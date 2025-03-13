@@ -1,6 +1,4 @@
-﻿#include "Olympian.h"
-
-#include <GL/glew.h>
+﻿#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -9,23 +7,26 @@
 
 struct PyramidVertexData
 {
-	// TODO try interleaving vertex positions with vertex colors
-	const float vertex_positions[3 * 4] = {
-		 0, 100, -58,
-		 0,   0, 115,
-		87, -50, -58,
-	   -87, -50, -58
+	struct InterleavedVertex
+	{
+		glm::vec3 position;
+		glm::u8vec4 color;
 	};
+
+	InterleavedVertex interleaved_vertices[4] = {};
 	glm::mat4 vertex_transforms[4] = {};
-	unsigned char vertex_colors[4 * 4] = {
-		255,   0,   0, 255,
-		  0, 255,   0, 255,
-		255, 255,   0, 255,
-		  0,   0, 255, 255
-	};
 
 	PyramidVertexData()
 	{
+		interleaved_vertices[0].position = {   0, 100, -58 };
+		interleaved_vertices[1].position = {   0,   0, 115 };
+		interleaved_vertices[2].position = {  87, -50, -58 };
+		interleaved_vertices[3].position = { -87, -50, -58 };
+		interleaved_vertices[0].color = { 255,   0,   0, 255 };
+		interleaved_vertices[1].color = {   0, 255,   0, 255 };
+		interleaved_vertices[2].color = { 255, 255,   0, 255 };
+		interleaved_vertices[3].color = {   0,   0, 255, 255 };
+
 		for (glm::mat4& transform : vertex_transforms)
 		{
 			transform = glm::translate(glm::mat4(1.0f), glm::vec3{ 0.0f, 0.0f, -500.0f }) * glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
@@ -62,8 +63,10 @@ template<>
 void oly::rendering::attrib_layout(const PyramidVertexData&, const std::vector<std::shared_ptr<GLBuffer>>& vbos)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(PyramidVertexData::InterleavedVertex), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(PyramidVertexData::InterleavedVertex), (void*)(sizeof(glm::vec3)));
+	glEnableVertexAttribArray(5);
 
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(0 * sizeof(glm::vec4)));
@@ -74,22 +77,15 @@ void oly::rendering::attrib_layout(const PyramidVertexData&, const std::vector<s
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 	glEnableVertexAttribArray(4);
-
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
-	glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
-	glEnableVertexAttribArray(5);
 }
 
 static void init_buffers(const PyramidVertexData& vertex_data, const PyramidElementData& element_data, const std::vector<std::shared_ptr<oly::rendering::GLBuffer>>& vbos, GLuint ebo)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.vertex_positions), vertex_data.vertex_positions, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.interleaved_vertices), vertex_data.interleaved_vertices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.vertex_transforms), glm::value_ptr(vertex_data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.vertex_colors), vertex_data.vertex_colors, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -119,7 +115,7 @@ int main()
 
 	oly::rendering::Batch<PyramidVertexData, PyramidElementData, PyramidDrawSpecification> batch;
 	batch.shader = oly::rendering::load_shader("../../../src/shaders/color_ngon_3d.glsl");
-	batch.gen_vao_descriptor(3, true);
+	batch.gen_vao_descriptor(2, true);
 	init_buffers(batch.vertex_data, batch.element_data, batch.vao_descriptor->vbos, *batch.vao_descriptor->ebo);
 
 	glm::mat4 proj = glm::ortho<float>(-720.0f, 720.0f, -540.0f, 540.0f, 0.1f, 1000.0f);

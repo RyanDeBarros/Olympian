@@ -38,6 +38,11 @@ namespace oly
 			std::shared_ptr<VAODescriptor> vao_descriptor;
 			std::shared_ptr<Shader> shader;
 
+			GLuint get_vao() const { return vao_descriptor->vao; }
+			GLuint get_vbo(size_t i = 0) const { return vao_descriptor->get_vbo(i); }
+			GLuint get_ebo() const { return vao_descriptor->get_ebo(); }
+			GLuint get_shader() const { return *shader; }
+
 			void gen_vao_descriptor(size_t n, bool ebo)
 			{
 				vao_descriptor = std::make_shared<VAODescriptor>();
@@ -47,11 +52,6 @@ namespace oly
 					vao_descriptor->gen_ebo();
 				init_layout();
 			}
-			GLuint get_vao() const { return vao_descriptor->vao; }
-			GLuint get_vbo(size_t i = 0) const { return vao_descriptor->get_vbo(i); }
-			GLuint get_ebo() const { return vao_descriptor->get_ebo(); }
-			GLuint get_shader() const { return *shader; }
-
 			void init_layout() const
 			{
 				glBindVertexArray(vao_descriptor->vao);
