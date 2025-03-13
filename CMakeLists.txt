@@ -15,6 +15,7 @@ set(LIBRARIES_DIR "D:/Libraries")
 
 # Include directories
 include_directories(
+	"${CMAKE_SOURCE_DIR}/src"
 	"${LIBRARIES_DIR}/glew-2.1.0/include"
 	"${LIBRARIES_DIR}/glfw-3.4/include"
 	"${LIBRARIES_DIR}/glm/include"
@@ -31,7 +32,7 @@ link_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-add_executable (Olympian "src/Olympian.cpp" "src/Olympian.h")
+add_executable (Olympian "src/Olympian.cpp" "src/Olympian.h" "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h" )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
@@ -39,6 +40,10 @@ endif()
 
 # Define GLEW_STATIC before compiling
 target_compile_definitions(Olympian PRIVATE GLEW_STATIC)
+
+# Olympian configuration macros
+target_compile_definitions(Olympian PRIVATE OLYMPIAN_SUBSHADER_VALIDATION)
+target_compile_definitions(Olympian PRIVATE OLYMPIAN_SHADER_VALIDATION)
 
 # Link libraries
 target_link_libraries(Olympian

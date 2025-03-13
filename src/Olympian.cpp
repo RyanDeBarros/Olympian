@@ -5,18 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <fstream>
-#include <sstream>
-
-static GLuint compile_subshader(const std::string& source, GLenum type)
-{
-	GLuint subshader = glCreateShader(type);
-	const char* src = source.c_str();
-	const GLint length = source.length();
-	glShaderSource(subshader, 1, &src, &length);
-	glCompileShader(type);
-	return subshader;
-}
+#include "rendering/core/Shaders.h"
 
 int main()
 {
@@ -39,32 +28,8 @@ int main()
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 
-	std::string file_prefix = "../../..";
-	std::fstream file;
-	std::stringstream file_content;
-
-	file.open(file_prefix + "/src/shaders/color_ngon_3d.vert");
-	assert(file.good());
-	file_content.clear();
-	file_content.str(std::string());
-	file_content << file.rdbuf();
-	file.close();
-	GLuint vert = compile_subshader(file_content.str(), GL_VERTEX_SHADER);
-
-	file.open(file_prefix + "/src/shaders/color_ngon_3d.frag");
-	assert(file.good());
-	file_content.clear();
-	file_content.str(std::string());
-	file_content << file.rdbuf();
-	file.close();
-	GLuint frag = compile_subshader(file_content.str(), GL_FRAGMENT_SHADER);
-
-	GLuint shader = glCreateProgram();
-	glAttachShader(shader, vert);
-	glAttachShader(shader, frag);
-	glLinkProgram(shader);
-	glDeleteShader(vert);
-	glDeleteShader(frag);
+	//GLuint shader = oly::shaders::load("../../../src/shaders/color_ngon_3d.vert", "../../../src/shaders/color_ngon_3d.frag");
+	GLuint shader = oly::shaders::load("../../../src/shaders/color_ngon_3d.glsl");
 
 	GLuint vao;
 	glCreateVertexArrays(1, &vao);
