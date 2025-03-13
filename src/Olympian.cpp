@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "rendering/core/Shaders.h"
+#include "rendering/core/Batches.h"
 
 int main()
 {
@@ -28,18 +28,15 @@ int main()
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 
-	//GLuint shader = oly::shaders::load("../../../src/shaders/color_ngon_3d.vert", "../../../src/shaders/color_ngon_3d.frag");
-	GLuint shader = oly::shaders::load("../../../src/shaders/color_ngon_3d.glsl");
+	//auto shader = oly::rendering::load_shader("../../../src/shaders/color_ngon_3d.vert", "../../../src/shaders/color_ngon_3d.frag");
+	auto shader = oly::rendering::load_shader("../../../src/shaders/color_ngon_3d.glsl");
 
-	GLuint vao;
-	glCreateVertexArrays(1, &vao);
-	GLuint vbos[3] = {};
-	auto& vbo_position = vbos[0];
-	auto& vbo_transform = vbos[1];
-	auto& vbo_color = vbos[2];
-	glGenBuffers(3, vbos);
-	GLuint ebo;
-	glGenBuffers(1, &ebo);
+	oly::rendering::VAODescriptor vao_descriptor{};
+	vao_descriptor.vbos = oly::rendering::gen_bulk_buffers(3);
+	GLuint vbo_position = vao_descriptor.get_vbo(0);
+	GLuint vbo_transform = vao_descriptor.get_vbo(1);
+	GLuint vbo_color = vao_descriptor.get_vbo(2);
+	vao_descriptor.gen_ebo();
 
 	// TODO try interleaving vertex positions with vertex colors
 	const float vertex_positions[3 * 4] = {
@@ -71,7 +68,7 @@ int main()
 		1, 3, 2
 	};
 
-	glBindVertexArray(vao);
+	glBindVertexArray(vao_descriptor.vao);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions), vertex_positions, GL_STATIC_DRAW);
@@ -95,7 +92,7 @@ int main()
 	glEnableVertexAttribArray(5);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao_descriptor.get_ebo());
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	glm::mat4 proj = glm::ortho<float>(-720.0f, 720.0f, -540.0f, 540.0f, 0.1f, 1000.0f);
@@ -117,17 +114,12 @@ int main()
 		gl_map = nullptr;
 
 		glUseProgram(shader);
-		glBindVertexArray(vao);
+		glBindVertexArray(vao_descriptor.vao);
 		glDrawElements(GL_TRIANGLES, 3 * 4, GL_UNSIGNED_SHORT, (void*)0);
 
 		glfwSwapBuffers(window);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-
-	glDeleteProgram(shader);
-	glDeleteBuffers(3, vbos);
-	glDeleteBuffers(1, &ebo);
-	glDeleteVertexArrays(1, &vao);
 
 	glfwTerminate();
 	return 0;
