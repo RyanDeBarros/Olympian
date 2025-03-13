@@ -18,6 +18,7 @@ include_directories(
 	"${LIBRARIES_DIR}/glew-2.1.0/include"
 	"${LIBRARIES_DIR}/glfw-3.4/include"
 	"${LIBRARIES_DIR}/glm/include"
+	"${LIBRARIES_DIR}/stb/include"
 )
 
 # Library directories
