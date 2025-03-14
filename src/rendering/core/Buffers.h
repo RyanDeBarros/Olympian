@@ -26,15 +26,15 @@ namespace oly
 			GLuint release() { GLuint old_id = id; id = 0; return old_id; }
 		};
 
-		std::vector<std::shared_ptr<GLBuffer>> gen_bulk_buffers(size_t n);
+		std::vector<std::shared_ptr<GLBuffer>> gen_bulk_buffers(GLsizei n);
 
-		template<size_t N>
+		template<GLsizei N>
 		std::array<std::shared_ptr<GLBuffer>, N> gen_bulk_buffers()
 		{
 			std::array<GLuint, N> buffers;
 			glGenBuffers(N, buffers.data());
 			std::array<std::shared_ptr<GLBuffer>, N> wrapped_buffers;
-			for (size_t i = 0; i < N; ++i)
+			for (GLsizei i = 0; i < N; ++i)
 				wrapped_buffers[i] = std::make_shared<GLBuffer>(buffers[i]);
 			return wrapped_buffers;
 		}

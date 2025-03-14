@@ -32,7 +32,7 @@ oly::rendering::GLBuffer& oly::rendering::GLBuffer::operator=(GLBuffer&& other) 
 	return *this;
 }
 
-std::vector<std::shared_ptr<oly::rendering::GLBuffer>> oly::rendering::gen_bulk_buffers(size_t n)
+std::vector<std::shared_ptr<oly::rendering::GLBuffer>> oly::rendering::gen_bulk_buffers(GLsizei n)
 {
 	std::vector<GLuint> buffers;
 	buffers.resize(n);

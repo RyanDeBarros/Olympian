@@ -2,100 +2,131 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <stb/stb_image.h>
 
 #include "rendering/core/Batches.h"
 
-struct PyramidVertexData
+struct SpriteVertexData
 {
-	struct InterleavedVertex
-	{
-		glm::vec3 position;
-		glm::u8vec4 color;
+	// vbo 0
+	glm::vec2 vertex_positions[4] = {};
+	// vbo 1
+	glm::mat3 vertex_transforms[4] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
+	// vbo 0
+	const glm::vec2 vertex_tex_coords[4] = {
+		{ 0.0f, 0.0f },
+		{ 1.0f, 0.0f },
+		{ 1.0f, 1.0f },
+		{ 0.0f, 1.0f }
 	};
+	// vbo 2
+	mutable unsigned char vertex_tex_slots[4] = { 0, 0, 0, 0 };
 
-	InterleavedVertex interleaved_vertices[4] = {};
-	glm::mat4 vertex_transforms[4] = {};
+	GLuint texture; // TODO eventually, std::vector<oly::rendering::Texture>
 
-	PyramidVertexData()
+	void load(int w, int h)
 	{
-		interleaved_vertices[0].position = {   0, 100, -58 };
-		interleaved_vertices[1].position = {   0,   0, 115 };
-		interleaved_vertices[2].position = {  87, -50, -58 };
-		interleaved_vertices[3].position = { -87, -50, -58 };
-		interleaved_vertices[0].color = { 255,   0,   0, 255 };
-		interleaved_vertices[1].color = {   0, 255,   0, 255 };
-		interleaved_vertices[2].color = { 255, 255,   0, 255 };
-		interleaved_vertices[3].color = {   0,   0, 255, 255 };
-
-		for (glm::mat4& transform : vertex_transforms)
-		{
-			transform = glm::translate(glm::mat4(1.0f), glm::vec3{ 0.0f, 0.0f, -500.0f }) * glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
-			transform = glm::rotate(transform, glm::radians(60.0f), glm::vec3{ 0.0f, 0.0f, 1.0f });
-		}
+		vertex_positions[0].x = -w * 0.5f;
+		vertex_positions[0].y = -h * 0.5f;
+		vertex_positions[1].x =  w * 0.5f;
+		vertex_positions[1].y = -h * 0.5f;
+		vertex_positions[2].x =  w * 0.5f;
+		vertex_positions[2].y =  h * 0.5f;
+		vertex_positions[3].x = -w * 0.5f;
+		vertex_positions[3].y =  h * 0.5f;
 	}
 };
 
-struct PyramidElementData
+struct SpriteElementData
 {
-	const unsigned short indices[3 * 4] = {
+	const unsigned short indices[6] = {
 		0, 1, 2,
-		0, 3, 1,
-		0, 2, 3,
-		1, 3, 2
+		2, 3, 0
 	};
 };
 
-struct PyramidDrawSpecification
+struct SpriteDrawSpecification
 {
 	GLenum mode = GL_TRIANGLES;
-	GLuint indices = 3 * 4;
+	GLuint indices = 6;
 	GLenum type = GL_UNSIGNED_SHORT;
 	GLuint offset = 0;
 };
 
 template<>
-void oly::rendering::draw(const PyramidDrawSpecification& spec)
+void oly::rendering::draw(const Batch<SpriteVertexData, SpriteElementData, SpriteDrawSpecification>& batch)
 {
+	const auto& vdata = batch.vertex_data;
+	const auto& spec = batch.draw_specification;
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, vdata.texture);
+	//glBindTextureUnit(GL_TEXTURE0 + 0, vdata.texture); // TODO only available in 4.5+, so use macros. also explorer bindless textures instead of sampler2d[]
+
+	for (size_t i = 0; i < 4; ++i)
+		vdata.vertex_tex_slots[i] = 0;
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata.vertex_tex_slots), &vdata.vertex_tex_slots, GL_DYNAMIC_DRAW);
+
 	glDrawElements(spec.mode, spec.indices, spec.type, (void*)spec.offset);
 }
 
 template<>
-void oly::rendering::attrib_layout(const PyramidVertexData&, const std::vector<std::shared_ptr<GLBuffer>>& vbos)
+void oly::rendering::attrib_layout(const SpriteVertexData&, const std::vector<std::shared_ptr<GLBuffer>>& vbos)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(PyramidVertexData::InterleavedVertex), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec2), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(PyramidVertexData::InterleavedVertex), (void*)(sizeof(glm::vec3)));
-	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec2), (void*)sizeof(glm::vec2));
+	glEnableVertexAttribArray(4);
 
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(0 * sizeof(glm::vec4)));
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)sizeof(glm::vec3));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(2 * sizeof(glm::vec3)));
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
-	glEnableVertexAttribArray(4);
+
+	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
+	glVertexAttribPointer(5, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(unsigned char), (void*)0);
+	glEnableVertexAttribArray(5);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-static void init_buffers(const PyramidVertexData& vertex_data, const PyramidElementData& element_data, const std::vector<std::shared_ptr<oly::rendering::GLBuffer>>& vbos, GLuint ebo)
+static void init_buffers(const SpriteVertexData& vertex_data, const SpriteElementData& element_data, const std::vector<std::shared_ptr<oly::rendering::GLBuffer>>& vbos, GLuint ebo)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.interleaved_vertices), vertex_data.interleaved_vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * (sizeof(glm::vec2) + sizeof(glm::vec2)), nullptr, GL_STATIC_DRAW);
+	unsigned char* buf = (unsigned char*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	for (size_t i = 0; i < 4; ++i)
+	{
+		*(glm::vec2*)buf = vertex_data.vertex_positions[i];
+		buf += sizeof(glm::vec2);
+		*(glm::vec2*)buf = vertex_data.vertex_tex_coords[i];
+		buf += sizeof(glm::vec2);
+	}
+	glUnmapBuffer(GL_ARRAY_BUFFER);
+	buf = nullptr;
 
 	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data.vertex_transforms), glm::value_ptr(vertex_data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::mat3), glm::value_ptr(vertex_data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(unsigned char), &vertex_data.vertex_tex_slots, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(element_data.indices), element_data.indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned short), element_data.indices, GL_STATIC_DRAW);
 }
 
 int main()
 {
 	if (glfwInit() != GLFW_TRUE)
 		return 1;
+
+	stbi_set_flip_vertically_on_load(true);
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -111,38 +142,59 @@ int main()
 	glClearColor(0.2f, 0.5f, 0.8f, 1.0f);
 	glfwSwapInterval(1);
 	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	oly::rendering::Batch<PyramidVertexData, PyramidElementData, PyramidDrawSpecification> batch;
-	batch.shader = oly::rendering::load_shader("../../../src/shaders/color_ngon_3d.glsl");
-	batch.gen_vao_descriptor(2, true);
+	int w, h, chpp;
+	unsigned char* image = stbi_load("../../../res/textures/einstein.png", &w, &h, &chpp, 4);
+	GLuint texture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	GLenum internal_format =
+		chpp == 1 ? GL_R8
+		: chpp == 2 ? GL_RG8
+		: chpp == 3 ? GL_RGB8
+		: GL_RGBA8;
+	GLenum format =
+		chpp == 1 ? GL_RED
+		: chpp == 2 ? GL_RG
+		: chpp == 3 ? GL_RGB
+		: GL_RGBA;
+	GLint alignment =
+		chpp == 1 ? 1
+		: chpp == 2 ? 2
+		: chpp == 3 ? 1
+		: 4;
+	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w, h, 0, format, GL_UNSIGNED_BYTE, image);
+	stbi_image_free(image);
+
+	oly::rendering::Batch<SpriteVertexData, SpriteElementData, SpriteDrawSpecification> batch;
+	batch.shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
+	batch.gen_vao_descriptor(3, true);
+	batch.vertex_data.load(w, h);
+	batch.vertex_data.texture = texture;
 	init_buffers(batch.vertex_data, batch.element_data, batch.vao_descriptor->vbos, *batch.vao_descriptor->ebo);
 
-	glm::mat4 proj = glm::ortho<float>(-720.0f, 720.0f, -540.0f, 540.0f, 0.1f, 1000.0f);
+	glm::mat3 proj = glm::ortho<float>(-720, 720, -540, 540);
 	GLuint proj_location = glGetUniformLocation(batch.get_shader(), "uProjection");
 	glUseProgram(batch.get_shader());
-	glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj));
+	glUniformMatrix3fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj));
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 
-		for (glm::mat4& transform : batch.vertex_data.vertex_transforms)
-			transform = glm::rotate(transform, 0.01f, glm::vec3{ 0.5f, 0.5f, 0.0f });
-		glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
-		glm::mat4* gl_map = (glm::mat4*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-		for (size_t i = 0; i < 4; ++i)
-			gl_map[i] = batch.vertex_data.vertex_transforms[i];
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		gl_map = nullptr;
-
 		glUseProgram(batch.get_shader());
 		glBindVertexArray(batch.get_vao());
-		batch.draw();
+		oly::rendering::draw(batch);
 
 		glfwSwapBuffers(window);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
+
+	glDeleteTextures(1, &texture);
 
 	glfwTerminate();
 	return 0;

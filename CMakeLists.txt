@@ -38,8 +38,10 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
 endif()
 
-# Define GLEW_STATIC before compiling
+# Dependency configuration macros
 target_compile_definitions(Olympian PRIVATE GLEW_STATIC)
+target_compile_definitions(Olympian PRIVATE STB_IMAGE_IMPLEMENTATION)
+target_compile_definitions(Olympian PRIVATE STB_TRUETYPE_IMPLEMENTATION)
 
 # Olympian configuration macros
 target_compile_definitions(Olympian PRIVATE OLYMPIAN_SUBSHADER_VALIDATION)
