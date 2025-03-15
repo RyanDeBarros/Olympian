@@ -14,16 +14,18 @@ namespace oly
 		{
 			GLuint id;
 
+			struct static_id { GLuint id; };
+			GLBuffer(static_id sid) : id(sid.id) {}
+
 		public:
 			GLBuffer();
-			GLBuffer(GLuint id);
 			GLBuffer(const GLBuffer&) = delete;
 			GLBuffer(GLBuffer&&) noexcept;
 			~GLBuffer();
 			GLBuffer& operator=(GLBuffer&&) noexcept;
 
 			operator GLuint () const { return id; }
-			GLuint release() { GLuint old_id = id; id = 0; return old_id; }
+			static std::shared_ptr<GLBuffer> from_id(GLuint id) { return std::shared_ptr<GLBuffer>(new GLBuffer(static_id{ id })); }
 		};
 
 		std::vector<std::shared_ptr<GLBuffer>> gen_bulk_buffers(GLsizei n);
@@ -35,7 +37,7 @@ namespace oly
 			glGenBuffers(N, buffers.data());
 			std::array<std::shared_ptr<GLBuffer>, N> wrapped_buffers;
 			for (GLsizei i = 0; i < N; ++i)
-				wrapped_buffers[i] = std::make_shared<GLBuffer>(buffers[i]);
+				wrapped_buffers[i] = GLBuffer::from_id(buffers[i]);
 			return wrapped_buffers;
 		}
 	}

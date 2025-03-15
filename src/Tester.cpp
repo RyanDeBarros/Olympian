@@ -5,120 +5,116 @@
 #include <stb/stb_image.h>
 
 #include "rendering/core/Batches.h"
+#include "rendering/core/Textures.h"
 
-struct SpriteVertexData
+struct SpriteCPUData
 {
 	// vbo 0
-	glm::vec2 vertex_positions[4] = {};
+	mutable GLubyte vertex_tex_slots[4] = { 0, 0, 0, 0 };
 	// vbo 1
-	glm::mat3 vertex_transforms[4] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
-	// vbo 0
-	const glm::vec2 vertex_tex_coords[4] = {
-		{ 0.0f, 0.0f },
-		{ 1.0f, 0.0f },
-		{ 1.0f, 1.0f },
-		{ 0.0f, 1.0f }
-	};
+	GLubyte vertex_tex_coord_slots[4] = { 0, 0, 0, 0 };
 	// vbo 2
-	mutable unsigned char vertex_tex_slots[4] = { 0, 0, 0, 0 };
+	glm::mat3 vertex_transforms[4] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
 
-	GLuint texture; // TODO eventually, std::vector<oly::rendering::Texture>
+	std::shared_ptr<oly::rendering::Texture> texture; // TODO eventually, std::vector<std::shared_ptr<oly::rendering::Texture>>
+	glm::vec2 texture_dimensions[1]; // TODO use vector
+	oly::rendering::GLBuffer tex_dimensions_ubo;
+	std::array<glm::vec2, 4> texture_coords[1]; // TODO use vector<array<glm::vec2, 4>>
+	oly::rendering::GLBuffer tex_coords_ssbo;
 
-	void load(int w, int h)
+	void load(float w, float h)
 	{
-		vertex_positions[0].x = -w * 0.5f;
-		vertex_positions[0].y = -h * 0.5f;
-		vertex_positions[1].x =  w * 0.5f;
-		vertex_positions[1].y = -h * 0.5f;
-		vertex_positions[2].x =  w * 0.5f;
-		vertex_positions[2].y =  h * 0.5f;
-		vertex_positions[3].x = -w * 0.5f;
-		vertex_positions[3].y =  h * 0.5f;
+		texture_dimensions[0].x = w;
+		texture_dimensions[0].y = h;
+		glBindBuffer(GL_UNIFORM_BUFFER, tex_dimensions_ubo);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(texture_dimensions), texture_dimensions, GL_DYNAMIC_DRAW);
+		
+		texture_coords[0][0].x = 0.0f;
+		texture_coords[0][0].y = 0.0f;
+		texture_coords[0][1].x = 1.0f;
+		texture_coords[0][1].y = 0.0f;
+		texture_coords[0][2].x = 1.0f;
+		texture_coords[0][2].y = 1.0f;
+		texture_coords[0][3].x = 0.0f;
+		texture_coords[0][3].y = 1.0f;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_coords_ssbo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(texture_coords), texture_coords, GL_STATIC_DRAW);
 	}
-};
 
-struct SpriteElementData
-{
 	const unsigned short indices[6] = {
 		0, 1, 2,
 		2, 3, 0
 	};
+
+	struct
+	{
+		GLenum mode = GL_TRIANGLES;
+		GLuint indices = 6;
+		GLenum type = GL_UNSIGNED_SHORT;
+		GLuint offset = 0;
+	} draw_spec;
 };
 
-struct SpriteDrawSpecification
-{
-	GLenum mode = GL_TRIANGLES;
-	GLuint indices = 6;
-	GLenum type = GL_UNSIGNED_SHORT;
-	GLuint offset = 0;
-};
+typedef oly::rendering::Batch<SpriteCPUData> SpriteBatch;
 
 template<>
-void oly::rendering::draw(const Batch<SpriteVertexData, SpriteElementData, SpriteDrawSpecification>& batch)
+void oly::rendering::draw(const SpriteBatch& batch)
 {
-	const auto& vdata = batch.vertex_data;
-	const auto& spec = batch.draw_specification;
+	const auto& data = batch.cpu_data;
 
 	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, vdata.texture);
+	glBindTexture(GL_TEXTURE_2D, *data.texture);
 	//glBindTextureUnit(GL_TEXTURE0 + 0, vdata.texture); // TODO only available in 4.5+, so use macros. also explorer bindless textures instead of sampler2d[]
 
 	for (size_t i = 0; i < 4; ++i)
-		vdata.vertex_tex_slots[i] = 0;
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vdata.vertex_tex_slots), &vdata.vertex_tex_slots, GL_DYNAMIC_DRAW);
+		data.vertex_tex_slots[i] = 0;
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
+	glBufferData(GL_ARRAY_BUFFER, sizeof(data.vertex_tex_slots), &data.vertex_tex_slots, GL_DYNAMIC_DRAW);
 
-	glDrawElements(spec.mode, spec.indices, spec.type, (void*)spec.offset);
+	// TODO create ShaderData class that references Shader and tracks uniform location and bindings. That way, can use glUniformBlockBinding on shader startup and not call glBindBufferBase every frame.
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, data.tex_dimensions_ubo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, data.tex_coords_ssbo);
+	glDrawElements(data.draw_spec.mode, data.draw_spec.indices, data.draw_spec.type, (void*)data.draw_spec.offset);
 }
 
 template<>
-void oly::rendering::attrib_layout(const SpriteVertexData&, const std::vector<std::shared_ptr<GLBuffer>>& vbos)
+void oly::rendering::attrib_layout(const SpriteBatch& batch)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec2), (void*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
+	glVertexAttribPointer(0, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLubyte), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec2), (void*)sizeof(glm::vec2));
-	glEnableVertexAttribArray(4);
 
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)sizeof(glm::vec3));
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(2 * sizeof(glm::vec3)));
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
+	glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLubyte), (void*)0);
 	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)0);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)sizeof(glm::vec3));
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(2 * sizeof(glm::vec3)));
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
-
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
-	glVertexAttribPointer(5, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(unsigned char), (void*)0);
-	glEnableVertexAttribArray(5);
+	glEnableVertexAttribArray(4);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-static void init_buffers(const SpriteVertexData& vertex_data, const SpriteElementData& element_data, const std::vector<std::shared_ptr<oly::rendering::GLBuffer>>& vbos, GLuint ebo)
+static void init_buffers(const SpriteBatch& batch)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[0]);
-	glBufferData(GL_ARRAY_BUFFER, 4 * (sizeof(glm::vec2) + sizeof(glm::vec2)), nullptr, GL_STATIC_DRAW);
-	unsigned char* buf = (unsigned char*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	for (size_t i = 0; i < 4; ++i)
-	{
-		*(glm::vec2*)buf = vertex_data.vertex_positions[i];
-		buf += sizeof(glm::vec2);
-		*(glm::vec2*)buf = vertex_data.vertex_tex_coords[i];
-		buf += sizeof(glm::vec2);
-	}
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	buf = nullptr;
+	const auto& data = batch.cpu_data;
 
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[1]);
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::mat3), glm::value_ptr(vertex_data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GLubyte), &data.vertex_tex_slots, GL_DYNAMIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, *vbos[2]);
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(unsigned char), &vertex_data.vertex_tex_slots, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GLubyte), &data.vertex_tex_coord_slots, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::mat3), glm::value_ptr(data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned short), element_data.indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.get_ebo());
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned short), data.indices, GL_STATIC_DRAW);
 }
 
 int main()
@@ -146,9 +142,8 @@ int main()
 
 	int w, h, chpp;
 	unsigned char* image = stbi_load("../../../res/textures/einstein.png", &w, &h, &chpp, 4);
-	GLuint texture;
-	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	auto texture = std::make_shared<oly::rendering::Texture>(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, *texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	GLenum internal_format =
@@ -170,12 +165,12 @@ int main()
 	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w, h, 0, format, GL_UNSIGNED_BYTE, image);
 	stbi_image_free(image);
 
-	oly::rendering::Batch<SpriteVertexData, SpriteElementData, SpriteDrawSpecification> batch;
+	SpriteBatch batch;
 	batch.shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
 	batch.gen_vao_descriptor(3, true);
-	batch.vertex_data.load(w, h);
-	batch.vertex_data.texture = texture;
-	init_buffers(batch.vertex_data, batch.element_data, batch.vao_descriptor->vbos, *batch.vao_descriptor->ebo);
+	batch.cpu_data.load(w, h);
+	batch.cpu_data.texture = texture;
+	init_buffers(batch);
 
 	glm::mat3 proj = glm::ortho<float>(-720, 720, -540, 540);
 	GLuint proj_location = glGetUniformLocation(batch.get_shader(), "uProjection");
@@ -193,8 +188,6 @@ int main()
 		glfwSwapBuffers(window);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
-
-	glDeleteTextures(1, &texture);
 
 	glfwTerminate();
 	return 0;

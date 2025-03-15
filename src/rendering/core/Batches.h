@@ -8,20 +8,31 @@ namespace oly
 {
 	namespace rendering
 	{
-		struct empty {};
+		template<typename CPUData>
+		struct Batch;
 
-		template<typename VertexData>
-		void attrib_layout(const VertexData&, const std::vector<std::shared_ptr<GLBuffer>>& vbos)
+		template<typename CPUData>
+		void attrib_layout(const Batch<CPUData>&)
 		{
 			static_assert(false);
 		}
 
-		template<typename VertexData, typename ElementData, typename DrawSpecification>
+		template<typename CPUData>
+		void draw(const Batch<CPUData>&)
+		{
+			static_assert(false);
+		};
+
+		template<typename CPUData>
+		void draw(const Batch<CPUData>&, size_t)
+		{
+			static_assert(false);
+		};
+
+		template<typename CPUData>
 		struct Batch
 		{
-			VertexData vertex_data = {};
-			ElementData element_data = {};
-			DrawSpecification draw_specification = {};
+			CPUData cpu_data = {};
 
 			std::shared_ptr<VAODescriptor> vao_descriptor;
 			std::shared_ptr<Shader> shader;
@@ -38,25 +49,9 @@ namespace oly
 					vao_descriptor->gen_vbos(n);
 				if (ebo)
 					vao_descriptor->gen_ebo();
-				init_layout();
-			}
-			void init_layout() const
-			{
 				glBindVertexArray(vao_descriptor->vao);
-				oly::rendering::attrib_layout(vertex_data, vao_descriptor->vbos);
+				oly::rendering::attrib_layout(*this);
 			}
-		};
-
-		template<typename VertexData, typename ElementData, typename DrawSpecification>
-		void draw(const Batch<VertexData, ElementData, DrawSpecification>&)
-		{
-			static_assert(false);
-		};
-
-		template<typename VertexData, typename ElementData, typename DrawSpecification>
-		void draw(const Batch<VertexData, ElementData, DrawSpecification>&, size_t)
-		{
-			static_assert(false);
 		};
 	}
 }

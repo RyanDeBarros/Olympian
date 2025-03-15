@@ -5,11 +5,6 @@ oly::rendering::GLBuffer::GLBuffer()
 	glGenBuffers(1, &id);
 }
 
-oly::rendering::GLBuffer::GLBuffer(GLuint id)
-	: id(id)
-{
-}
-
 oly::rendering::GLBuffer::GLBuffer(GLBuffer&& other) noexcept
 	: id(other.id)
 {
@@ -40,6 +35,6 @@ std::vector<std::shared_ptr<oly::rendering::GLBuffer>> oly::rendering::gen_bulk_
 	std::vector<std::shared_ptr<GLBuffer>> wrapped_buffers;
 	wrapped_buffers.reserve(n);
 	for (GLuint id : buffers)
-		wrapped_buffers.push_back(std::make_shared<GLBuffer>(id));
+		wrapped_buffers.push_back(GLBuffer::from_id(id));
 	return wrapped_buffers;
 }

@@ -32,7 +32,7 @@ link_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Batches.h" )
+add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Batches.h"  "src/rendering/core/Textures.h" "src/rendering/core/Textures.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
