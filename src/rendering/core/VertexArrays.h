@@ -25,8 +25,8 @@ namespace oly
 		struct VAODescriptor
 		{
 			VertexArray vao;
-			std::vector<std::shared_ptr<GLBuffer>> vbos = { nullptr };
-			std::shared_ptr<GLBuffer> ebo = nullptr;
+			std::vector<GLBufferRes> vbos = { nullptr };
+			GLBufferRes ebo = nullptr;
 
 			void gen_vbos(GLsizei n) { vbos = oly::rendering::gen_bulk_buffers(n); }
 			void gen_ebo() { ebo = std::make_shared<GLBuffer>(); }

@@ -1,14 +1,21 @@
-#version 440 core
+#version 450 core
 
 layout(location = 0) in uint iTexSlot;
 layout(location = 1) in uint iTexCoordSlot;
 layout(location = 2) in mat3 iTransform;
 
 uniform mat3 uProjection;
-layout(std140, binding = 1) uniform uTextureDimensions {
-	vec2 uTexDimensions[32]; // TODO template
+
+struct TexData
+{
+	uvec2 handle;
+	vec2 dimensions;
 };
-layout(std430, binding = 2) buffer uTextureCoords {
+layout(std430, binding = 0) buffer TextureData {
+	TexData uTexData[];
+};
+
+layout(std430, binding = 1) buffer TextureCoords {
 	vec2 uTexCoords[];
 };
 
@@ -29,7 +36,7 @@ vec2 position(vec2 dimensions) {
 }
 
 void main() {
-	gl_Position.xyz = uProjection * iTransform * vec3(position(uTexDimensions[iTexSlot]), 1.0);
+	gl_Position.xyz = uProjection * iTransform * vec3(position(uTexData[iTexSlot].dimensions), 1.0);
 	tTexCoord = uTexCoords[4 * iTexCoordSlot + gl_VertexID];
 	tTexSlot = iTexSlot;
 }

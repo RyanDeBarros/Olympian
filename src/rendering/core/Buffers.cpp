@@ -32,7 +32,7 @@ std::vector<std::shared_ptr<oly::rendering::GLBuffer>> oly::rendering::gen_bulk_
 	std::vector<GLuint> buffers;
 	buffers.resize(n);
 	glGenBuffers(n, buffers.data());
-	std::vector<std::shared_ptr<GLBuffer>> wrapped_buffers;
+	std::vector<GLBufferRes> wrapped_buffers;
 	wrapped_buffers.reserve(n);
 	for (GLuint id : buffers)
 		wrapped_buffers.push_back(GLBuffer::from_id(id));

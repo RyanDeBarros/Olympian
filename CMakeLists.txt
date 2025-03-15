@@ -32,7 +32,7 @@ link_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Batches.h"  "src/rendering/core/Textures.h" "src/rendering/core/Textures.cpp")
+add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Batches.h"  "src/rendering/core/Textures.h" "src/rendering/core/Textures.cpp" "src/util/STB.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
@@ -40,8 +40,6 @@ endif()
 
 # Dependency configuration macros
 target_compile_definitions(Olympian PRIVATE GLEW_STATIC)
-target_compile_definitions(Olympian PRIVATE STB_IMAGE_IMPLEMENTATION)
-target_compile_definitions(Olympian PRIVATE STB_TRUETYPE_IMPLEMENTATION)
 
 # Olympian configuration macros
 target_compile_definitions(Olympian PRIVATE OLYMPIAN_SUBSHADER_VALIDATION)

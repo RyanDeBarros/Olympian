@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <memory>
 
+#include "Buffers.h"
+
 namespace oly
 {
 	namespace rendering
@@ -31,7 +33,7 @@ namespace oly
 		struct vertex_source { const char* source; GLint length; vertex_source(const char* source, GLint length) : source(source), length(length) {} };
 		struct fragment_source { const char* source; GLint length; fragment_source(const char* source, GLint length) : source(source), length(length) {} };
 		struct geometry_source { const char* source; GLint length; geometry_source(const char* source, GLint length) : source(source), length(length) {} };
-		struct glsl_source { std::string source; glsl_source(std::string&& source) : source(source) {} };
+		struct glsl_source { std::string source; glsl_source(std::string&& source) : source(std::move(source)) {} };
 
 		std::shared_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader);
 		std::shared_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader);

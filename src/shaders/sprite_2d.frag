@@ -1,12 +1,20 @@
-#version 440 core
+#version 450 core
+#extension GL_ARB_bindless_texture : require
 
 layout(location = 0) out vec4 oColor;
 
 in vec2 tTexCoord;
 flat in uint tTexSlot;
 
-layout(binding = 0) uniform sampler2D uTextures[32]; // TODO template
+struct TexData
+{
+	uvec2 handle;
+	vec2 dimensions;
+};
+layout(std430, binding = 0) buffer TextureData {
+	TexData uTexData[];
+};
 
 void main() {
-	oColor = texture(uTextures[tTexSlot], tTexCoord);
+	oColor = texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
 }
