@@ -15,8 +15,12 @@ layout(std430, binding = 0) buffer TextureData {
 	TexData uTexData[];
 };
 
-layout(std430, binding = 1) buffer TextureCoords {
-	vec2 uTexCoords[];
+struct TexUVRect
+{
+	vec4 uvs[2];
+};
+layout(std140, binding = 0) uniform TextureCoords {
+	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B
 };
 
 out vec2 tTexCoord;
@@ -35,8 +39,21 @@ vec2 position(vec2 dimensions) {
 	}
 }
 
+vec2 coords(TexUVRect rect) {
+	switch (gl_VertexID) {
+	case 0:
+		return rect.uvs[0].xy;
+	case 1:
+		return rect.uvs[0].zw;
+	case 2:
+		return rect.uvs[1].xy;
+	case 3:
+		return rect.uvs[1].zw;
+	}
+}
+
 void main() {
 	gl_Position.xyz = uProjection * iTransform * vec3(position(uTexData[iTexSlot].dimensions), 1.0);
-	tTexCoord = uTexCoords[4 * iTexCoordSlot + gl_VertexID];
+	tTexCoord = coords(uTexCoords[4 * iTexCoordSlot]);
 	tTexSlot = iTexSlot;
 }

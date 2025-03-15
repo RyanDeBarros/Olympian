@@ -64,11 +64,9 @@ namespace oly
 
 		public:
 			BindlessTextureHandle() = default;
-			BindlessTextureHandle(GLuint texture);
 			~BindlessTextureHandle();
 
-			void refresh(GLuint texture) const;
-			void use() const;
+			void use(GLuint texture) const;
 			void disuse() const;
 			operator GLuint64 () const { return handle; }
 		};

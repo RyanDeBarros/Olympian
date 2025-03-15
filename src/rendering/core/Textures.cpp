@@ -58,30 +58,22 @@ std::vector<std::shared_ptr<oly::rendering::Texture>> oly::rendering::create_bul
 	return wrapped_textures;
 }
 
-oly::rendering::BindlessTextureHandle::BindlessTextureHandle(GLuint texture)
-{
-	refresh(texture);
-}
-
 oly::rendering::BindlessTextureHandle::~BindlessTextureHandle()
 {
 	disuse();
 }
 
-void oly::rendering::BindlessTextureHandle::refresh(GLuint texture) const
+void oly::rendering::BindlessTextureHandle::use(GLuint texture) const
 {
 	disuse();
 	handle = glGetTextureHandleARB(texture);
-}
-
-void oly::rendering::BindlessTextureHandle::use() const
-{
 	glMakeTextureHandleResidentARB(handle);
 }
 
 void oly::rendering::BindlessTextureHandle::disuse() const
 {
-	glMakeTextureHandleNonResidentARB(handle);
+	if (handle)
+		glMakeTextureHandleNonResidentARB(handle);
 }
 
 GLenum oly::rendering::tex::internal_format(int cpp)

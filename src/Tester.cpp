@@ -12,46 +12,53 @@
 struct SpriteCPUData
 {
 	// vbo 0
-	mutable GLubyte vertex_tex_slots[4] = { 0, 0, 0, 0 };
+	GLushort vertex_tex_slots[4] = { 0, 0, 0, 0 };
 	// vbo 1
-	GLubyte vertex_tex_coord_slots[4] = { 0, 0, 0, 0 };
+	GLushort vertex_tex_coord_slots[4] = { 0, 0, 0, 0 };
 	// vbo 2
 	glm::mat3 vertex_transforms[4] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
 
-	oly::rendering::TextureRes texture; // TODO eventually, std::vector<std::shared_ptr<oly::rendering::Texture>>
+	std::vector<oly::rendering::TextureRes> textures;
 	struct TexData
 	{
 		oly::rendering::BindlessTextureHandle handle;
-		glm::vec2 dimensions;
+		glm::vec2 dimensions = {};
 	};
-	TexData texture_data[1] = {}; // TODO use vector
 	oly::rendering::GLBuffer tex_data_ssbo;
-	std::array<glm::vec2, 4> texture_coords[1] = {}; // TODO use vector<array<glm::vec2, 4>>
-	oly::rendering::GLBuffer tex_coords_ssbo;
-
-	SpriteCPUData()
+	struct TexUVRect
 	{
-		texture_coords[0][0].x = 0.0f;
-		texture_coords[0][0].y = 0.0f;
-		texture_coords[0][1].x = 1.0f;
-		texture_coords[0][1].y = 0.0f;
-		texture_coords[0][2].x = 1.0f;
-		texture_coords[0][2].y = 1.0f;
-		texture_coords[0][3].x = 0.0f;
-		texture_coords[0][3].y = 1.0f;
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_coords_ssbo);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(texture_coords), texture_coords, GL_STATIC_DRAW);
+		glm::vec2 uvs[4];
+	};
+	oly::rendering::GLBuffer tex_coords_ubo;
+
+	void init(size_t num_textures, size_t num_uvs)
+	{
+		assert(num_uvs <= 500);
+		textures.resize(num_textures);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
+		glBufferStorage(GL_SHADER_STORAGE_BUFFER, num_textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
+		glBufferStorage(GL_UNIFORM_BUFFER, num_uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	}
 
-	void load(oly::rendering::TextureRes tex, oly::rendering::ImageDimensions dim)
+	void set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
 	{
-		texture = tex;
-		texture_data[0].dimensions.x = dim.w;
-		texture_data[0].dimensions.y = dim.h;
-		texture_data[0].handle.refresh(*texture);
-		texture_data[0].handle.use();
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(texture_data), texture_data, GL_DYNAMIC_DRAW);
+		textures[pos] = texture;
+		TexData texture_data;
+		texture_data.dimensions = { dim.w, dim.h };
+		texture_data.handle.use(*texture);
+		glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data);
+
+	}
+
+	void set_uvs(glm::vec2 bl, glm::vec2 br, glm::vec2 tr, glm::vec2 tl, size_t pos)
+	{
+		TexUVRect texture_coords;
+		texture_coords.uvs[0] = bl;
+		texture_coords.uvs[1] = br;
+		texture_coords.uvs[2] = tr;
+		texture_coords.uvs[3] = tl;
+		glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &texture_coords);
 	}
 
 	const unsigned short indices[6] = {
@@ -76,7 +83,7 @@ void oly::rendering::draw(const SpriteBatch& batch)
 	const auto& data = batch.cpu_data;
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, data.tex_data_ssbo);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, data.tex_coords_ssbo);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, data.tex_coords_ubo);
 	glDrawElements(data.draw_spec.mode, data.draw_spec.indices, data.draw_spec.type, (void*)data.draw_spec.offset);
 }
 
@@ -84,11 +91,11 @@ template<>
 void oly::rendering::attrib_layout(const SpriteBatch& batch)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
-	glVertexAttribPointer(0, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLubyte), (void*)0);
+	glVertexAttribPointer(0, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(GLubyte), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
-	glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLubyte), (void*)0);
+	glVertexAttribPointer(1, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(GLubyte), (void*)0);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
@@ -151,7 +158,9 @@ int main()
 	SpriteBatch batch;
 	batch.shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
 	batch.gen_vao_descriptor(3, true);
-	batch.cpu_data.load(texture, texture_dim);
+	batch.cpu_data.init(10, 3);
+	batch.cpu_data.set_texture(texture, texture_dim, 0);
+	batch.cpu_data.set_uvs({0,0}, {1,0}, {1,1}, {0,1}, 0);
 	init_buffers(batch);
 
 	glm::mat3 proj = glm::ortho<float>(-720, 720, -540, 540);
