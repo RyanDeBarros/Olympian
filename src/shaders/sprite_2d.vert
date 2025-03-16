@@ -19,8 +19,15 @@ struct QuadTexInfo
 layout(std430, binding = 1) readonly buffer QuadTextures {
 	QuadTexInfo uQuadTextures[];
 };
+struct Mat3
+{
+	float m00, m01, m02, m10, m11, m12, m20, m21, m22;
+};
+mat3 matrix(Mat3 m) {
+	return mat3(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, m.m20, m.m21, m.m22);
+}
 layout(std430, binding = 2) readonly buffer Transforms {
-	mat3 uTransforms[];
+	Mat3 uTransforms[];
 };
 
 struct TexUVRect
@@ -62,7 +69,12 @@ vec2 coords(TexUVRect rect) {
 
 void main() {
 	QuadTexInfo quad_texture = uQuadTextures[gl_VertexID / 4];
-	gl_Position.xyz = uProjection * uTransforms[gl_VertexID / 4] * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0);
-	tTexCoord = coords(uTexCoords[quad_texture.texCoordSlot]);
-	tTexSlot = quad_texture.texSlot;
+	if (quad_texture.texSlot > 0) {
+		gl_Position.xyz = uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0);
+		tTexCoord = coords(uTexCoords[quad_texture.texCoordSlot]);
+		tTexSlot = quad_texture.texSlot;
+	}
+	else {
+		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
+	}
 }

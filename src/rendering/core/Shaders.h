@@ -35,11 +35,13 @@ namespace oly
 		struct geometry_source { const char* source; GLint length; geometry_source(const char* source, GLint length) : source(source), length(length) {} };
 		struct glsl_source { std::string source; glsl_source(std::string&& source) : source(std::move(source)) {} };
 
-		std::shared_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader);
-		std::shared_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader);
-		std::shared_ptr<Shader> load_shader(glsl_path glsl_shader);
-		std::shared_ptr<Shader> load_shader(vertex_source vertex_shader, fragment_source fragment_shader);
-		std::shared_ptr<Shader> load_shader(vertex_source vertex_shader, fragment_source fragment_shader, geometry_source geometry_shader);
-		std::shared_ptr<Shader> load_shader(glsl_source glsl_shader);
+		typedef std::shared_ptr<Shader> ShaderRes;
+
+		ShaderRes load_shader(vertex_path vertex_shader, fragment_path fragment_shader);
+		ShaderRes load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader);
+		ShaderRes load_shader(glsl_path glsl_shader);
+		ShaderRes load_shader(vertex_source vertex_shader, fragment_source fragment_shader);
+		ShaderRes load_shader(vertex_source vertex_shader, fragment_source fragment_shader, geometry_source geometry_shader);
+		ShaderRes load_shader(glsl_source glsl_shader);
 	}
 }
