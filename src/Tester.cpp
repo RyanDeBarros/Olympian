@@ -1,10 +1,9 @@
-﻿#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <stb/stb_image.h>
+﻿#include "Olympian.h"
 
-#include "rendering/core/Core.h"
+#include "rendering/core/Batch.h"
+#include "rendering/core/Textures.h"
+#include "rendering/core/Window.h"
+#include "util/Errors.h"
 
 #include <iostream>
 
@@ -106,10 +105,10 @@ struct SpriteListCPUData
 	}
 
 	const GLushort indices[12] = {
+		4, 5, 6,
+		6, 7, 4,
 		0, 1, 2,
 		2, 3, 0,
-		4, 5, 6,
-		6, 7, 4
 	};
 
 	struct
@@ -140,28 +139,20 @@ void oly::rendering::attrib_layout(const SpriteListBatch& batch)
 {
 }
 
+static void run();
+
 int main()
 {
-	if (glfwInit() != GLFW_TRUE)
-		return 1;
+	oly::init();
+	run();
+	return oly::terminate();
+}
 
-	stbi_set_flip_vertically_on_load(true);
-
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	GLFWwindow* window = glfwCreateWindow(1440, 1080, "Olympian Engine", nullptr, nullptr);
-	if (!window)
-		return 2;
-
-	glfwMakeContextCurrent(window);
-
-	if (glewInit() != GLEW_OK)
-		return 3;
-	glClearColor(0.2f, 0.5f, 0.8f, 1.0f);
-	glfwSwapInterval(1);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void run()
+{
+	oly::rendering::WindowHint hint;
+	hint.context.clear_color = { 0.2f, 0.5f, 0.8f, 1.0f };
+	oly::rendering::Window window(1440, 1080, "Olympian Engine", hint);
 
 	oly::rendering::ImageDimensions einstein_texture_dim;
 	auto einstein_texture = oly::rendering::load_static_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
@@ -171,27 +162,32 @@ int main()
 	auto flag_texture = oly::rendering::load_static_texture_2d("../../../res/textures/flag.png", flag_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
-	SpriteListBatch* batch = new SpriteListBatch(3, 10, 2);
-	batch->shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
-	batch->gen_vao_descriptor(0, true);
-	glNamedBufferData(batch->get_ebo(), batch->cpu_data.draw_spec.indices * sizeof(GLushort), batch->cpu_data.indices, GL_STATIC_DRAW);
-	batch->cpu_data.set_texture(einstein_texture, einstein_texture_dim, 0);
-	batch->cpu_data.set_texture(flag_texture, flag_texture_dim, 1);
-	batch->cpu_data.set_uvs({0,0}, {1,0}, {1,1}, {0,1}, 0);
-	batch->cpu_data.set_uvs({0.5f,0}, {1,0}, {1,1}, {0.5f,1}, 1);
-	auto quad0 = batch->cpu_data.get_quad(0);
-	auto quad1 = batch->cpu_data.get_quad(1);
+	oly::rendering::ImageDimensions tux_texture_dim;
+	auto tux_texture = oly::rendering::load_static_texture_2d("../../../res/textures/tux.png", tux_texture_dim);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	SpriteListBatch batch(3, 10, 2);
+	batch.shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
+	batch.gen_vao_descriptor(0, true);
+	glNamedBufferData(batch.get_ebo(), batch.cpu_data.draw_spec.indices * sizeof(GLushort), batch.cpu_data.indices, GL_STATIC_DRAW);
+	batch.cpu_data.set_texture(einstein_texture, einstein_texture_dim, 0);
+	batch.cpu_data.set_texture(flag_texture, flag_texture_dim, 1);
+	batch.cpu_data.set_texture(tux_texture, tux_texture_dim, 2);
+	batch.cpu_data.set_uvs({ 0,0 }, { 1,0 }, { 1,1 }, { 0,1 }, 0);
+	batch.cpu_data.set_uvs({ 0.5f,0 }, { 1,0 }, { 1,1 }, { 0.5f,1 }, 1);
+	auto quad0 = batch.cpu_data.get_quad(0);
+	auto quad1 = batch.cpu_data.get_quad(1);
 	quad1.transform->v2[0] = 300;
 	quad1.transform->v2[1] = 200;
-	batch->cpu_data.send_quad_data(1);
+	batch.cpu_data.send_quad_data(1);
 
 	glm::mat3 proj = glm::ortho<float>(-720, 720, -540, 540);
-	GLuint proj_location = glGetUniformLocation(batch->get_shader(), "uProjection");
-	glUseProgram(batch->get_shader());
+	GLuint proj_location = glGetUniformLocation(batch.get_shader(), "uProjection");
+	glUseProgram(batch.get_shader());
 	glUniformMatrix3fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj));
 
-	while (!glfwWindowShouldClose(window))
+	while (!window.should_close())
 	{
 		glfwPollEvents();
 
@@ -199,40 +195,45 @@ int main()
 		quad0.transform->v0[1] = (float)glm::sin(glfwGetTime());
 		quad0.transform->v1[0] = (float)-glm::sin(glfwGetTime());
 		quad0.transform->v1[1] = (float)glm::cos(glfwGetTime());
-		batch->cpu_data.send_quad_data(0);
+		batch.cpu_data.send_quad_data(0);
 
 		static GLushort tex_index = 0;
-		if (fmod(glfwGetTime(), 1.0f) < 0.5f)
+		if (fmod(glfwGetTime(), 1.0f) < 1.0f / 3.0f)
 		{
-			if (tex_index == 1)
+			if (tex_index != 0)
 			{
 				tex_index = 0;
 				quad1.tex_info->tex_slot = 0;
-				quad1.tex_info->tex_coord_slot = 1;
-				batch->cpu_data.send_quad_data(1);
+				quad1.tex_info->tex_coord_slot = 1 - quad1.tex_info->tex_coord_slot;
+				batch.cpu_data.send_quad_data(1);
+			}
+		}
+		else if (fmod(glfwGetTime(), 1.0f) < 2.0f / 3.0f)
+		{
+			if (tex_index != 1)
+			{
+				tex_index = 1;
+				quad1.tex_info->tex_slot = 1;
+				quad1.tex_info->tex_coord_slot = 1 - quad1.tex_info->tex_coord_slot;
+				batch.cpu_data.send_quad_data(1);
 			}
 		}
 		else
 		{
-			if (tex_index == 0)
+			if (tex_index != 2)
 			{
-				tex_index = 1;
-				quad1.tex_info->tex_slot = 1;
-				quad1.tex_info->tex_coord_slot = 0;
-				batch->cpu_data.send_quad_data(1);
+				tex_index = 2;
+				quad1.tex_info->tex_slot = 2;
+				quad1.tex_info->tex_coord_slot = 1 - quad1.tex_info->tex_coord_slot;
+				batch.cpu_data.send_quad_data(2);
 			}
 		}
 
-		glUseProgram(batch->get_shader());
-		glBindVertexArray(batch->get_vao());
-		oly::rendering::draw(*batch);
+		glUseProgram(batch.get_shader());
+		glBindVertexArray(batch.get_vao());
+		oly::rendering::draw(batch);
 
-		glfwSwapBuffers(window);
+		window.swap_buffers();
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
-
-	delete batch;
-
-	glfwTerminate();
-	return 0;
 }

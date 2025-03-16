@@ -3,7 +3,6 @@
 #include "rendering/core/Shaders.h"
 #include "rendering/core/Buffers.h"
 #include "rendering/core/VertexArrays.h"
-#include "rendering/core/Textures.h"
 
 namespace oly
 {
