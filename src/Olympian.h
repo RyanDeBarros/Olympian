@@ -9,5 +9,6 @@
 namespace oly
 {
 	extern void init();
+	extern void init_context();
 	extern int terminate();
 }

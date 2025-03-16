@@ -70,7 +70,7 @@ vec2 coords(TexUVRect rect) {
 void main() {
 	QuadTexInfo quad_texture = uQuadTextures[gl_VertexID / 4];
 	if (quad_texture.texSlot > 0) {
-		gl_Position.xyz = uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0);
+		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = coords(uTexCoords[quad_texture.texCoordSlot]);
 		tTexSlot = quad_texture.texSlot;
 	}

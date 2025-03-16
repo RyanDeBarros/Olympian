@@ -46,7 +46,7 @@ namespace oly
 				{
 					bool blend = true;
 					bool depth_test = false;
-					bool cull_face = true;
+					bool cull_face = false;
 					bool scissor_test = false;
 					bool stencil_test = false;
 				} enable;

@@ -35,16 +35,15 @@ void oly::rendering::WindowHint::context_hint() const
 	glfwSwapInterval(context.swap_interval);
 	glClearColor(context.clear_color.r, context.clear_color.g, context.clear_color.b, context.clear_color.a);
 	if (context.enable.blend)
-	{
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
 	else
 		glDisable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	if (context.enable.depth_test)
 		glEnable(GL_DEPTH_TEST);
 	else
 		glDisable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 	if (context.enable.cull_face)
 		glEnable(GL_CULL_FACE);
 	else
