@@ -9,14 +9,18 @@
 
 #include <iostream>
 
-struct SpriteCPUData
+struct SpriteListCPUData
 {
+	// TODO interleave tex slots and coords into one VBO
 	// vbo 0
-	GLushort vertex_tex_slots[4] = { 0, 0, 0, 0 };
+	//GLushort vertex_tex_slots[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	//GLushort vertex_tex_slots[2] = { 0, 0 };
 	// vbo 1
-	GLushort vertex_tex_coord_slots[4] = { 0, 0, 0, 0 };
+	//GLushort vertex_tex_coord_slots[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	//GLushort vertex_tex_coord_slots[2] = { 0, 0 };
 	// vbo 2
-	glm::mat3 vertex_transforms[4] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
+	//glm::mat3 vertex_transforms[8] = { glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f), glm::mat3(1.0f) };
+	//glm::mat3 vertex_transforms[2] = { glm::mat3(1.0f), glm::mat3(1.0f) };
 
 	std::vector<oly::rendering::TextureRes> textures;
 	struct TexData
@@ -25,18 +29,62 @@ struct SpriteCPUData
 		glm::vec2 dimensions = {};
 	};
 	oly::rendering::GLBuffer tex_data_ssbo;
+	struct QuadTexInfo
+	{
+		GLuint tex_slot;
+		GLuint tex_coord_slot;
+	};
+	std::vector<QuadTexInfo> quad_textures;
+	oly::rendering::GLBuffer quad_tex_ssbo;
+	struct TransformMat3
+	{
+		alignas(16) glm::vec3 v0 = { 1.0f, 0.0f, 0.0f }, v1 = { 0.0f, 1.0f, 0.0f }, v2 = { 0.0f, 0.0f, 1.0f };
+		glm::mat3 get() const
+		{
+			return { v0, v1, v2 };
+		}
+		void set(const glm::mat3& mat)
+		{
+			v0 = mat[0];
+			v1 = mat[1];
+			v2 = mat[2];
+		}
+	};
+	std::vector<TransformMat3> quad_transforms;
+	oly::rendering::GLBuffer quad_transform_ssbo;
 	struct TexUVRect
 	{
-		glm::vec2 uvs[4];
+		glm::vec2 uvs[4] = {};
 	};
 	oly::rendering::GLBuffer tex_coords_ubo;
 
-	void init(size_t num_textures, size_t num_uvs)
+	struct Quad
+	{
+		QuadTexInfo* tex_info;
+		glm::mat3* transform;
+	};
+
+	void init(size_t num_textures, size_t num_uvs, size_t num_quads)
 	{
 		assert(num_uvs <= 500);
 		textures.resize(num_textures);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
 		glBufferStorage(GL_SHADER_STORAGE_BUFFER, num_textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		quad_textures.resize(num_quads);
+		quad_textures[0].tex_slot = 0;
+		quad_textures[0].tex_coord_slot = 0;
+		quad_textures[1].tex_slot = 0;
+		quad_textures[1].tex_coord_slot = 0;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_tex_ssbo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, quad_textures.size() * sizeof(QuadTexInfo), quad_textures.data(), GL_STATIC_DRAW);
+
+		quad_transforms.resize(num_quads);
+		quad_transforms[1].v2[0] = 300;
+		quad_transforms[1].v2[1] = 200;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_transform_ssbo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, quad_transforms.size() * sizeof(TransformMat3), quad_transforms.data(), GL_DYNAMIC_DRAW);
+
 		glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
 		glBufferStorage(GL_UNIFORM_BUFFER, num_uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	}
@@ -61,70 +109,39 @@ struct SpriteCPUData
 		glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &texture_coords);
 	}
 
-	const unsigned short indices[6] = {
+	const GLushort indices[12] = {
 		0, 1, 2,
-		2, 3, 0
+		2, 3, 0,
+		4, 5, 6,
+		6, 7, 4
 	};
 
 	struct
 	{
 		GLenum mode = GL_TRIANGLES;
-		GLuint indices = 6;
+		GLuint indices = 12;
 		GLenum type = GL_UNSIGNED_SHORT;
 		GLuint offset = 0;
 	} draw_spec;
 };
 
-typedef oly::rendering::Batch<SpriteCPUData> SpriteBatch;
+typedef oly::rendering::Batch<SpriteListCPUData> SpriteListBatch;
 
 template<>
-void oly::rendering::draw(const SpriteBatch& batch)
+void oly::rendering::draw(const SpriteListBatch& batch)
 {
 	const auto& data = batch.cpu_data;
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, data.tex_data_ssbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, data.quad_tex_ssbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, data.quad_transform_ssbo);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, data.tex_coords_ubo);
-	glDrawElements(data.draw_spec.mode, data.draw_spec.indices, data.draw_spec.type, (void*)data.draw_spec.offset);
+	glDrawElements(data.draw_spec.mode, data.draw_spec.indices, data.draw_spec.type, (void*)(data.draw_spec.offset*sizeof(GLushort)));
 }
 
 template<>
-void oly::rendering::attrib_layout(const SpriteBatch& batch)
+void oly::rendering::attrib_layout(const SpriteListBatch& batch)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
-	glVertexAttribPointer(0, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(GLubyte), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
-	glVertexAttribPointer(1, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(GLubyte), (void*)0);
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)0);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)sizeof(glm::vec3));
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(2 * sizeof(glm::vec3)));
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-	glEnableVertexAttribArray(4);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-static void init_buffers(const SpriteBatch& batch)
-{
-	const auto& data = batch.cpu_data;
-
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(0));
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GLubyte), &data.vertex_tex_slots, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(1));
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GLubyte), &data.vertex_tex_coord_slots, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, batch.get_vbo(2));
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::mat3), glm::value_ptr(data.vertex_transforms[0]), GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.get_ebo());
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned short), data.indices, GL_STATIC_DRAW);
 }
 
 int main()
@@ -155,30 +172,36 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	SpriteBatch batch;
-	batch.shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
-	batch.gen_vao_descriptor(3, true);
-	batch.cpu_data.init(10, 3);
-	batch.cpu_data.set_texture(texture, texture_dim, 0);
-	batch.cpu_data.set_uvs({0,0}, {1,0}, {1,1}, {0,1}, 0);
-	init_buffers(batch);
+	SpriteListBatch* batch = new SpriteListBatch();
+	batch->shader = oly::rendering::load_shader("../../../src/shaders/sprite_2d.vert", "../../../src/shaders/sprite_2d.frag");
+	//batch->gen_vao_descriptor(3, true);
+	batch->gen_vao_descriptor(0, true);
+	batch->cpu_data.init(10, 3, 2);
+	batch->cpu_data.set_texture(texture, texture_dim, 0);
+	batch->cpu_data.set_uvs({0,0}, {1,0}, {1,1}, {0,1}, 0);
+	//init_buffers(*batch);
+
+	glBindVertexArray(batch->get_vao());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->get_ebo());
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->cpu_data.draw_spec.indices * sizeof(GLushort), batch->cpu_data.indices, GL_STATIC_DRAW);
 
 	glm::mat3 proj = glm::ortho<float>(-720, 720, -540, 540);
-	GLuint proj_location = glGetUniformLocation(batch.get_shader(), "uProjection");
-	glUseProgram(batch.get_shader());
+	GLuint proj_location = glGetUniformLocation(batch->get_shader(), "uProjection");
+	glUseProgram(batch->get_shader());
 	glUniformMatrix3fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj));
-
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 
-		glUseProgram(batch.get_shader());
-		glBindVertexArray(batch.get_vao());
-		oly::rendering::draw(batch);
+		glUseProgram(batch->get_shader());
+		glBindVertexArray(batch->get_vao());
+		oly::rendering::draw(*batch);
 
 		glfwSwapBuffers(window);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
+
+	delete batch;
 
 	glfwTerminate();
 	return 0;

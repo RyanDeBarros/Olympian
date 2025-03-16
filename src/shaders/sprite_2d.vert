@@ -1,9 +1,5 @@
 #version 450 core
 
-layout(location = 0) in uint iTexSlot;
-layout(location = 1) in uint iTexCoordSlot;
-layout(location = 2) in mat3 iTransform;
-
 uniform mat3 uProjection;
 
 struct TexData
@@ -11,8 +7,20 @@ struct TexData
 	uvec2 handle;
 	vec2 dimensions;
 };
-layout(std430, binding = 0) buffer TextureData {
+layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
+};
+
+struct QuadTexInfo
+{
+	uint texSlot;
+	uint texCoordSlot;
+};
+layout(std430, binding = 1) readonly buffer QuadTextures {
+	QuadTexInfo uQuadTextures[];
+};
+layout(std430, binding = 2) readonly buffer Transforms {
+	mat3 uTransforms[];
 };
 
 struct TexUVRect
@@ -27,7 +35,7 @@ out vec2 tTexCoord;
 flat out uint tTexSlot;
 
 vec2 position(vec2 dimensions) {
-	switch (gl_VertexID) {
+	switch (gl_VertexID % 4) {
 	case 0:
 		return vec2(-dimensions[0] / 2, -dimensions[1] / 2);
 	case 1:
@@ -40,7 +48,7 @@ vec2 position(vec2 dimensions) {
 }
 
 vec2 coords(TexUVRect rect) {
-	switch (gl_VertexID) {
+	switch (gl_VertexID % 4) {
 	case 0:
 		return rect.uvs[0].xy;
 	case 1:
@@ -53,7 +61,8 @@ vec2 coords(TexUVRect rect) {
 }
 
 void main() {
-	gl_Position.xyz = uProjection * iTransform * vec3(position(uTexData[iTexSlot].dimensions), 1.0);
-	tTexCoord = coords(uTexCoords[4 * iTexCoordSlot]);
-	tTexSlot = iTexSlot;
+	QuadTexInfo quad_texture = uQuadTextures[gl_VertexID / 4];
+	gl_Position.xyz = uProjection * uTransforms[gl_VertexID / 4] * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0);
+	tTexCoord = coords(uTexCoords[quad_texture.texCoordSlot]);
+	tTexSlot = quad_texture.texSlot;
 }

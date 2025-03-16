@@ -11,7 +11,7 @@ struct TexData
 	uvec2 handle;
 	vec2 dimensions;
 };
-layout(std430, binding = 0) buffer TextureData {
+layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
