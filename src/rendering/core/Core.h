@@ -3,6 +3,7 @@
 #include "rendering/core/Shaders.h"
 #include "rendering/core/Buffers.h"
 #include "rendering/core/VertexArrays.h"
+#include "rendering/core/Textures.h"
 
 namespace oly
 {
@@ -36,6 +37,10 @@ namespace oly
 
 			std::shared_ptr<VAODescriptor> vao_descriptor;
 			std::shared_ptr<Shader> shader;
+
+			Batch() = default;
+			template<typename... CPUDataArgs>
+			Batch(CPUDataArgs&&... args) : cpu_data(std::forward<CPUDataArgs>(args)...) {}
 
 			GLuint get_vao() const { return vao_descriptor->vao; }
 			GLuint get_vbo(GLsizei i = 0) const { return vao_descriptor->get_vbo(i); }

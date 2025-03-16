@@ -26,3 +26,8 @@ oly::rendering::VertexArray& oly::rendering::VertexArray::operator=(VertexArray&
 	}
 	return *this;
 }
+
+void oly::rendering::VAODescriptor::gen_ebo()
+{
+	ebo = std::make_shared<GLBuffer>(); glBindVertexArray(vao); glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ebo);
+}

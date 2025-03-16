@@ -29,7 +29,7 @@ namespace oly
 			GLBufferRes ebo = nullptr;
 
 			void gen_vbos(GLsizei n) { vbos = oly::rendering::gen_bulk_buffers(n); }
-			void gen_ebo() { ebo = std::make_shared<GLBuffer>(); }
+			void gen_ebo();
 			GLuint get_vbo(GLsizei i = 0) const { return *vbos[i]; }
 			GLuint get_ebo() const { return *ebo; }
 		};
