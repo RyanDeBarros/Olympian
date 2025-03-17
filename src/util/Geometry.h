@@ -5,10 +5,11 @@
 
 #include <variant>
 #include <vector>
+#include <unordered_set>
 
 namespace oly
 {
-	namespace math
+	namespace geom
 	{
 		namespace vectors
 		{
@@ -46,30 +47,7 @@ namespace oly
 			return { { 1.0f, shearing.y, 0.0f }, { shearing.x, 1.0f, 0.0f }, vectors::H3 };
 		}
 
-		struct FlatTransform2D
-		{
-			glm::vec2 position = { 0.0f, 0.0f };
-			glm::vec2 scale = { 1.0f, 1.0f };
-
-			constexpr glm::mat3 matrix() const
-			{
-				return translation_matrix_2d(position) * scale_matrix_2d(scale);
-			}
-		};
-
 		struct Transform2D
-		{
-			glm::vec2 position = { 0.0f, 0.0f };
-			float rotation = 0.0f;
-			glm::vec2 scale = { 1.0f, 1.0f };
-
-			constexpr glm::mat3 matrix() const
-			{
-				return translation_matrix_2d(position) * rotation_matrix_2d(rotation) * scale_matrix_2d(scale);
-			}
-		};
-
-		struct AffineTransform2D
 		{
 			glm::vec2 position = { 0.0f, 0.0f };
 			float rotation = 0.0f;
@@ -82,126 +60,64 @@ namespace oly
 			}
 		};
 
-		typedef std::variant<FlatTransform2D, Transform2D, AffineTransform2D> Mat3Variant;
-		struct Mat3 : public Mat3Variant
-		{	
-			enum class Type
-			{
-				FLAT,
-				STANDARD,
-				AFFINE
-			};
-
-			struct unsupported_operation : public std::bad_variant_access {};
-
-			constexpr Mat3(Type type = Type::STANDARD)
-			{
-				if (type == Type::STANDARD)
-					*this = Transform2D();
-				else if (type == Type::FLAT)
-					*this = FlatTransform2D();
-				else
-					*this = AffineTransform2D();
-			}
-			constexpr Mat3(const FlatTransform2D& t) : Mat3Variant(t) {}
-			constexpr Mat3(const Transform2D& t) : Mat3Variant(t) {}
-			constexpr Mat3(const AffineTransform2D& t) : Mat3Variant(t) {}
-
-			constexpr glm::mat3 matrix() const
-			{
-				return std::visit([](auto&& transform) -> glm::mat3 { return transform.matrix(); }, *this);
-			}
-
-			constexpr glm::vec2 position() const
-			{
-				return std::visit([](auto&& transform) -> glm::vec2 { return transform.position; }, *this);
-			}
-
-			constexpr glm::vec2& position()
-			{
-				return std::visit([](auto&& transform) -> glm::vec2& { return transform.position; }, *this);
-			}
-
-			constexpr float rotation() const
-			{
-				return std::visit([](auto&& transform) -> float {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, Transform2D> || std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform2D>)
-						return transform.rotation;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-
-			constexpr float& rotation()
-			{
-				return std::visit([](auto&& transform) -> float& {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, Transform2D> || std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform2D>)
-						return transform.rotation;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-
-			constexpr glm::vec2 scale() const
-			{
-				return std::visit([](auto&& transform) -> glm::vec2 { return transform.scale; }, *this);
-			}
-
-			constexpr glm::vec2& scale()
-			{
-				return std::visit([](auto&& transform) -> glm::vec2& { return transform.scale; }, *this);
-			}
-
-			constexpr glm::vec2 shearing() const
-			{
-				return std::visit([](auto&& transform) -> glm::vec2 {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform2D>)
-						return transform.shearing;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-
-			constexpr glm::vec2& shearing()
-			{
-				return std::visit([](auto&& transform) -> glm::vec2& {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform2D>)
-						return transform.shearing;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-		};
-
 		struct Transformer2D
 		{
-			Mat3 local;
-			Transformer2D* parent = nullptr;
-			std::vector<Transformer2D*> children;
+			Transform2D local;
 
 		private:
+			Transformer2D* parent = nullptr;
+			std::unordered_set<Transformer2D*> children;
+			
+		protected:
 			mutable glm::mat3 _global = glm::mat3(1.0f);
+			
+		private:
 			mutable bool _dirty = true;
 			mutable bool _dirty_flush = true;
 
 		public:
-			Transformer2D(Mat3::Type type = Mat3::Type::STANDARD) : local(type) {}
-			Transformer2D(Mat3 local) : local(local) { post_set(); }
+			Transformer2D(Transform2D local = {}) : local(local) {}
 			Transformer2D(const Transformer2D&) = delete; // TODO implement
 			Transformer2D(Transformer2D&&) noexcept;
-			~Transformer2D();
+			virtual ~Transformer2D();
 			Transformer2D& operator=(Transformer2D&&) noexcept = delete; // TODO implement
 
-			glm::mat3 global() const { return _global; }
+			virtual glm::mat3 global() const { return _global; }
 			void post_set() const;
 			void pre_get() const;
 			bool flush() const;
+
+			const Transformer2D* top_level_parent() const;
+			Transformer2D* top_level_parent();
+			void attach_parent(Transformer2D* parent);
+			void insert_chain(Transformer2D* parent_chain);
+			void unparent();
+			void clear_children();
+			void pop_from_chain();
 		};
 
-		extern void attach(Transformer2D* parent, Transformer2D* child);
-		extern void insert(Transformer2D* parent, Transformer2D* child, size_t pos);
-		extern void clear_children(Transformer2D* parent);
-		extern void unparent(Transformer2D* child);
+		constexpr glm::mat3 pivot_matrix_2d(glm::vec2 pivot, glm::vec2 size)
+		{
+			return translation_matrix_2d(size * (pivot - glm::vec2(0.5f)));
+		}
+
+		// TODO create subclass of Transformer2D that uses pivot matrices.
+		struct PivotTransformer2D : public Transformer2D
+		{
+			glm::vec2 pivot = { 0.5f, 0.5f };
+			glm::vec2 size = { 0.0f, 0.0f };
+
+			PivotTransformer2D(Transform2D local = {}, glm::vec2 pivot = { 0.5f, 0.5f }, glm::vec2 size = {}) : Transformer2D(local), pivot(pivot), size(size) {}
+			PivotTransformer2D(const PivotTransformer2D&) = delete; // TODO implement
+			PivotTransformer2D(PivotTransformer2D&& other) noexcept : Transformer2D(std::move(other)), pivot(other.pivot), size(other.size) {}
+			PivotTransformer2D& operator=(PivotTransformer2D&&) noexcept = delete; // TODO implement
+
+			virtual glm::mat3 global() const override
+			{
+				glm::mat3 P = pivot_matrix_2d(pivot, size);
+				return P * _global * glm::inverse(P);
+			}
+		};
 
 		constexpr glm::mat4 translation_matrix_3d(glm::vec3 position)
 		{
@@ -239,18 +155,6 @@ namespace oly
 		struct Transform3D
 		{
 			glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-			glm::quat rotation = Rotator{};
-			glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
-
-			glm::mat4 matrix() const
-			{
-				return translation_matrix_3d(position) * (glm::mat4)rotation * scale_matrix_3d(scale);
-			}
-		};
-
-		struct AffineTransform3D
-		{
-			glm::vec3 position = { 0.0f, 0.0f, 0.0f };
 			glm::quat rotation = glm::quat(0.0f, { 0.0f, 0.0f, 0.0f });
 			glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
 			glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
@@ -261,97 +165,20 @@ namespace oly
 			}
 		};
 
-		typedef std::variant<Transform3D, AffineTransform3D> Mat4Variant;
-		struct Mat4 : public Mat4Variant
-		{
-			enum class Type
-			{
-				STANDARD,
-				AFFINE
-			};
-
-			struct unsupported_operation : public std::bad_variant_access {};
-
-			constexpr Mat4(Type type = Type::STANDARD)
-			{
-				if (type == Type::STANDARD)
-					*this = Transform3D();
-				else
-					*this = AffineTransform3D();
-			}
-			constexpr Mat4(const Transform3D& t) : Mat4Variant(t) {}
-			constexpr Mat4(const AffineTransform3D& t) : Mat4Variant(t) {}
-
-			constexpr glm::mat4 matrix() const
-			{
-				return std::visit([](auto&& transform) -> glm::mat4 { return transform.matrix(); }, *this);
-			}
-
-			constexpr glm::vec3 position() const
-			{
-				return std::visit([](auto&& transform) -> glm::vec3 { return transform.position; }, *this);
-			}
-
-			constexpr glm::vec3& position()
-			{
-				return std::visit([](auto&& transform) -> glm::vec3& { return transform.position; }, *this);
-			}
-
-			constexpr glm::quat rotation() const
-			{
-				return std::visit([](auto&& transform) -> glm::quat { return transform.rotation; }, *this);
-			}
-
-			constexpr glm::quat& rotation()
-			{
-				return std::visit([](auto&& transform) -> glm::quat& { return transform.rotation; }, *this);
-			}
-
-			constexpr glm::vec3 scale() const
-			{
-				return std::visit([](auto&& transform) -> glm::vec3 { return transform.scale; }, *this);
-			}
-
-			constexpr glm::vec3& scale()
-			{
-				return std::visit([](auto&& transform) -> glm::vec3& { return transform.scale; }, *this);
-			}
-
-			constexpr glm::mat3x2 shearing() const
-			{
-				return std::visit([](auto&& transform) -> glm::mat3x2 {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform3D>)
-						return transform.shearing;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-
-			constexpr glm::mat3x2& shearing()
-			{
-				return std::visit([](auto&& transform) -> glm::mat3x2& {
-					if constexpr (std::is_same_v<std::decay_t<decltype(transform)>, AffineTransform3D>)
-						return transform.shearing;
-					else
-						throw unsupported_operation();
-					}, *this);
-			}
-		};
-
 		struct Transformer3D
 		{
-			Mat4 local;
-			Transformer3D* parent = nullptr;
-			std::vector<Transformer3D*> children;
+			Transform3D local;
 
 		private:
+			Transformer3D* parent = nullptr;
+			std::unordered_set<Transformer3D*> children;
+			
 			mutable glm::mat4 _global = glm::mat4(1.0f);
 			mutable bool _dirty = true;
 			mutable bool _dirty_flush = true;
 
 		public:
-			Transformer3D(Mat4::Type type) : local(type) {}
-			Transformer3D(Mat4 local) : local(local) { post_set(); }
+			Transformer3D(const Transform3D& local = {}) : local(local) {}
 			Transformer3D(const Transformer3D&) = delete; // TODO implement
 			Transformer3D(Transformer3D&&) noexcept = delete; // TODO implement
 			~Transformer3D();
@@ -360,11 +187,14 @@ namespace oly
 			void post_set() const;
 			void pre_get() const;
 			bool flush() const;
-		};
 
-		extern void attach(Transformer3D* parent, Transformer3D* child);
-		extern void insert(Transformer3D* parent, Transformer3D* child, size_t pos);
-		extern void clear_children(Transformer3D* parent);
-		extern void unparent(Transformer3D* child);
+			const Transformer3D* top_level_parent() const;
+			Transformer3D* top_level_parent();
+			void attach_parent(Transformer3D* parent);
+			void insert_chain(Transformer3D* parent_chain);
+			void unparent();
+			void clear_children();
+			void pop_from_chain();
+		};
 	}
 }

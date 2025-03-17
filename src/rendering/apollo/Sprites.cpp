@@ -218,8 +218,8 @@ void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, s
 	dirty[flag].clear();
 }
 
-oly::apollo::Sprite::Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos, math::Mat3::Type type)
-	: sprite_list(&sprite_list), quad(&sprite_list.get_quad(pos)), transformer(type)
+oly::apollo::Sprite::Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos)
+	: sprite_list(&sprite_list), quad(&sprite_list.get_quad(pos))
 {
 	sprite_list.sprites.insert(this);
 }

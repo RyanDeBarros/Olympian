@@ -33,7 +33,7 @@ void run()
 	auto tux_texture = oly::rendering::load_static_texture_2d("../../../res/textures/tux.png", tux_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
+
 	oly::apollo::SpriteList sprite_list(1000, 5, 2, { -720, 720, -540, 540 });
 	enum
 	{
@@ -47,40 +47,47 @@ void run()
 	sprite_list.set_uvs({ 0,0 }, { 1,0 }, { 1,1 }, { 0,1 }, 0);
 	sprite_list.set_uvs({ 0.5f,0 }, { 1,0 }, { 1,1 }, { 0.5f,1 }, 1);
 	sprite_list.set_draw_spec(0, 100);
-	
+
 	oly::apollo::Sprite sprite0(sprite_list, 0);
 	sprite0.quad->tex_info().tex_slot = TEX_EINSTEIN;
 	sprite0.quad->send_tex_info();
-	sprite0.local().position().x = 300;
-	sprite0.local().position().y = 300;
+	sprite0.local().position.x = 300;
+	sprite0.local().position.y = 300;
 	sprite0.post_set();
-	
+
 	oly::apollo::Sprite sprite1(sprite_list, 1);
 	sprite1.quad->tex_info().tex_slot = TEX_EINSTEIN;
 	sprite1.quad->send_tex_info();
-	
-	oly::apollo::Sprite sprite2(sprite_list, 2, oly::math::Mat3::Type::AFFINE);
+
+	oly::apollo::Sprite sprite2(sprite_list, 2);
 	sprite2.quad->tex_info().tex_slot = TEX_TUX;
 	sprite2.quad->send_tex_info();
-	sprite2.local().position().x = -100;
-	sprite2.local().position().y = -100;
-	sprite2.local().scale() = glm::vec2(0.2f);
+	sprite2.local().position.x = -100;
+	sprite2.local().position.y = -100;
+	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
 
+	oly::geom::PivotTransformer2D flag_tesselation_parent;
+	flag_tesselation_parent.pivot = { 0.0f, 0.0f };
+	flag_tesselation_parent.size = { 400, 320 };
+	int flag_rows = 8;
+	int flag_cols = 8;
+	flag_tesselation_parent.post_set();
 	std::vector<oly::apollo::Sprite> flag_tesselation;
 	flag_tesselation.reserve(64);
-	for (int i = 0; i < 64; ++i)
+	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.emplace_back(sprite_list, 3 + i, oly::math::Mat3::Type::FLAT);
+		flag_tesselation.emplace_back(sprite_list, 3 + i);
 		flag_tesselation[i].quad->tex_info().tex_slot = TEX_FLAG;
 		flag_tesselation[i].quad->send_tex_info();
-		flag_tesselation[i].local().scale() = glm::vec2(2);
-		flag_tesselation[i].local().position().x = -160.0f + float(i % 8) * 40.0f;
-		flag_tesselation[i].local().position().y = 160.0f - float(i / 8) * 40.0f;
+		flag_tesselation[i].local().scale = glm::vec2(2);
+		flag_tesselation[i].local().position.x = -flag_tesselation_parent.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_parent.size.x / flag_cols;
+		flag_tesselation[i].local().position.y = flag_tesselation_parent.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_parent.size.y / flag_rows;
 		flag_tesselation[i].post_set();
+		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 	
-	sprite_list.move_quad_order(sprite2.quad->index_pos(), 0);
+	sprite_list.move_quad_order(sprite2.quad->index_pos(), 0); // TODO make into method on quad - set_z_index(QuadPos)
 	oly::apollo::SpriteList::QuadPos z = 0;
 	bool inc_z = true;
 
@@ -89,25 +96,25 @@ void run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 	
-		sprite1.local().rotation() = (float)glfwGetTime();
+		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();
 		if (inc_z)
 		{
-			if (z == 100)
+			if (z == 60)
 				inc_z = false;
 			else
 				++z;
 		}
 		else
 		{
-			if (z == 0)
+			if (z == 3)
 				inc_z = true;
 			else
 				--z;
 		}
 		sprite_list.move_quad_order(sprite1.quad->index_pos(), z);
 
-		sprite2.local().shearing().x += 0.008f;
+		sprite2.local().shearing.x += 0.008f;
 		sprite2.post_set();
 
 		static GLushort tex_index = TEX_EINSTEIN;
@@ -141,6 +148,11 @@ void run()
 				sprite0.quad->send_tex_info();
 			}
 		}
+
+		flag_tesselation_parent.pivot.x += 0.001f;
+		flag_tesselation_parent.pivot.y += 0.001f;
+		flag_tesselation_parent.local.rotation -= 0.01f;
+		flag_tesselation_parent.post_set();
 
 		sprite_list.process();
 		sprite_list.draw();

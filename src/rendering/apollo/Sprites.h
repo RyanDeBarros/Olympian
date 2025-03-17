@@ -142,16 +142,16 @@ namespace oly
 
 		public:
 			SpriteList::Quad* quad;
-			math::Transformer2D transformer;
+			geom::Transformer2D transformer;
 			
-			Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos, math::Mat3::Type type = math::Mat3::Type::STANDARD);
+			Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos);
 			Sprite(const Sprite&) = delete; // TODO implement
 			Sprite(Sprite&&) noexcept;
 			Sprite& operator=(Sprite&&) noexcept = delete; // TODO implement
 			~Sprite();
 
-			const math::Mat3& local() const { return transformer.local; }
-			math::Mat3& local() { return transformer.local; }
+			const geom::Transform2D& local() const { return transformer.local; }
+			geom::Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 
