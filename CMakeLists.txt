@@ -32,7 +32,7 @@ link_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Core.h"  "src/rendering/core/Textures.h" "src/rendering/core/Textures.cpp" "src/util/STB.cpp" "src/rendering/core/Window.h" "src/rendering/core/Window.cpp" "src/Olympian.h" "src/Olympian.cpp" "src/rendering/apollo/Sprites.h" "src/rendering/apollo/Sprites.cpp" "src/rendering/apollo/Resources.h" "src/rendering/apollo/Resources.cpp" "src/util/MathDS.h")
+add_executable (Olympian "src/Tester.cpp"  "src/rendering/core/Shaders.h" "src/rendering/core/Shaders.cpp" "src/util/IO.h" "src/util/IO.cpp" "src/util/Errors.h"  "src/rendering/core/Buffers.h" "src/rendering/core/Buffers.cpp" "src/rendering/core/VertexArrays.h" "src/rendering/core/VertexArrays.cpp"  "src/rendering/core/Core.h"  "src/rendering/core/Textures.h" "src/rendering/core/Textures.cpp" "src/util/STB.cpp" "src/rendering/core/Window.h" "src/rendering/core/Window.cpp" "src/Olympian.h" "src/Olympian.cpp" "src/rendering/apollo/Sprites.h" "src/rendering/apollo/Sprites.cpp" "src/rendering/apollo/Resources.h" "src/rendering/apollo/Resources.cpp" "src/util/MathDS.h" "src/util/Geometry.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)

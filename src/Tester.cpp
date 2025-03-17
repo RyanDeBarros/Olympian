@@ -2,6 +2,7 @@
 
 #include "rendering/apollo/Sprites.h"
 #include "util/Errors.h"
+#include "util/Geometry.h"
 
 #include <iostream>
 
@@ -49,20 +50,24 @@ void run()
 	
 	auto& quad0 = sprite_list.get_quad(0);
 	quad0.tex_info().tex_slot = TEX_EINSTEIN;
-	quad0.transform()[2][0] = 300;
-	quad0.transform()[2][1] = 200;
+	oly::math::Mat3 mat0;
+	mat0.position().x = 300;
+	mat0.position().y = 300;
+	quad0.transform() = mat0.matrix();
 	quad0.send_data();
 	
 	auto& quad1 = sprite_list.get_quad(1);
+	oly::math::Mat3 mat1;
 	quad1.tex_info().tex_slot = TEX_EINSTEIN;
 	quad1.send_tex_info();
 	
 	auto& quad2 = sprite_list.get_quad(2);
 	quad2.tex_info().tex_slot = TEX_TUX;
-	quad2.transform()[2][0] = -100;
-	quad2.transform()[2][1] = -100;
-	quad2.transform()[0][0] = 0.2f;
-	quad2.transform()[1][1] = 0.2f;
+	oly::math::Mat3 mat2(oly::math::TransformType::AFFINE);
+	mat2.position().x = -100;
+	mat2.position().y = -100;
+	mat2.scale() = glm::vec2(0.2f);
+	quad2.transform() = mat2.matrix();
 	quad2.send_data();
 
 	std::vector<oly::apollo::SpriteList::Quad*> flag_tesselation;
@@ -71,10 +76,11 @@ void run()
 	{
 		flag_tesselation.push_back(&sprite_list.get_quad(3 + i));
 		flag_tesselation[i]->tex_info().tex_slot = TEX_FLAG;
-		flag_tesselation[i]->transform()[0][0] = 2;
-		flag_tesselation[i]->transform()[1][1] = 2;
-		flag_tesselation[i]->transform()[2][0] = -160.0f + float(i % 8) * 40.0f;
-		flag_tesselation[i]->transform()[2][1] = 160.0f - float(i / 8) * 40.0f;
+		oly::math::Mat3 mat(oly::math::TransformType::FLAT);
+		mat.scale() = glm::vec2(2);
+		mat.position().x = -160.0f + float(i % 8) * 40.0f;
+		mat.position().y = 160.0f - float(i / 8) * 40.0f;
+		flag_tesselation[i]->transform() = mat.matrix();
 		flag_tesselation[i]->send_data();
 	}
 	
@@ -86,13 +92,12 @@ void run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 
-		quad2.transform()[1][0] += 0.001f;
+		mat2.shearing().x += 0.005f;
+		quad2.transform() = mat2.matrix();
 		quad2.send_transform();
 
-		quad1.transform()[0][0] = (float)glm::cos(glfwGetTime());
-		quad1.transform()[0][1] = (float)glm::sin(glfwGetTime());
-		quad1.transform()[1][0] = (float)-glm::sin(glfwGetTime());
-		quad1.transform()[1][1] = (float)glm::cos(glfwGetTime());
+		mat1.rotation() = (float)glfwGetTime();
+		quad1.transform() = mat1.matrix();
 		quad1.send_transform();
 
 		static GLushort tex_index = TEX_EINSTEIN;
