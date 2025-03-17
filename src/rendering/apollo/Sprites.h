@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../core/Core.h"
+#include "Transforms.h"
 #include "util/MathDS.h"
-#include "util/Geometry.h"
 
 #include <set>
 #include <unordered_set>
+#include <algorithm>
 
 namespace oly
 {
@@ -94,6 +95,8 @@ namespace oly
 				const SpriteList& sprite_list() const { return *_sprite_list; }
 				SpriteList& sprite_list() { return *_sprite_list; }
 				QuadPos index_pos() const { return _sprite_list->z_order.range_of(_ssbo_pos); }
+				void set_z_index(QuadPos z) { _sprite_list->move_quad_order(index_pos(), z); }
+				void move_z_index(int by) { _sprite_list->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_sprite_list->quads.size() - 1)); }
 
 				void send_tex_info() const;
 				void send_transform() const;
@@ -129,6 +132,8 @@ namespace oly
 			BufferSendType send_types[3] = { BufferSendType::SUBDATA, BufferSendType::SUBDATA, BufferSendType::SUBDATA };
 
 			std::unordered_set<Sprite*> sprites;
+			template<std::derived_from<Transformer2D> Transformer = Transformer2D>
+			Sprite create_sprite(QuadPos pos);
 			void process();
 
 		private:
@@ -139,24 +144,34 @@ namespace oly
 		{
 			friend SpriteList;
 			SpriteList* sprite_list;
-
-		public:
-			SpriteList::Quad* quad;
-			geom::Transformer2D transformer;
+			SpriteList::Quad* _quad;
+			std::unique_ptr<Transformer2D> _transformer;
 			
-			Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos);
-			Sprite(const Sprite&) = delete; // TODO implement
+		public:
+			Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos);
+			Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer);
+			Sprite(const Sprite&) = delete;
 			Sprite(Sprite&&) noexcept;
-			Sprite& operator=(Sprite&&) noexcept = delete; // TODO implement
 			~Sprite();
+			Sprite& operator=(Sprite&&) noexcept;
 
-			const geom::Transform2D& local() const { return transformer.local; }
-			geom::Transform2D& local() { return transformer.local; }
+			const SpriteList::Quad& quad() const { return *_quad; }
+			SpriteList::Quad& quad() { return *_quad; }
+			const Transformer2D& transformer() const { return *_transformer; }
+			Transformer2D& transformer() { return *_transformer; }
+			const Transform2D& local() const { return _transformer->local; }
+			Transform2D& local() { return _transformer->local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 
 		private:
 			void flush() const;
 		};
+
+		template<std::derived_from<Transformer2D> Transformer>
+		inline Sprite SpriteList::create_sprite(QuadPos pos)
+		{
+			return Sprite(this, pos, std::make_unique<Transformer>());
+		}
 	}
 }

@@ -1,19 +1,36 @@
-#include "Geometry.h"
+#include "Transforms.h"
 
-oly::geom::Transformer2D::Transformer2D(Transformer2D&& other) noexcept
-	: local(std::move(other.local)), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+oly::Transformer2D::Transformer2D(Transformer2D&& other) noexcept
+	: local(other.local), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
 {
 	other.unparent();
 	for (Transformer2D* child : children)
 		child->parent = this;
 }
 
-oly::geom::Transformer2D::~Transformer2D()
+oly::Transformer2D::~Transformer2D()
 {
+	unparent();
 	clear_children();
 }
 
-void oly::geom::Transformer2D::post_set() const
+oly::Transformer2D& oly::Transformer2D::operator=(Transformer2D&& other) noexcept
+{
+	if (this != &other)
+	{
+		unparent();
+		clear_children();
+		local = other.local;
+		parent = other.parent;
+		children = std::move(other.children);
+		_global = other._global;
+		_dirty = other._dirty;
+		_dirty_flush = other._dirty_flush;
+	}
+	return *this;
+}
+
+void oly::Transformer2D::post_set() const
 {
 	if (!_dirty)
 	{
@@ -24,7 +41,7 @@ void oly::geom::Transformer2D::post_set() const
 	}
 }
 
-void oly::geom::Transformer2D::pre_get() const
+void oly::Transformer2D::pre_get() const
 {
 	if (_dirty)
 	{
@@ -39,14 +56,14 @@ void oly::geom::Transformer2D::pre_get() const
 	}
 }
 
-bool oly::geom::Transformer2D::flush() const
+bool oly::Transformer2D::flush() const
 {
 	bool was_dirty = _dirty_flush;
 	_dirty_flush = false;
 	return was_dirty;
 }
 
-const oly::geom::Transformer2D* oly::geom::Transformer2D::top_level_parent() const
+const oly::Transformer2D* oly::Transformer2D::top_level_parent() const
 {
 	const Transformer2D* top = this;
 	while (top->parent)
@@ -54,7 +71,7 @@ const oly::geom::Transformer2D* oly::geom::Transformer2D::top_level_parent() con
 	return top;
 }
 
-oly::geom::Transformer2D* oly::geom::Transformer2D::top_level_parent()
+oly::Transformer2D* oly::Transformer2D::top_level_parent()
 {
 	Transformer2D* top = this;
 	while (top->parent)
@@ -62,7 +79,7 @@ oly::geom::Transformer2D* oly::geom::Transformer2D::top_level_parent()
 	return top;
 }
 
-void oly::geom::Transformer2D::attach_parent(Transformer2D* new_parent)
+void oly::Transformer2D::attach_parent(Transformer2D* new_parent)
 {
 	if (!new_parent)
 		unparent();
@@ -76,7 +93,7 @@ void oly::geom::Transformer2D::attach_parent(Transformer2D* new_parent)
 	}
 }
 
-void oly::geom::Transformer2D::insert_chain(Transformer2D* parent_chain)
+void oly::Transformer2D::insert_chain(Transformer2D* parent_chain)
 {
 	if (!parent_chain)
 		return;
@@ -92,7 +109,7 @@ void oly::geom::Transformer2D::insert_chain(Transformer2D* parent_chain)
 	post_set();
 }
 
-void oly::geom::Transformer2D::unparent()
+void oly::Transformer2D::unparent()
 {
 	if (parent)
 		parent->children.erase(this);
@@ -100,7 +117,7 @@ void oly::geom::Transformer2D::unparent()
 	post_set();
 }
 
-void oly::geom::Transformer2D::clear_children()
+void oly::Transformer2D::clear_children()
 {
 	for (Transformer2D* child : children)
 	{
@@ -110,7 +127,7 @@ void oly::geom::Transformer2D::clear_children()
 	children.clear();
 }
 
-void oly::geom::Transformer2D::pop_from_chain()
+void oly::Transformer2D::pop_from_chain()
 {
 	if (parent)
 	{
@@ -125,12 +142,48 @@ void oly::geom::Transformer2D::pop_from_chain()
 	children.clear();
 }
 
-oly::geom::Transformer3D::~Transformer3D()
+oly::PivotTransformer2D& oly::PivotTransformer2D::operator=(PivotTransformer2D&& other) noexcept
 {
+	if (this != &other)
+	{
+		Transformer2D::operator=(std::move(other));
+		pivot = other.pivot;
+		size = other.size;
+	}
+	return *this;
+}
+
+oly::Transformer3D::Transformer3D(Transformer3D&& other) noexcept
+	: local(other.local), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+{
+	other.unparent();
+	for (Transformer3D* child : children)
+		child->parent = this;
+}
+
+oly::Transformer3D::~Transformer3D()
+{
+	unparent();
 	clear_children();
 }
 
-void oly::geom::Transformer3D::post_set() const
+oly::Transformer3D& oly::Transformer3D::operator=(Transformer3D&& other) noexcept
+{
+	if (this != &other)
+	{
+		unparent();
+		clear_children();
+		local = other.local;
+		parent = other.parent;
+		children = std::move(other.children);
+		_global = other._global;
+		_dirty = other._dirty;
+		_dirty_flush = other._dirty_flush;
+	}
+	return *this;
+}
+
+void oly::Transformer3D::post_set() const
 {
 	if (!_dirty)
 	{
@@ -141,7 +194,7 @@ void oly::geom::Transformer3D::post_set() const
 	}
 }
 
-void oly::geom::Transformer3D::pre_get() const
+void oly::Transformer3D::pre_get() const
 {
 	if (_dirty)
 	{
@@ -156,14 +209,14 @@ void oly::geom::Transformer3D::pre_get() const
 	}
 }
 
-bool oly::geom::Transformer3D::flush() const
+bool oly::Transformer3D::flush() const
 {
 	bool was_dirty = _dirty_flush;
 	_dirty_flush = false;
 	return was_dirty;
 }
 
-const oly::geom::Transformer3D* oly::geom::Transformer3D::top_level_parent() const
+const oly::Transformer3D* oly::Transformer3D::top_level_parent() const
 {
 	const Transformer3D* top = this;
 	while (top->parent)
@@ -171,7 +224,7 @@ const oly::geom::Transformer3D* oly::geom::Transformer3D::top_level_parent() con
 	return top;
 }
 
-oly::geom::Transformer3D* oly::geom::Transformer3D::top_level_parent()
+oly::Transformer3D* oly::Transformer3D::top_level_parent()
 {
 	Transformer3D* top = this;
 	while (top->parent)
@@ -179,7 +232,7 @@ oly::geom::Transformer3D* oly::geom::Transformer3D::top_level_parent()
 	return top;
 }
 
-void oly::geom::Transformer3D::attach_parent(Transformer3D* new_parent)
+void oly::Transformer3D::attach_parent(Transformer3D* new_parent)
 {
 	if (!new_parent)
 		unparent();
@@ -193,7 +246,7 @@ void oly::geom::Transformer3D::attach_parent(Transformer3D* new_parent)
 	}
 }
 
-void oly::geom::Transformer3D::insert_chain(Transformer3D* parent_chain)
+void oly::Transformer3D::insert_chain(Transformer3D* parent_chain)
 {
 	if (!parent_chain)
 		return;
@@ -209,7 +262,7 @@ void oly::geom::Transformer3D::insert_chain(Transformer3D* parent_chain)
 	post_set();
 }
 
-void oly::geom::Transformer3D::unparent()
+void oly::Transformer3D::unparent()
 {
 	if (parent)
 		parent->children.erase(this);
@@ -217,7 +270,7 @@ void oly::geom::Transformer3D::unparent()
 	post_set();
 }
 
-void oly::geom::Transformer3D::clear_children()
+void oly::Transformer3D::clear_children()
 {
 	for (Transformer3D* child : children)
 	{
@@ -227,7 +280,7 @@ void oly::geom::Transformer3D::clear_children()
 	children.clear();
 }
 
-void oly::geom::Transformer3D::pop_from_chain()
+void oly::Transformer3D::pop_from_chain()
 {
 	if (parent)
 	{
@@ -240,4 +293,15 @@ void oly::geom::Transformer3D::pop_from_chain()
 		child->post_set();
 	}
 	children.clear();
+}
+
+oly::PivotTransformer3D& oly::PivotTransformer3D::operator=(PivotTransformer3D&& other) noexcept
+{
+	if (this != &other)
+	{
+		Transformer3D::operator=(std::move(other));
+		pivot = other.pivot;
+		size = other.size;
+	}
+	return *this;
 }

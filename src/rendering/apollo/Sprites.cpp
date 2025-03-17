@@ -11,7 +11,7 @@ oly::apollo::SpriteList::SpriteList(size_t quads_capacity, size_t textures_capac
 	assert(4 * quads_capacity <= USHRT_MAX);
 	assert(uvs_capacity <= 500);
 
-	shader = shaders::sprite_list(); // TODO lazy load shader on demand, rather than load(). It will check if shader has already been loaded or not.
+	shader = shaders::sprite_list();
 
 	textures.resize(textures_capacity + 1); // extra 0th texture
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
@@ -52,7 +52,7 @@ void oly::apollo::SpriteList::draw() const
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_texture_ssbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_transform_ssbo);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, tex_coords_ubo);
-	glDrawElements(GL_TRIANGLES, draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
+	glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
 }
 
 void oly::apollo::SpriteList::set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
@@ -218,38 +218,58 @@ void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, s
 	dirty[flag].clear();
 }
 
-oly::apollo::Sprite::Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos)
-	: sprite_list(&sprite_list), quad(&sprite_list.get_quad(pos))
+oly::apollo::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos)
+	: sprite_list(sprite_list), _quad(&sprite_list->get_quad(pos)), _transformer(std::make_unique<Transformer2D>())
 {
-	sprite_list.sprites.insert(this);
+	sprite_list->sprites.insert(this);
+}
+
+oly::apollo::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer)
+	: sprite_list(sprite_list), _quad(&sprite_list->get_quad(pos)), _transformer(std::move(transformer))
+{
+	sprite_list->sprites.insert(this);
 }
 
 oly::apollo::Sprite::Sprite(Sprite&& other) noexcept
-	: sprite_list(sprite_list), quad(other.quad), transformer(std::move(other.transformer))
+	: sprite_list(other.sprite_list), _quad(other._quad), _transformer(std::move(other._transformer))
 {
 }
 
 oly::apollo::Sprite::~Sprite()
 {
-	sprite_list->sprites.erase(this);
+	if (sprite_list)
+		sprite_list->sprites.erase(this);
+}
+
+oly::apollo::Sprite& oly::apollo::Sprite::operator=(Sprite&& other) noexcept
+{
+	if (this != &other)
+	{
+		sprite_list->sprites.erase(this);
+		sprite_list = other.sprite_list;
+		_quad = other._quad;
+		_transformer = std::move(other._transformer);
+		other.sprite_list = nullptr;
+	}
+	return *this;
 }
 
 void oly::apollo::Sprite::post_set() const
 {
-	transformer.post_set();
+	_transformer->post_set();
 }
 
 void oly::apollo::Sprite::pre_get() const
 {
-	transformer.pre_get();
+	_transformer->pre_get();
 }
 
 void oly::apollo::Sprite::flush() const
 {
-	if (transformer.flush())
+	if (_transformer->flush())
 	{
-		transformer.pre_get();
-		quad->transform() = transformer.global();
-		quad->send_transform();
+		_transformer->pre_get();
+		_quad->transform() = _transformer->global();
+		_quad->send_transform();
 	}
 }

@@ -2,7 +2,7 @@
 
 #include "rendering/apollo/Sprites.h"
 #include "util/Errors.h"
-#include "util/Geometry.h"
+#include "Transforms.h"
 
 #include <iostream>
 
@@ -48,26 +48,26 @@ void run()
 	sprite_list.set_uvs({ 0.5f,0 }, { 1,0 }, { 1,1 }, { 0.5f,1 }, 1);
 	sprite_list.set_draw_spec(0, 100);
 
-	oly::apollo::Sprite sprite0(sprite_list, 0);
-	sprite0.quad->tex_info().tex_slot = TEX_EINSTEIN;
-	sprite0.quad->send_tex_info();
+	oly::apollo::Sprite sprite0 = sprite_list.create_sprite(0);
+	sprite0.quad().tex_info().tex_slot = TEX_EINSTEIN;
+	sprite0.quad().send_tex_info();
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::apollo::Sprite sprite1(sprite_list, 1);
-	sprite1.quad->tex_info().tex_slot = TEX_EINSTEIN;
-	sprite1.quad->send_tex_info();
+	oly::apollo::Sprite sprite1 = sprite_list.create_sprite(1);
+	sprite1.quad().tex_info().tex_slot = TEX_EINSTEIN;
+	sprite1.quad().send_tex_info();
 
-	oly::apollo::Sprite sprite2(sprite_list, 2);
-	sprite2.quad->tex_info().tex_slot = TEX_TUX;
-	sprite2.quad->send_tex_info();
+	oly::apollo::Sprite sprite2 = sprite_list.create_sprite(2);
+	sprite2.quad().tex_info().tex_slot = TEX_TUX;
+	sprite2.quad().send_tex_info();
 	sprite2.local().position.x = -100;
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
 
-	oly::geom::PivotTransformer2D flag_tesselation_parent;
+	oly::PivotTransformer2D flag_tesselation_parent;
 	flag_tesselation_parent.pivot = { 0.0f, 0.0f };
 	flag_tesselation_parent.size = { 400, 320 };
 	int flag_rows = 8;
@@ -77,17 +77,17 @@ void run()
 	flag_tesselation.reserve(64);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.emplace_back(sprite_list, 3 + i);
-		flag_tesselation[i].quad->tex_info().tex_slot = TEX_FLAG;
-		flag_tesselation[i].quad->send_tex_info();
+		flag_tesselation.emplace_back(&sprite_list, 3 + i);
+		flag_tesselation[i].quad().tex_info().tex_slot = TEX_FLAG;
+		flag_tesselation[i].quad().send_tex_info();
 		flag_tesselation[i].local().scale = glm::vec2(2);
 		flag_tesselation[i].local().position.x = -flag_tesselation_parent.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_parent.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_parent.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_parent.size.y / flag_rows;
 		flag_tesselation[i].post_set();
-		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
+		flag_tesselation[i].transformer().attach_parent(&flag_tesselation_parent);
 	}
 	
-	sprite_list.move_quad_order(sprite2.quad->index_pos(), 0); // TODO make into method on quad - set_z_index(QuadPos)
+	sprite2.quad().set_z_index(0);
 	oly::apollo::SpriteList::QuadPos z = 0;
 	bool inc_z = true;
 
@@ -112,7 +112,7 @@ void run()
 			else
 				--z;
 		}
-		sprite_list.move_quad_order(sprite1.quad->index_pos(), z);
+		sprite1.quad().set_z_index(z);
 
 		sprite2.local().shearing.x += 0.008f;
 		sprite2.post_set();
@@ -123,9 +123,9 @@ void run()
 			if (tex_index != TEX_EINSTEIN)
 			{
 				tex_index = TEX_EINSTEIN;
-				sprite0.quad->tex_info().tex_slot = TEX_EINSTEIN;
-				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
-				sprite0.quad->send_tex_info();
+				sprite0.quad().tex_info().tex_slot = TEX_EINSTEIN;
+				sprite0.quad().tex_info().tex_coord_slot = 1 - sprite0.quad().tex_info().tex_coord_slot;
+				sprite0.quad().send_tex_info();
 			}
 		}
 		else if (fmod(glfwGetTime(), 1.0f) < 2.0f / 3.0f)
@@ -133,9 +133,9 @@ void run()
 			if (tex_index != TEX_FLAG)
 			{
 				tex_index = TEX_FLAG;
-				sprite0.quad->tex_info().tex_slot = TEX_FLAG;
-				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
-				sprite0.quad->send_tex_info();
+				sprite0.quad().tex_info().tex_slot = TEX_FLAG;
+				sprite0.quad().tex_info().tex_coord_slot = 1 - sprite0.quad().tex_info().tex_coord_slot;
+				sprite0.quad().send_tex_info();
 			}
 		}
 		else
@@ -143,9 +143,9 @@ void run()
 			if (tex_index != TEX_TUX)
 			{
 				tex_index = TEX_TUX;
-				sprite0.quad->tex_info().tex_slot = TEX_TUX;
-				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
-				sprite0.quad->send_tex_info();
+				sprite0.quad().tex_info().tex_slot = TEX_TUX;
+				sprite0.quad().tex_info().tex_coord_slot = 1 - sprite0.quad().tex_info().tex_coord_slot;
+				sprite0.quad().send_tex_info();
 			}
 		}
 
