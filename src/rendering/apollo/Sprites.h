@@ -2,6 +2,8 @@
 
 #include "../core/Core.h"
 
+#include <set>
+
 namespace oly
 {
 	namespace apollo
@@ -71,8 +73,8 @@ namespace oly
 				friend SpriteList;
 				QuadTexInfo* _tex_info = nullptr;
 				glm::mat3* _transform = nullptr;
-				SpriteList* sprite_list = nullptr;
-				QuadPos pos = -1;
+				SpriteList* _sprite_list = nullptr;
+				QuadPos _ssbo_pos = -1;
 
 			public:
 				Quad() = default;
@@ -83,6 +85,9 @@ namespace oly
 				const QuadTexInfo& tex_info() const { return *_tex_info; }
 				glm::mat3& transform() { return *_transform; }
 				const glm::mat3& transform() const { return *_transform; }
+				const SpriteList& sprite_list() const { return *_sprite_list; }
+				SpriteList& sprite_list() { return *_sprite_list; }
+				QuadPos index_pos() const { return _sprite_list->z_order[_ssbo_pos]; }
 
 				void send_tex_info() const;
 				void send_transform() const;
@@ -92,11 +97,36 @@ namespace oly
 
 		private:
 			std::vector<Quad> quads;
+			std::vector<QuadPos> z_order;
+			std::vector<QuadPos> z_order_inverse;
 
 		public:
 			Quad& get_quad(QuadPos pos);
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
+
+			enum Dirty
+			{
+				TEX_INFO,
+				TRANSFORM,
+				INDICES
+			};
+
+		private:
+			std::set<QuadPos> dirty[3] = { {}, {}, {} };
+
+		public:
+			enum class BufferSendType
+			{
+				SUBDATA,
+				MAP
+			};
+			BufferSendType send_types[3] = { BufferSendType::SUBDATA, BufferSendType::SUBDATA, BufferSendType::SUBDATA };
+
+			void process();
+
+		private:
+			void process_set(Dirty flag, void* data, GLuint buf, size_t element_size);
 		};
 	}
 }

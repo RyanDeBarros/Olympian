@@ -1,6 +1,7 @@
 #include "Sprites.h"
 
 #include "Resources.h"
+#include "util/MathDS.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <limits>
@@ -20,25 +21,26 @@ oly::apollo::SpriteList::SpriteList(size_t quads_capacity, size_t textures_capac
 
 	quad_textures.resize(quads_capacity);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_texture_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_textures.size() * sizeof(QuadTexInfo), quad_textures.data(), GL_DYNAMIC_STORAGE_BIT);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_textures.size() * sizeof(QuadTexInfo), quad_textures.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	quad_transforms.resize(quads_capacity, 1.0f);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_transform_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_transforms.size() * sizeof(glm::mat3), quad_transforms.data(), GL_DYNAMIC_STORAGE_BIT);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_transforms.size() * sizeof(glm::mat3), quad_transforms.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
 	glBufferStorage(GL_UNIFORM_BUFFER, uvs_capacity * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	indices.resize(quads_capacity);
+	z_order = math::fill_linear<QuadPos>(0, 1, quads_capacity);
+	z_order_inverse = math::fill_linear<QuadPos>(0, 1, quads_capacity);
 	set_draw_spec(0, quads_capacity);
 	
-	// TODO put in some kind of register/unregister quad functions
 	for (GLushort i = 0; i < quads_capacity; ++i)
 		rendering::quad_indices(indices[i].data, i);
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(QuadIndexLayout), indices.data(), GL_DYNAMIC_STORAGE_BIT);
+	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(QuadIndexLayout), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	set_projection(projection_bounds);
 }
@@ -87,24 +89,24 @@ void oly::apollo::SpriteList::set_draw_spec(QuadPos first, QuadPos count)
 {
 	if (first < indices.size())
 		draw_spec.first = first;
-	draw_spec.count = 6 * std::min(count, indices.size() - draw_spec.first);
+	draw_spec.count = 6 * std::min(count, (QuadPos)indices.size() - draw_spec.first);
 	draw_spec.offset = draw_spec.first * sizeof(QuadIndexLayout);
 }
 
 void oly::apollo::SpriteList::Quad::send_tex_info() const
 {
-	glNamedBufferSubData(sprite_list->quad_texture_ssbo, pos * sizeof(QuadTexInfo), sizeof(QuadTexInfo), sprite_list->quad_textures.data() + pos);
+	_sprite_list->dirty[Dirty::TEX_INFO].insert(_ssbo_pos);
 }
 
 void oly::apollo::SpriteList::Quad::send_transform() const
 {
-	glNamedBufferSubData(sprite_list->quad_transform_ssbo, pos * sizeof(glm::mat3), sizeof(glm::mat3), sprite_list->quad_transforms.data() + pos);
+	_sprite_list->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
 }
 
 void oly::apollo::SpriteList::Quad::send_data() const
 {
-	glNamedBufferSubData(sprite_list->quad_texture_ssbo, pos * sizeof(QuadTexInfo), sizeof(QuadTexInfo), sprite_list->quad_textures.data() + pos);
-	glNamedBufferSubData(sprite_list->quad_transform_ssbo, pos * sizeof(glm::mat3), sizeof(glm::mat3), sprite_list->quad_transforms.data() + pos);
+	_sprite_list->dirty[Dirty::TEX_INFO].insert(_ssbo_pos);
+	_sprite_list->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
 }
 
 oly::apollo::SpriteList::Quad& oly::apollo::SpriteList::get_quad(QuadPos pos)
@@ -112,8 +114,8 @@ oly::apollo::SpriteList::Quad& oly::apollo::SpriteList::get_quad(QuadPos pos)
 	Quad& quad = quads[pos];
 	quad._tex_info = &quad_textures[pos];
 	quad._transform = &quad_transforms[pos];
-	quad.sprite_list = this;
-	quad.pos = pos;
+	quad._sprite_list = this;
+	quad._ssbo_pos = pos;
 	return quad;
 }
 
@@ -122,9 +124,14 @@ void oly::apollo::SpriteList::swap_quad_order(QuadPos pos1, QuadPos pos2)
 	if (pos1 != pos2)
 	{
 		std::swap(indices[pos1], indices[pos2]);
-		glNamedBufferSubData(ebo, pos1 * sizeof(QuadIndexLayout), sizeof(QuadIndexLayout), indices[pos1].data);
-		glNamedBufferSubData(ebo, pos2 * sizeof(QuadIndexLayout), sizeof(QuadIndexLayout), indices[pos2].data);
-		// TODO dirty flagging system for all buffer updates
+		Quad& q1 = quads[z_order_inverse[pos1]];
+		Quad& q2 = quads[z_order_inverse[pos2]];
+		z_order[q1._ssbo_pos] = pos2;
+		z_order[q2._ssbo_pos] = pos1;
+		z_order_inverse[pos1] = q2._ssbo_pos;
+		z_order_inverse[pos2] = q1._ssbo_pos;
+		dirty[Dirty::INDICES].insert(pos1);
+		dirty[Dirty::INDICES].insert(pos2);
 	}
 }
 
@@ -140,4 +147,78 @@ void oly::apollo::SpriteList::move_quad_order(QuadPos from, QuadPos to)
 		for (QuadPos i = from; i > to; --i)
 			swap_quad_order(i, i - 1);
 	}
+}
+
+void oly::apollo::SpriteList::process()
+{
+	process_set(Dirty::TEX_INFO, quad_textures.data(), quad_texture_ssbo, sizeof(QuadTexInfo));
+	process_set(Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
+	process_set(Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
+}
+
+void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, size_t element_size)
+{
+	std::byte* data = (std::byte*)_data;
+	switch (send_types[flag])
+	{
+	case BufferSendType::SUBDATA:
+	{
+		bool contiguous = false;
+		GLintptr offset = 0;
+		GLsizeiptr size = 0;
+		for (auto iter = dirty[flag].begin(); iter != dirty[flag].end(); ++iter)
+		{
+			if (contiguous)
+			{
+				if (*iter * element_size == offset + size)
+					size += element_size;
+				else
+				{
+					glNamedBufferSubData(buf, offset, size, data + offset);
+					contiguous = false;
+				}
+			}
+			else
+			{
+				offset = *iter * element_size;
+				size = element_size;
+				contiguous = true;
+			}
+		}
+		if (contiguous)
+			glNamedBufferSubData(buf, offset, size, data + offset);
+		break;
+	}
+	case BufferSendType::MAP:
+	{
+		std::byte* gpu_buf = (std::byte*)glMapNamedBuffer(buf, GL_WRITE_ONLY);
+		bool contiguous = false;
+		GLintptr offset = 0;
+		GLsizeiptr size = 0;
+		for (auto iter = dirty[flag].begin(); iter != dirty[flag].end(); ++iter)
+		{
+			if (contiguous)
+			{
+				if (*iter * element_size == offset + size)
+					size += element_size;
+				else
+				{
+					memcpy(gpu_buf + offset, data + offset, size);
+					contiguous = false;
+				}
+			}
+			else
+			{
+				offset = *iter * element_size;
+				size = element_size;
+				contiguous = true;
+			}
+		}
+		if (contiguous)
+			memcpy(gpu_buf + offset, data + offset, size);
+		glUnmapNamedBuffer(buf);
+		break;
+	}
+	}
+	dirty[flag].clear();
 }

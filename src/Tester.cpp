@@ -34,7 +34,7 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	oly::apollo::SpriteList sprite_list(10, 5, 2, { -720, 720, -540, 540 });
+	oly::apollo::SpriteList sprite_list(1000, 5, 2, { -720, 720, -540, 540 });
 	enum
 	{
 		TEX_EINSTEIN = 1,
@@ -46,6 +46,7 @@ void run()
 	sprite_list.set_texture(tux_texture, tux_texture_dim, TEX_TUX);
 	sprite_list.set_uvs({ 0,0 }, { 1,0 }, { 1,1 }, { 0,1 }, 0);
 	sprite_list.set_uvs({ 0.5f,0 }, { 1,0 }, { 1,1 }, { 0.5f,1 }, 1);
+	sprite_list.set_draw_spec(0, 100);
 	
 	auto& quad0 = sprite_list.get_quad(0);
 	quad0.tex_info().tex_slot = TEX_EINSTEIN;
@@ -64,10 +65,22 @@ void run()
 	quad2.transform()[0][0] = 0.2f;
 	quad2.transform()[1][1] = 0.2f;
 	quad2.send_data();
+
+	std::vector<oly::apollo::SpriteList::Quad*> flag_tesselation;
+	flag_tesselation.reserve(64);
+	for (int i = 0; i < 64; ++i)
+	{
+		flag_tesselation.push_back(&sprite_list.get_quad(3 + i));
+		flag_tesselation[i]->tex_info().tex_slot = TEX_FLAG;
+		flag_tesselation[i]->transform()[0][0] = 2;
+		flag_tesselation[i]->transform()[1][1] = 2;
+		flag_tesselation[i]->transform()[2][0] = -160 + (i % 8) * 40;
+		flag_tesselation[i]->transform()[2][1] = 160 - (i / 8) * 40;
+		flag_tesselation[i]->send_data();
+	}
 	
-	//sprite_list.swap_quad_order(1, 2);
-	sprite_list.move_quad_order(2, 0);
-	sprite_list.set_draw_spec(1, 2);
+	sprite_list.move_quad_order(quad2.index_pos(), 0);
+	sprite_list.move_quad_order(quad1.index_pos(), quad1.index_pos() + 40);
 
 	while (!window.should_close())
 	{
@@ -115,6 +128,7 @@ void run()
 			}
 		}
 
+		sprite_list.process();
 		sprite_list.draw();
 
 		window.swap_buffers();

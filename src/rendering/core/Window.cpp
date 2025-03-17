@@ -4,6 +4,10 @@
 
 void oly::rendering::WindowHint::window_hint() const
 {
+	// TODO many functions are used that are from 4.5+, such as glNamed*. Use macros to provide alternatives when version is < 4.5.
+	assert(window.context_version_major == 4);
+	assert(window.context_version_minor >= 5);
+
 	glfwWindowHint(GLFW_RESIZABLE, window.resizable);
 	glfwWindowHint(GLFW_VISIBLE, window.visible);
 	glfwWindowHint(GLFW_DECORATED, window.decorated);
