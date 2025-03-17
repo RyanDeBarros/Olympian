@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/Core.h"
+#include "util/MathDS.h"
 
 #include <set>
 
@@ -87,7 +88,7 @@ namespace oly
 				const glm::mat3& transform() const { return *_transform; }
 				const SpriteList& sprite_list() const { return *_sprite_list; }
 				SpriteList& sprite_list() { return *_sprite_list; }
-				QuadPos index_pos() const { return _sprite_list->z_order[_ssbo_pos]; }
+				QuadPos index_pos() const { return _sprite_list->z_order.range_of(_ssbo_pos); }
 
 				void send_tex_info() const;
 				void send_transform() const;
@@ -97,8 +98,7 @@ namespace oly
 
 		private:
 			std::vector<Quad> quads;
-			std::vector<QuadPos> z_order;
-			std::vector<QuadPos> z_order_inverse;
+			math::IndexBijection<QuadPos> z_order;
 
 		public:
 			Quad& get_quad(QuadPos pos);

@@ -1,17 +1,17 @@
 #include "Sprites.h"
 
 #include "Resources.h"
-#include "util/MathDS.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <limits>
 
 oly::apollo::SpriteList::SpriteList(size_t quads_capacity, size_t textures_capacity, size_t uvs_capacity, const glm::vec4& projection_bounds)
+	: z_order(4 * quads_capacity <= USHRT_MAX ? quads_capacity : 0)
 {
 	assert(4 * quads_capacity <= USHRT_MAX);
 	assert(uvs_capacity <= 500);
 
-	shader = shaders::sprite_list; // TODO lazy load shader on demand, rather than load(). It will check if shader has already been loaded or not.
+	shader = shaders::sprite_list(); // TODO lazy load shader on demand, rather than load(). It will check if shader has already been loaded or not.
 
 	textures.resize(textures_capacity + 1); // extra 0th texture
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
@@ -31,8 +31,6 @@ oly::apollo::SpriteList::SpriteList(size_t quads_capacity, size_t textures_capac
 	glBufferStorage(GL_UNIFORM_BUFFER, uvs_capacity * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	indices.resize(quads_capacity);
-	z_order = math::fill_linear<QuadPos>(0, 1, quads_capacity);
-	z_order_inverse = math::fill_linear<QuadPos>(0, 1, quads_capacity);
 	set_draw_spec(0, quads_capacity);
 	
 	for (GLushort i = 0; i < quads_capacity; ++i)
@@ -124,12 +122,7 @@ void oly::apollo::SpriteList::swap_quad_order(QuadPos pos1, QuadPos pos2)
 	if (pos1 != pos2)
 	{
 		std::swap(indices[pos1], indices[pos2]);
-		Quad& q1 = quads[z_order_inverse[pos1]];
-		Quad& q2 = quads[z_order_inverse[pos2]];
-		z_order[q1._ssbo_pos] = pos2;
-		z_order[q2._ssbo_pos] = pos1;
-		z_order_inverse[pos1] = q2._ssbo_pos;
-		z_order_inverse[pos2] = q1._ssbo_pos;
+		z_order.swap_range(pos1, pos2);
 		dirty[Dirty::INDICES].insert(pos1);
 		dirty[Dirty::INDICES].insert(pos2);
 	}

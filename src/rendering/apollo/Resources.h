@@ -8,10 +8,8 @@ namespace oly
 	{
 		namespace shaders
 		{
-			extern void load();
+			extern rendering::ShaderRes sprite_list();
 			extern void unload();
-
-			extern rendering::ShaderRes sprite_list;
 		}
 	}
 }

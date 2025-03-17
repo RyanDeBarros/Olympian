@@ -19,7 +19,6 @@ void run()
 	oly::rendering::WindowHint hint;
 	hint.context.clear_color = { 0.2f, 0.5f, 0.8f, 1.0f };
 	oly::rendering::Window window(1440, 1080, "Olympian Engine", hint);
-	oly::init_context();
 
 	oly::rendering::ImageDimensions einstein_texture_dim;
 	auto einstein_texture = oly::rendering::load_static_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
@@ -74,8 +73,8 @@ void run()
 		flag_tesselation[i]->tex_info().tex_slot = TEX_FLAG;
 		flag_tesselation[i]->transform()[0][0] = 2;
 		flag_tesselation[i]->transform()[1][1] = 2;
-		flag_tesselation[i]->transform()[2][0] = -160 + (i % 8) * 40;
-		flag_tesselation[i]->transform()[2][1] = 160 - (i / 8) * 40;
+		flag_tesselation[i]->transform()[2][0] = -160.0f + float(i % 8) * 40.0f;
+		flag_tesselation[i]->transform()[2][1] = 160.0f - float(i / 8) * 40.0f;
 		flag_tesselation[i]->send_data();
 	}
 	
