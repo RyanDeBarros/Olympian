@@ -4,6 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include <variant>
+#include <vector>
 
 namespace oly
 {
@@ -172,6 +173,36 @@ namespace oly
 			}
 		};
 
+		struct Transformer2D
+		{
+			Mat3 local;
+			Transformer2D* parent = nullptr;
+			std::vector<Transformer2D*> children;
+
+		private:
+			mutable glm::mat3 _global = glm::mat3(1.0f);
+			mutable bool _dirty = true;
+			mutable bool _dirty_flush = true;
+
+		public:
+			Transformer2D(Mat3::Type type = Mat3::Type::STANDARD) : local(type) {}
+			Transformer2D(Mat3 local) : local(local) { post_set(); }
+			Transformer2D(const Transformer2D&) = delete; // TODO implement
+			Transformer2D(Transformer2D&&) noexcept;
+			~Transformer2D();
+			Transformer2D& operator=(Transformer2D&&) noexcept = delete; // TODO implement
+
+			glm::mat3 global() const { return _global; }
+			void post_set() const;
+			void pre_get() const;
+			bool flush() const;
+		};
+
+		extern void attach(Transformer2D* parent, Transformer2D* child);
+		extern void insert(Transformer2D* parent, Transformer2D* child, size_t pos);
+		extern void clear_children(Transformer2D* parent);
+		extern void unparent(Transformer2D* child);
+
 		constexpr glm::mat4 translation_matrix_3d(glm::vec3 position)
 		{
 			return { vectors::I4, vectors::J4, vectors::K4, glm::vec4(position, 1.0f) };
@@ -306,5 +337,34 @@ namespace oly
 					}, *this);
 			}
 		};
+
+		struct Transformer3D
+		{
+			Mat4 local;
+			Transformer3D* parent = nullptr;
+			std::vector<Transformer3D*> children;
+
+		private:
+			mutable glm::mat4 _global = glm::mat4(1.0f);
+			mutable bool _dirty = true;
+			mutable bool _dirty_flush = true;
+
+		public:
+			Transformer3D(Mat4::Type type) : local(type) {}
+			Transformer3D(Mat4 local) : local(local) { post_set(); }
+			Transformer3D(const Transformer3D&) = delete; // TODO implement
+			Transformer3D(Transformer3D&&) noexcept = delete; // TODO implement
+			~Transformer3D();
+
+			glm::mat4 global() const { return _global; }
+			void post_set() const;
+			void pre_get() const;
+			bool flush() const;
+		};
+
+		extern void attach(Transformer3D* parent, Transformer3D* child);
+		extern void insert(Transformer3D* parent, Transformer3D* child, size_t pos);
+		extern void clear_children(Transformer3D* parent);
+		extern void unparent(Transformer3D* child);
 	}
 }

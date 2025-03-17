@@ -48,57 +48,67 @@ void run()
 	sprite_list.set_uvs({ 0.5f,0 }, { 1,0 }, { 1,1 }, { 0.5f,1 }, 1);
 	sprite_list.set_draw_spec(0, 100);
 	
-	auto& quad0 = sprite_list.get_quad(0);
-	quad0.tex_info().tex_slot = TEX_EINSTEIN;
-	oly::math::Mat3 mat0;
-	mat0.position().x = 300;
-	mat0.position().y = 300;
-	quad0.transform() = mat0.matrix();
-	quad0.send_data();
+	oly::apollo::Sprite sprite0(sprite_list, 0);
+	sprite0.quad->tex_info().tex_slot = TEX_EINSTEIN;
+	sprite0.quad->send_tex_info();
+	sprite0.local().position().x = 300;
+	sprite0.local().position().y = 300;
+	sprite0.post_set();
 	
-	auto& quad1 = sprite_list.get_quad(1);
-	oly::math::Mat3 mat1;
-	quad1.tex_info().tex_slot = TEX_EINSTEIN;
-	quad1.send_tex_info();
+	oly::apollo::Sprite sprite1(sprite_list, 1);
+	sprite1.quad->tex_info().tex_slot = TEX_EINSTEIN;
+	sprite1.quad->send_tex_info();
 	
-	auto& quad2 = sprite_list.get_quad(2);
-	quad2.tex_info().tex_slot = TEX_TUX;
-	oly::math::Mat3 mat2(oly::math::TransformType::AFFINE);
-	mat2.position().x = -100;
-	mat2.position().y = -100;
-	mat2.scale() = glm::vec2(0.2f);
-	quad2.transform() = mat2.matrix();
-	quad2.send_data();
+	oly::apollo::Sprite sprite2(sprite_list, 2, oly::math::Mat3::Type::AFFINE);
+	sprite2.quad->tex_info().tex_slot = TEX_TUX;
+	sprite2.quad->send_tex_info();
+	sprite2.local().position().x = -100;
+	sprite2.local().position().y = -100;
+	sprite2.local().scale() = glm::vec2(0.2f);
+	sprite2.post_set();
 
-	std::vector<oly::apollo::SpriteList::Quad*> flag_tesselation;
+	std::vector<oly::apollo::Sprite> flag_tesselation;
 	flag_tesselation.reserve(64);
 	for (int i = 0; i < 64; ++i)
 	{
-		flag_tesselation.push_back(&sprite_list.get_quad(3 + i));
-		flag_tesselation[i]->tex_info().tex_slot = TEX_FLAG;
-		oly::math::Mat3 mat(oly::math::TransformType::FLAT);
-		mat.scale() = glm::vec2(2);
-		mat.position().x = -160.0f + float(i % 8) * 40.0f;
-		mat.position().y = 160.0f - float(i / 8) * 40.0f;
-		flag_tesselation[i]->transform() = mat.matrix();
-		flag_tesselation[i]->send_data();
+		flag_tesselation.emplace_back(sprite_list, 3 + i, oly::math::Mat3::Type::FLAT);
+		flag_tesselation[i].quad->tex_info().tex_slot = TEX_FLAG;
+		flag_tesselation[i].quad->send_tex_info();
+		flag_tesselation[i].local().scale() = glm::vec2(2);
+		flag_tesselation[i].local().position().x = -160.0f + float(i % 8) * 40.0f;
+		flag_tesselation[i].local().position().y = 160.0f - float(i / 8) * 40.0f;
+		flag_tesselation[i].post_set();
 	}
 	
-	sprite_list.move_quad_order(quad2.index_pos(), 0);
-	sprite_list.move_quad_order(quad1.index_pos(), quad1.index_pos() + 40);
+	sprite_list.move_quad_order(sprite2.quad->index_pos(), 0);
+	oly::apollo::SpriteList::QuadPos z = 0;
+	bool inc_z = true;
 
 	while (!window.should_close())
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
+	
+		sprite1.local().rotation() = (float)glfwGetTime();
+		sprite1.post_set();
+		if (inc_z)
+		{
+			if (z == 100)
+				inc_z = false;
+			else
+				++z;
+		}
+		else
+		{
+			if (z == 0)
+				inc_z = true;
+			else
+				--z;
+		}
+		sprite_list.move_quad_order(sprite1.quad->index_pos(), z);
 
-		mat2.shearing().x += 0.005f;
-		quad2.transform() = mat2.matrix();
-		quad2.send_transform();
-
-		mat1.rotation() = (float)glfwGetTime();
-		quad1.transform() = mat1.matrix();
-		quad1.send_transform();
+		sprite2.local().shearing().x += 0.008f;
+		sprite2.post_set();
 
 		static GLushort tex_index = TEX_EINSTEIN;
 		if (fmod(glfwGetTime(), 1.0f) < 1.0f / 3.0f)
@@ -106,9 +116,9 @@ void run()
 			if (tex_index != TEX_EINSTEIN)
 			{
 				tex_index = TEX_EINSTEIN;
-				quad0.tex_info().tex_slot = TEX_EINSTEIN;
-				quad0.tex_info().tex_coord_slot = 1 - quad0.tex_info().tex_coord_slot;
-				quad0.send_tex_info();
+				sprite0.quad->tex_info().tex_slot = TEX_EINSTEIN;
+				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
+				sprite0.quad->send_tex_info();
 			}
 		}
 		else if (fmod(glfwGetTime(), 1.0f) < 2.0f / 3.0f)
@@ -116,9 +126,9 @@ void run()
 			if (tex_index != TEX_FLAG)
 			{
 				tex_index = TEX_FLAG;
-				quad0.tex_info().tex_slot = TEX_FLAG;
-				quad0.tex_info().tex_coord_slot = 1 - quad0.tex_info().tex_coord_slot;
-				quad0.send_tex_info();
+				sprite0.quad->tex_info().tex_slot = TEX_FLAG;
+				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
+				sprite0.quad->send_tex_info();
 			}
 		}
 		else
@@ -126,9 +136,9 @@ void run()
 			if (tex_index != TEX_TUX)
 			{
 				tex_index = TEX_TUX;
-				quad0.tex_info().tex_slot = TEX_TUX;
-				quad0.tex_info().tex_coord_slot = 1 - quad0.tex_info().tex_coord_slot;
-				quad0.send_tex_info();
+				sprite0.quad->tex_info().tex_slot = TEX_TUX;
+				sprite0.quad->tex_info().tex_coord_slot = 1 - sprite0.quad->tex_info().tex_coord_slot;
+				sprite0.quad->send_tex_info();
 			}
 		}
 

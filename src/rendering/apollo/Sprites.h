@@ -2,13 +2,17 @@
 
 #include "../core/Core.h"
 #include "util/MathDS.h"
+#include "util/Geometry.h"
 
 #include <set>
+#include <unordered_set>
 
 namespace oly
 {
 	namespace apollo
 	{
+		class Sprite;
+
 		class SpriteList
 		{
 			oly::rendering::ShaderRes shader;
@@ -26,6 +30,7 @@ namespace oly
 			{
 				GLuint tex_slot = 0;
 				GLuint tex_coord_slot = 0;
+				// TODO add modulation slot here
 			};
 			std::vector<QuadTexInfo> quad_textures;
 			std::vector<glm::mat3> quad_transforms;
@@ -123,10 +128,35 @@ namespace oly
 			};
 			BufferSendType send_types[3] = { BufferSendType::SUBDATA, BufferSendType::SUBDATA, BufferSendType::SUBDATA };
 
+			std::unordered_set<Sprite*> sprites;
 			void process();
 
 		private:
 			void process_set(Dirty flag, void* data, GLuint buf, size_t element_size);
+		};
+
+		class Sprite
+		{
+			friend SpriteList;
+			SpriteList* sprite_list;
+
+		public:
+			SpriteList::Quad* quad;
+			math::Transformer2D transformer;
+			
+			Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos, math::Mat3::Type type = math::Mat3::Type::STANDARD);
+			Sprite(const Sprite&) = delete; // TODO implement
+			Sprite(Sprite&&) noexcept;
+			Sprite& operator=(Sprite&&) noexcept = delete; // TODO implement
+			~Sprite();
+
+			const math::Mat3& local() const { return transformer.local; }
+			math::Mat3& local() { return transformer.local; }
+			void post_set() const; // call after modifying local
+			void pre_get() const; // call before reading global
+
+		private:
+			void flush() const;
 		};
 	}
 }

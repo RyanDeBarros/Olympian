@@ -144,6 +144,8 @@ void oly::apollo::SpriteList::move_quad_order(QuadPos from, QuadPos to)
 
 void oly::apollo::SpriteList::process()
 {
+	for (Sprite* sprite : sprites)
+		sprite->flush();
 	process_set(Dirty::TEX_INFO, quad_textures.data(), quad_texture_ssbo, sizeof(QuadTexInfo));
 	process_set(Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
 	process_set(Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
@@ -214,4 +216,40 @@ void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, s
 	}
 	}
 	dirty[flag].clear();
+}
+
+oly::apollo::Sprite::Sprite(SpriteList& sprite_list, SpriteList::QuadPos pos, math::Mat3::Type type)
+	: sprite_list(&sprite_list), quad(&sprite_list.get_quad(pos)), transformer(type)
+{
+	sprite_list.sprites.insert(this);
+}
+
+oly::apollo::Sprite::Sprite(Sprite&& other) noexcept
+	: sprite_list(sprite_list), quad(other.quad), transformer(std::move(other.transformer))
+{
+}
+
+oly::apollo::Sprite::~Sprite()
+{
+	sprite_list->sprites.erase(this);
+}
+
+void oly::apollo::Sprite::post_set() const
+{
+	transformer.post_set();
+}
+
+void oly::apollo::Sprite::pre_get() const
+{
+	transformer.pre_get();
+}
+
+void oly::apollo::Sprite::flush() const
+{
+	if (transformer.flush())
+	{
+		transformer.pre_get();
+		quad->transform() = transformer.global();
+		quad->send_transform();
+	}
 }
