@@ -1,7 +1,7 @@
 #include "Olympian.h"
 
 #include "util/Errors.h"
-#include "rendering/apollo/Resources.h"
+#include "rendering/Resources.h"
 
 void oly::init()
 {
@@ -12,7 +12,7 @@ void oly::init()
 
 int oly::terminate()
 {
-	apollo::shaders::unload();
+	shaders::unload();
 	glfwTerminate();
 	return 0;
 }

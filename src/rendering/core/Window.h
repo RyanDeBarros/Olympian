@@ -42,14 +42,6 @@ namespace oly
 			{
 				int swap_interval = 1;
 				glm::vec4 clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
-				struct
-				{
-					bool blend = true;
-					bool depth_test = false;
-					bool cull_face = false;
-					bool scissor_test = false;
-					bool stencil_test = false;
-				} enable;
 			} context;
 
 			void window_hint() const;

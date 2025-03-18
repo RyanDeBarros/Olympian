@@ -1,6 +1,6 @@
 ﻿#include "Olympian.h"
 
-#include "rendering/apollo/Sprites.h"
+#include "rendering/Sprites.h"
 #include "util/Errors.h"
 #include "Transforms.h"
 
@@ -20,6 +20,7 @@ void run()
 	oly::rendering::WindowHint hint;
 	hint.context.clear_color = { 0.2f, 0.5f, 0.8f, 1.0f };
 	oly::rendering::Window window(1440, 1080, "Olympian Engine", hint);
+	glEnable(GL_BLEND);
 
 	oly::rendering::ImageDimensions einstein_texture_dim;
 	auto einstein_texture = oly::rendering::load_static_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
@@ -34,7 +35,7 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	oly::apollo::SpriteList sprite_list({ 1000, 5, 2, 2 }, { -720, 720, -540, 540 });
+	oly::SpriteList sprite_list({ 1000, 5, 2, 2 }, { -720, 720, -540, 540 });
 	enum
 	{
 		TEX_EINSTEIN = 1,
@@ -53,19 +54,19 @@ void run()
 		} }, 1);
 	sprite_list.set_draw_spec(0, 100);
 
-	oly::apollo::Sprite sprite0(&sprite_list, 0);
+	oly::Sprite sprite0(&sprite_list, 0);
 	sprite0.quad().info().tex_slot = TEX_EINSTEIN;
 	sprite0.quad().send_info();
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::apollo::Sprite sprite1(&sprite_list, 1);
+	oly::Sprite sprite1(&sprite_list, 1);
 	sprite1.quad().info().tex_slot = TEX_EINSTEIN;
 	sprite1.quad().info().color_slot = 1;
 	sprite1.quad().send_info();
 
-	oly::apollo::Sprite sprite2(&sprite_list, 2);
+	oly::Sprite sprite2(&sprite_list, 2);
 	sprite2.quad().info().tex_slot = TEX_TUX;
 	sprite2.quad().send_info();
 	sprite2.local().position.x = -100;
@@ -79,7 +80,7 @@ void run()
 	int flag_rows = 8;
 	int flag_cols = 8;
 	flag_tesselation_parent.post_set();
-	std::vector<oly::apollo::Sprite> flag_tesselation;
+	std::vector<oly::Sprite> flag_tesselation;
 	flag_tesselation.reserve(64);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
@@ -94,12 +95,12 @@ void run()
 	}
 	
 	sprite2.quad().set_z_index(0);
-	oly::apollo::SpriteList::QuadPos z = 0;
+	oly::SpriteList::QuadPos z = 0;
 	bool inc_z = true;
 
 	while (!window.should_close())
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glfwPollEvents();
 	
 		sprite1.local().rotation = (float)glfwGetTime();

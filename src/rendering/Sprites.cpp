@@ -5,13 +5,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <limits>
 
-oly::apollo::SpriteList::SpriteList(Capacity capacity, const glm::vec4& projection_bounds)
+oly::SpriteList::SpriteList(Capacity capacity, const glm::vec4& projection_bounds)
 	: capacity(capacity), z_order(4 * capacity.quads <= USHRT_MAX ? capacity.quads : 0)
 {
 	assert(4 * capacity.quads <= USHRT_MAX);
-	assert(capacity.textures + 1 != 0); // there is enough capacity for 0th texture
-	assert(1 <= capacity.uvs && capacity.uvs <= 500);
-	assert(1 <= capacity.modulations && capacity.modulations <= 250);
+	assert(capacity.textures > 0); // there is enough capacity for 0th texture
+	assert(0 < capacity.uvs && capacity.uvs <= 500);
+	assert(0 < capacity.modulations && capacity.modulations <= 250);
 
 	shader = shaders::sprite_list();
 
@@ -53,7 +53,7 @@ oly::apollo::SpriteList::SpriteList(Capacity capacity, const glm::vec4& projecti
 	set_projection(projection_bounds);
 }
 
-void oly::apollo::SpriteList::draw() const
+void oly::SpriteList::draw() const
 {
 	glUseProgram(*shader);
 	glBindVertexArray(vao);
@@ -66,7 +66,7 @@ void oly::apollo::SpriteList::draw() const
 	glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
 }
 
-void oly::apollo::SpriteList::set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
+void oly::SpriteList::set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
 {
 	assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 	textures[pos] = texture;
@@ -76,19 +76,19 @@ void oly::apollo::SpriteList::set_texture(const oly::rendering::TextureRes& text
 	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data);
 }
 
-void oly::apollo::SpriteList::set_uvs(const TexUVRect& tex_coords, size_t pos) const
+void oly::SpriteList::set_uvs(const TexUVRect& tex_coords, size_t pos) const
 {
 	assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
 	glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
 }
 
-void oly::apollo::SpriteList::set_modulation(const Modulation& modulation, size_t pos) const
+void oly::SpriteList::set_modulation(const Modulation& modulation, size_t pos) const
 {
 	assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
 	glNamedBufferSubData(modulation_ubo, pos * sizeof(Modulation), sizeof(Modulation), &modulation);
 }
 
-void oly::apollo::SpriteList::set_projection(const glm::vec4& projection_bounds) const
+void oly::SpriteList::set_projection(const glm::vec4& projection_bounds) const
 {
 	glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
 	GLuint proj_location = glGetUniformLocation(*shader, "uProjection");
@@ -96,7 +96,7 @@ void oly::apollo::SpriteList::set_projection(const glm::vec4& projection_bounds)
 	glUniformMatrix3fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj));
 }
 
-void oly::apollo::SpriteList::set_draw_spec(QuadPos first, QuadPos count)
+void oly::SpriteList::set_draw_spec(QuadPos first, QuadPos count)
 {
 	if (first < indices.size())
 		draw_spec.first = first;
@@ -104,23 +104,23 @@ void oly::apollo::SpriteList::set_draw_spec(QuadPos first, QuadPos count)
 	draw_spec.offset = draw_spec.first * sizeof(QuadIndexLayout);
 }
 
-void oly::apollo::SpriteList::Quad::send_info() const
+void oly::SpriteList::Quad::send_info() const
 {
 	_sprite_list->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
 }
 
-void oly::apollo::SpriteList::Quad::send_transform() const
+void oly::SpriteList::Quad::send_transform() const
 {
 	_sprite_list->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
 }
 
-void oly::apollo::SpriteList::Quad::send_data() const
+void oly::SpriteList::Quad::send_data() const
 {
 	_sprite_list->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
 	_sprite_list->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
 }
 
-oly::apollo::SpriteList::Quad& oly::apollo::SpriteList::get_quad(QuadPos pos)
+oly::SpriteList::Quad& oly::SpriteList::get_quad(QuadPos pos)
 {
 	Quad& quad = quads[pos];
 	quad._info = &quad_infos[pos];
@@ -130,7 +130,7 @@ oly::apollo::SpriteList::Quad& oly::apollo::SpriteList::get_quad(QuadPos pos)
 	return quad;
 }
 
-void oly::apollo::SpriteList::swap_quad_order(QuadPos pos1, QuadPos pos2)
+void oly::SpriteList::swap_quad_order(QuadPos pos1, QuadPos pos2)
 {
 	if (pos1 != pos2)
 	{
@@ -141,7 +141,7 @@ void oly::apollo::SpriteList::swap_quad_order(QuadPos pos1, QuadPos pos2)
 	}
 }
 
-void oly::apollo::SpriteList::move_quad_order(QuadPos from, QuadPos to)
+void oly::SpriteList::move_quad_order(QuadPos from, QuadPos to)
 {
 	if (from < to)
 	{
@@ -155,7 +155,7 @@ void oly::apollo::SpriteList::move_quad_order(QuadPos from, QuadPos to)
 	}
 }
 
-void oly::apollo::SpriteList::process()
+void oly::SpriteList::process()
 {
 	for (Sprite* sprite : sprites)
 		sprite->flush();
@@ -164,7 +164,7 @@ void oly::apollo::SpriteList::process()
 	process_set(Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
 }
 
-void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, size_t element_size)
+void oly::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, size_t element_size)
 {
 	std::byte* data = (std::byte*)_data;
 	switch (send_types[flag])
@@ -231,30 +231,30 @@ void oly::apollo::SpriteList::process_set(Dirty flag, void* _data, GLuint buf, s
 	dirty[flag].clear();
 }
 
-oly::apollo::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos)
+oly::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos)
 	: sprite_list(sprite_list), _quad(&sprite_list->get_quad(pos)), _transformer(std::make_unique<Transformer2D>())
 {
 	sprite_list->sprites.insert(this);
 }
 
-oly::apollo::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer)
+oly::Sprite::Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer)
 	: sprite_list(sprite_list), _quad(&sprite_list->get_quad(pos)), _transformer(std::move(transformer))
 {
 	sprite_list->sprites.insert(this);
 }
 
-oly::apollo::Sprite::Sprite(Sprite&& other) noexcept
+oly::Sprite::Sprite(Sprite&& other) noexcept
 	: sprite_list(other.sprite_list), _quad(other._quad), _transformer(std::move(other._transformer))
 {
 }
 
-oly::apollo::Sprite::~Sprite()
+oly::Sprite::~Sprite()
 {
 	if (sprite_list)
 		sprite_list->sprites.erase(this);
 }
 
-oly::apollo::Sprite& oly::apollo::Sprite::operator=(Sprite&& other) noexcept
+oly::Sprite& oly::Sprite::operator=(Sprite&& other) noexcept
 {
 	if (this != &other)
 	{
@@ -267,17 +267,17 @@ oly::apollo::Sprite& oly::apollo::Sprite::operator=(Sprite&& other) noexcept
 	return *this;
 }
 
-void oly::apollo::Sprite::post_set() const
+void oly::Sprite::post_set() const
 {
 	_transformer->post_set();
 }
 
-void oly::apollo::Sprite::pre_get() const
+void oly::Sprite::pre_get() const
 {
 	_transformer->pre_get();
 }
 
-void oly::apollo::Sprite::flush() const
+void oly::Sprite::flush() const
 {
 	if (_transformer->flush())
 	{
