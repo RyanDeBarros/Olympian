@@ -11,13 +11,14 @@ layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
-struct QuadTexInfo
+struct QuadInfo
 {
 	uint texSlot;
 	uint texCoordSlot;
+	uint colorSlot;
 };
-layout(std430, binding = 1) readonly buffer QuadTextures {
-	QuadTexInfo uQuadTextures[];
+layout(std430, binding = 1) readonly buffer QuadInfos {
+	QuadInfo uQuadInfo[];
 };
 struct Mat3
 {
@@ -38,8 +39,17 @@ layout(std140, binding = 0) uniform TextureCoords {
 	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B
 };
 
+struct Modulation
+{
+	vec4 colors[4];
+};
+layout(std140, binding = 1) uniform Modulations {
+	Modulation uModulation[250]; // guaranteed 16KB / 64B
+};
+
 out vec2 tTexCoord;
 flat out uint tTexSlot;
+out vec4 tModulation;
 
 vec2 position(vec2 dimensions) {
 	switch (gl_VertexID % 4) {
@@ -68,11 +78,12 @@ vec2 coords(TexUVRect rect) {
 }
 
 void main() {
-	QuadTexInfo quad_texture = uQuadTextures[gl_VertexID / 4];
-	if (quad_texture.texSlot > 0) {
-		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad_texture.texSlot].dimensions), 1.0)).xy;
-		tTexCoord = coords(uTexCoords[quad_texture.texCoordSlot]);
-		tTexSlot = quad_texture.texSlot;
+	QuadInfo quad = uQuadInfo[gl_VertexID / 4];
+	if (quad.texSlot > 0) {
+		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
+		tTexCoord = coords(uTexCoords[quad.texCoordSlot]);
+		tTexSlot = quad.texSlot;
+		tModulation = uModulation[quad.colorSlot].colors[gl_VertexID % 4];
 	}
 	else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC

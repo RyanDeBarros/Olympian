@@ -5,6 +5,7 @@ layout(location = 0) out vec4 oColor;
 
 in vec2 tTexCoord;
 flat in uint tTexSlot;
+in vec4 tModulation;
 
 struct TexData
 {
@@ -16,5 +17,5 @@ layout(std430, binding = 0) readonly buffer TextureData {
 };
 
 void main() {
-	oColor = texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
+	oColor = tModulation * texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
 }

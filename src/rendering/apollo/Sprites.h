@@ -14,6 +14,7 @@ namespace oly
 	{
 		class Sprite;
 
+		// TODO add resizing mechanism for SSBOs
 		class SpriteList
 		{
 			oly::rendering::ShaderRes shader;
@@ -27,24 +28,33 @@ namespace oly
 				oly::rendering::BindlessTextureHandle handle;
 				glm::vec2 dimensions = {};
 			};
-			struct QuadTexInfo
+			struct QuadInfo
 			{
 				GLuint tex_slot = 0;
 				GLuint tex_coord_slot = 0;
-				// TODO add modulation slot here
+				GLuint color_slot = 0;
 			};
-			std::vector<QuadTexInfo> quad_textures;
+			std::vector<QuadInfo> quad_infos;
 			std::vector<glm::mat3> quad_transforms;
 
 			oly::rendering::GLBuffer tex_data_ssbo;
-			oly::rendering::GLBuffer quad_texture_ssbo;
+			oly::rendering::GLBuffer quad_info_ssbo;
 			oly::rendering::GLBuffer quad_transform_ssbo;
 
+		public:
 			struct TexUVRect
 			{
 				glm::vec2 uvs[4] = {};
 			};
+		private:
 			oly::rendering::GLBuffer tex_coords_ubo;
+		public:
+			struct Modulation
+			{
+				glm::vec4 colors[4] = {};
+			};
+		private:
+			oly::rendering::GLBuffer modulation_ubo;
 
 			struct QuadIndexLayout
 			{
@@ -53,13 +63,26 @@ namespace oly
 			std::vector<QuadIndexLayout> indices;
 
 		public:
-			SpriteList(size_t quads_capacity, size_t textures_capacity, size_t uvs_capacity, const glm::vec4& projection_bounds);
+			struct Capacity
+			{
+				size_t quads = 0;
+				size_t textures = 0;
+				size_t uvs = 1;
+				size_t modulations = 1;
+			};
+
+		private:
+			Capacity capacity;
+
+		public:
+			SpriteList(Capacity capacity, const glm::vec4& projection_bounds);
 
 			void draw() const;
 
 			GLuint get_shader() const { return *shader; }
 			void set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos);
-			void set_uvs(glm::vec2 bl, glm::vec2 br, glm::vec2 tr, glm::vec2 tl, size_t pos) const;
+			void set_uvs(const TexUVRect& tex_coords, size_t pos) const;
+			void set_modulation(const Modulation& modulation, size_t pos) const;
 			void set_projection(const glm::vec4& projection_bounds) const;
 
 			typedef size_t QuadPos;
@@ -78,7 +101,7 @@ namespace oly
 			class Quad
 			{
 				friend SpriteList;
-				QuadTexInfo* _tex_info = nullptr;
+				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 				SpriteList* _sprite_list = nullptr;
 				QuadPos _ssbo_pos = -1;
@@ -88,8 +111,8 @@ namespace oly
 				Quad(const Quad&) = delete;
 				Quad(Quad&& other) noexcept = default;
 
-				QuadTexInfo& tex_info() { return *_tex_info; }
-				const QuadTexInfo& tex_info() const { return *_tex_info; }
+				QuadInfo& info() { return *_info; }
+				const QuadInfo& info() const { return *_info; }
 				glm::mat3& transform() { return *_transform; }
 				const glm::mat3& transform() const { return *_transform; }
 				const SpriteList& sprite_list() const { return *_sprite_list; }
@@ -98,7 +121,7 @@ namespace oly
 				void set_z_index(QuadPos z) { _sprite_list->move_quad_order(index_pos(), z); }
 				void move_z_index(int by) { _sprite_list->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_sprite_list->quads.size() - 1)); }
 
-				void send_tex_info() const;
+				void send_info() const;
 				void send_transform() const;
 				void send_data() const;
 			};
@@ -115,7 +138,7 @@ namespace oly
 
 			enum Dirty
 			{
-				TEX_INFO,
+				QUAD_INFO,
 				TRANSFORM,
 				INDICES
 			};
@@ -132,8 +155,6 @@ namespace oly
 			BufferSendType send_types[3] = { BufferSendType::SUBDATA, BufferSendType::SUBDATA, BufferSendType::SUBDATA };
 
 			std::unordered_set<Sprite*> sprites;
-			template<std::derived_from<Transformer2D> Transformer = Transformer2D>
-			Sprite create_sprite(QuadPos pos);
 			void process();
 
 		private:
@@ -155,6 +176,8 @@ namespace oly
 			~Sprite();
 			Sprite& operator=(Sprite&&) noexcept;
 
+			const SpriteList* get_sprite_list() const { return sprite_list; }
+			SpriteList* get_sprite_list() { return sprite_list; }
 			const SpriteList::Quad& quad() const { return *_quad; }
 			SpriteList::Quad& quad() { return *_quad; }
 			const Transformer2D& transformer() const { return *_transformer; }
@@ -167,11 +190,5 @@ namespace oly
 		private:
 			void flush() const;
 		};
-
-		template<std::derived_from<Transformer2D> Transformer>
-		inline Sprite SpriteList::create_sprite(QuadPos pos)
-		{
-			return Sprite(this, pos, std::make_unique<Transformer>());
-		}
 	}
 }

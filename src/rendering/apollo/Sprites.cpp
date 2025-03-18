@@ -5,35 +5,45 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <limits>
 
-oly::apollo::SpriteList::SpriteList(size_t quads_capacity, size_t textures_capacity, size_t uvs_capacity, const glm::vec4& projection_bounds)
-	: z_order(4 * quads_capacity <= USHRT_MAX ? quads_capacity : 0)
+oly::apollo::SpriteList::SpriteList(Capacity capacity, const glm::vec4& projection_bounds)
+	: capacity(capacity), z_order(4 * capacity.quads <= USHRT_MAX ? capacity.quads : 0)
 {
-	assert(4 * quads_capacity <= USHRT_MAX);
-	assert(uvs_capacity <= 500);
+	assert(4 * capacity.quads <= USHRT_MAX);
+	assert(capacity.textures + 1 != 0); // there is enough capacity for 0th texture
+	assert(1 <= capacity.uvs && capacity.uvs <= 500);
+	assert(1 <= capacity.modulations && capacity.modulations <= 250);
 
 	shader = shaders::sprite_list();
 
-	textures.resize(textures_capacity + 1); // extra 0th texture
+	++capacity.textures; // extra 0th texture
+	textures.resize(capacity.textures + 1);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
 	glBufferStorage(GL_SHADER_STORAGE_BUFFER, textures.size() * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
-	quads.resize(quads_capacity);
+	quads.resize(capacity.quads);
 
-	quad_textures.resize(quads_capacity);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_texture_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_textures.size() * sizeof(QuadTexInfo), quad_textures.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+	quad_infos.resize(capacity.quads);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_info_ssbo);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_infos.size() * sizeof(QuadInfo), quad_infos.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
-	quad_transforms.resize(quads_capacity, 1.0f);
+	quad_transforms.resize(capacity.quads, 1.0f);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_transform_ssbo);
 	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_transforms.size() * sizeof(glm::mat3), quad_transforms.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
-	glBufferStorage(GL_UNIFORM_BUFFER, uvs_capacity * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glBufferStorage(GL_UNIFORM_BUFFER, capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	TexUVRect tex_coords{ { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } };
+	glNamedBufferSubData(tex_coords_ubo, 0, sizeof(TexUVRect), &tex_coords);
 
-	indices.resize(quads_capacity);
-	set_draw_spec(0, quads_capacity);
+	glBindBuffer(GL_UNIFORM_BUFFER, modulation_ubo);
+	glBufferStorage(GL_UNIFORM_BUFFER, capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	Modulation modulation{ { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } };
+	glNamedBufferSubData(modulation_ubo, 0, sizeof(Modulation), &modulation);
+
+	indices.resize(capacity.quads);
+	set_draw_spec(0, capacity.quads);
 	
-	for (GLushort i = 0; i < quads_capacity; ++i)
+	for (GLushort i = 0; i < capacity.quads; ++i)
 		rendering::quad_indices(indices[i].data, i);
 
 	glBindVertexArray(vao);
@@ -49,15 +59,16 @@ void oly::apollo::SpriteList::draw() const
 	glBindVertexArray(vao);
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, tex_data_ssbo);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_texture_ssbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_info_ssbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_transform_ssbo);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, tex_coords_ubo);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, modulation_ubo);
 	glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
 }
 
 void oly::apollo::SpriteList::set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
 {
-	assert(pos > 0); // cannot set 0th texture
+	assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 	textures[pos] = texture;
 	TexData texture_data;
 	texture_data.dimensions = { dim.w, dim.h };
@@ -65,14 +76,16 @@ void oly::apollo::SpriteList::set_texture(const oly::rendering::TextureRes& text
 	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data);
 }
 
-void oly::apollo::SpriteList::set_uvs(glm::vec2 bl, glm::vec2 br, glm::vec2 tr, glm::vec2 tl, size_t pos) const
+void oly::apollo::SpriteList::set_uvs(const TexUVRect& tex_coords, size_t pos) const
 {
-	TexUVRect texture_coords;
-	texture_coords.uvs[0] = bl;
-	texture_coords.uvs[1] = br;
-	texture_coords.uvs[2] = tr;
-	texture_coords.uvs[3] = tl;
-	glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &texture_coords);
+	assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
+	glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
+}
+
+void oly::apollo::SpriteList::set_modulation(const Modulation& modulation, size_t pos) const
+{
+	assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
+	glNamedBufferSubData(modulation_ubo, pos * sizeof(Modulation), sizeof(Modulation), &modulation);
 }
 
 void oly::apollo::SpriteList::set_projection(const glm::vec4& projection_bounds) const
@@ -91,9 +104,9 @@ void oly::apollo::SpriteList::set_draw_spec(QuadPos first, QuadPos count)
 	draw_spec.offset = draw_spec.first * sizeof(QuadIndexLayout);
 }
 
-void oly::apollo::SpriteList::Quad::send_tex_info() const
+void oly::apollo::SpriteList::Quad::send_info() const
 {
-	_sprite_list->dirty[Dirty::TEX_INFO].insert(_ssbo_pos);
+	_sprite_list->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
 }
 
 void oly::apollo::SpriteList::Quad::send_transform() const
@@ -103,14 +116,14 @@ void oly::apollo::SpriteList::Quad::send_transform() const
 
 void oly::apollo::SpriteList::Quad::send_data() const
 {
-	_sprite_list->dirty[Dirty::TEX_INFO].insert(_ssbo_pos);
+	_sprite_list->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
 	_sprite_list->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
 }
 
 oly::apollo::SpriteList::Quad& oly::apollo::SpriteList::get_quad(QuadPos pos)
 {
 	Quad& quad = quads[pos];
-	quad._tex_info = &quad_textures[pos];
+	quad._info = &quad_infos[pos];
 	quad._transform = &quad_transforms[pos];
 	quad._sprite_list = this;
 	quad._ssbo_pos = pos;
@@ -146,7 +159,7 @@ void oly::apollo::SpriteList::process()
 {
 	for (Sprite* sprite : sprites)
 		sprite->flush();
-	process_set(Dirty::TEX_INFO, quad_textures.data(), quad_texture_ssbo, sizeof(QuadTexInfo));
+	process_set(Dirty::QUAD_INFO, quad_infos.data(), quad_info_ssbo, sizeof(QuadInfo));
 	process_set(Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
 	process_set(Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
 }
