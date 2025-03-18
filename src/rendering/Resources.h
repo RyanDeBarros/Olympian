@@ -6,7 +6,9 @@ namespace oly
 {
 	namespace shaders
 	{
-		extern rendering::ShaderRes sprite_list();
+		extern rendering::ShaderRes sprite_batch();
+		extern rendering::ShaderRes polygon_batch();
+		extern rendering::ShaderRes ellipse_batch();
 		extern void unload();
 	}
 }

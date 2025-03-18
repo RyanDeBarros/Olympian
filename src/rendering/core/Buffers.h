@@ -31,6 +31,7 @@ namespace oly
 			static GLBufferRes from_id(GLuint id) { return GLBufferRes(new GLBuffer(static_id{ id })); }
 		};
 
+		// TODO use GLbufferBlock instead
 		std::vector<GLBufferRes> gen_bulk_buffers(GLsizei n);
 
 		template<GLsizei N>

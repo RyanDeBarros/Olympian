@@ -11,13 +11,15 @@
 namespace oly
 {
 	// LATER add resizing mechanism for SSBOs
-	class SpriteList
+	class SpriteBatch
 	{
 		friend class Sprite;
 
 		oly::rendering::ShaderRes shader;
 		oly::rendering::VertexArray vao;
 		oly::rendering::GLBuffer ebo;
+
+		GLuint projection_location;
 
 		std::vector<oly::rendering::TextureRes> textures;
 
@@ -73,7 +75,7 @@ namespace oly
 		Capacity capacity;
 
 	public:
-		SpriteList(Capacity capacity, const glm::vec4& projection_bounds);
+		SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
 		void draw() const;
 
@@ -98,10 +100,10 @@ namespace oly
 
 		class Quad
 		{
-			friend SpriteList;
+			friend SpriteBatch;
 			QuadInfo* _info = nullptr;
 			glm::mat3* _transform = nullptr;
-			SpriteList* _sprite_list = nullptr;
+			SpriteBatch* _sprite_batch = nullptr;
 			QuadPos _ssbo_pos = -1;
 
 		public:
@@ -113,11 +115,11 @@ namespace oly
 			const QuadInfo& info() const { return *_info; }
 			glm::mat3& transform() { return *_transform; }
 			const glm::mat3& transform() const { return *_transform; }
-			const SpriteList& sprite_list() const { return *_sprite_list; }
-			SpriteList& sprite_list() { return *_sprite_list; }
-			QuadPos index_pos() const { return _sprite_list->z_order.range_of(_ssbo_pos); }
-			void set_z_index(QuadPos z) { _sprite_list->move_quad_order(index_pos(), z); }
-			void move_z_index(int by) { _sprite_list->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_sprite_list->quads.size() - 1)); }
+			const SpriteBatch& sprite_batch() const { return *_sprite_batch; }
+			SpriteBatch& sprite_batch() { return *_sprite_batch; }
+			QuadPos index_pos() const { return _sprite_batch->z_order.range_of(_ssbo_pos); }
+			void set_z_index(QuadPos z) { _sprite_batch->move_quad_order(index_pos(), z); }
+			void move_z_index(int by) { _sprite_batch->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_sprite_batch->quads.size() - 1)); }
 
 			void send_info() const;
 			void send_transform() const;
@@ -161,23 +163,22 @@ namespace oly
 
 	class Sprite
 	{
-		friend SpriteList;
-		SpriteList* sprite_list;
-		SpriteList::Quad* _quad;
+		friend SpriteBatch;
+		SpriteBatch::Quad* _quad;
 		std::unique_ptr<Transformer2D> _transformer;
 			
 	public:
-		Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos);
-		Sprite(SpriteList* sprite_list, SpriteList::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer);
+		Sprite(SpriteBatch* sprite_batch, SpriteBatch::QuadPos pos);
+		Sprite(SpriteBatch* sprite_batch, SpriteBatch::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer);
 		Sprite(const Sprite&) = delete;
 		Sprite(Sprite&&) noexcept;
 		~Sprite();
 		Sprite& operator=(Sprite&&) noexcept;
 
-		const SpriteList* get_sprite_list() const { return sprite_list; }
-		SpriteList* get_sprite_list() { return sprite_list; }
-		const SpriteList::Quad& quad() const { return *_quad; }
-		SpriteList::Quad& quad() { return *_quad; }
+		const SpriteBatch& sprite_batch() const { return _quad->sprite_batch(); }
+		SpriteBatch& sprite_batch() { return _quad->sprite_batch(); }
+		const SpriteBatch::Quad& quad() const { return *_quad; }
+		SpriteBatch::Quad& quad() { return *_quad; }
 		const Transformer2D& transformer() const { return *_transformer; }
 		Transformer2D& transformer() { return *_transformer; }
 		const Transform2D& local() const { return _transformer->local; }
