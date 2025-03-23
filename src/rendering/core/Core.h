@@ -26,4 +26,22 @@ namespace oly
 			indices[5] = Type(0 + 4 * quad_index);
 		}
 	}
+
+	namespace stencil
+	{
+		extern void begin();
+		extern void enable_drawing(GLuint mask = 0xFF);
+		extern void disable_drawing();
+		namespace draw
+		{
+			extern void replace();
+			extern void add();
+		}
+		namespace crop
+		{
+			extern void match();
+			extern void miss();
+		}
+		extern void end();
+	}
 }

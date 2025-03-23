@@ -146,20 +146,15 @@ void run()
 
 		sprite_batch.process();
 		
-		glEnable(GL_STENCIL_TEST);
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-		glStencilMask(0xFF);
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		oly::stencil::begin();
+		oly::stencil::enable_drawing();
+		oly::stencil::draw::replace();
 		polygon_batch.draw();
-
-		glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-		glStencilMask(0x00);
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		oly::stencil::disable_drawing();
+		oly::stencil::crop::match();
 		sprite_batch.set_draw_spec(0, 3);
 		sprite_batch.draw();
-		glDisable(GL_STENCIL_TEST);
-		
+		oly::stencil::end();
 		sprite_batch.set_draw_spec(3, 97);
 		sprite_batch.draw();
 
