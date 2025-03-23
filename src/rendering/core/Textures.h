@@ -10,15 +10,30 @@ namespace oly
 {
 	namespace rendering
 	{
-		class Texture;
-		typedef std::shared_ptr<Texture> TextureRes;
+		class Sampler
+		{
+			GLuint id = 0;
+
+		public:
+			Sampler();
+			Sampler(const Sampler&) = delete;
+			Sampler(Sampler&&) noexcept;
+			~Sampler();
+			Sampler& operator=(Sampler&&) noexcept;
+
+			operator GLuint () const { return id; }
+
+			void set_parameter_i(GLenum param, GLint value) const;
+			void set_parameter_iv(GLenum param, const GLint* values) const;
+			void set_parameter_f(GLenum param, GLfloat value) const;
+			void set_parameter_fv(GLenum param, const GLfloat* values) const;
+		};
+
+		typedef std::shared_ptr<Sampler> SamplerRes;
 
 		class Texture
 		{
-			GLuint id;
-
-			struct static_id { GLuint id; };
-			Texture(static_id sid) : id(sid.id) {}
+			GLuint id = 0;
 
 		public:
 			Texture();
@@ -29,46 +44,38 @@ namespace oly
 			Texture& operator=(Texture&&) noexcept;
 
 			operator GLuint () const { return id; }
-			static TextureRes from_id(GLuint id) { return TextureRes(new Texture(static_id{ id })); }
 		};
 
-		std::vector<TextureRes> gen_bulk_textures(GLsizei n);
+		typedef std::shared_ptr<Texture> TextureRes;
 
-		template<GLsizei N>
-		std::array<TextureRes, N> gen_bulk_textures()
+		class BindlessTexture
 		{
-			std::array<GLuint, N> textures;
-			glGenTextures(N, textures.data());
-			std::array<TextureRes, N> wrapped_textures;
-			for (GLsizei i = 0; i < N; ++i)
-				wrapped_textures[i] = Texture::from_id(textures[i]);
-			return wrapped_textures;
-		}
-
-		std::vector<TextureRes> create_bulk_textures(GLsizei n, GLenum target);
-
-		template<GLsizei N>
-		std::array<TextureRes, N> create_bulk_textures(GLenum target)
-		{
-			std::array<GLuint, N> textures;
-			glCreateTextures(target, N, textures.data());
-			std::array<TextureRes, N> wrapped_textures;
-			for (GLsizei i = 0; i < N; ++i)
-				wrapped_textures[i] = Texture::from_id(textures[i]);
-			return wrapped_textures;
-		}
-
-		class BindlessTextureHandle
-		{
-			mutable GLuint64 handle = 0;
+			GLuint id = 0;
+			GLuint64 handle = 0;
+			GLuint64 _tex_handle = 0;
+			std::vector<std::pair<GLuint, GLuint64>> _sampler_handles;
 
 		public:
-			BindlessTextureHandle() = default;
-			~BindlessTextureHandle();
+			BindlessTexture();
+			BindlessTexture(GLenum target);
+			BindlessTexture(const BindlessTexture&) = delete;
+			BindlessTexture(BindlessTexture&&) noexcept;
+			~BindlessTexture();
+			BindlessTexture& operator=(BindlessTexture&&) noexcept;
 
-			void use(GLuint texture) const;
-			void disuse() const;
-			operator GLuint64 () const { return handle; }
+			operator GLuint () const { return id; }
+			void set_handle(); // texture becomes immutable
+			void set_handle(GLuint sampler); // texture becomes immutable
+			GLuint64 get_handle() const { return handle; }
+			void use_handle() const;
+			void disuse_handle() const;
+		};
+
+		typedef std::shared_ptr<BindlessTexture> BindlessTextureRes;
+
+		struct ImageDimensions
+		{
+			int w, h, cpp;
 		};
 
 		namespace tex
@@ -76,13 +83,11 @@ namespace oly
 			extern GLenum internal_format(int cpp);
 			extern GLenum format(int cpp);
 			extern GLint alignment(int cpp);
+			
+			extern void image_2d(GLenum target, ImageDimensions dim, void* buf, GLenum data_type);
 		}
 
-		struct ImageDimensions
-		{
-			int w, h, cpp;
-		};
-
 		extern TextureRes load_static_texture_2d(const char* filename, ImageDimensions& dim);
+		extern BindlessTextureRes load_static_bindless_texture_2d(const char* filename, ImageDimensions& dim);
 	}
 }

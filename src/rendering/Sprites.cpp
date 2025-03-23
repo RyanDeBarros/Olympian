@@ -13,12 +13,11 @@ oly::SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bou
 	assert(0 < capacity.uvs && capacity.uvs <= 500);
 	assert(0 < capacity.modulations && capacity.modulations <= 250);
 
-	shader = shaders::sprite_batch();
-	glUseProgram(*shader);
-	projection_location = glGetUniformLocation(*shader, "uProjection");
+	shader = shaders::sprite_batch;
+	glUseProgram(shader);
+	projection_location = glGetUniformLocation(shader, "uProjection");
 
-	++capacity.textures; // extra 0th texture
-	textures.resize(capacity.textures + 1);
+	textures.resize(capacity.textures);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
 	glBufferStorage(GL_SHADER_STORAGE_BUFFER, textures.size() * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
@@ -57,7 +56,7 @@ oly::SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bou
 
 void oly::SpriteBatch::draw() const
 {
-	glUseProgram(*shader);
+	glUseProgram(shader);
 	glBindVertexArray(vao);
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, tex_data_ssbo);
@@ -68,23 +67,42 @@ void oly::SpriteBatch::draw() const
 	glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
 }
 
-void oly::SpriteBatch::set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos)
+void oly::SpriteBatch::set_texture(size_t pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
 {
 	assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 	textures[pos] = texture;
+	texture->use_handle();
 	TexData texture_data;
 	texture_data.dimensions = { dim.w, dim.h };
-	texture_data.handle.use(*texture);
-	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data);
+	texture_data.handle = texture->get_handle();
+	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
 }
 
-void oly::SpriteBatch::set_uvs(const TexUVRect& tex_coords, size_t pos) const
+void oly::SpriteBatch::refresh_handle(size_t pos, rendering::ImageDimensions dim)
+{
+	assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
+	textures[pos]->use_handle();
+	TexData texture_data;
+	texture_data.dimensions = { dim.w, dim.h };
+	texture_data.handle = textures[pos]->get_handle();
+	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+}
+
+void oly::SpriteBatch::refresh_handle(size_t pos)
+{
+	assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
+	textures[pos]->use_handle();
+	GLuint64 handle = textures[pos]->get_handle();
+	glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
+}
+
+void oly::SpriteBatch::set_uvs(size_t pos, const TexUVRect& tex_coords) const
 {
 	assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
 	glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
 }
 
-void oly::SpriteBatch::set_modulation(const Modulation& modulation, size_t pos) const
+void oly::SpriteBatch::set_modulation(size_t pos, const Modulation& modulation) const
 {
 	assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
 	glNamedBufferSubData(modulation_ubo, pos * sizeof(Modulation), sizeof(Modulation), &modulation);
@@ -93,7 +111,7 @@ void oly::SpriteBatch::set_modulation(const Modulation& modulation, size_t pos) 
 void oly::SpriteBatch::set_projection(const glm::vec4& projection_bounds) const
 {
 	glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-	glUseProgram(*shader);
+	glUseProgram(shader);
 	glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 }
 
@@ -107,18 +125,18 @@ void oly::SpriteBatch::set_draw_spec(QuadPos first, QuadPos count)
 
 void oly::SpriteBatch::Quad::send_info() const
 {
-	_sprite_batch->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
+	_sprite_batch->dirty_quad_infos.insert(_ssbo_pos);
 }
 
 void oly::SpriteBatch::Quad::send_transform() const
 {
-	_sprite_batch->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
+	_sprite_batch->dirty_transforms.insert(_ssbo_pos);
 }
 
 void oly::SpriteBatch::Quad::send_data() const
 {
-	_sprite_batch->dirty[Dirty::QUAD_INFO].insert(_ssbo_pos);
-	_sprite_batch->dirty[Dirty::TRANSFORM].insert(_ssbo_pos);
+	_sprite_batch->dirty_quad_infos.insert(_ssbo_pos);
+	_sprite_batch->dirty_transforms.insert(_ssbo_pos);
 }
 
 oly::SpriteBatch::Quad& oly::SpriteBatch::get_quad(QuadPos pos)
@@ -137,8 +155,8 @@ void oly::SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
 	{
 		std::swap(indices[pos1], indices[pos2]);
 		z_order.swap_range(pos1, pos2);
-		dirty[Dirty::INDICES].insert(pos1);
-		dirty[Dirty::INDICES].insert(pos2);
+		dirty_indices.insert(pos1);
+		dirty_indices.insert(pos2);
 	}
 }
 
@@ -160,12 +178,13 @@ void oly::SpriteBatch::process()
 {
 	for (Sprite* sprite : sprites)
 		sprite->flush();
-	process_set(Dirty::QUAD_INFO, quad_infos.data(), quad_info_ssbo, sizeof(QuadInfo));
-	process_set(Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
-	process_set(Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
+	process_set(dirty_quad_infos, Dirty::QUAD_INFO, quad_infos.data(), quad_info_ssbo, sizeof(QuadInfo));
+	process_set(dirty_transforms, Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
+	process_set(dirty_indices, Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
 }
 
-void oly::SpriteBatch::process_set(Dirty flag, void* _data, GLuint buf, size_t element_size)
+// TODO move to utility function
+void oly::SpriteBatch::process_set(std::set<size_t>& set, Dirty flag, void* _data, GLuint buf, size_t element_size)
 {
 	std::byte* data = (std::byte*)_data;
 	switch (send_types[flag])
@@ -175,7 +194,7 @@ void oly::SpriteBatch::process_set(Dirty flag, void* _data, GLuint buf, size_t e
 		bool contiguous = false;
 		GLintptr offset = 0;
 		GLsizeiptr size = 0;
-		for (auto iter = dirty[flag].begin(); iter != dirty[flag].end(); ++iter)
+		for (auto iter = set.begin(); iter != set.end(); ++iter)
 		{
 			if (contiguous)
 			{
@@ -204,7 +223,7 @@ void oly::SpriteBatch::process_set(Dirty flag, void* _data, GLuint buf, size_t e
 		bool contiguous = false;
 		GLintptr offset = 0;
 		GLsizeiptr size = 0;
-		for (auto iter = dirty[flag].begin(); iter != dirty[flag].end(); ++iter)
+		for (auto iter = set.begin(); iter != set.end(); ++iter)
 		{
 			if (contiguous)
 			{
@@ -229,7 +248,7 @@ void oly::SpriteBatch::process_set(Dirty flag, void* _data, GLuint buf, size_t e
 		break;
 	}
 	}
-	dirty[flag].clear();
+	set.clear();
 }
 
 oly::Sprite::Sprite(SpriteBatch* sprite_batch, SpriteBatch::QuadPos pos)

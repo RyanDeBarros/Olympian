@@ -6,9 +6,9 @@
 
 oly::PolygonBatch::PolygonBatch(const glm::vec4& projection_bounds)
 {
-	shader = shaders::polygon_batch();
-	glUseProgram(*shader);
-	projection_location = glGetUniformLocation(*shader, "uProjection");
+	shader = shaders::polygon_batch;
+	glUseProgram(shader);
+	projection_location = glGetUniformLocation(shader, "uProjection");
 
 	positions.push_back({ 0, 0 });
 	positions.push_back({ 1, -1 });
@@ -79,15 +79,15 @@ oly::PolygonBatch::PolygonBatch(const glm::vec4& projection_bounds)
 
 void oly::PolygonBatch::draw() const
 {
-	glUseProgram(*shader);
+	glUseProgram(shader);
 	glBindVertexArray(vao);
 
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+	glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_SHORT, 0);
 }
 
 void oly::PolygonBatch::set_projection(const glm::vec4& projection_bounds) const
 {
 	glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-	glUseProgram(*shader);
+	glUseProgram(shader);
 	glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 }

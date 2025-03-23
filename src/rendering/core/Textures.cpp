@@ -2,6 +2,53 @@
 
 #include <stb/stb_image.h>
 
+oly::rendering::Sampler::Sampler()
+{
+	glCreateSamplers(1, &id);
+}
+
+oly::rendering::Sampler::Sampler(Sampler&& other) noexcept
+	: id(other.id)
+{
+	other.id = 0;
+}
+
+oly::rendering::Sampler::~Sampler()
+{
+	glDeleteSamplers(1, &id);
+}
+
+oly::rendering::Sampler& oly::rendering::Sampler::operator=(Sampler&& other) noexcept
+{
+	if (this != &other)
+	{
+		glDeleteSamplers(1, &id);
+		id = other.id;
+		other.id = 0;
+	}
+	return *this;
+}
+
+void oly::rendering::Sampler::set_parameter_i(GLenum param, GLint value) const
+{
+	glSamplerParameteri(id, param, value);
+}
+
+void oly::rendering::Sampler::set_parameter_iv(GLenum param, const GLint* values) const
+{
+	glSamplerParameteriv(id, param, values);
+}
+
+void oly::rendering::Sampler::set_parameter_f(GLenum param, GLfloat value) const
+{
+	glSamplerParameterf(id, param, value);
+}
+
+void oly::rendering::Sampler::set_parameter_fv(GLenum param, const GLfloat* values) const
+{
+	glSamplerParameterfv(id, param, values);
+}
+
 oly::rendering::Texture::Texture()
 {
 	glGenTextures(1, &id);
@@ -34,43 +81,73 @@ oly::rendering::Texture& oly::rendering::Texture::operator=(Texture&& other) noe
 	return *this;
 }
 
-std::vector<std::shared_ptr<oly::rendering::Texture>> oly::rendering::gen_bulk_textures(GLsizei n)
+oly::rendering::BindlessTexture::BindlessTexture()
 {
-	std::vector<GLuint> textures;
-	textures.resize(n);
-	glGenTextures(n, textures.data());
-	std::vector<TextureRes> wrapped_textures;
-	wrapped_textures.reserve(n);
-	for (GLuint id : textures)
-		wrapped_textures.push_back(Texture::from_id(id));
-	return wrapped_textures;
+	glGenTextures(1, &id);
 }
 
-std::vector<std::shared_ptr<oly::rendering::Texture>> oly::rendering::create_bulk_textures(GLsizei n, GLenum target)
+oly::rendering::BindlessTexture::BindlessTexture(GLenum target)
 {
-	std::vector<GLuint> textures;
-	textures.resize(n);
-	glCreateTextures(target, n, textures.data());
-	std::vector<TextureRes> wrapped_textures;
-	wrapped_textures.reserve(n);
-	for (GLuint id : textures)
-		wrapped_textures.push_back(Texture::from_id(id));
-	return wrapped_textures;
+	glCreateTextures(target, 1, &id);
 }
 
-oly::rendering::BindlessTextureHandle::~BindlessTextureHandle()
+oly::rendering::BindlessTexture::BindlessTexture(BindlessTexture&& other) noexcept
+	: id(other.id), handle(other.handle)
 {
-	disuse();
+	other.id = 0;
+	other.handle = 0;
 }
 
-void oly::rendering::BindlessTextureHandle::use(GLuint texture) const
+oly::rendering::BindlessTexture::~BindlessTexture()
 {
-	disuse();
-	handle = glGetTextureHandleARB(texture);
-	glMakeTextureHandleResidentARB(handle);
+	disuse_handle();
+	glDeleteTextures(1, &id);
 }
 
-void oly::rendering::BindlessTextureHandle::disuse() const
+oly::rendering::BindlessTexture& oly::rendering::BindlessTexture::operator=(BindlessTexture&& other) noexcept
+{
+	if (this != &other)
+	{
+		disuse_handle();
+		glDeleteTextures(1, &id);
+		id = other.id;
+		other.id = 0;
+		handle = other.handle;
+		other.handle = 0;
+	}
+	return *this;
+}
+
+void oly::rendering::BindlessTexture::set_handle()
+{
+	disuse_handle();
+	if (!_tex_handle)
+		_tex_handle = glGetTextureHandleARB(id);
+	handle = _tex_handle;
+}
+
+void oly::rendering::BindlessTexture::set_handle(GLuint sampler)
+{
+	disuse_handle();
+	for (auto iter = _sampler_handles.begin(); iter != _sampler_handles.end(); ++iter)
+	{
+		if (iter->first == sampler)
+		{
+			handle = iter->second;
+			return;
+		}
+	}
+	handle = glGetTextureSamplerHandleARB(id, sampler);
+	_sampler_handles.push_back({ sampler, handle });
+}
+
+void oly::rendering::BindlessTexture::use_handle() const
+{
+	if (handle)
+		glMakeTextureHandleResidentARB(handle);
+}
+
+void oly::rendering::BindlessTexture::disuse_handle() const
 {
 	if (handle)
 		glMakeTextureHandleNonResidentARB(handle);
@@ -100,13 +177,29 @@ GLint oly::rendering::tex::alignment(int cpp)
 		: 4;
 }
 
+void oly::rendering::tex::image_2d(GLenum target, ImageDimensions dim, void* buf, GLenum data_type)
+{
+	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment(dim.cpp));
+	glTexImage2D(target, 0, internal_format(dim.cpp), dim.w, dim.h, 0, format(dim.cpp), data_type, buf);
+}
+
 oly::rendering::TextureRes oly::rendering::load_static_texture_2d(const char* filename, ImageDimensions& dim)
 {
+	// TODO PixelBuffer that encapsulates unsigned char* image and ImageDimensions dim
 	unsigned char* image = stbi_load(filename, &dim.w, &dim.h, &dim.cpp, 4);
-	auto texture = std::make_shared<oly::rendering::Texture>(GL_TEXTURE_2D);
+	TextureRes texture = std::make_shared<oly::rendering::Texture>(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, *texture);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, oly::rendering::tex::alignment(dim.cpp));
-	glTexImage2D(GL_TEXTURE_2D, 0, oly::rendering::tex::internal_format(dim.cpp), dim.w, dim.h, 0, oly::rendering::tex::format(dim.cpp), GL_UNSIGNED_BYTE, image);
+	tex::image_2d(GL_TEXTURE_2D, dim, image, GL_UNSIGNED_BYTE);
+	stbi_image_free(image);
+	return texture;
+}
+
+oly::rendering::BindlessTextureRes oly::rendering::load_static_bindless_texture_2d(const char* filename, ImageDimensions& dim)
+{
+	unsigned char* image = stbi_load(filename, &dim.w, &dim.h, &dim.cpp, 4);
+	BindlessTextureRes texture = std::make_shared<oly::rendering::BindlessTexture>(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, *texture);
+	tex::image_2d(GL_TEXTURE_2D, dim, image, GL_UNSIGNED_BYTE);
 	stbi_image_free(image);
 	return texture;
 }

@@ -95,9 +95,9 @@ static void validate_shader(GLuint shader)
 	}
 }
 
-static oly::rendering::ShaderRes create_linked_shader(GLuint vert, GLuint frag)
+static std::unique_ptr<oly::rendering::Shader> create_linked_shader(GLuint vert, GLuint frag)
 {
-	oly::rendering::ShaderRes shader = std::make_shared<oly::rendering::Shader>();
+	std::unique_ptr<oly::rendering::Shader> shader = std::make_unique<oly::rendering::Shader>();
 	glAttachShader(*shader, vert);
 	glAttachShader(*shader, frag);
 	glLinkProgram(*shader);
@@ -111,9 +111,9 @@ static oly::rendering::ShaderRes create_linked_shader(GLuint vert, GLuint frag)
 	return shader;
 }
 
-static oly::rendering::ShaderRes create_linked_shader(GLuint vert, GLuint frag, GLuint geom)
+static std::unique_ptr<oly::rendering::Shader> create_linked_shader(GLuint vert, GLuint frag, GLuint geom)
 {
-	oly::rendering::ShaderRes shader = std::make_shared<oly::rendering::Shader>();
+	std::unique_ptr<oly::rendering::Shader> shader = std::make_unique<oly::rendering::Shader>();
 	glAttachShader(*shader, vert);
 	glAttachShader(*shader, frag);
 	glAttachShader(*shader, geom);
@@ -218,7 +218,7 @@ static int parse_glsl_source(const std::string& glsl, parsed_glsl_source& full_s
 	return 0;
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(vertex_path vertex_shader, fragment_path fragment_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(vertex_path vertex_shader, fragment_path fragment_shader)
 {
 	std::string file_content;
 	file_content = io::read_file(vertex_shader.path);
@@ -229,7 +229,7 @@ oly::rendering::ShaderRes oly::rendering::load_shader(vertex_path vertex_shader,
 	return create_linked_shader(vert, frag);
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader)
 {
 	std::string file_content;
 	file_content = io::read_file(vertex_shader.path);
@@ -242,7 +242,7 @@ oly::rendering::ShaderRes oly::rendering::load_shader(vertex_path vertex_shader,
 	return create_linked_shader(vert, frag, geom);
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(glsl_path glsl_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(glsl_path glsl_shader)
 {
 	std::string file_content = io::read_file(glsl_shader.path);
 	parsed_glsl_source source;
@@ -267,14 +267,14 @@ oly::rendering::ShaderRes oly::rendering::load_shader(glsl_path glsl_shader)
 	}
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(vertex_source vertex_shader, fragment_source fragment_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(vertex_source vertex_shader, fragment_source fragment_shader)
 {
 	GLuint vert = create_compiled_subshader(vertex_shader.source, vertex_shader.length, GL_VERTEX_SHADER);
 	GLuint frag = create_compiled_subshader(fragment_shader.source, fragment_shader.length, GL_FRAGMENT_SHADER);
 	return create_linked_shader(vert, frag);
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(vertex_source vertex_shader, fragment_source fragment_shader, geometry_source geometry_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(vertex_source vertex_shader, fragment_source fragment_shader, geometry_source geometry_shader)
 {
 	GLuint vert = create_compiled_subshader(vertex_shader.source, vertex_shader.length, GL_VERTEX_SHADER);
 	GLuint frag = create_compiled_subshader(fragment_shader.source, fragment_shader.length, GL_FRAGMENT_SHADER);
@@ -282,7 +282,7 @@ oly::rendering::ShaderRes oly::rendering::load_shader(vertex_source vertex_shade
 	return create_linked_shader(vert, frag, geom);
 }
 
-oly::rendering::ShaderRes oly::rendering::load_shader(glsl_source glsl_shader)
+std::unique_ptr<oly::rendering::Shader> oly::rendering::load_shader(glsl_source glsl_shader)
 {
 	parsed_glsl_source source;
 	int res = parse_glsl_source(glsl_shader.source, source);

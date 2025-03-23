@@ -15,17 +15,17 @@ namespace oly
 	{
 		friend class Sprite;
 
-		oly::rendering::ShaderRes shader;
-		oly::rendering::VertexArray vao;
-		oly::rendering::GLBuffer ebo;
+		GLuint shader;
+		rendering::VertexArray vao;
+		rendering::GLBuffer ebo;
 
 		GLuint projection_location;
 
-		std::vector<oly::rendering::TextureRes> textures;
+		std::vector<rendering::BindlessTextureRes> textures;
 
 		struct TexData
 		{
-			oly::rendering::BindlessTextureHandle handle;
+			GLuint64 handle;
 			glm::vec2 dimensions = {};
 		};
 		struct QuadInfo
@@ -37,9 +37,9 @@ namespace oly
 		std::vector<QuadInfo> quad_infos;
 		std::vector<glm::mat3> quad_transforms;
 
-		oly::rendering::GLBuffer tex_data_ssbo;
-		oly::rendering::GLBuffer quad_info_ssbo;
-		oly::rendering::GLBuffer quad_transform_ssbo;
+		rendering::GLBuffer tex_data_ssbo;
+		rendering::GLBuffer quad_info_ssbo;
+		rendering::GLBuffer quad_transform_ssbo;
 
 	public:
 		struct TexUVRect
@@ -47,14 +47,14 @@ namespace oly
 			glm::vec2 uvs[4] = {};
 		};
 	private:
-		oly::rendering::GLBuffer tex_coords_ubo;
+		rendering::GLBuffer tex_coords_ubo;
 	public:
 		struct Modulation
 		{
 			glm::vec4 colors[4] = {};
 		};
 	private:
-		oly::rendering::GLBuffer modulation_ubo;
+		rendering::GLBuffer modulation_ubo;
 
 		struct QuadIndexLayout
 		{
@@ -79,10 +79,11 @@ namespace oly
 
 		void draw() const;
 
-		GLuint get_shader() const { return *shader; }
-		void set_texture(const oly::rendering::TextureRes& texture, oly::rendering::ImageDimensions dim, size_t pos);
-		void set_uvs(const TexUVRect& tex_coords, size_t pos) const;
-		void set_modulation(const Modulation& modulation, size_t pos) const;
+		void set_texture(size_t pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim);
+		void refresh_handle(size_t pos, rendering::ImageDimensions dim);
+		void refresh_handle(size_t pos);
+		void set_uvs(size_t pos, const TexUVRect& tex_coords) const;
+		void set_modulation(size_t pos, const Modulation& modulation) const;
 		void set_projection(const glm::vec4& projection_bounds) const;
 
 		typedef size_t QuadPos;
@@ -144,7 +145,9 @@ namespace oly
 		};
 
 	private:
-		std::set<QuadPos> dirty[3] = { {}, {}, {} };
+		std::set<QuadPos> dirty_quad_infos;
+		std::set<QuadPos> dirty_transforms;
+		std::set<QuadPos> dirty_indices;
 
 	public:
 		enum class BufferSendType
@@ -157,7 +160,7 @@ namespace oly
 		void process();
 
 	private:
-		void process_set(Dirty flag, void* data, GLuint buf, size_t element_size);
+		void process_set(std::set<size_t>& set, Dirty flag, void* data, GLuint buf, size_t element_size);
 		std::unordered_set<Sprite*> sprites;
 	};
 

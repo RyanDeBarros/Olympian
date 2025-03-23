@@ -8,7 +8,7 @@ namespace oly
 {
 	class PolygonBatch
 	{
-		oly::rendering::ShaderRes shader;
+		GLuint shader;
 		oly::rendering::VertexArray vao;
 		oly::rendering::GLBuffer ebo;
 		

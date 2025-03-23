@@ -10,9 +10,14 @@ void oly::init()
 	stbi_set_flip_vertically_on_load(true);
 }
 
+void oly::load_context()
+{
+	load_resources();
+}
+
 int oly::terminate()
 {
-	shaders::unload();
+	unload_resources();
 	glfwTerminate();
 	return 0;
 }
