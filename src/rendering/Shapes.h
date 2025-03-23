@@ -26,11 +26,37 @@ namespace oly
 		std::vector<GLushort> indices;
 
 	public:
-		PolygonBatch(const glm::vec4& projection_bounds);
+		typedef GLushort PolygonPos;
+		
+	private:
+		struct PolygonIndex
+		{
+			PolygonPos index;
+			GLushort vertices_offset;
+			GLushort num_vertices;
+			GLushort indices_offset;
+			GLushort num_indices;
+		};
+		std::vector<PolygonIndex> polygons;
+
+	public:
+		struct Capacity
+		{
+			size_t vertices;
+			size_t indices;
+		};
+
+	private:
+		Capacity capacity;
+		
+	public:
+		PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
 		void draw() const;
 
 		void set_projection(const glm::vec4& projection_bounds) const;
+
+		void append_polygon(const math::Polygon2D& polygon, const Transform2D& transform);
 	};
 	
 	// TODO

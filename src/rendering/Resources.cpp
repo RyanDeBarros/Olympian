@@ -5,9 +5,9 @@ namespace oly
 	namespace samplers
 	{
 		static std::unique_ptr<rendering::Sampler> _linear = nullptr;
-		GLuint64 linear = 0;
+		GLuint linear = 0;
 		static std::unique_ptr<rendering::Sampler> _nearest = nullptr;
-		GLuint64 nearest = 0;
+		GLuint nearest = 0;
 
 		void load()
 		{

@@ -101,7 +101,24 @@ void run()
 	
 	sprite2.quad().set_z_index(0);
 
-	oly::PolygonBatch polygon_batch({ -720, 720, -540, 540 });
+	size_t num_polygons = 100;
+	size_t approx_polygon_degree = 6;
+	oly::PolygonBatch polygon_batch({ num_polygons * approx_polygon_degree, num_polygons * (approx_polygon_degree - 2) * 3 }, { -720, 720, -540, 540 });
+
+	oly::math::Polygon2D pentagon;
+	pentagon.points.push_back({ 1, -1 });
+	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 0.5f });
+	pentagon.points.push_back({ 1, 0 });
+	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 0.5f });
+	pentagon.points.push_back({ 0, 1 });
+	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 0.5f });
+	pentagon.points.push_back({ -1, 0 });
+	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 0.5f });
+	pentagon.points.push_back({ -1, -1 });
+	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 0.5f });
+	oly::Transform2D pentagon_transform;
+	pentagon_transform.scale = glm::vec2(160);
+	polygon_batch.append_polygon(pentagon, pentagon_transform);
 	
 	bool first = true;
 
@@ -147,7 +164,7 @@ void run()
 		sprite_batch.process();
 		
 		oly::stencil::begin();
-		oly::stencil::enable_drawing();
+		oly::stencil::enable_drawing(true);
 		oly::stencil::draw::replace();
 		polygon_batch.draw();
 		oly::stencil::disable_drawing();

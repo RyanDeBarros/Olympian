@@ -34,6 +34,22 @@ namespace oly
 
 		extern float cross(glm::vec2 u, glm::vec2 v);
 		
-		extern std::vector<glm::ivec3> ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& points, int starting_offset = 0, int ear_cycle = 0);
+		struct Polygon2D
+		{
+			std::vector<glm::vec2> points;
+			std::vector<glm::vec4> colors;
+		};
+
+		extern size_t num_triangulated_faces(const Polygon2D& polygon);
+
+		struct Triangulation
+		{
+			glm::uint index_offset;
+			std::vector<glm::uvec3> faces;
+
+			size_t num_indices() const { return 3 * faces.size(); }
+		};
+
+		extern Triangulation ear_clipping(glm::uint index_offset, const Polygon2D& polygon, int starting_offset = 0, int ear_cycle = 0);
 	}
 }

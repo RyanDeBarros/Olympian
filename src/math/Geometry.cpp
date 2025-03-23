@@ -22,3 +22,8 @@ float oly::math::cross(glm::vec2 u, glm::vec2 v)
 {
 	return u.x * v.y - u.y * v.x;
 }
+
+size_t oly::math::num_triangulated_faces(const Polygon2D& polygon)
+{
+	return polygon.points.size() >= 3 ? (polygon.points.size() - 2) * 3 : 0;
+}

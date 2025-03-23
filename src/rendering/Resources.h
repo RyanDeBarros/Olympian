@@ -6,8 +6,8 @@ namespace oly
 {
 	namespace samplers
 	{
-		extern GLuint64 linear;
-		extern GLuint64 nearest;
+		extern GLuint linear;
+		extern GLuint nearest;
 
 		extern void load();
 		extern void unload();

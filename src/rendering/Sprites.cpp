@@ -119,7 +119,7 @@ void oly::SpriteBatch::set_draw_spec(QuadPos first, QuadPos count)
 {
 	if (first < indices.size())
 		draw_spec.first = first;
-	draw_spec.count = 6 * std::min(count, (QuadPos)indices.size() - draw_spec.first);
+	draw_spec.count = 6 * std::min(count, (QuadPos)(indices.size() - draw_spec.first));
 	draw_spec.offset = draw_spec.first * sizeof(QuadIndexLayout);
 }
 
@@ -184,7 +184,7 @@ void oly::SpriteBatch::process()
 }
 
 // TODO move to utility function
-void oly::SpriteBatch::process_set(std::set<size_t>& set, Dirty flag, void* _data, GLuint buf, size_t element_size)
+void oly::SpriteBatch::process_set(std::set<QuadPos>& set, Dirty flag, void* _data, GLuint buf, size_t element_size)
 {
 	std::byte* data = (std::byte*)_data;
 	switch (send_types[flag])

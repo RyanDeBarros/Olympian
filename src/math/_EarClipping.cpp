@@ -20,9 +20,9 @@ struct EarClippingData
 
 struct Node
 {
-	size_t v;
+	glm::uint v;
 
-	explicit Node(size_t v) : v(v) {}
+	explicit Node(glm::uint v) : v(v) {}
 
 	bool is_reflex = false;
 	bool is_ear = false;
@@ -45,9 +45,9 @@ struct Node
 		return oly::math::Triangle2D{ (*data.vertices)[v], (*data.vertices)[prev_vertex->v], (*data.vertices)[next_vertex->v] };
 	}
 
-	glm::ivec3 face(glm::uint index_offset) const
+	glm::uvec3 face(glm::uint index_offset) const
 	{
-		return glm::ivec3(index_offset) + glm::ivec3{ prev_vertex->v, v, next_vertex->v };
+		return glm::uvec3(index_offset) + glm::uvec3{ prev_vertex->v, v, next_vertex->v };
 	}
 
 	bool should_be_reflexive(const EarClippingData& data) const
@@ -303,16 +303,18 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	--data.size;
 }
 
-std::vector<glm::ivec3> oly::math::ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& points, int starting_offset, int ear_cycle)
+oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const oly::math::Polygon2D& polygon, int starting_offset, int ear_cycle)
 {
+	const std::vector<glm::vec2>& points = polygon.points;
 	assert(points.size() >= 3);
+	Triangulation triangulation{ index_offset };
+
 	if (points.size() == 3)
 	{
-		glm::ivec3 face(unsigned_mod(0 + starting_offset, (int)points.size()), unsigned_mod(1 + starting_offset, (int)points.size()), unsigned_mod(2 + starting_offset, (int)points.size()));
-		return { glm::ivec3(index_offset) + face};
+		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)points.size()), unsigned_mod(1 + starting_offset, (int)points.size()), unsigned_mod(2 + starting_offset, (int)points.size()) };
+		triangulation.faces.push_back(glm::uvec3(index_offset) + face);
+		return triangulation;
 	}
-
-	std::vector<glm::ivec3> triangulation;
 
 	EarClippingData data{};
 	data.size = points.size();
@@ -323,7 +325,7 @@ std::vector<glm::ivec3> oly::math::ear_clipping(glm::uint index_offset, const st
 		append_vertex(data, unsigned_mod(i + starting_offset, (int)points.size()));
 
 	// determine orientation
-	float signed_area = cross(points[points.size() - 1], points[0]);
+	float signed_area = cross(points.back(), points[0]);
 	for (size_t i = 1; i < points.size(); ++i)
 		signed_area += cross(points[i - 1], points[i]);
 	data.ccw = (signed_area >= 0.0f);
@@ -356,7 +358,7 @@ std::vector<glm::ivec3> oly::math::ear_clipping(glm::uint index_offset, const st
 	{
 		while (data.size > 3)
 		{
-			triangulation.push_back(data.head_ear->face(index_offset));
+			triangulation.faces.push_back(data.head_ear->face(index_offset));
 			remove_ear(data, data.head_ear);
 		}
 	}
@@ -368,7 +370,7 @@ std::vector<glm::ivec3> oly::math::ear_clipping(glm::uint index_offset, const st
 			std::shared_ptr<Node> next_indexer = indexer;
 			for (int i = 0; i < ear_cycle; ++i)
 				next_indexer = next_indexer->next_ear;
-			triangulation.push_back(indexer->face(index_offset));
+			triangulation.faces.push_back(indexer->face(index_offset));
 			remove_ear(data, indexer);
 			indexer = next_indexer;
 		}
@@ -381,12 +383,12 @@ std::vector<glm::ivec3> oly::math::ear_clipping(glm::uint index_offset, const st
 			std::shared_ptr<Node> prev_indexer = indexer;
 			for (int i = 0; i > ear_cycle; --i)
 				prev_indexer = prev_indexer->prev_ear;
-			triangulation.push_back(indexer->face(index_offset));
+			triangulation.faces.push_back(indexer->face(index_offset));
 			remove_ear(data, indexer);
 			indexer = prev_indexer;
 		}
 	}
 	// final face
-	triangulation.push_back(data.head_ear->face(index_offset));
+	triangulation.faces.push_back(data.head_ear->face(index_offset));
 	return triangulation;
 }

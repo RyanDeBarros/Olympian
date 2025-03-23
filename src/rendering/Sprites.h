@@ -86,7 +86,7 @@ namespace oly
 		void set_modulation(size_t pos, const Modulation& modulation) const;
 		void set_projection(const glm::vec4& projection_bounds) const;
 
-		typedef size_t QuadPos;
+		typedef GLushort QuadPos;
 	private:
 		struct
 		{
@@ -160,7 +160,7 @@ namespace oly
 		void process();
 
 	private:
-		void process_set(std::set<size_t>& set, Dirty flag, void* data, GLuint buf, size_t element_size);
+		void process_set(std::set<QuadPos>& set, Dirty flag, void* data, GLuint buf, size_t element_size);
 		std::unordered_set<Sprite*> sprites;
 	};
 

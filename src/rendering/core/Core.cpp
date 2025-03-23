@@ -1,19 +1,32 @@
 #include "Core.h"
 
+void oly::enable_color()
+{
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+}
+
+void oly::disable_color()
+{
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+}
+
 void oly::stencil::begin()
 {
 	glEnable(GL_STENCIL_TEST);
 }
 
-void oly::stencil::enable_drawing(GLuint mask)
+void oly::stencil::enable_drawing(bool color, GLuint mask)
 {
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	if (color)
+		enable_color();
+	else
+		disable_color();
 	glStencilMask(mask);
 }
 
 void oly::stencil::disable_drawing()
 {
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	enable_color();
 	glStencilMask(0x00);
 }
 
@@ -42,5 +55,5 @@ void oly::stencil::crop::miss()
 void oly::stencil::end()
 {
 	glDisable(GL_STENCIL_TEST);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	enable_color();
 }

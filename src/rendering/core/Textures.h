@@ -65,7 +65,7 @@ namespace oly
 
 			operator GLuint () const { return id; }
 			void set_handle(); // texture becomes immutable
-			void set_handle(GLuint64 sampler); // texture becomes immutable
+			void set_handle(GLuint sampler); // texture becomes immutable
 			GLuint64 get_handle() const { return handle; }
 			void use_handle() const;
 			void disuse_handle() const;
