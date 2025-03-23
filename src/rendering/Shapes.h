@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/Core.h"
-#include "Transforms.h"
-#include "util/MathDS.h"
+#include "math/Transforms.h"
+#include "math/DataStructures.h"
+#include "math/Geometry.h"
 
 namespace oly
 {

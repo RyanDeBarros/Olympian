@@ -10,14 +10,15 @@ oly::PolygonBatch::PolygonBatch(const glm::vec4& projection_bounds)
 	glUseProgram(shader);
 	projection_location = glGetUniformLocation(shader, "uProjection");
 
-	positions.push_back({ 0, 0 });
-	positions.push_back({ 1, -1 });
-	positions.push_back({ 1, 0 });
-	positions.push_back({ 0, 1 });
-	positions.push_back({ -1, 0 });
-	positions.push_back({ -1, -1 });
+	std::vector<glm::vec2> pentagon;
+	pentagon.push_back({ 1, -1 });
+	pentagon.push_back({ 1, 0 });
+	pentagon.push_back({ 0, 1 });
+	pentagon.push_back({ -1, 0 });
+	pentagon.push_back({ -1, -1 });
 
-	colors.push_back({ 0.5f, 0.5f, 0.5f, 0.5f });
+	positions.insert(positions.end(), pentagon.begin(), pentagon.end());
+
 	colors.push_back({ 1.0f, 1.0f, 0.0f, 0.5f });
 	colors.push_back({ 1.0f, 0.0f, 1.0f, 0.5f });
 	colors.push_back({ 0.0f, 1.0f, 1.0f, 0.5f });
@@ -26,28 +27,17 @@ oly::PolygonBatch::PolygonBatch(const glm::vec4& projection_bounds)
 
 	Transform2D transform;
 	transform.scale = glm::vec2(80);
-	transforms.push_back(transform.matrix());
-	transforms.push_back(transform.matrix());
-	transforms.push_back(transform.matrix());
-	transforms.push_back(transform.matrix());
-	transforms.push_back(transform.matrix());
-	transforms.push_back(transform.matrix());
+	for (size_t i = 0; i < pentagon.size(); ++i)
+		transforms.push_back(transform.matrix());
+	
+	auto pentagon_faces = math::ear_clipping(0, pentagon);
 
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-	indices.push_back(0);
-	indices.push_back(2);
-	indices.push_back(3);
-	indices.push_back(0);
-	indices.push_back(3);
-	indices.push_back(4);
-	indices.push_back(0);
-	indices.push_back(4);
-	indices.push_back(5);
-	indices.push_back(0);
-	indices.push_back(5);
-	indices.push_back(1);
+	for (glm::ivec3 face : pentagon_faces)
+	{
+		indices.push_back(face[0]);
+		indices.push_back(face[1]);
+		indices.push_back(face[2]);
+	}
 
 	glBindVertexArray(vao);
 

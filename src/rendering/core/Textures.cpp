@@ -126,7 +126,7 @@ void oly::rendering::BindlessTexture::set_handle()
 	handle = _tex_handle;
 }
 
-void oly::rendering::BindlessTexture::set_handle(GLuint sampler)
+void oly::rendering::BindlessTexture::set_handle(GLuint64 sampler)
 {
 	disuse_handle();
 	for (auto iter = _sampler_handles.begin(); iter != _sampler_handles.end(); ++iter)
