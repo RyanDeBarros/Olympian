@@ -21,17 +21,5 @@ namespace oly
 
 			operator GLuint () const { return id; }
 		};
-
-		struct VAODescriptor
-		{
-			VertexArray vao;
-			std::vector<GLBufferRes> vbos = { nullptr };
-			GLBufferRes ebo = nullptr;
-
-			void gen_vbos(GLsizei n) { vbos = oly::rendering::gen_bulk_buffers(n); }
-			void gen_ebo();
-			GLuint get_vbo(GLsizei i = 0) const { return *vbos[i]; }
-			GLuint get_ebo() const { return *ebo; }
-		};
 	}
 }

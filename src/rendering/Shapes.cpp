@@ -7,50 +7,50 @@
 oly::PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 	: capacity(capacity)
 {
+	assert(capacity.degree >= 3);
 	// TODO asserts on capacity
 
 	shader = shaders::polygon_batch;
 	glUseProgram(shader);
 	projection_location = glGetUniformLocation(shader, "uProjection");
+	degree_location = glGetUniformLocation(shader, "uDegree");
 
 	glBindVertexArray(vao);
 
-	positions.resize(capacity.vertices);
+	polygon_indexers.resize(capacity.polygons);
+	polygons.resize(capacity.polygons);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-	glNamedBufferStorage(vbo_position, positions.size() * sizeof(glm::vec2), positions.data(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(vbo_position, capacity.vertices * sizeof(glm::vec2), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	colors.resize(capacity.vertices);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
-	glNamedBufferStorage(vbo_color, colors.size() * sizeof(glm::vec4), colors.data(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(vbo_color, capacity.vertices * sizeof(glm::vec4), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	transforms.resize(capacity.vertices);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_transform);
-	glNamedBufferStorage(vbo_transform, transforms.size() * sizeof(glm::mat3), transforms.data(), GL_DYNAMIC_STORAGE_BIT);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(0 * sizeof(glm::vec3)));
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(1 * sizeof(glm::vec3)));
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(glm::mat3), (void*)(2 * sizeof(glm::vec3)));
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-	glEnableVertexAttribArray(4);
+	transforms.resize(capacity.polygons);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_transforms);
+	glNamedBufferStorage(ssbo_transforms, capacity.polygons * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	indices.resize(capacity.indices);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glNamedBufferStorage(ebo, indices.size() * sizeof(GLushort), indices.data(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(ebo, capacity.indices * sizeof(GLushort), indices.data(), GL_DYNAMIC_STORAGE_BIT);
 
 	set_projection(projection_bounds);
+
+	glBindVertexArray(0);
 }
 
 void oly::PolygonBatch::draw() const
 {
 	glUseProgram(shader);
+	glUniform1ui(degree_location, capacity.degree);
 	glBindVertexArray(vao);
-
-	glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_SHORT, 0);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_transforms);
+	glDrawElements(GL_TRIANGLES, (GLsizei)capacity.indices, GL_UNSIGNED_SHORT, 0);
 }
 
 void oly::PolygonBatch::set_projection(const glm::vec4& projection_bounds) const
@@ -60,54 +60,44 @@ void oly::PolygonBatch::set_projection(const glm::vec4& projection_bounds) const
 	glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 }
 
-void oly::PolygonBatch::append_polygon(const math::Polygon2D& polygon, const Transform2D& transform)
+void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform)
 {
-	assert(polygon.points.size() >= 3);
-	assert(polygon.colors.size() == 1 || polygon.points.size() == polygon.colors.size());
+	set_polygon(pos, std::move(polygon), math::ear_clipping(glm::uint(pos * capacity.degree), polygon), transform);
+}
 
-	auto polygon_faces = math::ear_clipping(0, polygon);
-	if (polygons.empty())
+void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
+{
+	assert(polygon.valid());
+	assert(polygon.points.size() <= capacity.degree);
+	assert(triangulation.num_indices() <= capacity.polygon_indices());
+	// TODO add asserts for capacity
+
+	PolygonPos polygon_insertion_index = pos;
+	GLushort vertex_insertion_index = GLushort(pos * capacity.degree);
+	GLushort index_insertion_index = GLushort(pos * capacity.polygon_indices());
+
+	PolygonIndexer p;
+	p.index = polygon_insertion_index;
+	p.num_vertices = (GLushort)polygon.points.size();
+	p.vertices_offset = vertex_insertion_index;
+	p.num_indices = (GLushort)triangulation.num_indices();
+	p.indices_offset = index_insertion_index;
+	polygon_indexers[polygon_insertion_index] = p;
+
+	polygon.fill_colors();
+	polygons[polygon_insertion_index] = std::move(polygon);
+
+	transforms[polygon_insertion_index] = transform.matrix();
+
+	for (size_t i = 0; i < triangulation.faces.size(); ++i)
 	{
-		PolygonIndex p;
-		p.index = 0;
-		p.vertices_offset = 0;
-		p.num_vertices = (GLushort)polygon.points.size();
-		p.indices_offset = 0;
-		p.num_indices = (GLushort)polygon_faces.num_indices();
-		polygons.push_back(p);
-	}
-	else
-	{
-		PolygonIndex p;
-		p.index = (PolygonPos)polygons.size();
-		p.vertices_offset = polygons.back().vertices_offset + polygons.back().num_vertices;
-		p.num_vertices = (GLushort)polygon.points.size();
-		p.indices_offset = polygons.back().indices_offset + polygons.back().num_indices;
-		p.num_indices = (GLushort)polygon_faces.num_indices();
-		polygons.push_back(p);
+		indices[index_insertion_index + 3 * i + 0] = triangulation.faces[i][0];
+		indices[index_insertion_index + 3 * i + 1] = triangulation.faces[i][1];
+		indices[index_insertion_index + 3 * i + 2] = triangulation.faces[i][2];
 	}
 
-	positions.insert(positions.begin() + polygons.back().vertices_offset, polygon.points.begin(), polygon.points.end());
-
-	if (polygon.colors.size() > 1)
-		colors.insert(colors.begin() + polygons.back().vertices_offset, polygon.colors.begin(), polygon.colors.end());
-	else
-		for (size_t i = 0; i < polygon.points.size(); ++i)
-			colors.insert(colors.begin() + polygons.back().vertices_offset + i, polygon.colors[0]);
-
-	for (size_t i = 0; i < polygon.points.size(); ++i)
-		transforms.insert(transforms.begin() + polygons.back().vertices_offset + i, transform.matrix());
-
-	size_t fi = 0;
-	for (glm::ivec3 face : polygon_faces.faces)
-	{
-		indices.insert(indices.begin() + polygons.back().indices_offset + fi++, face[0]);
-		indices.insert(indices.begin() + polygons.back().indices_offset + fi++, face[1]);
-		indices.insert(indices.begin() + polygons.back().indices_offset + fi++, face[2]);
-	}
-	
-	glNamedBufferSubData(vbo_position, polygons.back().vertices_offset * sizeof(glm::vec2), polygons.back().num_vertices * sizeof(glm::vec2), positions.data() + polygons.back().vertices_offset);
-	glNamedBufferSubData(vbo_color, polygons.back().vertices_offset * sizeof(glm::vec4), polygons.back().num_vertices * sizeof(glm::vec4), colors.data() + polygons.back().vertices_offset);
-	glNamedBufferSubData(vbo_transform, polygons.back().vertices_offset * sizeof(glm::mat3), polygons.back().num_vertices * sizeof(glm::mat3), transforms.data() + polygons.back().vertices_offset);
-	glNamedBufferSubData(ebo, polygons.back().indices_offset * sizeof(GLushort), polygons.back().num_indices * sizeof(GLushort), indices.data() + polygons.back().indices_offset);
+	glNamedBufferSubData(vbo_position, vertex_insertion_index * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[polygon_insertion_index].points.data());
+	glNamedBufferSubData(vbo_color, vertex_insertion_index * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[polygon_insertion_index].colors.data());
+	glNamedBufferSubData(ssbo_transforms, polygon_insertion_index * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + polygon_insertion_index);
+	glNamedBufferSubData(ebo, index_insertion_index * sizeof(GLushort), capacity.polygon_indices() * sizeof(GLushort), indices.data() + index_insertion_index);
 }

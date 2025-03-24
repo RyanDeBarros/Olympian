@@ -28,7 +28,8 @@ namespace oly
 
 			glm::vec2 dprev() const { return root - prev; }
 			glm::vec2 dnext() const { return next - root; }
-			float area() const;
+			float signed_area() const;
+			float area() const { return std::abs(signed_area()); }
 			Barycentric barycentric(glm::vec2 point) const; // (root, prev, next)
 		};
 
@@ -38,13 +39,23 @@ namespace oly
 		{
 			std::vector<glm::vec2> points;
 			std::vector<glm::vec4> colors;
+
+			void fill_colors();
+			bool valid() const;
+
+			static Polygon2D create_quad(glm::vec4 color,
+				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
+			static Polygon2D create_pentagon(glm::vec4 color,
+				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5);
+			static Polygon2D create_hexagon(glm::vec4 color,
+				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6);
 		};
 
-		extern size_t num_triangulated_faces(const Polygon2D& polygon);
+		extern size_t num_triangulated_indices(const Polygon2D& polygon);
 
 		struct Triangulation
 		{
-			glm::uint index_offset;
+			glm::uint index_offset = 0;
 			std::vector<glm::uvec3> faces;
 
 			size_t num_indices() const { return 3 * faces.size(); }

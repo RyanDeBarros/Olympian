@@ -33,7 +33,7 @@ namespace oly
 	namespace stencil
 	{
 		extern void begin();
-		extern void enable_drawing(bool color = false, GLuint mask = 0xFF);
+		extern void enable_drawing(GLuint mask = 0xFF);
 		extern void disable_drawing();
 		namespace draw
 		{

@@ -7,4 +7,10 @@ namespace oly
 		pos = pos % mod;
 		return pos >= 0 ? pos : pos + mod;
 	}
+
+	template<typename T>
+	inline T dupl(const T& obj)
+	{
+		return obj;
+	}
 }

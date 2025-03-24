@@ -15,18 +15,13 @@ void oly::stencil::begin()
 	glEnable(GL_STENCIL_TEST);
 }
 
-void oly::stencil::enable_drawing(bool color, GLuint mask)
+void oly::stencil::enable_drawing(GLuint mask)
 {
-	if (color)
-		enable_color();
-	else
-		disable_color();
 	glStencilMask(mask);
 }
 
 void oly::stencil::disable_drawing()
 {
-	enable_color();
 	glStencilMask(0x00);
 }
 

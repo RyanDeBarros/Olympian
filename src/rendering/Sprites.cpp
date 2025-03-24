@@ -19,25 +19,25 @@ oly::SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bou
 
 	textures.resize(capacity.textures);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, textures.size() * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(tex_data_ssbo, capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	quads.resize(capacity.quads);
 
 	quad_infos.resize(capacity.quads);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_info_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_infos.size() * sizeof(QuadInfo), quad_infos.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+	glNamedBufferStorage(quad_info_ssbo, capacity.quads * sizeof(QuadInfo), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	quad_transforms.resize(capacity.quads, 1.0f);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_transform_ssbo);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, quad_transforms.size() * sizeof(glm::mat3), quad_transforms.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+	glNamedBufferStorage(quad_transform_ssbo, capacity.quads * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
-	glBufferStorage(GL_UNIFORM_BUFFER, capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(tex_coords_ubo, capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	TexUVRect tex_coords{ { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } };
 	glNamedBufferSubData(tex_coords_ubo, 0, sizeof(TexUVRect), &tex_coords);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, modulation_ubo);
-	glBufferStorage(GL_UNIFORM_BUFFER, capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(modulation_ubo, capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	Modulation modulation{ { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } };
 	glNamedBufferSubData(modulation_ubo, 0, sizeof(Modulation), &modulation);
 
@@ -49,9 +49,11 @@ oly::SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bou
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glNamedBufferStorage(ebo, indices.size() * sizeof(QuadIndexLayout), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+	glNamedBufferStorage(ebo, capacity.quads * sizeof(QuadIndexLayout), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 	set_projection(projection_bounds);
+	
+	glBindVertexArray(0);
 }
 
 void oly::SpriteBatch::draw() const

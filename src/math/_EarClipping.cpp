@@ -70,7 +70,7 @@ struct Node
 	}
 };
 
-static std::shared_ptr<Node> append_vertex(EarClippingData& data, size_t v)
+static std::shared_ptr<Node> append_vertex(EarClippingData& data, glm::uint v)
 {
 	std::shared_ptr<Node> insert = std::make_shared<Node>(v);
 	if (data.head_polygon == nullptr)
@@ -301,6 +301,8 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	remove->next_vertex = nullptr;
 	remove->prev_vertex = nullptr;
 	--data.size;
+
+	assert(data.size == 3 || data.head_ear);
 }
 
 oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const oly::math::Polygon2D& polygon, int starting_offset, int ear_cycle)
@@ -352,6 +354,8 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 
 		indexer = indexer->next_vertex;
 	} while (indexer != data.head_polygon);
+
+	assert(data.head_ear);
 
 	// remove ears and form faces
 	if (ear_cycle == 0)
