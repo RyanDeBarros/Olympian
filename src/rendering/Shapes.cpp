@@ -4,6 +4,21 @@
 
 #include "Resources.h"
 
+size_t oly::PolygonBatch::Capacity::polygon_indices() const
+{
+	// max(F) = V - 2 + 2H
+	// max(H) = [V / 3] - 1
+	// --> max(F) = V + 2 * [V / 3] - 4
+	// --> return 3 * max(F)
+	assert(degree >= 3);
+	return 3 * degree + 6 * (degree / 3) - 12;
+}
+
+GLushort oly::PolygonBatch::index_offset(PolygonPos pos) const
+{
+	return pos * capacity.degree;
+}
+
 oly::PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 	: capacity(capacity)
 {
@@ -62,7 +77,7 @@ void oly::PolygonBatch::set_projection(const glm::vec4& projection_bounds) const
 
 void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform)
 {
-	set_polygon(pos, std::move(polygon), math::ear_clipping(glm::uint(pos * capacity.degree), polygon), transform);
+	set_polygon(pos, std::move(polygon), math::ear_clipping(glm::uint(pos * capacity.degree), polygon.points), transform);
 }
 
 void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
@@ -70,25 +85,24 @@ void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, c
 	assert(polygon.valid());
 	assert(polygon.points.size() <= capacity.degree);
 	assert(triangulation.num_indices() <= capacity.polygon_indices());
-	assert(triangulation.index_offset == pos * capacity.degree); // TODO create method that returns pos * capacity.degree so it can be used externally
-	// TODO add asserts for capacity
+	assert(triangulation.index_offset == index_offset(pos));
+	assert(pos < polygon_indexers.size());
 
-	PolygonPos polygon_insertion_index = pos;
 	GLushort vertex_insertion_index = GLushort(pos * capacity.degree);
 	GLushort index_insertion_index = GLushort(pos * capacity.polygon_indices());
 
 	PolygonIndexer p;
-	p.index = polygon_insertion_index;
+	p.index = pos;
 	p.num_vertices = (GLushort)polygon.points.size();
 	p.vertices_offset = vertex_insertion_index;
 	p.num_indices = (GLushort)triangulation.num_indices();
 	p.indices_offset = index_insertion_index;
-	polygon_indexers[polygon_insertion_index] = p;
+	polygon_indexers[pos] = p;
 
 	polygon.fill_colors();
-	polygons[polygon_insertion_index] = std::move(polygon);
+	polygons[pos] = std::move(polygon);
 
-	transforms[polygon_insertion_index] = transform.matrix();
+	transforms[pos] = transform.matrix();
 
 	for (size_t i = 0; i < triangulation.faces.size(); ++i)
 	{
@@ -97,8 +111,8 @@ void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, c
 		indices[index_insertion_index + 3 * i + 2] = triangulation.faces[i][2];
 	}
 
-	glNamedBufferSubData(vbo_position, vertex_insertion_index * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[polygon_insertion_index].points.data());
-	glNamedBufferSubData(vbo_color, vertex_insertion_index * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[polygon_insertion_index].colors.data());
-	glNamedBufferSubData(ssbo_transforms, polygon_insertion_index * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + polygon_insertion_index);
+	glNamedBufferSubData(vbo_position, vertex_insertion_index * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
+	glNamedBufferSubData(vbo_color, vertex_insertion_index * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
+	glNamedBufferSubData(ssbo_transforms, pos * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + pos);
 	glNamedBufferSubData(ebo, index_insertion_index * sizeof(GLushort), capacity.polygon_indices() * sizeof(GLushort), indices.data() + index_insertion_index);
 }

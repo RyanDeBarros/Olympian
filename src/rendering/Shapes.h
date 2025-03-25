@@ -28,6 +28,7 @@ namespace oly
 
 	public:
 		typedef GLushort PolygonPos;
+		GLushort index_offset(PolygonPos pos) const;
 
 	private:
 		struct PolygonIndexer
@@ -56,7 +57,7 @@ namespace oly
 				indices = polygons * polygon_indices();
 			}
 
-			size_t polygon_indices() const { return (degree - 2) * 3; }
+			size_t polygon_indices() const;
 		};
 
 	private:

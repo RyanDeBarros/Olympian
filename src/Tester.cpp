@@ -102,19 +102,20 @@ void run()
 
 	sprite2.quad().set_z_index(0);
 
-	oly::PolygonBatch polygon_batch(oly::PolygonBatch::Capacity(100, 8), { -720, 720, -540, 540 });
+	glm::uint max_degree = 5;
+	oly::PolygonBatch polygon_batch(oly::PolygonBatch::Capacity(100, max_degree), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points.push_back({ 1, -1 });
-	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 0.5f });
+	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 1.0f });
 	pentagon.points.push_back({ 1, 0 });
-	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 0.5f });
+	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 1.0f });
 	pentagon.points.push_back({ 0, 1 });
-	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 0.5f });
+	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 1.0f });
 	pentagon.points.push_back({ -1, 0 });
-	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 0.5f });
+	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
 	pentagon.points.push_back({ -1, -1 });
-	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 0.5f });
+	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 	oly::Transform2D pentagon_transform;
 	pentagon_transform.scale = glm::vec2(160);
@@ -122,13 +123,19 @@ void run()
 	pentagon_transform.position.x = -250;
 	pentagon_transform.rotation = -1;
 	pentagon_transform.scale.x *= 2;
+	for (glm::vec4& color : pentagon.colors)
+		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
-	auto bordered_triangle = oly::math::create_bordered_triangle({ 0.0f, 1.0f, 0.0f, 0.7f }, { 1.0f, 0.0f, 1.0f, 0.7f }, 0.2f, 0.5f, { 0, 0 }, { 3, 0 }, { 1, 3 });
-	bordered_triangle[0].triangulation.set_index_offset(2 * 8);
-	bordered_triangle[1].triangulation.set_index_offset(3 * 8);
-	polygon_batch.set_polygon(2, oly::dupl(bordered_triangle[0].polygon), bordered_triangle[0].triangulation, oly::Transform2D{ { 300, 0 }, 0, glm::vec2(100) });
-	polygon_batch.set_polygon(3, oly::dupl(bordered_triangle[1].polygon), bordered_triangle[1].triangulation, oly::Transform2D{ { 300, 0 }, 0, glm::vec2(100) });
+	oly::Transform2D triangle_transform;
+	triangle_transform.position.x = 300;
+	triangle_transform.scale = glm::vec2(100);
+	auto bordered_triangle = oly::math::create_bordered_triangle({ 0.0f, 1.0f, 0.0f, 0.7f }, { 0.5f, 0.0f, 0.5f, 1.0f }, 0.2f, 0.5f, { 0, 0 }, { 3, 0 }, { 1, 3 }, max_degree, polygon_batch.index_offset(2));
+	polygon_batch.set_polygon(2, oly::dupl(bordered_triangle[0].polygon), bordered_triangle[0].triangulation, triangle_transform);
+	oly::math::Polygon2DComposite triangle_border = oly::math::split_polygon_composite(bordered_triangle[1], max_degree);
+	size_t pi = 3;
+	for (const auto& poly : triangle_border)
+		polygon_batch.set_polygon(pi++, oly::dupl(poly.polygon), poly.triangulation, triangle_transform);
 	
 	bool first = true;
 

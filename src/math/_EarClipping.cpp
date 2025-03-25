@@ -305,32 +305,28 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	assert(data.size == 3 || data.head_ear);
 }
 
-oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const oly::math::Polygon2D& polygon, bool increasing, int starting_offset, int ear_cycle)
+oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
-	const std::vector<glm::vec2>& points = polygon.points;
-	assert(points.size() >= 3);
+	assert(polygon.size() >= 3);
 	Triangulation triangulation{ index_offset };
 
-	if (points.size() == 3)
+	if (polygon.size() == 3)
 	{
-		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)points.size()), unsigned_mod(1 + starting_offset, (int)points.size()), unsigned_mod(2 + starting_offset, (int)points.size()) };
+		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)polygon.size()), unsigned_mod(1 + starting_offset, (int)polygon.size()), unsigned_mod(2 + starting_offset, (int)polygon.size()) };
 		triangulation.faces.push_back(glm::uvec3(index_offset) + (increasing ? face : reverse(face)));
 		return triangulation;
 	}
 
 	EarClippingData data{};
-	data.size = points.size();
-	data.vertices = &points;
+	data.size = polygon.size();
+	data.vertices = &polygon;
 
 	// load polygon vertices
-	for (int i = 0; i < points.size(); ++i)
-		append_vertex(data, unsigned_mod(i + starting_offset, (int)points.size()));
+	for (int i = 0; i < polygon.size(); ++i)
+		append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
 
 	// determine orientation
-	float signed_area = cross(points.back(), points[0]);
-	for (size_t i = 1; i < points.size(); ++i)
-		signed_area += cross(points[i - 1], points[i]);
-	data.ccw = (signed_area >= 0.0f);
+	data.ccw = (signed_area(polygon) >= 0.0f);
 
 	std::shared_ptr<Node> indexer = data.head_polygon;
 	// categorize initial vertices
@@ -399,4 +395,32 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 	auto face = data.head_ear->face(index_offset);
 	triangulation.faces.push_back(increasing ? face : reverse(face));
 	return triangulation;
+}
+
+size_t oly::math::get_first_ear(const const std::vector<glm::vec2>& polygon, int starting_offset)
+{
+	assert(polygon.size() >= 3);
+	if (polygon.size() == 3)
+		return 0;
+
+	EarClippingData data{};
+	data.size = polygon.size();
+	data.vertices = &polygon;
+
+	// load polygon vertices
+	for (int i = 0; i < polygon.size(); ++i)
+		append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
+
+	// determine orientation
+	data.ccw = (signed_area(polygon) >= 0.0f);
+
+	std::shared_ptr<Node> indexer = data.head_polygon;
+	do
+	{
+		if (!indexer->should_be_reflexive(data) && indexer->should_be_ear(data))
+			return indexer->v;
+		indexer = indexer->next_vertex;
+	} while (indexer != data.head_polygon);
+
+	assert(false);
 }
