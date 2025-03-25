@@ -35,6 +35,13 @@ namespace oly
 
 		extern float cross(glm::vec2 u, glm::vec2 v);
 		
+		template<typename T, enum glm::qualifier Q = glm::packed_highp>
+		inline glm::vec<2, T, Q> reverse(glm::vec<2, T, Q> vec) { return { vec.y, vec.x }; }
+		template<typename T, enum glm::qualifier Q = glm::packed_highp>
+		inline glm::vec<3, T, Q> reverse(glm::vec<3, T, Q> vec) { return { vec.z, vec.y, vec.x }; }
+		template<typename T, enum glm::qualifier Q = glm::packed_highp>
+		inline glm::vec<4, T, Q> reverse(glm::vec<4, T, Q> vec) { return { vec.w, vec.z, vec.y, vec.x }; }
+		
 		struct Polygon2D
 		{
 			std::vector<glm::vec2> points;
@@ -42,13 +49,7 @@ namespace oly
 
 			void fill_colors();
 			bool valid() const;
-
-			static Polygon2D create_quad(glm::vec4 color,
-				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
-			static Polygon2D create_pentagon(glm::vec4 color,
-				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5);
-			static Polygon2D create_hexagon(glm::vec4 color,
-				glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6);
+			void merge(const Polygon2D& other);
 		};
 
 		extern size_t num_triangulated_indices(const Polygon2D& polygon);
@@ -58,9 +59,52 @@ namespace oly
 			glm::uint index_offset = 0;
 			std::vector<glm::uvec3> faces;
 
+			void set_index_offset(glm::uint index_offset);
+
 			size_t num_indices() const { return 3 * faces.size(); }
 		};
 
-		extern Triangulation ear_clipping(glm::uint index_offset, const Polygon2D& polygon, int starting_offset = 0, int ear_cycle = 0);
+		struct TriangulatedPolygon2D
+		{
+			Polygon2D polygon;
+			Triangulation triangulation;
+		};
+
+		extern std::pair<glm::vec2, glm::vec2> border_points(glm::vec2 point, float border, float border_pivot, glm::vec2 prev_point, glm::vec2 next_point); // border_pivot - 0.0f (outer), 0.5f (middle), 1.0f (inner). returns (inner, outer)
+		extern TriangulatedPolygon2D create_triangle(glm::vec4 color,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
+		extern TriangulatedPolygon2D create_triangle_border(glm::vec4 color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
+		extern TriangulatedPolygon2D create_quad(glm::vec4 color,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
+		extern TriangulatedPolygon2D create_quad_border(glm::vec4 color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
+		extern TriangulatedPolygon2D create_pentagon(glm::vec4 color,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5);
+		extern TriangulatedPolygon2D create_pentagon_border(glm::vec4 color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5);
+		extern TriangulatedPolygon2D create_hexagon(glm::vec4 color,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6);
+		extern TriangulatedPolygon2D create_hexagon_border(glm::vec4 color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6);
+		extern TriangulatedPolygon2D create_ngon(glm::vec4 color, const std::vector<glm::vec2>& points);
+		extern TriangulatedPolygon2D create_ngon_border(glm::vec4 color, float border, float border_pivot, const std::vector<glm::vec2>& points);
+
+		typedef std::vector<TriangulatedPolygon2D> Polygon2DComposite;
+		extern Polygon2DComposite split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree);
+		extern void split_polygon_composite(Polygon2DComposite& composite, glm::uint max_degree);
+
+		extern Polygon2DComposite create_bordered_triangle (glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
+		extern Polygon2DComposite create_bordered_quad(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
+		extern Polygon2DComposite create_bordered_pentagon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5);
+		extern Polygon2DComposite create_bordered_hexagon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6);
+		extern Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot, const std::vector<glm::vec2>& points);
+		
+		extern Triangulation ear_clipping(glm::uint index_offset, const Polygon2D& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
+		// TODO algorithm to compute closest mutually visible vertex to a given vertex in a polygon. see ear clipping triangulation paper
 	}
 }

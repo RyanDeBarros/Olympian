@@ -305,7 +305,7 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	assert(data.size == 3 || data.head_ear);
 }
 
-oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const oly::math::Polygon2D& polygon, int starting_offset, int ear_cycle)
+oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const oly::math::Polygon2D& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
 	const std::vector<glm::vec2>& points = polygon.points;
 	assert(points.size() >= 3);
@@ -314,7 +314,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 	if (points.size() == 3)
 	{
 		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)points.size()), unsigned_mod(1 + starting_offset, (int)points.size()), unsigned_mod(2 + starting_offset, (int)points.size()) };
-		triangulation.faces.push_back(glm::uvec3(index_offset) + face);
+		triangulation.faces.push_back(glm::uvec3(index_offset) + (increasing ? face : reverse(face)));
 		return triangulation;
 	}
 
@@ -362,7 +362,8 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 	{
 		while (data.size > 3)
 		{
-			triangulation.faces.push_back(data.head_ear->face(index_offset));
+			auto face = data.head_ear->face(index_offset);
+			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, data.head_ear);
 		}
 	}
@@ -374,7 +375,8 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 			std::shared_ptr<Node> next_indexer = indexer;
 			for (int i = 0; i < ear_cycle; ++i)
 				next_indexer = next_indexer->next_ear;
-			triangulation.faces.push_back(indexer->face(index_offset));
+			auto face = indexer->face(index_offset);
+			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = next_indexer;
 		}
@@ -387,12 +389,14 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const o
 			std::shared_ptr<Node> prev_indexer = indexer;
 			for (int i = 0; i > ear_cycle; --i)
 				prev_indexer = prev_indexer->prev_ear;
-			triangulation.faces.push_back(indexer->face(index_offset));
+			auto face = indexer->face(index_offset);
+			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = prev_indexer;
 		}
 	}
 	// final face
-	triangulation.faces.push_back(data.head_ear->face(index_offset));
+	auto face = data.head_ear->face(index_offset);
+	triangulation.faces.push_back(increasing ? face : reverse(face));
 	return triangulation;
 }

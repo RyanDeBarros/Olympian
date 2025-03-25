@@ -99,10 +99,10 @@ void run()
 		flag_tesselation[i].post_set();
 		flag_tesselation[i].transformer().attach_parent(&flag_tesselation_parent);
 	}
-	
+
 	sprite2.quad().set_z_index(0);
 
-	oly::PolygonBatch polygon_batch(oly::PolygonBatch::Capacity(100, 6), {-720, 720, -540, 540});
+	oly::PolygonBatch polygon_batch(oly::PolygonBatch::Capacity(100, 8), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points.push_back({ 1, -1 });
@@ -116,7 +116,6 @@ void run()
 	pentagon.points.push_back({ -1, -1 });
 	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 0.5f });
 
-
 	oly::Transform2D pentagon_transform;
 	pentagon_transform.scale = glm::vec2(160);
 	polygon_batch.set_polygon(0, oly::dupl(pentagon), pentagon_transform);
@@ -124,6 +123,12 @@ void run()
 	pentagon_transform.rotation = -1;
 	pentagon_transform.scale.x *= 2;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
+
+	auto bordered_triangle = oly::math::create_bordered_triangle({ 0.0f, 1.0f, 0.0f, 0.7f }, { 1.0f, 0.0f, 1.0f, 0.7f }, 0.2f, 0.5f, { 0, 0 }, { 3, 0 }, { 1, 3 });
+	bordered_triangle[0].triangulation.set_index_offset(2 * 8);
+	bordered_triangle[1].triangulation.set_index_offset(3 * 8);
+	polygon_batch.set_polygon(2, oly::dupl(bordered_triangle[0].polygon), bordered_triangle[0].triangulation, oly::Transform2D{ { 300, 0 }, 0, glm::vec2(100) });
+	polygon_batch.set_polygon(3, oly::dupl(bordered_triangle[1].polygon), bordered_triangle[1].triangulation, oly::Transform2D{ { 300, 0 }, 0, glm::vec2(100) });
 	
 	bool first = true;
 

@@ -70,6 +70,7 @@ void oly::PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, c
 	assert(polygon.valid());
 	assert(polygon.points.size() <= capacity.degree);
 	assert(triangulation.num_indices() <= capacity.polygon_indices());
+	assert(triangulation.index_offset == pos * capacity.degree); // TODO create method that returns pos * capacity.degree so it can be used externally
 	// TODO add asserts for capacity
 
 	PolygonPos polygon_insertion_index = pos;
