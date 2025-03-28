@@ -75,7 +75,7 @@ void oly::math::Triangulation::set_index_offset(glm::uint new_offset)
 	}
 }
 
-std::pair<glm::vec2, glm::vec2> oly::math::border_points(glm::vec2 point, float border, float border_pivot, glm::vec2 prev_point, glm::vec2 next_point)
+oly::math::BorderPointPair oly::math::border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point)
 {
 	glm::vec2 v_prev = glm::normalize(prev_point - point);
 	glm::vec2 v_next = glm::normalize(next_point - point);
@@ -86,10 +86,10 @@ std::pair<glm::vec2, glm::vec2> oly::math::border_points(glm::vec2 point, float 
 		n_prev *= -1;
 		n_next *= -1;
 	}
-	float b = border * border_pivot;
+	float b = border * border_pivot.v;
 	float t = b * glm::length(n_next - n_prev) / glm::length(v_prev - v_next);
 	glm::vec2 inner = point + b * n_next + t * v_next;
-	b = border * (border_pivot - 1.0f);
+	b = border * (border_pivot.v - 1.0f);
 	t = b * glm::length(n_next - n_prev) / glm::length(v_prev - v_next);
 	glm::vec2 outer = point + b * n_next + t * v_next;
 	return { inner, outer };
@@ -107,7 +107,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_triangle(glm::vec4 color, glm
 	return p;
 }
 
-oly::math::TriangulatedPolygon2D oly::math::create_triangle_border(glm::vec4 color, float border, float border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uint index_offset)
+oly::math::TriangulatedPolygon2D oly::math::create_triangle_border(glm::vec4 color, float border, BorderPivot border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uint index_offset)
 {
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
@@ -115,14 +115,14 @@ oly::math::TriangulatedPolygon2D oly::math::create_triangle_border(glm::vec4 col
 	auto ps2 = border_points(p2, border, border_pivot, p1, p3);
 	auto ps3 = border_points(p3, border, border_pivot, p2, p1);
 	p.polygon.points.reserve(2 * 3 + 2);
-	p.polygon.points.push_back(ps1.second);
-	p.polygon.points.push_back(ps2.second);
-	p.polygon.points.push_back(ps3.second);
-	p.polygon.points.push_back(ps1.second); // connector
-	p.polygon.points.push_back(ps1.first); // connector
-	p.polygon.points.push_back(ps3.first);
-	p.polygon.points.push_back(ps2.first);
-	p.polygon.points.push_back(ps1.first);
+	p.polygon.points.push_back(ps1.outer);
+	p.polygon.points.push_back(ps2.outer);
+	p.polygon.points.push_back(ps3.outer);
+	p.polygon.points.push_back(ps1.outer); // connector
+	p.polygon.points.push_back(ps1.inner); // connector
+	p.polygon.points.push_back(ps3.inner);
+	p.polygon.points.push_back(ps2.inner);
+	p.polygon.points.push_back(ps1.inner);
 	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + 3, p.polygon.points.begin() + 5); // remove connectors
 	static const auto reindex = [](glm::uint& index, glm::uint index_offset) {
@@ -157,7 +157,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_quad(glm::vec4 color, glm::ve
 	return p;
 }
 
-oly::math::TriangulatedPolygon2D oly::math::create_quad_border(glm::vec4 color, float border, float border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::uint index_offset)
+oly::math::TriangulatedPolygon2D oly::math::create_quad_border(glm::vec4 color, float border, BorderPivot border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::uint index_offset)
 {
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
@@ -166,16 +166,16 @@ oly::math::TriangulatedPolygon2D oly::math::create_quad_border(glm::vec4 color, 
 	auto ps3 = border_points(p3, border, border_pivot, p2, p4);
 	auto ps4 = border_points(p4, border, border_pivot, p3, p1);
 	p.polygon.points.reserve(2 * 4 + 2);
-	p.polygon.points.push_back(ps1.second);
-	p.polygon.points.push_back(ps2.second);
-	p.polygon.points.push_back(ps3.second);
-	p.polygon.points.push_back(ps4.second);
-	p.polygon.points.push_back(ps1.second); // connector
-	p.polygon.points.push_back(ps1.first); // connector
-	p.polygon.points.push_back(ps4.first);
-	p.polygon.points.push_back(ps3.first);
-	p.polygon.points.push_back(ps2.first);
-	p.polygon.points.push_back(ps1.first);
+	p.polygon.points.push_back(ps1.outer);
+	p.polygon.points.push_back(ps2.outer);
+	p.polygon.points.push_back(ps3.outer);
+	p.polygon.points.push_back(ps4.outer);
+	p.polygon.points.push_back(ps1.outer); // connector
+	p.polygon.points.push_back(ps1.inner); // connector
+	p.polygon.points.push_back(ps4.inner);
+	p.polygon.points.push_back(ps3.inner);
+	p.polygon.points.push_back(ps2.inner);
+	p.polygon.points.push_back(ps1.inner);
 	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + 4, p.polygon.points.begin() + 6); // remove connectors
 	static const auto reindex = [](glm::uint& index, glm::uint index_offset) {
@@ -211,7 +211,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_pentagon(glm::vec4 color, glm
 	return p;
 }
 
-oly::math::TriangulatedPolygon2D oly::math::create_pentagon_border(glm::vec4 color, float border, float border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::uint index_offset)
+oly::math::TriangulatedPolygon2D oly::math::create_pentagon_border(glm::vec4 color, float border, BorderPivot border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::uint index_offset)
 {
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
@@ -221,18 +221,18 @@ oly::math::TriangulatedPolygon2D oly::math::create_pentagon_border(glm::vec4 col
 	auto ps4 = border_points(p4, border, border_pivot, p3, p5);
 	auto ps5 = border_points(p5, border, border_pivot, p4, p1);
 	p.polygon.points.reserve(2 * 5 + 2);
-	p.polygon.points.push_back(ps1.second);
-	p.polygon.points.push_back(ps2.second);
-	p.polygon.points.push_back(ps3.second);
-	p.polygon.points.push_back(ps4.second);
-	p.polygon.points.push_back(ps5.second);
-	p.polygon.points.push_back(ps1.second); // connector
-	p.polygon.points.push_back(ps1.first); // connector
-	p.polygon.points.push_back(ps5.first);
-	p.polygon.points.push_back(ps4.first);
-	p.polygon.points.push_back(ps3.first);
-	p.polygon.points.push_back(ps2.first);
-	p.polygon.points.push_back(ps1.first);
+	p.polygon.points.push_back(ps1.outer);
+	p.polygon.points.push_back(ps2.outer);
+	p.polygon.points.push_back(ps3.outer);
+	p.polygon.points.push_back(ps4.outer);
+	p.polygon.points.push_back(ps5.outer);
+	p.polygon.points.push_back(ps1.outer); // connector
+	p.polygon.points.push_back(ps1.inner); // connector
+	p.polygon.points.push_back(ps5.inner);
+	p.polygon.points.push_back(ps4.inner);
+	p.polygon.points.push_back(ps3.inner);
+	p.polygon.points.push_back(ps2.inner);
+	p.polygon.points.push_back(ps1.inner);
 	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + 5, p.polygon.points.begin() + 7); // remove connectors
 	static const auto reindex = [](glm::uint& index, glm::uint index_offset) {
@@ -269,7 +269,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_hexagon(glm::vec4 color, glm:
 	return p;
 }
 
-oly::math::TriangulatedPolygon2D oly::math::create_hexagon_border(glm::vec4 color, float border, float border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6, glm::uint index_offset)
+oly::math::TriangulatedPolygon2D oly::math::create_hexagon_border(glm::vec4 color, float border, BorderPivot border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6, glm::uint index_offset)
 {
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
@@ -280,20 +280,20 @@ oly::math::TriangulatedPolygon2D oly::math::create_hexagon_border(glm::vec4 colo
 	auto ps5 = border_points(p5, border, border_pivot, p4, p6);
 	auto ps6 = border_points(p6, border, border_pivot, p5, p1);
 	p.polygon.points.reserve(2 * 6 + 2);
-	p.polygon.points.push_back(ps1.second);
-	p.polygon.points.push_back(ps2.second);
-	p.polygon.points.push_back(ps3.second);
-	p.polygon.points.push_back(ps4.second);
-	p.polygon.points.push_back(ps5.second);
-	p.polygon.points.push_back(ps6.second);
-	p.polygon.points.push_back(ps1.second); // connector
-	p.polygon.points.push_back(ps1.first); // connector
-	p.polygon.points.push_back(ps6.first);
-	p.polygon.points.push_back(ps5.first);
-	p.polygon.points.push_back(ps4.first);
-	p.polygon.points.push_back(ps3.first);
-	p.polygon.points.push_back(ps2.first);
-	p.polygon.points.push_back(ps1.first);
+	p.polygon.points.push_back(ps1.outer);
+	p.polygon.points.push_back(ps2.outer);
+	p.polygon.points.push_back(ps3.outer);
+	p.polygon.points.push_back(ps4.outer);
+	p.polygon.points.push_back(ps5.outer);
+	p.polygon.points.push_back(ps6.outer);
+	p.polygon.points.push_back(ps1.outer); // connector
+	p.polygon.points.push_back(ps1.inner); // connector
+	p.polygon.points.push_back(ps6.inner);
+	p.polygon.points.push_back(ps5.inner);
+	p.polygon.points.push_back(ps4.inner);
+	p.polygon.points.push_back(ps3.inner);
+	p.polygon.points.push_back(ps2.inner);
+	p.polygon.points.push_back(ps1.inner);
 	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + 6, p.polygon.points.begin() + 8); // remove connectors
 	static const auto reindex = [](glm::uint& index, glm::uint index_offset) {
@@ -320,33 +320,64 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, const s
 	assert(points.size() >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
-	p.polygon.points.reserve(points.size());
-	for (glm::vec2 pt : points)
-		p.polygon.points.push_back(pt);
+	p.polygon.points = points;
 	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	return p;
 }
 
-oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, float border, float border_pivot, const std::vector<glm::vec2>& points, glm::uint index_offset)
+oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, std::vector<glm::vec2>&& points, glm::uint index_offset)
+{
+	assert(points.size() >= 3);
+	TriangulatedPolygon2D p;
+	p.polygon.colors.push_back(color);
+	p.polygon.points = std::move(points);
+	p.triangulation = ear_clipping(index_offset, p.polygon.points);
+	return p;
+}
+
+oly::math::TriangulatedPolygon2D oly::math::create_ngon(const std::vector<glm::vec4>& colors, const std::vector<glm::vec2>& points, glm::uint index_offset)
+{
+	assert(points.size() >= 3);
+	TriangulatedPolygon2D p;
+	p.polygon.colors = colors;
+	p.polygon.points = points;
+	p.triangulation = ear_clipping(index_offset, p.polygon.points);
+	return p;
+}
+
+oly::math::TriangulatedPolygon2D oly::math::create_ngon(std::vector<glm::vec4>&& colors, std::vector<glm::vec2>& points, glm::uint index_offset)
+{
+	assert(points.size() >= 3);
+	TriangulatedPolygon2D p;
+	p.polygon.colors = std::move(colors);
+	p.polygon.points = std::move(points);
+	p.triangulation = ear_clipping(index_offset, p.polygon.points);
+	return p;
+}
+
+oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points, glm::uint index_offset)
 {
 	glm::uint num_points = (glm::uint)points.size();
 	assert(num_points >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
-	std::vector<std::pair<glm::vec2, glm::vec2>> bpts;
+	std::vector<BorderPointPair> bpts;
+	
 	bpts.reserve(num_points);
 	bpts.push_back(border_points(points[0], border, border_pivot, points.back(), points[1]));
 	for (size_t i = 1; i < num_points - 1; ++i)
 		bpts.push_back(border_points(points[i], border, border_pivot, points[i - 1], points[i + 1]));
 	bpts.push_back(border_points(points.back(), border, border_pivot, points[num_points - 2], points[0]));
+	
 	p.polygon.points.reserve(2 * num_points + 2);
 	for (auto iter = bpts.begin(); iter != bpts.end(); ++iter)
-		p.polygon.points.push_back(iter->second);
-	p.polygon.points.push_back(bpts[0].second); // connector
-	p.polygon.points.push_back(bpts[0].first); // connector
+		p.polygon.points.push_back(iter->outer);
+	p.polygon.points.push_back(bpts[0].outer); // connector
+	p.polygon.points.push_back(bpts[0].inner); // connector
 	for (auto iter = bpts.rbegin(); iter != bpts.rend(); ++iter)
-		p.polygon.points.push_back(iter->first);
-	p.triangulation = ear_clipping(0, p.polygon.points);
+		p.polygon.points.push_back(iter->inner);
+	
+	p.triangulation = ear_clipping(index_offset, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + num_points, p.polygon.points.begin() + num_points + 2); // remove connectors
 	static const auto reindex = [](glm::uint& index, glm::uint index_offset, glm::uint size) {
 		index -= index_offset;
@@ -367,6 +398,44 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, 
 	return p;
 }
 
+oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(const std::vector<glm::vec4>& colors, float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points, glm::uint index_offset)
+{
+	auto p = create_ngon_border(glm::vec4{}, border, border_pivot, points, index_offset);
+	if (colors.size() == 1)
+		p.polygon.colors = { colors[0] };
+	else
+	{
+		bool solid_border_color = (colors.size() == points.size());
+		p.polygon.colors = colors;
+		if (solid_border_color)
+		{
+			p.polygon.colors.reserve(2 * p.polygon.colors.size());
+			p.polygon.colors.insert(p.polygon.colors.end(), colors.rbegin(), colors.rend());
+		}
+	}
+	return p;
+}
+
+oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(std::vector<glm::vec4>&& colors, float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points, glm::uint index_offset)
+{
+	auto p = create_ngon_border(glm::vec4{}, border, border_pivot, points, index_offset);
+	if (colors.size() == 1)
+		p.polygon.colors = { colors[0] };
+	else
+	{
+		bool solid_border_color = (colors.size() == points.size());
+		p.polygon.colors = std::move(colors);
+		if (solid_border_color)
+		{
+			p.polygon.colors.reserve(2 * p.polygon.colors.size());
+			colors = p.polygon.colors;
+			p.polygon.colors.insert(p.polygon.colors.end(), colors.rbegin(), colors.rend());
+		}
+	}
+	return p;
+}
+
+// TODO create optional indexer structure that takes an index of the original triangulated polygon's points/colors and returns the new index(es) of that point/color in the generated composite
 oly::math::Polygon2DComposite oly::math::split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree)
 {
 	assert(max_degree >= 3);
@@ -438,10 +507,17 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 
 void oly::math::split_polygon_composite(Polygon2DComposite& composite, glm::uint max_degree)
 {
-	// TODO can simply call split_polygon_composite(triangulated polygon, max_degree) and join them all, but also implement merging subpolygons for optimal packing of points.
+	// TODO this simply calls split_polygon_composite(triangulated polygon, max_degree) and joins them all, but perhaps also implement merging subpolygons for optimal packing of points.
+	Polygon2DComposite split_composite;
+	for (const auto& polygon : composite)
+	{
+		auto split_polygons = split_polygon_composite(polygon, max_degree);
+		split_composite.insert(split_composite.end(), std::make_move_iterator(split_polygons.begin()), std::make_move_iterator(split_polygons.end()));
+	}
+	composite = std::move(split_composite);
 }
 
-oly::math::Polygon2DComposite oly::math::create_bordered_triangle(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+oly::math::Polygon2DComposite oly::math::create_bordered_triangle(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 	glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uint max_degree, glm::uint index_offset)
 {
 	Polygon2DComposite composite;
@@ -450,7 +526,7 @@ oly::math::Polygon2DComposite oly::math::create_bordered_triangle(glm::vec4 fill
 	return composite;
 }
 
-oly::math::Polygon2DComposite oly::math::create_bordered_quad(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+oly::math::Polygon2DComposite oly::math::create_bordered_quad(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 	glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::uint max_degree, glm::uint index_offset)
 {
 	Polygon2DComposite composite;
@@ -459,7 +535,7 @@ oly::math::Polygon2DComposite oly::math::create_bordered_quad(glm::vec4 fill_col
 	return composite;
 }
 
-oly::math::Polygon2DComposite oly::math::create_bordered_pentagon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+oly::math::Polygon2DComposite oly::math::create_bordered_pentagon(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 	glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::uint max_degree, glm::uint index_offset)
 {
 	Polygon2DComposite composite;
@@ -468,7 +544,7 @@ oly::math::Polygon2DComposite oly::math::create_bordered_pentagon(glm::vec4 fill
 	return composite;
 }
 
-oly::math::Polygon2DComposite oly::math::create_bordered_hexagon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+oly::math::Polygon2DComposite oly::math::create_bordered_hexagon(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 	glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 p5, glm::vec2 p6, glm::uint max_degree, glm::uint index_offset)
 {
 	Polygon2DComposite composite;
@@ -477,11 +553,52 @@ oly::math::Polygon2DComposite oly::math::create_bordered_hexagon(glm::vec4 fill_
 	return composite;
 }
 
-oly::math::Polygon2DComposite oly::math::create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot,
+oly::math::Polygon2DComposite oly::math::create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 	const std::vector<glm::vec2>& points, glm::uint max_degree, glm::uint index_offset)
 {
 	Polygon2DComposite composite;
 	composite.push_back(create_ngon(fill_color, points, index_offset));
 	composite.push_back(create_ngon_border(border_color, border, border_pivot, points, index_offset + max_degree));
 	return composite;
+}
+
+oly::math::Polygon2DComposite oly::math::create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
+	std::vector<glm::vec2>&& points, glm::uint max_degree, glm::uint index_offset)
+{
+	Polygon2DComposite composite;
+	TriangulatedPolygon2D ngon_border = create_ngon_border(border_color, border, border_pivot, points, index_offset + max_degree);
+	composite.push_back(create_ngon(fill_color, std::move(points), index_offset));
+	composite.push_back(std::move(ngon_border));
+	return composite;
+}
+
+oly::math::Polygon2DComposite oly::math::create_bordered_ngon(const std::vector<glm::vec4>& fill_colors, const std::vector<glm::vec4>& border_colors,
+	float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points, glm::uint max_degree, glm::uint index_offset)
+{
+	bool solid_border_color = (fill_colors.size() == border_colors.size() && border_colors.size() != 1);
+	auto ngon = create_bordered_ngon(glm::vec4{}, glm::vec4{}, border, border_pivot, points, max_degree, index_offset);
+	ngon[0].polygon.colors = fill_colors;
+	ngon[1].polygon.colors = border_colors;
+	if (solid_border_color)
+	{
+		ngon[1].polygon.colors.reserve(2 * ngon[1].polygon.colors.size());
+		ngon[1].polygon.colors.insert(ngon[1].polygon.colors.end(), border_colors.rbegin(), border_colors.rend());
+	}
+	return ngon;
+}
+
+oly::math::Polygon2DComposite oly::math::create_bordered_ngon(std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors,
+	float border, BorderPivot border_pivot, std::vector<glm::vec2>&& points, glm::uint max_degree, glm::uint index_offset)
+{
+	bool solid_border_color = (fill_colors.size() == border_colors.size() && border_colors.size() != 1);
+	auto ngon = create_bordered_ngon(glm::vec4{}, glm::vec4{}, border, border_pivot, std::move(points), max_degree, index_offset);
+	ngon[0].polygon.colors = std::move(fill_colors);
+	ngon[1].polygon.colors = std::move(border_colors);
+	if (solid_border_color)
+	{
+		ngon[1].polygon.colors.reserve(2 * ngon[1].polygon.colors.size());
+		border_colors = ngon[1].polygon.colors;
+		ngon[1].polygon.colors.insert(ngon[1].polygon.colors.end(), border_colors.rbegin(), border_colors.rend());
+	}
+	return ngon;
 }

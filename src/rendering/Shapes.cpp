@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Resources.h"
+#include "util/General.h"
 
 namespace oly
 {
@@ -119,6 +120,49 @@ namespace oly
 			glNamedBufferSubData(vbo_color, vertex_insertion_index * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
 			glNamedBufferSubData(ssbo_transforms, pos * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + pos);
 			glNamedBufferSubData(ebo, index_insertion_index * sizeof(GLushort), capacity.polygon_index_count() * sizeof(GLushort), indices.data() + index_insertion_index);
+		}
+
+		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort max_range)
+		{
+			return set_polygon_composite(pos, math::split_polygon_composite(polygon, capacity.degree), transform, max_range);
+		}
+		
+		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort max_range)
+		{
+			return set_polygon_composite(pos, dupl(composite), transform, max_range);
+		}
+		
+		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort max_range)
+		{
+			math::split_polygon_composite(composite, capacity.degree);
+			if (max_range > 0 && composite.size() > max_range)
+				return 0;
+			GLushort range = 0;
+			for (math::TriangulatedPolygon2D& poly : composite)
+				set_polygon(pos + range++, std::move(poly.polygon), poly.triangulation, transform);
+			return range;
+		}
+
+		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const
+		{
+			return math::create_bordered_ngon(fill_color, border_color, border, border_pivot, points, capacity.degree, index_offset(pos));
+		}
+		
+		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const
+		{
+			return math::create_bordered_ngon(fill_color, border_color, border, border_pivot, std::move(points), capacity.degree, index_offset(pos));
+		}
+
+		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, const std::vector<glm::vec4>& fill_colors, const std::vector<glm::vec4>& border_colors,
+			float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const
+		{
+			return math::create_bordered_ngon(fill_colors, border_colors, border, border_pivot, points, capacity.degree, index_offset(pos));
+		}
+
+		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors,
+			float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const
+		{
+			return math::create_bordered_ngon(std::move(fill_colors), std::move(border_colors), border, border_pivot, std::move(points), capacity.degree, index_offset(pos));
 		}
 	}
 }

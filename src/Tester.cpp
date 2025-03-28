@@ -102,19 +102,18 @@ void run()
 
 	sprite2.quad().set_z_index(0);
 
-	glm::uint max_degree = 5;
-	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100, max_degree), { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100, 5), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points.push_back({ 1, -1 });
-	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 1.0f });
 	pentagon.points.push_back({ 1, 0 });
-	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 1.0f });
 	pentagon.points.push_back({ 0, 1 });
-	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 1.0f });
 	pentagon.points.push_back({ -1, 0 });
-	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
 	pentagon.points.push_back({ -1, -1 });
+	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 1.0f });
+	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 1.0f });
+	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 1.0f });
+	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
 	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 	oly::Transform2D pentagon_transform;
@@ -127,16 +126,26 @@ void run()
 		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
+	oly::batch::PolygonBatch::PolygonPos triangle_pos = 2;
+	auto bordered_triangle = polygon_batch.create_bordered_ngon(triangle_pos, {
+			{ 0.0f, 1.0f, 0.0f, 0.7f },
+			{ 1.0f, 0.5f, 0.0f, 0.7f },
+			{ 0.0f, 0.5f, 1.0f, 0.7f }
+		}, {
+			{ 0.5f, 0.0f, 0.5f, 1.0f },
+			{ 0.0f, 0.5f, 0.5f, 1.0f },
+			{ 0.5f, 0.5f, 0.0f, 1.0f }
+		}, 0.2f, oly::math::BorderPivot::MIDDLE, {
+			{ 0, 0 },
+			{ 3, 0 },
+			{ 1, 3 }
+		});
 	oly::Transform2D triangle_transform;
 	triangle_transform.position.x = 300;
 	triangle_transform.scale = glm::vec2(100);
-	auto bordered_triangle = oly::math::create_bordered_triangle({ 0.0f, 1.0f, 0.0f, 0.7f }, { 0.5f, 0.0f, 0.5f, 1.0f }, 0.2f, 0.5f, { 0, 0 }, { 3, 0 }, { 1, 3 }, max_degree, polygon_batch.index_offset(2));
-	polygon_batch.set_polygon(2, oly::dupl(bordered_triangle[0].polygon), bordered_triangle[0].triangulation, triangle_transform);
-	oly::math::Polygon2DComposite triangle_border = oly::math::split_polygon_composite(bordered_triangle[1], max_degree);
-	oly::batch::PolygonBatch::PolygonPos pi = 3;
-	for (const auto& poly : triangle_border)
-		polygon_batch.set_polygon(pi++, oly::dupl(poly.polygon), poly.triangulation, triangle_transform);
-	
+	polygon_batch.set_polygon_composite(triangle_pos, bordered_triangle, triangle_transform);
+
+
 	bool first = true;
 
 	while (!window.should_close())
