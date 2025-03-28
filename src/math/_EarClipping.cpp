@@ -305,6 +305,8 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	assert(data.size == 3 || data.head_ear);
 }
 
+// TODO ear_clipping is the fundamental concave-aware triangulation algorithm in the project. Create a convex_decompose function that decomposes a polygon into a set of sub-polygons that are convex and as large as possible.
+// Then other triangulation methods can be used individually on each sub-polygon, such as FAN, STRIP, CLIP, and PIE.
 oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
 	assert(polygon.size() >= 3);

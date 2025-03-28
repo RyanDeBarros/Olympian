@@ -65,13 +65,16 @@ size_t oly::math::num_triangulated_indices(const Polygon2D& polygon)
 
 void oly::math::Triangulation::set_index_offset(glm::uint new_offset)
 {
-	int diff = (int)new_offset - (int)index_offset;
-	index_offset = new_offset;
-	for (glm::uvec3& face : faces)
+	if (new_offset != index_offset)
 	{
-		face[0] = (int)face[0] + diff;
-		face[1] = (int)face[1] + diff;
-		face[2] = (int)face[2] + diff;
+		int diff = (int)new_offset - (int)index_offset;
+		index_offset = new_offset;
+		for (glm::uvec3& face : faces)
+		{
+			face[0] = (int)face[0] + diff;
+			face[1] = (int)face[1] + diff;
+			face[2] = (int)face[2] + diff;
+		}
 	}
 }
 
@@ -107,6 +110,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_triangle(glm::vec4 color, glm
 	return p;
 }
 
+// TODO don't use ear_clipping for border triangulation. Simply triangulate each quad in the border, since it's guaranteed to be simple by nature of the border point construction.
 oly::math::TriangulatedPolygon2D oly::math::create_triangle_border(glm::vec4 color, float border, BorderPivot border_pivot, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uint index_offset)
 {
 	TriangulatedPolygon2D p;
@@ -509,9 +513,12 @@ void oly::math::split_polygon_composite(Polygon2DComposite& composite, glm::uint
 {
 	// TODO this simply calls split_polygon_composite(triangulated polygon, max_degree) and joins them all, but perhaps also implement merging subpolygons for optimal packing of points.
 	Polygon2DComposite split_composite;
-	for (const auto& polygon : composite)
+	glm::uint compound_index_offset_increase = 0;
+	for (auto& polygon : composite)
 	{
+		polygon.triangulation.set_index_offset(polygon.triangulation.index_offset + compound_index_offset_increase);
 		auto split_polygons = split_polygon_composite(polygon, max_degree);
+		compound_index_offset_increase += split_polygons.back().triangulation.index_offset - polygon.triangulation.index_offset;
 		split_composite.insert(split_composite.end(), std::make_move_iterator(split_polygons.begin()), std::make_move_iterator(split_polygons.end()));
 	}
 	composite = std::move(split_composite);
@@ -575,7 +582,7 @@ oly::math::Polygon2DComposite oly::math::create_bordered_ngon(glm::vec4 fill_col
 oly::math::Polygon2DComposite oly::math::create_bordered_ngon(const std::vector<glm::vec4>& fill_colors, const std::vector<glm::vec4>& border_colors,
 	float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points, glm::uint max_degree, glm::uint index_offset)
 {
-	bool solid_border_color = (fill_colors.size() == border_colors.size() && border_colors.size() != 1);
+	bool solid_border_color = (points.size() == border_colors.size() && border_colors.size() != 1);
 	auto ngon = create_bordered_ngon(glm::vec4{}, glm::vec4{}, border, border_pivot, points, max_degree, index_offset);
 	ngon[0].polygon.colors = fill_colors;
 	ngon[1].polygon.colors = border_colors;
@@ -590,7 +597,7 @@ oly::math::Polygon2DComposite oly::math::create_bordered_ngon(const std::vector<
 oly::math::Polygon2DComposite oly::math::create_bordered_ngon(std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors,
 	float border, BorderPivot border_pivot, std::vector<glm::vec2>&& points, glm::uint max_degree, glm::uint index_offset)
 {
-	bool solid_border_color = (fill_colors.size() == border_colors.size() && border_colors.size() != 1);
+	bool solid_border_color = (points.size() == border_colors.size() && border_colors.size() != 1);
 	auto ngon = create_bordered_ngon(glm::vec4{}, glm::vec4{}, border, border_pivot, std::move(points), max_degree, index_offset);
 	ngon[0].polygon.colors = std::move(fill_colors);
 	ngon[1].polygon.colors = std::move(border_colors);

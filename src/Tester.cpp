@@ -126,24 +126,33 @@ void run()
 		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
-	oly::batch::PolygonBatch::PolygonPos triangle_pos = 2;
-	auto bordered_triangle = polygon_batch.create_bordered_ngon(triangle_pos, {
-			{ 0.0f, 1.0f, 0.0f, 0.7f },
-			{ 1.0f, 0.5f, 0.0f, 0.7f },
-			{ 0.0f, 0.5f, 1.0f, 0.7f }
+	oly::batch::PolygonBatch::PolygonPos octagon_pos = 2;
+	auto octagon = polygon_batch.create_bordered_ngon(octagon_pos, {
+			{ 0.0f, 1.0f, 0.0f, 0.7f }
 		}, {
 			{ 0.5f, 0.0f, 0.5f, 1.0f },
-			{ 0.0f, 0.5f, 0.5f, 1.0f },
-			{ 0.5f, 0.5f, 0.0f, 1.0f }
-		}, 0.2f, oly::math::BorderPivot::MIDDLE, {
-			{ 0, 0 },
-			{ 3, 0 },
-			{ 1, 3 }
+			{ 0.6f, 0.1f, 0.4f, 1.0f },
+			{ 0.7f, 0.2f, 0.3f, 1.0f },
+			{ 0.8f, 0.3f, 0.2f, 1.0f },
+			{ 0.9f, 0.4f, 0.1f, 1.0f },
+			{ 1.0f, 0.5f, 0.0f, 1.0f },
+			{ 0.0f, 0.6f, 1.0f, 1.0f },
+			{ 0.1f, 0.7f, 0.9f, 1.0f },
+		}, 0.05f, oly::math::BorderPivot::MIDDLE, {
+			{ 1, 0 },
+			{ 0.707f, 0.707f },
+			{ 0, 1 },
+			{ -0.707f, 0.707f },
+			{ -1, 0 },
+			{ -0.707f, -0.707f },
+			{ 0, -1 },
+			{ 0.707f, -0.707f }
 		});
-	oly::Transform2D triangle_transform;
-	triangle_transform.position.x = 300;
-	triangle_transform.scale = glm::vec2(100);
-	polygon_batch.set_polygon_composite(triangle_pos, bordered_triangle, triangle_transform);
+	oly::Transform2D octagon_transform;
+	octagon_transform.position.x = 300;
+	octagon_transform.position.y = 200;
+	octagon_transform.scale = glm::vec2(200);
+	polygon_batch.set_polygon_composite(octagon_pos, octagon, octagon_transform);
 
 
 	bool first = true;
