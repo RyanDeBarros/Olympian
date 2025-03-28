@@ -329,7 +329,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, const s
 
 oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, float border, float border_pivot, const std::vector<glm::vec2>& points, glm::uint index_offset)
 {
-	size_t num_points = points.size();
+	glm::uint num_points = (glm::uint)points.size();
 	assert(num_points >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
@@ -348,7 +348,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, 
 		p.polygon.points.push_back(iter->first);
 	p.triangulation = ear_clipping(0, p.polygon.points);
 	p.polygon.points.erase(p.polygon.points.begin() + num_points, p.polygon.points.begin() + num_points + 2); // remove connectors
-	static const auto reindex = [](glm::uint& index, glm::uint index_offset, size_t size) {
+	static const auto reindex = [](glm::uint& index, glm::uint index_offset, glm::uint size) {
 		index -= index_offset;
 		if (index == size)
 			index = 0;
@@ -371,7 +371,7 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 {
 	assert(max_degree >= 3);
 	Polygon2DComposite composite;
-	glm::uint divisions = tp.polygon.points.size() / max_degree;
+	glm::uint divisions = (glm::uint)tp.polygon.points.size() / max_degree;
 	if (divisions == 0)
 		return { tp };
 	composite.reserve(divisions + 1);
@@ -400,7 +400,7 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 			polygon.polygon.colors.push_back(superpolygon.polygon.colors[0]);
 
 		polygon.triangulation.faces.reserve(faces.size());
-		polygon.triangulation.index_offset = superpolygon.triangulation.index_offset + max_degree * composite.size();
+		polygon.triangulation.index_offset = superpolygon.triangulation.index_offset + max_degree * (glm::uint)composite.size();
 		for (glm::uvec3 face : faces)
 		{
 			face[0] = local_vertex_indices[face[0]] + polygon.triangulation.index_offset;

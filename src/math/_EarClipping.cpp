@@ -397,7 +397,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 	return triangulation;
 }
 
-size_t oly::math::get_first_ear(const const std::vector<glm::vec2>& polygon, int starting_offset)
+size_t oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset)
 {
 	assert(polygon.size() >= 3);
 	if (polygon.size() == 3)
@@ -423,4 +423,5 @@ size_t oly::math::get_first_ear(const const std::vector<glm::vec2>& polygon, int
 	} while (indexer != data.head_polygon);
 
 	assert(false);
+	return -1;
 }

@@ -106,7 +106,7 @@ namespace oly
 		extern Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, float border_pivot, const std::vector<glm::vec2>& points, glm::uint max_degree, glm::uint index_offset = 0);
 		
 		extern Triangulation ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
-		extern size_t get_first_ear(const const std::vector<glm::vec2>& polygon, int starting_offset = 0);
+		extern size_t get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
 		// TODO algorithm to compute closest mutually visible vertex to a given vertex in a polygon. see ear clipping triangulation paper
 	}
 }

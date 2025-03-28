@@ -41,7 +41,7 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_handle();
 
-	oly::SpriteBatch sprite_batch({ 1000, 5, 2, 2 }, { -720, 720, -540, 540 });
+	oly::batch::SpriteBatch sprite_batch({ 1000, 5, 2, 2 }, { -720, 720, -540, 540 });
 	enum
 	{
 		TEX_EINSTEIN = 1,
@@ -60,19 +60,19 @@ void run()
 		} });
 	sprite_batch.set_draw_spec(0, 100);
 
-	oly::Sprite sprite0(&sprite_batch, 0);
+	oly::renderable::Sprite sprite0(&sprite_batch, 0);
 	sprite0.quad().info().tex_slot = TEX_EINSTEIN;
 	sprite0.quad().send_info();
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::Sprite sprite1(&sprite_batch, 1);
+	oly::renderable::Sprite sprite1(&sprite_batch, 1);
 	sprite1.quad().info().tex_slot = TEX_EINSTEIN;
 	sprite1.quad().info().color_slot = 1;
 	sprite1.quad().send_info();
 
-	oly::Sprite sprite2(&sprite_batch, 2);
+	oly::renderable::Sprite sprite2(&sprite_batch, 2);
 	sprite2.quad().info().tex_slot = TEX_TUX;
 	sprite2.quad().send_info();
 	sprite2.local().position.x = -100;
@@ -86,7 +86,7 @@ void run()
 	int flag_rows = 8;
 	int flag_cols = 8;
 	flag_tesselation_parent.post_set();
-	std::vector<oly::Sprite> flag_tesselation;
+	std::vector<oly::renderable::Sprite> flag_tesselation;
 	flag_tesselation.reserve(64);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
@@ -103,7 +103,7 @@ void run()
 	sprite2.quad().set_z_index(0);
 
 	glm::uint max_degree = 5;
-	oly::PolygonBatch polygon_batch(oly::PolygonBatch::Capacity(100, max_degree), { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100, max_degree), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points.push_back({ 1, -1 });
@@ -133,7 +133,7 @@ void run()
 	auto bordered_triangle = oly::math::create_bordered_triangle({ 0.0f, 1.0f, 0.0f, 0.7f }, { 0.5f, 0.0f, 0.5f, 1.0f }, 0.2f, 0.5f, { 0, 0 }, { 3, 0 }, { 1, 3 }, max_degree, polygon_batch.index_offset(2));
 	polygon_batch.set_polygon(2, oly::dupl(bordered_triangle[0].polygon), bordered_triangle[0].triangulation, triangle_transform);
 	oly::math::Polygon2DComposite triangle_border = oly::math::split_polygon_composite(bordered_triangle[1], max_degree);
-	size_t pi = 3;
+	oly::batch::PolygonBatch::PolygonPos pi = 3;
 	for (const auto& poly : triangle_border)
 		polygon_batch.set_polygon(pi++, oly::dupl(poly.polygon), poly.triangulation, triangle_transform);
 	
