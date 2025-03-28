@@ -105,16 +105,20 @@ void run()
 	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100, 5), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
-	pentagon.points.push_back({ 1, -1 });
-	pentagon.points.push_back({ 1, 0 });
-	pentagon.points.push_back({ 0, 1 });
-	pentagon.points.push_back({ -1, 0 });
-	pentagon.points.push_back({ -1, -1 });
-	pentagon.colors.push_back({ 1.0f, 1.0f, 0.0f, 1.0f });
-	pentagon.colors.push_back({ 1.0f, 0.0f, 1.0f, 1.0f });
-	pentagon.colors.push_back({ 0.0f, 1.0f, 1.0f, 1.0f });
-	pentagon.colors.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
-	pentagon.colors.push_back({ 1.0f, 1.0f, 1.0f, 1.0f });
+	pentagon.points = {
+		{ 1, -1 },
+		{ 1, 0 },
+		{ 0, 1 },
+		{ -1, 0 },
+		{ -1, -1 }
+	};
+	pentagon.colors = {
+		{ 1.0f, 1.0f, 0.0f, 1.0f },
+		{ 1.0f, 0.0f, 1.0f, 1.0f },
+		{ 0.0f, 1.0f, 1.0f, 1.0f },
+		{ 0.0f, 0.0f, 0.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f, 1.0f }
+	};
 
 	oly::Transform2D pentagon_transform;
 	pentagon_transform.scale = glm::vec2(160);
@@ -126,36 +130,45 @@ void run()
 		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
-	oly::batch::PolygonBatch::PolygonPos octagon_pos = 2;
-	auto octagon = polygon_batch.create_bordered_ngon(octagon_pos, {
-			{ 0.0f, 1.0f, 0.0f, 0.7f }
-		}, {
-			{ 0.5f, 0.0f, 0.5f, 1.0f },
-			{ 0.6f, 0.1f, 0.4f, 1.0f },
-			{ 0.7f, 0.2f, 0.3f, 1.0f },
-			{ 0.8f, 0.3f, 0.2f, 1.0f },
-			{ 0.9f, 0.4f, 0.1f, 1.0f },
-			{ 1.0f, 0.5f, 0.0f, 1.0f },
-			{ 0.0f, 0.6f, 1.0f, 1.0f },
-			{ 0.1f, 0.7f, 0.9f, 1.0f },
-		}, 0.05f, oly::math::BorderPivot::MIDDLE, {
-			{ 1, 0 },
-			{ 0.707f, 0.707f },
-			{ 0, 1 },
-			{ -0.707f, 0.707f },
-			{ -1, 0 },
-			{ -0.707f, -0.707f },
-			{ 0, -1 },
-			{ 0.707f, -0.707f }
-		});
+	auto triangle_pos = 2;
+	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, polygon_batch.max_degree(), polygon_batch.index_offset(triangle_pos));
+	oly::Transform2D triangle_transform;
+	triangle_transform.position.x = 100;
+	triangle_transform.position.y = -100;
+	triangle_transform.scale = glm::vec2(150);
+	auto triangle_range = polygon_batch.set_polygon_composite(triangle_pos, triangle, triangle_transform);
+
+	oly::math::NGonBase octagon;
+	octagon.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
+	octagon.border_colors = {
+		{ 0.25f,  0.0f,  0.5f, 1.0f },
+		{  0.0f, 0.25f, 0.25f, 1.0f },
+		{ 0.25f,  0.5f,  0.0f, 1.0f },
+		{  0.5f, 0.75f, 0.25f, 1.0f },
+		{ 0.75f,  1.0f,  0.5f, 1.0f },
+		{  1.0f, 0.75f, 0.75f, 1.0f },
+		{ 0.75f,  0.5f,  1.0f, 1.0f },
+		{  0.5f, 0.25f, 0.75f, 1.0f }
+	};
+	octagon.points = {
+		{ 1, 0 },
+		{ 0.707f, 0.707f },
+		{ 0, 1 },
+		{ -0.707f, 0.707f },
+		{ -1, 0 },
+		{ -0.707f, -0.707f },
+		{ 0, -1 },
+		{ 0.707f, -0.707f }
+	};
+	octagon.border_width = 0.05f;
+	oly::batch::PolygonBatch::PolygonPos octagon_pos = triangle_pos + triangle_range;
 	oly::Transform2D octagon_transform;
 	octagon_transform.position.x = 300;
 	octagon_transform.position.y = 200;
 	octagon_transform.scale = glm::vec2(200);
-	polygon_batch.set_polygon_composite(octagon_pos, octagon, octagon_transform);
+	auto octagon_range = polygon_batch.set_bordered_ngon_composite(octagon_pos, octagon, octagon_transform);
 
-
-	bool first = true;
+	// TODO create index-tracking system for polygon batch and sprite batch that keeps track of what indices+ranges (for composite polygons) are available.
 
 	while (!window.should_close())
 	{
@@ -166,24 +179,11 @@ void run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glfwPollEvents();
 
-		if (fmod(glfwGetTime(), 1.0) < 0.5f)
-		{
-			if (first)
-			{
-				first = false;
-				flag_texture->set_handle(oly::samplers::nearest);
-				sprite_batch.refresh_handle(TEX_FLAG);
-			}
-		}
-		else
-		{
-			if (!first)
-			{
-				first = true;
-				flag_texture->set_handle(oly::samplers::linear);
-				sprite_batch.refresh_handle(TEX_FLAG);
-			}
-		}
+		octagon.fill_colors[0].r = fmod((float)glfwGetTime(), 1.0f);
+		octagon.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
+		octagon.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
+		octagon.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
+		polygon_batch.set_bordered_ngon_composite(octagon_pos, octagon, octagon_transform, octagon_range, octagon_range);
 	
 		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();

@@ -109,6 +109,7 @@ namespace oly
 			class Quad
 			{
 				friend SpriteBatch;
+				// TODO _info and _transform pointers are only safe because the vector of infos and transforms is immutable. Define something like std::vector that is explicitly immutable so that this is safe. If std::vector is to be resized, then don't use pointers like here.
 				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 				SpriteBatch* _sprite_batch = nullptr;

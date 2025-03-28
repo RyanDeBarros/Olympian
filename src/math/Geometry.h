@@ -91,6 +91,7 @@ namespace oly
 			glm::vec2 outer;
 		};
 		extern BorderPointPair border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point);
+		extern void triangulate_border(const std::vector<glm::vec2>& border, Triangulation& triangulation, glm::uint index_offset);
 		extern TriangulatedPolygon2D create_triangle(glm::vec4 color,
 			glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uint index_offset = 0);
 		extern TriangulatedPolygon2D create_triangle_border(glm::vec4 color, float border, BorderPivot border_pivot,
@@ -135,6 +136,18 @@ namespace oly
 			const std::vector<glm::vec2>& points, glm::uint max_degree, glm::uint index_offset = 0);
 		extern Polygon2DComposite create_bordered_ngon(std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors, float border, BorderPivot border_pivot,
 			std::vector<glm::vec2>&& points, glm::uint max_degree, glm::uint index_offset = 0);
+
+		struct NGonBase
+		{
+			std::vector<glm::vec2> points;
+			std::vector<glm::vec4> fill_colors;
+			std::vector<glm::vec4> border_colors;
+			float border_width = 0.0f;
+			BorderPivot border_pivot = BorderPivot::MIDDLE;
+
+			Polygon2DComposite composite(glm::uint max_degree, glm::uint index_offset) const;
+			Polygon2DComposite bordered_composite(glm::uint max_degree, glm::uint index_offset) const;
+		};
 
 		extern Triangulation ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
 		extern size_t get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);

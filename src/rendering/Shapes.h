@@ -76,9 +76,12 @@ namespace oly
 
 			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform);
 			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform);
-			GLushort set_polygon_composite(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort max_range = 0);
-			GLushort set_polygon_composite(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort max_range = 0);
-			GLushort set_polygon_composite(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort max_range = 0);
+			void disable_polygon(PolygonPos pos);
+			GLushort set_polygon_composite(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			GLushort set_polygon_composite(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			GLushort set_polygon_composite(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			GLushort set_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			GLushort set_bordered_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const;
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const;
@@ -86,6 +89,9 @@ namespace oly
 				float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const;
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors,
 				float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const;
+			
+			math::Polygon2DComposite create_ngon(PolygonPos pos, const math::NGonBase& ngon) const;
+			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, const math::NGonBase& ngon) const;
 		};
 
 		// TODO
