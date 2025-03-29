@@ -32,7 +32,7 @@ namespace oly
 
 			struct TexData
 			{
-				GLuint64 handle;
+				GLuint64 handle = 0;
 				glm::vec2 dimensions = {};
 			};
 			struct QuadInfo
@@ -44,24 +44,32 @@ namespace oly
 			std::vector<QuadInfo> quad_infos;
 			std::vector<glm::mat3> quad_transforms;
 
-			rendering::GLBuffer tex_data_ssbo;
-			rendering::GLBuffer quad_info_ssbo;
-			rendering::GLBuffer quad_transform_ssbo;
+			enum SSBO
+			{
+				B_TEX_DATA,
+				B_QUAD_INFO,
+				B_QUAD_TRANSFORM,
+				__SSBO_COUNT
+			};
+			rendering::GLBufferBlock ssbos;
 
 		public:
 			struct TexUVRect
 			{
 				glm::vec2 uvs[4] = {};
 			};
-		private:
-			rendering::GLBuffer tex_coords_ubo;
-		public:
 			struct Modulation
 			{
 				glm::vec4 colors[4] = {};
 			};
 		private:
-			rendering::GLBuffer modulation_ubo;
+			enum UBO
+			{
+				B_TEX_COORDS,
+				B_MODULATION,
+				__UBO_COUNT
+			};
+			rendering::GLBufferBlock ubos;
 
 			struct QuadIndexLayout
 			{
@@ -72,10 +80,10 @@ namespace oly
 		public:
 			struct Capacity
 			{
-				size_t quads = 0;
-				size_t textures = 1;
-				size_t uvs = 1;
-				size_t modulations = 1;
+				GLushort quads = 0;
+				GLushort textures = 1;
+				GLushort uvs = 1;
+				GLushort modulations = 1;
 			};
 
 		private:
@@ -147,9 +155,9 @@ namespace oly
 
 			enum Dirty
 			{
-				QUAD_INFO,
-				TRANSFORM,
-				INDICES
+				D_QUAD_INFO,
+				D_TRANSFORM,
+				D_INDICES
 			};
 
 		private:

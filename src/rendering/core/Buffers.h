@@ -2,10 +2,6 @@
 
 #include <GL/glew.h>
 
-#include <vector>
-#include <array>
-#include <memory>
-
 namespace oly
 {
 	namespace rendering
@@ -24,8 +20,20 @@ namespace oly
 			operator GLuint () const { return id; }
 		};
 
-		typedef std::shared_ptr<GLBuffer> GLBufferRes;
+		class GLBufferBlock
+		{
+			GLuint* ids;
+			GLsizei count;
 
-		// TODO GLbufferBlock
+		public:
+			GLBufferBlock(GLsizei count);
+			GLBufferBlock(const GLBufferBlock&) = delete;
+			GLBufferBlock(GLBufferBlock&&) noexcept;
+			~GLBufferBlock();
+			GLBufferBlock& operator=(GLBufferBlock&&) noexcept;
+
+			GLuint operator[](GLsizei i) const;
+			GLsizei get_count() const { return count; }
+		};
 	}
 }

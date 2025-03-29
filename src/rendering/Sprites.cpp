@@ -10,7 +10,7 @@ namespace oly
 	namespace batch
 	{
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), z_order(4 * capacity.quads <= USHRT_MAX ? capacity.quads : 0)
+			: ssbos(SSBO::__SSBO_COUNT), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(4 * capacity.quads <= USHRT_MAX ? capacity.quads : 0)
 		{
 			assert(4 * capacity.quads <= USHRT_MAX);
 			assert(capacity.textures > 0); // there is enough capacity for 0th texture
@@ -22,31 +22,31 @@ namespace oly
 			projection_location = glGetUniformLocation(shader, "uProjection");
 
 			textures.resize(capacity.textures);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
-			glNamedBufferStorage(tex_data_ssbo, capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_TEX_DATA]);
+			glNamedBufferStorage(ssbos[SSBO::B_TEX_DATA], capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 			quads.resize(capacity.quads);
 
 			quad_infos.resize(capacity.quads);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_info_ssbo);
-			glNamedBufferStorage(quad_info_ssbo, capacity.quads * sizeof(QuadInfo), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_INFO]);
+			glNamedBufferStorage(ssbos[SSBO::B_QUAD_INFO], capacity.quads * sizeof(QuadInfo), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
 			quad_transforms.resize(capacity.quads, 1.0f);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, quad_transform_ssbo);
-			glNamedBufferStorage(quad_transform_ssbo, capacity.quads * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_TRANSFORM]);
+			glNamedBufferStorage(ssbos[SSBO::B_QUAD_TRANSFORM], capacity.quads * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
-			glBindBuffer(GL_UNIFORM_BUFFER, tex_coords_ubo);
-			glNamedBufferStorage(tex_coords_ubo, capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
+			glBindBuffer(GL_UNIFORM_BUFFER, ubos[UBO::B_TEX_COORDS]);
+			glNamedBufferStorage(ubos[UBO::B_TEX_COORDS], capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
 			TexUVRect tex_coords{ { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } };
-			glNamedBufferSubData(tex_coords_ubo, 0, sizeof(TexUVRect), &tex_coords);
+			glNamedBufferSubData(ubos[UBO::B_TEX_COORDS], 0, sizeof(TexUVRect), &tex_coords);
 
-			glBindBuffer(GL_UNIFORM_BUFFER, modulation_ubo);
-			glNamedBufferStorage(modulation_ubo, capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
+			glBindBuffer(GL_UNIFORM_BUFFER, ubos[UBO::B_MODULATION]);
+			glNamedBufferStorage(ubos[UBO::B_MODULATION], capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
 			Modulation modulation{ { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } };
-			glNamedBufferSubData(modulation_ubo, 0, sizeof(Modulation), &modulation);
+			glNamedBufferSubData(ubos[UBO::B_MODULATION], 0, sizeof(Modulation), &modulation);
 
 			indices.resize(capacity.quads);
-			set_draw_spec(0, (QuadPos)capacity.quads);
+			set_draw_spec(0, capacity.quads);
 
 			for (GLushort i = 0; i < capacity.quads; ++i)
 				rendering::quad_indices(indices[i].data, i);
@@ -65,11 +65,11 @@ namespace oly
 			glUseProgram(shader);
 			glBindVertexArray(vao);
 
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, tex_data_ssbo);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_info_ssbo);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_transform_ssbo);
-			glBindBufferBase(GL_UNIFORM_BUFFER, 0, tex_coords_ubo);
-			glBindBufferBase(GL_UNIFORM_BUFFER, 1, modulation_ubo);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbos[SSBO::B_TEX_DATA]);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbos[SSBO::B_QUAD_INFO]);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbos[SSBO::B_QUAD_TRANSFORM]);
+			glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubos[UBO::B_TEX_COORDS]);
+			glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubos[UBO::B_MODULATION]);
 			glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
 		}
 
@@ -81,7 +81,7 @@ namespace oly
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = texture->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
 		}
 
 		void SpriteBatch::refresh_handle(size_t pos, rendering::ImageDimensions dim)
@@ -91,7 +91,7 @@ namespace oly
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = textures[pos]->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
 		}
 
 		void SpriteBatch::refresh_handle(size_t pos)
@@ -99,19 +99,19 @@ namespace oly
 			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			GLuint64 handle = textures[pos]->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
+			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
 		}
 
 		void SpriteBatch::set_uvs(size_t pos, const TexUVRect& tex_coords) const
 		{
 			assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
-			glNamedBufferSubData(tex_coords_ubo, pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
+			glNamedBufferSubData(ubos[UBO::B_TEX_COORDS], pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
 		}
 
 		void SpriteBatch::set_modulation(size_t pos, const Modulation& modulation) const
 		{
 			assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
-			glNamedBufferSubData(modulation_ubo, pos * sizeof(Modulation), sizeof(Modulation), &modulation);
+			glNamedBufferSubData(ubos[UBO::B_MODULATION], pos * sizeof(Modulation), sizeof(Modulation), &modulation);
 		}
 
 		void SpriteBatch::set_projection(const glm::vec4& projection_bounds) const
@@ -184,9 +184,9 @@ namespace oly
 		{
 			for (renderable::Sprite* sprite : sprites)
 				sprite->flush();
-			process_set(dirty_quad_infos, Dirty::QUAD_INFO, quad_infos.data(), quad_info_ssbo, sizeof(QuadInfo));
-			process_set(dirty_transforms, Dirty::TRANSFORM, quad_transforms.data(), quad_transform_ssbo, sizeof(glm::mat3));
-			process_set(dirty_indices, Dirty::INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
+			process_set(dirty_quad_infos, Dirty::D_QUAD_INFO, quad_infos.data(), ssbos[SSBO::B_QUAD_INFO], sizeof(QuadInfo));
+			process_set(dirty_transforms, Dirty::D_TRANSFORM, quad_transforms.data(), ssbos[SSBO::B_QUAD_TRANSFORM], sizeof(glm::mat3));
+			process_set(dirty_indices, Dirty::D_INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
 		}
 
 		// TODO move to utility function

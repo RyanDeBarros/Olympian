@@ -30,7 +30,7 @@ namespace oly
 			glm::vec2 dnext() const { return next - root; }
 			float signed_area() const;
 			float area() const { return std::abs(signed_area()); }
-			Barycentric barycentric(glm::vec2 point) const; // (root, prev, next)
+			Barycentric barycentric(glm::vec2 point) const;
 		};
 
 		extern float cross(glm::vec2 u, glm::vec2 v);

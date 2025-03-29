@@ -172,7 +172,6 @@ void run()
 
 	while (!window.should_close())
 	{
-		// TODO do something else with per-frame error detection
 		if (auto err = glGetError())
 			__debugbreak();
 

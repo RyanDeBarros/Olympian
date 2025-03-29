@@ -373,7 +373,6 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(std::vector<glm::
 	return p;
 }
 
-// TODO create optional indexer structure that takes an index of the original triangulated polygon's points/colors and returns the new index(es) of that point/color in the generated composite
 oly::math::Polygon2DComposite oly::math::split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree)
 {
 	assert(max_degree >= 3);
