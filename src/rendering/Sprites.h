@@ -1,9 +1,8 @@
 #pragma once
 
-#include "core/Core.h"
+#include "SpecializedBuffers.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
-#include "util/FixedVector.h"
 
 #include <set>
 #include <unordered_set>
@@ -24,7 +23,7 @@ namespace oly
 
 			GLuint shader;
 			rendering::VertexArray vao;
-			rendering::GLBuffer ebo;
+			rendering::QuadLayoutEBO ebo;
 
 			GLuint projection_location;
 
@@ -41,17 +40,10 @@ namespace oly
 				GLuint tex_coord_slot = 0;
 				GLuint color_slot = 0;
 			};
-			FixedVector<QuadInfo> quad_infos;
-			FixedVector<glm::mat3> quad_transforms;
+			rendering::IndexedSSBO<QuadInfo, GLushort> quad_info_ssbo;
+			rendering::IndexedTransformSSBO quad_transform_ssbo;
 
-			enum SSBO
-			{
-				B_TEX_DATA,
-				B_QUAD_INFO,
-				B_QUAD_TRANSFORM,
-				__SSBO_COUNT
-			};
-			rendering::GLBufferBlock ssbos;
+			rendering::GLBuffer tex_data_ssbo;
 
 		public:
 			struct TexUVRect
@@ -70,12 +62,6 @@ namespace oly
 				__UBO_COUNT
 			};
 			rendering::GLBufferBlock ubos;
-
-			struct QuadIndexLayout
-			{
-				GLushort data[6];
-			};
-			FixedVector<QuadIndexLayout> indices;
 
 		public:
 			struct Capacity
@@ -104,17 +90,9 @@ namespace oly
 			void set_projection(const glm::vec4& projection_bounds) const;
 
 			typedef GLushort QuadPos;
-		private:
-			struct
-			{
-				QuadPos first = 0;
-				QuadPos count = 0;
-				size_t offset = 0;
-			} draw_spec;
-
 		public:
-			void get_draw_spec(QuadPos& first, QuadPos& count) const { first = draw_spec.first; count = draw_spec.count; }
-			void set_draw_spec(QuadPos first, QuadPos count);
+			void get_draw_spec(QuadPos& first, QuadPos& count) const { ebo.get_draw_spec(first, count); }
+			void set_draw_spec(QuadPos first, QuadPos count) { ebo.set_draw_spec(first, count); }
 
 			class Quad
 			{
@@ -154,30 +132,9 @@ namespace oly
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
 
-			enum Dirty
-			{
-				D_QUAD_INFO,
-				D_TRANSFORM,
-				D_INDICES
-			};
-
-		private:
-			std::set<QuadPos> dirty_quad_infos;
-			std::set<QuadPos> dirty_transforms;
-			std::set<QuadPos> dirty_indices;
-
-		public:
-			enum class BufferSendType
-			{
-				SUBDATA,
-				MAP
-			};
-
-			BufferSendType send_types[3] = { BufferSendType::SUBDATA, BufferSendType::SUBDATA, BufferSendType::SUBDATA };
 			void process();
 
 		private:
-			void process_set(std::set<QuadPos>& set, Dirty flag, void* data, GLuint buf, size_t element_size);
 			std::unordered_set<renderable::Sprite*> sprites;
 		};
 	}

@@ -19,21 +19,15 @@ namespace oly
 		}
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ssbos(SSBO::__SSBO_COUNT), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(capacity.quads),
-			quad_infos(capacity.quads), quad_transforms(capacity.quads, 1.0f), quads(capacity.quads), textures(capacity.textures), indices(capacity.quads)
+			: ebo(capacity.quads), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(capacity.quads),
+			quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f), quads(capacity.quads), textures(capacity.textures)
 		{
 			shader = shaders::sprite_batch;
 			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_TEX_DATA]);
-			glNamedBufferStorage(ssbos[SSBO::B_TEX_DATA], capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_INFO]);
-			glNamedBufferStorage(ssbos[SSBO::B_QUAD_INFO], capacity.quads * sizeof(QuadInfo), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_TRANSFORM]);
-			glNamedBufferStorage(ssbos[SSBO::B_QUAD_TRANSFORM], capacity.quads * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
+			glNamedBufferStorage(tex_data_ssbo, capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 			glBindBuffer(GL_UNIFORM_BUFFER, ubos[UBO::B_TEX_COORDS]);
 			glNamedBufferStorage(ubos[UBO::B_TEX_COORDS], capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
@@ -47,12 +41,9 @@ namespace oly
 
 			set_draw_spec(0, capacity.quads);
 
-			for (GLushort i = 0; i < capacity.quads; ++i)
-				rendering::quad_indices(indices[i].data, i);
-
 			glBindVertexArray(vao);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-			glNamedBufferStorage(ebo, capacity.quads * sizeof(QuadIndexLayout), indices.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+			rendering::pre_init(ebo);
+			ebo.init();
 
 			set_projection(projection_bounds);
 
@@ -64,12 +55,12 @@ namespace oly
 			glUseProgram(shader);
 			glBindVertexArray(vao);
 
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbos[SSBO::B_TEX_DATA]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbos[SSBO::B_QUAD_INFO]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbos[SSBO::B_QUAD_TRANSFORM]);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, tex_data_ssbo);
+			quad_info_ssbo.bind_base(1);
+			quad_transform_ssbo.bind_base(2);
 			glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubos[UBO::B_TEX_COORDS]);
 			glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubos[UBO::B_MODULATION]);
-			glDrawElements(GL_TRIANGLES, (GLsizei)draw_spec.count, GL_UNSIGNED_SHORT, (void*)(draw_spec.offset));
+			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
 		void SpriteBatch::set_texture(size_t pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
@@ -80,7 +71,7 @@ namespace oly
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = texture->get_handle();
-			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
 		}
 
 		void SpriteBatch::refresh_handle(size_t pos, rendering::ImageDimensions dim)
@@ -90,7 +81,7 @@ namespace oly
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = textures[pos]->get_handle();
-			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
 		}
 
 		void SpriteBatch::refresh_handle(size_t pos)
@@ -98,7 +89,7 @@ namespace oly
 			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			GLuint64 handle = textures[pos]->get_handle();
-			glNamedBufferSubData(ssbos[SSBO::B_TEX_DATA], pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
+			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
 		}
 
 		void SpriteBatch::set_uvs(size_t pos, const TexUVRect& tex_coords) const
@@ -120,35 +111,27 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void SpriteBatch::set_draw_spec(QuadPos first, QuadPos count)
-		{
-			if (first < indices.size())
-				draw_spec.first = first;
-			draw_spec.count = 6 * std::min(count, (QuadPos)(indices.size() - draw_spec.first));
-			draw_spec.offset = draw_spec.first * sizeof(QuadIndexLayout);
-		}
-
 		void SpriteBatch::Quad::send_info() const
 		{
-			_sprite_batch->dirty_quad_infos.insert(_ssbo_pos);
+			_sprite_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
 		}
 
 		void SpriteBatch::Quad::send_transform() const
 		{
-			_sprite_batch->dirty_transforms.insert(_ssbo_pos);
+			_sprite_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
 		}
 
 		void SpriteBatch::Quad::send_data() const
 		{
-			_sprite_batch->dirty_quad_infos.insert(_ssbo_pos);
-			_sprite_batch->dirty_transforms.insert(_ssbo_pos);
+			_sprite_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
+			_sprite_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
 		}
 
 		SpriteBatch::Quad& SpriteBatch::get_quad(QuadPos pos)
 		{
 			Quad& quad = quads[pos];
-			quad._info = &quad_infos[pos];
-			quad._transform = &quad_transforms[pos];
+			quad._info = &quad_info_ssbo.vector()[pos];
+			quad._transform = &quad_transform_ssbo.vector()[pos];
 			quad._sprite_batch = this;
 			quad._ssbo_pos = pos;
 			return quad;
@@ -158,10 +141,10 @@ namespace oly
 		{
 			if (pos1 != pos2)
 			{
-				std::swap(indices[pos1], indices[pos2]);
+				std::swap(ebo.vector()[pos1], ebo.vector()[pos2]);
 				z_order.swap_range(pos1, pos2);
-				dirty_indices.insert(pos1);
-				dirty_indices.insert(pos2);
+				ebo.lazy_send(pos1);
+				ebo.lazy_send(pos2);
 			}
 		}
 
@@ -183,77 +166,9 @@ namespace oly
 		{
 			for (renderable::Sprite* sprite : sprites)
 				sprite->flush();
-			process_set(dirty_quad_infos, Dirty::D_QUAD_INFO, quad_infos.data(), ssbos[SSBO::B_QUAD_INFO], sizeof(QuadInfo));
-			process_set(dirty_transforms, Dirty::D_TRANSFORM, quad_transforms.data(), ssbos[SSBO::B_QUAD_TRANSFORM], sizeof(glm::mat3));
-			process_set(dirty_indices, Dirty::D_INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
-		}
-
-		// TODO move to utility function, or rather implement in specialized buffer objects.
-		void SpriteBatch::process_set(std::set<QuadPos>& set, Dirty flag, void* _data, GLuint buf, size_t element_size)
-		{
-			std::byte* data = (std::byte*)_data;
-			switch (send_types[flag])
-			{
-			case BufferSendType::SUBDATA:
-			{
-				bool contiguous = false;
-				GLintptr offset = 0;
-				GLsizeiptr size = 0;
-				for (auto iter = set.begin(); iter != set.end(); ++iter)
-				{
-					if (contiguous)
-					{
-						if (*iter * element_size == offset + size)
-							size += element_size;
-						else
-						{
-							glNamedBufferSubData(buf, offset, size, data + offset);
-							contiguous = false;
-						}
-					}
-					else
-					{
-						offset = *iter * element_size;
-						size = element_size;
-						contiguous = true;
-					}
-				}
-				if (contiguous)
-					glNamedBufferSubData(buf, offset, size, data + offset);
-				break;
-			}
-			case BufferSendType::MAP:
-			{
-				std::byte* gpu_buf = (std::byte*)glMapNamedBuffer(buf, GL_WRITE_ONLY);
-				bool contiguous = false;
-				GLintptr offset = 0;
-				GLsizeiptr size = 0;
-				for (auto iter = set.begin(); iter != set.end(); ++iter)
-				{
-					if (contiguous)
-					{
-						if (*iter * element_size == offset + size)
-							size += element_size;
-						else
-						{
-							memcpy(gpu_buf + offset, data + offset, size);
-							contiguous = false;
-						}
-					}
-					else
-					{
-						offset = *iter * element_size;
-						size = element_size;
-						contiguous = true;
-					}
-				}
-				if (contiguous)
-					memcpy(gpu_buf + offset, data + offset, size);
-				glUnmapNamedBuffer(buf);
-				break;
-			}
-			}
-			set.clear();
+			quad_info_ssbo.flush();
+			quad_transform_ssbo.flush();
+			ebo.flush();
 		}
 	}
 
