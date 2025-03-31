@@ -130,13 +130,13 @@ void run()
 		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
-	auto triangle_pos = 2;
-	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, polygon_batch.max_degree(), polygon_batch.index_offset(triangle_pos));
+	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 },
+		polygon_batch.max_degree(), polygon_batch.index_offset(polygon_batch.primitive_start(2)));
 	oly::Transform2D triangle_transform;
 	triangle_transform.position.x = 100;
 	triangle_transform.position.y = -100;
 	triangle_transform.scale = glm::vec2(150);
-	auto triangle_range = polygon_batch.set_polygon_composite(triangle_pos, triangle, triangle_transform);
+	polygon_batch.set_polygon(2, triangle, triangle_transform);
 
 	oly::math::NGonBase octagon;
 	octagon.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
@@ -161,14 +161,11 @@ void run()
 		{ 0.707f, -0.707f }
 	};
 	octagon.border_width = 0.05f;
-	oly::batch::PolygonBatch::PolygonPos octagon_pos = triangle_pos + triangle_range;
 	oly::Transform2D octagon_transform;
 	octagon_transform.position.x = 300;
 	octagon_transform.position.y = 200;
 	octagon_transform.scale = glm::vec2(200);
-	auto octagon_range = polygon_batch.set_bordered_ngon_composite(octagon_pos, octagon, octagon_transform);
-
-	// TODO create index-tracking system for polygon batch and sprite batch that keeps track of what indices+ranges (for composite polygons) are available.
+	polygon_batch.set_bordered_ngon(3, octagon, octagon_transform);
 
 	std::vector<glm::vec2> concave_polygon{
 		{ -4,  0 },
@@ -182,7 +179,6 @@ void run()
 		{ -3,  1 },
 		{ -3,  2 }
 	};
-	auto concave_pos = octagon_pos + octagon_range;
 	auto decomposition = oly::math::convex_decompose_polygon(concave_polygon);
 	oly::math::Polygon2DComposite concave_composite;
 	concave_composite.reserve(decomposition.size());
@@ -191,15 +187,17 @@ void run()
 	{
 		oly::math::TriangulatedPolygon2D tp;
 		tp.polygon.colors = { glm::vec4(1.0f) };
-		tp.polygon.colors[0].g = tp.polygon.colors[0].b = float(i) / (decomposition.size() - 1);
+		tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
+		tp.polygon.colors[0].g = (float)rand() / RAND_MAX;
+		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 		tp.polygon.points = std::move(subconvex.first);
 		tp.triangulation = std::move(subconvex.second);
-		tp.triangulation.set_index_offset(polygon_batch.index_offset(concave_pos + i++));
+		tp.triangulation.set_index_offset(polygon_batch.index_offset(polygon_batch.primitive_start(4) + i++));
 		concave_composite.push_back(std::move(tp));
 	}
 	oly::Transform2D concave_transform;
 	concave_transform.scale = glm::vec2(100);
-	auto concave_range = polygon_batch.set_polygon_composite(concave_pos, concave_composite, concave_transform);
+	polygon_batch.set_polygon(4, concave_composite, concave_transform);
 
 	while (!window.should_close())
 	{
@@ -213,7 +211,7 @@ void run()
 		octagon.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
 		octagon.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
 		octagon.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
-		polygon_batch.set_bordered_ngon_composite(octagon_pos, octagon, octagon_transform, octagon_range, octagon_range);
+		polygon_batch.set_bordered_ngon(3, octagon, octagon_transform);
 	
 		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();

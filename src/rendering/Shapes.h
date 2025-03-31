@@ -30,21 +30,10 @@ namespace oly
 			FixedVector<GLushort> indices;
 
 		public:
+			typedef GLushort PrimitivePos;
 			typedef GLushort PolygonPos;
-			GLushort index_offset(PolygonPos pos) const;
+			GLushort index_offset(PrimitivePos pos) const;
 
-		private:
-			struct PolygonIndexer
-			{
-				PolygonPos index;
-				GLushort vertices_offset;
-				GLushort num_vertices;
-				GLushort indices_offset;
-				GLushort num_indices;
-			};
-			FixedVector<PolygonIndexer> polygon_indexers;
-
-		public:
 			struct Capacity
 			{
 				GLushort vertices = 0;
@@ -76,14 +65,19 @@ namespace oly
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 
-			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform);
-			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform);
+		private:
+			void set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const Transform2D& transform);
+			void set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform);
+			void disable_polygon_primitive(PrimitivePos pos);
+		public:
 			void disable_polygon(PolygonPos pos);
-			GLushort set_polygon_composite(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
-			GLushort set_polygon_composite(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
-			GLushort set_polygon_composite(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
-			GLushort set_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
-			GLushort set_bordered_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, math::Triangulation&& triangulation, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_ngon(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_bordered_ngon(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const;
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const;
@@ -94,6 +88,35 @@ namespace oly
 			
 			math::Polygon2DComposite create_ngon(PolygonPos pos, const math::NGonBase& ngon) const;
 			math::Polygon2DComposite create_bordered_ngon(PolygonPos pos, const math::NGonBase& ngon) const;
+
+		private:
+			struct PolygonIndexer
+			{
+				struct Composite
+				{
+					PrimitivePos start;
+					GLushort range;
+				};
+
+				GLushort total_range = 0;
+				std::vector<Composite> composites;
+
+				PrimitivePos next_pos() const { return total_range; }
+				void register_composite(PrimitivePos start, GLushort range)
+				{
+					composites.emplace_back(start, range);
+					total_range += range;
+				}
+				PrimitivePos get_pos(PolygonPos pos) const { return composites[pos].start; }
+				GLushort get_range(PolygonPos pos) const { return composites[pos].range; }
+				bool exists(PolygonPos pos) const { return pos < composites.size(); }
+				GLushort size() const { return (GLushort)composites.size(); }
+			};
+			PolygonIndexer polygon_indexer;
+
+		public:
+			PrimitivePos primitive_start(PolygonPos pos) const;
+			GLushort primitive_range(PolygonPos pos) const;
 		};
 
 		// TODO

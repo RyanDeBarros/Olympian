@@ -19,13 +19,13 @@ namespace oly
 			return 3 * degree + 6 * (degree / 3) - 12;
 		}
 
-		GLushort PolygonBatch::index_offset(PolygonPos pos) const
+		GLushort PolygonBatch::index_offset(PrimitivePos pos) const
 		{
 			return pos * capacity.degree;
 		}
 
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), polygon_indexers(capacity.polygons), polygons(capacity.polygons), transforms(capacity.polygons), indices(capacity.indices)
+			: capacity(capacity), polygons(capacity.polygons), transforms(capacity.polygons), indices(capacity.indices)
 		{
 			shader = shaders::polygon_batch;
 			glUseProgram(shader);
@@ -72,26 +72,21 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform)
+		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const Transform2D& transform)
 		{
-			set_polygon(pos, std::move(polygon), math::ear_clipping(glm::uint(pos * capacity.degree), polygon.points), transform);
+			set_polygon_primitive(pos, std::move(polygon), math::ear_clipping(glm::uint(pos * capacity.degree), polygon.points), transform);
 		}
 
-		void PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
+		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
 		{
 			assert(polygon.valid());
 			assert(polygon.points.size() <= capacity.degree);
 			assert(triangulation.num_indices() <= capacity.polygon_index_count());
-			assert(triangulation.index_offset == index_offset(pos));
-			assert(pos < polygon_indexers.size());
+			assert(triangulation.index_offset == index_offset(pos)); // TODO remove index_offset from triangulation. Just process it here instead, using index_offset(pos)
+			assert(pos < capacity.polygons);
 
-			PolygonIndexer p;
-			p.index = pos;
-			p.num_vertices = (GLushort)polygon.points.size();
-			p.vertices_offset = pos * capacity.degree;
-			p.num_indices = (GLushort)triangulation.num_indices();
-			p.indices_offset = pos * capacity.polygon_index_count();
-			polygon_indexers[pos] = p;
+			GLushort vertices_offset = pos * capacity.degree;
+			GLushort indices_offset = pos * capacity.polygon_index_count();
 
 			polygon.fill_colors();
 			polygons[pos] = std::move(polygon);
@@ -100,34 +95,29 @@ namespace oly
 
 			for (size_t i = 0; i < triangulation.num_indices(); i += 3)
 			{
-				indices[p.indices_offset + i + 0] = triangulation.faces[i / 3][0];
-				indices[p.indices_offset + i + 1] = triangulation.faces[i / 3][1];
-				indices[p.indices_offset + i + 2] = triangulation.faces[i / 3][2];
+				indices[indices_offset + i + 0] = triangulation.faces[i / 3][0];
+				indices[indices_offset + i + 1] = triangulation.faces[i / 3][1];
+				indices[indices_offset + i + 2] = triangulation.faces[i / 3][2];
 			}
 			for (size_t i = triangulation.num_indices(); i < capacity.polygon_index_count(); i += 3)
 			{
-				indices[p.indices_offset + i + 0] = 0;
-				indices[p.indices_offset + i + 1] = 0;
-				indices[p.indices_offset + i + 2] = 0;
+				indices[indices_offset + i + 0] = 0;
+				indices[indices_offset + i + 1] = 0;
+				indices[indices_offset + i + 2] = 0;
 			}
 
-			glNamedBufferSubData(vbo_position, p.vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
-			glNamedBufferSubData(vbo_color, p.vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
+			glNamedBufferSubData(vbo_position, vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
+			glNamedBufferSubData(vbo_color, vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
 			glNamedBufferSubData(ssbo_transforms, pos * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + pos);
-			glNamedBufferSubData(ebo, p.indices_offset * sizeof(GLushort), capacity.polygon_index_count() * sizeof(GLushort), indices.data() + p.indices_offset);
+			glNamedBufferSubData(ebo, indices_offset * sizeof(GLushort), capacity.polygon_index_count() * sizeof(GLushort), indices.data() + indices_offset);
 		}
 
-		void PolygonBatch::disable_polygon(PolygonPos pos)
+		void PolygonBatch::disable_polygon_primitive(PrimitivePos pos)
 		{
-			assert(pos < polygon_indexers.size());
+			assert(pos < capacity.polygons);
 
-			PolygonIndexer p;
-			p.index = pos;
-			p.num_vertices = 0;
-			p.vertices_offset = pos * capacity.degree;
-			p.num_indices = 0;
-			p.indices_offset = pos * capacity.polygon_index_count();
-			polygon_indexers[pos] = p;
+			GLushort vertices_offset = pos * capacity.degree;
+			GLushort indices_offset = pos * capacity.polygon_index_count();
 
 			polygons[pos] = {};
 
@@ -135,49 +125,84 @@ namespace oly
 
 			for (size_t i = 0; i < capacity.polygon_index_count(); i += 3)
 			{
-				indices[p.indices_offset + i + 0] = 0;
-				indices[p.indices_offset + i + 1] = 0;
-				indices[p.indices_offset + i + 2] = 0;
+				indices[indices_offset + i + 0] = 0;
+				indices[indices_offset + i + 1] = 0;
+				indices[indices_offset + i + 2] = 0;
 			}
 
-			glNamedBufferSubData(vbo_position, p.vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
-			glNamedBufferSubData(vbo_color, p.vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
+			glNamedBufferSubData(vbo_position, vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
+			glNamedBufferSubData(vbo_color, vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
 			glNamedBufferSubData(ssbo_transforms, pos * sizeof(glm::mat3), sizeof(glm::mat3), transforms.data() + pos);
-			glNamedBufferSubData(ebo, p.indices_offset * sizeof(GLushort), capacity.polygon_index_count() * sizeof(GLushort), indices.data() + p.indices_offset);
+			glNamedBufferSubData(ebo, indices_offset * sizeof(GLushort), capacity.polygon_index_count() * sizeof(GLushort), indices.data() + indices_offset);
 		}
 
-		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		void PolygonBatch::disable_polygon(PolygonPos pos)
 		{
-			return set_polygon_composite(pos, math::split_polygon_composite(polygon, capacity.degree), transform, min_range, max_range);
+			if (polygon_indexer.exists(pos))
+				for (GLushort diff = 0; diff < polygon_indexer.get_range(pos); ++diff)
+					disable_polygon(polygon_indexer.get_pos(pos) + diff);
+		}
+
+		void PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		{
+			math::TriangulatedPolygon2D poly;
+			poly.polygon = std::move(polygon);
+			poly.triangulation = math::ear_clipping(index_offset(pos), poly.polygon.points);
+			set_polygon(pos, math::split_polygon_composite(poly, capacity.degree), transform, min_range, max_range);
+		}
+
+		void PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2D&& polygon, math::Triangulation&& triangulation, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		{
+			math::TriangulatedPolygon2D poly;
+			poly.polygon = std::move(polygon);
+			poly.triangulation = std::move(triangulation);
+			set_polygon(pos, math::split_polygon_composite(poly, capacity.degree), transform, min_range, max_range);
+		}
+
+		void PolygonBatch::set_polygon(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		{
+			set_polygon(pos, math::split_polygon_composite(polygon, capacity.degree), transform, min_range, max_range);
 		}
 		
-		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		void PolygonBatch::set_polygon(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range, GLushort max_range)
 		{
-			return set_polygon_composite(pos, dupl(composite), transform, min_range, max_range);
+			set_polygon(pos, dupl(composite), transform, min_range, max_range);
 		}
 		
-		GLushort PolygonBatch::set_polygon_composite(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		void PolygonBatch::set_polygon(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range, GLushort max_range)
 		{
-			assert(max_range == 0 || max_range >= min_range);
 			math::split_polygon_composite(composite, capacity.degree);
-			if (max_range > 0 && composite.size() > max_range)
-				return 0;
-			GLushort range = 0;
+			GLushort start = polygon_indexer.exists(pos) ? polygon_indexer.get_pos(pos) : polygon_indexer.next_pos();
+			GLushort composite_range;
+			if (polygon_indexer.exists(pos))
+			{
+				composite_range = polygon_indexer.get_range(pos);
+				assert(composite.size() <= composite_range);
+			}
+			else if (max_range == 0)
+				composite_range = std::max(min_range, (GLushort)composite.size());
+			else
+			{
+				assert(composite.size() <= max_range && min_range <= max_range);
+				composite_range = std::max(min_range, max_range);
+			}
+			GLushort diff = 0;
 			for (math::TriangulatedPolygon2D& poly : composite)
-				set_polygon(pos + range++, std::move(poly.polygon), poly.triangulation, transform);
-			for (GLushort placeholder = range; placeholder < min_range; ++placeholder)
-				disable_polygon(pos + placeholder);
-			return range;
+				set_polygon_primitive(start + diff++, std::move(poly.polygon), poly.triangulation, transform);
+			while (diff < composite_range)
+				disable_polygon(start + diff++);
+			if (!polygon_indexer.exists(pos))
+				polygon_indexer.register_composite(start, composite_range);
 		}
 
-		GLushort PolygonBatch::set_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		void PolygonBatch::set_ngon(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range, GLushort max_range)
 		{
-			return set_polygon_composite(pos, create_ngon(pos, ngon), transform, min_range, max_range);
+			set_polygon(pos, create_ngon(pos, ngon), transform, min_range, max_range);
 		}
 
-		GLushort PolygonBatch::set_bordered_ngon_composite(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range, GLushort max_range)
+		void PolygonBatch::set_bordered_ngon(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range, GLushort max_range)
 		{
-			return set_polygon_composite(pos, create_bordered_ngon(pos, ngon), transform, min_range, max_range);
+			set_polygon(pos, create_bordered_ngon(pos, ngon), transform, min_range, max_range);
 		}
 
 		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const
@@ -204,12 +229,23 @@ namespace oly
 
 		math::Polygon2DComposite PolygonBatch::create_ngon(PolygonPos pos, const math::NGonBase& ngon) const
 		{
-			return ngon.composite(capacity.degree, index_offset(pos));
+			return ngon.composite(capacity.degree, index_offset(primitive_start(pos)));
 		}
 		
 		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(PolygonPos pos, const math::NGonBase& ngon) const
 		{
-			return ngon.bordered_composite(capacity.degree, index_offset(pos));
+			return ngon.bordered_composite(capacity.degree, index_offset(primitive_start(pos)));
+		}
+
+		PolygonBatch::PrimitivePos PolygonBatch::primitive_start(PolygonPos pos) const
+		{
+			return polygon_indexer.exists(pos) ? polygon_indexer.get_pos(pos) :
+				pos == polygon_indexer.size() ? polygon_indexer.next_pos() : -1;
+		}
+
+		GLushort PolygonBatch::primitive_range(PolygonPos pos) const
+		{
+			return polygon_indexer.exists(pos) ? polygon_indexer.get_range(pos) : 0;
 		}
 	}
 }
