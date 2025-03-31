@@ -21,9 +21,36 @@ oly::math::Barycentric oly::math::Triangle2D::barycentric(glm::vec2 point) const
 	return b;
 }
 
+float oly::math::Triangle2D::cross() const
+{
+	return oly::math::cross(root - prev, next - root);
+}
+
+bool oly::math::DirectedLine2D::intersect(const DirectedLine2D& other, glm::vec2 pt) const
+{
+	glm::mat2 D = { dir, -other.dir };
+	if (glm::determinant(D) == 0.0f)
+		return false;
+
+	glm::mat2 Dinv = glm::inverse(D);
+	glm::vec2 P = other.anchor - anchor;
+	glm::vec2 T = Dinv * P;
+	pt = anchor + T.x * dir;
+
+	return true;
+}
+
 float oly::math::cross(glm::vec2 u, glm::vec2 v)
 {
 	return u.x * v.y - u.y * v.x;
+}
+
+bool oly::math::in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test)
+{
+	if (cross(u1, u2) >= 0.0f)
+		return cross(u1, test) >= 0.0f && cross(test, u2) >= 0.0f;
+	else
+		return cross(u1, test) <= 0.0f && cross(test, u2) <= 0.0f;
 }
 
 float oly::math::signed_area(const std::vector<glm::vec2>& points)
@@ -63,6 +90,19 @@ size_t oly::math::num_triangulated_indices(const Polygon2D& polygon)
 	return polygon.points.size() >= 3 ? (polygon.points.size() - 2) * 3 : 0;
 }
 
+std::unordered_map<oly::math::Edge, std::vector<glm::uint>, oly::math::EdgeHash> oly::math::build_adjecency(const oly::math::Triangulation& triangulation)
+{
+	std::unordered_map<Edge, std::vector<glm::uint>, oly::math::EdgeHash> adjacency;
+	for (glm::uint i = 0; i < triangulation.faces.size(); ++i)
+	{
+		const auto& face = triangulation.faces[i];
+		adjacency[Edge(face[0], face[1])].push_back(i);
+		adjacency[Edge(face[1], face[2])].push_back(i);
+		adjacency[Edge(face[2], face[0])].push_back(i);
+	}
+	return adjacency;
+}
+
 void oly::math::Triangulation::set_index_offset(glm::uint new_offset)
 {
 	if (new_offset != index_offset)
@@ -76,6 +116,11 @@ void oly::math::Triangulation::set_index_offset(glm::uint new_offset)
 			face[2] = (int)face[2] + diff;
 		}
 	}
+}
+
+oly::math::Edge::Edge(glm::uint a, glm::uint b)
+	: a(std::min(a, b)), b(std::max(a, b))
+{
 }
 
 oly::math::BorderPointPair oly::math::border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point)

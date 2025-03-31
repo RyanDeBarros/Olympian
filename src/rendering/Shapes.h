@@ -51,10 +51,11 @@ namespace oly
 				GLushort polygons = 0;
 				GLushort degree = 0;
 
-				Capacity(GLushort polygons, GLushort degree)
+				Capacity(GLushort polygons, GLushort degree = 6)
 					: polygons(polygons), degree(degree)
 				{
 					assert(degree >= 3);
+					assert(degree * polygons <= USHRT_MAX);
 					vertices = polygons * degree;
 					indices = polygons * polygon_index_count();
 				}

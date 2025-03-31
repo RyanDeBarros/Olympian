@@ -17,7 +17,6 @@ namespace oly
 
 	namespace batch
 	{
-		// LATER add resizing mechanism for SSBOs
 		class SpriteBatch
 		{
 			friend class renderable::Sprite;

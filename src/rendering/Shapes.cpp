@@ -27,9 +27,6 @@ namespace oly
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity)
 		{
-			assert(capacity.degree >= 3);
-			// TODO asserts on capacity
-
 			shader = shaders::polygon_batch;
 			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");

@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include <vector>
+#include <unordered_map>
 
 namespace oly
 {
@@ -31,9 +32,19 @@ namespace oly
 			float signed_area() const;
 			float area() const { return std::abs(signed_area()); }
 			Barycentric barycentric(glm::vec2 point) const;
+			float cross() const;
+		};
+
+		struct DirectedLine2D
+		{
+			glm::vec2 anchor;
+			glm::vec2 dir;
+
+			bool intersect(const DirectedLine2D& other, glm::vec2 pt) const;
 		};
 
 		extern float cross(glm::vec2 u, glm::vec2 v);
+		extern bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test);
 		extern float signed_area(const std::vector<glm::vec2>& points);
 		
 		template<typename T, enum glm::qualifier Q = glm::packed_highp>
@@ -64,6 +75,25 @@ namespace oly
 
 			size_t num_indices() const { return 3 * faces.size(); }
 		};
+
+		struct Edge
+		{
+			glm::uint a, b;
+
+			Edge(glm::uint a, glm::uint b);
+
+			bool operator==(const Edge&) const = default;
+		};
+
+		struct EdgeHash
+		{
+			size_t operator()(const oly::math::Edge& e) const
+			{
+				return std::hash<glm::uint>{}(e.a) ^ std::hash<glm::uint>{}(e.b);
+			}
+		};
+
+		extern std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation);
 
 		struct TriangulatedPolygon2D
 		{
@@ -152,5 +182,10 @@ namespace oly
 		extern Triangulation ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
 		extern size_t get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
 		// TODO algorithm to compute closest mutually visible vertex to a given vertex in a polygon. see ear clipping triangulation paper
+		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon);
+		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
+		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon);
+		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
+		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations);
 	}
 }

@@ -102,7 +102,7 @@ void run()
 
 	sprite2.quad().set_z_index(0);
 
-	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100, 5), { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100), { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points = {
@@ -169,6 +169,37 @@ void run()
 	auto octagon_range = polygon_batch.set_bordered_ngon_composite(octagon_pos, octagon, octagon_transform);
 
 	// TODO create index-tracking system for polygon batch and sprite batch that keeps track of what indices+ranges (for composite polygons) are available.
+
+	std::vector<glm::vec2> concave_polygon{
+		{ -4,  0 },
+		{ -2, -2 },
+		{  0, -2 },
+		{  2, -1 },
+		{  4,  1 },
+		{  2,  3 },
+		{  1,  3 },
+		{ -1,  0 },
+		{ -3,  1 },
+		{ -3,  2 }
+	};
+	auto concave_pos = octagon_pos + octagon_range;
+	auto decomposition = oly::math::convex_decompose_polygon(concave_polygon);
+	oly::math::Polygon2DComposite concave_composite;
+	concave_composite.reserve(decomposition.size());
+	int i = 0;
+	for (auto& subconvex : decomposition)
+	{
+		oly::math::TriangulatedPolygon2D tp;
+		tp.polygon.colors = { glm::vec4(1.0f) };
+		tp.polygon.colors[0].g = tp.polygon.colors[0].b = float(i) / (decomposition.size() - 1);
+		tp.polygon.points = std::move(subconvex.first);
+		tp.triangulation = std::move(subconvex.second);
+		tp.triangulation.set_index_offset(polygon_batch.index_offset(concave_pos + i++));
+		concave_composite.push_back(std::move(tp));
+	}
+	oly::Transform2D concave_transform;
+	concave_transform.scale = glm::vec2(100);
+	auto concave_range = polygon_batch.set_polygon_composite(concave_pos, concave_composite, concave_transform);
 
 	while (!window.should_close())
 	{
