@@ -153,6 +153,34 @@ void oly::rendering::BindlessTexture::disuse_handle() const
 		glMakeTextureHandleNonResidentARB(handle);
 }
 
+oly::rendering::Image::Image(const char* filepath)
+{
+	_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, _dim.cpp);
+}
+
+oly::rendering::Image::Image(Image&& other) noexcept
+	: _buf(other._buf)
+{
+	other._buf = nullptr;
+}
+
+oly::rendering::Image::~Image()
+{
+	stbi_image_free(_buf);
+}
+
+oly::rendering::Image& oly::rendering::Image::operator=(Image&& other) noexcept
+{
+	if (this != &other)
+	{
+		stbi_image_free(_buf);
+		_buf = other._buf;
+		_dim = other._dim;
+		other._buf = nullptr;
+	}
+	return *this;
+}
+
 GLenum oly::rendering::tex::internal_format(int cpp)
 {
 	return cpp == 1 ? GL_R8
@@ -183,23 +211,40 @@ void oly::rendering::tex::image_2d(GLenum target, ImageDimensions dim, void* buf
 	glTexImage2D(target, 0, internal_format(dim.cpp), dim.w, dim.h, 0, format(dim.cpp), data_type, buf);
 }
 
-oly::rendering::TextureRes oly::rendering::load_static_texture_2d(const char* filename, ImageDimensions& dim)
+oly::rendering::TextureRes oly::rendering::load_texture_2d(const char* filename, ImageDimensions& dim)
 {
-	// TODO PixelBuffer that encapsulates unsigned char* image and ImageDimensions dim
-	unsigned char* image = stbi_load(filename, &dim.w, &dim.h, &dim.cpp, 4);
+	Image image(filename);
+	dim = image.dim();
 	TextureRes texture = std::make_shared<oly::rendering::Texture>(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, *texture);
-	tex::image_2d(GL_TEXTURE_2D, dim, image, GL_UNSIGNED_BYTE);
-	stbi_image_free(image);
+	tex::image_2d(GL_TEXTURE_2D, dim, image.buf(), GL_UNSIGNED_BYTE);
 	return texture;
 }
 
-oly::rendering::BindlessTextureRes oly::rendering::load_static_bindless_texture_2d(const char* filename, ImageDimensions& dim)
+oly::rendering::BindlessTextureRes oly::rendering::load_bindless_texture_2d(const char* filename, ImageDimensions& dim)
 {
-	unsigned char* image = stbi_load(filename, &dim.w, &dim.h, &dim.cpp, 4);
+	Image image(filename);
+	dim = image.dim();
 	BindlessTextureRes texture = std::make_shared<oly::rendering::BindlessTexture>(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, *texture);
-	tex::image_2d(GL_TEXTURE_2D, dim, image, GL_UNSIGNED_BYTE);
-	stbi_image_free(image);
+	tex::image_2d(GL_TEXTURE_2D, dim, image.buf(), GL_UNSIGNED_BYTE);
 	return texture;
+}
+
+oly::rendering::ImageTextureRes oly::rendering::load_texture_2d(const char* filename)
+{
+	ImageRes image = std::make_shared<Image>(filename);
+	TextureRes texture = std::make_shared<oly::rendering::Texture>(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, *texture);
+	tex::image_2d(GL_TEXTURE_2D, image->dim(), image->buf(), GL_UNSIGNED_BYTE);
+	return { std::move(image), std::move(texture) };
+}
+
+oly::rendering::ImageBindlessTextureRes oly::rendering::load_bindless_texture_2d(const char* filename)
+{
+	ImageRes image = std::make_shared<Image>(filename);
+	BindlessTextureRes texture = std::make_shared<oly::rendering::BindlessTexture>(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, *texture);
+	tex::image_2d(GL_TEXTURE_2D, image->dim(), image->buf(), GL_UNSIGNED_BYTE);
+	return { std::move(image), std::move(texture) };
 }

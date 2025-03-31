@@ -59,8 +59,8 @@ namespace oly
 			sprite_batch = 0;
 			_polygon_batch.reset();
 			polygon_batch = 0;
-			//_ellipse_batch.reset();
-			//ellipse_batch = 0;
+			_ellipse_batch.reset();
+			ellipse_batch = 0;
 		}
 	}
 

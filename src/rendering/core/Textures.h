@@ -75,8 +75,27 @@ namespace oly
 
 		struct ImageDimensions
 		{
-			int w, h, cpp;
+			int w = 0, h = 0, cpp = 4;
 		};
+
+		class Image
+		{
+			unsigned char* _buf = nullptr;
+			ImageDimensions _dim;
+
+		public:
+			Image(const char* filepath);
+			Image(const Image&) = delete;
+			Image(Image&&) noexcept;
+			~Image();
+			Image& operator=(Image&&) noexcept;
+
+			const unsigned char* buf() const { return _buf; }
+			unsigned char* buf() { return _buf; }
+			ImageDimensions dim() const { return _dim; }
+		};
+
+		typedef std::shared_ptr<Image> ImageRes;
 
 		namespace tex
 		{
@@ -87,7 +106,21 @@ namespace oly
 			extern void image_2d(GLenum target, ImageDimensions dim, void* buf, GLenum data_type);
 		}
 
-		extern TextureRes load_static_texture_2d(const char* filename, ImageDimensions& dim);
-		extern BindlessTextureRes load_static_bindless_texture_2d(const char* filename, ImageDimensions& dim);
+		extern TextureRes load_texture_2d(const char* filename, ImageDimensions& dim);
+		extern BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim);
+
+		struct ImageTextureRes
+		{
+			ImageRes image;
+			TextureRes texture;
+		};
+		struct ImageBindlessTextureRes
+		{
+			ImageRes image;
+			BindlessTextureRes texture;
+		};
+
+		extern ImageTextureRes load_texture_2d(const char* filename);
+		extern ImageBindlessTextureRes load_bindless_texture_2d(const char* filename);
 	}
 }

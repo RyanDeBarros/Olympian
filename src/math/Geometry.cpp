@@ -489,7 +489,7 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 
 void oly::math::split_polygon_composite(Polygon2DComposite& composite, glm::uint max_degree)
 {
-	// TODO this simply calls split_polygon_composite(triangulated polygon, max_degree) and joins them all, but perhaps also implement merging subpolygons for optimal packing of points.
+	// LATER this simply calls split_polygon_composite(triangulated polygon, max_degree) and joins them all, but perhaps also implement merging subpolygons for optimal packing of points.
 	Polygon2DComposite split_composite;
 	glm::uint compound_index_offset_increase = 0;
 	for (auto& polygon : composite)

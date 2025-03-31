@@ -188,7 +188,7 @@ namespace oly
 			process_set(dirty_indices, Dirty::D_INDICES, indices.data(), ebo, sizeof(QuadIndexLayout));
 		}
 
-		// TODO move to utility function
+		// TODO move to utility function, or rather implement in specialized buffer objects.
 		void SpriteBatch::process_set(std::set<QuadPos>& set, Dirty flag, void* _data, GLuint buf, size_t element_size)
 		{
 			std::byte* data = (std::byte*)_data;

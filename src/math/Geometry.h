@@ -180,8 +180,8 @@ namespace oly
 		};
 
 		extern Triangulation ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
-		extern size_t get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
-		// TODO algorithm to compute closest mutually visible vertex to a given vertex in a polygon. see ear clipping triangulation paper
+		extern glm::uint get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
+		extern glm::uint get_mutually_visible_vertex(const std::vector<glm::vec2>& polygon, glm::uint reference);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon);

@@ -26,17 +26,17 @@ void run()
 	glEnable(GL_BLEND);
 
 	oly::rendering::ImageDimensions einstein_texture_dim;
-	auto einstein_texture = oly::rendering::load_static_bindless_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
+	auto einstein_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	einstein_texture->set_handle();
 	oly::rendering::ImageDimensions flag_texture_dim;
-	auto flag_texture = oly::rendering::load_static_bindless_texture_2d("../../../res/textures/flag.png", flag_texture_dim);
+	auto flag_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/flag.png", flag_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	flag_texture->set_handle();
 	oly::rendering::ImageDimensions tux_texture_dim;
-	auto tux_texture = oly::rendering::load_static_bindless_texture_2d("../../../res/textures/tux.png", tux_texture_dim);
+	auto tux_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/tux.png", tux_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_handle();

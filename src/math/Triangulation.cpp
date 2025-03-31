@@ -63,7 +63,8 @@ struct Node
 		if (is_reflex)
 			return false;
 		auto tr = triangle(data);
-		for (auto tester = next_vertex.lock()->next_vertex.lock(); tester != prev_vertex.lock(); tester = tester->next_vertex.lock())
+		auto pv = prev_vertex.lock();
+		for (auto tester = next_vertex.lock()->next_vertex.lock(); tester != pv; tester = tester->next_vertex.lock())
 		{
 			if (tester->should_be_reflexive(data) && tr.barycentric((*data.vertices)[tester->v]).inside())
 				return false;
@@ -406,7 +407,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 	return triangulation;
 }
 
-size_t oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset)
+glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset)
 {
 	assert(polygon.size() >= 3);
 	if (polygon.size() == 3)
@@ -431,8 +432,15 @@ size_t oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int start
 		indexer = indexer->next_vertex.lock();
 	} while (indexer != data.head_polygon.lock());
 
+	// TODO everywhere throughout project, don't use assert, as this only works for debug. Create custom assert (one for debug and one for release) and logger.
 	assert(false);
 	return -1;
+}
+
+glm::uint oly::math::get_mutually_visible_vertex(const std::vector<glm::vec2>& polygon, glm::uint reference)
+{
+	// TODO implement using triangulation paper
+	return glm::uint();
 }
 
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
