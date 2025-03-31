@@ -32,7 +32,6 @@ namespace oly
 		public:
 			typedef GLushort PrimitivePos;
 			typedef GLushort PolygonPos;
-			GLushort index_offset(PrimitivePos pos) const;
 
 			struct Capacity
 			{
@@ -74,6 +73,7 @@ namespace oly
 			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 			void set_polygon(PolygonPos pos, math::Polygon2D&& polygon, math::Triangulation&& triangulation, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 			void set_polygon(PolygonPos pos, const math::TriangulatedPolygon2D& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
+			void set_polygon(PolygonPos pos, math::TriangulatedPolygon2D&& polygon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 			void set_polygon(PolygonPos pos, const math::Polygon2DComposite& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 			void set_polygon(PolygonPos pos, math::Polygon2DComposite&& composite, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
 			void set_ngon(PolygonPos pos, const math::NGonBase& ngon, const Transform2D& transform, GLushort min_range = 0, GLushort max_range = 0);
@@ -113,10 +113,6 @@ namespace oly
 				GLushort size() const { return (GLushort)composites.size(); }
 			};
 			PolygonIndexer polygon_indexer;
-
-		public:
-			PrimitivePos primitive_start(PolygonPos pos) const;
-			GLushort primitive_range(PolygonPos pos) const;
 		};
 
 		// TODO

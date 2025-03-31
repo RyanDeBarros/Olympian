@@ -48,9 +48,9 @@ struct Node
 		return oly::math::Triangle2D{ (*data.vertices)[v], (*data.vertices)[prev_vertex.lock()->v], (*data.vertices)[next_vertex.lock()->v]};
 	}
 
-	glm::uvec3 face(glm::uint index_offset) const
+	glm::uvec3 face() const
 	{
-		return glm::uvec3(index_offset) + glm::uvec3{ prev_vertex.lock()->v, v, next_vertex.lock()->v};
+		return glm::uvec3{ prev_vertex.lock()->v, v, next_vertex.lock()->v};
 	}
 
 	bool should_be_reflexive(const EarClippingData& data) const
@@ -315,15 +315,15 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	assert(data.size == 3 || data.head_ear.lock());
 }
 
-oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
+oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
 	assert(polygon.size() >= 3);
-	Triangulation triangulation{ index_offset };
+	Triangulation triangulation;
 
 	if (polygon.size() == 3)
 	{
 		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)polygon.size()), unsigned_mod(1 + starting_offset, (int)polygon.size()), unsigned_mod(2 + starting_offset, (int)polygon.size()) };
-		triangulation.faces.push_back(glm::uvec3(index_offset) + (increasing ? face : reverse(face)));
+		triangulation.faces.push_back(increasing ? face : reverse(face));
 		return triangulation;
 	}
 
@@ -368,7 +368,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 	{
 		while (data.size > 3)
 		{
-			auto face = data.head_ear.lock()->face(index_offset);
+			auto face = data.head_ear.lock()->face();
 			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, data.head_ear.lock());
 		}
@@ -381,7 +381,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 			std::shared_ptr<Node> next_indexer = indexer;
 			for (int i = 0; i < ear_cycle; ++i)
 				next_indexer = next_indexer->next_ear.lock();
-			auto face = indexer->face(index_offset);
+			auto face = indexer->face();
 			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = next_indexer;
@@ -395,14 +395,14 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 			std::shared_ptr<Node> prev_indexer = indexer;
 			for (int i = 0; i > ear_cycle; --i)
 				prev_indexer = prev_indexer->prev_ear.lock();
-			auto face = indexer->face(index_offset);
+			auto face = indexer->face();
 			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = prev_indexer;
 		}
 	}
 	// final face
-	auto face = data.head_ear.lock()->face(index_offset);
+	auto face = data.head_ear.lock()->face();
 	triangulation.faces.push_back(increasing ? face : reverse(face));
 	return triangulation;
 }
@@ -446,7 +446,7 @@ glm::uint oly::math::get_mutually_visible_vertex(const std::vector<glm::vec2>& p
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
 {
 	assert(polygon.size() >= 3);
-	return convex_decompose_triangulation(polygon, ear_clipping(0, polygon));
+	return convex_decompose_triangulation(polygon, ear_clipping(polygon));
 }
 
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)
@@ -463,7 +463,6 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 
 		Triangulation convex_subtr;
 		std::unordered_map<glm::uint, glm::uvec2> boundary;
-		convex_subtr.index_offset = triangulation.index_offset;
 		std::vector<glm::uint> stack = { (glm::uint)i };
 
 		while (!stack.empty())
@@ -511,20 +510,20 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 						glm::uint icpt = ntr[new_vertex];
 						glm::uint ippt = ntr[unsigned_mod(new_vertex - 1, 3)];
 						glm::uint inpt = ntr[unsigned_mod(new_vertex + 1, 3)];
-						glm::vec2 cpt = polygon[icpt - triangulation.index_offset];
-						glm::vec2 ppt = polygon[ippt - triangulation.index_offset];
-						glm::vec2 npt = polygon[inpt - triangulation.index_offset];
+						glm::vec2 cpt = polygon[icpt];
+						glm::vec2 ppt = polygon[ippt];
+						glm::vec2 npt = polygon[inpt];
 						auto& padj = boundary.find(ippt)->second;
 						auto& nadj = boundary.find(inpt)->second;
 						glm::vec2 pd{}, nd{};
 						if (padj[0] != inpt)
-							pd = ppt - polygon[padj[0] - triangulation.index_offset];
+							pd = ppt - polygon[padj[0]];
 						else
-							pd = ppt - polygon[padj[1] - triangulation.index_offset];
+							pd = ppt - polygon[padj[1]];
 						if (nadj[0] != ippt)
-							nd = npt - polygon[nadj[0] - triangulation.index_offset];
+							nd = npt - polygon[nadj[0]];
 						else
-							nd = npt - polygon[nadj[1] - triangulation.index_offset];
+							nd = npt - polygon[nadj[1]];
 
 						// does new vertex maintain convexity?
 						if (in_convex_sector(pd, npt - ppt, cpt - ppt) && in_convex_sector(nd, ppt - npt, cpt - npt))
@@ -583,13 +582,12 @@ std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::ma
 				if (!point_indices.count(face[i]))
 				{
 					point_indices[face[i]] = (glm::uint)point_indices.size();
-					subpolygon.first.push_back(polygon[face[i] - triangulation.index_offset]);
+					subpolygon.first.push_back(polygon[face[i]]);
 				}
 				new_face[i] = point_indices[face[i]];
 			}
 			subpolygon.second.faces.push_back(new_face);
 		}
-		subpolygon.second.index_offset = triangulation.index_offset;
 		subpolygons.push_back(std::move(subpolygon));
 	}
 

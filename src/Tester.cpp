@@ -130,8 +130,7 @@ void run()
 		color.a = 0.5f;
 	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
 
-	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 },
-		polygon_batch.max_degree(), polygon_batch.index_offset(polygon_batch.primitive_start(2)));
+	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
 	oly::Transform2D triangle_transform;
 	triangle_transform.position.x = 100;
 	triangle_transform.position.y = -100;
@@ -192,7 +191,6 @@ void run()
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 		tp.polygon.points = std::move(subconvex.first);
 		tp.triangulation = std::move(subconvex.second);
-		tp.triangulation.set_index_offset(polygon_batch.index_offset(polygon_batch.primitive_start(4) + i++));
 		concave_composite.push_back(std::move(tp));
 	}
 	oly::Transform2D concave_transform;
