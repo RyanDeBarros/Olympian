@@ -27,7 +27,7 @@ struct Mat3
 mat3 matrix(Mat3 m) {
 	return mat3(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, m.m20, m.m21, m.m22);
 }
-layout(std430, binding = 2) readonly buffer Transforms {
+layout(std430, binding = 2) readonly buffer QuadTransforms {
 	Mat3 uTransforms[];
 };
 

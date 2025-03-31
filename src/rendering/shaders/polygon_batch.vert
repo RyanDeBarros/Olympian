@@ -13,14 +13,13 @@ struct Mat3
 mat3 matrix(Mat3 m) {
 	return mat3(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, m.m20, m.m21, m.m22);
 }
-layout(std430, binding = 0) readonly buffer Transforms {
+layout(std430, binding = 0) readonly buffer PolygonTransforms {
 	Mat3 uTransforms[];
 };
 
 out vec4 tColor;
 
 void main() {
-	// TODO use compact EBO to avoid unnecessary drawing
 	gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / uDegree]) * vec3(iPosition, 1.0)).xy;
 	tColor = iColor;
 }

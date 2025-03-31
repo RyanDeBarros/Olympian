@@ -9,12 +9,13 @@
 struct Node;
 struct EarClippingData
 {
-	std::shared_ptr<Node> head_polygon = nullptr;
-	std::shared_ptr<Node> head_convex = nullptr;
-	std::shared_ptr<Node> tail_convex = nullptr;
-	std::shared_ptr<Node> head_reflex = nullptr;
-	std::shared_ptr<Node> tail_reflex = nullptr;
-	std::shared_ptr<Node> head_ear = nullptr;
+	std::vector<std::shared_ptr<Node>> nodes;
+	std::weak_ptr<Node> head_polygon;
+	std::weak_ptr<Node> head_convex;
+	std::weak_ptr<Node> tail_convex;
+	std::weak_ptr<Node> head_reflex;
+	std::weak_ptr<Node> tail_reflex;
+	std::weak_ptr<Node> head_ear;
 	size_t size = 0;
 	bool ccw;
 	const std::vector<glm::vec2>* vertices;
@@ -30,26 +31,26 @@ struct Node
 	bool is_ear = false;
 
 	// cyclical
-	std::shared_ptr<Node> next_vertex = nullptr;
-	std::shared_ptr<Node> prev_vertex = nullptr;
+	std::weak_ptr<Node> next_vertex;
+	std::weak_ptr<Node> prev_vertex;
 	// linear
-	std::shared_ptr<Node> next_convex = nullptr;
-	std::shared_ptr<Node> prev_convex = nullptr;
+	std::weak_ptr<Node> next_convex;
+	std::weak_ptr<Node> prev_convex;
 	// linear
-	std::shared_ptr<Node> next_reflex = nullptr;
-	std::shared_ptr<Node> prev_reflex = nullptr;
+	std::weak_ptr<Node> next_reflex;
+	std::weak_ptr<Node> prev_reflex;
 	// cyclical
-	std::shared_ptr<Node> next_ear = nullptr;
-	std::shared_ptr<Node> prev_ear = nullptr;
+	std::weak_ptr<Node> next_ear;
+	std::weak_ptr<Node> prev_ear;
 
 	oly::math::Triangle2D triangle(const EarClippingData& data) const
 	{
-		return oly::math::Triangle2D{ (*data.vertices)[v], (*data.vertices)[prev_vertex->v], (*data.vertices)[next_vertex->v] };
+		return oly::math::Triangle2D{ (*data.vertices)[v], (*data.vertices)[prev_vertex.lock()->v], (*data.vertices)[next_vertex.lock()->v]};
 	}
 
 	glm::uvec3 face(glm::uint index_offset) const
 	{
-		return glm::uvec3(index_offset) + glm::uvec3{ prev_vertex->v, v, next_vertex->v };
+		return glm::uvec3(index_offset) + glm::uvec3{ prev_vertex.lock()->v, v, next_vertex.lock()->v};
 	}
 
 	bool should_be_reflexive(const EarClippingData& data) const
@@ -62,7 +63,7 @@ struct Node
 		if (is_reflex)
 			return false;
 		auto tr = triangle(data);
-		for (auto tester = next_vertex->next_vertex; tester != prev_vertex; tester = tester->next_vertex)
+		for (auto tester = next_vertex.lock()->next_vertex.lock(); tester != prev_vertex.lock(); tester = tester->next_vertex.lock())
 		{
 			if (tester->should_be_reflexive(data) && tr.barycentric((*data.vertices)[tester->v]).inside())
 				return false;
@@ -74,71 +75,74 @@ struct Node
 static std::shared_ptr<Node> append_vertex(EarClippingData& data, glm::uint v)
 {
 	std::shared_ptr<Node> insert = std::make_shared<Node>(v);
-	if (data.head_polygon == nullptr)
+	data.nodes.push_back(insert);
+	if (auto h = data.head_polygon.lock())
 	{
-		data.head_polygon = insert;
-		data.head_polygon->next_vertex = data.head_polygon;
-		data.head_polygon->prev_vertex = data.head_polygon;
-	}
-	else
-	{
-		const std::shared_ptr<Node>& tail = data.head_polygon->prev_vertex;
+		const std::shared_ptr<Node>& tail = h->prev_vertex.lock();
 		insert->prev_vertex = tail;
 		tail->next_vertex = insert;
 		insert->next_vertex = data.head_polygon;
-		data.head_polygon->prev_vertex = insert;
+		h->prev_vertex = insert;
+	}
+	else
+	{
+		data.head_polygon = insert;
+		h = data.head_polygon.lock();
+		h->next_vertex = data.head_polygon;
+		h->prev_vertex = data.head_polygon;
 	}
 	return insert;
 }
 
 static void append_reflex(EarClippingData& data, const std::shared_ptr<Node>& insert)
 {
-	if (data.head_reflex == nullptr)
+	if (auto h = data.head_reflex.lock())
 	{
-		data.head_reflex = insert;
+		data.tail_reflex.lock()->next_reflex = insert;
+		insert->prev_reflex = data.tail_reflex;
 		data.tail_reflex = insert;
 	}
 	else
 	{
-		data.tail_reflex->next_reflex = insert;
-		insert->prev_reflex = data.tail_reflex;
+		data.head_reflex = insert;
 		data.tail_reflex = insert;
 	}
 }
 
 static void append_convex(EarClippingData& data, const std::shared_ptr<Node>& insert)
 {
-	if (data.head_convex == nullptr)
+	if (auto h = data.head_convex.lock())
 	{
-		data.head_convex = insert;
+		data.tail_convex.lock()->next_convex = insert;
+		insert->prev_convex = data.tail_convex;
 		data.tail_convex = insert;
 	}
 	else
 	{
-		data.tail_convex->next_convex = insert;
-		insert->prev_convex = data.tail_convex;
+		data.head_convex = insert;
 		data.tail_convex = insert;
 	}
 }
 
 static void append_ear(EarClippingData& data, const std::shared_ptr<Node>& insert)
 {
-	if (data.head_ear == nullptr)
+	if (auto h = data.head_ear.lock())
 	{
-		data.head_ear = insert;
-		data.head_ear->next_ear = data.head_ear;
-		data.head_ear->prev_ear = data.head_ear;
+		const std::weak_ptr<Node>& tail = h->prev_ear;
+		insert->prev_ear = tail;
+		tail.lock()->next_ear = insert;
+		insert->next_ear = data.head_ear;
+		h->prev_ear = insert;
 	}
 	else
 	{
-		const std::shared_ptr<Node>& tail = data.head_ear->prev_ear;
-		insert->prev_ear = tail;
-		tail->next_ear = insert;
-		insert->next_ear = data.head_ear;
-		data.head_ear->prev_ear = insert;
+		data.head_ear = insert;
+		h = data.head_ear.lock();
+		h->next_ear = data.head_ear;
+		h->prev_ear = data.head_ear;
 	}
 }
-static void update_adjacent(std::shared_ptr<Node>& adj, EarClippingData& data)
+static void update_adjacent(EarClippingData& data, const std::shared_ptr<Node>& adj)
 {
 	// note that if an adjacent vertex is convex, it will remain convex after removing ear.
 	if (adj->is_reflex)
@@ -152,24 +156,24 @@ static void update_adjacent(std::shared_ptr<Node>& adj, EarClippingData& data)
 			append_convex(data, adj);
 
 			// remove from reflexive
-			if (data.head_reflex == adj)
+			if (data.head_reflex.lock() == adj)
 			{
-				if (data.tail_reflex == adj)
-					data.tail_reflex = nullptr;
+				if (data.tail_reflex.lock() == adj)
+					data.tail_reflex.reset();
 				else
-					adj->next_reflex->prev_reflex = nullptr;
+					adj->next_reflex.lock()->prev_reflex.reset();
 				data.head_reflex = adj->next_reflex;
 			}
 			else
 			{
-				if (data.tail_reflex == adj)
-					data.tail_reflex = adj->prev_reflex;
+				if (data.tail_reflex.lock() == adj)
+					data.tail_reflex = adj->prev_reflex.lock();
 				else
-					adj->next_reflex->prev_reflex = adj->prev_reflex;
-				adj->prev_reflex->next_reflex = adj->next_reflex;
+					adj->next_reflex.lock()->prev_reflex = adj->prev_reflex;
+				adj->prev_reflex.lock()->next_reflex = adj->next_reflex;
 			}
-			adj->next_reflex = nullptr;
-			adj->prev_reflex = nullptr;
+			adj->next_reflex.reset();
+			adj->prev_reflex.reset();
 		}
 	}
 
@@ -188,24 +192,24 @@ static void update_adjacent(std::shared_ptr<Node>& adj, EarClippingData& data)
 			adj->is_ear = false;
 
 			// remove from ear
-			if (adj == data.head_ear)
+			if (adj == data.head_ear.lock())
 			{
-				if (adj->next_ear == data.head_ear)
-					data.head_ear = nullptr;
+				if (adj->next_ear.lock() == data.head_ear.lock())
+					data.head_ear.reset();
 				else
 				{
-					adj->next_ear->prev_ear = adj->prev_ear;
-					adj->prev_ear->next_ear = adj->next_ear;
+					adj->next_ear.lock()->prev_ear = adj->prev_ear;
+					adj->prev_ear.lock()->next_ear = adj->next_ear;
 					data.head_ear = adj->next_ear;
 				}
 			}
 			else
 			{
-				adj->next_ear->prev_ear = adj->prev_ear;
-				adj->prev_ear->next_ear = adj->next_ear;
+				adj->next_ear.lock()->prev_ear = adj->prev_ear;
+				adj->prev_ear.lock()->next_ear = adj->next_ear;
 			}
-			adj->next_ear = nullptr;
-			adj->prev_ear = nullptr;
+			adj->next_ear.reset();
+			adj->prev_ear.reset();
 		}
 	}
 };
@@ -214,96 +218,100 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 {
 	assert(remove->is_ear);
 	// remove from polygon
-	if (remove == data.head_polygon)
+	auto hp = data.head_polygon.lock();
+	if (remove == hp)
 	{
-		if (data.head_polygon->next_vertex == data.head_polygon)
-			data.head_polygon = nullptr;
+		if (hp->next_vertex.lock() == hp)
+			data.head_polygon.reset();
 		else
 		{
 			data.head_polygon = remove->next_vertex;
-			remove->next_vertex->prev_vertex = remove->prev_vertex;
-			remove->prev_vertex->next_vertex = remove->next_vertex;
+			remove->next_vertex.lock()->prev_vertex = remove->prev_vertex;
+			remove->prev_vertex.lock()->next_vertex = remove->next_vertex;
 		}
 	}
 	else
 	{
-		remove->next_vertex->prev_vertex = remove->prev_vertex;
-		remove->prev_vertex->next_vertex = remove->next_vertex;
+		remove->next_vertex.lock()->prev_vertex = remove->prev_vertex;
+		remove->prev_vertex.lock()->next_vertex = remove->next_vertex;
 	}
 	// remove from reflex
 	if (remove->is_reflex)
 	{
-		if (remove == data.head_reflex)
+		auto hr = data.head_reflex.lock();
+		if (remove == hr)
 		{
-			if (data.head_reflex->next_reflex == data.head_reflex)
-				data.head_reflex = nullptr;
+			if (hr->next_reflex.lock() == hr)
+				data.head_reflex.reset();
 			else
 			{
 				data.head_reflex = remove->next_reflex;
-				remove->next_reflex->prev_vertex = nullptr;
+				remove->next_reflex.lock()->prev_vertex.reset();
 			}
 		}
 		else
 		{
-			std::shared_ptr<Node> following = remove->next_reflex;
+			std::shared_ptr<Node> following = remove->next_reflex.lock();
 			if (following != nullptr)
 				following->prev_reflex = remove->prev_reflex;
-			remove->prev_reflex->next_reflex = following;
+			remove->prev_reflex.lock()->next_reflex = following;
 		}
-		remove->next_reflex = nullptr;
-		remove->prev_reflex = nullptr;
+		remove->next_reflex.reset();
+		remove->prev_reflex.reset();
 	}
 	// remove from convex
 	else
 	{
-		if (remove == data.head_convex)
+		auto hc = data.head_convex.lock();
+		if (remove == hc)
 		{
-			if (data.head_convex->next_convex == data.head_convex)
-				data.head_convex = nullptr;
+			if (hc->next_convex.lock() == hc)
+				data.head_convex.reset();
 			else
 			{
 				data.head_convex = remove->next_convex;
-				remove->next_convex->prev_convex = nullptr;
+				remove->next_convex.lock()->prev_convex.reset();
 			}
 		}
 		else
 		{
-			std::shared_ptr<Node> following = remove->next_convex;
+			std::shared_ptr<Node> following = remove->next_convex.lock();
 			if (following != nullptr)
 				following->prev_convex = remove->prev_convex;
-			remove->prev_convex->next_convex = following;
+			remove->prev_convex.lock()->next_convex = following;
 		}
-		remove->next_convex = nullptr;
-		remove->prev_convex = nullptr;
+		remove->next_convex.reset();
+		remove->prev_convex.reset();
 	}
 	// remove from ears
-	if (remove == data.head_ear)
+	auto he = data.head_ear.lock();
+	if (remove == he)
 	{
-		if (data.head_ear->next_ear == data.head_ear)
-			data.head_ear = nullptr;
+		if (he->next_ear.lock() == he)
+			data.head_ear.reset();
 		else
 		{
-			remove->next_ear->prev_ear = remove->prev_ear;
-			remove->prev_ear->next_ear = remove->next_ear;
+			remove->next_ear.lock()->prev_ear = remove->prev_ear;
+			remove->prev_ear.lock()->next_ear = remove->next_ear;
 			data.head_ear = remove->next_ear;
 		}
 	}
 	else
 	{
-		remove->next_ear->prev_ear = remove->prev_ear;
-		remove->prev_ear->next_ear = remove->next_ear;
+		remove->next_ear.lock()->prev_ear = remove->prev_ear;
+		remove->prev_ear.lock()->next_ear = remove->next_ear;
 	}
-	remove->next_ear = nullptr;
-	remove->prev_ear = nullptr;
+	remove->next_ear.reset();
+	remove->prev_ear.reset();
 
 	// update categorization of adjacent vertices
-	update_adjacent(remove->next_vertex, data);
-	update_adjacent(remove->prev_vertex, data);
-	remove->next_vertex = nullptr;
-	remove->prev_vertex = nullptr;
+	update_adjacent(data, remove->next_vertex.lock());
+	update_adjacent(data, remove->prev_vertex.lock());
+	remove->next_vertex.reset();
+	remove->prev_vertex.reset();
 	--data.size;
 
-	assert(data.size == 3 || data.head_ear);
+	assert(data.size == 3 || data.head_ear.lock());
 }
 
 oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
@@ -329,7 +337,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 	// determine orientation
 	data.ccw = (signed_area(polygon) >= 0.0f);
 
-	std::shared_ptr<Node> indexer = data.head_polygon;
+	std::shared_ptr<Node> indexer = data.head_polygon.lock();
 	// categorize initial vertices
 	do
 	{
@@ -349,29 +357,29 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 			}
 		}
 
-		indexer = indexer->next_vertex;
-	} while (indexer != data.head_polygon);
+		indexer = indexer->next_vertex.lock();
+	} while (indexer != data.head_polygon.lock());
 
-	assert(data.head_ear);
+	assert(data.head_ear.lock());
 
 	// remove ears and form faces
 	if (ear_cycle == 0)
 	{
 		while (data.size > 3)
 		{
-			auto face = data.head_ear->face(index_offset);
+			auto face = data.head_ear.lock()->face(index_offset);
 			triangulation.faces.push_back(increasing ? face : reverse(face));
-			remove_ear(data, data.head_ear);
+			remove_ear(data, data.head_ear.lock());
 		}
 	}
 	else if (ear_cycle > 0)
 	{
-		std::shared_ptr<Node> indexer = data.head_ear;
+		std::shared_ptr<Node> indexer = data.head_ear.lock();
 		while (data.size > 3)
 		{
 			std::shared_ptr<Node> next_indexer = indexer;
 			for (int i = 0; i < ear_cycle; ++i)
-				next_indexer = next_indexer->next_ear;
+				next_indexer = next_indexer->next_ear.lock();
 			auto face = indexer->face(index_offset);
 			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
@@ -380,12 +388,12 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 	}
 	else // if (ear_cycle < 0)
 	{
-		std::shared_ptr<Node> indexer = data.head_ear;
+		std::shared_ptr<Node> indexer = data.head_ear.lock();
 		while (data.size > 3)
 		{
 			std::shared_ptr<Node> prev_indexer = indexer;
 			for (int i = 0; i > ear_cycle; --i)
-				prev_indexer = prev_indexer->prev_ear;
+				prev_indexer = prev_indexer->prev_ear.lock();
 			auto face = indexer->face(index_offset);
 			triangulation.faces.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
@@ -393,7 +401,7 @@ oly::math::Triangulation oly::math::ear_clipping(glm::uint index_offset, const s
 		}
 	}
 	// final face
-	auto face = data.head_ear->face(index_offset);
+	auto face = data.head_ear.lock()->face(index_offset);
 	triangulation.faces.push_back(increasing ? face : reverse(face));
 	return triangulation;
 }
@@ -415,13 +423,13 @@ size_t oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int start
 	// determine orientation
 	data.ccw = (signed_area(polygon) >= 0.0f);
 
-	std::shared_ptr<Node> indexer = data.head_polygon;
+	std::shared_ptr<Node> indexer = data.head_polygon.lock();
 	do
 	{
 		if (!indexer->should_be_reflexive(data) && indexer->should_be_ear(data))
 			return indexer->v;
-		indexer = indexer->next_vertex;
-	} while (indexer != data.head_polygon);
+		indexer = indexer->next_vertex.lock();
+	} while (indexer != data.head_polygon.lock());
 
 	assert(false);
 	return -1;

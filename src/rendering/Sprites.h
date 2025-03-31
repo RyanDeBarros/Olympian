@@ -3,6 +3,7 @@
 #include "core/Core.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
+#include "util/FixedVector.h"
 
 #include <set>
 #include <unordered_set>
@@ -27,7 +28,7 @@ namespace oly
 
 			GLuint projection_location;
 
-			std::vector<rendering::BindlessTextureRes> textures;
+			FixedVector<rendering::BindlessTextureRes> textures;
 
 			struct TexData
 			{
@@ -40,8 +41,8 @@ namespace oly
 				GLuint tex_coord_slot = 0;
 				GLuint color_slot = 0;
 			};
-			std::vector<QuadInfo> quad_infos;
-			std::vector<glm::mat3> quad_transforms;
+			FixedVector<QuadInfo> quad_infos;
+			FixedVector<glm::mat3> quad_transforms;
 
 			enum SSBO
 			{
@@ -74,7 +75,7 @@ namespace oly
 			{
 				GLushort data[6];
 			};
-			std::vector<QuadIndexLayout> indices;
+			FixedVector<QuadIndexLayout> indices;
 
 		public:
 			struct Capacity
@@ -83,10 +84,12 @@ namespace oly
 				GLushort textures = 1;
 				GLushort uvs = 1;
 				GLushort modulations = 1;
+
+				Capacity(GLushort quads, GLushort textures = 1, GLushort uvs = 1, GLushort modulations = 1);
 			};
 
 		private:
-			Capacity capacity;
+			const Capacity capacity;
 
 		public:
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
@@ -116,7 +119,6 @@ namespace oly
 			class Quad
 			{
 				friend SpriteBatch;
-				// TODO _info and _transform pointers are only safe because the vector of infos and transforms is immutable. Define something like std::vector that is explicitly immutable so that this is safe. If std::vector is to be resized, then don't use pointers like here.
 				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 				SpriteBatch* _sprite_batch = nullptr;
@@ -144,7 +146,7 @@ namespace oly
 			friend Quad;
 
 		private:
-			std::vector<Quad> quads;
+			FixedVector<Quad> quads;
 			math::IndexBijection<QuadPos> z_order;
 
 		public:

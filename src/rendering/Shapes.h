@@ -4,6 +4,7 @@
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
 #include "math/Geometry.h"
+#include "util/FixedVector.h"
 
 namespace oly
 {
@@ -21,12 +22,12 @@ namespace oly
 			oly::rendering::GLBuffer vbo_position;
 			oly::rendering::GLBuffer vbo_color;
 
-			std::vector<math::Polygon2D> polygons;
-			std::vector<glm::mat3> transforms;
+			FixedVector<math::Polygon2D> polygons;
+			FixedVector<glm::mat3> transforms;
 
 			oly::rendering::GLBuffer ssbo_transforms;
 
-			std::vector<GLushort> indices;
+			FixedVector<GLushort> indices;
 
 		public:
 			typedef GLushort PolygonPos;
@@ -41,7 +42,7 @@ namespace oly
 				GLushort indices_offset;
 				GLushort num_indices;
 			};
-			std::vector<PolygonIndexer> polygon_indexers;
+			FixedVector<PolygonIndexer> polygon_indexers;
 
 		public:
 			struct Capacity
@@ -64,7 +65,7 @@ namespace oly
 			};
 
 		private:
-			Capacity capacity;
+			const Capacity capacity;
 
 		public:
 			GLushort max_degree() const { return capacity.degree; }

@@ -9,29 +9,29 @@ namespace oly
 {
 	namespace batch
 	{
-		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ssbos(SSBO::__SSBO_COUNT), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(4 * capacity.quads <= USHRT_MAX ? capacity.quads : 0)
+		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations)
+			: quads(quads), textures(textures), uvs(uvs), modulations(modulations)
 		{
-			assert(4 * capacity.quads <= USHRT_MAX);
-			assert(capacity.textures > 0); // there is enough capacity for 0th texture
-			assert(0 < capacity.uvs && capacity.uvs <= 500);
-			assert(0 < capacity.modulations && capacity.modulations <= 250);
+			assert(4 * quads <= USHRT_MAX);
+			assert(textures > 0); // there is enough capacity for 0th texture
+			assert(0 < uvs && uvs <= 500);
+			assert(0 < modulations && modulations <= 250);
+		}
 
+		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
+			: ssbos(SSBO::__SSBO_COUNT), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(capacity.quads),
+			quad_infos(capacity.quads), quad_transforms(capacity.quads, 1.0f), quads(capacity.quads), textures(capacity.textures), indices(capacity.quads)
+		{
 			shader = shaders::sprite_batch;
 			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 
-			textures.resize(capacity.textures);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_TEX_DATA]);
 			glNamedBufferStorage(ssbos[SSBO::B_TEX_DATA], capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
-			quads.resize(capacity.quads);
-
-			quad_infos.resize(capacity.quads);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_INFO]);
 			glNamedBufferStorage(ssbos[SSBO::B_QUAD_INFO], capacity.quads * sizeof(QuadInfo), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
-			quad_transforms.resize(capacity.quads, 1.0f);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbos[SSBO::B_QUAD_TRANSFORM]);
 			glNamedBufferStorage(ssbos[SSBO::B_QUAD_TRANSFORM], capacity.quads * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
 
@@ -45,7 +45,6 @@ namespace oly
 			Modulation modulation{ { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } };
 			glNamedBufferSubData(ubos[UBO::B_MODULATION], 0, sizeof(Modulation), &modulation);
 
-			indices.resize(capacity.quads);
 			set_draw_spec(0, capacity.quads);
 
 			for (GLushort i = 0; i < capacity.quads; ++i)

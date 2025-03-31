@@ -24,6 +24,8 @@ namespace oly
 		const T& operator[](size_t i) const;
 		T& operator[](size_t i);
 		size_t size() const { return _size; }
+		const T* data() const { return _arr; }
+		T* data() { return _arr; }
 	};
 
 	template<typename T>

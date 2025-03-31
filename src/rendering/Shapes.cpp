@@ -25,7 +25,7 @@ namespace oly
 		}
 
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity)
+			: capacity(capacity), polygon_indexers(capacity.polygons), polygons(capacity.polygons), transforms(capacity.polygons), indices(capacity.indices)
 		{
 			shader = shaders::polygon_batch;
 			glUseProgram(shader);
@@ -33,9 +33,6 @@ namespace oly
 			degree_location = glGetUniformLocation(shader, "uDegree");
 
 			glBindVertexArray(vao);
-
-			polygon_indexers.resize(capacity.polygons);
-			polygons.resize(capacity.polygons);
 
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 			glNamedBufferStorage(vbo_position, capacity.vertices * sizeof(glm::vec2), nullptr, GL_DYNAMIC_STORAGE_BIT);
@@ -47,11 +44,9 @@ namespace oly
 			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 			glEnableVertexAttribArray(1);
 
-			transforms.resize(capacity.polygons);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_transforms);
 			glNamedBufferStorage(ssbo_transforms, capacity.polygons * sizeof(glm::mat3), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
-			indices.resize(capacity.indices);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 			glNamedBufferStorage(ebo, capacity.indices * sizeof(GLushort), indices.data(), GL_DYNAMIC_STORAGE_BIT);

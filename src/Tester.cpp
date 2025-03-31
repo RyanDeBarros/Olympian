@@ -102,7 +102,7 @@ void run()
 
 	sprite2.quad().set_z_index(0);
 
-	oly::batch::PolygonBatch polygon_batch(oly::batch::PolygonBatch::Capacity(100), { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch({ 100 }, { -720, 720, -540, 540 });
 
 	oly::math::Polygon2D pentagon;
 	pentagon.points = {
