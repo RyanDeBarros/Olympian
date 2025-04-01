@@ -232,9 +232,7 @@ namespace oly
 
 		void PolygonBatch::flush() const
 		{
-			for (renderable::NGon* ngon : r_ngons)
-				ngon->flush();
-			for (renderable::Polygon* poly : r_polygons)
+			for (renderable::Polygonal* poly : polygonal_renderables)
 				poly->flush();
 			polygon_vbo.flush();
 			transform_ssbo.flush();
@@ -244,246 +242,78 @@ namespace oly
 
 	namespace renderable
 	{
-		Polygon::Polygon(batch::PolygonBatch* batch)
+		Polygonal::Polygonal(batch::PolygonBatch* batch)
 			: _batch(batch), _transformer(std::make_unique<Transformer2D>())
 		{
-			_batch->r_polygons.insert(this);
+			_batch->polygonal_renderables.insert(this);
 		}
-		
-		Polygon::Polygon(batch::PolygonBatch* batch, const Transform2D& local)
+
+		Polygonal::Polygonal(batch::PolygonBatch* batch, const Transform2D& local)
 			: _batch(batch), _transformer(std::make_unique<Transformer2D>(local))
 		{
-			_batch->r_polygons.insert(this);
+			_batch->polygonal_renderables.insert(this);
 		}
-		
-		Polygon::Polygon(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer)
+
+		Polygonal::Polygonal(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer)
 			: _batch(batch), _transformer(std::move(transformer))
 		{
-			_batch->r_polygons.insert(this);
+			_batch->polygonal_renderables.insert(this);
 		}
-		
-		Polygon::Polygon(Polygon&& other) noexcept
-			: _batch(other._batch), range(other.range), _transformer(std::move(other._transformer)), polygon(std::move(other.polygon))
+
+		Polygonal::Polygonal(Polygonal&& other) noexcept
+			: _batch(other._batch), range(other.range), _transformer(std::move(other._transformer))
 		{
 			if (_batch)
-				_batch->r_polygons.insert(this);
+				_batch->polygonal_renderables.insert(this);
 		}
-		
-		Polygon::~Polygon()
+
+		Polygonal::~Polygonal()
 		{
 			if (_batch)
-				_batch->r_polygons.erase(this);
+				_batch->polygonal_renderables.erase(this);
 		}
-		
-		Polygon& Polygon::operator=(Polygon&& other) noexcept
+
+		Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
 		{
 			if (this != &other)
 			{
 				if (_batch)
-					_batch->r_polygons.erase(this);
+					_batch->polygonal_renderables.erase(this);
 				_batch = other._batch;
 				if (_batch)
-					_batch->r_polygons.insert(this);
+					_batch->polygonal_renderables.insert(this);
 				range = other.range;
 				_transformer = std::move(other._transformer);
-				polygon = std::move(other.polygon);
 			}
 			return *this;
 		}
-		
-		void Polygon::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
-		{
-			assert(range.diff == 0);
-			range = _batch->set_polygon(pos, polygon, _transformer->global(), min_range, max_range);
-		}
-		
-		void Polygon::post_set() const
+
+		void Polygonal::post_set() const
 		{
 			_transformer->post_set();
 		}
 		
-		void Polygon::pre_get() const
+		void Polygonal::pre_get() const
 		{
 			_transformer->pre_get();
 		}
 		
-		void Polygon::send_polygon() const
-		{
-			math::Polygon2DComposite composite = math::split_polygon_composite(polygon, _batch->max_degree());
-			for (GLushort i = 0; i < range.diff; ++i)
-			{
-				_batch->set_primitive_points(range.initial + i, composite[i].polygon.points.data(), (GLushort)composite[i].polygon.points.size());
-				_batch->set_primitive_colors(range.initial + i, composite[i].polygon.colors.data(), (GLushort)composite[i].polygon.colors.size());
-				_batch->set_primitive_triangulation(range.initial + i, composite[i].triangulation);
-			}
-		}
-		
-		void Polygon::flush() const
-		{
-			if (_transformer->flush())
-			{
-				_transformer->pre_get();
-				_batch->set_range_transform(range, _transformer->global());
-			}
-		}
-
-		Composite::Composite(batch::PolygonBatch* batch)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>())
-		{
-			_batch->r_composites.insert(this);
-		}
-		
-		Composite::Composite(batch::PolygonBatch* batch, const Transform2D& local)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>(local))
-		{
-			_batch->r_composites.insert(this);
-		}
-		
-		Composite::Composite(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer)
-			: _batch(batch), _transformer(std::move(transformer))
-		{
-			_batch->r_composites.insert(this);
-		}
-		
-		Composite::Composite(Composite&& other) noexcept
-			: _batch(other._batch), range(other.range), _transformer(std::move(other._transformer)), composite(std::move(other.composite))
-		{
-			if (_batch)
-				_batch->r_composites.insert(this);
-		}
-		
-		Composite::~Composite()
-		{
-			if (_batch)
-				_batch->r_composites.erase(this);
-		}
-		
-		Composite& Composite::operator=(Composite&& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (_batch)
-					_batch->r_composites.erase(this);
-				_batch = other._batch;
-				if (_batch)
-					_batch->r_composites.insert(this);
-				range = other.range;
-				_transformer = std::move(other._transformer);
-				composite = std::move(other.composite);
-			}
-			return *this;
-		}
-
-		void Composite::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
+		void Polygonal::init(batch::PolygonBatch::PolygonPos pos, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(range.diff == 0);
 			_transformer->pre_get();
 			range = _batch->set_polygon(pos, composite, _transformer->global(), min_range, max_range);
 		}
 
-		void Composite::post_set() const
+		void Polygonal::init(batch::PolygonBatch::PolygonPos pos, math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			_transformer->post_set();
-		}
-
-		void Composite::pre_get() const
-		{
-			_transformer->pre_get();
-		}
-
-		void Composite::send_polygon() const
-		{
-			math::Polygon2DComposite dup = dupl(composite);
-			math::split_polygon_composite(dup, _batch->max_degree());
-			for (GLushort i = 0; i < range.diff; ++i)
-			{
-				_batch->set_primitive_points(range.initial + i, dup[i].polygon.points.data(), (GLushort)dup[i].polygon.points.size());
-				_batch->set_primitive_colors(range.initial + i, dup[i].polygon.colors.data(), (GLushort)dup[i].polygon.colors.size());
-				_batch->set_primitive_triangulation(range.initial + i, dup[i].triangulation);
-			}
-		}
-
-		void Composite::flush() const
-		{
-			if (_transformer->flush())
-			{
-				_transformer->pre_get();
-				_batch->set_range_transform(range, _transformer->global());
-			}
-		}
-
-		NGon::NGon(batch::PolygonBatch* batch)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>())
-		{
-			_batch->r_ngons.insert(this);
-		}
-
-		NGon::NGon(batch::PolygonBatch* batch, const Transform2D& local)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>(local))
-		{
-			_batch->r_ngons.insert(this);
-		}
-
-		NGon::NGon(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer)
-			: _batch(batch), _transformer(std::move(transformer))
-		{
-			_batch->r_ngons.insert(this);
-		}
-
-		NGon::NGon(NGon&& other) noexcept
-			: _batch(other._batch), range(other.range), _transformer(std::move(other._transformer)), bordered(other.bordered), base(std::move(other.base))
-		{
-			if (_batch)
-				_batch->r_ngons.insert(this);
-		}
-
-		NGon::~NGon()
-		{
-			if (_batch)
-				_batch->r_ngons.erase(this);
-		}
-
-		NGon& NGon::operator=(NGon&& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (_batch)
-					_batch->r_ngons.erase(this);
-				_batch = other._batch;
-				if (_batch)
-					_batch->r_ngons.insert(this);
-				range = other.range;
-				_transformer = std::move(other._transformer);
-				bordered = other.bordered;
-				base = std::move(other.base);
-			}
-			return *this;
-		}
-
-		void NGon::init(batch::PolygonBatch::PolygonPos pos, bool gen_border, GLushort min_range, GLushort max_range)
-		{
-			bordered = gen_border;
 			assert(range.diff == 0);
 			_transformer->pre_get();
-			if (bordered)
-				range = _batch->set_bordered_ngon(pos, base, _transformer->global(), min_range, max_range);
-			else
-				range = _batch->set_ngon(pos, base, _transformer->global(), min_range, max_range);
+			range = _batch->set_polygon(pos, std::move(composite), _transformer->global(), min_range, max_range);
 		}
 
-		void NGon::post_set() const
+		void Polygonal::send_polygon(const math::Polygon2DComposite& composite) const
 		{
-			_transformer->post_set();
-		}
-
-		void NGon::pre_get() const
-		{
-			_transformer->pre_get();
-		}
-
-		void NGon::send_base() const
-		{
-			math::Polygon2DComposite composite = bordered ? _batch->create_bordered_ngon(base) : _batch->create_ngon(base);
 			for (GLushort i = 0; i < range.diff; ++i)
 			{
 				_batch->set_primitive_points(range.initial + i, composite[i].polygon.points.data(), (GLushort)composite[i].polygon.points.size());
@@ -492,13 +322,46 @@ namespace oly
 			}
 		}
 
-		void NGon::flush() const
+		void Polygonal::flush() const
 		{
 			if (_transformer->flush())
 			{
 				_transformer->pre_get();
 				_batch->set_range_transform(range, _transformer->global());
 			}
+		}
+		
+		void Polygon::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
+		{
+			Polygonal::init(pos, math::split_polygon_composite(polygon, _batch->max_degree()), min_range, max_range);
+		}
+		
+		void Polygon::send_polygon() const
+		{
+			Polygonal::send_polygon(math::split_polygon_composite(polygon, _batch->max_degree()));
+		}
+		
+		void Composite::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
+		{
+			Polygonal::init(pos, composite, min_range, max_range);
+		}
+
+		void Composite::send_polygon() const
+		{
+			math::Polygon2DComposite dup = dupl(composite);
+			math::split_polygon_composite(dup, _batch->max_degree());
+			Polygonal::send_polygon(dup);
+		}
+
+		void NGon::init(batch::PolygonBatch::PolygonPos pos, bool gen_border, GLushort min_range, GLushort max_range)
+		{
+			bordered = gen_border;
+			Polygonal::init(pos, bordered ? _batch->create_bordered_ngon(base) : _batch->create_ngon(base), min_range, max_range);
+		}
+
+		void NGon::send_polygon() const
+		{
+			Polygonal::send_polygon(bordered ? _batch->create_bordered_ngon(base) : _batch->create_ngon(base));
 		}
 	}
 }

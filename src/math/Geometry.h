@@ -190,5 +190,6 @@ namespace oly
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations);
+		extern Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points);
 	}
 }

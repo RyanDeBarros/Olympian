@@ -10,18 +10,14 @@ namespace oly
 {
 	namespace renderable
 	{
-		class Polygon;
-		class Composite;
-		class NGon;
+		class Polygonal;
 	}
 
 	namespace batch
 	{
 		class PolygonBatch
 		{
-			friend renderable::Polygon;
-			friend renderable::Composite;
-			friend renderable::NGon;
+			friend renderable::Polygonal;
 			GLuint shader;
 			rendering::VertexArray vao;
 			rendering::FixedLayoutEBO<GLushort, 1> ebo;
@@ -136,9 +132,7 @@ namespace oly
 			};
 			PolygonIndexer polygon_indexer;
 
-			std::unordered_set<renderable::Polygon*> r_polygons;
-			std::unordered_set<renderable::Composite*> r_composites;
-			std::unordered_set<renderable::NGon*> r_ngons;
+			std::unordered_set<renderable::Polygonal*> polygonal_renderables;
 
 		public:
 			void flush() const;
@@ -147,111 +141,85 @@ namespace oly
 
 	namespace renderable
 	{
-		// TODO create common base class that holds batch, range, and transformer
-		class Polygon
+		class Polygonal
 		{
+		protected:
 			friend batch::PolygonBatch;
 			batch::PolygonBatch* _batch = nullptr;
-			Range<GLushort> range = {};
 			std::unique_ptr<Transformer2D> _transformer = nullptr;
+			Range<GLushort> range = {};
 
 		public:
+			Polygonal(batch::PolygonBatch* batch);
+			Polygonal(batch::PolygonBatch* batch, const Transform2D& local);
+			Polygonal(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer);
+			Polygonal(const Polygonal&) = delete;
+			Polygonal(Polygonal&&) noexcept;
+			virtual ~Polygonal();
+			Polygonal& operator=(Polygonal&&) noexcept;
+
+			const batch::PolygonBatch* batch() const { return _batch; }
+			batch::PolygonBatch* batch() { return _batch; }
+			Range<GLushort> get_range() const { return range; }
+			const Transformer2D& transformer() const { return *_transformer; }
+			Transformer2D& transformer() { return *_transformer; }
+			const Transform2D& local() const { return _transformer->local; }
+			Transform2D& local() { return _transformer->local; }
+			void post_set() const; // call after modifying local
+			void pre_get() const; // call before reading global
+
+			virtual void send_polygon() const = 0;
+		
+		protected:
+			void init(batch::PolygonBatch::PolygonPos pos, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);
+			void init(batch::PolygonBatch::PolygonPos pos, math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range);
+			void send_polygon(const math::Polygon2DComposite& composite) const;
+
+		private:
+			void flush() const;
+		};
+
+		struct Polygon : public Polygonal
+		{
 			math::Polygon2D polygon;
 
-			Polygon(batch::PolygonBatch* batch);
-			Polygon(batch::PolygonBatch* batch, const Transform2D& local);
-			Polygon(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer);
-			Polygon(const Polygon&) = delete;
-			Polygon(Polygon&&) noexcept;
-			~Polygon();
-			Polygon& operator=(Polygon&&) noexcept;
+			using Polygonal::Polygonal;
+			Polygon(Polygon&&) noexcept = default;
+			Polygon& operator=(Polygon&&) noexcept = default;
 
 			void init(batch::PolygonBatch::PolygonPos pos, GLushort min_range = 0, GLushort max_range = 0);
 
-			const batch::PolygonBatch* batch() const { return _batch; }
-			batch::PolygonBatch* batch() { return _batch; }
-			const Transformer2D& transformer() const { return *_transformer; }
-			Transformer2D& transformer() { return *_transformer; }
-			const Transform2D& local() const { return _transformer->local; }
-			Transform2D& local() { return _transformer->local; }
-			void post_set() const; // call after modifying local
-			void pre_get() const; // call before reading global
-
-			void send_polygon() const;
-
-		private:
-			void flush() const;
+			virtual void send_polygon() const override;
 		};
 
-		class Composite
+		struct Composite : public Polygonal
 		{
-			friend batch::PolygonBatch;
-			batch::PolygonBatch* _batch = nullptr;
-			Range<GLushort> range = {};
-			std::unique_ptr<Transformer2D> _transformer = nullptr;
-
-		public:
 			math::Polygon2DComposite composite;
 
-			Composite(batch::PolygonBatch* batch);
-			Composite(batch::PolygonBatch* batch, const Transform2D& local);
-			Composite(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer);
-			Composite(const Composite&) = delete;
-			Composite(Composite&&) noexcept;
-			~Composite();
-			Composite& operator=(Composite&&) noexcept;
+			using Polygonal::Polygonal;
+			Composite(Composite&&) noexcept = default;
+			Composite& operator=(Composite&&) noexcept = default;
 
 			void init(batch::PolygonBatch::PolygonPos pos, GLushort min_range = 0, GLushort max_range = 0);
 
-			const batch::PolygonBatch* batch() const { return _batch; }
-			batch::PolygonBatch* batch() { return _batch; }
-			const Transformer2D& transformer() const { return *_transformer; }
-			Transformer2D& transformer() { return *_transformer; }
-			const Transform2D& local() const { return _transformer->local; }
-			Transform2D& local() { return _transformer->local; }
-			void post_set() const; // call after modifying local
-			void pre_get() const; // call before reading global
-
-			void send_polygon() const;
-
-		private:
-			void flush() const;
+			virtual void send_polygon() const override;
 		};
 
-		class NGon
+		struct NGon : public Polygonal
 		{
-			friend batch::PolygonBatch;
-			batch::PolygonBatch* _batch = nullptr;
-			Range<GLushort> range = {};
+		private:
 			bool bordered = false;
-			std::unique_ptr<Transformer2D> _transformer = nullptr;
-
+		
 		public:
 			math::NGonBase base;
 
-			NGon(batch::PolygonBatch* batch);
-			NGon(batch::PolygonBatch* batch, const Transform2D& local);
-			NGon(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer);
-			NGon(const NGon&) = delete;
-			NGon(NGon&&) noexcept;
-			~NGon();
-			NGon& operator=(NGon&&) noexcept;
+			using Polygonal::Polygonal;
+			NGon(NGon&&) noexcept = default;
+			NGon& operator=(NGon&&) noexcept = default;
 
 			void init(batch::PolygonBatch::PolygonPos pos, bool gen_border, GLushort min_range = 0, GLushort max_range = 0);
 
-			const batch::PolygonBatch* batch() const { return _batch; }
-			batch::PolygonBatch* batch() { return _batch; }
-			const Transformer2D& transformer() const { return *_transformer; }
-			Transformer2D& transformer() { return *_transformer; }
-			const Transform2D& local() const { return _transformer->local; }
-			Transform2D& local() { return _transformer->local; }
-			void post_set() const; // call after modifying local
-			void pre_get() const; // call before reading global
-
-			void send_base() const;
-
-		private:
-			void flush() const;
+			virtual void send_polygon() const override;
 		};
 	}
 

@@ -593,3 +593,19 @@ std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::ma
 
 	return subpolygons;
 }
+
+oly::math::Polygon2DComposite oly::math::composite_convex_decomposition(const std::vector<glm::vec2>& points)
+{
+	auto decomposition = oly::math::convex_decompose_polygon(points);
+	Polygon2DComposite composite;
+	composite.reserve(decomposition.size());
+	for (auto& subconvex : decomposition)
+	{
+		oly::math::TriangulatedPolygon2D tp;
+		tp.polygon.points = std::move(subconvex.first);
+		tp.polygon.colors = { glm::vec4(1.0f) };
+		tp.triangulation = std::move(subconvex.second);
+		composite.push_back(std::move(tp));
+	}
+	return composite;
+}

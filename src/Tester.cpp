@@ -168,7 +168,8 @@ void run()
 	octagon.base.border_width = 0.05f;
 	octagon.init(3, true);
 
-	std::vector<glm::vec2> concave_polygon{
+	oly::renderable::Composite concave_shape(&polygon_batch, { {}, 0, glm::vec2(100) });
+	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
 		{ -2, -2 },
 		{  0, -2 },
@@ -179,25 +180,14 @@ void run()
 		{ -1,  0 },
 		{ -3,  1 },
 		{ -3,  2 }
-	};
-	auto decomposition = oly::math::convex_decompose_polygon(concave_polygon);
-	oly::math::Polygon2DComposite concave_composite;
-	concave_composite.reserve(decomposition.size());
-	int i = 0;
-	for (auto& subconvex : decomposition)
+	});
+	for (auto& tp : concave_shape.composite)
 	{
-		oly::math::TriangulatedPolygon2D tp;
-		tp.polygon.colors = { glm::vec4(1.0f) };
 		tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
 		tp.polygon.colors[0].g = (float)rand() / RAND_MAX;
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
-		tp.polygon.points = std::move(subconvex.first);
-		tp.triangulation = std::move(subconvex.second);
-		concave_composite.push_back(std::move(tp)); // TODO create function to abstract this decomposition->composite construction
 	}
-	oly::Transform2D concave_transform;
-	concave_transform.scale = glm::vec2(100);
-	oly::Range<GLushort> concave_range = polygon_batch.set_polygon(4, concave_composite, concave_transform.matrix());
+	concave_shape.init(4);
 
 	while (!window.should_close())
 	{
@@ -212,10 +202,10 @@ void run()
 		octagon.base.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
 		octagon.base.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
 		octagon.base.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
-		octagon.send_base();
+		octagon.send_polygon();
 	
-		concave_transform.rotation += 0.01f;
-		polygon_batch.set_range_transform(concave_range, concave_transform.matrix());
+		concave_shape.transformer().local.rotation += 0.01f;
+		concave_shape.post_set();
 
 		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();
@@ -236,7 +226,7 @@ void run()
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
-		polygon_batch.set_primitive_draw_spec(0, concave_range.initial);
+		polygon_batch.set_primitive_draw_spec(0, concave_shape.get_range().initial);
 		polygon_batch.draw();
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
@@ -245,7 +235,7 @@ void run()
 		oly::stencil::end();
 		sprite_batch.set_draw_spec(3, 97);
 		sprite_batch.draw();
-		polygon_batch.set_primitive_draw_spec(concave_range.initial, concave_range.diff);
+		polygon_batch.set_primitive_draw_spec(concave_shape.get_range().initial, concave_shape.get_range().diff);
 		polygon_batch.draw();
 
 		// post-frame
