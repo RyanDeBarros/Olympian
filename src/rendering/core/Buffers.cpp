@@ -29,26 +29,26 @@ oly::rendering::GLBuffer& oly::rendering::GLBuffer::operator=(GLBuffer&& other) 
 	return *this;
 }
 
-oly::rendering::GLBufferBlock::GLBufferBlock(GLsizei count)
+oly::rendering::GLBufferBlock<0>::GLBufferBlock(GLsizei count)
 	: ids(new GLuint[count]), count(count)
 {
 	glCreateBuffers(count, ids);
 }
 
-oly::rendering::GLBufferBlock::GLBufferBlock(GLBufferBlock&& other) noexcept
+oly::rendering::GLBufferBlock<0>::GLBufferBlock(GLBufferBlock<0>&& other) noexcept
 	: ids(other.ids), count(other.count)
 {
 	other.ids = nullptr;
 	other.count = 0;
 }
 
-oly::rendering::GLBufferBlock::~GLBufferBlock()
+oly::rendering::GLBufferBlock<0>::~GLBufferBlock()
 {
 	glDeleteBuffers(count, ids);
 	delete[] ids;
 }
 
-oly::rendering::GLBufferBlock& oly::rendering::GLBufferBlock::operator=(GLBufferBlock&& other) noexcept
+oly::rendering::GLBufferBlock<0>& oly::rendering::GLBufferBlock<0>::operator=(GLBufferBlock<0>&& other) noexcept
 {
 	if (this != &other)
 	{
@@ -62,7 +62,7 @@ oly::rendering::GLBufferBlock& oly::rendering::GLBufferBlock::operator=(GLBuffer
 	return *this;
 }
 
-GLuint oly::rendering::GLBufferBlock::operator[](GLsizei i) const
+GLuint oly::rendering::GLBufferBlock<0>::operator[](GLsizei i) const
 {
 	assert(i >= 0 && i < count);
 	return ids[i];

@@ -13,18 +13,20 @@ namespace oly
 		class PolygonBatch
 		{
 			GLuint shader;
-			oly::rendering::VertexArray vao;
-			oly::rendering::FixedLayoutEBO<GLushort, 1> ebo;
+			rendering::VertexArray vao;
+			rendering::FixedLayoutEBO<GLushort, 1> ebo;
 
 			GLuint projection_location;
 			GLuint degree_location;
 
-			oly::rendering::GLBuffer vbo_position;
-			oly::rendering::GLBuffer vbo_color;
+			enum PolygonAttribute
+			{
+				POSITION,
+				COLOR
+			};
+			rendering::LazyVertexBufferBlock2x1<glm::vec2, glm::vec4, GLushort> polygon_vbo;
 
-			FixedVector<math::Polygon2D> polygons;
-
-			oly::rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
+			rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
 
 		public:
 			typedef GLushort PrimitivePos;
@@ -70,8 +72,8 @@ namespace oly
 			void set_projection(const glm::vec4& projection_bounds) const;
 
 		private:
-			void set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const Transform2D& transform);
-			void set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform);
+			void set_polygon_primitive(PrimitivePos pos, const math::Polygon2D& polygon, const Transform2D& transform);
+			void set_polygon_primitive(PrimitivePos pos, const math::Polygon2D& polygon, const math::Triangulation& triangulation, const Transform2D& transform);
 			void disable_polygon_primitive(PrimitivePos pos);
 		public:
 			void disable_polygon(PolygonPos pos);

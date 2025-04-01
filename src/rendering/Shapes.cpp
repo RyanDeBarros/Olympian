@@ -10,7 +10,7 @@ namespace oly
 	namespace batch
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.indices), polygons(capacity.polygons), transform_ssbo(capacity.polygons)
+			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.polygons), polygon_vbo(capacity.vertices, capacity.vertices)
 		{
 			shader = shaders::polygon_batch;
 			glUseProgram(shader);
@@ -18,18 +18,7 @@ namespace oly
 			degree_location = glGetUniformLocation(shader, "uDegree");
 
 			glBindVertexArray(vao);
-
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-			glNamedBufferStorage(vbo_position, capacity.vertices * sizeof(glm::vec2), nullptr, GL_DYNAMIC_STORAGE_BIT);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-			glEnableVertexAttribArray(0);
-
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
-			glNamedBufferStorage(vbo_color, capacity.vertices * sizeof(glm::vec4), nullptr, GL_DYNAMIC_STORAGE_BIT);
-			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-			glEnableVertexAttribArray(1);
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			polygon_vbo.vbo().init_layout(oly::rendering::VertexAttribute<>{ 0, 2 }, oly::rendering::VertexAttribute<>{ 1, 4 });
 			ebo.init();
 
 			set_projection(projection_bounds);
@@ -65,12 +54,12 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const Transform2D& transform)
+		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, const math::Polygon2D& polygon, const Transform2D& transform)
 		{
-			set_polygon_primitive(pos, std::move(polygon), math::ear_clipping(polygon.points), transform);
+			set_polygon_primitive(pos, polygon, math::ear_clipping(polygon.points), transform);
 		}
 
-		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, math::Polygon2D&& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
+		void PolygonBatch::set_polygon_primitive(PrimitivePos pos, const math::Polygon2D& polygon, const math::Triangulation& triangulation, const Transform2D& transform)
 		{
 			assert(polygon.valid());
 			assert(polygon.points.size() <= capacity.degree);
@@ -80,8 +69,18 @@ namespace oly
 			GLushort vertices_offset = pos * capacity.degree;
 			GLushort indices_offset = pos * capacity.polygon_index_count;
 
-			polygon.fill_colors();
-			polygons[pos] = std::move(polygon);
+			for (GLushort v = 0; v < capacity.degree; ++v)
+				polygon_vbo.vbo().vector<PolygonAttribute::POSITION>()[vertices_offset + v] = polygon.points[v];
+			if (polygon.colors.size() == 1)
+			{
+				for (GLushort v = 0; v < capacity.degree; ++v)
+					polygon_vbo.vbo().vector<PolygonAttribute::COLOR>()[vertices_offset + v] = polygon.colors[0];
+			}
+			else
+			{
+				for (GLushort v = 0; v < capacity.degree; ++v)
+					polygon_vbo.vbo().vector<PolygonAttribute::COLOR>()[vertices_offset + v] = polygon.colors[v];
+			}
 			transform_ssbo.vector()[pos] = transform.matrix();
 			
 			GLushort vertex_index_offset = pos * capacity.degree;
@@ -99,8 +98,11 @@ namespace oly
 				indices[indices_offset + i + 2] = 0;
 			}
 
-			glNamedBufferSubData(vbo_position, vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
-			glNamedBufferSubData(vbo_color, vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
+			for (GLushort i = 0; i < capacity.degree; ++i)
+			{
+				polygon_vbo.lazy_send<PolygonAttribute::POSITION>(vertices_offset + i);
+				polygon_vbo.lazy_send<PolygonAttribute::COLOR>(vertices_offset + i);
+			}
 			transform_ssbo.lazy_send(pos);
 			for (GLushort i = 0; i < capacity.polygon_index_count; ++i)
 				ebo.lazy_send(indices_offset + i);
@@ -113,9 +115,6 @@ namespace oly
 			GLushort vertices_offset = pos * capacity.degree;
 			GLushort indices_offset = pos * capacity.polygon_index_count;
 
-			polygons[pos] = {};
-			transform_ssbo.vector()[pos] = {};
-
 			auto& indices = ebo.vector();
 			for (size_t i = 0; i < capacity.polygon_index_count; i += 3)
 			{
@@ -124,8 +123,11 @@ namespace oly
 				indices[indices_offset + i + 2] = 0;
 			}
 
-			glNamedBufferSubData(vbo_position, vertices_offset * sizeof(glm::vec2), capacity.degree * sizeof(glm::vec2), polygons[pos].points.data());
-			glNamedBufferSubData(vbo_color, vertices_offset * sizeof(glm::vec4), capacity.degree * sizeof(glm::vec4), polygons[pos].colors.data());
+			for (GLushort i = 0; i < capacity.degree; ++i)
+			{
+				polygon_vbo.lazy_send<PolygonAttribute::POSITION>(vertices_offset + i);
+				polygon_vbo.lazy_send<PolygonAttribute::COLOR>(vertices_offset + i);
+			}
 			transform_ssbo.lazy_send(pos);
 			for (GLushort i = 0; i < capacity.polygon_index_count; ++i)
 				ebo.lazy_send(indices_offset + i);
@@ -239,6 +241,7 @@ namespace oly
 
 		void PolygonBatch::flush() const
 		{
+			polygon_vbo.flush();
 			transform_ssbo.flush();
 			ebo.flush();
 		}
