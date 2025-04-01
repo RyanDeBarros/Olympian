@@ -202,7 +202,7 @@ namespace oly
 
 		public:
 			void lazy_send(IndexType pos) const { lazy.lazy_send(pos); }
-			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType), this->cpudata.size()); }
+			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size()); }
 		};
 
 		template<typename StructType, typename IndexType>
@@ -605,7 +605,8 @@ namespace oly
 		template<size_t ...Indexes>
 		inline void LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::flush_impl(std::index_sequence<Indexes...>) const
 		{
-			((multi_sender.sender<Indexes>().flush(vertex_buffer.buffer(Indexes), vertex_buffer.vector<Indexes>().data(), vertex_buffer.struct_size<Indexes>(), vertex_buffer.vector<Indexes>().size())), ...);
+			((multi_sender.sender<Indexes>().flush(vertex_buffer.buffer(Indexes), vertex_buffer.vector<Indexes>().data(), vertex_buffer.struct_size<Indexes>(),
+				(typename LazyMultiSender::template IndexType<Indexes>)vertex_buffer.vector<Indexes>().size())), ...);
 		}
 
 		template<typename VertexAttrib, typename IndexType>

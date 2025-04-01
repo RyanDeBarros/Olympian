@@ -99,28 +99,28 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void SpriteBatch::Quad::send_info() const
+		void SpriteBatch::QuadReference::send_info() const
 		{
-			_sprite_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
 		}
 
-		void SpriteBatch::Quad::send_transform() const
+		void SpriteBatch::QuadReference::send_transform() const
 		{
-			_sprite_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
 		}
 
-		void SpriteBatch::Quad::send_data() const
+		void SpriteBatch::QuadReference::send_data() const
 		{
-			_sprite_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
-			_sprite_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
 		}
 
-		SpriteBatch::Quad& SpriteBatch::get_quad(QuadPos pos)
+		SpriteBatch::QuadReference& SpriteBatch::get_quad(QuadPos pos)
 		{
-			Quad& quad = quads[pos];
+			QuadReference& quad = quads[pos];
 			quad._info = &quad_info_ssbo.vector()[pos];
 			quad._transform = &quad_transform_ssbo.vector()[pos];
-			quad._sprite_batch = this;
+			quad._batch = this;
 			quad._ssbo_pos = pos;
 			return quad;
 		}
@@ -177,17 +177,14 @@ namespace oly
 		Sprite::Sprite(Sprite&& other) noexcept
 			: _quad(other._quad), _transformer(std::move(other._transformer))
 		{
-			if (other._quad)
-			{
-				other._quad->sprite_batch().sprites.erase(&other);
-				other._quad = nullptr;
-			}
+			if (_quad)
+				_quad->batch().sprites.insert(this);
 		}
 
 		Sprite::~Sprite()
 		{
 			if (_quad)
-				_quad->sprite_batch().sprites.erase(this);
+				_quad->batch().sprites.erase(this);
 		}
 
 		Sprite& Sprite::operator=(Sprite&& other) noexcept
@@ -195,13 +192,10 @@ namespace oly
 			if (this != &other)
 			{
 				if (_quad)
-					_quad->sprite_batch().sprites.erase(this);
+					_quad->batch().sprites.erase(this);
 				_quad = other._quad;
-				if (other._quad)
-				{
-					other._quad->sprite_batch().sprites.erase(&other);
-					other._quad = nullptr;
-				}
+				if (_quad)
+					_quad->batch().sprites.insert(this);
 				_transformer = std::move(other._transformer);
 			}
 			return *this;

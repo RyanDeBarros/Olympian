@@ -108,6 +108,18 @@ oly::math::Edge::Edge(glm::uint a, glm::uint b)
 {
 }
 
+oly::math::TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D& polygon)
+	: polygon(polygon)
+{
+	triangulation = ear_clipping(polygon.points);
+}
+
+oly::math::TriangulatedPolygon2D::TriangulatedPolygon2D(Polygon2D&& polygon)
+	: polygon(std::move(polygon))
+{
+	triangulation = ear_clipping(this->polygon.points);
+}
+
 oly::math::BorderPointPair oly::math::border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point)
 {
 	glm::vec2 v_prev = glm::normalize(prev_point - point);

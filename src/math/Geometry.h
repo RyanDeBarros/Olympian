@@ -66,11 +66,10 @@ namespace oly
 
 		extern size_t num_triangulated_indices(const Polygon2D& polygon);
 
+		// TODO typedef instead?
 		struct Triangulation
 		{
 			std::vector<glm::uvec3> faces;
-
-			size_t num_indices() const { return 3 * faces.size(); }
 		};
 
 		struct Edge
@@ -96,6 +95,12 @@ namespace oly
 		{
 			Polygon2D polygon;
 			Triangulation triangulation;
+
+			TriangulatedPolygon2D() = default;
+			TriangulatedPolygon2D(const Polygon2D& polygon, const Triangulation& triangulation) : polygon(polygon), triangulation(triangulation) {}
+			TriangulatedPolygon2D(Polygon2D&& polygon, Triangulation&& triangulation) : polygon(std::move(polygon)), triangulation(std::move(triangulation)) {}
+			TriangulatedPolygon2D(const Polygon2D& polygon);
+			TriangulatedPolygon2D(Polygon2D&& polygon);
 		};
 
 		struct BorderPivot

@@ -104,42 +104,48 @@ void run()
 
 	oly::batch::PolygonBatch polygon_batch({ 100, 3 }, { -720, 720, -540, 540 });
 
-	oly::math::Polygon2D pentagon;
-	pentagon.points = {
+	oly::renderable::Polygon pentagon1(&polygon_batch);
+	pentagon1.polygon.points = {
 		{ 1, -1 },
 		{ 1, 0 },
 		{ 0, 1 },
 		{ -1, 0 },
 		{ -1, -1 }
 	};
-	pentagon.colors = {
+	pentagon1.polygon.colors = {
 		{ 1.0f, 1.0f, 0.0f, 1.0f },
 		{ 1.0f, 0.0f, 1.0f, 1.0f },
 		{ 0.0f, 1.0f, 1.0f, 1.0f },
 		{ 0.0f, 0.0f, 0.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f, 1.0f }
 	};
+	pentagon1.transformer().local.position.y = 200;
+	pentagon1.transformer().local.scale = glm::vec2(160);
+	pentagon1.post_set();
+	pentagon1.init(0);
 
-	oly::Transform2D pentagon_transform;
-	pentagon_transform.scale = glm::vec2(160);
-	polygon_batch.set_polygon(0, oly::dupl(pentagon), pentagon_transform);
-	pentagon_transform.position.x = -250;
-	pentagon_transform.rotation = -1;
-	pentagon_transform.scale.x *= 2;
-	for (glm::vec4& color : pentagon.colors)
+	oly::renderable::Polygon pentagon2(&polygon_batch);
+	pentagon2.polygon = pentagon1.polygon;
+	pentagon2.transformer().local.position.x = -250;
+	pentagon2.transformer().local.rotation = -1;
+	pentagon2.transformer().local.scale.x = 320;
+	pentagon2.transformer().local.scale.y = 160;
+	pentagon2.post_set();
+	for (glm::vec4& color : pentagon2.polygon.colors)
 		color.a = 0.5f;
-	polygon_batch.set_polygon(1, oly::dupl(pentagon), pentagon_transform);
+	pentagon2.init(1);
 
-	auto triangle = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
-	oly::Transform2D triangle_transform;
-	triangle_transform.position.x = 100;
-	triangle_transform.position.y = -100;
-	triangle_transform.scale = glm::vec2(150);
-	polygon_batch.set_polygon(2, triangle, triangle_transform);
+	oly::renderable::Composite bordered_triangle(&polygon_batch);
+	bordered_triangle.composite = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
+	bordered_triangle.transformer().local.position.x = 100;
+	bordered_triangle.transformer().local.position.y = -100;
+	bordered_triangle.transformer().local.scale = glm::vec2(150);
+	bordered_triangle.post_set();
+	bordered_triangle.init(2);
 
-	oly::math::NGonBase octagon;
-	octagon.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
-	octagon.border_colors = {
+	oly::renderable::NGon octagon(&polygon_batch, { { 300, 200 }, 0, { 200, 200 } });
+	octagon.base.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
+	octagon.base.border_colors = {
 		{ 0.25f,  0.0f,  0.5f, 1.0f },
 		{  0.0f, 0.25f, 0.25f, 1.0f },
 		{ 0.25f,  0.5f,  0.0f, 1.0f },
@@ -149,7 +155,7 @@ void run()
 		{ 0.75f,  0.5f,  1.0f, 1.0f },
 		{  0.5f, 0.25f, 0.75f, 1.0f }
 	};
-	octagon.points = {
+	octagon.base.points = {
 		{ 1, 0 },
 		{ 0.707f, 0.707f },
 		{ 0, 1 },
@@ -159,12 +165,8 @@ void run()
 		{ 0, -1 },
 		{ 0.707f, -0.707f }
 	};
-	octagon.border_width = 0.05f;
-	oly::Transform2D octagon_transform;
-	octagon_transform.position.x = 300;
-	octagon_transform.position.y = 200;
-	octagon_transform.scale = glm::vec2(200);
-	polygon_batch.set_bordered_ngon(3, octagon, octagon_transform);
+	octagon.base.border_width = 0.05f;
+	octagon.init(3, true);
 
 	std::vector<glm::vec2> concave_polygon{
 		{ -4,  0 },
@@ -191,12 +193,11 @@ void run()
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 		tp.polygon.points = std::move(subconvex.first);
 		tp.triangulation = std::move(subconvex.second);
-		concave_composite.push_back(std::move(tp));
+		concave_composite.push_back(std::move(tp)); // TODO create function to abstract this decomposition->composite construction
 	}
 	oly::Transform2D concave_transform;
 	concave_transform.scale = glm::vec2(100);
-	oly::batch::PolygonBatch::PolygonPos concave_pos = 4;
-	polygon_batch.set_polygon(concave_pos, concave_composite, concave_transform);
+	oly::Range<GLushort> concave_range = polygon_batch.set_polygon(4, concave_composite, concave_transform.matrix());
 
 	while (!window.should_close())
 	{
@@ -207,12 +208,15 @@ void run()
 		glfwPollEvents();
 
 		// logic update
-		octagon.fill_colors[0].r = fmod((float)glfwGetTime(), 1.0f);
-		octagon.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
-		octagon.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
-		octagon.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
-		polygon_batch.set_bordered_ngon(3, octagon, octagon_transform);
+		octagon.base.fill_colors[0].r = fmod((float)glfwGetTime(), 1.0f);
+		octagon.base.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
+		octagon.base.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
+		octagon.base.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
+		octagon.send_base();
 	
+		concave_transform.rotation += 0.01f;
+		polygon_batch.set_range_transform(concave_range, concave_transform.matrix());
+
 		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();
 
@@ -232,7 +236,7 @@ void run()
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
-		polygon_batch.set_primitive_draw_spec(0, polygon_batch.get_indexer().get_pos(concave_pos));
+		polygon_batch.set_primitive_draw_spec(0, concave_range.initial);
 		polygon_batch.draw();
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
@@ -241,7 +245,7 @@ void run()
 		oly::stencil::end();
 		sprite_batch.set_draw_spec(3, 97);
 		sprite_batch.draw();
-		polygon_batch.set_primitive_draw_spec(polygon_batch.get_indexer().get_pos(concave_pos), polygon_batch.get_indexer().get_range(concave_pos));
+		polygon_batch.set_primitive_draw_spec(concave_range.initial, concave_range.diff);
 		polygon_batch.draw();
 
 		// post-frame

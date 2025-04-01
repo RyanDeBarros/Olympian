@@ -88,41 +88,41 @@ namespace oly
 			void get_draw_spec(QuadPos& first, QuadPos& count) const { ebo.get_draw_spec(first, count); }
 			void set_draw_spec(QuadPos first, QuadPos count) { ebo.set_draw_spec(first, count); }
 
-			class Quad
+			class QuadReference
 			{
 				friend SpriteBatch;
+				SpriteBatch* _batch = nullptr;
+				QuadPos _ssbo_pos = -1;
 				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
-				SpriteBatch* _sprite_batch = nullptr;
-				QuadPos _ssbo_pos = -1;
 
 			public:
-				Quad() = default;
-				Quad(const Quad&) = delete;
-				Quad(Quad&& other) noexcept = default;
+				QuadReference() = default;
+				QuadReference(const QuadReference&) = delete;
+				QuadReference(QuadReference&& other) noexcept = default;
 
+				const SpriteBatch& batch() const { return *_batch; }
+				SpriteBatch& batch() { return *_batch; }
 				QuadInfo& info() { return *_info; }
 				const QuadInfo& info() const { return *_info; }
 				glm::mat3& transform() { return *_transform; }
 				const glm::mat3& transform() const { return *_transform; }
-				const SpriteBatch& sprite_batch() const { return *_sprite_batch; }
-				SpriteBatch& sprite_batch() { return *_sprite_batch; }
-				QuadPos index_pos() const { return _sprite_batch->z_order.range_of(_ssbo_pos); }
-				void set_z_index(QuadPos z) { _sprite_batch->move_quad_order(index_pos(), z); }
-				void move_z_index(int by) { _sprite_batch->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_sprite_batch->quads.size() - 1)); }
+				QuadPos index_pos() const { return _batch->z_order.range_of(_ssbo_pos); }
+				void set_z_index(QuadPos z) { _batch->move_quad_order(index_pos(), z); }
+				void move_z_index(int by) { _batch->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_batch->quads.size() - 1)); }
 
 				void send_info() const;
 				void send_transform() const;
 				void send_data() const;
 			};
-			friend Quad;
+			friend QuadReference;
 
 		private:
-			FixedVector<Quad> quads;
+			FixedVector<QuadReference> quads;
 			math::IndexBijection<QuadPos> z_order;
 
 		public:
-			Quad& get_quad(QuadPos pos);
+			QuadReference& get_quad(QuadPos pos);
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
 
@@ -138,7 +138,7 @@ namespace oly
 		class Sprite
 		{
 			friend batch::SpriteBatch;
-			batch::SpriteBatch::Quad* _quad;
+			batch::SpriteBatch::QuadReference* _quad = nullptr;
 			std::unique_ptr<Transformer2D> _transformer;
 
 		public:
@@ -149,10 +149,10 @@ namespace oly
 			~Sprite();
 			Sprite& operator=(Sprite&&) noexcept;
 
-			const batch::SpriteBatch& sprite_batch() const { return _quad->sprite_batch(); }
-			batch::SpriteBatch& sprite_batch() { return _quad->sprite_batch(); }
-			const batch::SpriteBatch::Quad& quad() const { return *_quad; }
-			batch::SpriteBatch::Quad& quad() { return *_quad; }
+			const batch::SpriteBatch& batch() const { return _quad->batch(); }
+			batch::SpriteBatch& batch() { return _quad->batch(); }
+			const batch::SpriteBatch::QuadReference& quad() const { return *_quad; }
+			batch::SpriteBatch::QuadReference& quad() { return *_quad; }
 			const Transformer2D& transformer() const { return *_transformer; }
 			Transformer2D& transformer() { return *_transformer; }
 			const Transform2D& local() const { return _transformer->local; }
