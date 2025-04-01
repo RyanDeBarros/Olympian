@@ -19,27 +19,15 @@ namespace oly
 		}
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.quads), ubos(UBO::__UBO_COUNT), capacity(capacity), z_order(capacity.quads),
-			quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f), quads(capacity.quads), textures(capacity.textures)
+			: ebo(capacity.quads), capacity(capacity), tex_data_ssbo(capacity.textures), quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f), tex_coords_ubo(capacity.uvs), modulation_ubo(capacity.modulations),
+			z_order(capacity.quads), quads(capacity.quads), textures(capacity.textures)
 		{
 			shader = shaders::sprite_batch;
 			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, tex_data_ssbo);
-			glNamedBufferStorage(tex_data_ssbo, capacity.textures * sizeof(TexData), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-			glBindBuffer(GL_UNIFORM_BUFFER, ubos[UBO::B_TEX_COORDS]);
-			glNamedBufferStorage(ubos[UBO::B_TEX_COORDS], capacity.uvs * sizeof(TexUVRect), nullptr, GL_DYNAMIC_STORAGE_BIT);
-			TexUVRect tex_coords{ { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } };
-			glNamedBufferSubData(ubos[UBO::B_TEX_COORDS], 0, sizeof(TexUVRect), &tex_coords);
-
-			glBindBuffer(GL_UNIFORM_BUFFER, ubos[UBO::B_MODULATION]);
-			glNamedBufferStorage(ubos[UBO::B_MODULATION], capacity.modulations * sizeof(Modulation), nullptr, GL_DYNAMIC_STORAGE_BIT);
-			Modulation modulation{ { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } };
-			glNamedBufferSubData(ubos[UBO::B_MODULATION], 0, sizeof(Modulation), &modulation);
-
-			set_draw_spec(0, capacity.quads);
+			tex_coords_ubo.send(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
+			modulation_ubo.send(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
@@ -55,15 +43,15 @@ namespace oly
 			glUseProgram(shader);
 			glBindVertexArray(vao);
 
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, tex_data_ssbo);
+			tex_data_ssbo.bind_base(0);
 			quad_info_ssbo.bind_base(1);
 			quad_transform_ssbo.bind_base(2);
-			glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubos[UBO::B_TEX_COORDS]);
-			glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubos[UBO::B_MODULATION]);
+			tex_coords_ubo.bind_base(0);
+			modulation_ubo.bind_base(1);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
-		void SpriteBatch::set_texture(size_t pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
+		void SpriteBatch::set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
 		{
 			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos] = texture;
@@ -71,37 +59,37 @@ namespace oly
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = texture->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			tex_data_ssbo.send(pos, texture_data);
 		}
 
-		void SpriteBatch::refresh_handle(size_t pos, rendering::ImageDimensions dim)
+		void SpriteBatch::refresh_handle(GLushort pos, rendering::ImageDimensions dim)
 		{
 			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = textures[pos]->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData), sizeof(TexData), &texture_data); // TODO move to process()
+			tex_data_ssbo.send(pos, texture_data);
 		}
 
-		void SpriteBatch::refresh_handle(size_t pos)
+		void SpriteBatch::refresh_handle(GLushort pos)
 		{
 			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			GLuint64 handle = textures[pos]->get_handle();
-			glNamedBufferSubData(tex_data_ssbo, pos * sizeof(TexData) + offsetof(TexData, handle), sizeof(GLuint64), &handle); // TODO move to process()
+			tex_data_ssbo.send(pos, &TexData::handle, handle);
 		}
 
-		void SpriteBatch::set_uvs(size_t pos, const TexUVRect& tex_coords) const
+		void SpriteBatch::set_uvs(GLushort pos, const TexUVRect& tex_coords) const
 		{
 			assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
-			glNamedBufferSubData(ubos[UBO::B_TEX_COORDS], pos * sizeof(TexUVRect), sizeof(TexUVRect), &tex_coords);
+			tex_coords_ubo.send(pos, tex_coords);
 		}
 
-		void SpriteBatch::set_modulation(size_t pos, const Modulation& modulation) const
+		void SpriteBatch::set_modulation(GLushort pos, const Modulation& modulation) const
 		{
 			assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
-			glNamedBufferSubData(ubos[UBO::B_MODULATION], pos * sizeof(Modulation), sizeof(Modulation), &modulation);
+			modulation_ubo.send(pos, modulation);
 		}
 
 		void SpriteBatch::set_projection(const glm::vec4& projection_bounds) const
@@ -162,7 +150,7 @@ namespace oly
 			}
 		}
 
-		void SpriteBatch::process()
+		void SpriteBatch::flush() const
 		{
 			for (renderable::Sprite* sprite : sprites)
 				sprite->flush();

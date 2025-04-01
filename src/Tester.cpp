@@ -195,16 +195,18 @@ void run()
 	}
 	oly::Transform2D concave_transform;
 	concave_transform.scale = glm::vec2(100);
-	polygon_batch.set_polygon(4, concave_composite, concave_transform);
+	oly::batch::PolygonBatch::PolygonPos concave_pos = 4;
+	polygon_batch.set_polygon(concave_pos, concave_composite, concave_transform);
 
 	while (!window.should_close())
 	{
+		// pre-frame
 		if (auto err = glGetError())
 			__debugbreak();
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glfwPollEvents();
 
+		// logic update
 		octagon.fill_colors[0].r = fmod((float)glfwGetTime(), 1.0f);
 		octagon.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
 		octagon.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
@@ -222,11 +224,15 @@ void run()
 		flag_tesselation_parent.local.rotation -= 0.01f;
 		flag_tesselation_parent.post_set();
 
-		sprite_batch.process();
+		// flush buffers
+		sprite_batch.flush();
+		polygon_batch.flush();
 		
+		// draw
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
+		polygon_batch.set_primitive_draw_spec(0, polygon_batch.get_indexer().get_pos(concave_pos));
 		polygon_batch.draw();
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
@@ -235,7 +241,10 @@ void run()
 		oly::stencil::end();
 		sprite_batch.set_draw_spec(3, 97);
 		sprite_batch.draw();
+		polygon_batch.set_primitive_draw_spec(polygon_batch.get_indexer().get_pos(concave_pos), polygon_batch.get_indexer().get_range(concave_pos));
+		polygon_batch.draw();
 
+		// post-frame
 		window.swap_buffers();
 	}
 }

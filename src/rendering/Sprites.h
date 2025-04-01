@@ -40,10 +40,9 @@ namespace oly
 				GLuint tex_coord_slot = 0;
 				GLuint color_slot = 0;
 			};
+			rendering::LightweightSSBO<TexData, GLushort> tex_data_ssbo;
 			rendering::IndexedSSBO<QuadInfo, GLushort> quad_info_ssbo;
-			rendering::IndexedTransformSSBO quad_transform_ssbo;
-
-			rendering::GLBuffer tex_data_ssbo;
+			rendering::IndexedSSBO<glm::mat3, GLushort> quad_transform_ssbo;
 
 		public:
 			struct TexUVRect
@@ -55,13 +54,8 @@ namespace oly
 				glm::vec4 colors[4] = {};
 			};
 		private:
-			enum UBO
-			{
-				B_TEX_COORDS,
-				B_MODULATION,
-				__UBO_COUNT
-			};
-			rendering::GLBufferBlock ubos;
+			rendering::LightweightUBO<TexUVRect, GLushort> tex_coords_ubo;
+			rendering::LightweightUBO<Modulation, GLushort> modulation_ubo;
 
 		public:
 			struct Capacity
@@ -82,11 +76,11 @@ namespace oly
 
 			void draw() const;
 
-			void set_texture(size_t pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim);
-			void refresh_handle(size_t pos, rendering::ImageDimensions dim);
-			void refresh_handle(size_t pos);
-			void set_uvs(size_t pos, const TexUVRect& tex_coords) const;
-			void set_modulation(size_t pos, const Modulation& modulation) const;
+			void set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim);
+			void refresh_handle(GLushort pos, rendering::ImageDimensions dim);
+			void refresh_handle(GLushort pos);
+			void set_uvs(GLushort pos, const TexUVRect& tex_coords) const;
+			void set_modulation(GLushort pos, const Modulation& modulation) const;
 			void set_projection(const glm::vec4& projection_bounds) const;
 
 			typedef GLushort QuadPos;
@@ -132,7 +126,7 @@ namespace oly
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
 
-			void process();
+			void flush() const;
 
 		private:
 			std::unordered_set<renderable::Sprite*> sprites;

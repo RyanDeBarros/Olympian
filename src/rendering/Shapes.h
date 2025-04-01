@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Core.h"
+#include "SpecializedBuffers.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
 #include "math/Geometry.h"
@@ -14,7 +14,7 @@ namespace oly
 		{
 			GLuint shader;
 			oly::rendering::VertexArray vao;
-			oly::rendering::GLBuffer ebo;
+			oly::rendering::FixedLayoutEBO<GLushort, 1> ebo;
 
 			GLuint projection_location;
 			GLuint degree_location;
@@ -23,11 +23,8 @@ namespace oly
 			oly::rendering::GLBuffer vbo_color;
 
 			FixedVector<math::Polygon2D> polygons;
-			FixedVector<glm::mat3> transforms;
 
-			oly::rendering::GLBuffer ssbo_transforms;
-
-			FixedVector<GLushort> indices;
+			oly::rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
 
 		public:
 			typedef GLushort PrimitivePos;
@@ -39,17 +36,22 @@ namespace oly
 				GLushort indices = 0;
 				GLushort polygons = 0;
 				GLushort degree = 0;
+				GLushort polygon_index_count = 0;
 
 				Capacity(GLushort polygons, GLushort degree = 6)
 					: polygons(polygons), degree(degree)
 				{
 					assert(degree >= 3);
 					assert(degree * polygons <= USHRT_MAX);
-					vertices = polygons * degree;
-					indices = polygons * polygon_index_count();
-				}
 
-				GLushort polygon_index_count() const;
+					// max(F) = V - 2 + 2H
+					// max(H) = [V / 3] - 1
+					// --> max(F) = V + 2 * [V / 3] - 4
+					// --> return 3 * max(F)
+					polygon_index_count = 3 * degree + 6 * (degree / 3) - 12;
+					vertices = polygons * degree;
+					indices = polygons * polygon_index_count;
+				}
 			};
 
 		private:
@@ -61,6 +63,9 @@ namespace oly
 			PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
 			void draw() const;
+
+			void get_primitive_draw_spec(PrimitivePos& first, PrimitivePos& count) const;
+			void set_primitive_draw_spec(PrimitivePos first, PrimitivePos count);
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 
@@ -113,6 +118,11 @@ namespace oly
 				GLushort size() const { return (GLushort)composites.size(); }
 			};
 			PolygonIndexer polygon_indexer;
+
+		public:
+			const PolygonIndexer& get_indexer() const { return polygon_indexer; }
+
+			void flush() const;
 		};
 
 		// TODO
