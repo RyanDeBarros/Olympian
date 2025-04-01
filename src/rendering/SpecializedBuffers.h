@@ -65,7 +65,7 @@ namespace oly
 
 			void init_storage(GLuint buf, const void* data, GLsizeiptr size) const;
 			void lazy_send(IndexType pos) const;
-			void flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size) const;
+			void flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const;
 		};
 
 		template<typename IndexType>
@@ -84,9 +84,8 @@ namespace oly
 		}
 
 		template<typename IndexType>
-		inline void LazySender<IndexType>::flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size) const
+		inline void LazySender<IndexType>::flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const
 		{
-			// TODO add checking for out-of-range access of cpudata
 			const std::byte* data = (const std::byte*)cpudata;
 			switch (config.buffer_send_type)
 			{
@@ -97,6 +96,8 @@ namespace oly
 				GLsizeiptr size = 0;
 				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
 				{
+					if (*iter >= pos_end)
+						continue;
 					if (contiguous)
 					{
 						if (*iter * struct_size == offset + size)
@@ -126,6 +127,8 @@ namespace oly
 				GLsizeiptr size = 0;
 				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
 				{
+					if (*iter >= pos_end)
+						continue;
 					if (contiguous)
 					{
 						if (*iter * struct_size == offset + size)
@@ -199,7 +202,7 @@ namespace oly
 
 		public:
 			void lazy_send(IndexType pos) const { lazy.lazy_send(pos); }
-			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType)); }
+			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType), this->cpudata.size()); }
 		};
 
 		template<typename StructType, typename IndexType>
@@ -441,6 +444,7 @@ namespace oly
 			GLsizei stride = 0;
 			GLsizei offset = 0;
 			GLuint divisor = 0;
+			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
@@ -461,6 +465,7 @@ namespace oly
 			GLsizei stride = 0;
 			GLsizei offset = 0;
 			GLuint divisor = 0;
+			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
@@ -480,6 +485,7 @@ namespace oly
 			GLsizei stride = 0;
 			GLsizei offset = 0;
 			GLuint divisor = 0;
+			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
@@ -543,7 +549,7 @@ namespace oly
 		{
 			((
 				glBindBuffer(GL_ARRAY_BUFFER, bufblock[Indexes]),
-				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>), nullptr, GL_DYNAMIC_STORAGE_BIT),
+				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>), nullptr, std::get<Indexes>(std::tie(attribs...)).storage_flags),
 				std::get<Indexes>(std::tie(attribs...)).setup()
 				), ...);
 		}
@@ -599,7 +605,7 @@ namespace oly
 		template<size_t ...Indexes>
 		inline void LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::flush_impl(std::index_sequence<Indexes...>) const
 		{
-			((multi_sender.sender<Indexes>().flush(vertex_buffer.buffer(Indexes), vertex_buffer.vector<Indexes>().data(), vertex_buffer.struct_size<Indexes>())), ...);
+			((multi_sender.sender<Indexes>().flush(vertex_buffer.buffer(Indexes), vertex_buffer.vector<Indexes>().data(), vertex_buffer.struct_size<Indexes>(), vertex_buffer.vector<Indexes>().size())), ...);
 		}
 
 		template<typename VertexAttrib, typename IndexType>
