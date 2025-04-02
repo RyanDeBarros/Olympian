@@ -97,7 +97,7 @@ void run()
 
 	sprite2.quad().set_z_index(0);
 
-	oly::batch::PolygonBatch polygon_batch({ 100, 3 }, { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, { -720, 720, -540, 540 });
 
 	oly::renderable::Polygon pentagon1(&polygon_batch);
 	pentagon1.polygon.points = {
@@ -137,6 +137,8 @@ void run()
 	bordered_triangle.transformer().local.scale = glm::vec2(150);
 	bordered_triangle.post_set();
 	bordered_triangle.init(2);
+	bordered_triangle.composite = oly::math::create_bordered_quad({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, { 0, 0 });
+	bordered_triangle.resize();
 
 	oly::renderable::NGon octagon(&polygon_batch, { { 300, 200 }, 0, { 200, 200 } });
 	octagon.base.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
@@ -221,7 +223,7 @@ void run()
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
-		polygon_batch.set_primitive_draw_spec(0, concave_shape.get_range().initial);
+		polygon_batch.set_primitive_draw_spec(0, concave_shape.range().initial);
 		polygon_batch.draw();
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
@@ -230,7 +232,7 @@ void run()
 		oly::stencil::end();
 		sprite_batch.set_draw_spec(3, 97);
 		sprite_batch.draw();
-		polygon_batch.set_primitive_draw_spec(concave_shape.get_range().initial, concave_shape.get_range().diff);
+		polygon_batch.set_primitive_draw_spec(concave_shape.range().initial, concave_shape.range().diff);
 		polygon_batch.draw();
 
 		// post-frame

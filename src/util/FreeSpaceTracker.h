@@ -47,26 +47,26 @@ namespace oly
 				free_space.erase(lb);
 			else // left part of range
 			{
-				int diff = lb->diff;
+				T diff = lb->diff;
 				free_space.erase(lb);
-				free_space.insert({ range.end(), diff - range.diff });
+				free_space.insert({ range.end(), T(diff - range.diff) });
 			}
 		}
 		else
 		{
 			if (lb->end() == range.end()) // right part of range
 			{
-				int initial = lb->initial;
+				T initial = lb->initial;
 				free_space.erase(lb);
-				free_space.insert({ initial, range.initial - initial });
+				free_space.insert({ initial, T(range.initial - initial) });
 			}
 			else // middle of range
 			{
-				int initial = lb->initial;
-				int end = lb->end();
+				T initial = lb->initial;
+				T end = lb->end();
 				free_space.erase(lb);
-				free_space.insert({ initial, range.initial - initial });
-				free_space.insert({ range.end(), end - range.end() });
+				free_space.insert({ initial, T(range.initial - initial) });
+				free_space.insert({ range.end(), T(end - range.end()) });
 			}
 		}
 	}
@@ -89,9 +89,9 @@ namespace oly
 			assert(!lb->contains(range.initial));
 			if (lb->end() == range.initial)
 			{
-				int initial = lb->initial;
+				T initial = lb->initial;
 				free_space.erase(lb);
-				free_space.insert({ initial, range.end() - initial });
+				free_space.insert({ initial, T(range.end() - initial) });
 			}
 			else
 				free_space.insert(range);
@@ -101,9 +101,9 @@ namespace oly
 			assert(range.initial < lb->initial && range.end() <= lb->initial);
 			if (range.end() == lb->initial)
 			{
-				int end = lb->end();
+				T end = lb->end();
 				free_space.erase(lb);
-				free_space.insert({ range.initial, end - range.initial });
+				free_space.insert({ range.initial, T(end - range.initial) });
 			}
 			else
 				free_space.insert(range);
@@ -117,27 +117,27 @@ namespace oly
 			assert(range.end() <= lb->initial);
 			if (pr->end() == range.initial)
 			{
-				int initial = pr->initial;
+				T initial = pr->initial;
 				if (range.end() == lb->initial)
 				{
-					int end = lb->end();
+					T end = lb->end();
 					++lb;
 					free_space.erase(pr, lb);
-					free_space.insert({ initial, end - initial });
+					free_space.insert({ initial, T(end - initial) });
 				}
 				else
 				{
 					free_space.erase(pr);
-					free_space.insert({ initial, range.end() - initial });
+					free_space.insert({ initial, T(range.end() - initial) });
 				}
 			}
 			else
 			{
 				if (range.end() == lb->initial)
 				{
-					int end = lb->end();
+					T end = lb->end();
 					free_space.erase(lb);
-					free_space.insert({ range.initial, end - range.initial });
+					free_space.insert({ range.initial, T(end - range.initial) });
 				}
 				else
 					free_space.insert(range);
