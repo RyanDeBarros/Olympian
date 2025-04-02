@@ -1,4 +1,4 @@
-#include "Shapes.h"
+#include "Polygons.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -141,16 +141,16 @@ namespace oly
 					disable_polygon_primitive(it->second.initial + i);
 		}
 
-		void PolygonBatch::generate_id(RangeID id, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		PolygonBatch::RangeID PolygonBatch::generate_id(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			math::Polygon2DComposite dup = dupl(composite);
-			generate_id(id, dup, min_range, max_range);
+			auto dup = dupl(composite);
+			return generate_id(dup, min_range, max_range);
 		}
 
-		void PolygonBatch::generate_id(RangeID id, math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		PolygonBatch::RangeID PolygonBatch::generate_id(math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
+			RangeID id = id_generator.gen();
 			math::split_polygon_composite(composite, capacity.degree);
-			Range<GLushort> composite_range;
 			auto it = polygon_indexer.find(id);
 			if (it == polygon_indexer.end())
 			{
@@ -159,10 +159,12 @@ namespace oly
 				{
 					assert(range <= max_range);
 				}
+				Range<GLushort> composite_range;
 				assert(free_space_tracker.next_free(range, composite_range));
 				free_space_tracker.reserve(composite_range);
 				polygon_indexer[id] = composite_range;
 			}
+			return id;
 		}
 
 		void PolygonBatch::terminate_id(RangeID id)
@@ -173,19 +175,20 @@ namespace oly
 				disable_polygon(id);
 				free_space_tracker.release(it->second);
 				polygon_indexer.erase(it);
+				id_generator.yield(id);
 			}
 		}
 
 		void PolygonBatch::resize_range(RangeID id, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			terminate_id(id);
-			generate_id(id, composite, min_range, max_range);
+			auto dup = dupl(composite);
+			resize_range(id, dup, min_range, max_range);
 		}
 
 		void PolygonBatch::resize_range(RangeID id, math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			terminate_id(id);
-			generate_id(id, composite, min_range, max_range);
+			assert(generate_id(composite, min_range, max_range) == id);
 		}
 
 		bool PolygonBatch::is_valid_id(RangeID id) const
@@ -343,20 +346,18 @@ namespace oly
 			_transformer->pre_get();
 		}
 		
-		void Polygonal::init(batch::PolygonBatch::RangeID id, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(this->id == batch::PolygonBatch::RangeID(-1));
-			_batch->generate_id(id, composite, min_range, max_range);
-			this->id = id;
+			assert(id == batch::PolygonBatch::RangeID(-1));
+			id = _batch->generate_id(composite, min_range, max_range);
 			_transformer->pre_get();
 			_batch->set_polygon(id, composite, _transformer->global());
 		}
 
-		void Polygonal::init(batch::PolygonBatch::RangeID id, math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
+		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(this->id == batch::PolygonBatch::RangeID(-1));
-			_batch->generate_id(id, composite, min_range, max_range);
-			this->id = id;
+			assert(id == batch::PolygonBatch::RangeID(-1));
+			id = _batch->generate_id(composite, min_range, max_range);
 			_transformer->pre_get();
 			_batch->set_polygon(id, std::move(composite), _transformer->global());
 		}
@@ -369,12 +370,12 @@ namespace oly
 			_batch->set_polygon(id, composite, _transformer->global());
 		}
 
-		void Polygonal::resize(math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(this->id != batch::PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
 			_transformer->pre_get();
-			_batch->set_polygon(id, composite, _transformer->global());
+			_batch->set_polygon(id, std::move(composite), _transformer->global());
 		}
 
 		void Polygonal::send_polygon(const math::Polygon2DComposite& composite) const
@@ -397,9 +398,9 @@ namespace oly
 			}
 		}
 		
-		void Polygon::init(batch::PolygonBatch::RangeID id, GLushort min_range, GLushort max_range)
+		void Polygon::init(GLushort min_range, GLushort max_range)
 		{
-			Polygonal::init(id, math::split_polygon_composite(polygon, batch()->max_degree()), min_range, max_range);
+			Polygonal::init(math::split_polygon_composite(polygon, batch()->max_degree()), min_range, max_range);
 		}
 
 		void Polygon::resize(GLushort min_range, GLushort max_range)
@@ -412,10 +413,10 @@ namespace oly
 			Polygonal::send_polygon(math::split_polygon_composite(polygon, batch()->max_degree()));
 		}
 		
-		void Composite::init(batch::PolygonBatch::RangeID id, GLushort min_range, GLushort max_range)
+		void Composite::init(GLushort min_range, GLushort max_range)
 		{
 			auto dup = dupl(composite);
-			Polygonal::init(id, dup, min_range, max_range);
+			Polygonal::init(dup, min_range, max_range);
 		}
 
 		void Composite::resize(GLushort min_range, GLushort max_range)
@@ -431,15 +432,13 @@ namespace oly
 			Polygonal::send_polygon(dup);
 		}
 
-		void NGon::init(batch::PolygonBatch::RangeID id, bool gen_border, GLushort min_range, GLushort max_range)
+		void NGon::init(GLushort min_range, GLushort max_range)
 		{
-			bordered = gen_border;
-			Polygonal::init(id, composite(), min_range, max_range);
+			Polygonal::init(composite(), min_range, max_range);
 		}
 
-		void NGon::resize(bool gen_border, GLushort min_range, GLushort max_range)
+		void NGon::resize(GLushort min_range, GLushort max_range)
 		{
-			bordered = gen_border;
 			Polygonal::resize(composite(), min_range, max_range);
 		}
 

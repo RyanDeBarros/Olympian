@@ -1,7 +1,7 @@
 ﻿#include "Olympian.h"
 
 #include "rendering/Sprites.h"
-#include "rendering/Shapes.h"
+#include "rendering/Polygons.h"
 
 static void run();
 
@@ -117,7 +117,7 @@ void run()
 	pentagon1.transformer().local.position.y = 200;
 	pentagon1.transformer().local.scale = glm::vec2(160);
 	pentagon1.post_set();
-	pentagon1.init(0);
+	pentagon1.init();
 
 	oly::renderable::Polygon pentagon2(&polygon_batch);
 	pentagon2.polygon = pentagon1.polygon;
@@ -128,7 +128,7 @@ void run()
 	pentagon2.post_set();
 	for (glm::vec4& color : pentagon2.polygon.colors)
 		color.a = 0.5f;
-	pentagon2.init(1);
+	pentagon2.init();
 
 	oly::renderable::Composite bordered_triangle(&polygon_batch);
 	bordered_triangle.composite = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
@@ -136,7 +136,7 @@ void run()
 	bordered_triangle.transformer().local.position.y = -100;
 	bordered_triangle.transformer().local.scale = glm::vec2(150);
 	bordered_triangle.post_set();
-	bordered_triangle.init(2);
+	bordered_triangle.init();
 	bordered_triangle.composite = oly::math::create_bordered_quad({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, { 0, 0 });
 	bordered_triangle.resize();
 
@@ -163,9 +163,10 @@ void run()
 		{ 0.707f, -0.707f }
 	};
 	octagon.base.border_width = 0.05f;
-	octagon.init(3, true);
+	octagon.bordered = true;
+	octagon.init();
 
-	oly::renderable::Composite concave_shape(&polygon_batch, { {}, 0, glm::vec2(100) });
+	oly::renderable::Composite concave_shape(&polygon_batch, { { -100, 100 }, 0, glm::vec2(40) });
 	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
 		{ -2, -2 },
@@ -184,7 +185,7 @@ void run()
 		tp.polygon.colors[0].g = (float)rand() / RAND_MAX;
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 	}
-	concave_shape.init(4);
+	concave_shape.init();
 
 	while (!window.should_close())
 	{

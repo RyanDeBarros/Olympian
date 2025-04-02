@@ -4,10 +4,10 @@
 
 #include "SpecializedBuffers.h"
 #include "math/Transforms.h"
-#include "math/DataStructures.h"
 #include "math/Geometry.h"
 #include "util/FixedVector.h"
 #include "util/FreeSpaceTracker.h"
+#include "util/IDGenerator.h"
 
 namespace oly
 {
@@ -92,11 +92,14 @@ namespace oly
 			void set_polygon_transform(RangeID id, const glm::mat3& transform);
 			void disable_polygon(RangeID id);
 
-			void generate_id(RangeID id, const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
-			void generate_id(RangeID id, math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+		private:
+			RangeID generate_id(const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+			RangeID generate_id(math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
 			void terminate_id(RangeID id);
 			void resize_range(RangeID id, const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
 			void resize_range(RangeID id, math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+
+		public:
 			bool is_valid_id(RangeID id) const;
 			Range<GLushort> get_range(RangeID id) const;
 
@@ -107,8 +110,7 @@ namespace oly
 			void set_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform);
 			void set_bordered_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform);
 
-			// TODO z-order swap/set
-			// TODO resize id range by terminating then re-generating with larger range
+			// TODO last part of polygon batch: z-order set. This is tricky, since the polygon ranges are not all uniform. It's easy to swap adjacent polygons, so do that. Of course, need to be able to access ids in draw-order, i.e., the order of the ranges they reference out of the free-space range.
 
 			math::Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const;
 			math::Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const;
@@ -123,6 +125,7 @@ namespace oly
 		private:
 			StrictFreeSpaceTracker<GLushort> free_space_tracker;
 			std::unordered_map<RangeID, Range<GLushort>> polygon_indexer;
+			IDGenerator<GLushort> id_generator;
 
 			std::unordered_set<renderable::Polygonal*> polygonal_renderables;
 
@@ -160,13 +163,15 @@ namespace oly
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 
+			virtual void init(GLushort min_range = 0, GLushort max_range = 0) = 0;
+			virtual void resize(GLushort min_range = 0, GLushort max_range = 0) = 0;
 			virtual void send_polygon() const = 0;
-		
+
 		protected:
-			void init(batch::PolygonBatch::RangeID id, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);
-			void init(batch::PolygonBatch::RangeID id, math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range);
+			void init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);
+			void init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range);
 			void resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);
-			void resize(math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);
+			void resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range);
 			void send_polygon(const math::Polygon2DComposite& composite) const;
 
 		private:
@@ -181,9 +186,8 @@ namespace oly
 			Polygon(Polygon&&) noexcept = default;
 			Polygon& operator=(Polygon&&) noexcept = default;
 
-			void init(batch::PolygonBatch::RangeID id, GLushort min_range = 0, GLushort max_range = 0);
-			void resize(GLushort min_range = 0, GLushort max_range = 0);
-
+			virtual void init(GLushort min_range = 0, GLushort max_range = 0) override;
+			virtual void resize(GLushort min_range = 0, GLushort max_range = 0) override;
 			virtual void send_polygon() const override;
 		};
 
@@ -195,37 +199,26 @@ namespace oly
 			Composite(Composite&&) noexcept = default;
 			Composite& operator=(Composite&&) noexcept = default;
 
-			void init(batch::PolygonBatch::RangeID id, GLushort min_range = 0, GLushort max_range = 0);
-			void resize(GLushort min_range = 0, GLushort max_range = 0);
-
+			void init(GLushort min_range = 0, GLushort max_range = 0) override;
+			void resize(GLushort min_range = 0, GLushort max_range = 0) override;
 			virtual void send_polygon() const override;
 		};
 
 		struct NGon : public Polygonal
 		{
-		private:
 			bool bordered = false;
-		
-		public:
 			math::NGonBase base;
 
 			using Polygonal::Polygonal;
 			NGon(NGon&&) noexcept = default;
 			NGon& operator=(NGon&&) noexcept = default;
 
-			void init(batch::PolygonBatch::RangeID id, bool gen_border, GLushort min_range = 0, GLushort max_range = 0);
-			void resize(bool gen_border, GLushort min_range = 0, GLushort max_range = 0);
-
+			virtual void init(GLushort min_range = 0, GLushort max_range = 0) override;
+			virtual void resize(GLushort min_range = 0, GLushort max_range = 0) override;
 			virtual void send_polygon() const override;
 
 		private:
 			math::Polygon2DComposite composite() const;
 		};
-	}
-
-	namespace batch
-	{
-		// TODO
-		class EllipseBatch;
 	}
 }
