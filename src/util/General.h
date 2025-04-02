@@ -26,6 +26,17 @@ namespace oly
 		T initial = T();
 		T diff = T();
 
-		T last() const { return initial + diff; }
+		constexpr T end() const { return initial + diff; }
+		constexpr bool contains(T in) const { return in >= initial && in < end(); }
+		constexpr bool contains(Range<T> sub) const { return contains(sub.initial) && sub.end() <= end(); }
+	};
+
+	template<typename T>
+	struct RangeComparator
+	{
+		constexpr bool operator()(const Range<T>& lhs, const Range<T>& rhs) const
+		{
+			return lhs.initial < rhs.initial || (lhs.initial == rhs.initial && lhs.diff < rhs.diff);
+		}
 	};
 }

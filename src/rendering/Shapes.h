@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "SpecializedBuffers.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
@@ -110,25 +112,15 @@ namespace oly
 		private:
 			struct PolygonIndexer
 			{
-				struct Composite
-				{
-					PrimitivePos start;
-					GLushort range;
-				};
-
 				GLushort total_range = 0;
-				std::vector<Composite> composites;
+				std::map<PolygonPos, Range<GLushort>> ranges;
 
 				PrimitivePos next_pos() const { return total_range; }
-				void register_composite(PrimitivePos start, GLushort range)
-				{
-					composites.emplace_back(start, range);
-					total_range += range;
-				}
-				PrimitivePos get_pos(PolygonPos pos) const { return composites[pos].start; }
-				GLushort get_range(PolygonPos pos) const { return composites[pos].range; }
-				bool exists(PolygonPos pos) const { return pos < composites.size(); }
-				GLushort size() const { return (GLushort)composites.size(); }
+				void register_composite(PolygonPos pos, PrimitivePos start, GLushort range);
+				void remove_composite(PolygonPos pos);
+				PrimitivePos get_pos(PolygonPos pos) const { return ranges.find(pos)->second.initial; }
+				GLushort get_range(PolygonPos pos) const { return ranges.find(pos)->second.diff; }
+				bool exists(PolygonPos pos) const { return ranges.count(pos); }
 			};
 			PolygonIndexer polygon_indexer;
 
@@ -143,11 +135,11 @@ namespace oly
 	{
 		class Polygonal
 		{
-		protected:
 			friend batch::PolygonBatch;
 			batch::PolygonBatch* _batch = nullptr;
 			std::unique_ptr<Transformer2D> _transformer = nullptr;
 			Range<GLushort> range = {};
+			batch::PolygonBatch::PolygonPos composite_pos = -1;
 
 		public:
 			Polygonal(batch::PolygonBatch* batch);
@@ -161,6 +153,7 @@ namespace oly
 			const batch::PolygonBatch* batch() const { return _batch; }
 			batch::PolygonBatch* batch() { return _batch; }
 			Range<GLushort> get_range() const { return range; }
+			batch::PolygonBatch::PolygonPos get_composite_pos() const { return composite_pos; }
 			const Transformer2D& transformer() const { return *_transformer; }
 			Transformer2D& transformer() { return *_transformer; }
 			const Transform2D& local() const { return _transformer->local; }

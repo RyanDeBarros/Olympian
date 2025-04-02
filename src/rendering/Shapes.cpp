@@ -183,7 +183,7 @@ namespace oly
 			while (diff < composite_range)
 				disable_polygon(start + diff++);
 			if (!polygon_indexer.exists(pos))
-				polygon_indexer.register_composite(start, composite_range);
+				polygon_indexer.register_composite(pos, start, composite_range);
 
 			return { start, composite_range };
 		}
@@ -230,6 +230,27 @@ namespace oly
 			return ngon.bordered_composite(capacity.degree);
 		}
 
+		void PolygonBatch::PolygonIndexer::register_composite(PolygonPos pos, PrimitivePos start, GLushort range)
+		{
+			ranges[pos] = { start, range };
+			total_range += range;
+		}
+
+		void PolygonBatch::PolygonIndexer::remove_composite(PolygonPos pos)
+		{
+			if (exists(pos))
+			{
+				GLushort range = ranges[pos].diff;
+				auto iter = ranges.erase(ranges.find(pos));
+				while (iter != ranges.end())
+				{
+					iter->second.initial -= range;
+					++iter;
+				}
+				total_range -= range;
+			}
+		}
+
 		void PolygonBatch::flush() const
 		{
 			for (renderable::Polygonal* poly : polygonal_renderables)
@@ -270,7 +291,11 @@ namespace oly
 		Polygonal::~Polygonal()
 		{
 			if (_batch)
+			{
 				_batch->polygonal_renderables.erase(this);
+				if (range.diff != 0)
+					_batch->polygon_indexer.remove_composite(composite_pos);
+			}
 		}
 
 		Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
@@ -301,6 +326,7 @@ namespace oly
 		void Polygonal::init(batch::PolygonBatch::PolygonPos pos, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(range.diff == 0);
+			composite_pos = pos;
 			_transformer->pre_get();
 			range = _batch->set_polygon(pos, composite, _transformer->global(), min_range, max_range);
 		}
@@ -308,6 +334,7 @@ namespace oly
 		void Polygonal::init(batch::PolygonBatch::PolygonPos pos, math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(range.diff == 0);
+			composite_pos = pos;
 			_transformer->pre_get();
 			range = _batch->set_polygon(pos, std::move(composite), _transformer->global(), min_range, max_range);
 		}
@@ -333,12 +360,12 @@ namespace oly
 		
 		void Polygon::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
 		{
-			Polygonal::init(pos, math::split_polygon_composite(polygon, _batch->max_degree()), min_range, max_range);
+			Polygonal::init(pos, math::split_polygon_composite(polygon, batch()->max_degree()), min_range, max_range);
 		}
 		
 		void Polygon::send_polygon() const
 		{
-			Polygonal::send_polygon(math::split_polygon_composite(polygon, _batch->max_degree()));
+			Polygonal::send_polygon(math::split_polygon_composite(polygon, batch()->max_degree()));
 		}
 		
 		void Composite::init(batch::PolygonBatch::PolygonPos pos, GLushort min_range, GLushort max_range)
@@ -349,19 +376,19 @@ namespace oly
 		void Composite::send_polygon() const
 		{
 			math::Polygon2DComposite dup = dupl(composite);
-			math::split_polygon_composite(dup, _batch->max_degree());
+			math::split_polygon_composite(dup, batch()->max_degree());
 			Polygonal::send_polygon(dup);
 		}
 
 		void NGon::init(batch::PolygonBatch::PolygonPos pos, bool gen_border, GLushort min_range, GLushort max_range)
 		{
 			bordered = gen_border;
-			Polygonal::init(pos, bordered ? _batch->create_bordered_ngon(base) : _batch->create_ngon(base), min_range, max_range);
+			Polygonal::init(pos, bordered ? batch()->create_bordered_ngon(base) : batch()->create_ngon(base), min_range, max_range);
 		}
 
 		void NGon::send_polygon() const
 		{
-			Polygonal::send_polygon(bordered ? _batch->create_bordered_ngon(base) : _batch->create_ngon(base));
+			Polygonal::send_polygon(bordered ? batch()->create_bordered_ngon(base) : batch()->create_ngon(base));
 		}
 	}
 }

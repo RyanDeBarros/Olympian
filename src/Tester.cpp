@@ -2,11 +2,6 @@
 
 #include "rendering/Sprites.h"
 #include "rendering/Shapes.h"
-#include "rendering/Resources.h"
-#include "util/Errors.h"
-#include "util/General.h"
-
-#include <iostream>
 
 static void run();
 
