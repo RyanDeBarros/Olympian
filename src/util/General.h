@@ -24,9 +24,9 @@ namespace oly
 	struct Range
 	{
 		T initial = T();
-		T diff = T();
+		T length = T();
 
-		constexpr T end() const { return initial + diff; }
+		constexpr T end() const { return initial + length; }
 		constexpr bool contains(T in) const { return in >= initial && in < end(); }
 		constexpr bool contains(Range<T> sub) const { return contains(sub.initial) && sub.end() <= end(); }
 	};
@@ -36,7 +36,7 @@ namespace oly
 	{
 		constexpr bool operator()(const Range<T>& lhs, const Range<T>& rhs) const
 		{
-			return lhs.initial < rhs.initial || (lhs.initial == rhs.initial && lhs.diff < rhs.diff);
+			return lhs.initial < rhs.initial || (lhs.initial == rhs.initial && lhs.length < rhs.length);
 		}
 	};
 }

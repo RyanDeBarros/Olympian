@@ -73,10 +73,14 @@ namespace oly
 
 			PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void draw() const;
+			void draw(size_t draw_spec = 0);
 
+		private:
 			void get_primitive_draw_spec(PrimitivePos& first, PrimitivePos& count) const;
 			void set_primitive_draw_spec(PrimitivePos first, PrimitivePos count);
+
+		public:
+			std::vector<Range<PrimitivePos>> draw_specs;
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 

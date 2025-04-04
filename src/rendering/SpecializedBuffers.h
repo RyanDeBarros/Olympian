@@ -91,63 +91,43 @@ namespace oly
 			{
 			case BufferSendType::SUBDATA:
 			{
-				bool contiguous = false;
 				GLintptr offset = 0;
 				GLsizeiptr size = 0;
 				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
 				{
 					if (*iter >= pos_end)
 						continue;
-					if (contiguous)
-					{
-						if (*iter * struct_size == offset + size)
-							size += struct_size;
-						else
-						{
-							glNamedBufferSubData(buf, offset, size, data + offset);
-							contiguous = false;
-						}
-					}
+					if (*iter * struct_size == offset + size)
+						size += struct_size;
 					else
 					{
+						glNamedBufferSubData(buf, offset, size, data + offset);
 						offset = *iter * struct_size;
 						size = struct_size;
-						contiguous = true;
 					}
 				}
-				if (contiguous)
-					glNamedBufferSubData(buf, offset, size, data + offset);
+				glNamedBufferSubData(buf, offset, size, data + offset);
 				break;
 			}
 			case BufferSendType::MAP:
 			{
 				std::byte* gpu_buf = (std::byte*)glMapNamedBuffer(buf, GL_WRITE_ONLY);
-				bool contiguous = false;
 				GLintptr offset = 0;
 				GLsizeiptr size = 0;
 				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
 				{
 					if (*iter >= pos_end)
 						continue;
-					if (contiguous)
-					{
-						if (*iter * struct_size == offset + size)
-							size += struct_size;
-						else
-						{
-							memcpy(gpu_buf + offset, data + offset, size);
-							contiguous = false;
-						}
-					}
+					if (*iter * struct_size == offset + size)
+						size += struct_size;
 					else
 					{
+						memcpy(gpu_buf + offset, data + offset, size);
 						offset = *iter * struct_size;
 						size = struct_size;
-						contiguous = true;
 					}
 				}
-				if (contiguous)
-					memcpy(gpu_buf + offset, data + offset, size);
+				memcpy(gpu_buf + offset, data + offset, size);
 				glUnmapNamedBuffer(buf);
 				break;
 			}
@@ -249,7 +229,7 @@ namespace oly
 		{
 			if (first < this->cpudata.size())
 				draw_spec.first = first;
-			draw_spec.count = 6 * std::min(count, (IndexType)(this->cpudata.size() - draw_spec.first));
+			draw_spec.count = LayoutSize * std::min(count, (IndexType)(this->cpudata.size() - draw_spec.first));
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(FixedIndexLayout<IndexType, LayoutSize>));
 		}
 
@@ -298,7 +278,7 @@ namespace oly
 		{
 			if (first < this->cpudata.size())
 				draw_spec.first = first;
-			draw_spec.count = 6 * std::min(count, (IndexType)(this->cpudata.size() - draw_spec.first));
+			draw_spec.count = std::min(count, (IndexType)(this->cpudata.size() - draw_spec.first));
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(IndexType));
 		}
 

@@ -20,11 +20,12 @@ namespace oly
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(capacity.quads), capacity(capacity), tex_data_ssbo(capacity.textures), quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f), tex_coords_ubo(capacity.uvs), modulation_ubo(capacity.modulations),
-			z_order(capacity.quads), quads(capacity.quads), textures(capacity.textures)
+			z_order(capacity.quads), textures(capacity.textures)
 		{
 			shader = shaders::sprite_batch;
 			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
+			modulation_location = glGetUniformLocation(shader, "uGlobalModulation");
 
 			tex_coords_ubo.send(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
 			modulation_ubo.send(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
@@ -33,12 +34,14 @@ namespace oly
 			rendering::pre_init(ebo);
 			ebo.init();
 
-			set_projection(projection_bounds);
-
 			glBindVertexArray(0);
+
+			set_projection(projection_bounds);
+			set_global_modulation(glm::vec4(1.0f));
+			draw_specs.push_back({ 0, capacity.quads });
 		}
 
-		void SpriteBatch::draw() const
+		void SpriteBatch::draw(size_t draw_spec)
 		{
 			glUseProgram(shader);
 			glBindVertexArray(vao);
@@ -48,6 +51,7 @@ namespace oly
 			quad_transform_ssbo.bind_base(2);
 			tex_coords_ubo.bind_base(0);
 			modulation_ubo.bind_base(1);
+			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
@@ -99,6 +103,47 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
+		void SpriteBatch::set_global_modulation(const glm::vec4& modulation) const
+		{
+			glUseProgram(shader);
+			glUniform4f(modulation_location, modulation[0], modulation[1], modulation[2], modulation[3]);
+		}
+
+		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)
+			: _batch(batch)
+		{
+			_ssbo_pos = _batch->pos_generator.gen();
+			_info = &_batch->quad_info_ssbo.vector()[_ssbo_pos];
+			_transform = &_batch->quad_transform_ssbo.vector()[_ssbo_pos];
+		}
+
+		SpriteBatch::QuadReference::QuadReference(QuadReference&& other) noexcept
+			: _batch(other._batch), _ssbo_pos(other._ssbo_pos), _info(other._info), _transform(other._transform)
+		{
+			other.active = false;
+		}
+
+		SpriteBatch::QuadReference::~QuadReference()
+		{
+			if (active)
+				_batch->pos_generator.yield(_ssbo_pos);
+		}
+
+		SpriteBatch::QuadReference& SpriteBatch::QuadReference::operator=(QuadReference&& other) noexcept
+		{
+			if (this != &other)
+			{
+				if (active)
+					_batch->pos_generator.yield(_ssbo_pos);
+				_batch = other._batch;
+				other.active = false;
+				_ssbo_pos = other._ssbo_pos;
+				_info = other._info;
+				_transform = other._transform;
+			}
+			return *this;
+		}
+
 		void SpriteBatch::QuadReference::send_info() const
 		{
 			_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
@@ -115,16 +160,6 @@ namespace oly
 			_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
 		}
 
-		SpriteBatch::QuadReference& SpriteBatch::get_quad(QuadPos pos)
-		{
-			QuadReference& quad = quads[pos];
-			quad._info = &quad_info_ssbo.vector()[pos];
-			quad._transform = &quad_transform_ssbo.vector()[pos];
-			quad._batch = this;
-			quad._ssbo_pos = pos;
-			return quad;
-		}
-
 		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
 		{
 			if (pos1 != pos2)
@@ -138,6 +173,9 @@ namespace oly
 
 		void SpriteBatch::move_quad_order(QuadPos from, QuadPos to)
 		{
+			to = std::clamp(to, (QuadPos)0, QuadPos(capacity.quads - 1));
+			from = std::clamp(from, (QuadPos)0, QuadPos(capacity.quads - 1));
+
 			if (from < to)
 			{
 				for (QuadPos i = from; i < to; ++i)
@@ -150,52 +188,78 @@ namespace oly
 			}
 		}
 
-		void SpriteBatch::flush() const
+		void SpriteBatch::flush()
 		{
 			for (renderable::Sprite* sprite : sprites)
 				sprite->flush();
 			quad_info_ssbo.flush();
 			quad_transform_ssbo.flush();
+			if (dirty_z)
+			{
+				dirty_z = false;
+				flush_z_values();
+			}
 			ebo.flush();
+		}
+
+		void SpriteBatch::flush_z_values()
+		{
+			std::vector<QuadReference*> quads;
+			quads.reserve(sprites.size());
+			for (const auto& sprite : sprites)
+				quads.push_back(&sprite->quad);
+			// LATER this is quadratic at worst-case
+			for (QuadPos i = 0; i < quads.size() - 1; ++i)
+			{
+				bool swapped = false;
+				float zi = quads[i]->z_value;
+				for (QuadPos j = i + 1; j < quads.size(); ++j)
+				{
+					if (zi > quads[j]->z_value)
+					{
+						std::swap(quads[i], quads[j]);
+						swap_quad_order(quads[i]->index_pos(), quads[j]->index_pos());
+						swapped = true;
+					}
+				}
+				if (!swapped)
+					break;
+			}
 		}
 	}
 
 	namespace renderable
 	{
-		Sprite::Sprite(batch::SpriteBatch* sprite_batch, batch::SpriteBatch::QuadPos pos)
-			: _quad(&sprite_batch->get_quad(pos)), _transformer(std::make_unique<Transformer2D>())
+		Sprite::Sprite(batch::SpriteBatch* sprite_batch)
+			: quad(sprite_batch), _transformer(std::make_unique<Transformer2D>())
 		{
 			sprite_batch->sprites.insert(this);
 		}
 
-		Sprite::Sprite(batch::SpriteBatch* sprite_batch, batch::SpriteBatch::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer)
-			: _quad(&sprite_batch->get_quad(pos)), _transformer(std::move(transformer))
+		Sprite::Sprite(batch::SpriteBatch* sprite_batch, std::unique_ptr<Transformer2D>&& transformer)
+			: quad(sprite_batch), _transformer(std::move(transformer))
 		{
 			sprite_batch->sprites.insert(this);
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
-			: _quad(other._quad), _transformer(std::move(other._transformer))
+			: quad(std::move(other.quad)), _transformer(std::move(other._transformer))
 		{
-			if (_quad)
-				_quad->batch().sprites.insert(this);
+			batch().sprites.insert(this);
 		}
 
 		Sprite::~Sprite()
 		{
-			if (_quad)
-				_quad->batch().sprites.erase(this);
+			batch().sprites.erase(this);
 		}
 
 		Sprite& Sprite::operator=(Sprite&& other) noexcept
 		{
 			if (this != &other)
 			{
-				if (_quad)
-					_quad->batch().sprites.erase(this);
-				_quad = other._quad;
-				if (_quad)
-					_quad->batch().sprites.insert(this);
+				batch().sprites.erase(this);
+				quad = std::move(other.quad);
+				batch().sprites.insert(this);
 				_transformer = std::move(other._transformer);
 			}
 			return *this;
@@ -211,13 +275,13 @@ namespace oly
 			_transformer->pre_get();
 		}
 
-		void Sprite::flush() const
+		void Sprite::flush()
 		{
 			if (_transformer->flush())
 			{
 				_transformer->pre_get();
-				_quad->transform() = _transformer->global();
-				_quad->send_transform();
+				quad.transform() = _transformer->global();
+				quad.send_transform();
 			}
 		}
 	}

@@ -3,6 +3,7 @@
 #include "SpecializedBuffers.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
+#include "util/IDGenerator.h"
 
 #include <set>
 #include <unordered_set>
@@ -25,9 +26,10 @@ namespace oly
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO ebo;
 
-			GLuint projection_location;
-
 			FixedVector<rendering::BindlessTextureRes> textures;
+
+			GLuint projection_location;
+			GLuint modulation_location;
 
 			struct TexData
 			{
@@ -74,7 +76,7 @@ namespace oly
 		public:
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void draw() const;
+			void draw(size_t draw_spec = 0);
 
 			void set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim);
 			void refresh_handle(GLushort pos, rendering::ImageDimensions dim);
@@ -82,24 +84,28 @@ namespace oly
 			void set_uvs(GLushort pos, const TexUVRect& tex_coords) const;
 			void set_modulation(GLushort pos, const Modulation& modulation) const;
 			void set_projection(const glm::vec4& projection_bounds) const;
+			void set_global_modulation(const glm::vec4& modulation) const;
 
 			typedef GLushort QuadPos;
-		public:
-			void get_draw_spec(QuadPos& first, QuadPos& count) const { ebo.get_draw_spec(first, count); }
-			void set_draw_spec(QuadPos first, QuadPos count) { ebo.set_draw_spec(first, count); }
+			std::vector<Range<QuadPos>> draw_specs;
 
 			class QuadReference
 			{
 				friend SpriteBatch;
 				SpriteBatch* _batch = nullptr;
 				QuadPos _ssbo_pos = -1;
+				bool active = true;
 				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 
 			public:
-				QuadReference() = default;
+				float z_value = 0.0f;
+
+				QuadReference(SpriteBatch* batch);
 				QuadReference(const QuadReference&) = delete;
-				QuadReference(QuadReference&& other) noexcept = default;
+				QuadReference(QuadReference&&) noexcept;
+				~QuadReference();
+				QuadReference& operator=(QuadReference&&) noexcept;
 
 				const SpriteBatch& batch() const { return *_batch; }
 				SpriteBatch& batch() { return *_batch; }
@@ -107,10 +113,13 @@ namespace oly
 				const QuadInfo& info() const { return *_info; }
 				glm::mat3& transform() { return *_transform; }
 				const glm::mat3& transform() const { return *_transform; }
+				
+			private:
 				QuadPos index_pos() const { return _batch->z_order.range_of(_ssbo_pos); }
 				void set_z_index(QuadPos z) { _batch->move_quad_order(index_pos(), z); }
-				void move_z_index(int by) { _batch->move_quad_order(index_pos(), std::clamp((int)index_pos() + by, 0, (int)_batch->quads.size() - 1)); }
+				void move_z_index(int by) { _batch->move_quad_order(index_pos(), index_pos() + by); }
 
+			public:
 				void send_info() const;
 				void send_transform() const;
 				void send_data() const;
@@ -118,18 +127,23 @@ namespace oly
 			friend QuadReference;
 
 		private:
-			FixedVector<QuadReference> quads;
 			math::IndexBijection<QuadPos> z_order;
+			IDGenerator<QuadPos> pos_generator;
 
 		public:
-			QuadReference& get_quad(QuadPos pos);
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
+			void sync_z_values() { dirty_z = true; }
+			
+		private:
+			bool dirty_z = false;
 
-			void flush() const;
+		public:
+			void flush();
 
 		private:
-			std::unordered_set<renderable::Sprite*> sprites;
+			std::set<renderable::Sprite*> sprites;
+			void flush_z_values();
 		};
 	}
 
@@ -138,21 +152,20 @@ namespace oly
 		class Sprite
 		{
 			friend batch::SpriteBatch;
-			batch::SpriteBatch::QuadReference* _quad = nullptr;
 			std::unique_ptr<Transformer2D> _transformer;
 
 		public:
-			Sprite(batch::SpriteBatch* sprite_batch, batch::SpriteBatch::QuadPos pos);
-			Sprite(batch::SpriteBatch* sprite_batch, batch::SpriteBatch::QuadPos pos, std::unique_ptr<Transformer2D>&& transformer);
+			batch::SpriteBatch::QuadReference quad;
+
+			Sprite(batch::SpriteBatch* sprite_batch);
+			Sprite(batch::SpriteBatch* sprite_batch, std::unique_ptr<Transformer2D>&& transformer);
 			Sprite(const Sprite&) = delete;
 			Sprite(Sprite&&) noexcept;
 			~Sprite();
 			Sprite& operator=(Sprite&&) noexcept;
 
-			const batch::SpriteBatch& batch() const { return _quad->batch(); }
-			batch::SpriteBatch& batch() { return _quad->batch(); }
-			const batch::SpriteBatch::QuadReference& quad() const { return *_quad; }
-			batch::SpriteBatch::QuadReference& quad() { return *_quad; }
+			const batch::SpriteBatch& batch() const { return quad.batch(); }
+			batch::SpriteBatch& batch() { return quad.batch(); }
 			const Transformer2D& transformer() const { return *_transformer; }
 			Transformer2D& transformer() { return *_transformer; }
 			const Transform2D& local() const { return _transformer->local; }
@@ -161,7 +174,7 @@ namespace oly
 			void pre_get() const; // call before reading global
 
 		private:
-			void flush() const;
+			void flush();
 		};
 	}
 }

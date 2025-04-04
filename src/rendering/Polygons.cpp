@@ -24,14 +24,16 @@ namespace oly
 			set_projection(projection_bounds);
 
 			glBindVertexArray(0);
+			draw_specs.push_back({ 0, capacity.polygons });
 		}
 
-		void PolygonBatch::draw() const
+		void PolygonBatch::draw(size_t draw_spec)
 		{
 			glUseProgram(shader);
 			glUniform1ui(degree_location, capacity.degree);
 			glBindVertexArray(vao);
 			transform_ssbo.bind_base(0);
+			set_primitive_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
@@ -129,7 +131,7 @@ namespace oly
 		void PolygonBatch::set_polygon_transform(RangeID id, const glm::mat3& transform)
 		{
 			Range<GLushort> range = get_range(id);
-			for (GLushort i = 0; i < range.diff; ++i)
+			for (GLushort i = 0; i < range.length; ++i)
 				set_primitive_transform(range.initial + i, transform);
 		}
 
@@ -137,7 +139,7 @@ namespace oly
 		{
 			auto it = polygon_indexer.find(id);
 			if (it != polygon_indexer.end())
-				for (GLushort i = 0; i < it->second.diff; ++i)
+				for (GLushort i = 0; i < it->second.length; ++i)
 					disable_polygon_primitive(it->second.initial + i);
 		}
 
@@ -222,12 +224,12 @@ namespace oly
 			assert(is_valid_id(id));
 			auto composite_range = get_range(id);
 			math::split_polygon_composite(composite, capacity.degree);
-			assert(composite.size() <= composite_range.diff);
-			GLushort diff = 0;
+			assert(composite.size() <= composite_range.length);
+			GLushort length = 0;
 			for (math::TriangulatedPolygon2D& poly : composite)
-				set_polygon_primitive(composite_range.initial + diff++, std::move(poly), transform);
-			while (diff < composite_range.diff)
-				disable_polygon(composite_range.initial + diff++);
+				set_polygon_primitive(composite_range.initial + length++, std::move(poly), transform);
+			while (length < composite_range.length)
+				disable_polygon(composite_range.initial + length++);
 		}
 
 		void PolygonBatch::set_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform)
@@ -381,7 +383,7 @@ namespace oly
 		void Polygonal::send_polygon(const math::Polygon2DComposite& composite) const
 		{
 			Range<GLushort> range = _batch->get_range(id);
-			for (GLushort i = 0; i < range.diff; ++i)
+			for (GLushort i = 0; i < range.length; ++i)
 			{
 				_batch->set_primitive_points(range.initial + i, composite[i].polygon.points.data(), (GLushort)composite[i].polygon.points.size());
 				_batch->set_primitive_colors(range.initial + i, composite[i].polygon.colors.data(), (GLushort)composite[i].polygon.colors.size());

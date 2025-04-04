@@ -31,7 +31,7 @@ namespace oly
 	inline void StrictFreeSpaceTracker<T>::reserve(Range<T> range)
 	{
 		assert(!free_space.empty());
-		if (range.diff == 0)
+		if (range.length == 0)
 			return;
 
 		auto lb = free_space.lower_bound(range);
@@ -47,9 +47,9 @@ namespace oly
 				free_space.erase(lb);
 			else // left part of range
 			{
-				T diff = lb->diff;
+				T length = lb->length;
 				free_space.erase(lb);
-				free_space.insert({ range.end(), T(diff - range.diff) });
+				free_space.insert({ range.end(), T(length - range.length) });
 			}
 		}
 		else
@@ -74,7 +74,7 @@ namespace oly
 	template<std::integral T>
 	inline void StrictFreeSpaceTracker<T>::release(Range<T> range)
 	{
-		if (range.diff == 0)
+		if (range.length == 0)
 			return;
 		if (free_space.empty())
 		{
@@ -151,10 +151,10 @@ namespace oly
 		auto end = free_space.end();
 		for (auto iter = free_space.begin(); iter != end; ++iter)
 		{
-			if (iter->diff >= length)
+			if (iter->length >= length)
 			{
 				range.initial = iter->initial;
-				range.diff = length;
+				range.length = length;
 				return true;
 			}
 		}

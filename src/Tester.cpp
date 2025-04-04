@@ -53,27 +53,28 @@ void run()
 		{ 1.0f, 0.2f, 1.0f, 0.5f },
 		{ 0.5f, 0.5f, 0.5f, 0.5f }
 		} });
-	sprite_batch.set_draw_spec(0, 100);
 
-	oly::renderable::Sprite sprite0(&sprite_batch, 0);
-	sprite0.quad().info().tex_slot = TEX_EINSTEIN;
-	sprite0.quad().send_info();
+	oly::renderable::Sprite sprite0(&sprite_batch);
+	sprite0.quad.info().tex_slot = TEX_EINSTEIN;
+	sprite0.quad.send_info();
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::renderable::Sprite sprite1(&sprite_batch, 1);
-	sprite1.quad().info().tex_slot = TEX_EINSTEIN;
-	sprite1.quad().info().color_slot = 1;
-	sprite1.quad().send_info();
+	oly::renderable::Sprite sprite1(&sprite_batch);
+	sprite1.quad.info().tex_slot = TEX_EINSTEIN;
+	sprite1.quad.info().color_slot = 1;
+	sprite1.quad.send_info();
 
-	oly::renderable::Sprite sprite2(&sprite_batch, 2);
-	sprite2.quad().info().tex_slot = TEX_TUX;
-	sprite2.quad().send_info();
+	oly::renderable::Sprite sprite2(&sprite_batch);
+	sprite2.quad.info().tex_slot = TEX_TUX;
+	sprite2.quad.send_info();
 	sprite2.local().position.x = -100;
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
+	sprite2.quad.z_value = -1.0f;
+	sprite2.quad.batch().sync_z_values();
 
 	oly::PivotTransformer2D flag_tesselation_parent;
 	flag_tesselation_parent.pivot = { 0.0f, 0.0f };
@@ -85,9 +86,9 @@ void run()
 	flag_tesselation.reserve(64);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.emplace_back(&sprite_batch, 3 + i);
-		flag_tesselation[i].quad().info().tex_slot = TEX_FLAG;
-		flag_tesselation[i].quad().send_info();
+		flag_tesselation.emplace_back(&sprite_batch);
+		flag_tesselation[i].quad.info().tex_slot = TEX_FLAG;
+		flag_tesselation[i].quad.send_info();
 		flag_tesselation[i].local().scale = glm::vec2(2);
 		flag_tesselation[i].local().position.x = -flag_tesselation_parent.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_parent.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_parent.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_parent.size.y / flag_rows;
@@ -95,7 +96,9 @@ void run()
 		flag_tesselation[i].transformer().attach_parent(&flag_tesselation_parent);
 	}
 
-	sprite2.quad().set_z_index(0);
+	sprite_batch.draw_specs.resize(3);
+	sprite_batch.draw_specs[1] = { 0, 3 };
+	sprite_batch.draw_specs[2] = { 3, 97 };
 
 	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, { -720, 720, -540, 540 });
 
@@ -166,7 +169,7 @@ void run()
 	octagon.bordered = true;
 	octagon.init();
 
-	oly::renderable::Composite concave_shape(&polygon_batch, { { -100, 100 }, 0, glm::vec2(40) });
+	oly::renderable::Composite concave_shape(&polygon_batch, { { -300, 300 }, 0, glm::vec2(40) });
 	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
 		{ -2, -2 },
@@ -186,6 +189,10 @@ void run()
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 	}
 	concave_shape.init();
+
+	polygon_batch.draw_specs.resize(3);
+	polygon_batch.draw_specs[1] = { 0, concave_shape.range().initial };
+	polygon_batch.draw_specs[2] = { concave_shape.range().initial, concave_shape.range().length};
 
 	while (!window.should_close())
 	{
@@ -216,25 +223,25 @@ void run()
 		flag_tesselation_parent.local.rotation -= 0.01f;
 		flag_tesselation_parent.post_set();
 
+		//sprite_batch.set_global_modulation({ 0.5f, 1.0f, 0.5f, fmod((float)glfwGetTime(), 1.0f) });
+
 		// flush buffers
 		sprite_batch.flush();
 		polygon_batch.flush();
 		
 		// draw
-		oly::stencil::begin();
-		oly::stencil::enable_drawing();
-		oly::stencil::draw::replace();
-		polygon_batch.set_primitive_draw_spec(0, concave_shape.range().initial);
-		polygon_batch.draw();
-		oly::stencil::disable_drawing();
-		oly::stencil::crop::match();
-		sprite_batch.set_draw_spec(0, 3);
+		//oly::stencil::begin();
+		//oly::stencil::enable_drawing();
+		//oly::stencil::draw::replace();
+		//polygon_batch.draw(1);
+		//oly::stencil::disable_drawing();
+		//oly::stencil::crop::match();
+		//sprite_batch.draw(1);
+		//oly::stencil::end();
+		//sprite_batch.draw(2);
+		//polygon_batch.draw(2);
+
 		sprite_batch.draw();
-		oly::stencil::end();
-		sprite_batch.set_draw_spec(3, 97);
-		sprite_batch.draw();
-		polygon_batch.set_primitive_draw_spec(concave_shape.range().initial, concave_shape.range().diff);
-		polygon_batch.draw();
 
 		// post-frame
 		window.swap_buffers();
