@@ -45,23 +45,23 @@ namespace oly
 			{
 				GLushort vertices = 0;
 				GLushort indices = 0;
-				GLushort polygons = 0;
+				GLushort primitives = 0;
 				GLushort degree = 0;
 				GLushort polygon_index_count = 0;
 
-				Capacity(GLushort polygons, GLushort degree = 6)
-					: polygons(polygons), degree(degree)
+				Capacity(GLushort primitives, GLushort degree = 6)
+					: primitives(primitives), degree(degree)
 				{
 					assert(degree >= 3);
-					assert(degree * polygons <= USHRT_MAX);
+					assert(degree * primitives <= USHRT_MAX);
 
 					// max(F) = V - 2 + 2H
 					// max(H) = [V / 3] - 1
 					// --> max(F) = V + 2 * [V / 3] - 4
 					// --> return 3 * max(F)
 					polygon_index_count = 3 * degree + 6 * (degree / 3) - 12;
-					vertices = polygons * degree;
-					indices = polygons * polygon_index_count;
+					vertices = primitives * degree;
+					indices = primitives * polygon_index_count;
 				}
 			};
 
@@ -69,7 +69,7 @@ namespace oly
 			const Capacity capacity;
 
 		public:
-			GLushort max_degree() const { return capacity.degree; }
+			const Capacity& get_capacity() const { return capacity; }
 
 			PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
@@ -88,9 +88,9 @@ namespace oly
 			void set_primitive_points(PrimitivePos pos, const glm::vec2* points, GLushort count);
 			void set_primitive_colors(PrimitivePos pos, const glm::vec4* colors, GLushort count);
 			void set_primitive_transform(PrimitivePos pos, const glm::mat3& transform);
-			void set_primitive_triangulation(PrimitivePos pos, const math::Triangulation& triangulation);
-			void set_polygon_primitive(PrimitivePos pos, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform);
-			void disable_polygon_primitive(PrimitivePos pos);
+			void set_primitive_triangulation(PrimitivePos vertex_pos, PrimitivePos index_pos, const math::Triangulation& triangulation);
+			void set_polygon_primitive(PrimitivePos vertex_pos, PrimitivePos index_pos, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform);
+			void disable_polygon_primitive(PrimitivePos index_pos);
 
 		public:
 			void set_polygon_transform(RangeID id, const glm::mat3& transform);
@@ -105,7 +105,12 @@ namespace oly
 
 		public:
 			bool is_valid_id(RangeID id) const;
-			Range<GLushort> get_range(RangeID id) const;
+			bool get_next_draw_id(RangeID id, RangeID& next_id) const;
+			bool get_prev_draw_id(RangeID id, RangeID& prev_id) const;
+		private:
+			Range<PrimitivePos> get_vertex_range(RangeID id) const;
+		public:
+			Range<PrimitivePos> get_index_range(RangeID id) const;
 
 			void set_polygon(RangeID id, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform);
 			void set_polygon(RangeID id, math::TriangulatedPolygon2D&& polygon, const glm::mat3& transform);
@@ -114,7 +119,15 @@ namespace oly
 			void set_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform);
 			void set_bordered_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform);
 
-			// TODO last part of polygon batch: z-order set. This is tricky, since the polygon ranges are not all uniform. It's easy to swap adjacent polygons, so do that. Of course, need to be able to access ids in draw-order, i.e., the order of the ranges they reference out of the free-space range.
+			void swap_poly_order_with_next(RangeID id);
+			void swap_poly_order_with_prev(RangeID id);
+		
+		private:
+			void swap_adjacent_poly_orders(Range<PrimitivePos>& left_index_range, Range<PrimitivePos>& right_index_range);
+
+		public:
+			void move_poly_order_after(RangeID id, RangeID after);
+			void move_poly_order_before(RangeID id, RangeID before);
 
 			math::Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const;
 			math::Polygon2DComposite create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const;
@@ -127,9 +140,15 @@ namespace oly
 			math::Polygon2DComposite create_bordered_ngon(const math::NGonBase& ngon) const;
 
 		private:
-			StrictFreeSpaceTracker<GLushort> free_space_tracker;
-			std::unordered_map<RangeID, Range<GLushort>> polygon_indexer;
-			IDGenerator<GLushort> id_generator;
+			StrictFreeSpaceTracker<PrimitivePos> vertex_free_space, index_free_space;
+			struct PolygonIndexer
+			{
+				Range<PrimitivePos> vertex_range;
+				Range<PrimitivePos> index_range;
+			};
+			std::unordered_map<RangeID, PolygonIndexer> polygon_indexer;
+			std::map<PrimitivePos, RangeID> id_order;
+			IDGenerator<RangeID> id_generator;
 
 			std::unordered_set<renderable::Polygonal*> polygonal_renderables;
 
@@ -159,7 +178,7 @@ namespace oly
 			const batch::PolygonBatch* batch() const { return _batch; }
 			batch::PolygonBatch* batch() { return _batch; }
 			batch::PolygonBatch::RangeID get_id() const { return id; }
-			Range<GLushort> range() const { return _batch->get_range(id); }
+			Range<batch::PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id); }
 			const Transformer2D& transformer() const { return *_transformer; }
 			Transformer2D& transformer() { return *_transformer; }
 			const Transform2D& local() const { return _transformer->local; }

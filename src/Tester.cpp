@@ -169,7 +169,7 @@ void run()
 	octagon.bordered = true;
 	octagon.init();
 
-	oly::renderable::Composite concave_shape(&polygon_batch, { { -300, 300 }, 0, glm::vec2(40) });
+	oly::renderable::Composite concave_shape(&polygon_batch, { { -200, 200 }, 0, glm::vec2(60) });
 	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
 		{ -2, -2 },
@@ -190,9 +190,17 @@ void run()
 	}
 	concave_shape.init();
 
+	polygon_batch.move_poly_order_after(pentagon2.get_id(), bordered_triangle.get_id());
+	polygon_batch.move_poly_order_before(concave_shape.get_id(), bordered_triangle.get_id());
+
 	polygon_batch.draw_specs.resize(3);
-	polygon_batch.draw_specs[1] = { 0, concave_shape.range().initial };
-	polygon_batch.draw_specs[2] = { concave_shape.range().initial, concave_shape.range().length};
+	{
+		oly::batch::PolygonBatch::RangeID post_octagon_id;
+		assert(polygon_batch.get_next_draw_id(octagon.get_id(), post_octagon_id));
+		auto post_octagon_range = polygon_batch.get_index_range(post_octagon_id);
+		polygon_batch.draw_specs[1] = { 0, post_octagon_range.initial };
+		polygon_batch.draw_specs[2] = { post_octagon_range.initial, polygon_batch.get_capacity().indices };
+	}
 
 	while (!window.should_close())
 	{
@@ -223,25 +231,21 @@ void run()
 		flag_tesselation_parent.local.rotation -= 0.01f;
 		flag_tesselation_parent.post_set();
 
-		//sprite_batch.set_global_modulation({ 0.5f, 1.0f, 0.5f, fmod((float)glfwGetTime(), 1.0f) });
-
 		// flush buffers
 		sprite_batch.flush();
 		polygon_batch.flush();
 		
 		// draw
-		//oly::stencil::begin();
-		//oly::stencil::enable_drawing();
-		//oly::stencil::draw::replace();
-		//polygon_batch.draw(1);
-		//oly::stencil::disable_drawing();
-		//oly::stencil::crop::match();
-		//sprite_batch.draw(1);
-		//oly::stencil::end();
-		//sprite_batch.draw(2);
-		//polygon_batch.draw(2);
-
-		sprite_batch.draw();
+		oly::stencil::begin();
+		oly::stencil::enable_drawing();
+		oly::stencil::draw::replace();
+		polygon_batch.draw(1);
+		oly::stencil::disable_drawing();
+		oly::stencil::crop::match();
+		sprite_batch.draw(1);
+		oly::stencil::end();
+		sprite_batch.draw(2);
+		polygon_batch.draw(2);
 
 		// post-frame
 		window.swap_buffers();

@@ -39,4 +39,28 @@ namespace oly
 			return lhs.initial < rhs.initial || (lhs.initial == rhs.initial && lhs.length < rhs.length);
 		}
 	};
+
+	template<typename T>
+	inline void swap_adjacent_subbuffers(T* buf, size_t offset1, size_t count1, size_t offset2, size_t count2)
+	{
+		if (count1 < count2)
+		{
+			std::swap(count1, count2);
+			std::swap(offset1, offset2);
+		}
+
+		T* temp = new T[count1];
+		memcpy(temp, buf + offset1, count1 * sizeof(T));
+		if (offset1 < offset2)
+		{
+			memcpy(buf + offset1, buf + offset2, count2 * sizeof(T));
+			memcpy(buf + offset2 + count2 - count1, temp, count1 * sizeof(T));
+		}
+		else
+		{
+			memcpy(buf + offset1 + count1 - count2, buf + offset2, count2 * sizeof(T));
+			memcpy(buf + offset2, temp, count1 * sizeof(T));
+		}
+		delete[] temp;
+	}
 }
