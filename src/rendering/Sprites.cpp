@@ -231,19 +231,13 @@ namespace oly
 	namespace renderable
 	{
 		Sprite::Sprite(batch::SpriteBatch* sprite_batch)
-			: quad(sprite_batch), _transformer(std::make_unique<Transformer2D>())
-		{
-			sprite_batch->sprites.insert(this);
-		}
-
-		Sprite::Sprite(batch::SpriteBatch* sprite_batch, std::unique_ptr<Transformer2D>&& transformer)
-			: quad(sprite_batch), _transformer(std::move(transformer))
+			: quad(sprite_batch)
 		{
 			sprite_batch->sprites.insert(this);
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
-			: quad(std::move(other.quad)), _transformer(std::move(other._transformer))
+			: quad(std::move(other.quad)), transformer(std::move(other.transformer))
 		{
 			batch().sprites.insert(this);
 		}
@@ -260,27 +254,27 @@ namespace oly
 				batch().sprites.erase(this);
 				quad = std::move(other.quad);
 				batch().sprites.insert(this);
-				_transformer = std::move(other._transformer);
+				transformer = std::move(other.transformer);
 			}
 			return *this;
 		}
 
 		void Sprite::post_set() const
 		{
-			_transformer->post_set();
+			transformer.post_set();
 		}
 
 		void Sprite::pre_get() const
 		{
-			_transformer->pre_get();
+			transformer.pre_get();
 		}
 
 		void Sprite::flush()
 		{
-			if (_transformer->flush())
+			if (transformer.flush())
 			{
-				_transformer->pre_get();
-				quad.transform() = _transformer->global();
+				transformer.pre_get();
+				quad.transform() = transformer.global();
 				quad.send_transform();
 			}
 		}

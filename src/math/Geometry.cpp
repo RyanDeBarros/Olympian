@@ -93,9 +93,9 @@ size_t oly::math::num_triangulated_indices(const Polygon2D& polygon)
 std::unordered_map<oly::math::Edge, std::vector<glm::uint>, oly::math::EdgeHash> oly::math::build_adjecency(const oly::math::Triangulation& triangulation)
 {
 	std::unordered_map<Edge, std::vector<glm::uint>, oly::math::EdgeHash> adjacency;
-	for (glm::uint i = 0; i < triangulation.faces.size(); ++i)
+	for (glm::uint i = 0; i < triangulation.size(); ++i)
 	{
-		const auto& face = triangulation.faces[i];
+		const auto& face = triangulation[i];
 		adjacency[Edge(face[0], face[1])].push_back(i);
 		adjacency[Edge(face[1], face[2])].push_back(i);
 		adjacency[Edge(face[2], face[0])].push_back(i);
@@ -149,21 +149,21 @@ void oly::math::triangulate_border(const std::vector<glm::vec2>& border, Triangu
 	face[0] = (glm::uint)border.size() - 2;
 	face[1] = (glm::uint)border.size() - 1;
 	face[2] = 1;
-	triangulation.faces.push_back(ccw ? face : reverse(face));
+	triangulation.push_back(ccw ? face : reverse(face));
 	face[0] = (glm::uint)border.size() - 2;
 	face[1] = 1;
 	face[2] = 0;
-	triangulation.faces.push_back(ccw ? face : reverse(face));
+	triangulation.push_back(ccw ? face : reverse(face));
 	for (glm::uint i = 1; i < border.size() / 2; ++i)
 	{
 		face[0] = 2 * i - 2;
 		face[1] = 2 * i - 1;
 		face[2] = 2 * i + 1;
-		triangulation.faces.push_back(ccw ? face : reverse(face));
+		triangulation.push_back(ccw ? face : reverse(face));
 		face[0] = 2 * i - 2;
 		face[1] = 2 * i + 1;
 		face[2] = 2 * i;
-		triangulation.faces.push_back(ccw ? face : reverse(face));
+		triangulation.push_back(ccw ? face : reverse(face));
 	}
 }
 
@@ -446,13 +446,13 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 		else
 			polygon.polygon.colors.push_back(superpolygon.polygon.colors[0]);
 
-		polygon.triangulation.faces.reserve(faces.size());
+		polygon.triangulation.reserve(faces.size());
 		for (glm::uvec3 face : faces)
 		{
 			face[0] = local_vertex_indices[face[0]];
 			face[1] = local_vertex_indices[face[1]];
 			face[2] = local_vertex_indices[face[2]];
-			polygon.triangulation.faces.push_back(face);
+			polygon.triangulation.push_back(face);
 		}
 
 		composite.push_back(std::move(polygon));
@@ -460,7 +460,7 @@ oly::math::Polygon2DComposite oly::math::split_polygon_composite(const Triangula
 		faces.clear();
 		};
 
-	for (glm::uvec3 face : tp.triangulation.faces)
+	for (glm::uvec3 face : tp.triangulation)
 	{
 		glm::uint distinct_points = 0;
 		if (!packed_points.count(face[0]))

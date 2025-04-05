@@ -323,7 +323,7 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 	if (polygon.size() == 3)
 	{
 		glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)polygon.size()), unsigned_mod(1 + starting_offset, (int)polygon.size()), unsigned_mod(2 + starting_offset, (int)polygon.size()) };
-		triangulation.faces.push_back(increasing ? face : reverse(face));
+		triangulation.push_back(increasing ? face : reverse(face));
 		return triangulation;
 	}
 
@@ -369,7 +369,7 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 		while (data.size > 3)
 		{
 			auto face = data.head_ear.lock()->face();
-			triangulation.faces.push_back(increasing ? face : reverse(face));
+			triangulation.push_back(increasing ? face : reverse(face));
 			remove_ear(data, data.head_ear.lock());
 		}
 	}
@@ -382,7 +382,7 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 			for (int i = 0; i < ear_cycle; ++i)
 				next_indexer = next_indexer->next_ear.lock();
 			auto face = indexer->face();
-			triangulation.faces.push_back(increasing ? face : reverse(face));
+			triangulation.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = next_indexer;
 		}
@@ -396,14 +396,14 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 			for (int i = 0; i > ear_cycle; --i)
 				prev_indexer = prev_indexer->prev_ear.lock();
 			auto face = indexer->face();
-			triangulation.faces.push_back(increasing ? face : reverse(face));
+			triangulation.push_back(increasing ? face : reverse(face));
 			remove_ear(data, indexer);
 			indexer = prev_indexer;
 		}
 	}
 	// final face
 	auto face = data.head_ear.lock()->face();
-	triangulation.faces.push_back(increasing ? face : reverse(face));
+	triangulation.push_back(increasing ? face : reverse(face));
 	return triangulation;
 }
 
@@ -437,12 +437,6 @@ glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int st
 	return -1;
 }
 
-glm::uint oly::math::get_mutually_visible_vertex(const std::vector<glm::vec2>& polygon, glm::uint reference)
-{
-	// TODO implement using triangulation paper
-	return glm::uint();
-}
-
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
 {
 	assert(polygon.size() >= 3);
@@ -455,8 +449,8 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 	// flood fill algorithm
 	std::vector<Triangulation> sub_triangulations;
 	const auto& adjacency = build_adjecency(triangulation);
-	std::vector<bool> visited(triangulation.faces.size(), false);
-	for (size_t i = 0; i < triangulation.faces.size(); ++i)
+	std::vector<bool> visited(triangulation.size(), false);
+	for (size_t i = 0; i < triangulation.size(); ++i)
 	{
 		if (visited[i])
 			continue;
@@ -474,11 +468,11 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 				continue;
 			visited[curr] = true;
 
-			const auto& face = triangulation.faces[curr];
-			convex_subtr.faces.push_back(triangulation.faces[curr]);
+			const auto& face = triangulation[curr];
+			convex_subtr.push_back(triangulation[curr]);
 
 			// initial triangle boundary
-			if (convex_subtr.faces.size() == 1)
+			if (convex_subtr.size() == 1)
 			{
 				boundary[face[0]] = { face[2], face[1] };
 				boundary[face[1]] = { face[0], face[2] };
@@ -498,7 +492,7 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 					if (!visited[neighbour])
 					{
 						// get new vertex that would be added to convex subpolygon
-						glm::uvec3 ntr = triangulation.faces[neighbour];
+						glm::uvec3 ntr = triangulation[neighbour];
 						int new_vertex;
 						if (ntr[0] != face[0] && ntr[0] != face[1] && ntr[0] != face[2])
 							new_vertex = 0;
@@ -574,7 +568,7 @@ std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::ma
 	{
 		std::pair<std::vector<glm::vec2>, Triangulation> subpolygon;
 		std::unordered_map<glm::uint, glm::uint> point_indices;
-		for (glm::uvec3 face : triangulation.faces)
+		for (glm::uvec3 face : triangulation)
 		{
 			glm::uvec3 new_face{};
 			for (glm::length_t i = 0; i < 3; ++i)
@@ -586,7 +580,7 @@ std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::ma
 				}
 				new_face[i] = point_indices[face[i]];
 			}
-			subpolygon.second.faces.push_back(new_face);
+			subpolygon.second.push_back(new_face);
 		}
 		subpolygons.push_back(std::move(subpolygon));
 	}

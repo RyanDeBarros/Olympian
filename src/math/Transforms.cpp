@@ -1,7 +1,7 @@
 #include "Transforms.h"
 
 oly::Transformer2D::Transformer2D(Transformer2D&& other) noexcept
-	: local(other.local), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+	: local(other.local), modifier(std::move(other.modifier)), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
 {
 	other.unparent();
 	for (Transformer2D* child : children)
@@ -21,6 +21,7 @@ oly::Transformer2D& oly::Transformer2D::operator=(Transformer2D&& other) noexcep
 		unparent();
 		clear_children();
 		local = other.local;
+		modifier = std::move(other.modifier);
 		parent = other.parent;
 		children = std::move(other.children);
 		_global = other._global;
@@ -142,19 +143,8 @@ void oly::Transformer2D::pop_from_chain()
 	children.clear();
 }
 
-oly::PivotTransformer2D& oly::PivotTransformer2D::operator=(PivotTransformer2D&& other) noexcept
-{
-	if (this != &other)
-	{
-		Transformer2D::operator=(std::move(other));
-		pivot = other.pivot;
-		size = other.size;
-	}
-	return *this;
-}
-
 oly::Transformer3D::Transformer3D(Transformer3D&& other) noexcept
-	: local(other.local), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+	: local(other.local), modifier(std::move(other.modifier)), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
 {
 	other.unparent();
 	for (Transformer3D* child : children)
@@ -174,6 +164,7 @@ oly::Transformer3D& oly::Transformer3D::operator=(Transformer3D&& other) noexcep
 		unparent();
 		clear_children();
 		local = other.local;
+		modifier = std::move(other.modifier);
 		parent = other.parent;
 		children = std::move(other.children);
 		_global = other._global;
@@ -293,15 +284,4 @@ void oly::Transformer3D::pop_from_chain()
 		child->post_set();
 	}
 	children.clear();
-}
-
-oly::PivotTransformer3D& oly::PivotTransformer3D::operator=(PivotTransformer3D&& other) noexcept
-{
-	if (this != &other)
-	{
-		Transformer3D::operator=(std::move(other));
-		pivot = other.pivot;
-		size = other.size;
-	}
-	return *this;
 }

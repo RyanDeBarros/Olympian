@@ -4,6 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include <unordered_set>
+#include <memory>
 
 namespace oly
 {
@@ -21,26 +22,21 @@ namespace oly
 		constexpr glm::vec4 H4 = { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
-	constexpr glm::mat3 translation_matrix_2d(glm::vec2 position)
+	constexpr glm::mat3 translation_matrix(glm::vec2 position)
 	{
 		return { vectors::I3, vectors::J3, glm::vec3(position, 1.0f) };
 	}
 
-	inline glm::mat3 rotation_matrix_2d(float rotation)
+	inline glm::mat3 rotation_matrix(float rotation)
 	{
 		float cos = glm::cos(rotation);
 		float sin = glm::sin(rotation);
 		return { { cos, sin, 0.0f }, { -sin, cos, 0.0f }, vectors::H3 };
 	}
 
-	constexpr glm::mat3 scale_matrix_2d(glm::vec2 scale)
+	constexpr glm::mat3 scale_matrix(glm::vec2 scale)
 	{
 		return { scale.x * vectors::I3, scale.y * vectors::J3, vectors::H3 };
-	}
-
-	constexpr glm::mat3 shearing_matrix_2d(glm::vec2 shearing)
-	{
-		return { { 1.0f, shearing.y, 0.0f }, { shearing.x, 1.0f, 0.0f }, vectors::H3 };
 	}
 
 	struct Transform2D
@@ -48,41 +44,48 @@ namespace oly
 		glm::vec2 position = { 0.0f, 0.0f };
 		float rotation = 0.0f;
 		glm::vec2 scale = { 1.0f, 1.0f };
-		glm::vec2 shearing = { 0.0f, 0.0f };
 
 		constexpr glm::mat3 matrix() const
 		{
-			return translation_matrix_2d(position) * rotation_matrix_2d(rotation) * scale_matrix_2d(scale) * shearing_matrix_2d(shearing);
+			return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
 		}
+	};
+
+	struct TransformModifier2D
+	{
+		virtual ~TransformModifier2D() = default;
+		virtual glm::mat3 operator()(const glm::mat3& global) const { return global; }
 	};
 
 	struct Transformer2D
 	{
 		Transform2D local;
-
+	
 	private:
-		Transformer2D* parent = nullptr;
-		std::unordered_set<Transformer2D*> children;
-			
-	protected:
 		mutable glm::mat3 _global = glm::mat3(1.0f);
-			
-	private:
 		mutable bool _dirty = true;
 		mutable bool _dirty_flush = true;
+		Transformer2D* parent = nullptr;
+		std::unordered_set<Transformer2D*> children;
 
 	public:
-		Transformer2D(Transform2D local = {}) : local(local) {}
+		std::unique_ptr<TransformModifier2D> modifier;
+
+		Transformer2D(Transform2D local = {}, std::unique_ptr<TransformModifier2D>&& modifier = std::make_unique<TransformModifier2D>()) : local(local), modifier(std::move(modifier)) {}
 		Transformer2D(const Transformer2D&) = delete;
 		Transformer2D(Transformer2D&&) noexcept;
-		virtual ~Transformer2D();
+		~Transformer2D();
 		Transformer2D& operator=(Transformer2D&&) noexcept;
 
-		virtual glm::mat3 global() const { return _global; }
+		glm::mat3 global() const { return (*modifier)(_global); }
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;
 
+		template<std::derived_from<TransformModifier2D> T>
+		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }
+		template<std::derived_from<TransformModifier2D> T>
+		T& get_modifier() { return *static_cast<T*>(modifier.get()); }
 		const Transformer2D* get_parent() const { return parent; }
 		Transformer2D* get_parent() { return parent; }
 		const Transformer2D* top_level_parent() const;
@@ -94,29 +97,52 @@ namespace oly
 		void pop_from_chain();
 	};
 
-	constexpr glm::mat3 pivot_matrix_2d(glm::vec2 pivot, glm::vec2 size)
+	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
 	{
-		return translation_matrix_2d(size * (pivot - glm::vec2(0.5f)));
+		return translation_matrix(size * (pivot - glm::vec2(0.5f)));
 	}
 
-	struct PivotTransformer2D : public Transformer2D
+	struct PivotTransformModifier2D : public TransformModifier2D
 	{
 		glm::vec2 pivot = { 0.5f, 0.5f };
 		glm::vec2 size = { 0.0f, 0.0f };
 
-		PivotTransformer2D(Transform2D local = {}, glm::vec2 pivot = { 0.5f, 0.5f }, glm::vec2 size = {}) : Transformer2D(local), pivot(pivot), size(size) {}
-		PivotTransformer2D(const PivotTransformer2D&) = delete;
-		PivotTransformer2D(PivotTransformer2D&& other) noexcept : Transformer2D(std::move(other)), pivot(other.pivot), size(other.size) {}
-		PivotTransformer2D& operator=(PivotTransformer2D&&) noexcept;
-
-		virtual glm::mat3 global() const override
+		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
-			glm::mat3 P = pivot_matrix_2d(pivot, size);
-			return P * _global * glm::inverse(P);
+			glm::mat3 P = pivot_matrix(pivot, size);
+			return P * global * glm::inverse(P);
 		}
 	};
 
-	constexpr glm::mat4 translation_matrix_3d(glm::vec3 position)
+	constexpr glm::mat3 shearing_matrix(glm::vec2 shearing)
+	{
+		return { { 1.0f, shearing.y, 0.0f }, { shearing.x, 1.0f, 0.0f }, vectors::H3 };
+	}
+
+	struct ShearTransformModifier2D : public TransformModifier2D
+	{
+		glm::vec2 shearing = { 0.0f, 0.0f };
+
+		virtual glm::mat3 operator()(const glm::mat3& global) const override
+		{
+			return global * shearing_matrix(shearing);
+		}
+	};
+
+	struct PivotShearTransformModifier2D : public TransformModifier2D
+	{
+		glm::vec2 pivot = { 0.5f, 0.5f };
+		glm::vec2 size = { 0.0f, 0.0f };
+		glm::vec2 shearing = { 0.0f, 0.0f };
+
+		virtual glm::mat3 operator()(const glm::mat3& global) const override
+		{
+			glm::mat3 P = pivot_matrix(pivot, size);
+			return P * global * shearing_matrix(shearing) * glm::inverse(P);
+		}
+	};
+
+	constexpr glm::mat4 translation_matrix(glm::vec3 position)
 	{
 		return { vectors::I4, vectors::J4, vectors::K4, glm::vec4(position, 1.0f) };
 	}
@@ -139,14 +165,9 @@ namespace oly
 		return { angles.y, angles.z, angles.x };
 	}
 
-	constexpr glm::mat4 scale_matrix_3d(glm::vec3 scale)
+	constexpr glm::mat4 scale_matrix(glm::vec3 scale)
 	{
 		return { scale.x * vectors::I4, scale.y * vectors::J4, scale.z * vectors::K4, vectors::H4 };
-	}
-
-	constexpr glm::mat4 shearing_matrix_3d(glm::mat3x2 shearing)
-	{
-		return { { 1.0f, shearing[1][0], shearing[2][0], 0.0f }, { shearing[0][0], 1.0f, shearing[2][1], 0.0f }, { shearing[0][1], shearing[1][1], 1.0f, 0.0f }, vectors::H4 };
 	}
 
 	struct Transform3D
@@ -154,41 +175,48 @@ namespace oly
 		glm::vec3 position = { 0.0f, 0.0f, 0.0f };
 		glm::quat rotation = glm::quat(0.0f, { 0.0f, 0.0f, 0.0f });
 		glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
-		glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 
 		glm::mat4 matrix() const
 		{
-			return translation_matrix_3d(position) * (glm::mat4)rotation * scale_matrix_3d(scale) * shearing_matrix_3d(shearing);
+			return translation_matrix(position) * (glm::mat4)rotation * scale_matrix(scale);
 		}
+	};
+
+	struct TransformModifier3D
+	{
+		virtual ~TransformModifier3D() = default;
+		virtual glm::mat4 operator()(const glm::mat4& global) const { return global; }
 	};
 
 	struct Transformer3D
 	{
 		Transform3D local;
-
+		
 	private:
-		Transformer3D* parent = nullptr;
-		std::unordered_set<Transformer3D*> children;
-			
-	protected:
 		mutable glm::mat4 _global = glm::mat4(1.0f);
-
-	private:
 		mutable bool _dirty = true;
 		mutable bool _dirty_flush = true;
+		Transformer3D* parent = nullptr;
+		std::unordered_set<Transformer3D*> children;
 
 	public:
-		Transformer3D(const Transform3D& local = {}) : local(local) {}
+		std::unique_ptr<TransformModifier3D> modifier;
+
+		Transformer3D(const Transform3D& local = {}, std::unique_ptr<TransformModifier3D>&& modifier = std::make_unique<TransformModifier3D>()) : local(local), modifier(std::move(modifier)) {}
 		Transformer3D(const Transformer3D&) = delete;
 		Transformer3D(Transformer3D&&) noexcept;
 		virtual ~Transformer3D();
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
-		virtual glm::mat4 global() const { return _global; }
+		virtual glm::mat4 global() const { return (*modifier)(_global); }
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;
 
+		template<std::derived_from<TransformModifier2D> T>
+		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }
+		template<std::derived_from<TransformModifier2D> T>
+		T& get_modifier() { return *static_cast<T*>(modifier.get()); }
 		const Transformer3D* get_parent() const { return parent; }
 		Transformer3D* get_parent() { return parent; }
 		const Transformer3D* top_level_parent() const;
@@ -200,25 +228,48 @@ namespace oly
 		void pop_from_chain();
 	};
 
-	constexpr glm::mat4 pivot_matrix_3d(glm::vec3 pivot, glm::vec3 size)
+	constexpr glm::mat4 pivot_matrix(glm::vec3 pivot, glm::vec3 size)
 	{
-		return translation_matrix_3d(size * (pivot - glm::vec3(0.5f)));
+		return translation_matrix(size * (pivot - glm::vec3(0.5f)));
 	}
 
-	struct PivotTransformer3D : public Transformer3D
+	struct PivotTransformModifier3D : public TransformModifier3D
 	{
 		glm::vec3 pivot = { 0.5f, 0.5f, 0.5f };
 		glm::vec3 size = { 0.0f, 0.0f, 0.0f };
 
-		PivotTransformer3D(Transform3D local = {}, glm::vec3 pivot = { 0.5f, 0.5f, 0.5f }, glm::vec3 size = {}) : Transformer3D(local), pivot(pivot), size(size) {}
-		PivotTransformer3D(const PivotTransformer2D&) = delete;
-		PivotTransformer3D(PivotTransformer3D&& other) noexcept : Transformer3D(std::move(other)), pivot(other.pivot), size(other.size) {}
-		PivotTransformer3D& operator=(PivotTransformer3D&&) noexcept;
-
-		virtual glm::mat4 global() const override
+		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
-			glm::mat4 P = pivot_matrix_3d(pivot, size);
-			return P * _global * glm::inverse(P);
+			glm::mat4 P = pivot_matrix(pivot, size);
+			return P * global * glm::inverse(P);
+		}
+	};
+
+	constexpr glm::mat4 shearing_matrix(glm::mat3x2 shearing)
+	{
+		return { { 1.0f, shearing[1][0], shearing[2][0], 0.0f }, { shearing[0][0], 1.0f, shearing[2][1], 0.0f }, { shearing[0][1], shearing[1][1], 1.0f, 0.0f }, vectors::H4 };
+	}
+
+	struct ShearTransformModifier3D : public TransformModifier3D
+	{
+		glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
+		
+		virtual glm::mat4 operator()(const glm::mat4& global) const override
+		{
+			return global * shearing_matrix(shearing);
+		}
+	};
+
+	struct PivotShearTransformModifier3D : public TransformModifier3D
+	{
+		glm::vec3 pivot = { 0.5f, 0.5f, 0.5f };
+		glm::vec3 size = { 0.0f, 0.0f, 0.0f };
+		glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
+
+		virtual glm::mat4 operator()(const glm::mat4& global) const override
+		{
+			glm::mat4 P = pivot_matrix(pivot, size);
+			return P * global * shearing_matrix(shearing) * glm::inverse(P);
 		}
 	};
 }

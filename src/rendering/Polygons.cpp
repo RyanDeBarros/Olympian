@@ -103,13 +103,13 @@ namespace oly
 			GLushort indices_offset = index_pos * capacity.polygon_index_count;
 			GLushort vertex_index_offset = vertex_pos * capacity.degree;
 			auto& indices = ebo.vector();
-			for (size_t i = 0; i < triangulation.faces.size() && i < capacity.polygon_index_count; ++i)
+			for (size_t i = 0; i < triangulation.size() && i < capacity.polygon_index_count; ++i)
 			{
-				indices[indices_offset + 3 * i + 0] = triangulation.faces[i][0] + vertex_index_offset;
-				indices[indices_offset + 3 * i + 1] = triangulation.faces[i][1] + vertex_index_offset;
-				indices[indices_offset + 3 * i + 2] = triangulation.faces[i][2] + vertex_index_offset;
+				indices[indices_offset + 3 * i + 0] = triangulation[i][0] + vertex_index_offset;
+				indices[indices_offset + 3 * i + 1] = triangulation[i][1] + vertex_index_offset;
+				indices[indices_offset + 3 * i + 2] = triangulation[i][2] + vertex_index_offset;
 			}
-			for (size_t i = triangulation.faces.size() * 3; i < capacity.polygon_index_count; i += 3)
+			for (size_t i = triangulation.size() * 3; i < capacity.polygon_index_count; i += 3)
 			{
 				indices[indices_offset + i + 0] = 0;
 				indices[indices_offset + i + 1] = 0;
@@ -163,7 +163,7 @@ namespace oly
 			auto it = polygon_indexer.find(id);
 			if (it == polygon_indexer.end())
 			{
-				GLushort range = std::max<GLushort>(min_range, composite.size());
+				GLushort range = std::max(min_range, (GLushort)composite.size());
 				if (max_range > 0)
 				{
 					assert(range <= max_range);
@@ -437,25 +437,13 @@ namespace oly
 	namespace renderable
 	{
 		Polygonal::Polygonal(batch::PolygonBatch* batch)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>())
-		{
-			_batch->polygonal_renderables.insert(this);
-		}
-
-		Polygonal::Polygonal(batch::PolygonBatch* batch, const Transform2D& local)
-			: _batch(batch), _transformer(std::make_unique<Transformer2D>(local))
-		{
-			_batch->polygonal_renderables.insert(this);
-		}
-
-		Polygonal::Polygonal(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer)
-			: _batch(batch), _transformer(std::move(transformer))
+			: _batch(batch)
 		{
 			_batch->polygonal_renderables.insert(this);
 		}
 
 		Polygonal::Polygonal(Polygonal&& other) noexcept
-			: _batch(other._batch), id(other.id), _transformer(std::move(other._transformer))
+			: _batch(other._batch), id(other.id), transformer(std::move(other.transformer))
 		{
 			if (_batch)
 				_batch->polygonal_renderables.insert(this);
@@ -483,51 +471,51 @@ namespace oly
 					_batch->polygonal_renderables.insert(this);
 				id = other.id;
 				other.id = -1;
-				_transformer = std::move(other._transformer);
+				transformer = std::move(other.transformer);
 			}
 			return *this;
 		}
 
 		void Polygonal::post_set() const
 		{
-			_transformer->post_set();
+			transformer.post_set();
 		}
 		
 		void Polygonal::pre_get() const
 		{
-			_transformer->pre_get();
+			transformer.pre_get();
 		}
 		
 		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(id == batch::PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
-			_transformer->pre_get();
-			_batch->set_polygon(id, composite, _transformer->global());
+			transformer.pre_get();
+			_batch->set_polygon(id, composite, transformer.global());
 		}
 
 		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(id == batch::PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
-			_transformer->pre_get();
-			_batch->set_polygon(id, std::move(composite), _transformer->global());
+			transformer.pre_get();
+			_batch->set_polygon(id, std::move(composite), transformer.global());
 		}
 
 		void Polygonal::resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(this->id != batch::PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
-			_transformer->pre_get();
-			_batch->set_polygon(id, composite, _transformer->global());
+			transformer.pre_get();
+			_batch->set_polygon(id, composite, transformer.global());
 		}
 
 		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
 			assert(this->id != batch::PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
-			_transformer->pre_get();
-			_batch->set_polygon(id, std::move(composite), _transformer->global());
+			transformer.pre_get();
+			_batch->set_polygon(id, std::move(composite), transformer.global());
 		}
 
 		void Polygonal::send_polygon(const math::Polygon2DComposite& composite) const
@@ -544,10 +532,10 @@ namespace oly
 
 		void Polygonal::flush() const
 		{
-			if (_transformer->flush())
+			if (transformer.flush())
 			{
-				_transformer->pre_get();
-				_batch->set_polygon_transform(id, _transformer->global());
+				transformer.pre_get();
+				_batch->set_polygon_transform(id, transformer.global());
 			}
 		}
 		

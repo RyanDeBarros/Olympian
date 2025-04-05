@@ -67,6 +67,7 @@ void run()
 	sprite1.quad.send_info();
 
 	oly::renderable::Sprite sprite2(&sprite_batch);
+	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
 	sprite2.quad.info().tex_slot = TEX_TUX;
 	sprite2.quad.send_info();
 	sprite2.local().position.x = -100;
@@ -76,9 +77,12 @@ void run()
 	sprite2.quad.z_value = -1.0f;
 	sprite2.quad.batch().sync_z_values();
 
-	oly::PivotTransformer2D flag_tesselation_parent;
-	flag_tesselation_parent.pivot = { 0.0f, 0.0f };
-	flag_tesselation_parent.size = { 400, 320 };
+	oly::Transformer2D flag_tesselation_parent;
+	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
+	auto& flag_tesselation_modifier = flag_tesselation_parent.get_modifier<oly::PivotShearTransformModifier2D>();
+	flag_tesselation_modifier.pivot = { 0.0f, 0.0f };
+	flag_tesselation_modifier.size = { 400, 320 };
+	flag_tesselation_modifier.shearing = { 0, 1 };
 	int flag_rows = 8;
 	int flag_cols = 8;
 	flag_tesselation_parent.post_set();
@@ -90,10 +94,10 @@ void run()
 		flag_tesselation[i].quad.info().tex_slot = TEX_FLAG;
 		flag_tesselation[i].quad.send_info();
 		flag_tesselation[i].local().scale = glm::vec2(2);
-		flag_tesselation[i].local().position.x = -flag_tesselation_parent.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_parent.size.x / flag_cols;
-		flag_tesselation[i].local().position.y = flag_tesselation_parent.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_parent.size.y / flag_rows;
+		flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
+		flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
 		flag_tesselation[i].post_set();
-		flag_tesselation[i].transformer().attach_parent(&flag_tesselation_parent);
+		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
 	sprite_batch.draw_specs.resize(3);
@@ -117,17 +121,17 @@ void run()
 		{ 0.0f, 0.0f, 0.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f, 1.0f }
 	};
-	pentagon1.transformer().local.position.y = 200;
-	pentagon1.transformer().local.scale = glm::vec2(160);
+	pentagon1.transformer.local.position.y = 200;
+	pentagon1.transformer.local.scale = glm::vec2(160);
 	pentagon1.post_set();
 	pentagon1.init();
 
 	oly::renderable::Polygon pentagon2(&polygon_batch);
 	pentagon2.polygon = pentagon1.polygon;
-	pentagon2.transformer().local.position.x = -250;
-	pentagon2.transformer().local.rotation = -1;
-	pentagon2.transformer().local.scale.x = 320;
-	pentagon2.transformer().local.scale.y = 160;
+	pentagon2.transformer.local.position.x = -250;
+	pentagon2.transformer.local.rotation = -1;
+	pentagon2.transformer.local.scale.x = 320;
+	pentagon2.transformer.local.scale.y = 160;
 	pentagon2.post_set();
 	for (glm::vec4& color : pentagon2.polygon.colors)
 		color.a = 0.5f;
@@ -135,15 +139,16 @@ void run()
 
 	oly::renderable::Composite bordered_triangle(&polygon_batch);
 	bordered_triangle.composite = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
-	bordered_triangle.transformer().local.position.x = 100;
-	bordered_triangle.transformer().local.position.y = -100;
-	bordered_triangle.transformer().local.scale = glm::vec2(150);
+	bordered_triangle.transformer.local.position.x = 100;
+	bordered_triangle.transformer.local.position.y = -100;
+	bordered_triangle.transformer.local.scale = glm::vec2(150);
 	bordered_triangle.post_set();
 	bordered_triangle.init();
 	bordered_triangle.composite = oly::math::create_bordered_quad({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, { 0, 0 });
 	bordered_triangle.resize();
 
-	oly::renderable::NGon octagon(&polygon_batch, { { 300, 200 }, 0, { 200, 200 } });
+	oly::renderable::NGon octagon(&polygon_batch);
+	octagon.local() = { { 300, 200 }, 0, { 200, 200 } };
 	octagon.base.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
 	octagon.base.border_colors = {
 		{ 0.25f,  0.0f,  0.5f, 1.0f },
@@ -169,7 +174,8 @@ void run()
 	octagon.bordered = true;
 	octagon.init();
 
-	oly::renderable::Composite concave_shape(&polygon_batch, { { -200, 200 }, 0, glm::vec2(60) });
+	oly::renderable::Composite concave_shape(&polygon_batch);
+	concave_shape.local() = { { -200, 200 }, 0, glm::vec2(60) };
 	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
 		{ -2, -2 },
@@ -217,19 +223,20 @@ void run()
 		octagon.base.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
 		octagon.send_polygon();
 	
-		concave_shape.transformer().local.rotation += 0.01f;
+		concave_shape.transformer.local.rotation += 0.01f;
 		concave_shape.post_set();
 
 		sprite1.local().rotation = (float)glfwGetTime();
 		sprite1.post_set();
 
-		sprite2.local().shearing.x += 0.008f;
+		sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.008f;
 		sprite2.post_set();
 
-		flag_tesselation_parent.pivot.x += 0.001f;
-		flag_tesselation_parent.pivot.y += 0.001f;
+		flag_tesselation_modifier.pivot.x += 0.001f;
+		flag_tesselation_modifier.pivot.y += 0.001f;
 		flag_tesselation_parent.local.rotation -= 0.01f;
 		flag_tesselation_parent.post_set();
+		flag_tesselation_parent.flush();
 
 		// flush buffers
 		sprite_batch.flush();

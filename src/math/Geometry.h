@@ -66,11 +66,7 @@ namespace oly
 
 		extern size_t num_triangulated_indices(const Polygon2D& polygon);
 
-		// TODO typedef instead?
-		struct Triangulation
-		{
-			std::vector<glm::uvec3> faces;
-		};
+		typedef std::vector<glm::uvec3> Triangulation;
 
 		struct Edge
 		{
@@ -184,7 +180,6 @@ namespace oly
 
 		extern Triangulation ear_clipping(const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
 		extern glm::uint get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
-		extern glm::uint get_mutually_visible_vertex(const std::vector<glm::vec2>& polygon, glm::uint reference);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon);

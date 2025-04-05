@@ -163,13 +163,12 @@ namespace oly
 		{
 			friend batch::PolygonBatch;
 			batch::PolygonBatch* _batch = nullptr;
-			std::unique_ptr<Transformer2D> _transformer = nullptr;
 			batch::PolygonBatch::RangeID id = -1;
 
 		public:
+			Transformer2D transformer;
+
 			Polygonal(batch::PolygonBatch* batch);
-			Polygonal(batch::PolygonBatch* batch, const Transform2D& local);
-			Polygonal(batch::PolygonBatch* batch, std::unique_ptr<Transformer2D>&& transformer);
 			Polygonal(const Polygonal&) = delete;
 			Polygonal(Polygonal&&) noexcept;
 			virtual ~Polygonal();
@@ -179,10 +178,8 @@ namespace oly
 			batch::PolygonBatch* batch() { return _batch; }
 			batch::PolygonBatch::RangeID get_id() const { return id; }
 			Range<batch::PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id); }
-			const Transformer2D& transformer() const { return *_transformer; }
-			Transformer2D& transformer() { return *_transformer; }
-			const Transform2D& local() const { return _transformer->local; }
-			Transform2D& local() { return _transformer->local; }
+			const Transform2D& local() const { return transformer.local; }
+			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 

@@ -13,14 +13,14 @@ namespace oly
 {
 	namespace renderable
 	{
-		class Sprite;
+		struct Sprite;
 	}
 
 	namespace batch
 	{
 		class SpriteBatch
 		{
-			friend class renderable::Sprite;
+			friend struct renderable::Sprite;
 
 			GLuint shader;
 			rendering::VertexArray vao;
@@ -149,16 +149,12 @@ namespace oly
 
 	namespace renderable
 	{
-		class Sprite
+		struct Sprite
 		{
-			friend batch::SpriteBatch;
-			std::unique_ptr<Transformer2D> _transformer;
-
-		public:
 			batch::SpriteBatch::QuadReference quad;
+			Transformer2D transformer;
 
 			Sprite(batch::SpriteBatch* sprite_batch);
-			Sprite(batch::SpriteBatch* sprite_batch, std::unique_ptr<Transformer2D>&& transformer);
 			Sprite(const Sprite&) = delete;
 			Sprite(Sprite&&) noexcept;
 			~Sprite();
@@ -166,14 +162,13 @@ namespace oly
 
 			const batch::SpriteBatch& batch() const { return quad.batch(); }
 			batch::SpriteBatch& batch() { return quad.batch(); }
-			const Transformer2D& transformer() const { return *_transformer; }
-			Transformer2D& transformer() { return *_transformer; }
-			const Transform2D& local() const { return _transformer->local; }
-			Transform2D& local() { return _transformer->local; }
+			const Transform2D& local() const { return transformer.local; }
+			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 
 		private:
+			friend batch::SpriteBatch;
 			void flush();
 		};
 	}

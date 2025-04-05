@@ -229,7 +229,7 @@ namespace oly
 		{
 			if (first < this->cpudata.size())
 				draw_spec.first = first;
-			draw_spec.count = LayoutSize * std::min<IndexType>(count, this->cpudata.size() - draw_spec.first);
+			draw_spec.count = LayoutSize * std::min(count, IndexType(this->cpudata.size() - draw_spec.first));
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(FixedIndexLayout<IndexType, LayoutSize>));
 		}
 
@@ -278,7 +278,7 @@ namespace oly
 		{
 			if (first < this->cpudata.size())
 				draw_spec.first = first;
-			draw_spec.count = std::min<IndexType>(count, this->cpudata.size() - draw_spec.first);
+			draw_spec.count = std::min(count, IndexType(this->cpudata.size() - draw_spec.first));
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(IndexType));
 		}
 
