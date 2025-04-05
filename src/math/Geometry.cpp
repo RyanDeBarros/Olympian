@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "util/Assert.h"
+
 float oly::math::Triangle2D::signed_area() const
 {
 	return 0.5f * (root.x * (prev.y - next.y) + prev.x * (next.y - root.y) + next.x * (root.y - prev.y));
@@ -142,7 +144,7 @@ oly::math::BorderPointPair oly::math::border_points(glm::vec2 point, float borde
 
 void oly::math::triangulate_border(const std::vector<glm::vec2>& border, Triangulation& triangulation)
 {
-	assert(border.size() >= 4 && border.size() % 2 == 0);
+	OLY_ASSERT(border.size() >= 4 && border.size() % 2 == 0);
 	bool ccw = signed_area(border) >= 0.0f;
 	glm::uvec3 face{};
 
@@ -313,7 +315,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_hexagon_border(glm::vec4 colo
 
 oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, const std::vector<glm::vec2>& points)
 {
-	assert(points.size() >= 3);
+	OLY_ASSERT(points.size() >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
 	p.polygon.points = points;
@@ -323,7 +325,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, const s
 
 oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, std::vector<glm::vec2>&& points)
 {
-	assert(points.size() >= 3);
+	OLY_ASSERT(points.size() >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
 	p.polygon.points = std::move(points);
@@ -333,7 +335,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, std::ve
 
 oly::math::TriangulatedPolygon2D oly::math::create_ngon(const std::vector<glm::vec4>& colors, const std::vector<glm::vec2>& points)
 {
-	assert(points.size() >= 3);
+	OLY_ASSERT(points.size() >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors = colors;
 	p.polygon.points = points;
@@ -343,7 +345,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(const std::vector<glm::v
 
 oly::math::TriangulatedPolygon2D oly::math::create_ngon(std::vector<glm::vec4>&& colors, std::vector<glm::vec2>& points)
 {
-	assert(points.size() >= 3);
+	OLY_ASSERT(points.size() >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors = std::move(colors);
 	p.polygon.points = std::move(points);
@@ -354,7 +356,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(std::vector<glm::vec4>&&
 oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(glm::vec4 color, float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points)
 {
 	glm::uint num_points = (glm::uint)points.size();
-	assert(num_points >= 3);
+	OLY_ASSERT(num_points >= 3);
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
 
@@ -416,7 +418,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon_border(std::vector<glm::
 
 oly::math::Polygon2DComposite oly::math::split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree)
 {
-	assert(max_degree >= 3);
+	OLY_ASSERT(max_degree >= 3);
 	Polygon2DComposite composite;
 	glm::uint divisions = (glm::uint)tp.polygon.points.size() / max_degree;
 	if (divisions == 0)

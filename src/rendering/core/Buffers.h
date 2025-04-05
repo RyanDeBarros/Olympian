@@ -3,7 +3,8 @@
 #include <GL/glew.h>
 
 #include <array>
-#include <assert.h>
+
+#include "util/Assert.h"
 
 namespace oly
 {
@@ -76,7 +77,7 @@ namespace oly
 		template<size_t N>
 		constexpr GLuint oly::rendering::GLBufferBlock<N>::operator[](GLsizei i) const
 		{
-			assert(i >= 0 && i < count);
+			OLY_ASSERT(i >= 0 && i < count);
 			return ids[i];
 		}
 		

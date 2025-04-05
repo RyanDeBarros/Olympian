@@ -1,7 +1,5 @@
 #include "Buffers.h"
 
-#include <assert.h>
-
 oly::rendering::GLBuffer::GLBuffer()
 {
 	glCreateBuffers(1, &id);
@@ -64,6 +62,6 @@ oly::rendering::GLBufferBlock<0>& oly::rendering::GLBufferBlock<0>::operator=(GL
 
 GLuint oly::rendering::GLBufferBlock<0>::operator[](GLsizei i) const
 {
-	assert(i >= 0 && i < count);
+	OLY_ASSERT(i >= 0 && i < count);
 	return ids[i];
 }

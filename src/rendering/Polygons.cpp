@@ -62,7 +62,7 @@ namespace oly
 
 		void PolygonBatch::set_primitive_points(PrimitivePos pos, const glm::vec2* points, GLushort count)
 		{
-			assert(pos < capacity.primitives);
+			OLY_ASSERT(pos < capacity.primitives);
 			GLushort vertices_offset = pos * capacity.degree;
 			count = std::min(capacity.degree, count);
 			for (GLushort v = 0; v < count; ++v)
@@ -73,7 +73,7 @@ namespace oly
 
 		void PolygonBatch::set_primitive_colors(PrimitivePos pos, const glm::vec4* colors, GLushort count)
 		{
-			assert(pos < capacity.primitives);
+			OLY_ASSERT(pos < capacity.primitives);
 			GLushort vertices_offset = pos * capacity.degree;
 			count = std::min(capacity.degree, count);
 			if (count == 1)
@@ -92,14 +92,14 @@ namespace oly
 
 		void PolygonBatch::set_primitive_transform(PrimitivePos pos, const glm::mat3& transform)
 		{
-			assert(pos < capacity.primitives);
+			OLY_ASSERT(pos < capacity.primitives);
 			transform_ssbo.vector()[pos] = transform;
 			transform_ssbo.lazy_send(pos);
 		}
 
 		void PolygonBatch::set_primitive_triangulation(PrimitivePos vertex_pos, PrimitivePos index_pos, const math::Triangulation& triangulation)
 		{
-			assert(vertex_pos < capacity.primitives && index_pos < capacity.primitives);
+			OLY_ASSERT(vertex_pos < capacity.primitives && index_pos < capacity.primitives);
 			GLushort indices_offset = index_pos * capacity.polygon_index_count;
 			GLushort vertex_index_offset = vertex_pos * capacity.degree;
 			auto& indices = ebo.vector();
@@ -166,11 +166,11 @@ namespace oly
 				GLushort range = std::max(min_range, (GLushort)composite.size());
 				if (max_range > 0)
 				{
-					assert(range <= max_range);
+					OLY_ASSERT(range <= max_range);
 				}
 				Range<GLushort> vertex_range, index_range;
-				assert(vertex_free_space.next_free(range, vertex_range));
-				assert(index_free_space.next_free(range, index_range));
+				OLY_ASSERT(vertex_free_space.next_free(range, vertex_range));
+				OLY_ASSERT(index_free_space.next_free(range, index_range));
 				vertex_free_space.reserve(vertex_range);
 				index_free_space.reserve(index_range);
 				polygon_indexer[id].vertex_range = vertex_range;
@@ -202,7 +202,7 @@ namespace oly
 		void PolygonBatch::resize_range(RangeID id, math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			terminate_id(id);
-			assert(generate_id(composite, min_range, max_range) == id);
+			OLY_ASSERT(generate_id(composite, min_range, max_range) == id);
 		}
 
 		bool PolygonBatch::is_valid_id(RangeID id) const
@@ -240,11 +240,15 @@ namespace oly
 
 		Range<PolygonBatch::PrimitivePos> PolygonBatch::get_vertex_range(RangeID id) const
 		{
+			if (!is_valid_id(id))
+				throw Error(ErrorCode::OTHER, "Invalid RangeID");
 			return polygon_indexer.find(id)->second.vertex_range;
 		}
 
 		Range<PolygonBatch::PrimitivePos> PolygonBatch::get_index_range(RangeID id) const
 		{
+			if (!is_valid_id(id))
+				throw Error(ErrorCode::OTHER, "Invalid RangeID");
 			return polygon_indexer.find(id)->second.index_range;
 		}
 
@@ -266,11 +270,11 @@ namespace oly
 		
 		void PolygonBatch::set_polygon(RangeID id, math::Polygon2DComposite& composite, const glm::mat3& transform)
 		{
-			assert(is_valid_id(id));
+			OLY_ASSERT(is_valid_id(id));
 			auto vertex_range = get_vertex_range(id);
 			auto index_range = get_index_range(id);
 			math::split_polygon_composite(composite, capacity.degree);
-			assert(composite.size() <= vertex_range.length);
+			OLY_ASSERT(composite.size() <= vertex_range.length);
 			GLushort length = 0;
 			for (math::TriangulatedPolygon2D& poly : composite)
 			{
@@ -488,7 +492,7 @@ namespace oly
 		
 		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(id == batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(id == batch::PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, composite, transformer.global());
@@ -496,7 +500,7 @@ namespace oly
 
 		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(id == batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(id == batch::PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, std::move(composite), transformer.global());
@@ -504,7 +508,7 @@ namespace oly
 
 		void Polygonal::resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(this->id != batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(this->id != batch::PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, composite, transformer.global());
@@ -512,7 +516,7 @@ namespace oly
 
 		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			assert(this->id != batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(this->id != batch::PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, std::move(composite), transformer.global());

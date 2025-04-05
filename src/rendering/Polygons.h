@@ -52,8 +52,8 @@ namespace oly
 				Capacity(GLushort primitives, GLushort degree = 6)
 					: primitives(primitives), degree(degree)
 				{
-					assert(degree >= 3);
-					assert(degree * primitives <= USHRT_MAX);
+					OLY_ASSERT(degree >= 3);
+					OLY_ASSERT(degree * primitives <= USHRT_MAX);
 
 					// max(F) = V - 2 + 2H
 					// max(H) = [V / 3] - 1

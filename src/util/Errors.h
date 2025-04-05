@@ -21,6 +21,7 @@ namespace oly
 		NULL_POINTER,
 		SUBSHADER_COMPILATION,
 		SHADER_LINKAGE,
+		OTHER
 	};
 
 	struct Error : public std::runtime_error

@@ -2,6 +2,8 @@
 
 #include "rendering/Sprites.h"
 #include "rendering/Polygons.h"
+#include "util/Assert.h"
+#include "util/Logger.h"
 
 static void run();
 
@@ -201,8 +203,8 @@ void run()
 
 	polygon_batch.draw_specs.resize(3);
 	{
-		oly::batch::PolygonBatch::RangeID post_octagon_id;
-		assert(polygon_batch.get_next_draw_id(octagon.get_id(), post_octagon_id));
+		oly::batch::PolygonBatch::RangeID post_octagon_id = -1;
+		OLY_ASSERT(polygon_batch.get_next_draw_id(octagon.get_id(), post_octagon_id));
 		auto post_octagon_range = polygon_batch.get_index_range(post_octagon_id);
 		polygon_batch.draw_specs[1] = { 0, post_octagon_range.initial };
 		polygon_batch.draw_specs[2] = { post_octagon_range.initial, polygon_batch.get_capacity().indices };
@@ -211,8 +213,8 @@ void run()
 	while (!window.should_close())
 	{
 		// pre-frame
-		if (auto err = glGetError())
-			__debugbreak();
+		oly::check_errors();
+		oly::LOG.flush();
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glfwPollEvents();
 

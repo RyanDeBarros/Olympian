@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "util/General.h"
+#include "util/Assert.h"
 
 struct Node;
 struct EarClippingData
@@ -217,7 +218,7 @@ static void update_adjacent(EarClippingData& data, const std::shared_ptr<Node>& 
 
 static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 {
-	assert(remove->is_ear);
+	OLY_ASSERT(remove->is_ear);
 	// remove from polygon
 	auto hp = data.head_polygon.lock();
 	if (remove == hp)
@@ -312,12 +313,12 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	remove->prev_vertex.reset();
 	--data.size;
 
-	assert(data.size == 3 || data.head_ear.lock());
+	OLY_ASSERT(data.size == 3 || data.head_ear.lock());
 }
 
 oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	Triangulation triangulation;
 
 	if (polygon.size() == 3)
@@ -361,7 +362,7 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 		indexer = indexer->next_vertex.lock();
 	} while (indexer != data.head_polygon.lock());
 
-	assert(data.head_ear.lock());
+	OLY_ASSERT((bool)data.head_ear.lock());
 
 	// remove ears and form faces
 	if (ear_cycle == 0)
@@ -409,7 +410,7 @@ oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& p
 
 glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	if (polygon.size() == 3)
 		return 0;
 
@@ -433,19 +434,19 @@ glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int st
 	} while (indexer != data.head_polygon.lock());
 
 	// TODO everywhere throughout project, don't use assert, as this only works for debug. Create custom assert (one for debug and one for release) and logger.
-	assert(false);
+	OLY_ASSERT(false);
 	return -1;
 }
 
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	return convex_decompose_triangulation(polygon, ear_clipping(polygon));
 }
 
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	// flood fill algorithm
 	std::vector<Triangulation> sub_triangulations;
 	const auto& adjacency = build_adjecency(triangulation);
@@ -546,21 +547,21 @@ std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(
 
 std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::math::convex_decompose_polygon(const std::vector<glm::vec2>& polygon)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
 	return decompose_polygon(polygon, decomposition);
 }
 
 std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::math::convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
 	return decompose_polygon(polygon, decomposition);
 }
 
 std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> oly::math::decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations)
 {
-	assert(polygon.size() >= 3);
+	OLY_ASSERT(polygon.size() >= 3);
 	std::vector<std::pair<std::vector<glm::vec2>, oly::math::Triangulation>> subpolygons;
 	subpolygons.reserve(triangulations.size());
 

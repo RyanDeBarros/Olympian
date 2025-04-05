@@ -12,10 +12,10 @@ namespace oly
 		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations)
 			: quads(quads), textures(textures), uvs(uvs), modulations(modulations)
 		{
-			assert(4 * quads <= USHRT_MAX);
-			assert(textures > 0); // there is enough capacity for 0th texture
-			assert(0 < uvs && uvs <= 500);
-			assert(0 < modulations && modulations <= 250);
+			OLY_ASSERT(4 * quads <= USHRT_MAX);
+			OLY_ASSERT(textures > 0); // there is enough capacity for 0th texture
+			OLY_ASSERT(0 < uvs && uvs <= 500);
+			OLY_ASSERT(0 < modulations && modulations <= 250);
 		}
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
@@ -57,7 +57,7 @@ namespace oly
 
 		void SpriteBatch::set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
 		{
-			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
+			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos] = texture;
 			texture->use_handle();
 			TexData texture_data;
@@ -68,7 +68,7 @@ namespace oly
 
 		void SpriteBatch::refresh_handle(GLushort pos, rendering::ImageDimensions dim)
 		{
-			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
+			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
@@ -78,7 +78,7 @@ namespace oly
 
 		void SpriteBatch::refresh_handle(GLushort pos)
 		{
-			assert(pos > 0 && pos < capacity.textures); // cannot set 0th texture
+			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			GLuint64 handle = textures[pos]->get_handle();
 			tex_data_ssbo.send(pos, &TexData::handle, handle);
@@ -86,13 +86,13 @@ namespace oly
 
 		void SpriteBatch::set_uvs(GLushort pos, const TexUVRect& tex_coords) const
 		{
-			assert(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
+			OLY_ASSERT(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
 			tex_coords_ubo.send(pos, tex_coords);
 		}
 
 		void SpriteBatch::set_modulation(GLushort pos, const Modulation& modulation) const
 		{
-			assert(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
+			OLY_ASSERT(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
 			modulation_ubo.send(pos, modulation);
 		}
 

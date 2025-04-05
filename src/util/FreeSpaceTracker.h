@@ -1,9 +1,9 @@
 #pragma once
 
-#include <assert.h>
 #include <set>
 
 #include "util/General.h"
+#include "util/Assert.h"
 
 namespace oly
 {
@@ -30,7 +30,7 @@ namespace oly
 	template<std::integral T>
 	inline void StrictFreeSpaceTracker<T>::reserve(Range<T> range)
 	{
-		assert(!free_space.empty());
+		OLY_ASSERT(!free_space.empty());
 		if (range.length == 0)
 			return;
 
@@ -39,7 +39,7 @@ namespace oly
 			--lb;
 		else if (range.initial < lb->initial) // lb is subsequent free range
 			--lb;
-		assert(lb->contains(range));
+		OLY_ASSERT(lb->contains(range));
 
 		if (lb->initial == range.initial)
 		{
@@ -86,7 +86,7 @@ namespace oly
 		if (lb == free_space.end())
 		{
 			--lb;
-			assert(!lb->contains(range.initial));
+			OLY_ASSERT(!lb->contains(range.initial));
 			if (lb->end() == range.initial)
 			{
 				T initial = lb->initial;
@@ -98,7 +98,7 @@ namespace oly
 		}
 		else if (lb == free_space.begin())
 		{
-			assert(range.initial < lb->initial && range.end() <= lb->initial);
+			OLY_ASSERT(range.initial < lb->initial && range.end() <= lb->initial);
 			if (range.end() == lb->initial)
 			{
 				T end = lb->end();
@@ -110,11 +110,11 @@ namespace oly
 		}
 		else
 		{
-			assert(range.initial < lb->initial);
+			OLY_ASSERT(range.initial < lb->initial);
 			auto pr = lb;
 			--pr;
-			assert(pr->end() <= range.initial);
-			assert(range.end() <= lb->initial);
+			OLY_ASSERT(pr->end() <= range.initial);
+			OLY_ASSERT(range.end() <= lb->initial);
 			if (pr->end() == range.initial)
 			{
 				T initial = pr->initial;

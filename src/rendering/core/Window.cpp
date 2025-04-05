@@ -1,12 +1,13 @@
 #include "Window.h"
 
 #include "util/Errors.h"
+#include "util/Assert.h"
 
 void oly::rendering::WindowHint::window_hint() const
 {
 	// LATER many functions are used that are from 4.5+, such as glNamed*. Use macros to provide alternatives when version is < 4.5. This will be difficult though, since stuff like BindlessTextures won't be supported, and consequently neither will SpriteBatch.
-	assert(window.context_version_major == 4);
-	assert(window.context_version_minor >= 5);
+	OLY_ASSERT(window.context_version_major == 4);
+	OLY_ASSERT(window.context_version_minor >= 5);
 
 	glfwWindowHint(GLFW_RESIZABLE, window.resizable);
 	glfwWindowHint(GLFW_VISIBLE, window.visible);
