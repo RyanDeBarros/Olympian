@@ -17,7 +17,7 @@ namespace oly
 				LOG << LOG.start_prefix("ASSERT") << description << " at " << file << ":" << line << LOG.nl;
 			else
 				LOG << LOG.start_prefix("ASSERT") << description << LOG.nl;
-			// TODO configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
+			// LATER configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
 			__debugbreak();
 		}
 	}

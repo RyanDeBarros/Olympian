@@ -433,7 +433,6 @@ glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int st
 		indexer = indexer->next_vertex.lock();
 	} while (indexer != data.head_polygon.lock());
 
-	// TODO everywhere throughout project, don't use assert, as this only works for debug. Create custom assert (one for debug and one for release) and logger.
 	OLY_ASSERT(false);
 	return -1;
 }

@@ -23,7 +23,7 @@ namespace oly
 		struct
 		{
 			bool console = true;
-			bool logfile = false; // TODO set true
+			bool logfile = true;
 		} target;
 
 		enum class Level
@@ -50,6 +50,7 @@ namespace oly
 			bool fatal = true;
 		} enable;
 
+		struct _timestamp {} timestamp;
 		struct _nl {} nl;
 		struct _endl {} endl;
 		struct _start {} start;
@@ -61,7 +62,9 @@ namespace oly
 		_start_prefix start_prefix(const char* prefix) { return _start_prefix{ prefix }; }
 		_start_prefix start_prefix(std::string&& prefix) { return _start_prefix{ std::move(prefix) }; }
 
+		void set_logfile(const char* filepath, bool append);
 		Logger& flush();
+		Logger& operator<<(const _timestamp&);
 		Logger& operator<<(const _nl&);
 		Logger& operator<<(const _endl&);
 		Logger& operator<<(const _start&);
