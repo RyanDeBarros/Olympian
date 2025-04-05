@@ -13,7 +13,7 @@ namespace oly
 	namespace batch
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), polygon_vbo(capacity.vertices, capacity.vertices),
+			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), polygon_vbo(capacity.vertices),
 			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives })
 		{
 			shader = shaders::polygon_batch;

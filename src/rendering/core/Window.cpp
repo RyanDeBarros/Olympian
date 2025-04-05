@@ -96,6 +96,11 @@ void oly::rendering::Window::set_height(int height)
 	glfwSetWindowSize(w, 0, height);
 }
 
+glm::vec4 oly::rendering::Window::projection_bounds() const
+{
+	return 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+}
+
 void oly::rendering::Window::make_context_current() const
 {
 	glfwMakeContextCurrent(w);

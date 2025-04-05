@@ -2,6 +2,7 @@
 
 #include "rendering/Sprites.h"
 #include "rendering/Polygons.h"
+#include "rendering/Ellipses.h"
 #include "util/Assert.h"
 #include "util/Logger.h"
 
@@ -38,7 +39,7 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_handle();
 
-	oly::batch::SpriteBatch sprite_batch({ 1000, 5, 2, 2 }, { -720, 720, -540, 540 });
+	oly::batch::SpriteBatch sprite_batch({ 1000, 5, 2, 2 }, window.projection_bounds());
 	enum
 	{
 		TEX_EINSTEIN = 1,
@@ -106,7 +107,7 @@ void run()
 	sprite_batch.draw_specs[1] = { 0, 3 };
 	sprite_batch.draw_specs[2] = { 3, 97 };
 
-	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, { -720, 720, -540, 540 });
+	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, window.projection_bounds());
 
 	oly::renderable::Polygon pentagon1(&polygon_batch);
 	pentagon1.polygon.points = {
@@ -210,6 +211,8 @@ void run()
 		polygon_batch.draw_specs[2] = { post_octagon_range.initial, polygon_batch.get_capacity().indices };
 	}
 
+	oly::batch::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
+
 	while (!window.should_close())
 	{
 		// pre-frame
@@ -243,6 +246,7 @@ void run()
 		// flush buffers
 		sprite_batch.flush();
 		polygon_batch.flush();
+		ellipse_batch.flush();
 		
 		// draw
 		oly::stencil::begin();
@@ -255,6 +259,7 @@ void run()
 		oly::stencil::end();
 		sprite_batch.draw(2);
 		polygon_batch.draw(2);
+		ellipse_batch.draw();
 
 		// post-frame
 		window.swap_buffers();

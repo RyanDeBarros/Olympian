@@ -20,6 +20,7 @@ struct QuadInfo
 layout(std430, binding = 1) readonly buffer QuadInfos {
 	QuadInfo uQuadInfo[];
 };
+
 struct Mat3
 {
 	float m00, m01, m02, m10, m11, m12, m20, m21, m22;

@@ -10,7 +10,7 @@ namespace oly
 {
 	namespace rendering
 	{
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		class FixedVectorBuffer
 		{
 		protected:
@@ -29,7 +29,7 @@ namespace oly
 			GLuint buffer() const { return buf; }
 		};
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline FixedVectorBuffer<StructType, IndexType>::FixedVectorBuffer(IndexType size, const StructType& default_value)
 			: cpudata(size, default_value)
 		{
@@ -50,7 +50,7 @@ namespace oly
 				: allow_map_send(allow_map_send), buffer_send_type(allow_map_send ? buffer_send_type : BufferSendType::SUBDATA) {}
 		};
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		class LazySender
 		{
 			BufferSendConfig config;
@@ -68,7 +68,7 @@ namespace oly
 			void flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const;
 		};
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void LazySender<IndexType>::init_storage(GLuint buf, const void* data, GLsizeiptr size) const
 		{
 			if (config.allow_map_send)
@@ -77,13 +77,13 @@ namespace oly
 				glNamedBufferStorage(buf, size, data, GL_DYNAMIC_STORAGE_BIT);
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void LazySender<IndexType>::lazy_send(IndexType pos) const
 		{
 			dirty.insert(pos);
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void LazySender<IndexType>::flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const
 		{
 			const std::byte* data = (const std::byte*)cpudata;
@@ -135,7 +135,7 @@ namespace oly
 			dirty.clear();
 		}
 
-		template<typename... IndexTypes>
+		template<std::unsigned_integral... IndexTypes>
 		class LazyMultiSender
 		{
 		public:
@@ -156,13 +156,13 @@ namespace oly
 			auto& sender() { return std::get<i>(senders); }
 		};
 
-		template<typename ...IndexTypes>
+		template<std::unsigned_integral... IndexTypes>
 		inline LazyMultiSender<IndexTypes...>::LazyMultiSender()
 			: senders(LazySender<IndexTypes>()...)
 		{
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		class LazyBuffer : public FixedVectorBuffer<StructType, IndexType>
 		{
 		protected:
@@ -185,19 +185,19 @@ namespace oly
 			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size()); }
 		};
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline LazyBuffer<StructType, IndexType>::LazyBuffer(IndexType size, const StructType& default_value, BufferSendConfig config)
 			: FixedVectorBuffer<StructType, IndexType>(size, default_value), lazy(config)
 		{
 		}
 
-		template<typename IndexType, size_t Size>
+		template<std::unsigned_integral IndexType, size_t Size>
 		struct FixedIndexLayout
 		{
 			IndexType data[Size];
 		};
 
-		template<typename IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize>
 		class FixedLayoutEBO : public LazyBuffer<FixedIndexLayout<IndexType, LayoutSize>, IndexType>
 		{
 			struct
@@ -217,14 +217,14 @@ namespace oly
 			void draw(GLenum mode, GLenum type) const;
 		};
 
-		template<typename IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize>
 		inline FixedLayoutEBO<IndexType, LayoutSize>::FixedLayoutEBO(IndexType size, BufferSendConfig config)
 			: LazyBuffer<FixedIndexLayout<IndexType, LayoutSize>, IndexType>(size, {}, config)
 		{
 			set_draw_spec(0, size);
 		}
 
-		template<typename IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize>
 		inline void FixedLayoutEBO<IndexType, LayoutSize>::set_draw_spec(IndexType first, IndexType count)
 		{
 			if (first < this->cpudata.size())
@@ -233,20 +233,20 @@ namespace oly
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(FixedIndexLayout<IndexType, LayoutSize>));
 		}
 
-		template<typename IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize>
 		inline void FixedLayoutEBO<IndexType, LayoutSize>::init() const
 		{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
 			this->init_storage();
 		}
 
-		template<typename IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize>
 		inline void FixedLayoutEBO<IndexType, LayoutSize>::draw(GLenum mode, GLenum type) const
 		{
 			glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		class FixedLayoutEBO<IndexType, 1> : public LazyBuffer<IndexType, IndexType>
 		{
 			struct
@@ -266,14 +266,14 @@ namespace oly
 			void draw(GLenum mode, GLenum type) const;
 		};
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline FixedLayoutEBO<IndexType, 1>::FixedLayoutEBO(IndexType size, BufferSendConfig config)
 			: LazyBuffer<IndexType, IndexType>(size, {}, config)
 		{
 			set_draw_spec(0, size);
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void FixedLayoutEBO<IndexType, 1>::set_draw_spec(IndexType first, IndexType count)
 		{
 			if (first < this->cpudata.size())
@@ -282,28 +282,30 @@ namespace oly
 			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(IndexType));
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void FixedLayoutEBO<IndexType, 1>::init() const
 		{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
 			this->init_storage();
 		}
 
-		template<typename IndexType>
+		template<std::unsigned_integral IndexType>
 		inline void FixedLayoutEBO<IndexType, 1>::draw(GLenum mode, GLenum type) const
 		{
 			glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
 		}
 
-		typedef FixedLayoutEBO<GLushort, 6> QuadLayoutEBO;
+		template<std::unsigned_integral IndexType = GLushort>
+		using QuadLayoutEBO = FixedLayoutEBO<IndexType, 6>;
 
-		inline void pre_init(QuadLayoutEBO& ebo)
+		template<std::unsigned_integral IndexType>
+		inline void pre_init(QuadLayoutEBO<IndexType>& ebo)
 		{
-			for (GLushort i = 0; i < ebo.vector().size(); ++i)
+			for (IndexType i = 0; i < ebo.vector().size(); ++i)
 				rendering::quad_indices(ebo.vector()[i].data, i);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		class IndexedSSBO : public LazyBuffer<StructType, IndexType>
 		{
 		public:
@@ -312,7 +314,7 @@ namespace oly
 			void bind_base(GLuint index) const;
 		};
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline IndexedSSBO<StructType, IndexType>::IndexedSSBO(IndexType size, const StructType& default_value, BufferSendConfig config)
 			: LazyBuffer<StructType, IndexType>(size, default_value, config)
 		{
@@ -320,13 +322,13 @@ namespace oly
 			this->init_storage();
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline void IndexedSSBO<StructType, IndexType>::bind_base(GLuint index) const
 		{
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, this->buf);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		class LightweightSSBO
 		{
 			GLBuffer buf;
@@ -342,33 +344,33 @@ namespace oly
 			void send(IndexType pos, MemberType StructType::*member, const MemberType& obj) const;
 		};
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline LightweightSSBO<StructType, IndexType>::LightweightSSBO(IndexType size)
 		{
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, buf);
 			glNamedBufferStorage(buf, size * sizeof(StructType), nullptr, GL_DYNAMIC_STORAGE_BIT);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline void LightweightSSBO<StructType, IndexType>::bind_base(GLuint index) const
 		{
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline void LightweightSSBO<StructType, IndexType>::send(IndexType pos, const StructType& obj) const
 		{
 			glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		template<typename MemberType>
 		inline void LightweightSSBO<StructType, IndexType>::send(IndexType pos, MemberType StructType::*member, const MemberType& obj) const
 		{
 			glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		class LightweightUBO
 		{
 			GLBuffer buf;
@@ -382,20 +384,20 @@ namespace oly
 			void send(IndexType pos, const StructType& obj) const;
 		};
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline LightweightUBO<StructType, IndexType>::LightweightUBO(IndexType size)
 		{
 			glBindBuffer(GL_UNIFORM_BUFFER, buf);
 			glNamedBufferStorage(buf, size * sizeof(StructType), nullptr, GL_DYNAMIC_STORAGE_BIT);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline void LightweightUBO<StructType, IndexType>::bind_base(GLuint index) const
 		{
 			glBindBufferBase(GL_UNIFORM_BUFFER, index, buf);
 		}
 
-		template<typename StructType, typename IndexType>
+		template<typename StructType, std::unsigned_integral IndexType>
 		inline void LightweightUBO<StructType, IndexType>::send(IndexType pos, const StructType& obj) const
 		{
 			glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
@@ -419,20 +421,25 @@ namespace oly
 		{
 			GLuint index;
 			GLint size;
+			GLint cols = 1;
 			GLenum type = GL_FLOAT;
 			GLboolean normalized = GL_FALSE;
 			GLsizei stride = 0;
 			GLsizei offset = 0;
+			GLsizei col_stride = 0;
 			GLuint divisor = 0;
 			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
+				for (GLint i = 0; i < cols; ++i)
+				{
 #pragma warning(suppress : 4312)
-				glVertexAttribPointer(index, size, type, normalized, stride, (void*)offset);
-				glEnableVertexAttribArray(index);
-				if (divisor > 0)
-					glVertexAttribDivisor(index, divisor);
+					glVertexAttribPointer(index + i, size, type, normalized, stride, (void*)(offset + i * col_stride));
+					glEnableVertexAttribArray(index + i);
+					if (divisor > 0)
+						glVertexAttribDivisor(index + i, divisor);
+				}
 			}
 		};
 
@@ -441,19 +448,24 @@ namespace oly
 		{
 			GLuint index;
 			GLint size;
+			GLint cols = 1;
 			GLenum type = GL_UNSIGNED_INT;
 			GLsizei stride = 0;
 			GLsizei offset = 0;
+			GLsizei col_stride = 0;
 			GLuint divisor = 0;
 			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
+				for (GLint i = 0; i < cols; ++i)
+				{
 #pragma warning(suppress : 4312)
-				glVertexAttribIPointer(index, size, type, stride, (void*)offset);
-				glEnableVertexAttribArray(index);
-				if (divisor > 0)
-					glVertexAttribDivisor(index, divisor);
+					glVertexAttribIPointer(index + i, size, type, stride, (void*)(offset + i * col_stride));
+					glEnableVertexAttribArray(index + i);
+					if (divisor > 0)
+						glVertexAttribDivisor(index + i, divisor);
+				}
 			}
 		};
 
@@ -462,18 +474,23 @@ namespace oly
 		{
 			GLuint index;
 			GLint size;
+			GLint cols = 1;
 			GLsizei stride = 0;
 			GLsizei offset = 0;
+			GLsizei col_stride = 0;
 			GLuint divisor = 0;
 			GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT;
 
 			void setup() const
 			{
+				for (GLint i = 0; i < cols; ++i)
+				{
 #pragma warning(suppress : 4312)
-				glVertexAttribLPointer(index, size, GL_DOUBLE, stride, (void*)offset);
-				glEnableVertexAttribArray(index);
-				if (divisor > 0)
-					glVertexAttribDivisor(index, divisor);
+					glVertexAttribLPointer(index + i, size, GL_DOUBLE, stride, (void*)(offset + i * col_stride));
+					glEnableVertexAttribArray(index + i);
+					if (divisor > 0)
+						glVertexAttribDivisor(index + i, divisor);
+				}
 			}
 		};
 
@@ -488,8 +505,10 @@ namespace oly
 			std::tuple<FixedVector<StructTypes>...> cpudata;
 
 		public:
-			template<typename... IndexType>
+			template<std::unsigned_integral... IndexType>
 			VertexBufferBlock(IndexType... sizes);
+			template<std::unsigned_integral IndexType>
+			VertexBufferBlock(IndexType size);
 
 			constexpr GLuint buffer(GLsizei i) const { return bufblock[i]; }
 			template<GLsizei i>
@@ -508,8 +527,15 @@ namespace oly
 		};
 
 		template<typename... StructTypes>
-		template<typename... IndexType>
+		template<std::unsigned_integral... IndexType>
 		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType... sizes)
+			: cpudata(FixedVector<StructTypes>(sizes)...)
+		{
+		}
+
+		template<typename... StructTypes>
+		template<std::unsigned_integral IndexType>
+		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType sizes)
 			: cpudata(FixedVector<StructTypes>(sizes)...)
 		{
 		}
@@ -531,7 +557,7 @@ namespace oly
 				glBindBuffer(GL_ARRAY_BUFFER, bufblock[Indexes]),
 				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>), nullptr, std::get<Indexes>(std::tie(attribs...)).storage_flags),
 				std::get<Indexes>(std::tie(attribs...)).setup()
-				), ...);
+			), ...);
 		}
 
 		template<typename VertexBufferBlock, typename LazyMultiSender>
@@ -544,7 +570,7 @@ namespace oly
 			static constexpr size_t N = VertexBufferBlock::N;
 
 		public:
-			template<typename... IndexType>
+			template<std::unsigned_integral... IndexType>
 			LazyVertexBufferBlock(IndexType... sizes);
 
 			const VertexBufferBlock& vbo() const { return vertex_buffer; }
@@ -562,7 +588,7 @@ namespace oly
 		};
 
 		template<typename VertexBufferBlock, typename LazyMultiSender>
-		template<typename... IndexType>
+		template<std::unsigned_integral... IndexType>
 		inline LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::LazyVertexBufferBlock(IndexType... sizes)
 			: vertex_buffer(sizes...)
 		{
@@ -589,32 +615,32 @@ namespace oly
 				(typename LazyMultiSender::template IndexType<Indexes>)vertex_buffer.vector<Indexes>().size())), ...);
 		}
 
-		template<typename VertexAttrib, typename IndexType>
+		template<typename VertexAttrib, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock1x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib>,
 			LazyMultiSender<IndexType>>;
 
-		template<typename VertexAttrib1, typename VertexAttrib2, typename IndexType>
+		template<typename VertexAttrib1, typename VertexAttrib2, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock2x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib1, VertexAttrib2>,
 			LazyMultiSender<IndexType, IndexType>>;
 
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename IndexType>
+		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock3x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3>,
 			LazyMultiSender<IndexType, IndexType, IndexType>>;
 
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename IndexType>
+		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock4x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4>,
 			LazyMultiSender<IndexType, IndexType, IndexType, IndexType>>;
 
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, typename IndexType>
+		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock5x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4, VertexAttrib5>,
 			LazyMultiSender<IndexType, IndexType, IndexType, IndexType, IndexType>>;
 
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, typename VertexAttrib6, typename IndexType>
+		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, typename VertexAttrib6, std::unsigned_integral IndexType>
 		using LazyVertexBufferBlock6x1 = LazyVertexBufferBlock<
 			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4, VertexAttrib5, VertexAttrib6>,
 			LazyMultiSender<IndexType, IndexType, IndexType, IndexType, IndexType, IndexType>>;

@@ -1,9 +1,10 @@
 #include "Sprites.h"
 
-#include "Resources.h"
-
 #include <glm/gtc/type_ptr.hpp>
+
 #include <limits>
+
+#include "Resources.h"
 
 namespace oly
 {
@@ -33,7 +34,6 @@ namespace oly
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
 			ebo.init();
-
 			glBindVertexArray(0);
 
 			set_projection(projection_bounds);
@@ -190,7 +190,7 @@ namespace oly
 
 		void SpriteBatch::flush()
 		{
-			for (renderable::Sprite* sprite : sprites)
+			for (renderable::Sprite* sprite : sprites) // TODO create separate map for sprites that need to be flushed. could probably get rid of sprites then.
 				sprite->flush();
 			quad_info_ssbo.flush();
 			quad_transform_ssbo.flush();

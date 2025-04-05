@@ -49,8 +49,8 @@ namespace oly
 			sprite_batch = *_sprite_batch;
 			_polygon_batch = rendering::load_shader((shaders_dir + "polygon_batch.vert").c_str(), (shaders_dir + "polygon_batch.frag").c_str());
 			polygon_batch = *_polygon_batch;
-			//_ellipse_batch = rendering::load_shader((shaders_dir + "ellipse_batch.vert").c_str(), (shaders_dir + "ellipse_batch.frag").c_str()); TODO uncomment
-			//ellipse_batch = *_ellipse_batch;
+			_ellipse_batch = rendering::load_shader((shaders_dir + "ellipse_batch.vert").c_str(), (shaders_dir + "ellipse_batch.frag").c_str());
+			ellipse_batch = *_ellipse_batch;
 		}
 
 		void unload()

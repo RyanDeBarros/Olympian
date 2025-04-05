@@ -24,7 +24,7 @@ namespace oly
 
 			GLuint shader;
 			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO ebo;
+			rendering::QuadLayoutEBO<> ebo;
 
 			FixedVector<rendering::BindlessTextureRes> textures;
 

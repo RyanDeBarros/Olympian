@@ -68,6 +68,8 @@ namespace oly
 			void set_width(int width);
 			void set_height(int height);
 
+			glm::vec4 projection_bounds() const;
+
 			void make_context_current() const;
 			bool should_close() const;
 			void should_close(bool close) const;
