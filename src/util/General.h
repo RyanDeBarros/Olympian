@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 namespace oly
 {
 	constexpr unsigned int unsigned_mod(int pos, int mod)
@@ -62,5 +64,11 @@ namespace oly
 			memcpy(buf + offset2, temp, count1 * sizeof(T));
 		}
 		delete[] temp;
+	}
+
+	template<typename T>
+	inline void vector_erase(std::vector<T>& vec, const T& el)
+	{
+		vec.erase(std::find(vec.begin(), vec.end(), el));
 	}
 }

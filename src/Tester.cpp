@@ -3,8 +3,6 @@
 #include "rendering/Sprites.h"
 #include "rendering/Polygons.h"
 #include "rendering/Ellipses.h"
-#include "util/Assert.h"
-#include "util/Logger.h"
 
 static void run();
 
@@ -77,20 +75,21 @@ void run()
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
-	sprite2.quad.z_value = -1.0f;
-	sprite2.quad.batch().sync_z_values();
+	sprite2.quad.z_value = 1.0f;
+	sprite2.quad.send_z_value();
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
+	flag_tesselation_parent.local.position.y = -100;
 	auto& flag_tesselation_modifier = flag_tesselation_parent.get_modifier<oly::PivotShearTransformModifier2D>();
 	flag_tesselation_modifier.pivot = { 0.0f, 0.0f };
 	flag_tesselation_modifier.size = { 400, 320 };
 	flag_tesselation_modifier.shearing = { 0, 1 };
-	int flag_rows = 8;
-	int flag_cols = 8;
 	flag_tesselation_parent.post_set();
 	std::vector<oly::renderable::Sprite> flag_tesselation;
-	flag_tesselation.reserve(64);
+	int flag_rows = 8;
+	int flag_cols = 8;
+	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
 		flag_tesselation.emplace_back(&sprite_batch);
@@ -213,6 +212,28 @@ void run()
 
 	oly::batch::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
 
+	oly::renderable::Ellipse ellipse1(&ellipse_batch);
+	ellipse1.ellipse.dimension() = { 2, 1, 0.3f, 1.0f, 1.0f };
+	ellipse1.ellipse.color().fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
+	ellipse1.ellipse.color().fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
+	ellipse1.ellipse.color().border_inner = { 0.2f, 0.6f, 1.0f, 1.0f };
+	ellipse1.ellipse.color().border_outer = { 0.8f, 0.9f, 1.0f, 1.0f };
+	ellipse1.local() = { { -300, 0 }, 0, { 150, 150 } };
+	ellipse1.post_set();
+	ellipse1.ellipse.send_data();
+	
+	oly::renderable::Ellipse ellipse2(&ellipse_batch);
+	ellipse2.ellipse.dimension() = { 1, 3, 0.4f, 0.5f, 2.0f };
+	ellipse2.ellipse.color().fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
+	ellipse2.ellipse.color().fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
+	ellipse2.ellipse.color().border_inner = { 0.0f, 0.0f, 0.0f, 1.0f };
+	ellipse2.ellipse.color().border_outer = { 0.8f, 0.9f, 1.0f, 0.0f };
+	ellipse2.local() = { { 0, 0 }, 0, { 150, 150 } };
+	ellipse2.post_set();
+	ellipse2.ellipse.send_data();
+	ellipse2.ellipse.z_value = -1.0f;
+	ellipse2.ellipse.send_z_value();
+
 	oly::TIME.init();
 	while (!window.should_close())
 	{
@@ -251,6 +272,7 @@ void run()
 		ellipse_batch.flush();
 		
 		// draw
+		ellipse_batch.draw();
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
@@ -261,7 +283,6 @@ void run()
 		oly::stencil::end();
 		sprite_batch.draw(2);
 		polygon_batch.draw(2);
-		ellipse_batch.draw();
 
 		// post-frame
 		window.swap_buffers();

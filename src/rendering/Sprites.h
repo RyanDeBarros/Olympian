@@ -93,13 +93,17 @@ namespace oly
 			{
 				friend SpriteBatch;
 				SpriteBatch* _batch = nullptr;
-				QuadPos _ssbo_pos = -1;
+				QuadPos pos = -1;
 				bool active = true;
+			
+			public:
+				float z_value = 0.0f;
+
+			private:
 				QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 
 			public:
-				float z_value = 0.0f;
 
 				QuadReference(SpriteBatch* batch);
 				QuadReference(const QuadReference&) = delete;
@@ -109,13 +113,13 @@ namespace oly
 
 				const SpriteBatch& batch() const { return *_batch; }
 				SpriteBatch& batch() { return *_batch; }
-				QuadInfo& info() { return *_info; }
 				const QuadInfo& info() const { return *_info; }
-				glm::mat3& transform() { return *_transform; }
+				QuadInfo& info() { return *_info; }
 				const glm::mat3& transform() const { return *_transform; }
+				glm::mat3& transform() { return *_transform; }
 				
 			private:
-				QuadPos index_pos() const { return _batch->z_order.range_of(_ssbo_pos); }
+				QuadPos index_pos() const { return _batch->z_order.range_of(pos); }
 				void set_z_index(QuadPos z) { _batch->move_quad_order(index_pos(), z); }
 				void move_z_index(int by) { _batch->move_quad_order(index_pos(), index_pos() + by); }
 
@@ -123,6 +127,7 @@ namespace oly
 				void send_info() const;
 				void send_transform() const;
 				void send_data() const;
+				void send_z_value() { _batch->dirty_z = true; }
 			};
 			friend QuadReference;
 
@@ -133,16 +138,13 @@ namespace oly
 		public:
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
-			void sync_z_values() { dirty_z = true; }
-			
-		private:
-			bool dirty_z = false;
 
-		public:
 			void flush();
 
 		private:
-			std::set<renderable::Sprite*> sprites;
+			bool dirty_z = false;
+			std::vector<QuadReference*> quads;
+			std::unordered_set<renderable::Sprite*> sprites;
 			void flush_z_values();
 		};
 	}
@@ -164,7 +166,7 @@ namespace oly
 			batch::SpriteBatch& batch() { return quad.batch(); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
-			void post_set() const; // call after modifying local
+			void post_set(); // call after modifying local
 			void pre_get() const; // call before reading global
 
 		private:

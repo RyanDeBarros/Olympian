@@ -2,6 +2,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <algorithm>
+
 #include "Resources.h"
 #include "math/Transforms.h"
 
@@ -10,7 +12,7 @@ namespace oly
 	namespace batch
 	{
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses)
+			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses)
 		{
 			shader = shaders::ellipse_batch;
 			glUseProgram(shader);
@@ -23,29 +25,6 @@ namespace oly
 
 			set_projection(projection_bounds);
 			draw_specs.push_back({ 0, capacity.ellipses });
-
-			dimension_ssbo.vector()[0] = { 2, 1, 0.3f, 1.0f, 1.0f };
-			dimension_ssbo.lazy_send(0);
-			ColorGradient c;
-			c.fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
-			c.fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
-			c.border_inner = { 0.2f, 0.6f, 1.0f, 1.0f };
-			c.border_outer = { 0.8f, 0.9f, 1.0f, 1.0f };
-			color_ssbo.vector()[0] = c;
-			color_ssbo.lazy_send(0);
-			transform_ssbo.vector()[0] = Transform2D{ { -300, 0 }, 0, { 150, 150 } }.matrix();
-			transform_ssbo.lazy_send(0);
-
-			dimension_ssbo.vector()[1] = { 1, 3, 0.4f, 0.5f, 2.0f };
-			dimension_ssbo.lazy_send(1);
-			c.fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
-			c.fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
-			c.border_inner = { 0.0f, 0.0f, 0.0f, 1.0f };
-			c.border_outer = { 0.8f, 0.9f, 1.0f, 0.0f };
-			color_ssbo.vector()[1] = c;
-			color_ssbo.lazy_send(1);
-			transform_ssbo.vector()[1] = Transform2D{ { 300, 0 }, 0, { 150, 150 } }.matrix();
-			transform_ssbo.lazy_send(1);
 		}
 
 		void EllipseBatch::draw(size_t draw_spec)
@@ -67,11 +46,194 @@ namespace oly
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void EllipseBatch::flush() const
+		EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
+			: _batch(batch)
 		{
+			pos = _batch->pos_generator.gen();
+			_dimension = &_batch->dimension_ssbo.vector()[pos];
+			_color = &_batch->color_ssbo.vector()[pos];
+			_transform = &_batch->transform_ssbo.vector()[pos];
+			_batch->ellipse_refs.push_back(this);
+			_batch->dirty_z = true;
+		}
+		
+		EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
+			: _batch(other._batch), pos(other.pos), _dimension(other._dimension), _color(other._color), _transform(other._transform)
+		{
+			other.active = false;
+			auto it = std::find(_batch->ellipse_refs.begin(), _batch->ellipse_refs.end(), &other);
+			if (it != _batch->ellipse_refs.end())
+				*it = this;
+		}
+		
+		EllipseBatch::EllipseReference::~EllipseReference()
+		{
+			if (active)
+			{
+				_batch->pos_generator.yield(pos);
+				vector_erase(_batch->ellipse_refs, this);
+			}
+		}
+		
+		EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(EllipseReference&& other) noexcept
+		{
+			if (this != &other)
+			{
+				if (active)
+				{
+					_batch->pos_generator.yield(pos);
+					vector_erase(_batch->ellipse_refs, this);
+				}
+				_batch = other._batch;
+				other.active = false;
+				auto it = std::find(_batch->ellipse_refs.begin(), _batch->ellipse_refs.end(), &other);
+				if (it != _batch->ellipse_refs.end())
+					*it = this;
+				pos = other.pos;
+				_dimension = other._dimension;
+				_color = other._color;
+				_transform = other._transform;
+			}
+			return *this;
+		}
+
+		void EllipseBatch::EllipseReference::send_dimension() const
+		{
+			_batch->dimension_ssbo.lazy_send(pos);
+		}
+
+		void EllipseBatch::EllipseReference::send_color() const
+		{
+			_batch->color_ssbo.lazy_send(pos);
+		}
+
+		void EllipseBatch::EllipseReference::send_transform() const
+		{
+			_batch->transform_ssbo.lazy_send(pos);
+		}
+
+		void EllipseBatch::EllipseReference::send_data() const
+		{
+			_batch->dimension_ssbo.lazy_send(pos);
+			_batch->color_ssbo.lazy_send(pos);
+			_batch->transform_ssbo.lazy_send(pos);
+		}
+
+		void EllipseBatch::swap_ellipse_order(EllipsePos pos1, EllipsePos pos2)
+		{
+			if (pos1 != pos2)
+			{
+				std::swap(ebo.vector()[pos1], ebo.vector()[pos2]);
+				z_order.swap_range(pos1, pos2);
+				ebo.lazy_send(pos1);
+				ebo.lazy_send(pos2);
+			}
+		}
+
+		void EllipseBatch::move_ellipse_order(EllipsePos from, EllipsePos to)
+		{
+			to = std::clamp(to, (EllipsePos)0, EllipsePos(capacity.ellipses - 1));
+			from = std::clamp(from, (EllipsePos)0, EllipsePos(capacity.ellipses - 1));
+
+			if (from < to)
+			{
+				for (EllipsePos i = from; i < to; ++i)
+					swap_ellipse_order(i, i + 1);
+			}
+			else if (from > to)
+			{
+				for (EllipsePos i = from; i > to; --i)
+					swap_ellipse_order(i, i - 1);
+			}
+		}
+
+		void EllipseBatch::flush()
+		{
+			for (renderable::Ellipse* ellipse : ellipses)
+				ellipse->flush();
 			dimension_ssbo.flush();
 			color_ssbo.flush();
 			transform_ssbo.flush();
+			flush_z_values();
+			ebo.flush();
+		}
+
+		void EllipseBatch::flush_z_values()
+		{
+			if (!dirty_z)
+				return;
+			dirty_z = false;
+			for (EllipsePos i = 0; i < ellipse_refs.size() - 1; ++i)
+			{
+				bool swapped = false;
+				for (EllipsePos j = 0; j < ellipse_refs.size() - i - 1; ++j)
+				{
+					if (ellipse_refs[j]->z_value > ellipse_refs[j + 1]->z_value)
+					{
+						std::swap(ellipse_refs[j], ellipse_refs[j + 1]);
+						swap_ellipse_order(ellipse_refs[j]->index_pos(), ellipse_refs[j + 1]->index_pos());
+						swapped = true;
+					}
+				}
+				if (!swapped)
+					break;
+			}
+		}
+	}
+
+	namespace renderable
+	{
+		Ellipse::Ellipse(batch::EllipseBatch* ellipse_batch)
+			: ellipse(ellipse_batch)
+		{
+			batch().ellipses.insert(this);
+		}
+
+		Ellipse::Ellipse(Ellipse&& other) noexcept
+			: ellipse(std::move(other.ellipse)), transformer(std::move(other.transformer))
+		{
+			batch().ellipses.erase(&other);
+		}
+
+		Ellipse::~Ellipse()
+		{
+			batch().ellipses.erase(this);
+		}
+
+		Ellipse& Ellipse::operator=(Ellipse&& other) noexcept
+		{
+			if (this != &other)
+			{
+				bool different_batch = (&batch() != &other.batch());
+				if (different_batch)
+					batch().ellipses.erase(this);
+				ellipse = std::move(other.ellipse);
+				transformer = std::move(other.transformer);
+				batch().ellipses.erase(&other);
+				if (different_batch)
+					batch().ellipses.insert(this);
+			}
+			return *this;
+		}
+
+		void Ellipse::post_set()
+		{
+			transformer.post_set();
+		}
+
+		void Ellipse::pre_get() const
+		{
+			transformer.pre_get();
+		}
+
+		void Ellipse::flush()
+		{
+			if (transformer.flush())
+			{
+				transformer.pre_get();
+				ellipse.transform() = transformer.global();
+				ellipse.send_transform();
+			}
 		}
 	}
 }

@@ -112,21 +112,29 @@ namespace oly
 		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)
 			: _batch(batch)
 		{
-			_ssbo_pos = _batch->pos_generator.gen();
-			_info = &_batch->quad_info_ssbo.vector()[_ssbo_pos];
-			_transform = &_batch->quad_transform_ssbo.vector()[_ssbo_pos];
+			pos = _batch->pos_generator.gen();
+			_info = &_batch->quad_info_ssbo.vector()[pos];
+			_transform = &_batch->quad_transform_ssbo.vector()[pos];
+			_batch->quads.push_back(this);
+			_batch->dirty_z = true;
 		}
 
 		SpriteBatch::QuadReference::QuadReference(QuadReference&& other) noexcept
-			: _batch(other._batch), _ssbo_pos(other._ssbo_pos), _info(other._info), _transform(other._transform)
+			: _batch(other._batch), pos(other.pos), _info(other._info), _transform(other._transform)
 		{
 			other.active = false;
+			auto it = std::find(_batch->quads.begin(), _batch->quads.end(), &other);
+			if (it != _batch->quads.end())
+				*it = this;
 		}
 
 		SpriteBatch::QuadReference::~QuadReference()
 		{
 			if (active)
-				_batch->pos_generator.yield(_ssbo_pos);
+			{
+				_batch->pos_generator.yield(pos);
+				vector_erase(_batch->quads, this);
+			}
 		}
 
 		SpriteBatch::QuadReference& SpriteBatch::QuadReference::operator=(QuadReference&& other) noexcept
@@ -134,10 +142,16 @@ namespace oly
 			if (this != &other)
 			{
 				if (active)
-					_batch->pos_generator.yield(_ssbo_pos);
+				{
+					_batch->pos_generator.yield(pos);
+					vector_erase(_batch->quads, this);
+				}
 				_batch = other._batch;
 				other.active = false;
-				_ssbo_pos = other._ssbo_pos;
+				auto it = std::find(_batch->quads.begin(), _batch->quads.end(), &other);
+				if (it != _batch->quads.end())
+					*it = this;
+				pos = other.pos;
 				_info = other._info;
 				_transform = other._transform;
 			}
@@ -146,18 +160,18 @@ namespace oly
 
 		void SpriteBatch::QuadReference::send_info() const
 		{
-			_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_info_ssbo.lazy_send(pos);
 		}
 
 		void SpriteBatch::QuadReference::send_transform() const
 		{
-			_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_transform_ssbo.lazy_send(pos);
 		}
 
 		void SpriteBatch::QuadReference::send_data() const
 		{
-			_batch->quad_info_ssbo.lazy_send(_ssbo_pos);
-			_batch->quad_transform_ssbo.lazy_send(_ssbo_pos);
+			_batch->quad_info_ssbo.lazy_send(pos);
+			_batch->quad_transform_ssbo.lazy_send(pos);
 		}
 
 		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
@@ -190,35 +204,28 @@ namespace oly
 
 		void SpriteBatch::flush()
 		{
-			for (renderable::Sprite* sprite : sprites) // TODO create separate map for sprites that need to be flushed. could probably get rid of sprites then.
+			for (renderable::Sprite* sprite : sprites)
 				sprite->flush();
 			quad_info_ssbo.flush();
 			quad_transform_ssbo.flush();
-			if (dirty_z)
-			{
-				dirty_z = false;
-				flush_z_values();
-			}
+			flush_z_values();
 			ebo.flush();
 		}
 
 		void SpriteBatch::flush_z_values()
 		{
-			std::vector<QuadReference*> quads;
-			quads.reserve(sprites.size());
-			for (const auto& sprite : sprites)
-				quads.push_back(&sprite->quad);
-			// LATER this is quadratic at worst-case
+			if (!dirty_z)
+				return;
+			dirty_z = false;
 			for (QuadPos i = 0; i < quads.size() - 1; ++i)
 			{
 				bool swapped = false;
-				float zi = quads[i]->z_value;
-				for (QuadPos j = i + 1; j < quads.size(); ++j)
+				for (QuadPos j = 0; j < quads.size() - i - 1; ++j)
 				{
-					if (zi > quads[j]->z_value)
+					if (quads[j]->z_value > quads[j + 1]->z_value)
 					{
-						std::swap(quads[i], quads[j]);
-						swap_quad_order(quads[i]->index_pos(), quads[j]->index_pos());
+						std::swap(quads[j], quads[j + 1]);
+						swap_quad_order(quads[j]->index_pos(), quads[j + 1]->index_pos());
 						swapped = true;
 					}
 				}
@@ -233,13 +240,13 @@ namespace oly
 		Sprite::Sprite(batch::SpriteBatch* sprite_batch)
 			: quad(sprite_batch)
 		{
-			sprite_batch->sprites.insert(this);
+			batch().sprites.insert(this);
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
 			: quad(std::move(other.quad)), transformer(std::move(other.transformer))
 		{
-			batch().sprites.insert(this);
+			batch().sprites.erase(&other);
 		}
 
 		Sprite::~Sprite()
@@ -251,15 +258,19 @@ namespace oly
 		{
 			if (this != &other)
 			{
-				batch().sprites.erase(this);
+				bool different_batch = (&batch() != &other.batch());
+				if (different_batch)
+					batch().sprites.erase(this);
 				quad = std::move(other.quad);
-				batch().sprites.insert(this);
 				transformer = std::move(other.transformer);
+				batch().sprites.erase(&other);
+				if (different_batch)
+					batch().sprites.insert(this);
 			}
 			return *this;
 		}
 
-		void Sprite::post_set() const
+		void Sprite::post_set()
 		{
 			transformer.post_set();
 		}
