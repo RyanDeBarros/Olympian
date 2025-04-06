@@ -213,6 +213,7 @@ void run()
 
 	oly::batch::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
 
+	oly::TIME.init();
 	while (!window.should_close())
 	{
 		// pre-frame
@@ -220,26 +221,27 @@ void run()
 		oly::LOG.flush();
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glfwPollEvents();
+		oly::TIME.sync();
 
 		// logic update
-		octagon.base.fill_colors[0].r = fmod((float)glfwGetTime(), 1.0f);
-		octagon.base.fill_colors[0].b = fmod((float)glfwGetTime(), 1.0f);
-		octagon.base.border_width = fmod((float)glfwGetTime() * 0.05f, 0.1f);
-		octagon.base.points[6].x = fmod((float)glfwGetTime(), 0.6f) - 0.3f;
+		octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
+		octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
+		octagon.base.border_width = fmod(oly::TIME.now<float>() * 0.05f, 0.1f);
+		octagon.base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
 		octagon.send_polygon();
 	
-		concave_shape.transformer.local.rotation += 0.01f;
+		concave_shape.transformer.local.rotation += 0.5f * oly::TIME.delta<float>();
 		concave_shape.post_set();
 
-		sprite1.local().rotation = (float)glfwGetTime();
+		sprite1.local().rotation = oly::TIME.now<float>();
 		sprite1.post_set();
 
-		sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.008f;
+		sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
 		sprite2.post_set();
 
-		flag_tesselation_modifier.pivot.x += 0.001f;
-		flag_tesselation_modifier.pivot.y += 0.001f;
-		flag_tesselation_parent.local.rotation -= 0.01f;
+		flag_tesselation_modifier.pivot.x += 0.05f * oly::TIME.delta<float>();
+		flag_tesselation_modifier.pivot.y += 0.05f * oly::TIME.delta<float>();
+		flag_tesselation_parent.local.rotation -= 0.5f * oly::TIME.delta<float>();
 		flag_tesselation_parent.post_set();
 		flag_tesselation_parent.flush();
 

@@ -2,16 +2,31 @@
 
 layout(location = 0) out vec4 oColor;
 
-in vec4 tColor;
-flat in vec2 tCenter;
-in vec2 tWorldPos;
-flat in vec2 tSize;
+struct Dimension {
+	float rx;
+	float ry;
+	float b;
+	float fill_exp;
+	float border_exp;
+};
+struct ColorGradient {
+	vec4 fill_inner;
+	vec4 fill_outer;
+	vec4 border_inner;
+	vec4 border_outer;
+};
+
+flat in ColorGradient tColor;
+in vec2 tLocalPos;
+flat in Dimension tDimension;
 
 void main() {
-	vec2 displ = tWorldPos - tCenter;
-	float square = pow(displ.x / tSize.x, 2) + pow(displ.y / tSize.y, 2);
-	if (square > 1.0)
+	float diff = 1 - sqrt(pow(tLocalPos.x / tDimension.rx, 2) + pow(tLocalPos.y / tDimension.ry, 2));
+	if (diff < 0.0)
 		discard;
-
-	oColor = tColor;
+	if (diff >= tDimension.b) {
+		oColor = mix(tColor.fill_inner, tColor.fill_outer, pow((1.0 - diff + tDimension.b) / (1.0 - tDimension.b), tDimension.fill_exp));	
+	} else {
+		oColor = mix(tColor.border_inner, tColor.border_outer, pow((tDimension.b - diff) / tDimension.b, tDimension.border_exp));
+	}
 }

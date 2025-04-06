@@ -13,8 +13,23 @@ namespace oly
 
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<> ebo;
-			rendering::IndexedSSBO<glm::vec2, GLushort> size_ssbo;
-			rendering::IndexedSSBO<glm::vec4, GLushort> color_ssbo;
+			
+		public:
+			struct EllipseDimension
+			{
+				float width, height, border;
+				float fill_exp = 1.0f, border_exp = 1.0f;
+			};
+			struct ColorGradient {
+				glm::vec4 fill_inner;
+				glm::vec4 fill_outer;
+				glm::vec4 border_inner;
+				glm::vec4 border_outer;
+			};
+
+		private:
+			rendering::IndexedSSBO<EllipseDimension, GLushort> dimension_ssbo;
+			rendering::IndexedSSBO<ColorGradient, GLushort> color_ssbo;
 			rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
 
 			GLuint projection_location;
