@@ -24,7 +24,6 @@ namespace oly
 			z_order(capacity.quads), textures(capacity.textures)
 		{
 			shader = shaders::sprite_batch;
-			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 			modulation_location = glGetUniformLocation(shader, "uGlobalModulation");
 

@@ -17,7 +17,6 @@ namespace oly
 			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives })
 		{
 			shader = shaders::polygon_batch;
-			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 			degree_location = glGetUniformLocation(shader, "uDegree");
 

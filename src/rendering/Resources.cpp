@@ -42,6 +42,8 @@ namespace oly
 		GLuint polygon_batch;
 		static std::unique_ptr<rendering::Shader> _ellipse_batch = nullptr;
 		GLuint ellipse_batch;
+		static std::unique_ptr<rendering::Shader> _polygonal_particle = nullptr;
+		GLuint polygonal_particle;
 
 		void load()
 		{
@@ -51,6 +53,8 @@ namespace oly
 			polygon_batch = *_polygon_batch;
 			_ellipse_batch = rendering::load_shader((shaders_dir + "ellipse_batch.vert").c_str(), (shaders_dir + "ellipse_batch.frag").c_str());
 			ellipse_batch = *_ellipse_batch;
+			_polygonal_particle = rendering::load_shader((shaders_dir + "polygonal_particle.vert").c_str(), (shaders_dir + "polygonal_particle.frag").c_str());
+			polygonal_particle = *_polygonal_particle;
 		}
 
 		void unload()
@@ -61,6 +65,8 @@ namespace oly
 			polygon_batch = 0;
 			_ellipse_batch.reset();
 			ellipse_batch = 0;
+			_polygonal_particle.reset();
+			polygonal_particle = 0;
 		}
 	}
 

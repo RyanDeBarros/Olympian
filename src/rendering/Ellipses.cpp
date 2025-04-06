@@ -15,7 +15,6 @@ namespace oly
 			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses)
 		{
 			shader = shaders::ellipse_batch;
-			glUseProgram(shader);
 			projection_location = glGetUniformLocation(shader, "uProjection");
 
 			glBindVertexArray(vao);

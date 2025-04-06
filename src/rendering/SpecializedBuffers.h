@@ -197,7 +197,7 @@ namespace oly
 			IndexType data[Size];
 		};
 
-		template<std::unsigned_integral IndexType, size_t LayoutSize>
+		template<std::unsigned_integral IndexType, size_t LayoutSize = 1>
 		class FixedLayoutEBO : public LazyBuffer<FixedIndexLayout<IndexType, LayoutSize>, IndexType>
 		{
 			struct
@@ -555,7 +555,8 @@ namespace oly
 		{
 			((
 				glBindBuffer(GL_ARRAY_BUFFER, bufblock[Indexes]),
-				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>), nullptr, std::get<Indexes>(std::tie(attribs...)).storage_flags),
+				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>),
+					std::get<Indexes>(cpudata).data(), std::get<Indexes>(std::tie(attribs...)).storage_flags),
 				std::get<Indexes>(std::tie(attribs...)).setup()
 			), ...);
 		}

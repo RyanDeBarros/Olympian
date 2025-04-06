@@ -18,6 +18,7 @@ namespace oly
 		extern GLuint sprite_batch;
 		extern GLuint polygon_batch;
 		extern GLuint ellipse_batch;
+		extern GLuint polygonal_particle;
 		
 		extern void load();
 		extern void unload();

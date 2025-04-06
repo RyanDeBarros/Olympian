@@ -3,6 +3,7 @@
 #include "rendering/Sprites.h"
 #include "rendering/Polygons.h"
 #include "rendering/Ellipses.h"
+#include "rendering/Particles.h"
 
 static void run();
 
@@ -234,6 +235,14 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
+	std::vector<glm::vec2> particle_polygon{
+		{ -1, -1 },
+		{  1, -1 },
+		{  1,  1 },
+		{ -1,  1 }
+	};
+	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle(100, particle_polygon), window.projection_bounds());
+
 	oly::TIME.init();
 	while (!window.should_close())
 	{
@@ -270,6 +279,9 @@ void run()
 		sprite_batch.flush();
 		polygon_batch.flush();
 		ellipse_batch.flush();
+
+		// update particle systems
+		particle_emitter.update();
 		
 		// draw
 		ellipse_batch.draw();
@@ -283,6 +295,7 @@ void run()
 		oly::stencil::end();
 		sprite_batch.draw(2);
 		polygon_batch.draw(2);
+		particle_emitter.draw();
 
 		// post-frame
 		window.swap_buffers();
