@@ -64,6 +64,7 @@ namespace oly
 			void set_buffer_send_type(BufferSendType type) { if (config.allow_map_send) config.buffer_send_type = type; }
 
 			void init_storage(GLuint buf, const void* data, GLsizeiptr size) const;
+			void init_mutable(GLuint buf, const void* data, GLsizeiptr size) const;
 			void lazy_send(IndexType pos) const;
 			void flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const;
 		};

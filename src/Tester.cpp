@@ -241,7 +241,7 @@ void run()
 		{  1,  1 },
 		{ -1,  1 }
 	};
-	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle(100, particle_polygon), window.projection_bounds());
+	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle(particle_polygon), window.projection_bounds(), 100);
 
 	oly::TIME.init();
 	while (!window.should_close())

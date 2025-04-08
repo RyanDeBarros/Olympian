@@ -6,6 +6,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "General.h"
+
 namespace oly
 {
 	class Logger
@@ -74,7 +76,7 @@ namespace oly
 
 		Logger& operator<<(const char*);
 		Logger& operator<<(const std::string&);
-		template<std::integral T>
+		template<numeric T>
 		Logger& operator<<(T v) { return *this << std::to_string(v); }
 	};
 

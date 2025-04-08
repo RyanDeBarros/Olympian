@@ -132,6 +132,8 @@ namespace oly
 			if (active)
 			{
 				_batch->pos_generator.yield(pos);
+				_info->tex_slot = 0;
+				send_info();
 				vector_erase(_batch->quads, this);
 			}
 		}

@@ -1,7 +1,6 @@
 #version 450 core
 
 uniform mat3 uProjection;
-uniform uint uBufOffset;
 
 layout(location = 0) in vec2 iPosition;
 
@@ -23,7 +22,6 @@ layout(std430, binding = 1) readonly buffer EllipseColor {
 out vec4 tColor;
 
 void main() {
-	uint instance = gl_InstanceID + uBufOffset;
-	gl_Position.xy = (uProjection * matrix(uTransforms[instance]) * vec3(iPosition, 1.0)).xy;
-	tColor = uColors[instance];
+	gl_Position.xy = (uProjection * matrix(uTransforms[gl_InstanceID]) * vec3(iPosition, 1.0)).xy;
+	tColor = uColors[gl_InstanceID];
 }
