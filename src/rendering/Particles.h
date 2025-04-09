@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "core/Core.h"
 #include "math/Geometry.h"
 #include "math/Transforms.h"
@@ -42,59 +44,158 @@ namespace oly
 			bool update(const Emitter& emitter);
 		};
 
-		struct DiscretePulsePoint
+		namespace random1d
 		{
-			float t;
-			unsigned int w;
-		};
+			struct Uniform
+			{
+				float offset = 0.0f;
+				float operator()(float v) const;
+			};
+
+			struct LogisticBell
+			{
+				float height = 1.0f;
+				float cutoff = 0.0f;
+				float operator()(float v) const;
+			};
+
+			enum
+			{
+				UNIFORM,
+				LOGISTIC_BELL,
+			};
+			using Function = std::variant<Uniform, LogisticBell>;
+			constexpr float eval(const Function& func, float t)
+			{
+				return std::visit([t](const auto& fn) { return fn(t); }, func);
+			}
+			constexpr glm::vec2 eval(const Function& func, glm::vec2 v)
+			{
+				return std::visit([v](const auto& fn) -> glm::vec2 { return { fn(v[0]), fn(v[1]) }; }, func);
+			}
+			constexpr glm::vec3 eval(const Function& func, glm::vec3 v)
+			{
+				return std::visit([v](const auto& fn) -> glm::vec3 { return { fn(v[0]), fn(v[1]), fn(v[2])}; }, func);
+			}
+			constexpr glm::vec4 eval(const Function& func, glm::vec4 v)
+			{
+				return std::visit([v](const auto& fn) -> glm::vec4 { return { fn(v[0]), fn(v[1]), fn(v[2]), fn(v[3])}; }, func);
+			}
+			constexpr glm::mat3 eval(const Function& func, const glm::mat3& m)
+			{
+				return { eval(func, m[0]), eval(func, m[1]), eval(func, m[2]) };
+			}
+		}
+
+		// TODO piecewise constant
+		// TODO piecewise linear
+		// TODO continuous pulse
+
+		namespace spawn_rate
+		{
+			struct Constant
+			{
+				// R(t) = c
+				float c = 3.0f;
+				float operator()(float t, float period) const;
+			};
+			struct Linear
+			{
+				// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
+				float i = 60.0f;
+				float f = 0.0f;
+				float operator()(float t, float period) const;
+			};
+			struct Sine
+			{
+				// R(t) = a * sin(k * pi * (t - b) / T) + c
+				float a = 1.0f;
+				int k = 1;
+				float b = 0.0f;
+				float c = 0.0f;
+				float operator()(float t, float period) const;
+			};
+			struct DiscretePulse
+			{
+				struct Point
+				{
+					float t;
+					unsigned int w;
+				};
+
+				// R(t) = sum over pt in pts of pt.w * delta(t - pt.t)
+				std::vector<Point> pts;
+				float operator()(float t, float period) const;
+				bool valid(float period) const;
+			};
+
+			enum
+			{
+				CONSTANT,
+				LINEAR,
+				SINE,
+				DISCRETE_PULSE,
+			};
+			using Function = std::variant<Constant, Linear, Sine, DiscretePulse>;
+			constexpr float eval(const Function& func, float t, float period)
+			{
+				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
+			}
+		}
+
+		namespace lifespan
+		{
+			struct Constant
+			{
+				// R(t) = c
+				float c = 3.0f;
+				float operator()(float t, float period) const;
+			};
+			struct Linear
+			{
+				// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
+				float i = 60.0f;
+				float f = 0.0f;
+				float operator()(float t, float period) const;
+			};
+			struct Sine
+			{
+				// R(t) = a * sin(k * pi * (t - b) / T) + c
+				float a = 1.0f;
+				int k = 1;
+				float b = 0.0f;
+				float c = 0.0f;
+				float operator()(float t, float period) const;
+			};
+
+			enum
+			{
+				CONSTANT,
+				LINEAR,
+				SINE,
+			};
+			using Function = std::variant<Constant, Linear, Sine>;
+			constexpr float eval(const Function& func, float t, float period)
+			{
+				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
+			}
+		}
 
 		struct EmitterParams
 		{
 			bool one_shot = false;
 			float period = 3.0f;
 			GLuint max_live_particles = 3000;
-			struct
-			{
-				enum class Mode
-				{
-					CONSTANT,
-					LINEAR,
-					SINE,
-					PULSE,
-				} mode = Mode::CONSTANT;
-				struct
-				{
-					// R(t) = c
-					float c = 1.0f;
-				} constant;
-				struct
-				{
-					// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
-					float i = 10.0f;
-					float f = 0.0f;
-				} linear;
-				struct
-				{
-					// R(t) = a * sin(k * pi * (t - b) / T) + c
-					float a = 1.0f;
-					int k = 1;
-					float b = 0.0f;
-					float c = 0.0f;
-				} sine;
-				struct
-				{
-					// R(t) = sum over pt in pts of pt.w * delta(t - pt.t)
-					std::vector<DiscretePulsePoint> pts;
-				} pulse;
-			} spawn_rate;
+			spawn_rate::Function spawn_rate;
+			lifespan::Function lifespan;
+			random1d::Function lifespan_rng;
+			random1d::Function transform_rng; // TODO use bounding box or other shape to generate from, and use 2d random distributions for them instead
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);
 			bool validate() const;
 
 		private:
-			mutable GLuint spawn_rate_pulse_phi = 0;
-
 			friend class Emitter;
 			const Emitter* emitter = nullptr;
 		};
@@ -140,9 +241,10 @@ namespace oly
 
 				mutable float spawn_rate_debt = 0.0f;
 			} state;
+			GLuint buffer_live_instances = 0;
 
 		public:
-			Emitter(std::unique_ptr<Particle>&& instance, const glm::vec4& projection_bounds, GLuint initial_particle_capacity);
+			Emitter(std::unique_ptr<Particle>&& instance, const EmitterParams& params, const glm::vec4& projection_bounds, GLuint initial_particle_capacity);
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 

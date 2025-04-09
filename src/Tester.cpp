@@ -235,13 +235,31 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	std::vector<glm::vec2> particle_polygon{
+	oly::particles::EmitterParams emitter_params;
+	emitter_params.period = 3.0f;
+	oly::particles::spawn_rate::DiscretePulse spawn_rate;
+	spawn_rate.pts.push_back({ 0.0f, 20 });
+	spawn_rate.pts.push_back({ 1.0f, 30 });
+	spawn_rate.pts.push_back({ 2.0f, 10 });
+	spawn_rate.pts.push_back({ 2.5f, 30 });
+	emitter_params.spawn_rate = spawn_rate;
+	oly::particles::lifespan::Constant lifespan;
+	lifespan.c = 0.5f;
+	emitter_params.lifespan = lifespan;
+	oly::particles::random1d::LogisticBell lifespan_rng;
+	lifespan_rng.height = 2.0f;
+	lifespan_rng.cutoff = 0.2f;
+	emitter_params.lifespan_rng = lifespan_rng;
+	oly::particles::random1d::LogisticBell transform_rng;
+	transform_rng.height = 0.01f;
+	transform_rng.cutoff = 300.0f;
+	emitter_params.transform_rng = transform_rng;
+	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
 		{  1, -1 },
 		{  1,  1 },
 		{ -1,  1 }
-	};
-	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle(particle_polygon), window.projection_bounds(), 100);
+		}), emitter_params, window.projection_bounds(), 100);
 
 	while (!window.should_close())
 	{

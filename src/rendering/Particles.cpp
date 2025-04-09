@@ -14,6 +14,90 @@ namespace oly
 		{
 		}
 
+		namespace random1d
+		{
+			float Uniform::operator()(float v) const
+			{
+				return offset != 0.0f ? v + offset * (2 * rng() - 1) : v;
+			}
+
+			float LogisticBell::operator()(float v) const
+			{
+				// f(x) = 4 * height * e ^ (-4 * height * x) / (1 + e ^ (-4 * height * x)) ^ 2
+				// CDF = int _(-infty) ^x 4 * height * e ^ (-4 * height * x) / (1 + e ^ (-4 * height * x)) ^ 2 dx
+				// CDF = 1 / (1 + e ^ (-4 * height * x))
+				// CDF^-1 = ln(x / (1 - x)) / (4 * height)
+				if (cutoff == 0.0f)
+					return v;
+				float r = rng();
+				float offset = glm::log(r / (1 - r)) / (4 * height);
+				return v + glm::clamp(offset, -cutoff, cutoff);
+			}
+		}
+
+		namespace spawn_rate
+		{
+			float Constant::operator()(float t, float period) const
+			{
+				return c * t;
+			}
+
+			float Linear::operator()(float t, float period) const
+			{
+				return 0.5f * (f - i) * t * t / period + i * t;
+			}
+
+			float Sine::operator()(float t, float period) const
+			{
+				float mult = k * glm::pi<float>() / period;
+				return c * t - (a / mult) * glm::cos(mult * (t - b));
+			}
+
+			float DiscretePulse::operator()(float t, float period) const
+			{
+				float weighted_sum = 0.0f;
+				for (const auto& pt : pts)
+				{
+					if (pt.t <= t)
+						weighted_sum += pt.w;
+					else
+						break;
+				}
+				return weighted_sum;
+			}
+
+			bool DiscretePulse::valid(float period) const
+			{
+				float prev_point = -1.0f;
+				for (const auto& pt : pts)
+				{
+					if (pt.t <= prev_point || pt.t >= period)
+						return false;
+					prev_point = pt.t;
+					if (pt.w == 0)
+						return false;
+				}
+			}
+		}
+
+		namespace lifespan
+		{
+			float Constant::operator()(float t, float period) const
+			{
+				return c;
+			}
+
+			float Linear::operator()(float t, float period) const
+			{
+				return (f - i) * t / period + i;
+			}
+
+			float Sine::operator()(float t, float period) const
+			{
+				return a * glm::sin(k * glm::pi<float>() * (t - b) / period) + c;
+			}
+		}
+
 		bool ParticleData::update(const Emitter& emitter)
 		{
 			lifespan -= emitter.state.delta_time;
@@ -25,53 +109,8 @@ namespace oly
 			float t = emitter->state.playtime;
 			float dt = emitter->state.delta_time;
 			float debt = emitter->state.spawn_rate_debt;
-			float debt_increase = 0.0f;
-			switch (spawn_rate.mode)
-			{
-			case decltype(spawn_rate.mode)::CONSTANT:
-			{
-				debt_increase = spawn_rate.constant.c * dt;
-				break;
-			}
-			case decltype(spawn_rate.mode)::LINEAR:
-			{
-				float tmod = fmod(t, period);
-				float dtmod = fmod(t - dt, period);
-				float tfloor = floorf(t / period);
-				float dtfloor = floorf((t - dt) / period);
-				float integral = 0.5f * tmod * tmod - 0.5f * dtmod * dtmod + 0.5f * period * period * (tfloor - dtfloor);
-				debt_increase = integral * (spawn_rate.linear.f - spawn_rate.linear.i) / period + spawn_rate.linear.i * dt;
-				break;
-			}
-			case decltype(spawn_rate.mode)::SINE:
-			{
-				float tfloor = floorf(t / period);
-				float dtfloor = floorf((t - dt) / period);
-				float mult = spawn_rate.sine.k * glm::pi<float>() / period;
-				float inv_mult = spawn_rate.sine.a / mult;
-				float cos_t = glm::cos(mult * (fmod(t, period) - spawn_rate.sine.b));
-				float cos_dt = glm::cos(mult * (fmod(t - dt, period) - spawn_rate.sine.b));
-				float cos_r = glm::cos(mult * spawn_rate.sine.b);
-				debt_increase = spawn_rate.sine.c * dt - inv_mult * cos_t + inv_mult * cos_dt + (tfloor - dtfloor) * 2 * inv_mult * unsigned_mod(spawn_rate.sine.k, 2) * cos_r;
-				break;
-			}
-			case decltype(spawn_rate.mode)::PULSE:
-			{
-				float tmod = fmod(t, period);
-				float dtmod = fmod(t - dt, period);
-				float full_integral = (floorf(t / period) - floorf((t - dt) / period)) * spawn_rate_pulse_phi;
-				int weighted_sum = 0;
-				for (const auto& pt : spawn_rate.pulse.pts)
-				{
-					weighted_sum += pt.w * (
-						(pt.t <= tmod ? 1 : 0)
-						- (pt.t <= dtmod ? 1 : 0)
-						);
-				}
-				debt_increase = weighted_sum + full_integral;
-				break;
-			}
-			}
+			float debt_increase = spawn_rate::eval(spawn_rate, fmod(t, period), period) - spawn_rate::eval(spawn_rate, fmod(t - dt, period), period)
+				+ (floorf(t / period) - floorf((t - dt) / period)) * spawn_rate::eval(spawn_rate, period, period);
 			if (debt_increase > 0.0f)
 			{
 				debt += debt_increase;
@@ -84,8 +123,10 @@ namespace oly
 
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
 		{
-			data.lifespan = 0.5f;
-			transform = Transform2D{ { glm::mix(-100, 100, rng()), glm::mix(-100, 100, rng()) }, 0, { 5, 5 }}.matrix();
+			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period);
+			data.lifespan = random1d::eval(lifespan_rng, data.lifespan);
+			glm::vec2 pos = random1d::eval(transform_rng, glm::vec2{ 0.0f, 0.0f });
+			transform = Transform2D{ pos, 0, { 5, 5 }}.matrix();
 			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
 		}
 
@@ -94,16 +135,10 @@ namespace oly
 			if (period <= 0.0f)
 				return false;
 
-			float prev_point = -1.0f;
-			spawn_rate_pulse_phi = 0;
-			for (const auto& pt : spawn_rate.pulse.pts)
+			if (spawn_rate.index() == spawn_rate::DISCRETE_PULSE)
 			{
-				if (pt.t <= prev_point || pt.t >= period)
+				if (!std::get<spawn_rate::DISCRETE_PULSE>(spawn_rate).valid(period))
 					return false;
-				prev_point = pt.t;
-				if (pt.w == 0)
-					return false;
-				spawn_rate_pulse_phi += pt.w;
 			}
 			return true;
 		}
@@ -117,22 +152,13 @@ namespace oly
 			}
 		}
 
-		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const glm::vec4& projection_bounds, GLuint initial_particle_capacity)
-			: instance(std::move(inst))
+		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const EmitterParams& params, const glm::vec4& projection_bounds, GLuint initial_particle_capacity)
+			: instance(std::move(inst)), buffer_live_instances(initial_particle_capacity)
 		{
 			glNamedBufferData(ssbo_block[SSBO::TRANSFORM], initial_particle_capacity * sizeof(glm::mat3), nullptr, GL_STREAM_DRAW);
 			glNamedBufferData(ssbo_block[SSBO::COLOR], initial_particle_capacity * sizeof(glm::vec4), nullptr, GL_STREAM_DRAW);
 			set_projection(projection_bounds);
-
-			EmitterParams test_params;
-			test_params.period = 3.0f;
-			test_params.spawn_rate.mode = decltype(test_params.spawn_rate.mode)::PULSE;
-			test_params.spawn_rate.pulse.pts.push_back({ 0.0f, 10 });
-			test_params.spawn_rate.pulse.pts.push_back({ 1.0f, 15 });
-			test_params.spawn_rate.pulse.pts.push_back({ 2.0f, 5 });
-			test_params.spawn_rate.pulse.pts.push_back({ 2.5f, 15 });
-			set_params(test_params);
-
+			set_params(params);
 			restart();
 		}
 
@@ -199,15 +225,19 @@ namespace oly
 			// update buffers
 			if (state.live_instances > 0)
 			{
-				if (state.live_instances > prev_live_instances)
+				if (state.live_instances > buffer_live_instances)
 				{
 					glNamedBufferData(ssbo_block[SSBO::TRANSFORM], state.live_instances * sizeof(glm::mat3), transform_buffer.front.data(), GL_STREAM_DRAW);
 					glNamedBufferData(ssbo_block[SSBO::COLOR], state.live_instances * sizeof(glm::vec4), color_buffer.front.data(), GL_STREAM_DRAW);
+					buffer_live_instances = state.live_instances;
 				}
 				else
 				{
+				oly::check_errors();
 					glNamedBufferSubData(ssbo_block[SSBO::TRANSFORM], 0, state.live_instances * sizeof(glm::mat3), transform_buffer.front.data());
+				oly::check_errors();
 					glNamedBufferSubData(ssbo_block[SSBO::COLOR], 0, state.live_instances * sizeof(glm::vec4), color_buffer.front.data());
+				oly::check_errors();
 				}
 			}
 			swap_buffers();
