@@ -243,7 +243,6 @@ void run()
 	};
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle(particle_polygon), window.projection_bounds(), 100);
 
-	oly::TIME.init();
 	while (!window.should_close())
 	{
 		// pre-frame
@@ -284,17 +283,17 @@ void run()
 		particle_emitter.update();
 		
 		// draw
-		ellipse_batch.draw();
-		oly::stencil::begin();
-		oly::stencil::enable_drawing();
-		oly::stencil::draw::replace();
-		polygon_batch.draw(1);
-		oly::stencil::disable_drawing();
-		oly::stencil::crop::match();
-		sprite_batch.draw(1);
-		oly::stencil::end();
-		sprite_batch.draw(2);
-		polygon_batch.draw(2);
+		//ellipse_batch.draw();
+		//oly::stencil::begin();
+		//oly::stencil::enable_drawing();
+		//oly::stencil::draw::replace();
+		//polygon_batch.draw(1);
+		//oly::stencil::disable_drawing();
+		//oly::stencil::crop::match();
+		//sprite_batch.draw(1);
+		//oly::stencil::end();
+		//sprite_batch.draw(2);
+		//polygon_batch.draw(2);
 		particle_emitter.draw();
 
 		// post-frame

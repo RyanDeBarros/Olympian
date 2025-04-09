@@ -35,13 +35,74 @@ namespace oly
 			virtual void set_projection(const glm::vec4& projection_bounds) const {}
 		};
 
+		struct ParticleData
+		{
+			float lifespan = 0.0f;
+
+			bool update(const Emitter& emitter);
+		};
+
+		struct DiscretePulsePoint
+		{
+			float t;
+			unsigned int w;
+		};
+
 		struct EmitterParams
 		{
+			bool one_shot = false;
+			float period = 3.0f;
+			GLuint max_live_particles = 3000;
+			struct
+			{
+				enum class Mode
+				{
+					CONSTANT,
+					LINEAR,
+					SINE,
+					PULSE,
+				} mode = Mode::CONSTANT;
+				struct
+				{
+					// R(t) = c
+					float c = 1.0f;
+				} constant;
+				struct
+				{
+					// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
+					float i = 10.0f;
+					float f = 0.0f;
+				} linear;
+				struct
+				{
+					// R(t) = a * sin(k * pi * (t - b) / T) + c
+					float a = 1.0f;
+					int k = 1;
+					float b = 0.0f;
+					float c = 0.0f;
+				} sine;
+				struct
+				{
+					// R(t) = sum over pt in pts of pt.w * delta(t - pt.t)
+					std::vector<DiscretePulsePoint> pts;
+				} pulse;
+			} spawn_rate;
 
+			GLuint spawn_count() const;
+			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);
+			bool validate() const;
+
+		private:
+			mutable GLuint spawn_rate_pulse_phi = 0;
+
+			friend class Emitter;
+			const Emitter* emitter = nullptr;
 		};
 
 		class Emitter
 		{
+			friend struct ParticleData;
+			friend struct EmitterParams;
 			std::unique_ptr<Particle> instance;
 
 			enum SSBO
@@ -50,13 +111,6 @@ namespace oly
 				COLOR
 			};
 			rendering::GLBufferBlock<2> ssbo_block;
-
-			struct ParticleData
-			{
-				float lifespan = 0.0f;
-
-				bool update(const Emitter& emitter);
-			};
 			struct
 			{
 				std::vector<ParticleData> front, back;
@@ -69,16 +123,12 @@ namespace oly
 			{
 				std::vector<glm::vec4> front, back;
 			} color_buffer;
-			bool use_front_buffer = true;
-			std::vector<glm::mat3>& current_transform_buffer() { return use_front_buffer ? transform_buffer.front : transform_buffer.back; }
-			std::vector<glm::mat3>& other_transform_buffer() { return use_front_buffer ? transform_buffer.back : transform_buffer.front; }
-			std::vector<glm::vec4>& current_color_buffer() { return use_front_buffer ? color_buffer.front : color_buffer.back; }
-			std::vector<glm::vec4>& other_color_buffer() { return use_front_buffer ? color_buffer.back : color_buffer.front; }
-			std::vector<ParticleData>& current_particle_data() { return use_front_buffer ? particle_data.front : particle_data.back; }
-			std::vector<ParticleData>& other_particle_data() { return use_front_buffer ? particle_data.back : particle_data.front; }
+
+			EmitterParams params;
 
 		public:
-			EmitterParams params;
+			const EmitterParams& get_params() const { return params; }
+			void set_params(const EmitterParams& params);
 
 		private:
 			struct
@@ -87,6 +137,8 @@ namespace oly
 				bool playing = true;
 				float playtime = 0.0f;
 				float delta_time = 0.0f;
+
+				mutable float spawn_rate_debt = 0.0f;
 			} state;
 
 		public:
@@ -94,10 +146,16 @@ namespace oly
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 
+			bool is_playing() const { return state.playing; }
+			void restart();
 			void resume();
 			void pause();
 			void update();
 			void draw() const;
+		
+		private:
+			void spawn_on_front_buffers();
+			void swap_buffers();
 		};
 
 		class PolygonalParticle : public Particle

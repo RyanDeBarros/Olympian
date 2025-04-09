@@ -14,6 +14,8 @@ void oly::init()
 void oly::load_context()
 {
 	load_resources();
+	TIME.init();
+	TIME.sync();
 }
 
 int oly::terminate()
