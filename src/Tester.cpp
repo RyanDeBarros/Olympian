@@ -238,10 +238,10 @@ void run()
 	oly::particles::EmitterParams emitter_params;
 	emitter_params.period = 3.0f;
 	oly::particles::spawn_rate::ContinuousPulse spawn_rate;
-	spawn_rate.pts.push_back({ 0.0f, 20, -0.1f, 0.1f });
-	spawn_rate.pts.push_back({ 1.0f, 30, 0.9f, 1.1f });
+	spawn_rate.pts.push_back({ 0.0f, 30, -0.1f, 0.1f });
+	spawn_rate.pts.push_back({ 1.0f, 50, 0.9f, 1.1f });
 	spawn_rate.pts.push_back({ 2.0f, 10, 1.9f, 2.1f });
-	spawn_rate.pts.push_back({ 2.5f, 30, 2.4f, 2.6f });
+	spawn_rate.pts.push_back({ 2.5f, 50, 2.4f, 2.6f });
 	emitter_params.spawn_rate = spawn_rate;
 	oly::particles::lifespan::Constant lifespan;
 	lifespan.c = 0.3f;
@@ -250,10 +250,12 @@ void run()
 	lifespan_rng.height = 2.0f;
 	emitter_params.lifespan_rng = lifespan_rng;
 	emitter_params.lifespan_rng_max_offset = 0.2f;
-	oly::particles::random2d::LogisticBellDependent transform_rng;
-	transform_rng.height = 0.01f;
+	oly::particles::random2d::RadialPowerSpike transform_rng;
+	transform_rng.radius = 200.0f;
+	transform_rng.power = 4.0f;
+	transform_rng.inverted = true;
 	emitter_params.transform_rng = transform_rng;
-	emitter_params.spawn_bounds = { -150.0f, 450.0f, 0.0f, 200.0f };
+	emitter_params.spawn_bounds = { -200.0f, 500.0f, 0.0f, 400.0f };
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
 		{  1, -1 },

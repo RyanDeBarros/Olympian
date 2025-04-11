@@ -59,16 +59,11 @@ namespace oly
 				float operator()() const;
 			};
 
-			struct LogisticBell
-			{
-				float height = 1.0f;
-				float operator()() const;
-			};
-
 			struct PowerSpike
 			{
 				// t = 0, w = 1, alpha = beta = power
 				float a = -1.0f, b = 1.0f, power = 1.0f;
+				bool inverted = false;
 				float operator()() const;
 			};
 
@@ -77,17 +72,24 @@ namespace oly
 				// t = 0, w = 1
 				float a = -1.0f, b = 1.0f;
 				float alpha = 1.0f, beta = 1.0f;
+				bool inverted = false;
+				float operator()() const;
+			};
+
+			struct LogisticBell
+			{
+				float height = 1.0f;
 				float operator()() const;
 			};
 
 			enum
 			{
 				UNIFORM,
-				LOGISTIC_BELL,
 				POWER_SPIKE,
 				DUAL_POWER_SPIKE,
+				LOGISTIC_BELL,
 			};
-			using Function = std::variant<Uniform, LogisticBell, PowerSpike, DualPowerSpike>;
+			using Function = std::variant<Uniform, PowerSpike, DualPowerSpike, LogisticBell>;
 			constexpr float eval(const Function& func)
 			{
 				return std::visit([](const auto& fn) { return fn(); }, func);
@@ -120,6 +122,24 @@ namespace oly
 				glm::vec2 operator()() const;
 			};
 
+			struct PowerSpike
+			{
+				// t = 0, w = 1
+				Interval<float> x_interval, y_interval;
+				float x_power = 1.0f, y_power = 1.0f;
+				bool x_inverted = false, y_inverted = false;
+				glm::vec2 operator()() const;
+			};
+
+			struct RadialPowerSpike
+			{
+				// t = 0, w = 1
+				float radius = 0.0f;
+				float power = 1.0f;
+				bool inverted = false;
+				glm::vec2 operator()() const;
+			};
+
 			struct LogisticBellIndependent
 			{
 				float height = 1.0f;
@@ -135,10 +155,12 @@ namespace oly
 			enum
 			{
 				UNIFORM,
+				POWER_SPIKE,
+				RADIAL_POWER_SPIKE,
 				LOGISTIC_BELL_INDEPENDENT,
 				LOGISTIC_BELL_DEPENDENT,
 			};
-			using Function = std::variant<Uniform, LogisticBellIndependent, LogisticBellDependent>;
+			using Function = std::variant<Uniform, PowerSpike, RadialPowerSpike, LogisticBellIndependent, LogisticBellDependent>;
 			constexpr glm::vec2 eval(const Function& func)
 			{
 				return std::visit([](const auto& fn) { return fn(); }, func);
@@ -153,6 +175,24 @@ namespace oly
 				glm::vec3 operator()() const;
 			};
 
+			struct PowerSpike
+			{
+				// t = 0, w = 1
+				Interval<float> x_interval, y_interval, z_interval;
+				float x_power = 1.0f, y_power = 1.0f, z_power = 1.0f;
+				bool x_inverted = false, y_inverted = false, z_inverted = false;
+				glm::vec3 operator()() const;
+			};
+
+			struct RadialPowerSpike
+			{
+				// t = 0, w = 1
+				float radius = 0.0f;
+				float power = 1.0f;
+				bool inverted = false;
+				glm::vec3 operator()() const;
+			};
+
 			struct LogisticBellIndependent
 			{
 				float height = 1.0f;
@@ -168,10 +208,12 @@ namespace oly
 			enum
 			{
 				UNIFORM,
+				POWER_SPIKE,
+				RADIAL_POWER_SPIKE,
 				LOGISTIC_BELL_INDEPENDENT,
 				LOGISTIC_BELL_DEPENDENT,
 			};
-			using Function = std::variant<Uniform, LogisticBellIndependent, LogisticBellDependent>;
+			using Function = std::variant<Uniform, PowerSpike, RadialPowerSpike, LogisticBellIndependent, LogisticBellDependent>;
 			constexpr glm::vec3 eval(const Function& func)
 			{
 				return std::visit([](const auto& fn) { return fn(); }, func);
@@ -333,7 +375,7 @@ namespace oly
 			random1d::Function lifespan_rng;
 			float lifespan_rng_max_offset = 0.0f;
 			random2d::Function transform_rng;
-			math::BBox2D spawn_bounds;
+			math::BBox2D spawn_bounds; // TODO create generic shape? at least add functionality to translate/scale/rotate the distribution/bounds
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);

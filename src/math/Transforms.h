@@ -147,24 +147,6 @@ namespace oly
 		return { vectors::I4, vectors::J4, vectors::K4, glm::vec4(position, 1.0f) };
 	}
 
-	struct Rotator
-	{
-		float pitch = 0.0f;
-		float yaw = 0.0f;
-		float roll = 0.0f;
-
-		constexpr operator glm::quat() const
-		{
-			return glm::quat({ roll, pitch, yaw });
-		}
-	};
-
-	inline Rotator rotator(glm::quat quaternion)
-	{
-		glm::vec3 angles = glm::eulerAngles(quaternion);
-		return { angles.y, angles.z, angles.x };
-	}
-
 	constexpr glm::mat4 scale_matrix(glm::vec3 scale)
 	{
 		return { scale.x * vectors::I4, scale.y * vectors::J4, scale.z * vectors::K4, vectors::H4 };

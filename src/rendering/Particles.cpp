@@ -23,42 +23,45 @@ namespace oly
 				return offset * (2 * rng() - 1);
 			}
 
-			float LogisticBell::operator()() const
-			{
-				float r = rng();
-				return glm::log(r / (1 - r)) / (4 * height);
-			}
-
 			float PowerSpike::operator()() const
 			{
 				float r = rng();
+				float res;
 				if (power == 0)
-					return r * (b - a) + a;
+					res = r * (b - a) + a;
 				else
 				{
-					float m = (power + 1.0f) / (b - a);
-					float comp = -a * m / (power + 1.0f);
+					float comp = -a / (b - a);
 					if (r < comp)
-						return a + pow((power + 1.0f) * pow(-a, power) * r / m, 1.0f / (power + 1.0f));
+						res = a + pow(pow(-a, power) * r * (b - a), 1.0f / (power + 1.0f));
 					else
-						return b - pow((power + 1.0f) * pow(b, power) * (1.0f - r) / m, 1.0f / (power + 1.0f));
+						res = b - pow(pow(b, power) * (1.0f - r) * (b - a), 1.0f / (power + 1.0f));
 				}
+				return inverted ? (res > 0.0f ? b - res : a - res) : res;
 			}
 
 			float DualPowerSpike::operator()() const
 			{
 				float r = rng();
+				float res;
 				if (alpha == 0 && beta == 0)
-					return r * (b - a) + a;
+					res = r * (b - a) + a;
 				else
 				{
 					float m = 1.0f / (b / (beta + 1.0f) - a / (alpha + 1.0f));
 					float comp = -a * m / (alpha + 1.0f);
 					if (r < comp)
-						return a + pow((alpha + 1.0f) * pow(-a, alpha) * r / m, 1.0f / (alpha + 1.0f));
+						res = a + pow((alpha + 1.0f) * pow(-a, alpha) * r / m, 1.0f / (alpha + 1.0f));
 					else
-						return b - pow((beta + 1.0f) * pow(b, beta) * (1.0f - r) / m, 1.0f / (beta + 1.0f));
+						res = b - pow((beta + 1.0f) * pow(b, beta) * (1.0f - r) / m, 1.0f / (beta + 1.0f));
 				}
+				return inverted ? (res > 0.0f ? b - res : a - res) : res;
+			}
+
+			float LogisticBell::operator()() const
+			{
+				float r = rng();
+				return glm::log(r / (1 - r)) / (4 * height);
 			}
 		}
 
@@ -67,6 +70,32 @@ namespace oly
 			glm::vec2 Uniform::operator()() const
 			{
 				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1) };
+			}
+
+			glm::vec2 PowerSpike::operator()() const
+			{
+				random1d::PowerSpike p1, p2;
+				p1.a = x_interval.left;
+				p1.b = x_interval.right;
+				p1.power = x_power;
+				p1.inverted = x_inverted;
+				p2.a = y_interval.left;
+				p2.b = y_interval.right;
+				p2.power = y_power;
+				p2.inverted = y_inverted;
+				return { p1(), p2() };
+			}
+
+			glm::vec2 RadialPowerSpike::operator()() const
+			{
+				static const auto half_curve = [](float offset, float power, float r) {
+					if (power == 0)
+						return r * offset;
+					else
+						return offset - pow(pow(offset, power) * r * offset, 1.0f / (power + 1.0f));
+					};
+				float r = half_curve(radius, power, rng());
+				return math::coordinates::to_cartesian({ inverted ? radius - r : r, 2 * glm::pi<float>() * rng() });
 			}
 
 			glm::vec2 LogisticBellIndependent::operator()() const
@@ -89,6 +118,36 @@ namespace oly
 			glm::vec3 Uniform::operator()() const
 			{
 				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1), offset.z * (2 * rng() - 1) };
+			}
+
+			glm::vec3 PowerSpike::operator()() const
+			{
+				random1d::PowerSpike p1, p2, p3;
+				p1.a = x_interval.left;
+				p1.b = x_interval.right;
+				p1.power = x_power;
+				p1.inverted = x_inverted;
+				p2.a = y_interval.left;
+				p2.b = y_interval.right;
+				p2.power = y_power;
+				p2.inverted = y_inverted;
+				p3.a = y_interval.left;
+				p3.b = y_interval.right;
+				p3.power = z_power;
+				p3.inverted = z_inverted;
+				return { p1(), p2(), p3() };
+			}
+
+			glm::vec3 RadialPowerSpike::operator()() const
+			{
+				static const auto half_curve = [](float offset, float power, float r) {
+					if (power == 0)
+						return r * offset;
+					else
+						return offset - pow(pow(offset, power) * r * offset, 1.0f / (power + 1.0f));
+					};
+				float r = half_curve(radius, power, rng());
+				return math::coordinates::to_cartesian({ inverted ? radius - r : r, 2 * glm::pi<float>() * rng(), glm::pi<float>() * rng() });
 			}
 
 			glm::vec3 LogisticBellIndependent::operator()() const

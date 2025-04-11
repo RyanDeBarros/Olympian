@@ -46,6 +46,14 @@ namespace oly
 	};
 
 	template<typename T>
+	struct Interval
+	{
+		T left = T(), right = T();
+
+		T length() const { return right - left; }
+	};
+
+	template<typename T>
 	inline void swap_adjacent_subbuffers(T* buf, size_t offset1, size_t count1, size_t offset2, size_t count2)
 	{
 		if (count1 < count2)
