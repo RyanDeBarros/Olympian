@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <variant>
 
 namespace oly
 {
@@ -23,6 +24,12 @@ namespace oly
 	constexpr std::size_t member_offset(Member Struct::* member)
 	{
 		return reinterpret_cast<std::size_t>(&(reinterpret_cast<Struct*>(0)->*member));
+	}
+
+	template<typename ToVariant, typename FromVariant>
+	inline ToVariant convert_variant(const FromVariant& from)
+	{
+		return std::visit([](const auto& f) { return ToVariant{ f }; }, from);
 	}
 
 	template<typename T>
@@ -51,6 +58,26 @@ namespace oly
 		T left = T(), right = T();
 
 		T length() const { return right - left; }
+
+		enum class Mode
+		{
+			CLOSED,
+			OPEN,
+			RIGHT_OPEN,
+			LEFT_OPEN
+		};
+		template<Mode mode = Mode::CLOSED>
+		bool contains(T pt) const
+		{
+			if constexpr (mode == Mode::CLOSED)
+				return left <= pt && pt <= right;
+			else if constexpr (mode == Mode::OPEN)
+				return left < pt && pt < right;
+			else if constexpr (mode == Mode::RIGHT_OPEN)
+				return left <= pt && pt < right;
+			else
+				return left < pt && pt <= right;
+		}
 	};
 
 	template<typename T>

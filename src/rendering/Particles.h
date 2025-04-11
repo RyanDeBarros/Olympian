@@ -10,46 +10,6 @@ namespace oly
 {
 	namespace particles
 	{
-		class Emitter;
-		struct EmitterParams;
-
-		struct Particle
-		{
-		protected:
-			friend Emitter;
-			GLuint shader = 0;
-			rendering::FixedLayoutEBO<GLuint> ebo;
-			rendering::VertexArray vao;
-
-			struct
-			{
-				GLenum mode = GL_TRIANGLES;
-				GLsizei count = 0;
-				GLenum type = GL_UNSIGNED_INT;
-				GLintptr offset = 0;
-			} draw_spec;
-
-			Particle(GLuint ebo_size);
-		
-		public:
-			virtual ~Particle() = default;
-			
-			virtual void set_projection(const glm::vec4& projection_bounds) const {}
-		};
-
-		struct ParticleData
-		{
-			float lifespan = 0.0f;
-
-			bool update();
-
-		private:
-			friend struct EmitterParams;
-			const Emitter* emitter = nullptr;
-		};
-
-		// TODO vector of spawn rate functions, and float min, max where the spawn rate is zero outside [min, max].
-
 		namespace spawn_rate
 		{
 			struct Constant
@@ -95,17 +55,16 @@ namespace oly
 				bool valid(float period) const;
 			};
 
-			// TODO in continuous pulse, a and b should represent offsets, not absolutes. i.e., t - a --> a, b - t --> b
 			struct ContinuousPulse
 			{
 				struct Point
 				{
-					// for tau in [a, t], summand(tau) = m() * ((tau - a) / (t - a)) ^ alpha
-					// for tau in [t, b], summand(tau) = m() * ((tau - b) / (t - b)) ^ beta
+					// for tau in [t - a, t], summand(tau) = m() * ((tau - a) / a) ^ alpha
+					// for tau in [t, t + b], summand(tau) = m() * ((b - tau) / b) ^ beta
 					// where w is the area under the pulse
 					float t;
 					unsigned int w;
-					float a, b;
+					float a = 1.0f, b = 1.0f;
 					float alpha = 1.0f, beta = 1.0f;
 
 					float m() const;
@@ -117,15 +76,21 @@ namespace oly
 				bool valid(float period) const;
 			};
 
-			enum
+			struct Piecewise
 			{
-				CONSTANT,
-				LINEAR,
-				SINE,
-				DISCRETE_PULSE,
-				CONTINUOUS_PULSE,
+				struct SubFunction
+				{
+					std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse> fn;
+					Interval<float> interval;
+				};
+				
+				std::vector<SubFunction> subfunctions;
+				float operator()(float t, float period) const;
+				bool valid(float period) const;
 			};
-			using Function = std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse>;
+
+			using Function = std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse, Piecewise>;
+
 			constexpr float eval(const Function& func, float t, float period)
 			{
 				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
@@ -150,6 +115,17 @@ namespace oly
 						return fn.debt_increment(t, dt, period);
 					else
 						return fn(fmod(t, period), period) - fn(fmod(t - dt, period), period) + period_sum(fn, period) * (floorf(t / period) - floorf((t - dt) / period));
+					}, func);
+			}
+			template<typename T>
+			concept has_valid = requires(T fn, float period) { { fn.valid(period) } -> std::convertible_to<bool>; };
+			inline bool valid(const Function& func, float period)
+			{
+				return std::visit([period](const auto& fn) {
+					if constexpr (has_valid<decltype(fn)>)
+						return fn.valid(period);
+					else
+						return true;
 					}, func);
 			}
 		}
@@ -181,18 +157,50 @@ namespace oly
 				float operator()(float t, float period) const;
 			};
 
-			enum
-			{
-				CONSTANT,
-				LINEAR,
-				SINE,
-			};
 			using Function = std::variant<Constant, Linear, Sine>;
 			constexpr float eval(const Function& func, float t, float period)
 			{
 				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
 			}
 		}
+
+		class Emitter;
+		struct EmitterParams;
+
+		struct Particle
+		{
+		protected:
+			friend Emitter;
+			GLuint shader = 0;
+			rendering::FixedLayoutEBO<GLuint> ebo;
+			rendering::VertexArray vao;
+
+			struct
+			{
+				GLenum mode = GL_TRIANGLES;
+				GLsizei count = 0;
+				GLenum type = GL_UNSIGNED_INT;
+				GLintptr offset = 0;
+			} draw_spec;
+
+			Particle(GLuint ebo_size);
+
+		public:
+			virtual ~Particle() = default;
+
+			virtual void set_projection(const glm::vec4& projection_bounds) const {}
+		};
+
+		struct ParticleData
+		{
+			float lifespan = 0.0f;
+
+			bool update();
+
+		private:
+			friend struct EmitterParams;
+			const Emitter* emitter = nullptr;
+		};
 
 		struct EmitterParams
 		{

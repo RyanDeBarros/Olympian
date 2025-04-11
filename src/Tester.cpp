@@ -236,13 +236,18 @@ void run()
 	ellipse2.ellipse.send_z_value();
 
 	oly::particles::EmitterParams emitter_params;
-	emitter_params.period = 3.0f;
-	oly::particles::spawn_rate::ContinuousPulse spawn_rate;
-	spawn_rate.pts.push_back({ 0.0f, 50, -0.1f, 0.1f });
-	spawn_rate.pts.push_back({ 1.0f, 100, 0.9f, 1.1f });
-	spawn_rate.pts.push_back({ 2.0f, 20, 1.9f, 2.1f });
-	spawn_rate.pts.push_back({ 2.3f, 70, 2.2f, 2.4f });
-	spawn_rate.global_multiplier = 5.0f;
+	emitter_params.period = 5.0f;
+	oly::particles::spawn_rate::ContinuousPulse continuous_pulses;
+	continuous_pulses.pts.push_back({ 0.0f, 50, 0.1f, 0.1f });
+	continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
+	continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
+	continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
+	continuous_pulses.global_multiplier = 5.0f;
+	oly::particles::spawn_rate::Constant constant_spawn;
+	constant_spawn.c = 500;
+	oly::particles::spawn_rate::Piecewise spawn_rate;
+	spawn_rate.subfunctions.push_back({ continuous_pulses, { 0.0f, 3.0f } });
+	spawn_rate.subfunctions.push_back({ constant_spawn, { 3.0f, 5.0f } });
 	emitter_params.spawn_rate = spawn_rate;
 	oly::particles::lifespan::Constant lifespan;
 	lifespan.c = 0.3f;
@@ -279,7 +284,33 @@ void run()
 		{  1, -1 },
 		{  1,  1 },
 		{ -1,  1 }
-		}), emitter_params, window.projection_bounds(), 100);
+		}), emitter_params, window.projection_bounds(), 1000);
+
+	oly::particles::EmitterParams emitter_params2;
+	oly::particles::spawn_rate::Constant spawn_rate2;
+	spawn_rate2.c = 200;
+	emitter_params2.spawn_rate = spawn_rate2;
+	{
+		const float outer_dist = 1.0f;
+		const float inner_dist = 0.4f;
+		const int num_points = 5;
+		std::vector<glm::vec2> star;
+		for (int i = 0; i < 2 * num_points; ++i)
+			star.push_back((i % 2 == 0 ? outer_dist : inner_dist) * glm::vec2{ glm::cos((2 * i + 1) * glm::pi<float>() * 0.5f / num_points), glm::sin((2 * i + 1) * glm::pi<float>() * 0.5f / num_points) });
+		emitter_params2.position_rng = oly::random::domain2d::create_triangulated_domain(star);
+		emitter_params2.position_rng.transform.position = { -200.0f, -100.0f };
+		emitter_params2.position_rng.transform.scale = glm::vec2(100.0f);
+	}
+	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
+		{ 1, 0 },
+		{ 0.707f, 0.707f },
+		{ 0, 1 },
+		{ -0.707f, 0.707f },
+		{ -1, 0 },
+		{ -0.707f, -0.707f },
+		{ 0, -1 },
+		{ 0.707f, -0.707f }
+		}), emitter_params2, window.projection_bounds(), 1000);
 
 	while (!window.should_close())
 	{
@@ -319,6 +350,7 @@ void run()
 
 		// update particle systems
 		particle_emitter.update();
+		particle_emitter2.update();
 		
 		// draw
 		//ellipse_batch.draw();
@@ -333,6 +365,7 @@ void run()
 		//sprite_batch.draw(2);
 		//polygon_batch.draw(2);
 		particle_emitter.draw();
+		particle_emitter2.draw();
 
 		// post-frame
 		window.swap_buffers();

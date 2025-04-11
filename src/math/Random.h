@@ -13,7 +13,6 @@ namespace oly
 	{
 		inline float seed() { srand((unsigned int)time(nullptr)); }
 
-		// NOTE: all random distributions have mean = 0, and generate an offset to the mean.
 		namespace bound1d
 		{
 			struct Uniform
@@ -105,8 +104,24 @@ namespace oly
 
 			struct Ellipse
 			{
-				bound1d::Function fnr, fna;
+				bound1d::Function fnr, fna; // radial, angular
 				Transform2D transform;
+
+				glm::vec2 operator()() const;
+			};
+
+			struct BaryTriangle
+			{
+				bound1d::Function fna, fnb, fnc; // barycentric coordinates relative to each point. Note that [-1, 1] from distribution maps to [0, 1] in barycentric coordiantes
+				glm::vec2 pta = {}, ptb = {}, ptc = {};
+
+				glm::vec2 operator()() const;
+			};
+
+			struct EarTriangle
+			{
+				bound1d::Function fnd, fna; // distance from ear, interpolation from prev_pt to next_pt. Note that [-1, 1] from distribution maps to [0, 1] in ear triangle coordinates
+				glm::vec2 root_pt = {}, prev_pt = {}, next_pt = {};
 
 				glm::vec2 operator()() const;
 			};
@@ -115,10 +130,14 @@ namespace oly
 			{
 				RECT,
 				ELLIPSE,
+				BARY_TRIANGLE,
+				EAR_TRIANGLE,
 			};
 			using Shape = std::variant<
 				Rect,
-				Ellipse
+				Ellipse,
+				BaryTriangle,
+				EarTriangle
 			>;
 			constexpr glm::vec2 eval(const Shape& shape)
 			{
@@ -136,11 +155,53 @@ namespace oly
 
 				glm::vec2 operator()() const;
 			};
+
+			extern Domain create_triangulated_domain(const std::vector<glm::vec2>& polygon);
 		}
 		
 		namespace domain3d
 		{
+			struct Prism
+			{
+				bound1d::Function fnx, fny, fnz;
+				Transform3D transform;
 
+				glm::vec3 operator()() const;
+			};
+
+			struct Ellipsoid
+			{
+				bound1d::Function fnr, fntheta, fnphi; // radial, azimuthal, polar
+				Transform3D transform;
+			
+				glm::vec3 operator()() const;
+			};
+
+			enum
+			{
+				PRISM,
+				ELLIPSOID,
+			};
+			using Shape = std::variant<
+				Prism,
+				Ellipsoid
+			>;
+			constexpr glm::vec3 eval(const Shape& shape)
+			{
+				return std::visit([](const auto& shp) { return shp(); }, shape);
+			}
+			struct Domain
+			{
+				Transform3D transform;
+				struct WeightedShape
+				{
+					Shape shape;
+					float w = 1.0f;
+				};
+				std::vector<WeightedShape> shapes;
+
+				glm::vec3 operator()() const;
+			};
 		}
 
 		namespace unbound1d

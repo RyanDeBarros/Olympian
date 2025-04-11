@@ -11,11 +11,6 @@ namespace oly
 {
 	namespace particles
 	{
-		Particle::Particle(GLuint ebo_size)
-			: ebo(ebo_size, rendering::BufferSendConfig(rendering::BufferSendType::SUBDATA, false))
-		{
-		}
-
 		namespace spawn_rate
 		{
 			float Constant::operator()(float t, float period) const
@@ -89,29 +84,29 @@ namespace oly
 
 			float ContinuousPulse::Point::m() const
 			{
-				return w / ((t - a) / (alpha + 1) + (b - t) / (beta + 1));
+				return w / (a / (alpha + 1) + b / (beta + 1));
 			}
-			
+
 			float ContinuousPulse::operator()(float t, float period) const
 			{
 				float weighted_sum = 0.0f;
 				for (const auto& pt : pts)
 				{
-					if (t > pt.a)
+					if (t > pt.t - pt.a)
 					{
 						if (pt.alpha == 0 && pt.beta == 0)
 						{
-							if (t < pt.b)
-								weighted_sum += pt.w * (t - pt.a) / (pt.b - pt.a);
+							if (t < pt.t + pt.b)
+								weighted_sum += pt.w * (t - pt.t + pt.a) / (pt.b + pt.a);
 							else
 								weighted_sum += pt.w;
 						}
 						else
 						{
 							if (t < pt.t)
-								weighted_sum += pt.m() * pow(t - pt.a, pt.alpha + 1) / ((pt.alpha + 1) * pow(pt.t - pt.a, pt.alpha));
-							else if (t < pt.b)
-								weighted_sum += pt.w - pt.m() * pow(pt.b - t, pt.beta + 1) / ((pt.beta + 1) * pow(pt.b - pt.t, pt.beta));
+								weighted_sum += pt.m() * pow(t - pt.t + pt.a, pt.alpha + 1) / ((pt.alpha + 1) * pow(pt.a, pt.alpha));
+							else if (t < pt.t + pt.b)
+								weighted_sum += pt.w - pt.m() * pow(pt.t + pt.b - t, pt.beta + 1) / ((pt.beta + 1) * pow(pt.b, pt.beta));
 							else
 								weighted_sum += pt.w;
 						}
@@ -119,7 +114,7 @@ namespace oly
 				}
 				return global_multiplier * weighted_sum;
 			}
-			
+
 			bool ContinuousPulse::valid(float period) const
 			{
 				float prev_point = -1.0f;
@@ -128,12 +123,33 @@ namespace oly
 					if (pt.t < 0.0f || pt.t <= prev_point || pt.t >= period)
 						return false;
 					prev_point = pt.t;
-					if (pt.w == 0 || pt.alpha < 0 || pt.beta < 0 || pt.a > pt.t || pt.b < pt.t || pt.a == pt.b)
+					if (pt.w == 0 || pt.alpha < 0 || pt.beta < 0 || pt.a < 0 || pt.b < 0 || (pt.a == 0 && pt.b == 0))
 						return false;
 				}
 				return true;
 			}
-		}
+
+			float Piecewise::operator()(float t, float period) const
+			{
+				float total = 0.0f;
+				for (const auto& subfunc : subfunctions)
+				{
+					if (subfunc.interval.contains(t))
+						total += eval(convert_variant<Function>(subfunc.fn), t, period);
+				}
+				return total;
+			}
+
+			bool Piecewise::valid(float period) const
+			{
+				for (const auto& subfunc : subfunctions)
+				{
+					if (!spawn_rate::valid(convert_variant<Function>(subfunc.fn), period))
+						return false;
+				}
+				return true;
+			}
+}
 
 		namespace lifespan
 		{
@@ -151,6 +167,11 @@ namespace oly
 			{
 				return a * glm::sin(k * glm::pi<float>() * (t - b) / period) + c;
 			}
+		}
+
+		Particle::Particle(GLuint ebo_size)
+			: ebo(ebo_size, rendering::BufferSendConfig(rendering::BufferSendType::SUBDATA, false))
+		{
 		}
 
 		bool ParticleData::update()
@@ -187,17 +208,7 @@ namespace oly
 			if (period <= 0.0f)
 				return false;
 
-			if (spawn_rate.index() == spawn_rate::DISCRETE_PULSE)
-			{
-				if (!std::get<spawn_rate::DISCRETE_PULSE>(spawn_rate).valid(period))
-					return false;
-			}
-			else if (spawn_rate.index() == spawn_rate::CONTINUOUS_PULSE)
-			{
-				if (!std::get<spawn_rate::CONTINUOUS_PULSE>(spawn_rate).valid(period))
-					return false;
-			}
-			return true;
+			return spawn_rate::valid(spawn_rate, period);
 		}
 
 		void Emitter::set_params(const EmitterParams& params)

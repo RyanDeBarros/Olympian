@@ -30,6 +30,8 @@ namespace oly
 
 		struct Barycentric : glm::vec3
 		{
+			using glm::vec3::vec;
+
 			float root() const { return x; }
 			float& root() { return x; }
 			float prev() const { return y; }
@@ -38,6 +40,7 @@ namespace oly
 			float& next() { return z; }
 
 			bool inside() const { return x >= 0.0f && y >= 0.0f && z >= 0.0f; }
+			glm::vec2 point(glm::vec2 a, glm::vec2 b, glm::vec2 c) const { return x * a + y * b + z * c; }
 		};
 
 		struct Triangle2D
