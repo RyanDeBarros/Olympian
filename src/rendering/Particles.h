@@ -1,10 +1,9 @@
 #pragma once
 
-#include <variant>
-
 #include "core/Core.h"
 #include "math/Geometry.h"
 #include "math/Transforms.h"
+#include "math/Random.h"
 #include "SpecializedBuffers.h"
 
 namespace oly
@@ -49,179 +48,7 @@ namespace oly
 			const Emitter* emitter = nullptr;
 		};
 
-		// NOTE: all random distributions in random*::* have mean = 0, and generate an offset to the mean. This way, transforming the range via translation/rotation/scaling can be done independently.
-
-		namespace random1d
-		{
-			struct Uniform
-			{
-				float offset = 0.0f;
-				float operator()() const;
-			};
-
-			struct PowerSpike
-			{
-				// t = 0, w = 1, alpha = beta = power
-				float a = -1.0f, b = 1.0f, power = 1.0f;
-				bool inverted = false;
-				float operator()() const;
-			};
-
-			struct DualPowerSpike
-			{
-				// t = 0, w = 1
-				float a = -1.0f, b = 1.0f;
-				float alpha = 1.0f, beta = 1.0f;
-				bool inverted = false;
-				float operator()() const;
-			};
-
-			struct LogisticBell
-			{
-				float height = 1.0f;
-				float operator()() const;
-			};
-
-			enum
-			{
-				UNIFORM,
-				POWER_SPIKE,
-				DUAL_POWER_SPIKE,
-				LOGISTIC_BELL,
-			};
-			using Function = std::variant<Uniform, PowerSpike, DualPowerSpike, LogisticBell>;
-			constexpr float eval(const Function& func)
-			{
-				return std::visit([](const auto& fn) { return fn(); }, func);
-			}
-			constexpr glm::vec2 eval2(const Function& func)
-			{
-				return std::visit([](const auto& fn) -> glm::vec2 { return { fn(), fn() }; }, func);
-			}
-			constexpr glm::vec3 eval3(const Function& func)
-			{
-				return std::visit([](const auto& fn) -> glm::vec3 { return { fn(), fn(), fn()}; }, func);
-			}
-			constexpr glm::vec4 eval4(const Function& func)
-			{
-				return std::visit([](const auto& fn) -> glm::vec4 { return { fn(), fn(), fn(), fn()}; }, func);
-			}
-			constexpr glm::mat3 eval3x3(const Function& func)
-			{
-				return { eval3(func), eval3(func), eval3(func) };
-			}
-		}
-
-		// TODO PowerSpike in 2D and 3D
-
-		namespace random2d
-		{
-			struct Uniform
-			{
-				glm::vec2 offset = {};
-				glm::vec2 operator()() const;
-			};
-
-			struct PowerSpike
-			{
-				// t = 0, w = 1
-				Interval<float> x_interval, y_interval;
-				float x_power = 1.0f, y_power = 1.0f;
-				bool x_inverted = false, y_inverted = false;
-				glm::vec2 operator()() const;
-			};
-
-			struct RadialPowerSpike
-			{
-				// t = 0, w = 1
-				float radius = 0.0f;
-				float power = 1.0f;
-				bool inverted = false;
-				glm::vec2 operator()() const;
-			};
-
-			struct LogisticBellIndependent
-			{
-				float height = 1.0f;
-				glm::vec2 operator()() const;
-			};
-
-			struct LogisticBellDependent
-			{
-				float height = 1.0f;
-				glm::vec2 operator()() const;
-			};
-
-			enum
-			{
-				UNIFORM,
-				POWER_SPIKE,
-				RADIAL_POWER_SPIKE,
-				LOGISTIC_BELL_INDEPENDENT,
-				LOGISTIC_BELL_DEPENDENT,
-			};
-			using Function = std::variant<Uniform, PowerSpike, RadialPowerSpike, LogisticBellIndependent, LogisticBellDependent>;
-			constexpr glm::vec2 eval(const Function& func)
-			{
-				return std::visit([](const auto& fn) { return fn(); }, func);
-			}
-		}
-
-		namespace random3d
-		{
-			struct Uniform
-			{
-				glm::vec3 offset = {};
-				glm::vec3 operator()() const;
-			};
-
-			struct PowerSpike
-			{
-				// t = 0, w = 1
-				Interval<float> x_interval, y_interval, z_interval;
-				float x_power = 1.0f, y_power = 1.0f, z_power = 1.0f;
-				bool x_inverted = false, y_inverted = false, z_inverted = false;
-				glm::vec3 operator()() const;
-			};
-
-			struct RadialPowerSpike
-			{
-				// t = 0, w = 1
-				float radius = 0.0f;
-				float power = 1.0f;
-				bool inverted = false;
-				glm::vec3 operator()() const;
-			};
-
-			struct LogisticBellIndependent
-			{
-				float height = 1.0f;
-				glm::vec3 operator()() const;
-			};
-
-			struct LogisticBellDependent
-			{
-				float height = 1.0f;
-				glm::vec3 operator()() const;
-			};
-
-			enum
-			{
-				UNIFORM,
-				POWER_SPIKE,
-				RADIAL_POWER_SPIKE,
-				LOGISTIC_BELL_INDEPENDENT,
-				LOGISTIC_BELL_DEPENDENT,
-			};
-			using Function = std::variant<Uniform, PowerSpike, RadialPowerSpike, LogisticBellIndependent, LogisticBellDependent>;
-			constexpr glm::vec3 eval(const Function& func)
-			{
-				return std::visit([](const auto& fn) { return fn(); }, func);
-			}
-		}
-
-		// TODO piecewise constant
-		// TODO piecewise linear
+		// TODO vector of spawn rate functions, and float min, max where the spawn rate is zero outside [min, max].
 
 		namespace spawn_rate
 		{
@@ -268,6 +95,7 @@ namespace oly
 				bool valid(float period) const;
 			};
 
+			// TODO in continuous pulse, a and b should represent offsets, not absolutes. i.e., t - a --> a, b - t --> b
 			struct ContinuousPulse
 			{
 				struct Point
@@ -283,6 +111,7 @@ namespace oly
 					float m() const;
 				};
 
+				float global_multiplier = 1.0f;
 				std::vector<Point> pts;
 				float operator()(float t, float period) const;
 				bool valid(float period) const;
@@ -372,10 +201,8 @@ namespace oly
 			GLuint max_live_particles = 3000;
 			spawn_rate::Function spawn_rate;
 			lifespan::Function lifespan;
-			random1d::Function lifespan_rng;
-			float lifespan_rng_max_offset = 0.0f;
-			random2d::Function transform_rng;
-			math::BBox2D spawn_bounds; // TODO create generic shape? at least add functionality to translate/scale/rotate the distribution/bounds
+			random::domain1d::Domain lifespan_rng;
+			random::domain2d::Domain position_rng;
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);

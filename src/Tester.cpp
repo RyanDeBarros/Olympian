@@ -238,24 +238,42 @@ void run()
 	oly::particles::EmitterParams emitter_params;
 	emitter_params.period = 3.0f;
 	oly::particles::spawn_rate::ContinuousPulse spawn_rate;
-	spawn_rate.pts.push_back({ 0.0f, 30, -0.1f, 0.1f });
-	spawn_rate.pts.push_back({ 1.0f, 50, 0.9f, 1.1f });
-	spawn_rate.pts.push_back({ 2.0f, 10, 1.9f, 2.1f });
-	spawn_rate.pts.push_back({ 2.5f, 50, 2.4f, 2.6f });
+	spawn_rate.pts.push_back({ 0.0f, 50, -0.1f, 0.1f });
+	spawn_rate.pts.push_back({ 1.0f, 100, 0.9f, 1.1f });
+	spawn_rate.pts.push_back({ 2.0f, 20, 1.9f, 2.1f });
+	spawn_rate.pts.push_back({ 2.3f, 70, 2.2f, 2.4f });
+	spawn_rate.global_multiplier = 5.0f;
 	emitter_params.spawn_rate = spawn_rate;
 	oly::particles::lifespan::Constant lifespan;
 	lifespan.c = 0.3f;
 	emitter_params.lifespan = lifespan;
-	oly::particles::random1d::LogisticBell lifespan_rng;
-	lifespan_rng.height = 2.0f;
-	emitter_params.lifespan_rng = lifespan_rng;
-	emitter_params.lifespan_rng_max_offset = 0.2f;
-	oly::particles::random2d::RadialPowerSpike transform_rng;
-	transform_rng.radius = 200.0f;
-	transform_rng.power = 4.0f;
-	transform_rng.inverted = true;
-	emitter_params.transform_rng = transform_rng;
-	emitter_params.spawn_bounds = { -200.0f, 500.0f, 0.0f, 400.0f };
+	emitter_params.lifespan_rng.shapes.push_back({ oly::random::domain1d::Interval{ oly::random::bound1d::PowerSpike{} } });
+	emitter_params.lifespan_rng.scale = 0.2f;
+	{
+		oly::random::domain2d::Rect rect;
+		oly::random::bound1d::DualPowerSpike fnx;
+		fnx.alpha = 4.0f;
+		fnx.beta = 0.25f;
+		oly::random::bound1d::Uniform fny;
+		rect.fnx = fnx;
+		rect.fny = fny;
+		rect.transform.position = { -0.5f, 0.5f };
+		rect.transform.scale = glm::vec2(0.2f);
+		emitter_params.position_rng.shapes.push_back({ rect });
+		oly::random::domain2d::Ellipse ellipse;
+		oly::random::bound1d::PowerSpike fnr;
+		fnr.a = 0.0f;
+		fnr.power = 10.0f;
+		fnr.inverted = true;
+		oly::random::bound1d::Uniform fna;
+		ellipse.fnr = fnr;
+		ellipse.fna = fna;
+		ellipse.transform.position = { 0.5f, -0.5f };
+		ellipse.transform.scale = glm::vec2(0.4f);
+		emitter_params.position_rng.shapes.push_back({ ellipse, 3.0f });
+		emitter_params.position_rng.transform.position = { 150.0f, 200.0f };
+		emitter_params.position_rng.transform.scale = { 400.0f, 250.0f };
+	}
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
 		{  1, -1 },

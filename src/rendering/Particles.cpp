@@ -16,156 +16,6 @@ namespace oly
 		{
 		}
 
-		namespace random1d
-		{
-			float Uniform::operator()() const
-			{
-				return offset * (2 * rng() - 1);
-			}
-
-			float PowerSpike::operator()() const
-			{
-				float r = rng();
-				float res;
-				if (power == 0)
-					res = r * (b - a) + a;
-				else
-				{
-					float comp = -a / (b - a);
-					if (r < comp)
-						res = a + pow(pow(-a, power) * r * (b - a), 1.0f / (power + 1.0f));
-					else
-						res = b - pow(pow(b, power) * (1.0f - r) * (b - a), 1.0f / (power + 1.0f));
-				}
-				return inverted ? (res > 0.0f ? b - res : a - res) : res;
-			}
-
-			float DualPowerSpike::operator()() const
-			{
-				float r = rng();
-				float res;
-				if (alpha == 0 && beta == 0)
-					res = r * (b - a) + a;
-				else
-				{
-					float m = 1.0f / (b / (beta + 1.0f) - a / (alpha + 1.0f));
-					float comp = -a * m / (alpha + 1.0f);
-					if (r < comp)
-						res = a + pow((alpha + 1.0f) * pow(-a, alpha) * r / m, 1.0f / (alpha + 1.0f));
-					else
-						res = b - pow((beta + 1.0f) * pow(b, beta) * (1.0f - r) / m, 1.0f / (beta + 1.0f));
-				}
-				return inverted ? (res > 0.0f ? b - res : a - res) : res;
-			}
-
-			float LogisticBell::operator()() const
-			{
-				float r = rng();
-				return glm::log(r / (1 - r)) / (4 * height);
-			}
-		}
-
-		namespace random2d
-		{
-			glm::vec2 Uniform::operator()() const
-			{
-				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1) };
-			}
-
-			glm::vec2 PowerSpike::operator()() const
-			{
-				random1d::PowerSpike p1, p2;
-				p1.a = x_interval.left;
-				p1.b = x_interval.right;
-				p1.power = x_power;
-				p1.inverted = x_inverted;
-				p2.a = y_interval.left;
-				p2.b = y_interval.right;
-				p2.power = y_power;
-				p2.inverted = y_inverted;
-				return { p1(), p2() };
-			}
-
-			glm::vec2 RadialPowerSpike::operator()() const
-			{
-				static const auto half_curve = [](float offset, float power, float r) {
-					if (power == 0)
-						return r * offset;
-					else
-						return offset - pow(pow(offset, power) * r * offset, 1.0f / (power + 1.0f));
-					};
-				float r = half_curve(radius, power, rng());
-				return math::coordinates::to_cartesian({ inverted ? radius - r : r, 2 * glm::pi<float>() * rng() });
-			}
-
-			glm::vec2 LogisticBellIndependent::operator()() const
-			{
-				float r1 = rng(), r2 = rng();
-				return { glm::log(r1 / (1 - r1)) / (4 * height), glm::log(r2 / (1 - r2)) / (4 * height) };
-			}
-
-			glm::vec2 LogisticBellDependent::operator()() const
-			{
-				float r = rng();
-				float radius = glm::log(r / (1 - r)) / (4 * height);
-				float angle = 2 * glm::pi<float>() * rng();
-				return math::coordinates::to_cartesian({ radius, angle });
-			}
-		}
-
-		namespace random3d
-		{
-			glm::vec3 Uniform::operator()() const
-			{
-				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1), offset.z * (2 * rng() - 1) };
-			}
-
-			glm::vec3 PowerSpike::operator()() const
-			{
-				random1d::PowerSpike p1, p2, p3;
-				p1.a = x_interval.left;
-				p1.b = x_interval.right;
-				p1.power = x_power;
-				p1.inverted = x_inverted;
-				p2.a = y_interval.left;
-				p2.b = y_interval.right;
-				p2.power = y_power;
-				p2.inverted = y_inverted;
-				p3.a = y_interval.left;
-				p3.b = y_interval.right;
-				p3.power = z_power;
-				p3.inverted = z_inverted;
-				return { p1(), p2(), p3() };
-			}
-
-			glm::vec3 RadialPowerSpike::operator()() const
-			{
-				static const auto half_curve = [](float offset, float power, float r) {
-					if (power == 0)
-						return r * offset;
-					else
-						return offset - pow(pow(offset, power) * r * offset, 1.0f / (power + 1.0f));
-					};
-				float r = half_curve(radius, power, rng());
-				return math::coordinates::to_cartesian({ inverted ? radius - r : r, 2 * glm::pi<float>() * rng(), glm::pi<float>() * rng() });
-			}
-
-			glm::vec3 LogisticBellIndependent::operator()() const
-			{
-				float r1 = rng(), r2 = rng(), r3 = rng();
-				return { glm::log(r1 / (1 - r1)) / (4 * height), glm::log(r2 / (1 - r2)) / (4 * height), glm::log(r3 / (1 - r3)) / (4 * height) };
-			}
-
-			glm::vec3 LogisticBellDependent::operator()() const
-			{
-				float r = rng();
-				float radius = glm::log(r / (1 - r)) / (4 * height);
-				float azimuthal = 2 * glm::pi<float>() * rng();
-				float polar = glm::pi<float>() * rng();
-				return math::coordinates::to_cartesian({ radius, azimuthal, polar });
-			}
-		}
-
 		namespace spawn_rate
 		{
 			float Constant::operator()(float t, float period) const
@@ -267,7 +117,7 @@ namespace oly
 						}
 					}
 				}
-				return weighted_sum;
+				return global_multiplier * weighted_sum;
 			}
 			
 			bool ContinuousPulse::valid(float period) const
@@ -326,8 +176,8 @@ namespace oly
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
 		{
 			data.emitter = emitter;
-			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + std::clamp(random1d::eval(lifespan_rng), -lifespan_rng_max_offset, lifespan_rng_max_offset);
-			glm::vec2 pos = spawn_bounds.clamp(spawn_bounds.center() + random2d::eval(transform_rng));
+			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + lifespan_rng();
+			glm::vec2 pos = position_rng();
 			transform = Transform2D{ pos, 0, { 5, 5 }}.matrix();
 			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
 		}

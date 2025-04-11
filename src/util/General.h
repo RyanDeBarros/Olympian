@@ -101,6 +101,4 @@ namespace oly
 		void sync() { double n = glfwGetTime(); _delta = n - _now; _now = n; }
 	};
 	inline TimeImpl TIME;
-
-	inline float rng() { return (float)rand() / RAND_MAX; }
 }
