@@ -416,3 +416,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+
+# LaTeX
+doc/*.aux
+doc/*.pdf
+doc/*.synctex.gz
+doc/*.toc

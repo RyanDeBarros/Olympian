@@ -4,11 +4,30 @@
 
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 namespace oly
 {
 	namespace math
 	{
+		namespace coordinates
+		{
+			inline glm::vec2 to_polar(glm::vec2 cartesian) { return { glm::length(cartesian), glm::atan(cartesian.y, cartesian.x) }; }
+			inline glm::vec2 to_cartesian(glm::vec2 polar) { return polar.x * glm::vec2{ glm::cos(polar.y), glm::sin(polar.y) }; }
+			inline glm::vec3 to_spherical(glm::vec3 cartesian) { float r = glm::length(cartesian);
+					return r != 0.0f ? glm::vec3{ r, glm::atan(cartesian.y, cartesian.x), glm::acos(cartesian.z / r) } : glm::vec3{ 0.0f, 0.0f, 0.0f }; }
+			inline glm::vec3 to_cartesian(glm::vec3 spherical) { float sphi = glm::sin(spherical.z); return spherical.x * glm::vec3{ glm::cos(spherical.y) * sphi, glm::sin(spherical.y) * sphi, glm::cosh(spherical.z)}; }
+		}
+
+		struct BBox2D
+		{
+			float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
+
+			glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
+			bool contains(glm::vec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
+			glm::vec2 clamp(glm::vec2 pt) const { return { std::clamp(pt.x, x1, x2), std::clamp(pt.y, y1, y2) }; }
+		};
+
 		struct Barycentric : glm::vec3
 		{
 			float root() const { return x; }

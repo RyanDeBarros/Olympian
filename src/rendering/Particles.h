@@ -12,6 +12,7 @@ namespace oly
 	namespace particles
 	{
 		class Emitter;
+		struct EmitterParams;
 
 		struct Particle
 		{
@@ -41,55 +42,144 @@ namespace oly
 		{
 			float lifespan = 0.0f;
 
-			bool update(const Emitter& emitter);
+			bool update();
+
+		private:
+			friend struct EmitterParams;
+			const Emitter* emitter = nullptr;
 		};
+
+		// NOTE: all random distributions in random*::* have mean = 0, and generate an offset to the mean. This way, transforming the range via translation/rotation/scaling can be done independently.
 
 		namespace random1d
 		{
 			struct Uniform
 			{
 				float offset = 0.0f;
-				float operator()(float v) const;
+				float operator()() const;
 			};
 
 			struct LogisticBell
 			{
 				float height = 1.0f;
-				float cutoff = 0.0f;
-				float operator()(float v) const;
+				float operator()() const;
+			};
+
+			struct PowerSpike
+			{
+				// t = 0, w = 1, alpha = beta = power
+				float a = -1.0f, b = 1.0f, power = 1.0f;
+				float operator()() const;
+			};
+
+			struct DualPowerSpike
+			{
+				// t = 0, w = 1
+				float a = -1.0f, b = 1.0f;
+				float alpha = 1.0f, beta = 1.0f;
+				float operator()() const;
 			};
 
 			enum
 			{
 				UNIFORM,
 				LOGISTIC_BELL,
+				POWER_SPIKE,
+				DUAL_POWER_SPIKE,
 			};
-			using Function = std::variant<Uniform, LogisticBell>;
-			constexpr float eval(const Function& func, float t)
+			using Function = std::variant<Uniform, LogisticBell, PowerSpike, DualPowerSpike>;
+			constexpr float eval(const Function& func)
 			{
-				return std::visit([t](const auto& fn) { return fn(t); }, func);
+				return std::visit([](const auto& fn) { return fn(); }, func);
 			}
-			constexpr glm::vec2 eval(const Function& func, glm::vec2 v)
+			constexpr glm::vec2 eval2(const Function& func)
 			{
-				return std::visit([v](const auto& fn) -> glm::vec2 { return { fn(v[0]), fn(v[1]) }; }, func);
+				return std::visit([](const auto& fn) -> glm::vec2 { return { fn(), fn() }; }, func);
 			}
-			constexpr glm::vec3 eval(const Function& func, glm::vec3 v)
+			constexpr glm::vec3 eval3(const Function& func)
 			{
-				return std::visit([v](const auto& fn) -> glm::vec3 { return { fn(v[0]), fn(v[1]), fn(v[2])}; }, func);
+				return std::visit([](const auto& fn) -> glm::vec3 { return { fn(), fn(), fn()}; }, func);
 			}
-			constexpr glm::vec4 eval(const Function& func, glm::vec4 v)
+			constexpr glm::vec4 eval4(const Function& func)
 			{
-				return std::visit([v](const auto& fn) -> glm::vec4 { return { fn(v[0]), fn(v[1]), fn(v[2]), fn(v[3])}; }, func);
+				return std::visit([](const auto& fn) -> glm::vec4 { return { fn(), fn(), fn(), fn()}; }, func);
 			}
-			constexpr glm::mat3 eval(const Function& func, const glm::mat3& m)
+			constexpr glm::mat3 eval3x3(const Function& func)
 			{
-				return { eval(func, m[0]), eval(func, m[1]), eval(func, m[2]) };
+				return { eval3(func), eval3(func), eval3(func) };
+			}
+		}
+
+		// TODO PowerSpike in 2D and 3D
+
+		namespace random2d
+		{
+			struct Uniform
+			{
+				glm::vec2 offset = {};
+				glm::vec2 operator()() const;
+			};
+
+			struct LogisticBellIndependent
+			{
+				float height = 1.0f;
+				glm::vec2 operator()() const;
+			};
+
+			struct LogisticBellDependent
+			{
+				float height = 1.0f;
+				glm::vec2 operator()() const;
+			};
+
+			enum
+			{
+				UNIFORM,
+				LOGISTIC_BELL_INDEPENDENT,
+				LOGISTIC_BELL_DEPENDENT,
+			};
+			using Function = std::variant<Uniform, LogisticBellIndependent, LogisticBellDependent>;
+			constexpr glm::vec2 eval(const Function& func)
+			{
+				return std::visit([](const auto& fn) { return fn(); }, func);
+			}
+		}
+
+		namespace random3d
+		{
+			struct Uniform
+			{
+				glm::vec3 offset = {};
+				glm::vec3 operator()() const;
+			};
+
+			struct LogisticBellIndependent
+			{
+				float height = 1.0f;
+				glm::vec3 operator()() const;
+			};
+
+			struct LogisticBellDependent
+			{
+				float height = 1.0f;
+				glm::vec3 operator()() const;
+			};
+
+			enum
+			{
+				UNIFORM,
+				LOGISTIC_BELL_INDEPENDENT,
+				LOGISTIC_BELL_DEPENDENT,
+			};
+			using Function = std::variant<Uniform, LogisticBellIndependent, LogisticBellDependent>;
+			constexpr glm::vec3 eval(const Function& func)
+			{
+				return std::visit([](const auto& fn) { return fn(); }, func);
 			}
 		}
 
 		// TODO piecewise constant
 		// TODO piecewise linear
-		// TODO continuous pulse
 
 		namespace spawn_rate
 		{
@@ -98,14 +188,19 @@ namespace oly
 				// R(t) = c
 				float c = 3.0f;
 				float operator()(float t, float period) const;
+				float debt_increment(float t, float dt, float period) const;
+				float period_sum(float period) const;
 			};
+
 			struct Linear
 			{
 				// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
 				float i = 60.0f;
 				float f = 0.0f;
 				float operator()(float t, float period) const;
+				float period_sum(float period) const;
 			};
+
 			struct Sine
 			{
 				// R(t) = a * sin(k * pi * (t - b) / T) + c
@@ -115,15 +210,37 @@ namespace oly
 				float c = 0.0f;
 				float operator()(float t, float period) const;
 			};
+
 			struct DiscretePulse
 			{
 				struct Point
 				{
+					// summand(tau) = w * delta(tau - t)
 					float t;
 					unsigned int w;
 				};
 
-				// R(t) = sum over pt in pts of pt.w * delta(t - pt.t)
+				std::vector<Point> pts;
+				float operator()(float t, float period) const;
+				float debt_increment(float t, float dt, float period) const;
+				bool valid(float period) const;
+			};
+
+			struct ContinuousPulse
+			{
+				struct Point
+				{
+					// for tau in [a, t], summand(tau) = m() * ((tau - a) / (t - a)) ^ alpha
+					// for tau in [t, b], summand(tau) = m() * ((tau - b) / (t - b)) ^ beta
+					// where w is the area under the pulse
+					float t;
+					unsigned int w;
+					float a, b;
+					float alpha = 1.0f, beta = 1.0f;
+
+					float m() const;
+				};
+
 				std::vector<Point> pts;
 				float operator()(float t, float period) const;
 				bool valid(float period) const;
@@ -135,11 +252,34 @@ namespace oly
 				LINEAR,
 				SINE,
 				DISCRETE_PULSE,
+				CONTINUOUS_PULSE,
 			};
-			using Function = std::variant<Constant, Linear, Sine, DiscretePulse>;
+			using Function = std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse>;
 			constexpr float eval(const Function& func, float t, float period)
 			{
 				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
+			}
+			template<typename T>
+			concept has_period_sum = requires(T fn, float period) { { fn.period_sum(period) } -> std::convertible_to<float>; };
+			inline float period_sum(const Function& func, float period)
+			{
+				return std::visit([period](const auto& fn) {
+					if constexpr (has_period_sum<decltype(fn)>)
+						return fn.period_sum(period);
+					else
+						return fn(period, period);
+					}, func);
+			}
+			template<typename T>
+			concept has_debt_increment = requires(T fn, float t, float dt, float period) { { fn.debt_increment(t, dt, period) } -> std::convertible_to<float>; };
+			inline float debt_increment(const Function& func, float t, float dt, float period)
+			{
+				return std::visit([t, dt, period](const auto& fn) {
+					if constexpr (has_debt_increment<decltype(fn)>)
+						return fn.debt_increment(t, dt, period);
+					else
+						return fn(fmod(t, period), period) - fn(fmod(t - dt, period), period) + period_sum(fn, period) * (floorf(t / period) - floorf((t - dt) / period));
+					}, func);
 			}
 		}
 
@@ -151,6 +291,7 @@ namespace oly
 				float c = 3.0f;
 				float operator()(float t, float period) const;
 			};
+
 			struct Linear
 			{
 				// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
@@ -158,6 +299,7 @@ namespace oly
 				float f = 0.0f;
 				float operator()(float t, float period) const;
 			};
+
 			struct Sine
 			{
 				// R(t) = a * sin(k * pi * (t - b) / T) + c
@@ -189,7 +331,9 @@ namespace oly
 			spawn_rate::Function spawn_rate;
 			lifespan::Function lifespan;
 			random1d::Function lifespan_rng;
-			random1d::Function transform_rng; // TODO use bounding box or other shape to generate from, and use 2d random distributions for them instead
+			float lifespan_rng_max_offset = 0.0f;
+			random2d::Function transform_rng;
+			math::BBox2D spawn_bounds;
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);

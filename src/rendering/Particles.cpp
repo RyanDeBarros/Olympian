@@ -2,6 +2,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <algorithm>
+
 #include "util/Assert.h"
 #include "Resources.h"
 
@@ -16,22 +18,92 @@ namespace oly
 
 		namespace random1d
 		{
-			float Uniform::operator()(float v) const
+			float Uniform::operator()() const
 			{
-				return offset != 0.0f ? v + offset * (2 * rng() - 1) : v;
+				return offset * (2 * rng() - 1);
 			}
 
-			float LogisticBell::operator()(float v) const
+			float LogisticBell::operator()() const
 			{
-				// f(x) = 4 * height * e ^ (-4 * height * x) / (1 + e ^ (-4 * height * x)) ^ 2
-				// CDF = int _(-infty) ^x 4 * height * e ^ (-4 * height * x) / (1 + e ^ (-4 * height * x)) ^ 2 dx
-				// CDF = 1 / (1 + e ^ (-4 * height * x))
-				// CDF^-1 = ln(x / (1 - x)) / (4 * height)
-				if (cutoff == 0.0f)
-					return v;
 				float r = rng();
-				float offset = glm::log(r / (1 - r)) / (4 * height);
-				return v + glm::clamp(offset, -cutoff, cutoff);
+				return glm::log(r / (1 - r)) / (4 * height);
+			}
+
+			float PowerSpike::operator()() const
+			{
+				float r = rng();
+				if (power == 0)
+					return r * (b - a) + a;
+				else
+				{
+					float m = (power + 1.0f) / (b - a);
+					float comp = -a * m / (power + 1.0f);
+					if (r < comp)
+						return a + pow((power + 1.0f) * pow(-a, power) * r / m, 1.0f / (power + 1.0f));
+					else
+						return b - pow((power + 1.0f) * pow(b, power) * (1.0f - r) / m, 1.0f / (power + 1.0f));
+				}
+			}
+
+			float DualPowerSpike::operator()() const
+			{
+				float r = rng();
+				if (alpha == 0 && beta == 0)
+					return r * (b - a) + a;
+				else
+				{
+					float m = 1.0f / (b / (beta + 1.0f) - a / (alpha + 1.0f));
+					float comp = -a * m / (alpha + 1.0f);
+					if (r < comp)
+						return a + pow((alpha + 1.0f) * pow(-a, alpha) * r / m, 1.0f / (alpha + 1.0f));
+					else
+						return b - pow((beta + 1.0f) * pow(b, beta) * (1.0f - r) / m, 1.0f / (beta + 1.0f));
+				}
+			}
+		}
+
+		namespace random2d
+		{
+			glm::vec2 Uniform::operator()() const
+			{
+				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1) };
+			}
+
+			glm::vec2 LogisticBellIndependent::operator()() const
+			{
+				float r1 = rng(), r2 = rng();
+				return { glm::log(r1 / (1 - r1)) / (4 * height), glm::log(r2 / (1 - r2)) / (4 * height) };
+			}
+
+			glm::vec2 LogisticBellDependent::operator()() const
+			{
+				float r = rng();
+				float radius = glm::log(r / (1 - r)) / (4 * height);
+				float angle = 2 * glm::pi<float>() * rng();
+				return math::coordinates::to_cartesian({ radius, angle });
+			}
+		}
+
+		namespace random3d
+		{
+			glm::vec3 Uniform::operator()() const
+			{
+				return { offset.x * (2 * rng() - 1), offset.y * (2 * rng() - 1), offset.z * (2 * rng() - 1) };
+			}
+
+			glm::vec3 LogisticBellIndependent::operator()() const
+			{
+				float r1 = rng(), r2 = rng(), r3 = rng();
+				return { glm::log(r1 / (1 - r1)) / (4 * height), glm::log(r2 / (1 - r2)) / (4 * height), glm::log(r3 / (1 - r3)) / (4 * height) };
+			}
+
+			glm::vec3 LogisticBellDependent::operator()() const
+			{
+				float r = rng();
+				float radius = glm::log(r / (1 - r)) / (4 * height);
+				float azimuthal = 2 * glm::pi<float>() * rng();
+				float polar = glm::pi<float>() * rng();
+				return math::coordinates::to_cartesian({ radius, azimuthal, polar });
 			}
 		}
 
@@ -42,9 +114,24 @@ namespace oly
 				return c * t;
 			}
 
+			float Constant::debt_increment(float t, float dt, float period) const
+			{
+				return c * dt;
+			}
+
+			float Constant::period_sum(float period) const
+			{
+				return c * period;
+			}
+
 			float Linear::operator()(float t, float period) const
 			{
 				return 0.5f * (f - i) * t * t / period + i * t;
+			}
+
+			float Linear::period_sum(float period) const
+			{
+				return 0.5f * (f - i) * period + i * period;
 			}
 
 			float Sine::operator()(float t, float period) const
@@ -66,17 +153,76 @@ namespace oly
 				return weighted_sum;
 			}
 
+			float DiscretePulse::debt_increment(float t, float dt, float period) const
+			{
+				float debt = 0.0f;
+				float tmod = fmod(t, period);
+				float dtmod = fmod(t - dt, period);
+				float floor_term = floorf(t / period) - floorf((t - dt) / period);
+				for (const auto& pt : pts)
+					debt += pt.w * ((int)(pt.t <= tmod) - (int)(pt.t <= dtmod) + floor_term);
+				return debt;
+			}
+
 			bool DiscretePulse::valid(float period) const
 			{
 				float prev_point = -1.0f;
 				for (const auto& pt : pts)
 				{
-					if (pt.t <= prev_point || pt.t >= period)
+					if (pt.t < 0.0f || pt.t <= prev_point || pt.t >= period)
 						return false;
 					prev_point = pt.t;
 					if (pt.w == 0)
 						return false;
 				}
+				return true;
+			}
+
+			float ContinuousPulse::Point::m() const
+			{
+				return w / ((t - a) / (alpha + 1) + (b - t) / (beta + 1));
+			}
+			
+			float ContinuousPulse::operator()(float t, float period) const
+			{
+				float weighted_sum = 0.0f;
+				for (const auto& pt : pts)
+				{
+					if (t > pt.a)
+					{
+						if (pt.alpha == 0 && pt.beta == 0)
+						{
+							if (t < pt.b)
+								weighted_sum += pt.w * (t - pt.a) / (pt.b - pt.a);
+							else
+								weighted_sum += pt.w;
+						}
+						else
+						{
+							if (t < pt.t)
+								weighted_sum += pt.m() * pow(t - pt.a, pt.alpha + 1) / ((pt.alpha + 1) * pow(pt.t - pt.a, pt.alpha));
+							else if (t < pt.b)
+								weighted_sum += pt.w - pt.m() * pow(pt.b - t, pt.beta + 1) / ((pt.beta + 1) * pow(pt.b - pt.t, pt.beta));
+							else
+								weighted_sum += pt.w;
+						}
+					}
+				}
+				return weighted_sum;
+			}
+			
+			bool ContinuousPulse::valid(float period) const
+			{
+				float prev_point = -1.0f;
+				for (const auto& pt : pts)
+				{
+					if (pt.t < 0.0f || pt.t <= prev_point || pt.t >= period)
+						return false;
+					prev_point = pt.t;
+					if (pt.w == 0 || pt.alpha < 0 || pt.beta < 0 || pt.a > pt.t || pt.b < pt.t || pt.a == pt.b)
+						return false;
+				}
+				return true;
 			}
 		}
 
@@ -98,19 +244,16 @@ namespace oly
 			}
 		}
 
-		bool ParticleData::update(const Emitter& emitter)
+		bool ParticleData::update()
 		{
-			lifespan -= emitter.state.delta_time;
+			lifespan -= emitter->state.delta_time;
 			return lifespan > 0.0f;
 		}
 
 		GLuint EmitterParams::spawn_count() const
 		{
-			float t = emitter->state.playtime;
-			float dt = emitter->state.delta_time;
 			float debt = emitter->state.spawn_rate_debt;
-			float debt_increase = spawn_rate::eval(spawn_rate, fmod(t, period), period) - spawn_rate::eval(spawn_rate, fmod(t - dt, period), period)
-				+ (floorf(t / period) - floorf((t - dt) / period)) * spawn_rate::eval(spawn_rate, period, period);
+			float debt_increase = spawn_rate::debt_increment(spawn_rate, emitter->state.playtime, emitter->state.delta_time, period);
 			if (debt_increase > 0.0f)
 			{
 				debt += debt_increase;
@@ -123,9 +266,9 @@ namespace oly
 
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
 		{
-			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period);
-			data.lifespan = random1d::eval(lifespan_rng, data.lifespan);
-			glm::vec2 pos = random1d::eval(transform_rng, glm::vec2{ 0.0f, 0.0f });
+			data.emitter = emitter;
+			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + std::clamp(random1d::eval(lifespan_rng), -lifespan_rng_max_offset, lifespan_rng_max_offset);
+			glm::vec2 pos = spawn_bounds.clamp(spawn_bounds.center() + random2d::eval(transform_rng));
 			transform = Transform2D{ pos, 0, { 5, 5 }}.matrix();
 			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
 		}
@@ -138,6 +281,11 @@ namespace oly
 			if (spawn_rate.index() == spawn_rate::DISCRETE_PULSE)
 			{
 				if (!std::get<spawn_rate::DISCRETE_PULSE>(spawn_rate).valid(period))
+					return false;
+			}
+			else if (spawn_rate.index() == spawn_rate::CONTINUOUS_PULSE)
+			{
+				if (!std::get<spawn_rate::CONTINUOUS_PULSE>(spawn_rate).valid(period))
 					return false;
 			}
 			return true;
@@ -212,7 +360,7 @@ namespace oly
 			// copy and update live particles
 			for (size_t i = 0; i < prev_live_instances; ++i)
 			{
-				if (particle_data.back[i].update(*this)) // TODO consider adding Emitter& data member to ParticleData
+				if (particle_data.back[i].update())
 				{
 					size_t j = state.live_instances++;
 					particle_data.front[j] = std::move(particle_data.back[i]);
