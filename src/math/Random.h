@@ -38,16 +38,27 @@ namespace oly
 				float operator()() const;
 			};
 
+			struct Sine
+			{
+				// a * sin(k * pi * (x - b)) + (1 - N) / (max - min), where N is a normalizing factor
+				float min = -1.0f, max = 1.0f;
+				float a = 1.0f, k = 1.0f, b = 0.0f;
+
+				float operator()() const;
+			};
+
 			enum
 			{
 				UNIFORM,
 				POWER_SPIKE,
 				DUAL_POWER_SPIKE,
+				SINE,
 			};
 			using Function = std::variant<
 				Uniform,
 				PowerSpike,
-				DualPowerSpike
+				DualPowerSpike,
+				Sine
 			>;
 			constexpr float eval(const Function& func)
 			{

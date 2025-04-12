@@ -1,6 +1,7 @@
 #include "Random.h"
 
 #include "Geometry.h"
+#include "math/Solvers.h"
 
 namespace oly
 {
@@ -46,6 +47,28 @@ namespace oly
 						res = b - pow((beta + 1.0f) * pow(b, beta) * (1.0f - r) / m, 1.0f / (beta + 1.0f));
 				}
 				return inverted ? (res > 0.0f ? b - res : a - res) : res;
+			}
+
+			float Sine::operator()() const
+			{
+				//float n = a * (glm::cos(k * glm::pi<float>() * (min - b)) - glm::cos(k * glm::pi<float>() * (max - b))) / (k * glm::pi<float>());
+				//math::solver::LinearCosine solver;
+				//solver.A = k * glm::pi<float>() * (n - 1) / (a * (max - min));
+				//solver.B = k * glm::pi<float>();
+				//solver.C = -b * k * glm::pi<float>();
+				//solver.D = (k * glm::pi<float>() / a) * (rng() + min * (n - 1) / (max - min)) - glm::cos(k * glm::pi<float>() * (min - b));
+				//float v = std::clamp(solver.solve(), min, max);
+				float c = glm::abs(a);
+				float R = rng() * (c * (max - min) - (a / (k * glm::pi<float>())) * (glm::cos(k * glm::pi<float>() * (max - b)) - glm::cos(k * glm::pi<float>() * (min - b))));
+				math::solver::LinearCosine solver;
+				solver.A = -k * glm::pi<float>() * c / a;
+				solver.B = k * glm::pi<float>();
+				solver.C = -k * glm::pi<float>() * b;
+				solver.D = (k * glm::pi<float>() / a) * (c * min + R) - glm::cos(k * glm::pi<float>() * (min - b));
+				float v = std::clamp(solver.solve(), min, max);
+				if (isnan(v))
+					printf("%f\n", v);
+				return v;
 			}
 		}
 

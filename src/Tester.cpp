@@ -242,7 +242,7 @@ void run()
 	continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
 	continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
 	continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
-	continuous_pulses.global_multiplier = 5.0f;
+	continuous_pulses.global_multiplier = 10.0f;
 	oly::particles::spawn_rate::Constant constant_spawn;
 	constant_spawn.c = 500;
 	oly::particles::spawn_rate::Piecewise spawn_rate;
@@ -256,15 +256,18 @@ void run()
 	emitter_params.lifespan_rng.scale = 0.2f;
 	{
 		oly::random::domain2d::Rect rect;
-		oly::random::bound1d::DualPowerSpike fnx;
-		fnx.alpha = 4.0f;
-		fnx.beta = 0.25f;
+		oly::random::bound1d::Sine fnx;
+		fnx.a = 5.0f;
+		fnx.k = 5.0f;
+		fnx.b = 5.0f;
+		fnx.min = -6;
+		fnx.max = 6;
 		oly::random::bound1d::Uniform fny;
 		rect.fnx = fnx;
 		rect.fny = fny;
 		rect.transform.position = { -0.5f, 0.5f };
 		rect.transform.scale = glm::vec2(0.2f);
-		emitter_params.position_rng.shapes.push_back({ rect });
+		emitter_params.position_rng.shapes.push_back({ rect, 3 });
 		oly::random::domain2d::Ellipse ellipse;
 		oly::random::bound1d::PowerSpike fnr;
 		fnr.a = 0.0f;
@@ -275,7 +278,7 @@ void run()
 		ellipse.fna = fna;
 		ellipse.transform.position = { 0.5f, -0.5f };
 		ellipse.transform.scale = glm::vec2(0.4f);
-		emitter_params.position_rng.shapes.push_back({ ellipse, 3.0f });
+		emitter_params.position_rng.shapes.push_back({ ellipse });
 		emitter_params.position_rng.transform.position = { 150.0f, 200.0f };
 		emitter_params.position_rng.transform.scale = { 400.0f, 250.0f };
 	}
