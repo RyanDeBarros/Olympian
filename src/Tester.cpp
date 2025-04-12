@@ -315,6 +315,8 @@ void run()
 		emitter_params2.acceleration.x = oly::particles::acceleration::Constant{ 200 };
 		emitter_params2.acceleration.y = oly::particles::acceleration::Force{ -10 };
 		emitter_params2.mass = oly::particles::mass::Proportional{ 15.0f, -2.0f };
+
+		emitter_params2.gradient = oly::particles::gradient::Linear{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } };
 	}
 	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
 		{ 1, 0 },

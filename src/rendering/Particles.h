@@ -177,6 +177,8 @@ namespace oly
 			rendering::FixedLayoutEBO<GLuint> ebo;
 			rendering::VertexArray vao;
 
+			// TODO global transform uniform
+
 			struct
 			{
 				GLenum mode = GL_TRIANGLES;
@@ -196,11 +198,14 @@ namespace oly
 		struct ParticleData
 		{
 			float t = 0.0f;
-			float lifespan = 0.0f;
 			bool alive = true;
 
-			float mass = 1.0f;
-			glm::vec2 velocity = {};
+			struct
+			{
+				float lifespan = 0.0f;
+				float mass = 1.0f;
+				glm::vec2 velocity = {};
+			} initial;
 
 			void update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel);
 
@@ -246,15 +251,14 @@ namespace oly
 				float operator()(float v, float t, float dt, float mass) const;
 			};
 
+			// not recommended as it is sensitive to frame lengths
 			struct SinePosition
 			{
 				// x(t) = a * sin(k * pi * (t - b)) + c
 				float a = 1.0f;
 				float k = 1.0f;
 				float b = 0.0f;
-				float c = 0.0f;
-
-				// TODO
+				float operator()(float v, float t, float dt, float mass) const;
 			};
 
 			struct Custom
@@ -263,7 +267,7 @@ namespace oly
 				float operator()(float v, float t, float dt, float mass) const;
 			};
 
-			using Function = std::variant<Constant, Force, Custom>;
+			using Function = std::variant<Constant, Force, SinePosition, Custom>;
 			constexpr float eval(const Function& func, float v, float t, float dt, float mass)
 			{
 				return std::visit([v, t, dt, mass](const auto& fn) { return fn(v, t, dt, mass); }, func);
@@ -272,8 +276,24 @@ namespace oly
 			{
 				Function x, y;
 
-				glm::vec2 eval(const ParticleData& prt, float dt) const { return { acceleration::eval(x, prt.velocity.x, prt.t, dt, prt.mass), acceleration::eval(y, prt.velocity.y, prt.t, dt, prt.mass) }; }
+				glm::vec2 eval(const ParticleData& prt, float dt) const { return { acceleration::eval(x, prt.initial.velocity.x, prt.t, dt, prt.initial.mass),
+					acceleration::eval(y, prt.initial.velocity.y, prt.t, dt, prt.initial.mass) }; }
 			};
+		}
+
+		namespace gradient
+		{
+			struct Linear
+			{
+				glm::vec4 i = glm::vec4(1.0f), f = glm::vec4(1.0f);
+				glm::vec4 operator()(float t, float dt, float lifespan) const;
+			};
+
+			using Function = std::variant<Linear>;
+			constexpr glm::vec4 eval(const Function& func, float t, float dt, float lifespan)
+			{
+				return std::visit([t, dt, lifespan](const auto& fn) { return fn(t, dt, lifespan); }, func);
+			}
 		}
 
 		struct EmitterParams
@@ -293,6 +313,8 @@ namespace oly
 			random::bound::Function2D velocity;
 			mass::Function mass;
 			acceleration::Function2D acceleration;
+			random::bound::Function4D color = { random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f } };
+			gradient::Function gradient;
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);

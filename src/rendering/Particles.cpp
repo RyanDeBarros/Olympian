@@ -178,11 +178,13 @@ namespace oly
 		void ParticleData::update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel)
 		{
 			t += emitter->state.delta_time;
-			if (t >= lifespan)
+			if (t >= initial.lifespan)
 				alive = false;
 
-			transform[2][0] += vel.x * emitter->state.delta_time;
-			transform[2][1] += vel.y * emitter->state.delta_time;
+			float dt = emitter->state.delta_time;
+			transform[2][0] += vel.x * dt;
+			transform[2][1] += vel.y * dt;
+			color = gradient::eval(emitter->params.gradient, t, dt, initial.lifespan);
 		}
 
 		namespace mass
@@ -210,9 +212,22 @@ namespace oly
 				return mass != 0.0f ? v + f * units::FORCE * t / (mass * units::MASS) : v;
 			}
 
+			float SinePosition::operator()(float v, float t, float dt, float mass) const
+			{
+				return a * k * glm::pi<float>() * glm::cos(k * glm::pi<float>() * (t - b));
+			}
+
 			float Custom::operator()(float v, float t, float dt, float mass) const
 			{
 				return func(v, t, dt, mass);
+			}
+		}
+
+		namespace gradient
+		{
+			glm::vec4 Linear::operator()(float t, float dt, float lifespan) const
+			{
+				return glm::mix(i, f, t / lifespan);
 			}
 		}
 
@@ -230,14 +245,14 @@ namespace oly
 			else return 0;
 		}
 
-		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
+		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& col)
 		{
 			data.emitter = emitter;
-			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound::eval(lifespan_offset_rng);
-			data.velocity = velocity.eval();
+			data.initial.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound::eval(lifespan_offset_rng);
+			data.initial.velocity = velocity.eval();
+			data.initial.mass = mass::eval(mass, fmod(emitter->state.playtime, period), extract_scale(transform));
 			transform = Transform2D{ transform_rng.position(), random::bound::eval(transform_rng.rotation), transform_rng.scale.eval() }.matrix();
-			data.mass = mass::eval(mass, fmod(emitter->state.playtime, period), extract_scale(transform));
-			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
+			col = color.eval();
 		}
 
 		bool EmitterParams::validate() const

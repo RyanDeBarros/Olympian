@@ -27,6 +27,13 @@ namespace oly
 		return { vectors::I3, vectors::J3, glm::vec3(position, 1.0f) };
 	}
 
+	inline glm::mat2 rotation_matrix_2x2(float rotation)
+	{
+		float cos = glm::cos(rotation);
+		float sin = glm::sin(rotation);
+		return { { cos, sin }, { -sin, cos } };
+	}
+
 	inline glm::mat3 rotation_matrix(float rotation)
 	{
 		float cos = glm::cos(rotation);
