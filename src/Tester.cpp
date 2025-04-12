@@ -256,17 +256,17 @@ void run()
 	emitter_params.lifespan_rng.scale = 0.2f;
 	{
 		oly::random::domain2d::Rect rect;
-		oly::random::bound1d::Sine fnx;
-		fnx.a = 5.0f;
-		fnx.k = 5.0f;
-		fnx.b = 5.0f;
-		fnx.min = -6;
-		fnx.max = 6;
-		oly::random::bound1d::Uniform fny;
+		oly::random::bound1d::PowerSpikeArray fnx;
+		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ 0.0f, 0.6f }, -1.0f });
+		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ -0.4f, 0.4f, 4.0f }, 0.0f });
+		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ -0.4f, 0.2f, 4.0f, true }, 0.8f });
 		rect.fnx = fnx;
+		oly::random::bound1d::PowerSpikeArray fny;
+		fny.spikes.push_back({ oly::random::bound1d::PowerSpike{}, -1.0f });
+		fny.spikes.push_back({ oly::random::bound1d::PowerSpike{}, 1.0f });
 		rect.fny = fny;
 		rect.transform.position = { -0.5f, 0.5f };
-		rect.transform.scale = glm::vec2(0.2f);
+		rect.transform.scale = { 1.0f, 0.4f };
 		emitter_params.position_rng.shapes.push_back({ rect, 3 });
 		oly::random::domain2d::Ellipse ellipse;
 		oly::random::bound1d::PowerSpike fnr;

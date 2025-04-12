@@ -51,13 +51,6 @@ namespace oly
 
 			float Sine::operator()() const
 			{
-				//float n = a * (glm::cos(k * glm::pi<float>() * (min - b)) - glm::cos(k * glm::pi<float>() * (max - b))) / (k * glm::pi<float>());
-				//math::solver::LinearCosine solver;
-				//solver.A = k * glm::pi<float>() * (n - 1) / (a * (max - min));
-				//solver.B = k * glm::pi<float>();
-				//solver.C = -b * k * glm::pi<float>();
-				//solver.D = (k * glm::pi<float>() / a) * (rng() + min * (n - 1) / (max - min)) - glm::cos(k * glm::pi<float>() * (min - b));
-				//float v = std::clamp(solver.solve(), min, max);
 				float c = glm::abs(a);
 				float R = rng() * (c * (max - min) - (a / (k * glm::pi<float>())) * (glm::cos(k * glm::pi<float>() * (max - b)) - glm::cos(k * glm::pi<float>() * (min - b))));
 				math::solver::LinearCosine solver;
@@ -65,10 +58,24 @@ namespace oly
 				solver.B = k * glm::pi<float>();
 				solver.C = -k * glm::pi<float>() * b;
 				solver.D = (k * glm::pi<float>() / a) * (c * min + R) - glm::cos(k * glm::pi<float>() * (min - b));
-				float v = std::clamp(solver.solve(), min, max);
-				if (isnan(v))
-					printf("%f\n", v);
-				return v;
+				return std::clamp(solver.solve(), min, max);
+			}
+
+			float PowerSpikeArray::operator()() const
+			{
+				float total_weight = 0.0f;
+				for (const auto& spike : spikes)
+					total_weight += spike.w;
+
+				float target = rng() * total_weight;
+				float sum = 0.0f;
+				for (size_t i = 0; i < spikes.size(); ++i)
+				{
+					sum += spikes[i].w;
+					if (sum > target)
+						return spikes[i].pos + spikes[i].spike();
+				}
+				return 0.0f;
 			}
 		}
 

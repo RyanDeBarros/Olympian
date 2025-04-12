@@ -47,18 +47,24 @@ namespace oly
 				float operator()() const;
 			};
 
-			enum
+			struct PowerSpikeArray
 			{
-				UNIFORM,
-				POWER_SPIKE,
-				DUAL_POWER_SPIKE,
-				SINE,
+				struct WeightedSpike
+				{
+					PowerSpike spike;
+					float pos;
+					float w = 1.0f;
+				};
+				std::vector<WeightedSpike> spikes;
+				float operator()() const;
 			};
+
 			using Function = std::variant<
 				Uniform,
 				PowerSpike,
 				DualPowerSpike,
-				Sine
+				Sine,
+				PowerSpikeArray
 			>;
 			constexpr float eval(const Function& func)
 			{
