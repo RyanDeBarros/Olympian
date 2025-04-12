@@ -174,10 +174,14 @@ namespace oly
 		{
 		}
 
-		bool ParticleData::update()
+		void ParticleData::update(glm::mat3& transform, glm::vec4& color)
 		{
 			lifespan -= emitter->state.delta_time;
-			return lifespan > 0.0f;
+			if (lifespan <= 0.0f)
+				alive = false;
+
+			transform[2][0] += velocity.x * emitter->state.delta_time;
+			transform[2][1] += velocity.y * emitter->state.delta_time;
 		}
 
 		GLuint EmitterParams::spawn_count() const
@@ -197,10 +201,11 @@ namespace oly
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
 		{
 			data.emitter = emitter;
-			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + lifespan_rng();
-			glm::vec2 pos = position_rng();
-			transform = Transform2D{ pos, 0, { 5, 5 }}.matrix();
+			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound1d::eval(lifespan_offset_rng);
+			data.velocity = { random::bound1d::eval(velocity_x), random::bound1d::eval(velocity_y) };
+			transform = Transform2D{ transform_rng.position(), random::bound1d::eval(transform_rng.rotation), { random::bound1d::eval(transform_rng.scale_x), random::bound1d::eval(transform_rng.scale_y) } }.matrix();
 			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
+			LOG << "(" << transform[2][0] << ", " << transform[2][1] << ")" << LOG.nl;
 		}
 
 		bool EmitterParams::validate() const
@@ -280,7 +285,8 @@ namespace oly
 			// copy and update live particles
 			for (size_t i = 0; i < prev_live_instances; ++i)
 			{
-				if (particle_data.back[i].update())
+				particle_data.back[i].update(transform_buffer.back[i], color_buffer.back[i]);
+				if (particle_data.back[i].alive)
 				{
 					size_t j = state.live_instances++;
 					particle_data.front[j] = std::move(particle_data.back[i]);

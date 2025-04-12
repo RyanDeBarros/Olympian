@@ -252,8 +252,7 @@ void run()
 	oly::particles::lifespan::Constant lifespan;
 	lifespan.c = 0.3f;
 	emitter_params.lifespan = lifespan;
-	emitter_params.lifespan_rng.shapes.push_back({ oly::random::domain1d::Interval{ oly::random::bound1d::PowerSpike{} } });
-	emitter_params.lifespan_rng.scale = 0.2f;
+	emitter_params.lifespan_offset_rng = oly::random::bound1d::PowerSpike{ -0.2f, 0.2f };
 	{
 		oly::random::domain2d::Rect rect;
 		oly::random::bound1d::PowerSpikeArray fnx;
@@ -267,7 +266,7 @@ void run()
 		rect.fny = fny;
 		rect.transform.position = { -0.5f, 0.5f };
 		rect.transform.scale = { 1.0f, 0.4f };
-		emitter_params.position_rng.shapes.push_back({ rect, 3 });
+		emitter_params.transform_rng.position.shapes.push_back({ rect, 3 });
 		oly::random::domain2d::Ellipse ellipse;
 		oly::random::bound1d::PowerSpike fnr;
 		fnr.a = 0.0f;
@@ -278,9 +277,14 @@ void run()
 		ellipse.fna = fna;
 		ellipse.transform.position = { 0.5f, -0.5f };
 		ellipse.transform.scale = glm::vec2(0.4f);
-		emitter_params.position_rng.shapes.push_back({ ellipse });
-		emitter_params.position_rng.transform.position = { 150.0f, 200.0f };
-		emitter_params.position_rng.transform.scale = { 400.0f, 250.0f };
+		emitter_params.transform_rng.position.shapes.push_back({ ellipse });
+		emitter_params.transform_rng.position.transform.position = { 150.0f, 200.0f };
+		emitter_params.transform_rng.position.transform.scale = { 400.0f, 250.0f };
+		
+		emitter_params.transform_rng.rotation = oly::random::bound1d::Uniform{ -glm::pi<float>() / 6, glm::pi<float>() / 6 };
+
+		emitter_params.transform_rng.scale_x = oly::random::bound1d::Uniform{ 4, 6 };
+		emitter_params.transform_rng.scale_y = oly::random::bound1d::Uniform{ 3, 12 };
 	}
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
@@ -295,14 +299,20 @@ void run()
 	emitter_params2.spawn_rate = spawn_rate2;
 	{
 		const float outer_dist = 1.0f;
-		const float inner_dist = 0.4f;
+		const float inner_dist = 0.3f;
 		const int num_points = 5;
 		std::vector<glm::vec2> star;
 		for (int i = 0; i < 2 * num_points; ++i)
 			star.push_back((i % 2 == 0 ? outer_dist : inner_dist) * glm::vec2{ glm::cos((2 * i + 1) * glm::pi<float>() * 0.5f / num_points), glm::sin((2 * i + 1) * glm::pi<float>() * 0.5f / num_points) });
-		emitter_params2.position_rng = oly::random::domain2d::create_triangulated_domain(star);
-		emitter_params2.position_rng.transform.position = { -200.0f, -100.0f };
-		emitter_params2.position_rng.transform.scale = glm::vec2(100.0f);
+		emitter_params2.transform_rng.position = oly::random::domain2d::create_triangulated_domain(star);
+		emitter_params2.transform_rng.position.transform.position = { -200.0f, -100.0f };
+		emitter_params2.transform_rng.position.transform.scale = glm::vec2(200.0f);
+
+		emitter_params2.transform_rng.scale_x = oly::random::bound1d::Constant{ 5 };
+		emitter_params2.transform_rng.scale_y = oly::random::bound1d::Constant{ 5 };
+
+		emitter_params2.velocity_x = oly::random::bound1d::Constant{ 200 };
+		emitter_params2.velocity_y = oly::random::bound1d::Constant{ 50 };
 	}
 	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
 		{ 1, 0 },

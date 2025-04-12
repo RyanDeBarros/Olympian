@@ -145,6 +145,18 @@ namespace oly
 				return root_pt + rd * dir;
 			}
 
+			glm::vec2 UniformTriangle::operator()() const
+			{
+				float ra = std::clamp(bound1d::eval(fna), 0.0f, 1.0f);
+				float rb = std::clamp(bound1d::eval(fnb), 0.0f, 1.0f);
+				if (ra + rb > 1.0f)
+				{
+					ra = 1.0f - ra;
+					rb = 1.0f - rb;
+				}
+				return ra * pta + rb * ptb + (1.0f - ra - rb) * ptc;
+			}
+
 			glm::vec2 Domain::operator()() const
 			{
 				if (shapes.empty())
@@ -176,7 +188,7 @@ namespace oly
 				d.shapes.resize(tp.size());
 				for (size_t i = 0; i < tp.size(); ++i)
 				{
-					BaryTriangle t;
+					UniformTriangle t;
 					t.pta = polygon[tp[i].x];
 					t.ptb = polygon[tp[i].y];
 					t.ptc = polygon[tp[i].z];

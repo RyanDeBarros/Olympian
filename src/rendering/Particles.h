@@ -194,8 +194,11 @@ namespace oly
 		struct ParticleData
 		{
 			float lifespan = 0.0f;
+			bool alive = true;
 
-			bool update();
+			glm::vec2 velocity;
+
+			void update(glm::mat3& transform, glm::vec4& color);
 
 		private:
 			friend struct EmitterParams;
@@ -209,8 +212,14 @@ namespace oly
 			GLuint max_live_particles = 3000;
 			spawn_rate::Function spawn_rate;
 			lifespan::Function lifespan;
-			random::domain1d::Domain lifespan_rng;
-			random::domain2d::Domain position_rng;
+			random::bound1d::Function lifespan_offset_rng;
+			struct
+			{
+				random::domain2d::Domain position;
+				random::bound1d::Function rotation;
+				random::bound1d::Function scale_x, scale_y;
+			} transform_rng;
+			random::bound1d::Function velocity_x, velocity_y;
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);

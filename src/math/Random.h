@@ -15,6 +15,12 @@ namespace oly
 
 		namespace bound1d
 		{
+			struct Constant
+			{
+				float c = 0.0f;
+				float operator()() const { return c; }
+			};
+
 			struct Uniform
 			{
 				float a = -1.0f, b = 1.0f;
@@ -60,6 +66,7 @@ namespace oly
 			};
 
 			using Function = std::variant<
+				Constant,
 				Uniform,
 				PowerSpike,
 				DualPowerSpike,
@@ -143,18 +150,21 @@ namespace oly
 				glm::vec2 operator()() const;
 			};
 
-			enum
+			struct UniformTriangle
 			{
-				RECT,
-				ELLIPSE,
-				BARY_TRIANGLE,
-				EAR_TRIANGLE,
+				bound1d::Function fna = bound1d::Uniform{ 0.0f, 1.0f };
+				bound1d::Function fnb = bound1d::Uniform{ 0.0f, 1.0f };
+				glm::vec2 pta = {}, ptb = {}, ptc = {};
+
+				glm::vec2 operator()() const;
 			};
+
 			using Shape = std::variant<
 				Rect,
 				Ellipse,
 				BaryTriangle,
-				EarTriangle
+				EarTriangle,
+				UniformTriangle
 			>;
 			constexpr glm::vec2 eval(const Shape& shape)
 			{
