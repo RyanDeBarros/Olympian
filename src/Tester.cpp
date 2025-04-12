@@ -252,27 +252,27 @@ void run()
 	oly::particles::lifespan::Constant lifespan;
 	lifespan.c = 0.3f;
 	emitter_params.lifespan = lifespan;
-	emitter_params.lifespan_offset_rng = oly::random::bound1d::PowerSpike{ -0.2f, 0.2f };
+	emitter_params.lifespan_offset_rng = oly::random::bound::PowerSpike{ -0.2f, 0.2f };
 	{
 		oly::random::domain2d::Rect rect;
-		oly::random::bound1d::PowerSpikeArray fnx;
-		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ 0.0f, 0.6f }, -1.0f });
-		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ -0.4f, 0.4f, 4.0f }, 0.0f });
-		fnx.spikes.push_back({ oly::random::bound1d::PowerSpike{ -0.4f, 0.2f, 4.0f, true }, 0.8f });
+		oly::random::bound::PowerSpikeArray fnx;
+		fnx.spikes.push_back({ { 0.0f, 0.6f }, -1.0f });
+		fnx.spikes.push_back({ { -0.4f, 0.4f, 4.0f }, 0.0f });
+		fnx.spikes.push_back({ { -0.4f, 0.2f, 4.0f, true }, 0.8f });
 		rect.fnx = fnx;
-		oly::random::bound1d::PowerSpikeArray fny;
-		fny.spikes.push_back({ oly::random::bound1d::PowerSpike{}, -1.0f });
-		fny.spikes.push_back({ oly::random::bound1d::PowerSpike{}, 1.0f });
+		oly::random::bound::PowerSpikeArray fny;
+		fny.spikes.push_back({ {}, -1.0f });
+		fny.spikes.push_back({ {}, 1.0f });
 		rect.fny = fny;
 		rect.transform.position = { -0.5f, 0.5f };
 		rect.transform.scale = { 1.0f, 0.4f };
 		emitter_params.transform_rng.position.shapes.push_back({ rect, 3 });
 		oly::random::domain2d::Ellipse ellipse;
-		oly::random::bound1d::PowerSpike fnr;
+		oly::random::bound::PowerSpike fnr;
 		fnr.a = 0.0f;
 		fnr.power = 10.0f;
 		fnr.inverted = true;
-		oly::random::bound1d::Uniform fna;
+		oly::random::bound::Uniform fna;
 		ellipse.fnr = fnr;
 		ellipse.fna = fna;
 		ellipse.transform.position = { 0.5f, -0.5f };
@@ -281,10 +281,10 @@ void run()
 		emitter_params.transform_rng.position.transform.position = { 150.0f, 200.0f };
 		emitter_params.transform_rng.position.transform.scale = { 400.0f, 250.0f };
 		
-		emitter_params.transform_rng.rotation = oly::random::bound1d::Uniform{ -glm::pi<float>() / 6, glm::pi<float>() / 6 };
+		emitter_params.transform_rng.rotation = oly::random::bound::Uniform{ -glm::pi<float>() / 6, glm::pi<float>() / 6 };
 
-		emitter_params.transform_rng.scale_x = oly::random::bound1d::Uniform{ 4, 6 };
-		emitter_params.transform_rng.scale_y = oly::random::bound1d::Uniform{ 3, 12 };
+		emitter_params.transform_rng.scale.x = oly::random::bound::Uniform{ 4, 6 };
+		emitter_params.transform_rng.scale.y = oly::random::bound::Uniform{ 3, 12 };
 	}
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
@@ -308,11 +308,13 @@ void run()
 		emitter_params2.transform_rng.position.transform.position = { -200.0f, -100.0f };
 		emitter_params2.transform_rng.position.transform.scale = glm::vec2(200.0f);
 
-		emitter_params2.transform_rng.scale_x = oly::random::bound1d::Constant{ 5 };
-		emitter_params2.transform_rng.scale_y = oly::random::bound1d::Constant{ 5 };
+		emitter_params2.transform_rng.scale.x = oly::random::bound::Constant{ 5 };
+		emitter_params2.transform_rng.scale.y = oly::random::bound::Constant{ 5 };
 
-		emitter_params2.velocity_x = oly::random::bound1d::Constant{ 200 };
-		emitter_params2.velocity_y = oly::random::bound1d::Constant{ 50 };
+		emitter_params2.velocity.y = oly::random::bound::Constant{ 200 };
+		emitter_params2.acceleration.x = oly::particles::acceleration::Constant{ 200 };
+		emitter_params2.acceleration.y = oly::particles::acceleration::Force{ -10 };
+		emitter_params2.mass = oly::particles::mass::Proportional{ 15.0f, -2.0f };
 	}
 	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
 		{ 1, 0 },

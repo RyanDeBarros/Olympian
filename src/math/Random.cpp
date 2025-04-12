@@ -7,7 +7,7 @@ namespace oly
 {
 	namespace random
 	{
-		namespace bound1d
+		namespace bound
 		{
 			float Uniform::operator()() const
 			{
@@ -83,7 +83,7 @@ namespace oly
 		{
 			float Interval::operator()() const
 			{
-				float r = bound1d::eval(fn);
+				float r = bound::eval(fn);
 				return mean + std::clamp(r * scale, -max_offset, max_offset);
 			}
 
@@ -116,39 +116,39 @@ namespace oly
 		{
 			glm::vec2 Rect::operator()() const
 			{
-				float rx = bound1d::eval(fnx);
-				float ry = bound1d::eval(fny);
+				float rx = bound::eval(fnx);
+				float ry = bound::eval(fny);
 				return transform.matrix() * glm::vec3{ rx, ry, 1.0f };
 			}
 
 			glm::vec2 Ellipse::operator()() const
 			{
-				float rr = bound1d::eval(fnr);
-				float ra = glm::pi<float>() * bound1d::eval(fna);
+				float rr = bound::eval(fnr);
+				float ra = glm::pi<float>() * bound::eval(fna);
 				return transform.matrix() * glm::vec3(math::coordinates::to_cartesian({ rr, ra }), 1.0f);
 			}
 
 			glm::vec2 BaryTriangle::operator()() const
 			{
-				float ra = 0.5f * (bound1d::eval(fna) + 1.0f);
-				float rb = 0.5f * (bound1d::eval(fnb) + 1.0f);
-				float rc = 0.5f * (bound1d::eval(fnc) + 1.0f);
+				float ra = 0.5f * (bound::eval(fna) + 1.0f);
+				float rb = 0.5f * (bound::eval(fnb) + 1.0f);
+				float rc = 0.5f * (bound::eval(fnc) + 1.0f);
 				math::Barycentric b{ ra, rb, rc };
 				return b.point(pta, ptb, ptc);
 			}
 
 			glm::vec2 EarTriangle::operator()() const
 			{
-				float rd = 0.5f * (bound1d::eval(fnd) + 1.0f);
-				float ra = 0.5f * (bound1d::eval(fna) + 1.0f);
+				float rd = 0.5f * (bound::eval(fnd) + 1.0f);
+				float ra = 0.5f * (bound::eval(fna) + 1.0f);
 				glm::vec2 dir = ra * (next_pt - prev_pt) + prev_pt - root_pt;
 				return root_pt + rd * dir;
 			}
 
 			glm::vec2 UniformTriangle::operator()() const
 			{
-				float ra = std::clamp(bound1d::eval(fna), 0.0f, 1.0f);
-				float rb = std::clamp(bound1d::eval(fnb), 0.0f, 1.0f);
+				float ra = std::clamp(bound::eval(fna), 0.0f, 1.0f);
+				float rb = std::clamp(bound::eval(fnb), 0.0f, 1.0f);
 				if (ra + rb > 1.0f)
 				{
 					ra = 1.0f - ra;
@@ -203,17 +203,17 @@ namespace oly
 		{
 			glm::vec3 Prism::operator()() const
 			{
-				float rx = bound1d::eval(fnx);
-				float ry = bound1d::eval(fny);
-				float rz = bound1d::eval(fnz);
+				float rx = bound::eval(fnx);
+				float ry = bound::eval(fny);
+				float rz = bound::eval(fnz);
 				return transform.matrix() * glm::vec4{ rx, ry, rz, 1.0f };
 			}
 
 			glm::vec3 Ellipsoid::operator()() const
 			{
-				float rr = bound1d::eval(fnr);
-				float rtheta = glm::pi<float>() * bound1d::eval(fntheta);
-				float rphi = 0.5f * glm::pi<float>() * bound1d::eval(fnphi);
+				float rr = bound::eval(fnr);
+				float rtheta = glm::pi<float>() * bound::eval(fntheta);
+				float rphi = 0.5f * glm::pi<float>() * bound::eval(fnphi);
 				return transform.matrix() * glm::vec4(math::coordinates::to_cartesian({ rr, rtheta, rphi }), 1.0f);
 			}
 
@@ -242,7 +242,7 @@ namespace oly
 			}
 		}
 
-		namespace unbound1d
+		namespace unbound
 		{
 			float LogisticBell::operator()() const
 			{

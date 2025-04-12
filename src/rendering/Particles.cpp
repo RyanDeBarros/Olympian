@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "util/Assert.h"
+#include "math/Units.h"
 #include "Resources.h"
 
 namespace oly
@@ -149,7 +150,7 @@ namespace oly
 				}
 				return true;
 			}
-}
+		}
 
 		namespace lifespan
 		{
@@ -174,14 +175,45 @@ namespace oly
 		{
 		}
 
-		void ParticleData::update(glm::mat3& transform, glm::vec4& color)
+		void ParticleData::update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel)
 		{
-			lifespan -= emitter->state.delta_time;
-			if (lifespan <= 0.0f)
+			t += emitter->state.delta_time;
+			if (t >= lifespan)
 				alive = false;
 
-			transform[2][0] += velocity.x * emitter->state.delta_time;
-			transform[2][1] += velocity.y * emitter->state.delta_time;
+			transform[2][0] += vel.x * emitter->state.delta_time;
+			transform[2][1] += vel.y * emitter->state.delta_time;
+		}
+
+		namespace mass
+		{
+			float Constant::operator()(float t, glm::vec2 size) const
+			{
+				return std::max(m + t_factor * t, 0.0f);
+			}
+
+			float Proportional::operator()(float t, glm::vec2 size) const
+			{
+				return std::max((m + t_factor * t) * size.x * size.y, 0.0f);
+			}
+		}
+
+		namespace acceleration
+		{
+			float Constant::operator()(float v, float t, float dt, float mass) const
+			{
+				return v + a * t;
+			}
+
+			float Force::operator()(float v, float t, float dt, float mass) const
+			{
+				return mass != 0.0f ? v + f * units::FORCE * t / (mass * units::MASS) : v;
+			}
+
+			float Custom::operator()(float v, float t, float dt, float mass) const
+			{
+				return func(v, t, dt, mass);
+			}
 		}
 
 		GLuint EmitterParams::spawn_count() const
@@ -201,11 +233,11 @@ namespace oly
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color)
 		{
 			data.emitter = emitter;
-			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound1d::eval(lifespan_offset_rng);
-			data.velocity = { random::bound1d::eval(velocity_x), random::bound1d::eval(velocity_y) };
-			transform = Transform2D{ transform_rng.position(), random::bound1d::eval(transform_rng.rotation), { random::bound1d::eval(transform_rng.scale_x), random::bound1d::eval(transform_rng.scale_y) } }.matrix();
+			data.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound::eval(lifespan_offset_rng);
+			data.velocity = velocity.eval();
+			transform = Transform2D{ transform_rng.position(), random::bound::eval(transform_rng.rotation), transform_rng.scale.eval() }.matrix();
+			data.mass = mass::eval(mass, fmod(emitter->state.playtime, period), extract_scale(transform));
 			color = { fmod(emitter->state.playtime, period) / period, 1.0f, 0.0f, 1.0f };
-			LOG << "(" << transform[2][0] << ", " << transform[2][1] << ")" << LOG.nl;
 		}
 
 		bool EmitterParams::validate() const
@@ -285,7 +317,7 @@ namespace oly
 			// copy and update live particles
 			for (size_t i = 0; i < prev_live_instances; ++i)
 			{
-				particle_data.back[i].update(transform_buffer.back[i], color_buffer.back[i]);
+				update_back_particle(i);
 				if (particle_data.back[i].alive)
 				{
 					size_t j = state.live_instances++;
@@ -324,6 +356,12 @@ namespace oly
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_block[SSBO::TRANSFORM]);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_block[SSBO::COLOR]);
 			glDrawElementsInstanced(instance->draw_spec.mode, instance->draw_spec.count, instance->draw_spec.type, (void*)instance->draw_spec.offset, state.live_instances);
+		}
+
+		void Emitter::update_back_particle(size_t i)
+		{
+			auto& prt = particle_data.back[i];
+			prt.update(transform_buffer.back[i], color_buffer.back[i], params.acceleration.eval(prt, state.delta_time));
 		}
 
 		void Emitter::spawn_on_front_buffers()

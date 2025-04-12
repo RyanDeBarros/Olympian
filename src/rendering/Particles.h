@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "core/Core.h"
 #include "math/Geometry.h"
 #include "math/Transforms.h"
@@ -193,17 +195,86 @@ namespace oly
 
 		struct ParticleData
 		{
+			float t = 0.0f;
 			float lifespan = 0.0f;
 			bool alive = true;
 
-			glm::vec2 velocity;
+			float mass = 1.0f;
+			glm::vec2 velocity = {};
 
-			void update(glm::mat3& transform, glm::vec4& color);
+			void update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel);
 
 		private:
 			friend struct EmitterParams;
 			const Emitter* emitter = nullptr;
 		};
+
+		namespace mass
+		{
+			struct Constant
+			{
+				float m = 1.0f;
+				float t_factor = 0.0f;
+				float operator()(float t, glm::vec2 size) const;
+			};
+
+			struct Proportional
+			{
+				float m = 1.0f;
+				float t_factor = 0.0f;
+				float operator()(float t, glm::vec2 size) const;
+			};
+
+			using Function = std::variant<Constant, Proportional>;
+			constexpr float eval(const Function& func, float t, glm::vec2 size)
+			{
+				return std::visit([t, size](const auto& fn) { return fn(t, size); }, func);
+			}
+		}
+
+		namespace acceleration
+		{
+			struct Constant
+			{
+				float a = 0.0f;
+				float operator()(float v, float t, float dt, float mass) const;
+			};
+
+			struct Force
+			{
+				float f = 0.0f;
+				float operator()(float v, float t, float dt, float mass) const;
+			};
+
+			struct SinePosition
+			{
+				// x(t) = a * sin(k * pi * (t - b)) + c
+				float a = 1.0f;
+				float k = 1.0f;
+				float b = 0.0f;
+				float c = 0.0f;
+
+				// TODO
+			};
+
+			struct Custom
+			{
+				std::function<float(float v, float t, float dt, float mass)> func;
+				float operator()(float v, float t, float dt, float mass) const;
+			};
+
+			using Function = std::variant<Constant, Force, Custom>;
+			constexpr float eval(const Function& func, float v, float t, float dt, float mass)
+			{
+				return std::visit([v, t, dt, mass](const auto& fn) { return fn(v, t, dt, mass); }, func);
+			}
+			struct Function2D
+			{
+				Function x, y;
+
+				glm::vec2 eval(const ParticleData& prt, float dt) const { return { acceleration::eval(x, prt.velocity.x, prt.t, dt, prt.mass), acceleration::eval(y, prt.velocity.y, prt.t, dt, prt.mass) }; }
+			};
+		}
 
 		struct EmitterParams
 		{
@@ -212,14 +283,16 @@ namespace oly
 			GLuint max_live_particles = 3000;
 			spawn_rate::Function spawn_rate;
 			lifespan::Function lifespan;
-			random::bound1d::Function lifespan_offset_rng;
+			random::bound::Function lifespan_offset_rng;
 			struct
 			{
 				random::domain2d::Domain position;
-				random::bound1d::Function rotation;
-				random::bound1d::Function scale_x, scale_y;
+				random::bound::Function rotation;
+				random::bound::Function2D scale;
 			} transform_rng;
-			random::bound1d::Function velocity_x, velocity_y;
+			random::bound::Function2D velocity;
+			mass::Function mass;
+			acceleration::Function2D acceleration;
 
 			GLuint spawn_count() const;
 			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);
@@ -286,6 +359,7 @@ namespace oly
 			void draw() const;
 		
 		private:
+			void update_back_particle(size_t i);
 			void spawn_on_front_buffers();
 			void swap_buffers();
 		};

@@ -13,7 +13,7 @@ namespace oly
 	{
 		inline float seed() { srand((unsigned int)time(nullptr)); }
 
-		namespace bound1d
+		namespace bound
 		{
 			struct Constant
 			{
@@ -77,13 +77,28 @@ namespace oly
 			{
 				return std::visit([](const auto& fn) { return fn(); }, func);
 			}
+			struct Function2D
+			{
+				Function x, y;
+				glm::vec2 eval() const { return { bound::eval(x), bound::eval(y) }; }
+			};
+			struct Function3D
+			{
+				Function x, y, z;
+				glm::vec3 eval() const { return { bound::eval(x), bound::eval(y), bound::eval(z) }; }
+			};
+			struct Function4D
+			{
+				Function x, y, z, w;
+				glm::vec4 eval() const { return { bound::eval(x), bound::eval(y), bound::eval(z), bound::eval(w) }; }
+			};
 		}
 
 		namespace domain1d
 		{
 			struct Interval
 			{
-				bound1d::Function fn;
+				bound::Function fn;
 				float mean = 0.0f;
 				float scale = 1.0f;
 				float max_offset = 1.0f;
@@ -120,7 +135,7 @@ namespace oly
 		{
 			struct Rect
 			{
-				bound1d::Function fnx, fny;
+				bound::Function fnx, fny;
 				Transform2D transform;
 
 				glm::vec2 operator()() const;
@@ -128,7 +143,7 @@ namespace oly
 
 			struct Ellipse
 			{
-				bound1d::Function fnr, fna; // radial, angular
+				bound::Function fnr, fna; // radial, angular
 				Transform2D transform;
 
 				glm::vec2 operator()() const;
@@ -136,7 +151,7 @@ namespace oly
 
 			struct BaryTriangle
 			{
-				bound1d::Function fna, fnb, fnc; // barycentric coordinates relative to each point. Note that [-1, 1] from distribution maps to [0, 1] in barycentric coordiantes
+				bound::Function fna, fnb, fnc; // barycentric coordinates relative to each point. Note that [-1, 1] from distribution maps to [0, 1] in barycentric coordiantes
 				glm::vec2 pta = {}, ptb = {}, ptc = {};
 
 				glm::vec2 operator()() const;
@@ -144,7 +159,7 @@ namespace oly
 
 			struct EarTriangle
 			{
-				bound1d::Function fnd, fna; // distance from ear, interpolation from prev_pt to next_pt. Note that [-1, 1] from distribution maps to [0, 1] in ear triangle coordinates
+				bound::Function fnd, fna; // distance from ear, interpolation from prev_pt to next_pt. Note that [-1, 1] from distribution maps to [0, 1] in ear triangle coordinates
 				glm::vec2 root_pt = {}, prev_pt = {}, next_pt = {};
 
 				glm::vec2 operator()() const;
@@ -152,8 +167,8 @@ namespace oly
 
 			struct UniformTriangle
 			{
-				bound1d::Function fna = bound1d::Uniform{ 0.0f, 1.0f };
-				bound1d::Function fnb = bound1d::Uniform{ 0.0f, 1.0f };
+				bound::Function fna = bound::Uniform{ 0.0f, 1.0f };
+				bound::Function fnb = bound::Uniform{ 0.0f, 1.0f };
 				glm::vec2 pta = {}, ptb = {}, ptc = {};
 
 				glm::vec2 operator()() const;
@@ -190,7 +205,7 @@ namespace oly
 		{
 			struct Prism
 			{
-				bound1d::Function fnx, fny, fnz;
+				bound::Function fnx, fny, fnz;
 				Transform3D transform;
 
 				glm::vec3 operator()() const;
@@ -198,7 +213,7 @@ namespace oly
 
 			struct Ellipsoid
 			{
-				bound1d::Function fnr, fntheta, fnphi; // radial, azimuthal, polar
+				bound::Function fnr, fntheta, fnphi; // radial, azimuthal, polar
 				Transform3D transform;
 			
 				glm::vec3 operator()() const;
@@ -231,7 +246,7 @@ namespace oly
 			};
 		}
 
-		namespace unbound1d
+		namespace unbound
 		{
 			struct LogisticBell
 			{
