@@ -183,7 +183,8 @@ Thus, we can convert between time-domain and particle index-domain lifespan func
 \subsection{Spawn debt increments}
 Define the spawn debt increment (increase in spawning amount after an update frame has passed) as:
 \begin{equation}\mathcal{D}\{R\}=S(t)-S(t-\Delta t)=S(t\bmod T)-S((t-\Delta t)\bmod T)+(\floor{\tfrac{t}{T}}-\floor{\tfrac{t-\Delta t}{T}})R_\Sigma\end{equation}
-
+When using spawn debt increments and maintaining spawn debt even over multiple periods, the particle index will no longer update properly, due to debt carry-over. Because of this, the actual formula for $\Phi$ is:
+\begin{equation}\boxed{\Phi(t)=\floor{R_\Sigma}+\floor{\floor{\frac{t}{T}}(R_\Sigma-\floor{R_\Sigma})}}\end{equation}
 
 \section{$(R,L)$-Emitter Examples}
 

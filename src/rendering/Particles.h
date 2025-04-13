@@ -82,16 +82,30 @@ namespace oly
 			{
 				struct SubFunction
 				{
-					std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse> fn;
+					std::variant<
+						Constant,
+						Linear,
+						Sine,
+						DiscretePulse,
+						ContinuousPulse
+					> fn;
 					Interval<float> interval;
 				};
 				
 				std::vector<SubFunction> subfunctions;
 				float operator()(float t, float period) const;
 				bool valid(float period) const;
+				float period_sum(float period) const;
 			};
 
-			using Function = std::variant<Constant, Linear, Sine, DiscretePulse, ContinuousPulse, Piecewise>;
+			using Function = std::variant<
+				Constant,
+				Linear,
+				Sine,
+				DiscretePulse,
+				ContinuousPulse,
+				Piecewise
+			>;
 
 			constexpr float eval(const Function& func, float t, float period)
 			{
@@ -108,15 +122,25 @@ namespace oly
 						return fn(period, period);
 					}, func);
 			}
+			struct DebtCache
+			{
+				float prev_accumulation = 0.0f;
+				float period_sum = 0.0f;
+			};
 			template<typename T>
 			concept has_debt_increment = requires(T fn, float t, float dt, float period) { { fn.debt_increment(t, dt, period) } -> std::convertible_to<float>; };
-			inline float debt_increment(const Function& func, float t, float dt, float period)
+			inline float debt_increment(const Function& func, float t, float dt, float period, DebtCache& cache)
 			{
-				return std::visit([t, dt, period](const auto& fn) {
+				return std::visit([t, dt, period, &cache](const auto& fn) {
 					if constexpr (has_debt_increment<decltype(fn)>)
 						return fn.debt_increment(t, dt, period);
 					else
-						return fn(fmod(t, period), period) - fn(fmod(t - dt, period), period) + period_sum(fn, period) * (floorf(t / period) - floorf((t - dt) / period));
+					{
+						float accumulation = fn(fmod(t, period), period);
+						float incr = accumulation - cache.prev_accumulation + cache.period_sum * (floorf(t / period) - floorf((t - dt) / period));
+						cache.prev_accumulation = accumulation;
+						return incr;
+					}
 					}, func);
 			}
 			template<typename T>
@@ -159,7 +183,11 @@ namespace oly
 				float operator()(float t, float period) const;
 			};
 
-			using Function = std::variant<Constant, Linear, Sine>;
+			using Function = std::variant<
+				Constant,
+				Linear,
+				Sine
+			>;
 			constexpr float eval(const Function& func, float t, float period)
 			{
 				return std::visit([t, period](const auto& fn) { return fn(t, period); }, func);
@@ -198,16 +226,16 @@ namespace oly
 		struct ParticleData
 		{
 			float t = 0.0f;
-			bool alive = true;
 
 			struct
 			{
 				float lifespan = 0.0f;
 				float mass = 1.0f;
+				float spawn_time = 0.0f;
+				unsigned int index = -1;
 				glm::vec2 velocity = {};
+				glm::vec4 color = glm::vec4(1.0f);
 			} initial;
-
-			void update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel);
 
 		private:
 			friend struct EmitterParams;
@@ -267,7 +295,12 @@ namespace oly
 				float operator()(float v, float t, float dt, float mass) const;
 			};
 
-			using Function = std::variant<Constant, Force, SinePosition, Custom>;
+			using Function = std::variant<
+				Constant,
+				Force,
+				SinePosition,
+				Custom
+			>;
 			constexpr float eval(const Function& func, float v, float t, float dt, float mass)
 			{
 				return std::visit([v, t, dt, mass](const auto& fn) { return fn(v, t, dt, mass); }, func);
@@ -281,18 +314,92 @@ namespace oly
 			};
 		}
 
-		namespace gradient
+		namespace color
 		{
-			struct Linear
+			struct Constant
 			{
-				glm::vec4 i = glm::vec4(1.0f), f = glm::vec4(1.0f);
-				glm::vec4 operator()(float t, float dt, float lifespan) const;
+				glm::vec4 c = glm::vec4(1.0f);
+				glm::vec4 operator()(const ParticleData& prt) const;
 			};
 
-			using Function = std::variant<Linear>;
-			constexpr glm::vec4 eval(const Function& func, float t, float dt, float lifespan)
+			struct Interp
 			{
-				return std::visit([t, dt, lifespan](const auto& fn) { return fn(t, dt, lifespan); }, func);
+				float t1 = 0.0f, t2 = 1.0f;
+				glm::vec4 c1 = glm::vec4(1.0f);
+				glm::vec4 c2 = glm::vec4(1.0f);
+				float power = 1.0f;
+				glm::vec4 operator()(const ParticleData& prt) const;
+			};
+
+			struct Piecewise
+			{
+				struct SubFunction
+				{
+					struct
+					{
+						float t;
+						bool use_index = false;
+						unsigned int i = 0;
+					} interval_end;
+					std::variant<
+						Constant,
+						Interp
+					> fn;
+				};
+				std::vector<SubFunction> subfunctions;
+				glm::vec4 last_color = glm::vec4(1.0f);
+
+				glm::vec4 operator()(const ParticleData& prt) const;
+			};
+
+			using Function = std::variant<
+				Constant,
+				Interp,
+				Piecewise
+			>;
+			constexpr glm::vec4 eval(const Function& func, const ParticleData& prt)
+			{
+				return std::visit([prt](const auto& fn) { return fn(prt); }, func);
+			}
+		}
+
+		namespace gradient
+		{
+			struct Keep
+			{
+				glm::vec4 operator()(const ParticleData& prt, float dt) const;
+			};
+
+			struct Interp
+			{
+				glm::vec4 i = glm::vec4(1.0f), f = glm::vec4(1.0f);
+				float power = 1.0f;
+				glm::vec4 operator()(const ParticleData& prt, float dt) const;
+			};
+
+			struct MultiInterp
+			{
+				struct Step
+				{
+					float t_end;
+					glm::vec4 col = glm::vec4(1.0f);
+					float power = 1.0f;
+				};
+
+				glm::vec4 starting = glm::vec4(1.0f), ending = glm::vec4(1.0f);
+				float power = 1.0f;
+				std::vector<Step> steps;
+				glm::vec4 operator()(const ParticleData& prt, float dt) const;
+			};
+
+			using Function = std::variant<
+				Keep,
+				Interp,
+				MultiInterp
+			>;
+			constexpr glm::vec4 eval(const Function& func, const ParticleData& prt, float dt)
+			{
+				return std::visit([prt, dt](const auto& fn) { return fn(prt, dt); }, func);
 			}
 		}
 
@@ -313,11 +420,11 @@ namespace oly
 			random::bound::Function2D velocity;
 			mass::Function mass;
 			acceleration::Function2D acceleration;
-			random::bound::Function4D color = { random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f }, random::bound::Constant{ 1.0f } };
+			color::Function color;
 			gradient::Function gradient;
 
 			GLuint spawn_count() const;
-			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color);
+			void spawn(ParticleData& data, glm::mat3& transform, glm::vec4& color, unsigned int index);
 			bool validate() const;
 
 		private:
@@ -351,18 +458,15 @@ namespace oly
 			} color_buffer;
 
 			EmitterParams params;
+			mutable spawn_rate::DebtCache spawn_debt_cache;
 
-		public:
-			const EmitterParams& get_params() const { return params; }
-			void set_params(const EmitterParams& params);
-
-		private:
 			struct
 			{
 				GLuint live_instances = 0;
 				bool playing = true;
 				float playtime = 0.0f;
 				float delta_time = 0.0f;
+				unsigned int particle_index = 0;
 
 				mutable float spawn_rate_debt = 0.0f;
 			} state;
@@ -381,7 +485,7 @@ namespace oly
 			void draw() const;
 		
 		private:
-			void update_back_particle(size_t i);
+			bool update_back_particle(size_t i);
 			void spawn_on_front_buffers();
 			void swap_buffers();
 		};

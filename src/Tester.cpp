@@ -238,7 +238,7 @@ void run()
 	oly::particles::EmitterParams emitter_params;
 	emitter_params.period = 5.0f;
 	oly::particles::spawn_rate::ContinuousPulse continuous_pulses;
-	continuous_pulses.pts.push_back({ 0.0f, 50, 0.1f, 0.1f });
+	continuous_pulses.pts.push_back({ 0.0f, 50, 0.0f, 0.2f });
 	continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
 	continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
 	continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
@@ -285,6 +285,14 @@ void run()
 
 		emitter_params.transform_rng.scale.x = oly::random::bound::Uniform{ 4, 6 };
 		emitter_params.transform_rng.scale.y = oly::random::bound::Uniform{ 3, 12 };
+
+		emitter_params.color = oly::particles::color::Piecewise{ {
+			{ { 1.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 50 ) }, oly::particles::color::Constant{ { 1.0f, 1.0f, 1.0f, 1.0f } } },
+			{ { 2.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 150) }, oly::particles::color::Constant{ { 1.0f, 0.0f, 0.0f, 1.0f } } },
+			{ { 2.3f, true, (unsigned int)(continuous_pulses.global_multiplier * 170) }, oly::particles::color::Constant{ { 0.0f, 0.0f, 1.0f, 1.0f } } },
+			{ { 3.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 240) }, oly::particles::color::Constant{ { 1.0f, 0.0f, 1.0f, 1.0f } } },
+		}, { 0.0f, 1.0f, 0.0f, 1.0f }
+		};
 	}
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
@@ -316,7 +324,7 @@ void run()
 		emitter_params2.acceleration.y = oly::particles::acceleration::Force{ -10 };
 		emitter_params2.mass = oly::particles::mass::Proportional{ 15.0f, -2.0f };
 
-		emitter_params2.gradient = oly::particles::gradient::Linear{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } };
+		emitter_params2.gradient = oly::particles::gradient::Interp{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } };
 	}
 	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
 		{ 1, 0 },

@@ -135,8 +135,8 @@ namespace oly
 				float total = 0.0f;
 				for (const auto& subfunc : subfunctions)
 				{
-					if (subfunc.interval.contains(t))
-						total += eval(convert_variant<Function>(subfunc.fn), t, period);
+					if (t >= subfunc.interval.left)
+						total += eval(convert_variant<Function>(subfunc.fn), std::min(t, subfunc.interval.right), period) - eval(convert_variant<Function>(subfunc.fn), subfunc.interval.left, period);
 				}
 				return total;
 			}
@@ -149,6 +149,14 @@ namespace oly
 						return false;
 				}
 				return true;
+			}
+
+			float Piecewise::period_sum(float period) const
+			{
+				float total = 0.0f;
+				for (const auto& subfunc : subfunctions)
+					total += spawn_rate::period_sum(convert_variant<Function>(subfunc.fn), period);
+				return total;
 			}
 		}
 
@@ -173,18 +181,6 @@ namespace oly
 		Particle::Particle(GLuint ebo_size)
 			: ebo(ebo_size, rendering::BufferSendConfig(rendering::BufferSendType::SUBDATA, false))
 		{
-		}
-
-		void ParticleData::update(glm::mat3& transform, glm::vec4& color, glm::vec2 vel)
-		{
-			t += emitter->state.delta_time;
-			if (t >= initial.lifespan)
-				alive = false;
-
-			float dt = emitter->state.delta_time;
-			transform[2][0] += vel.x * dt;
-			transform[2][1] += vel.y * dt;
-			color = gradient::eval(emitter->params.gradient, t, dt, initial.lifespan);
 		}
 
 		namespace mass
@@ -223,18 +219,71 @@ namespace oly
 			}
 		}
 
+		namespace color
+		{
+			glm::vec4 Constant::operator()(const ParticleData& prt) const
+			{
+				return c;
+			}
+
+			glm::vec4 Interp::operator()(const ParticleData& prt) const
+			{
+				return glm::mix(c1, c2, glm::pow((prt.initial.spawn_time - t1) / (t2 - t1), power));
+			}
+
+			glm::vec4 Piecewise::operator()(const ParticleData& prt) const
+			{
+				for (const auto& subfunc : subfunctions)
+				{
+					if (subfunc.interval_end.use_index)
+					{
+						if (prt.initial.index < subfunc.interval_end.i)
+							return eval(convert_variant<Function>(subfunc.fn), prt);
+					}
+					else
+					{
+						if (prt.initial.spawn_time < subfunc.interval_end.t)
+							return eval(convert_variant<Function>(subfunc.fn), prt);
+					}
+				}
+				return last_color;
+			}
+		}
+
 		namespace gradient
 		{
-			glm::vec4 Linear::operator()(float t, float dt, float lifespan) const
+			glm::vec4 Keep::operator()(const ParticleData& prt, float dt) const
 			{
-				return glm::mix(i, f, t / lifespan);
+				return prt.initial.color;
+			}
+
+			glm::vec4 Interp::operator()(const ParticleData& prt, float dt) const
+			{
+				return glm::mix(i, f, glm::pow(prt.t / prt.initial.lifespan, power));
+			}
+
+			glm::vec4 MultiInterp::operator()(const ParticleData& prt, float dt) const
+			{
+				if (steps.empty())
+					return glm::mix(starting, ending, glm::pow(prt.t / prt.initial.lifespan, power));
+				for (size_t i = 0; i < steps.size(); ++i)
+				{
+					if (prt.t <= steps[i].t_end)
+					{
+						if (i == 0)
+							return glm::mix(starting, steps[0].col, glm::pow(prt.t / steps[0].t_end, steps[0].power));
+						else
+							return glm::mix(steps[i - 1].col, steps[i].col, glm::pow((prt.t - steps[i - 1].t_end) / (steps[i].t_end - steps[i - 1].t_end), steps[i].power));
+					}
+				}
+				return glm::mix(steps.back().col, ending, glm::pow((prt.t - steps.back().t_end) / (prt.initial.lifespan - steps.back().t_end), power));
 			}
 		}
 
 		GLuint EmitterParams::spawn_count() const
 		{
 			float debt = emitter->state.spawn_rate_debt;
-			float debt_increase = spawn_rate::debt_increment(spawn_rate, emitter->state.playtime, emitter->state.delta_time, period);
+			float debt_increase = spawn_rate::debt_increment(spawn_rate, emitter->state.playtime, emitter->state.delta_time, period, emitter->spawn_debt_cache);
 			if (debt_increase > 0.0f)
 			{
 				debt += debt_increase;
@@ -245,14 +294,17 @@ namespace oly
 			else return 0;
 		}
 
-		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& col)
+		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& col, unsigned int index)
 		{
 			data.emitter = emitter;
-			data.initial.lifespan = lifespan::eval(lifespan, fmod(emitter->state.playtime, period), period) + random::bound::eval(lifespan_offset_rng);
+			data.initial.spawn_time = fmod(emitter->state.playtime, period);
+			data.initial.index = index;
+			data.initial.lifespan = lifespan::eval(lifespan, data.initial.spawn_time, period) + random::bound::eval(lifespan_offset_rng);
 			data.initial.velocity = velocity.eval();
-			data.initial.mass = mass::eval(mass, fmod(emitter->state.playtime, period), extract_scale(transform));
+			data.initial.mass = mass::eval(mass, data.initial.spawn_time, extract_scale(transform));
 			transform = Transform2D{ transform_rng.position(), random::bound::eval(transform_rng.rotation), transform_rng.scale.eval() }.matrix();
-			col = color.eval();
+			col = color::eval(color, data);
+			data.initial.color = col;
 		}
 
 		bool EmitterParams::validate() const
@@ -263,22 +315,17 @@ namespace oly
 			return spawn_rate::valid(spawn_rate, period);
 		}
 
-		void Emitter::set_params(const EmitterParams& params)
-		{
-			if (params.validate())
-			{
-				this->params = params;
-				this->params.emitter = this;
-			}
-		}
-
-		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const EmitterParams& params, const glm::vec4& projection_bounds, GLuint initial_particle_capacity)
+		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const EmitterParams& prms, const glm::vec4& projection_bounds, GLuint initial_particle_capacity)
 			: instance(std::move(inst)), buffer_live_instances(initial_particle_capacity)
 		{
+			if (!prms.validate())
+				throw Error(ErrorCode::BAD_EMITTER_PARAMS);
 			glNamedBufferData(ssbo_block[SSBO::TRANSFORM], initial_particle_capacity * sizeof(glm::mat3), nullptr, GL_STREAM_DRAW);
 			glNamedBufferData(ssbo_block[SSBO::COLOR], initial_particle_capacity * sizeof(glm::vec4), nullptr, GL_STREAM_DRAW);
 			set_projection(projection_bounds);
-			set_params(params);
+			params = prms;
+			params.emitter = this;
+			spawn_debt_cache.period_sum = spawn_rate::period_sum(params.spawn_rate, params.period);
 			restart();
 		}
 
@@ -291,8 +338,9 @@ namespace oly
 		{
 			state.playing = true;
 			state.delta_time = TIME.delta<float>();
-			state.playtime = 0.0f;
+			state.playtime = state.delta_time;
 			state.spawn_rate_debt = 0.0f;
+			spawn_debt_cache.prev_accumulation = spawn_rate::eval(params.spawn_rate, fmod(state.playtime - state.delta_time, params.period), params.period);
 
 			state.live_instances = 0;
 			particle_data.front.clear();
@@ -332,8 +380,7 @@ namespace oly
 			// copy and update live particles
 			for (size_t i = 0; i < prev_live_instances; ++i)
 			{
-				update_back_particle(i);
-				if (particle_data.back[i].alive)
+				if (update_back_particle(i))
 				{
 					size_t j = state.live_instances++;
 					particle_data.front[j] = std::move(particle_data.back[i]);
@@ -354,11 +401,8 @@ namespace oly
 				}
 				else
 				{
-				oly::check_errors();
 					glNamedBufferSubData(ssbo_block[SSBO::TRANSFORM], 0, state.live_instances * sizeof(glm::mat3), transform_buffer.front.data());
-				oly::check_errors();
 					glNamedBufferSubData(ssbo_block[SSBO::COLOR], 0, state.live_instances * sizeof(glm::vec4), color_buffer.front.data());
-				oly::check_errors();
 				}
 			}
 			swap_buffers();
@@ -373,10 +417,19 @@ namespace oly
 			glDrawElementsInstanced(instance->draw_spec.mode, instance->draw_spec.count, instance->draw_spec.type, (void*)instance->draw_spec.offset, state.live_instances);
 		}
 
-		void Emitter::update_back_particle(size_t i)
+		bool Emitter::update_back_particle(size_t i)
 		{
 			auto& prt = particle_data.back[i];
-			prt.update(transform_buffer.back[i], color_buffer.back[i], params.acceleration.eval(prt, state.delta_time));
+			
+			prt.t += state.delta_time;
+			if (prt.t >= prt.initial.lifespan)
+				return false;
+
+			glm::vec2 vel = params.acceleration.eval(prt, state.delta_time);
+			transform_buffer.back[i][2][0] += vel.x * state.delta_time;
+			transform_buffer.back[i][2][1] += vel.y * state.delta_time;
+			color_buffer.back[i] = gradient::eval(params.gradient, prt, state.delta_time);
+			return true;
 		}
 
 		void Emitter::spawn_on_front_buffers()
@@ -389,10 +442,15 @@ namespace oly
 				particle_data.front.resize(state.live_instances + spawn_count);
 				transform_buffer.front.resize(state.live_instances + spawn_count);
 				color_buffer.front.resize(state.live_instances + spawn_count);
+				float period_sum = spawn_rate::period_sum(params.spawn_rate, params.period);
+				GLuint period_particles = floorf(period_sum) + floorf(floorf(state.playtime / params.period) * (period_sum - floorf(period_sum)));
 				for (GLuint i = 0; i < spawn_count; ++i)
 				{
 					size_t j = state.live_instances++;
-					params.spawn(particle_data.front[j], transform_buffer.front[j], color_buffer.front[j]);
+					params.spawn(particle_data.front[j], transform_buffer.front[j], color_buffer.front[j], state.particle_index);
+					++state.particle_index;
+					if (state.particle_index == period_particles)
+						state.particle_index = 0;
 				}
 			}
 		}
