@@ -36,7 +36,7 @@ namespace oly
 			{
 				// R(t) = a * sin(k * pi * (t - b) / T) + c
 				float a = 1.0f;
-				int k = 1;
+				float k = 1.0f;
 				float b = 0.0f;
 				float c = 0.0f;
 				float operator()(float t, float period) const;
@@ -405,7 +405,7 @@ namespace oly
 
 		struct EmitterParams
 		{
-			bool one_shot = false;
+			bool one_shot = false; // TODO use one_shot
 			float period = 3.0f;
 			GLuint max_live_particles = 3000;
 			spawn_rate::Function spawn_rate;

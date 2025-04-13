@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <string>
 
 namespace oly
 {
@@ -107,7 +108,9 @@ namespace oly
 		}
 
 		extern TextureRes load_texture_2d(const char* filename, ImageDimensions& dim);
+		inline TextureRes load_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_texture_2d(filename.c_str(), dim); }
 		extern BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim);
+		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_bindless_texture_2d(filename.c_str(), dim); }
 
 		struct ImageTextureRes
 		{
@@ -121,6 +124,8 @@ namespace oly
 		};
 
 		extern ImageTextureRes load_texture_2d(const char* filename);
+		inline ImageTextureRes load_texture_2d(const std::string& filename) { return load_texture_2d(filename.c_str()); }
 		extern ImageBindlessTextureRes load_bindless_texture_2d(const char* filename);
+		inline ImageBindlessTextureRes load_bindless_texture_2d(const std::string& filename) { return load_bindless_texture_2d(filename.c_str()); }
 	}
 }

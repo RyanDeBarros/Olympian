@@ -198,7 +198,7 @@ namespace oly
 				glm::vec2 operator()() const;
 			};
 
-			extern Domain create_triangulated_domain(const std::vector<glm::vec2>& polygon);
+			extern std::vector<Domain::WeightedShape> create_triangulated_domain_shapes(const std::vector<glm::vec2>& polygon);
 		}
 		
 		namespace domain3d

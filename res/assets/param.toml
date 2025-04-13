@@ -1,0 +1,42 @@
+[emitter]
+"period" = 5.0
+
+	[emitter.spawn_rate]
+	"type" = "piecewise"
+		[[emitter.spawn_rate.subfunctions]]
+		"interval"          = [0.0, 3.0]
+		"type"              = "continuous pulse"
+		"global multiplier" = 10.0
+			[[emitter.spawn_rate.subfunctions.points]]
+			"t"     = 0.0
+			"w"     = 50
+			"a"     = 0.0
+			"b"     = 0.2
+			"alpha" = 1.0
+			"beta"  = 1.0
+			[[emitter.spawn_rate.subfunctions.points]]
+			"t"     = 1.0
+			"w"     = 100
+			"a"     = 0.1
+			"b"     = 0.1
+			"alpha" = 1.0
+			"beta"  = 1.0
+			[[emitter.spawn_rate.subfunctions.points]]
+			"t"     = 2.0
+			"w"     = 20
+			"a"     = 0.1
+			"b"     = 0.1
+			"alpha" = 1.0
+			"beta"  = 1.0
+			[[emitter.spawn_rate.subfunctions.points]]
+			"t"     = 2.3
+			"w"     = 70
+			"a"     = 0.1
+			"b"     = 0.1
+			"alpha" = 1.0
+			"beta"  = 1.0
+		[[emitter.spawn_rate.subfunctions]]
+		"interval" = [3.0, 5.0]
+		"type"     = "constant"
+		"c"        = 500
+			

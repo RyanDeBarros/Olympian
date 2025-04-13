@@ -4,6 +4,11 @@
 #include "rendering/Polygons.h"
 #include "rendering/Ellipses.h"
 #include "rendering/Particles.h"
+#include "rendering/Loader.h"
+
+static std::string RES_DIR = "../../../res/";
+static std::string TEXTURES_DIR = RES_DIR + "textures/";
+static std::string ASSET_DIR = RES_DIR + "assets/";
 
 static void run();
 
@@ -23,17 +28,17 @@ void run()
 	glEnable(GL_BLEND);
 
 	oly::rendering::ImageDimensions einstein_texture_dim;
-	auto einstein_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/einstein.png", einstein_texture_dim);
+	auto einstein_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "einstein.png", einstein_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	einstein_texture->set_handle();
 	oly::rendering::ImageDimensions flag_texture_dim;
-	auto flag_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/flag.png", flag_texture_dim);
+	auto flag_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "flag.png", flag_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	flag_texture->set_handle();
 	oly::rendering::ImageDimensions tux_texture_dim;
-	auto tux_texture = oly::rendering::load_bindless_texture_2d("../../../res/textures/tux.png", tux_texture_dim);
+	auto tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", tux_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_handle();
@@ -235,25 +240,26 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	oly::particles::EmitterParams emitter_params;
-	emitter_params.period = 5.0f;
-	oly::particles::spawn_rate::ContinuousPulse continuous_pulses;
-	continuous_pulses.pts.push_back({ 0.0f, 50, 0.0f, 0.2f });
-	continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
-	continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
-	continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
-	continuous_pulses.global_multiplier = 10.0f;
-	oly::particles::spawn_rate::Constant constant_spawn;
-	constant_spawn.c = 500;
-	oly::particles::spawn_rate::Piecewise spawn_rate;
-	spawn_rate.subfunctions.push_back({ continuous_pulses, { 0.0f, 3.0f } });
-	spawn_rate.subfunctions.push_back({ constant_spawn, { 3.0f, 5.0f } });
-	emitter_params.spawn_rate = spawn_rate;
-	oly::particles::lifespan::Constant lifespan;
-	lifespan.c = 0.3f;
-	emitter_params.lifespan = lifespan;
-	emitter_params.lifespan_offset_rng = oly::random::bound::PowerSpike{ -0.2f, 0.2f };
+	oly::particles::EmitterParams emitter_params = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param.toml")["emitter"]);
 	{
+		//oly::particles::spawn_rate::ContinuousPulse continuous_pulses;
+		//continuous_pulses.pts.push_back({ 0.0f, 50, 0.0f, 0.2f });
+		//continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
+		//continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
+		//continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
+		//continuous_pulses.global_multiplier = 10.0f;
+		//oly::particles::spawn_rate::Constant constant_spawn;
+		//constant_spawn.c = 500;
+		//oly::particles::spawn_rate::Piecewise spawn_rate;
+		//spawn_rate.subfunctions.push_back({ continuous_pulses, { 0.0f, 3.0f } });
+		//spawn_rate.subfunctions.push_back({ constant_spawn, { 3.0f, 5.0f } });
+		//emitter_params.spawn_rate = spawn_rate;
+		
+		oly::particles::lifespan::Constant lifespan;
+		lifespan.c = 0.3f;
+		emitter_params.lifespan = lifespan;
+		emitter_params.lifespan_offset_rng = oly::random::bound::PowerSpike{ -0.2f, 0.2f };
+
 		oly::random::domain2d::Rect rect;
 		oly::random::bound::PowerSpikeArray fnx;
 		fnx.spikes.push_back({ { 0.0f, 0.6f }, -1.0f });
@@ -287,10 +293,10 @@ void run()
 		emitter_params.transform_rng.scale.y = oly::random::bound::Uniform{ 3, 12 };
 
 		emitter_params.color = oly::particles::color::Piecewise{ {
-			{ { 1.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 50 ) }, oly::particles::color::Constant{ { 1.0f, 1.0f, 1.0f, 1.0f } } },
-			{ { 2.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 150) }, oly::particles::color::Constant{ { 1.0f, 0.0f, 0.0f, 1.0f } } },
-			{ { 2.3f, true, (unsigned int)(continuous_pulses.global_multiplier * 170) }, oly::particles::color::Constant{ { 0.0f, 0.0f, 1.0f, 1.0f } } },
-			{ { 3.0f, true, (unsigned int)(continuous_pulses.global_multiplier * 240) }, oly::particles::color::Constant{ { 1.0f, 0.0f, 1.0f, 1.0f } } },
+			{ { 1.0f, true, 500 }, oly::particles::color::Constant{ { 1.0f, 1.0f, 1.0f, 1.0f } } },
+			{ { 2.0f, true, 1500 }, oly::particles::color::Constant{ { 1.0f, 0.0f, 0.0f, 1.0f } } },
+			{ { 2.3f, true, 1700 }, oly::particles::color::Constant{ { 0.0f, 0.0f, 1.0f, 1.0f } } },
+			{ { 3.0f, true, 2400 }, oly::particles::color::Constant{ { 1.0f, 0.0f, 1.0f, 1.0f } } },
 		}, { 0.0f, 1.0f, 0.0f, 1.0f }
 		};
 	}
@@ -301,10 +307,7 @@ void run()
 		{ -1,  1 }
 		}), emitter_params, window.projection_bounds(), 1000);
 
-	oly::particles::EmitterParams emitter_params2;
-	oly::particles::spawn_rate::Constant spawn_rate2;
-	spawn_rate2.c = 200;
-	emitter_params2.spawn_rate = spawn_rate2;
+	oly::particles::EmitterParams emitter_params2 = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param2.toml")["emitter"]);
 	{
 		const float outer_dist = 1.0f;
 		const float inner_dist = 0.3f;
@@ -312,7 +315,8 @@ void run()
 		std::vector<glm::vec2> star;
 		for (int i = 0; i < 2 * num_points; ++i)
 			star.push_back((i % 2 == 0 ? outer_dist : inner_dist) * glm::vec2{ glm::cos((2 * i + 1) * glm::pi<float>() * 0.5f / num_points), glm::sin((2 * i + 1) * glm::pi<float>() * 0.5f / num_points) });
-		emitter_params2.transform_rng.position = oly::random::domain2d::create_triangulated_domain(star);
+		emitter_params2.transform_rng.position.shapes = oly::random::domain2d::create_triangulated_domain_shapes(star);
+
 		emitter_params2.transform_rng.position.transform.position = { -200.0f, -100.0f };
 		emitter_params2.transform_rng.position.transform.scale = glm::vec2(200.0f);
 
@@ -364,9 +368,6 @@ void run()
 		flag_tesselation_parent.post_set();
 		flag_tesselation_parent.flush();
 		
-		particle_system.get_transformer().local.rotation += 0.1f * oly::TIME.delta<float>();
-		particle_system.get_transformer().post_set();
-
 		// flush buffers
 		sprite_batch.flush();
 		polygon_batch.flush();

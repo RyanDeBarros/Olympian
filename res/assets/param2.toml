@@ -1,0 +1,5 @@
+[emitter]
+
+	[emitter.spawn_rate]
+	"type" = "constant"
+	"c" = 200

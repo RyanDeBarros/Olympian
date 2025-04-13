@@ -181,21 +181,21 @@ namespace oly
 					return transform.matrix() * glm::vec3(eval(shapes[0].shape), 1.0f);
 			}
 
-			Domain create_triangulated_domain(const std::vector<glm::vec2>& polygon)
+			std::vector<Domain::WeightedShape> create_triangulated_domain_shapes(const std::vector<glm::vec2>& polygon)
 			{
 				auto tp = math::ear_clipping(polygon);
-				Domain d;
-				d.shapes.resize(tp.size());
+				std::vector<Domain::WeightedShape> shapes;
+				shapes.resize(tp.size());
 				for (size_t i = 0; i < tp.size(); ++i)
 				{
 					UniformTriangle t;
 					t.pta = polygon[tp[i].x];
 					t.ptb = polygon[tp[i].y];
 					t.ptc = polygon[tp[i].z];
-					d.shapes[i].shape = t;
-					d.shapes[i].w = glm::abs(math::cross(t.ptb - t.pta, t.ptc - t.pta));
+					shapes[i].shape = t;
+					shapes[i].w = glm::abs(math::cross(t.ptb - t.pta, t.ptc - t.pta));
 				}
-				return d;
+				return shapes;
 			}
 		}
 
