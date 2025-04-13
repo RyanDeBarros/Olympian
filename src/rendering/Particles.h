@@ -205,7 +205,10 @@ namespace oly
 			rendering::FixedLayoutEBO<GLuint> ebo;
 			rendering::VertexArray vao;
 
-			// TODO global transform uniform
+			struct
+			{
+				GLuint projection = 0, transform = 0;
+			} locations;
 
 			struct
 			{
@@ -220,7 +223,8 @@ namespace oly
 		public:
 			virtual ~Particle() = default;
 
-			virtual void set_projection(const glm::vec4& projection_bounds) const {}
+			void set_projection(const glm::vec4& projection_bounds) const;
+			void set_transform(const glm::mat3& transform) const;
 		};
 
 		struct ParticleData
@@ -236,10 +240,6 @@ namespace oly
 				glm::vec2 velocity = {};
 				glm::vec4 color = glm::vec4(1.0f);
 			} initial;
-
-		private:
-			friend struct EmitterParams;
-			const Emitter* emitter = nullptr;
 		};
 
 		namespace mass
@@ -473,7 +473,11 @@ namespace oly
 			GLuint buffer_live_instances = 0;
 
 		public:
-			Emitter(std::unique_ptr<Particle>&& instance, const EmitterParams& params, const glm::vec4& projection_bounds, GLuint initial_particle_capacity);
+			std::unique_ptr<Transformer2D> transformer;
+
+			Emitter(std::unique_ptr<Particle>&& instance, const EmitterParams& params, const glm::vec4& projection_bounds, GLuint initial_particle_capacity, std::unique_ptr<Transformer2D>&& transformer = std::make_unique<Transformer2D>());
+			Emitter(Emitter&&) noexcept;
+			Emitter& operator=(Emitter&&) = delete;
 
 			void set_projection(const glm::vec4& projection_bounds) const;
 
@@ -483,6 +487,7 @@ namespace oly
 			void pause();
 			void update();
 			void draw() const;
+			void flush_transform() const;
 		
 		private:
 			bool update_back_particle(size_t i);
@@ -490,19 +495,54 @@ namespace oly
 			void swap_buffers();
 		};
 
+		class ParticleSystem
+		{
+		public:
+			struct Subemitter
+			{
+				Emitter emitter;
+				bool enabled = true;
+
+				Subemitter(Emitter&& emitter, bool enabled = true) : emitter(std::move(emitter)), enabled(enabled) {}
+				Subemitter(Subemitter&&) noexcept = default;
+			};
+
+		private:
+			std::vector<Subemitter> subemitters;
+			std::unique_ptr<Transformer2D> transformer;
+
+		public:
+			ParticleSystem(std::vector<Subemitter>&& subemitters, std::unique_ptr<Transformer2D>&& transformer = std::make_unique<Transformer2D>());
+
+			void update();
+			void draw() const;
+
+			size_t size() const { return subemitters.size(); }
+			const Emitter& get_subemitter(size_t i) const { return subemitters[i].emitter; }
+			Emitter& get_subemitter(size_t i) { return subemitters[i].emitter; }
+			bool subemitter_enabled(size_t i) const { return subemitters[i].enabled; }
+			bool& subemitter_enabled(size_t i) { return subemitters[i].enabled; }
+
+			const Transformer2D& get_transformer() const { return *transformer; }
+			Transformer2D& get_transformer() { return *transformer; }
+		};
+
 		class PolygonalParticle : public Particle
 		{
-			GLuint projection_location;
-
-			rendering::VertexBufferBlock<glm::vec2> position_vbo;
+			rendering::VertexBufferBlock<glm::vec2> vbo;
 
 		public:
 			PolygonalParticle(const std::vector<glm::vec2>& polygon, const math::Triangulation& triangulation);
-
-		public:
-			virtual void set_projection(const glm::vec4& projection_bounds) const override;
 		};
 
 		extern std::unique_ptr<PolygonalParticle> create_polygonal_particle(const std::vector<glm::vec2>& polygon);
+
+		class EllipticParticle : public Particle
+		{
+			rendering::VertexBufferBlock<glm::vec2, glm::vec2> vbo;
+
+		public:
+			EllipticParticle(float rx, float ry);
+		};
 	}
 }

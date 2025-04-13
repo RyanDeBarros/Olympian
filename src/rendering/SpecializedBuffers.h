@@ -536,8 +536,8 @@ namespace oly
 
 		template<typename... StructTypes>
 		template<std::unsigned_integral IndexType>
-		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType sizes)
-			: cpudata(FixedVector<StructTypes>(sizes)...)
+		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType size)
+			: cpudata(FixedVector<StructTypes>(size)...)
 		{
 		}
 

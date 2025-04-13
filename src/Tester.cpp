@@ -326,16 +326,12 @@ void run()
 
 		emitter_params2.gradient = oly::particles::gradient::Interp{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } };
 	}
-	oly::particles::Emitter particle_emitter2(oly::particles::create_polygonal_particle({
-		{ 1, 0 },
-		{ 0.707f, 0.707f },
-		{ 0, 1 },
-		{ -0.707f, 0.707f },
-		{ -1, 0 },
-		{ -0.707f, -0.707f },
-		{ 0, -1 },
-		{ 0.707f, -0.707f }
-		}), emitter_params2, window.projection_bounds(), 1000);
+	oly::particles::Emitter particle_emitter2(std::make_unique<oly::particles::EllipticParticle>(2.0f, 1.0f), emitter_params2, window.projection_bounds(), 1000);
+
+	std::vector<oly::particles::ParticleSystem::Subemitter> subemitters;
+	subemitters.emplace_back(std::move(particle_emitter));
+	subemitters.emplace_back(std::move(particle_emitter2));
+	oly::particles::ParticleSystem particle_system(std::move(subemitters));
 
 	while (!window.should_close())
 	{
@@ -367,6 +363,9 @@ void run()
 		flag_tesselation_parent.local.rotation -= 0.5f * oly::TIME.delta<float>();
 		flag_tesselation_parent.post_set();
 		flag_tesselation_parent.flush();
+		
+		particle_system.get_transformer().local.rotation += 0.1f * oly::TIME.delta<float>();
+		particle_system.get_transformer().post_set();
 
 		// flush buffers
 		sprite_batch.flush();
@@ -374,8 +373,7 @@ void run()
 		ellipse_batch.flush();
 
 		// update particle systems
-		particle_emitter.update();
-		particle_emitter2.update();
+		particle_system.update();
 		
 		// draw
 		//ellipse_batch.draw();
@@ -389,8 +387,7 @@ void run()
 		//oly::stencil::end();
 		//sprite_batch.draw(2);
 		//polygon_batch.draw(2);
-		particle_emitter.draw();
-		particle_emitter2.draw();
+		particle_system.draw();
 
 		// post-frame
 		window.swap_buffers();

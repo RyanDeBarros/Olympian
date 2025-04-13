@@ -183,6 +183,19 @@ namespace oly
 		{
 		}
 
+		void Particle::set_projection(const glm::vec4& projection_bounds) const
+		{
+			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
+			glUseProgram(shader);
+			glUniformMatrix3fv(locations.projection, 1, GL_FALSE, glm::value_ptr(proj));
+		}
+
+		void Particle::set_transform(const glm::mat3& transform) const
+		{
+			glUseProgram(shader);
+			glUniformMatrix3fv(locations.transform, 1, GL_FALSE, glm::value_ptr(transform));
+		}
+
 		namespace mass
 		{
 			float Constant::operator()(float t, glm::vec2 size) const
@@ -296,7 +309,6 @@ namespace oly
 
 		void EmitterParams::spawn(ParticleData& data, glm::mat3& transform, glm::vec4& col, unsigned int index)
 		{
-			data.emitter = emitter;
 			data.initial.spawn_time = fmod(emitter->state.playtime, period);
 			data.initial.index = index;
 			data.initial.lifespan = lifespan::eval(lifespan, data.initial.spawn_time, period) + random::bound::eval(lifespan_offset_rng);
@@ -315,8 +327,8 @@ namespace oly
 			return spawn_rate::valid(spawn_rate, period);
 		}
 
-		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const EmitterParams& prms, const glm::vec4& projection_bounds, GLuint initial_particle_capacity)
-			: instance(std::move(inst)), buffer_live_instances(initial_particle_capacity)
+		Emitter::Emitter(std::unique_ptr<Particle>&& inst, const EmitterParams& prms, const glm::vec4& projection_bounds, GLuint initial_particle_capacity, std::unique_ptr<Transformer2D>&& transformer)
+			: instance(std::move(inst)), buffer_live_instances(initial_particle_capacity), transformer(std::move(transformer))
 		{
 			if (!prms.validate())
 				throw Error(ErrorCode::BAD_EMITTER_PARAMS);
@@ -327,6 +339,14 @@ namespace oly
 			params.emitter = this;
 			spawn_debt_cache.period_sum = spawn_rate::period_sum(params.spawn_rate, params.period);
 			restart();
+		}
+
+		Emitter::Emitter(Emitter&& other) noexcept
+			: instance(std::move(other.instance)), ssbo_block(std::move(other.ssbo_block)), particle_data(std::move(other.particle_data)), transform_buffer(std::move(other.transform_buffer)),
+			color_buffer(std::move(other.color_buffer)), params(std::move(other.params)), spawn_debt_cache(std::move(other.spawn_debt_cache)), state(std::move(other.state)),
+			buffer_live_instances(std::move(other.buffer_live_instances)), transformer(std::move(other.transformer))
+		{
+			params.emitter = this;
 		}
 
 		void Emitter::set_projection(const glm::vec4& projection_bounds) const
@@ -417,6 +437,13 @@ namespace oly
 			glDrawElementsInstanced(instance->draw_spec.mode, instance->draw_spec.count, instance->draw_spec.type, (void*)instance->draw_spec.offset, state.live_instances);
 		}
 
+		void Emitter::flush_transform() const
+		{
+			transformer->pre_get();
+			instance->set_transform(transformer->global());
+			transformer->flush();
+		}
+
 		bool Emitter::update_back_particle(size_t i)
 		{
 			auto& prt = particle_data.back[i];
@@ -443,7 +470,7 @@ namespace oly
 				transform_buffer.front.resize(state.live_instances + spawn_count);
 				color_buffer.front.resize(state.live_instances + spawn_count);
 				float period_sum = spawn_rate::period_sum(params.spawn_rate, params.period);
-				GLuint period_particles = floorf(period_sum) + floorf(floorf(state.playtime / params.period) * (period_sum - floorf(period_sum)));
+				GLuint period_particles = (GLuint)floorf(period_sum) + (GLuint)floorf(floorf(state.playtime / params.period) * (period_sum - floorf(period_sum)));
 				for (GLuint i = 0; i < spawn_count; ++i)
 				{
 					size_t j = state.live_instances++;
@@ -462,19 +489,46 @@ namespace oly
 			std::swap(color_buffer.front, color_buffer.back);
 		}
 
+		ParticleSystem::ParticleSystem(std::vector<Subemitter>&& subemitters_, std::unique_ptr<Transformer2D>&& transformer_)
+			: subemitters(std::move(subemitters_)), transformer(std::move(transformer_))
+		{
+			for (auto& subemitter : subemitters)
+				subemitter.emitter.transformer->attach_parent(transformer.get());
+		}
+
+		void ParticleSystem::update()
+		{
+			transformer->pre_get();
+			for (auto& subemitter : subemitters)
+				if (subemitter.enabled)
+				{
+					subemitter.emitter.update();
+					subemitter.emitter.flush_transform();
+				}
+			transformer->flush();
+		}
+
+		void ParticleSystem::draw() const
+		{
+			for (const auto& subemitter : subemitters)
+				if (subemitter.enabled)
+					subemitter.emitter.draw();
+		}
+
 		PolygonalParticle::PolygonalParticle(const std::vector<glm::vec2>& polygon, const math::Triangulation& triangulation)
-			: Particle((GLuint)(triangulation.size() * 3)), position_vbo((GLuint)polygon.size())
+			: Particle((GLuint)(triangulation.size() * 3)), vbo((GLuint)polygon.size())
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 
 			shader = shaders::polygonal_particle;
 			draw_spec.count = (GLsizei)ebo.vector().size();
 
-			projection_location = glGetUniformLocation(shader, "uProjection");
+			locations.projection = glGetUniformLocation(shader, "uProjection");
+			locations.projection = glGetUniformLocation(shader, "uTransform");
 
 			glBindVertexArray(vao);
-			memcpy_s(position_vbo.vector<0>().data(), position_vbo.vector<0>().size() * sizeof(glm::vec2), polygon.data(), polygon.size() * sizeof(glm::vec2));
-			position_vbo.init_layout(rendering::VertexAttribute<>{ 0, 2 });
+			memcpy_s(vbo.vector<0>().data(), vbo.vector<0>().size() * sizeof(glm::vec2), polygon.data(), polygon.size() * sizeof(glm::vec2));
+			vbo.init_layout(rendering::VertexAttribute<>{ 0, 2 });
 			auto& indices = ebo.vector();
 			for (size_t i = 0; i < triangulation.size(); ++i)
 			{
@@ -486,16 +540,45 @@ namespace oly
 			glBindVertexArray(0);
 		}
 
-		void PolygonalParticle::set_projection(const glm::vec4& projection_bounds) const
-		{
-			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shader);
-			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
-		}
-
 		std::unique_ptr<PolygonalParticle> create_polygonal_particle(const std::vector<glm::vec2>& polygon)
 		{
 			return std::make_unique<PolygonalParticle>(polygon, math::ear_clipping(polygon));
 		}
-	}
+
+		EllipticParticle::EllipticParticle(float rx, float ry)
+			: Particle(6), vbo((GLuint)4)
+		{
+			shader = shaders::elliptic_particle;
+			draw_spec.count = (GLsizei)ebo.vector().size();
+
+			locations.projection = glGetUniformLocation(shader, "uProjection");
+			locations.projection = glGetUniformLocation(shader, "uTransform");
+
+			glBindVertexArray(vao);
+			glm::vec2 vertices[4] = {
+				{ -rx, -ry },
+				{  rx, -ry },
+				{  rx,  ry },
+				{ -rx,  ry }
+			};
+			memcpy_s(vbo.vector<0>().data(), vbo.vector<0>().size() * sizeof(glm::vec2), vertices, 4 * sizeof(glm::vec2));
+			glm::vec2 radii[4] = {
+				{ rx, ry },
+				{ rx, ry },
+				{ rx, ry },
+				{ rx, ry }
+			};
+			memcpy_s(vbo.vector<1>().data(), vbo.vector<1>().size() * sizeof(glm::vec2), radii, 4 * sizeof(glm::vec2));
+			vbo.init_layout(rendering::VertexAttribute<>{ 0, 2 }, rendering::VertexAttribute<>{ 1, 2 });
+			auto& indices = ebo.vector();
+			indices[0] = 0;
+			indices[1] = 1;
+			indices[2] = 2;
+			indices[3] = 2;
+			indices[4] = 3;
+			indices[5] = 0;
+			ebo.init();
+			glBindVertexArray(0);
+		}
+}
 }
