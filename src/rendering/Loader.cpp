@@ -31,6 +31,7 @@ namespace oly
 #define get_float(node, name) (float)node[name].value<double>().value()
 #define get_float_default(node, name, def) (float)node[name].value<double>().value_or(def)
 #define get_unsigned_int(node, name) (unsigned int)node[name].value<int64_t>().value()
+#define get_unsigned_int_default(node, name, def) (unsigned int)node[name].value<int64_t>().value_or(def)
 #define get_string(node, name) node[name].value<std::string>().value()
 #define get_bool(node, name) node[name].value<bool>().value()
 #define get_bool_default(node, name, def) node[name].value<bool>().value_or(def)
@@ -41,9 +42,7 @@ namespace oly
 #define get_vec4_default(node, name, def) glm::vec4{ get_float_element_default(node[name].as_array(), 0, def[0]),\
  get_float_element_default(node[name].as_array(), 1, def[1]), get_float_element_default(node[name].as_array(), 2, def[2]), get_float_element_default(node[name].as_array(), 3, def[3]) }
 
-		// TODO make some default parameters optional
-
-		Transform2D load_transform_2d(const toml::v3::node_view<toml::v3::node>& node)
+		Transform2D load_transform_2d(const AssetNode& node)
 		{
 			Transform2D transform;
 			if (!node)
@@ -63,7 +62,7 @@ namespace oly
 			return transform;
 		}
 
-		random::bound::Function load_random_bound_function(const toml::v3::node_view<toml::v3::node>& node)
+		random::bound::Function load_random_bound_function(const AssetNode& node)
 		{
 			if (!node)
 				return random::bound::Function{};
@@ -133,12 +132,12 @@ namespace oly
 				throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		random::bound::Function2D load_random_bound_function_2d(const toml::v3::node_view<toml::v3::node>& node)
+		random::bound::Function2D load_random_bound_function_2d(const AssetNode& node)
 		{
 			return { load_random_bound_function(node["x"]), load_random_bound_function(node["y"]) };
 		}
 
-		random::domain2d::Domain load_random_domain_2d(const toml::v3::node_view<toml::v3::node>& node)
+		random::domain2d::Domain load_random_domain_2d(const AssetNode& node)
 		{
 			random::domain2d::Domain d;
 			d.transform = load_transform_2d(node);
@@ -223,7 +222,7 @@ namespace oly
 			return d;
 		}
 
-		particles::EmitterParams load_emitter_params(const toml::v3::node_view<toml::v3::node>& node)
+		particles::EmitterParams load_particle_emitter_params(const AssetNode& node)
 		{
 			particles::EmitterParams params;
 			if (auto one_shot = node["one shot"])
@@ -386,7 +385,7 @@ namespace oly
 			}
 			if (auto acceleration = node["acceleration"])
 			{
-				static const auto load_acceleration = [](const toml::v3::node_view<toml::v3::node>& node) -> particles::acceleration::Function {
+				static const auto load_acceleration = [](const AssetNode& node) -> particles::acceleration::Function {
 					std::string type = get_string(node, "type");
 					if (type == "constant")
 					{
@@ -416,12 +415,12 @@ namespace oly
 			if (auto color = node["color"])
 			{
 				std::string type = get_string(color, "type");
-				static const auto load_constant = [](const toml::v3::node_view<toml::v3::node>& node) {
+				static const auto load_constant = [](const AssetNode& node) {
 					particles::color::Constant fn;
 					fn.c = get_vec4_default(node, "c", glm::vec4(1.0f));
 					return fn;
 					};
-				static const auto load_interp = [](const toml::v3::node_view<toml::v3::node>& node) {
+				static const auto load_interp = [](const AssetNode& node) {
 					particles::color::Interp fn;
 					fn.t1    = get_float_default(node, "t1", 0.0f);
 					fn.t2    = get_float_default(node, "t2", 1.0f);
@@ -453,9 +452,9 @@ namespace oly
 							}
 							std::string type = get_string(subfunction, "type");
 							if (type == "constant")
-								subfn.fn = load_constant((toml::v3::node_view<toml::v3::node>)subfunction);
+								subfn.fn = load_constant((AssetNode)subfunction);
 							else if (type == "interp")
-								subfn.fn = load_interp((toml::v3::node_view<toml::v3::node>)subfunction);
+								subfn.fn = load_interp((AssetNode)subfunction);
 							fn.subfunctions.push_back(std::move(subfn));
 						}
 						});
@@ -498,9 +497,56 @@ namespace oly
 			return params;
 		}
 
+		particles::Emitter load_particle_emitter(const AssetNode& node, const glm::vec4& projection_bounds)
+		{
+			GLuint initial_particle_capacity = get_unsigned_int_default(node, "initial particle capacity", 1000);
+			particles::EmitterParams params = load_particle_emitter_params(node["params"]);
+			std::unique_ptr<particles::Particle> instance;
+			auto inst = node["instance"];
+			std::string instance_type = get_string(inst, "type");
+			if (instance_type == "polygon")
+			{
+				auto polygon = inst["points"].as_array();
+				std::vector<glm::vec2> points;
+				polygon->for_each([&points](auto&& point) {
+					points.push_back({ get_float_element(point.as_array(), 0), get_float_element(point.as_array(), 1)});
+					});
+				instance = particles::create_polygonal_particle(points);
+			}
+			else if (instance_type == "ellipse")
+				instance = std::make_unique<oly::particles::EllipticParticle>(get_float(inst, "rx"), get_float(inst, "ry"));
+
+			return particles::Emitter(std::move(instance), params, projection_bounds, initial_particle_capacity);
+		}
+
+		particles::ParticleSystem load_particle_system(const AssetNode& node, const glm::vec4& projection_bounds)
+		{
+			std::vector<particles::ParticleSystem::Subemitter> subemitters;
+			auto subemitter_nodes = node["emitter"].as_array();
+			subemitter_nodes->for_each([&subemitters, &projection_bounds](auto&& emitter) {
+				if constexpr (toml::is_table<decltype(emitter)>)
+				{
+					particles::Emitter subemitter = load_particle_emitter((AssetNode)emitter, projection_bounds);
+					subemitters.emplace_back(std::move(subemitter), get_bool_default(emitter, "enabled", true));
+				}
+				});
+			return particles::ParticleSystem(std::move(subemitters));
+		}
+
+		particles::ParticleSystem load_particle_system(const char* file, const glm::vec4& projection_bounds)
+		{
+			return load_particle_system(oly::assets::load_toml(file)["particle_system"], projection_bounds);
+		}
+
+		particles::ParticleSystem load_particle_system(const std::string& file, const glm::vec4& projection_bounds)
+		{
+			return load_particle_system(file.c_str(), projection_bounds);
+		}
+
 #undef get_float
 #undef get_float_default
 #undef get_unsigned_int
+#undef get_unsigned_int_default
 #undef get_string
 #undef get_bool
 #undef get_bool_default

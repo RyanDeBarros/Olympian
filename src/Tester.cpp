@@ -240,21 +240,7 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	oly::particles::EmitterParams emitter_params = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param.toml")["emitter"]);
-	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
-		{ -1, -1 },
-		{  1, -1 },
-		{  1,  1 },
-		{ -1,  1 }
-		}), emitter_params, window.projection_bounds(), 1000);
-
-	oly::particles::EmitterParams emitter_params2 = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param2.toml")["emitter"]);
-	oly::particles::Emitter particle_emitter2(std::make_unique<oly::particles::EllipticParticle>(2.0f, 1.0f), emitter_params2, window.projection_bounds(), 1000);
-
-	std::vector<oly::particles::ParticleSystem::Subemitter> subemitters;
-	subemitters.emplace_back(std::move(particle_emitter));
-	subemitters.emplace_back(std::move(particle_emitter2));
-	oly::particles::ParticleSystem particle_system(std::move(subemitters));
+	oly::particles::ParticleSystem particle_system = oly::assets::load_particle_system(ASSET_DIR + "particle_system.toml", window.projection_bounds());
 
 	while (!window.should_close())
 	{
@@ -296,17 +282,17 @@ void run()
 		particle_system.update();
 		
 		// draw
-		//ellipse_batch.draw();
-		//oly::stencil::begin();
-		//oly::stencil::enable_drawing();
-		//oly::stencil::draw::replace();
-		//polygon_batch.draw(1);
-		//oly::stencil::disable_drawing();
-		//oly::stencil::crop::match();
-		//sprite_batch.draw(1);
-		//oly::stencil::end();
-		//sprite_batch.draw(2);
-		//polygon_batch.draw(2);
+		ellipse_batch.draw();
+		oly::stencil::begin();
+		oly::stencil::enable_drawing();
+		oly::stencil::draw::replace();
+		polygon_batch.draw(1);
+		oly::stencil::disable_drawing();
+		oly::stencil::crop::match();
+		sprite_batch.draw(1);
+		oly::stencil::end();
+		sprite_batch.draw(2);
+		polygon_batch.draw(2);
 		particle_system.draw();
 
 		// post-frame
