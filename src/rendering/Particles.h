@@ -177,7 +177,7 @@ namespace oly
 			{
 				// R(t) = a * sin(k * pi * (t - b) / T) + c
 				float a = 1.0f;
-				int k = 1;
+				float k = 1.0f;
 				float b = 0.0f;
 				float c = 0.0f;
 				float operator()(float t, float period) const;

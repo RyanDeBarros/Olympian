@@ -39,4 +39,113 @@
 		"interval" = [3.0, 5.0]
 		"type"     = "constant"
 		"c"        = 500
-			
+	
+	[emitter.lifespan]
+	"type" = "constant"
+	"c"    = 0.3
+
+	[emitter.lifespan_offset_rng]
+	"type"     = "power spike"
+	"a"        = -0.2
+	"b"        = 0.2
+	"power"    = 1.0
+	"inverted" = false
+
+	[emitter.transform_rng.position]
+	"position" = [150.0, 200.0]
+	"scale"    = [400.0, 250.0]
+		[[emitter.transform_rng.position.shapes]]
+		"type" = "rect"
+		"w"    = 3.0
+			[emitter.transform_rng.position.shapes.transform]
+			"position" = [-0.5, 0.5]
+			"scale"    = [1.0, 0.4]
+			[emitter.transform_rng.position.shapes.fnx]
+			"type" = "power spike array"
+				[[emitter.transform_rng.position.shapes.fnx.spikes]]
+				"a"        = 0.0
+				"b"        = 0.6
+				"power"    = 1.0
+				"inverted" = false
+				"pos"      = -1.0
+				"w"        = 1.0
+				[[emitter.transform_rng.position.shapes.fnx.spikes]]
+				"a"        = -0.4
+				"b"        = 0.4
+				"power"    = 4.0
+				"inverted" = false
+				"pos"      = 0.0
+				"w"        = 1.0
+				[[emitter.transform_rng.position.shapes.fnx.spikes]]
+				"a"        = -0.4
+				"b"        = 0.2
+				"power"    = 4.0
+				"inverted" = true
+				"pos"      = 0.8
+				"w"        = 1.0
+			[emitter.transform_rng.position.shapes.fny]
+			"type" = "power spike array"
+				[[emitter.transform_rng.position.shapes.fny.spikes]]
+				"a"        = -1.0
+				"b"        = 1.0
+				"power"    = 1.0
+				"inverted" = false
+				"pos"      = -1.0
+				"w"        = 1.0
+				[[emitter.transform_rng.position.shapes.fny.spikes]]
+				"a"        = -1.0
+				"b"        = 1.0
+				"power"    = 1.0
+				"inverted" = false
+				"pos"      = 1.0
+				"w"        = 1.0
+		[[emitter.transform_rng.position.shapes]]
+		"type" = "ellipse"
+		"w"    = 1.0
+			[emitter.transform_rng.position.shapes.transform]
+			"position" = [0.5, -0.5]
+			"scale"    = [0.4, 0.4]
+			[emitter.transform_rng.position.shapes.fnr]
+			"type"     = "power spike"
+			"a"        = 0.0
+			"b"        = 1.0
+			"power"    = 10.0
+			"inverted" = true
+			[emitter.transform_rng.position.shapes.fna]
+			"type" = "uniform"
+			"a"    = -1.0
+			"b"    = 1.0
+
+	[emitter.transform_rng.rotation]
+	"type" = "uniform"
+	"a"    = -0.52359877559829887307710723054658 # -pi / 6
+	"b"    = 0.52359877559829887307710723054658 # pi / 6
+
+	[emitter.transform_rng.scale.x]
+	"type" = "uniform"
+	"a"    = 4
+	"b"    = 6
+	[emitter.transform_rng.scale.y]
+	"type" = "uniform"
+	"a"    = 3
+	"b"    = 12
+
+	[emitter.color]
+	"type"       = "piecewise"
+	"last color" = [0.0, 1.0, 0.0, 1.0]
+		[[emitter.color.subfunctions]]
+		"type" = "constant"
+		"c"    = [1.0, 1.0, 1.0, 1.0]
+		"i"    = 500
+		[[emitter.color.subfunctions]]
+		"type" = "constant"
+		"c"    = [1.0, 0.0, 0.0, 1.0]
+		"i"    = 1500
+		[[emitter.color.subfunctions]]
+		"type" = "constant"
+		"c"    = [0.0, 0.0, 1.0, 1.0]
+		"i"    = 1700
+		[[emitter.color.subfunctions]]
+		"type" = "constant"
+		"c"    = [1.0, 0.0, 1.0, 1.0]
+		"i"    = 2400

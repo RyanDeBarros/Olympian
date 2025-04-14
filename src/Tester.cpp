@@ -241,65 +241,6 @@ void run()
 	ellipse2.ellipse.send_z_value();
 
 	oly::particles::EmitterParams emitter_params = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param.toml")["emitter"]);
-	{
-		//oly::particles::spawn_rate::ContinuousPulse continuous_pulses;
-		//continuous_pulses.pts.push_back({ 0.0f, 50, 0.0f, 0.2f });
-		//continuous_pulses.pts.push_back({ 1.0f, 100, 0.1f, 0.1f });
-		//continuous_pulses.pts.push_back({ 2.0f, 20, 0.1f, 0.1f });
-		//continuous_pulses.pts.push_back({ 2.3f, 70, 0.1f, 0.1f });
-		//continuous_pulses.global_multiplier = 10.0f;
-		//oly::particles::spawn_rate::Constant constant_spawn;
-		//constant_spawn.c = 500;
-		//oly::particles::spawn_rate::Piecewise spawn_rate;
-		//spawn_rate.subfunctions.push_back({ continuous_pulses, { 0.0f, 3.0f } });
-		//spawn_rate.subfunctions.push_back({ constant_spawn, { 3.0f, 5.0f } });
-		//emitter_params.spawn_rate = spawn_rate;
-		
-		oly::particles::lifespan::Constant lifespan;
-		lifespan.c = 0.3f;
-		emitter_params.lifespan = lifespan;
-		emitter_params.lifespan_offset_rng = oly::random::bound::PowerSpike{ -0.2f, 0.2f };
-
-		oly::random::domain2d::Rect rect;
-		oly::random::bound::PowerSpikeArray fnx;
-		fnx.spikes.push_back({ { 0.0f, 0.6f }, -1.0f });
-		fnx.spikes.push_back({ { -0.4f, 0.4f, 4.0f }, 0.0f });
-		fnx.spikes.push_back({ { -0.4f, 0.2f, 4.0f, true }, 0.8f });
-		rect.fnx = fnx;
-		oly::random::bound::PowerSpikeArray fny;
-		fny.spikes.push_back({ {}, -1.0f });
-		fny.spikes.push_back({ {}, 1.0f });
-		rect.fny = fny;
-		rect.transform.position = { -0.5f, 0.5f };
-		rect.transform.scale = { 1.0f, 0.4f };
-		emitter_params.transform_rng.position.shapes.push_back({ rect, 3 });
-		oly::random::domain2d::Ellipse ellipse;
-		oly::random::bound::PowerSpike fnr;
-		fnr.a = 0.0f;
-		fnr.power = 10.0f;
-		fnr.inverted = true;
-		oly::random::bound::Uniform fna;
-		ellipse.fnr = fnr;
-		ellipse.fna = fna;
-		ellipse.transform.position = { 0.5f, -0.5f };
-		ellipse.transform.scale = glm::vec2(0.4f);
-		emitter_params.transform_rng.position.shapes.push_back({ ellipse });
-		emitter_params.transform_rng.position.transform.position = { 150.0f, 200.0f };
-		emitter_params.transform_rng.position.transform.scale = { 400.0f, 250.0f };
-		
-		emitter_params.transform_rng.rotation = oly::random::bound::Uniform{ -glm::pi<float>() / 6, glm::pi<float>() / 6 };
-
-		emitter_params.transform_rng.scale.x = oly::random::bound::Uniform{ 4, 6 };
-		emitter_params.transform_rng.scale.y = oly::random::bound::Uniform{ 3, 12 };
-
-		emitter_params.color = oly::particles::color::Piecewise{ {
-			{ { 1.0f, true, 500 }, oly::particles::color::Constant{ { 1.0f, 1.0f, 1.0f, 1.0f } } },
-			{ { 2.0f, true, 1500 }, oly::particles::color::Constant{ { 1.0f, 0.0f, 0.0f, 1.0f } } },
-			{ { 2.3f, true, 1700 }, oly::particles::color::Constant{ { 0.0f, 0.0f, 1.0f, 1.0f } } },
-			{ { 3.0f, true, 2400 }, oly::particles::color::Constant{ { 1.0f, 0.0f, 1.0f, 1.0f } } },
-		}, { 0.0f, 1.0f, 0.0f, 1.0f }
-		};
-	}
 	oly::particles::Emitter particle_emitter(oly::particles::create_polygonal_particle({
 		{ -1, -1 },
 		{  1, -1 },
@@ -308,28 +249,6 @@ void run()
 		}), emitter_params, window.projection_bounds(), 1000);
 
 	oly::particles::EmitterParams emitter_params2 = oly::assets::load_emitter_params(oly::assets::load_toml(ASSET_DIR + "param2.toml")["emitter"]);
-	{
-		const float outer_dist = 1.0f;
-		const float inner_dist = 0.3f;
-		const int num_points = 5;
-		std::vector<glm::vec2> star;
-		for (int i = 0; i < 2 * num_points; ++i)
-			star.push_back((i % 2 == 0 ? outer_dist : inner_dist) * glm::vec2{ glm::cos((2 * i + 1) * glm::pi<float>() * 0.5f / num_points), glm::sin((2 * i + 1) * glm::pi<float>() * 0.5f / num_points) });
-		emitter_params2.transform_rng.position.shapes = oly::random::domain2d::create_triangulated_domain_shapes(star);
-
-		emitter_params2.transform_rng.position.transform.position = { -200.0f, -100.0f };
-		emitter_params2.transform_rng.position.transform.scale = glm::vec2(200.0f);
-
-		emitter_params2.transform_rng.scale.x = oly::random::bound::Constant{ 5 };
-		emitter_params2.transform_rng.scale.y = oly::random::bound::Constant{ 5 };
-
-		emitter_params2.velocity.y = oly::random::bound::Constant{ 200 };
-		emitter_params2.acceleration.x = oly::particles::acceleration::Constant{ 200 };
-		emitter_params2.acceleration.y = oly::particles::acceleration::Force{ -10 };
-		emitter_params2.mass = oly::particles::mass::Proportional{ 15.0f, -2.0f };
-
-		emitter_params2.gradient = oly::particles::gradient::Interp{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } };
-	}
 	oly::particles::Emitter particle_emitter2(std::make_unique<oly::particles::EllipticParticle>(2.0f, 1.0f), emitter_params2, window.projection_bounds(), 1000);
 
 	std::vector<oly::particles::ParticleSystem::Subemitter> subemitters;
