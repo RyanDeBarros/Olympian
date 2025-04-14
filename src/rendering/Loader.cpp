@@ -29,11 +29,17 @@ namespace oly
 		}
 
 #define get_float(node, name) (float)node[name].value<double>().value()
+#define get_float_default(node, name, def) (float)node[name].value<double>().value_or(def)
 #define get_unsigned_int(node, name) (unsigned int)node[name].value<int64_t>().value()
 #define get_string(node, name) node[name].value<std::string>().value()
 #define get_bool(node, name) node[name].value<bool>().value()
+#define get_bool_default(node, name, def) node[name].value<bool>().value_or(def)
 #define get_float_element(arr, index) (float)(arr->get_as<double>(index) ? arr->get_as<double>(index)->get() : arr->get_as<int64_t>(index)->get())
+#define get_float_element_default(arr, index, def) (float)(arr->get_as<double>(index) ? arr->get_as<double>(index)->get() :\
+ (arr->get_as<int64_t>(index) ? arr->get_as<int64_t>(index)->get() : def))
 #define get_vec4(node, name) glm::vec4{ get_float_element(node[name].as_array(), 0), get_float_element(node[name].as_array(), 1), get_float_element(node[name].as_array(), 2), get_float_element(node[name].as_array(), 3) }
+#define get_vec4_default(node, name, def) glm::vec4{ get_float_element_default(node[name].as_array(), 0, def[0]),\
+ get_float_element_default(node[name].as_array(), 1, def[1]), get_float_element_default(node[name].as_array(), 2, def[2]), get_float_element_default(node[name].as_array(), 3, def[3]) }
 
 		// TODO make some default parameters optional
 
@@ -65,43 +71,43 @@ namespace oly
 			if (type == "constant")
 			{
 				random::bound::Constant fn;
-				fn.c = get_float(node, "c");
+				fn.c = get_float_default(node, "c", 0.0f);
 				return fn;
 			}
 			else if (type == "uniform")
 			{
 				random::bound::Uniform fn;
-				fn.a = get_float(node, "a");
-				fn.b = get_float(node, "b");
+				fn.a = get_float_default(node, "a", -1.0f);
+				fn.b = get_float_default(node, "b", 1.0f);
 				return fn;
 			}
 			else if (type == "power spike")
 			{
 				random::bound::PowerSpike fn;
-				fn.a        = get_float(node, "a");
-				fn.b        = get_float(node, "b");
-				fn.power    = get_float(node, "power");
-				fn.inverted = get_bool(node, "inverted");
+				fn.a        = get_float_default(node, "a", -1.0f);
+				fn.b        = get_float_default(node, "b", 1.0f);
+				fn.power    = get_float_default(node, "power", 1.0f);
+				fn.inverted = get_bool_default(node, "inverted", false);
 				return fn;
 			}
 			else if (type == "dual power spike")
 			{
 				random::bound::DualPowerSpike fn;
-				fn.a        = get_float(node, "a");
-				fn.b        = get_float(node, "b");
-				fn.alpha    = get_float(node, "alpha");
-				fn.beta     = get_float(node, "beta");
-				fn.inverted = get_bool(node, "inverted");
+				fn.a        = get_float_default(node, "a", -1.0f);
+				fn.b        = get_float_default(node, "b", 1.0f);
+				fn.alpha    = get_float_default(node, "alpha", 1.0f);
+				fn.beta     = get_float_default(node, "beta", 1.0f);
+				fn.inverted = get_bool_default(node, "inverted", false);
 				return fn;
 			}
 			else if (type == "sine")
 			{
 				random::bound::Sine fn;
-				fn.min = get_float(node, "min");
-				fn.max = get_float(node, "max");
-				fn.a =   get_float(node, "a");
-				fn.k =   get_float(node, "k");
-				fn.b =   get_float(node, "b");
+				fn.min = get_float_default(node, "min", -1.0f);
+				fn.max = get_float_default(node, "max", 1.0f);
+				fn.a =   get_float_default(node, "a", 1.0f);
+				fn.k =   get_float_default(node, "k", 1.0f);
+				fn.b =   get_float_default(node, "b", 0.0f);
 				return fn;
 			}
 			else if (type == "power spike array")
@@ -113,11 +119,11 @@ namespace oly
 					{
 						random::bound::PowerSpikeArray::WeightedSpike spk;
 						spk.pos            = get_float(spike, "pos");
-						spk.w              = get_float(spike, "w");
-						spk.spike.a        = get_float(spike, "a");
-						spk.spike.b        = get_float(spike, "b");
-						spk.spike.power    = get_float(spike, "power");
-						spk.spike.inverted = get_bool(spike, "inverted");
+						spk.w              = get_float_default(spike, "w", 1.0f);
+						spk.spike.a        = get_float_default(spike, "a", -1.0f);
+						spk.spike.b        = get_float_default(spike, "b", 1.0f);
+						spk.spike.power    = get_float_default(spike, "power", 1.0f);
+						spk.spike.inverted = get_bool_default(spike, "inverted", false);
 						fn.spikes.push_back(spk);
 					}
 					});
@@ -231,21 +237,21 @@ namespace oly
 				std::string spawn_rate_type = get_string(spawn_rate, "type");
 				static const auto load_constant = [](const decltype(spawn_rate)& node) {
 					particles::spawn_rate::Constant fn;
-					fn.c = get_float(node, "c");
+					fn.c = get_float_default(node, "c", 3.0f);
 					return fn; 
 					};
 				static const auto load_linear = [](const decltype(spawn_rate)& node) {
 					particles::spawn_rate::Linear fn;
-					fn.i = get_float(node, "i");
-					fn.f = get_float(node, "f");
+					fn.i = get_float_default(node, "i", 60.0f);
+					fn.f = get_float_default(node, "f", 0.0f);
 					return fn;
 					};
 				static const auto load_sine = [](const decltype(spawn_rate)& node) {
 					particles::spawn_rate::Sine fn;
-					fn.a = get_float(node, "a");
-					fn.k = get_float(node, "k");
-					fn.b = get_float(node, "b");
-					fn.c = get_float(node, "c");
+					fn.a = get_float_default(node, "a", 1.0f);
+					fn.k = get_float_default(node, "k", 1.0f);
+					fn.b = get_float_default(node, "b", 0.0f);
+					fn.c = get_float_default(node, "c", 0.0f);
 					return fn;
 					};
 				static const auto load_discrete_pulse = [](const decltype(spawn_rate)& node) {
@@ -273,10 +279,10 @@ namespace oly
 							particles::spawn_rate::ContinuousPulse::Point pt;
 							pt.t     = get_float(point, "t");
 							pt.w     = get_unsigned_int(point, "w");
-							pt.a     = get_float(point, "a");
-							pt.b     = get_float(point, "b");
-							pt.alpha = get_float(point, "alpha");
-							pt.beta  = get_float(point, "beta");
+							pt.a     = get_float_default(point, "a", 1.0f);
+							pt.b     = get_float_default(point, "b", 1.0f);
+							pt.alpha = get_float_default(point, "alpha", 1.0f);
+							pt.beta  = get_float_default(point, "beta", 1.0f);
 							fn.pts.push_back(pt);
 						}
 						});
@@ -327,23 +333,23 @@ namespace oly
 				if (lifespan_type == "constant")
 				{
 					particles::lifespan::Constant fn;
-					fn.c = get_float(lifespan, "c");
+					fn.c = get_float_default(lifespan, "c", 0.3f);
 					params.lifespan = fn;
 				}
 				else if (lifespan_type == "linear")
 				{
 					particles::lifespan::Linear fn;
-					fn.i = get_float(lifespan, "i");
-					fn.f = get_float(lifespan, "f");
+					fn.i = get_float_default(lifespan, "i", 0.5f);
+					fn.f = get_float_default(lifespan, "f", 0.0f);
 					params.lifespan = fn;
 				}
 				else if (lifespan_type == "sine")
 				{
 					particles::lifespan::Sine fn;
-					fn.a = get_float(lifespan, "a");
-					fn.k = get_float(lifespan, "k");
-					fn.b = get_float(lifespan, "b");
-					fn.c = get_float(lifespan, "c");
+					fn.a = get_float_default(lifespan, "a", 1.0f);
+					fn.k = get_float_default(lifespan, "k", 1.0f);
+					fn.b = get_float_default(lifespan, "b", 0.0f);
+					fn.c = get_float_default(lifespan, "c", 0.0f);
 					params.lifespan = fn;
 				}
 			}
@@ -366,15 +372,15 @@ namespace oly
 				if (type == "constant")
 				{
 					particles::mass::Constant fn;
-					fn.m = get_float(mass, "m");
-					fn.t_factor = get_float(mass, "t factor");
+					fn.m = get_float_default(mass, "m", 1.0f);
+					fn.t_factor = get_float_default(mass, "t factor", 0.0f);
 					params.mass = fn;
 				}
 				else if (type == "proportional")
 				{
 					particles::mass::Proportional fn;
-					fn.m = get_float(mass, "m");
-					fn.t_factor = get_float(mass, "t factor");
+					fn.m = get_float_default(mass, "m", 1.0f);
+					fn.t_factor = get_float_default(mass, "t factor", 0.0f);
 					params.mass = fn;
 				}
 			}
@@ -385,21 +391,21 @@ namespace oly
 					if (type == "constant")
 					{
 						particles::acceleration::Constant fn;
-						fn.a = get_float(node, "a");
+						fn.a = get_float_default(node, "a", 0.0f);
 						return fn;
 					}
 					else if (type == "force")
 					{
 						particles::acceleration::Force fn;
-						fn.f = get_float(node, "f");
+						fn.f = get_float_default(node, "f", 0.0f);
 						return fn;
 					}
 					else if (type == "sine position")
 					{
 						particles::acceleration::SinePosition fn;
-						fn.a = get_float(node, "a");
-						fn.k = get_float(node, "k");
-						fn.b = get_float(node, "b");
+						fn.a = get_float_default(node, "a", 1.0f);
+						fn.k = get_float_default(node, "k", 1.0f);
+						fn.b = get_float_default(node, "b", 0.0f);
 						return fn;
 					}
 					else
@@ -412,16 +418,16 @@ namespace oly
 				std::string type = get_string(color, "type");
 				static const auto load_constant = [](const toml::v3::node_view<toml::v3::node>& node) {
 					particles::color::Constant fn;
-					fn.c = get_vec4(node, "c");
+					fn.c = get_vec4_default(node, "c", glm::vec4(1.0f));
 					return fn;
 					};
 				static const auto load_interp = [](const toml::v3::node_view<toml::v3::node>& node) {
 					particles::color::Interp fn;
-					fn.t1    = get_float(node, "t1");
-					fn.t2    = get_float(node, "t2");
-					fn.power = get_float(node, "power");
-					fn.c1 = get_vec4(node, "c1");
-					fn.c2 = get_vec4(node, "c2");
+					fn.t1    = get_float_default(node, "t1", 0.0f);
+					fn.t2    = get_float_default(node, "t2", 1.0f);
+					fn.power = get_float_default(node, "power", 1.0f);
+					fn.c1 = get_vec4_default(node, "c1", glm::vec4(1.0f));
+					fn.c2 = get_vec4_default(node, "c2", glm::vec4(1.0f));
 					return fn;
 					};
 				if (type == "constant")
@@ -431,7 +437,7 @@ namespace oly
 				else if (type == "piecewise")
 				{
 					particles::color::Piecewise fn;
-					fn.last_color = get_vec4(color, "last color");
+					fn.last_color = get_vec4_default(color, "last color", glm::vec4(1.0f));
 					auto subfunctions = color["subfunctions"].as_array();
 					subfunctions->for_each([&fn](auto&& subfunction) {
 						if constexpr (toml::is_table<decltype(subfunction)>)
@@ -464,25 +470,25 @@ namespace oly
 				else if (type == "interp")
 				{
 					particles::gradient::Interp fn;
-					fn.i     = get_vec4(gradient, "i");
-					fn.f     = get_vec4(gradient, "f");
-					fn.power = get_float(gradient, "power");
+					fn.i     = get_vec4_default(gradient, "i", glm::vec4(1.0f));
+					fn.f     = get_vec4_default(gradient, "f", glm::vec4(1.0f));
+					fn.power = get_float_default(gradient, "power", 1.0f);
 					params.gradient = fn;
 				}
 				else if (type == "multi interp")
 				{
 					particles::gradient::MultiInterp fn;
-					fn.starting = get_vec4(gradient, "starting");
-					fn.ending   = get_vec4(gradient, "ending");
-					fn.power    = get_float(gradient, "power");
+					fn.starting = get_vec4_default(gradient, "starting", glm::vec4(1.0f));
+					fn.ending   = get_vec4_default(gradient, "ending", glm::vec4(1.0f));
+					fn.power    = get_float_default(gradient, "power", 1.0f);
 					auto steps = gradient["steps"].as_array();
 					steps->for_each([&fn](auto&& step) {
 						if constexpr (toml::is_table<decltype(step)>)
 						{
 							particles::gradient::MultiInterp::Step stp;
 							stp.t_end = get_float(step, "t end");
-							stp.col   = get_vec4(step, "color");
-							stp.power = get_float(step, "power");
+							stp.col   = get_vec4_default(step, "color", glm::vec4(1.0f));
+							stp.power = get_float_default(step, "power", 1.0f);
 							fn.steps.push_back(stp);
 						}
 						});
@@ -493,11 +499,15 @@ namespace oly
 		}
 
 #undef get_float
+#undef get_float_default
 #undef get_unsigned_int
 #undef get_string
 #undef get_bool
+#undef get_bool_default
 #undef get_float_element
+#undef get_float_element_default
 #undef get_vec4
+#undef get_vec4_default
 
 	}
 }

@@ -1,51 +1,25 @@
 [emitter]
+spawn_rate = { "type" = "constant", "c" = 200 }
+lifespan = { "type" = "constant", "c" = 3.0 }
+velocity = { y = { "type" = "constant", "c" = 200 } }
+acceleration = { x = { "type" = "constant", "a" = 200 }, y = { "type" = "force", "f" = -10 } }
+mass = { "type" = "proportional", "m" = 15.0, "t factor" = -2.0 }
+gradient = { "type"  = "interp", "i" = [1.0, 1.0, 1.0, 1.0], "f" = [1.0, 0.0, 0.0, 1.0] }
 
-	[emitter.spawn_rate]
-	"type" = "constant"
-	"c" = 200
-
-	[emitter.transform_rng.position]
-	"position" = [-200.0, -100.0]
-	"scale"    = [200.0, 200.0]
-	"polygon"  = [
-		[ 0.9511, -0.309  ],
-		[ 0.2853,  0.09271],
-		[ 0.5878,  0.809  ],
-		[    0.0,  0.3    ],
-		[-0.5878,  0.809  ],
-		[-0.2853,  0.09271],
-		[-0.9511, -0.309  ],
-		[-0.1763, -0.2427 ],
-		[    0.0, -1.0    ],
-		[ 0.1763, -0.2427 ]
-	]
-
-	[emitter.transform_rng.scale.x]
-	"type" = "constant"
-	"c"    = 5.0
-	[emitter.transform_rng.scale.y]
-	"type" = "constant"
-	"c"    = 5.0
-
-	[emitter.velocity.y]
-	"type" = "constant"
-	"c"    = 200
-
-	[emitter.acceleration.x]
-	"type" = "constant"
-	"a"    = 200
-	[emitter.acceleration.y]
-	"type" = "force"
-	"f"    = -10
-
-	[emitter.mass]
-	"type"     = "proportional"
-	"m"        = 15.0
-	"t factor" = -2.0
-
-	[emitter.gradient]
-	"type"  = "interp"
-	"i"     = [1.0, 1.0, 1.0, 1.0]
-	"f"     = [1.0, 0.0, 0.0, 1.0]
-	"power" = 1.0
-
+	[emitter.transform_rng]
+		scale = { x = { "type" = "constant", "c" = 5.0 }, y = { "type" = "constant", "c" = 5.0 } }
+		[emitter.transform_rng.position]
+		"position" = [-200.0, -100.0]
+		"scale"    = [ 200.0,  200.0]
+		"polygon"  = [
+			[ 0.9511,  -0.309 ],
+			[ 0.2853, 0.09271 ],
+			[ 0.5878,   0.809 ],
+			[    0.0,     0.3 ],
+			[-0.5878,   0.809 ],
+			[-0.2853, 0.09271 ],
+			[-0.9511,  -0.309 ],
+			[-0.1763, -0.2427 ],
+			[    0.0,    -1.0 ],
+			[ 0.1763, -0.2427 ]
+		]

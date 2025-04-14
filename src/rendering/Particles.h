@@ -161,14 +161,14 @@ namespace oly
 			struct Constant
 			{
 				// R(t) = c
-				float c = 3.0f;
+				float c = 0.3f;
 				float operator()(float t, float period) const;
 			};
 
 			struct Linear
 			{
 				// R(0) = i, R(T) = f --> R(t) = (f - i) * t / T + i
-				float i = 60.0f;
+				float i = 0.5f;
 				float f = 0.0f;
 				float operator()(float t, float period) const;
 			};
