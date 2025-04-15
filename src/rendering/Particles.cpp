@@ -179,7 +179,7 @@ namespace oly
 		}
 
 		Particle::Particle(GLuint ebo_size)
-			: ebo(ebo_size, rendering::BufferSendConfig(rendering::BufferSendType::SUBDATA, false))
+			: ebo(ebo_size, rendering::BufferSendType::SUBDATA)
 		{
 		}
 

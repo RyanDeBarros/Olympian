@@ -36,8 +36,8 @@ namespace oly
 		static std::string src_dir = "../../../src/"; // LATER better way of storing src_dir path.
 		static std::string shaders_dir = src_dir + "rendering/shaders/";
 
-		static std::unique_ptr<rendering::Shader> _sprite_batch = nullptr;
-		GLuint sprite_batch;
+		static std::unique_ptr<rendering::Shader> _texture_quad_batch = nullptr;
+		GLuint texture_quad_batch;
 		static std::unique_ptr<rendering::Shader> _polygon_batch = nullptr;
 		GLuint polygon_batch;
 		static std::unique_ptr<rendering::Shader> _ellipse_batch = nullptr;
@@ -49,8 +49,8 @@ namespace oly
 
 		void load()
 		{
-			_sprite_batch = rendering::load_shader((shaders_dir + "sprite_batch.vert").c_str(), (shaders_dir + "sprite_batch.frag").c_str());
-			sprite_batch = *_sprite_batch;
+			_texture_quad_batch = rendering::load_shader((shaders_dir + "texture_quad_batch.vert").c_str(), (shaders_dir + "texture_quad_batch.frag").c_str());
+			texture_quad_batch = *_texture_quad_batch;
 			_polygon_batch = rendering::load_shader((shaders_dir + "polygon_batch.vert").c_str(), (shaders_dir + "polygon_batch.frag").c_str());
 			polygon_batch = *_polygon_batch;
 			_ellipse_batch = rendering::load_shader((shaders_dir + "ellipse_batch.vert").c_str(), (shaders_dir + "ellipse_batch.frag").c_str());
@@ -63,8 +63,8 @@ namespace oly
 
 		void unload()
 		{
-			_sprite_batch.reset();
-			sprite_batch = 0;
+			_texture_quad_batch.reset();
+			texture_quad_batch = 0;
 			_polygon_batch.reset();
 			polygon_batch = 0;
 			_ellipse_batch.reset();

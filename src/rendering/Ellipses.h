@@ -8,7 +8,7 @@
 
 #include <unordered_set>
 
-// LATER this design is extremely similar to SpriteBatch. Maybe it can be abstracted.
+// LATER this design is extremely similar to TextureQuadBatch. Maybe it can be abstracted.
 namespace oly
 {
 	namespace renderable

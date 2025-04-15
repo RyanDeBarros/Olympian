@@ -13,14 +13,14 @@ namespace oly
 {
 	namespace renderable
 	{
-		struct Sprite;
+		struct TextureQuad;
 	}
 
 	namespace batch
 	{
-		class SpriteBatch
+		class TextureQuadBatch
 		{
-			friend struct renderable::Sprite;
+			friend struct renderable::TextureQuad;
 
 			GLuint shader;
 			rendering::VertexArray vao;
@@ -74,7 +74,7 @@ namespace oly
 			const Capacity capacity;
 
 		public:
-			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
+			TextureQuadBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
 			void draw(size_t draw_spec = 0);
 
@@ -91,8 +91,8 @@ namespace oly
 
 			class QuadReference
 			{
-				friend SpriteBatch;
-				SpriteBatch* _batch = nullptr;
+				friend TextureQuadBatch;
+				TextureQuadBatch* _batch = nullptr;
 				QuadPos pos = -1;
 				bool active = true;
 			
@@ -105,14 +105,14 @@ namespace oly
 
 			public:
 
-				QuadReference(SpriteBatch* batch);
+				QuadReference(TextureQuadBatch* batch);
 				QuadReference(const QuadReference&) = delete;
 				QuadReference(QuadReference&&) noexcept;
 				~QuadReference();
 				QuadReference& operator=(QuadReference&&) noexcept;
 
-				const SpriteBatch& batch() const { return *_batch; }
-				SpriteBatch& batch() { return *_batch; }
+				const TextureQuadBatch& batch() const { return *_batch; }
+				TextureQuadBatch& batch() { return *_batch; }
 				const QuadInfo& info() const { return *_info; }
 				QuadInfo& info() { return *_info; }
 				const glm::mat3& transform() const { return *_transform; }
@@ -143,34 +143,34 @@ namespace oly
 
 		private:
 			bool dirty_z = false;
-			std::vector<QuadReference*> quads;
-			std::unordered_set<renderable::Sprite*> sprites;
+			std::vector<QuadReference*> quad_refs;
+			std::unordered_set<renderable::TextureQuad*> texture_quads;
 			void flush_z_values();
 		};
 	}
 
 	namespace renderable
 	{
-		struct Sprite
+		struct TextureQuad
 		{
-			batch::SpriteBatch::QuadReference quad;
+			batch::TextureQuadBatch::QuadReference quad;
 			Transformer2D transformer;
 
-			Sprite(batch::SpriteBatch* sprite_batch);
-			Sprite(const Sprite&) = delete;
-			Sprite(Sprite&&) noexcept;
-			~Sprite();
-			Sprite& operator=(Sprite&&) noexcept;
+			TextureQuad(batch::TextureQuadBatch* sprite_batch);
+			TextureQuad(const TextureQuad&) = delete;
+			TextureQuad(TextureQuad&&) noexcept;
+			~TextureQuad();
+			TextureQuad& operator=(TextureQuad&&) noexcept;
 
-			const batch::SpriteBatch& batch() const { return quad.batch(); }
-			batch::SpriteBatch& batch() { return quad.batch(); }
+			const batch::TextureQuadBatch& batch() const { return quad.batch(); }
+			batch::TextureQuadBatch& batch() { return quad.batch(); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set(); // call after modifying local
 			void pre_get() const; // call before reading global
 
 		private:
-			friend batch::SpriteBatch;
+			friend batch::TextureQuadBatch;
 			void flush();
 		};
 	}
