@@ -10,59 +10,14 @@ namespace oly
 {
 	namespace rendering
 	{
-		template<typename StructType, std::unsigned_integral IndexType>
-		class FixedVectorBuffer
-		{
-		protected:
-			using StructTypeAlias = StructType;
-			using IndexTypeAlias = IndexType;
-
-			FixedVector<StructType> cpudata;
-			GLBuffer buf;
-
-		public:
-			FixedVectorBuffer(IndexType size, const StructType& default_value = StructType());
-			virtual ~FixedVectorBuffer() = default;
-
-			const FixedVector<StructType>& vector() const { return cpudata; }
-			FixedVector<StructType>& vector() { return cpudata; }
-			GLuint buffer() const { return buf; }
-		};
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline FixedVectorBuffer<StructType, IndexType>::FixedVectorBuffer(IndexType size, const StructType& default_value)
-			: cpudata(size, default_value)
-		{
-		}
-
 		enum class BufferSendType
 		{
 			SUBDATA,
 			MAP
 		};
 
-		template<std::unsigned_integral IndexType>
-		class LazySender
-		{
-			mutable std::set<IndexType> dirty;
-
-		public:
-			BufferSendType send_type = BufferSendType::SUBDATA;
-
-			LazySender(BufferSendType send_type = BufferSendType::SUBDATA) : send_type(send_type) {}
-
-			void lazy_send(IndexType pos) const;
-			void flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const;
-		};
-
-		template<std::unsigned_integral IndexType>
-		inline void LazySender<IndexType>::lazy_send(IndexType pos) const
-		{
-			dirty.insert(pos);
-		}
-
-		template<std::unsigned_integral IndexType>
-		inline void LazySender<IndexType>::flush(GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end) const
+		template<typename Iterator, std::unsigned_integral IndexType>
+		inline void batch_send(Iterator dirty_begin, Iterator dirty_end, GLuint buf, const void* cpudata, GLsizeiptr struct_size, IndexType pos_end, BufferSendType send_type = BufferSendType::SUBDATA)
 		{
 			const std::byte* data = (const std::byte*)cpudata;
 			switch (send_type)
@@ -71,7 +26,7 @@ namespace oly
 			{
 				GLintptr offset = 0;
 				GLsizeiptr size = 0;
-				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
+				for (auto iter = dirty_begin; iter != dirty_end; ++iter)
 				{
 					if (*iter >= pos_end)
 						continue;
@@ -92,7 +47,7 @@ namespace oly
 				std::byte* gpu_buf = (std::byte*)glMapNamedBuffer(buf, GL_WRITE_ONLY);
 				GLintptr offset = 0;
 				GLsizeiptr size = 0;
-				for (auto iter = dirty.begin(); iter != dirty.end(); ++iter)
+				for (auto iter = dirty_begin; iter != dirty_end; ++iter)
 				{
 					if (*iter >= pos_end)
 						continue;
@@ -110,74 +65,72 @@ namespace oly
 				break;
 			}
 			}
-			dirty.clear();
 		}
 
-		template<std::unsigned_integral... IndexTypes>
-		class LazyMultiSender
+		template<typename Iterator, typename StructType>
+		inline void batch_send(Iterator dirty_begin, Iterator dirty_end, GLuint buf, const FixedVector<StructType>& cpudata, BufferSendType send_type = BufferSendType::SUBDATA)
 		{
-		public:
-			static constexpr size_t N = sizeof...(IndexTypes);
+			batch_send(dirty_begin, dirty_end, buf, cpudata.data(), sizeof(StructType), cpudata.size(), send_type);
+		}
 
-		private:
-			std::tuple<LazySender<IndexTypes>...> senders;
-
-		public:
-			template<size_t i>
-			using IndexType = std::tuple_element_t<i, std::tuple<IndexTypes...>>;
-
-			LazyMultiSender(BufferSendType buffer_send_type = BufferSendType::SUBDATA);
-
-			template<size_t i>
-			const auto& sender() const { return std::get<i>(senders); }
-			template<size_t i>
-			auto& sender() { return std::get<i>(senders); }
+		enum class Mutability
+		{
+			IMMUTABLE,
+			MUTABLE
 		};
 
-		template<std::unsigned_integral... IndexTypes>
-		inline LazyMultiSender<IndexTypes...>::LazyMultiSender(BufferSendType buffer_send_type)
-			: senders(LazySender<IndexTypes>(buffer_send_type)...)
+		template<typename StructType, Mutability M>
+		class CPUSideBuffer
 		{
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		class FixedLayerBuffer : public FixedVectorBuffer<StructType, IndexType>
-		{
-		protected:
-			using StructTypeAlias = StructType;
-
-		private:
-			LazySender<IndexType> lazy;
-
 		public:
-			FixedLayerBuffer(IndexType size, const StructType& default_value = StructType(), BufferSendType buffer_send_type = BufferSendType::SUBDATA);
-
-			const LazySender<IndexType>& get_sender() const { return lazy; }
-			LazySender<IndexType>& get_sender() { return lazy; }
+			using VectorAlias = std::conditional_t<M == Mutability::IMMUTABLE, FixedVector<StructType>, std::vector<StructType>>;
 
 		protected:
-			void init_storage(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const { glNamedBufferStorage(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), flags); }
+			VectorAlias cpudata;
+			GLBuffer buf;
 
 		public:
-			void lazy_send(IndexType pos) const { lazy.lazy_send(pos); }
-			void flush() const { lazy.flush(this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size()); }
+			CPUSideBuffer(size_t size, const StructType& default_value = StructType()) : cpudata(size, default_value) {}
+			virtual ~CPUSideBuffer() = default;
+
+			const VectorAlias& vector() const { return cpudata; }
+			VectorAlias& vector() { return cpudata; }
+			GLuint buffer() const { return buf; }
 		};
 
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline FixedLayerBuffer<StructType, IndexType>::FixedLayerBuffer(IndexType size, const StructType& default_value, BufferSendType buffer_send_type)
-			: FixedVectorBuffer<StructType, IndexType>(size, default_value), lazy(buffer_send_type)
+		template<typename StructType, std::unsigned_integral IndexType, Mutability M>
+		class LazyBuffer : public CPUSideBuffer<StructType, M>
 		{
-		}
+			mutable std::set<IndexType> dirty;
+
+		public:
+			using CPUSideBuffer<StructType, M>::CPUSideBuffer;
+
+		protected:
+			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const requires (M == Mutability::IMMUTABLE)
+					{ glNamedBufferStorage(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), flags); }
+			void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
+					{ glNamedBufferData(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), usage); }
+
+		public:
+			void lazy_send(IndexType pos) const { dirty.insert(pos); }
+			void flush(BufferSendType send_type = BufferSendType::SUBDATA) const
+					{ batch_send(dirty.begin(), dirty.end(), this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size(), send_type); dirty.clear(); }
+		};
 
 		template<std::unsigned_integral IndexType, size_t Size>
-		struct FixedIndexLayout
+		struct IndexLayout
 		{
 			IndexType data[Size];
+
+			using ElementAlias = std::conditional_t<Size != 1, IndexLayout<IndexType, Size>, IndexType>;
 		};
 
-		template<std::unsigned_integral IndexType, size_t LayoutSize = 1>
-		class FixedLayoutEBO : public FixedLayerBuffer<FixedIndexLayout<IndexType, LayoutSize>, IndexType>
+		template<std::unsigned_integral IndexType, Mutability M, size_t LayoutSize = 1>
+		class CPUSideEBO : public LazyBuffer<typename IndexLayout<IndexType, LayoutSize>::ElementAlias, IndexType, M>
 		{
+			using ElementAlias = typename IndexLayout<IndexType, LayoutSize>::ElementAlias;
+
 			struct
 			{
 				IndexType first = 0;
@@ -186,200 +139,95 @@ namespace oly
 			} draw_spec;
 
 		public:
-			FixedLayoutEBO(IndexType size, BufferSendType buffer_send_type = BufferSendType::SUBDATA);
+			CPUSideEBO(IndexType size) : LazyBuffer<ElementAlias, IndexType, M>(size, {}) { set_draw_spec(0, size); }
 
 			void get_draw_spec(IndexType& first, IndexType& count) const { first = draw_spec.first; count = draw_spec.count; }
-			void set_draw_spec(IndexType first, IndexType count);
-
-			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const;
-			void draw(GLenum mode, GLenum type) const;
-		};
-
-		template<std::unsigned_integral IndexType, size_t LayoutSize>
-		inline FixedLayoutEBO<IndexType, LayoutSize>::FixedLayoutEBO(IndexType size, BufferSendType buffer_send_type)
-			: FixedLayerBuffer<FixedIndexLayout<IndexType, LayoutSize>, IndexType>(size, {}, buffer_send_type)
-		{
-			set_draw_spec(0, size);
-		}
-
-		template<std::unsigned_integral IndexType, size_t LayoutSize>
-		inline void FixedLayoutEBO<IndexType, LayoutSize>::set_draw_spec(IndexType first, IndexType count)
-		{
-			if (first < this->cpudata.size())
-				draw_spec.first = first;
-			draw_spec.count = LayoutSize * std::min(count, IndexType(this->cpudata.size() - draw_spec.first));
-			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(FixedIndexLayout<IndexType, LayoutSize>));
-		}
-
-		template<std::unsigned_integral IndexType, size_t LayoutSize>
-		inline void FixedLayoutEBO<IndexType, LayoutSize>::init(GLbitfield flags) const
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
-			this->init_storage(flags);
-		}
-
-		template<std::unsigned_integral IndexType, size_t LayoutSize>
-		inline void FixedLayoutEBO<IndexType, LayoutSize>::draw(GLenum mode, GLenum type) const
-		{
-			glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
-		}
-
-		template<std::unsigned_integral IndexType>
-		class FixedLayoutEBO<IndexType, 1> : public FixedLayerBuffer<IndexType, IndexType>
-		{
-			struct
+			void set_draw_spec(IndexType first, IndexType count)
 			{
-				IndexType first = 0;
-				IndexType count = 0;
-				IndexType offset = 0;
-			} draw_spec;
+				if (first < this->cpudata.size())
+					draw_spec.first = first;
+				draw_spec.count = LayoutSize * std::min(count, IndexType(this->cpudata.size() - draw_spec.first));
+				draw_spec.offset = (IndexType)(draw_spec.first * sizeof(ElementAlias));
+			}
 
-		public:
-			FixedLayoutEBO(IndexType size, BufferSendType buffer_send_type = BufferSendType::SUBDATA);
-
-			void get_draw_spec(IndexType& first, IndexType& count) const { first = draw_spec.first; count = draw_spec.count; }
-			void set_draw_spec(IndexType first, IndexType count);
-
-			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const;
-			void draw(GLenum mode, GLenum type) const;
+			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const requires (M == Mutability::IMMUTABLE)
+			{
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
+				LazyBuffer<ElementAlias, IndexType, M>::init(flags);
+			}
+			void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
+			{
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
+				LazyBuffer<ElementAlias, IndexType, M>::init(usage);
+			}
+			void draw(GLenum mode, GLenum type) const
+			{
+				glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
+			}
 		};
 
-		template<std::unsigned_integral IndexType>
-		inline FixedLayoutEBO<IndexType, 1>::FixedLayoutEBO(IndexType size, BufferSendType buffer_send_type)
-			: FixedLayerBuffer<IndexType, IndexType>(size, {}, buffer_send_type)
-		{
-			set_draw_spec(0, size);
-		}
+		template<Mutability M, std::unsigned_integral IndexType = GLushort>
+		using QuadLayoutEBO = CPUSideEBO<IndexType, M, 6>;
 
-		template<std::unsigned_integral IndexType>
-		inline void FixedLayoutEBO<IndexType, 1>::set_draw_spec(IndexType first, IndexType count)
-		{
-			if (first < this->cpudata.size())
-				draw_spec.first = first;
-			draw_spec.count = std::min(count, IndexType(this->cpudata.size() - draw_spec.first));
-			draw_spec.offset = (IndexType)(draw_spec.first * sizeof(IndexType));
-		}
-
-		template<std::unsigned_integral IndexType>
-		inline void FixedLayoutEBO<IndexType, 1>::init(GLbitfield flags) const
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
-			this->init_storage(flags);
-		}
-
-		template<std::unsigned_integral IndexType>
-		inline void FixedLayoutEBO<IndexType, 1>::draw(GLenum mode, GLenum type) const
-		{
-			glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
-		}
-
-		template<std::unsigned_integral IndexType = GLushort>
-		using QuadLayoutEBO = FixedLayoutEBO<IndexType, 6>;
-
-		template<std::unsigned_integral IndexType>
-		inline void pre_init(QuadLayoutEBO<IndexType>& ebo)
+		template<Mutability M, std::unsigned_integral IndexType>
+		inline void pre_init(QuadLayoutEBO<M, IndexType>& ebo)
 		{
 			for (IndexType i = 0; i < ebo.vector().size(); ++i)
 				rendering::quad_indices(ebo.vector()[i].data, i);
 		}
 
-		template<typename StructType, std::unsigned_integral IndexType>
-		class IndexedSSBO : public FixedLayerBuffer<StructType, IndexType>
+		template<typename StructType, std::unsigned_integral IndexType, Mutability M>
+		struct IndexedSSBO : public LazyBuffer<StructType, IndexType, M>
 		{
-		public:
-			IndexedSSBO(IndexType size, const StructType& default_value = StructType(), BufferSendType buffer_send_type = BufferSendType::SUBDATA, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
+			IndexedSSBO(IndexType size, const StructType& default_value = StructType(), GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) requires (M == Mutability::IMMUTABLE)
+				: LazyBuffer<StructType, IndexType, M>(size, default_value)
+			{
+				glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->buf);
+				LazyBuffer<StructType, IndexType, M>::init(flags);
+			}
+			IndexedSSBO(IndexType size, const StructType& default_value = StructType(), GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE)
+				: LazyBuffer<StructType, IndexType, M>(size, default_value)
+			{
+				glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->buf);
+				LazyBuffer<StructType, IndexType, M>::init(usage);
+			}
 
-			void bind_base(GLuint index) const;
+			void bind_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, this->buf); }
 		};
 
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline IndexedSSBO<StructType, IndexType>::IndexedSSBO(IndexType size, const StructType& default_value, BufferSendType buffer_send_type, GLbitfield flags)
-			: FixedLayerBuffer<StructType, IndexType>(size, default_value, buffer_send_type)
-		{
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->buf);
-			this->init_storage(flags);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline void IndexedSSBO<StructType, IndexType>::bind_base(GLuint index) const
-		{
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, this->buf);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
+		template<Mutability M>
 		class LightweightSSBO
 		{
 			GLBuffer buf;
 
 		public:
-			LightweightSSBO(IndexType size);
-
+			LightweightSSBO(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE) { glNamedBufferStorage(buf, size_in_bytes, nullptr, flags); }
+			LightweightSSBO(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
+		
 			GLuint buffer() const { return buf; }
-
-			void bind_base(GLuint index) const;
-			void send(IndexType pos, const StructType& obj) const;
-			template<typename MemberType = StructType>
-			void send(IndexType pos, MemberType StructType::*member, const MemberType& obj) const;
+			void bind_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf); }
+			template<typename StructType>
+			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
+			template<typename StructType, typename MemberType>
+			void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj); }
+			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
 		};
 
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline LightweightSSBO<StructType, IndexType>::LightweightSSBO(IndexType size)
-		{
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, buf);
-			glNamedBufferStorage(buf, size * sizeof(StructType), nullptr, GL_DYNAMIC_STORAGE_BIT);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline void LightweightSSBO<StructType, IndexType>::bind_base(GLuint index) const
-		{
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline void LightweightSSBO<StructType, IndexType>::send(IndexType pos, const StructType& obj) const
-		{
-			glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		template<typename MemberType>
-		inline void LightweightSSBO<StructType, IndexType>::send(IndexType pos, MemberType StructType::*member, const MemberType& obj) const
-		{
-			glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
+		template<Mutability M>
 		class LightweightUBO
 		{
 			GLBuffer buf;
 
 		public:
-			LightweightUBO(IndexType size);
+			LightweightUBO(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE) { glNamedBufferStorage(buf, size_in_bytes, nullptr, flags); }
+			LightweightUBO(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
 
 			GLuint buffer() const { return buf; }
-
-			void bind_base(GLuint index) const;
-			void send(IndexType pos, const StructType& obj) const;
+			void bind_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf); }
+			template<typename StructType>
+			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
+			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
 		};
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline LightweightUBO<StructType, IndexType>::LightweightUBO(IndexType size)
-		{
-			glBindBuffer(GL_UNIFORM_BUFFER, buf);
-			glNamedBufferStorage(buf, size * sizeof(StructType), nullptr, GL_DYNAMIC_STORAGE_BIT);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline void LightweightUBO<StructType, IndexType>::bind_base(GLuint index) const
-		{
-			glBindBufferBase(GL_UNIFORM_BUFFER, index, buf);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType>
-		inline void LightweightUBO<StructType, IndexType>::send(IndexType pos, const StructType& obj) const
-		{
-			glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
-		}
 
 		enum class VertexAttributeType
 		{
@@ -465,157 +313,5 @@ namespace oly
 				}
 			}
 		};
-
-		template<typename... StructTypes>
-		class VertexBufferBlock
-		{
-		public:
-			static constexpr size_t N = sizeof...(StructTypes);
-
-		private:
-			GLBufferBlock<N> bufblock;
-			std::tuple<FixedVector<StructTypes>...> cpudata;
-
-		public:
-			template<std::unsigned_integral... IndexType>
-			VertexBufferBlock(IndexType... sizes);
-			template<std::unsigned_integral IndexType>
-			VertexBufferBlock(IndexType size);
-
-			constexpr GLuint buffer(GLsizei i) const { return bufblock[i]; }
-			template<GLsizei i>
-			const auto& vector() const { return std::get<i>(cpudata); }
-			template<GLsizei i>
-			auto& vector() { return std::get<i>(cpudata); }
-			template<GLsizei i>
-			constexpr size_t struct_size() const { return sizeof(std::tuple_element_t<i, std::tuple<StructTypes...>>); }
-
-			template<VertexAttributeType... AttribTypes>
-			void init_layout(const VertexAttribute<AttribTypes>&... attribs) const;
-
-		private:
-			template<size_t... Indexes, VertexAttributeType... AttribTypes>
-			void init_layout_impl(std::index_sequence<Indexes...>, const VertexAttribute<AttribTypes>&... attribs) const;
-		};
-
-		template<typename... StructTypes>
-		template<std::unsigned_integral... IndexType>
-		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType... sizes)
-			: cpudata(FixedVector<StructTypes>(sizes)...)
-		{
-		}
-
-		template<typename... StructTypes>
-		template<std::unsigned_integral IndexType>
-		inline VertexBufferBlock<StructTypes...>::VertexBufferBlock(IndexType size)
-			: cpudata(FixedVector<StructTypes>(size)...)
-		{
-		}
-
-		template<typename... StructTypes>
-		template<VertexAttributeType... AttribTypes>
-		inline void VertexBufferBlock<StructTypes...>::init_layout(const VertexAttribute<AttribTypes>&... attribs) const
-		{
-			static_assert(sizeof...(AttribTypes) == N);
-			init_layout_impl(std::make_index_sequence<sizeof...(StructTypes)>{}, attribs...);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-
-		template<typename ...StructTypes>
-		template<size_t ...Indexes, VertexAttributeType ...AttribTypes>
-		inline void VertexBufferBlock<StructTypes...>::init_layout_impl(std::index_sequence<Indexes...>, const VertexAttribute<AttribTypes>&... attribs) const
-		{
-			((
-				glBindBuffer(GL_ARRAY_BUFFER, bufblock[Indexes]),
-				glNamedBufferStorage(bufblock[Indexes], std::get<Indexes>(cpudata).size() * sizeof(std::tuple_element_t<Indexes, std::tuple<StructTypes...>>),
-					std::get<Indexes>(cpudata).data(), std::get<Indexes>(std::tie(attribs...)).storage_flags),
-				std::get<Indexes>(std::tie(attribs...)).setup()
-			), ...);
-		}
-
-		template<typename VertexBufferBlock, typename LazyMultiSender>
-		class LazyVertexBufferBlock
-		{
-			VertexBufferBlock vertex_buffer;
-			LazyMultiSender multi_sender;
-
-			static_assert(VertexBufferBlock::N == LazyMultiSender::N);
-			static constexpr size_t N = VertexBufferBlock::N;
-
-		public:
-			template<std::unsigned_integral... IndexType>
-			LazyVertexBufferBlock(IndexType... sizes);
-
-			const VertexBufferBlock& vbo() const { return vertex_buffer; }
-			VertexBufferBlock& vbo() { return vertex_buffer; }
-			const LazyMultiSender& sender() const { return multi_sender; }
-			LazyMultiSender& sender() { return multi_sender; }
-
-			template<size_t Attrib>
-			void lazy_send(typename LazyMultiSender::template IndexType<Attrib> pos) const;
-			void flush() const;
-
-		private:
-			template<size_t... Indexes>
-			void flush_impl(std::index_sequence<Indexes...>) const;
-		};
-
-		template<typename VertexBufferBlock, typename LazyMultiSender>
-		template<std::unsigned_integral... IndexType>
-		inline LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::LazyVertexBufferBlock(IndexType... sizes)
-			: vertex_buffer(sizes...)
-		{
-		}
-
-		template<typename VertexBufferBlock, typename LazyMultiSender>
-		template<size_t Attrib>
-		inline void LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::lazy_send(typename LazyMultiSender::template IndexType<Attrib> pos) const
-		{
-			multi_sender.sender<Attrib>().lazy_send(pos);
-		}
-
-		template<typename VertexBufferBlock, typename LazyMultiSender>
-		inline void LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::flush() const
-		{
-			flush_impl(std::make_index_sequence<N>{});
-		}
-
-		template<typename VertexBufferBlock, typename LazyMultiSender>
-		template<size_t ...Indexes>
-		inline void LazyVertexBufferBlock<VertexBufferBlock, LazyMultiSender>::flush_impl(std::index_sequence<Indexes...>) const
-		{
-			((multi_sender.sender<Indexes>().flush(vertex_buffer.buffer(Indexes), vertex_buffer.vector<Indexes>().data(), vertex_buffer.struct_size<Indexes>(),
-				(typename LazyMultiSender::template IndexType<Indexes>)vertex_buffer.vector<Indexes>().size())), ...);
-		}
-
-		template<typename VertexAttrib, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock1x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib>,
-			LazyMultiSender<IndexType>>;
-
-		template<typename VertexAttrib1, typename VertexAttrib2, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock2x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib1, VertexAttrib2>,
-			LazyMultiSender<IndexType, IndexType>>;
-
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock3x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3>,
-			LazyMultiSender<IndexType, IndexType, IndexType>>;
-
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock4x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4>,
-			LazyMultiSender<IndexType, IndexType, IndexType, IndexType>>;
-
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock5x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4, VertexAttrib5>,
-			LazyMultiSender<IndexType, IndexType, IndexType, IndexType, IndexType>>;
-
-		template<typename VertexAttrib1, typename VertexAttrib2, typename VertexAttrib3, typename VertexAttrib4, typename VertexAttrib5, typename VertexAttrib6, std::unsigned_integral IndexType>
-		using LazyVertexBufferBlock6x1 = LazyVertexBufferBlock<
-			VertexBufferBlock<VertexAttrib1, VertexAttrib2, VertexAttrib3, VertexAttrib4, VertexAttrib5, VertexAttrib6>,
-			LazyMultiSender<IndexType, IndexType, IndexType, IndexType, IndexType, IndexType>>;
 	}
 }

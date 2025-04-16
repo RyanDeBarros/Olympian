@@ -20,15 +20,15 @@ namespace oly
 		}
 
 		TextureQuadBatch::TextureQuadBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.quads), capacity(capacity), tex_data_ssbo(capacity.textures), quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f), tex_coords_ubo(capacity.uvs), modulation_ubo(capacity.modulations),
-			z_order(capacity.quads), textures(capacity.textures)
+			: ebo(capacity.quads), capacity(capacity), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f),
+			tex_coords_ubo(capacity.uvs * sizeof(TexUVRect)), modulation_ubo(capacity.modulations * sizeof(Modulation)), z_order(capacity.quads), textures(capacity.textures)
 		{
 			shader = shaders::texture_quad_batch;
 			projection_location = glGetUniformLocation(shader, "uProjection");
 			modulation_location = glGetUniformLocation(shader, "uGlobalModulation");
 
-			tex_coords_ubo.send(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
-			modulation_ubo.send(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
+			tex_coords_ubo.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
+			modulation_ubo.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);

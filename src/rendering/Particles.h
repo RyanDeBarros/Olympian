@@ -202,7 +202,7 @@ namespace oly
 		protected:
 			friend Emitter;
 			GLuint shader = 0;
-			rendering::FixedLayoutEBO<GLuint> ebo;
+			rendering::CPUSideEBO<GLuint, rendering::Mutability::IMMUTABLE> ebo;
 			rendering::VertexArray vao;
 
 			struct
@@ -529,7 +529,7 @@ namespace oly
 
 		class PolygonalParticle : public Particle
 		{
-			rendering::VertexBufferBlock<glm::vec2> vbo;
+			rendering::GLBuffer vbo;
 
 		public:
 			PolygonalParticle(const std::vector<glm::vec2>& polygon, const math::Triangulation& triangulation);
@@ -539,7 +539,7 @@ namespace oly
 
 		class EllipticParticle : public Particle
 		{
-			rendering::VertexBufferBlock<glm::vec2, glm::vec2> vbo;
+			rendering::GLBufferBlock<2> vbo_block;
 
 		public:
 			EllipticParticle(float rx, float ry);

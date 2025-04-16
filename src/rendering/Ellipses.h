@@ -25,7 +25,7 @@ namespace oly
 			GLuint shader;
 
 			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO<> ebo;
+			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 			
 		public:
 			struct EllipseDimension
@@ -41,9 +41,9 @@ namespace oly
 			};
 
 		private:
-			rendering::IndexedSSBO<EllipseDimension, GLushort> dimension_ssbo;
-			rendering::IndexedSSBO<ColorGradient, GLushort> color_ssbo;
-			rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
+			rendering::IndexedSSBO<EllipseDimension, GLushort, rendering::Mutability::IMMUTABLE> dimension_ssbo;
+			rendering::IndexedSSBO<ColorGradient, GLushort, rendering::Mutability::IMMUTABLE> color_ssbo;
+			rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> transform_ssbo;
 
 			GLuint projection_location;
 

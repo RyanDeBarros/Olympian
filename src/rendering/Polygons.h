@@ -23,7 +23,7 @@ namespace oly
 			friend renderable::Polygonal;
 			GLuint shader;
 			rendering::VertexArray vao;
-			rendering::FixedLayoutEBO<GLushort, 1> ebo;
+			rendering::CPUSideEBO<GLushort, rendering::Mutability::IMMUTABLE> ebo;
 
 			GLuint projection_location;
 			GLuint degree_location;
@@ -33,9 +33,21 @@ namespace oly
 				POSITION,
 				COLOR
 			};
-			rendering::LazyVertexBufferBlock2x1<glm::vec2, glm::vec4, GLushort> polygon_vbo;
+			rendering::GLBufferBlock<2> vbo_block;
+			struct CPUVertexData
+			{
+				FixedVector<glm::vec2> position;
+				FixedVector<glm::vec4> color;
 
-			rendering::IndexedSSBO<glm::mat3, GLushort> transform_ssbo;
+				CPUVertexData(size_t size) : position(size), color(size) {}
+			} cpudata;
+			struct
+			{
+				std::set<GLushort> position;
+				std::set<GLushort> color;
+			} mutable dirty;
+
+			rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> transform_ssbo;
 
 		public:
 			typedef GLushort PrimitivePos;

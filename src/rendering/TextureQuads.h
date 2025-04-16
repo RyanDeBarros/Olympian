@@ -24,7 +24,7 @@ namespace oly
 
 			GLuint shader;
 			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO<> ebo;
+			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 
 			FixedVector<rendering::BindlessTextureRes> textures;
 
@@ -42,9 +42,9 @@ namespace oly
 				GLuint tex_coord_slot = 0;
 				GLuint color_slot = 0;
 			};
-			rendering::LightweightSSBO<TexData, GLushort> tex_data_ssbo;
-			rendering::IndexedSSBO<QuadInfo, GLushort> quad_info_ssbo;
-			rendering::IndexedSSBO<glm::mat3, GLushort> quad_transform_ssbo;
+			rendering::LightweightSSBO<rendering::Mutability::IMMUTABLE> tex_data_ssbo;
+			rendering::IndexedSSBO<QuadInfo, GLushort, rendering::Mutability::IMMUTABLE> quad_info_ssbo;
+			rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> quad_transform_ssbo;
 
 		public:
 			struct TexUVRect
@@ -56,8 +56,7 @@ namespace oly
 				glm::vec4 colors[4] = {};
 			};
 		private:
-			rendering::LightweightUBO<TexUVRect, GLushort> tex_coords_ubo;
-			rendering::LightweightUBO<Modulation, GLushort> modulation_ubo;
+			rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords_ubo, modulation_ubo;
 
 		public:
 			struct Capacity

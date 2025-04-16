@@ -13,7 +13,7 @@ namespace oly
 	namespace batch
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), polygon_vbo(capacity.vertices),
+			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), cpudata(capacity.vertices),
 			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives })
 		{
 			shader = shaders::polygon_batch;
@@ -21,7 +21,12 @@ namespace oly
 			degree_location = glGetUniformLocation(shader, "uDegree");
 
 			glBindVertexArray(vao);
-			polygon_vbo.vbo().init_layout(oly::rendering::VertexAttribute<>{ 0, 2 }, oly::rendering::VertexAttribute<>{ 1, 4 });
+			glNamedBufferStorage(vbo_block[PolygonAttribute::POSITION], cpudata.position.size() * sizeof(glm::vec2), cpudata.position.data(), GL_DYNAMIC_STORAGE_BIT);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::POSITION]);
+			oly::rendering::VertexAttribute<>{ 0, 2 }.setup();
+			glNamedBufferStorage(vbo_block[PolygonAttribute::COLOR], cpudata.color.size() * sizeof(glm::vec4), cpudata.color.data(), GL_DYNAMIC_STORAGE_BIT);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::COLOR]);
+			oly::rendering::VertexAttribute<>{ 1, 4 }.setup();
 			ebo.init();
 
 			set_projection(projection_bounds);
@@ -65,9 +70,9 @@ namespace oly
 			GLushort vertices_offset = pos * capacity.degree;
 			count = std::min(capacity.degree, count);
 			for (GLushort v = 0; v < count; ++v)
-				polygon_vbo.vbo().vector<PolygonAttribute::POSITION>()[vertices_offset + v] = points[v];
+				cpudata.position[vertices_offset + v] = points[v];
 			for (GLushort v = 0; v < capacity.degree; ++v)
-				polygon_vbo.lazy_send<PolygonAttribute::POSITION>(vertices_offset + v);
+				dirty.position.insert(vertices_offset + v);
 		}
 
 		void PolygonBatch::set_primitive_colors(PrimitivePos pos, const glm::vec4* colors, GLushort count)
@@ -78,15 +83,15 @@ namespace oly
 			if (count == 1)
 			{
 				for (GLushort v = 0; v < capacity.degree; ++v)
-					polygon_vbo.vbo().vector<PolygonAttribute::COLOR>()[vertices_offset + v] = colors[0];
+					cpudata.color[vertices_offset + v] = colors[0];
 			}
 			else
 			{
 				for (GLushort v = 0; v < count; ++v)
-					polygon_vbo.vbo().vector<PolygonAttribute::COLOR>()[vertices_offset + v] = colors[v];
+					cpudata.color[vertices_offset + v] = colors[v];
 			}
 			for (GLushort v = 0; v < capacity.degree; ++v)
-				polygon_vbo.lazy_send<PolygonAttribute::COLOR>(vertices_offset + v);
+				dirty.color.insert(vertices_offset + v);
 		}
 
 		void PolygonBatch::set_primitive_transform(PrimitivePos pos, const glm::mat3& transform)
@@ -431,7 +436,10 @@ namespace oly
 		{
 			for (renderable::Polygonal* poly : polygonal_renderables)
 				poly->flush();
-			polygon_vbo.flush();
+			rendering::batch_send(dirty.position.begin(), dirty.position.end(), vbo_block[PolygonAttribute::POSITION], cpudata.position);
+			dirty.position.clear();
+			rendering::batch_send(dirty.color.begin(), dirty.color.end(), vbo_block[PolygonAttribute::COLOR], cpudata.color);
+			dirty.color.clear();
 			transform_ssbo.flush();
 			ebo.flush();
 		}
