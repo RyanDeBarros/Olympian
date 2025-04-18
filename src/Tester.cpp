@@ -71,6 +71,10 @@ void run()
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
 
+	oly::renderable::Sprite sprite3(sprite2);
+	sprite3.local().position.x = 100;
+	sprite3.post_set();
+
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
 	flag_tesselation_parent.local.position.y = -100;
@@ -278,6 +282,7 @@ void run()
 		oly::stencil::end();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
+		sprite3.draw();
 		sprite_batch.render();
 		polygon_batch.draw(2);
 		particle_system.draw();

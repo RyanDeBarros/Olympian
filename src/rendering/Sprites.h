@@ -234,8 +234,9 @@ namespace oly
 			Transformer2D transformer;
 
 			Sprite(batch::SpriteBatch* sprite_batch);
-			Sprite(const Sprite&) = delete; // TODO implement clone() that copies over texture, tex coord, transformer, and modulation. Transformer2D::clone() should copy upper hierarchy and local, but leave children empty.
+			Sprite(const Sprite&);
 			Sprite(Sprite&&) noexcept;
+			Sprite& operator=(const Sprite&);
 			Sprite& operator=(Sprite&&) noexcept;
 			~Sprite();
 

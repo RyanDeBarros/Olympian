@@ -78,6 +78,7 @@ namespace oly
 	{
 		virtual ~TransformModifier2D() = default;
 		virtual glm::mat3 operator()(const glm::mat3& global) const { return global; }
+		virtual std::unique_ptr<TransformModifier2D> clone() const { return std::make_unique<TransformModifier2D>(); }
 	};
 
 	struct Transformer2D
@@ -95,9 +96,10 @@ namespace oly
 		std::unique_ptr<TransformModifier2D> modifier;
 
 		Transformer2D(Transform2D local = {}, std::unique_ptr<TransformModifier2D>&& modifier = std::make_unique<TransformModifier2D>()) : local(local), modifier(std::move(modifier)) {}
-		Transformer2D(const Transformer2D&) = delete;
+		Transformer2D(const Transformer2D&); // NOTE this does not carry over children
 		Transformer2D(Transformer2D&&) noexcept;
 		~Transformer2D();
+		Transformer2D& operator=(const Transformer2D&); // NOTE this keeps old children
 		Transformer2D& operator=(Transformer2D&&) noexcept;
 
 		glm::mat3 global() const { return (*modifier)(_global); }
@@ -130,10 +132,16 @@ namespace oly
 		glm::vec2 pivot = { 0.5f, 0.5f };
 		glm::vec2 size = { 0.0f, 0.0f };
 
+		PivotTransformModifier2D(glm::vec2 pivot = glm::vec2(0.5f), glm::vec2 size = glm::vec2(0.0f)) : pivot(pivot), size(size) {}
+
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
 			glm::mat3 P = pivot_matrix(pivot, size);
 			return P * global * glm::inverse(P);
+		}
+		virtual std::unique_ptr<TransformModifier2D> clone() const override
+		{
+			return std::make_unique<PivotTransformModifier2D>(pivot, size);
 		}
 	};
 
@@ -146,9 +154,15 @@ namespace oly
 	{
 		glm::vec2 shearing = { 0.0f, 0.0f };
 
+		ShearTransformModifier2D(glm::vec2 shearing = glm::vec2(0.0f)) : shearing(shearing) {}
+
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
 			return global * shearing_matrix(shearing);
+		}
+		virtual std::unique_ptr<TransformModifier2D> clone() const override
+		{
+			return std::make_unique<ShearTransformModifier2D>(shearing);
 		}
 	};
 
@@ -158,10 +172,16 @@ namespace oly
 		glm::vec2 size = { 0.0f, 0.0f };
 		glm::vec2 shearing = { 0.0f, 0.0f };
 
+		PivotShearTransformModifier2D(glm::vec2 pivot = glm::vec2(0.5f), glm::vec2 size = glm::vec2(0.0f), glm::vec2 shearing = glm::vec2(0.0f)) : pivot(pivot), size(size), shearing(shearing) {}
+
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
 			glm::mat3 P = pivot_matrix(pivot, size);
 			return P * global * shearing_matrix(shearing) * glm::inverse(P);
+		}
+		virtual std::unique_ptr<TransformModifier2D> clone() const override
+		{
+			return std::make_unique<PivotShearTransformModifier2D>(pivot, size, shearing);
 		}
 	};
 
@@ -206,6 +226,7 @@ namespace oly
 	{
 		virtual ~TransformModifier3D() = default;
 		virtual glm::mat4 operator()(const glm::mat4& global) const { return global; }
+		virtual std::unique_ptr<TransformModifier3D> clone() const { return std::make_unique<TransformModifier3D>(); }
 	};
 
 	struct Transformer3D
@@ -223,9 +244,10 @@ namespace oly
 		std::unique_ptr<TransformModifier3D> modifier;
 
 		Transformer3D(const Transform3D& local = {}, std::unique_ptr<TransformModifier3D>&& modifier = std::make_unique<TransformModifier3D>()) : local(local), modifier(std::move(modifier)) {}
-		Transformer3D(const Transformer3D&) = delete;
+		Transformer3D(const Transformer3D&);
 		Transformer3D(Transformer3D&&) noexcept;
 		virtual ~Transformer3D();
+		Transformer3D& operator=(const Transformer3D&);
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
 		virtual glm::mat4 global() const { return (*modifier)(_global); }
@@ -258,10 +280,16 @@ namespace oly
 		glm::vec3 pivot = { 0.5f, 0.5f, 0.5f };
 		glm::vec3 size = { 0.0f, 0.0f, 0.0f };
 
+		PivotTransformModifier3D(glm::vec3 pivot = glm::vec3(0.5f), glm::vec3 size = glm::vec3(0.0f)) : pivot(pivot), size(size) {}
+
 		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
 			glm::mat4 P = pivot_matrix(pivot, size);
 			return P * global * glm::inverse(P);
+		}
+		virtual std::unique_ptr<TransformModifier3D> clone() const override
+		{
+			return std::make_unique<PivotTransformModifier3D>(pivot, size);
 		}
 	};
 
@@ -273,10 +301,16 @@ namespace oly
 	struct ShearTransformModifier3D : public TransformModifier3D
 	{
 		glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
-		
+
+		ShearTransformModifier3D(glm::mat3x2 shearing = {}) : shearing(shearing) {}
+
 		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
 			return global * shearing_matrix(shearing);
+		}
+		virtual std::unique_ptr<TransformModifier3D> clone() const override
+		{
+			return std::make_unique<ShearTransformModifier3D>(shearing);
 		}
 	};
 
@@ -286,10 +320,16 @@ namespace oly
 		glm::vec3 size = { 0.0f, 0.0f, 0.0f };
 		glm::mat3x2 shearing = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 
+		PivotShearTransformModifier3D(glm::vec3 pivot = glm::vec3(0.5f), glm::vec3 size = glm::vec3(0.0f), glm::mat3x2 shearing = {}) : pivot(pivot), size(size), shearing(shearing) {}
+
 		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
 			glm::mat4 P = pivot_matrix(pivot, size);
 			return P * global * shearing_matrix(shearing) * glm::inverse(P);
+		}
+		virtual std::unique_ptr<TransformModifier3D> clone() const override
+		{
+			return std::make_unique<PivotShearTransformModifier3D>(pivot, size, shearing);
 		}
 	};
 }

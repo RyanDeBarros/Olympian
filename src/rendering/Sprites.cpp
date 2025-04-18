@@ -113,19 +113,24 @@ namespace oly
 
 		rendering::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 		{
-			QuadInfoStore::Texture tex = quad_info_store.textures.get_object(ssbo.quad_info.vector()[vb_pos].tex_slot);
+			GLuint slot = ssbo.quad_info.vector()[vb_pos].tex_slot;
+			if (slot == 0)
+				return nullptr;
+			QuadInfoStore::Texture tex = quad_info_store.textures.get_object(slot);
 			dimensions = tex.dimensions;
 			return tex.texture;
 		}
 
 		SpriteBatch::TexUVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
 		{
-			return quad_info_store.tex_coords.get_object(ssbo.quad_info.vector()[vb_pos].tex_coord_slot);
+			GLuint slot = ssbo.quad_info.vector()[vb_pos].tex_coord_slot;
+			return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : TexUVRect{};
 		}
 
 		SpriteBatch::Modulation SpriteBatch::get_modulation(GLuint vb_pos) const
 		{
-			return quad_info_store.modulations.get_object(ssbo.quad_info.vector()[vb_pos].color_slot);
+			GLuint slot = ssbo.quad_info.vector()[vb_pos].color_slot;
+			return slot != 0 ? quad_info_store.modulations.get_object(slot) : Modulation{};
 		}
 
 		void SpriteBatch::draw_sprite(GLuint vb_pos)
@@ -148,13 +153,56 @@ namespace oly
 		Sprite::Sprite(batch::SpriteBatch* sprite_batch)
 			: batch(sprite_batch)
 		{
-			vb_pos = batch->gen_sprite_pos();
+			if (batch)
+				vb_pos = batch->gen_sprite_pos();
+			else
+				throw Error(ErrorCode::NULL_POINTER);
+		}
+
+		Sprite::Sprite(const Sprite& other)
+			: batch(other.batch), transformer(other.transformer)
+		{
+			if (batch)
+				vb_pos = batch->gen_sprite_pos();
+			else
+				throw Error(ErrorCode::NULL_POINTER);
+
+			glm::vec2 dim;
+			auto tex = other.get_texture(dim);
+			set_texture(tex, dim);
+			set_tex_coords(other.get_tex_coords());
+			set_modulation(other.get_modulation());
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
 			: batch(other.batch), vb_pos(other.vb_pos), transformer(std::move(other.transformer))
 		{
 			other.batch = nullptr;
+		}
+
+		Sprite& Sprite::operator=(const Sprite& other)
+		{
+			if (this != &other)
+			{
+				if (batch != other.batch)
+				{
+					if (batch)
+						batch->erase_sprite_pos(vb_pos);
+					batch = other.batch;
+					if (batch)
+						vb_pos = batch->gen_sprite_pos();
+					else
+						throw Error(ErrorCode::NULL_POINTER);
+				}
+				transformer = other.transformer;
+
+				glm::vec2 dim;
+				auto tex = other.get_texture(dim);
+				set_texture(tex, dim);
+				set_tex_coords(other.get_tex_coords());
+				set_modulation(other.get_modulation());
+			}
+			return *this;
 		}
 
 		Sprite& Sprite::operator=(Sprite&& other) noexcept

@@ -1,5 +1,13 @@
 #include "Transforms.h"
 
+oly::Transformer2D::Transformer2D(const Transformer2D& other)
+	: local(other.local), modifier(other.modifier->clone()), parent(other.parent), _global(other._global)
+{
+	if (parent)
+		parent->children.insert(this);
+	post_set();
+}
+
 oly::Transformer2D::Transformer2D(Transformer2D&& other) noexcept
 	: local(other.local), modifier(std::move(other.modifier)), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
 {
@@ -12,6 +20,20 @@ oly::Transformer2D::~Transformer2D()
 {
 	unparent();
 	clear_children();
+}
+
+oly::Transformer2D& oly::Transformer2D::operator=(const Transformer2D& other)
+{
+	if (this != &other)
+	{
+		attach_parent(other.parent);
+		local = other.local;
+		modifier = other.modifier->clone();
+		_global = other._global;
+		_dirty_flush = false;
+		post_set();
+	}
+	return *this;
 }
 
 oly::Transformer2D& oly::Transformer2D::operator=(Transformer2D&& other) noexcept
@@ -143,6 +165,14 @@ void oly::Transformer2D::pop_from_chain()
 	children.clear();
 }
 
+oly::Transformer3D::Transformer3D(const Transformer3D& other)
+	: local(other.local), modifier(other.modifier->clone()), parent(other.parent), _global(other._global)
+{
+	if (parent)
+		parent->children.insert(this);
+	post_set();
+}
+
 oly::Transformer3D::Transformer3D(Transformer3D&& other) noexcept
 	: local(other.local), modifier(std::move(other.modifier)), parent(other.parent), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
 {
@@ -155,6 +185,20 @@ oly::Transformer3D::~Transformer3D()
 {
 	unparent();
 	clear_children();
+}
+
+oly::Transformer3D& oly::Transformer3D::operator=(const Transformer3D& other)
+{
+	if (this != &other)
+	{
+		attach_parent(other.parent);
+		local = other.local;
+		modifier = other.modifier->clone();
+		_global = other._global;
+		_dirty_flush = false;
+		post_set();
+	}
+	return *this;
 }
 
 oly::Transformer3D& oly::Transformer3D::operator=(Transformer3D&& other) noexcept
