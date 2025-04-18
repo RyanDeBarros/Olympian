@@ -22,30 +22,36 @@ namespace oly
 		{
 			friend struct renderable::TextureQuad;
 
-			GLuint shader;
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 
 			FixedVector<rendering::BindlessTextureRes> textures;
 
-			GLuint projection_location;
-			GLuint modulation_location;
-
-			struct TexData
+			struct SSBO
 			{
-				GLuint64 handle = 0;
-				glm::vec2 dimensions = {};
-			};
-			struct QuadInfo
-			{
-				GLuint tex_slot = 0;
-				GLuint tex_coord_slot = 0;
-				GLuint color_slot = 0;
-			};
-			rendering::LightweightSSBO<rendering::Mutability::IMMUTABLE> tex_data_ssbo;
-			rendering::IndexedSSBO<QuadInfo, GLushort, rendering::Mutability::IMMUTABLE> quad_info_ssbo;
-			rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> quad_transform_ssbo;
+				struct TexData
+				{
+					GLuint64 handle = 0;
+					glm::vec2 dimensions = {};
+				};
+				struct QuadInfo
+				{
+					GLuint tex_slot = 0;
+					GLuint tex_coord_slot = 0;
+					GLuint color_slot = 0;
+				};
 
+				rendering::LightweightSSBO<rendering::Mutability::IMMUTABLE> tex_data;
+				rendering::IndexedSSBO<QuadInfo, GLushort, rendering::Mutability::IMMUTABLE> quad_info;
+				rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> quad_transform;
+
+				SSBO(GLushort textures, GLushort quads) : tex_data(textures * sizeof(TexData)), quad_info(quads), quad_transform(quads, 1.0f) {}
+			} ssbo;
+
+			struct
+			{
+				GLuint projection, modulation;
+			} shader_locations;
 		public:
 			struct TexUVRect
 			{
@@ -56,7 +62,12 @@ namespace oly
 				glm::vec4 colors[4] = {};
 			};
 		private:
-			rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords_ubo, modulation_ubo;
+			struct UBO
+			{
+				rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords, modulation;
+				
+				UBO(GLushort uvs, GLushort modulations) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)) {}
+			} ubo;
 
 		public:
 			struct Capacity
@@ -99,7 +110,7 @@ namespace oly
 				float z_value = 0.0f;
 
 			private:
-				QuadInfo* _info = nullptr;
+				SSBO::QuadInfo* _info = nullptr;
 				glm::mat3* _transform = nullptr;
 
 			public:
@@ -112,8 +123,8 @@ namespace oly
 
 				const TextureQuadBatch& batch() const { return *_batch; }
 				TextureQuadBatch& batch() { return *_batch; }
-				const QuadInfo& info() const { return *_info; }
-				QuadInfo& info() { return *_info; }
+				const SSBO::QuadInfo& info() const { return *_info; }
+				SSBO::QuadInfo& info() { return *_info; }
 				const glm::mat3& transform() const { return *_transform; }
 				glm::mat3& transform() { return *_transform; }
 				

@@ -15,6 +15,7 @@ namespace oly
 
 	namespace shaders
 	{
+		extern GLuint sprite_batch;
 		extern GLuint texture_quad_batch;
 		extern GLuint polygon_batch;
 		extern GLuint ellipse_batch;

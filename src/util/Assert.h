@@ -12,11 +12,13 @@ namespace oly
 	{
 		if (!condition)
 		{
+			auto prev_level = LOG.level;
 			LOG.level = LOG.error;
 			if (file)
 				LOG << LOG.start_prefix("ASSERT") << description << " at " << file << ":" << line << LOG.nl;
 			else
 				LOG << LOG.start_prefix("ASSERT") << description << LOG.nl;
+			LOG.level = prev_level;
 			// LATER configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
 			__debugbreak();
 		}

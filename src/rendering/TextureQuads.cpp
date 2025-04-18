@@ -20,15 +20,15 @@ namespace oly
 		}
 
 		TextureQuadBatch::TextureQuadBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.quads), capacity(capacity), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_info_ssbo(capacity.quads), quad_transform_ssbo(capacity.quads, 1.0f),
-			tex_coords_ubo(capacity.uvs * sizeof(TexUVRect)), modulation_ubo(capacity.modulations * sizeof(Modulation)), z_order(capacity.quads), textures(capacity.textures)
+			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations),
+			z_order(capacity.quads), textures(capacity.textures)
 		{
-			shader = shaders::texture_quad_batch;
-			projection_location = glGetUniformLocation(shader, "uProjection");
-			modulation_location = glGetUniformLocation(shader, "uGlobalModulation");
+			// TODO create structures that holds a shader resource and its locations
+			shader_locations.projection = glGetUniformLocation(shaders::texture_quad_batch, "uProjection");
+			shader_locations.modulation = glGetUniformLocation(shaders::texture_quad_batch, "uGlobalModulation");
 
-			tex_coords_ubo.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
-			modulation_ubo.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
+			ubo.tex_coords.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
+			ubo.modulation.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
@@ -42,14 +42,14 @@ namespace oly
 
 		void TextureQuadBatch::draw(size_t draw_spec)
 		{
-			glUseProgram(shader);
 			glBindVertexArray(vao);
+			glUseProgram(shaders::texture_quad_batch);
 
-			tex_data_ssbo.bind_base(0);
-			quad_info_ssbo.bind_base(1);
-			quad_transform_ssbo.bind_base(2);
-			tex_coords_ubo.bind_base(0);
-			modulation_ubo.bind_base(1);
+			ssbo.tex_data.bind_base(0);
+			ssbo.quad_info.bind_base(1);
+			ssbo.quad_transform.bind_base(2);
+			ubo.tex_coords.bind_base(0);
+			ubo.modulation.bind_base(1);
 			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
@@ -59,20 +59,20 @@ namespace oly
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos] = texture;
 			texture->use_handle();
-			TexData texture_data;
+			SSBO::TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = texture->get_handle();
-			tex_data_ssbo.send(pos, texture_data);
+			ssbo.tex_data.send(pos, texture_data);
 		}
 
 		void TextureQuadBatch::refresh_handle(GLushort pos, rendering::ImageDimensions dim)
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
-			TexData texture_data;
+			SSBO::TexData texture_data;
 			texture_data.dimensions = { dim.w, dim.h };
 			texture_data.handle = textures[pos]->get_handle();
-			tex_data_ssbo.send(pos, texture_data);
+			ssbo.tex_data.send(pos, texture_data);
 		}
 
 		void TextureQuadBatch::refresh_handle(GLushort pos)
@@ -80,40 +80,40 @@ namespace oly
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
 			GLuint64 handle = textures[pos]->get_handle();
-			tex_data_ssbo.send(pos, &TexData::handle, handle);
+			ssbo.tex_data.send(pos, &SSBO::TexData::handle, handle);
 		}
 
 		void TextureQuadBatch::set_uvs(GLushort pos, const TexUVRect& tex_coords) const
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
-			tex_coords_ubo.send(pos, tex_coords);
+			ubo.tex_coords.send(pos, tex_coords);
 		}
 
 		void TextureQuadBatch::set_modulation(GLushort pos, const Modulation& modulation) const
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
-			modulation_ubo.send(pos, modulation);
+			ubo.modulation.send(pos, modulation);
 		}
 
 		void TextureQuadBatch::set_projection(const glm::vec4& projection_bounds) const
 		{
 			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shader);
-			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
+			glUseProgram(shaders::texture_quad_batch);
+			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
 		void TextureQuadBatch::set_global_modulation(const glm::vec4& modulation) const
 		{
-			glUseProgram(shader);
-			glUniform4f(modulation_location, modulation[0], modulation[1], modulation[2], modulation[3]);
+			glUseProgram(shaders::texture_quad_batch);
+			glUniform4f(shader_locations.modulation, modulation[0], modulation[1], modulation[2], modulation[3]);
 		}
 
 		TextureQuadBatch::QuadReference::QuadReference(TextureQuadBatch* batch)
 			: _batch(batch)
 		{
 			pos = _batch->pos_generator.gen();
-			_info = &_batch->quad_info_ssbo.vector()[pos];
-			_transform = &_batch->quad_transform_ssbo.vector()[pos];
+			_info = &_batch->ssbo.quad_info.vector()[pos];
+			_transform = &_batch->ssbo.quad_transform.vector()[pos];
 			_batch->quad_refs.push_back(this);
 			_batch->dirty_z = true;
 		}
@@ -161,18 +161,18 @@ namespace oly
 
 		void TextureQuadBatch::QuadReference::send_info() const
 		{
-			_batch->quad_info_ssbo.lazy_send(pos);
+			_batch->ssbo.quad_info.lazy_send(pos);
 		}
 
 		void TextureQuadBatch::QuadReference::send_transform() const
 		{
-			_batch->quad_transform_ssbo.lazy_send(pos);
+			_batch->ssbo.quad_transform.lazy_send(pos);
 		}
 
 		void TextureQuadBatch::QuadReference::send_data() const
 		{
-			_batch->quad_info_ssbo.lazy_send(pos);
-			_batch->quad_transform_ssbo.lazy_send(pos);
+			_batch->ssbo.quad_info.lazy_send(pos);
+			_batch->ssbo.quad_transform.lazy_send(pos);
 		}
 
 		void TextureQuadBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
@@ -207,8 +207,8 @@ namespace oly
 		{
 			for (renderable::TextureQuad* texture_quad : texture_quads)
 				texture_quad->flush();
-			quad_info_ssbo.flush();
-			quad_transform_ssbo.flush();
+			ssbo.quad_info.flush();
+			ssbo.quad_transform.flush();
 			flush_z_values();
 			ebo.flush();
 		}

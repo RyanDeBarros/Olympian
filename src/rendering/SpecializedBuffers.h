@@ -84,6 +84,7 @@ namespace oly
 		{
 		public:
 			using VectorAlias = std::conditional_t<M == Mutability::IMMUTABLE, FixedVector<StructType>, std::vector<StructType>>;
+			using StructAlias = StructType;
 
 		protected:
 			VectorAlias cpudata;
@@ -196,37 +197,40 @@ namespace oly
 		};
 
 		template<Mutability M>
-		class LightweightSSBO
+		class LightweightBuffer
 		{
 			GLBuffer buf;
+			mutable GLsizeiptr size = 0;
 
 		public:
-			LightweightSSBO(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE) { glNamedBufferStorage(buf, size_in_bytes, nullptr, flags); }
-			LightweightSSBO(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
-		
+			LightweightBuffer(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE)
+				: size(size_in_bytes) { glNamedBufferStorage(buf, size, nullptr, flags); }
+			LightweightBuffer(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE)
+				: size(size_in_bytes) { glNamedBufferData(buf, size, nullptr, usage); }
+
 			GLuint buffer() const { return buf; }
-			void bind_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf); }
+			GLsizeiptr get_size() const { return size; }
 			template<typename StructType>
 			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
 			template<typename StructType, typename MemberType>
 			void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj); }
-			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
+			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { size = size_in_bytes; glNamedBufferData(buf, size, nullptr, usage); }
 		};
 
 		template<Mutability M>
-		class LightweightUBO
+		struct LightweightSSBO : public LightweightBuffer<M>
 		{
-			GLBuffer buf;
+			using LightweightBuffer<M>::LightweightBuffer;
+		
+			void bind_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, this->buffer()); }
+		};
 
-		public:
-			LightweightUBO(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE) { glNamedBufferStorage(buf, size_in_bytes, nullptr, flags); }
-			LightweightUBO(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
+		template<Mutability M>
+		struct LightweightUBO : public LightweightBuffer<M>
+		{
+			using LightweightBuffer<M>::LightweightBuffer;
 
-			GLuint buffer() const { return buf; }
-			void bind_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf); }
-			template<typename StructType>
-			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
-			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { glNamedBufferData(buf, size_in_bytes, nullptr, usage); }
+			void bind_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, this->buffer()); }
 		};
 
 		enum class VertexAttributeType

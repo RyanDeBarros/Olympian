@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #include <vector>
 #include <array>
@@ -77,6 +78,8 @@ namespace oly
 		struct ImageDimensions
 		{
 			int w = 0, h = 0, cpp = 4;
+
+			glm::vec2 dimensions() const { return { w, h }; }
 		};
 
 		class Image
