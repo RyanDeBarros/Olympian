@@ -97,6 +97,11 @@ namespace oly
 			const VectorAlias& vector() const { return cpudata; }
 			VectorAlias& vector() { return cpudata; }
 			GLuint buffer() const { return buf; }
+
+			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const requires (M == Mutability::IMMUTABLE)
+					{ glNamedBufferStorage(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), flags); }
+			void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
+					{ glNamedBufferData(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), usage); }
 		};
 
 		template<typename StructType, std::unsigned_integral IndexType, Mutability M>
@@ -107,14 +112,8 @@ namespace oly
 		public:
 			using CPUSideBuffer<StructType, M>::CPUSideBuffer;
 
-		protected:
-			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const requires (M == Mutability::IMMUTABLE)
-					{ glNamedBufferStorage(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), flags); }
-			void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
-					{ glNamedBufferData(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), usage); }
-
-		public:
 			void lazy_send(IndexType pos) const { dirty.insert(pos); }
+			void clear_dirty() const { dirty.clear(); }
 			void flush(BufferSendType send_type = BufferSendType::SUBDATA) const
 					{ batch_send(dirty.begin(), dirty.end(), this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size(), send_type); dirty.clear(); }
 		};
@@ -151,18 +150,10 @@ namespace oly
 				draw_spec.offset = (IndexType)(draw_spec.first * sizeof(ElementAlias));
 			}
 
-			void init(GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) const requires (M == Mutability::IMMUTABLE)
-			{
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
-				LazyBuffer<ElementAlias, IndexType, M>::init(flags);
-			}
-			void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
-			{
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf);
-				LazyBuffer<ElementAlias, IndexType, M>::init(usage);
-			}
+			void bind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->buf); }
 			void draw(GLenum mode, GLenum type) const
 			{
+#pragma warning(suppress : 4312)
 				glDrawElements(mode, (GLsizei)draw_spec.count, type, (void*)(draw_spec.offset));
 			}
 		};
@@ -214,7 +205,9 @@ namespace oly
 			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
 			template<typename StructType, typename MemberType>
 			void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj); }
-			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { size = size_in_bytes; glNamedBufferData(buf, size, nullptr, usage); }
+			void resize_empty(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { size = size_in_bytes; glNamedBufferData(buf, size, nullptr, usage); }
+			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { buf.mutable_resize(size_in_bytes, usage, size); size = size_in_bytes; }
+			void grow(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { if (size_in_bytes > size) { buf.mutable_grow(size_in_bytes, usage, size); size = size_in_bytes; } }
 		};
 
 		template<Mutability M>

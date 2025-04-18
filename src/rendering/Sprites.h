@@ -100,39 +100,122 @@ namespace oly
 
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void render() const;
+			void render();
+			void flush() const;
 
 		private:
 			mutable GLuint sprites_to_draw = 0;
+			mutable bool resize_ebo = false;
+			mutable bool resize_sprites = false;
 
 			std::unordered_map<renderable::Sprite*, GLuint> sprites;
 			IDGenerator<GLuint> vb_pos_generator;
 			GLuint gen_sprite_pos();
 			void erase_sprite_pos(GLuint vb_pos);
 
-			template<typename Property>
-			struct SSBOIndexTracker
+			template<typename StoredObjectType, typename StoredObjectTypeHash>
+			class BOStore
 			{
-				Property prop;
-				GLuint usage = 0;
+				struct UsageHolder
+				{
+					StoredObjectType obj;
+					GLuint usage = 0;
+				};
+
+				std::unordered_map<GLuint, UsageHolder> usages;
+				std::unordered_map<StoredObjectType, GLuint, StoredObjectTypeHash> slot_lookup;
+				IDGenerator<GLuint> pos_generator;
+
+				void _decrement_usage(GLuint i)
+				{
+					auto it = usages.find(i);
+					--it->second.usage;
+					if (it->second.usage == 0)
+						erase_slot(it);
+				}
+				
+				void erase_slot(const typename decltype(usages)::iterator& it) { pos_generator.yield(it->first); slot_lookup.erase(it->second.obj); usages.erase(it); }
+
+			public:
+				BOStore() { pos_generator.gen(); /* waste 0th slot */ }
+				
+				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
+				
+				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
+					const StoredObjectType& stored_obj, const std::function<bool(const StoredObjectType&)>& is_default)
+				{ set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj, is_default); }
+				
+				template<typename BufferObjectType>
+				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
+					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj, const std::function<bool(const StoredObjectType&)>& is_default)
+				{
+					if (is_default(stored_obj)) // remove object from sprite
+					{
+						if (slot != 0)
+						{
+							_decrement_usage(slot);
+							slot = 0;
+							sprite_batch.ssbo.quad_info.lazy_send(pos);
+						}
+						return;
+					}
+					if (slot != 0) // sprite has existing object -> decrement its usage
+					{
+						auto it = usages.find(slot);
+						if (stored_obj == it->second.obj) // same object that exists -> do nothing
+							return;
+						--it->second.usage;
+						if (it->second.usage == 0)
+							erase_slot(it);
+					}
+					auto newit = slot_lookup.find(stored_obj);
+					if (newit != slot_lookup.end()) // object already exists -> increment its usage
+					{
+						++usages.find(newit->second)->second.usage;
+						slot = newit->second;
+						sprite_batch.ssbo.quad_info.lazy_send(pos);
+					}
+					else // create new object slot
+					{
+						slot = pos_generator.gen();
+						usages[slot] = { stored_obj, 1 };
+						slot_lookup[stored_obj] = slot;
+						OLY_ASSERT(slot * sizeof(BufferObjectType) <= (GLuint)buffer.get_size());
+						if (slot * sizeof(BufferObjectType) == buffer.get_size())
+							buffer.grow(buffer.get_size() + sizeof(BufferObjectType));
+						buffer.send<BufferObjectType>(slot, buffer_obj);
+						sprite_batch.ssbo.quad_info.lazy_send(pos);
+					}
+				}
+
+				const StoredObjectType& get_object(GLuint slot) const { return usages.find(slot)->second.obj; }
 			};
+
 			struct QuadInfoStore
 			{
 				struct Texture
 				{
 					rendering::BindlessTextureRes texture;
-					glm::vec2 dimensions;
+					glm::vec2 dimensions = {};
+
+					bool operator==(const Texture&) const = default;
 				};
-				std::unordered_map<GLuint, SSBOIndexTracker<Texture>> textures;
-				std::unordered_map<GLuint, SSBOIndexTracker<TexUVRect>> tex_coords;
-				std::unordered_map<GLuint, SSBOIndexTracker<Modulation>> modulations;
+				struct TextureHash
+				{
+					size_t operator()(const Texture& t) const { return std::hash<rendering::BindlessTextureRes>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
+				};
+				BOStore<Texture, TextureHash> textures;
+				BOStore<TexUVRect, TexUVRectHash> tex_coords;
+				BOStore<Modulation, ModulationHash> modulations;
 			} quad_info_store;
 
 			void set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
 			void set_tex_coords(GLuint vb_pos, const TexUVRect& uvs);
 			void set_modulation(GLuint vb_pos, const Modulation& modulation);
 
-			// TODO some kind of (expensive) prune() that gets rid of extra space in ssbos/ubos/quad_info_store?
+			rendering::BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+			TexUVRect get_tex_coords(GLuint vb_pos) const;
+			Modulation get_modulation(GLuint vb_pos) const;
 
 			void draw_sprite(GLuint vb_pos);
 		};
@@ -162,7 +245,10 @@ namespace oly
 			void set_tex_coords(const batch::SpriteBatch::TexUVRect& tex_coords) const;
 			void set_modulation(const batch::SpriteBatch::Modulation& modulation) const;
 
-			// TODO getters
+			rendering::BindlessTextureRes get_texture() const;
+			rendering::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+			batch::SpriteBatch::TexUVRect get_tex_coords() const;
+			batch::SpriteBatch::Modulation get_modulation() const;
 
 			const batch::SpriteBatch& get_batch() const { return *batch; }
 			batch::SpriteBatch& get_batch() { return *batch; }

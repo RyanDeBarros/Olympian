@@ -27,6 +27,7 @@ namespace oly
 			glNamedBufferStorage(vbo_block[PolygonAttribute::COLOR], cpudata.color.size() * sizeof(glm::vec4), cpudata.color.data(), GL_DYNAMIC_STORAGE_BIT);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::COLOR]);
 			oly::rendering::VertexAttribute<>{ 1, 4 }.setup();
+			ebo.bind();
 			ebo.init();
 
 			set_projection(projection_bounds);

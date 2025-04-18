@@ -405,7 +405,7 @@ namespace oly
 
 		struct EmitterParams
 		{
-			bool one_shot = false; // TODO use one_shot
+			bool one_shot = false; // LATER use one_shot
 			float period = 3.0f;
 			GLuint max_live_particles = 3000;
 			spawn_rate::Function spawn_rate;

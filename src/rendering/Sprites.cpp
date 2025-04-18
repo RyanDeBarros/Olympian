@@ -18,31 +18,52 @@ namespace oly
 			ubo.modulation.send<Modulation>(0, {});
 
 			glBindVertexArray(vao);
-			ebo.init();
+			ebo.bind();
+			ebo.init(GL_STREAM_DRAW);
 			glBindVertexArray(0);
 		}
 
-		void SpriteBatch::render() const
+		void SpriteBatch::render()
 		{
-			oly::check_errors();
 			glBindVertexArray(vao);
 			glUseProgram(shaders::sprite_batch);
 			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
 			glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
-
-			ebo.flush();
-			ssbo.quad_info.flush();
-			ssbo.quad_transform.flush();
 
 			ssbo.tex_data.bind_base(0);
 			ssbo.quad_info.bind_base(1);
 			ssbo.quad_transform.bind_base(2);
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
-			glDrawElements(GL_TRIANGLES, (GLsizei)(sprites_to_draw * 6), GL_UNSIGNED_INT, (void*)0);
-			sprites_to_draw = 0;
 
-			oly::check_errors();
+			if (resize_ebo)
+			{
+				resize_ebo = false;
+				ebo.init(GL_STREAM_DRAW);
+				ebo.clear_dirty();
+			}
+			else
+				ebo.flush();
+			ebo.set_draw_spec((GLuint)0, sprites_to_draw);
+			sprites_to_draw = 0;
+			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_INT);
+		}
+
+		void SpriteBatch::flush() const
+		{
+			if (resize_sprites)
+			{
+				resize_sprites = false;
+				ssbo.quad_info.init();
+				ssbo.quad_info.clear_dirty();
+				ssbo.quad_transform.init();
+				ssbo.quad_transform.clear_dirty();
+			}
+			else
+			{
+				ssbo.quad_info.flush();
+				ssbo.quad_transform.flush();
+			}
 		}
 
 		GLuint SpriteBatch::gen_sprite_pos()
@@ -51,16 +72,17 @@ namespace oly
 			OLY_ASSERT(vb_pos <= ssbo.quad_info.vector().size());
 			if (vb_pos == ssbo.quad_info.vector().size())
 			{
-				// TODO batch these gl resizes?
 				ssbo.quad_info.vector().push_back({});
-				glNamedBufferData(ssbo.quad_info.buffer(), ssbo.quad_info.vector().size() * sizeof(decltype(ssbo.quad_info)::StructAlias), ssbo.quad_info.vector().data(), GL_DYNAMIC_DRAW);
 				ssbo.quad_transform.vector().push_back({});
-				glNamedBufferData(ssbo.quad_transform.buffer(), ssbo.quad_transform.vector().size() * sizeof(decltype(ssbo.quad_transform)::StructAlias), ssbo.quad_transform.vector().data(), GL_DYNAMIC_DRAW);
+				resize_sprites = true;
+			}
+			else if (!resize_sprites)
+			{
+				ssbo.quad_info.lazy_send(vb_pos);
+				ssbo.quad_transform.lazy_send(vb_pos);
 			}
 			ssbo.quad_info.vector()[vb_pos] = {};
-			ssbo.quad_info.lazy_send(vb_pos);
 			ssbo.quad_transform.vector()[vb_pos] = glm::mat3(1.0f);
-			ssbo.quad_transform.lazy_send(vb_pos);
 			return vb_pos;
 		}
 
@@ -68,200 +90,42 @@ namespace oly
 		{
 			vb_pos_generator.yield(vb_pos);
 			const SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[vb_pos];
-			if (quad_info.tex_slot != 0)
-			{
-				auto it = quad_info_store.textures.find(quad_info.tex_slot);
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.textures.erase(it);
-			}
-			if (quad_info.tex_coord_slot != 0)
-			{
-				auto it = quad_info_store.tex_coords.find(quad_info.tex_coord_slot);
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.tex_coords.erase(it);
-			}
-			if (quad_info.color_slot != 0)
-			{
-				auto it = quad_info_store.modulations.find(quad_info.color_slot);
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.modulations.erase(it);
-			}
+			quad_info_store.textures.decrement_usage(quad_info.tex_slot);
+			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
+			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
 		}
-
-		// TODO create custom data structures in quad_info_store that are more efficient
 
 		void SpriteBatch::set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
-			SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[vb_pos];
-			if (texture == nullptr) // remove texture from sprite
-			{
-				if (quad_info.tex_slot != 0) // sprite has existing texture -> decrement its usage and remove it
-				{
-					auto it = quad_info_store.textures.find(quad_info.tex_slot);
-					--it->second.usage;
-					if (it->second.usage == 0)
-						quad_info_store.textures.erase(it);
-					quad_info.tex_slot = 0;
-					ssbo.quad_info.lazy_send(vb_pos);
-				}
-				return;
-			}
-			if (quad_info.tex_slot != 0) // sprite has existing texture -> decrement its usage
-			{
-				auto it = quad_info_store.textures.find(quad_info.tex_slot);
-				if (texture == it->second.prop.texture && dimensions == it->second.prop.dimensions) // same texture that exists -> do nothing
-					return;
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.textures.erase(it);
-			}
-			for (auto newit = quad_info_store.textures.begin(); newit != quad_info_store.textures.end(); ++newit)
-			{
-				if (newit->second.prop.texture == texture && newit->second.prop.dimensions == dimensions) // texture exists already -> increment its usage and set it
-				{
-					++newit->second.usage;
-					quad_info.tex_slot = newit->first;
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
-			// create new texture slot (cannot be 0)
-			quad_info.tex_slot = 1;
-			while (true)
-			{
-				if (quad_info_store.textures.count(quad_info.tex_slot))
-					++quad_info.tex_slot;
-				else
-				{
-					quad_info_store.textures[quad_info.tex_slot] = { { texture, dimensions }, 1 };
-					OLY_ASSERT(quad_info.tex_slot * sizeof(SSBO::TexData) <= (GLuint)ssbo.tex_data.get_size());
-					if (quad_info.tex_slot * sizeof(SSBO::TexData) == ssbo.tex_data.get_size())
-					{
-						// TODO batch this resize when calling flush() ? probably not very frequent though
-						ssbo.tex_data.resize(ssbo.tex_data.get_size() + sizeof(SSBO::TexData));
-					}
-					ssbo.tex_data.send<SSBO::TexData>(quad_info.tex_slot, { texture->get_handle(), dimensions });
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
+			quad_info_store.textures.set_object<SSBO::TexData>(ssbo.tex_data, *this, ssbo.quad_info.vector()[vb_pos].tex_slot, vb_pos, { texture, dimensions }, { texture->get_handle(), dimensions },
+				[](const QuadInfoStore::Texture& tex) { return tex.texture == nullptr; });
 		}
 
 		void SpriteBatch::set_tex_coords(GLuint vb_pos, const TexUVRect& uvs)
 		{
-			SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[vb_pos];
-			if (uvs == TexUVRect{}) // remove uvs from sprite
-			{
-				if (quad_info.tex_coord_slot != 0) // sprite has existing uvs -> decrement its usage and remove it
-				{
-					auto it = quad_info_store.tex_coords.find(quad_info.tex_coord_slot);
-					--it->second.usage;
-					if (it->second.usage == 0)
-						quad_info_store.tex_coords.erase(it);
-					quad_info.tex_coord_slot = 0;
-					ssbo.quad_info.lazy_send(vb_pos);
-				}
-				return;
-			}
-			if (quad_info.tex_coord_slot != 0) // sprite has existing uvs -> decrement its usage
-			{
-				auto it = quad_info_store.tex_coords.find(quad_info.tex_coord_slot);
-				if (uvs == it->second.prop) // same uvs that exist -> do nothing
-					return;
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.tex_coords.erase(it);
-			}
-			for (auto newit = quad_info_store.tex_coords.begin(); newit != quad_info_store.tex_coords.end(); ++newit)
-			{
-				if (newit->second.prop == uvs) // uvs exist already -> increment its usage and set it
-				{
-					++newit->second.usage;
-					quad_info.tex_coord_slot = newit->first;
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
-			// create new tex coords slot (cannot be 0)
-			quad_info.tex_coord_slot = 1;
-			while (true)
-			{
-				if (quad_info_store.tex_coords.count(quad_info.tex_coord_slot))
-					++quad_info.tex_coord_slot;
-				else
-				{
-					quad_info_store.tex_coords[quad_info.tex_coord_slot] = { uvs, 1 };
-					OLY_ASSERT(quad_info.tex_coord_slot * sizeof(TexUVRect) <= (GLuint)ubo.tex_coords.get_size());
-					if (quad_info.tex_coord_slot * sizeof(TexUVRect) == ubo.tex_coords.get_size())
-					{
-						// TODO batch this resize when calling flush() ? probably not very frequent though
-						ubo.tex_coords.resize(ubo.tex_coords.get_size() + sizeof(TexUVRect));
-					}
-					ubo.tex_coords.send<TexUVRect>(quad_info.tex_coord_slot, uvs);
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
+			quad_info_store.tex_coords.set_object(ubo.tex_coords, *this, ssbo.quad_info.vector()[vb_pos].tex_coord_slot, vb_pos, uvs, [](const TexUVRect& uvs) { return uvs == TexUVRect{}; });
 		}
 
 		void SpriteBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
 		{
-			SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[vb_pos];
-			if (modulation == Modulation{}) // remove modulation from sprite
-			{
-				if (quad_info.color_slot != 0) // sprite has existing modulation -> decrement its usage and remove it
-				{
-					auto it = quad_info_store.modulations.find(quad_info.color_slot);
-					--it->second.usage;
-					if (it->second.usage == 0)
-						quad_info_store.modulations.erase(it);
-					quad_info.color_slot = 0;
-					ssbo.quad_info.lazy_send(vb_pos);
-				}
-				return;
-			}
-			if (quad_info.color_slot != 0) // sprite has existing modulation -> decrement its usage
-			{
-				auto it = quad_info_store.modulations.find(quad_info.color_slot);
-				if (modulation == it->second.prop) // same modulation that exists -> do nothing
-					return;
-				--it->second.usage;
-				if (it->second.usage == 0)
-					quad_info_store.modulations.erase(it);
-			}
-			for (auto newit = quad_info_store.modulations.begin(); newit != quad_info_store.modulations.end(); ++newit)
-			{
-				if (newit->second.prop == modulation) // modulation exists already -> increment its usage and set it
-				{
-					++newit->second.usage;
-					quad_info.color_slot = newit->first;
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
-			// create new modulation slot (cannot be 0)
-			quad_info.color_slot = 1;
-			while (true)
-			{
-				if (quad_info_store.modulations.count(quad_info.color_slot))
-					++quad_info.color_slot;
-				else
-				{
-					quad_info_store.modulations[quad_info.color_slot] = { modulation, 1 };
-					OLY_ASSERT(quad_info.color_slot * sizeof(Modulation) <= (GLuint)ubo.modulation.get_size());
-					if (quad_info.color_slot * sizeof(Modulation) == ubo.modulation.get_size())
-					{
-						// TODO batch this resize when calling flush() ? probably not very frequent though
-						ubo.modulation.resize(ubo.modulation.get_size() + sizeof(Modulation));
-					}
-					ubo.modulation.send<Modulation>(quad_info.color_slot, modulation);
-					ssbo.quad_info.lazy_send(vb_pos);
-					return;
-				}
-			}
+			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.vector()[vb_pos].color_slot, vb_pos, modulation, [](const Modulation& modulation) { return modulation == Modulation{}; });
+		}
+
+		rendering::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
+		{
+			QuadInfoStore::Texture tex = quad_info_store.textures.get_object(ssbo.quad_info.vector()[vb_pos].tex_slot);
+			dimensions = tex.dimensions;
+			return tex.texture;
+		}
+
+		SpriteBatch::TexUVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
+		{
+			return quad_info_store.tex_coords.get_object(ssbo.quad_info.vector()[vb_pos].tex_coord_slot);
+		}
+
+		SpriteBatch::Modulation SpriteBatch::get_modulation(GLuint vb_pos) const
+		{
+			return quad_info_store.modulations.get_object(ssbo.quad_info.vector()[vb_pos].color_slot);
 		}
 
 		void SpriteBatch::draw_sprite(GLuint vb_pos)
@@ -269,13 +133,12 @@ namespace oly
 			OLY_ASSERT(sprites_to_draw <= ebo.vector().size());
 			if (sprites_to_draw == ebo.vector().size())
 			{
-				// resize
-				// TODO batch this resize in render()
+				resize_ebo = true;
 				ebo.vector().push_back({});
-				glNamedBufferData(ebo.buffer(), ebo.vector().size() * sizeof(decltype(ebo)::StructAlias), ebo.vector().data(), GL_DYNAMIC_DRAW);
 			}
+			else if (!resize_ebo)
+				ebo.lazy_send(sprites_to_draw);
 			rendering::quad_indices(ebo.vector()[sprites_to_draw].data, vb_pos);
-			ebo.lazy_send(sprites_to_draw);
 			++sprites_to_draw;
 		}
 	}
@@ -333,6 +196,27 @@ namespace oly
 		void Sprite::set_modulation(const batch::SpriteBatch::Modulation& modulation) const
 		{
 			batch->set_modulation(vb_pos, modulation);
+		}
+
+		rendering::BindlessTextureRes Sprite::get_texture() const
+		{
+			glm::vec2 _;
+			return get_texture(_);
+		}
+
+		rendering::BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const
+		{
+			return batch->get_texture(vb_pos, dimensions);
+		}
+
+		batch::SpriteBatch::TexUVRect Sprite::get_tex_coords() const
+		{
+			return batch->get_tex_coords(vb_pos);
+		}
+
+		batch::SpriteBatch::Modulation Sprite::get_modulation() const
+		{
+			return batch->get_modulation(vb_pos);
 		}
 
 		void Sprite::post_set() const

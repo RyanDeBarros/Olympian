@@ -19,6 +19,7 @@ namespace oly
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
+			ebo.bind();
 			ebo.init();
 			glBindVertexArray(0);
 

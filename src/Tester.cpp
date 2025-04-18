@@ -1,7 +1,6 @@
 ﻿#include "Olympian.h"
 
 #include "rendering/Sprites.h"
-#include "rendering/TextureQuads.h"
 #include "rendering/Polygons.h"
 #include "rendering/Ellipses.h"
 #include "rendering/Particles.h"
@@ -47,32 +46,7 @@ void run()
 	tux_texture->set_handle();
 	tux_texture->use_handle();
 
-	//oly::batch::TextureQuadBatch texture_quad_batch({ 1000, 5, 2, 2 }, window.projection_bounds());
-	//enum
-	//{
-	//	TEX_EINSTEIN = 1,
-	//	TEX_FLAG = 2,
-	//	TEX_TUX = 3
-	//};
-	//texture_quad_batch.set_texture(TEX_EINSTEIN, einstein_texture, einstein_texture_dim);
-	//texture_quad_batch.set_texture(TEX_FLAG, flag_texture, flag_texture_dim);
-	//texture_quad_batch.set_texture(TEX_TUX, tux_texture, tux_texture_dim);
-	//texture_quad_batch.set_uvs(1, { { { 0.5f, 0 }, { 1, 0 }, { 1, 1 }, { 0.5f, 1 } } });
-	//texture_quad_batch.set_modulation(1, { {
-	//	{ 1.0f, 1.0f, 0.2f, 0.5f },
-	//	{ 0.2f, 1.0f, 1.0f, 0.5f },
-	//	{ 1.0f, 0.2f, 1.0f, 0.5f },
-	//	{ 0.5f, 0.5f, 0.5f, 0.5f }
-	//	} });
-
-	oly::batch::SpriteBatch sprite_batch({ 50, 5, 2, 2 }, window.projection_bounds());
-
-	//oly::renderable::TextureQuad texture_quad0(&texture_quad_batch);
-	//texture_quad0.quad.info().tex_slot = TEX_EINSTEIN;
-	//texture_quad0.quad.send_info();
-	//texture_quad0.local().position.x = 300;
-	//texture_quad0.local().position.y = 300;
-	//texture_quad0.post_set();
+	oly::batch::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
 	oly::renderable::Sprite sprite0(&sprite_batch);
 	sprite0.set_texture(einstein_texture, einstein_texture_dim.dimensions());
@@ -80,30 +54,14 @@ void run()
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	//oly::renderable::TextureQuad texture_quad1(&texture_quad_batch);
-	//texture_quad1.quad.info().tex_slot = TEX_EINSTEIN;
-	//texture_quad1.quad.info().color_slot = 1;
-	//texture_quad1.quad.send_info();
-
 	oly::renderable::Sprite sprite1(&sprite_batch);
 	sprite1.set_texture(einstein_texture, einstein_texture_dim.dimensions());
 	sprite1.set_modulation({ {
-		{ 1.0f, 1.0f, 0.2f, 0.5f },
-		{ 0.2f, 1.0f, 1.0f, 0.5f },
-		{ 1.0f, 0.2f, 1.0f, 0.5f },
-		{ 0.5f, 0.5f, 0.5f, 0.5f }
+		{ 1.0f, 1.0f, 0.2f, 0.7f },
+		{ 0.2f, 1.0f, 1.0f, 0.7f },
+		{ 1.0f, 0.2f, 1.0f, 0.7f },
+		{ 0.5f, 0.5f, 0.5f, 0.7f }
 	} });
-
-	//oly::renderable::TextureQuad texture_quad2(&texture_quad_batch);
-	//texture_quad2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
-	//texture_quad2.quad.info().tex_slot = TEX_TUX;
-	//texture_quad2.quad.send_info();
-	//texture_quad2.local().position.x = -100;
-	//texture_quad2.local().position.y = -100;
-	//texture_quad2.local().scale = glm::vec2(0.2f);
-	//texture_quad2.post_set();
-	//texture_quad2.quad.z_value = 1.0f;
-	//texture_quad2.quad.send_z_value();
 
 	oly::renderable::Sprite sprite2(&sprite_batch);
 	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
@@ -112,30 +70,6 @@ void run()
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
-
-	//oly::Transformer2D flag_tesselation_parent;
-	//flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
-	//flag_tesselation_parent.local.position.y = -100;
-	//auto& flag_tesselation_modifier = flag_tesselation_parent.get_modifier<oly::PivotShearTransformModifier2D>();
-	//flag_tesselation_modifier.pivot = { 0.0f, 0.0f };
-	//flag_tesselation_modifier.size = { 400, 320 };
-	//flag_tesselation_modifier.shearing = { 0, 1 };
-	//flag_tesselation_parent.post_set();
-	//std::vector<oly::renderable::TextureQuad> flag_tesselation;
-	//int flag_rows = 8;
-	//int flag_cols = 8;
-	//flag_tesselation.reserve(flag_rows * flag_cols);
-	//for (int i = 0; i < flag_rows * flag_cols; ++i)
-	//{
-	//	flag_tesselation.emplace_back(&texture_quad_batch);
-	//	flag_tesselation[i].quad.info().tex_slot = TEX_FLAG;
-	//	flag_tesselation[i].quad.send_info();
-	//	flag_tesselation[i].local().scale = glm::vec2(2);
-	//	flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
-	//	flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
-	//	flag_tesselation[i].post_set();
-	//	flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
-	//}
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -159,10 +93,6 @@ void run()
 		flag_tesselation[i].post_set();
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
-
-	//texture_quad_batch.draw_specs.resize(3);
-	//texture_quad_batch.draw_specs[1] = { 0, 3 };
-	//texture_quad_batch.draw_specs[2] = { 3, 97 };
 
 	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, window.projection_bounds());
 
@@ -313,15 +243,9 @@ void run()
 		concave_shape.transformer.local.rotation += 0.5f * oly::TIME.delta<float>();
 		concave_shape.post_set();
 
-		//texture_quad1.local().rotation = oly::TIME.now<float>();
-		//texture_quad1.post_set();
-		
 		sprite1.local().rotation = oly::TIME.now<float>();
 		sprite1.post_set();
 
-		//texture_quad2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
-		//texture_quad2.post_set();
-		
 		sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
 		sprite2.post_set();
 
@@ -332,7 +256,7 @@ void run()
 		flag_tesselation_parent.flush();
 		
 		// flush buffers
-		//texture_quad_batch.flush();
+		sprite_batch.flush();
 		polygon_batch.flush();
 		ellipse_batch.flush();
 
@@ -347,13 +271,11 @@ void run()
 		polygon_batch.draw(1);
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
-		//texture_quad_batch.draw(1);
 		sprite0.draw();
 		sprite1.draw();
 		sprite2.draw();
 		sprite_batch.render();
 		oly::stencil::end();
-		//texture_quad_batch.draw(2);
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		sprite_batch.render();

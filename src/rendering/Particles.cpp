@@ -537,6 +537,7 @@ namespace oly
 				indices[3 * i + 1] = triangulation[i][1];
 				indices[3 * i + 2] = triangulation[i][2];
 			}
+			ebo.bind();
 			ebo.init();
 			glBindVertexArray(0);
 		}
@@ -581,6 +582,7 @@ namespace oly
 			indices[3] = 2;
 			indices[4] = 3;
 			indices[5] = 0;
+			ebo.bind();
 			ebo.init();
 			glBindVertexArray(0);
 		}
