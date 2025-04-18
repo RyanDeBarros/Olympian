@@ -14,8 +14,7 @@ namespace oly
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses)
 		{
-			shader = shaders::ellipse_batch;
-			projection_location = glGetUniformLocation(shader, "uProjection");
+			projection_location = shaders::location(shaders::ellipse_batch, "uProjection");
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
@@ -29,7 +28,7 @@ namespace oly
 
 		void EllipseBatch::draw(size_t draw_spec)
 		{
-			glUseProgram(shader);
+			glUseProgram(shaders::ellipse_batch);
 			glBindVertexArray(vao);
 
 			dimension_ssbo.bind_base(0);
@@ -42,7 +41,7 @@ namespace oly
 		void EllipseBatch::set_projection(const glm::vec4& projection_bounds) const
 		{
 			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shader);
+			glUseProgram(shaders::ellipse_batch);
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 

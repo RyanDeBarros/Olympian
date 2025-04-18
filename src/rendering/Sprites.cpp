@@ -11,8 +11,8 @@ namespace oly
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations), projection_bounds(projection_bounds)
 		{
-			shader_locations.projection = glGetUniformLocation(shaders::sprite_batch, "uProjection");
-			shader_locations.modulation = glGetUniformLocation(shaders::sprite_batch, "uGlobalModulation");
+			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
+			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
 
 			ubo.tex_coords.send<TexUVRect>(0, {});
 			ubo.modulation.send<Modulation>(0, {});

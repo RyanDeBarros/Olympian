@@ -17,8 +17,8 @@ namespace oly
 			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives })
 		{
 			shader = shaders::polygon_batch;
-			projection_location = glGetUniformLocation(shader, "uProjection");
-			degree_location = glGetUniformLocation(shader, "uDegree");
+			projection_location = shaders::location(shader, "uProjection");
+			degree_location = shaders::location(shader, "uDegree");
 
 			glBindVertexArray(vao);
 			glNamedBufferStorage(vbo_block[PolygonAttribute::POSITION], cpudata.position.size() * sizeof(glm::vec2), cpudata.position.data(), GL_DYNAMIC_STORAGE_BIT);

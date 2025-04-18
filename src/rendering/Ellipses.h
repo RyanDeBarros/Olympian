@@ -22,8 +22,6 @@ namespace oly
 		{
 			friend struct renderable::Ellipse;
 
-			GLuint shader;
-
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 			

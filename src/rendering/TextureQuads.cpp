@@ -23,9 +23,8 @@ namespace oly
 			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations),
 			z_order(capacity.quads), textures(capacity.textures)
 		{
-			// TODO create structures that holds a shader resource and its locations
-			shader_locations.projection = glGetUniformLocation(shaders::texture_quad_batch, "uProjection");
-			shader_locations.modulation = glGetUniformLocation(shaders::texture_quad_batch, "uGlobalModulation");
+			shader_locations.projection = shaders::location(shaders::texture_quad_batch, "uProjection");
+			shader_locations.modulation = shaders::location(shaders::texture_quad_batch, "uGlobalModulation");
 
 			ubo.tex_coords.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
 			ubo.modulation.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });

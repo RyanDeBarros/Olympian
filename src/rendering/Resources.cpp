@@ -49,6 +49,19 @@ namespace oly
 		static std::unique_ptr<rendering::Shader> _elliptic_particle = nullptr;
 		GLuint elliptic_particle;
 
+		std::unordered_map<GLuint, std::unordered_map<std::string, GLuint>> locations;
+
+		GLuint location(GLuint shader, const std::string& uniform)
+		{
+			auto locmap = locations.find(shader);
+			if (locmap == locations.end())
+				locmap = locations.insert({ shader, {} }).first;
+			auto it = locmap->second.find(uniform);
+			if (it == locmap->second.end())
+				it = locmap->second.insert({ uniform, glGetUniformLocation(shader, uniform.c_str()) }).first;
+			return it->second;
+		}
+
 		void load()
 		{
 			_sprite_batch = rendering::load_shader((shaders_dir + "sprite_batch.vert").c_str(), (shaders_dir + "sprite_batch.frag").c_str());
@@ -79,6 +92,8 @@ namespace oly
 			polygonal_particle = 0;
 			_elliptic_particle.reset();
 			elliptic_particle = 0;
+
+			locations.clear();
 		}
 	}
 

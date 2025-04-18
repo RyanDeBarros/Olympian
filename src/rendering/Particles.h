@@ -219,6 +219,8 @@ namespace oly
 			} draw_spec;
 
 			Particle(GLuint ebo_size);
+			
+			void load_locations();
 
 		public:
 			virtual ~Particle() = default;

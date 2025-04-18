@@ -22,6 +22,7 @@ namespace oly
 		extern GLuint polygonal_particle;
 		extern GLuint elliptic_particle;
 		
+		extern GLuint location(GLuint shader, const std::string& uniform);
 		extern void load();
 		extern void unload();
 	}

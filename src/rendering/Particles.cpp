@@ -183,6 +183,12 @@ namespace oly
 		{
 		}
 
+		void Particle::load_locations()
+		{
+			locations.projection = shaders::location(shader, "uProjection");
+			locations.transform = shaders::location(shader, "uTransform");
+		}
+
 		void Particle::set_projection(const glm::vec4& projection_bounds) const
 		{
 			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
@@ -521,10 +527,8 @@ namespace oly
 			OLY_ASSERT(polygon.size() >= 3);
 
 			shader = shaders::polygonal_particle;
+			load_locations();
 			draw_spec.count = (GLsizei)ebo.vector().size();
-
-			locations.projection = glGetUniformLocation(shader, "uProjection");
-			locations.projection = glGetUniformLocation(shader, "uTransform");
 
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -551,10 +555,8 @@ namespace oly
 			: Particle(6)
 		{
 			shader = shaders::elliptic_particle;
+			load_locations();
 			draw_spec.count = (GLsizei)ebo.vector().size();
-
-			locations.projection = glGetUniformLocation(shader, "uProjection");
-			locations.projection = glGetUniformLocation(shader, "uTransform");
 
 			glBindVertexArray(vao);
 			glm::vec2 vertices[4] = {
