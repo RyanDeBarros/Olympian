@@ -1,8 +1,8 @@
 ﻿#include "Olympian.h"
 
-#include "rendering/Sprites.h"
-#include "rendering/Polygons.h"
-#include "rendering/Ellipses.h"
+#include "rendering/mutable/Sprites.h"
+#include "rendering/immutable/Polygons.h"
+#include "rendering/immutable/Ellipses.h"
 #include "rendering/Particles.h"
 #include "rendering/Loader.h"
 
@@ -46,15 +46,15 @@ void run()
 	tux_texture->set_handle();
 	tux_texture->use_handle();
 
-	oly::batch::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
+	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
-	oly::renderable::Sprite sprite0(&sprite_batch);
+	oly::mut::Sprite sprite0(&sprite_batch);
 	sprite0.set_texture(einstein_texture, einstein_texture_dim.dimensions());
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::renderable::Sprite sprite1(&sprite_batch);
+	oly::mut::Sprite sprite1(&sprite_batch);
 	sprite1.set_texture(einstein_texture, einstein_texture_dim.dimensions());
 	sprite1.set_modulation({ {
 		{ 1.0f, 1.0f, 0.2f, 0.7f },
@@ -63,7 +63,7 @@ void run()
 		{ 0.5f, 0.5f, 0.5f, 0.7f }
 	} });
 
-	oly::renderable::Sprite sprite2(&sprite_batch);
+	oly::mut::Sprite sprite2(&sprite_batch);
 	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
 	sprite2.set_texture(tux_texture, tux_texture_dim.dimensions());
 	sprite2.local().position.x = -100;
@@ -71,7 +71,7 @@ void run()
 	sprite2.local().scale = glm::vec2(0.2f);
 	sprite2.post_set();
 
-	oly::renderable::Sprite sprite3(sprite2);
+	oly::mut::Sprite sprite3(sprite2);
 	sprite3.local().position.x = 100;
 	sprite3.post_set();
 
@@ -83,7 +83,7 @@ void run()
 	flag_tesselation_modifier.size = { 400, 320 };
 	flag_tesselation_modifier.shearing = { 0, 1 };
 	flag_tesselation_parent.post_set();
-	std::vector<oly::renderable::Sprite> flag_tesselation;
+	std::vector<oly::mut::Sprite> flag_tesselation;
 	int flag_rows = 8;
 	int flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
@@ -98,9 +98,9 @@ void run()
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	oly::batch::PolygonBatch polygon_batch({ 100, 4 }, window.projection_bounds());
+	oly::immut::PolygonBatch polygon_batch({ 100, 4 }, window.projection_bounds());
 
-	oly::renderable::Polygon pentagon1(&polygon_batch);
+	oly::immut::Polygon pentagon1(&polygon_batch);
 	pentagon1.polygon.points = {
 		{ 1, -1 },
 		{ 1, 0 },
@@ -120,7 +120,7 @@ void run()
 	pentagon1.post_set();
 	pentagon1.init();
 
-	oly::renderable::Polygon pentagon2(&polygon_batch);
+	oly::immut::Polygon pentagon2(&polygon_batch);
 	pentagon2.polygon = pentagon1.polygon;
 	pentagon2.transformer.local.position.x = -250;
 	pentagon2.transformer.local.rotation = -1;
@@ -131,7 +131,7 @@ void run()
 		color.a = 0.5f;
 	pentagon2.init();
 
-	oly::renderable::Composite bordered_triangle(&polygon_batch);
+	oly::immut::Composite bordered_triangle(&polygon_batch);
 	bordered_triangle.composite = oly::math::create_bordered_triangle({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 });
 	bordered_triangle.transformer.local.position.x = 100;
 	bordered_triangle.transformer.local.position.y = -100;
@@ -141,7 +141,7 @@ void run()
 	bordered_triangle.composite = oly::math::create_bordered_quad({ 0.9f, 0.9f, 0.7f, 1.0f }, { 0.3f, 0.15f, 0.0f, 1.0f }, 0.1f, oly::math::BorderPivot::MIDDLE, { 3, -1 }, { 0, 2 }, { -3, -1 }, { 0, 0 });
 	bordered_triangle.resize();
 
-	oly::renderable::NGon octagon(&polygon_batch);
+	oly::immut::NGon octagon(&polygon_batch);
 	octagon.local() = { { 300, 200 }, 0, { 200, 200 } };
 	octagon.base.fill_colors = { { 0.0f, 1.0f, 0.0f, 0.7f } };
 	octagon.base.border_colors = {
@@ -168,7 +168,7 @@ void run()
 	octagon.bordered = true;
 	octagon.init();
 
-	oly::renderable::Composite concave_shape(&polygon_batch);
+	oly::immut::Composite concave_shape(&polygon_batch);
 	concave_shape.local() = { { -200, 200 }, 0, glm::vec2(60) };
 	concave_shape.composite = oly::math::composite_convex_decomposition({
 		{ -4,  0 },
@@ -195,16 +195,16 @@ void run()
 
 	polygon_batch.draw_specs.resize(3);
 	{
-		oly::batch::PolygonBatch::RangeID post_octagon_id = -1;
+		oly::immut::PolygonBatch::RangeID post_octagon_id = -1;
 		OLY_ASSERT(polygon_batch.get_next_draw_id(octagon.get_id(), post_octagon_id));
 		auto post_octagon_range = polygon_batch.get_index_range(post_octagon_id);
 		polygon_batch.draw_specs[1] = { 0, post_octagon_range.initial };
 		polygon_batch.draw_specs[2] = { post_octagon_range.initial, polygon_batch.get_capacity().indices };
 	}
 
-	oly::batch::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
+	oly::immut::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
 
-	oly::renderable::Ellipse ellipse1(&ellipse_batch);
+	oly::immut::Ellipse ellipse1(&ellipse_batch);
 	ellipse1.ellipse.dimension() = { 2, 1, 0.3f, 1.0f, 1.0f };
 	ellipse1.ellipse.color().fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
 	ellipse1.ellipse.color().fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
@@ -214,7 +214,7 @@ void run()
 	ellipse1.post_set();
 	ellipse1.ellipse.send_data();
 	
-	oly::renderable::Ellipse ellipse2(&ellipse_batch);
+	oly::immut::Ellipse ellipse2(&ellipse_batch);
 	ellipse2.ellipse.dimension() = { 1, 3, 0.4f, 0.5f, 2.0f };
 	ellipse2.ellipse.color().fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
 	ellipse2.ellipse.color().fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };

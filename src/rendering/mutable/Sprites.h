@@ -1,8 +1,7 @@
 #pragma once
 
-#include "core/Core.h"
+#include "../SpecializedBuffers.h"
 #include "math/Transforms.h"
-#include "SpecializedBuffers.h"
 #include "util/FreeSpaceTracker.h"
 #include "util/IDGenerator.h"
 
@@ -11,16 +10,13 @@
 
 namespace oly
 {
-	namespace renderable
+	namespace mut
 	{
 		struct Sprite;
-	}
 
-	namespace batch
-	{
 		class SpriteBatch
 		{
-			friend struct renderable::Sprite;
+			friend struct Sprite;
 			
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<rendering::Mutability::MUTABLE, GLuint> ebo;
@@ -108,7 +104,7 @@ namespace oly
 			mutable bool resize_ebo = false;
 			mutable bool resize_sprites = false;
 
-			std::unordered_map<renderable::Sprite*, GLuint> sprites;
+			std::unordered_map<Sprite*, GLuint> sprites;
 			IDGenerator<GLuint> vb_pos_generator;
 			GLuint gen_sprite_pos();
 			void erase_sprite_pos(GLuint vb_pos);
@@ -219,21 +215,18 @@ namespace oly
 
 			void draw_sprite(GLuint vb_pos);
 		};
-	}
 
-	namespace renderable
-	{
 		struct Sprite
 		{
 		private:
-			friend class batch::SpriteBatch;
-			batch::SpriteBatch* batch;
+			friend class SpriteBatch;
+			SpriteBatch* batch;
 			GLuint vb_pos;
 
 		public:
 			Transformer2D transformer;
 
-			Sprite(batch::SpriteBatch* sprite_batch);
+			Sprite(SpriteBatch* sprite_batch);
 			Sprite(const Sprite&);
 			Sprite(Sprite&&) noexcept;
 			Sprite& operator=(const Sprite&);
@@ -243,16 +236,16 @@ namespace oly
 			void draw() const;
 
 			void set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
-			void set_tex_coords(const batch::SpriteBatch::TexUVRect& tex_coords) const;
-			void set_modulation(const batch::SpriteBatch::Modulation& modulation) const;
+			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
+			void set_modulation(const SpriteBatch::Modulation& modulation) const;
 
 			rendering::BindlessTextureRes get_texture() const;
 			rendering::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
-			batch::SpriteBatch::TexUVRect get_tex_coords() const;
-			batch::SpriteBatch::Modulation get_modulation() const;
+			SpriteBatch::TexUVRect get_tex_coords() const;
+			SpriteBatch::Modulation get_modulation() const;
 
-			const batch::SpriteBatch& get_batch() const { return *batch; }
-			batch::SpriteBatch& get_batch() { return *batch; }
+			const SpriteBatch& get_batch() const { return *batch; }
+			SpriteBatch& get_batch() { return *batch; }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local

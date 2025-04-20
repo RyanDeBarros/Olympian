@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "SpecializedBuffers.h"
+#include "../SpecializedBuffers.h"
 #include "math/Transforms.h"
 #include "math/Geometry.h"
 #include "util/FixedVector.h"
@@ -11,16 +11,13 @@
 
 namespace oly
 {
-	namespace renderable
+	namespace immut
 	{
 		class Polygonal;
-	}
 
-	namespace batch
-	{
 		class PolygonBatch
 		{
-			friend renderable::Polygonal;
+			friend class Polygonal;
 			GLuint shader;
 			rendering::VertexArray vao;
 			rendering::CPUSideEBO<GLushort, rendering::Mutability::IMMUTABLE> ebo;
@@ -162,34 +159,31 @@ namespace oly
 			std::map<PrimitivePos, RangeID> id_order;
 			IDGenerator<RangeID> id_generator;
 
-			std::unordered_set<renderable::Polygonal*> polygonal_renderables;
+			std::unordered_set<Polygonal*> polygonal_renderables;
 
 		public:
 			void flush() const;
 		};
-	}
 
-	namespace renderable
-	{
 		class Polygonal
 		{
-			friend batch::PolygonBatch;
-			batch::PolygonBatch* _batch = nullptr;
-			batch::PolygonBatch::RangeID id = -1;
+			friend PolygonBatch;
+			PolygonBatch* _batch = nullptr;
+			PolygonBatch::RangeID id = -1;
 
 		public:
 			Transformer2D transformer;
 
-			Polygonal(batch::PolygonBatch* batch);
+			Polygonal(PolygonBatch* batch);
 			Polygonal(const Polygonal&) = delete;
 			Polygonal(Polygonal&&) noexcept;
 			virtual ~Polygonal();
 			Polygonal& operator=(Polygonal&&) noexcept;
 
-			const batch::PolygonBatch* batch() const { return _batch; }
-			batch::PolygonBatch* batch() { return _batch; }
-			batch::PolygonBatch::RangeID get_id() const { return id; }
-			Range<batch::PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id); }
+			const PolygonBatch* batch() const { return _batch; }
+			PolygonBatch* batch() { return _batch; }
+			PolygonBatch::RangeID get_id() const { return id; }
+			Range<PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local

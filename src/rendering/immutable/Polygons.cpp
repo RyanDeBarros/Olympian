@@ -4,13 +4,13 @@
 
 #include <algorithm>
 
-#include "Resources.h"
+#include "../Resources.h"
 #include "util/General.h"
 #include "math/DataStructures.h"
 
 namespace oly
 {
-	namespace batch
+	namespace immut
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), cpudata(capacity.vertices),
@@ -435,7 +435,7 @@ namespace oly
 
 		void PolygonBatch::flush() const
 		{
-			for (renderable::Polygonal* poly : polygonal_renderables)
+			for (Polygonal* poly : polygonal_renderables)
 				poly->flush();
 			rendering::batch_send(dirty.position.begin(), dirty.position.end(), vbo_block[PolygonAttribute::POSITION], cpudata.position);
 			dirty.position.clear();
@@ -444,11 +444,8 @@ namespace oly
 			transform_ssbo.flush();
 			ebo.flush();
 		}
-	}
 
-	namespace renderable
-	{
-		Polygonal::Polygonal(batch::PolygonBatch* batch)
+		Polygonal::Polygonal(PolygonBatch* batch)
 			: _batch(batch)
 		{
 			_batch->polygonal_renderables.insert(this);
@@ -500,7 +497,7 @@ namespace oly
 		
 		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(id == batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(id == PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, composite, transformer.global());
@@ -508,7 +505,7 @@ namespace oly
 
 		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(id == batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(id == PolygonBatch::RangeID(-1));
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, std::move(composite), transformer.global());
@@ -516,7 +513,7 @@ namespace oly
 
 		void Polygonal::resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(this->id != batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(this->id != PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, composite, transformer.global());
@@ -524,7 +521,7 @@ namespace oly
 
 		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(this->id != batch::PolygonBatch::RangeID(-1));
+			OLY_ASSERT(this->id != PolygonBatch::RangeID(-1));
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id, std::move(composite), transformer.global());

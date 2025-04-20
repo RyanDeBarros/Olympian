@@ -2,11 +2,11 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Resources.h"
+#include "../Resources.h"
 
 namespace oly
 {
-	namespace batch
+	namespace mut
 	{
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations), projection_bounds(projection_bounds)
@@ -146,11 +146,8 @@ namespace oly
 			rendering::quad_indices(ebo.vector()[sprites_to_draw].data, vb_pos);
 			++sprites_to_draw;
 		}
-	}
 
-	namespace renderable
-	{
-		Sprite::Sprite(batch::SpriteBatch* sprite_batch)
+		Sprite::Sprite(SpriteBatch* sprite_batch)
 			: batch(sprite_batch)
 		{
 			if (batch)
@@ -236,12 +233,12 @@ namespace oly
 			batch->set_texture(vb_pos, texture, dimensions);
 		}
 		
-		void Sprite::set_tex_coords(const batch::SpriteBatch::TexUVRect& tex_coords) const
+		void Sprite::set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const
 		{
 			batch->set_tex_coords(vb_pos, tex_coords);
 		}
 
-		void Sprite::set_modulation(const batch::SpriteBatch::Modulation& modulation) const
+		void Sprite::set_modulation(const SpriteBatch::Modulation& modulation) const
 		{
 			batch->set_modulation(vb_pos, modulation);
 		}
@@ -257,12 +254,12 @@ namespace oly
 			return batch->get_texture(vb_pos, dimensions);
 		}
 
-		batch::SpriteBatch::TexUVRect Sprite::get_tex_coords() const
+		SpriteBatch::TexUVRect Sprite::get_tex_coords() const
 		{
 			return batch->get_tex_coords(vb_pos);
 		}
 
-		batch::SpriteBatch::Modulation Sprite::get_modulation() const
+		SpriteBatch::Modulation Sprite::get_modulation() const
 		{
 			return batch->get_modulation(vb_pos);
 		}

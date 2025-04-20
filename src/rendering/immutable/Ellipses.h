@@ -1,7 +1,6 @@
 #pragma once
 
-#include "core/Core.h"
-#include "SpecializedBuffers.h"
+#include "../SpecializedBuffers.h"
 #include "math/DataStructures.h"
 #include "math/Transforms.h"
 #include "util/IDGenerator.h"
@@ -11,16 +10,13 @@
 // LATER this design is extremely similar to TextureQuadBatch. Maybe it can be abstracted.
 namespace oly
 {
-	namespace renderable
+	namespace immut
 	{
 		struct Ellipse;
-	}
-
-	namespace batch
-	{
+	
 		class EllipseBatch
 		{
-			friend struct renderable::Ellipse;
+			friend struct Ellipse;
 
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
@@ -128,33 +124,30 @@ namespace oly
 		private:
 			bool dirty_z = false;
 			std::vector<EllipseReference*> ellipse_refs;
-			std::unordered_set<renderable::Ellipse*> ellipses;
+			std::unordered_set<Ellipse*> ellipses;
 			void flush_z_values();
 		};
-	}
 
-	namespace renderable
-	{
 		struct Ellipse
 		{
-			batch::EllipseBatch::EllipseReference ellipse;
+			EllipseBatch::EllipseReference ellipse;
 			Transformer2D transformer;
 
-			Ellipse(batch::EllipseBatch* ellipse_batch);
+			Ellipse(EllipseBatch* ellipse_batch);
 			Ellipse(const Ellipse&) = delete;
 			Ellipse(Ellipse&&) noexcept;
 			~Ellipse();
 			Ellipse& operator=(Ellipse&&) noexcept;
 
-			const batch::EllipseBatch& batch() const { return ellipse.batch(); }
-			batch::EllipseBatch& batch() { return ellipse.batch(); }
+			const EllipseBatch& batch() const { return ellipse.batch(); }
+			EllipseBatch& batch() { return ellipse.batch(); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set(); // call after modifying local
 			void pre_get() const; // call before reading global
 
 		private:
-			friend batch::EllipseBatch;
+			friend class EllipseBatch;
 			void flush();
 		};
 	}

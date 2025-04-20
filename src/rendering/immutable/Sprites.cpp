@@ -1,16 +1,16 @@
-#include "TextureQuads.h"
+#include "Sprites.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <limits>
 
-#include "Resources.h"
+#include "../Resources.h"
 
 namespace oly
 {
-	namespace batch
+	namespace immut
 	{
-		TextureQuadBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations)
+		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations)
 			: quads(quads), textures(textures), uvs(uvs), modulations(modulations)
 		{
 			OLY_ASSERT(4 * quads <= USHRT_MAX);
@@ -19,12 +19,12 @@ namespace oly
 			OLY_ASSERT(0 < modulations && modulations <= 250);
 		}
 
-		TextureQuadBatch::TextureQuadBatch(Capacity capacity, const glm::vec4& projection_bounds)
+		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations),
 			z_order(capacity.quads), textures(capacity.textures)
 		{
-			shader_locations.projection = shaders::location(shaders::texture_quad_batch, "uProjection");
-			shader_locations.modulation = shaders::location(shaders::texture_quad_batch, "uGlobalModulation");
+			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
+			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
 
 			ubo.tex_coords.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
 			ubo.modulation.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
@@ -40,10 +40,10 @@ namespace oly
 			draw_specs.push_back({ 0, capacity.quads });
 		}
 
-		void TextureQuadBatch::draw(size_t draw_spec)
+		void SpriteBatch::draw(size_t draw_spec)
 		{
 			glBindVertexArray(vao);
-			glUseProgram(shaders::texture_quad_batch);
+			glUseProgram(shaders::sprite_batch);
 
 			ssbo.tex_data.bind_base(0);
 			ssbo.quad_info.bind_base(1);
@@ -54,7 +54,7 @@ namespace oly
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
-		void TextureQuadBatch::set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
+		void SpriteBatch::set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim)
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos] = texture;
@@ -65,7 +65,7 @@ namespace oly
 			ssbo.tex_data.send(pos, texture_data);
 		}
 
-		void TextureQuadBatch::refresh_handle(GLushort pos, rendering::ImageDimensions dim)
+		void SpriteBatch::refresh_handle(GLushort pos, rendering::ImageDimensions dim)
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
@@ -75,7 +75,7 @@ namespace oly
 			ssbo.tex_data.send(pos, texture_data);
 		}
 
-		void TextureQuadBatch::refresh_handle(GLushort pos)
+		void SpriteBatch::refresh_handle(GLushort pos)
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.textures); // cannot set 0th texture
 			textures[pos]->use_handle();
@@ -83,32 +83,32 @@ namespace oly
 			ssbo.tex_data.send(pos, &SSBO::TexData::handle, handle);
 		}
 
-		void TextureQuadBatch::set_uvs(GLushort pos, const TexUVRect& tex_coords) const
+		void SpriteBatch::set_uvs(GLushort pos, const TexUVRect& tex_coords) const
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.uvs); // cannot set 0th UV
 			ubo.tex_coords.send(pos, tex_coords);
 		}
 
-		void TextureQuadBatch::set_modulation(GLushort pos, const Modulation& modulation) const
+		void SpriteBatch::set_modulation(GLushort pos, const Modulation& modulation) const
 		{
 			OLY_ASSERT(pos > 0 && pos < capacity.modulations); // cannot set 0th modulation
 			ubo.modulation.send(pos, modulation);
 		}
 
-		void TextureQuadBatch::set_projection(const glm::vec4& projection_bounds) const
+		void SpriteBatch::set_projection(const glm::vec4& projection_bounds) const
 		{
 			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shaders::texture_quad_batch);
+			glUseProgram(shaders::sprite_batch);
 			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
-		void TextureQuadBatch::set_global_modulation(const glm::vec4& modulation) const
+		void SpriteBatch::set_global_modulation(const glm::vec4& modulation) const
 		{
-			glUseProgram(shaders::texture_quad_batch);
+			glUseProgram(shaders::sprite_batch);
 			glUniform4f(shader_locations.modulation, modulation[0], modulation[1], modulation[2], modulation[3]);
 		}
 
-		TextureQuadBatch::QuadReference::QuadReference(TextureQuadBatch* batch)
+		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)
 			: _batch(batch)
 		{
 			pos = _batch->pos_generator.gen();
@@ -118,7 +118,7 @@ namespace oly
 			_batch->dirty_z = true;
 		}
 
-		TextureQuadBatch::QuadReference::QuadReference(QuadReference&& other) noexcept
+		SpriteBatch::QuadReference::QuadReference(QuadReference&& other) noexcept
 			: _batch(other._batch), pos(other.pos), _info(other._info), _transform(other._transform)
 		{
 			other.active = false;
@@ -127,7 +127,7 @@ namespace oly
 				*it = this;
 		}
 
-		TextureQuadBatch::QuadReference::~QuadReference()
+		SpriteBatch::QuadReference::~QuadReference()
 		{
 			if (active)
 			{
@@ -138,7 +138,7 @@ namespace oly
 			}
 		}
 
-		TextureQuadBatch::QuadReference& TextureQuadBatch::QuadReference::operator=(QuadReference&& other) noexcept
+		SpriteBatch::QuadReference& SpriteBatch::QuadReference::operator=(QuadReference&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -159,23 +159,23 @@ namespace oly
 			return *this;
 		}
 
-		void TextureQuadBatch::QuadReference::send_info() const
+		void SpriteBatch::QuadReference::send_info() const
 		{
 			_batch->ssbo.quad_info.lazy_send(pos);
 		}
 
-		void TextureQuadBatch::QuadReference::send_transform() const
+		void SpriteBatch::QuadReference::send_transform() const
 		{
 			_batch->ssbo.quad_transform.lazy_send(pos);
 		}
 
-		void TextureQuadBatch::QuadReference::send_data() const
+		void SpriteBatch::QuadReference::send_data() const
 		{
 			_batch->ssbo.quad_info.lazy_send(pos);
 			_batch->ssbo.quad_transform.lazy_send(pos);
 		}
 
-		void TextureQuadBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
+		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
 		{
 			if (pos1 != pos2)
 			{
@@ -186,7 +186,7 @@ namespace oly
 			}
 		}
 
-		void TextureQuadBatch::move_quad_order(QuadPos from, QuadPos to)
+		void SpriteBatch::move_quad_order(QuadPos from, QuadPos to)
 		{
 			to = std::clamp(to, (QuadPos)0, QuadPos(capacity.quads - 1));
 			from = std::clamp(from, (QuadPos)0, QuadPos(capacity.quads - 1));
@@ -203,17 +203,17 @@ namespace oly
 			}
 		}
 
-		void TextureQuadBatch::flush()
+		void SpriteBatch::flush()
 		{
-			for (renderable::TextureQuad* texture_quad : texture_quads)
-				texture_quad->flush();
+			for (Sprite* sprite : sprites)
+				sprite->flush();
 			ssbo.quad_info.flush();
 			ssbo.quad_transform.flush();
 			flush_z_values();
 			ebo.flush();
 		}
 
-		void TextureQuadBatch::flush_z_values()
+		void SpriteBatch::flush_z_values()
 		{
 			if (!dirty_z)
 				return;
@@ -234,54 +234,51 @@ namespace oly
 					break;
 			}
 		}
-	}
 
-	namespace renderable
-	{
-		TextureQuad::TextureQuad(batch::TextureQuadBatch* sprite_batch)
+		Sprite::Sprite(SpriteBatch* sprite_batch)
 			: quad(sprite_batch)
 		{
-			batch().texture_quads.insert(this);
+			batch().sprites.insert(this);
 		}
 
-		TextureQuad::TextureQuad(TextureQuad&& other) noexcept
+		Sprite::Sprite(Sprite&& other) noexcept
 			: quad(std::move(other.quad)), transformer(std::move(other.transformer))
 		{
-			batch().texture_quads.erase(&other);
+			batch().sprites.erase(&other);
 		}
 
-		TextureQuad::~TextureQuad()
+		Sprite::~Sprite()
 		{
-			batch().texture_quads.erase(this);
+			batch().sprites.erase(this);
 		}
 
-		TextureQuad& TextureQuad::operator=(TextureQuad&& other) noexcept
+		Sprite& Sprite::operator=(Sprite&& other) noexcept
 		{
 			if (this != &other)
 			{
 				bool different_batch = (&batch() != &other.batch());
 				if (different_batch)
-					batch().texture_quads.erase(this);
+					batch().sprites.erase(this);
 				quad = std::move(other.quad);
 				transformer = std::move(other.transformer);
-				batch().texture_quads.erase(&other);
+				batch().sprites.erase(&other);
 				if (different_batch)
-					batch().texture_quads.insert(this);
+					batch().sprites.insert(this);
 			}
 			return *this;
 		}
 
-		void TextureQuad::post_set()
+		void Sprite::post_set()
 		{
 			transformer.post_set();
 		}
 
-		void TextureQuad::pre_get() const
+		void Sprite::pre_get() const
 		{
 			transformer.pre_get();
 		}
 
-		void TextureQuad::flush()
+		void Sprite::flush()
 		{
 			if (transformer.flush())
 			{

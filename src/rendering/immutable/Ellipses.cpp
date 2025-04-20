@@ -4,12 +4,12 @@
 
 #include <algorithm>
 
-#include "Resources.h"
+#include "../Resources.h"
 #include "math/Transforms.h"
 
 namespace oly
 {
-	namespace batch
+	namespace immut
 	{
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses)
@@ -148,7 +148,7 @@ namespace oly
 
 		void EllipseBatch::flush()
 		{
-			for (renderable::Ellipse* ellipse : ellipses)
+			for (Ellipse* ellipse : ellipses)
 				ellipse->flush();
 			dimension_ssbo.flush();
 			color_ssbo.flush();
@@ -178,11 +178,8 @@ namespace oly
 					break;
 			}
 		}
-	}
 
-	namespace renderable
-	{
-		Ellipse::Ellipse(batch::EllipseBatch* ellipse_batch)
+		Ellipse::Ellipse(EllipseBatch* ellipse_batch)
 			: ellipse(ellipse_batch)
 		{
 			batch().ellipses.insert(this);
