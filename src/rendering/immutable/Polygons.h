@@ -49,6 +49,7 @@ namespace oly
 		public:
 			typedef GLushort PrimitivePos;
 			typedef GLushort RangeID;
+			typedef StrictIDGenerator<RangeID>::ID PolygonID;
 
 			struct Capacity
 			{
@@ -106,11 +107,11 @@ namespace oly
 			void disable_polygon(RangeID id);
 
 		private:
-			RangeID generate_id(const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
-			RangeID generate_id(math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+			PolygonID generate_id(const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+			PolygonID generate_id(math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
 			void terminate_id(RangeID id);
-			void resize_range(RangeID id, const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
-			void resize_range(RangeID id, math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+			void resize_range(PolygonID& id, const math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
+			void resize_range(PolygonID& id, math::Polygon2DComposite& composite, GLushort min_range = 0, GLushort max_range = 0);
 
 		public:
 			bool is_valid_id(RangeID id) const;
@@ -157,7 +158,7 @@ namespace oly
 			};
 			std::unordered_map<RangeID, PolygonIndexer> polygon_indexer;
 			std::map<PrimitivePos, RangeID> id_order;
-			IDGenerator<RangeID> id_generator;
+			StrictIDGenerator<RangeID> id_generator;
 
 			std::unordered_set<Polygonal*> polygonal_renderables;
 
@@ -169,7 +170,7 @@ namespace oly
 		{
 			friend PolygonBatch;
 			PolygonBatch* _batch = nullptr;
-			PolygonBatch::RangeID id = -1;
+			PolygonBatch::PolygonID id;
 
 		public:
 			Transformer2D transformer;
@@ -182,8 +183,8 @@ namespace oly
 
 			const PolygonBatch* batch() const { return _batch; }
 			PolygonBatch* batch() { return _batch; }
-			PolygonBatch::RangeID get_id() const { return id; }
-			Range<PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id); }
+			PolygonBatch::RangeID get_id() const { return id.get(); }
+			Range<PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id.get()); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local

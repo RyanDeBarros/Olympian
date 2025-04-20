@@ -66,11 +66,11 @@ namespace oly
 			}
 		}
 
-		GLuint SpriteBatch::gen_sprite_pos()
+		SpriteBatch::VBID SpriteBatch::gen_sprite_id()
 		{
-			GLuint vb_pos = vb_pos_generator.gen();
-			OLY_ASSERT(vb_pos <= ssbo.quad_info.vector().size());
-			if (vb_pos == ssbo.quad_info.vector().size())
+			VBID id = vbid_generator.generate();
+			OLY_ASSERT(id.get() <= ssbo.quad_info.vector().size());
+			if (id.get() == ssbo.quad_info.vector().size())
 			{
 				ssbo.quad_info.vector().push_back({});
 				ssbo.quad_transform.vector().push_back({});
@@ -78,18 +78,17 @@ namespace oly
 			}
 			else if (!resize_sprites)
 			{
-				ssbo.quad_info.lazy_send(vb_pos);
-				ssbo.quad_transform.lazy_send(vb_pos);
+				ssbo.quad_info.lazy_send(id.get());
+				ssbo.quad_transform.lazy_send(id.get());
 			}
-			ssbo.quad_info.vector()[vb_pos] = {};
-			ssbo.quad_transform.vector()[vb_pos] = glm::mat3(1.0f);
-			return vb_pos;
+			ssbo.quad_info.vector()[id.get()] = {};
+			ssbo.quad_transform.vector()[id.get()] = glm::mat3(1.0f);
+			return id;
 		}
 
-		void SpriteBatch::erase_sprite_pos(GLuint vb_pos)
+		void SpriteBatch::erase_sprite_id(GLuint id)
 		{
-			vb_pos_generator.yield(vb_pos);
-			const SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[vb_pos];
+			const SSBO::QuadInfo& quad_info = ssbo.quad_info.vector()[id];
 			quad_info_store.textures.decrement_usage(quad_info.tex_slot);
 			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
@@ -151,7 +150,7 @@ namespace oly
 			: batch(sprite_batch)
 		{
 			if (batch)
-				vb_pos = batch->gen_sprite_pos();
+				vbid = batch->gen_sprite_id();
 			else
 				throw Error(ErrorCode::NULL_POINTER);
 		}
@@ -160,7 +159,7 @@ namespace oly
 			: batch(other.batch), transformer(other.transformer)
 		{
 			if (batch)
-				vb_pos = batch->gen_sprite_pos();
+				vbid = batch->gen_sprite_id();
 			else
 				throw Error(ErrorCode::NULL_POINTER);
 
@@ -172,7 +171,7 @@ namespace oly
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
-			: batch(other.batch), vb_pos(other.vb_pos), transformer(std::move(other.transformer))
+			: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 		{
 			other.batch = nullptr;
 		}
@@ -184,10 +183,10 @@ namespace oly
 				if (batch != other.batch)
 				{
 					if (batch)
-						batch->erase_sprite_pos(vb_pos);
+						batch->erase_sprite_id(vbid.get());
 					batch = other.batch;
 					if (batch)
-						vb_pos = batch->gen_sprite_pos();
+						vbid = batch->gen_sprite_id();
 					else
 						throw Error(ErrorCode::NULL_POINTER);
 				}
@@ -207,9 +206,9 @@ namespace oly
 			if (this != &other)
 			{
 				if (batch)
-					batch->erase_sprite_pos(vb_pos);
+					batch->erase_sprite_id(vbid.get());
 				batch = other.batch;
-				vb_pos = other.vb_pos;
+				vbid = std::move(other.vbid);
 				transformer = std::move(other.transformer);
 				other.batch = nullptr;
 			}
@@ -219,28 +218,28 @@ namespace oly
 		Sprite::~Sprite()
 		{
 			if (batch)
-				batch->erase_sprite_pos(vb_pos);
+				batch->erase_sprite_id(vbid.get());
 		}
 
 		void Sprite::draw() const
 		{
 			flush();
-			batch->draw_sprite(vb_pos);
+			batch->draw_sprite(vbid.get());
 		}
 		
 		void Sprite::set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const
 		{
-			batch->set_texture(vb_pos, texture, dimensions);
+			batch->set_texture(vbid.get(), texture, dimensions);
 		}
 		
 		void Sprite::set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const
 		{
-			batch->set_tex_coords(vb_pos, tex_coords);
+			batch->set_tex_coords(vbid.get(), tex_coords);
 		}
 
 		void Sprite::set_modulation(const SpriteBatch::Modulation& modulation) const
 		{
-			batch->set_modulation(vb_pos, modulation);
+			batch->set_modulation(vbid.get(), modulation);
 		}
 
 		rendering::BindlessTextureRes Sprite::get_texture() const
@@ -251,17 +250,17 @@ namespace oly
 
 		rendering::BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const
 		{
-			return batch->get_texture(vb_pos, dimensions);
+			return batch->get_texture(vbid.get(), dimensions);
 		}
 
 		SpriteBatch::TexUVRect Sprite::get_tex_coords() const
 		{
-			return batch->get_tex_coords(vb_pos);
+			return batch->get_tex_coords(vbid.get());
 		}
 
 		SpriteBatch::Modulation Sprite::get_modulation() const
 		{
-			return batch->get_modulation(vb_pos);
+			return batch->get_modulation(vbid.get());
 		}
 
 		void Sprite::post_set() const
@@ -280,8 +279,8 @@ namespace oly
 			{
 				transformer.pre_get();
 				auto& transform_buffer = batch->ssbo.quad_transform;
-				transform_buffer.vector()[vb_pos] = transformer.global();
-				transform_buffer.lazy_send(vb_pos);
+				transform_buffer.vector()[vbid.get()] = transformer.global();
+				transform_buffer.lazy_send(vbid.get());
 			}
 		}
 	}

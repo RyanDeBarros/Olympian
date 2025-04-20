@@ -48,16 +48,16 @@ namespace oly
 		EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
 			: _batch(batch)
 		{
-			pos = _batch->pos_generator.gen();
-			_dimension = &_batch->dimension_ssbo.vector()[pos];
-			_color = &_batch->color_ssbo.vector()[pos];
-			_transform = &_batch->transform_ssbo.vector()[pos];
+			pos = _batch->pos_generator.generate();
+			_dimension = &_batch->dimension_ssbo.vector()[pos.get()];
+			_color = &_batch->color_ssbo.vector()[pos.get()];
+			_transform = &_batch->transform_ssbo.vector()[pos.get()];
 			_batch->ellipse_refs.push_back(this);
 			_batch->dirty_z = true;
 		}
 		
 		EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
-			: _batch(other._batch), pos(other.pos), _dimension(other._dimension), _color(other._color), _transform(other._transform)
+			: _batch(other._batch), pos(std::move(other.pos)), _dimension(other._dimension), _color(other._color), _transform(other._transform)
 		{
 			other.active = false;
 			auto it = std::find(_batch->ellipse_refs.begin(), _batch->ellipse_refs.end(), &other);
@@ -68,10 +68,7 @@ namespace oly
 		EllipseBatch::EllipseReference::~EllipseReference()
 		{
 			if (active)
-			{
-				_batch->pos_generator.yield(pos);
 				vector_erase(_batch->ellipse_refs, this);
-			}
 		}
 		
 		EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(EllipseReference&& other) noexcept
@@ -79,16 +76,13 @@ namespace oly
 			if (this != &other)
 			{
 				if (active)
-				{
-					_batch->pos_generator.yield(pos);
 					vector_erase(_batch->ellipse_refs, this);
-				}
 				_batch = other._batch;
 				other.active = false;
 				auto it = std::find(_batch->ellipse_refs.begin(), _batch->ellipse_refs.end(), &other);
 				if (it != _batch->ellipse_refs.end())
 					*it = this;
-				pos = other.pos;
+				pos = std::move(other.pos);
 				_dimension = other._dimension;
 				_color = other._color;
 				_transform = other._transform;
@@ -98,24 +92,24 @@ namespace oly
 
 		void EllipseBatch::EllipseReference::send_dimension() const
 		{
-			_batch->dimension_ssbo.lazy_send(pos);
+			_batch->dimension_ssbo.lazy_send(pos.get());
 		}
 
 		void EllipseBatch::EllipseReference::send_color() const
 		{
-			_batch->color_ssbo.lazy_send(pos);
+			_batch->color_ssbo.lazy_send(pos.get());
 		}
 
 		void EllipseBatch::EllipseReference::send_transform() const
 		{
-			_batch->transform_ssbo.lazy_send(pos);
+			_batch->transform_ssbo.lazy_send(pos.get());
 		}
 
 		void EllipseBatch::EllipseReference::send_data() const
 		{
-			_batch->dimension_ssbo.lazy_send(pos);
-			_batch->color_ssbo.lazy_send(pos);
-			_batch->transform_ssbo.lazy_send(pos);
+			_batch->dimension_ssbo.lazy_send(pos.get());
+			_batch->color_ssbo.lazy_send(pos.get());
+			_batch->transform_ssbo.lazy_send(pos.get());
 		}
 
 		void EllipseBatch::swap_ellipse_order(EllipsePos pos1, EllipsePos pos2)

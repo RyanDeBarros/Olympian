@@ -111,15 +111,15 @@ namespace oly
 		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)
 			: _batch(batch)
 		{
-			pos = _batch->pos_generator.gen();
-			_info = &_batch->ssbo.quad_info.vector()[pos];
-			_transform = &_batch->ssbo.quad_transform.vector()[pos];
+			pos = _batch->pos_generator.generate();
+			_info = &_batch->ssbo.quad_info.vector()[pos.get()];
+			_transform = &_batch->ssbo.quad_transform.vector()[pos.get()];
 			_batch->quad_refs.push_back(this);
 			_batch->dirty_z = true;
 		}
 
 		SpriteBatch::QuadReference::QuadReference(QuadReference&& other) noexcept
-			: _batch(other._batch), pos(other.pos), _info(other._info), _transform(other._transform)
+			: _batch(other._batch), pos(std::move(other.pos)), _info(other._info), _transform(other._transform)
 		{
 			other.active = false;
 			auto it = std::find(_batch->quad_refs.begin(), _batch->quad_refs.end(), &other);
@@ -131,7 +131,6 @@ namespace oly
 		{
 			if (active)
 			{
-				_batch->pos_generator.yield(pos);
 				_info->tex_slot = 0;
 				send_info();
 				vector_erase(_batch->quad_refs, this);
@@ -143,16 +142,13 @@ namespace oly
 			if (this != &other)
 			{
 				if (active)
-				{
-					_batch->pos_generator.yield(pos);
 					vector_erase(_batch->quad_refs, this);
-				}
 				_batch = other._batch;
 				other.active = false;
 				auto it = std::find(_batch->quad_refs.begin(), _batch->quad_refs.end(), &other);
 				if (it != _batch->quad_refs.end())
 					*it = this;
-				pos = other.pos;
+				pos = std::move(other.pos);
 				_info = other._info;
 				_transform = other._transform;
 			}
@@ -161,18 +157,18 @@ namespace oly
 
 		void SpriteBatch::QuadReference::send_info() const
 		{
-			_batch->ssbo.quad_info.lazy_send(pos);
+			_batch->ssbo.quad_info.lazy_send(pos.get());
 		}
 
 		void SpriteBatch::QuadReference::send_transform() const
 		{
-			_batch->ssbo.quad_transform.lazy_send(pos);
+			_batch->ssbo.quad_transform.lazy_send(pos.get());
 		}
 
 		void SpriteBatch::QuadReference::send_data() const
 		{
-			_batch->ssbo.quad_info.lazy_send(pos);
-			_batch->ssbo.quad_transform.lazy_send(pos);
+			_batch->ssbo.quad_info.lazy_send(pos.get());
+			_batch->ssbo.quad_transform.lazy_send(pos.get());
 		}
 
 		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)

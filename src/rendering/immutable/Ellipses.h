@@ -66,11 +66,17 @@ namespace oly
 			typedef GLushort EllipsePos;
 			std::vector<Range<EllipsePos>> draw_specs;
 
+		private:
+			math::IndexBijection<EllipsePos> z_order;
+			StrictIDGenerator<EllipsePos> pos_generator;
+			typedef StrictIDGenerator<EllipsePos>::ID EID;
+
+		public:
 			class EllipseReference
 			{
 				friend EllipseBatch;
 				EllipseBatch* _batch = nullptr;
-				EllipsePos pos = -1;
+				EID pos;
 				bool active = true;
 
 			public:
@@ -98,7 +104,7 @@ namespace oly
 				glm::mat3& transform() { return *_transform; }
 
 			private:
-				EllipsePos index_pos() const { return _batch->z_order.range_of(pos); }
+				EllipsePos index_pos() const { return _batch->z_order.range_of(pos.get()); }
 				void set_z_index(EllipsePos z) { _batch->move_ellipse_order(index_pos(), z); }
 				void move_z_index(int by) { _batch->move_ellipse_order(index_pos(), index_pos() + by); }
 
@@ -109,13 +115,8 @@ namespace oly
 				void send_data() const;
 				void send_z_value() { _batch->dirty_z = true; }
 			};
-			friend EllipseReference;
+			friend class EllipseReference;
 
-		private:
-			math::IndexBijection<EllipsePos> z_order;
-			IDGenerator<EllipsePos> pos_generator;
-
-		public:
 			void swap_ellipse_order(EllipsePos pos1, EllipsePos pos2);
 			void move_ellipse_order(EllipsePos from, EllipsePos to);
 

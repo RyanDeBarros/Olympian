@@ -105,9 +105,10 @@ namespace oly
 			mutable bool resize_sprites = false;
 
 			std::unordered_map<Sprite*, GLuint> sprites;
-			IDGenerator<GLuint> vb_pos_generator;
-			GLuint gen_sprite_pos();
-			void erase_sprite_pos(GLuint vb_pos);
+			StrictIDGenerator<GLuint> vbid_generator;
+			typedef StrictIDGenerator<GLuint>::ID VBID;
+			VBID gen_sprite_id();
+			void erase_sprite_id(GLuint id);
 
 			template<typename StoredObjectType, typename StoredObjectTypeHash>
 			class BOStore
@@ -120,7 +121,7 @@ namespace oly
 
 				std::unordered_map<GLuint, UsageHolder> usages;
 				std::unordered_map<StoredObjectType, GLuint, StoredObjectTypeHash> slot_lookup;
-				IDGenerator<GLuint> pos_generator;
+				SoftIDGenerator<GLuint> pos_generator;
 
 				void _decrement_usage(GLuint i)
 				{
@@ -134,7 +135,7 @@ namespace oly
 
 			public:
 				BOStore() { pos_generator.gen(); /* waste 0th slot */ }
-				
+
 				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
 				
 				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
@@ -221,7 +222,7 @@ namespace oly
 		private:
 			friend class SpriteBatch;
 			SpriteBatch* batch;
-			GLuint vb_pos;
+			SpriteBatch::VBID vbid;
 
 		public:
 			Transformer2D transformer;

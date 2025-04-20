@@ -94,13 +94,14 @@ namespace oly
 			void set_global_modulation(const glm::vec4& modulation) const;
 
 			typedef GLushort QuadPos;
+			typedef StrictIDGenerator<GLushort>::ID QID;
 			std::vector<Range<QuadPos>> draw_specs;
 
 			class QuadReference
 			{
 				friend SpriteBatch;
 				SpriteBatch* _batch = nullptr;
-				QuadPos pos = -1;
+				QID pos;
 				bool active = true;
 			
 			public:
@@ -126,7 +127,7 @@ namespace oly
 				glm::mat3& transform() { return *_transform; }
 				
 			private:
-				QuadPos index_pos() const { return _batch->z_order.range_of(pos); }
+				QuadPos index_pos() const { return _batch->z_order.range_of(pos.get()); }
 				void set_z_index(QuadPos z) { _batch->move_quad_order(index_pos(), z); }
 				void move_z_index(int by) { _batch->move_quad_order(index_pos(), index_pos() + by); }
 
@@ -140,7 +141,7 @@ namespace oly
 
 		private:
 			math::IndexBijection<QuadPos> z_order;
-			IDGenerator<QuadPos> pos_generator;
+			StrictIDGenerator<QuadPos> pos_generator;
 
 		public:
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
