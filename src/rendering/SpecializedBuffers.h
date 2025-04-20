@@ -124,6 +124,7 @@ namespace oly
 			IndexType data[Size];
 
 			using ElementAlias = std::conditional_t<Size != 1, IndexLayout<IndexType, Size>, IndexType>;
+			static constexpr size_t SizeAlias = Size;
 		};
 
 		template<std::unsigned_integral IndexType, Mutability M, size_t LayoutSize = 1>

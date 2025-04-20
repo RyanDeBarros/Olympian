@@ -23,8 +23,22 @@ namespace oly
 			glBindVertexArray(0);
 		}
 
-		void SpriteBatch::render()
+		void SpriteBatch::render() const
 		{
+			if (resize_sprites)
+			{
+				resize_sprites = false;
+				ssbo.quad_info.init();
+				ssbo.quad_info.clear_dirty();
+				ssbo.quad_transform.init();
+				ssbo.quad_transform.clear_dirty();
+			}
+			else
+			{
+				ssbo.quad_info.flush();
+				ssbo.quad_transform.flush();
+			}
+
 			glBindVertexArray(vao);
 			glUseProgram(shaders::sprite_batch);
 			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
@@ -44,26 +58,9 @@ namespace oly
 			}
 			else
 				ebo.flush();
-			ebo.set_draw_spec((GLuint)0, sprites_to_draw);
-			sprites_to_draw = 0;
-			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_INT);
-		}
 
-		void SpriteBatch::flush() const
-		{
-			if (resize_sprites)
-			{
-				resize_sprites = false;
-				ssbo.quad_info.init();
-				ssbo.quad_info.clear_dirty();
-				ssbo.quad_transform.init();
-				ssbo.quad_transform.clear_dirty();
-			}
-			else
-			{
-				ssbo.quad_info.flush();
-				ssbo.quad_transform.flush();
-			}
+			glDrawElements(GL_TRIANGLES, (GLsizei)(sprites_to_draw * decltype(ebo)::StructAlias::SizeAlias), GL_UNSIGNED_INT, (void*)0);
+			sprites_to_draw = 0;
 		}
 
 		SpriteBatch::VBID SpriteBatch::gen_sprite_id()
@@ -96,18 +93,17 @@ namespace oly
 
 		void SpriteBatch::set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
-			quad_info_store.textures.set_object<SSBO::TexData>(ssbo.tex_data, *this, ssbo.quad_info.vector()[vb_pos].tex_slot, vb_pos, { texture, dimensions }, { texture->get_handle(), dimensions },
-				[](const QuadInfoStore::Texture& tex) { return tex.texture == nullptr; });
+			quad_info_store.textures.set_object<SSBO::TexData>(ssbo.tex_data, *this, ssbo.quad_info.vector()[vb_pos].tex_slot, vb_pos, { texture, dimensions }, { texture->get_handle(), dimensions });
 		}
 
 		void SpriteBatch::set_tex_coords(GLuint vb_pos, const TexUVRect& uvs)
 		{
-			quad_info_store.tex_coords.set_object(ubo.tex_coords, *this, ssbo.quad_info.vector()[vb_pos].tex_coord_slot, vb_pos, uvs, [](const TexUVRect& uvs) { return uvs == TexUVRect{}; });
+			quad_info_store.tex_coords.set_object(ubo.tex_coords, *this, ssbo.quad_info.vector()[vb_pos].tex_coord_slot, vb_pos, uvs);
 		}
 
 		void SpriteBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
 		{
-			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.vector()[vb_pos].color_slot, vb_pos, modulation, [](const Modulation& modulation) { return modulation == Modulation{}; });
+			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.vector()[vb_pos].color_slot, vb_pos, modulation);
 		}
 
 		rendering::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
@@ -115,7 +111,7 @@ namespace oly
 			GLuint slot = ssbo.quad_info.vector()[vb_pos].tex_slot;
 			if (slot == 0)
 				return nullptr;
-			QuadInfoStore::Texture tex = quad_info_store.textures.get_object(slot);
+			QuadInfoStore::DimensionlessTexture tex = quad_info_store.textures.get_object(slot);
 			dimensions = tex.dimensions;
 			return tex.texture;
 		}
@@ -144,6 +140,23 @@ namespace oly
 				ebo.lazy_send(sprites_to_draw);
 			rendering::quad_indices(ebo.vector()[sprites_to_draw].data, vb_pos);
 			++sprites_to_draw;
+		}
+
+		void SpriteBatch::update_texture_handle(const rendering::BindlessTextureRes& texture)
+		{
+			GLuint slot;
+			if (quad_info_store.textures.get_slot({ texture }, slot))
+				ssbo.tex_data.send<SSBO::TexData>(slot, &SSBO::TexData::handle, texture->get_handle());
+		}
+
+		void SpriteBatch::update_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
+		{
+			GLuint slot;
+			if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
+			{
+				ssbo.tex_data.send<SSBO::TexData>(slot, { texture->get_handle(), dimensions });
+				quad_info_store.textures.get_object(slot).dimensions = dimensions;
+			}
 		}
 
 		Sprite::Sprite(SpriteBatch* sprite_batch)

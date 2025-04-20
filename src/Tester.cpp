@@ -5,6 +5,7 @@
 #include "rendering/immutable/Ellipses.h"
 #include "rendering/Particles.h"
 #include "rendering/Loader.h"
+#include "rendering/Resources.h"
 
 static std::string RES_DIR = "../../../res/";
 static std::string TEXTURES_DIR = RES_DIR + "textures/";
@@ -31,20 +32,17 @@ void run()
 	auto einstein_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "einstein.png", einstein_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	einstein_texture->set_handle();
-	einstein_texture->use_handle();
+	einstein_texture->set_and_use_handle();
 	oly::rendering::ImageDimensions flag_texture_dim;
 	auto flag_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "flag.png", flag_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	flag_texture->set_handle();
-	flag_texture->use_handle();
+	flag_texture->set_and_use_handle();
 	oly::rendering::ImageDimensions tux_texture_dim;
 	auto tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", tux_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	tux_texture->set_handle();
-	tux_texture->use_handle();
+	tux_texture->set_and_use_handle();
 
 	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
@@ -258,9 +256,28 @@ void run()
 		flag_tesselation_parent.local.rotation -= 0.5f * oly::TIME.delta<float>();
 		flag_tesselation_parent.post_set();
 		flag_tesselation_parent.flush();
+
+		static bool lin = true;
+		if (lin)
+		{
+			if (fmod(oly::TIME.now<float>(), 1.0f) >= 0.5f)
+			{
+				lin = false;
+				flag_texture->set_and_use_handle(oly::samplers::nearest);
+				sprite_batch.update_texture_handle(flag_texture);
+			}
+		}
+		else
+		{
+			if (fmod(oly::TIME.now<float>(), 1.0f) < 0.5f)
+			{
+				lin = true;
+				flag_texture->set_and_use_handle(oly::samplers::linear);
+				sprite_batch.update_texture_handle(flag_texture);
+			}
+		}
 		
 		// flush buffers
-		sprite_batch.flush();
 		polygon_batch.flush();
 		ellipse_batch.flush();
 

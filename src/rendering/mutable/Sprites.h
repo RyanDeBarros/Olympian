@@ -96,8 +96,7 @@ namespace oly
 
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void render();
-			void flush() const;
+			void render() const;
 
 		private:
 			mutable GLuint sprites_to_draw = 0;
@@ -138,15 +137,14 @@ namespace oly
 
 				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
 				
-				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
-					const StoredObjectType& stored_obj, const std::function<bool(const StoredObjectType&)>& is_default)
-				{ set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj, is_default); }
+				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
+				{ set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj); }
 				
 				template<typename BufferObjectType>
 				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
-					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj, const std::function<bool(const StoredObjectType&)>& is_default)
+					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
 				{
-					if (is_default(stored_obj)) // remove object from sprite
+					if (stored_obj == StoredObjectType{}) // remove object from sprite
 					{
 						if (slot != 0)
 						{
@@ -186,22 +184,25 @@ namespace oly
 				}
 
 				const StoredObjectType& get_object(GLuint slot) const { return usages.find(slot)->second.obj; }
+				StoredObjectType& get_object(GLuint slot) { return usages.find(slot)->second.obj; }
+
+				bool get_slot(const StoredObjectType& obj, GLuint& slot) const { auto it = slot_lookup.find(obj); if (it != slot_lookup.end()) { slot = it->second; return true; } return false; }
 			};
 
 			struct QuadInfoStore
 			{
-				struct Texture
+				struct DimensionlessTexture
 				{
 					rendering::BindlessTextureRes texture;
 					glm::vec2 dimensions = {};
 
-					bool operator==(const Texture&) const = default;
+					bool operator==(const DimensionlessTexture& t) const { return texture == t.texture; }
 				};
-				struct TextureHash
+				struct DimensionlessTextureHash
 				{
-					size_t operator()(const Texture& t) const { return std::hash<rendering::BindlessTextureRes>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
+					size_t operator()(const DimensionlessTexture& t) const { return std::hash<rendering::BindlessTextureRes>{}(t.texture); }
 				};
-				BOStore<Texture, TextureHash> textures;
+				BOStore<DimensionlessTexture, DimensionlessTextureHash> textures;
 				BOStore<TexUVRect, TexUVRectHash> tex_coords;
 				BOStore<Modulation, ModulationHash> modulations;
 			} quad_info_store;
@@ -215,6 +216,10 @@ namespace oly
 			Modulation get_modulation(GLuint vb_pos) const;
 
 			void draw_sprite(GLuint vb_pos);
+
+		public:
+			void update_texture_handle(const rendering::BindlessTextureRes& texture);
+			void update_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
 
 		struct Sprite
