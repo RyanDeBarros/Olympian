@@ -207,6 +207,11 @@ namespace oly
 			_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, _dim.cpp);
 		}
 
+		Image::Image(unsigned char* buf, ImageDimensions dim)
+			: _buf(buf), _dim(dim)
+		{
+		}
+
 		Image::Image(Image&& other) noexcept
 			: _buf(other._buf)
 		{
@@ -230,7 +235,7 @@ namespace oly
 			return *this;
 		}
 
-		ImageTextureRes load_texture_2d(const char* filename)
+		ImageTextureRes load_texture_2d(const char* filename, bool generate_mipmaps)
 		{
 			ImageTextureRes img;
 			img.image = std::make_shared<Image>(filename);
@@ -239,6 +244,8 @@ namespace oly
 			const auto& dim = img.image->dim();
 			tex::pixel_alignment(dim.cpp);
 			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, img.image->buf());
+			if (generate_mipmaps)
+				glGenerateMipmap(GL_TEXTURE_2D);
 			return img;
 		}
 
@@ -305,19 +312,19 @@ namespace oly
 			return *this;
 		}
 
-		GIFTextureRes load_texture_2d_array(const char* filename)
+		GIFTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps)
 		{
 			GIFTextureRes gif;
-			gif.image = std::make_shared<GIF>(filename);
+			gif.gif = std::make_shared<GIF>(filename);
 			gif.texture = std::make_shared<Texture>(GL_TEXTURE_2D_ARRAY);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, *gif.texture);
-			const auto& dim = gif.image->dim();
+			const auto& dim = gif.gif->dim();
 			tex::pixel_alignment(dim.cpp);
 			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim.cpp), dim.w, dim.h, dim.frames(), 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, nullptr);
 			for (GLuint i = 0; i < dim.frames(); ++i)
-			{
-				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim.w, dim.h, 1, tex::format(dim.cpp), GL_UNSIGNED_BYTE, gif.image->buf() + i * dim.w * dim.h * dim.cpp);
-			}
+				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim.w, dim.h, 1, tex::format(dim.cpp), GL_UNSIGNED_BYTE, gif.gif->buf() + i * dim.w * dim.h * dim.cpp);
+			if (generate_mipmaps)
+				glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 			return gif;
 		}
 

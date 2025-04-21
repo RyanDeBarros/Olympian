@@ -15,6 +15,18 @@ namespace oly
 	}
 
 	template<typename T>
+	constexpr T max(const T& first, const T& second)
+	{
+		return first >= second ? first : second;
+	}
+
+	template<typename T, typename... Rest>
+	inline T max(const T& first, const Rest&... rest)
+	{
+		return max(first, max(rest...));
+	}
+
+	template<typename T>
 	inline T dupl(const T& obj)
 	{
 		return obj;

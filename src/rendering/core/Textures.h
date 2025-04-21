@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+#include "util/General.h"
+
 namespace oly
 {
 	namespace rendering
@@ -84,6 +86,8 @@ namespace oly
 			extern GLenum internal_format(int cpp);
 			extern GLenum format(int cpp);
 			extern void pixel_alignment(int cpp);
+			inline GLsizei expected_mipmap_levels(float w, float h) { return (GLsizei)glm::floor(glm::log2(max(w, h))) + 1; }
+			inline GLsizei expected_mipmap_levels(float w, float h, float d) { return (GLsizei)glm::floor(glm::log2(max(w, h, d))) + 1; }
 		}
 
 		struct ImageDimensions
@@ -100,6 +104,7 @@ namespace oly
 
 		public:
 			Image(const char* filepath);
+			Image(unsigned char* buf, ImageDimensions dim);
 			Image(const Image&) = delete;
 			Image(Image&&) noexcept;
 			~Image();
@@ -126,15 +131,19 @@ namespace oly
 			ImageBindlessTextureRes(ImageTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
 		};
 
-		extern ImageTextureRes load_texture_2d(const char* filename);
-		inline ImageTextureRes load_texture_2d(const std::string& filename) { return load_texture_2d(filename.c_str()); }
-		inline ImageBindlessTextureRes load_bindless_texture_2d(const char* filename) { return ImageBindlessTextureRes(load_texture_2d(filename)); }
-		inline ImageBindlessTextureRes load_bindless_texture_2d(const std::string& filename) { return load_bindless_texture_2d(filename.c_str()); }
+		extern ImageTextureRes load_texture_2d(const char* filename, bool generate_mipmaps = false);
+		inline ImageTextureRes load_texture_2d(const std::string& filename, bool generate_mipmaps = false) { return load_texture_2d(filename.c_str(), generate_mipmaps); }
+		inline ImageBindlessTextureRes load_bindless_texture_2d(const char* filename, bool generate_mipmaps = false) { return ImageBindlessTextureRes(load_texture_2d(filename, generate_mipmaps)); }
+		inline ImageBindlessTextureRes load_bindless_texture_2d(const std::string& filename, bool generate_mipmaps = false) { return load_bindless_texture_2d(filename.c_str(), generate_mipmaps); }
 
-		inline TextureRes load_texture_2d(const char* filename, ImageDimensions& dim) { auto res = load_texture_2d(filename); dim = res.image->dim(); return res.texture; }
-		inline TextureRes load_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_texture_2d(filename.c_str(), dim); }
-		inline BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d(filename, dim)); }
-		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_bindless_texture_2d(filename.c_str(), dim); }
+		inline TextureRes load_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
+				{ auto res = load_texture_2d(filename, generate_mipmaps); dim = res.image->dim(); return res.texture; }
+		inline TextureRes load_texture_2d(const std::string& filename, ImageDimensions& dim, bool generate_mipmaps = false)
+				{ return load_texture_2d(filename.c_str(), dim, generate_mipmaps); }
+		inline BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
+				{ return std::make_shared<BindlessTexture>(load_texture_2d(filename, dim, generate_mipmaps)); }
+		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim, bool generate_mipmaps = false)
+				{ return load_bindless_texture_2d(filename.c_str(), dim, generate_mipmaps); }
 
 		inline float gif_delay_epsilon = 1.0f;
 		struct GIFDimensions
@@ -174,27 +183,31 @@ namespace oly
 
 		struct GIFTextureRes
 		{
-			GIFRes image;
+			GIFRes gif;
 			TextureRes texture;
 		};
 		struct GIFBindlessTextureRes
 		{
-			GIFRes image;
+			GIFRes gif;
 			BindlessTextureRes texture;
 
 			GIFBindlessTextureRes() = default;
-			GIFBindlessTextureRes(GIFTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
+			GIFBindlessTextureRes(GIFTextureRes&& gif) : gif(std::move(gif.gif)), texture(std::make_shared<BindlessTexture>(std::move(gif.texture))) {}
 		};
 
-		extern GIFTextureRes load_texture_2d_array(const char* filename);
-		inline GIFTextureRes load_texture_2d_array(const std::string& filename) { return load_texture_2d_array(filename.c_str()); }
-		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const char* filename) { return GIFBindlessTextureRes(load_texture_2d_array(filename)); }
-		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename) { return load_bindless_texture_2d_array(filename.c_str()); }
+		extern GIFTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps = false);
+		inline GIFTextureRes load_texture_2d_array(const std::string& filename, bool generate_mipmaps = false) { return load_texture_2d_array(filename.c_str(), generate_mipmaps); }
+		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const char* filename, bool generate_mipmaps = false) { return GIFBindlessTextureRes(load_texture_2d_array(filename, generate_mipmaps)); }
+		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, bool generate_mipmaps = false) { return load_bindless_texture_2d_array(filename.c_str(), generate_mipmaps); }
 
-		inline TextureRes load_texture_2d_array(const char* filename, GIFDimensions& dim) { auto res = load_texture_2d_array(filename); dim = res.image->dim(); return res.texture; }
-		inline TextureRes load_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_texture_2d_array(filename.c_str(), dim); }
-		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, GIFDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim)); }
-		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_bindless_texture_2d_array(filename.c_str(), dim); }
+		inline TextureRes load_texture_2d_array(const char* filename, GIFDimensions& dim, bool generate_mipmaps = false)
+				{ auto res = load_texture_2d_array(filename, generate_mipmaps); dim = res.gif->dim(); return res.texture; }
+		inline TextureRes load_texture_2d_array(const std::string& filename, GIFDimensions& dim, bool generate_mipmaps = false)
+				{ return load_texture_2d_array(filename.c_str(), dim, generate_mipmaps); }
+		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, GIFDimensions& dim, bool generate_mipmaps = false)
+				{ return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim, generate_mipmaps)); }
+		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, GIFDimensions& dim, bool generate_mipmaps = false)
+				{ return load_bindless_texture_2d_array(filename.c_str(), dim, generate_mipmaps); }
 
 		struct GIFFrameFormat
 		{

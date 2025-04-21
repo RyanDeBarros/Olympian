@@ -32,21 +32,30 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	einstein_texture->set_and_use_handle();
+	
 	oly::rendering::ImageDimensions flag_texture_dim;
 	auto flag_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "flag.png", flag_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	flag_texture->set_and_use_handle();
+	
 	oly::rendering::ImageDimensions tux_texture_dim;
 	auto tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", tux_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_and_use_handle();
+	
 	oly::rendering::GIFDimensions serotonin_texture_dim;
 	auto serotonin_texture = oly::rendering::load_bindless_texture_2d_array(TEXTURES_DIR + "serotonin.gif", serotonin_texture_dim);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	serotonin_texture->set_and_use_handle();
+
+	oly::rendering::ImageDimensions mipmap_tux_texture_dim;
+	auto mipmap_tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", mipmap_tux_texture_dim, true);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	mipmap_tux_texture->set_and_use_handle();
 
 	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
@@ -78,7 +87,21 @@ void run()
 	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
 	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim.w, serotonin_texture_dim.h });
-	sprite3.set_frame_format(oly::rendering::setup_gif_frame_format(serotonin_texture_dim));
+	auto frame_format = oly::rendering::setup_gif_frame_format(serotonin_texture_dim);
+	--frame_format.num_frames;
+	sprite3.set_frame_format(frame_format);
+
+	oly::mut::Sprite sprite4(sprite3);
+	sprite4.local().position.x = -500;
+	sprite4.local().position.y = 300;
+	sprite4.local().scale = glm::vec2(0.1f);
+	sprite4.post_set();
+	sprite4.set_texture(mipmap_tux_texture, mipmap_tux_texture_dim.dimensions());
+	
+	oly::mut::Sprite sprite5(sprite4);
+	sprite5.local().position.x = -400;
+	sprite5.post_set();
+	sprite5.set_texture(tux_texture, tux_texture_dim.dimensions());
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -234,11 +257,8 @@ void run()
 	while (!window.should_close())
 	{
 		// pre-frame
-		oly::check_errors();
-		oly::LOG.flush();
+		oly::pre_frame();
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glfwPollEvents();
-		oly::TIME.sync();
 
 		// logic update
 		octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
@@ -304,6 +324,8 @@ void run()
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		sprite3.draw();
+		sprite4.draw();
+		sprite5.draw();
 		sprite_batch.render();
 		polygon_batch.draw(2);
 

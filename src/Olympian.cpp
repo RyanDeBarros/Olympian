@@ -24,3 +24,11 @@ int oly::terminate()
 	glfwTerminate();
 	return 0;
 }
+
+void oly::pre_frame()
+{
+	check_errors();
+	LOG.flush();
+	glfwPollEvents();
+	TIME.sync();
+}
