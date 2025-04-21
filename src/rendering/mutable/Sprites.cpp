@@ -9,13 +9,15 @@ namespace oly
 	namespace mut
 	{
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations), projection_bounds(projection_bounds)
+			: ebo(capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.gifs), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
 			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
+			shader_locations.time = shaders::location(shaders::sprite_batch, "uTime");
 
 			ubo.tex_coords.send<TexUVRect>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
+			ubo.gif.send<rendering::GIFFrameFormat>(0, {});
 
 			glBindVertexArray(vao);
 			ebo.bind();
@@ -43,12 +45,14 @@ namespace oly
 			glUseProgram(shaders::sprite_batch);
 			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
 			glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
+			glUniform1f(shader_locations.time, TIME.now<float>());
 
 			ssbo.tex_data.bind_base(0);
 			ssbo.quad_info.bind_base(1);
 			ssbo.quad_transform.bind_base(2);
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
+			ubo.gif.bind_base(2);
 
 			if (resize_ebo)
 			{
@@ -106,6 +110,11 @@ namespace oly
 			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.vector()[vb_pos].color_slot, vb_pos, modulation);
 		}
 
+		void SpriteBatch::set_frame_format(GLuint vb_pos, const rendering::GIFFrameFormat& gif)
+		{
+			quad_info_store.gifs.set_object(ubo.gif, *this, ssbo.quad_info.vector()[vb_pos].frame_slot, vb_pos, gif);
+		}
+
 		rendering::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 		{
 			GLuint slot = ssbo.quad_info.vector()[vb_pos].tex_slot;
@@ -126,6 +135,12 @@ namespace oly
 		{
 			GLuint slot = ssbo.quad_info.vector()[vb_pos].color_slot;
 			return slot != 0 ? quad_info_store.modulations.get_object(slot) : Modulation{};
+		}
+
+		rendering::GIFFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
+		{
+			GLuint slot = ssbo.quad_info.vector()[vb_pos].frame_slot;
+			return slot != 0 ? quad_info_store.gifs.get_object(slot) : rendering::GIFFrameFormat{};
 		}
 
 		void SpriteBatch::draw_sprite(GLuint vb_pos)
@@ -255,6 +270,11 @@ namespace oly
 			batch->set_modulation(vbid.get(), modulation);
 		}
 
+		void Sprite::set_frame_format(const rendering::GIFFrameFormat& gif) const
+		{
+			batch->set_frame_format(vbid.get(), gif);
+		}
+
 		rendering::BindlessTextureRes Sprite::get_texture() const
 		{
 			glm::vec2 _;
@@ -274,6 +294,11 @@ namespace oly
 		SpriteBatch::Modulation Sprite::get_modulation() const
 		{
 			return batch->get_modulation(vbid.get());
+		}
+
+		rendering::GIFFrameFormat Sprite::get_frame_format() const
+		{
+			return batch->get_frame_format(vbid.get());
 		}
 
 		void Sprite::post_set() const

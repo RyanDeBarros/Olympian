@@ -1,6 +1,7 @@
 #version 450 core
 
 uniform mat3 uProjection;
+uniform float uTime;
 
 struct TexData
 {
@@ -16,6 +17,7 @@ struct QuadInfo
 	uint texSlot;
 	uint texCoordSlot;
 	uint colorSlot;
+	uint frameSlot;
 };
 layout(std430, binding = 1) readonly buffer QuadInfos {
 	QuadInfo uQuadInfo[];
@@ -37,7 +39,7 @@ struct TexUVRect
 	vec4 uvs[2];
 };
 layout(std140, binding = 0) uniform TextureCoords {
-	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B
+	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B = #500
 };
 
 struct Modulation
@@ -45,12 +47,24 @@ struct Modulation
 	vec4 colors[4];
 };
 layout(std140, binding = 1) uniform Modulations {
-	Modulation uModulation[250]; // guaranteed 16KB / 64B
+	Modulation uModulation[250]; // guaranteed 16KB / 64B = #250
+};
+
+struct GIF
+{
+	uint starting_frame;
+	uint num_frames;
+	float starting_time;
+	float delay_seconds;
+};
+layout(std140, binding = 2) uniform GIFs {
+	GIF uGIFs[1000]; // guaranteed 16KB / 16B = #1000
 };
 
 out vec2 tTexCoord;
 flat out uint tTexSlot;
 out vec4 tModulation;
+flat out uint tFramePlusOne;
 
 vec2 position(vec2 dimensions) {
 	switch (gl_VertexID % 4) {
@@ -85,6 +99,15 @@ void main() {
 		tTexCoord = coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
 		tModulation = uModulation[quad.colorSlot].colors[gl_VertexID % 4];
+		if (quad.frameSlot > 0) {
+			GIF gif = uGIFs[quad.frameSlot];
+			int frame_offset = 0;
+			if (gif.delay_seconds > 0.0)
+				frame_offset = int(floor((uTime - gif.starting_time) / gif.delay_seconds));
+			tFramePlusOne = 1 + (gif.starting_frame + frame_offset) % gif.num_frames;
+		} else {
+			tFramePlusOne = 0;
+		}
 	}
 	else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC

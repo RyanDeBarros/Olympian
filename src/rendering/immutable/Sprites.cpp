@@ -10,24 +10,26 @@ namespace oly
 {
 	namespace immut
 	{
-		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations)
-			: quads(quads), textures(textures), uvs(uvs), modulations(modulations)
+		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations, GLushort gifs)
+			: quads(quads), textures(textures + 1), uvs(uvs + 1), modulations(modulations + 1), gifs(gifs + 1)
 		{
 			OLY_ASSERT(4 * quads <= USHRT_MAX);
-			OLY_ASSERT(textures > 0); // there is enough capacity for 0th texture
-			OLY_ASSERT(0 < uvs && uvs <= 500);
-			OLY_ASSERT(0 < modulations && modulations <= 250);
+			OLY_ASSERT(uvs <= 500);
+			OLY_ASSERT(modulations <= 250);
+			OLY_ASSERT(gifs <= 1000);
 		}
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations),
-			z_order(capacity.quads), textures(capacity.textures)
+			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations, capacity.gifs),
+			z_order(capacity.quads), textures(capacity.textures), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
 			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
+			shader_locations.time = shaders::location(shaders::sprite_batch, "uTime");
 
-			ubo.tex_coords.send<TexUVRect>(0, { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } });
-			ubo.modulation.send<Modulation>(0, { { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) } });
+			ubo.tex_coords.send<TexUVRect>(0, {});
+			ubo.modulation.send<Modulation>(0, {});
+			ubo.gif.send<rendering::GIFFrameFormat>(0, {});
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
@@ -35,8 +37,6 @@ namespace oly
 			ebo.init();
 			glBindVertexArray(0);
 
-			set_projection(projection_bounds);
-			set_global_modulation(glm::vec4(1.0f));
 			draw_specs.push_back({ 0, capacity.quads });
 		}
 
@@ -44,12 +44,16 @@ namespace oly
 		{
 			glBindVertexArray(vao);
 			glUseProgram(shaders::sprite_batch);
+			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
+			glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
+			glUniform1f(shader_locations.time, TIME.now<float>());
 
 			ssbo.tex_data.bind_base(0);
 			ssbo.quad_info.bind_base(1);
 			ssbo.quad_transform.bind_base(2);
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
+			ubo.gif.bind_base(2);
 			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
@@ -95,17 +99,10 @@ namespace oly
 			ubo.modulation.send(pos, modulation);
 		}
 
-		void SpriteBatch::set_projection(const glm::vec4& projection_bounds) const
+		void SpriteBatch::set_frame_format(GLushort pos, const rendering::GIFFrameFormat& gif) const
 		{
-			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shaders::sprite_batch);
-			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(proj));
-		}
-
-		void SpriteBatch::set_global_modulation(const glm::vec4& modulation) const
-		{
-			glUseProgram(shaders::sprite_batch);
-			glUniform4f(shader_locations.modulation, modulation[0], modulation[1], modulation[2], modulation[3]);
+			OLY_ASSERT(pos < capacity.gifs);
+			ubo.gif.send(pos, gif);
 		}
 
 		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)

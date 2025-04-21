@@ -136,20 +136,21 @@ namespace oly
 		inline BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d(filename, dim)); }
 		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_bindless_texture_2d(filename.c_str(), dim); }
 
+		inline float gif_delay_epsilon = 1.0f;
 		struct GIFDimensions
 		{
 			int w = 0, h = 0, cpp = 4;
 
 			void set_delays(int* delays, unsigned int num_frames);
-			void clear_delays();
 
 		private:
 			int _frames = -1;
 			std::vector<int> delays;
 
 		public:
-			int frames() const { return _frames >= 0 ? _frames : (int)delays.size(); }
-			int delay(unsigned int frame) const;
+			bool uniform() const { return _frames >= 0; }
+			GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)delays.size(); }
+			int delay(unsigned int frame = 0) const;
 		};
 
 		class GIF
@@ -194,5 +195,20 @@ namespace oly
 		inline TextureRes load_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_texture_2d_array(filename.c_str(), dim); }
 		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, GIFDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim)); }
 		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_bindless_texture_2d_array(filename.c_str(), dim); }
+
+		struct GIFFrameFormat
+		{
+			GLuint starting_frame = 0;
+			GLuint num_frames = 0;
+			float starting_time = 0.0f;
+			float delay_seconds = 0.0f;
+
+			bool operator==(const GIFFrameFormat&) const = default;
+		};
+
+		extern GIFFrameFormat setup_gif_frame_format(const GIFDimensions& dim, float speed = 0.1f, GLuint starting_frame = 0);
+		extern GIFFrameFormat setup_gif_frame_format_single(const GIFDimensions& dim, GLuint frame);
+
+		// TODO spritesheets, and automatic UV updating in shaders from spritesheets
 	}
 }

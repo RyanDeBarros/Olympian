@@ -78,6 +78,7 @@ void run()
 	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
 	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim.w, serotonin_texture_dim.h });
+	sprite3.set_frame_format(oly::rendering::setup_gif_frame_format(serotonin_texture_dim));
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();

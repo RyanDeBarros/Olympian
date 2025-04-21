@@ -4,6 +4,7 @@
 
 #include "util/IO.h"
 #include "util/Errors.h"
+#include "util/Assert.h"
 
 namespace oly
 {
@@ -244,6 +245,7 @@ namespace oly
 		void GIFDimensions::set_delays(int* new_delays, unsigned int num_frames)
 		{
 			delays.clear();
+			_frames = -1;
 			if (num_frames == 0)
 				return;
 			delays.resize(num_frames);
@@ -253,24 +255,21 @@ namespace oly
 			for (unsigned int i = 1; i < num_frames; ++i)
 			{
 				delays[i] = new_delays[i];
-				if (delays[i] != delay)
+				if (std::abs(delays[i] - delay) > gif_delay_epsilon)
 					single = false;
 			}
 			if (single)
+			{
 				delays.resize(1);
-		}
-
-		void GIFDimensions::clear_delays()
-		{
-			delays.clear();
-			_frames = -1;
+				_frames = num_frames;
+			}
 		}
 
 		int GIFDimensions::delay(unsigned int frame) const
 		{
 			if (frame >= frames())
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
-			return _frames >= 0 ? delays[0] : delays[frame];
+			return uniform() ? delays[0] : delays[frame];
 		}
 
 		GIF::GIF(const char* filepath)
@@ -278,7 +277,7 @@ namespace oly
 			auto full_content = io::read_file_uc(filepath);
 			int* delays;
 			int frames;
-			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim.w, &_dim.h, &frames, &_dim.cpp, 0);
+			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim.w, &_dim.h, &frames, &_dim.cpp, _dim.cpp);
 			_dim.set_delays(delays, frames);
 			stbi_image_free(delays);
 		}
@@ -315,11 +314,22 @@ namespace oly
 			const auto& dim = gif.image->dim();
 			tex::pixel_alignment(dim.cpp);
 			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim.cpp), dim.w, dim.h, dim.frames(), 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, nullptr);
-			for (int i = 0; i < dim.frames(); ++i)
+			for (GLuint i = 0; i < dim.frames(); ++i)
 			{
 				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim.w, dim.h, 1, tex::format(dim.cpp), GL_UNSIGNED_BYTE, gif.image->buf() + i * dim.w * dim.h * dim.cpp);
 			}
 			return gif;
+		}
+
+		GIFFrameFormat setup_gif_frame_format(const GIFDimensions& dim, float speed, GLuint starting_frame)
+		{
+			OLY_ASSERT(dim.uniform());
+			return { starting_frame, dim.frames(), 0.0f, speed * 0.01f * dim.delay() };
+		}
+
+		GIFFrameFormat setup_gif_frame_format_single(const GIFDimensions& dim, GLuint frame)
+		{
+			return { frame, dim.frames(), 0.0f, 0.0f };
 		}
 	}
 }

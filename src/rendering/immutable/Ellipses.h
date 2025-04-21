@@ -61,7 +61,7 @@ namespace oly
 
 			void draw(size_t draw_spec = 0);
 
-			void set_projection(const glm::vec4& projection_bounds) const;
+			glm::vec4 projection_bounds;
 
 			typedef GLushort EllipsePos;
 			std::vector<Range<EllipsePos>> draw_specs;

@@ -92,7 +92,7 @@ namespace oly
 		public:
 			std::vector<Range<PrimitivePos>> draw_specs;
 
-			void set_projection(const glm::vec4& projection_bounds) const;
+			glm::vec4 projection_bounds;
 
 		private:
 			void set_primitive_points(PrimitivePos pos, const glm::vec2* points, GLushort count);

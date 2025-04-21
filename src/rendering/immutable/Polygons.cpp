@@ -14,7 +14,7 @@ namespace oly
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), cpudata(capacity.vertices),
-			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives })
+			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives }), projection_bounds(projection_bounds)
 		{
 			shader = shaders::polygon_batch;
 			projection_location = shaders::location(shader, "uProjection");
@@ -29,18 +29,18 @@ namespace oly
 			oly::rendering::VertexAttribute<>{ 1, 4 }.setup();
 			ebo.bind();
 			ebo.init();
-
-			set_projection(projection_bounds);
-
 			glBindVertexArray(0);
+
 			draw_specs.push_back({ 0, capacity.primitives });
 		}
 
 		void PolygonBatch::draw(size_t draw_spec)
 		{
-			glUseProgram(shader);
-			glUniform1ui(degree_location, capacity.degree);
 			glBindVertexArray(vao);
+			glUseProgram(shader);
+			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
+			glUniform1ui(degree_location, capacity.degree);
+
 			transform_ssbo.bind_base(0);
 			set_primitive_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
@@ -56,13 +56,6 @@ namespace oly
 		void PolygonBatch::set_primitive_draw_spec(PrimitivePos first, PrimitivePos count)
 		{
 			ebo.set_draw_spec(first * capacity.polygon_index_count, count * capacity.polygon_index_count);
-		}
-
-		void PolygonBatch::set_projection(const glm::vec4& projection_bounds) const
-		{
-			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shader);
-			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
 		void PolygonBatch::set_primitive_points(PrimitivePos pos, const glm::vec2* points, GLushort count)

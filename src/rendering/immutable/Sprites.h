@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../SpecializedBuffers.h"
+#include "util/IDGenerator.h"
 #include "math/Transforms.h"
 #include "math/DataStructures.h"
-#include "util/IDGenerator.h"
 
 #include <set>
 #include <unordered_set>
@@ -36,6 +36,7 @@ namespace oly
 					GLuint tex_slot = 0;
 					GLuint tex_coord_slot = 0;
 					GLuint color_slot = 0;
+					GLuint frame_slot = 0;
 				};
 
 				rendering::LightweightSSBO<rendering::Mutability::IMMUTABLE> tex_data;
@@ -47,34 +48,33 @@ namespace oly
 
 			struct
 			{
-				GLuint projection, modulation;
+				GLuint projection, modulation, time;
 			} shader_locations;
 		public:
 			struct TexUVRect
 			{
-				glm::vec2 uvs[4] = {};
+				glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
 			};
 			struct Modulation
 			{
-				glm::vec4 colors[4] = {};
+				glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
 			};
 		private:
 			struct UBO
 			{
-				rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords, modulation;
+				rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords, modulation, gif;
 				
-				UBO(GLushort uvs, GLushort modulations) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)) {}
+				UBO(GLushort uvs, GLushort modulations, GLushort gifs) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), gif(gifs * sizeof(rendering::GIFFrameFormat)) {}
 			} ubo;
 
 		public:
 			struct Capacity
 			{
-				GLushort quads = 0;
-				GLushort textures = 1;
-				GLushort uvs = 1;
-				GLushort modulations = 1;
+				Capacity(GLushort quads, GLushort textures = 0, GLushort uvs = 0, GLushort modulations = 0, GLushort gifs = 0);
 
-				Capacity(GLushort quads, GLushort textures = 1, GLushort uvs = 1, GLushort modulations = 1);
+			private:
+				friend class SpriteBatch;
+				GLushort quads, textures, uvs, modulations, gifs;
 			};
 
 		private:
@@ -90,8 +90,10 @@ namespace oly
 			void refresh_handle(GLushort pos);
 			void set_uvs(GLushort pos, const TexUVRect& tex_coords) const;
 			void set_modulation(GLushort pos, const Modulation& modulation) const;
-			void set_projection(const glm::vec4& projection_bounds) const;
-			void set_global_modulation(const glm::vec4& modulation) const;
+			void set_frame_format(GLushort pos, const rendering::GIFFrameFormat& gif) const;
+
+			glm::vec4 projection_bounds;
+			glm::vec4 global_modulation = glm::vec4(1.0f);
 
 			typedef GLushort QuadPos;
 			typedef StrictIDGenerator<GLushort>::ID QID;

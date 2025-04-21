@@ -12,7 +12,7 @@ namespace oly
 	namespace immut
 	{
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses)
+			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses), projection_bounds(projection_bounds)
 		{
 			projection_location = shaders::location(shaders::ellipse_batch, "uProjection");
 
@@ -22,27 +22,20 @@ namespace oly
 			ebo.init();
 			glBindVertexArray(0);
 
-			set_projection(projection_bounds);
 			draw_specs.push_back({ 0, capacity.ellipses });
 		}
 
 		void EllipseBatch::draw(size_t draw_spec)
 		{
-			glUseProgram(shaders::ellipse_batch);
 			glBindVertexArray(vao);
+			glUseProgram(shaders::ellipse_batch);
+			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
 
 			dimension_ssbo.bind_base(0);
 			color_ssbo.bind_base(1);
 			transform_ssbo.bind_base(2);
 			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
-		}
-
-		void EllipseBatch::set_projection(const glm::vec4& projection_bounds) const
-		{
-			glm::mat3 proj = glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]);
-			glUseProgram(shaders::ellipse_batch);
-			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(proj));
 		}
 
 		EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
