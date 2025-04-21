@@ -3,7 +3,6 @@
 #include "rendering/mutable/Sprites.h"
 #include "rendering/immutable/Polygons.h"
 #include "rendering/immutable/Ellipses.h"
-#include "rendering/Particles.h"
 #include "rendering/Loader.h"
 #include "rendering/Resources.h"
 
@@ -43,6 +42,11 @@ void run()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	tux_texture->set_and_use_handle();
+	oly::rendering::GIFDimensions serotonin_texture_dim;
+	auto serotonin_texture = oly::rendering::load_bindless_texture_2d_array(TEXTURES_DIR + "serotonin.gif", serotonin_texture_dim);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	serotonin_texture->set_and_use_handle();
 
 	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
@@ -71,7 +75,9 @@ void run()
 
 	oly::mut::Sprite sprite3(sprite2);
 	sprite3.local().position.x = 100;
+	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
+	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim.w, serotonin_texture_dim.h });
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -224,8 +230,6 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	oly::particles::ParticleSystem particle_system = oly::assets::load_particle_system(ASSET_DIR + "particle_system.toml", window.projection_bounds());
-
 	while (!window.should_close())
 	{
 		// pre-frame
@@ -282,7 +286,6 @@ void run()
 		ellipse_batch.flush();
 
 		// update particle systems
-		particle_system.update();
 		
 		// draw
 		ellipse_batch.draw();
@@ -302,7 +305,6 @@ void run()
 		sprite3.draw();
 		sprite_batch.render();
 		polygon_batch.draw(2);
-		particle_system.draw();
 
 		// post-frame
 		window.swap_buffers();

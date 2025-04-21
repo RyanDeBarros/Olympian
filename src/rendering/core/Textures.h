@@ -52,7 +52,7 @@ namespace oly
 
 		class BindlessTexture
 		{
-			GLuint id = 0;
+			Texture t;
 			GLuint64 handle = 0;
 			GLuint64 _tex_handle = 0;
 			std::vector<std::pair<GLuint, GLuint64>> _sampler_handles;
@@ -60,12 +60,14 @@ namespace oly
 		public:
 			BindlessTexture();
 			BindlessTexture(GLenum target);
+			BindlessTexture(Texture&& texture);
+			BindlessTexture(TextureRes&& texture);
 			BindlessTexture(const BindlessTexture&) = delete;
 			BindlessTexture(BindlessTexture&&) noexcept;
 			~BindlessTexture();
 			BindlessTexture& operator=(BindlessTexture&&) noexcept;
 
-			operator GLuint () const { return id; }
+			operator GLuint () const { return t; }
 			void set_handle(); // texture becomes immutable
 			void set_handle(GLuint sampler); // texture becomes immutable
 			void set_and_use_handle() { set_handle(); use_handle(); }  // texture becomes immutable
@@ -76,6 +78,13 @@ namespace oly
 		};
 
 		typedef std::shared_ptr<BindlessTexture> BindlessTextureRes;
+
+		namespace tex
+		{
+			extern GLenum internal_format(int cpp);
+			extern GLenum format(int cpp);
+			extern void pixel_alignment(int cpp);
+		}
 
 		struct ImageDimensions
 		{
@@ -103,20 +112,6 @@ namespace oly
 
 		typedef std::shared_ptr<Image> ImageRes;
 
-		namespace tex
-		{
-			extern GLenum internal_format(int cpp);
-			extern GLenum format(int cpp);
-			extern GLint alignment(int cpp);
-			
-			extern void image_2d(GLenum target, ImageDimensions dim, void* buf, GLenum data_type);
-		}
-
-		extern TextureRes load_texture_2d(const char* filename, ImageDimensions& dim);
-		inline TextureRes load_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_texture_2d(filename.c_str(), dim); }
-		extern BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim);
-		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_bindless_texture_2d(filename.c_str(), dim); }
-
 		struct ImageTextureRes
 		{
 			ImageRes image;
@@ -126,11 +121,78 @@ namespace oly
 		{
 			ImageRes image;
 			BindlessTextureRes texture;
+
+			ImageBindlessTextureRes() = default;
+			ImageBindlessTextureRes(ImageTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
 		};
 
 		extern ImageTextureRes load_texture_2d(const char* filename);
 		inline ImageTextureRes load_texture_2d(const std::string& filename) { return load_texture_2d(filename.c_str()); }
-		extern ImageBindlessTextureRes load_bindless_texture_2d(const char* filename);
+		inline ImageBindlessTextureRes load_bindless_texture_2d(const char* filename) { return ImageBindlessTextureRes(load_texture_2d(filename)); }
 		inline ImageBindlessTextureRes load_bindless_texture_2d(const std::string& filename) { return load_bindless_texture_2d(filename.c_str()); }
+
+		inline TextureRes load_texture_2d(const char* filename, ImageDimensions& dim) { auto res = load_texture_2d(filename); dim = res.image->dim(); return res.texture; }
+		inline TextureRes load_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_texture_2d(filename.c_str(), dim); }
+		inline BindlessTextureRes load_bindless_texture_2d(const char* filename, ImageDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d(filename, dim)); }
+		inline BindlessTextureRes load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim) { return load_bindless_texture_2d(filename.c_str(), dim); }
+
+		struct GIFDimensions
+		{
+			int w = 0, h = 0, cpp = 4;
+
+			void set_delays(int* delays, unsigned int num_frames);
+			void clear_delays();
+
+		private:
+			int _frames = -1;
+			std::vector<int> delays;
+
+		public:
+			int frames() const { return _frames >= 0 ? _frames : (int)delays.size(); }
+			int delay(unsigned int frame) const;
+		};
+
+		class GIF
+		{
+			unsigned char* _buf = nullptr;
+			GIFDimensions _dim;
+
+		public:
+			GIF(const char* filepath);
+			GIF(const GIF&) = delete;
+			GIF(GIF&&) noexcept;
+			~GIF();
+			GIF& operator=(GIF&&) noexcept;
+
+			const unsigned char* buf() const { return _buf; }
+			unsigned char* buf() { return _buf; }
+			GIFDimensions dim() const { return _dim; }
+		};
+
+		typedef std::shared_ptr<GIF> GIFRes;
+
+		struct GIFTextureRes
+		{
+			GIFRes image;
+			TextureRes texture;
+		};
+		struct GIFBindlessTextureRes
+		{
+			GIFRes image;
+			BindlessTextureRes texture;
+
+			GIFBindlessTextureRes() = default;
+			GIFBindlessTextureRes(GIFTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
+		};
+
+		extern GIFTextureRes load_texture_2d_array(const char* filename);
+		inline GIFTextureRes load_texture_2d_array(const std::string& filename) { return load_texture_2d_array(filename.c_str()); }
+		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const char* filename) { return GIFBindlessTextureRes(load_texture_2d_array(filename)); }
+		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename) { return load_bindless_texture_2d_array(filename.c_str()); }
+
+		inline TextureRes load_texture_2d_array(const char* filename, GIFDimensions& dim) { auto res = load_texture_2d_array(filename); dim = res.image->dim(); return res.texture; }
+		inline TextureRes load_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_texture_2d_array(filename.c_str(), dim); }
+		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, GIFDimensions& dim) { return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim)); }
+		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, GIFDimensions& dim) { return load_bindless_texture_2d_array(filename.c_str(), dim); }
 	}
 }
