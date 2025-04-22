@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <nanosvg/nanosvg.h>
+#include <nanosvg/nanosvgrast.h>
 
 #include <vector>
 #include <array>
@@ -240,7 +242,6 @@ namespace oly
 
 			bool operator==(const GIFFrameFormat&) const = default;
 		};
-
 	}
 
 	class TextureRegistry;
@@ -253,5 +254,38 @@ namespace oly
 		extern GIFFrameFormat setup_gif_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame);
 
 		// TODO spritesheets, and automatic UV updating in shaders from spritesheets
+
+		class NSVGAbstract
+		{
+			friend class NSVGContext;
+			mutable NSVGimage* i = nullptr;
+
+		public:
+			NSVGAbstract(const char* filepath);
+			NSVGAbstract(const std::string& filepath);
+			NSVGAbstract(const char* filepath, const char* units, float dpi);
+			NSVGAbstract(const std::string& filepath, const char* units, float dpi);
+			NSVGAbstract(const NSVGAbstract&) = delete;
+			NSVGAbstract(NSVGAbstract&&) noexcept;
+			~NSVGAbstract();
+			NSVGAbstract& operator=(NSVGAbstract&&) noexcept;
+
+			float width() const { return i ? i->width : 0.0f; }
+			float height() const { return i ? i->height : 0.0f; }
+		};
+
+		class NSVGContext
+		{
+			NSVGrasterizer* r = nullptr;
+
+		public:
+			NSVGContext();
+			NSVGContext(const NSVGContext&) = delete;
+			NSVGContext(NSVGContext&&) noexcept;
+			~NSVGContext();
+			NSVGContext& operator=(NSVGContext&&) noexcept;
+
+			Image rasterize(const NSVGAbstract& abstract, float scale);
+		};
 	}
 }

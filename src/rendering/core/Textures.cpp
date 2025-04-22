@@ -362,5 +362,100 @@ namespace oly
 		{
 			return setup_gif_frame_format_single(*texture_registry->get_gif_dimensions(texture_name).lock(), frame);
 		}
+
+		NSVGAbstract::NSVGAbstract(const char* filepath)
+			: i(nsvgParseFromFile(filepath, "px", 96))
+		{
+			if (!i) throw Error(ErrorCode::NSVG_PARSING);
+		}
+
+		NSVGAbstract::NSVGAbstract(const std::string& filepath)
+			: i(nsvgParseFromFile(filepath.c_str(), "px", 96))
+		{
+			if (!i) throw Error(ErrorCode::NSVG_PARSING);
+		}
+		
+		NSVGAbstract::NSVGAbstract(const char* filepath, const char* units, float dpi)
+			: i(nsvgParseFromFile(filepath, units, dpi))
+		{
+			if (!i) throw Error(ErrorCode::NSVG_PARSING);
+		}
+
+		NSVGAbstract::NSVGAbstract(const std::string& filepath, const char* units, float dpi)
+			: i(nsvgParseFromFile(filepath.c_str(), units, dpi))
+		{
+			if (!i) throw Error(ErrorCode::NSVG_PARSING);
+		}
+
+		NSVGAbstract::NSVGAbstract(NSVGAbstract&& other) noexcept
+			: i(other.i)
+		{
+			other.i = nullptr;
+		}
+		
+		NSVGAbstract::~NSVGAbstract()
+		{
+			nsvgDelete(i);
+		}
+		
+		NSVGAbstract& NSVGAbstract::operator=(NSVGAbstract&& other) noexcept
+		{
+			if (this != &other)
+			{
+				nsvgDelete(i);
+				i = other.i;
+				other.i = nullptr;
+			}
+			return *this;
+		}
+
+		NSVGContext::NSVGContext()
+			: r(nsvgCreateRasterizer())
+		{
+		}
+
+		NSVGContext::NSVGContext(NSVGContext&& other) noexcept
+			: r(other.r)
+		{
+			other.r = nullptr;
+		}
+		
+		NSVGContext::~NSVGContext()
+		{
+			nsvgDeleteRasterizer(r);
+		}
+		
+		NSVGContext& NSVGContext::operator=(NSVGContext&& other) noexcept
+		{
+			if (this != &other)
+			{
+				nsvgDeleteRasterizer(r);
+				r = other.r;
+				other.r = nullptr;
+			}
+			return *this;
+		}
+
+		Image NSVGContext::rasterize(const NSVGAbstract& abstract, float scale)
+		{
+			ImageDimensions dim;
+			dim.w = (int)(scale * abstract.width());
+			dim.h = (int)(scale * abstract.height());
+			dim.cpp = 4;
+			int stride = dim.w * dim.cpp;
+			unsigned char* buf = new unsigned char[stride * dim.h];
+			nsvgRasterize(r, abstract.i, 0.0f, 0.0f, scale, buf, dim.w, dim.h, stride);
+
+			unsigned char* temp = new unsigned char[stride];
+			for (int i = 0; i < dim.h / 2; ++i)
+			{
+				memcpy(temp, buf + i * stride, stride);
+				memcpy(buf + i * stride, buf + (dim.h - 1 - i) * stride, stride);
+				memcpy(buf + (dim.h - 1 - i) * stride, temp, stride);
+			}
+			delete[] temp;
+
+			return Image(buf, dim);
+		}
 	}
 }

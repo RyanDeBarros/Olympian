@@ -7,9 +7,10 @@
 #include "rendering/Resources.h"
 #include "rendering/TextureRegistry.h"
 
-static std::string RES_DIR = "../../../res/";
-static std::string TEXTURES_DIR = RES_DIR + "textures/";
-static std::string ASSET_DIR = RES_DIR + "assets/";
+#include <nanosvg/nanosvg.h>
+#include <nanosvg/nanosvgrast.h>
+
+static std::string ASSET_DIR = "../../../res/assets/";
 
 static void run();
 
@@ -38,6 +39,23 @@ void run()
 		const char* mipmapped_tux = "mipmapped tux";
 		const char* serotonin = "serotonin";
 	} textures;
+	
+	oly::rendering::NSVGAbstract nsvg_abstract(ASSET_DIR + "../textures/godot.svg");
+	oly::rendering::NSVGContext nsvg_context;
+
+	float godot_scale = 1.0f;
+	auto godot_image = nsvg_context.rasterize(nsvg_abstract, godot_scale);
+	
+	oly::rendering::BindlessTextureRes godot_texture = std::make_shared<oly::rendering::BindlessTexture>(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, *godot_texture);
+	oly::rendering::tex::pixel_alignment(godot_image.dim().cpp);
+	glTexImage2D(GL_TEXTURE_2D, 0, oly::rendering::tex::internal_format(godot_image.dim().cpp), godot_image.dim().w, godot_image.dim().h, 0,
+		oly::rendering::tex::format(godot_image.dim().cpp), GL_UNSIGNED_BYTE, godot_image.buf());
+	//if (generate_mipmaps)
+		//glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	godot_texture->set_and_use_handle();
 
 	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
@@ -84,6 +102,12 @@ void run()
 	sprite5.local().position.x = -400;
 	sprite5.post_set();
 	sprite5.set_texture(&texture_registry, textures.tux);
+
+	oly::mut::Sprite godot_sprite(&sprite_batch);
+	godot_sprite.local().position = { -300, -200 };
+	godot_sprite.local().scale = glm::vec2(3.0f / godot_scale);
+	godot_sprite.post_set();
+	godot_sprite.set_texture(godot_texture, godot_image.dim().dimensions());
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -312,6 +336,8 @@ void run()
 		sprite5.draw();
 		sprite_batch.render();
 		polygon_batch.draw(2);
+		godot_sprite.draw();
+		sprite_batch.render();
 
 		// post-frame
 		window.swap_buffers();
