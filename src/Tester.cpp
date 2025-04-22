@@ -5,6 +5,7 @@
 #include "rendering/immutable/Ellipses.h"
 #include "rendering/Loader.h"
 #include "rendering/Resources.h"
+#include "rendering/TextureRegistry.h"
 
 static std::string RES_DIR = "../../../res/";
 static std::string TEXTURES_DIR = RES_DIR + "textures/";
@@ -27,46 +28,27 @@ void run()
 	oly::load_context();
 	glEnable(GL_BLEND);
 
-	oly::rendering::ImageDimensions einstein_texture_dim;
-	auto einstein_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "einstein.png", einstein_texture_dim);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	einstein_texture->set_and_use_handle();
-	
-	oly::rendering::ImageDimensions flag_texture_dim;
-	auto flag_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "flag.png", flag_texture_dim);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	flag_texture->set_and_use_handle();
-	
-	oly::rendering::ImageDimensions tux_texture_dim;
-	auto tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", tux_texture_dim);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	tux_texture->set_and_use_handle();
-	
-	oly::rendering::GIFDimensions serotonin_texture_dim;
-	auto serotonin_texture = oly::rendering::load_bindless_texture_2d_array(TEXTURES_DIR + "serotonin.gif", serotonin_texture_dim);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	serotonin_texture->set_and_use_handle();
-
-	oly::rendering::ImageDimensions mipmap_tux_texture_dim;
-	auto mipmap_tux_texture = oly::rendering::load_bindless_texture_2d(TEXTURES_DIR + "tux.png", mipmap_tux_texture_dim, true);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	mipmap_tux_texture->set_and_use_handle();
+	oly::TextureRegistry texture_registry;
+	texture_registry.load(ASSET_DIR + "texture_registry.toml");
+	struct
+	{
+		const char* einstein = "einstein";
+		const char* flag = "flag";
+		const char* tux = "tux";
+		const char* mipmapped_tux = "mipmapped tux";
+		const char* serotonin = "serotonin";
+	} textures;
 
 	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
 
 	oly::mut::Sprite sprite0(&sprite_batch);
-	sprite0.set_texture(einstein_texture, einstein_texture_dim.dimensions());
+	sprite0.set_texture(&texture_registry, textures.einstein);
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
 	oly::mut::Sprite sprite1(&sprite_batch);
-	sprite1.set_texture(einstein_texture, einstein_texture_dim.dimensions());
+	sprite1.set_texture(&texture_registry, textures.einstein);
 	sprite1.set_modulation({ {
 		{ 1.0f, 1.0f, 0.2f, 0.7f },
 		{ 0.2f, 1.0f, 1.0f, 0.7f },
@@ -76,7 +58,7 @@ void run()
 
 	oly::mut::Sprite sprite2(&sprite_batch);
 	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
-	sprite2.set_texture(tux_texture, tux_texture_dim.dimensions());
+	sprite2.set_texture(&texture_registry, textures.tux);
 	sprite2.local().position.x = -100;
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
@@ -86,8 +68,10 @@ void run()
 	sprite3.local().position.x = 100;
 	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
-	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim.w, serotonin_texture_dim.h });
-	auto frame_format = oly::rendering::setup_gif_frame_format(serotonin_texture_dim);
+	auto serotonin_texture = texture_registry.get_texture(textures.serotonin);
+	auto serotonin_texture_dim = texture_registry.get_gif_dimensions(textures.serotonin);
+	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim->w, serotonin_texture_dim->h });
+	auto frame_format = oly::rendering::setup_gif_frame_format(*serotonin_texture_dim);
 	--frame_format.num_frames;
 	sprite3.set_frame_format(frame_format);
 
@@ -96,12 +80,12 @@ void run()
 	sprite4.local().position.y = 300;
 	sprite4.local().scale = glm::vec2(0.1f);
 	sprite4.post_set();
-	sprite4.set_texture(mipmap_tux_texture, mipmap_tux_texture_dim.dimensions());
+	sprite4.set_texture(&texture_registry, textures.mipmapped_tux);
 	
 	oly::mut::Sprite sprite5(sprite4);
 	sprite5.local().position.x = -400;
 	sprite5.post_set();
-	sprite5.set_texture(tux_texture, tux_texture_dim.dimensions());
+	sprite5.set_texture(&texture_registry, textures.tux);
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -118,7 +102,7 @@ void run()
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
 		flag_tesselation.emplace_back(&sprite_batch);
-		flag_tesselation[i].set_texture(flag_texture, flag_texture_dim.dimensions());
+		flag_tesselation[i].set_texture(&texture_registry, textures.flag);
 		flag_tesselation[i].local().scale = glm::vec2(2);
 		flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
@@ -253,6 +237,8 @@ void run()
 	ellipse2.ellipse.send_data();
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
+
+	auto flag_texture = texture_registry.get_texture(textures.flag);
 
 	while (!window.should_close())
 	{

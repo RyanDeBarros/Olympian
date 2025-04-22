@@ -1,0 +1,39 @@
+[texture_registry]
+	"root" = "../textures/"
+	
+	[[texture_registry.texture]]
+	"name" = "einstein"
+	"file" = "einstein.png"
+	"auto-use" = true
+	"min filter" = "nearest"
+	"mag filter" = "nearest"
+	
+	[[texture_registry.texture]]
+	"name" = "flag"
+	"file" = "flag.png"
+	"auto-use" = true
+	"min filter" = "nearest"
+	"mag filter" = "nearest"
+	
+	[[texture_registry.texture]]
+	"name" = "tux"
+	"file" = "tux.png"
+	"auto-use" = true
+	"min filter" = "linear"
+	"mag filter" = "linear"
+	
+	[[texture_registry.texture]]
+	"name" = "serotonin"
+	"file" = "serotonin.gif"
+	"type" = "gif"
+	"auto-use" = true
+	"min filter" = "nearest"
+	"mag filter" = "nearest"
+	
+	[[texture_registry.texture]]
+	"name" = "mipmapped tux"
+	"file" = "tux.png"
+	"generate mipmaps" = true
+	"auto-use" = true
+	"min filter" = "nearest mipmap linear"
+	"mag filter" = "nearest"

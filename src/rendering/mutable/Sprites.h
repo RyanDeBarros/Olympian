@@ -16,7 +16,7 @@ namespace oly
 		class SpriteBatch
 		{
 			friend struct Sprite;
-			
+
 			rendering::VertexArray vao;
 			rendering::QuadLayoutEBO<rendering::Mutability::MUTABLE, GLuint> ebo;
 
@@ -63,7 +63,7 @@ namespace oly
 			struct Modulation
 			{
 				glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
-				
+
 				bool operator==(const Modulation&) const = default;
 			};
 			struct ModulationHash
@@ -94,7 +94,7 @@ namespace oly
 			struct Capacity
 			{
 				Capacity(GLuint initial_sprites, GLuint new_textures, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_gifs = 0)
-					: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), gifs(num_gifs + 1) 
+					: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), gifs(num_gifs + 1)
 				{
 					OLY_ASSERT(4 * initial_sprites <= UINT_MAX);
 					OLY_ASSERT(uvs <= 500);
@@ -142,17 +142,19 @@ namespace oly
 					if (it->second.usage == 0)
 						erase_slot(it);
 				}
-				
+
 				void erase_slot(const typename decltype(usages)::iterator& it) { pos_generator.yield(it->first); slot_lookup.erase(it->second.obj); usages.erase(it); }
 
 			public:
 				BOStore() { pos_generator.gen(); /* waste 0th slot */ }
 
 				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
-				
+
 				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
-				{ set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj); }
-				
+				{
+					set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj);
+				}
+
 				template<typename BufferObjectType>
 				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
 					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
@@ -238,6 +240,12 @@ namespace oly
 			void update_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
 
+	}
+
+	class TextureRegistry;
+	namespace mut
+	{
+
 		struct Sprite
 		{
 		private:
@@ -257,6 +265,7 @@ namespace oly
 
 			void draw() const;
 
+			void set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const;
 			void set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;

@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../Resources.h"
+#include "../TextureRegistry.h"
 
 namespace oly
 {
@@ -255,6 +256,11 @@ namespace oly
 			batch->draw_sprite(vbid.get());
 		}
 		
+		void Sprite::set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const
+		{
+			set_texture(texture_registry->get_texture(texture_name), texture_registry->get_image_dimensions(texture_name).dimensions());
+		}
+
 		void Sprite::set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const
 		{
 			batch->set_texture(vbid.get(), texture, dimensions);
