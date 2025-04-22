@@ -5,6 +5,7 @@
 #include "util/IO.h"
 #include "util/Errors.h"
 #include "util/Assert.h"
+#include "../TextureRegistry.h"
 
 namespace oly
 {
@@ -235,6 +236,12 @@ namespace oly
 			return *this;
 		}
 
+		void Image::delete_buffer()
+		{
+			stbi_image_free(_buf);
+			_buf = nullptr;
+		}
+
 		ImageTextureRes load_texture_2d(const char* filename, bool generate_mipmaps)
 		{
 			ImageTextureRes img;
@@ -280,12 +287,13 @@ namespace oly
 		}
 
 		GIF::GIF(const char* filepath)
+			: _dim(std::make_shared<GIFDimensions>())
 		{
 			auto full_content = io::read_file_uc(filepath);
 			int* delays;
 			int frames;
-			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim.w, &_dim.h, &frames, &_dim.cpp, _dim.cpp);
-			_dim.set_delays(delays, frames);
+			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, _dim->cpp);
+			_dim->set_delays(delays, frames);
 			stbi_image_free(delays);
 		}
 
@@ -312,17 +320,23 @@ namespace oly
 			return *this;
 		}
 
+		void GIF::delete_buffer()
+		{
+			stbi_image_free(_buf);
+			_buf = nullptr;
+		}
+
 		GIFTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps)
 		{
 			GIFTextureRes gif;
 			gif.gif = std::make_shared<GIF>(filename);
 			gif.texture = std::make_shared<Texture>(GL_TEXTURE_2D_ARRAY);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, *gif.texture);
-			const auto& dim = gif.gif->dim();
-			tex::pixel_alignment(dim.cpp);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim.cpp), dim.w, dim.h, dim.frames(), 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, nullptr);
-			for (GLuint i = 0; i < dim.frames(); ++i)
-				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim.w, dim.h, 1, tex::format(dim.cpp), GL_UNSIGNED_BYTE, gif.gif->buf() + i * dim.w * dim.h * dim.cpp);
+			const auto& dim = gif.gif->dim().lock();
+			tex::pixel_alignment(dim->cpp);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, tex::format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
+			for (GLuint i = 0; i < dim->frames(); ++i)
+				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, tex::format(dim->cpp), GL_UNSIGNED_BYTE, gif.gif->buf() + i * dim->w * dim->h * dim->cpp);
 			if (generate_mipmaps)
 				glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 			return gif;
@@ -334,9 +348,19 @@ namespace oly
 			return { starting_frame, dim.frames(), 0.0f, speed * 0.01f * dim.delay() };
 		}
 
+		GIFFrameFormat setup_gif_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
+		{
+			return setup_gif_frame_format(*texture_registry->get_gif_dimensions(texture_name).lock(), speed, starting_frame);
+		}
+
 		GIFFrameFormat setup_gif_frame_format_single(const GIFDimensions& dim, GLuint frame)
 		{
 			return { frame, dim.frames(), 0.0f, 0.0f };
+		}
+
+		GIFFrameFormat setup_gif_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame)
+		{
+			return setup_gif_frame_format_single(*texture_registry->get_gif_dimensions(texture_name).lock(), frame);
 		}
 	}
 }

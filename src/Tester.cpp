@@ -68,10 +68,8 @@ void run()
 	sprite3.local().position.x = 100;
 	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
-	auto serotonin_texture = texture_registry.get_texture(textures.serotonin);
-	auto serotonin_texture_dim = texture_registry.get_gif_dimensions(textures.serotonin);
-	sprite3.set_texture(serotonin_texture, { serotonin_texture_dim->w, serotonin_texture_dim->h });
-	auto frame_format = oly::rendering::setup_gif_frame_format(*serotonin_texture_dim);
+	sprite3.set_texture(&texture_registry, textures.serotonin);
+	auto frame_format = oly::rendering::setup_gif_frame_format(&texture_registry, textures.serotonin);
 	--frame_format.num_frames;
 	sprite3.set_frame_format(frame_format);
 

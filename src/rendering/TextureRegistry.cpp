@@ -6,7 +6,6 @@
 
 namespace oly
 {
-	// TODO option to store pixel buffer
 	void TextureRegistry::load_registree(const std::string& root_dir, const assets::AssetNode& node)
 	{
 		auto _name = node["name"].value<std::string>();
@@ -27,18 +26,16 @@ namespace oly
 		GLenum target;
 		if (type == "gif")
 		{
-			std::shared_ptr<rendering::GIFDimensions> dim = std::make_shared<rendering::GIFDimensions>();
-			r.texture = oly::rendering::load_bindless_texture_2d_array(root_dir + file, *dim, generate_mipmaps);
-			r.dimensions = dim;
+			rendering::GIFBindlessTextureRes g = oly::rendering::load_bindless_texture_2d_array(root_dir + file, generate_mipmaps);
+			r = g;
 			target = GL_TEXTURE_2D_ARRAY;
 		}
 		// TODO else if (type == "spritesheet")
 		// TODO else if (type == "svg")
 		else
 		{
-			rendering::ImageDimensions dim;
-			r.texture = oly::rendering::load_bindless_texture_2d(root_dir + file, dim, generate_mipmaps);
-			r.dimensions = dim;
+			rendering::ImageBindlessTextureRes i = oly::rendering::load_bindless_texture_2d(root_dir + file, generate_mipmaps);
+			r = i;
 			target = GL_TEXTURE_2D;
 		}
 
@@ -98,10 +95,14 @@ namespace oly
 		{
 			bool auto_use = node["auto-use"].value<bool>().value_or(false);
 			if (auto_use)
-				r.texture->set_and_use_handle();
+				texture_res(r)->set_and_use_handle();
 			else
-				r.texture->set_handle();
+				texture_res(r)->set_handle();
 		}
+
+		bool keep_pixel_buffer = node["keep pixel buffer"].value<bool>().value_or(false);
+		if (!keep_pixel_buffer)
+			delete_buffer(r);
 
 		reg[name] = r;
 	}
@@ -123,17 +124,32 @@ namespace oly
 
 	rendering::BindlessTextureRes oly::TextureRegistry::get_texture(const std::string& name) const
 	{
-		return get_registree(name)->second.texture;
+		return texture_res(get_registree(name)->second);
 	}
 
 	rendering::ImageDimensions oly::TextureRegistry::get_image_dimensions(const std::string& name) const
 	{
-		return std::get<DimensionIndex::IMAGE>(get_registree(name)->second.dimensions);
+		return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image->dim();
 	}
 
-	std::shared_ptr<rendering::GIFDimensions> oly::TextureRegistry::get_gif_dimensions(const std::string& name) const
+	std::weak_ptr<rendering::GIFDimensions> oly::TextureRegistry::get_gif_dimensions(const std::string& name) const
 	{
-		return std::get<DimensionIndex::GIF>(get_registree(name)->second.dimensions);
+		return std::get<(size_t)TextureType::GIF>(get_registree(name)->second).gif->dim();
+	}
+
+	rendering::ImageRes TextureRegistry::get_image_pixel_buffer(const std::string& name)
+	{
+		return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image;
+	}
+
+	rendering::GIFRes TextureRegistry::get_gif_pixel_buffer(const std::string& name)
+	{
+		return std::get<(size_t)TextureType::GIF>(get_registree(name)->second).gif;
+	}
+
+	TextureRegistry::TextureType TextureRegistry::get_type(const std::string& name) const
+	{
+		return (TextureType)get_registree(name)->second.index();
 	}
 
 	decltype(TextureRegistry::reg)::const_iterator TextureRegistry::get_registree(const std::string& name) const

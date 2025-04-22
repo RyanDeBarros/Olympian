@@ -258,7 +258,16 @@ namespace oly
 		
 		void Sprite::set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const
 		{
-			set_texture(texture_registry->get_texture(texture_name), texture_registry->get_image_dimensions(texture_name).dimensions());
+			switch (texture_registry->get_type(texture_name))
+			{
+			case TextureRegistry::TextureType::IMAGE:
+				set_texture(texture_registry->get_texture(texture_name), texture_registry->get_image_dimensions(texture_name).dimensions());
+				break;
+			case TextureRegistry::TextureType::GIF:
+				if (auto sp = texture_registry->get_gif_dimensions(texture_name).lock())
+					set_texture(texture_registry->get_texture(texture_name), sp->dimensions());
+				break;
+			}
 		}
 
 		void Sprite::set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const

@@ -9,18 +9,16 @@ namespace oly
 {
 	class TextureRegistry
 	{
-		enum DimensionIndex
-		{
-			IMAGE,
-			GIF
-		};
-		typedef std::variant<rendering::ImageDimensions, std::shared_ptr<rendering::GIFDimensions>> TextureDimensions;
-
-		struct Registree
-		{
-			rendering::BindlessTextureRes texture;
-			TextureDimensions dimensions;
-		};
+		typedef std::variant<rendering::ImageBindlessTextureRes, rendering::GIFBindlessTextureRes> Registree;
+		static const rendering::BindlessTextureRes& texture_res(const Registree& r) { return std::visit([](auto&& r) -> const rendering::BindlessTextureRes& { return r.texture; }, r); }
+		static rendering::BindlessTextureRes& texture_res(Registree& r) { return std::visit([](auto&& r) -> rendering::BindlessTextureRes& { return r.texture; }, r); }
+		static void delete_buffer(Registree& r) { std::visit([](auto&& r) {
+			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageDimensions>)
+				r.image.delete_buffer();
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::GIFDimensions>)
+				r.gif.delete_buffer();
+			}, r);
+		}
 
 		std::unordered_map<std::string, Registree> reg;
 
@@ -32,7 +30,17 @@ namespace oly
 
 		rendering::BindlessTextureRes get_texture(const std::string& name) const;
 		rendering::ImageDimensions get_image_dimensions(const std::string& name) const;
-		std::shared_ptr<rendering::GIFDimensions> get_gif_dimensions(const std::string& name) const;
+		std::weak_ptr<rendering::GIFDimensions> get_gif_dimensions(const std::string& name) const;
+		rendering::ImageRes get_image_pixel_buffer(const std::string& name);
+		rendering::GIFRes get_gif_pixel_buffer(const std::string& name);
+
+		enum class TextureType
+		{
+			IMAGE,
+			GIF
+		};
+
+		TextureType get_type(const std::string& name) const;
 
 	private:
 		decltype(reg)::const_iterator get_registree(const std::string& name) const;
