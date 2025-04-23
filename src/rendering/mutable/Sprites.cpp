@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../Resources.h"
-#include "../TextureRegistry.h"
+#include "../../Olympian.h"
 
 namespace oly
 {
@@ -268,6 +268,11 @@ namespace oly
 					set_texture(texture_registry->get_texture(texture_name), sp->dimensions());
 				break;
 			}
+		}
+
+		void Sprite::set_texture(const Context* context, const std::string& texture_name) const
+		{
+			set_texture(&context->texture_registry(), texture_name);
 		}
 
 		void Sprite::set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const

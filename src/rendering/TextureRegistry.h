@@ -10,8 +10,6 @@ namespace oly
 	class TextureRegistry
 	{
 		typedef std::variant<rendering::ImageBindlessTextureRes, rendering::GIFBindlessTextureRes> Registree;
-		static const rendering::BindlessTextureRes& texture_res(const Registree& r) { return std::visit([](auto&& r) -> const rendering::BindlessTextureRes& { return r.texture; }, r); }
-		static rendering::BindlessTextureRes& texture_res(Registree& r) { return std::visit([](auto&& r) -> rendering::BindlessTextureRes& { return r.texture; }, r); }
 		static void delete_buffer(Registree& r) { std::visit([](auto&& r) {
 			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageDimensions>)
 				r.image.delete_buffer();
@@ -22,6 +20,19 @@ namespace oly
 
 		std::unordered_map<std::string, Registree> reg;
 
+	public:
+		enum class TextureType
+		{
+			IMAGE,
+			GIF
+		};
+	
+	private:
+		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::Image& image);
+		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::GIF& gif);
+		static void setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target);
+		void register_gif(const assets::AssetNode& node, const rendering::GIFRes& gif);
+		void register_image(const assets::AssetNode& node, const rendering::ImageRes& image);
 		void load_registree(const std::string& root_dir, const assets::AssetNode& node);
 
 	public:
@@ -33,12 +44,6 @@ namespace oly
 		std::weak_ptr<rendering::GIFDimensions> get_gif_dimensions(const std::string& name) const;
 		rendering::ImageRes get_image_pixel_buffer(const std::string& name);
 		rendering::GIFRes get_gif_pixel_buffer(const std::string& name);
-
-		enum class TextureType
-		{
-			IMAGE,
-			GIF
-		};
 
 		TextureType get_type(const std::string& name) const;
 

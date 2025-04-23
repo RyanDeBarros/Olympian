@@ -1,36 +1,16 @@
 ﻿#include "Olympian.h"
 
-#include "rendering/mutable/Sprites.h"
 #include "rendering/immutable/Polygons.h"
 #include "rendering/immutable/Ellipses.h"
-#include "rendering/Loader.h"
 #include "rendering/Resources.h"
-#include "rendering/TextureRegistry.h"
 
 #include <nanosvg/nanosvg.h>
 #include <nanosvg/nanosvgrast.h>
 
-static std::string ASSET_DIR = "../../../res/assets/";
-
-static void run();
-
 int main()
 {
-	oly::init();
-	run();
-	return oly::terminate();
-}
+	oly::Context oly_context("../../../res/assets/oly_context.toml");
 
-void run()
-{
-	oly::rendering::WindowHint hint;
-	hint.context.clear_color = { 0.2f, 0.5f, 0.8f, 1.0f };
-	oly::rendering::Window window(1440, 1080, "Olympian Engine", hint);
-	oly::load_context();
-	glEnable(GL_BLEND);
-
-	oly::TextureRegistry texture_registry;
-	texture_registry.load(ASSET_DIR + "texture_registry.toml");
 	struct
 	{
 		const char* einstein = "einstein";
@@ -40,33 +20,24 @@ void run()
 		const char* serotonin = "serotonin";
 	} textures;
 	
-	oly::rendering::NSVGAbstract nsvg_abstract(ASSET_DIR + "../textures/godot.svg");
-	oly::rendering::NSVGContext nsvg_context;
+	oly::rendering::NSVGAbstract nsvg_abstract("../../../res/assets/../textures/godot.svg");
 
 	float godot_scale = 1.0f;
-	auto godot_image = nsvg_context.rasterize(nsvg_abstract, godot_scale);
+	auto godot_image = oly_context.nsvg_context().rasterize(nsvg_abstract, godot_scale);
 	
-	oly::rendering::BindlessTextureRes godot_texture = std::make_shared<oly::rendering::BindlessTexture>(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, *godot_texture);
-	oly::rendering::tex::pixel_alignment(godot_image.dim().cpp);
-	glTexImage2D(GL_TEXTURE_2D, 0, oly::rendering::tex::internal_format(godot_image.dim().cpp), godot_image.dim().w, godot_image.dim().h, 0,
-		oly::rendering::tex::format(godot_image.dim().cpp), GL_UNSIGNED_BYTE, godot_image.buf());
-	//if (generate_mipmaps)
-		//glGenerateMipmap(GL_TEXTURE_2D);
+	oly::rendering::BindlessTextureRes godot_texture = oly::rendering::load_bindless_texture_2d(godot_image, false);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	godot_texture->set_and_use_handle();
 
-	oly::mut::SpriteBatch sprite_batch({ 0, 0 }, window.projection_bounds());
-
-	oly::mut::Sprite sprite0(&sprite_batch);
-	sprite0.set_texture(&texture_registry, textures.einstein);
+	auto sprite0 = oly_context.mut.sprite();
+	sprite0.set_texture(&oly_context, textures.einstein);
 	sprite0.local().position.x = 300;
 	sprite0.local().position.y = 300;
 	sprite0.post_set();
 
-	oly::mut::Sprite sprite1(&sprite_batch);
-	sprite1.set_texture(&texture_registry, textures.einstein);
+	auto sprite1 = oly_context.mut.sprite();
+	sprite1.set_texture(&oly_context, textures.einstein);
 	sprite1.set_modulation({ {
 		{ 1.0f, 1.0f, 0.2f, 0.7f },
 		{ 0.2f, 1.0f, 1.0f, 0.7f },
@@ -74,9 +45,9 @@ void run()
 		{ 0.5f, 0.5f, 0.5f, 0.7f }
 	} });
 
-	oly::mut::Sprite sprite2(&sprite_batch);
+	auto sprite2 = oly_context.mut.sprite();
 	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
-	sprite2.set_texture(&texture_registry, textures.tux);
+	sprite2.set_texture(&oly_context, textures.tux);
 	sprite2.local().position.x = -100;
 	sprite2.local().position.y = -100;
 	sprite2.local().scale = glm::vec2(0.2f);
@@ -86,8 +57,8 @@ void run()
 	sprite3.local().position.x = 100;
 	sprite3.local().scale = glm::vec2(2.0f);
 	sprite3.post_set();
-	sprite3.set_texture(&texture_registry, textures.serotonin);
-	auto frame_format = oly::rendering::setup_gif_frame_format(&texture_registry, textures.serotonin);
+	sprite3.set_texture(&oly_context, textures.serotonin);
+	auto frame_format = oly::rendering::setup_gif_frame_format(&oly_context, textures.serotonin);
 	--frame_format.num_frames;
 	sprite3.set_frame_format(frame_format);
 
@@ -96,14 +67,14 @@ void run()
 	sprite4.local().position.y = 300;
 	sprite4.local().scale = glm::vec2(0.1f);
 	sprite4.post_set();
-	sprite4.set_texture(&texture_registry, textures.mipmapped_tux);
+	sprite4.set_texture(&oly_context, textures.mipmapped_tux);
 	
 	oly::mut::Sprite sprite5(sprite4);
 	sprite5.local().position.x = -400;
 	sprite5.post_set();
-	sprite5.set_texture(&texture_registry, textures.tux);
+	sprite5.set_texture(&oly_context, textures.tux);
 
-	oly::mut::Sprite godot_sprite(&sprite_batch);
+	oly::mut::Sprite godot_sprite = oly_context.mut.sprite();
 	godot_sprite.local().position = { -300, -200 };
 	godot_sprite.local().scale = glm::vec2(3.0f / godot_scale);
 	godot_sprite.post_set();
@@ -123,8 +94,8 @@ void run()
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.emplace_back(&sprite_batch);
-		flag_tesselation[i].set_texture(&texture_registry, textures.flag);
+		flag_tesselation.emplace_back(&oly_context.mut.sprite_batch());
+		flag_tesselation[i].set_texture(&oly_context, textures.flag);
 		flag_tesselation[i].local().scale = glm::vec2(2);
 		flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
@@ -132,7 +103,7 @@ void run()
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	oly::immut::PolygonBatch polygon_batch({ 100, 4 }, window.projection_bounds());
+	oly::immut::PolygonBatch polygon_batch({ 100, 4 }, oly_context.window().projection_bounds());
 
 	oly::immut::Polygon pentagon1(&polygon_batch);
 	pentagon1.polygon.points = {
@@ -236,7 +207,7 @@ void run()
 		polygon_batch.draw_specs[2] = { post_octagon_range.initial, polygon_batch.get_capacity().indices };
 	}
 
-	oly::immut::EllipseBatch ellipse_batch({ 100 }, window.projection_bounds());
+	oly::immut::EllipseBatch ellipse_batch({ 100 }, oly_context.window().projection_bounds());
 
 	oly::immut::Ellipse ellipse1(&ellipse_batch);
 	ellipse1.ellipse.dimension() = { 2, 1, 0.3f, 1.0f, 1.0f };
@@ -260,14 +231,11 @@ void run()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	auto flag_texture = texture_registry.get_texture(textures.flag);
+	auto flag_texture = oly_context.texture_registry().get_texture(textures.flag);
 
-	while (!window.should_close())
+	glEnable(GL_BLEND);
+	while (oly_context.frame())
 	{
-		// pre-frame
-		oly::pre_frame();
-		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
 		// logic update
 		octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
 		octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
@@ -297,7 +265,7 @@ void run()
 			{
 				lin = false;
 				flag_texture->set_and_use_handle(oly::samplers::nearest);
-				sprite_batch.update_texture_handle(flag_texture);
+				oly_context.sync_texture_handle(flag_texture);
 			}
 		}
 		else
@@ -306,7 +274,7 @@ void run()
 			{
 				lin = true;
 				flag_texture->set_and_use_handle(oly::samplers::linear);
-				sprite_batch.update_texture_handle(flag_texture);
+				oly_context.sync_texture_handle(flag_texture);
 			}
 		}
 		
@@ -318,6 +286,7 @@ void run()
 		
 		// draw
 		ellipse_batch.draw();
+		glClear(GL_STENCIL_BUFFER_BIT);
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		oly::stencil::draw::replace();
@@ -327,19 +296,19 @@ void run()
 		sprite0.draw();
 		sprite1.draw();
 		sprite2.draw();
-		sprite_batch.render();
+		oly_context.mut.render_sprites();
 		oly::stencil::end();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		sprite3.draw();
 		sprite4.draw();
 		sprite5.draw();
-		sprite_batch.render();
+		oly_context.mut.render_sprites();
 		polygon_batch.draw(2);
 		godot_sprite.draw();
-		sprite_batch.render();
+		oly_context.mut.render_sprites();
 
 		// post-frame
-		window.swap_buffers();
+		oly_context.window().swap_buffers();
 	}
 }

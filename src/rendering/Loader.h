@@ -12,6 +12,8 @@ namespace oly
 		extern toml::v3::parse_result load_toml(const std::string& file);
 		typedef toml::v3::node_view<toml::v3::node> AssetNode;
 
+		extern bool parse_int(const AssetNode& node, const std::string& name, int& v);
+		extern bool parse_vec4(const AssetNode& node, const std::string& name, glm::vec4& v);
 		extern Transform2D load_transform_2d(const AssetNode& node);
 		extern random::bound::Function load_random_bound_function(const AssetNode& node);
 		extern random::bound::Function2D load_random_bound_function_2d(const AssetNode& node);

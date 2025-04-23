@@ -243,6 +243,7 @@ namespace oly
 	}
 
 	class TextureRegistry;
+	class Context;
 	namespace mut
 	{
 
@@ -266,6 +267,7 @@ namespace oly
 			void draw() const;
 
 			void set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const;
+			void set_texture(const Context* context, const std::string& texture_name) const;
 			void set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;

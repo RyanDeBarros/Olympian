@@ -42,6 +42,32 @@ namespace oly
 #define get_vec4_default(node, name, def) glm::vec4{ get_float_element_default(node[name].as_array(), 0, def[0]),\
  get_float_element_default(node[name].as_array(), 1, def[1]), get_float_element_default(node[name].as_array(), 2, def[2]), get_float_element_default(node[name].as_array(), 3, def[3]) }
 
+		bool parse_int(const AssetNode& node, const std::string& name, int& v)
+		{
+			auto n = node[name];
+			if (n)
+			{
+				auto i = n.value<int64_t>();
+				if (i)
+				{
+					v = (int)i.value();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool parse_vec4(const AssetNode& node, const std::string& name, glm::vec4& v)
+		{
+			auto arr = node[name].as_array();
+			if (arr && arr->size() >= 4)
+			{
+				v = { (float)arr->get_as<double>(0)->get(), (float)arr->get_as<double>(1)->get(), (float)arr->get_as<double>(2)->get(), (float)arr->get_as<double>(3)->get() };
+				return true;
+			}
+			return false;
+		}
+
 		Transform2D load_transform_2d(const AssetNode& node)
 		{
 			Transform2D transform;
