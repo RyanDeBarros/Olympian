@@ -1,5 +1,5 @@
 # Olympian
-Olympian Engine is an GLFW/OpenGL framework to make future graphics projects easier, faster, and safer.
+Olympian Engine is an OpenGL framework to make future graphics projects easier, faster, and safer.
 
 ## Licensing
 This project uses the following libraries:
