@@ -2,16 +2,16 @@
 	"root" = "../textures/"
 	
 	[[texture_registry.image]]
-	"file" = "einstein.png"
-	"name" = "einstein"
-	"auto-use" = true
+	"file"       = "einstein.png"
+	"name"       = "einstein"
+	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
 	
 	[[texture_registry.image]]
-	"file" = "flag.png"
-	"name" = "flag"
-	"auto-use" = true
+	"file"       = "flag.png"
+	"name"       = "flag"
+	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
 	
@@ -19,23 +19,41 @@
 	"file" = "tux.png"
 		
 		[[texture_registry.image.texture]]
-		"name" = "tux"
-		"auto-use" = true
+		"name"       = "tux"
+		"auto-use"   = true
 		"min filter" = "linear"
 		"mag filter" = "linear"
 
 		[[texture_registry.image.texture]]
-		"name" = "mipmapped tux"
+		"name"             = "mipmapped tux"
 		"generate mipmaps" = true
-		"auto-use" = true
-		"min filter" = "nearest mipmap linear"
-		"mag filter" = "nearest"
+		"auto-use"         = true
+		"min filter"       = "nearest mipmap linear"
+		"mag filter"       = "nearest"
 
 	[[texture_registry.image]]
-	"file" = "serotonin.gif"
-	"type" = "gif"
-	"name" = "serotonin"
-	"auto-use" = true
+	"file"       = "serotonin.gif"
+	"type"       = "gif"
+	"name"       = "serotonin"
+	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
+
+	[[texture_registry.nsvg_abstract]]
+	"file" = "godot.svg"
+	"name" = "godot icon"
+
+		[[texture_registry.nsvg_abstract.texture]]
+		"name"       = "godot icon (1.0)"
+		"scale"      = 1.0
+		"auto-use"   = true
+		"min filter" = "nearest"
+		"mag filter" = "nearest"
+		
+		[[texture_registry.nsvg_abstract.texture]]
+		"name"       = "godot icon (3.0)"
+		"scale"      = 3.0
+		"auto-use"   = true
+		"min filter" = "nearest"
+		"mag filter" = "nearest"
 	

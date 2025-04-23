@@ -1,6 +1,6 @@
 [context]
-window_hint = { "clear color" = [0.2, 0.5, 0.8, 1.0] }
-window = { "width" = 1440, "height" = 1080, "title" = "Olympian Engine" }
-"texture registries" = ["texture_registry.toml"]
-mut_sprite_batch = { "initial sprites" = 50, "new textures" = 10 }
+window_hint             = { "clear color" = [0.2, 0.5, 0.8, 1.0] }
+window                  = { "width" = 1440, "height" = 1080, "title" = "Olympian Engine" }
+"texture registries"    = ["texture_registry.toml"]
+mut_sprite_batch        = { "initial sprites" = 50, "new textures" = 10 }
 "mut sprite registries" = ["sprite_registry.toml"]

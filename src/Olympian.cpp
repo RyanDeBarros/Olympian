@@ -50,7 +50,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.texture_registry.load(root_dir + file.value());
+						internal.texture_registry.load(this, root_dir + file.value());
 			}
 		}
 

@@ -320,7 +320,7 @@ namespace oly
 
 		class NSVGContext
 		{
-			NSVGrasterizer* r = nullptr;
+			mutable NSVGrasterizer* r = nullptr;
 
 		public:
 			NSVGContext();
@@ -329,7 +329,46 @@ namespace oly
 			~NSVGContext();
 			NSVGContext& operator=(NSVGContext&&) noexcept;
 
-			Image rasterize(const NSVGAbstract& abstract, float scale);
+			Image rasterize(const NSVGAbstract& abstract, float scale) const;
+			ImageRes rasterize_res(const NSVGAbstract& abstract, float scale) const;
+
+		private:
+			void rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const;
 		};
+
+		struct NSVGImageRes
+		{
+			ImageRes image;
+			float scale;
+		};
+
+		struct NSVGTextureRes
+		{
+			NSVGImageRes image;
+			TextureRes texture;
+		};
+		struct NSVGBindlessTextureRes
+		{
+			NSVGImageRes image;
+			BindlessTextureRes texture;
+
+			NSVGBindlessTextureRes() = default;
+			NSVGBindlessTextureRes(NSVGTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
+			NSVGBindlessTextureRes(const NSVGImageRes& image, const BindlessTextureRes& texture) : image(image), texture(texture) {}
+			NSVGBindlessTextureRes(const NSVGImageRes& image, BindlessTextureRes&& texture) : image(image), texture(std::move(texture)) {}
+		};
+
+		enum class NSVGMipmapMode
+		{
+			NONE,
+			AUTO,
+			MANUAL
+		};
+
+		extern TextureRes load_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps = NSVGMipmapMode::NONE);
+		inline BindlessTextureRes load_bindless_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps = NSVGMipmapMode::NONE)
+		{
+			return std::make_shared<BindlessTexture>(load_nsvg_texture_2d(image, generate_mipmaps));
+		}
 	}
 }

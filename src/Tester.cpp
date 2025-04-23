@@ -11,14 +11,6 @@
 int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
-	
-	oly::rendering::NSVGAbstract nsvg_abstract("../../../res/assets/../textures/godot.svg");
-	float godot_scale = 1.0f;
-	auto godot_image = oly_context.nsvg_context().rasterize(nsvg_abstract, godot_scale);
-	oly::rendering::BindlessTextureRes godot_texture = oly::rendering::load_bindless_texture_2d(godot_image, false);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	godot_texture->set_and_use_handle();
 
 	auto sprite0 = oly_context.mut.sprite("sprite0");
 	auto sprite1 = oly_context.mut.sprite("sprite1");
@@ -32,12 +24,7 @@ int main()
 	}
 	auto sprite4 = oly_context.mut.sprite("sprite4");
 	auto sprite5 = oly_context.mut.sprite("sprite5");
-	
-	oly::mut::Sprite godot_sprite = oly_context.mut.sprite();
-	godot_sprite.local().position = { -300, -200 };
-	godot_sprite.local().scale = glm::vec2(3.0f / godot_scale);
-	godot_sprite.post_set();
-	godot_sprite.set_texture(godot_texture, godot_image.dim().dimensions());
+	auto godot_sprite = oly_context.mut.sprite("godot icon (3.0)");
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -48,8 +35,7 @@ int main()
 	flag_tesselation_modifier.shearing = { 0, 1 };
 	flag_tesselation_parent.post_set();
 	std::vector<oly::mut::Sprite> flag_tesselation;
-	int flag_rows = 8;
-	int flag_cols = 8;
+	const int flag_rows = 8, flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
@@ -243,9 +229,9 @@ int main()
 		
 		// draw
 		ellipse_batch.draw();
-		glClear(GL_STENCIL_BUFFER_BIT);
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
+		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
 		polygon_batch.draw(1);
 		oly::stencil::disable_drawing();

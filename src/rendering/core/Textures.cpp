@@ -369,6 +369,22 @@ namespace oly
 			return setup_gif_frame_format_single(&context->texture_registry(), texture_name, frame);
 		}
 
+		TextureRes load_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps)
+		{
+			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
+			glBindTexture(GL_TEXTURE_2D, *texture);
+			const auto& dim = image.image->dim();
+			tex::pixel_alignment(dim.cpp);
+			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
+			if (generate_mipmaps == NSVGMipmapMode::AUTO)
+				glGenerateMipmap(GL_TEXTURE_2D);
+			else if (generate_mipmaps == NSVGMipmapMode::MANUAL)
+			{
+				// TODO
+			}
+			return texture;
+		}
+
 		NSVGAbstract::NSVGAbstract(const char* filepath)
 			: i(nsvgParseFromFile(filepath, "px", 96))
 		{
@@ -442,14 +458,29 @@ namespace oly
 			return *this;
 		}
 
-		Image NSVGContext::rasterize(const NSVGAbstract& abstract, float scale)
+		Image NSVGContext::rasterize(const NSVGAbstract& abstract, float scale) const
 		{
+			unsigned char* buf;
 			ImageDimensions dim;
+			rasterize_unsafe(abstract, scale, buf, dim);
+			return Image(buf, dim);
+		}
+
+		ImageRes NSVGContext::rasterize_res(const NSVGAbstract& abstract, float scale) const
+		{
+			unsigned char* buf;
+			ImageDimensions dim;
+			rasterize_unsafe(abstract, scale, buf, dim);
+			return std::make_shared<Image>(buf, dim);
+		}
+
+		void NSVGContext::rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const
+		{
 			dim.w = (int)(scale * abstract.width());
 			dim.h = (int)(scale * abstract.height());
 			dim.cpp = 4;
 			int stride = dim.w * dim.cpp;
-			unsigned char* buf = new unsigned char[stride * dim.h];
+			buf = new unsigned char[stride * dim.h];
 			nsvgRasterize(r, abstract.i, 0.0f, 0.0f, scale, buf, dim.w, dim.h, stride);
 
 			unsigned char* temp = new unsigned char[stride];
@@ -460,8 +491,6 @@ namespace oly
 				memcpy(buf + (dim.h - 1 - i) * stride, temp, stride);
 			}
 			delete[] temp;
-
-			return Image(buf, dim);
 		}
 	}
 }

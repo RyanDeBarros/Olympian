@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "../Olympian.h"
 #include "util/Errors.h"
 
 namespace oly
@@ -16,6 +17,17 @@ namespace oly
 	{
 		bool generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
 		return rendering::load_bindless_texture_2d_array(gif, generate_mipmaps);
+	}
+
+	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::NSVGImageRes& image)
+	{
+		std::string generate_mipmaps = node["generate mipmaps"].value<std::string>().value_or("");
+		if (generate_mipmaps == "auto")
+			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::AUTO);
+		else if (generate_mipmaps == "manual")
+			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::MANUAL);
+		else
+			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::NONE);
 	}
 
 	void TextureRegistry::setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target)
@@ -88,21 +100,30 @@ namespace oly
 	void TextureRegistry::register_gif(const assets::AssetNode& node, const rendering::GIFRes& gif)
 	{
 		auto name = node["name"].value<std::string>();
-		if (!name)
-			return;
-		rendering::BindlessTextureRes texture = create_texture(node, *gif);
-		setup_texture(texture, node, GL_TEXTURE_2D_ARRAY);
-		reg[name.value()] = rendering::GIFBindlessTextureRes{ gif, std::move(texture) };
+		if (name)
+		{
+			rendering::BindlessTextureRes texture = create_texture(node, *gif);
+			setup_texture(texture, node, GL_TEXTURE_2D_ARRAY);
+			texture_reg[name.value()] = rendering::GIFBindlessTextureRes{gif, std::move(texture)};
+		}
 	}
 
 	void TextureRegistry::register_image(const assets::AssetNode& node, const rendering::ImageRes& image)
 	{
 		auto name = node["name"].value<std::string>();
-		if (!name)
-			return;
-		rendering::BindlessTextureRes texture = create_texture(node, *image);
+		if (name)
+		{
+			rendering::BindlessTextureRes texture = create_texture(node, *image);
+			setup_texture(texture, node, GL_TEXTURE_2D);
+			texture_reg[name.value()] = rendering::ImageBindlessTextureRes{ image, std::move(texture) };
+		}
+	}
+
+	void TextureRegistry::register_nsvg_image(const assets::AssetNode& node, const rendering::NSVGImageRes& image, const std::string& name)
+	{
+		rendering::BindlessTextureRes texture = create_texture(node, image);
 		setup_texture(texture, node, GL_TEXTURE_2D);
-		reg[name.value()] = rendering::ImageBindlessTextureRes{ image, std::move(texture) };
+		texture_reg[name] = rendering::NSVGBindlessTextureRes{ image, std::move(texture) };
 	}
 
 	void TextureRegistry::load_registree(const std::string& root_dir, const assets::AssetNode& node)
@@ -130,7 +151,6 @@ namespace oly
 				gif->delete_buffer();
 		}
 		// TODO else if (type == "spritesheet")
-		// TODO else if (type == "svg")
 		else
 		{
 			rendering::ImageRes image = std::make_shared<rendering::Image>(image_filepath);
@@ -144,7 +164,40 @@ namespace oly
 		}
 	}
 
-	void TextureRegistry::load(const char* texture_registry_file)
+	void TextureRegistry::load_nsvg_abstract(const Context* context, const std::string& root_dir, const assets::AssetNode& node)
+	{
+		auto _file = node["file"].value<std::string>();
+		auto _name = node["name"].value<std::string>();
+		if (!_file || !_name)
+			return;
+
+		std::string file = _file.value();
+		std::string abstract_name = _name.value();
+
+		std::string units = node["units"].value<std::string>().value_or("px");
+		float dpi = (float)node["dpi"].value<double>().value_or(96.0);
+
+		rendering::NSVGAbstract nsvg_abstract(root_dir + file, units.c_str(), dpi);
+		
+		if (auto texture_list = node["texture"].as_array())
+			texture_list->for_each([this, context, &nsvg_abstract, &abstract_name](auto&& node) {
+				if constexpr (toml::is_table<decltype(node)>)
+				{
+					auto _name = node["name"].value<std::string>();
+					auto _scale = node["scale"].value<double>();
+					if (!_name || !_scale)
+						return;
+
+					std::string name = _name.value();
+					float scale = (float)_scale.value();
+					rendering::NSVGImageRes image = { context->nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
+					register_nsvg_image((assets::AssetNode)node, image, name);
+				}});
+		
+		nsvg_abstract_reg.emplace(abstract_name, std::move(nsvg_abstract));
+	}
+
+	void TextureRegistry::load(const Context* context, const char* texture_registry_file)
 	{
 		auto toml = assets::load_toml(texture_registry_file);
 		auto texture_registry = toml["texture_registry"];
@@ -155,6 +208,8 @@ namespace oly
 			return;
 		std::string root_dir = std::filesystem::path(texture_registry_file).parent_path().string() + "/" + texture_registry["root"].value<std::string>().value_or("");
 		textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (assets::AssetNode)node); });
+		if (auto nsvg_abstracts = texture_registry["nsvg_abstract"].as_array())
+			nsvg_abstracts->for_each([this, context, &root_dir](auto&& node) { load_nsvg_abstract(context, root_dir, (assets::AssetNode)node); });
 	}
 
 	rendering::BindlessTextureRes oly::TextureRegistry::get_texture(const std::string& name) const
@@ -164,7 +219,11 @@ namespace oly
 
 	rendering::ImageDimensions oly::TextureRegistry::get_image_dimensions(const std::string& name) const
 	{
-		return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image->dim();
+		const auto& r = get_registree(name)->second;
+		if (r.index() == (size_t)TextureType::IMAGE)
+			return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image->dim();
+		else
+			return std::get<(size_t)TextureType::NSVG>(get_registree(name)->second).image.image->dim();
 	}
 
 	std::weak_ptr<rendering::GIFDimensions> oly::TextureRegistry::get_gif_dimensions(const std::string& name) const
@@ -187,10 +246,23 @@ namespace oly
 		return (TextureType)get_registree(name)->second.index();
 	}
 
-	decltype(TextureRegistry::reg)::const_iterator TextureRegistry::get_registree(const std::string& name) const
+	const rendering::NSVGAbstract& TextureRegistry::get_nsvg_abstract(const std::string& name) const
 	{
-		auto it = reg.find(name);
-		if (it == reg.end())
+		auto it = nsvg_abstract_reg.find(name);
+		if (it == nsvg_abstract_reg.end())
+			throw Error(ErrorCode::UNREGISTERED_NSVG_ABSTRACT);
+		return it->second;
+	}
+
+	float TextureRegistry::get_nsvg_scale(const std::string& name) const
+	{
+		return std::get<(size_t)TextureType::NSVG>(get_registree(name)->second).image.scale;
+	}
+
+	decltype(TextureRegistry::texture_reg)::const_iterator TextureRegistry::get_registree(const std::string& name) const
+	{
+		auto it = texture_reg.find(name);
+		if (it == texture_reg.end())
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 		return it;
 	}

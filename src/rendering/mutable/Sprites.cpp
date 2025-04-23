@@ -263,6 +263,7 @@ namespace oly
 			switch (texture_registry->get_type(texture_name))
 			{
 			case TextureRegistry::TextureType::IMAGE:
+			case TextureRegistry::TextureType::NSVG:
 				set_texture(texture_registry->get_texture(texture_name), texture_registry->get_image_dimensions(texture_name).dimensions());
 				break;
 			case TextureRegistry::TextureType::GIF:

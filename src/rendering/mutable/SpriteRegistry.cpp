@@ -52,6 +52,14 @@ namespace oly
 				auto it = texture_map.find(toml_texture.value());
 				if (it != texture_map.end())
 					sprite.set_texture(&context->texture_registry(), it->second);
+				else
+					sprite.set_texture(&context->texture_registry(), toml_texture.value());
+			}
+			else if (auto toml_texture = node["texture"].value<int64_t>())
+			{
+				auto it = texture_map.find(std::to_string(toml_texture.value()));
+				if (it != texture_map.end())
+					sprite.set_texture(&context->texture_registry(), it->second);
 			}
 			if (auto toml_modulation = node["modulation"].as_array())
 			{
