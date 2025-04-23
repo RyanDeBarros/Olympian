@@ -1,5 +1,6 @@
 ﻿#include "Olympian.h"
 
+#include "rendering/mutable/SpriteRegistry.h"
 #include "rendering/immutable/Polygons.h"
 #include "rendering/immutable/Ellipses.h"
 #include "rendering/Resources.h"
@@ -10,70 +11,28 @@
 int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
-
-	struct
-	{
-		const char* einstein = "einstein";
-		const char* flag = "flag";
-		const char* tux = "tux";
-		const char* mipmapped_tux = "mipmapped tux";
-		const char* serotonin = "serotonin";
-	} textures;
 	
 	oly::rendering::NSVGAbstract nsvg_abstract("../../../res/assets/../textures/godot.svg");
-
 	float godot_scale = 1.0f;
 	auto godot_image = oly_context.nsvg_context().rasterize(nsvg_abstract, godot_scale);
-	
 	oly::rendering::BindlessTextureRes godot_texture = oly::rendering::load_bindless_texture_2d(godot_image, false);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	godot_texture->set_and_use_handle();
 
-	auto sprite0 = oly_context.mut.sprite();
-	sprite0.set_texture(&oly_context, textures.einstein);
-	sprite0.local().position.x = 300;
-	sprite0.local().position.y = 300;
-	sprite0.post_set();
-
-	auto sprite1 = oly_context.mut.sprite();
-	sprite1.set_texture(&oly_context, textures.einstein);
-	sprite1.set_modulation({ {
-		{ 1.0f, 1.0f, 0.2f, 0.7f },
-		{ 0.2f, 1.0f, 1.0f, 0.7f },
-		{ 1.0f, 0.2f, 1.0f, 0.7f },
-		{ 0.5f, 0.5f, 0.5f, 0.7f }
-	} });
-
-	auto sprite2 = oly_context.mut.sprite();
+	auto sprite0 = oly_context.mut.sprite("sprite0");
+	auto sprite1 = oly_context.mut.sprite("sprite1");
+	auto sprite2 = oly_context.mut.sprite("sprite2");
 	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
-	sprite2.set_texture(&oly_context, textures.tux);
-	sprite2.local().position.x = -100;
-	sprite2.local().position.y = -100;
-	sprite2.local().scale = glm::vec2(0.2f);
-	sprite2.post_set();
-
-	oly::mut::Sprite sprite3(sprite2);
-	sprite3.local().position.x = 100;
-	sprite3.local().scale = glm::vec2(2.0f);
-	sprite3.post_set();
-	sprite3.set_texture(&oly_context, textures.serotonin);
-	auto frame_format = oly::rendering::setup_gif_frame_format(&oly_context, textures.serotonin);
-	--frame_format.num_frames;
-	sprite3.set_frame_format(frame_format);
-
-	oly::mut::Sprite sprite4(sprite3);
-	sprite4.local().position.x = -500;
-	sprite4.local().position.y = 300;
-	sprite4.local().scale = glm::vec2(0.1f);
-	sprite4.post_set();
-	sprite4.set_texture(&oly_context, textures.mipmapped_tux);
+	auto sprite3 = oly_context.mut.sprite("sprite3");
+	{
+		auto frame_format = oly::rendering::setup_gif_frame_format(&oly_context, "serotonin");
+		--frame_format.num_frames;
+		sprite3.set_frame_format(frame_format);
+	}
+	auto sprite4 = oly_context.mut.sprite("sprite4");
+	auto sprite5 = oly_context.mut.sprite("sprite5");
 	
-	oly::mut::Sprite sprite5(sprite4);
-	sprite5.local().position.x = -400;
-	sprite5.post_set();
-	sprite5.set_texture(&oly_context, textures.tux);
-
 	oly::mut::Sprite godot_sprite = oly_context.mut.sprite();
 	godot_sprite.local().position = { -300, -200 };
 	godot_sprite.local().scale = glm::vec2(3.0f / godot_scale);
@@ -94,9 +53,7 @@ int main()
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.emplace_back(&oly_context.mut.sprite_batch());
-		flag_tesselation[i].set_texture(&oly_context, textures.flag);
-		flag_tesselation[i].local().scale = glm::vec2(2);
+		flag_tesselation.push_back(oly_context.mut.sprite("flag instance"));
 		flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
 		flag_tesselation[i].post_set();
@@ -231,7 +188,7 @@ int main()
 	ellipse2.ellipse.z_value = -1.0f;
 	ellipse2.ellipse.send_z_value();
 
-	auto flag_texture = oly_context.texture_registry().get_texture(textures.flag);
+	auto flag_texture = oly_context.texture_registry().get_texture("flag");
 
 	glEnable(GL_BLEND);
 	while (oly_context.frame())
@@ -294,7 +251,6 @@ int main()
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
 		sprite0.draw();
-		sprite1.draw();
 		sprite2.draw();
 		oly_context.mut.render_sprites();
 		oly::stencil::end();
@@ -305,10 +261,8 @@ int main()
 		sprite5.draw();
 		oly_context.mut.render_sprites();
 		polygon_batch.draw(2);
+		sprite1.draw();
 		godot_sprite.draw();
 		oly_context.mut.render_sprites();
-
-		// post-frame
-		oly_context.window().swap_buffers();
 	}
 }

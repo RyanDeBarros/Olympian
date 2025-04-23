@@ -45,7 +45,7 @@ namespace oly
 		}
 
 		{ // init texture registry
-			auto register_files = toml_context["texture_registries"].as_array();
+			auto register_files = toml_context["texture registries"].as_array();
 			if (register_files)
 			{
 				for (const auto& node : *register_files)
@@ -53,6 +53,8 @@ namespace oly
 						internal.texture_registry.load(root_dir + file.value());
 			}
 		}
+
+		mut.context = this;
 
 		{ // init mutable sprite batch
 			auto toml_sprite_batch = toml_context["mut_sprite_batch"];
@@ -70,6 +72,16 @@ namespace oly
 			mut::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_gifs };
 			mut.internal.sprite_batch = std::make_unique<mut::SpriteBatch>(capacity, internal.window->projection_bounds());
 		}
+
+		{ // init mutable sprite batch
+			auto register_files = toml_context["mut sprite registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.mut_sprite_registry.load(root_dir + file.value());
+			}
+		}
 	}
 
 	Context::~Context()
@@ -80,6 +92,7 @@ namespace oly
 
 	bool Context::frame() const
 	{
+		internal.window->swap_buffers();
 		check_errors();
 		LOG.flush();
 		glfwPollEvents();

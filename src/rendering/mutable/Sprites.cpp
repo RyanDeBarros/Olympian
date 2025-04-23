@@ -197,6 +197,7 @@ namespace oly
 			set_texture(tex, dim);
 			set_tex_coords(other.get_tex_coords());
 			set_modulation(other.get_modulation());
+			set_frame_format(other.get_frame_format());
 		}
 
 		Sprite::Sprite(Sprite&& other) noexcept
@@ -226,6 +227,7 @@ namespace oly
 				set_texture(tex, dim);
 				set_tex_coords(other.get_tex_coords());
 				set_modulation(other.get_modulation());
+				set_frame_format(other.get_frame_format());
 			}
 			return *this;
 		}

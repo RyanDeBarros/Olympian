@@ -3,6 +3,7 @@
 #include "rendering/core/Core.h"
 #include "rendering/TextureRegistry.h"
 #include "rendering/mutable/Sprites.h"
+#include "rendering/mutable/SpriteRegistry.h"
 
 namespace oly
 {
@@ -13,6 +14,7 @@ namespace oly
 			std::unique_ptr<rendering::Window> window;
 			TextureRegistry texture_registry;
 			rendering::NSVGContext nsvg_context;
+			mut::SpriteRegistry mut_sprite_registry;
 		} internal;
 
 	public:
@@ -33,6 +35,7 @@ namespace oly
 		class
 		{
 			friend class Context;
+			const Context* context;
 			struct
 			{
 				std::unique_ptr<mut::SpriteBatch> sprite_batch;
@@ -42,6 +45,7 @@ namespace oly
 			const mut::SpriteBatch& sprite_batch() const { return *internal.sprite_batch; }
 			mut::SpriteBatch& sprite_batch() { return *internal.sprite_batch; }
 			mut::Sprite sprite() const { return mut::Sprite(internal.sprite_batch.get()); }
+			mut::Sprite sprite(const std::string& name) const { return context->internal.mut_sprite_registry.create_sprite(context, name); }
 			void render_sprites() const { internal.sprite_batch->render(); }
 		} mut;
 

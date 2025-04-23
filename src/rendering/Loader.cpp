@@ -57,10 +57,19 @@ namespace oly
 			return false;
 		}
 
-		bool parse_vec4(const AssetNode& node, const std::string& name, glm::vec4& v)
+		bool parse_vec2(const toml::v3::array* arr, glm::vec2& v)
 		{
-			auto arr = node[name].as_array();
-			if (arr && arr->size() >= 4)
+			if (arr && arr->size() == 2)
+			{
+				v = { (float)arr->get_as<double>(0)->get(), (float)arr->get_as<double>(1)->get() };
+				return true;
+			}
+			return false;
+		}
+
+		bool parse_vec4(const toml::v3::array* arr, glm::vec4& v)
+		{
+			if (arr && arr->size() == 4)
 			{
 				v = { (float)arr->get_as<double>(0)->get(), (float)arr->get_as<double>(1)->get(), (float)arr->get_as<double>(2)->get(), (float)arr->get_as<double>(3)->get() };
 				return true;
