@@ -19,15 +19,19 @@ namespace oly
 		return rendering::load_bindless_texture_2d_array(gif, generate_mipmaps);
 	}
 
-	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::NSVGImageRes& image)
+	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::VectorImageRes& image, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context)
 	{
 		std::string generate_mipmaps = node["generate mipmaps"].value<std::string>().value_or("");
 		if (generate_mipmaps == "auto")
-			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::AUTO);
+			return rendering::load_bindless_nsvg_texture_2d(image, true);
 		else if (generate_mipmaps == "manual")
-			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::MANUAL);
+		{
+			auto texture = rendering::load_bindless_nsvg_texture_2d(image, false);
+			rendering::nsvg_manually_generate_mipmaps(image, abstract, context);
+			return texture;
+		}
 		else
-			return rendering::load_bindless_nsvg_texture_2d(image, rendering::NSVGMipmapMode::NONE);
+			return rendering::load_bindless_nsvg_texture_2d(image, false);
 	}
 
 	void TextureRegistry::setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target)
@@ -119,11 +123,11 @@ namespace oly
 		}
 	}
 
-	void TextureRegistry::register_nsvg_image(const assets::AssetNode& node, const rendering::NSVGImageRes& image, const std::string& name)
+	void TextureRegistry::register_nsvg_image(const assets::AssetNode& node, const rendering::VectorImageRes& image, const std::string& name, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context)
 	{
-		rendering::BindlessTextureRes texture = create_texture(node, image);
+		rendering::BindlessTextureRes texture = create_texture(node, image, abstract, context);
 		setup_texture(texture, node, GL_TEXTURE_2D);
-		texture_reg[name] = rendering::NSVGBindlessTextureRes{ image, std::move(texture) };
+		texture_reg[name] = rendering::VectorBindlessTextureRes{ image, std::move(texture) };
 	}
 
 	void TextureRegistry::load_registree(const std::string& root_dir, const assets::AssetNode& node)
@@ -135,12 +139,13 @@ namespace oly
 		std::string file = _file.value();
 		auto texture_list = node["texture"].as_array();
 		bool keep_pixel_buffer = node["keep pixel buffer"].value<bool>().value_or(false);
-		std::string type = node["type"].value<std::string>().value_or("");
+		bool anim = node["anim"].value<bool>().value_or(false);
 
 		const std::string _image_filepath = root_dir + file;
 		const char* image_filepath = _image_filepath.c_str();
-		if (type == "gif")
+		if (anim)
 		{
+			// TODO do this if extension is .gif, otherwise implement spritesheet
 			rendering::GIFRes gif = std::make_shared<rendering::GIF>(image_filepath);
 			if (texture_list)
 				texture_list->for_each([this, &gif](auto&& node) { register_gif((assets::AssetNode)node, gif); });
@@ -150,7 +155,6 @@ namespace oly
 			if (!keep_pixel_buffer)
 				gif->delete_buffer();
 		}
-		// TODO else if (type == "spritesheet")
 		else
 		{
 			rendering::ImageRes image = std::make_shared<rendering::Image>(image_filepath);
@@ -190,11 +194,17 @@ namespace oly
 
 					std::string name = _name.value();
 					float scale = (float)_scale.value();
-					rendering::NSVGImageRes image = { context->nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
-					register_nsvg_image((assets::AssetNode)node, image, name);
+					rendering::VectorImageRes image = { context->nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
+					register_nsvg_image((assets::AssetNode)node, image, name, nsvg_abstract, context->nsvg_context());
+
+					bool keep_pixel_buffer = node["keep pixel buffer"].value<bool>().value_or(false);
+					if (!keep_pixel_buffer)
+						image.image->delete_buffer();
 				}});
 		
-		nsvg_abstract_reg.emplace(abstract_name, std::move(nsvg_abstract));
+		bool discard = node["discard"].value<bool>().value_or(false);
+		if (!discard)
+			nsvg_abstract_reg.emplace(abstract_name, std::move(nsvg_abstract));
 	}
 
 	void TextureRegistry::load(const Context* context, const char* texture_registry_file)

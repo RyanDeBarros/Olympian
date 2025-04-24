@@ -336,39 +336,34 @@ namespace oly
 			void rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const;
 		};
 
-		struct NSVGImageRes
+		struct VectorImageRes
 		{
 			ImageRes image;
 			float scale;
 		};
 
-		struct NSVGTextureRes
+		struct VectorTextureRes
 		{
-			NSVGImageRes image;
+			VectorImageRes image;
 			TextureRes texture;
 		};
-		struct NSVGBindlessTextureRes
+		struct VectorBindlessTextureRes
 		{
-			NSVGImageRes image;
+			VectorImageRes image;
 			BindlessTextureRes texture;
 
-			NSVGBindlessTextureRes() = default;
-			NSVGBindlessTextureRes(NSVGTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
-			NSVGBindlessTextureRes(const NSVGImageRes& image, const BindlessTextureRes& texture) : image(image), texture(texture) {}
-			NSVGBindlessTextureRes(const NSVGImageRes& image, BindlessTextureRes&& texture) : image(image), texture(std::move(texture)) {}
+			VectorBindlessTextureRes() = default;
+			VectorBindlessTextureRes(VectorTextureRes&& image) : image(std::move(image.image)), texture(std::make_shared<BindlessTexture>(std::move(image.texture))) {}
+			VectorBindlessTextureRes(const VectorImageRes& image, const BindlessTextureRes& texture) : image(image), texture(texture) {}
+			VectorBindlessTextureRes(const VectorImageRes& image, BindlessTextureRes&& texture) : image(image), texture(std::move(texture)) {}
 		};
 
-		enum class NSVGMipmapMode
-		{
-			NONE,
-			AUTO,
-			MANUAL
-		};
-
-		extern TextureRes load_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps = NSVGMipmapMode::NONE);
-		inline BindlessTextureRes load_bindless_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps = NSVGMipmapMode::NONE)
+		extern TextureRes load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps = false);
+		inline BindlessTextureRes load_bindless_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps = false)
 		{
 			return std::make_shared<BindlessTexture>(load_nsvg_texture_2d(image, generate_mipmaps));
 		}
+		// texture needs to be bound to GL_TEXTURE_2D before calling nsvg_manually_generate_mipmaps()
+		extern void nsvg_manually_generate_mipmaps(const VectorImageRes& image, const NSVGAbstract& abstract, const NSVGContext& context);
 	}
 }

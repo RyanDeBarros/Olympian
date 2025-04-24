@@ -5,6 +5,7 @@
 #include "util/IO.h"
 #include "util/Errors.h"
 #include "util/Assert.h"
+#include "util/Approximate.h"
 #include "../../Olympian.h"
 
 namespace oly
@@ -369,22 +370,6 @@ namespace oly
 			return setup_gif_frame_format_single(&context->texture_registry(), texture_name, frame);
 		}
 
-		TextureRes load_nsvg_texture_2d(const NSVGImageRes& image, NSVGMipmapMode generate_mipmaps)
-		{
-			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
-			glBindTexture(GL_TEXTURE_2D, *texture);
-			const auto& dim = image.image->dim();
-			tex::pixel_alignment(dim.cpp);
-			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
-			if (generate_mipmaps == NSVGMipmapMode::AUTO)
-				glGenerateMipmap(GL_TEXTURE_2D);
-			else if (generate_mipmaps == NSVGMipmapMode::MANUAL)
-			{
-				// TODO
-			}
-			return texture;
-		}
-
 		NSVGAbstract::NSVGAbstract(const char* filepath)
 			: i(nsvgParseFromFile(filepath, "px", 96))
 		{
@@ -476,8 +461,8 @@ namespace oly
 
 		void NSVGContext::rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const
 		{
-			dim.w = (int)(scale * abstract.width());
-			dim.h = (int)(scale * abstract.height());
+			dim.w = std::max((int)(scale * abstract.width()), 1);
+			dim.h = std::max((int)(scale * abstract.height()), 1);
 			dim.cpp = 4;
 			int stride = dim.w * dim.cpp;
 			buf = new unsigned char[stride * dim.h];
@@ -491,6 +476,43 @@ namespace oly
 				memcpy(buf + (dim.h - 1 - i) * stride, temp, stride);
 			}
 			delete[] temp;
+		}
+
+		TextureRes load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps)
+		{
+			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
+			glBindTexture(GL_TEXTURE_2D, *texture);
+			const auto& dim = image.image->dim();
+			tex::pixel_alignment(dim.cpp);
+			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
+			if (generate_mipmaps)
+				glGenerateMipmap(GL_TEXTURE_2D);
+			return texture;
+		}
+
+		void nsvg_manually_generate_mipmaps(const VectorImageRes& image, const NSVGAbstract& abstract, const NSVGContext& context)
+		{
+			if (image.image->dim().w <= 1 && image.image->dim().h <= 1)
+				return;
+			float scale = image.scale;
+			GLint level = 0;
+			while (true)
+			{
+				{
+					float new_scale = scale / 2;
+					if (approx(new_scale, scale))
+						break;
+					scale = new_scale;
+				}
+
+				auto img = context.rasterize(abstract, scale);
+				const auto& dim = img.dim();
+				tex::pixel_alignment(dim.cpp);
+				glTexImage2D(GL_TEXTURE_2D, ++level, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, img.buf());
+				if (img.dim().w == 1 && img.dim().h == 1)
+					break;
+			}
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level);
 		}
 	}
 }

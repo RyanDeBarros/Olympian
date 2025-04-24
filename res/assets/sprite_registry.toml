@@ -7,6 +7,7 @@
 	4 = "mipmapped tux"
 	5 = "godot icon (1.0)"
 	6 = "godot icon (3.0)"
+	7 = "godot icon (10.0)"
 
 	[[sprite_registry.sprite]]
 	"name" = "sprite0"
@@ -57,3 +58,8 @@
 	"name" = "godot icon (3.0)"
 	"texture" = 6
 	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+	
+	[[sprite_registry.sprite]]
+	"name" = "godot icon (10.0)"
+	"texture" = 7
+	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }

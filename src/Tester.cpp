@@ -24,7 +24,7 @@ int main()
 	}
 	auto sprite4 = oly_context.mut.sprite("sprite4");
 	auto sprite5 = oly_context.mut.sprite("sprite5");
-	auto godot_sprite = oly_context.mut.sprite("godot icon (3.0)");
+	auto godot_sprite = oly_context.mut.sprite("godot icon (10.0)");
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();

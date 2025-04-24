@@ -33,15 +33,16 @@
 
 	[[texture_registry.image]]
 	"file"       = "serotonin.gif"
-	"type"       = "gif"
 	"name"       = "serotonin"
+	"anim"       = true
 	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
 
 	[[texture_registry.nsvg_abstract]]
-	"file" = "godot.svg"
-	"name" = "godot icon"
+	"file"    = "godot.svg"
+	"name"    = "godot icon"
+	"discard" = true
 
 		[[texture_registry.nsvg_abstract.texture]]
 		"name"       = "godot icon (1.0)"
@@ -56,4 +57,11 @@
 		"auto-use"   = true
 		"min filter" = "nearest"
 		"mag filter" = "nearest"
-	
+		
+		[[texture_registry.nsvg_abstract.texture]]
+		"name"             = "godot icon (10.0)"
+		"scale"            = 10.0
+		"auto-use"         = true
+		"generate mipmaps" = "manual"
+		"min filter"       = "nearest mipmap linear"
+		"mag filter"       = "nearest"
