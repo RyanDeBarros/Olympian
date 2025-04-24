@@ -62,19 +62,19 @@ namespace oly
 		private:
 			struct UBO
 			{
-				rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords, modulation, gif;
+				rendering::LightweightUBO<rendering::Mutability::IMMUTABLE> tex_coords, modulation, anim;
 				
-				UBO(GLushort uvs, GLushort modulations, GLushort gifs) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), gif(gifs * sizeof(rendering::GIFFrameFormat)) {}
+				UBO(GLushort uvs, GLushort modulations, GLushort anims) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(rendering::AnimFrameFormat)) {}
 			} ubo;
 
 		public:
 			struct Capacity
 			{
-				Capacity(GLushort quads, GLushort textures = 0, GLushort uvs = 0, GLushort modulations = 0, GLushort gifs = 0);
+				Capacity(GLushort quads, GLushort textures = 0, GLushort uvs = 0, GLushort modulations = 0, GLushort anims = 0);
 
 			private:
 				friend class SpriteBatch;
-				GLushort quads, textures, uvs, modulations, gifs;
+				GLushort quads, textures, uvs, modulations, anims;
 			};
 
 		private:
@@ -90,7 +90,7 @@ namespace oly
 			void refresh_handle(GLushort pos);
 			void set_uvs(GLushort pos, const TexUVRect& tex_coords) const;
 			void set_modulation(GLushort pos, const Modulation& modulation) const;
-			void set_frame_format(GLushort pos, const rendering::GIFFrameFormat& gif) const;
+			void set_frame_format(GLushort pos, const rendering::AnimFrameFormat& anim) const;
 
 			glm::vec4 projection_bounds;
 			glm::vec4 global_modulation = glm::vec4(1.0f);

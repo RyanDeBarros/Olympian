@@ -50,15 +50,15 @@ layout(std140, binding = 1) uniform Modulations {
 	Modulation uModulation[250]; // guaranteed 16KB / 64B = #250
 };
 
-struct GIF
+struct AnimFrameFormat
 {
 	uint starting_frame;
 	uint num_frames;
 	float starting_time;
 	float delay_seconds;
 };
-layout(std140, binding = 2) uniform GIFs {
-	GIF uGIFs[1000]; // guaranteed 16KB / 16B = #1000
+layout(std140, binding = 2) uniform Anims {
+	AnimFrameFormat uAnims[1000]; // guaranteed 16KB / 16B = #1000
 };
 
 out vec2 tTexCoord;
@@ -100,11 +100,11 @@ void main() {
 		tTexSlot = quad.texSlot;
 		tModulation = uModulation[quad.colorSlot].colors[gl_VertexID % 4];
 		if (quad.frameSlot > 0) {
-			GIF gif = uGIFs[quad.frameSlot];
+			AnimFrameFormat anim = uAnims[quad.frameSlot];
 			int frame_offset = 0;
-			if (gif.delay_seconds > 0.0)
-				frame_offset = int(floor((uTime - gif.starting_time) / gif.delay_seconds));
-			tFramePlusOne = 1 + (gif.starting_frame + frame_offset) % gif.num_frames;
+			if (anim.delay_seconds > 0.0)
+				frame_offset = int(floor((uTime - anim.starting_time) / anim.delay_seconds));
+			tFramePlusOne = 1 + (anim.starting_frame + frame_offset) % anim.num_frames;
 		} else {
 			tFramePlusOne = 0;
 		}

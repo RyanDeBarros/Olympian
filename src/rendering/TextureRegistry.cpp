@@ -13,10 +13,10 @@ namespace oly
 		return rendering::load_bindless_texture_2d(image, generate_mipmaps);
 	}
 
-	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::GIF& gif)
+	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::Anim& anim)
 	{
 		bool generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
-		return rendering::load_bindless_texture_2d_array(gif, generate_mipmaps);
+		return rendering::load_bindless_texture_2d_array(anim, generate_mipmaps);
 	}
 
 	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::VectorImageRes& image, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context)
@@ -101,14 +101,14 @@ namespace oly
 		}
 	}
 
-	void TextureRegistry::register_gif(const assets::AssetNode& node, const rendering::GIFRes& gif)
+	void TextureRegistry::register_anim(const assets::AssetNode& node, const rendering::AnimRes& anim)
 	{
 		auto name = node["name"].value<std::string>();
 		if (name)
 		{
-			rendering::BindlessTextureRes texture = create_texture(node, *gif);
+			rendering::BindlessTextureRes texture = create_texture(node, *anim);
 			setup_texture(texture, node, GL_TEXTURE_2D_ARRAY);
-			texture_reg[name.value()] = rendering::GIFBindlessTextureRes{gif, std::move(texture)};
+			texture_reg[name.value()] = rendering::AnimBindlessTextureRes{ anim, std::move(texture)};
 		}
 	}
 
@@ -146,14 +146,14 @@ namespace oly
 		if (anim)
 		{
 			// TODO do this if extension is .gif, otherwise implement spritesheet
-			rendering::GIFRes gif = std::make_shared<rendering::GIF>(image_filepath);
+			rendering::AnimRes anim = std::make_shared<rendering::Anim>(image_filepath);
 			if (texture_list)
-				texture_list->for_each([this, &gif](auto&& node) { register_gif((assets::AssetNode)node, gif); });
+				texture_list->for_each([this, &anim](auto&& node) { register_anim((assets::AssetNode)node, anim); });
 			else
-				register_gif(node, gif);
+				register_anim(node, anim);
 			
 			if (!keep_pixel_buffer)
-				gif->delete_buffer();
+				anim->delete_buffer();
 		}
 		else
 		{
@@ -242,9 +242,9 @@ namespace oly
 			return std::get<(size_t)TextureType::NSVG>(get_registree(name)->second).image.image->dim();
 	}
 
-	std::weak_ptr<rendering::GIFDimensions> oly::TextureRegistry::get_gif_dimensions(const std::string& name) const
+	std::weak_ptr<rendering::AnimDimensions> oly::TextureRegistry::get_anim_dimensions(const std::string& name) const
 	{
-		return std::get<(size_t)TextureType::GIF>(get_registree(name)->second).gif->dim();
+		return std::get<(size_t)TextureType::ANIM>(get_registree(name)->second).anim->dim();
 	}
 
 	rendering::ImageRes TextureRegistry::get_image_pixel_buffer(const std::string& name)
@@ -252,9 +252,9 @@ namespace oly
 		return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image;
 	}
 
-	rendering::GIFRes TextureRegistry::get_gif_pixel_buffer(const std::string& name)
+	rendering::AnimRes TextureRegistry::get_anim_pixel_buffer(const std::string& name)
 	{
-		return std::get<(size_t)TextureType::GIF>(get_registree(name)->second).gif;
+		return std::get<(size_t)TextureType::ANIM>(get_registree(name)->second).anim;
 	}
 
 	TextureRegistry::TextureType TextureRegistry::get_type(const std::string& name) const

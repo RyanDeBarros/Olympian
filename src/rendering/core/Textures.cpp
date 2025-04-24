@@ -255,7 +255,7 @@ namespace oly
 			return texture;
 		}
 
-		void GIFDimensions::set_delays(int* new_delays, unsigned int num_frames)
+		void AnimDimensions::set_delays(int* new_delays, unsigned int num_frames)
 		{
 			delays.clear();
 			_frames = -1;
@@ -268,7 +268,7 @@ namespace oly
 			for (unsigned int i = 1; i < num_frames; ++i)
 			{
 				delays[i] = new_delays[i];
-				if (std::abs(delays[i] - delay) > gif_delay_epsilon)
+				if (std::abs(delays[i] - delay) > anim_delay_epsilon)
 					single = false;
 			}
 			if (single)
@@ -278,36 +278,40 @@ namespace oly
 			}
 		}
 
-		int GIFDimensions::delay(unsigned int frame) const
+		int AnimDimensions::delay(unsigned int frame) const
 		{
 			if (frame >= frames())
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 			return uniform() ? delays[0] : delays[frame];
 		}
 
-		GIF::GIF(const char* filepath)
-			: _dim(std::make_shared<GIFDimensions>())
+		Anim::Anim(const char* filepath)
+			: _dim(std::make_shared<AnimDimensions>())
 		{
-			auto full_content = io::read_file_uc(filepath);
-			int* delays;
-			int frames;
-			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, _dim->cpp);
-			_dim->set_delays(delays, frames);
-			stbi_image_free(delays);
+			// TODO if file extension is .gif
+			//{
+				auto full_content = io::read_file_uc(filepath);
+				int* delays;
+				int frames;
+				_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, _dim->cpp);
+				_dim->set_delays(delays, frames);
+				stbi_image_free(delays);
+			//}
+			// TODO else spritesheet
 		}
 
-		GIF::GIF(GIF&& other) noexcept
+		Anim::Anim(Anim&& other) noexcept
 			: _buf(other._buf), _dim(std::move(other._dim))
 		{
 			other._buf = nullptr;
 		}
 
-		GIF::~GIF()
+		Anim::~Anim()
 		{
 			stbi_image_free(_buf);
 		}
 
-		GIF& GIF::operator=(GIF&& other) noexcept
+		Anim& Anim::operator=(Anim&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -319,55 +323,55 @@ namespace oly
 			return *this;
 		}
 
-		void GIF::delete_buffer()
+		void Anim::delete_buffer()
 		{
 			stbi_image_free(_buf);
 			_buf = nullptr;
 		}
 
-		TextureRes load_texture_2d_array(const GIF& gif, bool generate_mipmaps)
+		TextureRes load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
 		{
 			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D_ARRAY);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, *texture);
-			const auto& dim = gif.dim().lock();
+			const auto& dim = anim.dim().lock();
 			tex::pixel_alignment(dim->cpp);
 			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, tex::format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
 			for (GLuint i = 0; i < dim->frames(); ++i)
-				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, tex::format(dim->cpp), GL_UNSIGNED_BYTE, gif.buf() + i * dim->w * dim->h * dim->cpp);
+				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, tex::format(dim->cpp), GL_UNSIGNED_BYTE, anim.buf() + i * dim->w * dim->h * dim->cpp);
 			if (generate_mipmaps)
 				glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 			return texture;
 		}
 
-		GIFFrameFormat setup_gif_frame_format(const GIFDimensions& dim, float speed, GLuint starting_frame)
+		AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed, GLuint starting_frame)
 		{
 			OLY_ASSERT(dim.uniform());
 			return { starting_frame, dim.frames(), 0.0f, speed * 0.01f * dim.delay() };
 		}
 
-		GIFFrameFormat setup_gif_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
+		AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
 		{
-			return setup_gif_frame_format(*texture_registry->get_gif_dimensions(texture_name).lock(), speed, starting_frame);
+			return setup_anim_frame_format(*texture_registry->get_anim_dimensions(texture_name).lock(), speed, starting_frame);
 		}
 
-		GIFFrameFormat setup_gif_frame_format(const Context* context, const std::string& texture_name, float speed, GLuint starting_frame)
+		AnimFrameFormat setup_anim_frame_format(const Context* context, const std::string& texture_name, float speed, GLuint starting_frame)
 		{
-			return setup_gif_frame_format(&context->texture_registry(), texture_name, speed, starting_frame);
+			return setup_anim_frame_format(&context->texture_registry(), texture_name, speed, starting_frame);
 		}
 
-		GIFFrameFormat setup_gif_frame_format_single(const GIFDimensions& dim, GLuint frame)
+		AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
 		{
 			return { frame, dim.frames(), 0.0f, 0.0f };
 		}
 
-		GIFFrameFormat setup_gif_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame)
+		AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame)
 		{
-			return setup_gif_frame_format_single(*texture_registry->get_gif_dimensions(texture_name).lock(), frame);
+			return setup_anim_frame_format_single(*texture_registry->get_anim_dimensions(texture_name).lock(), frame);
 		}
 
-		GIFFrameFormat setup_gif_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame)
+		AnimFrameFormat setup_anim_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame)
 		{
-			return setup_gif_frame_format_single(&context->texture_registry(), texture_name, frame);
+			return setup_anim_frame_format_single(&context->texture_registry(), texture_name, frame);
 		}
 
 		NSVGAbstract::NSVGAbstract(const char* filepath)

@@ -66,10 +66,10 @@ namespace oly
 			assets::parse_int(toml_sprite_batch, "new uvs", new_uvs);
 			int new_modulations = 0;
 			assets::parse_int(toml_sprite_batch, "new modulations", new_modulations);
-			int num_gifs = 0;
-			assets::parse_int(toml_sprite_batch, "num gifs", num_gifs);
+			int num_anims = 0;
+			assets::parse_int(toml_sprite_batch, "num anims", num_anims);
 
-			mut::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_gifs };
+			mut::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_anims };
 			mut.internal.sprite_batch = std::make_unique<mut::SpriteBatch>(capacity, internal.window->projection_bounds());
 		}
 

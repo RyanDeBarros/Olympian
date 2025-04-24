@@ -10,12 +10,12 @@ namespace oly
 	class Context;
 	class TextureRegistry
 	{
-		typedef std::variant<rendering::ImageBindlessTextureRes, rendering::GIFBindlessTextureRes, rendering::VectorBindlessTextureRes> TextureRegistree;
+		typedef std::variant<rendering::ImageBindlessTextureRes, rendering::AnimBindlessTextureRes, rendering::VectorBindlessTextureRes> TextureRegistree;
 		static void delete_buffer(TextureRegistree& r) { std::visit([](auto&& r) {
 			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageDimensions>)
 				r.image.delete_buffer();
-			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::GIFDimensions>)
-				r.gif.delete_buffer();
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::AnimDimensions>)
+				r.anim.delete_buffer();
 			}, r);
 		}
 
@@ -26,16 +26,16 @@ namespace oly
 		enum class TextureType
 		{
 			IMAGE,
-			GIF,
+			ANIM,
 			NSVG
 		};
 	
 	private:
 		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::Image& image);
-		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::GIF& gif);
+		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::Anim& anim);
 		static rendering::BindlessTextureRes create_texture(const assets::AssetNode& node, const rendering::VectorImageRes& image, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context);
 		static void setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target);
-		void register_gif(const assets::AssetNode& node, const rendering::GIFRes& gif);
+		void register_anim(const assets::AssetNode& node, const rendering::AnimRes& anim);
 		void register_image(const assets::AssetNode& node, const rendering::ImageRes& image);
 		void register_nsvg_image(const assets::AssetNode& node, const rendering::VectorImageRes& image, const std::string& name, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context);
 		void load_registree(const std::string& root_dir, const assets::AssetNode& node);
@@ -49,9 +49,9 @@ namespace oly
 
 		rendering::BindlessTextureRes get_texture(const std::string& name) const;
 		rendering::ImageDimensions get_image_dimensions(const std::string& name) const;
-		std::weak_ptr<rendering::GIFDimensions> get_gif_dimensions(const std::string& name) const;
+		std::weak_ptr<rendering::AnimDimensions> get_anim_dimensions(const std::string& name) const;
 		rendering::ImageRes get_image_pixel_buffer(const std::string& name);
-		rendering::GIFRes get_gif_pixel_buffer(const std::string& name);
+		rendering::AnimRes get_anim_pixel_buffer(const std::string& name);
 
 		TextureType get_type(const std::string& name) const;
 		

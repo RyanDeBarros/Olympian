@@ -73,19 +73,19 @@ namespace oly
 						^ (std::hash<glm::vec4>{}(mod.colors[2]) << 2) ^ (std::hash<glm::vec4>{}(mod.colors[3]) << 3);
 				}
 			};
-			struct GIFHash
+			struct AnimHash
 			{
-				size_t operator()(const rendering::GIFFrameFormat& gif) const {
-					return std::hash<GLuint>{}(gif.starting_frame) ^ (std::hash<GLuint>{}(gif.num_frames) << 1)
-						^ (std::hash<float>{}(gif.starting_time) << 2) ^ (std::hash<float>{}(gif.delay_seconds) << 3);
+				size_t operator()(const rendering::AnimFrameFormat& anim) const {
+					return std::hash<GLuint>{}(anim.starting_frame) ^ (std::hash<GLuint>{}(anim.num_frames) << 1)
+						^ (std::hash<float>{}(anim.starting_time) << 2) ^ (std::hash<float>{}(anim.delay_seconds) << 3);
 				}
 			};
 		private:
 			struct UBO
 			{
-				rendering::LightweightUBO<rendering::Mutability::MUTABLE> tex_coords, modulation, gif;
+				rendering::LightweightUBO<rendering::Mutability::MUTABLE> tex_coords, modulation, anim;
 
-				UBO(GLuint uvs, GLuint modulations, GLuint gifs) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), gif(gifs * sizeof(rendering::GIFFrameFormat)) {}
+				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(rendering::AnimFrameFormat)) {}
 			} ubo;
 
 		public:
@@ -93,18 +93,18 @@ namespace oly
 
 			struct Capacity
 			{
-				Capacity(GLuint initial_sprites, GLuint new_textures, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_gifs = 0)
-					: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), gifs(num_gifs + 1)
+				Capacity(GLuint initial_sprites, GLuint new_textures, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_anims = 0)
+					: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), anims(num_anims + 1)
 				{
 					OLY_ASSERT(4 * initial_sprites <= UINT_MAX);
 					OLY_ASSERT(uvs <= 500);
 					OLY_ASSERT(modulations <= 250);
-					OLY_ASSERT(gifs <= 1000);
+					OLY_ASSERT(anims <= 1000);
 				}
 
 			private:
 				friend class SpriteBatch;
-				GLuint sprites, textures, uvs, modulations, gifs;
+				GLuint sprites, textures, uvs, modulations, anims;
 			};
 
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
@@ -220,18 +220,18 @@ namespace oly
 				BOStore<DimensionlessTexture, DimensionlessTextureHash> textures;
 				BOStore<TexUVRect, TexUVRectHash> tex_coords;
 				BOStore<Modulation, ModulationHash> modulations;
-				BOStore<rendering::GIFFrameFormat, GIFHash> gifs;
+				BOStore<rendering::AnimFrameFormat, AnimHash> anims;
 			} quad_info_store;
 
 			void set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
 			void set_tex_coords(GLuint vb_pos, const TexUVRect& uvs);
 			void set_modulation(GLuint vb_pos, const Modulation& modulation);
-			void set_frame_format(GLuint vb_pos, const rendering::GIFFrameFormat& gif);
+			void set_frame_format(GLuint vb_pos, const rendering::AnimFrameFormat& anim);
 
 			rendering::BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 			TexUVRect get_tex_coords(GLuint vb_pos) const;
 			Modulation get_modulation(GLuint vb_pos) const;
-			rendering::GIFFrameFormat get_frame_format(GLuint vb_pos) const;
+			rendering::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 
 			void draw_sprite(GLuint vb_pos);
 
@@ -271,13 +271,13 @@ namespace oly
 			void set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;
-			void set_frame_format(const rendering::GIFFrameFormat& gif) const;
+			void set_frame_format(const rendering::AnimFrameFormat& anim) const;
 
 			rendering::BindlessTextureRes get_texture() const;
 			rendering::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
 			SpriteBatch::TexUVRect get_tex_coords() const;
 			SpriteBatch::Modulation get_modulation() const;
-			rendering::GIFFrameFormat get_frame_format() const;
+			rendering::AnimFrameFormat get_frame_format() const;
 
 			const SpriteBatch& get_batch() const { return *batch; }
 			SpriteBatch& get_batch() { return *batch; }

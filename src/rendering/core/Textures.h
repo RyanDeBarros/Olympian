@@ -178,8 +178,8 @@ namespace oly
 			return load_bindless_texture_2d(filename.c_str(), dim, generate_mipmaps);
 		}
 
-		inline float gif_delay_epsilon = 1.0f;
-		struct GIFDimensions
+		inline float anim_delay_epsilon = 1.0f;
+		struct AnimDimensions
 		{
 			int w = 0, h = 0, cpp = 4;
 
@@ -197,92 +197,92 @@ namespace oly
 			glm::vec2 dimensions() const { return { w, h }; }
 		};
 
-		class GIF
+		class Anim
 		{
 			unsigned char* _buf = nullptr;
-			std::shared_ptr<GIFDimensions> _dim;
+			std::shared_ptr<AnimDimensions> _dim;
 
 		public:
-			GIF(const char* filepath);
-			GIF(const GIF&) = delete;
-			GIF(GIF&&) noexcept;
-			~GIF();
-			GIF& operator=(GIF&&) noexcept;
+			Anim(const char* filepath);
+			Anim(const Anim&) = delete;
+			Anim(Anim&&) noexcept;
+			~Anim();
+			Anim& operator=(Anim&&) noexcept;
 
 			const unsigned char* buf() const { return _buf; }
 			unsigned char* buf() { return _buf; }
-			std::weak_ptr<GIFDimensions> dim() const { return _dim; }
+			std::weak_ptr<AnimDimensions> dim() const { return _dim; }
 
 			void delete_buffer();
 		};
 
-		typedef std::shared_ptr<GIF> GIFRes;
+		typedef std::shared_ptr<Anim> AnimRes;
 
-		struct GIFTextureRes
+		struct AnimTextureRes
 		{
-			GIFRes gif;
+			AnimRes anim;
 			TextureRes texture;
 		};
-		struct GIFBindlessTextureRes
+		struct AnimBindlessTextureRes
 		{
-			GIFRes gif;
+			AnimRes anim;
 			BindlessTextureRes texture;
 
-			GIFBindlessTextureRes() = default;
-			GIFBindlessTextureRes(GIFTextureRes&& gif) : gif(std::move(gif.gif)), texture(std::make_shared<BindlessTexture>(std::move(gif.texture))) {}
-			GIFBindlessTextureRes(const GIFRes& gif, const BindlessTextureRes& texture) : gif(gif), texture(texture) {}
-			GIFBindlessTextureRes(const GIFRes& gif, BindlessTextureRes&& texture) : gif(gif), texture(std::move(texture)) {}
+			AnimBindlessTextureRes() = default;
+			AnimBindlessTextureRes(AnimTextureRes&& anim) : anim(std::move(anim.anim)), texture(std::make_shared<BindlessTexture>(std::move(anim.texture))) {}
+			AnimBindlessTextureRes(const AnimRes& anim, const BindlessTextureRes& texture) : anim(anim), texture(texture) {}
+			AnimBindlessTextureRes(const AnimRes& anim, BindlessTextureRes&& texture) : anim(anim), texture(std::move(texture)) {}
 		};
 
-		extern TextureRes load_texture_2d_array(const GIF& gif, bool generate_mipmaps = false);
-		inline BindlessTextureRes load_bindless_texture_2d_array(const GIF& gif, bool generate_mipmaps = false)
+		extern TextureRes load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
+		inline BindlessTextureRes load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false)
 		{
-			return std::make_shared<BindlessTexture>(load_texture_2d_array(gif, generate_mipmaps));
+			return std::make_shared<BindlessTexture>(load_texture_2d_array(anim, generate_mipmaps));
 		}
-		inline GIFTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps = false)
+		inline AnimTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps = false)
 		{
-			GIFTextureRes gif;
-			gif.gif = std::make_shared<GIF>(filename);
-			gif.texture = load_texture_2d_array(*gif.gif, generate_mipmaps);
-			return gif;
+			AnimTextureRes anim;
+			anim.anim = std::make_shared<Anim>(filename);
+			anim.texture = load_texture_2d_array(*anim.anim, generate_mipmaps);
+			return anim;
 		}
-		inline GIFTextureRes load_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
+		inline AnimTextureRes load_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
 		{
 			return load_texture_2d_array(filename.c_str(), generate_mipmaps);
 		}
-		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const char* filename, bool generate_mipmaps = false)
+		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const char* filename, bool generate_mipmaps = false)
 		{
-			return GIFBindlessTextureRes(load_texture_2d_array(filename, generate_mipmaps));
+			return AnimBindlessTextureRes(load_texture_2d_array(filename, generate_mipmaps));
 		}
-		inline GIFBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
+		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
 		{
 			return load_bindless_texture_2d_array(filename.c_str(), generate_mipmaps);
 		}
-		inline TextureRes load_texture_2d_array(const char* filename, GIFDimensions& dim, bool generate_mipmaps = false)
+		inline TextureRes load_texture_2d_array(const char* filename, AnimDimensions& dim, bool generate_mipmaps = false)
 		{
-			auto res = load_texture_2d_array(filename, generate_mipmaps); dim = std::move(*res.gif->dim().lock()); return res.texture;
+			auto res = load_texture_2d_array(filename, generate_mipmaps); dim = std::move(*res.anim->dim().lock()); return res.texture;
 		}
-		inline TextureRes load_texture_2d_array(const std::string& filename, GIFDimensions& dim, bool generate_mipmaps = false)
+		inline TextureRes load_texture_2d_array(const std::string& filename, AnimDimensions& dim, bool generate_mipmaps = false)
 		{
 			return load_texture_2d_array(filename.c_str(), dim, generate_mipmaps);
 		}
-		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, GIFDimensions& dim, bool generate_mipmaps = false)
+		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, AnimDimensions& dim, bool generate_mipmaps = false)
 		{
 			return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim, generate_mipmaps));
 		}
-		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, GIFDimensions& dim, bool generate_mipmaps = false)
+		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, AnimDimensions& dim, bool generate_mipmaps = false)
 		{
 			return load_bindless_texture_2d_array(filename.c_str(), dim, generate_mipmaps);
 		}
 
-		struct GIFFrameFormat
+		struct AnimFrameFormat
 		{
 			GLuint starting_frame = 0;
 			GLuint num_frames = 0;
 			float starting_time = 0.0f;
 			float delay_seconds = 0.0f;
 
-			bool operator==(const GIFFrameFormat&) const = default;
+			bool operator==(const AnimFrameFormat&) const = default;
 		};
 	}
 
@@ -290,14 +290,12 @@ namespace oly
 	class Context;
 	namespace rendering
 	{
-		extern GIFFrameFormat setup_gif_frame_format(const GIFDimensions& dim, float speed = 0.1f, GLuint starting_frame = 0);
-		extern GIFFrameFormat setup_gif_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
-		extern GIFFrameFormat setup_gif_frame_format(const Context* context, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
-		extern GIFFrameFormat setup_gif_frame_format_single(const GIFDimensions& dim, GLuint frame);
-		extern GIFFrameFormat setup_gif_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame);
-		extern GIFFrameFormat setup_gif_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame);
-
-		// TODO spritesheets, and automatic UV updating in shaders from spritesheets
+		extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 0.1f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const Context* context, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
+		extern AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame);
+		extern AnimFrameFormat setup_anim_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame);
 
 		class NSVGAbstract
 		{

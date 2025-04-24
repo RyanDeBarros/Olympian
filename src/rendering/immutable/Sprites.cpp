@@ -10,17 +10,17 @@ namespace oly
 {
 	namespace immut
 	{
-		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations, GLushort gifs)
-			: quads(quads), textures(textures + 1), uvs(uvs + 1), modulations(modulations + 1), gifs(gifs + 1)
+		SpriteBatch::Capacity::Capacity(GLushort quads, GLushort textures, GLushort uvs, GLushort modulations, GLushort anims)
+			: quads(quads), textures(textures + 1), uvs(uvs + 1), modulations(modulations + 1), anims(anims + 1)
 		{
 			OLY_ASSERT(4 * quads <= USHRT_MAX);
 			OLY_ASSERT(uvs <= 500);
 			OLY_ASSERT(modulations <= 250);
-			OLY_ASSERT(gifs <= 1000);
+			OLY_ASSERT(anims <= 1000);
 		}
 
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations, capacity.gifs),
+			: ebo(capacity.quads), capacity(capacity), ssbo(capacity.textures, capacity.quads), ubo(capacity.uvs, capacity.modulations, capacity.anims),
 			z_order(capacity.quads), textures(capacity.textures), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
@@ -29,7 +29,7 @@ namespace oly
 
 			ubo.tex_coords.send<TexUVRect>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
-			ubo.gif.send<rendering::GIFFrameFormat>(0, {});
+			ubo.anim.send<rendering::AnimFrameFormat>(0, {});
 
 			glBindVertexArray(vao);
 			rendering::pre_init(ebo);
@@ -53,7 +53,7 @@ namespace oly
 			ssbo.quad_transform.bind_base(2);
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
-			ubo.gif.bind_base(2);
+			ubo.anim.bind_base(2);
 			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
@@ -99,10 +99,10 @@ namespace oly
 			ubo.modulation.send(pos, modulation);
 		}
 
-		void SpriteBatch::set_frame_format(GLushort pos, const rendering::GIFFrameFormat& gif) const
+		void SpriteBatch::set_frame_format(GLushort pos, const rendering::AnimFrameFormat& anim) const
 		{
-			OLY_ASSERT(pos < capacity.gifs);
-			ubo.gif.send(pos, gif);
+			OLY_ASSERT(pos < capacity.anims);
+			ubo.anim.send(pos, anim);
 		}
 
 		SpriteBatch::QuadReference::QuadReference(SpriteBatch* batch)

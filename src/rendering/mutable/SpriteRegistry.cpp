@@ -131,21 +131,21 @@ namespace oly
 			}
 			if (auto toml_frame_format = node["frame_format"])
 			{
-				rendering::GIFFrameFormat frame_format;
+				rendering::AnimFrameFormat frame_format;
 				auto toml_texture_name = toml_frame_format["texture"].value<std::string>();
 				if (toml_texture_name)
 				{
 					bool single = toml_frame_format["single"].value<bool>().value_or(false);
 					if (single)
-						frame_format = rendering::setup_gif_frame_format_single(context, toml_texture_name.value(), (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
+						frame_format = rendering::setup_anim_frame_format_single(context, toml_texture_name.value(), (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
 					else
-						frame_format = rendering::setup_gif_frame_format(context, toml_texture_name.value(),
+						frame_format = rendering::setup_anim_frame_format(context, toml_texture_name.value(),
 							(float)toml_frame_format["speed"].value<double>().value_or(0.1), (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0));
 				}
 				else
 				{
-					frame_format.starting_frame = toml_frame_format["starting frame"].value<int64_t>().value_or(0);
-					frame_format.num_frames     = toml_frame_format["num frames"].value<int64_t>().value_or(0);
+					frame_format.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0);
+					frame_format.num_frames     = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0);
 					frame_format.starting_time  = (float)toml_frame_format["starting time"].value<double>().value_or(0.0);
 					frame_format.delay_seconds  = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0);
 				}
