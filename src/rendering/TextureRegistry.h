@@ -45,6 +45,7 @@ namespace oly
 	public:
 		void load(const Context* context, const char* texture_registry_file);
 		void load(const Context* context, const std::string& texture_registry_file) { load(context, texture_registry_file.c_str()); }
+		void clear();
 
 		rendering::BindlessTextureRes get_texture(const std::string& name) const;
 		rendering::ImageDimensions get_image_dimensions(const std::string& name) const;

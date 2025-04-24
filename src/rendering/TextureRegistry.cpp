@@ -222,6 +222,12 @@ namespace oly
 			nsvg_abstracts->for_each([this, context, &root_dir](auto&& node) { load_nsvg_abstract(context, root_dir, (assets::AssetNode)node); });
 	}
 
+	void TextureRegistry::clear()
+	{
+		texture_reg.clear();
+		nsvg_abstract_reg.clear();
+	}
+
 	rendering::BindlessTextureRes oly::TextureRegistry::get_texture(const std::string& name) const
 	{
 		return std::visit([](auto&& r) -> rendering::BindlessTextureRes { return r.texture; }, get_registree(name)->second);

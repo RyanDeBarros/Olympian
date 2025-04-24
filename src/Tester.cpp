@@ -12,20 +12,6 @@ int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
 
-	auto sprite0 = oly_context.mut.sprite("sprite0");
-	auto sprite1 = oly_context.mut.sprite("sprite1");
-	auto sprite2 = oly_context.mut.sprite("sprite2");
-	sprite2.transformer.modifier = std::make_unique<oly::ShearTransformModifier2D>();
-	auto sprite3 = oly_context.mut.sprite("sprite3");
-	{
-		auto frame_format = oly::rendering::setup_gif_frame_format(&oly_context, "serotonin");
-		--frame_format.num_frames;
-		sprite3.set_frame_format(frame_format);
-	}
-	auto sprite4 = oly_context.mut.sprite("sprite4");
-	auto sprite5 = oly_context.mut.sprite("sprite5");
-	auto godot_sprite = oly_context.mut.sprite("godot icon (10.0)");
-
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
 	flag_tesselation_parent.local.position.y = -100;
@@ -39,7 +25,7 @@ int main()
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.push_back(oly_context.mut.sprite("flag instance"));
+		flag_tesselation.push_back(*oly_context.mut.sprite("flag instance").lock());
 		flag_tesselation[i].local().position.x = -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols;
 		flag_tesselation[i].local().position.y = flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows;
 		flag_tesselation[i].post_set();
@@ -189,11 +175,17 @@ int main()
 		concave_shape.transformer.local.rotation += 0.5f * oly::TIME.delta<float>();
 		concave_shape.post_set();
 
-		sprite1.local().rotation = oly::TIME.now<float>();
-		sprite1.post_set();
+		if (auto sprite1 = oly_context.mut.sprite("sprite1").lock())
+		{
+			sprite1->local().rotation = oly::TIME.now<float>();
+			sprite1->post_set();
+		}
 
-		sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
-		sprite2.post_set();
+		if (auto sprite2 = oly_context.mut.sprite("sprite2").lock())
+		{
+			sprite2->transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
+			sprite2->post_set();
+		}
 
 		flag_tesselation_modifier.pivot.x += 0.05f * oly::TIME.delta<float>();
 		flag_tesselation_modifier.pivot.y += 0.05f * oly::TIME.delta<float>();
@@ -236,19 +228,12 @@ int main()
 		polygon_batch.draw(1);
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
-		sprite0.draw();
-		sprite2.draw();
-		oly_context.mut.render_sprites();
+		oly_context.mut.draw_sprite_list("#1");
 		oly::stencil::end();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
-		sprite3.draw();
-		sprite4.draw();
-		sprite5.draw();
-		oly_context.mut.render_sprites();
+		oly_context.mut.draw_sprite_list("#2");
 		polygon_batch.draw(2);
-		sprite1.draw();
-		godot_sprite.draw();
-		oly_context.mut.render_sprites();
+		oly_context.mut.draw_sprite_list("#3");
 	}
 }

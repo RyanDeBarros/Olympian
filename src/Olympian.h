@@ -29,13 +29,15 @@ namespace oly
 		TextureRegistry& texture_registry() { return internal.texture_registry; }
 		const rendering::NSVGContext& nsvg_context() const { return internal.nsvg_context; }
 		rendering::NSVGContext& nsvg_context() { return internal.nsvg_context; }
+		const mut::SpriteRegistry& mut_sprite_registry() const { return internal.mut_sprite_registry; }
+		mut::SpriteRegistry& mut_sprite_registry() { return internal.mut_sprite_registry; }
 		const rendering::Window& window() const { return *internal.window; }
 		rendering::Window& window() { return *internal.window; }
 
-		class
+		class Mut
 		{
 			friend class Context;
-			const Context* context;
+			const Context* context = nullptr;
 			struct
 			{
 				std::unique_ptr<mut::SpriteBatch> sprite_batch;
@@ -45,8 +47,9 @@ namespace oly
 			const mut::SpriteBatch& sprite_batch() const { return *internal.sprite_batch; }
 			mut::SpriteBatch& sprite_batch() { return *internal.sprite_batch; }
 			mut::Sprite sprite() const { return mut::Sprite(internal.sprite_batch.get()); }
-			mut::Sprite sprite(const std::string& name) const { return context->internal.mut_sprite_registry.create_sprite(context, name); }
+			std::weak_ptr<mut::Sprite> sprite(const std::string& name, bool register_if_nonexistant = true) const { return context->internal.mut_sprite_registry.get_sprite(context, name, register_if_nonexistant); }
 			void render_sprites() const { internal.sprite_batch->render(); }
+			void draw_sprite_list(const std::string& draw_list_name, bool register_if_nonexistant = true) const;
 		} mut;
 
 		void sync_texture_handle(const rendering::BindlessTextureRes& texture);

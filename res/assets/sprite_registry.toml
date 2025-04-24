@@ -28,12 +28,14 @@
 	"name" = "sprite2"
 	"texture" = 1
 	transform = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
+	transform_modifier = { "type" = "shear" }
 
 	[[sprite_registry.sprite]]
 	"name" = "sprite3"
 	"texture" = 3
 	transform = { "position" = [100, -100], "scale" = [2.0, 2.0] }
-	
+	frame_format = { "num frames" = 59, "delay seconds" = 0.05 }
+
 	[[sprite_registry.sprite]]
 	"name" = "sprite4"
 	"texture" = 4
@@ -63,3 +65,25 @@
 	"name" = "godot icon (10.0)"
 	"texture" = 7
 	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }
+
+	[[sprite_registry.draw_list]]
+	"name" = "#1"
+	"sprites" = [
+		"sprite0",
+		"sprite2"
+	]
+
+	[[sprite_registry.draw_list]]
+	"name" = "#2"
+	"sprites" = [
+		"sprite3",
+		"sprite4",
+		"sprite5"
+	]
+
+	[[sprite_registry.draw_list]]
+	"name" = "#3"
+	"sprites" = [
+		"sprite1",
+		"godot icon (10.0)"
+	]

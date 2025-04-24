@@ -86,6 +86,8 @@ namespace oly
 
 	Context::~Context()
 	{
+		internal.texture_registry.clear();
+		internal.mut_sprite_registry.clear();
 		unload_resources();
 		glfwTerminate();
 	}
@@ -109,5 +111,11 @@ namespace oly
 	void Context::sync_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
 	{
 		mut.internal.sprite_batch->update_texture_handle(texture, dimensions);
+	}
+
+	void Context::Mut::draw_sprite_list(const std::string& draw_list_name, bool register_if_nonexistant) const
+	{
+		context->internal.mut_sprite_registry.draw_sprites(context, draw_list_name, register_if_nonexistant);
+		render_sprites();
 	}
 }
