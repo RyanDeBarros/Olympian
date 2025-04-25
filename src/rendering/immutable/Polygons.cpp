@@ -36,6 +36,8 @@ namespace oly
 
 		void PolygonBatch::draw(size_t draw_spec)
 		{
+			flush();
+
 			glBindVertexArray(vao);
 			glUseProgram(shader);
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
@@ -486,7 +488,7 @@ namespace oly
 		
 		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(id.get() == PolygonBatch::RangeID(-1));
+			OLY_ASSERT(!initialized());
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id.get(), composite, transformer.global());
@@ -494,7 +496,7 @@ namespace oly
 
 		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(id.get() == PolygonBatch::RangeID(-1));
+			OLY_ASSERT(!initialized());
 			id = _batch->generate_id(composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id.get(), std::move(composite), transformer.global());
@@ -502,7 +504,7 @@ namespace oly
 
 		void Polygonal::resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(this->id.get() != PolygonBatch::RangeID(-1));
+			OLY_ASSERT(initialized());
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id.get(), composite, transformer.global());
@@ -510,7 +512,7 @@ namespace oly
 
 		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
 		{
-			OLY_ASSERT(this->id.get() != PolygonBatch::RangeID(-1));
+			OLY_ASSERT(initialized());
 			_batch->resize_range(id, composite, min_range, max_range);
 			transformer.pre_get();
 			_batch->set_polygon(id.get(), std::move(composite), transformer.global());

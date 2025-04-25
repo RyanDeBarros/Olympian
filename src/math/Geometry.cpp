@@ -113,13 +113,13 @@ oly::math::Edge::Edge(glm::uint a, glm::uint b)
 oly::math::TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D& polygon)
 	: polygon(polygon)
 {
-	triangulation = ear_clipping(polygon.points);
+	triangulation = triangulate(polygon.points);
 }
 
 oly::math::TriangulatedPolygon2D::TriangulatedPolygon2D(Polygon2D&& polygon)
 	: polygon(std::move(polygon))
 {
-	triangulation = ear_clipping(this->polygon.points);
+	triangulation = triangulate(this->polygon.points);
 }
 
 oly::math::BorderPointPair oly::math::border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point)
@@ -177,7 +177,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_triangle(glm::vec4 color, glm
 	p.polygon.points.push_back(p1);
 	p.polygon.points.push_back(p2);
 	p.polygon.points.push_back(p3);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -208,7 +208,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_quad(glm::vec4 color, glm::ve
 	p.polygon.points.push_back(p2);
 	p.polygon.points.push_back(p3);
 	p.polygon.points.push_back(p4);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -243,7 +243,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_pentagon(glm::vec4 color, glm
 	p.polygon.points.push_back(p3);
 	p.polygon.points.push_back(p4);
 	p.polygon.points.push_back(p5);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -282,7 +282,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_hexagon(glm::vec4 color, glm:
 	p.polygon.points.push_back(p4);
 	p.polygon.points.push_back(p5);
 	p.polygon.points.push_back(p6);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -319,7 +319,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, const s
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
 	p.polygon.points = points;
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -329,7 +329,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(glm::vec4 color, std::ve
 	TriangulatedPolygon2D p;
 	p.polygon.colors.push_back(color);
 	p.polygon.points = std::move(points);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -339,7 +339,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(const std::vector<glm::v
 	TriangulatedPolygon2D p;
 	p.polygon.colors = colors;
 	p.polygon.points = points;
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 
@@ -349,7 +349,7 @@ oly::math::TriangulatedPolygon2D oly::math::create_ngon(std::vector<glm::vec4>&&
 	TriangulatedPolygon2D p;
 	p.polygon.colors = std::move(colors);
 	p.polygon.points = std::move(points);
-	p.triangulation = ear_clipping(p.polygon.points);
+	p.triangulation = triangulate(p.polygon.points);
 	return p;
 }
 

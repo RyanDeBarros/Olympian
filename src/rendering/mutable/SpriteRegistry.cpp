@@ -9,7 +9,7 @@ namespace oly
 		void SpriteRegistry::load(const char* sprite_registry_file)
 		{
 			auto toml = assets::load_toml(sprite_registry_file);
-			auto toml_sprites = toml["sprite_registry"];
+			auto toml_sprites = toml["mut_sprite_registry"];
 			if (!toml_sprites)
 				return;
 			auto sprite_list = toml_sprites["sprite"].as_array();
@@ -26,12 +26,8 @@ namespace oly
 			sprite_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
-					auto _name = node["name"].value<std::string>();
-					if (_name)
-					{
-						std::string name = _name.value();
-						sprite_constructors[name] = node;
-					}
+					if (auto _name = node["name"].value<std::string>())
+						sprite_constructors[_name.value()] = node;
 				}
 				});
 
@@ -79,7 +75,7 @@ namespace oly
 			const auto& node = it->second;
 
 			Sprite sprite = context->mut.sprite();
-			sprite.local() = assets::load_transform_2d((const assets::AssetNode&)node["transform"]);
+			sprite.local() = assets::load_transform_2d(node, "transform");
 			sprite.post_set();
 
 			std::string texture;

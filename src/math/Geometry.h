@@ -200,7 +200,7 @@ namespace oly
 			Polygon2DComposite bordered_composite(glm::uint max_degree) const;
 		};
 
-		extern Triangulation ear_clipping(const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
+		extern Triangulation triangulate(const std::vector<glm::vec2>& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
 		extern glm::uint get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset = 0);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon);
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);

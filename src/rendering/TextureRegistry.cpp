@@ -184,7 +184,7 @@ namespace oly
 			return;
 
 		std::string file = _file.value();
-		std::string abstract_name = _name.value();
+		const std::string& abstract_name = _name.value();
 
 		std::string units = node["units"].value<std::string>().value_or("px");
 		float dpi = (float)node["dpi"].value<double>().value_or(96.0);
@@ -200,10 +200,9 @@ namespace oly
 					if (!_name || !_scale)
 						return;
 
-					std::string name = _name.value();
 					float scale = (float)_scale.value();
 					rendering::VectorImageRes image = { context->nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
-					register_nsvg_image((assets::AssetNode)node, image, name, nsvg_abstract, context->nsvg_context());
+					register_nsvg_image((assets::AssetNode)node, image, _name.value(), nsvg_abstract, context->nsvg_context());
 
 					bool keep_pixel_buffer = node["keep pixel buffer"].value<bool>().value_or(false);
 					if (!keep_pixel_buffer)

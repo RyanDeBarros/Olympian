@@ -548,7 +548,7 @@ namespace oly
 
 		std::unique_ptr<PolygonalParticle> create_polygonal_particle(const std::vector<glm::vec2>& polygon)
 		{
-			return std::make_unique<PolygonalParticle>(polygon, math::ear_clipping(polygon));
+			return std::make_unique<PolygonalParticle>(polygon, math::triangulate(polygon));
 		}
 
 		EllipticParticle::EllipticParticle(float rx, float ry)

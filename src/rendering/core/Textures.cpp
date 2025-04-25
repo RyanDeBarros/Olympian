@@ -333,11 +333,9 @@ namespace oly
 				GLuint major_height = minor_height * options.rows;
 				GLuint minor_area = minor_stride * minor_height;
 				_buf = new unsigned char[major_stride * major_height];
-				unsigned char* temp = new unsigned char[minor_stride * minor_height];
-				const auto cpy = [this, temp, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
+				const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
 					for (GLuint r = 0; r < minor_height; ++r)
-						memcpy(temp + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
-					memcpy(_buf + k * minor_area, temp, minor_area);
+						memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
 					};
 				GLuint k = 0;
 				if (options.row_major)
@@ -370,7 +368,6 @@ namespace oly
 								cpy((GLuint)i, j, k++);
 					}
 				}
-				delete[] temp;
 			}
 		}
 

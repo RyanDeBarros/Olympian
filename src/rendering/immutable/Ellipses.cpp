@@ -27,6 +27,8 @@ namespace oly
 
 		void EllipseBatch::draw(size_t draw_spec)
 		{
+			flush();
+
 			glBindVertexArray(vao);
 			glUseProgram(shaders::ellipse_batch);
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));

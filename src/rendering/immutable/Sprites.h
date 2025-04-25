@@ -149,9 +149,8 @@ namespace oly
 			void swap_quad_order(QuadPos pos1, QuadPos pos2);
 			void move_quad_order(QuadPos from, QuadPos to);
 
-			void flush();
-
 		private:
+			void flush();
 			bool dirty_z = false;
 			std::vector<QuadReference*> quad_refs;
 			std::unordered_set<Sprite*> sprites;

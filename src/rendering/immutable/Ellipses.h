@@ -120,9 +120,8 @@ namespace oly
 			void swap_ellipse_order(EllipsePos pos1, EllipsePos pos2);
 			void move_ellipse_order(EllipsePos from, EllipsePos to);
 
-			void flush();
-
 		private:
+			void flush();
 			bool dirty_z = false;
 			std::vector<EllipseReference*> ellipse_refs;
 			std::unordered_set<Ellipse*> ellipses;

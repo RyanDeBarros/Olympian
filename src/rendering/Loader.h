@@ -26,6 +26,7 @@ namespace oly
 		extern bool parse_vec4(const toml::v3::array* arr, glm::vec4& v);
 		inline bool parse_vec4(const AssetNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
 		extern Transform2D load_transform_2d(const AssetNode& node);
+		inline Transform2D load_transform_2d(const toml::table& node, const char* name) { return load_transform_2d((const AssetNode&)node[name]); }
 		inline Transform2D load_transform_2d(const AssetNode& node, const char* name) { return load_transform_2d(node[name]); }
 		extern random::bound::Function load_random_bound_function(const AssetNode& node);
 		extern random::bound::Function2D load_random_bound_function_2d(const AssetNode& node);

@@ -316,7 +316,7 @@ static void remove_ear(EarClippingData& data, std::shared_ptr<Node> remove)
 	OLY_ASSERT(data.size == 3 || data.head_ear.lock());
 }
 
-oly::math::Triangulation oly::math::ear_clipping(const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
+oly::math::Triangulation oly::math::triangulate(const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
 {
 	OLY_ASSERT(polygon.size() >= 3);
 	Triangulation triangulation;
@@ -440,7 +440,7 @@ glm::uint oly::math::get_first_ear(const std::vector<glm::vec2>& polygon, int st
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
 {
 	OLY_ASSERT(polygon.size() >= 3);
-	return convex_decompose_triangulation(polygon, ear_clipping(polygon));
+	return convex_decompose_triangulation(polygon, triangulate(polygon));
 }
 
 std::vector<oly::math::Triangulation> oly::math::convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)

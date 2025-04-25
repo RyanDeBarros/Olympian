@@ -135,7 +135,8 @@ namespace oly
 		template<numeric T>
 		T delta() const { return (T)_delta; }
 
-		// LATER make these private and make Universe a friend so it can call these.
+	private:
+		friend class Context;
 		void init() { _now = glfwGetTime(); _delta = 1.0f / 60.0f; }
 		void sync() { double n = glfwGetTime(); _delta = n - _now; _now = n; }
 	};

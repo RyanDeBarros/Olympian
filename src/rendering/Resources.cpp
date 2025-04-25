@@ -69,7 +69,7 @@ namespace oly
 
 	namespace shaders
 	{
-		static std::string src_dir = "../../../src/"; // LATER better way of storing src_dir path.
+		static std::string src_dir = "../../../src/"; // LATER better way of storing src_dir path. use macro?
 		static std::string shaders_dir = src_dir + "rendering/shaders/";
 
 		static std::unique_ptr<rendering::Shader> _sprite_batch = nullptr;

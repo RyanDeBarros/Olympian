@@ -57,24 +57,35 @@ namespace oly
 			return false;
 		}
 
-		bool parse_vec2(const toml::v3::array* arr, glm::vec2& v)
+		template<size_t N>
+		static bool parse_vec(const toml::v3::array* arr, glm::vec<N, float>& v)
 		{
-			if (arr && arr->size() == 2)
+			if (arr && arr->size() == N)
 			{
-				v = { (float)arr->get_as<double>(0)->get(), (float)arr->get_as<double>(1)->get() };
+				glm::vec<N, float> u;
+				for (size_t i = 0; i < N; ++i)
+				{
+					if (auto d = arr->get_as<double>(i))
+						u[i] = (float)d->get();
+					else if (auto n = arr->get_as<int64_t>(i))
+						u[i] = (float)n->get();
+					else
+						return false;
+				}
+				v = u;
 				return true;
 			}
 			return false;
 		}
 
+		bool parse_vec2(const toml::v3::array* arr, glm::vec2& v)
+		{
+			return parse_vec(arr, v);
+		}
+
 		bool parse_vec4(const toml::v3::array* arr, glm::vec4& v)
 		{
-			if (arr && arr->size() == 4)
-			{
-				v = { (float)arr->get_as<double>(0)->get(), (float)arr->get_as<double>(1)->get(), (float)arr->get_as<double>(2)->get(), (float)arr->get_as<double>(3)->get() };
-				return true;
-			}
-			return false;
+			return parse_vec(arr, v);
 		}
 
 		Transform2D load_transform_2d(const AssetNode& node)

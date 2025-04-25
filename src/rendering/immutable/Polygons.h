@@ -162,7 +162,6 @@ namespace oly
 
 			std::unordered_set<Polygonal*> polygonal_renderables;
 
-		public:
 			void flush() const;
 		};
 
@@ -184,6 +183,7 @@ namespace oly
 			const PolygonBatch* batch() const { return _batch; }
 			PolygonBatch* batch() { return _batch; }
 			PolygonBatch::RangeID get_id() const { return id.get(); }
+			bool initialized() const { return id.get() != PolygonBatch::RangeID(-1); }
 			Range<PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id.get()); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }

@@ -183,7 +183,7 @@ namespace oly
 
 			std::vector<Domain::WeightedShape> create_triangulated_domain_shapes(const std::vector<glm::vec2>& polygon)
 			{
-				auto tp = math::ear_clipping(polygon);
+				auto tp = math::triangulate(polygon);
 				std::vector<Domain::WeightedShape> shapes;
 				shapes.resize(tp.size());
 				for (size_t i = 0; i < tp.size(); ++i)

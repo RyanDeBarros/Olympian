@@ -42,6 +42,8 @@ namespace oly
 
 		void SpriteBatch::draw(size_t draw_spec)
 		{
+			flush();
+
 			glBindVertexArray(vao);
 			glUseProgram(shaders::sprite_batch);
 			glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
