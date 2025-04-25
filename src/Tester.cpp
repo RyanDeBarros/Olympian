@@ -39,11 +39,11 @@ int main()
 	}
 	concave_shape->send_polygon();
 
-	oly_context.immut.polygon_batch().move_poly_order_after(oly_context.immut.ref_polygonal("pentagon2").lock()->get_id(), oly_context.immut.ref_polygonal("bordered triangle").lock()->get_id());
-	oly_context.immut.polygon_batch().move_poly_order_before(concave_shape->get_id(), oly_context.immut.ref_polygonal("bordered triangle").lock()->get_id());
+	oly_context.immut.polygon_batch().move_poly_order_after(oly_context.immut.ref_polygon("pentagon2").lock()->get_id(), oly_context.immut.ref_composite("bordered triangle").lock()->get_id());
+	oly_context.immut.polygon_batch().move_poly_order_before(concave_shape->get_id(), oly_context.immut.ref_composite("bordered triangle").lock()->get_id());
 	oly_context.immut.polygon_batch().draw_specs.resize(3);
 	oly::immut::PolygonBatch::RangeID post_octagon_id = -1;
-	if (oly_context.immut.polygon_batch().get_next_draw_id(oly_context.immut.ref_polygonal("octagon").lock()->get_id(), post_octagon_id))
+	if (oly_context.immut.polygon_batch().get_next_draw_id(oly_context.immut.ref_ngon("octagon").lock()->get_id(), post_octagon_id))
 	{
 		auto post_octagon_range = oly_context.immut.polygon_batch().get_index_range(post_octagon_id);
 		oly_context.immut.polygon_batch().draw_specs[1] = { 0, post_octagon_range.initial };
@@ -107,20 +107,32 @@ int main()
 
 		// draw
 
-		oly_context.immut.draw_ellipses();
+		oly_context.immut.ref_ellipse("ellipse1").lock()->draw_unit();
+		oly_context.immut.ref_ellipse("ellipse2").lock()->draw_unit();
+
 		oly::stencil::begin();
+		
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
+		
 		oly_context.immut.draw_polygons(1);
+		
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
+		
 		oly_context.mut.draw_sprite_list("#1");
+		
 		oly::stencil::end();
+		
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		oly_context.mut.draw_sprite_list("#2");
+
 		oly_context.immut.draw_polygons(2);
+		
 		oly_context.mut.draw_sprite_list("#3");
+
+		oly_context.immut.ref_composite("concave shape").lock()->draw_unit();
 	}
 }

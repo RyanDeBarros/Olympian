@@ -76,7 +76,11 @@ namespace oly
 			immut::Composite composite(const std::string& name) const { return context->internal.immut_polygon_registry.create_composite(context, name); }
 			immut::NGon ngon() const { return immut::NGon(internal.polygon_batch.get()); }
 			immut::NGon ngon(const std::string& name) const { return context->internal.immut_polygon_registry.create_ngon(context, name); }
+
+		private:
 			std::weak_ptr<immut::Polygonal> ref_polygonal(const std::string& name) const { return context->internal.immut_polygon_registry.ref_polygonal(name); }
+
+		public:
 			std::weak_ptr<immut::Polygon> ref_polygon(const std::string& name) const { return std::dynamic_pointer_cast<immut::Polygon>(ref_polygonal(name).lock()); }
 			std::weak_ptr<immut::Composite> ref_composite(const std::string& name) const { return std::dynamic_pointer_cast<immut::Composite>(ref_polygonal(name).lock()); }
 			std::weak_ptr<immut::NGon> ref_ngon(const std::string& name) const { return std::dynamic_pointer_cast<immut::NGon>(ref_polygonal(name).lock()); }

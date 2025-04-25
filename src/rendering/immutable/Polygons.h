@@ -20,7 +20,7 @@ namespace oly
 			friend class Polygonal;
 			GLuint shader;
 			rendering::VertexArray vao;
-			rendering::CPUSideEBO<GLushort, rendering::Mutability::IMMUTABLE> ebo;
+			mutable rendering::CPUSideEBO<GLushort, rendering::Mutability::IMMUTABLE> ebo;
 
 			GLuint projection_location;
 			GLuint degree_location;
@@ -83,11 +83,12 @@ namespace oly
 
 			PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void draw(size_t draw_spec = 0);
+			void draw(size_t draw_spec = 0) const;
+			void draw(Range<PrimitivePos> range) const;
 
 		private:
 			void get_primitive_draw_spec(PrimitivePos& first, PrimitivePos& count) const;
-			void set_primitive_draw_spec(PrimitivePos first, PrimitivePos count);
+			void set_primitive_draw_spec(PrimitivePos first, PrimitivePos count) const;
 
 		public:
 			std::vector<Range<PrimitivePos>> draw_specs;
@@ -180,8 +181,8 @@ namespace oly
 			virtual ~Polygonal();
 			Polygonal& operator=(Polygonal&&) noexcept;
 
-			const PolygonBatch* batch() const { return _batch; }
-			PolygonBatch* batch() { return _batch; }
+			const PolygonBatch& batch() const { return *_batch; }
+			PolygonBatch& batch() { return *_batch; }
 			PolygonBatch::RangeID get_id() const { return id.get(); }
 			bool initialized() const { return id.get() != PolygonBatch::RangeID(-1); }
 			Range<PolygonBatch::PrimitivePos> index_range() const { return _batch->get_index_range(id.get()); }
@@ -193,6 +194,8 @@ namespace oly
 			virtual void init(GLushort min_range = 0, GLushort max_range = 0) = 0;
 			virtual void resize(GLushort min_range = 0, GLushort max_range = 0) = 0;
 			virtual void send_polygon() const = 0;
+
+			void draw_unit() const;
 
 		protected:
 			void init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range);

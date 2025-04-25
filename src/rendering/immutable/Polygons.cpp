@@ -34,7 +34,12 @@ namespace oly
 			draw_specs.push_back({ 0, capacity.primitives });
 		}
 
-		void PolygonBatch::draw(size_t draw_spec)
+		void PolygonBatch::draw(size_t draw_spec) const
+		{
+			draw(draw_specs[draw_spec]);
+		}
+
+		void PolygonBatch::draw(Range<PrimitivePos> range) const
 		{
 			flush();
 
@@ -44,7 +49,7 @@ namespace oly
 			glUniform1ui(degree_location, capacity.degree);
 
 			transform_ssbo.bind_base(0);
-			set_primitive_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
+			set_primitive_draw_spec(range.initial, range.length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
@@ -55,7 +60,7 @@ namespace oly
 			count /= capacity.polygon_index_count;
 		}
 
-		void PolygonBatch::set_primitive_draw_spec(PrimitivePos first, PrimitivePos count)
+		void PolygonBatch::set_primitive_draw_spec(PrimitivePos first, PrimitivePos count) const
 		{
 			ebo.set_draw_spec(first * capacity.polygon_index_count, count * capacity.polygon_index_count);
 		}
@@ -486,6 +491,11 @@ namespace oly
 			transformer.pre_get();
 		}
 		
+		void Polygonal::draw_unit() const
+		{
+			_batch->draw(_batch->get_index_range(id.get()));
+		}
+
 		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
 		{
 			OLY_ASSERT(!initialized());
@@ -541,17 +551,17 @@ namespace oly
 		
 		void Polygon::init(GLushort min_range, GLushort max_range)
 		{
-			Polygonal::init(math::split_polygon_composite(polygon, batch()->get_capacity().degree), min_range, max_range);
+			Polygonal::init(math::split_polygon_composite(polygon, batch().get_capacity().degree), min_range, max_range);
 		}
 
 		void Polygon::resize(GLushort min_range, GLushort max_range)
 		{
-			Polygonal::resize(math::split_polygon_composite(polygon, batch()->get_capacity().degree), min_range, max_range);
+			Polygonal::resize(math::split_polygon_composite(polygon, batch().get_capacity().degree), min_range, max_range);
 		}
 		
 		void Polygon::send_polygon() const
 		{
-			Polygonal::send_polygon(math::split_polygon_composite(polygon, batch()->get_capacity().degree));
+			Polygonal::send_polygon(math::split_polygon_composite(polygon, batch().get_capacity().degree));
 		}
 		
 		void Composite::init(GLushort min_range, GLushort max_range)
@@ -569,7 +579,7 @@ namespace oly
 		void Composite::send_polygon() const
 		{
 			math::Polygon2DComposite dup = dupl(composite);
-			math::split_polygon_composite(dup, batch()->get_capacity().degree);
+			math::split_polygon_composite(dup, batch().get_capacity().degree);
 			Polygonal::send_polygon(dup);
 		}
 
@@ -590,7 +600,7 @@ namespace oly
 
 		math::Polygon2DComposite NGon::composite() const
 		{
-			return bordered ? batch()->create_bordered_ngon(base) : batch()->create_ngon(base);
+			return bordered ? batch().create_bordered_ngon(base) : batch().create_ngon(base);
 		}
 	}
 }

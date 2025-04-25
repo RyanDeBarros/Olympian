@@ -38,6 +38,10 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
 endif()
 
+if (MSVC)
+  target_compile_options(Olympian PRIVATE /Zc:__cplusplus)
+endif()
+
 # Dependency configuration macros
 target_compile_definitions(Olympian PRIVATE GLEW_STATIC)
 

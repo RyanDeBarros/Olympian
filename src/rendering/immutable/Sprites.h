@@ -20,7 +20,7 @@ namespace oly
 			friend struct Sprite;
 
 			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
+			mutable rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 
 			FixedVector<rendering::BindlessTextureRes> textures;
 
@@ -81,9 +81,12 @@ namespace oly
 			const Capacity capacity;
 
 		public:
+			typedef GLushort QuadPos;
+
 			SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void draw(size_t draw_spec = 0);
+			void draw(size_t draw_spec = 0) const;
+			void draw(Range<QuadPos> range) const;
 
 			void set_texture(GLushort pos, const rendering::BindlessTextureRes& texture, rendering::ImageDimensions dim);
 			void refresh_handle(GLushort pos, rendering::ImageDimensions dim);
@@ -95,7 +98,6 @@ namespace oly
 			glm::vec4 projection_bounds;
 			glm::vec4 global_modulation = glm::vec4(1.0f);
 
-			typedef GLushort QuadPos;
 			typedef StrictIDGenerator<GLushort>::ID QID;
 			std::vector<Range<QuadPos>> draw_specs;
 
@@ -128,12 +130,10 @@ namespace oly
 				const glm::mat3& transform() const { return *_transform; }
 				glm::mat3& transform() { return *_transform; }
 				
-			private:
 				QuadPos index_pos() const { return _batch->z_order.range_of(pos.get()); }
 				void set_z_index(QuadPos z) { _batch->move_quad_order(index_pos(), z); }
 				void move_z_index(int by) { _batch->move_quad_order(index_pos(), index_pos() + by); }
 
-			public:
 				void send_info() const;
 				void send_transform() const;
 				void send_data() const;
@@ -142,19 +142,19 @@ namespace oly
 			friend QuadReference;
 
 		private:
-			math::IndexBijection<QuadPos> z_order;
+			mutable math::IndexBijection<QuadPos> z_order;
 			StrictIDGenerator<QuadPos> pos_generator;
 
 		public:
-			void swap_quad_order(QuadPos pos1, QuadPos pos2);
-			void move_quad_order(QuadPos from, QuadPos to);
+			void swap_quad_order(QuadPos pos1, QuadPos pos2) const;
+			void move_quad_order(QuadPos from, QuadPos to) const;
 
 		private:
-			void flush();
-			bool dirty_z = false;
-			std::vector<QuadReference*> quad_refs;
+			void flush() const;
+			mutable bool dirty_z = false;
+			mutable std::vector<QuadReference*> quad_refs;
 			std::unordered_set<Sprite*> sprites;
-			void flush_z_values();
+			void flush_z_values() const;
 		};
 
 		struct Sprite
@@ -174,6 +174,8 @@ namespace oly
 			Transform2D& local() { return transformer.local; }
 			void post_set(); // call after modifying local
 			void pre_get() const; // call before reading global
+
+			void draw_unit() const;
 
 		private:
 			friend SpriteBatch;

@@ -25,7 +25,12 @@ namespace oly
 			draw_specs.push_back({ 0, capacity.ellipses });
 		}
 
-		void EllipseBatch::draw(size_t draw_spec)
+		void EllipseBatch::draw(size_t draw_spec) const
+		{
+			draw(draw_specs[draw_spec]);
+		}
+
+		void EllipseBatch::draw(Range<EllipsePos> range) const
 		{
 			flush();
 
@@ -36,7 +41,7 @@ namespace oly
 			dimension_ssbo.bind_base(0);
 			color_ssbo.bind_base(1);
 			transform_ssbo.bind_base(2);
-			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
+			ebo.set_draw_spec(range.initial, range.length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
@@ -107,7 +112,7 @@ namespace oly
 			_batch->transform_ssbo.lazy_send(pos.get());
 		}
 
-		void EllipseBatch::swap_ellipse_order(EllipsePos pos1, EllipsePos pos2)
+		void EllipseBatch::swap_ellipse_order(EllipsePos pos1, EllipsePos pos2) const
 		{
 			if (pos1 != pos2)
 			{
@@ -118,7 +123,7 @@ namespace oly
 			}
 		}
 
-		void EllipseBatch::move_ellipse_order(EllipsePos from, EllipsePos to)
+		void EllipseBatch::move_ellipse_order(EllipsePos from, EllipsePos to) const
 		{
 			to = std::clamp(to, (EllipsePos)0, EllipsePos(capacity.ellipses - 1));
 			from = std::clamp(from, (EllipsePos)0, EllipsePos(capacity.ellipses - 1));
@@ -135,7 +140,7 @@ namespace oly
 			}
 		}
 
-		void EllipseBatch::flush()
+		void EllipseBatch::flush() const
 		{
 			for (Ellipse* ellipse : ellipses)
 				ellipse->flush();
@@ -146,7 +151,7 @@ namespace oly
 			ebo.flush();
 		}
 
-		void EllipseBatch::flush_z_values()
+		void EllipseBatch::flush_z_values() const
 		{
 			if (!dirty_z)
 				return;
@@ -209,6 +214,11 @@ namespace oly
 		void Ellipse::pre_get() const
 		{
 			transformer.pre_get();
+		}
+
+		void Ellipse::draw_unit() const
+		{
+			batch().draw({ ellipse.index_pos(), 1 });
 		}
 
 		void Ellipse::flush()

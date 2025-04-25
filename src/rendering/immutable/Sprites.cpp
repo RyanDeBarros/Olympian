@@ -40,7 +40,12 @@ namespace oly
 			draw_specs.push_back({ 0, capacity.quads });
 		}
 
-		void SpriteBatch::draw(size_t draw_spec)
+		void SpriteBatch::draw(size_t draw_spec) const
+		{
+			draw(draw_specs[draw_spec]);
+		}
+
+		void SpriteBatch::draw(Range<QuadPos> range) const
 		{
 			flush();
 
@@ -56,7 +61,7 @@ namespace oly
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
 			ubo.anim.bind_base(2);
-			ebo.set_draw_spec(draw_specs[draw_spec].initial, draw_specs[draw_spec].length);
+			ebo.set_draw_spec(range.initial, range.length);
 			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
 		}
 
@@ -170,7 +175,7 @@ namespace oly
 			_batch->ssbo.quad_transform.lazy_send(pos.get());
 		}
 
-		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2)
+		void SpriteBatch::swap_quad_order(QuadPos pos1, QuadPos pos2) const
 		{
 			if (pos1 != pos2)
 			{
@@ -181,7 +186,7 @@ namespace oly
 			}
 		}
 
-		void SpriteBatch::move_quad_order(QuadPos from, QuadPos to)
+		void SpriteBatch::move_quad_order(QuadPos from, QuadPos to) const
 		{
 			to = std::clamp(to, (QuadPos)0, QuadPos(capacity.quads - 1));
 			from = std::clamp(from, (QuadPos)0, QuadPos(capacity.quads - 1));
@@ -198,7 +203,7 @@ namespace oly
 			}
 		}
 
-		void SpriteBatch::flush()
+		void SpriteBatch::flush() const
 		{
 			for (Sprite* sprite : sprites)
 				sprite->flush();
@@ -208,7 +213,7 @@ namespace oly
 			ebo.flush();
 		}
 
-		void SpriteBatch::flush_z_values()
+		void SpriteBatch::flush_z_values() const
 		{
 			if (!dirty_z)
 				return;
@@ -271,6 +276,11 @@ namespace oly
 		void Sprite::pre_get() const
 		{
 			transformer.pre_get();
+		}
+
+		void Sprite::draw_unit() const
+		{
+			batch().draw({ quad.index_pos(), 1 });
 		}
 
 		void Sprite::flush()

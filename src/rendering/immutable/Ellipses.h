@@ -19,7 +19,7 @@ namespace oly
 			friend struct Ellipse;
 
 			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
+			mutable rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
 			
 		public:
 			struct EllipseDimension
@@ -57,17 +57,19 @@ namespace oly
 			Capacity capacity;
 
 		public:
+			typedef GLushort EllipsePos;
+
 			EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
-			void draw(size_t draw_spec = 0);
+			void draw(size_t draw_spec = 0) const;
+			void draw(Range<EllipsePos> range) const;
 
 			glm::vec4 projection_bounds;
 
-			typedef GLushort EllipsePos;
 			std::vector<Range<EllipsePos>> draw_specs;
 
 		private:
-			math::IndexBijection<EllipsePos> z_order;
+			mutable math::IndexBijection<EllipsePos> z_order;
 			StrictIDGenerator<EllipsePos> pos_generator;
 			typedef StrictIDGenerator<EllipsePos>::ID EID;
 
@@ -103,12 +105,10 @@ namespace oly
 				const glm::mat3& transform() const { return *_transform; }
 				glm::mat3& transform() { return *_transform; }
 
-			private:
 				EllipsePos index_pos() const { return _batch->z_order.range_of(pos.get()); }
 				void set_z_index(EllipsePos z) { _batch->move_ellipse_order(index_pos(), z); }
 				void move_z_index(int by) { _batch->move_ellipse_order(index_pos(), index_pos() + by); }
 
-			public:
 				void send_dimension() const;
 				void send_color() const;
 				void send_transform() const;
@@ -117,15 +117,15 @@ namespace oly
 			};
 			friend class EllipseReference;
 
-			void swap_ellipse_order(EllipsePos pos1, EllipsePos pos2);
-			void move_ellipse_order(EllipsePos from, EllipsePos to);
+			void swap_ellipse_order(EllipsePos pos1, EllipsePos pos2) const;
+			void move_ellipse_order(EllipsePos from, EllipsePos to) const;
 
 		private:
-			void flush();
-			bool dirty_z = false;
-			std::vector<EllipseReference*> ellipse_refs;
+			void flush() const;
+			mutable bool dirty_z = false;
+			mutable std::vector<EllipseReference*> ellipse_refs;
 			std::unordered_set<Ellipse*> ellipses;
-			void flush_z_values();
+			void flush_z_values() const;
 		};
 
 		struct Ellipse
@@ -145,6 +145,8 @@ namespace oly
 			Transform2D& local() { return transformer.local; }
 			void post_set(); // call after modifying local
 			void pre_get() const; // call before reading global
+
+			void draw_unit() const;
 
 		private:
 			friend class EllipseBatch;
