@@ -1,5 +1,5 @@
 [immut_polygon_registry]
-	"auto_draw_list" = [
+	"auto draw list" = [
 		"pentagon1",
 		"pentagon2",
 		"bordered triangle",

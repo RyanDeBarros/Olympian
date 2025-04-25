@@ -1,4 +1,4 @@
-#include "Olympian.h"
+#include "Context.h"
 
 #include <stb/stb_image.h>
 
@@ -86,7 +86,7 @@ namespace oly
 		immut.context = this;
 
 		if (auto toml_polygon_batch = toml_context["immut_polygon_batch"]) // init immutable polygon batch
-		{ 
+		{
 			int primitives;
 			assets::parse_int(toml_polygon_batch, "primitives", primitives);
 			int degree = 6;
@@ -105,6 +105,25 @@ namespace oly
 						internal.immut_polygon_registry.load(this, root_dir + file.value());
 			}
 		}
+
+		if (auto toml_ellipse_batch = toml_context["immut_ellipse_batch"]) // init immutable ellipse batch
+		{
+			int ellipses;
+			assets::parse_int(toml_ellipse_batch, "ellipses", ellipses);
+
+			immut::EllipseBatch::Capacity capacity{ (GLushort)ellipses };
+			immut.internal.ellipse_batch = std::make_unique<immut::EllipseBatch>(capacity, internal.window->projection_bounds());
+		}
+
+		{ // init immutable ellipse registry
+			auto register_files = toml_context["immut ellipse registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.immut_ellipse_registry.load(this, root_dir + file.value());
+			}
+		}
 	}
 
 	Context::~Context()
@@ -112,6 +131,7 @@ namespace oly
 		internal.texture_registry.clear();
 		internal.mut_sprite_registry.clear();
 		internal.immut_polygon_registry.clear();
+		internal.immut_ellipse_registry.clear();
 		unload_resources();
 		glfwTerminate();
 	}

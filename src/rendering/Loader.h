@@ -21,10 +21,15 @@ namespace oly
 		typedef toml::v3::node_view<toml::v3::node> AssetNode;
 
 		extern bool parse_int(const AssetNode& node, const std::string& name, int& v);
+		extern bool parse_int(const toml::table& node, const std::string& name, int& v);
+		extern bool parse_float(const AssetNode& node, const std::string& name, float& v);
+		extern bool parse_float(const toml::table& node, const std::string& name, float& v);
 		extern bool parse_vec2(const toml::v3::array* arr, glm::vec2& v);
 		inline bool parse_vec2(const AssetNode& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
+		inline bool parse_vec2(const toml::table& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
 		extern bool parse_vec4(const toml::v3::array* arr, glm::vec4& v);
 		inline bool parse_vec4(const AssetNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
+		inline bool parse_vec4(const toml::table& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
 		extern Transform2D load_transform_2d(const AssetNode& node);
 		inline Transform2D load_transform_2d(const toml::table& node, const char* name) { return load_transform_2d((const AssetNode&)node[name]); }
 		inline Transform2D load_transform_2d(const AssetNode& node, const char* name) { return load_transform_2d(node[name]); }

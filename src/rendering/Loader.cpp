@@ -57,13 +57,58 @@ namespace oly
 			return false;
 		}
 
+		bool parse_int(const toml::table& node, const std::string& name, int& v)
+		{
+			auto n = node[name];
+			if (n)
+			{
+				auto i = n.value<int64_t>();
+				if (i)
+				{
+					v = (int)i.value();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool parse_float(const AssetNode& node, const std::string& name, float& v)
+		{
+			auto n = node[name];
+			if (n)
+			{
+				auto i = n.value<double>();
+				if (i)
+				{
+					v = (float)i.value();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool parse_float(const toml::table& node, const std::string& name, float& v)
+		{
+			auto n = node[name];
+			if (n)
+			{
+				auto i = n.value<double>();
+				if (i)
+				{
+					v = (float)i.value();
+					return true;
+				}
+			}
+			return false;
+		}
+
 		template<size_t N>
 		static bool parse_vec(const toml::v3::array* arr, glm::vec<N, float>& v)
 		{
 			if (arr && arr->size() == N)
 			{
 				glm::vec<N, float> u;
-				for (size_t i = 0; i < N; ++i)
+				for (int i = 0; i < N; ++i)
 				{
 					if (auto d = arr->get_as<double>(i))
 						u[i] = (float)d->get();

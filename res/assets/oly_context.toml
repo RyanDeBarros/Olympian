@@ -6,3 +6,5 @@ mut_sprite_batch           = { "initial sprites" = 50, "new textures" = 10 }
 "mut sprite registries"    = ["mut_sprite_registry.toml"]
 immut_polygon_batch        = { "primitives" = 100 }
 "immut polygon registries" = ["immut_polygon_registry.toml"]
+immut_ellipse_batch        = { "ellipses" = 100 }
+"immut ellipse registries" = ["immut_ellipse_registry.toml"]

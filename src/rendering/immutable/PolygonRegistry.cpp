@@ -46,7 +46,7 @@ namespace oly
 					});
 			}
 
-			auto toml_auto_draw_list = toml_registry["auto_draw_list"].as_array();
+			auto toml_auto_draw_list = toml_registry["auto draw list"].as_array();
 			if (toml_auto_draw_list)
 			{
 				for (const auto& polygonal : *toml_auto_draw_list)
@@ -62,7 +62,7 @@ namespace oly
 							std::shared_ptr<Polygonal> poly(new Polygon(create_polygon(context, name)));
 							if (!poly->initialized())
 								poly->init();
-							auto_draw_list.emplace(std::move(name), std::move(poly));
+							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
 					}
@@ -73,7 +73,7 @@ namespace oly
 							std::shared_ptr<Polygonal> poly(new Composite(create_composite(context, name)));
 							if (!poly->initialized())
 								poly->init();
-							auto_draw_list.emplace(std::move(name), std::move(poly));
+							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
 					}
@@ -84,7 +84,7 @@ namespace oly
 							std::shared_ptr<Polygonal> poly(new NGon(create_ngon(context, name)));
 							if (!poly->initialized())
 								poly->init();
-							auto_draw_list.emplace(std::move(name), std::move(poly));
+							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
 					}
