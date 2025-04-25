@@ -186,6 +186,7 @@ namespace oly
 			void set_delays(int* delays, unsigned int num_frames);
 
 		private:
+			friend class Anim;
 			int _frames = -1;
 			std::vector<int> delays;
 
@@ -197,13 +198,21 @@ namespace oly
 			glm::vec2 dimensions() const { return { w, h }; }
 		};
 
+		struct SpritesheetOptions
+		{
+			GLuint rows = 1, cols = 1;
+			GLuint cell_width_override = 0, cell_height_override = 0;
+			int delay_cs = 0;
+			bool row_major = true, row_up = true;
+		};
+
 		class Anim
 		{
 			unsigned char* _buf = nullptr;
 			std::shared_ptr<AnimDimensions> _dim;
 
 		public:
-			Anim(const char* filepath);
+			Anim(const char* filepath, SpritesheetOptions options = {});
 			Anim(const Anim&) = delete;
 			Anim(Anim&&) noexcept;
 			~Anim();
@@ -239,40 +248,40 @@ namespace oly
 		{
 			return std::make_shared<BindlessTexture>(load_texture_2d_array(anim, generate_mipmaps));
 		}
-		inline AnimTextureRes load_texture_2d_array(const char* filename, bool generate_mipmaps = false)
+		inline AnimTextureRes load_texture_2d_array(const char* filename, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
 			AnimTextureRes anim;
-			anim.anim = std::make_shared<Anim>(filename);
+			anim.anim = std::make_shared<Anim>(filename, options);
 			anim.texture = load_texture_2d_array(*anim.anim, generate_mipmaps);
 			return anim;
 		}
-		inline AnimTextureRes load_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
+		inline AnimTextureRes load_texture_2d_array(const std::string& filename, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return load_texture_2d_array(filename.c_str(), generate_mipmaps);
+			return load_texture_2d_array(filename.c_str(), options, generate_mipmaps);
 		}
-		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const char* filename, bool generate_mipmaps = false)
+		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const char* filename, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return AnimBindlessTextureRes(load_texture_2d_array(filename, generate_mipmaps));
+			return AnimBindlessTextureRes(load_texture_2d_array(filename, options, generate_mipmaps));
 		}
-		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, bool generate_mipmaps = false)
+		inline AnimBindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return load_bindless_texture_2d_array(filename.c_str(), generate_mipmaps);
+			return load_bindless_texture_2d_array(filename.c_str(), options, generate_mipmaps);
 		}
-		inline TextureRes load_texture_2d_array(const char* filename, AnimDimensions& dim, bool generate_mipmaps = false)
+		inline TextureRes load_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			auto res = load_texture_2d_array(filename, generate_mipmaps); dim = std::move(*res.anim->dim().lock()); return res.texture;
+			auto res = load_texture_2d_array(filename, options, generate_mipmaps); dim = std::move(*res.anim->dim().lock()); return res.texture;
 		}
-		inline TextureRes load_texture_2d_array(const std::string& filename, AnimDimensions& dim, bool generate_mipmaps = false)
+		inline TextureRes load_texture_2d_array(const std::string& filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return load_texture_2d_array(filename.c_str(), dim, generate_mipmaps);
+			return load_texture_2d_array(filename.c_str(), dim, options, generate_mipmaps);
 		}
-		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, AnimDimensions& dim, bool generate_mipmaps = false)
+		inline BindlessTextureRes load_bindless_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim, generate_mipmaps));
+			return std::make_shared<BindlessTexture>(load_texture_2d_array(filename, dim, options, generate_mipmaps));
 		}
-		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, AnimDimensions& dim, bool generate_mipmaps = false)
+		inline BindlessTextureRes load_bindless_texture_2d_array(const std::string& filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 		{
-			return load_bindless_texture_2d_array(filename.c_str(), dim, generate_mipmaps);
+			return load_bindless_texture_2d_array(filename.c_str(), dim, options, generate_mipmaps);
 		}
 
 		struct AnimFrameFormat
@@ -290,9 +299,9 @@ namespace oly
 	class Context;
 	namespace rendering
 	{
-		extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 0.1f, GLuint starting_frame = 0);
-		extern AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
-		extern AnimFrameFormat setup_anim_frame_format(const Context* context, const std::string& texture_name, float speed = 0.1f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed = 1.0f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const Context* context, const std::string& texture_name, float speed = 1.0f, GLuint starting_frame = 0);
 		extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
 		extern AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame);
 		extern AnimFrameFormat setup_anim_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame);

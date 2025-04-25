@@ -45,3 +45,8 @@ std::string oly::io::read_template_file(const char* filepath, const std::unorder
 	}
 	return content;
 }
+
+std::string oly::io::file_extension(const char* filepath)
+{
+	return std::filesystem::path(filepath).extension().string();
+}

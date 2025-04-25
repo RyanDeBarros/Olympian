@@ -102,7 +102,7 @@ void main() {
 		if (quad.frameSlot > 0) {
 			AnimFrameFormat anim = uAnims[quad.frameSlot];
 			int frame_offset = 0;
-			if (anim.delay_seconds > 0.0)
+			if (anim.delay_seconds != 0.0)
 				frame_offset = int(floor((uTime - anim.starting_time) / anim.delay_seconds));
 			tFramePlusOne = 1 + (anim.starting_frame + frame_offset) % anim.num_frames;
 		} else {

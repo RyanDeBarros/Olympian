@@ -8,6 +8,7 @@
 	5 = "godot icon (1.0)"
 	6 = "godot icon (3.0)"
 	7 = "godot icon (10.0)"
+	8 = "knight"
 
 	[[sprite_registry.sprite]]
 	"name" = "sprite0"
@@ -29,12 +30,12 @@
 	"texture" = 1
 	transform = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
 	transform_modifier = { "type" = "shear" }
-
+	
 	[[sprite_registry.sprite]]
 	"name" = "sprite3"
 	"texture" = 3
 	transform = { "position" = [100, -100], "scale" = [2.0, 2.0] }
-	frame_format = { "num frames" = 59, "delay seconds" = 0.05 }
+	frame_format = { "num frames" = 59, "delay seconds" = -0.05 }
 
 	[[sprite_registry.sprite]]
 	"name" = "sprite4"
@@ -65,6 +66,12 @@
 	"name" = "godot icon (10.0)"
 	"texture" = 7
 	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }
+	
+	[[sprite_registry.sprite]]
+	"name" = "knight"
+	"texture" = 8
+	transform = { "position" = [100, -300], "scale" = [20, 20] }
+	frame_format = { "mode" = "auto", "speed" = 0.1 }
 
 	[[sprite_registry.draw_list]]
 	"name" = "#1"
@@ -85,5 +92,6 @@
 	"name" = "#3"
 	"sprites" = [
 		"sprite1",
-		"godot icon (10.0)"
+		"godot icon (10.0)",
+		"knight"
 	]

@@ -4,6 +4,7 @@
 
 #include "../Olympian.h"
 #include "util/Errors.h"
+#include "util/IO.h"
 
 namespace oly
 {
@@ -145,8 +146,15 @@ namespace oly
 		const char* image_filepath = _image_filepath.c_str();
 		if (anim)
 		{
-			// TODO do this if extension is .gif, otherwise implement spritesheet
-			rendering::AnimRes anim = std::make_shared<rendering::Anim>(image_filepath);
+			rendering::SpritesheetOptions options;
+			options.rows                 = (GLuint)node["rows"].value<int64_t>().value_or(1);
+			options.cols                 = (GLuint)node["cols"].value<int64_t>().value_or(1);
+			options.cell_width_override  = (GLuint)node["cell width override"].value<int64_t>().value_or(0);
+			options.cell_height_override = (GLuint)node["cell height override"].value<int64_t>().value_or(0);
+			options.delay_cs             = (int)node["delay cs"].value<int64_t>().value_or(0);
+			options.row_major            = (bool)node["row major"].value<bool>().value_or(true);
+			options.row_up               = (bool)node["row up"].value<bool>().value_or(true);
+			rendering::AnimRes anim = std::make_shared<rendering::Anim>(image_filepath, options);
 			if (texture_list)
 				texture_list->for_each([this, &anim](auto&& node) { register_anim((assets::AssetNode)node, anim); });
 			else

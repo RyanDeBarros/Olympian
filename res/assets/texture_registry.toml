@@ -65,3 +65,14 @@
 		"generate mipmaps" = "manual"
 		"min filter"       = "nearest mipmap linear"
 		"mag filter"       = "nearest"
+
+	[[texture_registry.image]]
+	"file"       = "knight.png"
+	"name"       = "knight"
+	"anim"       = true
+	"auto-use"   = true
+	"min filter" = "nearest"
+	"mag filter" = "nearest"
+	"rows"       = 2
+	"cols"       = 3
+	"delay cs"   = 10

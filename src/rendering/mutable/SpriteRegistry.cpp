@@ -82,6 +82,7 @@ namespace oly
 			sprite.local() = assets::load_transform_2d((const assets::AssetNode&)node["transform"]);
 			sprite.post_set();
 
+			std::string texture;
 			if (auto toml_texture = node["texture"].value<std::string>())
 			{
 				auto it = texture_map.find(toml_texture.value());
@@ -94,7 +95,10 @@ namespace oly
 			{
 				auto it = texture_map.find(std::to_string(toml_texture.value()));
 				if (it != texture_map.end())
-					sprite.set_texture(&context->texture_registry(), it->second);
+				{
+					texture = it->second;
+					sprite.set_texture(&context->texture_registry(), texture);
+				}
 			}
 			if (auto toml_modulation = node["modulation"].as_array())
 			{
@@ -132,16 +136,12 @@ namespace oly
 			if (auto toml_frame_format = node["frame_format"])
 			{
 				rendering::AnimFrameFormat frame_format;
-				auto toml_texture_name = toml_frame_format["texture"].value<std::string>();
-				if (toml_texture_name)
-				{
-					bool single = toml_frame_format["single"].value<bool>().value_or(false);
-					if (single)
-						frame_format = rendering::setup_anim_frame_format_single(context, toml_texture_name.value(), (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
-					else
-						frame_format = rendering::setup_anim_frame_format(context, toml_texture_name.value(),
-							(float)toml_frame_format["speed"].value<double>().value_or(0.1), (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0));
-				}
+				auto mode = toml_frame_format["mode"].value<std::string>();
+				if (mode && mode == "single")
+					frame_format = rendering::setup_anim_frame_format_single(context, texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
+				else if (mode && mode == "auto")
+					frame_format = rendering::setup_anim_frame_format(context, texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
+						(GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0));
 				else
 				{
 					frame_format.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0);

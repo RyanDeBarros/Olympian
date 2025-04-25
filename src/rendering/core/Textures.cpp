@@ -285,19 +285,93 @@ namespace oly
 			return uniform() ? delays[0] : delays[frame];
 		}
 
-		Anim::Anim(const char* filepath)
+		Anim::Anim(const char* filepath, SpritesheetOptions options)
 			: _dim(std::make_shared<AnimDimensions>())
 		{
-			// TODO if file extension is .gif
-			//{
+			if (io::file_extension(filepath) == ".gif")
+			{
 				auto full_content = io::read_file_uc(filepath);
 				int* delays;
 				int frames;
 				_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, _dim->cpp);
 				_dim->set_delays(delays, frames);
 				stbi_image_free(delays);
-			//}
-			// TODO else spritesheet
+			}
+			else
+			{
+				_dim->delays = { options.delay_cs };
+				Image image(filepath);
+				auto idim = image.dim();
+				_dim->cpp = idim.cpp;
+
+				if (options.cols > (GLuint)idim.w)
+					options.cols = (GLuint)idim.w;
+				else if (options.cols == 0)
+					options.cols = 1;
+				if (options.cell_width_override == 0)
+					options.cell_width_override = (int)(idim.w / options.cols);
+				else if (options.cell_width_override * options.cols > (GLuint)idim.w)
+					options.cols = (int)(idim.w / options.cell_width_override);
+
+				if (options.rows > (GLuint)idim.h)
+					options.rows = (GLuint)idim.h;
+				else if (options.rows == 0)
+					options.rows = 1;
+				if (options.cell_height_override == 0)
+					options.cell_height_override = (int)(idim.h / options.rows);
+				else if (options.cell_height_override * options.rows > (GLuint)idim.h)
+					options.rows = (int)(idim.h / options.cell_height_override);
+
+				_dim->w = options.cell_width_override;
+				_dim->h = options.cell_height_override;
+				_dim->_frames = options.rows * options.cols;
+
+				GLuint minor_stride = options.cell_width_override * idim.cpp;
+				GLuint major_stride = minor_stride * options.cols;
+				GLuint image_major_stride = idim.w * idim.cpp;
+				GLuint minor_height = options.cell_height_override;
+				GLuint major_height = minor_height * options.rows;
+				GLuint minor_area = minor_stride * minor_height;
+				_buf = new unsigned char[major_stride * major_height];
+				unsigned char* temp = new unsigned char[minor_stride * minor_height];
+				const auto cpy = [this, temp, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
+					for (GLuint r = 0; r < minor_height; ++r)
+						memcpy(temp + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
+					memcpy(_buf + k * minor_area, temp, minor_area);
+					};
+				GLuint k = 0;
+				if (options.row_major)
+				{
+					if (options.row_up)
+					{
+						for (GLuint i = 0; i < options.rows; ++i)
+							for (GLuint j = 0; j < options.cols; ++j)
+								cpy(i, j, k++);
+					}
+					else
+					{
+						for (int i = options.rows - 1; i >= 0; --i)
+							for (GLuint j = 0; j < options.cols; ++j)
+								cpy((GLuint)i, j, k++);
+					}
+				}
+				else
+				{
+					if (options.row_up)
+					{
+						for (GLuint j = 0; j < options.cols; ++j)
+							for (GLuint i = 0; i < options.rows; ++i)
+								cpy(i, j, k++);
+					}
+					else
+					{
+						for (GLuint j = 0; j < options.cols; ++j)
+							for (int i = options.rows - 1; i >= 0; --i)
+								cpy((GLuint)i, j, k++);
+					}
+				}
+				delete[] temp;
+			}
 		}
 
 		Anim::Anim(Anim&& other) noexcept
@@ -346,7 +420,7 @@ namespace oly
 		AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed, GLuint starting_frame)
 		{
 			OLY_ASSERT(dim.uniform());
-			return { starting_frame, dim.frames(), 0.0f, speed * 0.01f * dim.delay() };
+			return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 		}
 
 		AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
