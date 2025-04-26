@@ -54,9 +54,7 @@ namespace oly
 			}
 		}
 
-		mut.context = this;
-
-		if (auto toml_sprite_batch = toml_context["mut_sprite_batch"]) // init mutable sprite batch
+		if (auto toml_sprite_batch = toml_context["sprite_batch"]) // init sprite batch
 		{
 			int initial_sprites = 0;
 			assets::parse_int(toml_sprite_batch, "initial sprites", initial_sprites);
@@ -69,59 +67,57 @@ namespace oly
 			int num_anims = 0;
 			assets::parse_int(toml_sprite_batch, "num anims", num_anims);
 
-			mut::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_anims };
-			mut.internal.sprite_batch = std::make_unique<mut::SpriteBatch>(capacity, internal.window->projection_bounds());
+			rendering::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_anims };
+			internal.sprite_batch = std::make_unique<rendering::SpriteBatch>(capacity, internal.window->projection_bounds());
 		}
 
-		{ // init mutable sprite registry
-			auto register_files = toml_context["mut sprite registries"].as_array();
+		{ // init sprite registry
+			auto register_files = toml_context["sprite registries"].as_array();
 			if (register_files)
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.mut_sprite_registry.load(root_dir + file.value());
+						internal.sprite_registry.load(root_dir + file.value());
 			}
 		}
 
-		immut.context = this;
-
-		if (auto toml_polygon_batch = toml_context["immut_polygon_batch"]) // init immutable polygon batch
+		if (auto toml_polygon_batch = toml_context["polygon_batch"]) // init polygon batch
 		{
 			int primitives;
 			assets::parse_int(toml_polygon_batch, "primitives", primitives);
 			int degree = 6;
 			assets::parse_int(toml_polygon_batch, "degree", degree);
 
-			immut::PolygonBatch::Capacity capacity{ (GLushort)primitives, (GLushort)degree };
-			immut.internal.polygon_batch = std::make_unique<immut::PolygonBatch>(capacity, internal.window->projection_bounds());
+			rendering::PolygonBatch::Capacity capacity{ (GLushort)primitives, (GLushort)degree };
+			internal.polygon_batch = std::make_unique<rendering::PolygonBatch>(capacity, internal.window->projection_bounds());
 		}
 
-		{ // init immutable polygon registry
-			auto register_files = toml_context["immut polygon registries"].as_array();
+		{ // init polygon registry
+			auto register_files = toml_context["polygon registries"].as_array();
 			if (register_files)
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.immut_polygon_registry.load(this, root_dir + file.value());
+						internal.polygon_registry.load(this, root_dir + file.value());
 			}
 		}
 
-		if (auto toml_ellipse_batch = toml_context["immut_ellipse_batch"]) // init immutable ellipse batch
+		if (auto toml_ellipse_batch = toml_context["ellipse_batch"]) // init ellipse batch
 		{
 			int ellipses;
 			assets::parse_int(toml_ellipse_batch, "ellipses", ellipses);
 
-			immut::EllipseBatch::Capacity capacity{ (GLushort)ellipses };
-			immut.internal.ellipse_batch = std::make_unique<immut::EllipseBatch>(capacity, internal.window->projection_bounds());
+			rendering::EllipseBatch::Capacity capacity{ (GLushort)ellipses };
+			internal.ellipse_batch = std::make_unique<rendering::EllipseBatch>(capacity, internal.window->projection_bounds());
 		}
 
-		{ // init immutable ellipse registry
-			auto register_files = toml_context["immut ellipse registries"].as_array();
+		{ // init ellipse registry
+			auto register_files = toml_context["ellipse registries"].as_array();
 			if (register_files)
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.immut_ellipse_registry.load(this, root_dir + file.value());
+						internal.ellipse_registry.load(this, root_dir + file.value());
 			}
 		}
 	}
@@ -129,9 +125,9 @@ namespace oly
 	Context::~Context()
 	{
 		internal.texture_registry.clear();
-		internal.mut_sprite_registry.clear();
-		internal.immut_polygon_registry.clear();
-		internal.immut_ellipse_registry.clear();
+		internal.sprite_registry.clear();
+		internal.polygon_registry.clear();
+		internal.ellipse_registry.clear();
 		unload_resources();
 		glfwTerminate();
 	}
@@ -147,34 +143,13 @@ namespace oly
 		return !internal.window->should_close();
 	}
 
-	mut::Sprite Context::Mut::sprite() const
-	{
-		return mut::Sprite(internal.sprite_batch.get());
-	}
-
-	mut::Sprite Context::Mut::sprite(const std::string& name) const
-	{
-		return context->internal.mut_sprite_registry.create_sprite(context, name);
-	}
-
-	std::weak_ptr<mut::Sprite> Context::Mut::ref_sprite(const std::string& name, bool register_if_nonexistant) const
-	{
-		return context->internal.mut_sprite_registry.get_sprite(context, name, register_if_nonexistant);
-	}
-
-	void Context::Mut::draw_sprite_list(const std::string& draw_list_name, bool register_if_nonexistant) const
-	{
-		context->internal.mut_sprite_registry.draw_sprites(context, draw_list_name, register_if_nonexistant);
-		render_sprites();
-	}
-
 	void Context::sync_texture_handle(const rendering::BindlessTextureRes& texture) const
 	{
-		mut.internal.sprite_batch->update_texture_handle(texture);
+		internal.sprite_batch->update_texture_handle(texture);
 	}
 
 	void Context::sync_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const
 	{
-		mut.internal.sprite_batch->update_texture_handle(texture, dimensions);
+		internal.sprite_batch->update_texture_handle(texture, dimensions);
 	}
 }

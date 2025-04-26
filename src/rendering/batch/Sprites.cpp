@@ -7,7 +7,7 @@
 
 namespace oly
 {
-	namespace mut
+	namespace rendering
 	{
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims), projection_bounds(projection_bounds)
@@ -18,7 +18,7 @@ namespace oly
 
 			ubo.tex_coords.send<TexUVRect>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
-			ubo.anim.send<rendering::AnimFrameFormat>(0, {});
+			ubo.anim.send<AnimFrameFormat>(0, {});
 
 			glBindVertexArray(vao);
 			ebo.bind();
@@ -96,7 +96,7 @@ namespace oly
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
 		}
 
-		void SpriteBatch::set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
+		void SpriteBatch::set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
 			quad_info_store.textures.set_object<SSBO::TexData>(ssbo.tex_data, *this, ssbo.quad_info.vector()[vb_pos].tex_slot, vb_pos, { texture, dimensions }, { texture->get_handle(), dimensions });
 		}
@@ -111,12 +111,12 @@ namespace oly
 			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.vector()[vb_pos].color_slot, vb_pos, modulation);
 		}
 
-		void SpriteBatch::set_frame_format(GLuint vb_pos, const rendering::AnimFrameFormat& anim)
+		void SpriteBatch::set_frame_format(GLuint vb_pos, const AnimFrameFormat& anim)
 		{
 			quad_info_store.anims.set_object(ubo.anim, *this, ssbo.quad_info.vector()[vb_pos].frame_slot, vb_pos, anim);
 		}
 
-		rendering::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
+		BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 		{
 			GLuint slot = ssbo.quad_info.vector()[vb_pos].tex_slot;
 			if (slot == 0)
@@ -138,10 +138,10 @@ namespace oly
 			return slot != 0 ? quad_info_store.modulations.get_object(slot) : Modulation{};
 		}
 
-		rendering::AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
+		AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
 		{
 			GLuint slot = ssbo.quad_info.vector()[vb_pos].frame_slot;
-			return slot != 0 ? quad_info_store.anims.get_object(slot) : rendering::AnimFrameFormat{};
+			return slot != 0 ? quad_info_store.anims.get_object(slot) : AnimFrameFormat{};
 		}
 
 		void SpriteBatch::draw_sprite(GLuint vb_pos)
@@ -154,18 +154,18 @@ namespace oly
 			}
 			else if (!resize_ebo)
 				ebo.lazy_send(sprites_to_draw);
-			rendering::quad_indices(ebo.vector()[sprites_to_draw].data, vb_pos);
+			quad_indices(ebo.vector()[sprites_to_draw].data, vb_pos);
 			++sprites_to_draw;
 		}
 
-		void SpriteBatch::update_texture_handle(const rendering::BindlessTextureRes& texture)
+		void SpriteBatch::update_texture_handle(const BindlessTextureRes& texture)
 		{
 			GLuint slot;
 			if (quad_info_store.textures.get_slot({ texture }, slot))
 				ssbo.tex_data.send<SSBO::TexData>(slot, &SSBO::TexData::handle, texture->get_handle());
 		}
 
-		void SpriteBatch::update_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions)
+		void SpriteBatch::update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
 			GLuint slot;
 			if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
@@ -278,7 +278,7 @@ namespace oly
 			set_texture(&context->texture_registry(), texture_name);
 		}
 
-		void Sprite::set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const
+		void Sprite::set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const
 		{
 			batch->set_texture(vbid.get(), texture, dimensions);
 		}
@@ -293,18 +293,18 @@ namespace oly
 			batch->set_modulation(vbid.get(), modulation);
 		}
 
-		void Sprite::set_frame_format(const rendering::AnimFrameFormat& anim) const
+		void Sprite::set_frame_format(const AnimFrameFormat& anim) const
 		{
 			batch->set_frame_format(vbid.get(), anim);
 		}
 
-		rendering::BindlessTextureRes Sprite::get_texture() const
+		BindlessTextureRes Sprite::get_texture() const
 		{
 			glm::vec2 _;
 			return get_texture(_);
 		}
 
-		rendering::BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const
+		BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const
 		{
 			return batch->get_texture(vbid.get(), dimensions);
 		}
@@ -319,7 +319,7 @@ namespace oly
 			return batch->get_modulation(vbid.get());
 		}
 
-		rendering::AnimFrameFormat Sprite::get_frame_format() const
+		AnimFrameFormat Sprite::get_frame_format() const
 		{
 			return batch->get_frame_format(vbid.get());
 		}

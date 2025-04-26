@@ -4,12 +4,12 @@
 
 namespace oly
 {
-	namespace mut
+	namespace rendering
 	{
 		void SpriteRegistry::load(const char* sprite_registry_file)
 		{
 			auto toml = assets::load_toml(sprite_registry_file);
-			auto toml_sprites = toml["mut_sprite_registry"];
+			auto toml_sprites = toml["sprite_registry"];
 			if (!toml_sprites)
 				return;
 			auto sprite_list = toml_sprites["sprite"].as_array();
@@ -74,7 +74,7 @@ namespace oly
 				throw Error(ErrorCode::UNREGISTERED_SPRITE);
 			const auto& node = it->second;
 
-			Sprite sprite = context->mut.sprite();
+			Sprite sprite = context->sprite();
 			sprite.local() = assets::load_transform_2d(node, "transform");
 			sprite.post_set();
 
@@ -131,12 +131,12 @@ namespace oly
 			}
 			if (auto toml_frame_format = node["frame_format"])
 			{
-				rendering::AnimFrameFormat frame_format;
+				AnimFrameFormat frame_format;
 				auto mode = toml_frame_format["mode"].value<std::string>();
 				if (mode && mode == "single")
-					frame_format = rendering::setup_anim_frame_format_single(context, texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
+					frame_format = setup_anim_frame_format_single(context, texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
 				else if (mode && mode == "auto")
-					frame_format = rendering::setup_anim_frame_format(context, texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
+					frame_format = setup_anim_frame_format(context, texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
 						(GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0));
 				else
 				{

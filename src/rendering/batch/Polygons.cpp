@@ -10,7 +10,7 @@
 
 namespace oly
 {
-	namespace immut
+	namespace rendering
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), cpudata(capacity.vertices),
@@ -23,10 +23,10 @@ namespace oly
 			glBindVertexArray(vao);
 			glNamedBufferStorage(vbo_block[PolygonAttribute::POSITION], cpudata.position.size() * sizeof(glm::vec2), cpudata.position.data(), GL_DYNAMIC_STORAGE_BIT);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::POSITION]);
-			oly::rendering::VertexAttribute<>{ 0, 2 }.setup();
+			VertexAttribute<>{ 0, 2 }.setup();
 			glNamedBufferStorage(vbo_block[PolygonAttribute::COLOR], cpudata.color.size() * sizeof(glm::vec4), cpudata.color.data(), GL_DYNAMIC_STORAGE_BIT);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::COLOR]);
-			oly::rendering::VertexAttribute<>{ 1, 4 }.setup();
+			VertexAttribute<>{ 1, 4 }.setup();
 			ebo.bind();
 			ebo.init();
 			glBindVertexArray(0);
@@ -436,9 +436,9 @@ namespace oly
 		{
 			for (Polygonal* poly : polygonal_renderables)
 				poly->flush();
-			rendering::batch_send(dirty.position.begin(), dirty.position.end(), vbo_block[PolygonAttribute::POSITION], cpudata.position);
+			batch_send(dirty.position.begin(), dirty.position.end(), vbo_block[PolygonAttribute::POSITION], cpudata.position);
 			dirty.position.clear();
-			rendering::batch_send(dirty.color.begin(), dirty.color.end(), vbo_block[PolygonAttribute::COLOR], cpudata.color);
+			batch_send(dirty.color.begin(), dirty.color.end(), vbo_block[PolygonAttribute::COLOR], cpudata.color);
 			dirty.color.clear();
 			transform_ssbo.flush();
 			ebo.flush();

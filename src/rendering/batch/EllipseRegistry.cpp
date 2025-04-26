@@ -4,12 +4,12 @@
 
 namespace oly
 {
-	namespace immut
+	namespace rendering
 	{
 		void EllipseRegistry::load(const Context* context, const char* ellipse_registry_file)
 		{
 			auto toml = assets::load_toml(ellipse_registry_file);
-			auto toml_registry = toml["immut_ellipse_registry"];
+			auto toml_registry = toml["ellipse_registry"];
 			if (!toml_registry)
 				return;
 			auto ellipse_list = toml_registry["ellipse"].as_array();
@@ -53,7 +53,7 @@ namespace oly
 				throw Error(ErrorCode::UNREGISTERED_ELLIPSE);
 			const auto& node = it->second;
 
-			Ellipse ellipse = context->immut.ellipse();
+			Ellipse ellipse = context->ellipse();
 
 			ellipse.transformer.local = assets::load_transform_2d(node, "transform");
 			ellipse.post_set();

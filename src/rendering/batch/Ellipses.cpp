@@ -9,7 +9,7 @@
 
 namespace oly
 {
-	namespace immut
+	namespace rendering
 	{
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: capacity(capacity), ebo(capacity.ellipses), dimension_ssbo(capacity.ellipses), color_ssbo(capacity.ellipses), transform_ssbo(capacity.ellipses), z_order(capacity.ellipses), projection_bounds(projection_bounds)
@@ -17,7 +17,7 @@ namespace oly
 			projection_location = shaders::location(shaders::ellipse_batch, "uProjection");
 
 			glBindVertexArray(vao);
-			rendering::pre_init(ebo);
+			pre_init(ebo);
 			ebo.bind();
 			ebo.init();
 			glBindVertexArray(0);

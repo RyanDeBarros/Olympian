@@ -7,10 +7,9 @@
 
 #include <unordered_set>
 
-// LATER this design is extremely similar to TextureQuadBatch. Maybe it can be abstracted.
 namespace oly
 {
-	namespace immut
+	namespace rendering
 	{
 		struct Ellipse;
 	
@@ -18,13 +17,13 @@ namespace oly
 		{
 			friend struct Ellipse;
 
-			rendering::VertexArray vao;
-			mutable rendering::QuadLayoutEBO<rendering::Mutability::IMMUTABLE> ebo;
+			VertexArray vao;
+			mutable QuadLayoutEBO<Mutability::IMMUTABLE> ebo;
 			
 		public:
 			struct EllipseDimension
 			{
-				float width, height, border;
+				float width = 0.0f, height = 0.0f, border = 0.0f;
 				float fill_exp = 1.0f, border_exp = 1.0f;
 			};
 			struct ColorGradient {
@@ -35,9 +34,9 @@ namespace oly
 			};
 
 		private:
-			rendering::IndexedSSBO<EllipseDimension, GLushort, rendering::Mutability::IMMUTABLE> dimension_ssbo;
-			rendering::IndexedSSBO<ColorGradient, GLushort, rendering::Mutability::IMMUTABLE> color_ssbo;
-			rendering::IndexedSSBO<glm::mat3, GLushort, rendering::Mutability::IMMUTABLE> transform_ssbo;
+			IndexedSSBO<EllipseDimension, GLushort, Mutability::IMMUTABLE> dimension_ssbo;
+			IndexedSSBO<ColorGradient, GLushort, Mutability::IMMUTABLE> color_ssbo;
+			IndexedSSBO<glm::mat3, GLushort, Mutability::IMMUTABLE> transform_ssbo;
 
 			GLuint projection_location;
 

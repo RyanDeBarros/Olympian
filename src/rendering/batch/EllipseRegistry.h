@@ -7,7 +7,7 @@
 namespace oly
 {
 	class Context;
-	namespace immut
+	namespace rendering
 	{
 		class EllipseRegistry
 		{

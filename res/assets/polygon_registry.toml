@@ -1,4 +1,4 @@
-[immut_polygon_registry]
+[polygon_registry]
 	"auto draw list" = [
 		"pentagon1",
 		"pentagon2",
@@ -7,7 +7,7 @@
 		"concave shape"
 	]
 
-	[[immut_polygon_registry.polygon]]
+	[[polygon_registry.polygon]]
 	"name" = "pentagon1"
 	"points" = [
 		[  1, -1 ],
@@ -26,7 +26,7 @@
 	transform = { "position" = [0, 200], "scale" = [160, 160] }
 	"init" = true
 	
-	[[immut_polygon_registry.polygon]]
+	[[polygon_registry.polygon]]
 	"name" = "pentagon2"
 	"points" = [
 		[  1, -1 ],
@@ -45,7 +45,7 @@
 	transform = { "position" = [-250, 0], "rotation" = -1, "scale" = [320, 160] }
 	"init" = true
 
-	[[immut_polygon_registry.ngon]]
+	[[polygon_registry.ngon]]
 	"name" = "octagon"
 	transform = { "position" = [300, 200], "scale" = [200, 200] }
 	"points" = [
@@ -73,7 +73,7 @@
 	"border width" = 0.05
 	"init" = true
 
-	[[immut_polygon_registry.composite]]
+	[[polygon_registry.composite]]
 	"name" = "bordered triangle"
 	transform = { "position" = [100, -100], "scale" = [150, 150] }
 	"method" = "bordered ngon"
@@ -84,7 +84,7 @@
 	"border pivot" = "middle"
 	"init" = true
 	
-	[[immut_polygon_registry.composite]]
+	[[polygon_registry.composite]]
 	"name" = "concave shape"
 	transform = { "position" = [-200, 200], "scale" = [60, 60] }
 	"method" = "convex decomposition"

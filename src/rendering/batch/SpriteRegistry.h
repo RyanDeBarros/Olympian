@@ -7,7 +7,7 @@
 namespace oly
 {
 	class Context;
-	namespace mut
+	namespace rendering
 	{
 		class SpriteRegistry
 		{

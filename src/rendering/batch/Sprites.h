@@ -9,7 +9,7 @@
 
 namespace oly
 {
-	namespace mut
+	namespace rendering
 	{
 		struct Sprite;
 
@@ -17,8 +17,8 @@ namespace oly
 		{
 			friend struct Sprite;
 
-			rendering::VertexArray vao;
-			rendering::QuadLayoutEBO<rendering::Mutability::MUTABLE, GLuint> ebo;
+			VertexArray vao;
+			QuadLayoutEBO<Mutability::MUTABLE, GLuint> ebo;
 
 			struct SSBO
 			{
@@ -35,9 +35,9 @@ namespace oly
 					GLuint frame_slot = 0;
 				};
 
-				rendering::LightweightSSBO<rendering::Mutability::MUTABLE> tex_data;
-				rendering::IndexedSSBO<QuadInfo, GLuint, rendering::Mutability::MUTABLE> quad_info;
-				rendering::IndexedSSBO<glm::mat3, GLuint, rendering::Mutability::MUTABLE> quad_transform;
+				LightweightSSBO<Mutability::MUTABLE> tex_data;
+				IndexedSSBO<QuadInfo, GLuint, Mutability::MUTABLE> quad_info;
+				IndexedSSBO<glm::mat3, GLuint, Mutability::MUTABLE> quad_transform;
 
 				SSBO(GLuint textures, GLuint sprites) : tex_data(textures * sizeof(TexData)), quad_info(sprites), quad_transform(sprites) {}
 			} ssbo;
@@ -75,7 +75,7 @@ namespace oly
 			};
 			struct AnimHash
 			{
-				size_t operator()(const rendering::AnimFrameFormat& anim) const {
+				size_t operator()(const AnimFrameFormat& anim) const {
 					return std::hash<GLuint>{}(anim.starting_frame) ^ (std::hash<GLuint>{}(anim.num_frames) << 1)
 						^ (std::hash<float>{}(anim.starting_time) << 2) ^ (std::hash<float>{}(anim.delay_seconds) << 3);
 				}
@@ -83,9 +83,9 @@ namespace oly
 		private:
 			struct UBO
 			{
-				rendering::LightweightUBO<rendering::Mutability::MUTABLE> tex_coords, modulation, anim;
+				LightweightUBO<Mutability::MUTABLE> tex_coords, modulation, anim;
 
-				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(rendering::AnimFrameFormat)) {}
+				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(AnimFrameFormat)) {}
 			} ubo;
 
 		public:
@@ -150,13 +150,13 @@ namespace oly
 
 				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
 
-				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
+				void set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
 				{
 					set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj);
 				}
 
 				template<typename BufferObjectType>
-				void set_object(rendering::LightweightBuffer<rendering::Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
+				void set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
 					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
 				{
 					if (stored_obj == StoredObjectType{}) // remove object from sprite
@@ -208,43 +208,43 @@ namespace oly
 			{
 				struct DimensionlessTexture
 				{
-					rendering::BindlessTextureRes texture;
+					BindlessTextureRes texture;
 					glm::vec2 dimensions = {};
 
 					bool operator==(const DimensionlessTexture& t) const { return texture == t.texture; }
 				};
 				struct DimensionlessTextureHash
 				{
-					size_t operator()(const DimensionlessTexture& t) const { return std::hash<rendering::BindlessTextureRes>{}(t.texture); }
+					size_t operator()(const DimensionlessTexture& t) const { return std::hash<BindlessTextureRes>{}(t.texture); }
 				};
 				BOStore<DimensionlessTexture, DimensionlessTextureHash> textures;
 				BOStore<TexUVRect, TexUVRectHash> tex_coords;
 				BOStore<Modulation, ModulationHash> modulations;
-				BOStore<rendering::AnimFrameFormat, AnimHash> anims;
+				BOStore<AnimFrameFormat, AnimHash> anims;
 			} quad_info_store;
 
-			void set_texture(GLuint vb_pos, const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
+			void set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions);
 			void set_tex_coords(GLuint vb_pos, const TexUVRect& uvs);
 			void set_modulation(GLuint vb_pos, const Modulation& modulation);
-			void set_frame_format(GLuint vb_pos, const rendering::AnimFrameFormat& anim);
+			void set_frame_format(GLuint vb_pos, const AnimFrameFormat& anim);
 
-			rendering::BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+			BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 			TexUVRect get_tex_coords(GLuint vb_pos) const;
 			Modulation get_modulation(GLuint vb_pos) const;
-			rendering::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
+			AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 
 			void draw_sprite(GLuint vb_pos);
 
 		public:
-			void update_texture_handle(const rendering::BindlessTextureRes& texture);
-			void update_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
+			void update_texture_handle(const BindlessTextureRes& texture);
+			void update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
 
 	}
 
 	class TextureRegistry;
 	class Context;
-	namespace mut
+	namespace rendering
 	{
 
 		struct Sprite
@@ -268,16 +268,16 @@ namespace oly
 
 			void set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const;
 			void set_texture(const Context* context, const std::string& texture_name) const;
-			void set_texture(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
+			void set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;
-			void set_frame_format(const rendering::AnimFrameFormat& anim) const;
+			void set_frame_format(const AnimFrameFormat& anim) const;
 
-			rendering::BindlessTextureRes get_texture() const;
-			rendering::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+			BindlessTextureRes get_texture() const;
+			BindlessTextureRes get_texture(glm::vec2& dimensions) const;
 			SpriteBatch::TexUVRect get_tex_coords() const;
 			SpriteBatch::Modulation get_modulation() const;
-			rendering::AnimFrameFormat get_frame_format() const;
+			AnimFrameFormat get_frame_format() const;
 
 			const SpriteBatch& get_batch() const { return *batch; }
 			SpriteBatch& get_batch() { return *batch; }

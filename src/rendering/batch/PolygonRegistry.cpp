@@ -4,12 +4,12 @@
 
 namespace oly
 {
-	namespace immut
+	namespace rendering
 	{
 		void PolygonRegistry::load(const Context* context, const char* polygon_registry_file)
 		{
 			auto toml = assets::load_toml(polygon_registry_file);
-			auto toml_registry = toml["immut_polygon_registry"];
+			auto toml_registry = toml["polygon_registry"];
 			if (!toml_registry)
 				return;
 			auto polygon_list = toml_registry["polygon"].as_array();
@@ -107,7 +107,7 @@ namespace oly
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			Polygon polygon = context->immut.polygon();
+			Polygon polygon = context->polygon();
 
 			polygon.transformer.local = assets::load_transform_2d(node, "transform");
 			polygon.post_set();
@@ -148,7 +148,7 @@ namespace oly
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			Composite composite = context->immut.composite();
+			Composite composite = context->composite();
 
 			composite.transformer.local = assets::load_transform_2d(node, "transform");
 			composite.post_set();
@@ -271,7 +271,7 @@ namespace oly
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			NGon ngon = context->immut.ngon();
+			NGon ngon = context->ngon();
 
 			ngon.transformer.local = assets::load_transform_2d(node, "transform");
 			ngon.post_set();
