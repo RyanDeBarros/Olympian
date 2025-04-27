@@ -18,7 +18,7 @@ namespace oly
 			friend struct Sprite;
 
 			VertexArray vao;
-			QuadLayoutEBO<Mutability::MUTABLE, GLuint> ebo;
+			PersistentEBO<> ebo;
 
 			struct SSBO
 			{
@@ -36,8 +36,8 @@ namespace oly
 				};
 
 				LightweightSSBO<Mutability::MUTABLE> tex_data;
-				IndexedSSBO<QuadInfo, GLuint, Mutability::MUTABLE> quad_info;
-				IndexedSSBO<glm::mat3, GLuint, Mutability::MUTABLE> quad_transform;
+				LazyPersistentGPUBuffer<QuadInfo> quad_info;
+				LazyPersistentGPUBuffer<glm::mat3> quad_transform;
 
 				SSBO(GLuint textures, GLuint sprites) : tex_data(textures * sizeof(TexData)), quad_info(sprites), quad_transform(sprites) {}
 			} ssbo;
@@ -112,11 +112,6 @@ namespace oly
 			void render() const;
 
 		private:
-			mutable GLuint sprites_to_draw = 0;
-			mutable bool resize_ebo = false;
-			mutable bool resize_sprites = false;
-
-			std::unordered_map<Sprite*, GLuint> sprites;
 			StrictIDGenerator<GLuint> vbid_generator;
 			typedef StrictIDGenerator<GLuint>::ID VBID;
 			VBID gen_sprite_id();
@@ -165,7 +160,7 @@ namespace oly
 						{
 							_decrement_usage(slot);
 							slot = 0;
-							sprite_batch.ssbo.quad_info.lazy_send(pos);
+							sprite_batch.ssbo.quad_info.flag(pos);
 						}
 						return;
 					}
@@ -183,7 +178,7 @@ namespace oly
 					{
 						++usages.find(newit->second)->second.usage;
 						slot = newit->second;
-						sprite_batch.ssbo.quad_info.lazy_send(pos);
+						sprite_batch.ssbo.quad_info.flag(pos);
 					}
 					else // create new object slot
 					{
@@ -194,7 +189,7 @@ namespace oly
 						if (slot * sizeof(BufferObjectType) == buffer.get_size())
 							buffer.grow(buffer.get_size() + sizeof(BufferObjectType));
 						buffer.send<BufferObjectType>(slot, buffer_obj);
-						sprite_batch.ssbo.quad_info.lazy_send(pos);
+						sprite_batch.ssbo.quad_info.flag(pos);
 					}
 				}
 
@@ -232,8 +227,6 @@ namespace oly
 			TexUVRect get_tex_coords(GLuint vb_pos) const;
 			Modulation get_modulation(GLuint vb_pos) const;
 			AnimFrameFormat get_frame_format(GLuint vb_pos) const;
-
-			void draw_sprite(GLuint vb_pos);
 
 		public:
 			void update_texture_handle(const BindlessTextureRes& texture);

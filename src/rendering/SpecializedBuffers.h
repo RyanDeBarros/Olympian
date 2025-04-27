@@ -382,6 +382,52 @@ namespace oly
 			void grow() { buf.grow(); buf.pre_draw(); dirty.clear(); }
 		};
 
+		template<size_t PrimitiveIndices = 6>
+		class PersistentEBO
+		{
+			mutable LazyPersistentGPUBuffer<std::array<GLuint, PrimitiveIndices>> ebo;
+			mutable GLuint draw_count = 0;
+			GLuint vao = 0;
+
+		public:
+			PersistentEBO(const VertexArray& vao, GLuint primitives)
+				: ebo(primitives), vao(vao)
+			{
+				bind_to_vao();
+			}
+
+			void set_vao(const VertexArray& vao)
+			{
+				this->vao = vao;
+				bind_to_vao();
+			}
+
+			void grow() const
+			{
+				ebo.grow();
+				bind_to_vao();
+			}
+
+		private:
+			void bind_to_vao() const
+			{
+				glBindVertexArray(vao);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo.buf.get_buffer());
+				glBindVertexArray(0);
+			}
+
+		public:
+			std::array<GLuint, PrimitiveIndices>& draw_primitive() const
+			{
+				GLuint primitive = draw_count++;
+				if (primitive >= ebo.buf.get_size())
+					grow();
+				ebo.flag(primitive);
+				return ebo.buf[primitive];
+			}
+			void render_elements(GLenum mode) const { ebo.pre_draw(); glDrawElements(mode, draw_count * PrimitiveIndices, GL_UNSIGNED_INT, 0); draw_count = 0; ebo.post_draw(); }
+		};
+
 		enum class VertexAttributeType
 		{
 			FLOAT,

@@ -118,6 +118,10 @@ int main()
 		oly_context.draw_sprite_list("#1");
 		
 		oly::stencil::end();
+
+		oly_context.ref_ellipse("ellipse1").lock()->draw();
+		oly_context.ref_ellipse("ellipse2").lock()->draw();
+		oly_context.render_ellipses();
 		
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
@@ -128,9 +132,5 @@ int main()
 		oly_context.draw_sprite_list("#3");
 
 		oly_context.ref_composite("concave shape").lock()->draw_unit();
-
-		oly_context.ref_ellipse("ellipse1").lock()->draw();
-		oly_context.ref_ellipse("ellipse2").lock()->draw();
-		oly_context.render_ellipses();
 	}
 }

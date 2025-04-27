@@ -12,13 +12,9 @@ namespace oly
 	namespace rendering
 	{
 		EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.ellipses), ssbo(capacity.ellipses), projection_bounds(projection_bounds)
+			: ebo(vao, capacity.ellipses), ssbo(capacity.ellipses), projection_bounds(projection_bounds)
 		{
 			projection_location = shaders::location(shaders::ellipse_batch, "uProjection");
-
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo.buf.get_buffer());
-			glBindVertexArray(0);
 		}
 
 		void EllipseBatch::render() const
@@ -26,7 +22,6 @@ namespace oly
 			ssbo.dimension.pre_draw();
 			ssbo.color.pre_draw();
 			ssbo.transform.pre_draw();
-			ebo.pre_draw();
 
 			glBindVertexArray(vao);
 			glUseProgram(shaders::ellipse_batch);
@@ -35,39 +30,52 @@ namespace oly
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo.dimension.buf.get_buffer());
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo.color.buf.get_buffer());
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo.transform.buf.get_buffer());
-			glDrawElements(GL_TRIANGLES, num_ellipses_to_draw * 6, GL_UNSIGNED_INT, 0);
-			num_ellipses_to_draw = 0;
+			ebo.render_elements(GL_TRIANGLES);
 
 			ssbo.dimension.post_draw();
 			ssbo.color.post_draw();
 			ssbo.transform.post_draw();
-			ebo.post_draw();
 		}
 
-		void EllipseBatch::grow_ssbos()
+		EllipseBatch::EllipseID EllipseBatch::generate_id()
 		{
-			ssbo.dimension.grow();
-			ssbo.color.grow();
-			ssbo.transform.grow();
-		}
-
-		void EllipseBatch::grow_ebo() const
-		{
-			ebo.grow();
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo.buf.get_buffer());
-			glBindVertexArray(0);
+			EllipseID id = pos_generator.generate();
+			if (id.get() >= ssbo.dimension.buf.get_size())
+			{
+				ssbo.dimension.grow();
+				ssbo.color.grow();
+				ssbo.transform.grow();
+			}
+			return id;
 		}
 
 		EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
 			: _batch(batch)
 		{
-			pos = _batch->pos_generator.generate();
-			if (pos.get() > _batch->ssbo.dimension.buf.get_size())
-				_batch->grow_ssbos();
+			pos = _batch->generate_id();
 			dimension() = {};
 			color() = {};
 			transform() = 1.0f;
+		}
+
+		EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
+			: _batch(other._batch)
+		{
+			pos = _batch->generate_id();
+			dimension() = other.dimension();
+			color() = other.color();
+			transform() = other.transform();
+		}
+
+		EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(const EllipseReference& other)
+		{
+			if (this != &other)
+			{
+				dimension() = other.dimension();
+				color() = other.color();
+				transform() = other.transform();
+			}
+			return *this;
 		}
 		
 		void EllipseBatch::EllipseReference::flag_dimension() const
@@ -93,13 +101,7 @@ namespace oly
 				ellipse.transform() = transformer.global();
 				ellipse.flag_transform();
 			}
-
-			GLuint& num_ellipses_to_draw = batch().num_ellipses_to_draw;
-			if (num_ellipses_to_draw >= batch().ebo.buf.get_size())
-				batch().grow_ebo();
-			quad_indices(batch().ebo.buf.arr(num_ellipses_to_draw, 1)->data(), num_ellipses_to_draw);
-			batch().ebo.flag(num_ellipses_to_draw);
-			++num_ellipses_to_draw;
+			quad_indices(batch().ebo.draw_primitive().data(), ellipse.pos.get());
 		}
 	}
 }

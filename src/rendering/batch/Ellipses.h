@@ -22,7 +22,7 @@ namespace oly
 
 		private:
 			VertexArray vao;
-			mutable LazyPersistentGPUBuffer<std::array<Index, 6>> ebo; // TODO abstract persistent EBO
+			PersistentEBO<> ebo;
 			
 		public:
 			struct EllipseDimension
@@ -45,24 +45,19 @@ namespace oly
 				LazyPersistentGPUBuffer<glm::mat3> transform;
 
 				SSBO(Index ellipses) : dimension(ellipses), color(ellipses), transform(ellipses) {}
-			} ssbo;
+			} mutable ssbo;
 
 			GLuint projection_location;
 
 		public:
 			struct Capacity
 			{
+				Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= UINT_MAX); }
+
+			private:
+				friend class EllipseBatch;
 				Index ellipses;
-
-				Capacity(Index ellipses)
-					: ellipses(ellipses)
-				{
-					OLY_ASSERT(4 * ellipses <= UINT_MAX);
-				}
 			};
-
-		private:
-			Capacity capacity;
 
 		public:
 			EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds);
@@ -72,24 +67,23 @@ namespace oly
 			glm::vec4 projection_bounds;
 
 		private:
-			void grow_ssbos();
-			void grow_ebo() const;
-
 			StrictIDGenerator<Index> pos_generator;
 			typedef StrictIDGenerator<Index>::ID EllipseID;
+			EllipseID generate_id();
 
 		public:
 			class EllipseReference
 			{
-				friend EllipseBatch;
+				friend class EllipseBatch;
+				friend struct Ellipse;
 				EllipseBatch* _batch = nullptr;
 				EllipseID pos;
 
 			public:
 				EllipseReference(EllipseBatch* batch);
-				EllipseReference(const EllipseReference&) = default;
+				EllipseReference(const EllipseReference&);
 				EllipseReference(EllipseReference&&) noexcept = default;
-				EllipseReference& operator=(const EllipseReference&) = default;
+				EllipseReference& operator=(const EllipseReference&);
 				EllipseReference& operator=(EllipseReference&&) noexcept = default;
 
 				EllipseBatch& batch() const { return *_batch; }
@@ -102,9 +96,6 @@ namespace oly
 				void flag_transform() const;
 			};
 			friend class EllipseReference;
-
-		private:
-			mutable GLuint num_ellipses_to_draw = 0;
 		};
 
 		struct Ellipse
