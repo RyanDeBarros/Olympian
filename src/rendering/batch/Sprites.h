@@ -278,9 +278,6 @@ namespace oly
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
-
-		private:
-			void flush() const;
 		};
 	}
 }

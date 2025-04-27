@@ -380,6 +380,38 @@ namespace oly
 			}
 			void post_draw() const { buf.post_draw(); }
 			void grow() { buf.grow(); buf.pre_draw(); dirty.clear(); }
+
+			const Struct& get(GLuint i) const
+			{
+				while (i >= buf.get_size())
+					grow();
+				return buf[i];
+			}
+
+			Struct& set(GLuint i)
+			{
+				while (i >= buf.get_size())
+					grow();
+				flag(i);
+				return buf[i];
+			}
+
+			const Struct* get(GLuint offset, GLuint length) const
+			{
+				while (offset + length > buf.get_size())
+					grow();
+				return buf.arr(offset, length);
+			}
+
+			Struct* set(GLuint offset, GLuint length)
+			{
+				while (offset + length > buf.get_size())
+					grow();
+				for (GLuint i = 0; i < length; ++i)
+					flag(offset + i);
+				return buf.arr(offset, length);
+			}
+
 		};
 
 		template<size_t PrimitiveIndices = 6>

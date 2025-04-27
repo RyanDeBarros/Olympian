@@ -36,19 +36,8 @@ int main()
 	}
 	concave_shape->send_polygon();
 
-	oly_context.polygon_batch().move_poly_order_after(oly_context.ref_polygon("pentagon2").lock()->get_id(), oly_context.ref_composite("bordered triangle").lock()->get_id());
-	oly_context.polygon_batch().move_poly_order_before(concave_shape->get_id(), oly_context.ref_composite("bordered triangle").lock()->get_id());
-	oly_context.polygon_batch().draw_specs.resize(3);
-	oly::rendering::PolygonBatch::RangeID post_octagon_id = -1;
-	if (oly_context.polygon_batch().get_next_draw_id(oly_context.ref_ngon("octagon").lock()->get_id(), post_octagon_id))
-	{
-		auto post_octagon_range = oly_context.polygon_batch().get_index_range(post_octagon_id);
-		oly_context.polygon_batch().draw_specs[1] = { 0, post_octagon_range.initial };
-		oly_context.polygon_batch().draw_specs[2] = { post_octagon_range.initial, oly_context.polygon_batch().get_capacity().indices };
-	}
-
-	auto flag_texture = oly_context.texture_registry().get_texture("flag");
 	auto octagon = oly_context.ref_ngon("octagon").lock();
+	auto flag_texture = oly_context.texture_registry().get_texture("flag");
 
 	// LATER begin play on initial actors here
 
@@ -110,27 +99,32 @@ int main()
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
 		
-		oly_context.draw_polygons(1);
+		oly_context.ref_polygonal("pentagon1").lock()->draw();
+		oly_context.ref_polygonal("pentagon2").lock()->draw();
+		oly_context.ref_polygonal("bordered triangle").lock()->draw();
+		oly_context.render_polygons();
 		
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
-		
-		oly_context.draw_sprite_list("#1");
+
+		//oly_context.draw_sprite_list("#1");
 		
 		oly::stencil::end();
 
-		oly_context.ref_ellipse("ellipse1").lock()->draw();
-		oly_context.ref_ellipse("ellipse2").lock()->draw();
-		oly_context.render_ellipses();
+		//oly_context.ref_ellipse("ellipse1").lock()->draw();
+		//oly_context.ref_ellipse("ellipse2").lock()->draw();
+		//oly_context.render_ellipses();
 		
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
-		oly_context.draw_sprite_list("#2");
+		//oly_context.draw_sprite_list("#2");
 
-		oly_context.draw_polygons(2);
+		oly_context.ref_polygonal("octagon").lock()->draw();
+		oly_context.render_polygons();
 		
-		oly_context.draw_sprite_list("#3");
+		//oly_context.draw_sprite_list("#3");
 
-		oly_context.ref_composite("concave shape").lock()->draw_unit();
+		oly_context.ref_polygonal("concave shape").lock()->draw();
+		oly_context.render_polygons();
 	}
 }

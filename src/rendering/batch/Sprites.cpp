@@ -47,13 +47,8 @@ namespace oly
 		SpriteBatch::VBID SpriteBatch::gen_sprite_id()
 		{
 			VBID id = vbid_generator.generate();
-			if (id.get() >= ssbo.quad_info.buf.get_size())
-			{
-				ssbo.quad_info.grow();
-				ssbo.quad_transform.grow();
-			}
-			ssbo.quad_info.buf[id.get()] = {};
-			ssbo.quad_transform.buf[id.get()] = 1.0f;
+			ssbo.quad_info.set(id.get()) = {};
+			ssbo.quad_transform.set(id.get()) = 1.0f;
 			return id;
 		}
 
@@ -209,7 +204,11 @@ namespace oly
 
 		void Sprite::draw() const
 		{
-			flush();
+			if (transformer.flush())
+			{
+				transformer.pre_get();
+				batch->ssbo.quad_transform.set(vbid.get()) = transformer.global();
+			}
 			quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 		}
 		
@@ -287,17 +286,6 @@ namespace oly
 		void Sprite::pre_get() const
 		{
 			transformer.pre_get();
-		}
-		
-		void Sprite::flush() const
-		{
-			if (transformer.flush())
-			{
-				transformer.pre_get();
-				auto& transform_buffer = batch->ssbo.quad_transform;
-				transform_buffer.buf[vbid.get()] = transformer.global();
-				transform_buffer.flag(vbid.get());
-			}
 		}
 	}
 }

@@ -13,468 +13,218 @@ namespace oly
 	namespace rendering
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: capacity(capacity), ebo(capacity.indices), transform_ssbo(capacity.primitives), cpudata(capacity.vertices),
-			vertex_free_space({ 0, capacity.primitives }), index_free_space({ 0, capacity.primitives }), projection_bounds(projection_bounds)
+			: degree(capacity.degree), polygon_index_count(capacity.polygon_index_count), ebo(vao, capacity.indices), transform_ssbo(capacity.primitives), position_vbo(capacity.vertices), color_vbo(capacity.vertices),
+			vertex_free_space({ 0, capacity.primitives }), projection_bounds(projection_bounds)
 		{
 			shader = shaders::polygon_batch;
 			projection_location = shaders::location(shader, "uProjection");
 			degree_location = shaders::location(shader, "uDegree");
 
 			glBindVertexArray(vao);
-			glNamedBufferStorage(vbo_block[PolygonAttribute::POSITION], cpudata.position.size() * sizeof(glm::vec2), cpudata.position.data(), GL_DYNAMIC_STORAGE_BIT);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::POSITION]);
+			glBindBuffer(GL_ARRAY_BUFFER, position_vbo.buf.get_buffer());
 			VertexAttribute<>{ 0, 2 }.setup();
-			glNamedBufferStorage(vbo_block[PolygonAttribute::COLOR], cpudata.color.size() * sizeof(glm::vec4), cpudata.color.data(), GL_DYNAMIC_STORAGE_BIT);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[PolygonAttribute::COLOR]);
+			glBindBuffer(GL_ARRAY_BUFFER, color_vbo.buf.get_buffer());
 			VertexAttribute<>{ 1, 4 }.setup();
-			ebo.bind();
-			ebo.init();
 			glBindVertexArray(0);
-
-			draw_specs.push_back({ 0, capacity.primitives });
 		}
 
-		void PolygonBatch::draw(size_t draw_spec) const
+		void PolygonBatch::render() const
 		{
-			draw(draw_specs[draw_spec]);
-		}
-
-		void PolygonBatch::draw(Range<PrimitivePos> range) const
-		{
-			flush();
+			position_vbo.pre_draw();
+			color_vbo.pre_draw();
+			transform_ssbo.pre_draw();
 
 			glBindVertexArray(vao);
 			glUseProgram(shader);
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
-			glUniform1ui(degree_location, capacity.degree);
+			glUniform1ui(degree_location, degree);
 
-			transform_ssbo.bind_base(0);
-			set_primitive_draw_spec(range.initial, range.length);
-			ebo.draw(GL_TRIANGLES, GL_UNSIGNED_SHORT);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
+			ebo.render_elements(GL_TRIANGLES);
+			position_vbo.post_draw();
+			color_vbo.post_draw();
+			transform_ssbo.post_draw();
 		}
 
-		void PolygonBatch::get_primitive_draw_spec(PrimitivePos& first, PrimitivePos& count) const
+		void PolygonBatch::set_primitive_points(Index pos, const glm::vec2* points, Index count)
 		{
-			ebo.get_draw_spec(first, count);
-			first /= capacity.polygon_index_count;
-			count /= capacity.polygon_index_count;
+			Index vertices_offset = pos * degree;
+			count = std::min(degree, count);
+			for (Index v = 0; v < count; ++v)
+				position_vbo.set(vertices_offset + v) = points[v];
 		}
 
-		void PolygonBatch::set_primitive_draw_spec(PrimitivePos first, PrimitivePos count) const
+		void PolygonBatch::set_primitive_colors(Index pos, const glm::vec4* colors, Index count)
 		{
-			ebo.set_draw_spec(first * capacity.polygon_index_count, count * capacity.polygon_index_count);
-		}
-
-		void PolygonBatch::set_primitive_points(PrimitivePos pos, const glm::vec2* points, GLushort count)
-		{
-			OLY_ASSERT(pos < capacity.primitives);
-			GLushort vertices_offset = pos * capacity.degree;
-			count = std::min(capacity.degree, count);
-			for (GLushort v = 0; v < count; ++v)
-				cpudata.position[vertices_offset + v] = points[v];
-			for (GLushort v = 0; v < capacity.degree; ++v)
-				dirty.position.insert(vertices_offset + v);
-		}
-
-		void PolygonBatch::set_primitive_colors(PrimitivePos pos, const glm::vec4* colors, GLushort count)
-		{
-			OLY_ASSERT(pos < capacity.primitives);
-			GLushort vertices_offset = pos * capacity.degree;
-			count = std::min(capacity.degree, count);
+			Index vertices_offset = pos * degree;
+			count = std::min(degree, count);
 			if (count == 1)
 			{
-				for (GLushort v = 0; v < capacity.degree; ++v)
-					cpudata.color[vertices_offset + v] = colors[0];
+				for (Index v = 0; v < degree; ++v)
+					color_vbo.set(vertices_offset + v) = colors[0];
 			}
 			else
 			{
-				for (GLushort v = 0; v < count; ++v)
-					cpudata.color[vertices_offset + v] = colors[v];
+				for (Index v = 0; v < count; ++v)
+					color_vbo.set(vertices_offset + v) = colors[v];
 			}
-			for (GLushort v = 0; v < capacity.degree; ++v)
-				dirty.color.insert(vertices_offset + v);
 		}
 
-		void PolygonBatch::set_primitive_transform(PrimitivePos pos, const glm::mat3& transform)
+		void PolygonBatch::set_primitive_transform(Index pos, const glm::mat3& transform)
 		{
-			OLY_ASSERT(pos < capacity.primitives);
-			transform_ssbo.vector()[pos] = transform;
-			transform_ssbo.lazy_send(pos);
+			if (pos >= transform_ssbo.buf.get_size())
+				transform_ssbo.grow();
+			transform_ssbo.set(pos) = transform;
 		}
 
-		void PolygonBatch::set_primitive_triangulation(PrimitivePos vertex_pos, PrimitivePos index_pos, const math::Triangulation& triangulation)
+		void PolygonBatch::set_polygon_primitive(Index vertex_pos, const math::Polygon2D& polygon, const glm::mat3& transform)
 		{
-			OLY_ASSERT(vertex_pos < capacity.primitives && index_pos < capacity.primitives);
-			GLushort indices_offset = index_pos * capacity.polygon_index_count;
-			GLushort vertex_index_offset = vertex_pos * capacity.degree;
-			auto& indices = ebo.vector();
-			for (size_t i = 0; i < triangulation.size() && i < capacity.polygon_index_count; ++i)
-			{
-				indices[indices_offset + 3 * i + 0] = triangulation[i][0] + vertex_index_offset;
-				indices[indices_offset + 3 * i + 1] = triangulation[i][1] + vertex_index_offset;
-				indices[indices_offset + 3 * i + 2] = triangulation[i][2] + vertex_index_offset;
-			}
-			for (size_t i = triangulation.size() * 3; i < capacity.polygon_index_count; i += 3)
-			{
-				indices[indices_offset + i + 0] = 0;
-				indices[indices_offset + i + 1] = 0;
-				indices[indices_offset + i + 2] = 0;
-			}
-			for (GLushort i = 0; i < capacity.polygon_index_count; ++i)
-				ebo.lazy_send(indices_offset + i);
+			set_primitive_points(vertex_pos, polygon.points.data(), (Index)polygon.points.size());
+			set_primitive_colors(vertex_pos, polygon.colors.data(), (Index)polygon.colors.size());
+			set_primitive_transform(vertex_pos, transform);
 		}
 
-		void PolygonBatch::set_polygon_primitive(PrimitivePos vertex_pos, PrimitivePos index_pos, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform)
+		void PolygonBatch::set_polygon_transform(Index id, const glm::mat3& transform)
 		{
-			set_primitive_points(vertex_pos, polygon.polygon.points.data(), (GLushort)polygon.polygon.points.size());
-			set_primitive_colors(vertex_pos, polygon.polygon.colors.data(), (GLushort)polygon.polygon.colors.size());
-			set_primitive_transform(index_pos, transform);
-			set_primitive_triangulation(vertex_pos, index_pos, polygon.triangulation);
-		}
-
-		void PolygonBatch::disable_polygon_primitive(PrimitivePos index_pos)
-		{
-			set_primitive_triangulation(0, index_pos, {});
-		}
-
-		void PolygonBatch::set_polygon_transform(RangeID id, const glm::mat3& transform)
-		{
-			Range<GLushort> range = get_vertex_range(id);
-			for (GLushort i = 0; i < range.length; ++i)
+			Range<Index> range = get_vertex_range(id);
+			for (Index i = 0; i < range.length; ++i)
 				set_primitive_transform(range.initial + i, transform);
 		}
 
-		void PolygonBatch::disable_polygon(RangeID id)
-		{
-			auto it = polygon_indexer.find(id);
-			if (it != polygon_indexer.end())
-			{
-				Range<PrimitivePos> range = it->second.index_range;
-				for (GLushort i = 0; i < range.length; ++i)
-					disable_polygon_primitive(range.initial + i);
-			}
-		}
-
-		PolygonBatch::PolygonID PolygonBatch::generate_id(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		PolygonBatch::PolygonID PolygonBatch::generate_id(const math::Polygon2DComposite& composite, Index min_range, Index max_range)
 		{
 			auto dup = dupl(composite);
 			return generate_id(dup, min_range, max_range);
 		}
 
-		PolygonBatch::PolygonID PolygonBatch::generate_id(math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		PolygonBatch::PolygonID PolygonBatch::generate_id(math::Polygon2DComposite& composite, Index min_range, Index max_range)
 		{
 			PolygonID id = id_generator.generate();
-			math::split_polygon_composite(composite, capacity.degree);
+			math::split_polygon_composite(composite, degree);
 			auto it = polygon_indexer.find(id.get());
 			if (it == polygon_indexer.end())
 			{
-				GLushort range = std::max(min_range, (GLushort)composite.size());
+				Index range = std::max(min_range, (Index)composite.size());
 				if (max_range > 0)
 				{
 					OLY_ASSERT(range <= max_range);
 				}
-				Range<GLushort> vertex_range, index_range;
+				Range<Index> vertex_range, index_range;
 				OLY_ASSERT(vertex_free_space.next_free(range, vertex_range));
-				OLY_ASSERT(index_free_space.next_free(range, index_range));
 				vertex_free_space.reserve(vertex_range);
-				index_free_space.reserve(index_range);
-				polygon_indexer[id.get()].vertex_range = vertex_range;
-				polygon_indexer[id.get()].index_range = index_range;
+				polygon_indexer[id.get()] = vertex_range;
 				id_order[index_range.initial] = id.get();
 			}
 			return id;
 		}
 
-		void PolygonBatch::terminate_id(RangeID id)
+		void PolygonBatch::terminate_id(Index id)
 		{
 			auto it = polygon_indexer.find(id);
 			if (it != polygon_indexer.end())
 			{
-				disable_polygon(id);
-				vertex_free_space.release(it->second.vertex_range);
-				index_free_space.release(it->second.index_range);
+				vertex_free_space.release(it->second);
 				polygon_indexer.erase(it);
 			}
 		}
 
-		void PolygonBatch::resize_range(PolygonID& id, const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		void PolygonBatch::resize_range(PolygonID& id, const math::Polygon2DComposite& composite, Index min_range, Index max_range)
 		{
 			auto dup = dupl(composite);
 			resize_range(id, dup, min_range, max_range);
 		}
 
-		void PolygonBatch::resize_range(PolygonID& id, math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
+		void PolygonBatch::resize_range(PolygonID& id, math::Polygon2DComposite& composite, Index min_range, Index max_range)
 		{
 			terminate_id(id.get());
 			id = generate_id(composite, min_range, max_range);
 		}
 
-		bool PolygonBatch::is_valid_id(RangeID id) const
+		bool PolygonBatch::is_valid_id(Index id) const
 		{
 			return polygon_indexer.count(id);
 		}
 
-		bool PolygonBatch::get_next_draw_id(RangeID id, RangeID& next_id) const
-		{
-			auto it = polygon_indexer.find(id);
-			if (it == polygon_indexer.end())
-				return false;
-			auto nit = id_order.find(it->second.index_range.initial);
-			if (nit == id_order.end())
-				return false;
-			++nit;
-			if (nit == id_order.end())
-				return false;
-			next_id = nit->second;
-			return true;
-		}
-
-		bool PolygonBatch::get_prev_draw_id(RangeID id, RangeID& prev_id) const
-		{
-			auto it = polygon_indexer.find(id);
-			if (it == polygon_indexer.end())
-				return false;
-			auto pit = id_order.find(it->second.index_range.initial);
-			if (pit == id_order.end() || pit == id_order.begin())
-				return false;
-			--pit;
-			prev_id = pit->second;
-			return true;
-		}
-
-		Range<PolygonBatch::PrimitivePos> PolygonBatch::get_vertex_range(RangeID id) const
+		Range<PolygonBatch::Index> PolygonBatch::get_vertex_range(Index id) const
 		{
 			if (!is_valid_id(id))
-				throw Error(ErrorCode::OTHER, "Invalid RangeID");
-			return polygon_indexer.find(id)->second.vertex_range;
+				throw Error(ErrorCode::OTHER, "Invalid Index");
+			return polygon_indexer.find(id)->second;
 		}
 
-		Range<PolygonBatch::PrimitivePos> PolygonBatch::get_index_range(RangeID id) const
+		void PolygonBatch::set_polygon(Index id, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform)
 		{
-			if (!is_valid_id(id))
-				throw Error(ErrorCode::OTHER, "Invalid RangeID");
-			return polygon_indexer.find(id)->second.index_range;
+			set_polygon(id, math::Polygon2DComposite{ polygon }, transform);
 		}
 
-		void PolygonBatch::set_polygon(RangeID id, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform)
+		void PolygonBatch::set_polygon(Index id, math::TriangulatedPolygon2D&& polygon, const glm::mat3& transform)
 		{
-			set_polygon(id, math::split_polygon_composite(polygon, capacity.degree), transform);
-		}
-
-		void PolygonBatch::set_polygon(RangeID id, math::TriangulatedPolygon2D&& polygon, const glm::mat3& transform)
-		{
-			set_polygon(id, math::split_polygon_composite(std::move(polygon), capacity.degree), transform);
+			set_polygon(id, math::Polygon2DComposite{ std::move(polygon) }, transform);
 		}
 		
-		void PolygonBatch::set_polygon(RangeID id, const math::Polygon2DComposite& composite, const glm::mat3& transform)
+		void PolygonBatch::set_polygon(Index id, const math::Polygon2DComposite& composite, const glm::mat3& transform)
 		{
 			auto dup = dupl(composite);
 			set_polygon(id, dup, transform);
 		}
 		
-		void PolygonBatch::set_polygon(RangeID id, math::Polygon2DComposite& composite, const glm::mat3& transform)
+		void PolygonBatch::set_polygon(Index id, math::Polygon2DComposite& composite, const glm::mat3& transform)
 		{
 			OLY_ASSERT(is_valid_id(id));
 			auto vertex_range = get_vertex_range(id);
-			auto index_range = get_index_range(id);
-			math::split_polygon_composite(composite, capacity.degree);
+			math::split_polygon_composite(composite, degree);
 			OLY_ASSERT(composite.size() <= vertex_range.length);
-			GLushort length = 0;
+			Index length = 0;
 			for (math::TriangulatedPolygon2D& poly : composite)
 			{
-				set_polygon_primitive(vertex_range.initial + length, index_range.initial + length, std::move(poly), transform);
+				set_polygon_primitive(vertex_range.initial + length, std::move(poly.polygon), transform);
 				++length;
 			}
-			while (length < index_range.length)
-				disable_polygon_primitive(index_range.initial + length++);
 		}
 
-		void PolygonBatch::set_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform)
+		void PolygonBatch::set_ngon(Index id, const math::NGonBase& ngon, const glm::mat3& transform)
 		{
 			set_polygon(id, create_ngon(ngon), transform);
 		}
 
-		void PolygonBatch::set_bordered_ngon(RangeID id, const math::NGonBase& ngon, const glm::mat3& transform)
+		void PolygonBatch::set_bordered_ngon(Index id, const math::NGonBase& ngon, const glm::mat3& transform)
 		{
 			set_polygon(id, create_bordered_ngon(ngon), transform);
 		}
 
-		void PolygonBatch::swap_poly_order_with_next(RangeID id)
-		{
-			RangeID next_id;
-			if (!get_next_draw_id(id, next_id))
-				return;
-			Range<PrimitivePos>& this_range = polygon_indexer.find(id)->second.index_range;
-			Range<PrimitivePos>& next_range = polygon_indexer.find(next_id)->second.index_range;
-			swap_adjacent_poly_orders(this_range, next_range);
-
-			id_order.erase(this_range.initial);
-			id_order.erase(next_range.initial);
-			index_free_space.release(this_range);
-			index_free_space.release(next_range);
-			PrimitivePos next_initial = next_range.initial;
-			next_range.initial = this_range.initial;
-			this_range.initial = next_initial + next_range.length - this_range.length;
-			id_order[this_range.initial] = id;
-			id_order[next_range.initial] = next_id;
-			index_free_space.reserve(this_range);
-			index_free_space.reserve(next_range);
-		}
-
-		void PolygonBatch::swap_poly_order_with_prev(RangeID id)
-		{
-			RangeID prev_id;
-			if (!get_prev_draw_id(id, prev_id))
-				return;
-			Range<PrimitivePos>& this_range = polygon_indexer.find(id)->second.index_range;
-			Range<PrimitivePos>& prev_range = polygon_indexer.find(prev_id)->second.index_range;
-			swap_adjacent_poly_orders(prev_range, this_range);
-
-			id_order.erase(this_range.initial);
-			id_order.erase(prev_range.initial);
-			index_free_space.release(this_range);
-			index_free_space.release(prev_range);
-			PrimitivePos this_initial = this_range.initial;
-			this_range.initial = prev_range.initial;
-			prev_range.initial = this_initial + this_range.length - prev_range.length;
-			id_order[this_range.initial] = id;
-			id_order[prev_range.initial] = prev_id;
-			index_free_space.reserve(this_range);
-			index_free_space.reserve(prev_range);
-		}
-
-		void PolygonBatch::swap_adjacent_poly_orders(Range<PrimitivePos>& left, Range<PrimitivePos>& right)
-		{
-			swap_adjacent_subbuffers(ebo.vector().data(), left.initial * capacity.polygon_index_count, left.length * capacity.polygon_index_count,
-				right.initial * capacity.polygon_index_count, right.length * capacity.polygon_index_count);
-			PrimitivePos first = std::min(left.initial, right.initial);
-			PrimitivePos last = std::max(left.end(), right.end());
-			for (PrimitivePos i = first; i < last; ++i)
-				for (GLushort j = 0; j < capacity.polygon_index_count; ++j)
-					ebo.lazy_send(i * capacity.polygon_index_count + j);
-		}
-
-		void PolygonBatch::move_poly_order_after(RangeID id, RangeID after)
-		{
-			auto this_it = polygon_indexer.find(id);
-			auto after_it = polygon_indexer.find(after);
-			if (this_it == after_it || this_it == polygon_indexer.end() || after_it == polygon_indexer.end())
-				return;
-
-			auto this_order_it = id_order.find(this_it->second.index_range.initial);
-			auto after_order_it = id_order.find(after_it->second.index_range.initial);
-			if (after_it->second.index_range.initial > this_it->second.index_range.initial)
-			{
-				auto distance = std::distance(this_order_it, after_order_it);
-				for (int i = 0; i < distance + 1; ++i)
-					swap_poly_order_with_next(id);
-			}
-			else
-			{
-				auto distance = std::distance(after_order_it, this_order_it);
-				for (int i = 0; i < distance - 1; ++i)
-					swap_poly_order_with_prev(id);
-			}
-		}
-
-		void PolygonBatch::move_poly_order_before(RangeID id, RangeID before)
-		{
-			auto this_it = polygon_indexer.find(id);
-			auto before_it = polygon_indexer.find(before);
-			if (this_it == before_it || this_it == polygon_indexer.end() || before_it == polygon_indexer.end())
-				return;
-
-			auto this_order_it = id_order.find(this_it->second.index_range.initial);
-			auto before_order_it = id_order.find(before_it->second.index_range.initial);
-			if (before_it->second.index_range.initial > this_it->second.index_range.initial)
-			{
-				auto distance = std::distance(this_order_it, before_order_it);
-				for (int i = 0; i < distance - 1; ++i)
-					swap_poly_order_with_next(id);
-			}
-			else
-			{
-				auto distance = std::distance(before_order_it, this_order_it);
-				for (int i = 0; i < distance + 1; ++i)
-					swap_poly_order_with_prev(id);
-			}
-		}
-
-		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const
-		{
-			return math::create_bordered_ngon(fill_color, border_color, border, border_pivot, points);
-		}
-		
-		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(glm::vec4 fill_color, glm::vec4 border_color, float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const
-		{
-			return math::create_bordered_ngon(fill_color, border_color, border, border_pivot, std::move(points));
-		}
-
-		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(const std::vector<glm::vec4>& fill_colors, const std::vector<glm::vec4>& border_colors,
-			float border, math::BorderPivot border_pivot, const std::vector<glm::vec2>& points) const
-		{
-			return math::create_bordered_ngon(fill_colors, border_colors, border, border_pivot, points);
-		}
-
-		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(std::vector<glm::vec4>&& fill_colors, std::vector<glm::vec4>&& border_colors,
-			float border, math::BorderPivot border_pivot, std::vector<glm::vec2>&& points) const
-		{
-			return math::create_bordered_ngon(std::move(fill_colors), std::move(border_colors), border, border_pivot, std::move(points));
-		}
-
 		math::Polygon2DComposite PolygonBatch::create_ngon(const math::NGonBase& ngon) const
 		{
-			return ngon.composite(capacity.degree);
+			return ngon.composite(degree);
 		}
 		
 		math::Polygon2DComposite PolygonBatch::create_bordered_ngon(const math::NGonBase& ngon) const
 		{
-			return ngon.bordered_composite(capacity.degree);
-		}
-
-		void PolygonBatch::flush() const
-		{
-			for (Polygonal* poly : polygonal_renderables)
-				poly->flush();
-			batch_send(dirty.position.begin(), dirty.position.end(), vbo_block[PolygonAttribute::POSITION], cpudata.position);
-			dirty.position.clear();
-			batch_send(dirty.color.begin(), dirty.color.end(), vbo_block[PolygonAttribute::COLOR], cpudata.color);
-			dirty.color.clear();
-			transform_ssbo.flush();
-			ebo.flush();
+			return ngon.bordered_composite(degree);
 		}
 
 		Polygonal::Polygonal(PolygonBatch* batch)
 			: _batch(batch)
 		{
-			_batch->polygonal_renderables.insert(this);
 		}
 
 		Polygonal::Polygonal(Polygonal&& other) noexcept
 			: _batch(other._batch), id(std::move(other.id)), transformer(std::move(other.transformer))
 		{
-			if (_batch)
-				_batch->polygonal_renderables.insert(this);
+			other._batch = nullptr;
 		}
 
 		Polygonal::~Polygonal()
 		{
 			if (_batch)
-			{
-				_batch->polygonal_renderables.erase(this);
 				_batch->terminate_id(id.get());
-			}
 		}
 
 		Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
 		{
 			if (this != &other)
 			{
-				if (_batch)
-					_batch->polygonal_renderables.erase(this);
 				_batch = other._batch;
-				if (_batch)
-					_batch->polygonal_renderables.insert(this);
+				other._batch = nullptr;
 				id = std::move(other.id);
 				transformer = std::move(other.transformer);
 			}
@@ -491,115 +241,73 @@ namespace oly
 			transformer.pre_get();
 		}
 		
-		void Polygonal::draw_unit() const
-		{
-			_batch->draw(_batch->get_index_range(id.get()));
-		}
-
-		void Polygonal::init(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
-		{
-			OLY_ASSERT(!initialized());
-			id = _batch->generate_id(composite, min_range, max_range);
-			transformer.pre_get();
-			_batch->set_polygon(id.get(), composite, transformer.global());
-		}
-
-		void Polygonal::init(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
-		{
-			OLY_ASSERT(!initialized());
-			id = _batch->generate_id(composite, min_range, max_range);
-			transformer.pre_get();
-			_batch->set_polygon(id.get(), std::move(composite), transformer.global());
-		}
-
-		void Polygonal::resize(const math::Polygon2DComposite& composite, GLushort min_range, GLushort max_range)
-		{
-			OLY_ASSERT(initialized());
-			_batch->resize_range(id, composite, min_range, max_range);
-			transformer.pre_get();
-			_batch->set_polygon(id.get(), composite, transformer.global());
-		}
-
-		void Polygonal::resize(math::Polygon2DComposite&& composite, GLushort min_range, GLushort max_range)
-		{
-			OLY_ASSERT(initialized());
-			_batch->resize_range(id, composite, min_range, max_range);
-			transformer.pre_get();
-			_batch->set_polygon(id.get(), std::move(composite), transformer.global());
-		}
-
-		void Polygonal::send_polygon(const math::Polygon2DComposite& composite) const
-		{
-			auto vertex_range = _batch->get_vertex_range(id.get());
-			auto index_range = _batch->get_index_range(id.get());
-			for (GLushort i = 0; i < vertex_range.length; ++i)
-			{
-				_batch->set_primitive_points(vertex_range.initial + i, composite[i].polygon.points.data(), (GLushort)composite[i].polygon.points.size());
-				_batch->set_primitive_colors(vertex_range.initial + i, composite[i].polygon.colors.data(), (GLushort)composite[i].polygon.colors.size());
-				_batch->set_primitive_triangulation(vertex_range.initial + i, index_range.initial + i, composite[i].triangulation);
-			}
-		}
-
-		void Polygonal::flush() const
+		void Polygonal::draw() const
 		{
 			if (transformer.flush())
 			{
 				transformer.pre_get();
 				_batch->set_polygon_transform(id.get(), transformer.global());
 			}
+
+			PolygonBatch::Index vertex_initial = _batch->get_vertex_range(id.get()).initial;
+			auto comp = calc_composite(); // TODO use vector<Triangulation> instead
+			math::split_polygon_composite(comp, _batch->degree);
+			PolygonBatch::Index c = 0;
+			for (const auto& tp : comp)
+			{
+				const auto& faces = tp.triangulation;
+				for (size_t i = 0; i < faces.size() && i < _batch->polygon_index_count; ++i)
+				{
+					_batch->ebo.draw_primitive()[0] = faces[i][0] + (vertex_initial + c) * _batch->degree;
+					_batch->ebo.draw_primitive()[0] = faces[i][1] + (vertex_initial + c) * _batch->degree;
+					_batch->ebo.draw_primitive()[0] = faces[i][2] + (vertex_initial + c) * _batch->degree;
+				}
+				++c;
+			}
+		}
+
+		void Polygonal::init(PolygonBatch::Index min_range, PolygonBatch::Index max_range)
+		{
+			OLY_ASSERT(!initialized());
+			auto composite = calc_composite();
+			id = _batch->generate_id(composite, min_range, max_range);
+			transformer.pre_get();
+			_batch->set_polygon(id.get(), std::move(composite), transformer.global());
+		}
+
+		void Polygonal::resize(PolygonBatch::Index min_range, PolygonBatch::Index max_range)
+		{
+			OLY_ASSERT(initialized());
+			auto composite = calc_composite();
+			_batch->resize_range(id, composite, min_range, max_range);
+			transformer.pre_get();
+			_batch->set_polygon(id.get(), std::move(composite), transformer.global());
+		}
+
+		void Polygonal::send_polygon() const
+		{
+			auto composite = calc_composite();
+			auto vertex_range = _batch->get_vertex_range(id.get());
+			for (PolygonBatch::Index i = 0; i < vertex_range.length; ++i)
+			{
+				_batch->set_primitive_points(vertex_range.initial + i, composite[i].polygon.points.data(), (PolygonBatch::Index)composite[i].polygon.points.size());
+				_batch->set_primitive_colors(vertex_range.initial + i, composite[i].polygon.colors.data(), (PolygonBatch::Index)composite[i].polygon.colors.size());
+			}
+		}
+
+		math::Polygon2DComposite Polygon::calc_composite() const
+		{
+			return { math::TriangulatedPolygon2D{ polygon, math::triangulate(polygon.points) } };
 		}
 		
-		void Polygon::init(GLushort min_range, GLushort max_range)
+		math::Polygon2DComposite Composite::calc_composite() const
 		{
-			Polygonal::init(math::split_polygon_composite(polygon, batch().get_capacity().degree), min_range, max_range);
+			return composite;
 		}
 
-		void Polygon::resize(GLushort min_range, GLushort max_range)
+		math::Polygon2DComposite NGon::calc_composite() const
 		{
-			Polygonal::resize(math::split_polygon_composite(polygon, batch().get_capacity().degree), min_range, max_range);
-		}
-		
-		void Polygon::send_polygon() const
-		{
-			Polygonal::send_polygon(math::split_polygon_composite(polygon, batch().get_capacity().degree));
-		}
-		
-		void Composite::init(GLushort min_range, GLushort max_range)
-		{
-			auto dup = dupl(composite);
-			Polygonal::init(dup, min_range, max_range);
-		}
-
-		void Composite::resize(GLushort min_range, GLushort max_range)
-		{
-			auto dup = dupl(composite);
-			Polygonal::resize(dup, min_range, max_range);
-		}
-
-		void Composite::send_polygon() const
-		{
-			math::Polygon2DComposite dup = dupl(composite);
-			math::split_polygon_composite(dup, batch().get_capacity().degree);
-			Polygonal::send_polygon(dup);
-		}
-
-		void NGon::init(GLushort min_range, GLushort max_range)
-		{
-			Polygonal::init(composite(), min_range, max_range);
-		}
-
-		void NGon::resize(GLushort min_range, GLushort max_range)
-		{
-			Polygonal::resize(composite(), min_range, max_range);
-		}
-
-		void NGon::send_polygon() const
-		{
-			Polygonal::send_polygon(composite());
-		}
-
-		math::Polygon2DComposite NGon::composite() const
-		{
+			// TODO cache composite
 			return bordered ? batch().create_bordered_ngon(base) : batch().create_ngon(base);
 		}
 	}
