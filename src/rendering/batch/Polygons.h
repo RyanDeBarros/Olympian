@@ -69,6 +69,8 @@ namespace oly
 		private:
 			void set_primitive_points(Range<Index> vbo_range, const glm::vec2* points, Index count);
 			void set_primitive_colors(Range<Index> vbo_range, const glm::vec4* colors, Index count);
+			void set_polygon(Index id, const math::Polygon2D& polygon);
+			void set_polygon(Index id, const std::vector<math::Polygon2D>& polygons);
 			void set_polygon(Index id, const math::Polygon2DComposite& composite);
 			void set_polygon_transform(Index id, const glm::mat3& transform);
 
@@ -106,11 +108,16 @@ namespace oly
 			void pre_get() const; // call before reading global
 
 			void init();
-			void send_polygon() const;
+			virtual void send_polygon() const = 0;
+			virtual GLuint num_vertices() const = 0;
 			void draw() const;
 
 		protected:
-			virtual math::Polygon2DComposite calc_composite() const = 0;
+			void set_polygon(const math::Polygon2D& polygon) const;
+			void set_polygon(const std::vector<math::Polygon2D>& polygons) const;
+			void set_polygon(const math::Polygon2DComposite& composite) const;
+			GLuint& draw_index() const;
+			virtual void draw_triangulation(GLuint initial_vertex) const = 0;
 		};
 
 		struct Polygon : public Polygonal
@@ -121,7 +128,14 @@ namespace oly
 			Polygon(Polygon&&) noexcept = default;
 			Polygon& operator=(Polygon&&) noexcept = default;
 
-			virtual math::Polygon2DComposite calc_composite() const override;
+			virtual void send_polygon() const override;
+			virtual GLuint num_vertices() const override;
+
+		private:
+			mutable math::Triangulation cache;
+
+		protected:
+			virtual void draw_triangulation(GLuint initial_vertex) const override;
 		};
 
 		struct Composite : public Polygonal
@@ -132,7 +146,11 @@ namespace oly
 			Composite(Composite&&) noexcept = default;
 			Composite& operator=(Composite&&) noexcept = default;
 
-			virtual math::Polygon2DComposite calc_composite() const override;
+			virtual void send_polygon() const override;
+			virtual GLuint num_vertices() const override;
+
+		protected:
+			virtual void draw_triangulation(GLuint initial_vertex) const override;
 		};
 
 		struct NGon : public Polygonal
@@ -144,7 +162,14 @@ namespace oly
 			NGon(NGon&&) noexcept = default;
 			NGon& operator=(NGon&&) noexcept = default;
 
-			virtual math::Polygon2DComposite calc_composite() const override;
+			virtual void send_polygon() const override;
+			virtual GLuint num_vertices() const override;
+
+		private:
+			mutable math::Polygon2DComposite cache;
+
+		protected:
+			virtual void draw_triangulation(GLuint initial_vertex) const override;
 		};
 	}
 }

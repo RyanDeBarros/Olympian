@@ -62,6 +62,32 @@ namespace oly
 			}
 		}
 
+		void PolygonBatch::set_polygon(Index id, const math::Polygon2D& polygon)
+		{
+			OLY_ASSERT(is_valid_id(id));
+			auto vertex_range = get_vertex_range(id);
+			set_primitive_points(vertex_range, polygon.points.data(), (Index)polygon.points.size());
+			set_primitive_colors(vertex_range, polygon.colors.data(), (Index)polygon.colors.size());
+		}
+
+		void PolygonBatch::set_polygon(Index id, const std::vector<math::Polygon2D>& polygons)
+		{
+			OLY_ASSERT(is_valid_id(id));
+			auto vertex_range = get_vertex_range(id);
+			Index offset = 0;
+			for (const math::Polygon2D& poly : polygons)
+			{
+				Range<Index> poly_range;
+				poly_range.initial = vertex_range.initial + offset;
+				if (poly_range.initial >= vertex_range.end())
+					return;
+				poly_range.length = std::min((Index)poly.points.size(), vertex_range.end() - poly_range.initial);
+				set_primitive_points(poly_range, poly.points.data(), (Index)poly.points.size());
+				set_primitive_colors(poly_range, poly.colors.data(), (Index)poly.colors.size());
+				offset += (Index)poly.points.size();
+			}
+		}
+
 		void PolygonBatch::set_polygon(Index id, const math::Polygon2DComposite& composite)
 		{
 			OLY_ASSERT(is_valid_id(id));
@@ -185,53 +211,114 @@ namespace oly
 				transformer.pre_get();
 				_batch->set_polygon_transform(id.get(), transformer.global());
 			}
-
-			PolygonBatch::Index vertex_initial = _batch->get_vertex_range(id.get()).initial;
-			auto comp = calc_composite(); // TODO use vector<Triangulation> instead
-			PolygonBatch::Index offset = 0;
-			for (const auto& tp : comp)
-			{
-				const auto& faces = tp.triangulation;
-				for (size_t i = 0; i < faces.size(); ++i)
-				{
-					_batch->ebo.draw_primitive()[0] = faces[i][0] + vertex_initial + offset;
-					_batch->ebo.draw_primitive()[0] = faces[i][1] + vertex_initial + offset;
-					_batch->ebo.draw_primitive()[0] = faces[i][2] + vertex_initial + offset;
-				}
-				offset += (PolygonBatch::Index)tp.polygon.points.size();
-			}
+			draw_triangulation(_batch->get_vertex_range(id.get()).initial);
 		}
 
 		void Polygonal::init()
 		{
-			auto composite = calc_composite();
-			PolygonBatch::Index vertices = 0;
-			for (const auto& primitive : composite)
-				vertices += (PolygonBatch::Index)primitive.polygon.points.size();
-			_batch->resize_range(id, vertices);
+			_batch->resize_range(id, num_vertices());
 			transformer.pre_get();
 			send_polygon();
 		}
 
-		void Polygonal::send_polygon() const
+		void Polygonal::set_polygon(const math::Polygon2D& polygon) const
 		{
-			_batch->set_polygon(id.get(), calc_composite());
+			_batch->set_polygon(id.get(), polygon);
 		}
 
-		math::Polygon2DComposite Polygon::calc_composite() const
+		void Polygonal::set_polygon(const std::vector<math::Polygon2D>& polygons) const
 		{
-			return { math::TriangulatedPolygon2D{ polygon, math::triangulate(polygon.points) } };
-		}
-		
-		math::Polygon2DComposite Composite::calc_composite() const
-		{
-			return composite;
+			_batch->set_polygon(id.get(), polygons);
 		}
 
-		math::Polygon2DComposite NGon::calc_composite() const
+		void Polygonal::set_polygon(const math::Polygon2DComposite& composite) const
 		{
-			// TODO cache composite
-			return bordered ? base.bordered_composite() : base.composite();
+			_batch->set_polygon(id.get(), composite);
+		}
+
+		GLuint& Polygonal::draw_index() const
+		{
+			return _batch->ebo.draw_primitive()[0];
+		}
+
+		void Polygon::send_polygon() const
+		{
+			cache = math::triangulate(polygon.points);
+			set_polygon(polygon);
+		}
+
+		GLuint Polygon::num_vertices() const
+		{
+			return (GLuint)polygon.points.size();
+		}
+
+		void Polygon::draw_triangulation(GLuint initial_vertex) const
+		{
+			for (size_t i = 0; i < cache.size(); ++i)
+			{
+				draw_index() = cache[i][0] + initial_vertex;
+				draw_index() = cache[i][1] + initial_vertex;
+				draw_index() = cache[i][2] + initial_vertex;
+			}
+		}
+
+		void Composite::send_polygon() const
+		{
+			set_polygon(composite);
+		}
+
+		GLuint Composite::num_vertices() const
+		{
+			GLuint vertices = 0;
+			for (const auto& primitive : composite)
+				vertices += (GLuint)primitive.polygon.points.size();
+			return vertices;
+		}
+
+		void Composite::draw_triangulation(GLuint initial_vertex) const
+		{
+			GLuint offset = 0;
+			for (const auto& tp : composite)
+			{
+				const auto& faces = tp.triangulation;
+				for (size_t i = 0; i < faces.size(); ++i)
+				{
+					draw_index() = faces[i][0] + initial_vertex + offset;
+					draw_index() = faces[i][1] + initial_vertex + offset;
+					draw_index() = faces[i][2] + initial_vertex + offset;
+				}
+				offset += (GLuint)tp.polygon.points.size();
+			}
+		}
+
+		void NGon::send_polygon() const
+		{
+			cache = bordered ? base.bordered_composite() : base.composite();
+			set_polygon(cache);
+		}
+
+		GLuint NGon::num_vertices() const
+		{
+			GLuint vertices = 0;
+			for (const auto& primitive : cache)
+				vertices += (GLuint)primitive.polygon.points.size();
+			return vertices;
+		}
+
+		void NGon::draw_triangulation(GLuint initial_vertex) const
+		{
+			GLuint offset = 0;
+			for (const auto& tp : cache)
+			{
+				const auto& faces = tp.triangulation;
+				for (size_t i = 0; i < faces.size(); ++i)
+				{
+					draw_index() = faces[i][0] + initial_vertex + offset;
+					draw_index() = faces[i][1] + initial_vertex + offset;
+					draw_index() = faces[i][2] + initial_vertex + offset;
+				}
+				offset += (GLuint)tp.polygon.points.size();
+			}
 		}
 	}
 }
