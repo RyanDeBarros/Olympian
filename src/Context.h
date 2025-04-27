@@ -72,6 +72,6 @@ namespace oly
 		rendering::Ellipse ellipse() const { return rendering::Ellipse(internal.ellipse_batch.get()); }
 		rendering::Ellipse ellipse(const std::string& name) const { return internal.ellipse_registry.create_ellipse(this, name); }
 		std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) const { return internal.ellipse_registry.ref_ellipse(name); }
-		void draw_ellipses(size_t draw_spec = 0) const { internal.ellipse_batch->draw(draw_spec); }
+		void render_ellipses() const { internal.ellipse_batch->render(); }
 	};
 }

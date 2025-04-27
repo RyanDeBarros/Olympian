@@ -1,7 +1,7 @@
 [ellipse_registry]
 	"auto draw list" = [
 		"ellipse1",
-		"ellipse2"
+		"ellipse2",
 	]
 
 	[[ellipse_registry.ellipse]]
@@ -18,7 +18,6 @@
 	[[ellipse_registry.ellipse]]
 	"name" = "ellipse2"
 	transform = { "scale" = [150, 150] }
-	"z-value" = -1.0
 	"width" = 1
 	"height" = 3
 	"border" = 0.4

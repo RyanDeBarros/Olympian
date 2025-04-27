@@ -5,6 +5,7 @@
 #include "core/Core.h"
 #include "util/FixedVector.h"
 #include "util/General.h"
+#include "util/RangeMerger.h"
 
 namespace oly
 {
@@ -159,7 +160,7 @@ namespace oly
 			}
 		};
 
-		template<Mutability M, std::unsigned_integral IndexType = GLushort>
+		template<Mutability M, std::unsigned_integral IndexType = GLuint>
 		using QuadLayoutEBO = CPUSideEBO<IndexType, M, 6>;
 
 		template<Mutability M, std::unsigned_integral IndexType>
@@ -225,6 +226,160 @@ namespace oly
 			using LightweightBuffer<M>::LightweightBuffer;
 
 			void bind_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, this->buffer()); }
+		};
+
+		struct PersistentWaitOptions
+		{
+			GLuint64 timeout_ns = 10'000'000; // 10ms
+			GLuint max_timeout_tries = 100; // 1s total
+		};
+
+		template<typename Struct, PersistentWaitOptions options = PersistentWaitOptions{}>
+		class PersistentGPUBuffer
+		{
+			GLBuffer buf;
+			bool accessible = true;
+			GLuint size = 0;
+			void* data = nullptr;
+
+		public:
+			using StructAlias = Struct;
+
+			PersistentGPUBuffer(GLuint size) : size(size) { init(); }
+			PersistentGPUBuffer(const PersistentGPUBuffer&) = delete;
+
+			GLuint get_size() const { return size; }
+			GLuint get_buffer() const { return buf; }
+			bool is_accessible() const { return accessible; }
+
+			const Struct& operator[](GLuint i) const
+			{
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (i >= size)
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<const Struct*>(data)[i];
+			}
+
+			Struct& operator[](GLuint i)
+			{
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (i >= size)
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<Struct*>(data)[i];
+			}
+
+			const Struct* arr(GLuint offset, GLuint length) const
+			{
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (offset + length > size)
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<const Struct*>(data) + offset;
+			}
+
+			Struct* arr(GLuint offset, GLuint length)
+			{
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (offset + length > size)
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<Struct*>(data) + offset;
+			}
+
+			void grow()
+			{
+				static const float REALLOC_MULTIPLIER = 1.8f;
+				grow((GLuint)(REALLOC_MULTIPLIER * size));
+			}
+
+			void grow(GLuint new_size)
+			{
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (new_size <= size)
+					return;
+
+				GLuint old_size = size;
+				size = new_size;
+
+				GLBuffer old_buf;
+				std::swap(buf, old_buf);
+				init();
+
+				glCopyNamedBufferSubData(old_buf, buf, 0, 0, old_size * sizeof(Struct));
+				// no need to unmap old data, since it uses persistent bit
+			}
+
+			void pre_draw(GLuint offset, GLuint length) const
+			{
+				if (offset + length > size)
+				{
+					if (offset >= size)
+						throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+					else
+						length = size - 1 - offset;
+				}
+				glFlushMappedNamedBufferRange(buf, (GLintptr)(offset * sizeof(Struct)), (GLsizeiptr)(length * sizeof(Struct)));
+			}
+
+			void pre_draw() const
+			{
+				glFlushMappedNamedBufferRange(buf, (GLintptr)0, (GLsizeiptr)(size * sizeof(Struct)));
+			}
+
+			void post_draw() const
+			{
+				FenceSync sync;
+				if (sync.signaled())
+					return;
+				for (GLuint i = 0; i < options.max_timeout_tries; ++i)
+					if (sync.wait(options.timeout_ns))
+						return;
+				throw Error(ErrorCode::OUT_OF_TIME);
+			}
+
+		private:
+			void init()
+			{
+				glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+				data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+			}
+		};
+
+		template<typename Struct, PersistentWaitOptions options = PersistentWaitOptions{} >
+		struct LazyPersistentGPUBuffer
+		{
+			PersistentGPUBuffer<Struct, options> buf;
+
+		private:
+			mutable RangeMerger<GLuint> dirty;
+
+		public:
+			LazyPersistentGPUBuffer(GLuint size) : buf(size) {}
+
+			void flag(GLuint pos) const { dirty.insert({ pos, 1 }); }
+			void pre_draw() const
+			{
+				for (Range<GLuint> range : dirty)
+				{
+					try
+					{
+						buf.pre_draw(range.initial, range.length);
+					}
+					catch (Error e)
+					{
+						if (e.code == ErrorCode::INDEX_OUT_OF_RANGE)
+							; // silently ignore
+						else
+							throw e;
+					}
+				}
+				dirty.clear();
+			}
+			void post_draw() const { buf.post_draw(); }
+			void grow() { buf.grow(); buf.pre_draw(); dirty.clear(); }
 		};
 
 		enum class VertexAttributeType

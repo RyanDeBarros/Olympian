@@ -25,8 +25,8 @@ void main() {
 	if (diff < 0.0)
 		discard;
 	if (diff >= tDimension.b) {
-		oColor = mix(tColor.fill_inner, tColor.fill_outer, pow((1.0 - diff + tDimension.b) / (1.0 - tDimension.b), tDimension.fill_exp));	
+		oColor = mix(tColor.fill_inner, tColor.fill_outer, pow(clamp((1.0 - diff + tDimension.b) / (1.0 - tDimension.b), 0.0, 1.0), tDimension.fill_exp));	
 	} else {
-		oColor = mix(tColor.border_inner, tColor.border_outer, pow((tDimension.b - diff) / tDimension.b, tDimension.border_exp));
+		oColor = mix(tColor.border_inner, tColor.border_outer, pow(clamp((tDimension.b - diff) / tDimension.b, 0.0, 1.0), tDimension.border_exp));
 	}
 }

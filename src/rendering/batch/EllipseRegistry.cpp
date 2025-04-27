@@ -68,10 +68,8 @@ namespace oly
 			assets::parse_float(node, "width", ellipse.ellipse.dimension().width);
 			assets::parse_float(node, "height", ellipse.ellipse.dimension().height);
 
-			if (assets::parse_float(node, "z-value", ellipse.ellipse.z_value))
-				ellipse.ellipse.send_z_value();
-
-			ellipse.ellipse.send_data();
+			ellipse.ellipse.flag_dimension();
+			ellipse.ellipse.flag_color();
 			return ellipse;
 		}
 
