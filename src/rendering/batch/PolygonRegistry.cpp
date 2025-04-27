@@ -15,77 +15,71 @@ namespace oly
 			auto polygon_list = toml_registry["polygon"].as_array();
 			if (polygon_list)
 			{
-				polygon_list->for_each([this](auto&& node) {
+				polygon_list->for_each([this, context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
-							polygon_constructors[_name.value()] = node;
+						{
+							const std::string& name = _name.value();
+							polygon_constructors[name] = node;
+							if (auto _init = node["init"].value<bool>())
+							{
+								if (_init.value())
+								{
+									std::shared_ptr<Polygonal> poly(new Polygon(create_polygon(context, name)));
+									poly->init();
+									auto_loaded.emplace(std::move(name), std::move(poly));
+								}
+							}
+						}
 					}
 					});
 			}
 			auto composite_list = toml_registry["composite"].as_array();
 			if (composite_list)
 			{
-				composite_list->for_each([this](auto&& node) {
+				composite_list->for_each([this, context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
-							composite_constructors[_name.value()] = node;
+						{
+							const std::string& name = _name.value();
+							composite_constructors[name] = node;
+							if (auto _init = node["init"].value<bool>())
+							{
+								if (_init.value())
+								{
+									std::shared_ptr<Polygonal> poly(new Composite(create_composite(context, name)));
+									poly->init();
+									auto_loaded.emplace(std::move(name), std::move(poly));
+								}
+							}
+						}
 					}
 					});
 			}
 			auto ngon_list = toml_registry["ngon"].as_array();
 			if (ngon_list)
 			{
-				ngon_list->for_each([this](auto&& node) {
+				ngon_list->for_each([this, context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
-							ngon_constructors[_name.value()] = node;
+						{
+							const std::string& name = _name.value();
+							ngon_constructors[name] = node;
+							if (auto _init = node["init"].value<bool>())
+							{
+								if (_init.value())
+								{
+									std::shared_ptr<Polygonal> poly(new NGon(create_ngon(context, name)));
+									poly->init();
+									auto_loaded.emplace(std::move(name), std::move(poly));
+								}
+							}
+						}
 					}
 					});
-			}
-
-			auto toml_auto_draw_list = toml_registry["auto draw list"].as_array();
-			if (toml_auto_draw_list)
-			{
-				for (const auto& polygonal : *toml_auto_draw_list)
-				{
-					auto _name = polygonal.value<std::string>();
-					if (!_name)
-						continue;
-					const std::string& name = _name.value();
-					{
-						auto it = polygon_constructors.find(name);
-						if (it != polygon_constructors.end())
-						{
-							std::shared_ptr<Polygonal> poly(new Polygon(create_polygon(context, name)));
-							poly->init();
-							auto_draw_list.emplace(name, std::move(poly));
-							continue;
-						}
-					}
-					{
-						auto it = composite_constructors.find(name);
-						if (it != composite_constructors.end())
-						{
-							std::shared_ptr<Polygonal> poly(new Composite(create_composite(context, name)));
-							poly->init();
-							auto_draw_list.emplace(name, std::move(poly));
-							continue;
-						}
-					}
-					{
-						auto it = ngon_constructors.find(name);
-						if (it != ngon_constructors.end())
-						{
-							std::shared_ptr<Polygonal> poly(new NGon(create_ngon(context, name)));
-							poly->init();
-							auto_draw_list.emplace(name, std::move(poly));
-							continue;
-						}
-					}
-				}
 			}
 		}
 
@@ -94,7 +88,7 @@ namespace oly
 			polygon_constructors.clear();
 			composite_constructors.clear();
 			ngon_constructors.clear();
-			auto_draw_list.clear();
+			auto_loaded.clear();
 		}
 
 		Polygon PolygonRegistry::create_polygon(const Context* context, const std::string& name) const
@@ -332,10 +326,15 @@ namespace oly
 
 		std::weak_ptr<Polygonal> PolygonRegistry::ref_polygonal(const std::string& name) const
 		{
-			auto it = auto_draw_list.find(name);
-			if (it == auto_draw_list.end())
+			auto it = auto_loaded.find(name);
+			if (it == auto_loaded.end())
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			return it->second;
+		}
+
+		void PolygonRegistry::delete_polygonal(const Context* context, const std::string& name)
+		{
+			auto_loaded.erase(name);
 		}
 	}
 }

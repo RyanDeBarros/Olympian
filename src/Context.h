@@ -5,6 +5,7 @@
 #include "rendering/batch/SpriteRegistry.h"
 #include "rendering/batch/PolygonRegistry.h"
 #include "rendering/batch/EllipseRegistry.h"
+#include "rendering/batch/DrawCommands.h"
 
 namespace oly
 {
@@ -23,6 +24,8 @@ namespace oly
 			std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 			std::unique_ptr<rendering::PolygonBatch> polygon_batch;
 			std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
+			
+			rendering::DrawCommandRegistry draw_command_registry;
 		} internal;
 
 	public:
@@ -44,14 +47,19 @@ namespace oly
 		
 		const rendering::SpriteRegistry& sprite_registry() const { return internal.sprite_registry; }
 		rendering::SpriteRegistry& sprite_registry() { return internal.sprite_registry; }
+		const rendering::PolygonRegistry& polygon_registry() const { return internal.polygon_registry; }
+		rendering::PolygonRegistry& polygon_registry() { return internal.polygon_registry; }
+		const rendering::EllipseRegistry& ellipse_registry() const { return internal.ellipse_registry; }
+		rendering::EllipseRegistry& ellipse_registry() { return internal.ellipse_registry; }
+		const rendering::DrawCommandRegistry& draw_command_registry() const { return internal.draw_command_registry; }
+		rendering::DrawCommandRegistry& draw_command_registry() { return internal.draw_command_registry; }
 
 		const rendering::SpriteBatch& sprite_batch() const { return *internal.sprite_batch; }
 		rendering::SpriteBatch& sprite_batch() { return *internal.sprite_batch; }
 		rendering::Sprite sprite() const { return rendering::Sprite(internal.sprite_batch.get()); }
 		rendering::Sprite sprite(const std::string& name) const { return internal.sprite_registry.create_sprite(this, name); }
-		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name, bool register_if_nonexistant = true) const { return internal.sprite_registry.get_sprite(this, name, register_if_nonexistant); }
+		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const { return internal.sprite_registry.ref_sprite(this, name); }
 		void render_sprites() const { internal.sprite_batch->render(); }
-		void draw_sprite_list(const std::string& draw_list_name, bool register_if_nonexistant = true) const { internal.sprite_registry.draw_sprites(this, draw_list_name, register_if_nonexistant); render_sprites(); }
 
 		const rendering::PolygonBatch& polygon_batch() const { return *internal.polygon_batch; }
 		rendering::PolygonBatch& polygon_batch() { return *internal.polygon_batch; }
@@ -73,5 +81,7 @@ namespace oly
 		rendering::Ellipse ellipse(const std::string& name) const { return internal.ellipse_registry.create_ellipse(this, name); }
 		std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) const { return internal.ellipse_registry.ref_ellipse(name); }
 		void render_ellipses() const { internal.ellipse_batch->render(); }
+
+		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
 	};
 }

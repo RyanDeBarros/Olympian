@@ -1,12 +1,4 @@
 [polygon_registry]
-	"auto draw list" = [
-		"pentagon1",
-		"pentagon2",
-		"bordered triangle",
-		"octagon",
-		"concave shape"
-	]
-
 	[[polygon_registry.polygon]]
 	"name" = "pentagon1"
 	"points" = [

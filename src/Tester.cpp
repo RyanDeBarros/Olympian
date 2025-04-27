@@ -1,7 +1,5 @@
 ﻿#include "Olympian.h"
 
-#include "rendering/Resources.h"
-
 #include <nanosvg/nanosvg.h>
 #include <nanosvg/nanosvgrast.h>
 
@@ -94,37 +92,18 @@ int main()
 		// draw
 
 		oly::stencil::begin();
-		
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
-		
-		oly_context.ref_polygonal("pentagon1").lock()->draw();
-		oly_context.ref_polygonal("pentagon2").lock()->draw();
-		oly_context.ref_polygonal("bordered triangle").lock()->draw();
-		oly_context.render_polygons();
-		
+		oly_context.execute_draw_command("polygon crop");
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
-
-		oly_context.draw_sprite_list("#1");
-		
+		oly_context.execute_draw_command("sprite match");
 		oly::stencil::end();
-
-		oly_context.ref_ellipse("ellipse1").lock()->draw();
-		oly_context.ref_ellipse("ellipse2").lock()->draw();
-		oly_context.render_ellipses();
-		
+		oly_context.execute_draw_command("ellipses");
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
-		oly_context.draw_sprite_list("#2");
-
-		oly_context.ref_polygonal("octagon").lock()->draw();
-		oly_context.render_polygons();
-		
-		oly_context.draw_sprite_list("#3");
-
-		oly_context.ref_polygonal("concave shape").lock()->draw();
-		oly_context.render_polygons();
+		oly_context.render_sprites();
+		oly_context.execute_draw_command("sprites and polygons");
 	}
 }

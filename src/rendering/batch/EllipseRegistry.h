@@ -13,7 +13,7 @@ namespace oly
 		{
 			std::unordered_map<std::string, toml::table> ellipse_constructors;
 
-			std::unordered_map<std::string, std::shared_ptr<Ellipse>> auto_draw_list;
+			std::unordered_map<std::string, std::shared_ptr<Ellipse>> auto_loaded;
 
 		public:
 			void load(const Context* context, const char* ellipse_registry_file);
@@ -22,6 +22,7 @@ namespace oly
 
 			Ellipse create_ellipse(const Context* context, const std::string& name) const;
 			std::weak_ptr<Ellipse> ref_ellipse(const std::string& name) const;
+			void delete_ellipse(const Context* context, const std::string& name);
 		};
 	}
 }

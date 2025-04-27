@@ -17,7 +17,7 @@ namespace oly
 			FenceSync(const FenceSync&) = delete;
 			FenceSync(FenceSync&& other) noexcept : sync(other.sync) { other.sync = nullptr; }
 			~FenceSync() { glDeleteSync(sync); }
-			FenceSync& operator=(FenceSync&& other)
+			FenceSync& operator=(FenceSync&& other) noexcept
 			{
 				if (this != &other)
 				{

@@ -15,35 +15,28 @@ namespace oly
 			auto ellipse_list = toml_registry["ellipse"].as_array();
 			if (ellipse_list)
 			{
-				ellipse_list->for_each([this](auto&& node) {
+				ellipse_list->for_each([this, context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
-							ellipse_constructors[_name.value()] = node;
+						{
+							const std::string& name = _name.value();
+							ellipse_constructors[name] = node;
+							if (auto _init = node["init"].value<bool>())
+							{
+								if (_init.value())
+									auto_loaded.emplace(name, std::shared_ptr<Ellipse>(new Ellipse(create_ellipse(context, name))));
+							}
+						}
 					}
 					});
-			}
-
-			auto toml_auto_draw_list = toml_registry["auto draw list"].as_array();
-			if (toml_auto_draw_list)
-			{
-				for (const auto& toml_ellipse : *toml_auto_draw_list)
-				{
-					auto _name = toml_ellipse.value<std::string>();
-					if (!_name)
-						continue;
-					const std::string& name = _name.value();
-					auto it = ellipse_constructors.find(name);
-					if (it != ellipse_constructors.end())
-						auto_draw_list.emplace(name, std::shared_ptr<Ellipse>(new Ellipse(create_ellipse(context, name))));
-				}
 			}
 		}
 
 		void EllipseRegistry::clear()
 		{
 			ellipse_constructors.clear();
-			auto_draw_list.clear();
+			auto_loaded.clear();
 		}
 
 		Ellipse EllipseRegistry::create_ellipse(const Context* context, const std::string& name) const
@@ -75,10 +68,15 @@ namespace oly
 
 		std::weak_ptr<Ellipse> EllipseRegistry::ref_ellipse(const std::string& name) const
 		{
-			auto it = auto_draw_list.find(name);
-			if (it == auto_draw_list.end())
+			auto it = auto_loaded.find(name);
+			if (it == auto_loaded.end())
 				throw Error(ErrorCode::UNREGISTERED_ELLIPSE);
 			return it->second;
+		}
+
+		void EllipseRegistry::delete_ellipse(const Context* context, const std::string& name)
+		{
+			auto_loaded.erase(name);
 		}
 	}
 }

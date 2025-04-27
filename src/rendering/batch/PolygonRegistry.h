@@ -15,7 +15,7 @@ namespace oly
 			std::unordered_map<std::string, toml::table> composite_constructors;
 			std::unordered_map<std::string, toml::table> ngon_constructors;
 
-			std::unordered_map<std::string, std::shared_ptr<Polygonal>> auto_draw_list;
+			std::unordered_map<std::string, std::shared_ptr<Polygonal>> auto_loaded;
 
 		public:
 			void load(const Context* context, const char* polygon_registry_file);
@@ -26,6 +26,7 @@ namespace oly
 			Composite create_composite(const Context* context, const std::string& name) const;
 			NGon create_ngon(const Context* context, const std::string& name) const;
 			std::weak_ptr<Polygonal> ref_polygonal(const std::string& name) const;
+			void delete_polygonal(const Context* context, const std::string& name);
 		};
 	}
 }

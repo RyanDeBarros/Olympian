@@ -6,7 +6,7 @@ namespace oly
 {
 	namespace rendering
 	{
-		void SpriteRegistry::load(const char* sprite_registry_file)
+		void SpriteRegistry::load(const Context* context, const char* sprite_registry_file)
 		{
 			auto toml = assets::load_toml(sprite_registry_file);
 			auto toml_sprites = toml["sprite_registry"];
@@ -23,48 +23,28 @@ namespace oly
 				if (auto str = v.value<std::string>())
 					texture_map[std::string(k.str())] = str.value();
 			}
-			sprite_list->for_each([this](auto&& node) {
+			sprite_list->for_each([this, context](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					if (auto _name = node["name"].value<std::string>())
-						sprite_constructors[_name.value()] = node;
+					{
+						const std::string& name = _name.value();
+						sprite_constructors[name] = node;
+						if (auto _init = node["init"].value<bool>())
+						{
+							if (_init.value())
+								auto_loaded.emplace(std::move(name), std::shared_ptr<Sprite>(new Sprite(create_sprite(context, name))));
+						}
+					}
 				}
 				});
-
-			auto toml_draw_lists = toml_sprites["draw_list"].as_array();
-			if (toml_draw_lists)
-			{
-				toml_draw_lists->for_each([this](auto&& node) {
-					if constexpr (toml::is_table<decltype(node)>)
-					{
-						auto _name = node["name"].value<std::string>();
-						if (!_name)
-							return;
-
-						DrawList draw_list;
-						auto sprites = node["sprites"].as_array();
-						if (sprites)
-						{
-							for (const auto& toml_sprite_name : *sprites)
-							{
-								auto sprite_name = toml_sprite_name.value<std::string>();
-								if (sprite_name)
-									draw_list.push_back(std::move(sprite_name.value()));
-							}
-						}
-						if (!draw_list.empty())
-							draw_lists.emplace(_name.value(), std::move(draw_list));
-					}
-					});
-			}
 		}
 
 		void SpriteRegistry::clear()
 		{
 			texture_map.clear();
 			sprite_constructors.clear();
-			registered_sprites.clear();
-			draw_lists.clear();
+			auto_loaded.clear();
 		}
 
 		Sprite SpriteRegistry::create_sprite(const Context* context, const std::string& name) const
@@ -180,46 +160,17 @@ namespace oly
 			return sprite;
 		}
 
-		void SpriteRegistry::register_sprite(const Context* context, const std::string& name) const
+		std::weak_ptr<Sprite> SpriteRegistry::ref_sprite(const Context* context, const std::string& name) const
 		{
-			if (!registered_sprites.count(name))
-				registered_sprites.emplace(name, std::shared_ptr<Sprite>(new Sprite(create_sprite(context, name))));
+			auto it = auto_loaded.find(name);
+			if (it == auto_loaded.end())
+				throw Error(ErrorCode::UNREGISTERED_SPRITE);
+			return it->second;
 		}
 
-		std::weak_ptr<Sprite> SpriteRegistry::get_sprite(const Context* context, const std::string& name, bool register_if_nonexistant) const
+		void SpriteRegistry::delete_sprite(const Context* context, const std::string& name)
 		{
-			auto it = registered_sprites.find(name);
-			if (it != registered_sprites.end())
-				return it->second;
-			if (register_if_nonexistant)
-			{
-				register_sprite(context, name);
-				return registered_sprites.find(name)->second;
-			}
-			else
-				return {};
-		}
-
-		void SpriteRegistry::delete_sprite(const Context* context, const std::string& name) const
-		{
-			registered_sprites.erase(name);
-		}
-
-		void SpriteRegistry::draw_sprites(const Context* context, const std::string& draw_list_name, bool register_if_nonexistant) const
-		{
-			auto it = draw_lists.find(draw_list_name);
-			if (it != draw_lists.end())
-			{
-				const auto& draw_list = it->second;
-				for (const auto& sprite : draw_list)
-				{
-					auto ptr = get_sprite(context, sprite, register_if_nonexistant);
-					if (auto sp = ptr.lock())
-						sp->draw();
-				}
-			}
-			else
-				throw Error(ErrorCode::UNREGISTERED_DRAW_LIST);
+			auto_loaded.erase(name);
 		}
 	}
 }

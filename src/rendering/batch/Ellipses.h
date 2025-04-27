@@ -102,6 +102,10 @@ namespace oly
 			Transformer2D transformer;
 
 			Ellipse(EllipseBatch* ellipse_batch) : ellipse(ellipse_batch) {}
+			Ellipse(const Ellipse&) = default;
+			Ellipse(Ellipse&&) noexcept = default;
+			Ellipse& operator=(const Ellipse&) = default;
+			Ellipse& operator=(Ellipse&&) noexcept = default;
 
 			const EllipseBatch& batch() const { return ellipse.batch(); }
 			EllipseBatch& batch() { return ellipse.batch(); }
