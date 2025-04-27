@@ -291,14 +291,17 @@ namespace oly
 			return batch->get_frame_format(vbid.get());
 		}
 
-		void Sprite::post_set() const
-		{
-			transformer.post_set();
-		}
-		
-		void Sprite::pre_get() const
+		const Transform2D& Sprite::get_local() const
 		{
 			transformer.pre_get();
+			return transformer.local;
+		}
+
+		Transform2D& Sprite::set_local()
+		{
+			transformer.pre_get();
+			transformer.post_set();
+			return transformer.local;
 		}
 	}
 }

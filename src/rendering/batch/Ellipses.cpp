@@ -67,6 +67,19 @@ namespace oly
 			return *this;
 		}
 
+		const Transform2D& Ellipse::get_local() const
+		{
+			transformer.pre_get();
+			return transformer.local;
+		}
+
+		Transform2D& Ellipse::set_local()
+		{
+			transformer.pre_get();
+			transformer.post_set();
+			return transformer.local;
+		}
+
 		void Ellipse::draw() const
 		{
 			if (transformer.flush())

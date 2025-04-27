@@ -48,8 +48,7 @@ namespace oly
 
 			Ellipse ellipse = context->ellipse();
 
-			ellipse.transformer.local = assets::load_transform_2d(node, "transform");
-			ellipse.post_set();
+			ellipse.set_local() = assets::load_transform_2d(node, "transform");
 
 			auto& color = ellipse.ellipse.set_color();
 			auto& dimension = ellipse.ellipse.set_dimension();

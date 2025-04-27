@@ -55,8 +55,7 @@ namespace oly
 			const auto& node = it->second;
 
 			Sprite sprite = context->sprite();
-			sprite.local() = assets::load_transform_2d(node, "transform");
-			sprite.post_set();
+			sprite.set_local() = assets::load_transform_2d(node, "transform");
 
 			std::string texture;
 			if (auto toml_texture = node["texture"].value<std::string>())

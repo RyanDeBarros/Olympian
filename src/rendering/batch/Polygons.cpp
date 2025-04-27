@@ -194,14 +194,24 @@ namespace oly
 			return *this;
 		}
 
-		void Polygonal::post_set() const
-		{
-			transformer.post_set();
-		}
-		
-		void Polygonal::pre_get() const
+		const Transform2D& Polygonal::get_local() const
 		{
 			transformer.pre_get();
+			return transformer.local;
+		}
+
+		Transform2D& Polygonal::set_local()
+		{
+			transformer.pre_get();
+			transformer.post_set();
+			return transformer.local;
+		}
+
+		void Polygonal::init()
+		{
+			_batch->resize_range(id, num_vertices());
+			transformer.pre_get();
+			send_polygon();
 		}
 		
 		void Polygonal::draw() const
@@ -212,13 +222,6 @@ namespace oly
 				_batch->set_polygon_transform(id.get(), transformer.global());
 			}
 			draw_triangulation(_batch->get_vertex_range(id.get()).initial);
-		}
-
-		void Polygonal::init()
-		{
-			_batch->resize_range(id, num_vertices());
-			transformer.pre_get();
-			send_polygon();
 		}
 
 		void Polygonal::set_polygon(const math::Polygon2D& polygon) const

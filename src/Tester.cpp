@@ -19,9 +19,8 @@ int main()
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
 		flag_tesselation.push_back(oly_context.sprite("flag instance"));
-		flag_tesselation[i].local().position = { -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols,
+		flag_tesselation[i].set_local().position = { -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols,
 			flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows };
-		flag_tesselation[i].post_set();
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 	
@@ -50,18 +49,14 @@ int main()
 		octagon->base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
 		octagon->send_polygon();
 	
-		concave_shape->transformer.local.rotation += 0.5f * oly::TIME.delta<float>();
-		concave_shape->post_set();
+		concave_shape->set_local().rotation += 0.5f * oly::TIME.delta<float>();
 
 		if (auto sprite1 = oly_context.ref_sprite("sprite1").lock())
-		{
-			sprite1->local().rotation = oly::TIME.now<float>();
-			sprite1->post_set();
-		}
+			sprite1->set_local().rotation = oly::TIME.now<float>();
 		if (auto sprite2 = oly_context.ref_sprite("sprite2").lock())
 		{
 			sprite2->transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
-			sprite2->post_set();
+			sprite2->transformer.post_set();
 		}
 
 		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta<float>());

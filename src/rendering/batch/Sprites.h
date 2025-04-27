@@ -195,10 +195,8 @@ namespace oly
 
 			const SpriteBatch& get_batch() const { return *batch; }
 			SpriteBatch& get_batch() { return *batch; }
-			const Transform2D& local() const { return transformer.local; }
-			Transform2D& local() { return transformer.local; }
-			void post_set() const; // call after modifying local
-			void pre_get() const; // call before reading global
+			const Transform2D& get_local() const;
+			Transform2D& set_local();
 		};
 	}
 }

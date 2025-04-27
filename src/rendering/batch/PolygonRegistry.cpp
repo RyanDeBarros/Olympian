@@ -100,8 +100,7 @@ namespace oly
 
 			Polygon polygon = context->polygon();
 
-			polygon.transformer.local = assets::load_transform_2d(node, "transform");
-			polygon.post_set();
+			polygon.set_local() = assets::load_transform_2d(node, "transform");
 
 			auto toml_points = node["points"].as_array();
 			if (toml_points)
@@ -141,8 +140,7 @@ namespace oly
 
 			Composite composite = context->composite();
 
-			composite.transformer.local = assets::load_transform_2d(node, "transform");
-			composite.post_set();
+			composite.set_local() = assets::load_transform_2d(node, "transform");
 
 			auto toml_method = node["method"].value<std::string>();
 			if (toml_method)
@@ -264,8 +262,7 @@ namespace oly
 
 			NGon ngon = context->ngon();
 
-			ngon.transformer.local = assets::load_transform_2d(node, "transform");
-			ngon.post_set();
+			ngon.set_local() = assets::load_transform_2d(node, "transform");
 
 			auto toml_points = node["points"].as_array();
 			if (toml_points)

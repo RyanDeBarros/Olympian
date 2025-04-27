@@ -109,10 +109,8 @@ namespace oly
 
 			const EllipseBatch& batch() const { return ellipse.batch(); }
 			EllipseBatch& batch() { return ellipse.batch(); }
-			const Transform2D& local() const { return transformer.local; }
-			Transform2D& local() { return transformer.local; }
-			void post_set() const { transformer.post_set(); } // call after modifying local
-			void pre_get() const { transformer.pre_get(); } // call before reading global
+			const Transform2D& get_local() const;
+			Transform2D& set_local();
 
 			void draw() const;
 		};
