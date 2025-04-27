@@ -342,7 +342,7 @@ namespace oly
 			std::array<void*, N> data;
 
 		public:
-			PersistentGPUBufferBlock(GLuint size) { accessible.fill(true); size.fill(size); data.fill(nullptr); init_all(); }
+			PersistentGPUBufferBlock(GLuint size) { accessible.fill(true); this->size.fill(size); data.fill(nullptr); init_all(); }
 			PersistentGPUBufferBlock(const std::array<GLuint, N>& sizes) : size(sizes) { accessible.fill(true); data.fill(nullptr); init_all(); }
 			PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
 
@@ -357,7 +357,7 @@ namespace oly
 			const StructAlias<n>& at(GLuint i) const
 			{
 				static_assert(n < N);
-				if (!accessible)
+				if (!accessible[n])
 					throw Error(ErrorCode::INACCESSIBLE);
 				if (i >= size[n])
 					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
@@ -559,8 +559,6 @@ namespace oly
 
 			const Struct& get(GLuint i) const
 			{
-				while (i >= buf.get_size())
-					grow();
 				return buf[i];
 			}
 
@@ -574,8 +572,6 @@ namespace oly
 
 			const Struct* get(GLuint offset, GLuint length) const
 			{
-				while (offset + length > buf.get_size())
-					grow();
 				return buf.arr(offset, length);
 			}
 
@@ -659,8 +655,6 @@ namespace oly
 			const StructAlias<n>& get(GLuint i) const
 			{
 				static_assert(n < N);
-				while (i >= buf.get_size<n>())
-					grow<n>();
 				return buf.at<n>(i);
 			}
 
@@ -678,8 +672,6 @@ namespace oly
 			const StructAlias<n>* get(GLuint offset, GLuint length) const
 			{
 				static_assert(n < N);
-				while (offset + length > buf.get_size<n>())
-					grow<n>();
 				return buf.arr<n>(offset, length);
 			}
 

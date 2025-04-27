@@ -58,18 +58,18 @@ namespace oly
 			ellipse.transformer.local = assets::load_transform_2d(node, "transform");
 			ellipse.post_set();
 
-			assets::parse_vec4(node, "border inner color", ellipse.ellipse.color().border_inner);
-			assets::parse_vec4(node, "border outer color", ellipse.ellipse.color().border_outer);
-			assets::parse_vec4(node, "fill inner color", ellipse.ellipse.color().fill_inner);
-			assets::parse_vec4(node, "fill outer color", ellipse.ellipse.color().fill_outer);
-			assets::parse_float(node, "border", ellipse.ellipse.dimension().border);
-			assets::parse_float(node, "border exp", ellipse.ellipse.dimension().border_exp);
-			assets::parse_float(node, "fill exp", ellipse.ellipse.dimension().fill_exp);
-			assets::parse_float(node, "width", ellipse.ellipse.dimension().width);
-			assets::parse_float(node, "height", ellipse.ellipse.dimension().height);
+			auto& color = ellipse.ellipse.set_color();
+			auto& dimension = ellipse.ellipse.set_dimension();
+			assets::parse_vec4(node, "border inner color", color.border_inner);
+			assets::parse_vec4(node, "border outer color", color.border_outer);
+			assets::parse_vec4(node, "fill inner color", color.fill_inner);
+			assets::parse_vec4(node, "fill outer color", color.fill_outer);
+			assets::parse_float(node, "border", dimension.border);
+			assets::parse_float(node, "border exp", dimension.border_exp);
+			assets::parse_float(node, "fill exp", dimension.fill_exp);
+			assets::parse_float(node, "width", dimension.width);
+			assets::parse_float(node, "height", dimension.height);
 
-			ellipse.ellipse.flag_dimension();
-			ellipse.ellipse.flag_color();
 			return ellipse;
 		}
 

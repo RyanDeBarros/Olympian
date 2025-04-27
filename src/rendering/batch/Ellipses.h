@@ -38,14 +38,13 @@ namespace oly
 			};
 
 		private:
-			struct SSBO
+			enum
 			{
-				LazyPersistentGPUBuffer<EllipseDimension> dimension;
-				LazyPersistentGPUBuffer<ColorGradient> color;
-				LazyPersistentGPUBuffer<glm::mat3> transform;
-
-				SSBO(Index ellipses) : dimension(ellipses), color(ellipses), transform(ellipses) {}
-			} mutable ssbo;
+				DIMENSION,
+				COLOR,
+				TRANSFORM
+			};
+			LazyPersistentGPUBufferBlock<EllipseDimension, ColorGradient, glm::mat3> ssbo_block;
 
 			GLuint projection_location;
 
@@ -87,13 +86,12 @@ namespace oly
 				EllipseReference& operator=(EllipseReference&&) noexcept = default;
 
 				EllipseBatch& batch() const { return *_batch; }
-				EllipseDimension& dimension() const { return _batch->ssbo.dimension.buf[pos.get()]; }
-				ColorGradient& color() const { return _batch->ssbo.color.buf[pos.get()]; }
-				glm::mat3& transform() const { return _batch->ssbo.transform.buf[pos.get()]; }
-
-				void flag_dimension() const;
-				void flag_color() const;
-				void flag_transform() const;
+				const EllipseDimension& get_dimension() const { return _batch->ssbo_block.get<DIMENSION>(pos.get()); }
+				EllipseDimension& set_dimension() { return _batch->ssbo_block.set<DIMENSION>(pos.get()); }
+				const ColorGradient& get_color() const { return _batch->ssbo_block.get<COLOR>(pos.get()); }
+				ColorGradient& set_color() { return _batch->ssbo_block.set<COLOR>(pos.get()); }
+				const glm::mat3& get_transform() const { return _batch->ssbo_block.get<TRANSFORM>(pos.get()); }
+				glm::mat3& set_transform() { return _batch->ssbo_block.set<TRANSFORM>(pos.get()); }
 			};
 			friend class EllipseReference;
 		};

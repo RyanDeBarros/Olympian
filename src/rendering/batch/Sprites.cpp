@@ -9,8 +9,18 @@ namespace oly
 {
 	namespace rendering
 	{
+		const SpriteBatch::QuadInfo& SpriteBatch::get_quad_info(GLuint vb_pos) const
+		{
+			return quad_ssbo_block.get<INFO>(vb_pos);
+		}
+
+		SpriteBatch::QuadInfo& SpriteBatch::set_quad_info(GLuint vb_pos)
+		{
+			return quad_ssbo_block.set<INFO>(vb_pos);
+		}
+
 		SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(vao, capacity.sprites), ssbo(capacity.textures, capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims), projection_bounds(projection_bounds)
+			: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
 			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
@@ -23,8 +33,7 @@ namespace oly
 
 		void SpriteBatch::render() const
 		{
-			ssbo.quad_info.pre_draw();
-			ssbo.quad_transform.pre_draw();
+			quad_ssbo_block.pre_draw_all();
 
 			glBindVertexArray(vao);
 			glUseProgram(shaders::sprite_batch);
@@ -32,29 +41,28 @@ namespace oly
 			glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
 			glUniform1f(shader_locations.time, TIME.now<float>());
 
-			ssbo.tex_data.bind_base(0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo.quad_info.buf.get_buffer());
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo.quad_transform.buf.get_buffer());
+			tex_data_ssbo.bind_base(0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_ssbo_block.buf.get_buffer<INFO>());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_ssbo_block.buf.get_buffer<TRANSFORM>());
 			ubo.tex_coords.bind_base(0);
 			ubo.modulation.bind_base(1);
 			ubo.anim.bind_base(2);
 			ebo.render_elements(GL_TRIANGLES);
 
-			ssbo.quad_info.post_draw();
-			ssbo.quad_transform.post_draw();
+			quad_ssbo_block.post_draw_all();
 		}
 
 		SpriteBatch::VBID SpriteBatch::gen_sprite_id()
 		{
 			VBID id = vbid_generator.generate();
-			ssbo.quad_info.set(id.get()) = {};
-			ssbo.quad_transform.set(id.get()) = 1.0f;
+			quad_ssbo_block.set<INFO>(id.get()) = {};
+			quad_ssbo_block.set<TRANSFORM>(id.get()) = 1.0f;
 			return id;
 		}
 
 		void SpriteBatch::erase_sprite_id(GLuint id)
 		{
-			const SSBO::QuadInfo& quad_info = ssbo.quad_info.buf[id];
+			const QuadInfo& quad_info = quad_ssbo_block.buf.at<INFO>(id);
 			quad_info_store.textures.decrement_usage(quad_info.tex_slot);
 			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
@@ -62,27 +70,32 @@ namespace oly
 
 		void SpriteBatch::set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
-			quad_info_store.textures.set_object<SSBO::TexData>(ssbo.tex_data, *this, ssbo.quad_info.buf[vb_pos].tex_slot, vb_pos, { texture, dimensions }, { texture->get_handle(), dimensions });
+			if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos,
+				QuadInfoStore::DimensionlessTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
+				quad_ssbo_block.flag<INFO>(vb_pos);
 		}
 
 		void SpriteBatch::set_tex_coords(GLuint vb_pos, const TexUVRect& uvs)
 		{
-			quad_info_store.tex_coords.set_object(ubo.tex_coords, *this, ssbo.quad_info.buf[vb_pos].tex_coord_slot, vb_pos, uvs);
+			if (quad_info_store.tex_coords.set_object(ubo.tex_coords, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
+				quad_ssbo_block.flag<INFO>(vb_pos);
 		}
 
 		void SpriteBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
 		{
-			quad_info_store.modulations.set_object(ubo.modulation, *this, ssbo.quad_info.buf[vb_pos].color_slot, vb_pos, modulation);
+			if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, vb_pos, modulation))
+				quad_ssbo_block.flag<INFO>(vb_pos);
 		}
 
 		void SpriteBatch::set_frame_format(GLuint vb_pos, const AnimFrameFormat& anim)
 		{
-			quad_info_store.anims.set_object(ubo.anim, *this, ssbo.quad_info.buf[vb_pos].frame_slot, vb_pos, anim);
+			if (quad_info_store.anims.set_object(ubo.anim, quad_ssbo_block.buf.at<INFO>(vb_pos).frame_slot, vb_pos, anim))
+				quad_ssbo_block.flag<INFO>(vb_pos);
 		}
 
 		BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 		{
-			GLuint slot = ssbo.quad_info.buf[vb_pos].tex_slot;
+			GLuint slot = get_quad_info(vb_pos).tex_slot;
 			if (slot == 0)
 				return nullptr;
 			QuadInfoStore::DimensionlessTexture tex = quad_info_store.textures.get_object(slot);
@@ -92,19 +105,19 @@ namespace oly
 
 		SpriteBatch::TexUVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
 		{
-			GLuint slot = ssbo.quad_info.buf[vb_pos].tex_coord_slot;
+			GLuint slot = get_quad_info(vb_pos).tex_coord_slot;
 			return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : TexUVRect{};
 		}
 
 		SpriteBatch::Modulation SpriteBatch::get_modulation(GLuint vb_pos) const
 		{
-			GLuint slot = ssbo.quad_info.buf[vb_pos].color_slot;
+			GLuint slot = get_quad_info(vb_pos).color_slot;
 			return slot != 0 ? quad_info_store.modulations.get_object(slot) : Modulation{};
 		}
 
 		AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
 		{
-			GLuint slot = ssbo.quad_info.buf[vb_pos].frame_slot;
+			GLuint slot = get_quad_info(vb_pos).frame_slot;
 			return slot != 0 ? quad_info_store.anims.get_object(slot) : AnimFrameFormat{};
 		}
 
@@ -112,7 +125,7 @@ namespace oly
 		{
 			GLuint slot;
 			if (quad_info_store.textures.get_slot({ texture }, slot))
-				ssbo.tex_data.send<SSBO::TexData>(slot, &SSBO::TexData::handle, texture->get_handle());
+				tex_data_ssbo.send<TexData>(slot, &TexData::handle, texture->get_handle());
 		}
 
 		void SpriteBatch::update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions)
@@ -120,7 +133,7 @@ namespace oly
 			GLuint slot;
 			if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
 			{
-				ssbo.tex_data.send<SSBO::TexData>(slot, { texture->get_handle(), dimensions });
+				tex_data_ssbo.send<TexData>(slot, { texture->get_handle(), dimensions });
 				quad_info_store.textures.get_object(slot).dimensions = dimensions;
 			}
 		}
@@ -207,7 +220,7 @@ namespace oly
 			if (transformer.flush())
 			{
 				transformer.pre_get();
-				batch->ssbo.quad_transform.set(vbid.get()) = transformer.global();
+				batch->quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
 			}
 			quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 		}

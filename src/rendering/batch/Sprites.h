@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../SpecializedBuffers.h"
+#include "../UsageSlotTracker.h"
 #include "util/IDGenerator.h"
 #include "math/Transforms.h"
 
@@ -20,27 +21,30 @@ namespace oly
 			VertexArray vao;
 			PersistentEBO<> ebo;
 
-			struct SSBO
+			struct TexData
 			{
-				struct TexData
-				{
-					GLuint64 handle = 0;
-					glm::vec2 dimensions = {};
-				};
-				struct QuadInfo
-				{
-					GLuint tex_slot = 0;
-					GLuint tex_coord_slot = 0;
-					GLuint color_slot = 0;
-					GLuint frame_slot = 0;
-				};
+				GLuint64 handle = 0;
+				glm::vec2 dimensions = {};
+			};
 
-				LightweightSSBO<Mutability::MUTABLE> tex_data;
-				LazyPersistentGPUBuffer<QuadInfo> quad_info;
-				LazyPersistentGPUBuffer<glm::mat3> quad_transform;
+			struct QuadInfo
+			{
+				GLuint tex_slot = 0;
+				GLuint tex_coord_slot = 0;
+				GLuint color_slot = 0;
+				GLuint frame_slot = 0;
+			};
 
-				SSBO(GLuint textures, GLuint sprites) : tex_data(textures * sizeof(TexData)), quad_info(sprites), quad_transform(sprites) {}
-			} ssbo;
+			LightweightSSBO<Mutability::MUTABLE> tex_data_ssbo;
+			enum
+			{
+				INFO,
+				TRANSFORM
+			};
+			LazyPersistentGPUBufferBlock<QuadInfo, glm::mat3> quad_ssbo_block;
+
+			const QuadInfo& get_quad_info(GLuint vb_pos) const;
+			QuadInfo& set_quad_info(GLuint vb_pos);
 
 			struct
 			{
@@ -117,88 +121,6 @@ namespace oly
 			VBID gen_sprite_id();
 			void erase_sprite_id(GLuint id);
 
-			template<typename StoredObjectType, typename StoredObjectTypeHash>
-			class BOStore
-			{
-				struct UsageHolder
-				{
-					StoredObjectType obj;
-					GLuint usage = 0;
-				};
-
-				std::unordered_map<GLuint, UsageHolder> usages;
-				std::unordered_map<StoredObjectType, GLuint, StoredObjectTypeHash> slot_lookup;
-				SoftIDGenerator<GLuint> pos_generator;
-
-				void _decrement_usage(GLuint i)
-				{
-					auto it = usages.find(i);
-					--it->second.usage;
-					if (it->second.usage == 0)
-						erase_slot(it);
-				}
-
-				void erase_slot(const typename decltype(usages)::iterator& it) { pos_generator.yield(it->first); slot_lookup.erase(it->second.obj); usages.erase(it); }
-
-			public:
-				BOStore() { pos_generator.gen(); /* waste 0th slot */ }
-
-				void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
-
-				void set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
-				{
-					set_object<StoredObjectType>(buffer, sprite_batch, slot, pos, stored_obj, stored_obj);
-				}
-
-				template<typename BufferObjectType>
-				void set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SpriteBatch& sprite_batch, GLuint& slot, GLuint pos,
-					const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
-				{
-					if (stored_obj == StoredObjectType{}) // remove object from sprite
-					{
-						if (slot != 0)
-						{
-							_decrement_usage(slot);
-							slot = 0;
-							sprite_batch.ssbo.quad_info.flag(pos);
-						}
-						return;
-					}
-					if (slot != 0) // sprite has existing object -> decrement its usage
-					{
-						auto it = usages.find(slot);
-						if (stored_obj == it->second.obj) // same object that exists -> do nothing
-							return;
-						--it->second.usage;
-						if (it->second.usage == 0)
-							erase_slot(it);
-					}
-					auto newit = slot_lookup.find(stored_obj);
-					if (newit != slot_lookup.end()) // object already exists -> increment its usage
-					{
-						++usages.find(newit->second)->second.usage;
-						slot = newit->second;
-						sprite_batch.ssbo.quad_info.flag(pos);
-					}
-					else // create new object slot
-					{
-						slot = pos_generator.gen();
-						usages[slot] = { stored_obj, 1 };
-						slot_lookup[stored_obj] = slot;
-						OLY_ASSERT(slot * sizeof(BufferObjectType) <= (GLuint)buffer.get_size());
-						if (slot * sizeof(BufferObjectType) == buffer.get_size())
-							buffer.grow(buffer.get_size() + sizeof(BufferObjectType));
-						buffer.send<BufferObjectType>(slot, buffer_obj);
-						sprite_batch.ssbo.quad_info.flag(pos);
-					}
-				}
-
-				const StoredObjectType& get_object(GLuint slot) const { return usages.find(slot)->second.obj; }
-				StoredObjectType& get_object(GLuint slot) { return usages.find(slot)->second.obj; }
-
-				bool get_slot(const StoredObjectType& obj, GLuint& slot) const { auto it = slot_lookup.find(obj); if (it != slot_lookup.end()) { slot = it->second; return true; } return false; }
-			};
-
 			struct QuadInfoStore
 			{
 				struct DimensionlessTexture
@@ -212,10 +134,10 @@ namespace oly
 				{
 					size_t operator()(const DimensionlessTexture& t) const { return std::hash<BindlessTextureRes>{}(t.texture); }
 				};
-				BOStore<DimensionlessTexture, DimensionlessTextureHash> textures;
-				BOStore<TexUVRect, TexUVRectHash> tex_coords;
-				BOStore<Modulation, ModulationHash> modulations;
-				BOStore<AnimFrameFormat, AnimHash> anims;
+				UsageSlotTracker<DimensionlessTexture, DimensionlessTextureHash> textures;
+				UsageSlotTracker<TexUVRect, TexUVRectHash> tex_coords;
+				UsageSlotTracker<Modulation, ModulationHash> modulations;
+				UsageSlotTracker<AnimFrameFormat, AnimHash> anims;
 			} quad_info_store;
 
 			void set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions);
@@ -232,7 +154,6 @@ namespace oly
 			void update_texture_handle(const BindlessTextureRes& texture);
 			void update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
-
 	}
 
 	class TextureRegistry;

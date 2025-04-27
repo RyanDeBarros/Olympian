@@ -107,22 +107,22 @@ int main()
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
 
-		//oly_context.draw_sprite_list("#1");
+		oly_context.draw_sprite_list("#1");
 		
 		oly::stencil::end();
 
-		//oly_context.ref_ellipse("ellipse1").lock()->draw();
-		//oly_context.ref_ellipse("ellipse2").lock()->draw();
-		//oly_context.render_ellipses();
+		oly_context.ref_ellipse("ellipse1").lock()->draw();
+		oly_context.ref_ellipse("ellipse2").lock()->draw();
+		oly_context.render_ellipses();
 		
-		//for (const auto& sprite : flag_tesselation)
-			//sprite.draw();
-		//oly_context.draw_sprite_list("#2");
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		oly_context.draw_sprite_list("#2");
 
 		oly_context.ref_polygonal("octagon").lock()->draw();
 		oly_context.render_polygons();
 		
-		//oly_context.draw_sprite_list("#3");
+		oly_context.draw_sprite_list("#3");
 
 		oly_context.ref_polygonal("concave shape").lock()->draw();
 		oly_context.render_polygons();
