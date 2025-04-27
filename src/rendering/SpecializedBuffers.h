@@ -160,35 +160,6 @@ namespace oly
 			}
 		};
 
-		template<Mutability M, std::unsigned_integral IndexType = GLuint>
-		using QuadLayoutEBO = CPUSideEBO<IndexType, M, 6>;
-
-		template<Mutability M, std::unsigned_integral IndexType>
-		inline void pre_init(QuadLayoutEBO<M, IndexType>& ebo)
-		{
-			for (IndexType i = 0; i < ebo.vector().size(); ++i)
-				rendering::quad_indices(ebo.vector()[i].data, i);
-		}
-
-		template<typename StructType, std::unsigned_integral IndexType, Mutability M>
-		struct IndexedSSBO : public LazyBuffer<StructType, IndexType, M>
-		{
-			IndexedSSBO(IndexType size, const StructType& default_value = StructType(), GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT) requires (M == Mutability::IMMUTABLE)
-				: LazyBuffer<StructType, IndexType, M>(size, default_value)
-			{
-				glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->buf);
-				LazyBuffer<StructType, IndexType, M>::init(flags);
-			}
-			IndexedSSBO(IndexType size, const StructType& default_value = StructType(), GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE)
-				: LazyBuffer<StructType, IndexType, M>(size, default_value)
-			{
-				glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->buf);
-				LazyBuffer<StructType, IndexType, M>::init(usage);
-			}
-
-			void bind_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, this->buf); }
-		};
-
 		template<Mutability M>
 		class LightweightBuffer
 		{
@@ -238,7 +209,7 @@ namespace oly
 		class PersistentGPUBuffer
 		{
 			GLBuffer buf;
-			bool accessible = true;
+			mutable bool accessible = true;
 			GLuint size = 0;
 			void* data = nullptr;
 
@@ -333,10 +304,17 @@ namespace oly
 			{
 				FenceSync sync;
 				if (sync.signaled())
+				{
+					accessible = true;
 					return;
+				}
 				for (GLuint i = 0; i < options.max_timeout_tries; ++i)
 					if (sync.wait(options.timeout_ns))
+					{
+						accessible = true;
 						return;
+					}
+				accessible = false;
 				throw Error(ErrorCode::OUT_OF_TIME);
 			}
 
@@ -348,7 +326,205 @@ namespace oly
 			}
 		};
 
-		template<typename Struct, PersistentWaitOptions options = PersistentWaitOptions{} >
+		template<typename... Structs>
+		class PersistentGPUBufferBlock
+		{
+		public:
+			static constexpr size_t N = std::tuple_size_v<std::tuple<Structs...>>;
+			template<size_t n>
+			using StructAlias = std::tuple_element_t<n, std::tuple<Structs...>>;
+			
+		private:
+			static constexpr PersistentWaitOptions options = {};
+			GLBufferBlock<N> buf;
+			mutable std::array<bool, N> accessible;
+			std::array<GLuint, N> size;
+			std::array<void*, N> data;
+
+		public:
+			PersistentGPUBufferBlock(GLuint size) { accessible.fill(true); size.fill(size); data.fill(nullptr); init_all(); }
+			PersistentGPUBufferBlock(const std::array<GLuint, N>& sizes) : size(sizes) { accessible.fill(true); data.fill(nullptr); init_all(); }
+			PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
+
+			template<size_t n>
+			GLuint get_size() const { return size[n]; }
+			template<size_t n>
+			GLuint get_buffer() const { return buf[n]; }
+			template<size_t n>
+			bool is_accessible() const { return accessible[n]; }
+
+			template<size_t n>
+			const StructAlias<n>& at(GLuint i) const
+			{
+				static_assert(n < N);
+				if (!accessible)
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (i >= size[n])
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<const StructAlias<n>*>(data[n])[i];
+			}
+
+			template<size_t n>
+			StructAlias<n>& at(GLuint i)
+			{
+				static_assert(n < N);
+				if (!accessible[n])
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (i >= size[n])
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<StructAlias<n>*>(data[n])[i];
+			}
+
+			template<size_t n>
+			const StructAlias<n>* arr(GLuint offset, GLuint length) const
+			{
+				static_assert(n < N);
+				if (!accessible[n])
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (offset + length > size[n])
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<const StructAlias<n>*>(data[n]) + offset;
+			}
+
+			template<size_t n>
+			StructAlias<n>* arr(GLuint offset, GLuint length)
+			{
+				static_assert(n < N);
+				if (!accessible[n])
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (offset + length > size[n])
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				return reinterpret_cast<StructAlias<n>*>(data[n]) + offset;
+			}
+
+			void grow_all()
+			{
+				grow_impl(std::make_index_sequence<N>{});
+			}
+
+		private:
+			template<size_t... Indices>
+			void grow_impl(std::index_sequence<Indices...>) const
+			{
+				(grow<Indices>(), ...);
+			}
+
+		public:
+			template<size_t n>
+			void grow()
+			{
+				static_assert(n < N);
+				static const float REALLOC_MULTIPLIER = 1.8f;
+				grow<n>((GLuint)(REALLOC_MULTIPLIER * size[n]));
+			}
+
+			template<size_t n>
+			void grow(GLuint new_size)
+			{
+				static_assert(n < N);
+				if (!accessible[n])
+					throw Error(ErrorCode::INACCESSIBLE);
+				if (new_size <= size[n])
+					return;
+
+				GLuint old_size = size[n];
+				size[n] = new_size;
+
+				GLBuffer old_buf;
+				buf.swap<n>(old_buf);
+				init<n>();
+
+				glCopyNamedBufferSubData(old_buf, buf[n], 0, 0, old_size * sizeof(StructAlias<n>));
+				// no need to unmap old data, since it uses persistent bit
+			}
+
+			template<size_t n>
+			void pre_draw(GLuint offset, GLuint length) const
+			{
+				static_assert(n < N);
+				if (offset + length > size[n])
+				{
+					if (offset >= size[n])
+						throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+					else
+						length = size[n] - 1 - offset;
+				}
+				glFlushMappedNamedBufferRange(buf[n], (GLintptr)(offset * sizeof(StructAlias<n>)), (GLsizeiptr)(length * sizeof(StructAlias<n>)));
+			}
+
+			template<size_t n>
+			void pre_draw() const
+			{
+				static_assert(n < N);
+				glFlushMappedNamedBufferRange(buf[n], (GLintptr)0, (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)));
+			}
+			
+			void pre_draw_all() const
+			{
+				pre_draw_impl(std::make_index_sequence<N>{});
+			}
+
+		private:
+			template<size_t... Indices>
+			void pre_draw_impl(std::index_sequence<Indices...>) const
+			{
+				(pre_draw<Indices>(), ...);
+			}
+
+		public:
+			template<size_t n>
+			void post_draw() const
+			{
+				static_assert(n < N);
+				FenceSync sync;
+				if (sync.signaled())
+				{
+					accessible[n] = true;
+					return;
+				}
+				for (GLuint i = 0; i < options.max_timeout_tries; ++i)
+					if (sync.wait(options.timeout_ns))
+					{
+						accessible[n] = true;
+						return;
+					}
+				accessible[n] = false;
+				throw Error(ErrorCode::OUT_OF_TIME);
+			}
+
+			void post_draw_all() const
+			{
+				post_draw_impl(std::make_index_sequence<N>{});
+			}
+
+		private:
+			template<size_t... Indices>
+			void post_draw_impl(std::index_sequence<Indices...>) const
+			{
+				(post_draw<Indices>(), ...);
+			}
+
+			void init_all()
+			{
+				init_impl(std::make_index_sequence<N>{});
+			}
+
+			template<size_t... Indices>
+			void init_impl(std::index_sequence<Indices...>)
+			{
+				(init<Indices>(), ...);
+			}
+
+			template<size_t n>
+			void init()
+			{
+				static_assert(n < N);
+				glNamedBufferStorage(buf[n], (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+				data[n] = glMapNamedBufferRange(buf[n], 0, (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+			}
+		};
+
+		template<typename Struct, PersistentWaitOptions options = PersistentWaitOptions{}>
 		struct LazyPersistentGPUBuffer
 		{
 			PersistentGPUBuffer<Struct, options> buf;
@@ -411,7 +587,112 @@ namespace oly
 					flag(offset + i);
 				return buf.arr(offset, length);
 			}
+		};
 
+		template<typename... Structs>
+		struct LazyPersistentGPUBufferBlock
+		{
+			PersistentGPUBufferBlock<Structs...> buf;
+			static constexpr size_t N = PersistentGPUBufferBlock<Structs...>::N;
+			template<size_t n>
+			using StructAlias = typename PersistentGPUBufferBlock<Structs...>::template StructAlias<n>;
+
+		private:
+			mutable std::array<RangeMerger<GLuint>, N> dirty;
+
+		public:
+			LazyPersistentGPUBufferBlock(GLuint size) : buf(size) {}
+			LazyPersistentGPUBufferBlock(const std::array<GLuint, N>& sizes) : buf(sizes) {}
+
+			template<size_t n>
+			void flag(GLuint pos) const
+			{
+				static_assert(n < N);
+				dirty[n].insert({pos, 1});
+			}
+			template<size_t n>
+			void pre_draw() const
+			{
+				static_assert(n < N);
+				for (Range<GLuint> range : dirty[n])
+				{
+					try
+					{
+						buf.pre_draw<n>(range.initial, range.length);
+					}
+					catch (Error e)
+					{
+						if (e.code == ErrorCode::INDEX_OUT_OF_RANGE)
+							; // silently ignore
+						else
+							throw e;
+					}
+				}
+				dirty[n].clear();
+			}
+			void pre_draw_all() const { pre_draw_impl(std::make_index_sequence<N>{}); }
+
+		private:
+			template<size_t... Indices>
+			void pre_draw_impl(std::index_sequence<Indices...>) const { (pre_draw<Indices>(), ...); }
+
+		public:
+			template<size_t n>
+			void post_draw() const { static_assert(n < N); buf.post_draw<n>(); }
+			void post_draw_all() const { post_draw_impl(std::make_index_sequence<N>{}); }
+
+		private:
+			template<size_t... Indices>
+			void post_draw_impl(std::index_sequence<Indices...>) const { (post_draw<Indices>(), ...); }
+
+		public:
+			template<size_t n>
+			void grow() { static_assert(n < N); buf.grow<n>(); buf.pre_draw<n>(); dirty[n].clear(); }
+			void grow_all() const { grow_impl(std::make_index_sequence<N>{}); }
+
+		private:
+			template<size_t... Indices>
+			void grow_impl(std::index_sequence<Indices...>) const { (grow<Indices>(), ...); }
+
+		public:
+			template<size_t n>
+			const StructAlias<n>& get(GLuint i) const
+			{
+				static_assert(n < N);
+				while (i >= buf.get_size<n>())
+					grow<n>();
+				return buf.at<n>(i);
+			}
+
+			template<size_t n>
+			StructAlias<n>& set(GLuint i)
+			{
+				static_assert(n < N);
+				while (i >= buf.get_size<n>())
+					grow<n>();
+				flag<n>(i);
+				return buf.at<n>(i);
+			}
+
+			template<size_t n>
+			const StructAlias<n>* get(GLuint offset, GLuint length) const
+			{
+				static_assert(n < N);
+				while (offset + length > buf.get_size<n>())
+					grow<n>();
+				return buf.arr<n>(offset, length);
+			}
+
+			template<size_t n>
+			StructAlias<n>* set(GLuint offset, GLuint length)
+			{
+				static_assert(n < N);
+				while (offset + length > buf.get_size<n>())
+					grow<n>();
+				for (GLuint i = 0; i < length; ++i)
+					flag<n>(offset + i);
+				return buf.arr<n>(offset, length);
+			}
 		};
 
 		template<size_t PrimitiveIndices = 6>

@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec2 iPosition;
 layout(location = 1) in vec4 iColor;
-layout(location = 2) in uint iTransformIndex;
+layout(location = 2) in uint iIndex;
 
 uniform mat3 uProjection;
 
@@ -20,6 +20,6 @@ layout(std430, binding = 0) readonly buffer PolygonTransforms {
 out vec4 tColor;
 
 void main() {
-	gl_Position.xy = (uProjection * matrix(uTransforms[iTransformIndex]) * vec3(iPosition, 1.0)).xy;
+	gl_Position.xy = (uProjection * matrix(uTransforms[iIndex]) * vec3(iPosition, 1.0)).xy;
 	tColor = iColor;
 }

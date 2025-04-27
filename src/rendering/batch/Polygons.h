@@ -18,22 +18,21 @@ namespace oly
 		class PolygonBatch
 		{
 			friend class Polygonal;
-		
-		public:
 			typedef GLuint Index;
-		
-		private:
 			GLuint shader;
 			VertexArray vao;
 			PersistentEBO<1> ebo;
 
 			GLuint projection_location;
 
-			// TODO PersistentBufferBlock
-			LazyPersistentGPUBuffer<glm::vec2> position_vbo;
-			LazyPersistentGPUBuffer<glm::vec4> color_vbo;
-			LazyPersistentGPUBuffer<GLuint> transform_index_vbo;
-			LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
+			enum
+			{
+				POSITION, // vbo
+				COLOR,    // vbo
+				INDEX,    // vbo
+				TRANSFORM // ssbo
+			};
+			LazyPersistentGPUBufferBlock<glm::vec2, glm::vec4, GLuint, glm::mat3> bo_block;
 
 		public:
 			typedef StrictIDGenerator<Index>::ID PolygonID;
@@ -43,19 +42,18 @@ namespace oly
 				Index vertices = 0;
 				Index indices = 0;
 				Index primitives = 0;
-				const Index degree = 0;
-				const Index polygon_index_count = 0;
 
-				// TODO remove degree ??
-				// max(F) = V - 2 + 2H
-				// max(H) = [V / 3] - 1
-				// --> max(F) = V + 2 * [V / 3] - 4
-				// --> index count = 3 * max(F)
 				Capacity(Index primitives, Index degree = 6)
-					: primitives(primitives), degree(degree), polygon_index_count(3 * degree + 6 * (degree / 3) - 12)
+					: primitives(primitives)
 				{
 					OLY_ASSERT(degree >= 3);
 					OLY_ASSERT(degree * primitives <= UINT_MAX);
+
+					// max(F) = V - 2 + 2H
+					// max(H) = [V / 3] - 1
+					// --> max(F) = V + 2 * [V / 3] - 4
+					// --> index count = 3 * max(F)
+					Index polygon_index_count(3 * degree + 6 * (degree / 3) - 12);
 
 					vertices = primitives * degree;
 					indices = primitives * polygon_index_count;
@@ -102,7 +100,6 @@ namespace oly
 
 			const PolygonBatch& batch() const { return *_batch; }
 			PolygonBatch& batch() { return *_batch; }
-			PolygonBatch::Index get_id() const { return id.get(); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local

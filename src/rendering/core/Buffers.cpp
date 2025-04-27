@@ -1,5 +1,10 @@
 #include "Buffers.h"
 
+void oly::rendering::_::swap_gl_buffer(GLBuffer& buffer, GLuint& id)
+{
+	std::swap(buffer.id, id);
+}
+
 oly::rendering::GLBuffer::GLBuffer()
 {
 	glCreateBuffers(1, &id);

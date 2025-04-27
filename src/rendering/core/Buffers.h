@@ -10,8 +10,15 @@ namespace oly
 {
 	namespace rendering
 	{
+		class GLBuffer;
+		namespace _
+		{
+			extern void swap_gl_buffer(GLBuffer& buffer, GLuint& id);
+		}
+
 		class GLBuffer
 		{
+			friend void _::swap_gl_buffer(GLBuffer&, GLuint&);
 			GLuint id;
 
 		public:
@@ -44,6 +51,12 @@ namespace oly
 
 			constexpr GLuint operator[](GLsizei i) const;
 			static constexpr size_t count = N;
+			template<size_t i>
+			void swap(GLBuffer& single)
+			{
+				static_assert(i < N);
+				_::swap_gl_buffer(single, ids[i]);
+			}
 		};
 
 		template<size_t N>

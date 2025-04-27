@@ -12,6 +12,7 @@ namespace oly
 	class StrictFreeSpaceTracker
 	{
 		std::set<Range<T>, RangeComparator<T>> free_space;
+		Range<T> global;
 
 	public:
 		StrictFreeSpaceTracker(Range<T> free_space_range);
@@ -19,10 +20,13 @@ namespace oly
 		void reserve(Range<T> range);
 		void release(Range<T> range);
 		bool next_free(T length, Range<T>& range);
+		void extend_rightward(T end);
+		void extend_leftward(T initial);
 	};
 
 	template<std::integral T>
 	inline StrictFreeSpaceTracker<T>::StrictFreeSpaceTracker(Range<T> free_space_range)
+		: global(free_space_range)
 	{
 		free_space.insert(free_space_range);
 	}
@@ -159,5 +163,53 @@ namespace oly
 			}
 		}
 		return false;
+	}
+
+	template<std::integral T>
+	inline void StrictFreeSpaceTracker<T>::extend_rightward(T end)
+	{
+		if (end <= global.end())
+			return;
+
+		if (free_space.empty())
+			free_space.insert({ global.end(), end - global.end() });
+		else
+		{
+			auto last = free_space.end();
+			--last;
+			if (last->end() < global.end())
+				free_space.insert({ global.end(), end - global.end() });
+			else
+			{
+				Range<T> insert{ last->initial, end - last->initial };
+				free_space.erase(last);
+				free_space.insert(insert);
+			}
+		}
+		global.length = end - global.initial;
+	}
+
+	template<std::integral T>
+	inline void StrictFreeSpaceTracker<T>::extend_leftward(T initial)
+	{
+		if (initial >= global.initial)
+			return;
+		
+		if (free_space.empty())
+			free_space.insert({ initial, global.initial - initial });
+		else
+		{
+			auto first = free_space.begin();
+			if (first->initial > global.initial)
+				free_space.insert({ initial, global.initial - initial });
+			else
+			{
+				Range<T> insert{ initial, first->end() - initial };
+				free_space.erase(first);
+				free_space.insert(insert);
+			}
+		}
+		global.length += global.initial - initial;
+		global.initial = initial;
 	}
 }
