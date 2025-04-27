@@ -28,11 +28,11 @@ namespace oly
 			PersistentEBO<1> ebo;
 
 			GLuint projection_location;
-			GLuint degree_location;
 
 			// TODO PersistentBufferBlock
 			LazyPersistentGPUBuffer<glm::vec2> position_vbo;
 			LazyPersistentGPUBuffer<glm::vec4> color_vbo;
+			LazyPersistentGPUBuffer<GLuint> transform_index_vbo;
 			LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
 		public:
@@ -62,11 +62,6 @@ namespace oly
 				}
 			};
 
-		private:
-			const Index degree;
-			const Index polygon_index_count;
-
-		public:
 			PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
 
 			void render() const;
@@ -74,42 +69,19 @@ namespace oly
 			glm::vec4 projection_bounds;
 
 		private:
-			void set_primitive_points(Index pos, const glm::vec2* points, Index count);
-			void set_primitive_colors(Index pos, const glm::vec4* colors, Index count);
-			void set_primitive_transform(Index pos, const glm::mat3& transform);
-			void set_polygon_primitive(Index vertex_pos, const math::Polygon2D& polygon, const glm::mat3& transform);
-
-		public:
+			void set_primitive_points(Range<Index> vbo_range, const glm::vec2* points, Index count);
+			void set_primitive_colors(Range<Index> vbo_range, const glm::vec4* colors, Index count);
+			void set_polygon(Index id, const math::Polygon2DComposite& composite);
 			void set_polygon_transform(Index id, const glm::mat3& transform);
 
-		private:
-			PolygonID generate_id(const math::Polygon2DComposite& composite, Index min_range = 0, Index max_range = 0);
-			PolygonID generate_id(math::Polygon2DComposite& composite, Index min_range = 0, Index max_range = 0);
+			PolygonID generate_id(Index vertices);
 			void terminate_id(Index id);
-			void resize_range(PolygonID& id, const math::Polygon2DComposite& composite, Index min_range = 0, Index max_range = 0);
-			void resize_range(PolygonID& id, math::Polygon2DComposite& composite, Index min_range = 0, Index max_range = 0);
-
-		public:
-			bool is_valid_id(Index id) const;
-		
-		private:
+			void resize_range(PolygonID& id, Index vertices);
 			Range<Index> get_vertex_range(Index id) const;
-		
-		public:
-			void set_polygon(Index id, const math::TriangulatedPolygon2D& polygon, const glm::mat3& transform);
-			void set_polygon(Index id, math::TriangulatedPolygon2D&& polygon, const glm::mat3& transform);
-			void set_polygon(Index id, const math::Polygon2DComposite& composite, const glm::mat3& transform);
-			void set_polygon(Index id, math::Polygon2DComposite& composite, const glm::mat3& transform);
-			void set_ngon(Index id, const math::NGonBase& ngon, const glm::mat3& transform);
-			void set_bordered_ngon(Index id, const math::NGonBase& ngon, const glm::mat3& transform);
+			bool is_valid_id(Index id) const;
 
-			math::Polygon2DComposite create_ngon(const math::NGonBase& ngon) const;
-			math::Polygon2DComposite create_bordered_ngon(const math::NGonBase& ngon) const;
-
-		private:
 			StrictFreeSpaceTracker<Index> vertex_free_space;
 			std::unordered_map<Index, Range<Index>> polygon_indexer;
-			std::map<Index, Index> id_order;
 			StrictIDGenerator<Index> id_generator;
 		};
 
@@ -131,14 +103,12 @@ namespace oly
 			const PolygonBatch& batch() const { return *_batch; }
 			PolygonBatch& batch() { return *_batch; }
 			PolygonBatch::Index get_id() const { return id.get(); }
-			bool initialized() const { return id.get() != PolygonBatch::Index(-1); }
 			const Transform2D& local() const { return transformer.local; }
 			Transform2D& local() { return transformer.local; }
 			void post_set() const; // call after modifying local
 			void pre_get() const; // call before reading global
 
-			void init(PolygonBatch::Index min_range = 0, PolygonBatch::Index max_range = 0);
-			void resize(PolygonBatch::Index min_range = 0, PolygonBatch::Index max_range = 0);
+			void init();
 			void send_polygon() const;
 			void draw() const;
 

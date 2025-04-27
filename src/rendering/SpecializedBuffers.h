@@ -472,8 +472,8 @@ namespace oly
 		{
 			GLuint index;
 			GLint size;
-			GLint cols = 1;
 			GLenum type = GL_FLOAT;
+			GLint cols = 1;
 			GLboolean normalized = GL_FALSE;
 			GLsizei stride = 0;
 			GLsizei offset = 0;
@@ -499,8 +499,8 @@ namespace oly
 		{
 			GLuint index;
 			GLint size;
-			GLint cols = 1;
 			GLenum type = GL_UNSIGNED_INT;
+			GLint cols = 1;
 			GLsizei stride = 0;
 			GLsizei offset = 0;
 			GLsizei col_stride = 0;

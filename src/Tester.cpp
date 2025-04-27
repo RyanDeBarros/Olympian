@@ -115,8 +115,8 @@ int main()
 		//oly_context.ref_ellipse("ellipse2").lock()->draw();
 		//oly_context.render_ellipses();
 		
-		for (const auto& sprite : flag_tesselation)
-			sprite.draw();
+		//for (const auto& sprite : flag_tesselation)
+			//sprite.draw();
 		//oly_context.draw_sprite_list("#2");
 
 		oly_context.ref_polygonal("octagon").lock()->draw();

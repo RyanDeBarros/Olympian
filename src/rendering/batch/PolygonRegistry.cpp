@@ -60,8 +60,7 @@ namespace oly
 						if (it != polygon_constructors.end())
 						{
 							std::shared_ptr<Polygonal> poly(new Polygon(create_polygon(context, name)));
-							if (!poly->initialized())
-								poly->init();
+							poly->init();
 							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
@@ -71,8 +70,7 @@ namespace oly
 						if (it != composite_constructors.end())
 						{
 							std::shared_ptr<Polygonal> poly(new Composite(create_composite(context, name)));
-							if (!poly->initialized())
-								poly->init();
+							poly->init();
 							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
@@ -82,8 +80,7 @@ namespace oly
 						if (it != ngon_constructors.end())
 						{
 							std::shared_ptr<Polygonal> poly(new NGon(create_ngon(context, name)));
-							if (!poly->initialized())
-								poly->init();
+							poly->init();
 							auto_draw_list.emplace(name, std::move(poly));
 							continue;
 						}
@@ -136,7 +133,7 @@ namespace oly
 
 			bool init = node["init"].value<bool>().value_or(false);
 			if (init)
-				polygon.init((GLushort)node["min range"].value<int64_t>().value_or(0), (GLushort)node["max range"].value<int64_t>().value_or(0));
+				polygon.init();
 
 			return polygon;
 		}
@@ -259,7 +256,7 @@ namespace oly
 
 			bool init = node["init"].value<bool>().value_or(false);
 			if (init)
-				composite.init((GLushort)node["min range"].value<int64_t>().value_or(0), (GLushort)node["max range"].value<int64_t>().value_or(0));
+				composite.init();
 
 			return composite;
 		}
@@ -328,7 +325,7 @@ namespace oly
 
 			bool init = node["init"].value<bool>().value_or(false);
 			if (init)
-				ngon.init((GLushort)node["min range"].value<int64_t>().value_or(0), (GLushort)node["max range"].value<int64_t>().value_or(0));
+				ngon.init();
 
 			return ngon;
 		}

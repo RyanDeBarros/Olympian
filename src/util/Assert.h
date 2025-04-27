@@ -25,4 +25,4 @@ namespace oly
 	}
 }
 
-#define OLY_ASSERT(x) oly::assertcond((x), #x, __FILE__, __LINE__);
+#define OLY_ASSERT(x) { oly::assertcond((x), #x, __FILE__, __LINE__); }

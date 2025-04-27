@@ -196,7 +196,9 @@ namespace oly
 			float border_width = 0.0f;
 			BorderPivot border_pivot = BorderPivot::MIDDLE;
 
+			Polygon2DComposite composite() const;
 			Polygon2DComposite composite(glm::uint max_degree) const;
+			Polygon2DComposite bordered_composite() const;
 			Polygon2DComposite bordered_composite(glm::uint max_degree) const;
 		};
 

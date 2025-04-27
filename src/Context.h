@@ -65,7 +65,7 @@ namespace oly
 		std::weak_ptr<rendering::Polygon> ref_polygon(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Polygon>(ref_polygonal(name).lock()); }
 		std::weak_ptr<rendering::Composite> ref_composite(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Composite>(ref_polygonal(name).lock()); }
 		std::weak_ptr<rendering::NGon> ref_ngon(const std::string& name) const { return std::dynamic_pointer_cast<rendering::NGon>(ref_polygonal(name).lock()); }
-		void render_polygons(size_t draw_spec = 0) const { internal.polygon_batch->render(); }
+		void render_polygons() const { internal.polygon_batch->render(); }
 
 		const rendering::EllipseBatch& ellipse_batch() const { return *internal.ellipse_batch; }
 		rendering::EllipseBatch& ellipse_batch() { return *internal.ellipse_batch; }

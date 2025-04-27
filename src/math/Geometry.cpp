@@ -599,15 +599,24 @@ oly::math::Polygon2DComposite oly::math::create_bordered_ngon(std::vector<glm::v
 	return ngon;
 }
 
+oly::math::Polygon2DComposite oly::math::NGonBase::composite() const
+{
+	return { create_ngon(fill_colors, points) };
+}
+
 oly::math::Polygon2DComposite oly::math::NGonBase::composite(glm::uint max_degree) const
 {
-	auto tripoly = create_ngon(fill_colors, points);
-	return split_polygon_composite(tripoly, max_degree);
+	return split_polygon_composite(composite()[0], max_degree);
+}
+
+oly::math::Polygon2DComposite oly::math::NGonBase::bordered_composite() const
+{
+	return { create_bordered_ngon(fill_colors, border_colors, border_width, border_pivot, points) };
 }
 
 oly::math::Polygon2DComposite oly::math::NGonBase::bordered_composite(glm::uint max_degree) const
 {
-	auto comp = create_bordered_ngon(fill_colors, border_colors, border_width, border_pivot, points);
+	auto comp = bordered_composite();
 	split_polygon_composite(comp, max_degree);
 	return comp;
 }
