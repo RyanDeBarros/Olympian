@@ -35,6 +35,7 @@ int main()
 
 	auto octagon = oly_context.ref_ngon("octagon").lock();
 	auto flag_texture = oly_context.texture_registry().get_texture("flag");
+	auto atlased_knight = oly_context.ref_atlas_extension("atlased knight").lock();
 
 	// LATER begin play on initial actors here
 
@@ -48,7 +49,7 @@ int main()
 		octagon->base.border_width = fmod(oly::TIME.now<float>() * 0.05f, 0.1f);
 		octagon->base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
 		octagon->send_polygon();
-	
+
 		concave_shape->set_local().rotation += 0.5f * oly::TIME.delta<float>();
 
 		if (auto sprite1 = oly_context.ref_sprite("sprite1").lock())
@@ -83,6 +84,8 @@ int main()
 				oly_context.sync_texture_handle(flag_texture);
 			}
 		}
+
+		atlased_knight->on_tick();
 
 		// draw
 

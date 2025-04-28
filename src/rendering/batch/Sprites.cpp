@@ -26,7 +26,7 @@ namespace oly
 			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
 			shader_locations.time = shaders::location(shaders::sprite_batch, "uTime");
 
-			ubo.tex_coords.send<TexUVRect>(0, {});
+			ubo.tex_coords.send<UVRect>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
 			ubo.anim.send<AnimFrameFormat>(0, {});
 		}
@@ -70,12 +70,18 @@ namespace oly
 
 		void SpriteBatch::set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions)
 		{
-			if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos,
+			GLuint& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
+			if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos,
 				QuadInfoStore::DimensionlessTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
 				quad_ssbo_block.flag<INFO>(vb_pos);
+			else if (tex_data_ssbo.receive<TexData>(tex_slot).dimensions != dimensions)
+			{
+				tex_data_ssbo.send(tex_slot, &TexData::dimensions, dimensions);
+				quad_ssbo_block.flag<INFO>(vb_pos);
+			}
 		}
 
-		void SpriteBatch::set_tex_coords(GLuint vb_pos, const TexUVRect& uvs)
+		void SpriteBatch::set_tex_coords(GLuint vb_pos, const UVRect& uvs)
 		{
 			if (quad_info_store.tex_coords.set_object(ubo.tex_coords, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
 				quad_ssbo_block.flag<INFO>(vb_pos);
@@ -103,10 +109,10 @@ namespace oly
 			return tex.texture;
 		}
 
-		SpriteBatch::TexUVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
+		UVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
 		{
 			GLuint slot = get_quad_info(vb_pos).tex_coord_slot;
-			return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : TexUVRect{};
+			return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : UVRect{};
 		}
 
 		SpriteBatch::Modulation SpriteBatch::get_modulation(GLuint vb_pos) const
@@ -134,6 +140,16 @@ namespace oly
 			if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
 			{
 				tex_data_ssbo.send<TexData>(slot, { texture->get_handle(), dimensions });
+				quad_info_store.textures.get_object(slot).dimensions = dimensions;
+			}
+		}
+
+		void SpriteBatch::update_texture_dimensions(const BindlessTextureRes& texture, glm::vec2 dimensions)
+		{
+			GLuint slot;
+			if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
+			{
+				tex_data_ssbo.send(slot, &TexData::dimensions, dimensions);
 				quad_info_store.textures.get_object(slot).dimensions = dimensions;
 			}
 		}
@@ -215,6 +231,11 @@ namespace oly
 				batch->erase_sprite_id(vbid.get());
 		}
 
+		std::shared_ptr<Sprite> Sprite::share_moved()
+		{
+			return std::shared_ptr<Sprite>(new Sprite(std::move(*this)));
+		}
+
 		void Sprite::draw() const
 		{
 			if (transformer.flush())
@@ -225,24 +246,24 @@ namespace oly
 			quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 		}
 		
-		void Sprite::set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const
+		void Sprite::set_texture(const TextureRegistry& texture_registry, const std::string& texture_name) const
 		{
-			switch (texture_registry->get_type(texture_name))
+			switch (texture_registry.get_type(texture_name))
 			{
 			case TextureRegistry::TextureType::IMAGE:
 			case TextureRegistry::TextureType::NSVG:
-				set_texture(texture_registry->get_texture(texture_name), texture_registry->get_image_dimensions(texture_name).dimensions());
+				set_texture(texture_registry.get_texture(texture_name), texture_registry.get_image_dimensions(texture_name).dimensions());
 				break;
 			case TextureRegistry::TextureType::ANIM:
-				if (auto sp = texture_registry->get_anim_dimensions(texture_name).lock())
-					set_texture(texture_registry->get_texture(texture_name), sp->dimensions());
+				if (auto sp = texture_registry.get_anim_dimensions(texture_name).lock())
+					set_texture(texture_registry.get_texture(texture_name), sp->dimensions());
 				break;
 			}
 		}
 
-		void Sprite::set_texture(const Context* context, const std::string& texture_name) const
+		void Sprite::set_texture(const Context& context, const std::string& texture_name) const
 		{
-			set_texture(&context->texture_registry(), texture_name);
+			set_texture(context.texture_registry(), texture_name);
 		}
 
 		void Sprite::set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const
@@ -250,7 +271,7 @@ namespace oly
 			batch->set_texture(vbid.get(), texture, dimensions);
 		}
 		
-		void Sprite::set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const
+		void Sprite::set_tex_coords(const UVRect& tex_coords) const
 		{
 			batch->set_tex_coords(vbid.get(), tex_coords);
 		}
@@ -276,7 +297,7 @@ namespace oly
 			return batch->get_texture(vbid.get(), dimensions);
 		}
 
-		SpriteBatch::TexUVRect Sprite::get_tex_coords() const
+		UVRect Sprite::get_tex_coords() const
 		{
 			return batch->get_tex_coords(vbid.get());
 		}
@@ -302,6 +323,85 @@ namespace oly
 			transformer.pre_get();
 			transformer.post_set();
 			return transformer.local;
+		}
+
+		void AtlasExtension::on_tick() const
+		{
+			if (anim_format.delay_seconds != 0.0f)
+				select(anim_format.starting_frame + (int)floor((TIME.now<float>() - anim_format.starting_time) / anim_format.delay_seconds));
+		}
+
+		void AtlasExtension::select_static_frame(GLuint frame)
+		{
+			anim_format.delay_seconds = 0.0f;
+			select(frame);
+		}
+
+		void AtlasExtension::uvs_changed() const
+		{
+			current_frame = -1;
+		}
+
+		void AtlasExtension::setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major, bool row_up)
+		{
+			atlas = std::make_shared<UVAtlas>();
+			static const auto uv_rect = [](GLuint row, GLuint col, GLuint rows, GLuint cols) -> UVRect {
+				return { {
+					{       col / (float)cols,       row / (float)rows },
+					{ (col + 1) / (float)cols,       row / (float)rows },
+					{ (col + 1) / (float)cols, (row + 1) / (float)rows },
+					{       col / (float)cols, (row + 1) / (float)rows }
+				} };
+				};
+			if (row_major)
+			{
+				if (row_up)
+				{
+					for (GLuint row = 0; row < rows; ++row)
+						for (GLuint col = 0; col < cols; ++col)
+							atlas->push_back(uv_rect(row, col, rows, cols));
+				}
+				else
+				{
+					for (int row = rows - 1; row >= 0; --row)
+						for (GLuint col = 0; col < cols; ++col)
+							atlas->push_back(uv_rect(row, col, rows, cols));
+				}
+			}
+			else
+			{
+				if (row_up)
+				{
+					for (GLuint col = 0; col < cols; ++col)
+						for (GLuint row = 0; row < rows; ++row)
+							atlas->push_back(uv_rect(row, col, rows, cols));
+				}
+				else
+				{
+					for (GLuint col = 0; col < cols; ++col)
+						for (int row = rows - 1; row >= 0; --row)
+							atlas->push_back(uv_rect(row, col, rows, cols));
+				}
+			}
+			uvs_changed();
+			anim_format.num_frames = rows * cols;
+			anim_format.delay_seconds = delay_seconds;
+			anim_format.starting_frame = 0;
+			anim_format.starting_time = 0.0f;
+
+			glm::vec2 dimensions;
+			auto texture = sprite->get_texture(dimensions);
+			sprite->get_batch().update_texture_dimensions(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
+		}
+
+		void AtlasExtension::select(GLuint frame) const
+		{
+			frame %= anim_format.num_frames;
+			if (current_frame != frame)
+			{
+				current_frame = frame;
+				sprite->set_tex_coords((*atlas)[frame]);
+			}
 		}
 	}
 }

@@ -16,14 +16,21 @@ namespace oly
 			
 			std::unordered_map<std::string, std::shared_ptr<Sprite>> auto_loaded;
 
+			std::unordered_map<std::string, toml::table> atlas_constructors;
+			std::unordered_map<std::string, std::shared_ptr<AtlasExtension>> auto_loaded_atlas_extensions;
+
 		public:
-			void load(const Context* context, const char* sprite_registry_file);
-			void load(const Context* context, const std::string& sprite_registry_file) { load(context, sprite_registry_file.c_str()); }
+			void load(const Context& context, const char* sprite_registry_file);
+			void load(const Context& context, const std::string& sprite_registry_file) { load(context, sprite_registry_file.c_str()); }
 			void clear();
 
-			Sprite create_sprite(const Context* context, const std::string& name) const;
-			std::weak_ptr<Sprite> ref_sprite(const Context* context, const std::string& name) const;
-			void delete_sprite(const Context* context, const std::string& name);
+			Sprite create_sprite(const Context& context, const std::string& name) const;
+			std::weak_ptr<Sprite> ref_sprite(const std::string& name) const;
+			void delete_sprite(const std::string& name);
+
+			AtlasExtension create_atlas_extension(const std::string& name) const;
+			std::weak_ptr<AtlasExtension> ref_atlas_extension(const std::string& name) const;
+			void delete_atlas_extension(const std::string& name);
 		};
 	}
 }

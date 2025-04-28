@@ -57,18 +57,20 @@ namespace oly
 		const rendering::SpriteBatch& sprite_batch() const { return *internal.sprite_batch; }
 		rendering::SpriteBatch& sprite_batch() { return *internal.sprite_batch; }
 		rendering::Sprite sprite() const { return rendering::Sprite(internal.sprite_batch.get()); }
-		rendering::Sprite sprite(const std::string& name) const { return internal.sprite_registry.create_sprite(this, name); }
-		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const { return internal.sprite_registry.ref_sprite(this, name); }
+		rendering::Sprite sprite(const std::string& name) const { return internal.sprite_registry.create_sprite(*this, name); }
+		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const { return internal.sprite_registry.ref_sprite(name); }
 		void render_sprites() const { internal.sprite_batch->render(); }
+		rendering::AtlasExtension atlas_extension(const std::string& name) const { return internal.sprite_registry.create_atlas_extension(name); }
+		std::weak_ptr<rendering::AtlasExtension> ref_atlas_extension(const std::string& name) const { return internal.sprite_registry.ref_atlas_extension(name); }
 
 		const rendering::PolygonBatch& polygon_batch() const { return *internal.polygon_batch; }
 		rendering::PolygonBatch& polygon_batch() { return *internal.polygon_batch; }
 		rendering::Polygon polygon() const { return rendering::Polygon(internal.polygon_batch.get()); }
-		rendering::Polygon polygon(const std::string& name) const { return internal.polygon_registry.create_polygon(this, name); }
+		rendering::Polygon polygon(const std::string& name) const { return internal.polygon_registry.create_polygon(*this, name); }
 		rendering::Composite composite() const { return rendering::Composite(internal.polygon_batch.get()); }
-		rendering::Composite composite(const std::string& name) const { return internal.polygon_registry.create_composite(this, name); }
+		rendering::Composite composite(const std::string& name) const { return internal.polygon_registry.create_composite(*this, name); }
 		rendering::NGon ngon() const { return rendering::NGon(internal.polygon_batch.get()); }
-		rendering::NGon ngon(const std::string& name) const { return internal.polygon_registry.create_ngon(this, name); }
+		rendering::NGon ngon(const std::string& name) const { return internal.polygon_registry.create_ngon(*this, name); }
 		std::weak_ptr<rendering::Polygonal> ref_polygonal(const std::string& name) const { return internal.polygon_registry.ref_polygonal(name); }
 		std::weak_ptr<rendering::Polygon> ref_polygon(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Polygon>(ref_polygonal(name).lock()); }
 		std::weak_ptr<rendering::Composite> ref_composite(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Composite>(ref_polygonal(name).lock()); }
@@ -78,7 +80,7 @@ namespace oly
 		const rendering::EllipseBatch& ellipse_batch() const { return *internal.ellipse_batch; }
 		rendering::EllipseBatch& ellipse_batch() { return *internal.ellipse_batch; }
 		rendering::Ellipse ellipse() const { return rendering::Ellipse(internal.ellipse_batch.get()); }
-		rendering::Ellipse ellipse(const std::string& name) const { return internal.ellipse_registry.create_ellipse(this, name); }
+		rendering::Ellipse ellipse(const std::string& name) const { return internal.ellipse_registry.create_ellipse(*this, name); }
 		std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) const { return internal.ellipse_registry.ref_ellipse(name); }
 		void render_ellipses() const { internal.ellipse_batch->render(); }
 

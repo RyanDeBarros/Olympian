@@ -6,7 +6,7 @@ namespace oly
 {
 	namespace rendering
 	{
-		void PolygonRegistry::load(const Context* context, const char* polygon_registry_file)
+		void PolygonRegistry::load(const Context& context, const char* polygon_registry_file)
 		{
 			auto toml = assets::load_toml(polygon_registry_file);
 			auto toml_registry = toml["polygon_registry"];
@@ -15,7 +15,7 @@ namespace oly
 			auto polygon_list = toml_registry["polygon"].as_array();
 			if (polygon_list)
 			{
-				polygon_list->for_each([this, context](auto&& node) {
+				polygon_list->for_each([this, &context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
@@ -38,7 +38,7 @@ namespace oly
 			auto composite_list = toml_registry["composite"].as_array();
 			if (composite_list)
 			{
-				composite_list->for_each([this, context](auto&& node) {
+				composite_list->for_each([this, &context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
@@ -61,7 +61,7 @@ namespace oly
 			auto ngon_list = toml_registry["ngon"].as_array();
 			if (ngon_list)
 			{
-				ngon_list->for_each([this, context](auto&& node) {
+				ngon_list->for_each([this, &context](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
@@ -91,14 +91,14 @@ namespace oly
 			auto_loaded.clear();
 		}
 
-		Polygon PolygonRegistry::create_polygon(const Context* context, const std::string& name) const
+		Polygon PolygonRegistry::create_polygon(const Context& context, const std::string& name) const
 		{
 			auto it = polygon_constructors.find(name);
 			if (it == polygon_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			Polygon polygon = context->polygon();
+			Polygon polygon = context.polygon();
 
 			polygon.set_local() = assets::load_transform_2d(node, "transform");
 
@@ -131,14 +131,14 @@ namespace oly
 			return polygon;
 		}
 
-		Composite PolygonRegistry::create_composite(const Context* context, const std::string& name) const
+		Composite PolygonRegistry::create_composite(const Context& context, const std::string& name) const
 		{
 			auto it = composite_constructors.find(name);
 			if (it == composite_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			Composite composite = context->composite();
+			Composite composite = context.composite();
 
 			composite.set_local() = assets::load_transform_2d(node, "transform");
 
@@ -253,14 +253,14 @@ namespace oly
 			return composite;
 		}
 
-		NGon PolygonRegistry::create_ngon(const Context* context, const std::string& name) const
+		NGon PolygonRegistry::create_ngon(const Context& context, const std::string& name) const
 		{
 			auto it = ngon_constructors.find(name);
 			if (it == ngon_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_POLYGON);
 			const auto& node = it->second;
 
-			NGon ngon = context->ngon();
+			NGon ngon = context.ngon();
 
 			ngon.set_local() = assets::load_transform_2d(node, "transform");
 
@@ -329,7 +329,7 @@ namespace oly
 			return it->second;
 		}
 
-		void PolygonRegistry::delete_polygonal(const Context* context, const std::string& name)
+		void PolygonRegistry::delete_polygonal(const Context& context, const std::string& name)
 		{
 			auto_loaded.erase(name);
 		}

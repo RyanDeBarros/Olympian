@@ -50,7 +50,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.texture_registry.load(this, root_dir + file.value());
+						internal.texture_registry.load(*this, root_dir + file.value());
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.sprite_registry.load(this, root_dir + file.value());
+						internal.sprite_registry.load(*this, root_dir + file.value());
 			}
 		}
 
@@ -98,7 +98,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.polygon_registry.load(this, root_dir + file.value());
+						internal.polygon_registry.load(*this, root_dir + file.value());
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.ellipse_registry.load(this, root_dir + file.value());
+						internal.ellipse_registry.load(*this, root_dir + file.value());
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace oly
 			{
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
-						internal.draw_command_registry.load(*this, root_dir + file.value()); // TODO use more const Context& instead of const Context*
+						internal.draw_command_registry.load(*this, root_dir + file.value());
 			}
 		}
 	}

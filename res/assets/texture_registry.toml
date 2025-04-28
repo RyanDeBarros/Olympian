@@ -76,3 +76,10 @@
 	"rows"       = 2
 	"cols"       = 3
 	"delay cs"   = 10
+	
+	[[texture_registry.image]]
+	"file"       = "knight.png"
+	"name"       = "spritesheet"
+	"auto-use"   = true
+	"min filter" = "nearest"
+	"mag filter" = "nearest"

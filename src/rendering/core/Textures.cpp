@@ -420,14 +420,14 @@ namespace oly
 			return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 		}
 
-		AnimFrameFormat setup_anim_frame_format(const TextureRegistry* texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
+		AnimFrameFormat setup_anim_frame_format(const TextureRegistry& texture_registry, const std::string& texture_name, float speed, GLuint starting_frame)
 		{
-			return setup_anim_frame_format(*texture_registry->get_anim_dimensions(texture_name).lock(), speed, starting_frame);
+			return setup_anim_frame_format(*texture_registry.get_anim_dimensions(texture_name).lock(), speed, starting_frame);
 		}
 
-		AnimFrameFormat setup_anim_frame_format(const Context* context, const std::string& texture_name, float speed, GLuint starting_frame)
+		AnimFrameFormat setup_anim_frame_format(const Context& context, const std::string& texture_name, float speed, GLuint starting_frame)
 		{
-			return setup_anim_frame_format(&context->texture_registry(), texture_name, speed, starting_frame);
+			return setup_anim_frame_format(context.texture_registry(), texture_name, speed, starting_frame);
 		}
 
 		AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
@@ -435,14 +435,14 @@ namespace oly
 			return { frame, dim.frames(), 0.0f, 0.0f };
 		}
 
-		AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry* texture_registry, const std::string& texture_name, GLuint frame)
+		AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry& texture_registry, const std::string& texture_name, GLuint frame)
 		{
-			return setup_anim_frame_format_single(*texture_registry->get_anim_dimensions(texture_name).lock(), frame);
+			return setup_anim_frame_format_single(*texture_registry.get_anim_dimensions(texture_name).lock(), frame);
 		}
 
-		AnimFrameFormat setup_anim_frame_format_single(const Context* context, const std::string& texture_name, GLuint frame)
+		AnimFrameFormat setup_anim_frame_format_single(const Context& context, const std::string& texture_name, GLuint frame)
 		{
-			return setup_anim_frame_format_single(&context->texture_registry(), texture_name, frame);
+			return setup_anim_frame_format_single(context.texture_registry(), texture_name, frame);
 		}
 
 		NSVGAbstract::NSVGAbstract(const char* filepath)

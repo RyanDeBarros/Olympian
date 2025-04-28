@@ -12,6 +12,21 @@ namespace oly
 {
 	namespace rendering
 	{
+		struct UVRect
+		{
+			glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+
+			bool operator==(const UVRect&) const = default;
+		};
+		typedef std::vector<UVRect> UVAtlas;
+		struct UVRectHash
+		{
+			size_t operator()(const UVRect& uvs) const {
+				return std::hash<glm::vec2>{}(uvs.uvs[0]) ^ (std::hash<glm::vec2>{}(uvs.uvs[1]) << 1)
+					^ (std::hash<glm::vec2>{}(uvs.uvs[2]) << 2) ^ (std::hash<glm::vec2>{}(uvs.uvs[3]) << 3);
+			}
+		};
+
 		struct Sprite;
 
 		class SpriteBatch
@@ -51,19 +66,6 @@ namespace oly
 				GLuint projection, modulation, time;
 			} shader_locations;
 		public:
-			struct TexUVRect
-			{
-				glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-
-				bool operator==(const TexUVRect&) const = default;
-			};
-			struct TexUVRectHash
-			{
-				size_t operator()(const TexUVRect& uvs) const {
-					return std::hash<glm::vec2>{}(uvs.uvs[0]) ^ (std::hash<glm::vec2>{}(uvs.uvs[1]) << 1)
-						^ (std::hash<glm::vec2>{}(uvs.uvs[2]) << 2) ^ (std::hash<glm::vec2>{}(uvs.uvs[3]) << 3);
-				}
-			};
 			struct Modulation
 			{
 				glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
@@ -89,7 +91,7 @@ namespace oly
 			{
 				LightweightUBO<Mutability::MUTABLE> tex_coords, modulation, anim;
 
-				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(TexUVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(AnimFrameFormat)) {}
+				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(UVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(AnimFrameFormat)) {}
 			} ubo;
 
 		public:
@@ -135,24 +137,25 @@ namespace oly
 					size_t operator()(const DimensionlessTexture& t) const { return std::hash<BindlessTextureRes>{}(t.texture); }
 				};
 				UsageSlotTracker<DimensionlessTexture, DimensionlessTextureHash> textures;
-				UsageSlotTracker<TexUVRect, TexUVRectHash> tex_coords;
+				UsageSlotTracker<UVRect, UVRectHash> tex_coords;
 				UsageSlotTracker<Modulation, ModulationHash> modulations;
 				UsageSlotTracker<AnimFrameFormat, AnimHash> anims;
 			} quad_info_store;
 
 			void set_texture(GLuint vb_pos, const BindlessTextureRes& texture, glm::vec2 dimensions);
-			void set_tex_coords(GLuint vb_pos, const TexUVRect& uvs);
+			void set_tex_coords(GLuint vb_pos, const UVRect& uvs);
 			void set_modulation(GLuint vb_pos, const Modulation& modulation);
 			void set_frame_format(GLuint vb_pos, const AnimFrameFormat& anim);
 
 			BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
-			TexUVRect get_tex_coords(GLuint vb_pos) const;
+			UVRect get_tex_coords(GLuint vb_pos) const;
 			Modulation get_modulation(GLuint vb_pos) const;
 			AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 
 		public:
 			void update_texture_handle(const BindlessTextureRes& texture);
 			void update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions);
+			void update_texture_dimensions(const BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
 	}
 
@@ -160,7 +163,6 @@ namespace oly
 	class Context;
 	namespace rendering
 	{
-
 		struct Sprite
 		{
 		private:
@@ -178,18 +180,20 @@ namespace oly
 			Sprite& operator=(Sprite&&) noexcept;
 			~Sprite();
 
+			std::shared_ptr<Sprite> share_moved();
+
 			void draw() const;
 
-			void set_texture(const TextureRegistry* texture_registry, const std::string& texture_name) const;
-			void set_texture(const Context* context, const std::string& texture_name) const;
+			void set_texture(const TextureRegistry& texture_registry, const std::string& texture_name) const;
+			void set_texture(const Context& context, const std::string& texture_name) const;
 			void set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const;
-			void set_tex_coords(const SpriteBatch::TexUVRect& tex_coords) const;
+			void set_tex_coords(const UVRect& tex_coords) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;
 			void set_frame_format(const AnimFrameFormat& anim) const;
 
 			BindlessTextureRes get_texture() const;
 			BindlessTextureRes get_texture(glm::vec2& dimensions) const;
-			SpriteBatch::TexUVRect get_tex_coords() const;
+			UVRect get_tex_coords() const;
 			SpriteBatch::Modulation get_modulation() const;
 			AnimFrameFormat get_frame_format() const;
 
@@ -197,6 +201,23 @@ namespace oly
 			SpriteBatch& get_batch() { return *batch; }
 			const Transform2D& get_local() const;
 			Transform2D& set_local();
+		};
+
+		struct AtlasExtension
+		{
+			std::shared_ptr<Sprite> sprite;
+			std::shared_ptr<UVAtlas> atlas;
+			AnimFrameFormat anim_format;
+
+			void on_tick() const;
+
+			void select_static_frame(GLuint frame);
+			void uvs_changed() const;
+			void setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major = true, bool row_up = true);
+
+		private:
+			void select(GLuint frame) const;
+			mutable GLuint current_frame = -1;
 		};
 	}
 }

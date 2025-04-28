@@ -175,9 +175,29 @@ namespace oly
 			GLuint buffer() const { return buf; }
 			GLsizeiptr get_size() const { return size; }
 			template<typename StructType>
-			void send(GLintptr pos, const StructType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj); }
+			void send(GLintptr pos, const StructType& obj) const
+			{
+				glNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
+			}
 			template<typename StructType, typename MemberType>
-			void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const { glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj); }
+			void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const
+			{
+				glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+			}
+			template<typename StructType>
+			StructType receive(GLintptr pos) const
+			{
+				StructType obj;
+				glGetNamedBufferSubData(buf, pos * sizeof(StructType), sizeof(StructType), &obj);
+				return obj;
+			}
+			template<typename StructType, typename MemberType>
+			MemberType receive(GLintptr pos, MemberType StructType::* member) const
+			{
+				MemberType obj;
+				glGetNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+				return obj;
+			}
 			void resize_empty(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE) { size = size_in_bytes; glNamedBufferData(buf, size, nullptr, usage); }
 			void resize(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { buf.mutable_resize(size_in_bytes, usage, size); size = size_in_bytes; }
 			void grow(GLsizeiptr size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE) { if (size_in_bytes > size) { buf.mutable_grow(size_in_bytes, usage, size); size = size_in_bytes; } }
@@ -216,7 +236,12 @@ namespace oly
 		public:
 			using StructAlias = Struct;
 
-			PersistentGPUBuffer(GLuint size) : size(size) { init(); }
+			PersistentGPUBuffer(GLuint size)
+				: size(size)
+			{
+				glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+				data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+			}
 			PersistentGPUBuffer(const PersistentGPUBuffer&) = delete;
 
 			GLuint get_size() const { return size; }
@@ -277,9 +302,9 @@ namespace oly
 
 				GLBuffer old_buf;
 				std::swap(buf, old_buf);
-				init();
-
+				glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 				glCopyNamedBufferSubData(old_buf, buf, 0, 0, old_size * sizeof(Struct));
+				data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 				// no need to unmap old data, since it uses persistent bit
 			}
 
@@ -317,13 +342,6 @@ namespace oly
 				accessible = false;
 				throw Error(ErrorCode::OUT_OF_TIME);
 			}
-
-		private:
-			void init()
-			{
-				glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-				data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
-			}
 		};
 
 		template<typename... Structs>
@@ -342,8 +360,20 @@ namespace oly
 			std::array<void*, N> data;
 
 		public:
-			PersistentGPUBufferBlock(GLuint size) { accessible.fill(true); this->size.fill(size); data.fill(nullptr); init_all(); }
-			PersistentGPUBufferBlock(const std::array<GLuint, N>& sizes) : size(sizes) { accessible.fill(true); data.fill(nullptr); init_all(); }
+			PersistentGPUBufferBlock(GLuint size)
+			{
+				accessible.fill(true);
+				this->size.fill(size);
+				data.fill(nullptr);
+				init(std::make_index_sequence<N>{});
+			}
+			PersistentGPUBufferBlock(const std::array<GLuint, N>& sizes)
+				: size(sizes)
+			{
+				accessible.fill(true);
+				data.fill(nullptr);
+				init(std::make_index_sequence<N>{});
+			}
 			PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
 
 			template<size_t n>
@@ -432,9 +462,9 @@ namespace oly
 
 				GLBuffer old_buf;
 				buf.swap<n>(old_buf);
-				init<n>();
-
+				glNamedBufferStorage(buf[n], (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 				glCopyNamedBufferSubData(old_buf, buf[n], 0, 0, old_size * sizeof(StructAlias<n>));
+				data[n] = glMapNamedBufferRange(buf[n], 0, (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 				// no need to unmap old data, since it uses persistent bit
 			}
 
@@ -504,23 +534,13 @@ namespace oly
 				(post_draw<Indices>(), ...);
 			}
 
-			void init_all()
-			{
-				init_impl(std::make_index_sequence<N>{});
-			}
-
 			template<size_t... Indices>
-			void init_impl(std::index_sequence<Indices...>)
+			void init(std::index_sequence<Indices...>)
 			{
-				(init<Indices>(), ...);
-			}
-
-			template<size_t n>
-			void init()
-			{
-				static_assert(n < N);
-				glNamedBufferStorage(buf[n], (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-				data[n] = glMapNamedBufferRange(buf[n], 0, (GLsizeiptr)(size[n] * sizeof(StructAlias<n>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+				((
+					glNamedBufferStorage(buf[Indices], (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT),
+					data[Indices] = glMapNamedBufferRange(buf[Indices], 0, (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
+				), ...);
 			}
 		};
 
@@ -695,6 +715,8 @@ namespace oly
 			GLuint vao = 0;
 
 		public:
+			GLuint offset = 0;
+
 			PersistentEBO(const VertexArray& vao, GLuint primitives)
 				: ebo(primitives), vao(vao)
 			{
@@ -724,13 +746,20 @@ namespace oly
 		public:
 			std::array<GLuint, PrimitiveIndices>& draw_primitive() const
 			{
-				GLuint primitive = draw_count++;
-				if (primitive >= ebo.buf.get_size())
+				GLuint primitive = offset + draw_count++;
+				while (primitive >= ebo.buf.get_size())
 					grow();
 				ebo.flag(primitive);
 				return ebo.buf[primitive];
 			}
-			void render_elements(GLenum mode) const { ebo.pre_draw(); glDrawElements(mode, draw_count * PrimitiveIndices, GL_UNSIGNED_INT, 0); draw_count = 0; ebo.post_draw(); }
+
+			void render_elements(GLenum mode) const
+			{
+				ebo.pre_draw();
+				glDrawElements(mode, draw_count * PrimitiveIndices, GL_UNSIGNED_INT, (void*)(offset * PrimitiveIndices * sizeof(GLuint)));
+				draw_count = 0;
+				ebo.post_draw();
+			}
 		};
 
 		enum class VertexAttributeType
