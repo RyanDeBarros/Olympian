@@ -223,7 +223,7 @@ namespace oly
 		auto textures = texture_registry["image"].as_array();
 		if (!textures)
 			return;
-		std::string root_dir = std::filesystem::path(texture_registry_file).parent_path().string() + "/" + texture_registry["root"].value<std::string>().value_or("");
+		std::string root_dir = io::directory_of(texture_registry_file) + "/" + texture_registry["root"].value<std::string>().value_or("");
 		textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (assets::AssetNode)node); });
 		if (auto nsvg_abstracts = texture_registry["nsvg_abstract"].as_array())
 			nsvg_abstracts->for_each([this, &context, &root_dir](auto&& node) { load_nsvg_abstract(context, root_dir, (assets::AssetNode)node); });

@@ -57,7 +57,7 @@ namespace oly
 								atlas_constructors[name] = node;
 								if (auto _init = node["init"].value<std::string>())
 								{
-									auto_loaded_atlas_extensions.emplace(std::move(name), std::shared_ptr<AtlasExtension>(new AtlasExtension(create_atlas_extension(name))));
+									auto_loaded_atlas_extensions.emplace(std::move(name), std::shared_ptr<AtlasResExtension>(new AtlasResExtension(create_atlas_extension(name))));
 									if (_init.value() == "discard")
 										atlas_constructors.erase(name);
 								}
@@ -202,14 +202,14 @@ namespace oly
 			auto_loaded.erase(name);
 		}
 
-		AtlasExtension SpriteRegistry::create_atlas_extension(const std::string& name) const
+		AtlasResExtension SpriteRegistry::create_atlas_extension(const std::string& name) const
 		{
 			auto it = atlas_constructors.find(name);
 			if (it == atlas_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_ATLAS);
 			const auto& node = it->second;
 
-			AtlasExtension atlas;
+			AtlasResExtension atlas;
 
 			if (auto _sprite_name = node["sprite"].value<std::string>())
 				atlas.sprite = ref_sprite(_sprite_name.value()).lock();
@@ -227,14 +227,14 @@ namespace oly
 				if (auto _starting_frame = node["starting frame"].value<int64_t>())
 					atlas.anim_format.starting_frame = (GLuint)_starting_frame.value();
 				if (auto _starting_time = node["starting time"].value<double>())
-					atlas.anim_format.starting_frame = (float)_starting_time.value();
+					atlas.anim_format.starting_time = (float)_starting_time.value();
 				if (auto _static_frame = node["static frame"].value<int64_t>())
 					atlas.select_static_frame((GLuint)_static_frame.value());
 			}
 
 			return atlas;
 		}
-		std::weak_ptr<AtlasExtension> SpriteRegistry::ref_atlas_extension(const std::string& name) const
+		std::weak_ptr<AtlasResExtension> SpriteRegistry::ref_atlas_extension(const std::string& name) const
 		{
 			auto it = auto_loaded_atlas_extensions.find(name);
 			if (it == auto_loaded_atlas_extensions.end())

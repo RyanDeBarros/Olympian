@@ -6,6 +6,7 @@
 #include "rendering/batch/PolygonRegistry.h"
 #include "rendering/batch/EllipseRegistry.h"
 #include "rendering/batch/DrawCommands.h"
+#include "rendering/batch/TileSet.h"
 
 namespace oly
 {
@@ -26,6 +27,8 @@ namespace oly
 			std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
 			
 			rendering::DrawCommandRegistry draw_command_registry;
+
+			rendering::TileSetRegistry tileset_registry;
 		} internal;
 
 	public:
@@ -60,8 +63,8 @@ namespace oly
 		rendering::Sprite sprite(const std::string& name) const { return internal.sprite_registry.create_sprite(*this, name); }
 		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const { return internal.sprite_registry.ref_sprite(name); }
 		void render_sprites() const { internal.sprite_batch->render(); }
-		rendering::AtlasExtension atlas_extension(const std::string& name) const { return internal.sprite_registry.create_atlas_extension(name); }
-		std::weak_ptr<rendering::AtlasExtension> ref_atlas_extension(const std::string& name) const { return internal.sprite_registry.ref_atlas_extension(name); }
+		rendering::AtlasResExtension atlas_extension(const std::string& name) const { return internal.sprite_registry.create_atlas_extension(name); }
+		std::weak_ptr<rendering::AtlasResExtension> ref_atlas_extension(const std::string& name) const { return internal.sprite_registry.ref_atlas_extension(name); }
 
 		const rendering::PolygonBatch& polygon_batch() const { return *internal.polygon_batch; }
 		rendering::PolygonBatch& polygon_batch() { return *internal.polygon_batch; }
@@ -85,5 +88,9 @@ namespace oly
 		void render_ellipses() const { internal.ellipse_batch->render(); }
 
 		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
+
+		const rendering::TileSetRegistry& tilset_registry() const { return internal.tileset_registry; }
+		rendering::TileSet tileset(const std::string& name) const { return internal.tileset_registry.create_tileset(*this, name); }
+		std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name) const { return internal.tileset_registry.ref_tileset(name); }
 	};
 }

@@ -50,3 +50,8 @@ std::string oly::io::file_extension(const char* filepath)
 {
 	return std::filesystem::path(filepath).extension().string();
 }
+
+std::string oly::io::directory_of(const char* filepath)
+{
+	return std::filesystem::path(filepath).parent_path().string();
+}

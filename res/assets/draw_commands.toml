@@ -39,5 +39,6 @@
 	{ "type" = "draw", "renderable" = "polygon", "name" = "concave shape" },
 	{ "type" = "render", "batch" = "polygon" },
 	{ "type" = "draw", "renderable" = "sprite", "name" = "spritesheet" },
+	{ "type" = "draw", "renderable" = "sprite", "name" = "test" },
 	{ "type" = "render", "batch" = "sprite" },
 ]

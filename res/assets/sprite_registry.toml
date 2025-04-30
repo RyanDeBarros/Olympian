@@ -1,101 +1,101 @@
 [sprite_registry]
-	[sprite_registry.texture_map]
-	0 = "einstein"
-	1 = "tux"
-	2 = "flag"
-	3 = "serotonin"
-	4 = "mipmapped tux"
-	5 = "godot icon (1.0)"
-	6 = "godot icon (3.0)"
-	7 = "godot icon (10.0)"
-	8 = "knight"
-	9 = "spritesheet"
+[sprite_registry.texture_map]
+0  = "einstein"
+1  = "tux"
+2  = "flag"
+3  = "serotonin"
+4  = "mipmapped tux"
+5  = "godot icon (1.0)"
+6  = "godot icon (3.0)"
+7  = "godot icon (10.0)"
+8  = "knight"
+9  = "spritesheet"
 
-	[[sprite_registry.sprite]]
-	"name"    = "sprite0"
-	"texture" = 0
-	transform = { "position" = [300, 300] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "sprite0"
+"texture" = 0
+transform = { "position" = [300, 300] }
+"init"    = "discard"
 
-	[[sprite_registry.sprite]]
-	"name"       = "sprite1"
-	"texture"    = 0
-	"modulation" = [
-		[1.0, 1.0, 0.2, 0.7],
-		[0.2, 1.0, 1.0, 0.7],
-		[1.0, 0.2, 1.0, 0.7],
-		[0.5, 0.5, 0.5, 0.7]
-	]
-	"init"       = "discard"
+[[sprite_registry.sprite]]
+"name"       = "sprite1"
+"texture"    = 0
+"modulation" = [
+	[1.0, 1.0, 0.2, 0.7],
+	[0.2, 1.0, 1.0, 0.7],
+	[1.0, 0.2, 1.0, 0.7],
+	[0.5, 0.5, 0.5, 0.7]
+]
+"init"       = "discard"
 
-	[[sprite_registry.sprite]]
-	"name"             = "sprite2"
-	"texture"          = 1
-	transform          = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
-	transform_modifier = { "type" = "shear" }
-	"init"             = "discard"
+[[sprite_registry.sprite]]
+"name"             = "sprite2"
+"texture"          = 1
+transform          = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
+transform_modifier = { "type" = "shear" }
+"init"             = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"       = "sprite3"
-	"texture"    = 3
-	transform    = { "position" = [100, -100], "scale" = [2.0, 2.0] }
-	frame_format = { "num frames" = 59, "delay seconds" = -0.05 }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"       = "sprite3"
+"texture"    = 3
+transform    = { "position" = [100, -100], "scale" = [2.0, 2.0] }
+frame_format = { "num frames" = 59, "delay seconds" = -0.05 }
+"init"    = "discard"
 
-	[[sprite_registry.sprite]]
-	"name"    = "sprite4"
-	"texture" = 4
-	transform = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "sprite4"
+"texture" = 4
+transform = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
+"init"    = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"    = "sprite5"
-	"texture" = 1
-	transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "sprite5"
+"texture" = 1
+transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
+"init"    = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"    = "flag instance"
-	"texture" = 2
-	transform = { "scale" = [2.0, 2.0] }
-	"init"    = "keep"
+[[sprite_registry.sprite]]
+"name"    = "flag instance"
+"texture" = 2
+transform = { "scale" = [2.0, 2.0] }
+"init"    = "keep"
 	
-	[[sprite_registry.sprite]]
-	"name"    = "godot icon (1.0)"
-	"texture" = 5
-	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [3.0, 3.0] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "godot icon (1.0)"
+"texture" = 5
+transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [3.0, 3.0] }
+"init"    = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"    = "godot icon (3.0)"
-	"texture" = 6
-	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "godot icon (3.0)"
+"texture" = 6
+transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+"init"    = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"    = "godot icon (10.0)"
-	"texture" = 7
-	transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "godot icon (10.0)"
+"texture" = 7
+transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }
+"init"    = "discard"
 	
-	[[sprite_registry.sprite]]
-	"name"       = "knight"
-	"texture"    = 8
-	transform    = { "position" = [100, -300], "scale" = [20, 20] }
-	frame_format = { "mode" = "auto" }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"       = "knight"
+"texture"    = 8
+transform    = { "position" = [100, -300], "scale" = [20, 20] }
+frame_format = { "mode" = "auto" }
+"init"    = "discard"
 
-	[[sprite_registry.sprite]]
-	"name"    = "spritesheet"
-	"texture" = 9
-	transform = { "position" = [300, -200], "scale" = [20, 20] }
-	"init"    = "discard"
+[[sprite_registry.sprite]]
+"name"    = "spritesheet"
+"texture" = 9
+transform = { "position" = [300, -200], "scale" = [20, 20] }
+"init"    = "discard"
 
-	[[sprite_registry.extension]]
-	"extension"     = "atlas"
-	"name"          = "atlased knight"
-	"sprite"        = "spritesheet"
-	"rows"          = 2
-	"cols"          = 3
-	"delay seconds" = 0.1
-	"init"          = "discard"
+[[sprite_registry.extension]]
+"extension"     = "atlas"
+"name"          = "atlased knight"
+"sprite"        = "spritesheet"
+"rows"          = 2
+"cols"          = 3
+"delay seconds" = 0.1
+"init"          = "discard"

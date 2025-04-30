@@ -12,7 +12,6 @@ namespace oly
 		class EllipseRegistry
 		{
 			std::unordered_map<std::string, toml::table> ellipse_constructors;
-
 			std::unordered_map<std::string, std::shared_ptr<Ellipse>> auto_loaded;
 
 		public:

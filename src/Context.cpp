@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include "rendering/Loader.h"
+#include "util/IO.h"
 #include "rendering/Resources.h"
 
 namespace oly
@@ -23,7 +24,7 @@ namespace oly
 		if (!toml_window)
 			throw Error(ErrorCode::CONTEXT_INIT);
 
-		std::string root_dir = std::filesystem::path(filepath).parent_path().string() + "/";
+		std::string root_dir = io::directory_of(filepath) + "/";
 
 		{ // init window
 			auto width = toml_window["width"].value<int64_t>();
@@ -128,6 +129,16 @@ namespace oly
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
 						internal.draw_command_registry.load(*this, root_dir + file.value());
+			}
+		}
+
+		{ // init tileset registry
+			auto register_files = toml_context["tileset registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.tileset_registry.load(*this, root_dir + file.value());
 			}
 		}
 	}
