@@ -1,7 +1,7 @@
 #include "TileSet.h"
 
 #include "util/IO.h"
-#include "Olympian.h"
+#include "Context.h"
 
 namespace oly
 {
@@ -13,7 +13,7 @@ namespace oly
 			if (it == assignment.end())
 				return false;
 			else
-				return it->second.tex_index < textures.size();
+				return it->second.tex_index < texture_names.size();
 		}
 
 		bool TileSet::valid_6() const
@@ -38,11 +38,11 @@ namespace oly
 				               && valid_configuration(Configuration::CORNER_3) && valid_configuration(Configuration::CORNER_4);
 		}
 
-		BindlessTextureRes TileSet::get_texture(PaintedTile tile, Transformation& transformation) const
+		std::string TileSet::get_texture_name(PaintedTile tile, Transformation& transformation) const
 		{
 			Tile t = get_assignment(get_configuration(tile), transformation);
 			transformation &= t.transformation;
-			return textures[t.tex_index];
+			return texture_names[t.tex_index];
 		}
 
 		TileSet::Tile TileSet::get_assignment(Configuration config, Transformation& transformation) const
@@ -741,25 +741,13 @@ namespace oly
 					auto _tex = node["tex"].value<std::string>();
 					if (!_config || !_tex)
 						return;
-					BindlessTextureRes texture;
-					try
-					{
-						texture = texture_registry.get_texture(_tex.value());
-					}
-					catch (Error e)
-					{
-						if (e.code == ErrorCode::UNREGISTERED_TEXTURE)
-							return;
-						else
-							throw e;
-					}
 
-
+					const std::string& texture = _tex.value();
 					Tile tile;
-					auto texture_it = std::find(textures.begin(), textures.end(), texture);
-					tile.tex_index = texture_it - textures.begin();
-					if (texture_it == textures.end())
-						textures.push_back(texture);
+					auto texture_it = std::find(texture_names.begin(), texture_names.end(), texture);
+					tile.tex_index = texture_it - texture_names.begin();
+					if (texture_it == texture_names.end())
+						texture_names.push_back(texture);
 
 					Configuration c;
 					const std::string& config = _config.value();

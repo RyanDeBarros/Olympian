@@ -106,6 +106,8 @@ namespace oly
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;
+		const Transform2D& get_local() const { pre_get(); return local; }
+		Transform2D& set_local() { pre_get(); post_set(); return local; }
 
 		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }
@@ -254,6 +256,8 @@ namespace oly
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;
+		const Transform3D& get_local() const { pre_get(); return local; }
+		Transform3D& set_local() { pre_get(); post_set(); return local; }
 
 		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }

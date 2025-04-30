@@ -185,28 +185,23 @@ namespace oly
 				: GL_RGBA;
 		}
 
-		void tex::pixel_alignment(int cpp)
+		void tex::pixel_alignment_pre_send(int cpp)
 		{
-			switch (cpp)
-			{
-			case 1:
+			if (cpp == 1 || cpp == 3)
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				break;
-			case 2:
+			else if (cpp == 2)
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-				break;
-			case 3:
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				break;
-			case 4:
+		}
+
+		void tex::pixel_alignment_post_send(int cpp)
+		{
+			if (cpp != 4)
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-				break;
-			}
 		}
 
 		Image::Image(const char* filepath)
 		{
-			_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, _dim.cpp);
+			_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, 0);
 		}
 
 		Image::Image(unsigned char* buf, ImageDimensions dim)
@@ -248,8 +243,9 @@ namespace oly
 			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
 			glBindTexture(GL_TEXTURE_2D, *texture);
 			const auto& dim = image.dim();
-			tex::pixel_alignment(dim.cpp);
+			tex::pixel_alignment_pre_send(dim.cpp);
 			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.buf());
+			tex::pixel_alignment_post_send(dim.cpp);
 			if (generate_mipmaps)
 				glGenerateMipmap(GL_TEXTURE_2D);
 			return texture;
@@ -293,7 +289,7 @@ namespace oly
 				auto full_content = io::read_file_uc(filepath);
 				int* delays;
 				int frames;
-				_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, _dim->cpp);
+				_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, 0);
 				_dim->set_delays(delays, frames);
 				stbi_image_free(delays);
 			}
@@ -405,10 +401,11 @@ namespace oly
 			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D_ARRAY);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, *texture);
 			const auto& dim = anim.dim().lock();
-			tex::pixel_alignment(dim->cpp);
+			tex::pixel_alignment_pre_send(dim->cpp);
 			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, tex::format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
 			for (GLuint i = 0; i < dim->frames(); ++i)
 				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, tex::format(dim->cpp), GL_UNSIGNED_BYTE, anim.buf() + i * dim->w * dim->h * dim->cpp);
+			tex::pixel_alignment_post_send(dim->cpp);
 			if (generate_mipmaps)
 				glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 			return texture;
@@ -558,8 +555,9 @@ namespace oly
 			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
 			glBindTexture(GL_TEXTURE_2D, *texture);
 			const auto& dim = image.image->dim();
-			tex::pixel_alignment(dim.cpp);
+			tex::pixel_alignment_pre_send(dim.cpp);
 			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
+			tex::pixel_alignment_post_send(dim.cpp);
 			if (generate_mipmaps)
 				glGenerateMipmap(GL_TEXTURE_2D);
 			return texture;
@@ -571,6 +569,7 @@ namespace oly
 				return;
 			float scale = image.scale;
 			GLint level = 0;
+			tex::pixel_alignment_pre_send(image.image->dim().cpp);
 			while (true)
 			{
 				{
@@ -582,11 +581,11 @@ namespace oly
 
 				auto img = context.rasterize(abstract, scale);
 				const auto& dim = img.dim();
-				tex::pixel_alignment(dim.cpp);
 				glTexImage2D(GL_TEXTURE_2D, ++level, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, img.buf());
 				if (img.dim().w == 1 && img.dim().h == 1)
 					break;
 			}
+			tex::pixel_alignment_post_send(image.image->dim().cpp);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level);
 		}
 	}

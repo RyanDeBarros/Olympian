@@ -87,9 +87,8 @@ namespace oly
 		{
 			extern GLenum internal_format(int cpp);
 			extern GLenum format(int cpp);
-			extern void pixel_alignment(int cpp);
-			inline GLsizei expected_mipmap_levels(float w, float h) { return (GLsizei)glm::floor(glm::log2(max(w, h))) + 1; }
-			inline GLsizei expected_mipmap_levels(float w, float h, float d) { return (GLsizei)glm::floor(glm::log2(max(w, h, d))) + 1; }
+			extern void pixel_alignment_pre_send(int cpp);
+			extern void pixel_alignment_post_send(int cpp);
 		}
 
 		struct ImageDimensions

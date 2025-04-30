@@ -199,8 +199,8 @@ namespace oly
 
 			const SpriteBatch& get_batch() const { return *batch; }
 			SpriteBatch& get_batch() { return *batch; }
-			const Transform2D& get_local() const;
-			Transform2D& set_local();
+			const Transform2D& get_local() const { return transformer.get_local(); }
+			Transform2D& set_local() { return transformer.set_local(); }
 		};
 
 		struct AtlasResExtension

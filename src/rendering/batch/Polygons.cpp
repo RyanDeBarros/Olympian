@@ -194,19 +194,6 @@ namespace oly
 			return *this;
 		}
 
-		const Transform2D& Polygonal::get_local() const
-		{
-			transformer.pre_get();
-			return transformer.local;
-		}
-
-		Transform2D& Polygonal::set_local()
-		{
-			transformer.pre_get();
-			transformer.post_set();
-			return transformer.local;
-		}
-
 		void Polygonal::init()
 		{
 			_batch->resize_range(id, num_vertices());

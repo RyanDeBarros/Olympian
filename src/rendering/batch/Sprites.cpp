@@ -312,19 +312,6 @@ namespace oly
 			return batch->get_frame_format(vbid.get());
 		}
 
-		const Transform2D& Sprite::get_local() const
-		{
-			transformer.pre_get();
-			return transformer.local;
-		}
-
-		Transform2D& Sprite::set_local()
-		{
-			transformer.pre_get();
-			transformer.post_set();
-			return transformer.local;
-		}
-
 		void AtlasResExtension::on_tick() const
 		{
 			if (anim_format.delay_seconds != 0.0f)

@@ -242,11 +242,17 @@ namespace oly
 
 	rendering::ImageDimensions oly::TextureRegistry::get_image_dimensions(const std::string& name) const
 	{
-		const auto& r = get_registree(name)->second;
-		if (r.index() == (size_t)TextureType::IMAGE)
-			return std::get<(size_t)TextureType::IMAGE>(get_registree(name)->second).image->dim();
-		else
-			return std::get<(size_t)TextureType::NSVG>(get_registree(name)->second).image.image->dim();
+		return std::visit([](auto&& r) -> rendering::ImageDimensions {
+			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageBindlessTextureRes>)
+				return r.image->dim();
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::VectorBindlessTextureRes>)
+				return r.image.image->dim();
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::AnimBindlessTextureRes>)
+			{
+				auto sp = r.anim->dim().lock();
+				return { sp->w, sp->h, sp->cpp };
+			}
+			}, get_registree(name)->second);
 	}
 
 	std::weak_ptr<rendering::AnimDimensions> oly::TextureRegistry::get_anim_dimensions(const std::string& name) const

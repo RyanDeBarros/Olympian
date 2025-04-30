@@ -102,8 +102,8 @@ namespace oly
 
 			const PolygonBatch& batch() const { return *_batch; }
 			PolygonBatch& batch() { return *_batch; }
-			const Transform2D& get_local() const;
-			Transform2D& set_local();
+			const Transform2D& get_local() const { return transformer.get_local(); }
+			Transform2D& set_local() { return transformer.set_local(); }
 
 			void init();
 			virtual void send_polygon() const = 0;

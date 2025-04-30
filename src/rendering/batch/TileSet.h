@@ -87,7 +87,7 @@ namespace oly
 			};
 
 		private:
-			std::vector<BindlessTextureRes> textures;
+			std::vector<std::string> texture_names;
 			std::unordered_map<Configuration, Tile> assignment;
 
 			bool valid_configuration(Configuration configuration) const;
@@ -96,7 +96,7 @@ namespace oly
 			bool valid_6() const;
 			bool valid_4x4() const;
 			bool valid_4x4_2x2() const;
-			BindlessTextureRes get_texture(PaintedTile tile, Transformation& transformation) const;
+			std::string get_texture_name(PaintedTile tile, Transformation& transformation) const;
 
 		private:
 			Tile get_assignment(Configuration config, Transformation& transformation) const;
