@@ -241,11 +241,6 @@ namespace oly
 				batch->erase_sprite_id(vbid.get());
 		}
 
-		std::shared_ptr<Sprite> Sprite::share_moved()
-		{
-			return std::shared_ptr<Sprite>(new Sprite(std::move(*this)));
-		}
-
 		void Sprite::draw() const
 		{
 			if (transformer.flush())

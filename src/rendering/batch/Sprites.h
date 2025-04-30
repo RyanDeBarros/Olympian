@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../SpecializedBuffers.h"
-#include "../UsageSlotTracker.h"
+#include "UsageSlotTracker.h"
 #include "util/IDGenerator.h"
 #include "math/Transforms.h"
 #include "math/Geometry.h"
@@ -182,8 +182,6 @@ namespace oly
 			Sprite& operator=(const Sprite&);
 			Sprite& operator=(Sprite&&) noexcept;
 			~Sprite();
-
-			std::shared_ptr<Sprite> share_moved();
 
 			void draw() const;
 

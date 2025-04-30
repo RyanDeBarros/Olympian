@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 
-#include "SpecializedBuffers.h"
+#include "../SpecializedBuffers.h"
 #include "util/IDGenerator.h"
 #include "util/Assert.h"
 

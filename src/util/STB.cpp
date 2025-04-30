@@ -1,7 +1,9 @@
 #include <memory>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_TRUETYPE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG
 #define STBI_MALLOC(sz) (new unsigned char[sz])
 #define STBI_FREE(p) (delete[] (unsigned char*)p)
 inline static void* stbi_realloc_sized(void* p, auto oldsz, auto newsz)
@@ -16,3 +18,5 @@ inline static void* stbi_realloc_sized(void* p, auto oldsz, auto newsz)
 }
 #define STBI_REALLOC_SIZED(p, oldsz, newsz) stbi_realloc_sized(p, oldsz, newsz)
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
+#include <stb/stb_truetype.h>

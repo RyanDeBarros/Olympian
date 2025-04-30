@@ -11,28 +11,28 @@ namespace oly
 	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::Image& image)
 	{
 		bool generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
-		return rendering::load_bindless_texture_2d(image, generate_mipmaps);
+		return move_shared(rendering::load_bindless_texture_2d(image, generate_mipmaps));
 	}
 
 	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::Anim& anim)
 	{
 		bool generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
-		return rendering::load_bindless_texture_2d_array(anim, generate_mipmaps);
+		return move_shared(rendering::load_bindless_texture_2d_array(anim, generate_mipmaps));
 	}
 
 	rendering::BindlessTextureRes TextureRegistry::create_texture(const assets::AssetNode& node, const rendering::VectorImageRes& image, const rendering::NSVGAbstract& abstract, const rendering::NSVGContext& context)
 	{
 		std::string generate_mipmaps = node["generate mipmaps"].value<std::string>().value_or("");
 		if (generate_mipmaps == "auto")
-			return rendering::load_bindless_nsvg_texture_2d(image, true);
+			return move_shared(rendering::load_bindless_nsvg_texture_2d(image, true));
 		else if (generate_mipmaps == "manual")
 		{
 			auto texture = rendering::load_bindless_nsvg_texture_2d(image, false);
 			rendering::nsvg_manually_generate_mipmaps(image, abstract, context);
-			return texture;
+			return move_shared(std::move(texture));
 		}
 		else
-			return rendering::load_bindless_nsvg_texture_2d(image, false);
+			return move_shared(rendering::load_bindless_nsvg_texture_2d(image, false));
 	}
 
 	void TextureRegistry::setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target)
@@ -109,7 +109,7 @@ namespace oly
 		{
 			rendering::BindlessTextureRes texture = create_texture(node, *anim);
 			setup_texture(texture, node, GL_TEXTURE_2D_ARRAY);
-			texture_reg[name.value()] = rendering::AnimBindlessTextureRes{ anim, std::move(texture)};
+			texture_reg[name.value()] = AnimBindlessTextureRes{ anim, std::move(texture)};
 		}
 	}
 
@@ -120,7 +120,7 @@ namespace oly
 		{
 			rendering::BindlessTextureRes texture = create_texture(node, *image);
 			setup_texture(texture, node, GL_TEXTURE_2D);
-			texture_reg[name.value()] = rendering::ImageBindlessTextureRes{ image, std::move(texture) };
+			texture_reg[name.value()] = ImageBindlessTextureRes{ image, std::move(texture) };
 		}
 	}
 
@@ -128,7 +128,7 @@ namespace oly
 	{
 		rendering::BindlessTextureRes texture = create_texture(node, image, abstract, context);
 		setup_texture(texture, node, GL_TEXTURE_2D);
-		texture_reg[name] = rendering::VectorBindlessTextureRes{ image, std::move(texture) };
+		texture_reg[name] = VectorBindlessTextureRes{ image, std::move(texture) };
 	}
 
 	void TextureRegistry::load_registree(const std::string& root_dir, const assets::AssetNode& node)
@@ -243,11 +243,11 @@ namespace oly
 	rendering::ImageDimensions oly::TextureRegistry::get_image_dimensions(const std::string& name) const
 	{
 		return std::visit([](auto&& r) -> rendering::ImageDimensions {
-			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageBindlessTextureRes>)
+			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, ImageBindlessTextureRes>)
 				return r.image->dim();
-			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::VectorBindlessTextureRes>)
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, VectorBindlessTextureRes>)
 				return r.image.image->dim();
-			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::AnimBindlessTextureRes>)
+			else if constexpr (std::is_same_v<std::decay_t<decltype(r)>, AnimBindlessTextureRes>)
 			{
 				auto sp = r.anim->dim().lock();
 				return { sp->w, sp->h, sp->cpp };

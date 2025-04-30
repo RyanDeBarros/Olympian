@@ -149,4 +149,9 @@ namespace oly
 		void sync() { double n = glfwGetTime(); _delta = n - _now; _now = n; }
 	};
 	inline TimeImpl TIME;
+
+	template<typename T>
+	inline std::shared_ptr<T> move_shared(T&& obj) { return std::make_shared<T>(std::move(obj)); }
+	template<typename T>
+	inline std::unique_ptr<T> move_unique(T&& obj) { return std::make_unique<T>(std::move(obj)); }
 }

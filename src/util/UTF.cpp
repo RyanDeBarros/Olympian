@@ -248,7 +248,7 @@ namespace oly
 			return std::string(utf8.begin(), utf8.end());
 		}
 
-		int String::Iterator::codepoint() const
+		Codepoint String::Iterator::codepoint() const
 		{
 			if (i >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "End of string");
 			unsigned char first = UC(string.str[i]);
@@ -280,7 +280,7 @@ namespace oly
 				codepoint |= (UC(string.str[i + 3]) & CONT_MASK);
 			}
 
-			return codepoint;
+			return Codepoint(int(codepoint));
 		}
 
 		String::Iterator& String::Iterator::operator++()
@@ -340,7 +340,7 @@ namespace oly
 				throw Error(ErrorCode::UTF, "Invalid UTF-8");
 		}
 
-		int String::Iterator::advance()
+		Codepoint String::Iterator::advance()
 		{
 			if (i >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "End of string");
 			unsigned char first = UC(string.str[i]);
@@ -378,11 +378,12 @@ namespace oly
 			else
 				throw Error(ErrorCode::UTF, "Invalid UTF-8");
 
-			return codepoint;
+			return Codepoint(int(codepoint));
 		}
 
-		void String::push_back(int codepoint)
+		void String::push_back(Codepoint cdpnt)
 		{
+			int codepoint = cdpnt;
 			char8_t quad[4]{ 0, 0, 0, 0 };
 			if (codepoint <= CODEPOINT_B1_MAX)
 			{

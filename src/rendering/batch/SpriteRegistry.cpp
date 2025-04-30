@@ -32,7 +32,7 @@ namespace oly
 						sprite_constructors[name] = node;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(std::move(name), create_sprite(context, name).share_moved());
+							auto_loaded.emplace(std::move(name), move_shared(create_sprite(context, name)));
 							if (_init.value() == "discard")
 								sprite_constructors.erase(name);
 						}

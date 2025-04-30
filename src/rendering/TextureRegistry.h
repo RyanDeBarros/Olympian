@@ -10,7 +10,23 @@ namespace oly
 	class Context;
 	class TextureRegistry
 	{
-		typedef std::variant<rendering::ImageBindlessTextureRes, rendering::AnimBindlessTextureRes, rendering::VectorBindlessTextureRes> TextureRegistree;
+		struct ImageBindlessTextureRes
+		{
+			rendering::ImageRes image;
+			rendering::BindlessTextureRes texture;
+		};
+		struct AnimBindlessTextureRes
+		{
+			rendering::AnimRes anim;
+			rendering::BindlessTextureRes texture;
+		};
+		struct VectorBindlessTextureRes
+		{
+			rendering::VectorImageRes image;
+			rendering::BindlessTextureRes texture;
+		};
+
+		typedef std::variant<ImageBindlessTextureRes, AnimBindlessTextureRes, VectorBindlessTextureRes> TextureRegistree;
 		static void delete_buffer(TextureRegistree& r) { std::visit([](auto&& r) {
 			if constexpr (std::is_same_v<std::decay_t<decltype(r)>, rendering::ImageDimensions>)
 				r.image.delete_buffer();

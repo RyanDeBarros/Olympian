@@ -13,6 +13,22 @@ namespace oly
 		extern std::u8string convert(const std::string& str);
 		extern std::string convert(const std::u8string& utf8);
 
+		class Codepoint
+		{
+			int c;
+
+		public:
+			constexpr explicit Codepoint(int c = 0) : c(c) {}
+			operator int() const { return c; }
+
+			constexpr bool operator==(const Codepoint&) const = default;
+			constexpr bool operator==(int x) const { return c == x; }
+			constexpr bool operator==(char x) const { return c == x; }
+		};
+
+		constexpr bool is_n_or_r(Codepoint codepoint) { return codepoint == '\n' || codepoint == '\r'; }
+		constexpr bool is_rn(Codepoint r, Codepoint n) { return r == '\r' && n == '\n'; }
+
 		class String
 		{
 			friend class Iterator;
@@ -48,7 +64,7 @@ namespace oly
 				Iterator& operator=(const Iterator&) = default;
 				Iterator& operator=(Iterator&&) noexcept = default;
 
-				int codepoint() const;
+				Codepoint codepoint() const;
 				Iterator& operator++();
 				Iterator operator++(int);
 				Iterator& operator--();
@@ -57,7 +73,7 @@ namespace oly
 				bool operator!=(const Iterator& other) const { return string.str != other.string.str || i != other.i; }
 				char num_bytes() const;
 				operator bool() const { return i < string.str.size(); }
-				int advance();
+				Codepoint advance();
 			};
 
 			Iterator begin() const { return Iterator(*this, 0); }
@@ -67,7 +83,7 @@ namespace oly
 			std::u8string& encoding() { return str; }
 			const std::u8string& encoding() const { return str; }
 
-			void push_back(int codepoint);
+			void push_back(Codepoint codepoint);
 
 			String operator+(const String& rhs) const;
 			String& operator+=(const String& rhs);
@@ -84,3 +100,4 @@ namespace oly
 }
 
 template<> struct std::hash<oly::utf::String> { size_t operator()(const oly::utf::String& string) const { return string.hash(); } };
+template<> struct std::hash<oly::utf::Codepoint> { size_t operator()(const oly::utf::Codepoint& c) const { return std::hash<int>{}(c); } };

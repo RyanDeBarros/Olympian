@@ -238,10 +238,10 @@ namespace oly
 			_buf = nullptr;
 		}
 
-		TextureRes load_texture_2d(const Image& image, bool generate_mipmaps)
+		Texture load_texture_2d(const Image& image, bool generate_mipmaps)
 		{
-			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
-			glBindTexture(GL_TEXTURE_2D, *texture);
+			Texture texture(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, texture);
 			const auto& dim = image.dim();
 			tex::pixel_alignment_pre_send(dim.cpp);
 			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.buf());
@@ -396,10 +396,10 @@ namespace oly
 			_buf = nullptr;
 		}
 
-		TextureRes load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
+		Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
 		{
-			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D_ARRAY);
-			glBindTexture(GL_TEXTURE_2D_ARRAY, *texture);
+			Texture texture(GL_TEXTURE_2D_ARRAY);
+			glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
 			const auto& dim = anim.dim().lock();
 			tex::pixel_alignment_pre_send(dim->cpp);
 			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, tex::internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, tex::format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
@@ -550,10 +550,10 @@ namespace oly
 			delete[] temp;
 		}
 
-		TextureRes load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps)
+		Texture load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps)
 		{
-			TextureRes texture = std::make_shared<Texture>(GL_TEXTURE_2D);;
-			glBindTexture(GL_TEXTURE_2D, *texture);
+			Texture texture(GL_TEXTURE_2D);;
+			glBindTexture(GL_TEXTURE_2D, texture);
 			const auto& dim = image.image->dim();
 			tex::pixel_alignment_pre_send(dim.cpp);
 			glTexImage2D(GL_TEXTURE_2D, 0, tex::internal_format(dim.cpp), dim.w, dim.h, 0, tex::format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
