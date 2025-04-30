@@ -15,6 +15,7 @@ namespace oly
 		OLYMPIAN_INIT,
 		FILE_IO,
 		INDEX_OUT_OF_RANGE,
+		UTF,
 		GLFW_INIT,
 		GLEW_INIT,
 		CONTEXT_INIT,
