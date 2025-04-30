@@ -20,6 +20,9 @@ namespace oly
 			case Renderable::ELLIPSE:
 				renderable = context.ref_ellipse(name).lock();
 				break;
+			case Renderable::TILEMAP:
+				renderable = context.ref_tilemap(name).lock();
+				break;
 			}
 		}
 
@@ -97,6 +100,8 @@ namespace oly
 											renderable = DrawCommand::Draw::Renderable::POLYGON;
 										else if (toml_renderable == "ellipse")
 											renderable = DrawCommand::Draw::Renderable::ELLIPSE;
+										else if (toml_renderable == "tilemap")
+											renderable = DrawCommand::Draw::Renderable::TILEMAP;
 										else
 											return;
 										draw_command_list.commands.push_back({ DrawCommand::Draw(context, renderable, name) });

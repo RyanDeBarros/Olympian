@@ -5,8 +5,8 @@
 #include "rendering/batch/SpriteRegistry.h"
 #include "rendering/batch/PolygonRegistry.h"
 #include "rendering/batch/EllipseRegistry.h"
+#include "rendering/batch/TileMap.h"
 #include "rendering/batch/DrawCommands.h"
-#include "rendering/batch/TileSet.h"
 
 namespace oly
 {
@@ -26,9 +26,10 @@ namespace oly
 			std::unique_ptr<rendering::PolygonBatch> polygon_batch;
 			std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
 			
-			rendering::DrawCommandRegistry draw_command_registry;
-
 			rendering::TileSetRegistry tileset_registry;
+			rendering::TileMapRegistry tilemap_registry;
+
+			rendering::DrawCommandRegistry draw_command_registry;
 		} internal;
 
 	public:
@@ -87,10 +88,14 @@ namespace oly
 		std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) const { return internal.ellipse_registry.ref_ellipse(name); }
 		void render_ellipses() const { internal.ellipse_batch->render(); }
 
-		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
-
 		const rendering::TileSetRegistry& tilset_registry() const { return internal.tileset_registry; }
 		rendering::TileSet tileset(const std::string& name) const { return internal.tileset_registry.create_tileset(*this, name); }
 		std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name) const { return internal.tileset_registry.ref_tileset(name); }
+
+		const rendering::TileMapRegistry& tilmap_registry() const { return internal.tilemap_registry; }
+		rendering::TileMap tilemap(const std::string& name) const { return internal.tilemap_registry.create_tilemap(*this, name); }
+		std::weak_ptr<rendering::TileMap> ref_tilemap(const std::string& name) const { return internal.tilemap_registry.ref_tilemap(name); }
+
+		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
 	};
 }

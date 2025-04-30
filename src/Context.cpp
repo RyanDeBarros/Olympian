@@ -122,16 +122,6 @@ namespace oly
 			}
 		}
 
-		{ // init draw command registry
-			auto register_files = toml_context["draw command registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.draw_command_registry.load(*this, root_dir + file.value());
-			}
-		}
-
 		{ // init tileset registry
 			auto register_files = toml_context["tileset registries"].as_array();
 			if (register_files)
@@ -139,6 +129,26 @@ namespace oly
 				for (const auto& node : *register_files)
 					if (auto file = node.value<std::string>())
 						internal.tileset_registry.load(*this, root_dir + file.value());
+			}
+		}
+
+		{ // init tilemap registry
+			auto register_files = toml_context["tilemap registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.tilemap_registry.load(*this, root_dir + file.value());
+			}
+		}
+
+		{ // init draw command registry
+			auto register_files = toml_context["draw command registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.draw_command_registry.load(*this, root_dir + file.value());
 			}
 		}
 	}

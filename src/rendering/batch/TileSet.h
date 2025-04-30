@@ -124,7 +124,6 @@ namespace oly
 			TileSet create_tileset(const Context& context, const std::string& name) const;
 			std::weak_ptr<TileSet> ref_tileset(const std::string& name) const;
 			void delete_tileset(const Context& context, const std::string& name);
-
 		};
 	}
 }

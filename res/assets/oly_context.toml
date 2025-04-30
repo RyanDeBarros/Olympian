@@ -10,3 +10,4 @@ ellipse_batch             = { "ellipses" = 100 }
 "ellipse registries"      = [ "ellipse_registry.toml" ]
 "draw command registries" = [ "draw_commands.toml" ]
 "tileset registries"      = [ "grass_tileset.toml" ]
+"tilemap registries"      = [ "grass_tilemap.toml" ]

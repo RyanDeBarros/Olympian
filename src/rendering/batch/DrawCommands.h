@@ -3,6 +3,7 @@
 #include "Sprites.h"
 #include "Polygons.h"
 #include "Ellipses.h"
+#include "TileMap.h"
 
 namespace oly
 {
@@ -17,10 +18,11 @@ namespace oly
 				{
 					SPRITE,
 					POLYGON,
-					ELLIPSE
+					ELLIPSE,
+					TILEMAP
 				};
 
-				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>> renderable;
+				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>> renderable;
 				Draw(const Context& context, Renderable renderable, const std::string& name);
 				void execute() const;
 			};

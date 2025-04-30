@@ -105,5 +105,101 @@ namespace oly
 			layer.transformer.attach_parent(&transformer);
 			layers.insert(layers.begin() + z, std::move(layer));
 		}
+
+		void TileMap::load(const Context& context, const toml::table& node)
+		{
+			set_local() = assets::load_transform_2d(node, "transform");
+
+			auto toml_layers = node["layer"].as_array();
+			if (toml_layers)
+			{
+				toml_layers->for_each([this, &context](auto&& node) {
+					if constexpr (toml::is_table<decltype(node)>)
+					{
+						auto tileset = node["tileset"].value<std::string>();
+						if (!tileset)
+							return;
+
+						TileMapLayer layer;
+						layer.tileset = context.ref_tileset(tileset.value()).lock();
+						
+						auto tiles = node["tiles"].as_array();
+						if (tiles)
+						{
+							for (const auto& toml_tile : *tiles)
+							{
+								if (auto _tile = toml_tile.as_array())
+								{
+									glm::vec2 tile{};
+									if (assets::parse_vec2(_tile, tile))
+										layer.paint_tile(context, { (int)tile.x, (int)tile.y });
+								}
+							}
+						}
+
+						auto z = node["z"].value<int64_t>();
+						if (z)
+							register_layer((size_t)z.value(), std::move(layer));
+						else
+							register_layer(std::move(layer));
+					}
+					});
+			}
+		}
+
+		void TileMapRegistry::load(const Context& context, const char* tilemap_file)
+		{
+			auto toml = assets::load_toml(tilemap_file);
+			auto tilemap_list = toml["tilemap"].as_array();
+			if (!tilemap_list)
+				return;
+			tilemap_list->for_each([this, &context](auto&& node) {
+				if constexpr (toml::is_table<decltype(node)>)
+				{
+					if (auto _name = node["name"].value<std::string>())
+					{
+						const std::string& name = _name.value();
+						tilemap_constructors[name] = node;
+						if (auto _init = node["init"].value<std::string>())
+						{
+							auto_loaded.emplace(name, std::shared_ptr<TileMap>(new TileMap(create_tilemap(context, name))));
+							if (_init.value() == "discard")
+								tilemap_constructors.erase(name);
+						}
+					}
+				}
+				});
+		}
+		
+		void TileMapRegistry::clear()
+		{
+			tilemap_constructors.clear();
+			auto_loaded.clear();
+		}
+		
+		TileMap TileMapRegistry::create_tilemap(const Context& context, const std::string& name) const
+		{
+			auto it = tilemap_constructors.find(name);
+			if (it == tilemap_constructors.end())
+				throw Error(ErrorCode::UNREGISTERED_TILEMAP);
+			const auto& node = it->second;
+
+			TileMap tilemap;
+			tilemap.load(context, node);
+			return tilemap;
+		}
+		
+		std::weak_ptr<TileMap> TileMapRegistry::ref_tilemap(const std::string& name) const
+		{
+			auto it = auto_loaded.find(name);
+			if (it == auto_loaded.end())
+				throw Error(ErrorCode::UNREGISTERED_TILEMAP);
+			return it->second;
+		}
+		
+		void TileMapRegistry::delete_tilemap(const Context& context, const std::string& name)
+		{
+			auto_loaded.erase(name);
+		}
 	}
 }

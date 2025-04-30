@@ -38,26 +38,7 @@ int main()
 	auto octagon = oly_context.ref_ngon("octagon").lock();
 	auto flag_texture = oly_context.texture_registry().get_texture("flag");
 	auto atlased_knight = oly_context.ref_atlas_extension("atlased knight").lock();
-
-	oly::rendering::TileMap tilemap;
-	oly::rendering::TileMapLayer grass_layer;
-	grass_layer.tileset = oly_context.ref_tileset("grass tileset").lock();
-	grass_layer.paint_tile(oly_context, { -1, -1 });
-	grass_layer.paint_tile(oly_context, {  0, -1 });
-	grass_layer.paint_tile(oly_context, {  1, -1 });
-	grass_layer.paint_tile(oly_context, { -1,  0 });
-	grass_layer.paint_tile(oly_context, {  0,  0 });
-	grass_layer.paint_tile(oly_context, {  1,  0 });
-	grass_layer.paint_tile(oly_context, {  2,  0 });
-	grass_layer.paint_tile(oly_context, { -1,  1 });
-	grass_layer.paint_tile(oly_context, {  0,  1 });
-	grass_layer.paint_tile(oly_context, {  1,  1 });
-	grass_layer.paint_tile(oly_context, {  2,  2 });
-	grass_layer.paint_tile(oly_context, {  3,  2 });
-	grass_layer.paint_tile(oly_context, {  2,  3 });
-	grass_layer.paint_tile(oly_context, {  3,  3 });
-	tilemap.register_layer(std::move(grass_layer));
-	tilemap.transformer.set_local().scale = glm::vec2(100.0f);
+	auto tilemap = oly_context.ref_tilemap("grass tilemap").lock();
 
 	// LATER begin play on initial actors here
 
@@ -109,7 +90,7 @@ int main()
 
 		atlased_knight->on_tick();
 
-		tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
+		tilemap->set_local().rotation += oly::TIME.delta<float>() * 0.1f;
 
 		// draw
 
@@ -126,8 +107,6 @@ int main()
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		oly_context.render_sprites();
-		oly_context.execute_draw_command("sprites and polygons");
-		tilemap.draw();
-		oly_context.render_sprites();
+		oly_context.execute_draw_command("sprites, polygons, and tilemaps");
 	}
 }
