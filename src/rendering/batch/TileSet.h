@@ -86,8 +86,16 @@ namespace oly
 				Transformation transformation = Transformation::NONE;
 			};
 
+			struct TileDesc
+			{
+				std::string name;
+				math::Rect2D uvs = { 0, 1, 0, 1 };
+
+				bool operator==(const TileDesc&) const = default;
+			};
+
 		private:
-			std::vector<std::string> texture_names;
+			std::vector<TileDesc> tiles;
 			std::unordered_map<Configuration, Tile> assignment;
 
 			bool valid_configuration(Configuration configuration) const;
@@ -96,7 +104,7 @@ namespace oly
 			bool valid_6() const;
 			bool valid_4x4() const;
 			bool valid_4x4_2x2() const;
-			std::string get_texture_name(PaintedTile tile, Transformation& transformation) const;
+			TileDesc get_tile_desc(PaintedTile tile, Transformation& transformation) const;
 
 		private:
 			Tile get_assignment(Configuration config, Transformation& transformation) const;

@@ -9,6 +9,16 @@ namespace oly
 {
 	namespace rendering
 	{
+		UVRect& UVRect::from_rect(const math::Rect2D& rect)
+		{
+			auto rect_uvs = rect.uvs();
+			uvs[0] = rect_uvs[0];
+			uvs[1] = rect_uvs[1];
+			uvs[2] = rect_uvs[2];
+			uvs[3] = rect_uvs[3];
+			return *this;
+		}
+
 		const SpriteBatch::QuadInfo& SpriteBatch::get_quad_info(GLuint vb_pos) const
 		{
 			return quad_ssbo_block.get<INFO>(vb_pos);
@@ -274,6 +284,12 @@ namespace oly
 		void Sprite::set_tex_coords(const UVRect& tex_coords) const
 		{
 			batch->set_tex_coords(vbid.get(), tex_coords);
+		}
+
+		void Sprite::set_tex_coords(const math::Rect2D& rect) const
+		{
+
+			batch->set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
 		}
 
 		void Sprite::set_modulation(const SpriteBatch::Modulation& modulation) const

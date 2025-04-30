@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <array>
 
 namespace oly
 {
@@ -210,5 +211,22 @@ namespace oly
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations);
 		extern Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points);
+
+		struct Rect2D
+		{
+			float x1, x2, y1, y2;
+
+			std::array<glm::vec2, 4> uvs() const
+			{
+				return {
+					glm::vec2{ x1, y1 },
+					glm::vec2{ x2, y1 },
+					glm::vec2{ x2, y2 },
+					glm::vec2{ x1, y2 }
+				};
+			}
+
+			bool operator==(const Rect2D&) const = default;
+		};
 	}
 }

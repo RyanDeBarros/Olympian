@@ -13,7 +13,7 @@ namespace oly
 			if (it == assignment.end())
 				return false;
 			else
-				return it->second.tex_index < texture_names.size();
+				return it->second.tex_index < tiles.size();
 		}
 
 		bool TileSet::valid_6() const
@@ -38,11 +38,11 @@ namespace oly
 				               && valid_configuration(Configuration::CORNER_3) && valid_configuration(Configuration::CORNER_4);
 		}
 
-		std::string TileSet::get_texture_name(PaintedTile tile, Transformation& transformation) const
+		TileSet::TileDesc TileSet::get_tile_desc(PaintedTile tile, Transformation& transformation) const
 		{
 			Tile t = get_assignment(get_configuration(tile), transformation);
 			transformation &= t.transformation;
-			return texture_names[t.tex_index];
+			return tiles[t.tex_index];
 		}
 
 		TileSet::Tile TileSet::get_assignment(Configuration config, Transformation& transformation) const
@@ -742,12 +742,21 @@ namespace oly
 					if (!_config || !_tex)
 						return;
 
-					const std::string& texture = _tex.value();
+					TileDesc desc;
+					desc.name = _tex.value();
+					glm::vec4 uvs{};
+					if (assets::parse_vec4(node, "uvs", uvs))
+					{
+						desc.uvs.x1 = uvs[0];
+						desc.uvs.x2 = uvs[1];
+						desc.uvs.y1 = uvs[2];
+						desc.uvs.y2 = uvs[3];
+					}
 					Tile tile;
-					auto texture_it = std::find(texture_names.begin(), texture_names.end(), texture);
-					tile.tex_index = texture_it - texture_names.begin();
-					if (texture_it == texture_names.end())
-						texture_names.push_back(texture);
+					auto texture_it = std::find(tiles.begin(), tiles.end(), desc);
+					tile.tex_index = texture_it - tiles.begin();
+					if (texture_it == tiles.end())
+						tiles.push_back(desc);
 
 					Configuration c;
 					const std::string& config = _config.value();

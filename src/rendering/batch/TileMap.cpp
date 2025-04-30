@@ -63,9 +63,10 @@ namespace oly
 			painted_tile.diagonal[3]   = sprite_map.count(tile + glm::ivec2{  1, -1 });
 			
 			TileSet::Transformation transformation;
-			std::string texture = tileset->get_texture_name(painted_tile, transformation);
+			TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
-			sprite.set_texture(context, texture);
+			sprite.set_texture(context, tile_desc.name);
+			sprite.set_tex_coords(tile_desc.uvs);
 			sprite.set_local().position = glm::vec2(tile);
 			if (transformation & TileSet::Transformation::REFLECT_X)
 				sprite.set_local().scale.x = -glm::abs(sprite.set_local().scale.x);
@@ -84,7 +85,7 @@ namespace oly
 			else
 				sprite.set_local().rotation = 0.0f;
 			
-			auto idim = context.texture_registry().get_image_dimensions(texture);
+			auto idim = context.texture_registry().get_image_dimensions(tile_desc.name);
 			sprite.set_local().scale = { 1.0f / idim.w, 1.0f / idim.h };
 		}
 

@@ -4,6 +4,7 @@
 #include "../UsageSlotTracker.h"
 #include "util/IDGenerator.h"
 #include "math/Transforms.h"
+#include "math/Geometry.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -17,6 +18,8 @@ namespace oly
 			glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
 
 			bool operator==(const UVRect&) const = default;
+
+			UVRect& from_rect(const math::Rect2D& rect);
 		};
 		typedef std::vector<UVRect> UVAtlas;
 		struct UVRectHash
@@ -188,6 +191,7 @@ namespace oly
 			void set_texture(const Context& context, const std::string& texture_name) const;
 			void set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const UVRect& tex_coords) const;
+			void set_tex_coords(const math::Rect2D& rect) const;
 			void set_modulation(const SpriteBatch::Modulation& modulation) const;
 			void set_frame_format(const AnimFrameFormat& anim) const;
 
