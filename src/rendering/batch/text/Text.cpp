@@ -19,7 +19,7 @@ namespace oly
 		}
 
 		TextBatch::TextBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64)), vbo_block(capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs),
+			: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64)), vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs),
 			ubo(capacity.foregrounds, capacity.backgrounds, capacity.modulations), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
@@ -29,12 +29,9 @@ namespace oly
 			ubo.background.send<Background>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
 
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_block.buf.get_buffer<VERTEX_POSITION>());
-			VertexAttribute<float>{ 0, 2 }.setup();
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_block.buf.get_buffer<TEX_COORD>()); // TODO implement persistent VBO, because growing the buffer means that the new buffer needs to be rebound to the original VAO's attribute.
-			VertexAttribute<float>{ 1, 2 }.setup();
-			glBindVertexArray(0);
+			vbo_block.attributes[VERTEX_POSITION] = VertexAttribute<float>{ 0, 2 };
+			vbo_block.attributes[TEX_COORD] = VertexAttribute<float>{ 1, 2 };
+			vbo_block.setup();
 		}
 
 		void TextBatch::render() const

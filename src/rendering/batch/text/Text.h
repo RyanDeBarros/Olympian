@@ -26,7 +26,7 @@ namespace oly
 				VERTEX_POSITION,
 				TEX_COORD
 			};
-			LazyPersistentGPUBufferBlock<glm::vec2, glm::vec2> vbo_block;
+			PersistentVertexBufferBlock<glm::vec2, glm::vec2> vbo_block;
 
 			struct GlyphInfo
 			{

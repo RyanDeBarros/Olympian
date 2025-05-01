@@ -27,12 +27,13 @@ namespace oly
 
 			enum
 			{
-				POSITION, // vbo
-				COLOR,    // vbo
-				INDEX,    // vbo
-				TRANSFORM // ssbo
+				POSITION,
+				COLOR,
+				INDEX
 			};
-			LazyPersistentGPUBufferBlock<glm::vec2, glm::vec4, GLuint, glm::mat3> bo_block;
+			PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint> vbo_block;
+
+			LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
 		public:
 			typedef StrictIDGenerator<Index>::ID PolygonID;

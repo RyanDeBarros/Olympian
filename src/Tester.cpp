@@ -3,7 +3,7 @@
 #include <nanosvg/nanosvg.h>
 #include <nanosvg/nanosvgrast.h>
 
-#include "rendering/batch/text/Text.h"
+#include "rendering/batch/text/Paragraph.h"
 
 int main()
 {
@@ -45,13 +45,13 @@ int main()
 	const auto& glyph_a = roboto_regular->get_glyph(oly::utf::Codepoint('a'));
 	
 	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
-	oly::rendering::GlyphText glyph_text_a(text_batch);
-
-	glyph_text_a.set_texture(glyph_a.texture);
-	glyph_text_a.set_vertex_positions({ 0, (float)glyph_a.width, -(float)glyph_a.height, 0 });
-	glyph_text_a.set_tex_coords(roboto_regular->uvs(glyph_a));
-	glyph_text_a.set_local().position = { -300, 300 };
-	glyph_text_a.set_local().scale = glm::vec2(10.0f);
+	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), "rgb");
+	paragraph.set_local().position = { -300, 100 };
+	paragraph.set_local().scale = glm::vec2(2.0f);
+	paragraph.set_foreground_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
+	paragraph.set_foreground_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
+	paragraph.set_background_color(1, { { 0.0f, 0.0f, 0.0f, 1.0f } });
+	paragraph.set_foreground_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
 
 	// LATER begin play on initial actors here
 
@@ -122,7 +122,7 @@ int main()
 		oly_context.render_sprites();
 		oly_context.execute_draw_command("sprites, polygons, and tilemaps");
 
-		glyph_text_a.draw();
+		paragraph.draw();
 		text_batch.render();
 	}
 }

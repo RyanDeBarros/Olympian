@@ -13,38 +13,35 @@ namespace oly
 	namespace rendering
 	{
 		PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
-			: ebo(vao, capacity.indices), bo_block({ capacity.vertices, capacity.vertices, capacity.vertices, capacity.indices }), vertex_free_space({ 0, capacity.primitives }), projection_bounds(projection_bounds)
+			: ebo(vao, capacity.indices), vbo_block(vao, { capacity.vertices, capacity.vertices, capacity.vertices }), transform_ssbo(capacity.indices),
+			vertex_free_space({0, capacity.primitives}), projection_bounds(projection_bounds)
 		{
 			shader = shaders::polygon_batch;
 			projection_location = shaders::location(shader, "uProjection");
 
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<POSITION>());
-			VertexAttribute<float>{ 0, 2 }.setup();
-			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<COLOR>());
-			VertexAttribute<float>{ 1, 4 }.setup();
-			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<INDEX>());
-			VertexAttribute<int>{ 2, 1 }.setup();
-			glBindVertexArray(0);
+			vbo_block.attributes[POSITION] = VertexAttribute<float>{ 0, 2 };
+			vbo_block.attributes[COLOR] = VertexAttribute<float>{ 1, 4 };
+			vbo_block.attributes[INDEX] = VertexAttribute<int>{ 2, 1 };
+			vbo_block.setup();
 		}
 
 		void PolygonBatch::render() const
 		{
-			bo_block.pre_draw_all();
+			vbo_block.pre_draw_all();
 			glBindVertexArray(vao);
 			glUseProgram(shader);
 			glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
 
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bo_block.buf.get_buffer<TRANSFORM>());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
 			ebo.render_elements(GL_TRIANGLES);
-			bo_block.post_draw_all();
+			vbo_block.post_draw_all();
 		}
 
 		void PolygonBatch::set_primitive_points(Range<Index> range, const glm::vec2* points, Index count)
 		{
 			count = std::min(range.length, count);
 			for (Index v = 0; v < count; ++v)
-				bo_block.set<POSITION>(range.initial + v) = points[v];
+				vbo_block.set<POSITION>(range.initial + v) = points[v];
 		}
 
 		void PolygonBatch::set_primitive_colors(Range<Index> range, const glm::vec4* colors, Index count)
@@ -53,12 +50,12 @@ namespace oly
 			if (count == 1)
 			{
 				for (Index v = 0; v < range.length; ++v)
-					bo_block.set<COLOR>(range.initial + v) = colors[0];
+					vbo_block.set<COLOR>(range.initial + v) = colors[0];
 			}
 			else
 			{
 				for (Index v = 0; v < count; ++v)
-					bo_block.set<COLOR>(range.initial + v) = colors[v];
+					vbo_block.set<COLOR>(range.initial + v) = colors[v];
 			}
 		}
 
@@ -108,13 +105,13 @@ namespace oly
 
 		void PolygonBatch::set_polygon_transform(Index id, const glm::mat3& transform)
 		{
-			if (id >= bo_block.buf.get_size<TRANSFORM>())
+			if (id >= transform_ssbo.buf.get_size())
 			{
-				bo_block.grow<TRANSFORM>();
-				vertex_free_space.extend_rightward(bo_block.buf.get_size<TRANSFORM>());
+				transform_ssbo.grow();
+				vertex_free_space.extend_rightward(transform_ssbo.buf.get_size());
 			}
-			bo_block.buf.at<TRANSFORM>(id) = transform;
-			bo_block.flag<TRANSFORM>(id);
+			transform_ssbo.buf[id] = transform;
+			transform_ssbo.flag(id);
 		}
 
 		PolygonBatch::PolygonID PolygonBatch::generate_id(Index vertices)
@@ -128,7 +125,7 @@ namespace oly
 				vertex_free_space.reserve(vertex_range);
 				polygon_indexer[id.get()] = vertex_range;
 				for (Index v = 0; v < vertex_range.length; ++v)
-					bo_block.set<INDEX>(vertex_range.initial + v) = id.get();
+					vbo_block.set<INDEX>(vertex_range.initial + v) = id.get();
 			}
 			return id;
 		}

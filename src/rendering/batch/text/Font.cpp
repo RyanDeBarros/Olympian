@@ -185,7 +185,7 @@ namespace oly
 			return k != kerning.map.end() ? k->second : stbtt_GetGlyphKernAdvance(&info, g1, g2);
 		}
 
-		Glyph::Glyph(FontAtlas& font, int index, float scale, size_t buffer_pos)
+		FontGlyph::FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos)
 			: index(index), buffer_pos(buffer_pos)
 		{
 			font.font->get_glyph_horizontal_metrics(index, advance_width, left_bearing);
@@ -195,7 +195,7 @@ namespace oly
 			height = ch_y1 - ch_y0;
 		}
 
-		void Glyph::render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const
+		void FontGlyph::render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const
 		{
 			unsigned char* temp = new unsigned char[width * height];
 			font.font->make_bitmap(temp, width, height, font.scale, index);
@@ -212,7 +212,7 @@ namespace oly
 			delete[] temp;
 		}
 
-		void Glyph::render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const
+		void FontGlyph::render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const
 		{
 			font.font->make_bitmap(buffer, width, height, font.scale, index);
 		}
@@ -238,7 +238,7 @@ namespace oly
 				int g = font->find_glyph_index(codepoint);
 				if (!g)
 					continue;
-				Glyph glyph(*this, g, scale, common_dim.w);
+				FontGlyph glyph(*this, g, scale, common_dim.w);
 				common_dim.w += glyph.width + size_t(2);
 				if (glyph.height > common_dim.h)
 					common_dim.h = glyph.height;
@@ -274,7 +274,7 @@ namespace oly
 			int index = font->find_glyph_index(codepoint);
 			if (!index) return false;
 
-			Glyph glyph(*this, index, scale, -1);
+			FontGlyph glyph(*this, index, scale, -1);
 			ImageDimensions dim = { glyph.width, glyph.height, 1 };
 			unsigned char* bmp = dim.pxnew();
 			glyph.render_on_bitmap_unique(*this, bmp, dim.w, dim.h);
@@ -295,7 +295,7 @@ namespace oly
 				cache(codepoint);
 		}
 
-		const Glyph& FontAtlas::get_glyph(utf::Codepoint codepoint) const
+		const FontGlyph& FontAtlas::get_glyph(utf::Codepoint codepoint) const
 		{
 			auto it = glyphs.find(codepoint);
 			if (it != glyphs.end())
@@ -321,7 +321,7 @@ namespace oly
 			return (int)roundf((ascent - descent + linegap) * scale * line_spacing);
 		}
 
-		math::Rect2D FontAtlas::uvs(const Glyph& glyph) const
+		math::Rect2D FontAtlas::uvs(const FontGlyph& glyph) const
 		{
 			math::Rect2D b{};
 			if (glyph.buffer_pos != size_t(-1))

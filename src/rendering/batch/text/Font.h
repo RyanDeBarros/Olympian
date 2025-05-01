@@ -57,7 +57,7 @@ namespace oly
 		typedef std::shared_ptr<FontFace> FontFaceRes;
 
 		class FontAtlas;
-		struct Glyph
+		struct FontGlyph
 		{
 			int index = 0;
 			int width = 0, height = 0;
@@ -66,7 +66,7 @@ namespace oly
 			BindlessTextureRes texture;
 			size_t buffer_pos = -1;
 
-			Glyph(FontAtlas& font, int index, float scale, size_t buffer_pos);
+			FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos);
 
 			void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
 			void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
@@ -82,10 +82,10 @@ namespace oly
 		class FontAtlas
 		{
 			FontFaceRes font;
-			friend struct Glyph;
-			std::unordered_map<utf::Codepoint, Glyph> glyphs;
+			friend struct FontGlyph;
+			std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
 			FontOptions options;
-			float scale = 0.0f;
+			float scale = 1.0f;
 			int ascent = 0, descent = 0, linegap = 0, baseline = 0;
 			int space_width = 0;
 			ImageDimensions common_dim;
@@ -96,11 +96,12 @@ namespace oly
 
 			bool cache(utf::Codepoint codepoint);
 			void cache_all(const FontAtlas& other);
-			const Glyph& get_glyph(utf::Codepoint codepoint) const;
+			const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
 			bool supports(utf::Codepoint codepoint) const;
 			int kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc = 1.0f) const;
 			int line_height(float line_spacing = 1.0f) const;
-			math::Rect2D uvs(const Glyph& glyph) const;
+			math::Rect2D uvs(const FontGlyph& glyph) const;
+			float get_scale() const { return scale; }
 		};
 		typedef std::shared_ptr<FontAtlas> FontAtlasRes;
 
