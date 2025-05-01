@@ -1,62 +1,26 @@
 #include "Paragraph.h"
 
+#include "util/Errors.h"
+
 namespace oly
 {
 	namespace rendering
 	{
-		Paragraph::Paragraph(TextBatch& text_batch, const FontAtlasRes& font, utf::String&& text)
-			: text_batch(&text_batch), font(font)
+		Paragraph::Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat format, utf::String&& text)
+			: text_batch(&text_batch), format(format), font(font)
 		{
 			if (!text.empty())
 				set_text(std::move(text));
 		}
-		
-		void Paragraph::set_text(utf::String&& text)
+
+		TextBatch::TextColor Paragraph::get_text_color(size_t pos) const
 		{
-			this->text = std::move(text);
-			build_layout();
+			return renderables[pos].glyph.get_text_color();
 		}
 
-		void Paragraph::set_text(const utf::String& text)
+		void Paragraph::set_text_color(size_t pos, const TextBatch::TextColor& color)
 		{
-			this->text = text;
-			build_layout();
-		}
-
-		void Paragraph::set_font(const FontAtlasRes& font)
-		{
-			this->font = font;
-			auto iter = text.begin();
-			size_t i = 0;
-			while (iter)
-			{
-				utf::Codepoint codepoint = iter.advance();
-				GlyphText& glyph = renderables[i++].glyph;
-				if (font->cache(codepoint))
-					glyph.set_texture(font->get_glyph(codepoint).texture);
-				else
-					glyph.set_texture(nullptr);
-			}
-		}
-
-		TextBatch::Foreground Paragraph::get_foreground_color(size_t pos) const
-		{
-			return renderables[pos].glyph.get_foreground();
-		}
-
-		void Paragraph::set_foreground_color(size_t pos, const TextBatch::Foreground& color)
-		{
-			renderables[pos].glyph.set_foreground(color);
-		}
-
-		TextBatch::Background Paragraph::get_background_color(size_t pos) const
-		{
-			return renderables[pos].glyph.get_background();
-		}
-
-		void Paragraph::set_background_color(size_t pos, const TextBatch::Background& color)
-		{
-			renderables[pos].glyph.set_background(color);
+			renderables[pos].glyph.set_text_color(color);
 		}
 
 		TextBatch::Modulation Paragraph::get_modulation(size_t pos) const
@@ -88,45 +52,81 @@ namespace oly
 
 		void Paragraph::build_layout()
 		{
-			TypesetData typeset{};
+			build_page();
+			write_glyphs();
+			text_length = text.size();
+		}
+
+		void Paragraph::build_page()
+		{
+			pagedata = {};
+			typeset = {};
+			auto iter = text.begin();
+			while (iter)
+			{
+				utf::Codepoint codepoint = iter.advance();
+
+				if (codepoint == ' ')
+					typeset.x += font->get_space_width();
+				else if (codepoint == '\t')
+					typeset.x += font->get_space_width() * format.tab_spaces;
+				else if (utf::is_n_or_r(codepoint))
+				{
+					if (iter)
+					{
+						utf::Codepoint next_char = iter.codepoint();
+						if (utf::is_rn(codepoint, next_char))
+							++iter;
+					}
+					newline();
+					++pagedata.newlines;
+				}
+				else if (font->cache(codepoint))
+				{
+					const FontGlyph& font_glyph = font->get_glyph(codepoint);
+					typeset.x += roundi(font_glyph.advance_width * font->get_scale());
+				}
+				pagedata.width = std::max(pagedata.width, typeset.x);
+			}
+			pagedata.height = pagedata.newlines * line_height() + font->line_height();
+		}
+
+		void Paragraph::write_glyphs()
+		{
+			typeset = {};
 			size_t i = 0;
 			auto iter = text.begin();
 			while (iter)
 			{
 				utf::Codepoint codepoint = iter.advance();
 				if (i >= renderables.size())
-					create_glyph(); // TODO batch create glyphs instead of one at a time?
+					create_glyph();
 				Renderable& renderable = renderables[i++];
 
 				if (codepoint == ' ')
-				{
-					// TODO
-				}
+					typeset.x += font->get_space_width();
 				else if (codepoint == '\t')
-				{
-					// TODO
-				}
-				else if (utf::is_rn(codepoint, iter ? iter.codepoint() : utf::Codepoint(0)))
-				{
-					// TODO
-					++iter;
-				}
+					typeset.x += font->get_space_width() * format.tab_spaces;
 				else if (utf::is_n_or_r(codepoint))
 				{
-					// TODO
+					if (iter)
+					{
+						utf::Codepoint next_char = iter.codepoint();
+						if (utf::is_rn(codepoint, next_char))
+							++iter;
+					}
+					newline();
 				}
 				else if (font->cache(codepoint))
 				{
-					// TODO
 					const FontGlyph& font_glyph = font->get_glyph(codepoint);
 					renderable.visible = true;
 					write_glyph(renderable.glyph, font_glyph, { typeset.x, typeset.y });
-					typeset.x += (int)roundf(font_glyph.advance_width * font->get_scale());
+					typeset.x += roundi(font_glyph.advance_width * font->get_scale());
 				}
 				else
 					renderable.visible = false;
 			}
-			text_length = text.size();
 		}
 
 		void Paragraph::create_glyph()
@@ -139,9 +139,20 @@ namespace oly
 		void Paragraph::write_glyph(GlyphText& glyph, const FontGlyph& font_glyph, glm::vec2 par_pos) const
 		{
 			glyph.set_texture(font_glyph.texture);
-			glyph.set_vertex_positions({ 0, (float)font_glyph.width, (float)-font_glyph.height, 0 });
+			glyph.set_vertex_positions({ (float)font_glyph.box.x1, (float)font_glyph.box.x2, -(float)font_glyph.box.y2, -(float)font_glyph.box.y1});
 			glyph.set_tex_coords(font->uvs(font_glyph));
-			glyph.set_local().position = { par_pos.x, par_pos.y };
+			glyph.set_local().position = { par_pos.x - format.pivot.x * pagedata.width, par_pos.y - font->get_ascent() + (1.0 - format.pivot.y) * pagedata.height};
+		}
+
+		float Paragraph::line_height() const
+		{
+			return font->line_height() * format.line_spacing;
+		}
+
+		void Paragraph::newline()
+		{
+			typeset.x = 0.0f;
+			typeset.y -= line_height();
 		}
 	}
 }

@@ -45,13 +45,29 @@ int main()
 	const auto& glyph_a = roboto_regular->get_glyph(oly::utf::Codepoint('a'));
 	
 	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
-	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), "rgb");
-	paragraph.set_local().position = { -300, 100 };
-	paragraph.set_local().scale = glm::vec2(2.0f);
-	paragraph.set_foreground_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
-	paragraph.set_foreground_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
-	paragraph.set_background_color(1, { { 0.0f, 0.0f, 0.0f, 1.0f } });
-	paragraph.set_foreground_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
+	oly::rendering::ParagraphFormat parformat;
+	parformat.pivot = { 0.0f, 1.0f };
+	parformat.line_spacing = 2.0f;
+	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x\nabcd !!!");
+	paragraph.set_local().position = { 0, 0 };
+	paragraph.set_local().scale = glm::vec2(0.4f);
+	paragraph.set_text_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
+	paragraph.set_text_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
+	paragraph.set_text_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
+
+	auto bkg = oly_context.polygon();
+	bkg.transformer.attach_parent(&paragraph.transformer);
+	bkg.transformer.modifier = std::make_unique<oly::PivotTransformModifier2D>();
+	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().pivot = parformat.pivot;
+	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().size = paragraph.size();
+	bkg.polygon.colors = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+	bkg.polygon.points = {
+		{ -0.5f * paragraph.width(), -0.5f * paragraph.height() },
+		{  0.5f * paragraph.width(), -0.5f * paragraph.height() },
+		{  0.5f * paragraph.width(),  0.5f * paragraph.height() },
+		{ -0.5f * paragraph.width(),  0.5f * paragraph.height() }
+	};
+	bkg.init();
 
 	// LATER begin play on initial actors here
 
@@ -107,21 +123,23 @@ int main()
 
 		// draw
 
-		oly::stencil::begin();
-		oly::stencil::enable_drawing();
-		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
-		oly::stencil::draw::replace();
-		oly_context.execute_draw_command("polygon crop");
-		oly::stencil::disable_drawing();
-		oly::stencil::crop::match();
-		oly_context.execute_draw_command("sprite match");
-		oly::stencil::end();
-		oly_context.execute_draw_command("ellipses");
-		for (const auto& sprite : flag_tesselation)
-			sprite.draw();
-		oly_context.render_sprites();
-		oly_context.execute_draw_command("sprites, polygons, and tilemaps");
+		//oly::stencil::begin();
+		//oly::stencil::enable_drawing();
+		//glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
+		//oly::stencil::draw::replace();
+		//oly_context.execute_draw_command("polygon crop");
+		//oly::stencil::disable_drawing();
+		//oly::stencil::crop::match();
+		//oly_context.execute_draw_command("sprite match");
+		//oly::stencil::end();
+		//oly_context.execute_draw_command("ellipses");
+		//for (const auto& sprite : flag_tesselation)
+		//	sprite.draw();
+		//oly_context.render_sprites();
+		//oly_context.execute_draw_command("sprites, polygons, and tilemaps");
 
+		bkg.draw();
+		oly_context.render_polygons();
 		paragraph.draw();
 		text_batch.render();
 	}

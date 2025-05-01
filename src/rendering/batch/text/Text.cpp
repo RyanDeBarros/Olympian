@@ -20,13 +20,12 @@ namespace oly
 
 		TextBatch::TextBatch(Capacity capacity, const glm::vec4& projection_bounds)
 			: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64)), vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs),
-			ubo(capacity.foregrounds, capacity.backgrounds, capacity.modulations), projection_bounds(projection_bounds)
+			ubo(capacity.text_colors, capacity.modulations), projection_bounds(projection_bounds)
 		{
 			shader_locations.projection = shaders::location(shaders::sprite_batch, "uProjection");
 			shader_locations.modulation = shaders::location(shaders::sprite_batch, "uGlobalModulation");
 
-			ubo.foreground.send<Foreground>(0, {});
-			ubo.background.send<Background>(0, {});
+			ubo.text_color.send<TextColor>(0, {});
 			ubo.modulation.send<Modulation>(0, {});
 
 			vbo_block.attributes[VERTEX_POSITION] = VertexAttribute<float>{ 0, 2 };
@@ -46,9 +45,8 @@ namespace oly
 			tex_handles_ssbo.bind_base(0);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glyph_ssbo_block.buf.get_buffer<INFO>());
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glyph_ssbo_block.buf.get_buffer<TRANSFORM>());
-			ubo.foreground.bind_base(0);
-			ubo.background.bind_base(1);
-			ubo.modulation.bind_base(2);
+			ubo.text_color.bind_base(0);
+			ubo.modulation.bind_base(1);
 			ebo.render_elements(GL_TRIANGLES);
 
 			glyph_ssbo_block.post_draw_all();
@@ -66,9 +64,8 @@ namespace oly
 		{
 			const GlyphInfo& glyph_info = glyph_ssbo_block.buf.at<INFO>(id);
 			glyph_info_store.textures.decrement_usage(glyph_info.tex_slot);
-			glyph_info_store.foregrounds.decrement_usage(glyph_info.foreground_color_slot);
-			glyph_info_store.backgrounds.decrement_usage(glyph_info.background_color_slot);
-			glyph_info_store.modulations.decrement_usage(glyph_info.modulation_color_slot);
+			glyph_info_store.text_colors.decrement_usage(glyph_info.text_color_slot);
+			glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
 		}
 		
 		void TextBatch::set_texture(GLuint vb_pos, const BindlessTextureRes& texture)
@@ -77,21 +74,15 @@ namespace oly
 				glyph_ssbo_block.flag<INFO>(vb_pos);
 		}
 		
-		void TextBatch::set_foreground(GLuint vb_pos, const Foreground& foreground)
+		void TextBatch::set_text_color(GLuint vb_pos, const TextColor& text_color)
 		{
-			if (glyph_info_store.foregrounds.set_object(ubo.foreground, glyph_ssbo_block.buf.at<INFO>(vb_pos).foreground_color_slot, vb_pos, foreground))
-				glyph_ssbo_block.flag<INFO>(vb_pos);
-		}
-		
-		void TextBatch::set_background(GLuint vb_pos, const Background& background)
-		{
-			if (glyph_info_store.backgrounds.set_object(ubo.background, glyph_ssbo_block.buf.at<INFO>(vb_pos).background_color_slot, vb_pos, background))
+			if (glyph_info_store.text_colors.set_object(ubo.text_color, glyph_ssbo_block.buf.at<INFO>(vb_pos).text_color_slot, vb_pos, text_color))
 				glyph_ssbo_block.flag<INFO>(vb_pos);
 		}
 		
 		void TextBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
 		{
-			if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_color_slot, vb_pos, modulation))
+			if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_slot, vb_pos, modulation))
 				glyph_ssbo_block.flag<INFO>(vb_pos);
 		}
 		
@@ -101,21 +92,15 @@ namespace oly
 			return slot != 0 ? glyph_info_store.textures.get_object(slot) : nullptr;
 		}
 		
-		TextBatch::Foreground TextBatch::get_foreground(GLuint vb_pos) const
+		TextBatch::TextColor TextBatch::get_text_color(GLuint vb_pos) const
 		{
-			GLuint slot = get_glyph_info(vb_pos).foreground_color_slot;
-			return slot != 0 ? glyph_info_store.foregrounds.get_object(slot) : Foreground{};
-		}
-		
-		TextBatch::Background TextBatch::get_background(GLuint vb_pos) const
-		{
-			GLuint slot = get_glyph_info(vb_pos).background_color_slot;
-			return slot != 0 ? glyph_info_store.backgrounds.get_object(slot) : Background{};
+			GLuint slot = get_glyph_info(vb_pos).text_color_slot;
+			return slot != 0 ? glyph_info_store.text_colors.get_object(slot) : TextColor{};
 		}
 		
 		TextBatch::Modulation TextBatch::get_modulation(GLuint vb_pos) const
 		{
-			GLuint slot = get_glyph_info(vb_pos).modulation_color_slot;
+			GLuint slot = get_glyph_info(vb_pos).modulation_slot;
 			return slot != 0 ? glyph_info_store.modulations.get_object(slot) : Modulation{};
 		}
 
@@ -176,8 +161,7 @@ namespace oly
 
 			set_texture(other.get_texture());
 			set_tex_coords(other.get_tex_coords());
-			set_foreground(other.get_foreground());
-			set_background(other.get_background());
+			set_text_color(other.get_text_color());
 			set_modulation(other.get_modulation());
 		}
 		
@@ -205,8 +189,7 @@ namespace oly
 
 				set_texture(other.get_texture());
 				set_tex_coords(other.get_tex_coords());
-				set_foreground(other.get_foreground());
-				set_background(other.get_background());
+				set_text_color(other.get_text_color());
 				set_modulation(other.get_modulation());
 			}
 			return *this;
@@ -257,14 +240,9 @@ namespace oly
 			batch->set_tex_coords(vbid.get(), rect);
 		}
 		
-		void GlyphText::set_foreground(const TextBatch::Foreground& foreground) const
+		void GlyphText::set_text_color(const TextBatch::TextColor& text_color) const
 		{
-			batch->set_foreground(vbid.get(), foreground);
-		}
-		
-		void GlyphText::set_background(const TextBatch::Background& background) const
-		{
-			batch->set_background(vbid.get(), background);
+			batch->set_text_color(vbid.get(), text_color);
 		}
 		
 		void GlyphText::set_modulation(const TextBatch::Modulation& modulation) const
@@ -287,14 +265,9 @@ namespace oly
 			return batch->get_tex_coords(vbid.get());
 		}
 		
-		TextBatch::Foreground GlyphText::get_foreground() const
+		TextBatch::TextColor GlyphText::get_text_color() const
 		{
-			return batch->get_foreground(vbid.get());
-		}
-		
-		TextBatch::Background GlyphText::get_background() const
-		{
-			return batch->get_background(vbid.get());
+			return batch->get_text_color(vbid.get());
 		}
 		
 		TextBatch::Modulation GlyphText::get_modulation() const

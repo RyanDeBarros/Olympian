@@ -138,8 +138,7 @@ namespace oly
 
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
-			glm::mat3 P = pivot_matrix(pivot, size);
-			return P * global * glm::inverse(P);
+			return global * pivot_matrix(pivot, -size);
 		}
 		virtual std::unique_ptr<TransformModifier2D> clone() const override
 		{
@@ -178,8 +177,7 @@ namespace oly
 
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
-			glm::mat3 P = pivot_matrix(pivot, size);
-			return P * global * shearing_matrix(shearing) * glm::inverse(P);
+			return global * shearing_matrix(shearing) * pivot_matrix(pivot, -size);
 		}
 		virtual std::unique_ptr<TransformModifier2D> clone() const override
 		{
@@ -288,8 +286,7 @@ namespace oly
 
 		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
-			glm::mat4 P = pivot_matrix(pivot, size);
-			return P * global * glm::inverse(P);
+			return global * pivot_matrix(pivot, -size);
 		}
 		virtual std::unique_ptr<TransformModifier3D> clone() const override
 		{
@@ -328,8 +325,7 @@ namespace oly
 
 		virtual glm::mat4 operator()(const glm::mat4& global) const override
 		{
-			glm::mat4 P = pivot_matrix(pivot, size);
-			return P * global * shearing_matrix(shearing) * glm::inverse(P);
+			return global * shearing_matrix(shearing) * pivot_matrix(pivot, -size);
 		}
 		virtual std::unique_ptr<TransformModifier3D> clone() const override
 		{

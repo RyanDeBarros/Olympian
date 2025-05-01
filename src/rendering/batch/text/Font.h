@@ -60,8 +60,7 @@ namespace oly
 		struct FontGlyph
 		{
 			int index = 0;
-			int width = 0, height = 0;
-			int ch_y0 = 0;
+			math::IRect2D box;
 			int advance_width = 0, left_bearing = 0;
 			BindlessTextureRes texture;
 			size_t buffer_pos = -1;
@@ -74,7 +73,7 @@ namespace oly
 
 		struct FontOptions
 		{
-			float font_size;
+			float font_size = 36.0f;
 			GLenum min_filter = GL_NEAREST, mag_filter = GL_NEAREST;
 			bool auto_generate_mipmaps = false;
 		};
@@ -86,8 +85,8 @@ namespace oly
 			std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
 			FontOptions options;
 			float scale = 1.0f;
-			int ascent = 0, descent = 0, linegap = 0, baseline = 0;
-			int space_width = 0;
+			int ascent = 0, descent = 0, linegap = 0;
+			float baseline = 0.0f, space_width = 0.0f;
 			ImageDimensions common_dim;
 			BindlessTextureRes common_texture;
 
@@ -98,10 +97,14 @@ namespace oly
 			void cache_all(const FontAtlas& other);
 			const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
 			bool supports(utf::Codepoint codepoint) const;
-			int kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc = 1.0f) const;
-			int line_height(float line_spacing = 1.0f) const;
+			float kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc = 1.0f) const;
+			float line_height() const;
+			float get_ascent() const;
+			float get_descent() const;
+			float get_linegap() const;
 			math::Rect2D uvs(const FontGlyph& glyph) const;
 			float get_scale() const { return scale; }
+			float get_space_width() const { return space_width; }
 		};
 		typedef std::shared_ptr<FontAtlas> FontAtlasRes;
 

@@ -7,8 +7,7 @@ layout(location = 0) out vec4 oColor;
 
 in vec2 tTexCoord;
 flat in uint tTexSlot;
-flat in vec4 tForegroundColor;
-flat in vec4 tBackgroundColor;
+flat in vec4 tTextColor;
 in vec4 tModulation;
 
 layout(std430, binding = 0) readonly buffer TextureHandles {
@@ -17,5 +16,5 @@ layout(std430, binding = 0) readonly buffer TextureHandles {
 
 void main() {
 	float alpha = texture(sampler2D(uTextureHandles[tTexSlot]), tTexCoord).r;
-	oColor = uGlobalModulation * tModulation * mix(tBackgroundColor, tForegroundColor, alpha);
+	oColor = uGlobalModulation * tModulation * mix(vec4(0.0), tTextColor, alpha);
 }

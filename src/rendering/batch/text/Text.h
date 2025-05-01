@@ -31,9 +31,8 @@ namespace oly
 			struct GlyphInfo
 			{
 				GLuint tex_slot;
-				GLuint foreground_color_slot;
-				GLuint background_color_slot;
-				GLuint modulation_color_slot;
+				GLuint text_color_slot;
+				GLuint modulation_slot;
 			};
 
 			LightweightSSBO<Mutability::MUTABLE> tex_handles_ssbo;
@@ -53,28 +52,16 @@ namespace oly
 			} shader_locations;
 
 		public:
-			struct Foreground
+			struct TextColor
 			{
-				glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				glm::vec4 color = glm::vec4(1.0f);
 
-				bool operator==(const Foreground&) const = default;
+				bool operator==(const TextColor&) const = default;
 			};
-			struct ForegroundHash
+			struct TextColorHash
 			{
-				size_t operator()(const Foreground& foreground) const {
-					return std::hash<glm::vec4>{}(foreground.color);
-				}
-			};
-			struct Background
-			{
-				glm::vec4 color = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-				bool operator==(const Background&) const = default;
-			};
-			struct BackgroundHash
-			{
-				size_t operator()(const Background& background) const {
-					return std::hash<glm::vec4>{}(background.color);
+				size_t operator()(const TextColor& c) const {
+					return std::hash<glm::vec4>{}(c.color);
 				}
 			};
 			struct Modulation
@@ -93,10 +80,10 @@ namespace oly
 		private:
 			struct UBO
 			{
-				LightweightUBO<Mutability::MUTABLE> foreground, background, modulation;
+				LightweightUBO<Mutability::MUTABLE> text_color, modulation;
 
-				UBO(GLuint foregrounds, GLuint backgrounds, GLuint modulations)
-					: foreground(foregrounds * sizeof(glm::vec4)), background(backgrounds * sizeof(glm::vec4)), modulation(modulations * sizeof(Modulation)) {}
+				UBO(GLuint text_colors, GLuint modulations)
+					: text_color(text_colors * sizeof(TextColor)), modulation(modulations * sizeof(Modulation)) {}
 			} ubo;
 
 		public:
@@ -104,18 +91,17 @@ namespace oly
 
 			struct Capacity
 			{
-				Capacity(GLuint initial_glyphs, GLuint new_textures, GLuint new_foregrounds = 0, GLuint new_backgrounds = 0, GLuint new_modulations = 0)
-					: glyphs(initial_glyphs), textures(new_textures + 1), foregrounds(new_foregrounds + 1), backgrounds(new_backgrounds + 1), modulations(new_modulations + 1)
+				Capacity(GLuint initial_glyphs, GLuint new_textures, GLuint new_text_colors = 0, GLuint new_modulations = 0)
+					: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 				{
 					OLY_ASSERT(4 * initial_glyphs <= UINT_MAX);
-					OLY_ASSERT(foregrounds <= 1000);
-					OLY_ASSERT(backgrounds <= 1000); // TODO here and elsewhere, enforce this constraint when resizing
+					OLY_ASSERT(text_colors <= 1000); // TODO here and elsewhere, enforce this constraint when resizing
 					OLY_ASSERT(modulations <= 250);
 				}
 
 			private:
 				friend class TextBatch;
-				GLuint glyphs, textures, foregrounds, backgrounds, modulations;
+				GLuint glyphs, textures, text_colors, modulations;
 			};
 
 			TextBatch(Capacity capacity, const glm::vec4& projection_bounds);
@@ -131,19 +117,16 @@ namespace oly
 			struct GlyphInfoStore
 			{
 				UsageSlotTracker<BindlessTextureRes> textures;
-				UsageSlotTracker<Foreground, ForegroundHash> foregrounds;
-				UsageSlotTracker<Background, BackgroundHash> backgrounds;
+				UsageSlotTracker<TextColor, TextColorHash> text_colors;
 				UsageSlotTracker<Modulation, ModulationHash> modulations;
 			} glyph_info_store;
 
 			void set_texture(GLuint vb_pos, const BindlessTextureRes& texture);
-			void set_foreground(GLuint vb_pos, const Foreground& foreground);
-			void set_background(GLuint vb_pos, const Background& background);
+			void set_text_color(GLuint vb_pos, const TextColor& text_color);
 			void set_modulation(GLuint vb_pos, const Modulation& modulation);
 
 			BindlessTextureRes get_texture(GLuint vb_pos) const;
-			Foreground get_foreground(GLuint vb_pos) const;
-			Background get_background(GLuint vb_pos) const;
+			TextColor get_text_color(GLuint vb_pos) const;
 			Modulation get_modulation(GLuint vb_pos) const;
 
 			void set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect);
@@ -178,15 +161,13 @@ namespace oly
 			void set_texture(const BindlessTextureRes& texture) const;
 			void set_vertex_positions(const math::Rect2D& rect) const;
 			void set_tex_coords(const math::Rect2D& rect) const;
-			void set_foreground(const TextBatch::Foreground& foreground) const;
-			void set_background(const TextBatch::Background& background) const;
+			void set_text_color(const TextBatch::TextColor& text_color) const;
 			void set_modulation(const TextBatch::Modulation& modulation) const;
 
 			BindlessTextureRes get_texture() const;
 			math::Rect2D get_vertex_positions() const;
 			math::Rect2D get_tex_coords() const;
-			TextBatch::Foreground get_foreground() const;
-			TextBatch::Background get_background() const;
+			TextBatch::TextColor get_text_color() const;
 			TextBatch::Modulation get_modulation() const;
 
 			const TextBatch& get_batch() const { return *batch; }

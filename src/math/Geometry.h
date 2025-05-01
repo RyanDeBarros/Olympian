@@ -216,6 +216,8 @@ namespace oly
 		{
 			float x1, x2, y1, y2;
 
+			float width() const { return x2 - x1; }
+			float height() const { return y2 - y1; }
 			std::array<glm::vec2, 4> uvs() const
 			{
 				return {
@@ -227,6 +229,16 @@ namespace oly
 			}
 
 			bool operator==(const Rect2D&) const = default;
+		};
+
+		struct IRect2D
+		{
+			int x1, x2, y1, y2;
+
+			int width() const { return x2 - x1; }
+			int height() const { return y2 - y1; }
+
+			bool operator==(const IRect2D&) const = default;
 		};
 	}
 }

@@ -13,6 +13,11 @@ namespace oly
 		pos = pos % mod;
 		return pos >= 0 ? pos : pos + mod;
 	}
+	
+	constexpr int roundi(float v)
+	{
+		return (v > 0.0f) ? static_cast<int>(v + 0.5f) : static_cast<int>(v - 0.5f);
+	}
 
 	template<typename T>
 	constexpr T max(const T& first, const T& second)

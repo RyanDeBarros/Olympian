@@ -189,14 +189,13 @@ namespace oly
 			: index(index), buffer_pos(buffer_pos)
 		{
 			font.font->get_glyph_horizontal_metrics(index, advance_width, left_bearing);
-			int ch_x0, ch_x1, ch_y1;
-			font.font->get_bitmap_box(index, scale, ch_x0, ch_x1, ch_y0, ch_y1);
-			width = ch_x1 - ch_x0;
-			height = ch_y1 - ch_y0;
+			font.font->get_bitmap_box(index, scale, box.x1, box.x2, box.y1, box.y2);
 		}
 
 		void FontGlyph::render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const
 		{
+			int width = box.width();
+			int height = box.height();
 			unsigned char* temp = new unsigned char[width * height];
 			font.font->make_bitmap(temp, width, height, font.scale, index);
 			for (int row = 0; row < bottom_padding; ++row)
@@ -214,7 +213,7 @@ namespace oly
 
 		void FontGlyph::render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const
 		{
-			font.font->make_bitmap(buffer, width, height, font.scale, index);
+			font.font->make_bitmap(buffer, box.width(), box.height(), font.scale, index);
 		}
 
 		FontAtlas::FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, utf::String common_buffer)
@@ -224,7 +223,7 @@ namespace oly
 
 			scale = font->scale_for_pixel_height(options.font_size);
 			font->get_vertical_metrics(ascent, descent, linegap);
-			baseline = (int)roundf(ascent * scale);
+			baseline = ascent * scale;
 
 			std::vector<utf::Codepoint> codepoints;
 			auto iter = common_buffer.begin();
@@ -239,9 +238,9 @@ namespace oly
 				if (!g)
 					continue;
 				FontGlyph glyph(*this, g, scale, common_dim.w);
-				common_dim.w += glyph.width + size_t(2);
-				if (glyph.height > common_dim.h)
-					common_dim.h = glyph.height;
+				common_dim.w += glyph.box.width() + 2;
+				if (glyph.box.height() > common_dim.h)
+					common_dim.h = glyph.box.height();
 				glyphs.emplace(codepoint, std::move(glyph));
 				codepoints.push_back(codepoint);
 			}
@@ -264,7 +263,7 @@ namespace oly
 			}
 			int space_advance_width, space_left_bearing;
 			font->get_codepoint_horizontal_metrics(utf::Codepoint(' '), space_advance_width, space_left_bearing);
-			space_width = (int)(roundf(space_advance_width * scale));
+			space_width = space_advance_width * scale;
 		}
 
 		bool FontAtlas::cache(utf::Codepoint codepoint)
@@ -275,7 +274,7 @@ namespace oly
 			if (!index) return false;
 
 			FontGlyph glyph(*this, index, scale, -1);
-			ImageDimensions dim = { glyph.width, glyph.height, 1 };
+			ImageDimensions dim = { glyph.box.width(), glyph.box.height(), 1};
 			unsigned char* bmp = dim.pxnew();
 			glyph.render_on_bitmap_unique(*this, bmp, dim.w, dim.h);
 
@@ -311,14 +310,29 @@ namespace oly
 			return font->find_glyph_index(codepoint) != 0;
 		}
 
-		int FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc) const
+		float FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc) const
 		{
-			return (int)roundf(font->get_kerning(c1, c2, g1, g2) * scale * sc);
+			return font->get_kerning(c1, c2, g1, g2) * scale * sc;
 		}
 
-		int FontAtlas::line_height(float line_spacing) const
+		float FontAtlas::line_height() const
 		{
-			return (int)roundf((ascent - descent + linegap) * scale * line_spacing);
+			return (ascent - descent + linegap) * scale;
+		}
+
+		float FontAtlas::get_ascent() const
+		{
+			return ascent * scale;
+		}
+
+		float FontAtlas::get_descent() const
+		{
+			return descent * scale;
+		}
+
+		float FontAtlas::get_linegap() const
+		{
+			return linegap * scale;
 		}
 
 		math::Rect2D FontAtlas::uvs(const FontGlyph& glyph) const
@@ -327,9 +341,9 @@ namespace oly
 			if (glyph.buffer_pos != size_t(-1))
 			{
 				b.x1 = float(glyph.buffer_pos + 1) / common_dim.w;
-				b.x2 = float(glyph.buffer_pos + 1 + glyph.width) / common_dim.w;
+				b.x2 = float(glyph.buffer_pos + 1 + glyph.box.width()) / common_dim.w;
 				b.y1 = 0.0f;
-				b.y2 = float(glyph.height) / common_dim.h;
+				b.y2 = float(glyph.box.height()) / common_dim.h;
 			}
 			else
 			{
