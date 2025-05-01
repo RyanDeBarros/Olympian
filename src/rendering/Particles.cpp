@@ -533,7 +533,7 @@ namespace oly
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
 			glNamedBufferStorage(vbo, polygon.size() * sizeof(glm::vec2), polygon.data(), GL_NONE);
-			rendering::VertexAttribute<>{ 0, 2 }.setup();
+			rendering::VertexAttribute<float>{ 0, 2 }.setup();
 			auto& indices = ebo.vector();
 			for (size_t i = 0; i < triangulation.size(); ++i)
 			{
@@ -567,7 +567,7 @@ namespace oly
 			};
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[0]);
 			glNamedBufferStorage(vbo_block[0], 4 * sizeof(glm::vec2), vertices, GL_NONE);
-			rendering::VertexAttribute<>{ 0, 2 }.setup();
+			rendering::VertexAttribute<float>{ 0, 2 }.setup();
 			glm::vec2 radii[4] = {
 				{ rx, ry },
 				{ rx, ry },
@@ -576,7 +576,7 @@ namespace oly
 			};
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[1]);
 			glNamedBufferStorage(vbo_block[1], 4 * sizeof(glm::vec2), radii, GL_NONE);
-			rendering::VertexAttribute<>{ 1, 2 }.setup();
+			rendering::VertexAttribute<float>{ 1, 2 }.setup();
 			auto& indices = ebo.vector();
 			indices[0] = 0;
 			indices[1] = 1;

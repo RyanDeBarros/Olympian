@@ -769,8 +769,14 @@ namespace oly
 			DOUBLE
 		};
 
-		template<VertexAttributeType Type = VertexAttributeType::FLOAT>
+		template<typename T>
 		struct VertexAttribute
+		{
+			static_assert(false);
+		};
+
+		template<>
+		struct VertexAttribute<float>
 		{
 			GLuint index;
 			GLint size;
@@ -797,7 +803,7 @@ namespace oly
 		};
 
 		template<>
-		struct VertexAttribute<VertexAttributeType::INT>
+		struct VertexAttribute<int>
 		{
 			GLuint index;
 			GLint size;
@@ -823,7 +829,7 @@ namespace oly
 		};
 
 		template<>
-		struct VertexAttribute<VertexAttributeType::DOUBLE>
+		struct VertexAttribute<double>
 		{
 			GLuint index;
 			GLint size;

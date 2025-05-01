@@ -20,11 +20,11 @@ namespace oly
 
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<POSITION>());
-			VertexAttribute<>{ 0, 2 }.setup();
+			VertexAttribute<float>{ 0, 2 }.setup();
 			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<COLOR>());
-			VertexAttribute<>{ 1, 4 }.setup();
+			VertexAttribute<float>{ 1, 4 }.setup();
 			glBindBuffer(GL_ARRAY_BUFFER, bo_block.buf.get_buffer<INDEX>());
-			VertexAttribute<VertexAttributeType::INT>{ 2, 1 }.setup();
+			VertexAttribute<int>{ 2, 1 }.setup();
 			glBindVertexArray(0);
 		}
 
@@ -165,8 +165,8 @@ namespace oly
 			return polygon_indexer.count(id);
 		}
 
-		Polygonal::Polygonal(PolygonBatch* batch)
-			: _batch(batch)
+		Polygonal::Polygonal(PolygonBatch& batch)
+			: _batch(&batch)
 		{
 		}
 

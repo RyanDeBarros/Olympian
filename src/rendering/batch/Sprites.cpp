@@ -164,13 +164,10 @@ namespace oly
 			}
 		}
 
-		Sprite::Sprite(SpriteBatch* sprite_batch)
-			: batch(sprite_batch)
+		Sprite::Sprite(SpriteBatch& sprite_batch)
+			: batch(&sprite_batch)
 		{
-			if (batch)
-				vbid = batch->gen_sprite_id();
-			else
-				throw Error(ErrorCode::NULL_POINTER);
+			vbid = batch->gen_sprite_id();
 		}
 
 		Sprite::Sprite(const Sprite& other)
@@ -300,7 +297,7 @@ namespace oly
 		BindlessTextureRes Sprite::get_texture() const
 		{
 			glm::vec2 _;
-			return get_texture(_);
+			return batch->get_texture(vbid.get(), _);
 		}
 
 		BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const

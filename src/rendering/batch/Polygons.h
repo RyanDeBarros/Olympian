@@ -94,7 +94,7 @@ namespace oly
 		public:
 			Transformer2D transformer;
 
-			Polygonal(PolygonBatch* batch);
+			Polygonal(PolygonBatch& batch);
 			Polygonal(const Polygonal&) = delete;
 			Polygonal(Polygonal&&) noexcept;
 			virtual ~Polygonal();

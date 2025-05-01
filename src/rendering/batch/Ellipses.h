@@ -101,7 +101,7 @@ namespace oly
 			EllipseBatch::EllipseReference ellipse;
 			Transformer2D transformer;
 
-			Ellipse(EllipseBatch* ellipse_batch) : ellipse(ellipse_batch) {}
+			Ellipse(EllipseBatch& ellipse_batch) : ellipse(&ellipse_batch) {}
 			Ellipse(const Ellipse&) = default;
 			Ellipse(Ellipse&&) noexcept = default;
 			Ellipse& operator=(const Ellipse&) = default;

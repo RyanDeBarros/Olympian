@@ -21,7 +21,7 @@ layout(std430, binding = 0) readonly buffer TextureData {
 
 void main() {
 	if (tFramePlusOne == 0)
-		oColor = uGlobalModulation * tModulation * texture(sampler2D(uTexData[tTexSlot].handle), vec2(tTexCoord.x, tTexCoord.y));
+		oColor = uGlobalModulation * tModulation * texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
 	else
 		oColor = uGlobalModulation * tModulation * texture(sampler2DArray(uTexData[tTexSlot].handle), vec3(tTexCoord.x, tTexCoord.y, tFramePlusOne - 1));
 }

@@ -68,6 +68,7 @@ namespace oly
 			{
 				GLuint projection, modulation, time;
 			} shader_locations;
+		
 		public:
 			struct Modulation
 			{
@@ -89,12 +90,14 @@ namespace oly
 						^ (std::hash<float>{}(anim.starting_time) << 2) ^ (std::hash<float>{}(anim.delay_seconds) << 3);
 				}
 			};
+
 		private:
 			struct UBO
 			{
 				LightweightUBO<Mutability::MUTABLE> tex_coords, modulation, anim;
 
-				UBO(GLuint uvs, GLuint modulations, GLuint anims) : tex_coords(uvs * sizeof(UVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(AnimFrameFormat)) {}
+				UBO(GLuint uvs, GLuint modulations, GLuint anims)
+					: tex_coords(uvs * sizeof(UVRect)), modulation(modulations * sizeof(Modulation)), anim(anims * sizeof(AnimFrameFormat)) {}
 			} ubo;
 
 		public:
@@ -176,7 +179,7 @@ namespace oly
 		public:
 			Transformer2D transformer;
 
-			Sprite(SpriteBatch* sprite_batch);
+			Sprite(SpriteBatch& sprite_batch);
 			Sprite(const Sprite&);
 			Sprite(Sprite&&) noexcept;
 			Sprite& operator=(const Sprite&);
