@@ -1,0 +1,15 @@
+[[font_face]]
+"name"         = "roboto regular"
+"font file"    = "../fonts/Roboto-Regular.ttf"
+"kerning file" = "../fonts/Roboto-Regular-Kerning.txt"
+"init"         = "discard"
+
+[[font_atlas]]
+"name"                 = "roboto regular (96)"
+"font face"            = "roboto regular"
+"init"                 = "discard"
+"font size"            = 96
+"mag filter"           = "nearest"
+"min filter"           = "nearest"
+"generate mipmaps"     = true
+"common buffer preset" = "common"

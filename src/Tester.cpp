@@ -3,7 +3,7 @@
 #include <nanosvg/nanosvg.h>
 #include <nanosvg/nanosvgrast.h>
 
-#include "rendering/batch/TileMap.h"
+#include "rendering/batch/text/Font.h"
 
 int main()
 {
@@ -39,6 +39,14 @@ int main()
 	auto flag_texture = oly_context.texture_registry().get_texture("flag");
 	auto atlased_knight = oly_context.ref_atlas_extension("atlased knight").lock();
 	auto tilemap = oly_context.ref_tilemap("grass tilemap").lock();
+
+	auto roboto_regular = oly_context.ref_font_atlas("roboto regular (96)").lock();
+	roboto_regular->cache(oly::utf::Codepoint('a'));
+	const auto& glyph_a = roboto_regular->get_glyph(oly::utf::Codepoint('a'));
+	auto glyph_a_sprite = oly_context.sprite();
+	glyph_a_sprite.set_texture(glyph_a.texture, { glyph_a.width, glyph_a.height });
+	glyph_a_sprite.set_tex_coords(roboto_regular->uvs(glyph_a));
+	glyph_a_sprite.set_local().scale = glm::vec2(20.0f);
 
 	// LATER begin play on initial actors here
 
@@ -108,5 +116,7 @@ int main()
 			sprite.draw();
 		oly_context.render_sprites();
 		oly_context.execute_draw_command("sprites, polygons, and tilemaps");
+		glyph_a_sprite.draw();
+		oly_context.render_sprites();
 	}
 }

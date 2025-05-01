@@ -937,7 +937,7 @@ namespace oly
 			return it->second;
 		}
 
-		void TileSetRegistry::delete_tileset(const Context& context, const std::string& name)
+		void TileSetRegistry::delete_tileset(const std::string& name)
 		{
 			auto_loaded.erase(name);
 		}

@@ -18,9 +18,9 @@ namespace oly
 			static constexpr const char8_t* COMMON = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,./<>?;:\'\"\\|[]{}!@#$%^&*()-=_+`~";
 			static constexpr const char8_t* ALPHA_NUMERIC = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 			static constexpr const char8_t* NUMERIC = u8"0123456789";
-			static constexpr const char8_t* ALPHA = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-			static constexpr const char8_t* ALPHA_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
-			static constexpr const char8_t* ALPHA_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			static constexpr const char8_t* ALPHABET = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			static constexpr const char8_t* ALPHABET_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
+			static constexpr const char8_t* ALPHABET_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		}
 
 		struct CodepointPairHash
@@ -36,25 +36,25 @@ namespace oly
 			Kerning(const char* kerning_file);
 		};
 
-		typedef std::shared_ptr<Kerning> KerningRes;
-
 		class FontFace
 		{
 			std::vector<unsigned char> data;
 			stbtt_fontinfo info = {};
+			Kerning kerning;
 
 		public:
-			FontFace(const char* font_file);
+			FontFace(const char* font_file, const char* kerning_file = nullptr);
 
 			float scale_for_pixel_height(float font_size) const;
 			void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
 			void get_codepoint_horizontal_metrics(utf::Codepoint codepoint, int& advance_width, int& left_bearing) const;
 			void get_vertical_metrics(int& ascent, int& descent, int& linegap) const;
 			int find_glyph_index(utf::Codepoint codepoint) const;
-			int get_kern_advance(int g1, int g2) const;
 			void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
 			void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
+			int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		};
+		typedef std::shared_ptr<FontFace> FontFaceRes;
 
 		class FontAtlas;
 		struct Glyph
@@ -63,11 +63,10 @@ namespace oly
 			int width = 0, height = 0;
 			int ch_y0 = 0;
 			int advance_width = 0, left_bearing = 0;
-			std::unique_ptr<BindlessTexture> texture;
+			BindlessTextureRes texture;
 			size_t buffer_pos = -1;
 
 			Glyph(FontAtlas& font, int index, float scale, size_t buffer_pos);
-
 
 			void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
 			void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
@@ -82,7 +81,7 @@ namespace oly
 
 		class FontAtlas
 		{
-			std::shared_ptr<FontFace> font;
+			FontFaceRes font;
 			friend struct Glyph;
 			std::unordered_map<utf::Codepoint, Glyph> glyphs;
 			FontOptions options;
@@ -90,18 +89,61 @@ namespace oly
 			int ascent = 0, descent = 0, linegap = 0, baseline = 0;
 			int space_width = 0;
 			ImageDimensions common_dim;
-			std::unique_ptr<BindlessTexture> common_texture;
-			KerningRes kerning;
+			BindlessTextureRes common_texture;
 
 		public:
-			FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, utf::String common_buffer = glyphs::COMMON, const std::shared_ptr<Kerning>& kerning = nullptr);
+			FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, utf::String common_buffer = glyphs::COMMON);
 
 			bool cache(utf::Codepoint codepoint);
 			void cache_all(const FontAtlas& other);
+			const Glyph& get_glyph(utf::Codepoint codepoint) const;
 			bool supports(utf::Codepoint codepoint) const;
 			int kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc = 1.0f) const;
 			int line_height(float line_spacing = 1.0f) const;
 			math::Rect2D uvs(const Glyph& glyph) const;
+		};
+		typedef std::shared_ptr<FontAtlas> FontAtlasRes;
+
+		class FontFaceRegistry
+		{
+			struct Constructor
+			{
+				std::string font_file, kerning_file;
+			};
+
+			std::unordered_map<std::string, Constructor> constructors;
+			std::unordered_map<std::string, FontFaceRes> auto_loaded;
+
+		public:
+			void load(const char* font_face_registry_file);
+			void load(const std::string& font_face_registry_file) { load(font_face_registry_file.c_str()); }
+			void clear();
+
+			FontFace create_font_face(const std::string& name) const;
+			std::weak_ptr<FontFace> ref_font_face(const std::string& name) const;
+			void delete_font_face(const std::string& name);
+		};
+
+		class FontAtlasRegistry
+		{
+			struct Constructor
+			{
+				std::string font_face_name;
+				FontOptions options;
+				utf::String common_buffer;
+			};
+
+			std::unordered_map<std::string, Constructor> constructors;
+			std::unordered_map<std::string, FontAtlasRes> auto_loaded;
+
+		public:
+			void load(const FontFaceRegistry& font_face_registry, const char* font_atlas_registry_file);
+			void load(const FontFaceRegistry& font_face_registry, const std::string& font_atlas_registry_file) { load(font_face_registry, font_atlas_registry_file.c_str()); }
+			void clear();
+
+			FontAtlas create_font_atlas(const FontFaceRegistry& font_face_registry, const std::string& name) const;
+			std::weak_ptr<FontAtlas> ref_font_atlas(const std::string& name) const;
+			void delete_font_atlas(const std::string& name);
 		};
 	}
 }

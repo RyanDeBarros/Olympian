@@ -37,59 +37,17 @@ namespace oly
 
 	void TextureRegistry::setup_texture(const rendering::BindlessTextureRes& texture, const assets::AssetNode& node, GLenum target)
 	{
-		std::string min_filter = node["min filter"].value<std::string>().value_or("nearest");
-		std::string mag_filter = node["mag filter"].value<std::string>().value_or("nearest");
-
-		if (min_filter == "nearest")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		else if (min_filter == "linear")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		else if (min_filter == "nearest mipmap nearest")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-		else if (min_filter == "nearest mipmap linear")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		else if (min_filter == "linear mipmap nearest")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		else if (min_filter == "linear mipmap linear")
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		else
-			throw Error(ErrorCode::LOAD_ASSET);
-
-		if (mag_filter == "nearest")
-			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		else if (mag_filter == "linear")
-			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		else
-			throw Error(ErrorCode::LOAD_ASSET);
-
-		if (auto _wrap_s = node["wrap s"].value<std::string>())
-		{
-			std::string wrap_s = _wrap_s.value();
-			if (wrap_s == "clamp to edge")
-				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			else if (wrap_s == "clamp to border")
-				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			else if (wrap_s == "mirrored repeat")
-				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-			else if (wrap_s == "repeat")
-				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			else if (wrap_s == "mirror clamp to edge")
-				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
-		}
-		if (auto _wrap_t = node["wrap t"].value<std::string>())
-		{
-			std::string wrap_t = _wrap_t.value();
-			if (wrap_t == "clamp to edge")
-				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			else if (wrap_t == "clamp to border")
-				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			else if (wrap_t == "mirrored repeat")
-				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-			else if (wrap_t == "repeat")
-				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			else if (wrap_t == "mirror clamp to edge")
-				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
-		}
+		GLenum min_filter, mag_filter, wrap_s, wrap_t;
+		if (!assets::parse_min_filter(node, "min filter", min_filter))
+			min_filter = GL_NEAREST;
+		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
+		if (!assets::parse_mag_filter(node, "mag filter", mag_filter))
+			mag_filter = GL_NEAREST;
+		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
+		if (assets::parse_wrap(node, "wrap s", wrap_s))
+			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
+		if (assets::parse_wrap(node, "wrap t", wrap_t))
+			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
 
 		bool dont_set = node["don't set"].value<bool>().value_or(false);
 		if (!dont_set)
@@ -223,7 +181,7 @@ namespace oly
 		auto textures = texture_registry["image"].as_array();
 		if (!textures)
 			return;
-		std::string root_dir = io::directory_of(texture_registry_file) + "/" + texture_registry["root"].value<std::string>().value_or("");
+		std::string root_dir = io::directory_of(texture_registry_file) + texture_registry["root"].value<std::string>().value_or("");
 		textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (assets::AssetNode)node); });
 		if (auto nsvg_abstracts = texture_registry["nsvg_abstract"].as_array())
 			nsvg_abstracts->for_each([this, &context, &root_dir](auto&& node) { load_nsvg_abstract(context, root_dir, (assets::AssetNode)node); });

@@ -153,6 +153,124 @@ namespace oly
 			return transform;
 		}
 
+		bool parse_mag_filter(const AssetNode& node, const std::string& name, GLenum& mag_filter)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "nearest")
+				mag_filter = GL_NEAREST;
+			else if (v == "linear")
+				mag_filter = GL_LINEAR;
+			else
+				return false;
+			return true;
+		}
+
+		bool parse_mag_filter(const toml::table& node, const std::string& name, GLenum& mag_filter)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "nearest")
+				mag_filter = GL_NEAREST;
+			else if (v == "linear")
+				mag_filter = GL_LINEAR;
+			else
+				return false;
+			return true;
+		}
+
+		bool parse_min_filter(const AssetNode& node, const std::string& name, GLenum& min_filter)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "nearest")
+				min_filter = GL_NEAREST;
+			else if (v == "linear")
+				min_filter = GL_LINEAR;
+			else if (v == "nearest mipmap nearest")
+				min_filter = GL_NEAREST_MIPMAP_NEAREST;
+			else if (v == "nearest mipmap linear")
+				min_filter = GL_NEAREST_MIPMAP_LINEAR;
+			else if (v == "linear mipmap nearest")
+				min_filter = GL_LINEAR_MIPMAP_NEAREST;
+			else if (v == "linear mipmap linear")
+				min_filter = GL_LINEAR_MIPMAP_LINEAR;
+			else
+				return false;
+			return true;
+		}
+
+		bool parse_min_filter(const toml::table& node, const std::string& name, GLenum& min_filter)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "nearest")
+				min_filter = GL_NEAREST;
+			else if (v == "linear")
+				min_filter = GL_LINEAR;
+			else if (v == "nearest mipmap nearest")
+				min_filter = GL_NEAREST_MIPMAP_NEAREST;
+			else if (v == "nearest mipmap linear")
+				min_filter = GL_NEAREST_MIPMAP_LINEAR;
+			else if (v == "linear mipmap nearest")
+				min_filter = GL_LINEAR_MIPMAP_NEAREST;
+			else if (v == "linear mipmap linear")
+				min_filter = GL_LINEAR_MIPMAP_LINEAR;
+			else
+				return false;
+			return true;
+		}
+
+		bool parse_wrap(const AssetNode& node, const std::string& name, GLenum& wrap)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "clamp to edge")
+				wrap = GL_CLAMP_TO_EDGE;
+			else if (v == "clamp to border")
+				wrap = GL_CLAMP_TO_BORDER;
+			else if (v == "mirrored repeat")
+				wrap = GL_MIRRORED_REPEAT;
+			else if (v == "repeat")
+				wrap = GL_REPEAT;
+			else if (v == "mirror clamp to edge")
+				wrap = GL_MIRROR_CLAMP_TO_EDGE;
+			else
+				return false;
+			return true;
+		}
+
+		bool parse_wrap(const toml::table& node, const std::string& name, GLenum& wrap)
+		{
+			auto _v = node[name].value<std::string>();
+			if (!_v)
+				return false;
+			const std::string& v = _v.value();
+			if (v == "clamp to edge")
+				wrap = GL_CLAMP_TO_EDGE;
+			else if (v == "clamp to border")
+				wrap = GL_CLAMP_TO_BORDER;
+			else if (v == "mirrored repeat")
+				wrap = GL_MIRRORED_REPEAT;
+			else if (v == "repeat")
+				wrap = GL_REPEAT;
+			else if (v == "mirror clamp to edge")
+				wrap = GL_MIRROR_CLAMP_TO_EDGE;
+			else
+				return false;
+			return true;
+		}
+
 		random::bound::Function load_random_bound_function(const AssetNode& node)
 		{
 			if (!node)

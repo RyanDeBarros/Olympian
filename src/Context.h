@@ -6,6 +6,7 @@
 #include "rendering/batch/PolygonRegistry.h"
 #include "rendering/batch/EllipseRegistry.h"
 #include "rendering/batch/TileMap.h"
+#include "rendering/batch/text/Font.h"
 #include "rendering/batch/DrawCommands.h"
 
 namespace oly
@@ -28,6 +29,8 @@ namespace oly
 			
 			rendering::TileSetRegistry tileset_registry;
 			rendering::TileMapRegistry tilemap_registry;
+			rendering::FontFaceRegistry font_face_registry;
+			rendering::FontAtlasRegistry font_atlas_registry;
 
 			rendering::DrawCommandRegistry draw_command_registry;
 		} internal;
@@ -95,6 +98,14 @@ namespace oly
 		const rendering::TileMapRegistry& tilmap_registry() const { return internal.tilemap_registry; }
 		rendering::TileMap tilemap(const std::string& name) const { return internal.tilemap_registry.create_tilemap(*this, name); }
 		std::weak_ptr<rendering::TileMap> ref_tilemap(const std::string& name) const { return internal.tilemap_registry.ref_tilemap(name); }
+
+		const rendering::FontFaceRegistry& font_face_registry() const { return internal.font_face_registry; }
+		rendering::FontFace font_face(const std::string& name) const { return internal.font_face_registry.create_font_face(name); }
+		std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name) const { return internal.font_face_registry.ref_font_face(name); }
+
+		const rendering::FontAtlasRegistry& font_atlas_registry() const { return internal.font_atlas_registry; }
+		rendering::FontAtlas font_atlas(const std::string& name) const { return internal.font_atlas_registry.create_font_atlas(internal.font_face_registry, name); }
+		std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name) const { return internal.font_atlas_registry.ref_font_atlas(name); }
 
 		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
 	};

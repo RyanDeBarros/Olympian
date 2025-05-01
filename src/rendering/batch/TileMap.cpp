@@ -163,7 +163,7 @@ namespace oly
 						tilemap_constructors[name] = node;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(name, std::shared_ptr<TileMap>(new TileMap(create_tilemap(context, name))));
+							auto_loaded.emplace(name, std::make_shared<TileMap>(create_tilemap(context, name)));
 							if (_init.value() == "discard")
 								tilemap_constructors.erase(name);
 						}
@@ -198,7 +198,7 @@ namespace oly
 			return it->second;
 		}
 		
-		void TileMapRegistry::delete_tilemap(const Context& context, const std::string& name)
+		void TileMapRegistry::delete_tilemap(const std::string& name)
 		{
 			auto_loaded.erase(name);
 		}

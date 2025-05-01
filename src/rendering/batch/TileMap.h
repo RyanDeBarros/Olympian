@@ -64,7 +64,7 @@ namespace oly
 
 			TileMap create_tilemap(const Context& context, const std::string& name) const;
 			std::weak_ptr<TileMap> ref_tilemap(const std::string& name) const;
-			void delete_tilemap(const Context& context, const std::string& name);
+			void delete_tilemap(const std::string& name);
 		};
 	}
 }

@@ -11,3 +11,5 @@ ellipse_batch             = { "ellipses" = 100 }
 "draw command registries" = [ "draw_commands.toml" ]
 "tileset registries"      = [ "grass_tileset.toml" ]
 "tilemap registries"      = [ "grass_tilemap.toml" ]
+"font face registries"    = [ "font_registries.toml" ]
+"font atlas registries"   = [ "font_registries.toml" ]

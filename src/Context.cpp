@@ -24,7 +24,7 @@ namespace oly
 		if (!toml_window)
 			throw Error(ErrorCode::CONTEXT_INIT);
 
-		std::string root_dir = io::directory_of(filepath) + "/";
+		std::string root_dir = io::directory_of(filepath);
 
 		{ // init window
 			auto width = toml_window["width"].value<int64_t>();
@@ -142,6 +142,26 @@ namespace oly
 			}
 		}
 
+		{ // init font face registry
+			auto register_files = toml_context["font face registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.font_face_registry.load(root_dir + file.value());
+			}
+		}
+
+		{ // init font atlas registry
+			auto register_files = toml_context["font atlas registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal.font_atlas_registry.load(internal.font_face_registry, root_dir + file.value());
+			}
+		}
+
 		{ // init draw command registry
 			auto register_files = toml_context["draw command registries"].as_array();
 			if (register_files)
@@ -159,6 +179,9 @@ namespace oly
 		internal.sprite_registry.clear();
 		internal.polygon_registry.clear();
 		internal.ellipse_registry.clear();
+		internal.draw_command_registry.clear();
+		internal.tileset_registry.clear();
+		internal.tilemap_registry.clear();
 		unload_resources();
 		glfwTerminate();
 	}
