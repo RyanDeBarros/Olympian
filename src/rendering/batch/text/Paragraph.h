@@ -11,8 +11,30 @@ namespace oly
 		{
 			float line_spacing = 1.0f;
 			float tab_spaces = 4.0f;
+			float linebreak_spacing = 1.0f;
 			glm::vec2 pivot = { 0.5f, 0.5f };
-			// TODO horizontal/vertical alignment + min width/height
+			glm::vec2 min_size = {};
+			float text_wrap = 0.0f; // a standard glyph is around 42
+			float max_height = 0.0f; // a standard line is around 115
+			glm::vec2 padding = {};
+
+			enum class HorizontalAlignment
+			{
+				LEFT,
+				CENTER,
+				RIGHT,
+				JUSTIFY,
+				FULL_JUSTIFY
+			} horizontal_alignment = HorizontalAlignment::LEFT;
+
+			enum class VerticalAlignment
+			{
+				TOP,
+				MIDDLE,
+				BOTTOM,
+				JUSTIFY,
+				FULL_JUSTIFY
+			} vertical_alignment = VerticalAlignment::TOP;
 		};
 
 		/*
@@ -20,17 +42,13 @@ namespace oly
 		*/
 		class Paragraph
 		{
-			struct Renderable
-			{
-				GlyphText glyph;
-				bool visible;
-			};
-			std::vector<Renderable> renderables;
+			std::vector<TextGlyph> glyphs;
+			std::vector<bool> visible;
 			utf::String text;
-			mutable size_t text_length = 0;
 			TextBatch* text_batch;
 			FontAtlasRes font;
 			ParagraphFormat format;
+			size_t glyphs_drawn = 0;
 
 		public:
 			Transformer2D transformer;
@@ -67,20 +85,34 @@ namespace oly
 			void write_glyphs();
 
 			void create_glyph();
-			void write_glyph(GlyphText& glyph, const FontGlyph& font_glyph, glm::vec2 par_pos) const;
+			void write_glyph(const FontGlyph& font_glyph);
 
 			float line_height() const;
-			void newline();
 
 			struct PageData
 			{
 				float width = 0.0f, height = 0.0f;
-				int newlines = 0;
+
+				struct Line
+				{
+					float width = 0.0f;
+					float spaces = 0.0f;
+					float final_advance = 0.0f;
+				};
+				std::vector<Line> lines;
+
+				float blank_lines = 0.0f;
+				
 			} pagedata = {};
 			struct TypesetData
 			{
 				float x = 0.0f, y = 0.0f;
+				size_t line = 0;
 			} typeset = {};
+
+			float space_width_mult() const;
+			float content_height() const;
+			float linebreak_mult() const;
 		};
 	}
 }

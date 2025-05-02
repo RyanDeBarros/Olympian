@@ -25,7 +25,7 @@ int main()
 			flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows };
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
-	
+
 	auto concave_shape = oly_context.ref_composite("concave shape").lock();
 	for (auto& tp : concave_shape->composite)
 	{
@@ -43,29 +43,37 @@ int main()
 	auto roboto_regular = oly_context.ref_font_atlas("roboto regular (96)").lock();
 	roboto_regular->cache(oly::utf::Codepoint('a'));
 	const auto& glyph_a = roboto_regular->get_glyph(oly::utf::Codepoint('a'));
-	
+
 	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
 	oly::rendering::ParagraphFormat parformat;
 	parformat.pivot = { 0.0f, 1.0f };
-	parformat.line_spacing = 2.0f;
-	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x\nabcd !!!");
-	paragraph.set_local().position = { 0, 0 };
-	paragraph.set_local().scale = glm::vec2(0.4f);
+	parformat.line_spacing = 1.2f;
+	parformat.linebreak_spacing = 2.0f;
+	parformat.min_size = { 800.0f, 800.0f };
+	parformat.text_wrap = 42.0f * 5;
+	parformat.max_height = 115.0f * 3;
+	parformat.padding = { 50.0f, 50.0f };
+	parformat.horizontal_alignment = decltype(parformat.horizontal_alignment)::CENTER;
+	parformat.vertical_alignment = decltype(parformat.vertical_alignment)::MIDDLE;
+	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s");
+	paragraph.set_local().position = { -400, 400 };
+	paragraph.set_local().scale = glm::vec2(0.8f);
 	paragraph.set_text_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
 	paragraph.set_text_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
 	paragraph.set_text_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
 
+	// TODO implement bkg as another TextGlyph in Paragraph
 	auto bkg = oly_context.polygon();
 	bkg.transformer.attach_parent(&paragraph.transformer);
 	bkg.transformer.modifier = std::make_unique<oly::PivotTransformModifier2D>();
 	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().pivot = parformat.pivot;
-	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().size = paragraph.size();
+	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().size = paragraph.size() + 2.0f * parformat.padding;
 	bkg.polygon.colors = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 	bkg.polygon.points = {
-		{ -0.5f * paragraph.width(), -0.5f * paragraph.height() },
-		{  0.5f * paragraph.width(), -0.5f * paragraph.height() },
-		{  0.5f * paragraph.width(),  0.5f * paragraph.height() },
-		{ -0.5f * paragraph.width(),  0.5f * paragraph.height() }
+		{ -0.5f * paragraph.width() - parformat.padding.x, -0.5f * paragraph.height() - parformat.padding.y },
+		{  0.5f * paragraph.width() + parformat.padding.x, -0.5f * paragraph.height() - parformat.padding.y },
+		{  0.5f * paragraph.width() + parformat.padding.x,  0.5f * paragraph.height() + parformat.padding.y },
+		{ -0.5f * paragraph.width() - parformat.padding.x,  0.5f * paragraph.height() + parformat.padding.y }
 	};
 	bkg.init();
 

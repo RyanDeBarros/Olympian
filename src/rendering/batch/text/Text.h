@@ -13,10 +13,10 @@ namespace oly
 {
 	namespace rendering
 	{
-		struct GlyphText;
+		struct TextGlyph;
 		class TextBatch
 		{
-			friend struct GlyphText;
+			friend struct TextGlyph;
 
 			VertexArray vao;
 			PersistentEBO<> ebo;
@@ -139,7 +139,7 @@ namespace oly
 			void update_texture_handle(const BindlessTextureRes& texture);
 		};
 
-		struct GlyphText
+		struct TextGlyph
 		{
 		private:
 			friend class TextBatch;
@@ -149,12 +149,12 @@ namespace oly
 		public:
 			Transformer2D transformer;
 
-			GlyphText(TextBatch& text_batch);
-			GlyphText(const GlyphText&);
-			GlyphText(GlyphText&&) noexcept;
-			GlyphText& operator=(const GlyphText&);
-			GlyphText& operator=(GlyphText&&) noexcept;
-			~GlyphText();
+			TextGlyph(TextBatch& text_batch);
+			TextGlyph(const TextGlyph&);
+			TextGlyph(TextGlyph&&) noexcept;
+			TextGlyph& operator=(const TextGlyph&);
+			TextGlyph& operator=(TextGlyph&&) noexcept;
+			~TextGlyph();
 
 			void draw() const;
 

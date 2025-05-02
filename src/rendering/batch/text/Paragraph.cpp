@@ -15,98 +15,138 @@ namespace oly
 
 		TextBatch::TextColor Paragraph::get_text_color(size_t pos) const
 		{
-			return renderables[pos].glyph.get_text_color();
+			return glyphs[pos].get_text_color();
 		}
 
 		void Paragraph::set_text_color(size_t pos, const TextBatch::TextColor& color)
 		{
-			renderables[pos].glyph.set_text_color(color);
+			glyphs[pos].set_text_color(color);
 		}
 
 		TextBatch::Modulation Paragraph::get_modulation(size_t pos) const
 		{
-			return renderables[pos].glyph.get_modulation();
+			return glyphs[pos].get_modulation();
 		}
 
 		void Paragraph::set_modulation(size_t pos, const TextBatch::Modulation& modulation)
 		{
-			renderables[pos].glyph.set_modulation(modulation);
+			glyphs[pos].set_modulation(modulation);
 		}
 
 		bool Paragraph::is_visible(size_t pos) const
 		{
-			return renderables[pos].visible;
+			return visible[pos];
 		}
 
 		void Paragraph::set_visible(size_t pos, bool visible)
 		{
-			renderables[pos].visible = visible;
+			this->visible[pos] = visible;
 		}
 
 		void Paragraph::draw() const
 		{
-			for (const auto& renderable : renderables)
-				if (renderable.visible)
-					renderable.glyph.draw();
+			for (size_t i = 0; i < glyphs_drawn; ++i)
+				if (visible[i])
+					glyphs[i].draw();
 		}
 
 		void Paragraph::build_layout()
 		{
 			build_page();
 			write_glyphs();
-			text_length = text.size();
 		}
 
 		void Paragraph::build_page()
 		{
 			pagedata = {};
+			pagedata.lines.push_back({});
 			typeset = {};
 			auto iter = text.begin();
 			while (iter)
 			{
 				utf::Codepoint codepoint = iter.advance();
-
 				if (codepoint == ' ')
-					typeset.x += font->get_space_width();
+				{
+					float dx = font->get_space_width();
+					typeset.x += dx;
+					pagedata.lines.back().width += dx;
+					pagedata.lines.back().spaces += dx;
+					pagedata.lines.back().final_advance = dx;
+				}
 				else if (codepoint == '\t')
-					typeset.x += font->get_space_width() * format.tab_spaces;
+				{
+					float dx = font->get_space_width() * format.tab_spaces;
+					typeset.x += dx;
+					pagedata.lines.back().width += dx;
+					pagedata.lines.back().spaces += dx;
+					pagedata.lines.back().final_advance = dx;
+				}
 				else if (utf::is_n_or_r(codepoint))
 				{
-					if (iter)
-					{
-						utf::Codepoint next_char = iter.codepoint();
-						if (utf::is_rn(codepoint, next_char))
-							++iter;
-					}
-					newline();
-					++pagedata.newlines;
+					if (iter && utf::is_rn(codepoint, iter.codepoint()))
+						++iter;
+					float dy;
+					if (typeset.x == 0.0f)
+						dy = line_height() * format.linebreak_spacing;
+					else
+						dy = line_height();
+					if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
+						break;
+					++typeset.line;
+					typeset.y -= dy;
+					if (typeset.x == 0.0f)
+						pagedata.blank_lines += line_height();
+					typeset.x = 0.0f;
+					pagedata.lines.push_back({});
 				}
 				else if (font->cache(codepoint))
 				{
 					const FontGlyph& font_glyph = font->get_glyph(codepoint);
-					typeset.x += roundi(font_glyph.advance_width * font->get_scale());
+					float dx = font_glyph.advance_width * font->get_scale();
+					if (format.text_wrap > 0.0f && typeset.x + dx > format.text_wrap)
+					{
+						float dy;
+						if (typeset.x == 0.0f)
+							dy = line_height() * format.linebreak_spacing;
+						else
+							dy = line_height();
+						if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
+							break;
+						++typeset.line;
+						typeset.y -= dy;
+						if (typeset.x == 0.0f)
+							pagedata.blank_lines += line_height();
+						typeset.x = 0.0f;
+						pagedata.lines.push_back({});
+					}
+					typeset.x += dx;
+					pagedata.lines.back().width += dx;
+					pagedata.lines.back().final_advance = dx;
 				}
 				pagedata.width = std::max(pagedata.width, typeset.x);
 			}
-			pagedata.height = pagedata.newlines * line_height() + font->line_height();
+			pagedata.height = content_height();
+
+			if (pagedata.width < format.min_size.x)
+				pagedata.width = format.min_size.x;
+			if (pagedata.height < format.min_size.y)
+				pagedata.height = format.min_size.y;
 		}
 
 		void Paragraph::write_glyphs()
 		{
+			glyphs_drawn = 0;
 			typeset = {};
-			size_t i = 0;
+			typeset.x = 0.0f;
 			auto iter = text.begin();
 			while (iter)
 			{
 				utf::Codepoint codepoint = iter.advance();
-				if (i >= renderables.size())
-					create_glyph();
-				Renderable& renderable = renderables[i++];
 
 				if (codepoint == ' ')
-					typeset.x += font->get_space_width();
+					typeset.x += font->get_space_width() * space_width_mult();
 				else if (codepoint == '\t')
-					typeset.x += font->get_space_width() * format.tab_spaces;
+					typeset.x += font->get_space_width() * space_width_mult() * format.tab_spaces;
 				else if (utf::is_n_or_r(codepoint))
 				{
 					if (iter)
@@ -115,33 +155,93 @@ namespace oly
 						if (utf::is_rn(codepoint, next_char))
 							++iter;
 					}
-					newline();
+					float dy;
+					if (typeset.x == 0.0f)
+						dy = line_height() * linebreak_mult();
+					else
+						dy = line_height();
+					if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
+						break;
+					++typeset.line;
+					typeset.y -= dy;
+					typeset.x = 0.0f;
 				}
 				else if (font->cache(codepoint))
 				{
 					const FontGlyph& font_glyph = font->get_glyph(codepoint);
-					renderable.visible = true;
-					write_glyph(renderable.glyph, font_glyph, { typeset.x, typeset.y });
-					typeset.x += roundi(font_glyph.advance_width * font->get_scale());
+					float dx = font_glyph.advance_width * font->get_scale();
+					if (format.text_wrap > 0.0f && typeset.x + dx > format.text_wrap)
+					{
+						float dy;
+						if (typeset.x == 0.0f)
+							dy = line_height() * linebreak_mult();
+						else
+							dy = line_height();
+						if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
+							break;
+						++typeset.line;
+						typeset.y -= dy;
+						typeset.x = 0.0f;
+					}
+					write_glyph(font_glyph);
+					typeset.x += dx;
 				}
-				else
-					renderable.visible = false;
 			}
 		}
 
 		void Paragraph::create_glyph()
 		{
-			GlyphText glyph(*text_batch);
+			TextGlyph glyph(*text_batch);
 			glyph.transformer.attach_parent(&transformer);
-			renderables.emplace_back(std::move(glyph), false);
+			glyphs.emplace_back(std::move(glyph));
+			visible.push_back(true);
 		}
 
-		void Paragraph::write_glyph(GlyphText& glyph, const FontGlyph& font_glyph, glm::vec2 par_pos) const
+		void Paragraph::write_glyph(const FontGlyph& font_glyph)
 		{
+			if (glyphs_drawn >= glyphs.size())
+				create_glyph();
+			TextGlyph& glyph = glyphs[glyphs_drawn];
+
 			glyph.set_texture(font_glyph.texture);
-			glyph.set_vertex_positions({ (float)font_glyph.box.x1, (float)font_glyph.box.x2, -(float)font_glyph.box.y2, -(float)font_glyph.box.y1});
+			math::Rect2D vps{};
+			vps.x1 = (float) font_glyph.box.x1;
+			vps.x2 = (float) font_glyph.box.x2;
+			vps.y1 = (float)-font_glyph.box.y2;
+			vps.y2 = (float)-font_glyph.box.y1;
+			glyph.set_vertex_positions(vps);
 			glyph.set_tex_coords(font->uvs(font_glyph));
-			glyph.set_local().position = { par_pos.x - format.pivot.x * pagedata.width, par_pos.y - font->get_ascent() + (1.0 - format.pivot.y) * pagedata.height};
+
+			float line_start_x = 0.0f;
+			if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::RIGHT)
+				line_start_x = pagedata.width - pagedata.lines[typeset.line].width;
+			else if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::CENTER)
+				line_start_x = 0.5f * (pagedata.width - pagedata.lines[typeset.line].width);
+
+			float line_start_y = 0.0f;
+			if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::BOTTOM)
+				line_start_y = pagedata.height - content_height();
+			else if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::MIDDLE)
+				line_start_y = 0.5f * (pagedata.height - content_height());
+
+			float typeset_mult_x = 1.0f;
+			if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY)
+			{
+				PageData::Line ln = pagedata.lines[typeset.line];
+				if (ln.width - ln.final_advance > 0.0f)
+					typeset_mult_x = (pagedata.width - ln.final_advance) / (ln.width - ln.final_advance);
+			}
+			
+			float typeset_mult_y = 1.0f;
+			if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::FULL_JUSTIFY)
+			{
+				if (content_height() - font->line_height() > 0.0f)
+					typeset_mult_y = (pagedata.height - font->line_height()) / (content_height() - font->line_height());
+			}
+
+			glyph.set_local().position.x = line_start_x + typeset.x * typeset_mult_x - format.pivot.x * pagedata.width + format.padding.x;
+			glyph.set_local().position.y = -line_start_y + typeset.y * typeset_mult_y - font->get_ascent() + (1.0f - format.pivot.y) * pagedata.height - format.padding.y;
+			++glyphs_drawn;
 		}
 
 		float Paragraph::line_height() const
@@ -149,10 +249,30 @@ namespace oly
 			return font->line_height() * format.line_spacing;
 		}
 
-		void Paragraph::newline()
+		float Paragraph::space_width_mult() const
 		{
-			typeset.x = 0.0f;
-			typeset.y -= line_height();
+			if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::JUSTIFY)
+			{
+				PageData::Line ln = pagedata.lines[typeset.line];
+				if (ln.spaces > 0.0f)
+					return 1.0f + (pagedata.width - ln.width) / ln.spaces;
+			}
+			return 1.0f;
+		}
+
+		float Paragraph::content_height() const
+		{
+			return (pagedata.lines.size() - 1) * line_height() + font->line_height();
+		}
+
+		float Paragraph::linebreak_mult() const
+		{
+			if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::JUSTIFY)
+			{
+				if (pagedata.blank_lines > 0)
+					return 1.0f + (pagedata.height - content_height()) / pagedata.blank_lines;
+			}
+			return format.linebreak_spacing;
 		}
 	}
 }

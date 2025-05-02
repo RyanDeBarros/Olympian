@@ -145,13 +145,13 @@ namespace oly
 				tex_handles_ssbo.send(slot, texture->get_handle());
 		}
 		
-		GlyphText::GlyphText(TextBatch& text_batch)
+		TextGlyph::TextGlyph(TextBatch& text_batch)
 			: batch(&text_batch)
 		{
 			vbid = batch->gen_glyph_id();
 		}
 		
-		GlyphText::GlyphText(const GlyphText& other)
+		TextGlyph::TextGlyph(const TextGlyph& other)
 			: batch(other.batch), transformer(other.transformer)
 		{
 			if (batch)
@@ -165,13 +165,13 @@ namespace oly
 			set_modulation(other.get_modulation());
 		}
 		
-		GlyphText::GlyphText(GlyphText&& other) noexcept
+		TextGlyph::TextGlyph(TextGlyph&& other) noexcept
 			: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 		{
 			other.batch = nullptr;
 		}
 		
-		GlyphText& GlyphText::operator=(const GlyphText& other)
+		TextGlyph& TextGlyph::operator=(const TextGlyph& other)
 		{
 			if (this != &other)
 			{
@@ -195,7 +195,7 @@ namespace oly
 			return *this;
 		}
 		
-		GlyphText& GlyphText::operator=(GlyphText&& other) noexcept
+		TextGlyph& TextGlyph::operator=(TextGlyph&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -209,13 +209,13 @@ namespace oly
 			return *this;
 		}
 		
-		GlyphText::~GlyphText()
+		TextGlyph::~TextGlyph()
 		{
 			if (batch)
 				batch->erase_glyph_id(vbid.get());
 		}
 		
-		void GlyphText::draw() const
+		void TextGlyph::draw() const
 		{
 			if (transformer.flush())
 			{
@@ -225,52 +225,52 @@ namespace oly
 			quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 		}
 		
-		void GlyphText::set_texture(const BindlessTextureRes& texture) const
+		void TextGlyph::set_texture(const BindlessTextureRes& texture) const
 		{
 			batch->set_texture(vbid.get(), texture);
 		}
 
-		void GlyphText::set_vertex_positions(const math::Rect2D& rect) const
+		void TextGlyph::set_vertex_positions(const math::Rect2D& rect) const
 		{
 			batch->set_vertex_positions(vbid.get(), rect);
 		}
 		
-		void GlyphText::set_tex_coords(const math::Rect2D& rect) const
+		void TextGlyph::set_tex_coords(const math::Rect2D& rect) const
 		{
 			batch->set_tex_coords(vbid.get(), rect);
 		}
 		
-		void GlyphText::set_text_color(const TextBatch::TextColor& text_color) const
+		void TextGlyph::set_text_color(const TextBatch::TextColor& text_color) const
 		{
 			batch->set_text_color(vbid.get(), text_color);
 		}
 		
-		void GlyphText::set_modulation(const TextBatch::Modulation& modulation) const
+		void TextGlyph::set_modulation(const TextBatch::Modulation& modulation) const
 		{
 			batch->set_modulation(vbid.get(), modulation);
 		}
 		
-		BindlessTextureRes GlyphText::get_texture() const
+		BindlessTextureRes TextGlyph::get_texture() const
 		{
 			return batch->get_texture(vbid.get());
 		}
 		
-		math::Rect2D GlyphText::get_vertex_positions() const
+		math::Rect2D TextGlyph::get_vertex_positions() const
 		{
 			return batch->get_vertex_positions(vbid.get());
 		}
 		
-		math::Rect2D GlyphText::get_tex_coords() const
+		math::Rect2D TextGlyph::get_tex_coords() const
 		{
 			return batch->get_tex_coords(vbid.get());
 		}
 		
-		TextBatch::TextColor GlyphText::get_text_color() const
+		TextBatch::TextColor TextGlyph::get_text_color() const
 		{
 			return batch->get_text_color(vbid.get());
 		}
 		
-		TextBatch::Modulation GlyphText::get_modulation() const
+		TextBatch::Modulation TextGlyph::get_modulation() const
 		{
 			return batch->get_modulation(vbid.get());
 		}
