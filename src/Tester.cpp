@@ -40,42 +40,25 @@ int main()
 	auto atlased_knight = oly_context.ref_atlas_extension("atlased knight").lock();
 	auto tilemap = oly_context.ref_tilemap("grass tilemap").lock();
 
-	auto roboto_regular = oly_context.ref_font_atlas("roboto regular (96)").lock();
-	roboto_regular->cache(oly::utf::Codepoint('a'));
-	const auto& glyph_a = roboto_regular->get_glyph(oly::utf::Codepoint('a'));
-
 	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
 	oly::rendering::ParagraphFormat parformat;
 	parformat.pivot = { 0.0f, 1.0f };
-	parformat.line_spacing = 1.2f;
+	parformat.line_spacing = 1.5f;
 	parformat.linebreak_spacing = 2.0f;
 	parformat.min_size = { 800.0f, 800.0f };
-	parformat.text_wrap = 42.0f * 5;
-	parformat.max_height = 115.0f * 3;
 	parformat.padding = { 50.0f, 50.0f };
 	parformat.horizontal_alignment = decltype(parformat.horizontal_alignment)::CENTER;
 	parformat.vertical_alignment = decltype(parformat.vertical_alignment)::MIDDLE;
-	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s");
+	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex");
+	paragraph.draw_bkg = true;
 	paragraph.set_local().position = { -400, 400 };
 	paragraph.set_local().scale = glm::vec2(0.8f);
+	paragraph.set_bkg_color({ { 0.5f, 0.4f, 0.2f, 1.0f } });
+	paragraph.default_text_color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+	paragraph.recolor_text_with_default();
 	paragraph.set_text_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
 	paragraph.set_text_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
 	paragraph.set_text_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
-
-	// TODO implement bkg as another TextGlyph in Paragraph
-	auto bkg = oly_context.polygon();
-	bkg.transformer.attach_parent(&paragraph.transformer);
-	bkg.transformer.modifier = std::make_unique<oly::PivotTransformModifier2D>();
-	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().pivot = parformat.pivot;
-	bkg.transformer.get_modifier<oly::PivotTransformModifier2D>().size = paragraph.size() + 2.0f * parformat.padding;
-	bkg.polygon.colors = { { 0.0f, 0.0f, 0.0f, 1.0f } };
-	bkg.polygon.points = {
-		{ -0.5f * paragraph.width() - parformat.padding.x, -0.5f * paragraph.height() - parformat.padding.y },
-		{  0.5f * paragraph.width() + parformat.padding.x, -0.5f * paragraph.height() - parformat.padding.y },
-		{  0.5f * paragraph.width() + parformat.padding.x,  0.5f * paragraph.height() + parformat.padding.y },
-		{ -0.5f * paragraph.width() - parformat.padding.x,  0.5f * paragraph.height() + parformat.padding.y }
-	};
-	bkg.init();
 
 	// LATER begin play on initial actors here
 
@@ -146,8 +129,6 @@ int main()
 		//oly_context.render_sprites();
 		//oly_context.execute_draw_command("sprites, polygons, and tilemaps");
 
-		bkg.draw();
-		oly_context.render_polygons();
 		paragraph.draw();
 		text_batch.render();
 	}

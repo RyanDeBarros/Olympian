@@ -18,7 +18,8 @@ namespace oly
 			int c;
 
 		public:
-			constexpr explicit Codepoint(int c = 0) : c(c) {}
+			constexpr Codepoint() : c(0) {}
+			constexpr explicit Codepoint(int c) : c(c) {}
 			operator int() const { return c; }
 
 			constexpr bool operator==(const Codepoint&) const = default;

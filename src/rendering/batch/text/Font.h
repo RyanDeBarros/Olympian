@@ -8,6 +8,7 @@
 #include "math/Geometry.h"
 #include "util/UTF.h"
 #include "../../core/Textures.h"
+#include "../../Loader.h"
 
 namespace oly
 {
@@ -32,8 +33,6 @@ namespace oly
 		{
 			typedef std::unordered_map<std::pair<utf::Codepoint, utf::Codepoint>, int, CodepointPairHash> Map; // maps pairs of glyphs to kerning spacing
 			Map map;
-
-			Kerning(const char* kerning_file);
 		};
 
 		class FontFace
@@ -43,7 +42,7 @@ namespace oly
 			Kerning kerning;
 
 		public:
-			FontFace(const char* font_file, const char* kerning_file = nullptr);
+			FontFace(const char* font_file, Kerning&& kerning);
 
 			float scale_for_pixel_height(float font_size) const;
 			void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
@@ -53,6 +52,7 @@ namespace oly
 			void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
 			void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
 			int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
+			int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
 		};
 		typedef std::shared_ptr<FontFace> FontFaceRes;
 
@@ -98,8 +98,10 @@ namespace oly
 			bool cache(utf::Codepoint codepoint);
 			void cache_all(const FontAtlas& other);
 			const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
+			int get_glyph_index(utf::Codepoint codepoint) const;
 			bool supports(utf::Codepoint codepoint) const;
-			float kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc = 1.0f) const;
+			float kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
+			float kerning_of(utf::Codepoint c1, utf::Codepoint c2) const;
 			float line_height() const;
 			float get_ascent() const;
 			float get_descent() const;
@@ -114,7 +116,8 @@ namespace oly
 		{
 			struct Constructor
 			{
-				std::string font_file, kerning_file;
+				std::string font_file;
+				Kerning kerning;
 			};
 
 			std::unordered_map<std::string, Constructor> constructors;

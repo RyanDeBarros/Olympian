@@ -42,18 +42,21 @@ namespace oly
 		*/
 		class Paragraph
 		{
+			TextBatch* text_batch;
+			TextGlyph bkg;
 			std::vector<TextGlyph> glyphs;
 			std::vector<bool> visible;
 			utf::String text;
-			TextBatch* text_batch;
 			FontAtlasRes font;
 			ParagraphFormat format;
 			size_t glyphs_drawn = 0;
 
 		public:
 			Transformer2D transformer;
+			bool draw_bkg = false;
+			TextBatch::TextColor default_text_color;
 
-			Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat format = {}, utf::String&& text = "");
+			Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat& format = {}, utf::String&& text = "");
 
 			const utf::String& get_text() const { return text; }
 			void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }
@@ -66,10 +69,15 @@ namespace oly
 			const Transform2D& get_local() const { return transformer.get_local(); }
 			Transform2D& set_local() { return transformer.set_local(); }
 
+			void recolor_text_with_default();
 			TextBatch::TextColor get_text_color(size_t pos) const;
 			void set_text_color(size_t pos, const TextBatch::TextColor& color);
 			TextBatch::Modulation get_modulation(size_t pos) const;
 			void set_modulation(size_t pos, const TextBatch::Modulation& modulation);
+			TextBatch::TextColor get_bkg_color() const;
+			void set_bkg_color(const TextBatch::TextColor& color);
+			TextBatch::Modulation get_bkg_modulation() const;
+			void set_bkg_modulation(const TextBatch::Modulation& modulation);
 			bool is_visible(size_t pos) const;
 			void set_visible(size_t pos, bool visible);
 
@@ -83,6 +91,17 @@ namespace oly
 			void build_layout();
 			void build_page();
 			void write_glyphs();
+			void typeset_text(void(Paragraph::* space)(), void(Paragraph::* tab)(), bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx));
+
+			void build_space();
+			void build_tab();
+			bool build_newline();
+			void build_glyph(utf::Codepoint c, float dx);
+
+			void write_space();
+			void write_tab();
+			bool write_newline();
+			void write_glyph(utf::Codepoint c, float dx);
 
 			void create_glyph();
 			void write_glyph(const FontGlyph& font_glyph);
@@ -108,11 +127,15 @@ namespace oly
 			{
 				float x = 0.0f, y = 0.0f;
 				size_t line = 0;
+				utf::Codepoint prev_codepoint;
 			} typeset = {};
 
 			float space_width_mult() const;
 			float content_height() const;
 			float linebreak_mult() const;
+			float space_width();
+			float tab_width();
+			float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint);
 		};
 	}
 }

@@ -17,7 +17,7 @@ namespace oly
 		static std::unique_ptr<rendering::Sampler> _nearest_mipmap_nearest = nullptr;
 		GLuint nearest_mipmap_nearest = 0;
 
-		void load()
+		static void load()
 		{
 			_linear = std::make_unique<rendering::Sampler>();
 			_linear->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -50,7 +50,7 @@ namespace oly
 			nearest_mipmap_nearest = *_nearest_mipmap_nearest;
 		}
 
-		void unload()
+		static void unload()
 		{
 			_linear.reset();
 			linear = 0;
@@ -98,7 +98,7 @@ namespace oly
 			return it->second;
 		}
 
-		void load()
+		static void load()
 		{
 			_sprite_batch = rendering::load_shader((shaders_dir + "sprite_batch.vert").c_str(), (shaders_dir + "sprite_batch.frag").c_str());
 			sprite_batch = *_sprite_batch;
@@ -114,7 +114,7 @@ namespace oly
 			elliptic_particle = *_elliptic_particle;
 		}
 
-		void unload()
+		static void unload()
 		{
 			_sprite_batch.reset();
 			sprite_batch = 0;
@@ -133,15 +133,39 @@ namespace oly
 		}
 	}
 
+	namespace textures
+	{
+		rendering::BindlessTextureRes white1x1_1;
+		
+		static void load()
+		{
+			{
+				rendering::ImageDimensions dim{ 1, 1, 1 };
+				unsigned char* buf = dim.pxnew();
+				buf[0] = 255;
+				rendering::Image image(buf, dim);
+				white1x1_1 = move_shared(rendering::load_bindless_texture_2d(image));
+				white1x1_1->set_and_use_handle();
+			}
+		}
+
+		static void unload()
+		{
+			white1x1_1.reset();
+		}
+	}
+
 	void load_resources()
 	{
 		samplers::load();
 		shaders::load();
+		textures::load();
 	}
 
 	void unload_resources()
 	{
 		samplers::unload();
 		shaders::unload();
+		textures::unload();
 	}
 }

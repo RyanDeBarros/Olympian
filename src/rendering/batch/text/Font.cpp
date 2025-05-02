@@ -1,6 +1,5 @@
 #include "Font.h"
 
-#include "../../Loader.h"
 #include "util/IO.h"
 #include "util/Logger.h"
 #include "util/Errors.h"
@@ -10,126 +9,8 @@ namespace oly
 {
 	namespace rendering
 	{
-		static bool read_kern_part(const std::string& p, utf::Codepoint& k)
-		{
-			if (p[0] == '\\')
-			{
-				if (p.size() == 1)
-					return false;
-				if (p[1] == 'x')
-					k = utf::Codepoint(std::stoi(p.substr(2, p.size() - 2), nullptr, 16));
-				else if (p[1] == '\\')
-					k = utf::Codepoint('\\');
-				else if (p[1] == '\'')
-					k = utf::Codepoint('\'');
-				else if (p[1] == '"')
-					k = utf::Codepoint('\"');
-				else if (p[1] == '?')
-					k = utf::Codepoint('\?');
-				else if (p[1] == 'a')
-					k = utf::Codepoint('\a');
-				else if (p[1] == 'b')
-					k = utf::Codepoint('\b');
-				else if (p[1] == 'f')
-					k = utf::Codepoint('\f');
-				else if (p[1] == 'n')
-					k = utf::Codepoint('\n');
-				else if (p[1] == 'r')
-					k = utf::Codepoint('\r');
-				else if (p[1] == 't')
-					k = utf::Codepoint('\t');
-				else if (p[1] == 'v')
-					k = utf::Codepoint('\v');
-				else if (p[1] == '0')
-					k = utf::Codepoint('\0');
-				else
-					return false;
-			}
-			else
-				k = utf::Codepoint(p[0]);
-			return true;
-		}
-
-		static bool parse_kerning_line(const std::string& p0, const std::string& p1,
-			const std::string& p2, std::pair<std::pair<utf::Codepoint, utf::Codepoint>, int>& insert)
-		{
-			if (!read_kern_part(p0, insert.first.first))
-				return false;
-			if (!read_kern_part(p1, insert.first.second))
-				return false;
-			insert.second = std::stoi(p2);
-			return true;
-		}
-
-		static void parse_kerning(const char* filepath, Kerning::Map& kerning)
-		{
-			std::string content = io::read_file(filepath);
-			char part = 0;
-			std::string p0, p1, p2;
-			for (auto iter = content.begin(); iter != content.end(); ++iter)
-			{
-				if (utf::is_n_or_r(utf::Codepoint(*iter)))
-				{
-					std::pair<std::pair<utf::Codepoint, utf::Codepoint>, int> insert;
-					if (parse_kerning_line(p0, p1, p2, insert))
-						kerning.insert_or_assign(insert.first, insert.second);
-					p0.clear();
-					p1.clear();
-					p2.clear();
-					part = 0;
-				}
-				else if (utf::is_rn(utf::Codepoint(*iter), utf::Codepoint(iter + 1 != content.end() ? *(iter + 1) : 0)))
-				{
-					std::pair<std::pair<utf::Codepoint, utf::Codepoint>, int> insert;
-					if (parse_kerning_line(p0, p1, p2, insert))
-						kerning.insert_or_assign(insert.first, insert.second);
-					p0.clear();
-					p1.clear();
-					p2.clear();
-					part = 0;
-					++iter;
-				}
-				else if (part == 0)
-				{
-					if (*iter == ' ' || *iter == '\t')
-					{
-						if (!p0.empty())
-							++part;
-					}
-					else
-						p0.push_back(*iter);
-				}
-				else if (part == 1)
-				{
-					if (*iter == ' ' || *iter == '\t')
-					{
-						if (!p1.empty())
-							++part;
-					}
-					else
-						p1.push_back(*iter);
-				}
-				else if (*iter != ' ' && *iter != '\t')
-				{
-					p2.push_back(*iter);
-				}
-			}
-			if (part == 2)
-			{
-				std::pair<std::pair<utf::Codepoint, utf::Codepoint>, int> insert;
-				if (parse_kerning_line(p0, p1, p2, insert))
-					kerning.insert_or_assign(insert.first, insert.second);
-			}
-		}
-
-		Kerning::Kerning(const char* kerning_file)
-		{
-			if (kerning_file)
-				parse_kerning(kerning_file, map); // TODO use TOML array of triplets
-		}
-
-		FontFace::FontFace(const char* font_file, const char* kerning_file)
-			: info{}, data(io::read_file_uc(font_file)), kerning(kerning_file)
+		FontFace::FontFace(const char* font_file, Kerning&& kerning)
+			: info{}, data(io::read_file_uc(font_file)), kerning(std::move(kerning))
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
 			{
@@ -183,6 +64,13 @@ namespace oly
 				return 0;
 			auto k = kerning.map.find({ c1, c2 });
 			return k != kerning.map.end() ? k->second : stbtt_GetGlyphKernAdvance(&info, g1, g2);
+		}
+
+		int FontFace::get_kerning(utf::Codepoint c1, utf::Codepoint c2) const
+		{
+			int g1 = find_glyph_index(c1);
+			int g2 = find_glyph_index(c2);
+			return get_kerning(c1, c2, g1, g2);
 		}
 
 		FontGlyph::FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos)
@@ -303,6 +191,15 @@ namespace oly
 				throw Error(ErrorCode::UNCACHED_GLYPH);
 		}
 
+		int FontAtlas::get_glyph_index(utf::Codepoint codepoint) const
+		{
+			auto it = glyphs.find(codepoint);
+			if (it != glyphs.end())
+				return it->second.index;
+			else
+				return font->find_glyph_index(codepoint);
+		}
+
 		bool FontAtlas::supports(utf::Codepoint codepoint) const
 		{
 			if (glyphs.find(codepoint) != glyphs.end())
@@ -310,9 +207,14 @@ namespace oly
 			return font->find_glyph_index(codepoint) != 0;
 		}
 
-		float FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2, float sc) const
+		float FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const
 		{
-			return font->get_kerning(c1, c2, g1, g2) * scale * sc;
+			return font->get_kerning(c1, c2, g1, g2) * scale;
+		}
+
+		float FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2) const
+		{
+			return font->get_kerning(c1, c2) * scale;
 		}
 
 		float FontAtlas::line_height() const
@@ -366,20 +268,63 @@ namespace oly
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto _name = node["name"].value<std::string>();
-					auto _font_file = node["font file"].value<std::string>();
+					auto _font_file = node["file"].value<std::string>();
 					if (_name && _font_file)
 					{
 						const std::string& name = _name.value();
 						Constructor constructor;
 						constructor.font_file = root_dir + _font_file.value();
-						constructor.kerning_file = root_dir + node["kerning file"].value<std::string>().value_or("");
-						constructors[name] = constructor;
+						if (auto kerning_arr = node["kerning"].as_array())
+						{
+							for (const auto& node : *kerning_arr)
+							{
+								if (auto triplet = node.as_array())
+								{
+									utf::Codepoint c1, c2;
+									int k;
+									static const auto parse_codepoint = [](const std::string& sc) -> utf::Codepoint {
+										if (sc.size() >= 3)
+										{
+											std::string prefix = sc.substr(0, 2);
+											if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
+												return utf::Codepoint(std::stoi(sc.substr(2), nullptr, 16));
+											if (sc.substr(0, 3) == "&#x" && sc.ends_with(";"))
+												return utf::Codepoint(std::stoi(sc.substr(3, sc.size() - 3 - 1), nullptr, 16));
+										}
+										else if (sc.empty())
+											return utf::Codepoint(0);
+										else
+											return utf::Codepoint(sc[0]);
+									};
+									if (auto tc1 = triplet->get_as<std::string>(0))
+										c1 = parse_codepoint(tc1->get());
+									else
+										continue;
+									if (auto tc2 = triplet->get_as<std::string>(1))
+										c2 = parse_codepoint(tc2->get());
+									else
+										continue;
+									if (auto tk = triplet->get_as<int64_t>(2))
+										k = (int)tk->get();
+									else
+										continue;
+									if (c1 && c2)
+										constructor.kerning.map.emplace(std::make_pair(c1, c2), k);
+								}
+							}
+						}
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(name, std::make_shared<FontFace>(create_font_face(name)));
 							if (_init.value() == "discard")
-								constructors.erase(name);
+								auto_loaded.emplace(name, std::make_shared<FontFace>(constructor.font_file.c_str(), std::move(constructor.kerning)));
+							else
+							{
+								auto_loaded.emplace(name, std::make_shared<FontFace>(constructor.font_file.c_str(), dupl(constructor.kerning)));
+								constructors[name] = constructor;
+							}
 						}
+						else
+							constructors[name] = constructor;
 					}
 				}
 				});
@@ -397,7 +342,7 @@ namespace oly
 			if (it == constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_FONT_FACE);
 			const auto& constructor = it->second;
-			return FontFace(constructor.font_file.c_str(), constructor.kerning_file.c_str());
+			return FontFace(constructor.font_file.c_str(), dupl(constructor.kerning));
 		}
 
 		std::weak_ptr<FontFace> FontFaceRegistry::ref_font_face(const std::string& name) const

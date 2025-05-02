@@ -1,15 +1,18 @@
 [[font_face]]
-"name"         = "roboto regular"
-"font file"    = "../fonts/Roboto-Regular.ttf"
-"kerning file" = "../fonts/Roboto-Regular-Kerning.txt"
-"init"         = "discard"
+"name"    = "roboto regular"
+"file"    = "../fonts/Roboto-Regular.ttf"
+"init"    = "discard"
+"kerning" = [
+	[ "e", "U+78",  150 ],
+	[ "H", "e"   , -200 ]
+]
 
 [[font_atlas]]
 "name"                 = "roboto regular (96)"
 "font face"            = "roboto regular"
 "init"                 = "discard"
 "font size"            = 96
-"mag filter"           = "nearest"
-"min filter"           = "nearest"
+"mag filter"           = "linear"
+"min filter"           = "linear mipmap linear"
 "generate mipmaps"     = true
 "common buffer preset" = "common"

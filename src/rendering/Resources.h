@@ -12,9 +12,6 @@ namespace oly
 		extern GLuint linear_mipmap_nearest;
 		extern GLuint nearest_mipmap_linear;
 		extern GLuint nearest_mipmap_nearest;
-
-		extern void load();
-		extern void unload();
 	}
 
 	namespace shaders
@@ -27,8 +24,11 @@ namespace oly
 		extern GLuint elliptic_particle;
 		
 		extern GLuint location(GLuint shader, const std::string& uniform);
-		extern void load();
-		extern void unload();
+	}
+
+	namespace textures
+	{
+		extern rendering::BindlessTextureRes white1x1_1;
 	}
 
 	extern void load_resources();
