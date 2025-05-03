@@ -1,27 +1,27 @@
 #include "DrawCommands.h"
 
-#include "../../Context.h"
+#include "Context.h"
 #include "../Loader.h"
 
 namespace oly
 {
 	namespace rendering
 	{
-		DrawCommand::Draw::Draw(const Context& context, Renderable type, const std::string& name)
+		DrawCommand::Draw::Draw(Renderable type, const std::string& name)
 		{
 			switch (type)
 			{
 			case Renderable::SPRITE:
-				renderable = context.ref_sprite(name).lock();
+				renderable = context::ref_sprite(name).lock();
 				break;
 			case Renderable::POLYGON:
-				renderable = context.ref_polygonal(name).lock();
+				renderable = context::ref_polygonal(name).lock();
 				break;
 			case Renderable::ELLIPSE:
-				renderable = context.ref_ellipse(name).lock();
+				renderable = context::ref_ellipse(name).lock();
 				break;
 			case Renderable::TILEMAP:
-				renderable = context.ref_tilemap(name).lock();
+				renderable = context::ref_tilemap(name).lock();
 				break;
 			}
 		}
@@ -31,18 +31,18 @@ namespace oly
 			std::visit([](auto&& renderable) { renderable->draw(); }, renderable);
 		}
 		
-		DrawCommand::Render::Render(const Context& context, Batch type)
+		DrawCommand::Render::Render(Batch type)
 		{
 			switch (type)
 			{
 			case Batch::SPRITE:
-				batch = &context.sprite_batch();
+				batch = &context::sprite_batch();
 				break;
 			case Batch::POLYGON:
-				batch = &context.polygon_batch();
+				batch = &context::polygon_batch();
 				break;
 			case Batch::ELLIPSE:
-				batch = &context.ellipse_batch();
+				batch = &context::ellipse_batch();
 				break;
 			}
 		}
@@ -63,13 +63,13 @@ namespace oly
 				cmd.execute();
 		}
 
-		void DrawCommandRegistry::load(const Context& context, const char* draw_command_registry_file)
+		void DrawCommandRegistry::load(const char* draw_command_registry_file)
 		{
 			auto toml = assets::load_toml(draw_command_registry_file);
 			auto toml_draw_command_list = toml["draw_command"].as_array();
 			if (!toml_draw_command_list)
 				return;
-			toml_draw_command_list->for_each([this, &context](auto&& node) {
+			toml_draw_command_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					if (auto _name = node["name"].value<std::string>())
@@ -78,7 +78,7 @@ namespace oly
 						auto toml_commands = node["commands"].as_array();
 						if (toml_commands)
 						{
-							toml_commands->for_each([&context, &draw_command_list](auto&& node) {
+							toml_commands->for_each([&draw_command_list](auto&& node) {
 								if constexpr (toml::is_table<decltype(node)>)
 								{
 									auto _type = node["type"].value<std::string>();
@@ -104,7 +104,7 @@ namespace oly
 											renderable = DrawCommand::Draw::Renderable::TILEMAP;
 										else
 											return;
-										draw_command_list.commands.push_back({ DrawCommand::Draw(context, renderable, name) });
+										draw_command_list.commands.push_back({ DrawCommand::Draw(renderable, name) });
 									}
 									else if (type == "render")
 									{
@@ -121,7 +121,7 @@ namespace oly
 											batch = DrawCommand::Render::Batch::ELLIPSE;
 										else
 											return;
-										draw_command_list.commands.push_back({ DrawCommand::Render(context, batch) });
+										draw_command_list.commands.push_back({ DrawCommand::Render(batch) });
 									}
 								}
 								});

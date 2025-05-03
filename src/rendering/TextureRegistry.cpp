@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "../Olympian.h"
+#include "Context.h"
 #include "util/Errors.h"
 #include "util/IO.h"
 
@@ -134,7 +134,7 @@ namespace oly
 		}
 	}
 
-	void TextureRegistry::load_nsvg_abstract(const Context& context, const std::string& root_dir, const assets::AssetNode& node)
+	void TextureRegistry::load_nsvg_abstract(const std::string& root_dir, const assets::AssetNode& node)
 	{
 		auto _file = node["file"].value<std::string>();
 		auto _name = node["name"].value<std::string>();
@@ -150,7 +150,7 @@ namespace oly
 		rendering::NSVGAbstract nsvg_abstract(root_dir + file, units.c_str(), dpi);
 		
 		if (auto texture_list = node["texture"].as_array())
-			texture_list->for_each([this, &context, &nsvg_abstract, &abstract_name](auto&& node) {
+			texture_list->for_each([this, &nsvg_abstract, &abstract_name](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto _name = node["name"].value<std::string>();
@@ -159,8 +159,8 @@ namespace oly
 						return;
 
 					float scale = (float)_scale.value();
-					rendering::VectorImageRes image = { context.nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
-					register_nsvg_image((assets::AssetNode)node, image, _name.value(), nsvg_abstract, context.nsvg_context());
+					rendering::VectorImageRes image = { context::nsvg_context().rasterize_res(nsvg_abstract, scale), scale };
+					register_nsvg_image((assets::AssetNode)node, image, _name.value(), nsvg_abstract, context::nsvg_context());
 
 					bool keep_pixel_buffer = node["keep pixel buffer"].value<bool>().value_or(false);
 					if (!keep_pixel_buffer)
@@ -172,7 +172,7 @@ namespace oly
 			nsvg_abstract_reg.emplace(abstract_name, std::move(nsvg_abstract));
 	}
 
-	void TextureRegistry::load(const Context& context, const char* texture_registry_file)
+	void TextureRegistry::load(const char* texture_registry_file)
 	{
 		auto toml = assets::load_toml(texture_registry_file);
 		auto texture_registry = toml["texture_registry"];
@@ -184,7 +184,7 @@ namespace oly
 		std::string root_dir = io::directory_of(texture_registry_file) + texture_registry["root"].value<std::string>().value_or("");
 		textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (assets::AssetNode)node); });
 		if (auto nsvg_abstracts = texture_registry["nsvg_abstract"].as_array())
-			nsvg_abstracts->for_each([this, &context, &root_dir](auto&& node) { load_nsvg_abstract(context, root_dir, (assets::AssetNode)node); });
+			nsvg_abstracts->for_each([this, &root_dir](auto&& node) { load_nsvg_abstract(root_dir, (assets::AssetNode)node); });
 	}
 
 	void TextureRegistry::clear()

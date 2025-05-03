@@ -732,9 +732,9 @@ namespace oly
 				return Configuration::SINGLE;
 		}
 
-		void TileSet::load(const TextureRegistry& texture_registry, const toml::array& toml_assignments)
+		void TileSet::load(const toml::array& toml_assignments)
 		{
-			toml_assignments.for_each([this, &texture_registry](auto&& node) {
+			toml_assignments.for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto _config = node["config"].value<std::string>();
@@ -884,13 +884,13 @@ namespace oly
 				});
 		}
 
-		void TileSetRegistry::load(const Context& context, const char* tileset_file)
+		void TileSetRegistry::load(const char* tileset_file)
 		{
 			auto toml = assets::load_toml(tileset_file);
 			auto tileset_list = toml["tileset"].as_array();
 			if (!tileset_list)
 				return;
-			tileset_list->for_each([this, &context](auto&& node) {
+			tileset_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					if (auto _name = node["name"].value<std::string>())
@@ -902,7 +902,7 @@ namespace oly
 						tileset_constructors[name] = std::move(*assignments);
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(name, std::shared_ptr<TileSet>(new TileSet(create_tileset(context, name))));
+							auto_loaded.emplace(name, std::shared_ptr<TileSet>(new TileSet(create_tileset(name))));
 							if (_init.value() == "discard")
 								tileset_constructors.erase(name);
 						}
@@ -917,7 +917,7 @@ namespace oly
 			auto_loaded.clear();
 		}
 
-		TileSet TileSetRegistry::create_tileset(const Context& context, const std::string& name) const
+		TileSet TileSetRegistry::create_tileset(const std::string& name) const
 		{
 			auto it = tileset_constructors.find(name);
 			if (it == tileset_constructors.end())
@@ -925,7 +925,7 @@ namespace oly
 			const auto& node = it->second;
 
 			TileSet tileset;
-			tileset.load(context.texture_registry(), node);
+			tileset.load(node);
 			return tileset;
 		}
 

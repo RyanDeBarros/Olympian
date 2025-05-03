@@ -299,21 +299,35 @@ namespace oly
 			Phase phase;
 			glm::vec2 v;
 		};
+		
+		template<typename T>
+		concept GenericSignal = std::is_same_v<T, BooleanSignal> || std::is_same_v<T, GamepadButtonSignal>
+			|| std::is_same_v<T, GamepadAxis1DSignal> || std::is_same_v<T, GamepadAxis2DSignal> || std::is_same_v<T, Axis2DSignal>;
 
 		struct InputController
 		{
 			virtual ~InputController() = default;
 
-			typedef bool(InputController::* BooleanHandler      )(BooleanSignal      );
-			typedef bool(InputController::* GamepadButtonHandler)(GamepadButtonSignal);
-			typedef bool(InputController::* GamepadAxis1DHandler)(GamepadAxis1DSignal);
-			typedef bool(InputController::* GamepadAxis2DHandler)(GamepadAxis2DSignal);
-			typedef bool(InputController::* Axis2DHandler       )(Axis2DSignal       );
+			template<GenericSignal Signal>
+			using Handler = bool(InputController::*)(Signal);
+			using BooleanHandler       = Handler<BooleanSignal>;
+			using GamepadButtonHandler = Handler<GamepadButtonSignal>;
+			using GamepadAxis1DHandler = Handler<GamepadAxis1DSignal>;
+			using GamepadAxis2DHandler = Handler<GamepadAxis2DSignal>;
+			using Axis2DHandler        = Handler<Axis2DSignal>;
 		};
 
+		namespace _
+		{
+			template<typename T>
+			struct is_controller_handler : std::false_type {};
+
+			template<GenericSignal Signal>
+			struct is_controller_handler<bool (InputController::*)(Signal)> : std::true_type {};
+		}
+
 		template<typename T>
-		concept ControllerHandler = std::is_same_v<T, InputController::BooleanHandler> || std::is_same_v<T, InputController::GamepadButtonHandler>
-			|| std::is_same_v<T, InputController::GamepadAxis1DHandler> || std::is_same_v<T, InputController::GamepadAxis2DHandler> || std::is_same_v<T, InputController::Axis2DHandler>;
+		concept ControllerHandler = _::is_controller_handler<T>::value;
 
 		struct KeyBinding
 		{
@@ -433,7 +447,7 @@ namespace oly
 			};
 			struct Axis2DPoll
 			{
-				glm::vec2 axis;
+				glm::vec2 axis = { 0.0f, 0.0f };
 				bool moving = false;
 			};
 			struct GamepadPoll
@@ -442,7 +456,7 @@ namespace oly
 				std::array<Axis1DPoll, GamepadAxis1D::LAST + 1> axis_1d_polls;
 				std::array<Axis2DPoll, GamepadAxis2D::LAST + 1> axis_2d_polls;
 			};
-			std::array<GamepadPoll, GLFW_JOYSTICK_LAST> gamepad_polls;
+			std::array<GamepadPoll, GLFW_JOYSTICK_LAST> gamepad_polls; // TODO use FixedVector and pass number of gamepads to constructor, since this thing is 1980 bytes lol
 
 			template<ControllerHandler Handler>
 			struct InputControllerRef

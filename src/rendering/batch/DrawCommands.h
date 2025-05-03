@@ -7,11 +7,11 @@
 
 namespace oly
 {
-	class Context;
 	namespace rendering
 	{
 		struct DrawCommand
 		{
+			// TODO add TEXT renderable and batch
 			struct Draw
 			{
 				enum class Renderable
@@ -23,7 +23,7 @@ namespace oly
 				};
 
 				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>> renderable;
-				Draw(const Context& context, Renderable renderable, const std::string& name);
+				Draw(Renderable renderable, const std::string& name);
 				void execute() const;
 			};
 
@@ -37,7 +37,7 @@ namespace oly
 				};
 
 				std::variant<const SpriteBatch*, const PolygonBatch*, const EllipseBatch*> batch;
-				Render(const Context& context, Batch batch);
+				Render(Batch batch);
 				void execute() const;
 			};
 
@@ -57,8 +57,8 @@ namespace oly
 			std::unordered_map<std::string, DrawCommandList> command_lists;
 
 		public:
-			void load(const Context& context, const char* draw_command_registry_file);
-			void load(const Context& context, const std::string& draw_command_registry_file) { load(context, draw_command_registry_file.c_str()); }
+			void load(const char* draw_command_registry_file);
+			void load(const std::string& draw_command_registry_file) { load(draw_command_registry_file.c_str()); }
 			void clear();
 			void execute(const std::string& name) const;
 		};

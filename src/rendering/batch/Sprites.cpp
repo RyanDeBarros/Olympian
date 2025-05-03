@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../Resources.h"
-#include "../../Olympian.h"
+#include "Context.h"
 
 namespace oly
 {
@@ -247,9 +247,10 @@ namespace oly
 			}
 			quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 		}
-		
-		void Sprite::set_texture(const TextureRegistry& texture_registry, const std::string& texture_name) const
+
+		void Sprite::set_texture(const std::string& texture_name) const
 		{
+			TextureRegistry& texture_registry = context::texture_registry();
 			switch (texture_registry.get_type(texture_name))
 			{
 			case TextureRegistry::TextureType::IMAGE:
@@ -261,11 +262,6 @@ namespace oly
 					set_texture(texture_registry.get_texture(texture_name), sp->dimensions());
 				break;
 			}
-		}
-
-		void Sprite::set_texture(const Context& context, const std::string& texture_name) const
-		{
-			set_texture(context.texture_registry(), texture_name);
 		}
 
 		void Sprite::set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const

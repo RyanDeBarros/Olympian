@@ -6,7 +6,6 @@
 
 namespace oly
 {
-	class Context;
 	namespace rendering
 	{
 		class SpriteRegistry
@@ -20,11 +19,11 @@ namespace oly
 			std::unordered_map<std::string, std::shared_ptr<AtlasResExtension>> auto_loaded_atlas_extensions;
 
 		public:
-			void load(const Context& context, const char* sprite_registry_file);
-			void load(const Context& context, const std::string& sprite_registry_file) { load(context, sprite_registry_file.c_str()); }
+			void load(const char* sprite_registry_file);
+			void load(const std::string& sprite_registry_file) { load(sprite_registry_file.c_str()); }
 			void clear();
 
-			Sprite create_sprite(const Context& context, const std::string& name) const;
+			Sprite create_sprite(const std::string& name) const;
 			std::weak_ptr<Sprite> ref_sprite(const std::string& name) const;
 			void delete_sprite(const std::string& name);
 

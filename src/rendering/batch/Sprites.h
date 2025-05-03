@@ -163,12 +163,7 @@ namespace oly
 			void update_texture_handle(const BindlessTextureRes& texture, glm::vec2 dimensions);
 			void update_texture_dimensions(const BindlessTextureRes& texture, glm::vec2 dimensions);
 		};
-	}
 
-	class TextureRegistry;
-	class Context;
-	namespace rendering
-	{
 		struct Sprite
 		{
 		private:
@@ -188,8 +183,7 @@ namespace oly
 
 			void draw() const;
 
-			void set_texture(const TextureRegistry& texture_registry, const std::string& texture_name) const;
-			void set_texture(const Context& context, const std::string& texture_name) const;
+			void set_texture(const std::string& texture_name) const;
 			void set_texture(const BindlessTextureRes& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const UVRect& tex_coords) const;
 			void set_tex_coords(const math::Rect2D& rect) const;

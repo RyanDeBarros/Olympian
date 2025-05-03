@@ -228,18 +228,11 @@ namespace oly
 
 			bool operator==(const AnimFrameFormat&) const = default;
 		};
-	}
 
-	class TextureRegistry;
-	class Context;
-	namespace rendering
-	{
 		extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
-		extern AnimFrameFormat setup_anim_frame_format(const TextureRegistry& texture_registry, const std::string& texture_name, float speed = 1.0f, GLuint starting_frame = 0);
-		extern AnimFrameFormat setup_anim_frame_format(const Context& context, const std::string& texture_name, float speed = 1.0f, GLuint starting_frame = 0);
+		extern AnimFrameFormat setup_anim_frame_format(const std::string& texture_name, float speed = 1.0f, GLuint starting_frame = 0);
 		extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
-		extern AnimFrameFormat setup_anim_frame_format_single(const TextureRegistry& texture_registry, const std::string& texture_name, GLuint frame);
-		extern AnimFrameFormat setup_anim_frame_format_single(const Context& context, const std::string& texture_name, GLuint frame);
+		extern AnimFrameFormat setup_anim_frame_format_single(const std::string& texture_name, GLuint frame);
 
 		class NSVGAbstract
 		{

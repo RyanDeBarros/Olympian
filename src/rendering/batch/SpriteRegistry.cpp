@@ -1,12 +1,12 @@
 #include "SpriteRegistry.h"
 
-#include "../../Olympian.h"
+#include "Context.h"
 
 namespace oly
 {
 	namespace rendering
 	{
-		void SpriteRegistry::load(const Context& context, const char* sprite_registry_file)
+		void SpriteRegistry::load(const char* sprite_registry_file)
 		{
 			auto toml = assets::load_toml(sprite_registry_file);
 			auto toml_sprites = toml["sprite_registry"];
@@ -23,7 +23,7 @@ namespace oly
 				if (auto str = v.value<std::string>())
 					texture_map[std::string(k.str())] = str.value();
 			}
-			sprite_list->for_each([this, &context](auto&& node) {
+			sprite_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					if (auto _name = node["name"].value<std::string>())
@@ -32,7 +32,7 @@ namespace oly
 						sprite_constructors[name] = node;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(std::move(name), move_shared(create_sprite(context, name)));
+							auto_loaded.emplace(std::move(name), move_shared(create_sprite(name)));
 							if (_init.value() == "discard")
 								sprite_constructors.erase(name);
 						}
@@ -77,14 +77,14 @@ namespace oly
 			auto_loaded_atlas_extensions.clear();
 		}
 
-		Sprite SpriteRegistry::create_sprite(const Context& context, const std::string& name) const
+		Sprite SpriteRegistry::create_sprite(const std::string& name) const
 		{
 			auto it = sprite_constructors.find(name);
 			if (it == sprite_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_SPRITE);
 			const auto& node = it->second;
 
-			Sprite sprite = context.sprite();
+			Sprite sprite = context::sprite();
 			sprite.set_local() = assets::load_transform_2d(node, "transform");
 
 			std::string texture;
@@ -92,9 +92,9 @@ namespace oly
 			{
 				auto it = texture_map.find(toml_texture.value());
 				if (it != texture_map.end())
-					sprite.set_texture(context.texture_registry(), it->second);
+					sprite.set_texture(it->second);
 				else
-					sprite.set_texture(context.texture_registry(), toml_texture.value());
+					sprite.set_texture(toml_texture.value());
 			}
 			else if (auto toml_texture = node["texture"].value<int64_t>())
 			{
@@ -102,7 +102,7 @@ namespace oly
 				if (it != texture_map.end())
 				{
 					texture = it->second;
-					sprite.set_texture(context.texture_registry(), texture);
+					sprite.set_texture(texture);
 				}
 			}
 			if (auto toml_modulation = node["modulation"].as_array())
@@ -143,9 +143,9 @@ namespace oly
 				AnimFrameFormat frame_format;
 				auto mode = toml_frame_format["mode"].value<std::string>();
 				if (mode && mode == "single")
-					frame_format = setup_anim_frame_format_single(context, texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
+					frame_format = setup_anim_frame_format_single(texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
 				else if (mode && mode == "auto")
-					frame_format = setup_anim_frame_format(context, texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
+					frame_format = setup_anim_frame_format(texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
 						(GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0));
 				else
 				{

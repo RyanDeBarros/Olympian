@@ -6,7 +6,6 @@
 
 namespace oly
 {
-	class Context;
 	namespace rendering
 	{
 		class EllipseRegistry
@@ -15,13 +14,13 @@ namespace oly
 			std::unordered_map<std::string, std::shared_ptr<Ellipse>> auto_loaded;
 
 		public:
-			void load(const Context& context, const char* ellipse_registry_file);
-			void load(const Context& context, const std::string& ellipse_registry_file) { load(context, ellipse_registry_file.c_str()); }
+			void load(const char* ellipse_registry_file);
+			void load(const std::string& ellipse_registry_file) { load(ellipse_registry_file.c_str()); }
 			void clear();
 
-			Ellipse create_ellipse(const Context& context, const std::string& name) const;
+			Ellipse create_ellipse(const std::string& name) const;
 			std::weak_ptr<Ellipse> ref_ellipse(const std::string& name) const;
-			void delete_ellipse(const Context& context, const std::string& name);
+			void delete_ellipse(const std::string& name);
 		};
 	}
 }

@@ -6,7 +6,7 @@ namespace oly
 {
 	namespace rendering
 	{
-		void EllipseRegistry::load(const Context& context, const char* ellipse_registry_file)
+		void EllipseRegistry::load(const char* ellipse_registry_file)
 		{
 			auto toml = assets::load_toml(ellipse_registry_file);
 			auto toml_registry = toml["ellipse_registry"];
@@ -15,7 +15,7 @@ namespace oly
 			auto ellipse_list = toml_registry["ellipse"].as_array();
 			if (ellipse_list)
 			{
-				ellipse_list->for_each([this, &context](auto&& node) {
+				ellipse_list->for_each([this](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						if (auto _name = node["name"].value<std::string>())
@@ -25,7 +25,7 @@ namespace oly
 							if (auto _init = node["init"].value<bool>())
 							{
 								if (_init.value())
-									auto_loaded.emplace(name, std::shared_ptr<Ellipse>(new Ellipse(create_ellipse(context, name))));
+									auto_loaded.emplace(name, std::shared_ptr<Ellipse>(new Ellipse(create_ellipse(name))));
 							}
 						}
 					}
@@ -39,14 +39,14 @@ namespace oly
 			auto_loaded.clear();
 		}
 
-		Ellipse EllipseRegistry::create_ellipse(const Context& context, const std::string& name) const
+		Ellipse EllipseRegistry::create_ellipse(const std::string& name) const
 		{
 			auto it = ellipse_constructors.find(name);
 			if (it == ellipse_constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_ELLIPSE);
 			const auto& node = it->second;
 
-			Ellipse ellipse = context.ellipse();
+			Ellipse ellipse = context::ellipse();
 
 			ellipse.set_local() = assets::load_transform_2d(node, "transform");
 
@@ -73,7 +73,7 @@ namespace oly
 			return it->second;
 		}
 
-		void EllipseRegistry::delete_ellipse(const Context& context, const std::string& name)
+		void EllipseRegistry::delete_ellipse(const std::string& name)
 		{
 			auto_loaded.erase(name);
 		}

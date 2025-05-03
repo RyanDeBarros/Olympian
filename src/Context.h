@@ -11,6 +11,70 @@
 
 namespace oly
 {
+	namespace context
+	{
+		extern TextureRegistry& texture_registry();
+		extern rendering::NSVGContext& nsvg_context();
+
+		extern rendering::SpriteRegistry& sprite_registry();
+		extern rendering::PolygonRegistry& polygon_registry();
+		extern rendering::EllipseRegistry& ellipse_registry();
+
+		extern rendering::TileSetRegistry& tileset_registry();
+		extern rendering::TileMapRegistry& tilemap_registry();
+		extern rendering::FontFaceRegistry& font_face_registry();
+		extern rendering::FontAtlasRegistry& font_atlas_registry();
+
+		extern rendering::DrawCommandRegistry draw_command_registry();
+
+		extern rendering::SpriteBatch& sprite_batch();
+		extern rendering::PolygonBatch& polygon_batch();
+		extern rendering::EllipseBatch& ellipse_batch();
+
+		extern void sync_texture_handle(const rendering::BindlessTextureRes& texture);
+		extern void sync_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions);
+
+		// TODO make all of these inline functions extern
+		inline rendering::Sprite sprite() { return rendering::Sprite(sprite_batch()); }
+		inline rendering::Sprite sprite(const std::string& name) { return context::sprite_registry().create_sprite(name); }
+		inline std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) { return context::sprite_registry().ref_sprite(name); }
+		inline void render_sprites() { sprite_batch().render(); }
+		inline rendering::AtlasResExtension atlas_extension(const std::string& name) { return context::sprite_registry().create_atlas_extension(name); }
+		inline std::weak_ptr<rendering::AtlasResExtension> ref_atlas_extension(const std::string& name) { return context::sprite_registry().ref_atlas_extension(name); }
+
+		inline rendering::Polygon polygon() { return rendering::Polygon(polygon_batch()); }
+		inline rendering::Polygon polygon(const std::string& name) { return context::polygon_registry().create_polygon(name); }
+		inline rendering::Composite composite() { return rendering::Composite(polygon_batch()); }
+		inline rendering::Composite composite(const std::string& name) { return context::polygon_registry().create_composite(name); }
+		inline rendering::NGon ngon() { return rendering::NGon(polygon_batch()); }
+		inline rendering::NGon ngon(const std::string& name) { return context::polygon_registry().create_ngon(name); }
+		inline std::weak_ptr<rendering::Polygonal> ref_polygonal(const std::string& name) { return context::polygon_registry().ref_polygonal(name); }
+		inline std::weak_ptr<rendering::Polygon> ref_polygon(const std::string& name) { return std::dynamic_pointer_cast<rendering::Polygon>(ref_polygonal(name).lock()); }
+		inline std::weak_ptr<rendering::Composite> ref_composite(const std::string& name) { return std::dynamic_pointer_cast<rendering::Composite>(ref_polygonal(name).lock()); }
+		inline std::weak_ptr<rendering::NGon> ref_ngon(const std::string& name) { return std::dynamic_pointer_cast<rendering::NGon>(ref_polygonal(name).lock()); }
+		inline void render_polygons() { polygon_batch().render(); }
+
+		inline rendering::Ellipse ellipse() { return rendering::Ellipse(ellipse_batch()); }
+		inline rendering::Ellipse ellipse(const std::string& name) { return context::ellipse_registry().create_ellipse(name); }
+		inline std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) { return context::ellipse_registry().ref_ellipse(name); }
+		inline void render_ellipses() { ellipse_batch().render(); }
+
+		inline rendering::TileSet tileset(const std::string& name) { return context::tileset_registry().create_tileset(name); }
+		inline std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name) { return context::tileset_registry().ref_tileset(name); }
+
+		inline rendering::TileMap tilemap(const std::string& name) { return context::tilemap_registry().create_tilemap(name); }
+		inline std::weak_ptr<rendering::TileMap> ref_tilemap(const std::string& name) { return context::tilemap_registry().ref_tilemap(name); }
+
+		inline rendering::FontFace font_face(const std::string& name) { return context::font_face_registry().create_font_face(name); }
+		inline std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name) { return context::font_face_registry().ref_font_face(name); }
+
+		inline rendering::FontAtlas font_atlas(const std::string& name) { return context::font_atlas_registry().create_font_atlas(context::font_face_registry(), name); }
+		inline std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name) { return context::font_atlas_registry().ref_font_atlas(name); }
+
+		inline void execute_draw_command(const std::string& name) { context::draw_command_registry().execute(name); }
+	}
+
+	// TODO Context is getting large. Use static global variables in Context.cpp instead of class.
 	class Context
 	{
 		struct
@@ -18,25 +82,8 @@ namespace oly
 			std::unique_ptr<rendering::Window> window;
 			std::array<std::unique_ptr<input::Gamepad>, GLFW_JOYSTICK_LAST> gamepads;
 			int num_gamepads = 0;
+			input::SignalTable signal_table;
 			input::BindingContext binding_context;
-
-			TextureRegistry texture_registry;
-			rendering::NSVGContext nsvg_context;
-
-			rendering::SpriteRegistry sprite_registry;
-			rendering::PolygonRegistry polygon_registry;
-			rendering::EllipseRegistry ellipse_registry;
-
-			std::unique_ptr<rendering::SpriteBatch> sprite_batch;
-			std::unique_ptr<rendering::PolygonBatch> polygon_batch;
-			std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
-			
-			rendering::TileSetRegistry tileset_registry;
-			rendering::TileMapRegistry tilemap_registry;
-			rendering::FontFaceRegistry font_face_registry;
-			rendering::FontAtlasRegistry font_atlas_registry;
-
-			rendering::DrawCommandRegistry draw_command_registry;
 		} internal;
 
 	public:
@@ -48,18 +95,6 @@ namespace oly
 		void init_window(const assets::AssetNode& node);
 		void init_gamepads(const assets::AssetNode& node);
 		void init_binding_context();
-		void init_texture_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_sprite_batch(const assets::AssetNode& node);
-		void init_sprite_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_polygon_batch(const assets::AssetNode& node);
-		void init_polygon_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_ellipse_batch(const assets::AssetNode& node);
-		void init_ellipse_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_tileset_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_tilemap_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_font_face_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_font_atlas_registry(const assets::AssetNode& node, const std::string& root_dir);
-		void init_draw_command_registry(const assets::AssetNode& node, const std::string& root_dir);
 
 	public:
 		GLenum per_frame_clear_mask = GL_COLOR_BUFFER_BIT;
@@ -69,71 +104,19 @@ namespace oly
 		rendering::Window& window() { return *internal.window; }
 		const input::Gamepad& gamepad(int i = 0) const { return *internal.gamepads[i]; }
 		input::Gamepad& gamepad(int i = 0) { return *internal.gamepads[i]; }
+		const input::SignalTable& signal_table() const { return internal.signal_table; }
+		input::SignalTable& signal_table() { return internal.signal_table; }
 		const input::BindingContext& binding_context() const { return internal.binding_context; }
 		input::BindingContext& binding_context() { return internal.binding_context; }
-
-		const TextureRegistry& texture_registry() const { return internal.texture_registry; }
-		TextureRegistry& texture_registry() { return internal.texture_registry; }
-		const rendering::NSVGContext& nsvg_context() const { return internal.nsvg_context; }
-		rendering::NSVGContext& nsvg_context() { return internal.nsvg_context; }
-		void sync_texture_handle(const rendering::BindlessTextureRes& texture) const;
-		void sync_texture_handle(const rendering::BindlessTextureRes& texture, glm::vec2 dimensions) const;
-		
-		const rendering::SpriteRegistry& sprite_registry() const { return internal.sprite_registry; }
-		rendering::SpriteRegistry& sprite_registry() { return internal.sprite_registry; }
-		const rendering::PolygonRegistry& polygon_registry() const { return internal.polygon_registry; }
-		rendering::PolygonRegistry& polygon_registry() { return internal.polygon_registry; }
-		const rendering::EllipseRegistry& ellipse_registry() const { return internal.ellipse_registry; }
-		rendering::EllipseRegistry& ellipse_registry() { return internal.ellipse_registry; }
-		const rendering::DrawCommandRegistry& draw_command_registry() const { return internal.draw_command_registry; }
-		rendering::DrawCommandRegistry& draw_command_registry() { return internal.draw_command_registry; }
-
-		const rendering::SpriteBatch& sprite_batch() const { return *internal.sprite_batch; }
-		rendering::SpriteBatch& sprite_batch() { return *internal.sprite_batch; }
-		rendering::Sprite sprite() const { return rendering::Sprite(*internal.sprite_batch); }
-		rendering::Sprite sprite(const std::string& name) const { return internal.sprite_registry.create_sprite(*this, name); }
-		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const { return internal.sprite_registry.ref_sprite(name); }
-		void render_sprites() const { internal.sprite_batch->render(); }
-		rendering::AtlasResExtension atlas_extension(const std::string& name) const { return internal.sprite_registry.create_atlas_extension(name); }
-		std::weak_ptr<rendering::AtlasResExtension> ref_atlas_extension(const std::string& name) const { return internal.sprite_registry.ref_atlas_extension(name); }
-
-		const rendering::PolygonBatch& polygon_batch() const { return *internal.polygon_batch; }
-		rendering::PolygonBatch& polygon_batch() { return *internal.polygon_batch; }
-		rendering::Polygon polygon() const { return rendering::Polygon(*internal.polygon_batch); }
-		rendering::Polygon polygon(const std::string& name) const { return internal.polygon_registry.create_polygon(*this, name); }
-		rendering::Composite composite() const { return rendering::Composite(*internal.polygon_batch); }
-		rendering::Composite composite(const std::string& name) const { return internal.polygon_registry.create_composite(*this, name); }
-		rendering::NGon ngon() const { return rendering::NGon(*internal.polygon_batch); }
-		rendering::NGon ngon(const std::string& name) const { return internal.polygon_registry.create_ngon(*this, name); }
-		std::weak_ptr<rendering::Polygonal> ref_polygonal(const std::string& name) const { return internal.polygon_registry.ref_polygonal(name); }
-		std::weak_ptr<rendering::Polygon> ref_polygon(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Polygon>(ref_polygonal(name).lock()); }
-		std::weak_ptr<rendering::Composite> ref_composite(const std::string& name) const { return std::dynamic_pointer_cast<rendering::Composite>(ref_polygonal(name).lock()); }
-		std::weak_ptr<rendering::NGon> ref_ngon(const std::string& name) const { return std::dynamic_pointer_cast<rendering::NGon>(ref_polygonal(name).lock()); }
-		void render_polygons() const { internal.polygon_batch->render(); }
-
-		const rendering::EllipseBatch& ellipse_batch() const { return *internal.ellipse_batch; }
-		rendering::EllipseBatch& ellipse_batch() { return *internal.ellipse_batch; }
-		rendering::Ellipse ellipse() const { return rendering::Ellipse(*internal.ellipse_batch); }
-		rendering::Ellipse ellipse(const std::string& name) const { return internal.ellipse_registry.create_ellipse(*this, name); }
-		std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name) const { return internal.ellipse_registry.ref_ellipse(name); }
-		void render_ellipses() const { internal.ellipse_batch->render(); }
-
-		const rendering::TileSetRegistry& tilset_registry() const { return internal.tileset_registry; }
-		rendering::TileSet tileset(const std::string& name) const { return internal.tileset_registry.create_tileset(*this, name); }
-		std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name) const { return internal.tileset_registry.ref_tileset(name); }
-
-		const rendering::TileMapRegistry& tilmap_registry() const { return internal.tilemap_registry; }
-		rendering::TileMap tilemap(const std::string& name) const { return internal.tilemap_registry.create_tilemap(*this, name); }
-		std::weak_ptr<rendering::TileMap> ref_tilemap(const std::string& name) const { return internal.tilemap_registry.ref_tilemap(name); }
-
-		const rendering::FontFaceRegistry& font_face_registry() const { return internal.font_face_registry; }
-		rendering::FontFace font_face(const std::string& name) const { return internal.font_face_registry.create_font_face(name); }
-		std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name) const { return internal.font_face_registry.ref_font_face(name); }
-
-		const rendering::FontAtlasRegistry& font_atlas_registry() const { return internal.font_atlas_registry; }
-		rendering::FontAtlas font_atlas(const std::string& name) const { return internal.font_atlas_registry.create_font_atlas(internal.font_face_registry, name); }
-		std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name) const { return internal.font_atlas_registry.ref_font_atlas(name); }
-
-		void execute_draw_command(const std::string& name) const { internal.draw_command_registry.execute(name); }
+		template<std::derived_from<input::InputController> Controller, input::GenericSignal Signal>
+		void bind_signal(const char* signal, bool(Controller::* handler)(Signal), Controller& controller)
+		{
+			binding_context().bind(signal_table().get(signal), static_cast<input::InputController::Handler<Signal>>(handler), &controller);
+		}
+		template<std::derived_from<input::InputController> Controller, input::GenericSignal Signal>
+		void unbind_signal(const char* signal, bool(Controller::* handler)(Signal), Controller& controller)
+		{
+			binding_context().unbind(signal_table().get(signal), static_cast<input::InputController::Handler<Signal>>(handler), &controller);
+		}
 	};
 }

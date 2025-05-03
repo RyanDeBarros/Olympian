@@ -6,7 +6,6 @@
 
 namespace oly
 {
-	class Context;
 	namespace rendering
 	{
 		struct TileMapLayer
@@ -24,12 +23,12 @@ namespace oly
 
 			void draw() const;
 
-			void paint_tile(const Context& context, glm::ivec2 tile);
-			void unpaint_tile(const Context& context, glm::ivec2 tile);
+			void paint_tile(glm::ivec2 tile);
+			void unpaint_tile(glm::ivec2 tile);
 
 		private:
-			void update_neighbour_configurations(const Context& context, glm::ivec2 center);
-			void update_configuration(const Context& context, glm::ivec2 tile);
+			void update_neighbour_configurations(glm::ivec2 center);
+			void update_configuration(glm::ivec2 tile);
 		};
 
 		class TileMap
@@ -49,7 +48,7 @@ namespace oly
 			void register_layer(TileMapLayer&& layer);
 			void register_layer(size_t z, TileMapLayer&& layer);
 
-			void load(const Context& context, const toml::table& node);
+			void load(const toml::table& node);
 		};
 
 		class TileMapRegistry
@@ -58,11 +57,11 @@ namespace oly
 			std::unordered_map<std::string, std::shared_ptr<TileMap>> auto_loaded;
 
 		public:
-			void load(const Context& context, const char* tilemap_file);
-			void load(const Context& context, const std::string& tilemap_file) { load(context, tilemap_file.c_str()); }
+			void load(const char* tilemap_file);
+			void load(const std::string& tilemap_file) { load(tilemap_file.c_str()); }
 			void clear();
 
-			TileMap create_tilemap(const Context& context, const std::string& name) const;
+			TileMap create_tilemap(const std::string& name) const;
 			std::weak_ptr<TileMap> ref_tilemap(const std::string& name) const;
 			void delete_tilemap(const std::string& name);
 		};

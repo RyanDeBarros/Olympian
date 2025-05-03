@@ -135,6 +135,7 @@ namespace oly
 		vec.erase(std::find(vec.begin(), vec.end(), el));
 	}
 
+	// TODO put completely internally in Context.cpp
 	template<typename T>
 	concept numeric = std::integral<T> || std::floating_point<T>;
 	class TimeImpl

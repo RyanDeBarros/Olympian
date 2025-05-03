@@ -6,8 +6,6 @@
 
 namespace oly
 {
-	class Context;
-	class TextureRegistry;
 	namespace rendering
 	{
 		class TileSet
@@ -111,7 +109,7 @@ namespace oly
 			static Configuration get_configuration(PaintedTile tile);
 
 		public:
-			void load(const TextureRegistry& texture_registry, const toml::array& toml_assignments);
+			void load(const toml::array& toml_assignments);
 		};
 
 		inline TileSet::Transformation operator&(TileSet::Transformation a, TileSet::Transformation b) { return (TileSet::Transformation)((char)a & (char)b); }
@@ -125,11 +123,11 @@ namespace oly
 			std::unordered_map<std::string, std::shared_ptr<TileSet>> auto_loaded;
 
 		public:
-			void load(const Context& context, const char* tileset_file);
-			void load(const Context& context, const std::string& tileset_file) { load(context, tileset_file.c_str()); }
+			void load(const char* tileset_file);
+			void load(const std::string& tileset_file) { load(tileset_file.c_str()); }
 			void clear();
 
-			TileSet create_tileset(const Context& context, const std::string& name) const;
+			TileSet create_tileset(const std::string& name) const;
 			std::weak_ptr<TileSet> ref_tileset(const std::string& name) const;
 			void delete_tileset(const std::string& name);
 		};

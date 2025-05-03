@@ -73,20 +73,18 @@ int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
 
-	oly::input::SignalTable signal_table;
-
-	// TODO signal assets
-	oly::input::SignalID JUMP = signal_table.get("jump");
+	// TODO signal registries
+	oly::input::SignalID JUMP = oly_context.signal_table().get("jump");
 	oly_context.binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
-	oly::input::SignalID PAN_CAMERA = signal_table.get("pan camera");
+	oly::input::SignalID PAN_CAMERA = oly_context.signal_table().get("pan camera");
 	oly_context.binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
-	oly::input::SignalID ZOOM_CAMERA = signal_table.get("zoom camera");
+	oly::input::SignalID ZOOM_CAMERA = oly_context.signal_table().get("zoom camera");
 	oly_context.binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
 
 	PlayerController pc;
-	oly_context.binding_context().bind(signal_table.get("jump"), static_cast<oly::input::InputController::BooleanHandler>(&PlayerController::jump), &pc);
-	//oly_context.binding_context().bind(signal_table.get("pan camera"), static_cast<oly::input::InputController::Axis2DHandler>(&PlayerController::pan_camera), &pc);
-	oly_context.binding_context().bind(signal_table.get("zoom camera"), static_cast<oly::input::InputController::Axis2DHandler>(&PlayerController::zoom_camera), &pc);
+	oly_context.bind_signal("jump", &PlayerController::jump, pc);
+	oly_context.bind_signal("pan camera", &PlayerController::pan_camera, pc);
+	oly_context.bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly_context.window().handlers.key);
@@ -102,13 +100,13 @@ int main()
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.push_back(oly_context.sprite("flag instance"));
+		flag_tesselation.push_back(oly::context::sprite("flag instance"));
 		flag_tesselation[i].set_local().position = { -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols,
 			flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows };
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	auto concave_shape = oly_context.ref_composite("concave shape").lock();
+	auto concave_shape = oly::context::ref_composite("concave shape").lock();
 	for (auto& tp : concave_shape->composite)
 	{
 		tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
@@ -117,11 +115,12 @@ int main()
 	}
 	concave_shape->send_polygon();
 
-	auto octagon = oly_context.ref_ngon("octagon").lock();
-	auto flag_texture = oly_context.texture_registry().get_texture("flag");
-	auto atlased_knight = oly_context.ref_atlas_extension("atlased knight").lock();
-	auto tilemap = oly_context.ref_tilemap("grass tilemap").lock();
+	auto octagon = oly::context::ref_ngon("octagon").lock();
+	auto flag_texture = oly::context::texture_registry().get_texture("flag");
+	auto atlased_knight = oly::context::ref_atlas_extension("atlased knight").lock();
+	auto tilemap = oly::context::ref_tilemap("grass tilemap").lock();
 
+	// TODO TextRegistry
 	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
 	oly::rendering::ParagraphFormat parformat;
 	parformat.pivot = { 0.0f, 1.0f };
@@ -131,7 +130,7 @@ int main()
 	parformat.padding = { 50.0f, 50.0f };
 	parformat.horizontal_alignment = decltype(parformat.horizontal_alignment)::CENTER;
 	parformat.vertical_alignment = decltype(parformat.vertical_alignment)::MIDDLE;
-	oly::rendering::Paragraph paragraph(text_batch, oly_context.ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex");
+	oly::rendering::Paragraph paragraph(text_batch, oly::context::ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex");
 	paragraph.draw_bkg = true;
 	paragraph.set_local().position = { -400, 400 };
 	paragraph.set_local().scale = glm::vec2(0.8f);
@@ -157,9 +156,9 @@ int main()
 
 		concave_shape->set_local().rotation += 0.5f * oly::TIME.delta<float>();
 
-		if (auto sprite1 = oly_context.ref_sprite("sprite1").lock())
+		if (auto sprite1 = oly::context::ref_sprite("sprite1").lock())
 			sprite1->set_local().rotation = oly::TIME.now<float>();
-		if (auto sprite2 = oly_context.ref_sprite("sprite2").lock())
+		if (auto sprite2 = oly::context::ref_sprite("sprite2").lock())
 		{
 			sprite2->transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
 			sprite2->transformer.post_set();
@@ -177,7 +176,7 @@ int main()
 			{
 				lin = false;
 				flag_texture->set_and_use_handle(oly::samplers::nearest);
-				oly_context.sync_texture_handle(flag_texture);
+				oly::context::sync_texture_handle(flag_texture);
 			}
 		}
 		else
@@ -186,7 +185,7 @@ int main()
 			{
 				lin = true;
 				flag_texture->set_and_use_handle(oly::samplers::linear);
-				oly_context.sync_texture_handle(flag_texture);
+				oly::context::sync_texture_handle(flag_texture);
 			}
 		}
 

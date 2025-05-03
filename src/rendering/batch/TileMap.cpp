@@ -12,40 +12,40 @@ namespace oly
 				sprite.draw();
 		}
 
-		void TileMapLayer::paint_tile(const Context& context, glm::ivec2 tile)
+		void TileMapLayer::paint_tile(glm::ivec2 tile)
 		{
 			if (!sprite_map.count(tile))
 			{
-				auto& sprite = sprite_map.emplace(tile, context.sprite()).first->second;
+				auto& sprite = sprite_map.emplace(tile, context::sprite()).first->second;
 				sprite.transformer.attach_parent(&transformer);
-				update_configuration(context, tile);
-				update_neighbour_configurations(context, tile);
+				update_configuration(tile);
+				update_neighbour_configurations(tile);
 			}
 		}
 
-		void TileMapLayer::unpaint_tile(const Context& context, glm::ivec2 tile)
+		void TileMapLayer::unpaint_tile(glm::ivec2 tile)
 		{
 			auto it = sprite_map.find(tile);
 			if (it != sprite_map.end())
 			{
 				sprite_map.erase(it);
-				update_neighbour_configurations(context, tile);
+				update_neighbour_configurations(tile);
 			}
 		}
 
-		void TileMapLayer::update_neighbour_configurations(const Context& context, glm::ivec2 center)
+		void TileMapLayer::update_neighbour_configurations(glm::ivec2 center)
 		{
-			update_configuration(context, center + glm::ivec2{  1,  0 });
-			update_configuration(context, center + glm::ivec2{  0,  1 });
-			update_configuration(context, center + glm::ivec2{ -1,  0 });
-			update_configuration(context, center + glm::ivec2{  0, -1 });
-			update_configuration(context, center + glm::ivec2{  1,  1 });
-			update_configuration(context, center + glm::ivec2{ -1,  1 });
-			update_configuration(context, center + glm::ivec2{ -1, -1 });
-			update_configuration(context, center + glm::ivec2{  1, -1 });
+			update_configuration(center + glm::ivec2{  1,  0 });
+			update_configuration(center + glm::ivec2{  0,  1 });
+			update_configuration(center + glm::ivec2{ -1,  0 });
+			update_configuration(center + glm::ivec2{  0, -1 });
+			update_configuration(center + glm::ivec2{  1,  1 });
+			update_configuration(center + glm::ivec2{ -1,  1 });
+			update_configuration(center + glm::ivec2{ -1, -1 });
+			update_configuration(center + glm::ivec2{  1, -1 });
 		}
 
-		void TileMapLayer::update_configuration(const Context& context, glm::ivec2 tile)
+		void TileMapLayer::update_configuration(glm::ivec2 tile)
 		{
 			auto it = sprite_map.find(tile);
 			if (it == sprite_map.end())
@@ -65,7 +65,7 @@ namespace oly
 			TileSet::Transformation transformation;
 			TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
-			sprite.set_texture(context, tile_desc.name);
+			sprite.set_texture(tile_desc.name);
 			sprite.set_tex_coords(tile_desc.uvs);
 			sprite.set_local().position = glm::vec2(tile);
 			if (transformation & TileSet::Transformation::REFLECT_X)
@@ -85,7 +85,7 @@ namespace oly
 			else
 				sprite.set_local().rotation = 0.0f;
 			
-			auto idim = context.texture_registry().get_image_dimensions(tile_desc.name);
+			auto idim = context::texture_registry().get_image_dimensions(tile_desc.name);
 			sprite.set_local().scale = { 1.0f / idim.w, 1.0f / idim.h };
 		}
 
@@ -107,14 +107,14 @@ namespace oly
 			layers.insert(layers.begin() + z, std::move(layer));
 		}
 
-		void TileMap::load(const Context& context, const toml::table& node)
+		void TileMap::load(const toml::table& node)
 		{
 			set_local() = assets::load_transform_2d(node, "transform");
 
 			auto toml_layers = node["layer"].as_array();
 			if (toml_layers)
 			{
-				toml_layers->for_each([this, &context](auto&& node) {
+				toml_layers->for_each([this](auto&& node) {
 					if constexpr (toml::is_table<decltype(node)>)
 					{
 						auto tileset = node["tileset"].value<std::string>();
@@ -122,7 +122,7 @@ namespace oly
 							return;
 
 						TileMapLayer layer;
-						layer.tileset = context.ref_tileset(tileset.value()).lock();
+						layer.tileset = context::ref_tileset(tileset.value()).lock();
 						
 						auto tiles = node["tiles"].as_array();
 						if (tiles)
@@ -133,7 +133,7 @@ namespace oly
 								{
 									glm::vec2 tile{};
 									if (assets::parse_vec2(_tile, tile))
-										layer.paint_tile(context, { (int)tile.x, (int)tile.y });
+										layer.paint_tile({ (int)tile.x, (int)tile.y });
 								}
 							}
 						}
@@ -148,13 +148,13 @@ namespace oly
 			}
 		}
 
-		void TileMapRegistry::load(const Context& context, const char* tilemap_file)
+		void TileMapRegistry::load(const char* tilemap_file)
 		{
 			auto toml = assets::load_toml(tilemap_file);
 			auto tilemap_list = toml["tilemap"].as_array();
 			if (!tilemap_list)
 				return;
-			tilemap_list->for_each([this, &context](auto&& node) {
+			tilemap_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					if (auto _name = node["name"].value<std::string>())
@@ -163,7 +163,7 @@ namespace oly
 						tilemap_constructors[name] = node;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(name, std::make_shared<TileMap>(create_tilemap(context, name)));
+							auto_loaded.emplace(name, std::make_shared<TileMap>(create_tilemap(name)));
 							if (_init.value() == "discard")
 								tilemap_constructors.erase(name);
 						}
@@ -178,7 +178,7 @@ namespace oly
 			auto_loaded.clear();
 		}
 		
-		TileMap TileMapRegistry::create_tilemap(const Context& context, const std::string& name) const
+		TileMap TileMapRegistry::create_tilemap(const std::string& name) const
 		{
 			auto it = tilemap_constructors.find(name);
 			if (it == tilemap_constructors.end())
@@ -186,7 +186,7 @@ namespace oly
 			const auto& node = it->second;
 
 			TileMap tilemap;
-			tilemap.load(context, node);
+			tilemap.load(node);
 			return tilemap;
 		}
 		
