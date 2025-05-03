@@ -16,7 +16,8 @@ namespace oly
 		struct
 		{
 			std::unique_ptr<rendering::Window> window;
-			std::array<std::unique_ptr<input::Gamepad>, 16> gamepads;
+			std::array<std::unique_ptr<input::Gamepad>, GLFW_JOYSTICK_LAST> gamepads;
+			int num_gamepads = 0;
 			input::BindingContext binding_context;
 
 			TextureRegistry texture_registry;
@@ -45,7 +46,7 @@ namespace oly
 
 	private:
 		void init_window(const assets::AssetNode& node);
-		void init_gamepads();
+		void init_gamepads(const assets::AssetNode& node);
 		void init_binding_context();
 		void init_texture_registry(const assets::AssetNode& node, const std::string& root_dir);
 		void init_sprite_batch(const assets::AssetNode& node);

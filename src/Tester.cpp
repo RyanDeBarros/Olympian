@@ -24,7 +24,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct PlayerController : public oly::input::InputController
 {
-	bool jump(oly::input::InputSignal0D signal)
+	bool jump(oly::input::BooleanSignal signal)
 	{
 		if (signal.phase == oly::input::Phase::STARTED)
 		{
@@ -34,7 +34,24 @@ struct PlayerController : public oly::input::InputController
 		return false;
 	}
 
-	bool camera(oly::input::InputSignal2D signal)
+	bool pan_camera(oly::input::Axis2DSignal signal)
+	{
+		switch (signal.phase)
+		{
+		case oly::input::Phase::STARTED:
+			oly::LOG << "STARTED:   " << signal.v << oly::LOG.endl;
+			return true;
+		case oly::input::Phase::ONGOING:
+			oly::LOG << "ONGOING:   " << signal.v << oly::LOG.endl;
+			return true;
+		case oly::input::Phase::COMPLETED:
+			oly::LOG << "COMPLETED: " << signal.v << oly::LOG.endl;
+			return true;
+		}
+		return false;
+	}
+
+	bool zoom_camera(oly::input::Axis2DSignal signal)
 	{
 		switch (signal.phase)
 		{
@@ -57,14 +74,19 @@ int main()
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
 
 	oly::input::SignalTable signal_table;
+
+	// TODO signal assets
 	oly::input::SignalID JUMP = signal_table.get("jump");
 	oly_context.binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
-	oly::input::SignalID CAMERA = signal_table.get("camera");
-	oly_context.binding_context().register_signal(CAMERA, oly::input::CursorPosBinding{});
+	oly::input::SignalID PAN_CAMERA = signal_table.get("pan camera");
+	oly_context.binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
+	oly::input::SignalID ZOOM_CAMERA = signal_table.get("zoom camera");
+	oly_context.binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
 
 	PlayerController pc;
-	oly_context.binding_context().bind(signal_table.get("jump"), static_cast<oly::input::InputController::Handler0D>(&PlayerController::jump), &pc);
-	oly_context.binding_context().bind(signal_table.get("camera"), static_cast<oly::input::InputController::Handler2D>(&PlayerController::camera), &pc);
+	oly_context.binding_context().bind(signal_table.get("jump"), static_cast<oly::input::InputController::BooleanHandler>(&PlayerController::jump), &pc);
+	//oly_context.binding_context().bind(signal_table.get("pan camera"), static_cast<oly::input::InputController::Axis2DHandler>(&PlayerController::pan_camera), &pc);
+	oly_context.binding_context().bind(signal_table.get("zoom camera"), static_cast<oly::input::InputController::Axis2DHandler>(&PlayerController::zoom_camera), &pc);
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly_context.window().handlers.key);

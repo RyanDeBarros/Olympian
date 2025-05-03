@@ -21,7 +21,7 @@ namespace oly
 		auto toml = assets::load_toml(filepath);
 		auto toml_context = toml["context"];
 		init_window(toml_context);
-		init_gamepads();
+		init_gamepads(toml_context);
 		init_binding_context();
 		std::string root_dir = io::directory_of(filepath);
 		init_texture_registry(toml_context, root_dir);
@@ -76,9 +76,12 @@ namespace oly
 		load_resources();
 	}
 
-	void Context::init_gamepads()
+	void Context::init_gamepads(const assets::AssetNode& node)
 	{
-		for (int i = 0; i < 16; ++i)
+		auto toml_num_gamepads = node["gamepads"].value<int64_t>();
+		if (toml_num_gamepads)
+			internal.num_gamepads = glm::clamp((int)toml_num_gamepads.value(), 0, GLFW_JOYSTICK_LAST);
+		for (int i = 0; i < internal.num_gamepads; ++i)
 		{
 			internal.gamepads[i] = std::make_unique<input::Gamepad>(GLFW_JOYSTICK_1 + i);
 			internal.gamepads[i]->set_handler();
@@ -90,6 +93,7 @@ namespace oly
 		internal.binding_context.attach_key(&internal.window->handlers.key);
 		internal.binding_context.attach_mouse_button(&internal.window->handlers.mouse_button);
 		internal.binding_context.attach_cursor_pos(&internal.window->handlers.cursor_pos);
+		internal.binding_context.attach_scroll(&internal.window->handlers.scroll);
 	}
 
 	void Context::init_texture_registry(const assets::AssetNode& node, const std::string& root_dir)
@@ -244,7 +248,7 @@ namespace oly
 		check_errors();
 		LOG.flush();
 		glfwPollEvents();
-		internal.binding_context.poll(*internal.window);
+		internal.binding_context.poll(*this, internal.num_gamepads);
 		TIME.sync();
 		glClear(per_frame_clear_mask);
 		return !internal.window->should_close();
