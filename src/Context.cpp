@@ -22,6 +22,7 @@ namespace oly
 		auto toml_context = toml["context"];
 		init_window(toml_context);
 		init_gamepads();
+		init_binding_context();
 		std::string root_dir = io::directory_of(filepath);
 		init_texture_registry(toml_context, root_dir);
 		init_sprite_batch(toml_context);
@@ -43,9 +44,11 @@ namespace oly
 		internal.sprite_registry.clear();
 		internal.polygon_registry.clear();
 		internal.ellipse_registry.clear();
-		internal.draw_command_registry.clear();
 		internal.tileset_registry.clear();
 		internal.tilemap_registry.clear();
+		internal.font_face_registry.clear();
+		internal.font_atlas_registry.clear();
+		internal.draw_command_registry.clear();
 		unload_resources();
 		glfwTerminate();
 	}
@@ -80,6 +83,13 @@ namespace oly
 			internal.gamepads[i] = std::make_unique<input::Gamepad>(GLFW_JOYSTICK_1 + i);
 			internal.gamepads[i]->set_handler();
 		}
+	}
+
+	void Context::init_binding_context()
+	{
+		internal.binding_context.attach_key(&internal.window->handlers.key);
+		internal.binding_context.attach_mouse_button(&internal.window->handlers.mouse_button);
+		internal.binding_context.attach_cursor_pos(&internal.window->handlers.cursor_pos);
 	}
 
 	void Context::init_texture_registry(const assets::AssetNode& node, const std::string& root_dir)
@@ -228,12 +238,13 @@ namespace oly
 		}
 	}
 
-	bool Context::frame() const
+	bool Context::frame()
 	{
 		internal.window->swap_buffers();
 		check_errors();
 		LOG.flush();
 		glfwPollEvents();
+		internal.binding_context.poll(*internal.window);
 		TIME.sync();
 		glClear(per_frame_clear_mask);
 		return !internal.window->should_close();

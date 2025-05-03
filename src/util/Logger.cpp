@@ -200,4 +200,19 @@ namespace oly
 		stream << s;
 		return *this;
 	}
+
+	Logger& Logger::operator<<(glm::vec2 v)
+	{
+		return *this << "(" << v.x << ", " << v.y << ")";
+	}
+	
+	Logger& Logger::operator<<(glm::vec3 v)
+	{
+		return *this << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+	}
+	
+	Logger& Logger::operator<<(glm::vec4 v)
+	{
+		return *this << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+	}
 }

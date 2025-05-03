@@ -1,6 +1,7 @@
 #include "Input.h"
 
 #include "rendering/core/Window.h"
+#include "Context.h"
 
 namespace oly
 {
@@ -120,6 +121,105 @@ namespace oly
 		void init_joystick_handler()
 		{
 			glfwSetJoystickCallback(joystick);
+		}
+
+		void BindingContext::poll(GLFWwindow* window)
+		{
+			if (cpos_poll.cursor_moving && (TIME.now<double>() > cpos_poll.callback_time))
+			{
+				double x, y;
+				glfwGetCursorPos(window, &x, &y);
+				InputSignal2D signal{};
+				signal.v = { (float)x, (float)y };
+				signal.phase = Phase::COMPLETED;
+				for (const auto& binding : cpos_bindings)
+				{
+					if (dispatch(binding.first, signal))
+						break;
+				}
+				cpos_poll.cursor_moving = false;
+			}
+		}
+
+		bool BindingContext::get_phase(int action, Phase& phase) const
+		{
+			switch (action)
+			{
+			case GLFW_PRESS:
+				phase = Phase::STARTED;
+				return true;
+			case GLFW_RELEASE:
+				phase = Phase::COMPLETED;
+				return true;
+			case GLFW_REPEAT:
+				phase = Phase::ONGOING;
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		bool BindingContext::dispatch(SignalID id, InputSignal0D signal) const
+		{
+			auto it = handler_0d_map.find(id);
+			if (it != handler_0d_map.end())
+				if ((it->second.controller->*it->second.handler)(signal))
+					return true;
+			return false;
+		}
+
+		bool BindingContext::dispatch(SignalID id, InputSignal2D signal) const
+		{
+			auto it = handler_2d_map.find(id);
+			if (it != handler_2d_map.end())
+				if ((it->second.controller->*it->second.handler)(signal))
+					return true;
+			return false;
+		}
+
+		bool BindingContext::consume(const KeyEventData& data)
+		{
+			InputSignal0D signal{};
+			if (!get_phase(data.action, signal.phase))
+				return false;
+			for (const auto& binding : key_bindings)
+			{
+				if (binding.second.matches(data.key, data.mods) && dispatch(binding.first, signal))
+					return true;
+			}
+			return false;
+		}
+
+		bool BindingContext::consume(const MouseButtonEventData& data)
+		{
+			InputSignal0D signal{};
+			if (!get_phase(data.action, signal.phase))
+				return false;
+			for (const auto& binding : mb_bindings)
+			{
+				if (binding.second.matches(data.button, data.mods) && dispatch(binding.first, signal))
+					return true;
+			}
+			return false;
+		}
+
+		bool BindingContext::consume(const CursorPosEventData& data)
+		{
+			InputSignal2D signal{};
+			signal.v = { (float)data.x, (float)data.y };
+			if (cpos_poll.cursor_moving)
+				signal.phase = Phase::ONGOING;
+			else
+				signal.phase = Phase::STARTED;
+			cpos_poll.cursor_moving = true;
+			cpos_poll.callback_time = TIME.now<double>();
+
+			for (const auto& binding : cpos_bindings)
+			{
+				if (dispatch(binding.first, signal))
+					return true;
+			}
+			return false;
 		}
 	}
 }

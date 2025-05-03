@@ -2,6 +2,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include <sstream>
 #include <fstream>
@@ -87,6 +88,9 @@ namespace oly
 		Logger& operator<<(const std::string&);
 		template<numeric T>
 		Logger& operator<<(T v) { return *this << std::to_string(v); }
+		Logger& operator<<(glm::vec2 v);
+		Logger& operator<<(glm::vec3 v);
+		Logger& operator<<(glm::vec4 v);
 	};
 
 	inline Logger& LOG = Logger::instance();

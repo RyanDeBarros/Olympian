@@ -22,13 +22,52 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 	}
 };
 
+struct PlayerController : public oly::input::InputController
+{
+	bool jump(oly::input::InputSignal0D signal)
+	{
+		if (signal.phase == oly::input::Phase::STARTED)
+		{
+			oly::LOG << "Jump!" << oly::LOG.endl;
+			return true;
+		}
+		return false;
+	}
+
+	bool camera(oly::input::InputSignal2D signal)
+	{
+		switch (signal.phase)
+		{
+		case oly::input::Phase::STARTED:
+			oly::LOG << "STARTED:   " << signal.v << oly::LOG.endl;
+			return true;
+		case oly::input::Phase::ONGOING:
+			oly::LOG << "ONGOING:   " << signal.v << oly::LOG.endl;
+			return true;
+		case oly::input::Phase::COMPLETED:
+			oly::LOG << "COMPLETED: " << signal.v << oly::LOG.endl;
+			return true;
+		}
+		return false;
+	}
+};
+
 int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
 
+	oly::input::SignalTable signal_table;
+	oly::input::SignalID JUMP = signal_table.get("jump");
+	oly_context.binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
+	oly::input::SignalID CAMERA = signal_table.get("camera");
+	oly_context.binding_context().register_signal(CAMERA, oly::input::CursorPosBinding{});
+
+	PlayerController pc;
+	oly_context.binding_context().bind(signal_table.get("jump"), static_cast<oly::input::InputController::Handler0D>(&PlayerController::jump), &pc);
+	oly_context.binding_context().bind(signal_table.get("camera"), static_cast<oly::input::InputController::Handler2D>(&PlayerController::camera), &pc);
+
 	KeyHandler key_handler;
 	key_handler.attach(&oly_context.window().handlers.key);
-
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
