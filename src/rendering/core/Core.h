@@ -3,7 +3,6 @@
 #include "Shaders.h"
 #include "VertexArrays.h"
 #include "Textures.h"
-#include "Window.h"
 #include "FenceSync.h"
 #include "util/Logger.h"
 

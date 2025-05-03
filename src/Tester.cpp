@@ -24,7 +24,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct PlayerController : public oly::input::InputController
 {
-	bool jump(oly::input::BooleanSignal signal)
+	bool jump(oly::input::Signal signal)
 	{
 		if (signal.phase == oly::input::Phase::STARTED)
 		{
@@ -34,35 +34,35 @@ struct PlayerController : public oly::input::InputController
 		return false;
 	}
 
-	bool pan_camera(oly::input::Axis2DSignal signal)
+	bool pan_camera(oly::input::Signal signal)
 	{
 		switch (signal.phase)
 		{
 		case oly::input::Phase::STARTED:
-			oly::LOG << "STARTED:   " << signal.v << oly::LOG.endl;
+			oly::LOG << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		case oly::input::Phase::ONGOING:
-			oly::LOG << "ONGOING:   " << signal.v << oly::LOG.endl;
+			oly::LOG << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		case oly::input::Phase::COMPLETED:
-			oly::LOG << "COMPLETED: " << signal.v << oly::LOG.endl;
+			oly::LOG << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		}
 		return false;
 	}
 
-	bool zoom_camera(oly::input::Axis2DSignal signal)
+	bool zoom_camera(oly::input::Signal signal)
 	{
 		switch (signal.phase)
 		{
 		case oly::input::Phase::STARTED:
-			oly::LOG << "STARTED:   " << signal.v << oly::LOG.endl;
+			oly::LOG << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		case oly::input::Phase::ONGOING:
-			oly::LOG << "ONGOING:   " << signal.v << oly::LOG.endl;
+			oly::LOG << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		case oly::input::Phase::COMPLETED:
-			oly::LOG << "COMPLETED: " << signal.v << oly::LOG.endl;
+			oly::LOG << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
 			return true;
 		}
 		return false;
@@ -73,13 +73,12 @@ int main()
 {
 	oly::context::Context oly_context("../../../res/assets/context.toml");
 
-	// TODO test gamepad input
-
 	// TODO signal registries
 	oly::input::SignalID JUMP = oly::context::platform().signal_table().get("jump");
 	oly::context::platform().binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
 	oly::input::SignalID PAN_CAMERA = oly::context::platform().signal_table().get("pan camera");
 	oly::context::platform().binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
+	oly::context::platform().binding_context().register_signal(PAN_CAMERA, oly::input::GamepadAxis2DBinding{ oly::input::GamepadAxis2D::RIGHT_XY, 0.018f });
 	oly::input::SignalID ZOOM_CAMERA = oly::context::platform().signal_table().get("zoom camera");
 	oly::context::platform().binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
 
@@ -87,6 +86,9 @@ int main()
 	oly::context::platform().bind_signal("jump", &PlayerController::jump, pc);
 	oly::context::platform().bind_signal("pan camera", &PlayerController::pan_camera, pc);
 	oly::context::platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
+
+	oly::LOG << oly::context::platform().gamepad().connected() << oly::LOG.endl;
+	oly::LOG << oly::context::platform().gamepad().has_mapping() << oly::LOG.endl;
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly::context::platform().window().handlers.key);

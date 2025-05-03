@@ -201,6 +201,11 @@ namespace oly
 		return *this;
 	}
 
+	Logger& Logger::operator<<(bool b)
+	{
+		return *this << (b ? "true" : "false");
+	}
+
 	Logger& Logger::operator<<(glm::vec2 v)
 	{
 		return *this << "(" << v.x << ", " << v.y << ")";

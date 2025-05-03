@@ -223,8 +223,9 @@ namespace oly
 		public:
 			EventHandler<GamepadEventData> handler;
 
-			Gamepad(int controller) : c(controller) { glfwGetGamepadState(controller, &g); }
+			Gamepad(int controller) : c(controller) { poll(); }
 
+			void poll() { glfwGetGamepadState(c, &g); }
 			int controller() const { return c; }
 			bool connected() const { return glfwJoystickPresent(c); }
 			bool has_mapping() const { return glfwJoystickIsGamepad(c); }
@@ -270,65 +271,83 @@ namespace oly
 			ONGOING
 		};
 
-		struct BooleanSignal
+		struct Signal
 		{
 			Phase phase;
-		};
 
-		struct GamepadButtonSignal
-		{
-			Phase phase;
-			int controller;
-		};
+		private:
+			enum class Type
+			{
+				BOOL,
+				AXIS1D,
+				AXIS2D
+			} type;
 
-		struct GamepadAxis1DSignal
-		{
-			Phase phase;
-			int controller;
-			float v;
-		};
+			union
+			{
+				bool bool_value;
+				float axis_1d_value;
+				glm::vec2 axis_2d_value;
+			};
 
-		struct GamepadAxis2DSignal
-		{
-			Phase phase;
-			int controller;
-			glm::vec2 v;
-		};
+			enum Source
+			{
+				KEYBOARD = -2,
+				MOUSE = -1,
+				JOYSTICK = 0,
+			} source;
 
-		struct Axis2DSignal
-		{
-			Phase phase;
-			glm::vec2 v;
-		};
+			friend class BindingContext;
+			Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::BOOL), bool_value(v), source(source) {}
+			Signal(Phase phase, float v, Source source) : phase(phase), type(Type::AXIS1D), axis_1d_value(v), source(source) {}
+			Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::AXIS2D), axis_2d_value(v), source(source) {}
 
-		template<typename T>
-		concept GenericSignal = std::is_same_v<T, BooleanSignal> || std::is_same_v<T, GamepadButtonSignal>
-			|| std::is_same_v<T, GamepadAxis1DSignal> || std::is_same_v<T, GamepadAxis2DSignal> || std::is_same_v<T, Axis2DSignal>;
+		public:
+			template<typename T>
+			T get() const
+			{
+				static_assert(false, "Signal::get<T>() does not support the invoked type.");
+			}
+			
+			template<>
+			bool get<bool>() const
+			{
+				if (type != Type::BOOL)
+					throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				return bool_value;
+			}
+
+			template<>
+			float get<float>() const
+			{
+				if (type != Type::AXIS1D)
+					throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				return axis_1d_value;
+			}
+
+			template<>
+			glm::vec2 get<glm::vec2>() const
+			{
+				if (type != Type::AXIS2D)
+					throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				return axis_2d_value;
+			}
+
+			bool from_controller() const { return source >= Source::JOYSTICK; }
+			int controller_id() const
+			{
+				if (source < Source::JOYSTICK)
+					throw Error(ErrorCode::INVALID_CONTROLLER_ID);
+				return source;
+			}
+		};
 
 		struct InputController
 		{
 			virtual ~InputController() = default;
 
-			template<GenericSignal Signal>
 			using Handler = bool(InputController::*)(Signal);
-			using BooleanHandler = Handler<BooleanSignal>;
-			using GamepadButtonHandler = Handler<GamepadButtonSignal>;
-			using GamepadAxis1DHandler = Handler<GamepadAxis1DSignal>;
-			using GamepadAxis2DHandler = Handler<GamepadAxis2DSignal>;
-			using Axis2DHandler = Handler<Axis2DSignal>;
 		};
-
-		namespace _
-		{
-			template<typename T>
-			struct is_controller_handler : std::false_type {};
-
-			template<GenericSignal Signal>
-			struct is_controller_handler<bool (InputController::*)(Signal)> : std::true_type {};
-		}
-
-		template<typename T>
-		concept ControllerHandler = _::is_controller_handler<T>::value;
 
 		struct KeyBinding
 		{
@@ -385,10 +404,11 @@ namespace oly
 		struct GamepadAxis1DBinding
 		{
 			GamepadAxis1D axis;
+			float deadzone = 0.0f;
 
-			bool matches(GamepadAxis1D axis) const
+			bool matches(GamepadAxis1D axis, float value) const
 			{
-				return axis == this->axis;
+				return axis == this->axis && glm::abs(value) >= glm::abs(deadzone);
 			}
 
 			bool operator==(const GamepadAxis1DBinding&) const = default;
@@ -397,10 +417,11 @@ namespace oly
 		struct GamepadAxis2DBinding
 		{
 			GamepadAxis2D axis;
+			float deadzone = 0.0f;
 
-			bool matches(GamepadAxis2D axis) const
+			bool matches(GamepadAxis2D axis, glm::vec2 value) const
 			{
-				return axis == this->axis;
+				return axis == this->axis && glm::dot(value, value) >= deadzone * deadzone;
 			}
 
 			bool operator==(const GamepadAxis2DBinding&) const = default;
@@ -459,36 +480,16 @@ namespace oly
 			};
 			FixedVector<GamepadPoll> gamepad_polls;
 
-			template<ControllerHandler Handler>
-			struct InputControllerRef
+			struct HandlerRef
 			{
-				Handler handler;
+				InputController::Handler handler;
 				InputController* controller;
 			};
-			std::unordered_map<SignalID, InputControllerRef<InputController::BooleanHandler>> boolean_handler_map;
-			std::unordered_map<SignalID, InputControllerRef<InputController::GamepadButtonHandler>> gamepad_button_handler_map;
-			std::unordered_map<SignalID, InputControllerRef<InputController::GamepadAxis1DHandler>> gamepad_axis_1d_handler_map;
-			std::unordered_map<SignalID, InputControllerRef<InputController::GamepadAxis2DHandler>> gamepad_axis_2d_handler_map;
-			std::unordered_map<SignalID, InputControllerRef<InputController::Axis2DHandler>> axis_2d_handler_map;
+			std::unordered_map<SignalID, HandlerRef> handler_map;
 
 			friend class Platform;
 			BindingContext(int num_gamepads);
 			BindingContext(const BindingContext&) = delete;
-
-			template<ControllerHandler Handler>
-			std::unordered_map<SignalID, InputControllerRef<Handler>>& handler_map()
-			{
-				if constexpr (std::is_same_v<Handler, InputController::BooleanHandler>)
-					return boolean_handler_map;
-				else if constexpr (std::is_same_v<Handler, InputController::GamepadButtonHandler>)
-					return gamepad_button_handler_map;
-				else if constexpr (std::is_same_v<Handler, InputController::GamepadAxis1DHandler>)
-					return gamepad_axis_1d_handler_map;
-				else if constexpr (std::is_same_v<Handler, InputController::GamepadAxis2DHandler>)
-					return gamepad_axis_2d_handler_map;
-				else if constexpr (std::is_same_v<Handler, InputController::Axis2DHandler>)
-					return axis_2d_handler_map;
-			}
 
 			void attach_key(EventHandler<KeyEventData>* parent) { EventHandler<KeyEventData>::attach(parent); }
 			void attach_mouse_button(EventHandler<MouseButtonEventData>* parent) { EventHandler<MouseButtonEventData>::attach(parent); }
@@ -514,14 +515,12 @@ namespace oly
 
 #undef REG_SIGNAL
 
-			template<ControllerHandler Handler>
-			void bind(SignalID signal, Handler handler, InputController* controller) { handler_map<Handler>()[signal] = { handler, controller }; }
-			template<ControllerHandler Handler>
-			void unbind(SignalID signal, Handler handler, InputController* controller)
+			void bind(SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = { handler, controller }; }
+			void unbind(SignalID signal, InputController::Handler handler, InputController* controller)
 			{
-				auto it = handler_map<Handler>().find(signal);
-				if (it != handler_map<Handler>().end() && it->second.handler == handler && it->second.controller == controller)
-					handler_map<Handler>().erase(it);
+				auto it = handler_map.find(signal);
+				if (it != handler_map.end() && it->second.handler == handler && it->second.controller == controller)
+					handler_map.erase(it);
 			}
 
 			// call poll() after glfwPollEvents() but before TIME.sync()
@@ -535,11 +534,7 @@ namespace oly
 			void poll_gamepad_axis_2d(int controller, int axis);
 
 			bool get_phase(int action, Phase& phase) const;
-			bool dispatch(SignalID id, BooleanSignal signal) const;
-			bool dispatch(SignalID id, GamepadButtonSignal signal) const;
-			bool dispatch(SignalID id, GamepadAxis1DSignal signal) const;
-			bool dispatch(SignalID id, GamepadAxis2DSignal signal) const;
-			bool dispatch(SignalID id, Axis2DSignal signal) const;
+			bool dispatch(SignalID id, Signal signal) const;
 
 		public:
 			virtual bool consume(const KeyEventData& data) override;

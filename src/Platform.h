@@ -45,16 +45,16 @@ namespace oly
 		const input::BindingContext& binding_context() const { return _binding_context; }
 		input::BindingContext& binding_context() { return _binding_context; }
 
-		template<std::derived_from<input::InputController> Controller, input::GenericSignal Signal>
-		void bind_signal(const char* signal, bool(Controller::* handler)(Signal), Controller& controller)
+		template<std::derived_from<input::InputController> Controller>
+		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 		{
-			_binding_context.bind(_signal_table.get(signal), static_cast<input::InputController::Handler<Signal>>(handler), &controller);
+			_binding_context.bind(_signal_table.get(signal), static_cast<input::InputController::Handler>(handler), &controller);
 		}
 
-		template<std::derived_from<input::InputController> Controller, input::GenericSignal Signal>
-		void unbind_signal(const char* signal, bool(Controller::* handler)(Signal), Controller& controller)
+		template<std::derived_from<input::InputController> Controller>
+		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 		{
-			_binding_context.unbind(_signal_table.get(signal), static_cast<input::InputController::Handler<Signal>>(handler), &controller);
+			_binding_context.unbind(_signal_table.get(signal), static_cast<input::InputController::Handler>(handler), &controller);
 		}
 	};
 }

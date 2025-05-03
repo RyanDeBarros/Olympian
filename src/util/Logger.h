@@ -86,11 +86,12 @@ namespace oly
 
 		Logger& operator<<(const char*);
 		Logger& operator<<(const std::string&);
+		Logger& operator<<(bool);
 		template<numeric T>
 		Logger& operator<<(T v) { return *this << std::to_string(v); }
-		Logger& operator<<(glm::vec2 v);
-		Logger& operator<<(glm::vec3 v);
-		Logger& operator<<(glm::vec4 v);
+		Logger& operator<<(glm::vec2);
+		Logger& operator<<(glm::vec3);
+		Logger& operator<<(glm::vec4);
 	};
 
 	inline Logger& LOG = Logger::instance();
