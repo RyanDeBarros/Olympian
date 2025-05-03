@@ -35,6 +35,29 @@ namespace oly
 			rendering::DrawCommandRegistry draw_command_registry;
 		}
 
+		static void init_logger(const assets::AssetNode& node, const std::string& root_dir)
+		{
+			auto toml_logger = node["logger"];
+			if (toml_logger)
+			{
+				LOG.target.console = toml_logger["console"].value<bool>().value_or(true);
+				auto logfile = toml_logger["logfile"].value<std::string>();
+				if (logfile)
+				{
+					LOG.target.logfile = true;
+					LOG.set_logfile((root_dir + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
+					LOG.flush();
+				}
+				else
+					LOG.target.logfile = false;
+			}
+			else
+			{
+				LOG.target.logfile = false;
+				LOG.target.console = true;
+			}
+		}
+
 		static void init_sprite_batch(const assets::AssetNode& node)
 		{
 			if (auto toml_sprite_batch = node["sprite_batch"])
@@ -201,29 +224,28 @@ namespace oly
 			if (glfwInit() != GLFW_TRUE)
 				throw oly::Error(oly::ErrorCode::GLFW_INIT);
 			stbi_set_flip_vertically_on_load(true);
-			LOG.set_logfile("../../../Olympian.log", true); // TODO use filepath set by context.toml
-			LOG.flush();
 
 			auto toml = assets::load_toml(context_filepath);
 			auto toml_context = toml["context"];
+			std::string root_dir = io::directory_of(context_filepath);
+			init_logger(toml_context, root_dir);
 
 			internal::platform = std::make_unique<Platform>(toml_context);
 			Internal{}.time_init();
 			load_resources();
 
-			context::init_sprite_batch(toml_context);
-			context::init_polygon_batch(toml_context);
-			context::init_ellipse_batch(toml_context);
-			std::string root_dir = io::directory_of(context_filepath);
-			context::init_texture_registry(toml_context, root_dir);
-			context::init_sprite_registry(toml_context, root_dir);
-			context::init_polygon_registry(toml_context, root_dir);
-			context::init_ellipse_registry(toml_context, root_dir);
-			context::init_tileset_registry(toml_context, root_dir);
-			context::init_tilemap_registry(toml_context, root_dir);
-			context::init_font_face_registry(toml_context, root_dir);
-			context::init_font_atlas_registry(toml_context, root_dir);
-			context::init_draw_command_registry(toml_context, root_dir);
+			init_sprite_batch(toml_context);
+			init_polygon_batch(toml_context);
+			init_ellipse_batch(toml_context);
+			init_texture_registry(toml_context, root_dir);
+			init_sprite_registry(toml_context, root_dir);
+			init_polygon_registry(toml_context, root_dir);
+			init_ellipse_registry(toml_context, root_dir);
+			init_tileset_registry(toml_context, root_dir);
+			init_tilemap_registry(toml_context, root_dir);
+			init_font_face_registry(toml_context, root_dir);
+			init_font_atlas_registry(toml_context, root_dir);
+			init_draw_command_registry(toml_context, root_dir);
 		}
 
 		static void terminate()
@@ -246,6 +268,8 @@ namespace oly
 
 			unload_resources(); // TODO move resources to context namespace
 			glfwTerminate();
+
+			LOG.flush();
 		}
 
 		static size_t active_contexts = 0;
