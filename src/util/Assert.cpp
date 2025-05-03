@@ -31,8 +31,7 @@ namespace oly
 				description = "stack overflow";
 				break;
 			}
-			LOG.level = LOG.error;
-			LOG << LOG.start_opengl(err) << description << LOG.nl;
+			LOG << LOG.begin_temp(LOG.error) << LOG.start_opengl(err) << description << LOG.end_temp << LOG.nl;
 #ifdef _DEBUG
 			__debugbreak();
 #endif
@@ -46,8 +45,7 @@ namespace oly
 		const char* description = "";
 		if (auto err = glfwGetError(&description))
 		{
-			LOG.level = LOG.error;
-			LOG << LOG.start_glfw(err) << description << LOG.nl;
+			LOG << LOG.begin_temp(LOG.error) << LOG.start_glfw(err) << description << LOG.end_temp << LOG.nl;
 #ifdef _DEBUG
 			__debugbreak();
 #endif

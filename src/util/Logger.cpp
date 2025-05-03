@@ -176,6 +176,19 @@ namespace oly
 		return *this;
 	}
 
+	Logger& Logger::operator<<(const _begin_temp& temp)
+	{
+		normal_level = level;
+		level = temp.level;
+		return *this;
+	}
+
+	Logger& Logger::operator<<(const _end_temp&)
+	{
+		level = normal_level;
+		return *this;
+	}
+
 	Logger& Logger::operator<<(const char* c)
 	{
 		stream << c;

@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "Input.h"
+
 namespace oly
 {
 	namespace rendering
@@ -74,6 +76,27 @@ namespace oly
 			bool should_close() const;
 			void should_close(bool close) const;
 			void swap_buffers() const;
+
+			struct
+			{
+				EventHandler<input::CharEventData> character;
+				EventHandler<input::CharModsEventData> char_mods;
+				EventHandler<input::CursorEnterEventData> cursor_enter;
+				EventHandler<input::CursorPosEventData> cursor_pos;
+				EventHandler<input::PathDropEventData> path_drop;
+				EventHandler<input::FramebufferResizeEventData> framebuffer_resize;
+				EventHandler<input::KeyEventData> key;
+				EventHandler<input::MouseButtonEventData> mouse_button;
+				EventHandler<input::ScrollEventData> scroll;
+				EventHandler<input::WindowCloseEventData> window_close;
+				EventHandler<input::WindowContentScaleEventData> window_content_scale;
+				EventHandler<input::WindowFocusEventData> window_focus;
+				EventHandler<input::WindowIconifyEventData> window_iconify;
+				EventHandler<input::WindowMaximizeEventData> window_maximize;
+				EventHandler<input::WindowPosEventData> window_pos;
+				EventHandler<input::WindowRefreshEventData> window_refresh;
+				EventHandler<input::WindowResizeEventData> window_resize;
+			} handlers;
 		};
 	}
 }

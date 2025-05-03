@@ -52,11 +52,14 @@ oly::rendering::Window::Window(int width, int height, const char* title, const W
 	if (glewInit() != GLEW_OK)
 		throw oly::Error(oly::ErrorCode::GLEW_INIT);
 	hint.context_hint();
+	input::init_handlers(w);
+	glfwSetWindowUserPointer(w, this);
 }
 
 oly::rendering::Window::Window(Window&& other) noexcept
 	: w(other.w), size(other.size)
 {
+	glfwSetWindowUserPointer(w, this);
 	other.w = nullptr;
 }
 
@@ -71,6 +74,7 @@ oly::rendering::Window& oly::rendering::Window::operator=(Window&& other) noexce
 	{
 		glfwDestroyWindow(w);
 		w = other.w;
+		glfwSetWindowUserPointer(w, this);
 		size = other.size;
 		other.w = nullptr;
 	}

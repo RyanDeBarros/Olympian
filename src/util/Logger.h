@@ -63,7 +63,14 @@ namespace oly
 		struct _start_prefix { std::string prefix; };
 		_start_prefix start_prefix(const char* prefix) { return _start_prefix{ prefix }; }
 		_start_prefix start_prefix(std::string&& prefix) { return _start_prefix{ std::move(prefix) }; }
+		struct _begin_temp { Level level; };
+		_begin_temp begin_temp(Level level) { return { level }; }
+		struct _end_temp {} end_temp;
 
+	private:
+		Level normal_level = Level::INFO;
+
+	public:
 		void set_logfile(const char* filepath, bool append);
 		Logger& flush();
 		Logger& operator<<(const _timestamp&);
@@ -73,6 +80,8 @@ namespace oly
 		Logger& operator<<(const _start_opengl&);
 		Logger& operator<<(const _start_glfw&);
 		Logger& operator<<(const _start_prefix&);
+		Logger& operator<<(const _begin_temp&);
+		Logger& operator<<(const _end_temp&);
 
 		Logger& operator<<(const char*);
 		Logger& operator<<(const std::string&);

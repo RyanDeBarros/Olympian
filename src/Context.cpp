@@ -20,42 +20,82 @@ namespace oly
 
 		auto toml = assets::load_toml(filepath);
 		auto toml_context = toml["context"];
-		auto toml_window = toml_context["window"];
+		init_window(toml_context);
+		init_gamepads();
+		std::string root_dir = io::directory_of(filepath);
+		init_texture_registry(toml_context, root_dir);
+		init_sprite_batch(toml_context);
+		init_sprite_registry(toml_context, root_dir);
+		init_polygon_batch(toml_context);
+		init_polygon_registry(toml_context, root_dir);
+		init_ellipse_batch(toml_context);
+		init_ellipse_registry(toml_context, root_dir);
+		init_tileset_registry(toml_context, root_dir);
+		init_tilemap_registry(toml_context, root_dir);
+		init_font_face_registry(toml_context, root_dir);
+		init_font_atlas_registry(toml_context, root_dir);
+		init_draw_command_registry(toml_context, root_dir);
+	}
+
+	Context::~Context()
+	{
+		internal.texture_registry.clear();
+		internal.sprite_registry.clear();
+		internal.polygon_registry.clear();
+		internal.ellipse_registry.clear();
+		internal.draw_command_registry.clear();
+		internal.tileset_registry.clear();
+		internal.tilemap_registry.clear();
+		unload_resources();
+		glfwTerminate();
+	}
+
+	void Context::init_window(const assets::AssetNode& node)
+	{
+		auto toml_window = node["window"];
 		if (!toml_window)
 			throw Error(ErrorCode::CONTEXT_INIT);
+		auto width = toml_window["width"].value<int64_t>();
+		auto height = toml_window["height"].value<int64_t>();
+		auto title = toml_window["title"].value<std::string>();
+		if (!width || !height || !title)
+			throw Error(ErrorCode::CONTEXT_INIT);
 
-		std::string root_dir = io::directory_of(filepath);
-
-		{ // init window
-			auto width = toml_window["width"].value<int64_t>();
-			auto height = toml_window["height"].value<int64_t>();
-			auto title = toml_window["title"].value<std::string>();
-			if (!width || !height || !title)
-				throw Error(ErrorCode::CONTEXT_INIT);
-
-			rendering::WindowHint hint;
-			if (auto toml_window_hint = toml_context["window_hint"])
-			{
-				assets::parse_vec4(toml_window_hint, "clear color", hint.context.clear_color);
-				// TODO rest of window hint options
-			}
-
-			internal.window = std::make_unique<rendering::Window>((int)width.value(), (int)height.value(), title.value().c_str(), hint);
-			load_resources();
-			TIME.init();
+		rendering::WindowHint hint;
+		if (auto toml_window_hint = node["window_hint"])
+		{
+			assets::parse_vec4(toml_window_hint, "clear color", hint.context.clear_color);
+			// TODO rest of window hint options
 		}
 
-		{ // init texture registry
-			auto register_files = toml_context["texture registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.texture_registry.load(*this, root_dir + file.value());
-			}
-		}
+		internal.window = std::make_unique<rendering::Window>((int)width.value(), (int)height.value(), title.value().c_str(), hint);
+		TIME.init();
+		load_resources();
+	}
 
-		if (auto toml_sprite_batch = toml_context["sprite_batch"]) // init sprite batch
+	void Context::init_gamepads()
+	{
+		for (int i = 0; i < 16; ++i)
+		{
+			internal.gamepads[i] = std::make_unique<input::Gamepad>(GLFW_JOYSTICK_1 + i);
+			internal.gamepads[i]->set_handler();
+		}
+	}
+
+	void Context::init_texture_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["texture registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.texture_registry.load(*this, root_dir + file.value());
+		}
+	}
+
+	void Context::init_sprite_batch(const assets::AssetNode& node)
+	{
+		if (auto toml_sprite_batch = node["sprite_batch"])
 		{
 			int initial_sprites = 0;
 			assets::parse_int(toml_sprite_batch, "initial sprites", initial_sprites);
@@ -71,18 +111,22 @@ namespace oly
 			rendering::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_anims };
 			internal.sprite_batch = std::make_unique<rendering::SpriteBatch>(capacity, internal.window->projection_bounds());
 		}
+	}
 
-		{ // init sprite registry
-			auto register_files = toml_context["sprite registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.sprite_registry.load(*this, root_dir + file.value());
-			}
+	void Context::init_sprite_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["sprite registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.sprite_registry.load(*this, root_dir + file.value());
 		}
+	}
 
-		if (auto toml_polygon_batch = toml_context["polygon_batch"]) // init polygon batch
+	void Context::init_polygon_batch(const assets::AssetNode& node)
+	{
+		if (auto toml_polygon_batch = node["polygon_batch"])
 		{
 			int primitives;
 			assets::parse_int(toml_polygon_batch, "primitives", primitives);
@@ -92,18 +136,22 @@ namespace oly
 			rendering::PolygonBatch::Capacity capacity{ (GLushort)primitives, (GLushort)degree };
 			internal.polygon_batch = std::make_unique<rendering::PolygonBatch>(capacity, internal.window->projection_bounds());
 		}
+	}
 
-		{ // init polygon registry
-			auto register_files = toml_context["polygon registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.polygon_registry.load(*this, root_dir + file.value());
-			}
+	void Context::init_polygon_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["polygon registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.polygon_registry.load(*this, root_dir + file.value());
 		}
+	}
 
-		if (auto toml_ellipse_batch = toml_context["ellipse_batch"]) // init ellipse batch
+	void Context::init_ellipse_batch(const assets::AssetNode& node)
+	{
+		if (auto toml_ellipse_batch = node["ellipse_batch"])
 		{
 			int ellipses;
 			assets::parse_int(toml_ellipse_batch, "ellipses", ellipses);
@@ -112,78 +160,72 @@ namespace oly
 			internal.ellipse_batch = std::make_unique<rendering::EllipseBatch>(capacity, internal.window->projection_bounds());
 		}
 
-		{ // init ellipse registry
-			auto register_files = toml_context["ellipse registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.ellipse_registry.load(*this, root_dir + file.value());
-			}
-		}
+	}
 
-		{ // init tileset registry
-			auto register_files = toml_context["tileset registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.tileset_registry.load(*this, root_dir + file.value());
-			}
-		}
-
-		{ // init tilemap registry
-			auto register_files = toml_context["tilemap registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.tilemap_registry.load(*this, root_dir + file.value());
-			}
-		}
-
-		{ // init font face registry
-			auto register_files = toml_context["font face registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.font_face_registry.load(root_dir + file.value());
-			}
-		}
-
-		{ // init font atlas registry
-			auto register_files = toml_context["font atlas registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.font_atlas_registry.load(internal.font_face_registry, root_dir + file.value());
-			}
-		}
-
-		{ // init draw command registry
-			auto register_files = toml_context["draw command registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal.draw_command_registry.load(*this, root_dir + file.value());
-			}
+	void Context::init_ellipse_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["ellipse registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.ellipse_registry.load(*this, root_dir + file.value());
 		}
 	}
 
-	Context::~Context()
+	void Context::init_tileset_registry(const assets::AssetNode& node, const std::string& root_dir)
 	{
-		internal.texture_registry.clear();
-		internal.sprite_registry.clear();
-		internal.polygon_registry.clear();
-		internal.ellipse_registry.clear();
-		internal.draw_command_registry.clear();
-		internal.tileset_registry.clear();
-		internal.tilemap_registry.clear();
-		unload_resources();
-		glfwTerminate();
+		auto register_files = node["tileset registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.tileset_registry.load(*this, root_dir + file.value());
+		}
+	}
+
+	void Context::init_tilemap_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["tilemap registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.tilemap_registry.load(*this, root_dir + file.value());
+		}
+	}
+
+	void Context::init_font_face_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["font face registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.font_face_registry.load(root_dir + file.value());
+		}
+	}
+
+	void Context::init_font_atlas_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["font atlas registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.font_atlas_registry.load(internal.font_face_registry, root_dir + file.value());
+		}
+	}
+
+	void Context::init_draw_command_registry(const assets::AssetNode& node, const std::string& root_dir)
+	{
+		auto register_files = node["draw command registries"].as_array();
+		if (register_files)
+		{
+			for (const auto& node : *register_files)
+				if (auto file = node.value<std::string>())
+					internal.draw_command_registry.load(*this, root_dir + file.value());
+		}
 	}
 
 	bool Context::frame() const

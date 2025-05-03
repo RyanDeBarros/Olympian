@@ -5,9 +5,30 @@
 
 #include "rendering/batch/text/Paragraph.h"
 
+struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
+{
+	virtual bool consume(const oly::input::KeyEventData& data) override
+	{
+		if (data.action == GLFW_PRESS)
+		{
+			if (data.key == GLFW_KEY_A)
+				oly::LOG << "A" << oly::LOG.endl;
+			else if (data.key == GLFW_KEY_B)
+				oly::LOG << "B" << oly::LOG.endl;
+			else
+				oly::LOG << "?" << oly::LOG.endl;
+		}
+		return false;
+	}
+};
+
 int main()
 {
 	oly::Context oly_context("../../../res/assets/oly_context.toml");
+
+	KeyHandler key_handler;
+	key_handler.attach(&oly_context.window().handlers.key);
+
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();

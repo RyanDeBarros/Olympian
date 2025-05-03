@@ -95,7 +95,7 @@ namespace oly
 					: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 				{
 					OLY_ASSERT(4 * initial_glyphs <= UINT_MAX);
-					OLY_ASSERT(text_colors <= 1000); // TODO here and elsewhere, enforce this constraint when resizing
+					OLY_ASSERT(text_colors <= 1000); // TODO here and elsewhere, enforce this constraint when resizing -> add max_size to mutable specialized buffers
 					OLY_ASSERT(modulations <= 250);
 				}
 

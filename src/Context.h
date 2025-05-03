@@ -16,6 +16,8 @@ namespace oly
 		struct
 		{
 			std::unique_ptr<rendering::Window> window;
+			std::array<std::unique_ptr<input::Gamepad>, 16> gamepads;
+
 			TextureRegistry texture_registry;
 			rendering::NSVGContext nsvg_context;
 
@@ -40,11 +42,30 @@ namespace oly
 		Context(const Context&) = delete;
 		~Context();
 
+	private:
+		void init_window(const assets::AssetNode& node);
+		void init_gamepads();
+		void init_texture_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_sprite_batch(const assets::AssetNode& node);
+		void init_sprite_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_polygon_batch(const assets::AssetNode& node);
+		void init_polygon_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_ellipse_batch(const assets::AssetNode& node);
+		void init_ellipse_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_tileset_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_tilemap_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_font_face_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_font_atlas_registry(const assets::AssetNode& node, const std::string& root_dir);
+		void init_draw_command_registry(const assets::AssetNode& node, const std::string& root_dir);
+
+	public:
 		GLenum per_frame_clear_mask = GL_COLOR_BUFFER_BIT;
 		bool frame() const;
 
 		const rendering::Window& window() const { return *internal.window; }
 		rendering::Window& window() { return *internal.window; }
+		const input::Gamepad& gamepad(int i = 0) const { return *internal.gamepads[i]; }
+		input::Gamepad& gamepad(int i = 0) { return *internal.gamepads[i]; }
 		const TextureRegistry& texture_registry() const { return internal.texture_registry; }
 		TextureRegistry& texture_registry() { return internal.texture_registry; }
 		const rendering::NSVGContext& nsvg_context() const { return internal.nsvg_context; }

@@ -13,13 +13,7 @@ namespace oly
 			: info{}, data(io::read_file_uc(font_file)), kerning(std::move(kerning))
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
-			{
-				// TODO abstract this kind of temporary fatal/other behaviour in Logger.
-				auto level = LOG.level;
-				LOG.level = LOG.fatal;
-				LOG << LOG.start << "Cannot init font" << LOG.endl;
-				LOG.level = level;
-			}
+				LOG << LOG.begin_temp(LOG.fatal) << LOG.start << "Cannot init font" << LOG.end_temp << LOG.endl;
 		}
 
 		float FontFace::scale_for_pixel_height(float font_size) const
@@ -293,8 +287,7 @@ namespace oly
 										}
 										else if (sc.empty())
 											return utf::Codepoint(0);
-										else
-											return utf::Codepoint(sc[0]);
+										return utf::Codepoint(sc[0]);
 									};
 									if (auto tc1 = triplet->get_as<std::string>(0))
 										c1 = parse_codepoint(tc1->get());
