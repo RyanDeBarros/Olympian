@@ -123,31 +123,36 @@ namespace oly
 			glfwSetJoystickCallback(joystick);
 		}
 
-		void BindingContext::poll(const Context& context, int gamepads)
+		BindingContext::BindingContext(int num_gamepads)
+			: gamepad_polls(glm::clamp(num_gamepads, 0, GLFW_JOYSTICK_LAST))
 		{
-			poll_cursor_pos(context);
-			poll_scroll(context);
-			
-			for (int g = 0; g < gamepads; ++g)
-				for (int i = 0; i <= GamepadButton::LAST; ++i)
-					poll_gamepad_button(context, g, i);
-
-			for (int g = 0; g < gamepads; ++g)
-				for (int i = 0; i <= GamepadAxis1D::LAST; ++i)
-					poll_gamepad_axis_1d(context, g, i);
-
-			for (int g = 0; g < gamepads; ++g)
-				for (int i = 0; i <= GamepadAxis2D::LAST; ++i)
-					poll_gamepad_axis_2d(context, g, i);
 		}
 
-		void BindingContext::poll_cursor_pos(const Context& context)
+		void BindingContext::poll()
+		{
+			poll_cursor_pos();
+			poll_scroll();
+			
+			for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+				for (int i = 0; i <= GamepadButton::LAST; ++i)
+					poll_gamepad_button(g, i);
+
+			for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+				for (int i = 0; i <= GamepadAxis1D::LAST; ++i)
+					poll_gamepad_axis_1d(g, i);
+
+			for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+				for (int i = 0; i <= GamepadAxis2D::LAST; ++i)
+					poll_gamepad_axis_2d(g, i);
+		}
+
+		void BindingContext::poll_cursor_pos()
 		{
 			if (cpos_poll.moving && (TIME.now<double>() > cpos_poll.callback_time))
 			{
 				cpos_poll.moving = false;
 				double x, y;
-				glfwGetCursorPos(context.window(), &x, &y);
+				glfwGetCursorPos(context::platform().window(), &x, &y);
 				Axis2DSignal signal{};
 				signal.v = { (float)x, (float)y };
 				signal.phase = Phase::COMPLETED;
@@ -157,7 +162,7 @@ namespace oly
 			}
 		}
 
-		void BindingContext::poll_scroll(const Context& context)
+		void BindingContext::poll_scroll()
 		{
 			if (scroll_poll.moving && (TIME.now<double>() > scroll_poll.callback_time))
 			{
@@ -170,9 +175,9 @@ namespace oly
 			}
 		}
 
-		void BindingContext::poll_gamepad_button(const Context& context, int controller, int button)
+		void BindingContext::poll_gamepad_button(int controller, int button)
 		{
-			int state = context.gamepad(controller).button_state(GamepadButton(button));
+			int state = context::platform().gamepad(controller).button_state(GamepadButton(button));
 			ButtonPoll& bpoll = gamepad_polls[controller].button_polls[button];
 			int prev_action = bpoll.action;
 			bpoll.action = state;
@@ -199,9 +204,9 @@ namespace oly
 					break;
 		}
 
-		void BindingContext::poll_gamepad_axis_1d(const Context& context, int controller, int axis)
+		void BindingContext::poll_gamepad_axis_1d(int controller, int axis)
 		{
-			float state = context.gamepad(controller).axis_1d_state(GamepadAxis1D(axis));
+			float state = context::platform().gamepad(controller).axis_1d_state(GamepadAxis1D(axis));
 			Axis1DPoll& apoll = gamepad_polls[controller].axis_1d_polls[axis];
 			float prev_axis = apoll.axis;
 			apoll.axis = state;
@@ -235,9 +240,9 @@ namespace oly
 					break;
 		}
 
-		void BindingContext::poll_gamepad_axis_2d(const Context& context, int controller, int axis)
+		void BindingContext::poll_gamepad_axis_2d(int controller, int axis)
 		{
-			glm::vec2 state = context.gamepad(controller).axis_2d_state(GamepadAxis2D(axis));
+			glm::vec2 state = context::platform().gamepad(controller).axis_2d_state(GamepadAxis2D(axis));
 			Axis2DPoll& apoll = gamepad_polls[controller].axis_2d_polls[axis];
 			glm::vec2 prev_axis = apoll.axis;
 			apoll.axis = state;

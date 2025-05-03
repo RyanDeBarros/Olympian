@@ -71,23 +71,25 @@ struct PlayerController : public oly::input::InputController
 
 int main()
 {
-	oly::Context oly_context("../../../res/assets/oly_context.toml");
+	oly::context::Context oly_context("../../../res/assets/context.toml");
+
+	// TODO test gamepad input
 
 	// TODO signal registries
-	oly::input::SignalID JUMP = oly_context.signal_table().get("jump");
-	oly_context.binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
-	oly::input::SignalID PAN_CAMERA = oly_context.signal_table().get("pan camera");
-	oly_context.binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
-	oly::input::SignalID ZOOM_CAMERA = oly_context.signal_table().get("zoom camera");
-	oly_context.binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
+	oly::input::SignalID JUMP = oly::context::platform().signal_table().get("jump");
+	oly::context::platform().binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
+	oly::input::SignalID PAN_CAMERA = oly::context::platform().signal_table().get("pan camera");
+	oly::context::platform().binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
+	oly::input::SignalID ZOOM_CAMERA = oly::context::platform().signal_table().get("zoom camera");
+	oly::context::platform().binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
 
 	PlayerController pc;
-	oly_context.bind_signal("jump", &PlayerController::jump, pc);
-	oly_context.bind_signal("pan camera", &PlayerController::pan_camera, pc);
-	oly_context.bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
+	oly::context::platform().bind_signal("jump", &PlayerController::jump, pc);
+	oly::context::platform().bind_signal("pan camera", &PlayerController::pan_camera, pc);
+	oly::context::platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
 	KeyHandler key_handler;
-	key_handler.attach(&oly_context.window().handlers.key);
+	key_handler.attach(&oly::context::platform().window().handlers.key);
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -121,7 +123,7 @@ int main()
 	auto tilemap = oly::context::ref_tilemap("grass tilemap").lock();
 
 	// TODO TextRegistry
-	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly_context.window().projection_bounds());
+	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly::context::platform().window().projection_bounds());
 	oly::rendering::ParagraphFormat parformat;
 	parformat.pivot = { 0.0f, 1.0f };
 	parformat.line_spacing = 1.5f;
@@ -144,7 +146,7 @@ int main()
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
-	while (oly_context.frame())
+	while (oly::context::frame())
 	{
 		// logic update
 
@@ -195,20 +197,20 @@ int main()
 
 		// draw
 
-		//oly::stencil::begin();
-		//oly::stencil::enable_drawing();
-		//glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
-		//oly::stencil::draw::replace();
-		//oly_context.execute_draw_command("polygon crop");
-		//oly::stencil::disable_drawing();
-		//oly::stencil::crop::match();
-		//oly_context.execute_draw_command("sprite match");
-		//oly::stencil::end();
-		//oly_context.execute_draw_command("ellipses");
-		//for (const auto& sprite : flag_tesselation)
-		//	sprite.draw();
-		//oly_context.render_sprites();
-		//oly_context.execute_draw_command("sprites, polygons, and tilemaps");
+		oly::stencil::begin();
+		oly::stencil::enable_drawing();
+		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
+		oly::stencil::draw::replace();
+		oly::context::execute_draw_command("polygon crop");
+		oly::stencil::disable_drawing();
+		oly::stencil::crop::match();
+		oly::context::execute_draw_command("sprite match");
+		oly::stencil::end();
+		oly::context::execute_draw_command("ellipses");
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		oly::context::render_sprites();
+		oly::context::execute_draw_command("sprites, polygons, and tilemaps");
 
 		paragraph.draw();
 		text_batch.render();

@@ -135,7 +135,6 @@ namespace oly
 		vec.erase(std::find(vec.begin(), vec.end(), el));
 	}
 
-	// TODO put completely internally in Context.cpp
 	template<typename T>
 	concept numeric = std::integral<T> || std::floating_point<T>;
 	class TimeImpl
@@ -150,7 +149,7 @@ namespace oly
 		T delta() const { return (T)_delta; }
 
 	private:
-		friend class Context;
+		friend struct Internal;
 		void init() { _now = glfwGetTime(); _delta = 1.0f / 60.0f; }
 		void sync() { double n = glfwGetTime(); _delta = n - _now; _now = n; }
 	};

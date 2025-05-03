@@ -10,6 +10,7 @@
 #include <array>
 
 #include "Events.h"
+#include "util/FixedVector.h"
 
 namespace oly
 {
@@ -237,7 +238,7 @@ namespace oly
 					return { g.axes[GamepadAxis1D::RIGHT_X], g.axes[GamepadAxis1D::RIGHT_Y] };
 				else
 					return {};
-				}
+			}
 			const char* name() const { return glfwGetJoystickName(c); }
 			const char* identifier() const { return glfwGetJoystickGUID(c); }
 			void set_handler() { glfwSetJoystickUserPointer(c, this); }
@@ -299,7 +300,7 @@ namespace oly
 			Phase phase;
 			glm::vec2 v;
 		};
-		
+
 		template<typename T>
 		concept GenericSignal = std::is_same_v<T, BooleanSignal> || std::is_same_v<T, GamepadButtonSignal>
 			|| std::is_same_v<T, GamepadAxis1DSignal> || std::is_same_v<T, GamepadAxis2DSignal> || std::is_same_v<T, Axis2DSignal>;
@@ -310,11 +311,11 @@ namespace oly
 
 			template<GenericSignal Signal>
 			using Handler = bool(InputController::*)(Signal);
-			using BooleanHandler       = Handler<BooleanSignal>;
+			using BooleanHandler = Handler<BooleanSignal>;
 			using GamepadButtonHandler = Handler<GamepadButtonSignal>;
 			using GamepadAxis1DHandler = Handler<GamepadAxis1DSignal>;
 			using GamepadAxis2DHandler = Handler<GamepadAxis2DSignal>;
-			using Axis2DHandler        = Handler<Axis2DSignal>;
+			using Axis2DHandler = Handler<Axis2DSignal>;
 		};
 
 		namespace _
@@ -416,7 +417,7 @@ namespace oly
 		};
 	}
 
-	class Context;
+	class Platform;
 	namespace input
 	{
 		class BindingContext : public EventHandler<KeyEventData>, public EventHandler<MouseButtonEventData>, public EventHandler<CursorPosEventData>, public EventHandler<ScrollEventData>
@@ -456,7 +457,7 @@ namespace oly
 				std::array<Axis1DPoll, GamepadAxis1D::LAST + 1> axis_1d_polls;
 				std::array<Axis2DPoll, GamepadAxis2D::LAST + 1> axis_2d_polls;
 			};
-			std::array<GamepadPoll, GLFW_JOYSTICK_LAST> gamepad_polls; // TODO use FixedVector and pass number of gamepads to constructor, since this thing is 1980 bytes lol
+			FixedVector<GamepadPoll> gamepad_polls;
 
 			template<ControllerHandler Handler>
 			struct InputControllerRef
@@ -469,6 +470,10 @@ namespace oly
 			std::unordered_map<SignalID, InputControllerRef<InputController::GamepadAxis1DHandler>> gamepad_axis_1d_handler_map;
 			std::unordered_map<SignalID, InputControllerRef<InputController::GamepadAxis2DHandler>> gamepad_axis_2d_handler_map;
 			std::unordered_map<SignalID, InputControllerRef<InputController::Axis2DHandler>> axis_2d_handler_map;
+
+			friend class Platform;
+			BindingContext(int num_gamepads);
+			BindingContext(const BindingContext&) = delete;
 
 			template<ControllerHandler Handler>
 			std::unordered_map<SignalID, InputControllerRef<Handler>>& handler_map()
@@ -484,8 +489,6 @@ namespace oly
 				else if constexpr (std::is_same_v<Handler, InputController::Axis2DHandler>)
 					return axis_2d_handler_map;
 			}
-
-			friend class Context;
 
 			void attach_key(EventHandler<KeyEventData>* parent) { EventHandler<KeyEventData>::attach(parent); }
 			void attach_mouse_button(EventHandler<MouseButtonEventData>* parent) { EventHandler<MouseButtonEventData>::attach(parent); }
@@ -521,15 +524,15 @@ namespace oly
 					handler_map<Handler>().erase(it);
 			}
 
-			// call poll(context) after glfwPollEvents()
-			void poll(const Context& context, int gamepads);
+			// call poll() after glfwPollEvents() but before TIME.sync()
+			void poll();
 
 		private:
-			void poll_cursor_pos(const Context& context);
-			void poll_scroll(const Context& context);
-			void poll_gamepad_button(const Context& context, int controller, int button);
-			void poll_gamepad_axis_1d(const Context& context, int controller, int axis);
-			void poll_gamepad_axis_2d(const Context& context, int controller, int axis);
+			void poll_cursor_pos();
+			void poll_scroll();
+			void poll_gamepad_button(int controller, int button);
+			void poll_gamepad_axis_1d(int controller, int axis);
+			void poll_gamepad_axis_2d(int controller, int axis);
 
 			bool get_phase(int action, Phase& phase) const;
 			bool dispatch(SignalID id, BooleanSignal signal) const;
