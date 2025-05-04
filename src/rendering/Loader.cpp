@@ -744,7 +744,7 @@ namespace oly
 
 		particles::ParticleSystem load_particle_system(const char* file, const glm::vec4& projection_bounds)
 		{
-			return load_particle_system(oly::assets::load_toml(file)["particle_system"], projection_bounds);
+			return load_particle_system((const assets::AssetNode&)load_toml(file)["particle_system"], projection_bounds);
 		}
 
 		particles::ParticleSystem load_particle_system(const std::string& file, const glm::vec4& projection_bounds)

@@ -7,7 +7,7 @@
 #include "rendering/batch/PolygonRegistry.h"
 #include "rendering/batch/EllipseRegistry.h"
 #include "rendering/batch/TileMap.h"
-#include "rendering/batch/text/Font.h"
+#include "rendering/batch/text/ParagraphRegistry.h"
 #include "rendering/batch/DrawCommands.h"
 
 namespace oly
@@ -30,6 +30,7 @@ namespace oly
 		extern rendering::SpriteBatch& sprite_batch();
 		extern rendering::PolygonBatch& polygon_batch();
 		extern rendering::EllipseBatch& ellipse_batch();
+		extern rendering::TextBatch& text_batch();
 
 		extern TextureRegistry& texture_registry();
 		extern rendering::NSVGContext& nsvg_context();
@@ -40,8 +41,10 @@ namespace oly
 
 		extern rendering::TileSetRegistry& tileset_registry();
 		extern rendering::TileMapRegistry& tilemap_registry();
+
 		extern rendering::FontFaceRegistry& font_face_registry();
 		extern rendering::FontAtlasRegistry& font_atlas_registry();
+		extern rendering::ParagraphRegistry& paragraph_registry();
 
 		extern rendering::DrawCommandRegistry draw_command_registry();
 
@@ -82,6 +85,11 @@ namespace oly
 		extern std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name);
 		extern rendering::FontAtlas font_atlas(const std::string& name);
 		extern std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name);
+
+		extern rendering::Paragraph paragraph(const rendering::FontAtlasRes& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "");
+		extern rendering::Paragraph paragraph(const std::string& name);
+		extern std::weak_ptr<rendering::Paragraph> ref_paragraph(const std::string& name);
+		extern void render_text();
 
 		extern void execute_draw_command(const std::string& name);
 	}

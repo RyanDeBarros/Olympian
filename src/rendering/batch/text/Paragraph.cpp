@@ -25,12 +25,12 @@ namespace oly
 				glyph.set_text_color(default_text_color);
 		}
 
-		TextBatch::TextColor Paragraph::get_text_color(size_t pos) const
+		TextBatch::TextColor Paragraph::get_glyph_color(size_t pos) const
 		{
 			return glyphs[pos].get_text_color();
 		}
 
-		void Paragraph::set_text_color(size_t pos, const TextBatch::TextColor& color)
+		void Paragraph::set_glyph_color(size_t pos, const TextBatch::TextColor& color)
 		{
 			glyphs[pos].set_text_color(color);
 		}

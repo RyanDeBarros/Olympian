@@ -4,6 +4,7 @@
 #include "Polygons.h"
 #include "Ellipses.h"
 #include "TileMap.h"
+#include "text/Paragraph.h"
 
 namespace oly
 {
@@ -11,7 +12,6 @@ namespace oly
 	{
 		struct DrawCommand
 		{
-			// TODO add TEXT renderable and batch
 			struct Draw
 			{
 				enum class Renderable
@@ -19,10 +19,11 @@ namespace oly
 					SPRITE,
 					POLYGON,
 					ELLIPSE,
-					TILEMAP
+					TILEMAP,
+					PARAGRAPH,
 				};
 
-				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>> renderable;
+				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>, std::shared_ptr<Paragraph>> renderable;
 				Draw(Renderable renderable, const std::string& name);
 				void execute() const;
 			};
@@ -33,11 +34,10 @@ namespace oly
 				{
 					SPRITE,
 					POLYGON,
-					ELLIPSE
-				};
+					ELLIPSE,
+					TEXT,
+				} batch;
 
-				std::variant<const SpriteBatch*, const PolygonBatch*, const EllipseBatch*> batch;
-				Render(Batch batch);
 				void execute() const;
 			};
 

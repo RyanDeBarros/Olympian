@@ -23,6 +23,9 @@ namespace oly
 			case Renderable::TILEMAP:
 				renderable = context::ref_tilemap(name).lock();
 				break;
+			case Renderable::PARAGRAPH:
+				renderable = context::ref_paragraph(name).lock();
+				break;
 			}
 		}
 
@@ -30,26 +33,24 @@ namespace oly
 		{
 			std::visit([](auto&& renderable) { renderable->draw(); }, renderable);
 		}
-		
-		DrawCommand::Render::Render(Batch type)
-		{
-			switch (type)
-			{
-			case Batch::SPRITE:
-				batch = &context::sprite_batch();
-				break;
-			case Batch::POLYGON:
-				batch = &context::polygon_batch();
-				break;
-			case Batch::ELLIPSE:
-				batch = &context::ellipse_batch();
-				break;
-			}
-		}
 
 		void DrawCommand::Render::execute() const
 		{
-			std::visit([](auto&& batch) { batch->render(); }, batch);
+			switch (batch)
+			{
+			case Batch::SPRITE:
+				context::render_sprites();
+				break;
+			case Batch::POLYGON:
+				context::render_polygons();
+				break;
+			case Batch::ELLIPSE:
+				context::render_ellipses();
+				break;
+			case Batch::TEXT:
+				context::render_text();
+				break;
+			}
 		}
 
 		void DrawCommand::execute() const
@@ -102,6 +103,8 @@ namespace oly
 											renderable = DrawCommand::Draw::Renderable::ELLIPSE;
 										else if (toml_renderable == "tilemap")
 											renderable = DrawCommand::Draw::Renderable::TILEMAP;
+										else if (toml_renderable == "paragraph")
+											renderable = DrawCommand::Draw::Renderable::PARAGRAPH;
 										else
 											return;
 										draw_command_list.commands.push_back({ DrawCommand::Draw(renderable, name) });
@@ -119,6 +122,8 @@ namespace oly
 											batch = DrawCommand::Render::Batch::POLYGON;
 										else if (toml_batch == "ellipse")
 											batch = DrawCommand::Render::Batch::ELLIPSE;
+										else if (toml_batch == "text")
+											batch = DrawCommand::Render::Batch::TEXT;
 										else
 											return;
 										draw_command_list.commands.push_back({ DrawCommand::Render(batch) });

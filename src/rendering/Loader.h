@@ -18,7 +18,7 @@ namespace oly
 	{
 		extern toml::v3::parse_result load_toml(const char* file);
 		extern toml::v3::parse_result load_toml(const std::string& file);
-		typedef toml::v3::node_view<toml::v3::node> AssetNode;
+		typedef toml::v3::node_view<const toml::v3::node> AssetNode;
 
 		extern bool parse_int(const AssetNode& node, const std::string& name, int& v);
 		extern bool parse_int(const toml::table& node, const std::string& name, int& v);

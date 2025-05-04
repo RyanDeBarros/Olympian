@@ -20,6 +20,7 @@ namespace oly
 			std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 			std::unique_ptr<rendering::PolygonBatch> polygon_batch;
 			std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
+			std::unique_ptr<rendering::TextBatch> text_batch;
 
 			TextureRegistry texture_registry;
 			rendering::NSVGContext nsvg_context;
@@ -30,8 +31,10 @@ namespace oly
 
 			rendering::TileSetRegistry tileset_registry;
 			rendering::TileMapRegistry tilemap_registry;
+			
 			rendering::FontFaceRegistry font_face_registry;
 			rendering::FontAtlasRegistry font_atlas_registry;
+			rendering::ParagraphRegistry paragraph_registry;
 
 			rendering::DrawCommandRegistry draw_command_registry;
 		}
@@ -88,7 +91,7 @@ namespace oly
 				int degree = 6;
 				assets::parse_int(toml_polygon_batch, "degree", degree);
 
-				rendering::PolygonBatch::Capacity capacity{ (GLushort)primitives, (GLushort)degree };
+				rendering::PolygonBatch::Capacity capacity{ (GLuint)primitives, (GLuint)degree };
 				internal::polygon_batch = std::make_unique<rendering::PolygonBatch>(capacity, internal::platform->window().projection_bounds());
 			}
 		}
@@ -100,8 +103,26 @@ namespace oly
 				int ellipses;
 				assets::parse_int(toml_ellipse_batch, "ellipses", ellipses);
 
-				rendering::EllipseBatch::Capacity capacity{ (GLushort)ellipses };
+				rendering::EllipseBatch::Capacity capacity{ (rendering::EllipseBatch::Index)ellipses };
 				internal::ellipse_batch = std::make_unique<rendering::EllipseBatch>(capacity, internal::platform->window().projection_bounds());
+			}
+		}
+
+		static void init_text_batch(const assets::AssetNode& node)
+		{
+			if (auto toml_text_batch = node["text_batch"])
+			{
+				int initial_glyphs = 0;
+				assets::parse_int(toml_text_batch, "initial glyphs", initial_glyphs);
+				int new_textures = 0;
+				assets::parse_int(toml_text_batch, "new textures", new_textures);
+				int new_text_colors = 0;
+				assets::parse_int(toml_text_batch, "new text colors", new_text_colors);
+				int new_modulations = 0;
+				assets::parse_int(toml_text_batch, "new modulations", new_modulations);
+
+				rendering::TextBatch::Capacity capacity{ (GLuint)initial_glyphs, (GLuint)new_textures, (GLuint)new_text_colors, (GLuint)new_modulations };
+				internal::text_batch = std::make_unique<rendering::TextBatch>(capacity, internal::platform->window().projection_bounds());
 			}
 		}
 
@@ -193,6 +214,18 @@ namespace oly
 			}
 		}
 
+		// TODO use macro for these init_registry functions
+		static void init_paragraph_registry(const assets::AssetNode& node, const std::string& root_dir)
+		{
+			auto register_files = node["paragraph registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						internal::paragraph_registry.load(root_dir + file.value());
+			}
+		}
+
 		static void init_draw_command_registry(const assets::AssetNode& node, const std::string& root_dir)
 		{
 			auto register_files = node["draw command registries"].as_array();
@@ -237,7 +270,7 @@ namespace oly
 			stbi_set_flip_vertically_on_load(true);
 
 			auto toml = assets::load_toml(context_filepath);
-			auto toml_context = toml["context"];
+			const assets::AssetNode& toml_context = (const assets::AssetNode&)toml["context"];
 			std::string root_dir = io::directory_of(context_filepath);
 			init_logger(toml_context, root_dir);
 
@@ -248,6 +281,8 @@ namespace oly
 			init_sprite_batch(toml_context);
 			init_polygon_batch(toml_context);
 			init_ellipse_batch(toml_context);
+			init_text_batch(toml_context);
+			
 			init_texture_registry(toml_context, root_dir);
 			init_sprite_registry(toml_context, root_dir);
 			init_polygon_registry(toml_context, root_dir);
@@ -256,6 +291,7 @@ namespace oly
 			init_tilemap_registry(toml_context, root_dir);
 			init_font_face_registry(toml_context, root_dir);
 			init_font_atlas_registry(toml_context, root_dir);
+			init_paragraph_registry(toml_context, root_dir);
 			init_draw_command_registry(toml_context, root_dir);
 			init_signal_registry(toml_context, root_dir);
 		}
@@ -270,11 +306,13 @@ namespace oly
 			internal::tilemap_registry.clear();
 			internal::font_face_registry.clear();
 			internal::font_atlas_registry.clear();
+			internal::paragraph_registry.clear();
 			internal::draw_command_registry.clear();
 
 			internal::sprite_batch.reset();
 			internal::polygon_batch.reset();
 			internal::ellipse_batch.reset();
+			internal::text_batch.reset();
 
 			internal::platform.reset();
 
@@ -340,6 +378,11 @@ namespace oly
 			return *internal::ellipse_batch;
 		}
 
+		rendering::TextBatch& text_batch()
+		{
+			return *internal::text_batch;
+		}
+
 		TextureRegistry& texture_registry()
 		{
 			return internal::texture_registry;
@@ -383,6 +426,11 @@ namespace oly
 		rendering::FontAtlasRegistry& font_atlas_registry()
 		{
 			return internal::font_atlas_registry;
+		}
+
+		rendering::ParagraphRegistry& paragraph_registry()
+		{
+			return internal::paragraph_registry;
 		}
 
 		rendering::DrawCommandRegistry draw_command_registry()
@@ -551,6 +599,26 @@ namespace oly
 		std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name)
 		{
 			return internal::font_atlas_registry.ref_font_atlas(name);
+		}
+
+		rendering::Paragraph paragraph(const rendering::FontAtlasRes& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text)
+		{
+			return rendering::Paragraph(*internal::text_batch, font_atlas, format, std::move(text));
+		}
+
+		rendering::Paragraph paragraph(const std::string& name)
+		{
+			return internal::paragraph_registry.create_paragraph(name);
+		}
+
+		std::weak_ptr<rendering::Paragraph> ref_paragraph(const std::string& name)
+		{
+			return internal::paragraph_registry.ref_paragraph(name);
+		}
+
+		void render_text()
+		{
+			internal::text_batch->render();
 		}
 		
 		void execute_draw_command(const std::string& name)

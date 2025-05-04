@@ -70,8 +70,8 @@ namespace oly
 			Transform2D& set_local() { return transformer.set_local(); }
 
 			void recolor_text_with_default();
-			TextBatch::TextColor get_text_color(size_t pos) const;
-			void set_text_color(size_t pos, const TextBatch::TextColor& color);
+			TextBatch::TextColor get_glyph_color(size_t pos) const;
+			void set_glyph_color(size_t pos, const TextBatch::TextColor& color);
 			TextBatch::Modulation get_modulation(size_t pos) const;
 			void set_modulation(size_t pos, const TextBatch::Modulation& modulation);
 			TextBatch::TextColor get_bkg_color() const;

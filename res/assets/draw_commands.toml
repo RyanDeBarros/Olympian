@@ -24,7 +24,7 @@
 ]
 
 [[draw_command]]
-"name" = "sprites, polygons, and tilemaps"
+"name" = "sprites, polygons, tilemaps, and text"
 "commands" = [
 	{ "type" = "draw", "renderable" = "sprite", "name" = "sprite3" },
 	{ "type" = "draw", "renderable" = "sprite", "name" = "sprite4" },
@@ -41,4 +41,6 @@
 	{ "type" = "draw", "renderable" = "sprite", "name" = "spritesheet" },
 	{ "type" = "draw", "renderable" = "tilemap", "name" = "grass tilemap" },
 	{ "type" = "render", "batch" = "sprite" },
+	{ "type" = "draw", "renderable" = "paragraph", "name" = "test text" },
+	{ "type" = "render", "batch" = "text" },
 ]

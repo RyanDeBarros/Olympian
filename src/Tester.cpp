@@ -115,27 +115,6 @@ int main()
 	auto atlased_knight = oly::context::ref_atlas_extension("atlased knight").lock();
 	auto tilemap = oly::context::ref_tilemap("grass tilemap").lock();
 
-	// TODO TextRegistry
-	oly::rendering::TextBatch text_batch({ 1000, 200 }, oly::context::platform().window().projection_bounds());
-	oly::rendering::ParagraphFormat parformat;
-	parformat.pivot = { 0.0f, 1.0f };
-	parformat.line_spacing = 1.5f;
-	parformat.linebreak_spacing = 2.0f;
-	parformat.min_size = { 800.0f, 800.0f };
-	parformat.padding = { 50.0f, 50.0f };
-	parformat.horizontal_alignment = decltype(parformat.horizontal_alignment)::CENTER;
-	parformat.vertical_alignment = decltype(parformat.vertical_alignment)::MIDDLE;
-	oly::rendering::Paragraph paragraph(text_batch, oly::context::ref_font_atlas("roboto regular (96)").lock(), parformat, "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex");
-	paragraph.draw_bkg = true;
-	paragraph.set_local().position = { -400, 400 };
-	paragraph.set_local().scale = glm::vec2(0.8f);
-	paragraph.set_bkg_color({ { 0.5f, 0.4f, 0.2f, 1.0f } });
-	paragraph.default_text_color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
-	paragraph.recolor_text_with_default();
-	paragraph.set_text_color(0, { { 1.0f, 0.0f, 0.0f, 1.0f } });
-	paragraph.set_text_color(1, { { 0.0f, 1.0f, 0.0f, 1.0f } });
-	paragraph.set_text_color(2, { { 0.0f, 0.0f, 1.0f, 1.0f } });
-
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -203,9 +182,6 @@ int main()
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		oly::context::render_sprites();
-		oly::context::execute_draw_command("sprites, polygons, and tilemaps");
-
-		paragraph.draw();
-		text_batch.render();
+		oly::context::execute_draw_command("sprites, polygons, tilemaps, and text");
 	}
 }
