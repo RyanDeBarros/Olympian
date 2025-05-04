@@ -1,14 +1,16 @@
 #pragma once
 
-#include <stb/stb_truetype.h>
-
 #include <unordered_map>
 #include <memory>
 
-#include "math/Geometry.h"
-#include "util/UTF.h"
-#include "../../core/Textures.h"
-#include "../../Loader.h"
+#include "external/STB.h"
+
+#include "core/math/Geometry.h"
+#include "core/util/UTF.h"
+
+#include "graphics/backend/basic/Textures.h"
+
+#include "registries/Loader.h"
 
 namespace oly
 {

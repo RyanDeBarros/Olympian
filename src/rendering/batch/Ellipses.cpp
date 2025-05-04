@@ -1,11 +1,8 @@
 #include "Ellipses.h"
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <algorithm>
 
-#include "../Resources.h"
-#include "math/Transforms.h"
+#include "graphics/resources/Shaders.h"
 
 namespace oly
 {

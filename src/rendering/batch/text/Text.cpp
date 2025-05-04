@@ -1,8 +1,6 @@
 #include "Text.h"
 
-#include <glm/gtc/type_ptr.hpp>
-
-#include "../../Resources.h"
+#include "graphics/resources/Shaders.h"
 
 namespace oly
 {

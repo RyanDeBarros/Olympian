@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../SpecializedBuffers.h"
-#include "math/DataStructures.h"
-#include "math/Transforms.h"
-#include "util/IDGenerator.h"
+#include "core/base/Transforms.h"
+#include "core/containers/IDGenerator.h"
+
+#include "graphics/backend/specialized/General.h"
 
 #include <unordered_set>
 

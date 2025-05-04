@@ -1,18 +1,21 @@
 #pragma once
 
-#include "../SpecializedBuffers.h"
-#include "UsageSlotTracker.h"
-#include "util/IDGenerator.h"
-#include "math/Transforms.h"
-#include "math/Geometry.h"
+#include "external/GLM.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
+#include "core/base/Transforms.h"
+#include "core/math/Geometry.h"
+#include "core/containers/IDGenerator.h"
+
+#include "graphics/backend/basic/Textures.h"
+#include "graphics/backend/specialized/General.h"
+
+#include "UsageSlotTracker.h"
 
 namespace oly
 {
 	namespace rendering
 	{
+		// TODO use more standard structure from core/math/Geometry
 		struct UVRect
 		{
 			glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };

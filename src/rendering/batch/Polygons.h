@@ -2,12 +2,12 @@
 
 #include <map>
 
-#include "../SpecializedBuffers.h"
-#include "math/Transforms.h"
-#include "math/Geometry.h"
-#include "util/FixedVector.h"
-#include "util/FreeSpaceTracker.h"
-#include "util/IDGenerator.h"
+#include "core/base/Transforms.h"
+#include "core/math/Geometry.h"
+#include "core/containers/FreeSpaceTracker.h"
+#include "core/containers/IDGenerator.h"
+
+#include "graphics/backend/specialized/General.h"
 
 namespace oly
 {

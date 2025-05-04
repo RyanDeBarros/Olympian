@@ -2,7 +2,7 @@
 
 #include "Polygons.h"
 
-#include "../Loader.h"
+#include "registries/Loader.h"
 
 namespace oly
 {

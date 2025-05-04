@@ -1,7 +1,7 @@
 #include "DrawCommands.h"
 
-#include "Context.h"
-#include "../Loader.h"
+#include "core/base/Context.h"
+#include "registries/Loader.h"
 
 namespace oly
 {
@@ -66,7 +66,7 @@ namespace oly
 
 		void DrawCommandRegistry::load(const char* draw_command_registry_file)
 		{
-			auto toml = assets::load_toml(draw_command_registry_file);
+			auto toml = reg::load_toml(draw_command_registry_file);
 			auto toml_draw_command_list = toml["draw_command"].as_array();
 			if (!toml_draw_command_list)
 				return;

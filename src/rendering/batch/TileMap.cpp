@@ -1,6 +1,6 @@
 #include "TileMap.h"
 
-#include "Context.h"
+#include "core/base/Context.h"
 
 namespace oly
 {
@@ -109,7 +109,7 @@ namespace oly
 
 		void TileMap::load(const toml::table& node)
 		{
-			set_local() = assets::load_transform_2d(node, "transform");
+			set_local() = reg::load_transform_2d(node, "transform");
 
 			auto toml_layers = node["layer"].as_array();
 			if (toml_layers)
@@ -132,7 +132,7 @@ namespace oly
 								if (auto _tile = toml_tile.as_array())
 								{
 									glm::vec2 tile{};
-									if (assets::parse_vec2(_tile, tile))
+									if (reg::parse_vec2(_tile, tile))
 										layer.paint_tile({ (int)tile.x, (int)tile.y });
 								}
 							}
@@ -150,7 +150,7 @@ namespace oly
 
 		void TileMapRegistry::load(const char* tilemap_file)
 		{
-			auto toml = assets::load_toml(tilemap_file);
+			auto toml = reg::load_toml(tilemap_file);
 			auto tilemap_list = toml["tilemap"].as_array();
 			if (!tilemap_list)
 				return;

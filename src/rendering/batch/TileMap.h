@@ -2,7 +2,7 @@
 
 #include "TileSet.h"
 
-#include "../Loader.h"
+#include "registries/Loader.h"
 
 namespace oly
 {

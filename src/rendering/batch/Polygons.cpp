@@ -1,12 +1,8 @@
 #include "Polygons.h"
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <algorithm>
 
-#include "../Resources.h"
-#include "util/General.h"
-#include "math/DataStructures.h"
+#include "graphics/resources/Shaders.h"
 
 namespace oly
 {

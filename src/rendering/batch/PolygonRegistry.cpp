@@ -1,6 +1,6 @@
 #include "PolygonRegistry.h"
 
-#include "Context.h"
+#include "core/base/Context.h"
 
 namespace oly
 {
@@ -8,7 +8,7 @@ namespace oly
 	{
 		void PolygonRegistry::load(const char* polygon_registry_file)
 		{
-			auto toml = assets::load_toml(polygon_registry_file);
+			auto toml = reg::load_toml(polygon_registry_file);
 			auto toml_registry = toml["polygon_registry"];
 			if (!toml_registry)
 				return;
@@ -100,7 +100,7 @@ namespace oly
 
 			Polygon polygon = context::polygon();
 
-			polygon.set_local() = assets::load_transform_2d(node, "transform");
+			polygon.set_local() = reg::load_transform_2d(node, "transform");
 
 			auto toml_points = node["points"].as_array();
 			if (toml_points)
@@ -108,7 +108,7 @@ namespace oly
 				for (const auto& toml_point : *toml_points)
 				{
 					glm::vec2 pt;
-					if (assets::parse_vec2(toml_point.as_array(), pt))
+					if (reg::parse_vec2(toml_point.as_array(), pt))
 						polygon.polygon.points.push_back(pt);
 				}
 			}
@@ -119,7 +119,7 @@ namespace oly
 				for (const auto& toml_color : *toml_colors)
 				{
 					glm::vec4 col;
-					if (assets::parse_vec4(toml_color.as_array(), col))
+					if (reg::parse_vec4(toml_color.as_array(), col))
 						polygon.polygon.colors.push_back(col);
 				}
 			}
@@ -140,7 +140,7 @@ namespace oly
 
 			Composite composite = context::composite();
 
-			composite.set_local() = assets::load_transform_2d(node, "transform");
+			composite.set_local() = reg::load_transform_2d(node, "transform");
 
 			auto toml_method = node["method"].value<std::string>();
 			if (toml_method)
@@ -155,7 +155,7 @@ namespace oly
 						for (const auto& toml_point : *toml_points)
 						{
 							glm::vec2 pt;
-							if (assets::parse_vec2(toml_point.as_array(), pt))
+							if (reg::parse_vec2(toml_point.as_array(), pt))
 								points.push_back(pt);
 						}
 					}
@@ -167,7 +167,7 @@ namespace oly
 						for (const auto& toml_color : *toml_fill_colors)
 						{
 							glm::vec4 col;
-							if (assets::parse_vec4(toml_color.as_array(), col))
+							if (reg::parse_vec4(toml_color.as_array(), col))
 								colors.push_back(col);
 						}
 					}
@@ -184,7 +184,7 @@ namespace oly
 						for (const auto& toml_point : *toml_points)
 						{
 							glm::vec2 pt;
-							if (assets::parse_vec2(toml_point.as_array(), pt))
+							if (reg::parse_vec2(toml_point.as_array(), pt))
 								ngon.points.push_back(pt);
 						}
 					}
@@ -195,7 +195,7 @@ namespace oly
 						for (const auto& toml_color : *toml_fill_colors)
 						{
 							glm::vec4 col;
-							if (assets::parse_vec4(toml_color.as_array(), col))
+							if (reg::parse_vec4(toml_color.as_array(), col))
 								ngon.fill_colors.push_back(col);
 						}
 					}
@@ -206,7 +206,7 @@ namespace oly
 						for (const auto& toml_color : *toml_border_colors)
 						{
 							glm::vec4 col;
-							if (assets::parse_vec4(toml_color.as_array(), col))
+							if (reg::parse_vec4(toml_color.as_array(), col))
 								ngon.border_colors.push_back(col);
 						}
 					}
@@ -238,7 +238,7 @@ namespace oly
 						for (const auto& toml_point : *toml_points)
 						{
 							glm::vec2 pt;
-							if (assets::parse_vec2(toml_point.as_array(), pt))
+							if (reg::parse_vec2(toml_point.as_array(), pt))
 								points.push_back(pt);
 						}
 					}
@@ -262,7 +262,7 @@ namespace oly
 
 			NGon ngon = context::ngon();
 
-			ngon.set_local() = assets::load_transform_2d(node, "transform");
+			ngon.set_local() = reg::load_transform_2d(node, "transform");
 
 			auto toml_points = node["points"].as_array();
 			if (toml_points)
@@ -270,7 +270,7 @@ namespace oly
 				for (const auto& toml_point : *toml_points)
 				{
 					glm::vec2 pt;
-					if (assets::parse_vec2(toml_point.as_array(), pt))
+					if (reg::parse_vec2(toml_point.as_array(), pt))
 						ngon.base.points.push_back(pt);
 				}
 			}
@@ -281,7 +281,7 @@ namespace oly
 				for (const auto& toml_color : *toml_fill_colors)
 				{
 					glm::vec4 col;
-					if (assets::parse_vec4(toml_color.as_array(), col))
+					if (reg::parse_vec4(toml_color.as_array(), col))
 						ngon.base.fill_colors.push_back(col);
 				}
 			}
@@ -292,7 +292,7 @@ namespace oly
 				for (const auto& toml_color : *toml_border_colors)
 				{
 					glm::vec4 col;
-					if (assets::parse_vec4(toml_color.as_array(), col))
+					if (reg::parse_vec4(toml_color.as_array(), col))
 						ngon.base.border_colors.push_back(col);
 				}
 			}

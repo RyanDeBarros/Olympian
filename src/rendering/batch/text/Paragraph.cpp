@@ -1,7 +1,7 @@
 #include "Paragraph.h"
 
-#include "util/Errors.h"
-#include "../../Resources.h"
+#include "core/base/Errors.h"
+#include "graphics/resources/Textures.h"
 
 namespace oly
 {

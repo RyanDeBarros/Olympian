@@ -1,6 +1,6 @@
 #include "EllipseRegistry.h"
 
-#include "Context.h"
+#include "core/base/Context.h"
 
 namespace oly
 {
@@ -8,7 +8,7 @@ namespace oly
 	{
 		void EllipseRegistry::load(const char* ellipse_registry_file)
 		{
-			auto toml = assets::load_toml(ellipse_registry_file);
+			auto toml = reg::load_toml(ellipse_registry_file);
 			auto toml_registry = toml["ellipse_registry"];
 			if (!toml_registry)
 				return;
@@ -48,19 +48,19 @@ namespace oly
 
 			Ellipse ellipse = context::ellipse();
 
-			ellipse.set_local() = assets::load_transform_2d(node, "transform");
+			ellipse.set_local() = reg::load_transform_2d(node, "transform");
 
 			auto& color = ellipse.ellipse.set_color();
 			auto& dimension = ellipse.ellipse.set_dimension();
-			assets::parse_vec4(node, "border inner color", color.border_inner);
-			assets::parse_vec4(node, "border outer color", color.border_outer);
-			assets::parse_vec4(node, "fill inner color", color.fill_inner);
-			assets::parse_vec4(node, "fill outer color", color.fill_outer);
-			assets::parse_float(node, "border", dimension.border);
-			assets::parse_float(node, "border exp", dimension.border_exp);
-			assets::parse_float(node, "fill exp", dimension.fill_exp);
-			assets::parse_float(node, "width", dimension.width);
-			assets::parse_float(node, "height", dimension.height);
+			reg::parse_vec4(node, "border inner color", color.border_inner);
+			reg::parse_vec4(node, "border outer color", color.border_outer);
+			reg::parse_vec4(node, "fill inner color", color.fill_inner);
+			reg::parse_vec4(node, "fill outer color", color.fill_outer);
+			reg::parse_float(node, "border", dimension.border);
+			reg::parse_float(node, "border exp", dimension.border_exp);
+			reg::parse_float(node, "fill exp", dimension.fill_exp);
+			reg::parse_float(node, "width", dimension.width);
+			reg::parse_float(node, "height", dimension.height);
 
 			return ellipse;
 		}

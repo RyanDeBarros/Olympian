@@ -1,7 +1,7 @@
 #include "TileSet.h"
 
-#include "util/IO.h"
-#include "Context.h"
+#include "core/base/Context.h"
+#include "core/util/IO.h"
 
 namespace oly
 {
@@ -745,7 +745,7 @@ namespace oly
 					TileDesc desc;
 					desc.name = _tex.value();
 					glm::vec4 uvs{};
-					if (assets::parse_vec4(node, "uvs", uvs))
+					if (reg::parse_vec4(node, "uvs", uvs))
 					{
 						desc.uvs.x1 = uvs[0];
 						desc.uvs.x2 = uvs[1];
@@ -886,7 +886,7 @@ namespace oly
 
 		void TileSetRegistry::load(const char* tileset_file)
 		{
-			auto toml = assets::load_toml(tileset_file);
+			auto toml = reg::load_toml(tileset_file);
 			auto tileset_list = toml["tileset"].as_array();
 			if (!tileset_list)
 				return;

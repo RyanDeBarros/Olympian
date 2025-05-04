@@ -1,6 +1,6 @@
 #include "ParagraphRegistry.h"
 
-#include "Context.h"
+#include "core/base/Context.h"
 
 namespace oly
 {
@@ -8,7 +8,7 @@ namespace oly
 	{
 		void ParagraphRegistry::load(const char* registry_file)
 		{
-			auto toml = assets::load_toml(registry_file);
+			auto toml = reg::load_toml(registry_file);
 			auto parageaph_list = toml["paragraph"].as_array();
 			if (!parageaph_list)
 				return;
@@ -36,17 +36,17 @@ namespace oly
 			auto_loaded.clear();
 		}
 
-		static ParagraphFormat create_format(const assets::AssetNode& node)
+		static ParagraphFormat create_format(const TOMLNode& node)
 		{
 			ParagraphFormat format;
 
-			assets::parse_vec2(node, "pivot", format.pivot);
-			assets::parse_float(node, "line spacing", format.line_spacing);
-			assets::parse_float(node, "linebreak spacing", format.linebreak_spacing);
-			assets::parse_vec2(node, "min size", format.min_size);
-			assets::parse_vec2(node, "padding", format.padding);
-			assets::parse_float(node, "text wrap", format.text_wrap);
-			assets::parse_float(node, "max height", format.max_height);
+			reg::parse_vec2(node, "pivot", format.pivot);
+			reg::parse_float(node, "line spacing", format.line_spacing);
+			reg::parse_float(node, "linebreak spacing", format.linebreak_spacing);
+			reg::parse_vec2(node, "min size", format.min_size);
+			reg::parse_vec2(node, "padding", format.padding);
+			reg::parse_float(node, "text wrap", format.text_wrap);
+			reg::parse_float(node, "max height", format.max_height);
 
 			if (auto halign = node["horizontal align"].value<std::string>())
 			{
@@ -97,12 +97,12 @@ namespace oly
 			Paragraph paragraph(context::text_batch(), context::ref_font_atlas(font_atlas.value()).lock(), create_format(node["format"]), std::move(text));
 			if (auto draw_bkg = node["draw bkg"].value<bool>())
 				paragraph.draw_bkg = draw_bkg.value();
-			paragraph.set_local() = assets::load_transform_2d(node, "transform");
+			paragraph.set_local() = reg::load_transform_2d(node, "transform");
 
 			glm::vec4 v;
-			if (assets::parse_vec4(node, "bkg color", v))
+			if (reg::parse_vec4(node, "bkg color", v))
 				paragraph.set_bkg_color({ v });
-			if (assets::parse_vec4(node, "text color", paragraph.default_text_color.color))
+			if (reg::parse_vec4(node, "text color", paragraph.default_text_color.color))
 				paragraph.recolor_text_with_default();
 
 			auto glyph_colors = node["glyph colors"].as_table();
@@ -111,7 +111,7 @@ namespace oly
 				for (const auto& [k, v] : *glyph_colors)
 				{
 					glm::vec4 gc;
-					if (assets::parse_vec4(v.as_array(), gc))
+					if (reg::parse_vec4(v.as_array(), gc))
 						paragraph.set_glyph_color(std::stoi(k.data()), { gc });
 				}
 			}

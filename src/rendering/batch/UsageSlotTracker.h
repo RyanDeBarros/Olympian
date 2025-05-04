@@ -1,12 +1,11 @@
 #pragma once
 
-#include <GL/glew.h>
-
 #include <unordered_map>
 
-#include "../SpecializedBuffers.h"
-#include "util/IDGenerator.h"
-#include "util/Assert.h"
+#include "core/base/Assert.h"
+#include "core/containers/IDGenerator.h"
+
+#include "graphics/backend/specialized/General.h"
 
 namespace oly
 {

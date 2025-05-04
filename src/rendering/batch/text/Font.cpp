@@ -1,10 +1,10 @@
 #include "Font.h"
 
-#include "Context.h"
-#include "util/IO.h"
-#include "util/Logger.h"
-#include "util/Errors.h"
-#include "util/PixelBuffers.h"
+#include "core/base/Context.h"
+#include "core/base/Errors.h"
+#include "core/util/IO.h"
+#include "core/util/Logger.h"
+#include "core/util/Memory.h"
 
 namespace oly
 {
@@ -254,7 +254,7 @@ namespace oly
 
 		void FontFaceRegistry::load(const char* font_face_registry_file)
 		{
-			auto toml = assets::load_toml(font_face_registry_file);
+			auto toml = reg::load_toml(font_face_registry_file);
 			auto font_face_list = toml["font_face"].as_array();
 			if (!font_face_list)
 				return;
@@ -354,7 +354,7 @@ namespace oly
 		
 		void FontAtlasRegistry::load(const char* font_atlas_registry_file)
 		{
-			auto toml = assets::load_toml(font_atlas_registry_file);
+			auto toml = reg::load_toml(font_atlas_registry_file);
 			auto font_atlas_list = toml["font_atlas"].as_array();
 			if (!font_atlas_list)
 				return;
@@ -371,8 +371,8 @@ namespace oly
 						Constructor constructor;
 						constructor.font_face_name = _font_face.value();
 						constructor.options.font_size = _font_size_double ? (float)_font_size_double.value() : (float)_font_size_int.value();
-						assets::parse_min_filter(node, "min filter", constructor.options.min_filter);
-						assets::parse_mag_filter(node, "mag filter", constructor.options.mag_filter);
+						reg::parse_min_filter(node, "min filter", constructor.options.min_filter);
+						reg::parse_mag_filter(node, "mag filter", constructor.options.mag_filter);
 						constructor.options.auto_generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
 
 						auto _common_buffer_preset = node["common buffer preset"].value<std::string>();

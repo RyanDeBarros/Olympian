@@ -1,6 +1,6 @@
 #include "SpriteRegistry.h"
 
-#include "Context.h"
+#include "core/base/Context.h"
 
 namespace oly
 {
@@ -8,7 +8,7 @@ namespace oly
 	{
 		void SpriteRegistry::load(const char* sprite_registry_file)
 		{
-			auto toml = assets::load_toml(sprite_registry_file);
+			auto toml = reg::load_toml(sprite_registry_file);
 			auto toml_sprites = toml["sprite_registry"];
 			if (!toml_sprites)
 				return;
@@ -85,7 +85,7 @@ namespace oly
 			const auto& node = it->second;
 
 			Sprite sprite = context::sprite();
-			sprite.set_local() = assets::load_transform_2d(node, "transform");
+			sprite.set_local() = reg::load_transform_2d(node, "transform");
 
 			std::string texture;
 			if (auto toml_texture = node["texture"].value<std::string>())
@@ -112,16 +112,16 @@ namespace oly
 					if (toml_modulation->get(0)->is_array())
 					{
 						SpriteBatch::Modulation modulation;
-						if (assets::parse_vec4(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
-							&& assets::parse_vec4(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
-							&& assets::parse_vec4(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
-							&& assets::parse_vec4(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
+						if (reg::parse_vec4(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
+							&& reg::parse_vec4(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
+							&& reg::parse_vec4(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
+							&& reg::parse_vec4(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
 							sprite.set_modulation(modulation);
 					}
 					else
 					{
 						glm::vec4 modulation;
-						if (assets::parse_vec4(toml_modulation, modulation))
+						if (reg::parse_vec4(toml_modulation, modulation))
 							sprite.set_modulation({ modulation, modulation, modulation, modulation });
 					}
 				}
@@ -131,10 +131,10 @@ namespace oly
 				if (toml_tex_coords->size() == 4)
 				{
 					UVRect uvs;
-					if (assets::parse_vec2(toml_tex_coords->get_as<toml::array>(0), uvs.uvs[0])
-						&& assets::parse_vec2(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
-						&& assets::parse_vec2(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
-						&& assets::parse_vec2(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
+					if (reg::parse_vec2(toml_tex_coords->get_as<toml::array>(0), uvs.uvs[0])
+						&& reg::parse_vec2(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
+						&& reg::parse_vec2(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
+						&& reg::parse_vec2(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
 						sprite.set_tex_coords(uvs);
 				}
 			}
@@ -166,22 +166,22 @@ namespace oly
 					{
 						sprite.transformer.modifier = std::make_unique<ShearTransformModifier2D>();
 						auto& modifier = sprite.transformer.get_modifier<ShearTransformModifier2D>();
-						assets::parse_vec2(node["shearing"].as_array(), modifier.shearing);
+						reg::parse_vec2(node["shearing"].as_array(), modifier.shearing);
 					}
 					else if (type == "pivot")
 					{
 						sprite.transformer.modifier = std::make_unique<PivotTransformModifier2D>();
 						auto& modifier = sprite.transformer.get_modifier<PivotTransformModifier2D>();
-						assets::parse_vec2(node["pivot"].as_array(), modifier.pivot);
-						assets::parse_vec2(node["size"].as_array(), modifier.size);
+						reg::parse_vec2(node["pivot"].as_array(), modifier.pivot);
+						reg::parse_vec2(node["size"].as_array(), modifier.size);
 					}
 					else if (type == "pivot-shear")
 					{
 						sprite.transformer.modifier = std::make_unique<PivotShearTransformModifier2D>();
 						auto& modifier = sprite.transformer.get_modifier<PivotShearTransformModifier2D>();
-						assets::parse_vec2(node["shearing"].as_array(), modifier.shearing);
-						assets::parse_vec2(node["pivot"].as_array(), modifier.pivot);
-						assets::parse_vec2(node["size"].as_array(), modifier.size);
+						reg::parse_vec2(node["shearing"].as_array(), modifier.shearing);
+						reg::parse_vec2(node["pivot"].as_array(), modifier.pivot);
+						reg::parse_vec2(node["size"].as_array(), modifier.size);
 					}
 				}
 			}

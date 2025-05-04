@@ -1,8 +1,5 @@
 ﻿#include "Olympian.h"
 
-#include <nanosvg/nanosvg.h>
-#include <nanosvg/nanosvgrast.h>
-
 #include "rendering/batch/text/Paragraph.h"
 
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
