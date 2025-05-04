@@ -24,6 +24,10 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct PlayerController : public oly::input::InputController
 {
+	bool dragging = false;
+	glm::vec2 ref_cursor_pos = {};
+	glm::vec2 ref_text_pos = {};
+
 	bool jump(oly::input::Signal signal)
 	{
 		if (signal.phase == oly::input::Phase::STARTED)
@@ -34,21 +38,48 @@ struct PlayerController : public oly::input::InputController
 		return false;
 	}
 
-	bool pan_camera(oly::input::Signal signal)
+	bool click(oly::input::Signal signal)
 	{
-		switch (signal.phase)
+		if (signal.phase == oly::input::Phase::STARTED)
 		{
-		case oly::input::Phase::STARTED:
-			oly::LOG << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+			dragging = true;
+			double x, y;
+			glfwGetCursorPos(oly::context::platform().window(), &x, &y);
+			ref_cursor_pos = { (float)x, (float)y };
+			if (auto sp = oly::context::ref_paragraph("test text").lock())
+				ref_text_pos = sp->get_local().position;
+			drag(ref_cursor_pos);
 			return true;
-		case oly::input::Phase::ONGOING:
-			oly::LOG << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
-			return true;
-		case oly::input::Phase::COMPLETED:
-			oly::LOG << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
+		}
+		else if (signal.phase == oly::input::Phase::COMPLETED)
+		{
+			dragging = false;
 			return true;
 		}
 		return false;
+	}
+
+	bool drag(oly::input::Signal signal)
+	{
+		if (dragging)
+			return drag(signal.get<glm::vec2>());
+		return false;
+	}
+
+	bool drag(glm::vec2 cursor_pos)
+	{
+		if (auto sp = oly::context::ref_paragraph("test text").lock())
+		{
+			oly::LOG << cursor_pos << oly::LOG.endl;
+			sp->set_local().position = ref_text_pos + screen_to_world_coords(cursor_pos) - screen_to_world_coords(ref_cursor_pos);
+			return true;
+		}
+		return false;
+	}
+
+	glm::vec2 screen_to_world_coords(glm::vec2 coords)
+	{
+		return { coords.x - 0.5f * oly::context::platform().window().get_width(), 0.5f * oly::context::platform().window().get_height() - coords.y };
 	}
 
 	bool zoom_camera(oly::input::Signal signal)
@@ -75,7 +106,8 @@ int main()
 
 	PlayerController pc;
 	oly::context::platform().bind_signal("jump", &PlayerController::jump, pc);
-	oly::context::platform().bind_signal("pan camera", &PlayerController::pan_camera, pc);
+	oly::context::platform().bind_signal("click", &PlayerController::click, pc);
+	oly::context::platform().bind_signal("drag", &PlayerController::drag, pc);
 	oly::context::platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
 	oly::LOG << oly::context::platform().gamepad().connected() << oly::LOG.endl;

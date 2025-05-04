@@ -1,5 +1,6 @@
 #include "Font.h"
 
+#include "Context.h"
 #include "util/IO.h"
 #include "util/Logger.h"
 #include "util/Errors.h"
@@ -351,13 +352,13 @@ namespace oly
 			auto_loaded.erase(name);
 		}
 		
-		void FontAtlasRegistry::load(const FontFaceRegistry& font_face_registry, const char* font_atlas_registry_file)
+		void FontAtlasRegistry::load(const char* font_atlas_registry_file)
 		{
 			auto toml = assets::load_toml(font_atlas_registry_file);
 			auto font_atlas_list = toml["font_atlas"].as_array();
 			if (!font_atlas_list)
 				return;
-			font_atlas_list->for_each([this, &font_face_registry](auto&& node) {
+			font_atlas_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto _name = node["name"].value<std::string>();
@@ -398,7 +399,7 @@ namespace oly
 						constructors[name] = constructor;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded.emplace(name, std::make_shared<FontAtlas>(create_font_atlas(font_face_registry, name)));
+							auto_loaded.emplace(name, std::make_shared<FontAtlas>(create_font_atlas(name)));
 							if (_init.value() == "discard")
 								constructors.erase(name);
 						}
@@ -413,14 +414,14 @@ namespace oly
 			auto_loaded.clear();
 		}
 
-		FontAtlas FontAtlasRegistry::create_font_atlas(const FontFaceRegistry& font_face_registry, const std::string& name) const
+		FontAtlas FontAtlasRegistry::create_font_atlas(const std::string& name) const
 		{
 			auto it = constructors.find(name);
 			if (it == constructors.end())
 				throw Error(ErrorCode::UNREGISTERED_FONT_ATLAS);
 			const auto& constructor = it->second;
 
-			return FontAtlas(font_face_registry.ref_font_face(constructor.font_face_name).lock(), constructor.options, constructor.common_buffer);
+			return FontAtlas(context::ref_font_face(constructor.font_face_name).lock(), constructor.options, constructor.common_buffer);
 		}
 		
 		std::weak_ptr<FontAtlas> FontAtlasRegistry::ref_font_atlas(const std::string& name) const

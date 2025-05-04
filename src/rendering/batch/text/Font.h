@@ -146,11 +146,11 @@ namespace oly
 			std::unordered_map<std::string, FontAtlasRes> auto_loaded;
 
 		public:
-			void load(const FontFaceRegistry& font_face_registry, const char* font_atlas_registry_file);
-			void load(const FontFaceRegistry& font_face_registry, const std::string& font_atlas_registry_file) { load(font_face_registry, font_atlas_registry_file.c_str()); }
+			void load(const char* font_atlas_registry_file);
+			void load(const std::string& font_atlas_registry_file) { load(font_atlas_registry_file.c_str()); }
 			void clear();
 
-			FontAtlas create_font_atlas(const FontFaceRegistry& font_face_registry, const std::string& name) const;
+			FontAtlas create_font_atlas(const std::string& name) const;
 			std::weak_ptr<FontAtlas> ref_font_atlas(const std::string& name) const;
 			void delete_font_atlas(const std::string& name);
 		};

@@ -4,7 +4,12 @@
 "key"     = 32 # space
 
 [[signal]]
-"id"      = "pan camera"
+"id"      = "click"
+"binding" = "mouse button"
+"button"  = 0 # LMB
+
+[[signal]]
+"id"      = "drag"
 "binding" = "cursor pos"
 
 [[signal]]

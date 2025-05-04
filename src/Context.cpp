@@ -126,116 +126,28 @@ namespace oly
 			}
 		}
 
-		static void init_texture_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["texture registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::texture_registry.load(root_dir + file.value());
-			}
+#define INIT_REGISTRY(function, node_name, registry)\
+		static void function(const assets::AssetNode& node, const std::string& root_dir)\
+		{\
+			auto register_files = node[node_name].as_array();\
+			if (register_files)\
+			{\
+				for (const auto& node : *register_files)\
+					if (auto file = node.value<std::string>())\
+						internal::registry.load(root_dir + file.value());\
+			}\
 		}
 
-		static void init_sprite_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["sprite registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::sprite_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_polygon_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["polygon registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::polygon_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_ellipse_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["ellipse registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::ellipse_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_tileset_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["tileset registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::tileset_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_tilemap_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["tilemap registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::tilemap_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_font_face_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["font face registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::font_face_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_font_atlas_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["font atlas registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::font_atlas_registry.load(font_face_registry(), root_dir + file.value());
-			}
-		}
-
-		// TODO use macro for these init_registry functions
-		static void init_paragraph_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["paragraph registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::paragraph_registry.load(root_dir + file.value());
-			}
-		}
-
-		static void init_draw_command_registry(const assets::AssetNode& node, const std::string& root_dir)
-		{
-			auto register_files = node["draw command registries"].as_array();
-			if (register_files)
-			{
-				for (const auto& node : *register_files)
-					if (auto file = node.value<std::string>())
-						internal::draw_command_registry.load(root_dir + file.value());
-			}
-		}
+		INIT_REGISTRY(init_texture_registry, "texture registries", texture_registry);
+		INIT_REGISTRY(init_sprite_registry, "sprite registries", sprite_registry);
+		INIT_REGISTRY(init_polygon_registry, "polygon registries", polygon_registry);
+		INIT_REGISTRY(init_ellipse_registry, "ellipse registries", ellipse_registry);
+		INIT_REGISTRY(init_tileset_registry, "tileset registries", tileset_registry);
+		INIT_REGISTRY(init_tilemap_registry, "tilemap registries", tilemap_registry);
+		INIT_REGISTRY(init_font_face_registry, "font face registries", font_face_registry);
+		INIT_REGISTRY(init_font_atlas_registry, "font atlas registries", font_atlas_registry);
+		INIT_REGISTRY(init_paragraph_registry, "paragraph registries", paragraph_registry);
+		INIT_REGISTRY(init_draw_command_registry, "draw command registries", draw_command_registry);
 
 		static void init_signal_registry(const assets::AssetNode& node, const std::string& root_dir)
 		{
@@ -247,6 +159,8 @@ namespace oly
 						input::load_signal_registry((root_dir + file.value()).c_str());
 			}
 		}
+
+#undef INIT_REGISTRY
 	}
 		struct Internal
 		{
@@ -593,7 +507,7 @@ namespace oly
 		
 		rendering::FontAtlas font_atlas(const std::string& name)
 		{
-			return internal::font_atlas_registry.create_font_atlas(internal::font_face_registry, name);
+			return internal::font_atlas_registry.create_font_atlas(name);
 		}
 		
 		std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name)
