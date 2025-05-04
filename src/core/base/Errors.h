@@ -5,11 +5,6 @@
 
 namespace oly
 {
-	struct CompileError : public std::exception
-	{
-		CompileError(const char* message = "") : std::exception(message) {}
-	};
-
 	enum class ErrorCode
 	{
 		OLYMPIAN_INIT,
@@ -48,6 +43,8 @@ namespace oly
 		UNCACHED_GLYPH,
 		UNREGISTERED_FONT_FACE,
 		UNREGISTERED_FONT_ATLAS,
+		SOLVER_NO_SOLUTION,
+		SOLVER_INFINITE_SOLUTIONS,
 		BAD_EMITTER_PARAMS,
 		OTHER
 	};

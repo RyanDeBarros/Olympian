@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "core/base/Transforms.h"
-#include "core/math/Geometry.h"
+#include "core/math/Triangulation.h"
 #include "core/math/Random.h"
 #include "core/containers/Ranges.h"
 
@@ -203,8 +203,8 @@ namespace oly
 		protected:
 			friend Emitter;
 			GLuint shader = 0;
-			rendering::CPUSideEBO<GLuint, rendering::Mutability::IMMUTABLE> ebo;
-			rendering::VertexArray vao;
+			graphics::CPUSideEBO<GLuint, graphics::Mutability::IMMUTABLE> ebo;
+			graphics::VertexArray vao;
 
 			struct
 			{
@@ -446,7 +446,7 @@ namespace oly
 				TRANSFORM,
 				COLOR
 			};
-			rendering::GLBufferBlock<2> ssbo_block;
+			graphics::GLBufferBlock<2> ssbo_block;
 			struct
 			{
 				std::vector<ParticleData> front, back;
@@ -532,17 +532,17 @@ namespace oly
 
 		class PolygonalParticle : public Particle
 		{
-			rendering::GLBuffer vbo;
+			graphics::GLBuffer vbo;
 
 		public:
-			PolygonalParticle(const std::vector<glm::vec2>& polygon, const math::Triangulation& triangulation);
+			PolygonalParticle(const std::vector<glm::vec2>& polygon, const cmath::Triangulation& triangulation);
 		};
 
 		extern std::unique_ptr<PolygonalParticle> create_polygonal_particle(const std::vector<glm::vec2>& polygon);
 
 		class EllipticParticle : public Particle
 		{
-			rendering::GLBufferBlock<2> vbo_block;
+			graphics::GLBufferBlock<2> vbo_block;
 
 		public:
 			EllipticParticle(float rx, float ry);

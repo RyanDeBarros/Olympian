@@ -17,7 +17,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 	}
 };
 
-struct PlayerController : public oly::input::InputController
+struct PlayerController : public oly::InputController
 {
 	bool dragging = false;
 	glm::vec2 ref_cursor_pos = {};
@@ -39,7 +39,7 @@ struct PlayerController : public oly::input::InputController
 		{
 			dragging = true;
 			double x, y;
-			glfwGetCursorPos(oly::context::platform().window(), &x, &y);
+			glfwGetCursorPos(oly::get_platform().window(), &x, &y);
 			ref_cursor_pos = { (float)x, (float)y };
 			if (auto sp = oly::context::ref_paragraph("test text").lock())
 				ref_text_pos = sp->get_local().position;
@@ -74,7 +74,7 @@ struct PlayerController : public oly::input::InputController
 
 	glm::vec2 screen_to_world_coords(glm::vec2 coords)
 	{
-		return { coords.x - 0.5f * oly::context::platform().window().get_width(), 0.5f * oly::context::platform().window().get_height() - coords.y };
+		return { coords.x - 0.5f * oly::get_platform().window().get_width(), 0.5f * oly::get_platform().window().get_height() - coords.y };
 	}
 
 	bool zoom_camera(oly::input::Signal signal)
@@ -100,16 +100,16 @@ int main()
 	oly::context::Context oly_context("../../../res/assets/context.toml");
 
 	PlayerController pc;
-	oly::context::platform().bind_signal("jump", &PlayerController::jump, pc);
-	oly::context::platform().bind_signal("click", &PlayerController::click, pc);
-	oly::context::platform().bind_signal("drag", &PlayerController::drag, pc);
-	oly::context::platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
+	oly::get_platform().bind_signal("jump", &PlayerController::jump, pc);
+	oly::get_platform().bind_signal("click", &PlayerController::click, pc);
+	oly::get_platform().bind_signal("drag", &PlayerController::drag, pc);
+	oly::get_platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
-	oly::LOG << oly::context::platform().gamepad().connected() << oly::LOG.endl;
-	oly::LOG << oly::context::platform().gamepad().has_mapping() << oly::LOG.endl;
+	oly::LOG << oly::get_platform().gamepad().connected() << oly::LOG.endl;
+	oly::LOG << oly::get_platform().gamepad().has_mapping() << oly::LOG.endl;
 
 	KeyHandler key_handler;
-	key_handler.attach(&oly::context::platform().window().handlers.key);
+	key_handler.attach(&oly::get_platform().window().handlers.key);
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
@@ -117,18 +117,18 @@ int main()
 	auto& flag_tesselation_modifier = flag_tesselation_parent.get_modifier<oly::PivotShearTransformModifier2D>();
 	flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 }, { 0, 1 } };
 	flag_tesselation_parent.post_set();
-	std::vector<oly::rendering::Sprite> flag_tesselation;
+	std::vector<oly::Sprite> flag_tesselation;
 	const int flag_rows = 8, flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.push_back(oly::context::sprite("flag instance"));
+		flag_tesselation.push_back(oly::sprite("flag instance"));
 		flag_tesselation[i].set_local().position = { -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols,
 			flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows };
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	auto concave_shape = oly::context::ref_composite("concave shape").lock();
+	auto concave_shape = oly::context::ref_poly_composite("concave shape").lock();
 	for (auto& tp : concave_shape->composite)
 	{
 		tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
@@ -141,7 +141,7 @@ int main()
 	auto flag_texture = oly::context::texture_registry().get_texture("flag");
 	auto atlased_knight = oly::context::ref_atlas_extension("atlased knight").lock();
 	auto tilemap = oly::context::ref_tilemap("grass tilemap").lock();
-
+	
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -176,7 +176,7 @@ int main()
 			if (fmod(oly::TIME.now<float>(), 1.0f) >= 0.5f)
 			{
 				lin = false;
-				flag_texture->set_and_use_handle(oly::samplers::nearest);
+				flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
 				oly::context::sync_texture_handle(flag_texture);
 			}
 		}
@@ -185,7 +185,7 @@ int main()
 			if (fmod(oly::TIME.now<float>(), 1.0f) < 0.5f)
 			{
 				lin = true;
-				flag_texture->set_and_use_handle(oly::samplers::linear);
+				flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
 				oly::context::sync_texture_handle(flag_texture);
 			}
 		}

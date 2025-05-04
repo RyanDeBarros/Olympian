@@ -2,12 +2,12 @@
 
 #include "graphics/backend/basic/Textures.h"
 
-namespace oly
+namespace oly::graphics::textures
 {
-	namespace textures
-	{
-		extern rendering::BindlessTextureRes white1x1_1;
+	extern BindlessTextureRes white1x1_1;
 
+	namespace internal
+	{
 		extern void load();
 		extern void unload();
 	}

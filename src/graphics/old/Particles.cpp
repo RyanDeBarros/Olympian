@@ -187,8 +187,8 @@ namespace oly
 
 		void Particle::load_locations()
 		{
-			locations.projection = shaders::location(shader, "uProjection");
-			locations.transform = shaders::location(shader, "uTransform");
+			locations.projection = glGetUniformLocation(shader, "uProjection");
+			locations.transform = glGetUniformLocation(shader, "uTransform");
 		}
 
 		void Particle::set_projection(const glm::vec4& projection_bounds) const
@@ -523,19 +523,19 @@ namespace oly
 					subemitter.emitter.draw();
 		}
 
-		PolygonalParticle::PolygonalParticle(const std::vector<glm::vec2>& polygon, const math::Triangulation& triangulation)
+		PolygonalParticle::PolygonalParticle(const std::vector<glm::vec2>& polygon, const cmath::Triangulation& triangulation)
 			: Particle((GLuint)(triangulation.size() * 3))
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 
-			shader = shaders::polygonal_particle;
+			shader = graphics::internal_shaders::polygonal_particle;
 			load_locations();
 			draw_spec.count = (GLsizei)ebo.vector().size();
 
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
 			glNamedBufferStorage(vbo, polygon.size() * sizeof(glm::vec2), polygon.data(), GL_NONE);
-			rendering::VertexAttribute<float>{ 0, 2 }.setup();
+			graphics::VertexAttribute<float>{ 0, 2 }.setup();
 			auto& indices = ebo.vector();
 			for (size_t i = 0; i < triangulation.size(); ++i)
 			{
@@ -550,13 +550,13 @@ namespace oly
 
 		std::unique_ptr<PolygonalParticle> create_polygonal_particle(const std::vector<glm::vec2>& polygon)
 		{
-			return std::make_unique<PolygonalParticle>(polygon, math::triangulate(polygon));
+			return std::make_unique<PolygonalParticle>(polygon, cmath::triangulate(polygon));
 		}
 
 		EllipticParticle::EllipticParticle(float rx, float ry)
 			: Particle(6)
 		{
-			shader = shaders::elliptic_particle;
+			shader = graphics::internal_shaders::elliptic_particle;
 			load_locations();
 			draw_spec.count = (GLsizei)ebo.vector().size();
 
@@ -569,7 +569,7 @@ namespace oly
 			};
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[0]);
 			glNamedBufferStorage(vbo_block[0], 4 * sizeof(glm::vec2), vertices, GL_NONE);
-			rendering::VertexAttribute<float>{ 0, 2 }.setup();
+			graphics::VertexAttribute<float>{ 0, 2 }.setup();
 			glm::vec2 radii[4] = {
 				{ rx, ry },
 				{ rx, ry },
@@ -578,7 +578,7 @@ namespace oly
 			};
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_block[1]);
 			glNamedBufferStorage(vbo_block[1], 4 * sizeof(glm::vec2), radii, GL_NONE);
-			rendering::VertexAttribute<float>{ 1, 2 }.setup();
+			graphics::VertexAttribute<float>{ 1, 2 }.setup();
 			auto& indices = ebo.vector();
 			indices[0] = 0;
 			indices[1] = 1;

@@ -2,7 +2,7 @@
 
 #include "core/util/Logger.h"
 
-namespace oly
+namespace oly::internal
 {
 	extern bool check_opengl_error();
 	extern bool check_glfw_error();
@@ -22,4 +22,4 @@ namespace oly
 	}
 }
 
-#define OLY_ASSERT(x) { oly::assertcond((x), #x, __FILE__, __LINE__); }
+#define OLY_ASSERT(x) { oly::internal::assertcond((x), #x, __FILE__, __LINE__); }

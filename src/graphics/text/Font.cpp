@@ -136,8 +136,8 @@ namespace oly
 					auto it = glyphs.find(codepoint);
 					it->second.render_on_bitmap_shared(*this, common_buf + it->second.buffer_pos, common_dim.w, common_dim.h, 1, 1, 1, 1);
 				}
-				Image common_image(common_buf, common_dim);
-				common_texture = move_shared(load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
+				graphics::Image common_image(common_buf, common_dim);
+				common_texture = move_shared(graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, options.min_filter);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, options.mag_filter);
 				common_texture->set_and_use_handle();
@@ -157,12 +157,12 @@ namespace oly
 			if (!index) return false;
 
 			FontGlyph glyph(*this, index, scale, -1);
-			ImageDimensions dim = { glyph.box.width(), glyph.box.height(), 1};
+			graphics::ImageDimensions dim = { glyph.box.width(), glyph.box.height(), 1};
 			unsigned char* bmp = dim.pxnew();
 			glyph.render_on_bitmap_unique(*this, bmp, dim.w, dim.h);
 
-			Image image(bmp, dim);
-			BindlessTexture texture = load_bindless_texture_2d(image, options.auto_generate_mipmaps);
+			graphics::Image image(bmp, dim);
+			graphics::BindlessTexture texture = load_bindless_texture_2d(image, options.auto_generate_mipmaps);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, options.min_filter);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, options.mag_filter);
 			texture.set_and_use_handle();

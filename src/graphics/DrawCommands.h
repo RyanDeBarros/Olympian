@@ -6,50 +6,47 @@
 #include "graphics/extensions/TileMap.h"
 #include "graphics/text/Paragraph.h"
 
-namespace oly
+namespace oly::rendering
 {
-	namespace rendering
+	struct DrawCommand
 	{
-		struct DrawCommand
+		struct Draw
 		{
-			struct Draw
+			enum class Renderable
 			{
-				enum class Renderable
-				{
-					SPRITE,
-					POLYGON,
-					ELLIPSE,
-					TILEMAP,
-					PARAGRAPH,
-				};
-
-				std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>, std::shared_ptr<Paragraph>> renderable;
-				Draw(Renderable renderable, const std::string& name);
-				void execute() const;
+				SPRITE,
+				POLYGON,
+				ELLIPSE,
+				TILEMAP,
+				PARAGRAPH,
 			};
 
-			struct Render
-			{
-				enum class Batch
-				{
-					SPRITE,
-					POLYGON,
-					ELLIPSE,
-					TEXT,
-				} batch;
-
-				void execute() const;
-			};
-
-			std::variant<Draw, Render> cmd;
+			std::variant<std::shared_ptr<Sprite>, std::shared_ptr<Polygonal>, std::shared_ptr<Ellipse>, std::shared_ptr<TileMap>, std::shared_ptr<Paragraph>> renderable;
+			Draw(Renderable renderable, const std::string& name);
 			void execute() const;
 		};
 
-		struct DrawCommandList
+		struct Render
 		{
-			std::vector<DrawCommand> commands;
+			enum class Batch
+			{
+				SPRITE,
+				POLYGON,
+				ELLIPSE,
+				TEXT,
+			} batch;
 
 			void execute() const;
 		};
-	}
+
+		std::variant<Draw, Render> cmd;
+		void execute() const;
+	};
+
+	struct DrawCommandList
+	{
+		std::vector<DrawCommand> commands;
+
+		void execute() const;
+	};
 }

@@ -4,19 +4,19 @@
 #include "graphics/resources/Samplers.h"
 #include "graphics/resources/Textures.h"
 
-namespace oly
+namespace oly::graphics::internal
 {
 	void load_resources()
 	{
-		samplers::load();
-		shaders::load();
-		textures::load();
+		samplers::internal::load();
+		internal_shaders::load();
+		textures::internal::load();
 	}
 
 	void unload_resources()
 	{
-		samplers::unload();
-		shaders::unload();
-		textures::unload();
+		samplers::internal::unload();
+		internal_shaders::unload();
+		textures::internal::unload();
 	}
 }

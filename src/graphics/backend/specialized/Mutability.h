@@ -1,13 +1,10 @@
 #pragma once
 
-namespace oly
+namespace oly::graphics
 {
-	namespace rendering
+	enum class Mutability
 	{
-		enum class Mutability
-		{
-			IMMUTABLE,
-			MUTABLE
-		};
-	}
+		IMMUTABLE,
+		MUTABLE
+	};
 }

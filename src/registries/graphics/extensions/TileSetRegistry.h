@@ -2,23 +2,20 @@
 
 #include "graphics/extensions/TileSet.h"
 
-namespace oly
+namespace oly::reg
 {
-	namespace rendering
+	class TileSetRegistry
 	{
-		class TileSetRegistry
-		{
-			std::unordered_map<std::string, toml::array> tileset_constructors;
-			std::unordered_map<std::string, std::shared_ptr<TileSet>> auto_loaded;
+		std::unordered_map<std::string, toml::array> tileset_constructors;
+		std::unordered_map<std::string, std::shared_ptr<rendering::TileSet>> auto_loaded;
 
-		public:
-			void load(const char* tileset_file);
-			void load(const std::string& tileset_file) { load(tileset_file.c_str()); }
-			void clear();
+	public:
+		void load(const char* tileset_file);
+		void load(const std::string& tileset_file) { load(tileset_file.c_str()); }
+		void clear();
 
-			TileSet create_tileset(const std::string& name) const;
-			std::weak_ptr<TileSet> ref_tileset(const std::string& name) const;
-			void delete_tileset(const std::string& name);
-		};
-	}
+		rendering::TileSet create_tileset(const std::string& name) const;
+		std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name) const;
+		void delete_tileset(const std::string& name);
+	};
 }

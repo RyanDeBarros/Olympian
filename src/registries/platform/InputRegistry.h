@@ -2,10 +2,7 @@
 
 #include "core/platform/Input.h"
 
-namespace oly
+namespace oly::reg
 {
-	namespace input
-	{
-		extern void load_signal_registry(const char* signal_registry_filepath);
-	}
+	extern void load_signal_registry(const char* signal_registry_filepath);
 }

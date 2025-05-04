@@ -207,37 +207,42 @@ namespace oly
 
 		inline const GamepadAxis2D GamepadAxis2D::LEFT_XY = GamepadAxis2D(0);
 		inline const GamepadAxis2D GamepadAxis2D::RIGHT_XY = GamepadAxis2D(1);
+	}
 
+	namespace platform
+	{
 		class Gamepad
 		{
 			GLFWgamepadstate g;
 			int c;
 
 		public:
-			EventHandler<GamepadEventData> handler;
+			EventHandler<input::GamepadEventData> handler;
 
 			Gamepad(int controller) : c(controller) { poll(); }
 
-			void poll() { glfwGetGamepadState(c, &g); }
+			void poll() { glfwGetGamepadState(c, &g); glfwSetJoystickUserPointer(c, this); }
 			int controller() const { return c; }
 			bool connected() const { return glfwJoystickPresent(c); }
 			bool has_mapping() const { return glfwJoystickIsGamepad(c); }
-			int button_state(GamepadButton button) const { return g.buttons[button]; }
-			float axis_1d_state(GamepadAxis1D axis) const { return g.axes[axis]; }
-			glm::vec2 axis_2d_state(GamepadAxis2D axis) const
+			int button_state(input::GamepadButton button) const { return g.buttons[button]; }
+			float axis_1d_state(input::GamepadAxis1D axis) const { return g.axes[axis]; }
+			glm::vec2 axis_2d_state(input::GamepadAxis2D axis) const
 			{
-				if (axis == GamepadAxis2D::LEFT_XY)
-					return { g.axes[GamepadAxis1D::LEFT_X], g.axes[GamepadAxis1D::LEFT_Y] };
-				else if (axis == GamepadAxis2D::RIGHT_XY)
-					return { g.axes[GamepadAxis1D::RIGHT_X], g.axes[GamepadAxis1D::RIGHT_Y] };
+				if (axis == input::GamepadAxis2D::LEFT_XY)
+					return { g.axes[input::GamepadAxis1D::LEFT_X], g.axes[input::GamepadAxis1D::LEFT_Y] };
+				else if (axis == input::GamepadAxis2D::RIGHT_XY)
+					return { g.axes[input::GamepadAxis1D::RIGHT_X], g.axes[input::GamepadAxis1D::RIGHT_Y] };
 				else
 					return {};
 			}
 			const char* name() const { return glfwGetJoystickName(c); }
 			const char* identifier() const { return glfwGetJoystickGUID(c); }
-			void set_handler() { glfwSetJoystickUserPointer(c, this); }
 		};
+	}
 
+	namespace input
+	{
 		extern void init_joystick_handler();
 
 		typedef unsigned int SignalID;
@@ -263,7 +268,11 @@ namespace oly
 			COMPLETED,
 			ONGOING
 		};
+	}
 
+	namespace platform { class InputBindingContext; }
+	namespace input
+	{
 		struct Signal
 		{
 			Phase phase;
@@ -290,7 +299,7 @@ namespace oly
 				JOYSTICK = 0,
 			} source;
 
-			friend class BindingContext;
+			friend class platform::InputBindingContext;
 			Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::BOOL), bool_value(v), source(source) {}
 			Signal(Phase phase, float v, Source source) : phase(phase), type(Type::AXIS1D), axis_1d_value(v), source(source) {}
 			Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::AXIS2D), axis_2d_value(v), source(source) {}
@@ -301,7 +310,7 @@ namespace oly
 			{
 				static_assert(false, "Signal::get<T>() does not support the invoked type.");
 			}
-			
+
 			template<>
 			bool get<bool>() const
 			{
@@ -334,14 +343,17 @@ namespace oly
 				return source;
 			}
 		};
+	}
 
-		struct InputController
-		{
-			virtual ~InputController() = default;
+	struct InputController
+	{
+		virtual ~InputController() = default;
 
-			using Handler = bool(InputController::*)(Signal);
-		};
+		using Handler = bool(InputController::*)(input::Signal);
+	};
 
+	namespace input
+	{
 		struct KeyBinding
 		{
 			int key;
@@ -431,18 +443,18 @@ namespace oly
 		};
 	}
 
-	class Platform;
-	namespace input
+	namespace platform
 	{
-		class BindingContext : public EventHandler<KeyEventData>, public EventHandler<MouseButtonEventData>, public EventHandler<CursorPosEventData>, public EventHandler<ScrollEventData>
+		class InputBindingContext : public EventHandler<input::KeyEventData>, public EventHandler<input::MouseButtonEventData>,
+			public EventHandler<input::CursorPosEventData>, public EventHandler<input::ScrollEventData>
 		{
-			std::vector<std::pair<SignalID, KeyBinding>> key_bindings;
-			std::vector<std::pair<SignalID, MouseButtonBinding>> mb_bindings;
-			std::vector<std::pair<SignalID, GamepadButtonBinding>> gmpd_button_bindings;
-			std::vector<std::pair<SignalID, GamepadAxis1DBinding>> gmpd_axis_1d_bindings;
-			std::vector<std::pair<SignalID, GamepadAxis2DBinding>> gmpd_axis_2d_bindings;
-			std::vector<std::pair<SignalID, CursorPosBinding>> cpos_bindings;
-			std::vector<std::pair<SignalID, ScrollBinding>> scroll_bindings;
+			std::vector<std::pair<input::SignalID, input::KeyBinding>> key_bindings;
+			std::vector<std::pair<input::SignalID, input::MouseButtonBinding>> mb_bindings;
+			std::vector<std::pair<input::SignalID, input::GamepadButtonBinding>> gmpd_button_bindings;
+			std::vector<std::pair<input::SignalID, input::GamepadAxis1DBinding>> gmpd_axis_1d_bindings;
+			std::vector<std::pair<input::SignalID, input::GamepadAxis2DBinding>> gmpd_axis_2d_bindings;
+			std::vector<std::pair<input::SignalID, input::CursorPosBinding>> cpos_bindings;
+			std::vector<std::pair<input::SignalID, input::ScrollBinding>> scroll_bindings;
 
 			struct CallbackPoll
 			{
@@ -467,9 +479,9 @@ namespace oly
 			};
 			struct GamepadPoll
 			{
-				std::array<ButtonPoll, GamepadButton::LAST + 1> button_polls;
-				std::array<Axis1DPoll, GamepadAxis1D::LAST + 1> axis_1d_polls;
-				std::array<Axis2DPoll, GamepadAxis2D::LAST + 1> axis_2d_polls;
+				std::array<ButtonPoll, input::GamepadButton::LAST + 1> button_polls;
+				std::array<Axis1DPoll, input::GamepadAxis1D::LAST + 1> axis_1d_polls;
+				std::array<Axis2DPoll, input::GamepadAxis2D::LAST + 1> axis_2d_polls;
 			};
 			FixedVector<GamepadPoll> gamepad_polls;
 
@@ -478,23 +490,23 @@ namespace oly
 				InputController::Handler handler;
 				InputController* controller;
 			};
-			std::unordered_map<SignalID, HandlerRef> handler_map;
+			std::unordered_map<input::SignalID, HandlerRef> handler_map;
 
 			friend class Platform;
-			BindingContext(int num_gamepads);
-			BindingContext(const BindingContext&) = delete;
+			InputBindingContext(int num_gamepads);
+			InputBindingContext(const InputBindingContext&) = delete;
 
-			void attach_key(EventHandler<KeyEventData>* parent) { EventHandler<KeyEventData>::attach(parent); }
-			void attach_mouse_button(EventHandler<MouseButtonEventData>* parent) { EventHandler<MouseButtonEventData>::attach(parent); }
-			void attach_cursor_pos(EventHandler<CursorPosEventData>* parent) { EventHandler<CursorPosEventData>::attach(parent); }
-			void attach_scroll(EventHandler<ScrollEventData>* parent) { EventHandler<ScrollEventData>::attach(parent); }
-			void detach_key() { EventHandler<KeyEventData>::detach(); }
-			void detach_mouse_button() { EventHandler<MouseButtonEventData>::detach(); }
-			void detach_cusor_pos() { EventHandler<CursorPosEventData>::detach(); }
-			void detach_scroll() { EventHandler<ScrollEventData>::detach(); }
+			void attach_key(EventHandler<input::KeyEventData>* parent) { EventHandler<input::KeyEventData>::attach(parent); }
+			void attach_mouse_button(EventHandler<input::MouseButtonEventData>* parent) { EventHandler<input::MouseButtonEventData>::attach(parent); }
+			void attach_cursor_pos(EventHandler<input::CursorPosEventData>* parent) { EventHandler<input::CursorPosEventData>::attach(parent); }
+			void attach_scroll(EventHandler<input::ScrollEventData>* parent) { EventHandler<input::ScrollEventData>::attach(parent); }
+			void detach_key() { EventHandler<input::KeyEventData>::detach(); }
+			void detach_mouse_button() { EventHandler<input::MouseButtonEventData>::detach(); }
+			void detach_cusor_pos() { EventHandler<input::CursorPosEventData>::detach(); }
+			void detach_scroll() { EventHandler<input::ScrollEventData>::detach(); }
 
-#define REG_SIGNAL(Binding, vector) void register_signal(SignalID signal, Binding binding) { vector.push_back({ signal, binding }); }\
-									void unregister_signal(SignalID signal, Binding binding)\
+#define REG_SIGNAL(Binding, vector) void register_signal(input::SignalID signal, input::Binding binding) { vector.push_back({ signal, binding }); }\
+									void unregister_signal(input::SignalID signal, input::Binding binding)\
 											{ vector.erase(std::find(vector.begin(), vector.end(), std::make_pair(signal, binding))); }
 
 		public:
@@ -508,8 +520,8 @@ namespace oly
 
 #undef REG_SIGNAL
 
-			void bind(SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = { handler, controller }; }
-			void unbind(SignalID signal, InputController::Handler handler, InputController* controller)
+			void bind(input::SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = { handler, controller }; }
+			void unbind(input::SignalID signal, InputController::Handler handler, InputController* controller)
 			{
 				auto it = handler_map.find(signal);
 				if (it != handler_map.end() && it->second.handler == handler && it->second.controller == controller)
@@ -526,14 +538,14 @@ namespace oly
 			void poll_gamepad_axis_1d(int controller, int axis);
 			void poll_gamepad_axis_2d(int controller, int axis);
 
-			bool get_phase(int action, Phase& phase) const;
-			bool dispatch(SignalID id, Signal signal) const;
+			bool get_phase(int action, input::Phase& phase) const;
+			bool dispatch(input::SignalID id, input::Signal signal) const;
 
 		public:
-			virtual bool consume(const KeyEventData& data) override;
-			virtual bool consume(const MouseButtonEventData& data) override;
-			virtual bool consume(const CursorPosEventData& data) override;
-			virtual bool consume(const ScrollEventData& data) override;
+			virtual bool consume(const input::KeyEventData& data) override;
+			virtual bool consume(const input::MouseButtonEventData& data) override;
+			virtual bool consume(const input::CursorPosEventData& data) override;
+			virtual bool consume(const input::ScrollEventData& data) override;
 		};
 	}
 }

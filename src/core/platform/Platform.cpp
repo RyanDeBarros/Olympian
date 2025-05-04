@@ -3,7 +3,7 @@
 #include "core/base/Assert.h"
 #include "registries/Loader.h"
 
-namespace oly
+namespace oly::platform
 {
 	PlatformSetup::PlatformSetup(const TOMLNode& node)
 	{
@@ -26,19 +26,14 @@ namespace oly
 			// TODO rest of window hint options
 		}
 
-		auto toml_num_gamepads = node["gamepads"].value<int64_t>();
-		if (toml_num_gamepads)
-			num_gamepads = glm::clamp((int)toml_num_gamepads.value(), 0, GLFW_JOYSTICK_LAST);
+		num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
 	}
 
 	Platform::Platform(const PlatformSetup& setup)
 		: _window(setup.window_width, setup.window_height, setup.window_title.c_str(), setup.window_hint), _num_gamepads(setup.num_gamepads), _gamepads(setup.num_gamepads, 0), _binding_context(setup.num_gamepads)
 	{
 		for (int i = 0; i < _num_gamepads; ++i)
-		{
-			_gamepads[i] = input::Gamepad(GLFW_JOYSTICK_1 + i);
-			_gamepads[i].set_handler();
-		}
+			_gamepads[i] = Gamepad(GLFW_JOYSTICK_1 + i);
 
 		_binding_context.attach_key(&_window.handlers.key);
 		_binding_context.attach_mouse_button(&_window.handlers.mouse_button);
@@ -49,7 +44,7 @@ namespace oly
 	bool Platform::frame()
 	{
 		_window.swap_buffers();
-		check_errors();
+		internal::check_errors();
 		LOG.flush();
 		glfwPollEvents();
 		_binding_context.poll();

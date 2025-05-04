@@ -2,22 +2,19 @@
 
 #include "Buffers.h"
 
-namespace oly
+namespace oly::graphics
 {
-	namespace rendering
+	class VertexArray
 	{
-		class VertexArray
-		{
-			GLuint id;
+		GLuint id;
 
-		public:
-			VertexArray();
-			VertexArray(const VertexArray&) = delete;
-			VertexArray(VertexArray&&) noexcept;
-			~VertexArray();
-			VertexArray& operator=(VertexArray&&) noexcept;
+	public:
+		VertexArray();
+		VertexArray(const VertexArray&) = delete;
+		VertexArray(VertexArray&&) noexcept;
+		~VertexArray();
+		VertexArray& operator=(VertexArray&&) noexcept;
 
-			operator GLuint () const { return id; }
-		};
-	}
+		operator GLuint () const { return id; }
+	};
 }

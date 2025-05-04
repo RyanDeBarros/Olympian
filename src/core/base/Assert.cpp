@@ -1,6 +1,6 @@
 #include "Assert.h"
 
-namespace oly
+namespace oly::internal
 {
 	bool check_opengl_error()
 	{
