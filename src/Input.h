@@ -120,10 +120,8 @@ namespace oly
 		private:
 			int v;
 
-			friend class BindingContext;
-			explicit GamepadButton(int v) { this->v = glm::clamp(v, 0, LAST); }
-
 		public:
+			explicit GamepadButton(int v) { this->v = glm::clamp(v, 0, LAST); }
 			operator int() const { return v; }
 
 			static const GamepadButton A;
@@ -174,10 +172,8 @@ namespace oly
 		private:
 			int v;
 
-			friend class BindingContext;
-			explicit GamepadAxis1D(int v) { this->v = glm::clamp(v, 0, LAST); }
-
 		public:
+			explicit GamepadAxis1D(int v) { this->v = glm::clamp(v, 0, LAST); }
 			operator int() const { return v; }
 
 			static const GamepadAxis1D LEFT_X;
@@ -202,10 +198,8 @@ namespace oly
 		private:
 			int v;
 
-			friend class BindingContext;
-			explicit GamepadAxis2D(int v) { this->v = glm::clamp(v, 0, LAST); }
-
 		public:
+			explicit GamepadAxis2D(int v) { this->v = glm::clamp(v, 0, LAST); }
 			operator int() const { return v; }
 
 			static const GamepadAxis2D LEFT_XY;

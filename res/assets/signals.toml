@@ -1,0 +1,18 @@
+[[signal]]
+"id"      = "jump"
+"binding" = "key"
+"key"     = 32 # space
+
+[[signal]]
+"id"      = "pan camera"
+"binding" = "cursor pos"
+
+[[signal]]
+"id"       = "pan camera"
+"binding"  = "gamepad axis 2d"
+"axis2d"   = 1 # RIGHT_XY
+"deadzone" = 0.018
+
+[[signal]]
+"id"      = "zoom camera"
+"binding" = "scroll"

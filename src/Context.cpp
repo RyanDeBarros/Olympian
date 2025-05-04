@@ -7,6 +7,7 @@
 #include "rendering/Loader.h"
 #include "util/IO.h"
 #include "rendering/Resources.h"
+#include "InputRegistry.h"
 
 namespace oly
 {
@@ -203,6 +204,16 @@ namespace oly
 			}
 		}
 
+		static void init_signal_registry(const assets::AssetNode& node, const std::string& root_dir)
+		{
+			auto register_files = node["signal registries"].as_array();
+			if (register_files)
+			{
+				for (const auto& node : *register_files)
+					if (auto file = node.value<std::string>())
+						input::load_signal_registry((root_dir + file.value()).c_str());
+			}
+		}
 	}
 		struct Internal
 		{
@@ -246,6 +257,7 @@ namespace oly
 			init_font_face_registry(toml_context, root_dir);
 			init_font_atlas_registry(toml_context, root_dir);
 			init_draw_command_registry(toml_context, root_dir);
+			init_signal_registry(toml_context, root_dir);
 		}
 
 		static void terminate()

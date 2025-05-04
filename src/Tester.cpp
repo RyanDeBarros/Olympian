@@ -73,15 +73,6 @@ int main()
 {
 	oly::context::Context oly_context("../../../res/assets/context.toml");
 
-	// TODO signal registries
-	oly::input::SignalID JUMP = oly::context::platform().signal_table().get("jump");
-	oly::context::platform().binding_context().register_signal(JUMP, oly::input::KeyBinding{ GLFW_KEY_SPACE });
-	oly::input::SignalID PAN_CAMERA = oly::context::platform().signal_table().get("pan camera");
-	oly::context::platform().binding_context().register_signal(PAN_CAMERA, oly::input::CursorPosBinding{});
-	oly::context::platform().binding_context().register_signal(PAN_CAMERA, oly::input::GamepadAxis2DBinding{ oly::input::GamepadAxis2D::RIGHT_XY, 0.018f });
-	oly::input::SignalID ZOOM_CAMERA = oly::context::platform().signal_table().get("zoom camera");
-	oly::context::platform().binding_context().register_signal(ZOOM_CAMERA, oly::input::ScrollBinding{});
-
 	PlayerController pc;
 	oly::context::platform().bind_signal("jump", &PlayerController::jump, pc);
 	oly::context::platform().bind_signal("pan camera", &PlayerController::pan_camera, pc);
