@@ -3,13 +3,15 @@
 #include "core/platform/Platform.h"
 
 #include "registries/graphics/TextureRegistry.h"
-
-#include "rendering/batch/SpriteRegistry.h"
-#include "rendering/batch/PolygonRegistry.h"
-#include "rendering/batch/EllipseRegistry.h"
-#include "rendering/batch/TileMap.h"
-#include "rendering/batch/text/ParagraphRegistry.h"
-#include "rendering/batch/DrawCommands.h"
+#include "registries/graphics/primitives/SpriteRegistry.h"
+#include "registries/graphics/primitives/PolygonRegistry.h"
+#include "registries/graphics/primitives/EllipseRegistry.h"
+#include "registries/graphics/extensions/TileSetRegistry.h"
+#include "registries/graphics/extensions/TileMapRegistry.h"
+#include "registries/graphics/text/FontFaceRegistry.h"
+#include "registries/graphics/text/FontAtlasRegistry.h"
+#include "registries/graphics/text/ParagraphRegistry.h"
+#include "registries/graphics/DrawCommandRegistry.h"
 
 namespace oly
 {

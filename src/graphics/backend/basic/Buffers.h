@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "external/GL.h"
 #include "core/base/Assert.h"
 

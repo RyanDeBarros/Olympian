@@ -5,8 +5,9 @@
 #include "core/base/Transforms.h"
 #include "core/math/Geometry.h"
 #include "core/math/Random.h"
+#include "core/containers/Ranges.h"
 
-#include "graphics/backend/specialized/General.h"
+#include "graphics/backend/specialized/ElementBuffers.h"
 
 namespace oly
 {

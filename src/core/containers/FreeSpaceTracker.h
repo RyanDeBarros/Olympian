@@ -1,8 +1,6 @@
 #pragma once
 
-#include <set>
-
-#include "core/base/Intervals.h"
+#include "core/containers/Ranges.h"
 #include "core/base/Assert.h"
 
 namespace oly

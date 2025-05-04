@@ -1,7 +1,5 @@
 ﻿#include "Olympian.h"
 
-#include "rendering/batch/text/Paragraph.h"
-
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override

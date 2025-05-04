@@ -4,8 +4,11 @@
 
 #include "core/base/Assert.h"
 #include "core/util/Time.h"
+
 #include "physics/Units.h"
+
 #include "graphics/resources/Shaders.h"
+#include "graphics/backend/specialized/VertexAttributes.h"
 
 namespace oly
 {
