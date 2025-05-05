@@ -15,10 +15,6 @@ namespace oly::graphics::internal_shaders
 	GLuint ellipse_batch;
 	static std::unique_ptr<Shader> _text_batch = nullptr;
 	GLuint text_batch;
-	static std::unique_ptr<Shader> _polygonal_particle = nullptr;
-	GLuint polygonal_particle;
-	static std::unique_ptr<Shader> _elliptic_particle = nullptr;
-	GLuint elliptic_particle;
 
 	void load()
 	{
@@ -30,10 +26,6 @@ namespace oly::graphics::internal_shaders
 		ellipse_batch = *_ellipse_batch;
 		_text_batch = load_shader((shaders_dir + "text_batch.vert").c_str(), (shaders_dir + "text_batch.frag").c_str());
 		text_batch = *_text_batch;
-		_polygonal_particle = load_shader((shaders_dir + "polygonal_particle.vert").c_str(), (shaders_dir + "polygonal_particle.frag").c_str());
-		polygonal_particle = *_polygonal_particle;
-		_elliptic_particle = load_shader((shaders_dir + "elliptic_particle.vert").c_str(), (shaders_dir + "elliptic_particle.frag").c_str());
-		elliptic_particle = *_elliptic_particle;
 	}
 
 	void unload()
@@ -46,9 +38,5 @@ namespace oly::graphics::internal_shaders
 		ellipse_batch = 0;
 		_text_batch.reset();
 		text_batch = 0;
-		_polygonal_particle.reset();
-		polygonal_particle = 0;
-		_elliptic_particle.reset();
-		elliptic_particle = 0;
 	}
 }
