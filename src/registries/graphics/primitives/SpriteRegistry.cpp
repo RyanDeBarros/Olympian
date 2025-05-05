@@ -8,58 +8,42 @@ namespace oly::reg
 	void SpriteRegistry::load(const char* sprite_registry_file)
 	{
 		auto toml = load_toml(sprite_registry_file);
-		auto toml_sprites = toml["sprite_registry"];
-		if (!toml_sprites)
-			return;
-		auto sprite_list = toml_sprites["sprite"].as_array();
-		if (!sprite_list)
-			return;
-		auto toml_texture_map = toml_sprites["texture_map"].as_table();
-		if (!toml_texture_map)
-			return;
-		for (const auto& [k, v] : *toml_texture_map)
+		auto sprite_list = toml["sprite"].as_array();
+		if (sprite_list)
 		{
-			if (auto str = v.value<std::string>())
-				texture_map[std::string(k.str())] = str.value();
-		}
-		sprite_list->for_each([this](auto&& node) {
-			if constexpr (toml::is_table<decltype(node)>)
-			{
-				if (auto _name = node["name"].value<std::string>())
-				{
-					const std::string& name = _name.value();
-					sprite_constructors[name] = node;
-					if (auto _init = node["init"].value<std::string>())
-					{
-						auto_loaded.emplace(std::move(name), move_shared(create_sprite(name)));
-						if (_init.value() == "discard")
-							sprite_constructors.erase(name);
-					}
-				}
-			}
-			});
-
-		auto extension_list = toml_sprites["extension"].as_array();
-		if (extension_list)
-		{
-			extension_list->for_each([this](auto&& node) {
+			sprite_list->for_each([this](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
-					auto _name = node["name"].value<std::string>();
-					auto _type = node["extension"].value<std::string>();
-					if (_name && _type)
+					if (auto _name = node["name"].value<std::string>())
 					{
-						const std::string& type = _type.value();
-						if (type == "atlas")
+						const std::string& name = _name.value();
+						sprite_constructors[name] = node;
+						if (auto _init = node["init"].value<std::string>())
 						{
-							const std::string& name = _name.value();
-							atlas_constructors[name] = node;
-							if (auto _init = node["init"].value<std::string>())
-							{
-								auto_loaded_atlas_extensions.emplace(std::move(name), move_shared(create_atlas_extension(name)));
-								if (_init.value() == "discard")
-									atlas_constructors.erase(name);
-							}
+							auto_loaded_sprites.emplace(std::move(name), move_shared(create_sprite(name)));
+							if (_init.value() == "discard")
+								sprite_constructors.erase(name);
+						}
+					}
+				}
+				});
+		}
+
+		auto sprite_atlas_list = toml["sprite_atlas"].as_array();
+		if (sprite_atlas_list)
+		{
+			sprite_atlas_list->for_each([this](auto&& node) {
+				if constexpr (toml::is_table<decltype(node)>)
+				{
+					if (auto _name = node["name"].value<std::string>())
+					{
+						const std::string& name = _name.value();
+						sprite_atlas_constructors[name] = node;
+						if (auto _init = node["init"].value<std::string>())
+						{
+							auto_loaded_sprite_atlases.emplace(std::move(name), move_shared(create_atlas_extension(name)));
+							if (_init.value() == "discard")
+								sprite_atlas_constructors.erase(name);
 						}
 					}
 				}
@@ -69,11 +53,10 @@ namespace oly::reg
 
 	void SpriteRegistry::clear()
 	{
-		texture_map.clear();
 		sprite_constructors.clear();
-		auto_loaded.clear();
-		atlas_constructors.clear();
-		auto_loaded_atlas_extensions.clear();
+		auto_loaded_sprites.clear();
+		sprite_atlas_constructors.clear();
+		auto_loaded_sprite_atlases.clear();
 	}
 
 	rendering::Sprite SpriteRegistry::create_sprite(const std::string& name) const
@@ -89,21 +72,10 @@ namespace oly::reg
 		std::string texture;
 		if (auto toml_texture = node["texture"].value<std::string>())
 		{
-			auto it = texture_map.find(toml_texture.value());
-			if (it != texture_map.end())
-				sprite.set_texture(it->second);
-			else
-				sprite.set_texture(toml_texture.value());
+			texture = toml_texture.value();
+			sprite.set_texture(texture);
 		}
-		else if (auto toml_texture = node["texture"].value<int64_t>())
-		{
-			auto it = texture_map.find(std::to_string(toml_texture.value()));
-			if (it != texture_map.end())
-			{
-				texture = it->second;
-				sprite.set_texture(texture);
-			}
-		}
+
 		if (auto toml_modulation = node["modulation"].as_array())
 		{
 			if (toml_modulation->size() == 4)
@@ -125,6 +97,7 @@ namespace oly::reg
 				}
 			}
 		}
+
 		if (auto toml_tex_coords = node["tex coords"].as_array())
 		{
 			if (toml_tex_coords->size() == 4)
@@ -137,13 +110,14 @@ namespace oly::reg
 					sprite.set_tex_coords(uvs);
 			}
 		}
+
 		if (auto toml_frame_format = node["frame_format"])
 		{
 			graphics::AnimFrameFormat frame_format;
 			auto mode = toml_frame_format["mode"].value<std::string>();
-			if (mode && mode == "single")
+			if (!texture.empty() && mode && mode == "single")
 				frame_format = graphics::setup_anim_frame_format_single(texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
-			else if (mode && mode == "auto")
+			else if (!texture.empty() && mode && mode == "auto")
 				frame_format = graphics::setup_anim_frame_format(texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
 					(GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0));
 			else
@@ -155,6 +129,7 @@ namespace oly::reg
 			}
 			sprite.set_frame_format(frame_format);
 		}
+
 		if (auto toml_transformer_modifier = node["transform_modifier"])
 		{
 			auto toml_type = toml_transformer_modifier["type"].value<std::string>();
@@ -190,21 +165,21 @@ namespace oly::reg
 
 	std::weak_ptr<rendering::Sprite> SpriteRegistry::ref_sprite(const std::string& name) const
 	{
-		auto it = auto_loaded.find(name);
-		if (it == auto_loaded.end())
+		auto it = auto_loaded_sprites.find(name);
+		if (it == auto_loaded_sprites.end())
 			throw Error(ErrorCode::UNREGISTERED_SPRITE);
 		return it->second;
 	}
 
 	void SpriteRegistry::delete_sprite(const std::string& name)
 	{
-		auto_loaded.erase(name);
+		auto_loaded_sprites.erase(name);
 	}
 
 	rendering::SpriteAtlasResExtension SpriteRegistry::create_atlas_extension(const std::string& name) const
 	{
-		auto it = atlas_constructors.find(name);
-		if (it == atlas_constructors.end())
+		auto it = sprite_atlas_constructors.find(name);
+		if (it == sprite_atlas_constructors.end())
 			throw Error(ErrorCode::UNREGISTERED_ATLAS);
 		const auto& node = it->second;
 
@@ -235,14 +210,14 @@ namespace oly::reg
 	}
 	std::weak_ptr<rendering::SpriteAtlasResExtension> SpriteRegistry::ref_atlas_extension(const std::string& name) const
 	{
-		auto it = auto_loaded_atlas_extensions.find(name);
-		if (it == auto_loaded_atlas_extensions.end())
+		auto it = auto_loaded_sprite_atlases.find(name);
+		if (it == auto_loaded_sprite_atlases.end())
 			throw Error(ErrorCode::UNREGISTERED_ATLAS);
 		return it->second;
 	}
 
 	void SpriteRegistry::delete_atlas_extension(const std::string& name)
 	{
-		auto_loaded_atlas_extensions.erase(name);
+		auto_loaded_sprite_atlases.erase(name);
 	}
 }

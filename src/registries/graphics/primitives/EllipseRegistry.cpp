@@ -5,31 +5,27 @@
 
 namespace oly::reg
 {
-void EllipseRegistry::load(const char* ellipse_registry_file)
+	void EllipseRegistry::load(const char* ellipse_registry_file)
 	{
 		auto toml = load_toml(ellipse_registry_file);
-		auto toml_registry = toml["ellipse_registry"];
-		if (!toml_registry)
+		auto ellipse_list = toml["ellipse"].as_array();
+		if (!ellipse_list)
 			return;
-		auto ellipse_list = toml_registry["ellipse"].as_array();
-		if (ellipse_list)
-		{
-			ellipse_list->for_each([this](auto&& node) {
-				if constexpr (toml::is_table<decltype(node)>)
+		ellipse_list->for_each([this](auto&& node) {
+			if constexpr (toml::is_table<decltype(node)>)
+			{
+				if (auto _name = node["name"].value<std::string>())
 				{
-					if (auto _name = node["name"].value<std::string>())
+					const std::string& name = _name.value();
+					ellipse_constructors[name] = node;
+					if (auto _init = node["init"].value<bool>())
 					{
-						const std::string& name = _name.value();
-						ellipse_constructors[name] = node;
-						if (auto _init = node["init"].value<bool>())
-						{
-							if (_init.value())
-								auto_loaded.emplace(name, move_shared(create_ellipse(name)));
-						}
+						if (_init.value())
+							auto_loaded.emplace(name, move_shared(create_ellipse(name)));
 					}
 				}
-				});
-		}
+			}
+			});
 	}
 
 	void EllipseRegistry::clear()

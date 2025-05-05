@@ -176,15 +176,10 @@ namespace oly::reg
 	void TextureRegistry::load(const char* texture_registry_file)
 	{
 		auto toml = load_toml(texture_registry_file);
-		auto texture_registry = toml["texture_registry"];
-		if (!texture_registry)
-			return;
-		auto textures = texture_registry["image"].as_array();
-		if (!textures)
-			return;
-		std::string root_dir = io::directory_of(texture_registry_file) + texture_registry["root"].value<std::string>().value_or("");
-		textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (TOMLNode)node); });
-		if (auto nsvg_abstracts = texture_registry["nsvg_abstract"].as_array())
+		std::string root_dir = io::directory_of(texture_registry_file);
+		if (auto textures = toml["image"].as_array())
+			textures->for_each([this, &root_dir](auto&& node) { load_registree(root_dir, (TOMLNode)node); });
+		if (auto nsvg_abstracts = toml["nsvg_abstract"].as_array())
 			nsvg_abstracts->for_each([this, &root_dir](auto&& node) { load_nsvg_abstract(root_dir, (TOMLNode)node); });
 	}
 

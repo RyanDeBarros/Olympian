@@ -9,10 +9,7 @@ namespace oly::reg
 	void PolygonRegistry::load(const char* polygon_registry_file)
 	{
 		auto toml = load_toml(polygon_registry_file);
-		auto toml_registry = toml["polygon_registry"];
-		if (!toml_registry)
-			return;
-		auto polygon_list = toml_registry["polygon"].as_array();
+		auto polygon_list = toml["polygon"].as_array();
 		if (polygon_list)
 		{
 			polygon_list->for_each([this](auto&& node) {
@@ -35,7 +32,7 @@ namespace oly::reg
 				}
 				});
 		}
-		auto composite_list = toml_registry["composite"].as_array();
+		auto composite_list = toml["poly_composite"].as_array();
 		if (composite_list)
 		{
 			composite_list->for_each([this](auto&& node) {
@@ -58,7 +55,7 @@ namespace oly::reg
 				}
 				});
 		}
-		auto ngon_list = toml_registry["ngon"].as_array();
+		auto ngon_list = toml["ngon"].as_array();
 		if (ngon_list)
 		{
 			ngon_list->for_each([this](auto&& node) {

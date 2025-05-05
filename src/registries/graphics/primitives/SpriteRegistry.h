@@ -8,13 +8,11 @@ namespace oly::reg
 {
 	class SpriteRegistry
 	{
-		std::unordered_map<std::string, std::string> texture_map;
-		std::unordered_map<std::string, toml::table> sprite_constructors;
-			
-		std::unordered_map<std::string, std::shared_ptr<rendering::Sprite>> auto_loaded;
+		std::unordered_map<std::string, toml::table> sprite_constructors;		
+		std::unordered_map<std::string, std::shared_ptr<rendering::Sprite>> auto_loaded_sprites;
 
-		std::unordered_map<std::string, toml::table> atlas_constructors;
-		std::unordered_map<std::string, std::shared_ptr<rendering::SpriteAtlasResExtension>> auto_loaded_atlas_extensions;
+		std::unordered_map<std::string, toml::table> sprite_atlas_constructors;
+		std::unordered_map<std::string, std::shared_ptr<rendering::SpriteAtlasResExtension>> auto_loaded_sprite_atlases;
 
 	public:
 		void load(const char* sprite_registry_file);

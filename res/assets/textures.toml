@@ -1,64 +1,61 @@
-[texture_registry]
-"root" = "../textures/"
-	
-[[texture_registry.image]]
-"file"       = "einstein.png"
+[[image]]
+"file"       = "../textures/einstein.png"
 "name"       = "einstein"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 	
-[[texture_registry.image]]
-"file"       = "flag.png"
+[[image]]
+"file"       = "../textures/flag.png"
 "name"       = "flag"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 	
-[[texture_registry.image]]
-"file" = "tux.png"
+[[image]]
+"file" = "../textures/tux.png"
 		
-	[[texture_registry.image.texture]]
+	[[image.texture]]
 	"name"       = "tux"
 	"auto-use"   = true
 	"min filter" = "linear"
 	"mag filter" = "linear"
 
-	[[texture_registry.image.texture]]
+	[[image.texture]]
 	"name"             = "mipmapped tux"
 	"generate mipmaps" = true
 	"auto-use"         = true
 	"min filter"       = "nearest mipmap linear"
 	"mag filter"       = "nearest"
 
-[[texture_registry.image]]
-"file"       = "serotonin.gif"
+[[image]]
+"file"       = "../textures/serotonin.gif"
 "name"       = "serotonin"
 "anim"       = true
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.nsvg_abstract]]
-"file"    = "godot.svg"
+[[nsvg_abstract]]
+"file"    = "../textures/godot.svg"
 "name"    = "godot icon"
 "discard" = true
 
-	[[texture_registry.nsvg_abstract.texture]]
+	[[nsvg_abstract.texture]]
 	"name"       = "godot icon (1.0)"
 	"scale"      = 1.0
 	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
 		
-	[[texture_registry.nsvg_abstract.texture]]
+	[[nsvg_abstract.texture]]
 	"name"       = "godot icon (3.0)"
 	"scale"      = 3.0
 	"auto-use"   = true
 	"min filter" = "nearest"
 	"mag filter" = "nearest"
 		
-	[[texture_registry.nsvg_abstract.texture]]
+	[[nsvg_abstract.texture]]
 	"name"             = "godot icon (10.0)"
 	"scale"            = 10.0
 	"auto-use"         = true
@@ -66,8 +63,8 @@
 	"min filter"       = "nearest mipmap linear"
 	"mag filter"       = "nearest"
 
-[[texture_registry.image]]
-"file"       = "knight.png"
+[[image]]
+"file"       = "../textures/knight.png"
 "name"       = "knight"
 "anim"       = true
 "auto-use"   = true
@@ -77,8 +74,8 @@
 "cols"       = 3
 "delay cs"   = 10
 	
-[[texture_registry.image]]
-"file"       = "knight.png"
+[[image]]
+"file"       = "../textures/knight.png"
 "name"       = "spritesheet"
 "auto-use"   = true
 "min filter" = "nearest"

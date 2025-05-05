@@ -1,113 +1,110 @@
-[texture_registry]
-"root" = "../textures/grass tileset/"
-
-[[texture_registry.image]]
-"file"       = "BE.png"
+[[image]]
+"file"       = "../textures/grass tileset/BE.png"
 "name"       = "GT - BE"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "BL.png"
+[[image]]
+"file"       = "../textures/grass tileset/BL.png"
 "name"       = "GT - BL"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "BR.png"
+[[image]]
+"file"       = "../textures/grass tileset/BR.png"
 "name"       = "GT - BR"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "BT.png"
+[[image]]
+"file"       = "../textures/grass tileset/BT.png"
 "name"       = "GT - BT"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "I1.png"
+[[image]]
+"file"       = "../textures/grass tileset/I1.png"
 "name"       = "GT - I1"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "I2.png"
+[[image]]
+"file"       = "../textures/grass tileset/I2.png"
 "name"       = "GT - I2"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "LE.png"
+[[image]]
+"file"       = "../textures/grass tileset/LE.png"
 "name"       = "GT - LE"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "LT.png"
+[[image]]
+"file"       = "../textures/grass tileset/LT.png"
 "name"       = "GT - LT"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "M.png"
+[[image]]
+"file"       = "../textures/grass tileset/M.png"
 "name"       = "GT - M"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "RE.png"
+[[image]]
+"file"       = "../textures/grass tileset/RE.png"
 "name"       = "GT - RE"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "RT.png"
+[[image]]
+"file"       = "../textures/grass tileset/RT.png"
 "name"       = "GT - RT"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "S.png"
+[[image]]
+"file"       = "../textures/grass tileset/S.png"
 "name"       = "GT - S"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "TE.png"
+[[image]]
+"file"       = "../textures/grass tileset/TE.png"
 "name"       = "GT - TE"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "TL.png"
+[[image]]
+"file"       = "../textures/grass tileset/TL.png"
 "name"       = "GT - TL"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "TR.png"
+[[image]]
+"file"       = "../textures/grass tileset/TR.png"
 "name"       = "GT - TR"
 "auto-use"   = true
 "min filter" = "nearest"
 "mag filter" = "nearest"
 
-[[texture_registry.image]]
-"file"       = "TT.png"
+[[image]]
+"file"       = "../textures/grass tileset/TT.png"
 "name"       = "GT - TT"
 "auto-use"   = true
 "min filter" = "nearest"
