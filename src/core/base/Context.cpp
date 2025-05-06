@@ -34,6 +34,8 @@ namespace oly::context
 		reg::ParagraphRegistry paragraph_registry;
 
 		reg::DrawCommandRegistry draw_command_registry;
+
+		platform::StandardWindowResize standard_window_resize;
 	}
 
 	static void init_logger(const TOMLNode& node, const std::string& root_dir)
@@ -75,7 +77,7 @@ namespace oly::context
 			reg::parse_int(toml_sprite_batch, "num anims", num_anims);
 
 			rendering::SpriteBatch::Capacity capacity{ (GLuint)initial_sprites, (GLuint)new_textures, (GLuint)new_uvs, (GLuint)new_modulations, (GLuint)num_anims };
-			internal::sprite_batch = std::make_unique<rendering::SpriteBatch>(capacity, internal::platform->window().projection_bounds());
+			internal::sprite_batch = std::make_unique<rendering::SpriteBatch>(capacity);
 		}
 	}
 
@@ -89,7 +91,7 @@ namespace oly::context
 			reg::parse_int(toml_polygon_batch, "degree", degree);
 
 			rendering::PolygonBatch::Capacity capacity{ (GLuint)primitives, (GLuint)degree };
-			internal::polygon_batch = std::make_unique<rendering::PolygonBatch>(capacity, internal::platform->window().projection_bounds());
+			internal::polygon_batch = std::make_unique<rendering::PolygonBatch>(capacity);
 		}
 	}
 
@@ -101,7 +103,7 @@ namespace oly::context
 			reg::parse_int(toml_ellipse_batch, "ellipses", ellipses);
 
 			rendering::EllipseBatch::Capacity capacity{ (rendering::EllipseBatch::Index)ellipses };
-			internal::ellipse_batch = std::make_unique<rendering::EllipseBatch>(capacity, internal::platform->window().projection_bounds());
+			internal::ellipse_batch = std::make_unique<rendering::EllipseBatch>(capacity);
 		}
 	}
 
@@ -119,7 +121,7 @@ namespace oly::context
 			reg::parse_int(toml_text_batch, "new modulations", new_modulations);
 
 			rendering::TextBatch::Capacity capacity{ (GLuint)initial_glyphs, (GLuint)new_textures, (GLuint)new_text_colors, (GLuint)new_modulations };
-			internal::text_batch = std::make_unique<rendering::TextBatch>(capacity, internal::platform->window().projection_bounds());
+			internal::text_batch = std::make_unique<rendering::TextBatch>(capacity);
 		}
 	}
 
@@ -276,6 +278,20 @@ namespace oly::context
 	platform::Platform& get_platform()
 	{
 		return *internal::platform;
+	}
+
+	void attach_standard_window_resize(const std::function<void()>& render_frame, bool boxed, bool stretch)
+	{
+		internal::standard_window_resize.boxed = boxed;
+		internal::standard_window_resize.stretch = stretch;
+		internal::standard_window_resize.render_frame = render_frame;
+		internal::standard_window_resize.target_aspect_ratio = internal::platform->window().aspect_ratio();
+		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
+	}
+
+	platform::StandardWindowResize& get_standard_window_resize()
+	{
+		return internal::standard_window_resize;
 	}
 
 	rendering::SpriteBatch& sprite_batch()

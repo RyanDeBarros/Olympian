@@ -58,7 +58,7 @@ namespace oly::rendering
 		};
 
 	public:
-		EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds);
+		EllipseBatch(Capacity capacity);
 
 		void render() const;
 

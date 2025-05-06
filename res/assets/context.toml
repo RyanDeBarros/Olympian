@@ -1,5 +1,5 @@
 [context]
-window_hint               = { "clear color" = [0.2, 0.5, 0.8, 1.0] }
+window_hint               = {}
 window                    = { "width" = 1440, "height" = 1080, "title" = "Olympian Engine" }
 "gamepads"                = 1
 "signal registries"       = [ "signals.toml" ]

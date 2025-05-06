@@ -60,7 +60,7 @@ namespace oly::rendering
 			}
 		};
 
-		PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds);
+		PolygonBatch(Capacity capacity);
 
 		void render() const;
 			

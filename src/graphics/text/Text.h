@@ -104,7 +104,7 @@ namespace oly::rendering
 			GLuint glyphs, textures, text_colors, modulations;
 		};
 
-		TextBatch(Capacity capacity, const glm::vec4& projection_bounds);
+		TextBatch(Capacity capacity);
 
 		void render() const;
 

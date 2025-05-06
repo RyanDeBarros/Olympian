@@ -26,9 +26,12 @@ namespace oly::rendering
 		return quad_ssbo_block.set<INFO>(vb_pos);
 	}
 
-	SpriteBatch::SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds)
-		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims), projection_bounds(projection_bounds)
+	SpriteBatch::SpriteBatch(Capacity capacity)
+		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims)
 	{
+		glm::ivec2 size = context::get_platform().window().get_size();
+		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");

@@ -118,7 +118,7 @@ namespace oly::rendering
 			GLuint sprites, textures, uvs, modulations, anims;
 		};
 
-		SpriteBatch(Capacity capacity, const glm::vec4& projection_bounds);
+		SpriteBatch(Capacity capacity);
 
 		void render() const;
 

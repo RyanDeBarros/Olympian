@@ -63,8 +63,8 @@ namespace oly::platform
 		void set_size(glm::ivec2 size);
 		void set_width(int width);
 		void set_height(int height);
-
-		glm::vec4 projection_bounds() const;
+		float aspect_ratio() const;
+		void refresh_size();
 
 		void make_context_current() const;
 		bool should_close() const;

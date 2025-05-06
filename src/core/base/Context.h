@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform/Platform.h"
+#include "core/platform/WindowResize.h"
 
 #include "registries/graphics/TextureRegistry.h"
 #include "registries/graphics/primitives/SpriteRegistry.h"
@@ -27,6 +28,8 @@ namespace oly::context
 	};
 
 	extern platform::Platform& get_platform();
+	extern void attach_standard_window_resize(const std::function<void()>& render_frame, bool boxed = true, bool stretch = true);
+	extern platform::StandardWindowResize& get_standard_window_resize();
 
 	extern rendering::SpriteBatch& sprite_batch();
 	extern rendering::PolygonBatch& polygon_batch();

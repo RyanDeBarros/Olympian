@@ -2,13 +2,17 @@
 
 #include <algorithm>
 
+#include "core/base/Context.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
 {
-	EllipseBatch::EllipseBatch(Capacity capacity, const glm::vec4& projection_bounds)
-		: ebo(vao, capacity.ellipses), ssbo_block(capacity.ellipses), projection_bounds(projection_bounds)
+	EllipseBatch::EllipseBatch(Capacity capacity)
+		: ebo(vao, capacity.ellipses), ssbo_block(capacity.ellipses)
 	{
+		glm::ivec2 size = context::get_platform().window().get_size();
+		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+
 		projection_location = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uProjection");
 	}
 

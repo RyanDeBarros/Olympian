@@ -137,6 +137,7 @@ int main()
 	}
 	concave_shape->send_polygon();
 
+	auto bkg_rect = oly::context::ref_polygon("bkg rect").lock();
 	auto octagon = oly::context::ref_ngon("octagon").lock();
 	auto flag_texture = oly::context::texture_registry().get_texture("flag");
 	auto atlased_knight = oly::context::ref_atlas_extension("atlased knight").lock();
@@ -145,6 +146,29 @@ int main()
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
+
+	auto render_frame = [&]() {
+		bkg_rect->draw();
+		oly::context::render_polygons();
+		oly::stencil::begin();
+		oly::stencil::enable_drawing();
+		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
+		oly::stencil::draw::replace();
+		oly::context::execute_draw_command("polygon crop");
+		oly::stencil::disable_drawing();
+		oly::stencil::crop::match();
+		oly::context::execute_draw_command("sprite match");
+		oly::stencil::end();
+		oly::context::execute_draw_command("ellipses");
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		oly::context::render_sprites();
+		oly::context::execute_draw_command("sprites, polygons, tilemaps, and text");
+		};
+
+
+	oly::context::attach_standard_window_resize(render_frame);
+
 	while (oly::context::frame())
 	{
 		// logic update
@@ -195,20 +219,6 @@ int main()
 		tilemap->set_local().rotation += oly::TIME.delta<float>() * 0.1f;
 
 		// draw
-
-		oly::stencil::begin();
-		oly::stencil::enable_drawing();
-		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
-		oly::stencil::draw::replace();
-		oly::context::execute_draw_command("polygon crop");
-		oly::stencil::disable_drawing();
-		oly::stencil::crop::match();
-		oly::context::execute_draw_command("sprite match");
-		oly::stencil::end();
-		oly::context::execute_draw_command("ellipses");
-		for (const auto& sprite : flag_tesselation)
-			sprite.draw();
-		oly::context::render_sprites();
-		oly::context::execute_draw_command("sprites, polygons, tilemaps, and text");
+		render_frame();
 	}
 }

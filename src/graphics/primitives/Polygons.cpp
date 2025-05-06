@@ -2,15 +2,19 @@
 
 #include <algorithm>
 
+#include "core/base/Context.h"
 #include "core/math/Triangulation.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
 {
-	PolygonBatch::PolygonBatch(Capacity capacity, const glm::vec4& projection_bounds)
+	PolygonBatch::PolygonBatch(Capacity capacity)
 		: ebo(vao, capacity.indices), vbo_block(vao, { capacity.vertices, capacity.vertices, capacity.vertices }), transform_ssbo(capacity.indices),
-		vertex_free_space({0, capacity.primitives}), projection_bounds(projection_bounds)
+		vertex_free_space({0, capacity.primitives})
 	{
+		glm::ivec2 size = context::get_platform().window().get_size();
+		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+
 		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
 
 		vbo_block.attributes[POSITION] = graphics::VertexAttribute<float>{ 0, 2 };

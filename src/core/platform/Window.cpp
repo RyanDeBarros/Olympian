@@ -56,6 +56,7 @@ namespace oly::platform
 		hint.context_hint();
 		input::init_handlers(w);
 		glfwSetWindowUserPointer(w, this);
+		glViewport(0, 0, width, height);
 	}
 
 	Window::Window(Window&& other) noexcept
@@ -101,9 +102,14 @@ namespace oly::platform
 		glfwSetWindowSize(w, 0, height);
 	}
 
-	glm::vec4 Window::projection_bounds() const
+	float Window::aspect_ratio() const
 	{
-		return 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+		return float(size.x) / size.y;
+	}
+
+	void Window::refresh_size()
+	{
+		glfwGetWindowSize(w, &size.x, &size.y);
 	}
 
 	void Window::make_context_current() const
