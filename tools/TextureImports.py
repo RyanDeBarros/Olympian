@@ -1,17 +1,20 @@
 import argparse
 import os
+
 import toml
 
-from Tool import ToolNode, print_info, print_warning, print_error, varinput
+from Tool import *
+from Parameters import *
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
+IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE = (".png", ".jpg", ".jpeg", ".bmp", ".svg")
 DEFAULT_TEXTURE_IMPORT_FILE = "DefaultTextureImport.toml"
 
 
 class TextureImporter:
     def __init__(self, folder: str, recur: bool, prune: bool, default: bool, clear: bool):
-        self.folder = os.path.join("../res/", folder)
+        self.folder = res_path(folder)
         self.recur = recur
         self.prune = prune
         self.default = default
@@ -120,6 +123,115 @@ def import_textures():
     print_info("Success!")
 
 
+def edit_parameter(node, parameter, options, default, option_type: type = str):
+    if parameter not in node:
+        node[parameter] = default
+    inpt = varinput(f"{parameter} ({node[parameter]}): ")
+    if inpt:
+        try:
+            if option_type == bool:
+                inpt = str_to_bool(inpt)
+            else:
+                inpt = option_type(inpt)
+            if inpt in options:
+                node[parameter] = inpt
+            else:
+                raise TypeError()
+        except TypeError:
+            print_warning(f"Invalid input. Must be one of {options}.")
+
+
+def edit_image_parameters(node):
+    edit_parameter(node, 'storage', ["discard", "keep"], "discard")
+    edit_parameter(node, 'min filter',
+                   ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                    "linear mipmap nearest", "linear mipmap linear"], "nearest")
+    edit_parameter(node, 'mag filter', ["nearest", "linear"], "nearest")
+    edit_parameter(node, 'generate mipmaps', [True, False], False, bool)
+
+
+def edit_gif_parameters(node):
+    edit_parameter(node, 'storage', ["discard", "keep"], "discard")
+    edit_parameter(node, 'min filter',
+                   ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                    "linear mipmap nearest", "linear mipmap linear"], "nearest")
+    edit_parameter(node, 'mag filter', ["nearest", "linear"], "nearest")
+    edit_parameter(node, 'generate mipmaps', [True, False], False, bool)
+
+
+def edit_svg_parameters(node):
+    edit_parameter(node, 'abstract storage', ["discard", "keep"], "discard")
+    edit_parameter(node, 'image storage', ["discard", "keep"], "discard")
+    edit_parameter(node, 'min filter',
+                   ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                    "linear mipmap nearest", "linear mipmap linear"], "linear")
+    edit_parameter(node, 'mag filter', ["nearest", "linear"], "linear")
+    edit_parameter(node, 'generate mipmaps', ["off", "auto", "manual"], "off")
+
+
+def generate_spritesheet():
+    filepath = ""
+    while len(filepath) == 0:
+        filepath = varinput("Texture filepath: ")
+    filepath = res_path(filepath)
+
+    if not filepath.endswith(IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE):
+        print_error(f"Can only generate spritesheets for images of the following file types: "
+                    f"{IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE}")
+        return
+
+    tml = {}
+    if os.path.exists(filepath + '.oly'):
+        with open(filepath + '.oly', 'r') as f:
+            tml = toml.load(f)
+
+    def get_texture_index():
+        if 'texture' in tml:
+            max_texture_index = len(tml['texture'])
+        else:
+            max_texture_index = 0
+            tml['texture'] = []
+
+        if max_texture_index > 0:
+            index = ""
+            while not index.isdigit():
+                if max_texture_index == 1:
+                    index = varinput(f"Texture index [0-1] (0): ")
+                    if not index:
+                        index = "0"
+                else:
+                    index = varinput(f"Texture index [0-{max_texture_index}]: ")
+                if index.isdigit() and (int(index) < 0 or int(index) > max_texture_index):
+                    print_error(f"Texture index must be from interval [0-{max_texture_index}]")
+            index = int(index)
+        else:
+            index = 0
+
+        if index == max_texture_index:
+            tml['texture'].append({})
+        return index
+
+    texture_index = get_texture_index()
+    texture_node = tml['texture'][texture_index]
+    if filepath.endswith('.svg'):
+        edit_svg_parameters(texture_node)
+    else:
+        edit_image_parameters(texture_node)
+    texture_node['anim'] = True
+
+    edit_bound_int_parameter(texture_node, 'rows', 1, inf)
+    edit_bound_int_parameter(texture_node, 'cols', 1, inf)
+    edit_bound_int_parameter(texture_node, 'delay cs', 0, inf)
+    edit_optional_bound_int_parameter(texture_node, 'cell width override', 0, inf)
+    edit_optional_bound_int_parameter(texture_node, 'cell height override', 0, inf)
+    edit_optional_bool_parameter(texture_node, 'row major')
+    edit_optional_bool_parameter(texture_node, 'row up')
+
+    with open(filepath + '.oly', 'w') as f:
+        toml.dump(tml, f)
+    print_info("Success!")
+
+
 def edit_defaults():
     while True:
         choice = input("(1) Edit image import\n(2) Edit gif import\n(3) Edit svg import\n(0) Back\n")
@@ -136,57 +248,19 @@ def edit_defaults():
         with open(DEFAULT_TEXTURE_IMPORT_FILE) as f:
             tml = toml.load(f)
 
-    def edit_parameter(sel, parameter, options, default, option_type: type = str):
-        if parameter not in tml[sel]:
-            tml[sel][parameter] = default
-        inpt = varinput(f"{parameter} ({tml[sel][parameter]}): ")
-        if inpt:
-            try:
-                if option_type == bool:
-                    if inpt == "True" or inpt == "true":
-                        inpt = True
-                    elif inpt == "False" or inpt == "false":
-                        inpt = False
-                    else:
-                        raise TypeError()
-                else:
-                    inpt = option_type(inpt)
-                if inpt in options:
-                    tml[sel][parameter] = inpt
-                else:
-                    raise TypeError()
-            except TypeError:
-                print_warning(f"Invalid input. Must be one of {options}.")
-
     match selection:
         case 1:
             if 'image' not in tml:
                 tml['image'] = {}
-            edit_parameter('image', 'storage', ["discard", "keep"], "discard")
-            edit_parameter('image', 'min filter',
-                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
-                            "linear mipmap nearest", "linear mipmap linear"], "nearest")
-            edit_parameter('image', 'mag filter', ["nearest", "linear"], "nearest")
-            edit_parameter('image', 'generate mipmaps', [True, False], False, bool)
+            edit_image_parameters(tml['image'])
         case 2:
             if 'gif' not in tml:
                 tml['gif'] = {}
-            edit_parameter('gif', 'storage', ["discard", "keep"], "discard")
-            edit_parameter('gif', 'min filter',
-                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
-                            "linear mipmap nearest", "linear mipmap linear"], "nearest")
-            edit_parameter('gif', 'mag filter', ["nearest", "linear"], "nearest")
-            edit_parameter('gif', 'generate mipmaps', [True, False], False, bool)
+            edit_gif_parameters(tml['gif'])
         case 3:
             if 'svg' not in tml:
                 tml['svg'] = {}
-            edit_parameter('svg', 'abstract storage', ["discard", "keep"], "discard")
-            edit_parameter('svg', 'image storage', ["discard", "keep"], "discard")
-            edit_parameter('svg', 'min filter',
-                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
-                            "linear mipmap nearest", "linear mipmap linear"], "linear")
-            edit_parameter('svg', 'mag filter', ["nearest", "linear"], "linear")
-            edit_parameter('svg', 'generate mipmaps', ["off", "auto", "manual"], "off")
+            edit_svg_parameters(tml['svg'])
 
     with open(DEFAULT_TEXTURE_IMPORT_FILE, 'w') as f:
         toml.dump(tml, f)
@@ -255,6 +329,9 @@ TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
 
 IMPORT_TEXTURES = ToolNode("import", "Generate import files.", import_textures)
 TOOL.add_child(IMPORT_TEXTURES)
+
+GENERATE_SPRITESHEET = ToolNode("spritesheet", "Generate spritesheet texture in import files.", generate_spritesheet)
+TOOL.add_child(GENERATE_SPRITESHEET)
 
 EDIT_DEFAULTS = ToolNode("edit defaults", "Edit the default texture import structure.", edit_defaults)
 TOOL.add_child(EDIT_DEFAULTS)

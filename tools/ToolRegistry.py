@@ -1,8 +1,6 @@
 from Tool import ToolNode
-import TextureImporter
+import TextureImports
 
 ROOT = ToolNode("root")
 
-ROOT.add_child(TextureImporter.TOOL)
-
-# TODO function to generate import file for spritesheet animation -> put in interactive console commands program
+ROOT.add_child(TextureImports.TOOL)
