@@ -2,10 +2,11 @@ import argparse
 import os
 import toml
 
-from Tool import ToolNode, print_info, varinput
+from Tool import ToolNode, print_info, print_warning, print_error, varinput
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
+DEFAULT_TEXTURE_IMPORT_FILE = "DefaultTextureImport.toml"
 
 
 class TextureImporter:
@@ -15,8 +16,10 @@ class TextureImporter:
         self.prune = prune
         self.default = default
         self.clear = clear
-        with open('DefaultTextureImport.toml', 'r') as f:
-            self.default_toml = toml.load(f)
+        self.default_toml = {}
+        if os.path.exists(DEFAULT_TEXTURE_IMPORT_FILE):
+            with open(DEFAULT_TEXTURE_IMPORT_FILE, 'r') as f:
+                self.default_toml = toml.load(f)
 
     def run(self):
         if self.clear:
@@ -114,11 +117,138 @@ def import_textures():
     clear = varinput("Clear imports (y/n): ") == "y"
 
     TextureImporter(folder=folder, recur=recur, prune=prune, default=default, clear=clear).run()
-    print_info("success!")
+    print_info("Success!")
 
 
 def edit_defaults():
-    print_info("TODO editing defaults...")  # TODO
+    while True:
+        choice = input("(1) Edit image import\n(2) Edit gif import\n(3) Edit svg import\n(0) Back\n")
+        if choice == "0":
+            return
+        elif choice.isdigit() and 0 < int(choice) <= 3:
+            selection = int(choice)
+            break
+        else:
+            print_error("Invalid input.")
+
+    tml = {}
+    if os.path.exists(DEFAULT_TEXTURE_IMPORT_FILE):
+        with open(DEFAULT_TEXTURE_IMPORT_FILE) as f:
+            tml = toml.load(f)
+
+    def edit_parameter(sel, parameter, options, default, option_type: type = str):
+        if parameter not in tml[sel]:
+            tml[sel][parameter] = default
+        inpt = varinput(f"{parameter} ({tml[sel][parameter]}): ")
+        if inpt:
+            try:
+                if option_type == bool:
+                    if inpt == "True" or inpt == "true":
+                        inpt = True
+                    elif inpt == "False" or inpt == "false":
+                        inpt = False
+                    else:
+                        raise TypeError()
+                else:
+                    inpt = option_type(inpt)
+                if inpt in options:
+                    tml[sel][parameter] = inpt
+                else:
+                    raise TypeError()
+            except TypeError:
+                print_warning(f"Invalid input. Must be one of {options}.")
+
+    match selection:
+        case 1:
+            if 'image' not in tml:
+                tml['image'] = {}
+            edit_parameter('image', 'storage', ["discard", "keep"], "discard")
+            edit_parameter('image', 'min filter',
+                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                            "linear mipmap nearest", "linear mipmap linear"], "nearest")
+            edit_parameter('image', 'mag filter', ["nearest", "linear"], "nearest")
+            edit_parameter('image', 'generate mipmaps', [True, False], False, bool)
+        case 2:
+            if 'gif' not in tml:
+                tml['gif'] = {}
+            edit_parameter('gif', 'storage', ["discard", "keep"], "discard")
+            edit_parameter('gif', 'min filter',
+                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                            "linear mipmap nearest", "linear mipmap linear"], "nearest")
+            edit_parameter('gif', 'mag filter', ["nearest", "linear"], "nearest")
+            edit_parameter('gif', 'generate mipmaps', [True, False], False, bool)
+        case 3:
+            if 'svg' not in tml:
+                tml['svg'] = {}
+            edit_parameter('svg', 'abstract storage', ["discard", "keep"], "discard")
+            edit_parameter('svg', 'image storage', ["discard", "keep"], "discard")
+            edit_parameter('svg', 'min filter',
+                           ["nearest", "linear", "nearest mipmap nearest", "nearest mipmap linear",
+                            "linear mipmap nearest", "linear mipmap linear"], "linear")
+            edit_parameter('svg', 'mag filter', ["nearest", "linear"], "linear")
+            edit_parameter('svg', 'generate mipmaps', ["off", "auto", "manual"], "off")
+
+    with open(DEFAULT_TEXTURE_IMPORT_FILE, 'w') as f:
+        toml.dump(tml, f)
+    print_info("Success!")
+
+
+def reset_defaults():
+    while True:
+        choice = input("(1) Reset image import\n(2) Reset gif import\n(3) Reset svg import\n(4) Reset all\n(0) Back\n")
+        if choice == "0":
+            return
+        elif choice.isdigit() and 0 < int(choice) <= 4:
+            selection = int(choice)
+            break
+        else:
+            print_error("Invalid input.")
+
+    tml = {}
+    if os.path.exists(DEFAULT_TEXTURE_IMPORT_FILE):
+        with open(DEFAULT_TEXTURE_IMPORT_FILE) as f:
+            tml = toml.load(f)
+
+    def reset_image():
+        if 'image' not in tml:
+            tml['image'] = {}
+        tml['image']['storage'] = "discard"
+        tml['image']['min filter'] = "nearest"
+        tml['image']['mag filter'] = "nearest"
+        tml['image']['generate mipmaps'] = False
+
+    def reset_gif():
+        if 'gif' not in tml:
+            tml['gif'] = {}
+        tml['gif']['storage'] = "discard"
+        tml['gif']['min filter'] = "nearest"
+        tml['gif']['mag filter'] = "nearest"
+        tml['gif']['generate mipmaps'] = False
+
+    def reset_svg():
+        if 'svg' not in tml:
+            tml['svg'] = {}
+        tml['svg']['abstract storage'] = "discard"
+        tml['svg']['image storage'] = "discard"
+        tml['svg']['min filter'] = "linear"
+        tml['svg']['mag filter'] = "linear"
+        tml['svg']['generate mipmaps'] = "off"
+
+    match selection:
+        case 1:
+            reset_image()
+        case 2:
+            reset_gif()
+        case 3:
+            reset_svg()
+        case 4:
+            reset_image()
+            reset_gif()
+            reset_svg()
+
+    with open(DEFAULT_TEXTURE_IMPORT_FILE, 'w') as f:
+        toml.dump(tml, f)
+    print_info("Success!")
 
 
 TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
@@ -128,3 +258,6 @@ TOOL.add_child(IMPORT_TEXTURES)
 
 EDIT_DEFAULTS = ToolNode("edit defaults", "Edit the default texture import structure.", edit_defaults)
 TOOL.add_child(EDIT_DEFAULTS)
+
+RESET_DEFAULTS = ToolNode("reset defaults", "Reset the default texture import structure.", reset_defaults)
+TOOL.add_child(RESET_DEFAULTS)
