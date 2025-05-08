@@ -144,6 +144,7 @@ namespace oly::graphics
 		bool row_major = true, row_up = true;
 	};
 
+	class NSVGAbstract;
 	class Anim
 	{
 		unsigned char* _buf = nullptr;
@@ -151,6 +152,12 @@ namespace oly::graphics
 
 	public:
 		Anim(const char* filepath, SpritesheetOptions options = {});
+		Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options = {});
+
+	private:
+		void parse_sprite_sheet(const Image& image, SpritesheetOptions options);
+
+	public:
 		Anim(const Anim&) = delete;
 		Anim(Anim&&) noexcept;
 		~Anim();
@@ -159,6 +166,7 @@ namespace oly::graphics
 		const unsigned char* buf() const { return _buf; }
 		unsigned char* buf() { return _buf; }
 		std::weak_ptr<AnimDimensions> dim() const { return _dim; }
+		glm::vec2 dimensions() const { return _dim->dimensions(); }
 
 		void delete_buffer();
 	};

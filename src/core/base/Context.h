@@ -3,7 +3,7 @@
 #include "core/platform/Platform.h"
 #include "core/platform/WindowResize.h"
 
-#include "registries/graphics/TextureRegistry.h"
+#include "registries/graphics/Textures.h"
 #include "registries/graphics/primitives/SpriteRegistry.h"
 #include "registries/graphics/primitives/PolygonRegistry.h"
 #include "registries/graphics/primitives/EllipseRegistry.h"
@@ -27,6 +27,7 @@ namespace oly::context
 		Context& operator=(Context&&) noexcept;
 	};
 
+	extern const std::string& context_filepath();
 	extern platform::Platform& get_platform();
 	extern void attach_standard_window_resize(const std::function<void()>& render_frame, bool boxed = true, bool stretch = true);
 	extern platform::StandardWindowResize& get_standard_window_resize();
@@ -53,6 +54,10 @@ namespace oly::context
 	extern reg::DrawCommandRegistry draw_command_registry();
 
 	extern bool frame();
+
+	extern graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index = 0);
+	extern graphics::BindlessTextureRes load_svg_texture(const std::string& file, float svg_scale = 1.0f, unsigned int texture_index = 0);
+	extern glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index = 0);
 
 	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture);
 	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);

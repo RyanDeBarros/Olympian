@@ -12,6 +12,7 @@ namespace oly::context
 {
 	namespace internal
 	{
+		std::string context_filepath;
 		std::unique_ptr<platform::Platform> platform;
 
 		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
@@ -38,7 +39,7 @@ namespace oly::context
 		platform::StandardWindowResize standard_window_resize;
 	}
 
-	static void init_logger(const TOMLNode& node, const std::string& root_dir)
+	static void init_logger(const TOMLNode& node)
 	{
 		auto toml_logger = node["logger"];
 		if (toml_logger)
@@ -48,7 +49,7 @@ namespace oly::context
 			if (logfile)
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile((root_dir + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
+				LOG.set_logfile((internal::context_filepath + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
 				LOG.flush();
 			}
 			else
@@ -126,18 +127,17 @@ namespace oly::context
 	}
 
 #define INIT_REGISTRY(function, node_name, registry)\
-	static void function(const TOMLNode& node, const std::string& root_dir)\
+	static void function(const TOMLNode& node)\
 	{\
 		auto register_files = node[node_name].as_array();\
 		if (register_files)\
 		{\
 			for (const auto& node : *register_files)\
 				if (auto file = node.value<std::string>())\
-					internal::registry.load(root_dir + file.value());\
+					internal::registry.load(internal::context_filepath + file.value());\
 		}\
 	}
 
-	INIT_REGISTRY(init_texture_registry, "texture registries", texture_registry);
 	INIT_REGISTRY(init_sprite_registry, "sprite registries", sprite_registry);
 	INIT_REGISTRY(init_polygon_registry, "polygon registries", polygon_registry);
 	INIT_REGISTRY(init_ellipse_registry, "ellipse registries", ellipse_registry);
@@ -148,14 +148,14 @@ namespace oly::context
 	INIT_REGISTRY(init_paragraph_registry, "paragraph registries", paragraph_registry);
 	INIT_REGISTRY(init_draw_command_registry, "draw command registries", draw_command_registry);
 
-	static void init_signal_registry(const TOMLNode& node, const std::string& root_dir)
+	static void init_signal_registry(const TOMLNode& node)
 	{
 		auto register_files = node["signal registries"].as_array();
 		if (register_files)
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signal_registry((root_dir + file.value()).c_str());
+					reg::load_signal_registry((internal::context_filepath + file.value()).c_str());
 		}
 	}
 
@@ -186,10 +186,11 @@ namespace oly::context
 			throw oly::Error(oly::ErrorCode::GLFW_INIT);
 		stbi_set_flip_vertically_on_load(true);
 
+		internal::context_filepath = io::directory_of(context_filepath);
+
 		auto toml = reg::load_toml(context_filepath);
 		const TOMLNode& toml_context = (const TOMLNode&)toml["context"];
-		std::string root_dir = io::directory_of(context_filepath);
-		init_logger(toml_context, root_dir);
+		init_logger(toml_context);
 
 		internal::platform = std::make_unique<platform::Platform>(toml_context);
 		Internal{}.time_init();
@@ -200,17 +201,16 @@ namespace oly::context
 		init_ellipse_batch(toml_context);
 		init_text_batch(toml_context);
 			
-		init_texture_registry(toml_context, root_dir);
-		init_sprite_registry(toml_context, root_dir);
-		init_polygon_registry(toml_context, root_dir);
-		init_ellipse_registry(toml_context, root_dir);
-		init_tileset_registry(toml_context, root_dir);
-		init_tilemap_registry(toml_context, root_dir);
-		init_font_face_registry(toml_context, root_dir);
-		init_font_atlas_registry(toml_context, root_dir);
-		init_paragraph_registry(toml_context, root_dir);
-		init_draw_command_registry(toml_context, root_dir);
-		init_signal_registry(toml_context, root_dir);
+		init_sprite_registry(toml_context);
+		init_polygon_registry(toml_context);
+		init_ellipse_registry(toml_context);
+		init_tileset_registry(toml_context);
+		init_tilemap_registry(toml_context);
+		init_font_face_registry(toml_context);
+		init_font_atlas_registry(toml_context);
+		init_paragraph_registry(toml_context);
+		init_draw_command_registry(toml_context);
+		init_signal_registry(toml_context);
 	}
 
 	static void terminate()
@@ -273,6 +273,11 @@ namespace oly::context
 	Context& Context::operator=(Context&&) noexcept
 	{
 		return *this;
+	}
+
+	const std::string& context_filepath()
+	{
+		return internal::context_filepath;
 	}
 
 	platform::Platform& get_platform()
@@ -375,6 +380,21 @@ namespace oly::context
 			return false;
 		Internal{}.time_sync();
 		return true;
+	}
+
+	graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index)
+	{
+		return internal::texture_registry.load_texture(file, { .texture_index = texture_index });
+	}
+
+	graphics::BindlessTextureRes load_svg_texture(const std::string& file, float svg_scale, unsigned int texture_index)
+	{
+		return internal::texture_registry.load_svg_texture(file, svg_scale, { .texture_index = texture_index });
+	}
+
+	glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index)
+	{
+		return internal::texture_registry.get_dimensions(file, texture_index);
 	}
 
 	void sync_texture_handle(const graphics::BindlessTextureRes& texture)

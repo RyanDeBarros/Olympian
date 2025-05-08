@@ -1,0 +1,18 @@
+[image]
+'storage' = "discard"
+'min filter' = "nearest"
+'mag filter' = "nearest"
+'generate mipmaps' = false
+
+[gif]
+'storage' = "discard"
+'min filter' = "nearest"
+'mag filter' = "nearest"
+'generate mipmaps' = false
+
+[svg]
+'abstract storage' = "keep"
+'image storage' = "discard"
+'min filter' = "linear"
+'mag filter' = "linear"
+'generate mipmaps' = "off"

@@ -62,7 +62,7 @@ namespace oly::graphics
 	}
 
 	BindlessTexture::BindlessTexture(BindlessTexture&& other) noexcept
-		: t(std::move(other.t)), handle(other.handle)
+		: t(std::move(other.t)), handle(other.handle), _tex_handle(other._tex_handle), _sampler_handles(std::move(other._sampler_handles))
 	{
 		other.handle = 0;
 	}
@@ -79,6 +79,8 @@ namespace oly::graphics
 			disuse_handle();
 			t = std::move(other.t);
 			handle = other.handle;
+			_tex_handle = other._tex_handle;
+			_sampler_handles = std::move(other._sampler_handles);
 			other.handle = 0;
 		}
 		return *this;
@@ -152,6 +154,8 @@ namespace oly::graphics
 	Image::Image(const char* filepath)
 	{
 		_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, 0);
+		if (!_buf)
+			throw Error(ErrorCode::IMAGE_LOAD);
 	}
 
 	Image::Image(unsigned char* buf, ImageDimensions dim)
@@ -160,7 +164,7 @@ namespace oly::graphics
 	}
 
 	Image::Image(Image&& other) noexcept
-		: _buf(other._buf)
+		: _buf(other._buf), _dim(other._dim)
 	{
 		other._buf = nullptr;
 	}
@@ -244,75 +248,83 @@ namespace oly::graphics
 			stbi_image_free(delays);
 		}
 		else
+			parse_sprite_sheet(Image(filepath), options);
+	}
+
+	Anim::Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options)
+		: _dim(std::make_shared<AnimDimensions>())
+	{
+		parse_sprite_sheet(context::nsvg_context().rasterize(svg_abstract, scale), options);
+	}
+	
+	void Anim::parse_sprite_sheet(const Image& image, SpritesheetOptions options)
+	{
+		_dim->delays = { options.delay_cs };
+		auto idim = image.dim();
+		_dim->cpp = idim.cpp;
+
+		if (options.cols > (GLuint)idim.w)
+			options.cols = (GLuint)idim.w;
+		else if (options.cols == 0)
+			options.cols = 1;
+		if (options.cell_width_override == 0)
+			options.cell_width_override = (int)(idim.w / options.cols);
+		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
+			options.cols = (int)(idim.w / options.cell_width_override);
+
+		if (options.rows > (GLuint)idim.h)
+			options.rows = (GLuint)idim.h;
+		else if (options.rows == 0)
+			options.rows = 1;
+		if (options.cell_height_override == 0)
+			options.cell_height_override = (int)(idim.h / options.rows);
+		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
+			options.rows = (int)(idim.h / options.cell_height_override);
+
+		_dim->w = options.cell_width_override;
+		_dim->h = options.cell_height_override;
+		_dim->_frames = options.rows * options.cols;
+
+		GLuint minor_stride = options.cell_width_override * idim.cpp;
+		GLuint major_stride = minor_stride * options.cols;
+		GLuint image_major_stride = idim.w * idim.cpp;
+		GLuint minor_height = options.cell_height_override;
+		GLuint major_height = minor_height * options.rows;
+		GLuint minor_area = minor_stride * minor_height;
+		_buf = new unsigned char[major_stride * major_height];
+		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
+			for (GLuint r = 0; r < minor_height; ++r)
+				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
+			};
+		GLuint k = 0;
+		if (options.row_major)
 		{
-			_dim->delays = { options.delay_cs };
-			Image image(filepath);
-			auto idim = image.dim();
-			_dim->cpp = idim.cpp;
-
-			if (options.cols > (GLuint)idim.w)
-				options.cols = (GLuint)idim.w;
-			else if (options.cols == 0)
-				options.cols = 1;
-			if (options.cell_width_override == 0)
-				options.cell_width_override = (int)(idim.w / options.cols);
-			else if (options.cell_width_override * options.cols > (GLuint)idim.w)
-				options.cols = (int)(idim.w / options.cell_width_override);
-
-			if (options.rows > (GLuint)idim.h)
-				options.rows = (GLuint)idim.h;
-			else if (options.rows == 0)
-				options.rows = 1;
-			if (options.cell_height_override == 0)
-				options.cell_height_override = (int)(idim.h / options.rows);
-			else if (options.cell_height_override * options.rows > (GLuint)idim.h)
-				options.rows = (int)(idim.h / options.cell_height_override);
-
-			_dim->w = options.cell_width_override;
-			_dim->h = options.cell_height_override;
-			_dim->_frames = options.rows * options.cols;
-
-			GLuint minor_stride = options.cell_width_override * idim.cpp;
-			GLuint major_stride = minor_stride * options.cols;
-			GLuint image_major_stride = idim.w * idim.cpp;
-			GLuint minor_height = options.cell_height_override;
-			GLuint major_height = minor_height * options.rows;
-			GLuint minor_area = minor_stride * minor_height;
-			_buf = new unsigned char[major_stride * major_height];
-			const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
-				for (GLuint r = 0; r < minor_height; ++r)
-					memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
-				};
-			GLuint k = 0;
-			if (options.row_major)
+			if (options.row_up)
 			{
-				if (options.row_up)
-				{
-					for (GLuint i = 0; i < options.rows; ++i)
-						for (GLuint j = 0; j < options.cols; ++j)
-							cpy(i, j, k++);
-				}
-				else
-				{
-					for (int i = options.rows - 1; i >= 0; --i)
-						for (GLuint j = 0; j < options.cols; ++j)
-							cpy((GLuint)i, j, k++);
-				}
+				for (GLuint i = 0; i < options.rows; ++i)
+					for (GLuint j = 0; j < options.cols; ++j)
+						cpy(i, j, k++);
 			}
 			else
 			{
-				if (options.row_up)
-				{
+				for (int i = options.rows - 1; i >= 0; --i)
 					for (GLuint j = 0; j < options.cols; ++j)
-						for (GLuint i = 0; i < options.rows; ++i)
-							cpy(i, j, k++);
-				}
-				else
-				{
-					for (GLuint j = 0; j < options.cols; ++j)
-						for (int i = options.rows - 1; i >= 0; --i)
-							cpy((GLuint)i, j, k++);
-				}
+						cpy((GLuint)i, j, k++);
+			}
+		}
+		else
+		{
+			if (options.row_up)
+			{
+				for (GLuint j = 0; j < options.cols; ++j)
+					for (GLuint i = 0; i < options.rows; ++i)
+						cpy(i, j, k++);
+			}
+			else
+			{
+				for (GLuint j = 0; j < options.cols; ++j)
+					for (int i = options.rows - 1; i >= 0; --i)
+						cpy((GLuint)i, j, k++);
 			}
 		}
 	}

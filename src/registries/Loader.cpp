@@ -44,6 +44,21 @@ namespace oly::reg
 		return false;
 	}
 
+	bool parse_int(const CTOMLNode& node, const std::string& name, int& v)
+	{
+		auto n = node[name];
+		if (n)
+		{
+			auto i = n.value<int64_t>();
+			if (i)
+			{
+				v = (int)i.value();
+				return true;
+			}
+		}
+		return false;
+	}
+
 	bool parse_int(const toml::table& node, const std::string& name, int& v)
 	{
 		auto n = node[name];
@@ -60,6 +75,21 @@ namespace oly::reg
 	}
 
 	bool parse_float(const TOMLNode& node, const std::string& name, float& v)
+	{
+		auto n = node[name];
+		if (n)
+		{
+			auto i = n.value<double>();
+			if (i)
+			{
+				v = (float)i.value();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool parse_float(const CTOMLNode& node, const std::string& name, float& v)
 	{
 		auto n = node[name];
 		if (n)
@@ -121,6 +151,18 @@ namespace oly::reg
 	}
 
 	Transform2D load_transform_2d(const TOMLNode& node)
+	{
+		Transform2D transform;
+		if (!node)
+			return transform;
+		parse_vec2(node, "position", transform.position);
+		if (auto rotation = node["rotation"].value<double>())
+			transform.rotation = (float)rotation.value();
+		parse_vec2(node, "scale", transform.scale);
+		return transform;
+	}
+
+	Transform2D load_transform_2d(const CTOMLNode& node)
 	{
 		Transform2D transform;
 		if (!node)

@@ -73,7 +73,19 @@ namespace oly::reg
 		if (auto toml_texture = node["texture"].value<std::string>())
 		{
 			texture = toml_texture.value();
-			sprite.set_texture(texture);
+			unsigned int texture_index = (unsigned int)node["texture index"].value<int64_t>().value_or(0);
+			if (auto sc = node["svg scale"].value<double>())
+			{
+				reg::TextureRegistry::SVGLoadParams params{ .texture_index = texture_index };
+				auto btex = context::texture_registry().load_svg_texture(texture, (float)sc.value(), params);
+				sprite.set_texture(btex, context::texture_registry().get_dimensions(texture, texture_index));
+			}
+			else
+			{
+				reg::TextureRegistry::LoadParams params{ .texture_index = texture_index };
+				auto btex = context::texture_registry().load_texture(texture, params);
+				sprite.set_texture(btex, context::texture_registry().get_dimensions(texture, texture_index));
+			}
 		}
 
 		if (auto toml_modulation = node["modulation"].as_array())

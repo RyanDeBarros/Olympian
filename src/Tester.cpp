@@ -1,5 +1,7 @@
 ﻿#include "Olympian.h"
 
+#include "registries/graphics/Textures.h"
+
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override
@@ -97,7 +99,7 @@ struct PlayerController : public oly::InputController
 
 int main()
 {
-	oly::context::Context oly_context("../../../res/assets/context.toml");
+	oly::context::Context oly_context("../../../res/context.toml");
 
 	PlayerController pc;
 	oly::get_platform().bind_signal("jump", &PlayerController::jump, pc);
@@ -137,9 +139,10 @@ int main()
 	}
 	concave_shape->send_polygon();
 
+
 	auto bkg_rect = oly::context::ref_polygon("bkg rect").lock();
 	auto octagon = oly::context::ref_ngon("octagon").lock();
-	auto flag_texture = oly::context::texture_registry().get_texture("flag");
+	auto flag_texture = oly::context::load_texture("textures/flag.png");
 	auto atlased_knight = oly::context::ref_atlas_extension("atlased knight").lock();
 	auto tilemap = oly::context::ref_tilemap("grass tilemap").lock();
 	

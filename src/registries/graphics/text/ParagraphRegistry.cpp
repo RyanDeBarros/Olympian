@@ -35,7 +35,7 @@ namespace oly::reg
 		auto_loaded.clear();
 	}
 
-	static rendering::ParagraphFormat create_format(const TOMLNode& node)
+	static rendering::ParagraphFormat create_format(const CTOMLNode& node)
 	{
 		rendering::ParagraphFormat format;
 

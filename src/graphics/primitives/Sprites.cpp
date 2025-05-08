@@ -248,20 +248,16 @@ namespace oly::rendering
 		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 	}
 
-	void Sprite::set_texture(const std::string& texture_name) const
+	void Sprite::set_texture(const std::string& texture_name, unsigned texture_index) const
 	{
-		reg::TextureRegistry& texture_registry = context::texture_registry();
-		switch (texture_registry.get_type(texture_name))
-		{
-		case reg::TextureRegistry::TextureType::IMAGE:
-		case reg::TextureRegistry::TextureType::NSVG:
-			set_texture(texture_registry.get_texture(texture_name), texture_registry.get_image_dimensions(texture_name).dimensions());
-			break;
-		case reg::TextureRegistry::TextureType::ANIM:
-			if (auto sp = texture_registry.get_anim_dimensions(texture_name).lock())
-				set_texture(texture_registry.get_texture(texture_name), sp->dimensions());
-			break;
-		}
+		auto texture = context::load_texture(texture_name, texture_index);
+		set_texture(texture, context::get_texture_dimensions(texture_name, texture_index));
+	}
+
+	void Sprite::set_texture(const std::string& texture_name, float svg_scale, unsigned texture_index) const
+	{
+		auto texture = context::load_svg_texture(texture_name, svg_scale, texture_index);
+		set_texture(texture, context::get_texture_dimensions(texture_name, texture_index));
 	}
 
 	void Sprite::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const

@@ -1,179 +1,67 @@
-[[image]]
-"file"       = "../textures/grass tileset/BE.png"
-"name"       = "GT - BE"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/BL.png"
-"name"       = "GT - BL"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/BR.png"
-"name"       = "GT - BR"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/BT.png"
-"name"       = "GT - BT"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/I1.png"
-"name"       = "GT - I1"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/I2.png"
-"name"       = "GT - I2"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/LE.png"
-"name"       = "GT - LE"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/LT.png"
-"name"       = "GT - LT"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/M.png"
-"name"       = "GT - M"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/RE.png"
-"name"       = "GT - RE"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/RT.png"
-"name"       = "GT - RT"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/S.png"
-"name"       = "GT - S"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/TE.png"
-"name"       = "GT - TE"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/TL.png"
-"name"       = "GT - TL"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/TR.png"
-"name"       = "GT - TR"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
-[[image]]
-"file"       = "../textures/grass tileset/TT.png"
-"name"       = "GT - TT"
-"auto-use"   = true
-"min filter" = "nearest"
-"mag filter" = "nearest"
-
 [[tileset]]
 "name" = "grass tileset"
 "init" = "discard"
 
 [[tileset.assignment]]
 "config" = "S"
-"tex"    = "GT - S"
+"tex"    = "textures/grass tileset/S.png"
 
 [[tileset.assignment]]
 "config" = "M'"
-"tex"    = "GT - M"
+"tex"    = "textures/grass tileset/M.png"
 
 [[tileset.assignment]]
 "config" = "C1'"
-"tex"    = "GT - BL"
+"tex"    = "textures/grass tileset/BL.png"
 
 [[tileset.assignment]]
 "config" = "C2'"
-"tex"    = "GT - BR"
+"tex"    = "textures/grass tileset/BR.png"
 
 [[tileset.assignment]]
 "config" = "C3'"
-"tex"    = "GT - TR"
+"tex"    = "textures/grass tileset/TR.png"
 
 [[tileset.assignment]]
 "config" = "C4'"
-"tex"    = "GT - TL"
+"tex"    = "textures/grass tileset/TL.png"
 
 [[tileset.assignment]]
 "config" = "T1'"
-"tex"    = "GT - LE"
+"tex"    = "textures/grass tileset/LE.png"
 
 [[tileset.assignment]]
 "config" = "T2'"
-"tex"    = "GT - BE"
+"tex"    = "textures/grass tileset/BE.png"
 
 [[tileset.assignment]]
 "config" = "T3'"
-"tex"    = "GT - RE"
+"tex"    = "textures/grass tileset/RE.png"
 
 [[tileset.assignment]]
 "config" = "T4'"
-"tex"    = "GT - TE"
+"tex"    = "textures/grass tileset/TE.png"
 
 [[tileset.assignment]]
 "config" = "E1"
-"tex"    = "GT - LT"
+"tex"    = "textures/grass tileset/LT.png"
 
 [[tileset.assignment]]
 "config" = "E2"
-"tex"    = "GT - BT"
+"tex"    = "textures/grass tileset/BT.png"
 
 [[tileset.assignment]]
 "config" = "E3"
-"tex"    = "GT - RT"
+"tex"    = "textures/grass tileset/RT.png"
 
 [[tileset.assignment]]
 "config" = "E4"
-"tex"    = "GT - TT"
+"tex"    = "textures/grass tileset/TT.png"
 
 [[tileset.assignment]]
 "config" = "I1"
-"tex"    = "GT - I1"
+"tex"    = "textures/grass tileset/I1.png"
 
 [[tileset.assignment]]
 "config" = "I2"
-"tex"    = "GT - I2"
+"tex"    = "textures/grass tileset/I2.png"

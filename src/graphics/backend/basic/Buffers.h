@@ -50,7 +50,7 @@ namespace oly::graphics
 		GLBufferBlock(GLBufferBlock&& other) noexcept
 			: ids(other.ids)
 		{
-			other.active = false; // TODO use ids[0] = false instead of active?
+			other.active = false; // TODO use ids[0] instead of active?
 		}
 
 		~GLBufferBlock()

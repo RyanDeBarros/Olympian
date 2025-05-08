@@ -1,0 +1,7 @@
+[[texture]]
+"abstract storage" = "keep"
+"image storage" = "discard"
+"min filter" = "linear"
+"mag filter" = "linear"
+"generate mipmaps" = "off"
+

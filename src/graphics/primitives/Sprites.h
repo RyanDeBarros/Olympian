@@ -182,7 +182,8 @@ namespace oly::rendering
 
 		void draw() const;
 
-		void set_texture(const std::string& texture_name) const;
+		void set_texture(const std::string& texture_name, unsigned texture_index = 0) const;
+		void set_texture(const std::string& texture_name, float svg_scale, unsigned texture_index = 0) const;
 		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const;
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
