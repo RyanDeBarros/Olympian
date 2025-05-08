@@ -1,4 +1,5 @@
 import ToolRegistry
+from Tool import var_cmd, varinput, print_error
 
 
 def resolve_path(current, path, root):
@@ -26,7 +27,7 @@ def repl(root):
     current = root
     while True:
         try:
-            cmd = input(f"[{current.get_path() or '/'}] > ").strip()
+            cmd = varinput(f"[{current.get_path() or '/'}] > ").strip()
         except KeyboardInterrupt:
             print("\n^C - cancelled input.")
             continue
@@ -42,6 +43,13 @@ def repl(root):
         elif cmd == "..":
             if current.parent:
                 current = current.parent
+        elif cmd.startswith("!"):
+            if var_cmd(cmd):
+                continue
+            else:
+                print_error(
+                    "Unknown command. Enter 'list' for a list of options, '..' to go return to the preceding command, "
+                    ", '!LIST' for a list of special commands, or 'exit' to quit OREPL.")
         elif "/" in cmd:
             node = resolve_path(current, cmd, root)
             if node is None:
@@ -64,8 +72,9 @@ def repl(root):
             else:
                 current = node
         else:
-            print("Unknown command. Enter 'list' for a list of options, '..' to go return to the preceding command, "
-                  "and 'exit' to quit OREPL.")
+            print_error(
+                "Unknown command. Enter 'list' for a list of options, '..' to go return to the preceding command, "
+                ", '!LIST' for a list of special commands, or 'exit' to quit OREPL.")
 
 
 if __name__ == "__main__":

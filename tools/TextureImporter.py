@@ -2,7 +2,7 @@ import argparse
 import os
 import toml
 
-from Tool import ToolNode, print_info
+from Tool import ToolNode, print_info, varinput
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
@@ -106,12 +106,12 @@ if __name__ == "__main__":
 def import_textures():
     folder = ""
     while len(folder) == 0:
-        folder = input("Textures folder: ")
+        folder = varinput("Textures folder: ")
 
-    recur = input("Recursive search (y/n): ") == "y"
-    prune = input("Prune isolated imports (y/n): ") != "n"
-    default = input("Reset existing imports to default (y/n): ") == "y"
-    clear = input("Clear imports (y/n): ") == "y"
+    recur = varinput("Recursive search (y/n): ") == "y"
+    prune = varinput("Prune isolated imports (y/n): ") != "n"
+    default = varinput("Reset existing imports to default (y/n): ") == "y"
+    clear = varinput("Clear imports (y/n): ") == "y"
 
     TextureImporter(folder=folder, recur=recur, prune=prune, default=default, clear=clear).run()
     print_info("success!")
