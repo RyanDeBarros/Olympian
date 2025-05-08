@@ -1,4 +1,8 @@
-import argparse, os, warnings, toml
+import argparse
+import os
+import toml
+
+from Tool import ToolNode, print_info
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
@@ -6,7 +10,7 @@ IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
 
 class TextureImporter:
     def __init__(self, folder: str, recur: bool, prune: bool, default: bool, clear: bool):
-        self.folder = folder
+        self.folder = os.path.join("../res/", folder)
         self.recur = recur
         self.prune = prune
         self.default = default
@@ -24,7 +28,8 @@ class TextureImporter:
         with os.scandir(folder) as entries:
             for entry in entries:
                 if entry.is_file():
-                    if entry.name.endswith('.oly') and entry.name[-len('.oly'):].endswith(IMPORT_FILE_EXTENSIONS):
+                    if entry.path.endswith('.oly') and self.nonoly_filepath(entry.path).endswith(
+                            IMPORT_FILE_EXTENSIONS):
                         with open(entry.path, 'r') as f:
                             tml = toml.load(f)
                         if 'texture' in tml:
@@ -48,9 +53,12 @@ class TextureImporter:
                     self.run_search(entry.path)
 
     def prune_imports(self, file: str):
-        if file[-len('.oly'):].endswith(IMPORT_FILE_EXTENSIONS) and not os.path.exists(file[-len('.oly'):]):
+        if self.nonoly_filepath(file).endswith(IMPORT_FILE_EXTENSIONS) and not os.path.exists(
+                self.nonoly_filepath(file)):
             os.remove(file)
 
+    def nonoly_filepath(self, file: str):
+        return file[:-len('.oly')]
 
     def import_texture(self, file: str):
         if file.endswith(IMPORT_FILE_EXTENSIONS_IMAGES):
@@ -61,8 +69,11 @@ class TextureImporter:
             self.write_default(file, 'gif')
 
     def write_default(self, file: str, texture_type: str):
-        with open(file + '.oly', 'r') as f:
-            tml = toml.load(f)
+        if os.path.exists(file + '.oly'):
+            with open(file + '.oly', 'r') as f:
+                tml = toml.load(f)
+        else:
+            tml = {}
 
         if 'texture' in tml:
             if self.default:
@@ -89,7 +100,31 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--clear', action='store_true', help="Clear all texture import files")
 
     args = parser.parse_args()
-    importer = TextureImporter(args.folder, args.recur, args.prune, args.default, args.clear)
-    importer.run()
+    TextureImporter(args.folder, args.recur, args.prune, args.default, args.clear).run()
 
-    # TODO function to generate import file for spritesheet animation -> put in interactive console commands program
+
+def import_textures():
+    folder = ""
+    while len(folder) == 0:
+        folder = input("Textures folder: ")
+
+    recur = input("Recursive search (y/n): ") == "y"
+    prune = input("Prune isolated imports (y/n): ") != "n"
+    default = input("Reset existing imports to default (y/n): ") == "y"
+    clear = input("Clear imports (y/n): ") == "y"
+
+    TextureImporter(folder=folder, recur=recur, prune=prune, default=default, clear=clear).run()
+    print_info("success!")
+
+
+def edit_defaults():
+    print_info("TODO editing defaults...")  # TODO
+
+
+TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
+
+IMPORT_TEXTURES = ToolNode("import", "Generate import files.", import_textures)
+TOOL.add_child(IMPORT_TEXTURES)
+
+EDIT_DEFAULTS = ToolNode("edit defaults", "Edit the default texture import structure.", edit_defaults)
+TOOL.add_child(EDIT_DEFAULTS)
