@@ -126,11 +126,14 @@ namespace oly::graphics
 				return;
 			}
 			for (GLuint i = 0; i < options.max_timeout_tries; ++i)
+			{
 				if (sync.wait(options.timeout_ns))
 				{
 					accessible = true;
 					return;
 				}
+				LOG << LOG.begin_temp(LOG.error) << LOG.start << "Timeout in persistent buffer sync" << LOG.end_temp << LOG.nl;
+			}
 			accessible = false;
 			throw Error(ErrorCode::OUT_OF_TIME);
 		}
@@ -304,11 +307,14 @@ namespace oly::graphics
 				return;
 			}
 			for (GLuint i = 0; i < options.max_timeout_tries; ++i)
+			{
 				if (sync.wait(options.timeout_ns))
 				{
 					accessible[n] = true;
 					return;
 				}
+				LOG << LOG.begin_temp(LOG.error) << LOG.start << "Timeout in persistent buffer sync" << LOG.end_temp << LOG.nl;
+			}
 			accessible[n] = false;
 			throw Error(ErrorCode::OUT_OF_TIME);
 		}

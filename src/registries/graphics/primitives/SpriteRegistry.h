@@ -23,7 +23,8 @@ namespace oly::reg
 		std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name) const;
 		void delete_sprite(const std::string& name);
 
-		rendering::SpriteAtlasResExtension create_atlas_extension(const std::string& name) const;
+		rendering::SpriteAtlasExtension create_atlas_extension(const std::string& name) const;
+		rendering::SpriteAtlasResExtension create_atlas_res_extension(const std::string& name) const;
 		std::weak_ptr<rendering::SpriteAtlasResExtension> ref_atlas_extension(const std::string& name) const;
 		void delete_atlas_extension(const std::string& name);
 	};

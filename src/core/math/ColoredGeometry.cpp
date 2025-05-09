@@ -71,9 +71,10 @@ namespace oly::cmath
 	{
 		glm::vec2 v_prev = glm::normalize(prev_point - point);
 		glm::vec2 v_next = glm::normalize(next_point - point);
+		bool reflex = math::cross(v_prev, v_next) >= 0.0f;
 		glm::vec2 n_prev{ v_prev.y, -v_prev.x };
 		glm::vec2 n_next{ -v_next.y, v_next.x };
-		if (math::cross(point - prev_point, next_point - point) <= 0.0f)
+		if (reflex)
 		{
 			n_prev *= -1;
 			n_next *= -1;
@@ -84,7 +85,7 @@ namespace oly::cmath
 		b = border * (border_pivot.v - 1.0f);
 		t = b * glm::length(n_next - n_prev) / glm::length(v_prev - v_next);
 		glm::vec2 outer = point + b * n_next + t * v_next;
-		return { inner, outer };
+		return reflex ? BorderPointPair{ outer, inner } : BorderPointPair{ inner, outer };
 	}
 
 	void triangulate_border(const std::vector<glm::vec2>& border, Triangulation& triangulation)

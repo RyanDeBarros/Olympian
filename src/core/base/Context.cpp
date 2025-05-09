@@ -34,8 +34,6 @@ namespace oly::context
 		reg::FontAtlasRegistry font_atlas_registry;
 		reg::ParagraphRegistry paragraph_registry;
 
-		reg::DrawCommandRegistry draw_command_registry;
-
 		platform::StandardWindowResize standard_window_resize;
 	}
 
@@ -146,7 +144,6 @@ namespace oly::context
 	INIT_REGISTRY(init_font_face_registry, "font face registries", font_face_registry);
 	INIT_REGISTRY(init_font_atlas_registry, "font atlas registries", font_atlas_registry);
 	INIT_REGISTRY(init_paragraph_registry, "paragraph registries", paragraph_registry);
-	INIT_REGISTRY(init_draw_command_registry, "draw command registries", draw_command_registry);
 
 	static void init_signal_registry(const TOMLNode& node)
 	{
@@ -209,7 +206,6 @@ namespace oly::context
 		init_font_face_registry(toml_context);
 		init_font_atlas_registry(toml_context);
 		init_paragraph_registry(toml_context);
-		init_draw_command_registry(toml_context);
 		init_signal_registry(toml_context);
 	}
 
@@ -224,7 +220,6 @@ namespace oly::context
 		internal::font_face_registry.clear();
 		internal::font_atlas_registry.clear();
 		internal::paragraph_registry.clear();
-		internal::draw_command_registry.clear();
 
 		internal::sprite_batch.reset();
 		internal::polygon_batch.reset();
@@ -369,11 +364,6 @@ namespace oly::context
 		return internal::paragraph_registry;
 	}
 
-	reg::DrawCommandRegistry draw_command_registry()
-	{
-		return internal::draw_command_registry;
-	}
-
 	bool frame()
 	{
 		if (!internal::platform->frame())
@@ -427,7 +417,7 @@ namespace oly::context
 		internal::sprite_batch->render();
 	}
 
-	rendering::SpriteAtlasResExtension atlas_extension(const std::string& name)
+	rendering::SpriteAtlasExtension atlas_extension(const std::string& name)
 	{
 		return internal::sprite_registry.create_atlas_extension(name);
 	}
@@ -570,10 +560,5 @@ namespace oly::context
 	void render_text()
 	{
 		internal::text_batch->render();
-	}
-		
-	void execute_draw_command(const std::string& name)
-	{
-		internal::draw_command_registry.execute(name);
 	}
 }

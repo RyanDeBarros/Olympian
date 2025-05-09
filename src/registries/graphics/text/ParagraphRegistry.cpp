@@ -21,8 +21,8 @@ namespace oly::reg
 					if (auto _init = node["init"].value<std::string>())
 					{
 						auto_loaded.emplace(name, move_shared(create_paragraph(name)));
-						if (_init.value() == "discard")
-							constructors.erase(name);
+						//if (_init.value() == "discard")
+							//constructors.erase(name); TODO when removing ref_ functions, don't discard
 					}
 				}
 			}

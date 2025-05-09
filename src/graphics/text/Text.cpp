@@ -34,6 +34,7 @@ namespace oly::rendering
 
 	void TextBatch::render() const
 	{
+		vbo_block.pre_draw_all();
 		glyph_ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);
@@ -48,6 +49,7 @@ namespace oly::rendering
 		ubo.modulation.bind_base(1);
 		ebo.render_elements(GL_TRIANGLES);
 
+		vbo_block.post_draw_all();
 		glyph_ssbo_block.post_draw_all();
 	}
 		

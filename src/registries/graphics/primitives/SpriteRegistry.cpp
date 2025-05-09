@@ -21,8 +21,8 @@ namespace oly::reg
 						if (auto _init = node["init"].value<std::string>())
 						{
 							auto_loaded_sprites.emplace(std::move(name), move_shared(create_sprite(name)));
-							if (_init.value() == "discard")
-								sprite_constructors.erase(name);
+							//if (_init.value() == "discard")
+								//sprite_constructors.erase(name); TODO when removing ref_ functions, don't discard
 						}
 					}
 				}
@@ -41,9 +41,9 @@ namespace oly::reg
 						sprite_atlas_constructors[name] = node;
 						if (auto _init = node["init"].value<std::string>())
 						{
-							auto_loaded_sprite_atlases.emplace(std::move(name), move_shared(create_atlas_extension(name)));
-							if (_init.value() == "discard")
-								sprite_atlas_constructors.erase(name);
+							auto_loaded_sprite_atlases.emplace(std::move(name), move_shared(create_atlas_res_extension(name)));
+							//if (_init.value() == "discard")
+								//sprite_atlas_constructors.erase(name); TODO when removing ref_ functions, don't discard
 						}
 					}
 				}
@@ -188,7 +188,43 @@ namespace oly::reg
 		auto_loaded_sprites.erase(name);
 	}
 
-	rendering::SpriteAtlasResExtension SpriteRegistry::create_atlas_extension(const std::string& name) const
+	rendering::SpriteAtlasExtension SpriteRegistry::create_atlas_extension(const std::string& name) const
+	{
+		auto it = sprite_atlas_constructors.find(name);
+		if (it == sprite_atlas_constructors.end())
+			throw Error(ErrorCode::UNREGISTERED_ATLAS);
+		const auto& node = it->second;
+
+		auto _sprite_name = node["sprite"].value<std::string>();
+		if (!_sprite_name)
+			throw Error(ErrorCode::UNREGISTERED_SPRITE);
+
+		rendering::SpriteAtlasExtension atlas(create_sprite(_sprite_name.value()));
+
+		auto _rows = node["rows"].value<int64_t>();
+		auto _cols = node["cols"].value<int64_t>();
+		auto _delay_seconds = node["delay seconds"].value<double>();
+
+		if (_rows && _cols && _delay_seconds)
+		{
+			auto row_major = node["row major"].value<bool>().value_or(true);
+			auto row_up = node["row up"].value<bool>().value_or(true);
+			atlas.setup_uniform((GLuint)_rows.value(), (GLuint)_cols.value(), (float)_delay_seconds.value(), row_major, row_up);
+
+			if (auto _starting_frame = node["starting frame"].value<int64_t>())
+				atlas.anim_format.starting_frame = (GLuint)_starting_frame.value();
+			if (auto _starting_time = node["starting time"].value<double>())
+				atlas.anim_format.starting_time = (float)_starting_time.value();
+			if (auto _static_frame = node["static frame"].value<int64_t>()) // TODO this should be in else clause if rows/cols/delay_cs are not provided
+				atlas.select_static_frame((GLuint)_static_frame.value());
+
+			atlas.on_tick();
+		}
+
+		return atlas;
+	}
+
+	rendering::SpriteAtlasResExtension SpriteRegistry::create_atlas_res_extension(const std::string& name) const
 	{
 		auto it = sprite_atlas_constructors.find(name);
 		if (it == sprite_atlas_constructors.end())
@@ -214,8 +250,10 @@ namespace oly::reg
 				atlas.anim_format.starting_frame = (GLuint)_starting_frame.value();
 			if (auto _starting_time = node["starting time"].value<double>())
 				atlas.anim_format.starting_time = (float)_starting_time.value();
-			if (auto _static_frame = node["static frame"].value<int64_t>())
+			if (auto _static_frame = node["static frame"].value<int64_t>()) // TODO this should be in else clause if rows/cols/delay_cs are not provided
 				atlas.select_static_frame((GLuint)_static_frame.value());
+
+			atlas.on_tick();
 		}
 
 		return atlas;

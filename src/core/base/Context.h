@@ -12,7 +12,6 @@
 #include "registries/graphics/text/FontFaceRegistry.h"
 #include "registries/graphics/text/FontAtlasRegistry.h"
 #include "registries/graphics/text/ParagraphRegistry.h"
-#include "registries/graphics/DrawCommandRegistry.h"
 
 namespace oly::context
 {
@@ -51,8 +50,6 @@ namespace oly::context
 	extern reg::FontAtlasRegistry& font_atlas_registry();
 	extern reg::ParagraphRegistry& paragraph_registry();
 
-	extern reg::DrawCommandRegistry draw_command_registry();
-
 	extern bool frame();
 
 	extern graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index = 0);
@@ -66,7 +63,7 @@ namespace oly::context
 	extern rendering::Sprite sprite(const std::string& name);
 	extern std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name);
 	extern void render_sprites();
-	extern rendering::SpriteAtlasResExtension atlas_extension(const std::string& name);
+	extern rendering::SpriteAtlasExtension atlas_extension(const std::string& name);
 	extern std::weak_ptr<rendering::SpriteAtlasResExtension> ref_atlas_extension(const std::string& name);
 
 	extern rendering::Polygon polygon();
@@ -99,6 +96,4 @@ namespace oly::context
 	extern rendering::Paragraph paragraph(const std::string& name);
 	extern std::weak_ptr<rendering::Paragraph> ref_paragraph(const std::string& name);
 	extern void render_text();
-
-	extern void execute_draw_command(const std::string& name);
 }

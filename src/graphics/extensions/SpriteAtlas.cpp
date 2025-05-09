@@ -70,7 +70,7 @@ namespace oly::rendering
 
 		glm::vec2 dimensions;
 		auto texture = sprite->get_texture(dimensions);
-		sprite->get_batch().update_texture_dimensions(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
+		sprite->set_texture(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
 	}
 
 	void SpriteAtlasResExtension::select(GLuint frame) const
@@ -81,6 +81,11 @@ namespace oly::rendering
 			current_frame = frame;
 			sprite->set_tex_coords(atlas[frame]);
 		}
+	}
+
+	SpriteAtlasExtension::SpriteAtlasExtension(Sprite&& sprite)
+		: sprite(std::move(sprite))
+	{
 	}
 
 	void SpriteAtlasExtension::on_tick() const
@@ -149,7 +154,7 @@ namespace oly::rendering
 
 		glm::vec2 dimensions;
 		auto texture = sprite.get_texture(dimensions);
-		sprite.get_batch().update_texture_dimensions(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
+		sprite.set_texture(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
 	}
 
 	void SpriteAtlasExtension::select(GLuint frame) const

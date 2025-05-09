@@ -20,8 +20,8 @@ namespace oly::reg
 					if (auto _init = node["init"].value<std::string>())
 					{
 						auto_loaded.emplace(name, move_shared(create_tilemap(name)));
-						if (_init.value() == "discard")
-							tilemap_constructors.erase(name);
+						//if (_init.value() == "discard")
+							//tilemap_constructors.erase(name); TODO when removing ref_ functions, don't discard
 					}
 				}
 			}

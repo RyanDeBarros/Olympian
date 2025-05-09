@@ -80,15 +80,9 @@ namespace oly::rendering
 
 	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
 	{
-		GLuint& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos,
-			QuadInfoStore::DimensionlessTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos,
+				QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
 			quad_ssbo_block.flag<INFO>(vb_pos);
-		else if (tex_data_ssbo.receive<TexData>(tex_slot).dimensions != dimensions)
-		{
-			tex_data_ssbo.send(tex_slot, &TexData::dimensions, dimensions);
-			quad_ssbo_block.flag<INFO>(vb_pos);
-		}
 	}
 
 	void SpriteBatch::set_tex_coords(GLuint vb_pos, const UVRect& uvs)
@@ -114,7 +108,7 @@ namespace oly::rendering
 		GLuint slot = get_quad_info(vb_pos).tex_slot;
 		if (slot == 0)
 			return nullptr;
-		QuadInfoStore::DimensionlessTexture tex = quad_info_store.textures.get_object(slot);
+		QuadInfoStore::SizedTexture tex = quad_info_store.textures.get_object(slot);
 		dimensions = tex.dimensions;
 		return tex.texture;
 	}
@@ -264,7 +258,7 @@ namespace oly::rendering
 	{
 		batch->set_texture(vbid.get(), texture, dimensions);
 	}
-		
+
 	void Sprite::set_tex_coords(const UVRect& tex_coords) const
 	{
 		batch->set_tex_coords(vbid.get(), tex_coords);

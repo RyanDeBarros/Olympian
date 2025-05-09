@@ -130,18 +130,18 @@ namespace oly::rendering
 
 		struct QuadInfoStore
 		{
-			struct DimensionlessTexture
+			struct SizedTexture
 			{
 				graphics::BindlessTextureRes texture;
 				glm::vec2 dimensions = {};
 
-				bool operator==(const DimensionlessTexture& t) const { return texture == t.texture; }
+				bool operator==(const SizedTexture& t) const = default;
 			};
-			struct DimensionlessTextureHash
+			struct SizedTextureHash
 			{
-				size_t operator()(const DimensionlessTexture& t) const { return std::hash<graphics::BindlessTextureRes>{}(t.texture); }
+				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRes>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
 			};
-			graphics::UsageSlotTracker<DimensionlessTexture, DimensionlessTextureHash> textures;
+			graphics::UsageSlotTracker<SizedTexture, SizedTextureHash> textures;
 			graphics::UsageSlotTracker<UVRect, UVRectHash> tex_coords;
 			graphics::UsageSlotTracker<Modulation, ModulationHash> modulations;
 			graphics::UsageSlotTracker<graphics::AnimFrameFormat, AnimHash> anims;

@@ -41,10 +41,8 @@ namespace oly::rendering
 		{
 			Index vertices = 0;
 			Index indices = 0;
-			Index primitives = 0;
 
 			Capacity(Index primitives, Index degree = 6)
-				: primitives(primitives)
 			{
 				OLY_ASSERT(degree >= 3);
 				OLY_ASSERT(degree * primitives <= UINT_MAX);

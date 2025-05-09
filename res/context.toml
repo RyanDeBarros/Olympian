@@ -16,4 +16,3 @@ ellipse_batch             = { "ellipses" = 100 }
 "font atlas registries"   = [ "assets/fonts.toml" ]
 text_batch                = { "initial glyphs" = 1000, "new textures" = 10 }
 "paragraph registries"    = [ "assets/paragraphs.toml" ]
-"draw command registries" = [ "assets/draw_commands.toml" ]

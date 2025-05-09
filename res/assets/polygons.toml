@@ -79,7 +79,7 @@ transform = { "position" = [300, 200], "scale" = [200, 200] }
 "init" = true
 
 [[poly_composite]]
-"name" = "bordered triangle"
+"name" = "bordered quad"
 transform = { "position" = [100, -100], "scale" = [150, 150] }
 "method" = "bordered ngon"
 "points" = [[ 3, -1 ], [ 0, 2 ], [ -3, -1 ], [ 0, 0 ]]
