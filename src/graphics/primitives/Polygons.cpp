@@ -193,9 +193,15 @@ namespace oly::rendering
 
 	void Polygonal::init()
 	{
+		subinit();
 		_batch->resize_range(id, num_vertices());
-		transformer.pre_get();
-		send_polygon();
+		impl_set_polygon();
+	}
+
+	void Polygonal::send_polygon()
+	{
+		subinit();
+		impl_set_polygon();
 	}
 		
 	void Polygonal::draw() const
@@ -228,15 +234,19 @@ namespace oly::rendering
 		return _batch->ebo.draw_primitive()[0];
 	}
 
-	void Polygon::send_polygon() const
-	{
-		cache = cmath::triangulate(polygon.points);
-		set_polygon(polygon);
-	}
-
 	GLuint Polygon::num_vertices() const
 	{
 		return (GLuint)polygon.points.size();
+	}
+
+	void Polygon::impl_set_polygon() const
+	{
+		set_polygon(polygon);
+	}
+
+	void Polygon::subinit() const
+	{
+		cache = cmath::triangulate(polygon.points);
 	}
 
 	void Polygon::draw_triangulation(GLuint initial_vertex) const
@@ -249,17 +259,21 @@ namespace oly::rendering
 		}
 	}
 
-	void PolyComposite::send_polygon() const
-	{
-		set_polygon(composite);
-	}
-
 	GLuint PolyComposite::num_vertices() const
 	{
 		GLuint vertices = 0;
 		for (const auto& primitive : composite)
 			vertices += (GLuint)primitive.polygon.points.size();
 		return vertices;
+	}
+
+	void PolyComposite::impl_set_polygon() const
+	{
+		set_polygon(composite);
+	}
+
+	void PolyComposite::subinit() const
+	{
 	}
 
 	void PolyComposite::draw_triangulation(GLuint initial_vertex) const
@@ -278,18 +292,22 @@ namespace oly::rendering
 		}
 	}
 
-	void NGon::send_polygon() const
-	{
-		cache = bordered ? base.bordered_composite() : base.composite();
-		set_polygon(cache);
-	}
-
 	GLuint NGon::num_vertices() const
 	{
 		GLuint vertices = 0;
 		for (const auto& primitive : cache)
 			vertices += (GLuint)primitive.polygon.points.size();
 		return vertices;
+	}
+
+	void NGon::impl_set_polygon() const
+	{
+		set_polygon(cache);
+	}
+
+	void NGon::subinit() const
+	{
+		cache = bordered ? base.bordered_composite() : base.composite();
 	}
 
 	void NGon::draw_triangulation(GLuint initial_vertex) const

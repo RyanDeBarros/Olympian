@@ -104,7 +104,7 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		void init();
-		virtual void send_polygon() const = 0;
+		void send_polygon();
 		virtual GLuint num_vertices() const = 0;
 		void draw() const;
 
@@ -113,6 +113,8 @@ namespace oly::rendering
 		void set_polygon(const std::vector<cmath::Polygon2D>& polygons) const;
 		void set_polygon(const cmath::Polygon2DComposite& composite) const;
 		GLuint& draw_index() const;
+		virtual void impl_set_polygon() const = 0;
+		virtual void subinit() const = 0;
 		virtual void draw_triangulation(GLuint initial_vertex) const = 0;
 	};
 
@@ -124,13 +126,14 @@ namespace oly::rendering
 		Polygon(Polygon&&) noexcept = default;
 		Polygon& operator=(Polygon&&) noexcept = default;
 
-		virtual void send_polygon() const override;
 		virtual GLuint num_vertices() const override;
 
 	private:
 		mutable cmath::Triangulation cache;
 
 	protected:
+		virtual void impl_set_polygon() const override;
+		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
@@ -142,10 +145,11 @@ namespace oly::rendering
 		PolyComposite(PolyComposite&&) noexcept = default;
 		PolyComposite& operator=(PolyComposite&&) noexcept = default;
 
-		virtual void send_polygon() const override;
 		virtual GLuint num_vertices() const override;
 
 	protected:
+		virtual void impl_set_polygon() const override;
+		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
@@ -158,13 +162,14 @@ namespace oly::rendering
 		NGon(NGon&&) noexcept = default;
 		NGon& operator=(NGon&&) noexcept = default;
 
-		virtual void send_polygon() const override;
 		virtual GLuint num_vertices() const override;
 
 	private:
 		mutable cmath::Polygon2DComposite cache;
 
 	protected:
+		virtual void impl_set_polygon() const override;
+		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
 }

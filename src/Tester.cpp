@@ -1,5 +1,11 @@
 ﻿#include "Olympian.h"
 
+#include "archetypes/PolygonCrop.h"
+#include "archetypes/SpriteMatch.h"
+#include "archetypes/EllipsePair.h"
+#include "archetypes/Jumble.h"
+#include "archetypes/BKG.h"
+
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override
@@ -129,126 +135,21 @@ int main()
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	oly::rendering::Polygon bkg_rect = oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/bkg rect.toml")["polygon"]);
+	oly::gen::BKG bkg;
+	oly::gen::PolygonCrop polygon_crop;
+	oly::gen::SpriteMatch sprite_match;
+	oly::gen::EllipsePair ellipses;
+	oly::gen::Jumble jumble;
 
-	struct Archetype_PolygonCrop
-	{
-		oly::rendering::Polygon pentagon1, pentagon2;
-		oly::rendering::PolyComposite bordered_quad;
+	pc.test_text = &jumble.test_text;
 
-		Archetype_PolygonCrop()
-			: pentagon1(oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/pentagon1.toml")["polygon"])),
-			pentagon2(oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/pentagon2.toml")["polygon"])),
-			bordered_quad(oly::reg::load_poly_composite(oly::context::load_toml("assets/polygonals/bordered quad.toml")["poly_composite"]))
-		{}
-
-		void draw(bool flush_polygons) const
-		{
-			pentagon1.draw();
-			pentagon2.draw();
-			bordered_quad.draw();
-			if (flush_polygons)
-				oly::context::render_polygons();
-		}
-	} polygon_crop;
-
-	struct Archetype_SpriteMatch
-	{
-		oly::rendering::Sprite sprite0, sprite2;
-
-		Archetype_SpriteMatch()
-			: sprite0(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite0.toml")["sprite"])),
-			sprite2(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite2.toml")["sprite"]))
-		{
-		}
-
-		void draw(bool flush_sprites) const
-		{
-			sprite0.draw();
-			sprite2.draw();
-			if (flush_sprites)
-				oly::context::render_sprites();
-		}
-	} sprite_match;
-
-	struct Archetype_Ellipses
-	{
-		oly::rendering::Ellipse ellipse1, ellipse2;
-
-		Archetype_Ellipses()
-			: ellipse1(oly::reg::load_ellipse(oly::context::load_toml("assets/ellipses/ellipse1.toml")["ellipse"])),
-			ellipse2(oly::reg::load_ellipse(oly::context::load_toml("assets/ellipses/ellipse2.toml")["ellipse"]))
-		{
-		}
-
-		void draw(bool flush_ellipses) const
-		{
-			ellipse1.draw();
-			ellipse2.draw();
-			if (flush_ellipses)
-				oly::context::render_ellipses();
-		}
-	} ellipses;
-
-	struct Archetype_Diverse
-	{
-		oly::rendering::Sprite sprite3, sprite4, sprite5;
-		oly::rendering::NGon octagon;
-		oly::rendering::Sprite sprite1, godot_icon_3_0, knight;
-		oly::rendering::PolyComposite concave_shape;
-		oly::rendering::SpriteAtlasExtension atlased_knight;
-		oly::rendering::TileMap grass_tilemap;
-		oly::rendering::Paragraph test_text;
-
-		Archetype_Diverse()
-			: sprite3(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite3.toml")["sprite"])),
-			sprite4(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite4.toml")["sprite"])),
-			sprite5(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite5.toml")["sprite"])),
-			octagon(oly::reg::load_ngon(oly::context::load_toml("assets/polygonals/octagon.toml")["ngon"])),
-			sprite1(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite1.toml")["sprite"])),
-			godot_icon_3_0(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/godot icon (3.0).toml")["sprite"])),
-			knight(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/knight.toml")["sprite"])),
-			concave_shape(oly::reg::load_poly_composite(oly::context::load_toml("assets/polygonals/concave shape.toml")["poly_composite"])),
-			atlased_knight(oly::reg::load_sprite_atlas(oly::context::load_toml("assets/sprites/atlased knight.toml")["sprite_atlas"])),
-			grass_tilemap(oly::reg::load_tilemap(oly::context::load_toml("assets/tilemaps/grass tilemap.toml")["tilemap"])),
-			test_text(oly::reg::load_paragraph(oly::context::load_toml("assets/paragraphs/test text.toml")["paragraph"]))
-		{
-			octagon.init(); // TODO init() should happen in move constructor, why is this init() call necessary?
-			concave_shape.init();
-		}
-
-		void draw(bool flush_text) const
-		{
-			sprite3.draw();
-			sprite4.draw();
-			sprite5.draw();
-			oly::context::render_sprites();
-			octagon.draw();
-			oly::context::render_polygons();
-			sprite1.draw();
-			godot_icon_3_0.draw();
-			knight.draw();
-			oly::context::render_sprites();
-			concave_shape.draw();
-			oly::context::render_polygons();
-			atlased_knight.sprite.draw();
-			grass_tilemap.draw();
-			oly::context::render_sprites();
-			test_text.draw();
-			if (flush_text)
-				oly::context::render_text();
-		}
-	} diverse;
-
-	pc.test_text = &diverse.test_text;
-
-	for (auto& tp : diverse.concave_shape.composite)
+	for (auto& tp : jumble.concave_shape.composite)
 	{
 		tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
 		tp.polygon.colors[0].g = (float)rand() / RAND_MAX;
 		tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
 	}
-	diverse.concave_shape.send_polygon();
+	jumble.concave_shape.send_polygon();
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
@@ -257,8 +158,7 @@ int main()
 	glEnable(GL_BLEND);
 
 	auto render_frame = [&]() {
-		bkg_rect.draw();
-		oly::context::render_polygons();
+		bkg.draw(true);
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
@@ -272,7 +172,7 @@ int main()
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		oly::context::render_sprites();
-		diverse.draw(true);
+		jumble.draw(true);
 		};
 
 
@@ -282,15 +182,15 @@ int main()
 	{
 		// logic update
 
-		diverse.octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
-		diverse.octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
-		diverse.octagon.base.border_width = fmod(oly::TIME.now<float>() * 0.05f, 0.1f);
-		diverse.octagon.base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
-		diverse.octagon.send_polygon();
+		jumble.octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
+		jumble.octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
+		jumble.octagon.base.border_width = fmod(oly::TIME.now<float>() * 0.05f, 0.1f);
+		jumble.octagon.base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
+		jumble.octagon.send_polygon();
 
-		diverse.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<float>();
+		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<float>();
 
-		diverse.sprite1.set_local().rotation = oly::TIME.now<float>();
+		jumble.sprite1.set_local().rotation = oly::TIME.now<float>();
 		sprite_match.sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
 		sprite_match.sprite2.transformer.post_set();
 		
@@ -319,9 +219,8 @@ int main()
 			}
 		}
 
-		diverse.atlased_knight.on_tick();
-
-		diverse.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
+		jumble.on_tick();
+		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
 
 		// draw
 		render_frame();
