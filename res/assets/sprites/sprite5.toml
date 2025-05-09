@@ -1,0 +1,3 @@
+[sprite]
+"texture" = "textures/tux.png"
+transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }

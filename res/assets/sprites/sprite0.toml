@@ -1,0 +1,3 @@
+[sprite]
+"texture" = "textures/einstein.png"
+transform = { "position" = [300, 300] }

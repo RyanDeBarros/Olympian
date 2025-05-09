@@ -4,6 +4,7 @@
 
 #include "core/base/Context.h"
 #include "graphics/resources/Shaders.h"
+#include "Ellipses.h"
 
 namespace oly::rendering
 {

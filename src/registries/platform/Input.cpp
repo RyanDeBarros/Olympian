@@ -1,4 +1,4 @@
-#include "InputRegistry.h"
+#include "Input.h"
 
 #include "core/base/Context.h"
 #include "registries/Loader.h"
@@ -7,7 +7,7 @@
 
 namespace oly::reg
 {
-	static void load_key_binding(const toml::table& node, const std::string& id)
+	static void load_key_binding(const TOMLNode& node, const std::string& id)
 	{
 		auto key = node["key"].value<int64_t>();
 		if (!key)
@@ -19,7 +19,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_mouse_button_binding(const toml::table& node, const std::string& id)
+	static void load_mouse_button_binding(const TOMLNode& node, const std::string& id)
 	{
 		auto button = node["button"].value<int64_t>();
 		if (!button)
@@ -31,7 +31,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_button_binding(const toml::table& node, const std::string& id)
+	static void load_gamepad_button_binding(const TOMLNode& node, const std::string& id)
 	{
 		auto button = node["button"].value<int64_t>();
 		if (!button)
@@ -41,7 +41,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_1d_binding(const toml::table& node, const std::string& id)
+	static void load_gamepad_axis_1d_binding(const TOMLNode& node, const std::string& id)
 	{
 		auto axis1d = node["axis1d"].value<int64_t>();
 		if (!axis1d)
@@ -52,7 +52,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_2d_binding(const toml::table& node, const std::string& id)
+	static void load_gamepad_axis_2d_binding(const TOMLNode& node, const std::string& id)
 	{
 		auto axis2d = node["axis2d"].value<int64_t>();
 		if (!axis2d)
@@ -63,21 +63,21 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_cursor_pos_binding(const toml::table& node, const std::string& id)
+	static void load_cursor_pos_binding(const TOMLNode& node, const std::string& id)
 	{
 		input::CursorPosBinding b{};
 
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_scroll_binding(const toml::table& node, const std::string& id)
+	static void load_scroll_binding(const TOMLNode& node, const std::string& id)
 	{
 		input::ScrollBinding b{};
 			
 		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_signal(const toml::table& node)
+	void load_signal(const TOMLNode& node)
 	{
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
@@ -102,7 +102,7 @@ namespace oly::reg
 			load_scroll_binding(node, toml_id.value());
 	}
 
-	void load_signal_registry(const char* signal_registry_filepath)
+	void load_signals(const char* signal_registry_filepath)
 	{
 		auto toml = load_toml(signal_registry_filepath);
 		auto signals = toml["signal"].as_array();
@@ -110,7 +110,7 @@ namespace oly::reg
 			return;
 		signals->for_each([](auto&& node) {
 			if constexpr (toml::is_table<decltype(node)>)
-				load_signal(node);
+				load_signal((TOMLNode)node);
 			});
 	}
 }

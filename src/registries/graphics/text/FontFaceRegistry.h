@@ -20,6 +20,8 @@ namespace oly::reg
 		void load(const std::string& font_face_registry_file) { load(font_face_registry_file.c_str()); }
 		void clear();
 
+		// TODO only clear(), load_font_face(file), and delete_font_face(file)
+
 		rendering::FontFace create_font_face(const std::string& name) const;
 		std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name) const;
 		void delete_font_face(const std::string& name);

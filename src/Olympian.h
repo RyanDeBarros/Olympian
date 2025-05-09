@@ -9,6 +9,14 @@
 #include "graphics/resources/Samplers.h"
 #include "graphics/Stencil.h"
 
+#include "registries/Loader.h"
+#include "registries/graphics/primitives/Sprites.h"
+#include "registries/graphics/primitives/Polygons.h"
+#include "registries/graphics/primitives/Ellipses.h"
+#include "registries/graphics/extensions/TileMaps.h"
+#include "registries/graphics/extensions/SpriteAtlases.h"
+#include "registries/graphics/text/Paragraphs.h"
+
 namespace oly
 {
 	using context::get_platform;

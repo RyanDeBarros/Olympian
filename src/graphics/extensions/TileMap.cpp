@@ -105,45 +105,4 @@ namespace oly::rendering
 		layer.transformer.attach_parent(&transformer);
 		layers.insert(layers.begin() + z, std::move(layer));
 	}
-
-	void TileMap::load(const toml::table& node)
-	{
-		set_local() = reg::load_transform_2d(node, "transform");
-
-		auto toml_layers = node["layer"].as_array();
-		if (toml_layers)
-		{
-			toml_layers->for_each([this](auto&& node) {
-				if constexpr (toml::is_table<decltype(node)>)
-				{
-					auto tileset = node["tileset"].value<std::string>();
-					if (!tileset)
-						return;
-
-					TileMapLayer layer;
-					layer.tileset = context::ref_tileset(tileset.value()).lock();
-						
-					auto tiles = node["tiles"].as_array();
-					if (tiles)
-					{
-						for (const auto& toml_tile : *tiles)
-						{
-							if (auto _tile = toml_tile.as_array())
-							{
-								glm::vec2 tile{};
-								if (reg::parse_vec2(_tile, tile))
-									layer.paint_tile({ (int)tile.x, (int)tile.y });
-							}
-						}
-					}
-
-					auto z = node["z"].value<int64_t>();
-					if (z)
-						register_layer((size_t)z.value(), std::move(layer));
-					else
-						register_layer(std::move(layer));
-				}
-				});
-		}
-	}
 }

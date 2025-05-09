@@ -43,7 +43,5 @@ namespace oly::rendering
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);
-
-		void load(const toml::table& node);
 	};
 }

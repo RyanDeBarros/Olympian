@@ -1,41 +1,11 @@
-#include "ParagraphRegistry.h"
+#include "Paragraphs.h"
 
 #include "core/base/Context.h"
 #include "registries/Loader.h"
 
 namespace oly::reg
 {
-	void ParagraphRegistry::load(const char* registry_file)
-	{
-		auto toml = load_toml(registry_file);
-		auto parageaph_list = toml["paragraph"].as_array();
-		if (!parageaph_list)
-			return;
-		parageaph_list->for_each([this](auto&& node) {
-			if constexpr (toml::is_table<decltype(node)>)
-			{
-				if (auto _name = node["name"].value<std::string>())
-				{
-					const std::string& name = _name.value();
-					constructors[name] = node;
-					if (auto _init = node["init"].value<std::string>())
-					{
-						auto_loaded.emplace(name, move_shared(create_paragraph(name)));
-						//if (_init.value() == "discard")
-							//constructors.erase(name); TODO when removing ref_ functions, don't discard
-					}
-				}
-			}
-			});
-	}
-
-	void ParagraphRegistry::clear()
-	{
-		constructors.clear();
-		auto_loaded.clear();
-	}
-
-	static rendering::ParagraphFormat create_format(const CTOMLNode& node)
+	static rendering::ParagraphFormat create_format(const TOMLNode& node)
 	{
 		rendering::ParagraphFormat format;
 
@@ -79,14 +49,9 @@ namespace oly::reg
 
 		return format;
 	}
-		
-	rendering::Paragraph ParagraphRegistry::create_paragraph(const std::string& name) const
+	
+	rendering::Paragraph load_paragraph(const TOMLNode& node)
 	{
-		auto it = constructors.find(name);
-		if (it == constructors.end())
-			throw Error(ErrorCode::UNREGISTERED_PARAGRAPH);
-		const auto& node = it->second;
-
 		auto font_atlas = node["font atlas"].value<std::string>();
 		if (!font_atlas)
 			throw Error(ErrorCode::LOAD_ASSET);
@@ -116,18 +81,5 @@ namespace oly::reg
 		}
 
 		return paragraph;
-	}
-		
-	std::weak_ptr<rendering::Paragraph> ParagraphRegistry::ref_paragraph(const std::string& name) const
-	{
-		auto it = auto_loaded.find(name);
-		if (it == auto_loaded.end())
-			throw Error(ErrorCode::UNREGISTERED_PARAGRAPH);
-		return it->second;
-	}
-		
-	void ParagraphRegistry::delete_paragraph(const std::string& name)
-	{
-		auto_loaded.erase(name);
 	}
 }

@@ -1,9 +1,7 @@
-[[tilemap]]
-"name" = "grass tilemap"
-"init" = "discard"
+[tilemap]
 transform = { "scale" = [ 100, 100 ] }
 
-[[tilemap.layer]]
+[tilemap.layer]
 "z" = 0
 "tileset" = "grass tileset"
 "tiles" = [

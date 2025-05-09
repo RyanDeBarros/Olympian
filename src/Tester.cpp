@@ -1,7 +1,5 @@
 ﻿#include "Olympian.h"
 
-#include "registries/graphics/Textures.h"
-
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override
@@ -122,15 +120,16 @@ int main()
 	std::vector<oly::Sprite> flag_tesselation;
 	const int flag_rows = 8, flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
+	oly::Sprite flag_instance = oly::reg::load_sprite(oly::context::load_toml("assets/sprites/flag instance.toml")["sprite"]);
 	for (int i = 0; i < flag_rows * flag_cols; ++i)
 	{
-		flag_tesselation.push_back(oly::sprite("flag instance"));
+		flag_tesselation.push_back(flag_instance);
 		flag_tesselation[i].set_local().position = { -flag_tesselation_modifier.size.x * 0.5f + float(i % flag_cols) * flag_tesselation_modifier.size.x / flag_cols,
 			flag_tesselation_modifier.size.y * 0.5f - float(i / flag_rows) * flag_tesselation_modifier.size.y / flag_rows };
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	oly::rendering::Polygon bkg_rect = oly::context::polygon("bkg rect");
+	oly::rendering::Polygon bkg_rect = oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/bkg rect.toml")["polygon"]);
 
 	struct Archetype_PolygonCrop
 	{
@@ -138,9 +137,9 @@ int main()
 		oly::rendering::PolyComposite bordered_quad;
 
 		Archetype_PolygonCrop()
-			: pentagon1(oly::context::polygon("pentagon1")),
-			pentagon2(oly::context::polygon("pentagon2")),
-			bordered_quad(oly::context::poly_composite("bordered quad"))
+			: pentagon1(oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/pentagon1.toml")["polygon"])),
+			pentagon2(oly::reg::load_polygon(oly::context::load_toml("assets/polygonals/pentagon2.toml")["polygon"])),
+			bordered_quad(oly::reg::load_poly_composite(oly::context::load_toml("assets/polygonals/bordered quad.toml")["poly_composite"]))
 		{}
 
 		void draw(bool flush_polygons) const
@@ -158,8 +157,8 @@ int main()
 		oly::rendering::Sprite sprite0, sprite2;
 
 		Archetype_SpriteMatch()
-			: sprite0(oly::context::sprite("sprite0")),
-			sprite2(oly::context::sprite("sprite2"))
+			: sprite0(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite0.toml")["sprite"])),
+			sprite2(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite2.toml")["sprite"]))
 		{
 		}
 
@@ -177,8 +176,8 @@ int main()
 		oly::rendering::Ellipse ellipse1, ellipse2;
 
 		Archetype_Ellipses()
-			: ellipse1(oly::context::ellipse("ellipse1")),
-			ellipse2(oly::context::ellipse("ellipse2"))
+			: ellipse1(oly::reg::load_ellipse(oly::context::load_toml("assets/ellipses/ellipse1.toml")["ellipse"])),
+			ellipse2(oly::reg::load_ellipse(oly::context::load_toml("assets/ellipses/ellipse2.toml")["ellipse"]))
 		{
 		}
 
@@ -195,26 +194,26 @@ int main()
 	{
 		oly::rendering::Sprite sprite3, sprite4, sprite5;
 		oly::rendering::NGon octagon;
-		oly::rendering::Sprite sprite1, godot_icon_10_0, knight;
+		oly::rendering::Sprite sprite1, godot_icon_3_0, knight;
 		oly::rendering::PolyComposite concave_shape;
 		oly::rendering::SpriteAtlasExtension atlased_knight;
 		oly::rendering::TileMap grass_tilemap;
 		oly::rendering::Paragraph test_text;
 
 		Archetype_Diverse()
-			: sprite3(oly::context::sprite("sprite3")),
-			sprite4(oly::context::sprite("sprite4")),
-			sprite5(oly::context::sprite("sprite5")),
-			octagon(oly::context::ngon("octagon")),
-			sprite1(oly::context::sprite("sprite1")),
-			godot_icon_10_0(oly::context::sprite("godot icon (10.0)")),
-			knight(oly::context::sprite("knight")),
-			concave_shape(oly::context::poly_composite("concave shape")),
-			atlased_knight(oly::context::atlas_extension("atlased knight")),
-			grass_tilemap(oly::context::tilemap("grass tilemap")),
-			test_text(oly::context::paragraph("test text"))
+			: sprite3(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite3.toml")["sprite"])),
+			sprite4(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite4.toml")["sprite"])),
+			sprite5(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite5.toml")["sprite"])),
+			octagon(oly::reg::load_ngon(oly::context::load_toml("assets/polygonals/octagon.toml")["ngon"])),
+			sprite1(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/sprite1.toml")["sprite"])),
+			godot_icon_3_0(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/godot icon (3.0).toml")["sprite"])),
+			knight(oly::reg::load_sprite(oly::context::load_toml("assets/sprites/knight.toml")["sprite"])),
+			concave_shape(oly::reg::load_poly_composite(oly::context::load_toml("assets/polygonals/concave shape.toml")["poly_composite"])),
+			atlased_knight(oly::reg::load_sprite_atlas(oly::context::load_toml("assets/sprites/atlased knight.toml")["sprite_atlas"])),
+			grass_tilemap(oly::reg::load_tilemap(oly::context::load_toml("assets/tilemaps/grass tilemap.toml")["tilemap"])),
+			test_text(oly::reg::load_paragraph(oly::context::load_toml("assets/paragraphs/test text.toml")["paragraph"]))
 		{
-			octagon.init(); // TODO make protected in Polygonal and call in constructor of Polygon/PolyComposite/NGon
+			octagon.init(); // TODO init() should happen in move constructor, why is this init() call necessary?
 			concave_shape.init();
 		}
 
@@ -227,7 +226,7 @@ int main()
 			octagon.draw();
 			oly::context::render_polygons();
 			sprite1.draw();
-			godot_icon_10_0.draw();
+			godot_icon_3_0.draw();
 			knight.draw();
 			oly::context::render_sprites();
 			concave_shape.draw();

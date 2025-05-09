@@ -6,7 +6,7 @@
 #include "core/util/Time.h"
 #include "graphics/resources/Resources.h"
 #include "registries/Loader.h"
-#include "registries/platform/InputRegistry.h"
+#include "registries/platform/Input.h"
 
 namespace oly::context
 {
@@ -22,17 +22,9 @@ namespace oly::context
 
 		graphics::NSVGContext nsvg_context;
 		reg::TextureRegistry texture_registry;
-
-		reg::SpriteRegistry sprite_registry;
-		reg::PolygonRegistry polygon_registry;
-		reg::EllipseRegistry ellipse_registry;
-
-		reg::TileSetRegistry tileset_registry;
-		reg::TileMapRegistry tilemap_registry;
-			
+		reg::TileSetRegistry tileset_registry;			
 		reg::FontFaceRegistry font_face_registry;
 		reg::FontAtlasRegistry font_atlas_registry;
-		reg::ParagraphRegistry paragraph_registry;
 
 		platform::StandardWindowResize standard_window_resize;
 	}
@@ -136,23 +128,18 @@ namespace oly::context
 		}\
 	}
 
-	INIT_REGISTRY(init_sprite_registry, "sprite registries", sprite_registry);
-	INIT_REGISTRY(init_polygon_registry, "polygon registries", polygon_registry);
-	INIT_REGISTRY(init_ellipse_registry, "ellipse registries", ellipse_registry);
 	INIT_REGISTRY(init_tileset_registry, "tileset registries", tileset_registry);
-	INIT_REGISTRY(init_tilemap_registry, "tilemap registries", tilemap_registry);
 	INIT_REGISTRY(init_font_face_registry, "font face registries", font_face_registry);
 	INIT_REGISTRY(init_font_atlas_registry, "font atlas registries", font_atlas_registry);
-	INIT_REGISTRY(init_paragraph_registry, "paragraph registries", paragraph_registry);
 
-	static void init_signal_registry(const TOMLNode& node)
+	static void autoload_signals(const TOMLNode& node)
 	{
-		auto register_files = node["signal registries"].as_array();
+		auto register_files = node["signals"].as_array();
 		if (register_files)
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signal_registry((internal::context_filepath + file.value()).c_str());
+					reg::load_signals((internal::context_filepath + file.value()).c_str());
 		}
 	}
 
@@ -198,28 +185,18 @@ namespace oly::context
 		init_ellipse_batch(toml_context);
 		init_text_batch(toml_context);
 			
-		init_sprite_registry(toml_context);
-		init_polygon_registry(toml_context);
-		init_ellipse_registry(toml_context);
 		init_tileset_registry(toml_context);
-		init_tilemap_registry(toml_context);
 		init_font_face_registry(toml_context);
 		init_font_atlas_registry(toml_context);
-		init_paragraph_registry(toml_context);
-		init_signal_registry(toml_context);
+		autoload_signals(toml_context);
 	}
 
 	static void terminate()
 	{
 		internal::texture_registry.clear();
-		internal::sprite_registry.clear();
-		internal::polygon_registry.clear();
-		internal::ellipse_registry.clear();
 		internal::tileset_registry.clear();
-		internal::tilemap_registry.clear();
 		internal::font_face_registry.clear();
 		internal::font_atlas_registry.clear();
-		internal::paragraph_registry.clear();
 
 		internal::sprite_batch.reset();
 		internal::polygon_batch.reset();
@@ -324,29 +301,9 @@ namespace oly::context
 		return internal::nsvg_context;
 	}
 
-	reg::SpriteRegistry& sprite_registry()
-	{
-		return internal::sprite_registry;
-	}
-		
-	reg::PolygonRegistry& polygon_registry()
-	{
-		return internal::polygon_registry;
-	}
-		
-	reg::EllipseRegistry& ellipse_registry()
-	{
-		return internal::ellipse_registry;
-	}
-		
 	reg::TileSetRegistry& tileset_registry()
 	{
 		return internal::tileset_registry;
-	}
-		
-	reg::TileMapRegistry& tilemap_registry()
-	{
-		return internal::tilemap_registry;
 	}
 		
 	reg::FontFaceRegistry& font_face_registry()
@@ -359,9 +316,9 @@ namespace oly::context
 		return internal::font_atlas_registry;
 	}
 
-	reg::ParagraphRegistry& paragraph_registry()
+	toml::parse_result load_toml(const char* file)
 	{
-		return internal::paragraph_registry;
+		return reg::load_toml(context_filepath() + file);
 	}
 
 	bool frame()
@@ -402,29 +359,9 @@ namespace oly::context
 		return rendering::Sprite(*internal::sprite_batch);
 	}
 
-	rendering::Sprite sprite(const std::string& name)
-	{
-		return internal::sprite_registry.create_sprite(name);
-	}
-
-	std::weak_ptr<rendering::Sprite> ref_sprite(const std::string& name)
-	{
-		return internal::sprite_registry.ref_sprite(name);
-	}
-
 	void render_sprites()
 	{
 		internal::sprite_batch->render();
-	}
-
-	rendering::SpriteAtlasExtension atlas_extension(const std::string& name)
-	{
-		return internal::sprite_registry.create_atlas_extension(name);
-	}
-
-	std::weak_ptr<rendering::SpriteAtlasResExtension> ref_atlas_extension(const std::string& name)
-	{
-		return internal::sprite_registry.ref_atlas_extension(name);
 	}
 
 	rendering::Polygon polygon()
@@ -432,49 +369,14 @@ namespace oly::context
 		return rendering::Polygon(*internal::polygon_batch);
 	}
 
-	rendering::Polygon polygon(const std::string& name)
-	{
-		return internal::polygon_registry.create_polygon(name);
-	}
-
 	rendering::PolyComposite poly_composite()
 	{
 		return rendering::PolyComposite(*internal::polygon_batch);
 	}
 
-	rendering::PolyComposite poly_composite(const std::string& name)
-	{
-		return internal::polygon_registry.create_composite(name);
-	}
-
 	rendering::NGon ngon()
 	{
 		return rendering::NGon(*internal::polygon_batch);
-	}
-
-	rendering::NGon ngon(const std::string& name)
-	{
-		return internal::polygon_registry.create_ngon(name);
-	}
-
-	std::weak_ptr<rendering::Polygonal> ref_polygonal(const std::string& name)
-	{
-		return internal::polygon_registry.ref_polygonal(name);
-	}
-
-	std::weak_ptr<rendering::Polygon> ref_polygon(const std::string& name)
-	{
-		return std::dynamic_pointer_cast<rendering::Polygon>(ref_polygonal(name).lock());
-	}
-
-	std::weak_ptr<rendering::PolyComposite> ref_poly_composite(const std::string& name)
-	{
-		return std::dynamic_pointer_cast<rendering::PolyComposite>(ref_polygonal(name).lock());
-	}
-
-	std::weak_ptr<rendering::NGon> ref_ngon(const std::string& name)
-	{
-		return std::dynamic_pointer_cast<rendering::NGon>(ref_polygonal(name).lock());
 	}
 
 	void render_polygons()
@@ -485,16 +387,6 @@ namespace oly::context
 	rendering::Ellipse ellipse()
 	{
 		return rendering::Ellipse(*internal::ellipse_batch);
-	}
-
-	rendering::Ellipse ellipse(const std::string& name)
-	{
-		return internal::ellipse_registry.create_ellipse(name);
-	}
-
-	std::weak_ptr<rendering::Ellipse> ref_ellipse(const std::string& name)
-	{
-		return internal::ellipse_registry.ref_ellipse(name);
 	}
 
 	void render_ellipses()
@@ -511,17 +403,7 @@ namespace oly::context
 	{
 		return internal::tileset_registry.ref_tileset(name);
 	}
-		
-	rendering::TileMap tilemap(const std::string& name)
-	{
-		return internal::tilemap_registry.create_tilemap(name);
-	}
-		
-	std::weak_ptr<rendering::TileMap> ref_tilemap(const std::string& name)
-	{
-		return internal::tilemap_registry.ref_tilemap(name);
-	}
-		
+
 	rendering::FontFace font_face(const std::string& name)
 	{
 		return internal::font_face_registry.create_font_face(name);
@@ -545,16 +427,6 @@ namespace oly::context
 	rendering::Paragraph paragraph(const rendering::FontAtlasRes& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text)
 	{
 		return rendering::Paragraph(*internal::text_batch, font_atlas, format, std::move(text));
-	}
-
-	rendering::Paragraph paragraph(const std::string& name)
-	{
-		return internal::paragraph_registry.create_paragraph(name);
-	}
-
-	std::weak_ptr<rendering::Paragraph> ref_paragraph(const std::string& name)
-	{
-		return internal::paragraph_registry.ref_paragraph(name);
 	}
 
 	void render_text()

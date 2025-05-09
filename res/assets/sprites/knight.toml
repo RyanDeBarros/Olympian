@@ -1,0 +1,4 @@
+[sprite]
+"texture"    = "textures/knight.png"
+transform    = { "position" = [100, -300], "scale" = [20, 20] }
+frame_format = { "mode" = "auto" }

@@ -1,6 +1,4 @@
-[[paragraph]]
-"name"         = "test text"
-"init"         = "discard"
+[paragraph]
 "font atlas"   = "roboto regular (96)"
 "text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 "draw bkg"     = true
@@ -8,11 +6,11 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 "bkg color"    = [ 0.5, 0.4, 0.2, 0.8 ]
 "text color"   = [ 0.0, 0.0, 0.0, 1.0 ]
 "glyph colors" = { "0" = [ 1.0, 0.0, 0.0, 1.0 ], "1" = [ 0.0, 1.0, 0.0, 1.0 ], "2" = [ 0.0, 0.0, 1.0, 1.0 ] }
-	[paragraph.format]
-	"pivot"             = [ 0.0, 1.0 ]
-	"line spacing"      = 1.5
-	"linebreak spacing" = 2.0
-	"min size"          = [ 800, 800 ]
-	"padding"           = [ 50, 50 ]
-	"horizontal align"  = "center"
-	"vertical align"    = "middle"
+[paragraph.format]
+"pivot"             = [ 0.0, 1.0 ]
+"line spacing"      = 1.5
+"linebreak spacing" = 2.0
+"min size"          = [ 800, 800 ]
+"padding"           = [ 50, 50 ]
+"horizontal align"  = "center"
+"vertical align"    = "middle"

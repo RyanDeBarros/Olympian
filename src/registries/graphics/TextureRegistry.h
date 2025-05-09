@@ -96,5 +96,7 @@ namespace oly::reg
 		graphics::ImageRes get_image_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
 		graphics::AnimRes get_anim_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
 		const graphics::NSVGAbstract& get_nsvg_abstract(const std::string& file, unsigned int texture_index = 0) const;
+
+		// TODO delete_texture(file, texture_index)
 	};
 }

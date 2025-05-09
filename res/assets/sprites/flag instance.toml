@@ -1,0 +1,3 @@
+[sprite]
+"texture" = "textures/flag.png"
+transform = { "scale" = [ 2.0, 2.0 ] }

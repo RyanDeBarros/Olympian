@@ -2,17 +2,12 @@
 window_hint               = {}
 window                    = { "width" = 1440, "height" = 1080, "title" = "Olympian Engine" }
 "gamepads"                = 1
-"signal registries"       = [ "assets/signals.toml" ]
+"signals"                 = [ "assets/signals.toml" ]
 logger                    = { "logfile" = "Olympian.log", "append" = true, "console" = true }
 sprite_batch              = { "initial sprites" = 50, "new textures" = 10 }
-"sprite registries"       = [ "assets/sprites.toml" ]
 polygon_batch             = { "primitives" = 100 }
-"polygon registries"      = [ "assets/polygons.toml" ]
 ellipse_batch             = { "ellipses" = 100 }
-"ellipse registries"      = [ "assets/ellipses.toml" ]
 "tileset registries"      = [ "assets/grass_tileset.toml" ]
-"tilemap registries"      = [ "assets/grass_tilemap.toml" ]
 "font face registries"    = [ "assets/fonts.toml" ]
 "font atlas registries"   = [ "assets/fonts.toml" ]
 text_batch                = { "initial glyphs" = 1000, "new textures" = 10 }
-"paragraph registries"    = [ "assets/paragraphs.toml" ]

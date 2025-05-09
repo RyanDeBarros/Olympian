@@ -1,4 +1,4 @@
-#include "Textures.h"
+#include "TextureRegistry.h"
 
 #include "core/base/Context.h"
 #include "core/types/Meta.h"
@@ -332,6 +332,7 @@ namespace oly::reg
 		anims.clear();
 		vector_images.clear();
 		textures.clear();
+		svg_textures.clear();
 		nsvg_abstracts.clear();
 	}
 

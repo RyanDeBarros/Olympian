@@ -1,4 +1,4 @@
-#include "PolygonRegistry.h"
+#include "Polygons.h"
 
 #include "core/base/Context.h"
 #include "core/math/Triangulation.h"
@@ -6,95 +6,8 @@
 
 namespace oly::reg
 {
-	void PolygonRegistry::load(const char* polygon_registry_file)
+	rendering::Polygon load_polygon(const TOMLNode& node)
 	{
-		auto toml = load_toml(polygon_registry_file);
-		auto polygon_list = toml["polygon"].as_array();
-		if (polygon_list)
-		{
-			polygon_list->for_each([this](auto&& node) {
-				if constexpr (toml::is_table<decltype(node)>)
-				{
-					if (auto _name = node["name"].value<std::string>())
-					{
-						const std::string& name = _name.value();
-						polygon_constructors[name] = node;
-						if (auto _init = node["init"].value<bool>())
-						{
-							if (_init.value())
-							{
-								std::shared_ptr<rendering::Polygonal> poly = move_shared(create_polygon(name));
-								poly->init();
-								auto_loaded.emplace(std::move(name), std::move(poly));
-							}
-						}
-					}
-				}
-				});
-		}
-		auto composite_list = toml["poly_composite"].as_array();
-		if (composite_list)
-		{
-			composite_list->for_each([this](auto&& node) {
-				if constexpr (toml::is_table<decltype(node)>)
-				{
-					if (auto _name = node["name"].value<std::string>())
-					{
-						const std::string& name = _name.value();
-						composite_constructors[name] = node;
-						if (auto _init = node["init"].value<bool>())
-						{
-							if (_init.value())
-							{
-								std::shared_ptr<rendering::Polygonal> poly = move_shared(create_composite(name));
-								poly->init();
-								auto_loaded.emplace(std::move(name), std::move(poly));
-							}
-						}
-					}
-				}
-				});
-		}
-		auto ngon_list = toml["ngon"].as_array();
-		if (ngon_list)
-		{
-			ngon_list->for_each([this](auto&& node) {
-				if constexpr (toml::is_table<decltype(node)>)
-				{
-					if (auto _name = node["name"].value<std::string>())
-					{
-						const std::string& name = _name.value();
-						ngon_constructors[name] = node;
-						if (auto _init = node["init"].value<bool>())
-						{
-							if (_init.value())
-							{
-								std::shared_ptr<rendering::Polygonal> poly = move_shared(create_ngon(name));
-								poly->init();
-								auto_loaded.emplace(std::move(name), std::move(poly));
-							}
-						}
-					}
-				}
-				});
-		}
-	}
-
-	void PolygonRegistry::clear()
-	{
-		polygon_constructors.clear();
-		composite_constructors.clear();
-		ngon_constructors.clear();
-		auto_loaded.clear();
-	}
-
-	rendering::Polygon PolygonRegistry::create_polygon(const std::string& name) const
-	{
-		auto it = polygon_constructors.find(name);
-		if (it == polygon_constructors.end())
-			throw Error(ErrorCode::UNREGISTERED_POLYGON);
-		const auto& node = it->second;
-
 		rendering::Polygon polygon = context::polygon();
 
 		polygon.set_local() = load_transform_2d(node, "transform");
@@ -121,20 +34,12 @@ namespace oly::reg
 			}
 		}
 
-		bool init = node["init"].value<bool>().value_or(false);
-		if (init)
-			polygon.init();
-
+		polygon.init();
 		return polygon;
 	}
 
-	rendering::PolyComposite PolygonRegistry::create_composite(const std::string& name) const
+	rendering::PolyComposite load_poly_composite(const TOMLNode& node)
 	{
-		auto it = composite_constructors.find(name);
-		if (it == composite_constructors.end())
-			throw Error(ErrorCode::UNREGISTERED_POLYGON);
-		const auto& node = it->second;
-
 		rendering::PolyComposite composite = context::poly_composite();
 
 		composite.set_local() = load_transform_2d(node, "transform");
@@ -243,20 +148,12 @@ namespace oly::reg
 			}
 		}
 
-		bool init = node["init"].value<bool>().value_or(false);
-		if (init)
-			composite.init();
-
+		composite.init();
 		return composite;
 	}
 
-	rendering::NGon PolygonRegistry::create_ngon(const std::string& name) const
+	rendering::NGon load_ngon(const TOMLNode& node)
 	{
-		auto it = ngon_constructors.find(name);
-		if (it == ngon_constructors.end())
-			throw Error(ErrorCode::UNREGISTERED_POLYGON);
-		const auto& node = it->second;
-
 		rendering::NGon ngon = context::ngon();
 
 		ngon.set_local() = load_transform_2d(node, "transform");
@@ -296,7 +193,7 @@ namespace oly::reg
 
 		ngon.bordered = node["bordered"].value<bool>().value_or(false);
 		ngon.base.border_width = (float)node["border width"].value<double>().value_or(0.0);
-			
+
 		auto border_pivot = node["border pivot"];
 		if (auto str_border_pivot = border_pivot.value<std::string>())
 		{
@@ -311,23 +208,7 @@ namespace oly::reg
 		else if (auto flt_border_pivot = border_pivot.value<double>())
 			ngon.base.border_pivot = (float)flt_border_pivot.value();
 
-		bool init = node["init"].value<bool>().value_or(false);
-		if (init)
-			ngon.init();
-
+		ngon.init();
 		return ngon;
-	}
-
-	std::weak_ptr<rendering::Polygonal> PolygonRegistry::ref_polygonal(const std::string& name) const
-	{
-		auto it = auto_loaded.find(name);
-		if (it == auto_loaded.end())
-			throw Error(ErrorCode::UNREGISTERED_POLYGON);
-		return it->second;
-	}
-
-	void PolygonRegistry::delete_polygonal(const std::string& name)
-	{
-		auto_loaded.erase(name);
 	}
 }
