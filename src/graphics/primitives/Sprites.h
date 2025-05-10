@@ -145,6 +145,8 @@ namespace oly::rendering
 			graphics::UsageSlotTracker<UVRect, UVRectHash> tex_coords;
 			graphics::UsageSlotTracker<Modulation, ModulationHash> modulations;
 			graphics::UsageSlotTracker<graphics::AnimFrameFormat, AnimHash> anims;
+
+			std::unordered_map<graphics::BindlessTextureRes, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
 		} quad_info_store;
 
 		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);

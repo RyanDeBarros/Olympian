@@ -22,23 +22,35 @@ namespace oly::graphics
 		std::unordered_map<StoredObjectType, GLuint, StoredObjectTypeHash> slot_lookup;
 		SoftIDGenerator<GLuint> pos_generator;
 
-		void _decrement_usage(GLuint i)
+		std::optional<StoredObjectType> _decrement_usage(GLuint i)
 		{
 			auto it = usages.find(i);
 			--it->second.usage;
 			if (it->second.usage == 0)
-				erase_slot(it);
+				return erase_slot(it);
+			else
+				return std::nullopt;
 		}
 
-		void erase_slot(const typename decltype(usages)::iterator& it)
+		StoredObjectType erase_slot(typename decltype(usages)::iterator& it)
 		{
-			pos_generator.yield(it->first); slot_lookup.erase(it->second.obj); usages.erase(it);
+			pos_generator.yield(it->first);
+			StoredObjectType obj = std::move(it->second.obj);
+			slot_lookup.erase(obj);
+			usages.erase(it);
+			return obj;
 		}
 
 	public:
 		UsageSlotTracker() { pos_generator.gen(); /* waste 0th slot */ }
 
-		void decrement_usage(GLuint i) { if (i != 0) _decrement_usage(i); }
+		std::optional<StoredObjectType> decrement_usage(GLuint i)
+		{
+			if (i != 0)
+				return _decrement_usage(i);
+			else
+				return std::nullopt;
+		}
 
 		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
 		{

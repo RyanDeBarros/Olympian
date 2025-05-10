@@ -53,7 +53,6 @@ namespace oly::reg
 		if (params.starting_time)
 			atlas.anim_format.starting_time = params.starting_time.value();
 
-		atlas.on_tick();
 		return atlas;
 	}
 }

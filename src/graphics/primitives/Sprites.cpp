@@ -73,16 +73,25 @@ namespace oly::rendering
 	void SpriteBatch::erase_sprite_id(GLuint id)
 	{
 		const QuadInfo& quad_info = quad_ssbo_block.buf.at<INFO>(id);
-		quad_info_store.textures.decrement_usage(quad_info.tex_slot);
+		if (auto texture = quad_info_store.textures.decrement_usage(quad_info.tex_slot))
+		{
+			auto& slots = quad_info_store.dimensionless_texture_slot_map.find(texture.value().texture)->second;
+			slots.erase(quad_info.tex_slot);
+			if (slots.empty())
+				quad_info_store.dimensionless_texture_slot_map.erase(texture.value().texture);
+		}
 		quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 		quad_info_store.modulations.decrement_usage(quad_info.color_slot);
 	}
 
 	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
 	{
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos,
-				QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
+		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
+		{
 			quad_ssbo_block.flag<INFO>(vb_pos);
+			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);
+		}
 	}
 
 	void SpriteBatch::set_tex_coords(GLuint vb_pos, const UVRect& uvs)
@@ -133,10 +142,14 @@ namespace oly::rendering
 
 	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRes& texture)
 	{
-		// TODO this is not working, since it's looking for dimension = {}. Implement some kind of map that maps texture handle to all dimensions in use, and iterate over that here.
-		GLuint slot;
-		if (quad_info_store.textures.get_slot({ texture }, slot))
-			tex_data_ssbo.send<TexData>(slot, &TexData::handle, texture->get_handle());
+		auto iter = quad_info_store.dimensionless_texture_slot_map.find(texture);
+		if (iter != quad_info_store.dimensionless_texture_slot_map.end())
+		{
+			GLuint64 handle = texture->get_handle();
+			const auto& slots = iter->second;
+			for (auto it = slots.begin(); it != slots.end(); ++it)
+				tex_data_ssbo.send<TexData>(*it, &TexData::handle, handle);
+		}
 	}
 
 	Sprite::Sprite(SpriteBatch& sprite_batch)

@@ -225,19 +225,19 @@ namespace oly::reg
 			{
 			case params::PolyComposite::MethodIndex::NGON:
 			{
-				const auto& m = std::get<params::PolyComposite::MethodIndex::NGON>(method);
+				auto& m = std::get<params::PolyComposite::MethodIndex::NGON>(method);
 				composite.composite = { cmath::create_ngon(std::move(m.colors), std::move(m.points)) };
 				break;
 			}
 			case params::PolyComposite::MethodIndex::BORDERED_NGON:
 			{
-				const auto& m = std::get<params::PolyComposite::MethodIndex::BORDERED_NGON>(method);
+				auto& m = std::get<params::PolyComposite::MethodIndex::BORDERED_NGON>(method);
 				composite.composite = cmath::create_bordered_ngon(std::move(m.ngon_base.fill_colors), std::move(m.ngon_base.border_colors), m.ngon_base.border_width, m.ngon_base.border_pivot, std::move(m.ngon_base.points));
 				break;
 			}
 			case params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION:
 			{
-				const auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
+				auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
 				composite.composite = cmath::composite_convex_decomposition(m.points);
 				break;
 			}
