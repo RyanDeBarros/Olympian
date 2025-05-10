@@ -42,8 +42,8 @@ namespace oly::platform
 
 	bool StandardWindowResize::re_render_frame() const
 	{
-		if (render_frame)
-			render_frame();
+		if (render_frame && *render_frame)
+			(*render_frame)();
 		return context::frame();
 	}
 

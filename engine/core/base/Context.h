@@ -29,7 +29,8 @@ namespace oly::context
 
 	extern const std::string& context_filepath();
 	extern platform::Platform& get_platform();
-	extern void attach_standard_window_resize(const std::function<void()>& render_frame, bool boxed = true, bool stretch = true);
+	extern void set_render_function(const std::function<void()>* render_frame);
+	extern void set_window_resized_parameters(bool boxed = true, bool stretch = true);
 	extern platform::StandardWindowResize& get_standard_window_resize();
 
 	extern rendering::SpriteBatch& sprite_batch();

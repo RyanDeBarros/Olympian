@@ -11,7 +11,7 @@ namespace oly::platform
 
 		float target_aspect_ratio;
 
-		std::function<void()> render_frame;
+		const std::function<void()>* render_frame;
 
 		bool consume(const input::WindowResizeEventData& data);
 

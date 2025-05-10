@@ -1,5 +1,5 @@
 [ellipse]
-transform = { "scale" = [150, 150] }
+transform = { "scale" = [ 150, 150 ] }
 "width"      = 1
 "height"     = 3
 "border"     = 0.4

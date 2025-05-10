@@ -6,6 +6,8 @@
 #include "archetypes/Jumble.h"
 #include "archetypes/BKG.h"
 
+#include "PlayerController.h"
+
 struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override
@@ -18,84 +20,6 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 				oly::LOG << "B" << oly::LOG.endl;
 			else
 				oly::LOG << "?" << oly::LOG.endl;
-		}
-		return false;
-	}
-};
-
-struct PlayerController : public oly::InputController
-{
-	bool dragging = false;
-	glm::vec2 ref_cursor_pos = {};
-	glm::vec2 ref_text_pos = {};
-	oly::rendering::Paragraph* test_text = nullptr;
-
-	bool jump(oly::input::Signal signal)
-	{
-		if (signal.phase == oly::input::Phase::STARTED)
-		{
-			oly::LOG << "Jump!" << oly::LOG.endl;
-			return true;
-		}
-		return false;
-	}
-
-	bool click(oly::input::Signal signal)
-	{
-		if (signal.phase == oly::input::Phase::STARTED)
-		{
-			dragging = true;
-			double x, y;
-			glfwGetCursorPos(oly::get_platform().window(), &x, &y);
-			ref_cursor_pos = { (float)x, (float)y };
-			if (test_text)
-				ref_text_pos = test_text->get_local().position;
-			drag(ref_cursor_pos);
-			return true;
-		}
-		else if (signal.phase == oly::input::Phase::COMPLETED)
-		{
-			dragging = false;
-			return true;
-		}
-		return false;
-	}
-
-	bool drag(oly::input::Signal signal)
-	{
-		if (dragging)
-			return drag(signal.get<glm::vec2>());
-		return false;
-	}
-
-	bool drag(glm::vec2 cursor_pos)
-	{
-		if (test_text)
-		{
-			test_text->set_local().position = ref_text_pos + screen_to_world_coords(cursor_pos) - screen_to_world_coords(ref_cursor_pos);
-			return true;
-		}
-		return false;
-	}
-
-	glm::vec2 screen_to_world_coords(glm::vec2 coords)
-	{
-		return { coords.x - 0.5f * oly::get_platform().window().get_width(), 0.5f * oly::get_platform().window().get_height() - coords.y };
-	}
-
-	bool zoom_camera(oly::input::Signal signal)
-	{
-		switch (signal.phase)
-		{
-		case oly::input::Phase::STARTED:
-			oly::LOG << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
-			return true;
-		case oly::input::Phase::ONGOING:
-			oly::LOG << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
-			return true;
-		case oly::input::Phase::COMPLETED:
-			oly::LOG << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
-			return true;
 		}
 		return false;
 	}
@@ -157,7 +81,7 @@ int main()
 
 	glEnable(GL_BLEND);
 
-	auto render_frame = [&]() {
+	std::function<void()> render_frame = [&]() {
 		bkg.draw(true);
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
@@ -175,8 +99,7 @@ int main()
 		jumble.draw(true);
 		};
 
-
-	oly::context::attach_standard_window_resize(render_frame);
+	oly::context::set_render_function(&render_frame);
 
 	while (oly::context::frame())
 	{
@@ -223,6 +146,6 @@ int main()
 		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
 
 		// draw
-		render_frame();
+		render_frame(); // TODO put in context::frame()
 	}
 }

@@ -14,6 +14,7 @@ namespace oly::context
 	{
 		std::string context_filepath;
 		std::unique_ptr<platform::Platform> platform;
+		const std::function<void()>* render_frame;
 
 		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
@@ -189,6 +190,8 @@ namespace oly::context
 		init_font_face_registry(toml_context);
 		init_font_atlas_registry(toml_context);
 		autoload_signals(toml_context);
+
+		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
 	}
 
 	static void terminate()
@@ -257,13 +260,17 @@ namespace oly::context
 		return *internal::platform;
 	}
 
-	void attach_standard_window_resize(const std::function<void()>& render_frame, bool boxed, bool stretch)
+	void set_render_function(const std::function<void()>* render_frame)
+	{
+		internal::render_frame = render_frame;
+		internal::standard_window_resize.render_frame = render_frame;
+		internal::standard_window_resize.target_aspect_ratio = internal::platform->window().aspect_ratio();
+	}
+
+	void set_window_resized_parameters(bool boxed, bool stretch)
 	{
 		internal::standard_window_resize.boxed = boxed;
 		internal::standard_window_resize.stretch = stretch;
-		internal::standard_window_resize.render_frame = render_frame;
-		internal::standard_window_resize.target_aspect_ratio = internal::platform->window().aspect_ratio();
-		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
 	}
 
 	platform::StandardWindowResize& get_standard_window_resize()
@@ -323,6 +330,8 @@ namespace oly::context
 
 	bool frame()
 	{
+		if (internal::render_frame && *internal::render_frame)
+			(*internal::render_frame)();
 		if (!internal::platform->frame())
 			return false;
 		Internal{}.time_sync();
