@@ -1,0 +1,53 @@
+[archetype]
+name = "PolygonCrop"
+draw = [
+	"pentagon1",
+	"pentagon2",
+	"bordered_quad"
+]
+
+[[archetype.polygon]]
+name = "pentagon1"
+"points" = [
+	[  1, -1 ],
+	[  1,  0 ],
+	[  0,  1 ],
+	[ -1,  0 ],
+	[ -1, -1 ]
+]
+"colors" = [
+	[ 1.0, 1.0, 0.0, 1.0 ],
+	[ 1.0, 0.0, 1.0, 1.0 ],
+	[ 0.0, 1.0, 1.0, 1.0 ],
+	[ 0.0, 0.0, 0.0, 1.0 ],
+	[ 1.0, 1.0, 1.0, 1.0 ]
+]
+transform = { "position" = [0, 200], "scale" = [160, 160] }
+
+[[archetype.polygon]]
+name = "pentagon2"
+"points" = [
+	[  1, -1 ],
+	[  1,  0 ],
+	[  0,  1 ],
+	[ -1,  0 ],
+	[ -1, -1 ]
+]
+"colors" = [
+	[ 1.0, 1.0, 0.0, 0.5 ],
+	[ 1.0, 0.0, 1.0, 0.5 ],
+	[ 0.0, 1.0, 1.0, 0.5 ],
+	[ 0.0, 0.0, 0.0, 0.5 ],
+	[ 1.0, 1.0, 1.0, 0.5 ]
+]
+transform = { "position" = [-250, 0], "rotation" = -1, "scale" = [320, 160] }
+
+[[archetype.poly_composite]]
+name = "bordered_quad"
+transform = { "position" = [100, -100], "scale" = [150, 150] }
+"method" = "bordered ngon"
+"points" = [[ 3, -1 ], [ 0, 2 ], [ -3, -1 ], [ 0, 0 ]]
+"fill colors" = [[0.9, 0.9, 0.7, 1.0]]
+"border colors" = [[0.3, 0.15, 0.0, 1.0]]
+"border width" = 0.1
+"border pivot" = "middle"

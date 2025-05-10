@@ -41,7 +41,9 @@ class Archetype:
 
         def register_batch(renderables, batch: Batch):
             for renderable in renderables:
-                assert renderable['name'] not in self.batch_map, "Repeated variable name"
+                assert len(renderable['name']) > 0 and renderable['name'][0].isalpha() and not any(
+                    c.isspace() for c in renderable['name']), f"Invalid variable name '{renderable['name']}'"
+                assert renderable['name'] not in self.batch_map, f"Repeated variable name '{renderable['name']}'"
                 self.batch_map[renderable['name']] = batch
 
         register_batch(self.sprites, Batch.SPRITE)
@@ -178,7 +180,8 @@ class Archetype:
 
     def on_tick(self) -> str:
         tick = ""
-        # TODO
+        for sprite_atlas in self.sprite_atlases:
+            tick += f"\t\t{sprite_atlas['name']}.on_tick();\n"
         return tick
 
 
@@ -194,8 +197,8 @@ def generate_header(proto: Archetype) -> str:
     hdr += f"""
 namespace oly::gen
 {{
-    struct {proto.name}
-    {{
+\tstruct {proto.name}
+\t{{
 """
 
     hdr += proto.declarations()
@@ -209,16 +212,16 @@ namespace oly::gen
     hdr += proto.constructor_declarations()
 
     hdr += f"""
-            Constructor();
-        }};
+\t\t\tConstructor();
+\t\t}};
 
-    public:
-        {proto.name}(Constructor = {{}});
+\tpublic:
+\t\t{proto.name}(Constructor = {{}});
 
-        void draw(bool {proto.batch_flush()}) const;
+\t\tvoid draw(bool {proto.batch_flush()}) const;
 
-        void on_tick() const;
-    }};
+\t\tvoid on_tick() const;
+\t}};
 }}
 """
     return hdr
@@ -229,37 +232,37 @@ def generate_cpp(proto: Archetype) -> str:
 
 namespace oly::gen
 {{
-    {proto.name}::Constructor::Constructor()
-    {{
+\t{proto.name}::Constructor::Constructor()
+\t{{
 """
 
     cpp += proto.constructors()
 
-    cpp += f"""    }}
-    
-    {proto.name}::{proto.name}(Constructor c) :
+    cpp += f"""\t}}
+
+\t{proto.name}::{proto.name}(Constructor c) :
 """
 
     cpp += proto.initializer_list()
 
     cpp += f"""
-    {{}}
-    
-    void {proto.name}::draw(bool {proto.batch_flush()}) const
-    {{
+\t{{}}
+
+\tvoid {proto.name}::draw(bool {proto.batch_flush()}) const
+\t{{
 """
 
     cpp += proto.draw_calls()
 
-    cpp += f"""    }}
-    
-    void {proto.name}::on_tick() const
-    {{
+    cpp += f"""\t}}
+
+\tvoid {proto.name}::on_tick() const
+\t{{
 """
 
     cpp += proto.on_tick()
 
-    cpp += """    }
+    cpp += """\t}
 }
 """
 

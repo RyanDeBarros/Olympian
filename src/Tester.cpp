@@ -1,10 +1,10 @@
 ﻿#include "Olympian.h"
 
+#include "archetypes/PolygonCrop.h"
+#include "archetypes/SpriteMatch.h"
 #include "archetypes/EllipsePair.h"
-#include "hardcoded archetypes/PolygonCrop.h"
-#include "hardcoded archetypes/SpriteMatch.h"
 #include "hardcoded archetypes/Jumble.h"
-#include "hardcoded archetypes/BKG.h"
+#include "archetypes/BKG.h"
 
 #include "PlayerController.h"
 

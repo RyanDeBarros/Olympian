@@ -1,4 +1,11 @@
-[polygon]
+[archetype]
+name = "BKG"
+draw = [
+	"bkg_rect"
+]
+
+[[archetype.polygon]]
+name = "bkg_rect"
 "points" = [
 	[ -1, -1 ],
 	[  1, -1 ],

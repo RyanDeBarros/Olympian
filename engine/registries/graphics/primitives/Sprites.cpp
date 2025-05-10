@@ -59,15 +59,15 @@ namespace oly::reg
 				else if (mode == "auto")
 					params.frame_format = params::Sprite::AutoFrameFormat{ .speed = (float)toml_frame_format["speed"].value<double>().value_or(1.0),
 						.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0) };
-				else
-				{
-					params.frame_format = graphics::AnimFrameFormat{
-						.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0),
-						.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0),
-						.starting_time = (float)toml_frame_format["starting time"].value<double>().value_or(0.0),
-						.delay_seconds = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0)
-					};
-				}
+			}
+			else
+			{
+				params.frame_format = graphics::AnimFrameFormat{
+					.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0),
+					.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0),
+					.starting_time = (float)toml_frame_format["starting time"].value<double>().value_or(0.0),
+					.delay_seconds = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0)
+				};
 			}
 		}
 
