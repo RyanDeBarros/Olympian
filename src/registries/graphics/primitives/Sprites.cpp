@@ -5,29 +5,14 @@
 
 namespace oly::reg
 {
-	rendering::Sprite load_sprite(const TOMLNode& node)
+	params::Sprite sprite_params(const TOMLNode& node)
 	{
-		rendering::Sprite sprite = context::sprite();
-		sprite.set_local() = load_transform_2d(node, "transform");
+		params::Sprite params;
 
-		std::string texture;
-		if (auto toml_texture = node["texture"].value<std::string>())
-		{
-			texture = toml_texture.value();
-			unsigned int texture_index = (unsigned int)node["texture index"].value<int64_t>().value_or(0);
-			if (auto sc = node["svg scale"].value<double>())
-			{
-				reg::TextureRegistry::SVGLoadParams params{ .texture_index = texture_index };
-				auto btex = context::texture_registry().load_svg_texture(texture, (float)sc.value(), params);
-				sprite.set_texture(btex, context::texture_registry().get_dimensions(texture, texture_index));
-			}
-			else
-			{
-				reg::TextureRegistry::LoadParams params{ .texture_index = texture_index };
-				auto btex = context::texture_registry().load_texture(texture, params);
-				sprite.set_texture(btex, context::texture_registry().get_dimensions(texture, texture_index));
-			}
-		}
+		params.local = load_transform_2d(node, "transform");
+		params.texture = node["texture"].value<std::string>();
+		params.texture_index = (unsigned int)node["texture index"].value<int64_t>().value_or(0);
+		params.svg_scale = convert_optional<float>(node["svg scale"].value<double>());
 
 		if (auto toml_modulation = node["modulation"].as_array())
 		{
@@ -40,13 +25,13 @@ namespace oly::reg
 						&& parse_vec4(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
 						&& parse_vec4(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
 						&& parse_vec4(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
-						sprite.set_modulation(modulation);
+						params.modulation = modulation;
 				}
 				else
 				{
 					glm::vec4 modulation;
 					if (parse_vec4(toml_modulation, modulation))
-						sprite.set_modulation({ modulation, modulation, modulation, modulation });
+						params.modulation = modulation;
 				}
 			}
 		}
@@ -60,27 +45,30 @@ namespace oly::reg
 					&& parse_vec2(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
 					&& parse_vec2(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
 					&& parse_vec2(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
-					sprite.set_tex_coords(uvs);
+					params.tex_coords = uvs;
 			}
 		}
 
 		if (auto toml_frame_format = node["frame_format"])
 		{
-			graphics::AnimFrameFormat frame_format;
 			auto mode = toml_frame_format["mode"].value<std::string>();
-			if (!texture.empty() && mode && mode == "single")
-				frame_format = graphics::setup_anim_frame_format_single(texture, (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0));
-			else if (!texture.empty() && mode && mode == "auto")
-				frame_format = graphics::setup_anim_frame_format(texture, (float)toml_frame_format["speed"].value<double>().value_or(1.0),
-					(GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0));
-			else
+			if (mode)
 			{
-				frame_format.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0);
-				frame_format.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0);
-				frame_format.starting_time = (float)toml_frame_format["starting time"].value<double>().value_or(0.0);
-				frame_format.delay_seconds = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0);
+				if (mode == "single")
+					params.frame_format = params::Sprite::SingleFrameFormat{ .frame = (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0) };
+				else if (mode == "auto")
+					params.frame_format = params::Sprite::AutoFrameFormat{ .speed = (float)toml_frame_format["speed"].value<double>().value_or(1.0),
+						.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0) };
+				else
+				{
+					params.frame_format = graphics::AnimFrameFormat{
+						.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0),
+						.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0),
+						.starting_time = (float)toml_frame_format["starting time"].value<double>().value_or(0.0),
+						.delay_seconds = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0)
+					};
+				}
 			}
-			sprite.set_frame_format(frame_format);
 		}
 
 		if (auto toml_transformer_modifier = node["transform_modifier"])
@@ -91,27 +79,81 @@ namespace oly::reg
 				std::string type = toml_type.value();
 				if (type == "shear")
 				{
-					sprite.transformer.modifier = std::make_unique<ShearTransformModifier2D>();
-					auto& modifier = sprite.transformer.get_modifier<ShearTransformModifier2D>();
+					ShearTransformModifier2D modifier;
 					parse_vec2(node["shearing"].as_array(), modifier.shearing);
+					params.modifier = modifier;
 				}
 				else if (type == "pivot")
 				{
-					sprite.transformer.modifier = std::make_unique<PivotTransformModifier2D>();
-					auto& modifier = sprite.transformer.get_modifier<PivotTransformModifier2D>();
+					PivotTransformModifier2D modifier;
 					parse_vec2(node["pivot"].as_array(), modifier.pivot);
 					parse_vec2(node["size"].as_array(), modifier.size);
+					params.modifier = modifier;
 				}
 				else if (type == "pivot-shear")
 				{
-					sprite.transformer.modifier = std::make_unique<PivotShearTransformModifier2D>();
-					auto& modifier = sprite.transformer.get_modifier<PivotShearTransformModifier2D>();
+					PivotShearTransformModifier2D modifier;
 					parse_vec2(node["shearing"].as_array(), modifier.shearing);
 					parse_vec2(node["pivot"].as_array(), modifier.pivot);
 					parse_vec2(node["size"].as_array(), modifier.size);
+					params.modifier = modifier;
 				}
 			}
 		}
+
+		return params;
+	}
+
+	rendering::Sprite load_sprite(const TOMLNode& node)
+	{
+
+		return load_sprite(sprite_params(node));
+	}
+
+	rendering::Sprite load_sprite(const params::Sprite& params)
+	{
+		rendering::Sprite sprite = context::sprite();
+		sprite.set_local() = params.local;
+
+		if (params.texture)
+		{
+			if (params.svg_scale)
+			{
+				reg::TextureRegistry::SVGLoadParams lparams{ .texture_index = params.texture_index };
+				auto btex = context::texture_registry().load_svg_texture(params.texture.value(), params.svg_scale.value(), lparams);
+				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
+			}
+			else
+			{
+				reg::TextureRegistry::LoadParams lparams{ .texture_index = params.texture_index };
+				auto btex = context::texture_registry().load_texture(params.texture.value(), lparams);
+				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
+			}
+		}
+
+		if (params.modulation)
+			std::visit([&sprite](auto&& m) { return sprite.set_modulation(m); }, params.modulation.value());
+
+		if (params.tex_coords)
+			sprite.set_tex_coords(params.tex_coords.value());
+
+		if (params.frame_format)
+		{
+			const auto& frame_format = params.frame_format.value();
+			if (frame_format.index() == params::Sprite::FrameFormatIndex::CUSTOM)
+				sprite.set_frame_format(std::get<params::Sprite::FrameFormatIndex::CUSTOM>(frame_format));
+			else if (params.texture)
+			{
+				if (frame_format.index() == params::Sprite::FrameFormatIndex::SINGLE)
+					sprite.set_frame_format(graphics::setup_anim_frame_format_single(params.texture.value(), std::get<params::Sprite::FrameFormatIndex::SINGLE>(frame_format).frame));
+				else if (frame_format.index() == params::Sprite::FrameFormatIndex::AUTO)
+					sprite.set_frame_format(graphics::setup_anim_frame_format(params.texture.value(), std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).speed,
+						std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).starting_frame));
+			}
+		}
+
+		if (params.modifier)
+			sprite.transformer.modifier = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
 
 		return sprite;
 	}

@@ -53,7 +53,6 @@ namespace oly::context
 	extern glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index = 0);
 
 	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture);
-	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
 
 	extern rendering::Sprite sprite();
 	extern void render_sprites();
@@ -73,6 +72,6 @@ namespace oly::context
 	extern rendering::FontAtlas font_atlas(const std::string& name);
 	extern std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name);
 
-	extern rendering::Paragraph paragraph(const rendering::FontAtlasRes& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "");
+	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "");
 	extern void render_text();
 }

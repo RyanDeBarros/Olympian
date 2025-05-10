@@ -133,29 +133,10 @@ namespace oly::rendering
 
 	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRes& texture)
 	{
+		// TODO this is not working, since it's looking for dimension = {}. Implement some kind of map that maps texture handle to all dimensions in use, and iterate over that here.
 		GLuint slot;
 		if (quad_info_store.textures.get_slot({ texture }, slot))
 			tex_data_ssbo.send<TexData>(slot, &TexData::handle, texture->get_handle());
-	}
-
-	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
-	{
-		GLuint slot;
-		if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
-		{
-			tex_data_ssbo.send<TexData>(slot, { texture->get_handle(), dimensions });
-			quad_info_store.textures.get_object(slot).dimensions = dimensions;
-		}
-	}
-
-	void SpriteBatch::update_texture_dimensions(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
-	{
-		GLuint slot;
-		if (quad_info_store.textures.get_slot({ texture, dimensions }, slot))
-		{
-			tex_data_ssbo.send(slot, &TexData::dimensions, dimensions);
-			quad_info_store.textures.get_object(slot).dimensions = dimensions;
-		}
 	}
 
 	Sprite::Sprite(SpriteBatch& sprite_batch)
@@ -273,6 +254,11 @@ namespace oly::rendering
 	void Sprite::set_modulation(const SpriteBatch::Modulation& modulation) const
 	{
 		batch->set_modulation(vbid.get(), modulation);
+	}
+
+	void Sprite::set_modulation(glm::vec4 modulation) const
+	{
+		batch->set_modulation(vbid.get(), { modulation, modulation, modulation, modulation });
 	}
 
 	void Sprite::set_frame_format(const graphics::AnimFrameFormat& anim) const

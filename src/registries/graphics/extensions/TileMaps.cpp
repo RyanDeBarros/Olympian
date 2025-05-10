@@ -7,22 +7,22 @@ namespace oly::reg
 {
 	rendering::TileMap load_tilemap(const TOMLNode& node)
 	{
-		rendering::TileMap tilemap;
+		params::TileMap params;
 
-		tilemap.set_local() = reg::load_transform_2d(node, "transform");
+		params.local = reg::load_transform_2d(node, "transform");
 
 		auto toml_layers = node["layer"].as_array();
 		if (toml_layers)
 		{
-			toml_layers->for_each([&tilemap](auto&& node) {
+			toml_layers->for_each([&params](auto&& node) {
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto tileset = node["tileset"].value<std::string>();
 					if (!tileset)
 						return;
 
-					rendering::TileMapLayer layer;
-					layer.tileset = context::ref_tileset(tileset.value()).lock();
+					params::TileMap::Layer lparams;
+					lparams.tileset = tileset.value();
 
 					auto tiles = node["tiles"].as_array();
 					if (tiles)
@@ -31,20 +31,42 @@ namespace oly::reg
 						{
 							if (auto _tile = toml_tile.as_array())
 							{
-								glm::vec2 tile{};
-								if (reg::parse_vec2(_tile, tile))
-									layer.paint_tile({ (int)tile.x, (int)tile.y });
+								glm::ivec2 tile{};
+								if (parse_ivec2(_tile, tile))
+									lparams.tiles.push_back(tile);
 							}
 						}
 					}
 
-					auto z = node["z"].value<int64_t>();
-					if (z)
-						tilemap.register_layer((size_t)z.value(), std::move(layer));
-					else
-						tilemap.register_layer(std::move(layer));
+					if (auto z = node["z"].value<int64_t>())
+						lparams.z = (int)z.value();
+
+					params.layers.push_back(std::move(lparams));
 				}
 				});
+		}
+
+		return load_tilemap(params);
+	}
+
+	rendering::TileMap load_tilemap(const params::TileMap& params)
+	{
+		rendering::TileMap tilemap;
+
+		tilemap.set_local() = params.local;
+
+		for (const auto& lparams : params.layers)
+		{
+			rendering::TileMapLayer layer;
+			layer.tileset = context::ref_tileset(lparams.tileset).lock();
+
+			for (const auto& tile : lparams.tiles)
+				layer.paint_tile(tile);
+
+			if (lparams.z)
+				tilemap.register_layer(lparams.z.value(), std::move(layer));
+			else
+				tilemap.register_layer(std::move(layer));
 		}
 
 		return tilemap;

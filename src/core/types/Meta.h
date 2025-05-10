@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <variant>
+#include <optional>
 
 namespace oly
 {
@@ -42,4 +43,10 @@ namespace oly
 	inline std::shared_ptr<T> move_shared(T&& obj) { return std::make_shared<T>(std::move(obj)); }
 	template<typename T>
 	inline std::unique_ptr<T> move_unique(T&& obj) { return std::make_unique<T>(std::move(obj)); }
+
+	template<typename ToOptional, typename FromOptional>
+	inline std::optional<ToOptional> convert_optional(const std::optional<FromOptional>& from)
+	{
+		return from ? std::make_optional<ToOptional>((ToOptional)*from) : std::nullopt;
+	}
 }

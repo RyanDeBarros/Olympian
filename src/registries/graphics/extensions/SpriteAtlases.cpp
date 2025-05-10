@@ -6,7 +6,9 @@ namespace oly::reg
 {
 	rendering::SpriteAtlasExtension load_sprite_atlas(const TOMLNode& node)
 	{
-		rendering::SpriteAtlasExtension atlas(load_sprite(node["sprite"]));
+		params::SpriteAtlas params;
+
+		params.sprite_params = sprite_params(node["sprite"]);
 
 		auto _rows = node["rows"].value<int64_t>();
 		auto _cols = node["cols"].value<int64_t>();
@@ -14,20 +16,44 @@ namespace oly::reg
 
 		if (_rows && _cols && _delay_seconds)
 		{
-			auto row_major = node["row major"].value<bool>().value_or(true);
-			auto row_up = node["row up"].value<bool>().value_or(true);
-			atlas.setup_uniform((GLuint)_rows.value(), (GLuint)_cols.value(), (float)_delay_seconds.value(), row_major, row_up);
-
-			if (auto _starting_frame = node["starting frame"].value<int64_t>())
-				atlas.anim_format.starting_frame = (GLuint)_starting_frame.value();
-			if (auto _starting_time = node["starting time"].value<double>())
-				atlas.anim_format.starting_time = (float)_starting_time.value();
-			if (auto _static_frame = node["static frame"].value<int64_t>()) // TODO this should be in else clause if rows/cols/delay_cs are not provided
-				atlas.select_static_frame((GLuint)_static_frame.value());
-
-			atlas.on_tick();
+			params.frame = params::SpriteAtlas::Frame{
+				.rows = (GLuint)_rows.value(),
+				.cols = (GLuint)_cols.value(),
+				.delay_seconds = (float)_delay_seconds.value(),
+				.row_major = node["row major"].value<bool>().value_or(true),
+				.row_up = node["row up"].value<bool>().value_or(true)
+			};
+		}
+		else if (auto _static_frame = node["static frame"].value<int64_t>())
+		{
+			params.frame = params::SpriteAtlas::StaticFrame{ .frame = (GLuint)_static_frame.value() };
 		}
 
+		params.starting_frame = convert_optional<GLuint>(node["starting frame"].value<int64_t>());
+		params.starting_time = convert_optional<float>(node["starting time"].value<double>());
+
+		return load_sprite_atlas(params);
+	}
+
+	rendering::SpriteAtlasExtension load_sprite_atlas(const params::SpriteAtlas& params)
+	{
+		rendering::SpriteAtlasExtension atlas(load_sprite(params.sprite_params));
+
+		if (params.frame)
+		{
+			std::visit([&atlas](auto&& frame) {
+				if constexpr (std::is_same_v<std::decay_t<decltype(frame)>, params::SpriteAtlas::Frame>)
+					atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up);
+				else if constexpr (std::is_same_v<std::decay_t<decltype(frame)>, params::SpriteAtlas::StaticFrame>)
+					atlas.select_static_frame(frame.frame);
+				}, params.frame.value());
+		}
+		if (params.starting_frame)
+			atlas.anim_format.starting_frame = params.starting_frame.value();
+		if (params.starting_time)
+			atlas.anim_format.starting_time = params.starting_time.value();
+
+		atlas.on_tick();
 		return atlas;
 	}
 }

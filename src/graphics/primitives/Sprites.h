@@ -159,8 +159,6 @@ namespace oly::rendering
 
 	public:
 		void update_texture_handle(const graphics::BindlessTextureRes& texture);
-		void update_texture_handle(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
-		void update_texture_dimensions(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
 	};
 
 	struct Sprite
@@ -188,6 +186,7 @@ namespace oly::rendering
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
 		void set_modulation(const SpriteBatch::Modulation& modulation) const;
+		void set_modulation(glm::vec4 modulation) const;
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 
 		graphics::BindlessTextureRes get_texture() const;

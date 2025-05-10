@@ -5,69 +5,108 @@
 
 namespace oly::reg
 {
-	static rendering::ParagraphFormat create_format(const TOMLNode& node)
+	static void create_format(const TOMLNode& node, params::Paragraph& params)
 	{
-		rendering::ParagraphFormat format;
+		auto& fparams = params.format;
 
-		parse_vec2(node, "pivot", format.pivot);
-		parse_float(node, "line spacing", format.line_spacing);
-		parse_float(node, "linebreak spacing", format.linebreak_spacing);
-		parse_vec2(node, "min size", format.min_size);
-		parse_vec2(node, "padding", format.padding);
-		parse_float(node, "text wrap", format.text_wrap);
-		parse_float(node, "max height", format.max_height);
+		glm::vec2 v2;
+		float v1;
+
+		if (parse_vec2(node, "pivot", v2))
+			fparams.pivot = v2;
+		if (parse_float(node, "line spacing", v1))
+			fparams.line_spacing = v1;
+		if (parse_float(node, "linebreak spacing", v1))
+			fparams.linebreak_spacing = v1;
+		if (parse_vec2(node, "min size", v2))
+			fparams.min_size = v2;
+		if (parse_vec2(node, "padding", v2))
+			fparams.padding = v2;
+		if (parse_float(node, "text wrap", v1))
+			fparams.text_wrap = v1;
+		if (parse_float(node, "max height", v1))
+			fparams.max_height = v1;
 
 		if (auto halign = node["horizontal align"].value<std::string>())
 		{
 			const std::string& align = halign.value();
 			if (align == "left")
-				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::LEFT;
+				fparams.halign= rendering::ParagraphFormat::HorizontalAlignment::LEFT;
 			else if (align == "center")
-				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::CENTER;
+				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::CENTER;
 			else if (align == "right")
-				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
+				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
 			else if (align == "justify")
-				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
+				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
 			else if (align == "full justify")
-				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
+				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
 		}
 
 		if (auto valign = node["vertical align"].value<std::string>())
 		{
 			const std::string& align = valign.value();
 			if (align == "top")
-				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::TOP;
+				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::TOP;
 			else if (align == "middle")
-				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::MIDDLE;
+				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::MIDDLE;
 			else if (align == "bottom")
-				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
+				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
 			else if (align == "justify")
-				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
+				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
 			else if (align == "full justify")
-				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
+				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
 		}
+	}
+
+	static rendering::ParagraphFormat create_format(const params::Paragraph& params)
+	{
+		const auto& fparams = params.format;
+
+		rendering::ParagraphFormat format;
+
+		if (fparams.pivot)
+			format.pivot = fparams.pivot.value();
+		if (fparams.line_spacing)
+			format.line_spacing = fparams.line_spacing.value();
+		if (fparams.linebreak_spacing)
+			format.linebreak_spacing = fparams.linebreak_spacing.value();
+		if (fparams.min_size)
+			format.min_size = fparams.min_size.value();
+		if (fparams.padding)
+			format.padding = fparams.padding.value();
+		if (fparams.text_wrap)
+			format.text_wrap = fparams.text_wrap.value();
+		if (fparams.max_height)
+			format.max_height = fparams.max_height.value();
+		if (fparams.halign)
+			format.horizontal_alignment = fparams.halign.value();
+		if (fparams.valign)
+			format.vertical_alignment = fparams.valign.value();
 
 		return format;
 	}
 	
 	rendering::Paragraph load_paragraph(const TOMLNode& node)
 	{
+		params::Paragraph params;
+
 		auto font_atlas = node["font atlas"].value<std::string>();
 		if (!font_atlas)
 			throw Error(ErrorCode::LOAD_ASSET);
 
-		auto text = node["text"].value<std::string>().value_or("");
+		params.font_atlas = font_atlas.value();
+		create_format(node["format"], params);
+		params.text = node["text"].value<std::string>().value_or("");
 
-		rendering::Paragraph paragraph(context::text_batch(), context::ref_font_atlas(font_atlas.value()).lock(), create_format(node["format"]), std::move(text));
 		if (auto draw_bkg = node["draw bkg"].value<bool>())
-			paragraph.draw_bkg = draw_bkg.value();
-		paragraph.set_local() = load_transform_2d(node, "transform");
+			params.draw_bkg = draw_bkg.value();
+		params.local = load_transform_2d(node, "transform");
 
 		glm::vec4 v;
 		if (parse_vec4(node, "bkg color", v))
-			paragraph.set_bkg_color({ v });
-		if (parse_vec4(node, "text color", paragraph.default_text_color.color))
-			paragraph.recolor_text_with_default();
+			params.bkg_color = v;
+		if (parse_vec4(node, "text color", v))
+			params.text_color = v;
 
 		auto glyph_colors = node["glyph colors"].as_table();
 		if (glyph_colors)
@@ -76,9 +115,30 @@ namespace oly::reg
 			{
 				glm::vec4 gc;
 				if (parse_vec4(v.as_array(), gc))
-					paragraph.set_glyph_color(std::stoi(k.data()), { gc });
+					params.glyph_colors.push_back({ std::stoi(k.data()), { gc } });
 			}
 		}
+
+		return load_paragraph(std::move(params));
+	}
+
+	rendering::Paragraph load_paragraph(params::Paragraph&& params)
+	{
+		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, create_format(params), std::move(params.text));
+		if (params.draw_bkg)
+			paragraph.draw_bkg = params.draw_bkg.value();
+		paragraph.set_local() = params.local;
+
+		if (params.bkg_color)
+			paragraph.set_bkg_color({ params.bkg_color.value() });
+		if (params.text_color)
+		{
+			paragraph.default_text_color.color = params.text_color.value();
+			paragraph.recolor_text_with_default();
+		}
+
+		for (const auto& gc : params.glyph_colors)
+			paragraph.set_glyph_color(gc.first, { gc.second });
 
 		return paragraph;
 	}

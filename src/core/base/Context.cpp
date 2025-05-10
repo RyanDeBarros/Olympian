@@ -349,11 +349,6 @@ namespace oly::context
 		internal::sprite_batch->update_texture_handle(texture);
 	}
 
-	void sync_texture_handle(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
-	{
-		internal::sprite_batch->update_texture_handle(texture, dimensions);
-	}
-
 	rendering::Sprite sprite()
 	{
 		return rendering::Sprite(*internal::sprite_batch);
@@ -424,9 +419,9 @@ namespace oly::context
 		return internal::font_atlas_registry.ref_font_atlas(name);
 	}
 
-	rendering::Paragraph paragraph(const rendering::FontAtlasRes& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text)
+	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text)
 	{
-		return rendering::Paragraph(*internal::text_batch, font_atlas, format, std::move(text));
+		return rendering::Paragraph(*internal::text_batch, internal::font_atlas_registry.ref_font_atlas(font_atlas).lock(), format, std::move(text));
 	}
 
 	void render_text()

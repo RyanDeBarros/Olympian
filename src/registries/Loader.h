@@ -19,6 +19,10 @@ namespace oly::reg
 	inline bool parse_vec2(const TOMLNode& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
 	inline bool parse_vec2(const CTOMLNode& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
 	inline bool parse_vec2(const toml::table& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
+	extern bool parse_ivec2(const toml::v3::array* arr, glm::ivec2& v);
+	inline bool parse_ivec2(const TOMLNode& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
+	inline bool parse_ivec2(const CTOMLNode& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
+	inline bool parse_ivec2(const toml::table& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
 	extern bool parse_vec4(const toml::v3::array* arr, glm::vec4& v);
 	inline bool parse_vec4(const TOMLNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
 	inline bool parse_vec4(const CTOMLNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }

@@ -140,9 +140,33 @@ namespace oly::reg
 		return false;
 	}
 
+	template<size_t N>
+	static bool parse_ivec(const toml::v3::array* arr, glm::vec<N, int>& v)
+	{
+		if (arr && arr->size() == N)
+		{
+			glm::vec<N, int> u;
+			for (int i = 0; i < N; ++i)
+			{
+				if (auto n = arr->get_as<int64_t>(i))
+					u[i] = (int)n->get();
+				else
+					return false;
+			}
+			v = u;
+			return true;
+		}
+		return false;
+	}
+
 	bool parse_vec2(const toml::v3::array* arr, glm::vec2& v)
 	{
 		return parse_vec(arr, v);
+	}
+
+	bool parse_ivec2(const toml::v3::array* arr, glm::ivec2& v)
+	{
+		return parse_ivec(arr, v);
 	}
 
 	bool parse_vec4(const toml::v3::array* arr, glm::vec4& v)

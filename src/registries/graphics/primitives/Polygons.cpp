@@ -8,9 +8,9 @@ namespace oly::reg
 {
 	rendering::Polygon load_polygon(const TOMLNode& node)
 	{
-		rendering::Polygon polygon = context::polygon();
+		params::Polygon params;
 
-		polygon.set_local() = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node, "transform");
 
 		auto toml_points = node["points"].as_array();
 		if (toml_points)
@@ -19,7 +19,7 @@ namespace oly::reg
 			{
 				glm::vec2 pt;
 				if (parse_vec2(toml_point.as_array(), pt))
-					polygon.polygon.points.push_back(pt);
+					params.points.push_back(pt);
 			}
 		}
 
@@ -30,9 +30,32 @@ namespace oly::reg
 			{
 				glm::vec4 col;
 				if (parse_vec4(toml_color.as_array(), col))
-					polygon.polygon.colors.push_back(col);
+					params.colors.push_back(col);
 			}
 		}
+
+		return load_polygon(std::move(params));
+	}
+
+	rendering::Polygon load_polygon(const params::Polygon& params)
+	{
+		rendering::Polygon polygon = context::polygon();
+
+		polygon.set_local() = params.local;
+		polygon.polygon.points = params.points;
+		polygon.polygon.colors = params.colors;
+
+		polygon.init();
+		return polygon;
+	}
+
+	rendering::Polygon load_polygon(params::Polygon&& params)
+	{
+		rendering::Polygon polygon = context::polygon();
+
+		polygon.set_local() = params.local;
+		polygon.polygon.points = std::move(params.points);
+		polygon.polygon.colors = std::move(params.colors);
 
 		polygon.init();
 		return polygon;
@@ -40,9 +63,9 @@ namespace oly::reg
 
 	rendering::PolyComposite load_poly_composite(const TOMLNode& node)
 	{
-		rendering::PolyComposite composite = context::poly_composite();
+		params::PolyComposite params;
 
-		composite.set_local() = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node, "transform");
 
 		auto toml_method = node["method"].value<std::string>();
 		if (toml_method)
@@ -50,7 +73,8 @@ namespace oly::reg
 			const std::string& method = toml_method.value();
 			if (method == "ngon")
 			{
-				std::vector<glm::vec2> points;
+				params::PolyComposite::NGonMethod method;
+
 				auto toml_points = node["points"].as_array();
 				if (toml_points)
 				{
@@ -58,11 +82,10 @@ namespace oly::reg
 					{
 						glm::vec2 pt;
 						if (parse_vec2(toml_point.as_array(), pt))
-							points.push_back(pt);
+							method.points.push_back(pt);
 					}
 				}
 
-				std::vector<glm::vec4> colors;
 				auto toml_fill_colors = node["colors"].as_array();
 				if (toml_fill_colors)
 				{
@@ -70,15 +93,15 @@ namespace oly::reg
 					{
 						glm::vec4 col;
 						if (parse_vec4(toml_color.as_array(), col))
-							colors.push_back(col);
+							method.colors.push_back(col);
 					}
 				}
 
-				composite.composite = { cmath::create_ngon(std::move(colors), std::move(points)) };
+				params.method = std::move(method);
 			}
 			else if (method == "bordered ngon")
 			{
-				cmath::NGonBase ngon;
+				params::PolyComposite::BorderedNGonMethod method;
 
 				auto toml_points = node["points"].as_array();
 				if (toml_points)
@@ -87,7 +110,7 @@ namespace oly::reg
 					{
 						glm::vec2 pt;
 						if (parse_vec2(toml_point.as_array(), pt))
-							ngon.points.push_back(pt);
+							method.ngon_base.points.push_back(pt);
 					}
 				}
 
@@ -98,7 +121,7 @@ namespace oly::reg
 					{
 						glm::vec4 col;
 						if (parse_vec4(toml_color.as_array(), col))
-							ngon.fill_colors.push_back(col);
+							method.ngon_base.fill_colors.push_back(col);
 					}
 				}
 
@@ -109,31 +132,32 @@ namespace oly::reg
 					{
 						glm::vec4 col;
 						if (parse_vec4(toml_color.as_array(), col))
-							ngon.border_colors.push_back(col);
+							method.ngon_base.border_colors.push_back(col);
 					}
 				}
 
-				ngon.border_width = (float)node["border width"].value<double>().value_or(0.0);
+				method.ngon_base.border_width = (float)node["border width"].value<double>().value_or(0.0);
 
 				auto border_pivot = node["border pivot"];
 				if (auto str_border_pivot = border_pivot.value<std::string>())
 				{
 					const std::string& str = str_border_pivot.value();
 					if (str == "outer")
-						ngon.border_pivot = cmath::BorderPivot::OUTER;
+						method.ngon_base.border_pivot = cmath::BorderPivot::OUTER;
 					else if (str == "middle")
-						ngon.border_pivot = cmath::BorderPivot::MIDDLE;
+						method.ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
 					else if (str == "inner")
-						ngon.border_pivot = cmath::BorderPivot::INNER;
+						method.ngon_base.border_pivot = cmath::BorderPivot::INNER;
 				}
 				else if (auto flt_border_pivot = border_pivot.value<double>())
-					ngon.border_pivot = (float)flt_border_pivot.value();
+					method.ngon_base.border_pivot = (float)flt_border_pivot.value();
 
-				composite.composite = cmath::create_bordered_ngon(std::move(ngon.fill_colors), std::move(ngon.border_colors), ngon.border_width, ngon.border_pivot, std::move(ngon.points));
+				params.method = std::move(method);
 			}
 			else if (method == "convex decomposition")
 			{
-				std::vector<glm::vec2> points;
+				params::PolyComposite::ConvexDecompositionMethod method;
+
 				auto toml_points = node["points"].as_array();
 				if (toml_points)
 				{
@@ -141,10 +165,82 @@ namespace oly::reg
 					{
 						glm::vec2 pt;
 						if (parse_vec2(toml_point.as_array(), pt))
-							points.push_back(pt);
+							method.points.push_back(pt);
 					}
 				}
-				composite.composite = cmath::composite_convex_decomposition(points);
+
+				params.method = std::move(method);
+			}
+		}
+
+		return load_poly_composite(std::move(params));
+	}
+
+	rendering::PolyComposite load_poly_composite(const params::PolyComposite& params)
+	{
+		rendering::PolyComposite composite = context::poly_composite();
+
+		composite.set_local() = params.local;
+
+		if (params.method)
+		{
+			const auto& method = params.method.value();
+			switch (method.index())
+			{
+			case params::PolyComposite::MethodIndex::NGON:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::NGON>(method);
+				composite.composite = { cmath::create_ngon(m.colors, m.points) };
+				break;
+			}
+			case params::PolyComposite::MethodIndex::BORDERED_NGON:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::BORDERED_NGON>(method);
+				composite.composite = cmath::create_bordered_ngon(m.ngon_base.fill_colors, m.ngon_base.border_colors, m.ngon_base.border_width, m.ngon_base.border_pivot, m.ngon_base.points);
+				break;
+			}
+			case params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
+				composite.composite = cmath::composite_convex_decomposition(m.points);
+				break;
+			}
+			}
+		}
+
+		composite.init();
+		return composite;
+	}
+
+	rendering::PolyComposite load_poly_composite(params::PolyComposite&& params)
+	{
+		rendering::PolyComposite composite = context::poly_composite();
+
+		composite.set_local() = params.local;
+
+		if (params.method)
+		{
+			auto& method = params.method.value();
+			switch (method.index())
+			{
+			case params::PolyComposite::MethodIndex::NGON:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::NGON>(method);
+				composite.composite = { cmath::create_ngon(std::move(m.colors), std::move(m.points)) };
+				break;
+			}
+			case params::PolyComposite::MethodIndex::BORDERED_NGON:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::BORDERED_NGON>(method);
+				composite.composite = cmath::create_bordered_ngon(std::move(m.ngon_base.fill_colors), std::move(m.ngon_base.border_colors), m.ngon_base.border_width, m.ngon_base.border_pivot, std::move(m.ngon_base.points));
+				break;
+			}
+			case params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION:
+			{
+				const auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
+				composite.composite = cmath::composite_convex_decomposition(m.points);
+				break;
+			}
 			}
 		}
 
@@ -154,9 +250,9 @@ namespace oly::reg
 
 	rendering::NGon load_ngon(const TOMLNode& node)
 	{
-		rendering::NGon ngon = context::ngon();
+		params::NGon params;
 
-		ngon.set_local() = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node, "transform");
 
 		auto toml_points = node["points"].as_array();
 		if (toml_points)
@@ -165,7 +261,7 @@ namespace oly::reg
 			{
 				glm::vec2 pt;
 				if (parse_vec2(toml_point.as_array(), pt))
-					ngon.base.points.push_back(pt);
+					params.ngon_base.points.push_back(pt);
 			}
 		}
 
@@ -176,7 +272,7 @@ namespace oly::reg
 			{
 				glm::vec4 col;
 				if (parse_vec4(toml_color.as_array(), col))
-					ngon.base.fill_colors.push_back(col);
+					params.ngon_base.fill_colors.push_back(col);
 			}
 		}
 
@@ -187,26 +283,49 @@ namespace oly::reg
 			{
 				glm::vec4 col;
 				if (parse_vec4(toml_color.as_array(), col))
-					ngon.base.border_colors.push_back(col);
+					params.ngon_base.border_colors.push_back(col);
 			}
 		}
 
-		ngon.bordered = node["bordered"].value<bool>().value_or(false);
-		ngon.base.border_width = (float)node["border width"].value<double>().value_or(0.0);
+		params.bordered = node["bordered"].value<bool>().value_or(false);
+		params.ngon_base.border_width = (float)node["border width"].value<double>().value_or(0.0);
 
 		auto border_pivot = node["border pivot"];
 		if (auto str_border_pivot = border_pivot.value<std::string>())
 		{
 			const std::string& str = str_border_pivot.value();
 			if (str == "outer")
-				ngon.base.border_pivot = cmath::BorderPivot::OUTER;
+				params.ngon_base.border_pivot = cmath::BorderPivot::OUTER;
 			else if (str == "middle")
-				ngon.base.border_pivot = cmath::BorderPivot::MIDDLE;
+				params.ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
 			else if (str == "inner")
-				ngon.base.border_pivot = cmath::BorderPivot::INNER;
+				params.ngon_base.border_pivot = cmath::BorderPivot::INNER;
 		}
 		else if (auto flt_border_pivot = border_pivot.value<double>())
-			ngon.base.border_pivot = (float)flt_border_pivot.value();
+			params.ngon_base.border_pivot = (float)flt_border_pivot.value();
+
+		return load_ngon(std::move(params));
+	}
+
+	rendering::NGon load_ngon(const params::NGon& params)
+	{
+		rendering::NGon ngon = context::ngon();
+
+		ngon.set_local() = params.local;
+		ngon.base = params.ngon_base;
+		ngon.bordered = params.bordered;
+
+		ngon.init();
+		return ngon;
+	}
+
+	rendering::NGon load_ngon(params::NGon&& params)
+	{
+		rendering::NGon ngon = context::ngon();
+
+		ngon.set_local() = params.local;
+		ngon.base = std::move(params.ngon_base);
+		ngon.bordered = params.bordered;
 
 		ngon.init();
 		return ngon;

@@ -6,5 +6,22 @@
 
 namespace oly::reg
 {
+	namespace params
+	{
+		struct Ellipse
+		{
+			Transform2D local;
+			struct
+			{
+				std::optional<glm::vec4> border_inner, border_outer, fill_inner, fill_outer;
+			} color;
+			struct
+			{
+				std::optional<float> border, border_exp, fill_exp, width, height;
+			} dimension;
+		};
+	}
+
 	extern rendering::Ellipse load_ellipse(const TOMLNode& node);
+	extern rendering::Ellipse load_ellipse(const params::Ellipse& params);
 }
