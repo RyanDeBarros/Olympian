@@ -1,10 +1,10 @@
 ﻿#include "Olympian.h"
 
-#include "archetypes/PolygonCrop.h"
-#include "archetypes/SpriteMatch.h"
 #include "archetypes/EllipsePair.h"
-#include "archetypes/Jumble.h"
-#include "archetypes/BKG.h"
+#include "hardcoded archetypes/PolygonCrop.h"
+#include "hardcoded archetypes/SpriteMatch.h"
+#include "hardcoded archetypes/Jumble.h"
+#include "hardcoded archetypes/BKG.h"
 
 #include "PlayerController.h"
 
@@ -62,7 +62,7 @@ int main()
 	oly::gen::BKG bkg;
 	oly::gen::PolygonCrop polygon_crop;
 	oly::gen::SpriteMatch sprite_match;
-	oly::gen::EllipsePair ellipses;
+	oly::gen::EllipsePair ellipse_pair;
 	oly::gen::Jumble jumble;
 
 	pc.test_text = &jumble.test_text;
@@ -92,7 +92,7 @@ int main()
 		oly::stencil::crop::match();
 		sprite_match.draw(true);
 		oly::stencil::end();
-		ellipses.draw(true);
+		ellipse_pair.draw(true);
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		oly::context::render_sprites();

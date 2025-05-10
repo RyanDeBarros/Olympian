@@ -52,16 +52,16 @@ namespace oly::reg
 			color.fill_outer = params.color.fill_outer.value();
 
 		auto& dimension = ellipse.ellipse.set_dimension();
+		if (params.dimension.width)
+			dimension.width = params.dimension.width.value();
+		if (params.dimension.height)
+			dimension.height = params.dimension.height.value();
 		if (params.dimension.border)
 			dimension.border = params.dimension.border.value();
 		if (params.dimension.border_exp)
 			dimension.border_exp = params.dimension.border_exp.value();
 		if (params.dimension.fill_exp)
 			dimension.fill_exp = params.dimension.fill_exp.value();
-		if (params.dimension.width)
-			dimension.width = params.dimension.width.value();
-		if (params.dimension.height)
-			dimension.height = params.dimension.height.value();
 
 		return ellipse;
 	}

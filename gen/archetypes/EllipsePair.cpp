@@ -2,45 +2,44 @@
 
 namespace oly::gen
 {
-	EllipsePair::Constructor::Constructor()
-	{
-		ellipse1.local = {
-			{ -300.0f, 0.0f },
-			{},
-			{ 150.0f, 150.0f }
-		};
-		ellipse1.dimension.width = 2;
-		ellipse1.dimension.height = 1;
-		ellipse1.dimension.border = 0.3f;
-		ellipse1.color.fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
-		ellipse1.color.fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
-		ellipse1.color.border_inner = { 0.2f, 0.6f, 1.0f, 1.0f };
-		ellipse1.color.border_outer = { 0.8f, 0.9f, 1.0f, 1.0f };
+    EllipsePair::Constructor::Constructor()
+    {
+		ellipse1.local.position = { (float)-300, (float)0 };
+		ellipse1.local.scale = { (float)150, (float)150 };
+		ellipse1.dimension.width = (float)2;
+		ellipse1.dimension.height = (float)1;
+		ellipse1.dimension.border = (float)0.3;
+		ellipse1.color.fill_inner = { (float)1.0, (float)0.9, (float)0.8, (float)0.5 };
+		ellipse1.color.fill_outer = { (float)1.0, (float)0.6, (float)0.2, (float)1.0 };
+		ellipse1.color.border_inner = { (float)0.2, (float)0.6, (float)1.0, (float)1.0 };
+		ellipse1.color.border_outer = { (float)0.8, (float)0.9, (float)1.0, (float)1.0 };
 
-		ellipse2.local = {
-			{},
-			{},
-			{ 150.0f, 150.0f }
-		};
-		ellipse2.dimension.width = 1;
-		ellipse2.dimension.height = 3;
-		ellipse2.dimension.border = 0.4f;
-		ellipse2.color.fill_inner = { 1.0f, 0.9f, 0.8f, 0.5f };
-		ellipse2.color.fill_outer = { 1.0f, 0.6f, 0.2f, 1.0f };
-		ellipse2.color.border_inner = { 0.0f, 0.0f, 0.0f, 1.0f };
-		ellipse2.color.border_outer = { 0.8f, 0.9f, 1.0f, 0.0f };
-	}
-
-	EllipsePair::EllipsePair(Constructor c) :
+		ellipse2.local.scale = { (float)150, (float)150 };
+		ellipse2.dimension.width = (float)1;
+		ellipse2.dimension.height = (float)3;
+		ellipse2.dimension.border = (float)0.4;
+		ellipse2.dimension.border_exp = (float)2.0;
+		ellipse2.dimension.fill_exp = (float)0.5;
+		ellipse2.color.fill_inner = { (float)1.0, (float)0.9, (float)0.8, (float)0.5 };
+		ellipse2.color.fill_outer = { (float)1.0, (float)0.6, (float)0.2, (float)1.0 };
+		ellipse2.color.border_inner = { (float)0.0, (float)0.0, (float)0.0, (float)1.0 };
+		ellipse2.color.border_outer = { (float)0.8, (float)0.9, (float)1.0, (float)0.0 };
+    }
+    
+    EllipsePair::EllipsePair(Constructor c) :
 		ellipse1(reg::load_ellipse(c.ellipse1)),
 		ellipse2(reg::load_ellipse(c.ellipse2))
-	{}
-
-	void EllipsePair::draw(bool flush_ellipses) const
-	{
+    {}
+    
+    void EllipsePair::draw(bool flush_ellipses) const
+    {
 		ellipse1.draw();
 		ellipse2.draw();
 		if (flush_ellipses)
 			context::render_ellipses();
-	}
+    }
+    
+    void EllipsePair::on_tick() const
+    {
+    }
 }

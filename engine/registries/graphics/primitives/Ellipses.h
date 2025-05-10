@@ -17,7 +17,7 @@ namespace oly::reg
 			} color;
 			struct
 			{
-				std::optional<float> border, border_exp, fill_exp, width, height;
+				std::optional<float> width, height, border, border_exp, fill_exp;
 			} dimension;
 		};
 	}
