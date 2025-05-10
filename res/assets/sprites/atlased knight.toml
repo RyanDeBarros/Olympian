@@ -1,8 +1,0 @@
-[sprite_atlas]
-"rows"          = 2
-"cols"          = 3
-"delay seconds" = 0.1
-[sprite_atlas.sprite]
-"texture" = "textures/knight.png"
-"texture index" = 1
-transform = { "position" = [300, -200], "scale" = [20, 20] }

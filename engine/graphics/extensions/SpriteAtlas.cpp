@@ -4,6 +4,11 @@
 
 namespace oly::rendering
 {
+	void SpriteAtlasResExtension::draw() const
+	{
+		sprite->draw();
+	}
+
 	void SpriteAtlasResExtension::on_tick() const
 	{
 		if (anim_format.delay_seconds != 0.0f)
@@ -86,6 +91,11 @@ namespace oly::rendering
 	SpriteAtlasExtension::SpriteAtlasExtension(Sprite&& sprite)
 		: sprite(std::move(sprite))
 	{
+	}
+
+	void SpriteAtlasExtension::draw() const
+	{
+		sprite.draw();
 	}
 
 	void SpriteAtlasExtension::on_tick() const

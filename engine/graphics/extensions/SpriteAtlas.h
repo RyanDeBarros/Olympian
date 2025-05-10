@@ -10,6 +10,7 @@ namespace oly::rendering
 		UVAtlas atlas;
 		graphics::AnimFrameFormat anim_format;
 
+		void draw() const;
 		void on_tick() const;
 
 		void select_static_frame(GLuint frame);
@@ -29,6 +30,7 @@ namespace oly::rendering
 
 		SpriteAtlasExtension(Sprite&& sprite);
 
+		void draw() const;
 		void on_tick() const;
 
 		void select_static_frame(GLuint frame);

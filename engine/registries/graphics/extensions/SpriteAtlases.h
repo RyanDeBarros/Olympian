@@ -17,7 +17,7 @@ namespace oly::reg
 			{
 				GLuint rows, cols;
 				float delay_seconds;
-				bool row_major, row_up;
+				bool row_major = true, row_up = true;
 			};
 			struct StaticFrame
 			{

@@ -5,87 +5,63 @@
 
 namespace oly::reg
 {
-	static void create_format(const TOMLNode& node, params::Paragraph& params)
+	static rendering::ParagraphFormat create_format(const TOMLNode& node)
 	{
-		auto& fparams = params.format;
+		rendering::ParagraphFormat format;
 
 		glm::vec2 v2;
 		float v1;
 
 		if (parse_vec2(node, "pivot", v2))
-			fparams.pivot = v2;
+			format.pivot = v2;
 		if (parse_float(node, "line spacing", v1))
-			fparams.line_spacing = v1;
+			format.line_spacing = v1;
 		if (parse_float(node, "linebreak spacing", v1))
-			fparams.linebreak_spacing = v1;
+			format.linebreak_spacing = v1;
 		if (parse_vec2(node, "min size", v2))
-			fparams.min_size = v2;
+			format.min_size = v2;
 		if (parse_vec2(node, "padding", v2))
-			fparams.padding = v2;
+			format.padding = v2;
 		if (parse_float(node, "text wrap", v1))
-			fparams.text_wrap = v1;
+			format.text_wrap = v1;
 		if (parse_float(node, "max height", v1))
-			fparams.max_height = v1;
+			format.max_height = v1;
+		if (parse_float(node, "tab spaces", v1))
+			format.tab_spaces = v1;
 
 		if (auto halign = node["horizontal align"].value<std::string>())
 		{
 			const std::string& align = halign.value();
 			if (align == "left")
-				fparams.halign= rendering::ParagraphFormat::HorizontalAlignment::LEFT;
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::LEFT;
 			else if (align == "center")
-				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::CENTER;
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::CENTER;
 			else if (align == "right")
-				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
 			else if (align == "justify")
-				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
 			else if (align == "full justify")
-				fparams.halign = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
 		}
 
 		if (auto valign = node["vertical align"].value<std::string>())
 		{
 			const std::string& align = valign.value();
 			if (align == "top")
-				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::TOP;
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::TOP;
 			else if (align == "middle")
-				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::MIDDLE;
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::MIDDLE;
 			else if (align == "bottom")
-				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
 			else if (align == "justify")
-				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
 			else if (align == "full justify")
-				fparams.valign = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
 		}
-	}
-
-	static rendering::ParagraphFormat create_format(const params::Paragraph& params)
-	{
-		const auto& fparams = params.format;
-
-		rendering::ParagraphFormat format;
-
-		if (fparams.pivot)
-			format.pivot = fparams.pivot.value();
-		if (fparams.line_spacing)
-			format.line_spacing = fparams.line_spacing.value();
-		if (fparams.linebreak_spacing)
-			format.linebreak_spacing = fparams.linebreak_spacing.value();
-		if (fparams.min_size)
-			format.min_size = fparams.min_size.value();
-		if (fparams.padding)
-			format.padding = fparams.padding.value();
-		if (fparams.text_wrap)
-			format.text_wrap = fparams.text_wrap.value();
-		if (fparams.max_height)
-			format.max_height = fparams.max_height.value();
-		if (fparams.halign)
-			format.horizontal_alignment = fparams.halign.value();
-		if (fparams.valign)
-			format.vertical_alignment = fparams.valign.value();
 
 		return format;
 	}
-	
+
 	rendering::Paragraph load_paragraph(const TOMLNode& node)
 	{
 		params::Paragraph params;
@@ -95,7 +71,7 @@ namespace oly::reg
 			throw Error(ErrorCode::LOAD_ASSET);
 
 		params.font_atlas = font_atlas.value();
-		create_format(node["format"], params);
+		params.format = create_format(node["format"]);
 		params.text = node["text"].value<std::string>().value_or("");
 
 		if (auto draw_bkg = node["draw bkg"].value<bool>())
@@ -122,9 +98,30 @@ namespace oly::reg
 		return load_paragraph(std::move(params));
 	}
 
+	rendering::Paragraph load_paragraph(const params::Paragraph& params)
+	{
+		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, dupl(params.text));
+		if (params.draw_bkg)
+			paragraph.draw_bkg = params.draw_bkg.value();
+		paragraph.set_local() = params.local;
+
+		if (params.bkg_color)
+			paragraph.set_bkg_color({ params.bkg_color.value() });
+		if (params.text_color)
+		{
+			paragraph.default_text_color.color = params.text_color.value();
+			paragraph.recolor_text_with_default();
+		}
+
+		for (const auto& gc : params.glyph_colors)
+			paragraph.set_glyph_color(gc.first, { gc.second });
+
+		return paragraph;
+	}
+
 	rendering::Paragraph load_paragraph(params::Paragraph&& params)
 	{
-		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, create_format(params), std::move(params.text));
+		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, std::move(params.text));
 		if (params.draw_bkg)
 			paragraph.draw_bkg = params.draw_bkg.value();
 		paragraph.set_local() = params.local;

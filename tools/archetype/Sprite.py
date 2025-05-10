@@ -1,33 +1,33 @@
 from Common import *
 
 
-def constructor(sprite) -> str:
-    c = write_transform_2d(sprite)
+def sprite_constructor(sprite, name) -> str:
+    c = write_named_transform_2d(sprite, name)
 
     if 'texture' in sprite:
-        c += f"\t\t{sprite['name']}.texture = \"{sprite['texture']}\";\n"
+        c += f"\t\t{name}.texture = \"{sprite['texture']}\";\n"
     if 'texture index' in sprite:
-        c += f"\t\t{sprite['name']}.texture_index = (unsigned int){sprite['texture index']};\n"
+        c += f"\t\t{name}.texture_index = (unsigned int){sprite['texture index']};\n"
     if 'svg scale' in sprite:
-        c += f"\t\t{sprite['name']}.svg_scale = (float){sprite['svg scale']};\n"
+        c += f"\t\t{name}.svg_scale = (float){sprite['svg scale']};\n"
 
     if 'modulation' in sprite:
-        if sprite['modulation'][0] is list:
-            c += f"\t\t{sprite['name']}.modulation = {{\n"
-            c += f"\t\t\t{{ (float){sprite['modulation'][0][0]}, (float){sprite['modulation'][0][1]}, (float){sprite['modulation'][0][2]}, (float){sprite['modulation'][0][3]} }}, "
-            c += f"\t\t\t{{ (float){sprite['modulation'][1][0]}, (float){sprite['modulation'][1][1]}, (float){sprite['modulation'][1][2]}, (float){sprite['modulation'][1][3]} }}, "
-            c += f"\t\t\t{{ (float){sprite['modulation'][2][0]}, (float){sprite['modulation'][2][1]}, (float){sprite['modulation'][2][2]}, (float){sprite['modulation'][2][3]} }}, "
-            c += f"\t\t\t{{ (float){sprite['modulation'][3][0]}, (float){sprite['modulation'][3][1]}, (float){sprite['modulation'][3][2]}, (float){sprite['modulation'][3][3]} }}"
+        if isinstance(sprite['modulation'][0], list):
+            c += f"\t\t{name}.modulation = rendering::SpriteBatch::Modulation{{\n"
+            c += f"\t\t\tglm::vec4{{ (float){sprite['modulation'][0][0]}, (float){sprite['modulation'][0][1]}, (float){sprite['modulation'][0][2]}, (float){sprite['modulation'][0][3]} }},\n"
+            c += f"\t\t\tglm::vec4{{ (float){sprite['modulation'][1][0]}, (float){sprite['modulation'][1][1]}, (float){sprite['modulation'][1][2]}, (float){sprite['modulation'][1][3]} }},\n"
+            c += f"\t\t\tglm::vec4{{ (float){sprite['modulation'][2][0]}, (float){sprite['modulation'][2][1]}, (float){sprite['modulation'][2][2]}, (float){sprite['modulation'][2][3]} }},\n"
+            c += f"\t\t\tglm::vec4{{ (float){sprite['modulation'][3][0]}, (float){sprite['modulation'][3][1]}, (float){sprite['modulation'][3][2]}, (float){sprite['modulation'][3][3]} }}\n"
             c += "\t\t};\n"
         else:
-            c += f"\t\t{sprite['name']}.modulation = {{ (float){sprite['modulation'][0]}, (float){sprite['modulation'][1]}, (float){sprite['modulation'][2]}, (float){sprite['modulation'][3]} }};\n"
+            c += f"\t\t{name}.modulation = {{ (float){sprite['modulation'][0]}, (float){sprite['modulation'][1]}, (float){sprite['modulation'][2]}, (float){sprite['modulation'][3]} }};\n"
 
     if 'tex coords' in sprite:
-        c += f"\t\t{sprite['name']}.tex_coords = {{\n"
-        c += f"\t\t\t{{ (float){sprite['tex coords'][0][0]}, (float){sprite['tex coords'][0][1]} }}, "
-        c += f"\t\t\t{{ (float){sprite['tex coords'][1][0]}, (float){sprite['tex coords'][1][1]} }}, "
-        c += f"\t\t\t{{ (float){sprite['tex coords'][2][0]}, (float){sprite['tex coords'][2][1]} }}, "
-        c += f"\t\t\t{{ (float){sprite['tex coords'][3][0]}, (float){sprite['tex coords'][3][1]} }}"
+        c += f"\t\t{name}.tex_coords = rendering::SpriteBatch::UVRect{{\n"
+        c += f"\t\t\tglm::vec4{{ (float){sprite['tex coords'][0][0]}, (float){sprite['tex coords'][0][1]} }},\n"
+        c += f"\t\t\tglm::vec4{{ (float){sprite['tex coords'][1][0]}, (float){sprite['tex coords'][1][1]} }},\n"
+        c += f"\t\t\tglm::vec4{{ (float){sprite['tex coords'][2][0]}, (float){sprite['tex coords'][2][1]} }},\n"
+        c += f"\t\t\tglm::vec4{{ (float){sprite['tex coords'][3][0]}, (float){sprite['tex coords'][3][1]} }}\n"
         c += "\t\t};\n"
 
     if 'frame_format' in sprite:
@@ -68,7 +68,7 @@ def constructor(sprite) -> str:
                     c += write_auto_frame_format()
         else:
             c += write_anim_frame_format()
-        c += f"""\t\t\t{sprite['name']}.frame_format = frame_format;
+        c += f"""\t\t\t{name}.frame_format = frame_format;
 \t\t}}\n"""
 
     if 'transform_modifier' in sprite and sprite['transform_modifier']['type'] in ["shear", "pivot", "pivot-shear"]:
@@ -106,6 +106,10 @@ def constructor(sprite) -> str:
                 c += write_pivot_modifier()
             case "pivot-shear":
                 c += write_pivot_shear_modifier()
-        c += f"""\t\t\t{sprite['name']}.modifier = modifier;
+        c += f"""\t\t\t{name}.modifier = modifier;
 \t\t}}\n"""
     return c
+
+
+def constructor(sprite) -> str:
+    return sprite_constructor(sprite, sprite['name'])

@@ -83,7 +83,7 @@ class Archetype:
         decl += self.write_declarations(self.sprites, "Sprite", "rendering", 2)
         decl += self.write_declarations(self.polygons, "Polygon", "rendering", 2)
         decl += self.write_declarations(self.poly_composites, "PolyComposite", "rendering", 2)
-        decl += self.write_declarations(self.ngons, "Ngon", "rendering", 2)
+        decl += self.write_declarations(self.ngons, "NGon", "rendering", 2)
         decl += self.write_declarations(self.ellipses, "Ellipse", "rendering", 2)
         decl += self.write_declarations(self.paragraphs, "Paragraph", "rendering", 2)
         decl += self.write_declarations(self.sprite_atlases, "SpriteAtlasExtension", "rendering", 2)
@@ -98,7 +98,7 @@ class Archetype:
         decl += self.write_declarations(self.ngons, "NGon", "reg::params", 3)
         decl += self.write_declarations(self.ellipses, "Ellipse", "reg::params", 3)
         decl += self.write_declarations(self.paragraphs, "Paragraph", "reg::params", 3)
-        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlasExtension", "reg::params", 3)
+        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "reg::params", 3)
         decl += self.write_declarations(self.tilemaps, "TileMap", "reg::params", 3)
         return decl
 

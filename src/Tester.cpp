@@ -3,7 +3,7 @@
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
 #include "archetypes/EllipsePair.h"
-#include "hardcoded archetypes/Jumble.h"
+#include "archetypes/Jumble.h"
 #include "archetypes/BKG.h"
 
 #include "PlayerController.h"

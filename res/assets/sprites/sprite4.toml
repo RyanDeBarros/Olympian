@@ -1,4 +1,0 @@
-[sprite]
-"texture"       = "textures/tux.png"
-"texture index" = 1
-transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }

@@ -47,12 +47,16 @@ namespace oly::rendering
 		utf::String text;
 		FontAtlasRes font;
 		ParagraphFormat format;
+
+	public:
+		bool draw_bkg = false;
+
+	private:
 		size_t glyphs_drawn = 0;
 
 	public:
-		Transformer2D transformer;
-		bool draw_bkg = false;
 		TextBatch::TextColor default_text_color;
+		Transformer2D transformer;
 
 		Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat& format = {}, utf::String&& text = "");
 

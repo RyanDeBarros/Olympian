@@ -1,4 +1,0 @@
-[sprite]
-"texture"   = "textures/godot.svg"
-"svg scale" = 10.0
-transform   = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [0.3, 0.3] }

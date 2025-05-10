@@ -1,0 +1,149 @@
+[archetype]
+name = "Jumble"
+draw = [
+	"sprite3",
+	"sprite4",
+	"sprite5",
+	"octagon",
+	"sprite1",
+	"godot_icon",
+	"knight",
+	"concave_shape",
+	"atlased_knight",
+	"grass_tilemap",
+	"test_text"
+]
+
+[[archetype.sprite]]
+name = "sprite3"
+"texture"    = "textures/serotonin.gif"
+transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
+frame_format = { "num frames" = 59, "delay seconds" = -0.05 }
+
+[[archetype.sprite]]
+name = "sprite4"
+"texture"       = "textures/tux.png"
+"texture index" = 1
+transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
+
+[[archetype.sprite]]
+name = "sprite5"
+"texture" = "textures/tux.png"
+transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
+
+[[archetype.ngon]]
+name = "octagon"
+transform = { "position" = [300, 200], "scale" = [200, 200] }
+"points" = [
+	[      1,      0 ],
+	[  0.707,  0.707 ],
+	[      0,      1 ],
+	[ -0.707,  0.707 ],
+	[     -1,      0 ],
+	[ -0.707, -0.707 ],
+	[      0,     -1 ],
+	[  0.707, -0.707 ]
+]
+"fill colors" = [[0.0, 1.0, 0.0, 0.7]]
+"border colors" = [
+	[ 0.25,  0.0,  0.5, 1.0 ],
+	[  0.0, 0.25, 0.25, 1.0 ],
+	[ 0.25,  0.5,  0.0, 1.0 ],
+	[  0.5, 0.75, 0.25, 1.0 ],
+	[ 0.75,  1.0,  0.5, 1.0 ],
+	[  1.0, 0.75, 0.75, 1.0 ],
+	[ 0.75,  0.5,  1.0, 1.0 ],
+	[  0.5, 0.25, 0.75, 1.0 ]
+]
+"bordered" = true
+"border width" = 0.05
+
+[[archetype.sprite]]
+name = "sprite1"
+"texture" = "textures/einstein.png"
+"modulation" = [
+	[1.0, 1.0, 0.2, 0.7],
+	[0.2, 1.0, 1.0, 0.7],
+	[1.0, 0.2, 1.0, 0.7],
+	[0.5, 0.5, 0.5, 0.7]
+]
+
+[[archetype.sprite]]
+name = "godot_icon"
+"texture" = "textures/godot.svg"
+"svg scale" = 3.0
+transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+
+[[archetype.sprite]]
+name = "knight"
+"texture"    = "textures/knight.png"
+transform    = { "position" = [100, -300], "scale" = [20, 20] }
+frame_format = { "mode" = "auto" }
+
+[[archetype.poly_composite]]
+name = "concave_shape"
+transform = { "position" = [-200, 200], "scale" = [60, 60] }
+"method" = "convex decomposition"
+"points" = [
+	[ -4,  0 ],
+	[ -2, -2 ],
+	[  0, -2 ],
+	[  2, -1 ],
+	[  4,  1 ],
+	[  2,  3 ],
+	[  1,  3 ],
+	[ -1,  0 ],
+	[ -3,  1 ],
+	[ -3,  2 ]
+]
+
+[[archetype.sprite_atlas]]
+name            = "atlased_knight"
+"rows"          = 2
+"cols"          = 3
+"delay seconds" = 0.1
+	[archetype.sprite_atlas.sprite]
+	"texture" = "textures/knight.png"
+	"texture index" = 1
+	transform = { "position" = [300, -200], "scale" = [20, 20] }
+
+[[archetype.tilemap]]
+name = "grass_tilemap"
+transform = { "scale" = [ 100, 100 ] }
+
+	[[archetype.tilemap.layer]]
+	"z" = 0
+	"tileset" = "grass tileset"
+	"tiles" = [
+		[ -1, -1 ],
+		[  0, -1 ],
+		[  1, -1 ],
+		[ -1,  0 ],
+		[  1,  0 ],
+		[  2,  0 ],
+		[ -1,  1 ],
+		[  0,  1 ],
+		[  1,  1 ],
+		[  2,  2 ],
+		[  3,  2 ],
+		[  2,  3 ],
+		[  3,  3 ],
+	]
+
+[[archetype.paragraph]]
+name           = "test_text"
+"font atlas"   = "roboto regular (96)"
+"text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+"draw bkg"     = true
+transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
+"bkg color"    = [ 0.5, 0.4, 0.2, 0.8 ]
+"text color"   = [ 0.0, 0.0, 0.0, 1.0 ]
+"glyph colors" = { "0" = [ 1.0, 0.0, 0.0, 1.0 ], "1" = [ 0.0, 1.0, 0.0, 1.0 ], "2" = [ 0.0, 0.0, 1.0, 1.0 ] }
+	[archetype.paragraph.format]
+	"pivot"             = [ 0.0, 1.0 ]
+	"line spacing"      = 1.5
+	"linebreak spacing" = 2.0
+	"min size"          = [ 800, 800 ]
+	"padding"           = [ 50, 50 ]
+	"horizontal align"  = "center"
+	"vertical align"    = "middle"
