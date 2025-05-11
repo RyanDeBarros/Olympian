@@ -24,9 +24,9 @@ namespace oly::gen
 		rendering::SpriteAtlasExtension atlased_knight;
 		rendering::TileMap grass_tilemap;
 
-    private:
-        struct Constructor
-        {
+	private:
+		struct Constructor
+		{
 			reg::params::Sprite sprite3;
 			reg::params::Sprite sprite4;
 			reg::params::Sprite sprite5;

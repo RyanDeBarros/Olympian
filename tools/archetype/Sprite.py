@@ -1,4 +1,4 @@
-from Common import *
+from .Common import *
 
 
 def sprite_constructor(sprite, name) -> str:

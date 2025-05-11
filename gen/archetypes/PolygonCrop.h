@@ -12,9 +12,9 @@ namespace oly::gen
 		rendering::Polygon pentagon2;
 		rendering::PolyComposite bordered_quad;
 
-    private:
-        struct Constructor
-        {
+	private:
+		struct Constructor
+		{
 			reg::params::Polygon pentagon1;
 			reg::params::Polygon pentagon2;
 			reg::params::PolyComposite bordered_quad;

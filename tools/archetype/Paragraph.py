@@ -1,4 +1,4 @@
-from Common import *
+from .Common import *
 
 
 def escape_text(text: str) -> str:

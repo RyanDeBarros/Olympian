@@ -9,6 +9,21 @@ endif()
 
 project ("Olympian")
 
+# Run automatic tools
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+message(STATUS "Generating pre-build source code")
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/PreBuild.py"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tools"
+	RESULT_VARIABLE PREBUILD_RESULT
+)
+
+if (NOT PREBUILD_RESULT EQUAL 0)
+	message(FATAL_ERROR "PreBuild.py failed with code ${PREBUILD_RESULT}")
+endif()
+
+# Variables
 set(LIBRARIES_DIR "D:/Libraries")
 
 # Include directories

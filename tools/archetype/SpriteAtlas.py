@@ -1,4 +1,4 @@
-import Sprite
+from . import Sprite
 
 
 def constructor(sprite_atlas) -> str:

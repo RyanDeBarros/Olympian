@@ -2,8 +2,8 @@
 
 namespace oly::gen
 {
-    EllipsePair::Constructor::Constructor()
-    {
+	EllipsePair::Constructor::Constructor()
+	{
 		ellipse1.local.position = { (float)-300, (float)0 };
 		ellipse1.local.scale = { (float)150, (float)150 };
 		ellipse1.dimension.width = (float)2;
@@ -24,22 +24,22 @@ namespace oly::gen
 		ellipse2.color.fill_outer = { (float)1.0, (float)0.6, (float)0.2, (float)1.0 };
 		ellipse2.color.border_inner = { (float)0.0, (float)0.0, (float)0.0, (float)1.0 };
 		ellipse2.color.border_outer = { (float)0.8, (float)0.9, (float)1.0, (float)0.0 };
-    }
-    
-    EllipsePair::EllipsePair(Constructor c) :
+	}
+
+	EllipsePair::EllipsePair(Constructor c) :
 		ellipse1(reg::load_ellipse(c.ellipse1)),
 		ellipse2(reg::load_ellipse(c.ellipse2))
-    {}
-    
-    void EllipsePair::draw(bool flush_ellipses) const
-    {
+	{}
+
+	void EllipsePair::draw(bool flush_ellipses) const
+	{
 		ellipse1.draw();
 		ellipse2.draw();
 		if (flush_ellipses)
 			context::render_ellipses();
-    }
-    
-    void EllipsePair::on_tick() const
-    {
-    }
+	}
+
+	void EllipsePair::on_tick() const
+	{
+	}
 }

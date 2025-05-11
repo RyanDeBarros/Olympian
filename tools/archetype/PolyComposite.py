@@ -1,4 +1,4 @@
-from Common import *
+from .Common import *
 
 
 def constructor(poly_composite) -> str:

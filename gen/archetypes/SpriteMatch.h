@@ -11,9 +11,9 @@ namespace oly::gen
 		rendering::Sprite sprite0;
 		rendering::Sprite sprite2;
 
-    private:
-        struct Constructor
-        {
+	private:
+		struct Constructor
+		{
 			reg::params::Sprite sprite0;
 			reg::params::Sprite sprite2;
 

@@ -10,9 +10,9 @@ namespace oly::gen
 	{
 		rendering::Polygon bkg_rect;
 
-    private:
-        struct Constructor
-        {
+	private:
+		struct Constructor
+		{
 			reg::params::Polygon bkg_rect;
 
 			Constructor();

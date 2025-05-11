@@ -2,6 +2,9 @@ import ToolRegistry
 from Tool import var_cmd, varinput, print_error
 
 
+DESCRIPTION_OFFSET = 64
+
+
 def resolve_path(current, path, root):
     if path.startswith("/"):
         # absolute path
@@ -39,7 +42,7 @@ def repl(root):
             break
         elif cmd == "list":
             for child in current.children.values():
-                print(f"{child.name:<24} - {child.description}")
+                print(f"{child.name:<{DESCRIPTION_OFFSET}} - {child.description}")
         elif cmd == "..":
             if current.parent:
                 current = current.parent

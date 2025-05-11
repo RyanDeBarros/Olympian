@@ -95,20 +95,6 @@ class TextureImporter:
             toml.dump(tml, f)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Auto-generates .oly texture import files with default parameters "
-                                                 "for isolated textures.")
-
-    parser.add_argument('-f', '--folder', required=True, type=str, help="Folder to look in")
-    parser.add_argument('-r', '--recur', action='store_true', help="Recursively search subfolders")
-    parser.add_argument('-p', '--prune', action='store_true', help="Remove isolated import files")
-    parser.add_argument('-d', '--default', action='store_true', help="Reset existing texture import files to default")
-    parser.add_argument('-c', '--clear', action='store_true', help="Clear all texture import files")
-
-    args = parser.parse_args()
-    TextureImporter(args.folder, args.recur, args.prune, args.default, args.clear).run()
-
-
 def import_textures():
     folder = ""
     while len(folder) == 0:

@@ -4,14 +4,8 @@ from enum import Enum
 
 import toml
 
-import Ellipse
-import NGon
-import Paragraph
-import PolyComposite
-import Polygon
-import Sprite
-import SpriteAtlas
-import TileMap
+from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap
+from Tool import ToolNode, print_info, print_error, varinput
 
 
 class Batch(Enum):
@@ -34,6 +28,9 @@ class Archetype:
         self.tilemaps = self.archetype['tilemap'] if 'tilemap' in self.archetype else []
 
         self.name: str = self.archetype['name']
+        self.gen_folder = ""
+        if 'gen folder' in self.archetype:
+            self.gen_folder = self.archetype['gen folder']
         assert len(self.name) > 0 and self.name[0].isalpha(), "Invalid archetype name"
         self.draw_list = self.archetype['draw']
 
@@ -204,9 +201,9 @@ namespace oly::gen
     hdr += proto.declarations()
 
     hdr += """
-    private:
-        struct Constructor
-        {
+\tprivate:
+\t\tstruct Constructor
+\t\t{
 """
 
     hdr += proto.constructor_declarations()
@@ -269,10 +266,14 @@ namespace oly::gen
     return cpp
 
 
-def generate(asset_filepath: str, gen_folder: str):
+def generate(asset_filepath: str):
     with open(asset_filepath, 'r') as f:
-        proto = Archetype(toml.load(f))
+        tml = toml.load(f)
+        if 'archetype' not in tml:
+            return
+        proto = Archetype(tml)
 
+    gen_folder = os.path.join('../gen/archetypes', proto.gen_folder)
     hdr = generate_header(proto)
     cpp = generate_cpp(proto)
 
@@ -283,11 +284,144 @@ def generate(asset_filepath: str, gen_folder: str):
         f.write(cpp)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generates archetype source code from archetype asset file.")
+def read_manifest_folders():
+    return open('archetype/manifest.txt', 'r').read().splitlines()
 
-    parser.add_argument('-a', '--asset', required=True, type=str, help="Archetype asset to generate")
-    parser.add_argument('-g', '--gen_folder', required=True, type=str, help="Folder to generate source code")
 
-    args = parser.parse_args()
-    generate(args.asset, args.gen_folder)
+def generate_manifest():
+    asset_folders = read_manifest_folders()
+
+    def generate_folder(folder):
+        with os.scandir(os.path.join('../res', folder)) as entries:
+            for entry in entries:
+                if entry.is_file():
+                    generate(entry.path)
+                elif entry.is_dir():
+                    generate_folder(entry)
+
+    for asset_folder in asset_folders:
+        generate_folder(asset_folder)
+
+
+def view_manifest():
+    folders = read_manifest_folders()
+    if len(folders) > 0:
+        for folder in folders:
+            print_info(folder)
+    else:
+        print_info("Manifest is empty.")
+
+
+def append_to_manifest():
+    folders = read_manifest_folders()
+    folder = varinput("Append folder: ").strip()
+    if folder in folders:
+        print_info(f"'{folder}' already exists in manifest.")
+    else:
+        with open('archetype/manifest.txt', 'a') as f:
+            f.write(folder + '\n')
+        print_info(f"Successfully appended '{folder}'.")
+
+
+def remove_from_manifest():
+    folders = read_manifest_folders()
+    folder = varinput("Remove folder: ").strip()
+    if folder not in folders:
+        print_info(f"'{folder}' does not exist in manifest.")
+    else:
+        folders.remove(folder)
+        with open('archetype/manifest.txt', 'w') as f:
+            for fd in folders:
+                f.write(fd + '\n')
+        print_info(f"Successfully removed '{folder}'.")
+
+
+def is_subfolder(sub, parent):
+    return os.path.normpath(parent) == os.path.normpath(os.path.commonpath([sub, parent]))
+
+
+def remove_recursive_from_manifest():
+    folders = read_manifest_folders()
+    parent = varinput("Remove folder: ").strip()
+    remaining = []
+    for folder in folders:
+        if not is_subfolder(folder, parent):
+            remaining.append(folder)
+    with open('archetype/manifest.txt', 'w') as f:
+        for fd in remaining:
+            f.write(fd + '\n')
+    print_info("Success!")
+
+
+def clear_manifest():
+    with open('archetype/manifest.txt', 'w') as f:
+        f.write('')
+    print_info("Success!")
+
+
+def edit_manifest():
+    folders = read_manifest_folders()
+    folder = varinput("Edit folder: ").strip()
+    if folder not in folders:
+        print_info(f"{folder} does not exist in manifest.")
+    else:
+        old_folder = folder
+        folder = varinput("New folder: ").strip()
+        if folder in folders:
+            print_error(f"Fail - '{folder}' already exists in manifest.")
+        else:
+            folders[folders.index(old_folder)] = folder
+            with open('archetype/manifest.txt', 'w') as f:
+                for fd in folders:
+                    f.write(fd + '\n')
+            print_info(f"'{old_folder}' -> '{folder}'")
+
+
+def clean_manifest():
+    folders = read_manifest_folders()
+    cleaned = []
+    for folder in folders:
+        if len(folder) == 0:
+            continue
+        orphan = True
+        for possible_parent in folders:
+            if len(possible_parent) > 0 and folder != possible_parent and is_subfolder(folder, possible_parent):
+                orphan = False
+                break
+        if orphan:
+            cleaned.append(folder)
+
+    with open('archetype/manifest.txt', 'w') as f:
+        for fd in cleaned:
+            f.write(fd + '\n')
+    print_info("Success!")
+
+
+TOOL = ToolNode("archetype", "Manipulate archetype source code generation.")
+
+GENERATE_MANIFEST = ToolNode("generate",
+                             "Generate all archetype source code from assets found in the folders listed in tools/archetype/manifest.txt.",
+                             generate_manifest)
+TOOL.add_child(GENERATE_MANIFEST)
+
+MANIFEST = ToolNode("manifest", "Manipulate tools/archetype/manifest.txt.")
+VIEW_MANIFEST = ToolNode("view", "View the manifest file.", view_manifest)
+MANIFEST.add_child(VIEW_MANIFEST)
+APPEND_TO_MANIFEST = ToolNode("append", "Append folder to manifest file.", append_to_manifest)
+MANIFEST.add_child(APPEND_TO_MANIFEST)
+REMOVE_FROM_MANIFEST = ToolNode("remove", "Remove folder from manifest file.", remove_from_manifest)
+MANIFEST.add_child(REMOVE_FROM_MANIFEST)
+REMOVE_RECURSIVE_FROM_MANIFEST = ToolNode("remove recursive", "Remove folder and any subfolders from manifest file.", remove_recursive_from_manifest)
+MANIFEST.add_child(REMOVE_RECURSIVE_FROM_MANIFEST)
+CLEAR_MANIFEST = ToolNode("clear", "Clear the manifest file.", clear_manifest)
+MANIFEST.add_child(CLEAR_MANIFEST)
+EDIT_MANIFEST = ToolNode("edit", "Edit a folder in the manifest file.", edit_manifest)
+MANIFEST.add_child(EDIT_MANIFEST)
+CLEAN_MANIFEST = ToolNode("clean",
+                          "Remove redundant folders from manifest file, such as folders that have parent folders already in manifest file.",
+                          clean_manifest)
+MANIFEST.add_child(CLEAN_MANIFEST)
+
+TOOL.add_child(MANIFEST)
+
+# TODO add cache, and tool to clear cache
