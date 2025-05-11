@@ -36,7 +36,8 @@ namespace oly::graphics
 	template<size_t N>
 	class GLBufferBlock
 	{
-		bool active = true;
+		static_assert(N > 0);
+
 		std::array<GLuint, N> ids;
 
 	public:
@@ -50,12 +51,12 @@ namespace oly::graphics
 		GLBufferBlock(GLBufferBlock&& other) noexcept
 			: ids(other.ids)
 		{
-			other.active = false; // TODO use ids[0] instead of active?
+			other.ids[0] = 0;
 		}
 
 		~GLBufferBlock()
 		{
-			if (active)
+			if (ids[0])
 				glDeleteBuffers(N, ids.data());
 		}
 
@@ -63,10 +64,10 @@ namespace oly::graphics
 		{
 			if (this != &other)
 			{
-				if (active)
+				if (ids[0])
 					glDeleteBuffers(N, ids.data());
 				ids = other.ids;
-				other.active = false;
+				other.ids[0] = 0;
 			}
 			return *this;
 		}
@@ -85,6 +86,9 @@ namespace oly::graphics
 		}
 	};
 
+	/*
+	* GLBufferBlock<0> is the dynamic version of GLBufferBlock<N> - it still holds a block of buffers, not 0!
+	*/
 	template<>
 	class GLBufferBlock<0>
 	{

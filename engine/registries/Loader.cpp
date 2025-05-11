@@ -31,90 +31,60 @@ namespace oly::reg
 
 	bool parse_int(const TOMLNode& node, const std::string& name, int& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<int64_t>())
 		{
-			auto i = n.value<int64_t>();
-			if (i)
-			{
-				v = (int)i.value();
-				return true;
-			}
+			v = (int)i.value();
+			return true;
 		}
 		return false;
 	}
 
 	bool parse_int(const CTOMLNode& node, const std::string& name, int& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<int64_t>())
 		{
-			auto i = n.value<int64_t>();
-			if (i)
-			{
-				v = (int)i.value();
-				return true;
-			}
+			v = (int)i.value();
+			return true;
 		}
 		return false;
 	}
 
 	bool parse_int(const toml::table& node, const std::string& name, int& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<int64_t>())
 		{
-			auto i = n.value<int64_t>();
-			if (i)
-			{
-				v = (int)i.value();
-				return true;
-			}
+			v = (int)i.value();
+			return true;
 		}
 		return false;
 	}
 
 	bool parse_float(const TOMLNode& node, const std::string& name, float& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<double>())
 		{
-			auto i = n.value<double>();
-			if (i)
-			{
-				v = (float)i.value();
-				return true;
-			}
+			v = (float)i.value();
+			return true;
 		}
 		return false;
 	}
 
 	bool parse_float(const CTOMLNode& node, const std::string& name, float& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<double>())
 		{
-			auto i = n.value<double>();
-			if (i)
-			{
-				v = (float)i.value();
-				return true;
-			}
+			v = (float)i.value();
+			return true;
 		}
 		return false;
 	}
 
 	bool parse_float(const toml::table& node, const std::string& name, float& v)
 	{
-		auto n = node[name];
-		if (n)
+		if (auto i = node[name].value<double>())
 		{
-			auto i = n.value<double>();
-			if (i)
-			{
-				v = (float)i.value();
-				return true;
-			}
+			v = (float)i.value();
+			return true;
 		}
 		return false;
 	}
