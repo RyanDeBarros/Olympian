@@ -2,7 +2,7 @@ from .Common import *
 
 
 def constructor(tilemap) -> str:
-    c = write_transform_2d(tilemap)
+    c = write_transformer_2d(tilemap)
 
     if 'layer' in tilemap:
         for layer in tilemap['layer']:

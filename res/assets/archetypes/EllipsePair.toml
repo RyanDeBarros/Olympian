@@ -4,6 +4,7 @@ draw = [
 	"ellipse1",
 	"ellipse2"
 ]
+transform = { "position" = [ 500, 0 ] }
 
 [[archetype.ellipse]]
 name = "ellipse1"

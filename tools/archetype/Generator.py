@@ -5,7 +5,7 @@ from enum import Enum
 
 import toml
 
-from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap
+from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, Common
 from Tool import ToolNode, print_info, print_error, varinput
 
 MANIFEST_PATH = 'archetype/manifest.txt'
@@ -18,6 +18,9 @@ class Batch(Enum):
     POLYGON = 1,
     ELLIPSE = 2,
     TEXT = 3
+
+
+RESERVED_NAMES = ["transformer"]
 
 
 class Archetype:
@@ -43,10 +46,12 @@ class Archetype:
 
         def register_batch(renderables, batch: Batch):
             for renderable in renderables:
-                assert len(renderable['name']) > 0 and renderable['name'][0].isalpha() and not any(
-                    c.isspace() for c in renderable['name']), f"Invalid variable name '{renderable['name']}'"
-                assert renderable['name'] not in self.batch_map, f"Repeated variable name '{renderable['name']}'"
-                self.batch_map[renderable['name']] = batch
+                name = renderable['name']
+                assert name not in RESERVED_NAMES, f"'{name}' is a reserved name"
+                assert len(name) > 0 and (name[0].isalpha() or name[0] == "_") and not any(
+                    c.isspace() for c in name), f"Invalid variable name '{name}'"
+                assert name not in self.batch_map, f"Repeated variable name '{name}'"
+                self.batch_map[name] = batch
 
         register_batch(self.sprites, Batch.SPRITE)
         register_batch(self.polygons, Batch.POLYGON)
@@ -105,7 +110,7 @@ class Archetype:
         return decl
 
     def constructors(self) -> str:
-        c = ""
+        c = Common.write_named_transformer_2d(self.archetype, 'transformer')
         for sprite in self.sprites:
             c += Sprite.constructor(sprite) + "\n"
         for polygon in self.polygons:
@@ -141,7 +146,27 @@ class Archetype:
         ini += self.write_initializer(self.paragraphs, "load_paragraph")
         ini += self.write_initializer(self.sprite_atlases, "load_sprite_atlas")
         ini += self.write_initializer(self.tilemaps, "load_tilemap")
-        return ini[:-2] if len(ini) > 0 else ""  # don't keep last ,\n
+        return ini[:-1] if len(ini) > 0 else ""  # don't keep last \n
+
+    @staticmethod
+    def write_transformer_attachment(renderables):
+        att = ""
+        for renderable in renderables:
+            att += f"\t\t{renderable['name']}.transformer.attach_parent(&transformer);\n"
+        return att
+
+    def transformer_attachments(self) -> str:
+        att = ""
+        att += self.write_transformer_attachment(self.sprites)
+        att += self.write_transformer_attachment(self.polygons)
+        att += self.write_transformer_attachment(self.poly_composites)
+        att += self.write_transformer_attachment(self.ngons)
+        att += self.write_transformer_attachment(self.ellipses)
+        att += self.write_transformer_attachment(self.paragraphs)
+        att += self.write_transformer_attachment(self.tilemaps)
+        for renderable in self.sprite_atlases:
+            att += f"\t\t{renderable['name']}.sprite.transformer.attach_parent(&transformer);\n"
+        return att
 
     @staticmethod
     def write_render(batch) -> str:
@@ -201,6 +226,10 @@ namespace oly::gen
 {{
 \tstruct {proto.name}
 \t{{
+\t\tTransformer2D transformer;
+\t\tconst Transform2D& get_local() const {{ return transformer.get_local(); }}
+\t\tTransform2D& set_local() {{ return transformer.set_local(); }}
+
 """
 
     hdr += proto.declarations()
@@ -209,6 +238,11 @@ namespace oly::gen
 \tprivate:
 \t\tstruct Constructor
 \t\t{
+\t\t\tstruct
+\t\t\t{
+\t\t\t\tTransform2D local;
+\t\t\t\tstd::unique_ptr<TransformModifier2D> modifier;
+\t\t\t} transformer;
 """
 
     hdr += proto.constructor_declarations()
@@ -237,7 +271,6 @@ namespace oly::gen
 \t{proto.name}::Constructor::Constructor()
 \t{{
 """
-
     cpp += proto.constructors()
 
     cpp += f"""\t}}
@@ -248,7 +281,12 @@ namespace oly::gen
     cpp += proto.initializer_list()
 
     cpp += f"""
-\t{{}}
+\t\ttransformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+\t{{\n"""
+
+    cpp += proto.transformer_attachments()
+
+    cpp += f"""\t}}
 
 \tvoid {proto.name}::draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const
 \t{{
@@ -345,6 +383,11 @@ def generate_manifest():
     for asset_folder in asset_folders:
         generate_folder(asset_folder)
     cache.dump()
+
+
+def generate_manifest_tool():
+    generate_manifest()
+    print_info("Success!")
 
 
 def view_manifest():
@@ -449,8 +492,9 @@ def clear_cache():
 TOOL = ToolNode("archetype", "Manipulate archetype source code generation.")
 
 GENERATE_MANIFEST = ToolNode("generate",
-                             "Generate all archetype source code from assets found in the folders listed in tools/archetype/manifest.txt.",
-                             generate_manifest)
+                             "Generate all archetype source code from assets found in the folders listed in "
+                             "tools/archetype/manifest.txt.",
+                             generate_manifest_tool)
 TOOL.add_child(GENERATE_MANIFEST)
 
 MANIFEST = ToolNode("manifest", "Manipulate tools/archetype/manifest.txt.")
@@ -468,10 +512,13 @@ MANIFEST.add_child(CLEAR_MANIFEST)
 EDIT_MANIFEST = ToolNode("edit", "Edit a folder in the manifest file.", edit_manifest)
 MANIFEST.add_child(EDIT_MANIFEST)
 CLEAN_MANIFEST = ToolNode("clean",
-                          "Remove redundant folders from manifest file, such as folders that have parent folders already in manifest file.",
+                          "Remove redundant folders from manifest file, such as folders that have parent folders "
+                          "already in manifest file.",
                           clean_manifest)
 MANIFEST.add_child(CLEAN_MANIFEST)
 TOOL.add_child(MANIFEST)
 
-CLEAR_CACHE = ToolNode("clear cache", "Clear the pre-build cache completely, as well as all generated source code in gen/archetypes.", clear_cache)
+CLEAR_CACHE = ToolNode("clear cache",
+                       "Clear the pre-build cache completely, as well as all generated source code in gen/archetypes.",
+                       clear_cache)
 TOOL.add_child(CLEAR_CACHE)

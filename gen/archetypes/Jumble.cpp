@@ -150,8 +150,21 @@ namespace oly::gen
 		octagon(reg::load_ngon(c.octagon)),
 		test_text(reg::load_paragraph(c.test_text)),
 		atlased_knight(reg::load_sprite_atlas(c.atlased_knight)),
-		grass_tilemap(reg::load_tilemap(c.grass_tilemap))
-	{}
+		grass_tilemap(reg::load_tilemap(c.grass_tilemap)),
+		transformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+	{
+		sprite3.transformer.attach_parent(&transformer);
+		sprite4.transformer.attach_parent(&transformer);
+		sprite5.transformer.attach_parent(&transformer);
+		sprite1.transformer.attach_parent(&transformer);
+		godot_icon.transformer.attach_parent(&transformer);
+		knight.transformer.attach_parent(&transformer);
+		concave_shape.transformer.attach_parent(&transformer);
+		octagon.transformer.attach_parent(&transformer);
+		test_text.transformer.attach_parent(&transformer);
+		grass_tilemap.transformer.attach_parent(&transformer);
+		atlased_knight.sprite.transformer.attach_parent(&transformer);
+	}
 
 	void Jumble::draw(bool flush_text) const
 	{

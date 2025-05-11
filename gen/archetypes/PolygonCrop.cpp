@@ -57,8 +57,13 @@ namespace oly::gen
 	PolygonCrop::PolygonCrop(Constructor c) :
 		pentagon1(reg::load_polygon(c.pentagon1)),
 		pentagon2(reg::load_polygon(c.pentagon2)),
-		bordered_quad(reg::load_poly_composite(c.bordered_quad))
-	{}
+		bordered_quad(reg::load_poly_composite(c.bordered_quad)),
+		transformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+	{
+		pentagon1.transformer.attach_parent(&transformer);
+		pentagon2.transformer.attach_parent(&transformer);
+		bordered_quad.transformer.attach_parent(&transformer);
+	}
 
 	void PolygonCrop::draw(bool flush_polygons) const
 	{

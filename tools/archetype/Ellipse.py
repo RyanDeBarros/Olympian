@@ -2,7 +2,7 @@ from .Common import *
 
 
 def constructor(ellipse) -> str:
-    c = write_transform_2d(ellipse)
+    c = write_transformer_2d(ellipse)
 
     def write_dimension_parameter(parameter: str, variable: str) -> str:
         if parameter in ellipse:

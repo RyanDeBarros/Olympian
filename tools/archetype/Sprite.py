@@ -2,7 +2,7 @@ from .Common import *
 
 
 def sprite_constructor(sprite, name) -> str:
-    c = write_named_transform_2d(sprite, name)
+    c = write_named_transformer_2d(sprite, name)
 
     if 'texture' in sprite:
         c += f"\t\t{name}.texture = \"{sprite['texture']}\";\n"
@@ -71,43 +71,6 @@ def sprite_constructor(sprite, name) -> str:
         c += f"""\t\t\t{name}.frame_format = frame_format;
 \t\t}}\n"""
 
-    if 'transform_modifier' in sprite and sprite['transform_modifier']['type'] in ["shear", "pivot", "pivot-shear"]:
-        transform_modifier = sprite['transform_modifier']
-
-        def write_shear_modifier():
-            c = "\t\t\tShearTransformModifier2D modifier;\n"
-            if 'shearing' in transform_modifier:
-                c += f"\t\t\tmodifier.shearing = {{ (float){transform_modifier['shearing'][0]}, (float){transform_modifier['shearing'][1]} }};\n"
-            return c
-
-        def write_pivot_modifier():
-            c = "\t\t\tPivotTransformModifier2D modifier;\n"
-            if 'pivot' in transform_modifier:
-                c += f"\t\t\tmodifier.pivot = {{ (float){transform_modifier['pivot'][0]}, (float){transform_modifier['pivot'][1]} }};\n"
-            if 'size' in transform_modifier:
-                c += f"\t\t\tmodifier.size = {{ (float){transform_modifier['size'][0]}, (float){transform_modifier['size'][1]} }};\n"
-            return c
-
-        def write_pivot_shear_modifier():
-            c = "\t\t\tPivotShearTransformModifier2D modifier;\n"
-            if 'shearing' in transform_modifier:
-                c += f"\t\t\tmodifier.shearing = {{ (float){transform_modifier['shearing'][0]}, (float){transform_modifier['shearing'][1]} }};\n"
-            if 'pivot' in transform_modifier:
-                c += f"\t\t\tmodifier.pivot = {{ (float){transform_modifier['pivot'][0]}, (float){transform_modifier['pivot'][1]} }};\n"
-            if 'size' in transform_modifier:
-                c += f"\t\t\tmodifier.size = {{ (float){transform_modifier['size'][0]}, (float){transform_modifier['size'][1]} }};\n"
-            return c
-
-        c += """\t\t{\n"""
-        match transform_modifier['type']:
-            case "shear":
-                c += write_shear_modifier()
-            case "pivot":
-                c += write_pivot_modifier()
-            case "pivot-shear":
-                c += write_pivot_shear_modifier()
-        c += f"""\t\t\t{name}.modifier = modifier;
-\t\t}}\n"""
     return c
 
 

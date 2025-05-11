@@ -9,17 +9,21 @@ namespace oly::gen
 
 		sprite2.local.position = { (float)-100, (float)-100 };
 		sprite2.local.scale = { (float)0.2, (float)0.2 };
-		sprite2.texture = "textures/tux.png";
 		{
 			ShearTransformModifier2D modifier;
 			sprite2.modifier = modifier;
 		}
+		sprite2.texture = "textures/tux.png";
 	}
 
 	SpriteMatch::SpriteMatch(Constructor c) :
 		sprite0(reg::load_sprite(c.sprite0)),
-		sprite2(reg::load_sprite(c.sprite2))
-	{}
+		sprite2(reg::load_sprite(c.sprite2)),
+		transformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+	{
+		sprite0.transformer.attach_parent(&transformer);
+		sprite2.transformer.attach_parent(&transformer);
+	}
 
 	void SpriteMatch::draw(bool flush_sprites) const
 	{

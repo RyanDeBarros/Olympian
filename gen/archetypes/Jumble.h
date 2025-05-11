@@ -12,6 +12,10 @@ namespace oly::gen
 {
 	struct Jumble
 	{
+		Transformer2D transformer;
+		const Transform2D& get_local() const { return transformer.get_local(); }
+		Transform2D& set_local() { return transformer.set_local(); }
+
 		rendering::Sprite sprite3;
 		rendering::Sprite sprite4;
 		rendering::Sprite sprite5;
@@ -27,6 +31,11 @@ namespace oly::gen
 	private:
 		struct Constructor
 		{
+			struct
+			{
+				Transform2D local;
+				std::unique_ptr<TransformModifier2D> modifier;
+			} transformer;
 			reg::params::Sprite sprite3;
 			reg::params::Sprite sprite4;
 			reg::params::Sprite sprite5;

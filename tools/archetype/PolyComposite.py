@@ -2,7 +2,7 @@ from .Common import *
 
 
 def constructor(poly_composite) -> str:
-    c = write_transform_2d(poly_composite)
+    c = write_transformer_2d(poly_composite)
 
     def write_ngon_method() -> str:
         c = "\t\t\treg::params::PolyComposite::NGonMethod method;\n"

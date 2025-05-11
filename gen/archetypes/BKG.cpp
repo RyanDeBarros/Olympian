@@ -15,8 +15,11 @@ namespace oly::gen
 	}
 
 	BKG::BKG(Constructor c) :
-		bkg_rect(reg::load_polygon(c.bkg_rect))
-	{}
+		bkg_rect(reg::load_polygon(c.bkg_rect)),
+		transformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+	{
+		bkg_rect.transformer.attach_parent(&transformer);
+	}
 
 	void BKG::draw(bool flush_polygons) const
 	{

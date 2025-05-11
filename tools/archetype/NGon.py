@@ -2,7 +2,7 @@ from .Common import *
 
 
 def constructor(ngon) -> str:
-    c = write_transform_2d(ngon)
+    c = write_transformer_2d(ngon)
     if 'bordered' in ngon:
         c += f"\t\t{ngon['name']}.bordered = {'true' if ngon['bordered'] else 'false'};\n"
 

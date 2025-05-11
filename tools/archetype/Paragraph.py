@@ -16,7 +16,7 @@ def escape_text(text: str) -> str:
 
 
 def constructor(paragraph) -> str:
-    c = write_transform_2d(paragraph)
+    c = write_transformer_2d(paragraph)
     c += f"\t\t{paragraph['name']}.font_atlas = \"{paragraph['font atlas']}\";\n"
 
     if 'atlas index' in paragraph:
