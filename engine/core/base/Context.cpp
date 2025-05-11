@@ -117,22 +117,6 @@ namespace oly::context
 		}
 	}
 
-#define INIT_REGISTRY(function, node_name, registry)\
-	static void function(const TOMLNode& node)\
-	{\
-		auto register_files = node[node_name].as_array();\
-		if (register_files)\
-		{\
-			for (const auto& node : *register_files)\
-				if (auto file = node.value<std::string>())\
-					internal::registry.load(internal::context_filepath + file.value());\
-		}\
-	}
-
-	INIT_REGISTRY(init_tileset_registry, "tileset registries", tileset_registry);
-	INIT_REGISTRY(init_font_face_registry, "font face registries", font_face_registry);
-	INIT_REGISTRY(init_font_atlas_registry, "font atlas registries", font_atlas_registry);
-
 	static void autoload_signals(const TOMLNode& node)
 	{
 		auto register_files = node["signals"].as_array();
@@ -186,9 +170,6 @@ namespace oly::context
 		init_ellipse_batch(toml_context);
 		init_text_batch(toml_context);
 			
-		init_tileset_registry(toml_context);
-		init_font_face_registry(toml_context);
-		init_font_atlas_registry(toml_context);
 		autoload_signals(toml_context);
 
 		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
@@ -208,7 +189,7 @@ namespace oly::context
 
 		internal::platform.reset();
 
-		graphics::internal::unload_resources(); // TODO move resources to context namespace
+		graphics::internal::unload_resources();
 		glfwTerminate();
 
 		LOG.flush();
@@ -398,39 +379,24 @@ namespace oly::context
 		internal::ellipse_batch->render();
 	}
 
-	rendering::TileSet tileset(const std::string& name)
+	rendering::TileSetRes load_tileset(const std::string& file)
 	{
-		return internal::tileset_registry.create_tileset(name);
+		return internal::tileset_registry.load_tileset(file);
 	}
 
-	std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name)
+	rendering::FontFaceRes load_font_face(const std::string& file)
 	{
-		return internal::tileset_registry.ref_tileset(name);
+		return internal::font_face_registry.load_font_face(file);
 	}
 
-	rendering::FontFace font_face(const std::string& name)
+	rendering::FontAtlasRes load_font_atlas(const std::string& file, unsigned int index)
 	{
-		return internal::font_face_registry.create_font_face(name);
-	}
-		
-	std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name)
-	{
-		return internal::font_face_registry.ref_font_face(name);
-	}
-		
-	rendering::FontAtlas font_atlas(const std::string& name)
-	{
-		return internal::font_atlas_registry.create_font_atlas(name);
-	}
-		
-	std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name)
-	{
-		return internal::font_atlas_registry.ref_font_atlas(name);
+		return internal::font_atlas_registry.load_font_atlas(file, index);
 	}
 
-	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text)
+	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index)
 	{
-		return rendering::Paragraph(*internal::text_batch, internal::font_atlas_registry.ref_font_atlas(font_atlas).lock(), format, std::move(text));
+		return rendering::Paragraph(*internal::text_batch, internal::font_atlas_registry.load_font_atlas(font_atlas, atlas_index), format, std::move(text));
 	}
 
 	void render_text()

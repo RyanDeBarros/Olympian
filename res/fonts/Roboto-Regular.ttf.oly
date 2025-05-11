@@ -1,16 +1,12 @@
-[[font_face]]
-"name"    = "roboto regular"
-"file"    = "../fonts/Roboto-Regular.ttf"
-"init"    = "discard"
+[font_face]
+"storage" = "discard"
 "kerning" = [
 	[ "e", "U+78",  150 ],
 	[ "H", "e"   , -200 ]
 ]
 
 [[font_atlas]]
-"name"                 = "roboto regular (96)"
-"font face"            = "roboto regular"
-"init"                 = "discard"
+"storage"              = "discard"
 "font size"            = 96
 "mag filter"           = "linear"
 "min filter"           = "linear mipmap linear"

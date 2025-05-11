@@ -113,7 +113,7 @@ transform = { "scale" = [ 100, 100 ] }
 
 	[[archetype.tilemap.layer]]
 	"z" = 0
-	"tileset" = "grass tileset"
+	"tileset" = "assets/grass tileset.toml"
 	"tiles" = [
 		[ -1, -1 ],
 		[  0, -1 ],
@@ -132,7 +132,7 @@ transform = { "scale" = [ 100, 100 ] }
 
 [[archetype.paragraph]]
 name           = "test_text"
-"font atlas"   = "roboto regular (96)"
+"font atlas"   = "fonts/Roboto-Regular.ttf"
 "text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 "draw bkg"     = true
 transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }

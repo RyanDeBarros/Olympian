@@ -91,7 +91,7 @@ namespace oly::rendering
 		graphics::BindlessTextureRes common_texture;
 
 	public:
-		FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, utf::String common_buffer = glyphs::COMMON);
+		FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
 
 		bool cache(utf::Codepoint codepoint);
 		void cache_all(const FontAtlas& other);

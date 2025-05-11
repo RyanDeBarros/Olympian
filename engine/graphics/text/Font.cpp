@@ -99,7 +99,7 @@ namespace oly
 			font.font->make_bitmap(buffer, box.width(), box.height(), font.scale, index);
 		}
 
-		FontAtlas::FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, utf::String common_buffer)
+		FontAtlas::FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, const utf::String& common_buffer)
 			: font(font), options(options)
 		{
 			common_dim.cpp = 1;

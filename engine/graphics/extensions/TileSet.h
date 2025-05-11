@@ -1,7 +1,5 @@
 #pragma once
 
-#include "external/TOML.h"
-
 #include "graphics/primitives/Sprites.h"
 
 namespace oly::rendering
@@ -90,6 +88,15 @@ namespace oly::rendering
 			bool operator==(const TileDesc&) const = default;
 		};
 
+		struct Assignment
+		{
+			TileDesc desc;
+			Configuration config;
+			Transformation transformation;
+		};
+
+		TileSet(const std::vector<Assignment>& assignments);
+
 	private:
 		std::vector<TileDesc> tiles;
 		std::unordered_map<Configuration, Tile> assignment;
@@ -105,10 +112,8 @@ namespace oly::rendering
 	private:
 		Tile get_assignment(Configuration config, Transformation& transformation) const;
 		static Configuration get_configuration(PaintedTile tile);
-
-	public:
-		void load(const toml::array& toml_assignments);
 	};
+	typedef std::shared_ptr<TileSet> TileSetRes;
 
 	inline TileSet::Transformation operator&(TileSet::Transformation a, TileSet::Transformation b) { return (TileSet::Transformation)((char)a & (char)b); }
 	inline TileSet::Transformation& operator&=(TileSet::Transformation& a, TileSet::Transformation b) { return a = a & b; }

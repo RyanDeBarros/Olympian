@@ -6,7 +6,7 @@ namespace oly::rendering
 {
 	struct TileMapLayer
 	{
-		std::shared_ptr<TileSet> tileset;
+		TileSetRes tileset;
 		
 	private:
 		std::unordered_map<glm::ivec2, Sprite> sprite_map;

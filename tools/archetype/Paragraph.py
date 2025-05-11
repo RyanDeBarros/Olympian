@@ -19,6 +19,8 @@ def constructor(paragraph) -> str:
     c = write_transform_2d(paragraph)
     c += f"\t\t{paragraph['name']}.font_atlas = \"{paragraph['font atlas']}\";\n"
 
+    if 'atlas index' in paragraph:
+        c += f"\t\t{paragraph['name']}.atlas_index = (unsigned int){paragraph['atlas index']};\n"
     if 'text' in paragraph:
         c += f"\t\t{paragraph['name']}.text = \"{escape_text(paragraph['text'])}\";\n"
     if 'draw bkg' in paragraph:

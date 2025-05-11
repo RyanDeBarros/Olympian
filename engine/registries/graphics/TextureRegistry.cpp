@@ -115,7 +115,7 @@ namespace oly::reg
 			return load_svg_texture(file, 1.0f, svg_params);
 		}
 		
-		TextureKey tkey { .file = file, .index = params.texture_index };
+		TextureKey tkey { file, params.texture_index };
 		auto it = textures.find(tkey);
 		if (it != textures.end())
 			return it->second;
@@ -171,12 +171,12 @@ namespace oly::reg
 		if (!file.ends_with(".svg"))
 			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "attempting to load non-svg file as svg texture: " << file << LOG.nl << LOG.end_temp;
 
-		SVGTextureKey svg_tkey{ .file = file, .index = params.texture_index, .scale = scale };
+		SVGTextureKey svg_tkey{ file, params.texture_index, scale };
 		auto it = svg_textures.find(svg_tkey);
 		if (it != svg_textures.end())
 			return it->second;
 
-		TextureKey tkey{ .file = file, .index = params.texture_index };
+		TextureKey tkey{ file, params.texture_index };
 		std::string full_path = context::context_filepath() + file;
 		toml::parse_result toml;
 		TOMLNode texture_node;
@@ -406,5 +406,71 @@ namespace oly::reg
 		if (it != nsvg_abstracts.end())
 			return it->second;
 		throw Error(ErrorCode::UNREGISTERED_NSVG_ABSTRACT);
+	}
+
+	void TextureRegistry::free_texture(const std::string& file, unsigned texture_index)
+	{
+		TextureKey tkey{ file, texture_index };
+		{
+			auto it = textures.find(tkey);
+			if (it == textures.end())
+			{
+				free_svg_texture(file, 1.0f, texture_index);
+				return;
+			}
+			textures.erase(it);
+		}
+		{
+			auto it = images.find(tkey);
+			if (it != images.end())
+			{
+				images.erase(it);
+				return;
+			}
+		}
+		{
+			auto it = anims.find(tkey);
+			if (it != anims.end())
+			{
+				anims.erase(it);
+				return;
+			}
+		}
+	}
+
+	void TextureRegistry::free_svg_texture(const std::string& file, float scale, unsigned texture_index)
+	{
+		{
+			SVGTextureKey skey{ file, texture_index, scale };
+			auto it = svg_textures.find(skey);
+			if (it == svg_textures.end())
+				return;
+			svg_textures.erase(it);
+		}
+		TextureKey tkey{ file, texture_index };
+		{
+			auto it = vector_images.find(tkey);
+			if (it != vector_images.end())
+			{
+				vector_images.erase(it);
+				return;
+			}
+		}
+		{
+			auto it = anims.find(tkey);
+			if (it != anims.end())
+			{
+				anims.erase(it);
+				return;
+			}
+		}
+	}
+
+	void TextureRegistry::free_nsvg_abstract(const std::string& file, unsigned texture_index)
+	{
+		TextureKey tkey{ file, texture_index };
+		auto it = nsvg_abstracts.find(tkey);
+		if (it != nsvg_abstracts.end())
+			nsvg_abstracts.erase(it);
 	}
 }

@@ -11,6 +11,7 @@ namespace oly::reg
 		struct Paragraph
 		{
 			std::string font_atlas;
+			unsigned int atlas_index = 0;
 			utf::String text;
 			Transform2D local;
 			std::optional<bool> draw_bkg;

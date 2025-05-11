@@ -58,7 +58,7 @@ namespace oly::reg
 		for (const auto& lparams : params.layers)
 		{
 			rendering::TileMapLayer layer;
-			layer.tileset = context::ref_tileset(lparams.tileset).lock();
+			layer.tileset = context::load_tileset(lparams.tileset);
 
 			for (const auto& tile : lparams.tiles)
 				layer.paint_tile(tile);

@@ -90,7 +90,7 @@ namespace oly::gen
 
 		test_text.local.position = { (float)-400, (float)400 };
 		test_text.local.scale = { (float)0.8, (float)0.8 };
-		test_text.font_atlas = "roboto regular (96)";
+		test_text.font_atlas = "fonts/Roboto-Regular.ttf";
 		test_text.text = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex";
 		test_text.draw_bkg = true;
 		test_text.bkg_color = { (float)0.5, (float)0.4, (float)0.2, (float)0.8 };
@@ -119,7 +119,7 @@ namespace oly::gen
 		grass_tilemap.local.scale = { (float)100, (float)100 };
 		{
 			reg::params::TileMap::Layer layer;
-			layer.tileset = "grass tileset";
+			layer.tileset = "assets/grass tileset.toml";
 			layer.z = (size_t)0;
 			layer.tiles.reserve(13);
 			layer.tiles.push_back({ (float)-1, (float)-1 });

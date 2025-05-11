@@ -66,13 +66,10 @@ namespace oly::context
 	extern rendering::Ellipse ellipse();
 	extern void render_ellipses();
 
-	extern rendering::TileSet tileset(const std::string& name);
-	extern std::weak_ptr<rendering::TileSet> ref_tileset(const std::string& name);
-	extern rendering::FontFace font_face(const std::string& name);
-	extern std::weak_ptr<rendering::FontFace> ref_font_face(const std::string& name);
-	extern rendering::FontAtlas font_atlas(const std::string& name);
-	extern std::weak_ptr<rendering::FontAtlas> ref_font_atlas(const std::string& name);
+	extern rendering::TileSetRes load_tileset(const std::string& file);
+	extern rendering::FontFaceRes load_font_face(const std::string& file);
+	extern rendering::FontAtlasRes load_font_atlas(const std::string& file, unsigned int index = 0);
 
-	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "");
+	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "", unsigned int atlas_index = 0);
 	extern void render_text();
 }

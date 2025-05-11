@@ -37,7 +37,7 @@ class Archetype:
         if 'gen folder' in self.archetype:
             self.gen_folder = self.archetype['gen folder']
         assert len(self.name) > 0 and self.name[0].isalpha(), "Invalid archetype name"
-        self.draw_list = self.archetype['draw']
+        self.draw_list = self.archetype['draw'] if 'draw' in self.archetype else []
 
         self.batch_map = {}
 
@@ -220,7 +220,7 @@ namespace oly::gen
 \tpublic:
 \t\t{proto.name}(Constructor = {{}});
 
-\t\tvoid draw(bool {proto.batch_flush()}) const;
+\t\tvoid draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const;
 
 \t\tvoid on_tick() const;
 \t}};
@@ -250,7 +250,7 @@ namespace oly::gen
     cpp += f"""
 \t{{}}
 
-\tvoid {proto.name}::draw(bool {proto.batch_flush()}) const
+\tvoid {proto.name}::draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const
 \t{{
 """
 

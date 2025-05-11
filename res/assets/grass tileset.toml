@@ -1,0 +1,66 @@
+[tileset]
+"storage" = "discard"
+
+[[tileset.assignment]]
+"config"  = "S"
+"texture" = "textures/grass tileset/S.png"
+
+[[tileset.assignment]]
+"config"  = "M'"
+"texture" = "textures/grass tileset/M.png"
+
+[[tileset.assignment]]
+"config"  = "C1'"
+"texture" = "textures/grass tileset/BL.png"
+
+[[tileset.assignment]]
+"config"  = "C2'"
+"texture" = "textures/grass tileset/BR.png"
+
+[[tileset.assignment]]
+"config"  = "C3'"
+"texture" = "textures/grass tileset/TR.png"
+
+[[tileset.assignment]]
+"config"  = "C4'"
+"texture" = "textures/grass tileset/TL.png"
+
+[[tileset.assignment]]
+"config"  = "T1'"
+"texture" = "textures/grass tileset/LE.png"
+
+[[tileset.assignment]]
+"config"  = "T2'"
+"texture" = "textures/grass tileset/BE.png"
+
+[[tileset.assignment]]
+"config"  = "T3'"
+"texture" = "textures/grass tileset/RE.png"
+
+[[tileset.assignment]]
+"config"  = "T4'"
+"texture" = "textures/grass tileset/TE.png"
+
+[[tileset.assignment]]
+"config"  = "E1"
+"texture" = "textures/grass tileset/LT.png"
+
+[[tileset.assignment]]
+"config"  = "E2"
+"texture" = "textures/grass tileset/BT.png"
+
+[[tileset.assignment]]
+"config"  = "E3"
+"texture" = "textures/grass tileset/RT.png"
+
+[[tileset.assignment]]
+"config"  = "E4"
+"texture" = "textures/grass tileset/TT.png"
+
+[[tileset.assignment]]
+"config"  = "I1"
+"texture" = "textures/grass tileset/I1.png"
+
+[[tileset.assignment]]
+"config"  = "I2"
+"texture" = "textures/grass tileset/I2.png"

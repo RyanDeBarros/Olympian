@@ -71,6 +71,8 @@ namespace oly::reg
 			throw Error(ErrorCode::LOAD_ASSET);
 
 		params.font_atlas = font_atlas.value();
+		if (auto index = node["atlas index"].value<int64_t>())
+			params.atlas_index = (unsigned int)index.value();
 		params.format = create_format(node["format"]);
 		params.text = node["text"].value<std::string>().value_or("");
 
@@ -100,7 +102,7 @@ namespace oly::reg
 
 	rendering::Paragraph load_paragraph(const params::Paragraph& params)
 	{
-		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, dupl(params.text));
+		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, dupl(params.text), params.atlas_index);
 		if (params.draw_bkg)
 			paragraph.draw_bkg = params.draw_bkg.value();
 		paragraph.set_local() = params.local;
@@ -121,7 +123,7 @@ namespace oly::reg
 
 	rendering::Paragraph load_paragraph(params::Paragraph&& params)
 	{
-		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, std::move(params.text));
+		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, std::move(params.text), params.atlas_index);
 		if (params.draw_bkg)
 			paragraph.draw_bkg = params.draw_bkg.value();
 		paragraph.set_local() = params.local;
