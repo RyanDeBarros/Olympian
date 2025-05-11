@@ -1,5 +1,6 @@
 [archetype]
 name = "Jumble"
+"singleton" = true
 draw = [
 	"sprite3",
 	"sprite4",

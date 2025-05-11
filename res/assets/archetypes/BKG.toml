@@ -3,6 +3,7 @@ name = "BKG"
 draw = [
 	"bkg_rect"
 ]
+"singleton" = "true"
 
 [[archetype.polygon]]
 name = "bkg_rect"

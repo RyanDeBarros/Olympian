@@ -20,7 +20,12 @@ class Batch(Enum):
     TEXT = 3
 
 
-RESERVED_NAMES = ["transformer"]
+RESERVED_NAMES = [
+    "transformer",
+    "draw",
+    "on_tick",
+    "free_constructor"
+]
 
 
 class Archetype:
@@ -41,6 +46,7 @@ class Archetype:
             self.gen_folder = self.archetype['gen folder']
         assert len(self.name) > 0 and self.name[0].isalpha(), "Invalid archetype name"
         self.draw_list = self.archetype['draw'] if 'draw' in self.archetype else []
+        self.singleton: bool = 'singleton' in self.archetype and self.archetype['singleton']
 
         self.batch_map = {}
 
@@ -129,11 +135,14 @@ class Archetype:
             c += TileMap.constructor(tilemap) + "\n"
         return c[:-1] if len(c) > 0 else ""  # don't keep last \n
 
-    @staticmethod
-    def write_initializer(renderables, load):
+    def write_initializer(self, renderables, load):
         ini = ""
-        for renderable in renderables:
-            ini += f"\t\t{renderable['name']}(reg::{load}(c.{renderable['name']})),\n"
+        if self.singleton:
+            for renderable in renderables:
+                ini += f"\t\t{renderable['name']}(reg::{load}(std::move(constructor().{renderable['name']}))),\n"
+        else:
+            for renderable in renderables:
+                ini += f"\t\t{renderable['name']}(reg::{load}(constructor().{renderable['name']})),\n"
         return ini
 
     def initializer_list(self) -> str:
@@ -226,6 +235,8 @@ namespace oly::gen
 {{
 \tstruct {proto.name}
 \t{{
+\t\tstatic void free_constructor();
+
 \t\tTransformer2D transformer;
 \t\tconst Transform2D& get_local() const {{ return transformer.get_local(); }}
 \t\tTransform2D& set_local() {{ return transformer.set_local(); }}
@@ -234,25 +245,12 @@ namespace oly::gen
 
     hdr += proto.declarations()
 
-    hdr += """
-\tprivate:
-\t\tstruct Constructor
-\t\t{
-\t\t\tstruct
-\t\t\t{
-\t\t\t\tTransform2D local;
-\t\t\t\tstd::unique_ptr<TransformModifier2D> modifier;
-\t\t\t} transformer;
-"""
-
-    hdr += proto.constructor_declarations()
-
     hdr += f"""
-\t\t\tConstructor();
-\t\t}};
-
-\tpublic:
-\t\t{proto.name}(Constructor = {{}});
+\t\t{proto.name}();
+\t\t{proto.name}(const {proto.name}&) = default;
+\t\t{proto.name}({proto.name}&&) = default;
+\t\t{proto.name}& operator=(const {proto.name}&) = default;
+\t\t{proto.name}& operator=({proto.name}&&) = default;
 
 \t\tvoid draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const;
 
@@ -267,24 +265,60 @@ def generate_cpp(proto: Archetype) -> str:
     cpp = f"""#include \"{proto.name}.h\"
 
 namespace oly::gen
-{{
-\t{proto.name}::Constructor::Constructor()
-\t{{
+{{"""
+
+    cpp += """
+\tnamespace
+\t{
+\t\tstruct Constructor
+\t\t{
+\t\t\tstruct
+\t\t\t{
+\t\t\t\tTransform2D local;
+\t\t\t\tstd::unique_ptr<TransformModifier2D> modifier;
+\t\t\t} transformer;
+"""
+
+    cpp += proto.constructor_declarations()
+
+    cpp += f"""
+\t\t\tConstructor();
+\t\t}};
+
+\t\tConstructor::Constructor()
+\t\t{{
 """
     cpp += proto.constructors()
 
-    cpp += f"""\t}}
+    cpp += f"""\t\t}}
 
-\t{proto.name}::{proto.name}(Constructor c) :
+\t\tstatic std::unique_ptr<Constructor> _c;
+\t\tstatic Constructor& constructor()
+\t\t{{
+\t\t\tif (!_c)
+\t\t\t\t_c = std::make_unique<Constructor>();
+\t\t\treturn *_c;
+\t\t}}
+\t}}
+
+\tvoid {proto.name}::free_constructor()
+\t{{
+\t\t_c.reset();
+\t}}
+
+\t{proto.name}::{proto.name}() :
 """
 
     cpp += proto.initializer_list()
 
     cpp += f"""
-\t\ttransformer(c.transformer.local, std::make_unique<TransformModifier2D>(*c.transformer.modifier))
+\t\ttransformer(constructor().transformer.local, std::make_unique<TransformModifier2D>(*constructor().transformer.modifier))
 \t{{\n"""
 
     cpp += proto.transformer_attachments()
+
+    if proto.singleton:
+        cpp += "\t\tfree_constructor();\n"
 
     cpp += f"""\t}}
 

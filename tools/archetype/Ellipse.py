@@ -2,17 +2,17 @@ from .Common import *
 
 
 def constructor(ellipse) -> str:
-    c = write_transformer_2d(ellipse)
+    c = write_transformer_2d(ellipse, 3)
 
     def write_dimension_parameter(parameter: str, variable: str) -> str:
         if parameter in ellipse:
-            return f"\t\t{ellipse['name']}.dimension.{variable} = (float){ellipse[parameter]};\n"
+            return f"\t\t\t{ellipse['name']}.dimension.{variable} = (float){ellipse[parameter]};\n"
         else:
             return ""
 
     def write_color_parameter(parameter: str, variable: str) -> str:
         if parameter in ellipse:
-            return f"\t\t{ellipse['name']}.color.{variable} = {{ (float){ellipse[parameter][0]}, (float){ellipse[parameter][1]}, (float){ellipse[parameter][2]}, (float){ellipse[parameter][3]} }};\n"
+            return f"\t\t\t{ellipse['name']}.color.{variable} = {{ (float){ellipse[parameter][0]}, (float){ellipse[parameter][1]}, (float){ellipse[parameter][2]}, (float){ellipse[parameter][3]} }};\n"
         else:
             return ""
 

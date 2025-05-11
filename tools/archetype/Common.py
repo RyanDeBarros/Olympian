@@ -55,7 +55,7 @@ def write_transformer_2d(renderable: dict, tabs=2) -> str:
     return write_named_transformer_2d(renderable, renderable['name'], tabs)
 
 
-def write_vec2_vector(renderable: dict, variable: str, parameter: str, tabs=2) -> str:
+def write_vec2_vector(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
     c = ""
     if parameter in renderable and len(renderable[parameter]) > 0:
         c += "\t" * tabs + f"{variable}.reserve({len(renderable[parameter])});\n"
@@ -64,7 +64,7 @@ def write_vec2_vector(renderable: dict, variable: str, parameter: str, tabs=2) -
     return c
 
 
-def write_vec4_vector(renderable: dict, variable: str, parameter: str, tabs=2) -> str:
+def write_vec4_vector(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
     c = ""
     if parameter in renderable and len(renderable[parameter]) > 0:
         c += "\t" * tabs + f"{variable}.reserve({len(renderable[parameter])});\n"
@@ -73,7 +73,7 @@ def write_vec4_vector(renderable: dict, variable: str, parameter: str, tabs=2) -
     return c
 
 
-def write_vec4(renderable: dict, variable: str, parameter: str, tabs=2) -> str:
+def write_vec4(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
     c = ""
     if parameter in renderable:
         vec4 = renderable[parameter]

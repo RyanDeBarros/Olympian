@@ -418,8 +418,12 @@ FodyWeavers.xsd
 *.sln.iml
 
 
+
 # LaTeX
 doc/*.aux
 doc/*.pdf
 doc/*.synctex.gz
 doc/*.toc
+
+# Olympian
+/tools/archetype/cache.json
