@@ -426,4 +426,5 @@ doc/*.synctex.gz
 doc/*.toc
 
 # Olympian
-/tools/archetype/cache.json
+tools/archetype/cache.json
+gen/
