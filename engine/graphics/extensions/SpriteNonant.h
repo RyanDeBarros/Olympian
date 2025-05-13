@@ -70,6 +70,7 @@ namespace oly::rendering
 		glm::vec2 get_dimensions() const { return regular_dimensions; }
 
 	private:
+		void clamp_nsize(glm::vec2 nsize);
 		void sync_grid();
 		void sync_modulation();
 	};

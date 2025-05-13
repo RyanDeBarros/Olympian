@@ -201,20 +201,19 @@ namespace oly::rendering
 
 	void SpriteNonant::set_width(float w)
 	{
-		nsize.x = std::max(w, regular_dimensions.x);
+		clamp_nsize({ w, nsize.y });
 		sync_grid();
 	}
 
 	void SpriteNonant::set_height(float h)
 	{
-		nsize.y = std::max(h, regular_dimensions.y);
+		clamp_nsize({ nsize.x, h });
 		sync_grid();
 	}
 
 	void SpriteNonant::set_size(glm::vec2 size)
 	{
-		nsize.x = std::max(size.x, regular_dimensions.x);
-		nsize.y = std::max(size.y, regular_dimensions.y);
+		clamp_nsize(size);
 		sync_grid();
 	}
 
@@ -224,8 +223,7 @@ namespace oly::rendering
 		offsets.x_right = x_right;
 		offsets.y_bottom = y_bottom;
 		offsets.y_top = y_top;
-		nsize.x = std::max(size.x, regular_dimensions.x);
-		nsize.y = std::max(size.y, regular_dimensions.y);
+		clamp_nsize(size);
 		sync_grid();
 	}
 
@@ -249,8 +247,7 @@ namespace oly::rendering
 		nsize = regular_dimensions;
 
 		// set nsize
-		nsize.x = std::max(size.x, regular_dimensions.x);
-		nsize.y = std::max(size.y, regular_dimensions.y);
+		clamp_nsize(size);
 
 		// set tex coords
 		auto tex_coords = copy.get_tex_coords();
@@ -258,6 +255,12 @@ namespace oly::rendering
 		sync_grid();
 
 		set_modulation(copy.get_modulation()); // TODO optimize/combine with prior operations
+	}
+
+	void SpriteNonant::clamp_nsize(glm::vec2 size)
+	{
+		nsize.x = std::max(size.x, offsets.x_left + offsets.x_right);
+		nsize.y = std::max(size.y, offsets.y_bottom + offsets.y_top);
 	}
 
 	void SpriteNonant::sync_grid()

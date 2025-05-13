@@ -7,6 +7,7 @@
 #include "registries/graphics/text/Paragraphs.h"
 #include "registries/graphics/extensions/SpriteAtlases.h"
 #include "registries/graphics/extensions/TileMaps.h"
+#include "registries/graphics/extensions/SpriteNonants.h"
 
 namespace oly::gen
 {
@@ -29,6 +30,7 @@ namespace oly::gen
 		rendering::Paragraph test_text;
 		rendering::SpriteAtlas atlased_knight;
 		rendering::TileMap grass_tilemap;
+		rendering::SpriteNonant nonant_panel;
 
 		Jumble();
 		Jumble(const Jumble&) = default;

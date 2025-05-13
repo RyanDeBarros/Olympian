@@ -77,8 +77,6 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
-	auto nonant = oly::reg::load_sprite_nonant(oly::reg::load_toml(oly::context::context_filepath() + "assets/sprites/nonant panel.toml")["sprite_nonant"]);
-
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -99,8 +97,6 @@ int main()
 			sprite.draw();
 		oly::context::render_sprites();
 		jumble.draw(true);
-		nonant.draw();
-		oly::context::render_sprites();
 		};
 
 	oly::context::set_render_function(&render_frame);
@@ -150,6 +146,6 @@ int main()
 		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
 
 		// draw
-		render_frame(); // TODO put in context::frame()
+		render_frame(); // LATER put in context::frame()?
 	}
 }

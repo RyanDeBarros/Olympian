@@ -22,6 +22,7 @@ namespace oly::gen
 			reg::params::Paragraph test_text;
 			reg::params::SpriteAtlas atlased_knight;
 			reg::params::TileMap grass_tilemap;
+			reg::params::SpriteNonant nonant_panel;
 
 			Constructor();
 		};
@@ -161,6 +162,14 @@ namespace oly::gen
 				layer.tiles.push_back({ (float)3, (float)3 });
 				grass_tilemap.layers.push_back(std::move(layer));
 			}
+
+			nonant_panel.sprite_params.local.scale = { (float)10.0, (float)10.0 };
+			nonant_panel.sprite_params.texture = "textures/panel.png";
+			nonant_panel.nsize = { (float)128, (float)0 };
+			nonant_panel.offsets.x_left = (float)6;
+			nonant_panel.offsets.x_right = (float)6;
+			nonant_panel.offsets.y_bottom = (float)6;
+			nonant_panel.offsets.y_top = (float)6;
 		}
 
 		static std::unique_ptr<Constructor> _c;
@@ -189,6 +198,7 @@ namespace oly::gen
 		test_text(reg::load_paragraph(std::move(constructor().test_text))),
 		atlased_knight(reg::load_sprite_atlas(std::move(constructor().atlased_knight))),
 		grass_tilemap(reg::load_tilemap(std::move(constructor().grass_tilemap))),
+		nonant_panel(reg::load_sprite_nonant(std::move(constructor().nonant_panel))),
 		transformer(constructor().transformer.local, std::make_unique<TransformModifier2D>(*constructor().transformer.modifier))
 	{
 		sprite3.transformer.attach_parent(&transformer);
@@ -201,6 +211,7 @@ namespace oly::gen
 		octagon.transformer.attach_parent(&transformer);
 		test_text.transformer.attach_parent(&transformer);
 		grass_tilemap.transformer.attach_parent(&transformer);
+		nonant_panel.transformer.attach_parent(&transformer);
 		atlased_knight.sprite.transformer.attach_parent(&transformer);
 		free_constructor();
 	}
@@ -214,6 +225,7 @@ namespace oly::gen
 		octagon.draw();
 		context::render_polygons();
 		sprite1.draw();
+		nonant_panel.draw();
 		godot_icon.draw();
 		knight.draw();
 		context::render_sprites();

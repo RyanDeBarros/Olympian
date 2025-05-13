@@ -5,7 +5,7 @@ from enum import Enum
 
 import toml
 
-from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, Common
+from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
 from Tool import ToolNode, print_info, print_error, varinput
 
 MANIFEST_PATH = 'archetype/manifest.txt'
@@ -39,6 +39,7 @@ class Archetype:
         self.paragraphs = self.archetype['paragraph'] if 'paragraph' in self.archetype else []
         self.sprite_atlases = self.archetype['sprite_atlas'] if 'sprite_atlas' in self.archetype else []
         self.tilemaps = self.archetype['tilemap'] if 'tilemap' in self.archetype else []
+        self.sprite_nonants = self.archetype['sprite_nonant'] if 'sprite_nonant' in self.archetype else []
 
         self.name: str = self.archetype['name']
         self.gen_folder = ""
@@ -67,6 +68,7 @@ class Archetype:
         register_batch(self.paragraphs, Batch.TEXT)
         register_batch(self.sprite_atlases, Batch.SPRITE)
         register_batch(self.tilemaps, Batch.SPRITE)
+        register_batch(self.sprite_nonants, Batch.SPRITE)
 
     def includes(self) -> str:
         incl = ""
@@ -82,6 +84,8 @@ class Archetype:
             incl += "#include \"registries/graphics/extensions/SpriteAtlases.h\"\n"
         if len(self.tilemaps) > 0:
             incl += "#include \"registries/graphics/extensions/TileMaps.h\"\n"
+        if len(self.tilemaps) > 0:
+            incl += "#include \"registries/graphics/extensions/SpriteNonants.h\"\n"
         return incl
 
     @staticmethod
@@ -101,6 +105,7 @@ class Archetype:
         decl += self.write_declarations(self.paragraphs, "Paragraph", "rendering", 2)
         decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "rendering", 2)
         decl += self.write_declarations(self.tilemaps, "TileMap", "rendering", 2)
+        decl += self.write_declarations(self.sprite_nonants, "SpriteNonant", "rendering", 2)
         return decl
 
     def constructor_declarations(self) -> str:
@@ -113,6 +118,7 @@ class Archetype:
         decl += self.write_declarations(self.paragraphs, "Paragraph", "reg::params", 3)
         decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "reg::params", 3)
         decl += self.write_declarations(self.tilemaps, "TileMap", "reg::params", 3)
+        decl += self.write_declarations(self.sprite_nonants, "SpriteNonant", "reg::params", 3)
         return decl
 
     def constructors(self) -> str:
@@ -133,6 +139,8 @@ class Archetype:
             c += SpriteAtlas.constructor(sprite_atlas) + "\n"
         for tilemap in self.tilemaps:
             c += TileMap.constructor(tilemap) + "\n"
+        for sprite_nonant in self.sprite_nonants:
+            c += SpriteNonant.constructor(sprite_nonant) + "\n"
         return c[:-1] if len(c) > 0 else ""  # don't keep last \n
 
     def write_initializer(self, renderables, load):
@@ -155,6 +163,7 @@ class Archetype:
         ini += self.write_initializer(self.paragraphs, "load_paragraph")
         ini += self.write_initializer(self.sprite_atlases, "load_sprite_atlas")
         ini += self.write_initializer(self.tilemaps, "load_tilemap")
+        ini += self.write_initializer(self.sprite_nonants, "load_sprite_nonant")
         return ini[:-1] if len(ini) > 0 else ""  # don't keep last \n
 
     @staticmethod
@@ -173,6 +182,7 @@ class Archetype:
         att += self.write_transformer_attachment(self.ellipses)
         att += self.write_transformer_attachment(self.paragraphs)
         att += self.write_transformer_attachment(self.tilemaps)
+        att += self.write_transformer_attachment(self.sprite_nonants)
         for renderable in self.sprite_atlases:
             att += f"\t\t{renderable['name']}.sprite.transformer.attach_parent(&transformer);\n"
         return att

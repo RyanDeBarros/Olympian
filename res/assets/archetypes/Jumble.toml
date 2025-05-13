@@ -7,6 +7,7 @@ draw = [
 	"sprite5",
 	"octagon",
 	"sprite1",
+	"nonant_panel",
 	"godot_icon",
 	"knight",
 	"concave_shape",
@@ -107,6 +108,17 @@ name            = "atlased_knight"
 	"texture" = "textures/knight.png"
 	"texture index" = 1
 	transform = { "position" = [300, -200], "scale" = [20, 20] }
+
+[[archetype.sprite_nonant]]
+name            = "nonant_panel"
+"left offset"   = 6
+"right offset"  = 6
+"bottom offset" = 6
+"top offset"    = 6
+"nsize"         = [ 128, 0 ]
+[archetype.sprite_nonant.sprite]
+"texture" = "textures/panel.png"
+transform = { "scale" = [ 10.0, 10.0 ] }
 
 [[archetype.tilemap]]
 name = "grass_tilemap"

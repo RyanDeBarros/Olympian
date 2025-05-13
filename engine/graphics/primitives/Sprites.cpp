@@ -87,7 +87,7 @@ namespace oly::rendering
 	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
 	{
 		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture->get_handle(), dimensions }))
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
 		{
 			quad_ssbo_block.flag<INFO>(vb_pos);
 			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);
