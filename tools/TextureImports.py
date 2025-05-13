@@ -313,6 +313,8 @@ TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
 IMPORT_TEXTURES = ToolNode("import", "Generate import files.", import_textures)
 TOOL.add_child(IMPORT_TEXTURES)
 
+# TODO 'import manifest' that uses a manifest of texture folders, and saved individual and global settings for recur/prune/etc.
+
 GENERATE_SPRITESHEET = ToolNode("spritesheet", "Generate spritesheet texture in import files.", generate_spritesheet)
 TOOL.add_child(GENERATE_SPRITESHEET)
 

@@ -37,7 +37,7 @@ namespace oly::rendering
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
 
 		ubo.tex_coords.send<UVRect>(0, {});
-		ubo.modulation.send<Modulation>(0, {});
+		ubo.modulation.send<ModulationRect>(0, {});
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}
 
@@ -100,7 +100,7 @@ namespace oly::rendering
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	void SpriteBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
+	void SpriteBatch::set_modulation(GLuint vb_pos, const ModulationRect& modulation)
 	{
 		if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, vb_pos, modulation))
 			quad_ssbo_block.flag<INFO>(vb_pos);
@@ -128,10 +128,10 @@ namespace oly::rendering
 		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : UVRect{};
 	}
 
-	SpriteBatch::Modulation SpriteBatch::get_modulation(GLuint vb_pos) const
+	ModulationRect SpriteBatch::get_modulation(GLuint vb_pos) const
 	{
 		GLuint slot = get_quad_info(vb_pos).color_slot;
-		return slot != 0 ? quad_info_store.modulations.get_object(slot) : Modulation{};
+		return slot != 0 ? quad_info_store.modulations.get_object(slot) : ModulationRect{};
 	}
 
 	graphics::AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
@@ -150,6 +150,12 @@ namespace oly::rendering
 			for (auto it = slots.begin(); it != slots.end(); ++it)
 				tex_data_ssbo.send<TexData>(*it, &TexData::handle, handle);
 		}
+	}
+
+	Sprite::Sprite()
+		: batch(&context::sprite_batch())
+	{
+		vbid = batch->gen_sprite_id();
 	}
 
 	Sprite::Sprite(SpriteBatch& sprite_batch)
@@ -236,16 +242,16 @@ namespace oly::rendering
 		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 	}
 
-	void Sprite::set_texture(const std::string& texture_name, unsigned texture_index) const
+	void Sprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
-		auto texture = context::load_texture(texture_name, texture_index);
-		set_texture(texture, context::get_texture_dimensions(texture_name, texture_index));
+		auto texture = context::load_texture(texture_file, texture_index);
+		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
-	void Sprite::set_texture(const std::string& texture_name, float svg_scale, unsigned texture_index) const
+	void Sprite::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index) const
 	{
-		auto texture = context::load_svg_texture(texture_name, svg_scale, texture_index);
-		set_texture(texture, context::get_texture_dimensions(texture_name, texture_index));
+		auto texture = context::load_svg_texture(texture_file, svg_scale, texture_index);
+		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
 	void Sprite::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const
@@ -260,11 +266,10 @@ namespace oly::rendering
 
 	void Sprite::set_tex_coords(const math::Rect2D& rect) const
 	{
-
 		batch->set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
 	}
 
-	void Sprite::set_modulation(const SpriteBatch::Modulation& modulation) const
+	void Sprite::set_modulation(const ModulationRect& modulation) const
 	{
 		batch->set_modulation(vbid.get(), modulation);
 	}
@@ -295,7 +300,7 @@ namespace oly::rendering
 		return batch->get_tex_coords(vbid.get());
 	}
 
-	SpriteBatch::Modulation Sprite::get_modulation() const
+	ModulationRect Sprite::get_modulation() const
 	{
 		return batch->get_modulation(vbid.get());
 	}

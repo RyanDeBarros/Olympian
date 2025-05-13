@@ -4,7 +4,7 @@
 
 namespace oly::reg
 {
-	rendering::SpriteAtlasExtension load_sprite_atlas(const TOMLNode& node)
+	rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node)
 	{
 		params::SpriteAtlas params;
 
@@ -35,9 +35,9 @@ namespace oly::reg
 		return load_sprite_atlas(params);
 	}
 
-	rendering::SpriteAtlasExtension load_sprite_atlas(const params::SpriteAtlas& params)
+	rendering::SpriteAtlas load_sprite_atlas(const params::SpriteAtlas& params)
 	{
-		rendering::SpriteAtlasExtension atlas(load_sprite(params.sprite_params));
+		rendering::SpriteAtlas atlas(load_sprite(params.sprite_params));
 
 		if (params.frame)
 		{

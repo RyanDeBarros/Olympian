@@ -379,9 +379,9 @@ namespace oly::graphics
 		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 	}
 
-	AnimFrameFormat setup_anim_frame_format(const std::string& texture_name, float speed, GLuint starting_frame)
+	AnimFrameFormat setup_anim_frame_format(const std::string& texture_file, float speed, GLuint starting_frame)
 	{
-		return setup_anim_frame_format(*context::texture_registry().get_anim_dimensions(texture_name).lock(), speed, starting_frame);
+		return setup_anim_frame_format(*context::texture_registry().get_anim_dimensions(texture_file).lock(), speed, starting_frame);
 	}
 
 	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
@@ -389,9 +389,9 @@ namespace oly::graphics
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_single(const std::string& texture_name, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const std::string& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_single(*context::texture_registry().get_anim_dimensions(texture_name).lock(), frame);
+		return setup_anim_frame_format_single(*context::texture_registry().get_anim_dimensions(texture_file).lock(), frame);
 	}
 
 	NSVGAbstract::NSVGAbstract(const char* filepath)

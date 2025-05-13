@@ -30,6 +30,6 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::SpriteAtlasExtension load_sprite_atlas(const TOMLNode& node);
-	extern rendering::SpriteAtlasExtension load_sprite_atlas(const params::SpriteAtlas& params);
+	extern rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node);
+	extern rendering::SpriteAtlas load_sprite_atlas(const params::SpriteAtlas& params);
 }

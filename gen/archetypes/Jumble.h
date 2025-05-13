@@ -27,7 +27,7 @@ namespace oly::gen
 		rendering::PolyComposite concave_shape;
 		rendering::NGon octagon;
 		rendering::Paragraph test_text;
-		rendering::SpriteAtlasExtension atlased_knight;
+		rendering::SpriteAtlas atlased_knight;
 		rendering::TileMap grass_tilemap;
 
 		Jumble();

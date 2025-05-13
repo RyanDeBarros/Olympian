@@ -408,7 +408,7 @@ namespace oly::reg
 		throw Error(ErrorCode::UNREGISTERED_NSVG_ABSTRACT);
 	}
 
-	void TextureRegistry::free_texture(const std::string& file, unsigned texture_index)
+	void TextureRegistry::free_texture(const std::string& file, unsigned int texture_index)
 	{
 		TextureKey tkey{ file, texture_index };
 		{
@@ -438,7 +438,7 @@ namespace oly::reg
 		}
 	}
 
-	void TextureRegistry::free_svg_texture(const std::string& file, float scale, unsigned texture_index)
+	void TextureRegistry::free_svg_texture(const std::string& file, float scale, unsigned int texture_index)
 	{
 		{
 			SVGTextureKey skey{ file, texture_index, scale };
@@ -466,7 +466,7 @@ namespace oly::reg
 		}
 	}
 
-	void TextureRegistry::free_nsvg_abstract(const std::string& file, unsigned texture_index)
+	void TextureRegistry::free_nsvg_abstract(const std::string& file, unsigned int texture_index)
 	{
 		TextureKey tkey{ file, texture_index };
 		auto it = nsvg_abstracts.find(tkey);

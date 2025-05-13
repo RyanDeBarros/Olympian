@@ -99,7 +99,7 @@ class Archetype:
         decl += self.write_declarations(self.ngons, "NGon", "rendering", 2)
         decl += self.write_declarations(self.ellipses, "Ellipse", "rendering", 2)
         decl += self.write_declarations(self.paragraphs, "Paragraph", "rendering", 2)
-        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlasExtension", "rendering", 2)
+        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "rendering", 2)
         decl += self.write_declarations(self.tilemaps, "TileMap", "rendering", 2)
         return decl
 

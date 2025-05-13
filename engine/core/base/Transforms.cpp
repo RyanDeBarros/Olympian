@@ -76,10 +76,10 @@ namespace oly
 			if (parent)
 			{
 				parent->pre_get();
-				_global = parent->global() * local.matrix();
+				_global = parent->_global * (*modifier)(local.matrix());
 			}
 			else
-				_global = local.matrix();
+				_global = (*modifier)(local.matrix());
 		}
 	}
 
@@ -243,10 +243,10 @@ namespace oly
 			if (parent)
 			{
 				parent->pre_get();
-				_global = parent->global() * local.matrix();
+				_global = parent->_global * (*modifier)(local.matrix());
 			}
 			else
-				_global = local.matrix();
+				_global = (*modifier)(local.matrix());
 		}
 	}
 

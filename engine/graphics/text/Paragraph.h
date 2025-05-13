@@ -74,12 +74,12 @@ namespace oly::rendering
 		void recolor_text_with_default();
 		TextBatch::TextColor get_glyph_color(size_t pos) const;
 		void set_glyph_color(size_t pos, const TextBatch::TextColor& color);
-		TextBatch::Modulation get_modulation(size_t pos) const;
-		void set_modulation(size_t pos, const TextBatch::Modulation& modulation);
+		TextBatch::ModulationRect get_modulation(size_t pos) const;
+		void set_modulation(size_t pos, const TextBatch::ModulationRect& modulation);
 		TextBatch::TextColor get_bkg_color() const;
 		void set_bkg_color(const TextBatch::TextColor& color);
-		TextBatch::Modulation get_bkg_modulation() const;
-		void set_bkg_modulation(const TextBatch::Modulation& modulation);
+		TextBatch::ModulationRect get_bkg_modulation() const;
+		void set_bkg_modulation(const TextBatch::ModulationRect& modulation);
 		bool is_visible(size_t pos) const;
 		void set_visible(size_t pos, bool visible);
 

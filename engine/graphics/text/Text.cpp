@@ -25,7 +25,7 @@ namespace oly::rendering
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::text_batch, "uGlobalModulation");
 
 		ubo.text_color.send<TextColor>(0, {});
-		ubo.modulation.send<Modulation>(0, {});
+		ubo.modulation.send<ModulationRect>(0, {});
 
 		vbo_block.attributes[VERTEX_POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
 		vbo_block.attributes[TEX_COORD] = graphics::VertexAttribute<float>{ 1, 2 };
@@ -81,7 +81,7 @@ namespace oly::rendering
 			glyph_ssbo_block.flag<INFO>(vb_pos);
 	}
 		
-	void TextBatch::set_modulation(GLuint vb_pos, const Modulation& modulation)
+	void TextBatch::set_modulation(GLuint vb_pos, const ModulationRect& modulation)
 	{
 		if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_slot, vb_pos, modulation))
 			glyph_ssbo_block.flag<INFO>(vb_pos);
@@ -99,10 +99,10 @@ namespace oly::rendering
 		return slot != 0 ? glyph_info_store.text_colors.get_object(slot) : TextColor{};
 	}
 		
-	TextBatch::Modulation TextBatch::get_modulation(GLuint vb_pos) const
+	TextBatch::ModulationRect TextBatch::get_modulation(GLuint vb_pos) const
 	{
 		GLuint slot = get_glyph_info(vb_pos).modulation_slot;
-		return slot != 0 ? glyph_info_store.modulations.get_object(slot) : Modulation{};
+		return slot != 0 ? glyph_info_store.modulations.get_object(slot) : ModulationRect{};
 	}
 
 	void TextBatch::set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect)
@@ -246,7 +246,7 @@ namespace oly::rendering
 		batch->set_text_color(vbid.get(), text_color);
 	}
 		
-	void TextGlyph::set_modulation(const TextBatch::Modulation& modulation) const
+	void TextGlyph::set_modulation(const TextBatch::ModulationRect& modulation) const
 	{
 		batch->set_modulation(vbid.get(), modulation);
 	}
@@ -271,7 +271,7 @@ namespace oly::rendering
 		return batch->get_text_color(vbid.get());
 	}
 		
-	TextBatch::Modulation TextGlyph::get_modulation() const
+	TextBatch::ModulationRect TextGlyph::get_modulation() const
 	{
 		return batch->get_modulation(vbid.get());
 	}

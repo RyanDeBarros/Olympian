@@ -101,7 +101,7 @@ namespace oly
 		Transformer2D& operator=(const Transformer2D&); // NOTE this keeps old children
 		Transformer2D& operator=(Transformer2D&&) noexcept;
 
-		glm::mat3 global() const { return (*modifier)(_global); }
+		glm::mat3 global() const { return _global; }
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;
@@ -137,7 +137,7 @@ namespace oly
 
 		virtual glm::mat3 operator()(const glm::mat3& global) const override
 		{
-			return global * pivot_matrix(pivot, -size);
+			return pivot_matrix(pivot, -size) * global;
 		}
 		virtual std::unique_ptr<TransformModifier2D> clone() const override
 		{
@@ -249,7 +249,7 @@ namespace oly
 		Transformer3D& operator=(const Transformer3D&);
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
-		virtual glm::mat4 global() const { return (*modifier)(_global); }
+		virtual glm::mat4 global() const { return _global; }
 		void post_set() const;
 		void pre_get() const;
 		bool flush() const;

@@ -14,7 +14,7 @@ namespace oly::reg
 			std::optional<std::string> texture;
 			unsigned int texture_index = 0;
 			std::optional<float> svg_scale;
-			std::optional<std::variant<rendering::SpriteBatch::Modulation, glm::vec4>> modulation;
+			std::optional<std::variant<rendering::ModulationRect, glm::vec4>> modulation;
 			std::optional<rendering::UVRect> tex_coords;
 
 			struct SingleFrameFormat

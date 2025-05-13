@@ -63,15 +63,15 @@ namespace oly::rendering
 				return std::hash<glm::vec4>{}(c.color);
 			}
 		};
-		struct Modulation
+		struct ModulationRect
 		{
 			glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
 
-			bool operator==(const Modulation&) const = default;
+			bool operator==(const ModulationRect&) const = default;
 		};
 		struct ModulationHash
 		{
-			size_t operator()(const Modulation& mod) const {
+			size_t operator()(const ModulationRect& mod) const {
 				return std::hash<glm::vec4>{}(mod.colors[0]) ^ (std::hash<glm::vec4>{}(mod.colors[1]) << 1) ^ (std::hash<glm::vec4>{}(mod.colors[2]) << 2) ^ (std::hash<glm::vec4>{}(mod.colors[3]) << 3);
 			}
 		};
@@ -82,7 +82,7 @@ namespace oly::rendering
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> text_color, modulation;
 
 			UBO(GLuint text_colors, GLuint modulations)
-				: text_color(text_colors * sizeof(TextColor)), modulation(modulations * sizeof(Modulation)) {}
+				: text_color(text_colors * sizeof(TextColor)), modulation(modulations * sizeof(ModulationRect)) {}
 		} ubo;
 
 	public:
@@ -118,16 +118,16 @@ namespace oly::rendering
 		{
 			graphics::UsageSlotTracker<graphics::BindlessTextureRes> textures;
 			graphics::UsageSlotTracker<TextColor, TextColorHash> text_colors;
-			graphics::UsageSlotTracker<Modulation, ModulationHash> modulations;
+			graphics::UsageSlotTracker<ModulationRect, ModulationHash> modulations;
 		} glyph_info_store;
 
 		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture);
 		void set_text_color(GLuint vb_pos, const TextColor& text_color);
-		void set_modulation(GLuint vb_pos, const Modulation& modulation);
+		void set_modulation(GLuint vb_pos, const ModulationRect& modulation);
 
 		graphics::BindlessTextureRes get_texture(GLuint vb_pos) const;
 		TextColor get_text_color(GLuint vb_pos) const;
-		Modulation get_modulation(GLuint vb_pos) const;
+		ModulationRect get_modulation(GLuint vb_pos) const;
 
 		void set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect);
 		void set_tex_coords(GLuint vb_pos, const math::Rect2D& rect);
@@ -162,13 +162,13 @@ namespace oly::rendering
 		void set_vertex_positions(const math::Rect2D& rect) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
 		void set_text_color(const TextBatch::TextColor& text_color) const;
-		void set_modulation(const TextBatch::Modulation& modulation) const;
+		void set_modulation(const TextBatch::ModulationRect& modulation) const;
 
 		graphics::BindlessTextureRes get_texture() const;
 		math::Rect2D get_vertex_positions() const;
 		math::Rect2D get_tex_coords() const;
 		TextBatch::TextColor get_text_color() const;
-		TextBatch::Modulation get_modulation() const;
+		TextBatch::ModulationRect get_modulation() const;
 
 		const TextBatch& get_batch() const { return *batch; }
 		TextBatch& get_batch() { return *batch; }

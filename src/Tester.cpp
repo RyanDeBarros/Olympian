@@ -1,5 +1,7 @@
 ﻿#include "Olympian.h"
 
+#include "graphics/extensions/SpriteNonant.h"
+
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
 #include "archetypes/EllipsePair.h"
@@ -77,6 +79,11 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
+	oly::rendering::SpriteNonant nonant;
+	nonant.set_local().scale = glm::vec2(10.0f);
+	nonant.set_texture("textures/panel.png");
+	nonant.set_offsets(6.0f, 6.0f, 6.0f, 6.0f);
+
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -97,6 +104,8 @@ int main()
 			sprite.draw();
 		oly::context::render_sprites();
 		jumble.draw(true);
+		nonant.draw();
+		oly::context::render_sprites();
 		};
 
 	oly::context::set_render_function(&render_frame);
@@ -144,6 +153,9 @@ int main()
 
 		jumble.on_tick();
 		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
+
+		nonant.set_width(nonant.get_dimensions().x + 32.0f * (1.0f + glm::sin(oly::TIME.now<float>())));
+		nonant.set_height(nonant.get_dimensions().y + 32.0f * (1.0f + glm::sin(1.0f + oly::TIME.now<float>())));
 
 		// draw
 		render_frame(); // TODO put in context::frame()

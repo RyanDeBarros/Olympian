@@ -48,7 +48,7 @@ namespace oly::gen
 			sprite5.texture = "textures/tux.png";
 
 			sprite1.texture = "textures/einstein.png";
-			sprite1.modulation = rendering::SpriteBatch::Modulation{
+			sprite1.modulation = rendering::ModulationRect{
 				glm::vec4{ (float)1.0, (float)1.0, (float)0.2, (float)0.7 },
 				glm::vec4{ (float)0.2, (float)1.0, (float)1.0, (float)0.7 },
 				glm::vec4{ (float)1.0, (float)0.2, (float)1.0, (float)0.7 },

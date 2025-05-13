@@ -13,7 +13,7 @@ def sprite_constructor(sprite, name) -> str:
 
     if 'modulation' in sprite:
         if isinstance(sprite['modulation'][0], list):
-            c += f"\t\t\t{name}.modulation = rendering::SpriteBatch::Modulation{{\n"
+            c += f"\t\t\t{name}.modulation = rendering::ModulationRect{{\n"
             c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][0][0]}, (float){sprite['modulation'][0][1]}, (float){sprite['modulation'][0][2]}, (float){sprite['modulation'][0][3]} }},\n"
             c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][1][0]}, (float){sprite['modulation'][1][1]}, (float){sprite['modulation'][1][2]}, (float){sprite['modulation'][1][3]} }},\n"
             c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][2][0]}, (float){sprite['modulation'][2][1]}, (float){sprite['modulation'][2][2]}, (float){sprite['modulation'][2][3]} }},\n"

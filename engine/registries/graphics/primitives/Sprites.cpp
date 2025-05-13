@@ -20,7 +20,7 @@ namespace oly::reg
 			{
 				if (toml_modulation->get(0)->is_array())
 				{
-					rendering::SpriteBatch::Modulation modulation;
+					rendering::ModulationRect modulation;
 					if (parse_vec4(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
 						&& parse_vec4(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
 						&& parse_vec4(toml_modulation->get_as<toml::array>(2), modulation.colors[2])

@@ -33,12 +33,12 @@ namespace oly::rendering
 		glyphs[pos].set_text_color(color);
 	}
 
-	TextBatch::Modulation Paragraph::get_modulation(size_t pos) const
+	TextBatch::ModulationRect Paragraph::get_modulation(size_t pos) const
 	{
 		return glyphs[pos].get_modulation();
 	}
 
-	void Paragraph::set_modulation(size_t pos, const TextBatch::Modulation& modulation)
+	void Paragraph::set_modulation(size_t pos, const TextBatch::ModulationRect& modulation)
 	{
 		glyphs[pos].set_modulation(modulation);
 	}
@@ -53,12 +53,12 @@ namespace oly::rendering
 		bkg.set_text_color(color);
 	}
 
-	TextBatch::Modulation Paragraph::get_bkg_modulation() const
+	TextBatch::ModulationRect Paragraph::get_bkg_modulation() const
 	{
 		return bkg.get_modulation();
 	}
 
-	void Paragraph::set_bkg_modulation(const TextBatch::Modulation& modulation)
+	void Paragraph::set_bkg_modulation(const TextBatch::ModulationRect& modulation)
 	{
 		bkg.set_modulation(modulation);
 	}
