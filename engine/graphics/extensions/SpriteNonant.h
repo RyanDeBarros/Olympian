@@ -30,6 +30,7 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
+		void copy_sprite_attributes(const Sprite& sprite);
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);
 		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0);
 		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
@@ -62,6 +63,9 @@ namespace oly::rendering
 		void set_width(float w);
 		void set_height(float h);
 		void set_size(glm::vec2 size);
+
+		void setup_nonant(glm::vec2 nsize, float x_left, float x_right, float y_bottom, float y_top);
+		void setup_nonant(const Sprite& copy, glm::vec2 nsize, float x_left, float x_right, float y_bottom, float y_top);
 
 		glm::vec2 get_dimensions() const { return regular_dimensions; }
 

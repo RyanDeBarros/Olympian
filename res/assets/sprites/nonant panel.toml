@@ -1,0 +1,9 @@
+[sprite_nonant]
+"left offset" = 6
+"right offset" = 6
+"bottom offset" = 6
+"top offset" = 6
+"nsize" = [ 128, 64 ]
+[sprite_nonant.sprite]
+"texture" = "textures/panel.png"
+transform = { "scale" = [ 10.0, 10.0 ] }

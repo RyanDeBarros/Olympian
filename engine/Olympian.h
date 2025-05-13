@@ -15,6 +15,7 @@
 #include "registries/graphics/primitives/Ellipses.h"
 #include "registries/graphics/extensions/TileMaps.h"
 #include "registries/graphics/extensions/SpriteAtlases.h"
+#include "registries/graphics/extensions/SpriteNonants.h"
 #include "registries/graphics/text/Paragraphs.h"
 
 namespace oly

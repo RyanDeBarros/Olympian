@@ -50,6 +50,28 @@ namespace oly::rendering
 				sprites[i][j].draw();
 	}
 
+	void SpriteNonant::copy_sprite_attributes(const Sprite& sprite)
+	{
+		set_local() = sprite.get_local();
+		set_frame_format(sprite.get_frame_format());
+
+		// set texture
+		glm::vec2 dimensions;
+		auto texture = sprite.get_texture(dimensions);
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				sprites[i][j].set_texture(texture, dimensions);
+		regular_dimensions = dimensions;
+		nsize = regular_dimensions;
+
+		// set tex coords
+		auto tex_coords = sprite.get_tex_coords();
+		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
+		sync_grid();
+		
+		set_modulation(sprite.get_modulation()); // TODO optimize/combine with prior operations
+	}
+
 	void SpriteNonant::set_texture(const std::string& texture_file, unsigned int texture_index)
 	{
 		for (int i = 0; i < 3; ++i)
@@ -179,20 +201,63 @@ namespace oly::rendering
 
 	void SpriteNonant::set_width(float w)
 	{
-		nsize.x = w;
+		nsize.x = std::max(w, regular_dimensions.x);
 		sync_grid();
 	}
 
 	void SpriteNonant::set_height(float h)
 	{
-		nsize.y = h;
+		nsize.y = std::max(h, regular_dimensions.y);
 		sync_grid();
 	}
 
 	void SpriteNonant::set_size(glm::vec2 size)
 	{
-		nsize = size;
+		nsize.x = std::max(size.x, regular_dimensions.x);
+		nsize.y = std::max(size.y, regular_dimensions.y);
 		sync_grid();
+	}
+
+	void SpriteNonant::setup_nonant(glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
+	{
+		offsets.x_left = x_left;
+		offsets.x_right = x_right;
+		offsets.y_bottom = y_bottom;
+		offsets.y_top = y_top;
+		nsize.x = std::max(size.x, regular_dimensions.x);
+		nsize.y = std::max(size.y, regular_dimensions.y);
+		sync_grid();
+	}
+
+	void SpriteNonant::setup_nonant(const Sprite& copy, glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
+	{
+		offsets.x_left = x_left;
+		offsets.x_right = x_right;
+		offsets.y_bottom = y_bottom;
+		offsets.y_top = y_top;
+
+		set_local() = copy.get_local();
+		set_frame_format(copy.get_frame_format());
+
+		// set texture
+		glm::vec2 dimensions;
+		auto texture = copy.get_texture(dimensions);
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				sprites[i][j].set_texture(texture, dimensions);
+		regular_dimensions = dimensions;
+		nsize = regular_dimensions;
+
+		// set nsize
+		nsize.x = std::max(size.x, regular_dimensions.x);
+		nsize.y = std::max(size.y, regular_dimensions.y);
+
+		// set tex coords
+		auto tex_coords = copy.get_tex_coords();
+		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
+		sync_grid();
+
+		set_modulation(copy.get_modulation()); // TODO optimize/combine with prior operations
 	}
 
 	void SpriteNonant::sync_grid()
