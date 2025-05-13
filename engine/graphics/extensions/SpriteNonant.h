@@ -6,7 +6,7 @@ namespace oly::rendering
 {
 	class SpriteNonant
 	{
-		Sprite sprites[3][3];
+		mutable Sprite sprites[3][3];
 
 		glm::vec2 nsize{};
 		glm::vec2 regular_dimensions{};
@@ -17,6 +17,12 @@ namespace oly::rendering
 		{
 			float x_left = 0.0f, x_right = 0.0f, y_bottom = 0.0f, y_top = 0.0f;
 		} offsets;
+		
+		struct
+		{
+			bool grid = false;
+			bool modulation = false;
+		} mutable dirty;
 
 	public:
 		Transformer2D transformer; // TODO public transformers in extensions like SpriteNonant and TileMap should not have their children public
@@ -71,7 +77,7 @@ namespace oly::rendering
 
 	private:
 		void clamp_nsize(glm::vec2 nsize);
-		void sync_grid();
-		void sync_modulation();
+		void sync_grid() const;
+		void sync_modulation() const;
 	};
 }

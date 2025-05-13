@@ -7,13 +7,13 @@ draw = [
 	"sprite5",
 	"octagon",
 	"sprite1",
-	"nonant_panel",
 	"godot_icon",
 	"knight",
 	"concave_shape",
 	"atlased_knight",
 	"grass_tilemap",
-	"test_text"
+	"test_text",
+	"nonant_panel",
 ]
 
 [[archetype.sprite]]
@@ -119,6 +119,12 @@ name            = "nonant_panel"
 [archetype.sprite_nonant.sprite]
 "texture" = "textures/panel.png"
 transform = { "scale" = [ 10.0, 10.0 ] }
+modulation = [
+	[ 1.0, 0.3, 0.3, 1.0 ],
+	[ 0.3, 0.3, 0.3, 1.0 ],
+	[ 0.3, 0.3, 1.0, 1.0 ],
+	[ 0.3, 0.3, 0.3, 1.0 ]
+]
 
 [[archetype.tilemap]]
 name = "grass_tilemap"

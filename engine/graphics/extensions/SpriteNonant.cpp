@@ -45,6 +45,17 @@ namespace oly::rendering
 
 	void SpriteNonant::draw() const
 	{
+		if (dirty.grid)
+		{
+			sync_grid();
+			dirty.grid = false;
+			dirty.modulation = false; // sync_modulation() is already called in sync_grid()
+		}
+		else if (dirty.modulation)
+		{
+			sync_modulation();
+			dirty.modulation = false;
+		}
 		for (int i = 0; i < 3; ++i)
 			for (int j = 0; j < 3; ++j)
 				sprites[i][j].draw();
@@ -67,9 +78,11 @@ namespace oly::rendering
 		// set tex coords
 		auto tex_coords = sprite.get_tex_coords();
 		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
-		sync_grid();
-		
-		set_modulation(sprite.get_modulation()); // TODO optimize/combine with prior operations
+
+		// set modulation
+		regular_modulation = sprite.get_modulation();
+
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_texture(const std::string& texture_file, unsigned int texture_index)
@@ -79,7 +92,7 @@ namespace oly::rendering
 				sprites[i][j].set_texture(texture_file, texture_index);
 		regular_dimensions = context::get_texture_dimensions(texture_file, texture_index);
 		nsize = regular_dimensions;
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index)
@@ -89,7 +102,7 @@ namespace oly::rendering
 				sprites[i][j].set_texture(texture_file, svg_scale, texture_index);
 		regular_dimensions = context::get_texture_dimensions(texture_file, texture_index);
 		nsize = regular_dimensions;
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
@@ -99,25 +112,25 @@ namespace oly::rendering
 				sprites[i][j].set_texture(texture, dimensions);
 		regular_dimensions = dimensions;
 		nsize = regular_dimensions;
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_tex_coords(const math::Rect2D& rect)
 	{
 		regular_uvs = rect;
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_modulation(const ModulationRect& modulation)
 	{
 		regular_modulation = modulation;
-		sync_modulation();
+		dirty.modulation = true;
 	}
 
 	void SpriteNonant::set_modulation(glm::vec4 modulation)
 	{
 		regular_modulation = { modulation, modulation, modulation, modulation };
-		sync_modulation();
+		dirty.modulation = true;
 	}
 	
 	void SpriteNonant::set_frame_format(const graphics::AnimFrameFormat& anim) const
@@ -145,8 +158,7 @@ namespace oly::rendering
 
 	ModulationRect SpriteNonant::get_modulation() const
 	{
-		// TODO
-		return ModulationRect();
+		return regular_modulation;
 	}
 
 	graphics::AnimFrameFormat SpriteNonant::get_frame_format() const
@@ -157,25 +169,25 @@ namespace oly::rendering
 	void SpriteNonant::set_x_left_offset(float xoff)
 	{
 		offsets.x_left = xoff;
-		sync_grid();
+		dirty.grid = true;
 	}
 	
 	void SpriteNonant::set_x_right_offset(float xoff)
 	{
 		offsets.x_right = xoff;
-		sync_grid();
+		dirty.grid = true;
 	}
 	
 	void SpriteNonant::set_y_bottom_offset(float yoff)
 	{
 		offsets.y_bottom = yoff;
-		sync_grid();
+		dirty.grid = true;
 	}
 	
 	void SpriteNonant::set_y_top_offset(float yoff)
 	{
 		offsets.y_top = yoff;
-		sync_grid();
+		dirty.grid = true;
 	}
 	
 	void SpriteNonant::set_offsets(float x_left, float x_right, float y_bottom, float y_top)
@@ -184,7 +196,7 @@ namespace oly::rendering
 		offsets.x_right = x_right;
 		offsets.y_bottom = y_bottom;
 		offsets.y_top = y_top;
-		sync_grid();
+		dirty.grid = true;
 	}
 	
 	void SpriteNonant::get_offsets(float* x_left, float* x_right, float* y_bottom, float* y_top) const
@@ -202,19 +214,19 @@ namespace oly::rendering
 	void SpriteNonant::set_width(float w)
 	{
 		clamp_nsize({ w, nsize.y });
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_height(float h)
 	{
 		clamp_nsize({ nsize.x, h });
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::set_size(glm::vec2 size)
 	{
 		clamp_nsize(size);
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::setup_nonant(glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
@@ -224,7 +236,7 @@ namespace oly::rendering
 		offsets.y_bottom = y_bottom;
 		offsets.y_top = y_top;
 		clamp_nsize(size);
-		sync_grid();
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::setup_nonant(const Sprite& copy, glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
@@ -252,9 +264,11 @@ namespace oly::rendering
 		// set tex coords
 		auto tex_coords = copy.get_tex_coords();
 		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
-		sync_grid();
 
-		set_modulation(copy.get_modulation()); // TODO optimize/combine with prior operations
+		// set modulation
+		regular_modulation = copy.get_modulation();
+
+		dirty.grid = true;
 	}
 
 	void SpriteNonant::clamp_nsize(glm::vec2 size)
@@ -263,7 +277,7 @@ namespace oly::rendering
 		nsize.y = std::max(size.y, offsets.y_bottom + offsets.y_top);
 	}
 
-	void SpriteNonant::sync_grid()
+	void SpriteNonant::sync_grid() const
 	{
 		// [2][0] [2][1] [2][2]
 		// [1][0] [1][1] [1][2]
@@ -298,8 +312,20 @@ namespace oly::rendering
 		sync_modulation();
 	}
 
-	void SpriteNonant::sync_modulation()
+	void SpriteNonant::sync_modulation() const
 	{
-		// TODO
+		float xcuvs[4]{ 0.0f, offsets.x_left / nsize.x, 1.0f - offsets.x_right / nsize.x, 1.0f };
+		float ycuvs[4]{ 0.0f, offsets.y_bottom / nsize.y, 1.0f - offsets.y_top / nsize.y, 1.0f };
+
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+			{
+				ModulationRect mod;
+				mod.colors[0] = regular_modulation.mix({ xcuvs[j]    , ycuvs[i]     });
+				mod.colors[1] = regular_modulation.mix({ xcuvs[j + 1], ycuvs[i]     });
+				mod.colors[2] = regular_modulation.mix({ xcuvs[j + 1], ycuvs[i + 1] });
+				mod.colors[3] = regular_modulation.mix({ xcuvs[j]    , ycuvs[i + 1] });
+				sprites[i][j].set_modulation(mod);
+			}
 	}
 }

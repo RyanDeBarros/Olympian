@@ -76,7 +76,7 @@ int main()
 	jumble.concave_shape.send_polygon();
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
-
+	
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -104,6 +104,8 @@ int main()
 	while (oly::context::frame())
 	{
 		// logic update
+
+		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 
 		jumble.octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
 		jumble.octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);

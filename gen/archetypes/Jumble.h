@@ -38,7 +38,7 @@ namespace oly::gen
 		Jumble& operator=(const Jumble&) = default;
 		Jumble& operator=(Jumble&&) = default;
 
-		void draw(bool flush_text) const;
+		void draw(bool flush_sprites) const;
 
 		void on_tick() const;
 	};

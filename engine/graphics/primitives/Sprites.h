@@ -33,6 +33,8 @@ namespace oly::rendering
 	{
 		glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
 
+		glm::vec4 mix(glm::vec2 uv) const;
+
 		bool operator==(const ModulationRect&) const = default;
 	};
 	struct ModulationHash

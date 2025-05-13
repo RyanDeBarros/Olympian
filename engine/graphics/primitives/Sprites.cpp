@@ -16,6 +16,11 @@ namespace oly::rendering
 		return *this;
 	}
 
+	glm::vec4 oly::rendering::ModulationRect::mix(glm::vec2 uv) const
+	{
+		return glm::mix(glm::mix(colors[0], colors[1], uv.x), glm::mix(colors[3], colors[2], uv.x), uv.y);
+	}
+
 	const SpriteBatch::QuadInfo& SpriteBatch::get_quad_info(GLuint vb_pos) const
 	{
 		return quad_ssbo_block.get<INFO>(vb_pos);

@@ -165,6 +165,12 @@ namespace oly::gen
 
 			nonant_panel.sprite_params.local.scale = { (float)10.0, (float)10.0 };
 			nonant_panel.sprite_params.texture = "textures/panel.png";
+			nonant_panel.sprite_params.modulation = rendering::ModulationRect{
+				glm::vec4{ (float)1.0, (float)0.3, (float)0.3, (float)1.0 },
+				glm::vec4{ (float)0.3, (float)0.3, (float)0.3, (float)1.0 },
+				glm::vec4{ (float)0.3, (float)0.3, (float)1.0, (float)1.0 },
+				glm::vec4{ (float)0.3, (float)0.3, (float)0.3, (float)1.0 }
+			};
 			nonant_panel.nsize = { (float)128, (float)0 };
 			nonant_panel.offsets.x_left = (float)6;
 			nonant_panel.offsets.x_right = (float)6;
@@ -216,7 +222,7 @@ namespace oly::gen
 		free_constructor();
 	}
 
-	void Jumble::draw(bool flush_text) const
+	void Jumble::draw(bool flush_sprites) const
 	{
 		sprite3.draw();
 		sprite4.draw();
@@ -225,7 +231,6 @@ namespace oly::gen
 		octagon.draw();
 		context::render_polygons();
 		sprite1.draw();
-		nonant_panel.draw();
 		godot_icon.draw();
 		knight.draw();
 		context::render_sprites();
@@ -235,8 +240,10 @@ namespace oly::gen
 		grass_tilemap.draw();
 		context::render_sprites();
 		test_text.draw();
-		if (flush_text)
-			context::render_text();
+		context::render_text();
+		nonant_panel.draw();
+		if (flush_sprites)
+			context::render_sprites();
 	}
 
 	void Jumble::on_tick() const
