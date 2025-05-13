@@ -9,6 +9,7 @@
     <option name="namespacePackageFolders">
       <list>
         <option value="$MODULE_DIR$/archetype" />
+        <option value="$MODULE_DIR$/textures" />
       </list>
     </option>
   </component>

@@ -12,7 +12,6 @@ project ("Olympian")
 # Run automatic tools
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-message(STATUS "Generating pre-build source code")
 execute_process(
     COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/PreBuild.py"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tools"

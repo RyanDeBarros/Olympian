@@ -1,12 +1,13 @@
 import os
 
 from Tool import *
-from Parameters import *
+from .Parameters import *
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
 IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE = (".png", ".jpg", ".jpeg", ".bmp", ".svg")
-DEFAULT_TEXTURE_IMPORT_FILE = "DefaultTextureImport.toml"
+DEFAULT_TEXTURE_IMPORT_FILE = "textures/DefaultTextureImport.toml"
+IMPORT_MANIFEST = "textures/manifest.toml"
 
 
 class TextureImporter:
@@ -308,13 +309,29 @@ def reset_defaults():
     print_info("Success!")
 
 
+def import_manifest():
+    with open(IMPORT_MANIFEST, 'r') as f:
+        folders = toml.load(f)["folder"]
+
+    for folder in folders:
+        if 'path' not in folder:
+            continue
+        recur = folder['recur'] if 'recur' in folder else False
+        prune = folder['prune'] if 'prune' in folder else True
+        default = folder['default'] if 'default' in folder else False
+        clear = folder['clear'] if 'clear' in folder else False
+        TextureImporter(folder=folder['path'], recur=recur, prune=prune, default=default, clear=clear).run()
+
+    print_info("Success!")
+
+
 TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
 
 IMPORT_TEXTURES = ToolNode("import", "Generate import files.", import_textures)
 TOOL.add_child(IMPORT_TEXTURES)
 
-IMPORT_ALL_TEXTURES = ToolNode("import all", "Generate import files for texture manifest")
-# TODO 'import manifest' that uses a manifest of texture folders, and saved individual and global settings for recur/prune/etc.
+IMPORT_ALL_TEXTURES = ToolNode("import all", "Generate import files for texture manifest", import_manifest)
+TOOL.add_child(IMPORT_ALL_TEXTURES)
 
 GENERATE_SPRITESHEET = ToolNode("spritesheet", "Generate spritesheet texture in import files.", generate_spritesheet)
 TOOL.add_child(GENERATE_SPRITESHEET)
