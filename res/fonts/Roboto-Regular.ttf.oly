@@ -1,9 +1,13 @@
 [font_face]
 "storage" = "discard"
-"kerning" = [
-	[ "e", "U+78",  150 ],
-	[ "H", "e"   , -200 ]
-]
+	
+	[[font_face.kerning]]
+	pair = [ "e", "U+78" ]
+	dist = 150
+	
+	[[font_face.kerning]]
+	pair = [ "H", "e" ]
+	dist = -200
 
 [[font_atlas]]
 "storage"              = "discard"

@@ -1,5 +1,5 @@
 import ToolRegistry
-from Tool import var_cmd, varinput, print_error
+from ToolNode import var_cmd, varinput, print_error
 
 
 DESCRIPTION_OFFSET = 64

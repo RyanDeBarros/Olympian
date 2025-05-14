@@ -6,7 +6,7 @@ from enum import Enum
 import toml
 
 from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
-from Tool import ToolNode, print_info, print_error, varinput
+from ToolNode import ToolNode, print_info, print_error, varinput
 
 MANIFEST_PATH = 'archetype/manifest.txt'
 CACHE_PATH = 'archetype/cache.json'

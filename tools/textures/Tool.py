@@ -1,109 +1,48 @@
 import os
 
-from Tool import *
-from .Parameters import *
+from common import *
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
 IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE = (".png", ".jpg", ".jpeg", ".bmp", ".svg")
-DEFAULT_TEXTURE_IMPORT_FILE = "textures/DefaultTextureImport.toml"
-IMPORT_MANIFEST = "textures/manifest.toml"
+DEFAULT_TEXTURE_IMPORT_FILE = "textures/default.toml"
 
 
-class TextureImporter:
+class TextureImporter(Importer):
     def __init__(self, folder: str, recur: bool, prune: bool, default: bool, clear: bool):
-        self.folder = res_path(folder)
-        self.recur = recur
-        self.prune = prune
-        self.default = default
-        self.clear = clear
-        self.default_toml = {}
-        if os.path.exists(DEFAULT_TEXTURE_IMPORT_FILE):
-            with open(DEFAULT_TEXTURE_IMPORT_FILE, 'r') as f:
-                self.default_toml = toml.load(f)
+        super().__init__(folder, recur, prune, default, clear)
+        super().setup("textures", IMPORT_FILE_EXTENSIONS)
 
-    def run(self):
-        if self.clear:
-            self.run_clear(self.folder)
-        else:
-            self.run_search(self.folder)
+    def write_default_toml(self, file: str, tml: dict) -> bool:
+        if 'texture' in tml and not self.default:
+            return False
 
-    def run_clear(self, folder: str):
-        with os.scandir(folder) as entries:
-            for entry in entries:
-                if entry.is_file():
-                    if entry.path.endswith('.oly') and self.nonoly_filepath(entry.path).endswith(
-                            IMPORT_FILE_EXTENSIONS):
-                        with open(entry.path, 'r') as f:
-                            tml = toml.load(f)
-                        if 'texture' in tml:
-                            del tml['texture']
-                            with open(entry.path, 'w') as f:
-                                toml.dump(tml, f)
-                        if len(tml) == 0:
-                            os.remove(entry.path)
-                elif entry.is_dir() and self.recur:
-                    self.run_clear(entry.path)
-
-    def run_search(self, folder: str):
-        with os.scandir(folder) as entries:
-            for entry in entries:
-                if entry.is_file():
-                    if self.prune and entry.path.endswith('.oly'):
-                        self.prune_imports(entry.path)
-                    elif entry.path.endswith(IMPORT_FILE_EXTENSIONS):
-                        self.import_texture(entry.path)
-                elif entry.is_dir() and self.recur:
-                    self.run_search(entry.path)
-
-    def prune_imports(self, file: str):
-        if self.nonoly_filepath(file).endswith(IMPORT_FILE_EXTENSIONS) and not os.path.exists(
-                self.nonoly_filepath(file)):
-            os.remove(file)
-
-    def nonoly_filepath(self, file: str):
-        return file[:-len('.oly')]
-
-    def import_texture(self, file: str):
-        if file.endswith(IMPORT_FILE_EXTENSIONS_IMAGES):
-            self.write_default(file, 'image')
-        elif file.endswith(".svg"):
-            self.write_default(file, 'svg')
-        elif file.endswith(".gif"):
-            self.write_default(file, 'gif')
-
-    def write_default(self, file: str, texture_type: str):
-        if os.path.exists(file + '.oly'):
-            with open(file + '.oly', 'r') as f:
-                tml = toml.load(f)
-        else:
-            tml = {}
-
-        if 'texture' in tml:
-            if self.default:
-                tml['texture'] = [{}]
-            else:
-                return
-        else:
-            tml['texture'] = [{}]
-
-        for k, v in self.default_toml[texture_type].items():
+        tml['texture'] = [{}]
+        for k, v in self.default_toml[self.default_header(file)].items():
             tml['texture'][0][k] = v
-        with open(file + '.oly', 'w') as f:
-            toml.dump(tml, f)
+        return True
+
+    @staticmethod
+    def default_header(file: str):
+        if file.endswith(IMPORT_FILE_EXTENSIONS_IMAGES):
+            return 'image'
+        elif file.endswith(".svg"):
+            return 'svg'
+        elif file.endswith(".gif"):
+            return 'gif'
 
 
 def import_textures():
-    folder = ""
-    while len(folder) == 0:
-        folder = varinput("Textures folder: ")
+    import_folder("Textures folder: ", TextureImporter)
+    print_info("Success!")
 
-    recur = varinput("Recursive search (y/n): ") == "y"
-    prune = varinput("Prune isolated imports (y/n): ") != "n"
-    default = varinput("Reset existing imports to default (y/n): ") == "y"
-    clear = varinput("Clear imports (y/n): ") == "y"
 
-    TextureImporter(folder=folder, recur=recur, prune=prune, default=default, clear=clear).run()
+def import_textures_manifest():
+    import_manifest("textures", TextureImporter)
+
+
+def import_textures_manifest_tool():
+    import_manifest("textures", TextureImporter)
     print_info("Success!")
 
 
@@ -309,28 +248,12 @@ def reset_defaults():
     print_info("Success!")
 
 
-def import_manifest():
-    with open(IMPORT_MANIFEST, 'r') as f:
-        folders = toml.load(f)["folder"]
-
-    for folder in folders:
-        if 'path' not in folder:
-            continue
-        recur = folder['recur'] if 'recur' in folder else False
-        prune = folder['prune'] if 'prune' in folder else True
-        default = folder['default'] if 'default' in folder else False
-        clear = folder['clear'] if 'clear' in folder else False
-        TextureImporter(folder=folder['path'], recur=recur, prune=prune, default=default, clear=clear).run()
-
-    print_info("Success!")
-
-
-TOOL = ToolNode("textures", "Manipulate texture import (.oly) files.")
+TOOL = ToolNode("textures", "Manipulate texture import files.")
 
 IMPORT_TEXTURES = ToolNode("import", "Generate import files.", import_textures)
 TOOL.add_child(IMPORT_TEXTURES)
 
-IMPORT_ALL_TEXTURES = ToolNode("import all", "Generate import files for texture manifest", import_manifest)
+IMPORT_ALL_TEXTURES = ToolNode("import all", "Generate import files for texture manifest", import_textures_manifest_tool)
 TOOL.add_child(IMPORT_ALL_TEXTURES)
 
 GENERATE_SPRITESHEET = ToolNode("spritesheet", "Generate spritesheet texture in import files.", generate_spritesheet)

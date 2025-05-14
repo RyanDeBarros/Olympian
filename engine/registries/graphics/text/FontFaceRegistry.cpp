@@ -21,12 +21,19 @@ namespace oly::reg
 		rendering::Kerning kerning;
 		if (auto kerning_arr = node["kerning"].as_array())
 		{
-			for (const auto& node : *kerning_arr)
-			{
-				if (auto triplet = node.as_array())
+			kerning_arr->for_each([&kerning](auto&& node) {
+				if constexpr (toml::is_table<decltype(node)>)
 				{
-					utf::Codepoint c1, c2;
-					int k;
+					auto pair = node["pair"].as_array();
+					auto dist = node["dist"].value<int64_t>();
+					if (!pair || !dist || pair->size() != 2)
+						return;
+
+					auto tc0 = pair->get_as<std::string>(0);
+					auto tc1 = pair->get_as<std::string>(1);
+					if (!tc0 || !tc1)
+						return;
+
 					static const auto parse_codepoint = [](const std::string& sc) -> utf::Codepoint {
 						if (sc.size() >= 3)
 						{
@@ -40,22 +47,12 @@ namespace oly::reg
 							return utf::Codepoint(0);
 						return utf::Codepoint(sc[0]);
 						};
-					if (auto tc1 = triplet->get_as<std::string>(0))
-						c1 = parse_codepoint(tc1->get());
-					else
-						continue;
-					if (auto tc2 = triplet->get_as<std::string>(1))
-						c2 = parse_codepoint(tc2->get());
-					else
-						continue;
-					if (auto tk = triplet->get_as<int64_t>(2))
-						k = (int)tk->get();
-					else
-						continue;
+					utf::Codepoint c1 = parse_codepoint(tc0->get());
+					utf::Codepoint c2 = parse_codepoint(tc1->get());
 					if (c1 && c2)
-						kerning.map.emplace(std::make_pair(c1, c2), k);
+						kerning.map.emplace(std::make_pair(c1, c2), (int)dist.value());
 				}
-			}
+				});
 		}
 
 		rendering::FontFaceRes font_face = std::make_shared<rendering::FontFace>((context::context_filepath() + file).c_str(), std::move(kerning));

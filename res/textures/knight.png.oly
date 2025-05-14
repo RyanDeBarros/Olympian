@@ -13,3 +13,4 @@ storage = "discard"
 "min filter" = "nearest"
 "mag filter" = "nearest"
 "generate mipmaps" = false
+

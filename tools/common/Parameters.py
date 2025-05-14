@@ -1,6 +1,6 @@
 from math import inf
 
-from Tool import varinput, print_error
+from ToolNode import varinput, print_error
 
 
 def str_to_bool(s: str) -> bool:
