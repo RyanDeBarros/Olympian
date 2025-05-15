@@ -11,6 +11,7 @@ namespace oly::platform
 
 		float target_aspect_ratio;
 
+		// TODO use Functor<void()> instead, which is a typedef of std::unique_ptr<Func<void()>>, which overloads void operator()()
 		const std::function<void()>* render_frame;
 
 		bool consume(const input::WindowResizeEventData& data);

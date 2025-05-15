@@ -213,7 +213,7 @@ namespace oly::random
 		{
 			float rr = bound::eval(fnr);
 			float rtheta = glm::pi<float>() * bound::eval(fntheta);
-			float rphi = 0.5f * glm::pi<float>() * bound::eval(fnphi);
+			float rphi = glm::half_pi<float>() * bound::eval(fnphi);
 			return transform.matrix() * glm::vec4(math::coordinates::to_cartesian({ rr, rtheta, rphi }), 1.0f);
 		}
 

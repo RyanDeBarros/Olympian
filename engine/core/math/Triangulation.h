@@ -17,5 +17,8 @@ namespace oly
 		extern Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points);
 	}
 
-	// LATER pure math versions
+	namespace math
+	{
+		// TODO pure math versions
+	}
 }

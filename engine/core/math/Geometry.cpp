@@ -7,6 +7,31 @@ namespace oly::math
 		return u.x * v.y - u.y * v.x;
 	}
 
+	float magnitude(glm::vec2 v)
+	{
+		return glm::sqrt(glm::dot(v, v));
+	}
+
+	float mag_sqrd(glm::vec2 v)
+	{
+		return glm::dot(v, v);
+	}
+
+	glm::vec2 dir_vector(float radians)
+	{
+		return { glm::cos(radians), glm::sin(radians) };
+	}
+
+	glm::vec2 project(glm::vec2 point, glm::vec2 axis)
+	{
+		return axis * glm::dot(point, axis) / glm::dot(axis, axis);
+	}
+
+	float projection_distance(glm::vec2 point, glm::vec2 axis)
+	{
+		return glm::dot(point, axis) / magnitude(axis);
+	}
+
 	bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test)
 	{
 		if (cross(u1, u2) >= 0.0f)
