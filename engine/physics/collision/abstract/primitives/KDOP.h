@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/Geometry.h"
-#include "physics/collision/abstract/ConvexHull.h"
+#include "physics/collision/abstract/primitives/ConvexHull.h"
 
 #include <array>
 
