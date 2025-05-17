@@ -1,11 +1,13 @@
 #include "OBB.h"
 
+#include "core/base/Errors.h"
+
 namespace oly::acm2d
 {
 	OBB OBB::fast_wrap(const math::Polygon2D& polygon, unsigned int quadrant_steps, unsigned int iterations)
 	{
 		if (quadrant_steps <= 1 || iterations == 0)
-			return {}; // TODO throw math/collision error
+			throw Error(ErrorCode::BAD_COLLISION_PRIMITIVE);
 
 		// find minimizing OBB for a given angle
 		static const auto obb_compute = [](const math::Polygon2D& polygon, float angle) {
