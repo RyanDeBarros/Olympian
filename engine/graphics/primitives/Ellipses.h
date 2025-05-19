@@ -26,7 +26,7 @@ namespace oly::rendering
 	public:
 		struct EllipseDimension
 		{
-			float width = 0.0f, height = 0.0f, border = 0.0f;
+			float rx = 0.0f, ry = 0.0f, border = 0.0f;
 			float fill_exp = 1.0f, border_exp = 1.0f;
 		};
 		struct ColorGradient {

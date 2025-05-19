@@ -1,5 +1,7 @@
 ﻿#include "Olympian.h"
 
+#include "physics/collision/abstract/methods/Collide.h"
+
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
 #include "archetypes/EllipsePair.h"
@@ -76,6 +78,46 @@ int main()
 	jumble.concave_shape.send_polygon();
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
+
+	oly::acm2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
+	auto aabb_visual = oly::context::polygon();
+	aabb_visual.polygon.points = {
+		{ aabb.x1, aabb.y1 },
+		{ aabb.x2, aabb.y1 },
+		{ aabb.x2, aabb.y2 },
+		{ aabb.x1, aabb.y2 }
+	};
+	aabb_visual.polygon.colors = { oly::colors::MAGENTA };
+	aabb_visual.init();
+
+	oly::acm2d::Circle circ{ .radius = 50.0f };
+	auto circ_visual = oly::context::ellipse();
+	{
+		auto& dimension = circ_visual.ellipse.set_dimension();
+		dimension.ry = dimension.rx = circ.radius;
+		dimension.fill_exp = 0.0f;
+	}
+	circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
+
+	oly::acm2d::AABB rect{};
+	auto rect_visual = oly::context::polygon();
+	rect_visual.polygon.points = { { -circ.radius, -circ.radius }, { circ.radius, -circ.radius }, { circ.radius, circ.radius }, { -circ.radius, circ.radius } };
+	rect_visual.polygon.colors = { oly::colors::YELLOW };
+	rect_visual.init();
+
+	// LATER anti-aliasing settings
+	
+	// TODO LineExtension and ArrowExtension helper structs
+
+	auto aabb_impulse_visual = oly::context::polygon();
+	aabb_impulse_visual.polygon.points = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+	aabb_impulse_visual.polygon.colors = { oly::colors::WHITE };
+	aabb_impulse_visual.init();
+
+	auto circ_impulse_visual = oly::context::polygon();
+	circ_impulse_visual.polygon.points = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+	circ_impulse_visual.polygon.colors = { oly::colors::GREEN };
+	circ_impulse_visual.init();
 	
 	// LATER begin play on initial actors here
 
@@ -97,6 +139,15 @@ int main()
 			sprite.draw();
 		oly::context::render_sprites();
 		jumble.draw(true);
+
+		aabb_visual.draw();
+		//rect_visual.draw();
+		oly::context::render_polygons();
+		circ_visual.draw();
+		oly::context::render_ellipses();
+		aabb_impulse_visual.draw();
+		circ_impulse_visual.draw();
+		oly::context::render_polygons();
 		};
 
 	oly::context::set_render_function(&render_frame);
@@ -104,6 +155,52 @@ int main()
 	while (oly::context::frame())
 	{
 		// logic update
+
+		circ.center = oly::context::get_cursor_screen_pos();
+		auto contact = oly::acm2d::contacts(circ, aabb);
+		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
+		//auto contact = oly::acm2d::contacts(rect, aabb);
+		if (contact.overlap)
+			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
+			//rect_visual.polygon.colors[0] = oly::colors::RED;
+		else
+			circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
+			//rect_visual.polygon.colors[0] = oly::colors::YELLOW;
+		circ_visual.set_local().position = circ.center;
+		//rect_visual.send_polygon();
+		//rect_visual.set_local().position = circ.center;
+		
+		if (oly::near_zero(contact.active_feature.impulse.x))
+		{
+			circ_impulse_visual.polygon.points[0] = contact.active_feature.position + glm::vec2{ -1.0f, 0.0f };
+			circ_impulse_visual.polygon.points[1] = contact.active_feature.position + glm::vec2{  1.0f, 0.0f };
+			circ_impulse_visual.polygon.points[2] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{  3.0f, 0.0f };
+			circ_impulse_visual.polygon.points[3] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ -3.0f, 0.0f };
+		}
+		else
+		{
+			circ_impulse_visual.polygon.points[0] = contact.active_feature.position + glm::vec2{ 0.0f, -1.0f };
+			circ_impulse_visual.polygon.points[1] = contact.active_feature.position + glm::vec2{ 0.0f,  1.0f };
+			circ_impulse_visual.polygon.points[2] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ 0.0f,  3.0f };
+			circ_impulse_visual.polygon.points[3] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ 0.0f, -3.0f };
+		}
+		circ_impulse_visual.send_polygon();
+		
+		if (oly::near_zero(contact.static_feature.impulse.x))
+		{
+			aabb_impulse_visual.polygon.points[0] = contact.static_feature.position + glm::vec2{ -1.0f, 0.0f };
+			aabb_impulse_visual.polygon.points[1] = contact.static_feature.position + glm::vec2{  1.0f, 0.0f };
+			aabb_impulse_visual.polygon.points[2] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{  3.0f, 0.0f };
+			aabb_impulse_visual.polygon.points[3] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ -3.0f, 0.0f };
+		}
+		else
+		{
+			aabb_impulse_visual.polygon.points[0] = contact.static_feature.position + glm::vec2{ 0.0f, -1.0f };
+			aabb_impulse_visual.polygon.points[1] = contact.static_feature.position + glm::vec2{ 0.0f,  1.0f };
+			aabb_impulse_visual.polygon.points[2] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ 0.0f,  3.0f };
+			aabb_impulse_visual.polygon.points[3] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ 0.0f, -3.0f };
+		}
+		aabb_impulse_visual.send_polygon();
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 

@@ -36,7 +36,7 @@ namespace oly::acm2d::sat
 		return axis_signed_overlap(i1.first, i1.second, i2.first, i2.second);
 	};
 
-	OverlapInfo overlap(const std::vector<glm::vec2>& c1, const std::vector<glm::vec2>& c2)
+	OverlapResult overlaps(const std::vector<glm::vec2>& c1, const std::vector<glm::vec2>& c2)
 	{
 		for (size_t i = 0; i < c1.size(); ++i)
 		{
@@ -57,11 +57,11 @@ namespace oly::acm2d::sat
 		return true;
 	}
 
-	GeometricInfo geometric_collision(const std::vector<glm::vec2>& c1, const std::vector<glm::vec2>& c2)
+	CollisionResult collides(const std::vector<glm::vec2>& c1, const std::vector<glm::vec2>& c2)
 	{
-		GeometricInfo info{};
+		CollisionResult info{};
 
-		static const auto update_info = [](GeometricInfo& info, glm::vec2 p1, glm::vec2 p2, const std::vector<glm::vec2>&c1, const std::vector<glm::vec2>&c2)
+		static const auto update_info = [](CollisionResult& info, glm::vec2 p1, glm::vec2 p2, const std::vector<glm::vec2>&c1, const std::vector<glm::vec2>&c2)
 			{
 				float depth = sat(p1, p2, c1, c2);
 				if (depth < info.penetration_depth)
@@ -96,7 +96,7 @@ namespace oly::acm2d::sat
 		return info;
 	}
 
-	OverlapInfo overlap(const Circle& c1, const std::vector<glm::vec2>& c2)
+	OverlapResult overlaps(const Circle& c1, const std::vector<glm::vec2>& c2)
 	{
 		float closest_dist_sqrd = FLT_MAX;
 		glm::vec2 closest_point{};
@@ -130,11 +130,11 @@ namespace oly::acm2d::sat
 		return true;
 	}
 	
-	GeometricInfo geometric_collision(const Circle& c1, const std::vector<glm::vec2>& c2)
+	CollisionResult collides(const Circle& c1, const std::vector<glm::vec2>& c2)
 	{
-		GeometricInfo info{};
+		CollisionResult info{};
 
-		static const auto update_info = [](GeometricInfo& info, glm::vec2 p1, glm::vec2 p2, const Circle& c1, const std::vector<glm::vec2>& c2)
+		static const auto update_info = [](CollisionResult& info, glm::vec2 p1, glm::vec2 p2, const Circle& c1, const std::vector<glm::vec2>& c2)
 			{
 				float depth = sat(p1, p2, c1, c2);
 				if (depth < info.penetration_depth)

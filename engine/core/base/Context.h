@@ -72,4 +72,6 @@ namespace oly::context
 
 	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "", unsigned int atlas_index = 0);
 	extern void render_text();
+
+	extern glm::vec2 get_cursor_screen_pos();
 }

@@ -173,6 +173,8 @@ namespace oly::context
 		autoload_signals(toml_context);
 
 		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
+		glm::ivec2 size = context::get_platform().window().get_size();
+		internal::standard_window_resize.projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
 	}
 
 	static void terminate()
@@ -402,5 +404,12 @@ namespace oly::context
 	void render_text()
 	{
 		internal::text_batch->render();
+	}
+
+	glm::vec2 get_cursor_screen_pos()
+	{
+		double x, y;
+		glfwGetCursorPos(internal::platform->window(), &x, &y);
+		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y};
 	}
 }

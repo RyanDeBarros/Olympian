@@ -1,6 +1,7 @@
 #include "Shapes.h"
 
-#include "Geometry.h"
+#include "core/math/Geometry.h"
+#include "core/types/Approximate.h"
 
 namespace oly::math
 {
@@ -17,7 +18,7 @@ namespace oly::math
 	bool DirectedLine2D::intersect(const DirectedLine2D& other, glm::vec2 pt) const
 	{
 		glm::mat2 D = { dir, -other.dir };
-		if (glm::determinant(D) == 0.0f)
+		if (near_zero(glm::determinant(D)))
 			return false;
 
 		glm::mat2 Dinv = glm::inverse(D);

@@ -17,6 +17,11 @@ namespace oly::math
 		return glm::dot(v, v);
 	}
 
+	float inv_magnitude(glm::vec2 v)
+	{
+		return glm::inversesqrt(glm::dot(v, v));
+	}
+
 	glm::vec2 dir_vector(float radians)
 	{
 		return { glm::cos(radians), glm::sin(radians) };

@@ -10,6 +10,7 @@ namespace oly::platform
 		bool stretch = true;
 
 		float target_aspect_ratio;
+		glm::vec4 projection_bounds;
 
 		// TODO use Functor<void()> instead, which is a typedef of std::unique_ptr<Func<void()>>, which overloads void operator()()
 		const std::function<void()>* render_frame;
@@ -18,6 +19,6 @@ namespace oly::platform
 
 	private:
 		bool re_render_frame() const;
-		void set_projection_bounds(glm::vec4 projection_bounds) const;
+		void set_projection_bounds(glm::vec4 projection_bounds);
 	};
 }

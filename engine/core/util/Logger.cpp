@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include "core/util/Time.h"
+
 #include <iostream>
 #include <chrono>
 
@@ -8,6 +10,11 @@
 
 namespace oly
 {
+	Logger::_start_prefix Logger::start_timestamp()
+	{
+		return _start_prefix{ std::to_string(TIME.now<float>()) };
+	}
+
 	void Logger::set_logfile(const char* filepath, bool append)
 	{
 		file.close();

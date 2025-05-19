@@ -5,6 +5,7 @@
 #include "core/base/SimpleMath.h"
 #include "core/util/Logger.h"
 #include "core/util/Time.h"
+#include "core/types/Approximate.h"
 
 #include "graphics/resources/Samplers.h"
 #include "graphics/Stencil.h"

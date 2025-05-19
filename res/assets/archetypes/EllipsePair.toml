@@ -7,24 +7,24 @@ draw = [
 transform = { "position" = [ 500, 0 ] }
 
 [[archetype.ellipse]]
-name = "ellipse1"
-transform = { "position" = [ -300, 0 ], "scale" = [ 150, 150 ] }
-"width"  = 2
-"height" = 1
-"border" = 0.3
+name                 = "ellipse1"
+transform            = { "position" = [ -300, 0 ], "scale" = [ 150, 150 ] }
+"rx"                 = 2
+"ry"                 = 1
+"border"             = 0.3
 "fill inner color"   = [ 1.0, 0.9, 0.8, 0.5 ]
 "fill outer color"   = [ 1.0, 0.6, 0.2, 1.0 ]
 "border inner color" = [ 0.2, 0.6, 1.0, 1.0 ]
 "border outer color" = [ 0.8, 0.9, 1.0, 1.0 ]
 
 [[archetype.ellipse]]
-name = "ellipse2"
-transform = { "scale" = [ 150, 150 ] }
-"width"      = 1
-"height"     = 3
-"border"     = 0.4
-"fill exp"   = 0.5
-"border exp" = 2.0
+name                 = "ellipse2"
+transform            = { "scale" = [ 150, 150 ] }
+"rx"                 = 1
+"ry"                 = 3
+"border"             = 0.4
+"fill exp"           = 0.5
+"border exp"         = 2.0
 "fill inner color"   = [ 1.0, 0.9, 0.8, 0.5 ]
 "fill outer color"   = [ 1.0, 0.6, 0.2, 1.0 ]
 "border inner color" = [ 0.0, 0.0, 0.0, 1.0 ]

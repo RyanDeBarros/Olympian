@@ -10,18 +10,27 @@
 
 namespace oly::acm2d
 {
-	// circle
-	extern bool point_trace(const Circle& c, glm::vec2 test);
-	extern OverlapInfo ray_trace(const Circle& c, Ray ray);
-	extern SimpleRayHit simple_ray_trace(const Circle& c, Ray ray);
-	extern DeepRayHit deep_ray_trace(const Circle& c, Ray ray);
-	extern OverlapInfo overlap(const Circle& c1, const Circle& c2);
-	extern GeometricInfo geometric_collision(const Circle& c1, const Circle& c2);
-	extern StructuralInfo structural_collision(const Circle& c1, const Circle& c2);
+	// Circle
+	extern OverlapResult point_hits(const Circle& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const Circle& c, Ray ray);
+	extern RaycastResult raycast(const Circle& c, Ray ray);
+	extern OverlapResult overlaps(const Circle& c1, const Circle& c2);
+	extern CollisionResult collides(const Circle& c1, const Circle& c2);
+	extern ContactResult contacts(const Circle& c1, const Circle& c2);
 
 	// AABB
-	extern bool point_trace(const AABB& c, glm::vec2 test);
-	extern OverlapInfo overlap(const AABB& c1, const AABB& c2);
-	extern GeometricInfo geometric_collision(const AABB& c1, const AABB& c2);
-	extern StructuralInfo structural_collision(const AABB& c1, const AABB& c2);
+	extern OverlapResult point_hits(const AABB& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const AABB& c, Ray ray);
+	extern RaycastResult raycast(const AABB& c, Ray ray);
+	extern OverlapResult overlaps(const AABB& c1, const AABB& c2);
+	extern CollisionResult collides(const AABB& c1, const AABB& c2);
+	extern ContactResult contacts(const AABB& c1, const AABB& c2);
+
+	// Compound
+	extern OverlapResult overlaps(const Circle& c1, const AABB& c2);
+	inline OverlapResult overlaps(const AABB& c1, const Circle& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const Circle& c1, const AABB& c2);
+	inline CollisionResult collides(const AABB& c1, const Circle& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const Circle& c1, const AABB& c2);
+	inline ContactResult contacts(const AABB& c1, const Circle& c2) { return contacts(c2, c1).invert(); }
 }

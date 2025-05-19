@@ -47,8 +47,9 @@ namespace oly::platform
 		return context::frame();
 	}
 
-	void StandardWindowResize::set_projection_bounds(glm::vec4 projection_bounds) const
+	void StandardWindowResize::set_projection_bounds(glm::vec4 projection_bounds)
 	{
+		this->projection_bounds = projection_bounds;
 		context::sprite_batch().projection_bounds = projection_bounds;
 		context::polygon_batch().projection_bounds = projection_bounds;
 		context::ellipse_batch().projection_bounds = projection_bounds;

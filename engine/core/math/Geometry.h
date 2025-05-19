@@ -9,6 +9,7 @@ namespace oly::math
 	extern float cross(glm::vec2 u, glm::vec2 v);
 	extern float magnitude(glm::vec2 v);
 	extern float mag_sqrd(glm::vec2 v);
+	extern float inv_magnitude(glm::vec2 v);
 	extern glm::vec2 dir_vector(float radians);
 	extern glm::vec2 project(glm::vec2 point, glm::vec2 axis);
 	extern float projection_distance(glm::vec2 point, glm::vec2 axis);

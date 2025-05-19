@@ -200,8 +200,18 @@ namespace oly::rendering
 
 	void Polygonal::send_polygon()
 	{
-		subinit();
-		impl_set_polygon();
+		try
+		{
+			subinit();
+			impl_set_polygon();
+		}
+		catch (Error e)
+		{
+			if (e.code == ErrorCode::TRIANGULATION)
+				LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+			else
+				throw e;
+		}
 	}
 		
 	void Polygonal::draw() const

@@ -2,6 +2,7 @@
 
 #include "core/base/SimpleMath.h"
 #include "core/base/Assert.h"
+#include "core/base/Errors.h"
 #include "core/math/Geometry.h"
 #include "core/math/Coordinates.h"
 
@@ -364,7 +365,8 @@ namespace oly
 				indexer = indexer->next_vertex.lock();
 			} while (indexer != data.head_polygon.lock());
 
-			OLY_ASSERT((bool)data.head_ear.lock());
+			if (!data.head_ear.lock())
+				throw Error(ErrorCode::TRIANGULATION);
 
 			// remove ears and form faces
 			if (ear_cycle == 0)

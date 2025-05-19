@@ -27,10 +27,10 @@ namespace oly::reg
 			params.dimension.border_exp = v1;
 		if (parse_float(node, "fill exp", v1))
 			params.dimension.fill_exp = v1;
-		if (parse_float(node, "width", v1))
-			params.dimension.width = v1;
-		if (parse_float(node, "height", v1))
-			params.dimension.height = v1;
+		if (parse_float(node, "rx", v1))
+			params.dimension.rx = v1;
+		if (parse_float(node, "ry", v1))
+			params.dimension.ry = v1;
 
 		return load_ellipse(params);
 	}
@@ -52,10 +52,10 @@ namespace oly::reg
 			color.fill_outer = params.color.fill_outer.value();
 
 		auto& dimension = ellipse.ellipse.set_dimension();
-		if (params.dimension.width)
-			dimension.width = params.dimension.width.value();
-		if (params.dimension.height)
-			dimension.height = params.dimension.height.value();
+		if (params.dimension.rx)
+			dimension.rx = params.dimension.rx.value();
+		if (params.dimension.ry)
+			dimension.ry = params.dimension.ry.value();
 		if (params.dimension.border)
 			dimension.border = params.dimension.border.value();
 		if (params.dimension.border_exp)

@@ -16,8 +16,8 @@ def constructor(ellipse) -> str:
         else:
             return ""
 
-    c += write_dimension_parameter('width', 'width')
-    c += write_dimension_parameter('height', 'height')
+    c += write_dimension_parameter('rx', 'rx')
+    c += write_dimension_parameter('ry', 'ry')
     c += write_dimension_parameter('border', 'border')
     c += write_dimension_parameter('border exp', 'border_exp')
     c += write_dimension_parameter('fill exp', 'fill_exp')

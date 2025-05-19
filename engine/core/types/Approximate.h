@@ -61,4 +61,10 @@ namespace oly
 	{
 		return Distance<T>{}(a, b) <= tolerance;
 	}
+
+	template<typename T>
+	inline bool near_zero(const T& a, double tolerance = Tolerance<T>)
+	{
+		return approx(a, T(0), tolerance);
+	}
 }

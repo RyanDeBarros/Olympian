@@ -7,37 +7,44 @@
 
 namespace oly::acm2d
 {
-	typedef bool OverlapInfo;
-	
-	struct GeometricInfo
+	struct OverlapResult
 	{
-		OverlapInfo overlap;
+		bool overlap;
+
+		OverlapResult(bool overlap = bool()) : overlap(overlap) {}
+
+		operator bool () const { return overlap; }
+	};
+	
+	struct CollisionResult
+	{
+		bool overlap;
 		float penetration_depth;
 		glm::vec2 unit_impulse;
 
+		// minimum translation vector
 		glm::vec2 mtv() const { return unit_impulse * penetration_depth; }
-		GeometricInfo& inverted() { unit_impulse *= -1; return *this; }
+		CollisionResult& invert() { unit_impulse *= -1; return *this; }
 	};
 
-	struct StructuralInfo
+	struct ContactResult
 	{
-		enum
+		struct Feature
 		{
-			WITNESS = 0,
-			CONTACT = 1,
-			POINT = 0,
-			LINE = 1
+			glm::vec2 position;
+			glm::vec2 impulse;
 		};
-		typedef std::pair<glm::vec2, glm::vec2> Line;
-		typedef std::variant<glm::vec2, Line> ContactElement;
-		typedef std::variant<glm::vec2, std::vector<ContactElement>> Manifold;
 
-		GeometricInfo simple;
-		Manifold active_manifold, static_manifold;
+		bool overlap;
+		Feature active_feature, static_feature;
 
-		bool is_contact() const { return simple.overlap; }
-		bool is_witness() const { return !simple.overlap; }
-		StructuralInfo& inverted() { simple.inverted(); return *this; }
+		ContactResult& invert()
+		{
+			active_feature.impulse *= -1.0f;
+			static_feature.impulse *= -1.0f;
+			std::swap(active_feature, static_feature);
+			return *this;
+		}
 	};
 
 	struct Ray
@@ -54,18 +61,9 @@ namespace oly::acm2d
 		float clip = 0.0f;
 	};
 
-	struct SimpleRayHit
+	struct RaycastResult
 	{
 		bool hit;
 		glm::vec2 contact;
-	};
-
-	struct DeepRayHit
-	{
-		bool hit;
-		bool exit;
-		float depth;
-		glm::vec2 contact;
-		glm::vec2 normal;
 	};
 }
