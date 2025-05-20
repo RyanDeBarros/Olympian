@@ -37,34 +37,16 @@ namespace oly::cmath
 		return polygon.points.size() >= 3 ? (polygon.points.size() - 2) * 3 : 0;
 	}
 
-	std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation)
-	{
-		std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> adjacency;
-		for (glm::uint i = 0; i < triangulation.size(); ++i)
-		{
-			const auto& face = triangulation[i];
-			adjacency[Edge(face[0], face[1])].push_back(i);
-			adjacency[Edge(face[1], face[2])].push_back(i);
-			adjacency[Edge(face[2], face[0])].push_back(i);
-		}
-		return adjacency;
-	}
-
-	Edge::Edge(glm::uint a, glm::uint b)
-		: a(std::min(a, b)), b(std::max(a, b))
-	{
-	}
-
 	TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D& polygon)
 		: polygon(polygon)
 	{
-		triangulation = triangulate(polygon.points);
+		triangulation = math::triangulate(polygon.points);
 	}
 
 	TriangulatedPolygon2D::TriangulatedPolygon2D(Polygon2D&& polygon)
 		: polygon(std::move(polygon))
 	{
-		triangulation = triangulate(this->polygon.points);
+		triangulation = math::triangulate(this->polygon.points);
 	}
 
 	BorderPointPair border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point)
@@ -88,7 +70,7 @@ namespace oly::cmath
 		return reflex ? BorderPointPair{ outer, inner } : BorderPointPair{ inner, outer };
 	}
 
-	void triangulate_border(const std::vector<glm::vec2>& border, Triangulation& triangulation)
+	void triangulate_border(const std::vector<glm::vec2>& border, math::Triangulation& triangulation)
 	{
 		OLY_ASSERT(border.size() >= 4 && border.size() % 2 == 0);
 		bool ccw = math::signed_area(border) >= 0.0f;
@@ -123,7 +105,7 @@ namespace oly::cmath
 		p.polygon.points.push_back(p1);
 		p.polygon.points.push_back(p2);
 		p.polygon.points.push_back(p3);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -154,7 +136,7 @@ namespace oly::cmath
 		p.polygon.points.push_back(p2);
 		p.polygon.points.push_back(p3);
 		p.polygon.points.push_back(p4);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -189,7 +171,7 @@ namespace oly::cmath
 		p.polygon.points.push_back(p3);
 		p.polygon.points.push_back(p4);
 		p.polygon.points.push_back(p5);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -228,7 +210,7 @@ namespace oly::cmath
 		p.polygon.points.push_back(p4);
 		p.polygon.points.push_back(p5);
 		p.polygon.points.push_back(p6);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -265,7 +247,7 @@ namespace oly::cmath
 		TriangulatedPolygon2D p;
 		p.polygon.colors.push_back(color);
 		p.polygon.points = points;
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -275,7 +257,7 @@ namespace oly::cmath
 		TriangulatedPolygon2D p;
 		p.polygon.colors.push_back(color);
 		p.polygon.points = std::move(points);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -285,7 +267,7 @@ namespace oly::cmath
 		TriangulatedPolygon2D p;
 		p.polygon.colors = colors;
 		p.polygon.points = points;
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 
@@ -295,7 +277,7 @@ namespace oly::cmath
 		TriangulatedPolygon2D p;
 		p.polygon.colors = std::move(colors);
 		p.polygon.points = std::move(points);
-		p.triangulation = triangulate(p.polygon.points);
+		p.triangulation = math::triangulate(p.polygon.points);
 		return p;
 	}
 

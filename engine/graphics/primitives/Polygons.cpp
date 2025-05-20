@@ -256,7 +256,7 @@ namespace oly::rendering
 
 	void Polygon::subinit() const
 	{
-		cache = cmath::triangulate(polygon.points);
+		cache = math::triangulate(polygon.points);
 	}
 
 	void Polygon::draw_triangulation(GLuint initial_vertex) const

@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "external/GLM.h"
+#include "core/math/Geometry.h"
 
 namespace oly::cmath
 {
@@ -18,35 +19,14 @@ namespace oly::cmath
 
 	extern size_t num_triangulated_indices(const Polygon2D& polygon);
 
-	typedef std::vector<glm::uvec3> Triangulation;
-
-	struct Edge
-	{
-		glm::uint a, b;
-
-		Edge(glm::uint a, glm::uint b);
-
-		bool operator==(const Edge&) const = default;
-	};
-
-	struct EdgeHash
-	{
-		size_t operator()(const Edge& e) const
-		{
-			return std::hash<glm::uint>{}(e.a) ^ std::hash<glm::uint>{}(e.b);
-		}
-	};
-
-	extern std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation);
-
 	struct TriangulatedPolygon2D
 	{
 		Polygon2D polygon;
-		Triangulation triangulation;
+		math::Triangulation triangulation;
 
 		TriangulatedPolygon2D() = default;
-		TriangulatedPolygon2D(const Polygon2D& polygon, const Triangulation& triangulation) : polygon(polygon), triangulation(triangulation) {}
-		TriangulatedPolygon2D(Polygon2D&& polygon, Triangulation&& triangulation) : polygon(std::move(polygon)), triangulation(std::move(triangulation)) {}
+		TriangulatedPolygon2D(const Polygon2D& polygon, const math::Triangulation& triangulation) : polygon(polygon), triangulation(triangulation) {}
+		TriangulatedPolygon2D(Polygon2D&& polygon, math::Triangulation&& triangulation) : polygon(std::move(polygon)), triangulation(std::move(triangulation)) {}
 		TriangulatedPolygon2D(const Polygon2D& polygon);
 		TriangulatedPolygon2D(Polygon2D&& polygon);
 	};
@@ -71,7 +51,7 @@ namespace oly::cmath
 		glm::vec2 outer;
 	};
 	extern BorderPointPair border_points(glm::vec2 point, float border, BorderPivot border_pivot, glm::vec2 prev_point, glm::vec2 next_point);
-	extern void triangulate_border(const std::vector<glm::vec2>& border, Triangulation& triangulation);
+	extern void triangulate_border(const std::vector<glm::vec2>& border, math::Triangulation& triangulation);
 	extern TriangulatedPolygon2D create_triangle(glm::vec4 color,
 		glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 	extern TriangulatedPolygon2D create_triangle_border(glm::vec4 color, float border, BorderPivot border_pivot,

@@ -1,7 +1,7 @@
 #include "Polygons.h"
 
 #include "core/base/Context.h"
-#include "core/math/Triangulation.h"
+#include "core/cmath/Triangulation.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

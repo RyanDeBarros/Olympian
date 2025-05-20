@@ -3,7 +3,7 @@
 #include <map>
 
 #include "core/base/Transforms.h"
-#include "core/math/ColoredGeometry.h"
+#include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
 
@@ -129,7 +129,7 @@ namespace oly::rendering
 		virtual GLuint num_vertices() const override;
 
 	private:
-		mutable cmath::Triangulation cache;
+		mutable math::Triangulation cache;
 
 	protected:
 		virtual void impl_set_polygon() const override;

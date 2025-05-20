@@ -1,7 +1,7 @@
 #include "Arrow.h"
 
 #include "core/base/Context.h"
-#include "core/math/Triangulation.h" // TODO separate core/math and core/cmath
+#include "core/cmath/Triangulation.h"
 #include "core/types/Approximate.h"
 
 namespace oly::rendering
@@ -38,9 +38,18 @@ namespace oly::rendering
 			for (size_t i = 1; i < polygon.points.size() - 1; ++i)
 				polygon.points[i] += end;
 
-			poly.composite = cmath::convex_decompose_polygon(polygon);
-
-			poly.send_polygon();
+			try
+			{
+				poly.composite = cmath::convex_decompose_polygon(polygon);
+				poly.send_polygon();
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::TRIANGULATION)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+				else
+					throw e;
+			}
 		}
 		poly.draw();
 	}
