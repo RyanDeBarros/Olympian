@@ -1,66 +1,55 @@
 #include "OBB.h"
 
 #include "core/base/Errors.h"
+#include "core/math/Solvers.h"
 
 namespace oly::acm2d
 {
-	OBB OBB::fast_wrap(const math::Polygon2D& polygon, unsigned int quadrant_steps, unsigned int iterations)
+	OBB OBB::fast_wrap(const math::Polygon2D& polygon)
 	{
-		if (quadrant_steps <= 1 || iterations == 0)
-			throw Error(ErrorCode::BAD_COLLISION_PRIMITIVE);
+		OBB obb{};
 
-		// find minimizing OBB for a given angle
-		static const auto obb_compute = [](const math::Polygon2D& polygon, float angle) {
-			float max_w = -FLT_MAX, min_w = FLT_MAX, max_h = -FLT_MAX, min_h = FLT_MAX;
+		glm::vec2 centroid = {};
+		for (glm::vec2 point : polygon.points)
+			centroid += point;
+		centroid /= (float)polygon.points.size();
 
-			glm::vec2 axis_w = math::dir_vector(angle);
-			glm::vec2 axis_h = math::dir_vector(angle + glm::half_pi<float>());
+		math::solver::Eigen2x2 covariance{ .M = 0.0f };
 
-			for (glm::vec2 point : polygon.points)
-			{
-				float w = math::projection_distance(point, axis_w);
-				float h = math::projection_distance(point, axis_h);
-				max_w = std::max(max_w, w);
-				min_w = std::min(min_w, w);
-				max_h = std::max(max_h, h);
-				min_h = std::min(min_h, h);
-			}
+		for (glm::vec2 point : polygon.points)
+		{
+			glm::vec2 p = point - centroid;
+			covariance.M[0][0] += p.x * p.x;
+			covariance.M[0][1] += p.x * p.y;
+			covariance.M[1][0] += p.y * p.x;
+			covariance.M[1][1] += p.y * p.y;
+		}
+		covariance.M /= (float)polygon.points.size();
 
-			OBB c{};
-			c.width = max_w - min_w;
-			c.height = max_h - min_h;
-			c.center = 0.5f * (max_w + min_w) * axis_w + 0.5f * (max_h + min_h) * axis_h;
-			c.rotation = angle;
-			return c;
-			};
+		glm::vec2 eigenvectors[2];
+		covariance.solve(nullptr, eigenvectors);
+		glm::vec2 major_axis = eigenvectors[1];
+		glm::vec2 minor_axis = eigenvectors[0];
 
-		// find minimizing OBB within a sector
-		static const auto iteration = [](const math::Polygon2D& polygon, float min_angle, float max_angle, unsigned int quadrant_steps, float& new_min_angle, float& new_max_angle) {
-			float min_area = FLT_MAX;
-			OBB fit_obb{};
+		obb.rotation = glm::atan(major_axis.y, major_axis.x);
 
-			float delta_angle = (max_angle - min_angle) / (quadrant_steps - 1);
-			for (unsigned int i = 0; i < quadrant_steps; ++i)
-			{
-				OBB c = obb_compute(polygon, min_angle + i * delta_angle);
-				float area = c.area();
-				if (area < min_area)
-				{
-					min_area = area;
-					fit_obb = c;
-					new_min_angle = min_angle + (i - 1) * delta_angle;
-					new_max_angle = min_angle + (i + 1) * delta_angle;
-				}
-			}
+		float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
+		for (glm::vec2 point : polygon.points)
+		{
+			glm::vec2 p = point - centroid;
+			float x = glm::dot(p, major_axis);
+			float y = glm::dot(p, minor_axis);
 
-			return fit_obb;
-			};
+			minX = std::min(minX, x);
+			maxX = std::max(maxX, x);
+			minY = std::min(minY, y);
+			maxY = std::max(maxY, y);
+		}
 
-		float min_angle = 0.0f;
-		float max_angle = glm::half_pi<float>();
-		OBB c{};
-		for (unsigned int i = 0; i < iterations; ++i)
-			c = iteration(polygon, min_angle, max_angle, quadrant_steps, min_angle, max_angle);
-		return c;
+		obb.center = 0.5f * glm::vec2{ minX + maxX, minY + maxY };
+		obb.width = maxX - minX;
+		obb.height = maxY - minY;
+
+		return obb;
 	}
 }

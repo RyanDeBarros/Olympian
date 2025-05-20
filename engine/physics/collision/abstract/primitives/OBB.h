@@ -12,7 +12,7 @@ namespace oly::acm2d
 
 		float area() const { return width * height; }
 
-		static OBB fast_wrap(const math::Polygon2D& polygon, unsigned int quadrant_steps = 5, unsigned int iterations = 2);
+		static OBB fast_wrap(const math::Polygon2D& polygon);
 		// TODO static OBB slow_wrap(const math::Polygon2D& polygon); using rotating calipers method
 	};
 }
