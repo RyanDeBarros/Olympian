@@ -97,10 +97,7 @@ namespace oly::cmath
 	extern TriangulatedPolygon2D create_ngon_border(std::vector<glm::vec4>&& colors, float border, BorderPivot border_pivot, const std::vector<glm::vec2>& points);
 
 	typedef std::vector<TriangulatedPolygon2D> Polygon2DComposite;
-	extern Polygon2DComposite split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree);
-	extern Polygon2DComposite split_polygon_composite(TriangulatedPolygon2D&& tp, glm::uint max_degree);
-	extern void split_polygon_composite(Polygon2DComposite& composite, glm::uint max_degree);
-
+	
 	extern Polygon2DComposite create_bordered_triangle(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 		glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 	extern Polygon2DComposite create_bordered_quad(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
@@ -127,8 +124,6 @@ namespace oly::cmath
 		BorderPivot border_pivot = BorderPivot::MIDDLE;
 
 		Polygon2DComposite composite() const;
-		Polygon2DComposite composite(glm::uint max_degree) const;
 		Polygon2DComposite bordered_composite() const;
-		Polygon2DComposite bordered_composite(glm::uint max_degree) const;
 	};
 }

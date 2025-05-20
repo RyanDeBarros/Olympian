@@ -1,6 +1,7 @@
 ﻿#include "Olympian.h"
 
 #include "physics/collision/abstract/methods/Collide.h"
+#include "graphics/extensions/Arrow.h"
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -107,17 +108,13 @@ int main()
 
 	// LATER anti-aliasing settings
 	
-	// TODO LineExtension and ArrowExtension helper structs
+	oly::rendering::ArrowExtension aabb_impulse_visual;
+	aabb_impulse_visual.set_color(oly::colors::WHITE);
+	aabb_impulse_visual.adjust_standard_head_for_width(6.0f);
 
-	auto aabb_impulse_visual = oly::context::polygon();
-	aabb_impulse_visual.polygon.points = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-	aabb_impulse_visual.polygon.colors = { oly::colors::WHITE };
-	aabb_impulse_visual.init();
-
-	auto circ_impulse_visual = oly::context::polygon();
-	circ_impulse_visual.polygon.points = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-	circ_impulse_visual.polygon.colors = { oly::colors::GREEN };
-	circ_impulse_visual.init();
+	oly::rendering::ArrowExtension circ_impulse_visual;
+	circ_impulse_visual.set_color(oly::colors::GREEN);
+	circ_impulse_visual.adjust_standard_head_for_width(6.0f);
 	
 	// LATER begin play on initial actors here
 
@@ -169,38 +166,12 @@ int main()
 		circ_visual.set_local().position = circ.center;
 		//rect_visual.send_polygon();
 		//rect_visual.set_local().position = circ.center;
+
+		circ_impulse_visual.set_start() = contact.active_feature.position;
+		circ_impulse_visual.set_end() = contact.active_feature.position + contact.active_feature.impulse;
 		
-		if (oly::near_zero(contact.active_feature.impulse.x))
-		{
-			circ_impulse_visual.polygon.points[0] = contact.active_feature.position + glm::vec2{ -1.0f, 0.0f };
-			circ_impulse_visual.polygon.points[1] = contact.active_feature.position + glm::vec2{  1.0f, 0.0f };
-			circ_impulse_visual.polygon.points[2] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{  3.0f, 0.0f };
-			circ_impulse_visual.polygon.points[3] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ -3.0f, 0.0f };
-		}
-		else
-		{
-			circ_impulse_visual.polygon.points[0] = contact.active_feature.position + glm::vec2{ 0.0f, -1.0f };
-			circ_impulse_visual.polygon.points[1] = contact.active_feature.position + glm::vec2{ 0.0f,  1.0f };
-			circ_impulse_visual.polygon.points[2] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ 0.0f,  3.0f };
-			circ_impulse_visual.polygon.points[3] = contact.active_feature.position + contact.active_feature.impulse + glm::vec2{ 0.0f, -3.0f };
-		}
-		circ_impulse_visual.send_polygon();
-		
-		if (oly::near_zero(contact.static_feature.impulse.x))
-		{
-			aabb_impulse_visual.polygon.points[0] = contact.static_feature.position + glm::vec2{ -1.0f, 0.0f };
-			aabb_impulse_visual.polygon.points[1] = contact.static_feature.position + glm::vec2{  1.0f, 0.0f };
-			aabb_impulse_visual.polygon.points[2] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{  3.0f, 0.0f };
-			aabb_impulse_visual.polygon.points[3] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ -3.0f, 0.0f };
-		}
-		else
-		{
-			aabb_impulse_visual.polygon.points[0] = contact.static_feature.position + glm::vec2{ 0.0f, -1.0f };
-			aabb_impulse_visual.polygon.points[1] = contact.static_feature.position + glm::vec2{ 0.0f,  1.0f };
-			aabb_impulse_visual.polygon.points[2] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ 0.0f,  3.0f };
-			aabb_impulse_visual.polygon.points[3] = contact.static_feature.position + contact.static_feature.impulse + glm::vec2{ 0.0f, -3.0f };
-		}
-		aabb_impulse_visual.send_polygon();
+		aabb_impulse_visual.set_start() = contact.static_feature.position;
+		aabb_impulse_visual.set_end() = contact.static_feature.position + contact.static_feature.impulse;
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 

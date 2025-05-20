@@ -361,95 +361,7 @@ namespace oly::cmath
 		}
 		return p;
 	}
-
-	Polygon2DComposite split_polygon_composite(const TriangulatedPolygon2D& tp, glm::uint max_degree)
-	{
-		OLY_ASSERT(max_degree >= 3);
-		Polygon2DComposite composite;
-		glm::uint divisions = (glm::uint)tp.polygon.points.size() / max_degree;
-		if (divisions == 0)
-			return { tp };
-		composite.reserve(divisions + 1);
-		std::vector<glm::uvec3> faces;
-		faces.reserve(max_degree);
-		std::set<glm::uint> packed_points;
-
-		static const auto add_subpolygon = [](Polygon2DComposite& composite, std::set<glm::uint>& packed_points, std::vector<glm::uvec3>& faces, glm::uint max_degree, const TriangulatedPolygon2D& superpolygon) {
-			TriangulatedPolygon2D polygon;
-
-			polygon.polygon.points.reserve(max_degree);
-			std::unordered_map<glm::uint, glm::uint> local_vertex_indices;
-			glm::uint i = 0;
-			for (auto iter = packed_points.begin(); iter != packed_points.end(); ++iter)
-			{
-				polygon.polygon.points.push_back(superpolygon.polygon.points[*iter]);
-				local_vertex_indices[*iter] = i++;
-			}
-			if (superpolygon.polygon.colors.size() == superpolygon.polygon.points.size())
-			{
-				polygon.polygon.colors.reserve(max_degree);
-				for (auto iter = packed_points.begin(); iter != packed_points.end(); ++iter)
-					polygon.polygon.colors.push_back(superpolygon.polygon.colors[*iter]);
-			}
-			else
-				polygon.polygon.colors.push_back(superpolygon.polygon.colors[0]);
-
-			polygon.triangulation.reserve(faces.size());
-			for (glm::uvec3 face : faces)
-			{
-				face[0] = local_vertex_indices[face[0]];
-				face[1] = local_vertex_indices[face[1]];
-				face[2] = local_vertex_indices[face[2]];
-				polygon.triangulation.push_back(face);
-			}
-
-			composite.push_back(std::move(polygon));
-			packed_points.clear();
-			faces.clear();
-			};
-
-		for (glm::uvec3 face : tp.triangulation)
-		{
-			glm::uint distinct_points = 0;
-			if (!packed_points.count(face[0]))
-				++distinct_points;
-			if (!packed_points.count(face[1]))
-				++distinct_points;
-			if (!packed_points.count(face[2]))
-				++distinct_points;
-
-			if (packed_points.size() + distinct_points > max_degree)
-				add_subpolygon(composite, packed_points, faces, max_degree, tp);
-
-			packed_points.insert(face[0]);
-			packed_points.insert(face[1]);
-			packed_points.insert(face[2]);
-			faces.push_back(face);
-		}
-		add_subpolygon(composite, packed_points, faces, max_degree, tp);
-		return composite;
-	}
-
-	Polygon2DComposite split_polygon_composite(TriangulatedPolygon2D&& tp, glm::uint max_degree)
-	{
-		if (tp.polygon.points.size() <= max_degree)
-			return { std::move(tp) };
-		else
-			return split_polygon_composite(tp, max_degree);
-	}
-
-	void split_polygon_composite(Polygon2DComposite& composite, glm::uint max_degree)
-	{
-		// LATER this simply calls split_polygon_composite(triangulated polygon, max_degree) and joins them all, but perhaps also implement merging subpolygons for optimal packing of points.
-		Polygon2DComposite split_composite;
-		for (auto& polygon : composite)
-		{
-			auto split_polygons = split_polygon_composite(polygon, max_degree);
-			split_composite.insert(split_composite.end(), std::make_move_iterator(split_polygons.begin()), std::make_move_iterator(split_polygons.end()));
-		}
-		composite = std::move(split_composite);
-	}
-
+	
 	Polygon2DComposite create_bordered_triangle(glm::vec4 fill_color, glm::vec4 border_color, float border, BorderPivot border_pivot,
 		glm::vec2 p1, glm::vec2 p2, glm::vec2 p3)
 	{
@@ -550,20 +462,8 @@ namespace oly::cmath
 		return { create_ngon(fill_colors, points) };
 	}
 
-	Polygon2DComposite NGonBase::composite(glm::uint max_degree) const
-	{
-		return split_polygon_composite(composite()[0], max_degree);
-	}
-
 	Polygon2DComposite NGonBase::bordered_composite() const
 	{
 		return { create_bordered_ngon(fill_colors, border_colors, border_width, border_pivot, points) };
-	}
-
-	Polygon2DComposite NGonBase::bordered_composite(glm::uint max_degree) const
-	{
-		auto comp = bordered_composite();
-		split_polygon_composite(comp, max_degree);
-		return comp;
 	}
 }

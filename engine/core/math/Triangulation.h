@@ -13,12 +13,15 @@ namespace oly
 		extern std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation);
+		extern Polygon2DComposite convex_decompose_polygon(const Polygon2D& polygon);
+		extern Polygon2DComposite convex_decompose_polygon(const Polygon2D& polygon, const Triangulation& triangulation);
 		extern std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations);
+		extern Polygon2DComposite decompose_polygon(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations); // TODO use convex_decompose_polygon over composite_convex_decomposition in archetype generation / asset loading
 		extern Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points);
 	}
 
 	namespace math
 	{
-		// TODO pure math versions
+		// TODO move pure math versions here
 	}
 }
