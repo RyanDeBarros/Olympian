@@ -14,7 +14,7 @@ namespace oly::context
 	{
 		std::string context_filepath;
 		std::unique_ptr<platform::Platform> platform;
-		const std::function<void()>* render_frame;
+		std::shared_ptr<Functor<void()>> render_frame;
 
 		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
@@ -243,7 +243,7 @@ namespace oly::context
 		return *internal::platform;
 	}
 
-	void set_render_function(const std::function<void()>* render_frame)
+	void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame)
 	{
 		internal::render_frame = render_frame;
 		internal::standard_window_resize.render_frame = render_frame;
@@ -313,7 +313,7 @@ namespace oly::context
 
 	bool frame()
 	{
-		if (internal::render_frame && *internal::render_frame)
+		if (internal::render_frame)
 			(*internal::render_frame)();
 		if (!internal::platform->frame())
 			return false;

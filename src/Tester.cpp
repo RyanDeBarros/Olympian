@@ -147,7 +147,7 @@ int main()
 		oly::context::render_polygons();
 		};
 
-	oly::context::set_render_function(&render_frame);
+	oly::context::set_render_function(oly::make_functor(render_frame));
 
 	while (oly::context::frame())
 	{

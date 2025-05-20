@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Window.h"
+#include "core/platform/Window.h"
+#include "core/types/Functor.h"
 
 namespace oly::platform
 {
@@ -12,8 +13,7 @@ namespace oly::platform
 		float target_aspect_ratio;
 		glm::vec4 projection_bounds;
 
-		// TODO use Functor<void()> instead, which is a typedef of std::unique_ptr<Func<void()>>, which overloads void operator()()
-		const std::function<void()>* render_frame;
+		std::shared_ptr<Functor<void()>> render_frame;
 
 		bool consume(const input::WindowResizeEventData& data);
 
