@@ -38,9 +38,24 @@ namespace oly::rendering
 			poly.polygon.points[2] += end;
 			poly.polygon.points[3] += start;
 
-			poly.send_polygon();
+			try
+			{
+				poly.send_polygon();
+				can_draw = true;
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::TRIANGULATION)
+				{
+					can_draw = false;
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+				}
+				else
+					throw e;
+			}
 		}
-		poly.draw();
+		if (can_draw)
+			poly.draw();
 	}
 
 	void LineExtension::set_default_polygon() const

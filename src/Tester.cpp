@@ -116,6 +116,8 @@ int main()
 	oly::rendering::ArrowExtension circ_impulse_visual;
 	circ_impulse_visual.set_color(oly::colors::GREEN);
 	circ_impulse_visual.adjust_standard_head_for_width(6.0f);
+
+	bool draw_impulse_visual = true;
 	
 	// LATER begin play on initial actors here
 
@@ -143,9 +145,12 @@ int main()
 		oly::context::render_polygons();
 		circ_visual.draw();
 		oly::context::render_ellipses();
-		aabb_impulse_visual.draw();
-		circ_impulse_visual.draw();
-		oly::context::render_polygons();
+		if (draw_impulse_visual)
+		{
+			aabb_impulse_visual.draw();
+			circ_impulse_visual.draw();
+			oly::context::render_polygons();
+		}
 		};
 
 	oly::context::set_render_function(oly::make_functor(render_frame));
@@ -160,11 +165,17 @@ int main()
 		//auto contact = oly::acm2d::contacts(rect, aabb);
 		//if (contact.overlap)
 		if (oly::acm2d::sat::overlaps(circ, aabb))
+		{
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;
+			draw_impulse_visual = true;
+		}
 		else
+		{
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
 			//rect_visual.polygon.colors[0] = oly::colors::YELLOW;
+			draw_impulse_visual = false;
+		}
 		circ_visual.set_local().position = circ.center;
 		//rect_visual.send_polygon();
 		//rect_visual.set_local().position = circ.center;

@@ -35,13 +35,17 @@ namespace oly::acm2d::sat
 		return info;
 	}
 
+	// TODO ContactResult
+
 	namespace internal
 	{
 		template<typename Shape1, typename Shape2>
-		static float sat(const Shape1& c1, const Shape2& c2, glm::vec2 axis)
+		static float sat(const Shape1& c1, const Shape2& c2, glm::vec2& axis)
 		{
 			std::pair<float, float> i1 = c1.projection_interval(axis);
 			std::pair<float, float> i2 = c2.projection_interval(axis);
+			if (i1.first < i2.first)
+				axis = -axis;
 			return std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 		}
 
@@ -114,7 +118,8 @@ namespace oly::acm2d::sat
 			static OverlapResult overlaps_impl(const Circle& c, const Other& other)
 			{
 				glm::vec2 closest_point = c.closest_point(other.points());
-				return approx(closest_point, c.center) || sat(c, other, glm::normalize(closest_point - c.center)) >= 0.0f;
+				glm::vec2 axis = glm::normalize(closest_point - c.center);
+				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;
 			}
 
 			static bool update_collision_result_impl(const Circle& c, const Other& other, CollisionResult& info)
@@ -129,7 +134,8 @@ namespace oly::acm2d::sat
 			static OverlapResult overlaps_impl(const Circle& c, const ConvexHull& other)
 			{
 				glm::vec2 closest_point = c.closest_point(other.points);
-				return approx(closest_point, c.center) || sat(c, other, glm::normalize(closest_point - c.center)) >= 0.0f;
+				glm::vec2 axis = glm::normalize(closest_point - c.center);
+				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;
 			}
 
 			static bool update_collision_result_impl(const Circle& c, const ConvexHull& other, CollisionResult& info)
@@ -143,12 +149,21 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult overlaps_impl(const AABB& c, const Other& other)
 			{
-				return sat(c, other, { 1.0f, 0.0f }) >= 0.0f && sat(c, other, { 0.0f, 1.0f }) >= 0.0f;
+				std::pair<float, float> i = other.projection_interval({ 1.0f, 0.0f });
+				if (std::min(c.x2, i.second) - std::max(c.x1, i.first) < 0.0f)
+					return false;
+
+				i = other.projection_interval({ 0.0f, 1.0f });
+				if (std::min(c.y2, i.second) - std::max(c.y1, i.first) < 0.0f)
+					return false;
+
+				return true;
 			}
 
 			static bool update_collision_result_impl(const AABB& c, const Other& other, CollisionResult& info)
 			{
-				float depth = sat(c, other, { 1.0f, 0.0f });
+				glm::vec2 axis = { 1.0f, 0.0f };
+				float depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{
 					info.overlap = false;
@@ -158,9 +173,10 @@ namespace oly::acm2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = { 0.0f, 1.0f };
+					info.unit_impulse = axis;
 				}
-				depth = sat(c, other, { 0.0f, 1.0f });
+				axis = { 0.0f, 1.0f };
+				depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{
 					info.overlap = false;
@@ -170,7 +186,7 @@ namespace oly::acm2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = { -1.0f, 0.0f }; // TODO should this be { 1, 0 } in some cases? Test SAT extensively.
+					info.unit_impulse = axis;
 				}
 				return true;
 			}
@@ -182,16 +198,19 @@ namespace oly::acm2d::sat
 			static OverlapResult overlaps_impl(const OBB& c, const Other& other)
 			{
 				std::array<glm::vec2, 2> axes = c.get_axes();
+				
 				float cw = glm::dot(c.center, axes[0]);
 				std::pair<float, float> i1 = { cw - 0.5f * c.width, cw + 0.5f * c.width };
 				std::pair<float, float> i2 = projection_interval(other, axes[0]);
 				if (axis_signed_overlap(i1.first, i1.second, i2.first, i2.second) < 0.0f)
 					return false;
+				
 				float ch = glm::dot(c.center, axes[1]);
 				i1 = { ch - 0.5f * c.height, ch + 0.5f * c.height };
 				i2 = projection_interval(other, axes[1]);
 				if (axis_signed_overlap(i1.first, i1.second, i2.first, i2.second) < 0.0f)
 					return false;
+				
 				return true;
 			}
 

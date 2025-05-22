@@ -11,6 +11,7 @@ namespace oly::rendering
 		glm::vec4 start_color = {}, end_color = {};
 		float width = 1.0f;
 		mutable bool dirty = false;
+		mutable bool can_draw = true;
 
 	public:
 		LineExtension();

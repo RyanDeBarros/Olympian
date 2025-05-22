@@ -42,16 +42,21 @@ namespace oly::rendering
 			{
 				poly.composite = cmath::convex_decompose_polygon(polygon);
 				poly.send_polygon();
+				can_draw = true;
 			}
 			catch (Error e)
 			{
 				if (e.code == ErrorCode::TRIANGULATION)
+				{
+					can_draw = false;
 					LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+				}
 				else
 					throw e;
 			}
 		}
-		poly.draw();
+		if (can_draw)
+			poly.draw();
 	}
 
 	cmath::Polygon2D ArrowExtension::default_polygon() const
