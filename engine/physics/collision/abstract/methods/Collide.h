@@ -25,6 +25,14 @@ namespace oly::acm2d
 	extern OverlapResult overlaps(const AABB& c1, const AABB& c2);
 	extern CollisionResult collides(const AABB& c1, const AABB& c2);
 	extern ContactResult contacts(const AABB& c1, const AABB& c2);
+	
+	// OBB
+	extern OverlapResult point_hits(const OBB& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const OBB& c, Ray ray);
+	extern RaycastResult raycast(const OBB& c, Ray ray);
+	extern OverlapResult overlaps(const OBB& c1, const OBB& c2);
+	extern CollisionResult collides(const OBB& c1, const OBB& c2);
+	extern ContactResult contacts(const OBB& c1, const OBB& c2);
 
 	// Compound
 	extern OverlapResult overlaps(const Circle& c1, const AABB& c2);
