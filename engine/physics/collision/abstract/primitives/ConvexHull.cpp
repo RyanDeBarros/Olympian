@@ -55,4 +55,16 @@ namespace oly::acm2d
 
 		return { lower };
 	}
+
+	std::pair<float, float> ConvexHull::projection_interval(glm::vec2 axis) const
+	{
+		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		for (glm::vec2 point : points)
+		{
+			float proj = glm::dot(point, axis);
+			interval.first = std::min(interval.first, proj);
+			interval.second = std::max(interval.second, proj);
+		}
+		return interval;
+	}
 }

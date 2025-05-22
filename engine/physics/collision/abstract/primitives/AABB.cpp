@@ -14,4 +14,26 @@ namespace oly::acm2d
 		}
 		return c;
 	}
+
+	std::array<glm::vec2, 4> AABB::points() const
+	{
+		return {
+			glm::vec2{ x1, y1 },
+			glm::vec2{ x2, y1 },
+			glm::vec2{ x2, y2 },
+			glm::vec2{ x1, y2 }
+		};
+	}
+
+	std::pair<float, float> AABB::projection_interval(glm::vec2 axis) const
+	{
+		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		for (glm::vec2 point : points())
+		{
+			float proj = glm::dot(point, axis);
+			interval.first = std::min(interval.first, proj);
+			interval.second = std::max(interval.second, proj);
+		}
+		return interval;
+	}
 }

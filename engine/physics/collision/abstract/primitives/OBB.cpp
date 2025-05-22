@@ -52,4 +52,30 @@ namespace oly::acm2d
 
 		return obb;
 	}
+
+	std::array<glm::vec2, 4> OBB::points() const
+	{
+		std::array<glm::vec2, 4> points{
+			glm::vec2{ -0.5f * width, -0.5f * height },
+			glm::vec2{  0.5f * width, -0.5f * height },
+			glm::vec2{  0.5f * width,  0.5f * height },
+			glm::vec2{ -0.5f * width,  0.5f * height }
+		};
+		glm::mat2 rotation = get_rotation_matrix();
+		for (glm::vec2& point : points)
+			point = center + rotation * point;
+		return points;
+	}
+
+	std::pair<float, float> OBB::projection_interval(glm::vec2 axis) const
+	{
+		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		for (glm::vec2 point : points())
+		{
+			float proj = glm::dot(point, axis);
+			interval.first = std::min(interval.first, proj);
+			interval.second = std::max(interval.second, proj);
+		}
+		return interval;
+	}
 }

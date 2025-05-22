@@ -18,4 +18,9 @@ namespace oly::acm2d
 
 		return c;
 	}
+	std::pair<float, float> Circle::projection_interval(glm::vec2 axis) const
+	{
+		float center_proj = glm::dot(center, axis);
+		return { center_proj - radius, center_proj + radius };
+	}
 }

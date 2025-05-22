@@ -30,5 +30,8 @@ namespace oly::acm2d
 			float sin = glm::sin(rotation);
 			return { { cos, sin }, { -sin, cos } };
 		}
+
+		std::array<glm::vec2, 4> points() const;
+		std::pair<float, float> projection_interval(glm::vec2 axis) const;
 	};
 }

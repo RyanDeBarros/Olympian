@@ -1,7 +1,8 @@
 ﻿#include "Olympian.h"
 
 #include "physics/collision/abstract/methods/Collide.h"
-#include "graphics/extensions/Arrow.h"
+#include "physics/collision/abstract/methods/SAT.h"
+#include "graphics/extensions/Arrow.h" // TODO loading for Arrow and Line extensions. Rename registries folder to assets
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -157,7 +158,8 @@ int main()
 		auto contact = oly::acm2d::contacts(circ, aabb);
 		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
 		//auto contact = oly::acm2d::contacts(rect, aabb);
-		if (contact.overlap)
+		//if (contact.overlap)
+		if (oly::acm2d::sat::overlaps(circ, aabb))
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;
 		else
