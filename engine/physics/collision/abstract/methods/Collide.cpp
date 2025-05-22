@@ -25,15 +25,8 @@ namespace oly::acm2d
 		if (t2 < 0.0f)
 			return false;
 
-		// semi-infinite ray
-		if (ray.clip == 0.0f)
-			return true;
-
 		// contact within clip
-		if (t1 <= ray.clip)
-			return true;
-
-		return false;
+		return ray.clip == 0.0f || t1 <= ray.clip;
 	}
 
 	static OverlapResult ray_contact_circle(const Circle& c, Ray ray)
@@ -152,12 +145,8 @@ namespace oly::acm2d
 
 			t1 = std::max(t1, 0.0f);
 
-			// semi-infinite ray
-			if (ray.clip == 0.0f)
-				return true;
-
 			// ray reaches line segment
-			return t1 <= ray.clip;
+			return ray.clip == 0.0f || t1 <= ray.clip;
 		}
 		else
 			return false;
@@ -234,8 +223,6 @@ namespace oly::acm2d
 		{
 			if (ray.origin.y >= c.y2) // first contact on top edge
 				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray, t1, t2)) // first contact on bottom edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1);
 			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
 				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
 			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
@@ -251,10 +238,6 @@ namespace oly::acm2d
 				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
 			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
 				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray, t1, t2)) // first contact on bottom edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1);
-			else if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2);
 			else // should be unreachable
 				return { .hit = false };
 		}
@@ -264,12 +247,6 @@ namespace oly::acm2d
 		{
 			if (ray.origin.x >= c.x2) // first contact on right edge
 				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray, t1, t2)) // first contact on bottom edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1);
-			else if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2);
 			else // should be unreachable
 				return { .hit = false };
 		}
