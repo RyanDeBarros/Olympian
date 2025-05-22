@@ -78,4 +78,9 @@ namespace oly::acm2d
 		}
 		return interval;
 	}
+
+	AABB OBB::get_unrotated_aabb() const
+	{
+		return { .x1 = center.x - 0.5f * width, .x2 = center.x + 0.5f * width, .y1 = center.y - 0.5f * height, .y2 = center.y + 0.5f * height };
+	}
 }

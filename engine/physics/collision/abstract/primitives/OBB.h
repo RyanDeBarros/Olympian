@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/Geometry.h"
+#include "physics/collision/abstract/primitives/AABB.h"
 
 #include <array>
 
@@ -33,5 +34,6 @@ namespace oly::acm2d
 
 		std::array<glm::vec2, 4> points() const;
 		std::pair<float, float> projection_interval(glm::vec2 axis) const;
+		AABB get_unrotated_aabb() const;
 	};
 }

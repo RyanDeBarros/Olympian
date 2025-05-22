@@ -1,5 +1,6 @@
 #include "Collide.h"
 
+#include "physics/collision/abstract/methods/SAT.h"
 #include "core/types/Approximate.h"
 
 namespace oly::acm2d
@@ -42,12 +43,16 @@ namespace oly::acm2d
 
 	RaycastResult raycast(const Circle& c, Ray ray)
 	{
+		if (point_hits(c, ray.origin))
+			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+
 		float t1, t2;
 		if (!ray_contact_circle(c, ray, t1, t2))
-			return { .hit = false };
+			return { .hit = RaycastResult::Hit::NO_HIT };
 
-		RaycastResult info{ .hit = true };
+		RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT };
 		info.contact = std::max(t1, 0.0f) * ray.direction() + ray.origin;
+		info.normal = glm::normalize(info.contact - c.center);
 		return info;
 	}
 
@@ -171,34 +176,38 @@ namespace oly::acm2d
 	RaycastResult raycast(const AABB& c, Ray ray)
 	{
 		if (point_hits(c, ray.origin))
-			return { .hit = true, .contact = ray.origin };
+			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 
-		static const auto first_contact_on_horizontal_edge = [](glm::vec2 ray_origin, float t1, float t2, float x1, float x2, float y) -> RaycastResult {
+		static const auto first_contact_on_horizontal_edge = [](glm::vec2 ray_origin, float t1, float t2, float x1, float x2, float y, bool normal_up) -> RaycastResult {
+			RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT, .normal = normal_up ? glm::vec2{ 0.0f, 1.0f } : glm::vec2{ 0.0f, -1.0f } };
 			if (t1 == t2) // single intersection point
-				return { .hit = true, .contact = t1 * glm::vec2{ x2 - x1, 0 } + glm::vec2{ x1, y } };
+				info.contact = { t1 * (x2 - x1) + x1, y };
 			else // ray is parallel to edge
 			{
 				if (ray_origin.x <= x1) // left edge corner
-					return { .hit = true, .contact = { x1, y } };
+					info.contact = { x1, y };
 				else if (ray_origin.x >= x2) // right edge corner
-					return { .hit = true, .contact = { x2, y } };
+					info.contact = { x2, y };
 				else // should be unreachable
-					return { .hit = true, .contact = ray_origin };
+					info.contact = ray_origin;
 			}
+			return info;
 			};
 
-		static const auto first_contact_on_vertical_edge = [](glm::vec2 ray_origin, float t1, float t2, float y1, float y2, float x) -> RaycastResult {
+		static const auto first_contact_on_vertical_edge = [](glm::vec2 ray_origin, float t1, float t2, float y1, float y2, float x, bool normal_right) -> RaycastResult {
+			RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT, .normal = normal_right ? glm::vec2{ 1.0f, 0.0f } : glm::vec2{ -1.0f, 0.0f } };
 			if (t1 == t2) // single intersection point
-				return { .hit = true, .contact = t1 * glm::vec2{ 0, y2 - y1 } + glm::vec2{ x, y1 } };
+				info.contact = { x, t1 * (y2 - y1) + y1 };
 			else // ray is parallel to edge
 			{
 				if (ray_origin.y <= y1) // bottom edge corner
-					return { .hit = true, .contact = { x, y1 } };
+					info.contact = { x, y1 };
 				else if (ray_origin.y >= y2) // top edge corner
-					return { .hit = true, .contact = { x, y2 } };
+					info.contact = { x, y2 };
 				else // should be unreachable
-					return { .hit = true, .contact = ray_origin };
+					info.contact = ray_origin;
 			}
+			return info;
 			};
 
 		float t1, t2;
@@ -207,51 +216,51 @@ namespace oly::acm2d
 		if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray, t1, t2))
 		{
 			if (ray.origin.y <= c.y1) // first contact on bottom edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1);
+				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1, false);
 			else if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2);
+				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2, true);
 			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
 			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
 			else // should be unreachable
-				return { .hit = false };
+				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 
 		// contact on top edge
 		if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2))
 		{
 			if (ray.origin.y >= c.y2) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2);
+				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2, true);
 			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
 			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
 			else // should be unreachable
-				return { .hit = false };
+				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 
 		// contact on left edge
 		if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2))
 		{
 			if (ray.origin.x <= c.x1) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
 			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
 			else // should be unreachable
-				return { .hit = false };
+				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 
 		// contact on right edge
 		if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2))
 		{
 			if (ray.origin.x >= c.x2) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2);
+				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
 			else // should be unreachable
-				return { .hit = false };
+				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 
-		return { .hit = false };
+		return { .hit = RaycastResult::Hit::NO_HIT };
 	}
 
 	OverlapResult overlaps(const AABB& c1, const AABB& c2)
@@ -387,9 +396,43 @@ namespace oly::acm2d
 		return info;
 	}
 
+	OverlapResult point_hits(const OBB& c, glm::vec2 test)
+	{
+		glm::vec2 local = (c.get_rotation_matrix() * test - c.center);
+		return glm::abs(local.x) <= c.width && glm::abs(local.y) <= c.height;
+	}
+
+	OverlapResult ray_hits(const OBB& c, Ray ray)
+	{
+		glm::mat2 rot = c.get_rotation_matrix();
+		Ray rotated_ray(rot * ray.origin, rot * ray.direction(), ray.clip);
+		return ray_hits(c.get_unrotated_aabb(), rotated_ray);
+	}
+
+	RaycastResult raycast(const OBB& c, Ray ray)
+	{
+		glm::mat2 rot = c.get_rotation_matrix();
+		Ray rotated_ray(rot * ray.origin, rot * ray.direction(), ray.clip);
+		RaycastResult info = raycast(c.get_unrotated_aabb(), rotated_ray);
+		glm::mat2 inv_rot = glm::inverse(rot);
+		info.contact = inv_rot * info.contact;
+		info.normal = inv_rot * info.normal;
+		return info;
+	}
+
+	OverlapResult overlaps(const OBB& c1, const OBB& c2)
+	{
+		return sat::overlaps(c1, c2);
+	}
+
+	CollisionResult collides(const OBB& c1, const OBB& c2)
+	{
+		return sat::collides(c1, c2);
+	}
+
 	OverlapResult overlaps(const Circle& c1, const AABB& c2)
 	{
-		// closest point on AABB to center of circle
+		// closest point in AABB to center of circle
 		glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
 
 		float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
@@ -492,5 +535,44 @@ namespace oly::acm2d
 		}
 
 		return info;
+	}
+
+	OverlapResult overlaps(const Circle& c1, const OBB& c2)
+	{
+		return overlaps(Circle{ .center = c2.get_rotation_matrix() * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
+	}
+
+	CollisionResult collides(const Circle& c1, const OBB& c2)
+	{
+		glm::mat2 rot = c2.get_rotation_matrix();
+		CollisionResult info = collides(Circle{ .center = rot * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
+		if (info.overlap)
+			info.unit_impulse = glm::inverse(rot) * info.unit_impulse;
+		return info;
+	}
+
+	ContactResult contacts(const Circle& c1, const OBB& c2)
+	{
+		glm::mat2 rot = c2.get_rotation_matrix();
+		ContactResult info = contacts(Circle{ .center = rot * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
+		if (info.overlap)
+		{
+			glm::mat2 inv_rot = glm::inverse(rot);
+			info.active_feature.position = inv_rot * info.active_feature.position;
+			info.active_feature.impulse = inv_rot * info.active_feature.impulse;
+			info.static_feature.position = inv_rot * info.static_feature.position;
+			info.static_feature.impulse = inv_rot * info.static_feature.impulse;
+		}
+		return info;
+	}
+
+	OverlapResult overlaps(const AABB& c1, const OBB& c2)
+	{
+		return sat::overlaps(c1, c2);
+	}
+
+	CollisionResult collides(const AABB& c1, const OBB& c2)
+	{
+		return sat::collides(c1, c2);
 	}
 }

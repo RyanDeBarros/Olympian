@@ -55,6 +55,8 @@ namespace oly::acm2d
 		glm::vec2 _direction;
 
 	public:
+		Ray(glm::vec2 origin, glm::vec2 direction, float clip = 0.0f) : origin(origin), clip(clip) { set_direction(direction); }
+
 		glm::vec2 direction() const { return _direction; }
 		void set_direction(glm::vec2 direction) { _direction = glm::normalize(direction); }
 
@@ -63,7 +65,13 @@ namespace oly::acm2d
 
 	struct RaycastResult
 	{
-		bool hit;
+		enum class Hit
+		{
+			NO_HIT,
+			EMBEDDED_ORIGIN,
+			TRUE_HIT
+		} hit;
 		glm::vec2 contact;
+		glm::vec2 normal;
 	};
 }
