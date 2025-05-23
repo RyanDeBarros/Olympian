@@ -2,6 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/math/Solvers.h"
+#include "core/types/Approximate.h"
 
 namespace oly::acm2d
 {
@@ -67,12 +68,12 @@ namespace oly::acm2d
 		return points;
 	}
 
-	std::pair<float, float> OBB::projection_interval(glm::vec2 axis) const
+	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
 	{
 		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
 		for (glm::vec2 point : points())
 		{
-			float proj = glm::dot(point, axis);
+			float proj = glm::dot(point, (glm::vec2)axis);
 			interval.first = std::min(interval.first, proj);
 			interval.second = std::max(interval.second, proj);
 		}
@@ -82,5 +83,24 @@ namespace oly::acm2d
 	AABB OBB::get_unrotated_aabb() const
 	{
 		return { .x1 = center.x - 0.5f * width, .x2 = center.x + 0.5f * width, .y1 = center.y - 0.5f * height, .y2 = center.y + 0.5f * height };
+	}
+
+
+	glm::vec2 OBB::deepest_point(const UnitVector2D& axis) const
+	{
+		glm::vec2 deepest{};
+		float max_depth = -FLT_MAX;
+		for (glm::vec2 point : points())
+		{
+			float proj = glm::dot(point, (glm::vec2)axis);
+			if (proj > max_depth)
+			{
+				max_depth = proj;
+				deepest = point;
+			}
+			else if (approx(proj, max_depth))
+				deepest = 0.5f * (deepest + point);
+		}
+		return deepest;
 	}
 }

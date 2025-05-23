@@ -1,5 +1,7 @@
 #include "AABB.h"
 
+#include "core/types/Approximate.h"
+
 namespace oly::acm2d
 {
 	AABB AABB::wrap(const math::Polygon2D& polygon)
@@ -25,15 +27,33 @@ namespace oly::acm2d
 		};
 	}
 
-	std::pair<float, float> AABB::projection_interval(glm::vec2 axis) const
+	std::pair<float, float> AABB::projection_interval(const UnitVector2D& axis) const
 	{
 		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
 		for (glm::vec2 point : points())
 		{
-			float proj = glm::dot(point, axis);
+			float proj = glm::dot(point, (glm::vec2)axis);
 			interval.first = std::min(interval.first, proj);
 			interval.second = std::max(interval.second, proj);
 		}
 		return interval;
+	}
+
+	glm::vec2 AABB::deepest_point(const UnitVector2D& axis) const
+	{
+		glm::vec2 deepest{};
+		float max_depth = -FLT_MAX;
+		for (glm::vec2 point : points())
+		{
+			float proj = glm::dot(point, (glm::vec2)axis);
+			if (proj > max_depth)
+			{
+				max_depth = proj;
+				deepest = point;
+			}
+			else if (approx(proj, max_depth))
+				deepest = 0.5f * (deepest + point);
+		}
+		return deepest;
 	}
 }

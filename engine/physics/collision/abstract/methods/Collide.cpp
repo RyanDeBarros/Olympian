@@ -12,12 +12,12 @@ namespace oly::acm2d
 
 	static OverlapResult ray_contact_circle(const Circle& c, Ray ray, float& t1, float& t2)
 	{
-		float cross = math::cross(ray.direction(), c.center - ray.origin);
+		float cross = math::cross(ray.direction, c.center - ray.origin);
 		float discriminant = c.radius * c.radius - cross * cross;
 		if (discriminant < 0.0f)
 			return false;
 
-		float offset = glm::dot(ray.direction(), c.center - ray.origin);
+		float offset = glm::dot((glm::vec2)ray.direction, c.center - ray.origin);
 		discriminant = glm::sqrt(discriminant);
 		t1 = offset - discriminant;
 		t2 = offset + discriminant;
@@ -51,8 +51,8 @@ namespace oly::acm2d
 			return { .hit = RaycastResult::Hit::NO_HIT };
 
 		RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT };
-		info.contact = std::max(t1, 0.0f) * ray.direction() + ray.origin;
-		info.normal = glm::normalize(info.contact - c.center);
+		info.contact = std::max(t1, 0.0f) * (glm::vec2)ray.direction + ray.origin;
+		info.normal = info.contact - c.center;
 		return info;
 	}
 
@@ -70,7 +70,8 @@ namespace oly::acm2d
 		if (info.overlap)
 		{
 			info.penetration_depth = c1.radius + c2.radius - math::magnitude(c1.center - c2.center);
-			info.unit_impulse = (c1.center != c2.center) ? glm::normalize(c1.center - c2.center) : glm::vec2{};
+			if (!approx(c1.center, c2.center))
+				info.unit_impulse = UnitVector2D(c1.center - c2.center);
 		}
 		return info;
 	}
@@ -80,13 +81,13 @@ namespace oly::acm2d
 		ContactResult info{};
 		info.overlap = overlaps(c1, c2);
 
-		glm::vec2 d = glm::normalize(c2.center - c1.center);
-		info.active_feature.position = c1.center + c1.radius * d;
-		info.static_feature.position = c2.center - c2.radius * d;
+		UnitVector2D d(c2.center - c1.center);
+		info.active_feature.position = c1.center + c1.radius * (glm::vec2)d;
+		info.static_feature.position = c2.center - c2.radius * (glm::vec2)d;
 
 		if (info.overlap)
 		{
-			info.active_feature.impulse = glm::normalize(c1.center - c2.center) * (c1.radius + c2.radius - math::magnitude(c1.center - c2.center));
+			info.active_feature.impulse = (glm::vec2)UnitVector2D(c1.center - c2.center) * (c1.radius + c2.radius - math::magnitude(c1.center - c2.center));
 			info.static_feature.impulse = -info.active_feature.impulse;
 		}
 
@@ -100,10 +101,10 @@ namespace oly::acm2d
 
 	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, Ray ray, float& t1, float& t2)
 	{
-		if (math::cross(ray.direction(), a - b) != 0.0f) // ray and line segment are not parallel
+		if (math::cross(ray.direction, a - b) != 0.0f) // ray and line segment are not parallel
 		{
 			// solution to linear system
-			glm::vec2 q = glm::inverse(glm::mat2(ray.direction(), a - b)) * (a - ray.origin);
+			glm::vec2 q = glm::inverse(glm::mat2(ray.direction, a - b)) * (a - ray.origin);
 
 			// solution is not on line segment
 			if (q.y < 0.0f || q.y > 1.0f)
@@ -125,11 +126,11 @@ namespace oly::acm2d
 		}
 		else if (near_zero(math::cross(b - a, ray.origin - a))) // ray's origin lies on infinite line
 		{
-			if (near_zero(ray.direction().y))
+			if (near_zero(ray.direction.y()))
 			{
 				float ts[2]{
-					(a.x - ray.origin.x) / ray.direction().x,
-					(b.x - ray.origin.x) / ray.direction().x
+					(a.x - ray.origin.x) / ray.direction.x(),
+					(b.x - ray.origin.x) / ray.direction.x()
 				};
 				t1 = std::min(ts[0], ts[1]);
 				t2 = std::max(ts[0], ts[1]);
@@ -137,8 +138,8 @@ namespace oly::acm2d
 			else
 			{
 				float ts[2]{
-					(a.y - ray.origin.y) / ray.direction().y,
-					(b.y - ray.origin.y) / ray.direction().y
+					(a.y - ray.origin.y) / ray.direction.y(),
+					(b.y - ray.origin.y) / ray.direction.y()
 				};
 				t1 = std::min(ts[0], ts[1]);
 				t2 = std::max(ts[0], ts[1]);
@@ -286,14 +287,12 @@ namespace oly::acm2d
 			if (overlapX < overlapY)
 			{
 				info.penetration_depth = overlapX;
-				info.unit_impulse.x = -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2));
-				info.unit_impulse.y = 0.0f;
+				info.unit_impulse = { -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2)), 0.0f };
 			}
 			else
 			{
 				info.penetration_depth = overlapY;
-				info.unit_impulse.x = 0.0f;
-				info.unit_impulse.y = -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2));
+				info.unit_impulse = { 0.0f, -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2)) };
 			}
 		}
 
@@ -405,14 +404,14 @@ namespace oly::acm2d
 	OverlapResult ray_hits(const OBB& c, Ray ray)
 	{
 		glm::mat2 rot = c.get_rotation_matrix();
-		Ray rotated_ray(rot * ray.origin, rot * ray.direction(), ray.clip);
+		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
 		return ray_hits(c.get_unrotated_aabb(), rotated_ray);
 	}
 
 	RaycastResult raycast(const OBB& c, Ray ray)
 	{
 		glm::mat2 rot = c.get_rotation_matrix();
-		Ray rotated_ray(rot * ray.origin, rot * ray.direction(), ray.clip);
+		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
 		RaycastResult info = raycast(c.get_unrotated_aabb(), rotated_ray);
 		glm::mat2 inv_rot = glm::inverse(rot);
 		info.contact = inv_rot * info.contact;
@@ -428,6 +427,11 @@ namespace oly::acm2d
 	CollisionResult collides(const OBB& c1, const OBB& c2)
 	{
 		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const OBB& c1, const OBB& c2)
+	{
+		return sat::contacts(c1, c2);
 	}
 
 	OverlapResult overlaps(const Circle& c1, const AABB& c2)
@@ -464,20 +468,18 @@ namespace oly::acm2d
 				if (dx < dy)
 				{
 					info.penetration_depth = dx + c1.radius;
-					info.unit_impulse.x = dx1 < dx2 ? -1.0f : 1.0f;
-					info.unit_impulse.y = 0.0f;
+					info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
 				}
 				else
 				{
 					info.penetration_depth = dy + c1.radius;
-					info.unit_impulse.x = 0.0f;
-					info.unit_impulse.y = dy1 < dy2 ? -1.0f : 1.0f;
+					info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
 				}
 			}
 			else // circle center is outside AABB
 			{
 				info.penetration_depth = c1.radius - glm::sqrt(dist_sqrd);
-				info.unit_impulse = glm::normalize(c1.center - closest_point);
+				info.unit_impulse = c1.center - closest_point;
 			}
 		}
 
@@ -524,10 +526,10 @@ namespace oly::acm2d
 			}
 			else // circle center is outside AABB
 			{
-				glm::vec2 displacement = glm::normalize(closest_point - c1.center);
+				UnitVector2D displacement(closest_point - c1.center);
 
-				info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * displacement;
-				info.active_feature.position = c1.center + c1.radius * displacement;
+				info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
+				info.active_feature.position = c1.center + c1.radius * (glm::vec2)displacement;
 
 				info.static_feature.impulse = -info.active_feature.impulse;
 				info.static_feature.position = closest_point;
@@ -574,5 +576,10 @@ namespace oly::acm2d
 	CollisionResult collides(const AABB& c1, const OBB& c2)
 	{
 		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const AABB& c1, const OBB& c2)
+	{
+		return sat::contacts(c1, c2);
 	}
 }

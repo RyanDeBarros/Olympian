@@ -1,5 +1,7 @@
 #include "ConvexHull.h"
 
+#include "core/types/Approximate.h"
+
 #include <algorithm>
 
 namespace oly::acm2d
@@ -56,15 +58,39 @@ namespace oly::acm2d
 		return { lower };
 	}
 
-	std::pair<float, float> ConvexHull::projection_interval(glm::vec2 axis) const
+	std::pair<float, float> ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
 		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
 		for (glm::vec2 point : points)
 		{
-			float proj = glm::dot(point, axis);
+			float proj = glm::dot(point, (glm::vec2)axis);
 			interval.first = std::min(interval.first, proj);
 			interval.second = std::max(interval.second, proj);
 		}
 		return interval;
+	}
+
+	UnitVector2D ConvexHull::edge_normal(size_t i) const
+	{
+		glm::vec2 edge = points[(i + 1) % points.size()] - points[i];
+		return glm::vec2{ -edge.y, edge.x };
+	}
+
+	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
+	{
+		glm::vec2 deepest{};
+		float max_depth = -FLT_MAX;
+		for (size_t i = 0; i < points.size(); ++i)
+		{
+			float proj = glm::dot(points[i], (glm::vec2)axis);
+			if (proj > max_depth)
+			{
+				max_depth = proj;
+				deepest = points[i];
+			}
+			else if (approx(proj, max_depth))
+				deepest = 0.5f * (deepest + points[i]);
+		}
+		return deepest;
 	}
 }

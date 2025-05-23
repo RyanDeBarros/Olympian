@@ -18,9 +18,14 @@ namespace oly::acm2d
 
 		return c;
 	}
-	std::pair<float, float> Circle::projection_interval(glm::vec2 axis) const
+	std::pair<float, float> Circle::projection_interval(const UnitVector2D& axis) const
 	{
-		float center_proj = glm::dot(center, axis);
+		float center_proj = glm::dot(center, (glm::vec2)axis);
 		return { center_proj - radius, center_proj + radius };
+	}
+
+	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
+	{
+		return center + radius * (glm::vec2)axis;
 	}
 }

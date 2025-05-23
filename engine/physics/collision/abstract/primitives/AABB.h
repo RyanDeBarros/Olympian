@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 
 #include <array>
@@ -16,6 +17,7 @@ namespace oly::acm2d
 		static AABB wrap(const math::Polygon2D& polygon);
 
 		std::array<glm::vec2, 4> points() const;
-		std::pair<float, float> projection_interval(glm::vec2 axis) const;
+		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		glm::vec2 deepest_point(const UnitVector2D& axis) const;
 	};
 }

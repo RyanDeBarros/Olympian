@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 
 namespace oly::acm2d
@@ -10,6 +11,8 @@ namespace oly::acm2d
 
 		static ConvexHull wrap(const math::Polygon2D& polygon);
 
-		std::pair<float, float> projection_interval(glm::vec2 axis) const;
+		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		UnitVector2D edge_normal(size_t i) const;
+		glm::vec2 deepest_point(const UnitVector2D& axis) const;
 	};
 }

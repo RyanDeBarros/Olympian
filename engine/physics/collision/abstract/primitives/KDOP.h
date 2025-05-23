@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 #include "physics/collision/abstract/primitives/ConvexHull.h"
 
@@ -12,19 +13,19 @@ namespace oly::acm2d
 	{
 		static_assert(K_half >= 2, "kDOP must have degree at least 4.");
 
-		std::array<glm::vec2, 2 * K_half> points;
+		std::array<UnitVector2D, 2 * K_half> points;
 
-		static std::array<glm::vec2, K_half> uniform_axes()
+		static std::array<UnitVector2D, K_half> uniform_axes()
 		{
-			std::array<glm::vec2, K_half> axes;
+			std::array<UnitVector2D, K_half> axes;
 			for (size_t i = 0; i < K_half; ++i)
-				axes[i] = math::dir_vector(glm::two_pi<float>() * float(i) / float(K_half));
+				axes[i] = UnitVector2D(glm::two_pi<float>() * float(i) / float(K_half));
 			return axes;
 		}
 
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
 		{
-			std::array<glm::vec2, K_half> axes = uniform_axes();
+			std::array<UnitVector2D, K_half> axes = uniform_axes();
 
 			std::array<float, K_half> mins, maxs;
 			mins.fill(FLT_MAX);
@@ -34,7 +35,7 @@ namespace oly::acm2d
 			{
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					float v = glm::dot(point, axes[i]);
+					float v = glm::dot(point, (glm::vec)axes[i]);
 					mins[i] = std::min(mins[i], v);
 					maxs[i] = std::max(maxs[i], v);
 				}
@@ -44,8 +45,8 @@ namespace oly::acm2d
 			cloud.points.reserve(2 * K_half);
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				cloud.points.push_back(axes[i] * mins[i]);
-				cloud.points.push_back(axes[i] * maxs[i]);
+				cloud.points.push_back((glm::vec2)axes[i] * mins[i]);
+				cloud.points.push_back((glm::vec2)axes[i] * maxs[i]);
 			}
 
 			ConvexHull hull = ConvexHull::wrap(cloud);
@@ -56,12 +57,12 @@ namespace oly::acm2d
 		}
 	};
 
-	template<size_t K_half, std::array<glm::vec2, K_half> Axes>
+	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
 	struct CustomKDOP
 	{
-		static_assert(K_half >= 2, "kDOP must have degree at least 4.");
+		static_assert(K_half >= 2, "Custom kDOP must have degree at least 4.");
 
-		std::array<glm::vec2, 2 * K_half> points;
+		std::array<UnitVector2D, 2 * K_half> points;
 
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
 		{
@@ -73,7 +74,7 @@ namespace oly::acm2d
 			{
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					float v = glm::dot(point, Axes[i]);
+					float v = glm::dot(point, (glm::vec2)Axes[i]);
 					mins[i] = std::min(mins[i], v);
 					maxs[i] = std::max(maxs[i], v);
 				}
@@ -83,8 +84,8 @@ namespace oly::acm2d
 			cloud.points.reserve(2 * K_half);
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				cloud.points.push_back(Axes[i] * mins[i] / glm::dot(Axes[i], Axes[i]));
-				cloud.points.push_back(Axes[i] * maxs[i] / glm::dot(Axes[i], Axes[i]));
+				cloud.points.push_back((glm::vec2)Axes[i] * mins[i]);
+				cloud.points.push_back((glm::vec2)Axes[i] * maxs[i]);
 			}
 
 			ConvexHull hull = ConvexHull::wrap(cloud);

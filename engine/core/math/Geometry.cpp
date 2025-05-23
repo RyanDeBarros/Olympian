@@ -22,11 +22,6 @@ namespace oly::math
 		return glm::inversesqrt(glm::dot(v, v));
 	}
 
-	glm::vec2 dir_vector(float radians)
-	{
-		return { glm::cos(radians), glm::sin(radians) };
-	}
-
 	glm::vec2 project(glm::vec2 point, glm::vec2 axis)
 	{
 		return axis * glm::dot(point, axis) / glm::dot(axis, axis);

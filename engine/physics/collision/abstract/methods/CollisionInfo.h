@@ -1,6 +1,6 @@
 #pragma once
 
-#include "external/GLM.h"
+#include "core/base/UnitVector.h"
 
 #include <vector>
 #include <variant>
@@ -20,11 +20,11 @@ namespace oly::acm2d
 	{
 		bool overlap;
 		float penetration_depth;
-		glm::vec2 unit_impulse;
+		UnitVector2D unit_impulse;
 
 		// minimum translation vector
-		glm::vec2 mtv() const { return unit_impulse * penetration_depth; }
-		CollisionResult& invert() { unit_impulse *= -1; return *this; }
+		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
+		CollisionResult& invert() { unit_impulse.flip(); return *this; }
 	};
 
 	struct ContactResult
@@ -50,16 +50,7 @@ namespace oly::acm2d
 	struct Ray
 	{
 		glm::vec2 origin;
-
-	private:
-		glm::vec2 _direction;
-
-	public:
-		Ray(glm::vec2 origin, glm::vec2 direction, float clip = 0.0f) : origin(origin), clip(clip) { set_direction(direction); }
-
-		glm::vec2 direction() const { return _direction; }
-		void set_direction(glm::vec2 direction) { _direction = glm::normalize(direction); }
-
+		UnitVector2D direction;
 		float clip = 0.0f;
 	};
 
@@ -72,6 +63,6 @@ namespace oly::acm2d
 			TRUE_HIT
 		} hit;
 		glm::vec2 contact;
-		glm::vec2 normal;
+		UnitVector2D normal;
 	};
 }
