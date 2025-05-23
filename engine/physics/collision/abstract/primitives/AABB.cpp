@@ -6,7 +6,7 @@ namespace oly::acm2d
 {
 	AABB AABB::wrap(const math::Polygon2D& polygon)
 	{
-		AABB c{ .x1 = FLT_MAX, .x2 = -FLT_MAX, .y1 = FLT_MAX, .y2 = -FLT_MIN };
+		AABB c{ .x1 = std::numeric_limits<float>::max(), .x2 = std::numeric_limits<float>::lowest(), .y1 = std::numeric_limits<float>::max(), .y2 = std::numeric_limits<float>::lowest() };
 		for (glm::vec2 point : polygon.points)
 		{
 			c.x1 = std::min(c.x1, point.x);
@@ -29,7 +29,7 @@ namespace oly::acm2d
 
 	std::pair<float, float> AABB::projection_interval(const UnitVector2D& axis) const
 	{
-		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
 		for (glm::vec2 point : points())
 		{
 			float proj = glm::dot(point, (glm::vec2)axis);
@@ -42,7 +42,7 @@ namespace oly::acm2d
 	glm::vec2 AABB::deepest_point(const UnitVector2D& axis) const
 	{
 		glm::vec2 deepest{};
-		float max_depth = -FLT_MAX;
+		float max_depth = std::numeric_limits<float>::lowest();
 		for (glm::vec2 point : points())
 		{
 			float proj = glm::dot(point, (glm::vec2)axis);

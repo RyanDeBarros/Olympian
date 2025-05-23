@@ -34,7 +34,7 @@ namespace oly::acm2d
 
 		obb.rotation = glm::atan(major_axis.y, major_axis.x);
 
-		float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
+		float minX = std::numeric_limits<float>::max(), maxX = std::numeric_limits<float>::lowest(), minY = std::numeric_limits<float>::max(), maxY = std::numeric_limits<float>::lowest();
 		for (glm::vec2 point : polygon.points)
 		{
 			glm::vec2 p = point - centroid;
@@ -70,7 +70,7 @@ namespace oly::acm2d
 
 	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
 	{
-		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
 		for (glm::vec2 point : points())
 		{
 			float proj = glm::dot(point, (glm::vec2)axis);
@@ -89,7 +89,7 @@ namespace oly::acm2d
 	glm::vec2 OBB::deepest_point(const UnitVector2D& axis) const
 	{
 		glm::vec2 deepest{};
-		float max_depth = -FLT_MAX;
+		float max_depth = std::numeric_limits<float>::lowest();
 		for (glm::vec2 point : points())
 		{
 			float proj = glm::dot(point, (glm::vec2)axis);

@@ -60,7 +60,7 @@ namespace oly::acm2d
 
 	std::pair<float, float> ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
-		std::pair<float, float> interval = { FLT_MAX, -FLT_MAX };
+		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
 		for (glm::vec2 point : points)
 		{
 			float proj = glm::dot(point, (glm::vec2)axis);
@@ -79,7 +79,7 @@ namespace oly::acm2d
 	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
 	{
 		glm::vec2 deepest{};
-		float max_depth = -FLT_MAX;
+		float max_depth = std::numeric_limits<float>::lowest();
 		for (size_t i = 0; i < points.size(); ++i)
 		{
 			float proj = glm::dot(points[i], (glm::vec2)axis);

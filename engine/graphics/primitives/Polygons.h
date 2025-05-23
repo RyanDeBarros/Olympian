@@ -45,7 +45,7 @@ namespace oly::rendering
 			Capacity(Index primitives, Index degree = 6)
 			{
 				OLY_ASSERT(degree >= 3);
-				OLY_ASSERT(degree * primitives <= UINT_MAX);
+				OLY_ASSERT(degree * primitives <= std::numeric_limits<unsigned int>::max());
 
 				// max(F) = V - 2 + 2H
 				// max(H) = [V / 3] - 1

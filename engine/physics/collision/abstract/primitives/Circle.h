@@ -19,7 +19,7 @@ namespace oly::acm2d
 		template<typename Polygon>
 		glm::vec2 closest_point(const Polygon& polygon) const
 		{
-			float closest_dist_sqrd = FLT_MAX;
+			float closest_dist_sqrd = std::numeric_limits<float>::max();
 			glm::vec2 cp{};
 			for (glm::vec2 point : polygon)
 			{

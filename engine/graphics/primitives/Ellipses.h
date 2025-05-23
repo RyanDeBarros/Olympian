@@ -50,7 +50,7 @@ namespace oly::rendering
 	public:
 		struct Capacity
 		{
-			Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= UINT_MAX); }
+			Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= std::numeric_limits<unsigned int>::max()); }
 
 		private:
 			friend class EllipseBatch;

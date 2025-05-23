@@ -2,6 +2,7 @@
 
 #include "physics/collision/abstract/methods/SAT.h"
 #include "core/types/Approximate.h"
+#include "core/base/SimpleMath.h"
 
 namespace oly::acm2d
 {
@@ -10,7 +11,7 @@ namespace oly::acm2d
 		return math::mag_sqrd(c.center - test) <= c.radius * c.radius;
 	}
 
-	static OverlapResult ray_contact_circle(const Circle& c, Ray ray, float& t1, float& t2)
+	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray, float& t1, float& t2)
 	{
 		float cross = math::cross(ray.direction, c.center - ray.origin);
 		float discriminant = c.radius * c.radius - cross * cross;
@@ -30,18 +31,18 @@ namespace oly::acm2d
 		return ray.clip == 0.0f || t1 <= ray.clip;
 	}
 
-	static OverlapResult ray_contact_circle(const Circle& c, Ray ray)
+	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray)
 	{
 		float t1, t2;
 		return ray_contact_circle(c, ray, t1, t2);
 	}
 
-	OverlapResult ray_hits(const Circle& c, Ray ray)
+	OverlapResult ray_hits(const Circle& c, const Ray& ray)
 	{
 		return ray_contact_circle(c, ray);
 	}
 
-	RaycastResult raycast(const Circle& c, Ray ray)
+	RaycastResult raycast(const Circle& c, const Ray& ray)
 	{
 		if (point_hits(c, ray.origin))
 			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
@@ -99,7 +100,7 @@ namespace oly::acm2d
 		return test.x >= c.x1 && test.x <= c.x2 && test.y >= c.y1 && test.y <= c.y2;
 	}
 
-	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, Ray ray, float& t1, float& t2)
+	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, const Ray& ray, float& t1, float& t2)
 	{
 		if (math::cross(ray.direction, a - b) != 0.0f) // ray and line segment are not parallel
 		{
@@ -158,13 +159,13 @@ namespace oly::acm2d
 			return false;
 	}
 
-	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, Ray ray)
+	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, const Ray& ray)
 	{
 		float t1, t2;
 		return ray_contact_line_segment(a, b, ray, t1, t2);
 	}
 
-	OverlapResult ray_hits(const AABB& c, Ray ray)
+	OverlapResult ray_hits(const AABB& c, const Ray& ray)
 	{
 		// origin is inside AABB
 		if (point_hits(c, ray.origin))
@@ -174,7 +175,7 @@ namespace oly::acm2d
 			|| ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray) || ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray);
 	}
 
-	RaycastResult raycast(const AABB& c, Ray ray)
+	RaycastResult raycast(const AABB& c, const Ray& ray)
 	{
 		if (point_hits(c, ray.origin))
 			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
@@ -401,14 +402,14 @@ namespace oly::acm2d
 		return glm::abs(local.x) <= c.width && glm::abs(local.y) <= c.height;
 	}
 
-	OverlapResult ray_hits(const OBB& c, Ray ray)
+	OverlapResult ray_hits(const OBB& c, const Ray& ray)
 	{
 		glm::mat2 rot = c.get_rotation_matrix();
 		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
 		return ray_hits(c.get_unrotated_aabb(), rotated_ray);
 	}
 
-	RaycastResult raycast(const OBB& c, Ray ray)
+	RaycastResult raycast(const OBB& c, const Ray& ray)
 	{
 		glm::mat2 rot = c.get_rotation_matrix();
 		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
@@ -431,6 +432,85 @@ namespace oly::acm2d
 
 	ContactResult contacts(const OBB& c1, const OBB& c2)
 	{
+		return sat::contacts(c1, c2);
+	}
+
+	OverlapResult point_hits(const ConvexHull& c, glm::vec2 test)
+	{
+		for (int i = 0; i < c.points.size(); ++i)
+		{
+			glm::vec2 u1 = c.points[unsigned_mod(i - 1, (int)c.points.size())] - c.points[i];
+			glm::vec2 u2 = c.points[(i + 1) % c.points.size()] - c.points[i];
+			if (!math::in_convex_sector(u1, u2, test))
+				return false;
+		}
+		return true;
+	}
+
+	OverlapResult ray_hits(const ConvexHull& c, const Ray& ray)
+	{
+		// origin is already in polygon
+		if (point_hits(c, ray.origin))
+			return true;
+
+		for (size_t i = 0; i < c.points.size(); ++i)
+		{
+			// ray hits polygon edge
+			if (ray_contact_line_segment(c.points[i], c.points[(i + 1) % c.points.size()], ray))
+				return true;
+		}
+		return false;
+	}
+
+	RaycastResult raycast(const ConvexHull& c, const Ray& ray)
+	{
+		// origin is already in polygon
+		if (point_hits(c, ray.origin))
+			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN };
+
+		float closest_edge_distance = std::numeric_limits<float>::max();;
+		size_t closest_idx = -1;
+		for (size_t i = 0; i < c.points.size(); ++i)
+		{
+			// ray hits polygon edge
+			float t1, t2;
+			if (ray_contact_line_segment(c.points[i], c.points[(i + 1) % c.points.size()], ray, t1, t2))
+			{
+				if (t1 < closest_edge_distance)
+				{
+					closest_edge_distance = t1;
+					closest_idx = i;
+				}
+			}
+		}
+
+		if (closest_idx != size_t(-1))
+		{
+			return {
+				.hit = RaycastResult::Hit::TRUE_HIT,
+				.contact = ray.origin + closest_edge_distance * (glm::vec2)ray.direction,
+				.normal = c.edge_normal(closest_idx)
+			};
+		}
+		else
+			return { .hit = RaycastResult::Hit::NO_HIT };
+	}
+
+	OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::overlaps(c1, c2);
+	}
+
+	CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
 		return sat::contacts(c1, c2);
 	}
 
@@ -580,6 +660,60 @@ namespace oly::acm2d
 
 	ContactResult contacts(const AABB& c1, const OBB& c2)
 	{
+		return sat::contacts(c1, c2);
+	}
+
+	OverlapResult overlaps(const Circle& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::overlaps(c1, c2);
+	}
+
+	CollisionResult collides(const Circle& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const Circle& c1, const ConvexHull& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::contacts(c1, c2);
+	}
+
+	OverlapResult overlaps(const ConvexHull& c1, const AABB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::overlaps(c1, c2);
+	}
+
+	CollisionResult collides(const ConvexHull& c1, const AABB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const ConvexHull& c1, const AABB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::contacts(c1, c2);
+	}
+
+	OverlapResult overlaps(const ConvexHull& c1, const OBB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::overlaps(c1, c2);
+	}
+	
+	CollisionResult collides(const ConvexHull& c1, const OBB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return sat::collides(c1, c2);
+	}
+
+	ContactResult contacts(const ConvexHull& c1, const OBB& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
 		return sat::contacts(c1, c2);
 	}
 }

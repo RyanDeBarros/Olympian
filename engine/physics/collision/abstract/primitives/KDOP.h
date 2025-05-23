@@ -28,8 +28,8 @@ namespace oly::acm2d
 			std::array<UnitVector2D, K_half> axes = uniform_axes();
 
 			std::array<float, K_half> mins, maxs;
-			mins.fill(FLT_MAX);
-			maxs.fill(-FLT_MAX);
+			mins.fill(std::numeric_limits<float>::max());
+			maxs.fill(std::numeric_limits<float>::lowest());
 
 			for (glm::vec2 point : polygon.points)
 			{
@@ -67,8 +67,8 @@ namespace oly::acm2d
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
 		{
 			std::array<float, K_half> mins, maxs;
-			mins.fill(FLT_MAX);
-			maxs.fill(-FLT_MAX);
+			mins.fill(std::numeric_limits<float>::max());
+			maxs.fill(std::numeric_limits<float>::lowest());
 
 			for (glm::vec2 point : polygon.points)
 			{

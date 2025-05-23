@@ -110,7 +110,7 @@ namespace oly::rendering
 			Capacity(GLuint initial_sprites, GLuint new_textures, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_anims = 0)
 				: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), anims(num_anims + 1)
 			{
-				OLY_ASSERT(4 * initial_sprites <= UINT_MAX);
+				OLY_ASSERT(4 * initial_sprites <= std::numeric_limits<unsigned int>::max());
 				OLY_ASSERT(uvs <= 500);
 				OLY_ASSERT(modulations <= 250);
 				OLY_ASSERT(anims <= 1000);

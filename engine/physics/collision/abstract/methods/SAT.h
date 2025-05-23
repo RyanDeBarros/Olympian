@@ -34,7 +34,7 @@ namespace oly::acm2d::sat
 	template<typename Shape1, typename Shape2>
 	inline CollisionResult collides(const Shape1& c1, const Shape2& c2)
 	{
-		CollisionResult info{ .overlap = true, .penetration_depth = FLT_MAX };
+		CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
 		internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
 		if (!info.overlap)
 			return info;
@@ -82,8 +82,11 @@ namespace oly::acm2d::sat
 			static OverlapResult impl(const ConvexHull& c, const Other& other)
 			{
 				for (size_t i = 0; i < c.points.size(); ++i)
-					if (sat(c, other, c.edge_normal(i)) < 0.0f)
+				{
+					UnitVector2D axis = c.edge_normal(i);
+					if (sat(c, other, axis) < 0.0f)
 						return false;
+				}
 				return true;
 			}
 		};
