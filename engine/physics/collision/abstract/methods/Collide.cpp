@@ -6,6 +6,85 @@
 
 namespace oly::acm2d
 {
+	namespace internal
+	{
+		OverlapResult ray_hits_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis)
+		{
+			float proj_origin = axis.dot(ray.origin);
+			float proj_direction = axis.dot(ray.direction);
+
+			float proj_clip;
+			if (ray.clip == 0.0f)
+			{
+				if (near_zero(proj_direction))
+					proj_clip = proj_origin;
+				else if (above_zero(proj_direction))
+					proj_clip = std::numeric_limits<float>::max();
+				else if (below_zero(proj_direction))
+					proj_clip = std::numeric_limits<float>::lowest();
+			}
+			else
+				proj_clip = proj_origin + ray.clip * proj_direction;
+
+			float proj_min = std::min(proj_origin, proj_clip);
+			float proj_max = std::max(proj_origin, proj_clip);
+
+			return proj_max >= min_proj && proj_min <= max_proj;
+		}
+
+		bool raycast_update_on_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis, RaycastResult& info, float& max_entry)
+		{
+			float proj_origin = axis.dot(ray.origin);
+			float proj_direction = axis.dot(ray.direction);
+
+			float proj_clip;
+			if (ray.clip == 0.0f)
+			{
+				if (near_zero(proj_direction))
+					proj_clip = proj_origin;
+				else if (above_zero(proj_direction))
+					proj_clip = std::numeric_limits<float>::max();
+				else if (below_zero(proj_direction))
+					proj_clip = std::numeric_limits<float>::lowest();
+			}
+			else
+				proj_clip = proj_origin + ray.clip * proj_direction;
+
+			float proj_min = std::min(proj_origin, proj_clip);
+			float proj_max = std::max(proj_origin, proj_clip);
+
+			if (proj_max < min_proj || proj_min > max_proj)
+				return false;
+
+			if (!near_zero(proj_direction)) // ray is not parallel
+			{
+				// boundary = proj_origin + t * proj_direction --> t = (boundary - proj_origin) / proj_direction
+				if (proj_origin < min_proj)
+				{
+					float t = (min_proj - proj_origin) / proj_direction; // boundary == minimum
+					if (above_zero(t) && t > max_entry)
+					{
+						max_entry = t;
+						info.hit = RaycastResult::Hit::TRUE_HIT;
+						info.normal = -axis;
+					}
+				}
+				else if (proj_origin > max_proj)
+				{
+					float t = (max_proj - proj_origin) / proj_direction; // boundary == maximum
+					if (above_zero(t) && t > max_entry)
+					{
+						max_entry = t;
+						info.hit = RaycastResult::Hit::TRUE_HIT;
+						info.normal = axis;
+					}
+				}
+			}
+
+			return true;
+		}
+	}
+
 	OverlapResult point_hits(const Circle& c, glm::vec2 test)
 	{
 		return math::mag_sqrd(c.center - test) <= c.radius * c.radius;
@@ -18,7 +97,7 @@ namespace oly::acm2d
 		if (discriminant < 0.0f)
 			return false;
 
-		float offset = glm::dot((glm::vec2)ray.direction, c.center - ray.origin);
+		float offset = ray.direction.dot(c.center - ray.origin);
 		discriminant = glm::sqrt(discriminant);
 		t1 = offset - discriminant;
 		t2 = offset + discriminant;
@@ -167,102 +246,20 @@ namespace oly::acm2d
 
 	OverlapResult ray_hits(const AABB& c, const Ray& ray)
 	{
-		// origin is inside AABB
-		if (point_hits(c, ray.origin))
-			return true;
-		// check if ray hits any of AABB's edges
-		return ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray) || ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray)
-			|| ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray) || ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray);
+		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::UP);
 	}
 
 	RaycastResult raycast(const AABB& c, const Ray& ray)
 	{
-		if (point_hits(c, ray.origin))
-			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-
-		static const auto first_contact_on_horizontal_edge = [](glm::vec2 ray_origin, float t1, float t2, float x1, float x2, float y, bool normal_up) -> RaycastResult {
-			RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT, .normal = normal_up ? glm::vec2{ 0.0f, 1.0f } : glm::vec2{ 0.0f, -1.0f } };
-			if (t1 == t2) // single intersection point
-				info.contact = { t1 * (x2 - x1) + x1, y };
-			else // ray is parallel to edge
-			{
-				if (ray_origin.x <= x1) // left edge corner
-					info.contact = { x1, y };
-				else if (ray_origin.x >= x2) // right edge corner
-					info.contact = { x2, y };
-				else // should be unreachable
-					info.contact = ray_origin;
-			}
-			return info;
-			};
-
-		static const auto first_contact_on_vertical_edge = [](glm::vec2 ray_origin, float t1, float t2, float y1, float y2, float x, bool normal_right) -> RaycastResult {
-			RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT, .normal = normal_right ? glm::vec2{ 1.0f, 0.0f } : glm::vec2{ -1.0f, 0.0f } };
-			if (t1 == t2) // single intersection point
-				info.contact = { x, t1 * (y2 - y1) + y1 };
-			else // ray is parallel to edge
-			{
-				if (ray_origin.y <= y1) // bottom edge corner
-					info.contact = { x, y1 };
-				else if (ray_origin.y >= y2) // top edge corner
-					info.contact = { x, y2 };
-				else // should be unreachable
-					info.contact = ray_origin;
-			}
-			return info;
-			};
-
-		float t1, t2;
-
-		// contact on bottom edge
-		if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x2, c.y1 }, ray, t1, t2))
-		{
-			if (ray.origin.y <= c.y1) // first contact on bottom edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y1, false);
-			else if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2, true);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
-			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
-			else // should be unreachable
-				return { .hit = RaycastResult::Hit::NO_HIT };
-		}
-
-		// contact on top edge
-		if (ray_contact_line_segment({ c.x1, c.y2 }, { c.x2, c.y2 }, ray, t1, t2))
-		{
-			if (ray.origin.y >= c.y2) // first contact on top edge
-				return first_contact_on_horizontal_edge(ray.origin, t1, t2, c.x1, c.x2, c.y2, true);
-			else if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2)) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
-			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
-			else // should be unreachable
-				return { .hit = RaycastResult::Hit::NO_HIT };
-		}
-
-		// contact on left edge
-		if (ray_contact_line_segment({ c.x1, c.y1 }, { c.x1, c.y2 }, ray, t1, t2))
-		{
-			if (ray.origin.x <= c.x1) // first contact on left edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x1, false);
-			else if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2)) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
-			else // should be unreachable
-				return { .hit = RaycastResult::Hit::NO_HIT };
-		}
-
-		// contact on right edge
-		if (ray_contact_line_segment({ c.x2, c.y1 }, { c.x2, c.y2 }, ray, t1, t2))
-		{
-			if (ray.origin.x >= c.x2) // first contact on right edge
-				return first_contact_on_vertical_edge(ray.origin, t1, t2, c.y1, c.y2, c.x2, true);
-			else // should be unreachable
-				return { .hit = RaycastResult::Hit::NO_HIT };
-		}
-
-		return { .hit = RaycastResult::Hit::NO_HIT };
+		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		float max_entry = std::numeric_limits<float>::lowest();
+		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT, info, max_entry))
+			return { .hit = RaycastResult::Hit::NO_HIT };
+		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::UP, info, max_entry))
+			return { .hit = RaycastResult::Hit::NO_HIT };
+		if (info.hit == RaycastResult::Hit::TRUE_HIT)
+			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
+		return info;
 	}
 
 	OverlapResult overlaps(const AABB& c1, const AABB& c2)
@@ -404,19 +401,25 @@ namespace oly::acm2d
 
 	OverlapResult ray_hits(const OBB& c, const Ray& ray)
 	{
-		glm::mat2 rot = c.get_rotation_matrix();
-		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
-		return ray_hits(c.get_unrotated_aabb(), rotated_ray);
+		auto proj = c.get_axis_1_projection_interval();
+		if (internal::ray_hits_slab(proj.first, proj.second, ray, c.get_axis_1()))
+			return false;
+		proj = c.get_axis_2_projection_interval();
+		return internal::ray_hits_slab(proj.first, proj.second, ray, c.get_axis_2());
 	}
 
 	RaycastResult raycast(const OBB& c, const Ray& ray)
 	{
-		glm::mat2 rot = c.get_rotation_matrix();
-		Ray rotated_ray(rot * ray.origin, rot * ray.direction, ray.clip);
-		RaycastResult info = raycast(c.get_unrotated_aabb(), rotated_ray);
-		glm::mat2 inv_rot = glm::inverse(rot);
-		info.contact = inv_rot * info.contact;
-		info.normal = inv_rot * info.normal;
+		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		float max_entry = std::numeric_limits<float>::lowest();
+		auto proj = c.get_axis_1_projection_interval();
+		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_axis_1(), info, max_entry))
+			return { .hit = RaycastResult::Hit::NO_HIT };
+		proj = c.get_axis_2_projection_interval();
+		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_axis_2(), info, max_entry))
+			return { .hit = RaycastResult::Hit::NO_HIT };
+		if (info.hit == RaycastResult::Hit::TRUE_HIT)
+			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
 		return info;
 	}
 

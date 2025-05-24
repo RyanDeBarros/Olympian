@@ -247,17 +247,17 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult impl(const OBB& c, const Other& other)
 			{
-				std::array<UnitVector2D, 2> axes = c.get_axes();
-
-				float cw = glm::dot(c.center, (glm::vec2)axes[0]);
+				UnitVector2D axis = c.get_axis_1();
+				float cw = axis.dot(c.center);
 				std::pair<float, float> i1 = { cw - 0.5f * c.width, cw + 0.5f * c.width };
-				std::pair<float, float> i2 = other.projection_interval(axes[0]);
+				std::pair<float, float> i2 = other.projection_interval(axis);
 				if (std::min(i1.second, i2.second) - std::max(i1.first, i2.first) < 0.0f)
 					return false;
 
-				float ch = glm::dot(c.center, (glm::vec2)axes[1]);
+				axis = c.get_axis_2();
+				float ch = axis.dot(c.center);
 				i1 = { ch - 0.5f * c.height, ch + 0.5f * c.height };
-				i2 = other.projection_interval(axes[1]);
+				i2 = other.projection_interval(axis);
 				if (std::min(i1.second, i2.second) - std::max(i1.first, i2.first) < 0.0f)
 					return false;
 
@@ -270,8 +270,8 @@ namespace oly::acm2d::sat
 		{
 			static void update_collision(const OBB& c, const Other& other, CollisionResult& info)
 			{
-				std::array<UnitVector2D, 2> axes = c.get_axes();
-				float depth = sat(c, other, axes[0]);
+				UnitVector2D axis = c.get_axis_1();
+				float depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{
 					info.overlap = false;
@@ -281,9 +281,10 @@ namespace oly::acm2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = axes[0].get_quarter_turn();
+					info.unit_impulse = axis.get_quarter_turn();
 				}
-				depth = sat(c, other, axes[1]);
+				axis = c.get_axis_2();
+				depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{
 					info.overlap = false;
@@ -292,7 +293,7 @@ namespace oly::acm2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = axes[1].get_quarter_turn();
+					info.unit_impulse = axis.get_quarter_turn();
 				}
 			}
 		};

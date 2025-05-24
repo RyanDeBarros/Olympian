@@ -10,7 +10,7 @@ namespace oly::acm2d::internal
 		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
 		for (glm::vec2 point : polygon)
 		{
-			float proj = glm::dot(point, (glm::vec2)axis);
+			float proj = axis.dot(point);
 			interval.first = std::min(interval.first, proj);
 			interval.second = std::max(interval.second, proj);
 		}
@@ -31,7 +31,7 @@ namespace oly::acm2d::internal
 		float max_depth = std::numeric_limits<float>::lowest();
 		for (glm::vec2 point : polygon)
 		{
-			float proj = glm::dot(point, (glm::vec2)axis);
+			float proj = axis.dot(point);
 			if (proj > max_depth)
 			{
 				max_depth = proj;

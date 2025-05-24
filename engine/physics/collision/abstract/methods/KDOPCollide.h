@@ -33,27 +33,7 @@ namespace oly::acm2d
 	{
 		for (size_t i = 0; i < K_half; ++i)
 		{
-			glm::vec2 axis = KDOP<K_half>::uniform_axis(i);
-			float proj_origin = glm::dot(ray.origin, axis);
-			float proj_direction = glm::dot((glm::vec2)ray.direction, axis);
-
-			float proj_clip;
-			if (ray.clip == 0.0f)
-			{
-				if (near_zero(proj_direction))
-					proj_clip = proj_origin;
-				else if (above_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::max();
-				else if (below_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::lowest();
-			}
-			else
-				proj_clip = proj_origin + ray.clip * proj_direction;
-
-			float proj_min = std::min(proj_origin, proj_clip);
-			float proj_max = std::max(proj_origin, proj_clip);
-
-			if (proj_max < c.get_minimum(i) || proj_min > c.get_maximum(i))
+			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K_half>::uniform_axis(i)))
 				return false;
 		}
 		return true;
@@ -63,61 +43,14 @@ namespace oly::acm2d
 	inline RaycastResult raycast(const KDOP<K_half>& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-		float t_max = std::numeric_limits<float>::lowest(); // first slab encountered must come at maximum t
+		float max_entry = std::numeric_limits<float>::lowest();
 		for (size_t i = 0; i < K_half; ++i)
 		{
-			UnitVector2D axis = KDOP<K_half>::uniform_axis(i);
-			float proj_origin = glm::dot(ray.origin, (glm::vec2)axis);
-			float proj_direction = glm::dot((glm::vec2)ray.direction, (glm::vec2)axis);
-
-			float proj_clip;
-			if (ray.clip == 0.0f)
-			{
-				if (near_zero(proj_direction))
-					proj_clip = proj_origin;
-				else if (above_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::max();
-				else if (below_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::lowest();
-			}
-			else
-				proj_clip = proj_origin + ray.clip * proj_direction;
-
-			float proj_min = std::min(proj_origin, proj_clip);
-			float proj_max = std::max(proj_origin, proj_clip);
-
-			if (proj_max < c.get_minimum(i) || proj_min > c.get_maximum(i))
+			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K_half>::uniform_axis(i), info, max_entry))
 				return { .hit = RaycastResult::Hit::NO_HIT };
-
-			if (!near_zero(proj_direction)) // ray is not parallel
-			{
-				// boundary = proj_origin + t * proj_direction --> t = (boundary - proj_origin) / proj_direction
-				if (proj_origin < c.get_minimum(i))
-				{
-					float t = (c.get_minimum(i) - proj_origin) / proj_direction; // boundary == minimum
-					if (above_zero(t) && t > t_max)
-					{
-						t_max = t;
-						info.hit = RaycastResult::Hit::TRUE_HIT;
-						info.normal = -axis;
-					}
-				}
-				else if (proj_origin > c.get_maximum(i))
-				{
-					float t = (c.get_maximum(i) - proj_origin) / proj_direction; // boundary == maximum
-					if (above_zero(t) && t > t_max)
-					{
-						t_max = t;
-						info.hit = RaycastResult::Hit::TRUE_HIT;
-						info.normal = axis;
-					}
-				}
-			}
 		}
-
 		if (info.hit == RaycastResult::Hit::TRUE_HIT)
-			info.contact = ray.origin + t_max * (glm::vec2)ray.direction;
-
+			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
 		return info;
 	}
 	

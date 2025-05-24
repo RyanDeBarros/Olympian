@@ -11,6 +11,12 @@
 
 namespace oly::acm2d
 {
+	namespace internal
+	{
+		extern OverlapResult ray_hits_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis);
+		extern bool raycast_update_on_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis, RaycastResult& info, float& max_entry);
+	}
+
 	// Matched
 
 	// Circle

@@ -44,6 +44,7 @@ namespace oly
 
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
+		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
 	};
 
 	inline const UnitVector2D UnitVector2D::RIGHT = UnitVector2D(_right{});
