@@ -1,6 +1,7 @@
 #include "ConvexHull.h"
 
 #include "core/types/Approximate.h"
+#include "physics/collision/abstract/primitives/Common.h"
 
 #include <algorithm>
 
@@ -60,37 +61,16 @@ namespace oly::acm2d
 
 	std::pair<float, float> ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
-		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
-		for (glm::vec2 point : points)
-		{
-			float proj = glm::dot(point, (glm::vec2)axis);
-			interval.first = std::min(interval.first, proj);
-			interval.second = std::max(interval.second, proj);
-		}
-		return interval;
+		return internal::polygon_projection_interval(points, axis);
 	}
 
 	UnitVector2D ConvexHull::edge_normal(size_t i) const
 	{
-		glm::vec2 edge = points[(i + 1) % points.size()] - points[i];
-		return glm::vec2{ -edge.y, edge.x };
+		return internal::polygon_edge_normal(points, i);
 	}
 
 	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
 	{
-		glm::vec2 deepest{};
-		float max_depth = std::numeric_limits<float>::lowest();
-		for (size_t i = 0; i < points.size(); ++i)
-		{
-			float proj = glm::dot(points[i], (glm::vec2)axis);
-			if (proj > max_depth)
-			{
-				max_depth = proj;
-				deepest = points[i];
-			}
-			else if (approx(proj, max_depth))
-				deepest = 0.5f * (deepest + points[i]);
-		}
-		return deepest;
+		return internal::polygon_deepest_point(points, axis);
 	}
 }

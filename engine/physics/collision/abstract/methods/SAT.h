@@ -5,6 +5,7 @@
 #include "physics/collision/abstract/primitives/Circle.h"
 #include "physics/collision/abstract/primitives/AABB.h"
 #include "physics/collision/abstract/primitives/OBB.h"
+#include "physics/collision/abstract/primitives/KDOP.h"
 
 #include "core/types/Approximate.h"
 
@@ -19,29 +20,47 @@ namespace oly::acm2d::sat
 		};
 
 		template<typename Shape1, typename Shape2>
+		struct FullOverlapTest
+		{
+			static OverlapResult call(const Shape1& c1, const Shape2& c2)
+			{
+				return internal::OverlapTest<Shape1, Shape2>::impl(c1, c2) && internal::OverlapTest<Shape2, Shape1>::impl(c2, c1);
+			}
+		};
+
+		template<typename Shape1, typename Shape2>
 		struct CollisionTest
 		{
 			static_assert(false, "CollisionTest not supported for the provided shape combo.");
+		};
+
+		template<typename Shape1, typename Shape2>
+		struct FullCollisionTest
+		{
+			static CollisionResult call(const Shape1& c1, const Shape2& c2)
+			{
+				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+				internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
+				if (!info.overlap)
+					return info;
+				internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info);
+				if (!info.overlap)
+					return info;
+				return info;
+			}
 		};
 	}
 
 	template<typename Shape1, typename Shape2>
 	inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2)
 	{
-		return internal::OverlapTest<Shape1, Shape2>::impl(c1, c2) && internal::OverlapTest<Shape2, Shape1>::impl(c2, c1);
+		return internal::FullOverlapTest<Shape1, Shape2>::call(c1, c2);
 	}
 
 	template<typename Shape1, typename Shape2>
 	inline CollisionResult collides(const Shape1& c1, const Shape2& c2)
 	{
-		CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
-		internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
-		if (!info.overlap)
-			return info;
-		internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info);
-		if (!info.overlap)
-			return info;
-		return info;
+		return internal::FullCollisionTest<Shape1, Shape2>::call(c1, c2);
 	}
 
 	template<typename Shape1, typename Shape2>
@@ -275,6 +294,128 @@ namespace oly::acm2d::sat
 					info.penetration_depth = depth;
 					info.unit_impulse = axes[1].get_quarter_turn();
 				}
+			}
+		};
+
+		template<size_t K_half, typename Other>
+		struct OverlapTest<KDOP<K_half>, Other>
+		{
+			static OverlapResult impl(const KDOP<K_half>& c, const Other& other)
+			{
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					UnitVector2D axis = KDOP<K_half>::uniform_axis(i);
+					if (sat(c, other, axis) < 0.0f)
+						return false;
+				}
+				return true;
+			}
+		};
+
+		template<size_t K_half, typename Other>
+		struct CollisionTest<KDOP<K_half>, Other>
+		{
+			static void update_collision(const KDOP<K_half>& c, const Other& other, CollisionResult& info)
+			{
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					UnitVector2D axis = KDOP<K_half>::uniform_axis(i);
+					float depth = sat(c, other, axis);
+					if (depth < 0.0f)
+					{
+						info.overlap = false;
+						info.penetration_depth = 0.0f;
+						return;
+					}
+					else if (depth < info.penetration_depth)
+					{
+						info.penetration_depth = depth;
+						info.unit_impulse = axis;
+					}
+				}
+			}
+		};
+
+		template<size_t K_half>
+		struct FullOverlapTest<KDOP<K_half>, KDOP<K_half>>
+		{
+			static OverlapResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
+			{
+				return OverlapTest<KDOP<K_half>, KDOP<K_half>>::impl(c1, c2);
+			}
+		};
+
+		template<size_t K_half>
+		struct FullCollisionTest<KDOP<K_half>, KDOP<K_half>>
+		{
+			static CollisionResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
+			{
+				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+				internal::CollisionTest<KDOP<K_half>, KDOP<K_half>>::update_collision(c1, c2, info);
+				return info;
+			}
+		};
+
+		template<size_t K_half, std::array<UnitVector2D, K_half> Axes, typename Other>
+		struct OverlapTest<CustomKDOP<K_half, Axes>, Other>
+		{
+			static OverlapResult impl(const CustomKDOP<K_half, Axes>& c, const Other& other)
+			{
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					UnitVector2D axis = Axes[i];
+					if (sat(c, other, axis) < 0.0f)
+						return false;
+				}
+				return true;
+			}
+		};
+
+		template<size_t K_half, std::array<UnitVector2D, K_half> Axes, typename Other>
+		struct CollisionTest<CustomKDOP<K_half, Axes>, Other>
+		{
+			static void update_collision(const CustomKDOP<K_half, Axes>& c, const Other& other, CollisionResult& info)
+			{
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					UnitVector2D axis = Axes[i];
+					float depth = sat(c, other, axis);
+					if (depth < 0.0f)
+					{
+						info.overlap = false;
+						info.penetration_depth = 0.0f;
+						return;
+					}
+					else if (depth < info.penetration_depth)
+					{
+						info.penetration_depth = depth;
+						info.unit_impulse = axis;
+					}
+				}
+			}
+		};
+
+		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+		struct FullOverlapTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>
+		{
+			static OverlapResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
+			{
+				return OverlapTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>::impl(c1, c2);
+			}
+		};
+
+		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+		struct FullCollisionTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>
+		{
+			static CollisionResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
+			{
+				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+				internal::CollisionTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>::update_collision(c1, c2, info);
+				return info;
 			}
 		};
 	}
