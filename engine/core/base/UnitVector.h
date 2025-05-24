@@ -42,6 +42,8 @@ namespace oly
 		UnitVector2D& quarter_turn() { _direction = { -_direction.y, _direction.x }; return *this; }
 		UnitVector2D get_quarter_turn() const { UnitVector2D cpy = *this; return cpy.quarter_turn(); }
 
+		float rotation() const { return glm::atan(_direction.y, _direction.x); }
+
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }

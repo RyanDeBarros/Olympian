@@ -6,8 +6,6 @@
 #include "physics/collision/abstract/primitives/AABB.h"
 #include "physics/collision/abstract/primitives/OBB.h"
 #include "physics/collision/abstract/primitives/ConvexHull.h"
-#include "physics/collision/abstract/primitives/Capsule.h"
-#include "physics/collision/abstract/primitives/HalfPlane.h"
 
 namespace oly::acm2d
 {

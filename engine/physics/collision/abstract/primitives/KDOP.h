@@ -64,7 +64,20 @@ namespace oly::acm2d
 	public:
 		static constexpr UnitVector2D uniform_axis(size_t i)
 		{
-			return UnitVector2D(glm::two_pi<float>() * float(i) / float(K_half));
+			if (i == 0)
+				return UnitVector2D::RIGHT;
+			else if (i == 1)
+				return UnitVector2D::UP;
+			else
+			{
+				static constexpr size_t K_quadrant_1 = (K_half - 2) / 2;
+				static constexpr size_t K_quadrant_4 = K_half - 2 - K_quadrant_1;
+				i -= 2;
+				if (i < K_quadrant_1)
+					return UnitVector2D((i + 1) * glm::half_pi<float>() / K_quadrant_1);
+				else
+					return UnitVector2D(-(i - K_quadrant_1 + 1) * glm::half_pi<float>() / K_quadrant_4);
+			}
 		}
 
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
@@ -78,7 +91,7 @@ namespace oly::acm2d
 			{
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					float v = glm::dot(point, (glm::vec)uniform_axis(i));
+					float v = uniform_axis(i).dot(point);
 					minima[i] = std::min(minima[i], v);
 					maxima[i] = std::max(maxima[i], v);
 				}
@@ -116,7 +129,7 @@ namespace oly::acm2d
 	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
 	struct CustomKDOP
 	{
-		static_assert(K_half >= 2, "kDOP must have degree at least 4.");
+		static_assert(K_half >= 2, "Custom kDOP must have degree at least 4.");
 		static const inline size_t K = 2 * K_half;
 
 	private:
@@ -166,7 +179,7 @@ namespace oly::acm2d
 		}
 
 	public:
-		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
+		static CustomKDOP<K_half, Axes> wrap(const math::Polygon2D& polygon)
 		{
 			std::array<float, K_half> minima;
 			std::array<float, K_half> maxima;
@@ -177,13 +190,13 @@ namespace oly::acm2d
 			{
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					float v = glm::dot(point, (glm::vec)Axes[i]);
+					float v = Axes[i].dot(point);
 					minima[i] = std::min(minima[i], v);
 					maxima[i] = std::max(maxima[i], v);
 				}
 			}
 
-			return KDOP<K_half>(minima, maxima);
+			return CustomKDOP<K_half, Axes>(minima, maxima);
 		}
 
 		const std::array<glm::vec2, K>& get_polygon() const

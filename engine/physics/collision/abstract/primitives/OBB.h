@@ -17,6 +17,7 @@ namespace oly::acm2d
 		float area() const { return width * height; }
 
 		static OBB fast_wrap(const math::Polygon2D& polygon);
+		static OBB wrap_axis_aligned(const math::Polygon2D& polygon, float rotation);
 		// TODO static OBB slow_wrap(const math::Polygon2D& polygon); using rotating calipers method
 
 		UnitVector2D get_axis_1() const { return UnitVector2D(rotation); }
@@ -46,7 +47,6 @@ namespace oly::acm2d
 
 		std::array<glm::vec2, 4> points() const;
 		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
-		AABB get_unrotated_aabb() const;
 		glm::vec2 deepest_point(const UnitVector2D& axis) const;
 	};
 }

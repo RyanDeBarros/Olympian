@@ -55,6 +55,27 @@ namespace oly::acm2d
 		return obb;
 	}
 
+	OBB OBB::wrap_axis_aligned(const math::Polygon2D& polygon, float rotation)
+	{
+		float max_w = std::numeric_limits<float>::lowest(), min_w = std::numeric_limits<float>::max(), max_h = std::numeric_limits<float>::lowest(), min_h = std::numeric_limits<float>::max();
+		UnitVector2D axis1(rotation);
+		// TODO Polygon2D maybe should just be a typedef for std::vector<glm::vec2>
+		for (glm::vec2 point : polygon.points)
+		{
+			float w = axis1.dot(point);
+			min_w = std::min(min_w, w);
+			max_w = std::max(max_w, w);
+		}
+		UnitVector2D axis2(rotation + glm::half_pi<float>());
+		for (glm::vec2 point : polygon.points)
+		{
+			float h = axis2.dot(point);
+			min_h = std::min(min_h, h);
+			max_h = std::max(max_h, h);
+		}
+		return { .center = 0.5f * glm::vec2{ min_w + max_w, min_h + max_h }, .width = max_w - min_w, .height = max_h - min_h, .rotation = rotation };
+	}
+
 	std::array<glm::vec2, 4> OBB::points() const
 	{
 		std::array<glm::vec2, 4> points{
@@ -71,13 +92,13 @@ namespace oly::acm2d
 
 	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
 	{
+		if (approx(get_axis_1(), axis))
+			return get_axis_1_projection_interval();
+		else if (approx(get_axis_2(), axis))
+			return get_axis_2_projection_interval();
+
 		auto pts = points();
 		return internal::polygon_projection_interval(pts, axis);
-	}
-
-	AABB OBB::get_unrotated_aabb() const
-	{
-		return { .x1 = center.x - 0.5f * width, .x2 = center.x + 0.5f * width, .y1 = center.y - 0.5f * height, .y2 = center.y + 0.5f * height };
 	}
 
 	glm::vec2 OBB::deepest_point(const UnitVector2D& axis) const

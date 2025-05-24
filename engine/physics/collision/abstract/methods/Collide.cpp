@@ -517,6 +517,81 @@ namespace oly::acm2d
 		return sat::contacts(c1, c2);
 	}
 
+	OverlapResult point_hits(const Capsule& c, glm::vec2 test)
+	{
+		return point_hits(c.mid_obb(), test) || point_hits(c.upper_circle(), test) || point_hits(c.lower_circle(), test);
+	}
+
+	OverlapResult ray_hits(const Capsule& c, const Ray& ray)
+	{
+		return ray_hits(c.mid_obb(), ray) || ray_hits(c.upper_circle(), ray) || ray_hits(c.lower_circle(), ray);
+	}
+
+	RaycastResult raycast(const Capsule& c, const Ray& ray)
+	{
+		RaycastResult upper_circle_cast = raycast(c.upper_circle(), ray);
+		if (upper_circle_cast.hit != RaycastResult::Hit::NO_HIT)
+		{
+			if (upper_circle_cast.normal.dot(c.vertical()) >= 0.0f) // on exposed semi-circle
+				return upper_circle_cast;
+			else
+				return raycast(c.mid_obb(), ray);
+		}
+		RaycastResult lower_circle_cast = raycast(c.lower_circle(), ray);
+		if (lower_circle_cast.hit != RaycastResult::Hit::NO_HIT)
+		{
+			if (lower_circle_cast.normal.dot(-c.vertical()) >= 0.0f) // on exposed semi-circle
+				return lower_circle_cast;
+			else
+				return raycast(c.mid_obb(), ray);
+		}
+		return raycast(c.mid_obb(), ray);
+	}
+
+	OverlapResult overlaps(const Capsule& c1, const Capsule& c2)
+	{
+		auto c1a = c1.mid_obb();
+		auto c1b = c1.lower_circle();
+		auto c1c = c1.upper_circle();
+		auto c2a = c2.mid_obb();
+		auto c2b = c2.lower_circle();
+		auto c2c = c2.upper_circle();
+
+		return overlaps(c1a, c2a) || overlaps(c1a, c2b) || overlaps(c1a, c2c)
+			|| overlaps(c1b, c2a) || overlaps(c1b, c2b) || overlaps(c1b, c2c)
+			|| overlaps(c1c, c2a) || overlaps(c1c, c2b) || overlaps(c1c, c2c);
+	}
+
+	CollisionResult collides(const Capsule& c1, const Capsule& c2)
+	{
+		auto c1_obb = c1.mid_obb();
+		auto c1_lc = c1.lower_circle();
+		auto c1_uc = c1.upper_circle();
+		auto c2_obb = c2.mid_obb();
+		auto c2_lc = c2.lower_circle();
+		auto c2_uc = c2.upper_circle();
+
+		CollisionResult info;
+
+		info = collides(c1_lc, c2_lc);
+		if (info.overlap)
+		{
+			info.
+		}
+
+		// TODO
+
+
+
+
+		return { .overlap = false };
+	}
+
+	ContactResult contacts(const Capsule& c1, const Capsule& c2)
+	{
+		// TODO
+	}
+
 	OverlapResult overlaps(const Circle& c1, const AABB& c2)
 	{
 		// closest point in AABB to center of circle
@@ -624,31 +699,17 @@ namespace oly::acm2d
 
 	OverlapResult overlaps(const Circle& c1, const OBB& c2)
 	{
-		return overlaps(Circle{ .center = c2.get_rotation_matrix() * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
+		return sat::overlaps(c1, c2);
 	}
 
 	CollisionResult collides(const Circle& c1, const OBB& c2)
 	{
-		glm::mat2 rot = c2.get_rotation_matrix();
-		CollisionResult info = collides(Circle{ .center = rot * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
-		if (info.overlap)
-			info.unit_impulse = glm::inverse(rot) * info.unit_impulse;
-		return info;
+		return sat::collides(c1, c2);
 	}
 
 	ContactResult contacts(const Circle& c1, const OBB& c2)
 	{
-		glm::mat2 rot = c2.get_rotation_matrix();
-		ContactResult info = contacts(Circle{ .center = rot * c1.center, .radius = c1.radius }, c2.get_unrotated_aabb());
-		if (info.overlap)
-		{
-			glm::mat2 inv_rot = glm::inverse(rot);
-			info.active_feature.position = inv_rot * info.active_feature.position;
-			info.active_feature.impulse = inv_rot * info.active_feature.impulse;
-			info.static_feature.position = inv_rot * info.static_feature.position;
-			info.static_feature.impulse = inv_rot * info.static_feature.impulse;
-		}
-		return info;
+		return sat::contacts(c1, c2);
 	}
 
 	OverlapResult overlaps(const AABB& c1, const OBB& c2)
