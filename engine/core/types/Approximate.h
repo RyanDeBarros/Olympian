@@ -67,4 +67,16 @@ namespace oly
 	{
 		return approx(a, T(0), tolerance);
 	}
+
+	template<typename T>
+	inline bool above_zero(const T& a, double tolerance = Tolerance<T>)
+	{
+		return static_cast<double>(a) > tolerance;
+	}
+
+	template<typename T>
+	inline bool below_zero(const T& a, double tolerance = Tolerance<T>)
+	{
+		return static_cast<double>(a) < tolerance;
+	}
 }

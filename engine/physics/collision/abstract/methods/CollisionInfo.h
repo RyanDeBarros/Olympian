@@ -24,7 +24,7 @@ namespace oly::acm2d
 
 		// minimum translation vector
 		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
-		CollisionResult& invert() { unit_impulse.flip(); return *this; }
+		CollisionResult& invert() { unit_impulse = -unit_impulse; return *this; }
 	};
 
 	struct ContactResult

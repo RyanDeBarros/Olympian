@@ -2,6 +2,7 @@
 
 #include "physics/collision/abstract/methods/Collide.h"
 #include "physics/collision/abstract/methods/SAT.h"
+#include "physics/collision/abstract/methods/KDOPCollide.h"
 #include "graphics/extensions/Arrow.h" // TODO loading for Arrow and Line extensions. Rename registries folder to assets
 
 #include "archetypes/PolygonCrop.h"

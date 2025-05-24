@@ -73,12 +73,12 @@ namespace oly::acm2d::sat
 		return {
 			.overlap = true,
 			.active_feature = {
-				.position = c1.deepest_point(collision.unit_impulse.get_flipped()),
+				.position = c1.deepest_point(-collision.unit_impulse),
 				.impulse = (glm::vec2)collision.unit_impulse * collision.penetration_depth
 			},
 			.static_feature = {
 				.position = c2.deepest_point(collision.unit_impulse),
-				.impulse = (glm::vec2)collision.unit_impulse.get_flipped() * collision.penetration_depth,
+				.impulse = -(glm::vec2)collision.unit_impulse * collision.penetration_depth,
 			}
 		};
 	}
@@ -91,7 +91,7 @@ namespace oly::acm2d::sat
 			std::pair<float, float> i1 = c1.projection_interval(axis);
 			std::pair<float, float> i2 = c2.projection_interval(axis);
 			if (i1.first > i2.first)
-				axis.flip();
+				axis = -axis;
 			return std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 		}
 
@@ -305,8 +305,8 @@ namespace oly::acm2d::sat
 				// only go through half the axes, since the other half has parallel normals
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					UnitVector2D axis = KDOP<K_half>::uniform_axis(i);
-					if (sat(c, other, axis) < 0.0f)
+					std::pair<float, float> i2 = other.projection_interval(KDOP<K_half>::uniform_axis(i));
+					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
 				return true;
@@ -321,8 +321,9 @@ namespace oly::acm2d::sat
 				// only go through half the axes, since the other half has parallel normals
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					UnitVector2D axis = KDOP<K_half>::uniform_axis(i);
-					float depth = sat(c, other, axis);
+					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
+					std::pair<float, float> i2 = other.projection_interval(KDOP<K_half>::uniform_axis(i));
+					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -332,7 +333,7 @@ namespace oly::acm2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = axis;
+						info.unit_impulse = i1.first < i2.first ? KDOP<K_half>::uniform_axis(i) : -KDOP<K_half>::uniform_axis(i);
 					}
 				}
 			}
@@ -343,7 +344,13 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
 			{
-				return OverlapTest<KDOP<K_half>, KDOP<K_half>>::impl(c1, c2);
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
+						return false;
+				}
+				return true;
 			}
 		};
 
@@ -353,7 +360,20 @@ namespace oly::acm2d::sat
 			static CollisionResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
 			{
 				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
-				internal::CollisionTest<KDOP<K_half>, KDOP<K_half>>::update_collision(c1, c2, info);
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
+					std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
+					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+					if (depth < 0.0f)
+						return { .overlap = false };
+					else if (depth < info.penetration_depth)
+					{
+						info.penetration_depth = depth;
+						info.unit_impulse = i1.first < i2.first ? KDOP<K_half>::uniform_axis(i) : -KDOP<K_half>::uniform_axis(i);
+					}
+				}
 				return info;
 			}
 		};
@@ -366,8 +386,8 @@ namespace oly::acm2d::sat
 				// only go through half the axes, since the other half has parallel normals
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					UnitVector2D axis = Axes[i];
-					if (sat(c, other, axis) < 0.0f)
+					std::pair<float, float> i2 = other.projection_interval(Axes[i]);
+					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
 				return true;
@@ -382,8 +402,9 @@ namespace oly::acm2d::sat
 				// only go through half the axes, since the other half has parallel normals
 				for (size_t i = 0; i < K_half; ++i)
 				{
-					UnitVector2D axis = Axes[i];
-					float depth = sat(c, other, axis);
+					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
+					std::pair<float, float> i2 = other.projection_interval(Axes[i]);
+					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -393,7 +414,7 @@ namespace oly::acm2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = axis;
+						info.unit_impulse = i1.first < i2.first ? Axes[i] : -Axes[i];
 					}
 				}
 			}
@@ -404,7 +425,13 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
 			{
-				return OverlapTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>::impl(c1, c2);
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
+						return false;
+				}
+				return true;
 			}
 		};
 
@@ -414,7 +441,20 @@ namespace oly::acm2d::sat
 			static CollisionResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
 			{
 				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
-				internal::CollisionTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>::update_collision(c1, c2, info);
+				// only go through half the axes, since the other half has parallel normals
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
+					std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
+					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+					if (depth < 0.0f)
+						return { .overlap = false };
+					else if (depth < info.penetration_depth)
+					{
+						info.penetration_depth = depth;
+						info.unit_impulse = i1.first < i2.first ? Axes[i] : -Axes[i];
+					}
+				}
 				return info;
 			}
 		};
