@@ -397,37 +397,53 @@ namespace oly::acm2d
 	
 	OverlapResult overlaps(const TCompound& c1, const TCompound& c2)
 	{
-		if (c1.compound.primitives.size() < c2.compound.primitives.size()) // rough estimate that c1 is more efficient to transform
+		glm::mat3 g1 = c1.transformer.global();
+		glm::mat3 g2 = c2.transformer.global();
+		for (const auto& p1 : c1.compound.primitives)
 		{
-			
-		}
-		else // rough estimate that c2 is more efficient to transform
-		{
+			if (std::visit([&g1, &g2, &c2](auto&& p1) {
+				for (const auto& p2 : c2.compound.primitives)
+				{
 
+					if (std::visit([&g1, &g2, &p1](auto&& p2) {
+						bool transform_1 = true;
+						if constexpr (std::is_same_v<std::decay_t<decltype(p1)>, Circle>)
+						{
+							transform_1 = false;
+						}
+						else if constexpr (!std::is_same_v<std::decay_t<decltype(p2)>, Circle>)
+						{
+							if (degree(p1) > degree(p2))
+								transform_1 = false;
+						}
+
+						if (transform_1)
+						{
+							// TODO
+							return overlaps(, p2);
+						}
+						else
+						{
+							// TODO
+							return overlaps(p1, );
+						}
+						}, p2))
+						return true;
+				}
+				return false;
+				}, p1))
+				return true;
 		}
+		return false;
 	}
 	
 	CollisionResult collides(const TCompound& c1, const TCompound& c2)
 	{
-		if (c1.compound.primitives.size() < c2.compound.primitives.size()) // rough estimate that c1 is more efficient to transform
-		{
 
-		}
-		else // rough estimate that c2 is more efficient to transform
-		{
-
-		}
 	}
 	
 	ContactResult contacts(const TCompound& c1, const TCompound& c2)
 	{
-		if (c1.compound.primitives.size() < c2.compound.primitives.size()) // rough estimate that c1 is more efficient to transform
-		{
 
-		}
-		else // rough estimate that c2 is more efficient to transform
-		{
-
-		}
 	}
 }

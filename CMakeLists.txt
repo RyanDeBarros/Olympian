@@ -25,6 +25,13 @@ endif()
 # Variables
 set(LIBRARIES_DIR "D:/Libraries")
 
+# Library directories
+link_directories(
+	"${LIBRARIES_DIR}/glew-2.1.0/lib/Release/x64"
+	"${LIBRARIES_DIR}/glfw-3.4/lib-vc2022/x64"
+)
+add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
+
 # Include directories
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
@@ -36,13 +43,9 @@ include_directories(
 	"${LIBRARIES_DIR}/stb/include"
 	"${LIBRARIES_DIR}/toml/include"
 	"${LIBRARIES_DIR}/nanosvg/include"
+	"${LIBRARIES_DIR}/Quartic/include"
 )
-
-# Library directories
-link_directories(
-	"${LIBRARIES_DIR}/glew-2.1.0/lib/Release/x64"
-	"${LIBRARIES_DIR}/glfw-3.4/lib-vc2022/x64"
-)
+target_include_directories(Quartic PUBLIC "${LIBRARIES_DIR}/Quartic/include")
 
 # Find OpenGL
 find_package(OpenGL REQUIRED)
@@ -71,7 +74,8 @@ target_compile_definitions(Olympian PRIVATE OLYMPIAN_SHADER_VALIDATION)
 
 # Link libraries
 target_link_libraries(Olympian
-	OpenGL::GL
-	glew32s		# link against static GLEW library
-	glfw3		# link against GLFW library
+	PRIVATE OpenGL::GL
+	PRIVATE glew32s		# link against static GLEW library
+	PRIVATE glfw3		# link against GLFW library
+	PRIVATE Quartic
 )
