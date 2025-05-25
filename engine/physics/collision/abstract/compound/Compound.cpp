@@ -1,5 +1,8 @@
 #include "Compound.h"
 
+#include "core/base/SimpleMath.h"
+
+// TODO in all collision testing, use approximations and override tolerance to be more lenient.
 namespace oly::acm2d
 {
 	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
@@ -216,6 +219,256 @@ namespace oly::acm2d
 			.static_feature = { .position = greediest_mtv.static_contact, .impulse = -greediest_mtv.mtv } };
 	}
 
+	static bool only_translation_and_scale(const glm::mat3& m)
+	{
+		return (near_zero(m[0][1]) && near_zero(m[1][0])) || (near_zero(m[0][0]) && near_zero(m[1][1]));
+	}
+
+	static bool orthogonal_transform(const glm::mat3& m)
+	{
+		return near_zero(glm::dot(m[0], m[1]));
+	}
+
+	Primitive transform_primitive(const Circle& c, const glm::mat3& m)
+	{
+		Circle tc(c.center, c.radius);
+		internal::CircleGlobalAccess::global(tc) = m;
+		return tc;
+	}
+
+	Primitive transform_primitive(const AABB& c, const glm::mat3& m)
+	{
+		if (only_translation_and_scale(m))
+		{
+			// AABB
+			if (near_zero(m[0][1]))
+			{
+				float x1 = m[0][0] * c.x1 + m[2][0];
+				float x2 = m[0][0] * c.x2 + m[2][0];
+				float y1 = m[1][1] * c.y1 + m[2][1];
+				float y2 = m[1][1] * c.y2 + m[2][1];
+				return AABB{ .x1 = std::min(x1, x2), .x2 = std::max(x1, x2), .y1 = std::min(y1, y2), .y2 = std::max(y1, y2) };
+			}
+			else
+			{
+				float x1 = m[1][0] * c.y1 + m[2][0];
+				float x2 = m[1][0] * c.y2 + m[2][0];
+				float y1 = m[0][1] * c.x1 + m[2][1];
+				float y2 = m[0][1] * c.x2 + m[2][1];
+				return AABB{ .x1 = std::min(x1, x2), .x2 = std::max(x1, x2), .y1 = std::min(y1, y2), .y2 = std::max(y1, y2) };
+			}
+		}
+		else if (orthogonal_transform(m))
+		{
+			// OBB
+			glm::vec2 scale = extract_scale(m);
+			return OBB{ .center = m * glm::vec3(c.center(), 1.0f), .width = (c.x2 - c.x1) * scale.x, .height = (c.y2 - c.y1) * scale.y, .rotation = extract_rotation(m)};
+		}
+		else
+		{
+			// CustomKDOP
+			std::vector<UnitVector2D> axes = {
+				transform_direction(m, UnitVector2D::RIGHT),
+				transform_direction(m, UnitVector2D::UP)
+				};
+			
+			math::Polygon2D polygon;
+			polygon.reserve(4);
+			for (glm::vec2 point : c.points())
+				polygon.push_back(transform_point(m, point));
+
+			return CustomKDOP::wrap(polygon, axes);
+		}
+	}
+
+	Primitive transform_primitive(const OBB& c, const glm::mat3& m)
+	{
+		if (orthogonal_transform(m))
+		{
+			float rotation = extract_rotation(m);
+			float r = fmod((c.rotation + rotation) * glm::two_over_pi<float>(), 1.0f);
+			if (near_zero(r) || approx(r, 1.0f))
+			{
+				// AABB
+				math::Polygon2D polygon;
+				polygon.reserve(4);
+				for (glm::vec2 point : c.points())
+					polygon.push_back(transform_point(m, point));
+
+				return AABB::wrap(polygon);
+			}
+			else
+			{
+				// OBB
+				glm::vec2 scale = extract_scale(m);
+				return OBB{ .center = transform_point(m, c.center), .width = scale.x * c.width, .height = scale.y * c.height, .rotation = c.rotation + rotation};
+			}
+		}
+		else
+		{
+			// CustomKDOP
+			std::vector<UnitVector2D> axes = {
+				transform_direction(m, c.get_axis_1()),
+				transform_direction(m, c.get_axis_2())
+			};
+
+			math::Polygon2D polygon;
+			polygon.reserve(4);
+			for (glm::vec2 point : c.points())
+				polygon.push_back(transform_point(m, point));
+
+			return CustomKDOP::wrap(polygon, axes);
+		}
+	}
+
+	Primitive transform_primitive(const CustomKDOP& c, const glm::mat3& m)
+	{
+		math::Polygon2D polygon;
+		polygon.reserve(c.points().size());
+		for (glm::vec2 point : c.points())
+			polygon.push_back(transform_point(m, point));
+
+		std::vector<UnitVector2D> axes(c.get_axes().size());
+		for (size_t i = 0; i < axes.size(); ++i)
+			axes[i] = transform_direction(m, c.get_axes()[i]);
+
+		if (c.get_k_half() == 2)
+		{
+			if (near_zero(axes[0].dot(axes[1])))
+			{
+				if (axes[0].near_standard() && axes[1].near_standard())
+				{
+					// AABB
+					return AABB::wrap(polygon);
+				}
+				else
+				{
+					// OBB
+					return OBB::fast_wrap(polygon);
+				}
+			}
+			else
+			{
+				// CustomKDOP
+				return CustomKDOP::wrap(polygon, axes);
+			}
+		}
+		else
+		{
+			// CustomKDOP
+			// LATER check if compatible with standard KDOP axes
+			return CustomKDOP::wrap(polygon, axes);
+		}
+	}
+
+	// TODO test this transformation especially
+	template<size_t K_half>
+	static Primitive transform_primitive_impl(const KDOP<K_half>& c, const glm::mat3& m)
+	{
+		bool maintain_axes = false;
+		glm::vec2 scale2D{};
+		float rotation = 0.0f;
+		if (orthogonal_transform(m))
+		{
+			scale2D = extract_scale(m);
+			rotation = extract_rotation(m);
+			if (approx(glm::abs(scale2D.x), glm::abs(scale2D.y)) && near_multiple(rotation, glm::pi<float>() / K_half))
+				maintain_axes = true;
+		}
+
+		if (maintain_axes)
+		{
+			// KDOP
+			glm::vec2 translation = m[2];
+			int rotation_axis_offset = 0;
+			rotation_axis_offset = roundi(K_half * rotation * glm::one_over_pi<float>());
+			// TODO In LaTeX documentation, use graphic to explain this more visually, but keep comment here. Or, use syntax "SEE chapter#.section#.subsubection# in doc/Olympian.pdf". SEE allows me to easily find and update these comments.
+			// Use scale2D.y as the representative scale, i.e. the sign of scale2D.y determines the sign of the scale that will multiply the extrema. This effect is illustrated here:
+			// 
+			// 1. scale2D.x > 0 && scale2D.y > 0
+			//     -> No reflection, axes preserved, and scale remains positive.
+			// 
+			// 2. scale2D.x < 0 && scale2D.y > 0
+			//     -> Reflection across Y-axis, so reverse_axes = true. Note that reversing the axis order is equivalent to a horizontal reflection, so scale remains positive.
+			// 
+			// 3. scale2D.x > 0 && scale2D.y < 0
+			//     -> Reflection across X-axis. Given an axis in quadrant I, its reflection into quadrant IV is equivalent to a reflection into quadrant II but with negative scale.
+			//        Therefore, reverse_axes = true, but scale becomes negative.
+			// 
+			// 4. scale2D.x < 0 && scale2D.y < 0
+			//     -> 180-degree rotation. This is equivalent to *not* reversing axis order, but simply negating the scale.
+			// 
+			// Therefore, reverse_axes = sign(scale2D.x) != sign(scale2D.y) and scale = scale2D.y.
+			bool reverse_axes = glm::sign(scale2D.x) != glm::sign(scale2D.y);
+			float scale = scale2D.y;
+
+			std::array<float, K_half> minima;
+			std::array<float, K_half> maxima;
+			for (int i = 0; i < K_half; ++i)
+			{
+				float offset = KDOP<K_half>::uniform_axis(i).dot(translation);
+				int og_idx = reverse_axes ? int(K_half) - i : i;
+				og_idx = unsigned_mod(og_idx + rotation_axis_offset, int(K_half));
+				minima[i] = c.get_minimum(og_idx) * scale + offset;
+				maxima[i] = c.get_maximum(og_idx) * scale + offset;
+			}
+			return KDOP<K_half>(minima, maxima);
+		}
+		else
+		{
+			// CustomKDOP
+			math::Polygon2D polygon;
+			polygon.reserve(c.points().size());
+			for (glm::vec2 point : c.points())
+				polygon.push_back(transform_point(m, point));
+
+			std::vector<UnitVector2D> axes(K_half);
+			for (size_t i = 0; i < axes.size(); ++i)
+				axes[i] = transform_direction(m, KDOP<K_half>::uniform_axis(i));
+
+			return CustomKDOP::wrap(polygon, axes);
+		}
+	}
+
+	Primitive transform_primitive(const KDOP6& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const KDOP8& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const KDOP10& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const KDOP12& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const KDOP14& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const KDOP16& c, const glm::mat3& m)
+	{
+		return transform_primitive_impl(c, m);
+	}
+
+	Primitive transform_primitive(const ConvexHull& c, const glm::mat3& m)
+	{
+		ConvexHull tc;
+		tc.points.reserve(c.points.size());
+		for (glm::vec2 p : c.points)
+			tc.points.push_back(transform_point(m, p));
+		return tc;
+	}
+
 	OverlapResult point_hits(const Compound& c, glm::vec2 test)
 	{
 		for (const auto& primitive : c.primitives)
@@ -265,6 +518,7 @@ namespace oly::acm2d
 			if (std::visit([&c2](auto&& p1) {
 				for (const auto& p2 : c2.primitives)
 				{
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
 						return true;
 				}
@@ -347,49 +601,55 @@ namespace oly::acm2d
 		return greedy_collision(cntcts);
 	}
 
+	void TCompound::bake() const
+	{
+		baked.resize(compound.primitives.size());
+		glm::mat3 g = transformer.global();
+		for (size_t i = 0; i < baked.size(); ++i)
+			baked[i] = std::visit([&g](auto&& p) { return transform_primitive(p, g); }, compound.primitives[i]);
+	}
+
 	OverlapResult point_hits(const TCompound& c, glm::vec2 test)
 	{
-		glm::vec2 local_test = glm::inverse(c.transformer.global()) * glm::vec3(test, 1.0f);
-		return point_hits(c.compound, local_test);
+		glm::vec2 local_test = transform_point(glm::inverse(c.global()), test);
+		return point_hits(c.get_compound(), local_test);
 	}
 	
 	OverlapResult ray_hits(const TCompound& c, const Ray& ray)
 	{
-		glm::mat3 m = glm::inverse(c.transformer.global());
-		Ray local_ray = { .origin = m * glm::vec3(ray.origin, 1.0f) };
+		glm::mat3 m = glm::inverse(c.global());
+		Ray local_ray = { .origin = transform_point(m, ray.origin) };
 		if (ray.clip == 0.0f)
 		{
-			local_ray.direction = glm::vec2(m * glm::vec3((glm::vec2)ray.direction, 0.0f));
+			local_ray.direction = transform_direction(m, ray.direction);
 			local_ray.clip = 0.0f;
 		}
 		else
 		{
-			glm::vec2 clip = ray.clip * (glm::vec2)ray.direction;
-			clip = m * glm::vec3(clip, 0.0f);
+			glm::vec2 clip = transform_direction(m, ray.clip * (glm::vec2)ray.direction);
 			local_ray.direction = clip;
 			local_ray.clip = glm::length(clip);
 		}
-		return ray_hits(c.compound, local_ray);
+		return ray_hits(c.get_compound(), local_ray);
 	}
 	
 	RaycastResult raycast(const TCompound& c, const Ray& ray)
 	{
-		glm::mat3 g = c.transformer.global();
+		glm::mat3 g = c.global();
 		glm::mat3 m = glm::inverse(g);
-		Ray local_ray = { .origin = m * glm::vec3(ray.origin, 1.0f) };
+		Ray local_ray = { .origin = transform_point(m, ray.origin) };
 		if (ray.clip == 0.0f)
 		{
-			local_ray.direction = glm::vec2(m * glm::vec3((glm::vec2)ray.direction, 0.0f));
+			local_ray.direction = transform_direction(m, ray.direction);
 			local_ray.clip = 0.0f;
 		}
 		else
 		{
-			glm::vec2 clip = ray.clip * (glm::vec2)ray.direction;
-			clip = m * glm::vec3(clip, 0.0f);
+			glm::vec2 clip = transform_direction(m, ray.clip * (glm::vec2)ray.direction);
 			local_ray.direction = clip;
 			local_ray.clip = glm::length(clip);
 		}
-		RaycastResult result = raycast(c.compound, local_ray);
+		RaycastResult result = raycast(c.get_compound(), local_ray);
 		result.contact = transform_point(g, result.contact);
 		result.normal = transform_normal(g, result.normal);
 		return result;
@@ -397,37 +657,12 @@ namespace oly::acm2d
 	
 	OverlapResult overlaps(const TCompound& c1, const TCompound& c2)
 	{
-		glm::mat3 g1 = c1.transformer.global();
-		glm::mat3 g2 = c2.transformer.global();
-		for (const auto& p1 : c1.compound.primitives)
+		for (const auto& p1 : c1.get_baked())
 		{
-			if (std::visit([&g1, &g2, &c2](auto&& p1) {
-				for (const auto& p2 : c2.compound.primitives)
+			if (std::visit([&c2](auto&& p1) {
+				for (const auto& p2 : c2.get_baked())
 				{
-
-					if (std::visit([&g1, &g2, &p1](auto&& p2) {
-						bool transform_1 = true;
-						if constexpr (std::is_same_v<std::decay_t<decltype(p1)>, Circle>)
-						{
-							transform_1 = false;
-						}
-						else if constexpr (!std::is_same_v<std::decay_t<decltype(p2)>, Circle>)
-						{
-							if (degree(p1) > degree(p2))
-								transform_1 = false;
-						}
-
-						if (transform_1)
-						{
-							// TODO
-							return overlaps(, p2);
-						}
-						else
-						{
-							// TODO
-							return overlaps(p1, );
-						}
-						}, p2))
+					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
 						return true;
 				}
 				return false;
@@ -439,11 +674,124 @@ namespace oly::acm2d
 	
 	CollisionResult collides(const TCompound& c1, const TCompound& c2)
 	{
-
+		std::vector<CollisionResult> collisions;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&collisions, &c2](auto&& p1) {
+				for (const auto& p2 : c2.get_baked())
+				{
+					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
+					if (collision.overlap)
+						collisions.push_back(collision);
+				}
+				}, p1);
+		}
+		return greedy_collision(collisions);
 	}
 	
 	ContactResult contacts(const TCompound& c1, const TCompound& c2)
 	{
+		std::vector<ContactResult> cntcts;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&cntcts, &c2](auto&& p1) {
+				for (const auto& p2 : c2.get_baked())
+				{
+					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
+					if (contact.overlap)
+						cntcts.push_back(contact);
+				}
+				}, p1);
+		}
+		return greedy_collision(cntcts);
+	}
 
+	OverlapResult overlaps(const TCompound& c1, const Compound& c2)
+	{
+		for (const auto& p1 : c1.get_baked())
+		{
+			if (std::visit([&c2](auto&& p1) {
+				for (const auto& p2 : c2.primitives)
+				{
+					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
+						return true;
+				}
+				return false;
+				}, p1))
+				return true;
+		}
+		return false;
+	}
+
+	CollisionResult collides(const TCompound& c1, const Compound& c2)
+	{
+		std::vector<CollisionResult> collisions;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&collisions, &c2](auto&& p1) {
+				for (const auto& p2 : c2.primitives)
+				{
+					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
+					if (collision.overlap)
+						collisions.push_back(collision);
+				}
+				}, p1);
+		}
+		return greedy_collision(collisions);
+	}
+
+	ContactResult contacts(const TCompound& c1, const Compound& c2)
+	{
+		std::vector<ContactResult> cntcts;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&cntcts, &c2](auto&& p1) {
+				for (const auto& p2 : c2.primitives)
+				{
+					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
+					if (contact.overlap)
+						cntcts.push_back(contact);
+				}
+				}, p1);
+		}
+		return greedy_collision(cntcts);
+	}
+
+	OverlapResult overlaps(const TCompound& c1, const Primitive& c2)
+	{
+		for (const auto& p1 : c1.get_baked())
+		{
+			if (std::visit([&c2](auto&& p1) { return std::visit([&p1](auto&& c2) { return overlaps(p1, c2); }, c2); }, p1))
+				return true;
+		}
+		return false;
+	}
+
+	CollisionResult collides(const TCompound& c1, const Primitive& c2)
+	{
+		std::vector<CollisionResult> collisions;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&collisions, &c2](auto&& p1) {
+				CollisionResult collision = std::visit([&p1](auto&& c2) { return collides(p1, c2); }, c2);
+				if (collision.overlap)
+					collisions.push_back(collision);
+				}, p1);
+		}
+		return greedy_collision(collisions);
+	}
+
+	ContactResult contacts(const TCompound& c1, const Primitive& c2)
+	{
+		std::vector<ContactResult> cntcts;
+		for (const auto& p1 : c1.get_baked())
+		{
+			std::visit([&cntcts, &c2](auto&& p1) {
+				ContactResult contact = std::visit([&p1](auto&& c2) { return contacts(p1, c2); }, c2);
+				if (contact.overlap)
+					cntcts.push_back(contact);
+				}, p1);
+		}
+		return greedy_collision(cntcts);
 	}
 }

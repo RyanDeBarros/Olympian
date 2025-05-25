@@ -54,7 +54,7 @@ namespace oly
 	inline float extract_rotation(const glm::mat3& transform)
 	{
 		float scale_x = glm::length(transform[0]);
-		return glm::atan(transform[0][1] / scale_x, transform[0][0] / scale_x);
+		return glm::atan(transform[0][1] / scale_x, transform[0][0] / scale_x); // TODO doesn't account for shearing
 	}
 
 	constexpr glm::vec2 extract_scale(const glm::mat3& transform)

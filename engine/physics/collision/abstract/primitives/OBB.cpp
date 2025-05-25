@@ -59,7 +59,6 @@ namespace oly::acm2d
 	{
 		float max_w = std::numeric_limits<float>::lowest(), min_w = std::numeric_limits<float>::max(), max_h = std::numeric_limits<float>::lowest(), min_h = std::numeric_limits<float>::max();
 		UnitVector2D axis1(rotation);
-		// TODO Polygon2D maybe should just be a typedef for std::vector<glm::vec2>
 		for (glm::vec2 point : polygon)
 		{
 			float w = axis1.dot(point);

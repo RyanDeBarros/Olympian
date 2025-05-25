@@ -5,10 +5,28 @@
 
 namespace oly::acm2d
 {
+	struct Circle;
+	namespace internal
+	{
+		struct CircleGlobalAccess
+		{
+			static const glm::mat3x2& global(const Circle&);
+			static glm::mat3x2& global(Circle&);
+			static inline const glm::mat3x2 DEFAULT = { glm::vec2{ 1.0f, 0.0f }, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 0.0f, 0.0f } };
+		};
+	}
+
 	struct Circle
 	{
 		glm::vec2 center;
 		float radius;
+
+	private:
+		friend struct internal::CircleGlobalAccess;
+		glm::mat3x2 global = internal::CircleGlobalAccess::DEFAULT; // TODO use this in collision methods
+
+	public:
+		Circle(glm::vec2 center = {}, float radius = 0.0f) : center(center), radius(radius) {}
 
 		float area() const { return glm::pi<float>() * radius * radius; }
 

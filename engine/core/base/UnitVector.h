@@ -49,6 +49,7 @@ namespace oly
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
+		bool near_standard() const;
 
 		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};

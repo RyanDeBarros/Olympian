@@ -93,7 +93,7 @@ int main()
 	aabb_visual.polygon.colors = { oly::colors::MAGENTA };
 	aabb_visual.init();
 
-	oly::acm2d::Circle circ{ .radius = 50.0f };
+	oly::acm2d::Circle circ({}, 50.0f);
 	auto circ_visual = oly::context::ellipse();
 	{
 		auto& dimension = circ_visual.ellipse.set_dimension();

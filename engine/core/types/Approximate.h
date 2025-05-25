@@ -92,4 +92,14 @@ namespace oly
 	{
 		return static_cast<double>(a) < tolerance;
 	}
+
+	template<numeric T>
+	inline bool near_multiple(const T& a, const T& b, double tolerance = Tolerance<T>)
+	{
+		if (near_zero(b))
+			return false;
+
+		double m = fmod(fmod(double(a), double(b)) + double(b), double(b));
+		return approx(m, 0.0, tolerance) || approx(m, double(b), tolerance);
+	}
 }

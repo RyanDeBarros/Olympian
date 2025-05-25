@@ -2,21 +2,32 @@
 
 namespace oly::acm2d
 {
+	namespace internal
+	{
+		const glm::mat3x2& CircleGlobalAccess::global(const Circle& c)
+		{
+			return c.global;
+		}
+
+		glm::mat3x2& CircleGlobalAccess::global(Circle& c)
+		{
+			return c.global;
+		}
+	}
+
 	Circle Circle::fast_wrap(const math::Polygon2D& polygon)
 	{
-		Circle c{};
-
-		c.center = {};
+		glm::vec2 center = {};
 		for (glm::vec2 point : polygon)
-			c.center += point;
-		c.center /= (float)polygon.size();
+			center += point;
+		center /= (float)polygon.size();
 
-		c.radius = 0.0f;
+		float radius = 0.0f;
 		for (glm::vec2 point : polygon)
-			c.radius = std::max(c.radius, math::mag_sqrd(point - c.center));
-		c.radius = glm::sqrt(c.radius);
+			radius = std::max(radius, math::mag_sqrd(point - center));
+		radius = glm::sqrt(radius);
 
-		return c;
+		return Circle(center, radius);
 	}
 	std::pair<float, float> Circle::projection_interval(const UnitVector2D& axis) const
 	{

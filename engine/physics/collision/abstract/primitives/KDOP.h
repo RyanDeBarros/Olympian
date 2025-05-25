@@ -68,20 +68,7 @@ namespace oly::acm2d
 	public:
 		static constexpr UnitVector2D uniform_axis(size_t i)
 		{
-			if (i == 0)
-				return UnitVector2D::RIGHT;
-			else if (i == 1)
-				return UnitVector2D::UP;
-			else
-			{
-				static constexpr size_t K_quadrant_1 = (K_half - 2) / 2;
-				static constexpr size_t K_quadrant_4 = K_half - 2 - K_quadrant_1;
-				i -= 2;
-				if (i < K_quadrant_1)
-					return UnitVector2D((i + 1) * glm::half_pi<float>() / K_quadrant_1);
-				else
-					return UnitVector2D(-int(i - K_quadrant_1 + 1) * glm::half_pi<float>() / K_quadrant_4);
-			}
+			return UnitVector2D(i * glm::pi<float>() / K_half);
 		}
 
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
