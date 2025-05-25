@@ -29,10 +29,7 @@ namespace oly::math
 	template<typename T, enum glm::qualifier Q = glm::packed_highp>
 	inline glm::vec<4, T, Q> reverse(glm::vec<4, T, Q> vec) { return { vec.w, vec.z, vec.y, vec.x }; }
 
-	struct Polygon2D
-	{
-		std::vector<glm::vec2> points;
-	};
+	typedef std::vector<glm::vec2> Polygon2D;
 
 	typedef std::vector<glm::uvec3> Triangulation;
 

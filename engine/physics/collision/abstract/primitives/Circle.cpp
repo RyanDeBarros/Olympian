@@ -7,12 +7,12 @@ namespace oly::acm2d
 		Circle c{};
 
 		c.center = {};
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 			c.center += point;
-		c.center /= (float)polygon.points.size();
+		c.center /= (float)polygon.size();
 
 		c.radius = 0.0f;
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 			c.radius = std::max(c.radius, math::mag_sqrd(point - c.center));
 		c.radius = glm::sqrt(c.radius);
 

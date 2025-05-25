@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "external/GLM.h"
+#include "core/base/UnitVector.h"
 
 namespace oly
 {
@@ -331,4 +332,9 @@ namespace oly
 			return std::make_unique<PivotShearTransformModifier3D>(pivot, size, shearing);
 		}
 	};
+
+	// TODO LaTeX documentation for the derivation of these and collision tests:
+	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
+	extern glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction);
+	extern UnitVector2D transform_normal(const glm::mat3& tr, UnitVector2D normal);
 }

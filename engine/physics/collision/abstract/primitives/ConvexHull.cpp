@@ -9,12 +9,12 @@ namespace oly::acm2d
 {
 	ConvexHull ConvexHull::wrap(const math::Polygon2D& polygon)
 	{
-		if (polygon.points.size() <= 3)
-			return { polygon.points };
+		if (polygon.size() <= 3)
+			return { polygon };
 
 		// Andrew's monotone chain
 
-		std::vector<glm::vec2> sorted_polygon = polygon.points;
+		std::vector<glm::vec2> sorted_polygon = polygon; // TODO version of wrap() that passes polygon by r-value so that it can be directly sorted here instead
 		std::sort(sorted_polygon.begin(), sorted_polygon.end(), [](glm::vec2 lhs, glm::vec2 rhs) { return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y); });
 
 		std::vector<glm::vec2> lower, upper;

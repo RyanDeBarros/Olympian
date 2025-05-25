@@ -36,6 +36,7 @@ namespace oly
 		UnitVector2D& operator=(glm::vec2 direction) { _direction = glm::normalize(direction); return *this; }
 
 		UnitVector2D operator-() const { return UnitVector2D(-_direction, _direct{}); }
+		bool operator==(const UnitVector2D& other) const { return _direction == other._direction; }
 
 		UnitVector2D& rotate(float angle) { float c = glm::cos(angle); float s = glm::sin(angle); _direction = glm::mat2{ { c, s }, { -s, c } } * _direction; return *this; }
 		UnitVector2D get_rotated(float angle) const { float c = glm::cos(angle); float s = glm::sin(angle); return UnitVector2D(glm::mat2{ { c, s }, { -s, c } } * _direction, _direct{}); }
@@ -43,10 +44,13 @@ namespace oly
 		UnitVector2D get_quarter_turn() const { UnitVector2D cpy = *this; return cpy.quarter_turn(); }
 
 		float rotation() const { return glm::atan(_direction.y, _direction.x); }
+		glm::mat2 rotation_matrix() const { return { _direction, { -_direction.y, _direction.x } }; }
 
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
+
+		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};
 
 	inline const UnitVector2D UnitVector2D::RIGHT = UnitVector2D(_right{});
@@ -54,3 +58,9 @@ namespace oly
 	inline const UnitVector2D UnitVector2D::LEFT = UnitVector2D(_left{});
 	inline const UnitVector2D UnitVector2D::DOWN = UnitVector2D(_down{});
 }
+
+template<>
+struct std::hash<oly::UnitVector2D>
+{
+	size_t operator()(const oly::UnitVector2D& v) const { return v.hash(); }
+};

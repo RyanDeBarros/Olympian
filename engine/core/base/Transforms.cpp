@@ -335,4 +335,19 @@ namespace oly
 		}
 		children.clear();
 	}
+
+	glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point)
+	{
+		return tr * glm::vec3(point, 1.0f);
+	}
+	
+	glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction)
+	{
+		return tr * glm::vec3(direction, 0.0f);
+	}
+
+	UnitVector2D transform_normal(const glm::mat3& tr, UnitVector2D normal)
+	{
+		return UnitVector2D(glm::inverse(glm::transpose(tr)) * glm::vec3((glm::vec2)normal, 0.0f));
+	}
 }

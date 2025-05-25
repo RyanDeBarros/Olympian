@@ -2,6 +2,7 @@
 
 #include "external/GLM.h"
 #include "core/types/Meta.h"
+#include "core/base/UnitVector.h"
 
 namespace oly
 {
@@ -21,6 +22,12 @@ namespace oly
 	struct Distance<glm::vec<L, T, Q>>
 	{
 		double operator()(const glm::vec<L, T, Q>& a, const glm::vec<L, T, Q>& b) const { return static_cast<double>(glm::length(a - b)); }
+	};
+
+	template<>
+	struct Distance<UnitVector2D>
+	{
+		double operator()(const UnitVector2D& a, const UnitVector2D& b) const { return static_cast<double>(glm::abs(a.rotation() - b.rotation())); }
 	};
 
 	template<typename T>
@@ -54,6 +61,12 @@ namespace oly
 	struct Tolerance_V<glm::vec<L, double, Q>>
 	{
 		static constexpr double TOL = 1e-15;
+	};
+
+	template<>
+	struct Tolerance_V<UnitVector2D>
+	{
+		static constexpr double TOL = 1e-7;
 	};
 
 	template<typename T>

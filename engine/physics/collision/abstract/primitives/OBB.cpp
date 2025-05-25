@@ -12,13 +12,13 @@ namespace oly::acm2d
 		OBB obb{};
 
 		glm::vec2 centroid = {};
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 			centroid += point;
-		centroid /= (float)polygon.points.size();
+		centroid /= (float)polygon.size();
 
 		math::solver::Eigen2x2 covariance{ .M = 0.0f };
 
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 		{
 			glm::vec2 p = point - centroid;
 			covariance.M[0][0] += p.x * p.x;
@@ -26,7 +26,7 @@ namespace oly::acm2d
 			covariance.M[1][0] += p.y * p.x;
 			covariance.M[1][1] += p.y * p.y;
 		}
-		covariance.M /= (float)polygon.points.size();
+		covariance.M /= (float)polygon.size();
 
 		glm::vec2 eigenvectors[2];
 		covariance.solve(nullptr, eigenvectors);
@@ -36,7 +36,7 @@ namespace oly::acm2d
 		obb.rotation = glm::atan(major_axis.y, major_axis.x);
 
 		float minX = std::numeric_limits<float>::max(), maxX = std::numeric_limits<float>::lowest(), minY = std::numeric_limits<float>::max(), maxY = std::numeric_limits<float>::lowest();
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 		{
 			glm::vec2 p = point - centroid;
 			float x = glm::dot(p, major_axis);
@@ -60,14 +60,14 @@ namespace oly::acm2d
 		float max_w = std::numeric_limits<float>::lowest(), min_w = std::numeric_limits<float>::max(), max_h = std::numeric_limits<float>::lowest(), min_h = std::numeric_limits<float>::max();
 		UnitVector2D axis1(rotation);
 		// TODO Polygon2D maybe should just be a typedef for std::vector<glm::vec2>
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 		{
 			float w = axis1.dot(point);
 			min_w = std::min(min_w, w);
 			max_w = std::max(max_w, w);
 		}
 		UnitVector2D axis2(rotation + glm::half_pi<float>());
-		for (glm::vec2 point : polygon.points)
+		for (glm::vec2 point : polygon)
 		{
 			float h = axis2.dot(point);
 			min_h = std::min(min_h, h);

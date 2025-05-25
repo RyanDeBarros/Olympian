@@ -8,8 +8,6 @@
 #include "physics/collision/abstract/primitives/AABB.h"
 #include "physics/collision/abstract/primitives/OBB.h"
 #include "physics/collision/abstract/primitives/ConvexHull.h"
-#include "physics/collision/abstract/primitives/Capsule.h"
-#include "physics/collision/abstract/primitives/HalfPlane.h"
 
 namespace oly::acm2d
 {
@@ -23,7 +21,7 @@ namespace oly::acm2d
 	{
 		for (size_t i = 0; i < K_half; ++i)
 		{
-			float proj = glm::dot(test, KDOP<K_half>::uniform_axis(i));
+			float proj = KDOP<K_half>::uniform_axis(i).dot(test);
 			if (proj < c.get_minimum(i) || proj > c.get_maximum(i))
 				return false;
 		}
@@ -82,37 +80,34 @@ namespace oly::acm2d
 	// ######################################################################################################################################################
 	// CustomKDOP
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-	inline OverlapResult point_hits(const CustomKDOP<K_half, Axes>& c, glm::vec2 test)
+	inline OverlapResult point_hits(const CustomKDOP& c, glm::vec2 test)
 	{
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < c.get_k_half(); ++i)
 		{
-			float proj = glm::dot(test, Axes[i]);
+			float proj = c.edge_normal(i).dot(test);
 			if (proj < c.get_minimum(i) || proj > c.get_maximum(i))
 				return false;
 		}
 		return true;
 	}
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-	inline OverlapResult ray_hits(const CustomKDOP<K_half, Axes>& c, const Ray& ray)
+	inline OverlapResult ray_hits(const CustomKDOP& c, const Ray& ray)
 	{
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < c.get_k_half(); ++i)
 		{
-			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, Axes[i]))
+			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, c.edge_normal(i)))
 				return false;
 		}
 		return true;
 	}
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-	inline RaycastResult raycast(const CustomKDOP<K_half, Axes>& c, const Ray& ray)
+	inline RaycastResult raycast(const CustomKDOP& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = std::numeric_limits<float>::lowest();
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < c.get_k_half(); ++i)
 		{
-			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, Axes[i], info, max_entry))
+			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, c.edge_normal(i), info, max_entry))
 				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 		if (info.hit == RaycastResult::Hit::TRUE_HIT)
@@ -120,22 +115,19 @@ namespace oly::acm2d
 		return info;
 	}
 
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1, std::array<UnitVector2D, K_half2> Axes2>
-	inline OverlapResult overlaps(const CustomKDOP<K_half1, Axes1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
+	inline OverlapResult overlaps(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
 		return sat::overlaps(c1, c2);
 	}
 
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1, std::array<UnitVector2D, K_half2> Axes2>
-	inline CollisionResult collides(const CustomKDOP<K_half1, Axes1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
+	inline CollisionResult collides(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
 		return sat::collides(c1, c2);
 	}
 
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1, std::array<UnitVector2D, K_half2> Axes2>
-	inline ContactResult contacts(const CustomKDOP<K_half1, Axes1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
+	inline ContactResult contacts(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
 		return sat::contacts(c1, c2);
@@ -144,53 +136,6 @@ namespace oly::acm2d
 	// ######################################################################################################################################################
 
 	// Mixed
-
-	// ######################################################################################################################################################
-	// KDOP - CustomKDOP
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half2> Axes2>
-	inline OverlapResult overlaps(const KDOP<K_half1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::overlaps(c1, c2);
-	}
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1>
-	inline OverlapResult overlaps(const CustomKDOP<K_half1, Axes1>& c1, const KDOP<K_half2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::overlaps(c1, c2);
-	}
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half2> Axes2>
-	inline CollisionResult collides(const KDOP<K_half1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::collides(c1, c2);
-	}
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1>
-	inline CollisionResult collides(const CustomKDOP<K_half1, Axes1>& c1, const KDOP<K_half2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::collides(c1, c2);
-	}
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half2> Axes2>
-	inline ContactResult contacts(const KDOP<K_half1>& c1, const CustomKDOP<K_half2, Axes2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::contacts(c1, c2);
-	}
-
-	template<size_t K_half1, size_t K_half2, std::array<UnitVector2D, K_half1> Axes1>
-	inline ContactResult contacts(const CustomKDOP<K_half1, Axes1>& c1, const KDOP<K_half2>& c2)
-	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::contacts(c1, c2);
-	}
-
-	// ######################################################################################################################################################
 
 	// ######################################################################################################################################################
 	// KDOP - Rest
@@ -232,6 +177,7 @@ namespace oly::acm2d
 	OLY_KDOP_COLLISION_METHODS(AABB);
 	OLY_KDOP_COLLISION_METHODS(OBB);
 	OLY_KDOP_COLLISION_METHODS(ConvexHull);
+	OLY_KDOP_COLLISION_METHODS(CustomKDOP);
 #undef OLY_KDOP_COLLISION_METHODS
 
 	// ######################################################################################################################################################
@@ -241,33 +187,27 @@ namespace oly::acm2d
 	
 	// TODO only do SAT if shapes have low enough degree. Otherwise, use GJK
 #define OLY_CUSTOM_KDOP_COLLISION_METHODS(Shape)\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline OverlapResult overlaps(const CustomKDOP<K_half, Axes>& c1, const Shape& c2)\
+	inline OverlapResult overlaps(const CustomKDOP& c1, const Shape& c2)\
 	{\
 		return sat::overlaps(c1, c2);\
 	}\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline OverlapResult overlaps(const Shape& c1, const CustomKDOP<K_half, Axes>& c2)\
+	inline OverlapResult overlaps(const Shape& c1, const CustomKDOP& c2)\
 	{\
 		return sat::overlaps(c1, c2);\
 	}\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline CollisionResult collides(const CustomKDOP<K_half, Axes>& c1, const Shape& c2)\
+	inline CollisionResult collides(const CustomKDOP& c1, const Shape& c2)\
 	{\
 		return sat::collides(c1, c2);\
 	}\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline CollisionResult collides(const Shape& c1, const CustomKDOP<K_half, Axes>& c2)\
+	inline CollisionResult collides(const Shape& c1, const CustomKDOP& c2)\
 	{\
 		return sat::collides(c1, c2);\
 	}\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline ContactResult contacts(const CustomKDOP<K_half, Axes>& c1, const Shape& c2)\
+	inline ContactResult contacts(const CustomKDOP& c1, const Shape& c2)\
 	{\
 		return sat::contacts(c1, c2);\
 	}\
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>\
-	inline ContactResult contacts(const Shape& c1, const CustomKDOP<K_half, Axes>& c2)\
+	inline ContactResult contacts(const Shape& c1, const CustomKDOP& c2)\
 	{\
 		return sat::contacts(c1, c2);\
 	}\
@@ -278,4 +218,6 @@ namespace oly::acm2d
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(ConvexHull);
 #undef OLY_CUSTOM_KDOP_COLLISION_METHODS
 	// ######################################################################################################################################################
+
+	// TODO specialize for CustomKDOP - Circle and KDOP - Circle
 }

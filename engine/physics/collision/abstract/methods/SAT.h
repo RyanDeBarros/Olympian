@@ -379,15 +379,15 @@ namespace oly::acm2d::sat
 			}
 		};
 
-		template<size_t K_half, std::array<UnitVector2D, K_half> Axes, typename Other>
-		struct OverlapTest<CustomKDOP<K_half, Axes>, Other>
+		template<typename Other>
+		struct OverlapTest<CustomKDOP, Other>
 		{
-			static OverlapResult impl(const CustomKDOP<K_half, Axes>& c, const Other& other)
+			static OverlapResult impl(const CustomKDOP& c, const Other& other)
 			{
 				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < c.get_k_half(); ++i)
 				{
-					std::pair<float, float> i2 = other.projection_interval(Axes[i]);
+					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
 					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
@@ -395,16 +395,16 @@ namespace oly::acm2d::sat
 			}
 		};
 
-		template<size_t K_half, std::array<UnitVector2D, K_half> Axes, typename Other>
-		struct CollisionTest<CustomKDOP<K_half, Axes>, Other>
+		template<typename Other>
+		struct CollisionTest<CustomKDOP, Other>
 		{
-			static void update_collision(const CustomKDOP<K_half, Axes>& c, const Other& other, CollisionResult& info)
+			static void update_collision(const CustomKDOP& c, const Other& other, CollisionResult& info)
 			{
 				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < c.get_k_half(); ++i)
 				{
 					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
-					std::pair<float, float> i2 = other.projection_interval(Axes[i]);
+					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
 					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 					if (depth < 0.0f)
 					{
@@ -415,48 +415,69 @@ namespace oly::acm2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? Axes[i] : -Axes[i];
+						info.unit_impulse = i1.first < i2.first ? c.edge_normal(i) : -c.edge_normal(i);
 					}
 				}
 			}
 		};
 
-		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-		struct FullOverlapTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>
+		template<>
+		struct FullOverlapTest<CustomKDOP, CustomKDOP>
 		{
-			static OverlapResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
+			static OverlapResult call(const CustomKDOP& c1, const CustomKDOP& c2)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				if (c1.get_k_half() == c2.get_k_half() && c1.get_axes() == c2.get_axes())
 				{
-					if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
-						return false;
-				}
-				return true;
-			}
-		};
-
-		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-		struct FullCollisionTest<CustomKDOP<K_half, Axes>, CustomKDOP<K_half, Axes>>
-		{
-			static CollisionResult call(const CustomKDOP<K_half, Axes>& c1, const CustomKDOP<K_half, Axes>& c2)
-			{
-				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
-				{
-					std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
-					std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
-					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
-					if (depth < 0.0f)
-						return { .overlap = false };
-					else if (depth < info.penetration_depth)
+					// only go through half the axes, since the other half has parallel normals
+					for (size_t i = 0; i < c1.get_k_half(); ++i)
 					{
-						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? Axes[i] : -Axes[i];
+						if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
+							return false;
 					}
+					return true;
 				}
-				return info;
+				else
+				{
+					return internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c1, c2) && internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c2, c1);
+				}
+			}
+		};
+
+		template<>
+		struct FullCollisionTest<CustomKDOP, CustomKDOP>
+		{
+			static CollisionResult call(const CustomKDOP& c1, const CustomKDOP& c2)
+			{
+				if (c1.get_k_half() == c2.get_k_half() && c1.get_axes() == c2.get_axes())
+				{
+					CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+					// only go through half the axes, since the other half has parallel normals
+					for (size_t i = 0; i < c1.get_k_half(); ++i)
+					{
+						std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
+						std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
+						float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+						if (depth < 0.0f)
+							return { .overlap = false };
+						else if (depth < info.penetration_depth)
+						{
+							info.penetration_depth = depth;
+							info.unit_impulse = i1.first < i2.first ? c1.edge_normal(i) : -c1.edge_normal(i);
+						}
+					}
+					return info;
+				}
+				else
+				{
+					CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c1, c2, info);
+					if (!info.overlap)
+						return info;
+					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c2, c1, info);
+					if (!info.overlap)
+						return info;
+					return info;
+				}
 			}
 		};
 	}

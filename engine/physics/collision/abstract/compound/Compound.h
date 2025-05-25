@@ -6,6 +6,9 @@
 
 namespace oly::acm2d
 {
+	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
+	extern ContactResult greedy_collision(const std::vector<ContactResult>& contacts);
+
 	using KDOP6 = KDOP<6>;
 	using KDOP8 = KDOP<8>;
 	using KDOP10 = KDOP<10>;
@@ -18,7 +21,7 @@ namespace oly::acm2d
 		AABB,
 		OBB,
 		ConvexHull,
-		// TODO add CustomKDOP which is not templated
+		CustomKDOP,
 		KDOP6,
 		KDOP8,
 		KDOP10,
@@ -39,9 +42,37 @@ namespace oly::acm2d
 	extern CollisionResult collides(const Compound& c1, const Compound& c2);
 	extern ContactResult contacts(const Compound& c1, const Compound& c2);
 
+	extern OverlapResult overlaps(const Compound& c1, const Primitive& c2);
+	inline OverlapResult overlaps(const Primitive& c1, const Compound& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const Compound& c1, const Primitive& c2);
+	inline CollisionResult collides(const Primitive& c1, const Compound& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const Compound& c1, const Primitive& c2);
+	inline ContactResult contacts(const Primitive& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
+
 	struct TCompound
 	{
 		Compound compound;
 		Transformer2D transformer;
 	};
+
+	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const TCompound& c, const Ray& ray);
+	extern RaycastResult raycast(const TCompound& c, const Ray& ray);
+	extern OverlapResult overlaps(const TCompound& c1, const TCompound& c2);
+	extern CollisionResult collides(const TCompound& c1, const TCompound& c2);
+	extern ContactResult contacts(const TCompound& c1, const TCompound& c2);
+
+	extern OverlapResult overlaps(const TCompound& c1, const Compound& c2);
+	inline OverlapResult overlaps(const Compound& c1, const TCompound& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const TCompound& c1, const Compound& c2);
+	inline CollisionResult collides(const Compound& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const TCompound& c1, const Compound& c2);
+	inline ContactResult contacts(const Compound& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
+
+	extern OverlapResult overlaps(const TCompound& c1, const Primitive& c2);
+	inline OverlapResult overlaps(const Primitive& c1, const TCompound& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const TCompound& c1, const Primitive& c2);
+	inline CollisionResult collides(const Primitive& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const TCompound& c1, const Primitive& c2);
+	inline ContactResult contacts(const Primitive& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
 }
