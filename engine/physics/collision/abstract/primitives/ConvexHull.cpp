@@ -12,15 +12,23 @@ namespace oly::acm2d
 		if (polygon.size() <= 3)
 			return { polygon };
 
+		math::Polygon2D cpy = polygon;
+		return wrap(cpy);
+	}
+
+	ConvexHull ConvexHull::wrap(math::Polygon2D& polygon)
+	{
+		if (polygon.size() <= 3)
+			return { polygon };
+
 		// Andrew's monotone chain
 
-		std::vector<glm::vec2> sorted_polygon = polygon; // TODO version of wrap() that passes polygon by r-value so that it can be directly sorted here instead
-		std::sort(sorted_polygon.begin(), sorted_polygon.end(), [](glm::vec2 lhs, glm::vec2 rhs) { return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y); });
+		std::sort(polygon.begin(), polygon.end(), [](glm::vec2 lhs, glm::vec2 rhs) { return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y); });
 
 		std::vector<glm::vec2> lower, upper;
 
 		// lower hull
-		for (glm::vec2 p : sorted_polygon)
+		for (glm::vec2 p : polygon)
 		{
 			while (lower.size() >= 2)
 			{
@@ -35,9 +43,9 @@ namespace oly::acm2d
 		}
 
 		// upper hull
-		for (int i = (int)sorted_polygon.size() - 1; i >= 0; --i)
+		for (int i = (int)polygon.size() - 1; i >= 0; --i)
 		{
-			glm::vec2 p = sorted_polygon[i];
+			glm::vec2 p = polygon[i];
 			while (upper.size() >= 2)
 			{
 				glm::vec2 a = upper[upper.size() - 2];

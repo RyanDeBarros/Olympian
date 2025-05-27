@@ -48,18 +48,42 @@ namespace oly::acm2d
 	{
 		std::vector<Primitive> primitives;
 
-		Mask mask;
-		Layer layer;
+		Mask mask = 0;
+		Layer layer = 0;
 	};
-
-	// TODO collision tests involving 2 compounds should check for interaction first (active.mask & static.layer) and then call internal _test methods that don't check for interaction.
 
 	extern OverlapResult point_hits(const Compound& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const Compound& c, const Ray& ray);
 	extern RaycastResult raycast(const Compound& c, const Ray& ray);
-	extern OverlapResult overlaps(const Compound& c1, const Compound& c2);
-	extern CollisionResult collides(const Compound& c1, const Compound& c2);
-	extern ContactResult contacts(const Compound& c1, const Compound& c2);
+
+	namespace internal
+	{
+		extern OverlapResult overlaps(const Compound& c1, const Compound& c2);
+		extern CollisionResult collides(const Compound& c1, const Compound& c2);
+		extern ContactResult contacts(const Compound& c1, const Compound& c2);
+	}
+
+	inline OverlapResult overlaps(const Compound& c1, const Compound& c2)
+	{
+		if (c1.mask & c2.layer)
+			return internal::overlaps(c1, c2);
+		else
+			return false;
+	}
+	inline CollisionResult collides(const Compound& c1, const Compound& c2)
+	{
+		if (c1.mask & c2.layer)
+			return internal::collides(c1, c2);
+		else
+			return { .overlap = false };
+	}
+	inline ContactResult contacts(const Compound& c1, const Compound& c2)
+	{
+		if (c1.mask & c2.layer)
+			return internal::contacts(c1, c2);
+		else
+			return { .overlap = false };
+	}
 
 	extern OverlapResult overlaps(const Compound& c1, const Primitive& c2);
 	inline OverlapResult overlaps(const Primitive& c1, const Compound& c2) { return overlaps(c2, c1); }
@@ -71,36 +95,105 @@ namespace oly::acm2d
 	class TCompound
 	{
 		Compound compound;
-		Transformer2D transformer;
 		mutable std::vector<Primitive> baked;
 		mutable bool dirty;
 
 		void bake() const;
 
 	public:
+		Transformer2D transformer;
 		glm::mat3 global() const { return transformer.global(); }
+		const Transform2D& get_local() const { return transformer.get_local(); }
+		Transform2D& set_local() { flag(); return transformer.set_local(); }
 
-		// TODO interface for attaching/detaching transformer to hierarchies, without exposing it directly
-
+		void flag() const { dirty = true; }
 		const Compound& get_compound() const { return compound; }
-		Compound& set_compound() { dirty = true; return compound; }
-		const std::vector<Primitive>& get_baked() const { if (dirty) { dirty = false; bake(); } return baked; }
-		// TODO bake transformed primitives. Therefore, set_local() and set_compound() should refresh these baked primitives (or rather flag them for baking - get_world_compound() actually bakes them if flagged), so that they don't need to be transformed in collision tests.
+		Compound& set_compound() { flag(); return compound; }
+		const std::vector<Primitive>& get_baked() const { if (dirty) { bake(); } return baked; }
 	};
 
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const TCompound& c, const Ray& ray);
 	extern RaycastResult raycast(const TCompound& c, const Ray& ray);
-	extern OverlapResult overlaps(const TCompound& c1, const TCompound& c2);
-	extern CollisionResult collides(const TCompound& c1, const TCompound& c2);
-	extern ContactResult contacts(const TCompound& c1, const TCompound& c2);
 
-	extern OverlapResult overlaps(const TCompound& c1, const Compound& c2);
-	inline OverlapResult overlaps(const Compound& c1, const TCompound& c2) { return overlaps(c2, c1); }
-	extern CollisionResult collides(const TCompound& c1, const Compound& c2);
-	inline CollisionResult collides(const Compound& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-	extern ContactResult contacts(const TCompound& c1, const Compound& c2);
-	inline ContactResult contacts(const Compound& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
+	namespace internal
+	{
+		extern OverlapResult overlaps(const TCompound& c1, const TCompound& c2);
+		extern CollisionResult collides(const TCompound& c1, const TCompound& c2);
+		extern ContactResult contacts(const TCompound& c1, const TCompound& c2);
+
+		extern OverlapResult overlaps(const TCompound& c1, const Compound& c2);
+		inline OverlapResult overlaps(const Compound& c1, const TCompound& c2) { return internal::overlaps(c2, c1); }
+		extern CollisionResult collides(const TCompound& c1, const Compound& c2);
+		inline CollisionResult collides(const Compound& c1, const TCompound& c2) { return internal::collides(c2, c1).invert(); }
+		extern ContactResult contacts(const TCompound& c1, const Compound& c2);
+		inline ContactResult contacts(const Compound& c1, const TCompound& c2) { return internal::contacts(c2, c1).invert(); }
+	}
+
+	inline OverlapResult overlaps(const TCompound& c1, const TCompound& c2)
+	{
+		if (c1.get_compound().mask & c2.get_compound().layer)
+			return internal::overlaps(c1, c2);
+		else
+			return false;
+	}
+	inline CollisionResult collides(const TCompound& c1, const TCompound& c2)
+	{
+		if (c1.get_compound().mask & c2.get_compound().layer)
+			return internal::collides(c1, c2);
+		else
+			return { .overlap = false };
+	}
+	inline ContactResult contacts(const TCompound& c1, const TCompound& c2)
+	{
+		if (c1.get_compound().mask & c2.get_compound().layer)
+			return internal::contacts(c1, c2);
+		else
+			return { .overlap = false };
+	}
+
+	inline OverlapResult overlaps(const TCompound& c1, const Compound& c2)
+	{
+		if (c1.get_compound().mask & c2.layer)
+			return internal::overlaps(c1, c2);
+		else
+			return false;
+	}
+	inline OverlapResult overlaps(const Compound& c1, const TCompound& c2)
+	{
+		if (c1.mask & c2.get_compound().layer)
+			return internal::overlaps(c1, c2);
+		else
+			return false;
+	}
+	inline CollisionResult collides(const TCompound& c1, const Compound& c2)
+	{
+		if (c1.get_compound().mask & c2.layer)
+			return internal::collides(c1, c2);
+		else
+			return { .overlap = false };
+	}
+	inline CollisionResult collides(const Compound& c1, const TCompound& c2)
+	{
+		if (c1.mask & c2.get_compound().layer)
+			return internal::collides(c1, c2);
+		else
+			return { .overlap = false };
+	}
+	inline ContactResult contacts(const TCompound& c1, const Compound& c2)
+	{
+		if (c1.get_compound().mask & c2.layer)
+			return internal::contacts(c1, c2);
+		else
+			return { .overlap = false };
+	}
+	inline ContactResult contacts(const Compound& c1, const TCompound& c2)
+	{
+		if (c1.mask & c2.get_compound().layer)
+			return internal::contacts(c1, c2);
+		else
+			return { .overlap = false };
+	}
 
 	extern OverlapResult overlaps(const TCompound& c1, const Primitive& c2);
 	inline OverlapResult overlaps(const Primitive& c1, const TCompound& c2) { return overlaps(c2, c1); }

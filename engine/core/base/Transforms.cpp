@@ -348,21 +348,21 @@ namespace oly
 	
 	glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction)
 	{
-		return tr * glm::vec3(direction, 0.0f);
+		return glm::mat2(tr) * direction;
 	}
 
 	glm::vec2 transform_direction(const glm::mat3x2& tr, glm::vec2 direction)
 	{
-		return tr * glm::vec3(direction, 0.0f);
+		return glm::mat2(tr) * direction;
 	}
 
 	UnitVector2D transform_normal(const glm::mat3& tr, UnitVector2D normal)
 	{
-		return UnitVector2D(glm::inverse(glm::transpose(tr)) * glm::vec3((glm::vec2)normal, 0.0f));
+		return UnitVector2D(glm::inverse(glm::transpose(glm::mat2(tr))) * (glm::vec2)normal);
 	}
 
 	UnitVector2D transform_normal(const glm::mat3x2& tr, UnitVector2D normal)
 	{
-		return UnitVector2D(glm::inverse(glm::transpose(tr)) * glm::vec3((glm::vec2)normal, 0.0f));
+		return UnitVector2D(glm::inverse(glm::transpose(glm::mat2(tr))) * (glm::vec2)normal);
 	}
 }
