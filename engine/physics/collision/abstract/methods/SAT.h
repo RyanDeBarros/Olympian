@@ -137,6 +137,7 @@ namespace oly::acm2d::sat
 		template<typename Other>
 		static void circle_update_collision(const Circle& c, const Other& other, CollisionResult& info, glm::vec2 closest_point)
 		{
+			// TODO use global
 			if (approx(closest_point, c.center))
 				return;
 			UnitVector2D axis(closest_point - c.center);
@@ -157,6 +158,7 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult impl(const Circle& c, const Other& other)
 			{
+				// TODO use global
 				glm::vec2 closest_point = c.closest_point(other.points());
 				UnitVector2D axis(closest_point - c.center);
 				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;
@@ -177,6 +179,7 @@ namespace oly::acm2d::sat
 		{
 			static OverlapResult impl(const Circle& c, const ConvexHull& other)
 			{
+				// TODO use global
 				glm::vec2 closest_point = c.closest_point(other.points);
 				UnitVector2D axis(closest_point - c.center);
 				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;

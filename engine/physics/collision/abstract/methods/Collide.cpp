@@ -3,6 +3,8 @@
 #include "physics/collision/abstract/methods/SAT.h"
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
+#include "core/base/Transforms.h"
+#include "core/math/Solvers.h"
 
 namespace oly::acm2d
 {
@@ -87,17 +89,32 @@ namespace oly::acm2d
 
 	OverlapResult point_hits(const Circle& c, glm::vec2 test)
 	{
-		return math::mag_sqrd(c.center - test) <= c.radius * c.radius;
+		glm::vec2 local = transform_point(internal::CircleGlobalAccess::get_ginv(c), test);
+		return math::mag_sqrd(local - c.center) <= c.radius * c.radius;
 	}
 
 	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray, float& t1, float& t2)
 	{
-		float cross = math::cross(ray.direction, c.center - ray.origin);
+		const glm::mat3x2& ginv = internal::CircleGlobalAccess::get_ginv(c);
+		Ray local_ray{ .origin = transform_point(ginv, ray.origin) };
+		if (ray.clip == 0.0f)
+		{
+			local_ray.clip = 0.0f;
+			local_ray.direction = transform_direction(ginv, ray.direction);
+		}
+		else
+		{
+			glm::vec2 clip = transform_direction(ginv, (glm::vec2)ray.direction * ray.clip);
+			local_ray.clip = glm::length(clip);
+			local_ray.direction = clip;
+		}
+
+		float cross = math::cross(local_ray.direction, c.center - local_ray.origin);
 		float discriminant = c.radius * c.radius - cross * cross;
 		if (discriminant < 0.0f)
 			return false;
 
-		float offset = ray.direction.dot(c.center - ray.origin);
+		float offset = local_ray.direction.dot(c.center - local_ray.origin);
 		discriminant = glm::sqrt(discriminant);
 		t1 = offset - discriminant;
 		t2 = offset + discriminant;
@@ -107,7 +124,11 @@ namespace oly::acm2d
 			return false;
 
 		// contact within clip
-		return ray.clip == 0.0f || t1 <= ray.clip;
+		bool contact = local_ray.clip == 0.0f || t1 <= local_ray.clip;
+		float mult = math::inv_magnitude(glm::mat2(ginv) * ray.direction);
+		t1 *= mult;
+		t2 *= mult;
+		return contact;
 	}
 
 	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray)
@@ -132,46 +153,140 @@ namespace oly::acm2d
 
 		RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT };
 		info.contact = std::max(t1, 0.0f) * (glm::vec2)ray.direction + ray.origin;
-		info.normal = info.contact - c.center;
+		glm::vec2 local_contact = transform_point(internal::CircleGlobalAccess::get_ginv(c), info.contact);
+		info.normal = transform_normal(internal::CircleGlobalAccess::get_global(c), local_contact - c.center);
 		return info;
+	}
+
+	static float circle_penetration_depth(const Circle& c1, const Circle& c2, const UnitVector2D& axis)
+	{
+		auto [min1, max1] = c1.projection_interval(axis);
+		auto [min2, max2] = c2.projection_interval(axis);
+		return std::min(max1, max2) - std::max(min1, min2);
+	}
+
+	static bool circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& minimizing_axis, float& depth)
+	{
+		// TODO abstract these constants
+		static constexpr float phi = 1.0f / glm::golden_ratio<float>();
+		static const size_t iterations = roundi(glm::log(1.0f / 360.0f) / glm::log(phi)); // DOC <= 1.0 degree error
+		float left = 0.0f, right = glm::pi<float>();
+		for (size_t i = 0; i < iterations && right > left; ++i)
+		{
+			float m1 = right - (right - left) * phi;
+			float m2 = left + (right - left) * phi;
+			UnitVector2D a1(m1);
+			float d1 = circle_penetration_depth(c1, c2, a1);
+			if (d1 < 0.0f)
+				return false;
+			UnitVector2D a2(m2);
+			float d2 = circle_penetration_depth(c1, c2, a2);
+			if (d2 < 0.0f)
+				return false;
+			if (d1 < d2)
+			{
+				right = m2;
+				minimizing_axis = a1;
+				depth = d1;
+			}
+			else
+			{
+				left = m1;
+				minimizing_axis = a2;
+				depth = d2;
+			}
+		}
+		return true;
 	}
 
 	OverlapResult overlaps(const Circle& c1, const Circle& c2)
 	{
-		float dist_sqrd = math::mag_sqrd(c2.center - c1.center);
-		float rsum = c1.radius + c2.radius;
-		return dist_sqrd <= rsum * rsum;
+		if (internal::CircleGlobalAccess::has_no_global(c1) && internal::CircleGlobalAccess::has_no_global(c2))
+		{
+			float dist_sqrd = math::mag_sqrd(c2.center - c1.center);
+			float rsum = c1.radius + c2.radius;
+			return dist_sqrd <= rsum * rsum;
+		}
+		else
+		{
+			if (!overlaps(internal::CircleGlobalAccess::bounding_circle(c1), internal::CircleGlobalAccess::bounding_circle(c2)))
+				return false;
+
+			if (point_hits(c1, transform_point(internal::CircleGlobalAccess::get_global(c2), c2.center)))
+				return true;
+			if (point_hits(c2, transform_point(internal::CircleGlobalAccess::get_global(c1), c1.center)))
+				return true;
+
+			UnitVector2D m;
+			float d;
+			return circle_penetration_depth(c1, c2, m, d);
+		}
 	}
 
 	CollisionResult collides(const Circle& c1, const Circle& c2)
 	{
-		CollisionResult info{};
-		info.overlap = overlaps(c1, c2);
-		if (info.overlap)
+		if (internal::CircleGlobalAccess::has_no_global(c1) && internal::CircleGlobalAccess::has_no_global(c2))
 		{
-			info.penetration_depth = c1.radius + c2.radius - math::magnitude(c1.center - c2.center);
-			if (!approx(c1.center, c2.center))
-				info.unit_impulse = UnitVector2D(c1.center - c2.center);
+			CollisionResult info{};
+			info.overlap = overlaps(c1, c2);
+			if (info.overlap)
+			{
+				info.penetration_depth = c1.radius + c2.radius - math::magnitude(c1.center - c2.center);
+				if (!approx(c1.center, c2.center))
+					info.unit_impulse = UnitVector2D(c1.center - c2.center);
+			}
+			return info;
 		}
-		return info;
+		else
+		{
+			if (!overlaps(internal::CircleGlobalAccess::bounding_circle(c1), internal::CircleGlobalAccess::bounding_circle(c2)))
+				return { .overlap = false };
+
+			UnitVector2D axis;
+			float depth;
+			if (!circle_penetration_depth(c1, c2, axis, depth))
+				return { .overlap = false };
+
+			return CollisionResult{ .overlap = true, .penetration_depth = depth, .unit_impulse = axis.dot(c1.center - c2.center) > 0.0f ? axis : -axis };
+		}
 	}
 
 	ContactResult contacts(const Circle& c1, const Circle& c2)
 	{
-		ContactResult info{};
-		info.overlap = overlaps(c1, c2);
-
-		UnitVector2D d(c2.center - c1.center);
-		info.active_feature.position = c1.center + c1.radius * (glm::vec2)d;
-		info.static_feature.position = c2.center - c2.radius * (glm::vec2)d;
-
-		if (info.overlap)
+		if (internal::CircleGlobalAccess::has_no_global(c1) && internal::CircleGlobalAccess::has_no_global(c2))
 		{
-			info.active_feature.impulse = (glm::vec2)UnitVector2D(c1.center - c2.center) * (c1.radius + c2.radius - math::magnitude(c1.center - c2.center));
-			info.static_feature.impulse = -info.active_feature.impulse;
-		}
+			ContactResult info{};
+			info.overlap = overlaps(c1, c2);
 
-		return info;
+			UnitVector2D d(c2.center - c1.center);
+			info.active_feature.position = c1.center + c1.radius * (glm::vec2)d;
+			info.static_feature.position = c2.center - c2.radius * (glm::vec2)d;
+
+			if (info.overlap)
+			{
+				info.active_feature.impulse = (glm::vec2)UnitVector2D(c1.center - c2.center) * (c1.radius + c2.radius - math::magnitude(c1.center - c2.center));
+				info.static_feature.impulse = -info.active_feature.impulse;
+			}
+
+			return info;
+		}
+		else
+		{
+			if (!overlaps(internal::CircleGlobalAccess::bounding_circle(c1), internal::CircleGlobalAccess::bounding_circle(c2)))
+				return { .overlap = false };
+
+			UnitVector2D axis;
+			float depth;
+			if (!circle_penetration_depth(c1, c2, axis, depth))
+				return { .overlap = false };
+
+			ContactResult info{ .overlap = true };
+			if (axis.dot(c1.center - c2.center) < 0.0f)
+				axis = -axis;
+			info.active_feature = { .position = c1.deepest_point(-axis), .impulse = depth * (glm::vec2)axis };
+			info.static_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis };
+			return info;
+		}
 	}
 
 	OverlapResult point_hits(const AABB& c, glm::vec2 test)
@@ -519,107 +634,128 @@ namespace oly::acm2d
 
 	OverlapResult overlaps(const Circle& c1, const AABB& c2)
 	{
-		// closest point in AABB to center of circle
-		glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
+		if (internal::CircleGlobalAccess::has_no_global(c1))
+		{
+			// closest point in AABB to center of circle
+			glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
 
-		float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
-		return dist_sqrd <= c1.radius * c1.radius;
+			float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
+			return dist_sqrd <= c1.radius * c1.radius;
+		}
+		else
+		{
+			// TODO
+		}
 	}
 	
 	CollisionResult collides(const Circle& c1, const AABB& c2)
 	{
-		CollisionResult info{};
-
-		// closest point on AABB to center of circle
-		glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
-
-		float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
-		info.overlap = dist_sqrd <= c1.radius * c1.radius;
-
-		if (info.overlap)
+		if (internal::CircleGlobalAccess::has_no_global(c1))
 		{
-			if (near_zero(dist_sqrd)) // circle center is inside AABB
+			CollisionResult info{};
+
+			// closest point on AABB to center of circle
+			glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
+
+			float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
+			info.overlap = dist_sqrd <= c1.radius * c1.radius;
+
+			if (info.overlap)
 			{
-				float dx1 = c1.center.x - c2.x1;
-				float dx2 = c2.x2 - c1.center.x;
-				float dy1 = c1.center.y - c2.y1;
-				float dy2 = c2.y2 - c1.center.y;
-
-				float dx = std::min(dx1, dx2);
-				float dy = std::min(dy1, dy2);
-
-				if (dx < dy)
+				if (near_zero(dist_sqrd)) // circle center is inside AABB
 				{
-					info.penetration_depth = dx + c1.radius;
-					info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
+					float dx1 = c1.center.x - c2.x1;
+					float dx2 = c2.x2 - c1.center.x;
+					float dy1 = c1.center.y - c2.y1;
+					float dy2 = c2.y2 - c1.center.y;
+
+					float dx = std::min(dx1, dx2);
+					float dy = std::min(dy1, dy2);
+
+					if (dx < dy)
+					{
+						info.penetration_depth = dx + c1.radius;
+						info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
+					}
+					else
+					{
+						info.penetration_depth = dy + c1.radius;
+						info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
+					}
 				}
-				else
+				else // circle center is outside AABB
 				{
-					info.penetration_depth = dy + c1.radius;
-					info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
+					info.penetration_depth = c1.radius - glm::sqrt(dist_sqrd);
+					info.unit_impulse = c1.center - closest_point;
 				}
 			}
-			else // circle center is outside AABB
-			{
-				info.penetration_depth = c1.radius - glm::sqrt(dist_sqrd);
-				info.unit_impulse = c1.center - closest_point;
-			}
+
+			return info;
 		}
-
-		return info;
+		else
+		{
+			// TODO
+		}
 	}
 	
 	ContactResult contacts(const Circle& c1, const AABB& c2)
 	{
-		ContactResult info{};
-
-		// closest point on AABB to center of circle
-		glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
-
-		float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
-		info.overlap = dist_sqrd <= c1.radius * c1.radius;
-
-		if (info.overlap)
+		if (internal::CircleGlobalAccess::has_no_global(c1))
 		{
-			if (near_zero(dist_sqrd)) // circle center is inside AABB
+			ContactResult info{};
+
+			// closest point on AABB to center of circle
+			glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
+
+			float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
+			info.overlap = dist_sqrd <= c1.radius * c1.radius;
+
+			if (info.overlap)
 			{
-				float dx1 = c1.center.x - c2.x1;
-				float dx2 = c2.x2 - c1.center.x;
-				float dy1 = c1.center.y - c2.y1;
-				float dy2 = c2.y2 - c1.center.y;
-
-				float dx = std::min(dx1, dx2);
-				float dy = std::min(dy1, dy2);
-
-				if (dx < dy)
+				if (near_zero(dist_sqrd)) // circle center is inside AABB
 				{
-					float dirX = dx1 < dx2 ? 1.0f : -1.0f;
-					info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
-					info.active_feature.position = c1.center + glm::vec2{ dirX * c1.radius, 0.0f };
-					info.static_feature.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, c1.center.y };
+					float dx1 = c1.center.x - c2.x1;
+					float dx2 = c2.x2 - c1.center.x;
+					float dy1 = c1.center.y - c2.y1;
+					float dy2 = c2.y2 - c1.center.y;
+
+					float dx = std::min(dx1, dx2);
+					float dy = std::min(dy1, dy2);
+
+					if (dx < dy)
+					{
+						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
+						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
+						info.active_feature.position = c1.center + glm::vec2{ dirX * c1.radius, 0.0f };
+						info.static_feature.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, c1.center.y };
+					}
+					else
+					{
+						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
+						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
+						info.active_feature.position = c1.center + glm::vec2{ 0.0f, dirY * c1.radius };
+						info.static_feature.position = glm::vec2{ c1.center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
+					}
+					info.static_feature.impulse = -info.active_feature.impulse;
 				}
-				else
+				else // circle center is outside AABB
 				{
-					float dirY = dy1 < dy2 ? 1.0f : -1.0f;
-					info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
-					info.active_feature.position = c1.center + glm::vec2{ 0.0f, dirY * c1.radius };
-					info.static_feature.position = glm::vec2{ c1.center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
+					UnitVector2D displacement(closest_point - c1.center);
+
+					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
+					info.active_feature.position = c1.center + c1.radius * (glm::vec2)displacement;
+
+					info.static_feature.impulse = -info.active_feature.impulse;
+					info.static_feature.position = closest_point;
 				}
-				info.static_feature.impulse = -info.active_feature.impulse;
 			}
-			else // circle center is outside AABB
-			{
-				UnitVector2D displacement(closest_point - c1.center);
 
-				info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
-				info.active_feature.position = c1.center + c1.radius * (glm::vec2)displacement;
-
-				info.static_feature.impulse = -info.active_feature.impulse;
-				info.static_feature.position = closest_point;
-			}
+			return info;
 		}
-
-		return info;
+		else
+		{
+			// TODO
+		}
 	}
 
 	OverlapResult overlaps(const Circle& c1, const OBB& c2)

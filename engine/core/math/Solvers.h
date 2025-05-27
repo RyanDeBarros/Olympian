@@ -19,4 +19,28 @@ namespace oly::math::solver
 
 		float solve() const;
 	};
+
+	struct Quadratic
+	{
+		// Ax^2 + Bx + C = 0
+		float A, B, C;
+
+		int solve(float& t1, float& t2) const;
+	};
+
+	struct Cubic
+	{
+		// Ax^3 + Bx^2 + Cx + D = 0
+		float A, B, C, D;
+
+		int solve(float& t1, float& t2, float& t3) const;
+	};
+
+	struct Quartic
+	{
+		// Ax^4 + Bx^3 + Cx^2 + Dx + E = 0
+		float A, B, C, D, E;
+
+		int solve(float& t1, float& t2, float& t3, float& t4) const;
+	};
 }

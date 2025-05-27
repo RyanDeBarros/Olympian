@@ -6,13 +6,22 @@
 namespace oly::acm2d
 {
 	struct Circle;
+	struct OBB;
 	namespace internal
 	{
 		struct CircleGlobalAccess
 		{
-			static const glm::mat3x2& global(const Circle&);
-			static glm::mat3x2& global(Circle&);
+			static const glm::mat3x2& get_global(const Circle&);
+			static const glm::mat3x2& get_ginv(const Circle&);
+			static void set_global(Circle&, const glm::mat3x2&);
+			static void set_ginv(Circle&, const glm::mat3x2&);
 			static inline const glm::mat3x2 DEFAULT = { glm::vec2{ 1.0f, 0.0f }, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 0.0f, 0.0f } };
+			static bool has_no_global(const Circle&);
+			static float radius_disparity(const Circle&);
+			static float max_radius(const Circle&);
+			static float min_radius(const Circle&);
+			static Circle bounding_circle(const Circle&);
+			static OBB bounding_obb(const Circle&);
 		};
 	}
 
@@ -23,12 +32,14 @@ namespace oly::acm2d
 
 	private:
 		friend struct internal::CircleGlobalAccess;
+
 		glm::mat3x2 global = internal::CircleGlobalAccess::DEFAULT; // TODO use this in collision methods
+		glm::mat3x2 ginv = internal::CircleGlobalAccess::DEFAULT; // TODO use this in collision methods
 
 	public:
 		Circle(glm::vec2 center = {}, float radius = 0.0f) : center(center), radius(radius) {}
 
-		float area() const { return glm::pi<float>() * radius * radius; }
+		float area() const { return glm::pi<float>() * radius * radius * glm::determinant(glm::mat2(global)); }
 
 		static Circle fast_wrap(const math::Polygon2D& polygon);
 

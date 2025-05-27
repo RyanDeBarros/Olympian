@@ -335,6 +335,9 @@ namespace oly
 
 	// TODO LaTeX documentation for the derivation of these and collision tests:
 	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
+	extern glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point);
 	extern glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction);
+	extern glm::vec2 transform_direction(const glm::mat3x2& tr, glm::vec2 direction);
 	extern UnitVector2D transform_normal(const glm::mat3& tr, UnitVector2D normal);
+	extern UnitVector2D transform_normal(const glm::mat3x2& tr, UnitVector2D normal);
 }

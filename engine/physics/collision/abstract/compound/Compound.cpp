@@ -232,7 +232,7 @@ namespace oly::acm2d
 	Primitive transform_primitive(const Circle& c, const glm::mat3& m)
 	{
 		Circle tc(c.center, c.radius);
-		internal::CircleGlobalAccess::global(tc) = m;
+		internal::CircleGlobalAccess::set_global(tc, m);
 		return tc;
 	}
 
