@@ -165,7 +165,7 @@ int main()
 		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
 		//auto contact = oly::acm2d::contacts(rect, aabb);
 		//if (contact.overlap)
-		if (oly::acm2d::sat::overlaps(circ, aabb))
+		if (oly::acm2d::overlaps(circ, aabb))
 		{
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;

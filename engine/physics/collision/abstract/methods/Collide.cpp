@@ -1,6 +1,7 @@
 #include "Collide.h"
 
 #include "physics/collision/abstract/methods/SAT.h"
+#include "physics/collision/abstract/methods/CircleMethods.h"
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
@@ -638,14 +639,11 @@ namespace oly::acm2d
 		{
 			// closest point in AABB to center of circle
 			glm::vec2 closest_point = { glm::clamp(c1.center.x, c2.x1, c2.x2), glm::clamp(c1.center.y, c2.y1, c2.y2) };
-
 			float dist_sqrd = math::mag_sqrd(c1.center - closest_point);
 			return dist_sqrd <= c1.radius * c1.radius;
 		}
 		else
-		{
-			// TODO
-		}
+			return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 	
 	CollisionResult collides(const Circle& c1, const AABB& c2)
@@ -693,9 +691,7 @@ namespace oly::acm2d
 			return info;
 		}
 		else
-		{
-			// TODO
-		}
+			return internal::circle_collides_polygon(c1, c2.points());
 	}
 	
 	ContactResult contacts(const Circle& c1, const AABB& c2)
@@ -753,24 +749,25 @@ namespace oly::acm2d
 			return info;
 		}
 		else
-		{
-			// TODO
-		}
+			return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
 	OverlapResult overlaps(const Circle& c1, const OBB& c2)
 	{
-		return sat::overlaps(c1, c2);
+		// TODO do clamping thing that AABB does
+		return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 
 	CollisionResult collides(const Circle& c1, const OBB& c2)
 	{
-		return sat::collides(c1, c2);
+		// TODO can do something cimilar to Circle - AABB
+		return internal::circle_collides_polygon(c1, c2.points());
 	}
 
 	ContactResult contacts(const Circle& c1, const OBB& c2)
 	{
-		return sat::contacts(c1, c2);
+		// TODO can do something cimilar to Circle - AABB
+		return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
 	OverlapResult overlaps(const AABB& c1, const OBB& c2)
@@ -791,19 +788,19 @@ namespace oly::acm2d
 	OverlapResult overlaps(const Circle& c1, const ConvexHull& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::overlaps(c1, c2);
+		return internal::circle_overlaps_polygon(c1, c2.points);
 	}
 
 	CollisionResult collides(const Circle& c1, const ConvexHull& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::collides(c1, c2);
+		return internal::circle_collides_polygon(c1, c2.points);
 	}
 
 	ContactResult contacts(const Circle& c1, const ConvexHull& c2)
 	{
 		// TODO only do if shapes have low enough degree. Otherwise, use GJK
-		return sat::contacts(c1, c2);
+		return internal::circle_contacts_polygon(c1, c2, c2.points);
 	}
 
 	OverlapResult overlaps(const ConvexHull& c1, const AABB& c2)

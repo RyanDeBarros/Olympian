@@ -135,67 +135,6 @@ namespace oly::acm2d::sat
 		};
 
 		template<typename Other>
-		static void circle_update_collision(const Circle& c, const Other& other, CollisionResult& info, glm::vec2 closest_point)
-		{
-			// TODO use global
-			if (approx(closest_point, c.center))
-				return;
-			UnitVector2D axis(closest_point - c.center);
-			float depth = sat(c, other, axis);
-			if (depth < 0.0f)
-			{
-				info.overlap = false;
-				info.penetration_depth = 0.0f;
-			}
-			else if (depth < info.penetration_depth)
-			{
-				info.penetration_depth = depth;
-				info.unit_impulse = axis;
-			}
-		}
-		template<typename Other>
-		struct OverlapTest<Circle, Other>
-		{
-			static OverlapResult impl(const Circle& c, const Other& other)
-			{
-				// TODO use global
-				glm::vec2 closest_point = c.closest_point(other.points());
-				UnitVector2D axis(closest_point - c.center);
-				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;
-			}
-		};
-
-		template<typename Other>
-		struct CollisionTest<Circle, Other>
-		{
-			static void update_collision(const Circle& c, const Other& other, CollisionResult& info)
-			{
-				circle_update_collision(c, other, info, c.closest_point(other.points()));
-			}
-		};
-
-		template<>
-		struct OverlapTest<Circle, ConvexHull>
-		{
-			static OverlapResult impl(const Circle& c, const ConvexHull& other)
-			{
-				// TODO use global
-				glm::vec2 closest_point = c.closest_point(other.points);
-				UnitVector2D axis(closest_point - c.center);
-				return approx(closest_point, c.center) || sat(c, other, axis) >= 0.0f;
-			}
-		};
-
-		template<>
-		struct CollisionTest<Circle, ConvexHull>
-		{
-			static void update_collision(const Circle& c, const ConvexHull& other, CollisionResult& info)
-			{
-				circle_update_collision(c, other, info, c.closest_point(other.points));
-			}
-		};
-
-		template<typename Other>
 		struct OverlapTest<AABB, Other>
 		{
 			static OverlapResult impl(const AABB& c, const Other& other)

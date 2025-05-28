@@ -2,6 +2,7 @@
 
 #include "physics/collision/abstract/methods/CollisionInfo.h"
 #include "physics/collision/abstract/methods/SAT.h"
+#include "physics/collision/abstract/methods/CircleMethods.h"
 
 #include "physics/collision/abstract/primitives/KDOP.h"
 #include "physics/collision/abstract/primitives/Circle.h"
@@ -138,6 +139,48 @@ namespace oly::acm2d
 	// Mixed
 
 	// ######################################################################################################################################################
+	// KDOP - Circle
+
+	template<size_t K_half>
+	inline OverlapResult overlaps(const KDOP<K_half>& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_overlaps_polygon(c2, c1.points());
+	}
+	template<size_t K_half>
+	inline OverlapResult overlaps(const Circle& c1, const KDOP<K_half>& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_overlaps_polygon(c1, c2.points());
+	}
+	template<size_t K_half>
+	inline CollisionResult collides(const KDOP<K_half>& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_collides_polygon(c2, c1.points()).invert();
+	}
+	template<size_t K_half>
+	inline CollisionResult collides(const Circle& c1, const KDOP<K_half>& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_collides_polygon(c1, c2.points());
+	}
+	template<size_t K_half>
+	inline ContactResult contacts(const KDOP<K_half>& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
+	}
+	template<size_t K_half>
+	inline ContactResult contacts(const Circle& c1, const KDOP<K_half>& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_contacts_polygon(c1, c2, c2.points());
+	}
+
+	// ######################################################################################################################################################
+
+	// ######################################################################################################################################################
 	// KDOP - Rest
 	
 	// TODO only do SAT if shapes have low enough degree. Otherwise, use GJK
@@ -173,12 +216,47 @@ namespace oly::acm2d
 		return sat::contacts(c1, c2);\
 	}
 
-	OLY_KDOP_COLLISION_METHODS(Circle);
 	OLY_KDOP_COLLISION_METHODS(AABB);
 	OLY_KDOP_COLLISION_METHODS(OBB);
 	OLY_KDOP_COLLISION_METHODS(ConvexHull);
 	OLY_KDOP_COLLISION_METHODS(CustomKDOP);
 #undef OLY_KDOP_COLLISION_METHODS
+
+	// ######################################################################################################################################################
+
+	// ######################################################################################################################################################
+	// CustomKDOP - Circle
+	
+	inline OverlapResult overlaps(const CustomKDOP& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_overlaps_polygon(c2, c1.points());
+	}
+	inline OverlapResult overlaps(const Circle& c1, const CustomKDOP& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_overlaps_polygon(c1, c2.points());
+	}
+	inline CollisionResult collides(const CustomKDOP& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_collides_polygon(c2, c1.points()).invert();
+	}
+	inline CollisionResult collides(const Circle& c1, const CustomKDOP& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_collides_polygon(c1, c2.points());
+	}
+	inline ContactResult contacts(const CustomKDOP& c1, const Circle& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
+	}
+	inline ContactResult contacts(const Circle& c1, const CustomKDOP& c2)
+	{
+		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		return internal::circle_contacts_polygon(c1, c2, c2.points());
+	}
 
 	// ######################################################################################################################################################
 
@@ -212,12 +290,9 @@ namespace oly::acm2d
 		return sat::contacts(c1, c2);\
 	}\
 
-	OLY_CUSTOM_KDOP_COLLISION_METHODS(Circle);
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(AABB);
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(OBB);
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(ConvexHull);
 #undef OLY_CUSTOM_KDOP_COLLISION_METHODS
 	// ######################################################################################################################################################
-
-	// TODO specialize for CustomKDOP - Circle and KDOP - Circle
 }
