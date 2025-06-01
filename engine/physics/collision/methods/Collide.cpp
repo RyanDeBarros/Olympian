@@ -1,13 +1,13 @@
 #include "Collide.h"
 
-#include "physics/collision/abstract/methods/SAT.h"
-#include "physics/collision/abstract/methods/CircleMethods.h"
+#include "physics/collision/methods/SAT.h"
+#include "physics/collision/methods/CircleMethods.h"
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	namespace internal
 	{

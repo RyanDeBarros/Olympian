@@ -3,9 +3,9 @@
 #include "core/base/Transforms.h"
 #include "core/base/Errors.h"
 
-#include "physics/collision/abstract/primitives/OBB.h"
+#include "physics/collision/primitives/OBB.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	namespace internal
 	{

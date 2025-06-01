@@ -3,9 +3,9 @@
 #include "core/base/Errors.h"
 #include "core/math/Solvers.h"
 #include "core/types/Approximate.h"
-#include "physics/collision/abstract/primitives/Common.h"
+#include "physics/collision/primitives/Common.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	OBB OBB::fast_wrap(const math::Polygon2D& polygon)
 	{

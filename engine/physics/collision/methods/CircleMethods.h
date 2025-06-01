@@ -2,20 +2,20 @@
 
 #include "core/base/Transforms.h"
 
-#include "physics/collision/abstract/primitives/Circle.h"
-#include "physics/collision/abstract/methods/CollisionInfo.h"
+#include "physics/collision/primitives/Circle.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
-namespace oly::acm2d::internal
+namespace oly::col2d::internal
 {
 	template<typename Polygon>
 	inline OverlapResult circle_overlaps_polygon(const Circle& c, const Polygon& polygon)
 	{
 		std::optional<bool> ccw;
-		glm::vec2 prev = transform_point(acm2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
+		glm::vec2 prev = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{
 			glm::vec2 a = prev;
-			glm::vec2 b = transform_point(acm2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
+			glm::vec2 b = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
 			prev = b;
 
 			UnitVector2D edge = b - a;
@@ -70,7 +70,7 @@ namespace oly::acm2d::internal
 	{
 		CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
 		std::optional<bool> ccw;
-		glm::vec2 prev = transform_point(acm2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
+		glm::vec2 prev = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
 		float ccw_depth = std::numeric_limits<float>::max();
 		UnitVector2D ccw_unit_impulse;
 		float cw_depth = std::numeric_limits<float>::max();
@@ -78,7 +78,7 @@ namespace oly::acm2d::internal
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{
 			glm::vec2 a = prev;
-			glm::vec2 b = transform_point(acm2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
+			glm::vec2 b = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
 			prev = b;
 
 			UnitVector2D edge = b - a;
@@ -159,7 +159,7 @@ namespace oly::acm2d::internal
 		{
 			// transform back to global
 			glm::vec2 impulse = info.penetration_depth * (glm::vec2)info.unit_impulse;
-			impulse = transform_direction(acm2d::internal::CircleGlobalAccess::get_global(c), impulse);
+			impulse = transform_direction(col2d::internal::CircleGlobalAccess::get_global(c), impulse);
 			info.penetration_depth = glm::length(impulse);
 			info.unit_impulse = impulse;
 		}

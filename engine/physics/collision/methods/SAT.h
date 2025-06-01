@@ -1,15 +1,15 @@
 #pragma once
 
-#include "physics/collision/abstract/methods/CollisionInfo.h"
-#include "physics/collision/abstract/primitives/ConvexHull.h"
-#include "physics/collision/abstract/primitives/Circle.h"
-#include "physics/collision/abstract/primitives/AABB.h"
-#include "physics/collision/abstract/primitives/OBB.h"
-#include "physics/collision/abstract/primitives/KDOP.h"
+#include "physics/collision/methods/CollisionInfo.h"
+#include "physics/collision/primitives/ConvexHull.h"
+#include "physics/collision/primitives/Circle.h"
+#include "physics/collision/primitives/AABB.h"
+#include "physics/collision/primitives/OBB.h"
+#include "physics/collision/primitives/KDOP.h"
 
 #include "core/types/Approximate.h"
 
-namespace oly::acm2d::sat
+namespace oly::col2d::sat
 {
 	namespace internal
 	{

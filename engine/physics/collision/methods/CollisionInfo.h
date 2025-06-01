@@ -5,7 +5,7 @@
 #include <vector>
 #include <variant>
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	struct OverlapResult
 	{

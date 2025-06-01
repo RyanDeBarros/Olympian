@@ -1,10 +1,10 @@
 #pragma once
 
-#include "physics/collision/abstract/methods/Collide.h"
-#include "physics/collision/abstract/methods/KDOPCollide.h"
+#include "physics/collision/methods/Collide.h"
+#include "physics/collision/methods/KDOPCollide.h"
 #include "core/base/Transforms.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
 	extern ContactResult greedy_collision(const std::vector<ContactResult>& contacts);

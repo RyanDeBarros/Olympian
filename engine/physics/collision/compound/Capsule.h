@@ -1,8 +1,8 @@
 #pragma once
 
-#include "physics/collision/abstract/compound/Compound.h"
+#include "physics/collision/compound/Compound.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	struct Capsule
 	{

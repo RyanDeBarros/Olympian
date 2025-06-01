@@ -2,7 +2,7 @@
 
 #include "core/base/UnitVector.h"
 
-namespace oly::acm2d::internal
+namespace oly::col2d::internal
 {
 	template<typename Polygon>
 	std::pair<float, float> polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis)

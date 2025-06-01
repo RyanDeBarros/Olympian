@@ -3,7 +3,7 @@
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	struct ConvexHull
 	{

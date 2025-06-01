@@ -2,11 +2,11 @@
 
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
-#include "physics/collision/abstract/primitives/AABB.h"
+#include "physics/collision/primitives/AABB.h"
 
 #include <array>
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	struct OBB
 	{

@@ -1,8 +1,8 @@
 ﻿#include "Olympian.h"
 
-#include "physics/collision/abstract/methods/Collide.h"
-#include "physics/collision/abstract/methods/SAT.h"
-#include "physics/collision/abstract/methods/KDOPCollide.h"
+#include "physics/collision/methods/Collide.h"
+#include "physics/collision/methods/SAT.h"
+#include "physics/collision/methods/KDOPCollide.h"
 #include "graphics/extensions/Arrow.h" // TODO loading for Arrow and Line extensions. Rename registries folder to assets
 
 #include "archetypes/PolygonCrop.h"
@@ -82,7 +82,7 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
-	oly::acm2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
+	oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
 	auto aabb_visual = oly::context::polygon();
 	aabb_visual.polygon.points = {
 		{ aabb.x1, aabb.y1 },
@@ -93,7 +93,7 @@ int main()
 	aabb_visual.polygon.colors = { oly::colors::MAGENTA };
 	aabb_visual.init();
 
-	oly::acm2d::Circle circ({}, 50.0f);
+	oly::col2d::Circle circ({}, 50.0f);
 	auto circ_visual = oly::context::ellipse();
 	{
 		auto& dimension = circ_visual.ellipse.set_dimension();
@@ -102,7 +102,7 @@ int main()
 	}
 	circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
 
-	oly::acm2d::AABB rect{};
+	oly::col2d::AABB rect{};
 	auto rect_visual = oly::context::polygon();
 	rect_visual.polygon.points = { { -circ.radius, -circ.radius }, { circ.radius, -circ.radius }, { circ.radius, circ.radius }, { -circ.radius, circ.radius } };
 	rect_visual.polygon.colors = { oly::colors::YELLOW };
@@ -161,11 +161,11 @@ int main()
 		// logic update
 
 		circ.center = oly::context::get_cursor_screen_pos();
-		auto contact = oly::acm2d::contacts(circ, aabb);
+		auto contact = oly::col2d::contacts(circ, aabb);
 		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
 		//auto contact = oly::acm2d::contacts(rect, aabb);
 		//if (contact.overlap)
-		if (oly::acm2d::overlaps(circ, aabb))
+		if (oly::col2d::overlaps(circ, aabb))
 		{
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;

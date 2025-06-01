@@ -1,11 +1,11 @@
 #include "ConvexHull.h"
 
 #include "core/types/Approximate.h"
-#include "physics/collision/abstract/primitives/Common.h"
+#include "physics/collision/primitives/Common.h"
 
 #include <algorithm>
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	ConvexHull ConvexHull::wrap(const math::Polygon2D& polygon)
 	{

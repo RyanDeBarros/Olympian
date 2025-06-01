@@ -4,14 +4,14 @@
 #include "core/base/Errors.h"
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
-#include "physics/collision/abstract/primitives/ConvexHull.h"
-#include "physics/collision/abstract/primitives/Common.h"
+#include "physics/collision/primitives/ConvexHull.h"
+#include "physics/collision/primitives/Common.h"
 
 #include <array>
 #include <string>
 #include <vector>
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	template<size_t K_half>
 	struct KDOP

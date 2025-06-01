@@ -1,9 +1,9 @@
 #include "AABB.h"
 
 #include "core/types/Approximate.h"
-#include "physics/collision/abstract/primitives/Common.h"
+#include "physics/collision/primitives/Common.h"
 
-namespace oly::acm2d
+namespace oly::col2d
 {
 	AABB AABB::wrap(const math::Polygon2D& polygon)
 	{

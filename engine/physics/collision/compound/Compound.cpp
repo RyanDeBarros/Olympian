@@ -3,7 +3,7 @@
 #include "core/base/SimpleMath.h"
 
 // TODO in all collision testing, use approximations and override tolerance to be more lenient.
-namespace oly::acm2d
+namespace oly::col2d
 {
 	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
 	{
