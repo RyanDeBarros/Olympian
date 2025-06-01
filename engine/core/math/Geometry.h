@@ -7,6 +7,7 @@
 namespace oly::math
 {
 	extern float cross(glm::vec2 u, glm::vec2 v);
+	extern glm::vec2 triple_cross(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 	extern float magnitude(glm::vec2 v);
 	extern float mag_sqrd(glm::vec2 v);
 	extern float inv_magnitude(glm::vec2 v);
@@ -15,6 +16,7 @@ namespace oly::math
 
 	extern bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test);
 	extern float signed_area(const std::vector<glm::vec2>& points);
+	inline bool point_in_triangle(glm::vec2 test, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 		
 	template<typename T>
 	inline T lerp(const T& t1, const T& t2, float alpha)

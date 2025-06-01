@@ -65,4 +65,9 @@ namespace oly::col2d
 		glm::vec2 contact;
 		UnitVector2D normal;
 	};
+
+	namespace gjk
+	{
+		inline static constexpr size_t VERTICES_THRESHOLD = 16;
+	}
 }

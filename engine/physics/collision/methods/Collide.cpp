@@ -1,11 +1,13 @@
 #include "Collide.h"
 
 #include "physics/collision/methods/SAT.h"
+#include "physics/collision/methods/GJK.h"
 #include "physics/collision/methods/CircleMethods.h"
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
+#include "core/util/Logger.h"
 
 namespace oly::col2d
 {
@@ -617,19 +619,58 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::overlaps(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::overlaps(c1, c2);
 	}
 
 	CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::collides(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::collides(c1, c2);
 	}
 
 	ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::contacts(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::contacts(c1, c2);
 	}
 
@@ -787,55 +828,172 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const Circle& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::overlaps(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return internal::circle_overlaps_polygon(c1, c2.points);
 	}
 
 	CollisionResult collides(const Circle& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::collides(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return internal::circle_collides_polygon(c1, c2.points);
 	}
 
 	ContactResult contacts(const Circle& c1, const ConvexHull& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::contacts(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return internal::circle_contacts_polygon(c1, c2, c2.points);
 	}
 
 	OverlapResult overlaps(const ConvexHull& c1, const AABB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::overlaps(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::overlaps(c1, c2);
 	}
 
 	CollisionResult collides(const ConvexHull& c1, const AABB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::collides(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::collides(c1, c2);
 	}
 
 	ContactResult contacts(const ConvexHull& c1, const AABB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::contacts(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::contacts(c1, c2);
 	}
 
 	OverlapResult overlaps(const ConvexHull& c1, const OBB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::overlaps(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::overlaps(c1, c2);
 	}
 	
 	CollisionResult collides(const ConvexHull& c1, const OBB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::collides(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::collides(c1, c2);
 	}
 
 	ContactResult contacts(const ConvexHull& c1, const OBB& c2)
 	{
-		// TODO only do if shapes have low enough degree. Otherwise, use GJK
+		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		{
+			try
+			{
+				return gjk::contacts(c1, c2);
+			}
+			catch (Error e)
+			{
+				if (e.code == ErrorCode::GJK_OVERFLOW)
+					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+				else
+					throw e;
+			}
+		}
 		return sat::contacts(c1, c2);
 	}
 }

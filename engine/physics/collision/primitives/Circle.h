@@ -33,8 +33,8 @@ namespace oly::col2d
 	private:
 		friend struct internal::CircleGlobalAccess;
 
-		glm::mat3x2 global = internal::CircleGlobalAccess::DEFAULT; // TODO use this in collision methods
-		glm::mat3x2 ginv = internal::CircleGlobalAccess::DEFAULT; // TODO use this in collision methods
+		glm::mat3x2 global = internal::CircleGlobalAccess::DEFAULT;
+		glm::mat3x2 ginv = internal::CircleGlobalAccess::DEFAULT;
 
 	public:
 		Circle(glm::vec2 center = {}, float radius = 0.0f) : center(center), radius(radius) {}

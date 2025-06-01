@@ -29,6 +29,7 @@ namespace oly::math
 		float& next() { return z; }
 
 		bool inside() const { return x >= 0.0f && y >= 0.0f && z >= 0.0f; }
+		glm::vec2 point(const Triangle2D& triangle) const { return x * triangle.root + y * triangle.prev + z * triangle.next; }
 		glm::vec2 point(glm::vec2 a, glm::vec2 b, glm::vec2 c) const { return x * a + y * b + z * c; }
 	};
 }

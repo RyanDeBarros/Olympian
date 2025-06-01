@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
-
 #include "external/GLM.h"
+
+#include <array>
 
 namespace oly::math
 {

@@ -1,10 +1,18 @@
 #include "Geometry.h"
 
+#include "core/math/Coordinates.h"
+
 namespace oly::math
 {
 	float cross(glm::vec2 u, glm::vec2 v)
 	{
 		return u.x * v.y - u.y * v.x;
+	}
+
+	glm::vec2 triple_cross(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3)
+	{
+		float d = cross(p1, p2);
+		return { -d * p3.y, d * p3.x };
 	}
 
 	float magnitude(glm::vec2 v)
@@ -46,6 +54,11 @@ namespace oly::math
 		for (size_t i = 1; i < points.size(); ++i)
 			signed_area += cross(points[i - 1], points[i]);
 		return 0.5f * signed_area;
+	}
+
+	bool point_in_triangle(glm::vec2 test, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3)
+	{
+		return math::Barycentric(math::Triangle2D{ p1, p2, p3 }, {}).inside();
 	}
 
 	Edge::Edge(glm::uint a, glm::uint b)
