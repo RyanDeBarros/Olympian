@@ -1,0 +1,92 @@
+\documentclass[10pt]{report}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{amsthm}
+\usepackage{braket}
+
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\quarterturn}{\mathcal{R^*}}
+
+\DeclareMathOperator{\clamp}{clamp}
+\DeclareMathOperator{\chs}{choose}
+
+\colorlet{shadecolor}{yellow!10}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newenvironment{thm}
+	{\begin{shaded}\begin{theorem}}
+	{\end{theorem}\end{shaded}}
+\newenvironment{coro}
+	{\begin{shaded}\begin{corollary}}
+	{\end{corollary}\end{shaded}}
+
+\begin{document}
+\title{Olympian Engine}
+\author{Ryan de Barros}
+\date{May 27, 2025}
+\maketitle
+
+\tableofcontents
+
+\chapter{Engine Layout}
+
+\chapter{Collision Testing}
+
+\section{Introduction}
+The MTV (minimum translation vector), or impulse, is represented by $\vec{\xi}$. A contact point for shape $S_i$ is represented by $\vec{\chi}_i$. The normalization of a vector $\vec{v}$, $\hat{v}=\frac{1}{|\vec{v}|}\vec{v}$, is equivalently represented by $\braket{\vec{v}}$ when dealing with more verbose expressions. The quarter-turn (90-degree CCW rotation) of a vector $\vec{v}$ is denoted by $\quarterturn\vec{v}$.
+
+\section{The Separating Axis Theroem (SAT)}
+
+\section{The Gilbert-Johnson-Keerthi (GJK) algorithm}
+
+\section{Primitives}
+
+\subsection{Axis-Aligned Bounding Box (AABB)}
+
+\subsection{Oriented Bounding Box (OBB)}
+
+\subsection{k-Discrete Oriented Polytope (kDOP)}
+
+\subsection{Convex Hull}
+
+\subsection{Affine Circle}
+Circles would indeed be the simplest primitives to work with if it weren't for the case of Affine Circles, circles that undergo some global affine transformation. Recall that this transformation can be represented by $G(\vec{v}_{\mbox{point}})=L\vec{v}_{\mbox{point}}+\vec{T}$ and $G(\vec{v}_{\mbox{ray}})=L\vec{v}_{\mbox{ray}}$. Note that in general, an Affine Circle is \textit{not} necessarily an ellipse.
+
+\subsubsection{Fast-wrap algorithm}
+
+\subsubsection{Deepest point algorithm}
+
+\subsubsection{Non-affine Circle-Circle overlap}
+This is the simplest possible test. Given two non-affine circles, parametrized by $(\vec{c}_1,r_1)$ and $(\vec{c}_2,r_2)$, the overlap test is simply
+\begin{equation}|\vec{c_2}-\vec{c_1}|\leq r_1+r_2\end{equation}
+
+\subsubsection{Non-affine Circle-Circle collision}
+If two non-affine circles overlap, then the mtv is calculated as:
+\begin{equation}\vec{\xi}=(r_1+r_2-|\vec{c_1}-\vec{c_2}|)\braket{\vec{c_1}-\vec{c_2}}\end{equation}
+
+\subsubsection{Non-affine Circle-Circle contact}
+If two non-affine circles collide, then the contact point on $\vec{c_1}$ is:
+\begin{equation}\vec{\chi}_1=\vec{c_1}+r_1\braket{\vec{\xi}}\end{equation}
+
+\subsubsection{Affine Circle-Circle overlap}
+Unfortunately, an Affine Circle may be worse than an ellipse, which already requires solving a complex quartic equation when testing for collision with another ellipse or circle. Fortunately, there is a clearer and equally efficient golden-search algorithm that allows for approximation of the MTV. If a negative MTV occurs, the algorithm can be left early with a no-collision result. For overlapping, simply check that the MTV is non-negative, the approximation of which is described in the next section.
+
+\subsubsection{Affine Circle-Circle collision}
+
+\subsubsection{Affine Circle-Circle contact}
+
+\subsubsection{General Circle-Polygon overlap}
+
+\subsubsection{General Circle-Polygon collision}
+
+\subsubsection{General Circle-Polygon contact}
+
+\section{Compounds}
+
+\section{Bounding Volume Hierarchies}
+
+\end{document}
