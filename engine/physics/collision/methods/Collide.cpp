@@ -7,7 +7,6 @@
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
-#include "core/util/Logger.h"
 
 namespace oly::col2d
 {
@@ -627,9 +626,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW)
 					throw e;
 			}
 		}
@@ -646,9 +643,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -665,9 +660,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -836,9 +829,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW)
 					throw e;
 			}
 		}
@@ -855,9 +846,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -874,9 +863,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -893,9 +880,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW)
 					throw e;
 			}
 		}
@@ -912,9 +897,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -931,9 +914,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -950,9 +931,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW)
 					throw e;
 			}
 		}
@@ -969,9 +948,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}
@@ -988,9 +965,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::GJK_OVERFLOW)
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
-				else
+				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
 					throw e;
 			}
 		}

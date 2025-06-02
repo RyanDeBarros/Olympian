@@ -161,11 +161,10 @@ int main()
 		// logic update
 
 		circ.center = oly::context::get_cursor_screen_pos();
-		auto contact = oly::col2d::contacts(circ, aabb);
+		auto contact = oly::col2d::gjk::contacts(circ, aabb);
 		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
 		//auto contact = oly::acm2d::contacts(rect, aabb);
-		//if (contact.overlap)
-		if (oly::col2d::overlaps(circ, aabb))
+		if (contact.overlap)
 		{
 			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;

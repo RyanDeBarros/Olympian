@@ -2,6 +2,11 @@
 
 #include "core/base/UnitVector.h"
 
+
+
+#include "core/util/Logger.h"
+
+
 namespace oly::col2d::internal
 {
 	template<typename Polygon>
@@ -27,11 +32,13 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis)
 	{
+		// TODO use the fact that polygon should be convex. once the proj starts to taper off, it can never return to deepest proj for rest of points, so return early.
 		glm::vec2 deepest{};
 		float max_depth = std::numeric_limits<float>::lowest();
 		for (glm::vec2 point : polygon)
 		{
 			float proj = axis.dot(point);
+			LOG << point << " " << proj << LOG.nl;
 			if (proj > max_depth)
 			{
 				max_depth = proj;
