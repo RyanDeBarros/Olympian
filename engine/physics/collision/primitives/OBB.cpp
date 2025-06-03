@@ -7,26 +7,26 @@
 
 namespace oly::col2d
 {
-	OBB OBB::fast_wrap(const math::Polygon2D& polygon)
+	OBB OBB::fast_wrap(const const glm::vec2* polygon, size_t count)
 	{
 		OBB obb{};
 
 		glm::vec2 centroid = {};
-		for (glm::vec2 point : polygon)
-			centroid += point;
-		centroid /= (float)polygon.size();
+		for (size_t i = 0; i < count; ++i)
+			centroid += polygon[i];
+		centroid /= (float)count;
 
 		math::solver::Eigen2x2 covariance{ .M = 0.0f };
 
-		for (glm::vec2 point : polygon)
+		for (size_t i = 0; i < count; ++i)
 		{
-			glm::vec2 p = point - centroid;
+			glm::vec2 p = polygon[i] - centroid;
 			covariance.M[0][0] += p.x * p.x;
 			covariance.M[0][1] += p.x * p.y;
 			covariance.M[1][0] += p.y * p.x;
 			covariance.M[1][1] += p.y * p.y;
 		}
-		covariance.M /= (float)polygon.size();
+		covariance.M /= (float)count;
 
 		glm::vec2 eigenvectors[2];
 		covariance.solve(nullptr, eigenvectors);
@@ -35,44 +35,41 @@ namespace oly::col2d
 
 		obb.rotation = glm::atan(major_axis.y, major_axis.x);
 
-		float minX = std::numeric_limits<float>::max(), maxX = std::numeric_limits<float>::lowest(), minY = std::numeric_limits<float>::max(), maxY = std::numeric_limits<float>::lowest();
-		for (glm::vec2 point : polygon)
+		AABB bounds = AABB::DEFAULT;
+		for (size_t i = 0; i < count; ++i)
 		{
-			glm::vec2 p = point - centroid;
+			glm::vec2 p = polygon[i] - centroid;
 			float x = glm::dot(p, major_axis);
 			float y = glm::dot(p, minor_axis);
 
-			minX = std::min(minX, x);
-			maxX = std::max(maxX, x);
-			minY = std::min(minY, y);
-			maxY = std::max(maxY, y);
+			bounds.x1 = std::min(bounds.x1, x);
+			bounds.x2 = std::max(bounds.x2, x);
+			bounds.y1 = std::min(bounds.y1, y);
+			bounds.y2 = std::max(bounds.y2, y);
 		}
 
-		obb.center = 0.5f * glm::vec2{ minX + maxX, minY + maxY };
-		obb.width = maxX - minX;
-		obb.height = maxY - minY;
-
-		return obb;
+		return { .center = bounds.center(), .width = bounds.x2 - bounds.x1, .height = bounds.y2 - bounds.y1 };
 	}
 
-	OBB OBB::wrap_axis_aligned(const math::Polygon2D& polygon, float rotation)
+	OBB OBB::wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation)
 	{
-		float max_w = std::numeric_limits<float>::lowest(), min_w = std::numeric_limits<float>::max(), max_h = std::numeric_limits<float>::lowest(), min_h = std::numeric_limits<float>::max();
+		AABB bounds = AABB::DEFAULT;
 		UnitVector2D axis1(rotation);
-		for (glm::vec2 point : polygon)
+		for (size_t i = 0; i < count; ++i)
 		{
-			float w = axis1.dot(point);
-			min_w = std::min(min_w, w);
-			max_w = std::max(max_w, w);
+			float w = axis1.dot(polygon[i]);
+			bounds.x1 = std::min(bounds.x1, w);
+			bounds.x2 = std::max(bounds.x2, w);
 		}
 		UnitVector2D axis2(rotation + glm::half_pi<float>());
-		for (glm::vec2 point : polygon)
+		for (size_t i = 0; i < count; ++i)
 		{
-			float h = axis2.dot(point);
-			min_h = std::min(min_h, h);
-			max_h = std::max(max_h, h);
+			float h = axis2.dot(polygon[i]);
+			bounds.y1 = std::min(bounds.y1, h);
+			bounds.y2 = std::max(bounds.y2, h);
 		}
-		return { .center = 0.5f * glm::vec2{ min_w + max_w, min_h + max_h }, .width = max_w - min_w, .height = max_h - min_h, .rotation = rotation };
+		
+		return { .center = bounds.center(), .width = bounds.x2 - bounds.x1, .height = bounds.y2 - bounds.y1, .rotation = rotation };
 	}
 
 	std::array<glm::vec2, 4> OBB::points() const

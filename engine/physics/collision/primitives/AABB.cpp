@@ -5,11 +5,12 @@
 
 namespace oly::col2d
 {
-	AABB AABB::wrap(const math::Polygon2D& polygon)
+	AABB AABB::wrap(const glm::vec2* polygon, size_t count)
 	{
-		AABB c{ .x1 = std::numeric_limits<float>::max(), .x2 = std::numeric_limits<float>::lowest(), .y1 = std::numeric_limits<float>::max(), .y2 = std::numeric_limits<float>::lowest() };
-		for (glm::vec2 point : polygon)
+		AABB c = DEFAULT;
+		for (size_t i = 0; i < count; ++i)
 		{
+			glm::vec2 point = polygon[i];
 			c.x1 = std::min(c.x1, point.x);
 			c.x2 = std::max(c.x2, point.x);
 			c.y1 = std::min(c.y1, point.y);

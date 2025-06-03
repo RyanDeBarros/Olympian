@@ -295,7 +295,7 @@ namespace oly::col2d
 				for (glm::vec2 point : c.points())
 					polygon.push_back(transform_point(m, point));
 
-				return AABB::wrap(polygon);
+				return AABB::wrap(polygon.data(), polygon.size());
 			}
 			else
 			{
@@ -339,12 +339,12 @@ namespace oly::col2d
 				if (axes[0].near_standard() && axes[1].near_standard())
 				{
 					// AABB
-					return AABB::wrap(polygon);
+					return AABB::wrap(polygon.data(), polygon.size());
 				}
 				else
 				{
 					// OBB
-					return OBB::fast_wrap(polygon);
+					return OBB::fast_wrap(polygon.data(), polygon.size());
 				}
 			}
 			else

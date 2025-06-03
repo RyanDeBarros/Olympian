@@ -89,6 +89,41 @@ namespace oly::col2d
 		}
 	}
 
+	OverlapResult point_hits(glm::vec2 c, glm::vec2 test)
+	{
+		return approx(c, test);
+	}
+
+	OverlapResult ray_hits(glm::vec2 c, const Ray& ray)
+	{
+		if (!near_zero(ray.direction.get_quarter_turn().dot(c - ray.origin)))
+			return false;
+		float dot = ray.direction.dot(c - ray.origin);
+		if (near_zero(dot))
+			return true;
+		if (dot < 0.0f)
+			return false;
+		return ray.clip == 0.0f || dot <= ray.clip;
+	}
+
+	RaycastResult raycast(glm::vec2 c, const Ray& ray)
+	{
+		if (!near_zero(ray.direction.get_quarter_turn().dot(c - ray.origin)))
+			return { .hit = RaycastResult::Hit::NO_HIT };
+
+		float dot = ray.direction.dot(c - ray.origin);
+		if (near_zero(dot))
+			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = c, .normal = ray.origin - c };
+		
+		if (dot < 0.0f)
+			return { .hit = RaycastResult::Hit::NO_HIT };
+
+		if (ray.clip == 0.0f || dot <= ray.clip)
+			return { .hit = RaycastResult::Hit::TRUE_HIT, .contact = c, .normal = ray.origin - c };
+		else
+			return { .hit = RaycastResult::Hit::NO_HIT };
+	}
+
 	OverlapResult point_hits(const Circle& c, glm::vec2 test)
 	{
 		glm::vec2 local = transform_point(internal::CircleGlobalAccess::get_ginv(c), test);

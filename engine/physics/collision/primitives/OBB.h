@@ -16,9 +16,9 @@ namespace oly::col2d
 
 		float area() const { return width * height; }
 
-		static OBB fast_wrap(const math::Polygon2D& polygon);
-		static OBB wrap_axis_aligned(const math::Polygon2D& polygon, float rotation);
-		// TODO static OBB slow_wrap(const math::Polygon2D& polygon); using rotating calipers method
+		static OBB fast_wrap(const glm::vec2* polygon, size_t count);
+		static OBB wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation);
+		// TODO static OBB slow_wrap(const glm::vec2* polygon, size_t count); using rotating calipers method
 
 		UnitVector2D get_axis_1() const { return UnitVector2D(rotation); }
 		float get_axis_1_projection() const { return UnitVector2D(rotation).dot(center); }
