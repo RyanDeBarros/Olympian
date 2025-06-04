@@ -23,44 +23,55 @@ namespace oly::col2d
 		std::array<float, K_half> minima;
 		std::array<float, K_half> maxima;
 		mutable std::array<glm::vec2, K> _cache;
-		mutable bool dirty = true;
+		mutable glm::vec2 _center{};
+		mutable bool dirty_cache = true;
+		mutable bool dirty_center = true;
 
 	public:
 		const std::array<float, K_half>& get_minima() const { return minima; }
 		const std::array<float, K_half>& get_maxima() const { return maxima; }
-		void set_minima(const std::array<float, K_half>& min) { minima = min; dirty = true; }
-		void set_maxima(const std::array<float, K_half>& max) { maxima = max; dirty = true; }
+		void set_minima(const std::array<float, K_half>& min) { minima = min; dirty_cache = true; dirty_center = true; }
+		void set_maxima(const std::array<float, K_half>& max) { maxima = max; dirty_cache = true; dirty_center = true; }
 		float get_minimum(size_t i) const { return minima[i]; }
 		float get_maximum(size_t i) const { return maxima[i]; }
-		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty = true; }
-		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty = true; }
+		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty_cache = true; dirty_center = true; }
+		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty_cache = true; dirty_center = true; }
 		
 		KDOP() = default;
-		KDOP(const std::array<float, K_half>& minima, const std::array<float, K_half>& maxima) : minima(minima), maxima(maxima) { dirty = true; }
+		KDOP(const std::array<float, K_half>& minima, const std::array<float, K_half>& maxima) : minima(minima), maxima(maxima) { dirty_cache = true; dirty_center = true; }
 
-	private:
-		void recompute_cache() const
+		glm::vec2 center() const
 		{
-			math::Polygon2D cloud;
-			cloud.reserve(K);
-
-			for (size_t i = 0; i < K_half; ++i)
+			if (dirty_center)
 			{
-				cloud.push_back((glm::vec2)uniform_axis(i) * minima[i]);
-				cloud.push_back((glm::vec2)uniform_axis(i) * maxima[i]);
+				dirty_center = false;
+				_center = {};
+				for (glm::vec2 p : cache())
+					_center += p;
+				_center /= (float)K;
 			}
-
-			ConvexHull hull = ConvexHull::wrap(cloud);
-			for (size_t i = 0; i < K; ++i)
-				_cache[i] = hull.points[i];
+			return _center;
 		}
 
+	private:
 		const std::array<glm::vec2, K>& cache() const
 		{
-			if (dirty)
+			if (dirty_cache)
 			{
-				dirty = false;
-				recompute_cache();
+				dirty_cache = false;
+
+				math::Polygon2D cloud;
+				cloud.reserve(K);
+
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					cloud.push_back((glm::vec2)uniform_axis(i) * minima[i]);
+					cloud.push_back((glm::vec2)uniform_axis(i) * maxima[i]);
+				}
+
+				ConvexHull hull = ConvexHull::wrap(cloud);
+				for (size_t i = 0; i < K; ++i)
+					_cache[i] = hull.points()[i];
 			}
 			return _cache;
 		}
@@ -123,10 +134,13 @@ namespace oly::col2d
 		std::vector<float> minima;
 		std::vector<float> maxima;
 		mutable std::vector<glm::vec2> _cache;
-		mutable bool dirty = true;
+		mutable glm::vec2 _center{};
+		mutable bool dirty_cache = true;
+		mutable bool dirty_center = true;
 
 	public:
 		size_t get_k_half() const { return axes.size(); }
+		size_t get_k() const { return 2 * axes.size(); }
 		const std::vector<UnitVector2D>& get_axes() const { return axes; }
 		const std::vector<float>& get_minima() const { return minima; }
 		const std::vector<float>& get_maxima() const { return maxima; }
@@ -137,12 +151,13 @@ namespace oly::col2d
 			axes.resize(k_half);
 			minima.resize(k_half);
 			maxima.resize(k_half);
-			dirty = true;
+			dirty_cache = true;
+			dirty_center = true;
 		}
 		float get_minimum(size_t i) const { return minima[i]; }
 		float get_maximum(size_t i) const { return maxima[i]; }
-		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty = true; }
-		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty = true; }
+		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty_cache = true; dirty_center = true; }
+		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty_cache = true; dirty_center = true; }
 		void set_axes(const std::vector<UnitVector2D>& axes)
 		{
 			set_k_half(axes.size());
@@ -174,29 +189,38 @@ namespace oly::col2d
 			}
 		}
 
-	private:
-		void recompute_cache() const
+		glm::vec2 center() const
 		{
-			math::Polygon2D cloud;
-			cloud.reserve(2 * get_k_half());
-
-			for (size_t i = 0; i < get_k_half(); ++i)
+			if (dirty_center)
 			{
-				cloud.push_back((glm::vec2)axes[i] * minima[i]);
-				cloud.push_back((glm::vec2)axes[i] * maxima[i]);
+				dirty_center = false;
+				_center = {};
+				for (glm::vec2 p : cache())
+					_center += p;
+				_center / (float)get_k();
 			}
-
-			ConvexHull hull = ConvexHull::wrap(cloud);
-			for (size_t i = 0; i < 2 * get_k_half(); ++i)
-				_cache[i] = hull.points[i];
+			return _center;
 		}
 
+	private:
 		const std::vector<glm::vec2>& cache() const
 		{
-			if (dirty)
+			if (dirty_cache)
 			{
-				dirty = false;
-				recompute_cache();
+				dirty_cache = false;
+
+				math::Polygon2D cloud;
+				cloud.reserve(get_k());
+
+				for (size_t i = 0; i < get_k_half(); ++i)
+				{
+					cloud.push_back((glm::vec2)axes[i] * minima[i]);
+					cloud.push_back((glm::vec2)axes[i] * maxima[i]);
+				}
+
+				ConvexHull hull = ConvexHull::wrap(cloud);
+				for (size_t i = 0; i < get_k(); ++i)
+					_cache[i] = hull.points()[i];
 			}
 			return _cache;
 		}

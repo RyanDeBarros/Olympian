@@ -98,6 +98,7 @@ namespace oly
 			RIGHT_OPEN,
 			LEFT_OPEN
 		};
+		
 		template<Mode mode = Mode::CLOSED>
 		bool contains(T pt) const
 		{
@@ -109,6 +110,11 @@ namespace oly
 				return left <= pt && pt < right;
 			else
 				return left < pt && pt <= right;
+		}
+
+		T clamp(T pt) const
+		{
+			return pt < left ? left : (pt > right ? right : pt);
 		}
 	};
 }

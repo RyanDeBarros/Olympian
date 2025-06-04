@@ -152,7 +152,7 @@ namespace oly::col2d
 
 	inline OverlapResult overlaps(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
-		if (2 * (c1.get_k_half() + c2.get_k_half()) >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -169,7 +169,7 @@ namespace oly::col2d
 
 	inline CollisionResult collides(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
-		if (2 * (c1.get_k_half() + c2.get_k_half()) >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -186,7 +186,7 @@ namespace oly::col2d
 
 	inline ContactResult contacts(const CustomKDOP& c1, const CustomKDOP& c2)
 	{
-		if (2 * (c1.get_k_half() + c2.get_k_half()) >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -427,8 +427,8 @@ namespace oly::col2d
 
 	OLY_KDOP_COLLISION_METHODS(AABB, 4, 4);
 	OLY_KDOP_COLLISION_METHODS(OBB, 4, 4);
-	OLY_KDOP_COLLISION_METHODS(ConvexHull, c1.points.size(), c2.points.size());
-	OLY_KDOP_COLLISION_METHODS(CustomKDOP, 2 * c1.get_k_half(), 2 * c2.get_k_half());
+	OLY_KDOP_COLLISION_METHODS(ConvexHull, c1.points().size(), c2.points().size());
+	OLY_KDOP_COLLISION_METHODS(CustomKDOP, c1.get_k(), c2.get_k());
 #undef OLY_KDOP_COLLISION_METHODS
 
 	// ######################################################################################################################################################
@@ -438,7 +438,7 @@ namespace oly::col2d
 	
 	inline OverlapResult overlaps(const CustomKDOP& c1, const Circle& c2)
 	{
-		if (2 * c1.get_k_half() + 1 >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -455,7 +455,7 @@ namespace oly::col2d
 
 	inline OverlapResult overlaps(const Circle& c1, const CustomKDOP& c2)
 	{
-		if (1 + 2 * c2.get_k_half() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -472,7 +472,7 @@ namespace oly::col2d
 
 	inline CollisionResult collides(const CustomKDOP& c1, const Circle& c2)
 	{
-		if (2 * c1.get_k_half() + 1 >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -489,7 +489,7 @@ namespace oly::col2d
 
 	inline CollisionResult collides(const Circle& c1, const CustomKDOP& c2)
 	{
-		if (1 + 2 * c2.get_k_half() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -506,7 +506,7 @@ namespace oly::col2d
 
 	inline ContactResult contacts(const CustomKDOP& c1, const Circle& c2)
 	{
-		if (2 * c1.get_k_half() + 1 >= gjk::VERTICES_THRESHOLD)
+		if (c1.get_k() + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -523,7 +523,7 @@ namespace oly::col2d
 
 	inline ContactResult contacts(const Circle& c1, const CustomKDOP& c2)
 	{
-		if (1 + 2 * c2.get_k_half() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -546,7 +546,7 @@ namespace oly::col2d
 #define OLY_CUSTOM_KDOP_COLLISION_METHODS(Shape, shape_vertices1, shape_vertices2)\
 	inline OverlapResult overlaps(const CustomKDOP& c1, const Shape& c2)\
 	{\
-		if (2 * c1.get_k_half() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (c1.get_k() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -562,7 +562,7 @@ namespace oly::col2d
 	}\
 	inline OverlapResult overlaps(const Shape& c1, const CustomKDOP& c2)\
 	{\
-		if (2 * c2.get_k_half() + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (shape_vertices1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -578,7 +578,7 @@ namespace oly::col2d
 	}\
 	inline CollisionResult collides(const CustomKDOP& c1, const Shape& c2)\
 	{\
-		if (2 * c1.get_k_half() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (c1.get_k() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -594,7 +594,7 @@ namespace oly::col2d
 	}\
 	inline CollisionResult collides(const Shape& c1, const CustomKDOP& c2)\
 	{\
-		if (2 * c2.get_k_half() + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (shape_vertices1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -610,7 +610,7 @@ namespace oly::col2d
 	}\
 	inline ContactResult contacts(const CustomKDOP& c1, const Shape& c2)\
 	{\
-		if (2 * c1.get_k_half() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (c1.get_k() + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -626,7 +626,7 @@ namespace oly::col2d
 	}\
 	inline ContactResult contacts(const Shape& c1, const CustomKDOP& c2)\
 	{\
-		if (2 * c2.get_k_half() + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (shape_vertices1 + c2.get_k() >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -643,7 +643,7 @@ namespace oly::col2d
 
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(AABB, 4, 4);
 	OLY_CUSTOM_KDOP_COLLISION_METHODS(OBB, 4, 4);
-	OLY_CUSTOM_KDOP_COLLISION_METHODS(ConvexHull, c1.points.size(), c2.points.size());
+	OLY_CUSTOM_KDOP_COLLISION_METHODS(ConvexHull, c1.points().size(), c2.points().size());
 #undef OLY_CUSTOM_KDOP_COLLISION_METHODS
 
 	// ######################################################################################################################################################

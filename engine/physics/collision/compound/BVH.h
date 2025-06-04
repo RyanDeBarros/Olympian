@@ -4,6 +4,8 @@
 #include "core/math/Solvers.h"
 #include "core/base/Assert.h"
 
+#include <algorithm>
+
 namespace oly::col2d
 {
 	namespace internal
@@ -27,6 +29,32 @@ namespace oly::col2d
 		};
 
 		// TODO other shapes
+	}
+
+	namespace heuristics
+	{
+		extern glm::vec2 midpoint(const Primitive& primitive);
+
+		struct MidpointXY
+		{
+			bool operator()(const Primitive& lhs, const Primitive& rhs) const
+			{
+				glm::vec2 lm = midpoint(lhs);
+				glm::vec2 rm = midpoint(rhs);
+				return lm.x < rm.x || (lm.x == rm.x && lm.y <= rm.y);
+			}
+		};
+
+		struct MidpointYX
+		{
+			bool operator()(const Primitive& lhs, const Primitive& rhs) const
+			{
+				glm::vec2 lm = midpoint(lhs);
+				glm::vec2 rm = midpoint(rhs);
+				return lm.y < rm.y || (lm.y == rm.y && lm.x <= rm.x);
+			}
+		};
+
 	}
 
 	template<typename Shape>
@@ -54,12 +82,26 @@ namespace oly::col2d
 		};
 
 		mutable std::unique_ptr<Node> _root;
-		std::vector<Primitive> primitives;
+		mutable std::vector<Primitive> primitives;
 		mutable bool dirty = true;
+
+	public:
+		enum class Heuristic
+		{
+			NONE,
+			MIDPOINT_XY,
+			MIDPOINT_YX
+		};
+
+	private:
+		Heuristic heuristic = Heuristic::MIDPOINT_XY;
 
 	public:
 		const std::vector<Primitive>& get_primitives() const { return primitives; }
 		std::vector<Primitive>& set_primitives() { dirty = true; return primitives; }
+
+		Heuristic get_heuristic() const { return heuristic; }
+		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
 
 	private:
 		const Node& root() const
@@ -67,7 +109,10 @@ namespace oly::col2d
 			if (dirty)
 			{
 				dirty = false;
-				// TODO later, sort primitives by heuristic, such as left-to-right
+				if (heuristic == Heuristic::MIDPOINT_XY)
+					std::sort(primitives.begin(), primitives.end(), heuristics::MidpointXY{});
+				else if (heuristic == Heuristic::MIDPOINT_YX)
+					std::sort(primitives.begin(), primitives.end(), heuristics::MidpointYX{});
 				_root = std::make_unique<Node>(primitives.data(), 0, primitives.size());
 			}
 			return *_root;

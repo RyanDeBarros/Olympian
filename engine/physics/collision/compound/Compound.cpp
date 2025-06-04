@@ -308,8 +308,8 @@ namespace oly::col2d
 		{
 			// CustomKDOP
 			std::vector<UnitVector2D> axes = {
-				transform_direction(m, c.get_axis_1()),
-				transform_direction(m, c.get_axis_2())
+				transform_direction(m, c.get_major_axis()),
+				transform_direction(m, c.get_minor_axis())
 			};
 
 			math::Polygon2D polygon;
@@ -463,9 +463,10 @@ namespace oly::col2d
 	Primitive transform_primitive(const ConvexHull& c, const glm::mat3& m)
 	{
 		ConvexHull tc;
-		tc.points.reserve(c.points.size());
-		for (glm::vec2 p : c.points)
-			tc.points.push_back(transform_point(m, p));
+		std::vector<glm::vec2>& points = tc.set_points();
+		points.reserve(points.size());
+		for (glm::vec2 p : points)
+			points.push_back(transform_point(m, p));
 		return tc;
 	}
 

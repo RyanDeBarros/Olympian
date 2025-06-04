@@ -201,6 +201,4 @@ namespace oly::col2d
 	inline CollisionResult collides(const Primitive& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
 	extern ContactResult contacts(const TCompound& c1, const Primitive& c2);
 	inline ContactResult contacts(const Primitive& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
-
-	// TODO PointCloud that can be transformed and can bake a BVH. When using collision in game, try to use PointCloud if possible.
 }

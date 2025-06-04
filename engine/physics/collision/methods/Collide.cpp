@@ -6,6 +6,7 @@
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
+#include "core/base/Constants.h"
 #include "core/math/Solvers.h"
 
 namespace oly::col2d
@@ -169,14 +170,11 @@ namespace oly::col2d
 
 	static bool circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& minimizing_axis, float& depth)
 	{
-		// TODO abstract these constants
-		static constexpr float phi = 1.0f / glm::golden_ratio<float>();
-		static const size_t iterations = roundi(glm::log(1.0f / 360.0f) / glm::log(phi)); // DOC <= 1.0 degree error
 		float left = 0.0f, right = glm::pi<float>();
-		for (size_t i = 0; i < iterations && right > left; ++i)
+		for (size_t i = 0; i < golden_iterations(1.0f / 360.0f) && right > left; ++i)
 		{
-			float m1 = right - (right - left) * phi;
-			float m2 = left + (right - left) * phi;
+			float m1 = right - (right - left) * inv_golden_ratio();
+			float m2 = left + (right - left) * inv_golden_ratio();
 			UnitVector2D a1(m1);
 			float d1 = circle_penetration_depth(c1, c2, a1);
 			if (d1 < 0.0f)
@@ -518,22 +516,22 @@ namespace oly::col2d
 
 	OverlapResult ray_hits(const OBB& c, const Ray& ray)
 	{
-		auto proj = c.get_axis_1_projection_interval();
-		if (internal::ray_hits_slab(proj.first, proj.second, ray, c.get_axis_1()))
+		auto proj = c.get_major_axis_projection_interval();
+		if (internal::ray_hits_slab(proj.first, proj.second, ray, c.get_major_axis()))
 			return false;
-		proj = c.get_axis_2_projection_interval();
-		return internal::ray_hits_slab(proj.first, proj.second, ray, c.get_axis_2());
+		proj = c.get_minor_axis_projection_interval();
+		return internal::ray_hits_slab(proj.first, proj.second, ray, c.get_minor_axis());
 	}
 
 	RaycastResult raycast(const OBB& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = std::numeric_limits<float>::lowest();
-		auto proj = c.get_axis_1_projection_interval();
-		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_axis_1(), info, max_entry))
+		auto proj = c.get_major_axis_projection_interval();
+		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_major_axis(), info, max_entry))
 			return { .hit = RaycastResult::Hit::NO_HIT };
-		proj = c.get_axis_2_projection_interval();
-		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_axis_2(), info, max_entry))
+		proj = c.get_minor_axis_projection_interval();
+		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_minor_axis(), info, max_entry))
 			return { .hit = RaycastResult::Hit::NO_HIT };
 		if (info.hit == RaycastResult::Hit::TRUE_HIT)
 			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
@@ -557,10 +555,10 @@ namespace oly::col2d
 
 	OverlapResult point_hits(const ConvexHull& c, glm::vec2 test)
 	{
-		for (int i = 0; i < c.points.size(); ++i)
+		for (int i = 0; i < c.points().size(); ++i)
 		{
-			glm::vec2 u1 = c.points[unsigned_mod(i - 1, (int)c.points.size())] - c.points[i];
-			glm::vec2 u2 = c.points[(i + 1) % c.points.size()] - c.points[i];
+			glm::vec2 u1 = c.points()[unsigned_mod(i - 1, (int)c.points().size())] - c.points()[i];
+			glm::vec2 u2 = c.points()[(i + 1) % c.points().size()] - c.points()[i];
 			if (!math::in_convex_sector(u1, u2, test))
 				return false;
 		}
@@ -573,10 +571,10 @@ namespace oly::col2d
 		if (point_hits(c, ray.origin))
 			return true;
 
-		for (size_t i = 0; i < c.points.size(); ++i)
+		for (size_t i = 0; i < c.points().size(); ++i)
 		{
 			// ray hits polygon edge
-			if (ray_contact_line_segment(c.points[i], c.points[(i + 1) % c.points.size()], ray))
+			if (ray_contact_line_segment(c.points()[i], c.points()[(i + 1) % c.points().size()], ray))
 				return true;
 		}
 		return false;
@@ -590,11 +588,11 @@ namespace oly::col2d
 
 		float closest_edge_distance = std::numeric_limits<float>::max();;
 		size_t closest_idx = -1;
-		for (size_t i = 0; i < c.points.size(); ++i)
+		for (size_t i = 0; i < c.points().size(); ++i)
 		{
 			// ray hits polygon edge
 			float t1, t2;
-			if (ray_contact_line_segment(c.points[i], c.points[(i + 1) % c.points.size()], ray, t1, t2))
+			if (ray_contact_line_segment(c.points()[i], c.points()[(i + 1) % c.points().size()], ray, t1, t2))
 			{
 				if (t1 < closest_edge_distance)
 				{
@@ -618,7 +616,7 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -635,7 +633,7 @@ namespace oly::col2d
 
 	CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -652,7 +650,7 @@ namespace oly::col2d
 
 	ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points.size() + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -788,20 +786,140 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const Circle& c1, const OBB& c2)
 	{
-		// TODO do clamping thing that AABB does
-		return internal::circle_overlaps_polygon(c1, c2.points());
+		if (internal::CircleGlobalAccess::has_no_global(c1))
+		{
+			// closest point in OBB to center of circle
+			glm::mat2 rot = c2.get_rotation_matrix();
+			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
+			float mx = glm::length(c2.center);
+			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, mx - 0.5f * c2.width, mx + 0.5f * c2.width), glm::clamp(local_c1_center.y, -0.5f * c2.height, 0.5f * c2.height) };
+			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
+			return dist_sqrd <= c1.radius * c1.radius;
+		}
+		else
+			return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 
 	CollisionResult collides(const Circle& c1, const OBB& c2)
 	{
-		// TODO can do something cimilar to Circle - AABB
-		return internal::circle_collides_polygon(c1, c2.points());
+		if (internal::CircleGlobalAccess::has_no_global(c1))
+		{
+			CollisionResult info{};
+
+			// closest point on OBB to center of circle
+			glm::mat2 rot = c2.get_rotation_matrix();
+			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
+			float mx = glm::length(c2.center);
+			AABB b2{ .x1 = mx - 0.5f * c2.width, .x2 = mx + 0.5f * c2.width, .y1 = -0.5f * c2.height, .y2 = 0.5f * c2.height };
+			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
+			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
+			info.overlap = dist_sqrd <= c1.radius * c1.radius;
+
+			if (info.overlap)
+			{
+				if (near_zero(dist_sqrd)) // circle center is inside OBB
+				{
+					float dx1 = local_c1_center.x - b2.x1;
+					float dx2 = b2.x2 - c1.center.x;
+					float dy1 = local_c1_center.y - b2.y1;
+					float dy2 = b2.y2 - c1.center.y;
+
+					float dx = std::min(dx1, dx2);
+					float dy = std::min(dy1, dy2);
+
+					if (dx < dy)
+					{
+						info.penetration_depth = dx + c1.radius;
+						info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
+					}
+					else
+					{
+						info.penetration_depth = dy + c1.radius;
+						info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
+					}
+				}
+				else // circle center is outside OBB
+				{
+					info.penetration_depth = c1.radius - glm::sqrt(dist_sqrd);
+					info.unit_impulse = local_c1_center - closest_point;
+				}
+			}
+
+			glm::vec2 mtv = info.penetration_depth * (glm::vec2)info.unit_impulse;
+			mtv = rot * mtv;
+			info.penetration_depth = glm::length(mtv);
+			info.unit_impulse = UnitVector2D(mtv);
+
+			return info;
+		}
+		else
+			return internal::circle_collides_polygon(c1, c2.points());
 	}
 
 	ContactResult contacts(const Circle& c1, const OBB& c2)
 	{
-		// TODO can do something cimilar to Circle - AABB
-		return internal::circle_contacts_polygon(c1, c2, c2.points());
+		if (internal::CircleGlobalAccess::has_no_global(c1))
+		{
+			ContactResult info{};
+
+			// closest point on OBB to center of circle
+			glm::mat2 rot = c2.get_rotation_matrix();
+			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
+			float mx = glm::length(c2.center);
+			AABB b2{ .x1 = mx - 0.5f * c2.width, .x2 = mx + 0.5f * c2.width, .y1 = -0.5f * c2.height, .y2 = 0.5f * c2.height };
+			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
+			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
+			info.overlap = dist_sqrd <= c1.radius * c1.radius;
+
+			if (info.overlap)
+			{
+				if (near_zero(dist_sqrd)) // circle center is inside OBB
+				{
+					float dx1 = local_c1_center.x - b2.x1;
+					float dx2 = b2.x2 - c1.center.x;
+					float dy1 = local_c1_center.y - b2.y1;
+					float dy2 = b2.y2 - c1.center.y;
+
+					float dx = std::min(dx1, dx2);
+					float dy = std::min(dy1, dy2);
+
+					if (dx < dy)
+					{
+						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
+						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
+						info.active_feature.position = local_c1_center + glm::vec2{ dirX * c1.radius, 0.0f };
+						info.static_feature.position = glm::vec2{ dx1 < dx2 ? b2.x1 : b2.x2, local_c1_center.y };
+					}
+					else
+					{
+						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
+						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
+						info.active_feature.position = local_c1_center + glm::vec2{ 0.0f, dirY * c1.radius };
+						info.static_feature.position = glm::vec2{ local_c1_center.x, dy1 < dy2 ? b2.y1 : b2.y2 };
+					}
+					info.static_feature.impulse = -info.active_feature.impulse;
+				}
+				else // circle center is outside OBB
+				{
+					UnitVector2D displacement(closest_point - local_c1_center);
+
+					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
+					info.active_feature.position = local_c1_center + c1.radius * (glm::vec2)displacement;
+
+					info.static_feature.impulse = -info.active_feature.impulse;
+					info.static_feature.position = closest_point;
+				}
+			}
+
+			info.active_feature.impulse = rot * info.active_feature.impulse;
+			info.active_feature.position = rot * info.active_feature.position;
+			info.static_feature.impulse = rot * info.static_feature.impulse;
+			info.static_feature.position = rot * info.static_feature.position;
+
+			return info;
+		}
+		else
+			return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
 	OverlapResult overlaps(const AABB& c1, const OBB& c2)
@@ -821,7 +939,7 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -833,12 +951,12 @@ namespace oly::col2d
 					throw e;
 			}
 		}
-		return internal::circle_overlaps_polygon(c1, c2.points);
+		return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 
 	CollisionResult collides(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -850,12 +968,12 @@ namespace oly::col2d
 					throw e;
 			}
 		}
-		return internal::circle_collides_polygon(c1, c2.points);
+		return internal::circle_collides_polygon(c1, c2.points());
 	}
 
 	ContactResult contacts(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points.size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -867,12 +985,12 @@ namespace oly::col2d
 					throw e;
 			}
 		}
-		return internal::circle_contacts_polygon(c1, c2, c2.points);
+		return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
 	OverlapResult overlaps(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -889,7 +1007,7 @@ namespace oly::col2d
 
 	CollisionResult collides(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -906,7 +1024,7 @@ namespace oly::col2d
 
 	ContactResult contacts(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -923,7 +1041,7 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -940,7 +1058,7 @@ namespace oly::col2d
 	
 	CollisionResult collides(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -957,7 +1075,7 @@ namespace oly::col2d
 
 	ContactResult contacts(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points.size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{

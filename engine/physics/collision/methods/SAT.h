@@ -100,7 +100,7 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult impl(const ConvexHull& c, const Other& other)
 			{
-				for (size_t i = 0; i < c.points.size(); ++i)
+				for (size_t i = 0; i < c.points().size(); ++i)
 				{
 					UnitVector2D axis = c.edge_normal(i);
 					if (sat(c, other, axis) < 0.0f)
@@ -115,7 +115,7 @@ namespace oly::col2d::sat
 		{
 			static void update_collision(const ConvexHull& c, const Other& other, CollisionResult& info)
 			{
-				for (size_t i = 0; i < c.points.size(); ++i)
+				for (size_t i = 0; i < c.points().size(); ++i)
 				{
 					UnitVector2D axis = c.edge_normal(i);
 					float depth = sat(c, other, axis);
@@ -189,14 +189,14 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult impl(const OBB& c, const Other& other)
 			{
-				UnitVector2D axis = c.get_axis_1();
+				UnitVector2D axis = c.get_major_axis();
 				float cw = axis.dot(c.center);
 				std::pair<float, float> i1 = { cw - 0.5f * c.width, cw + 0.5f * c.width };
 				std::pair<float, float> i2 = other.projection_interval(axis);
 				if (std::min(i1.second, i2.second) - std::max(i1.first, i2.first) < 0.0f)
 					return false;
 
-				axis = c.get_axis_2();
+				axis = c.get_minor_axis();
 				float ch = axis.dot(c.center);
 				i1 = { ch - 0.5f * c.height, ch + 0.5f * c.height };
 				i2 = other.projection_interval(axis);
@@ -212,7 +212,7 @@ namespace oly::col2d::sat
 		{
 			static void update_collision(const OBB& c, const Other& other, CollisionResult& info)
 			{
-				UnitVector2D axis = c.get_axis_1();
+				UnitVector2D axis = c.get_major_axis();
 				float depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{
@@ -225,7 +225,7 @@ namespace oly::col2d::sat
 					info.penetration_depth = depth;
 					info.unit_impulse = axis.get_quarter_turn();
 				}
-				axis = c.get_axis_2();
+				axis = c.get_minor_axis();
 				depth = sat(c, other, axis);
 				if (depth < 0.0f)
 				{

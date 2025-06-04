@@ -64,21 +64,34 @@ namespace oly::col2d
 
 		lower.insert(lower.end(), upper.begin(), upper.end());
 
-		return { lower };
+		return { std::move(lower) };
+	}
+
+	glm::vec2 ConvexHull::center() const
+	{
+		if (dirty_center)
+		{
+			dirty_center = false;
+			_center = {};
+			for (glm::vec2 p : _points)
+				_center += p;
+			_center /= (float)_points.size();
+		}
+		return _center;
 	}
 
 	std::pair<float, float> ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_interval(points, axis);
+		return internal::polygon_projection_interval(_points, axis);
 	}
 
 	UnitVector2D ConvexHull::edge_normal(size_t i) const
 	{
-		return internal::polygon_edge_normal(points, i);
+		return internal::polygon_edge_normal(_points, i);
 	}
 
 	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
 	{
-		return internal::polygon_deepest_point(points, axis);
+		return internal::polygon_deepest_point(_points, axis);
 	}
 }

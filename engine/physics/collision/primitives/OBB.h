@@ -20,23 +20,8 @@ namespace oly::col2d
 		static OBB wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation);
 		// TODO static OBB slow_wrap(const glm::vec2* polygon, size_t count); using rotating calipers method
 
-		UnitVector2D get_axis_1() const { return UnitVector2D(rotation); }
-		float get_axis_1_projection() const { return UnitVector2D(rotation).dot(center); }
-
-		std::pair<float, float> get_axis_1_projection_interval() const
-		{
-			float x = get_axis_1_projection();
-			return { x - 0.5f * width, x + 0.5f * width };
-		}
-
-		UnitVector2D get_axis_2() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
-		float get_axis_2_projection() const { return UnitVector2D(rotation + glm::half_pi<float>()).dot(center); }
-
-		std::pair<float, float> get_axis_2_projection_interval() const
-		{
-			float y = get_axis_2_projection();
-			return { y - 0.5f * height, y + 0.5f * height };
-		}
+		UnitVector2D get_major_axis() const { return UnitVector2D(rotation); }
+		UnitVector2D get_minor_axis() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
 
 		glm::mat2 get_rotation_matrix() const
 		{

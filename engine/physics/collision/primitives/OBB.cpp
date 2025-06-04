@@ -88,10 +88,16 @@ namespace oly::col2d
 
 	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
 	{
-		if (approx(get_axis_1(), axis))
-			return get_axis_1_projection_interval();
-		else if (approx(get_axis_2(), axis))
-			return get_axis_2_projection_interval();
+		if (approx(get_major_axis(), axis))
+		{
+			float m = UnitVector2D(rotation).dot(center);
+			return { m - 0.5f * width, m + 0.5f * width };
+		}
+		else if (approx(get_minor_axis(), axis))
+		{
+			float m = UnitVector2D(rotation).get_quarter_turn().dot(center);
+			return { m - 0.5f * height, m + 0.5f * height };
+		}
 
 		auto pts = points();
 		return internal::polygon_projection_interval(pts, axis);
