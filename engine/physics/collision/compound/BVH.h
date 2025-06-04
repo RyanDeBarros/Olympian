@@ -8,8 +8,6 @@ namespace oly::col2d
 {
 	namespace internal
 	{
-		// TODO BVH-Compound and TBVH-TCompound conversion.
-
 		template<typename Shape>
 		struct Wrap
 		{
@@ -76,30 +74,30 @@ namespace oly::col2d
 		}
 
 	public:
-		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), test); }
-		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), ray); }
-		RaycastResult raycast(const Ray& ray) const { return raycast(root(), ray); }
+		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), primitives, test); }
+		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), primitives, ray); }
+		RaycastResult raycast(const Ray& ray) const { return raycast(root(), primitives, ray); }
 		
-		OverlapResult overlaps(const Primitive& c) const { return overlaps(root(), c); }
-		OverlapResult overlaps(const Compound& c) const { return overlaps(root(), c); }
-		OverlapResult overlaps(const TCompound& c) const { return overlaps(root(), c); }
+		OverlapResult overlaps(const Primitive& c) const { return overlaps(root(), primitives, c); }
+		OverlapResult overlaps(const Compound& c) const { return overlaps(root(), primitives, c); }
+		OverlapResult overlaps(const TCompound& c) const { return overlaps(root(), primitives, c); }
 		template<typename S>
-		OverlapResult overlaps(const BVH<S>& bvh) const;
+		OverlapResult overlaps(const BVH<S>& bvh) const { return overlaps(root(), primitives, bvh.root(), bvh.primitives.data()); }
 		
-		CollisionResult collides(const Primitive& c) const { return collides(root(), c); }
-		CollisionResult collides(const Compound& c) const { return collides(root(), c); }
-		CollisionResult collides(const TCompound& c) const { return collides(root(), c); }
+		CollisionResult collides(const Primitive& c) const { return collides(root(), primitives, c); }
+		CollisionResult collides(const Compound& c) const { return collides(root(), primitives, c); }
+		CollisionResult collides(const TCompound& c) const { return collides(root(), primitives, c); }
 		template<typename S>
-		CollisionResult collides(const BVH<S>& bvh) const;
+		CollisionResult collides(const BVH<S>& bvh) const { return collides(root(), primitives, bvh.root()); }
 		
-		ContactResult contacts(const Primitive& c) const { return contacts(root(), c); }
-		ContactResult contacts(const Compound& c) const { return contacts(root(), c); }
-		ContactResult contacts(const TCompound& c) const { return contacts(root(), c); }
+		ContactResult contacts(const Primitive& c) const { return contacts(root(), primitives, c); }
+		ContactResult contacts(const Compound& c) const { return contacts(root(), primitives, c); }
+		ContactResult contacts(const TCompound& c) const { return contacts(root(), primitives, c); }
 		template<typename S>
-		ContactResult contacts(const BVH<S>& bvh) const;
+		ContactResult contacts(const BVH<S>& bvh) const { return contacts(root(), primitives, bvh.root()); }
 
 	private:
-		OverlapResult point_hits(const Node& node, glm::vec2 test) const
+		static OverlapResult point_hits(const Node& node, const Primitive* primitives, glm::vec2 test)
 		{
 			if (node.is_leaf())
 				return col2d::point_hits(primitives[node.start_index], test);
@@ -109,7 +107,7 @@ namespace oly::col2d
 				return point_hits(*node.left, test) || point_hits(*node.right, test);
 		}
 
-		OverlapResult ray_hits(const Node& node, const Ray& ray) const
+		static OverlapResult ray_hits(const Node& node, const Primitive* primitives, const Ray& ray)
 		{
 			if (node.is_leaf())
 				return col2d::ray_hits(primitives[node.start_index], ray);
@@ -119,7 +117,7 @@ namespace oly::col2d
 				return ray_hits(*node.left, ray) || ray_hits(*node.right, ray);
 		}
 
-		RaycastResult raycast(const Node& node, const Ray& ray) const
+		static RaycastResult raycast(const Node& node, const Primitive* primitives, const Ray& ray)
 		{
 			if (node.is_leaf())
 				return col2d::raycast(primitives[node.start_index], ray);
@@ -151,8 +149,35 @@ namespace oly::col2d
 			}
 		}
 
+		template<typename OtherShape>
+		static OverlapResult overlaps(const Node& my_node, const Primitive* my_primitives, const BVH<OtherShape>::Node& other_node, const Primitive* other_primitives)
+		{
+			if (my_node.is_leaf())
+			{
+				if (other_node.is_leaf())
+					return col2d::overlaps(my_primitives[my_node.start_index], other_primitives[other_node.start_index]);
+				else
+					return BVH<OtherShape>::overlaps(other_node, other_primitives, my_primitives[my_node.start_index]);
+			}
+			else
+			{
+				if (other_node.is_leaf())
+					return overlaps(my_node, my_primitives, other_primitives[other_node.start_index]);
+				else
+				{
+					if (!col2d::overlaps(my_node.shape.value(), other_node.shape.value()))
+						return false;
+					else
+						return overlaps(*my_node.left, my_primitives, *other_node.left, other_primitives)
+							|| overlaps(*my_node.left, my_primitives, *other_node.right, other_primitives)
+							|| overlaps(*my_node.right, my_primitives, *other_node.left, other_primitives)
+							|| overlaps(*my_node.right, my_primitives, *other_node.right, other_primitives);
+				}
+			}
+		}
+
 		template<typename Other>
-		OverlapResult overlaps(const Node& node, const Other& c) const
+		static OverlapResult overlaps(const Node& node, const Primitive* primitives, const Other& c)
 		{
 			if (node.is_leaf())
 				return overlaps(primitives[node.start_index], c);
@@ -162,8 +187,33 @@ namespace oly::col2d
 				return overlaps(*node.left, c) || overlaps(*node.right, c);
 		}
 
+		template<typename OtherShape>
+		static CollisionResult collides(const Node& my_node, const Primitive* my_primitives, const BVH<OtherShape>::Node& other_node, const Primitive* other_primitives)
+		{
+			if (my_node.is_leaf())
+			{
+				if (other_node.is_leaf())
+					return collides(my_primitives[my_node.start_index], other_primitives[other_node.start_index]);
+				else
+					return BVH<OtherShape>::collides(other_node, other_primitives, my_primitives[my_node.start_index]).invert();
+			}
+			else
+			{
+				if (other_node.is_leaf())
+					return collides(my_node, my_primitives, other_primitives[other_node.start_index]);
+				else
+				{
+					if (!col2d::overlaps(my_node.shape.value(), other_node.shape.value()))
+						return false;
+					else
+						return greedy_collision({ collides(*my_node.left,  my_primitives, *other_node.left, other_primitives), collides(*my_node.left,  my_primitives, *other_node.right, other_primitives),
+												  collides(*my_node.right, my_primitives, *other_node.left, other_primitives), collides(*my_node.right, my_primitives, *other_node.right, other_primitives) });
+				}
+			}
+		}
+
 		template<typename Other>
-		CollisionResult collides(const Node& node, const Other& c) const
+		static CollisionResult collides(const Node& node, const Other& c)
 		{
 			if (node.is_leaf())
 				return collides(primitives[node.start_index], c);
@@ -173,8 +223,28 @@ namespace oly::col2d
 				return greedy_collision({ collides(*node.left, c), collides(*node.right, c) });
 		}
 
+		template<typename OtherShape>
+		static ContactResult contacts(const Node& my_node, const Primitive* my_primitives, const BVH<OtherShape>::Node& other_node, const Primitive* other_primitives)
+		{
+			if (my_node.is_leaf())
+			{
+				if (other_node.is_leaf())
+					return contacts(my_primitives[my_node.start_index], other_primitives[other_node.start_index]);
+				else
+					return BVH<OtherShape>::contacts(other_node, other_primitives, my_primitives[my_node.start_index]).invert();
+			}
+			else
+			{
+				if (other_node.is_leaf())
+					return contacts(my_node, my_primitives, other_primitives[other_node.start_index]);
+				else
+					return greedy_contact({ contacts(*my_node.left,  my_primitives, *other_node.left, other_primitives), contacts(*my_node.left,  my_primitives, *other_node.right, other_primitives),
+											contacts(*my_node.right, my_primitives, *other_node.left, other_primitives), contacts(*my_node.right, my_primitives, *other_node.right, other_primitives) });
+			}
+		}
+
 		template<typename Other>
-		ContactResult contacts(const Node& node, const Other& c) const
+		static ContactResult contacts(const Node& node, const Primitive* primitives, const Other& c)
 		{
 			if (node.is_leaf())
 				return contacts(primitives[node.start_index], c);
@@ -223,24 +293,24 @@ namespace oly::col2d
 		OverlapResult overlaps(const Compound& c) const { return bvh().overlaps(c); }
 		OverlapResult overlaps(const TCompound& c) const { return bvh().overlaps(c); }
 		template<typename S>
-		OverlapResult overlaps(const BVH<S>& bvh) const;
+		OverlapResult overlaps(const BVH<S>& c) const { return bvh().overlaps(c); }
 		template<typename S>
-		OverlapResult overlaps(const TBVH<S>& bvh) const;
+		OverlapResult overlaps(const TBVH<S>& c) const { return bvh().overlaps(c.bvh()); }
 
 		CollisionResult collides(const Primitive& c) const { return bvh().collides(c); }
 		CollisionResult collides(const Compound& c) const { return bvh().collides(c); }
 		CollisionResult collides(const TCompound& c) const { return bvh().collides(c); }
 		template<typename S>
-		CollisionResult collides(const BVH<S>& bvh) const;
+		CollisionResult collides(const BVH<S>& c) const { return bvh().collides(c); }
 		template<typename S>
-		CollisionResult collides(const TBVH<S>& bvh) const;
+		CollisionResult collides(const TBVH<S>& c) const { return bvh().collides(c.bvh()); }
 
 		ContactResult contacts(const Primitive& c) const { return bvh().contacts(c); }
 		ContactResult contacts(const Compound& c) const { return bvh().contacts(c); }
 		ContactResult contacts(const TCompound& c) const { return bvh().contacts(c); }
 		template<typename S>
-		ContactResult contacts(const BVH<S>& bvh) const;
+		ContactResult contacts(const BVH<S>& c) const { return bvh().contacts(c); }
 		template<typename S>
-		ContactResult contacts(const TBVH<S>& bvh) const;
+		ContactResult contacts(const TBVH<S>& c) const { return bvh().contacts(c.bvh()); }
 	};
 }
