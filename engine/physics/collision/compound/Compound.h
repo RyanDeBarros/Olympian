@@ -7,7 +7,7 @@
 namespace oly::col2d
 {
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
-	extern ContactResult greedy_collision(const std::vector<ContactResult>& contacts);
+	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 
 	using KDOP6 = KDOP<6>;
 	using KDOP8 = KDOP<8>;

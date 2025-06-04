@@ -18,13 +18,6 @@ namespace oly::col2d
 	// Matched
 
 	// ######################################################################################################################################################
-	// Point
-	extern OverlapResult point_hits(glm::vec2 c, glm::vec2 test);
-	extern OverlapResult ray_hits(glm::vec2 c, const Ray& ray);
-	extern RaycastResult raycast(glm::vec2 c, const Ray& ray);
-	// ######################################################################################################################################################
-
-	// ######################################################################################################################################################
 	// Circle
 	extern OverlapResult point_hits(const Circle& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const Circle& c, const Ray& ray);

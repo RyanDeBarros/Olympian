@@ -30,17 +30,17 @@ namespace oly::col2d
 
 		glm::vec2 eigenvectors[2];
 		covariance.solve(nullptr, eigenvectors);
-		glm::vec2 major_axis = eigenvectors[1];
-		glm::vec2 minor_axis = eigenvectors[0];
+		UnitVector2D major_axis = eigenvectors[1];
+		UnitVector2D minor_axis = eigenvectors[0];
 
-		obb.rotation = glm::atan(major_axis.y, major_axis.x);
+		obb.rotation = major_axis.rotation();
 
 		AABB bounds = AABB::DEFAULT;
 		for (size_t i = 0; i < count; ++i)
 		{
 			glm::vec2 p = polygon[i] - centroid;
-			float x = glm::dot(p, major_axis);
-			float y = glm::dot(p, minor_axis);
+			float x = major_axis.dot(p);
+			float y = minor_axis.dot(p);
 
 			bounds.x1 = std::min(bounds.x1, x);
 			bounds.x2 = std::max(bounds.x2, x);

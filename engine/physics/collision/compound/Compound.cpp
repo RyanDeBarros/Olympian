@@ -98,7 +98,7 @@ namespace oly::col2d
 		return { .overlap = true, .penetration_depth = glm::length(greediest_mtv), .unit_impulse = UnitVector2D(greediest_mtv) };
 	}
 
-	ContactResult greedy_collision(const std::vector<ContactResult>& contacts)
+	ContactResult greedy_contact(const std::vector<ContactResult>& contacts)
 	{
 		if (contacts.empty())
 			return { .overlap = false };
@@ -565,7 +565,7 @@ namespace oly::col2d
 				}
 				}, p1);
 		}
-		return greedy_collision(cntcts);
+		return greedy_contact(cntcts);
 	}
 
 	OverlapResult overlaps(const Compound& c1, const Primitive& c2)
@@ -609,7 +609,7 @@ namespace oly::col2d
 					cntcts.push_back(contact);
 				}, p1);
 		}
-		return greedy_collision(cntcts);
+		return greedy_contact(cntcts);
 	}
 
 	void TCompound::bake() const
@@ -721,7 +721,7 @@ namespace oly::col2d
 				}
 				}, p1);
 		}
-		return greedy_collision(cntcts);
+		return greedy_contact(cntcts);
 	}
 
 	OverlapResult internal::overlaps(const TCompound& c1, const Compound& c2)
@@ -778,7 +778,7 @@ namespace oly::col2d
 				}
 				}, p1);
 		}
-		return greedy_collision(cntcts);
+		return greedy_contact(cntcts);
 	}
 
 	OverlapResult overlaps(const TCompound& c1, const Primitive& c2)
@@ -822,6 +822,6 @@ namespace oly::col2d
 					cntcts.push_back(contact);
 				}, p1);
 		}
-		return greedy_collision(cntcts);
+		return greedy_contact(cntcts);
 	}
 }
