@@ -30,9 +30,6 @@ namespace oly::col2d
 		KDOP16
 	>;
 
-	inline const auto& extract(const Element& e) { return std::visit([](auto&& e) -> const auto& { return e; }, e); }
-	inline auto& extract(Element& e) { return std::visit([](auto& e) -> auto& { return e; }, e); }
-
 	extern Element transform_element(const Circle& c, const glm::mat3& m);
 	extern Element transform_element(const AABB& c, const glm::mat3& m);
 	extern Element transform_element(const OBB& c, const glm::mat3& m);
@@ -56,12 +53,33 @@ namespace oly::col2d
 		Layer layer = 0;
 	};
 
-	inline OverlapResult point_hits(const Primitive& c, glm::vec2 test) { return point_hits(extract(c.element), test); }
-	inline OverlapResult ray_hits(const Primitive& c, const Ray& ray) { return ray_hits(extract(c.element), ray); }
-	inline RaycastResult raycast(const Primitive& c, const Ray& ray) { return raycast(extract(c.element), ray); }
-	inline OverlapResult overlaps(const Primitive& c1, const Primitive& c2) { return (c1.mask & c2.layer) && overlaps(extract(c1.element), extract(c2.element)); }
-	inline CollisionResult collides(const Primitive& c1, const Primitive& c2) { return (c1.mask & c2.layer) ? collides(extract(c1.element), extract(c2.element)) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const Primitive& c1, const Primitive& c2) { return (c1.mask & c2.layer) ? contacts(extract(c1.element), extract(c2.element)) : ContactResult{ .overlap = false }; }
+	inline OverlapResult point_hits(const Primitive& c, glm::vec2 test) { return std::visit([test](auto&& e) { return point_hits(e, test); }, c.element); }
+	inline OverlapResult ray_hits(const Primitive& c, const Ray& ray) { return std::visit([&ray](auto&& e) { return ray_hits(e, ray); }, c.element); }
+	inline RaycastResult raycast(const Primitive& c, const Ray& ray) { return std::visit([&ray](auto&& e) { return raycast(e, ray); }, c.element); }
+	inline OverlapResult overlaps(const Primitive& c1, const Primitive& c2)
+	{
+		return (c1.mask & c2.layer) && std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return overlaps(e1, e2);
+				}, c2.element);
+			}, c1.element);
+	}
+	inline CollisionResult collides(const Primitive& c1, const Primitive& c2)
+	{
+		return (c1.mask & c2.layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return collides(e1, e2);
+				}, c2.element);
+			}, c1.element) : CollisionResult{ .overlap = false };
+	}
+	inline ContactResult contacts(const Primitive& c1, const Primitive& c2)
+	{
+		return (c1.mask & c2.layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return contacts(e1, e2);
+				}, c2.element);
+			}, c1.element) : ContactResult{ .overlap = false };
+	}
 
 	class TPrimitive
 	{
@@ -83,18 +101,82 @@ namespace oly::col2d
 		const Element& get_baked() const { if (dirty) { bake(); } return baked; }
 	};
 
-	inline OverlapResult point_hits(const TPrimitive& c, glm::vec2 test) { return point_hits(extract(c.get_baked()), test); }
-	inline OverlapResult ray_hits(const TPrimitive& c, const Ray& ray) { return ray_hits(extract(c.get_baked()), ray); }
-	inline RaycastResult raycast(const TPrimitive& c, const Ray& ray) { return raycast(extract(c.get_baked()), ray); }
-	inline OverlapResult overlaps(const TPrimitive& c1, const TPrimitive& c2) { return (c1.get_primitive().mask & c2.get_primitive().layer) && overlaps(extract(c1.get_baked()), extract(c2.get_baked())); }
-	inline OverlapResult overlaps(const TPrimitive& c1, const Primitive& c2) { return (c1.get_primitive().mask & c2.layer) && overlaps(extract(c1.get_baked()), extract(c2.element)); }
-	inline OverlapResult overlaps(const Primitive& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) && overlaps(extract(c1.element), extract(c2.get_baked())); }
-	inline CollisionResult collides(const TPrimitive& c1, const TPrimitive& c2) { return (c1.get_primitive().mask & c2.get_primitive().layer) ? collides(extract(c1.get_baked()), extract(c2.get_baked())) : CollisionResult{ .overlap = false }; }
-	inline CollisionResult collides(const TPrimitive& c1, const Primitive& c2) { return (c1.get_primitive().mask & c2.layer) ? collides(extract(c1.get_baked()), extract(c2.element)) : CollisionResult{ .overlap = false }; }
-	inline CollisionResult collides(const Primitive& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? collides(extract(c1.element), extract(c2.get_baked())) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const TPrimitive& c1, const TPrimitive& c2) { return (c1.get_primitive().mask & c2.get_primitive().layer) ? contacts(extract(c1.get_baked()), extract(c2.get_baked())) : ContactResult{ .overlap = false }; }
-	inline ContactResult contacts(const TPrimitive& c1, const Primitive& c2) { return (c1.get_primitive().mask & c2.layer) ? contacts(extract(c1.get_baked()), extract(c2.element)) : ContactResult{ .overlap = false }; }
-	inline ContactResult contacts(const Primitive& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? contacts(extract(c1.element), extract(c2.get_baked())) : ContactResult{ .overlap = false }; }
+	inline OverlapResult point_hits(const TPrimitive& c, glm::vec2 test) { return std::visit([test](auto&& e) { return point_hits(e, test); }, c.get_baked()); }
+	inline OverlapResult ray_hits(const TPrimitive& c, const Ray& ray) { return std::visit([&ray](auto&& e) { return ray_hits(e, ray); }, c.get_baked()); }
+	inline RaycastResult raycast(const TPrimitive& c, const Ray& ray) { return std::visit([&ray](auto&& e) { return raycast(e, ray); }, c.get_baked()); }
+
+	inline OverlapResult overlaps(const TPrimitive& c1, const TPrimitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.get_primitive().layer) && std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return overlaps(e1, e2);
+				}, c2.get_baked());
+			}, c1.get_baked());
+	}
+	inline OverlapResult overlaps(const TPrimitive& c1, const Primitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.layer) && std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return overlaps(e1, e2);
+				}, c2.element);
+			}, c1.get_baked());
+	}
+	inline OverlapResult overlaps(const Primitive& c1, const TPrimitive& c2)
+	{
+		return (c1.mask & c2.get_primitive().layer) && std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return overlaps(e1, e2);
+				}, c2.get_baked());
+			}, c1.element);
+	}
+	inline CollisionResult collides(const TPrimitive& c1, const TPrimitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.get_primitive().layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return collides(e1, e2);
+				}, c2.get_baked());
+			}, c1.get_baked()) : CollisionResult{ .overlap = false };
+	}
+	inline CollisionResult collides(const TPrimitive& c1, const Primitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return collides(e1, e2);
+				}, c2.element);
+			}, c1.get_baked()) : CollisionResult{ .overlap = false };
+	}
+	inline CollisionResult collides(const Primitive& c1, const TPrimitive& c2)
+	{
+		return (c1.mask & c2.get_primitive().layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return collides(e1, e2);
+				}, c2.get_baked());
+			}, c1.element) : CollisionResult{ .overlap = false };
+	}
+	inline ContactResult contacts(const TPrimitive& c1, const TPrimitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.get_primitive().layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return contacts(e1, e2);
+				}, c2.get_baked());
+			}, c1.get_baked()) : ContactResult{ .overlap = false };
+	}
+	inline ContactResult contacts(const TPrimitive& c1, const Primitive& c2)
+	{
+		return (c1.get_primitive().mask & c2.layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return contacts(e1, e2);
+				}, c2.element);
+			}, c1.get_baked()) : ContactResult{ .overlap = false };
+	}
+	inline ContactResult contacts(const Primitive& c1, const TPrimitive& c2)
+	{
+		return (c1.mask & c2.get_primitive().layer) ? std::visit([c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				return contacts(e1, e2);
+				}, c2.get_baked());
+			}, c1.element) : ContactResult{ .overlap = false };
+	}
 
 	struct Compound
 	{
@@ -268,17 +350,17 @@ namespace oly::col2d
 	inline ContactResult contacts(const TCompound& c1, const Primitive& c2) { return (c1.get_compound().mask & c2.layer) ? contacts(c1, c2.element) : ContactResult{ .overlap = false }; }
 	inline ContactResult contacts(const Primitive& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
 
-	extern OverlapResult overlaps(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) && overlaps(c1, c2.get_baked()); }
+	inline OverlapResult overlaps(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) && overlaps(c1, c2.get_baked()); }
 	inline OverlapResult overlaps(const TPrimitive& c1, const Compound& c2) { return overlaps(c2, c1); }
-	extern CollisionResult collides(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? collides(c1, c2.get_baked()) : CollisionResult{.overlap = false}; }
+	inline CollisionResult collides(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? collides(c1, c2.get_baked()) : CollisionResult{.overlap = false}; }
 	inline CollisionResult collides(const TPrimitive& c1, const Compound& c2) { return collides(c2, c1).invert(); }
-	extern ContactResult contacts(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? contacts(c1, c2.get_baked()) : ContactResult{.overlap = false}; }
+	inline ContactResult contacts(const Compound& c1, const TPrimitive& c2) { return (c1.mask & c2.get_primitive().layer) ? contacts(c1, c2.get_baked()) : ContactResult{.overlap = false}; }
 	inline ContactResult contacts(const TPrimitive& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
 
-	extern OverlapResult overlaps(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) && overlaps(c1, c2.get_baked()); }
+	inline OverlapResult overlaps(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) && overlaps(c1, c2.get_baked()); }
 	inline OverlapResult overlaps(const TPrimitive& c1, const TCompound& c2) { return overlaps(c2, c1); }
-	extern CollisionResult collides(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) ? collides(c1, c2.get_baked()) : CollisionResult{ .overlap = false }; }
+	inline CollisionResult collides(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) ? collides(c1, c2.get_baked()) : CollisionResult{ .overlap = false }; }
 	inline CollisionResult collides(const TPrimitive& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-	extern ContactResult contacts(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) ? contacts(c1, c2.get_baked()) : ContactResult{ .overlap = false }; }
+	inline ContactResult contacts(const TCompound& c1, const TPrimitive& c2) { return (c1.get_compound().mask & c2.get_primitive().layer) ? contacts(c1, c2.get_baked()) : ContactResult{ .overlap = false }; }
 	inline ContactResult contacts(const TPrimitive& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
 }
