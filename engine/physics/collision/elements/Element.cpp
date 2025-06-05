@@ -1,8 +1,8 @@
-#include "Compound.h"
+#include "Element.h"
 
+#include "core/base/Transforms.h"
 #include "core/base/SimpleMath.h"
 
-// TODO in all collision testing, use approximations and override tolerance to be more lenient.
 namespace oly::col2d
 {
 	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
@@ -124,7 +124,7 @@ namespace oly::col2d
 			{
 				auto rit = mapped_mtvs.find(UnitVector2D(contact.static_feature.impulse));
 				if (rit == mapped_mtvs.end())
-					mapped_mtvs.insert({ UnitVector2D(contact.active_feature.impulse), { impulse_sqrd, false, contact.active_feature.position, {contact.static_feature.position}}});
+					mapped_mtvs.insert({ UnitVector2D(contact.active_feature.impulse), { impulse_sqrd, false, contact.active_feature.position, {contact.static_feature.position}} });
 				else
 				{
 					if (approx(impulse_sqrd, glm::abs(rit->second.signed_length)))
@@ -215,8 +215,8 @@ namespace oly::col2d
 		}
 
 		// step 3: construct ContactResult
-		return { .overlap = true, .active_feature = { .position = greediest_mtv.active_contact, .impulse = greediest_mtv.mtv },
-			.static_feature = { .position = greediest_mtv.static_contact, .impulse = -greediest_mtv.mtv } };
+		return { .overlap = true, .active_feature = {.position = greediest_mtv.active_contact, .impulse = greediest_mtv.mtv },
+			.static_feature = {.position = greediest_mtv.static_contact, .impulse = -greediest_mtv.mtv } };
 	}
 
 	static bool only_translation_and_scale(const glm::mat3& m)
@@ -262,7 +262,7 @@ namespace oly::col2d
 		{
 			// OBB
 			glm::vec2 scale = extract_scale(m);
-			return OBB{ .center = m * glm::vec3(c.center(), 1.0f), .width = (c.x2 - c.x1) * scale.x, .height = (c.y2 - c.y1) * scale.y, .rotation = extract_rotation(m)};
+			return OBB{ .center = m * glm::vec3(c.center(), 1.0f), .width = (c.x2 - c.x1) * scale.x, .height = (c.y2 - c.y1) * scale.y, .rotation = extract_rotation(m) };
 		}
 		else
 		{
@@ -270,8 +270,8 @@ namespace oly::col2d
 			std::vector<UnitVector2D> axes = {
 				transform_direction(m, UnitVector2D::RIGHT),
 				transform_direction(m, UnitVector2D::UP)
-				};
-			
+			};
+
 			math::Polygon2D polygon;
 			polygon.reserve(4);
 			for (glm::vec2 point : c.points())
@@ -301,7 +301,7 @@ namespace oly::col2d
 			{
 				// OBB
 				glm::vec2 scale = extract_scale(m);
-				return OBB{ .center = transform_point(m, c.center), .width = scale.x * c.width, .height = scale.y * c.height, .rotation = c.rotation + rotation};
+				return OBB{ .center = transform_point(m, c.center), .width = scale.x * c.width, .height = scale.y * c.height, .rotation = c.rotation + rotation };
 			}
 		}
 		else
@@ -470,366 +470,4 @@ namespace oly::col2d
 		return tc;
 	}
 
-	OverlapResult point_hits(const Compound& c, glm::vec2 test)
-	{
-		for (const auto& element : c.elements)
-		{
-			if (std::visit([test](auto&& element) { return point_hits(element, test); }, element))
-				return true;
-		}
-		return false;
-	}
-
-	OverlapResult ray_hits(const Compound& c, const Ray& ray)
-	{
-		for (const auto& element : c.elements)
-		{
-			if (std::visit([&ray](auto&& element) { return ray_hits(element, ray); }, element))
-				return true;
-		}
-		return false;
-	}
-
-	RaycastResult raycast(const Compound& c, const Ray& ray)
-	{
-		RaycastResult info{ .hit = RaycastResult::Hit::NO_HIT };
-		float closest_dist_sqrd = std::numeric_limits<float>::max();
-		for (const auto& element : c.elements)
-		{
-			RaycastResult res = std::visit([&ray](auto&& element) { return raycast(element, ray); }, element);
-			if (res.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
-				return res;
-			else if (res.hit == RaycastResult::Hit::TRUE_HIT)
-			{
-				float dist_sqrd = math::mag_sqrd(res.contact - ray.origin);
-				if (dist_sqrd < closest_dist_sqrd)
-				{
-					closest_dist_sqrd = dist_sqrd;
-					info = res;
-				}
-			}
-		}
-		return info;
-	}
-
-	OverlapResult internal::overlaps(const Compound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.elements)
-		{
-			if (std::visit([&c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
-						return true;
-				}
-				return false;
-			}, p1))
-				return true;
-		}
-		return false;
-	}
-
-	CollisionResult internal::collides(const Compound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.elements)
-		{
-			std::visit([&collisions, &c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
-					if (collision.overlap)
-						collisions.push_back(collision);
-				}
-				}, p1);
-		}
-		return greedy_collision(collisions);
-	}
-
-	ContactResult internal::contacts(const Compound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.elements)
-		{
-			std::visit([&cntcts, &c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
-					if (contact.overlap)
-						cntcts.push_back(contact);
-				}
-				}, p1);
-		}
-		return greedy_contact(cntcts);
-	}
-
-	OverlapResult overlaps(const Compound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.elements)
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			if (std::visit([&c2](auto&& p1) { return std::visit([&p1](auto&& c2) { return overlaps(p1, c2); }, c2); }, p1))
-				return true;
-		}
-		return false;
-	}
-	
-	CollisionResult collides(const Compound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.elements)
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			std::visit([&collisions, &c2](auto&& p1) {
-				CollisionResult collision = std::visit([&p1](auto&& c2) { return collides(p1, c2); }, c2);
-				if (collision.overlap)
-					collisions.push_back(collision);
-				}, p1);
-		}
-		return greedy_collision(collisions);
-	}
-	
-	ContactResult contacts(const Compound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.elements)
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			std::visit([&cntcts, &c2](auto&& p1) {
-				ContactResult contact = std::visit([&p1](auto&& c2) { return contacts(p1, c2); }, c2);
-				if (contact.overlap)
-					cntcts.push_back(contact);
-				}, p1);
-		}
-		return greedy_contact(cntcts);
-	}
-
-	void TPrimitive::bake() const
-	{
-		glm::mat3 g = transformer.global();
-		baked = std::visit([&g](auto&& e) { return transform_element(e, g); }, primitive.element);
-		dirty = false;
-	}
-
-	void TCompound::bake() const
-	{
-		baked.resize(compound.elements.size());
-		glm::mat3 g = transformer.global();
-		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& e) { return transform_element(e, g); }, compound.elements[i]);
-		dirty = false;
-	}
-
-	OverlapResult point_hits(const TCompound& c, glm::vec2 test)
-	{
-		glm::vec2 local_test = transform_point(glm::inverse(c.global()), test);
-		return point_hits(c.get_compound(), local_test);
-	}
-	
-	OverlapResult ray_hits(const TCompound& c, const Ray& ray)
-	{
-		glm::mat3 m = glm::inverse(c.global());
-		Ray local_ray = { .origin = transform_point(m, ray.origin) };
-		if (ray.clip == 0.0f)
-		{
-			local_ray.direction = transform_direction(m, ray.direction);
-			local_ray.clip = 0.0f;
-		}
-		else
-		{
-			glm::vec2 clip = transform_direction(m, ray.clip * (glm::vec2)ray.direction);
-			local_ray.direction = clip;
-			local_ray.clip = glm::length(clip);
-		}
-		return ray_hits(c.get_compound(), local_ray);
-	}
-	
-	RaycastResult raycast(const TCompound& c, const Ray& ray)
-	{
-		glm::mat3 g = c.global();
-		glm::mat3 m = glm::inverse(g);
-		Ray local_ray = { .origin = transform_point(m, ray.origin) };
-		if (ray.clip == 0.0f)
-		{
-			local_ray.direction = transform_direction(m, ray.direction);
-			local_ray.clip = 0.0f;
-		}
-		else
-		{
-			glm::vec2 clip = transform_direction(m, ray.clip * (glm::vec2)ray.direction);
-			local_ray.direction = clip;
-			local_ray.clip = glm::length(clip);
-		}
-		RaycastResult result = raycast(c.get_compound(), local_ray);
-		result.contact = transform_point(g, result.contact);
-		result.normal = transform_normal(g, result.normal);
-		return result;
-	}
-	
-	OverlapResult internal::overlaps(const TCompound& c1, const TCompound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.get_baked())
-		{
-			if (std::visit([&c2](auto&& p1) {
-				for (const auto& p2 : c2.get_baked())
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
-						return true;
-				}
-				return false;
-				}, p1))
-				return true;
-		}
-		return false;
-	}
-	
-	CollisionResult internal::collides(const TCompound& c1, const TCompound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.get_baked())
-		{
-			std::visit([&collisions, &c2](auto&& p1) {
-				for (const auto& p2 : c2.get_baked())
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
-					if (collision.overlap)
-						collisions.push_back(collision);
-				}
-				}, p1);
-		}
-		return greedy_collision(collisions);
-	}
-	
-	ContactResult internal::contacts(const TCompound& c1, const TCompound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.get_baked())
-		{
-			std::visit([&cntcts, &c2](auto&& p1) {
-				for (const auto& p2 : c2.get_baked())
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
-					if (contact.overlap)
-						cntcts.push_back(contact);
-				}
-				}, p1);
-		}
-		return greedy_contact(cntcts);
-	}
-
-	OverlapResult internal::overlaps(const TCompound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.get_baked())
-		{
-			if (std::visit([&c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
-						return true;
-				}
-				return false;
-				}, p1))
-				return true;
-		}
-		return false;
-	}
-
-	CollisionResult internal::collides(const TCompound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.get_baked())
-		{
-			std::visit([&collisions, &c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
-					if (collision.overlap)
-						collisions.push_back(collision);
-				}
-				}, p1);
-		}
-		return greedy_collision(collisions);
-	}
-
-	ContactResult internal::contacts(const TCompound& c1, const Compound& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.get_baked())
-		{
-			std::visit([&cntcts, &c2](auto&& p1) {
-				for (const auto& p2 : c2.elements)
-				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
-					if (contact.overlap)
-						cntcts.push_back(contact);
-				}
-				}, p1);
-		}
-		return greedy_contact(cntcts);
-	}
-
-	OverlapResult overlaps(const TCompound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.get_baked())
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			if (std::visit([&c2](auto&& p1) { return std::visit([&p1](auto&& c2) { return overlaps(p1, c2); }, c2); }, p1))
-				return true;
-		}
-		return false;
-	}
-
-	CollisionResult collides(const TCompound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.get_baked())
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			std::visit([&collisions, &c2](auto&& p1) {
-				CollisionResult collision = std::visit([&p1](auto&& c2) { return collides(p1, c2); }, c2);
-				if (collision.overlap)
-					collisions.push_back(collision);
-				}, p1);
-		}
-		return greedy_collision(collisions);
-	}
-
-	ContactResult contacts(const TCompound& c1, const Element& c2)
-	{
-		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.get_baked())
-		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
-			std::visit([&cntcts, &c2](auto&& p1) {
-				ContactResult contact = std::visit([&p1](auto&& c2) { return contacts(p1, c2); }, c2);
-				if (contact.overlap)
-					cntcts.push_back(contact);
-				}, p1);
-		}
-		return greedy_contact(cntcts);
-	}
 }

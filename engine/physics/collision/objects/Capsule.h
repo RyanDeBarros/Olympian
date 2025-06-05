@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/compound/Compound.h"
+#include "physics/collision/objects/Compound.h"
 
 namespace oly::col2d
 {
