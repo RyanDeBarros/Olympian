@@ -613,12 +613,19 @@ namespace oly::col2d
 		return greedy_contact(cntcts);
 	}
 
+	void TPrimitive::bake() const
+	{
+		glm::mat3 g = transformer.global();
+		baked = std::visit([&g](auto&& e) { return transform_element(e, g); }, primitive.element);
+		dirty = false;
+	}
+
 	void TCompound::bake() const
 	{
 		baked.resize(compound.elements.size());
 		glm::mat3 g = transformer.global();
 		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& p) { return transform_element(p, g); }, compound.elements[i]);
+			baked[i] = std::visit([&g](auto&& e) { return transform_element(e, g); }, compound.elements[i]);
 		dirty = false;
 	}
 
