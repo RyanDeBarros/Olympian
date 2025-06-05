@@ -229,14 +229,14 @@ namespace oly::col2d
 		return near_zero(glm::dot(m[0], m[1]));
 	}
 
-	Primitive transform_primitive(const Circle& c, const glm::mat3& m)
+	Element transform_element(const Circle& c, const glm::mat3& m)
 	{
 		Circle tc(c.center, c.radius);
 		internal::CircleGlobalAccess::set_global(tc, m);
 		return tc;
 	}
 
-	Primitive transform_primitive(const AABB& c, const glm::mat3& m)
+	Element transform_element(const AABB& c, const glm::mat3& m)
 	{
 		if (only_translation_and_scale(m))
 		{
@@ -281,7 +281,7 @@ namespace oly::col2d
 		}
 	}
 
-	Primitive transform_primitive(const OBB& c, const glm::mat3& m)
+	Element transform_element(const OBB& c, const glm::mat3& m)
 	{
 		if (orthogonal_transform(m))
 		{
@@ -321,7 +321,7 @@ namespace oly::col2d
 		}
 	}
 
-	Primitive transform_primitive(const CustomKDOP& c, const glm::mat3& m)
+	Element transform_element(const CustomKDOP& c, const glm::mat3& m)
 	{
 		math::Polygon2D polygon;
 		polygon.reserve(c.points().size());
@@ -363,7 +363,7 @@ namespace oly::col2d
 
 	// TODO test this transformation especially
 	template<size_t K_half>
-	static Primitive transform_primitive_impl(const KDOP<K_half>& c, const glm::mat3& m)
+	static Element transform_element_impl(const KDOP<K_half>& c, const glm::mat3& m)
 	{
 		bool maintain_axes = false;
 		glm::vec2 scale2D{};
@@ -430,37 +430,37 @@ namespace oly::col2d
 		}
 	}
 
-	Primitive transform_primitive(const KDOP6& c, const glm::mat3& m)
+	Element transform_element(const KDOP6& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const KDOP8& c, const glm::mat3& m)
+	Element transform_element(const KDOP8& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const KDOP10& c, const glm::mat3& m)
+	Element transform_element(const KDOP10& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const KDOP12& c, const glm::mat3& m)
+	Element transform_element(const KDOP12& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const KDOP14& c, const glm::mat3& m)
+	Element transform_element(const KDOP14& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const KDOP16& c, const glm::mat3& m)
+	Element transform_element(const KDOP16& c, const glm::mat3& m)
 	{
-		return transform_primitive_impl(c, m);
+		return transform_element_impl(c, m);
 	}
 
-	Primitive transform_primitive(const ConvexHull& c, const glm::mat3& m)
+	Element transform_element(const ConvexHull& c, const glm::mat3& m)
 	{
 		ConvexHull tc;
 		std::vector<glm::vec2>& points = tc.set_points();
@@ -472,9 +472,9 @@ namespace oly::col2d
 
 	OverlapResult point_hits(const Compound& c, glm::vec2 test)
 	{
-		for (const auto& primitive : c.primitives)
+		for (const auto& element : c.elements)
 		{
-			if (std::visit([test](auto&& primitive) { return point_hits(primitive, test); }, primitive))
+			if (std::visit([test](auto&& element) { return point_hits(element, test); }, element))
 				return true;
 		}
 		return false;
@@ -482,9 +482,9 @@ namespace oly::col2d
 
 	OverlapResult ray_hits(const Compound& c, const Ray& ray)
 	{
-		for (const auto& primitive : c.primitives)
+		for (const auto& element : c.elements)
 		{
-			if (std::visit([&ray](auto&& primitive) { return ray_hits(primitive, ray); }, primitive))
+			if (std::visit([&ray](auto&& element) { return ray_hits(element, ray); }, element))
 				return true;
 		}
 		return false;
@@ -494,9 +494,9 @@ namespace oly::col2d
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::NO_HIT };
 		float closest_dist_sqrd = std::numeric_limits<float>::max();
-		for (const auto& primitive : c.primitives)
+		for (const auto& element : c.elements)
 		{
-			RaycastResult res = std::visit([&ray](auto&& primitive) { return raycast(primitive, ray); }, primitive);
+			RaycastResult res = std::visit([&ray](auto&& element) { return raycast(element, ray); }, element);
 			if (res.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
 				return res;
 			else if (res.hit == RaycastResult::Hit::TRUE_HIT)
@@ -515,12 +515,12 @@ namespace oly::col2d
 	OverlapResult internal::overlaps(const Compound& c1, const Compound& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
 			if (std::visit([&c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
 						return true;
 				}
@@ -535,12 +535,12 @@ namespace oly::col2d
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
 			std::visit([&collisions, &c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
 					if (collision.overlap)
 						collisions.push_back(collision);
@@ -554,12 +554,12 @@ namespace oly::col2d
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
 			std::visit([&cntcts, &c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
 					if (contact.overlap)
 						cntcts.push_back(contact);
@@ -569,25 +569,25 @@ namespace oly::col2d
 		return greedy_contact(cntcts);
 	}
 
-	OverlapResult overlaps(const Compound& c1, const Primitive& c2)
+	OverlapResult overlaps(const Compound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			if (std::visit([&c2](auto&& p1) { return std::visit([&p1](auto&& c2) { return overlaps(p1, c2); }, c2); }, p1))
 				return true;
 		}
 		return false;
 	}
 	
-	CollisionResult collides(const Compound& c1, const Primitive& c2)
+	CollisionResult collides(const Compound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<CollisionResult> collisions;
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			std::visit([&collisions, &c2](auto&& p1) {
 				CollisionResult collision = std::visit([&p1](auto&& c2) { return collides(p1, c2); }, c2);
 				if (collision.overlap)
@@ -597,13 +597,13 @@ namespace oly::col2d
 		return greedy_collision(collisions);
 	}
 	
-	ContactResult contacts(const Compound& c1, const Primitive& c2)
+	ContactResult contacts(const Compound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<ContactResult> cntcts;
-		for (const auto& p1 : c1.primitives)
+		for (const auto& p1 : c1.elements)
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			std::visit([&cntcts, &c2](auto&& p1) {
 				ContactResult contact = std::visit([&p1](auto&& c2) { return contacts(p1, c2); }, c2);
 				if (contact.overlap)
@@ -615,10 +615,10 @@ namespace oly::col2d
 
 	void TCompound::bake() const
 	{
-		baked.resize(compound.primitives.size());
+		baked.resize(compound.elements.size());
 		glm::mat3 g = transformer.global();
 		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& p) { return transform_primitive(p, g); }, compound.primitives[i]);
+			baked[i] = std::visit([&g](auto&& p) { return transform_element(p, g); }, compound.elements[i]);
 		dirty = false;
 	}
 
@@ -676,7 +676,7 @@ namespace oly::col2d
 			if (std::visit([&c2](auto&& p1) {
 				for (const auto& p2 : c2.get_baked())
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
 						return true;
 				}
@@ -696,7 +696,7 @@ namespace oly::col2d
 			std::visit([&collisions, &c2](auto&& p1) {
 				for (const auto& p2 : c2.get_baked())
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
 					if (collision.overlap)
 						collisions.push_back(collision);
@@ -715,7 +715,7 @@ namespace oly::col2d
 			std::visit([&cntcts, &c2](auto&& p1) {
 				for (const auto& p2 : c2.get_baked())
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
 					if (contact.overlap)
 						cntcts.push_back(contact);
@@ -731,9 +731,9 @@ namespace oly::col2d
 		for (const auto& p1 : c1.get_baked())
 		{
 			if (std::visit([&c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					if (std::visit([&p1](auto&& p2) { return overlaps(p1, p2); }, p2))
 						return true;
 				}
@@ -751,9 +751,9 @@ namespace oly::col2d
 		for (const auto& p1 : c1.get_baked())
 		{
 			std::visit([&collisions, &c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					CollisionResult collision = std::visit([&p1](auto&& p2) { return collides(p1, p2); }, p2);
 					if (collision.overlap)
 						collisions.push_back(collision);
@@ -770,9 +770,9 @@ namespace oly::col2d
 		for (const auto& p1 : c1.get_baked())
 		{
 			std::visit([&cntcts, &c2](auto&& p1) {
-				for (const auto& p2 : c2.primitives)
+				for (const auto& p2 : c2.elements)
 				{
-					// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+					// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 					ContactResult contact = std::visit([&p1](auto&& p2) { return contacts(p1, p2); }, p2);
 					if (contact.overlap)
 						cntcts.push_back(contact);
@@ -782,25 +782,25 @@ namespace oly::col2d
 		return greedy_contact(cntcts);
 	}
 
-	OverlapResult overlaps(const TCompound& c1, const Primitive& c2)
+	OverlapResult overlaps(const TCompound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		for (const auto& p1 : c1.get_baked())
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			if (std::visit([&c2](auto&& p1) { return std::visit([&p1](auto&& c2) { return overlaps(p1, c2); }, c2); }, p1))
 				return true;
 		}
 		return false;
 	}
 
-	CollisionResult collides(const TCompound& c1, const Primitive& c2)
+	CollisionResult collides(const TCompound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<CollisionResult> collisions;
 		for (const auto& p1 : c1.get_baked())
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			std::visit([&collisions, &c2](auto&& p1) {
 				CollisionResult collision = std::visit([&p1](auto&& c2) { return collides(p1, c2); }, c2);
 				if (collision.overlap)
@@ -810,13 +810,13 @@ namespace oly::col2d
 		return greedy_collision(collisions);
 	}
 
-	ContactResult contacts(const TCompound& c1, const Primitive& c2)
+	ContactResult contacts(const TCompound& c1, const Element& c2)
 	{
 		// TODO cache AABB of compound as a whole, and then compare here for early-out
 		std::vector<ContactResult> cntcts;
 		for (const auto& p1 : c1.get_baked())
 		{
-			// TODO BVH-like check for AABB/OBB of p1/p2 first, if primitive is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
+			// TODO BVH-like check for AABB/OBB of p1/p2 first, if element is kDOP or ConvexHull of degree >= 6. Put in SAT/GJK instead of here?
 			std::visit([&cntcts, &c2](auto&& p1) {
 				ContactResult contact = std::visit([&p1](auto&& c2) { return contacts(p1, c2); }, c2);
 				if (contact.overlap)

@@ -2,10 +2,10 @@
 
 #include "physics/collision/methods/CollisionInfo.h"
 
-#include "physics/collision/primitives/Circle.h"
-#include "physics/collision/primitives/AABB.h"
-#include "physics/collision/primitives/OBB.h"
-#include "physics/collision/primitives/ConvexHull.h"
+#include "physics/collision/elements/Circle.h"
+#include "physics/collision/elements/AABB.h"
+#include "physics/collision/elements/OBB.h"
+#include "physics/collision/elements/ConvexHull.h"
 
 namespace oly::col2d
 {

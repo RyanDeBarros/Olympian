@@ -4,18 +4,18 @@ namespace oly::col2d
 {
 	namespace internal
 	{
-		static AABB compute_aabb(const Primitive& primitive)
+		static AABB compute_aabb(const Element& element)
 		{
-			return std::visit([](auto&& primitive) {
-				if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, AABB>)
-					return primitive;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, Circle>)
-					return AABB{ .x1 = primitive.deepest_point(UnitVector2D::LEFT).x, .x2 = primitive.deepest_point(UnitVector2D::RIGHT).x,
-								 .y1 = primitive.deepest_point(UnitVector2D::DOWN).y, .y2 = primitive.deepest_point(UnitVector2D::UP).y };
+			return std::visit([](auto&& element) {
+				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, AABB>)
+					return element;
+				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+					return AABB{ .x1 = element.deepest_point(UnitVector2D::LEFT).x, .x2 = element.deepest_point(UnitVector2D::RIGHT).x,
+								 .y1 = element.deepest_point(UnitVector2D::DOWN).y, .y2 = element.deepest_point(UnitVector2D::UP).y };
 				else
 				{
 					AABB bounds = AABB::DEFAULT;
-					for (glm::vec2 p : primitive.points())
+					for (glm::vec2 p : element.points())
 					{
 						bounds.x1 = std::min(bounds.x1, p.x);
 						bounds.x2 = std::max(bounds.x2, p.x);
@@ -24,15 +24,15 @@ namespace oly::col2d
 					}
 					return bounds;
 				}
-				}, primitive);
+				}, element);
 		}
 
-		AABB Wrap<AABB>::operator()(const Primitive* primitives, size_t count) const
+		AABB Wrap<AABB>::operator()(const Element* elements, size_t count) const
 		{
 			AABB c = AABB::DEFAULT;
 			for (size_t i = 0; i < count; ++i)
 			{
-				AABB sub = compute_aabb(primitives[i]);
+				AABB sub = compute_aabb(elements[i]);
 				c.x1 = std::min(c.x1, sub.x1);
 				c.x2 = std::max(c.x2, sub.x2);
 				c.y1 = std::min(c.y1, sub.y1);
@@ -41,47 +41,47 @@ namespace oly::col2d
 			return c;
 		}
 
-		static glm::vec2 compute_centroid_sum(const Primitive& primitive)
+		static glm::vec2 compute_centroid_sum(const Element& element)
 		{
-			return std::visit([](auto&& primitive) -> glm::vec2 {
-				if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, Circle>)
-					return primitive.center;
+			return std::visit([](auto&& element) -> glm::vec2 {
+				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+					return element.center;
 				else
 				{
 					glm::vec2 centroid = {};
-					for (glm::vec2 p : primitive.points())
+					for (glm::vec2 p : element.points())
 						centroid += p;
 					return centroid;
 				}
-				}, primitive);
+				}, element);
 		}
 
-		static size_t compute_centroid_point_count(const Primitive& primitive)
+		static size_t compute_centroid_point_count(const Element& element)
 		{
-			return std::visit([](auto&& primitive) -> size_t {
-				if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, Circle>)
+			return std::visit([](auto&& element) -> size_t {
+				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
 					return 1;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, AABB>)
+				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, AABB>)
 					return 4;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, OBB>)
+				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, OBB>)
 					return 4;
 				else
-					return primitive.points().size();
-				}, primitive);
+					return element.points().size();
+				}, element);
 		}
 
-		static glm::mat2 compute_covariance(const Primitive& primitive, glm::vec2 centroid)
+		static glm::mat2 compute_covariance(const Element& element, glm::vec2 centroid)
 		{
-			return std::visit([centroid](auto&& primitive) -> glm::mat2 {
-				if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, Circle>)
+			return std::visit([centroid](auto&& element) -> glm::mat2 {
+				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
 				{
-					glm::vec2 p = primitive.center - centroid;
+					glm::vec2 p = element.center - centroid;
 					return { { p.x * p.x, p.x * p.y }, { p.y * p.x, p.y * p.y } };
 				}
 				else
 				{
 					glm::mat2 covariance = 0.0f;
-					for (glm::vec2 point : primitive.points())
+					for (glm::vec2 point : element.points())
 					{
 						glm::vec2 p = point - centroid;
 						covariance[0][0] += p.x * p.x;
@@ -91,19 +91,19 @@ namespace oly::col2d
 					}
 					return covariance;
 				}
-				}, primitive);
+				}, element);
 		}
 
-		static AABB compute_obb_bounds(const Primitive& primitive, glm::vec2 centroid, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
+		static AABB compute_obb_bounds(const Element& element, glm::vec2 centroid, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
 		{
-			return std::visit([&major_axis, &minor_axis, centroid](auto&& primitive) -> AABB {
-				if constexpr (std::is_same_v<std::decay_t<decltype(primitive)>, Circle>)
-					return { .x1 = (-major_axis).dot(primitive.deepest_point(-major_axis)), .x2 = major_axis.dot(primitive.deepest_point(major_axis)),
-							 .y1 = (-minor_axis).dot(primitive.deepest_point(-minor_axis)), .y2 = minor_axis.dot(primitive.deepest_point(minor_axis)) };
+			return std::visit([&major_axis, &minor_axis, centroid](auto&& element) -> AABB {
+				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+					return { .x1 = (-major_axis).dot(element.deepest_point(-major_axis)), .x2 = major_axis.dot(element.deepest_point(major_axis)),
+							 .y1 = (-minor_axis).dot(element.deepest_point(-minor_axis)), .y2 = minor_axis.dot(element.deepest_point(minor_axis)) };
 				else
 				{
 					AABB bounds = AABB::DEFAULT;
-					for (glm::vec2 point : primitive.points())
+					for (glm::vec2 point : element.points())
 					{
 						glm::vec2 p = point - centroid;
 						float x = major_axis.dot(p);
@@ -116,10 +116,10 @@ namespace oly::col2d
 					}
 					return bounds;
 				}
-				}, primitive);
+				}, element);
 		}
 
-		OBB Wrap<OBB>::operator()(const Primitive* primitives, size_t count) const
+		OBB Wrap<OBB>::operator()(const Element* elements, size_t count) const
 		{
 			OBB obb{};
 
@@ -127,15 +127,15 @@ namespace oly::col2d
 			size_t point_count = 0;
 			for (size_t i = 0; i < count; ++i)
 			{
-				centroid += compute_centroid_sum(primitives[i]);
-				point_count += compute_centroid_point_count(primitives[i]);
+				centroid += compute_centroid_sum(elements[i]);
+				point_count += compute_centroid_point_count(elements[i]);
 			}
 			centroid /= (float)point_count;
 
 			math::solver::Eigen2x2 covariance{ .M = 0.0f };
 
 			for (size_t i = 0; i < count; ++i)
-				covariance.M += compute_covariance(primitives[i], centroid);
+				covariance.M += compute_covariance(elements[i], centroid);
 			covariance.M /= (float)point_count;
 
 			glm::vec2 eigenvectors[2];
@@ -148,7 +148,7 @@ namespace oly::col2d
 			AABB bounds = AABB::DEFAULT;
 			for (size_t i = 0; i < count; ++i)
 			{
-				AABB sub = compute_obb_bounds(primitives[i], centroid, major_axis, minor_axis);
+				AABB sub = compute_obb_bounds(elements[i], centroid, major_axis, minor_axis);
 				bounds.x1 = std::min(bounds.x1, sub.x1);
 				bounds.x2 = std::max(bounds.x2, sub.x2);
 				bounds.y1 = std::min(bounds.y1, sub.y1);
@@ -161,17 +161,17 @@ namespace oly::col2d
 
 	namespace heuristics
 	{
-		glm::vec2 midpoint(const Primitive& primitive)
+		glm::vec2 midpoint(const Element& element)
 		{
-			return std::visit([](auto&& primitive) -> glm::vec2 {
-				using PT = std::decay_t<decltype(primitive)>;
+			return std::visit([](auto&& element) -> glm::vec2 {
+				using PT = std::decay_t<decltype(element)>;
 				if constexpr (std::is_same_v<PT, Circle>)
-					return transform_point(internal::CircleGlobalAccess::get_global(primitive), primitive.center);
+					return transform_point(internal::CircleGlobalAccess::get_global(element), element.center);
 				else if constexpr (std::is_same_v<PT, OBB>)
-					return primitive.center;
+					return element.center;
 				else
-					return primitive.center();
-				}, primitive);
+					return element.center();
+				}, element);
 		}
 	}
 }

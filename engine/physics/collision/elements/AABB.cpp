@@ -1,7 +1,7 @@
 #include "AABB.h"
 
 #include "core/types/Approximate.h"
-#include "physics/collision/primitives/Common.h"
+#include "physics/collision/elements/Common.h"
 
 namespace oly::col2d
 {

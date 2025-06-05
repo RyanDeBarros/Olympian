@@ -3,11 +3,11 @@
 #include "core/base/Errors.h"
 #include "core/math/Solvers.h"
 #include "core/types/Approximate.h"
-#include "physics/collision/primitives/Common.h"
+#include "physics/collision/elements/Common.h"
 
 namespace oly::col2d
 {
-	OBB OBB::fast_wrap(const const glm::vec2* polygon, size_t count)
+	OBB OBB::fast_wrap(const glm::vec2* polygon, size_t count)
 	{
 		OBB obb{};
 

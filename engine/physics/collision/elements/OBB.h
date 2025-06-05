@@ -2,7 +2,7 @@
 
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
-#include "physics/collision/primitives/AABB.h"
+#include "physics/collision/elements/AABB.h"
 
 #include <array>
 
@@ -21,7 +21,17 @@ namespace oly::col2d
 		// TODO static OBB slow_wrap(const glm::vec2* polygon, size_t count); using rotating calipers method
 
 		UnitVector2D get_major_axis() const { return UnitVector2D(rotation); }
-		UnitVector2D get_minor_axis() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
+		UnitVector2D get_minor_axis() const { return UnitVector2D(rotation).get_quarter_turn(); }
+		std::pair<float, float> get_major_axis_projection_interval() const
+		{
+			float c = UnitVector2D(rotation).dot(center);
+			return { c - 0.5f * width, c + 0.5f * width };
+		}
+		std::pair<float, float> get_minor_axis_projection_interval() const
+		{
+			float c = UnitVector2D(rotation).get_quarter_turn().dot(center);
+			return { c - 0.5f * height, c + 0.5f * height };
+		}
 
 		glm::mat2 get_rotation_matrix() const
 		{

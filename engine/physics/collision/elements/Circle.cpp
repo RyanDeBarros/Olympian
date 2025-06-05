@@ -3,7 +3,7 @@
 #include "core/base/Transforms.h"
 #include "core/base/Errors.h"
 
-#include "physics/collision/primitives/OBB.h"
+#include "physics/collision/elements/OBB.h"
 
 namespace oly::col2d
 {

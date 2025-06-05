@@ -2,7 +2,7 @@
 
 #include "core/base/Transforms.h"
 
-#include "physics/collision/primitives/Circle.h"
+#include "physics/collision/elements/Circle.h"
 #include "physics/collision/methods/CollisionInfo.h"
 
 namespace oly::col2d::internal

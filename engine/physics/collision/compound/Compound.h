@@ -16,7 +16,7 @@ namespace oly::col2d
 	using KDOP14 = KDOP<14>;
 	using KDOP16 = KDOP<16>;
 
-	using Primitive = std::variant<
+	using Element = std::variant<
 		Circle,
 		AABB,
 		OBB,
@@ -30,23 +30,23 @@ namespace oly::col2d
 		KDOP16
 	>;
 
-	extern Primitive transform_primitive(const Circle& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const AABB& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const OBB& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const CustomKDOP& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP6& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP8& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP10& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP12& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP14& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const KDOP16& c, const glm::mat3& m);
-	extern Primitive transform_primitive(const ConvexHull& c, const glm::mat3& m);
+	extern Element transform_element(const Circle& c, const glm::mat3& m);
+	extern Element transform_element(const AABB& c, const glm::mat3& m);
+	extern Element transform_element(const OBB& c, const glm::mat3& m);
+	extern Element transform_element(const CustomKDOP& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP6& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP8& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP10& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP12& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP14& c, const glm::mat3& m);
+	extern Element transform_element(const KDOP16& c, const glm::mat3& m);
+	extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
 
 	typedef int Mask;
 	typedef int Layer;
 	struct Compound
 	{
-		std::vector<Primitive> primitives;
+		std::vector<Element> elements;
 
 		Mask mask = 0;
 		Layer layer = 0;
@@ -85,17 +85,17 @@ namespace oly::col2d
 			return { .overlap = false };
 	}
 
-	extern OverlapResult overlaps(const Compound& c1, const Primitive& c2);
-	inline OverlapResult overlaps(const Primitive& c1, const Compound& c2) { return overlaps(c2, c1); }
-	extern CollisionResult collides(const Compound& c1, const Primitive& c2);
-	inline CollisionResult collides(const Primitive& c1, const Compound& c2) { return collides(c2, c1).invert(); }
-	extern ContactResult contacts(const Compound& c1, const Primitive& c2);
-	inline ContactResult contacts(const Primitive& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
+	extern OverlapResult overlaps(const Compound& c1, const Element& c2);
+	inline OverlapResult overlaps(const Element& c1, const Compound& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const Compound& c1, const Element& c2);
+	inline CollisionResult collides(const Element& c1, const Compound& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const Compound& c1, const Element& c2);
+	inline ContactResult contacts(const Element& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
 
 	class TCompound
 	{
 		Compound compound;
-		mutable std::vector<Primitive> baked;
+		mutable std::vector<Element> baked;
 		mutable bool dirty;
 
 		void bake() const;
@@ -109,7 +109,7 @@ namespace oly::col2d
 		void flag() const { dirty = true; }
 		const Compound& get_compound() const { return compound; }
 		Compound& set_compound() { flag(); return compound; }
-		const std::vector<Primitive>& get_baked() const { if (dirty) { bake(); } return baked; }
+		const std::vector<Element>& get_baked() const { if (dirty) { bake(); } return baked; }
 	};
 
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
@@ -195,10 +195,10 @@ namespace oly::col2d
 			return { .overlap = false };
 	}
 
-	extern OverlapResult overlaps(const TCompound& c1, const Primitive& c2);
-	inline OverlapResult overlaps(const Primitive& c1, const TCompound& c2) { return overlaps(c2, c1); }
-	extern CollisionResult collides(const TCompound& c1, const Primitive& c2);
-	inline CollisionResult collides(const Primitive& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-	extern ContactResult contacts(const TCompound& c1, const Primitive& c2);
-	inline ContactResult contacts(const Primitive& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
+	extern OverlapResult overlaps(const TCompound& c1, const Element& c2);
+	inline OverlapResult overlaps(const Element& c1, const TCompound& c2) { return overlaps(c2, c1); }
+	extern CollisionResult collides(const TCompound& c1, const Element& c2);
+	inline CollisionResult collides(const Element& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
+	extern ContactResult contacts(const TCompound& c1, const Element& c2);
+	inline ContactResult contacts(const Element& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
 }

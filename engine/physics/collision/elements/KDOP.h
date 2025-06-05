@@ -4,8 +4,8 @@
 #include "core/base/Errors.h"
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
-#include "physics/collision/primitives/ConvexHull.h"
-#include "physics/collision/primitives/Common.h"
+#include "physics/collision/elements/ConvexHull.h"
+#include "physics/collision/elements/Common.h"
 
 #include <array>
 #include <string>
