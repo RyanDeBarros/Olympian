@@ -1,16 +1,22 @@
 #pragma once
 
+#include <limits>
+
 #include "external/GLM.h"
 #include "core/base/SimpleMath.h"
+#include "core/types/Meta.h"
 
 namespace oly
 {
-	template<typename genType = float>
-	constexpr genType golden_ratio() { return glm::golden_ratio<genType>(); }
+	template<numeric T = float>
+	constexpr T golden_ratio() { return glm::golden_ratio<T>(); }
 
-	template<typename genType = float>
-	constexpr genType inv_golden_ratio() { return genType(1.0) / glm::golden_ratio<genType>(); }
+	template<numeric T = float>
+	constexpr T inv_golden_ratio() { return T(1.0) / glm::golden_ratio<T>(); }
 
-	template<typename genType = float>
-	constexpr size_t golden_iterations(genType error) { return roundi(glm::log(error) / glm::log(inv_golden_ratio())); }
+	template<numeric T = float>
+	constexpr size_t golden_iterations(T error) { return roundi(glm::log(error) / glm::log(inv_golden_ratio())); }
+
+	template<numeric T>
+	constexpr T nmax() { return std::numeric_limits<T>::max(); }
 }

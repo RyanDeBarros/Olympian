@@ -261,8 +261,7 @@ namespace oly::col2d
 		else if (orthogonal_transform(m))
 		{
 			// OBB
-			glm::vec2 scale = extract_scale(m);
-			return OBB{ .center = m * glm::vec3(c.center(), 1.0f), .width = (c.x2 - c.x1) * scale.x, .height = (c.y2 - c.y1) * scale.y, .rotation = extract_rotation(m) };
+			return OBB{ .center = m * glm::vec3(c.center(), 1.0f), .width = c.width() * glm::length(m[0]), .height = c.height() * glm::length(m[1]), .rotation = glm::atan(m[0][1], m[0][0])};
 		}
 		else
 		{
@@ -285,7 +284,7 @@ namespace oly::col2d
 	{
 		if (orthogonal_transform(m))
 		{
-			float rotation = extract_rotation(m);
+			float rotation = glm::atan(m[0][1], m[0][0]);
 			float r = fmod((c.rotation + rotation) * glm::two_over_pi<float>(), 1.0f);
 			if (near_zero(r) || approx(r, 1.0f))
 			{
@@ -300,8 +299,7 @@ namespace oly::col2d
 			else
 			{
 				// OBB
-				glm::vec2 scale = extract_scale(m);
-				return OBB{ .center = transform_point(m, c.center), .width = scale.x * c.width, .height = scale.y * c.height, .rotation = c.rotation + rotation };
+				return OBB{ .center = transform_point(m, c.center), .width = glm::length(m[0]) * c.width, .height = glm::length(m[1]) * c.height, .rotation = c.rotation + rotation };
 			}
 		}
 		else
@@ -361,18 +359,20 @@ namespace oly::col2d
 		}
 	}
 
-	// TODO test this transformation especially
 	template<size_t K_half>
 	static Element transform_element_impl(const KDOP<K_half>& c, const glm::mat3& m)
 	{
+		bool reverse_axes = false;
 		bool maintain_axes = false;
-		glm::vec2 scale2D{};
+		float scale = 0.0f;
 		float rotation = 0.0f;
 		if (orthogonal_transform(m))
 		{
-			scale2D = extract_scale(m);
-			rotation = extract_rotation(m);
-			if (approx(glm::abs(scale2D.x), glm::abs(scale2D.y)) && near_multiple(rotation, glm::pi<float>() / K_half))
+			scale = glm::length(m[0]);
+			float scaleY = glm::length(m[1]);
+			reverse_axes = math::cross(m[0], m[1]) < 0.0f;
+			rotation = glm::atan(m[0][1], m[0][0]);
+			if (approx(glm::abs(scale), glm::abs(scaleY)) && near_multiple(rotation, glm::pi<float>() / K_half))
 				maintain_axes = true;
 		}
 
@@ -382,26 +382,6 @@ namespace oly::col2d
 			glm::vec2 translation = m[2];
 			int rotation_axis_offset = 0;
 			rotation_axis_offset = roundi(K_half * rotation * glm::one_over_pi<float>());
-			// TODO In LaTeX documentation, use graphic to explain this more visually, but keep comment here. Or, use syntax "SEE chapter#.section#.subsubection# in doc/Olympian.pdf". SEE allows me to easily find and update these comments.
-			// Use scale2D.y as the representative scale, i.e. the sign of scale2D.y determines the sign of the scale that will multiply the extrema. This effect is illustrated here:
-			// 
-			// 1. scale2D.x > 0 && scale2D.y > 0
-			//     -> No reflection, axes preserved, and scale remains positive.
-			// 
-			// 2. scale2D.x < 0 && scale2D.y > 0
-			//     -> Reflection across Y-axis, so reverse_axes = true. Note that reversing the axis order is equivalent to a horizontal reflection, so scale remains positive.
-			// 
-			// 3. scale2D.x > 0 && scale2D.y < 0
-			//     -> Reflection across X-axis. Given an axis in quadrant I, its reflection into quadrant IV is equivalent to a reflection into quadrant II but with negative scale.
-			//        Therefore, reverse_axes = true, but scale becomes negative.
-			// 
-			// 4. scale2D.x < 0 && scale2D.y < 0
-			//     -> 180-degree rotation. This is equivalent to *not* reversing axis order, but simply negating the scale.
-			// 
-			// Therefore, reverse_axes = sign(scale2D.x) != sign(scale2D.y) and scale = scale2D.y.
-			bool reverse_axes = glm::sign(scale2D.x) != glm::sign(scale2D.y);
-			float scale = scale2D.y;
-
 			std::array<float, K_half> minima;
 			std::array<float, K_half> maxima;
 			for (int i = 0; i < K_half; ++i)

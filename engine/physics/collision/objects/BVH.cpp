@@ -155,7 +155,7 @@ namespace oly::col2d
 				bounds.y2 = std::max(bounds.y2, sub.y2);
 			}
 
-			return { .center = bounds.center(), .width = bounds.x2 - bounds.x1, .height = bounds.y2 - bounds.y1 };
+			return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height() };
 		}
 	}
 

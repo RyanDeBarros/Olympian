@@ -86,8 +86,8 @@ namespace oly::col2d
 		{
 			std::array<float, K_half> minima;
 			std::array<float, K_half> maxima;
-			minima.fill(std::numeric_limits<float>::max());
-			maxima.fill(std::numeric_limits<float>::lowest());
+			minima.fill(nmax<float>());
+			maxima.fill(-nmax<float>());
 
 			for (glm::vec2 point : polygon)
 			{
@@ -232,7 +232,7 @@ namespace oly::col2d
 			if (k_half < 2)
 				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 4, but k_half provided is: " + std::to_string(k_half));
 			std::vector<std::pair<float, float>> extrema(k_half);
-			std::fill_n(extrema.begin(), k_half, std::make_pair(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest()));
+			std::fill_n(extrema.begin(), k_half, std::make_pair(nmax<float>(), -nmax<float>()));
 
 			for (glm::vec2 point : polygon)
 			{

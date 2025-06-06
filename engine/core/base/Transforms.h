@@ -46,22 +46,6 @@ namespace oly
 		return { scale.x * vectors::I3, scale.y * vectors::J3, vectors::H3 };
 	}
 
-	constexpr glm::vec2 extract_translation(const glm::mat3& transform)
-	{
-		return { transform[2][0], transform[2][1] };
-	}
-
-	inline float extract_rotation(const glm::mat3& transform)
-	{
-		float scale_x = glm::length(transform[0]);
-		return glm::atan(transform[0][1] / scale_x, transform[0][0] / scale_x); // TODO doesn't account for shearing
-	}
-
-	constexpr glm::vec2 extract_scale(const glm::mat3& transform)
-	{
-		return { glm::length(transform[0]), glm::length(transform[1]) };
-	}
-
 	struct Transform2D
 	{
 		glm::vec2 position = { 0.0f, 0.0f };
@@ -195,21 +179,6 @@ namespace oly
 		return { scale.x * vectors::I4, scale.y * vectors::J4, scale.z * vectors::K4, vectors::H4 };
 	}
 
-	constexpr glm::vec3 extract_translation(const glm::mat4& transform)
-	{
-		return { transform[3][0], transform[3][1], transform[3][2] };
-	}
-
-	inline glm::quat extract_rotation(const glm::mat4& transform)
-	{
-		return glm::quat_cast(glm::mat3{ transform[0] / glm::length(transform[0]), transform[1] / glm::length(transform[1]), transform[2] / glm::length(transform[2]) });
-	}
-
-	constexpr glm::vec3 extract_scale(const glm::mat4& transform)
-	{
-		return { glm::length(transform[0]), glm::length(transform[1]), glm::length(transform[2])};
-	}
-
 	struct Transform3D
 	{
 		glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -333,7 +302,6 @@ namespace oly
 		}
 	};
 
-	// TODO LaTeX documentation for the derivation of these and collision tests:
 	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
 	extern glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point);
 	extern glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction);

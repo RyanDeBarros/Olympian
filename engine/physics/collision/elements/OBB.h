@@ -18,7 +18,7 @@ namespace oly::col2d
 
 		static OBB fast_wrap(const glm::vec2* polygon, size_t count);
 		static OBB wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation);
-		// TODO static OBB slow_wrap(const glm::vec2* polygon, size_t count); using rotating calipers method
+		static OBB slow_wrap(const glm::vec2* polygon, size_t count);
 
 		UnitVector2D get_major_axis() const { return UnitVector2D(rotation); }
 		UnitVector2D get_minor_axis() const { return UnitVector2D(rotation).get_quarter_turn(); }

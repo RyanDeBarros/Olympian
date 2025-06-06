@@ -1,13 +1,14 @@
 #pragma once
 
 #include "core/base/UnitVector.h"
+#include "core/base/Constants.h"
 
 namespace oly::col2d::internal
 {
 	template<typename Polygon>
 	std::pair<float, float> polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		std::pair<float, float> interval = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
+		std::pair<float, float> interval = { nmax<float>(), -nmax<float>() };
 		for (glm::vec2 point : polygon)
 		{
 			float proj = axis.dot(point);
@@ -29,7 +30,7 @@ namespace oly::col2d::internal
 	{
 		glm::vec2 deepest{};
 		size_t num_deepest_points = 0;
-		float max_depth = std::numeric_limits<float>::lowest();
+		float max_depth = -nmax<float>();
 		for (glm::vec2 point : polygon)
 		{
 			float proj = axis.dot(point);

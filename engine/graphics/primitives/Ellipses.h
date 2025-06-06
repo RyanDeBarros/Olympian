@@ -4,6 +4,7 @@
 
 #include "core/base/Transforms.h"
 #include "core/containers/IDGenerator.h"
+#include "core/base/Constants.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -50,7 +51,7 @@ namespace oly::rendering
 	public:
 		struct Capacity
 		{
-			Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= std::numeric_limits<unsigned int>::max()); }
+			Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= nmax<unsigned int>()); }
 
 		private:
 			friend class EllipseBatch;

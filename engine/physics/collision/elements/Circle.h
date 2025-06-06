@@ -2,6 +2,7 @@
 
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
+#include "core/base/Constants.h"
 
 namespace oly::col2d
 {
@@ -48,7 +49,7 @@ namespace oly::col2d
 		template<typename Polygon>
 		glm::vec2 closest_point(const Polygon& polygon) const
 		{
-			float closest_dist_sqrd = std::numeric_limits<float>::max();
+			float closest_dist_sqrd = nmax<float>();
 			glm::vec2 cp{};
 			for (glm::vec2 point : polygon)
 			{

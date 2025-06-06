@@ -1,14 +1,15 @@
 #pragma once
 
-#include <map>
-
 #include "core/base/Transforms.h"
+#include "core/base/Constants.h"
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
+
+#include <map>
 
 namespace oly::rendering
 {
@@ -45,7 +46,7 @@ namespace oly::rendering
 			Capacity(Index primitives, Index degree = 6)
 			{
 				OLY_ASSERT(degree >= 3);
-				OLY_ASSERT(degree * primitives <= std::numeric_limits<unsigned int>::max());
+				OLY_ASSERT(degree * primitives <= nmax<unsigned int>());
 
 				// max(F) = V - 2 + 2H
 				// max(H) = [V / 3] - 1

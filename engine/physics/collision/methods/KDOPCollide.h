@@ -45,7 +45,7 @@ namespace oly::col2d
 	inline RaycastResult raycast(const KDOP<K_half>& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-		float max_entry = std::numeric_limits<float>::lowest();
+		float max_entry = -nmax<float>();
 		for (size_t i = 0; i < K_half; ++i)
 		{
 			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K_half>::uniform_axis(i), info, max_entry))
@@ -139,7 +139,7 @@ namespace oly::col2d
 	inline RaycastResult raycast(const CustomKDOP& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-		float max_entry = std::numeric_limits<float>::lowest();
+		float max_entry = -nmax<float>();
 		for (size_t i = 0; i < c.get_k_half(); ++i)
 		{
 			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, c.edge_normal(i), info, max_entry))

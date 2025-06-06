@@ -1,9 +1,11 @@
 #include "OBB.h"
 
 #include "core/base/Errors.h"
+#include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
 #include "core/types/Approximate.h"
 #include "physics/collision/elements/Common.h"
+#include "physics/collision/elements/ConvexHull.h"
 
 namespace oly::col2d
 {
@@ -48,7 +50,7 @@ namespace oly::col2d
 			bounds.y2 = std::max(bounds.y2, y);
 		}
 
-		return { .center = bounds.center(), .width = bounds.x2 - bounds.x1, .height = bounds.y2 - bounds.y1 };
+		return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height() };
 	}
 
 	OBB OBB::wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation)
@@ -69,7 +71,45 @@ namespace oly::col2d
 			bounds.y2 = std::max(bounds.y2, h);
 		}
 		
-		return { .center = bounds.center(), .width = bounds.x2 - bounds.x1, .height = bounds.y2 - bounds.y1, .rotation = rotation };
+		return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = rotation};
+	}
+
+	OBB OBB::slow_wrap(const glm::vec2* polygon, size_t count)
+	{
+		// rotating calipers method
+
+		ConvexHull hull = ConvexHull::wrap(polygon, count);
+		size_t n = hull.size();
+		float min_area = nmax<float>();
+		OBB obb{};
+
+		for (size_t i = 0; i < n; ++i)
+		{
+			UnitVector2D major_axis = hull.points()[(i + 1) % n] - hull.points()[i];
+			UnitVector2D minor_axis = major_axis.get_quarter_turn();
+
+			AABB bounds = AABB::DEFAULT;
+			for (size_t j = 0; j < n; ++j)
+			{
+				float w = major_axis.dot(hull.points()[j]);
+				float h = minor_axis.dot(hull.points()[j]);
+				bounds.x1 = std::min(bounds.x1, w);
+				bounds.x2 = std::max(bounds.x2, w);
+				bounds.y1 = std::min(bounds.y1, h);
+				bounds.y2 = std::max(bounds.y2, h);
+			}
+
+			float area = bounds.area();
+			if (area < min_area)
+			{
+				min_area = area;
+				obb.rotation = major_axis.rotation();
+				obb.center = major_axis.rotation_matrix() * bounds.center();
+				obb.width = bounds.width();
+				obb.height = bounds.height();
+			}
+		}
+		return obb;
 	}
 
 	std::array<glm::vec2, 4> OBB::points() const

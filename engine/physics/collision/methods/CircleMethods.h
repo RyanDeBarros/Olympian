@@ -68,12 +68,12 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	inline CollisionResult circle_collides_polygon(const Circle& c, const Polygon& polygon)
 	{
-		CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+		CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 		std::optional<bool> ccw;
 		glm::vec2 prev = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
-		float ccw_depth = std::numeric_limits<float>::max();
+		float ccw_depth = nmax<float>();
 		UnitVector2D ccw_unit_impulse;
-		float cw_depth = std::numeric_limits<float>::max();
+		float cw_depth = nmax<float>();
 		UnitVector2D cw_unit_impulse;
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{

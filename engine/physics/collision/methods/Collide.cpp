@@ -24,9 +24,9 @@ namespace oly::col2d
 				if (near_zero(proj_direction))
 					proj_clip = proj_origin;
 				else if (above_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::max();
+					proj_clip = nmax<float>();
 				else if (below_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::lowest();
+					proj_clip = -nmax<float>();
 			}
 			else
 				proj_clip = proj_origin + ray.clip * proj_direction;
@@ -48,9 +48,9 @@ namespace oly::col2d
 				if (near_zero(proj_direction))
 					proj_clip = proj_origin;
 				else if (above_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::max();
+					proj_clip = nmax<float>();
 				else if (below_zero(proj_direction))
-					proj_clip = std::numeric_limits<float>::lowest();
+					proj_clip = -nmax<float>();
 			}
 			else
 				proj_clip = proj_origin + ray.clip * proj_direction;
@@ -367,7 +367,7 @@ namespace oly::col2d
 	RaycastResult raycast(const AABB& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-		float max_entry = std::numeric_limits<float>::lowest();
+		float max_entry = -nmax<float>();
 		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT, info, max_entry))
 			return { .hit = RaycastResult::Hit::NO_HIT };
 		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::UP, info, max_entry))
@@ -526,7 +526,7 @@ namespace oly::col2d
 	RaycastResult raycast(const OBB& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
-		float max_entry = std::numeric_limits<float>::lowest();
+		float max_entry = -nmax<float>();
 		auto proj = c.get_major_axis_projection_interval();
 		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_major_axis(), info, max_entry))
 			return { .hit = RaycastResult::Hit::NO_HIT };
@@ -586,7 +586,7 @@ namespace oly::col2d
 		if (point_hits(c, ray.origin))
 			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN };
 
-		float closest_edge_distance = std::numeric_limits<float>::max();;
+		float closest_edge_distance = nmax<float>();;
 		size_t closest_idx = -1;
 		for (size_t i = 0; i < c.points().size(); ++i)
 		{

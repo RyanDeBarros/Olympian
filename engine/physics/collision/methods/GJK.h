@@ -125,7 +125,7 @@ namespace oly::col2d::gjk
 		};
 
 		static const auto find_closest_edge = [](const std::vector<glm::vec2>& polygon) -> Edge {
-			float min_dist = std::numeric_limits<float>::max();
+			float min_dist = nmax<float>();
 			Edge closest{};
 			for (size_t i = 0; i < polygon.size(); ++i)
 			{

@@ -39,7 +39,7 @@ namespace oly::col2d::sat
 		{
 			static CollisionResult call(const Shape1& c1, const Shape2& c2)
 			{
-				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+				CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 				internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
 				if (!info.overlap)
 					return info;
@@ -302,7 +302,7 @@ namespace oly::col2d::sat
 		{
 			static CollisionResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
 			{
-				CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+				CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 				// only go through half the axes, since the other half has parallel normals
 				for (size_t i = 0; i < K_half; ++i)
 				{
@@ -392,7 +392,7 @@ namespace oly::col2d::sat
 			{
 				if (c1.get_k_half() == c2.get_k_half() && c1.get_axes() == c2.get_axes())
 				{
-					CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 					// only go through half the axes, since the other half has parallel normals
 					for (size_t i = 0; i < c1.get_k_half(); ++i)
 					{
@@ -411,7 +411,7 @@ namespace oly::col2d::sat
 				}
 				else
 				{
-					CollisionResult info{ .overlap = true, .penetration_depth = std::numeric_limits<float>::max() };
+					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c1, c2, info);
 					if (!info.overlap)
 						return info;

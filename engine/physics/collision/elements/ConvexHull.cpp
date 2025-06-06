@@ -7,11 +7,16 @@
 
 namespace oly::col2d
 {
+	ConvexHull ConvexHull::wrap(const glm::vec2* polygon, size_t count)
+	{
+		math::Polygon2D poly(count);
+		for (size_t i = 0; i < count; ++i)
+			poly[i] = polygon[i];
+		return wrap(poly);
+	}
+
 	ConvexHull ConvexHull::wrap(const math::Polygon2D& polygon)
 	{
-		if (polygon.size() <= 3)
-			return { polygon };
-
 		math::Polygon2D cpy = polygon;
 		return wrap(cpy);
 	}
