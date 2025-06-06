@@ -121,8 +121,6 @@ namespace oly::col2d
 
 		OBB Wrap<OBB>::operator()(const Element* elements, size_t count) const
 		{
-			OBB obb{};
-
 			glm::vec2 centroid = {};
 			size_t point_count = 0;
 			for (size_t i = 0; i < count; ++i)
@@ -143,8 +141,6 @@ namespace oly::col2d
 			UnitVector2D major_axis = eigenvectors[1];
 			UnitVector2D minor_axis = eigenvectors[0];
 
-			obb.rotation = major_axis.rotation();
-
 			AABB bounds = AABB::DEFAULT;
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -155,12 +151,61 @@ namespace oly::col2d
 				bounds.y2 = std::max(bounds.y2, sub.y2);
 			}
 
-			return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height() };
+			return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = major_axis.rotation() };
 		}
-	}
 
-	namespace heuristics
-	{
+		Circle Wrap<Circle>::operator()(const Element* elements, size_t count) const
+		{
+			std::vector<glm::vec2> csums;
+			glm::vec2 centroid = {};
+			size_t point_count = 0;
+			for (size_t i = 0; i < count; ++i)
+			{
+				csums.push_back(compute_centroid_sum(elements[i]));
+				centroid += csums[i];
+				point_count += compute_centroid_point_count(elements[i]);
+			}
+			centroid /= (float)point_count;
+			
+			float radius = 0.0f;
+			for (glm::vec2 p : csums)
+				radius = std::max(radius, math::mag_sqrd(p - centroid));
+			radius = glm::sqrt(radius);
+			return Circle(centroid, radius);
+		}
+
+		static void add_point_cloud(const Element& element, std::vector<glm::vec2>& point_cloud)
+		{
+			std::visit([&point_cloud](auto&& e) -> void {
+				if constexpr (std::is_same_v<std::decay_t<decltype(e)>, Circle>)
+				{
+					size_t start = point_cloud.size();
+					static const auto& enclosure = Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
+					point_cloud.resize(point_cloud.size() + enclosure.get_degree());
+					for (size_t i = 0; i < enclosure.get_degree(); ++i)
+						point_cloud[start + i] = transform_point(CircleGlobalAccess::get_global(e), enclosure.get_point(e, i));
+				}
+				else if constexpr (std::is_same_v<std::decay_t<decltype(e)>, AABB> || std::is_same_v<std::decay_t<decltype(e)>, OBB>)
+				{
+					auto points = e.points();
+					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
+				}
+				else
+				{
+					const auto& points = e.points();
+					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
+				}
+				}, element);
+		}
+
+		ConvexHull Wrap<ConvexHull>::operator()(const Element* elements, size_t count) const
+		{
+			std::vector<glm::vec2> point_cloud;
+			for (size_t i = 0; i < count; ++i)
+				add_point_cloud(elements[i], point_cloud);
+			return ConvexHull::wrap(point_cloud);
+		}
+
 		glm::vec2 midpoint(const Element& element)
 		{
 			return std::visit([](auto&& element) -> glm::vec2 {

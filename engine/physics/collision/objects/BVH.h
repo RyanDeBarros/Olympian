@@ -31,11 +31,95 @@ namespace oly::col2d
 			OBB operator()(const Element* elements, size_t count) const;
 		};
 
-		// TODO other shapes
+		template<>
+		struct Wrap<Circle>
+		{
+			Circle operator()(const Element* elements, size_t count) const;
+		};
+
+		template<>
+		struct Wrap<ConvexHull>
+		{
+			class CirclePolygonEnclosure
+			{
+				size_t degree = 8;
+				float overfitting_multiplier;
+
+				void set_mult() { overfitting_multiplier = 1.0f / glm::cos(glm::pi<float>() / float(degree)); }
+
+			public:
+				CirclePolygonEnclosure(size_t degree = 8) : degree(degree) { set_mult(); }
+
+				size_t get_degree() const { return degree; }
+				void set_degree(size_t d) { degree = d; set_mult(); }
+				glm::vec2 get_point(const Circle& c, size_t i) const
+				{
+					return c.center + c.radius * overfitting_multiplier * (glm::vec2)UnitVector2D(i * glm::two_pi<float>() / get_degree());
+				}
+			};
+
+			static CirclePolygonEnclosure CIRCLE_POLYGON_ENCLOSURE;
+			ConvexHull operator()(const Element* elements, size_t count) const;
+		};
+		inline Wrap<ConvexHull>::CirclePolygonEnclosure Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
+
+		template<size_t K_half>
+		struct Wrap<KDOP<K_half>>
+		{
+			KDOP<K_half> operator()(const Element* elements, size_t count) const
+			{
+				KDOP<K_half> kdop;
+				kdop.fill_invalid();
+				for (size_t i = 0; i < count; ++i)
+				{
+					std::visit([&kdop](auto&& element) {
+						for (size_t j = 0; j < K_half; ++j)
+						{
+							std::pair<float, float> interval = element.projection_interval(KDOP<K_half>::uniform_axis(j));
+							kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
+							kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
+						}
+						}, elements[i]);
+				}
+				return kdop;
+			}
+		};
 	}
 
-	namespace heuristics
+	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+	struct CustomKDOPShape
 	{
+		CustomKDOP kdop;
+		operator const CustomKDOP& () const { return kdop; }
+		operator CustomKDOP& () { return kdop; }
+	};
+
+	namespace internal
+	{
+		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+		struct Wrap<CustomKDOPShape<K_half, Axes>>
+		{
+			CustomKDOPShape<K_half, Axes> operator()(const Element* elements, size_t count) const
+			{
+				std::vector<float> minima(K_half, nmax<float>());
+				std::vector<float> maxima(K_half, -nmax<float>());
+				for (size_t i = 0; i < count; ++i)
+				{
+					std::visit([&minima, &maxima](auto&& element) {
+						for (size_t j = 0; j < K_half; ++j)
+						{
+							std::pair<float, float> interval = element.projection_interval(Axes[j]);
+							minima[j] = std::min(minima[j], interval.first);
+							maxima[j] = std::max(maxima[j], interval.second);
+						}
+						}, elements[i]);
+				}
+				std::vector<UnitVector2D> axes;
+				axes.insert(axes.end(), Axes.begin(), Axes.end());
+				return { .kdop = CustomKDOP(std::move(axes), std::move(minima), std::move(maxima)) };
+			}
+		};
+
 		extern glm::vec2 midpoint(const Element& element);
 
 		struct MidpointXY
@@ -58,6 +142,45 @@ namespace oly::col2d
 			}
 		};
 
+		template<bool XY, bool MinX, bool MinY>
+		struct ByBounds
+		{
+			bool operator()(const Element& lhs, const Element& rhs) const
+			{
+				float(*bx)(const Element& e) = nullptr;
+				if constexpr (MinX)
+					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::LEFT).second; }, e); };
+				else
+					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::RIGHT).second; }, e); };
+				
+				float(*by)(const Element& e) = nullptr;
+				if constexpr (MinY)
+					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::DOWN).second; }, e); };
+				else
+					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::UP).second; }, e); };
+
+				if constexpr (XY)
+				{
+					float lx = bx(lhs);
+					float rx = bx(rhs);
+					if (lx < rx)
+						return true;
+					if (lx > rx)
+						return false;
+					return by(lhs) < by(rhs);
+				}
+				else
+				{
+					float ly = by(lhs);
+					float ry = by(rhs);
+					if (ly < ry)
+						return true;
+					if (ly > ry)
+						return false;
+					return bx(lhs) < bx(rhs);
+				}
+			}
+		};
 	}
 
 	template<typename Shape>
@@ -93,7 +216,15 @@ namespace oly::col2d
 		{
 			NONE,
 			MIDPOINT_XY,
-			MIDPOINT_YX
+			MIDPOINT_YX,
+			MIN_X_MIN_Y,
+			MIN_X_MAX_Y,
+			MAX_X_MIN_Y,
+			MAX_X_MAX_Y,
+			MIN_Y_MIN_X,
+			MIN_Y_MAX_X,
+			MAX_Y_MIN_X,
+			MAX_Y_MAX_X,
 		};
 
 		Mask mask = 0;
@@ -116,9 +247,25 @@ namespace oly::col2d
 			{
 				dirty = false;
 				if (heuristic == Heuristic::MIDPOINT_XY)
-					std::sort(elements.begin(), elements.end(), heuristics::MidpointXY{});
+					std::sort(elements.begin(), elements.end(), internal::MidpointXY{});
 				else if (heuristic == Heuristic::MIDPOINT_YX)
-					std::sort(elements.begin(), elements.end(), heuristics::MidpointYX{});
+					std::sort(elements.begin(), elements.end(), internal::MidpointYX{});
+				else if (heuristic == Heuristic::MIN_X_MIN_Y)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, true>{});
+				else if (heuristic == Heuristic::MIN_X_MAX_Y)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, false>{});
+				else if (heuristic == Heuristic::MAX_X_MIN_Y)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, true>{});
+				else if (heuristic == Heuristic::MAX_X_MAX_Y)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, false>{});
+				else if (heuristic == Heuristic::MIN_Y_MIN_X)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, true>{});
+				else if (heuristic == Heuristic::MIN_Y_MAX_X)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, true>{});
+				else if (heuristic == Heuristic::MAX_Y_MIN_X)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
+				else if (heuristic == Heuristic::MAX_Y_MAX_X)
+					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
 				_root = std::make_unique<Node>(elements.data(), 0, elements.size());
 			}
 			return *_root;

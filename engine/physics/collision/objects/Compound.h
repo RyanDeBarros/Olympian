@@ -73,6 +73,11 @@ namespace oly::col2d
 		const Compound& get_compound() const { return compound; }
 		Compound& set_compound() { flag(); return compound; }
 		const std::vector<Element>& get_baked() const { if (dirty) { bake(); } return baked; }
+
+		Mask mask() const { return compound.mask; }
+		Mask& mask() { return compound.mask; }
+		Layer layer() const { return compound.layer; }
+		Layer& layer() { return compound.layer; }
 	};
 
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);

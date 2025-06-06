@@ -39,6 +39,17 @@ namespace oly::col2d
 		
 		KDOP() = default;
 		KDOP(const std::array<float, K_half>& minima, const std::array<float, K_half>& maxima) : minima(minima), maxima(maxima) { dirty_cache = true; dirty_center = true; }
+		
+		void fill_invalid()
+		{
+			for (size_t i = 0; i < K_half; ++i)
+			{
+				minima[i] = nmax<float>();
+				maxima[i] = -nmax<float>();
+			}
+			dirty_cache = true;
+			dirty_center = true;
+		}
 
 		glm::vec2 center() const
 		{
@@ -84,22 +95,18 @@ namespace oly::col2d
 
 		static KDOP<K_half> wrap(const math::Polygon2D& polygon)
 		{
-			std::array<float, K_half> minima;
-			std::array<float, K_half> maxima;
-			minima.fill(nmax<float>());
-			maxima.fill(-nmax<float>());
-
+			KDOP<K_half> kdop;
+			kdop.fill_invalid();
 			for (glm::vec2 point : polygon)
 			{
 				for (size_t i = 0; i < K_half; ++i)
 				{
 					float v = uniform_axis(i).dot(point);
-					minima[i] = std::min(minima[i], v);
-					maxima[i] = std::max(maxima[i], v);
+					kdop.set_minimum(i, std::min(kdop.get_minimum(i), v));
+					kdop.set_maximum(i, std::max(kdop.get_maximum(i), v));
 				}
 			}
-
-			return KDOP<K_half>(minima, maxima);
+			return kdop;
 		}
 
 		const std::array<glm::vec2, K>& points() const
@@ -175,18 +182,31 @@ namespace oly::col2d
 		}
 
 		CustomKDOP() = default;
-		CustomKDOP(const std::vector<UnitVector2D>& axes, const std::vector<std::pair<float, float>>& extrema)
+		CustomKDOP(const std::vector<UnitVector2D>& axes, const std::vector<float>& minima, const std::vector<float>& maxima)
 		{
-			if (axes.size() != extrema.size())
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have the same number of extrema as axes");
+			if (axes.size() != minima.size() || axes.size() != maxima.size())
+				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have the same number of minima, maxima, and axes");
+			if (axes.size() < 2)
+				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 4, but k_half provided is: " + std::to_string(axes.size()));
 
-			set_k_half(axes.size());
-			for (size_t i = 0; i < get_k_half(); ++i)
-			{
-				this->axes[i] = axes[i];
-				minima[i] = extrema[i].first;
-				maxima[i] = extrema[i].second;
-			}
+			this->minima = minima;
+			this->maxima = maxima;
+			this->axes = axes;
+			dirty_cache = true;
+			dirty_center = true;
+		}
+		CustomKDOP(std::vector<UnitVector2D>&& axes, std::vector<float>&& minima, std::vector<float>&& maxima)
+		{
+			if (axes.size() != minima.size() || axes.size() != maxima.size())
+				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have the same number of minima, maxima, and axes");
+			if (axes.size() < 2)
+				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 4, but k_half provided is: " + std::to_string(axes.size()));
+
+			this->minima = std::move(minima);
+			this->maxima = std::move(maxima);
+			this->axes = std::move(axes);
+			dirty_cache = true;
+			dirty_center = true;
 		}
 
 		glm::vec2 center() const
@@ -228,23 +248,28 @@ namespace oly::col2d
 	public:
 		static CustomKDOP wrap(const math::Polygon2D& polygon, const std::vector<UnitVector2D>& axes)
 		{
+			return wrap(polygon, dupl(axes));
+		}
+
+		static CustomKDOP wrap(const math::Polygon2D& polygon, std::vector<UnitVector2D>&& axes)
+		{
 			size_t k_half = axes.size();
 			if (k_half < 2)
 				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 4, but k_half provided is: " + std::to_string(k_half));
-			std::vector<std::pair<float, float>> extrema(k_half);
-			std::fill_n(extrema.begin(), k_half, std::make_pair(nmax<float>(), -nmax<float>()));
+			std::vector<float> minima(k_half, nmax<float>());
+			std::vector<float> maxima(k_half, -nmax<float>());
 
 			for (glm::vec2 point : polygon)
 			{
 				for (size_t i = 0; i < k_half; ++i)
 				{
 					float v = axes[i].dot(point);
-					extrema[i].first = std::min(extrema[i].first, v);
-					extrema[i].second = std::max(extrema[i].second, v);
+					minima[i] = std::min(minima[i], v);
+					maxima[i] = std::max(maxima[i], v);
 				}
 			}
 
-			return CustomKDOP(axes, extrema);
+			return CustomKDOP(std::move(axes), std::move(minima), std::move(maxima));
 		}
 
 		const std::vector<glm::vec2>& points() const

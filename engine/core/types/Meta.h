@@ -24,6 +24,12 @@ namespace oly
 		return obj;
 	}
 
+	template<typename T>
+	inline T dupl(T&& obj)
+	{
+		return std::move(obj);
+	}
+
 	template<typename Struct, typename Member>
 	constexpr size_t member_offset(Member Struct::* member)
 	{
