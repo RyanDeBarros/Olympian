@@ -89,5 +89,4 @@ namespace oly::col2d
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const TCompound& c, const Ray& ray);
 	extern RaycastResult raycast(const TCompound& c, const Ray& ray);
-
 }

@@ -20,7 +20,7 @@ namespace oly
 		std::weak_ptr<Node> head_ear;
 		size_t size = 0;
 		bool ccw;
-		const std::vector<glm::vec2>* vertices;
+		const math::Polygon2D* vertices;
 	};
 
 	struct Node
@@ -319,7 +319,7 @@ namespace oly
 
 	namespace math
 	{
-		Triangulation triangulate(const std::vector<glm::vec2>& polygon, bool increasing, int starting_offset, int ear_cycle)
+		Triangulation triangulate(const Polygon2D& polygon, bool increasing, int starting_offset, int ear_cycle)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			Triangulation triangulation;
@@ -412,7 +412,7 @@ namespace oly
 			return triangulation;
 		}
 
-		glm::uint get_first_ear(const std::vector<glm::vec2>& polygon, int starting_offset)
+		glm::uint get_first_ear(const Polygon2D& polygon, int starting_offset)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			if (polygon.size() == 3)
@@ -441,13 +441,13 @@ namespace oly
 			return -1;
 		}
 
-		std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon)
+		std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			return convex_decompose_triangulation(polygon, triangulate(polygon));
 		}
 
-		std::vector<Triangulation> convex_decompose_triangulation(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)
+		std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			// flood fill algorithm
@@ -548,29 +548,29 @@ namespace oly
 			return sub_triangulations;
 		}
 
-		std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon)
+		std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
 			return decompose_polygon(polygon, decomposition);
 		}
 
-		std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> convex_decompose_polygon(const std::vector<glm::vec2>& polygon, const Triangulation& triangulation)
+		std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon, const Triangulation& triangulation)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
 			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
 			return decompose_polygon(polygon, decomposition);
 		}
 
-		std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> decompose_polygon(const std::vector<glm::vec2>& polygon, const std::vector<Triangulation>& triangulations)
+		std::vector<std::pair<Polygon2D, Triangulation>> decompose_polygon(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
 		{
 			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<std::pair<std::vector<glm::vec2>, Triangulation>> subpolygons;
+			std::vector<std::pair<Polygon2D, Triangulation>> subpolygons;
 			subpolygons.reserve(triangulations.size());
 
 			for (const Triangulation& triangulation : triangulations)
 			{
-				std::pair<std::vector<glm::vec2>, Triangulation> subpolygon;
+				std::pair<Polygon2D, Triangulation> subpolygon;
 				std::unordered_map<glm::uint, glm::uint> point_indices;
 				for (glm::uvec3 face : triangulation)
 				{
@@ -585,6 +585,49 @@ namespace oly
 						new_face[i] = point_indices[face[i]];
 					}
 					subpolygon.second.push_back(new_face);
+				}
+				subpolygons.push_back(std::move(subpolygon));
+			}
+
+			return subpolygons;
+		}
+
+		std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon)
+		{
+			OLY_ASSERT(polygon.size() >= 3);
+			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
+			return decompose_polygon_without_triangulation(polygon, decomposition);
+		}
+		
+		std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
+		{
+			OLY_ASSERT(polygon.size() >= 3);
+			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
+			return decompose_polygon_without_triangulation(polygon, decomposition);
+		}
+		
+		std::vector<Polygon2D> decompose_polygon_without_triangulation(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
+		{
+			OLY_ASSERT(polygon.size() >= 3);
+			std::vector<Polygon2D> subpolygons;
+			subpolygons.reserve(triangulations.size());
+
+			for (const Triangulation& triangulation : triangulations)
+			{
+				Polygon2D subpolygon;
+				std::unordered_map<glm::uint, glm::uint> point_indices;
+				for (glm::uvec3 face : triangulation)
+				{
+					glm::uvec3 new_face{};
+					for (glm::length_t i = 0; i < 3; ++i)
+					{
+						if (!point_indices.count(face[i]))
+						{
+							point_indices[face[i]] = (glm::uint)point_indices.size();
+							subpolygon.push_back(polygon[face[i]]);
+						}
+						new_face[i] = point_indices[face[i]];
+					}
 				}
 				subpolygons.push_back(std::move(subpolygon));
 			}

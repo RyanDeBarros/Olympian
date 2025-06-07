@@ -10,15 +10,32 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		OLY_ASSERT(polygon.size() >= 3);
-		float min_proj = axis.dot(polygon[0]);
-		float proj = axis.dot(polygon[1]);
-		if (proj < min_proj)
+		bool forward;
+		int offset = 0;
+		float min_proj = axis.dot(polygon[offset++]);
+		while (offset < polygon.size())
 		{
-			min_proj = proj;
-			for (auto it = polygon.begin() + 2; it != polygon.end(); ++it)
+			float proj = axis.dot(polygon[offset++]);
+			if (proj < min_proj)
 			{
-				float proj = axis.dot(*it);
+				min_proj = proj;
+				forward = true;
+				break;
+			}
+			else if (proj > min_proj)
+			{
+				forward = false;
+				break;
+			}
+		}
+		if (offset == polygon.size())
+			return min_proj;
+
+		if (forward)
+		{
+			for (int i = offset; i < (int)polygon.size(); ++i)
+			{
+				float proj = axis.dot(*polygon[i]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
@@ -27,12 +44,9 @@ namespace oly::col2d::internal
 		}
 		else
 		{
-			auto rend = polygon.rend();
-			--rend;
-			--rend;
-			for (auto it = polygon.rbegin(); it != rend; ++it)
+			for (int i = (int)polygon.size() - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(*it);
+				float proj = axis.dot(*polygon[i]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
@@ -45,29 +59,43 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		OLY_ASSERT(polygon.size() >= 3);
-		float max_proj = axis.dot(polygon[0]);
-		float proj = axis.dot(polygon[1]);
-		if (proj > max_proj)
+		bool forward;
+		int offset = 0;
+		float max_proj = axis.dot(polygon[offset++]);
+		while (offset < polygon.size())
 		{
-			max_proj = proj;
-			for (auto it = polygon.begin() + 2; it != polygon.end(); ++it)
+			float proj = axis.dot(polygon[offset++]);
+			if (proj > max_proj)
 			{
-				float proj = axis.dot(*it);
+				max_proj = proj;
+				forward = true;
+				break;
+			}
+			else if (proj < max_proj)
+			{
+				forward = false;
+				break;
+			}
+		}
+		if (offset == polygon.size())
+			return max_proj;
+
+		if (forward)
+		{
+			for (int i = offset; i < (int)polygon.size(); ++i)
+			{
+				float proj = axis.dot(*polygon[i]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
-					return max_proj;
+					return min_proj;
 			}
 		}
 		else
 		{
-			auto rend = polygon.rend();
-			--rend;
-			--rend;
-			for (auto it = polygon.rbegin(); it != rend; ++it)
+			for (int i = (int)polygon.size() - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(*it);
+				float proj = axis.dot(*polygon[i]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
