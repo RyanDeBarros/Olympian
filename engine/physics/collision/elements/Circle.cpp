@@ -116,6 +116,22 @@ namespace oly::col2d
 		}
 	}
 
+	float Circle::projection_min(const UnitVector2D& axis) const
+	{
+		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+			return axis.dot(center) - radius;
+		else
+			return axis.dot(transform_point(global, center)) - radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+	}
+
+	float Circle::projection_max(const UnitVector2D& axis) const
+	{
+		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+			return axis.dot(center) + radius;
+		else
+			return axis.dot(transform_point(global, center)) + radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+	}
+
 	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
 	{
 		if (ginv == internal::CircleGlobalAccess::DEFAULT)

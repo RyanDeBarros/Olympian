@@ -90,6 +90,16 @@ namespace oly::col2d
 		return internal::polygon_projection_interval(_points, axis);
 	}
 
+	float ConvexHull::projection_min(const UnitVector2D& axis) const
+	{
+		return internal::polygon_projection_min(_points, axis);
+	}
+
+	float ConvexHull::projection_max(const UnitVector2D& axis) const
+	{
+		return internal::polygon_projection_max(_points, axis);
+	}
+
 	UnitVector2D ConvexHull::edge_normal(size_t i) const
 	{
 		return internal::polygon_edge_normal(_points, i);

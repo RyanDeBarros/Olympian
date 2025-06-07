@@ -65,6 +65,4 @@ namespace oly::col2d
 		glm::vec2 contact;
 		UnitVector2D normal;
 	};
-
-	// TODO thick raycasting - RectCasting + CircleCasting
 }

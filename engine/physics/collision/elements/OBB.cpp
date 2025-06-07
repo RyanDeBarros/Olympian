@@ -128,24 +128,42 @@ namespace oly::col2d
 
 	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
 	{
-		if (approx(get_major_axis(), axis))
+		if (near_zero(math::cross(get_major_axis(), axis)))
 		{
-			float m = UnitVector2D(rotation).dot(center);
+			float m = axis.dot(center);
 			return { m - 0.5f * width, m + 0.5f * width };
 		}
-		else if (approx(get_minor_axis(), axis))
+		else if (near_zero(math::cross(get_minor_axis(), axis)))
 		{
-			float m = UnitVector2D(rotation).get_quarter_turn().dot(center);
+			float m = axis.dot(center);
 			return { m - 0.5f * height, m + 0.5f * height };
 		}
 
-		auto pts = points();
-		return internal::polygon_projection_interval(pts, axis);
+		return internal::polygon_projection_interval(points(), axis);
+	}
+
+	float OBB::projection_min(const UnitVector2D& axis) const
+	{
+		if (near_zero(math::cross(get_major_axis(), axis)))
+			return axis.dot(center) - 0.5f * width;
+		else if (near_zero(math::cross(get_minor_axis(), axis)))
+			return axis.dot(center) - 0.5f * height;
+
+		return internal::polygon_projection_min(points(), axis);
+	}
+
+	float OBB::projection_max(const UnitVector2D& axis) const
+	{
+		if (near_zero(math::cross(get_major_axis(), axis)))
+			return axis.dot(center) + 0.5f * width;
+		else if (near_zero(math::cross(get_minor_axis(), axis)))
+			return axis.dot(center) + 0.5f * height;
+
+		return internal::polygon_projection_max(points(), axis);
 	}
 
 	glm::vec2 OBB::deepest_point(const UnitVector2D& axis) const
 	{
-		auto pts = points();
-		return internal::polygon_deepest_point(pts, axis);
+		return internal::polygon_deepest_point(points(), axis);
 	}
 }

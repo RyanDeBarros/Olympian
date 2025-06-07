@@ -51,6 +51,15 @@ namespace oly
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
 		bool near_standard() const;
 
+		enum Parallel
+		{
+			SAME_DIRECTION,
+			OPPOSITE_DIRECTION,
+			NON_PARALLEL
+		};
+
+		Parallel near_parallel(UnitVector2D other) const;
+
 		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};
 

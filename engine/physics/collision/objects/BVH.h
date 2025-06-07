@@ -183,6 +183,8 @@ namespace oly::col2d
 		};
 	}
 
+	// TODO copy/move semantics in BVH/TBVH/Compound/TCompound
+
 	template<typename Shape>
 	class BVH
 	{
@@ -234,6 +236,10 @@ namespace oly::col2d
 		Heuristic heuristic = Heuristic::MIDPOINT_XY;
 
 	public:
+		BVH() = default;
+		BVH(const std::vector<Element>& elements) : elements(elements) {}
+		BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
+
 		const std::vector<Element>& get_elements() const { return elements; }
 		std::vector<Element>& set_elements() { dirty = true; return elements; }
 
@@ -473,6 +479,12 @@ namespace oly::col2d
 
 	public:
 		Transformer2D transformer;
+
+		TBVH() = default;
+		TBVH(const std::vector<Element>& elements) : local_elements(elements) {}
+		TBVH(std::vector<Element>&& elements) : local_elements(std::move(elements)) {}
+		TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
+		TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { local_dirty = true; return transformer.get_local(); }

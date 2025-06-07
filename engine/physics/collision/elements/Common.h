@@ -2,20 +2,84 @@
 
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
+#include "core/base/Assert.h"
 
 namespace oly::col2d::internal
 {
 	template<typename Polygon>
+	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
+	{
+		OLY_ASSERT(polygon.size() >= 3); // TODO add getter/setter points for ConvexHull that does this check so it only needs to be executed then
+		float min_proj = axis.dot(polygon[0]);
+		float proj = axis.dot(polygon[1]);
+		if (proj < min_proj)
+		{
+			min_proj = proj;
+			for (auto it = polygon.begin() + 2; it != polygon.end(); ++it)
+			{
+				float proj = axis.dot(*it);
+				if (proj < min_proj)
+					min_proj = proj;
+				else
+					return min_proj;
+			}
+		}
+		else
+		{
+			auto rend = polygon.rend();
+			--rend;
+			--rend;
+			for (auto it = polygon.rbegin(); it != rend; ++it)
+			{
+				float proj = axis.dot(*it);
+				if (proj < min_proj)
+					min_proj = proj;
+				else
+					return min_proj;
+			}
+		}
+		return min_proj;
+	}
+
+	template<typename Polygon>
+	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
+	{
+		OLY_ASSERT(polygon.size() >= 3); // TODO add getter/setter points for ConvexHull that does this check so it only needs to be executed then
+		float max_proj = axis.dot(polygon[0]);
+		float proj = axis.dot(polygon[1]);
+		if (proj > max_proj)
+		{
+			max_proj = proj;
+			for (auto it = polygon.begin() + 2; it != polygon.end(); ++it)
+			{
+				float proj = axis.dot(*it);
+				if (proj > max_proj)
+					max_proj = proj;
+				else
+					return max_proj;
+			}
+		}
+		else
+		{
+			auto rend = polygon.rend();
+			--rend;
+			--rend;
+			for (auto it = polygon.rbegin(); it != rend; ++it)
+			{
+				float proj = axis.dot(*it);
+				if (proj > max_proj)
+					max_proj = proj;
+				else
+					return max_proj;
+			}
+		}
+		return max_proj;
+	}
+
+	template<typename Polygon>
 	std::pair<float, float> polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		std::pair<float, float> interval = { nmax<float>(), -nmax<float>() };
-		for (glm::vec2 point : polygon)
-		{
-			float proj = axis.dot(point);
-			interval.first = std::min(interval.first, proj);
-			interval.second = std::max(interval.second, proj);
-		}
-		return interval;
+		return { polygon_projection_min(polygon, axis), polygon_projection_max(polygon, axis) };
 	}
 
 	template<typename Polygon>

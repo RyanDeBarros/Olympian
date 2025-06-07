@@ -27,6 +27,8 @@ namespace oly::col2d
 		glm::vec2 center() const;
 		
 		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		float projection_min(const UnitVector2D& axis) const;
+		float projection_max(const UnitVector2D& axis) const;
 		UnitVector2D edge_normal(size_t i) const;
 		glm::vec2 deepest_point(const UnitVector2D& axis) const;
 	};

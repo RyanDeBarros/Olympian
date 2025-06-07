@@ -31,13 +31,21 @@ namespace oly::col2d
 
 	std::pair<float, float> AABB::projection_interval(const UnitVector2D& axis) const
 	{
-		auto pts = points();
-		return internal::polygon_projection_interval(pts, axis);
+		return internal::polygon_projection_interval(points(), axis);
+	}
+
+	float AABB::projection_min(const UnitVector2D& axis) const
+	{
+		return internal::polygon_projection_min(points(), axis);
+	}
+
+	float AABB::projection_max(const UnitVector2D& axis) const
+	{
+		return internal::polygon_projection_max(points(), axis);
 	}
 
 	glm::vec2 AABB::deepest_point(const UnitVector2D& axis) const
 	{
-		auto pts = points();
-		return internal::polygon_deepest_point(pts, axis);
+		return internal::polygon_deepest_point(points(), axis);
 	}
 }

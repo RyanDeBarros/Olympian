@@ -118,10 +118,39 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				if (approx(axis, uniform_axis(i)))
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return { minima[i], maxima[i] };
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return { -maxima[i], -minima[i] };
 			}
 			return internal::polygon_projection_interval(cache(), axis);
+		}
+
+		float projection_min(const UnitVector2D& axis) const
+		{
+			for (size_t i = 0; i < K_half; ++i)
+			{
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
+					return minima[i];
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return -maxima[i];
+			}
+			return internal::polygon_projection_min(cache(), axis);
+		}
+
+		float projection_max(const UnitVector2D& axis) const
+		{
+			for (size_t i = 0; i < K_half; ++i)
+			{
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
+					return maxima[i];
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return -minima[i];
+			}
+			return internal::polygon_projection_max(cache(), axis);
 		}
 
 		UnitVector2D edge_normal(size_t i) const
@@ -281,10 +310,39 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < get_k_half(); ++i)
 			{
-				if (approx(axis, axes[i]))
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return { minima[i], maxima[i] };
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return { -maxima[i], -minima[i] };
 			}
 			return internal::polygon_projection_interval(cache(), axis);
+		}
+
+		float projection_min(const UnitVector2D& axis) const
+		{
+			for (size_t i = 0; i < get_k_half(); ++i)
+			{
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
+					return minima[i];
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return -maxima[i];
+			}
+			return internal::polygon_projection_min(cache(), axis);
+		}
+
+		float projection_max(const UnitVector2D& axis) const
+		{
+			for (size_t i = 0; i < get_k_half(); ++i)
+			{
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
+					return maxima[i];
+				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
+					return -minima[i];
+			}
+			return internal::polygon_projection_max(cache(), axis);
 		}
 
 		UnitVector2D edge_normal(size_t i) const

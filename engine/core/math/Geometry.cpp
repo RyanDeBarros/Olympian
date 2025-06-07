@@ -9,6 +9,21 @@ namespace oly::math
 		return u.x * v.y - u.y * v.x;
 	}
 
+	float cross(glm::vec2 u, UnitVector2D v)
+	{
+		return u.x * v.y() - u.y * v.x();
+	}
+
+	float cross(UnitVector2D u, glm::vec2 v)
+	{
+		return u.x() * v.y - u.y() * v.x;
+	}
+
+	float cross(UnitVector2D u, UnitVector2D v)
+	{
+		return u.x() * v.y() - u.y() * v.x();
+	}
+
 	glm::vec2 triple_cross(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3)
 	{
 		float d = cross(p1, p2);

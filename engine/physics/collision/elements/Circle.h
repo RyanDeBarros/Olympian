@@ -45,6 +45,8 @@ namespace oly::col2d
 		static Circle fast_wrap(const math::Polygon2D& polygon);
 
 		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		float projection_min(const UnitVector2D& axis) const;
+		float projection_max(const UnitVector2D& axis) const;
 
 		template<typename Polygon>
 		glm::vec2 closest_point(const Polygon& polygon) const
