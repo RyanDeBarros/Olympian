@@ -334,7 +334,7 @@ namespace oly::col2d
 		{
 			if (near_zero(axes[0].dot(axes[1])))
 			{
-				if (axes[0].near_standard() && axes[1].near_standard())
+				if (axes[0].near_standard(LINEAR_TOLERANCE) && axes[1].near_standard(LINEAR_TOLERANCE))
 				{
 					// AABB
 					return AABB::wrap(polygon.data(), polygon.size());

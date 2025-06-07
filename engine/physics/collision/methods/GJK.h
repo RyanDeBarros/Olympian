@@ -5,6 +5,7 @@
 #include "core/types/Approximate.h"
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
+#include "physics/collision/Tolerance.h"
 
 #include <optional>
 
@@ -88,7 +89,7 @@ namespace oly::col2d::gjk
 	}
 
 	template<typename Shape1, typename Shape2>
-	inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = 1e-5f)
+	inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = LINEAR_TOLERANCE)
 	{
 		UnitVector2D axis;
 		std::vector<glm::vec2> simplex;
@@ -149,7 +150,7 @@ namespace oly::col2d::gjk
 			glm::vec2 p = support(c1, c2, edge.normal);
 			float d = edge.normal.dot(p);
 
-			if (near_zero(d - edge.distance, epa_epsilon))
+			if (oly::near_zero(d - edge.distance, epa_epsilon))
 				return { .overlap = true, .penetration_depth = d, .unit_impulse = -edge.normal };
 
 			simplex.insert(simplex.begin() + edge.index + 1, p);
@@ -160,7 +161,7 @@ namespace oly::col2d::gjk
 	}
 
 	template<typename Shape1, typename Shape2>
-	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = 1e-5f)
+	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = LINEAR_TOLERANCE)
 	{
 		CollisionResult collision = collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon);
 		if (!collision.overlap)

@@ -4,6 +4,7 @@
 
 #include "physics/collision/elements/Circle.h"
 #include "physics/collision/methods/CollisionInfo.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d::internal
 {

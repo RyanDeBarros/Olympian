@@ -6,8 +6,7 @@
 #include "physics/collision/elements/AABB.h"
 #include "physics/collision/elements/OBB.h"
 #include "physics/collision/elements/KDOP.h"
-
-#include "core/types/Approximate.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d::sat
 {

@@ -2,7 +2,6 @@
 
 #include "core/base/SimpleMath.h"
 
-// TODO in all collision testing, use approximations and override tolerance to be more lenient.
 namespace oly::col2d
 {
 	OverlapResult point_hits(const Compound& c, glm::vec2 test)

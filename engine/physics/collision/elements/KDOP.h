@@ -6,6 +6,7 @@
 #include "core/types/Approximate.h"
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/Common.h"
+#include "physics/collision/Tolerance.h"
 
 #include <array>
 #include <string>
@@ -118,7 +119,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i), LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return { minima[i], maxima[i] };
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
@@ -131,7 +132,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i), LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return minima[i];
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
@@ -144,7 +145,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < K_half; ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i));
+				UnitVector2D::Parallel p = axis.near_parallel(uniform_axis(i), LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return maxima[i];
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
@@ -310,7 +311,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < get_k_half(); ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i], LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return { minima[i], maxima[i] };
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
@@ -323,7 +324,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < get_k_half(); ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i], LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return minima[i];
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)
@@ -336,7 +337,7 @@ namespace oly::col2d
 		{
 			for (size_t i = 0; i < get_k_half(); ++i)
 			{
-				UnitVector2D::Parallel p = axis.near_parallel(axes[i]);
+				UnitVector2D::Parallel p = axis.near_parallel(axes[i], LINEAR_TOLERANCE);
 				if (p == UnitVector2D::Parallel::SAME_DIRECTION)
 					return maxima[i];
 				else if (p == UnitVector2D::Parallel::OPPOSITE_DIRECTION)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/base/UnitVector.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d
 {

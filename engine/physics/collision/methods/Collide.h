@@ -2,6 +2,7 @@
 
 #include "physics/collision/elements/Element.h"
 #include "physics/collision/methods/CollisionInfo.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d
 {

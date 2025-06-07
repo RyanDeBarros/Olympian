@@ -3,6 +3,7 @@
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 #include "core/base/Constants.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d
 {

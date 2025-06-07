@@ -3,6 +3,7 @@
 #include "physics/collision/objects/Primitive.h"
 #include "physics/collision/objects/Compound.h"
 #include "physics/collision/objects/BVH.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d
 {

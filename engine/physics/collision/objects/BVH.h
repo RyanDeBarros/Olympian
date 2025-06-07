@@ -6,6 +6,7 @@
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
 #include "core/base/Assert.h"
+#include "physics/collision/Tolerance.h"
 
 #include <algorithm>
 
@@ -183,8 +184,6 @@ namespace oly::col2d
 		};
 	}
 
-	// TODO copy/move semantics in BVH/TBVH/Compound/TCompound
-
 	template<typename Shape>
 	class BVH
 	{
@@ -206,10 +205,14 @@ namespace oly::col2d
 				}
 			}
 
+			Node(const Node& other)
+				: shape(other.shape), start_index(other.start_index), left(other.left ? std::make_unique<Node>(*other.left) : nullptr), right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
+			{}
+
 			bool is_leaf() const { return !shape.has_value(); }
 		};
 
-		mutable std::unique_ptr<Node> _root;
+		mutable Node _root;
 		mutable std::vector<Element> elements;
 		mutable bool dirty = true;
 
@@ -272,9 +275,9 @@ namespace oly::col2d
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
 				else if (heuristic == Heuristic::MAX_Y_MAX_X)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
-				_root = std::make_unique<Node>(elements.data(), 0, elements.size());
+				_root = Node(elements.data(), 0, elements.size());
 			}
-			return *_root;
+			return _root;
 		}
 
 	public:

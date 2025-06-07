@@ -11,6 +11,8 @@
 #include "physics/collision/elements/OBB.h"
 #include "physics/collision/elements/ConvexHull.h"
 
+#include "physics/collision/Tolerance.h"
+
 namespace oly::col2d
 {
 	// Matched

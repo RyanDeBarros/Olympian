@@ -3,6 +3,7 @@
 #include "physics/collision/elements/Element.h"
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
+#include "physics/collision/Tolerance.h"
 #include "core/base/Transforms.h"
 
 namespace oly::col2d
@@ -59,12 +60,17 @@ namespace oly::col2d
 	{
 		Compound compound;
 		mutable std::vector<Element> baked;
-		mutable bool dirty;
+		mutable bool dirty = true;
 
 		void bake() const;
 
 	public:
 		Transformer2D transformer;
+
+		TCompound() = default;
+		TCompound(const std::vector<Element>& elements) : compound({ elements }) {}
+		TCompound(std::vector<Element>&& elements) : compound({ std::move(elements) }) {}
+
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { flag(); return transformer.set_local(); }

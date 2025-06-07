@@ -3,6 +3,7 @@
 #include "physics/collision/elements/Element.h"
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
+#include "physics/collision/Tolerance.h"
 #include "core/base/Transforms.h"
 
 namespace oly::col2d

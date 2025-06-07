@@ -1,6 +1,7 @@
 #pragma once
 
 #include "external/GLM.h"
+#include "core/types/Approximate.h"
 
 namespace oly
 {
@@ -49,7 +50,7 @@ namespace oly
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
-		bool near_standard() const;
+		bool near_standard(double tolerance = Tolerance<float>) const;
 
 		enum Parallel
 		{
@@ -58,7 +59,7 @@ namespace oly
 			NON_PARALLEL
 		};
 
-		Parallel near_parallel(UnitVector2D other) const;
+		Parallel near_parallel(UnitVector2D other, double tolerance = Tolerance<float>) const;
 
 		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};
@@ -67,6 +68,18 @@ namespace oly
 	inline const UnitVector2D UnitVector2D::UP = UnitVector2D(_up{});
 	inline const UnitVector2D UnitVector2D::LEFT = UnitVector2D(_left{});
 	inline const UnitVector2D UnitVector2D::DOWN = UnitVector2D(_down{});
+
+	template<>
+	struct Distance<UnitVector2D>
+	{
+		double operator()(const UnitVector2D& a, const UnitVector2D& b) const { return static_cast<double>(glm::abs(a.rotation() - b.rotation())); }
+	};
+
+	template<>
+	struct Tolerance_V<UnitVector2D>
+	{
+		static constexpr double TOL = 1e-7;
+	};
 }
 
 template<>

@@ -3,13 +3,14 @@
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 #include "core/base/Assert.h"
+#include "physics/collision/Tolerance.h"
 
 namespace oly::col2d::internal
 {
 	template<typename Polygon>
 	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		OLY_ASSERT(polygon.size() >= 3); // TODO add getter/setter points for ConvexHull that does this check so it only needs to be executed then
+		OLY_ASSERT(polygon.size() >= 3);
 		float min_proj = axis.dot(polygon[0]);
 		float proj = axis.dot(polygon[1]);
 		if (proj < min_proj)
@@ -44,7 +45,7 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		OLY_ASSERT(polygon.size() >= 3); // TODO add getter/setter points for ConvexHull that does this check so it only needs to be executed then
+		OLY_ASSERT(polygon.size() >= 3);
 		float max_proj = axis.dot(polygon[0]);
 		float proj = axis.dot(polygon[1]);
 		if (proj > max_proj)
