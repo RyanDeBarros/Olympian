@@ -79,6 +79,7 @@ namespace oly::rendering
 			EllipseID pos;
 
 		public:
+			EllipseReference();
 			EllipseReference(EllipseBatch* batch);
 			EllipseReference(const EllipseReference&);
 			EllipseReference(EllipseReference&&) noexcept = default;
@@ -92,6 +93,8 @@ namespace oly::rendering
 			ColorGradient& set_color() { return _batch->ssbo_block.set<COLOR>(pos.get()); }
 			const glm::mat3& get_transform() const { return _batch->ssbo_block.get<TRANSFORM>(pos.get()); }
 			glm::mat3& set_transform() { return _batch->ssbo_block.set<TRANSFORM>(pos.get()); }
+
+			void draw() const;
 		};
 		friend class EllipseReference;
 	};
@@ -101,6 +104,7 @@ namespace oly::rendering
 		EllipseBatch::EllipseReference ellipse;
 		Transformer2D transformer;
 
+		Ellipse() = default;
 		Ellipse(EllipseBatch& ellipse_batch) : ellipse(&ellipse_batch) {}
 		Ellipse(const Ellipse&) = default;
 		Ellipse(Ellipse&&) noexcept = default;

@@ -162,6 +162,11 @@ namespace oly::rendering
 		return polygon_indexer.count(id);
 	}
 
+	Polygonal::Polygonal()
+		: _batch(&context::polygon_batch())
+	{
+	}
+
 	Polygonal::Polygonal(PolygonBatch& batch)
 		: _batch(&batch)
 	{

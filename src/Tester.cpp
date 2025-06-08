@@ -84,24 +84,8 @@ int main()
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
 	oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
-	auto aabb_visual = oly::context::polygon();
-	aabb_visual.polygon.points = {
-		{ aabb.x1, aabb.y1 },
-		{ aabb.x2, aabb.y1 },
-		{ aabb.x2, aabb.y2 },
-		{ aabb.x1, aabb.y2 }
-	};
-	aabb_visual.polygon.colors = { oly::colors::MAGENTA };
-	aabb_visual.init();
-
 	oly::col2d::Circle circ({}, 50.0f);
-	auto circ_visual = oly::context::ellipse();
-	{
-		auto& dimension = circ_visual.ellipse.set_dimension();
-		dimension.ry = dimension.rx = circ.radius;
-		dimension.fill_exp = 0.0f;
-	}
-	circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
+	glm::vec4 circ_color = oly::colors::YELLOW;
 
 	oly::col2d::AABB rect{};
 	auto rect_visual = oly::context::polygon();
@@ -150,17 +134,12 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
-		aabb_visual.draw();
+		oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
 		//rect_visual.draw();
-		oly::context::render_polygons();
-		circ_visual.draw();
-		oly::context::render_ellipses();
-		if (draw_impulse_visual)
-		{
-			aabb_impulse_visual.draw();
-			circ_impulse_visual.draw();
-			oly::context::render_polygons();
-		}
+		oly::debug::draw_collision(circ, circ_color * oly::colors::alpha(0.8f));
+		aabb_impulse_visual.draw(); // TODO add arrows to debug drawing
+		circ_impulse_visual.draw();
+		oly::debug::render_collision();
 		};
 
 	oly::context::set_render_function(oly::make_functor(render_frame));
@@ -177,17 +156,16 @@ int main()
 		//auto contact = oly::acm2d::contacts(rect, aabb);
 		if (contact.overlap)
 		{
-			circ_visual.ellipse.set_color().fill_outer = oly::colors::RED;
+			circ_color = oly::colors::RED;
 			//rect_visual.polygon.colors[0] = oly::colors::RED;
 			draw_impulse_visual = true;
 		}
 		else
 		{
-			circ_visual.ellipse.set_color().fill_outer = oly::colors::YELLOW;
+			circ_color = oly::colors::YELLOW;
 			//rect_visual.polygon.colors[0] = oly::colors::YELLOW;
 			draw_impulse_visual = false;
 		}
-		circ_visual.set_local().position = circ.center;
 		//rect_visual.send_polygon();
 		//rect_visual.set_local().position = circ.center;
 

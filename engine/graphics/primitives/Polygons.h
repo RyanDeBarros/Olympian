@@ -93,6 +93,7 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
+		Polygonal();
 		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
 		Polygonal(Polygonal&&) noexcept;

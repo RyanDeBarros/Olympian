@@ -38,6 +38,15 @@ namespace oly::rendering
 		return pos_generator.generate();
 	}
 
+	EllipseBatch::EllipseReference::EllipseReference()
+		: _batch(&context::ellipse_batch())
+	{
+		pos = _batch->generate_id();
+		set_dimension() = {};
+		set_color() = {};
+		set_transform() = 1.0f;
+	}
+
 	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
 		: _batch(batch)
 	{
@@ -67,6 +76,11 @@ namespace oly::rendering
 		return *this;
 	}
 
+	void EllipseBatch::EllipseReference::draw() const
+	{
+		graphics::quad_indices(batch().ebo.draw_primitive().data(), pos.get());
+	}
+
 	void Ellipse::draw() const
 	{
 		if (transformer.flush())
@@ -74,6 +88,6 @@ namespace oly::rendering
 			transformer.pre_get();
 			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
 		}
-		graphics::quad_indices(batch().ebo.draw_primitive().data(), ellipse.pos.get());
+		ellipse.draw();
 	}
 }

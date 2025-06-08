@@ -1,9 +1,113 @@
 #pragma once
 
-namespace oly::rendering
+#include "physics/collision/objects/Primitive.h"
+#include "physics/collision/objects/Compound.h"
+#include "physics/collision/objects/BVH.h"
+
+#include "graphics/primitives/Ellipses.h"
+#include "graphics/primitives/Polygons.h"
+
+namespace oly::debug
 {
-	class CollisionViewBatch
+	// TODO cache these ellipses/polygons
+
+	inline void draw_collision(const col2d::Circle& c, glm::vec4 color)
 	{
-		// TODO
-	};
+		rendering::EllipseBatch::EllipseReference ellipse;
+		ellipse.set_transform() = glm::mat3(col2d::internal::CircleGlobalAccess::get_global(c)) * translation_matrix(c.center);
+		auto& dim = ellipse.set_dimension();
+		dim.ry = dim.rx = c.radius;
+		dim.fill_exp = 0.0f; // TODO should this be standard for ellipses?
+		ellipse.set_color().fill_outer = color;
+		ellipse.draw();
+	}
+
+	namespace
+	{
+		template<typename Polygon>
+		static void draw_polygon_collision(const Polygon& points, glm::vec4 color)
+		{
+			// TODO create a new struct similar to Polygon that doesn't inherit from Polygonal and doesn't have a transformer. Also, it can send colors independently of points.
+			rendering::Polygon polygon;
+			polygon.polygon.colors = { color };
+			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
+			polygon.init();
+			polygon.draw();
+		}
+	}
+
+	inline void draw_collision(const col2d::AABB& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	inline void draw_collision(const col2d::OBB& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	inline void draw_collision(const col2d::ConvexHull& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	inline void draw_collision(const col2d::CustomKDOP& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+	inline void draw_collision(const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	template<size_t K_half>
+	inline void draw_collision(const col2d::KDOP<K_half>& c, glm::vec4 color)
+	{
+		draw_polygon_collision(c.points(), color);
+	}
+
+	inline void draw_collision(const col2d::Element& c, glm::vec4 color)
+	{
+		std::visit([color](auto&& e) { draw_collision(e, color); }, c);
+	}
+	
+	inline void draw_collision(const col2d::Primitive& c, glm::vec4 color)
+	{
+		draw_collision(c.element, color);
+	}
+
+	inline void draw_collision(const col2d::TPrimitive& c, glm::vec4 color)
+	{
+		draw_collision(c.get_baked(), color);
+	}
+
+	inline void draw_collision(const col2d::Compound& c, glm::vec4 color)
+	{
+		for (const auto& e : c.elements)
+			draw_collision(e, color);
+	}
+
+	inline void draw_collision(const col2d::TCompound& c, glm::vec4 color)
+	{
+		for (const auto& e : c.get_baked())
+			draw_collision(e, color);
+	}
+
+	template<typename Shape>
+	inline void draw_collision(const col2d::BVH<Shape>& c, glm::vec4 color)
+	{
+		for (const auto& e : c.get_elements())
+			draw_collision(e, color);
+	}
+
+	template<typename Shape>
+	inline void draw_collision(const col2d::TBVH<Shape>& c, glm::vec4 color)
+	{
+		for (const auto& e : c.get_elements())
+			draw_collision(e, color);
+	}
+
+	extern void render_collision();
 }

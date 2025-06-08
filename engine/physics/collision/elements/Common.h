@@ -35,7 +35,7 @@ namespace oly::col2d::internal
 		{
 			for (int i = offset; i < (int)polygon.size(); ++i)
 			{
-				float proj = axis.dot(*polygon[i]);
+				float proj = axis.dot(polygon[i]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
@@ -46,7 +46,7 @@ namespace oly::col2d::internal
 		{
 			for (int i = (int)polygon.size() - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(*polygon[i]);
+				float proj = axis.dot(polygon[i]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
@@ -84,18 +84,18 @@ namespace oly::col2d::internal
 		{
 			for (int i = offset; i < (int)polygon.size(); ++i)
 			{
-				float proj = axis.dot(*polygon[i]);
+				float proj = axis.dot(polygon[i]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
-					return min_proj;
+					return max_proj;
 			}
 		}
 		else
 		{
 			for (int i = (int)polygon.size() - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(*polygon[i]);
+				float proj = axis.dot(polygon[i]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
