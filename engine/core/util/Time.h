@@ -4,7 +4,6 @@
 
 namespace oly
 {
-	struct Internal;
 	namespace internal
 	{
 		class TimeImpl
@@ -18,8 +17,6 @@ namespace oly
 			template<numeric T>
 			T delta() const { return (T)_delta; }
 
-		private:
-			friend struct Internal;
 			void init() { _now = glfwGetTime(); _delta = 1.0f / 60.0f; }
 			void sync() { double n = glfwGetTime(); _delta = n - _now; _now = n; }
 		};

@@ -4,6 +4,7 @@
 #include "physics/collision/methods/SAT.h"
 #include "physics/collision/methods/KDOPCollide.h"
 #include "graphics/extensions/Arrow.h" // TODO loading for Arrow and Line extensions. Rename registries folder to assets
+#include "physics/collision/debugging/CollisionView.h"
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -119,6 +120,14 @@ int main()
 	circ_impulse_visual.adjust_standard_head_for_width(6.0f);
 
 	bool draw_impulse_visual = true;
+
+	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) {
+		if (state == 0)
+			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
+		else if (state == 1)
+			flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
+		oly::context::sync_texture_handle(flag_texture);
+		});
 	
 	// LATER begin play on initial actors here
 
@@ -204,26 +213,6 @@ int main()
 		flag_tesselation_parent.local.rotation -= 0.5f * oly::TIME.delta<float>();
 		flag_tesselation_parent.post_set();
 		flag_tesselation_parent.flush();
-
-		static bool lin = true;
-		if (lin)
-		{
-			if (fmod(oly::TIME.now<float>(), 1.0f) >= 0.5f)
-			{
-				lin = false;
-				flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
-				oly::context::sync_texture_handle(flag_texture);
-			}
-		}
-		else
-		{
-			if (fmod(oly::TIME.now<float>(), 1.0f) < 0.5f)
-			{
-				lin = true;
-				flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
-				oly::context::sync_texture_handle(flag_texture);
-			}
-		}
 
 		jumble.on_tick();
 		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
