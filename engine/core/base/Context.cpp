@@ -131,22 +131,6 @@ namespace oly::context
 #undef INIT_REGISTRY
 }
 
-namespace oly
-{
-	struct Internal
-	{
-		void time_init()
-		{
-			TIME.init();
-		}
-
-		void time_sync()
-		{
-			TIME.sync();
-		}
-	};
-}
-
 namespace oly::context
 {
 	static void init(const char* context_filepath)
@@ -162,7 +146,7 @@ namespace oly::context
 		init_logger(toml_context);
 
 		internal::platform = std::make_unique<platform::Platform>(toml_context);
-		Internal{}.time_init();
+		TIME.init();
 		graphics::internal::load_resources();
 
 		init_sprite_batch(toml_context);
@@ -317,7 +301,7 @@ namespace oly::context
 			(*internal::render_frame)();
 		if (!internal::platform->frame())
 			return false;
-		Internal{}.time_sync();
+		TIME.sync();
 		return true;
 	}
 

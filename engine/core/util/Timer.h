@@ -89,10 +89,11 @@ namespace oly
 		float total_length;
 		float starting_time = 0.0f;
 		mutable size_t _state = 0;
+		bool continuous;
 
 	public:
-		CallbackStateTimer(const std::vector<float>& intervals, const std::function<void(size_t)>& callback)
-			: callback(callback)
+		CallbackStateTimer(const std::vector<float>& intervals, const std::function<void(size_t)>& callback, bool continuous)
+			: callback(callback), continuous(continuous)
 		{
 			starting_time = TIME.now<float>();
 			cumulative_intervals.reserve(intervals.size());
@@ -104,8 +105,8 @@ namespace oly
 			}
 		}
 
-		CallbackStateTimer(std::vector<float>&& intervals, std::function<void(size_t)>&& callback)
-			: callback(std::move(callback)), cumulative_intervals(std::move(intervals))
+		CallbackStateTimer(std::vector<float>&& intervals, std::function<void(size_t)>&& callback, bool continuous)
+			: callback(std::move(callback)), cumulative_intervals(std::move(intervals)), continuous(continuous)
 		{
 			starting_time = TIME.now<float>();
 			total_length = 0.0f;
@@ -124,10 +125,40 @@ namespace oly
 			{
 				if (_state != 0 && local_time < cumulative_intervals[_state - 1]) // earlier than _state
 				{
-					for (size_t i = _state; i < cumulative_intervals.size(); ++i)
-						callback(i);
+					if (continuous)
+					{
+						for (size_t i = _state; i < cumulative_intervals.size(); ++i)
+							callback(i);
 
-					for (size_t i = 0; i < _state; ++i) 
+						for (size_t i = 0; i < _state; ++i)
+						{
+							callback(i);
+							if (local_time < cumulative_intervals[i])
+							{
+								_state = i;
+								return;
+							}
+						}
+					}
+					else
+					{
+						for (size_t i = 0; i < _state; ++i)
+						{
+							if (local_time < cumulative_intervals[i])
+							{
+								callback(i);
+								_state = i;
+								return;
+							}
+						}
+					}
+				}
+			}
+			else // later than _state
+			{
+				if (continuous)
+				{
+					for (size_t i = _state + 1; i < cumulative_intervals.size(); ++i)
 					{
 						callback(i);
 						if (local_time < cumulative_intervals[i])
@@ -137,16 +168,16 @@ namespace oly
 						}
 					}
 				}
-			}
-			else // later than _state
-			{
-				for (size_t i = _state + 1; i < cumulative_intervals.size(); ++i)
+				else
 				{
-					callback(i);
-					if (local_time < cumulative_intervals[i])
+					for (size_t i = _state + 1; i < cumulative_intervals.size(); ++i)
 					{
-						_state = i;
-						return;
+						if (local_time < cumulative_intervals[i])
+						{
+							callback(i);
+							_state = i;
+							return;
+						}
 					}
 				}
 			}

@@ -127,7 +127,7 @@ int main()
 		else if (state == 1)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
 		oly::context::sync_texture_handle(flag_texture);
-		});
+		}, false);
 	
 	// LATER begin play on initial actors here
 
@@ -168,6 +168,8 @@ int main()
 	while (oly::context::frame())
 	{
 		// logic update
+
+		flag_state_timer.poll();
 
 		circ.center = oly::context::get_cursor_screen_pos();
 		auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
