@@ -10,7 +10,7 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		bool forward;
+		bool forward = true;
 		int offset = 0;
 		float min_proj = axis.dot(polygon[offset++]);
 		while (offset < polygon.size())
@@ -59,7 +59,7 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		bool forward;
+		bool forward = true;
 		int offset = 0;
 		float max_proj = axis.dot(polygon[offset++]);
 		while (offset < polygon.size())

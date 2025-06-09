@@ -15,6 +15,7 @@ namespace oly::context
 		std::string context_filepath;
 		std::unique_ptr<platform::Platform> platform;
 		std::shared_ptr<Functor<void()>> render_frame;
+		size_t this_frame = 0;
 
 		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
@@ -139,6 +140,7 @@ namespace oly::context
 			throw oly::Error(oly::ErrorCode::GLFW_INIT);
 		stbi_set_flip_vertically_on_load(true);
 
+		internal::this_frame = 0;
 		internal::context_filepath = io::directory_of(context_filepath);
 
 		auto toml = reg::load_toml(context_filepath);
@@ -302,7 +304,13 @@ namespace oly::context
 		if (!internal::platform->frame())
 			return false;
 		TIME.sync();
+		++internal::this_frame;
 		return true;
+	}
+
+	BigSize this_frame()
+	{
+		return internal::this_frame;
 	}
 
 	graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index)

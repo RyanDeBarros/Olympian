@@ -96,7 +96,9 @@ int main()
 			flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
 		oly::context::sync_texture_handle(flag_texture);
 		}, false);
-	
+
+	oly::debug::CollisionView c1, c2, c3, c4;
+
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -120,17 +122,34 @@ int main()
 
 		if (contact.overlap)
 		{
-			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
-			oly::debug::draw_collision(circ, oly::colors::RED * oly::colors::alpha(0.8f));
-			oly::debug::draw_impulse(contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-			oly::debug::draw_impulse(contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
+			// TODO store reference to shape in CollisionView, and update during draw().
+			//oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
+			//oly::debug::update_view(c2, circ, oly::colors::RED * oly::colors::alpha(0.8f));
+			//oly::debug::update_view(c3, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			//oly::debug::update_view(c4, contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
+			oly::debug::CollisionView c1 = oly::debug::collision_view(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
+			oly::debug::CollisionView c2 = oly::debug::collision_view(circ, oly::colors::RED * oly::colors::alpha(0.8f));
+			oly::debug::CollisionView c3 = oly::debug::collision_view(contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::CollisionView c4 = oly::debug::collision_view(contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
+			c1.draw();
+			c2.draw();
+			c3.draw();
+			c4.draw();
 		}
 		else
 		{
-			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-			oly::debug::draw_collision(circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			//oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			//oly::debug::update_view(c2, circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			//c3.clear_view();
+			//c4.clear_view();
+			oly::debug::CollisionView c1 = oly::debug::collision_view(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			oly::debug::CollisionView c2 = oly::debug::collision_view(circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			c1.draw();
+			c2.draw();
+			//c3.draw();
+			//c4.draw();
 		}
-		oly::debug::CollisionView.render();
+		oly::debug::render_collision();
 		};
 
 	oly::context::set_render_function(oly::make_functor(render_frame));

@@ -48,6 +48,7 @@ namespace oly::context
 	inline toml::parse_result load_toml(const std::string& file) { return load_toml(file.c_str()); }
 
 	extern bool frame();
+	extern BigSize this_frame();
 
 	extern graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index = 0);
 	extern graphics::BindlessTextureRes load_svg_texture(const std::string& file, float svg_scale = 1.0f, unsigned int texture_index = 0);
