@@ -85,26 +85,10 @@ int main()
 
 	oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
 	oly::col2d::Circle circ({}, 50.0f);
-	glm::vec4 circ_color = oly::colors::YELLOW;
-
-	oly::col2d::AABB rect{};
-	auto rect_visual = oly::context::polygon();
-	rect_visual.polygon.points = { { -circ.radius, -circ.radius }, { circ.radius, -circ.radius }, { circ.radius, circ.radius }, { -circ.radius, circ.radius } };
-	rect_visual.polygon.colors = { oly::colors::YELLOW };
-	rect_visual.init();
+	oly::col2d::ContactResult contact;
 
 	// LATER anti-aliasing settings
 	
-	oly::rendering::ArrowExtension aabb_impulse_visual;
-	aabb_impulse_visual.set_color(oly::colors::WHITE);
-	aabb_impulse_visual.adjust_standard_head_for_width(6.0f);
-
-	oly::rendering::ArrowExtension circ_impulse_visual;
-	circ_impulse_visual.set_color(oly::colors::GREEN);
-	circ_impulse_visual.adjust_standard_head_for_width(6.0f);
-
-	bool draw_impulse_visual = true;
-
 	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
@@ -134,11 +118,18 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
-		oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-		//rect_visual.draw();
-		oly::debug::draw_collision(circ, circ_color * oly::colors::alpha(0.8f));
-		aabb_impulse_visual.draw(); // TODO add arrows to debug drawing
-		circ_impulse_visual.draw();
+		if (contact.overlap)
+		{
+			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
+			oly::debug::draw_collision(circ, oly::colors::RED * oly::colors::alpha(0.8f));
+			oly::debug::draw_impulse(contact.static_feature, oly::colors::WHITE);
+			oly::debug::draw_impulse(contact.active_feature, oly::colors::GREEN);
+		}
+		else
+		{
+			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			oly::debug::draw_collision(circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+		}
 		oly::debug::render_collision();
 		};
 
@@ -151,29 +142,7 @@ int main()
 		flag_state_timer.poll();
 
 		circ.center = oly::context::get_cursor_screen_pos();
-		auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		//rect = { .x1 = circ.center.x - circ.radius, .x2 = circ.center.x + circ.radius, .y1 = circ.center.y - circ.radius, .y2 = circ.center.y + circ.radius };
-		//auto contact = oly::acm2d::contacts(rect, aabb);
-		if (contact.overlap)
-		{
-			circ_color = oly::colors::RED;
-			//rect_visual.polygon.colors[0] = oly::colors::RED;
-			draw_impulse_visual = true;
-		}
-		else
-		{
-			circ_color = oly::colors::YELLOW;
-			//rect_visual.polygon.colors[0] = oly::colors::YELLOW;
-			draw_impulse_visual = false;
-		}
-		//rect_visual.send_polygon();
-		//rect_visual.set_local().position = circ.center;
-
-		circ_impulse_visual.set_start() = contact.active_feature.position;
-		circ_impulse_visual.set_end() = contact.active_feature.position + contact.active_feature.impulse;
-		
-		aabb_impulse_visual.set_start() = contact.static_feature.position;
-		aabb_impulse_visual.set_end() = contact.static_feature.position + contact.static_feature.impulse;
+		contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 

@@ -108,21 +108,24 @@ namespace oly
 
 	void Transformer2D::attach_parent(Transformer2D* new_parent)
 	{
-		if (!new_parent)
-			unparent();
-		else if (parent != new_parent)
+		if (new_parent != this)
 		{
-			if (parent)
-				parent->children.erase(this);
-			parent = new_parent;
-			parent->children.insert(this);
-			post_set();
+			if (!new_parent)
+				unparent();
+			else if (parent != new_parent)
+			{
+				if (parent)
+					parent->children.erase(this);
+				parent = new_parent;
+				parent->children.insert(this);
+				post_set();
+			}
 		}
 	}
 
 	void Transformer2D::insert_chain(Transformer2D* parent_chain)
 	{
-		if (!parent_chain)
+		if (!parent_chain || parent_chain == this)
 			return;
 		if (parent)
 		{
@@ -275,21 +278,24 @@ namespace oly
 
 	void Transformer3D::attach_parent(Transformer3D* new_parent)
 	{
-		if (!new_parent)
-			unparent();
-		else if (parent != new_parent)
+		if (new_parent == this)
 		{
-			if (parent)
-				parent->children.erase(this);
-			parent = new_parent;
-			parent->children.insert(this);
-			post_set();
+			if (!new_parent)
+				unparent();
+			else if (parent != new_parent)
+			{
+				if (parent)
+					parent->children.erase(this);
+				parent = new_parent;
+				parent->children.insert(this);
+				post_set();
+			}
 		}
 	}
 
 	void Transformer3D::insert_chain(Transformer3D* parent_chain)
 	{
-		if (!parent_chain)
+		if (!parent_chain || parent_chain == this)
 			return;
 		if (parent)
 		{

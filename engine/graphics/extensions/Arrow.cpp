@@ -7,11 +7,24 @@
 namespace oly::rendering
 {
 	ArrowExtension::ArrowExtension()
-		: poly(context::poly_composite())
+		: body(context::polygon()), head(context::polygon())
 	{
-		poly.composite = cmath::convex_decompose_polygon(default_polygon());
+		body.transformer.attach_parent(&_transformer);
+		body.polygon.points.resize(4);
+		body.polygon.points[0] = { 0.0f, -0.5f };
+		body.polygon.points[1] = { 1.0f, -0.5f };
+		body.polygon.points[2] = { 1.0f,  0.5f };
+		body.polygon.points[3] = { 0.0f,  0.5f };
+		body.polygon.colors.resize(4);
+		body.init();
 
-		poly.init();
+		head.polygon.points.resize(3);
+		head.polygon.points[0] = { 1.0f, -0.5f };
+		head.polygon.points[1] = { 2.0f,  0.0f };
+		head.polygon.points[2] = { 1.0f,  0.5f };
+		head.polygon.colors.resize(3);
+		head.transformer.attach_parent(&_transformer);
+		head.init();
 	}
 
 	void ArrowExtension::draw() const
@@ -20,91 +33,67 @@ namespace oly::rendering
 		{
 			dirty = false;
 
-			cmath::Polygon2D polygon = default_polygon();
-
-			if (!approx(start, end))
+			float length = glm::length(start - end);
+			if (near_zero(length))
 			{
-				glm::mat2 rotation{
-					glm::normalize(end - start),
-					glm::normalize(glm::vec2{ -(end - start).y, (end - start).x })
-				};
-
-				for (size_t i = 0; i < polygon.points.size(); ++i)
-					polygon.points[i] = rotation * polygon.points[i];
+				can_draw_body = false;
+				can_draw_head = false;
 			}
-
-			polygon.points.front() += start;
-			polygon.points.back() += start;
-			for (size_t i = 1; i < polygon.points.size() - 1; ++i)
-				polygon.points[i] += end;
-
-			try
+			else if (length <= head_height)
 			{
-				poly.composite = cmath::convex_decompose_polygon(polygon);
-				poly.send_polygon();
-				can_draw = true;
+				can_draw_body = false;
+				can_draw_head = true;
+				
+				head.polygon.points[0] = {   0.0f, -0.5f * head_width };
+				head.polygon.points[1] = { length,               0.0f };
+				head.polygon.points[2] = {   0.0f,  0.5f * head_width };
+
+				glm::mat2 rotation_matrix = UnitVector2D(end - start).rotation_matrix();
+				for (glm::vec2& point : head.polygon.points)
+					point = start + rotation_matrix * point;
+
+				head.polygon.colors[0] = start_color;
+				head.polygon.colors[1] = end_color;
+				head.polygon.colors[2] = start_color;
+
+				head.send_polygon();
 			}
-			catch (Error e)
+			else
 			{
-				if (e.code == ErrorCode::TRIANGULATION)
-				{
-					can_draw = false;
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
-				}
-				else
-					throw e;
+				can_draw_body = true;
+				can_draw_head = true;
+
+				body.polygon.points[0] = {                 0.0f, -0.5f * width };
+				body.polygon.points[1] = { length - head_height, -0.5f * width };
+				body.polygon.points[2] = { length - head_height,  0.5f * width };
+				body.polygon.points[3] = {                 0.0f,  0.5f * width };
+
+				head.polygon.points[0] = { length - head_height, -0.5f * head_width };
+				head.polygon.points[1] = {               length,               0.0f };
+				head.polygon.points[2] = { length - head_height,  0.5f * head_width };
+
+				glm::mat2 rotation_matrix = UnitVector2D(end - start).rotation_matrix();
+				for (glm::vec2& point : body.polygon.points)
+					point = start + rotation_matrix * point;
+				for (glm::vec2& point : head.polygon.points)
+					point = start + rotation_matrix * point;
+
+				body.polygon.colors[0] = start_color;
+				body.polygon.colors[1] = glm::mix(start_color, end_color, 1.0f - (head_height / length));
+				body.polygon.colors[2] = glm::mix(start_color, end_color, 1.0f - (head_height / length));
+				body.polygon.colors[3] = start_color;
+
+				head.polygon.colors[0] = glm::mix(start_color, end_color, 1.0f - (head_height / length));
+				head.polygon.colors[1] = end_color;
+				head.polygon.colors[2] = glm::mix(start_color, end_color, 1.0f - (head_height / length));
+
+				body.send_polygon();
+				head.send_polygon();
 			}
 		}
-		if (can_draw)
-			poly.draw();
-	}
-
-	cmath::Polygon2D ArrowExtension::default_polygon() const
-	{
-		cmath::Polygon2D polygon;
-
-		float hw = 0.5f * width;
-		if (head_cavity == 0.0f && head_width == width)
-		{
-			polygon.colors = {
-				start_color,
-				end_color,
-				end_color,
-				end_color,
-				start_color
-			};
-
-			polygon.points = {
-				glm::vec2{         0.0f,  -hw },
-				glm::vec2{ -head_height,  -hw },
-				glm::vec2{         0.0f, 0.0f },
-				glm::vec2{ -head_height,   hw },
-				glm::vec2{         0.0f,   hw }
-			};
-		}
-		else
-		{
-			polygon.colors = {
-				start_color,
-				end_color,
-				end_color,
-				end_color,
-				end_color,
-				end_color,
-				start_color
-			};
-
-			polygon.points = {
-				glm::vec2{                       0.0f,                -hw },
-				glm::vec2{               -head_height,                -hw },
-				glm::vec2{ -head_height - head_cavity, -0.5f * head_width },
-				glm::vec2{                       0.0f,               0.0f },
-				glm::vec2{ -head_height - head_cavity,  0.5f * head_width },
-				glm::vec2{               -head_height,                 hw },
-				glm::vec2{                       0.0f,                 hw }
-			};
-		}
-
-		return polygon;
+		if (can_draw_body)
+			body.draw();
+		if (can_draw_head)
+			head.draw();
 	}
 }

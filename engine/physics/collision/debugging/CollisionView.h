@@ -9,7 +9,7 @@
 
 namespace oly::debug
 {
-	// TODO cache these ellipses/polygons
+	// TODO cache references to EllipseReference/StaticPolygon so that list doesn't need to be rebuilt every frame.
 
 	inline void draw_collision(const col2d::Circle& c, glm::vec4 color)
 	{
@@ -17,18 +17,16 @@ namespace oly::debug
 		ellipse.set_transform() = glm::mat3(col2d::internal::CircleGlobalAccess::get_global(c)) * translation_matrix(c.center);
 		auto& dim = ellipse.set_dimension();
 		dim.ry = dim.rx = c.radius;
-		dim.fill_exp = 0.0f; // TODO should this be standard for ellipses?
 		ellipse.set_color().fill_outer = color;
 		ellipse.draw();
 	}
 
-	namespace
+	namespace internal
 	{
 		template<typename Polygon>
 		static void draw_polygon_collision(const Polygon& points, glm::vec4 color)
 		{
-			// TODO create a new struct similar to Polygon that doesn't inherit from Polygonal and doesn't have a transformer. Also, it can send colors independently of points.
-			rendering::Polygon polygon;
+			rendering::StaticPolygon polygon;
 			polygon.polygon.colors = { color };
 			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
 			polygon.init();
@@ -38,34 +36,34 @@ namespace oly::debug
 
 	inline void draw_collision(const col2d::AABB& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	inline void draw_collision(const col2d::OBB& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	inline void draw_collision(const col2d::ConvexHull& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	inline void draw_collision(const col2d::CustomKDOP& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
 	inline void draw_collision(const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	template<size_t K_half>
 	inline void draw_collision(const col2d::KDOP<K_half>& c, glm::vec4 color)
 	{
-		draw_polygon_collision(c.points(), color);
+		internal::draw_polygon_collision(c.points(), color);
 	}
 
 	inline void draw_collision(const col2d::Element& c, glm::vec4 color)
@@ -110,4 +108,6 @@ namespace oly::debug
 	}
 
 	extern void render_collision();
+
+	extern void draw_impulse(const col2d::ContactResult::Feature& feature, glm::vec4 color);
 }

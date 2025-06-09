@@ -53,7 +53,7 @@ namespace oly
 		public:
 			ID() = default;
 			ID(const ID&) = delete;
-			ID(ID&& other) noexcept : generator(other.generator), id(other.id) { other.generator = nullptr; }
+			ID(ID&& other) noexcept : generator(other.generator), id(other.id) { other.generator = nullptr; other.id = T(-1); }
 			ID& operator=(ID&& other) noexcept
 			{
 				if (this != &other)
@@ -63,6 +63,7 @@ namespace oly
 					generator = other.generator;
 					id = other.id;
 					other.generator = nullptr;
+					other.id = T(-1);
 				}
 				return *this;
 			}

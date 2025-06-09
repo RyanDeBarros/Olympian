@@ -132,7 +132,7 @@ namespace oly::rendering
 
 	void PolygonBatch::terminate_id(Index id)
 	{
-		if (id == (Index)-1)
+		if (id == Index(-1))
 			return;
 		auto it = polygon_indexer.find(id);
 		if (it != polygon_indexer.end())
@@ -162,6 +162,51 @@ namespace oly::rendering
 		return polygon_indexer.count(id);
 	}
 
+	StaticPolygon::StaticPolygon()
+		: _batch(&context::polygon_batch())
+	{
+	}
+
+	StaticPolygon::StaticPolygon(PolygonBatch& batch)
+		: _batch(&batch)
+	{
+	}
+
+	void StaticPolygon::init()
+	{
+		cache = math::triangulate(polygon.points);
+		_batch->resize_range(id, (PolygonBatch::Index)polygon.points.size());
+		_batch->set_polygon(id.get(), polygon);
+		_batch->set_polygon_transform(id.get(), glm::mat3(1.0f));
+	}
+
+	void StaticPolygon::send_polygon()
+	{
+		try
+		{
+			cache = math::triangulate(polygon.points);
+			_batch->set_polygon(id.get(), polygon);
+		}
+		catch (Error e)
+		{
+			if (e.code == ErrorCode::TRIANGULATION)
+				LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+			else
+				throw e;
+		}
+	}
+
+	void StaticPolygon::draw() const
+	{
+		GLuint initial_vertex = _batch->get_vertex_range(id.get()).initial;
+		for (size_t i = 0; i < cache.size(); ++i)
+		{
+			_batch->ebo.draw_primitive()[0] = cache[i][0] + initial_vertex;
+			_batch->ebo.draw_primitive()[0] = cache[i][1] + initial_vertex;
+			_batch->ebo.draw_primitive()[0] = cache[i][2] + initial_vertex;
+		}
+	}
+
 	Polygonal::Polygonal()
 		: _batch(&context::polygon_batch())
 	{
@@ -170,30 +215,6 @@ namespace oly::rendering
 	Polygonal::Polygonal(PolygonBatch& batch)
 		: _batch(&batch)
 	{
-	}
-
-	Polygonal::Polygonal(Polygonal&& other) noexcept
-		: _batch(other._batch), id(std::move(other.id)), transformer(std::move(other.transformer))
-	{
-		other._batch = nullptr;
-	}
-
-	Polygonal::~Polygonal()
-	{
-		if (_batch)
-			_batch->terminate_id(id.get());
-	}
-
-	Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
-	{
-		if (this != &other)
-		{
-			_batch = other._batch;
-			other._batch = nullptr;
-			id = std::move(other.id);
-			transformer = std::move(other.transformer);
-		}
-		return *this;
 	}
 
 	void Polygonal::init()

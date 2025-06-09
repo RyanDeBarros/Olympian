@@ -13,10 +13,12 @@
 
 namespace oly::rendering
 {
+	class StaticPolygon;
 	class Polygonal;
 
 	class PolygonBatch
 	{
+		friend class StaticPolygon;
 		friend class Polygonal;
 		typedef GLuint Index;
 
@@ -84,6 +86,30 @@ namespace oly::rendering
 		StrictIDGenerator<Index> id_generator;
 	};
 
+	class StaticPolygon // TODO asset
+	{
+		friend PolygonBatch;
+		PolygonBatch* _batch = nullptr;
+		PolygonBatch::PolygonID id;
+		mutable math::Triangulation cache;
+
+	public:
+		cmath::Polygon2D polygon;
+
+		StaticPolygon();
+		StaticPolygon(PolygonBatch& batch);
+		StaticPolygon(const StaticPolygon&) = delete;
+		StaticPolygon(StaticPolygon&&) noexcept = default;
+		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
+
+		const PolygonBatch& batch() const { return *_batch; }
+		PolygonBatch& batch() { return *_batch; }
+
+		void init();
+		void send_polygon();
+		void draw() const;
+	};
+
 	class Polygonal
 	{
 		friend PolygonBatch;
@@ -96,9 +122,9 @@ namespace oly::rendering
 		Polygonal();
 		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
-		Polygonal(Polygonal&&) noexcept;
-		virtual ~Polygonal();
-		Polygonal& operator=(Polygonal&&) noexcept;
+		Polygonal(Polygonal&&) noexcept = default;
+		virtual ~Polygonal() = default;
+		Polygonal& operator=(Polygonal&&) noexcept = default;
 
 		const PolygonBatch& batch() const { return *_batch; }
 		PolygonBatch& batch() { return *_batch; }

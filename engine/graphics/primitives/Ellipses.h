@@ -28,7 +28,7 @@ namespace oly::rendering
 		struct EllipseDimension
 		{
 			float rx = 0.0f, ry = 0.0f, border = 0.0f;
-			float fill_exp = 1.0f, border_exp = 1.0f;
+			float fill_exp = 0.0f, border_exp = 0.0f;
 		};
 		struct ColorGradient {
 			glm::vec4 fill_inner;

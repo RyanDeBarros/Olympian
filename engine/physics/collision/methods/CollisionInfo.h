@@ -10,7 +10,7 @@ namespace oly::col2d
 {
 	struct OverlapResult
 	{
-		bool overlap;
+		bool overlap = false;
 
 		OverlapResult(bool overlap = bool()) : overlap(overlap) {}
 
@@ -19,7 +19,7 @@ namespace oly::col2d
 	
 	struct CollisionResult
 	{
-		bool overlap;
+		bool overlap = false;
 		float penetration_depth;
 		UnitVector2D unit_impulse;
 
@@ -32,11 +32,11 @@ namespace oly::col2d
 	{
 		struct Feature
 		{
-			glm::vec2 position;
-			glm::vec2 impulse;
+			glm::vec2 position = { 0.0f, 0.0f };
+			glm::vec2 impulse = { 0.0f, 0.0f };
 		};
 
-		bool overlap;
+		bool overlap = false;
 		Feature active_feature, static_feature;
 
 		ContactResult& invert()
