@@ -130,15 +130,16 @@ namespace oly::rendering
 		return id;
 	}
 
-	void PolygonBatch::terminate_id(Index id)
+	void PolygonBatch::terminate_id(const PolygonID& id)
 	{
-		if (id == Index(-1))
-			return;
-		auto it = polygon_indexer.find(id);
-		if (it != polygon_indexer.end())
+		if (id.is_valid())
 		{
-			vertex_free_space.release(it->second);
-			polygon_indexer.erase(it);
+			auto it = polygon_indexer.find(id.get());
+			if (it != polygon_indexer.end())
+			{
+				vertex_free_space.release(it->second);
+				polygon_indexer.erase(it);
+			}
 		}
 	}
 
@@ -146,7 +147,7 @@ namespace oly::rendering
 	{
 		if (is_valid_id(id.get()) && vertices == get_vertex_range(id.get()).length)
 			return;
-		terminate_id(id.get());
+		terminate_id(id);
 		id = generate_id(vertices);
 	}
 
@@ -170,6 +171,12 @@ namespace oly::rendering
 	StaticPolygon::StaticPolygon(PolygonBatch& batch)
 		: _batch(&batch)
 	{
+	}
+
+	StaticPolygon::~StaticPolygon()
+	{
+		if (_batch)
+			_batch->terminate_id(id);
 	}
 
 	void StaticPolygon::init()
@@ -215,6 +222,12 @@ namespace oly::rendering
 	Polygonal::Polygonal(PolygonBatch& batch)
 		: _batch(&batch)
 	{
+	}
+
+	Polygonal::~Polygonal()
+	{
+		if (_batch)
+			_batch->terminate_id(id);
 	}
 
 	void Polygonal::init()

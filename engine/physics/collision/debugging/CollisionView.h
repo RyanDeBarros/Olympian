@@ -6,10 +6,26 @@
 
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/primitives/Polygons.h"
+#include "graphics/extensions/Arrow.h"
 
 namespace oly::debug
 {
 	// TODO cache references to EllipseReference/StaticPolygon so that list doesn't need to be rebuilt every frame.
+	namespace internal
+	{
+		class CollisionViewImpl
+		{
+			mutable std::vector<std::variant<rendering::EllipseBatch::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>> objects;
+
+		public:
+			void append(rendering::EllipseBatch::EllipseReference&& obj) const { objects.push_back(std::move(obj)); }
+			void append(rendering::StaticPolygon&& obj) const { objects.push_back(std::move(obj)); }
+			void append(rendering::StaticArrowExtension&& obj) const { objects.push_back(std::move(obj)); }
+			void render() const;
+		};
+	}
+
+	inline internal::CollisionViewImpl CollisionView; // TODO move to context
 
 	inline void draw_collision(const col2d::Circle& c, glm::vec4 color)
 	{
@@ -18,7 +34,7 @@ namespace oly::debug
 		auto& dim = ellipse.set_dimension();
 		dim.ry = dim.rx = c.radius;
 		ellipse.set_color().fill_outer = color;
-		ellipse.draw();
+		CollisionView.append(std::move(ellipse));
 	}
 
 	namespace internal
@@ -30,7 +46,7 @@ namespace oly::debug
 			polygon.polygon.colors = { color };
 			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
 			polygon.init();
-			polygon.draw();
+			CollisionView.append(std::move(polygon));
 		}
 	}
 
@@ -107,7 +123,13 @@ namespace oly::debug
 			draw_collision(e, color);
 	}
 
-	extern void render_collision();
-
-	extern void draw_impulse(const col2d::ContactResult::Feature& feature, glm::vec4 color);
+	inline void draw_impulse(const col2d::ContactResult::Feature& feature, glm::vec4 color)
+	{
+		oly::rendering::StaticArrowExtension impulse; // TODO StaticArrowExtension that doesn't have transformer
+		impulse.set_color(color);
+		impulse.adjust_standard_head_for_width(6.0f);
+		impulse.set_start() = feature.position;
+		impulse.set_end() = feature.position + feature.impulse;
+		CollisionView.append(std::move(impulse));
+	}
 }

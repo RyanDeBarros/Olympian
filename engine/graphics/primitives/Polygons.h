@@ -76,7 +76,7 @@ namespace oly::rendering
 		void set_polygon_transform(Index id, const glm::mat3& transform);
 
 		PolygonID generate_id(Index vertices);
-		void terminate_id(Index id);
+		void terminate_id(const PolygonID& id);
 		void resize_range(PolygonID& id, Index vertices);
 		Range<Index> get_vertex_range(Index id) const;
 		bool is_valid_id(Index id) const;
@@ -101,6 +101,7 @@ namespace oly::rendering
 		StaticPolygon(const StaticPolygon&) = delete;
 		StaticPolygon(StaticPolygon&&) noexcept = default;
 		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
+		~StaticPolygon();
 
 		const PolygonBatch& batch() const { return *_batch; }
 		PolygonBatch& batch() { return *_batch; }
@@ -123,7 +124,7 @@ namespace oly::rendering
 		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
 		Polygonal(Polygonal&&) noexcept = default;
-		virtual ~Polygonal() = default;
+		virtual ~Polygonal();
 		Polygonal& operator=(Polygonal&&) noexcept = default;
 
 		const PolygonBatch& batch() const { return *_batch; }

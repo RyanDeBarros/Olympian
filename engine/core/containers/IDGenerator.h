@@ -38,9 +38,11 @@ namespace oly
 			friend class StrictIDGenerator;
 			StrictIDGenerator* generator = nullptr;
 			T id = T(-1);
+			bool valid = false;
 
 			ID(StrictIDGenerator* generator) : generator(generator)
 			{
+				valid = true;
 				if (generator->yielded.empty())
 					id = generator->next++;
 				else
@@ -53,7 +55,7 @@ namespace oly
 		public:
 			ID() = default;
 			ID(const ID&) = delete;
-			ID(ID&& other) noexcept : generator(other.generator), id(other.id) { other.generator = nullptr; other.id = T(-1); }
+			ID(ID&& other) noexcept : generator(other.generator), id(other.id), valid(other.valid) { other.generator = nullptr; other.valid = false; }
 			ID& operator=(ID&& other) noexcept
 			{
 				if (this != &other)
@@ -62,18 +64,20 @@ namespace oly
 						generator->yielded.push(id);
 					generator = other.generator;
 					id = other.id;
+					valid = other.valid;
 					other.generator = nullptr;
-					other.id = T(-1);
+					other.valid = false;
 				}
 				return *this;
 			}
 			~ID()
 			{
-				if (generator)
+				if (generator && valid)
 					generator->yielded.push(id);
 			}
 
 			T get() const { return id; }
+			bool is_valid() const { return valid; }
 		};
 
 		ID generate() { return ID(this); }

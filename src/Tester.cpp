@@ -122,15 +122,15 @@ int main()
 		{
 			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
 			oly::debug::draw_collision(circ, oly::colors::RED * oly::colors::alpha(0.8f));
-			oly::debug::draw_impulse(contact.static_feature, oly::colors::WHITE);
-			oly::debug::draw_impulse(contact.active_feature, oly::colors::GREEN);
+			oly::debug::draw_impulse(contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::draw_impulse(contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
 		}
 		else
 		{
 			oly::debug::draw_collision(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
 			oly::debug::draw_collision(circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 		}
-		oly::debug::render_collision();
+		oly::debug::CollisionView.render();
 		};
 
 	oly::context::set_render_function(oly::make_functor(render_frame));
@@ -143,6 +143,7 @@ int main()
 
 		circ.center = oly::context::get_cursor_screen_pos();
 		contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
+		//contact = oly::col2d::contacts(circ, aabb);
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 
