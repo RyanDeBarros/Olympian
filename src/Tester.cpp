@@ -3,8 +3,8 @@
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/SAT.h"
 #include "physics/collision/methods/KDOPCollide.h"
-#include "graphics/extensions/Arrow.h" // TODO loading for Arrow and Line extensions. Rename registries folder to assets
 #include "physics/collision/debugging/CollisionView.h"
+#include "physics/collision/objects/Capsule.h"
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -85,7 +85,8 @@ int main()
 
 	oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
 	oly::col2d::Circle circ({}, 50.0f);
-	oly::col2d::ContactResult contact;
+	oly::col2d::Capsule capsule{ .center = { 500.0f, -400.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
+	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	// LATER anti-aliasing settings
 	
@@ -97,7 +98,7 @@ int main()
 		oly::context::sync_texture_handle(flag_texture);
 		}, false);
 
-	oly::debug::CollisionView c1, c2, c3, c4;
+	oly::debug::CollisionView c1, c2, c3, c4, c5, c6, c7;
 
 	// LATER begin play on initial actors here
 
@@ -120,35 +121,13 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
-		if (contact.overlap)
-		{
-			// TODO store reference to shape in CollisionView, and update during draw().
-			//oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
-			//oly::debug::update_view(c2, circ, oly::colors::RED * oly::colors::alpha(0.8f));
-			//oly::debug::update_view(c3, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-			//oly::debug::update_view(c4, contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
-			oly::debug::CollisionView c1 = oly::debug::collision_view(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
-			oly::debug::CollisionView c2 = oly::debug::collision_view(circ, oly::colors::RED * oly::colors::alpha(0.8f));
-			oly::debug::CollisionView c3 = oly::debug::collision_view(contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-			oly::debug::CollisionView c4 = oly::debug::collision_view(contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
-			c1.draw();
-			c2.draw();
-			c3.draw();
-			c4.draw();
-		}
-		else
-		{
-			//oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-			//oly::debug::update_view(c2, circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-			//c3.clear_view();
-			//c4.clear_view();
-			oly::debug::CollisionView c1 = oly::debug::collision_view(aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-			oly::debug::CollisionView c2 = oly::debug::collision_view(circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-			c1.draw();
-			c2.draw();
-			//c3.draw();
-			//c4.draw();
-		}
+		c5.draw(); // TODO for compounds, draw into framebuffer and use sprite to prevent self-overlapping alpha.
+		c1.draw();
+		c6.draw();
+		c2.draw();
+		c7.draw();
+		c3.draw();
+		c4.draw();
 		oly::debug::render_collision();
 		};
 
@@ -161,8 +140,36 @@ int main()
 		flag_state_timer.poll();
 
 		circ.center = oly::context::get_cursor_screen_pos();
-		contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		//contact = oly::col2d::contacts(circ, aabb);
+		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
+		auto contact = oly::col2d::contacts(circ, aabb);
+
+		if (contact.overlap)
+		{
+			oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
+			oly::debug::update_view(c2, circ, oly::colors::RED * oly::colors::alpha(0.8f));
+			oly::debug::update_view(c3, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view(c4, contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
+		}
+		else
+		{
+			oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			oly::debug::update_view(c2, circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			c3.clear_view();
+			c4.clear_view();
+		}
+		oly::debug::update_view(c5, capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.5f));
+		if (oly::col2d::overlaps(circ, capsule.compound()))
+		{
+			oly::debug::update_view(c2, circ, oly::colors::GREEN * oly::colors::alpha(0.8f));
+		}
+		auto raycast_result = oly::col2d::raycast(circ, ray);
+		if (raycast_result.hit == decltype(raycast_result.hit)::NO_HIT)
+			oly::debug::update_view(c6, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+		else if (raycast_result.hit == decltype(raycast_result.hit)::EMBEDDED_ORIGIN)
+			oly::debug::update_view(c6, ray, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+		else if (raycast_result.hit == decltype(raycast_result.hit)::TRUE_HIT)
+			oly::debug::update_view(c6, ray, oly::colors::ORANGE * oly::colors::alpha(0.8f));
+		oly::debug::update_view(c7, raycast_result, oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 

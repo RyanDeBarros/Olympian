@@ -55,11 +55,13 @@ namespace oly
 			void match()
 			{
 				glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			}
 
 			void miss()
 			{
 				glStencilFunc(GL_EQUAL, 0, 0xFF);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			}
 		}
 	}

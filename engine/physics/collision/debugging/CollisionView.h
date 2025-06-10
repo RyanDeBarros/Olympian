@@ -63,7 +63,7 @@ namespace oly::debug
 	namespace internal
 	{
 		template<typename Polygon>
-		inline debug::CollisionView draw_polygon_collision(const Polygon& points, glm::vec4 color)
+		inline debug::CollisionView polygon_collision_view(const Polygon& points, glm::vec4 color)
 		{
 			rendering::StaticPolygon polygon;
 			polygon.polygon.colors = { color };
@@ -73,7 +73,7 @@ namespace oly::debug
 		}
 
 		template<typename Polygon>
-		inline void update_polygon_view(debug::CollisionView& view, const Polygon& points, glm::vec4 color)
+		inline void polygon_update_view(debug::CollisionView& view, const Polygon& points, glm::vec4 color)
 		{
 			rendering::StaticPolygon polygon;
 			polygon.polygon.colors = { color };
@@ -85,66 +85,66 @@ namespace oly::debug
 
 	inline CollisionView collision_view(const col2d::AABB& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::AABB& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::OBB& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::OBB& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::ConvexHull& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::ConvexHull& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::CustomKDOP& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::CustomKDOP& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
 	inline CollisionView collision_view(const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
 	inline void update_view(CollisionView& view, const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	template<size_t K_half>
 	inline CollisionView collision_view(const col2d::KDOP<K_half>& c, glm::vec4 color)
 	{
-		return internal::draw_polygon_collision(c.points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	template<size_t K_half>
 	inline void update_view(CollisionView& view, const col2d::KDOP<K_half>& c, glm::vec4 color)
 	{
-		internal::update_polygon_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)
@@ -241,23 +241,73 @@ namespace oly::debug
 			view.merge(collision_view(c.get_elements()[i], color));
 	}
 
-	inline CollisionView collision_view(const col2d::ContactResult::Feature& feature, glm::vec4 color)
+	inline CollisionView collision_view(const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f)
 	{
 		rendering::StaticArrowExtension impulse;
 		impulse.set_color(color);
-		impulse.adjust_standard_head_for_width(6.0f);
+		impulse.adjust_standard_head_for_width(arrow_width);
 		impulse.set_start() = feature.position;
 		impulse.set_end() = feature.position + feature.impulse;
 		return CollisionView(std::move(impulse));
 	}
 
-	inline void update_view(CollisionView& view, const col2d::ContactResult::Feature& feature, glm::vec4 color)
+	inline void update_view(CollisionView& view, const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f)
 	{
 		rendering::StaticArrowExtension impulse;
 		impulse.set_color(color);
-		impulse.adjust_standard_head_for_width(6.0f);
+		impulse.adjust_standard_head_for_width(arrow_width);
 		impulse.set_start() = feature.position;
 		impulse.set_end() = feature.position + feature.impulse;
 		view.set_view(std::move(impulse));
+	}
+
+	inline CollisionView collision_view(const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f)
+	{
+		rendering::StaticArrowExtension arrow;
+		arrow.set_color(color);
+		arrow.adjust_standard_head_for_width(arrow_width);
+		arrow.set_start() = ray.origin;
+		arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+		return CollisionView(std::move(arrow));
+	}
+
+	inline void update_view(CollisionView& view, const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f)
+	{
+		rendering::StaticArrowExtension arrow;
+		arrow.set_color(color);
+		arrow.adjust_standard_head_for_width(arrow_width);
+		arrow.set_start() = ray.origin;
+		arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+		view.set_view(std::move(arrow));
+	}
+
+	inline CollisionView collision_view(const col2d::RaycastResult& result, glm::vec4 color, float impulse_length = 50.0f, float arrow_width = 6.0f)
+	{
+		if (result.hit == col2d::RaycastResult::Hit::TRUE_HIT)
+		{
+			rendering::StaticArrowExtension impulse;
+			impulse.set_color(color);
+			impulse.adjust_standard_head_for_width(arrow_width);
+			impulse.set_start() = result.contact;
+			impulse.set_end() = result.contact + impulse_length * (glm::vec2)result.normal;
+			return CollisionView(std::move(impulse));
+		}
+		else
+			return CollisionView();
+	}
+
+	inline void update_view(CollisionView& view, const col2d::RaycastResult& result, glm::vec4 color, float impulse_length = 50.0f, float arrow_width = 6.0f)
+	{
+		if (result.hit == col2d::RaycastResult::Hit::TRUE_HIT)
+		{
+			rendering::StaticArrowExtension impulse;
+			impulse.set_color(color);
+			impulse.adjust_standard_head_for_width(arrow_width);
+			impulse.set_start() = result.contact;
+			impulse.set_end() = result.contact + impulse_length * (glm::vec2)result.normal;
+			view.set_view(std::move(impulse));
+		}
+		else
+			view.clear_view();
 	}
 }

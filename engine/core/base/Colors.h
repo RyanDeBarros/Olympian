@@ -12,6 +12,7 @@ namespace oly::colors
 	constexpr glm::vec4 YELLOW		= { 1.0f, 1.0f, 0.0f, 1.0f };
 	constexpr glm::vec4 MAGENTA		= { 1.0f, 0.0f, 1.0f, 1.0f };
 	constexpr glm::vec4 CYAN		= { 0.0f, 1.0f, 1.0f, 1.0f };
+	constexpr glm::vec4 ORANGE		= { 1.0f, 0.5f, 0.0f, 1.0f };
 
 	constexpr glm::vec4 alpha(float a) { return { 1.0f, 1.0f, 1.0f, a }; }
 }

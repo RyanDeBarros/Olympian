@@ -99,9 +99,9 @@ namespace oly::rendering
 		StaticPolygon();
 		StaticPolygon(PolygonBatch& batch);
 		StaticPolygon(const StaticPolygon&) = delete;
-		StaticPolygon(StaticPolygon&&) noexcept = default;
-		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
+		StaticPolygon(StaticPolygon&&) noexcept;
 		~StaticPolygon();
+		StaticPolygon& operator=(StaticPolygon&&) noexcept;
 
 		const PolygonBatch& batch() const { return *_batch; }
 		PolygonBatch& batch() { return *_batch; }
@@ -123,9 +123,9 @@ namespace oly::rendering
 		Polygonal();
 		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
-		Polygonal(Polygonal&&) noexcept = default;
+		Polygonal(Polygonal&&) noexcept;
 		virtual ~Polygonal();
-		Polygonal& operator=(Polygonal&&) noexcept = default;
+		Polygonal& operator=(Polygonal&&) noexcept;
 
 		const PolygonBatch& batch() const { return *_batch; }
 		PolygonBatch& batch() { return *_batch; }

@@ -173,10 +173,31 @@ namespace oly::rendering
 	{
 	}
 
+	StaticPolygon::StaticPolygon(StaticPolygon&& other) noexcept
+		: _batch(other._batch), id(std::move(other.id)), cache(std::move(other.cache)), polygon(std::move(other.polygon))
+	{
+		other._batch = nullptr;
+	}
+
 	StaticPolygon::~StaticPolygon()
 	{
 		if (_batch)
 			_batch->terminate_id(id);
+	}
+
+	StaticPolygon& StaticPolygon::operator=(StaticPolygon&& other) noexcept
+	{
+		if (this != &other)
+		{
+			if (_batch)
+				_batch->terminate_id(id);
+			_batch = other._batch;
+			id = std::move(other.id);
+			cache = std::move(other.cache);
+			polygon = std::move(other.polygon);
+			other._batch = nullptr;
+		}
+		return *this;
 	}
 
 	void StaticPolygon::init()
@@ -224,10 +245,30 @@ namespace oly::rendering
 	{
 	}
 
+	Polygonal::Polygonal(Polygonal&& other) noexcept
+		: _batch(other._batch), id(std::move(other.id)), transformer(std::move(other.transformer))
+	{
+		other._batch = nullptr;
+	}
+
 	Polygonal::~Polygonal()
 	{
 		if (_batch)
 			_batch->terminate_id(id);
+	}
+
+	Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
+	{
+		if (this != &other)
+		{
+			if (_batch)
+				_batch->terminate_id(id);
+			_batch = other._batch;
+			id = std::move(other.id);
+			transformer = std::move(other.transformer);
+			other._batch = nullptr;
+		}
+		return *this;
 	}
 
 	void Polygonal::init()

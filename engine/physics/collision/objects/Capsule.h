@@ -7,8 +7,8 @@ namespace oly::col2d
 {
 	struct Capsule
 	{
-		glm::vec2 center;
-		float obb_width, obb_height, rotation;
+		glm::vec2 center = {};
+		float obb_width = 0.0f, obb_height = 0.0f, rotation = 0.0f;
 
 		glm::mat2 get_rotation_matrix() const
 		{
@@ -18,8 +18,8 @@ namespace oly::col2d
 		}
 
 		OBB mid_obb() const { return { .center = center, .width = obb_width, .height = obb_height, .rotation = rotation }; }
-		Circle upper_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f, obb_height }, 0.5f * obb_width); }
-		Circle lower_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f, -obb_height }, 0.5f * obb_width); }
+		Circle upper_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f,  0.5f * obb_height }, 0.5f * obb_width); }
+		Circle lower_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f, -0.5f * obb_height }, 0.5f * obb_width); }
 
 		UnitVector2D horizontal() const { return UnitVector2D(rotation); }
 		UnitVector2D vertical() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
