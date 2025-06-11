@@ -25,6 +25,7 @@ namespace oly::graphics
 			READ = GL_READ_FRAMEBUFFER
 		};
 		void bind(Target target = Framebuffer::Target::REG) const { glBindFramebuffer((GLenum)target, id); }
+		static void unbind(Target target = Framebuffer::Target::REG) { glBindFramebuffer((GLenum)target, 0); }
 
 		class NonColorAttachment
 		{
@@ -92,13 +93,13 @@ namespace oly::graphics
 			LINEAR = GL_LINEAR
 		};
 		static void blit(const Framebuffer& read, const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter);
+		static void blit_to_default(const Framebuffer& read, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter);
+		static void blit_from_default(const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter);
 
 	private:
 		std::vector<ColorAttachment> color_attachments;
 		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 	};
-
-	inline void unbind_framebuffer(Framebuffer::Target target = Framebuffer::Target::REG) { glBindFramebuffer((GLenum)target, 0); }
 
 	// TODO FramebufferBlock
 	// TODO Renderbuffer

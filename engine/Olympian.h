@@ -10,6 +10,7 @@
 
 #include "graphics/resources/Samplers.h"
 #include "graphics/Stencil.h"
+#include "graphics/backend/basic/Framebuffers.h"
 
 #include "registries/Loader.h"
 #include "registries/graphics/primitives/Sprites.h"

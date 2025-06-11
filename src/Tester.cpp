@@ -98,7 +98,21 @@ int main()
 		oly::context::sync_texture_handle(flag_texture);
 		}, false);
 
-	oly::debug::CollisionView c1, c2, c3, c4, c5, c6, c7;
+	oly::debug::CollisionLayer player_layer;
+	oly::debug::CollisionLayer obstacle_layer;
+	oly::debug::CollisionLayer ray_layer;
+	oly::debug::CollisionLayer impulse_layer;
+	oly::debug::CollisionLayer raycast_result_layer;
+	bool draw_impulses = false;
+
+	oly::debug::CollisionView player_cv, block_cv, capsule_cv, ray_cv, player_impulse_cv, block_impulse_cv, raycast_result_cv;
+	player_cv.assign(player_layer);
+	block_cv.assign(obstacle_layer);
+	capsule_cv.assign(obstacle_layer);
+	player_impulse_cv.assign(impulse_layer);
+	block_impulse_cv.assign(impulse_layer);
+	ray_cv.assign(ray_layer);
+	raycast_result_cv.assign(raycast_result_layer);
 
 	// LATER begin play on initial actors here
 
@@ -121,14 +135,13 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
-		c5.draw(); // TODO for compounds, draw into framebuffer and use sprite to prevent self-overlapping alpha.
-		c1.draw();
-		c6.draw();
-		c2.draw();
-		c7.draw();
-		c3.draw();
-		c4.draw();
-		oly::debug::render_collision();
+		obstacle_layer.draw();
+		player_layer.draw();
+		if (draw_impulses)
+			impulse_layer.draw();
+		ray_layer.draw();
+		raycast_result_layer.draw();
+		oly::debug::render_layers();
 		};
 
 	oly::context::set_render_function(oly::make_functor(render_frame));
@@ -145,31 +158,39 @@ int main()
 
 		if (contact.overlap)
 		{
-			oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.5f));
-			oly::debug::update_view(c2, circ, oly::colors::RED * oly::colors::alpha(0.8f));
-			oly::debug::update_view(c3, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-			oly::debug::update_view(c4, contact.active_feature, oly::colors::GREEN * oly::colors::alpha(0.8f));
+			draw_impulses = true;
+			oly::debug::update_view(block_impulse_cv, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view(player_impulse_cv, contact.active_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
 		}
 		else
-		{
-			oly::debug::update_view(c1, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-			oly::debug::update_view(c2, circ, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-			c3.clear_view();
-			c4.clear_view();
-		}
-		oly::debug::update_view(c5, capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.5f));
-		if (oly::col2d::overlaps(circ, capsule.compound()))
-		{
-			oly::debug::update_view(c2, circ, oly::colors::GREEN * oly::colors::alpha(0.8f));
-		}
+			draw_impulses = false;
+
+		auto capsule_overlaps = oly::col2d::overlaps(circ, capsule.compound());
+
+		if (contact.overlap || capsule_overlaps)
+			oly::debug::update_view(player_cv, circ, oly::colors::RED * oly::colors::alpha(0.8f));
+		else
+			oly::debug::update_view(player_cv, circ, oly::colors::YELLOW* oly::colors::alpha(0.8f));
+
+		if (contact.overlap)
+			oly::debug::update_view(block_cv, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+		else
+			oly::debug::update_view(block_cv, aabb, oly::colors::BLUE * oly::colors::alpha(0.8f));
+
+		if (capsule_overlaps)
+			oly::debug::update_view(capsule_cv, capsule.compound(), oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+		else
+			oly::debug::update_view(capsule_cv, capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.8f));
+
 		auto raycast_result = oly::col2d::raycast(circ, ray);
 		if (raycast_result.hit == decltype(raycast_result.hit)::NO_HIT)
-			oly::debug::update_view(c6, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view(ray_cv, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 		else if (raycast_result.hit == decltype(raycast_result.hit)::EMBEDDED_ORIGIN)
-			oly::debug::update_view(c6, ray, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			oly::debug::update_view(ray_cv, ray, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 		else if (raycast_result.hit == decltype(raycast_result.hit)::TRUE_HIT)
-			oly::debug::update_view(c6, ray, oly::colors::ORANGE * oly::colors::alpha(0.8f));
-		oly::debug::update_view(c7, raycast_result, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view(ray_cv, ray, oly::colors::ORANGE * oly::colors::alpha(0.8f));
+
+		oly::debug::update_view(raycast_result_cv, raycast_result, oly::colors::WHITE* oly::colors::alpha(0.8f));
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
 

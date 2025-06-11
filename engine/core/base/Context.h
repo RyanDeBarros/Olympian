@@ -38,6 +38,16 @@ namespace oly::context
 	extern rendering::EllipseBatch& ellipse_batch();
 	extern rendering::TextBatch& text_batch();
 
+	enum class InternalBatch
+	{
+		NONE,
+		SPRITE,
+		POLYGON,
+		ELLIPSE,
+		TEXT
+	};
+	extern InternalBatch last_internal_batch_rendered();
+
 	extern graphics::NSVGContext& nsvg_context();
 	extern reg::TextureRegistry& texture_registry();
 	extern reg::TileSetRegistry& tileset_registry();
@@ -75,4 +85,7 @@ namespace oly::context
 	extern void render_text();
 
 	extern glm::vec2 get_cursor_screen_pos();
+
+	extern bool blend_enabled();
+	extern glm::vec4 clear_color();
 }

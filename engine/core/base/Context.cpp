@@ -21,6 +21,8 @@ namespace oly::context
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
 		std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
 		std::unique_ptr<rendering::TextBatch> text_batch;
+		
+		InternalBatch last_internal_batch_rendered = InternalBatch::NONE;
 
 		graphics::NSVGContext nsvg_context;
 		reg::TextureRegistry texture_registry;
@@ -272,6 +274,11 @@ namespace oly::context
 		return internal::texture_registry;
 	}
 		
+	InternalBatch last_internal_batch_rendered()
+	{
+		return internal::last_internal_batch_rendered;
+	}
+
 	graphics::NSVGContext& nsvg_context()
 	{
 		return internal::nsvg_context;
@@ -341,6 +348,7 @@ namespace oly::context
 	void render_sprites()
 	{
 		internal::sprite_batch->render();
+		internal::last_internal_batch_rendered = InternalBatch::SPRITE;
 	}
 
 	rendering::Polygon polygon()
@@ -361,6 +369,7 @@ namespace oly::context
 	void render_polygons()
 	{
 		internal::polygon_batch->render();
+		internal::last_internal_batch_rendered = InternalBatch::POLYGON;
 	}
 
 	rendering::Ellipse ellipse()
@@ -371,6 +380,7 @@ namespace oly::context
 	void render_ellipses()
 	{
 		internal::ellipse_batch->render();
+		internal::last_internal_batch_rendered = InternalBatch::ELLIPSE;
 	}
 
 	rendering::TileSetRes load_tileset(const std::string& file)
@@ -396,6 +406,7 @@ namespace oly::context
 	void render_text()
 	{
 		internal::text_batch->render();
+		internal::last_internal_batch_rendered = InternalBatch::TEXT;
 	}
 
 	glm::vec2 get_cursor_screen_pos()
@@ -403,5 +414,19 @@ namespace oly::context
 		double x, y;
 		glfwGetCursorPos(internal::platform->window(), &x, &y);
 		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y};
+	}
+
+	bool blend_enabled()
+	{
+		GLboolean enabled;
+		glGetBooleanv(GL_BLEND, &enabled);
+		return (bool)enabled;
+	}
+
+	glm::vec4 clear_color()
+	{
+		glm::vec4 color;
+		glGetFloatv(GL_COLOR_CLEAR_VALUE, glm::value_ptr(color));
+		return color;
 	}
 }

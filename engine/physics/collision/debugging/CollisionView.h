@@ -7,13 +7,18 @@
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/primitives/Polygons.h"
 #include "graphics/extensions/Arrow.h"
+#include "graphics/backend/basic/Framebuffers.h"
 
 #include "core/base/Context.h"
 
 namespace oly::debug
 {
+	class CollisionLayer;
+
 	class CollisionView
 	{
+		friend class CollisionLayer;
+
 		using Object = std::variant<rendering::EllipseBatch::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 		struct Empty {};
 		enum
@@ -25,20 +30,58 @@ namespace oly::debug
 		using ObjectView = std::variant<Empty, Object, std::vector<Object>>;
 
 		ObjectView obj;
+		std::vector<CollisionLayer*> layers;
 
 	public:
 		CollisionView() : obj(Empty{}) {}
 		CollisionView(rendering::EllipseBatch::EllipseReference&& obj) : obj(std::move(obj)) {}
 		CollisionView(rendering::StaticPolygon&& obj) : obj(std::move(obj)) {}
 		CollisionView(rendering::StaticArrowExtension&& obj) : obj(std::move(obj)) {}
+		// TODO copy
+		CollisionView(const CollisionView&) = delete;
+		CollisionView(CollisionView&&) noexcept;
+		~CollisionView();
+		CollisionView& operator=(CollisionView&&) noexcept;
 
-		void draw();
-		void clear_view() { obj = Empty{}; }
-		void set_view(ObjectView&& obj) { this->obj = std::move(obj); }
+		void draw() const;
+		void clear_view();
+		void set_view(ObjectView&& obj);
 		void merge(CollisionView&& other);
+
+		void assign(CollisionLayer& layer);
+		void unassign(CollisionLayer& layer);
+	};
+
+	class CollisionLayer
+	{
+		friend class CollisionView;
+
+		rendering::Sprite sprite;
+		graphics::Framebuffer framebuffer;
+		graphics::BindlessTextureRes texture;
+		graphics::ImageDimensions texture_dimensions;
+		std::vector<CollisionView*> collision_views;
+		mutable bool dirty_views = false;
+
+	public:
+		CollisionLayer();
+		// TODO copy
+		CollisionLayer(const CollisionLayer&) = delete;
+		CollisionLayer(CollisionLayer&&) noexcept;
+		~CollisionLayer();
+		CollisionLayer& operator=(CollisionLayer&&) noexcept;
+
+	private:
+		void write_texture() const;
+	
+	public:
+		void draw() const;
+
+		void assign(CollisionView& view);
+		void unassign(CollisionView& view);
 	};
 	
-	extern void render_collision();
+	extern void render_layers();
 
 	inline CollisionView collision_view(const col2d::Circle& c, glm::vec4 color)
 	{

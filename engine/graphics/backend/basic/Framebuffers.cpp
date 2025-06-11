@@ -114,4 +114,14 @@ namespace oly::graphics
 	{
 		glBlitNamedFramebuffer(read, draw, src.x1, src.y1, src.x2, src.y2, dst.x1, dst.y1, dst.x2, dst.y2, (GLenum)mask, (GLenum)filter);
 	}
+	
+	void Framebuffer::blit_to_default(const Framebuffer& read, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter)
+	{
+		glBlitNamedFramebuffer(read, 0, src.x1, src.y1, src.x2, src.y2, dst.x1, dst.y1, dst.x2, dst.y2, (GLenum)mask, (GLenum)filter);
+	}
+
+	void Framebuffer::blit_from_default(const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter)
+	{
+		glBlitNamedFramebuffer(0, draw, src.x1, src.y1, src.x2, src.y2, dst.x1, dst.y1, dst.x2, dst.y2, (GLenum)mask, (GLenum)filter);
+	}
 }
