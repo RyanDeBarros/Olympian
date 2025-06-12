@@ -11,9 +11,6 @@ namespace oly::rendering
 	EllipseBatch::EllipseBatch(Capacity capacity)
 		: ebo(vao, capacity.ellipses), ssbo_block(capacity.ellipses)
 	{
-		glm::ivec2 size = context::get_platform().window().get_size();
-		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
-
 		projection_location = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uProjection");
 	}
 
@@ -26,7 +23,7 @@ namespace oly::rendering
 
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::ellipse_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
+		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_block.buf.get_buffer<DIMENSION>());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_block.buf.get_buffer<COLOR>());

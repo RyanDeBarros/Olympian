@@ -30,8 +30,9 @@ namespace oly::context
 	extern const std::string& context_filepath();
 	extern platform::Platform& get_platform();
 	extern void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame);
-	extern void set_window_resized_parameters(bool boxed = true, bool stretch = true);
-	extern platform::StandardWindowResize& get_standard_window_resize();
+	extern void set_window_resize_mode(bool boxed = true, bool stretch = true);
+	extern const platform::WRViewport& get_wr_viewport();
+	extern platform::WRDrawer& get_wr_drawer();
 	extern void set_standard_viewport();
 
 	extern rendering::SpriteBatch& sprite_batch();

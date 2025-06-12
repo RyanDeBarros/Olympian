@@ -104,7 +104,8 @@ namespace oly::rendering
 		} ubo;
 
 	public:
-		glm::vec4 projection_bounds, global_modulation = glm::vec4(1.0f);
+		glm::mat3 projection = 1.0f;
+		glm::vec4 global_modulation = glm::vec4(1.0f);
 
 		struct Capacity
 		{

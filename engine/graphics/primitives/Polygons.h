@@ -65,7 +65,7 @@ namespace oly::rendering
 
 		void render() const;
 			
-		glm::vec4 projection_bounds;
+		glm::mat3 projection = 1.0f;
 
 	private:
 		void set_primitive_points(Range<Index> vbo_range, const glm::vec2* points, Index count);

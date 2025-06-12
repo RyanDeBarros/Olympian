@@ -114,9 +114,6 @@ int main()
 	ray_cv.assign(ray_layer);
 	raycast_result_cv.assign(raycast_result_layer);
 
-	oly::context::get_standard_window_resize().boxed = false;
-	oly::context::get_standard_window_resize().stretch = false;
-
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);

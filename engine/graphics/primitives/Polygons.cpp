@@ -12,9 +12,6 @@ namespace oly::rendering
 		: ebo(vao, capacity.indices), vbo_block(vao, { capacity.vertices, capacity.vertices, capacity.vertices }), transform_ssbo(capacity.indices),
 		vertex_free_space({ 0, capacity.indices })
 	{
-		glm::ivec2 size = context::get_platform().window().get_size();
-		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
-
 		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
 
 		vbo_block.attributes[POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
@@ -32,7 +29,7 @@ namespace oly::rendering
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::polygon_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
+		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
 		ebo.render_elements(GL_TRIANGLES);

@@ -31,7 +31,8 @@ namespace oly::context
 		reg::FontFaceRegistry font_face_registry;
 		reg::FontAtlasRegistry font_atlas_registry;
 
-		platform::StandardWindowResize standard_window_resize;
+		platform::WRViewport wr_viewport;
+		platform::WRDrawer wr_drawer;
 	}
 
 	static void init_logger(const TOMLNode& node)
@@ -163,8 +164,9 @@ namespace oly::context
 		
 		autoload_signals(toml_context);
 
-		internal::standard_window_resize.initialize_viewport();
-		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
+		platform::internal::invoke_initialize_viewport(internal::wr_viewport);
+		internal::wr_viewport.attach(&internal::platform->window().handlers.window_resize);
+		internal::wr_drawer.attach(&internal::platform->window().handlers.window_resize);
 	}
 
 	static void terminate()
@@ -236,24 +238,27 @@ namespace oly::context
 	void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame)
 	{
 		internal::render_frame = render_frame;
-		internal::standard_window_resize.render_frame = render_frame;
-		internal::standard_window_resize.target_aspect_ratio = internal::platform->window().aspect_ratio();
 	}
 
-	void set_window_resized_parameters(bool boxed, bool stretch)
+	void set_window_resize_mode(bool boxed, bool stretch)
 	{
-		internal::standard_window_resize.boxed = boxed;
-		internal::standard_window_resize.stretch = stretch;
+		internal::wr_viewport.boxed = boxed;
+		internal::wr_viewport.stretch = stretch;
 	}
 
-	platform::StandardWindowResize& get_standard_window_resize()
+	const platform::WRViewport& get_wr_viewport()
 	{
-		return internal::standard_window_resize;
+		return internal::wr_viewport;
+	}
+
+	platform::WRDrawer& get_wr_drawer()
+	{
+		return internal::wr_drawer;
 	}
 
 	void set_standard_viewport()
 	{
-		internal::standard_window_resize.set_viewport();
+		internal::wr_viewport.set_viewport();
 	}
 
 	rendering::SpriteBatch& sprite_batch()
@@ -430,9 +435,9 @@ namespace oly::context
 
 	glm::vec2 get_view_stretch()
 	{
-		if (internal::standard_window_resize.stretch)
+		if (internal::wr_viewport.stretch)
 		{
-			auto v = internal::standard_window_resize.get_viewport();
+			auto v = internal::wr_viewport.get_viewport();
 			return glm::vec2(v.w, v.h) / glm::vec2(internal::initial_window_size);
 		}
 		else

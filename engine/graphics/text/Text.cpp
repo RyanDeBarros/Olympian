@@ -18,9 +18,6 @@ namespace oly::rendering
 	TextBatch::TextBatch(Capacity capacity)
 		: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64)), vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.text_colors, capacity.modulations)
 	{
-		glm::ivec2 size = context::get_platform().window().get_size();
-		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
-
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::text_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::text_batch, "uGlobalModulation");
 
@@ -42,7 +39,7 @@ namespace oly::rendering
 
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::text_batch);
-		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(glm::mat3(glm::ortho<float>(projection_bounds[0], projection_bounds[1], projection_bounds[2], projection_bounds[3]))));
+		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
 
 		tex_handles_ssbo.bind_base(0);

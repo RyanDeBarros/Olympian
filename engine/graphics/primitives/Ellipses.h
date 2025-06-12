@@ -63,7 +63,7 @@ namespace oly::rendering
 
 		void render() const;
 
-		glm::vec4 projection_bounds;
+		glm::mat3 projection = 1.0f;
 
 	private:
 		StrictIDGenerator<Index> pos_generator;

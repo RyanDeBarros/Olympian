@@ -115,15 +115,15 @@ namespace oly::debug
 
 	CollisionLayer::WindowResizeHandler::WindowResizeHandler()
 	{
-		attach(&context::get_platform().window().handlers.window_resize);
+		attach(&context::get_wr_drawer());
 	}
 
 	bool CollisionLayer::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
 	{
-		auto& wr = context::get_standard_window_resize();
+		auto& wr = context::get_wr_viewport();
 		if (!wr.stretch)
 		{
-			layer->sprite.set_local().scale = glm::vec2{ wr.get_viewport().w, wr.get_viewport().h } / glm::vec2(layer->dimensions);
+			layer->sprite.set_local().scale = wr.get_size() / glm::vec2(layer->dimensions);
 			layer->dirty_views = true;
 		}
 		return false;
@@ -239,9 +239,7 @@ namespace oly::debug
 
 	void CollisionLayer::setup_texture()
 	{
-		auto& window = context::get_platform().window();
-		window.refresh_size();
-		dimensions = window.get_size();
+		dimensions = context::get_platform().window().get_size();
 
 		const int cpp = 4;
 		glBindTexture(GL_TEXTURE_2D, *texture);
@@ -257,8 +255,7 @@ namespace oly::debug
 		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
 		framebuffer.unbind();
 
-		auto& wr = context::get_standard_window_resize();
-		sprite.set_local().scale = glm::vec2{ wr.get_viewport().w, wr.get_viewport().h } / glm::vec2(dimensions);
+		sprite.set_local().scale = context::get_wr_viewport().get_size() / glm::vec2(dimensions);
 		sprite.set_texture(texture, dimensions);
 	}
 
