@@ -34,6 +34,9 @@ namespace oly::rendering
 
 	void TextBatch::render() const
 	{
+		if (ebo.empty())
+			return;
+
 		vbo_block.pre_draw_all();
 		glyph_ssbo_block.pre_draw_all();
 

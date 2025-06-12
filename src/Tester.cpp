@@ -114,6 +114,9 @@ int main()
 	ray_cv.assign(ray_layer);
 	raycast_result_cv.assign(raycast_result_layer);
 
+	oly::context::get_standard_window_resize().boxed = false;
+	oly::context::get_standard_window_resize().stretch = false;
+
 	// LATER begin play on initial actors here
 
 	glEnable(GL_BLEND);
@@ -152,7 +155,7 @@ int main()
 
 		flag_state_timer.poll();
 
-		circ.center = oly::context::get_cursor_screen_pos();
+		circ.center = oly::context::get_cursor_view_pos();
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
 		auto contact = oly::col2d::contacts(circ, aabb);
 

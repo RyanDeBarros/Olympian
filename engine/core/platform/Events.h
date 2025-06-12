@@ -24,4 +24,14 @@ namespace oly
 			return consume(data);
 		}
 	};
+
+	template<typename EventData>
+	struct StandardEventHandler : public EventHandler<EventData>
+	{
+		std::function<bool(const EventData&)> impl_block = [](const EventData&) {};
+		std::function<bool(const EventData&)> impl_consume = [](const EventData&) {};
+
+		bool block(const EventData& data) override { return impl_block(data); }
+		bool consume(const EventData& data) override { return impl_consume(data); }
+	};
 }

@@ -4,40 +4,54 @@
 
 namespace oly::platform
 {
+	void StandardWindowResize::initialize_viewport()
+	{
+		auto& window = context::get_platform().window();
+		window.refresh_size();
+		glm::ivec2 size = window.get_size();
+		viewport.w = size.x;
+		viewport.h = size.y;
+		projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
+	}
+
 	bool StandardWindowResize::consume(const input::WindowResizeEventData& data)
 	{
 		context::get_platform().window().refresh_size();
-		int vx, vy, vw, vh;
 		if (boxed)
 		{
 			float aspect_ratio = float(data.w) / data.h;
 			if (aspect_ratio > target_aspect_ratio)
 			{
-				vh = data.h;
-				vy = 0;
-				vw = (int)(data.h * target_aspect_ratio);
-				vx = (data.w - vw) / 2;
+				viewport.h = data.h;
+				viewport.y = 0;
+				viewport.w = data.h * target_aspect_ratio;
+				viewport.x = (data.w - viewport.w) * 0.5f;
 			}
 			else
 			{
-				vw = data.w;
-				vx = 0;
-				vh = (int)(data.w / target_aspect_ratio);
-				vy = (data.h - vh) / 2;
+				viewport.w = data.w;
+				viewport.x = 0;
+				viewport.h = data.w / target_aspect_ratio;
+				viewport.y = (data.h - viewport.h) * 0.5f;
 			}
 			glClear(GL_COLOR_BUFFER_BIT); // LATER clear depth buffer too?
 		}
 		else
 		{
-			vx = 0;
-			vy = 0;
-			vw = data.w;
-			vh = data.h;
+			viewport.x = 0;
+			viewport.y = 0;
+			viewport.w = data.w;
+			viewport.h = data.h;
 		}
-		glViewport(vx, vy, vw, vh);
+		set_viewport();
 		if (!stretch)
-			set_projection_bounds(0.5f * glm::vec4{ -vw, vw, -vh, vh });
+			set_projection_bounds(0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h });
 		return !re_render_frame();
+	}
+
+	void StandardWindowResize::set_viewport() const
+	{
+		glViewport((int)viewport.x, (int)viewport.y, (int)viewport.w, (int)viewport.h);
 	}
 
 	bool StandardWindowResize::re_render_frame() const

@@ -94,7 +94,7 @@ namespace oly::graphics
 		glNamedFramebufferDrawBuffer(id, color);
 	}
 
-	void Framebuffer::draw_buffers(const ColorAttachment* colors, size_t count) const
+	void Framebuffer::draw_buffers(const ColorAttachment* colors, GLsizei count) const
 	{
 		glNamedFramebufferDrawBuffers(id, count, reinterpret_cast<const GLenum*>(colors));
 	}
@@ -102,7 +102,7 @@ namespace oly::graphics
 	void Framebuffer::draw_buffers() const
 	{
 		if (!color_attachments.empty())
-			glNamedFramebufferDrawBuffers(id, color_attachments.size(), reinterpret_cast<const GLenum*>(color_attachments.data()));
+			glNamedFramebufferDrawBuffers(id, (GLsizei)color_attachments.size(), reinterpret_cast<const GLenum*>(color_attachments.data()));
 	}
 
 	void Framebuffer::read_buffer(ColorAttachment color) const
@@ -123,5 +123,17 @@ namespace oly::graphics
 	void Framebuffer::blit_from_default(const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter)
 	{
 		glBlitNamedFramebuffer(0, draw, src.x1, src.y1, src.x2, src.y2, dst.x1, dst.y1, dst.x2, dst.y2, (GLenum)mask, (GLenum)filter);
+	}
+
+	std::vector<Framebuffer> framebuffer_block(const GLsizei n) // TODO do this instead of other block structs like GLBufferBlock
+	{
+		GLuint* ids = new GLuint[n];
+		glGenFramebuffers(n, ids);
+		std::vector<Framebuffer> fbs;
+		fbs.reserve(n);
+		for (GLsizei i = 0; i < n; ++i)
+			fbs.push_back(std::move(Framebuffer(ids[i])));
+		delete[] ids;
+		return fbs;
 	}
 }

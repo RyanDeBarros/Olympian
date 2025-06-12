@@ -25,7 +25,9 @@ namespace oly::rendering
 
 	void PolygonBatch::render() const
 	{
-		// TODO here and in other render() functions, do early return if no elements to draw
+		if (ebo.empty())
+			return;
+
 		vbo_block.pre_draw_all();
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);

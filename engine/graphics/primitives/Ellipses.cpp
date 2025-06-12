@@ -19,6 +19,9 @@ namespace oly::rendering
 
 	void EllipseBatch::render() const
 	{
+		if (ebo.empty())
+			return;
+
 		ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);

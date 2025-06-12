@@ -789,10 +789,11 @@ namespace oly::col2d
 		if (internal::CircleGlobalAccess::has_no_global(c1))
 		{
 			// closest point in OBB to center of circle
-			glm::mat2 rot = c2.get_rotation_matrix();
-			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
-			float mx = glm::length(c2.center);
-			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, mx - 0.5f * c2.width, mx + 0.5f * c2.width), glm::clamp(local_c1_center.y, -0.5f * c2.height, 0.5f * c2.height) };
+			glm::mat2 inv_rot = glm::inverse(c2.get_rotation_matrix());
+			glm::vec2 local_c1_center = inv_rot * c1.center;
+			glm::vec2 local_c2_center = inv_rot * c2.center;
+			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, local_c2_center.x - 0.5f * c2.width, local_c2_center.x + 0.5f * c2.width),
+				glm::clamp(local_c1_center.y, local_c2_center.y - 0.5f * c2.height, local_c2_center.y + 0.5f * c2.height) };
 			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			return dist_sqrd <= c1.radius * c1.radius;
 		}
@@ -808,9 +809,10 @@ namespace oly::col2d
 
 			// closest point on OBB to center of circle
 			glm::mat2 rot = c2.get_rotation_matrix();
-			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
-			float mx = glm::length(c2.center);
-			AABB b2{ .x1 = mx - 0.5f * c2.width, .x2 = mx + 0.5f * c2.width, .y1 = -0.5f * c2.height, .y2 = 0.5f * c2.height };
+			glm::mat2 inv_rot = glm::inverse(rot);
+			glm::vec2 local_c1_center = inv_rot * c1.center;
+			glm::vec2 local_c2_center = inv_rot * c2.center;
+			AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
 			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
 			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;
@@ -864,9 +866,10 @@ namespace oly::col2d
 
 			// closest point on OBB to center of circle
 			glm::mat2 rot = c2.get_rotation_matrix();
-			glm::vec2 local_c1_center = glm::inverse(rot) * c1.center;
-			float mx = glm::length(c2.center);
-			AABB b2{ .x1 = mx - 0.5f * c2.width, .x2 = mx + 0.5f * c2.width, .y1 = -0.5f * c2.height, .y2 = 0.5f * c2.height };
+			glm::mat2 inv_rot = glm::inverse(rot);
+			glm::vec2 local_c1_center = inv_rot * c1.center;
+			glm::vec2 local_c2_center = inv_rot * c2.center;
+			AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
 			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
 			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;

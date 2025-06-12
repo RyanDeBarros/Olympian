@@ -32,6 +32,7 @@ namespace oly::context
 	extern void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame);
 	extern void set_window_resized_parameters(bool boxed = true, bool stretch = true);
 	extern platform::StandardWindowResize& get_standard_window_resize();
+	extern void set_standard_viewport();
 
 	extern rendering::SpriteBatch& sprite_batch();
 	extern rendering::PolygonBatch& polygon_batch();
@@ -85,6 +86,9 @@ namespace oly::context
 	extern void render_text();
 
 	extern glm::vec2 get_cursor_screen_pos();
+	extern glm::vec2 get_initial_window_size();
+	extern glm::vec2 get_view_stretch();
+	extern glm::vec2 get_cursor_view_pos();
 
 	extern bool blend_enabled();
 	extern glm::vec4 clear_color();

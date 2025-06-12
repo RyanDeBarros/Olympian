@@ -30,7 +30,7 @@ namespace oly::debug
 		using ObjectView = std::variant<Empty, Object, std::vector<Object>>;
 
 		ObjectView obj;
-		std::vector<CollisionLayer*> layers;
+		std::unordered_set<CollisionLayer*> layers;
 
 	public:
 		CollisionView() : obj(Empty{}) {}
@@ -59,9 +59,19 @@ namespace oly::debug
 		rendering::Sprite sprite;
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRes texture;
-		graphics::ImageDimensions texture_dimensions;
-		std::vector<CollisionView*> collision_views;
+		glm::ivec2 dimensions;
 		mutable bool dirty_views = false;
+		std::unordered_set<CollisionView*> collision_views;
+
+		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
+		{
+			CollisionLayer* layer = nullptr;
+
+			WindowResizeHandler();
+
+			bool consume(const input::WindowResizeEventData& data) override;
+		} window_resize_handler;
+		friend struct WindowResizeHandler;
 
 	public:
 		CollisionLayer();
@@ -79,6 +89,11 @@ namespace oly::debug
 
 		void assign(CollisionView& view);
 		void unassign(CollisionView& view);
+
+		void regen_to_current_resolution();
+
+	private:
+		void setup_texture();
 	};
 	
 	extern void render_layers();

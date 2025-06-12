@@ -9,9 +9,8 @@ namespace oly::debug
 	{
 		for (CollisionLayer* layer : layers)
 		{
-			auto it = std::find(layer->collision_views.begin(), layer->collision_views.end(), &other);
-			if (it != layer->collision_views.end())
-				*it = this;
+			layer->collision_views.erase(&other);
+			layer->collision_views.insert(this);
 		}
 	}
 
@@ -19,7 +18,7 @@ namespace oly::debug
 	{
 		for (CollisionLayer* layer : layers)
 		{
-			layer->collision_views.erase(std::find(layer->collision_views.begin(), layer->collision_views.end(), this));
+			layer->collision_views.erase(this);
 			layer->dirty_views = true;
 		}
 	}
@@ -30,7 +29,7 @@ namespace oly::debug
 		{
 			for (CollisionLayer* layer : layers)
 			{
-				layer->collision_views.erase(std::find(layer->collision_views.begin(), layer->collision_views.end(), this));
+				layer->collision_views.erase(this);
 				layer->dirty_views = true;
 			}
 			
@@ -39,9 +38,8 @@ namespace oly::debug
 			
 			for (CollisionLayer* layer : layers)
 			{
-				auto it = std::find(layer->collision_views.begin(), layer->collision_views.end(), &other);
-				if (it != layer->collision_views.end())
-					*it = this;
+				layer->collision_views.erase(&other);
+				layer->collision_views.insert(this);
 			}
 		}
 		return *this;
@@ -100,61 +98,59 @@ namespace oly::debug
 	{
 		if (std::find(layers.begin(), layers.end(), &layer) == layers.end())
 		{
-			layers.push_back(&layer);
-			layer.collision_views.push_back(this);
+			layers.insert(&layer);
+			layer.collision_views.insert(this);
 			layer.dirty_views = true;
 		}
 	}
 
 	void CollisionView::unassign(CollisionLayer& layer)
 	{
-		auto it = std::find(layers.begin(), layers.end(), &layer);
-		if (it != layers.end())
+		if (layers.erase(&layer))
 		{
-			layers.erase(it);
-			layer.collision_views.erase(std::find(layer.collision_views.begin(), layer.collision_views.end(), this));
+			layer.collision_views.erase(this);
 			layer.dirty_views = true;
 		}
 	}
 
+	CollisionLayer::WindowResizeHandler::WindowResizeHandler()
+	{
+		attach(&context::get_platform().window().handlers.window_resize);
+	}
+
+	bool CollisionLayer::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
+	{
+		auto& wr = context::get_standard_window_resize();
+		if (!wr.stretch)
+		{
+			layer->sprite.set_local().scale = glm::vec2{ wr.get_viewport().w, wr.get_viewport().h } / glm::vec2(layer->dimensions);
+			layer->dirty_views = true;
+		}
+		return false;
+	}
+
 	CollisionLayer::CollisionLayer()
 	{
+		window_resize_handler.layer = this;
 		texture = std::make_shared<graphics::BindlessTexture>(GL_TEXTURE_2D);
-
-		// TODO change
-		texture_dimensions = { .w = context::get_platform().window().get_width(), .h = context::get_platform().window().get_height(), .cpp = 4 };
-
-		glBindTexture(GL_TEXTURE_2D, *texture);
-		graphics::pixel_alignment_pre_send(texture_dimensions.cpp);
-		glTexImage2D(GL_TEXTURE_2D, 0, graphics::texture_internal_format(texture_dimensions.cpp), texture_dimensions.w, texture_dimensions.h, 0, graphics::texture_format(texture_dimensions.cpp), GL_UNSIGNED_BYTE, nullptr);
-		graphics::pixel_alignment_post_send(texture_dimensions.cpp);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		texture->set_and_use_handle();
-
-		framebuffer.bind();
-		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-		graphics::Framebuffer::unbind();
-
-		sprite.set_texture(texture, texture_dimensions.dimensions());
+		setup_texture();
 	}
 
 	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
 		: sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
-		texture_dimensions(std::move(other.texture_dimensions)), collision_views(std::move(other.collision_views)), dirty_views(other.dirty_views)
+		dimensions(other.dimensions), collision_views(std::move(other.collision_views)), dirty_views(other.dirty_views)
 	{
+		window_resize_handler.layer = this;
 		for (CollisionView* view : collision_views)
 		{
-			auto it = std::find(view->layers.begin(), view->layers.end(), &other);
-			if (it != view->layers.end())
-				*it = this;
+			view->layers.erase(&other);
+			view->layers.insert(this);
 		}
 	}
 
 	CollisionLayer::~CollisionLayer()
 	{
-		// TODO use std::unordered_set instead of vector? For both collision_views and layers
+		window_resize_handler.detach();
 		for (CollisionView* view : collision_views)
 			view->layers.erase(std::find(view->layers.begin(), view->layers.end(), this));
 	}
@@ -169,15 +165,14 @@ namespace oly::debug
 			sprite = std::move(other.sprite);
 			framebuffer = std::move(other.framebuffer);
 			texture = std::move(other.texture);
-			texture_dimensions = std::move(other.texture_dimensions);
+			dimensions = other.dimensions;
 			collision_views = std::move(other.collision_views);
 			dirty_views = other.dirty_views;
 			
 			for (CollisionView* view : collision_views)
 			{
-				auto it = std::find(view->layers.begin(), view->layers.end(), &other);
-				if (it != view->layers.end())
-					*it = this;
+				view->layers.erase(&other);
+				view->layers.insert(this);
 			}
 		}
 		return *this;
@@ -188,7 +183,7 @@ namespace oly::debug
 		bool was_blending = context::blend_enabled();
 		glm::vec4 clear_color = context::clear_color();
 		framebuffer.bind();
-		glViewport(0, 0, texture_dimensions.w, texture_dimensions.h);
+		glViewport(0, 0, dimensions.x, dimensions.y);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (was_blending)
@@ -200,10 +195,8 @@ namespace oly::debug
 		context::render_ellipses();
 
 		framebuffer.unbind();
-		// TODO put this viewport in context function
-		glViewport(0, 0, context::get_platform().window().get_width(), context::get_platform().window().get_height());
+		context::set_standard_viewport();
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-		glClear(GL_COLOR_BUFFER_BIT);
 		if (was_blending)
 			glEnable(GL_BLEND);
 	}
@@ -222,21 +215,51 @@ namespace oly::debug
 	{
 		if (std::find(collision_views.begin(), collision_views.end(), &view) == collision_views.end())
 		{
-			collision_views.push_back(&view);
-			view.layers.push_back(this);
+			collision_views.insert(&view);
+			view.layers.insert(this);
 			dirty_views = true;
 		}
 	}
 
 	void CollisionLayer::unassign(CollisionView& view)
 	{
-		auto it = std::find(collision_views.begin(), collision_views.end(), &view);
-		if (it != collision_views.end())
+		if (collision_views.erase(&view))
 		{
-			collision_views.erase(it);
-			view.layers.erase(std::find(view.layers.begin(), view.layers.end(), this));
+			view.layers.erase(this);
 			dirty_views = true;
 		}
+	}
+
+	void CollisionLayer::regen_to_current_resolution()
+	{
+		*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
+		setup_texture();
+		dirty_views = true;
+	}
+
+	void CollisionLayer::setup_texture()
+	{
+		auto& window = context::get_platform().window();
+		window.refresh_size();
+		dimensions = window.get_size();
+
+		const int cpp = 4;
+		glBindTexture(GL_TEXTURE_2D, *texture);
+		graphics::pixel_alignment_pre_send(cpp);
+		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
+		graphics::pixel_alignment_post_send(cpp);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		texture->set_and_use_handle();
+
+		framebuffer.bind();
+		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
+		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+		framebuffer.unbind();
+
+		auto& wr = context::get_standard_window_resize();
+		sprite.set_local().scale = glm::vec2{ wr.get_viewport().w, wr.get_viewport().h } / glm::vec2(dimensions);
+		sprite.set_texture(texture, dimensions);
 	}
 
 	void render_layers()

@@ -70,6 +70,28 @@ namespace oly::graphics
 		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
 	};
 
+	template<typename Pixel = unsigned char>
+	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, const Pixel* pixels, GLint level = 0)
+	{
+		GLenum data_type;
+		if constexpr (std::is_same_v<Pixel, unsigned char>)
+			data_type = GL_UNSIGNED_BYTE;
+		else
+			static_assert(false, "Unsupported pixel type in tex_image_2d().");
+		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, pixels);
+	}
+
+	template<typename Pixel = unsigned char>
+	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, GLint level = 0)
+	{
+		GLenum data_type;
+		if constexpr (std::is_same_v<Pixel, unsigned char>)
+			data_type = GL_UNSIGNED_BYTE;
+		else
+			static_assert(false, "Unsupported pixel type in tex_image_2d().");
+		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, nullptr);
+	}
+
 	class Image
 	{
 		unsigned char* _buf = nullptr;

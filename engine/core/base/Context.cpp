@@ -16,6 +16,7 @@ namespace oly::context
 		std::unique_ptr<platform::Platform> platform;
 		std::shared_ptr<Functor<void()>> render_frame;
 		size_t this_frame = 0;
+		glm::ivec2 initial_window_size;
 
 		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
@@ -149,7 +150,9 @@ namespace oly::context
 		const TOMLNode& toml_context = (const TOMLNode&)toml["context"];
 		init_logger(toml_context);
 
-		internal::platform = std::make_unique<platform::Platform>(toml_context);
+		platform::PlatformSetup platform_setup(toml_context);
+		internal::initial_window_size = platform_setup.window_size();
+		internal::platform = std::make_unique<platform::Platform>(platform_setup);
 		TIME.init();
 		graphics::internal::load_resources();
 
@@ -157,12 +160,11 @@ namespace oly::context
 		init_polygon_batch(toml_context);
 		init_ellipse_batch(toml_context);
 		init_text_batch(toml_context);
-			
+		
 		autoload_signals(toml_context);
 
+		internal::standard_window_resize.initialize_viewport();
 		internal::standard_window_resize.attach(&internal::platform->window().handlers.window_resize);
-		glm::ivec2 size = context::get_platform().window().get_size();
-		internal::standard_window_resize.projection_bounds = 0.5f * glm::vec4{ -size.x, size.x, -size.y, size.y };
 	}
 
 	static void terminate()
@@ -247,6 +249,11 @@ namespace oly::context
 	platform::StandardWindowResize& get_standard_window_resize()
 	{
 		return internal::standard_window_resize;
+	}
+
+	void set_standard_viewport()
+	{
+		internal::standard_window_resize.set_viewport();
 	}
 
 	rendering::SpriteBatch& sprite_batch()
@@ -414,6 +421,27 @@ namespace oly::context
 		double x, y;
 		glfwGetCursorPos(internal::platform->window(), &x, &y);
 		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y};
+	}
+
+	glm::vec2 get_initial_window_size()
+	{
+		return internal::initial_window_size;
+	}
+
+	glm::vec2 get_view_stretch()
+	{
+		if (internal::standard_window_resize.stretch)
+		{
+			auto v = internal::standard_window_resize.get_viewport();
+			return glm::vec2(v.w, v.h) / glm::vec2(internal::initial_window_size);
+		}
+		else
+			return { 1.0f, 1.0f };
+	}
+
+	glm::vec2 get_cursor_view_pos()
+	{
+		return get_cursor_screen_pos() / get_view_stretch();
 	}
 
 	bool blend_enabled()

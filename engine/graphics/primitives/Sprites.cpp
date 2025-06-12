@@ -48,6 +48,9 @@ namespace oly::rendering
 
 	void SpriteBatch::render() const
 	{
+		if (ebo.empty())
+			return;
+
 		quad_ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);

@@ -100,6 +100,11 @@ namespace oly::graphics
 			draw_count = 0;
 			ebo.post_draw();
 		}
+
+		bool empty() const
+		{
+			return draw_count == 0;
+		}
 	};
 
 	template<std::integral Type>

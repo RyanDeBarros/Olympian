@@ -198,7 +198,7 @@ namespace oly::graphics
 		glBindTexture(GL_TEXTURE_2D, texture);
 		const auto& dim = image.dim();
 		pixel_alignment_pre_send(dim.cpp);
-		glTexImage2D(GL_TEXTURE_2D, 0, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), GL_UNSIGNED_BYTE, image.buf());
+		tex_image_2d(GL_TEXTURE_2D, dim, image.buf());
 		pixel_alignment_post_send(dim.cpp);
 		if (generate_mipmaps)
 			glGenerateMipmap(GL_TEXTURE_2D);
@@ -508,7 +508,7 @@ namespace oly::graphics
 		glBindTexture(GL_TEXTURE_2D, texture);
 		const auto& dim = image.image->dim();
 		pixel_alignment_pre_send(dim.cpp);
-		glTexImage2D(GL_TEXTURE_2D, 0, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), GL_UNSIGNED_BYTE, image.image->buf());
+		tex_image_2d(GL_TEXTURE_2D, dim, image.image->buf());
 		pixel_alignment_post_send(dim.cpp);
 		if (generate_mipmaps)
 			glGenerateMipmap(GL_TEXTURE_2D);
@@ -532,8 +532,7 @@ namespace oly::graphics
 			}
 
 			auto img = context.rasterize(abstract, scale);
-			const auto& dim = img.dim();
-			glTexImage2D(GL_TEXTURE_2D, ++level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), GL_UNSIGNED_BYTE, img.buf());
+			tex_image_2d(GL_TEXTURE_2D, img.dim(), img.buf(), ++level);
 			if (img.dim().w == 1 && img.dim().h == 1)
 				break;
 		}

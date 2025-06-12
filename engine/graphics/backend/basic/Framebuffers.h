@@ -9,6 +9,10 @@ namespace oly::graphics
 	{
 		GLuint id = 0;
 
+		friend std::vector<Framebuffer> framebuffer_block(const GLsizei n);
+
+		Framebuffer(GLuint id) : id(id) {}
+
 	public:
 		Framebuffer();
 		Framebuffer(const Framebuffer&) = delete;
@@ -76,7 +80,7 @@ namespace oly::graphics
 		Status status(Target target = Target::REG) const;
 
 		void draw_buffer(ColorAttachment a) const;
-		void draw_buffers(const ColorAttachment* as, size_t count) const;
+		void draw_buffers(const ColorAttachment* as, GLsizei count) const;
 		void draw_buffers() const;
 
 		void read_buffer(ColorAttachment color) const;
@@ -100,7 +104,8 @@ namespace oly::graphics
 		std::vector<ColorAttachment> color_attachments;
 		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 	};
+	
+	extern std::vector<Framebuffer> framebuffer_block(const GLsizei n);
 
-	// TODO FramebufferBlock
-	// TODO Renderbuffer
+	// LATER Renderbuffer
 }
