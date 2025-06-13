@@ -39,7 +39,7 @@ namespace oly::reg
 
 	rendering::Polygon load_polygon(const params::Polygon& params)
 	{
-		rendering::Polygon polygon = context::polygon();
+		rendering::Polygon polygon;
 
 		polygon.set_local() = params.local;
 		polygon.polygon.points = params.points;
@@ -51,7 +51,7 @@ namespace oly::reg
 
 	rendering::Polygon load_polygon(params::Polygon&& params)
 	{
-		rendering::Polygon polygon = context::polygon();
+		rendering::Polygon polygon;
 
 		polygon.set_local() = params.local;
 		polygon.polygon.points = std::move(params.points);
@@ -178,7 +178,7 @@ namespace oly::reg
 
 	rendering::PolyComposite load_poly_composite(const params::PolyComposite& params)
 	{
-		rendering::PolyComposite composite = context::poly_composite();
+		rendering::PolyComposite composite;
 
 		composite.set_local() = params.local;
 
@@ -214,7 +214,7 @@ namespace oly::reg
 
 	rendering::PolyComposite load_poly_composite(params::PolyComposite&& params)
 	{
-		rendering::PolyComposite composite = context::poly_composite();
+		rendering::PolyComposite composite;
 
 		composite.set_local() = params.local;
 
@@ -309,7 +309,7 @@ namespace oly::reg
 
 	rendering::NGon load_ngon(const params::NGon& params)
 	{
-		rendering::NGon ngon = context::ngon();
+		rendering::NGon ngon;
 
 		ngon.set_local() = params.local;
 		ngon.base = params.ngon_base;
@@ -321,7 +321,7 @@ namespace oly::reg
 
 	rendering::NGon load_ngon(params::NGon&& params)
 	{
-		rendering::NGon ngon = context::ngon();
+		rendering::NGon ngon;
 
 		ngon.set_local() = params.local;
 		ngon.base = std::move(params.ngon_base);

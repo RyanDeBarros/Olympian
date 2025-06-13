@@ -75,24 +75,21 @@ namespace oly::rendering
 		{
 			friend class EllipseBatch;
 			friend struct Ellipse;
-			EllipseBatch* _batch = nullptr;
 			EllipseID pos;
 
 		public:
 			EllipseReference();
-			EllipseReference(EllipseBatch* batch);
 			EllipseReference(const EllipseReference&);
 			EllipseReference(EllipseReference&&) noexcept = default;
 			EllipseReference& operator=(const EllipseReference&);
 			EllipseReference& operator=(EllipseReference&&) noexcept = default;
 
-			EllipseBatch& batch() const { return *_batch; }
-			const EllipseDimension& get_dimension() const { return _batch->ssbo_block.get<DIMENSION>(pos.get()); }
-			EllipseDimension& set_dimension() { return _batch->ssbo_block.set<DIMENSION>(pos.get()); }
-			const ColorGradient& get_color() const { return _batch->ssbo_block.get<COLOR>(pos.get()); }
-			ColorGradient& set_color() { return _batch->ssbo_block.set<COLOR>(pos.get()); }
-			const glm::mat3& get_transform() const { return _batch->ssbo_block.get<TRANSFORM>(pos.get()); }
-			glm::mat3& set_transform() { return _batch->ssbo_block.set<TRANSFORM>(pos.get()); }
+			const EllipseDimension& get_dimension() const;
+			EllipseDimension& set_dimension();
+			const ColorGradient& get_color() const;
+			ColorGradient& set_color();
+			const glm::mat3& get_transform() const;
+			glm::mat3& set_transform();
 
 			void draw() const;
 		};
@@ -105,14 +102,11 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		Ellipse() = default;
-		Ellipse(EllipseBatch& ellipse_batch) : ellipse(&ellipse_batch) {}
 		Ellipse(const Ellipse&) = default;
 		Ellipse(Ellipse&&) noexcept = default;
 		Ellipse& operator=(const Ellipse&) = default;
 		Ellipse& operator=(Ellipse&&) noexcept = default;
 
-		const EllipseBatch& batch() const { return ellipse.batch(); }
-		EllipseBatch& batch() { return ellipse.batch(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 

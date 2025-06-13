@@ -352,41 +352,16 @@ namespace oly::context
 		internal::sprite_batch->update_texture_handle(texture);
 	}
 
-	rendering::Sprite sprite()
-	{
-		return rendering::Sprite(*internal::sprite_batch);
-	}
-
 	void render_sprites()
 	{
 		internal::sprite_batch->render();
 		internal::last_internal_batch_rendered = InternalBatch::SPRITE;
 	}
 
-	rendering::Polygon polygon()
-	{
-		return rendering::Polygon(*internal::polygon_batch);
-	}
-
-	rendering::PolyComposite poly_composite()
-	{
-		return rendering::PolyComposite(*internal::polygon_batch);
-	}
-
-	rendering::NGon ngon()
-	{
-		return rendering::NGon(*internal::polygon_batch);
-	}
-
 	void render_polygons()
 	{
 		internal::polygon_batch->render();
 		internal::last_internal_batch_rendered = InternalBatch::POLYGON;
-	}
-
-	rendering::Ellipse ellipse()
-	{
-		return rendering::Ellipse(*internal::ellipse_batch);
 	}
 
 	void render_ellipses()

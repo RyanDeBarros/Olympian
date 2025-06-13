@@ -112,7 +112,7 @@ namespace oly::reg
 
 	rendering::Sprite load_sprite(const params::Sprite& params)
 	{
-		rendering::Sprite sprite = context::sprite();
+		rendering::Sprite sprite;
 		sprite.set_local() = params.local;
 
 		if (params.texture)

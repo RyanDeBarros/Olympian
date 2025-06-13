@@ -37,7 +37,7 @@ namespace oly::reg
 
 	rendering::Ellipse load_ellipse(const params::Ellipse& params)
 	{
-		rendering::Ellipse ellipse = context::ellipse();
+		rendering::Ellipse ellipse;
 
 		ellipse.set_local() = params.local;
 

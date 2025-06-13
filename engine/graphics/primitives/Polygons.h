@@ -89,22 +89,18 @@ namespace oly::rendering
 	class StaticPolygon // TODO asset
 	{
 		friend PolygonBatch;
-		PolygonBatch* _batch = nullptr;
 		PolygonBatch::PolygonID id;
-		mutable math::Triangulation cache;
+		mutable math::Triangulation triangulation;
 
 	public:
 		cmath::Polygon2D polygon;
 
 		StaticPolygon();
-		StaticPolygon(PolygonBatch& batch);
-		StaticPolygon(const StaticPolygon&) = delete;
+		StaticPolygon(const StaticPolygon&);
 		StaticPolygon(StaticPolygon&&) noexcept;
 		~StaticPolygon();
+		StaticPolygon& operator=(const StaticPolygon&);
 		StaticPolygon& operator=(StaticPolygon&&) noexcept;
-
-		const PolygonBatch& batch() const { return *_batch; }
-		PolygonBatch& batch() { return *_batch; }
 
 		void init();
 		void send_polygon();
@@ -114,21 +110,17 @@ namespace oly::rendering
 	class Polygonal
 	{
 		friend PolygonBatch;
-		PolygonBatch* _batch = nullptr;
 		PolygonBatch::PolygonID id;
 
 	public:
 		Transformer2D transformer;
 
 		Polygonal();
-		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
 		Polygonal(Polygonal&&) noexcept;
 		virtual ~Polygonal();
 		Polygonal& operator=(Polygonal&&) noexcept;
 
-		const PolygonBatch& batch() const { return *_batch; }
-		PolygonBatch& batch() { return *_batch; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 

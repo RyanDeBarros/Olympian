@@ -8,6 +8,7 @@ namespace oly::graphics
 	class Framebuffer
 	{
 		GLuint id = 0;
+		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 
 		friend std::vector<Framebuffer> framebuffer_block(const GLsizei n);
 
@@ -102,7 +103,6 @@ namespace oly::graphics
 
 	private:
 		std::vector<ColorAttachment> color_attachments;
-		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 	};
 	
 	extern std::vector<Framebuffer> framebuffer_block(const GLsizei n);

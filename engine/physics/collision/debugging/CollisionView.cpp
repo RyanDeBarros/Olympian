@@ -4,6 +4,17 @@
 
 namespace oly::debug
 {
+	CollisionView::CollisionView(const CollisionView& other)
+		: obj(other.obj)
+	{
+		for (CollisionLayer* layer : other.layers)
+		{
+			layers.insert(layer);
+			layer->collision_views.insert(this);
+			layer->dirty_views = true;
+		}
+	}
+
 	CollisionView::CollisionView(CollisionView&& other) noexcept
 		: obj(std::move(other.obj)), layers(std::move(other.layers))
 	{
@@ -21,6 +32,35 @@ namespace oly::debug
 			layer->collision_views.erase(this);
 			layer->dirty_views = true;
 		}
+	}
+
+	CollisionView& CollisionView::operator=(const CollisionView& other)
+	{
+		if (this != &other)
+		{
+			for (CollisionLayer* layer : layers)
+			{
+				if (!other.layers.count(layer))
+				{
+					layer->collision_views.erase(this);
+					layer->dirty_views = true;
+				}
+			}
+
+			obj = other.obj;
+			
+			for (CollisionLayer* layer : other.layers)
+			{
+				if (!layers.count(layer))
+				{
+					layer->collision_views.insert(this);
+					layer->dirty_views = true;
+				}
+			}
+
+			layers = other.layers;
+		}
+		return *this;
 	}
 
 	CollisionView& CollisionView::operator=(CollisionView&& other) noexcept
@@ -123,7 +163,7 @@ namespace oly::debug
 		auto& wr = context::get_wr_viewport();
 		if (!wr.stretch)
 		{
-			layer->sprite.set_local().scale = wr.get_size() / glm::vec2(layer->dimensions);
+			layer->set_sprite_scale(wr.get_size() / glm::vec2(layer->dimensions));
 			layer->dirty_views = true;
 		}
 		return false;
@@ -134,6 +174,32 @@ namespace oly::debug
 		window_resize_handler.layer = this;
 		texture = std::make_shared<graphics::BindlessTexture>(GL_TEXTURE_2D);
 		setup_texture();
+	}
+
+	CollisionLayer::CollisionLayer(const CollisionLayer& other)
+		: sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), collision_views(other.collision_views)
+	{
+		window_resize_handler.layer = this;
+		for (CollisionView* view : collision_views)
+			view->layers.insert(this);
+
+		const int cpp = 4;
+		texture = std::make_shared<graphics::BindlessTexture>(GL_TEXTURE_2D);
+		graphics::pixel_alignment_pre_send(cpp);
+		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
+		glCopyImageSubData(*other.texture, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
+		graphics::pixel_alignment_post_send(cpp);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		texture->set_and_use_handle();
+
+		framebuffer.bind();
+		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
+		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+		framebuffer.unbind();
+
+		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
+		sprite.set_texture(texture, dimensions);
 	}
 
 	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
@@ -153,6 +219,51 @@ namespace oly::debug
 		window_resize_handler.detach();
 		for (CollisionView* view : collision_views)
 			view->layers.erase(std::find(view->layers.begin(), view->layers.end(), this));
+	}
+
+	CollisionLayer& CollisionLayer::operator=(const CollisionLayer& other)
+	{
+		if (this != &other)
+		{
+			for (CollisionView* view : collision_views)
+			{
+				if (!other.collision_views.count(view))
+					view->layers.erase(this);
+			}
+
+			sprite = other.sprite;
+			dimensions = other.dimensions;
+			dirty_views = other.dirty_views;
+
+			*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
+
+			const int cpp = 4;
+			glBindTexture(GL_TEXTURE_2D, *texture);
+			graphics::pixel_alignment_pre_send(cpp);
+			graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
+			glCopyImageSubData(*other.texture, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
+			graphics::pixel_alignment_post_send(cpp);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			texture->set_and_use_handle();
+
+			framebuffer.bind();
+			framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
+			OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+			framebuffer.unbind();
+
+			set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
+			sprite.set_texture(texture, dimensions);
+			
+			for (CollisionView* view : other.collision_views)
+			{
+				if (!collision_views.count(view))
+					view->layers.insert(this);
+			}
+
+			collision_views = other.collision_views;
+		}
+		return *this;
 	}
 
 	CollisionLayer& CollisionLayer::operator=(CollisionLayer&& other) noexcept
@@ -199,6 +310,14 @@ namespace oly::debug
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		if (was_blending)
 			glEnable(GL_BLEND);
+	}
+
+	void CollisionLayer::set_sprite_scale(glm::vec2 scale)
+	{
+		glm::mat3 m = 1.0f;
+		m[0][0] = scale.x;
+		m[1][1] = scale.y;
+		sprite.set_transform(m);
 	}
 
 	void CollisionLayer::draw() const
@@ -255,7 +374,7 @@ namespace oly::debug
 		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
 		framebuffer.unbind();
 
-		sprite.set_local().scale = context::get_wr_viewport().get_size() / glm::vec2(dimensions);
+		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
 		sprite.set_texture(texture, dimensions);
 	}
 

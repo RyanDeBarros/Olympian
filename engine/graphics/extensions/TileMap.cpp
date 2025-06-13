@@ -15,7 +15,7 @@ namespace oly::rendering
 	{
 		if (!sprite_map.count(tile))
 		{
-			auto& sprite = sprite_map.emplace(tile, context::sprite()).first->second;
+			auto& sprite = sprite_map.emplace(tile, Sprite()).first->second;
 			sprite.transformer.attach_parent(&transformer);
 			update_configuration(tile);
 			update_neighbour_configurations(tile);

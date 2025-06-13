@@ -37,10 +37,10 @@ namespace oly::debug
 		CollisionView(rendering::EllipseBatch::EllipseReference&& obj) : obj(std::move(obj)) {}
 		CollisionView(rendering::StaticPolygon&& obj) : obj(std::move(obj)) {}
 		CollisionView(rendering::StaticArrowExtension&& obj) : obj(std::move(obj)) {}
-		// TODO copy
-		CollisionView(const CollisionView&) = delete;
+		CollisionView(const CollisionView&);
 		CollisionView(CollisionView&&) noexcept;
 		~CollisionView();
+		CollisionView& operator=(const CollisionView&);
 		CollisionView& operator=(CollisionView&&) noexcept;
 
 		void draw() const;
@@ -56,7 +56,7 @@ namespace oly::debug
 	{
 		friend class CollisionView;
 
-		rendering::Sprite sprite;
+		rendering::StaticSprite sprite;
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRes texture;
 		glm::ivec2 dimensions;
@@ -75,15 +75,16 @@ namespace oly::debug
 
 	public:
 		CollisionLayer();
-		// TODO copy
-		CollisionLayer(const CollisionLayer&) = delete;
+		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
+		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
 
 	private:
 		void write_texture() const;
-	
+		void set_sprite_scale(glm::vec2 scale);
+
 	public:
 		void draw() const;
 

@@ -24,7 +24,5 @@
 namespace oly
 {
 	using context::get_platform;
-	using context::sprite;
-
 	using rendering::Sprite;
 }

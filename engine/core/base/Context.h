@@ -68,15 +68,8 @@ namespace oly::context
 
 	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture);
 
-	extern rendering::Sprite sprite();
 	extern void render_sprites();
-
-	extern rendering::Polygon polygon();
-	extern rendering::PolyComposite poly_composite();
-	extern rendering::NGon ngon();
 	extern void render_polygons();
-
-	extern rendering::Ellipse ellipse();
 	extern void render_ellipses();
 
 	extern rendering::TileSetRes load_tileset(const std::string& file);

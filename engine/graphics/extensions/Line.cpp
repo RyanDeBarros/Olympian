@@ -6,7 +6,6 @@
 namespace oly::rendering
 {
 	LineExtension::LineExtension()
-		: poly(context::polygon())
 	{
 		poly.polygon.colors.reserve(4);
 		poly.polygon.points.reserve(4);

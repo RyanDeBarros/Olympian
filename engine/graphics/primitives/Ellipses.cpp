@@ -39,27 +39,16 @@ namespace oly::rendering
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference()
-		: _batch(&context::ellipse_batch())
 	{
-		pos = _batch->generate_id();
-		set_dimension() = {};
-		set_color() = {};
-		set_transform() = 1.0f;
-	}
-
-	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
-		: _batch(batch)
-	{
-		pos = _batch->generate_id();
+		pos = context::ellipse_batch().generate_id();
 		set_dimension() = {};
 		set_color() = {};
 		set_transform() = 1.0f;
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
-		: _batch(other._batch)
 	{
-		pos = _batch->generate_id();
+		pos = context::ellipse_batch().generate_id();
 		set_dimension() = other.get_dimension();
 		set_color() = other.get_color();
 		set_transform() = other.get_transform();
@@ -76,9 +65,39 @@ namespace oly::rendering
 		return *this;
 	}
 
+	const EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::get_dimension() const
+	{
+		return context::ellipse_batch().ssbo_block.get<DIMENSION>(pos.get());
+	}
+
+	EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::set_dimension()
+	{
+		return context::ellipse_batch().ssbo_block.set<DIMENSION>(pos.get());
+	}
+
+	const EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::get_color() const
+	{
+		return context::ellipse_batch().ssbo_block.get<COLOR>(pos.get());
+	}
+
+	EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::set_color()
+	{
+		return context::ellipse_batch().ssbo_block.set<COLOR>(pos.get());
+	}
+
+	const glm::mat3& EllipseBatch::EllipseReference::get_transform() const
+	{
+		return context::ellipse_batch().ssbo_block.get<TRANSFORM>(pos.get());
+	}
+
+	glm::mat3& EllipseBatch::EllipseReference::set_transform()
+	{
+		return context::ellipse_batch().ssbo_block.set<TRANSFORM>(pos.get());
+	}
+
 	void EllipseBatch::EllipseReference::draw() const
 	{
-		graphics::quad_indices(batch().ebo.draw_primitive().data(), pos.get());
+		graphics::quad_indices(context::ellipse_batch().ebo.draw_primitive().data(), pos.get());
 	}
 
 	void Ellipse::draw() const

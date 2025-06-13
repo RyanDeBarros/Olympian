@@ -7,7 +7,6 @@
 namespace oly::rendering
 {
 	ArrowExtension::ArrowExtension()
-		: body(context::polygon()), head(context::polygon())
 	{
 		body.transformer.attach_parent(&_transformer);
 		body.polygon.points.resize(4);

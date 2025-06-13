@@ -46,11 +46,13 @@ namespace oly::rendering
 		}
 	};
 
-	struct Sprite;
+	class Sprite;
+	class StaticSprite;
 
 	class SpriteBatch
 	{
-		friend struct Sprite;
+		friend class Sprite;
+		friend class StaticSprite;
 
 		graphics::VertexArray vao;
 		graphics::PersistentEBO<> ebo;
@@ -131,7 +133,7 @@ namespace oly::rendering
 		StrictIDGenerator<GLuint> vbid_generator;
 		typedef StrictIDGenerator<GLuint>::ID VBID;
 		VBID gen_sprite_id();
-		void erase_sprite_id(GLuint id);
+		void erase_sprite_id(const VBID& id);
 
 		struct QuadInfoStore
 		{
@@ -168,18 +170,46 @@ namespace oly::rendering
 		void update_texture_handle(const graphics::BindlessTextureRes& texture);
 	};
 
-	struct Sprite
+	class StaticSprite // TODO asset
 	{
-	private:
-		friend class SpriteBatch;
-		SpriteBatch* batch;
+		SpriteBatch::VBID vbid;
+
+	public:
+		StaticSprite();
+		StaticSprite(const StaticSprite&);
+		StaticSprite(StaticSprite&&) noexcept;
+		StaticSprite& operator=(const StaticSprite&);
+		StaticSprite& operator=(StaticSprite&&) noexcept;
+		~StaticSprite();
+
+		void draw() const;
+
+		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
+		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0) const;
+		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const;
+		void set_tex_coords(const UVRect& tex_coords) const;
+		void set_tex_coords(const math::Rect2D& rect) const;
+		void set_modulation(const ModulationRect& modulation) const;
+		void set_modulation(glm::vec4 modulation) const;
+		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+		void set_transform(const glm::mat3& transform);
+
+		graphics::BindlessTextureRes get_texture() const;
+		graphics::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+		UVRect get_tex_coords() const;
+		ModulationRect get_modulation() const;
+		graphics::AnimFrameFormat get_frame_format() const;
+		glm::mat3 get_transform() const;
+	};
+
+	class Sprite
+	{
 		SpriteBatch::VBID vbid;
 
 	public:
 		Transformer2D transformer;
 
 		Sprite();
-		Sprite(SpriteBatch& sprite_batch);
 		Sprite(const Sprite&);
 		Sprite(Sprite&&) noexcept;
 		Sprite& operator=(const Sprite&);
@@ -203,8 +233,6 @@ namespace oly::rendering
 		ModulationRect get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;
 
-		const SpriteBatch& get_batch() const { return *batch; }
-		SpriteBatch& get_batch() { return *batch; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 	};
