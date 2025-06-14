@@ -7,9 +7,9 @@ namespace oly::col2d
 		static AABB compute_aabb(const Element& element)
 		{
 			return std::visit([](auto&& element) {
-				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, AABB>)
+				if constexpr (visiting_class_is<decltype(element), AABB>)
 					return element;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+				else if constexpr (visiting_class_is<decltype(element), Circle>)
 					return AABB{ .x1 = element.deepest_point(UnitVector2D::LEFT).x, .x2 = element.deepest_point(UnitVector2D::RIGHT).x,
 								 .y1 = element.deepest_point(UnitVector2D::DOWN).y, .y2 = element.deepest_point(UnitVector2D::UP).y };
 				else
@@ -44,7 +44,7 @@ namespace oly::col2d
 		static glm::vec2 compute_centroid_sum(const Element& element)
 		{
 			return std::visit([](auto&& element) -> glm::vec2 {
-				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return element.center;
 				else
 				{
@@ -59,11 +59,11 @@ namespace oly::col2d
 		static size_t compute_centroid_point_count(const Element& element)
 		{
 			return std::visit([](auto&& element) -> size_t {
-				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return 1;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, AABB>)
+				else if constexpr (visiting_class_is<decltype(element), AABB>)
 					return 4;
-				else if constexpr (std::is_same_v<std::decay_t<decltype(element)>, OBB>)
+				else if constexpr (visiting_class_is<decltype(element), OBB>)
 					return 4;
 				else
 					return element.points().size();
@@ -73,7 +73,7 @@ namespace oly::col2d
 		static glm::mat2 compute_covariance(const Element& element, glm::vec2 centroid)
 		{
 			return std::visit([centroid](auto&& element) -> glm::mat2 {
-				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+				if constexpr (visiting_class_is<decltype(element), Circle>)
 				{
 					glm::vec2 p = element.center - centroid;
 					return { { p.x * p.x, p.x * p.y }, { p.y * p.x, p.y * p.y } };
@@ -97,7 +97,7 @@ namespace oly::col2d
 		static AABB compute_obb_bounds(const Element& element, glm::vec2 centroid, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
 		{
 			return std::visit([&major_axis, &minor_axis, centroid](auto&& element) -> AABB {
-				if constexpr (std::is_same_v<std::decay_t<decltype(element)>, Circle>)
+				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return { .x1 = (-major_axis).dot(element.deepest_point(-major_axis)), .x2 = major_axis.dot(element.deepest_point(major_axis)),
 							 .y1 = (-minor_axis).dot(element.deepest_point(-minor_axis)), .y2 = minor_axis.dot(element.deepest_point(minor_axis)) };
 				else
@@ -177,7 +177,7 @@ namespace oly::col2d
 		static void add_point_cloud(const Element& element, std::vector<glm::vec2>& point_cloud)
 		{
 			std::visit([&point_cloud](auto&& e) -> void {
-				if constexpr (std::is_same_v<std::decay_t<decltype(e)>, Circle>)
+				if constexpr (visiting_class_is<decltype(e), Circle>)
 				{
 					size_t start = point_cloud.size();
 					static const auto& enclosure = Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
@@ -185,7 +185,7 @@ namespace oly::col2d
 					for (size_t i = 0; i < enclosure.get_degree(); ++i)
 						point_cloud[start + i] = transform_point(CircleGlobalAccess::get_global(e), enclosure.get_point(e, i));
 				}
-				else if constexpr (std::is_same_v<std::decay_t<decltype(e)>, AABB> || std::is_same_v<std::decay_t<decltype(e)>, OBB>)
+				else if constexpr (visiting_class_is<decltype(e), AABB> || visiting_class_is<decltype(e), OBB>)
 				{
 					auto points = e.points();
 					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
@@ -209,10 +209,9 @@ namespace oly::col2d
 		glm::vec2 midpoint(const Element& element)
 		{
 			return std::visit([](auto&& element) -> glm::vec2 {
-				using PT = std::decay_t<decltype(element)>;
-				if constexpr (std::is_same_v<PT, Circle>)
+				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return transform_point(internal::CircleGlobalAccess::get_global(element), element.center);
-				else if constexpr (std::is_same_v<PT, OBB>)
+				else if constexpr (visiting_class_is<decltype(element), OBB>)
 					return element.center;
 				else
 					return element.center();

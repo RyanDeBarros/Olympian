@@ -5,13 +5,18 @@
 
 namespace oly::graphics
 {
+	class Framebuffer;
+	namespace internal
+	{
+		extern Framebuffer framebuffer_from_id(GLuint id);
+	}
+
 	class Framebuffer
 	{
 		GLuint id = 0;
 		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 
-		friend std::vector<Framebuffer> framebuffer_block(const GLsizei n);
-
+		friend Framebuffer internal::framebuffer_from_id(GLuint id);
 		Framebuffer(GLuint id) : id(id) {}
 
 	public:
@@ -105,7 +110,34 @@ namespace oly::graphics
 		std::vector<ColorAttachment> color_attachments;
 	};
 	
-	extern std::vector<Framebuffer> framebuffer_block(const GLsizei n);
+	inline std::vector<Framebuffer> framebuffer_block(size_t n)
+	{
+		GLuint* ids = new GLuint[n];
+		glCreateFramebuffers((GLsizei)n, ids);
+		std::vector<Framebuffer> fbs;
+		fbs.reserve(n);
+		for (size_t i = 0; i < n; ++i)
+			fbs.push_back(internal::framebuffer_from_id(ids[i]));
+		delete[] ids;
+		return fbs;
+	}
+
+	namespace internal
+	{
+		template <size_t... Indices>
+		inline std::array<Framebuffer, sizeof...(Indices)> framebuffer_block_impl(GLuint* ids, std::index_sequence<Indices...>)
+		{
+			return { framebuffer_from_id(ids[Indices])... };
+		}
+	}
+
+	template <size_t N>
+	inline std::array<Framebuffer, N> framebuffer_block()
+	{
+		GLuint ids[N];
+		glCreateFramebuffers((GLsizei)N, ids);
+		return internal::framebuffer_block_impl(ids, std::make_index_sequence<N>{});
+	}
 
 	// LATER Renderbuffer
 }

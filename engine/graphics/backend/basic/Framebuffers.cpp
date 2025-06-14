@@ -2,9 +2,14 @@
 
 namespace oly::graphics
 {
+	Framebuffer internal::framebuffer_from_id(GLuint id)
+	{
+		return Framebuffer(id);
+	}
+
 	Framebuffer::Framebuffer()
 	{
-		glGenFramebuffers(1, &id);
+		glCreateFramebuffers(1, &id);
 	}
 
 	Framebuffer::Framebuffer(Framebuffer&& other) noexcept
@@ -123,17 +128,5 @@ namespace oly::graphics
 	void Framebuffer::blit_from_default(const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter)
 	{
 		glBlitNamedFramebuffer(0, draw, src.x1, src.y1, src.x2, src.y2, dst.x1, dst.y1, dst.x2, dst.y2, (GLenum)mask, (GLenum)filter);
-	}
-
-	std::vector<Framebuffer> framebuffer_block(const GLsizei n) // TODO do this instead of other block structs like GLBufferBlock
-	{
-		GLuint* ids = new GLuint[n];
-		glGenFramebuffers(n, ids);
-		std::vector<Framebuffer> fbs;
-		fbs.reserve(n);
-		for (GLsizei i = 0; i < n; ++i)
-			fbs.push_back(std::move(Framebuffer(ids[i])));
-		delete[] ids;
-		return fbs;
 	}
 }

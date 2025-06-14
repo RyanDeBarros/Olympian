@@ -42,9 +42,9 @@ namespace oly::reg
 		if (params.frame)
 		{
 			std::visit([&atlas](auto&& frame) {
-				if constexpr (std::is_same_v<std::decay_t<decltype(frame)>, params::SpriteAtlas::Frame>)
+				if constexpr (visiting_class_is<decltype(frame), params::SpriteAtlas::Frame>)
 					atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up);
-				else if constexpr (std::is_same_v<std::decay_t<decltype(frame)>, params::SpriteAtlas::StaticFrame>)
+				else if constexpr (visiting_class_is<decltype(frame), params::SpriteAtlas::StaticFrame>)
 					atlas.select_static_frame(frame.frame);
 				}, params.frame.value());
 		}

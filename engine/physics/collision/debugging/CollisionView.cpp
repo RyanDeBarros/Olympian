@@ -89,9 +89,9 @@ namespace oly::debug
 	{
 		static const auto draw_object = [](auto&& obj) { std::visit([](auto&& obj) { obj.draw(); }, obj); };
 		std::visit([](auto&& view) {
-			if constexpr (std::is_same_v<std::decay_t<decltype(view)>, Object>)
+			if constexpr (visiting_class_is<decltype(view), CollisionObject>)
 				draw_object(view);
-			else if constexpr (std::is_same_v<std::decay_t<decltype(view)>, std::vector<Object>>)
+			else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
 				for (const auto& obj : view)
 					draw_object(obj);
 			}, obj);
@@ -99,39 +99,36 @@ namespace oly::debug
 
 	void CollisionView::clear_view()
 	{
-		obj = Empty{};
-		for (CollisionLayer* layer : layers)
-			layer->dirty_views = true;
+		obj = EmptyCollision{};
+		view_changed();
 	}
 
-	void CollisionView::set_view(ObjectView&& obj)
+	void CollisionView::set_view(CollisionObjectView&& obj)
 	{
 		this->obj = std::move(obj);
-		for (CollisionLayer* layer : layers)
-			layer->dirty_views = true;
+		view_changed();
 	}
 
 	void CollisionView::merge(CollisionView&& other)
 	{
-		if (other.obj.index() == EMPTY)
+		if (other.obj.index() == CollisionObjectViewType::EMPTY)
 			return;
 
-		if (obj.index() == SINGLE)
+		if (obj.index() == CollisionObjectViewType::SINGLE)
 		{
-			Object old_view = std::move(std::get<SINGLE>(obj));
-			obj = std::vector<Object>();
-			std::get<VECTOR>(obj).push_back(std::move(old_view));
+			CollisionObject old_view = std::move(std::get<CollisionObjectViewType::SINGLE>(obj));
+			obj = CollisionObjectGroup();
+			std::get<CollisionObjectViewType::GROUP>(obj).push_back(std::move(old_view));
 		}
 
-		std::visit([&view = std::get<VECTOR>(obj)](auto&& other_view) {
-			if constexpr (std::is_same_v<std::decay_t<decltype(other_view)>, Object>)
+		std::visit([&view = std::get<CollisionObjectViewType::GROUP>(obj)](auto&& other_view) {
+			if constexpr (visiting_class_is<decltype(other_view), CollisionObject>)
 				view.push_back(std::move(other_view));
-			else if constexpr (std::is_same_v<std::decay_t<decltype(other_view)>, std::vector<Object>>)
+			else if constexpr (visiting_class_is<decltype(other_view), CollisionObjectGroup>)
 				view.insert(view.end(), std::make_move_iterator(other_view.begin()), std::make_move_iterator(other_view.end()));
 			}, std::move(other.obj));
 
-		for (CollisionLayer* layer : layers)
-			layer->dirty_views = true;
+		view_changed();
 	}
 
 	void CollisionView::assign(CollisionLayer& layer)
@@ -151,6 +148,12 @@ namespace oly::debug
 			layer.collision_views.erase(this);
 			layer.dirty_views = true;
 		}
+	}
+
+	void CollisionView::view_changed() const
+	{
+		for (CollisionLayer* layer : layers)
+			layer->dirty_views = true;
 	}
 
 	CollisionLayer::WindowResizeHandler::WindowResizeHandler()

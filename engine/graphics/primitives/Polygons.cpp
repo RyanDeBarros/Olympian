@@ -214,7 +214,7 @@ namespace oly::rendering
 		context::polygon_batch().set_polygon_transform(id.get(), glm::mat3(1.0f));
 	}
 
-	void StaticPolygon::send_polygon()
+	void StaticPolygon::send_polygon() const
 	{
 		try
 		{
@@ -227,6 +227,15 @@ namespace oly::rendering
 				LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
 			else
 				throw e;
+		}
+	}
+
+	void StaticPolygon::send_colors_only() const
+	{
+		if (context::polygon_batch().is_valid_id(id.get()))
+		{
+			auto vertex_range = context::polygon_batch().get_vertex_range(id.get());
+			context::polygon_batch().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
 		}
 	}
 

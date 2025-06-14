@@ -103,7 +103,8 @@ namespace oly::rendering
 		StaticPolygon& operator=(StaticPolygon&&) noexcept;
 
 		void init();
-		void send_polygon();
+		void send_polygon() const;
+		void send_colors_only() const;
 		void draw() const;
 	};
 

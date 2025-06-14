@@ -55,4 +55,7 @@ namespace oly
 	{
 		return from ? std::make_optional<ToOptional>((ToOptional)*from) : std::nullopt;
 	}
+
+	template<typename T, typename Class>
+	constexpr bool visiting_class_is = std::is_same_v<std::decay_t<T>, Class>;
 }

@@ -83,7 +83,8 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
-	oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
+	//oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
+	oly::col2d::OBB obb{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
 	oly::col2d::Circle circ({}, 50.0f);
 	oly::col2d::Capsule capsule{ .center = { 500.0f, -400.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
@@ -105,7 +106,11 @@ int main()
 	oly::debug::CollisionLayer raycast_result_layer;
 	bool draw_impulses = false;
 
-	oly::debug::CollisionView player_cv, block_cv, capsule_cv, ray_cv, player_impulse_cv, block_impulse_cv, raycast_result_cv;
+	oly::debug::CollisionView player_cv, player_impulse_cv, block_impulse_cv, raycast_result_cv;
+	oly::debug::CollisionView block_cv = oly::debug::collision_view(obb, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView capsule_cv = oly::debug::collision_view(capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+
 	player_cv.assign(player_layer);
 	block_cv.assign(obstacle_layer);
 	capsule_cv.assign(obstacle_layer);
@@ -154,7 +159,7 @@ int main()
 
 		circ.center = oly::context::get_cursor_view_pos();
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		auto contact = oly::col2d::contacts(circ, aabb);
+		auto contact = oly::col2d::contacts(circ, obb);
 
 		if (contact.overlap)
 		{
@@ -173,22 +178,22 @@ int main()
 			oly::debug::update_view(player_cv, circ, oly::colors::YELLOW* oly::colors::alpha(0.8f));
 
 		if (contact.overlap)
-			oly::debug::update_view(block_cv, aabb, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(block_cv, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
 		else
-			oly::debug::update_view(block_cv, aabb, oly::colors::BLUE * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(block_cv, oly::colors::BLUE * oly::colors::alpha(0.8f));
 
 		if (capsule_overlaps)
-			oly::debug::update_view(capsule_cv, capsule.compound(), oly::colors::MAGENTA * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(capsule_cv, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
 		else
-			oly::debug::update_view(capsule_cv, capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(capsule_cv, oly::colors::BLUE * oly::colors::alpha(0.8f));
 
 		auto raycast_result = oly::col2d::raycast(circ, ray);
 		if (raycast_result.hit == decltype(raycast_result.hit)::NO_HIT)
-			oly::debug::update_view(ray_cv, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(ray_cv, oly::colors::WHITE * oly::colors::alpha(0.8f));
 		else if (raycast_result.hit == decltype(raycast_result.hit)::EMBEDDED_ORIGIN)
-			oly::debug::update_view(ray_cv, ray, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(ray_cv, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 		else if (raycast_result.hit == decltype(raycast_result.hit)::TRUE_HIT)
-			oly::debug::update_view(ray_cv, ray, oly::colors::ORANGE * oly::colors::alpha(0.8f));
+			oly::debug::update_view_color(ray_cv, oly::colors::ORANGE * oly::colors::alpha(0.8f));
 
 		oly::debug::update_view(raycast_result_cv, raycast_result, oly::colors::WHITE* oly::colors::alpha(0.8f));
 
