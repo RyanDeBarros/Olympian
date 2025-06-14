@@ -103,10 +103,7 @@ namespace oly::rendering
 	void Ellipse::draw() const
 	{
 		if (transformer.flush())
-		{
-			transformer.pre_get();
 			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
-		}
 		ellipse.draw();
 	}
 }

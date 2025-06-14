@@ -9,7 +9,7 @@ namespace oly::rendering
 		: text_batch(&text_batch), format(format), font(font), bkg(text_batch)
 	{
 		bkg.transformer.attach_parent(&transformer);
-		bkg.transformer.modifier = std::make_unique<oly::PivotTransformModifier2D>();
+		bkg.transformer.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		bkg.set_texture(graphics::textures::white1x1_1);
 
 		set_bkg_color({ { 0.0f, 0.0f, 0.0f, 1.0f } });
@@ -86,7 +86,7 @@ namespace oly::rendering
 	{
 		build_page();
 		write_glyphs();
-		auto& bkg_modifier = bkg.transformer.get_modifier<oly::PivotTransformModifier2D>();
+		auto& bkg_modifier = bkg.transformer.ref_modifier<oly::PivotTransformModifier2D>();
 		bkg_modifier.size = size() + 2.0f * format.padding;
 		bkg_modifier.pivot = format.pivot;
 		math::Rect2D vps{};

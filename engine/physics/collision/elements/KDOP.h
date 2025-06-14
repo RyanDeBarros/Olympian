@@ -8,6 +8,8 @@
 #include "physics/collision/elements/Common.h"
 #include "physics/collision/Tolerance.h"
 
+#include "core/types/CopyPtr.h"
+
 #include <array>
 #include <string>
 #include <vector>
@@ -105,6 +107,22 @@ namespace oly::col2d
 					float v = uniform_axis(i).dot(point);
 					kdop.set_minimum(i, std::min(kdop.get_minimum(i), v));
 					kdop.set_maximum(i, std::max(kdop.get_maximum(i), v));
+				}
+			}
+			return kdop;
+		}
+
+		static CopyPtr<KDOP<K_half>> wrap_copy_ptr(const math::Polygon2D& polygon)
+		{
+			CopyPtr<KDOP<K_half>> kdop = make_copy_ptr<KDOP<K_half>>();
+			kdop->fill_invalid();
+			for (glm::vec2 point : polygon)
+			{
+				for (size_t i = 0; i < K_half; ++i)
+				{
+					float v = uniform_axis(i).dot(point);
+					kdop->set_minimum(i, std::min(kdop.get_minimum(i), v));
+					kdop->set_maximum(i, std::max(kdop.get_maximum(i), v));
 				}
 			}
 			return kdop;
@@ -300,6 +318,32 @@ namespace oly::col2d
 			}
 
 			return CustomKDOP(std::move(axes), std::move(minima), std::move(maxima));
+		}
+
+		static CopyPtr<CustomKDOP> wrap_copy_ptr(const math::Polygon2D& polygon, const std::vector<UnitVector2D>& axes)
+		{
+			return wrap_copy_ptr(polygon, dupl(axes));
+		}
+
+		static CopyPtr<CustomKDOP> wrap_copy_ptr(const math::Polygon2D& polygon, std::vector<UnitVector2D>&& axes)
+		{
+			size_t k_half = axes.size();
+			if (k_half < 2)
+				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 4, but k_half provided is: " + std::to_string(k_half));
+			std::vector<float> minima(k_half, nmax<float>());
+			std::vector<float> maxima(k_half, -nmax<float>());
+
+			for (glm::vec2 point : polygon)
+			{
+				for (size_t i = 0; i < k_half; ++i)
+				{
+					float v = axes[i].dot(point);
+					minima[i] = std::min(minima[i], v);
+					maxima[i] = std::max(maxima[i], v);
+				}
+			}
+
+			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
 		}
 
 		const std::vector<glm::vec2>& points() const

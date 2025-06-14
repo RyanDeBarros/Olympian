@@ -48,11 +48,10 @@ int main()
 	key_handler.attach(&oly::get_platform().window().handlers.key);
 
 	oly::Transformer2D flag_tesselation_parent;
-	flag_tesselation_parent.modifier = std::make_unique<oly::PivotShearTransformModifier2D>();
-	flag_tesselation_parent.local.position.y = -100;
-	auto& flag_tesselation_modifier = flag_tesselation_parent.get_modifier<oly::PivotShearTransformModifier2D>();
+	flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotShearTransformModifier2D>();
+	flag_tesselation_parent.set_local().position.y = -100;
+	auto& flag_tesselation_modifier = flag_tesselation_parent.ref_modifier<oly::PivotShearTransformModifier2D>();
 	flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 }, { 0, 1 } };
-	flag_tesselation_parent.post_set();
 	std::vector<oly::Sprite> flag_tesselation;
 	const int flag_rows = 8, flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
@@ -83,8 +82,11 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
-	//oly::col2d::AABB aabb{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
-	oly::col2d::OBB obb{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
+	//oly::col2d::AABB block{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
+	//oly::col2d::OBB block{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
+	oly::col2d::TPrimitive block = { oly::col2d::Circle({-100.0f, 50.0f}, 200.0f) };
+	block.set_local().scale.x = 2.0f;
+	block.set_local().rotation = glm::pi<float>() / 8;
 	oly::col2d::Circle circ({}, 50.0f);
 	oly::col2d::Capsule capsule{ .center = { 500.0f, -400.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
@@ -104,10 +106,9 @@ int main()
 	oly::debug::CollisionLayer ray_layer;
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
-	bool draw_impulses = false;
 
 	oly::debug::CollisionView player_cv, player_impulse_cv, block_impulse_cv, raycast_result_cv;
-	oly::debug::CollisionView block_cv = oly::debug::collision_view(obb, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView capsule_cv = oly::debug::collision_view(capsule.compound(), oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 
@@ -142,8 +143,7 @@ int main()
 
 		obstacle_layer.draw();
 		player_layer.draw();
-		if (draw_impulses)
-			impulse_layer.draw();
+		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
 		oly::debug::render_layers();
@@ -158,34 +158,29 @@ int main()
 		flag_state_timer.poll();
 
 		circ.center = oly::context::get_cursor_view_pos();
+
+		bool point_hits = oly::col2d::point_hits(block, circ.center);
+
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		auto contact = oly::col2d::contacts(circ, obb);
+		auto contact = oly::col2d::contacts(circ, block.get_baked());
 
 		if (contact.overlap)
 		{
-			draw_impulses = true;
 			oly::debug::update_view(block_impulse_cv, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
 			oly::debug::update_view(player_impulse_cv, contact.active_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
 		}
 		else
-			draw_impulses = false;
+		{
+			block_impulse_cv.clear_view();
+			player_impulse_cv.clear_view();
+		}
 
 		auto capsule_overlaps = oly::col2d::overlaps(circ, capsule.compound());
 
-		if (contact.overlap || capsule_overlaps)
-			oly::debug::update_view(player_cv, circ, oly::colors::RED * oly::colors::alpha(0.8f));
-		else
-			oly::debug::update_view(player_cv, circ, oly::colors::YELLOW* oly::colors::alpha(0.8f));
-
-		if (contact.overlap)
-			oly::debug::update_view_color(block_cv, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-		else
-			oly::debug::update_view_color(block_cv, oly::colors::BLUE * oly::colors::alpha(0.8f));
-
-		if (capsule_overlaps)
-			oly::debug::update_view_color(capsule_cv, oly::colors::MAGENTA * oly::colors::alpha(0.8f));
-		else
-			oly::debug::update_view_color(capsule_cv, oly::colors::BLUE * oly::colors::alpha(0.8f));
+		oly::debug::update_view(player_cv, circ, ((contact.overlap || capsule_overlaps) ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
+		oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
+		oly::debug::update_view_color(capsule_cv, (capsule_overlaps ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 
 		auto raycast_result = oly::col2d::raycast(circ, ray);
 		if (raycast_result.hit == decltype(raycast_result.hit)::NO_HIT)
@@ -208,12 +203,10 @@ int main()
 		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<float>();
 
 		jumble.sprite1.set_local().rotation = oly::TIME.now<float>();
-		sprite_match.sprite2.transformer.get_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
-		sprite_match.sprite2.transformer.post_set();
+		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
 		
 		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta<float>());
-		flag_tesselation_parent.local.rotation -= 0.5f * oly::TIME.delta<float>();
-		flag_tesselation_parent.post_set();
+		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta<float>();
 		flag_tesselation_parent.flush();
 
 		jumble.on_tick();

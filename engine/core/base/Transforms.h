@@ -65,20 +65,17 @@ namespace oly
 		virtual std::unique_ptr<TransformModifier2D> clone() const { return std::make_unique<TransformModifier2D>(); }
 	};
 
-	struct Transformer2D
+	class Transformer2D
 	{
 		Transform2D local;
-	
-	private:
 		mutable glm::mat3 _global = glm::mat3(1.0f);
 		mutable bool _dirty = true;
 		mutable bool _dirty_flush = true;
 		Transformer2D* parent = nullptr;
 		std::unordered_set<Transformer2D*> children;
-
-	public:
 		std::unique_ptr<TransformModifier2D> modifier;
 
+	public:
 		Transformer2D(Transform2D local = {}, std::unique_ptr<TransformModifier2D>&& modifier = std::make_unique<TransformModifier2D>()) : local(local), modifier(std::move(modifier)) {}
 		Transformer2D(const Transformer2D&); // NOTE this does not carry over children
 		Transformer2D(Transformer2D&&) noexcept;
@@ -86,17 +83,23 @@ namespace oly
 		Transformer2D& operator=(const Transformer2D&); // NOTE this keeps old children
 		Transformer2D& operator=(Transformer2D&&) noexcept;
 
-		glm::mat3 global() const { return _global; }
+		glm::mat3 global() const { pre_get(); return _global; }
+
+	private:
 		void post_set() const;
 		void pre_get() const;
-		bool flush() const;
-		const Transform2D& get_local() const { pre_get(); return local; }
-		Transform2D& set_local() { pre_get(); post_set(); return local; }
 
+	public:
+		bool flush() const;
+		const Transform2D& get_local() const { return local; }
+		Transform2D& set_local() { post_set(); return local; }
+
+		std::unique_ptr<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
 		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }
 		template<std::derived_from<TransformModifier2D> T>
-		T& get_modifier() { return *static_cast<T*>(modifier.get()); }
+		T& ref_modifier() { post_set(); return *static_cast<T*>(modifier.get()); }
+
 		const Transformer2D* get_parent() const { return parent; }
 		Transformer2D* get_parent() { return parent; }
 		const Transformer2D* top_level_parent() const;
@@ -198,20 +201,17 @@ namespace oly
 		virtual std::unique_ptr<TransformModifier3D> clone() const { return std::make_unique<TransformModifier3D>(); }
 	};
 
-	struct Transformer3D
+	class Transformer3D
 	{
 		Transform3D local;
-		
-	private:
 		mutable glm::mat4 _global = glm::mat4(1.0f);
 		mutable bool _dirty = true;
 		mutable bool _dirty_flush = true;
 		Transformer3D* parent = nullptr;
 		std::unordered_set<Transformer3D*> children;
-
-	public:
 		std::unique_ptr<TransformModifier3D> modifier;
 
+	public:
 		Transformer3D(const Transform3D& local = {}, std::unique_ptr<TransformModifier3D>&& modifier = std::make_unique<TransformModifier3D>()) : local(local), modifier(std::move(modifier)) {}
 		Transformer3D(const Transformer3D&);
 		Transformer3D(Transformer3D&&) noexcept;
@@ -219,17 +219,23 @@ namespace oly
 		Transformer3D& operator=(const Transformer3D&);
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
-		virtual glm::mat4 global() const { return _global; }
+		virtual glm::mat4 global() const { pre_get(); return _global; }
+		
+	private:
 		void post_set() const;
 		void pre_get() const;
-		bool flush() const;
-		const Transform3D& get_local() const { pre_get(); return local; }
-		Transform3D& set_local() { pre_get(); post_set(); return local; }
 
-		template<std::derived_from<TransformModifier2D> T>
+	public:
+		bool flush() const;
+		const Transform3D& get_local() const { return local; }
+		Transform3D& set_local() { post_set(); return local; }
+
+		std::unique_ptr<TransformModifier3D>& set_modifier() { post_set(); return modifier; }
+		template<std::derived_from<TransformModifier3D> T>
 		const T& get_modifier() const { return *static_cast<T*>(modifier.get()); }
-		template<std::derived_from<TransformModifier2D> T>
-		T& get_modifier() { return *static_cast<T*>(modifier.get()); }
+		template<std::derived_from<TransformModifier3D> T>
+		T& ref_modifier() { post_set(); return *static_cast<T*>(modifier.get()); }
+
 		const Transformer3D* get_parent() const { return parent; }
 		Transformer3D* get_parent() { return parent; }
 		const Transformer3D* top_level_parent() const;

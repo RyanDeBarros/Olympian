@@ -115,4 +115,15 @@ namespace oly::col2d
 	extern ContactResult contacts(const ConvexHull& c1, const OBB& c2);
 	inline ContactResult contacts(const OBB& c1, const ConvexHull& c2) { return contacts(c2, c1).invert(); }
 	// ######################################################################################################################################################
+
+	// ######################################################################################################################################################
+	// Element
+	extern OverlapResult point_hits(const Element& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const Element& c, const Ray& ray);
+	extern RaycastResult raycast(const Element& c, const Ray& ray);
+	extern OverlapResult overlaps(const Element& c1, const Element& c2);
+	extern CollisionResult collides(const Element& c1, const Element& c2);
+	extern ContactResult contacts(const Element& c1, const Element& c2);
+	// ######################################################################################################################################################
+
 }

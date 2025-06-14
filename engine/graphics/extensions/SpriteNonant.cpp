@@ -13,7 +13,7 @@ namespace oly::rendering
 				PivotTransformModifier2D modifier;
 				modifier.pivot.x = -0.5f * j + 1.0f;
 				modifier.pivot.y = -0.5f * i + 1.0f;
-				sprites[i][j].transformer.modifier = move_unique(std::move(modifier));
+				sprites[i][j].transformer.set_modifier() = move_unique(std::move(modifier));
 			}
 	}
 
@@ -303,7 +303,7 @@ namespace oly::rendering
 			{
 				sprites[i][j].set_tex_coords(math::Rect2D{ .x1 = xuvs[j], .x2 = xuvs[j + 1], .y1 = yuvs[i], .y2 = yuvs[i + 1] });
 				glm::vec2 size = { widths[j], heights[i] };
-				sprites[i][j].transformer.get_modifier<PivotTransformModifier2D>().size = size;
+				sprites[i][j].transformer.ref_modifier<PivotTransformModifier2D>().size = size;
 				Transform2D& local = sprites[i][j].set_local();
 				local.scale = size / regular_dimensions;
 				local.position = glm::vec2{ xpos[j], ypos[i] };

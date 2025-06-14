@@ -301,10 +301,7 @@ namespace oly::rendering
 	void Polygonal::draw() const
 	{
 		if (transformer.flush())
-		{
-			transformer.pre_get();
 			context::polygon_batch().set_polygon_transform(id.get(), transformer.global());
-		}
 		draw_triangulation(context::polygon_batch().get_vertex_range(id.get()).initial);
 	}
 

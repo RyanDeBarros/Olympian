@@ -8,6 +8,8 @@
 #include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
 
+#include "core/types/CopyPtr.h"
+
 namespace oly::col2d
 {
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
@@ -25,25 +27,25 @@ namespace oly::col2d
 		AABB,
 		OBB,
 		ConvexHull,
-		CustomKDOP,
-		KDOP6,
-		KDOP8,
-		KDOP10,
-		KDOP12,
-		KDOP14,
-		KDOP16
+		CopyPtr<CustomKDOP>,
+		CopyPtr<KDOP6>,
+		CopyPtr<KDOP8>,
+		CopyPtr<KDOP10>,
+		CopyPtr<KDOP12>,
+		CopyPtr<KDOP14>,
+		CopyPtr<KDOP16>
 	>;
 
 	extern Element transform_element(const Circle& c, const glm::mat3& m);
 	extern Element transform_element(const AABB& c, const glm::mat3& m);
 	extern Element transform_element(const OBB& c, const glm::mat3& m);
-	extern Element transform_element(const CustomKDOP& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP6& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP8& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP10& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP12& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP14& c, const glm::mat3& m);
-	extern Element transform_element(const KDOP16& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<CustomKDOP>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP6>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP8>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP10>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP12>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP14>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP16>& c, const glm::mat3& m);
 	extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
 
 	typedef int Mask;

@@ -352,10 +352,7 @@ namespace oly::rendering
 	void Sprite::draw() const
 	{
 		if (transformer.flush())
-		{
-			transformer.pre_get();
 			context::sprite_batch().quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
-		}
 		graphics::quad_indices(context::sprite_batch().ebo.draw_primitive().data(), vbid.get());
 	}
 

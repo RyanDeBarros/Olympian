@@ -1,0 +1,94 @@
+#pragma once
+
+#include "core/base/Errors.h"
+
+namespace oly
+{
+	template<typename T>
+	class CopyPtr
+	{
+		T* _ptr = nullptr;
+
+	public:
+		CopyPtr() = default;
+
+		explicit CopyPtr(T* ptr) : _ptr(ptr) {}
+		
+		explicit CopyPtr(const T& obj) : _ptr(new T(obj)) {}
+		
+		explicit CopyPtr(T&& obj) noexcept : _ptr(new T(std::move(obj))) {}
+
+		CopyPtr(const CopyPtr<T>& other) : _ptr(other._ptr ? new T(*other._ptr) : nullptr) {}
+
+		CopyPtr(CopyPtr<T>&& other) noexcept : _ptr(other._ptr) { other._ptr = nullptr; }
+
+		~CopyPtr() { if (_ptr) delete _ptr; }
+
+		CopyPtr<T>& operator=(const CopyPtr<T>& other)
+		{
+			if (this != &other)
+			{
+				if (other._ptr)
+				{
+					if (_ptr)
+						*_ptr = *other._ptr;
+					else
+						_ptr = new T(*other._ptr);
+				}
+				else if (_ptr)
+				{
+					delete _ptr;
+					_ptr = nullptr;
+				}
+			}
+			return *this;
+		}
+
+		CopyPtr<T>& operator=(CopyPtr<T>&& other) noexcept
+		{
+			if (this != &other)
+			{
+				if (_ptr)
+					delete _ptr;
+				_ptr = other._ptr;
+				other._ptr = nullptr;
+			}
+			return *this;
+		}
+
+		void reset(T* ptr = nullptr) { if (_ptr && _ptr != ptr) delete _ptr; _ptr = ptr; }
+
+		const T* get() const { return _ptr; }
+
+		T* get() { return _ptr; }
+
+		const T& operator*() const { if (_ptr) return *_ptr; else throw Error(ErrorCode::NULL_POINTER); }
+
+		T& operator*() { if (_ptr) return *_ptr; else throw Error(ErrorCode::NULL_POINTER); }
+
+		const T* operator->() const { if (_ptr) return _ptr; else throw Error(ErrorCode::NULL_POINTER); }
+
+		T* operator->() { if (_ptr) return _ptr; else throw Error(ErrorCode::NULL_POINTER); }
+
+		operator bool() const { return _ptr; }
+	};
+
+	template<typename T, typename... Args>
+	inline CopyPtr<T> make_copy_ptr(Args&&... args) { return CopyPtr<T>(new T(std::forward<Args>(args)...)); }
+
+	namespace internal
+	{
+		template<typename Class>
+		struct is_copy_ptr : std::false_type
+		{
+		};
+
+		template<typename Class>
+		struct is_copy_ptr<CopyPtr<Class>> : std::true_type
+		{
+		};
+	}
+
+	template<typename Class>
+	constexpr bool is_copy_ptr = internal::is_copy_ptr<std::decay_t<Class>>::value;
+}

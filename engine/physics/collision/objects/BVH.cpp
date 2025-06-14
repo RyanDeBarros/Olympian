@@ -12,10 +12,22 @@ namespace oly::col2d
 				else if constexpr (visiting_class_is<decltype(element), Circle>)
 					return AABB{ .x1 = element.deepest_point(UnitVector2D::LEFT).x, .x2 = element.deepest_point(UnitVector2D::RIGHT).x,
 								 .y1 = element.deepest_point(UnitVector2D::DOWN).y, .y2 = element.deepest_point(UnitVector2D::UP).y };
-				else
+				else if constexpr (visiting_class_is<decltype(element), OBB, ConvexHull>)
 				{
 					AABB bounds = AABB::DEFAULT;
 					for (glm::vec2 p : element.points())
+					{
+						bounds.x1 = std::min(bounds.x1, p.x);
+						bounds.x2 = std::max(bounds.x2, p.x);
+						bounds.y1 = std::min(bounds.y1, p.y);
+						bounds.y2 = std::max(bounds.y2, p.y);
+					}
+					return bounds;
+				}
+				else
+				{
+					AABB bounds = AABB::DEFAULT;
+					for (glm::vec2 p : element->points())
 					{
 						bounds.x1 = std::min(bounds.x1, p.x);
 						bounds.x2 = std::max(bounds.x2, p.x);
@@ -46,10 +58,17 @@ namespace oly::col2d
 			return std::visit([](auto&& element) -> glm::vec2 {
 				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return element.center;
-				else
+				else if constexpr (visiting_class_is<decltype(element), AABB, OBB, ConvexHull>)
 				{
 					glm::vec2 centroid = {};
 					for (glm::vec2 p : element.points())
+						centroid += p;
+					return centroid;
+				}
+				else
+				{
+					glm::vec2 centroid = {};
+					for (glm::vec2 p : element->points())
 						centroid += p;
 					return centroid;
 				}
@@ -61,12 +80,12 @@ namespace oly::col2d
 			return std::visit([](auto&& element) -> size_t {
 				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return 1;
-				else if constexpr (visiting_class_is<decltype(element), AABB>)
+				else if constexpr (visiting_class_is<decltype(element), AABB, OBB>)
 					return 4;
-				else if constexpr (visiting_class_is<decltype(element), OBB>)
-					return 4;
-				else
+				else if constexpr (visiting_class_is<decltype(element), ConvexHull>)
 					return element.points().size();
+				else
+					return element->points().size();
 				}, element);
 		}
 
@@ -78,10 +97,23 @@ namespace oly::col2d
 					glm::vec2 p = element.center - centroid;
 					return { { p.x * p.x, p.x * p.y }, { p.y * p.x, p.y * p.y } };
 				}
-				else
+				else if constexpr (visiting_class_is<decltype(element), AABB, OBB, ConvexHull>)
 				{
 					glm::mat2 covariance = 0.0f;
 					for (glm::vec2 point : element.points())
+					{
+						glm::vec2 p = point - centroid;
+						covariance[0][0] += p.x * p.x;
+						covariance[0][1] += p.x * p.y;
+						covariance[1][0] += p.y * p.x;
+						covariance[1][1] += p.y * p.y;
+					}
+					return covariance;
+				}
+				else
+				{
+					glm::mat2 covariance = 0.0f;
+					for (glm::vec2 point : element->points())
 					{
 						glm::vec2 p = point - centroid;
 						covariance[0][0] += p.x * p.x;
@@ -100,10 +132,26 @@ namespace oly::col2d
 				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return { .x1 = (-major_axis).dot(element.deepest_point(-major_axis)), .x2 = major_axis.dot(element.deepest_point(major_axis)),
 							 .y1 = (-minor_axis).dot(element.deepest_point(-minor_axis)), .y2 = minor_axis.dot(element.deepest_point(minor_axis)) };
-				else
+				else if constexpr (visiting_class_is<decltype(element), AABB, OBB, ConvexHull>)
 				{
 					AABB bounds = AABB::DEFAULT;
 					for (glm::vec2 point : element.points())
+					{
+						glm::vec2 p = point - centroid;
+						float x = major_axis.dot(p);
+						float y = minor_axis.dot(p);
+
+						bounds.x1 = std::min(bounds.x1, x);
+						bounds.x2 = std::max(bounds.x2, x);
+						bounds.y1 = std::min(bounds.y1, y);
+						bounds.y2 = std::max(bounds.y2, y);
+					}
+					return bounds;
+				}
+				else
+				{
+					AABB bounds = AABB::DEFAULT;
+					for (glm::vec2 point : element->points())
 					{
 						glm::vec2 p = point - centroid;
 						float x = major_axis.dot(p);
@@ -185,14 +233,19 @@ namespace oly::col2d
 					for (size_t i = 0; i < enclosure.get_degree(); ++i)
 						point_cloud[start + i] = transform_point(CircleGlobalAccess::get_global(e), enclosure.get_point(e, i));
 				}
-				else if constexpr (visiting_class_is<decltype(e), AABB> || visiting_class_is<decltype(e), OBB>)
+				else if constexpr (visiting_class_is<decltype(e), AABB, OBB>)
 				{
 					auto points = e.points();
 					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
 				}
-				else
+				else if constexpr (visiting_class_is<decltype(e), ConvexHull>)
 				{
 					const auto& points = e.points();
+					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
+				}
+				else
+				{
+					const auto& points = e->points();
 					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
 				}
 				}, element);
@@ -213,8 +266,10 @@ namespace oly::col2d
 					return transform_point(internal::CircleGlobalAccess::get_global(element), element.center);
 				else if constexpr (visiting_class_is<decltype(element), OBB>)
 					return element.center;
-				else
+				else if constexpr (visiting_class_is<decltype(element), AABB, ConvexHull>)
 					return element.center();
+				else
+					return element->center();
 				}, element);
 		}
 	}

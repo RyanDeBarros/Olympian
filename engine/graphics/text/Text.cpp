@@ -219,10 +219,7 @@ namespace oly::rendering
 	void TextGlyph::draw() const
 	{
 		if (transformer.flush())
-		{
-			transformer.pre_get();
 			batch->glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
-		}
 		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 	}
 		

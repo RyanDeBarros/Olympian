@@ -3,6 +3,7 @@
 #include "physics/collision/methods/SAT.h"
 #include "physics/collision/methods/GJK.h"
 #include "physics/collision/methods/CircleMethods.h"
+#include "physics/collision/methods/KDOPCollide.h"
 #include "core/types/Approximate.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
@@ -1091,5 +1092,101 @@ namespace oly::col2d
 			}
 		}
 		return sat::contacts(c1, c2);
+	}
+
+	OverlapResult point_hits(const Element& c, glm::vec2 test)
+	{
+		return std::visit([test](auto&& e) {
+			if constexpr (is_copy_ptr<decltype(e)>)
+				return point_hits(*e, test);
+			else
+				return point_hits(e, test);
+			}, c);
+	}
+
+	OverlapResult ray_hits(const Element& c, const Ray& ray)
+	{
+		return std::visit([&ray](auto&& e) {
+			if constexpr (is_copy_ptr<decltype(e)>)
+				return ray_hits(*e, ray);
+			else
+				return ray_hits(e, ray);
+			}, c);
+	}
+	
+	RaycastResult raycast(const Element& c, const Ray& ray)
+	{
+		return std::visit([&ray](auto&& e) {
+			if constexpr (is_copy_ptr<decltype(e)>)
+				return raycast(*e, ray);
+			else
+				return raycast(e, ray);
+			}, c);
+	}
+
+	OverlapResult overlaps(const Element& c1, const Element& c2)
+	{
+		return std::visit([&c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				if constexpr (is_copy_ptr<decltype(e1)>)
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return overlaps(*e1, *e2);
+					else
+						return overlaps(*e1, e2);
+				}
+				else
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return overlaps(e1, *e2);
+					else
+						return overlaps(e1, e2);
+				}
+				}, c2);
+			}, c1);
+	}
+	
+	CollisionResult collides(const Element& c1, const Element& c2)
+	{
+		return std::visit([&c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				if constexpr (is_copy_ptr<decltype(e1)>)
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return collides(*e1, *e2);
+					else
+						return collides(*e1, e2);
+				}
+				else
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return collides(e1, *e2);
+					else
+						return collides(e1, e2);
+				}
+				}, c2);
+			}, c1);
+	}
+	
+	ContactResult contacts(const Element& c1, const Element& c2)
+	{
+		return std::visit([&c2](auto&& e1) {
+			return std::visit([&e1](auto&& e2) {
+				if constexpr (is_copy_ptr<decltype(e1)>)
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return contacts(*e1, *e2);
+					else
+						return contacts(*e1, e2);
+				}
+				else
+				{
+					if constexpr (is_copy_ptr<decltype(e2)>)
+						return contacts(e1, *e2);
+					else
+						return contacts(e1, e2);
+				}
+				}, c2);
+			}, c1);
 	}
 }

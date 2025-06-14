@@ -20,7 +20,7 @@ namespace oly::col2d
 	struct CollisionResult
 	{
 		bool overlap = false;
-		float penetration_depth;
+		float penetration_depth = 0.0f;
 		UnitVector2D unit_impulse;
 
 		// minimum translation vector
