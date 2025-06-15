@@ -1,6 +1,7 @@
 #include "Geometry.h"
 
 #include "core/math/Coordinates.h"
+#include "core/base/SimpleMath.h"
 
 namespace oly::math
 {
@@ -76,21 +77,22 @@ namespace oly::math
 		return math::Barycentric(math::Triangle2D{ p1, p2, p3 }, {}).inside();
 	}
 
-	Edge::Edge(glm::uint a, glm::uint b)
-		: a(std::min(a, b)), b(std::max(a, b))
+	math::Polygon2D clip_polygon(const math::Polygon2D& polygon, const UnitVector2D& axis, float maximum)
 	{
-	}
-
-	std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation)
-	{
-		std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> adjacency;
-		for (glm::uint i = 0; i < triangulation.size(); ++i)
+		math::Polygon2D out;
+		const int n = (int)polygon.size();
+		for (int i = 0; i < n; ++i)
 		{
-			const auto& face = triangulation[i];
-			adjacency[Edge(face[0], face[1])].push_back(i);
-			adjacency[Edge(face[1], face[2])].push_back(i);
-			adjacency[Edge(face[2], face[0])].push_back(i);
+			glm::vec2 curr = polygon[i];
+			glm::vec2 prev = polygon[unsigned_mod(i - 1, n)];
+			bool curr_in = below_zero(axis.dot(curr) - maximum);
+			bool prev_in = below_zero(axis.dot(prev) - maximum);
+
+			if (curr_in != prev_in)
+				out.push_back(prev + (curr - prev) * (maximum - axis.dot(prev)) / axis.dot(curr - prev));
+			if (curr_in)
+				out.push_back(curr);
 		}
-		return adjacency;
+		return out;
 	}
 }

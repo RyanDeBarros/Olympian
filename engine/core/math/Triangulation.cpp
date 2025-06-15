@@ -6,7 +6,7 @@
 #include "core/math/Shapes.h"
 #include "core/math/Coordinates.h"
 
-namespace oly
+namespace oly::math
 {
 	struct Node;
 	struct EarClippingData
@@ -317,322 +317,337 @@ namespace oly
 		OLY_ASSERT(data.size == 3 || data.head_ear.lock());
 	}
 
-	namespace math
+	Edge::Edge(glm::uint a, glm::uint b)
+		: a(std::min(a, b)), b(std::max(a, b))
 	{
-		Triangulation triangulate(const Polygon2D& polygon, bool increasing, int starting_offset, int ear_cycle)
+	}
+
+	std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation)
+	{
+		std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> adjacency;
+		for (glm::uint i = 0; i < triangulation.size(); ++i)
 		{
-			OLY_ASSERT(polygon.size() >= 3);
-			Triangulation triangulation;
+			const auto& face = triangulation[i];
+			adjacency[Edge(face[0], face[1])].push_back(i);
+			adjacency[Edge(face[1], face[2])].push_back(i);
+			adjacency[Edge(face[2], face[0])].push_back(i);
+		}
+		return adjacency;
+	}
 
-			if (polygon.size() == 3)
-			{
-				glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)polygon.size()), unsigned_mod(1 + starting_offset, (int)polygon.size()), unsigned_mod(2 + starting_offset, (int)polygon.size()) };
-				triangulation.push_back(increasing ? face : math::reverse(face));
-				return triangulation;
-			}
+	Triangulation triangulate(const Polygon2D& polygon, bool increasing, int starting_offset, int ear_cycle)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		Triangulation triangulation;
 
-			EarClippingData data{};
-			data.size = polygon.size();
-			data.vertices = &polygon;
-
-			// load polygon vertices
-			for (int i = 0; i < polygon.size(); ++i)
-				append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
-
-			// determine orientation
-			data.ccw = (math::signed_area(polygon) >= 0.0f);
-
-			std::shared_ptr<Node> indexer = data.head_polygon.lock();
-			// categorize initial vertices
-			do
-			{
-				if (indexer->should_be_reflexive(data))
-				{
-					indexer->is_reflex = true;
-					append_reflex(data, indexer);
-				}
-				else
-				{
-					indexer->is_reflex = false;
-					append_convex(data, indexer);
-					if (indexer->should_be_ear(data))
-					{
-						indexer->is_ear = true;
-						append_ear(data, indexer);
-					}
-				}
-
-				indexer = indexer->next_vertex.lock();
-			} while (indexer != data.head_polygon.lock());
-
-			if (!data.head_ear.lock())
-				throw Error(ErrorCode::TRIANGULATION);
-
-			// remove ears and form faces
-			if (ear_cycle == 0)
-			{
-				while (data.size > 3)
-				{
-					auto face = data.head_ear.lock()->face();
-					triangulation.push_back(increasing ? face : math::reverse(face));
-					remove_ear(data, data.head_ear.lock());
-				}
-			}
-			else if (ear_cycle > 0)
-			{
-				std::shared_ptr<Node> indexer = data.head_ear.lock();
-				while (data.size > 3)
-				{
-					std::shared_ptr<Node> next_indexer = indexer;
-					for (int i = 0; i < ear_cycle; ++i)
-						next_indexer = next_indexer->next_ear.lock();
-					auto face = indexer->face();
-					triangulation.push_back(increasing ? face : math::reverse(face));
-					remove_ear(data, indexer);
-					indexer = next_indexer;
-				}
-			}
-			else // if (ear_cycle < 0)
-			{
-				std::shared_ptr<Node> indexer = data.head_ear.lock();
-				while (data.size > 3)
-				{
-					std::shared_ptr<Node> prev_indexer = indexer;
-					for (int i = 0; i > ear_cycle; --i)
-						prev_indexer = prev_indexer->prev_ear.lock();
-					auto face = indexer->face();
-					triangulation.push_back(increasing ? face : math::reverse(face));
-					remove_ear(data, indexer);
-					indexer = prev_indexer;
-				}
-			}
-			// final face
-			auto face = data.head_ear.lock()->face();
+		if (polygon.size() == 3)
+		{
+			glm::uvec3 face{ unsigned_mod(0 + starting_offset, (int)polygon.size()), unsigned_mod(1 + starting_offset, (int)polygon.size()), unsigned_mod(2 + starting_offset, (int)polygon.size()) };
 			triangulation.push_back(increasing ? face : math::reverse(face));
 			return triangulation;
 		}
 
-		glm::uint get_first_ear(const Polygon2D& polygon, int starting_offset)
+		EarClippingData data{};
+		data.size = polygon.size();
+		data.vertices = &polygon;
+
+		// load polygon vertices
+		for (int i = 0; i < polygon.size(); ++i)
+			append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
+
+		// determine orientation
+		data.ccw = (math::signed_area(polygon) >= 0.0f);
+
+		std::shared_ptr<Node> indexer = data.head_polygon.lock();
+		// categorize initial vertices
+		do
 		{
-			OLY_ASSERT(polygon.size() >= 3);
-			if (polygon.size() == 3)
-				return 0;
-
-			EarClippingData data{};
-			data.size = polygon.size();
-			data.vertices = &polygon;
-
-			// load polygon vertices
-			for (int i = 0; i < polygon.size(); ++i)
-				append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
-
-			// determine orientation
-			data.ccw = (math::signed_area(polygon) >= 0.0f);
-
-			std::shared_ptr<Node> indexer = data.head_polygon.lock();
-			do
+			if (indexer->should_be_reflexive(data))
 			{
-				if (!indexer->should_be_reflexive(data) && indexer->should_be_ear(data))
-					return indexer->v;
-				indexer = indexer->next_vertex.lock();
-			} while (indexer != data.head_polygon.lock());
-
-			OLY_ASSERT(false);
-			return -1;
-		}
-
-		std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			return convex_decompose_triangulation(polygon, triangulate(polygon));
-		}
-
-		std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			// flood fill algorithm
-			std::vector<Triangulation> sub_triangulations;
-			const auto& adjacency = build_adjecency(triangulation);
-			std::vector<bool> visited(triangulation.size(), false);
-			for (size_t i = 0; i < triangulation.size(); ++i)
+				indexer->is_reflex = true;
+				append_reflex(data, indexer);
+			}
+			else
 			{
-				if (visited[i])
-					continue;
-
-				Triangulation convex_subtr;
-				std::unordered_map<glm::uint, glm::uvec2> boundary;
-				std::vector<glm::uint> stack = { (glm::uint)i };
-
-				while (!stack.empty())
+				indexer->is_reflex = false;
+				append_convex(data, indexer);
+				if (indexer->should_be_ear(data))
 				{
-					glm::uint curr = stack.back();
-					stack.pop_back();
+					indexer->is_ear = true;
+					append_ear(data, indexer);
+				}
+			}
 
-					if (visited[curr])
-						continue;
-					visited[curr] = true;
+			indexer = indexer->next_vertex.lock();
+		} while (indexer != data.head_polygon.lock());
 
-					const auto& face = triangulation[curr];
-					convex_subtr.push_back(triangulation[curr]);
+		if (!data.head_ear.lock())
+			throw Error(ErrorCode::TRIANGULATION);
 
-					// initial triangle boundary
-					if (convex_subtr.size() == 1)
+		// remove ears and form faces
+		if (ear_cycle == 0)
+		{
+			while (data.size > 3)
+			{
+				auto face = data.head_ear.lock()->face();
+				triangulation.push_back(increasing ? face : math::reverse(face));
+				remove_ear(data, data.head_ear.lock());
+			}
+		}
+		else if (ear_cycle > 0)
+		{
+			std::shared_ptr<Node> indexer = data.head_ear.lock();
+			while (data.size > 3)
+			{
+				std::shared_ptr<Node> next_indexer = indexer;
+				for (int i = 0; i < ear_cycle; ++i)
+					next_indexer = next_indexer->next_ear.lock();
+				auto face = indexer->face();
+				triangulation.push_back(increasing ? face : math::reverse(face));
+				remove_ear(data, indexer);
+				indexer = next_indexer;
+			}
+		}
+		else // if (ear_cycle < 0)
+		{
+			std::shared_ptr<Node> indexer = data.head_ear.lock();
+			while (data.size > 3)
+			{
+				std::shared_ptr<Node> prev_indexer = indexer;
+				for (int i = 0; i > ear_cycle; --i)
+					prev_indexer = prev_indexer->prev_ear.lock();
+				auto face = indexer->face();
+				triangulation.push_back(increasing ? face : math::reverse(face));
+				remove_ear(data, indexer);
+				indexer = prev_indexer;
+			}
+		}
+		// final face
+		auto face = data.head_ear.lock()->face();
+		triangulation.push_back(increasing ? face : math::reverse(face));
+		return triangulation;
+	}
+
+	glm::uint get_first_ear(const Polygon2D& polygon, int starting_offset)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		if (polygon.size() == 3)
+			return 0;
+
+		EarClippingData data{};
+		data.size = polygon.size();
+		data.vertices = &polygon;
+
+		// load polygon vertices
+		for (int i = 0; i < polygon.size(); ++i)
+			append_vertex(data, unsigned_mod(i + starting_offset, (int)polygon.size()));
+
+		// determine orientation
+		data.ccw = (math::signed_area(polygon) >= 0.0f);
+
+		std::shared_ptr<Node> indexer = data.head_polygon.lock();
+		do
+		{
+			if (!indexer->should_be_reflexive(data) && indexer->should_be_ear(data))
+				return indexer->v;
+			indexer = indexer->next_vertex.lock();
+		} while (indexer != data.head_polygon.lock());
+
+		OLY_ASSERT(false);
+		return -1;
+	}
+
+	std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		return convex_decompose_triangulation(polygon, triangulate(polygon));
+	}
+
+	std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		// flood fill algorithm
+		std::vector<Triangulation> sub_triangulations;
+		const auto& adjacency = build_adjecency(triangulation);
+		std::vector<bool> visited(triangulation.size(), false);
+		for (size_t i = 0; i < triangulation.size(); ++i)
+		{
+			if (visited[i])
+				continue;
+
+			Triangulation convex_subtr;
+			std::unordered_map<glm::uint, glm::uvec2> boundary;
+			std::vector<glm::uint> stack = { (glm::uint)i };
+
+			while (!stack.empty())
+			{
+				glm::uint curr = stack.back();
+				stack.pop_back();
+
+				if (visited[curr])
+					continue;
+				visited[curr] = true;
+
+				const auto& face = triangulation[curr];
+				convex_subtr.push_back(triangulation[curr]);
+
+				// initial triangle boundary
+				if (convex_subtr.size() == 1)
+				{
+					boundary[face[0]] = { face[2], face[1] };
+					boundary[face[1]] = { face[0], face[2] };
+					boundary[face[2]] = { face[1], face[0] };
+				}
+
+				Edge edges[3] = {
+					Edge(face[0], face[1]),
+					Edge(face[1], face[2]),
+					Edge(face[2], face[0])
+				};
+				for (const auto& edge : edges)
+				{
+					const auto& adj = adjacency.find(edge)->second;
+					for (glm::uint neighbour : adj)
 					{
-						boundary[face[0]] = { face[2], face[1] };
-						boundary[face[1]] = { face[0], face[2] };
-						boundary[face[2]] = { face[1], face[0] };
-					}
-
-					Edge edges[3] = {
-						Edge(face[0], face[1]),
-						Edge(face[1], face[2]),
-						Edge(face[2], face[0])
-					};
-					for (const auto& edge : edges)
-					{
-						const auto& adj = adjacency.find(edge)->second;
-						for (glm::uint neighbour : adj)
+						if (!visited[neighbour])
 						{
-							if (!visited[neighbour])
+							// get new vertex that would be added to convex subpolygon
+							glm::uvec3 ntr = triangulation[neighbour];
+							int new_vertex;
+							if (ntr[0] != face[0] && ntr[0] != face[1] && ntr[0] != face[2])
+								new_vertex = 0;
+							else if (ntr[1] != face[0] && ntr[1] != face[1] && ntr[1] != face[2])
+								new_vertex = 1;
+							else
+								new_vertex = 2;
+
+							glm::uint icpt = ntr[new_vertex];
+							glm::uint ippt = ntr[unsigned_mod(new_vertex - 1, 3)];
+							glm::uint inpt = ntr[unsigned_mod(new_vertex + 1, 3)];
+							glm::vec2 cpt = polygon[icpt];
+							glm::vec2 ppt = polygon[ippt];
+							glm::vec2 npt = polygon[inpt];
+							auto& padj = boundary.find(ippt)->second;
+							auto& nadj = boundary.find(inpt)->second;
+							glm::vec2 pd{}, nd{};
+							if (padj[0] != inpt)
+								pd = ppt - polygon[padj[0]];
+							else
+								pd = ppt - polygon[padj[1]];
+							if (nadj[0] != ippt)
+								nd = npt - polygon[nadj[0]];
+							else
+								nd = npt - polygon[nadj[1]];
+
+							// does new vertex maintain convexity?
+							if (math::in_convex_sector(pd, npt - ppt, cpt - ppt) && math::in_convex_sector(nd, ppt - npt, cpt - npt))
 							{
-								// get new vertex that would be added to convex subpolygon
-								glm::uvec3 ntr = triangulation[neighbour];
-								int new_vertex;
-								if (ntr[0] != face[0] && ntr[0] != face[1] && ntr[0] != face[2])
-									new_vertex = 0;
-								else if (ntr[1] != face[0] && ntr[1] != face[1] && ntr[1] != face[2])
-									new_vertex = 1;
+								stack.push_back(neighbour);
+								if (padj[0] == inpt)
+									padj[0] = icpt;
 								else
-									new_vertex = 2;
-
-								glm::uint icpt = ntr[new_vertex];
-								glm::uint ippt = ntr[unsigned_mod(new_vertex - 1, 3)];
-								glm::uint inpt = ntr[unsigned_mod(new_vertex + 1, 3)];
-								glm::vec2 cpt = polygon[icpt];
-								glm::vec2 ppt = polygon[ippt];
-								glm::vec2 npt = polygon[inpt];
-								auto& padj = boundary.find(ippt)->second;
-								auto& nadj = boundary.find(inpt)->second;
-								glm::vec2 pd{}, nd{};
-								if (padj[0] != inpt)
-									pd = ppt - polygon[padj[0]];
+									padj[1] = icpt;
+								if (nadj[0] == ippt)
+									nadj[0] = icpt;
 								else
-									pd = ppt - polygon[padj[1]];
-								if (nadj[0] != ippt)
-									nd = npt - polygon[nadj[0]];
-								else
-									nd = npt - polygon[nadj[1]];
-
-								// does new vertex maintain convexity?
-								if (math::in_convex_sector(pd, npt - ppt, cpt - ppt) && math::in_convex_sector(nd, ppt - npt, cpt - npt))
-								{
-									stack.push_back(neighbour);
-									if (padj[0] == inpt)
-										padj[0] = icpt;
-									else
-										padj[1] = icpt;
-									if (nadj[0] == ippt)
-										nadj[0] = icpt;
-									else
-										nadj[1] = icpt;
-									boundary[icpt] = { ippt, inpt };
-								}
+									nadj[1] = icpt;
+								boundary[icpt] = { ippt, inpt };
 							}
 						}
 					}
 				}
-
-				sub_triangulations.push_back(std::move(convex_subtr));
 			}
 
-			return sub_triangulations;
+			sub_triangulations.push_back(std::move(convex_subtr));
 		}
 
-		std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
-			return decompose_polygon(polygon, decomposition);
-		}
+		return sub_triangulations;
+	}
 
-		std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon, const Triangulation& triangulation)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
-			return decompose_polygon(polygon, decomposition);
-		}
+	std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
+		return decompose_polygon(polygon, decomposition);
+	}
 
-		std::vector<std::pair<Polygon2D, Triangulation>> decompose_polygon(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<std::pair<Polygon2D, Triangulation>> subpolygons;
-			subpolygons.reserve(triangulations.size());
+	std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon, const Triangulation& triangulation)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
+		return decompose_polygon(polygon, decomposition);
+	}
 
-			for (const Triangulation& triangulation : triangulations)
+	std::vector<std::pair<Polygon2D, Triangulation>> decompose_polygon(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<std::pair<Polygon2D, Triangulation>> subpolygons;
+		subpolygons.reserve(triangulations.size());
+
+		for (const Triangulation& triangulation : triangulations)
+		{
+			std::pair<Polygon2D, Triangulation> subpolygon;
+			std::unordered_map<glm::uint, glm::uint> point_indices;
+			for (glm::uvec3 face : triangulation)
 			{
-				std::pair<Polygon2D, Triangulation> subpolygon;
-				std::unordered_map<glm::uint, glm::uint> point_indices;
-				for (glm::uvec3 face : triangulation)
+				glm::uvec3 new_face{};
+				for (glm::length_t i = 0; i < 3; ++i)
 				{
-					glm::uvec3 new_face{};
-					for (glm::length_t i = 0; i < 3; ++i)
+					if (!point_indices.count(face[i]))
 					{
-						if (!point_indices.count(face[i]))
-						{
-							point_indices[face[i]] = (glm::uint)point_indices.size();
-							subpolygon.first.push_back(polygon[face[i]]);
-						}
-						new_face[i] = point_indices[face[i]];
+						point_indices[face[i]] = (glm::uint)point_indices.size();
+						subpolygon.first.push_back(polygon[face[i]]);
 					}
-					subpolygon.second.push_back(new_face);
+					new_face[i] = point_indices[face[i]];
 				}
-				subpolygons.push_back(std::move(subpolygon));
+				subpolygon.second.push_back(new_face);
 			}
-
-			return subpolygons;
+			subpolygons.push_back(std::move(subpolygon));
 		}
 
-		std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
-			return decompose_polygon_without_triangulation(polygon, decomposition);
-		}
+		return subpolygons;
+	}
+
+	std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon);
+		return decompose_polygon_without_triangulation(polygon, decomposition);
+	}
 		
-		std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
-			return decompose_polygon_without_triangulation(polygon, decomposition);
-		}
+	std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon, const Triangulation& triangulation)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<Triangulation> decomposition = convex_decompose_triangulation(polygon, triangulation);
+		return decompose_polygon_without_triangulation(polygon, decomposition);
+	}
 		
-		std::vector<Polygon2D> decompose_polygon_without_triangulation(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
-		{
-			OLY_ASSERT(polygon.size() >= 3);
-			std::vector<Polygon2D> subpolygons;
-			subpolygons.reserve(triangulations.size());
+	std::vector<Polygon2D> decompose_polygon_without_triangulation(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations)
+	{
+		OLY_ASSERT(polygon.size() >= 3);
+		std::vector<Polygon2D> subpolygons;
+		subpolygons.reserve(triangulations.size());
 
-			for (const Triangulation& triangulation : triangulations)
+		for (const Triangulation& triangulation : triangulations)
+		{
+			Polygon2D subpolygon;
+			std::unordered_map<glm::uint, glm::uint> point_indices;
+			for (glm::uvec3 face : triangulation)
 			{
-				Polygon2D subpolygon;
-				std::unordered_map<glm::uint, glm::uint> point_indices;
-				for (glm::uvec3 face : triangulation)
+				glm::uvec3 new_face{};
+				for (glm::length_t i = 0; i < 3; ++i)
 				{
-					glm::uvec3 new_face{};
-					for (glm::length_t i = 0; i < 3; ++i)
+					if (!point_indices.count(face[i]))
 					{
-						if (!point_indices.count(face[i]))
-						{
-							point_indices[face[i]] = (glm::uint)point_indices.size();
-							subpolygon.push_back(polygon[face[i]]);
-						}
-						new_face[i] = point_indices[face[i]];
+						point_indices[face[i]] = (glm::uint)point_indices.size();
+						subpolygon.push_back(polygon[face[i]]);
 					}
+					new_face[i] = point_indices[face[i]];
 				}
-				subpolygons.push_back(std::move(subpolygon));
 			}
-
-			return subpolygons;
+			subpolygons.push_back(std::move(subpolygon));
 		}
+
+		return subpolygons;
 	}
 }

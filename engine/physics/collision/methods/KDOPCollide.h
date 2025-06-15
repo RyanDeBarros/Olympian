@@ -20,37 +20,37 @@ namespace oly::col2d
 	// ######################################################################################################################################################
 	// KDOP
 
-	template<size_t K_half>
-	inline OverlapResult point_hits(const KDOP<K_half>& c, glm::vec2 test)
+	template<size_t K>
+	inline OverlapResult point_hits(const KDOP<K>& c, glm::vec2 test)
 	{
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < K; ++i)
 		{
-			float proj = KDOP<K_half>::uniform_axis(i).dot(test);
+			float proj = KDOP<K>::uniform_axis(i).dot(test);
 			if (proj < c.get_minimum(i) || proj > c.get_maximum(i))
 				return false;
 		}
 		return true;
 	}
 	
-	template<size_t K_half>
-	inline OverlapResult ray_hits(const KDOP<K_half>& c, const Ray& ray)
+	template<size_t K>
+	inline OverlapResult ray_hits(const KDOP<K>& c, const Ray& ray)
 	{
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < K; ++i)
 		{
-			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K_half>::uniform_axis(i)))
+			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K>::uniform_axis(i)))
 				return false;
 		}
 		return true;
 	}
 	
-	template<size_t K_half>
-	inline RaycastResult raycast(const KDOP<K_half>& c, const Ray& ray)
+	template<size_t K>
+	inline RaycastResult raycast(const KDOP<K>& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = -nmax<float>();
-		for (size_t i = 0; i < K_half; ++i)
+		for (size_t i = 0; i < K; ++i)
 		{
-			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K_half>::uniform_axis(i), info, max_entry))
+			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, KDOP<K>::uniform_axis(i), info, max_entry))
 				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 		if (info.hit == RaycastResult::Hit::TRUE_HIT)
@@ -58,10 +58,10 @@ namespace oly::col2d
 		return info;
 	}
 	
-	template<size_t K_half1, size_t K_half2>
-	inline OverlapResult overlaps(const KDOP<K_half1>& c1, const KDOP<K_half2>& c2)
+	template<size_t K1, size_t K2>
+	inline OverlapResult overlaps(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K_half1 + K_half2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -76,10 +76,10 @@ namespace oly::col2d
 		return sat::overlaps(c1, c2);
 	}
 	
-	template<size_t K_half1, size_t K_half2>
-	inline CollisionResult collides(const KDOP<K_half1>& c1, const KDOP<K_half2>& c2)
+	template<size_t K1, size_t K2>
+	inline CollisionResult collides(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K_half1 + K_half2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -94,10 +94,10 @@ namespace oly::col2d
 		return sat::collides(c1, c2);
 	}
 	
-	template<size_t K_half1, size_t K_half2>
-	inline ContactResult contacts(const KDOP<K_half1>& c1, const KDOP<K_half2>& c2)
+	template<size_t K1, size_t K2>
+	inline ContactResult contacts(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K_half1 + K_half2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -119,7 +119,7 @@ namespace oly::col2d
 
 	inline OverlapResult point_hits(const CustomKDOP& c, glm::vec2 test)
 	{
-		for (size_t i = 0; i < c.get_k_half(); ++i)
+		for (size_t i = 0; i < c.get_k(); ++i)
 		{
 			float proj = c.edge_normal(i).dot(test);
 			if (proj < c.get_minimum(i) || proj > c.get_maximum(i))
@@ -130,7 +130,7 @@ namespace oly::col2d
 
 	inline OverlapResult ray_hits(const CustomKDOP& c, const Ray& ray)
 	{
-		for (size_t i = 0; i < c.get_k_half(); ++i)
+		for (size_t i = 0; i < c.get_k(); ++i)
 		{
 			if (!internal::ray_hits_slab(c.get_minimum(i), c.get_maximum(i), ray, c.edge_normal(i)))
 				return false;
@@ -142,7 +142,7 @@ namespace oly::col2d
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = -nmax<float>();
-		for (size_t i = 0; i < c.get_k_half(); ++i)
+		for (size_t i = 0; i < c.get_k(); ++i)
 		{
 			if (!internal::raycast_update_on_slab(c.get_minimum(i), c.get_maximum(i), ray, c.edge_normal(i), info, max_entry))
 				return { .hit = RaycastResult::Hit::NO_HIT };
@@ -210,10 +210,10 @@ namespace oly::col2d
 	// ######################################################################################################################################################
 	// KDOP - Circle
 
-	template<size_t K_half>
-	inline OverlapResult overlaps(const KDOP<K_half>& c1, const Circle& c2)
+	template<size_t K>
+	inline OverlapResult overlaps(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -228,10 +228,10 @@ namespace oly::col2d
 		return internal::circle_overlaps_polygon(c2, c1.points());
 	}
 
-	template<size_t K_half>
-	inline OverlapResult overlaps(const Circle& c1, const KDOP<K_half>& c2)
+	template<size_t K>
+	inline OverlapResult overlaps(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -246,10 +246,10 @@ namespace oly::col2d
 		return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 
-	template<size_t K_half>
-	inline CollisionResult collides(const KDOP<K_half>& c1, const Circle& c2)
+	template<size_t K>
+	inline CollisionResult collides(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -264,10 +264,10 @@ namespace oly::col2d
 		return internal::circle_collides_polygon(c2, c1.points()).invert();
 	}
 
-	template<size_t K_half>
-	inline CollisionResult collides(const Circle& c1, const KDOP<K_half>& c2)
+	template<size_t K>
+	inline CollisionResult collides(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -282,10 +282,10 @@ namespace oly::col2d
 		return internal::circle_collides_polygon(c1, c2.points());
 	}
 
-	template<size_t K_half>
-	inline ContactResult contacts(const KDOP<K_half>& c1, const Circle& c2)
+	template<size_t K>
+	inline ContactResult contacts(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -300,10 +300,10 @@ namespace oly::col2d
 		return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
 	}
 
-	template<size_t K_half>
-	inline ContactResult contacts(const Circle& c1, const KDOP<K_half>& c2)
+	template<size_t K>
+	inline ContactResult contacts(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K_half + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
 		{
 			try
 			{
@@ -324,10 +324,10 @@ namespace oly::col2d
 	// KDOP - Rest
 	
 #define OLY_KDOP_COLLISION_METHODS(Shape, shape_vertices1, shape_vertices2)\
-	template<size_t K_half>\
-	inline OverlapResult overlaps(const KDOP<K_half>& c1, const Shape& c2)\
+	template<size_t K>\
+	inline OverlapResult overlaps(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K_half + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -341,10 +341,10 @@ namespace oly::col2d
 		}\
 		return sat::overlaps(c1, c2);\
 	}\
-	template<size_t K_half>\
-	inline OverlapResult overlaps(const Shape& c1, const KDOP<K_half>& c2)\
+	template<size_t K>\
+	inline OverlapResult overlaps(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K_half + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -358,10 +358,10 @@ namespace oly::col2d
 		}\
 		return sat::overlaps(c1, c2);\
 	}\
-	template<size_t K_half>\
-	inline CollisionResult collides(const KDOP<K_half>& c1, const Shape& c2)\
+	template<size_t K>\
+	inline CollisionResult collides(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K_half + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -375,10 +375,10 @@ namespace oly::col2d
 		}\
 		return sat::collides(c1, c2);\
 	}\
-	template<size_t K_half>\
-	inline CollisionResult collides(const Shape& c1, const KDOP<K_half>& c2)\
+	template<size_t K>\
+	inline CollisionResult collides(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K_half + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -392,10 +392,10 @@ namespace oly::col2d
 		}\
 		return sat::collides(c1, c2);\
 	}\
-	template<size_t K_half>\
-	inline ContactResult contacts(const KDOP<K_half>& c1, const Shape& c2)\
+	template<size_t K>\
+	inline ContactResult contacts(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K_half + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\
@@ -409,10 +409,10 @@ namespace oly::col2d
 		}\
 		return sat::contacts(c1, c2);\
 	}\
-	template<size_t K_half>\
-	inline ContactResult contacts(const Shape& c1, const KDOP<K_half>& c2)\
+	template<size_t K>\
+	inline ContactResult contacts(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K_half + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
 		{\
 			try\
 			{\

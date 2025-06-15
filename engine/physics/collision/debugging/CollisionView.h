@@ -199,6 +199,9 @@ namespace oly::debug
 		template<typename Polygon>
 		inline debug::CollisionView polygon_collision_view(const Polygon& points, glm::vec4 color)
 		{
+			if (points.size() < 3)
+				return CollisionView();
+
 			rendering::StaticPolygon polygon;
 			polygon.polygon.colors = { color };
 			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
@@ -209,6 +212,12 @@ namespace oly::debug
 		template<typename Polygon>
 		inline void polygon_update_view(debug::CollisionView& view, const Polygon& points, glm::vec4 color)
 		{
+			if (points.size() < 3)
+			{
+				view.clear_view();
+				return;
+			}
+
 			CollisionObjectView& obj = view.get_view();
 			bool modify = std::visit([](auto&& obj) -> bool {
 				if constexpr (visiting_class_is<decltype(obj), CollisionObject>)
@@ -228,9 +237,10 @@ namespace oly::debug
 			{
 				rendering::StaticPolygon& polygon = std::get<CollisionObjectType::POLYGON>(std::get<CollisionObjectViewType::SINGLE>(obj));
 				polygon.polygon.colors = { color };
+				polygon.polygon.points.clear();
 				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-				polygon.init();
-				view.set_view(std::move(polygon));
+				polygon.send_polygon();
+				view.view_changed();
 			}
 			else
 			{
@@ -283,26 +293,26 @@ namespace oly::debug
 		internal::polygon_update_view(view, c.points(), color);
 	}
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-	inline CollisionView collision_view(const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
+	template<size_t K, std::array<UnitVector2D, K> Axes>
+	inline CollisionView collision_view(const col2d::CustomKDOPShape<K, Axes>& c, glm::vec4 color)
 	{
 		return internal::polygon_collision_view(c.points(), color);
 	}
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-	inline void update_view(CollisionView& view, const col2d::CustomKDOPShape<K_half, Axes>& c, glm::vec4 color)
+	template<size_t K, std::array<UnitVector2D, K> Axes>
+	inline void update_view(CollisionView& view, const col2d::CustomKDOPShape<K, Axes>& c, glm::vec4 color)
 	{
 		internal::polygon_update_view(view, c.points(), color);
 	}
 
-	template<size_t K_half>
-	inline CollisionView collision_view(const col2d::KDOP<K_half>& c, glm::vec4 color)
+	template<size_t K>
+	inline CollisionView collision_view(const col2d::KDOP<K>& c, glm::vec4 color)
 	{
 		return internal::polygon_collision_view(c.points(), color);
 	}
 
-	template<size_t K_half>
-	inline void update_view(CollisionView& view, const col2d::KDOP<K_half>& c, glm::vec4 color)
+	template<size_t K>
+	inline void update_view(CollisionView& view, const col2d::KDOP<K>& c, glm::vec4 color)
 	{
 		internal::polygon_update_view(view, c.points(), color);
 	}
@@ -445,7 +455,7 @@ namespace oly::debug
 			impulse.adjust_standard_head_for_width(arrow_width);
 			impulse.set_start() = feature.position;
 			impulse.set_end() = feature.position + feature.impulse;
-			view.set_view(std::move(impulse));
+			view.view_changed();
 		}
 		else
 		{
@@ -492,7 +502,7 @@ namespace oly::debug
 			arrow.adjust_standard_head_for_width(arrow_width);
 			arrow.set_start() = ray.origin;
 			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
-			view.set_view(std::move(arrow));
+			view.view_changed();
 		}
 		else
 		{

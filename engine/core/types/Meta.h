@@ -36,12 +36,6 @@ namespace oly
 		return reinterpret_cast<std::size_t>(&(reinterpret_cast<Struct*>(0)->*member));
 	}
 
-	template<typename ToVariant, typename FromVariant>
-	inline ToVariant convert_variant(const FromVariant& from)
-	{
-		return std::visit([](const auto& f) { return ToVariant{ f }; }, from);
-	}
-
 	template<typename T>
 	concept numeric = std::integral<T> || std::floating_point<T>;
 

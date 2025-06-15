@@ -511,8 +511,8 @@ namespace oly::col2d
 
 	OverlapResult point_hits(const OBB& c, glm::vec2 test)
 	{
-		glm::vec2 local = (c.get_rotation_matrix() * test - c.center);
-		return glm::abs(local.x) <= c.width && glm::abs(local.y) <= c.height;
+		glm::vec2 local = c.get_inv_rotation_matrix() * (test - c.center);
+		return glm::abs(local.x) <= 0.5f * c.width && glm::abs(local.y) <= 0.5f * c.height;
 	}
 
 	OverlapResult ray_hits(const OBB& c, const Ray& ray)

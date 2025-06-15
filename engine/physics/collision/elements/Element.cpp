@@ -321,46 +321,23 @@ namespace oly::col2d
 
 	Element transform_element(const CopyPtr<CustomKDOP>& c, const glm::mat3& m)
 	{
-		math::Polygon2D polygon;
-		polygon.reserve(c->points().size());
-		for (glm::vec2 point : c->points())
-			polygon.push_back(transform_point(m, point));
-
-		std::vector<UnitVector2D> axes(c->get_axes().size());
+		// CustomKDOP
+		// LATER check if compatible with standard KDOP axes
+		std::vector<UnitVector2D> axes(c->get_k());
+		std::vector<float> minima(c->get_k());
+		std::vector<float> maxima(c->get_k());
 		for (size_t i = 0; i < axes.size(); ++i)
-			axes[i] = transform_direction(m, c->get_axes()[i]);
-
-		if (c->get_k_half() == 2)
 		{
-			if (near_zero(axes[0].dot(axes[1])))
-			{
-				if (axes[0].near_standard(LINEAR_TOLERANCE) && axes[1].near_standard(LINEAR_TOLERANCE))
-				{
-					// AABB
-					return AABB::wrap(polygon.data(), polygon.size());
-				}
-				else
-				{
-					// OBB
-					return OBB::fast_wrap(polygon.data(), polygon.size());
-				}
-			}
-			else
-			{
-				// CustomKDOP
-				return CustomKDOP::wrap_copy_ptr(polygon, axes);
-			}
+			axes[i] = transform_normal(m, c->edge_normal(i));
+			float offset = axes[i].dot(m[2]);
+			minima[i] = offset + axes[i].dot(transform_normal(m, c->get_minimum(i) * (glm::vec2)c->edge_normal(i)));
+			maxima[i] = offset + axes[i].dot(transform_normal(m, c->get_maximum(i) * (glm::vec2)c->edge_normal(i)));
 		}
-		else
-		{
-			// CustomKDOP
-			// LATER check if compatible with standard KDOP axes
-			return CustomKDOP::wrap_copy_ptr(polygon, axes);
-		}
+		return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
 	}
 
-	template<size_t K_half>
-	static Element transform_element_impl(const CopyPtr<KDOP<K_half>>& c, const glm::mat3& m)
+	template<size_t K>
+	static Element transform_element_impl(const CopyPtr<KDOP<K>>& c, const glm::mat3& m)
 	{
 		bool reverse_axes = false;
 		bool maintain_axes = false;
@@ -372,7 +349,7 @@ namespace oly::col2d
 			float scaleY = glm::length(m[1]);
 			reverse_axes = math::cross(m[0], m[1]) < 0.0f;
 			rotation = glm::atan(m[0][1], m[0][0]);
-			if (approx(glm::abs(scale), glm::abs(scaleY)) && near_multiple(rotation, glm::pi<float>() / K_half))
+			if (approx(glm::abs(scale), glm::abs(scaleY)) && near_multiple(rotation, glm::pi<float>() / K))
 				maintain_axes = true;
 		}
 
@@ -381,33 +358,49 @@ namespace oly::col2d
 			// KDOP
 			glm::vec2 translation = m[2];
 			int rotation_axis_offset = 0;
-			rotation_axis_offset = roundi(K_half * rotation * glm::one_over_pi<float>());
-			std::array<float, K_half> minima;
-			std::array<float, K_half> maxima;
-			for (int i = 0; i < K_half; ++i)
+			rotation_axis_offset = roundi(K * rotation * glm::one_over_pi<float>());
+			std::array<float, K> minima;
+			std::array<float, K> maxima;
+			for (int i = 0; i < K; ++i)
 			{
-				float offset = KDOP<K_half>::uniform_axis(i).dot(translation);
-				int og_idx = reverse_axes ? int(K_half) - i : i;
-				og_idx = unsigned_mod(og_idx + rotation_axis_offset, int(K_half));
+				float offset = KDOP<K>::uniform_axis(i).dot(translation);
+				int og_idx = reverse_axes ? int(K) - i : i;
+				og_idx = unsigned_mod(og_idx + rotation_axis_offset, int(K));
 				minima[i] = c->get_minimum(og_idx) * scale + offset;
 				maxima[i] = c->get_maximum(og_idx) * scale + offset;
 			}
-			return make_copy_ptr<KDOP<K_half>>(minima, maxima);
+			return make_copy_ptr<KDOP<K>>(minima, maxima);
 		}
 		else
 		{
 			// CustomKDOP
-			math::Polygon2D polygon;
-			polygon.reserve(c->points().size());
-			for (glm::vec2 point : c->points())
-				polygon.push_back(transform_point(m, point));
-
-			std::vector<UnitVector2D> axes(K_half);
+			std::vector<UnitVector2D> axes(K);
+			std::vector<float> minima(K);
+			std::vector<float> maxima(K);
 			for (size_t i = 0; i < axes.size(); ++i)
-				axes[i] = transform_direction(m, KDOP<K_half>::uniform_axis(i));
-
-			return CustomKDOP::wrap_copy_ptr(polygon, axes);
+			{
+				axes[i] = transform_normal(m, KDOP<K>::uniform_axis(i));
+				float offset = axes[i].dot(m[2]);
+				minima[i] = offset + axes[i].dot(transform_normal(m, c->get_minimum(i) * (glm::vec2)KDOP<K>::uniform_axis(i)));
+				maxima[i] = offset + axes[i].dot(transform_normal(m, c->get_maximum(i) * (glm::vec2)KDOP<K>::uniform_axis(i)));
+			}
+			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
 		}
+	}
+
+	Element transform_element(const CopyPtr<KDOP3>& c, const glm::mat3& m)
+	{
+		return transform_element_impl(c, m);
+	}
+
+	Element transform_element(const CopyPtr<KDOP4>& c, const glm::mat3& m)
+	{
+		return transform_element_impl(c, m);
+	}
+
+	Element transform_element(const CopyPtr<KDOP5>& c, const glm::mat3& m)
+	{
+		return transform_element_impl(c, m);
 	}
 
 	Element transform_element(const CopyPtr<KDOP6>& c, const glm::mat3& m)
@@ -415,27 +408,12 @@ namespace oly::col2d
 		return transform_element_impl(c, m);
 	}
 
+	Element transform_element(const CopyPtr<KDOP7>& c, const glm::mat3& m)
+	{
+		return transform_element_impl(c, m);
+	}
+
 	Element transform_element(const CopyPtr<KDOP8>& c, const glm::mat3& m)
-	{
-		return transform_element_impl(c, m);
-	}
-
-	Element transform_element(const CopyPtr<KDOP10>& c, const glm::mat3& m)
-	{
-		return transform_element_impl(c, m);
-	}
-
-	Element transform_element(const CopyPtr<KDOP12>& c, const glm::mat3& m)
-	{
-		return transform_element_impl(c, m);
-	}
-
-	Element transform_element(const CopyPtr<KDOP14>& c, const glm::mat3& m)
-	{
-		return transform_element_impl(c, m);
-	}
-
-	Element transform_element(const CopyPtr<KDOP16>& c, const glm::mat3& m)
 	{
 		return transform_element_impl(c, m);
 	}

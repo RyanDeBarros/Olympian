@@ -52,14 +52,15 @@ namespace oly
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
 		bool near_standard(double tolerance = Tolerance<float>) const;
 
-		enum Parallel
+		enum ParallelState
 		{
 			SAME_DIRECTION,
 			OPPOSITE_DIRECTION,
 			NON_PARALLEL
 		};
 
-		Parallel near_parallel(UnitVector2D other, double tolerance = Tolerance<float>) const;
+		bool near_parallel(UnitVector2D other, double tolerance = Tolerance<float>) const;
+		ParallelState near_parallel_state(UnitVector2D other, double tolerance = Tolerance<float>) const;
 
 		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};

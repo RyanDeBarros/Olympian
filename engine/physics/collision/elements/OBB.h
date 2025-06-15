@@ -41,6 +41,13 @@ namespace oly::col2d
 			return { { cos, sin }, { -sin, cos } };
 		}
 
+		glm::mat2 get_inv_rotation_matrix() const
+		{
+			float cos = glm::cos(rotation);
+			float sin = -glm::sin(rotation);
+			return { { cos, sin }, { -sin, cos } };
+		}
+
 		std::array<glm::vec2, 4> points() const;
 		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;

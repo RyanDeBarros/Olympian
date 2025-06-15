@@ -17,14 +17,14 @@ namespace oly::col2d
 		ConvexHull(const std::vector<glm::vec2>& points = {}) : _points(points) {}
 		ConvexHull(std::vector<glm::vec2>&& points) : _points(std::move(points)) {}
 
-		const std::vector<glm::vec2> points() const { return _points; }
+		const std::vector<glm::vec2>& points() const { return _points; }
 		std::vector<glm::vec2>& set_points() { dirty_center = true; return _points; }
 		size_t size() const { return _points.size(); }
 
 		static ConvexHull wrap(const glm::vec2* polygon, size_t count);
 		static ConvexHull wrap(const math::Polygon2D& polygon);
 		static ConvexHull wrap(math::Polygon2D& polygon);
-		
+
 		glm::vec2 center() const;
 		
 		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;

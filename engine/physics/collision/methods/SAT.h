@@ -239,15 +239,14 @@ namespace oly::col2d::sat
 			}
 		};
 
-		template<size_t K_half, typename Other>
-		struct OverlapTest<KDOP<K_half>, Other>
+		template<size_t K, typename Other>
+		struct OverlapTest<KDOP<K>, Other>
 		{
-			static OverlapResult impl(const KDOP<K_half>& c, const Other& other)
+			static OverlapResult impl(const KDOP<K>& c, const Other& other)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < K; ++i)
 				{
-					std::pair<float, float> i2 = other.projection_interval(KDOP<K_half>::uniform_axis(i));
+					std::pair<float, float> i2 = other.projection_interval(KDOP<K>::uniform_axis(i));
 					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
@@ -255,16 +254,15 @@ namespace oly::col2d::sat
 			}
 		};
 
-		template<size_t K_half, typename Other>
-		struct CollisionTest<KDOP<K_half>, Other>
+		template<size_t K, typename Other>
+		struct CollisionTest<KDOP<K>, Other>
 		{
-			static void update_collision(const KDOP<K_half>& c, const Other& other, CollisionResult& info)
+			static void update_collision(const KDOP<K>& c, const Other& other, CollisionResult& info)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < K; ++i)
 				{
 					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
-					std::pair<float, float> i2 = other.projection_interval(KDOP<K_half>::uniform_axis(i));
+					std::pair<float, float> i2 = other.projection_interval(KDOP<K>::uniform_axis(i));
 					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
 					if (depth < 0.0f)
 					{
@@ -275,19 +273,18 @@ namespace oly::col2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? KDOP<K_half>::uniform_axis(i) : -KDOP<K_half>::uniform_axis(i);
+						info.unit_impulse = i1.first < i2.first ? KDOP<K>::uniform_axis(i) : -KDOP<K>::uniform_axis(i);
 					}
 				}
 			}
 		};
 
-		template<size_t K_half>
-		struct FullOverlapTest<KDOP<K_half>, KDOP<K_half>>
+		template<size_t K>
+		struct FullOverlapTest<KDOP<K>, KDOP<K>>
 		{
-			static OverlapResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
+			static OverlapResult call(const KDOP<K>& c1, const KDOP<K>& c2)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < K; ++i)
 				{
 					if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
 						return false;
@@ -296,14 +293,13 @@ namespace oly::col2d::sat
 			}
 		};
 
-		template<size_t K_half>
-		struct FullCollisionTest<KDOP<K_half>, KDOP<K_half>>
+		template<size_t K>
+		struct FullCollisionTest<KDOP<K>, KDOP<K>>
 		{
-			static CollisionResult call(const KDOP<K_half>& c1, const KDOP<K_half>& c2)
+			static CollisionResult call(const KDOP<K>& c1, const KDOP<K>& c2)
 			{
 				CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < K_half; ++i)
+				for (size_t i = 0; i < K; ++i)
 				{
 					std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
 					std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
@@ -313,7 +309,7 @@ namespace oly::col2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? KDOP<K_half>::uniform_axis(i) : -KDOP<K_half>::uniform_axis(i);
+						info.unit_impulse = i1.first < i2.first ? KDOP<K>::uniform_axis(i) : -KDOP<K>::uniform_axis(i);
 					}
 				}
 				return info;
@@ -325,8 +321,7 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult impl(const CustomKDOP& c, const Other& other)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < c.get_k_half(); ++i)
+				for (size_t i = 0; i < c.get_k(); ++i)
 				{
 					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
 					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
@@ -341,8 +336,7 @@ namespace oly::col2d::sat
 		{
 			static void update_collision(const CustomKDOP& c, const Other& other, CollisionResult& info)
 			{
-				// only go through half the axes, since the other half has parallel normals
-				for (size_t i = 0; i < c.get_k_half(); ++i)
+				for (size_t i = 0; i < c.get_k(); ++i)
 				{
 					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
 					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
@@ -367,10 +361,9 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult call(const CustomKDOP& c1, const CustomKDOP& c2)
 			{
-				if (c1.get_k_half() == c2.get_k_half() && c1.get_axes() == c2.get_axes())
+				if (c1.get_k() == c2.get_k() && c1.get_axes() == c2.get_axes())
 				{
-					// only go through half the axes, since the other half has parallel normals
-					for (size_t i = 0; i < c1.get_k_half(); ++i)
+					for (size_t i = 0; i < c1.get_k(); ++i)
 					{
 						if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
 							return false;
@@ -389,11 +382,10 @@ namespace oly::col2d::sat
 		{
 			static CollisionResult call(const CustomKDOP& c1, const CustomKDOP& c2)
 			{
-				if (c1.get_k_half() == c2.get_k_half() && c1.get_axes() == c2.get_axes())
+				if (c1.get_k() == c2.get_k() && c1.get_axes() == c2.get_axes())
 				{
 					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					// only go through half the axes, since the other half has parallel normals
-					for (size_t i = 0; i < c1.get_k_half(); ++i)
+					for (size_t i = 0; i < c1.get_k(); ++i)
 					{
 						std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
 						std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };

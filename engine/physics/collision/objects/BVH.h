@@ -64,19 +64,19 @@ namespace oly::col2d
 		};
 		inline Wrap<ConvexHull>::CirclePolygonEnclosure Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
 
-		template<size_t K_half>
-		struct Wrap<KDOP<K_half>>
+		template<size_t K>
+		struct Wrap<KDOP<K>>
 		{
-			KDOP<K_half> operator()(const Element* elements, size_t count) const
+			KDOP<K> operator()(const Element* elements, size_t count) const
 			{
-				KDOP<K_half> kdop;
+				KDOP<K> kdop;
 				kdop.fill_invalid();
 				for (size_t i = 0; i < count; ++i)
 				{
 					std::visit([&kdop](auto&& element) {
-						for (size_t j = 0; j < K_half; ++j)
+						for (size_t j = 0; j < K; ++j)
 						{
-							std::pair<float, float> interval = element.projection_interval(KDOP<K_half>::uniform_axis(j));
+							std::pair<float, float> interval = element.projection_interval(KDOP<K>::uniform_axis(j));
 							kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
 							kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
 						}
@@ -87,7 +87,7 @@ namespace oly::col2d
 		};
 	}
 
-	template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
+	template<size_t K, std::array<UnitVector2D, K> Axes>
 	struct CustomKDOPShape
 	{
 		CustomKDOP kdop;
@@ -97,17 +97,17 @@ namespace oly::col2d
 
 	namespace internal
 	{
-		template<size_t K_half, std::array<UnitVector2D, K_half> Axes>
-		struct Wrap<CustomKDOPShape<K_half, Axes>>
+		template<size_t K, std::array<UnitVector2D, K> Axes>
+		struct Wrap<CustomKDOPShape<K, Axes>>
 		{
-			CustomKDOPShape<K_half, Axes> operator()(const Element* elements, size_t count) const
+			CustomKDOPShape<K, Axes> operator()(const Element* elements, size_t count) const
 			{
-				std::vector<float> minima(K_half, nmax<float>());
-				std::vector<float> maxima(K_half, -nmax<float>());
+				std::vector<float> minima(K, nmax<float>());
+				std::vector<float> maxima(K, -nmax<float>());
 				for (size_t i = 0; i < count; ++i)
 				{
 					std::visit([&minima, &maxima](auto&& element) {
-						for (size_t j = 0; j < K_half; ++j)
+						for (size_t j = 0; j < K; ++j)
 						{
 							std::pair<float, float> interval = element.projection_interval(Axes[j]);
 							minima[j] = std::min(minima[j], interval.first);

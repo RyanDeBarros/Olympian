@@ -15,12 +15,12 @@ namespace oly::col2d
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
 	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 
+	using KDOP3 = KDOP<3>;
+	using KDOP4 = KDOP<4>;
+	using KDOP5 = KDOP<5>;
 	using KDOP6 = KDOP<6>;
+	using KDOP7 = KDOP<7>;
 	using KDOP8 = KDOP<8>;
-	using KDOP10 = KDOP<10>;
-	using KDOP12 = KDOP<12>;
-	using KDOP14 = KDOP<14>;
-	using KDOP16 = KDOP<16>;
 
 	using Element = std::variant<
 		Circle,
@@ -28,24 +28,24 @@ namespace oly::col2d
 		OBB,
 		ConvexHull,
 		CopyPtr<CustomKDOP>,
+		CopyPtr<KDOP3>,
+		CopyPtr<KDOP4>,
+		CopyPtr<KDOP5>,
 		CopyPtr<KDOP6>,
-		CopyPtr<KDOP8>,
-		CopyPtr<KDOP10>,
-		CopyPtr<KDOP12>,
-		CopyPtr<KDOP14>,
-		CopyPtr<KDOP16>
+		CopyPtr<KDOP7>,
+		CopyPtr<KDOP8>
 	>;
 
 	extern Element transform_element(const Circle& c, const glm::mat3& m);
 	extern Element transform_element(const AABB& c, const glm::mat3& m);
 	extern Element transform_element(const OBB& c, const glm::mat3& m);
 	extern Element transform_element(const CopyPtr<CustomKDOP>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP3>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP4>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP5>& c, const glm::mat3& m);
 	extern Element transform_element(const CopyPtr<KDOP6>& c, const glm::mat3& m);
+	extern Element transform_element(const CopyPtr<KDOP7>& c, const glm::mat3& m);
 	extern Element transform_element(const CopyPtr<KDOP8>& c, const glm::mat3& m);
-	extern Element transform_element(const CopyPtr<KDOP10>& c, const glm::mat3& m);
-	extern Element transform_element(const CopyPtr<KDOP12>& c, const glm::mat3& m);
-	extern Element transform_element(const CopyPtr<KDOP14>& c, const glm::mat3& m);
-	extern Element transform_element(const CopyPtr<KDOP16>& c, const glm::mat3& m);
 	extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
 
 	typedef int Mask;

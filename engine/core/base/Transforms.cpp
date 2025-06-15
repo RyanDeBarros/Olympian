@@ -362,13 +362,13 @@ namespace oly
 		return glm::mat2(tr) * direction;
 	}
 
-	UnitVector2D transform_normal(const glm::mat3& tr, UnitVector2D normal)
+	glm::vec2 transform_normal(const glm::mat3& tr, glm::vec2 normal)
 	{
-		return UnitVector2D(glm::inverse(glm::transpose(glm::mat2(tr))) * (glm::vec2)normal);
+		return glm::inverse(glm::transpose(glm::mat2(tr))) * normal;
 	}
 
-	UnitVector2D transform_normal(const glm::mat3x2& tr, UnitVector2D normal)
+	glm::vec2 transform_normal(const glm::mat3x2& tr, glm::vec2 normal)
 	{
-		return UnitVector2D(glm::inverse(glm::transpose(glm::mat2(tr))) * (glm::vec2)normal);
+		return glm::inverse(glm::transpose(glm::mat2(tr))) * normal;
 	}
 }

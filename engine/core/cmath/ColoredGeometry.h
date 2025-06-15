@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #include "external/GLM.h"
-#include "core/math/Geometry.h"
+#include "core/math/Triangulation.h"
 
 namespace oly::cmath
 {
