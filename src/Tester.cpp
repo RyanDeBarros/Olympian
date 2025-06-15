@@ -88,7 +88,19 @@ int main()
 	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f } };
 	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
 	//oly::col2d::TPrimitive block = { oly::make_copy_ptr<oly::col2d::KDOP3>(std::array<float, 3>{ -300.0f, -100.0f, -100.0f }, std::array<float, 3>{ 100.0f, 100.0f, 100.0f }) };
-	oly::col2d::TPrimitive block = { oly::make_copy_ptr<oly::col2d::KDOP3>(std::array<float, 3>{ -300.0f, -100.0f, -100.0f }, std::array<float, 3>{ 100.0f, 100.0f, 100.0f }) };
+
+	std::vector<glm::vec2> _pts;
+	const int _npts = 5;
+	for (int i = 0; i < _npts; ++i)
+	{
+		glm::vec2 p;
+		const float radius = 100.0f;
+		p.x = radius * glm::cos((float)i * glm::two_pi<float>() / (float)_npts);
+		p.y = radius * glm::sin((float)i * glm::two_pi<float>() / (float)_npts);
+		_pts.push_back(p);
+	}
+
+	oly::col2d::TPrimitive block = { oly::col2d::ConvexHull(std::move(_pts)) };
 	block.set_local().position.y = -100.0f;
 	block.set_local().scale.x = 2.0f;
 	block.set_local().rotation = glm::pi<float>() / 8;

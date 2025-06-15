@@ -17,7 +17,7 @@ namespace oly::math
 	extern float inv_magnitude(glm::vec2 v);
 	extern glm::vec2 project(glm::vec2 point, glm::vec2 axis);
 	extern float projection_distance(glm::vec2 point, glm::vec2 axis);
-	extern bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test);
+	extern bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 v);
 	extern float signed_area(const std::vector<glm::vec2>& points);
 	inline bool point_in_triangle(glm::vec2 test, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
 		

@@ -236,10 +236,11 @@ namespace oly::col2d
 	Element transform_element(const ConvexHull& c, const glm::mat3& m)
 	{
 		ConvexHull tc;
-		std::vector<glm::vec2>& points = tc.set_points();
-		points.reserve(points.size());
+		const std::vector<glm::vec2>& points = c.points();
+		std::vector<glm::vec2>& tpoints = tc.set_points();
+		tpoints.reserve(points.size());
 		for (glm::vec2 p : points)
-			points.push_back(transform_point(m, p));
+			tpoints.push_back(transform_point(m, p));
 		return tc;
 	}
 }

@@ -56,12 +56,12 @@ namespace oly::math
 		return glm::dot(point, axis) / magnitude(axis);
 	}
 
-	bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 test)
+	bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 v)
 	{
 		if (cross(u1, u2) >= 0.0f)
-			return cross(u1, test) >= 0.0f && cross(test, u2) >= 0.0f;
+			return cross(u1, v) >= 0.0f && cross(v, u2) >= 0.0f;
 		else
-			return cross(u1, test) <= 0.0f && cross(test, u2) <= 0.0f;
+			return cross(u1, v) <= 0.0f && cross(v, u2) <= 0.0f;
 	}
 
 	float signed_area(const std::vector<glm::vec2>& points)

@@ -558,9 +558,10 @@ namespace oly::col2d
 	{
 		for (int i = 0; i < c.points().size(); ++i)
 		{
-			glm::vec2 u1 = c.points()[unsigned_mod(i - 1, (int)c.points().size())] - c.points()[i];
-			glm::vec2 u2 = c.points()[(i + 1) % c.points().size()] - c.points()[i];
-			if (!math::in_convex_sector(u1, u2, test))
+			glm::vec2 curr = c.points()[i];
+			glm::vec2 next = c.points()[(i + 1) % (int)c.points().size()];
+			glm::vec2 prev = c.points()[unsigned_mod(i - 1, (int)c.points().size())];
+			if (!math::in_convex_sector(prev - curr, next - curr, test - curr))
 				return false;
 		}
 		return true;
