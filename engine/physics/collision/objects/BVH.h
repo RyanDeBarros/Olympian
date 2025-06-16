@@ -232,8 +232,8 @@ namespace oly::col2d
 			MAX_Y_MAX_X,
 		};
 
-		Mask mask = 0;
-		Layer layer = 0;
+		Mask mask = 1;
+		Layer layer = 1;
 
 	private:
 		Heuristic heuristic = Heuristic::MIDPOINT_XY;

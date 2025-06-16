@@ -12,8 +12,8 @@ namespace oly::col2d
 	{
 		std::vector<Element> elements;
 
-		Mask mask = 0;
-		Layer layer = 0;
+		Mask mask = 1;
+		Layer layer = 1;
 	};
 
 	extern OverlapResult point_hits(const Compound& c, glm::vec2 test);

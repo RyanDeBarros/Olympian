@@ -121,25 +121,79 @@ namespace oly::col2d::internal
 	template<typename Polygon>
 	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		glm::vec2 deepest{};
-		size_t num_deepest_points = 0;
-		float max_depth = -nmax<float>();
-		for (glm::vec2 point : polygon)
+		bool forward = true;
+		int offset = 0;
+		glm::vec2 deepest = polygon[offset++];
+		float max_proj = axis.dot(deepest);
+		int num_deepest_points = 1;
+		
+		while (offset < polygon.size())
 		{
+			glm::vec2 point = polygon[offset++];
 			float proj = axis.dot(point);
-			if (proj > max_depth)
-			{
-				max_depth = proj;
-				deepest = point;
-				num_deepest_points = 1;
-			}
-			else if (approx(proj, max_depth))
+			if (approx(proj, max_proj))
 			{
 				deepest += point;
 				++num_deepest_points;
 			}
+			else if (proj > max_proj)
+			{
+				max_proj = proj;
+				deepest = point;
+				num_deepest_points = 1;
+				forward = true;
+				break;
+			}
 			else
-				break; // polygon is convex, so as soon as depth tapers off, it will never return to exceed max depth
+			{
+				forward = false;
+				break;
+			}
+		}
+		if (offset == polygon.size())
+			return deepest /= (float)num_deepest_points;
+
+		if (forward)
+		{
+			for (int i = offset; i < (int)polygon.size(); ++i)
+			{
+				glm::vec2 point = polygon[i];
+				float proj = axis.dot(point);
+				if (approx(proj, max_proj))
+				{
+					deepest += point;
+					++num_deepest_points;
+				}
+				else if (proj > max_proj)
+				{
+					max_proj = proj;
+					deepest = point;
+					num_deepest_points = 1;
+				}
+				else
+					break;
+			}
+		}
+		else
+		{
+			for (int i = (int)polygon.size() - 1; i >= offset; --i)
+			{
+				glm::vec2 point = polygon[i];
+				float proj = axis.dot(point);
+				if (approx(proj, max_proj))
+				{
+					deepest += point;
+					++num_deepest_points;
+				}
+				else if (proj > max_proj)
+				{
+					max_proj = proj;
+					deepest = point;
+					num_deepest_points = 1;
+				}
+				else
+					break;
+			}
 		}
 		return deepest /= (float)num_deepest_points;
 	}

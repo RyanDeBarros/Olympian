@@ -102,7 +102,7 @@ namespace oly::col2d
 
 	std::pair<float, float> Circle::projection_interval(const UnitVector2D& axis) const
 	{
-		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+		if (global == internal::CircleGlobalAccess::DEFAULT)
 		{
 			float center_proj = axis.dot(center);
 			return { center_proj - radius, center_proj + radius };
@@ -118,7 +118,7 @@ namespace oly::col2d
 
 	float Circle::projection_min(const UnitVector2D& axis) const
 	{
-		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+		if (global == internal::CircleGlobalAccess::DEFAULT)
 			return axis.dot(center) - radius;
 		else
 			return axis.dot(transform_point(global, center)) - radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
@@ -126,7 +126,7 @@ namespace oly::col2d
 
 	float Circle::projection_max(const UnitVector2D& axis) const
 	{
-		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+		if (global == internal::CircleGlobalAccess::DEFAULT)
 			return axis.dot(center) + radius;
 		else
 			return axis.dot(transform_point(global, center)) + radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
@@ -134,7 +134,7 @@ namespace oly::col2d
 
 	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
 	{
-		if (ginv == internal::CircleGlobalAccess::DEFAULT)
+		if (global == internal::CircleGlobalAccess::DEFAULT)
 			return center + radius * (glm::vec2)axis;
 		else
 			return radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis) + transform_point(global, center);

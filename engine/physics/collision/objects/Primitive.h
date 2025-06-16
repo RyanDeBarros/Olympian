@@ -12,8 +12,8 @@ namespace oly::col2d
 	{
 		Element element;
 
-		Mask mask = 0;
-		Layer layer = 0;
+		Mask mask = 1;
+		Layer layer = 1;
 	};
 
 	inline OverlapResult point_hits(const Primitive& c, glm::vec2 test) { return point_hits(c.element, test); }

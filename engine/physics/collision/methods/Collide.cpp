@@ -202,6 +202,8 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const Circle& c1, const Circle& c2)
 	{
+		return gjk::overlaps(c1, c2);
+
 		if (internal::CircleGlobalAccess::has_no_global(c1) && internal::CircleGlobalAccess::has_no_global(c2))
 		{
 			float dist_sqrd = math::mag_sqrd(c2.center - c1.center);

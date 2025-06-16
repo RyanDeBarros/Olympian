@@ -42,8 +42,8 @@ namespace oly::col2d::sat
 				internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
 				if (!info.overlap)
 					return info;
-				internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info);
-				if (!info.overlap)
+				internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info.invert());
+				if (!info.invert().overlap)
 					return info;
 				return info;
 			}
@@ -87,11 +87,48 @@ namespace oly::col2d::sat
 		template<typename Shape1, typename Shape2>
 		static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)
 		{
-			std::pair<float, float> i1 = c1.projection_interval(axis);
-			std::pair<float, float> i2 = c2.projection_interval(axis);
-			if (i1.first > i2.first)
+			auto [min1, max1] = c1.projection_interval(axis);
+			auto [min2, max2] = c2.projection_interval(axis);
+			if (min1 > max2)
+				return max2 - min1;
+			if (min2 > max1)
+			{
 				axis = -axis;
-			return std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+				return max1 - min2;
+			}
+			if (min1 < min2)
+			{
+				if (max1 < max2)
+				{
+					axis = -axis;
+					return max1 - min2;
+				}
+				else
+				{
+					if (min1 + max1 < min2 + max2)
+						return max2 - min1;
+					else
+					{
+						axis = -axis;
+						return max1 - min2;
+					}
+				}
+			}
+			else
+			{
+				if (max1 > max2)
+					return max2 - min1;
+				else
+				{
+					if (min1 + max1 < min2 + max2)
+					{
+						axis = -axis;
+						return max1 - min2;
+					}
+					else
+						return max2 - min1;
+				}
+			}
 		}
 
 		template<typename Other>
@@ -222,7 +259,7 @@ namespace oly::col2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = axis.get_quarter_turn();
+					info.unit_impulse = axis;
 				}
 				axis = c.get_minor_axis();
 				depth = sat(c, other, axis);
@@ -234,7 +271,7 @@ namespace oly::col2d::sat
 				else if (depth < info.penetration_depth)
 				{
 					info.penetration_depth = depth;
-					info.unit_impulse = axis.get_quarter_turn();
+					info.unit_impulse = axis;
 				}
 			}
 		};
