@@ -106,12 +106,12 @@ namespace oly::col2d::sat
 				else
 				{
 					if (min1 + max1 < min2 + max2)
-						return max2 - min1;
-					else
 					{
 						axis = -axis;
 						return max1 - min2;
 					}
+					else
+						return max2 - min1;
 				}
 			}
 			else
