@@ -84,11 +84,8 @@ namespace oly::col2d::sat
 
 	namespace internal
 	{
-		template<typename Shape1, typename Shape2>
-		static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)
+		static float sat(float min1, float max1, float min2, float max2, UnitVector2D& axis)
 		{
-			auto [min1, max1] = c1.projection_interval(axis);
-			auto [min2, max2] = c2.projection_interval(axis);
 			if (min1 > max2)
 				return max2 - min1;
 			if (min2 > max1)
@@ -129,6 +126,14 @@ namespace oly::col2d::sat
 						return max2 - min1;
 				}
 			}
+		}
+
+		template<typename Shape1, typename Shape2>
+		static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)
+		{
+			auto [min1, max1] = c1.projection_interval(axis);
+			auto [min2, max2] = c2.projection_interval(axis);
+			return sat(min1, max1, min2, max2, axis);
 		}
 
 		template<typename Other>
@@ -175,13 +180,19 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult impl(const AABB& c, const Other& other)
 			{
-				std::pair<float, float> i = other.projection_interval(UnitVector2D::RIGHT);
-				if (std::min(c.x2, i.second) - std::max(c.x1, i.first) < 0.0f)
-					return false;
+				{
+					UnitVector2D axis = UnitVector2D::RIGHT;
+					auto [min2, max2] = other.projection_interval(axis);
+					if (sat(c.x1, c.x2, min2, max2, axis) < 0.0f)
+						return false;
+				}
 
-				i = other.projection_interval(UnitVector2D::UP);
-				if (std::min(c.y2, i.second) - std::max(c.y1, i.first) < 0.0f)
-					return false;
+				{
+					UnitVector2D axis = UnitVector2D::UP;
+					auto [min2, max2] = other.projection_interval(axis);
+					if (sat(c.y1, c.y2, min2, max2, axis) < 0.0f)
+						return false;
+				}
 
 				return true;
 			}
@@ -225,19 +236,21 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult impl(const OBB& c, const Other& other)
 			{
-				UnitVector2D axis = c.get_major_axis();
-				float cw = axis.dot(c.center);
-				std::pair<float, float> i1 = { cw - 0.5f * c.width, cw + 0.5f * c.width };
-				std::pair<float, float> i2 = other.projection_interval(axis);
-				if (std::min(i1.second, i2.second) - std::max(i1.first, i2.first) < 0.0f)
-					return false;
+				{
+					UnitVector2D axis = c.get_major_axis();
+					float cw = axis.dot(c.center);
+					auto [min2, max2] = other.projection_interval(axis);
+					if (sat(cw - 0.5f * c.width, cw + 0.5f * c.width, min2, max2, axis) < 0.0f)
+						return false;
+				}
 
-				axis = c.get_minor_axis();
-				float ch = axis.dot(c.center);
-				i1 = { ch - 0.5f * c.height, ch + 0.5f * c.height };
-				i2 = other.projection_interval(axis);
-				if (std::min(i1.second, i2.second) - std::max(i1.first, i2.first) < 0.0f)
-					return false;
+				{
+					UnitVector2D axis = c.get_minor_axis();
+					float ch = axis.dot(c.center);
+					auto [min2, max2]  = other.projection_interval(axis);
+					if (sat(ch - 0.5f * c.height, ch + 0.5f * c.height, min2, max2, axis) < 0.0f)
+						return false;
+				}
 
 				return true;
 			}
@@ -298,9 +311,9 @@ namespace oly::col2d::sat
 			{
 				for (size_t i = 0; i < K; ++i)
 				{
-					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
-					std::pair<float, float> i2 = other.projection_interval(KDOP<K>::uniform_axis(i));
-					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+					UnitVector2D axis = KDOP<K>::uniform_axis(i);
+					auto [min2, max2] = other.projection_interval(axis);
+					float depth = sat(c.get_minimum(i), c.get_maximum(i), min2, max2, axis);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -310,7 +323,7 @@ namespace oly::col2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? KDOP<K>::uniform_axis(i) : -KDOP<K>::uniform_axis(i);
+						info.unit_impulse = axis;
 					}
 				}
 			}
@@ -338,15 +351,14 @@ namespace oly::col2d::sat
 				CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 				for (size_t i = 0; i < K; ++i)
 				{
-					std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
-					std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
-					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+					UnitVector2D axis = KDOP<K>::uniform_axis(i);
+					float depth = sat(c1.get_minimum(i), c1.get_maximum(i), c2.get_minimum(i), c2.get_maximum(i), axis);
 					if (depth < 0.0f)
 						return { .overlap = false };
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? KDOP<K>::uniform_axis(i) : -KDOP<K>::uniform_axis(i);
+						info.unit_impulse = axis;
 					}
 				}
 				return info;
@@ -375,9 +387,9 @@ namespace oly::col2d::sat
 			{
 				for (size_t i = 0; i < c.get_k(); ++i)
 				{
-					std::pair<float, float> i1 = { c.get_minimum(i), c.get_maximum(i) };
-					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
-					float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+					UnitVector2D axis = c.edge_normal(i);
+					auto [min2, max2] = other.projection_interval(c.edge_normal(i));
+					float depth = sat(c.get_minimum(i), c.get_maximum(i), min2, max2, axis);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -387,7 +399,7 @@ namespace oly::col2d::sat
 					else if (depth < info.penetration_depth)
 					{
 						info.penetration_depth = depth;
-						info.unit_impulse = i1.first < i2.first ? c.edge_normal(i) : -c.edge_normal(i);
+						info.unit_impulse = axis;
 					}
 				}
 			}
@@ -408,9 +420,7 @@ namespace oly::col2d::sat
 					return true;
 				}
 				else
-				{
 					return internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c1, c2) && internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c2, c1);
-				}
 			}
 		};
 
@@ -424,15 +434,14 @@ namespace oly::col2d::sat
 					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
 					for (size_t i = 0; i < c1.get_k(); ++i)
 					{
-						std::pair<float, float> i1 = { c1.get_minimum(i), c1.get_maximum(i) };
-						std::pair<float, float> i2 = { c2.get_minimum(i), c2.get_maximum(i) };
-						float depth = std::min(i1.second, i2.second) - std::max(i1.first, i2.first);
+						UnitVector2D axis = c1.edge_normal(i);
+						float depth = sat(c1.get_minimum(i), c1.get_maximum(i), c2.get_minimum(i), c2.get_maximum(i), axis);
 						if (depth < 0.0f)
 							return { .overlap = false };
 						else if (depth < info.penetration_depth)
 						{
 							info.penetration_depth = depth;
-							info.unit_impulse = i1.first < i2.first ? c1.edge_normal(i) : -c1.edge_normal(i);
+							info.unit_impulse = axis;
 						}
 					}
 					return info;
@@ -443,8 +452,8 @@ namespace oly::col2d::sat
 					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c1, c2, info);
 					if (!info.overlap)
 						return info;
-					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c2, c1, info);
-					if (!info.overlap)
+					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c2, c1, info.invert());
+					if (!info.invert().overlap)
 						return info;
 					return info;
 				}

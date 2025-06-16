@@ -86,8 +86,8 @@ int main()
 	//oly::col2d::OBB block{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
 	//oly::col2d::TPrimitive block = { oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f) };
 	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -200.0f, .x2 = 50.0f, .y1 = -200.0f, .y2 = 300.0f } };
-	oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
-	//oly::col2d::TPrimitive block = { oly::make_copy_ptr<oly::col2d::KDOP3>(std::array<float, 3>{ -300.0f, -100.0f, -100.0f }, std::array<float, 3>{ 100.0f, 100.0f, 100.0f }) };
+	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
+	oly::col2d::TPrimitive block = { oly::make_copy_ptr<oly::col2d::KDOP3>(std::array<float, 3>{ -300.0f, -100.0f, -100.0f }, std::array<float, 3>{ 100.0f, 100.0f, 100.0f }) };
 
 	//std::vector<glm::vec2> _pts;
 	//const int _npts = 5;
