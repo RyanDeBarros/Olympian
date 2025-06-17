@@ -117,13 +117,22 @@ namespace oly::col2d
 	// ######################################################################################################################################################
 
 	// ######################################################################################################################################################
-	// Element
-	extern OverlapResult point_hits(const Element& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const Element& c, const Ray& ray);
-	extern RaycastResult raycast(const Element& c, const Ray& ray);
-	extern OverlapResult overlaps(const Element& c1, const Element& c2);
-	extern CollisionResult collides(const Element& c1, const Element& c2);
-	extern ContactResult contacts(const Element& c1, const Element& c2);
+	// ElementParam
+	extern OverlapResult point_hits(ElementParam c, glm::vec2 test);
+	extern OverlapResult ray_hits(ElementParam c, const Ray& ray);
+	extern RaycastResult raycast(ElementParam c, const Ray& ray);
+	extern OverlapResult overlaps(ElementParam c1, ElementParam c2);
+	extern CollisionResult collides(ElementParam c1, ElementParam c2);
+	extern ContactResult contacts(ElementParam c1, ElementParam c2);
 	// ######################################################################################################################################################
 
+	// ######################################################################################################################################################
+	// Element
+	inline OverlapResult point_hits(const Element& c, glm::vec2 test) { return point_hits(param(c), test); }
+	inline OverlapResult ray_hits(const Element& c, const Ray& ray) { return ray_hits(param(c), ray); }
+	inline RaycastResult raycast(const Element& c, const Ray& ray) { return raycast(param(c), ray); }
+	inline OverlapResult overlaps(const Element& c1, const Element& c2) { return overlaps(param(c1), param(c2)); }
+	inline CollisionResult collides(const Element& c1, const Element& c2) { return collides(param(c1), param(c2)); }
+	inline ContactResult contacts(const Element& c1, const Element& c2) { return contacts(param(c1), param(c2)); }
+	// ######################################################################################################################################################
 }

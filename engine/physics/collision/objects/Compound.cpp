@@ -46,77 +46,38 @@ namespace oly::col2d
 		return info;
 	}
 
-	OverlapResult internal::overlaps(const Compound& c1, const Compound& c2)
-	{
-		for (const auto& e1 : c1.elements)
-			for (const auto& e2 : c2.elements)
-				if (overlaps(e1, e2))
-					return true;
-		return false;
-	}
-
-	CollisionResult internal::collides(const Compound& c1, const Compound& c2)
-	{
-		std::vector<CollisionResult> collisions;
-		for (const auto& e1 : c1.elements)
-		{
-			for (const auto& e2 : c2.elements)
-			{
-				CollisionResult collision = collides(e1, e2);
-				if (collision.overlap)
-					collisions.push_back(collision);
-			}
-		}
-		return greedy_collision(collisions);
-	}
-
-	ContactResult internal::contacts(const Compound& c1, const Compound& c2)
-	{
-		std::vector<ContactResult> cntcts;
-		for (const auto& e1 : c1.elements)
-		{
-			for (const auto& e2 : c2.elements)
-			{
-				ContactResult contact = contacts(e1, e2);
-				if (contact.overlap)
-					cntcts.push_back(contact);
-			}
-		}
-		return greedy_contact(cntcts);
-	}
-
-	OverlapResult overlaps(const Compound& c1, const Element& c2)
+	OverlapResult overlaps(const Compound& c1, ElementParam c2)
 	{
 		for (const auto& e1 : c1.elements)
 		{
-			if (overlaps(e1, c2))
+			if (overlaps(param(e1), c2))
 				return true;
 		}
 		return false;
 	}
 	
-	CollisionResult collides(const Compound& c1, const Element& c2)
+	CollisionResult collides(const Compound& c1, ElementParam c2)
 	{
 		std::vector<CollisionResult> collisions;
 		for (const auto& e1 : c1.elements)
 		{
-			CollisionResult collision = collides(e1, c2);
+			CollisionResult collision = collides(param(e1), c2);
 			if (collision.overlap)
 				collisions.push_back(collision);
 		}
-		return greedy_collision(collisions);
+		return greedy_collision(collisions, c1.elements.data(), c1.elements.size(), c2);
 	}
 	
-	ContactResult contacts(const Compound& c1, const Element& c2)
+	ContactResult contacts(const Compound& c1, ElementParam c2)
 	{
 		std::vector<ContactResult> cntcts;
 		for (const auto& e1 : c1.elements)
 		{
-			ContactResult contact = contacts(e1, c2);
+			ContactResult contact = contacts(param(e1), c2);
 			if (contact.overlap)
 				cntcts.push_back(contact);
 		}
-		return greedy_contact(cntcts);
+		return greedy_contact(cntcts, c1.elements.data(), c1.elements.size(), c2);
 	}
 
 	void TCompound::bake() const
@@ -124,7 +85,7 @@ namespace oly::col2d
 		baked.resize(compound.elements.size());
 		glm::mat3 g = transformer.global();
 		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& e) { return transform_element(e, g); }, compound.elements[i]);
+			baked[i] = std::visit([&g](auto&& e) { return transform_element(param(e), g); }, compound.elements[i]);
 		dirty = false;
 	}
 

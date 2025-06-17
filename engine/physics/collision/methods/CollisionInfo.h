@@ -59,7 +59,4 @@ namespace oly::col2d
 		glm::vec2 contact;
 		UnitVector2D normal;
 	};
-
-	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
-	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 }

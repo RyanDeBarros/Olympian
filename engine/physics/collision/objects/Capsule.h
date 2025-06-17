@@ -25,7 +25,10 @@ namespace oly::col2d
 		UnitVector2D vertical() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
 
 		Compound compound() const { return { { lower_circle(), mid_obb(), upper_circle() } }; }
+		TCompound tcompound() const { return TCompound({ lower_circle(), mid_obb(), upper_circle() }); }
 		template<typename Shape = OBB>
 		BVH<Shape> bvh() const { return convert<Shape>(compound()); }
+		template<typename Shape = OBB>
+		TBVH<Shape> tbvh() const { return convert<Shape>(tcompound()); }
 	};
 }

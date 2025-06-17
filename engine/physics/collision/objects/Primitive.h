@@ -35,7 +35,7 @@ namespace oly::col2d
 		void bake() const
 		{
 			glm::mat3 g = transformer.global();
-			baked = std::visit([&g](auto&& e) { return transform_element(e, g); }, primitive.element);
+			baked = std::visit([&g](auto&& e) { return transform_element(param(e), g); }, primitive.element);
 			dirty = false;
 		}
 
@@ -45,8 +45,8 @@ namespace oly::col2d
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { flag(); return transformer.set_local(); }
 
-		TPrimitive(const Element& element) : primitive{ .element = element } {}
-		TPrimitive(Element&& element) noexcept : primitive{ .element = std::move(element) } {}
+		explicit TPrimitive(const Element& element) : primitive{ .element = element } {}
+		explicit TPrimitive(Element&& element) noexcept : primitive{ .element = std::move(element) } {}
 
 		void flag() const { dirty = true; }
 		const Primitive& get_primitive() const { return primitive; }

@@ -3,6 +3,8 @@
 #include "physics/collision/elements/Element.h"
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
+#include "physics/collision/objects/Primitive.h"
+#include "physics/collision/objects/Compound.h"
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
 #include "core/base/Assert.h"
@@ -190,11 +192,11 @@ namespace oly::col2d
 		struct Node
 		{
 			std::optional<Shape> shape;
-			size_t start_index;
+			size_t start_index, count;
 			std::unique_ptr<Node> left, right;
 
 			Node(const Element* elements, size_t start_index, size_t count)
-				: start_index(start_index)
+				: start_index(start_index), count(count)
 			{
 				OLY_ASSERT(count > 0);
 				if (count > 1)
@@ -240,8 +242,8 @@ namespace oly::col2d
 
 	public:
 		BVH() = default;
-		BVH(const std::vector<Element>& elements) : elements(elements) {}
-		BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
+		explicit BVH(const std::vector<Element>& elements) : elements(elements) {}
+		explicit BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
 
 		const std::vector<Element>& get_elements() const { return elements; }
 		std::vector<Element>& set_elements() { dirty = true; return elements; }
@@ -411,7 +413,8 @@ namespace oly::col2d
 						return false;
 					else
 						return greedy_collision({ collides(*my_node.left,  my_elements, *other_node.left, other_elements), collides(*my_node.left,  my_elements, *other_node.right, other_elements),
-												  collides(*my_node.right, my_elements, *other_node.left, other_elements), collides(*my_node.right, my_elements, *other_node.right, other_elements) });
+												  collides(*my_node.right, my_elements, *other_node.left, other_elements), collides(*my_node.right, my_elements, *other_node.right, other_elements) },
+							my_elements, my_node.count, other_elements, other_node.count);
 				}
 			}
 		}
@@ -424,7 +427,37 @@ namespace oly::col2d
 			else if (!col2d::overlaps(node.shape.value(), c))
 				return { .overlap = false };
 			else
-				return greedy_collision({ collides(*node.left, c), collides(*node.right, c) });
+				return greedy_collision(node, c);
+		}
+
+		static CollisionResult greedy_collision(const Node& node, const Element& c)
+		{
+			return greedy_collision(node, param(c));
+		}
+
+		static CollisionResult greedy_collision(const Node& node, ElementParam c)
+		{
+			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c);
+		}
+
+		static CollisionResult greedy_collision(const Node& node, const Primitive& c)
+		{
+			return greedy_collision(node, param(c.element));
+		}
+
+		static CollisionResult greedy_collision(const Node& node, const TPrimitive c)
+		{
+			return greedy_collision(node, param(c.get_baked()));
+		}
+
+		static CollisionResult greedy_collision(const Node& node, const Compound& c)
+		{
+			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c.elements.data(), c.elements.size());
+		}
+
+		static CollisionResult greedy_collision(const Node& node, const TCompound c)
+		{
+			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c.get_baked().data(), c.get_baked().size());
 		}
 
 		template<typename OtherShape>
@@ -443,7 +476,8 @@ namespace oly::col2d
 					return contacts(my_node, my_elements, other_elements[other_node.start_index]);
 				else
 					return greedy_contact({ contacts(*my_node.left,  my_elements, *other_node.left, other_elements), contacts(*my_node.left,  my_elements, *other_node.right, other_elements),
-											contacts(*my_node.right, my_elements, *other_node.left, other_elements), contacts(*my_node.right, my_elements, *other_node.right, other_elements) });
+											contacts(*my_node.right, my_elements, *other_node.left, other_elements), contacts(*my_node.right, my_elements, *other_node.right, other_elements) },
+						my_elements, my_node.count, other_elements, other_node.count);
 			}
 		}
 
@@ -484,10 +518,10 @@ namespace oly::col2d
 		Transformer2D transformer;
 
 		TBVH() = default;
-		TBVH(const std::vector<Element>& elements) : local_elements(elements) {}
-		TBVH(std::vector<Element>&& elements) : local_elements(std::move(elements)) {}
-		TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
-		TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
+		explicit TBVH(const std::vector<Element>& elements) : local_elements(elements) {}
+		explicit TBVH(std::vector<Element>&& elements) : local_elements(std::move(elements)) {}
+		explicit TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
+		explicit TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { local_dirty = true; return transformer.get_local(); }
