@@ -20,6 +20,7 @@ namespace oly::math
 	extern bool in_convex_sector(glm::vec2 u1, glm::vec2 u2, glm::vec2 v);
 	extern float signed_area(const std::vector<glm::vec2>& points);
 	inline bool point_in_triangle(glm::vec2 test, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3);
+	extern glm::vec2 closest_point_on_line_segment(glm::vec2 ref, glm::vec2 a, glm::vec2 b);
 		
 	template<typename T>
 	inline T lerp(const T& t1, const T& t2, float alpha)

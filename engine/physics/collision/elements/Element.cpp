@@ -92,48 +92,32 @@ namespace oly::col2d
 
 	static std::set<UnitVector2D> candidate_axes(const Circle& c, ElementParam other)
 	{
+		static const auto closest_point_on_polygon = [](const auto& points, glm::vec2 center) -> glm::vec2 {
+			float closest_dist_sqrd = nmax<float>();
+			glm::vec2 closest_point{};
+			for (size_t i = 0; i < points.size(); ++i)
+			{
+				glm::vec2 pt = math::closest_point_on_line_segment(center, points[i], points[(i + 1) % points.size()]);
+				float dist_sqrd = math::mag_sqrd(pt - center);
+				if (dist_sqrd < closest_dist_sqrd)
+				{
+					closest_dist_sqrd = dist_sqrd;
+					closest_point = pt;
+					if (near_zero(closest_dist_sqrd))
+						break;
+				}
+			}
+			return closest_point;
+			};
+
 		glm::vec2 axis = std::visit([&c](auto&& other) {
 			glm::vec2 center = internal::CircleGlobalAccess::global_center(c);
 			if constexpr (visiting_class_is<decltype(*other), Circle>)
 				return internal::CircleGlobalAccess::global_center(*other) - center;
-			else if constexpr(visiting_class_is<decltype(*other), AABB, OBB>)
-			{
-				float closest_dist_sqrd = nmax<float>();
-				glm::vec2 closest_point{};
-				auto points = other->points();
-				for (glm::vec2 pt : points)
-				{
-					float dist_sqrd = math::mag_sqrd(pt - center);
-					if (dist_sqrd < closest_dist_sqrd)
-					{
-						closest_dist_sqrd = dist_sqrd;
-						closest_point = pt;
-						if (near_zero(closest_dist_sqrd))
-							break;
-					}
-				}
-				return closest_point - center;
-			}
 			else
-			{
-				float closest_dist_sqrd = nmax<float>();
-				glm::vec2 closest_point{};
-				const auto& points = other->points();
-				for (glm::vec2 pt : points)
-				{
-					float dist_sqrd = math::mag_sqrd(pt - center);
-					if (dist_sqrd < closest_dist_sqrd)
-					{
-						closest_dist_sqrd = dist_sqrd;
-						closest_point = pt;
-						if (near_zero(closest_dist_sqrd))
-							break;
-					}
-				}
-				return closest_point - center;
-			}
+				return closest_point_on_polygon(other->points(), center) - center;
 			}, other);
-		return { UnitVector2D(axis) };
+		return { UnitVector2D(axis), UnitVector2D(-axis) };
 	}
 	
 	static std::set<UnitVector2D> candidate_axes(ElementParam reference, ElementParam other)
@@ -197,7 +181,7 @@ namespace oly::col2d
 		for (size_t i = 0; i < num_active_elements; ++i)
 			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
 		float static_max_proj = projection_max(axis, static_element);
-		return active_min_proj - static_max_proj;
+		return static_max_proj - active_min_proj;
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
@@ -209,7 +193,7 @@ namespace oly::col2d
 		float static_max_proj = nmax<float>();
 		for (size_t i = 0; i < num_static_elements; ++i)
 			static_max_proj = std::min(static_max_proj, projection_max(axis, param(static_elements[i])));
-		return active_min_proj - static_max_proj;
+		return static_max_proj - active_min_proj;
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
@@ -345,6 +329,7 @@ namespace oly::col2d
 
 	Element internal::transform_element(const Circle& c, const glm::mat3& m)
 	{
+		// TODO global should only store linear 2x2 sub-transformation. m[2] should go into offsetting the center.
 		Circle tc(c.center, c.radius);
 		internal::CircleGlobalAccess::set_global(tc, m);
 		return tc;

@@ -106,13 +106,13 @@ int main()
 	//block.set_local().rotation = glm::pi<float>() / 8;
 	//oly::col2d::TPrimitive player = { oly::col2d::Circle({}, 50.0f) };
 	oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
-	//player.set_local().scale.y = 1.2f;
-	//player.set_local().rotation = glm::pi<float>() / 4;
+	player.set_local().scale.y = 1.2f;
+	player.set_local().rotation = glm::pi<float>() / 4;
 	//oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = 0.0f };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
 	//oly::col2d::TCompound capsule = { { _capsule.mid_obb() } };
-	//capsule.set_local().scale = glm::vec2(3.0f);
+	capsule.set_local().scale = glm::vec2(3.0f);
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	// LATER anti-aliasing settings
@@ -131,7 +131,8 @@ int main()
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
 
-	oly::debug::CollisionView player_cv, player_impulse_cv, block_impulse_cv, raycast_result_cv;
+	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
+	oly::debug::CollisionView player_cv = oly::debug::collision_view(player, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 
@@ -182,6 +183,7 @@ int main()
 		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { -150.0f, -100.0f };
 		//player.set_local().position = { 0.0f, 0.0f };
+		//player.set_local().position = { 75.0f, -225.0f };
 		//player.set_local().position = { 211, -134 };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 

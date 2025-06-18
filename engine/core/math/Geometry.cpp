@@ -77,6 +77,18 @@ namespace oly::math
 		return math::Barycentric(math::Triangle2D{ p1, p2, p3 }, {}).inside();
 	}
 
+	glm::vec2 closest_point_on_line_segment(glm::vec2 ref, glm::vec2 a, glm::vec2 b)
+	{
+		glm::vec2 ab = b - a;
+		float ab_sqrd = mag_sqrd(ab);
+		if (near_zero(ab_sqrd))
+			return a;
+
+		float t = glm::dot(ref - a, ab) / ab_sqrd;
+		t = glm::clamp(t, 0.0f, 1.0f);
+		return a + t * ab;
+	}
+
 	math::Polygon2D clip_polygon(const math::Polygon2D& polygon, const UnitVector2D& axis, float maximum)
 	{
 		math::Polygon2D out;
