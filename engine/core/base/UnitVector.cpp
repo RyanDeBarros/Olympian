@@ -2,6 +2,68 @@
 
 namespace oly
 {
+	bool UnitVector2D::operator<(const UnitVector2D& rhs) const
+	{
+		if (above_zero(_direction.y))
+		{
+			if (below_zero(rhs._direction.y))
+				return true;
+			else if (above_zero(rhs._direction.y))
+				return _direction.x > rhs._direction.x;
+			else
+				return rhs._direction.x < 0.0f;
+		}
+		else if (below_zero(_direction.y))
+		{
+			if (above_zero(rhs._direction.y))
+				return false;
+			else if (below_zero(rhs._direction.y))
+				return _direction.x < rhs._direction.x;
+			else
+				false;
+		}
+		else
+		{
+			if (above_zero(rhs._direction.y))
+				return _direction.x > 0.0f;
+			else if (below_zero(rhs._direction.y))
+				return true;
+			else
+				return _direction.x > 0.0f && rhs._direction.x < 0.0f;
+		}
+	}
+
+	bool UnitVector2D::operator<=(const UnitVector2D& rhs) const
+	{
+		if (above_zero(_direction.y))
+		{
+			if (below_zero(rhs._direction.y))
+				return true;
+			else if (above_zero(rhs._direction.y))
+				return _direction.x >= rhs._direction.x;
+			else
+				return rhs._direction.x < 0.0f;
+		}
+		else if (below_zero(_direction.y))
+		{
+			if (above_zero(rhs._direction.y))
+				return false;
+			else if (below_zero(rhs._direction.y))
+				return _direction.x <= rhs._direction.x;
+			else
+				false;
+		}
+		else
+		{
+			if (above_zero(rhs._direction.y))
+				return _direction.x > 0.0f;
+			else if (below_zero(rhs._direction.y))
+				return true;
+			else
+				return _direction.x >= rhs._direction.x;
+		}
+	}
+
 	bool UnitVector2D::near_standard(double tolerance) const
 	{
 		return near_zero(_direction.x, tolerance) || near_zero(_direction.y, tolerance);

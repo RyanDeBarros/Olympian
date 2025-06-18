@@ -172,6 +172,7 @@ namespace oly::col2d
 			return internal::polygon_projection_interval(cache(), axis);
 		}
 
+		// TODO reverse engineer axis angle to get closest uniform axis
 		float projection_min(const UnitVector2D& axis) const
 		{
 			for (size_t i = 0; i < K; ++i)

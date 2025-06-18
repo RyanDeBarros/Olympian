@@ -58,26 +58,12 @@ namespace oly::col2d
 	
 	CollisionResult collides(const Compound& c1, ElementParam c2)
 	{
-		std::vector<CollisionResult> collisions;
-		for (const auto& e1 : c1.elements)
-		{
-			CollisionResult collision = collides(param(e1), c2);
-			if (collision.overlap)
-				collisions.push_back(collision);
-		}
-		return greedy_collision(collisions, c1.elements.data(), c1.elements.size(), c2);
+		return compound_collision(c1.elements.data(), c1.elements.size(), c2);
 	}
 	
 	ContactResult contacts(const Compound& c1, ElementParam c2)
 	{
-		std::vector<ContactResult> cntcts;
-		for (const auto& e1 : c1.elements)
-		{
-			ContactResult contact = contacts(param(e1), c2);
-			if (contact.overlap)
-				cntcts.push_back(contact);
-		}
-		return greedy_contact(cntcts, c1.elements.data(), c1.elements.size(), c2);
+		return compound_contact(c1.elements.data(), c1.elements.size(), c2);
 	}
 
 	void TCompound::bake() const

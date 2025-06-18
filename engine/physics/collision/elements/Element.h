@@ -80,13 +80,13 @@ namespace oly::col2d
 	inline ElementParam param(const KDOP7& c) { return &c; }
 	inline ElementParam param(const KDOP8& c) { return &c; }
 
-	//extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
-	//extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
+	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
+	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 
-	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions, const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
-	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
-	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts, const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
-	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
+	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
+	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
+	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
+	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
 
 	namespace internal
 	{

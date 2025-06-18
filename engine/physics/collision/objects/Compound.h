@@ -64,33 +64,13 @@ namespace oly::col2d
 		template<typename Comp1, typename Comp2>
 		inline CollisionResult collides(const Comp1& c1, const Comp2& c2)
 		{
-			std::vector<CollisionResult> collisions;
-			for (const auto& e1 : element_array(c1))
-			{
-				for (const auto& e2 : element_array(c2))
-				{
-					CollisionResult collision = collides(e1, e2);
-					if (collision.overlap)
-						collisions.push_back(collision);
-				}
-			}
-			return greedy_collision(collisions, element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
 		}
 
 		template<typename Comp1, typename Comp2>
 		inline ContactResult contacts(const Comp1& c1, const Comp2& c2)
 		{
-			std::vector<ContactResult> cntcts;
-			for (const auto& e1 : element_array(c1))
-			{
-				for (const auto& e2 : element_array(c2))
-				{
-					ContactResult contact = contacts(e1, e2);
-					if (contact.overlap)
-						cntcts.push_back(contact);
-				}
-			}
-			return greedy_contact(cntcts, element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
 		}
 	}
 

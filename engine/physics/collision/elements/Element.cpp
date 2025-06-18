@@ -2,226 +2,10 @@
 
 #include "core/base/Transforms.h"
 
+#include <set>
+
 namespace oly::col2d
 {
-	//CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
-	//{
-	//	if (collisions.empty())
-	//		return { .overlap = false };
-	//	else if (collisions.size() == 1)
-	//		return collisions[0];
-
-	//	// step 1: prune redundant MTVs
-	//	struct GreedyMTV
-	//	{
-	//		float signed_length;
-	//		bool has_opposing;
-	//	};
-	//	std::unordered_map<UnitVector2D, GreedyMTV> mapped_mtvs;
-	//	for (const CollisionResult& collision : collisions)
-	//	{
-	//		if (!collision.overlap || near_zero(collision.penetration_depth))
-	//			continue;
-
-	//		auto it = mapped_mtvs.find(collision.unit_impulse);
-	//		if (it == mapped_mtvs.end())
-	//		{
-	//			auto rit = mapped_mtvs.find(-collision.unit_impulse);
-	//			if (rit == mapped_mtvs.end())
-	//				mapped_mtvs.insert({ collision.unit_impulse, { collision.penetration_depth, false } });
-	//			else
-	//			{
-	//				if (approx(collision.penetration_depth, glm::abs(rit->second.signed_length)))
-	//				{
-	//					if (rit->second.signed_length > 0.0f)
-	//						rit->second.has_opposing = true;
-	//				}
-	//				else if (collision.penetration_depth > glm::abs(rit->second.signed_length))
-	//				{
-	//					rit->second.signed_length = -collision.penetration_depth;
-	//					rit->second.has_opposing = false;
-	//				}
-	//			}
-	//		}
-	//		else
-	//		{
-	//			if (approx(collision.penetration_depth, glm::abs(it->second.signed_length)))
-	//			{
-	//				if (it->second.signed_length < 0.0f)
-	//					it->second.has_opposing = true;
-	//			}
-	//			else if (collision.penetration_depth > glm::abs(it->second.signed_length))
-	//			{
-	//				it->second.signed_length = collision.penetration_depth;
-	//				it->second.has_opposing = false;
-	//			}
-	//		}
-	//	}
-	//	std::vector<glm::vec2> greediest_mtvs;
-	//	for (const auto& [normal, mtv] : mapped_mtvs)
-	//	{
-	//		if (!mtv.has_opposing)
-	//			greediest_mtvs.push_back((glm::vec2)normal * mtv.signed_length);
-	//	}
-	//	if (greediest_mtvs.empty())
-	//		return { .overlap = false };
-
-	//	// step 2: find greediest orthonormal frame
-	//	glm::vec2 greediest_mtv{};
-	//	float largest_mag_sqrd = 0.0f;
-	//	for (glm::vec2 normal : greediest_mtvs)
-	//	{
-	//		UnitVector2D axis1 = normal;
-	//		UnitVector2D axis2 = axis1.get_quarter_turn();
-
-	//		float greediest_x = 0.0f;
-	//		float greediest_y = 0.0f;
-	//		for (glm::vec2 mtv : greediest_mtvs)
-	//		{
-	//			float x = axis1.dot(mtv);
-	//			if (glm::abs(x) > glm::abs(greediest_x))
-	//				greediest_x = x;
-	//			float y = axis2.dot(mtv);
-	//			if (glm::abs(y) > glm::abs(greediest_y))
-	//				greediest_y = y;
-	//		}
-	//		float mag_sqrd = greediest_x * greediest_x + greediest_y * greediest_y;
-	//		if (mag_sqrd > largest_mag_sqrd)
-	//		{
-	//			largest_mag_sqrd = mag_sqrd;
-	//			greediest_mtv = greediest_x * (glm::vec2)axis1 + greediest_y * (glm::vec2)axis2;
-	//		}
-	//	}
-
-	//	// step 3: construct CollisionResult
-	//	return { .overlap = true, .penetration_depth = glm::length(greediest_mtv), .unit_impulse = UnitVector2D(greediest_mtv) };
-	//}
-
-	//ContactResult greedy_contact(const std::vector<ContactResult>& contacts)
-	//{
-	//	if (contacts.empty())
-	//		return { .overlap = false };
-	//	else if (contacts.size() == 1)
-	//		return contacts[0];
-
-	//	// step 1: prune redundant MTVs
-	//	struct GreedyMTV
-	//	{
-	//		float length_sqrd;
-	//		bool has_opposing;
-	//		char sign;
-	//		glm::vec2 active_contact, static_contact;
-	//	};
-	//	std::unordered_map<UnitVector2D, GreedyMTV> mapped_mtvs;
-	//	for (const ContactResult& contact : contacts)
-	//	{
-	//		if (!contact.overlap || near_zero(contact.active_feature.impulse))
-	//			continue;
-
-	//		float impulse_sqrd = math::mag_sqrd(contact.active_feature.impulse);
-	//		auto it = mapped_mtvs.find(UnitVector2D(contact.active_feature.impulse));
-	//		if (it == mapped_mtvs.end())
-	//		{
-	//			auto rit = mapped_mtvs.find(UnitVector2D(contact.static_feature.impulse));
-	//			if (rit == mapped_mtvs.end())
-	//				mapped_mtvs.insert({ UnitVector2D(contact.active_feature.impulse), {.length_sqrd = impulse_sqrd, .has_opposing = false, .sign = 1,
-	//					.active_contact = contact.active_feature.position, .static_contact = contact.static_feature.position } });
-	//			else
-	//			{
-	//				if (approx(impulse_sqrd, rit->second.length_sqrd))
-	//				{
-	//					if (rit->second.sign > 0.0f)
-	//						rit->second.has_opposing = true;
-	//				}
-	//				else if (impulse_sqrd > rit->second.length_sqrd)
-	//				{
-	//					rit->second.length_sqrd = impulse_sqrd;
-	//					rit->second.has_opposing = false;
-	//					rit->second.sign = -1;
-	//					rit->second.active_contact = contact.active_feature.position;
-	//					rit->second.static_contact = contact.static_feature.position;
-	//				}
-	//			}
-	//		}
-	//		else
-	//		{
-	//			if (approx(impulse_sqrd, it->second.length_sqrd))
-	//			{
-	//				if (it->second.sign < 0.0f)
-	//					it->second.has_opposing = true;
-	//			}
-	//			else if (impulse_sqrd > it->second.length_sqrd)
-	//			{
-	//				it->second.length_sqrd = impulse_sqrd;
-	//				it->second.has_opposing = false;
-	//				it->second.sign = 1;
-	//				it->second.active_contact = contact.active_feature.position;
-	//				it->second.static_contact = contact.static_feature.position;
-	//			}
-	//		}
-	//	}
-
-	//	struct GreedyContact
-	//	{
-	//		glm::vec2 mtv;
-	//		glm::vec2 active_contact, static_contact;
-	//	};
-	//	std::vector<GreedyContact> greediest_mtvs;
-	//	for (const auto& [normal, mtv] : mapped_mtvs)
-	//	{
-	//		if (!mtv.has_opposing)
-	//			greediest_mtvs.push_back({ .mtv = (glm::vec2)normal * (float)mtv.sign * glm::sqrt(mtv.length_sqrd), .active_contact = mtv.active_contact, .static_contact = mtv.static_contact });
-	//	}
-	//	if (greediest_mtvs.empty())
-	//		return { .overlap = false };
-
-	//	// step 2: find greediest orthonormal frame
-	//	GreedyContact greediest_mtv{};
-	//	float largest_mag_sqrd = 0.0f;
-	//	for (const GreedyContact& normal : greediest_mtvs)
-	//	{
-	//		UnitVector2D axis1 = normal.mtv;
-	//		UnitVector2D axis2 = axis1.get_quarter_turn();
-
-	//		glm::vec2 active_contact_x{}, active_contact_y{};
-	//		glm::vec2 static_contact_x{}, static_contact_y{};
-	//		float greediest_x = 0.0f;
-	//		float greediest_y = 0.0f;
-	//		for (const GreedyContact& mtv : greediest_mtvs)
-	//		{
-	//			float x = axis1.dot(mtv.mtv);
-	//			if (glm::abs(x) > glm::abs(greediest_x))
-	//			{
-	//				greediest_x = x;
-	//				active_contact_x = mtv.active_contact;
-	//				static_contact_x = mtv.static_contact;
-	//			}
-	//			float y = axis2.dot(mtv.mtv);
-	//			if (glm::abs(y) > glm::abs(greediest_y))
-	//			{
-	//				greediest_y = y;
-	//				active_contact_y = mtv.active_contact;
-	//				static_contact_y = mtv.static_contact;
-	//			}
-	//		}
-	//		float mag_sqrd = greediest_x * greediest_x + greediest_y * greediest_y;
-	//		if (mag_sqrd > largest_mag_sqrd)
-	//		{
-	//			largest_mag_sqrd = mag_sqrd;
-	//			greediest_mtv.mtv = greediest_x * (glm::vec2)axis1 + greediest_y * (glm::vec2)axis2;
-	//			float weight_x = glm::abs(greediest_x);
-	//			float weight_y = glm::abs(greediest_y);
-	//			float weight_total = weight_x + weight_y;
-	//			greediest_mtv.active_contact = (weight_x * active_contact_x + weight_y * active_contact_y) / weight_total;
-	//			greediest_mtv.static_contact = (weight_x * static_contact_x + weight_y * static_contact_y) / weight_total;
-	//		}
-	//	}
-
-	//	// step 3: construct ContactResult
-	//	return { .overlap = true, .active_feature = {.position = greediest_mtv.active_contact, .impulse = greediest_mtv.mtv },
-	//		.static_feature = {.position = greediest_mtv.static_contact, .impulse = -greediest_mtv.mtv } };
-	//}
-
 	ElementParam param(const Element& e)
 	{
 		return std::visit([](auto&& e) -> ElementParam {
@@ -232,166 +16,249 @@ namespace oly::col2d
 			}, e);
 	}
 
-	// TODO only calculate the unit impulses
-	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions, const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
 	{
-		if (collisions.empty())
-			return { .overlap = false };
-		else if (collisions.size() == 1)
-			return collisions[0];
-
-		// Step 1: find unique MTV directions
-		std::unordered_set<UnitVector2D> mtvs;
-		for (const CollisionResult& result : collisions)
+		CollisionResult greedy{ .overlap = true, .penetration_depth = 0.0f };
+		for (const CollisionResult& collision : collisions)
 		{
-			if (result.overlap)
-			{
-				if (!mtvs.count(result.unit_impulse) && !mtvs.count(-result.unit_impulse))
-					mtvs.insert(result.unit_impulse);
-			}
+			if (collision.overlap && collision.penetration_depth > greedy.penetration_depth)
+				greedy = collision;
 		}
-
-		// Step 2: find least impactful MTV direction
-		float min_length = nmax<float>();
-		UnitVector2D minimizing_axis;
-		for (const UnitVector2D& axis : mtvs)
-		{
-			// find greediest translation
-			static const auto outer_visit = [](const UnitVector2D& axis, const Element& active_element, ElementParam static_element) -> float {
-				return std::visit([&axis, static_element](auto&& ae) -> float {
-					return std::visit([&axis, &ae](auto&& se) -> float {
-						if constexpr (is_copy_ptr<decltype(ae)>)
-							return se->projection_max(axis) - ae->projection_min(axis);
-						else
-							return se->projection_max(axis) - ae.projection_min(axis);
-						}, static_element);
-					}, active_element);
-				};
-
-			// find greediest translation
-			const auto find_greediest_translation = [num_active_elements, active_elements, static_element](const UnitVector2D& axis) -> float {
-				float max_separation = -1.0f;
-				for (size_t i = 0; i < num_active_elements; ++i)
-				{
-					float separation = outer_visit(axis, active_elements[i], static_element);
-					if (separation > std::max(max_separation, 0.0f))
-						max_separation = separation;
-				}
-				return max_separation;
-				};
-
-			// minimize greediest translation
-			float separation = find_greediest_translation(axis);
-			if (separation > 0.0f && separation < min_length)
-			{
-				min_length = separation;
-				minimizing_axis = axis;
-			}
-			separation = find_greediest_translation(-axis);
-			if (separation > 0.0f && separation < min_length)
-			{
-				min_length = separation;
-				minimizing_axis = -axis;
-			}
-		}
-		return CollisionResult{ .overlap = true, .penetration_depth = min_length, .unit_impulse = minimizing_axis };
+		return greedy;
 	}
 
-	// TODO only calculate the unit impulses
-	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	ContactResult greedy_contact(const std::vector<ContactResult>& contacts)
 	{
-		if (collisions.empty())
-			return { .overlap = false };
-		else if (collisions.size() == 1)
-			return collisions[0];
-
-		// Step 1: find unique MTV directions
-		std::unordered_set<UnitVector2D> mtvs;
-		for (const CollisionResult& result : collisions)
-		{
-			if (result.overlap)
-			{
-				if (!mtvs.count(result.unit_impulse) && !mtvs.count(-result.unit_impulse))
-					mtvs.insert(result.unit_impulse);
-			}
-		}
-
-		// Step 2: find least impactful MTV direction
-		float min_length = nmax<float>();
-		UnitVector2D minimizing_axis;
-		for (const UnitVector2D& axis : mtvs)
-		{
-			// compute separation translation
-			static const auto inner_visit = [](const UnitVector2D& axis, const auto& ae, const Element* static_element) {
-				return std::visit([&axis, &ae](auto&& se) -> float {
-					if constexpr (is_copy_ptr<decltype(ae)>)
-					{
-						if constexpr (is_copy_ptr<decltype(se)>)
-							return se->projection_max(axis) - ae->projection_min(axis);
-						else
-							return se.projection_max(axis) - ae->projection_min(axis);
-					}
-					else
-					{
-						if constexpr (is_copy_ptr<decltype(se)>)
-							return se->projection_max(axis) - ae.projection_min(axis);
-						else
-							return se.projection_max(axis) - ae.projection_min(axis);
-					}
-					}, *static_element);
-				};
-
-			// find greediest translation
-			static const auto outer_visit = [](const UnitVector2D& axis, const Element* active_element, const Element* static_elements, const size_t num_static_elements) -> float {
-				return std::visit([&axis, static_elements, num_static_elements](auto&& ae) -> float {
-					float max_separation = -1.0f;
-					for (size_t i = 0; i < num_static_elements; ++i)
-					{
-						float separation = inner_visit(axis, ae, static_elements + i);
-						if (separation > std::max(max_separation, 0.0f))
-							max_separation = separation;
-					}
-					return max_separation;
-					}, *active_element);
-				};
-
-			// find greediest translation
-			const auto find_greediest_translation = [active_elements, num_active_elements, static_elements, num_static_elements](const UnitVector2D& axis) -> float {
-				float max_separation = -1.0f;
-				for (size_t i = 0; i < num_active_elements; ++i)
-				{
-					float separation = outer_visit(axis, active_elements + i, static_elements, num_static_elements);
-					if (separation > std::max(max_separation, 0.0f))
-						max_separation = separation;
-				}
-				return max_separation;
-				};
-
-			// minimize greediest translation
-			float separation = find_greediest_translation(axis);
-			if (separation > 0.0f && separation < min_length)
-			{
-				min_length = separation;
-				minimizing_axis = axis;
-			}
-			separation = find_greediest_translation(-axis);
-			if (separation > 0.0f && separation < min_length)
-			{
-				min_length = separation;
-				minimizing_axis = -axis;
-			}
-		}
-		return CollisionResult{ .overlap = true, .penetration_depth = min_length, .unit_impulse = minimizing_axis };
-	}
-
-	// TODO only calculate the unit impulses
-	ContactResult greedy_contact(const std::vector<ContactResult>& contacts, const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
-	{
-		// TODO custom implementation
-		std::vector<CollisionResult> collisions;
+		ContactResult greedy{ .overlap = true };
+		float greedy_depth_sqrd = 0.0f;
 		for (const ContactResult& contact : contacts)
-			collisions.push_back({ .overlap = contact.overlap, .penetration_depth = glm::length(contact.active_feature.impulse), .unit_impulse = UnitVector2D(contact.active_feature.impulse) });
-		CollisionResult collision = greedy_collision(collisions, active_elements, num_active_elements, static_element);
+		{
+			if (contact.overlap)
+			{
+				float depth_sqrd = math::mag_sqrd(contact.active_feature.impulse);
+				if (depth_sqrd > greedy_depth_sqrd)
+				{
+					greedy_depth_sqrd = depth_sqrd;
+					greedy = contact;
+				}
+			}
+		}
+		return greedy;
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const AABB&)
+	{
+		return { UnitVector2D::RIGHT, UnitVector2D::UP, UnitVector2D::LEFT, UnitVector2D::DOWN };
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const OBB& c)
+	{
+		return { c.get_major_axis(), c.get_minor_axis(), -c.get_major_axis(), -c.get_minor_axis() };
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const ConvexHull& c)
+	{
+		std::set<UnitVector2D> axes;
+		for (size_t i = 0; i < c.size(); ++i)
+		{
+			axes.insert(c.edge_normal(i));
+			axes.insert(-c.edge_normal(i));
+		}
+		return axes;
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const CustomKDOP& c)
+	{
+		std::set<UnitVector2D> axes;
+		for (size_t i = 0; i < c.get_k(); ++i)
+		{
+			axes.insert(c.edge_normal(i));
+			axes.insert(-c.edge_normal(i));
+		}
+		return axes;
+	}
+
+	template<size_t K>
+	static std::set<UnitVector2D> candidate_axes(const KDOP<K>&)
+	{
+		std::set<UnitVector2D> axes;
+		for (size_t i = 0; i < K; ++i)
+		{
+			axes.insert(KDOP<K>::uniform_axis(i));
+			axes.insert(-KDOP<K>::uniform_axis(i));
+		}
+		return axes;
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const Circle& c, ElementParam other)
+	{
+		glm::vec2 axis = std::visit([&c](auto&& other) {
+			glm::vec2 center = internal::CircleGlobalAccess::global_center(c);
+			if constexpr (visiting_class_is<decltype(*other), Circle>)
+				return internal::CircleGlobalAccess::global_center(*other) - center;
+			else if constexpr(visiting_class_is<decltype(*other), AABB, OBB>)
+			{
+				float closest_dist_sqrd = nmax<float>();
+				glm::vec2 closest_point{};
+				auto points = other->points();
+				for (glm::vec2 pt : points)
+				{
+					float dist_sqrd = math::mag_sqrd(pt - center);
+					if (dist_sqrd < closest_dist_sqrd)
+					{
+						closest_dist_sqrd = dist_sqrd;
+						closest_point = pt;
+						if (near_zero(closest_dist_sqrd))
+							break;
+					}
+				}
+				return closest_point - center;
+			}
+			else
+			{
+				float closest_dist_sqrd = nmax<float>();
+				glm::vec2 closest_point{};
+				const auto& points = other->points();
+				for (glm::vec2 pt : points)
+				{
+					float dist_sqrd = math::mag_sqrd(pt - center);
+					if (dist_sqrd < closest_dist_sqrd)
+					{
+						closest_dist_sqrd = dist_sqrd;
+						closest_point = pt;
+						if (near_zero(closest_dist_sqrd))
+							break;
+					}
+				}
+				return closest_point - center;
+			}
+			}, other);
+		return { UnitVector2D(axis) };
+	}
+	
+	static std::set<UnitVector2D> candidate_axes(ElementParam reference, ElementParam other)
+	{
+		return std::visit([&other](auto&& c) {
+			if constexpr (visiting_class_is<decltype(*c), Circle>)
+				return candidate_axes(*c, other);
+			else
+				return candidate_axes(*c);
+			}, reference);
+	}
+
+	static std::set<UnitVector2D> candidate_axes(ElementParam reference, const Element* others, const size_t num_others)
+	{
+		return std::visit([others, num_others](auto&& c) {
+			if constexpr (visiting_class_is<decltype(*c), Circle>)
+			{
+				std::set<UnitVector2D> axes;
+				for (size_t i = 0; i < num_others; ++i)
+					axes.merge(candidate_axes(*c, param(others[i])));
+				return axes;
+			}
+			else
+				return candidate_axes(*c);
+			}, reference);
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	{
+		std::set<UnitVector2D> axes = candidate_axes(static_element, active_elements, num_active_elements);
+		for (size_t i = 0; i < num_active_elements; ++i)
+			axes.merge(candidate_axes(param(active_elements[i]), static_element));
+		return axes;
+	}
+
+	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	{
+		std::set<UnitVector2D> axes;
+		for (size_t i = 0; i < num_static_elements; ++i)
+			axes.merge(candidate_axes(active_elements, num_active_elements, param(static_elements[i])));
+		return axes;
+	}
+
+	// TODO more efficient way of computing projection_max/min, such as with caching. For example, in ConvexHull cache the last axis that was queried, along with the deepest_point/min/max.
+	// Therefore, the polygonal projection algorithms can start at a better initial point by comparing the previous axis queried and the current, especially since the axes visited by compound collision are ordered.
+
+	static float projection_max(const UnitVector2D& axis, ElementParam el)
+	{
+		return std::visit([&axis](auto&& el) { return el->projection_max(axis); }, el);
+	}
+
+	static float projection_min(const UnitVector2D& axis, ElementParam el)
+	{
+		return std::visit([&axis](auto&& el) { return el->projection_min(axis); }, el);
+	}
+
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	{
+		// Find what length is necessary to separate compound objects along axis
+		float active_min_proj = nmax<float>();
+		for (size_t i = 0; i < num_active_elements; ++i)
+			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
+		float static_max_proj = projection_max(axis, static_element);
+		return active_min_proj - static_max_proj;
+	}
+
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	{
+		// Find what length is necessary to separate compound objects along axis
+		float active_min_proj = nmax<float>();
+		for (size_t i = 0; i < num_active_elements; ++i)
+			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
+		float static_max_proj = nmax<float>();
+		for (size_t i = 0; i < num_static_elements; ++i)
+			static_max_proj = std::min(static_max_proj, projection_max(axis, param(static_elements[i])));
+		return active_min_proj - static_max_proj;
+	}
+
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	{
+		// Find candidate separating axes
+		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
+
+		// Iterate through each candidate separating axis
+		// Find the laziest MTV required
+		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
+		for (const UnitVector2D& axis : separating_axes)
+		{
+			float sep = separation(axis, active_elements, num_active_elements, static_element);
+			if (sep < 0.0f)
+				return { .overlap = false };
+			else if (sep < laziest.penetration_depth)
+			{
+				laziest.penetration_depth = sep;
+				laziest.unit_impulse = axis;
+			}
+		}
+		return laziest;
+	}
+
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	{
+		// Find all candidate MTV directions
+		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_elements, num_static_elements);
+
+		// Iterate through each candidate separating axis
+		// Find the laziest MTV required
+		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
+		for (const UnitVector2D& axis : separating_axes)
+		{
+			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements);
+			if (sep < 0.0f)
+				return { .overlap = false };
+			else if (sep < laziest.penetration_depth)
+			{
+				laziest.penetration_depth = sep;
+				laziest.unit_impulse = axis;
+			}
+		}
+		return laziest;
+	}
+
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	{
+		CollisionResult collision = compound_collision(active_elements, num_active_elements, static_element);
 		ContactResult contact{ .overlap = collision.overlap };
 		if (!contact.overlap)
 			return contact;
@@ -423,14 +290,9 @@ namespace oly::col2d
 		return contact;
 	}
 
-	// TODO only calculate the unit impulses
-	ContactResult greedy_contact(const std::vector<ContactResult>& contacts, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		// TODO custom implementation
-		std::vector<CollisionResult> collisions;
-		for (const ContactResult& contact : contacts)
-			collisions.push_back({ .overlap = contact.overlap, .penetration_depth = glm::length(contact.active_feature.impulse), .unit_impulse = UnitVector2D(contact.active_feature.impulse) });
-		CollisionResult collision = greedy_collision(collisions, active_elements, num_active_elements, static_elements, num_static_elements);
+		CollisionResult collision = compound_collision(active_elements, num_active_elements, static_elements, num_static_elements);
 		ContactResult contact{ .overlap = collision.overlap };
 		if (!contact.overlap)
 			return contact;

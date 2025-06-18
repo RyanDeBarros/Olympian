@@ -24,6 +24,7 @@ namespace oly::col2d
 			static float min_radius(const Circle&);
 			static Circle bounding_circle(const Circle&);
 			static OBB bounding_obb(const Circle&);
+			static glm::vec2 global_center(const Circle&);
 		};
 	}
 

@@ -15,7 +15,7 @@ namespace oly::col2d
 
 		operator bool () const { return overlap; }
 	};
-	
+
 	struct CollisionResult
 	{
 		bool overlap = false;

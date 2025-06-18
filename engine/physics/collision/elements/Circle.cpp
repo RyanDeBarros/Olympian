@@ -74,14 +74,19 @@ namespace oly::col2d
 		Circle CircleGlobalAccess::bounding_circle(const Circle& c)
 		{
 			// DOC
-			return Circle(transform_point(c.global, c.center), max_radius(c));
+			return Circle(global_center(c), max_radius(c));
 		}
 
 		OBB CircleGlobalAccess::bounding_obb(const Circle& c)
 		{
 			// DOC
 			float max_angle = 0.5f * glm::atan(2.0f * glm::dot(c.global[0], c.global[1]), glm::dot(c.global[0], c.global[0]) - glm::dot(c.global[1], c.global[1]));
-			return OBB{ .center = transform_point(c.global, c.center), .width = 2.0f * max_radius(c), .height = 2.0f * min_radius(c), .rotation = max_angle };
+			return OBB{ .center = global_center(c), .width = 2.0f * max_radius(c), .height = 2.0f * min_radius(c), .rotation = max_angle };
+		}
+
+		glm::vec2 CircleGlobalAccess::global_center(const Circle& c)
+		{
+			return transform_point(c.global, c.center);
 		}
 	}
 

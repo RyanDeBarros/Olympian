@@ -292,15 +292,27 @@ namespace oly::col2d
 		template<typename S>
 		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps(root(), elements, bvh.root(), bvh.elements.data()); }
 
-		template<typename Other>
-		CollisionResult raw_collides(const Other& c) const { return collides(root(), elements, c); }
-		template<typename S>
-		CollisionResult raw_collides(const BVH<S>& bvh) const { return collides(root(), elements, bvh.root()); }
+		// TODO faster collides/contacts that only puts overlapping elements in a set, and then passes that set to compound_collision? Wouldn't be exact, since the computed MTV might push the other object onto a previously non-overlapping element, but still.
 
-		template<typename Other>
-		ContactResult raw_contacts(const Other& c) const { return contacts(root(), elements, c); }
+		CollisionResult raw_collides(const Element& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e)) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(ElementParam e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const Primitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element)) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const TPrimitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.get_baked())) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const Compound& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const TCompound& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size()) : CollisionResult{ .overlap = false }; }
+
 		template<typename S>
-		ContactResult raw_contacts(const BVH<S>& bvh) const { return contacts(root(), elements, bvh.root()); }
+		CollisionResult raw_collides(const BVH<S>& bvh) const { return raw_overlaps(bvh) ? compound_collision(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size()) : CollisionResult{.overlap = false}; }
+
+		ContactResult raw_contacts(const Element& e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), param(e)) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(ElementParam e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const Primitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.element)) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const TPrimitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.get_baked())) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const Compound& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const TCompound& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size()) : ContactResult{ .overlap = false }; }
+
+		template<typename S>
+		ContactResult raw_contacts(const BVH<S>& bvh) const { return raw_overlaps(bvh) ? compound_contact(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size()) : ContactResult{ .overlap = false }; }
 
 	private:
 		static OverlapResult point_hits(const Node& node, const Element* elements, glm::vec2 test)
@@ -391,105 +403,6 @@ namespace oly::col2d
 				return false;
 			else
 				return overlaps(*node.left, c) || overlaps(*node.right, c);
-		}
-
-		template<typename OtherShape>
-		static CollisionResult collides(const Node& my_node, const Element* my_elements, const BVH<OtherShape>::Node& other_node, const Element* other_elements)
-		{
-			if (my_node.is_leaf())
-			{
-				if (other_node.is_leaf())
-					return collides(my_elements[my_node.start_index], other_elements[other_node.start_index]);
-				else
-					return BVH<OtherShape>::collides(other_node, other_elements, my_elements[my_node.start_index]).invert();
-			}
-			else
-			{
-				if (other_node.is_leaf())
-					return collides(my_node, my_elements, other_elements[other_node.start_index]);
-				else
-				{
-					if (!col2d::overlaps(my_node.shape.value(), other_node.shape.value()))
-						return false;
-					else
-						return greedy_collision({ collides(*my_node.left,  my_elements, *other_node.left, other_elements), collides(*my_node.left,  my_elements, *other_node.right, other_elements),
-												  collides(*my_node.right, my_elements, *other_node.left, other_elements), collides(*my_node.right, my_elements, *other_node.right, other_elements) },
-							my_elements, my_node.count, other_elements, other_node.count);
-				}
-			}
-		}
-
-		template<typename Other>
-		static CollisionResult collides(const Node& node, const Other& c)
-		{
-			if (node.is_leaf())
-				return collides(elements[node.start_index], c);
-			else if (!col2d::overlaps(node.shape.value(), c))
-				return { .overlap = false };
-			else
-				return greedy_collision(node, c);
-		}
-
-		static CollisionResult greedy_collision(const Node& node, const Element& c)
-		{
-			return greedy_collision(node, param(c));
-		}
-
-		static CollisionResult greedy_collision(const Node& node, ElementParam c)
-		{
-			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c);
-		}
-
-		static CollisionResult greedy_collision(const Node& node, const Primitive& c)
-		{
-			return greedy_collision(node, param(c.element));
-		}
-
-		static CollisionResult greedy_collision(const Node& node, const TPrimitive c)
-		{
-			return greedy_collision(node, param(c.get_baked()));
-		}
-
-		static CollisionResult greedy_collision(const Node& node, const Compound& c)
-		{
-			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c.elements.data(), c.elements.size());
-		}
-
-		static CollisionResult greedy_collision(const Node& node, const TCompound c)
-		{
-			return greedy_collision({ collides(*node.left, c), collides(*node.right, c) }, elements + node.start_index, node.count, c.get_baked().data(), c.get_baked().size());
-		}
-
-		template<typename OtherShape>
-		static ContactResult contacts(const Node& my_node, const Element* my_elements, const BVH<OtherShape>::Node& other_node, const Element* other_elements)
-		{
-			if (my_node.is_leaf())
-			{
-				if (other_node.is_leaf())
-					return contacts(my_elements[my_node.start_index], other_elements[other_node.start_index]);
-				else
-					return BVH<OtherShape>::contacts(other_node, other_elements, my_elements[my_node.start_index]).invert();
-			}
-			else
-			{
-				if (other_node.is_leaf())
-					return contacts(my_node, my_elements, other_elements[other_node.start_index]);
-				else
-					return greedy_contact({ contacts(*my_node.left,  my_elements, *other_node.left, other_elements), contacts(*my_node.left,  my_elements, *other_node.right, other_elements),
-											contacts(*my_node.right, my_elements, *other_node.left, other_elements), contacts(*my_node.right, my_elements, *other_node.right, other_elements) },
-						my_elements, my_node.count, other_elements, other_node.count);
-			}
-		}
-
-		template<typename Other>
-		static ContactResult contacts(const Node& node, const Element* elements, const Other& c)
-		{
-			if (node.is_leaf())
-				return contacts(elements[node.start_index], c);
-			else if (!col2d::overlaps(node.shape.value(), c))
-				return { .overlap = false };
-			else
-				return greedy_contact({ contacts(*node.left, c), contacts(*node.right, c) });
 		}
 	};
 

@@ -38,6 +38,8 @@ namespace oly
 
 		UnitVector2D operator-() const { return UnitVector2D(-_direction, _direct{}); }
 		bool operator==(const UnitVector2D& other) const { return _direction == other._direction; }
+		bool operator<(const UnitVector2D&) const;
+		bool operator<=(const UnitVector2D&) const;
 
 		UnitVector2D& rotate(float angle) { float c = glm::cos(angle); float s = glm::sin(angle); _direction = glm::mat2{ { c, s }, { -s, c } } * _direction; return *this; }
 		UnitVector2D get_rotated(float angle) const { float c = glm::cos(angle); float s = glm::sin(angle); return UnitVector2D(glm::mat2{ { c, s }, { -s, c } } * _direction, _direct{}); }
