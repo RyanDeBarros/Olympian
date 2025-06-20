@@ -29,7 +29,7 @@ namespace oly::col2d
 		};
 	}
 
-	std::pair<float, float> AABB::projection_interval(const UnitVector2D& axis) const
+	fpair AABB::projection_interval(const UnitVector2D& axis) const
 	{
 		return internal::polygon_projection_interval(points(), axis);
 	}

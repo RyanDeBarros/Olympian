@@ -22,7 +22,7 @@ namespace oly::col2d
 		static const AABB DEFAULT;
 
 		std::array<glm::vec2, 4> points() const;
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		fpair projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 		glm::vec2 deepest_point(const UnitVector2D& axis) const;

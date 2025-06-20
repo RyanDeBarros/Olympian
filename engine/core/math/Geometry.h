@@ -38,4 +38,6 @@ namespace oly::math
 	typedef std::vector<glm::vec2> Polygon2D;
 
 	extern math::Polygon2D clip_polygon(const math::Polygon2D& polygon, const UnitVector2D& axis, float maximum);
+	extern glm::vec2 intersection_by_normals(glm::vec2 p1, UnitVector2D n1, glm::vec2 p2, UnitVector2D n2);
+	extern glm::vec2 intersection_by_directions(glm::vec2 p1, UnitVector2D d1, glm::vec2 p2, UnitVector2D d2);
 }

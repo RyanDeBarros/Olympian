@@ -34,6 +34,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 int main()
 {
+	// TODO Log engine initialization/terminatation steps.
 	oly::context::Context oly_context("../../../res/context.toml");
 
 	PlayerController pc;
@@ -88,7 +89,7 @@ int main()
 	//oly::col2d::TPrimitive block = { oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f) };
 	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -200.0f, .x2 = 50.0f, .y1 = -200.0f, .y2 = 300.0f } };
 	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
-	//oly::col2d::TPrimitive block = { oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })) };
+	oly::col2d::TPrimitive block(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
 
 	//std::vector<glm::vec2> _pts;
 	//const int _npts = 5;
@@ -133,7 +134,8 @@ int main()
 
 	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
 	oly::debug::CollisionView player_cv = oly::debug::collision_view(player, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	//oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 	player_cv.assign(player_layer);
@@ -164,6 +166,7 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
+		// TODO alpha doesn't seem to work with collision views
 		obstacle_layer.draw();
 		player_layer.draw();
 		impulse_layer.draw();
@@ -181,23 +184,23 @@ int main()
 		flag_state_timer.poll();
 
 		player.set_local().position = oly::context::get_cursor_view_pos();
-		//player.set_local().position = { -150.0f, -100.0f };
+		//player.set_local().position = { -250.0f, 0.0f };
 		//player.set_local().position = { 0.0f, 0.0f };
 		//player.set_local().position = { 75.0f, -225.0f };
 		//player.set_local().position = { 211, -134 };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);
-		//bool player_block_overlap = oly::col2d::overlaps(player, block);
-		bool player_block_overlap = oly::col2d::overlaps(player, capsule);
+		bool player_block_overlap = oly::col2d::overlaps(player, block);
+		//bool player_block_overlap = oly::col2d::overlaps(player, capsule);
 
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		//auto contact = oly::col2d::contacts(player, block);
-		auto contact = oly::col2d::contacts(player, capsule);
-		//auto collide = oly::col2d::collides(player, block);
-		auto collide = oly::col2d::collides(player, capsule);
-		if (collide.overlap)
-			oly::LOG << collide.mtv() << oly::LOG.nl;
+		auto contact = oly::col2d::contacts(player, block);
+		//auto contact = oly::col2d::contacts(player, capsule);
+		auto collide = oly::col2d::collides(player, block);
+		//auto collide = oly::col2d::collides(player, capsule);
+		if (collide.overlap);
+			//oly::LOG << collide.mtv() << oly::LOG.nl;
 
 		if (contact.overlap)
 		{

@@ -296,8 +296,8 @@ namespace oly::col2d::sat
 			{
 				for (size_t i = 0; i < K; ++i)
 				{
-					std::pair<float, float> i2 = other.projection_interval(KDOP<K>::uniform_axis(i));
-					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
+					fpair i2 = other.projection_interval(KDOP<K>::uniform_axis(i));
+					if (std::min(c.get_clipped_maximum(i), i2.second) - std::max(c.get_clipped_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
 				return true;
@@ -313,7 +313,7 @@ namespace oly::col2d::sat
 				{
 					UnitVector2D axis = KDOP<K>::uniform_axis(i);
 					auto [min2, max2] = other.projection_interval(axis);
-					float depth = sat(c.get_minimum(i), c.get_maximum(i), min2, max2, axis);
+					float depth = sat(c.get_clipped_minimum(i), c.get_clipped_maximum(i), min2, max2, axis);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -336,7 +336,7 @@ namespace oly::col2d::sat
 			{
 				for (size_t i = 0; i < K; ++i)
 				{
-					if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
+					if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(i)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(i)) < 0.0f)
 						return false;
 				}
 				return true;
@@ -352,7 +352,7 @@ namespace oly::col2d::sat
 				for (size_t i = 0; i < K; ++i)
 				{
 					UnitVector2D axis = KDOP<K>::uniform_axis(i);
-					float depth = sat(c1.get_minimum(i), c1.get_maximum(i), c2.get_minimum(i), c2.get_maximum(i), axis);
+					float depth = sat(c1.get_clipped_minimum(i), c1.get_clipped_maximum(i), c2.get_clipped_minimum(i), c2.get_clipped_maximum(i), axis);
 					if (depth < 0.0f)
 						return { .overlap = false };
 					else if (depth < info.penetration_depth)
@@ -362,101 +362,6 @@ namespace oly::col2d::sat
 					}
 				}
 				return info;
-			}
-		};
-
-		template<typename Other>
-		struct OverlapTest<CustomKDOP, Other>
-		{
-			static OverlapResult impl(const CustomKDOP& c, const Other& other)
-			{
-				for (size_t i = 0; i < c.get_k(); ++i)
-				{
-					std::pair<float, float> i2 = other.projection_interval(c.edge_normal(i));
-					if (std::min(c.get_maximum(i), i2.second) - std::max(c.get_minimum(i), i2.first) < 0.0f)
-						return false;
-				}
-				return true;
-			}
-		};
-
-		template<typename Other>
-		struct CollisionTest<CustomKDOP, Other>
-		{
-			static void update_collision(const CustomKDOP& c, const Other& other, CollisionResult& info)
-			{
-				for (size_t i = 0; i < c.get_k(); ++i)
-				{
-					UnitVector2D axis = c.edge_normal(i);
-					auto [min2, max2] = other.projection_interval(c.edge_normal(i));
-					float depth = sat(c.get_minimum(i), c.get_maximum(i), min2, max2, axis);
-					if (depth < 0.0f)
-					{
-						info.overlap = false;
-						info.penetration_depth = 0.0f;
-						return;
-					}
-					else if (depth < info.penetration_depth)
-					{
-						info.penetration_depth = depth;
-						info.unit_impulse = axis;
-					}
-				}
-			}
-		};
-
-		template<>
-		struct FullOverlapTest<CustomKDOP, CustomKDOP>
-		{
-			static OverlapResult call(const CustomKDOP& c1, const CustomKDOP& c2)
-			{
-				if (c1.get_k() == c2.get_k() && c1.get_axes() == c2.get_axes())
-				{
-					for (size_t i = 0; i < c1.get_k(); ++i)
-					{
-						if (std::min(c1.get_maximum(i), c2.get_maximum(i)) - std::max(c1.get_minimum(i), c2.get_minimum(i)) < 0.0f)
-							return false;
-					}
-					return true;
-				}
-				else
-					return internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c1, c2) && internal::OverlapTest<CustomKDOP, CustomKDOP>::impl(c2, c1);
-			}
-		};
-
-		template<>
-		struct FullCollisionTest<CustomKDOP, CustomKDOP>
-		{
-			static CollisionResult call(const CustomKDOP& c1, const CustomKDOP& c2)
-			{
-				if (c1.get_k() == c2.get_k() && c1.get_axes() == c2.get_axes())
-				{
-					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					for (size_t i = 0; i < c1.get_k(); ++i)
-					{
-						UnitVector2D axis = c1.edge_normal(i);
-						float depth = sat(c1.get_minimum(i), c1.get_maximum(i), c2.get_minimum(i), c2.get_maximum(i), axis);
-						if (depth < 0.0f)
-							return { .overlap = false };
-						else if (depth < info.penetration_depth)
-						{
-							info.penetration_depth = depth;
-							info.unit_impulse = axis;
-						}
-					}
-					return info;
-				}
-				else
-				{
-					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c1, c2, info);
-					if (!info.overlap)
-						return info;
-					internal::CollisionTest<CustomKDOP, CustomKDOP>::update_collision(c2, c1, info.invert());
-					if (!info.invert().overlap)
-						return info;
-					return info;
-				}
 			}
 		};
 	}

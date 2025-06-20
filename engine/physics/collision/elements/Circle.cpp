@@ -9,20 +9,6 @@ namespace oly::col2d
 {
 	namespace internal
 	{
-		static void invert(glm::mat3x2& g, glm::mat3x2& ginv)
-		{
-			float det = g[0][0] * g[1][1] - g[0][1] * g[1][0];
-			if (det == 0.0f)
-			{
-				g = 0.0f;
-				ginv = 0.0f;
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE);
-			}
-
-			det = 1.0f / det;
-			ginv = { { g[1][1] * det, -g[0][1] * det }, { -g[1][0] * det, g[0][0] * det }, { (g[1][0] * g[2][1] - g[1][1] * g[2][0]) * det, (g[0][1] * g[2][0] - g[0][0] * g[2][1]) * det} };
-		}
-
 		const glm::mat3x2& CircleGlobalAccess::get_global(const Circle& c)
 		{
 			return c.global;
@@ -33,16 +19,12 @@ namespace oly::col2d
 			return c.ginv;
 		}
 
-		void CircleGlobalAccess::set_global(Circle& c, const glm::mat3x2& g)
+		Circle CircleGlobalAccess::create_affine_circle(const Circle& c, const glm::mat3x2& g)
 		{
-			c.global = g;
-			invert(c.global, c.ginv);
-		}
-
-		void CircleGlobalAccess::set_ginv(Circle& c, const glm::mat3x2& ginv)
-		{
-			c.ginv = ginv;
-			invert(c.ginv, c.global);
+			Circle tc(c.center, c.radius);
+			tc.global = g;
+			tc.ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+			return tc;
 		}
 
 		bool CircleGlobalAccess::has_no_global(const Circle& c)
@@ -105,7 +87,7 @@ namespace oly::col2d
 		return Circle(center, radius);
 	}
 
-	std::pair<float, float> Circle::projection_interval(const UnitVector2D& axis) const
+	fpair Circle::projection_interval(const UnitVector2D& axis) const
 	{
 		if (global == internal::CircleGlobalAccess::DEFAULT)
 		{

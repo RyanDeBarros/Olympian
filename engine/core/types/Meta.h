@@ -18,6 +18,29 @@ namespace oly
 		return max(first, max(rest...));
 	}
 
+	namespace internal
+	{
+		template<size_t I, typename T, typename... Rest>
+		constexpr const T& get_by_index(const T& first, const Rest&... rest) {
+			if constexpr (I == 0)
+				return first;
+			else
+				return get_by_index<I - 1>(rest...);
+		}
+	}
+
+	template<typename T>
+	constexpr size_t max_of(const T&)
+	{
+		return 0;
+	}
+
+	template<typename T, typename... Rest>
+	inline size_t max_of(const T& first, const Rest&... rest)
+	{
+		return first >= internal::get_by_index<0>(rest...) ? 0 : 1 + max_of(rest...);
+	}
+
 	template<typename T>
 	inline T dupl(const T& obj)
 	{

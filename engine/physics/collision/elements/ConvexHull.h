@@ -3,6 +3,7 @@
 #include "core/base/UnitVector.h"
 #include "core/math/Geometry.h"
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/elements/Common.h"
 
 namespace oly::col2d
 {
@@ -12,6 +13,7 @@ namespace oly::col2d
 		std::vector<glm::vec2> _points;
 		mutable bool dirty_center = true;
 		mutable glm::vec2 _center{};
+		mutable internal::ProjectionCache proj_cache;
 
 	public:
 		ConvexHull(const std::vector<glm::vec2>& points = {}) : _points(points) {}
@@ -27,7 +29,7 @@ namespace oly::col2d
 
 		glm::vec2 center() const;
 		
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		fpair projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 		UnitVector2D edge_normal(size_t i) const;

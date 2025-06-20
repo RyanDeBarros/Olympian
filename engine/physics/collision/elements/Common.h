@@ -7,15 +7,23 @@
 
 namespace oly::col2d::internal
 {
+	struct ProjectionCache
+	{
+		int index_min = 0;
+		int index_max = 0;
+		int index_deepest = 0;
+	};
+
 	template<typename Polygon>
-	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
+	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis, int& starting_index)
 	{
 		bool forward = true;
 		int offset = 0;
-		float min_proj = axis.dot(polygon[offset++]);
-		while (offset < polygon.size())
+		const size_t n = polygon.size();
+		float min_proj = axis.dot(polygon[unsigned_mod(starting_index + offset++, n)]);
+		while (offset < n)
 		{
-			float proj = axis.dot(polygon[offset++]);
+			float proj = axis.dot(polygon[unsigned_mod(starting_index + offset++, n)]);
 			if (proj < min_proj)
 			{
 				min_proj = proj;
@@ -28,43 +36,68 @@ namespace oly::col2d::internal
 				break;
 			}
 		}
-		if (offset == polygon.size())
+		if (offset == n)
+		{
+			starting_index = unsigned_mod(starting_index - 1, n);
 			return min_proj;
+		}
 
 		if (forward)
 		{
-			for (int i = offset; i < (int)polygon.size(); ++i)
+			for (int i = offset; i < (int)n; ++i)
 			{
-				float proj = axis.dot(polygon[i]);
+				float proj = axis.dot(polygon[unsigned_mod(starting_index + i, n)]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
+				{
+					starting_index = unsigned_mod(starting_index + i - 1, n);
 					return min_proj;
+				}
 			}
+			starting_index = unsigned_mod(starting_index - 1, n);
 		}
 		else
 		{
-			for (int i = (int)polygon.size() - 1; i >= offset; --i)
+			for (int i = (int)n - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(polygon[i]);
+				float proj = axis.dot(polygon[unsigned_mod(starting_index + i, n)]);
 				if (proj < min_proj)
 					min_proj = proj;
 				else
+				{
+					starting_index = unsigned_mod(starting_index + i + 1, n);
 					return min_proj;
+				}
 			}
+			starting_index = unsigned_mod(starting_index + offset, n);
 		}
 		return min_proj;
 	}
 
 	template<typename Polygon>
-	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
+	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis)
+	{
+		int starting_index = 0;
+		return polygon_projection_min(polygon, axis, starting_index);
+	}
+
+	template<typename Polygon>
+	float polygon_projection_min(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
+	{
+		return polygon_projection_min(polygon, axis, cache.index_min);
+	}
+
+	template<typename Polygon>
+	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis, int& starting_index)
 	{
 		bool forward = true;
 		int offset = 0;
-		float max_proj = axis.dot(polygon[offset++]);
-		while (offset < polygon.size())
+		const size_t n = polygon.size();
+		float max_proj = axis.dot(polygon[unsigned_mod(starting_index + offset++, n)]);
+		while (offset < n)
 		{
-			float proj = axis.dot(polygon[offset++]);
+			float proj = axis.dot(polygon[unsigned_mod(starting_index + offset++, n)]);
 			if (proj > max_proj)
 			{
 				max_proj = proj;
@@ -77,38 +110,75 @@ namespace oly::col2d::internal
 				break;
 			}
 		}
-		if (offset == polygon.size())
+		if (offset == n)
+		{
+			starting_index = unsigned_mod(starting_index - 1, n);
 			return max_proj;
+		}
 
 		if (forward)
 		{
-			for (int i = offset; i < (int)polygon.size(); ++i)
+			for (int i = offset; i < (int)n; ++i)
 			{
-				float proj = axis.dot(polygon[i]);
+				float proj = axis.dot(polygon[unsigned_mod(starting_index + i, n)]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
+				{
+					starting_index = unsigned_mod(starting_index + i - 1, n);
 					return max_proj;
+				}
 			}
+			starting_index = unsigned_mod(starting_index - 1, n);
 		}
 		else
 		{
-			for (int i = (int)polygon.size() - 1; i >= offset; --i)
+			for (int i = (int)n - 1; i >= offset; --i)
 			{
-				float proj = axis.dot(polygon[i]);
+				float proj = axis.dot(polygon[unsigned_mod(starting_index + i, n)]);
 				if (proj > max_proj)
 					max_proj = proj;
 				else
+				{
+					starting_index = unsigned_mod(starting_index + i + 1, n);
 					return max_proj;
+				}
 			}
+			starting_index = unsigned_mod(starting_index + offset, n);
 		}
 		return max_proj;
 	}
 
 	template<typename Polygon>
-	std::pair<float, float> polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis)
+	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis)
 	{
-		return { polygon_projection_min(polygon, axis), polygon_projection_max(polygon, axis) };
+		int starting_index = 0;
+		return polygon_projection_max(polygon, axis, starting_index);
+	}
+
+	template<typename Polygon>
+	float polygon_projection_max(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
+	{
+		return polygon_projection_max(polygon, axis, cache.index_max);
+	}
+
+	template<typename Polygon>
+	fpair polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis, int& starting_index_min, int& starting_index_max)
+	{
+		return { polygon_projection_min(polygon, axis, starting_index_min), polygon_projection_max(polygon, axis, starting_index_max) };
+	}
+
+	template<typename Polygon>
+	fpair polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis)
+	{
+		int starting_index_min = 0, starting_index_max = 0;
+		return polygon_projection_interval(polygon, axis, starting_index_min, starting_index_max);
+	}
+
+	template<typename Polygon>
+	fpair polygon_projection_interval(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
+	{
+		return polygon_projection_interval(polygon, axis, cache.index_min, cache.index_max);
 	}
 
 	template<typename Polygon>
@@ -119,17 +189,18 @@ namespace oly::col2d::internal
 	}
 
 	template<typename Polygon>
-	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis)
+	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis, int& starting_index)
 	{
 		bool forward = true;
 		int offset = 0;
-		glm::vec2 deepest = polygon[offset++];
+		const size_t n = polygon.size();
+		glm::vec2 deepest = polygon[unsigned_mod(starting_index + offset++, n)];
 		float max_proj = axis.dot(deepest);
 		int num_deepest_points = 1;
 		
-		while (offset < polygon.size())
+		while (offset < n)
 		{
-			glm::vec2 point = polygon[offset++];
+			glm::vec2 point = polygon[unsigned_mod(starting_index + offset++, n)];
 			float proj = axis.dot(point);
 			if (approx(proj, max_proj))
 			{
@@ -150,14 +221,18 @@ namespace oly::col2d::internal
 				break;
 			}
 		}
-		if (offset == polygon.size())
+		if (offset == n)
+		{
+			starting_index = unsigned_mod(starting_index - 1, n);
 			return deepest /= (float)num_deepest_points;
+		}
 
 		if (forward)
 		{
-			for (int i = offset; i < (int)polygon.size(); ++i)
+			int i = offset;
+			while (i < (int)n)
 			{
-				glm::vec2 point = polygon[i];
+				glm::vec2 point = polygon[unsigned_mod(starting_index + i, n)];
 				float proj = axis.dot(point);
 				if (approx(proj, max_proj))
 				{
@@ -172,13 +247,16 @@ namespace oly::col2d::internal
 				}
 				else
 					break;
+				++i;
 			}
+			starting_index = unsigned_mod(starting_index + i - num_deepest_points, n);
 		}
 		else
 		{
-			for (int i = (int)polygon.size() - 1; i >= offset; --i)
+			int i = (int)n - 1;
+			while (i >= offset)
 			{
-				glm::vec2 point = polygon[i];
+				glm::vec2 point = polygon[unsigned_mod(starting_index + i, n)];
 				float proj = axis.dot(point);
 				if (approx(proj, max_proj))
 				{
@@ -193,8 +271,23 @@ namespace oly::col2d::internal
 				}
 				else
 					break;
+				++i;
 			}
+			starting_index = unsigned_mod(starting_index + i - 1 + num_deepest_points, n);
 		}
 		return deepest /= (float)num_deepest_points;
+	}
+
+	template<typename Polygon>
+	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis)
+	{
+		int starting_index = 0;
+		return polygon_deepest_point(polygon, axis, starting_index);
+	}
+
+	template<typename Polygon>
+	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
+	{
+		return polygon_deepest_point(polygon, axis, cache.index_deepest);
 	}
 }

@@ -78,48 +78,13 @@ namespace oly::col2d
 					std::visit([&kdop](auto&& element) {
 						for (size_t j = 0; j < K; ++j)
 						{
-							std::pair<float, float> interval = element.projection_interval(KDOP<K>::uniform_axis(j));
+							fpair interval = element.projection_interval(KDOP<K>::uniform_axis(j));
 							kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
 							kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
 						}
 						}, elements[i]);
 				}
 				return kdop;
-			}
-		};
-	}
-
-	template<size_t K, std::array<UnitVector2D, K> Axes>
-	struct CustomKDOPShape
-	{
-		CustomKDOP kdop;
-		operator const CustomKDOP& () const { return kdop; }
-		operator CustomKDOP& () { return kdop; }
-	};
-
-	namespace internal
-	{
-		template<size_t K, std::array<UnitVector2D, K> Axes>
-		struct Wrap<CustomKDOPShape<K, Axes>>
-		{
-			CustomKDOPShape<K, Axes> operator()(const Element* elements, size_t count) const
-			{
-				std::vector<float> minima(K, nmax<float>());
-				std::vector<float> maxima(K, -nmax<float>());
-				for (size_t i = 0; i < count; ++i)
-				{
-					std::visit([&minima, &maxima](auto&& element) {
-						for (size_t j = 0; j < K; ++j)
-						{
-							std::pair<float, float> interval = element.projection_interval(Axes[j]);
-							minima[j] = std::min(minima[j], interval.first);
-							maxima[j] = std::max(maxima[j], interval.second);
-						}
-						}, elements[i]);
-				}
-				std::vector<UnitVector2D> axes;
-				axes.insert(axes.end(), Axes.begin(), Axes.end());
-				return { .kdop = CustomKDOP(std::move(axes), std::move(minima), std::move(maxima)) };
 			}
 		};
 

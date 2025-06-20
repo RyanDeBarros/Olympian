@@ -67,17 +67,6 @@ namespace oly::col2d
 		return axes;
 	}
 
-	static std::set<UnitVector2D> candidate_axes(const CustomKDOP& c)
-	{
-		std::set<UnitVector2D> axes;
-		for (size_t i = 0; i < c.get_k(); ++i)
-		{
-			axes.insert(c.edge_normal(i));
-			axes.insert(-c.edge_normal(i));
-		}
-		return axes;
-	}
-
 	template<size_t K>
 	static std::set<UnitVector2D> candidate_axes(const KDOP<K>&)
 	{
@@ -329,10 +318,7 @@ namespace oly::col2d
 
 	Element internal::transform_element(const Circle& c, const glm::mat3& m)
 	{
-		// TODO global should only store linear 2x2 sub-transformation. m[2] should go into offsetting the center.
-		Circle tc(c.center, c.radius);
-		internal::CircleGlobalAccess::set_global(tc, m);
-		return tc;
+		return internal::CircleGlobalAccess::create_affine_circle(c, m);
 	}
 
 	Element internal::transform_element(const AABB& c, const glm::mat3& m)
@@ -364,30 +350,12 @@ namespace oly::col2d
 		}
 		else
 		{
-			// CustomKDOP
-			std::vector<UnitVector2D> axes(2);
-			std::vector<float> minima(2);
-			std::vector<float> maxima(2);
-
-			{
-				glm::vec2 normal = transform_normal(m, UnitVector2D::RIGHT);
-				axes[0] = UnitVector2D(normal);
-				float normalization = math::inv_magnitude(normal);
-				float offset = axes[0].dot(m[2]);
-				minima[0] = offset + c.x1 * normalization;
-				maxima[0] = offset + c.x2 * normalization;
-			}
-
-			{
-				glm::vec2 normal = transform_normal(m, UnitVector2D::UP);
-				axes[1] = UnitVector2D(normal);
-				float normalization = math::inv_magnitude(normal);
-				float offset = axes[1].dot(m[2]);
-				minima[1] = offset + c.y1 * normalization;
-				maxima[1] = offset + c.y2 * normalization;
-			}
-
-			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
+			// TODO KDOP should keep a local transform, similar to Circle. Then return a KDOP2 with that.
+			
+			ConvexHull hull;
+			for (glm::vec2 pt : c.points())
+				hull.set_points().push_back(transform_point(m, pt));
+			return hull;
 		}
 	}
 
@@ -415,52 +383,13 @@ namespace oly::col2d
 		}
 		else
 		{
-			// CustomKDOP
-			std::vector<UnitVector2D> axes(2);
-			std::vector<float> minima(2);
-			std::vector<float> maxima(2);
+			// TODO KDOP should keep a local transform, similar to Circle. Then return a KDOP2 with that.
 
-			{
-				glm::vec2 normal = transform_normal(m, c.get_major_axis());
-				axes[0] = UnitVector2D(normal);
-				float normalization = math::inv_magnitude(normal);
-				float offset = axes[1].dot(m[2]);
-				float local_offset = c.get_major_axis().dot(c.center);
-				minima[0] = offset + (local_offset - 0.5f * c.width) * normalization;
-				maxima[0] = offset + (local_offset + 0.5f * c.width) * normalization;
-			}
-
-			{
-				glm::vec2 normal = transform_normal(m, c.get_minor_axis());
-				axes[1] = UnitVector2D(normal);
-				float normalization = math::inv_magnitude(normal);
-				float offset = axes[1].dot(m[2]);
-				float local_offset = c.get_minor_axis().dot(c.center);
-				minima[1] = offset + (local_offset - 0.5f * c.height) * normalization;
-				maxima[1] = offset + (local_offset + 0.5f * c.height) * normalization;
-			}
-
-			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
+			ConvexHull hull;
+			for (glm::vec2 pt : c.points())
+				hull.set_points().push_back(transform_point(m, pt));
+			return hull;
 		}
-	}
-
-	Element internal::transform_element(const CustomKDOP& c, const glm::mat3& m)
-	{
-		// CustomKDOP
-		// LATER check if compatible with standard KDOP axes
-		std::vector<UnitVector2D> axes(c.get_k());
-		std::vector<float> minima(c.get_k());
-		std::vector<float> maxima(c.get_k());
-		for (size_t i = 0; i < axes.size(); ++i)
-		{
-			glm::vec2 normal = transform_normal(m, c.edge_normal(i));
-			axes[i] = UnitVector2D(normal);
-			float normalization = math::inv_magnitude(normal);
-			float offset = axes[i].dot(m[2]);
-			minima[i] = offset + c.get_minimum(i) * normalization;
-			maxima[i] = offset + c.get_maximum(i) * normalization;
-		}
-		return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
 	}
 
 	template<size_t K>
@@ -500,20 +429,12 @@ namespace oly::col2d
 		}
 		else
 		{
-			// CustomKDOP
-			std::vector<UnitVector2D> axes(K);
-			std::vector<float> minima(K);
-			std::vector<float> maxima(K);
-			for (size_t i = 0; i < axes.size(); ++i)
-			{
-				glm::vec2 normal = transform_normal(m, KDOP<K>::uniform_axis(i));
-				axes[i] = UnitVector2D(normal);
-				float normalization = math::inv_magnitude(normal);
-				float offset = axes[i].dot(m[2]);
-				minima[i] = offset + c.get_minimum(i) * normalization;
-				maxima[i] = offset + c.get_maximum(i) * normalization;
-			}
-			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
+			// TODO KDOP should keep a local transform, similar to Circle.
+
+			ConvexHull hull;
+			for (glm::vec2 pt : c.points())
+				hull.set_points().push_back(transform_point(m, pt));
+			return hull;
 		}
 	}
 

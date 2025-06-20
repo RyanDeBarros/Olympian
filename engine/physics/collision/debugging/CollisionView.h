@@ -283,28 +283,6 @@ namespace oly::debug
 		internal::polygon_update_view(view, c.points(), color);
 	}
 
-	inline CollisionView collision_view(const col2d::CustomKDOP& c, glm::vec4 color)
-	{
-		return internal::polygon_collision_view(c.points(), color);
-	}
-
-	inline void update_view(CollisionView& view, const col2d::CustomKDOP& c, glm::vec4 color)
-	{
-		internal::polygon_update_view(view, c.points(), color);
-	}
-
-	template<size_t K, std::array<UnitVector2D, K> Axes>
-	inline CollisionView collision_view(const col2d::CustomKDOPShape<K, Axes>& c, glm::vec4 color)
-	{
-		return internal::polygon_collision_view(c.points(), color);
-	}
-
-	template<size_t K, std::array<UnitVector2D, K> Axes>
-	inline void update_view(CollisionView& view, const col2d::CustomKDOPShape<K, Axes>& c, glm::vec4 color)
-	{
-		internal::polygon_update_view(view, c.points(), color);
-	}
-
 	template<size_t K>
 	inline CollisionView collision_view(const col2d::KDOP<K>& c, glm::vec4 color)
 	{

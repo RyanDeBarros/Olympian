@@ -1,7 +1,6 @@
 #include "ConvexHull.h"
 
 #include "core/types/Approximate.h"
-#include "physics/collision/elements/Common.h"
 
 #include <algorithm>
 
@@ -85,19 +84,19 @@ namespace oly::col2d
 		return _center;
 	}
 
-	std::pair<float, float> ConvexHull::projection_interval(const UnitVector2D& axis) const
+	fpair ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
 		return internal::polygon_projection_interval(_points, axis);
 	}
 
 	float ConvexHull::projection_min(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_min(_points, axis);
+		return internal::polygon_projection_min(_points, axis, proj_cache);
 	}
 
 	float ConvexHull::projection_max(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_max(_points, axis);
+		return internal::polygon_projection_max(_points, axis, proj_cache);
 	}
 
 	UnitVector2D ConvexHull::edge_normal(size_t i) const
@@ -107,6 +106,6 @@ namespace oly::col2d
 
 	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
 	{
-		return internal::polygon_deepest_point(_points, axis);
+		return internal::polygon_deepest_point(_points, axis, proj_cache);
 	}
 }

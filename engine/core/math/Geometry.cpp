@@ -107,4 +107,14 @@ namespace oly::math
 		}
 		return out;
 	}
+
+	glm::vec2 intersection_by_normals(glm::vec2 p1, UnitVector2D n1, glm::vec2 p2, UnitVector2D n2)
+	{
+		return glm::inverse(glm::transpose(glm::mat2(n1, n2))) * glm::vec2(n1.dot(p1), n2.dot(p2));
+	}
+
+	glm::vec2 intersection_by_directions(glm::vec2 p1, UnitVector2D d1, glm::vec2 p2, UnitVector2D d2)
+	{
+		return intersection_by_normals(p1, d1.get_quarter_turn(), p2, d2.get_quarter_turn());
+	}
 }

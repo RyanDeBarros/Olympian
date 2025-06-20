@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace oly
 {
 	constexpr unsigned int unsigned_mod(int pos, int mod)
@@ -8,9 +10,14 @@ namespace oly
 		return pos >= 0 ? pos : pos + mod;
 	}
 
+	constexpr unsigned int unsigned_mod(int pos, size_t mod)
+	{
+		return unsigned_mod(pos, (int)mod);
+	}
+
 	constexpr int roundi(float v)
 	{
-		return (v > 0.0f) ? static_cast<int>(v + 0.5f) : static_cast<int>(v - 0.5f);
+		return (v >= 0.0f) ? static_cast<int>(v + 0.5f) : static_cast<int>(v - 0.5f);
 	}
 
 	class BigSize
@@ -30,6 +37,8 @@ namespace oly
 		size_t get_remainder() const { return v; }
 		size_t hash() const { return std::hash<size_t>{}(v) ^ (std::hash<size_t>{}(order) << 1); }
 	};
+
+	typedef std::pair<float, float> fpair;
 }
 
 template<>

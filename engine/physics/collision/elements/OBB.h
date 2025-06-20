@@ -23,12 +23,12 @@ namespace oly::col2d
 
 		UnitVector2D get_major_axis() const { return UnitVector2D(rotation); }
 		UnitVector2D get_minor_axis() const { return UnitVector2D(rotation).get_quarter_turn(); }
-		std::pair<float, float> get_major_axis_projection_interval() const
+		fpair get_major_axis_projection_interval() const
 		{
 			float c = UnitVector2D(rotation).dot(center);
 			return { c - 0.5f * width, c + 0.5f * width };
 		}
-		std::pair<float, float> get_minor_axis_projection_interval() const
+		fpair get_minor_axis_projection_interval() const
 		{
 			float c = UnitVector2D(rotation).get_quarter_turn().dot(center);
 			return { c - 0.5f * height, c + 0.5f * height };
@@ -49,7 +49,7 @@ namespace oly::col2d
 		}
 
 		std::array<glm::vec2, 4> points() const;
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		fpair projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 		glm::vec2 deepest_point(const UnitVector2D& axis) const;

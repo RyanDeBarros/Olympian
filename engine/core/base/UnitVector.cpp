@@ -20,7 +20,7 @@ namespace oly
 			else if (below_zero(rhs._direction.y))
 				return _direction.x < rhs._direction.x;
 			else
-				false;
+				return false;
 		}
 		else
 		{
@@ -51,7 +51,7 @@ namespace oly
 			else if (below_zero(rhs._direction.y))
 				return _direction.x <= rhs._direction.x;
 			else
-				false;
+				return false;
 		}
 		else
 		{

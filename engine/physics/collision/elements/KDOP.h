@@ -49,28 +49,32 @@ namespace oly::col2d
 		mutable glm::vec2 _center{};
 		mutable bool dirty_cache = true;
 		mutable bool dirty_center = true;
+		mutable bool dirty_clipped = true;
+		mutable std::array<fpair, K> _clipped_extrema;
+		mutable internal::ProjectionCache proj_cache;
+
+		void flag() const { dirty_cache = true; dirty_center = true; dirty_clipped = true; }
 
 	public:
-		const std::array<float, K>& get_minima() const { return minima; }
-		const std::array<float, K>& get_maxima() const { return maxima; }
-		void set_minima(const std::array<float, K>& min) { minima = min; dirty_cache = true; dirty_center = true; }
-		void set_maxima(const std::array<float, K>& max) { maxima = max; dirty_cache = true; dirty_center = true; }
 		float get_minimum(size_t i) const { return minima[i]; }
 		float get_maximum(size_t i) const { return maxima[i]; }
-		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty_cache = true; dirty_center = true; }
-		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty_cache = true; dirty_center = true; }
-		
+		float get_clipped_minimum(size_t i) const { return clipped_extrema()[i].first; }
+		float get_clipped_maximum(size_t i) const { return clipped_extrema()[i].second; }
+		void set_minimum(size_t i, float minimum) { minima[i] = minimum; flag(); }
+		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; flag(); }
+		void set_minima(const std::array<float, K>& min) { minima = min; flag(); }
+		void set_maxima(const std::array<float, K>& max) { maxima = max; flag(); }
+
 		KDOP() = default;
-		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima) : minima(minima), maxima(maxima) { dirty_cache = true; dirty_center = true; }
-		KDOP(const std::array<std::pair<float, float>, K>& extrema)
+		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima) : minima(minima), maxima(maxima) { flag(); }
+		KDOP(const std::array<fpair, K>& extrema)
 		{
 			for (size_t i = 0; i < K; ++i)
 			{
 				minima[i] = extrema[i].first;
 				maxima[i] = extrema[i].second;
 			}
-			dirty_cache = true;
-			dirty_center = true;
+			flag();
 		}
 		
 		void fill_invalid()
@@ -80,8 +84,7 @@ namespace oly::col2d
 				minima[i] = nmax<float>();
 				maxima[i] = -nmax<float>();
 			}
-			dirty_cache = true;
-			dirty_center = true;
+			flag();
 		}
 
 		glm::vec2 center() const
@@ -159,44 +162,62 @@ namespace oly::col2d
 			return cache();
 		}
 
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const
+	private:
+		const std::array<fpair, K>& clipped_extrema() const
 		{
-			for (size_t i = 0; i < K; ++i)
+			if (dirty_clipped)
 			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(uniform_axis(i), LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return { minima[i], maxima[i] };
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return { -maxima[i], -minima[i] };
+				dirty_clipped = false;
+				for (size_t i = 0; i < K; ++i)
+					_clipped_extrema[i] = internal::polygon_projection_interval(cache(), uniform_axis(i));
 			}
-			return internal::polygon_projection_interval(cache(), axis);
+			return _clipped_extrema;
 		}
 
-		// TODO reverse engineer axis angle to get closest uniform axis
+	public:
+		fpair projection_interval(const UnitVector2D& axis) const
+		{
+			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
+			{
+				int j = unsigned_mod(roundi(i), 2 * K);
+				if (j < K)
+					return { get_clipped_minimum(j), get_clipped_maximum(j) };
+				else
+					return { -get_clipped_maximum(j - K), -get_clipped_minimum(j - K) };
+			}
+			else
+				return { axis.dot(deepest_point(-axis)), axis.dot(deepest_point(axis)) };
+		}
+
 		float projection_min(const UnitVector2D& axis) const
 		{
-			for (size_t i = 0; i < K; ++i)
+			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
 			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(uniform_axis(i), LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return minima[i];
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return -maxima[i];
+				int j = unsigned_mod(roundi(i), 2 * K);
+				if (j < K)
+					return get_clipped_minimum(j);
+				else
+					return -get_clipped_maximum(j - K);
 			}
-			return internal::polygon_projection_min(cache(), axis);
+			else
+				return axis.dot(deepest_point(-axis));
 		}
 
 		float projection_max(const UnitVector2D& axis) const
 		{
-			for (size_t i = 0; i < K; ++i)
+			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
 			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(uniform_axis(i), LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return maxima[i];
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return -minima[i];
+				int j = unsigned_mod(roundi(i), 2 * K);
+				if (j < K)
+					return get_clipped_maximum(j);
+				else
+					return -get_clipped_minimum(j - K);
 			}
-			return internal::polygon_projection_max(cache(), axis);
+			else
+				return axis.dot(deepest_point(axis));
 		}
 
 		UnitVector2D edge_normal(size_t i) const
@@ -206,220 +227,33 @@ namespace oly::col2d
 		
 		glm::vec2 deepest_point(const UnitVector2D& axis) const
 		{
-			return internal::polygon_deepest_point(cache(), axis);
-		}
-	};
-
-	class CustomKDOP
-	{
-		std::vector<UnitVector2D> axes;
-		std::vector<float> minima;
-		std::vector<float> maxima;
-		mutable std::vector<glm::vec2> _cache;
-		mutable glm::vec2 _center{};
-		mutable bool dirty_cache = true;
-		mutable bool dirty_center = true;
-
-	public:
-		size_t get_k() const { return axes.size(); }
-		const std::vector<UnitVector2D>& get_axes() const { return axes; }
-		const std::vector<float>& get_minima() const { return minima; }
-		const std::vector<float>& get_maxima() const { return maxima; }
-		void set_k(size_t k)
-		{
-			if (k < 2)
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 2, but the degree provided is: " + std::to_string(k));
-			axes.resize(k);
-			minima.resize(k);
-			maxima.resize(k);
-			dirty_cache = true;
-			dirty_center = true;
-		}
-		float get_minimum(size_t i) const { return minima[i]; }
-		float get_maximum(size_t i) const { return maxima[i]; }
-		void set_minimum(size_t i, float minimum) { minima[i] = minimum; dirty_cache = true; dirty_center = true; }
-		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; dirty_cache = true; dirty_center = true; }
-		void set_axes(const std::vector<UnitVector2D>& axes)
-		{
-			set_k(axes.size());
-			for (size_t i = 0; i < get_k(); ++i)
-				this->axes[i] = axes[i];
-		}
-		void set_extrema(const std::vector<std::pair<float, float>>& extrema)
-		{
-			set_k(extrema.size());
-			for (size_t i = 0; i < get_k(); ++i)
+			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
 			{
-				minima[i] = extrema[i].first;
-				maxima[i] = extrema[i].second;
+				int j = unsigned_mod(roundi(i), 2 * K);
+				return (j < K ? get_clipped_maximum(j) : get_clipped_minimum(j - K)) * (glm::vec2)uniform_axis(j % K);
 			}
-		}
-
-		CustomKDOP() = default;
-		CustomKDOP(const std::vector<UnitVector2D>& axes, const std::vector<float>& minima, const std::vector<float>& maxima)
-		{
-			if (axes.size() != minima.size() || axes.size() != maxima.size())
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have the same number of minima, maxima, and axes");
-			if (axes.size() < 2)
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 2, but the degree provided is: " + std::to_string(axes.size()));
-
-			this->minima = minima;
-			this->maxima = maxima;
-			this->axes = axes;
-			dirty_cache = true;
-			dirty_center = true;
-		}
-		CustomKDOP(std::vector<UnitVector2D>&& axes, std::vector<float>&& minima, std::vector<float>&& maxima)
-		{
-			if (axes.size() != minima.size() || axes.size() != maxima.size())
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have the same number of minima, maxima, and axes");
-			if (axes.size() < 2)
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 2, but the degree provided is: " + std::to_string(axes.size()));
-
-			this->minima = std::move(minima);
-			this->maxima = std::move(maxima);
-			this->axes = std::move(axes);
-			dirty_cache = true;
-			dirty_center = true;
-		}
-
-		glm::vec2 center() const
-		{
-			if (dirty_center)
+			else
 			{
-				dirty_center = false;
-				_center = {};
-				for (glm::vec2 p : cache())
-					_center += p;
-				_center / (float)get_k();
+				int i1 = unsigned_mod((int)floorf(i), 2 * K);
+				glm::vec2 p1 = (i1 < K ? get_clipped_maximum(i1) : get_clipped_minimum(i1 - K)) * (glm::vec2)uniform_axis(i1 % K);
+				float m1 = math::mag_sqrd(p1);
+				
+				int i2 = unsigned_mod((int)ceilf(i), 2 * K);
+				glm::vec2 p2 = (i2 < K ? get_clipped_maximum(i2) : get_clipped_minimum(i2 - K)) * (glm::vec2)uniform_axis(i2 % K);
+				float m2 = math::mag_sqrd(p2);
+
+				glm::vec2 xpt = math::intersection_by_normals(p1, uniform_axis(i1), p2, uniform_axis(i2));
+				float m3 = math::mag_sqrd(xpt);
+				
+				size_t sel = max_of(m1, m2, m3);
+				if (sel == 0)
+					return p1;
+				else if (sel == 0)
+					return p2;
+				else
+					return xpt;
 			}
-			return _center;
-		}
-
-	private:
-		const std::vector<glm::vec2>& cache() const
-		{
-			if (dirty_cache)
-			{
-				dirty_cache = false;
-				_cache = internal::initial_kdop_polygon(edge_normal(0), minima[0], maxima[0], edge_normal(1), minima[1], maxima[1]);
-				for (size_t i = 2; i < get_k(); ++i)
-				{
-					UnitVector2D axis = edge_normal(i);
-					_cache = math::clip_polygon(_cache, -axis, -minima[i]);
-					_cache = math::clip_polygon(_cache, axis, maxima[i]);
-					if (_cache.empty())
-						break;
-				}
-			}
-			return _cache;
-		}
-
-	public:
-		static CustomKDOP wrap(const math::Polygon2D& polygon, const std::vector<UnitVector2D>& axes)
-		{
-			return wrap(polygon, dupl(axes));
-		}
-
-		static CustomKDOP wrap(const math::Polygon2D& polygon, std::vector<UnitVector2D>&& axes)
-		{
-			const size_t k = axes.size();
-			if (k < 2)
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 2, but the degree provided is: " + std::to_string(k));
-			std::vector<float> minima(k, nmax<float>());
-			std::vector<float> maxima(k, -nmax<float>());
-
-			for (glm::vec2 point : polygon)
-			{
-				for (size_t i = 0; i < k; ++i)
-				{
-					float v = axes[i].dot(point);
-					minima[i] = std::min(minima[i], v);
-					maxima[i] = std::max(maxima[i], v);
-				}
-			}
-
-			return CustomKDOP(std::move(axes), std::move(minima), std::move(maxima));
-		}
-
-		static CopyPtr<CustomKDOP> wrap_copy_ptr(const math::Polygon2D& polygon, const std::vector<UnitVector2D>& axes)
-		{
-			return wrap_copy_ptr(polygon, dupl(axes));
-		}
-
-		static CopyPtr<CustomKDOP> wrap_copy_ptr(const math::Polygon2D& polygon, std::vector<UnitVector2D>&& axes)
-		{
-			const size_t k = axes.size();
-			if (k < 2)
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "kDOP must have degree at least 2, but the degree provided is: " + std::to_string(k));
-			std::vector<float> minima(k, nmax<float>());
-			std::vector<float> maxima(k, -nmax<float>());
-
-			for (glm::vec2 point : polygon)
-			{
-				for (size_t i = 0; i < k; ++i)
-				{
-					float v = axes[i].dot(point);
-					minima[i] = std::min(minima[i], v);
-					maxima[i] = std::max(maxima[i], v);
-				}
-			}
-
-			return make_copy_ptr<CustomKDOP>(std::move(axes), std::move(minima), std::move(maxima));
-		}
-
-		const math::Polygon2D& points() const
-		{
-			return cache();
-		}
-
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const
-		{
-			for (size_t i = 0; i < get_k(); ++i)
-			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(axes[i], LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return { minima[i], maxima[i] };
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return { -maxima[i], -minima[i] };
-			}
-			return internal::polygon_projection_interval(cache(), axis);
-		}
-
-		float projection_min(const UnitVector2D& axis) const
-		{
-			for (size_t i = 0; i < get_k(); ++i)
-			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(axes[i], LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return minima[i];
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return -maxima[i];
-			}
-			return internal::polygon_projection_min(cache(), axis);
-		}
-
-		float projection_max(const UnitVector2D& axis) const
-		{
-			for (size_t i = 0; i < get_k(); ++i)
-			{
-				UnitVector2D::ParallelState p = axis.near_parallel_state(axes[i], LINEAR_TOLERANCE);
-				if (p == UnitVector2D::ParallelState::SAME_DIRECTION)
-					return maxima[i];
-				else if (p == UnitVector2D::ParallelState::OPPOSITE_DIRECTION)
-					return -minima[i];
-			}
-			return internal::polygon_projection_max(cache(), axis);
-		}
-
-		UnitVector2D edge_normal(size_t i) const
-		{
-			return axes[i];
-		}
-
-		glm::vec2 deepest_point(const UnitVector2D& axis) const
-		{
-			return internal::polygon_deepest_point(cache(), axis);
 		}
 	};
 }

@@ -24,7 +24,6 @@ namespace oly::col2d
 		AABB,
 		OBB,
 		ConvexHull,
-		CopyPtr<CustomKDOP>,
 		CopyPtr<KDOP3>,
 		CopyPtr<KDOP4>,
 		CopyPtr<KDOP5>,
@@ -38,8 +37,6 @@ namespace oly::col2d
 	inline Element element(const OBB& c) { return c; }
 	inline Element element(const ConvexHull& c) { return c; }
 	inline Element element(ConvexHull&& c) { return std::move(c); }
-	inline Element element(const CustomKDOP& c) { return CopyPtr<CustomKDOP>(c); }
-	inline Element element(CustomKDOP&& c) { return CopyPtr<CustomKDOP>(std::move(c)); }
 	inline Element element(const KDOP3& c) { return CopyPtr<KDOP3>(c); }
 	inline Element element(KDOP3&& c) { return CopyPtr<KDOP3>(std::move(c)); }
 	inline Element element(const KDOP4& c) { return CopyPtr<KDOP4>(c); }
@@ -58,7 +55,6 @@ namespace oly::col2d
 		const AABB*,
 		const OBB*,
 		const ConvexHull*,
-		const CustomKDOP*,
 		const KDOP3*,
 		const KDOP4*,
 		const KDOP5*,
@@ -72,7 +68,6 @@ namespace oly::col2d
 	inline ElementParam param(const AABB& c) { return &c; }
 	inline ElementParam param(const OBB& c) { return &c; }
 	inline ElementParam param(const ConvexHull& c) { return &c; }
-	inline ElementParam param(const CustomKDOP& c) { return &c; }
 	inline ElementParam param(const KDOP3& c) { return &c; }
 	inline ElementParam param(const KDOP4& c) { return &c; }
 	inline ElementParam param(const KDOP5& c) { return &c; }
@@ -93,7 +88,6 @@ namespace oly::col2d
 		extern Element transform_element(const Circle& c, const glm::mat3& m);
 		extern Element transform_element(const AABB& c, const glm::mat3& m);
 		extern Element transform_element(const OBB& c, const glm::mat3& m);
-		extern Element transform_element(const CustomKDOP& c, const glm::mat3& m);
 		extern Element transform_element(const KDOP3& c, const glm::mat3& m);
 		extern Element transform_element(const KDOP4& c, const glm::mat3& m);
 		extern Element transform_element(const KDOP5& c, const glm::mat3& m);

@@ -15,8 +15,7 @@ namespace oly::col2d
 		{
 			static const glm::mat3x2& get_global(const Circle&);
 			static const glm::mat3x2& get_ginv(const Circle&);
-			static void set_global(Circle&, const glm::mat3x2&);
-			static void set_ginv(Circle&, const glm::mat3x2&);
+			static Circle create_affine_circle(const Circle&, const glm::mat3x2&);
 			static inline const glm::mat3x2 DEFAULT = { glm::vec2{ 1.0f, 0.0f }, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 0.0f, 0.0f } };
 			static bool has_no_global(const Circle&);
 			static float radius_disparity(const Circle&);
@@ -46,7 +45,7 @@ namespace oly::col2d
 
 		static Circle fast_wrap(const math::Polygon2D& polygon);
 
-		std::pair<float, float> projection_interval(const UnitVector2D& axis) const;
+		fpair projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 

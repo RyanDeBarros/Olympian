@@ -126,7 +126,7 @@ namespace oly::col2d
 		return points;
 	}
 
-	std::pair<float, float> OBB::projection_interval(const UnitVector2D& axis) const
+	fpair OBB::projection_interval(const UnitVector2D& axis) const
 	{
 		if (near_zero(math::cross(get_major_axis(), axis)))
 		{
