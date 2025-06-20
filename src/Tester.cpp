@@ -166,7 +166,6 @@ int main()
 		oly::context::render_sprites();
 		jumble.draw(true);
 
-		// TODO alpha doesn't seem to work with collision views
 		obstacle_layer.draw();
 		player_layer.draw();
 		impulse_layer.draw();
@@ -184,7 +183,7 @@ int main()
 		flag_state_timer.poll();
 
 		player.set_local().position = oly::context::get_cursor_view_pos();
-		//player.set_local().position = { -250.0f, 0.0f };
+		//player.set_local().position = { 150.0f, -80.0f };
 		//player.set_local().position = { 0.0f, 0.0f };
 		//player.set_local().position = { 75.0f, -225.0f };
 		//player.set_local().position = { 211, -134 };

@@ -1,12 +1,66 @@
 #include "Circle.h"
 
-#include "core/base/Transforms.h"
 #include "core/base/Errors.h"
 
 #include "physics/collision/elements/OBB.h"
 
 namespace oly::col2d
 {
+	Circle Circle::fast_wrap(const math::Polygon2D& polygon)
+	{
+		glm::vec2 center = {};
+		for (glm::vec2 point : polygon)
+			center += point;
+		center /= (float)polygon.size();
+
+		float radius = 0.0f;
+		for (glm::vec2 point : polygon)
+			radius = std::max(radius, math::mag_sqrd(point - center));
+		radius = glm::sqrt(radius);
+
+		return Circle(center, radius);
+	}
+
+	fpair Circle::projection_interval(const UnitVector2D& axis) const
+	{
+		if (global == DEFAULT_3x2)
+		{
+			float center_proj = axis.dot(center);
+			return { center_proj - radius, center_proj + radius };
+		}
+		else
+		{
+			glm::vec2 global_center = transform_point(global, center);
+			float offset = axis.dot(global_center);
+			float multiplier = glm::length(glm::transpose(glm::mat2(global)) * axis);
+			return { offset - radius * multiplier, offset + radius * multiplier };
+		}
+	}
+
+	float Circle::projection_min(const UnitVector2D& axis) const
+	{
+		if (global == DEFAULT_3x2)
+			return axis.dot(center) - radius;
+		else
+			return axis.dot(transform_point(global, center)) - radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+	}
+
+	float Circle::projection_max(const UnitVector2D& axis) const
+	{
+		if (global == DEFAULT_3x2)
+			return axis.dot(center) + radius;
+		else
+			return axis.dot(transform_point(global, center)) + radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+	}
+
+	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
+	{
+		if (global == DEFAULT_3x2)
+			return center + radius * (glm::vec2)axis;
+		else
+			return radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis) + transform_point(global, center);
+	}
+
 	namespace internal
 	{
 		const glm::mat3x2& CircleGlobalAccess::get_global(const Circle& c)
@@ -29,7 +83,7 @@ namespace oly::col2d
 
 		bool CircleGlobalAccess::has_no_global(const Circle& c)
 		{
-			return c.global == DEFAULT;
+			return c.global == DEFAULT_3x2;
 		}
 
 		float CircleGlobalAccess::radius_disparity(const Circle& c)
@@ -70,60 +124,5 @@ namespace oly::col2d
 		{
 			return transform_point(c.global, c.center);
 		}
-	}
-
-	Circle Circle::fast_wrap(const math::Polygon2D& polygon)
-	{
-		glm::vec2 center = {};
-		for (glm::vec2 point : polygon)
-			center += point;
-		center /= (float)polygon.size();
-
-		float radius = 0.0f;
-		for (glm::vec2 point : polygon)
-			radius = std::max(radius, math::mag_sqrd(point - center));
-		radius = glm::sqrt(radius);
-
-		return Circle(center, radius);
-	}
-
-	fpair Circle::projection_interval(const UnitVector2D& axis) const
-	{
-		if (global == internal::CircleGlobalAccess::DEFAULT)
-		{
-			float center_proj = axis.dot(center);
-			return { center_proj - radius, center_proj + radius };
-		}
-		else
-		{
-			glm::vec2 global_center = transform_point(global, center);
-			float offset = axis.dot(global_center);
-			float multiplier = glm::length(glm::transpose(glm::mat2(global)) * axis);
-			return { offset - radius * multiplier, offset + radius * multiplier };
-		}
-	}
-
-	float Circle::projection_min(const UnitVector2D& axis) const
-	{
-		if (global == internal::CircleGlobalAccess::DEFAULT)
-			return axis.dot(center) - radius;
-		else
-			return axis.dot(transform_point(global, center)) - radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
-	}
-
-	float Circle::projection_max(const UnitVector2D& axis) const
-	{
-		if (global == internal::CircleGlobalAccess::DEFAULT)
-			return axis.dot(center) + radius;
-		else
-			return axis.dot(transform_point(global, center)) + radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
-	}
-
-	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
-	{
-		if (global == internal::CircleGlobalAccess::DEFAULT)
-			return center + radius * (glm::vec2)axis;
-		else
-			return radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis) + transform_point(global, center);
 	}
 }

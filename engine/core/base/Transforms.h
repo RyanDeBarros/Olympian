@@ -22,6 +22,8 @@ namespace oly
 		constexpr glm::vec4 H4 = { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
+	static inline const glm::mat3x2 DEFAULT_3x2 = { glm::vec2{ 1.0f, 0.0f }, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 0.0f, 0.0f } };
+
 	constexpr glm::mat3 translation_matrix(glm::vec2 position)
 	{
 		return { vectors::I3, vectors::J3, glm::vec3(position, 1.0f) };

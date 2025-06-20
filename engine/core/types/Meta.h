@@ -20,25 +20,21 @@ namespace oly
 
 	namespace internal
 	{
-		template<size_t I, typename T, typename... Rest>
-		constexpr const T& get_by_index(const T& first, const Rest&... rest) {
-			if constexpr (I == 0)
-				return first;
-			else
-				return get_by_index<I - 1>(rest...);
+		template<typename Tuple, size_t... Is>
+		constexpr size_t max_of_impl(const Tuple& tup, std::index_sequence<Is...>)
+		{
+			size_t max_index = 0;
+			auto max_value = std::get<0>(tup);
+			((std::get<Is>(tup) > max_value ? (max_value = std::get<Is>(tup), max_index = Is, void(0)) : void(0)), ...);
+			return max_index;
 		}
 	}
 
-	template<typename T>
-	constexpr size_t max_of(const T&)
+	template<typename... Args>
+	constexpr size_t max_of(const Args&... args)
 	{
-		return 0;
-	}
-
-	template<typename T, typename... Rest>
-	inline size_t max_of(const T& first, const Rest&... rest)
-	{
-		return first >= internal::get_by_index<0>(rest...) ? 0 : 1 + max_of(rest...);
+		static_assert(sizeof...(Args) > 0, "At least one argument required for oly::max_of");
+		return internal::max_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(Args)>{});
 	}
 
 	template<typename T>

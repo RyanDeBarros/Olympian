@@ -150,9 +150,6 @@ namespace oly::col2d
 		return axes;
 	}
 
-	// TODO more efficient way of computing projection_max/min, such as with caching. For example, in ConvexHull cache the last axis that was queried, along with the deepest_point/min/max.
-	// Therefore, the polygonal projection algorithms can start at a better initial point by comparing the previous axis queried and the current, especially since the axes visited by compound collision are ordered.
-
 	static float projection_max(const UnitVector2D& axis, ElementParam el)
 	{
 		return std::visit([&axis](auto&& el) { return el->projection_max(axis); }, el);
@@ -436,6 +433,11 @@ namespace oly::col2d
 				hull.set_points().push_back(transform_point(m, pt));
 			return hull;
 		}
+	}
+
+	Element internal::transform_element(const KDOP2& c, const glm::mat3& m)
+	{
+		return transform_element_impl(c, m);
 	}
 
 	Element internal::transform_element(const KDOP3& c, const glm::mat3& m)

@@ -2,6 +2,7 @@
 
 #include "core/base/UnitVector.h"
 #include "core/base/Errors.h"
+#include "core/base/Transforms.h"
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
 #include "physics/collision/elements/ConvexHull.h"
@@ -18,6 +19,9 @@ namespace oly::col2d
 {
 	namespace internal
 	{
+		template<size_t K>
+		struct KDOPGlobalAccess;
+
 		inline math::Polygon2D initial_kdop_polygon(const UnitVector2D& axis0, float min0, float max0, const UnitVector2D& axis1, float min1, float max1)
 		{
 			if (axis0.near_parallel(axis1, LINEAR_TOLERANCE))
@@ -43,6 +47,8 @@ namespace oly::col2d
 		static_assert(K >= 2, "kDOP must have degree at least 2.");
 
 	private:
+		friend struct internal::KDOPGlobalAccess<K>;
+
 		std::array<float, K> minima;
 		std::array<float, K> maxima;
 		mutable math::Polygon2D _cache;
@@ -51,7 +57,9 @@ namespace oly::col2d
 		mutable bool dirty_center = true;
 		mutable bool dirty_clipped = true;
 		mutable std::array<fpair, K> _clipped_extrema;
-		mutable internal::ProjectionCache proj_cache;
+
+		glm::mat3x2 global = DEFAULT_3x2;
+		glm::mat3x2 ginv = DEFAULT_3x2;
 
 		void flag() const { dirty_cache = true; dirty_center = true; dirty_clipped = true; }
 
@@ -256,4 +264,47 @@ namespace oly::col2d
 			}
 		}
 	};
+
+	namespace internal
+	{
+		template<size_t K>
+		struct KDOPGlobalAccess
+		{
+			static const glm::mat3x2& get_global(const KDOP<K>& c)
+			{
+				return c.global;
+			}
+
+			static const glm::mat3x2& get_ginv(const KDOP<K>& c)
+			{
+				return c.ginv;
+			}
+
+			static KDOP<K> create_affine_kdop(const KDOP<K>& c, const glm::mat3x2& g)
+			{
+				KDOP<K> tc = c;
+				tc.global = g;
+				tc.ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				return tc;
+			}
+
+			static CopyPtr<KDOP<K>> create_affine_kdop_ptr(const KDOP<K>& c, const glm::mat3x2& g)
+			{
+				CopyPtr<KDOP<K>> tc(c);
+				tc->global = g;
+				tc->ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				return tc;
+			}
+
+			static bool has_no_global(const KDOP<K>& c)
+			{
+				return c.global == DEFAULT_3x2;
+			}
+
+			static glm::vec2 global_center(const KDOP<K>& c)
+			{
+				return transform_point(c.global, c.center);
+			}
+		};
+	}
 }
