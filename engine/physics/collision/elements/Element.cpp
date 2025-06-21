@@ -347,12 +347,9 @@ namespace oly::col2d
 		}
 		else
 		{
-			// TODO KDOP should keep a local transform, similar to Circle. Then return a KDOP2 with that.
-			
-			ConvexHull hull;
-			for (glm::vec2 pt : c.points())
-				hull.set_points().push_back(transform_point(m, pt));
-			return hull;
+			// KDOP
+			KDOP<2> kdop({ { c.x1, c.x2 }, { c.y1, c.y2 } });
+			return internal::KDOPGlobalAccess<2>::create_affine_kdop_ptr(kdop, m);
 		}
 	}
 
@@ -380,66 +377,62 @@ namespace oly::col2d
 		}
 		else
 		{
-			// TODO KDOP should keep a local transform, similar to Circle. Then return a KDOP2 with that.
-
-			ConvexHull hull;
-			for (glm::vec2 pt : c.points())
-				hull.set_points().push_back(transform_point(m, pt));
-			return hull;
+			// KDOP
+			KDOP<2> kdop({ { -0.5f * c.width, 0.5f * c.width}, { -0.5f * c.height, 0.5f * c.height } });
+			glm::mat3 g = m * Transform2D{ .position = c.center, .rotation = c.rotation }.matrix();
+			return internal::KDOPGlobalAccess<2>::create_affine_kdop_ptr(kdop, g);
 		}
 	}
 
 	template<size_t K>
 	static Element transform_element_impl(const KDOP<K>& c, const glm::mat3& m)
 	{
-		bool reverse_axes = false;
-		bool maintain_axes = false;
-		float scale = 0.0f;
-		float rotation = 0.0f;
-		if (orthogonal_transform(m))
-		{
-			scale = glm::length(m[0]);
-			float scaleY = glm::length(m[1]);
-			reverse_axes = math::cross(m[0], m[1]) < 0.0f;
-			rotation = glm::atan(m[0][1], m[0][0]);
-			if (approx(glm::abs(scale), glm::abs(scaleY)) && near_multiple(rotation, glm::pi<float>() / K))
-				maintain_axes = true;
-		}
-
-		if (maintain_axes)
-		{
-			// KDOP
-			glm::vec2 translation = m[2];
-			int rotation_axis_offset = 0;
-			rotation_axis_offset = roundi(K * rotation * glm::one_over_pi<float>());
-			std::array<float, K> minima;
-			std::array<float, K> maxima;
-			for (int i = 0; i < K; ++i)
-			{
-				// TODO uniform_axis or edge_normal?
-				float offset = KDOP<K>::uniform_axis(i).dot(translation);
-				int og_idx = reverse_axes ? int(K) - i : i;
-				og_idx = unsigned_mod(og_idx + rotation_axis_offset, int(K));
-				minima[i] = c.get_minimum(og_idx) * scale + offset;
-				maxima[i] = c.get_maximum(og_idx) * scale + offset;
-			}
-			return make_copy_ptr<KDOP<K>>(minima, maxima);
-		}
-		else
-		{
-			// TODO KDOP should keep a local transform, similar to Circle.
-			return internal::KDOPGlobalAccess<K>::create_affine_kdop_ptr(c, m);
-
-			//ConvexHull hull;
-			//for (glm::vec2 pt : c.points())
-				//hull.set_points().push_back(transform_point(m, pt));
-			//return hull;
-		}
+		// KDOP
+		return internal::KDOPGlobalAccess<K>::create_affine_kdop_ptr(c, m);
 	}
 
 	Element internal::transform_element(const KDOP2& c, const glm::mat3& m)
 	{
-		return transform_element_impl(c, m);
+		glm::mat3 global = m * augment(internal::KDOPGlobalAccess<2>::get_global(c), internal::KDOPGlobalAccess<2>::get_global_offset(c));
+		glm::mat2 g_inv_t = glm::transpose(glm::inverse(glm::mat2(global)));
+		UnitVector2D right = UnitVector2D(g_inv_t * KDOP2::uniform_axis(0));
+		UnitVector2D up = UnitVector2D(g_inv_t * KDOP2::uniform_axis(1));
+		if (near_zero(right.dot(up)))
+		{
+			math::Polygon2D points = c.points();
+			for (size_t i = 0; i < 4; ++i)
+				points[i] = transform_point(m, points[i]);
+
+			if (right.near_standard(LINEAR_TOLERANCE))
+			{
+				// AABB
+				return AABB{
+					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+				};
+			}
+			else
+			{
+				// OBB
+				UnitVector2D rot = glm::vec2(global[0]);
+				glm::mat2 inverse_rotation = rot.inverse_rotation_matrix();
+				for (size_t i = 0; i < 4; ++i)
+					points[i] = inverse_rotation * points[i];
+				
+				AABB aabb{
+					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+				};
+
+				return OBB{ .center = rot.rotation_matrix() * aabb.center(), .width = aabb.width(), .height = aabb.height(), .rotation = rot.rotation() };
+			}
+		}
+		else
+			return transform_element_impl(c, m);
 	}
 
 	Element internal::transform_element(const KDOP3& c, const glm::mat3& m)

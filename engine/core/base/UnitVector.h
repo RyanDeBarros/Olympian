@@ -48,6 +48,7 @@ namespace oly
 
 		float rotation() const { return glm::atan(_direction.y, _direction.x); }
 		glm::mat2 rotation_matrix() const { return { _direction, { -_direction.y, _direction.x } }; }
+		glm::mat2 inverse_rotation_matrix() const { return { { _direction.x, -_direction.y }, { _direction.y, _direction.x } }; }
 
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }

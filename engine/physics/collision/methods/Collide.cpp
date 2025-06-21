@@ -93,22 +93,21 @@ namespace oly::col2d
 
 	OverlapResult point_hits(const Circle& c, glm::vec2 test)
 	{
-		glm::vec2 local = transform_point(internal::CircleGlobalAccess::get_ginv(c), test);
+		glm::vec2 local = internal::CircleGlobalAccess::local_point(c, test);
 		return math::mag_sqrd(local - c.center) <= c.radius * c.radius;
 	}
 
 	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray, float& t1, float& t2)
 	{
-		const glm::mat3x2& ginv = internal::CircleGlobalAccess::get_ginv(c);
-		Ray local_ray{ .origin = transform_point(ginv, ray.origin) };
+		Ray local_ray{ .origin = internal::CircleGlobalAccess::local_point(c, ray.origin) };
 		if (ray.clip == 0.0f)
 		{
 			local_ray.clip = 0.0f;
-			local_ray.direction = transform_direction(ginv, ray.direction);
+			local_ray.direction = internal::CircleGlobalAccess::local_direction(c, ray.direction);
 		}
 		else
 		{
-			glm::vec2 clip = transform_direction(ginv, (glm::vec2)ray.direction * ray.clip);
+			glm::vec2 clip = internal::CircleGlobalAccess::local_direction(c, (glm::vec2)ray.direction * ray.clip);
 			local_ray.clip = glm::length(clip);
 			local_ray.direction = clip;
 		}
@@ -129,7 +128,7 @@ namespace oly::col2d
 
 		// contact within clip
 		bool contact = local_ray.clip == 0.0f || t1 <= local_ray.clip;
-		float mult = math::inv_magnitude(glm::mat2(ginv) * ray.direction);
+		float mult = math::inv_magnitude(internal::CircleGlobalAccess::local_direction(c, ray.direction));
 		t1 *= mult;
 		t2 *= mult;
 		return contact;
@@ -157,8 +156,8 @@ namespace oly::col2d
 
 		RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT };
 		info.contact = std::max(t1, 0.0f) * (glm::vec2)ray.direction + ray.origin;
-		glm::vec2 local_contact = transform_point(internal::CircleGlobalAccess::get_ginv(c), info.contact);
-		info.normal = transform_normal(internal::CircleGlobalAccess::get_global(c), local_contact - c.center);
+		glm::vec2 local_contact = internal::CircleGlobalAccess::local_point(c, info.contact);
+		info.normal = internal::CircleGlobalAccess::global_normal(c, local_contact - c.center);
 		return info;
 	}
 
@@ -215,9 +214,9 @@ namespace oly::col2d
 			if (!overlaps(internal::CircleGlobalAccess::bounding_circle(c1), internal::CircleGlobalAccess::bounding_circle(c2)))
 				return false;
 
-			if (point_hits(c1, transform_point(internal::CircleGlobalAccess::get_global(c2), c2.center)))
+			if (point_hits(c1, internal::CircleGlobalAccess::global_point(c2, c2.center)))
 				return true;
-			if (point_hits(c2, transform_point(internal::CircleGlobalAccess::get_global(c1), c1.center)))
+			if (point_hits(c2, internal::CircleGlobalAccess::global_point(c1, c1.center)))
 				return true;
 
 			UnitVector2D m;

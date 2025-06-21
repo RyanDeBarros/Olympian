@@ -9,13 +9,25 @@ namespace oly
 	template<typename T>
 	constexpr T max(const T& first, const T& second)
 	{
-		return first >= second ? first : second;
+		return first > second ? first : second;
 	}
 
 	template<typename T, typename... Rest>
 	inline T max(const T& first, const Rest&... rest)
 	{
 		return max(first, max(rest...));
+	}
+
+	template<typename T>
+	constexpr T min(const T& first, const T& second)
+	{
+		return first < second ? first : second;
+	}
+
+	template<typename T, typename... Rest>
+	inline T min(const T& first, const Rest&... rest)
+	{
+		return min(first, min(rest...));
 	}
 
 	namespace internal
@@ -28,6 +40,15 @@ namespace oly
 			((std::get<Is>(tup) > max_value ? (max_value = std::get<Is>(tup), max_index = Is, void(0)) : void(0)), ...);
 			return max_index;
 		}
+
+		template<typename Tuple, size_t... Is>
+		constexpr size_t min_of_impl(const Tuple& tup, std::index_sequence<Is...>)
+		{
+			size_t min_index = 0;
+			auto min_value = std::get<0>(tup);
+			((std::get<Is>(tup) < min_value ? (min_value = std::get<Is>(tup), min_index = Is, void(0)) : void(0)), ...);
+			return min_index;
+		}
 	}
 
 	template<typename... Args>
@@ -35,6 +56,13 @@ namespace oly
 	{
 		static_assert(sizeof...(Args) > 0, "At least one argument required for oly::max_of");
 		return internal::max_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(Args)>{});
+	}
+
+	template<typename... Args>
+	constexpr size_t min_of(const Args&... args)
+	{
+		static_assert(sizeof...(Args) > 0, "At least one argument required for oly::min_of");
+		return internal::min_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(Args)>{});
 	}
 
 	template<typename T>

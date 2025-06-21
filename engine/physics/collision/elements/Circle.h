@@ -21,8 +21,9 @@ namespace oly::col2d
 	private:
 		friend struct internal::CircleGlobalAccess;
 
-		glm::mat3x2 global = DEFAULT_3x2;
-		glm::mat3x2 ginv = DEFAULT_3x2;
+		glm::mat2 global = 1.0f;
+		glm::vec2 global_offset = {};
+		glm::mat2 global_inverse = 1.0f;
 
 	public:
 		Circle(glm::vec2 center = {}, float radius = 0.0f) : center(center), radius(radius) {}
@@ -60,8 +61,8 @@ namespace oly::col2d
 	{
 		struct CircleGlobalAccess
 		{
-			static const glm::mat3x2& get_global(const Circle&);
-			static const glm::mat3x2& get_ginv(const Circle&);
+			static const glm::mat2& get_global(const Circle&);
+			static glm::vec2 get_global_offset(const Circle&);
 			static Circle create_affine_circle(const Circle&, const glm::mat3x2&);
 			static bool has_no_global(const Circle&);
 			static float radius_disparity(const Circle&);
@@ -70,6 +71,11 @@ namespace oly::col2d
 			static Circle bounding_circle(const Circle&);
 			static OBB bounding_obb(const Circle&);
 			static glm::vec2 global_center(const Circle&);
+			static glm::vec2 global_point(const Circle&, glm::vec2);
+			static glm::vec2 global_direction(const Circle&, glm::vec2);
+			static glm::vec2 global_normal(const Circle&, glm::vec2);
+			static glm::vec2 local_point(const Circle&, glm::vec2);
+			static glm::vec2 local_direction(const Circle&, glm::vec2);
 		};
 	}
 }

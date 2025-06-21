@@ -150,7 +150,7 @@ namespace oly::debug
 	inline CollisionView collision_view(const col2d::Circle& c, glm::vec4 color)
 	{
 		rendering::EllipseBatch::EllipseReference ellipse;
-		ellipse.set_transform() = glm::mat3(col2d::internal::CircleGlobalAccess::get_global(c)) * translation_matrix(c.center);
+		ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 		auto& dim = ellipse.set_dimension();
 		dim.ry = dim.rx = c.radius;
 		ellipse.set_color().fill_outer = color;
@@ -177,7 +177,7 @@ namespace oly::debug
 		if (modify)
 		{
 			rendering::EllipseBatch::EllipseReference& ellipse = std::get<CollisionObjectType::ELLIPSE>(std::get<CollisionObjectViewType::SINGLE>(obj));
-			ellipse.set_transform() = glm::mat3(col2d::internal::CircleGlobalAccess::get_global(c)) * translation_matrix(c.center);
+			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 			auto& dim = ellipse.set_dimension();
 			dim.ry = dim.rx = c.radius;
 			ellipse.set_color().fill_outer = color;
@@ -186,7 +186,7 @@ namespace oly::debug
 		else
 		{
 			rendering::EllipseBatch::EllipseReference ellipse;
-			ellipse.set_transform() = glm::mat3(col2d::internal::CircleGlobalAccess::get_global(c)) * translation_matrix(c.center);
+			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 			auto& dim = ellipse.set_dimension();
 			dim.ry = dim.rx = c.radius;
 			ellipse.set_color().fill_outer = color;
@@ -286,13 +286,13 @@ namespace oly::debug
 	template<size_t K>
 	inline CollisionView collision_view(const col2d::KDOP<K>& c, glm::vec4 color)
 	{
-		return internal::polygon_collision_view(c.global_points(), color);
+		return internal::polygon_collision_view(c.points(), color);
 	}
 
 	template<size_t K>
 	inline void update_view(CollisionView& view, const col2d::KDOP<K>& c, glm::vec4 color)
 	{
-		internal::polygon_update_view(view, c.global_points(), color);
+		internal::polygon_update_view(view, c.points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)

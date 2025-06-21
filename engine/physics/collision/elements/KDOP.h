@@ -58,8 +58,9 @@ namespace oly::col2d
 		mutable bool dirty_clipped = true;
 		mutable std::array<fpair, K> _clipped_extrema;
 
-		glm::mat3x2 global = DEFAULT_3x2;
-		glm::mat3x2 ginv = DEFAULT_3x2;
+		glm::mat2 global = 1.0f;
+		glm::vec2 global_offset = {};
+		glm::mat2 global_inverse = 1.0f;
 
 		void flag() const { dirty_cache = true; dirty_center = true; dirty_clipped = true; }
 
@@ -75,7 +76,7 @@ namespace oly::col2d
 
 		KDOP() = default;
 		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima) : minima(minima), maxima(maxima) { flag(); }
-		KDOP(const std::array<fpair, K>& extrema)
+		explicit KDOP(const std::array<fpair, K>& extrema)
 		{
 			for (size_t i = 0; i < K; ++i)
 			{
@@ -126,6 +127,8 @@ namespace oly::col2d
 							break;
 					}
 				}
+				for (size_t i = 0; i < _cache.size(); ++i)
+					_cache[i] = global * _cache[i] + global_offset;
 			}
 			return _cache;
 		}
@@ -173,15 +176,6 @@ namespace oly::col2d
 			return cache();
 		}
 
-		math::Polygon2D global_points() const
-		{
-			math::Polygon2D gpoints;
-			gpoints.reserve(cache().size());
-			for (glm::vec2 pt : cache())
-				gpoints.push_back(transform_point(global, pt));
-			return gpoints;
-		}
-
 	private:
 		const std::array<fpair, K>& clipped_extrema() const
 		{
@@ -189,19 +183,27 @@ namespace oly::col2d
 			{
 				dirty_clipped = false;
 				for (size_t i = 0; i < K; ++i)
-					_clipped_extrema[i] = internal::polygon_projection_interval(cache(), uniform_axis(i));
+				{
+					fpair global_clipped_extrema = internal::polygon_projection_interval(cache(), edge_normal(i));
+					_clipped_extrema[i] = { local_extremum(edge_normal(i), global_clipped_extrema.first), local_extremum(edge_normal(i), global_clipped_extrema.second) };
+				}
 			}
 			return _clipped_extrema;
 		}
 
 		UnitVector2D get_local_axis(UnitVector2D axis) const
 		{
-			return glm::transpose(glm::mat2(global)) * axis;
+			return glm::transpose(global) * axis;
+		}
+
+		float local_extremum(UnitVector2D axis, float extremum) const
+		{
+			return (extremum - axis.dot(global_offset)) * math::inv_magnitude(glm::transpose(global) * (glm::vec2)axis);
 		}
 
 		float global_extremum(UnitVector2D axis, float extremum) const
 		{
-			return (extremum + axis.dot(glm::mat2(ginv) * global[2])) * math::inv_magnitude(glm::transpose(glm::mat2(ginv)) * (glm::vec2)axis);
+			return (extremum + axis.dot(global_inverse * global_offset)) * math::inv_magnitude(glm::transpose(global_inverse) * (glm::vec2)axis);
 		}
 
 	public:
@@ -250,13 +252,12 @@ namespace oly::col2d
 
 		UnitVector2D edge_normal(size_t i) const
 		{
-			return UnitVector2D(glm::transpose(glm::mat2(ginv)) * uniform_axis(i));
+			return UnitVector2D(glm::transpose(global_inverse) * uniform_axis(i));
 		}
 
 		glm::vec2 deepest_point(const UnitVector2D& axis) const
 		{
-			UnitVector2D local_axis = get_local_axis(axis);
-			return transform_point(global, local_deepest_point(local_axis));
+			return global * local_deepest_point(get_local_axis(axis)) + global_offset;
 		}
 		
 	private:
@@ -297,21 +298,23 @@ namespace oly::col2d
 		template<size_t K>
 		struct KDOPGlobalAccess
 		{
-			static const glm::mat3x2& get_global(const KDOP<K>& c)
+			static const glm::mat2& get_global(const KDOP<K>& c)
 			{
 				return c.global;
 			}
 
-			static const glm::mat3x2& get_ginv(const KDOP<K>& c)
+			static glm::vec2 get_global_offset(const KDOP<K>& c)
 			{
-				return c.ginv;
+				return c.global_offset;
 			}
 
 			static KDOP<K> create_affine_kdop(const KDOP<K>& c, const glm::mat3x2& g)
 			{
 				KDOP<K> tc = c;
-				tc.global = g;
-				tc.ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				glm::mat3x2 full = augment(g) * augment(c.global, c.global_offset);
+				tc.global = glm::mat2(full);
+				tc.global_offset = full[2];
+				tc.global_inverse = glm::inverse(tc.global);
 				tc.flag();
 				return tc;
 			}
@@ -319,45 +322,38 @@ namespace oly::col2d
 			static CopyPtr<KDOP<K>> create_affine_kdop_ptr(const KDOP<K>& c, const glm::mat3x2& g)
 			{
 				CopyPtr<KDOP<K>> tc(c);
-				tc->global = g;
-				tc->ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				glm::mat3x2 full = augment(g) * augment(c.global, c.global_offset);
+				tc->global = glm::mat2(full);
+				tc->global_offset = full[2];
+				tc->global_inverse = glm::inverse(tc->global);
 				tc->flag();
 				return tc;
 			}
 
-			static bool has_no_global(const KDOP<K>& c)
-			{
-				return c.global == DEFAULT_3x2;
-			}
-
 			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2)
 			{
-				glm::vec2 u1 = c1.global[0];
-				glm::vec2 v1 = c1.global[1];
-				glm::vec2 u2 = c2.global[0];
-				glm::vec2 v2 = c2.global[1];
-
-				return math::mag_sqrd(u1) * math::mag_sqrd(v2) == math::mag_sqrd(u2) * math::mag_sqrd(v1) && UnitVector2D(u1) == UnitVector2D(u2) && UnitVector2D(v1) == UnitVector2D(v2);
+				return math::mag_sqrd(c1.global[0]) * math::mag_sqrd(c2.global[1]) == math::mag_sqrd(c2.global[0]) * math::mag_sqrd(c1.global[1])
+					&& UnitVector2D(c1.global[0]) == UnitVector2D(c2.global[0]) && UnitVector2D(c1.global[1]) == UnitVector2D(c2.global[1]);
 			}
 
 			static glm::vec2 global_center(const KDOP<K>& c)
 			{
-				return transform_point(c.global, c.center());
+				return c.global * c.center() + c.global_offset;
 			}
 
 			static glm::vec2 local_point(const KDOP<K>& c, glm::vec2 v)
 			{
-				return transform_point(c.ginv, v);
+				return c.global_inverse * (v - c.global_offset);
 			}
 
 			static glm::vec2 local_direction(const KDOP<K>& c, glm::vec2 v)
 			{
-				return transform_direction(c.ginv, v);
+				return c.global_inverse * v;
 			}
 
-			static glm::vec2 local_normal(const KDOP<K>& c, glm::vec2 v)
+			static glm::vec2 local_normal(const KDOP<K>& c, glm::vec2 n)
 			{
-				return transform_normal(c.ginv, v);
+				return glm::transpose(c.global) * n;
 			}
 
 			static Ray local_ray(const KDOP<K>& c, const Ray& ray)
@@ -377,17 +373,17 @@ namespace oly::col2d
 
 			static glm::vec2 global_point(const KDOP<K>& c, glm::vec2 v)
 			{
-				return transform_point(c.global, v);
+				return c.global * v + c.global_offset;
 			}
 
 			static glm::vec2 global_direction(const KDOP<K>& c, glm::vec2 v)
 			{
-				return transform_direction(c.global, v);
+				return c.global * v;
 			}
 
-			static glm::vec2 global_normal(const KDOP<K>& c, glm::vec2 v)
+			static glm::vec2 global_normal(const KDOP<K>& c, glm::vec2 n)
 			{
-				return transform_normal(c.global, v);
+				return glm::transpose(c.global_inverse) * n;
 			}
 		};
 	}

@@ -107,8 +107,8 @@ int main()
 	block.set_local().rotation = glm::pi<float>() / 8;
 	//oly::col2d::TPrimitive player = { oly::col2d::Circle({}, 50.0f) };
 	oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
-	//player.set_local().scale.y = 1.2f;
-	//player.set_local().rotation = glm::pi<float>() / 4;
+	player.set_local().scale.y = 1.2f;
+	player.set_local().rotation = glm::pi<float>() / 4;
 	//oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = 0.0f };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
@@ -134,8 +134,8 @@ int main()
 
 	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
 	oly::debug::CollisionView player_cv = oly::debug::collision_view(player, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
-	//oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	//oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 	player_cv.assign(player_layer);

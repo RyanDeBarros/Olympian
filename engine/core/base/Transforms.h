@@ -22,8 +22,6 @@ namespace oly
 		constexpr glm::vec4 H4 = { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
-	static inline const glm::mat3x2 DEFAULT_3x2 = { glm::vec2{ 1.0f, 0.0f }, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 0.0f, 0.0f } };
-
 	constexpr glm::mat3 translation_matrix(glm::vec2 position)
 	{
 		return { vectors::I3, vectors::J3, glm::vec3(position, 1.0f) };
@@ -316,4 +314,7 @@ namespace oly
 	extern glm::vec2 transform_direction(const glm::mat3x2& tr, glm::vec2 direction);
 	extern glm::vec2 transform_normal(const glm::mat3& tr, glm::vec2 normal);
 	extern glm::vec2 transform_normal(const glm::mat3x2& tr, glm::vec2 normal);
+	
+	inline glm::mat3 augment(const glm::mat2& l, glm::vec2 t) { return { glm::vec3(l[0], 0.0f), glm::vec3(l[1], 0.0f), glm::vec3(t, 1.0f) }; }
+	inline glm::mat3 augment(const glm::mat3x2& tr) { return { glm::vec3(tr[0], 0.0f), glm::vec3(tr[1], 0.0f), glm::vec3(tr[2], 1.0f) }; }
 }

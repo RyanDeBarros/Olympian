@@ -349,7 +349,7 @@ namespace oly
 
 	glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point)
 	{
-		return tr * glm::vec3(point, 1.0f);
+		return glm::mat2(tr) * point + tr[2];
 	}
 	
 	glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction)

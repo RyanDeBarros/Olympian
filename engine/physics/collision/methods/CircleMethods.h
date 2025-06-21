@@ -29,12 +29,12 @@ namespace oly::col2d::internal
 	inline OverlapResult circle_overlaps_polygon(const Circle& c, const Polygon& polygon)
 	{
 		std::optional<bool> ccw;
-		glm::vec2 prev = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
+		glm::vec2 prev = col2d::internal::CircleGlobalAccess::local_point(c, polygon[polygon.size() - 1]);
 		glm::vec2 local_polygon_center = prev;
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{
 			glm::vec2 a = prev;
-			glm::vec2 b = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
+			glm::vec2 b = col2d::internal::CircleGlobalAccess::local_point(c, polygon[i]);
 			prev = b;
 			local_polygon_center += prev;
 
@@ -74,7 +74,7 @@ namespace oly::col2d::internal
 	{
 		CollisionResult info{ .overlap = false, .penetration_depth = nmax<float>() };
 		std::optional<bool> ccw;
-		glm::vec2 prev = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[polygon.size() - 1]);
+		glm::vec2 prev = col2d::internal::CircleGlobalAccess::local_point(c, polygon[polygon.size() - 1]);
 		glm::vec2 local_polygon_center = prev;
 		float ccw_depth = nmax<float>();
 		UnitVector2D ccw_unit_impulse;
@@ -83,7 +83,7 @@ namespace oly::col2d::internal
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{
 			glm::vec2 a = prev;
-			glm::vec2 b = transform_point(col2d::internal::CircleGlobalAccess::get_ginv(c), polygon[i]);
+			glm::vec2 b = col2d::internal::CircleGlobalAccess::local_point(c, polygon[i]);
 			prev = b;
 			local_polygon_center += prev;
 
@@ -185,7 +185,7 @@ namespace oly::col2d::internal
 		{
 			// transform back to global
 			glm::vec2 impulse = info.penetration_depth * (glm::vec2)info.unit_impulse;
-			impulse = transform_direction(col2d::internal::CircleGlobalAccess::get_global(c), impulse);
+			impulse = col2d::internal::CircleGlobalAccess::global_direction(c, impulse);
 			info.penetration_depth = glm::length(impulse);
 			info.unit_impulse = impulse;
 		}

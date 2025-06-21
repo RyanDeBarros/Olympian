@@ -23,76 +23,75 @@ namespace oly::col2d
 
 	fpair Circle::projection_interval(const UnitVector2D& axis) const
 	{
-		if (global == DEFAULT_3x2)
+		if (global == glm::mat2(1.0f))
 		{
 			float center_proj = axis.dot(center);
 			return { center_proj - radius, center_proj + radius };
 		}
 		else
 		{
-			glm::vec2 global_center = transform_point(global, center);
-			float offset = axis.dot(global_center);
-			float multiplier = glm::length(glm::transpose(glm::mat2(global)) * axis);
+			float offset = axis.dot(global * center + global_offset);
+			float multiplier = glm::length(glm::transpose(global) * axis);
 			return { offset - radius * multiplier, offset + radius * multiplier };
 		}
 	}
 
 	float Circle::projection_min(const UnitVector2D& axis) const
 	{
-		if (global == DEFAULT_3x2)
+		if (global == glm::mat2(1.0f))
 			return axis.dot(center) - radius;
 		else
-			return axis.dot(transform_point(global, center)) - radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+			return axis.dot(global * center + global_offset) - radius * glm::length(glm::transpose(global) * axis);
 	}
 
 	float Circle::projection_max(const UnitVector2D& axis) const
 	{
-		if (global == DEFAULT_3x2)
+		if (global == glm::mat2(1.0f))
 			return axis.dot(center) + radius;
 		else
-			return axis.dot(transform_point(global, center)) + radius * glm::length(glm::transpose(glm::mat2(global)) * axis);
+			return axis.dot(global * center + global_offset) + radius * glm::length(glm::transpose(global) * axis);
 	}
 
 	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
 	{
-		if (global == DEFAULT_3x2)
+		if (global == glm::mat2(1.0f))
 			return center + radius * (glm::vec2)axis;
 		else
-			return transform_point(global, center) + radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis);
+			return global * center + global_offset + radius * (glm::vec2)axis * math::inv_magnitude(global_inverse * axis);
 	}
 
 	namespace internal
 	{
-		const glm::mat3x2& CircleGlobalAccess::get_global(const Circle& c)
+		const glm::mat2& CircleGlobalAccess::get_global(const Circle& c)
 		{
 			return c.global;
 		}
 
-		const glm::mat3x2& CircleGlobalAccess::get_ginv(const Circle& c)
+		glm::vec2 CircleGlobalAccess::get_global_offset(const Circle& c)
 		{
-			return c.ginv;
+			return c.global_offset;
 		}
 
 		Circle CircleGlobalAccess::create_affine_circle(const Circle& c, const glm::mat3x2& g)
 		{
 			Circle tc(c.center, c.radius);
-			tc.global = g;
-			tc.ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+			glm::mat3x2 full = augment(g) * augment(c.global, c.global_offset);
+			tc.global = glm::mat2(full);
+			tc.global_offset = full[2];
+			tc.global_inverse = glm::inverse(tc.global);
 			return tc;
 		}
 
 		bool CircleGlobalAccess::has_no_global(const Circle& c)
 		{
-			return c.global == DEFAULT_3x2;
+			return c.global == glm::mat2(1.0f);
 		}
 
 		float CircleGlobalAccess::radius_disparity(const Circle& c)
 		{
 			// DOC
-			glm::vec2 l0 = c.global[0];
-			glm::vec2 l1 = c.global[1];
-			float mag_sqrd_diff = glm::dot(l0, l0) - glm::dot(l1, l1);
-			return glm::sqrt(mag_sqrd_diff * mag_sqrd_diff + 4 * glm::dot(l0, l1) * glm::dot(l0, l1));
+			float mag_sqrd_diff = glm::dot(c.global[0], c.global[0]) - glm::dot(c.global[1], c.global[1]);
+			return glm::sqrt(mag_sqrd_diff * mag_sqrd_diff + 4 * glm::dot(c.global[0], c.global[1]) * glm::dot(c.global[0], c.global[1]));
 		}
 
 		float CircleGlobalAccess::max_radius(const Circle& c)
@@ -122,7 +121,32 @@ namespace oly::col2d
 
 		glm::vec2 CircleGlobalAccess::global_center(const Circle& c)
 		{
-			return transform_point(c.global, c.center);
+			return c.global * c.center + c.global_offset;
+		}
+
+		glm::vec2 CircleGlobalAccess::global_point(const Circle& c, glm::vec2 v)
+		{
+			return c.global * v + c.global_offset;
+		}
+
+		glm::vec2 CircleGlobalAccess::global_direction(const Circle& c, glm::vec2 v)
+		{
+			return c.global * v;
+		}
+
+		glm::vec2 CircleGlobalAccess::global_normal(const Circle& c, glm::vec2 n)
+		{
+			return glm::transpose(c.global_inverse) * n;
+		}
+
+		glm::vec2 CircleGlobalAccess::local_point(const Circle& c, glm::vec2 v)
+		{
+			return c.global_inverse * (v - c.global_offset);
+		}
+
+		glm::vec2 CircleGlobalAccess::local_direction(const Circle& c, glm::vec2 v)
+		{
+			return c.global_inverse * v;
 		}
 	}
 }

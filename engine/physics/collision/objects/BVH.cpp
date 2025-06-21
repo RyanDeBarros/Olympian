@@ -231,7 +231,7 @@ namespace oly::col2d
 					static const auto& enclosure = Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
 					point_cloud.resize(point_cloud.size() + enclosure.get_degree());
 					for (size_t i = 0; i < enclosure.get_degree(); ++i)
-						point_cloud[start + i] = transform_point(CircleGlobalAccess::get_global(e), enclosure.get_point(e, i));
+						point_cloud[start + i] = CircleGlobalAccess::global_point(e, enclosure.get_point(e, i));
 				}
 				else if constexpr (visiting_class_is<decltype(e), AABB, OBB>)
 				{
@@ -263,7 +263,7 @@ namespace oly::col2d
 		{
 			return std::visit([](auto&& element) -> glm::vec2 {
 				if constexpr (visiting_class_is<decltype(element), Circle>)
-					return transform_point(internal::CircleGlobalAccess::get_global(element), element.center);
+					return internal::CircleGlobalAccess::global_center(element);
 				else if constexpr (visiting_class_is<decltype(element), OBB>)
 					return element.center;
 				else if constexpr (visiting_class_is<decltype(element), AABB, ConvexHull>)
