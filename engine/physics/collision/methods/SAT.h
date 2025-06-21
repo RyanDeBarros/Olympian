@@ -296,7 +296,7 @@ namespace oly::col2d::sat
 			{
 				for (size_t i = 0; i < K; ++i)
 				{
-					fpair i2 = other.projection_interval(c.edge_normal(i));
+					const fpair i2 = other.projection_interval(c.edge_normal(i));
 					if (std::min(c.global_clipped_maximum(i), i2.second) - std::max(c.global_clipped_minimum(i), i2.first) < 0.0f)
 						return false;
 				}
@@ -312,8 +312,8 @@ namespace oly::col2d::sat
 				for (size_t i = 0; i < K; ++i)
 				{
 					UnitVector2D axis = c.edge_normal(i);
-					auto [min2, max2] = other.projection_interval(axis);
-					float depth = sat(c.global_clipped_minimum(i), c.global_clipped_maximum(i), min2, max2, axis);
+					const auto [min2, max2] = other.projection_interval(axis);
+					const float depth = sat(c.global_clipped_minimum(i), c.global_clipped_maximum(i), min2, max2, axis);
 					if (depth < 0.0f)
 					{
 						info.overlap = false;
@@ -334,11 +334,13 @@ namespace oly::col2d::sat
 		{
 			static OverlapResult call(const KDOP<K>& c1, const KDOP<K>& c2)
 			{
-				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2)) // TODO variations for compatible globals - reflected or rotated by i * pi / K.
+				int offset2 = 0, sign2 = 1;
+				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
 				{
-					for (size_t i = 0; i < K; ++i)
+					for (int i = 0; i < K; ++i)
 					{
-						if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(i)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(i)) < 0.0f)
+						const int j = sign2 * i + offset2;
+						if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(j)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(j)) < 0.0f)
 							return false;
 					}
 					return true;
@@ -353,13 +355,15 @@ namespace oly::col2d::sat
 		{
 			static CollisionResult call(const KDOP<K>& c1, const KDOP<K>& c2)
 			{
-				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2)) // TODO variations for compatible globals - reflected or rotated by i * pi / K.
+				int offset2 = 0, sign2 = 1;
+				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
 				{
 					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					for (size_t i = 0; i < K; ++i)
+					for (int i = 0; i < K; ++i)
 					{
 						UnitVector2D axis = c1.edge_normal(i);
-						float depth = sat(c1.global_clipped_minimum(i), c1.global_clipped_maximum(i), c2.global_clipped_minimum(i), c2.global_clipped_maximum(i), axis);
+						const int j = sign2 * i + offset2;
+						const float depth = sat(c1.global_clipped_minimum(i), c1.global_clipped_maximum(i), c2.global_clipped_minimum(j), c2.global_clipped_maximum(j), axis);
 						if (depth < 0.0f)
 							return { .overlap = false };
 						else if (depth < info.penetration_depth)

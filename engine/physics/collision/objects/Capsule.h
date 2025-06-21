@@ -18,14 +18,14 @@ namespace oly::col2d
 		}
 
 		OBB mid_obb() const { return { .center = center, .width = obb_width, .height = obb_height, .rotation = rotation }; }
-		Circle upper_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f,  0.5f * obb_height }, 0.5f * obb_width); }
 		Circle lower_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f, -0.5f * obb_height }, 0.5f * obb_width); }
+		Circle upper_circle() const { return Circle(center + get_rotation_matrix() * glm::vec2{ 0.0f,  0.5f * obb_height }, 0.5f * obb_width); }
 
 		UnitVector2D horizontal() const { return UnitVector2D(rotation); }
 		UnitVector2D vertical() const { return UnitVector2D(rotation + glm::half_pi<float>()); }
 
-		Compound compound() const { return { { lower_circle(), mid_obb(), upper_circle() } }; }
-		TCompound tcompound() const { return TCompound({ lower_circle(), mid_obb(), upper_circle() }); }
+		Compound compound() const { return { { mid_obb(), lower_circle(), upper_circle() } }; }
+		TCompound tcompound() const { return TCompound({ mid_obb(), lower_circle(), upper_circle() }); }
 		template<typename Shape = OBB>
 		BVH<Shape> bvh() const { return convert<Shape>(compound()); }
 		template<typename Shape = OBB>

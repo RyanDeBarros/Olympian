@@ -45,6 +45,10 @@ namespace oly
 		UnitVector2D get_rotated(float angle) const { float c = glm::cos(angle); float s = glm::sin(angle); return UnitVector2D(glm::mat2{ { c, s }, { -s, c } } * _direction, _direct{}); }
 		UnitVector2D& quarter_turn() { _direction = { -_direction.y, _direction.x }; return *this; }
 		UnitVector2D get_quarter_turn() const { UnitVector2D cpy = *this; return cpy.quarter_turn(); }
+		UnitVector2D& flip_x() { _direction.x = -_direction.x; return *this; }
+		UnitVector2D get_flipped_x() const { return UnitVector2D({ -_direction.x, _direction.y }, _direct{}); }
+		UnitVector2D& flip_y() { _direction.y = -_direction.y; return *this; }
+		UnitVector2D get_flipped_y() const { return UnitVector2D({ _direction.x, -_direction.y }, _direct{}); }
 
 		float rotation() const { return glm::atan(_direction.y, _direction.x); }
 		glm::mat2 rotation_matrix() const { return { _direction, { -_direction.y, _direction.x } }; }

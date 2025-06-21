@@ -190,16 +190,16 @@ int main()
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);
-		bool player_block_overlap = oly::col2d::overlaps(player, block);
-		//bool player_block_overlap = oly::col2d::overlaps(player, capsule);
+		//bool player_block_overlap = oly::col2d::overlaps(player, block);
+		bool player_block_overlap = oly::col2d::overlaps(player, capsule);
 
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		auto contact = oly::col2d::contacts(player, block);
-		//auto contact = oly::col2d::contacts(player, capsule);
-		auto collide = oly::col2d::collides(player, block);
-		//auto collide = oly::col2d::collides(player, capsule);
-		if (collide.overlap);
-			//oly::LOG << collide.mtv() << oly::LOG.nl;
+		//auto contact = oly::col2d::contacts(player, block);
+		auto contact = oly::col2d::contacts(player, capsule);
+		//auto collide = oly::col2d::collides(player, block);
+		auto collide = oly::col2d::collides(player, capsule);
+		if (collide.overlap)
+			oly::LOG << collide.mtv() << oly::LOG.nl;
 
 		if (contact.overlap)
 		{

@@ -45,6 +45,7 @@ namespace oly::col2d
 	struct KDOP
 	{
 		static_assert(K >= 2, "kDOP must have degree at least 2.");
+		static constexpr float PI_OVER_K = glm::pi<float>() / K;
 
 	private:
 		friend struct internal::KDOPGlobalAccess<K>;
@@ -136,7 +137,7 @@ namespace oly::col2d
 	public:
 		static constexpr UnitVector2D uniform_axis(size_t i)
 		{
-			return UnitVector2D((float)i * glm::pi<float>() / K);
+			return UnitVector2D((float)i * PI_OVER_K);
 		}
 
 		static KDOP<K> wrap(const math::Polygon2D& polygon)
@@ -330,10 +331,78 @@ namespace oly::col2d
 				return tc;
 			}
 
-			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2)
+			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2, int& offset2, int& sign2)
 			{
-				return math::mag_sqrd(c1.global[0]) * math::mag_sqrd(c2.global[1]) == math::mag_sqrd(c2.global[0]) * math::mag_sqrd(c1.global[1])
-					&& UnitVector2D(c1.global[0]) == UnitVector2D(c2.global[0]) && UnitVector2D(c1.global[1]) == UnitVector2D(c2.global[1]);
+				static const auto nonrotated_compatible_globals = [](UnitVector2D v10, UnitVector2D v11, UnitVector2D v20, UnitVector2D v21, int& offset2, int& sign2) -> bool {
+					if (approx(v10.x(), v20.x()) && approx(v11.x(), v21.x()))
+					{
+						if (approx(v10.y(), v20.y()) && approx(v11.y(), v21.y()))
+						{
+							offset2 = 0;
+							sign2 = 1;
+							return true;
+						}
+						else if (approx(v10.y(), -v20.y()) && approx(v11.y(), -v21.y()))
+						{
+							offset2 = 0;
+							sign2 = -1;
+							return true;
+						}
+					}
+					else if (approx(v10.x(), -v20.x()) && approx(v11.x(), -v21.x()))
+					{
+						if (approx(v10.y(), v20.y()) && approx(v11.y(), v21.y()))
+						{
+							offset2 = K;
+							sign2 = -1;
+							return true;
+						}
+						else if (approx(v10.y(), -v20.y()) && approx(v11.y(), -v21.y()))
+						{
+							offset2 = K;
+							sign2 = 1;
+							return true;
+						}
+					}
+					return false;
+					};
+
+				float m10 = math::mag_sqrd(c1.global[0]);
+				float m11 = math::mag_sqrd(c1.global[1]);
+				float m20 = math::mag_sqrd(c2.global[0]);
+				float m21 = math::mag_sqrd(c2.global[1]);
+
+				if (approx(m10, m11) && approx(m20, m21)) // uniform scaling
+				{
+					UnitVector2D v10(c1.global[0]);
+					UnitVector2D v11(c1.global[1]);
+					UnitVector2D v20(c2.global[0]);
+					UnitVector2D v21(c2.global[1]);
+
+					float rotation_offset = v20.rotation() - v10.rotation();
+					if (!approx(rotation_offset, v21.rotation() - v11.rotation()) || !near_multiple(rotation_offset, KDOP<K>::PI_OVER_K))
+						return false;
+
+					v20.rotate(-rotation_offset);
+					v21.rotate(-rotation_offset);
+					
+					if (nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2))
+					{
+						offset2 += roundi(rotation_offset / KDOP<K>::PI_OVER_K);
+						return true;
+					}
+					return false;
+				}
+				else if (approx(m10 * m21, m20 * m11)) // proportional scaling
+				{
+					UnitVector2D v10(c1.global[0]);
+					UnitVector2D v11(c1.global[1]);
+					UnitVector2D v20(c2.global[0]);
+					UnitVector2D v21(c2.global[1]);
+					return nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2);
+				}
+				else
+					return false;
 			}
 
 			static glm::vec2 global_center(const KDOP<K>& c)

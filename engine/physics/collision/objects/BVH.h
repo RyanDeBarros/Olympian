@@ -257,8 +257,6 @@ namespace oly::col2d
 		template<typename S>
 		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps(root(), elements, bvh.root(), bvh.elements.data()); }
 
-		// TODO faster collides/contacts that only puts overlapping elements in a set, and then passes that set to compound_collision? Wouldn't be exact, since the computed MTV might push the other object onto a previously non-overlapping element, but still.
-
 		CollisionResult raw_collides(const Element& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e)) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(ElementParam e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const Primitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element)) : CollisionResult{ .overlap = false }; }
