@@ -10,10 +10,20 @@ namespace oly::col2d
 	{
 		math::Polygon2D concave_polygon;
 
+		Primitive as_convex_primitive() const
+		{
+			return Primitive(ConvexHull::wrap(concave_polygon));
+		}
+
+		TPrimitive as_convex_tprimitive() const
+		{
+			return TPrimitive(ConvexHull::wrap(concave_polygon));
+		}
+
 		Compound as_convex_compound() const
 		{
 			Compound compound;
-			std::vector<math::Polygon2D> convex_polygons = math::convex_decompose_polygon_without_triangulation(concave_polygon);
+			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			compound.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 				compound.elements[i] = ConvexHull(std::move(convex_polygons[i]));
@@ -23,7 +33,7 @@ namespace oly::col2d
 		TCompound as_convex_tcompound() const
 		{
 			TCompound compound;
-			std::vector<math::Polygon2D> convex_polygons = math::convex_decompose_polygon_without_triangulation(concave_polygon);
+			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			compound.set_compound().elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 				compound.set_compound().elements[i] = ConvexHull(std::move(convex_polygons[i]));
@@ -34,7 +44,7 @@ namespace oly::col2d
 		BVH<Shape> as_convex_bvh() const
 		{
 			BVH<Shape> bvh;
-			std::vector<math::Polygon2D> convex_polygons = math::convex_decompose_polygon_without_triangulation(concave_polygon);
+			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			bvh.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));
@@ -45,7 +55,7 @@ namespace oly::col2d
 		TBVH<Shape> as_convex_tbvh() const
 		{
 			TBVH<Shape> bvh;
-			std::vector<math::Polygon2D> convex_polygons = math::convex_decompose_polygon_without_triangulation(concave_polygon);
+			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			bvh.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));

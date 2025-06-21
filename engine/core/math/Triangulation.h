@@ -4,8 +4,6 @@
 
 namespace oly::math
 {
-	typedef std::vector<glm::uvec3> Triangulation;
-
 	struct Edge
 	{
 		glm::uint a, b;
@@ -23,15 +21,42 @@ namespace oly::math
 		}
 	};
 
+	typedef std::vector<glm::uvec3> Triangulation;
 	extern std::unordered_map<Edge, std::vector<glm::uint>, EdgeHash> build_adjecency(const Triangulation& triangulation);
 	extern Triangulation triangulate(const Polygon2D& polygon, bool increasing = true, int starting_offset = 0, int ear_cycle = 0);
-	extern glm::uint get_first_ear(const Polygon2D& polygon, int starting_offset = 0);
-	extern std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon);
-	extern std::vector<Triangulation> convex_decompose_triangulation(const Polygon2D& polygon, const Triangulation& triangulation);
-	extern std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon);
-	extern std::vector<std::pair<Polygon2D, Triangulation>> convex_decompose_polygon(const Polygon2D& polygon, const Triangulation& triangulation);
-	extern std::vector<std::pair<Polygon2D, Triangulation>> decompose_polygon(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations);
-	extern std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon);
-	extern std::vector<Polygon2D> convex_decompose_polygon_without_triangulation(const Polygon2D& polygon, const Triangulation& triangulation);
-	extern std::vector<Polygon2D> decompose_polygon_without_triangulation(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations);
+
+	template<bool Triangulation, bool Polygon>
+	struct Decompose
+	{
+		static_assert(Triangulation || Polygon, "Decompose must decompose at least one of Triangulation and Polygon.");
+	};
+
+	template<>
+	struct Decompose<true, false>
+	{
+		std::vector<Triangulation> operator()(const Polygon2D& polygon) const;
+		std::vector<Triangulation> operator()(const Polygon2D& polygon, const Triangulation& triangulation) const;
+	};
+
+	using DecomposeTriangulation = Decompose<true, false>;
+
+	template<>
+	struct Decompose<true, true>
+	{
+		std::vector<std::pair<Polygon2D, Triangulation>> operator()(const Polygon2D& polygon) const;
+		std::vector<std::pair<Polygon2D, Triangulation>> operator()(const Polygon2D& polygon, const Triangulation& triangulation) const;
+		std::vector<std::pair<Polygon2D, Triangulation>> operator()(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations) const;
+	};
+
+	using DecomposeAll = Decompose<true, true>;
+
+	template<>
+	struct Decompose<false, true>
+	{
+		std::vector<Polygon2D> operator()(const Polygon2D& polygon) const;
+		std::vector<Polygon2D> operator()(const Polygon2D& polygon, const Triangulation& triangulation) const;
+		std::vector<Polygon2D> operator()(const Polygon2D& polygon, const std::vector<Triangulation>& triangulations) const;
+	};
+
+	using DecomposePolygon = Decompose<false, true>;
 }

@@ -6,6 +6,7 @@
 #include "physics/collision/debugging/CollisionView.h"
 #include "physics/collision/objects/Capsule.h"
 #include "physics/collision/objects/Combinations.h"
+#include "physics/collision/objects/Polygon.h"
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -106,9 +107,22 @@ int main()
 	block.set_local().scale.x = 2.0f;
 	block.set_local().rotation = glm::pi<float>() / 8;
 	//oly::col2d::TPrimitive player = { oly::col2d::Circle({}, 50.0f) };
-	oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
-	player.set_local().scale.y = 1.2f;
-	player.set_local().rotation = glm::pi<float>() / 4;
+
+	//oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
+	oly::col2d::PolygonCollision star;
+	const float outer_star_radius = 50.0f;
+	const float inner_star_radius = 20.0f;
+	const int num_star_points = 5;
+	for (int i = 0; i < num_star_points; ++i)
+	{
+		star.concave_polygon.push_back(inner_star_radius * glm::vec2{ glm::cos((i - 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i - 0.25f) * glm::two_pi<float>() / num_star_points) });
+		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
+	}
+
+	oly::col2d::TCompound player = star.as_convex_tcompound();
+	//player.set_local().scale.y = 1.2f;
+	//player.set_local().rotation = glm::pi<float>() / 4;
+	
 	//oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = 0.0f };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
