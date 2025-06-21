@@ -23,9 +23,10 @@ namespace oly::col2d
 	template<size_t K>
 	inline OverlapResult point_hits(const KDOP<K>& c, glm::vec2 test)
 	{
+		glm::vec2 local_test = internal::KDOPGlobalAccess<K>::local_point(c, test);
 		for (size_t i = 0; i < K; ++i)
 		{
-			float proj = KDOP<K>::uniform_axis(i).dot(test);
+			float proj = KDOP<K>::uniform_axis(i).dot(local_test);
 			if (proj < c.get_clipped_minimum(i) || proj > c.get_clipped_maximum(i))
 				return false;
 		}
@@ -35,9 +36,10 @@ namespace oly::col2d
 	template<size_t K>
 	inline OverlapResult ray_hits(const KDOP<K>& c, const Ray& ray)
 	{
+		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
 		for (size_t i = 0; i < K; ++i)
 		{
-			if (!internal::ray_hits_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), ray, KDOP<K>::uniform_axis(i)))
+			if (!internal::ray_hits_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i)))
 				return false;
 		}
 		return true;
@@ -47,14 +49,19 @@ namespace oly::col2d
 	inline RaycastResult raycast(const KDOP<K>& c, const Ray& ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
 		float max_entry = -nmax<float>();
 		for (size_t i = 0; i < K; ++i)
 		{
-			if (!internal::raycast_update_on_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), ray, KDOP<K>::uniform_axis(i), info, max_entry))
+			if (!internal::raycast_update_on_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i), info, max_entry))
 				return { .hit = RaycastResult::Hit::NO_HIT };
 		}
 		if (info.hit == RaycastResult::Hit::TRUE_HIT)
-			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
+		{
+			glm::vec2 local_clip = max_entry * (glm::vec2)local_ray.direction;
+			info.contact = ray.origin + internal::KDOPGlobalAccess<K>::global_direction(c, local_clip);
+			info.normal = internal::KDOPGlobalAccess<K>::global_normal(c, info.normal);
+		}
 		return info;
 	}
 	

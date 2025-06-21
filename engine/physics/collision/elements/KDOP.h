@@ -115,13 +115,16 @@ namespace oly::col2d
 			{
 				dirty_cache = false;
 				_cache = internal::initial_kdop_polygon(uniform_axis(0), minima[0], maxima[0], uniform_axis(1), minima[1], maxima[1]);
-				for (size_t i = 2; i < K; ++i)
+				if constexpr (K > 2)
 				{
-					UnitVector2D axis = uniform_axis(i);
-					_cache = math::clip_polygon(_cache, -axis, -minima[i]);
-					_cache = math::clip_polygon(_cache, axis, maxima[i]);
-					if (_cache.empty())
-						break;
+					for (size_t i = 2; i < K; ++i)
+					{
+						UnitVector2D axis = uniform_axis(i);
+						_cache = math::clip_polygon(_cache, -axis, -minima[i]);
+						_cache = math::clip_polygon(_cache, axis, maxima[i]);
+						if (_cache.empty())
+							break;
+					}
 				}
 			}
 			return _cache;
@@ -170,6 +173,15 @@ namespace oly::col2d
 			return cache();
 		}
 
+		math::Polygon2D global_points() const
+		{
+			math::Polygon2D gpoints;
+			gpoints.reserve(cache().size());
+			for (glm::vec2 pt : cache())
+				gpoints.push_back(transform_point(global, pt));
+			return gpoints;
+		}
+
 	private:
 		const std::array<fpair, K>& clipped_extrema() const
 		{
@@ -182,58 +194,73 @@ namespace oly::col2d
 			return _clipped_extrema;
 		}
 
+		UnitVector2D get_local_axis(UnitVector2D axis) const
+		{
+			return glm::transpose(glm::mat2(global)) * axis;
+		}
+
+		float global_extremum(UnitVector2D axis, float extremum) const
+		{
+			return (extremum + axis.dot(glm::mat2(ginv) * global[2])) * math::inv_magnitude(glm::transpose(glm::mat2(ginv)) * (glm::vec2)axis);
+		}
+
 	public:
+		float global_clipped_minimum(size_t i) const
+		{
+			return i < K ? global_extremum(uniform_axis(i), get_clipped_minimum(i)) : global_extremum(uniform_axis(i - K), -get_clipped_maximum(i - K));
+		}
+
+		float global_clipped_maximum(size_t i) const
+		{
+			return i < K ? global_extremum(uniform_axis(i), get_clipped_maximum(i)) : global_extremum(uniform_axis(i - K), -get_clipped_minimum(i - K));
+		}
+
 		fpair projection_interval(const UnitVector2D& axis) const
 		{
-			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			UnitVector2D local_axis = get_local_axis(axis);
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			if (near_multiple(i, 1.0f))
 			{
 				int j = unsigned_mod(roundi(i), 2 * K);
-				if (j < K)
-					return { get_clipped_minimum(j), get_clipped_maximum(j) };
-				else
-					return { -get_clipped_maximum(j - K), -get_clipped_minimum(j - K) };
+				return { global_clipped_minimum(j), global_clipped_maximum(j) };
 			}
 			else
-				return { axis.dot(deepest_point(-axis)), axis.dot(deepest_point(axis)) };
+				return { global_extremum(local_axis, local_axis.dot(local_deepest_point(-local_axis))), global_extremum(local_axis, local_axis.dot(local_deepest_point(local_axis))) };
 		}
 
 		float projection_min(const UnitVector2D& axis) const
 		{
-			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			UnitVector2D local_axis = get_local_axis(axis);
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			if (near_multiple(i, 1.0f))
-			{
-				int j = unsigned_mod(roundi(i), 2 * K);
-				if (j < K)
-					return get_clipped_minimum(j);
-				else
-					return -get_clipped_maximum(j - K);
-			}
+				return global_clipped_minimum(unsigned_mod(roundi(i), 2 * K));
 			else
-				return axis.dot(deepest_point(-axis));
+				return global_extremum(local_axis, local_axis.dot(local_deepest_point(-local_axis)));
 		}
 
 		float projection_max(const UnitVector2D& axis) const
 		{
-			float i = axis.rotation() * K * glm::one_over_pi<float>();
+			UnitVector2D local_axis = get_local_axis(axis);
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			if (near_multiple(i, 1.0f))
-			{
-				int j = unsigned_mod(roundi(i), 2 * K);
-				if (j < K)
-					return get_clipped_maximum(j);
-				else
-					return -get_clipped_minimum(j - K);
-			}
+				return global_clipped_maximum(unsigned_mod(roundi(i), 2 * K));
 			else
-				return axis.dot(deepest_point(axis));
+				return global_extremum(local_axis, local_axis.dot(local_deepest_point(local_axis)));
 		}
 
 		UnitVector2D edge_normal(size_t i) const
 		{
-			return uniform_axis(i);
+			return UnitVector2D(glm::transpose(glm::mat2(ginv)) * uniform_axis(i));
+		}
+
+		glm::vec2 deepest_point(const UnitVector2D& axis) const
+		{
+			UnitVector2D local_axis = get_local_axis(axis);
+			return transform_point(global, local_deepest_point(local_axis));
 		}
 		
-		glm::vec2 deepest_point(const UnitVector2D& axis) const
+	private:
+		glm::vec2 local_deepest_point(const UnitVector2D& axis) const
 		{
 			float i = axis.rotation() * K * glm::one_over_pi<float>();
 			if (near_multiple(i, 1.0f))
@@ -285,6 +312,7 @@ namespace oly::col2d
 				KDOP<K> tc = c;
 				tc.global = g;
 				tc.ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				tc.flag();
 				return tc;
 			}
 
@@ -293,6 +321,7 @@ namespace oly::col2d
 				CopyPtr<KDOP<K>> tc(c);
 				tc->global = g;
 				tc->ginv = glm::inverse(glm::mat3{ glm::vec3(g[0], 0.0f), glm::vec3(g[1], 0.0f), glm::vec3(g[2], 1.0f) });
+				tc->flag();
 				return tc;
 			}
 
@@ -301,9 +330,64 @@ namespace oly::col2d
 				return c.global == DEFAULT_3x2;
 			}
 
+			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2)
+			{
+				glm::vec2 u1 = c1.global[0];
+				glm::vec2 v1 = c1.global[1];
+				glm::vec2 u2 = c2.global[0];
+				glm::vec2 v2 = c2.global[1];
+
+				return math::mag_sqrd(u1) * math::mag_sqrd(v2) == math::mag_sqrd(u2) * math::mag_sqrd(v1) && UnitVector2D(u1) == UnitVector2D(u2) && UnitVector2D(v1) == UnitVector2D(v2);
+			}
+
 			static glm::vec2 global_center(const KDOP<K>& c)
 			{
-				return transform_point(c.global, c.center);
+				return transform_point(c.global, c.center());
+			}
+
+			static glm::vec2 local_point(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_point(c.ginv, v);
+			}
+
+			static glm::vec2 local_direction(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_direction(c.ginv, v);
+			}
+
+			static glm::vec2 local_normal(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_normal(c.ginv, v);
+			}
+
+			static Ray local_ray(const KDOP<K>& c, const Ray& ray)
+			{
+				Ray local_ray = { .origin = local_point(c, ray.origin) };
+				if (ray.clip == 0.0f)
+					local_ray.direction = local_direction(c, ray.direction);
+				else
+				{
+					glm::vec2 clip = ray.clip * (glm::vec2)ray.direction;
+					clip = local_direction(c, clip);
+					local_ray.direction = UnitVector2D(clip);
+					local_ray.clip = glm::length(clip);
+				}
+				return local_ray;
+			}
+
+			static glm::vec2 global_point(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_point(c.global, v);
+			}
+
+			static glm::vec2 global_direction(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_direction(c.global, v);
+			}
+
+			static glm::vec2 global_normal(const KDOP<K>& c, glm::vec2 v)
+			{
+				return transform_normal(c.global, v);
 			}
 		};
 	}

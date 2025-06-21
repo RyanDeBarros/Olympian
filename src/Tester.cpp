@@ -102,13 +102,13 @@ int main()
 	//	_pts.push_back(p);
 	//}
 	//oly::col2d::TPrimitive block = { oly::col2d::ConvexHull(std::move(_pts)) };
-	//block.set_local().position.y = -100.0f;
-	//block.set_local().scale.x = 2.0f;
-	//block.set_local().rotation = glm::pi<float>() / 8;
+	block.set_local().position.y = -100.0f;
+	block.set_local().scale.x = 2.0f;
+	block.set_local().rotation = glm::pi<float>() / 8;
 	//oly::col2d::TPrimitive player = { oly::col2d::Circle({}, 50.0f) };
 	oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
-	player.set_local().scale.y = 1.2f;
-	player.set_local().rotation = glm::pi<float>() / 4;
+	//player.set_local().scale.y = 1.2f;
+	//player.set_local().rotation = glm::pi<float>() / 4;
 	//oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = 0.0f };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
@@ -185,7 +185,7 @@ int main()
 		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 150.0f, -80.0f };
 		//player.set_local().position = { 0.0f, 0.0f };
-		//player.set_local().position = { 75.0f, -225.0f };
+		//player.set_local().position = { -300.0f, -200.0f };
 		//player.set_local().position = { 211, -134 };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 

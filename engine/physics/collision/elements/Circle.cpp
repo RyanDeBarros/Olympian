@@ -58,7 +58,7 @@ namespace oly::col2d
 		if (global == DEFAULT_3x2)
 			return center + radius * (glm::vec2)axis;
 		else
-			return radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis) + transform_point(global, center);
+			return transform_point(global, center) + radius * (glm::vec2)axis * math::inv_magnitude(glm::mat2(ginv) * axis);
 	}
 
 	namespace internal

@@ -68,13 +68,13 @@ namespace oly::col2d
 	}
 
 	template<size_t K>
-	static std::set<UnitVector2D> candidate_axes(const KDOP<K>&)
+	static std::set<UnitVector2D> candidate_axes(const KDOP<K>& c)
 	{
 		std::set<UnitVector2D> axes;
 		for (size_t i = 0; i < K; ++i)
 		{
-			axes.insert(KDOP<K>::uniform_axis(i));
-			axes.insert(-KDOP<K>::uniform_axis(i));
+			axes.insert(c.edge_normal(i));
+			axes.insert(-c.edge_normal(i));
 		}
 		return axes;
 	}
@@ -416,6 +416,7 @@ namespace oly::col2d
 			std::array<float, K> maxima;
 			for (int i = 0; i < K; ++i)
 			{
+				// TODO uniform_axis or edge_normal?
 				float offset = KDOP<K>::uniform_axis(i).dot(translation);
 				int og_idx = reverse_axes ? int(K) - i : i;
 				og_idx = unsigned_mod(og_idx + rotation_axis_offset, int(K));
@@ -427,11 +428,12 @@ namespace oly::col2d
 		else
 		{
 			// TODO KDOP should keep a local transform, similar to Circle.
+			return internal::KDOPGlobalAccess<K>::create_affine_kdop_ptr(c, m);
 
-			ConvexHull hull;
-			for (glm::vec2 pt : c.points())
-				hull.set_points().push_back(transform_point(m, pt));
-			return hull;
+			//ConvexHull hull;
+			//for (glm::vec2 pt : c.points())
+				//hull.set_points().push_back(transform_point(m, pt));
+			//return hull;
 		}
 	}
 

@@ -286,13 +286,13 @@ namespace oly::debug
 	template<size_t K>
 	inline CollisionView collision_view(const col2d::KDOP<K>& c, glm::vec4 color)
 	{
-		return internal::polygon_collision_view(c.points(), color);
+		return internal::polygon_collision_view(c.global_points(), color);
 	}
 
 	template<size_t K>
 	inline void update_view(CollisionView& view, const col2d::KDOP<K>& c, glm::vec4 color)
 	{
-		internal::polygon_update_view(view, c.points(), color);
+		internal::polygon_update_view(view, c.global_points(), color);
 	}
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)
