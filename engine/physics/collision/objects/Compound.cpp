@@ -46,26 +46,6 @@ namespace oly::col2d
 		return info;
 	}
 
-	OverlapResult overlaps(const Compound& c1, ElementParam c2)
-	{
-		for (const auto& e1 : c1.elements)
-		{
-			if (overlaps(param(e1), c2))
-				return true;
-		}
-		return false;
-	}
-	
-	CollisionResult collides(const Compound& c1, ElementParam c2)
-	{
-		return compound_collision(c1.elements.data(), c1.elements.size(), c2);
-	}
-	
-	ContactResult contacts(const Compound& c1, ElementParam c2)
-	{
-		return compound_contact(c1.elements.data(), c1.elements.size(), c2);
-	}
-
 	void TCompound::bake() const
 	{
 		baked.resize(compound.elements.size());

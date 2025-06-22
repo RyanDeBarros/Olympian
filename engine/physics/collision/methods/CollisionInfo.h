@@ -14,6 +14,8 @@ namespace oly::col2d
 		OverlapResult(bool overlap = bool()) : overlap(overlap) {}
 
 		operator bool () const { return overlap; }
+
+		bool operator!() const { return !overlap; }
 	};
 
 	struct CollisionResult

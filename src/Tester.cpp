@@ -112,14 +112,16 @@ int main()
 	oly::col2d::PolygonCollision star;
 	const int num_star_points = 5;
 	const float outer_star_radius = 50.0f;
-	const float inner_star_radius = 25.0f;
+	const float inner_star_radius = 15.0f;
 	for (int i = 0; i < num_star_points; ++i)
 	{
 		star.concave_polygon.push_back(inner_star_radius * glm::vec2{ glm::cos((i - 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i - 0.25f) * glm::two_pi<float>() / num_star_points) });
 		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
 	}
 
-	oly::col2d::TCompound player = star.as_convex_tcompound();
+	//oly::col2d::TCompound player = star.as_convex_tcompound();
+	oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>(); // TODO OBB not working, at least for collision view.
+	player.set_heuristic(oly::col2d::Heuristic::MIN_Y_MIN_X);
 	player.set_local().scale.y = 1.2f;
 	player.set_local().rotation = glm::pi<float>() / 4;
 	
@@ -147,7 +149,8 @@ int main()
 	oly::debug::CollisionLayer raycast_result_layer;
 
 	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
-	oly::debug::CollisionView player_cv = oly::debug::collision_view(player, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+	//oly::debug::CollisionView player_cv = oly::debug::collision_view(player, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView player_cv = oly::debug::collision_view(player, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	//oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
@@ -226,7 +229,11 @@ int main()
 			player_impulse_cv.clear_view();
 		}
 
-		oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
+			oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		else
+			oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO either rebuild() itself or just build_layer(2) is not working
+
 		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		oly::debug::update_view_color(block_cv, (player_block_overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));

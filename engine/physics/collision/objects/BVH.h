@@ -8,6 +8,7 @@
 #include "core/base/Transforms.h"
 #include "core/math/Solvers.h"
 #include "core/base/Assert.h"
+#include "core/containers/DoubleBuffer.h"
 #include "physics/collision/Tolerance.h"
 
 #include <algorithm>
@@ -117,15 +118,15 @@ namespace oly::col2d
 			{
 				float(*bx)(const Element& e) = nullptr;
 				if constexpr (MinX)
-					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::LEFT).second; }, e); };
+					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::LEFT); }, param(e)); };
 				else
-					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::RIGHT).second; }, e); };
+					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::RIGHT); }, param(e)); };
 				
 				float(*by)(const Element& e) = nullptr;
 				if constexpr (MinY)
-					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::DOWN).second; }, e); };
+					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::DOWN); }, param(e)); };
 				else
-					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e.projection_interval(UnitVector2D::UP).second; }, e); };
+					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::UP); }, param(e)); };
 
 				if constexpr (XY)
 				{
@@ -151,30 +152,79 @@ namespace oly::col2d
 		};
 	}
 
+	enum class Heuristic
+	{
+		NONE,
+		MIDPOINT_XY,
+		MIDPOINT_YX,
+		MIN_X_MIN_Y,
+		MIN_X_MAX_Y,
+		MAX_X_MIN_Y,
+		MAX_X_MAX_Y,
+		MIN_Y_MIN_X,
+		MIN_Y_MAX_X,
+		MAX_Y_MIN_X,
+		MAX_Y_MAX_X,
+	};
+
 	template<typename Shape>
 	class BVH
 	{
 		struct Node
 		{
 			std::optional<Shape> shape;
-			size_t start_index, count;
+			size_t start_index = 0, count = 0;
 			std::unique_ptr<Node> left, right;
 
-			Node(const Element* elements, size_t start_index, size_t count)
+			Node() = default;
+
+			Node(const Element* elements, size_t start_index, size_t count, size_t* depth)
 				: start_index(start_index), count(count)
 			{
 				OLY_ASSERT(count > 0);
+				if (depth)
+					++*depth;
 				if (count > 1)
 				{
 					shape.emplace(internal::Wrap<Shape>{}(elements + start_index, count));
-					left = std::make_unique<Node>(elements, start_index, (count + 1) / 2);
-					right = std::make_unique<Node>(elements, start_index + (count + 1) / 2, count / 2);
+					left = std::make_unique<Node>(elements, start_index, (count + 1) / 2, depth);
+					right = std::make_unique<Node>(elements, start_index + (count + 1) / 2, count / 2, nullptr);
 				}
 			}
 
 			Node(const Node& other)
-				: shape(other.shape), start_index(other.start_index), left(other.left ? std::make_unique<Node>(*other.left) : nullptr), right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
+				: shape(other.shape), start_index(other.start_index), count(other.count), left(other.left ? std::make_unique<Node>(*other.left) : nullptr), right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
 			{}
+
+			Node(Node&& other) noexcept
+				: shape(std::move(other.shape)), start_index(other.start_index), count(other.count), left(std::move(other.left)), right(std::move(other.right))
+			{}
+
+			Node& operator=(const Node& other)
+			{
+				if (this != &other)
+				{
+					shape = other.shape;
+					start_index = other.start_index;
+					count = other.count;
+					left = other.left ? std::make_unique<Node>(*other.left) : nullptr;
+					right = other.right ? std::make_unique<Node>(*other.right) : nullptr;
+				}
+				return *this;
+			}
+
+			Node& operator=(Node&& other) noexcept
+			{
+				if (this != &other)
+				{
+					shape = std::move(other.shape);
+					start_index = other.start_index;
+					count = other.count;
+					left = std::move(other.left);
+					right = std::move(other.right);
+				}
+				return *this;
+			}
 
 			bool is_leaf() const { return !shape.has_value(); }
 		};
@@ -184,26 +234,12 @@ namespace oly::col2d
 		mutable bool dirty = true;
 
 	public:
-		enum class Heuristic
-		{
-			NONE,
-			MIDPOINT_XY,
-			MIDPOINT_YX,
-			MIN_X_MIN_Y,
-			MIN_X_MAX_Y,
-			MAX_X_MIN_Y,
-			MAX_X_MAX_Y,
-			MIN_Y_MIN_X,
-			MIN_Y_MAX_X,
-			MAX_Y_MIN_X,
-			MAX_Y_MAX_X,
-		};
-
 		Mask mask = 1;
 		Layer layer = 1;
 
 	private:
 		Heuristic heuristic = Heuristic::MIDPOINT_XY;
+		mutable size_t depth = 0;
 
 	public:
 		BVH() = default;
@@ -216,8 +252,10 @@ namespace oly::col2d
 		Heuristic get_heuristic() const { return heuristic; }
 		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
 
+		size_t get_depth() const { rebuild(); return depth; }
+
 	private:
-		const Node& root() const
+		void rebuild() const
 		{
 			if (dirty)
 			{
@@ -242,20 +280,55 @@ namespace oly::col2d
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
 				else if (heuristic == Heuristic::MAX_Y_MAX_X)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
-				_root = Node(elements.data(), 0, elements.size());
+				depth = 0;
+				_root = Node(elements.data(), 0, elements.size(), &depth); // TODO is there a mathematical way of determining depth? If so, use that instead of rebuilding in get_depth()
 			}
+		}
+
+		const Node& root() const
+		{
+			rebuild();
 			return _root;
 		}
 
 	public:
-		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), elements, test); }
-		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), elements, ray); }
-		RaycastResult raycast(const Ray& ray) const { return raycast(root(), elements, ray); }
+		std::vector<Shape> build_layer(size_t at_depth) const
+		{
+			std::vector<Shape> layer;
+			DoubleBuffer<const Node*> nodes;
+			nodes.back().push_back(&root());
+
+			for (size_t i = 0; i < at_depth; ++i)
+			{
+				nodes.swap().back().clear();
+				if (nodes.front().empty())
+					return layer;
+				for (const Node* node : nodes.front())
+				{
+					if (node->left)
+						nodes.back().push_back(node->left.get());
+					if (node->right)
+						nodes.back().push_back(node->right.get());
+				}
+			}
+
+			nodes.swap();
+			for (const Node* node : nodes.front())
+			{
+				if (node->shape.has_value())
+					layer.push_back(*node->shape);
+			}
+			return layer;
+		}
+
+		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), elements.data(), test); }
+		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), elements.data(), ray); }
+		RaycastResult raycast(const Ray& ray) const { return raycast(root(), elements.data(), ray); }
 		
 		template<typename Other>
-		OverlapResult raw_overlaps(const Other& c) const { return overlaps(root(), elements, c); }
+		OverlapResult raw_overlaps(const Other& c) const { return overlaps(root(), elements.data(), c); }
 		template<typename S>
-		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps(root(), elements, bvh.root(), bvh.elements.data()); }
+		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps(root(), elements.data(), bvh.root(), bvh.elements.data()); }
 
 		CollisionResult raw_collides(const Element& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e)) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(ElementParam e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
@@ -285,7 +358,7 @@ namespace oly::col2d
 			else if (!col2d::point_hits(node.shape.value(), test))
 				return false;
 			else
-				return point_hits(*node.left, test) || point_hits(*node.right, test);
+				return point_hits(*node.left, elements, test) || point_hits(*node.right, elements, test);
 		}
 
 		static OverlapResult ray_hits(const Node& node, const Element* elements, const Ray& ray)
@@ -295,7 +368,7 @@ namespace oly::col2d
 			else if (!col2d::ray_hits(node.shape.value(), ray))
 				return false;
 			else
-				return ray_hits(*node.left, ray) || ray_hits(*node.right, ray);
+				return ray_hits(*node.left, elements, ray) || ray_hits(*node.right, elements, ray);
 		}
 
 		static RaycastResult raycast(const Node& node, const Element* elements, const Ray& ray)
@@ -306,10 +379,10 @@ namespace oly::col2d
 				return { .hit = RaycastResult::Hit::NO_HIT };
 			else
 			{
-				RaycastResult left_result = raycast(*node.left, ray);
+				RaycastResult left_result = raycast(*node.left, elements, ray);
 				if (left_result.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
 					return left_result;
-				RaycastResult right_result = raycast(*node.right, ray);
+				RaycastResult right_result = raycast(*node.right, elements, ray);
 				if (right_result.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
 					return right_result;
 				
@@ -361,11 +434,11 @@ namespace oly::col2d
 		static OverlapResult overlaps(const Node& node, const Element* elements, const Other& c)
 		{
 			if (node.is_leaf())
-				return overlaps(elements[node.start_index], c);
-			else if (!col2d::overlaps(node.shape.value(), c))
+				return col2d::overlaps(param(elements[node.start_index]), c);
+			else if (!col2d::overlaps(param(node.shape.value()), c))
 				return false;
 			else
-				return overlaps(*node.left, c) || overlaps(*node.right, c);
+				return overlaps(*node.left, elements, c) || overlaps(*node.right, elements, c);
 		}
 	};
 
@@ -385,7 +458,7 @@ namespace oly::col2d
 				std::vector<Element>& global_elements = _bvh.set_elements();
 				global_elements.resize(local_elements.size());
 				for (size_t i = 0; i < local_elements.size(); ++i)
-					global_elements[i] = transform_element(local_elements[i], m);
+					global_elements[i] = transform_element(param(local_elements[i]), m);
 			}
 			return _bvh;
 		}
@@ -400,15 +473,23 @@ namespace oly::col2d
 		explicit TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { local_dirty = true; return transformer.get_local(); }
+		Transform2D& set_local() { local_dirty = true; return transformer.set_local(); }
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
+
+		const std::vector<Element>& get_baked() const { return bvh().get_elements(); }
 
 		Mask mask() const { return _bvh.mask; }
 		Mask& mask() { return _bvh.mask; }
 		Layer layer() const { return _bvh.layer; }
 		Layer& layer() { return _bvh.layer; }
+
+		Heuristic get_heuristic() const { return _bvh.get_heuristic(); }
+		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
+		size_t get_depth() const { return _bvh.get_depth(); }
+
+		std::vector<Shape> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
 
 		OverlapResult point_hits(glm::vec2 test) const { return bvh().point_hits(test); }
 		OverlapResult ray_hits(const Ray& ray) const { return bvh().ray_hits(ray); }

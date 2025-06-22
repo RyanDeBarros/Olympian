@@ -49,15 +49,6 @@ namespace oly::col2d
 		return bvh;
 	}
 
-	extern OverlapResult overlaps(const TCompound& c1, ElementParam c2);
-	inline OverlapResult overlaps(ElementParam c1, const TCompound& c2) { return overlaps(c2, c1); }
-
-	extern CollisionResult collides(const TCompound& c1, ElementParam c2);
-	inline CollisionResult collides(ElementParam c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-
-	extern ContactResult contacts(const TCompound& c1, ElementParam c2);
-	inline ContactResult contacts(ElementParam c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
-
 	inline OverlapResult overlaps(const Compound& c1, const Primitive& c2) { return (c1.mask & c2.layer) && overlaps(c1, param(c2.element)); }
 	inline OverlapResult overlaps(const Primitive& c1, const Compound& c2) { return overlaps(c2, c1); }
 	inline CollisionResult collides(const Compound& c1, const Primitive& c2) { return (c1.mask & c2.layer) ? collides(c1, param(c2.element)) : CollisionResult{ .overlap = false }; }

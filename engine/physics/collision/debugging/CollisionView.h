@@ -345,68 +345,96 @@ namespace oly::debug
 		update_view(view, c.get_baked(), color);
 	}
 
+	template<typename Object>
+	inline CollisionView collision_view(const std::vector<Object>& elements, glm::vec4 color)
+	{
+		if (elements.empty())
+			return {};
+		CollisionView view = collision_view(elements[0], color);
+		for (size_t i = 1; i < elements.size(); ++i)
+			view.merge(collision_view(elements[i], color));
+		return view;
+	}
+
+	template<typename Object>
+	inline void update_view(CollisionView& view, const std::vector<Object>& elements, glm::vec4 color)
+	{
+		if (elements.empty())
+			view.clear_view();
+		else
+		{
+			update_view(view, elements[0], color);
+			for (size_t i = 1; i < elements.size(); ++i)
+				view.merge(collision_view(elements[i], color));
+		}
+	}
+
 	inline CollisionView collision_view(const col2d::Compound& c, glm::vec4 color)
 	{
-		CollisionView view = collision_view(c.elements[0], color);
-		for (size_t i = 1; i < c.elements.size(); ++i)
-			view.merge(collision_view(c.elements[i], color));
-		return view;
+		return collision_view(c.elements, color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::Compound& c, glm::vec4 color)
 	{
-		update_view(view, c.elements[0], color);
-		for (size_t i = 1; i < c.elements.size(); ++i)
-			view.merge(collision_view(c.elements[i], color));
+		update_view(view, c.elements, color);
 	}
 
 	inline CollisionView collision_view(const col2d::TCompound& c, glm::vec4 color)
 	{
-		CollisionView view = collision_view(c.get_baked()[0], color);
-		for (size_t i = 1; i < c.get_baked().size(); ++i)
-			view.merge(collision_view(c.get_baked()[i], color));
-		return view;
+		return collision_view(c.get_baked(), color);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::TCompound& c, glm::vec4 color)
 	{
-		update_view(view, c.get_baked()[0], color);
-		for (size_t i = 1; i < c.get_baked().size(); ++i)
-			view.merge(collision_view(c.get_baked()[i], color));
+		update_view(view, c.get_baked(), color);
 	}
 
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::BVH<Shape>& c, glm::vec4 color)
 	{
-		CollisionView view = collision_view(c.get_elements()[0], color);
-		for (size_t i = 1; i < c.get_elements().size(); ++i)
-			view.merge(collision_view(c.get_elements()[i], color));
-		return view;
+		return collision_view(c.get_elements(), color);
+	}
+
+	template<typename Shape>
+	inline CollisionView collision_view(const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
+	{
+		return collision_view(c.build_layer(depth), color);
 	}
 
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, glm::vec4 color)
 	{
-		update_view(view, c.get_elements()[0], color);
-		for (size_t i = 1; i < c.get_elements().size(); ++i)
-			view.merge(collision_view(c.get_elements()[i], color));
+		update_view(view, c.get_elements(), color);
+	}
+	
+	template<typename Shape>
+	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
+	{
+		update_view(view, c.build_layer(depth), color);
 	}
 
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::TBVH<Shape>& c, glm::vec4 color)
 	{
-		CollisionView view = collision_view(c.get_elements()[0], color);
-		for (size_t i = 1; i < c.get_elements().size(); ++i)
-			view.merge(collision_view(c.get_elements()[i], color));
-		return view;
+		return collision_view(c.get_baked(), color);
+	}
+
+	template<typename Shape>
+	inline CollisionView collision_view(const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
+	{
+		return collision_view(c.build_layer(depth), color);
 	}
 
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, glm::vec4 color)
 	{
-		update_view(view, c.get_elements()[0], color);
-		for (size_t i = 1; i < c.get_elements().size(); ++i)
-			view.merge(collision_view(c.get_elements()[i], color));
+		update_view(view, c.get_baked(), color);
+	}
+
+	template<typename Shape>
+	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
+	{
+		update_view(view, c.build_layer(depth), color);
 	}
 
 	inline CollisionView collision_view(const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f)

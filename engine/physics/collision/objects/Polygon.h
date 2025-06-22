@@ -65,7 +65,7 @@ namespace oly::col2d
 		{
 			TBVH<Shape> bvh;
 			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
-			bvh.elements.resize(convex_polygons.size());
+			bvh.set_elements().resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 			{
 				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);

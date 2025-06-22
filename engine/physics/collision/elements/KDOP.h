@@ -9,7 +9,7 @@
 #include "physics/collision/elements/Common.h"
 #include "physics/collision/Tolerance.h"
 
-#include "core/types/CopyPtr.h"
+#include "core/containers/CopyPtr.h"
 
 #include <array>
 #include <string>
