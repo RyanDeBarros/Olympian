@@ -271,9 +271,9 @@ namespace oly::col2d::internal
 				}
 				else
 					break;
-				++i;
+				--i;
 			}
-			starting_index = unsigned_mod(starting_index + i - 1 + num_deepest_points, n);
+			starting_index = unsigned_mod(starting_index + i + num_deepest_points, n);
 		}
 		return deepest /= (float)num_deepest_points;
 	}

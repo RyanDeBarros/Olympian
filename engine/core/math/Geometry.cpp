@@ -2,6 +2,7 @@
 
 #include "core/math/Coordinates.h"
 #include "core/base/SimpleMath.h"
+#include "core/types/Approximate.h"
 
 namespace oly::math
 {
@@ -116,5 +117,15 @@ namespace oly::math
 	glm::vec2 intersection_by_directions(glm::vec2 p1, UnitVector2D d1, glm::vec2 p2, UnitVector2D d2)
 	{
 		return intersection_by_normals(p1, d1.get_quarter_turn(), p2, d2.get_quarter_turn());
+	}
+
+	bool colinear(glm::vec2 a, glm::vec2 b, glm::vec2 c)
+	{
+		return math::cross(b - a, c - a) == 0;
+	}
+
+	bool near_colinear(glm::vec2 a, glm::vec2 b, glm::vec2 c, double tolerance)
+	{
+		return near_zero(math::cross(b - a, c - a), tolerance);
 	}
 }

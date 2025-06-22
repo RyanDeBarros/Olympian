@@ -633,4 +633,60 @@ namespace oly::math
 
 		return subpolygons;
 	}
+
+	void simplify(Polygon2D& polygon, double tolerance)
+	{
+		size_t i = 0;
+		while (i < polygon.size())
+		{
+			glm::vec2 a = polygon[i];
+			glm::vec2 b = polygon[(i + 1) % polygon.size()];
+			glm::vec2 c = polygon[(i + 2) % polygon.size()];
+			if (near_colinear(a, b, c, tolerance))
+				polygon.erase(polygon.begin() + (i + 1) % polygon.size());
+			else
+				++i;
+		}
+	}
+
+	void simplify(Polygon2D& polygon, Triangulation& triangulation, double tolerance)
+	{
+		glm::uint j = 0;
+		glm::uint num_erased = 0;
+		std::unordered_map<glm::uint, glm::uint> index_map;
+		
+		size_t i = 0;
+		while (i < polygon.size())
+		{
+			glm::vec2 a = polygon[i];
+			glm::vec2 b = polygon[(i + 1) % polygon.size()];
+			glm::vec2 c = polygon[(i + 2) % polygon.size()];
+			if (near_colinear(a, b, c, tolerance))
+			{
+				++num_erased;
+				index_map[j] = glm::uint(-1);
+				polygon.erase(polygon.begin() + (i + 1) % polygon.size());
+			}
+			else
+			{
+				index_map[j] = j - num_erased;
+				++i;
+			}
+			++j;
+		}
+
+		i = 0;
+		while (i < triangulation.size())
+		{
+			glm::uvec3 face = triangulation[i];
+			glm::uvec3 new_face = { index_map.find(face[0])->second, index_map.find(face[1])->second, index_map.find(face[2])->second };
+			if (new_face[0] == glm::uint(-1) || new_face[1] == glm::uint(-1) || new_face[2] == glm::uint(-1))
+				triangulation.erase(triangulation.begin() + i);
+			else
+			{
+				triangulation[i] = new_face;
+				++i;
+			}
+		}
+	}
 }

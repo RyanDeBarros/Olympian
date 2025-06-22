@@ -40,4 +40,6 @@ namespace oly::math
 	extern math::Polygon2D clip_polygon(const math::Polygon2D& polygon, const UnitVector2D& axis, float maximum);
 	extern glm::vec2 intersection_by_normals(glm::vec2 p1, UnitVector2D n1, glm::vec2 p2, UnitVector2D n2);
 	extern glm::vec2 intersection_by_directions(glm::vec2 p1, UnitVector2D d1, glm::vec2 p2, UnitVector2D d2);
+	extern bool colinear(glm::vec2 a, glm::vec2 b, glm::vec2 c);
+	extern bool near_colinear(glm::vec2 a, glm::vec2 b, glm::vec2 c, double tolerance);
 }

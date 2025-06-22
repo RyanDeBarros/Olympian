@@ -26,7 +26,10 @@ namespace oly::col2d
 			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			compound.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
+			{
+				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
 				compound.elements[i] = ConvexHull(std::move(convex_polygons[i]));
+			}
 			return compound;
 		}
 
@@ -36,7 +39,10 @@ namespace oly::col2d
 			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			compound.set_compound().elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
+			{
+				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
 				compound.set_compound().elements[i] = ConvexHull(std::move(convex_polygons[i]));
+			}
 			return compound;
 		}
 
@@ -47,7 +53,10 @@ namespace oly::col2d
 			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			bvh.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
+			{
+				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));
+			}
 			return bvh;
 		}
 
@@ -58,7 +67,10 @@ namespace oly::col2d
 			std::vector<math::Polygon2D> convex_polygons = math::Decompose<false, true>{}(concave_polygon);
 			bvh.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
+			{
+				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));
+			}
 			return bvh;
 		}
 	};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/Geometry.h"
+#include "core/types/Approximate.h"
 
 namespace oly::math
 {
@@ -59,4 +60,9 @@ namespace oly::math
 	};
 
 	using DecomposePolygon = Decompose<false, true>;
+
+	extern void simplify(Polygon2D& polygon, double tolerance = Tolerance<float>);
+	extern void simplify(Polygon2D& polygon, Triangulation& triangulation, double tolerance = Tolerance<float>);
+
+	// TODO simplify polygon/triangulation that cleans adjacent colinear points
 }

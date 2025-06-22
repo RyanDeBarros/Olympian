@@ -81,6 +81,7 @@ namespace oly::col2d
 	inline ElementParam param(const KDOP7& c) { return &c; }
 	inline ElementParam param(const KDOP8& c) { return &c; }
 
+	// TODO implement a collides/contacts for Compound/BVH that uses greedy_collision/greedy_contact
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
 	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 

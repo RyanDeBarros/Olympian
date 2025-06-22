@@ -58,7 +58,7 @@ namespace oly::col2d
 
 	static std::set<UnitVector2D> candidate_axes(const ConvexHull& c)
 	{
-		std::set<UnitVector2D> axes;
+		std::set<UnitVector2D> axes; // TODO use LINEAR_TOLERANCE for sets
 		for (size_t i = 0; i < c.size(); ++i)
 		{
 			axes.insert(c.edge_normal(i));
@@ -119,6 +119,45 @@ namespace oly::col2d
 			}, reference);
 	}
 
+	static void merge_axes(std::set<UnitVector2D>& into, const std::set<UnitVector2D>& from)
+	{
+		for (UnitVector2D v : from)
+		{
+			if (into.empty())
+				into.insert(v);
+			else if (into.size() == 1)
+			{
+				if (!col2d::approx(*into.begin(), v))
+					into.insert(v);
+			}
+			else
+			{
+				auto lb = into.lower_bound(v);
+				if (lb == into.begin())
+				{
+					auto prev = into.rbegin();
+					if (!col2d::approx(*prev, v) && !col2d::approx(*into.begin(), v))
+						into.insert(v);
+				}
+				else
+				{
+					auto prev = lb;
+					--prev;
+					if (lb == into.end())
+					{
+						if (!col2d::approx(*prev, v) && !col2d::approx(*into.begin(), v))
+							into.insert(v);
+					}
+					else
+					{
+						if (!col2d::approx(*prev, v) && !col2d::approx(*lb, v))
+							into.insert(v);
+					}
+				}
+			}
+		}
+	}
+
 	static std::set<UnitVector2D> candidate_axes(ElementParam reference, const Element* others, const size_t num_others)
 	{
 		return std::visit([others, num_others](auto&& c) {
@@ -126,7 +165,7 @@ namespace oly::col2d
 			{
 				std::set<UnitVector2D> axes;
 				for (size_t i = 0; i < num_others; ++i)
-					axes.merge(candidate_axes(*c, param(others[i])));
+					merge_axes(axes, candidate_axes(*c, param(others[i])));
 				return axes;
 			}
 			else
@@ -138,15 +177,17 @@ namespace oly::col2d
 	{
 		std::set<UnitVector2D> axes = candidate_axes(static_element, active_elements, num_active_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
-			axes.merge(candidate_axes(param(active_elements[i]), static_element));
+			merge_axes(axes, candidate_axes(param(active_elements[i]), static_element));
 		return axes;
 	}
 
 	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
 		std::set<UnitVector2D> axes;
+		for (size_t i = 0; i < num_active_elements; ++i)
+			merge_axes(axes, candidate_axes(param(active_elements[i]), static_elements, num_static_elements));
 		for (size_t i = 0; i < num_static_elements; ++i)
-			axes.merge(candidate_axes(active_elements, num_active_elements, param(static_elements[i])));
+			merge_axes(axes, candidate_axes(param(static_elements[i]), active_elements, num_active_elements));
 		return axes;
 	}
 
@@ -176,20 +217,16 @@ namespace oly::col2d
 		float active_min_proj = nmax<float>();
 		for (size_t i = 0; i < num_active_elements; ++i)
 			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
-		float static_max_proj = nmax<float>();
+		float static_max_proj = -nmax<float>();
 		for (size_t i = 0; i < num_static_elements; ++i)
-			static_max_proj = std::min(static_max_proj, projection_max(axis, param(static_elements[i])));
+			static_max_proj = std::max(static_max_proj, projection_max(axis, param(static_elements[i])));
 		return static_max_proj - active_min_proj;
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
 	{
-		// Find candidate separating axes
 		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
-
-		// Iterate through each candidate separating axis
-		// Find the laziest MTV required
-		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
+		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			float sep = separation(axis, active_elements, num_active_elements, static_element);
@@ -197,6 +234,7 @@ namespace oly::col2d
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
+				laziest.overlap = true;
 				laziest.penetration_depth = sep;
 				laziest.unit_impulse = axis;
 			}
@@ -206,12 +244,8 @@ namespace oly::col2d
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		// Find all candidate MTV directions
 		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_elements, num_static_elements);
-
-		// Iterate through each candidate separating axis
-		// Find the laziest MTV required
-		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
+		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements);
@@ -219,6 +253,7 @@ namespace oly::col2d
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
+				laziest.overlap = true;
 				laziest.penetration_depth = sep;
 				laziest.unit_impulse = axis;
 			}

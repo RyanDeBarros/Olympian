@@ -610,7 +610,7 @@ namespace oly::col2d
 			return {
 				.hit = RaycastResult::Hit::TRUE_HIT,
 				.contact = ray.origin + closest_edge_distance * (glm::vec2)ray.direction,
-				.normal = c.edge_normal(closest_idx)
+				.normal = -c.edge_normal(closest_idx)
 			};
 		}
 		else
