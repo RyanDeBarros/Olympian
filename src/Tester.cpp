@@ -44,9 +44,6 @@ int main()
 	oly::get_platform().bind_signal("drag", &PlayerController::drag, pc);
 	oly::get_platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
-	oly::LOG << oly::get_platform().gamepad().connected() << oly::LOG.endl;
-	oly::LOG << oly::get_platform().gamepad().has_mapping() << oly::LOG.endl;
-
 	KeyHandler key_handler;
 	key_handler.attach(&oly::get_platform().window().handlers.key);
 
@@ -120,15 +117,14 @@ int main()
 	}
 
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
-	oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>(); // TODO OBB not working, at least for collision view.
+	oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
+	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
 	player.set_heuristic(oly::col2d::Heuristic::MIN_Y_MIN_X);
 	player.set_local().scale.y = 1.2f;
 	player.set_local().rotation = glm::pi<float>() / 4;
 	
-	//oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 100.0f, .obb_height = 50.0f, .rotation = 0.0f };
 	oly::col2d::Capsule _capsule{ .center = { -100.0f, 0.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = 0.0f };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
-	//oly::col2d::TCompound capsule = { { _capsule.mid_obb() } };
 	capsule.set_local().scale = glm::vec2(3.0f);
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
@@ -229,10 +225,11 @@ int main()
 			player_impulse_cv.clear_view();
 		}
 
-		if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
-			oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-		else
-			oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO either rebuild() itself or just build_layer(2) is not working
+		//if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
+			//oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		//else
+			oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO either rebuild() itself or just build_layer(2) is not working for AABB
+		//oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO build_layer(2) is not working for OBB
 
 		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));

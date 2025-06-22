@@ -126,9 +126,9 @@ namespace oly::col2d
 				}, element);
 		}
 
-		static AABB compute_obb_bounds(const Element& element, glm::vec2 centroid, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
+		static AABB compute_obb_bounds(const Element& element, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
 		{
-			return std::visit([&major_axis, &minor_axis, centroid](auto&& element) -> AABB {
+			return std::visit([&major_axis, &minor_axis](auto&& element) -> AABB {
 				if constexpr (visiting_class_is<decltype(element), Circle>)
 					return { .x1 = (-major_axis).dot(element.deepest_point(-major_axis)), .x2 = major_axis.dot(element.deepest_point(major_axis)),
 							 .y1 = (-minor_axis).dot(element.deepest_point(-minor_axis)), .y2 = minor_axis.dot(element.deepest_point(minor_axis)) };
@@ -137,9 +137,8 @@ namespace oly::col2d
 					AABB bounds = AABB::DEFAULT;
 					for (glm::vec2 point : element.points())
 					{
-						glm::vec2 p = point - centroid;
-						float x = major_axis.dot(p);
-						float y = minor_axis.dot(p);
+						float x = major_axis.dot(point);
+						float y = minor_axis.dot(point);
 
 						bounds.x1 = std::min(bounds.x1, x);
 						bounds.x2 = std::max(bounds.x2, x);
@@ -153,9 +152,8 @@ namespace oly::col2d
 					AABB bounds = AABB::DEFAULT;
 					for (glm::vec2 point : element->points())
 					{
-						glm::vec2 p = point - centroid;
-						float x = major_axis.dot(p);
-						float y = minor_axis.dot(p);
+						float x = major_axis.dot(point);
+						float y = minor_axis.dot(point);
 
 						bounds.x1 = std::min(bounds.x1, x);
 						bounds.x2 = std::max(bounds.x2, x);
@@ -192,14 +190,14 @@ namespace oly::col2d
 			AABB bounds = AABB::DEFAULT;
 			for (size_t i = 0; i < count; ++i)
 			{
-				AABB sub = compute_obb_bounds(elements[i], centroid, major_axis, minor_axis);
+				AABB sub = compute_obb_bounds(elements[i], major_axis, minor_axis);
 				bounds.x1 = std::min(bounds.x1, sub.x1);
 				bounds.x2 = std::max(bounds.x2, sub.x2);
 				bounds.y1 = std::min(bounds.y1, sub.y1);
 				bounds.y2 = std::max(bounds.y2, sub.y2);
 			}
 
-			return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = major_axis.rotation() };
+			return { .center = major_axis.rotation_matrix() * bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = major_axis.rotation()};
 		}
 
 		Circle Wrap<Circle>::operator()(const Element* elements, size_t count) const

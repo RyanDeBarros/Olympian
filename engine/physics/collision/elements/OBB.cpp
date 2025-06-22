@@ -11,8 +11,6 @@ namespace oly::col2d
 {
 	OBB OBB::fast_wrap(const glm::vec2* polygon, size_t count)
 	{
-		OBB obb{};
-
 		glm::vec2 centroid = {};
 		for (size_t i = 0; i < count; ++i)
 			centroid += polygon[i];
@@ -35,14 +33,11 @@ namespace oly::col2d
 		UnitVector2D major_axis = eigenvectors[1];
 		UnitVector2D minor_axis = eigenvectors[0];
 
-		obb.rotation = major_axis.rotation();
-
 		AABB bounds = AABB::DEFAULT;
 		for (size_t i = 0; i < count; ++i)
 		{
-			glm::vec2 p = polygon[i] - centroid;
-			float x = major_axis.dot(p);
-			float y = minor_axis.dot(p);
+			float x = major_axis.dot(polygon[i]);
+			float y = minor_axis.dot(polygon[i]);
 
 			bounds.x1 = std::min(bounds.x1, x);
 			bounds.x2 = std::max(bounds.x2, x);
@@ -50,28 +45,28 @@ namespace oly::col2d
 			bounds.y2 = std::max(bounds.y2, y);
 		}
 
-		return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height() };
+		return { .center = major_axis.rotation_matrix() * bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = major_axis.rotation() };
 	}
 
 	OBB OBB::wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation)
 	{
 		AABB bounds = AABB::DEFAULT;
-		UnitVector2D axis1(rotation);
+		UnitVector2D major_axis(rotation);
 		for (size_t i = 0; i < count; ++i)
 		{
-			float w = axis1.dot(polygon[i]);
+			float w = major_axis.dot(polygon[i]);
 			bounds.x1 = std::min(bounds.x1, w);
 			bounds.x2 = std::max(bounds.x2, w);
 		}
-		UnitVector2D axis2(rotation + glm::half_pi<float>());
+		UnitVector2D minor_axis(rotation + glm::half_pi<float>());
 		for (size_t i = 0; i < count; ++i)
 		{
-			float h = axis2.dot(polygon[i]);
+			float h = minor_axis.dot(polygon[i]);
 			bounds.y1 = std::min(bounds.y1, h);
 			bounds.y2 = std::max(bounds.y2, h);
 		}
 		
-		return { .center = bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = rotation};
+		return { .center = major_axis.rotation_matrix() * bounds.center(), .width = bounds.width(), .height = bounds.height(), .rotation = rotation};
 	}
 
 	OBB OBB::slow_wrap(const glm::vec2* polygon, size_t count)

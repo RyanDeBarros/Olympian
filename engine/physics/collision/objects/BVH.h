@@ -178,17 +178,15 @@ namespace oly::col2d
 
 			Node() = default;
 
-			Node(const Element* elements, size_t start_index, size_t count, size_t* depth)
+			Node(const Element* elements, size_t start_index, size_t count)
 				: start_index(start_index), count(count)
 			{
 				OLY_ASSERT(count > 0);
-				if (depth)
-					++*depth;
 				if (count > 1)
 				{
 					shape.emplace(internal::Wrap<Shape>{}(elements + start_index, count));
-					left = std::make_unique<Node>(elements, start_index, (count + 1) / 2, depth);
-					right = std::make_unique<Node>(elements, start_index + (count + 1) / 2, count / 2, nullptr);
+					left = std::make_unique<Node>(elements, start_index, (count + 1) / 2);
+					right = std::make_unique<Node>(elements, start_index + (count + 1) / 2, count / 2);
 				}
 			}
 
@@ -232,16 +230,12 @@ namespace oly::col2d
 		mutable Node _root;
 		mutable std::vector<Element> elements;
 		mutable bool dirty = true;
+		Heuristic heuristic = Heuristic::MIDPOINT_XY;
 
 	public:
 		Mask mask = 1;
 		Layer layer = 1;
 
-	private:
-		Heuristic heuristic = Heuristic::MIDPOINT_XY;
-		mutable size_t depth = 0;
-
-	public:
 		BVH() = default;
 		explicit BVH(const std::vector<Element>& elements) : elements(elements) {}
 		explicit BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
@@ -252,14 +246,15 @@ namespace oly::col2d
 		Heuristic get_heuristic() const { return heuristic; }
 		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
 
-		size_t get_depth() const { rebuild(); return depth; }
+		size_t get_depth_cap() const { elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)elements.size())); }
 
 	private:
-		void rebuild() const
+		const Node& root() const
 		{
 			if (dirty)
 			{
 				dirty = false;
+				
 				if (heuristic == Heuristic::MIDPOINT_XY)
 					std::sort(elements.begin(), elements.end(), internal::MidpointXY{});
 				else if (heuristic == Heuristic::MIDPOINT_YX)
@@ -280,14 +275,9 @@ namespace oly::col2d
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
 				else if (heuristic == Heuristic::MAX_Y_MAX_X)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
-				depth = 0;
-				_root = Node(elements.data(), 0, elements.size(), &depth); // TODO is there a mathematical way of determining depth? If so, use that instead of rebuilding in get_depth()
-			}
-		}
 
-		const Node& root() const
-		{
-			rebuild();
+				_root = Node(elements.data(), 0, elements.size());
+			}
 			return _root;
 		}
 
@@ -487,7 +477,7 @@ namespace oly::col2d
 
 		Heuristic get_heuristic() const { return _bvh.get_heuristic(); }
 		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
-		size_t get_depth() const { return _bvh.get_depth(); }
+		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
 
 		std::vector<Shape> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
 

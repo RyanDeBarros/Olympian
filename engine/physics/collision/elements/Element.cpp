@@ -58,7 +58,7 @@ namespace oly::col2d
 
 	static std::set<UnitVector2D> candidate_axes(const ConvexHull& c)
 	{
-		std::set<UnitVector2D> axes; // TODO use LINEAR_TOLERANCE for sets
+		std::set<UnitVector2D> axes;
 		for (size_t i = 0; i < c.size(); ++i)
 		{
 			axes.insert(c.edge_normal(i));

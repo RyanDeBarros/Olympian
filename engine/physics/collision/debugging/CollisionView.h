@@ -398,6 +398,8 @@ namespace oly::debug
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
+		if (depth >= c.get_depth_cap())
+			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::collision_view - cannot set depth " << depth << " for BVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
 		return collision_view(c.build_layer(depth), color);
 	}
 
@@ -410,6 +412,8 @@ namespace oly::debug
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
+		if (depth >= c.get_depth_cap())
+			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::update_view - cannot set depth " << depth << " for BVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
 		update_view(view, c.build_layer(depth), color);
 	}
 
@@ -422,6 +426,8 @@ namespace oly::debug
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
+		if (depth >= c.get_depth_cap())
+			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::collision_view - cannot set depth " << depth << " for TBVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
 		return collision_view(c.build_layer(depth), color);
 	}
 
@@ -434,6 +440,8 @@ namespace oly::debug
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
+		if (depth >= c.get_depth_cap())
+			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::update_view - cannot set depth " << depth << " for TBVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
 		update_view(view, c.build_layer(depth), color);
 	}
 
