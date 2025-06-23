@@ -4,6 +4,7 @@
 #include "core/base/Errors.h"
 #include "core/base/Transforms.h"
 #include "core/math/Geometry.h"
+#include "core/math/Triangulation.h"
 #include "core/types/Approximate.h"
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/Common.h"
@@ -128,6 +129,7 @@ namespace oly::col2d
 							break;
 					}
 				}
+				math::simplify(_cache, LINEAR_TOLERANCE);
 				for (size_t i = 0; i < _cache.size(); ++i)
 					_cache[i] = global * _cache[i] + global_offset;
 			}

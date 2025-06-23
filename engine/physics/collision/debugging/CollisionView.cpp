@@ -114,6 +114,12 @@ namespace oly::debug
 		if (other.obj.index() == CollisionObjectViewType::EMPTY)
 			return;
 
+		if (obj.index() == CollisionObjectViewType::EMPTY)
+		{
+			set_view(std::move(other.obj));
+			return;
+		}
+
 		if (obj.index() == CollisionObjectViewType::SINGLE)
 		{
 			CollisionObject old_view = std::move(std::get<CollisionObjectViewType::SINGLE>(obj));

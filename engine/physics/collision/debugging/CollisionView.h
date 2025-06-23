@@ -297,22 +297,12 @@ namespace oly::debug
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)
 	{
-		return std::visit([color](auto&& e) {
-			if constexpr (is_copy_ptr<decltype(e)>)
-				return collision_view(*e, color);
-			else
-				return collision_view(e, color);
-			}, c);
+		return std::visit([color](auto&& e) { return collision_view(*e, color); }, param(c));
 	}
 
 	inline void update_view(CollisionView& view, const col2d::Element& c, glm::vec4 color)
 	{
-		std::visit([&view, color](auto&& e) {
-			if constexpr (is_copy_ptr<decltype(e)>)
-				update_view(view, *e, color);
-			else
-				update_view(view, e, color);
-			}, c);
+		std::visit([&view, color](auto&& e) { update_view(view, *e, color); }, param(c));
 	}
 
 	inline CollisionView collision_view(col2d::ElementParam c, glm::vec4 color)
@@ -398,9 +388,18 @@ namespace oly::debug
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
-		if (depth >= c.get_depth_cap())
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::collision_view - cannot set depth " << depth << " for BVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
-		return collision_view(c.build_layer(depth), color);
+		CollisionView view;
+		auto layer = c.build_layer(depth);
+		for (const auto& e : layer)
+		{
+			std::visit([&view, color] (auto&& e) {
+				if constexpr (visiting_class_is<decltype(e), Shape>)
+					view.merge(collision_view(*e, color));
+				else
+					view.merge(collision_view(e, color));
+				}, e);
+		}
+		return view;
 	}
 
 	template<typename Shape>
@@ -412,9 +411,27 @@ namespace oly::debug
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
-		if (depth >= c.get_depth_cap())
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::update_view - cannot set depth " << depth << " for BVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
-		update_view(view, c.build_layer(depth), color);
+		auto layer = c.build_layer(depth);
+		if (layer.empty())
+			view.clear_view();
+		else
+		{
+			std::visit([&view, color](auto&& e) {
+				if constexpr (visiting_class_is<decltype(e), Shape>)
+					update_view(view, *e, color);
+				else
+					update_view(view, e, color);
+				}, layer[0]);
+			for (size_t i = 1; i < layer.size(); ++i)
+			{
+				std::visit([&view, color](auto&& e) {
+					if constexpr (visiting_class_is<decltype(e), Shape>)
+						view.merge(collision_view(*e, color));
+					else
+						view.merge(collision_view(e, color));
+					}, layer[i]);
+			}
+		}
 	}
 
 	template<typename Shape>
@@ -426,9 +443,18 @@ namespace oly::debug
 	template<typename Shape>
 	inline CollisionView collision_view(const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
-		if (depth >= c.get_depth_cap())
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::collision_view - cannot set depth " << depth << " for TBVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
-		return collision_view(c.build_layer(depth), color);
+		CollisionView view;
+		auto layer = c.build_layer(depth);
+		for (const auto& e : layer)
+		{
+			std::visit([&view, color](auto&& e) {
+				if constexpr (visiting_class_is<decltype(e), Shape>)
+					view.merge(collision_view(*e, color));
+				else
+					view.merge(collision_view(e, color));
+				}, e);
+		}
+		return view;
 	}
 
 	template<typename Shape>
@@ -440,9 +466,27 @@ namespace oly::debug
 	template<typename Shape>
 	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color)
 	{
-		if (depth >= c.get_depth_cap())
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "oly::debug::update_view - cannot set depth " << depth << " for TBVH of depth cap " << c.get_depth_cap() << LOG.end_temp << LOG.nl;
-		update_view(view, c.build_layer(depth), color);
+		auto layer = c.build_layer(depth);
+		if (layer.empty())
+			view.clear_view();
+		else
+		{
+			std::visit([&view, color](auto&& e) {
+				if constexpr (visiting_class_is<decltype(e), Shape>)
+					update_view(view, *e, color);
+				else
+					update_view(view, e, color);
+				}, layer[0]);
+			for (size_t i = 1; i < layer.size(); ++i)
+			{
+				std::visit([&view, color](auto&& e) {
+					if constexpr (visiting_class_is<decltype(e), Shape>)
+						view.merge(collision_view(*e, color));
+					else
+						view.merge(collision_view(e, color));
+					}, layer[i]);
+			}
+		}
 	}
 
 	inline CollisionView collision_view(const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f)

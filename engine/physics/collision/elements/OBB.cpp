@@ -31,7 +31,7 @@ namespace oly::col2d
 		glm::vec2 eigenvectors[2];
 		covariance.solve(nullptr, eigenvectors);
 		UnitVector2D major_axis = eigenvectors[1];
-		UnitVector2D minor_axis = eigenvectors[0];
+		UnitVector2D minor_axis = major_axis.get_quarter_turn();
 
 		AABB bounds = AABB::DEFAULT;
 		for (size_t i = 0; i < count; ++i)

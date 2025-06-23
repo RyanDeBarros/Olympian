@@ -79,11 +79,11 @@ namespace oly::col2d
 					std::visit([&kdop](auto&& element) {
 						for (size_t j = 0; j < K; ++j)
 						{
-							fpair interval = element.projection_interval(KDOP<K>::uniform_axis(j));
+							fpair interval = element->projection_interval(KDOP<K>::uniform_axis(j));
 							kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
 							kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
 						}
-						}, elements[i]);
+						}, param(elements[i]));
 				}
 				return kdop;
 			}
@@ -282,9 +282,9 @@ namespace oly::col2d
 		}
 
 	public:
-		std::vector<Shape> build_layer(size_t at_depth) const
+		std::vector<std::variant<const Shape*, ElementParam>> build_layer(size_t at_depth) const
 		{
-			std::vector<Shape> layer;
+			std::vector<std::variant<const Shape*, ElementParam>> layer;
 			DoubleBuffer<const Node*> nodes;
 			nodes.back().push_back(&root());
 
@@ -295,18 +295,23 @@ namespace oly::col2d
 					return layer;
 				for (const Node* node : nodes.front())
 				{
-					if (node->left)
+					if (node->is_leaf())
+						layer.push_back(param(elements[node->start_index]));
+					else
+					{
 						nodes.back().push_back(node->left.get());
-					if (node->right)
 						nodes.back().push_back(node->right.get());
+					}
 				}
 			}
 
 			nodes.swap();
 			for (const Node* node : nodes.front())
 			{
-				if (node->shape.has_value())
-					layer.push_back(*node->shape);
+				if (node->is_leaf())
+					layer.push_back(param(elements[node->start_index]));
+				else
+					layer.push_back(&*node->shape);
 			}
 			return layer;
 		}
@@ -479,7 +484,7 @@ namespace oly::col2d
 		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
 		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
 
-		std::vector<Shape> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
+		std::vector<std::variant<const Shape*, ElementParam>> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
 
 		OverlapResult point_hits(glm::vec2 test) const { return bvh().point_hits(test); }
 		OverlapResult ray_hits(const Ray& ray) const { return bvh().ray_hits(ray); }

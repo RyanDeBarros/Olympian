@@ -117,8 +117,9 @@ int main()
 	}
 
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
-	oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
+	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
+	oly::col2d::TBVH<oly::col2d::KDOP5> player = star.as_convex_tbvh<oly::col2d::KDOP5>();
 	player.set_heuristic(oly::col2d::Heuristic::MIN_Y_MIN_X);
 	player.set_local().scale.y = 1.2f;
 	player.set_local().rotation = glm::pi<float>() / 4;
@@ -198,7 +199,7 @@ int main()
 		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 0.0f, -50.0f };
 		//player.set_local().position = { 0.0f, 0.0f };
-		//player.set_local().position = { -100.0f, 300.0f };
+		//player.set_local().position = { 500.0f, 0.0f };
 		//player.set_local().position = { 211, -134 };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
@@ -225,11 +226,10 @@ int main()
 			player_impulse_cv.clear_view();
 		}
 
-		//if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
-			//oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-		//else
-			oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO either rebuild() itself or just build_layer(2) is not working for AABB
-		//oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f)); // TODO build_layer(2) is not working for OBB
+		if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
+			oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		else
+			oly::debug::update_view(player_cv, player, 2, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
 
 		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));

@@ -282,11 +282,8 @@ namespace oly::col2d
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
 			std::visit([&contact, &active_depth, axis = -collision.unit_impulse](auto&& ae) {
-				if constexpr (is_copy_ptr<decltype(ae)>)
-					update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				else
-					update_feature(ae.deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				}, active_elements[i]);
+				update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
+				}, param(active_elements[i]));
 		}
 
 		contact.static_feature.impulse = -collision.mtv();
@@ -316,11 +313,8 @@ namespace oly::col2d
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
 			std::visit([&contact, &active_depth, axis = -collision.unit_impulse](auto&& ae) {
-				if constexpr (is_copy_ptr<decltype(ae)>)
-					update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				else
-					update_feature(ae.deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				}, active_elements[i]);
+				update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
+				}, param(active_elements[i]));
 		}
 
 		contact.static_feature.impulse = -collision.mtv();
@@ -328,11 +322,8 @@ namespace oly::col2d
 		for (size_t i = 0; i < num_static_elements; ++i)
 		{
 			std::visit([&contact, &static_depth, axis = collision.unit_impulse](auto&& se) {
-				if constexpr (is_copy_ptr<decltype(se)>)
-					update_feature(se->deepest_point(axis), axis, static_depth, contact.static_feature.position);
-				else
-					update_feature(se.deepest_point(axis), axis, static_depth, contact.static_feature.position);
-				}, static_elements[i]);
+				update_feature(se->deepest_point(axis), axis, static_depth, contact.static_feature.position);
+				}, param(static_elements[i]));
 		}
 
 		return contact;
