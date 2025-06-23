@@ -100,10 +100,32 @@ namespace oly::rendering
 		graphics::quad_indices(context::ellipse_batch().ebo.draw_primitive().data(), pos.get());
 	}
 
+	Ellipse::Ellipse(float r, glm::vec4 color)
+	{
+		ellipse.set_dimension().rx = r;
+		ellipse.set_dimension().ry = r;
+		set_color(color);
+	}
+
+	Ellipse::Ellipse(float rx, float ry, glm::vec4 color)
+	{
+		ellipse.set_dimension().rx = rx;
+		ellipse.set_dimension().ry = ry;
+		set_color(color);
+	}
+
 	void Ellipse::draw() const
 	{
 		if (transformer.flush())
 			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
 		ellipse.draw();
+	}
+
+	void Ellipse::set_color(glm::vec4 color)
+	{
+		ellipse.set_color().fill_inner = color;
+		ellipse.set_color().fill_outer = color;
+		ellipse.set_color().border_inner = color;
+		ellipse.set_color().border_outer = color;
 	}
 }

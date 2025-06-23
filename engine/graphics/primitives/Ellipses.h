@@ -31,10 +31,10 @@ namespace oly::rendering
 			float fill_exp = 0.0f, border_exp = 0.0f;
 		};
 		struct ColorGradient {
-			glm::vec4 fill_inner;
-			glm::vec4 fill_outer;
-			glm::vec4 border_inner;
-			glm::vec4 border_outer;
+			glm::vec4 fill_inner = glm::vec4(1.0f);
+			glm::vec4 fill_outer = glm::vec4(1.0f);
+			glm::vec4 border_inner = glm::vec4(1.0f);
+			glm::vec4 border_outer = glm::vec4(1.0f);
 		};
 
 	private:
@@ -102,6 +102,8 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		Ellipse() = default;
+		Ellipse(float r, glm::vec4 color = glm::vec4(1.0f));
+		Ellipse(float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(const Ellipse&) = default;
 		Ellipse(Ellipse&&) noexcept = default;
 		Ellipse& operator=(const Ellipse&) = default;
@@ -111,5 +113,7 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		void draw() const;
+
+		void set_color(glm::vec4 color);
 	};
 }

@@ -519,7 +519,7 @@ namespace oly::col2d
 	OverlapResult ray_hits(const OBB& c, const Ray& ray)
 	{
 		auto proj = c.get_major_axis_projection_interval();
-		if (internal::ray_hits_slab(proj.first, proj.second, ray, c.get_major_axis()))
+		if (!internal::ray_hits_slab(proj.first, proj.second, ray, c.get_major_axis()))
 			return false;
 		proj = c.get_minor_axis_projection_interval();
 		return internal::ray_hits_slab(proj.first, proj.second, ray, c.get_minor_axis());
