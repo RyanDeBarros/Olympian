@@ -84,22 +84,22 @@ int main()
 
 	//oly::col2d::AABB block{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
 	//oly::col2d::OBB block{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
-	oly::col2d::TPrimitive block(oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f));
+	//oly::col2d::TPrimitive block(oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f));
 	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -200.0f, .x2 = 50.0f, .y1 = -200.0f, .y2 = 300.0f } };
 	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
 	//oly::col2d::TPrimitive block(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
 
-	//std::vector<glm::vec2> _pts;
-	//const int _npts = 5;
-	//for (int i = 0; i < _npts; ++i)
-	//{
-	//	glm::vec2 p;
-	//	const float radius = 100.0f;
-	//	p.x = radius * glm::cos((float)i * glm::two_pi<float>() / (float)_npts);
-	//	p.y = radius * glm::sin((float)i * glm::two_pi<float>() / (float)_npts);
-	//	_pts.push_back(p);
-	//}
-	//oly::col2d::TPrimitive block = { oly::col2d::ConvexHull(std::move(_pts)) };
+	std::vector<glm::vec2> _pts;
+	const int _npts = 5;
+	for (int i = 0; i < _npts; ++i)
+	{
+		glm::vec2 p;
+		const float radius = 100.0f;
+		p.x = radius * glm::cos((float)i * glm::two_pi<float>() / (float)_npts);
+		p.y = radius * glm::sin((float)i * glm::two_pi<float>() / (float)_npts);
+		_pts.push_back(p);
+	}
+	oly::col2d::TPrimitive block(oly::col2d::ConvexHull(std::move(_pts)));
 	block.set_local().position.y = -100.0f;
 	block.set_local().scale.x = 2.0f;
 	block.set_local().rotation = glm::pi<float>() / 8;
@@ -203,17 +203,19 @@ int main()
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);
-		bool player_block_overlap = oly::col2d::overlaps(player, block);
+		//bool player_block_overlap = oly::col2d::overlaps(player, block);
 		//bool player_block_overlap = oly::col2d::overlaps(player, capsule);
+		bool player_block_overlap = std::visit([&block](auto&& player) { return std::visit([player](auto&& block) { return oly::col2d::gjk::overlaps(*player, *block); }, param(block.get_baked())); }, param(player.get_baked()));
 
-		auto collide = oly::col2d::collides(player, block);
+		//auto collide = oly::col2d::collides(player, block);
 		//auto collide = oly::col2d::collides(player, capsule);
 		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		auto contact = oly::col2d::contacts(player, block);
+		//auto contact = oly::col2d::contacts(player, block);
 		//auto contact = oly::col2d::contacts(player, capsule);
+		auto contact = std::visit([&block](auto&& player) { return std::visit([player](auto&& block) { return oly::col2d::gjk::contacts(*player, *block); }, param(block.get_baked())); }, param(player.get_baked()));
 
-		if (collide.overlap)
-			oly::LOG << collide.mtv() << oly::LOG.nl;
+		//if (collide.overlap)
+			//oly::LOG << collide.mtv() << oly::LOG.nl;
 
 		bool ray_hits = oly::col2d::ray_hits(player, ray);
 
@@ -233,7 +235,7 @@ int main()
 		//else
 			//oly::debug::update_view(player_cv, player, 2, (point_hits ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
 		
-		oly::debug::update_view(player_cv, player, (collide.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
 
 		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
