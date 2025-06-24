@@ -161,16 +161,16 @@ namespace oly::col2d
 		return info;
 	}
 
-	static float circle_penetration_depth(const Circle& c1, const Circle& c2, const UnitVector2D& axis)
+	static float circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& axis)
 	{
 		auto [min1, max1] = c1.projection_interval(axis);
 		auto [min2, max2] = c2.projection_interval(axis);
-		return std::min(max1, max2) - std::max(min1, min2);
+		return sat::internal::sat(min1, max1, min2, max2, axis);
 	}
 
 	static bool circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& minimizing_axis, float& depth)
 	{
-		float left = 0.0f, right = glm::pi<float>();
+		float left = -glm::pi<float>(), right = glm::pi<float>();
 		for (size_t i = 0; i < golden_iterations(1.0f / 360.0f) && right > left; ++i)
 		{
 			float m1 = right - (right - left) * inv_golden_ratio();
@@ -201,8 +201,6 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const Circle& c1, const Circle& c2)
 	{
-		return gjk::overlaps(c1, c2);
-
 		if (internal::CircleGlobalAccess::has_no_global(c1) && internal::CircleGlobalAccess::has_no_global(c2))
 		{
 			float dist_sqrd = math::mag_sqrd(c2.center - c1.center);
@@ -249,7 +247,7 @@ namespace oly::col2d
 			if (!circle_penetration_depth(c1, c2, axis, depth))
 				return { .overlap = false };
 
-			return CollisionResult{ .overlap = true, .penetration_depth = depth, .unit_impulse = axis.dot(c1.center - c2.center) > 0.0f ? axis : -axis };
+			return CollisionResult{ .overlap = true, .penetration_depth = depth, .unit_impulse = axis };
 		}
 	}
 
@@ -282,12 +280,8 @@ namespace oly::col2d
 			if (!circle_penetration_depth(c1, c2, axis, depth))
 				return { .overlap = false };
 
-			ContactResult info{ .overlap = true };
-			if (axis.dot(c1.center - c2.center) < 0.0f)
-				axis = -axis;
-			info.active_feature = { .position = c1.deepest_point(-axis), .impulse = depth * (glm::vec2)axis };
-			info.static_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis };
-			return info;
+			return ContactResult{ .overlap = true, .active_feature = { .position = c1.deepest_point(-axis), .impulse = depth * (glm::vec2)axis },
+				.static_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis } };
 		}
 	}
 
