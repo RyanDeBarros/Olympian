@@ -4,6 +4,38 @@
 
 namespace oly::col2d
 {
+	float Compound::projection_max(const UnitVector2D& axis) const
+	{
+		float proj_max = -nmax<float>();
+		for (const Element& element : elements)
+			proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+		return proj_max;
+	}
+	
+	float Compound::projection_min(const UnitVector2D& axis) const
+	{
+		float proj_min = nmax<float>();
+		for (const Element& element : elements)
+			proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+		return proj_min;
+	}
+
+	float TCompound::projection_max(const UnitVector2D& axis) const
+	{
+		float proj_max = -nmax<float>();
+		for (const Element& element : get_baked())
+			proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+		return proj_max;
+	}
+
+	float TCompound::projection_min(const UnitVector2D& axis) const
+	{
+		float proj_min = nmax<float>();
+		for (const Element& element : get_baked())
+			proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+		return proj_min;
+	}
+
 	OverlapResult point_hits(const Compound& c, glm::vec2 test)
 	{
 		for (const auto& element : c.elements)

@@ -9,11 +9,12 @@ namespace oly::col2d
 	struct RectCast
 	{
 		Ray ray;
-		float width, height;
+		float width, depth;
 
-		OBB finite_obb() const
+		OBB finite_obb(float infinite_clip = 0.0f) const
 		{
-			return OBB{ .center = ray.origin + 0.5f * ray.clip * (glm::vec2)ray.direction, .width = width + ray.clip, .height = height, .rotation = ray.direction.rotation() };
+			float clip = ray.clip == 0.0f ? infinite_clip : ray.clip;
+			return OBB{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .width = depth + clip, .height = width, .rotation = ray.direction.rotation() };
 		}
 	};
 
@@ -22,9 +23,10 @@ namespace oly::col2d
 		Ray ray;
 		float radius;
 
-		Capsule finite_capsule() const
+		Capsule finite_capsule(float infinite_clip = 0.0f) const
 		{
-			return Capsule{ .center = ray.origin + 0.5f * ray.clip * (glm::vec2)ray.direction, .obb_width = 2.0f * radius, .obb_height = ray.clip, .rotation = ray.direction.rotation() };
+			float clip = ray.clip == 0.0f ? infinite_clip : ray.clip;
+			return Capsule{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .obb_width = 2.0f * radius, .obb_height = clip, .rotation = (-ray.direction.get_quarter_turn()).rotation()};
 		}
 	};
 
@@ -35,10 +37,10 @@ namespace oly::col2d
 		{
 			RectCast finite = cast;
 			finite.ray.clip = std::max(c.projection_max(cast.ray.direction) - cast.ray.direction.dot(cast.ray.origin), 0.0f);
-			return overlaps(c, finite.finite_obb());
+			return overlaps(c, param(finite.finite_obb()));
 		}
 		else
-			return overlaps(c, cast.finite_obb());
+			return overlaps(c, param(cast.finite_obb()));
 	}
 
 	template<typename Shape>

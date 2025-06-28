@@ -316,6 +316,22 @@ namespace oly::col2d
 			return layer;
 		}
 
+		float projection_max(const UnitVector2D& axis) const
+		{
+			float proj_max = -nmax<float>();
+			for (const Element& element : elements)
+				proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+			return proj_max;
+		}
+
+		float projection_min(const UnitVector2D& axis) const
+		{
+			float proj_min = nmax<float>();
+			for (const Element& element : elements)
+				proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+			return proj_min;
+		}
+
 		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), elements.data(), test); }
 		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), elements.data(), ray); }
 		RaycastResult raycast(const Ray& ray) const { return raycast(root(), elements.data(), ray); }
@@ -485,6 +501,22 @@ namespace oly::col2d
 		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
 
 		std::vector<std::variant<const Shape*, ElementParam>> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
+
+		float projection_max(const UnitVector2D& axis) const
+		{
+			float proj_max = -nmax<float>();
+			for (const Element& element : bvh().get_elements())
+				proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+			return proj_max;
+		}
+
+		float projection_min(const UnitVector2D& axis) const
+		{
+			float proj_min = nmax<float>();
+			for (const Element& element : bvh().get_elements())
+				proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+			return proj_min;
+		}
 
 		OverlapResult point_hits(glm::vec2 test) const { return bvh().point_hits(test); }
 		OverlapResult ray_hits(const Ray& ray) const { return bvh().ray_hits(ray); }

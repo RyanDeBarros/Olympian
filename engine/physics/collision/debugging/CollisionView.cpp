@@ -85,15 +85,30 @@ namespace oly::debug
 		return *this;
 	}
 
-	void CollisionView::draw() const
+	void CollisionView::draw(context::InternalBatch& current_batch) const
 	{
-		static const auto draw_object = [](auto&& obj) { std::visit([](auto&& obj) { obj.draw(); }, obj); };
-		std::visit([](auto&& view) {
+		// LATER specialized shader for collision view
+		static const auto draw_object = [](auto&& obj, context::InternalBatch& current_batch) { std::visit([&current_batch](auto&& obj) {
+			if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
+			{
+				if (current_batch == context::InternalBatch::POLYGON)
+					context::render_polygons();
+				current_batch = context::InternalBatch::ELLIPSE;
+			}
+			else
+			{
+				if (current_batch == context::InternalBatch::ELLIPSE)
+					context::render_ellipses();
+				current_batch = context::InternalBatch::POLYGON;
+			}
+			obj.draw();
+			}, obj); };
+		std::visit([&current_batch](auto&& view) {
 			if constexpr (visiting_class_is<decltype(view), CollisionObject>)
-				draw_object(view);
+				draw_object(view, current_batch);
 			else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
 				for (const auto& obj : view)
-					draw_object(obj);
+					draw_object(obj, current_batch);
 			}, obj);
 	}
 
@@ -309,8 +324,9 @@ namespace oly::debug
 		if (was_blending)
 			glDisable(GL_BLEND);
 
+		context::InternalBatch current_batch = context::InternalBatch::NONE;
 		for (const auto& collision_view : collision_views)
-			collision_view->draw();
+			collision_view->draw(current_batch);
 		context::render_polygons();
 		context::render_ellipses();
 

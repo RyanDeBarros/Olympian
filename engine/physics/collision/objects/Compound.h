@@ -14,6 +14,9 @@ namespace oly::col2d
 
 		Mask mask = 1;
 		Layer layer = 1;
+
+		float projection_max(const UnitVector2D& axis) const;
+		float projection_min(const UnitVector2D& axis) const;
 	};
 
 	class TCompound
@@ -44,6 +47,9 @@ namespace oly::col2d
 		Mask& mask() { return compound.mask; }
 		Layer layer() const { return compound.layer; }
 		Layer& layer() { return compound.layer; }
+
+		float projection_max(const UnitVector2D& axis) const;
+		float projection_min(const UnitVector2D& axis) const;
 	};
 
 	namespace internal

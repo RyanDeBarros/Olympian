@@ -3,6 +3,7 @@
 #include "physics/collision/objects/Primitive.h"
 #include "physics/collision/objects/Compound.h"
 #include "physics/collision/objects/BVH.h"
+#include "physics/collision/methods/SpecialCasting.h"
 
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/primitives/Polygons.h"
@@ -49,7 +50,10 @@ namespace oly::debug
 		CollisionView& operator=(const CollisionView&);
 		CollisionView& operator=(CollisionView&&) noexcept;
 
-		void draw() const;
+	private:
+		void draw(context::InternalBatch& current_batch) const;
+
+	public:
 		void clear_view();
 		void set_view(CollisionObjectView&& obj);
 		void merge(CollisionView&& other);
@@ -536,13 +540,16 @@ namespace oly::debug
 		}
 	}
 
+	constexpr float INFINITE_RAY_LENGTH = 1'000'000.0f;
+
 	inline CollisionView collision_view(const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f)
 	{
 		rendering::StaticArrowExtension arrow;
 		arrow.set_color(color);
 		arrow.adjust_standard_head_for_width(arrow_width);
 		arrow.set_start() = ray.origin;
-		arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+		float clip = ray.clip == 0.0f ? INFINITE_RAY_LENGTH : ray.clip;
+		arrow.set_end() = ray.origin + clip * (glm::vec2)ray.direction;
 		return CollisionView(std::move(arrow));
 	}
 
@@ -569,7 +576,7 @@ namespace oly::debug
 			arrow.set_color(color);
 			arrow.adjust_standard_head_for_width(arrow_width);
 			arrow.set_start() = ray.origin;
-			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
 			view.view_changed();
 		}
 		else
@@ -578,7 +585,7 @@ namespace oly::debug
 			arrow.set_color(color);
 			arrow.adjust_standard_head_for_width(arrow_width);
 			arrow.set_start() = ray.origin;
-			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + 1'000'000.0f * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
 			view.set_view(std::move(arrow));
 		}
 	}
@@ -603,5 +610,32 @@ namespace oly::debug
 		}
 		else
 			view.clear_view();
+	}
+
+	inline CollisionView collision_view(const col2d::RectCast& cast, glm::vec4 color, glm::vec4 arrow_color)
+	{
+		CollisionView view = collision_view(cast.finite_obb(INFINITE_RAY_LENGTH), color);
+		view.merge(collision_view(cast.ray, arrow_color));
+		return view;
+	}
+
+	inline void update_view(CollisionView& view, const col2d::RectCast& cast, glm::vec4 color, glm::vec4 arrow_color)
+	{
+		update_view(view, cast.finite_obb(INFINITE_RAY_LENGTH), color);
+		view.merge(collision_view(cast.ray, arrow_color));
+	}
+
+	inline CollisionView collision_view(const col2d::CircleCast& cast, glm::vec4 color, glm::vec4 arrow_color)
+	{
+		CollisionView view = collision_view(cast.finite_capsule(INFINITE_RAY_LENGTH).compound(), color);
+		view.merge(collision_view(cast.ray, arrow_color));
+		return view;
+	}
+
+	// LATER update_view can be better specialized. can check if view is vector of #X objects, and individually update them.
+	inline void update_view(CollisionView& view, const col2d::CircleCast& cast, glm::vec4 color, glm::vec4 arrow_color)
+	{
+		update_view(view, cast.finite_capsule(INFINITE_RAY_LENGTH).compound(), color);
+		view.merge(collision_view(cast.ray, arrow_color));
 	}
 }

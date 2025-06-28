@@ -130,6 +130,11 @@ int main()
 	capsule.set_local().scale = glm::vec2(3.0f);
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
+	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .width = 25.0f, .depth = 15.0f};
+	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .width = 25.0f, .depth = 15.0f};
+	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
+	//oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .radius = 25.0f };
+
 	// LATER anti-aliasing settings
 	
 	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) {
@@ -152,6 +157,8 @@ int main()
 	oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	//oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+	//oly::debug::CollisionView rect_cast_cv = oly::debug::collision_view(rect_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 	player_cv.assign(player_layer);
 	block_cv.assign(obstacle_layer);
@@ -159,6 +166,8 @@ int main()
 	block_impulse_cv.assign(impulse_layer);
 	ray_cv.assign(ray_layer);
 	raycast_result_cv.assign(raycast_result_layer);
+	//rect_cast_cv.assign(ray_layer);
+	circle_cast_cv.assign(ray_layer);
 
 	// LATER begin play on initial actors here
 
@@ -199,20 +208,17 @@ int main()
 
 		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 0.0f, 0.0f };
-		//player.set_local().position = { -550.0f, -250.0f };
+		//player.set_local().position = { -57.0f, -23.0f };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);
-		//bool player_block_overlap = oly::col2d::overlaps(player, block);
+		bool player_block_overlap = oly::col2d::overlaps(player, block);
 		//bool player_block_overlap = oly::col2d::overlaps(player, capsule);
-		bool player_block_overlap = std::visit([&block](auto&& player) { return std::visit([player](auto&& block) { return oly::col2d::gjk::overlaps(*player, *block); }, param(block.get_baked())); }, param(player.get_baked()));
 
-		//auto collide = oly::col2d::collides(player, block);
+		auto collide = oly::col2d::collides(player, block);
 		//auto collide = oly::col2d::collides(player, capsule);
-		//auto contact = oly::col2d::gjk::contacts(circ, aabb); // TODO this breaks when circle comes into AABB from left or top.
-		//auto contact = oly::col2d::contacts(player, block);
+		auto contact = oly::col2d::contacts(player, block);
 		//auto contact = oly::col2d::contacts(player, capsule);
-		auto contact = std::visit([&block](auto&& player) { return std::visit([player](auto&& block) { return oly::col2d::gjk::contacts(*player, *block); }, param(block.get_baked())); }, param(player.get_baked()));
 
 		//if (collide.overlap)
 			//oly::LOG << collide.mtv() << oly::LOG.nl;
@@ -235,7 +241,10 @@ int main()
 		//else
 			//oly::debug::update_view(player_cv, player, 2, (point_hits ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
 		
-		oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		//oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
+		//bool special_cast_overlap = oly::col2d::rect_cast_hits(player, rect_cast);
+		bool special_cast_overlap = oly::col2d::circle_cast_hits(player, circle_cast);
+		oly::debug::update_view(player_cv, player, (special_cast_overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
 
 		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
 		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
