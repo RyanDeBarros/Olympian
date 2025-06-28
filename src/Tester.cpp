@@ -104,7 +104,7 @@ int main()
 	block.set_local().scale.x = 2.0f;
 	block.set_local().rotation = glm::pi<float>() / 8;
 
-	oly::col2d::TPrimitive player(oly::col2d::Circle({}, 50.0f));
+	//oly::col2d::TPrimitive player(oly::col2d::Circle({}, 50.0f));
 	//oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	oly::col2d::PolygonCollision star;
 	const int num_star_points = 5;
@@ -116,7 +116,7 @@ int main()
 		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
 	}
 
-	//oly::col2d::TCompound player = star.as_convex_tcompound();
+	oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
 	//oly::col2d::TBVH<oly::col2d::KDOP5> player = star.as_convex_tbvh<oly::col2d::KDOP5>();
@@ -208,7 +208,7 @@ int main()
 
 		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 0.0f, 0.0f };
-		//player.set_local().position = { -57.0f, -23.0f };
+		//player.set_local().position = { -50.0f, -50.0f };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);

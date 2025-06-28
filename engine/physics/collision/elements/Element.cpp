@@ -261,71 +261,114 @@ namespace oly::col2d
 		return laziest;
 	}
 
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, ElementParam static_element, size_t& most_significant_active_element)
 	{
-		CollisionResult collision = compound_collision(active_elements, num_active_elements, static_element);
-		ContactResult contact{ .overlap = collision.overlap };
-		if (!contact.overlap)
-			return contact;
-
-		static const auto update_feature = [](glm::vec2 pt, const UnitVector2D& axis, float& max_depth, glm::vec2& contact_position) {
-			float depth = axis.dot(pt);
-			if (depth > max_depth)
-			{
-				max_depth = depth;
-				contact_position = pt;
-			}
-			};
-
-		contact.active_feature.impulse = collision.mtv();
-		float active_depth = -nmax<float>();
+		// Find what length is necessary to separate compound objects along axis, and which element contributes the largest translation
+		float active_min_proj = nmax<float>();
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
-			std::visit([&contact, &active_depth, axis = -collision.unit_impulse](auto&& ae) {
-				update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				}, param(active_elements[i]));
+			float proj = projection_min(axis, param(active_elements[i]));
+			if (proj < active_min_proj)
+			{
+				active_min_proj = proj;
+				most_significant_active_element = i;
+			}
+		}
+		float static_max_proj = projection_max(axis, static_element);
+		return static_max_proj - active_min_proj;
+	}
+
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements,
+		size_t& most_significant_active_element, size_t& most_significant_static_element)
+	{
+		// Find what length is necessary to separate compound objects along axis, and which element contributes the largest translation
+		float active_min_proj = nmax<float>();
+		for (size_t i = 0; i < num_active_elements; ++i)
+		{
+			float proj = projection_min(axis, param(active_elements[i]));
+			if (proj < active_min_proj)
+			{
+				active_min_proj = proj;
+				most_significant_active_element = i;
+			}
+		}
+		float static_max_proj = -nmax<float>();
+		for (size_t i = 0; i < num_static_elements; ++i)
+		{
+			float proj = projection_max(axis, param(static_elements[i]));
+			if (proj > static_max_proj)
+			{
+				static_max_proj = proj;
+				most_significant_static_element = i;
+			}
+		}
+		return static_max_proj - active_min_proj;
+	}
+
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	{
+		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
+		size_t most_significant_active_element = 0;
+
+		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
+		for (const UnitVector2D& axis : separating_axes)
+		{
+			size_t _most_significant_active_element;
+			float sep = separation(axis, active_elements, num_active_elements, static_element, _most_significant_active_element);
+			if (sep < 0.0f)
+				return { .overlap = false };
+			else if (sep < laziest.penetration_depth)
+			{
+				laziest.overlap = true;
+				laziest.penetration_depth = sep;
+				laziest.unit_impulse = axis;
+				most_significant_active_element = _most_significant_active_element;
+			}
 		}
 
-		contact.static_feature.impulse = -collision.mtv();
-		contact.static_feature.position = std::visit([axis = collision.unit_impulse](auto&& se) { return se->deepest_point(axis); }, static_element);
+		ContactResult contact{ .overlap = laziest.overlap };
+		if (contact.overlap)
+		{
+			contact.active_feature.impulse = laziest.mtv();
+			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
 
+			contact.static_feature.impulse = -laziest.mtv();
+			contact.static_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, static_element);
+		}
 		return contact;
 	}
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		CollisionResult collision = compound_collision(active_elements, num_active_elements, static_elements, num_static_elements);
-		ContactResult contact{ .overlap = collision.overlap };
-		if (!contact.overlap)
-			return contact;
+		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
+		size_t most_significant_active_element = 0, most_significant_static_element = 0;
 
-		static const auto update_feature = [](glm::vec2 pt, const UnitVector2D& axis, float& max_depth, glm::vec2& contact_position) {
-			float depth = axis.dot(pt);
-			if (depth > max_depth)
+		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_elements, num_static_elements);
+		for (const UnitVector2D& axis : separating_axes)
+		{
+			size_t _most_significant_active_element, _most_significant_static_element;
+			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, _most_significant_active_element, _most_significant_static_element);
+			if (sep < 0.0f)
+				return { .overlap = false };
+			else if (sep < laziest.penetration_depth)
 			{
-				max_depth = depth;
-				contact_position = pt;
+				laziest.overlap = true;
+				laziest.penetration_depth = sep;
+				laziest.unit_impulse = axis;
+				most_significant_active_element = _most_significant_active_element;
+				most_significant_static_element = _most_significant_static_element;
 			}
-			};
-
-		contact.active_feature.impulse = collision.mtv();
-		float active_depth = -nmax<float>();
-		for (size_t i = 0; i < num_active_elements; ++i)
-		{
-			std::visit([&contact, &active_depth, axis = -collision.unit_impulse](auto&& ae) {
-				update_feature(ae->deepest_point(axis), axis, active_depth, contact.active_feature.position);
-				}, param(active_elements[i]));
 		}
 
-		contact.static_feature.impulse = -collision.mtv();
-		float static_depth = -nmax<float>();
-		for (size_t i = 0; i < num_static_elements; ++i)
+		ContactResult contact{ .overlap = laziest.overlap };
+		if (contact.overlap)
 		{
-			std::visit([&contact, &static_depth, axis = collision.unit_impulse](auto&& se) {
-				update_feature(se->deepest_point(axis), axis, static_depth, contact.static_feature.position);
-				}, param(static_elements[i]));
-		}
+			contact.active_feature.impulse = laziest.mtv();
+			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
 
+			contact.static_feature.impulse = -laziest.mtv();
+			contact.static_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, param(static_elements[most_significant_static_element]));
+		}
 		return contact;
 	}
 
