@@ -95,7 +95,6 @@ namespace oly::rendering
 			Capacity(GLuint initial_glyphs, GLuint new_textures, GLuint new_text_colors = 0, GLuint new_modulations = 0)
 				: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 			{
-				// TODO there seems to be an issue if the initial_glyphs passed is 0. The process gets stuck in TextGlyph constructor.
 				OLY_ASSERT(4 * initial_glyphs <= nmax<unsigned int>());
 				OLY_ASSERT(text_colors <= 1000); // TODO here and elsewhere, enforce this constraint when resizing -> add max_size to mutable specialized buffers
 				OLY_ASSERT(modulations <= 250);

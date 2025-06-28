@@ -14,7 +14,6 @@ namespace oly::platform
 	struct WRDrawer;
 	struct WRViewport : public EventHandler<input::WindowResizeEventData>
 	{
-		// TODO put boxed and stretch in context file
 		bool boxed = true;
 		bool stretch = true;
 

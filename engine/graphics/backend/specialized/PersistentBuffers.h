@@ -32,6 +32,8 @@ namespace oly::graphics
 		PersistentGPUBuffer(GLuint size)
 			: size(size)
 		{
+			if (size == 0)
+				throw Error(ErrorCode::NULL_STORAGE);
 			glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 			data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 		}
@@ -79,7 +81,8 @@ namespace oly::graphics
 
 		void grow()
 		{
-			grow((GLuint)(options.grow_multiplier * size));
+			GLuint new_size = (GLuint)(options.grow_multiplier * size);
+			grow(new_size > size ? new_size : size + 1);
 		}
 
 		void grow(GLuint new_size)
@@ -239,7 +242,8 @@ namespace oly::graphics
 		void grow()
 		{
 			static_assert(n < N);
-			grow<n>((GLuint)(options.grow_multiplier * size[n]));
+			GLuint new_size = (GLuint)(options.grow_multiplier * size[n]);
+			grow<n>(new_size > size[n] ? new_size : size[n] + 1);
 		}
 
 		template<size_t n>

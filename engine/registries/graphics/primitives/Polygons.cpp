@@ -202,7 +202,7 @@ namespace oly::reg
 			case params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION:
 			{
 				const auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
-				composite.composite = cmath::composite_convex_decomposition(m.points);
+				composite.composite = cmath::Decompose{}(m.points);
 				break;
 			}
 			}
@@ -238,7 +238,7 @@ namespace oly::reg
 			case params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION:
 			{
 				auto& m = std::get<params::PolyComposite::MethodIndex::CONVEX_DECOMPOSITION>(method);
-				composite.composite = cmath::composite_convex_decomposition(m.points);
+				composite.composite = cmath::Decompose{}(m.points);
 				break;
 			}
 			}

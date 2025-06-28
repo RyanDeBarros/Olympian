@@ -133,7 +133,15 @@ namespace oly::context
 		}
 	}
 
-#undef INIT_REGISTRY
+	static void init_viewport(const TOMLNode& node)
+	{
+		internal::wr_viewport.boxed = node["window"]["boxed"].value_or<bool>(true);
+		internal::wr_viewport.stretch = node["window"]["stretch"].value_or<bool>(true);
+
+		platform::internal::invoke_initialize_viewport(internal::wr_viewport);
+		internal::wr_viewport.attach(&internal::platform->window().handlers.window_resize);
+		internal::wr_drawer.attach(&internal::platform->window().handlers.window_resize);
+	}
 }
 
 namespace oly::context
@@ -163,10 +171,9 @@ namespace oly::context
 		init_text_batch(toml_context);
 		
 		autoload_signals(toml_context);
+		init_viewport(toml_context);
 
-		platform::internal::invoke_initialize_viewport(internal::wr_viewport);
-		internal::wr_viewport.attach(&internal::platform->window().handlers.window_resize);
-		internal::wr_drawer.attach(&internal::platform->window().handlers.window_resize);
+		oly::internal::check_errors();
 	}
 
 	static void terminate()

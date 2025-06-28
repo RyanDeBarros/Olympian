@@ -5,21 +5,21 @@
 
 namespace oly::cmath
 {
-	Polygon2DComposite decompose_polygon(const Polygon2D& polygon)
+	Polygon2DComposite Decompose::operator()(const Polygon2D& polygon) const
 	{
 		OLY_ASSERT(polygon.points.size() >= 3);
 		std::vector<math::Triangulation> decomposition = math::Decompose<true, false>{}(polygon.points);
-		return decompose_polygon(polygon, decomposition);
+		return Decompose{}(polygon, decomposition);
 	}
 
-	Polygon2DComposite decompose_polygon(const Polygon2D& polygon, const math::Triangulation& triangulation)
+	Polygon2DComposite Decompose::operator()(const Polygon2D& polygon, const math::Triangulation& triangulation) const
 	{
 		OLY_ASSERT(polygon.points.size() >= 3);
 		std::vector<math::Triangulation> decomposition = math::Decompose<true, false>{}(polygon.points, triangulation);
-		return decompose_polygon(polygon, decomposition);
+		return Decompose{}(polygon, decomposition);
 	}
 
-	Polygon2DComposite decompose_polygon(const Polygon2D& polygon, const std::vector<math::Triangulation>& triangulations)
+	Polygon2DComposite Decompose::operator()(const Polygon2D& polygon, const std::vector<math::Triangulation>& triangulations) const
 	{
 		OLY_ASSERT(polygon.points.size() >= 3);
 		Polygon2DComposite composite;
@@ -50,9 +50,9 @@ namespace oly::cmath
 		return composite;
 	}
 
-	Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points)
+	Polygon2DComposite Decompose::operator()(const math::Polygon2D& polygon) const
 	{
-		auto decomposition = math::Decompose<true, true>{}(points);
+		auto decomposition = math::Decompose<true, true>{}(polygon);
 		Polygon2DComposite composite;
 		composite.reserve(decomposition.size());
 		for (auto& subconvex : decomposition)

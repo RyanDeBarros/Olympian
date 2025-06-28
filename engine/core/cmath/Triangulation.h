@@ -4,8 +4,11 @@
 
 namespace oly::cmath
 {
-	extern Polygon2DComposite decompose_polygon(const Polygon2D& polygon);
-	extern Polygon2DComposite decompose_polygon(const Polygon2D& polygon, const math::Triangulation& triangulation);
-	extern Polygon2DComposite decompose_polygon(const Polygon2D& polygon, const std::vector<math::Triangulation>& triangulations); // TODO use decompose_polygon over composite_convex_decomposition in archetype generation / asset loading. Also use math style Decompose<> instead
-	extern Polygon2DComposite composite_convex_decomposition(const std::vector<glm::vec2>& points);
+	struct Decompose
+	{
+		Polygon2DComposite operator()(const Polygon2D& polygon) const;
+		Polygon2DComposite operator()(const Polygon2D& polygon, const math::Triangulation& triangulation) const;
+		Polygon2DComposite operator()(const Polygon2D& polygon, const std::vector<math::Triangulation>& triangulations) const;
+		Polygon2DComposite operator()(const math::Polygon2D& polygon) const;
+	};
 }

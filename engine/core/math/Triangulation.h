@@ -63,6 +63,4 @@ namespace oly::math
 
 	extern void simplify(Polygon2D& polygon, double tolerance = Tolerance<float>);
 	extern void simplify(Polygon2D& polygon, Triangulation& triangulation, double tolerance = Tolerance<float>);
-
-	// TODO simplify polygon/triangulation that cleans adjacent colinear points
 }
