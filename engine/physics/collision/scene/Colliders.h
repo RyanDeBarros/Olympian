@@ -7,99 +7,92 @@
 
 namespace oly::col2d
 {
-	class PrimitiveCollider : public ICollider
+	class PrimitiveCollider : public Collider
 	{
 		Primitive p;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override;
+		using Collider::Collider;
 
 		const Primitive& get() const { return p; }
-		Primitive& set() { _d = true; return p; }
+		Primitive& set() { flag(); return p; }
+
+	protected:
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(param(p.element)).rect(); }
 	};
 
-	class TPrimitiveCollider : public ICollider
+	class TPrimitiveCollider : public Collider
 	{
 		TPrimitive p;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override;
+		using Collider::Collider;
 
 		const TPrimitive& get() const { return p; }
-		TPrimitive& set() { _d = true; return p; }
+		TPrimitive& set() { flag(); return p; }
+
+	protected:
+		bool dirty_impl() const override { return p.is_dirty(); }
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(param(p.get_baked())).rect(); }
 	};
 
-	class CompoundCollider : public ICollider
+	class CompoundCollider : public Collider
 	{
 		Compound c;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override;
+		using Collider::Collider;
 
 		const Compound& get() const { return c; }
-		Compound& set() { _d = true; return c; }
+		Compound& set() { flag(); return c; }
+
+	protected:
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(c.elements.data(), c.elements.size()).rect(); }
 	};
 
-	class TCompoundCollider : public ICollider
+	class TCompoundCollider : public Collider
 	{
 		TCompound c;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override;
+		using Collider::Collider;
 
 		const TCompound& get() const { return c; }
-		TCompound& set() { _d = true; return c; }
+		TCompound& set() { flag(); return c; }
+
+	protected:
+		bool dirty_impl() const override { return c.is_dirty(); }
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(c.get_baked().data(), c.get_baked().size()).rect(); }
 	};
 
 	template<typename Shape>
-	class BVHCollider : public ICollider
+	class BVHCollider : public Collider
 	{
 		BVH<Shape> b;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override
-		{
-			if (_d)
-			{
-				_d = false;
-				wrap = internal::Wrap<AABB>{}(&b.root_shape()).rect();
-			}
-			return wrap;
-		}
+		using Collider::Collider;
 
 		const BVH<Shape>& get() const { return b; }
-		BVH<Shape>& set() { _d = true; return b; }
+		BVH<Shape>& set() { flag(); return b; }
+
+	protected:
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(&b.root_shape()).rect(); }
 	};
 
 	template<typename Shape>
-	class TBVHCollider : public ICollider
+	class TBVHCollider : public Collider
 	{
 		TBVH<Shape> b;
-		mutable bool _d = true;
-		mutable math::Rect2D wrap;
 
 	public:
-		math::Rect2D quad_wrap() const override
-		{
-			if (_d)
-			{
-				_d = false;
-				wrap = internal::Wrap<AABB>{}(&b.root_shape()).rect();
-			}
-			return wrap;
-		}
+		using Collider::Collider;
 
 		const TBVH<Shape>& get() const { return b; }
-		TBVH<Shape>& set() { _d = true; return b; }
+		TBVH<Shape>& set() { flag(); return b; }
+
+	protected:
+		bool dirty_impl() const override { return b.is_dirty(); }
+		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(&b.root_shape()).rect(); }
 	};
 }

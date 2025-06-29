@@ -32,6 +32,7 @@ namespace oly::col2d
 
 	class TPrimitive
 	{
+		Transformer2D transformer;
 		Primitive primitive;
 		mutable Element baked;
 		mutable bool dirty = true;
@@ -44,18 +45,18 @@ namespace oly::col2d
 		}
 
 	public:
-		Transformer2D transformer;
-		glm::mat3 global() const { return transformer.global(); }
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { flag(); return transformer.set_local(); }
-
 		explicit TPrimitive(const Element& element) : primitive{ .element = element } {}
 		explicit TPrimitive(Element&& element) noexcept : primitive{ .element = std::move(element) } {}
 
-		void flag() const { dirty = true; }
+		glm::mat3 global() const { return transformer.global(); }
+		const Transform2D& get_local() const { return transformer.get_local(); }
+		Transform2D& set_local() { return transformer.set_local(); }
+		bool is_dirty() const { return dirty || transformer.dirty(); }
+		// TODO expose other transformer methods - not flush()
+
 		const Primitive& get_primitive() const { return primitive; }
-		Primitive& set_primitive() { flag(); return primitive; }
-		const Element& get_baked() const { if (dirty) { bake(); } return baked; }
+		Primitive& set_primitive() { dirty = true; return primitive; }
+		const Element& get_baked() const { if (dirty || transformer.flush()) { bake(); } return baked; }
 
 		Mask mask() const { return primitive.mask; }
 		Mask& mask() { return primitive.mask; }

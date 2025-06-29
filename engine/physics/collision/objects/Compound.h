@@ -21,6 +21,7 @@ namespace oly::col2d
 
 	class TCompound
 	{
+		Transformer2D transformer;
 		Compound compound;
 		mutable std::vector<Element> baked;
 		mutable bool dirty = true;
@@ -28,20 +29,19 @@ namespace oly::col2d
 		void bake() const;
 
 	public:
-		Transformer2D transformer;
-
 		TCompound() = default;
 		explicit TCompound(const std::vector<Element>& elements) : compound({ elements }) {}
 		explicit TCompound(std::vector<Element>&& elements) : compound({ std::move(elements) }) {}
 
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { flag(); return transformer.set_local(); }
+		Transform2D& set_local() { return transformer.set_local(); }
+		bool is_dirty() const { return dirty || transformer.dirty(); }
+		// TODO expose other transformer methods - not flush()
 
-		void flag() const { dirty = true; }
 		const Compound& get_compound() const { return compound; }
-		Compound& set_compound() { flag(); return compound; }
-		const std::vector<Element>& get_baked() const { if (dirty) { bake(); } return baked; }
+		Compound& set_compound() { dirty = true; return compound; }
+		const std::vector<Element>& get_baked() const { if (dirty || transformer.flush()) { bake(); } return baked; }
 
 		Mask mask() const { return compound.mask; }
 		Mask& mask() { return compound.mask; }

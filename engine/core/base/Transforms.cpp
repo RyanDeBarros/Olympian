@@ -10,7 +10,7 @@ namespace oly
 	}
 
 	Transformer2D::Transformer2D(Transformer2D&& other) noexcept
-		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
 	{
 		attach_parent(other.parent);
 		other.unparent();
@@ -32,8 +32,8 @@ namespace oly
 			local = other.local;
 			modifier = other.modifier->clone();
 			_global = other._global;
-			_dirty_flush = false;
-			post_set();
+			_dirty_internal = other._dirty_internal;
+			_dirty_external = other._dirty_external;
 		}
 		return *this;
 	}
@@ -51,42 +51,59 @@ namespace oly
 			for (Transformer2D* child : children)
 				child->parent = this;
 			_global = other._global;
-			_dirty = other._dirty;
-			_dirty_flush = other._dirty_flush;
+			_dirty_internal = other._dirty_internal;
+			_dirty_external = other._dirty_external;
 		}
 		return *this;
 	}
 
 	void Transformer2D::post_set() const
 	{
-		if (!_dirty)
+		post_set_internal();
+		post_set_external();
+	}
+
+	void Transformer2D::post_set_internal() const
+	{
+		if (!_dirty_internal)
 		{
-			_dirty = true;
-			_dirty_flush = true;
+			_dirty_internal = true;
 			for (Transformer2D* child : children)
-				child->post_set();
+				child->post_set_internal();
 		}
+	}
+
+	void Transformer2D::post_set_external() const
+	{
+		_dirty_external = true;
+		for (Transformer2D* child : children)
+			child->post_set_external();
 	}
 
 	void Transformer2D::pre_get() const
 	{
-		if (_dirty)
+		if (_dirty_internal)
 		{
-			_dirty = false;
+			_dirty_internal = false;
 			if (parent)
 			{
 				parent->pre_get();
-				_global = parent->_global * (*modifier)(local.matrix());
+				_global = local.matrix();
+				(*modifier)(_global);
+				_global = parent->_global * _global;
 			}
 			else
-				_global = (*modifier)(local.matrix());
+			{
+				_global = local.matrix();
+				(*modifier)(_global);
+			}
 		}
 	}
 
 	bool Transformer2D::flush() const
 	{
-		bool was_dirty = _dirty_flush;
-		_dirty_flush = false;
+		bool was_dirty = _dirty_external;
+		_dirty_external = false;
 		return was_dirty;
 	}
 
@@ -173,14 +190,14 @@ namespace oly
 	}
 
 	Transformer3D::Transformer3D(const Transformer3D& other)
-		: local(other.local), modifier(other.modifier->clone()), _global(other._global)
+		: local(other.local), modifier(other.modifier->clone()), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
 	{
 		attach_parent(other.parent);
 		post_set();
 	}
 
 	Transformer3D::Transformer3D(Transformer3D&& other) noexcept
-		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty(other._dirty), _dirty_flush(other._dirty_flush)
+		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
 	{
 		attach_parent(other.parent);
 		other.unparent();
@@ -202,8 +219,8 @@ namespace oly
 			local = other.local;
 			modifier = other.modifier->clone();
 			_global = other._global;
-			_dirty_flush = false;
-			post_set();
+			_dirty_internal = other._dirty_internal;
+			_dirty_external = other._dirty_external;
 		}
 		return *this;
 	}
@@ -221,42 +238,59 @@ namespace oly
 			for (Transformer3D* child : children)
 				child->parent = this;
 			_global = other._global;
-			_dirty = other._dirty;
-			_dirty_flush = other._dirty_flush;
+			_dirty_internal = other._dirty_internal;
+			_dirty_external = other._dirty_external;
 		}
 		return *this;
 	}
 
 	void Transformer3D::post_set() const
 	{
-		if (!_dirty)
+		post_set_internal();
+		post_set_external();
+	}
+
+	void Transformer3D::post_set_internal() const
+	{
+		if (!_dirty_internal)
 		{
-			_dirty = true;
-			_dirty_flush = true;
+			_dirty_internal = true;
 			for (Transformer3D* child : children)
-				child->post_set();
+				child->post_set_internal();
 		}
+	}
+
+	void Transformer3D::post_set_external() const
+	{
+		_dirty_external = true;
+		for (Transformer3D* child : children)
+			child->post_set_external();
 	}
 
 	void Transformer3D::pre_get() const
 	{
-		if (_dirty)
+		if (_dirty_internal)
 		{
-			_dirty = false;
+			_dirty_internal = false;
 			if (parent)
 			{
 				parent->pre_get();
-				_global = parent->_global * (*modifier)(local.matrix());
+				_global = local.matrix();
+				(*modifier)(_global);
+				_global = parent->_global * _global;
 			}
 			else
-				_global = (*modifier)(local.matrix());
+			{
+				_global = local.matrix();
+				(*modifier)(_global);
+			}
 		}
 	}
 
 	bool Transformer3D::flush() const
 	{
-		bool was_dirty = _dirty_flush;
-		_dirty_flush = false;
+		bool was_dirty = _dirty_external;
+		_dirty_external = false;
 		return was_dirty;
 	}
 

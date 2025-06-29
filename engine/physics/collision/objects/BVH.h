@@ -459,13 +459,14 @@ namespace oly::col2d
 	template<typename Shape>
 	class TBVH
 	{
+		Transformer2D transformer;
 		mutable BVH<Shape> _bvh;
 		mutable bool local_dirty = true;
 		std::vector<Element> local_elements;
 
 		const BVH<Shape>& bvh() const
 		{
-			if (local_dirty)
+			if (local_dirty || transformer.flush())
 			{
 				local_dirty = false;
 				const glm::mat3 m = transformer.global();
@@ -478,16 +479,17 @@ namespace oly::col2d
 		}
 
 	public:
-		Transformer2D transformer;
-
 		TBVH() = default;
 		explicit TBVH(const std::vector<Element>& elements) : local_elements(elements) {}
 		explicit TBVH(std::vector<Element>&& elements) : local_elements(std::move(elements)) {}
 		explicit TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 		explicit TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
+		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { local_dirty = true; return transformer.set_local(); }
+		Transform2D& set_local() { return transformer.set_local(); }
+		bool is_dirty() const { return local_dirty || transformer.dirty(); }
+		// TODO expose other transformer methods - not flush()
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }

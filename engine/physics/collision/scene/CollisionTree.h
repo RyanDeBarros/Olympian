@@ -4,66 +4,78 @@
 #include "core/math/Shapes.h"
 
 #include <memory>
+#include <unordered_set>
 
 namespace oly::col2d
 {
-	struct ICollider
-	{
-		virtual ~ICollider() = default;
-		virtual math::Rect2D quad_wrap() const = 0;
-	};
-
 	class CollisionNode;
 	class CollisionTree;
 
-	// It is important that the handle cannot outlive the collider it references, or else it will be dangling.
-	class CollisionHandle
+	class Collider
 	{
+		friend class CollisionTree;
 		friend class CollisionNode;
 
-		const ICollider* collider = nullptr;
-		CollisionNode* node = nullptr;
+		CollisionTree* tree = nullptr;
+		mutable CollisionNode* node = nullptr;
+		mutable bool dirty = true;
 
-		CollisionHandle(const ICollider* collider = nullptr, CollisionNode* node = nullptr);
+	protected:
+		mutable math::Rect2D quad_wrap;
 
 	public:
-		CollisionHandle(const CollisionHandle&) = delete;
-		CollisionHandle(CollisionHandle&& other) noexcept;
-		~CollisionHandle();
-		CollisionHandle& operator=(const CollisionHandle&) = delete;
-		CollisionHandle& operator=(CollisionHandle&& other) noexcept;
+		Collider(CollisionTree& tree);
+		Collider(const Collider&);
+		Collider(Collider&&) noexcept;
+		virtual ~Collider();
+		Collider& operator=(const Collider&);
+		Collider& operator=(Collider&&) noexcept;
+
+	private:
+		void replace_in_node(Collider&& other) noexcept;
+		bool is_dirty() const { return dirty || dirty_impl(); }
+		void flush() const;
+
+	protected:
+		void flag() const { dirty = true; }
+		virtual bool dirty_impl() const { return false; }
+		virtual void flush_impl() const {}
 	};
 
 	class CollisionNode
 	{
 		friend class CollisionTree;
-		friend class CollisionHandle;
+		friend class Collider;
 
-		const CollisionTree* tree = nullptr;
+		CollisionTree& tree;
 		math::Rect2D bounds;
+		CollisionNode* parent = nullptr;
 		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-		std::vector<const ICollider*> colliders;
+		std::vector<const Collider*> colliders;
 
-		CollisionNode(const CollisionTree* tree);
-		static std::unique_ptr<CollisionNode> instantiate(const CollisionTree* tree);
+		CollisionNode(CollisionTree& tree);
+		static std::unique_ptr<CollisionNode> instantiate(CollisionTree& tree);
 
 	public:
-		CollisionHandle insert(const ICollider* collider);
+		void insert(const Collider& collider);
 
 	private:
-		CollisionHandle insert(const ICollider& collider, const math::Rect2D& b);
+		CollisionNode* _insert(const Collider* collider);
+		void insert_direct(const Collider& collider);
+
+	public:
+		bool remove(const Collider& collider);
+
+	private:
+		bool _remove(const Collider* collider);
+		void remove_direct(const Collider& collider);
+
+		void update(const Collider& collider);
+		void insert_upwards(const Collider& collider);
 
 		bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
 		const std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y) const;
 		std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y);
-
-		void remove_direct(const ICollider* collider);
-
-	public:
-		bool remove(const ICollider* collider);
-
-	private:
-		bool remove(const ICollider& collider, const math::Rect2D& b);
 
 		math::Rect2D subdivision(int x, int y) const;
 	};
@@ -71,16 +83,20 @@ namespace oly::col2d
 	class CollisionTree
 	{
 		friend class CollisionNode;
+		friend class Collider;
 
 		const size_t cell_capacity = 4;
 		const glm::uvec2 degree;
 		const glm::vec2 inv_degree;
 
+		std::unordered_set<const Collider*> colliders;
 		std::unique_ptr<CollisionNode> root;
+
+		void insert(const Collider& collider);
 
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 
-		CollisionHandle insert(const ICollider* collider);
+		void flush() const;
 	};
 }
