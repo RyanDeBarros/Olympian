@@ -289,27 +289,27 @@ namespace oly::col2d
 		{
 			std::vector<std::variant<const Shape*, ElementParam>> layer;
 			DoubleBuffer<const Node*> nodes;
-			nodes.back().push_back(&root());
+			nodes.back.push_back(&root());
 
 			for (size_t i = 0; i < at_depth; ++i)
 			{
-				nodes.swap().back().clear();
-				if (nodes.front().empty())
+				nodes.swap().back.clear();
+				if (nodes.front.empty())
 					return layer;
-				for (const Node* node : nodes.front())
+				for (const Node* node : nodes.front)
 				{
 					if (node->is_leaf())
 						layer.push_back(param(elements[node->start_index]));
 					else
 					{
-						nodes.back().push_back(node->left.get());
-						nodes.back().push_back(node->right.get());
+						nodes.back.push_back(node->left.get());
+						nodes.back.push_back(node->right.get());
 					}
 				}
 			}
 
 			nodes.swap();
-			for (const Node* node : nodes.front())
+			for (const Node* node : nodes.front)
 			{
 				if (node->is_leaf())
 					layer.push_back(param(elements[node->start_index]));

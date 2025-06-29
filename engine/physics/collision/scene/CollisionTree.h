@@ -1,10 +1,12 @@
 #pragma once
 
 #include "core/containers/FixedVector.h"
+#include "core/containers/ContiguousSet.h"
 #include "core/math/Shapes.h"
 
+#include "physics/collision/Tolerance.h"
+
 #include <memory>
-#include <unordered_set>
 
 namespace oly::col2d
 {
@@ -51,27 +53,18 @@ namespace oly::col2d
 		math::Rect2D bounds;
 		CollisionNode* parent = nullptr;
 		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-		std::vector<const Collider*> colliders;
+		ContiguousSet<const Collider*> colliders;
 
 		CollisionNode(CollisionTree& tree);
 		static std::unique_ptr<CollisionNode> instantiate(CollisionTree& tree);
 
-	public:
 		void insert(const Collider& collider);
-
-	private:
-		CollisionNode* _insert(const Collider* collider);
-		void insert_direct(const Collider& collider);
-
-	public:
-		bool remove(const Collider& collider);
-
-	private:
-		bool _remove(const Collider* collider);
-		void remove_direct(const Collider& collider);
+		void remove(const Collider& collider);
 
 		void update(const Collider& collider);
 		void insert_upwards(const Collider& collider);
+
+		void subdivide();
 
 		bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
 		const std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y) const;
@@ -89,8 +82,7 @@ namespace oly::col2d
 		const glm::uvec2 degree;
 		const glm::vec2 inv_degree;
 
-		std::unordered_set<const Collider*> colliders;
-		std::unique_ptr<CollisionNode> root;
+		mutable std::unique_ptr<CollisionNode> root;
 
 		void insert(const Collider& collider);
 
@@ -98,5 +90,10 @@ namespace oly::col2d
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 
 		void flush() const;
+
+	private:
+		void flush_update_colliders() const;
+		void flush_insert_downward() const;
+		void flush_remove_upward() const;
 	};
 }
