@@ -1,7 +1,7 @@
 #include "AABB.h"
 
-#include "core/types/Approximate.h"
 #include "physics/collision/elements/Common.h"
+#include "core/math/Shapes.h"
 
 namespace oly::col2d
 {
@@ -47,5 +47,10 @@ namespace oly::col2d
 	glm::vec2 AABB::deepest_point(const UnitVector2D& axis) const
 	{
 		return internal::polygon_deepest_point(points(), axis);
+	}
+
+	math::Rect2D AABB::rect() const
+	{
+		return { .x1 = x1, .x2 = x2, .y1 = y1, .y2 = y2 };
 	}
 }

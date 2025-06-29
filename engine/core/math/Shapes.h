@@ -32,10 +32,9 @@ namespace oly::math
 		float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
 
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
-		bool contains(glm::vec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
-		glm::vec2 clamp(glm::vec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
 		float width() const { return x2 - x1; }
 		float height() const { return y2 - y1; }
+		
 		std::array<glm::vec2, 4> uvs() const
 		{
 			return {
@@ -45,6 +44,10 @@ namespace oly::math
 				glm::vec2{ x1, y2 }
 			};
 		}
+
+		bool contains(glm::vec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
+		bool inside(const Rect2D& enclosing) const { return x1 >= enclosing.x1 && x2 <= enclosing.x2 && y1 >= enclosing.y1 && y2 <= enclosing.y2; }
+		glm::vec2 clamp(glm::vec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
 
 		bool operator==(const Rect2D&) const = default;
 	};

@@ -20,13 +20,14 @@ namespace oly::col2d
 		template<typename Shape>
 		struct Wrap
 		{
-			Shape operator()(const Element* elements, size_t count) const { static_assert(false, "oly::col2d::internal::wrap not defined for the provided Shape"); }
+			Shape operator()(const Element* elements, size_t count) const { static_assert(false, "oly::col2d::internal::wrap() not defined for the provided Shape"); }
 		};
 
 		template<>
 		struct Wrap<AABB>
 		{
 			AABB operator()(const Element* elements, size_t count) const;
+			AABB operator()(ElementParam element) const;
 		};
 
 		template<>
@@ -247,6 +248,8 @@ namespace oly::col2d
 		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
 
 		size_t get_depth_cap() const { elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)elements.size())); }
+
+		const Shape& root_shape() const { return *root().shape; }
 
 	private:
 		const Node& root() const
@@ -490,6 +493,8 @@ namespace oly::col2d
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
 
 		const std::vector<Element>& get_baked() const { return bvh().get_elements(); }
+
+		const Shape& root_shape() const { return bvh().root_shape(); }
 
 		Mask mask() const { return _bvh.mask; }
 		Mask& mask() { return _bvh.mask; }

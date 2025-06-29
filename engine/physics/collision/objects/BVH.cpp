@@ -4,53 +4,32 @@ namespace oly::col2d
 {
 	namespace internal
 	{
-		static AABB compute_aabb(const Element& element)
-		{
-			return std::visit([](auto&& element) {
-				if constexpr (visiting_class_is<decltype(element), AABB>)
-					return element;
-				else if constexpr (visiting_class_is<decltype(element), Circle>)
-					return AABB{ .x1 = element.deepest_point(UnitVector2D::LEFT).x, .x2 = element.deepest_point(UnitVector2D::RIGHT).x,
-								 .y1 = element.deepest_point(UnitVector2D::DOWN).y, .y2 = element.deepest_point(UnitVector2D::UP).y };
-				else if constexpr (visiting_class_is<decltype(element), OBB, ConvexHull>)
-				{
-					AABB bounds = AABB::DEFAULT;
-					for (glm::vec2 p : element.points())
-					{
-						bounds.x1 = std::min(bounds.x1, p.x);
-						bounds.x2 = std::max(bounds.x2, p.x);
-						bounds.y1 = std::min(bounds.y1, p.y);
-						bounds.y2 = std::max(bounds.y2, p.y);
-					}
-					return bounds;
-				}
-				else
-				{
-					AABB bounds = AABB::DEFAULT;
-					for (glm::vec2 p : element->points())
-					{
-						bounds.x1 = std::min(bounds.x1, p.x);
-						bounds.x2 = std::max(bounds.x2, p.x);
-						bounds.y1 = std::min(bounds.y1, p.y);
-						bounds.y2 = std::max(bounds.y2, p.y);
-					}
-					return bounds;
-				}
-				}, element);
-		}
-
 		AABB Wrap<AABB>::operator()(const Element* elements, size_t count) const
 		{
 			AABB c = AABB::DEFAULT;
 			for (size_t i = 0; i < count; ++i)
 			{
-				AABB sub = compute_aabb(elements[i]);
+				AABB sub = operator()(param(elements[i]));
 				c.x1 = std::min(c.x1, sub.x1);
 				c.x2 = std::max(c.x2, sub.x2);
 				c.y1 = std::min(c.y1, sub.y1);
 				c.y2 = std::max(c.y2, sub.y2);
 			}
 			return c;
+		}
+
+		AABB Wrap<AABB>::operator()(ElementParam element) const
+		{
+			return std::visit([](auto&& element) {
+				if constexpr (visiting_class_is<decltype(*element), AABB>)
+					return *element;
+				else
+				{
+					fpair ix = element->projection_interval(UnitVector2D::RIGHT);
+					fpair iy = element->projection_interval(UnitVector2D::UP);
+					return AABB{ .x1 = ix.first, .x2 = ix.second, .y1 = iy.first, .y2 = iy.second };
+				}
+				}, element);
 		}
 
 		static glm::vec2 compute_centroid_sum(const Element& element)

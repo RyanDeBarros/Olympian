@@ -7,6 +7,11 @@
 
 #include <array>
 
+namespace oly::math
+{
+	struct Rect2D;
+}
+
 namespace oly::col2d
 {
 	struct AABB
@@ -26,6 +31,7 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 		glm::vec2 deepest_point(const UnitVector2D& axis) const;
+		math::Rect2D rect() const;
 	};
 
 	inline const AABB AABB::DEFAULT = AABB{ .x1 = nmax<float>(), .x2 = -nmax<float>(), .y1 = nmax<float>(), .y2 = -nmax<float>() };;
