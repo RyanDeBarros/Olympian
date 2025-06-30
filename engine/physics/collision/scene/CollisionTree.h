@@ -3,7 +3,9 @@
 #include "core/containers/FixedVector.h"
 #include "core/containers/ContiguousSet.h"
 #include "core/math/Shapes.h"
+#include "core/types/SoftReference.h"
 
+#include "physics/collision/methods/CollisionInfo.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
@@ -16,10 +18,19 @@ namespace oly::col2d
 
 	class Collider
 	{
+		// LATER movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
 		friend class CollisionNode;
 
-		CollisionTree* tree = nullptr;
+		SoftReferenceBase<Collider> _ref;
+
+	public:
+		ConstSoftReference<Collider> ref() const { return _ref.cref(this); }
+		ConstSoftReference<Collider> cref() const { return _ref.cref(this); }
+		SoftReference<Collider> ref() { return _ref.ref(this); }
+
+	private:
+		mutable CollisionTree* tree = nullptr;
 		mutable CollisionNode* node = nullptr;
 		mutable bool dirty = true;
 
@@ -27,14 +38,23 @@ namespace oly::col2d
 		mutable math::Rect2D quad_wrap;
 
 	public:
-		Collider(CollisionTree& tree);
+		Collider(CollisionTree* tree = nullptr) : tree(tree) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
 		virtual ~Collider();
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
-		// TODO option to set tree, rather then setting automatically in constructor
+		// TODO allow assignment for multiple trees
+		const CollisionTree* get_tree() const { return tree; }
+		CollisionTree* get_tree() { return tree; }
+		void set_tree(CollisionTree* tree);
+		void unset_tree();
+
+		// TODO tie these into existing functions
+		virtual OverlapResult overlaps(const Collider& other) const { return false; }
+		virtual CollisionResult collides(const Collider& other) const { return { .overlap = false }; }
+		virtual ContactResult contacts(const Collider& other) const { return { .overlap = false }; }
 
 	private:
 		void replace_in_node(Collider&& other) noexcept;
@@ -55,11 +75,15 @@ namespace oly::col2d
 		CollisionTree& tree;
 		math::Rect2D bounds;
 		CollisionNode* parent = nullptr;
-		// TODO use flat-map for subnodes rather than maintaining a full vector.
 		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-		ContiguousSet<const Collider*> colliders;
+		ContiguousSet<ConstSoftReference<Collider>> colliders;
 
 		CollisionNode(CollisionTree& tree);
+
+	public:
+		~CollisionNode();
+	
+	private:
 		static std::unique_ptr<CollisionNode> instantiate(CollisionTree& tree);
 
 		void insert(const Collider& collider);
@@ -71,13 +95,12 @@ namespace oly::col2d
 		void subdivide();
 
 		bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
-		const std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y) const;
-		std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y);
+		size_t idx(unsigned int x, unsigned int y) const;
 
 		math::Rect2D subdivision(int x, int y) const;
 
 	public:
-		const ContiguousSet<const Collider*>& get_colliders() const { return colliders; }
+		const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
 	};
 
 	class CollisionTree
@@ -93,6 +116,7 @@ namespace oly::col2d
 
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
+		~CollisionTree();
 
 		void flush() const;
 
@@ -125,7 +149,7 @@ namespace oly::col2d
 
 		public:
 			bool done() const { return nodes.empty(); }
-			const Collider* next();
+			ConstSoftReference<Collider> next();
 		};
 
 		class PairIterator
@@ -135,8 +159,8 @@ namespace oly::col2d
 			BFSColliderIterator first, second;
 			struct ColliderPtrPair
 			{
-				const Collider* first = nullptr;
-				const Collider* second = nullptr;
+				ConstSoftReference<Collider> first = nullptr;
+				ConstSoftReference<Collider> second = nullptr;
 
 				operator bool () const { return first && second; }
 			} current;
