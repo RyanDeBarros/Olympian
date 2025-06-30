@@ -48,6 +48,7 @@ namespace oly::math
 		bool contains(glm::vec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
 		bool inside(const Rect2D& enclosing) const { return x1 >= enclosing.x1 && x2 <= enclosing.x2 && y1 >= enclosing.y1 && y2 <= enclosing.y2; }
 		bool strict_inside(const Rect2D& enclosing) const { return x1 > enclosing.x1 && x2 < enclosing.x2 && y1 > enclosing.y1 && y2 < enclosing.y2; }
+		bool overlaps(const Rect2D& other) const { return x1 <= other.x2 && other.x1 <= x2 && y1 <= other.y2 && other.y1 <= y2; }
 		glm::vec2 clamp(glm::vec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
 
 		bool operator==(const Rect2D&) const = default;

@@ -1,7 +1,6 @@
 #include "CollisionTree.h"
 
 #include "core/base/Assert.h"
-#include "core/containers/DoubleBuffer.h"
 
 #include <stack>
 
@@ -99,7 +98,7 @@ namespace oly::col2d
 		if (node)
 			node->update(*this);
 		else
-			tree->insert(*this);
+			tree->root->insert(*this);
 	}
 
 	CollisionNode::CollisionNode(CollisionTree& tree)
@@ -114,11 +113,8 @@ namespace oly::col2d
 
 	void CollisionNode::insert(const Collider& collider)
 	{
-		if (collider.quad_wrap.strict_inside(bounds))
-		{
-			colliders.insert(&collider);
-			collider.node = this;
-		}
+		colliders.insert(&collider);
+		collider.node = this;
 	}
 
 	void CollisionNode::remove(const Collider& collider)
@@ -243,57 +239,37 @@ namespace oly::col2d
 
 	void CollisionTree::flush_update_colliders() const
 	{
-		// BFS
-
-		DoubleBuffer<CollisionNode*> nodes;
-		nodes.back.push_back(root.get());
-		nodes.swap();
-		while (!nodes.front.empty())
+		BFSIterator it(root.get());
+		while (CollisionNode* node = it.next())
 		{
-			for (CollisionNode* node : nodes.front)
-			{
-				for (const Collider* collider : node->colliders)
-					collider->flush();
-
-				for (std::unique_ptr<CollisionNode>& subnode : root->subnodes)
-				{
-					if (subnode.get())
-						nodes.back.push_back(subnode.get());
-				}
-			}
-			nodes.front.clear();
-			nodes.swap();
+			for (const Collider* collider : node->colliders)
+				collider->flush();
 		}
 	}
 
 	void CollisionTree::flush_insert_downward() const
 	{
-		// BFS
-
-		DoubleBuffer<CollisionNode*> nodes;
-		nodes.back.push_back(root.get());
-		nodes.swap();
-		while (!nodes.front.empty())
+		// Sensitive BFS
+		std::queue<CollisionNode*> nodes;
+		nodes.push(root.get());
+		while (!nodes.empty())
 		{
-			for (CollisionNode* node : nodes.front)
+			CollisionNode* node = nodes.front();
+			nodes.pop();
+
+			node->subdivide();
+
+			for (std::unique_ptr<CollisionNode>& subnode : node->subnodes)
 			{
-				node->subdivide();
-				
-				for (std::unique_ptr<CollisionNode>& subnode : root->subnodes)
-				{
-					if (subnode.get())
-						nodes.back.push_back(subnode.get());
-				}
+				if (subnode.get())
+					nodes.push(subnode.get());
 			}
-			nodes.front.clear();
-			nodes.swap();
 		}
 	}
 
 	void CollisionTree::flush_remove_upward() const
 	{
 		// DFS post-order
-
 		struct Indexer
 		{
 			CollisionNode* node = nullptr;
@@ -346,8 +322,71 @@ namespace oly::col2d
 		}
 	}
 
-	void CollisionTree::insert(const Collider& collider)
+	CollisionNode* CollisionTree::BFSIterator::next()
 	{
-		root->insert(collider);
+		if (nodes.empty())
+			return nullptr;
+
+		CollisionNode* node = nodes.front();
+		nodes.pop();
+
+		for (const auto& subnode : node->subnodes)
+			if (subnode.get())
+				nodes.push(subnode.get());
+
+		return node;
+	}
+
+	void CollisionTree::BFSColliderIterator::set(const BFSColliderIterator& other)
+	{
+		i = other.i;
+		nodes.push(other.nodes.front());
+	}
+
+	const Collider* CollisionTree::BFSColliderIterator::next()
+	{
+		while (!nodes.empty())
+		{
+			const CollisionNode* node = nodes.front();
+			if (i < node->colliders.size())
+				return node->colliders[i++];
+
+			i = 0;
+			nodes.pop();
+			for (const auto& subnode : node->subnodes)
+				if (subnode.get() && subnode->bounds.overlaps(bounds))
+					nodes.push(subnode.get());
+		}
+		return nullptr;
+	}
+
+	CollisionTree::PairIterator::PairIterator(CollisionNode* node, const math::Rect2D bounds)
+		: first(node, bounds), second(bounds)
+	{
+		increment_current();
+	}
+
+	void CollisionTree::PairIterator::increment_current()
+	{
+		if (second.done())
+		{
+			current.first = first.next();
+			if (!first.done())
+			{
+				second.set(first);
+				current.second = second.next();
+			}
+			else
+				current.first = current.second = nullptr;
+		}
+		else
+			current.second = second.next();
+	}
+
+	CollisionTree::PairIterator::ColliderPtrPair CollisionTree::PairIterator::next()
+	{
+		ColliderPtrPair og = current;
+		increment_current();
+		return og;
 	}
 }

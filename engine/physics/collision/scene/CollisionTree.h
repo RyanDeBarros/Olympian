@@ -7,6 +7,7 @@
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
+#include <queue>
 
 namespace oly::col2d
 {
@@ -33,6 +34,8 @@ namespace oly::col2d
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
+		// TODO option to set tree, rather then setting automatically in constructor
+
 	private:
 		void replace_in_node(Collider&& other) noexcept;
 		bool is_dirty() const { return dirty || dirty_impl(); }
@@ -52,6 +55,7 @@ namespace oly::col2d
 		CollisionTree& tree;
 		math::Rect2D bounds;
 		CollisionNode* parent = nullptr;
+		// TODO use flat-map for subnodes rather than maintaining a full vector.
 		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
 		ContiguousSet<const Collider*> colliders;
 
@@ -71,6 +75,9 @@ namespace oly::col2d
 		std::unique_ptr<CollisionNode>& subnode(unsigned int x, unsigned int y);
 
 		math::Rect2D subdivision(int x, int y) const;
+
+	public:
+		const ContiguousSet<const Collider*>& get_colliders() const { return colliders; }
 	};
 
 	class CollisionTree
@@ -84,8 +91,6 @@ namespace oly::col2d
 
 		mutable std::unique_ptr<CollisionNode> root;
 
-		void insert(const Collider& collider);
-
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 
@@ -95,5 +100,59 @@ namespace oly::col2d
 		void flush_update_colliders() const;
 		void flush_insert_downward() const;
 		void flush_remove_upward() const;
+
+		class BFSIterator
+		{
+			friend class CollisionTree;
+			std::queue<CollisionNode*> nodes;
+			BFSIterator(CollisionNode* root) { nodes.push(root); }
+
+		public:
+			bool done() const { return nodes.empty(); }
+			CollisionNode* next();
+		};
+
+		class BFSColliderIterator
+		{
+			friend class CollisionTree;
+			const math::Rect2D bounds;
+			std::queue<const CollisionNode*> nodes;
+			size_t i = 0;
+			BFSColliderIterator(const math::Rect2D bounds) : bounds(bounds) {}
+			BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds) : bounds(bounds) { nodes.push(root); }
+
+			void set(const BFSColliderIterator&);
+
+		public:
+			bool done() const { return nodes.empty(); }
+			const Collider* next();
+		};
+
+		class PairIterator
+		{
+			friend class CollisionTree;
+
+			BFSColliderIterator first, second;
+			struct ColliderPtrPair
+			{
+				const Collider* first = nullptr;
+				const Collider* second = nullptr;
+
+				operator bool () const { return first && second; }
+			} current;
+
+			PairIterator(CollisionNode* node, const math::Rect2D bounds);
+
+			void increment_current();
+
+		public:
+			bool done() const { return !current; }
+			ColliderPtrPair next();
+		};
+
+	public:
+		BFSColliderIterator query(const Collider& collider) const { return BFSColliderIterator(root.get(), collider.quad_wrap); }
+		BFSColliderIterator query(const math::Rect2D bounds) const { return BFSColliderIterator(root.get(), bounds); }
+		PairIterator iterator() const { return PairIterator(root.get(), root->bounds); }
 	};
 }
