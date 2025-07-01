@@ -30,7 +30,7 @@ namespace oly::col2d::internal
 	{
 		std::optional<bool> ccw;
 		glm::vec2 prev = col2d::internal::CircleGlobalAccess::local_point(c, polygon[polygon.size() - 1]);
-		glm::vec2 local_polygon_center = prev;
+		glm::vec2 local_polygon_center = {};
 		for (size_t i = 0; i < polygon.size(); ++i)
 		{
 			glm::vec2 a = prev;
@@ -75,7 +75,7 @@ namespace oly::col2d::internal
 		CollisionResult info{ .overlap = false, .penetration_depth = nmax<float>() };
 		std::optional<bool> ccw;
 		glm::vec2 prev = col2d::internal::CircleGlobalAccess::local_point(c, polygon[polygon.size() - 1]);
-		glm::vec2 local_polygon_center = prev;
+		glm::vec2 local_polygon_center = {};
 		float ccw_depth = nmax<float>();
 		UnitVector2D ccw_unit_impulse;
 		float cw_depth = nmax<float>();

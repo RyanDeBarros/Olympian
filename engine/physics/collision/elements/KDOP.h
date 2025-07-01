@@ -76,7 +76,7 @@ namespace oly::col2d
 		void set_minima(const std::array<float, K>& min) { minima = min; flag(); }
 		void set_maxima(const std::array<float, K>& max) { maxima = max; flag(); }
 
-		KDOP() = default;
+		KDOP() { minima.fill(0.0f); maxima.fill(0.0f); }
 		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima) : minima(minima), maxima(maxima) { flag(); }
 		explicit KDOP(const std::array<fpair, K>& extrema)
 		{

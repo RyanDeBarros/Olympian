@@ -2,6 +2,8 @@
 
 #include "core/base/UnitVector.h"
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/objects/Compound.h"
+#include "physics/collision/objects/BVH.h"
 
 namespace oly::col2d
 {

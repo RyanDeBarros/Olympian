@@ -32,6 +32,9 @@ namespace oly::col2d
 
 	struct CollisionController
 	{
+		OLY_SOFT_REFERENCE_BASE_DECLARATION(CollisionController);
+
+	public:
 		virtual ~CollisionController() = default;
 
 		using OverlapHandler = void(CollisionController::*)(const OverlapEventData&);
@@ -41,6 +44,9 @@ namespace oly::col2d
 		using ContactHandler = void(CollisionController::*)(const ContactEventData&);
 		using ContactConstHandler = void(CollisionController::*)(const ContactEventData&) const;
 	};
+
+#define OLY_COLLISION_CONTROLLER_HEADER(Class)\
+	OLY_SOFT_REFERENCE_PUBLIC(Class)
 
 	class CollisionDispatcher
 	{

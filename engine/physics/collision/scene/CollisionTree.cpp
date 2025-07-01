@@ -86,6 +86,8 @@ namespace oly::col2d
 				node = nullptr;
 			}
 			tree = new_tree;
+			if (tree)
+				tree->root->insert(*this);
 		}
 	}
 

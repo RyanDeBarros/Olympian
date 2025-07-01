@@ -5,6 +5,7 @@
 #include "core/types/SoftReference.h"
 
 #include "physics/collision/scene/LUT.h"
+#include "physics/collision/scene/ColliderObject.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
@@ -34,9 +35,10 @@ namespace oly::col2d
 		mutable math::Rect2D quad_wrap;
 
 	public:
+		Collider() = default;
 		template<typename CObj>
-		explicit Collider(CObj&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)), tree(tree) {}
-		Collider(internal::ColliderObject&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)), tree(tree) {}
+		explicit Collider(CObj&& obj, CollisionTree* tree = nullptr) : obj(std::forward<CObj>(obj)) { set_tree(tree); }
+		Collider(internal::ColliderObject&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)) { set_tree(tree); }
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
 		~Collider();
@@ -49,16 +51,33 @@ namespace oly::col2d
 		void set_tree(CollisionTree* tree);
 		void unset_tree();
 
-		const internal::ColliderObject& _obj() const { return obj; }
 		template<typename CObj>
 		const CObj& get() const { return obj.get<CObj>(); }
 		template<typename CObj>
 		CObj& set() { dirty = true; return obj.set<CObj>(); }
+		void emplace(internal::ColliderObject&& obj) { dirty = true; this->obj = std::move(obj); }
+		template<typename CObj>
+		void emplace(CObj&& obj) { dirty = true; this->obj = internal::ColliderObject(std::forward<CObj>(obj)); }
+
+		void flag() { dirty = true; }
 
 	private:
 		void replace_in_node(Collider&& other) noexcept;
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
 		void flush() const;
+
+	public:
+		OverlapResult point_hits(glm::vec2 test) const { return internal::lut_point_hits(obj, test); }
+		OverlapResult ray_hits(const Ray& ray) const { return internal::lut_ray_hits(obj, ray); }
+		RaycastResult raycast(const Ray& ray) const { return internal::lut_raycast(obj, ray); }
+		OverlapResult overlaps(const Collider& other) const { return internal::lut_overlaps(obj, other.obj); }
+		CollisionResult collides(const Collider& other) const { return internal::lut_collides(obj, other.obj); }
+		ContactResult contacts(const Collider& other) const { return internal::lut_contacts(obj, other.obj); }
+		OverlapResult circle_cast_hits(const CircleCast& cast) const { return internal::lut_circle_cast_hits(obj, cast); }
+		OverlapResult rect_cast_hits(const RectCast& cast) const { return internal::lut_rect_cast_hits(obj, cast); }
+
+		debug::CollisionView collision_view(glm::vec4 color) const { return internal::lut_collision_view(obj, color); }
+		void update_view(debug::CollisionView& view, glm::vec4 color) const { internal::lut_update_view(view, obj, color); }
 	};
 
 #define OLY_COLLIDER_HEADER(Class)\

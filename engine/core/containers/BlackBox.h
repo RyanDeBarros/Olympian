@@ -55,19 +55,11 @@ namespace oly
 		}
 
 		template<typename T>
-		explicit BlackBox(const T& obj)
-		{
-			ptr = static_cast<void*>(new T(obj));
-			deleter = internal::deleter<T>();
-			copier = internal::copier<T>();
-		}
-
-		template<typename T>
 		explicit BlackBox(T&& obj) noexcept
 		{
-			ptr = static_cast<void*>(new T(std::move(obj)));
-			deleter = internal::deleter<T>();
-			copier = internal::copier<T>();
+			ptr = static_cast<void*>(new std::decay_t<T>(std::forward<T>(obj)));
+			deleter = internal::deleter<std::decay_t<T>>();
+			copier = internal::copier<std::decay_t<T>>();
 		}
 
 		~BlackBox()
@@ -167,17 +159,10 @@ namespace oly
 		}
 
 		template<typename T>
-		explicit BlackBox(const T& obj)
-		{
-			ptr = static_cast<void*>(new T(obj));
-			deleter = internal::deleter<T>();
-		}
-
-		template<typename T>
 		explicit BlackBox(T&& obj) noexcept
 		{
-			ptr = static_cast<void*>(new T(std::move(obj)));
-			deleter = internal::deleter<T>();
+			ptr = static_cast<void*>(new std::decay_t<T>(std::forward<T>(obj)));
+			deleter = internal::deleter<std::decay_t<T>>();
 		}
 
 		~BlackBox()
