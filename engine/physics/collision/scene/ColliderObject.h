@@ -4,12 +4,38 @@
 #include "physics/collision/objects/Combinations.h"
 
 #include "core/math/Shapes.h"
+#include "core/containers/BlackBox.h"
 
 namespace oly::col2d
 {
 	// TODO use fn-ptr lookup table over variant
+	
+	namespace internal
+	{
+		enum CObjID : unsigned int;
 
-	using ColliderObject = std::variant<
+		template<typename T>
+		struct CObjIDTrait;
+
+		class ColliderObject
+		{
+			BlackBox<true> _obj;
+			CObjID _id;
+
+		public:
+			template<typename CObj>
+			explicit ColliderObject(CObj&& shape)
+				: _obj(std::forward<CObj>(shape)), _id(CObjIDTrait<std::decay_t<Shape>>::ID)
+			{
+			}
+
+			const void* raw_obj() const { return _obj.raw(); }
+			CObjID id() const { return _id; }
+		};
+	}
+
+
+	using VColliderObject = std::variant<
 		Primitive,
 		TPrimitive,
 		Compound,
@@ -26,17 +52,17 @@ namespace oly::col2d
 		TBVH<KDOP4>
 	>;
 
-	inline OverlapResult overlaps(const ColliderObject& c1, const ColliderObject& c2)
+	inline OverlapResult overlaps(const VColliderObject& c1, const VColliderObject& c2)
 	{
 		return std::visit([&c2](const auto& c1) { return std::visit([&c1](const auto& c2) { return overlaps(c1, c2); }, c2); }, c1);
 	}
 
-	inline CollisionResult collides(const ColliderObject& c1, const ColliderObject& c2)
+	inline CollisionResult collides(const VColliderObject& c1, const VColliderObject& c2)
 	{
 		return std::visit([&c2](const auto& c1) { return std::visit([&c1](const auto& c2) { return collides(c1, c2); }, c2); }, c1);
 	}
 
-	inline ContactResult contacts(const ColliderObject& c1, const ColliderObject& c2)
+	inline ContactResult contacts(const VColliderObject& c1, const VColliderObject& c2)
 	{
 		return std::visit([&c2](const auto& c1) { return std::visit([&c1](const auto& c2) { return contacts(c1, c2); }, c2); }, c1);
 	}
@@ -75,7 +101,7 @@ namespace oly::col2d
 			return b.is_dirty();
 		}
 
-		inline bool shape_is_dirty(const ColliderObject& shape)
+		inline bool shape_is_dirty(const VColliderObject& shape)
 		{
 			return std::visit([](const auto& shape) -> bool { return shape_is_dirty_impl(shape); }, shape);
 		}
@@ -112,7 +138,7 @@ namespace oly::col2d
 			return internal::Wrap<AABB>{}(&b.root_shape()).rect();
 		}
 
-		inline math::Rect2D flush_shape(const ColliderObject& shape)
+		inline math::Rect2D flush_shape(const VColliderObject& shape)
 		{
 			return std::visit([](const auto& shape) -> math::Rect2D { return flush_shape_impl(shape); }, shape);
 		}

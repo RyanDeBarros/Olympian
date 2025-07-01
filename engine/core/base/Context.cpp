@@ -7,6 +7,7 @@
 #include "graphics/resources/Resources.h"
 #include "registries/Loader.h"
 #include "registries/platform/Input.h"
+#include "physics/collision/scene/LUT.h"
 
 namespace oly::context
 {
@@ -174,6 +175,8 @@ namespace oly::context
 		init_viewport(toml_context);
 
 		oly::internal::check_errors();
+
+		col2d::internal::load_luts();
 	}
 
 	static void terminate()

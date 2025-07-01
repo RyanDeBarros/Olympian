@@ -24,7 +24,7 @@ namespace oly::col2d
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:
-		ColliderObject shape;
+		VColliderObject shape;
 
 		mutable CollisionTree* tree = nullptr;
 		mutable CollisionNode* node = nullptr;
@@ -34,7 +34,7 @@ namespace oly::col2d
 		mutable math::Rect2D quad_wrap;
 
 	public:
-		Collider(ColliderObject&& shape, CollisionTree* tree = nullptr) : shape(std::move(shape)), tree(tree) {}
+		Collider(VColliderObject&& shape, CollisionTree* tree = nullptr) : shape(std::move(shape)), tree(tree) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
 		~Collider();
@@ -47,8 +47,8 @@ namespace oly::col2d
 		void set_tree(CollisionTree* tree);
 		void unset_tree();
 
-		const ColliderObject& get() const { return shape; }
-		ColliderObject& set() { dirty = true; return shape; }
+		const VColliderObject& get() const { return shape; }
+		VColliderObject& set() { dirty = true; return shape; }
 
 	private:
 		void replace_in_node(Collider&& other) noexcept;

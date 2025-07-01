@@ -4,7 +4,7 @@ namespace oly::col2d
 {
 	template<typename Result, typename EventData, typename HandlerRef>
 	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second, std::unordered_map<ConstSoftReference<Collider>,
-		HandlerRef>& handlers, Result(*op)(const ColliderObject&, const ColliderObject&))
+		HandlerRef>& handlers, Result(*op)(const VColliderObject&, const VColliderObject&))
 	{
 		static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
 		static const auto emit = [](auto&& ref, const auto& data) { return (ref.controller.get()->*ref.handler)(data); };
@@ -89,7 +89,7 @@ namespace oly::col2d
 
 	template<typename Result, typename EventData, typename Handler, typename Reference>
 	static void emit_from(const CollisionTree& tree, const Collider& from, Handler only_handler, const Reference& only_controller,
-		Result(*op)(const ColliderObject&, const ColliderObject&))
+		Result(*op)(const VColliderObject&, const VColliderObject&))
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
 		auto it = tree.query(from);
