@@ -4,7 +4,7 @@
 #include "core/containers/ContiguousSet.h"
 #include "core/types/SoftReference.h"
 
-#include "physics/collision/scene/ColliderObject.h"
+#include "physics/collision/scene/LUT.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
@@ -24,7 +24,7 @@ namespace oly::col2d
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:
-		VColliderObject shape;
+		internal::ColliderObject obj;
 
 		mutable CollisionTree* tree = nullptr;
 		mutable CollisionNode* node = nullptr;
@@ -34,7 +34,9 @@ namespace oly::col2d
 		mutable math::Rect2D quad_wrap;
 
 	public:
-		Collider(VColliderObject&& shape, CollisionTree* tree = nullptr) : shape(std::move(shape)), tree(tree) {}
+		template<typename CObj>
+		explicit Collider(CObj&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)), tree(tree) {}
+		Collider(internal::ColliderObject&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)), tree(tree) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
 		~Collider();
@@ -47,12 +49,15 @@ namespace oly::col2d
 		void set_tree(CollisionTree* tree);
 		void unset_tree();
 
-		const VColliderObject& get() const { return shape; }
-		VColliderObject& set() { dirty = true; return shape; }
+		const internal::ColliderObject& _obj() const { return obj; }
+		template<typename CObj>
+		const CObj& get() const { return obj.get<CObj>(); }
+		template<typename CObj>
+		CObj& set() { dirty = true; return obj.set<CObj>(); }
 
 	private:
 		void replace_in_node(Collider&& other) noexcept;
-		bool is_dirty() const { return dirty || internal::shape_is_dirty(shape); }
+		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
 		void flush() const;
 	};
 

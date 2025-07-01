@@ -4,7 +4,7 @@ namespace oly::col2d
 {
 	template<typename Result, typename EventData, typename HandlerRef>
 	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second, std::unordered_map<ConstSoftReference<Collider>,
-		HandlerRef>& handlers, Result(*op)(const VColliderObject&, const VColliderObject&))
+		HandlerRef>& handlers, Result(*op)(const internal::ColliderObject&, const internal::ColliderObject&))
 	{
 		static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
 		static const auto emit = [](auto&& ref, const auto& data) { return (ref.controller.get()->*ref.handler)(data); };
@@ -31,7 +31,7 @@ namespace oly::col2d
 			const Collider* c2 = second.get();
 			if (c1 && c2)
 			{
-				EventData data = { .result = op(c1->get(), c2->get()), .active_collider = first, .passive_collider = second };
+				EventData data = { .result = op(c1->_obj(), c2->_obj()), .active_collider = first, .passive_collider = second };
 				if (found_1)
 					std::visit([&data](auto&& ref) { emit(ref, data); }, it_1->second);
 				if (found_2)
@@ -47,9 +47,9 @@ namespace oly::col2d
 		while (!it.done())
 		{
 			auto pair = it.next();
-			dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handlers, &overlaps);
-			dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handlers, &collides);
-			dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handlers, &contacts);
+			dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handlers, &internal::lut_overlaps);
+			dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handlers, &internal::lut_collides);
+			dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handlers, &internal::lut_contacts);
 		}
 	}
 
@@ -81,24 +81,24 @@ namespace oly::col2d
 		while (!it.done())
 		{
 			ConstSoftReference<Collider> c2 = it.next();
-			dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handlers, &overlaps);
-			dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handlers, &collides);
-			dispatch<ContactResult, ContactEventData>(c1, c2, contact_handlers, &contacts);
+			dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handlers, &internal::lut_overlaps);
+			dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handlers, &internal::lut_collides);
+			dispatch<ContactResult, ContactEventData>(c1, c2, contact_handlers, &internal::lut_contacts);
 		}
 	}
 
 	template<typename Result, typename EventData, typename Handler, typename Reference>
 	static void emit_from(const CollisionTree& tree, const Collider& from, Handler only_handler, const Reference& only_controller,
-		Result(*op)(const VColliderObject&, const VColliderObject&))
+		Result(*op)(const internal::ColliderObject&, const internal::ColliderObject&))
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
 		auto it = tree.query(from);
 		while (!it.done())
 		{
 			ConstSoftReference<Collider> other = it.next();
-			if (auto c2 = other.get())
+			if (const Collider* c2 = other.get())
 			{
-				EventData data = { .result = op(from.get(), c2->get()), .active_collider = c1, .passive_collider = other};
+				EventData data = { .result = op(from._obj(), c2->_obj()), .active_collider = c1, .passive_collider = other};
 				(only_controller.get()->*only_handler)(data);
 			}
 		}
@@ -106,31 +106,31 @@ namespace oly::col2d
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &overlaps);
+		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &internal::lut_overlaps);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &overlaps);
+		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &internal::lut_overlaps);
 	}
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &collides);
+		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &internal::lut_collides);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &collides);
+		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &internal::lut_collides);
 	}
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &contacts);
+		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &internal::lut_contacts);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &contacts);
+		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &internal::lut_contacts);
 	}
 }
