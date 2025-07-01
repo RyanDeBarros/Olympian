@@ -118,12 +118,12 @@ namespace oly::col2d
 
 	// ######################################################################################################################################################
 	// ElementParam
-	extern OverlapResult point_hits(ElementParam c, glm::vec2 test);
-	extern OverlapResult ray_hits(ElementParam c, const Ray& ray);
-	extern RaycastResult raycast(ElementParam c, const Ray& ray);
-	extern OverlapResult overlaps(ElementParam c1, ElementParam c2);
-	extern CollisionResult collides(ElementParam c1, ElementParam c2);
-	extern ContactResult contacts(ElementParam c1, ElementParam c2);
+	extern OverlapResult point_hits(const ElementParam& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const ElementParam& c, const Ray& ray);
+	extern RaycastResult raycast(const ElementParam& c, const Ray& ray);
+	extern OverlapResult overlaps(const ElementParam& c1, const ElementParam& c2);
+	extern CollisionResult collides(const ElementParam& c1, const ElementParam& c2);
+	extern ContactResult contacts(const ElementParam& c1, const ElementParam& c2);
 	// ######################################################################################################################################################
 
 	// ######################################################################################################################################################

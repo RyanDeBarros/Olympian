@@ -85,9 +85,9 @@ namespace oly::col2d
 	extern CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions);
 	extern ContactResult greedy_contact(const std::vector<ContactResult>& contacts);
 
-	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
+	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element);
 	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
-	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element);
+	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element);
 	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements);
 
 	namespace internal
@@ -105,7 +105,7 @@ namespace oly::col2d
 		extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
 	}
 
-	inline Element transform_element(ElementParam c, const glm::mat3& m) { return std::visit([&m](auto&& c) { return internal::transform_element(*c, m); }, c); }
+	inline Element transform_element(const ElementParam& c, const glm::mat3& m) { return std::visit([&m](auto&& c) { return internal::transform_element(*c, m); }, c); }
 
 	typedef int Mask;
 	typedef int Layer;

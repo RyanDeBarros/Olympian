@@ -1090,32 +1090,32 @@ namespace oly::col2d
 		return sat::contacts(c1, c2);
 	}
 
-	OverlapResult point_hits(ElementParam c, glm::vec2 test)
+	OverlapResult point_hits(const ElementParam& c, glm::vec2 test)
 	{
 		return std::visit([test](auto&& c) { return point_hits(*c, test); }, c);
 	}
 
-	OverlapResult ray_hits(ElementParam c, const Ray& ray)
+	OverlapResult ray_hits(const ElementParam& c, const Ray& ray)
 	{
 		return std::visit([&ray](auto&& c) { return ray_hits(*c, ray); }, c);
 	}
 
-	RaycastResult raycast(ElementParam c, const Ray& ray)
+	RaycastResult raycast(const ElementParam& c, const Ray& ray)
 	{
 		return std::visit([&ray](auto&& c) { return raycast(*c, ray); }, c);
 	}
 
-	OverlapResult overlaps(ElementParam c1, ElementParam c2)
+	OverlapResult overlaps(const ElementParam& c1, const ElementParam& c2)
 	{
 		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return overlaps(*c1, *c2); }, c2); }, c1);
 	}
 
-	CollisionResult collides(ElementParam c1, ElementParam c2)
+	CollisionResult collides(const ElementParam& c1, const ElementParam& c2)
 	{
 		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return collides(*c1, *c2); }, c2); }, c1);
 	}
 	
-	ContactResult contacts(ElementParam c1, ElementParam c2)
+	ContactResult contacts(const ElementParam& c1, const ElementParam& c2)
 	{
 		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return contacts(*c1, *c2); }, c2); }, c1);
 	}

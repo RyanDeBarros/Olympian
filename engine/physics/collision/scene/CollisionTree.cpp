@@ -7,14 +7,14 @@
 namespace oly::col2d
 {
 	Collider::Collider(const Collider& other)
-		: tree(other.tree), node(other.node), dirty(other.dirty), quad_wrap(other.quad_wrap)
+		: shape(other.shape), tree(other.tree), node(other.node), dirty(other.dirty), quad_wrap(other.quad_wrap)
 	{
 		if (node)
 			node->insert(*this);
 	}
 
 	Collider::Collider(Collider&& other) noexcept
-		: tree(other.tree), dirty(other.dirty), quad_wrap(other.quad_wrap)
+		: shape(std::move(other.shape)), tree(other.tree), dirty(other.dirty), quad_wrap(other.quad_wrap)
 	{
 		replace_in_node(std::move(other));
 	}
@@ -29,6 +29,8 @@ namespace oly::col2d
 	{
 		if (this != &other)
 		{
+			shape = other.shape;
+
 			if (tree == other.tree)
 			{
 				if (node != other.node)
@@ -61,6 +63,8 @@ namespace oly::col2d
 	{
 		if (this != &other)
 		{
+			shape = std::move(other.shape);
+
 			if (node)
 				node->remove(*this);
 
@@ -111,7 +115,7 @@ namespace oly::col2d
 			return;
 
 		dirty = false;
-		flush_impl();
+		internal::flush_shape(shape);
 
 		if (node)
 			node->update(*this);

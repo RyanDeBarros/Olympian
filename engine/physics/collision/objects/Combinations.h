@@ -91,30 +91,30 @@ namespace oly::col2d
 	inline RaycastResult raycast(const TBVH<Shape>& c, const Ray& ray) { return c.raycast(ray); }
 
 	template<typename Shape>
-	inline OverlapResult overlaps(const BVH<Shape>& c1, ElementParam c2) { return c1.raw_overlaps(c2); }
+	inline OverlapResult overlaps(const BVH<Shape>& c1, const ElementParam& c2) { return c1.raw_overlaps(c2); }
 	template<typename Shape>
-	inline OverlapResult overlaps(ElementParam c1, const BVH<Shape>& c2) { return c2.raw_overlaps(c1); }
+	inline OverlapResult overlaps(const ElementParam& c1, const BVH<Shape>& c2) { return c2.raw_overlaps(c1); }
 	template<typename Shape>
-	inline CollisionResult collides(const BVH<Shape>& c1, ElementParam c2) { return c1.raw_collides(c2); }
+	inline CollisionResult collides(const BVH<Shape>& c1, const ElementParam& c2) { return c1.raw_collides(c2); }
 	template<typename Shape>
-	inline CollisionResult collides(ElementParam c1, const BVH<Shape>& c2) { return c2.raw_collides(c1).invert(); }
+	inline CollisionResult collides(const ElementParam& c1, const BVH<Shape>& c2) { return c2.raw_collides(c1).invert(); }
 	template<typename Shape>
-	inline ContactResult contacts(const BVH<Shape>& c1, ElementParam c2) { return c1.raw_contacts(c2); }
+	inline ContactResult contacts(const BVH<Shape>& c1, const ElementParam& c2) { return c1.raw_contacts(c2); }
 	template<typename Shape>
-	inline ContactResult contacts(ElementParam c1, const BVH<Shape>& c2) { return c2.raw_contacts(c1).invert(); }
+	inline ContactResult contacts(const ElementParam& c1, const BVH<Shape>& c2) { return c2.raw_contacts(c1).invert(); }
 
 	template<typename Shape>
-	inline OverlapResult overlaps(const TBVH<Shape>& c1, ElementParam c2) { return c1.raw_overlaps(c2); }
+	inline OverlapResult overlaps(const TBVH<Shape>& c1, const ElementParam& c2) { return c1.raw_overlaps(c2); }
 	template<typename Shape>
-	inline OverlapResult overlaps(ElementParam c1, const TBVH<Shape>& c2) { return c2.raw_overlaps(c1); }
+	inline OverlapResult overlaps(const ElementParam& c1, const TBVH<Shape>& c2) { return c2.raw_overlaps(c1); }
 	template<typename Shape>
-	inline CollisionResult collides(const TBVH<Shape>& c1, ElementParam c2) { return c1.raw_collides(c2); }
+	inline CollisionResult collides(const TBVH<Shape>& c1, const ElementParam& c2) { return c1.raw_collides(c2); }
 	template<typename Shape>
-	inline CollisionResult collides(ElementParam c1, const TBVH<Shape>& c2) { return c2.raw_collides(c1).invert(); }
+	inline CollisionResult collides(const ElementParam& c1, const TBVH<Shape>& c2) { return c2.raw_collides(c1).invert(); }
 	template<typename Shape>
-	inline ContactResult contacts(const TBVH<Shape>& c1, ElementParam c2) { return c1.raw_contacts(c2); }
+	inline ContactResult contacts(const TBVH<Shape>& c1, const ElementParam& c2) { return c1.raw_contacts(c2); }
 	template<typename Shape>
-	inline ContactResult contacts(ElementParam c1, const TBVH<Shape>& c2) { return c2.raw_contacts(c1).invert(); }
+	inline ContactResult contacts(const ElementParam& c1, const TBVH<Shape>& c2) { return c2.raw_contacts(c1).invert(); }
 
 	template<typename Shape>
 	inline OverlapResult overlaps(const BVH<Shape>& c1, const Primitive& c2) { return (c1.mask & c2.layer) && c1.raw_overlaps(c2); }

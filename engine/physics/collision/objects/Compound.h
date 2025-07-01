@@ -80,7 +80,7 @@ namespace oly::col2d
 		}
 
 		template<typename Comp>
-		OverlapResult overlaps(const Comp& c1, ElementParam c2)
+		OverlapResult overlaps(const Comp& c1, const ElementParam& c2)
 		{
 			for (const auto& e1 : element_array(c1))
 			{
@@ -91,13 +91,13 @@ namespace oly::col2d
 		}
 
 		template<typename Comp>
-		CollisionResult collides(const Comp& c1, ElementParam c2)
+		CollisionResult collides(const Comp& c1, const ElementParam& c2)
 		{
 			return compound_collision(element_array(c1).data(), element_array(c1).size(), c2);
 		}
 
 		template<typename Comp>
-		ContactResult contacts(const Comp& c1, ElementParam c2)
+		ContactResult contacts(const Comp& c1, const ElementParam& c2)
 		{
 			return compound_contact(element_array(c1).data(), element_array(c1).size(), c2);
 		}
@@ -107,23 +107,23 @@ namespace oly::col2d
 	extern OverlapResult ray_hits(const Compound& c, const Ray& ray);
 	extern RaycastResult raycast(const Compound& c, const Ray& ray);
 
-	inline OverlapResult overlaps(const Compound& c1, ElementParam c2) { return internal::overlaps(c1, c2); }
-	inline OverlapResult overlaps(ElementParam c1, const Compound& c2) { return overlaps(c2, c1); }
-	inline CollisionResult collides(const Compound& c1, ElementParam c2) { return internal::collides(c1, c2); }
-	inline CollisionResult collides(ElementParam c1, const Compound& c2) { return collides(c2, c1).invert(); }
-	inline ContactResult contacts(const Compound& c1, ElementParam c2) { return internal::contacts(c1, c2); }
-	inline ContactResult contacts(ElementParam c1, const Compound& c2) { return contacts(c2, c1).invert(); }
+	inline OverlapResult overlaps(const Compound& c1, const ElementParam& c2) { return internal::overlaps(c1, c2); }
+	inline OverlapResult overlaps(const ElementParam& c1, const Compound& c2) { return overlaps(c2, c1); }
+	inline CollisionResult collides(const Compound& c1, const ElementParam& c2) { return internal::collides(c1, c2); }
+	inline CollisionResult collides(const ElementParam& c1, const Compound& c2) { return collides(c2, c1).invert(); }
+	inline ContactResult contacts(const Compound& c1, const ElementParam& c2) { return internal::contacts(c1, c2); }
+	inline ContactResult contacts(const ElementParam& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
 
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const TCompound& c, const Ray& ray);
 	extern RaycastResult raycast(const TCompound& c, const Ray& ray);
 
-	inline OverlapResult overlaps(const TCompound& c1, ElementParam c2) { return internal::overlaps(c1, c2); }
-	inline OverlapResult overlaps(ElementParam c1, const TCompound& c2) { return overlaps(c2, c1); }
-	inline CollisionResult collides(const TCompound& c1, ElementParam c2) { return internal::collides(c1, c2); }
-	inline CollisionResult collides(ElementParam c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-	inline ContactResult contacts(const TCompound& c1, ElementParam c2) { return internal::contacts(c1, c2); }
-	inline ContactResult contacts(ElementParam c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
+	inline OverlapResult overlaps(const TCompound& c1, const ElementParam& c2) { return internal::overlaps(c1, c2); }
+	inline OverlapResult overlaps(const ElementParam& c1, const TCompound& c2) { return overlaps(c2, c1); }
+	inline CollisionResult collides(const TCompound& c1, const ElementParam& c2) { return internal::collides(c1, c2); }
+	inline CollisionResult collides(const ElementParam& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
+	inline ContactResult contacts(const TCompound& c1, const ElementParam& c2) { return internal::contacts(c1, c2); }
+	inline ContactResult contacts(const ElementParam& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
 
 	inline OverlapResult overlaps(const Compound& c1, const Compound& c2) { return (c1.mask & c2.layer) && internal::overlaps(c1, c2); }
 	inline CollisionResult collides(const Compound& c1, const Compound& c2) { return (c1.mask & c2.layer) ? internal::collides(c1, c2) : CollisionResult{ .overlap = false }; }

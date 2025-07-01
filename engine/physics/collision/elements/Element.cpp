@@ -79,7 +79,7 @@ namespace oly::col2d
 		return axes;
 	}
 
-	static std::set<UnitVector2D> candidate_axes(const Circle& c, ElementParam other)
+	static std::set<UnitVector2D> candidate_axes(const Circle& c, const ElementParam& other)
 	{
 		static const auto closest_point_on_polygon = [](const auto& points, glm::vec2 center) -> glm::vec2 {
 			float closest_dist_sqrd = nmax<float>();
@@ -109,7 +109,7 @@ namespace oly::col2d
 		return { UnitVector2D(axis), UnitVector2D(-axis) };
 	}
 	
-	static std::set<UnitVector2D> candidate_axes(ElementParam reference, ElementParam other)
+	static std::set<UnitVector2D> candidate_axes(const ElementParam& reference, const ElementParam& other)
 	{
 		return std::visit([&other](auto&& c) {
 			if constexpr (visiting_class_is<decltype(*c), Circle>)
@@ -158,7 +158,7 @@ namespace oly::col2d
 		}
 	}
 
-	static std::set<UnitVector2D> candidate_axes(ElementParam reference, const Element* others, const size_t num_others)
+	static std::set<UnitVector2D> candidate_axes(const ElementParam& reference, const Element* others, const size_t num_others)
 	{
 		return std::visit([others, num_others](auto&& c) {
 			if constexpr (visiting_class_is<decltype(*c), Circle>)
@@ -173,7 +173,7 @@ namespace oly::col2d
 			}, reference);
 	}
 
-	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		std::set<UnitVector2D> axes = candidate_axes(static_element, active_elements, num_active_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
@@ -191,17 +191,17 @@ namespace oly::col2d
 		return axes;
 	}
 
-	static float projection_max(const UnitVector2D& axis, ElementParam el)
+	static float projection_max(const UnitVector2D& axis, const ElementParam& el)
 	{
 		return std::visit([&axis](auto&& el) { return el->projection_max(axis); }, el);
 	}
 
-	static float projection_min(const UnitVector2D& axis, ElementParam el)
+	static float projection_min(const UnitVector2D& axis, const ElementParam& el)
 	{
 		return std::visit([&axis](auto&& el) { return el->projection_min(axis); }, el);
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		// Find what length is necessary to separate compound objects along axis
 		float active_min_proj = nmax<float>();
@@ -223,7 +223,7 @@ namespace oly::col2d
 		return static_max_proj - active_min_proj;
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
@@ -261,7 +261,7 @@ namespace oly::col2d
 		return laziest;
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, ElementParam static_element, size_t& most_significant_active_element)
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element, size_t& most_significant_active_element)
 	{
 		// Find what length is necessary to separate compound objects along axis, and which element contributes the largest translation
 		float active_min_proj = nmax<float>();
@@ -305,7 +305,7 @@ namespace oly::col2d
 		return static_max_proj - active_min_proj;
 	}
 
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, ElementParam static_element)
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		size_t most_significant_active_element = 0;

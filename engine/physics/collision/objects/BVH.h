@@ -27,7 +27,7 @@ namespace oly::col2d
 		struct Wrap<AABB>
 		{
 			AABB operator()(const Element* elements, size_t count) const;
-			AABB operator()(ElementParam element) const;
+			AABB operator()(const ElementParam& element) const;
 		};
 
 		template<>
@@ -171,6 +171,9 @@ namespace oly::col2d
 	template<typename Shape>
 	class BVH
 	{
+		template<typename>
+		friend class BVH;
+
 		struct Node
 		{
 			std::optional<Shape> shape;
@@ -339,13 +342,14 @@ namespace oly::col2d
 		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), elements.data(), ray); }
 		RaycastResult raycast(const Ray& ray) const { return raycast(root(), elements.data(), ray); }
 		
+		OverlapResult raw_overlaps(const Element& e) const { return overlaps(root(), elements.data(), param(e)); }
 		template<typename Other>
 		OverlapResult raw_overlaps(const Other& c) const { return overlaps(root(), elements.data(), c); }
 		template<typename S>
-		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps(root(), elements.data(), bvh.root(), bvh.elements.data()); }
+		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps<S>(root(), elements.data(), bvh.root(), bvh.elements.data()); }
 
 		CollisionResult raw_collides(const Element& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e)) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(ElementParam e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const ElementParam& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const Primitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element)) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const TPrimitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.get_baked())) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const Compound& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : CollisionResult{ .overlap = false }; }
@@ -355,7 +359,7 @@ namespace oly::col2d
 		CollisionResult raw_collides(const BVH<S>& bvh) const { return raw_overlaps(bvh) ? compound_collision(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size()) : CollisionResult{.overlap = false}; }
 
 		ContactResult raw_contacts(const Element& e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), param(e)) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(ElementParam e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const ElementParam& e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const Primitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.element)) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const TPrimitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.get_baked())) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const Compound& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : ContactResult{ .overlap = false }; }
@@ -418,28 +422,28 @@ namespace oly::col2d
 		}
 
 		template<typename OtherShape>
-		static OverlapResult overlaps(const Node& my_node, const Element* my_elements, const BVH<OtherShape>::Node& other_node, const Element* other_elements)
+		static OverlapResult overlaps(const Node& my_node, const Element* my_elements, const typename BVH<OtherShape>::Node& other_node, const Element* other_elements)
 		{
 			if (my_node.is_leaf())
 			{
 				if (other_node.is_leaf())
 					return col2d::overlaps(my_elements[my_node.start_index], other_elements[other_node.start_index]);
 				else
-					return BVH<OtherShape>::overlaps(other_node, other_elements, my_elements[my_node.start_index]);
+					return BVH<OtherShape>::overlaps(other_node, other_elements, param(my_elements[my_node.start_index]));
 			}
 			else
 			{
 				if (other_node.is_leaf())
-					return overlaps(my_node, my_elements, other_elements[other_node.start_index]);
+					return overlaps(my_node, my_elements, param(other_elements[other_node.start_index]));
 				else
 				{
 					if (!col2d::overlaps(my_node.shape.value(), other_node.shape.value()))
 						return false;
 					else
-						return overlaps(*my_node.left, my_elements, *other_node.left, other_elements)
-							|| overlaps(*my_node.left, my_elements, *other_node.right, other_elements)
-							|| overlaps(*my_node.right, my_elements, *other_node.left, other_elements)
-							|| overlaps(*my_node.right, my_elements, *other_node.right, other_elements);
+						return overlaps<OtherShape>(*my_node.left, my_elements, *other_node.left, other_elements)
+							|| overlaps<OtherShape>(*my_node.left, my_elements, *other_node.right, other_elements)
+							|| overlaps<OtherShape>(*my_node.right, my_elements, *other_node.left, other_elements)
+							|| overlaps<OtherShape>(*my_node.right, my_elements, *other_node.right, other_elements);
 				}
 			}
 		}
@@ -459,6 +463,9 @@ namespace oly::col2d
 	template<typename Shape>
 	class TBVH
 	{
+		template<typename>
+		friend class TBVH;
+
 		Transformer2D transformer;
 		mutable BVH<Shape> _bvh;
 		mutable bool local_dirty = true;

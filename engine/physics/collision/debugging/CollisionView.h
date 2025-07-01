@@ -309,12 +309,12 @@ namespace oly::debug
 		std::visit([&view, color](auto&& e) { update_view(view, *e, color); }, param(c));
 	}
 
-	inline CollisionView collision_view(col2d::ElementParam c, glm::vec4 color)
+	inline CollisionView collision_view(const col2d::ElementParam& c, glm::vec4 color)
 	{
 		return std::visit([color](auto&& e) { return collision_view(*e, color); }, c);
 	}
 
-	inline void update_view(CollisionView& view, col2d::ElementParam c, glm::vec4 color)
+	inline void update_view(CollisionView& view, const col2d::ElementParam& c, glm::vec4 color)
 	{
 		std::visit([&view, color](auto&& e) { update_view(view, *e, color); }, c);
 	}

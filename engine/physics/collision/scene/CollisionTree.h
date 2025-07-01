@@ -2,10 +2,9 @@
 
 #include "core/containers/FixedVector.h"
 #include "core/containers/ContiguousSet.h"
-#include "core/math/Shapes.h"
 #include "core/types/SoftReference.h"
 
-#include "physics/collision/methods/CollisionInfo.h"
+#include "physics/collision/scene/ColliderObject.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
@@ -25,6 +24,8 @@ namespace oly::col2d
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:
+		ColliderObject shape;
+
 		mutable CollisionTree* tree = nullptr;
 		mutable CollisionNode* node = nullptr;
 		mutable bool dirty = true;
@@ -33,10 +34,10 @@ namespace oly::col2d
 		mutable math::Rect2D quad_wrap;
 
 	public:
-		Collider(CollisionTree* tree = nullptr) : tree(tree) {}
+		Collider(ColliderObject&& shape, CollisionTree* tree = nullptr) : shape(std::move(shape)), tree(tree) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
-		virtual ~Collider();
+		~Collider();
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
@@ -46,21 +47,13 @@ namespace oly::col2d
 		void set_tree(CollisionTree* tree);
 		void unset_tree();
 
-		// TODO tie these into existing functions
-		virtual OverlapResult overlaps(const Collider& other) const { return false; }
-		virtual CollisionResult collides(const Collider& other) const { return { .overlap = false }; }
-		virtual ContactResult contacts(const Collider& other) const { return { .overlap = false }; }
+		const ColliderObject& get() const { return shape; }
+		ColliderObject& set() { dirty = true; return shape; }
 
 	private:
 		void replace_in_node(Collider&& other) noexcept;
-		bool is_dirty() const { return dirty || dirty_impl(); }
-		// call flush() after all collision objects have moved, but before handling events
+		bool is_dirty() const { return dirty || internal::shape_is_dirty(shape); }
 		void flush() const;
-
-	protected:
-		void flag() const { dirty = true; }
-		virtual bool dirty_impl() const { return false; }
-		virtual void flush_impl() const {}
 	};
 
 #define OLY_COLLIDER_HEADER(Class)\
@@ -117,6 +110,7 @@ namespace oly::col2d
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 		~CollisionTree();
 
+		// call flush() after all collision objects have moved, but before handling events
 		void flush() const;
 
 	private:

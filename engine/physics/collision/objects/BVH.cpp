@@ -18,7 +18,7 @@ namespace oly::col2d
 			return c;
 		}
 
-		AABB Wrap<AABB>::operator()(ElementParam element) const
+		AABB Wrap<AABB>::operator()(const ElementParam& element) const
 		{
 			return std::visit([](auto&& element) {
 				if constexpr (visiting_class_is<decltype(*element), AABB>)
