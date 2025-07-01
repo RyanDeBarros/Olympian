@@ -296,10 +296,23 @@ namespace oly
 			}
 		}
 
-		bool InputBindingContext::dispatch(input::SignalID id, input::Signal signal) const
+		bool InputBindingContext::dispatch(input::SignalID id, input::Signal signal)
 		{
+			static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
+
 			auto it = handler_map.find(id);
-			return it != handler_map.end() && std::visit([signal](auto&& ref) { return (ref.controller->*ref.handler)(signal); }, it->second);
+			if (it != handler_map.end())
+			{
+				if (std::visit(invalid_controller, it->second))
+				{
+					handler_map.erase(it);
+					return false;
+				}
+				else
+					return std::visit([signal](auto&& ref) { return (ref.controller.get()->*ref.handler)(signal); }, it->second);
+			}
+			else
+				return false;
 		}
 
 		bool InputBindingContext::consume(const input::KeyEventData& data)

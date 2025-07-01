@@ -17,9 +17,7 @@ namespace oly::col2d
 		const Primitive& get() const { return p; }
 		Primitive& set() { flag(); return p; }
 
-		ConstSoftReference<PrimitiveCollider> ref() const { return _ref.cref(this); }
-		ConstSoftReference<PrimitiveCollider> cref() const { return _ref.cref(this); }
-		SoftReference<PrimitiveCollider> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(PrimitiveCollider);
 
 	protected:
 		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(param(p.element)).rect(); }
@@ -35,9 +33,7 @@ namespace oly::col2d
 		const TPrimitive& get() const { return p; }
 		TPrimitive& set() { flag(); return p; }
 
-		ConstSoftReference<TPrimitiveCollider> ref() const { return _ref.cref(this); }
-		ConstSoftReference<TPrimitiveCollider> cref() const { return _ref.cref(this); }
-		SoftReference<TPrimitiveCollider> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(TPrimitiveCollider);
 
 	protected:
 		bool dirty_impl() const override { return p.is_dirty(); }
@@ -54,9 +50,7 @@ namespace oly::col2d
 		const Compound& get() const { return c; }
 		Compound& set() { flag(); return c; }
 
-		ConstSoftReference<CompoundCollider> ref() const { return _ref.cref(this); }
-		ConstSoftReference<CompoundCollider> cref() const { return _ref.cref(this); }
-		SoftReference<CompoundCollider> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(CompoundCollider);
 
 	protected:
 		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(c.elements.data(), c.elements.size()).rect(); }
@@ -72,9 +66,7 @@ namespace oly::col2d
 		const TCompound& get() const { return c; }
 		TCompound& set() { flag(); return c; }
 
-		ConstSoftReference<TCompoundCollider> ref() const { return _ref.cref(this); }
-		ConstSoftReference<TCompoundCollider> cref() const { return _ref.cref(this); }
-		SoftReference<TCompoundCollider> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(TCompoundCollider);
 
 	protected:
 		bool dirty_impl() const override { return c.is_dirty(); }
@@ -92,9 +84,7 @@ namespace oly::col2d
 		const BVH<Shape>& get() const { return b; }
 		BVH<Shape>& set() { flag(); return b; }
 
-		ConstSoftReference<BVHCollider<Shape>> ref() const { return _ref.cref(this); }
-		ConstSoftReference<BVHCollider<Shape>> cref() const { return _ref.cref(this); }
-		SoftReference<BVHCollider<Shape>> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(BVHCollider<Shape>);
 
 	protected:
 		void flush_impl() const override { quad_wrap = internal::Wrap<AABB>{}(&b.root_shape()).rect(); }
@@ -111,9 +101,7 @@ namespace oly::col2d
 		const TBVH<Shape>& get() const { return b; }
 		TBVH<Shape>& set() { flag(); return b; }
 
-		ConstSoftReference<TBVHCollider<Shape>> ref() const { return _ref.cref(this); }
-		ConstSoftReference<TBVHCollider<Shape>> cref() const { return _ref.cref(this); }
-		SoftReference<TBVHCollider<Shape>> ref() { return _ref.ref(this); }
+		OLY_COLLIDER_HEADER(TBVHCollider<Shape>);
 
 	protected:
 		bool dirty_impl() const override { return b.is_dirty(); }

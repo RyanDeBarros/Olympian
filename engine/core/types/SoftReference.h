@@ -26,8 +26,12 @@ namespace oly
 		T* ref = nullptr;
 		std::shared_ptr<bool> status = nullptr;
 
-		friend class SoftReferenceBase<T>;
-		friend class ConstSoftReference<T>;
+		template<typename>
+		friend class SoftReference;
+		template<typename>
+		friend class SoftReferenceBase;
+		template<typename>
+		friend class ConstSoftReference;
 		SoftReference(T* ref, const std::shared_ptr<bool>& status) : ref(ref), status(status) {}
 
 	public:
@@ -46,6 +50,9 @@ namespace oly
 		operator bool() const { return status && *status; }
 		T& operator*() const { return *get(); }
 		T* operator->() const { return get(); }
+
+		bool operator==(const SoftReference<T>& other) const { return ref == other.ref; }
+		bool operator!=(const SoftReference<T>& other) const { return ref != other.ref; }
 
 		template<typename U>
 		SoftReference<U> cast_dynamic() const
@@ -71,7 +78,10 @@ namespace oly
 		const T* ref = nullptr;
 		std::shared_ptr<bool> status = nullptr;
 
-		friend class SoftReferenceBase<T>;
+		template<typename>
+		friend class ConstSoftReference;
+		template<typename>
+		friend class SoftReferenceBase;
 		ConstSoftReference(const T* ref, const std::shared_ptr<bool>& status) : ref(ref), status(status) {}
 		ConstSoftReference(T* ref, const std::shared_ptr<bool>& status) : ref(ref), status(status) {}
 
@@ -101,6 +111,11 @@ namespace oly
 		operator bool() const { return status && *status; }
 		const T& operator*() const { return *get(); }
 		const T* operator->() const { return get(); }
+
+		bool operator==(const ConstSoftReference<T>& other) const { return ref == other.ref; }
+		bool operator!=(const ConstSoftReference<T>& other) const { return ref != other.ref; }
+		bool operator==(const SoftReference<T>& other) const { return ref == other.ref; }
+		bool operator!=(const SoftReference<T>& other) const { return ref != other.ref; }
 
 		template<typename U>
 		ConstSoftReference<U> cast_dynamic() const
@@ -146,12 +161,28 @@ namespace oly
 		template<PointerConvertibleTo<T> U>
 		SoftReference<U> ref(U* obj) const { return SoftReference<U>(obj, status); }
 		template<PointerConvertibleTo<T> U>
-		SoftReference<U> cref(const U* obj) const { return ConstSoftReference<U>(obj, status); }
+		ConstSoftReference<U> cref(const U* obj) const { return ConstSoftReference<U>(obj, status); }
 		template<PointerConvertibleTo<T> U>
-		SoftReference<U> cref(U* obj) const { return ConstSoftReference<U>(obj, status); }
+		ConstSoftReference<U> cref(U* obj) const { return ConstSoftReference<U>(obj, status); }
 
 		size_t hash() const { return std::hash<std::shared_ptr<bool>>{}(status); }
 	};
+
+#define OLY_SOFT_REFERENCE_BASE_DECLARATION(Class)\
+	protected:\
+		oly::SoftReferenceBase<Class> _ref_base;\
+	\
+	public:\
+		oly::ConstSoftReference<Class> ref() const { return _ref_base.cref(this); }\
+		oly::ConstSoftReference<Class> cref() const { return _ref_base.cref(this); }\
+		oly::SoftReference<Class> ref() { return _ref_base.ref(this); }
+
+#define OLY_SOFT_REFERENCE_PUBLIC(Class)\
+	public:\
+		oly::ConstSoftReference<Class> ref() const { return _ref_base.cref(this); }\
+		oly::ConstSoftReference<Class> cref() const { return _ref_base.cref(this); }\
+		oly::SoftReference<Class> ref() { return _ref_base.ref(this); }
+
 }
 
 template<typename T>

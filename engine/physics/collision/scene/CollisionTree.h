@@ -22,13 +22,7 @@ namespace oly::col2d
 		friend class CollisionTree;
 		friend class CollisionNode;
 
-	protected:
-		SoftReferenceBase<Collider> _ref;
-
-	public:
-		ConstSoftReference<Collider> ref() const { return _ref.cref(this); }
-		ConstSoftReference<Collider> cref() const { return _ref.cref(this); }
-		SoftReference<Collider> ref() { return _ref.ref(this); }
+		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:
 		mutable CollisionTree* tree = nullptr;
@@ -68,6 +62,9 @@ namespace oly::col2d
 		virtual bool dirty_impl() const { return false; }
 		virtual void flush_impl() const {}
 	};
+
+#define OLY_COLLIDER_HEADER(Class)\
+	OLY_SOFT_REFERENCE_PUBLIC(Class);
 
 	class CollisionNode
 	{

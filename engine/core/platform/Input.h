@@ -11,6 +11,7 @@
 #include "core/platform/Events.h"
 #include "core/containers/FixedVector.h"
 #include "core/types/Meta.h"
+#include "core/types/SoftReference.h"
 
 namespace oly
 {
@@ -346,13 +347,19 @@ namespace oly
 		};
 	}
 
-	struct InputController
+	class InputController
 	{
+		OLY_SOFT_REFERENCE_BASE_DECLARATION(InputController);
+
+	public:
 		virtual ~InputController() = default;
 
 		using Handler = bool(InputController::*)(input::Signal);
 		using ConstHandler = bool(InputController::*)(input::Signal) const;
 	};
+
+#define OLY_INPUT_CONTROLLER_HEADER(Class)\
+	OLY_SOFT_REFERENCE_PUBLIC(Class)
 
 	namespace input
 	{
@@ -490,14 +497,12 @@ namespace oly
 			struct HandlerRef
 			{
 				InputController::Handler handler = nullptr;
-				// TODO use soft reference
-				InputController* controller = nullptr;
+				SoftReference<InputController> controller = nullptr;
 			};
 			struct ConstHandlerRef
 			{
 				InputController::ConstHandler handler = nullptr;
-				// TODO use soft reference
-				const InputController* controller = nullptr;
+				ConstSoftReference<InputController> controller = nullptr;
 			};
 			
 			std::unordered_map<input::SignalID, std::variant<HandlerRef, ConstHandlerRef>> handler_map;
@@ -530,14 +535,14 @@ namespace oly
 
 #undef REG_SIGNAL
 
-			void bind(input::SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = HandlerRef{ handler, controller }; }
-			void bind(input::SignalID signal, InputController::ConstHandler handler, const InputController* controller) { handler_map[signal] = ConstHandlerRef{ handler, controller }; }
-			void unbind(input::SignalID signal, InputController::Handler handler, InputController* controller)
+			void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller) { handler_map[signal] = HandlerRef{ handler, controller }; }
+			void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) { handler_map[signal] = ConstHandlerRef{ handler, controller }; }
+			void unbind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller)
 			{
 				auto it = handler_map.find(signal);
 				if (it != handler_map.end())
 				{
-					if (std::visit([handler, controller](auto&& ref) {
+					if (std::visit([handler, &controller](auto&& ref) {
 						if constexpr (visiting_class_is<decltype(ref), HandlerRef>)
 							return ref.handler == handler && ref.controller == controller;
 						else
@@ -546,7 +551,7 @@ namespace oly
 						handler_map.erase(it);
 				}
 			}
-			void unbind(input::SignalID signal, InputController::ConstHandler handler, const InputController* controller)
+			void unbind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller)
 			{
 				auto it = handler_map.find(signal);
 				if (it != handler_map.end())
@@ -573,7 +578,7 @@ namespace oly
 			void poll_gamepad_axis_2d(int controller, int axis);
 
 			bool get_phase(int action, input::Phase& phase) const;
-			bool dispatch(input::SignalID id, input::Signal signal) const;
+			bool dispatch(input::SignalID id, input::Signal signal);
 
 		public:
 			virtual bool consume(const input::KeyEventData& data) override;

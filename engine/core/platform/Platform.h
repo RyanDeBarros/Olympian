@@ -48,27 +48,51 @@ namespace oly::platform
 		InputBindingContext& binding_context() { return _binding_context; }
 
 		template<std::derived_from<InputController> Controller>
+		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
+		{
+			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), controller);
+		}
+
+		template<std::derived_from<InputController> Controller>
+		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
+		{
+			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), controller);
+		}
+
+		template<std::derived_from<InputController> Controller>
 		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 		{
-			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), &controller);
+			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), controller.ref());
 		}
 
 		template<std::derived_from<InputController> Controller>
 		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
 		{
-			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), &controller);
+			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), controller.cref());
+		}
+
+		template<std::derived_from<InputController> Controller>
+		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
+		{
+			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), controller);
+		}
+
+		template<std::derived_from<InputController> Controller>
+		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
+		{
+			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), controller);
 		}
 
 		template<std::derived_from<InputController> Controller>
 		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 		{
-			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), &controller);
+			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), controller.ref());
 		}
 
 		template<std::derived_from<InputController> Controller>
 		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
 		{
-			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), &controller);
+			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), controller.cref());
 		}
 
 		void unbind_signal(const char* signal)
