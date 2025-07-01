@@ -54,9 +54,26 @@ namespace oly::platform
 		}
 
 		template<std::derived_from<InputController> Controller>
+		void bind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
+		{
+			_binding_context.bind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), &controller);
+		}
+
+		template<std::derived_from<InputController> Controller>
 		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 		{
 			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::Handler>(handler), &controller);
+		}
+
+		template<std::derived_from<InputController> Controller>
+		void unbind_signal(const char* signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
+		{
+			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), &controller);
+		}
+
+		void unbind_signal(const char* signal)
+		{
+			_binding_context.unbind(_signal_table.get(signal));
 		}
 	};
 }

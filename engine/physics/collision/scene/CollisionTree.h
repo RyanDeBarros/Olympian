@@ -60,6 +60,7 @@ namespace oly::col2d
 	private:
 		void replace_in_node(Collider&& other) noexcept;
 		bool is_dirty() const { return dirty || dirty_impl(); }
+		// call flush() after all collision objects have moved, but before handling events
 		void flush() const;
 
 	protected:

@@ -299,7 +299,7 @@ namespace oly
 		bool InputBindingContext::dispatch(input::SignalID id, input::Signal signal) const
 		{
 			auto it = handler_map.find(id);
-			return it != handler_map.end() && (it->second.controller->*it->second.handler)(signal);
+			return it != handler_map.end() && std::visit([signal](auto&& ref) { return (ref.controller->*ref.handler)(signal); }, it->second);
 		}
 
 		bool InputBindingContext::consume(const input::KeyEventData& data)

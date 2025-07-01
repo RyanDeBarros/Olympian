@@ -10,6 +10,7 @@
 
 #include "core/platform/Events.h"
 #include "core/containers/FixedVector.h"
+#include "core/types/Meta.h"
 
 namespace oly
 {
@@ -350,6 +351,7 @@ namespace oly
 		virtual ~InputController() = default;
 
 		using Handler = bool(InputController::*)(input::Signal);
+		using ConstHandler = bool(InputController::*)(input::Signal) const;
 	};
 
 	namespace input
@@ -487,11 +489,18 @@ namespace oly
 
 			struct HandlerRef
 			{
-				InputController::Handler handler;
+				InputController::Handler handler = nullptr;
 				// TODO use soft reference
-				InputController* controller;
+				InputController* controller = nullptr;
 			};
-			std::unordered_map<input::SignalID, HandlerRef> handler_map;
+			struct ConstHandlerRef
+			{
+				InputController::ConstHandler handler = nullptr;
+				// TODO use soft reference
+				const InputController* controller = nullptr;
+			};
+			
+			std::unordered_map<input::SignalID, std::variant<HandlerRef, ConstHandlerRef>> handler_map;
 
 			friend class Platform;
 			InputBindingContext(int num_gamepads);
@@ -521,12 +530,35 @@ namespace oly
 
 #undef REG_SIGNAL
 
-			void bind(input::SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = { handler, controller }; }
+			void bind(input::SignalID signal, InputController::Handler handler, InputController* controller) { handler_map[signal] = HandlerRef{ handler, controller }; }
+			void bind(input::SignalID signal, InputController::ConstHandler handler, const InputController* controller) { handler_map[signal] = ConstHandlerRef{ handler, controller }; }
 			void unbind(input::SignalID signal, InputController::Handler handler, InputController* controller)
 			{
 				auto it = handler_map.find(signal);
-				if (it != handler_map.end() && it->second.handler == handler && it->second.controller == controller)
-					handler_map.erase(it);
+				if (it != handler_map.end())
+				{
+					if (std::visit([handler, controller](auto&& ref) {
+						if constexpr (visiting_class_is<decltype(ref), HandlerRef>)
+							return ref.handler == handler && ref.controller == controller;
+						else
+							return false;
+						}, it->second))
+						handler_map.erase(it);
+				}
+			}
+			void unbind(input::SignalID signal, InputController::ConstHandler handler, const InputController* controller)
+			{
+				auto it = handler_map.find(signal);
+				if (it != handler_map.end())
+				{
+					if (std::visit([handler, controller](auto&& ref) {
+						if constexpr (visiting_class_is<decltype(ref), ConstHandlerRef>)
+							return ref.handler == handler && ref.controller == controller;
+						else
+							return false;
+						}, it->second))
+						handler_map.erase(it);
+				}
 			}
 			void unbind(input::SignalID signal) { handler_map.erase(signal); }
 

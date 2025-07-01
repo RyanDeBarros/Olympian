@@ -41,14 +41,11 @@ namespace oly
 		template<PointerConvertibleTo<T> U>
 		SoftReference(SoftReference<U>&& other) : ref(static_cast<T*>(other.ref)), status(std::move(other.status)) {}
 
-		const T* get() const { return status && *status ? ref : nullptr; }
-		T* get() { return status && *status ? ref : nullptr; }
+		T* get() const { return status && *status ? ref : nullptr; }
 
 		operator bool() const { return status && *status; }
-		const T& operator*() const { return *get(); }
-		T& operator*() { return *get(); }
-		const T* operator->() const { return get(); }
-		T* operator->() { return get(); }
+		T& operator*() const { return *get(); }
+		T* operator->() const { return get(); }
 
 		template<typename U>
 		SoftReference<U> cast_dynamic() const
