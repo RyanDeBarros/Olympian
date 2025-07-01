@@ -40,9 +40,9 @@ namespace oly::col2d
 		};
 
 		bool overlap = false;
-		Feature active_feature, static_feature;
+		Feature active_feature, passive_feature;
 
-		ContactResult& invert() { std::swap(active_feature, static_feature); return *this; }
+		ContactResult& invert() { std::swap(active_feature, passive_feature); return *this; }
 	};
 
 	struct Ray

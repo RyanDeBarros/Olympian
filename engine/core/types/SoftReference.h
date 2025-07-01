@@ -1,16 +1,18 @@
 #pragma once
 
+#include "core/types/Meta.h"
+
 #include <memory>
 
 namespace oly
 {
-	// LATER add thread-safe soft references that use atomic bool statuses.
-
 	/*
 	 * Soft references allow for safe, non-dangling, non-owning references to objects of any allocation type (stack, unique, shared, etc.) using CRTP instead of inheritance.
 	 * Optimal way of dereferencing a soft reference is via:
 	 * if (auto r = ref.get())
 	 *     r->do_something();
+	 * 
+	 * Note that soft references are NOT thread-safe. In fact, their design does not allow for multi-threading in any capacity, since the internal pointer may be dangling after checking if status is alive.
 	 */
 
 	template<typename T>
@@ -34,6 +36,11 @@ namespace oly
 		SoftReference(std::nullptr_t) {}
 		SoftReference& operator=(std::nullptr_t) { ref = nullptr; status.reset(); return *this; }
 
+		template<PointerConvertibleTo<T> U>
+		SoftReference(const SoftReference<U>& other) : ref(static_cast<T*>(other.ref)), status(other.status) {}
+		template<PointerConvertibleTo<T> U>
+		SoftReference(SoftReference<U>&& other) : ref(static_cast<T*>(other.ref)), status(std::move(other.status)) {}
+
 		const T* get() const { return status && *status ? ref : nullptr; }
 		T* get() { return status && *status ? ref : nullptr; }
 
@@ -42,6 +49,23 @@ namespace oly
 		T& operator*() { return *get(); }
 		const T* operator->() const { return get(); }
 		T* operator->() { return get(); }
+
+		template<typename U>
+		SoftReference<U> cast_dynamic() const
+		{
+			if (status && *status)
+				if (U* cast = dynamic_cast<U*>(ref))
+					return SoftReference<U>(cast, status);
+			return nullptr;
+		}
+
+		template<typename U>
+		SoftReference<U> cast_static() const
+		{
+			return SoftReference<U>(static_cast<U*>(ref), status);
+		}
+
+		size_t hash() const { return std::hash<T*>{}(ref); }
 	};
 
 	template<typename T>
@@ -65,11 +89,38 @@ namespace oly
 		ConstSoftReference& operator=(const SoftReference<T>& other) { ref = other.ref; status = other.status; return *this; }
 		ConstSoftReference& operator=(SoftReference<T>&& other) noexcept { ref = other.ref; status = std::move(other.status); return *this; }
 
+		template<PointerConvertibleTo<T> U>
+		ConstSoftReference(const ConstSoftReference<U>& other) : ref(static_cast<const T*>(other.ref)), status(other.status) {}
+		template<PointerConvertibleTo<T> U>
+		ConstSoftReference(ConstSoftReference<U>&& other) : ref(static_cast<const T*>(other.ref)), status(std::move(other.status)) {}
+
+		template<PointerConvertibleTo<T> U>
+		ConstSoftReference(const SoftReference<U>& other) : ref(static_cast<const T*>(other.ref)), status(other.status) {}
+		template<PointerConvertibleTo<T> U>
+		ConstSoftReference(SoftReference<U>&& other) : ref(static_cast<const T*>(other.ref)), status(std::move(other.status)) {}
+
 		const T* get() const { return status && *status ? ref : nullptr; }
 
 		operator bool() const { return status && *status; }
 		const T& operator*() const { return *get(); }
 		const T* operator->() const { return get(); }
+
+		template<typename U>
+		ConstSoftReference<U> cast_dynamic() const
+		{
+			if (status && *status)
+				if (U* cast = dynamic_cast<const U*>(ref))
+					return ConstSoftReference<U>(cast, status);
+			return nullptr;
+		}
+
+		template<typename U>
+		ConstSoftReference<U> cast_static() const
+		{
+			return ConstSoftReference<U>(static_cast<const U*>(ref), status);
+		}
+
+		size_t hash() const { return std::hash<const T*>{}(ref); }
 	};
 
 	/*
@@ -91,11 +142,18 @@ namespace oly
 		SoftReferenceBase& operator=(const SoftReferenceBase<T>&) { return *this; }
 		SoftReferenceBase& operator=(SoftReferenceBase<T>&&) { return *this; }
 
-	private:
-		friend T;
 		SoftReference<T> ref(T* obj) const { return SoftReference<T>(obj, status); }
 		ConstSoftReference<T> cref(const T* obj) const { return ConstSoftReference<T>(obj, status); }
 		ConstSoftReference<T> cref(T* obj) const { return ConstSoftReference<T>(obj, status); }
+
+		template<PointerConvertibleTo<T> U>
+		SoftReference<U> ref(U* obj) const { return SoftReference<U>(obj, status); }
+		template<PointerConvertibleTo<T> U>
+		SoftReference<U> cref(const U* obj) const { return ConstSoftReference<U>(obj, status); }
+		template<PointerConvertibleTo<T> U>
+		SoftReference<U> cref(U* obj) const { return ConstSoftReference<U>(obj, status); }
+
+		size_t hash() const { return std::hash<std::shared_ptr<bool>>{}(status); }
 	};
 }
 
@@ -104,7 +162,7 @@ struct std::hash<oly::SoftReference<T>>
 {
 	size_t operator()(const oly::SoftReference<T>& ref) const
 	{
-		return hash<T*>{}(ref.get());
+		return ref.hash();
 	}
 };
 
@@ -113,6 +171,15 @@ struct std::hash<oly::ConstSoftReference<T>>
 {
 	size_t operator()(const oly::ConstSoftReference<T>& ref) const
 	{
-		return hash<const T*>{}(ref.get());
+		return ref.hash();
+	}
+};
+
+template<typename T>
+struct std::hash<oly::SoftReferenceBase<T>>
+{
+	size_t operator()(const oly::SoftReferenceBase<T>& base) const
+	{
+		return base.hash();
 	}
 };

@@ -173,7 +173,7 @@ namespace oly::col2d::gjk
 				.position = c1.deepest_point(-collision.unit_impulse),
 				.impulse = (glm::vec2)collision.unit_impulse * collision.penetration_depth
 			},
-			.static_feature = {
+			.passive_feature = {
 				.position = c2.deepest_point(collision.unit_impulse),
 				.impulse = -(glm::vec2)collision.unit_impulse * collision.penetration_depth,
 			}

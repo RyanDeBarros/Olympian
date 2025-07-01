@@ -227,7 +227,7 @@ int main()
 
 		if (contact.overlap)
 		{
-			oly::debug::update_view(block_impulse_cv, contact.static_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
+			oly::debug::update_view(block_impulse_cv, contact.passive_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
 			oly::debug::update_view(player_impulse_cv, contact.active_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
 		}
 		else

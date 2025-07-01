@@ -260,12 +260,12 @@ namespace oly::col2d
 
 			UnitVector2D d(c2.center - c1.center);
 			info.active_feature.position = c1.center + c1.radius * (glm::vec2)d;
-			info.static_feature.position = c2.center - c2.radius * (glm::vec2)d;
+			info.passive_feature.position = c2.center - c2.radius * (glm::vec2)d;
 
 			if (info.overlap)
 			{
 				info.active_feature.impulse = (glm::vec2)UnitVector2D(c1.center - c2.center) * (c1.radius + c2.radius - math::magnitude(c1.center - c2.center));
-				info.static_feature.impulse = -info.active_feature.impulse;
+				info.passive_feature.impulse = -info.active_feature.impulse;
 			}
 
 			return info;
@@ -281,7 +281,7 @@ namespace oly::col2d
 				return { .overlap = false };
 
 			return ContactResult{ .overlap = true, .active_feature = { .position = c1.deepest_point(-axis), .impulse = depth * (glm::vec2)axis },
-				.static_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis } };
+				.passive_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis } };
 		}
 	}
 
@@ -428,48 +428,48 @@ namespace oly::col2d
 				if (glm::abs(dx1) < glm::abs(dx2))
 				{
 					info.active_feature.position.x = c1.x2;
-					info.static_feature.position.x = c2.x1;
+					info.passive_feature.position.x = c2.x1;
 
 					info.active_feature.impulse.x = -overlapX;
 				}
 				else
 				{
 					info.active_feature.position.x = c1.x1;
-					info.static_feature.position.x = c2.x2;
+					info.passive_feature.position.x = c2.x2;
 
 					info.active_feature.impulse.x = overlapX;
 				}
 
 				info.active_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
-				info.static_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
+				info.passive_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
 
 				info.active_feature.impulse.y = 0.0f;
-				info.static_feature.impulse.x = -info.active_feature.impulse.x;
-				info.static_feature.impulse.y = 0.0f;
+				info.passive_feature.impulse.x = -info.active_feature.impulse.x;
+				info.passive_feature.impulse.y = 0.0f;
 			}
 			else
 			{
 				if (glm::abs(dy1) < glm::abs(dy2))
 				{
 					info.active_feature.position.y = c1.y2;
-					info.static_feature.position.y = c2.y1;
+					info.passive_feature.position.y = c2.y1;
 
 					info.active_feature.impulse.y = -overlapY;
 				}
 				else
 				{
 					info.active_feature.position.y = c1.y1;
-					info.static_feature.position.y = c2.y2;
+					info.passive_feature.position.y = c2.y2;
 
 					info.active_feature.impulse.y = overlapY;
 				}
 
 				info.active_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
-				info.static_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
+				info.passive_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
 
 				info.active_feature.impulse.x = 0.0f;
-				info.static_feature.impulse.x = 0.0f;
-				info.static_feature.impulse.y = -info.active_feature.impulse.y;
+				info.passive_feature.impulse.x = 0.0f;
+				info.passive_feature.impulse.y = -info.active_feature.impulse.y;
 			}
 		}
 		else // witness points - closest points on each AABB
@@ -477,28 +477,28 @@ namespace oly::col2d
 			if (c1.x1 > c2.x2) // c1 is right of c2
 			{
 				info.active_feature.position.x = c1.x1;
-				info.static_feature.position.x = c2.x2;
+				info.passive_feature.position.x = c2.x2;
 			}
 			else if (c2.x1 > c1.x2) // c2 is right of c1
 			{
 				info.active_feature.position.x = c1.x2;
-				info.static_feature.position.x = c2.x1;
+				info.passive_feature.position.x = c2.x1;
 			}
 			else // c1 and c2 overlap horizontally
-				info.static_feature.position.x = info.active_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
+				info.passive_feature.position.x = info.active_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
 
 			if (c1.y1 > c2.y2) // c1 is above c2
 			{
 				info.active_feature.position.y = c1.y1;
-				info.static_feature.position.y = c2.y2;
+				info.passive_feature.position.y = c2.y2;
 			}
 			else if (c2.y1 > c1.y2) // c2 is above c1
 			{
 				info.active_feature.position.y = c1.y2;
-				info.static_feature.position.y = c2.y1;
+				info.passive_feature.position.y = c2.y1;
 			}
 			else // c1 and c2 overlap vertically
-				info.static_feature.position.y = info.active_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
+				info.passive_feature.position.y = info.active_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
 		}
 
 		return info;
@@ -752,16 +752,16 @@ namespace oly::col2d
 						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
 						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
 						info.active_feature.position = c1.center + glm::vec2{ dirX * c1.radius, 0.0f };
-						info.static_feature.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, c1.center.y };
+						info.passive_feature.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, c1.center.y };
 					}
 					else
 					{
 						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
 						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
 						info.active_feature.position = c1.center + glm::vec2{ 0.0f, dirY * c1.radius };
-						info.static_feature.position = glm::vec2{ c1.center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
+						info.passive_feature.position = glm::vec2{ c1.center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
 					}
-					info.static_feature.impulse = -info.active_feature.impulse;
+					info.passive_feature.impulse = -info.active_feature.impulse;
 				}
 				else // circle center is outside AABB
 				{
@@ -770,8 +770,8 @@ namespace oly::col2d
 					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
 					info.active_feature.position = c1.center + c1.radius * (glm::vec2)displacement;
 
-					info.static_feature.impulse = -info.active_feature.impulse;
-					info.static_feature.position = closest_point;
+					info.passive_feature.impulse = -info.active_feature.impulse;
+					info.passive_feature.position = closest_point;
 				}
 			}
 
@@ -888,16 +888,16 @@ namespace oly::col2d
 						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
 						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
 						info.active_feature.position = local_c1_center + glm::vec2{ dirX * c1.radius, 0.0f };
-						info.static_feature.position = glm::vec2{ dx1 < dx2 ? b2.x1 : b2.x2, local_c1_center.y };
+						info.passive_feature.position = glm::vec2{ dx1 < dx2 ? b2.x1 : b2.x2, local_c1_center.y };
 					}
 					else
 					{
 						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
 						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
 						info.active_feature.position = local_c1_center + glm::vec2{ 0.0f, dirY * c1.radius };
-						info.static_feature.position = glm::vec2{ local_c1_center.x, dy1 < dy2 ? b2.y1 : b2.y2 };
+						info.passive_feature.position = glm::vec2{ local_c1_center.x, dy1 < dy2 ? b2.y1 : b2.y2 };
 					}
-					info.static_feature.impulse = -info.active_feature.impulse;
+					info.passive_feature.impulse = -info.active_feature.impulse;
 				}
 				else // circle center is outside OBB
 				{
@@ -906,15 +906,15 @@ namespace oly::col2d
 					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
 					info.active_feature.position = local_c1_center + c1.radius * (glm::vec2)displacement;
 
-					info.static_feature.impulse = -info.active_feature.impulse;
-					info.static_feature.position = closest_point;
+					info.passive_feature.impulse = -info.active_feature.impulse;
+					info.passive_feature.position = closest_point;
 				}
 			}
 
 			info.active_feature.impulse = rot * info.active_feature.impulse;
 			info.active_feature.position = rot * info.active_feature.position;
-			info.static_feature.impulse = rot * info.static_feature.impulse;
-			info.static_feature.position = rot * info.static_feature.position;
+			info.passive_feature.impulse = rot * info.passive_feature.impulse;
+			info.passive_feature.position = rot * info.passive_feature.position;
 
 			return info;
 		}

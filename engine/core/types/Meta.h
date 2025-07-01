@@ -99,4 +99,7 @@ namespace oly
 
 	template<typename T, typename... Class>
 	constexpr bool visiting_class_is = std::disjunction_v<std::is_same<std::decay_t<T>, Class>...>;
+
+	template<typename From, typename To>
+	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 }

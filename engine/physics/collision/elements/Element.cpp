@@ -332,8 +332,8 @@ namespace oly::col2d
 			contact.active_feature.impulse = laziest.mtv();
 			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
 
-			contact.static_feature.impulse = -laziest.mtv();
-			contact.static_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, static_element);
+			contact.passive_feature.impulse = -laziest.mtv();
+			contact.passive_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, static_element);
 		}
 		return contact;
 	}
@@ -366,8 +366,8 @@ namespace oly::col2d
 			contact.active_feature.impulse = laziest.mtv();
 			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
 
-			contact.static_feature.impulse = -laziest.mtv();
-			contact.static_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, param(static_elements[most_significant_static_element]));
+			contact.passive_feature.impulse = -laziest.mtv();
+			contact.passive_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, param(static_elements[most_significant_static_element]));
 		}
 		return contact;
 	}

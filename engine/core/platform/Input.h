@@ -488,6 +488,7 @@ namespace oly
 			struct HandlerRef
 			{
 				InputController::Handler handler;
+				// TODO use soft reference
 				InputController* controller;
 			};
 			std::unordered_map<input::SignalID, HandlerRef> handler_map;
@@ -527,6 +528,7 @@ namespace oly
 				if (it != handler_map.end() && it->second.handler == handler && it->second.controller == controller)
 					handler_map.erase(it);
 			}
+			void unbind(input::SignalID signal) { handler_map.erase(signal); }
 
 			// call poll() after glfwPollEvents() but before TIME.sync()
 			void poll();

@@ -22,6 +22,7 @@ namespace oly::col2d
 		friend class CollisionTree;
 		friend class CollisionNode;
 
+	protected:
 		SoftReferenceBase<Collider> _ref;
 
 	public:
