@@ -388,19 +388,30 @@ namespace oly::col2d
 		return node;
 	}
 
+	CollisionTree::BFSColliderIterator::BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds)
+		: bounds(bounds)
+	{
+		nodes.push(root);
+		increment_current();
+	}
+
 	void CollisionTree::BFSColliderIterator::set(const BFSColliderIterator& other)
 	{
 		i = other.i;
 		nodes.push(other.nodes.front());
+		current = other.current;
 	}
 
-	ConstSoftReference<Collider> CollisionTree::BFSColliderIterator::next()
+	void CollisionTree::BFSColliderIterator::increment_current()
 	{
 		while (!nodes.empty())
 		{
 			const CollisionNode* node = nodes.front();
 			if (i < node->colliders.size())
-				return node->colliders[i++];
+			{
+				current = node->colliders[i++];
+				return;
+			}
 
 			i = 0;
 			nodes.pop();
@@ -408,7 +419,14 @@ namespace oly::col2d
 				if (subnode.get() && subnode->bounds.overlaps(bounds))
 					nodes.push(subnode.get());
 		}
-		return nullptr;
+		current = nullptr;
+	}
+
+	ConstSoftReference<Collider> CollisionTree::BFSColliderIterator::next()
+	{
+		ConstSoftReference<Collider> og = current;
+		increment_current();
+		return og;
 	}
 
 	CollisionTree::PairIterator::PairIterator(CollisionNode* node, const math::Rect2D bounds)

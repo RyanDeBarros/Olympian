@@ -159,13 +159,16 @@ namespace oly::col2d
 			const math::Rect2D bounds;
 			std::queue<const CollisionNode*> nodes;
 			size_t i = 0;
+			ConstSoftReference<Collider> current = nullptr;
 			BFSColliderIterator(const math::Rect2D bounds) : bounds(bounds) {}
-			BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds) : bounds(bounds) { nodes.push(root); }
+			BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds);
 
 			void set(const BFSColliderIterator&);
 
+			void increment_current();
+
 		public:
-			bool done() const { return nodes.empty(); }
+			bool done() const { return !current; }
 			ConstSoftReference<Collider> next();
 		};
 

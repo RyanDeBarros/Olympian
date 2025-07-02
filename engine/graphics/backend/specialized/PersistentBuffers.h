@@ -135,6 +135,7 @@ namespace oly::graphics
 					accessible = true;
 					return;
 				}
+				// TODO alt-tabbing and otherwise switching window focus causes timeout
 				LOG << LOG.begin_temp(LOG.error) << LOG.start << "Timeout in persistent buffer sync" << LOG.end_temp << LOG.nl;
 			}
 			accessible = false;
@@ -317,6 +318,7 @@ namespace oly::graphics
 					accessible[n] = true;
 					return;
 				}
+				// TODO alt-tabbing and otherwise switching window focus causes timeout
 				LOG << LOG.begin_temp(LOG.error) << LOG.start << "Timeout in persistent buffer sync" << LOG.end_temp << LOG.nl;
 			}
 			accessible[n] = false;

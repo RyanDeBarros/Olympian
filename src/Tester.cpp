@@ -119,8 +119,8 @@ int main()
 		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
 	}
 
-	//oly::col2d::Collider player(star.as_convex_tcompound(), &collision_dispatcher.ref_tree());
-	oly::col2d::Collider player(star.as_convex_tcompound());
+	oly::col2d::Collider player(star.as_convex_tcompound(), &collision_dispatcher.ref_tree());
+	//oly::col2d::Collider player(star.as_convex_tcompound());
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
@@ -173,18 +173,18 @@ int main()
 
 		void walk_on(const oly::col2d::OverlapEventData& data) const
 		{
-			if (data.result.overlap && data.passive_collider == player)
+			if (data.passive_collider == player)
 			{
 				if (data.active_collider.get() == &obstacle1)
-					oly::LOG << "obstacle 1 !!" << oly::LOG.nl;
+					oly::LOG << "obstacle 1 : " << data.phase << oly::LOG.nl;
 				else if (data.active_collider.get() == &obstacle2)
-					oly::LOG << "obstacle 2 !!" << oly::LOG.nl;
+					oly::LOG << "obstacle 2 : " << data.phase << oly::LOG.nl;
 				else if (data.active_collider.get() == &obstacle3)
-					oly::LOG << "obstacle 3 !!" << oly::LOG.nl;
+					oly::LOG << "obstacle 3 : " << data.phase << oly::LOG.nl;
 				else if (data.active_collider.get() == &obstacle4)
-					oly::LOG << "obstacle 4 !!" << oly::LOG.nl;
+					oly::LOG << "obstacle 4 : " << data.phase << oly::LOG.nl;
 				else if (data.active_collider.get() == &obstacle5)
-					oly::LOG << "obstacle 5 !!" << oly::LOG.nl;
+					oly::LOG << "obstacle 5 : " << data.phase << oly::LOG.nl;
 			}
 		}
 	} obstacle_controller(player.cref(), collision_dispatcher);
@@ -279,11 +279,11 @@ int main()
 
 		flag_state_timer.poll();
 		
-		collision_dispatcher.emit(player);
+		//collision_dispatcher.emit(player);
 
 		player.set<oly::col2d::TCompound>().set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 0.0f, 0.0f };
-		//player.set<oly::col2d::TCompound>().set_local().position = { -200.0f, -350.0f };
+		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;
 
 		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);

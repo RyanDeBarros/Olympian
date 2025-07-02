@@ -6,28 +6,56 @@
 
 namespace oly::col2d
 {
+	enum class Phase : unsigned char
+	{
+		STARTED,
+		ONGOING,
+		COMPLETED,
+		EXPIRED
+	};
+
+	extern Logger& operator<<(Logger&, Phase);
+
 	struct OverlapEventData
 	{
-		OverlapResult result;
+		Phase phase;
 		ConstSoftReference<Collider> active_collider, passive_collider;
 
-		OverlapEventData& invert() { result.invert(); std::swap(active_collider, passive_collider); return *this; }
+		OverlapEventData(OverlapResult result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+
+		OverlapEventData& invert() { std::swap(active_collider, passive_collider); return *this; }
 	};
 
 	struct CollisionEventData
 	{
-		CollisionResult result;
+		Phase phase;
+		float penetration_depth;
+		UnitVector2D unit_impulse;
 		ConstSoftReference<Collider> active_collider, passive_collider;
 
-		CollisionEventData& invert() { result.invert(); std::swap(active_collider, passive_collider); return *this; }
+		CollisionEventData(const CollisionResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+
+		CollisionEventData& invert() { unit_impulse = -unit_impulse; std::swap(active_collider, passive_collider); return *this; }
+		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
 	};
 
 	struct ContactEventData
 	{
-		ContactResult result;
+		struct Contact
+		{
+			glm::vec2 position;
+			glm::vec2 impulse;
+
+			Contact(ContactResult::Feature feature) : position(feature.position), impulse(feature.impulse) {}
+		};
+
+		Phase phase;
+		Contact active_contact, passive_contact;
 		ConstSoftReference<Collider> active_collider, passive_collider;
 
-		ContactEventData& invert() { result.invert(); std::swap(active_collider, passive_collider); return *this; }
+		ContactEventData(const ContactResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+
+		ContactEventData& invert() { std::swap(active_contact, passive_contact); std::swap(active_collider, passive_collider); return *this; }
 	};
 
 	struct CollisionController
@@ -43,6 +71,33 @@ namespace oly::col2d
 		using CollisionConstHandler = void(CollisionController::*)(const CollisionEventData&) const;
 		using ContactHandler = void(CollisionController::*)(const ContactEventData&);
 		using ContactConstHandler = void(CollisionController::*)(const ContactEventData&) const;
+	};
+
+	class CollisionPhaseTracker
+	{
+		struct ColliderUnorderedPair
+		{
+			ConstSoftReference<Collider> c1;
+			ConstSoftReference<Collider> c2;
+
+			bool operator==(const ColliderUnorderedPair& other) const { return (c1 == other.c1 && c2 == other.c2) || (c1 == other.c2 && c2 == other.c1); }
+		};
+
+		struct ColliderUnorderedPairHash
+		{
+			size_t operator()(const ColliderUnorderedPair& pair) const { return pair.c1.hash() ^ pair.c2.hash(); }
+		};
+		
+		std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> map;
+		std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> lazy_updates;
+
+	public:
+		Phase prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
+		void lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase);
+		void flush();
+		void clear();
+		void clean();
+		void erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
 	};
 
 #define OLY_COLLISION_CONTROLLER_HEADER(Class)\
@@ -91,6 +146,7 @@ namespace oly::col2d
 		std::unordered_map<ConstSoftReference<Collider>, std::variant<ContactHandlerRef, ContactConstHandlerRef>> contact_handlers;
 
 		CollisionTree tree;
+		mutable CollisionPhaseTracker phase_tracker;
 
 	public:
 		CollisionDispatcher(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4) : tree(bounds, degree, cell_capacity) {}
