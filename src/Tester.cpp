@@ -102,7 +102,9 @@ int main()
 		p.y = radius * glm::sin((float)i * glm::two_pi<float>() / (float)_npts);
 		hull_pts.set_points().push_back(p);
 	}
-	oly::col2d::Collider block(oly::col2d::TPrimitive(std::move(hull_pts)), &collision_dispatcher.ref_tree());
+	oly::col2d::Collider block(oly::col2d::TPrimitive(std::move(hull_pts)));
+	block.handles.attach(&collision_dispatcher.ref_tree());
+	// TODO put set_local/get_local on Collider
 	block.set<oly::col2d::TPrimitive>().set_local().position.y = -100.0f;
 	block.set<oly::col2d::TPrimitive>().set_local().scale.x = 2.0f;
 	block.set<oly::col2d::TPrimitive>().set_local().rotation = glm::pi<float>() / 8;
@@ -119,8 +121,8 @@ int main()
 		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
 	}
 
-	oly::col2d::Collider player(star.as_convex_tcompound(), &collision_dispatcher.ref_tree());
-	//oly::col2d::Collider player(star.as_convex_tcompound());
+	oly::col2d::Collider player(star.as_convex_tcompound());
+	player.handles.attach(&collision_dispatcher.ref_tree());
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
@@ -146,23 +148,23 @@ int main()
 			oly::col2d::Capsule _capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 			oly::col2d::TCompound capsule = _capsule.tcompound();
 			obstacle1.emplace(capsule);
-			obstacle1.set_tree(&dispatcher.ref_tree());
+			obstacle1.handles.attach(&dispatcher.ref_tree());
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle2.emplace(capsule);
-			obstacle2.set_tree(&dispatcher.ref_tree());
+			obstacle2.handles.attach(&dispatcher.ref_tree());
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle3.emplace(capsule);
-			obstacle3.set_tree(&dispatcher.ref_tree());
+			obstacle3.handles.attach(&dispatcher.ref_tree());
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle4.emplace(capsule);
-			obstacle4.set_tree(&dispatcher.ref_tree());
+			obstacle4.handles.attach(&dispatcher.ref_tree());
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle5.emplace(capsule);
-			obstacle5.set_tree(&dispatcher.ref_tree());
+			obstacle5.handles.attach(&dispatcher.ref_tree());
 
 			dispatcher.register_handler(obstacle1.cref(), &ObstacleCollisionController::walk_on, cref());
 			dispatcher.register_handler(obstacle2.cref(), &ObstacleCollisionController::walk_on, cref());

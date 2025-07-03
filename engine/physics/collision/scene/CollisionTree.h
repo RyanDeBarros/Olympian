@@ -2,6 +2,7 @@
 
 #include "core/containers/FixedVector.h"
 #include "core/containers/ContiguousSet.h"
+#include "core/containers/ContiguousMap.h"
 #include "core/types/SoftReference.h"
 
 #include "physics/collision/scene/LUT.h"
@@ -27,29 +28,50 @@ namespace oly::col2d
 	private:
 		internal::ColliderObject obj;
 
-		mutable CollisionTree* tree = nullptr;
-		mutable CollisionNode* node = nullptr;
+		class TreeHandleMap
+		{
+			friend class CollisionNode;
+			friend class CollisionTree;
+			friend class Collider;
+			Collider& collider;
+			mutable ContiguousMap<const CollisionTree*, CollisionNode*> handles;
+
+			TreeHandleMap(Collider& collider) : collider(collider) {}
+			TreeHandleMap(const TreeHandleMap&) = delete;
+			TreeHandleMap(TreeHandleMap&&) = delete;
+			TreeHandleMap(Collider&, const TreeHandleMap&);
+			TreeHandleMap(Collider&, TreeHandleMap&&) noexcept;
+			~TreeHandleMap();
+
+			TreeHandleMap& operator=(const TreeHandleMap&);
+			TreeHandleMap& operator=(TreeHandleMap&&) noexcept;
+
+			void flush() const;
+
+		public:
+			void attach(CollisionTree* tree);
+			void detach(CollisionTree* tree);
+			bool is_attached(CollisionTree* tree) const { return handles.count(tree); }
+			void clear();
+			size_t size() const { return handles.size(); }
+		};
+
 		mutable bool dirty = true;
 
 	protected:
 		mutable math::Rect2D quad_wrap;
 
 	public:
+		TreeHandleMap handles = TreeHandleMap(*this);
+
 		Collider() = default;
 		template<typename CObj>
-		explicit Collider(CObj&& obj, CollisionTree* tree = nullptr) : obj(std::forward<CObj>(obj)) { set_tree(tree); }
-		Collider(internal::ColliderObject&& obj, CollisionTree* tree = nullptr) : obj(std::move(obj)) { set_tree(tree); }
+		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)) {}
+		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
-		~Collider();
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
-
-		// TODO allow assignment for multiple trees
-		const CollisionTree* get_tree() const { return tree; }
-		CollisionTree* get_tree() { return tree; }
-		void set_tree(CollisionTree* tree);
-		void unset_tree();
 
 		template<typename CObj>
 		const CObj& get() const { return obj.get<CObj>(); }
@@ -62,7 +84,6 @@ namespace oly::col2d
 		void flag() { dirty = true; }
 
 	private:
-		void replace_in_node(Collider&& other) noexcept;
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
 		void flush() const;
 
@@ -87,6 +108,7 @@ namespace oly::col2d
 	{
 		friend class CollisionTree;
 		friend class Collider;
+		friend class Collider::TreeHandleMap;
 
 		CollisionTree& tree;
 		math::Rect2D bounds;
@@ -102,11 +124,8 @@ namespace oly::col2d
 	private:
 		static std::unique_ptr<CollisionNode> instantiate(CollisionTree& tree);
 
-		void insert(const Collider& collider);
-		void remove(const Collider& collider);
-
-		void update(const Collider& collider);
-		void insert_upwards(const Collider& collider);
+		void update(const Collider& collider, CollisionNode*& node);
+		void insert_upwards(const Collider& collider, CollisionNode*& node);
 
 		void subdivide();
 

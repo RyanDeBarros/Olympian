@@ -20,7 +20,7 @@ namespace oly::col2d::internal
 	extern OverlapResult lut_circle_cast_hits(const ColliderObject&, const CircleCast&);
 	extern OverlapResult lut_rect_cast_hits(const ColliderObject&, const RectCast&);
 
-	// TODO LUT function that returns a variant of CollisionObject types
+	// TODO LUT function that returns a variant of CollisionObject types. Should CollisionObject only support transformer types?
 
 	extern math::Rect2D lut_flush(const ColliderObject&);
 	extern bool lut_is_dirty(const ColliderObject&);

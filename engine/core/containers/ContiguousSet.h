@@ -46,13 +46,15 @@ namespace oly
 			return set.erase(where);
 		}
 
-		void remove(size_t i)
+		Iterator remove(size_t i)
 		{
-			set.erase(set.begin() + i);
+			return set.erase(set.begin() + i);
 		}
 
 		bool replace(const T& existing, const T& with)
 		{
+			if (existing == with)
+				return false;
 			auto it_existing = find(existing);
 			if (it_existing != set.end())
 			{
@@ -69,6 +71,8 @@ namespace oly
 
 		bool replace(const T& existing, T&& with)
 		{
+			if (existing == with)
+				return false;
 			auto it_existing = std::find(set.begin(), set.end(), existing);
 			if (it_existing != set.end())
 			{
