@@ -104,25 +104,28 @@ namespace oly::col2d
 #define OLY_COLLIDER_HEADER(Class)\
 	OLY_SOFT_REFERENCE_PUBLIC(Class);
 
+	// TODO put in internal
 	class CollisionNode
 	{
 		friend class CollisionTree;
 		friend class Collider;
 		friend class Collider::TreeHandleMap;
 
-		CollisionTree& tree;
+		const CollisionTree* tree;
 		math::Rect2D bounds;
 		CollisionNode* parent = nullptr;
 		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
 		ContiguousSet<ConstSoftReference<Collider>> colliders;
 
-		CollisionNode(CollisionTree& tree);
+		CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
+		CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
+		void assign_tree(const CollisionTree* new_tree);
 
 	public:
 		~CollisionNode();
 	
 	private:
-		static std::unique_ptr<CollisionNode> instantiate(CollisionTree& tree);
+		static std::unique_ptr<CollisionNode> instantiate(const CollisionTree* tree, math::Rect2D bounds);
 
 		void update(const Collider& collider, CollisionNode*& node);
 		void insert_upwards(const Collider& collider, CollisionNode*& node);
@@ -138,25 +141,31 @@ namespace oly::col2d
 		const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
 	};
 
+	class CollisionDispatcher;
 	class CollisionTree
 	{
 		friend class CollisionNode;
 		friend class Collider;
+		friend class CollisionDispatcher;
 
-		const size_t cell_capacity = 4;
-		const glm::uvec2 degree;
-		const glm::vec2 inv_degree;
+		size_t cell_capacity;
+		glm::uvec2 degree;
+		glm::vec2 inv_degree;
 
 		mutable std::unique_ptr<CollisionNode> root;
 
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
+		CollisionTree(const CollisionTree&);
+		CollisionTree(CollisionTree&&) noexcept;
 		~CollisionTree();
+		CollisionTree& operator=(const CollisionTree&);
+		CollisionTree& operator=(CollisionTree&&) noexcept;
 
+	private:
 		// call flush() after all collision objects have moved, but before handling events
 		void flush() const;
 
-	private:
 		void flush_update_colliders() const;
 		void flush_insert_downward() const;
 		void flush_remove_upward() const;

@@ -79,8 +79,8 @@ namespace oly::col2d
 	}
 
 	template<typename Result, typename EventData, typename HandlerRef>
-	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second, std::unordered_map<ConstSoftReference<Collider>,
-		HandlerRef>& handlers, Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
+	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second,
+		std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers, Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
 	{
 		static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
 		static const auto emit = [](auto&& ref, const auto& data) { return (ref.controller.get()->*ref.handler)(data); };
@@ -120,17 +120,20 @@ namespace oly::col2d
 		}
 	}
 
-	void CollisionDispatcher::poll()
+	void CollisionDispatcher::poll() const
 	{
-		tree.flush();
 		phase_tracker.flush();
-		auto it = tree.iterator();
-		while (!it.done())
+		for (const CollisionTree& tree : trees)
 		{
-			auto pair = it.next();
-			dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handlers, &Collider::overlaps, phase_tracker);
-			dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handlers, &Collider::collides, phase_tracker);
-			dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handlers, &Collider::contacts, phase_tracker);
+			tree.flush();
+			auto it = tree.iterator();
+			while (!it.done())
+			{
+				auto pair = it.next();
+				dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handlers, &Collider::overlaps, phase_tracker);
+				dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handlers, &Collider::collides, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handlers, &Collider::contacts, phase_tracker);
+			}
 		}
 	}
 
@@ -158,62 +161,68 @@ namespace oly::col2d
 	void CollisionDispatcher::emit(const Collider& from)
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
-		auto it = tree.query(from);
-		while (!it.done())
+		for (const CollisionTree& tree : trees)
 		{
-			ConstSoftReference<Collider> c2 = it.next();
-			dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handlers, &Collider::overlaps, phase_tracker);
-			dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handlers, &Collider::collides, phase_tracker);
-			dispatch<ContactResult, ContactEventData>(c1, c2, contact_handlers, &Collider::contacts, phase_tracker);
+			auto it = tree.query(from);
+			while (!it.done())
+			{
+				ConstSoftReference<Collider> c2 = it.next();
+				dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handlers, &Collider::overlaps, phase_tracker);
+				dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handlers, &Collider::collides, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(c1, c2, contact_handlers, &Collider::contacts, phase_tracker);
+			}
 		}
 	}
 
 	template<typename Result, typename EventData, typename Handler, typename Reference>
-	static void emit_from(const CollisionTree& tree, const Collider& from, Handler only_handler, const Reference& only_controller,
+	static void emit_from(const std::vector<CollisionTree>& trees, const Collider& from, Handler only_handler, const Reference& only_controller,
 		Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
-		auto it = tree.query(from);
-		while (!it.done())
+		for (const CollisionTree& tree : trees)
 		{
-			ConstSoftReference<Collider> other = it.next();
-			if (const Collider* c2 = other.get())
+			auto it = tree.query(from);
+			while (!it.done())
 			{
-				EventData data((from.*method)(*c2), c1, other, phase_tracker.prior_phase(c1, other));
-				phase_tracker.lazy_update_phase(c1, other, data.phase);
-				if (data.phase != Phase::EXPIRED)
-					(only_controller.get()->*only_handler)(data);
+				ConstSoftReference<Collider> other = it.next();
+				if (const Collider* c2 = other.get())
+				{
+					EventData data((from.*method)(*c2), c1, other, phase_tracker.prior_phase(c1, other));
+					phase_tracker.lazy_update_phase(c1, other, data.phase);
+					if (data.phase != Phase::EXPIRED)
+						(only_controller.get()->*only_handler)(data);
+				}
 			}
 		}
 	}
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
+		emit_from<OverlapResult, OverlapEventData>(trees, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<OverlapResult, OverlapEventData>(tree, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
+		emit_from<OverlapResult, OverlapEventData>(trees, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
 	}
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &Collider::collides, phase_tracker);
+		emit_from<CollisionResult, CollisionEventData>(trees, from, only_handler, only_controller, &Collider::collides, phase_tracker);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<CollisionResult, CollisionEventData>(tree, from, only_handler, only_controller, &Collider::collides, phase_tracker);
+		emit_from<CollisionResult, CollisionEventData>(trees, from, only_handler, only_controller, &Collider::collides, phase_tracker);
 	}
 	
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
+		emit_from<ContactResult, ContactEventData>(trees, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
 	}
 
 	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
-		emit_from<ContactResult, ContactEventData>(tree, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
+		emit_from<ContactResult, ContactEventData>(trees, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
 	}
 }

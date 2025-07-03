@@ -200,8 +200,8 @@ namespace oly
 			
 			const T& operator*() const { return vec[idx()]; }
 			T& operator*() { return vec[idx()]; }
-			const T* operator->() const { return vec.data() + idx(); }
-			T* operator->() { return vec.data() + idx(); }
+			const T* operator->() const { return &vec[idx()]; }
+			T* operator->() { return &vec[idx()]; }
 
 			Iterator& operator++()
 			{
@@ -240,7 +240,7 @@ namespace oly
 			bool operator!=(const ConstIterator&) const = default;
 
 			const T& operator*() const { return vec[idx()]; }
-			const T* operator->() const { return vec.data() + idx(); }
+			const T* operator->() const { return &vec[idx()]; }
 
 			ConstIterator& operator++()
 			{
@@ -280,8 +280,8 @@ namespace oly
 
 			const T& operator*() const { return vec[idx()]; }
 			T& operator*() { return vec[idx()]; }
-			const T* operator->() const { return vec.data() + idx(); }
-			T* operator->() { return vec.data() + idx(); }
+			const T* operator->() const { return &vec[idx()]; }
+			T* operator->() { return &vec[idx()]; }
 
 			ReverseIterator& operator++()
 			{
@@ -320,7 +320,7 @@ namespace oly
 			bool operator!=(const ConstReverseIterator&) const = default;
 
 			const T& operator*() const { return vec[idx()]; }
-			const T* operator->() const { return vec.data() + idx(); }
+			const T* operator->() const { return &vec[idx()]; }
 
 			ConstReverseIterator& operator++()
 			{

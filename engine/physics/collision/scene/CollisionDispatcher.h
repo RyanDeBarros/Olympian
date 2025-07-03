@@ -141,15 +141,24 @@ namespace oly::col2d
 			ConstSoftReference<CollisionController> controller = nullptr;
 		};
 
-		std::unordered_map<ConstSoftReference<Collider>, std::variant<OverlapHandlerRef, OverlapConstHandlerRef>> overlap_handlers;
-		std::unordered_map<ConstSoftReference<Collider>, std::variant<CollisionHandlerRef, CollisionConstHandlerRef>> collision_handlers;
-		std::unordered_map<ConstSoftReference<Collider>, std::variant<ContactHandlerRef, ContactConstHandlerRef>> contact_handlers;
+		mutable std::unordered_map<ConstSoftReference<Collider>, std::variant<OverlapHandlerRef, OverlapConstHandlerRef>> overlap_handlers;
+		mutable std::unordered_map<ConstSoftReference<Collider>, std::variant<CollisionHandlerRef, CollisionConstHandlerRef>> collision_handlers;
+		mutable std::unordered_map<ConstSoftReference<Collider>, std::variant<ContactHandlerRef, ContactConstHandlerRef>> contact_handlers;
 
-		CollisionTree tree;
+		std::vector<CollisionTree> trees;
 		mutable CollisionPhaseTracker phase_tracker;
 
 	public:
-		CollisionDispatcher(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4) : tree(bounds, degree, cell_capacity) {}
+		CollisionDispatcher() = default;
+
+		void add_tree(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4)
+		{
+			trees.emplace_back(bounds, degree, cell_capacity);
+		}
+
+		CollisionTree* get_tree(size_t i = 0) { return &trees[i]; }
+
+		void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
 
 		void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::OverlapHandler handler, const SoftReference<CollisionController>& controller)
 		{
@@ -212,11 +221,8 @@ namespace oly::col2d
 		void unregister_contact_handler(const ConstSoftReference<Collider>& collider) { contact_handlers.erase(collider); }
 		void unregister_handlers(const ConstSoftReference<Collider>& collider) { overlap_handlers.erase(collider); collision_handlers.erase(collider); contact_handlers.erase(collider); }
 
-		// TODO just expose tree methods, not tree itself
-		CollisionTree& ref_tree() { return tree; }
-
 		// call poll() after all collision objects have moved, but before handling events
-		void poll();
+		void poll() const;
 		void clean();
 
 		void emit(const Collider& from);
