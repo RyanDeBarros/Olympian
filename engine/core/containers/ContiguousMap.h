@@ -15,11 +15,11 @@ namespace oly
 			mutable V value;
 		};
 
-		using Iterator = std::vector<Pair>::const_iterator;
-
 		std::vector<Pair> map;
 
 	public:
+		using Iterator = std::vector<Pair>::const_iterator;
+
 		Iterator insert(const K& key, const V& value)
 		{
 			for (auto it = map.begin(); it != map.end(); ++it)

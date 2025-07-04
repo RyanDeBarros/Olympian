@@ -14,44 +14,13 @@
 
 namespace oly::col2d
 {
-	namespace internal { class CollisionNode; }
+	class Collider;
 	class CollisionTree;
 
-	class Collider;
-
 	namespace internal
 	{
-		class TreeHandleMap
-		{
-			friend class internal::CollisionNode;
-			friend class CollisionTree;
-			friend class Collider;
-			Collider& collider;
-			mutable ContiguousMap<const CollisionTree*, internal::CollisionNode*> handles;
+		class TreeHandleMap;
 
-			TreeHandleMap(Collider& collider) : collider(collider) {}
-			TreeHandleMap(const TreeHandleMap&) = delete;
-			TreeHandleMap(TreeHandleMap&&) = delete;
-			TreeHandleMap(Collider&, const TreeHandleMap&);
-			TreeHandleMap(Collider&, TreeHandleMap&&) noexcept;
-			~TreeHandleMap();
-
-			TreeHandleMap& operator=(const TreeHandleMap&);
-			TreeHandleMap& operator=(TreeHandleMap&&) noexcept;
-
-			void flush() const;
-
-		public:
-			void attach(CollisionTree* tree);
-			void detach(CollisionTree* tree);
-			bool is_attached(CollisionTree* tree) const { return handles.count(tree); }
-			void clear();
-			size_t size() const { return handles.size(); }
-		};
-	}
-
-	namespace internal
-	{
 		class CollisionNode
 		{
 			friend class CollisionTree;

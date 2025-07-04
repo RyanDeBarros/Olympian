@@ -5,12 +5,13 @@
 #include "physics/collision/objects/BVH.h"
 #include "physics/collision/methods/SpecialCasting.h"
 
+#include "graphics/primitives/Sprites.h"
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/primitives/Polygons.h"
 #include "graphics/extensions/Arrow.h"
 #include "graphics/backend/basic/Framebuffers.h"
 
-#include "core/base/Context.h"
+#include "core/platform/Input.h"
 
 namespace oly::debug
 {
@@ -51,7 +52,13 @@ namespace oly::debug
 		CollisionView& operator=(CollisionView&&) noexcept;
 
 	private:
-		void draw(context::InternalBatch& current_batch) const;
+		enum class Batch
+		{
+			NONE,
+			POLYGON,
+			ELLIPSE
+		};
+		void draw(Batch& current_batch) const;
 
 	public:
 		void clear_view();

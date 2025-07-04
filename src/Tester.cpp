@@ -83,8 +83,7 @@ int main()
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 
-	oly::col2d::CollisionDispatcher collision_dispatcher;
-	collision_dispatcher.add_tree(oly::math::Rect2D{ .x1 = -10'000, .x2 = 10'000, .y1 = -10'000, .y2 = 10'000 });
+	oly::context::collision_dispatcher().add_tree(oly::math::Rect2D{.x1 = -10'000, .x2 = 10'000, .y1 = -10'000, .y2 = 10'000});
 
 	//oly::col2d::AABB block{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
 	//oly::col2d::OBB block{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
@@ -104,7 +103,7 @@ int main()
 		hull_pts.set_points().push_back(p);
 	}
 	oly::col2d::Collider block(oly::col2d::TPrimitive(std::move(hull_pts)));
-	block.handles.attach(collision_dispatcher.get_tree());
+	block.handles.attach();
 	block.set_local().position.y = -100.0f;
 	block.set_local().scale.x = 2.0f;
 	block.set_local().rotation = glm::pi<float>() / 8;
@@ -122,7 +121,7 @@ int main()
 	}
 
 	oly::col2d::Collider player(star.as_convex_tcompound());
-	player.handles.attach(collision_dispatcher.get_tree());
+	player.handles.attach();
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
@@ -142,35 +141,44 @@ int main()
 		oly::ConstSoftReference<oly::col2d::Collider> player;
 		oly::col2d::Collider obstacle1, obstacle2, obstacle3, obstacle4, obstacle5;
 
-		ObstacleCollisionController(const oly::ConstSoftReference<oly::col2d::Collider>& player, oly::col2d::CollisionDispatcher& dispatcher)
+		ObstacleCollisionController(const oly::ConstSoftReference<oly::col2d::Collider>& player)
 			: player(player)
 		{
 			oly::col2d::Capsule _capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 			oly::col2d::TCompound capsule = _capsule.tcompound();
 			obstacle1.emplace(capsule);
-			obstacle1.handles.attach(dispatcher.get_tree());
+			obstacle1.handles.attach();
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle2.emplace(capsule);
-			obstacle2.handles.attach(dispatcher.get_tree());
+			obstacle2.handles.attach();
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle3.emplace(capsule);
-			obstacle3.handles.attach(dispatcher.get_tree());
+			obstacle3.handles.attach();
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle4.emplace(capsule);
-			obstacle4.handles.attach(dispatcher.get_tree());
+			obstacle4.handles.attach();
 			
 			capsule.set_local().position.y += 200.0f;
 			obstacle5.emplace(capsule);
-			obstacle5.handles.attach(dispatcher.get_tree());
+			obstacle5.handles.attach();
 
-			dispatcher.register_handler(obstacle1.cref(), &ObstacleCollisionController::walk_on, cref());
-			dispatcher.register_handler(obstacle2.cref(), &ObstacleCollisionController::walk_on, cref());
-			dispatcher.register_handler(obstacle3.cref(), &ObstacleCollisionController::walk_on, cref());
-			dispatcher.register_handler(obstacle4.cref(), &ObstacleCollisionController::walk_on, cref());
-			dispatcher.register_handler(obstacle5.cref(), &ObstacleCollisionController::walk_on, cref());
+			oly::context::collision_dispatcher().register_handler(obstacle1.cref(), &ObstacleCollisionController::walk_on, cref());
+			oly::context::collision_dispatcher().register_handler(obstacle2.cref(), &ObstacleCollisionController::walk_on, cref());
+			oly::context::collision_dispatcher().register_handler(obstacle3.cref(), &ObstacleCollisionController::walk_on, cref());
+			oly::context::collision_dispatcher().register_handler(obstacle4.cref(), &ObstacleCollisionController::walk_on, cref());
+			oly::context::collision_dispatcher().register_handler(obstacle5.cref(), &ObstacleCollisionController::walk_on, cref());
+		}
+
+		~ObstacleCollisionController()
+		{
+			oly::context::collision_dispatcher().unregister_handlers(obstacle1.cref());
+			oly::context::collision_dispatcher().unregister_handlers(obstacle2.cref());
+			oly::context::collision_dispatcher().unregister_handlers(obstacle3.cref());
+			oly::context::collision_dispatcher().unregister_handlers(obstacle4.cref());
+			oly::context::collision_dispatcher().unregister_handlers(obstacle5.cref());
 		}
 
 		void walk_on(const oly::col2d::OverlapEventData& data) const
@@ -189,7 +197,7 @@ int main()
 					oly::LOG << "obstacle 5 : " << data.phase << oly::LOG.nl;
 			}
 		}
-	} obstacle_controller(player.cref(), collision_dispatcher);
+	} obstacle_controller(player.cref());
 
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .width = 25.0f, .depth = 15.0f};
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .width = 25.0f, .depth = 15.0f};
@@ -275,8 +283,6 @@ int main()
 
 	while (oly::context::frame())
 	{
-		collision_dispatcher.poll();
-
 		// logic update
 
 		flag_state_timer.poll();

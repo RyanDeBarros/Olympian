@@ -8,6 +8,8 @@
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/text/Paragraph.h"
 
+#include "physics/collision/scene/CollisionDispatcher.h"
+
 #include "registries/Loader.h"
 #include "registries/graphics/TextureRegistry.h"
 #include "registries/graphics/extensions/TileSetRegistry.h"
@@ -86,4 +88,6 @@ namespace oly::context
 
 	extern bool blend_enabled();
 	extern glm::vec4 clear_color();
+
+	extern col2d::CollisionDispatcher& collision_dispatcher();
 }

@@ -73,6 +73,9 @@ namespace oly::col2d
 		using ContactConstHandler = void(CollisionController::*)(const ContactEventData&) const;
 	};
 
+#define OLY_COLLISION_CONTROLLER_HEADER(Class)\
+	OLY_SOFT_REFERENCE_PUBLIC(Class)
+
 	class CollisionPhaseTracker
 	{
 		struct ColliderUnorderedPair
@@ -99,9 +102,6 @@ namespace oly::col2d
 		void clean();
 		void erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
 	};
-
-#define OLY_COLLISION_CONTROLLER_HEADER(Class)\
-	OLY_SOFT_REFERENCE_PUBLIC(Class)
 
 	class CollisionDispatcher
 	{
@@ -156,7 +156,9 @@ namespace oly::col2d
 			trees.emplace_back(bounds, degree, cell_capacity);
 		}
 
-		CollisionTree* get_tree(size_t i = 0) { return &trees[i]; }
+		void clear() { trees.clear(); overlap_handlers.clear(); collision_handlers.clear(); contact_handlers.clear(); phase_tracker.clear(); }
+
+		const CollisionTree& get_tree(size_t i = 0) const { return trees[i]; }
 
 		void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
 

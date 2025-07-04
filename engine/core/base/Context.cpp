@@ -34,6 +34,8 @@ namespace oly::context
 
 		platform::WRViewport wr_viewport;
 		platform::WRDrawer wr_drawer;
+
+		col2d::CollisionDispatcher collision_dispatcher;
 	}
 
 	static void init_logger(const TOMLNode& node)
@@ -181,6 +183,8 @@ namespace oly::context
 
 	static void terminate()
 	{
+		internal::collision_dispatcher.clear();
+
 		internal::texture_registry.clear();
 		internal::tileset_registry.clear();
 		internal::font_face_registry.clear();
@@ -334,6 +338,7 @@ namespace oly::context
 			return false;
 		TIME.sync();
 		++internal::this_frame;
+		internal::collision_dispatcher.poll();
 		return true;
 	}
 
@@ -446,5 +451,10 @@ namespace oly::context
 		glm::vec4 color;
 		glGetFloatv(GL_COLOR_CLEAR_VALUE, glm::value_ptr(color));
 		return color;
+	}
+
+	col2d::CollisionDispatcher& collision_dispatcher()
+	{
+		return internal::collision_dispatcher;
 	}
 }
