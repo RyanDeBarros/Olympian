@@ -4,65 +4,79 @@
 
 namespace oly::physics
 {
-	RigidBody::RigidBody()
+	SimpleRigidBody::SimpleRigidBody(const SimpleRigidBody& other)
+		: colliders(other.colliders), _transformer(other._transformer)
 	{
-		register_handlers();
-	}
-
-	RigidBody::RigidBody(col2d::Collider&& collider)
-		: collider(std::move(collider))
-	{
-		register_handlers();
-	}
-
-	RigidBody::~RigidBody()
-	{
-		unregister_handlers();
-	}
-
-	void RigidBody::attach_tree(size_t context_tree_index)
-	{
-		collider.handles.attach(context_tree_index);
-	}
-
-	void RigidBody::detach_tree(size_t context_tree_index)
-	{
-		collider.handles.detach(context_tree_index);
-	}
-
-	bool RigidBody::tree_is_attached(size_t context_tree_index) const
-	{
-		return collider.handles.is_attached(context_tree_index);
-	}
-
-	void RigidBody::clear_trees()
-	{
-		collider.handles.clear();
+		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+			context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
 	}
 	
-	void RigidBody::register_handlers()
+	SimpleRigidBody::SimpleRigidBody(SimpleRigidBody&& other) noexcept
+		: colliders(std::move(other.colliders)), _transformer(std::move(other._transformer))
 	{
-		context::collision_dispatcher().register_handler(collider.ref(), &RigidBody::handle_overlaps, ref());
-		context::collision_dispatcher().register_handler(collider.ref(), &RigidBody::handle_collides, ref());
-		context::collision_dispatcher().register_handler(collider.ref(), &RigidBody::handle_contacts, ref());
+		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		{
+			context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
+			context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, other.ref());
+		}
 	}
 
-	void RigidBody::unregister_handlers()
+	SimpleRigidBody::~SimpleRigidBody()
 	{
-		context::collision_dispatcher().unregister_handlers(collider.ref());
+		clear_colliders();
 	}
 
-	void RigidBody::handle_overlaps(const col2d::OverlapEventData& data)
+	SimpleRigidBody& SimpleRigidBody::operator=(const SimpleRigidBody& other)
 	{
-		// TODO
+		if (this != &other)
+		{
+			clear_colliders();
+			colliders = other.colliders;
+			for (auto it = colliders.begin(); it != colliders.end(); ++it)
+				context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
+			
+			_transformer = other._transformer;
+		}
+		return *this;
 	}
-	
-	void RigidBody::handle_collides(const col2d::CollisionEventData& data)
+
+	SimpleRigidBody& SimpleRigidBody::operator=(SimpleRigidBody&& other) noexcept
 	{
-		// TODO
+		if (this != &other)
+		{
+			clear_colliders();
+			colliders = std::move(other.colliders);
+			for (auto it = colliders.begin(); it != colliders.end(); ++it)
+			{
+				context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
+				context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, other.ref());
+			}
+
+			_transformer = std::move(other._transformer);
+		}
+		return *this;
 	}
-	
-	void RigidBody::handle_contacts(const col2d::ContactEventData& data)
+
+	void SimpleRigidBody::bind_collider(const ConstSoftReference<col2d::Collider>& collider)
+	{
+		if (colliders.insert(collider))
+			context::collision_dispatcher().register_handler(collider, &SimpleRigidBody::handle_collides, ref());
+	}
+
+	void SimpleRigidBody::unbind_collider(const ConstSoftReference<col2d::Collider>& collider)
+	{
+		if (colliders.erase(collider))
+			context::collision_dispatcher().unregister_handler(collider, &SimpleRigidBody::handle_collides, ref());
+	}
+
+	void SimpleRigidBody::clear_colliders()
+	{
+		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+			context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, ref());
+		colliders.clear();
+	}
+
+	void SimpleRigidBody::handle_collides(const col2d::CollisionEventData& data)
 	{
 		// TODO
 	}

@@ -4,27 +4,34 @@
 
 namespace oly::physics
 {
-	class RigidBody : public col2d::CollisionController
+	class SimpleRigidBody : public col2d::CollisionController
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
-
-	public:
-		col2d::Collider collider;
-
-		RigidBody();
-		RigidBody(col2d::Collider&& collider);
-		~RigidBody();
-
-		void attach_tree(size_t context_tree_index = 0);
-		void detach_tree(size_t context_tree_index = 0);
-		bool tree_is_attached(size_t context_tree_index = 0) const;
-		void clear_trees();
+		OLY_COLLISION_CONTROLLER_HEADER(SimpleRigidBody);
 
 	private:
-		void register_handlers();
-		void unregister_handlers();
-		void handle_overlaps(const col2d::OverlapEventData& data);
+		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
+
+		Transformer2D _transformer;
+
+	public:
+		// TODO expose transformer methods instead. Since this is a common demand, create helper adapter class(es) that hides a reference to transformer, but exposes certain functions.
+		const Transformer2D& transformer() const { return _transformer; }
+		Transformer2D& transformer() { return _transformer; }
+
+		SimpleRigidBody() = default;
+		SimpleRigidBody(const SimpleRigidBody&);
+		SimpleRigidBody(SimpleRigidBody&&) noexcept;
+		~SimpleRigidBody();
+		SimpleRigidBody& operator=(const SimpleRigidBody&);
+		SimpleRigidBody& operator=(SimpleRigidBody&&) noexcept;
+
+		void bind_collider(const ConstSoftReference<col2d::Collider>& collider);
+		void unbind_collider(const ConstSoftReference<col2d::Collider>& collider);
+		void clear_colliders();
+
+	private:
 		void handle_collides(const col2d::CollisionEventData& data);
-		void handle_contacts(const col2d::ContactEventData& data);
 	};
+
+	// TODO RigidBody uses handle_contacts for torque movement.
 }

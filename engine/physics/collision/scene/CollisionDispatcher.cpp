@@ -82,42 +82,61 @@ namespace oly::col2d
 	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second,
 		std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers, Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
 	{
-		static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
+		static const auto invalid_controller = [](const auto& ref) { return !ref.controller; };
 		static const auto emit = [](auto&& ref, const auto& data) { return (ref.controller.get()->*ref.handler)(data); };
 
 		auto it_1 = handlers.find(first);
-		bool found_1 = it_1 != handlers.end();
-		if (found_1 && std::visit(invalid_controller, it_1->second))
-		{
-			found_1 = false;
-			handlers.erase(it_1);
-		}
-
 		auto it_2 = handlers.find(second);
-		bool found_2 = it_2 != handlers.end();
-		if (found_2 && std::visit(invalid_controller, it_2->second))
-		{
-			found_2 = false;
-			handlers.erase(it_2);
-		}
 
-		if (found_1 || found_2)
+		if (it_1 == handlers.end() && it_2 == handlers.end())
+			return;
+
+		const Collider* c1 = first.get();
+		const Collider* c2 = second.get();
+		if (!c1)
 		{
-			const Collider* c1 = first.get();
-			const Collider* c2 = second.get();
-			if (c1 && c2)
+			handlers.erase(it_1);
+			it_2 = handlers.find(second);
+		}
+		if (!c2)
+			handlers.erase(it_2);
+		if (!c1 || !c2)
+			return;
+
+		EventData data((c1->*method)(*c2), first, second, phase_tracker.prior_phase(first, second));
+		phase_tracker.lazy_update_phase(first, second, data.phase);
+		if (data.phase == Phase::EXPIRED)
+			return;
+
+		if (it_1 != handlers.end())
+		{
+			for (auto it = it_1->second.begin(); it != it_1->second.end(); )
 			{
-				EventData data((c1->*method)(*c2), first, second, phase_tracker.prior_phase(first, second));
-				phase_tracker.lazy_update_phase(first, second, data.phase);
-				if (data.phase != Phase::EXPIRED)
-				{
-					if (found_1)
-						std::visit([&data](auto&& ref) { emit(ref, data); }, it_1->second);
-					if (found_2)
-						std::visit([&data](auto&& ref) { emit(ref, data.invert()); }, it_2->second);
-				}
+				if (std::visit(invalid_controller, *it))
+					std::visit([&data](auto&& ref) { emit(ref, data); }, *it);
+				else
+					it = it_1->second.erase(it);
 			}
 		}
+		data.invert();
+		if (it_2 != handlers.end())
+		{
+			for (auto it = it_2->second.begin(); it != it_2->second.end(); )
+			{
+				if (std::visit(invalid_controller, *it))
+					std::visit([&data](auto&& ref) { emit(ref, data); }, *it);
+				else
+					it = it_2->second.erase(it);
+			}
+		}
+
+		if (it_1 != handlers.end() && it_1->second.empty())
+		{
+			handlers.erase(it_1);
+			it_2 = handlers.find(second);
+		}
+		if (it_2 != handlers.end() && it_2->second.empty())
+			handlers.erase(it_2);
 	}
 
 	void CollisionDispatcher::poll() const
@@ -140,12 +159,24 @@ namespace oly::col2d
 	template<typename HandlerRef>
 	static void clean_handlers(std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers)
 	{
-		static const auto valid_controller = [](auto&& ref) -> bool { return ref.controller; };
+		static const auto valid_controller = [](const auto& ref) -> bool { return ref.controller; };
 
 		for (auto it = handlers.begin(); it != handlers.end(); )
 		{
-			if (it->first && std::visit(valid_controller, it->second))
-				++it;
+			if (it->first)
+			{
+				for (auto inner_it = it->second.begin(); inner_it != it->second.end(); )
+				{
+					if (std::visit(valid_controller, *inner_it))
+						++inner_it;
+					else
+						inner_it = it->second.erase(inner_it);
+				}
+				if (it->second.empty())
+					it = handlers.erase(it);
+				else
+					++it;
+			}
 			else
 				it = handlers.erase(it);
 		}
