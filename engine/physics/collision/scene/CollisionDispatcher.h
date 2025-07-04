@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/scene/CollisionTree.h"
+#include "physics/collision/scene/Collider.h"
 
 #include <unordered_set>
 

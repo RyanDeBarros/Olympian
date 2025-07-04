@@ -1,158 +1,115 @@
 #include "CollisionTree.h"
 
+#include "physics/collision/scene/Collider.h"
 #include "core/base/Assert.h"
 
 #include <stack>
 
 namespace oly::col2d
 {
-	Collider::TreeHandleMap::TreeHandleMap(Collider& collider, const TreeHandleMap& other)
-		: collider(collider), handles(other.handles)
+	namespace internal
 	{
-		for (auto& [tree, node] : handles)
-			if (node)
-				node->colliders.insert(collider.cref());
-	}
-	
-	Collider::TreeHandleMap::TreeHandleMap(Collider& collider, TreeHandleMap&& other) noexcept
-		: collider(collider), handles(std::move(other.handles))
-	{
-		for (auto& [tree, node] : handles)
-			if (node)
-				node->colliders.replace(other.collider.cref(), collider.cref());
-	}
-	
-	Collider::TreeHandleMap::~TreeHandleMap()
-	{
-		clear();
-	}
-	
-	Collider::TreeHandleMap& Collider::TreeHandleMap::operator=(const TreeHandleMap& other)
-	{
-		if (this != &other)
+		TreeHandleMap::TreeHandleMap(Collider& collider, const TreeHandleMap& other)
+			: collider(collider), handles(other.handles)
 		{
-			for (auto it = handles.begin(); it != handles.end(); )
-			{
-				if (other.handles.count(it->key))
-					++it;
-				else
-					it = handles.erase(it);
-			}
-
-			for (auto it = other.handles.begin(); it != other.handles.end(); ++it)
-			{
-				if (!handles.count(it->key))
-				{
-					if (it->value)
-						it->value->colliders.insert(collider.cref());
-					handles.insert(it->key, it->value);
-				}
-			}
+			for (auto& [tree, node] : handles)
+				if (node)
+					node->colliders.insert(collider.cref());
 		}
-		return *this;
-	}
 	
-	Collider::TreeHandleMap& Collider::TreeHandleMap::operator=(TreeHandleMap&& other) noexcept
-	{
-		if (this != &other)
+		TreeHandleMap::TreeHandleMap(Collider& collider, TreeHandleMap&& other) noexcept
+			: collider(collider), handles(std::move(other.handles))
 		{
-			clear();
-			handles = std::move(other.handles);
 			for (auto& [tree, node] : handles)
 				if (node)
 					node->colliders.replace(other.collider.cref(), collider.cref());
 		}
-		return *this;
-	}
-
-	void Collider::TreeHandleMap::flush() const
-	{
-		for (auto& [tree, node] : handles)
+	
+		TreeHandleMap::~TreeHandleMap()
 		{
-			if (node)
-				node->update(collider, node);
-			else
+			clear();
+		}
+	
+		TreeHandleMap& TreeHandleMap::operator=(const TreeHandleMap& other)
+		{
+			if (this != &other)
 			{
-				tree->root->colliders.insert(collider.cref());
-				node = tree->root.get();
+				for (auto it = handles.begin(); it != handles.end(); )
+				{
+					if (other.handles.count(it->key))
+						++it;
+					else
+						it = handles.erase(it);
+				}
+
+				for (auto it = other.handles.begin(); it != other.handles.end(); ++it)
+				{
+					if (!handles.count(it->key))
+					{
+						if (it->value)
+							it->value->colliders.insert(collider.cref());
+						handles.insert(it->key, it->value);
+					}
+				}
+			}
+			return *this;
+		}
+	
+		TreeHandleMap& TreeHandleMap::operator=(TreeHandleMap&& other) noexcept
+		{
+			if (this != &other)
+			{
+				clear();
+				handles = std::move(other.handles);
+				for (auto& [tree, node] : handles)
+					if (node)
+						node->colliders.replace(other.collider.cref(), collider.cref());
+			}
+			return *this;
+		}
+
+		void TreeHandleMap::flush() const
+		{
+			for (auto& [tree, node] : handles)
+			{
+				if (node)
+					node->update(collider, node);
+				else
+				{
+					tree->root->colliders.insert(collider.cref());
+					node = tree->root.get();
+				}
 			}
 		}
-	}
 
-	void Collider::TreeHandleMap::attach(CollisionTree* tree)
-	{
-		if (!handles.count(tree))
+		void TreeHandleMap::attach(CollisionTree* tree)
 		{
-			tree->root->colliders.insert(collider.cref());
-			handles.insert(tree, tree->root.get());
+			if (!handles.count(tree))
+			{
+				tree->root->colliders.insert(collider.cref());
+				handles.insert(tree, tree->root.get());
+			}
 		}
-	}
 
-	void Collider::TreeHandleMap::detach(CollisionTree* tree)
-	{
-		auto it = handles.find(tree);
-		if (it != handles.end())
+		void TreeHandleMap::detach(CollisionTree* tree)
 		{
-			if (it->value)
-				it->value->colliders.erase(collider.cref());
-			handles.erase(it);
+			auto it = handles.find(tree);
+			if (it != handles.end())
+			{
+				if (it->value)
+					it->value->colliders.erase(collider.cref());
+				handles.erase(it);
+			}
 		}
-	}
 
-	void Collider::TreeHandleMap::clear()
-	{
-		for (auto& [tree, node] : handles)
-			if (node)
-				node->colliders.erase(collider.cref());
-		handles.clear();
-	}
-
-	Collider::Collider(const Collider& other)
-		: obj(other.obj), handles(*this, other.handles), dirty(other.dirty), quad_wrap(other.quad_wrap)
-	{
-	}
-
-	Collider::Collider(Collider&& other) noexcept
-		: obj(std::move(other.obj)), handles(*this, std::move(other.handles)), dirty(other.dirty), quad_wrap(other.quad_wrap)
-	{
-	}
-
-	Collider& Collider::operator=(const Collider& other)
-	{
-		if (this != &other)
+		void TreeHandleMap::clear()
 		{
-			obj = other.obj;
-			dirty = other.dirty;
-			quad_wrap = other.quad_wrap;
-			handles = other.handles;
+			for (auto& [tree, node] : handles)
+				if (node)
+					node->colliders.erase(collider.cref());
+			handles.clear();
 		}
-		return *this;
-	}
 
-	Collider& Collider::operator=(Collider&& other) noexcept
-	{
-		if (this != &other)
-		{
-			obj = std::move(other.obj);
-			dirty = other.dirty;
-			quad_wrap = other.quad_wrap;
-			handles = std::move(other.handles);
-		}
-		return *this;
-	}
-
-	void Collider::flush() const
-	{
-		if (!is_dirty())
-			return;
-
-		dirty = false;
-		internal::lut_flush(obj);
-		handles.flush();
-	}
-
-	namespace internal
-	{
 		CollisionNode::CollisionNode(const CollisionTree* tree, math::Rect2D bounds)
 			: tree(tree), bounds(bounds), subnodes(tree->degree.x * tree->degree.y)
 		{
@@ -460,6 +417,16 @@ namespace oly::col2d
 				}
 			}
 		}
+	}
+
+	CollisionTree::BFSColliderIterator CollisionTree::query(const Collider& collider) const
+	{
+		return BFSColliderIterator(root.get(), collider.quad_wrap);
+	}
+
+	CollisionTree::BFSColliderIterator CollisionTree::query(const math::Rect2D bounds) const
+	{
+		return BFSColliderIterator(root.get(), bounds);
 	}
 
 	internal::CollisionNode* CollisionTree::BFSIterator::next()
