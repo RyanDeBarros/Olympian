@@ -6,7 +6,7 @@
 #include "core/types/SoftReference.h"
 
 #include "physics/collision/scene/LUT.h"
-#include "physics/collision/scene/ColliderObject.h"
+#include "physics/collision/scene/LUTVariant.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>
@@ -14,14 +14,14 @@
 
 namespace oly::col2d
 {
-	class CollisionNode;
+	namespace internal { class CollisionNode; }
 	class CollisionTree;
 
 	class Collider
 	{
 		// LATER movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
-		friend class CollisionNode;
+		friend class internal::CollisionNode;
 
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
@@ -30,11 +30,11 @@ namespace oly::col2d
 
 		class TreeHandleMap
 		{
-			friend class CollisionNode;
+			friend class internal::CollisionNode;
 			friend class CollisionTree;
 			friend class Collider;
 			Collider& collider;
-			mutable ContiguousMap<const CollisionTree*, CollisionNode*> handles;
+			mutable ContiguousMap<const CollisionTree*, internal::CollisionNode*> handles;
 
 			TreeHandleMap(Collider& collider) : collider(collider) {}
 			TreeHandleMap(const TreeHandleMap&) = delete;
@@ -83,6 +83,13 @@ namespace oly::col2d
 
 		void flag() { dirty = true; }
 
+		const Transform2D& get_local() const { return internal::lut_transformer(obj).get_local(); }
+		Transform2D& set_local() { return internal::lut_transformer(obj).set_local(); }
+
+		// TODO expose transformer methods instead
+		const Transformer2D& get_transformer() const { return internal::lut_transformer(obj); }
+		Transformer2D& set_transformer() { return internal::lut_transformer(obj); }
+
 	private:
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
 		void flush() const;
@@ -99,52 +106,55 @@ namespace oly::col2d
 
 		debug::CollisionView collision_view(glm::vec4 color) const { return internal::lut_collision_view(obj, color); }
 		void update_view(debug::CollisionView& view, glm::vec4 color) const { internal::lut_update_view(view, obj, color); }
-	};
 
-#define OLY_COLLIDER_HEADER(Class)\
-	OLY_SOFT_REFERENCE_PUBLIC(Class);
-
-	// TODO put in internal
-	class CollisionNode
-	{
-		friend class CollisionTree;
-		friend class Collider;
-		friend class Collider::TreeHandleMap;
-
-		const CollisionTree* tree;
-		math::Rect2D bounds;
-		CollisionNode* parent = nullptr;
-		FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-		ContiguousSet<ConstSoftReference<Collider>> colliders;
-
-		CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
-		CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
-		void assign_tree(const CollisionTree* new_tree);
-
-	public:
-		~CollisionNode();
-	
 	private:
-		static std::unique_ptr<CollisionNode> instantiate(const CollisionTree* tree, math::Rect2D bounds);
-
-		void update(const Collider& collider, CollisionNode*& node);
-		void insert_upwards(const Collider& collider, CollisionNode*& node);
-
-		void subdivide();
-
-		bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
-		size_t idx(unsigned int x, unsigned int y) const;
-
-		math::Rect2D subdivision(int x, int y) const;
-
-	public:
-		const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
+		internal::ColliderObjectConstVariant get_object_variant() const { return internal::lut_variant(obj); }
+		internal::ColliderObjectVariant get_object_variant() { return internal::lut_variant(obj); }
 	};
+
+	namespace internal
+	{
+		class CollisionNode
+		{
+			friend class CollisionTree;
+			friend class Collider;
+			friend class Collider::TreeHandleMap;
+
+			const CollisionTree* tree;
+			math::Rect2D bounds;
+			CollisionNode* parent = nullptr;
+			FixedVector<std::unique_ptr<CollisionNode>> subnodes;
+			ContiguousSet<ConstSoftReference<Collider>> colliders;
+
+			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
+			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
+			void assign_tree(const CollisionTree* new_tree);
+
+		public:
+			~CollisionNode();
+
+		private:
+			static std::unique_ptr<CollisionNode> instantiate(const CollisionTree* tree, math::Rect2D bounds);
+
+			void update(const Collider& collider, CollisionNode*& node);
+			void insert_upwards(const Collider& collider, CollisionNode*& node);
+
+			void subdivide();
+
+			bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
+			size_t idx(unsigned int x, unsigned int y) const;
+
+			math::Rect2D subdivision(int x, int y) const;
+
+		public:
+			const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
+		};
+	}
 
 	class CollisionDispatcher;
 	class CollisionTree
 	{
-		friend class CollisionNode;
+		friend class internal::CollisionNode;
 		friend class Collider;
 		friend class CollisionDispatcher;
 
@@ -152,7 +162,7 @@ namespace oly::col2d
 		glm::uvec2 degree;
 		glm::vec2 inv_degree;
 
-		mutable std::unique_ptr<CollisionNode> root;
+		mutable std::unique_ptr<internal::CollisionNode> root;
 
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
@@ -173,23 +183,23 @@ namespace oly::col2d
 		class BFSIterator
 		{
 			friend class CollisionTree;
-			std::queue<CollisionNode*> nodes;
-			BFSIterator(CollisionNode* root) { nodes.push(root); }
+			std::queue<internal::CollisionNode*> nodes;
+			BFSIterator(internal::CollisionNode* root) { nodes.push(root); }
 
 		public:
 			bool done() const { return nodes.empty(); }
-			CollisionNode* next();
+			internal::CollisionNode* next();
 		};
 
 		class BFSColliderIterator
 		{
 			friend class CollisionTree;
 			const math::Rect2D bounds;
-			std::queue<const CollisionNode*> nodes;
+			std::queue<const internal::CollisionNode*> nodes;
 			size_t i = 0;
 			ConstSoftReference<Collider> current = nullptr;
 			BFSColliderIterator(const math::Rect2D bounds) : bounds(bounds) {}
-			BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds);
+			BFSColliderIterator(const internal::CollisionNode* root, const math::Rect2D bounds);
 
 			void set(const BFSColliderIterator&);
 
@@ -213,7 +223,7 @@ namespace oly::col2d
 				operator bool () const { return first && second; }
 			} current;
 
-			PairIterator(CollisionNode* node, const math::Rect2D bounds);
+			PairIterator(internal::CollisionNode* node, const math::Rect2D bounds);
 
 			void increment_current();
 

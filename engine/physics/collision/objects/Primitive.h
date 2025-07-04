@@ -30,8 +30,11 @@ namespace oly::col2d
 	inline CollisionResult collides(const Primitive& c1, const Primitive& c2) { return (c1.mask & c2.layer) ? collides(c1.element, c2.element) : CollisionResult{ .overlap = false }; }
 	inline ContactResult contacts(const Primitive& c1, const Primitive& c2) { return (c1.mask & c2.layer) ? contacts(c1.element, c2.element) : ContactResult{ .overlap = false }; }
 
+	namespace internal { struct LUT; };
+
 	class TPrimitive
 	{
+		friend struct internal::LUT;
 		Transformer2D transformer;
 		Primitive primitive;
 		mutable Element baked;

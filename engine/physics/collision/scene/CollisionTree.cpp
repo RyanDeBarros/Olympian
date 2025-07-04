@@ -151,151 +151,154 @@ namespace oly::col2d
 		handles.flush();
 	}
 
-	CollisionNode::CollisionNode(const CollisionTree* tree, math::Rect2D bounds)
-		: tree(tree), bounds(bounds), subnodes(tree->degree.x * tree->degree.y)
+	namespace internal
 	{
-	}
-
-	CollisionNode::CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other)
-		: tree(tree), bounds(other.bounds), parent(parent), subnodes(tree->degree.x * tree->degree.y)
-	{
-		for (const ConstSoftReference<Collider>& collider : other.colliders)
+		CollisionNode::CollisionNode(const CollisionTree* tree, math::Rect2D bounds)
+			: tree(tree), bounds(bounds), subnodes(tree->degree.x * tree->degree.y)
 		{
-			if (const Collider* c = collider.get())
+		}
+
+		CollisionNode::CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other)
+			: tree(tree), bounds(other.bounds), parent(parent), subnodes(tree->degree.x * tree->degree.y)
+		{
+			for (const ConstSoftReference<Collider>& collider : other.colliders)
 			{
-				colliders.insert(collider);
-				c->handles.handles[tree] = this;
-			}
-		}
-
-		for (size_t i = 0; i < other.subnodes.size(); ++i)
-		{
-			const std::unique_ptr<CollisionNode>& sub = other.subnodes[i];
-			if (CollisionNode* subnode = sub.get())
-				subnodes[i] = std::unique_ptr<CollisionNode>(new CollisionNode(tree, this, *subnode));
-		}
-	}
-
-	void CollisionNode::assign_tree(const CollisionTree* new_tree)
-	{
-		for (const ConstSoftReference<Collider>& collider : colliders)
-		{
-			if (const Collider* c = collider.get())
-			{
-				c->handles.handles.get(tree) = nullptr;
-				c->handles.handles[tree] = this;
-			}
-		}
-
-		tree = new_tree;
-
-		for (const std::unique_ptr<CollisionNode>& sub : subnodes)
-			if (CollisionNode* subnode = sub.get())
-				subnode->assign_tree(tree);
-	}
-
-	CollisionNode::~CollisionNode()
-	{
-		for (const ConstSoftReference<Collider>& collider : colliders)
-			if (const Collider* c = collider.get())
-				c->handles.handles.get(tree) = nullptr;
-	}
-
-	std::unique_ptr<CollisionNode> CollisionNode::instantiate(const CollisionTree* tree, math::Rect2D bounds)
-	{
-		return std::unique_ptr<CollisionNode>(new CollisionNode(tree, bounds));
-	}
-
-	void CollisionNode::update(const Collider& collider, CollisionNode*& node)
-	{
-		colliders.erase(collider.cref());
-		node = nullptr;
-		insert_upwards(collider, node);
-	}
-
-	void CollisionNode::insert_upwards(const Collider& collider, CollisionNode*& node)
-	{
-		if (collider.quad_wrap.strict_inside(bounds))
-		{
-			if (colliders.insert(collider.cref()))
-				node = this;
-		}
-		else if (parent)
-			parent->insert_upwards(collider, node);
-	}
-
-	void CollisionNode::subdivide()
-	{
-		if (colliders.size() >= tree->cell_capacity)
-		{
-			size_t i = 0;
-			while (i < colliders.size())
-			{
-				unsigned int x, y;
-				if (subnode_coordinates(colliders[i]->quad_wrap, x, y))
+				if (const Collider* c = collider.get())
 				{
-					std::unique_ptr<CollisionNode>& sub = subnodes[idx(x, y)];
-					if (!sub.get())
-					{
-						sub = instantiate(tree, subdivision(x, y));
-						sub->parent = this;
-					}
-					sub->colliders.insert(colliders[i]);
-					colliders[i]->handles.handles.get(tree) = sub.get();
-					colliders.remove(i);
-					if (colliders.size() < tree->cell_capacity)
-						return;
+					colliders.insert(collider);
+					c->handles.handles[tree] = this;
 				}
-				else
-					++i;
+			}
+
+			for (size_t i = 0; i < other.subnodes.size(); ++i)
+			{
+				const std::unique_ptr<CollisionNode>& sub = other.subnodes[i];
+				if (CollisionNode* subnode = sub.get())
+					subnodes[i] = std::unique_ptr<CollisionNode>(new CollisionNode(tree, this, *subnode));
 			}
 		}
-	}
 
-	bool CollisionNode::subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const
-	{
-		static const auto coord = [](unsigned int degree, float val, float rel, float len) {
-			return (float)degree * (val - rel) / len;
+		void CollisionNode::assign_tree(const CollisionTree* new_tree)
+		{
+			for (const ConstSoftReference<Collider>& collider : colliders)
+			{
+				if (const Collider* c = collider.get())
+				{
+					c->handles.handles.get(tree) = nullptr;
+					c->handles.handles[tree] = this;
+				}
+			}
+
+			tree = new_tree;
+
+			for (const std::unique_ptr<CollisionNode>& sub : subnodes)
+				if (CollisionNode* subnode = sub.get())
+					subnode->assign_tree(tree);
+		}
+
+		CollisionNode::~CollisionNode()
+		{
+			for (const ConstSoftReference<Collider>& collider : colliders)
+				if (const Collider* c = collider.get())
+					c->handles.handles.get(tree) = nullptr;
+		}
+
+		std::unique_ptr<CollisionNode> CollisionNode::instantiate(const CollisionTree* tree, math::Rect2D bounds)
+		{
+			return std::unique_ptr<CollisionNode>(new CollisionNode(tree, bounds));
+		}
+
+		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
+		{
+			colliders.erase(collider.cref());
+			node = nullptr;
+			insert_upwards(collider, node);
+		}
+
+		void CollisionNode::insert_upwards(const Collider& collider, CollisionNode*& node)
+		{
+			if (collider.quad_wrap.strict_inside(bounds))
+			{
+				if (colliders.insert(collider.cref()))
+					node = this;
+			}
+			else if (parent)
+				parent->insert_upwards(collider, node);
+		}
+
+		void CollisionNode::subdivide()
+		{
+			if (colliders.size() >= tree->cell_capacity)
+			{
+				size_t i = 0;
+				while (i < colliders.size())
+				{
+					unsigned int x, y;
+					if (subnode_coordinates(colliders[i]->quad_wrap, x, y))
+					{
+						std::unique_ptr<CollisionNode>& sub = subnodes[idx(x, y)];
+						if (!sub.get())
+						{
+							sub = instantiate(tree, subdivision(x, y));
+							sub->parent = this;
+						}
+						sub->colliders.insert(colliders[i]);
+						colliders[i]->handles.handles.get(tree) = sub.get();
+						colliders.remove(i);
+						if (colliders.size() < tree->cell_capacity)
+							return;
+					}
+					else
+						++i;
+				}
+			}
+		}
+
+		bool CollisionNode::subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const
+		{
+			static const auto coord = [](unsigned int degree, float val, float rel, float len) {
+				return (float)degree * (val - rel) / len;
+				};
+
+			float x1 = coord(tree->degree.x, b.x1, bounds.x1, bounds.width());
+			if (near_zero(x1 - trunc(x1)))
+				return false;
+
+			float x2 = coord(tree->degree.x, b.x2, bounds.x1, bounds.width());
+			if (near_zero(x2 - trunc(x2)))
+				return false;
+
+			if ((unsigned int)x1 != (unsigned int)x2)
+				return false;
+
+			float y1 = coord(tree->degree.y, b.y1, bounds.y1, bounds.height());
+			if (near_zero(y1 - trunc(y1)))
+				return false;
+
+			float y2 = coord(tree->degree.y, b.y2, bounds.y1, bounds.height());
+			if (near_zero(y2 - trunc(y2)))
+				return false;
+
+			if ((unsigned int)y1 != (unsigned int)y2)
+				return false;
+
+			x = (unsigned int)x1;
+			y = (unsigned int)y1;
+			return true;
+		}
+
+		size_t CollisionNode::idx(unsigned int x, unsigned int y) const
+		{
+			return size_t(y) * tree->degree.x + x;
+		}
+
+		math::Rect2D CollisionNode::subdivision(int x, int y) const
+		{
+			return {
+				.x1 = glm::mix(bounds.x1, bounds.x2, float(x) * tree->inv_degree.x), .x2 = glm::mix(bounds.x1, bounds.x2, (float(x) + 1.0f) * tree->inv_degree.x),
+				.y1 = glm::mix(bounds.y1, bounds.y2, float(y) * tree->inv_degree.y), .y2 = glm::mix(bounds.y1, bounds.y2, (float(y) + 1.0f) * tree->inv_degree.y)
 			};
-
-		float x1 = coord(tree->degree.x, b.x1, bounds.x1, bounds.width());
-		if (near_zero(x1 - trunc(x1)))
-			return false;
-
-		float x2 = coord(tree->degree.x, b.x2, bounds.x1, bounds.width());
-		if (near_zero(x2 - trunc(x2)))
-			return false;
-
-		if ((unsigned int)x1 != (unsigned int)x2)
-			return false;
-
-		float y1 = coord(tree->degree.y, b.y1, bounds.y1, bounds.height());
-		if (near_zero(y1 - trunc(y1)))
-			return false;
-
-		float y2 = coord(tree->degree.y, b.y2, bounds.y1, bounds.height());
-		if (near_zero(y2 - trunc(y2)))
-			return false;
-
-		if ((unsigned int)y1 != (unsigned int)y2)
-			return false;
-
-		x = (unsigned int)x1;
-		y = (unsigned int)y1;
-		return true;
-	}
-
-	size_t CollisionNode::idx(unsigned int x, unsigned int y) const
-	{
-		return size_t(y) * tree->degree.x + x;
-	}
-
-	math::Rect2D CollisionNode::subdivision(int x, int y) const
-	{
-		return {
-			.x1 = glm::mix(bounds.x1, bounds.x2, float(x) * tree->inv_degree.x), .x2 = glm::mix(bounds.x1, bounds.x2, (float(x) + 1.0f) * tree->inv_degree.x),
-			.y1 = glm::mix(bounds.y1, bounds.y2, float(y) * tree->inv_degree.y), .y2 = glm::mix(bounds.y1, bounds.y2, (float(y) + 1.0f) * tree->inv_degree.y)
-		};
+		}
 	}
 
 	CollisionTree::CollisionTree(math::Rect2D bounds, glm::uvec2 degree, size_t cell_capacity)
@@ -303,13 +306,13 @@ namespace oly::col2d
 	{
 		OLY_ASSERT(degree.x * degree.y >= 2);
 		OLY_ASSERT(cell_capacity >= 2);
-		root = CollisionNode::instantiate(this, bounds);
+		root = internal::CollisionNode::instantiate(this, bounds);
 	}
 
 	CollisionTree::CollisionTree(const CollisionTree& other)
 		: cell_capacity(other.cell_capacity), degree(other.degree), inv_degree(other.inv_degree)
 	{
-		root = std::unique_ptr<CollisionNode>(new CollisionNode(this, nullptr, *other.root));
+		root = std::unique_ptr<internal::CollisionNode>(new internal::CollisionNode(this, nullptr, *other.root));
 	}
 
 	CollisionTree::CollisionTree(CollisionTree&& other) noexcept
@@ -322,7 +325,7 @@ namespace oly::col2d
 	CollisionTree::~CollisionTree()
 	{
 		BFSIterator it(root.get());
-		while (CollisionNode* node = it.next())
+		while (internal::CollisionNode* node = it.next())
 		{
 			for (const ConstSoftReference<Collider>& collider : node->colliders)
 				if (const Collider* c = collider.get())
@@ -337,7 +340,7 @@ namespace oly::col2d
 			cell_capacity = other.cell_capacity;
 			degree = other.degree;
 			inv_degree = other.inv_degree;
-			root = std::unique_ptr<CollisionNode>(new CollisionNode(this, nullptr, *other.root));
+			root = std::unique_ptr<internal::CollisionNode>(new internal::CollisionNode(this, nullptr, *other.root));
 		}
 		return *this;
 	}
@@ -365,7 +368,7 @@ namespace oly::col2d
 	void CollisionTree::flush_update_colliders() const
 	{
 		BFSIterator it(root.get());
-		while (CollisionNode* node = it.next())
+		while (internal::CollisionNode* node = it.next())
 		{
 			size_t i = 0;
 			while (i < node->colliders.size())
@@ -385,17 +388,17 @@ namespace oly::col2d
 	void CollisionTree::flush_insert_downward() const
 	{
 		// Sensitive BFS
-		std::queue<CollisionNode*> nodes;
+		std::queue<internal::CollisionNode*> nodes;
 		nodes.push(root.get());
 		while (!nodes.empty())
 		{
-			CollisionNode* node = nodes.front();
+			internal::CollisionNode* node = nodes.front();
 			nodes.pop();
 
 			node->subdivide();
 
-			for (std::unique_ptr<CollisionNode>& subnode : node->subnodes)
-				if (CollisionNode* sub = subnode.get())
+			for (std::unique_ptr<internal::CollisionNode>& subnode : node->subnodes)
+				if (internal::CollisionNode* sub = subnode.get())
 					nodes.push(sub);
 		}
 	}
@@ -405,11 +408,11 @@ namespace oly::col2d
 		// DFS post-order
 		struct Indexer
 		{
-			CollisionNode* node = nullptr;
+			internal::CollisionNode* node = nullptr;
 			size_t index_in_parent = 0;
 			bool visited_children = false;
 
-			Indexer(CollisionNode* node, size_t index_in_parent, bool visited_children) : node(node), index_in_parent(index_in_parent), visited_children(visited_children) {}
+			Indexer(internal::CollisionNode* node, size_t index_in_parent, bool visited_children) : node(node), index_in_parent(index_in_parent), visited_children(visited_children) {}
 		};
 		std::stack<Indexer> stack;
 		stack.emplace(root.get(), 0, false);
@@ -420,7 +423,7 @@ namespace oly::col2d
 
 			if (indexer.visited_children)
 			{
-				if (CollisionNode* parent = indexer.node->parent) // non-root
+				if (internal::CollisionNode* parent = indexer.node->parent) // non-root
 				{
 					// due to traversal, it is guaranteed that node has no subnodes
 					if (parent->colliders.size() < cell_capacity)
@@ -459,22 +462,22 @@ namespace oly::col2d
 		}
 	}
 
-	CollisionNode* CollisionTree::BFSIterator::next()
+	internal::CollisionNode* CollisionTree::BFSIterator::next()
 	{
 		if (nodes.empty())
 			return nullptr;
 
-		CollisionNode* node = nodes.front();
+		internal::CollisionNode* node = nodes.front();
 		nodes.pop();
 
-		for (std::unique_ptr<CollisionNode>& subnode : node->subnodes)
-			if (CollisionNode* sub = subnode.get())
+		for (std::unique_ptr<internal::CollisionNode>& subnode : node->subnodes)
+			if (internal::CollisionNode* sub = subnode.get())
 				nodes.push(sub);
 
 		return node;
 	}
 
-	CollisionTree::BFSColliderIterator::BFSColliderIterator(const CollisionNode* root, const math::Rect2D bounds)
+	CollisionTree::BFSColliderIterator::BFSColliderIterator(const internal::CollisionNode* root, const math::Rect2D bounds)
 		: bounds(bounds)
 	{
 		nodes.push(root);
@@ -492,7 +495,7 @@ namespace oly::col2d
 	{
 		while (!nodes.empty())
 		{
-			const CollisionNode* node = nodes.front();
+			const internal::CollisionNode* node = nodes.front();
 			if (i < node->colliders.size())
 			{
 				current = node->colliders[i++];
@@ -515,7 +518,7 @@ namespace oly::col2d
 		return og;
 	}
 
-	CollisionTree::PairIterator::PairIterator(CollisionNode* node, const math::Rect2D bounds)
+	CollisionTree::PairIterator::PairIterator(internal::CollisionNode* node, const math::Rect2D bounds)
 		: first(node, bounds), second(bounds)
 	{
 		increment_current();

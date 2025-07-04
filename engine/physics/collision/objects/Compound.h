@@ -19,8 +19,12 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const;
 	};
 
+	namespace internal { struct LUT; };
+
 	class TCompound
 	{
+		friend struct internal::LUT;
+
 		Transformer2D transformer;
 		Compound compound;
 		mutable std::vector<Element> baked;

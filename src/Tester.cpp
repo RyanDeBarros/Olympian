@@ -105,10 +105,9 @@ int main()
 	}
 	oly::col2d::Collider block(oly::col2d::TPrimitive(std::move(hull_pts)));
 	block.handles.attach(collision_dispatcher.get_tree());
-	// TODO put set_local/get_local on Collider
-	block.set<oly::col2d::TPrimitive>().set_local().position.y = -100.0f;
-	block.set<oly::col2d::TPrimitive>().set_local().scale.x = 2.0f;
-	block.set<oly::col2d::TPrimitive>().set_local().rotation = glm::pi<float>() / 8;
+	block.set_local().position.y = -100.0f;
+	block.set_local().scale.x = 2.0f;
+	block.set_local().rotation = glm::pi<float>() / 8;
 
 	//oly::col2d::TPrimitive player(oly::col2d::Circle({}, 50.0f));
 	//oly::col2d::TPrimitive player(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
@@ -130,8 +129,8 @@ int main()
 	//oly::col2d::TBVH<oly::col2d::KDOP5> player = star.as_convex_tbvh<oly::col2d::KDOP5>();
 	//player.set_heuristic(oly::col2d::Heuristic::MIN_Y_MIN_X);
 	//auto player = oly::col2d::Capsule{ .center = {}, .obb_width = 50.0f, .obb_height = 50.0f, .rotation = 0.1f }.tcompound();
-	player.set<oly::col2d::TCompound>().set_local().scale.y = 1.2f;
-	player.set<oly::col2d::TCompound>().set_local().rotation = glm::pi<float>() / 4;
+	player.set_local().scale.y = 1.2f;
+	player.set_local().rotation = glm::pi<float>() / 4;
 	
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
@@ -284,7 +283,7 @@ int main()
 		
 		//collision_dispatcher.emit(player);
 
-		player.set<oly::col2d::TCompound>().set_local().position = oly::context::get_cursor_view_pos();
+		player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set_local().position = { 0.0f, 0.0f };
 		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };
 		//oly::LOG << player.get_local().position << oly::LOG.nl;

@@ -460,11 +460,15 @@ namespace oly::col2d
 		}
 	};
 
+	namespace internal { struct LUT; };
+
 	template<typename Shape>
 	class TBVH
 	{
 		template<typename>
 		friend class TBVH;
+
+		friend struct internal::LUT;
 
 		Transformer2D transformer;
 		mutable BVH<Shape> _bvh;
