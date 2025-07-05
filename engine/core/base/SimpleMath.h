@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "core/base/Constants.h"
+
 namespace oly
 {
 	constexpr unsigned int unsigned_mod(int pos, int mod)
@@ -39,6 +41,28 @@ namespace oly
 	};
 
 	typedef std::pair<float, float> fpair;
+
+	template<typename T, T Min, T Max>
+	struct BoundedValue
+	{
+	private:
+		T val;
+
+	public:
+		BoundedValue(T val = Min) { set(val); }
+
+		T get() const { return val; }
+		void set(T v) { val = glm::clamp(v, Min, Max); }
+	};
+
+	template<float Min, float Max>
+	using BoundedFloat = BoundedValue<float, Min, Max>;
+	template<int Min, int Max>
+	using BoundedInt = BoundedValue<int, Min, Max>;
+	template<unsigned int Min, unsigned int Max>
+	using BoundedUInt = BoundedValue<unsigned int, Min, Max>;
+
+	using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
 }
 
 template<>

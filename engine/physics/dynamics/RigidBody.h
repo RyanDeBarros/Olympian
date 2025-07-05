@@ -1,36 +1,39 @@
 #pragma once
 
 #include "physics/collision/scene/CollisionDispatcher.h"
-#include "core/base/TransformerExposure.h"
+#include "physics/dynamics/DynamicsComponent.h"
 
 namespace oly::physics
 {
-	class SimpleRigidBody : public col2d::CollisionController
+	// TODO for complex greedy mtv, maybe keep track of all impulses of maximal length, or even all of them.
+	class GreedyMTV
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(SimpleRigidBody);
-
-	private:
-		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
-
-		Transformer2D transformer;
+		glm::vec2 mtv = {};
+		bool dual = false;
+		math::Rect2D contact_box = {};
 
 	public:
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+		void reset() { mtv = {}; dual = false; contact_box = {}; }
+		void add(glm::vec2 impulse, glm::vec2 position)
+		{
+			float impulse_mag_sqrd = math::mag_sqrd(impulse);
+			float mtv_mag_sqrd = math::mag_sqrd(mtv);
+			if (col2d::approx(impulse_mag_sqrd, mtv_mag_sqrd))
+			{
+				if (glm::dot(impulse, mtv) < 0.0f)
+					dual = true;
 
-		SimpleRigidBody() = default;
-		SimpleRigidBody(const SimpleRigidBody&);
-		SimpleRigidBody(SimpleRigidBody&&) noexcept;
-		~SimpleRigidBody();
-		SimpleRigidBody& operator=(const SimpleRigidBody&);
-		SimpleRigidBody& operator=(SimpleRigidBody&&) noexcept;
-
-		void bind_collider(const ConstSoftReference<col2d::Collider>& collider);
-		void unbind_collider(const ConstSoftReference<col2d::Collider>& collider);
-		void clear_colliders();
-
-	private:
-		void handle_collides(const col2d::CollisionEventData& data);
+				contact_box.include(position);
+			}
+			else if (impulse_mag_sqrd > mtv_mag_sqrd)
+			{
+				mtv = impulse;
+				contact_box = { .x1 = position.x, .x2 = position.x, .y1 = position.y, .y2 = position.y };
+				dual = false;
+			}
+		}
+		glm::vec2 get_mtv() const { return dual ? glm::vec2{} : mtv; }
+		glm::vec2 get_contact() const { return contact_box.center(); }
 	};
 
 	class RigidBody : public col2d::CollisionController
@@ -39,12 +42,10 @@ namespace oly::physics
 
 	private:
 		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
-
 		Transformer2D transformer;
 
 	public:
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+		DynamicsComponent dynamics;
 
 		RigidBody() = default;
 		RigidBody(const RigidBody&);
@@ -53,9 +54,14 @@ namespace oly::physics
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+
 		void bind_collider(const ConstSoftReference<col2d::Collider>& collider);
 		void unbind_collider(const ConstSoftReference<col2d::Collider>& collider);
 		void clear_colliders();
+
+		void on_tick();
 
 	private:
 		void handle_contacts(const col2d::ContactEventData& data);

@@ -505,7 +505,7 @@ namespace oly
 				ConstSoftReference<InputController> controller = nullptr;
 			};
 			
-			std::unordered_map<input::SignalID, /*TODO unordered_set<*/ std::variant<HandlerRef, ConstHandlerRef>> handler_map;
+			std::unordered_map<input::SignalID, std::variant<HandlerRef, ConstHandlerRef>> handler_map;
 
 			friend class Platform;
 			InputBindingContext(int num_gamepads);

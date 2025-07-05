@@ -1,5 +1,6 @@
 #pragma once
 
+#include "external/GL.h"
 #include "core/types/Meta.h"
 
 namespace oly

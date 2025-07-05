@@ -4,15 +4,16 @@ namespace oly::col2d
 {
 	Logger& operator<<(Logger& log, Phase phase)
 	{
+#pragma warning(suppress : 26813)
 		return log << (phase == Phase::STARTED ? "started" : phase == Phase::ONGOING ? "ongoing" : phase == Phase::COMPLETED ? "completed" : "expired");
 	}
 
 	static Phase next_phase(bool overlap, Phase prior)
 	{
 		if (overlap)
-			return prior == Phase::COMPLETED || prior == Phase::EXPIRED ? Phase::STARTED : Phase::ONGOING;
+			return prior & (Phase::COMPLETED | Phase::EXPIRED) ? Phase::STARTED : Phase::ONGOING;
 		else
-			return prior == Phase::STARTED || prior == Phase::ONGOING ? Phase::COMPLETED : Phase::EXPIRED;
+			return prior & (Phase::STARTED | Phase::ONGOING) ? Phase::COMPLETED : Phase::EXPIRED;
 	}
 
 	OverlapEventData::OverlapEventData(OverlapResult result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior)

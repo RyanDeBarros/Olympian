@@ -2,6 +2,7 @@
 
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
+#include "core/base/SimpleMath.h"
 #include "core/math/Geometry.h"
 #include "physics/collision/Tolerance.h"
 

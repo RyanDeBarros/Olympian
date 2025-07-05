@@ -4,92 +4,15 @@
 
 namespace oly::physics
 {
-	SimpleRigidBody::SimpleRigidBody(const SimpleRigidBody& other)
-		: colliders(other.colliders), transformer(other.transformer)
-	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
-	}
-	
-	SimpleRigidBody::SimpleRigidBody(SimpleRigidBody&& other) noexcept
-		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer))
-	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-		{
-			context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
-			context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, other.ref());
-		}
-	}
-
-	SimpleRigidBody::~SimpleRigidBody()
-	{
-		clear_colliders();
-	}
-
-	SimpleRigidBody& SimpleRigidBody::operator=(const SimpleRigidBody& other)
-	{
-		if (this != &other)
-		{
-			clear_colliders();
-			colliders = other.colliders;
-			for (auto it = colliders.begin(); it != colliders.end(); ++it)
-				context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
-			
-			transformer = other.transformer;
-		}
-		return *this;
-	}
-
-	SimpleRigidBody& SimpleRigidBody::operator=(SimpleRigidBody&& other) noexcept
-	{
-		if (this != &other)
-		{
-			clear_colliders();
-			colliders = std::move(other.colliders);
-			for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			{
-				context::collision_dispatcher().register_handler(*it, &SimpleRigidBody::handle_collides, ref());
-				context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, other.ref());
-			}
-
-			transformer = std::move(other.transformer);
-		}
-		return *this;
-	}
-
-	void SimpleRigidBody::bind_collider(const ConstSoftReference<col2d::Collider>& collider)
-	{
-		if (colliders.insert(collider))
-			context::collision_dispatcher().register_handler(collider, &SimpleRigidBody::handle_collides, ref());
-	}
-
-	void SimpleRigidBody::unbind_collider(const ConstSoftReference<col2d::Collider>& collider)
-	{
-		if (colliders.erase(collider))
-			context::collision_dispatcher().unregister_handler(collider, &SimpleRigidBody::handle_collides, ref());
-	}
-
-	void SimpleRigidBody::clear_colliders()
-	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().unregister_handler(*it, &SimpleRigidBody::handle_collides, ref());
-		colliders.clear();
-	}
-
-	void SimpleRigidBody::handle_collides(const col2d::CollisionEventData& data)
-	{
-		// TODO
-	}
-
 	RigidBody::RigidBody(const RigidBody& other)
-		: colliders(other.colliders), transformer(other.transformer)
+		: colliders(other.colliders), dynamics(other.dynamics)
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
 	}
 	
 	RigidBody::RigidBody(RigidBody&& other) noexcept
-		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer))
+		: colliders(std::move(other.colliders)), dynamics(std::move(other.dynamics))
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
@@ -112,7 +35,7 @@ namespace oly::physics
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 				context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
 
-			transformer = other.transformer;
+			dynamics = other.dynamics;
 		}
 		return *this;
 	}
@@ -129,7 +52,7 @@ namespace oly::physics
 				context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, other.ref());
 			}
 
-			transformer = std::move(other.transformer);
+			dynamics = std::move(other.dynamics);
 		}
 		return *this;
 	}
@@ -152,9 +75,19 @@ namespace oly::physics
 			context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, ref());
 		colliders.clear();
 	}
-	
+
+	void RigidBody::on_tick()
+	{
+		dynamics.on_tick();
+		// TODO set dynamics position/rotation in world coordinates -> use parent's inverse matrix to transform them.
+	}
+
 	void RigidBody::handle_contacts(const col2d::ContactEventData& data)
 	{
-		// TODO
+		// TODO something more sophisticated, using GreedyMTV.
+		// TODO relative position is data.active_contact.position - center. Use lazy center tracking of colliders. Or maybe, contact.position in collision methods should already be relative.
+		// TODO should impulse somehow override existing acceleration/force/velocity/impulses to prevent clipping? Could be an optional setting.
+		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+			dynamics.impulses.push_back({ .impulse = data.active_contact.impulse, .relative_position = data.active_contact.position });
 	}
 }

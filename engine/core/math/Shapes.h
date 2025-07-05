@@ -51,6 +51,8 @@ namespace oly::math
 		bool overlaps(const Rect2D& other) const { return x1 <= other.x2 && other.x1 <= x2 && y1 <= other.y2 && other.y1 <= y2; }
 		glm::vec2 clamp(glm::vec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
 
+		void include(glm::vec2 pt) { x1 = glm::min(x1, pt.x); x2 = glm::max(x2, pt.x); y1 = glm::min(y1, pt.y); y2 = glm::max(y2, pt.y); }
+
 		bool operator==(const Rect2D&) const = default;
 	};
 

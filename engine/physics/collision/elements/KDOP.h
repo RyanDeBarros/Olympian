@@ -3,6 +3,7 @@
 #include "core/base/UnitVector.h"
 #include "core/base/Errors.h"
 #include "core/base/Transforms.h"
+#include "core/base/SimpleMath.h"
 #include "core/math/Geometry.h"
 #include "core/math/Triangulation.h"
 #include "core/types/Approximate.h"

@@ -6,13 +6,17 @@
 
 namespace oly::col2d
 {
-	enum class Phase : unsigned char
+	enum Phase : unsigned char
 	{
-		STARTED,
-		ONGOING,
-		COMPLETED,
-		EXPIRED
+		EXPIRED = 0,
+		STARTED = 0b1,
+		ONGOING = 0b10,
+		COMPLETED = 0b100
 	};
+
+	constexpr Phase operator&(Phase a, Phase b) { return (Phase)((unsigned char)a & (unsigned char)b); }
+	constexpr Phase operator|(Phase a, Phase b) { return (Phase)((unsigned char)a | (unsigned char)b); }
+	constexpr Phase operator~(Phase a) { return (Phase)(~(unsigned char)a); }
 
 	extern Logger& operator<<(Logger&, Phase);
 
