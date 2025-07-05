@@ -6,6 +6,7 @@
 #include "physics/collision/objects/Primitive.h"
 #include "physics/collision/objects/Compound.h"
 #include "core/base/Transforms.h"
+#include "core/base/TransformerExposure.h"
 #include "core/math/Solvers.h"
 #include "core/base/Assert.h"
 #include "core/containers/DoubleBuffer.h"
@@ -496,11 +497,12 @@ namespace oly::col2d
 		explicit TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 		explicit TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
-		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 		bool is_dirty() const { return local_dirty || transformer.dirty(); }
-		// TODO expose other transformer methods - not flush()
+
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }

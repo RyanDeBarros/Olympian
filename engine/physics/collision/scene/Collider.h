@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/collision/scene/CollisionTree.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::col2d
 {
@@ -79,9 +80,8 @@ namespace oly::col2d
 		const Transform2D& get_local() const { return internal::lut_transformer(obj).get_local(); }
 		Transform2D& set_local() { return internal::lut_transformer(obj).set_local(); }
 
-		// TODO expose transformer methods instead
-		const Transformer2D& get_transformer() const { return internal::lut_transformer(obj); }
-		Transformer2D& set_transformer() { return internal::lut_transformer(obj); }
+		Transformer2DConstExposure get_transformer() const { return internal::lut_transformer(obj); }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return internal::lut_transformer(obj); }
 
 	private:
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }

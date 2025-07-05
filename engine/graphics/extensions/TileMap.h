@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/extensions/TileSet.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::rendering
 {
@@ -31,13 +32,16 @@ namespace oly::rendering
 	{
 		std::vector<TileMapLayer> layers;
 			
-	public:
 		Transformer2D transformer;
 
+	public:
 		const TileMapLayer& layer(size_t i) const { return layers[i]; }
 		TileMapLayer& layer(size_t i) { return layers[i]; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
+
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::STANDARD_HIDDEN> set_transformer() { return transformer; }
 
 		void draw() const;
 

@@ -5,6 +5,7 @@
 #include "physics/collision/methods/KDOPCollide.h"
 #include "physics/collision/Tolerance.h"
 #include "core/base/Transforms.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::col2d
 {
@@ -37,11 +38,12 @@ namespace oly::col2d
 		explicit TCompound(const std::vector<Element>& elements) : compound({ elements }) {}
 		explicit TCompound(std::vector<Element>&& elements) : compound({ std::move(elements) }) {}
 
-		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 		bool is_dirty() const { return dirty || transformer.dirty(); }
-		// TODO expose other transformer methods - not flush()
+
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
 
 		const Compound& get_compound() const { return compound; }
 		Compound& set_compound() { dirty = true; return compound; }

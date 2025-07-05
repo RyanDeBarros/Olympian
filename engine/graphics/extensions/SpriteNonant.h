@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/primitives/Sprites.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::rendering
 {
@@ -24,9 +25,9 @@ namespace oly::rendering
 			bool modulation = false;
 		} mutable dirty;
 
-	public:
-		Transformer2D transformer; // TODO public transformers in extensions like SpriteNonant and TileMap should not have their children public
+		Transformer2D transformer;
 
+	public:
 		SpriteNonant();
 		SpriteNonant(const SpriteNonant&);
 		SpriteNonant& operator=(const SpriteNonant&);
@@ -35,6 +36,9 @@ namespace oly::rendering
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
+
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::STANDARD_HIDDEN> set_transformer() { return transformer; }
 
 		void copy_sprite_attributes(const Sprite& sprite);
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);

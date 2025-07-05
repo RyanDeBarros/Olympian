@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/collision/scene/CollisionDispatcher.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::physics
 {
@@ -11,12 +12,11 @@ namespace oly::physics
 	private:
 		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
 
-		Transformer2D _transformer;
+		Transformer2D transformer;
 
 	public:
-		// TODO expose transformer methods instead. Since this is a common demand, create helper adapter class(es) that hides a reference to transformer, but exposes certain functions.
-		const Transformer2D& transformer() const { return _transformer; }
-		Transformer2D& transformer() { return _transformer; }
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
 
 		SimpleRigidBody() = default;
 		SimpleRigidBody(const SimpleRigidBody&);
@@ -33,5 +33,31 @@ namespace oly::physics
 		void handle_collides(const col2d::CollisionEventData& data);
 	};
 
-	// TODO RigidBody uses handle_contacts for torque movement.
+	class RigidBody : public col2d::CollisionController
+	{
+		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
+
+	private:
+		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
+
+		Transformer2D transformer;
+
+	public:
+		Transformer2DConstExposure get_transformer() const { return transformer; }
+		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+
+		RigidBody() = default;
+		RigidBody(const RigidBody&);
+		RigidBody(RigidBody&&) noexcept;
+		~RigidBody();
+		RigidBody& operator=(const RigidBody&);
+		RigidBody& operator=(RigidBody&&) noexcept;
+
+		void bind_collider(const ConstSoftReference<col2d::Collider>& collider);
+		void unbind_collider(const ConstSoftReference<col2d::Collider>& collider);
+		void clear_colliders();
+
+	private:
+		void handle_contacts(const col2d::ContactEventData& data);
+	};
 }

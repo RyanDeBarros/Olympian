@@ -167,10 +167,10 @@ class Archetype:
         return ini[:-1] if len(ini) > 0 else ""  # don't keep last \n
 
     @staticmethod
-    def write_transformer_attachment(renderables):
+    def write_transformer_attachment(renderables, transformer_accessor="transformer"):
         att = ""
         for renderable in renderables:
-            att += f"\t\t{renderable['name']}.transformer.attach_parent(&transformer);\n"
+            att += f"\t\t{renderable['name']}.{transformer_accessor}.attach_parent(&transformer);\n"
         return att
 
     def transformer_attachments(self) -> str:
@@ -181,8 +181,8 @@ class Archetype:
         att += self.write_transformer_attachment(self.ngons)
         att += self.write_transformer_attachment(self.ellipses)
         att += self.write_transformer_attachment(self.paragraphs)
-        att += self.write_transformer_attachment(self.tilemaps)
-        att += self.write_transformer_attachment(self.sprite_nonants)
+        att += self.write_transformer_attachment(self.tilemaps, "set_transformer()")
+        att += self.write_transformer_attachment(self.sprite_nonants, "set_transformer()")
         for renderable in self.sprite_atlases:
             att += f"\t\t{renderable['name']}.sprite.transformer.attach_parent(&transformer);\n"
         return att

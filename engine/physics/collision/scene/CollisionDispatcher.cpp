@@ -82,8 +82,16 @@ namespace oly::col2d
 	static void dispatch(const ConstSoftReference<Collider>& first, const ConstSoftReference<Collider>& second,
 		std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers, Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
 	{
-		static const auto invalid_controller = [](const auto& ref) { return !ref.controller; };
-		static const auto emit = [](auto&& ref, const auto& data) { return (ref.controller.get()->*ref.handler)(data); };
+		static const auto handler_loop = [](const auto& outer_it, const auto& data)
+			{
+				for (auto it = outer_it->second.begin(); it != outer_it->second.end(); )
+				{
+					if (std::visit([](const auto& ref) -> bool { return ref.controller; }, *it))
+						std::visit([&data](auto&& ref) { (ref.controller.get()->*ref.handler)(data); }, *it++);
+					else
+						it = outer_it->second.erase(it);
+				}
+			};
 
 		auto it_1 = handlers.find(first);
 		auto it_2 = handlers.find(second);
@@ -109,26 +117,9 @@ namespace oly::col2d
 			return;
 
 		if (it_1 != handlers.end())
-		{
-			for (auto it = it_1->second.begin(); it != it_1->second.end(); )
-			{
-				if (std::visit(invalid_controller, *it))
-					std::visit([&data](auto&& ref) { emit(ref, data); }, *it);
-				else
-					it = it_1->second.erase(it);
-			}
-		}
-		data.invert();
+			handler_loop(it_1, data);
 		if (it_2 != handlers.end())
-		{
-			for (auto it = it_2->second.begin(); it != it_2->second.end(); )
-			{
-				if (std::visit(invalid_controller, *it))
-					std::visit([&data](auto&& ref) { emit(ref, data); }, *it);
-				else
-					it = it_2->second.erase(it);
-			}
-		}
+			handler_loop(it_2, data.invert());
 
 		if (it_1 != handlers.end() && it_1->second.empty())
 		{

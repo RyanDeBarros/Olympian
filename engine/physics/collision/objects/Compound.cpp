@@ -89,13 +89,13 @@ namespace oly::col2d
 
 	OverlapResult point_hits(const TCompound& c, glm::vec2 test)
 	{
-		glm::vec2 local_test = transform_point(glm::inverse(c.global()), test);
+		glm::vec2 local_test = transform_point(glm::inverse(c.get_transformer().global()), test);
 		return point_hits(c.get_compound(), local_test);
 	}
 	
 	OverlapResult ray_hits(const TCompound& c, const Ray& ray)
 	{
-		glm::mat3 m = glm::inverse(c.global());
+		glm::mat3 m = glm::inverse(c.get_transformer().global());
 		Ray local_ray = { .origin = transform_point(m, ray.origin) };
 		if (ray.clip == 0.0f)
 		{
@@ -113,7 +113,7 @@ namespace oly::col2d
 	
 	RaycastResult raycast(const TCompound& c, const Ray& ray)
 	{
-		glm::mat3 g = c.global();
+		glm::mat3 g = c.get_transformer().global();
 		glm::mat3 m = glm::inverse(g);
 		Ray local_ray = { .origin = transform_point(m, ray.origin) };
 		if (ray.clip == 0.0f)
