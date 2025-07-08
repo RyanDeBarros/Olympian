@@ -54,7 +54,7 @@ namespace oly::rendering
 		glUseProgram(graphics::internal_shaders::sprite_batch);
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
-		glUniform1f(shader_locations.time, TIME.now<float>());
+		glUniform1f(shader_locations.time, TIME.now<>());
 
 		tex_data_ssbo.bind_base(0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_ssbo_block.buf.get_buffer<INFO>());

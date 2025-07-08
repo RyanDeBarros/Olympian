@@ -14,6 +14,9 @@
 
 \DeclareMathOperator{\clamp}{clamp}
 \DeclareMathOperator{\chs}{choose}
+\DeclareMathOperator{\avg}{avg}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 \colorlet{shadecolor}{yellow!10}
 \newtheorem{theorem}{Theorem}
@@ -126,7 +129,7 @@ The physics variables of a rigid body can be organized into 4 categories:
 \end{itemize}
 \item Resolution bias ($\Phi\in[0,1]$)
 \end{itemize}
-\item \textbf{Collision}
+\item \textbf{Collision response}
 \begin{itemize}
 \item Minimum translation vector $\boldsymbol{\zeta}$
 \item Contact point $\boldsymbol{\chi}$
@@ -137,7 +140,7 @@ Alternatively to storing mass in properties, one could store volume (area) inste
 \item Compute total linear acceleration $\boldsymbol{a}_\Sigma$.
 \item Compute total angular acceleraiton $\alpha_\Sigma$.
 \item $\Delta\boldsymbol{v}=\boldsymbol{a}_\Sigma\Delta t\implies\boldsymbol{v}^*=(\boldsymbol{v}^*/\boldsymbol{v})(\boldsymbol{v}+\Delta\boldsymbol{v})$
-\item $\Delta\alpha=\omega_\Sigma\Delta t\implies\omega^*=(\omega^*/\omega)(\omega+\Delta\omega)$
+\item $\Delta\omega=\alpha_\Sigma\Delta t\implies\omega^*=(\omega^*/\omega)(\omega+\Delta\omega)$
 \item $\Delta\boldsymbol{x}=\boldsymbol{v}\Delta t$
 \item $\Delta\theta=\omega\Delta t$
 \end{enumerate}
@@ -176,13 +179,14 @@ The definition for elasticity is:
 \begin{equation}(\boldsymbol{v}_A+\Delta\boldsymbol{v}_A-\boldsymbol{v}_B-\Delta\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
 \begin{equation}\left(\frac{1}{m_A}\boldsymbol{J}_R+\frac{1}{m_B}\boldsymbol{J}_R\right)\cdot\boldsymbol{\zeta}=(1+\varepsilon)(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
 \begin{equation}\boldsymbol{J}_R\cdot\boldsymbol{\zeta}=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)(\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\end{equation}
-\begin{equation}\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left(\boldsymbol{v}_{A-B}\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
+\begin{equation}\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
+\begin{equation}\boldsymbol{J}_R=-\frac{1+\varepsilon}{\|\boldsymbol{\zeta}\|^2\left(m_A^{-1}+m_B^{-1}\right)}\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\right)\boldsymbol{\zeta}\end{equation}
 There is also an angular impulse applied:
-\begin{equation}H_R=\boldsymbol{\chi}\times\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left((\boldsymbol{v}_{A-B})\cdot\braket{\boldsymbol{\zeta}}\right)\boldsymbol{\chi}\times\braket{\boldsymbol{\zeta}}\end{equation}
+\begin{equation}H_R=\boldsymbol{\chi}\times\boldsymbol{J}_R\end{equation}
 
 \subsubsection{Restitution contribution against a static object}
 Suppose $B$ is a static body, i.e. $m_B=\infty$, $\boldsymbol{v_B}=\boldsymbol{0}$.
-\begin{equation}\boldsymbol{J}_R=-m_A(1+\varepsilon)\left(\boldsymbol{v}_A\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
+\begin{equation}\boldsymbol{J}_R=-m_A(1+\varepsilon)\left(\boldsymbol{v}_A\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}=-\frac{m_A(1+\varepsilon)}{\|\boldsymbol{\zeta}\|^2}\left(\boldsymbol{v}_A\cdot\boldsymbol{\zeta}\right)\boldsymbol{\zeta}\end{equation}
 
 \subsubsection{Friction contribution}
 The restitution impulse acts as an instantaneous normal force, which causes friction. First, define the following notation:
@@ -197,12 +201,12 @@ The full impact response is the combination of restitution impulse and friction 
 \begin{equation}\boldsymbol{J}_C=\boldsymbol{J}_R+\boldsymbol{J}_f\end{equation}
 \begin{equation}H_C=H_R+H_f=\boldsymbol{\chi}\times\boldsymbol{J}_C\end{equation}
 Note that this is used for positioning when resolution bias is 1. In full:
-\begin{equation}\Delta\boldsymbol{x}=(\Phi-1)\Delta\boldsymbol{x}_T+\Phi\Delta\boldsymbol{x}=(\Phi-1)\boldsymbol{\zeta}+\Phi\boldsymbol{v}\Delta t\end{equation}
-\begin{equation}\Delta\theta=(\Phi-1)\Delta\theta_T+\Phi\Delta\theta=(\Phi-1)\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}+\Phi\omega\Delta t\end{equation}
+\begin{equation}\Delta\boldsymbol{x}=(1-\Phi)\Delta\boldsymbol{x}_T+\Phi\boldsymbol{v}\Delta t\end{equation}
+\begin{equation}\Delta\theta=(1-\Phi)\Delta\theta_T+\Phi\omega\Delta t\end{equation}
 
 \subsubsection{Full additive acceleration without collision}
 \begin{equation}\Delta\boldsymbol{v}=\Delta\boldsymbol{v}_\Psi:=\sum_{\boldsymbol{a}}\boldsymbol{a}\Delta t+\frac{1}{m}\left(\sum_{\boldsymbol{F}}\boldsymbol{F}\Delta t+\sum_{\boldsymbol{J}}\boldsymbol{J}\right)\end{equation}
-\begin{equation}\Delta\omega=\Delta\omega_\Psi:=\sum_\alpha\alpha\Delta t+\frac{1}{I}\left(\sum_\tau\tau\Delta t+\sum_HH+\sum_{\boldsymbol{F}}\boldsymbol{\chi_{\boldsymbol{F}}}\times{\boldsymbol{F}}\Delta t+\sum_{\boldsymbol{J}}\boldsymbol{\chi_{\boldsymbol{J}}}\times{\boldsymbol{J}}\right)\end{equation}
+\begin{equation}\Delta\omega=\Delta\omega_\Psi:=\sum_\alpha\alpha\Delta t+\frac{1}{I}\left(m\sum_{\boldsymbol{a}}\boldsymbol{\chi}_{\boldsymbol{a}}\times\boldsymbol{a}\Delta t+\sum_\tau\tau\Delta t+\sum_HH+\sum_{\boldsymbol{F}}\boldsymbol{\chi_{\boldsymbol{F}}}\times{\boldsymbol{F}}\Delta t+\sum_{\boldsymbol{J}}\boldsymbol{\chi_{\boldsymbol{J}}}\times{\boldsymbol{J}}\right)\end{equation}
 
 \subsubsection{Full additive acceleration with collision}
 \begin{equation}\Delta\boldsymbol{v}=\Delta\boldsymbol{v}_\Psi+\frac{1}{m}\boldsymbol{J}_C\end{equation}
@@ -241,6 +245,15 @@ So the overall impulse is calculated as:
 \begin{equation}\boldsymbol{J}_R=\boldsymbol{J}_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\braket{\boldsymbol{\zeta}_i}\end{equation}
 \begin{equation}H_R=H_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\boldsymbol{\chi}_i\times\braket{\boldsymbol{\zeta}_i}\end{equation}
 For the sake of potential numerical inconsistencies, clamp $j_i\geq0$.
+
+\subsubsection{Static bodies}
+Suppose body $\beta$ is static. Then we know that the impulse exterted by it on the active body is:
+\begin{equation}j_\beta=-m_0(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
+Thus, this can be simplified for $i\neq\beta$:
+\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
+\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i,k\neq\beta}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i-m_ij_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
+Equivalently, undergo the normal procedure excluding all static bodies, but swap $\boldsymbol{C}$ for $\boldsymbol{C}'$:
+\begin{equation}C_i'=C_i-m_i\sum_\beta j_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}=C_i+m_0m_i\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
 
 \subsubsection{Friction}
 Each individual friction impulse is:
@@ -287,6 +300,14 @@ We can further simplify this using component notation:
 \begin{equation}j_i=[M^{-1}\boldsymbol{C}]_i=\sum_{u=1}^N[M^{-1}]_{iu}C_u\end{equation}
 \begin{equation}j_i=\sum_{u=1}^N\left(-\frac{\delta_i^j}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\left(-m_0m_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\right)\end{equation}
 \begin{equation}\boxed{j_i=\frac{1}{\Gamma}\sum_{u=1}^Nm_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\left(\Gamma\delta_i^j+m_0m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+m_i\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)}\end{equation}
+
+\subsubsection{Corrective positioning}
+Previously, we defined:
+\begin{equation}\Delta\boldsymbol{x}_T=\boldsymbol{\zeta}\end{equation}
+\begin{equation}\Delta\theta_T=\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
+Given multiple collisions, the accumulation can be used:
+\begin{equation}\Delta\boldsymbol{x}_T=\sum_{i=1}^N\boldsymbol{\zeta}_i\end{equation}
+\begin{equation}\Delta\theta_T=\frac{m}{I}\sum_{i=1}^N\boldsymbol{\chi}_i\times\boldsymbol{\zeta}_i\end{equation}
 
 \subsection{Moment of Inertia}
 

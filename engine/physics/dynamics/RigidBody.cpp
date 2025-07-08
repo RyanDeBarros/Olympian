@@ -8,7 +8,7 @@ namespace oly::physics
 		: colliders(other.colliders), dynamics(other.dynamics)
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
+			context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, cref());
 	}
 	
 	RigidBody::RigidBody(RigidBody&& other) noexcept
@@ -16,8 +16,8 @@ namespace oly::physics
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
-			context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
-			context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, other.ref());
+			context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, cref());
+			context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, other.cref());
 		}
 	}
 	
@@ -33,7 +33,7 @@ namespace oly::physics
 			clear_colliders();
 			colliders = other.colliders;
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
-				context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
+				context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, cref());
 
 			dynamics = other.dynamics;
 		}
@@ -48,8 +48,8 @@ namespace oly::physics
 			colliders = std::move(other.colliders);
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
-				context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, ref());
-				context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, other.ref());
+				context::collision_dispatcher().register_handler(*it, &RigidBody::handle_contacts, cref());
+				context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, other.cref());
 			}
 
 			dynamics = std::move(other.dynamics);
@@ -60,34 +60,32 @@ namespace oly::physics
 	void RigidBody::bind_collider(const ConstSoftReference<col2d::Collider>& collider)
 	{
 		if (colliders.insert(collider))
-			context::collision_dispatcher().register_handler(collider, &RigidBody::handle_contacts, ref());
+			context::collision_dispatcher().register_handler(collider, &RigidBody::handle_contacts, cref());
 	}
 	
 	void RigidBody::unbind_collider(const ConstSoftReference<col2d::Collider>& collider)
 	{
 		if (colliders.erase(collider))
-			context::collision_dispatcher().unregister_handler(collider, &RigidBody::handle_contacts, ref());
+			context::collision_dispatcher().unregister_handler(collider, &RigidBody::handle_contacts, cref());
 	}
 	
 	void RigidBody::clear_colliders()
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, ref());
+			context::collision_dispatcher().unregister_handler(*it, &RigidBody::handle_contacts, cref());
 		colliders.clear();
 	}
 
 	void RigidBody::on_tick()
 	{
 		dynamics.on_tick();
-		// TODO set dynamics position/rotation in world coordinates -> use parent's inverse matrix to transform them.
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation }.matrix());
 	}
 
-	void RigidBody::handle_contacts(const col2d::ContactEventData& data)
+	void RigidBody::handle_contacts(const col2d::ContactEventData& data) const
 	{
-		// TODO something more sophisticated, using GreedyMTV.
-		// TODO relative position is data.active_contact.position - center. Use lazy center tracking of colliders. Or maybe, contact.position in collision methods should already be relative.
-		// TODO should impulse somehow override existing acceleration/force/velocity/impulses to prevent clipping? Could be an optional setting.
 		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			dynamics.impulses.push_back({ .impulse = data.active_contact.impulse, .relative_position = data.active_contact.position });
+			// TODO only add if other collider is in rigid body
+			dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, data.passive_collider->dynamics());
 	}
 }

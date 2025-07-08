@@ -59,6 +59,8 @@ namespace oly
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
 		bool near_standard(double tolerance = Tolerance<float>) const;
 
+		UnitVector2D normal_project(glm::vec2 v) const;
+
 		enum ParallelState
 		{
 			SAME_DIRECTION,

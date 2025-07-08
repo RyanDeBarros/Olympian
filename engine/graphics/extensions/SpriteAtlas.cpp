@@ -17,7 +17,7 @@ namespace oly::rendering
 	void SpriteAtlas::on_tick() const
 	{
 		if (anim_format.delay_seconds != 0.0f)
-			select(anim_format.starting_frame + (int)floor((TIME.now<float>() - anim_format.starting_time) / anim_format.delay_seconds));
+			select(anim_format.starting_frame + (int)floor((TIME.now<>() - anim_format.starting_time) / anim_format.delay_seconds));
 	}
 
 	void SpriteAtlas::select_static_frame(GLuint frame)

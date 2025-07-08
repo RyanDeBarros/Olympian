@@ -53,6 +53,8 @@ namespace oly
 
 		T get() const { return val; }
 		void set(T v) { val = glm::clamp(v, Min, Max); }
+		operator T() const { return val; }
+		BoundedValue<T, Min, Max>& operator=(T v) { set(v); return *this; }
 	};
 
 	template<float Min, float Max>

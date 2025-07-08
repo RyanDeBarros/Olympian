@@ -25,7 +25,7 @@ namespace oly
 	public:
 		StateTimer(const std::vector<float>& intervals)
 		{
-			starting_time = TIME.now<float>();
+			starting_time = TIME.now<>();
 			cumulative_intervals.reserve(intervals.size());
 			total_length = 0.0f;
 			for (float interval : intervals)
@@ -38,7 +38,7 @@ namespace oly
 		StateTimer(std::vector<float>&& intervals)
 			: cumulative_intervals(std::move(intervals))
 		{
-			starting_time = TIME.now<float>();
+			starting_time = TIME.now<>();
 			total_length = 0.0f;
 			for (size_t i = 0; i < cumulative_intervals.size(); ++i)
 			{
@@ -47,7 +47,7 @@ namespace oly
 			}
 		}
 
-		float elapsed_time() const { return TIME.now<float>() - starting_time; }
+		float elapsed_time() const { return TIME.now<>() - starting_time; }
 		State state() const
 		{
 			float local_time = fmod(elapsed_time(), total_length);
@@ -95,7 +95,7 @@ namespace oly
 		CallbackStateTimer(const std::vector<float>& intervals, const std::function<void(size_t)>& callback, bool continuous)
 			: callback(callback), continuous(continuous)
 		{
-			starting_time = TIME.now<float>();
+			starting_time = TIME.now<>();
 			cumulative_intervals.reserve(intervals.size());
 			total_length = 0.0f;
 			for (float interval : intervals)
@@ -108,7 +108,7 @@ namespace oly
 		CallbackStateTimer(std::vector<float>&& intervals, std::function<void(size_t)>&& callback, bool continuous)
 			: callback(std::move(callback)), cumulative_intervals(std::move(intervals)), continuous(continuous)
 		{
-			starting_time = TIME.now<float>();
+			starting_time = TIME.now<>();
 			total_length = 0.0f;
 			for (size_t i = 0; i < cumulative_intervals.size(); ++i)
 			{
@@ -117,7 +117,7 @@ namespace oly
 			}
 		}
 
-		float elapsed_time() const { return TIME.now<float>() - starting_time; }
+		float elapsed_time() const { return TIME.now<>() - starting_time; }
 		void poll() const
 		{
 			float local_time = fmod(elapsed_time(), total_length);

@@ -12,7 +12,7 @@ namespace oly
 {
 	Logger::_start_prefix Logger::start_timestamp()
 	{
-		return _start_prefix{ std::to_string(TIME.now<float>()) };
+		return _start_prefix{ std::to_string(TIME.now<>()) };
 	}
 
 	void Logger::set_logfile(const char* filepath, bool append)

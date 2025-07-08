@@ -13,9 +13,9 @@ namespace oly
 			double _delta;
 
 		public:
-			template<numeric T>
+			template<numeric T = float>
 			T now() const { return (T)_now; }
-			template<numeric T>
+			template<numeric T = float>
 			T delta() const { return (T)_delta; }
 
 			void init() { _now = glfwGetTime(); _delta = 1.0f / 60.0f; }

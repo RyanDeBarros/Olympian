@@ -349,7 +349,7 @@ int main()
 
 		oly::debug::update_view(raycast_result_cv, raycast_result, oly::colors::WHITE* oly::colors::alpha(0.8f));
 
-		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<float>());
+		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<>());
 
 		jumble.octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
 		jumble.octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
@@ -357,17 +357,17 @@ int main()
 		jumble.octagon.base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
 		jumble.octagon.send_polygon();
 
-		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<float>();
+		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<>();
 
 		jumble.sprite1.set_local().rotation = oly::TIME.now<float>();
-		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<float>();
+		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<>();
 		
-		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta<float>());
-		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta<float>();
+		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta<>());
+		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta<>();
 		flag_tesselation_parent.flush();
 
 		jumble.on_tick();
-		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<float>() * 0.1f;
+		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<>() * 0.1f;
 
 		// draw
 		render_frame(); // LATER put in context::frame()?
