@@ -10,6 +10,7 @@
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 \newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\quarterturn}{\mathcal{R^*}}
+\newcommand{\mat}[1]{\begin{pmatrix} #1 \end{pmatrix}}
 
 \DeclareMathOperator{\clamp}{clamp}
 \DeclareMathOperator{\chs}{choose}
@@ -37,7 +38,7 @@
 \chapter{Collision Testing}
 
 \section{Introduction}
-The MTV (minimum translation vector), or impulse, is represented by $\vec{\xi}$. A contact point for shape $S_i$ is represented by $\vec{\chi}_i$. The normalization of a vector $\vec{v}$, $\hat{v}=\frac{1}{|\vec{v}|}\vec{v}$, is equivalently represented by $\braket{\vec{v}}$ when dealing with more verbose expressions. The quarter-turn (90-degree CCW rotation) of a vector $\vec{v}$ is denoted by $\quarterturn\vec{v}$.
+The MTV (minimum translation vector), or impulse, is represented by $\vec{\zeta}$. A contact point for shape $S_i$ is represented by $\vec{\chi}_i$. The normalization of a vector $\vec{v}$, $\hat{v}=\frac{1}{|\vec{v}|}\vec{v}$, is equivalently represented by $\braket{\vec{v}}$ when dealing with more verbose expressions. The quarter-turn (90-degree CCW rotation) of a vector $\vec{v}$ is denoted by $\quarterturn\vec{v}$.
 
 \section{The Separating Axis Theroem (SAT)}
 
@@ -66,11 +67,11 @@ This is the simplest possible test. Given two non-affine circles, parametrized b
 
 \subsubsection{Non-affine Circle-Circle collision}
 If two non-affine circles overlap, then the mtv is calculated as:
-\begin{equation}\vec{\xi}=(r_1+r_2-|\vec{c_1}-\vec{c_2}|)\braket{\vec{c_1}-\vec{c_2}}\end{equation}
+\begin{equation}\vec{\zeta}=(r_1+r_2-|\vec{c_1}-\vec{c_2}|)\braket{\vec{c_1}-\vec{c_2}}\end{equation}
 
 \subsubsection{Non-affine Circle-Circle contact}
 If two non-affine circles collide, then the contact point on $\vec{c_1}$ is:
-\begin{equation}\vec{\chi}_1=\vec{c_1}+r_1\braket{\vec{\xi}}\end{equation}
+\begin{equation}\vec{\chi}_1=\vec{c_1}+r_1\braket{\vec{\zeta}}\end{equation}
 
 \subsubsection{Affine Circle-Circle overlap}
 Unfortunately, an Affine Circle may be worse than an ellipse, which already requires solving a complex quartic equation when testing for collision with another ellipse or circle. Fortunately, there is a clearer and equally efficient golden-search algorithm that allows for approximation of the MTV. If a negative MTV occurs, the algorithm can be left early with a no-collision result. For overlapping, simply check that the MTV is non-negative, the approximation of which is described in the next section.
@@ -88,5 +89,261 @@ Unfortunately, an Affine Circle may be worse than an ellipse, which already requ
 \section{Compounds}
 
 \section{Bounding Volume Hierarchies}
+
+\section{Dynamics}
+
+The physics variables of a rigid body can be organized into 4 categories:
+\begin{itemize}
+\item \textbf{State} (variable data that's updated every frame)
+\begin{itemize}
+\item Position ($\boldsymbol{x}$)
+\item Rotation ($\theta$)
+\item Linear velocity ($\boldsymbol{v}$)
+\item Angular velocity ($\omega$)
+\end{itemize}
+\item \textbf{Properties} (stimuli applied to a particular instance)
+\begin{itemize}
+\item Linear acceleration ($\boldsymbol{a}$)
+\item Angular acceleration ($\alpha$)
+\item Force ($\boldsymbol{F}$) with optional local contact point ($\boldsymbol{\chi}_{\boldsymbol{F}}$)
+\item Torque ($\tau$)
+\item Linear impulse ($\boldsymbol{J}$) with optional local contact point ($\boldsymbol{\chi}_{\boldsymbol{J}}$)
+\item Angular impulse ($H$)
+\item Mass ($m\geq0$)
+\item Moment of inertia ($I\geq0$)
+\end{itemize}
+\item \textbf{Material} (how a generic rigid body responds to stimuli)
+\begin{itemize}
+\item Restitution ($\varepsilon\in[0,1]$)
+\item Linear drag ($\delta\geq0$)
+\item Angular drag ($\sigma\geq0$)
+\item Friction ($\mu\geq0$)
+\begin{itemize}
+\item 0 if body is not colliding with anything
+\item Static friction ($\mu_s$) if body is stationary
+\item Kinetic friction ($\mu_k$) if body is sliding
+\item Rolling friction ($\mu_r$) if body is rolling
+\end{itemize}
+\item Resolution bias ($\Phi\in[0,1]$)
+\end{itemize}
+\item \textbf{Collision}
+\begin{itemize}
+\item Minimum translation vector $\boldsymbol{\zeta}$
+\item Contact point $\boldsymbol{\chi}$
+\end{itemize}
+\end{itemize}
+Alternatively to storing mass in properties, one could store volume (area) instead, and density in material, so that mass can be computed generically. The resolution process is as follows:
+\begin{enumerate}
+\item Compute total linear acceleration $\boldsymbol{a}_\Sigma$.
+\item Compute total angular acceleraiton $\alpha_\Sigma$.
+\item $\Delta\boldsymbol{v}=\boldsymbol{a}_\Sigma\Delta t\implies\boldsymbol{v}^*=(\boldsymbol{v}^*/\boldsymbol{v})(\boldsymbol{v}+\Delta\boldsymbol{v})$
+\item $\Delta\alpha=\omega_\Sigma\Delta t\implies\omega^*=(\omega^*/\omega)(\omega+\Delta\omega)$
+\item $\Delta\boldsymbol{x}=\boldsymbol{v}\Delta t$
+\item $\Delta\theta=\omega\Delta t$
+\end{enumerate}
+
+\subsection{Dynamics contributions for single collision}
+
+\subsubsection{Standard accelerations}
+\begin{equation}\Delta\boldsymbol{v}_{\boldsymbol{F}}=\int_t^{t+\Delta t}\boldsymbol{a}_{\boldsymbol{F}}dt=\int_t^{t+\Delta t}\frac{1}{m}\boldsymbol{F}dt=\frac{\Delta t}{m}\boldsymbol{F}\end{equation}
+\begin{equation}\Delta\boldsymbol{v}_{\boldsymbol{J}}=\int_t^{t+\Delta t}\boldsymbol{a}_{\boldsymbol{J}}dt=\int_t^{t+\Delta t}\frac{1}{m}\boldsymbol{J}\delta(t-t^*)dt=\frac{1}{m}\boldsymbol{J}\end{equation}
+\begin{equation}\Delta\omega_\tau=\int_t^{t+\Delta t}\alpha_\tau dt=\int_t^{t+\Delta t}\frac{1}{I}\tau dt=\frac{\tau\Delta t}{I}\end{equation}
+\begin{equation}\Delta\omega_H=\int_t^{t+\Delta t}\alpha_Hdt=\int_t^{t+\Delta t}\frac{1}{I}H\delta(t-t^*)dt=\frac{H}{I}\end{equation}
+\begin{equation}\Delta\omega_{\boldsymbol{\chi}}=\int_t^{t+\Delta t}\alpha_{\boldsymbol{\chi}}dt=\frac{\boldsymbol{\chi_{\boldsymbol{F}}}\times{\boldsymbol{F}}\Delta t}{I}+\frac{\boldsymbol{\chi_{\boldsymbol{J}}}\times{\boldsymbol{J}}}{I}\end{equation}
+
+\subsubsection{Corrective teleportation due to collision}
+If the resolution bias is 0, the position should be overridden via:
+\begin{equation}\Delta\boldsymbol{x}=\Delta\boldsymbol{x}_T:=\boldsymbol{\zeta}\end{equation}
+ The rotation should thus be overriden via:
+\begin{equation}\Delta\boldsymbol{v}=\frac{1}{\Delta t}\boldsymbol{\zeta}\implies \boldsymbol{J}=m\Delta\boldsymbol{v}=\frac{m}{\Delta t}\boldsymbol{\zeta}\implies H=\boldsymbol{\chi}\times\boldsymbol{J}=\frac{m}{\Delta t}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
+\begin{equation}\implies\Delta\omega=\frac{H}{I}=\frac{m}{I\Delta t}\boldsymbol{\chi}\times\boldsymbol{\zeta}\implies\Delta\theta=\Delta\theta_T:=\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
+However, the above impulses are never used for updating linear/angular velocity.
+
+\subsubsection{Restitution contribution}
+During a collision, there is a restitution impulse applied equally against the two objects. The restitution of the collision can be computed via several strategies:
+\begin{itemize}
+\item $\varepsilon=\min(\varepsilon_A,\varepsilon_B)$ (recommended)
+\item $\varepsilon=\sqrt{\varepsilon_A\varepsilon_B}$
+\item $\varepsilon=\frac{1}{2}(\varepsilon_A+\varepsilon_B)$
+\item $\varepsilon=\varepsilon_A$
+\end{itemize}
+Supposing the impulse on A is:
+\begin{equation}\boldsymbol{J}_R=m_A\Delta\boldsymbol{v}_A\end{equation}
+Then via the conservation of momentum:
+\begin{equation}m_A\Delta\boldsymbol{v}_A+m_B\Delta\boldsymbol{v}_B=0\implies m_B\Delta\boldsymbol{v}_B=-\boldsymbol{J}_R\end{equation}
+The definition for elasticity is:
+\begin{equation}\varepsilon=-\frac{(\boldsymbol{v}_B^*-\boldsymbol{v}_A^*)\cdot\boldsymbol{\zeta}}{(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}}\implies(\boldsymbol{v}_A^*-\boldsymbol{v}_B^*)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}(\boldsymbol{v}_A+\Delta\boldsymbol{v}_A-\boldsymbol{v}_B-\Delta\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}\left(\frac{1}{m_A}\boldsymbol{J}_R+\frac{1}{m_B}\boldsymbol{J}_R\right)\cdot\boldsymbol{\zeta}=(1+\varepsilon)(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}\boldsymbol{J}_R\cdot\boldsymbol{\zeta}=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)(\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left(\boldsymbol{v}_{A-B}\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
+There is also an angular impulse applied:
+\begin{equation}H_R=\boldsymbol{\chi}\times\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left((\boldsymbol{v}_{A-B})\cdot\braket{\boldsymbol{\zeta}}\right)\boldsymbol{\chi}\times\braket{\boldsymbol{\zeta}}\end{equation}
+
+\subsubsection{Restitution contribution against a static object}
+Suppose $B$ is a static body, i.e. $m_B=\infty$, $\boldsymbol{v_B}=\boldsymbol{0}$.
+\begin{equation}\boldsymbol{J}_R=-m_A(1+\varepsilon)\left(\boldsymbol{v}_A\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
+
+\subsubsection{Friction contribution}
+The restitution impulse acts as an instantaneous normal force, which causes friction. First, define the following notation:
+\begin{equation}\boldsymbol{T}_{\boldsymbol{u}}(\boldsymbol{v})=\braket{\boldsymbol{v}-(\boldsymbol{v}\cdot\braket{\boldsymbol{u}})\braket{\boldsymbol{u}}}\end{equation}
+Then:
+\begin{equation}\boldsymbol{J}_f=-\mu\|\boldsymbol{N}\Delta t\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_A-\boldsymbol{v}_B)=-\mu\left\|\boldsymbol{J}_R\right\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_A-\boldsymbol{v}_B)\end{equation}
+Just like with restitution, combine $\mu_A$ with $\mu_B$ ($\mu=\sqrt{\mu_A\mu_B}$ is the recommended strategy). There is also an angular impulse contribution:
+\begin{equation}H_f=\boldsymbol{\chi}\times\boldsymbol{J}_f\end{equation}
+
+\subsubsection{Full impact response}
+The full impact response is the combination of restitution impulse and friction impulse:
+\begin{equation}\boldsymbol{J}_C=\boldsymbol{J}_R+\boldsymbol{J}_f\end{equation}
+\begin{equation}H_C=H_R+H_f=\boldsymbol{\chi}\times\boldsymbol{J}_C\end{equation}
+Note that this is used for positioning when resolution bias is 1. In full:
+\begin{equation}\Delta\boldsymbol{x}=(\Phi-1)\Delta\boldsymbol{x}_T+\Phi\Delta\boldsymbol{x}=(\Phi-1)\boldsymbol{\zeta}+\Phi\boldsymbol{v}\Delta t\end{equation}
+\begin{equation}\Delta\theta=(\Phi-1)\Delta\theta_T+\Phi\Delta\theta=(\Phi-1)\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}+\Phi\omega\Delta t\end{equation}
+
+\subsubsection{Full additive acceleration without collision}
+\begin{equation}\Delta\boldsymbol{v}=\Delta\boldsymbol{v}_\Psi:=\sum_{\boldsymbol{a}}\boldsymbol{a}\Delta t+\frac{1}{m}\left(\sum_{\boldsymbol{F}}\boldsymbol{F}\Delta t+\sum_{\boldsymbol{J}}\boldsymbol{J}\right)\end{equation}
+\begin{equation}\Delta\omega=\Delta\omega_\Psi:=\sum_\alpha\alpha\Delta t+\frac{1}{I}\left(\sum_\tau\tau\Delta t+\sum_HH+\sum_{\boldsymbol{F}}\boldsymbol{\chi_{\boldsymbol{F}}}\times{\boldsymbol{F}}\Delta t+\sum_{\boldsymbol{J}}\boldsymbol{\chi_{\boldsymbol{J}}}\times{\boldsymbol{J}}\right)\end{equation}
+
+\subsubsection{Full additive acceleration with collision}
+\begin{equation}\Delta\boldsymbol{v}=\Delta\boldsymbol{v}_\Psi+\frac{1}{m}\boldsymbol{J}_C\end{equation}
+\begin{equation}\Delta\omega=\Delta\omega_\Psi+\frac{1}{I}\boldsymbol{\chi}\times\boldsymbol{J}_C\end{equation}
+
+\subsubsection{Multiplicative acceleration due to drag}
+\begin{equation}\boldsymbol{F}_\delta=-\delta\boldsymbol{v}\implies m\frac{d\boldsymbol{v}}{dt}=-\delta\boldsymbol{v}\implies\boldsymbol{v}=\boldsymbol{C}e^{-\frac{\delta}{m}t}\end{equation}
+Velocity on next frame ($\boldsymbol{v}^*$) due to drag is:
+\begin{equation}\boldsymbol{v}^*=\boldsymbol{C}e^{-\frac{\delta}{m}(t+\Delta t)}=\boldsymbol{C}e^{-\frac{\delta}{m}t}e^{-\frac{\delta}{m}\Delta t}=\boldsymbol{v}e^{-\frac{\delta}{m}\Delta t}\end{equation}
+\begin{equation}(\boldsymbol{v}^*/\boldsymbol{v})_\delta=e^{-\frac{\delta}{m}\Delta t}\end{equation}
+Therefore, unlike adding $\Delta\boldsymbol{v}$ to velocity like with standard acceleration, multiply by $\boldsymbol{v}^*/\boldsymbol{v}$. Likewise;
+\begin{equation}(\omega^*/\omega)_\sigma=e^{-\frac{\sigma}{I}\Delta t}\end{equation}
+
+\subsection{Dynamics response for multiple collisions}
+Suppose there is a set of collisions $\{(\boldsymbol{\zeta}_i,\boldsymbol{\chi}_i)\}_{i=1}^N$. Then the active body has mass $m_0$, velocity $\boldsymbol{v}_0$, and restitution $\varepsilon_0$. Every other body has mass $m_i$, velocity $\boldsymbol{v}_i$, and restitution $\varepsilon_i$. Let $\varepsilon_0^i=\min(\varepsilon_0,\varepsilon_i)$ or whatever other strategy is used. Then there are $N$ equations:
+\begin{equation}\varepsilon_0^i=-\frac{(\boldsymbol{v}_i^*-\boldsymbol{v}_0^*)\cdot\boldsymbol{\zeta}_i}{(\boldsymbol{v}_i-\boldsymbol{v}_0)\cdot\boldsymbol{\zeta}_i}\implies(\boldsymbol{v}_i^*-\boldsymbol{v}_0^*)\cdot\boldsymbol{\zeta}_i=-\varepsilon_0^i(\boldsymbol{v}_i-\boldsymbol{v}_0)\cdot\boldsymbol{\zeta}_i\end{equation}
+\begin{equation}\implies(\Delta\boldsymbol{v}_0-\Delta\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i=-(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i\end{equation}
+There is also the full conservation of momentum:
+\begin{equation}\sum_{i=0}^Nm_i\Delta\boldsymbol{v}_i=\boldsymbol{0}\end{equation}
+Let $\boldsymbol{J}_i$ be the impulse applied by object $i$:
+\begin{equation}\boldsymbol{J}_i=-m_i\Delta\boldsymbol{v}_i=j_i\braket{\boldsymbol{\zeta}_i}\end{equation}
+Then via the conservation of momentum,
+\begin{equation}m_0\Delta\boldsymbol{v}_0=\boldsymbol{J}_0=\sum_{i=1}^N\boldsymbol{J}_i\end{equation}
+Plugging back into the elasticity equations:
+\begin{equation}(\frac{1}{m_0}\boldsymbol{J}_0-\frac{1}{m_i}\boldsymbol{J}_i)\cdot\boldsymbol{\zeta}_i=-(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i\end{equation}
+\begin{equation}(m_i\boldsymbol{J}_0-m_0\boldsymbol{J}_i)\cdot\braket{\boldsymbol{\zeta}_i}=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
+\begin{equation}m_i\boldsymbol{J}_0\cdot\braket{\boldsymbol{\zeta}_i}-m_0\boldsymbol{J}_i\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
+\begin{equation}m_i\sum_{k=1}^N\boldsymbol{J}_k\cdot\braket{\boldsymbol{\zeta}_i}-m_0j_i=C_i\end{equation}
+\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
+This is now a linear system of $N$ equations. Define $\boldsymbol{j}=[j_i]_{i=1}^N$, and
+\begin{equation}C_i=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
+\begin{equation}M_{rc}=\begin{cases}m_r-m_0&\mbox{if }r=c\\m_r\braket{\boldsymbol{\zeta}_r}\cdot\braket{\boldsymbol{\zeta}_c}&\mbox{otherwise}\end{cases}\end{equation}
+Then:
+\begin{equation}M\boldsymbol{j}=\boldsymbol{C}\implies\boldsymbol{j}=M^{-1}\boldsymbol{C}\implies j_i=[M^{-1}\boldsymbol{C}]_i\end{equation}
+So the overall impulse is calculated as:
+\begin{equation}\boldsymbol{J}_R=\boldsymbol{J}_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\braket{\boldsymbol{\zeta}_i}\end{equation}
+\begin{equation}H_R=H_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\boldsymbol{\chi}_i\times\braket{\boldsymbol{\zeta}_i}\end{equation}
+For the sake of potential numerical inconsistencies, clamp $j_i\geq0$.
+
+\subsubsection{Friction}
+Each individual friction impulse is:
+\begin{equation}\boldsymbol{J}_{i,f}=-\mu_0^i\|\boldsymbol{N}_i\Delta t\|\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)=-\mu_0^i\left\|\boldsymbol{J}_{i,R}\right\|\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)=-\mu_0^ij_i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
+So:
+\begin{equation}\boldsymbol{J}_f=-\sum_{i=1}^N\mu_0^ij_i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
+\begin{equation}\boldsymbol{J}_C=\boldsymbol{J}_R+\boldsymbol{J}_f\end{equation}
+\begin{equation}H_f=-\sum_{i=1}^N\mu_0^ij_i\boldsymbol{\chi}_i\times\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
+\begin{equation}H_C=H_R+H_f=\sum_{i=1}^Nj_i\boldsymbol{\chi}_i\times\left(\braket{\boldsymbol{\zeta}_i}-\mu_0^i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\right)\end{equation}
+
+\subsubsection{Inverting the impulse matrix}
+Recall the definition of the impulse matrix:
+\begin{equation}M_{rc}=\begin{cases}m_r-m_0&\mbox{if }r=c\\m_r\braket{\boldsymbol{\zeta}_r}\cdot\braket{\boldsymbol{\zeta}_c}&\mbox{otherwise}\end{cases}\end{equation}
+Equivalently,
+\begin{equation}M=DZ-m_0I\end{equation}
+where:
+\begin{equation}D_{ij}=\delta_i^jm_i,\quad Z_{ij}=\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}\end{equation}
+$Z$ can be written as:
+\begin{equation}Z=EE^T\end{equation}
+where $E\in\mathbb{R}^{N\times2}$ with rows $\braket{\boldsymbol{\zeta}_i}^T$. Thus, $Z$ is a symmetric, positive semi-definite matrix of rank at most 2. So:
+\begin{equation}M=DEE^T-m_0I=-m_0I+DEI_2E^T\end{equation}
+The \textit{Woodbury matrix identity} states that:
+\begin{equation}(A+UBV)^{-1}=A^{-1}-A^{-1}U(B^{-1}+VA^{-1}U)^{-1}VA^{-1}\end{equation}
+where $A$ and $B$ are invertible matrices. In our situation, let $A=-m_0I$, $U=DE$, $B=I_2$, and $V=E^T$. Then:
+\begin{equation}M^{-1}=(-m_0I)^{-1}-(-m_0I)^{-1}DE(I_2^{-1}+E^T(-m_0I)^{-1}DE)^{-1}E^T(-m_0I)^{-1}\end{equation}
+\begin{equation}M^{-1}=-\frac{1}{m_0}\left(I+DE(m_0I_2-E^TDE)^{-1}E^T\right)\end{equation}
+We can further simplify this using component notation:
+\begin{equation}[DE]_{ij}=\sum_{k=1}^ND_{ik}E_{kj}=\sum_{k=1}^Nm_i\delta_i^k\braket{\boldsymbol{\zeta}_k}_j=m_i\braket{\boldsymbol{\zeta}_i}_j\end{equation}
+\begin{equation}[E^TDE]_{ij}=\sum_{k=1}^N[E^T]_{ik}[DE]_{kj}=\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j\end{equation}
+\begin{equation}[m_0I_2-E^TDE]_{ij}=m_0\delta_i^j+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j\end{equation}
+\begin{equation}\det(m_0I_2-E^TDE)=\left(m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_1^2\right)\left(m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_2^2\right)-\left(\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_k}_2\right)^2\end{equation}
+\begin{equation}\det(m_0I_2-E^TDE)=m_0^2+m_0\sum_{k=1}^Nm_k+\sum_{k=1}^N\sum_{l=1}^Nm_km_l\left(\braket{\boldsymbol{\zeta}_k}_1^2\braket{\boldsymbol{\zeta}_l}_2^2-\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_k}_2\braket{\boldsymbol{\zeta}_l}_1\braket{\boldsymbol{\zeta}_l}_2\right)\end{equation}
+\begin{equation}\boxed{\Gamma:=\det(m_0I_2-E^TDE)=m_0^2+m_0\sum_{k=1}^Nm_k+\sum_{k=1}^N\sum_{l=1}^Nm_km_l\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_l}_2(\braket{\boldsymbol{\zeta}_k}\times\braket{\boldsymbol{\zeta}_l})}\end{equation}
+\begin{equation}[m_0I_2-E^TDE]^{-1}_{ij}=\frac{1}{\Gamma}\begin{cases}m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-i}^2&\mbox{if }i=j\\-\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j&\mbox{otherwise}\end{cases}\end{equation}
+\begin{equation}[(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\sum_{k=1}^2[(m_0I_2-E^TDE)^{-1}]_{ik}\braket{\boldsymbol{\zeta}_j}_k\end{equation}
+\begin{equation}[(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{1}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_j}_i+(-1)^{i-1}\braket{\boldsymbol{\zeta}_j}\times\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-i}\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
+\begin{equation}[DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{m_i}{\Gamma}\left(m_0\sum_{l=1}^2\braket{\boldsymbol{\zeta}_i}_l\braket{\boldsymbol{\zeta}_j}_l+\sum_{l=1}^2(-1)^{l-1}\braket{\boldsymbol{\zeta}_i}_l\braket{\boldsymbol{\zeta}_j}\times\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-l}\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
+\begin{equation}[DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{m_i}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\end{equation}
+\begin{equation}[I+DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\delta_i^j+\frac{m_i}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\end{equation}
+\begin{equation}\boxed{[M^{-1}]_{ij}=-\frac{\delta_i^j}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)}\end{equation}
+
+\noindent With the inverse, we can solve directly for $\boldsymbol{j}$:
+\begin{equation}\boldsymbol{j}=M^{-1}\boldsymbol{C}\end{equation}
+\begin{equation}j_i=[M^{-1}\boldsymbol{C}]_i=\sum_{u=1}^N[M^{-1}]_{iu}C_u\end{equation}
+\begin{equation}j_i=\sum_{u=1}^N\left(-\frac{\delta_i^j}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\left(-m_0m_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\right)\end{equation}
+\begin{equation}\boxed{j_i=\frac{1}{\Gamma}\sum_{u=1}^Nm_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\left(\Gamma\delta_i^j+m_0m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+m_i\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)}\end{equation}
+
+\subsection{Moment of Inertia}
+
+\subsubsection{Affine circle}
+\begin{equation}I=\frac{|L|\rho\pi r^4}{4}\mbox{tr}(L^TL)+|L|\rho\pi r^2\|L\boldsymbol{c}+\boldsymbol{T}\|^2=\frac{mr^2}{4}\mbox{tr}(L^TL)+m\|L\boldsymbol{c}+\boldsymbol{T}\|^2\end{equation}
+
+\subsubsection{Polygon}
+\begin{multline}I=\frac{\rho}{12}\sum_{i=1}^N(\boldsymbol{p}_i\times\boldsymbol{p}_{i+1})(\|\boldsymbol{p}_i\|^2+\boldsymbol{p}_i\cdot\boldsymbol{p}_{i+1}+\|\boldsymbol{p}_{i+1}\|^2)\\=\frac{m}{6\sum_{i=1}^N\boldsymbol{p}_i\times\boldsymbol{p}_{i+1}}\sum_{i=1}^N(\boldsymbol{p}_i\times\boldsymbol{p}_{i+1})(\|\boldsymbol{p}_i\|^2+\boldsymbol{p}_i\cdot\boldsymbol{p}_{i+1}+\|\boldsymbol{p}_{i+1}\|^2)\end{multline}
+
+\subsubsection{Capsule}
+A non-affine split circle has moment of inertia:
+\begin{equation}I=\frac{1}{2}mr^2+mh^2\end{equation}
+The affine split circle has moment of inertia:
+\begin{equation}I=\frac{mr^2}{4}\mbox{tr}(L^TL)+\frac{1}{4}mh^2[L^TL]_{yy}+m\|L\boldsymbol{c}+\boldsymbol{T}\|^2\end{equation}
+From now on, let $\boldsymbol{q}=L\boldsymbol{c}+\boldsymbol{T}$. The rectangular section has these coordinates:
+\begin{itemize}
+\item $\boldsymbol{p}_1=\frac{1}{2}L\mat{-w\\-h}+\boldsymbol{q}$
+\item $\boldsymbol{p}_2=\frac{1}{2}L\mat{w\\-h}+\boldsymbol{q}$
+\item $\boldsymbol{p}_3=\frac{1}{2}L\mat{w\\h}+\boldsymbol{q}$
+\item $\boldsymbol{p}_4=\frac{1}{2}L\mat{-w\\h}+\boldsymbol{q}$
+\end{itemize}
+Therefore:
+\begin{itemize}
+\item $\|\boldsymbol{p}_1\|^2=\frac{1}{4}\left\|L\mat{-w\\-h}\right\|^2+L\mat{-w\\-h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_2\|^2=\frac{1}{4}\left\|L\mat{w\\-h}\right\|^2+L\mat{w\\-h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_3\|^2=\frac{1}{4}\left\|L\mat{w\\h}\right\|^2+L\mat{w\\h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_4\|^2=\frac{1}{4}\left\|L\mat{-w\\h}\right\|^2+L\mat{-w\\h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\end{itemize}
+\begin{itemize}
+\item $\boldsymbol{p}_1\cdot\boldsymbol{p}_2=\frac{1}{4}L\mat{-w\\-h}\cdot L\mat{w\\-h}+L\mat{0\\-h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\boldsymbol{p}_2\cdot\boldsymbol{p}_3=\frac{1}{4}L\mat{w\\-h}\cdot L\mat{w\\h}+L\mat{w\\0}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\boldsymbol{p}_3\cdot\boldsymbol{p}_4=\frac{1}{4}L\mat{w\\h}\cdot L\mat{-w\\h}+L\mat{0\\h}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\item $\boldsymbol{p}_4\cdot\boldsymbol{p}_1=\frac{1}{4}L\mat{-w\\h}\cdot L\mat{-w\\-h}+L\mat{-w\\0}\cdot\boldsymbol{q}+\|\boldsymbol{q}\|^2$
+\end{itemize}
+\begin{itemize}
+\item $\|\boldsymbol{p}_1\|^2+\boldsymbol{p}_1\cdot\boldsymbol{p}_2+\|\boldsymbol{p}_2\|^2=h^2\|\boldsymbol{L}_2\|^2-\frac{1}{4}L\mat{-w\\-h}\cdot L\mat{w\\-h}-3h\boldsymbol{L}_2\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_2\|^2+\boldsymbol{p}_2\cdot\boldsymbol{p}_3+\|\boldsymbol{p}_3\|^2=w^2\|\boldsymbol{L}_1\|^2-\frac{1}{4}L\mat{w\\-h}\cdot L\mat{w\\h}+3w\boldsymbol{L}_1\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_3\|^2+\boldsymbol{p}_3\cdot\boldsymbol{p}_4+\|\boldsymbol{p}_4\|^2=h^2\|\boldsymbol{L}_2\|^2-\frac{1}{4}L\mat{w\\h}\cdot L\mat{-w\\h}+3h\boldsymbol{L}_2\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2$
+\item $\|\boldsymbol{p}_4\|^2+\boldsymbol{p}_4\cdot\boldsymbol{p}_1+\|\boldsymbol{p}_1\|^2=w^2\|\boldsymbol{L}_1\|^2-\frac{1}{4}L\mat{-w\\h}\cdot L\mat{-w\\-h}-3w\boldsymbol{L}_1\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2$
+\end{itemize}
+\begin{itemize}
+\item $\boldsymbol{p}_1\times\boldsymbol{p}_2=\frac{1}{2}wh|L|-w\boldsymbol{L}_1\times\boldsymbol{q}$
+\item $\boldsymbol{p}_2\times\boldsymbol{p}_3=\frac{1}{2}wh|L|-h\boldsymbol{L}_2\times\boldsymbol{q}$
+\item $\boldsymbol{p}_3\times\boldsymbol{p}_4=\frac{1}{2}wh|L|+w\boldsymbol{L}_1\times\boldsymbol{q}$
+\item $\boldsymbol{p}_4\times\boldsymbol{p}_1=\frac{1}{2}wh|L|+h\boldsymbol{L}_2\times\boldsymbol{q}$
+\end{itemize}
+\begin{itemize}
+\item $(\boldsymbol{p}_1\times\boldsymbol{p}_2)(\|\boldsymbol{p}_1\|^2+\boldsymbol{p}_1\cdot\boldsymbol{p}_2+\|\boldsymbol{p}_2\|^2)=\left(\frac{1}{2}wh|L|-w\boldsymbol{L}_1\times\boldsymbol{q}\right)\left(h^2\|\boldsymbol{L}_2\|^2-\frac{1}{4}L\mat{-w\\-h}\cdot L\mat{w\\-h}-3h\boldsymbol{L}_2\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2\right)$
+\item $(\boldsymbol{p}_2\times\boldsymbol{p}_3)(\|\boldsymbol{p}_2\|^2+\boldsymbol{p}_2\cdot\boldsymbol{p}_3+\|\boldsymbol{p}_3\|^2)=\left(\frac{1}{2}wh|L|-h\boldsymbol{L}_2\times\boldsymbol{q}\right)\left(w^2\|\boldsymbol{L}_1\|^2-\frac{1}{4}L\mat{w\\-h}\cdot L\mat{w\\h}+3w\boldsymbol{L}_1\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2\right)$
+\item $(\boldsymbol{p}_3\times\boldsymbol{p}_4)(\|\boldsymbol{p}_3\|^2+\boldsymbol{p}_3\cdot\boldsymbol{p}_4+\|\boldsymbol{p}_4\|^2)=\left(\frac{1}{2}wh|L|+w\boldsymbol{L}_1\times\boldsymbol{q}\right)\left(h^2\|\boldsymbol{L}_2\|^2-\frac{1}{4}L\mat{w\\h}\cdot L\mat{-w\\h}+3h\boldsymbol{L}_2\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2\right)$
+\item $(\boldsymbol{p}_4\times\boldsymbol{p}_1)(\|\boldsymbol{p}_4\|^2+\boldsymbol{p}_4\cdot\boldsymbol{p}_1+\|\boldsymbol{p}_1\|^2)=\left(\frac{1}{2}wh|L|+h\boldsymbol{L}_2\times\boldsymbol{q}\right)\left(w^2\|\boldsymbol{L}_1\|^2-\frac{1}{4}L\mat{-w\\h}\cdot L\mat{-w\\-h}-3w\boldsymbol{L}_1\cdot\boldsymbol{q}+3\|\boldsymbol{q}\|^2\right)$
+\end{itemize}
+So the moment of inertia is:
+\begin{equation}
+I=\frac{\rho wh|L|}{12}\left(w^2\|\boldsymbol{L}_1\|^2+h^2\|\boldsymbol{L}_2\|^2\right)+\rho wh|L|\|\boldsymbol{q}\|^2=\frac{m}{12}\left(w^2\|\boldsymbol{L}_1\|^2+h^2\|\boldsymbol{L}_2\|^2\right)+m\|\boldsymbol{q}\|^2
+\end{equation}
+In total, the moment of inertia of an initially upright capsule is:
+\begin{equation}I=\frac{mr^2}{4}\mbox{tr}(L^TL)+\frac{mh^2}{4}[L^TL]_{yy}+\frac{m}{12}\left(w^2\|\boldsymbol{L}_1\|^2+h^2\|\boldsymbol{L}_2\|^2\right)+2m\|L\boldsymbol{c}+\boldsymbol{T}\|^2\end{equation}
 
 \end{document}
