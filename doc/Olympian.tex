@@ -172,16 +172,20 @@ During a collision, there is a restitution impulse applied equally against the t
 \end{itemize}
 Supposing the impulse on A is:
 \begin{equation}\boldsymbol{J}_R=m_A\Delta\boldsymbol{v}_A\end{equation}
-Then via the conservation of momentum:
+Then via the conservation of linear momentum:
 \begin{equation}m_A\Delta\boldsymbol{v}_A+m_B\Delta\boldsymbol{v}_B=0\implies m_B\Delta\boldsymbol{v}_B=-\boldsymbol{J}_R\end{equation}
 The definition for elasticity is:
-\begin{equation}\varepsilon=-\frac{(\boldsymbol{v}_B^*-\boldsymbol{v}_A^*)\cdot\boldsymbol{\zeta}}{(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}}\implies(\boldsymbol{v}_A^*-\boldsymbol{v}_B^*)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}\varepsilon=-\frac{(\boldsymbol{v}_B^*+\omega_B^*\boldsymbol{\chi}_B^\perp-\boldsymbol{v}_A^*-\omega_A^*\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}}{(\boldsymbol{v}_B+\omega_B\boldsymbol{\chi}_B^\perp-\boldsymbol{v}_A-\omega_A\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}}\end{equation}
+\begin{equation}
+(\boldsymbol{v}_A^*-\boldsymbol{v}_B^*)\cdot\boldsymbol{\zeta}+(\omega_A^*\boldsymbol{\chi}_A^\perp-\omega_B^*\boldsymbol{v}_B^\perp)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}+\varepsilon(\omega_B\boldsymbol{\chi}_B^\perp-\omega_A\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}
+\end{equation}
+This can be used in combination with both conservation of linear momentum and conservation of angular momentum. Or, we can isolate the independent linear portion:
 \begin{equation}(\boldsymbol{v}_A+\Delta\boldsymbol{v}_A-\boldsymbol{v}_B-\Delta\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
 \begin{equation}\left(\frac{1}{m_A}\boldsymbol{J}_R+\frac{1}{m_B}\boldsymbol{J}_R\right)\cdot\boldsymbol{\zeta}=(1+\varepsilon)(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
 \begin{equation}\boldsymbol{J}_R\cdot\boldsymbol{\zeta}=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)(\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\end{equation}
 \begin{equation}\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
 \begin{equation}\boldsymbol{J}_R=-\frac{1+\varepsilon}{\|\boldsymbol{\zeta}\|^2\left(m_A^{-1}+m_B^{-1}\right)}\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\right)\boldsymbol{\zeta}\end{equation}
-There is also an angular impulse applied:
+And only now compute the angular impulse applied:
 \begin{equation}H_R=\boldsymbol{\chi}\times\boldsymbol{J}_R\end{equation}
 
 \subsubsection{Restitution contribution against a static object}
@@ -254,6 +258,8 @@ Thus, this can be simplified for $i\neq\beta$:
 \begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i,k\neq\beta}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i-m_ij_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
 Equivalently, undergo the normal procedure excluding all static bodies, but swap $\boldsymbol{C}$ for $\boldsymbol{C}'$:
 \begin{equation}C_i'=C_i-m_i\sum_\beta j_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}=C_i+m_0m_i\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
+\begin{equation}C_i'=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}+m_0m_i\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
+\begin{equation}C_i'=-m_0m_i\left((1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}-\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\right)\end{equation}
 
 \subsubsection{Friction}
 Each individual friction impulse is:
@@ -298,8 +304,12 @@ We can further simplify this using component notation:
 \noindent With the inverse, we can solve directly for $\boldsymbol{j}$:
 \begin{equation}\boldsymbol{j}=M^{-1}\boldsymbol{C}\end{equation}
 \begin{equation}j_i=[M^{-1}\boldsymbol{C}]_i=\sum_{u=1}^N[M^{-1}]_{iu}C_u\end{equation}
-\begin{equation}j_i=\sum_{u=1}^N\left(-\frac{\delta_i^j}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\left(-m_0m_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\right)\end{equation}
-\begin{equation}\boxed{j_i=\frac{1}{\Gamma}\sum_{u=1}^Nm_u(1+\varepsilon_0^u)(\boldsymbol{v}_0-\boldsymbol{v}_u)\cdot\braket{\boldsymbol{\zeta}_u}\left(\Gamma\delta_i^j+m_0m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+m_i\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)}\end{equation}
+\begin{equation}j_i=\sum_{u=1}^N\left(-\frac{\delta_i^u}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_u}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_u}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)C_u\end{equation}
+\begin{equation}j_i=-\frac{C_i}{m_0}-\frac{m_i}{\Gamma}\sum_{u=1}^NC_u\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_u}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\sum_{u=1}^NC_u\left(\braket{\boldsymbol{\zeta}_u}\times\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
+Let
+\begin{equation}\mathcal{C}:=\sum_{i=1}^NC_i\braket{\boldsymbol{\zeta}_i}\end{equation}
+Then:
+\begin{equation}\boxed{j_i=-\frac{C_i}{m_0}-\frac{m_i}{\Gamma}\mathcal{C}\cdot\braket{\boldsymbol{\zeta}_i}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\mathcal{C}\times\braket{\boldsymbol{\zeta}_k}\right)}\end{equation}
 
 \subsubsection{Corrective positioning}
 Previously, we defined:

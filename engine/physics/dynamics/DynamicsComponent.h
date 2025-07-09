@@ -12,6 +12,17 @@ namespace oly::physics
 		float rotation = 0.0f;
 		glm::vec2 linear_velocity = {};
 		float angular_velocity = 0.0f;
+
+		glm::vec2 linear_velocity_at(glm::vec2 contact) const;
+
+		enum class FrictionType
+		{
+			STATIC,
+			KINEMATIC
+			// TODO ROLLING
+		};
+
+		FrictionType friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE) const;
 	};
 
 	struct AppliedAcceleration
@@ -75,8 +86,8 @@ namespace oly::physics
 	private:
 		PositiveFloat _static_friction = 0.5f;
 		PositiveFloat _sqrt_static_friction = glm::sqrt(_static_friction);
-		PositiveFloat _dynamic_friction = 0.3f; // TODO kinetic vs rolling
-		PositiveFloat _sqrt_dynamic_friction = glm::sqrt(_dynamic_friction);
+		PositiveFloat _kinematic_friction = 0.3f; // TODO kinetic vs rolling
+		PositiveFloat _sqrt_kinematic_friction = glm::sqrt(_kinematic_friction);
 
 	public:
 		BoundedFloat<0.0f, 1.0f> restitution = 0.2f;
@@ -90,16 +101,22 @@ namespace oly::physics
 		float sqrt_static_friction() const { return _sqrt_static_friction; }
 		void set_static_friction(float mu) { _static_friction.set(mu); _sqrt_static_friction.set(glm::sqrt(_static_friction)); }
 
-		float dynamic_friction() const { return _dynamic_friction; }
-		float sqrt_dynamic_friction() const { return _sqrt_dynamic_friction; }
-		void set_dynamic_friction(float mu) { _dynamic_friction.set(mu); _sqrt_dynamic_friction.set(glm::sqrt(_dynamic_friction)); }
+		float kinematic_friction() const { return _kinematic_friction; }
+		float sqrt_kinematic_friction() const { return _sqrt_kinematic_friction; }
+		void set_kinematic_friction(float mu) { _kinematic_friction.set(mu); _sqrt_kinematic_friction.set(glm::sqrt(_kinematic_friction)); }
+
+	private:
+		friend class DynamicsComponent;
+		float restitution_with(const Material& mat) const;
+		float friction_with(glm::vec2 contact, UnitVector2D tangent, const State& state, const Material& mat, const State& other_state, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE) const;
 	};
 
 	struct CollisionResponse
 	{
 		glm::vec2 mtv;
 		glm::vec2 contact;
-		const DynamicsComponent& other;
+		UnitVector2D normal;
+		const DynamicsComponent* dynamics;
 	};
 
 	class DynamicsComponent

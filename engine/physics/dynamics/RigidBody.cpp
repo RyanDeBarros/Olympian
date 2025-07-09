@@ -85,7 +85,7 @@ namespace oly::physics
 	void RigidBody::handle_contacts(const col2d::ContactEventData& data) const
 	{
 		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			// TODO only add if other collider is in rigid body
-			dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, data.passive_collider->dynamics());
+			if (RigidBody* other = data.passive_collider->rigid_body)
+				dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, other->dynamics);
 	}
 }

@@ -3,6 +3,8 @@
 #include "physics/collision/scene/CollisionTree.h"
 #include "core/base/TransformerExposure.h"
 
+namespace oly::physics { class RigidBody; };
+
 namespace oly::col2d
 {
 	namespace internal
@@ -51,6 +53,9 @@ namespace oly::col2d
 		internal::ColliderObject obj;
 
 		mutable bool dirty = true;
+
+		friend class physics::RigidBody;
+		physics::RigidBody* rigid_body = nullptr; // TODO set when binding collider to rigidbody. add to move/copy/destructor. provide option to bind to rigidbody directly from collider class.
 
 	protected:
 		mutable math::Rect2D quad_wrap;
