@@ -54,6 +54,9 @@ namespace oly::physics
 		PositiveFloat _moi = 1.0f;
 		PositiveFloat _moi_inverse = 1.0f;
 
+		std::vector<AppliedAcceleration> applied_accelerations;
+		std::vector<AppliedForce> applied_forces;
+
 	public:
 		float mass() const { return _mass; }
 		float mass_inverse() const { return _mass_inverse; }
@@ -63,9 +66,7 @@ namespace oly::physics
 		float moi_inverse() const { return _moi_inverse; }
 		void set_moi(float m) { _moi.set(m); _moi_inverse.set(1.0f / m); }
 
-		std::vector<AppliedAcceleration> applied_accelerations; // TODO should this be cached in net linear and in net angular?
-		std::vector<AppliedForce> applied_forces; // TODO should this be cached in net linear and in net angular?
-		mutable std::vector<AppliedImpulse> applied_impulses; // TODO should this be cached in net linear and in net angular?
+		mutable std::vector<AppliedImpulse> applied_impulses;
 		glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
 		glm::vec2 net_force = {}; // does not include applied forces
 		mutable glm::vec2 net_linear_impulse = {}; // does not include applied impulses
@@ -77,16 +78,29 @@ namespace oly::physics
 		friend class DynamicsComponent;
 		glm::vec2 dv_psi() const;
 		float dw_psi() const;
-	};
 
-	// TODO helper functions for MOI
+		mutable glm::vec2 _net_linear_applied_acceleration = {};
+		mutable float _net_angular_applied_acceleration = 0.0f;
+		mutable glm::vec2 _net_linear_applied_force = {};
+		mutable float _net_angular_applied_force = 0.0f;
+		mutable bool dirty_linear_applied_accelerations = false;
+		mutable bool dirty_angular_applied_accelerations = false;
+		mutable bool dirty_linear_applied_forces = false;
+		mutable bool dirty_angular_applied_forces = false;
+
+	public:
+		const std::vector<AppliedAcceleration>& get_applied_accelerations() const { return applied_accelerations; }
+		std::vector<AppliedAcceleration>& set_applied_accelerations() { dirty_linear_applied_accelerations = true; dirty_angular_applied_accelerations = true; return applied_accelerations; }
+		const std::vector<AppliedForce>& get_applied_forces() const { return applied_forces; }
+		std::vector<AppliedForce>& set_applied_forces() { dirty_linear_applied_forces = true; dirty_angular_applied_forces = true; return applied_forces; }
+	};
 
 	struct Material
 	{
 	private:
 		PositiveFloat _static_friction = 0.5f;
 		PositiveFloat _sqrt_static_friction = glm::sqrt(_static_friction);
-		PositiveFloat _kinematic_friction = 0.3f; // TODO kinetic vs rolling
+		PositiveFloat _kinematic_friction = 0.3f;
 		PositiveFloat _sqrt_kinematic_friction = glm::sqrt(_kinematic_friction);
 
 	public:
@@ -143,4 +157,8 @@ namespace oly::physics
 	private:
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse) const;
 	};
+
+	extern float moment_of_inertia(const math::Polygon2D& p, float mass);
+	extern float moment_of_inertia(const std::array<glm::vec2, 4>& p, float mass);
+	extern float moment_of_inertia(col2d::ElementParam e, float mass);
 }

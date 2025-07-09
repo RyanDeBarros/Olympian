@@ -21,15 +21,23 @@ namespace oly::physics
 	{
 		glm::vec2 dv = {};
 
-		glm::vec2 accumul_net_lin_accel = net_linear_acceleration;
-		for (AppliedAcceleration accel : applied_accelerations)
-			accumul_net_lin_accel += accel.acceleration;
-		dv += accumul_net_lin_accel * TIME.delta<>();
+		if (dirty_linear_applied_accelerations)
+		{
+			dirty_linear_applied_accelerations = false;
+			_net_linear_applied_acceleration = {};
+			for (AppliedAcceleration accel : applied_accelerations)
+				_net_linear_applied_acceleration += accel.acceleration;
+		}
+		dv += (net_linear_acceleration + _net_linear_applied_acceleration) * TIME.delta<>();
 
-		glm::vec2 accumul_net_force = net_force;
-		for (AppliedForce force : applied_forces)
-			accumul_net_force += force.force;
-		dv += accumul_net_force * TIME.delta<>() * _mass_inverse.get();
+		if (dirty_linear_applied_forces)
+		{
+			dirty_linear_applied_forces = false;
+			_net_linear_applied_force = {};
+			for (AppliedForce force : applied_forces)
+				_net_linear_applied_force += force.force;
+		}
+		dv += (net_force + _net_linear_applied_force) * TIME.delta<>() * _mass_inverse.get();
 
 		glm::vec2 accumul_net_lin_impulse = net_linear_impulse;
 		for (AppliedImpulse impulse : applied_impulses)
@@ -49,15 +57,23 @@ namespace oly::physics
 
 		dw += net_angular_impulse * _moi_inverse;
 
-		float net_applied_angular_acceleration = 0.0f;
-		for (AppliedAcceleration accel : applied_accelerations)
-			net_applied_angular_acceleration += math::cross(accel.contact, accel.acceleration);
-		dw += net_applied_angular_acceleration * TIME.delta<>() * _mass * _moi_inverse;
+		if (dirty_angular_applied_accelerations)
+		{
+			dirty_angular_applied_accelerations = false;
+			_net_angular_applied_acceleration = 0.0f;
+			for (AppliedAcceleration accel : applied_accelerations)
+				_net_angular_applied_acceleration += math::cross(accel.contact, accel.acceleration);
+		}
+		dw += _net_angular_applied_acceleration * TIME.delta<>() * _mass * _moi_inverse;
 
-		float net_applied_torque = 0.0f;
-		for (AppliedForce force : applied_forces)
-			net_applied_torque += math::cross(force.contact, force.force);
-		dw += net_applied_torque * TIME.delta<>() * _moi_inverse;
+		if (dirty_angular_applied_forces)
+		{
+			dirty_angular_applied_forces = false;
+			_net_angular_applied_force = 0.0f;
+			for (AppliedForce force : applied_forces)
+				_net_angular_applied_force += math::cross(force.contact, force.force);
+		}
+		dw += _net_angular_applied_force * TIME.delta<>() * _moi_inverse;
 
 		float net_applied_angular_impulse = 0.0f;
 		for (AppliedImpulse impulse : applied_impulses)
@@ -279,5 +295,40 @@ namespace oly::physics
 			linear_impulse += j_r + j_f;
 			angular_impulse += math::cross(static_collision.contact, linear_impulse);
 		}
+	}
+
+	float moment_of_inertia(const math::Polygon2D& p, float mass)
+	{
+		float sum = 0.0f;
+		for (size_t i = 0; i < p.size(); ++i)
+		{
+			glm::vec2 curr = p[i];
+			glm::vec2 next = p[(i + 1) % p.size()];
+			sum += math::cross(curr, next) * (math::mag_sqrd(curr) + glm::dot(curr, next) + math::mag_sqrd(next));
+		}
+		return sum * mass / (6.0f * math::signed_area(p));
+	}
+
+	float moment_of_inertia(const std::array<glm::vec2, 4>& p, float mass)
+	{
+		return moment_of_inertia(math::Polygon2D{ p[0], p[1], p[2], p[3] }, mass);
+	}
+
+	float moment_of_inertia(col2d::ElementParam e, float mass)
+	{
+		return std::visit([mass](const auto& e) {
+			if constexpr (visiting_class_is<decltype(*e), col2d::Circle>)
+			{
+				if (col2d::internal::CircleGlobalAccess::has_no_global(*e))
+					return 0.5f * mass * e->radius * e->radius;
+				else
+				{
+					const glm::mat2 ltl = glm::transpose(col2d::internal::CircleGlobalAccess::get_global(*e)) * col2d::internal::CircleGlobalAccess::get_global(*e);
+					return 0.25f * mass * e->radius * e->radius * (ltl[0][0] + ltl[1][1]) + mass * math::mag_sqrd(col2d::internal::CircleGlobalAccess::global_center(*e));
+				}
+			}
+			else
+				return moment_of_inertia(e->points(), mass);
+			}, e);
 	}
 }
