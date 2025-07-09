@@ -5,6 +5,10 @@
 
 // TODO log warnings in all registries when format is incompatible (currently, it's quietly ingored).
 
+// TODO OREPL commands for signal assets
+// TODO modifiers for signals, like swizzle/negate/etc.
+// TODO allow for key signals to generate non-bool values, like float/glm::vec2
+
 namespace oly::reg
 {
 	static void load_key_binding(const TOMLNode& node, const std::string& id)

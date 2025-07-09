@@ -84,7 +84,7 @@ namespace oly
 		Transformer2D& operator=(Transformer2D&&) noexcept;
 
 		glm::mat3 global() const { pre_get(); return _global; }
-		void set_global(const glm::mat3& g) { _global = g; post_set(); }
+		void set_global(const glm::mat3& g) { _global = g; post_set(); _dirty_internal = false; }
 
 	private:
 		void post_set() const;
@@ -223,8 +223,9 @@ namespace oly
 		Transformer3D& operator=(const Transformer3D&);
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
-		virtual glm::mat4 global() const { pre_get(); return _global; }
-		
+		glm::mat4 global() const { pre_get(); return _global; }
+		void set_global(const glm::mat4& g) { _global = g; post_set(); _dirty_internal = false; }
+
 	private:
 		void post_set() const;
 		void post_set_internal() const;

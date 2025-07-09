@@ -168,6 +168,7 @@ namespace oly::debug
 		return CollisionView(std::move(ellipse));
 	}
 
+	// TODO update_view without color setting
 	inline void update_view(CollisionView& view, const col2d::Circle& c, glm::vec4 color)
 	{
 		CollisionObjectView& obj = view.get_view();

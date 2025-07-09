@@ -48,11 +48,11 @@ namespace oly::physics
 	struct Properties
 	{
 	private:
-		PositiveFloat _mass;
-		PositiveFloat _mass_inverse;
+		PositiveFloat _mass = 1.0f;
+		PositiveFloat _mass_inverse = 1.0f;
 		// moment of inertia
-		PositiveFloat _moi;
-		PositiveFloat _moi_inverse;
+		PositiveFloat _moi = 1.0f;
+		PositiveFloat _moi_inverse = 1.0f;
 
 	public:
 		float mass() const { return _mass; }
@@ -65,13 +65,13 @@ namespace oly::physics
 
 		std::vector<AppliedAcceleration> applied_accelerations; // TODO should this be cached in net linear and in net angular?
 		std::vector<AppliedForce> applied_forces; // TODO should this be cached in net linear and in net angular?
-		std::vector<AppliedImpulse> applied_impulses; // TODO should this be cached in net linear and in net angular?
+		mutable std::vector<AppliedImpulse> applied_impulses; // TODO should this be cached in net linear and in net angular?
 		glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
 		glm::vec2 net_force = {}; // does not include applied forces
-		glm::vec2 net_linear_impulse = {}; // does not include applied impulses
+		mutable glm::vec2 net_linear_impulse = {}; // does not include applied impulses
 		float net_angular_acceleration = 0.0f;
 		float net_torque = 0.0f;
-		float net_angular_impulse = 0.0f;
+		mutable float net_angular_impulse = 0.0f;
 
 	private:
 		friend class DynamicsComponent;

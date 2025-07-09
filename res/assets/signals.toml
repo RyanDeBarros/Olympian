@@ -21,3 +21,23 @@
 [[signal]]
 "id"      = "zoom camera"
 "binding" = "scroll"
+
+[[signal]]
+"id"      = "move left"
+"binding" = "key"
+"key"     = 263 # LEFT
+
+[[signal]]
+"id"      = "move right"
+"binding" = "key"
+"key"     = 262 # RIGHT
+
+[[signal]]
+"id"      = "move up"
+"binding" = "key"
+"key"     = 265 # UP
+
+[[signal]]
+"id"      = "move down"
+"binding" = "key"
+"key"     = 264 # DOWN

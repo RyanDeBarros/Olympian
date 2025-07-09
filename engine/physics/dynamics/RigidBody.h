@@ -10,7 +10,7 @@ namespace oly::physics
 		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
 
 	private:
-		ContiguousSet<ConstSoftReference<col2d::Collider>> colliders;
+		std::vector<CopyPtr<col2d::Collider>> colliders;
 		Transformer2D transformer;
 
 		friend class DynamicsComponent;
@@ -29,9 +29,15 @@ namespace oly::physics
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void bind_collider(const ConstSoftReference<col2d::Collider>& collider);
-		void unbind_collider(const ConstSoftReference<col2d::Collider>& collider);
+		SoftReference<col2d::Collider> add_collider(col2d::Collider&& collider);
+		void erase_collider(size_t i);
+		void remove_collider(const SoftReference<col2d::Collider>& collider);
 		void clear_colliders();
+		SoftReference<col2d::Collider> collider(size_t i = 0);
+		size_t num_colliders() const { return colliders.size(); }
+
+		debug::CollisionView collision_view(size_t i, glm::vec4 color) const;
+		void update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const;
 
 		void on_tick();
 
@@ -39,6 +45,8 @@ namespace oly::physics
 		Material& material() { return dynamics.material; }
 		const Properties& properties() const { return dynamics.properties; }
 		Properties& properties() { return dynamics.properties; }
+		DynamicsComponent::Flag flag() const { return dynamics.flag; }
+		DynamicsComponent::Flag& flag() { return dynamics.flag; }
 
 	private:
 		void handle_contacts(const col2d::ContactEventData& data) const;

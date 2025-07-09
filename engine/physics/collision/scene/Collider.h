@@ -55,7 +55,7 @@ namespace oly::col2d
 		mutable bool dirty = true;
 
 		friend class physics::RigidBody;
-		physics::RigidBody* rigid_body = nullptr; // TODO set when binding collider to rigidbody. add to move/copy/destructor. provide option to bind to rigidbody directly from collider class.
+		physics::RigidBody* rigid_body = nullptr;
 
 	protected:
 		mutable math::Rect2D quad_wrap;
@@ -64,7 +64,7 @@ namespace oly::col2d
 		internal::TreeHandleMap handles = internal::TreeHandleMap(*this);
 
 		Collider() = default;
-		template<typename CObj>
+		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
 		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)) {}
 		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)) {}
 		Collider(const Collider&);
@@ -72,12 +72,12 @@ namespace oly::col2d
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
-		template<typename CObj>
+		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
 		const CObj& get() const { return obj.get<CObj>(); }
-		template<typename CObj>
+		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
 		CObj& set() { dirty = true; return obj.set<CObj>(); }
 		void emplace(internal::ColliderObject&& obj) { dirty = true; this->obj = std::move(obj); }
-		template<typename CObj>
+		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
 		void emplace(CObj&& obj) { dirty = true; this->obj = internal::ColliderObject(std::forward<CObj>(obj)); }
 
 		void flag() { dirty = true; }

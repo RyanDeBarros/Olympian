@@ -2,6 +2,8 @@
 
 #include "Olympian.h"
 
+#include "physics/dynamics/RigidBody.h"
+
 struct PlayerController : public oly::InputController
 {
 	OLY_INPUT_CONTROLLER_HEADER(PlayerController);
@@ -11,6 +13,7 @@ public:
 	glm::vec2 ref_cursor_pos = {};
 	glm::vec2 ref_text_pos = {};
 	oly::rendering::Paragraph* test_text = nullptr;
+	oly::physics::RigidBody* rigid_body = nullptr;
 
 	bool jump(oly::input::Signal signal);
 	bool click(oly::input::Signal signal);
@@ -18,4 +21,8 @@ public:
 	bool drag(glm::vec2 cursor_pos);
 	glm::vec2 screen_to_world_coords(glm::vec2 coords);
 	bool zoom_camera(oly::input::Signal signal);
+	bool move_left(oly::input::Signal signal);
+	bool move_right(oly::input::Signal signal);
+	bool move_up(oly::input::Signal signal);
+	bool move_down(oly::input::Signal signal);
 };

@@ -13,7 +13,8 @@ namespace oly::physics
 
 	State::FrictionType State::friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold) const
 	{
-		return near_zero(tangent.dot(linear_velocity_at(contact) - other.linear_velocity_at(contact + position - other.position)), speed_threshold) ? FrictionType::STATIC : FrictionType::KINEMATIC;
+		return near_zero(tangent.dot(linear_velocity_at(contact) - other.linear_velocity_at(contact + position - other.position)), speed_threshold)
+			? FrictionType::STATIC : FrictionType::KINEMATIC;
 	}
 
 	glm::vec2 Properties::dv_psi() const
@@ -90,62 +91,68 @@ namespace oly::physics
 
 	void DynamicsComponent::on_tick() const
 	{
-		// 1. prep collision response
-
-		glm::vec2 j_c = {};
-		float h_c = 0.0f;
-		compute_collision_response(j_c, h_c);
-
-		// 2. update linear velocity
-
-		glm::vec2 dv = properties.dv_psi() + j_c * properties.mass_inverse();
-		state.linear_velocity += state.linear_velocity + dv;
-		state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>() * properties.mass_inverse());
-
-		// 3. update angular velocity
-
-		float dw = properties.dw_psi() + h_c * properties.moi_inverse();
-		state.angular_velocity += dw;
-		state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>() * properties.moi_inverse());
-
-		// 4. update position
-
-		glm::vec2 dx = {};
-		if (material.resolution_bias > 0.0f)
-			dx += material.resolution_bias.get()* state.linear_velocity* TIME.delta<>();
-		if (material.resolution_bias < 1.0f)
+		if (flag == Flag::KINEMATIC)
 		{
-			glm::vec2 dx_t = {};
-			for (const CollisionResponse& collision : static_collisions)
-				dx_t += collision.mtv;
-			for (const CollisionResponse& collision : kinematic_collisions)
-				dx_t += collision.mtv;
+			// 1. prep collision response
 
-			dx += (1.0f - material.resolution_bias.get()) * dx_t;
+			glm::vec2 j_c = {};
+			float h_c = 0.0f;
+			compute_collision_response(j_c, h_c);
+
+			// 2. update linear velocity
+
+			glm::vec2 dv = properties.dv_psi() + j_c * properties.mass_inverse();
+			state.linear_velocity += dv;
+			state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>() * properties.mass_inverse());
+
+			// 3. update angular velocity
+
+			float dw = properties.dw_psi() + h_c * properties.moi_inverse();
+			state.angular_velocity += dw;
+			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>() * properties.moi_inverse());
+
+			// 4. update position
+
+			glm::vec2 dx = {};
+			if (material.resolution_bias > 0.0f)
+				dx += material.resolution_bias.get() * state.linear_velocity * TIME.delta<>();
+			if (material.resolution_bias < 1.0f)
+			{
+				glm::vec2 dx_t = {};
+				for (const CollisionResponse& collision : static_collisions)
+					dx_t += collision.mtv;
+				for (const CollisionResponse& collision : kinematic_collisions)
+					dx_t += collision.mtv;
+
+				dx += (1.0f - material.resolution_bias.get()) * dx_t;
+			}
+
+			state.position += dx;
+
+			// 5. update rotation
+
+			float dtheta = 0.0f;
+			if (material.resolution_bias > 0.0f)
+				dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
+			if (material.resolution_bias < 1.0f)
+			{
+				float dtheta_t = 0.0f;
+				for (const CollisionResponse& collision : static_collisions)
+					dtheta_t += math::cross(collision.contact, collision.mtv);
+				for (const CollisionResponse& collision : kinematic_collisions)
+					dtheta_t += math::cross(collision.contact, collision.mtv);
+
+				dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
+			}
+
+			state.position += dtheta;
 		}
-
-		state.position += dx;
-
-		// 5. update rotation
-
-		float dtheta = 0.0f;
-		if (material.resolution_bias > 0.0f)
-			dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
-		if (material.resolution_bias < 1.0f)
-		{
-			float dtheta_t = 0.0f;
-			for (const CollisionResponse& collision : static_collisions)
-				dtheta_t += math::cross(collision.contact, collision.mtv);
-			for (const CollisionResponse& collision : kinematic_collisions)
-				dtheta_t += math::cross(collision.contact, collision.mtv);
-
-			dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
-		}
-
-		state.position += dtheta;
 
 		// 6. clean up
 
+		properties.applied_impulses.clear();
+		properties.net_linear_impulse = {};
+		properties.net_angular_impulse = 0.0f;
 		static_collisions.clear();
 		kinematic_collisions.clear();
 	}
@@ -154,28 +161,26 @@ namespace oly::physics
 	{
 		linear_impulse = {};
 		angular_impulse = 0.0f;
-		if (kinematic_collisions.size() <= 1)
+		if (kinematic_collisions.size() == 1)
 		{
-			if (kinematic_collisions.size() == 1)
-			{
-				const CollisionResponse& kinematic_collision = kinematic_collisions[0];
+			const CollisionResponse& kinematic_collision = kinematic_collisions[0];
 
-				float restitution = material.restitution_with(kinematic_collision.dynamics->material);
-				float _j_r = -(1.0f + restitution) / (properties.mass_inverse() + kinematic_collision.dynamics->properties.mass_inverse())
-					* kinematic_collision.normal.dot(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity);
-				if (_j_r < 0.0f)
-					_j_r = 0.0f;
-				glm::vec2 j_r = _j_r * (glm::vec2)kinematic_collision.normal;
+			float restitution = material.restitution_with(kinematic_collision.dynamics->material);
+			float _j_r = -(1.0f + restitution) / (properties.mass_inverse() + kinematic_collision.dynamics->properties.mass_inverse())
+				* kinematic_collision.normal.dot(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity);
+			if (_j_r < 0.0f)
+				_j_r = 0.0f;
+			glm::vec2 j_r = _j_r * (glm::vec2)kinematic_collision.normal;
 
-				float mu = material.friction_with(kinematic_collision.contact, kinematic_collision.normal.get_quarter_turn(),
-					state, kinematic_collision.dynamics->material, kinematic_collision.dynamics->state);
-				glm::vec2 j_f = -mu * glm::length(j_r) * (glm::vec2)UnitVector2D(kinematic_collision.mtv).normal_project(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity);
+			float mu = material.friction_with(kinematic_collision.contact, kinematic_collision.normal.get_quarter_turn(),
+				state, kinematic_collision.dynamics->material, kinematic_collision.dynamics->state);
+			glm::vec2 proj = kinematic_collision.normal.normal_project(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity);
+			glm::vec2 j_f = -mu * glm::length(j_r) * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj));
 
-				linear_impulse = j_r + j_f;
-				angular_impulse = math::cross(kinematic_collision.contact, linear_impulse);
-			}
+			linear_impulse = j_r + j_f;
+			angular_impulse = math::cross(kinematic_collision.contact, linear_impulse);
 		}
-		else
+		else if (kinematic_collisions.size() > 1)
 		{
 			const size_t N = kinematic_collisions.size();
 			std::vector<float> C(N);
@@ -245,7 +250,8 @@ namespace oly::physics
 			{
 				float mu = material.friction_with(kinematic_collisions[i].contact, kinematic_collisions[i].normal.get_quarter_turn(),
 					state, kinematic_collisions[i].dynamics->material, kinematic_collisions[i].dynamics->state);
-				jf[i] = -mu * j[i] * (glm::vec2)kinematic_collisions[i].normal.normal_project(state.linear_velocity - kinematic_collisions[i].dynamics->state.linear_velocity);
+				glm::vec2 proj = kinematic_collisions[i].normal.normal_project(state.linear_velocity - kinematic_collisions[i].dynamics->state.linear_velocity);
+				jf[i] = -mu * j[i] * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj)); // TODO { 0.0f, 0.0f } state for UnitVector2D
 			}
 
 			linear_impulse = j_r;
@@ -267,7 +273,8 @@ namespace oly::physics
 
 			float mu = material.friction_with(static_collision.contact, static_collision.normal.get_quarter_turn(),
 				state, static_collision.dynamics->material, static_collision.dynamics->state);
-			glm::vec2 j_f = -mu * glm::length(j_r) * (glm::vec2)static_collision.normal.normal_project(state.linear_velocity);
+			glm::vec2 proj = static_collision.normal.normal_project(state.linear_velocity);
+			glm::vec2 j_f = -mu * glm::length(j_r) * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj));
 
 			linear_impulse += j_r + j_f;
 			angular_impulse += math::cross(static_collision.contact, linear_impulse);

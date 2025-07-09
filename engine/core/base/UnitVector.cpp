@@ -69,9 +69,9 @@ namespace oly
 		return near_zero(_direction.x, tolerance) || near_zero(_direction.y, tolerance);
 	}
 
-	UnitVector2D UnitVector2D::normal_project(glm::vec2 v) const
+	glm::vec2 UnitVector2D::normal_project(glm::vec2 v) const
 	{
-		return UnitVector2D(v - glm::dot(v, _direction) * _direction);
+		return v - glm::dot(v, _direction) * _direction;
 	}
 
 	bool UnitVector2D::near_parallel(UnitVector2D other, double tolerance) const

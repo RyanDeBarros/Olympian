@@ -13,8 +13,8 @@ namespace oly::col2d
 	{
 		Element element;
 
-		Mask mask = 1;
-		Layer layer = 1;
+		Mask mask = 0;
+		Layer layer = 0;
 
 		float projection_max(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)); }
 		float projection_min(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)); }
@@ -49,6 +49,7 @@ namespace oly::col2d
 		}
 
 	public:
+		TPrimitive() = default;
 		explicit TPrimitive(const Element& element) : primitive{ .element = element } {}
 		explicit TPrimitive(Element&& element) noexcept : primitive{ .element = std::move(element) } {}
 

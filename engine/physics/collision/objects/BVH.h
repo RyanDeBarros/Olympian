@@ -238,8 +238,8 @@ namespace oly::col2d
 		Heuristic heuristic = Heuristic::MIDPOINT_XY;
 
 	public:
-		Mask mask = 1;
-		Layer layer = 1;
+		Mask mask = 0;
+		Layer layer = 0;
 
 		BVH() = default;
 		explicit BVH(const std::vector<Element>& elements) : elements(elements) {}

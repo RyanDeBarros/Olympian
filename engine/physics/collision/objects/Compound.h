@@ -13,8 +13,8 @@ namespace oly::col2d
 	{
 		std::vector<Element> elements;
 
-		Mask mask = 1;
-		Layer layer = 1;
+		Mask mask = 0;
+		Layer layer = 0;
 
 		float projection_max(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
