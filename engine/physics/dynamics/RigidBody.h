@@ -29,6 +29,8 @@ namespace oly::physics
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
+		// TODO add_collider(CObj&&), add_collider(ElementParam), add_collider(TPrimitive), etc.
+
 		SoftReference<col2d::Collider> add_collider(col2d::Collider&& collider);
 		void erase_collider(size_t i);
 		void remove_collider(const SoftReference<col2d::Collider>& collider);
@@ -47,6 +49,7 @@ namespace oly::physics
 		Properties& properties() { return dynamics.properties; }
 		DynamicsComponent::Flag flag() const { return dynamics.flag; }
 		DynamicsComponent::Flag& flag() { return dynamics.flag; }
+		bool is_colliding() const { return dynamics.is_colliding(); }
 
 	private:
 		void handle_contacts(const col2d::ContactEventData& data) const;

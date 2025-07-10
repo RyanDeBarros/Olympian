@@ -9,6 +9,7 @@
 #include "physics/collision/objects/Polygon.h"
 #include "physics/collision/scene/CollisionDispatcher.h"
 #include "physics/dynamics/RigidBody.h"
+#include "physics/dynamics/Constants.h"
 
 #include "archetypes/PolygonCrop.h"
 #include "archetypes/SpriteMatch.h"
@@ -145,9 +146,9 @@ int main()
 	player.flag() = oly::physics::DynamicsComponent::Flag::KINEMATIC;
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi(2000.0f);
-	player.material().set_static_friction(0.0f);
-	player.material().set_kinematic_friction(0.0f);
-	player.material().set_rolling_friction(0.0f);
+	player.properties().net_force += oly::physics::GRAVITY;
+	player.material().angular_drag = 1.0f;
+	player.material().resolution_bias = 0.5f;
 
 	player.add_collider(oly::col2d::Collider(star.as_convex_tcompound()));
 	player.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_PLAYER; // TODO put get_layer/set_layer/get_mask/set_mask on Collider. it should not set the dirty flag.
@@ -166,6 +167,7 @@ int main()
 	oly::col2d::Capsule _capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::col2d::TCompound capsule = _capsule.tcompound();
 	oly::physics::RigidBody obstacle0;
+	obstacle0.flag() = oly::physics::DynamicsComponent::Flag::KINEMATIC;
 	obstacle0.add_collider(oly::col2d::Collider(capsule));
 	obstacle0.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle0.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
@@ -193,6 +195,11 @@ int main()
 	obstacle4.add_collider(oly::col2d::Collider(capsule));
 	obstacle4.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle4.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+
+	oly::physics::RigidBody ground;
+	ground.add_collider(oly::col2d::Collider(oly::col2d::TPrimitive(oly::col2d::AABB{ .x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f })));
+	ground.collider()->set<oly::col2d::TPrimitive>().layer() |= CollisionLayers::L_OBSTACLE;
+	ground.collider()->set<oly::col2d::TPrimitive>().mask() |= CollisionMasks::M_PLAYER;
 
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .width = 25.0f, .depth = 15.0f};
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .width = 25.0f, .depth = 15.0f};
@@ -235,6 +242,9 @@ int main()
 	obstacle_layer.assign(cv_obstacle3);
 	auto cv_obstacle4 = obstacle4.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	obstacle_layer.assign(cv_obstacle4);
+
+	auto ground_cv = ground.collision_view(0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	ground_cv.assign(obstacle_layer);
 
 	player_cv.assign(player_layer);
 	block_cv.assign(obstacle_layer);

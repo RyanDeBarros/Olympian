@@ -144,5 +144,7 @@ namespace oly::col2d
 		BFSColliderIterator query(const Collider& collider) const;
 		BFSColliderIterator query(const math::Rect2D bounds) const;
 		PairIterator iterator() const { return PairIterator(root.get(), root->bounds); }
+
+		// TODO set_bounds()
 	};
 }

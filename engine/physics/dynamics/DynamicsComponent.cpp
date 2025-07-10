@@ -186,46 +186,58 @@ namespace oly::physics
 			// 2. update linear velocity
 
 			state.linear_velocity += properties.dv_psi() + j_c * properties.mass_inverse();
-			state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>() * properties.mass_inverse());
+			if (material.linear_drag > 0.0f)
+				state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
 
 			// 3. update angular velocity
 
 			state.angular_velocity += properties.dw_psi() + h_c * properties.moi_inverse();
-			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>() * properties.moi_inverse());
+			if (material.angular_drag > 0.0f)
+				state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
 
 			// 4. update position
 
 			glm::vec2 dx = {};
-			if (material.resolution_bias > 0.0f)
-				dx += material.resolution_bias.get() * state.linear_velocity * TIME.delta<>();
-			if (material.resolution_bias < 1.0f)
+			if (is_colliding())
 			{
-				glm::vec2 dx_t = {};
-				for (const CollisionResponse& collision : static_collisions)
-					dx_t += collision.mtv;
-				for (const CollisionResponse& collision : kinematic_collisions)
-					dx_t += collision.mtv;
+				if (material.resolution_bias > 0.0f)
+					dx += material.resolution_bias.get() * state.linear_velocity * TIME.delta<>();
+				if (material.resolution_bias < 1.0f)
+				{
+					glm::vec2 dx_t = {};
+					for (const CollisionResponse& collision : static_collisions)
+						dx_t += collision.mtv;
+					for (const CollisionResponse& collision : kinematic_collisions)
+						dx_t += collision.mtv;
 
-				dx += (1.0f - material.resolution_bias.get()) * dx_t;
+					dx += (1.0f - material.resolution_bias.get()) * dx_t;
+				}
 			}
+			else
+				dx += state.linear_velocity * TIME.delta<>();
 
 			state.position += dx;
 
 			// 5. update rotation
 
 			float dtheta = 0.0f;
-			if (material.resolution_bias > 0.0f)
-				dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
-			if (material.resolution_bias < 1.0f)
+			if (is_colliding())
 			{
-				float dtheta_t = 0.0f;
-				for (const CollisionResponse& collision : static_collisions)
-					dtheta_t += math::cross(collision.contact, collision.mtv);
-				for (const CollisionResponse& collision : kinematic_collisions)
-					dtheta_t += math::cross(collision.contact, collision.mtv);
+				if (material.resolution_bias > 0.0f)
+					dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
+				if (material.resolution_bias < 1.0f)
+				{
+					float dtheta_t = 0.0f;
+					for (const CollisionResponse& collision : static_collisions)
+						dtheta_t += math::cross(collision.contact, collision.mtv);
+					for (const CollisionResponse& collision : kinematic_collisions)
+						dtheta_t += math::cross(collision.contact, collision.mtv);
 
-				dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
+					dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
+				}
 			}
+			else
+				dtheta += state.angular_velocity * TIME.delta<>();
 
 			state.rotation += dtheta;
 		}

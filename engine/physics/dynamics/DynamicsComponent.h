@@ -121,7 +121,11 @@ namespace oly::physics
 		BoundedFloat<0.0f, 1.0f> restitution = 0.2f;
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 0.0f;
-		BoundedFloat<0.0f, 1.0f> resolution_bias = 1.0f;
+		// Resolution bias controls collision response:
+		//     -   0: No clipping, but less accurate bouncing.
+		//     - 0.5: Accurate bouncing + low chance of clipping.
+		//     -   1: Very accurate bouncing, but potential clipping.
+		BoundedFloat<0.0f, 1.0f> resolution_bias = 0.5f;
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }
@@ -170,6 +174,8 @@ namespace oly::physics
 
 		void on_tick() const;
 		State get_state() const { return state; }
+
+		bool is_colliding() const { return !static_collisions.empty() || !kinematic_collisions.empty(); }
 
 	private:
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse) const;
