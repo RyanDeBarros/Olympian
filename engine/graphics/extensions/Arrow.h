@@ -4,7 +4,8 @@
 
 namespace oly::rendering
 {
-	class ArrowExtension // TODO asset
+	// ASSET
+	class ArrowExtension
 	{
 		mutable Polygon body, head;
 		Transformer2D _transformer;
@@ -55,7 +56,8 @@ namespace oly::rendering
 		}
 	};
 
-	class StaticArrowExtension // TODO asset
+	// ASSET
+	class StaticArrowExtension
 	{
 		mutable StaticPolygon body, head;
 		glm::vec2 start = {}, end = {};

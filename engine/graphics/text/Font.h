@@ -54,7 +54,7 @@ namespace oly::rendering
 	};
 	typedef std::shared_ptr<FontFace> FontFaceRes;
 
-	// TODO manual generation of mipmaps
+	// LATER manual generation of mipmaps
 
 	class FontAtlas;
 	struct FontGlyph

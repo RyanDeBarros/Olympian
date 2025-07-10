@@ -18,8 +18,8 @@ namespace oly::physics
 		enum class FrictionType
 		{
 			STATIC,
-			KINEMATIC
-			// TODO ROLLING
+			KINEMATIC,
+			ROLLING
 		};
 
 		FrictionType friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE) const;
@@ -95,6 +95,18 @@ namespace oly::physics
 		std::vector<AppliedForce>& set_applied_forces() { dirty_linear_applied_forces = true; dirty_angular_applied_forces = true; return applied_forces; }
 	};
 
+	enum class FactorBlendOp
+	{
+		MINIMUM,
+		GEOMETRIC_MEAN,
+		ARITHMETIC_MEAN,
+		ACTIVE,
+	};
+
+	extern void set_restitution_blend_op(FactorBlendOp op);
+	extern void set_friction_blend_op(FactorBlendOp op);
+
+	// LATER density
 	struct Material
 	{
 	private:
@@ -102,14 +114,14 @@ namespace oly::physics
 		PositiveFloat _sqrt_static_friction = glm::sqrt(_static_friction);
 		PositiveFloat _kinematic_friction = 0.3f;
 		PositiveFloat _sqrt_kinematic_friction = glm::sqrt(_kinematic_friction);
+		PositiveFloat _rolling_friction = 0.4f;
+		PositiveFloat _sqrt_rolling_friction = glm::sqrt(_rolling_friction);
 
 	public:
 		BoundedFloat<0.0f, 1.0f> restitution = 0.2f;
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 0.0f;
 		BoundedFloat<0.0f, 1.0f> resolution_bias = 1.0f;
-		std::optional<PositiveFloat> mass_density = std::nullopt; // TODO mass_density * area = mass
-		std::optional<PositiveFloat> moi_density = std::nullopt; // TODO moi_density * area = moi
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }
@@ -118,6 +130,10 @@ namespace oly::physics
 		float kinematic_friction() const { return _kinematic_friction; }
 		float sqrt_kinematic_friction() const { return _sqrt_kinematic_friction; }
 		void set_kinematic_friction(float mu) { _kinematic_friction.set(mu); _sqrt_kinematic_friction.set(glm::sqrt(_kinematic_friction)); }
+		
+		float rolling_friction() const { return _rolling_friction; }
+		float sqrt_rolling_friction() const { return _sqrt_rolling_friction; }
+		void set_rolling_friction(float mu) { _rolling_friction.set(mu); _sqrt_rolling_friction.set(glm::sqrt(_rolling_friction)); }
 
 	private:
 		friend class DynamicsComponent;
@@ -140,6 +156,7 @@ namespace oly::physics
 		mutable std::vector<CollisionResponse> kinematic_collisions;
 
 	public:
+		// TODO use handle to Material registry.
 		Material material;
 		Properties properties;
 
@@ -158,7 +175,5 @@ namespace oly::physics
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse) const;
 	};
 
-	extern float moment_of_inertia(const math::Polygon2D& p, float mass);
-	extern float moment_of_inertia(const std::array<glm::vec2, 4>& p, float mass);
-	extern float moment_of_inertia(col2d::ElementParam e, float mass);
+	extern float moment_of_inertia(col2d::ElementParam e, float mass, bool relative_to_cm = false);
 }

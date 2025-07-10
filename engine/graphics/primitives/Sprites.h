@@ -170,7 +170,8 @@ namespace oly::rendering
 		void update_texture_handle(const graphics::BindlessTextureRes& texture);
 	};
 
-	class StaticSprite // TODO asset
+	// ASSET
+	class StaticSprite
 	{
 		SpriteBatch::VBID vbid;
 

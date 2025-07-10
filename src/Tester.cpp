@@ -141,8 +141,14 @@ int main()
 	}
 
 	oly::physics::RigidBody player;
-	player.flag() = oly::physics::DynamicsComponent::Flag::KINEMATIC;
 	pc.rigid_body = &player;
+	player.flag() = oly::physics::DynamicsComponent::Flag::KINEMATIC;
+	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
+	player.properties().set_moi(2000.0f);
+	player.material().set_static_friction(0.0f);
+	player.material().set_kinematic_friction(0.0f);
+	player.material().set_rolling_friction(0.0f);
+
 	player.add_collider(oly::col2d::Collider(star.as_convex_tcompound()));
 	player.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_PLAYER; // TODO put get_layer/set_layer/get_mask/set_mask on Collider. it should not set the dirty flag.
 	player.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_OBSTACLE;

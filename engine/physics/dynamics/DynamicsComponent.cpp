@@ -6,6 +6,19 @@
 
 namespace oly::physics
 {
+	static FactorBlendOp restitution_blend_op = FactorBlendOp::MINIMUM;
+	static FactorBlendOp friction_blend_op = FactorBlendOp::GEOMETRIC_MEAN;
+
+	void set_restitution_blend_op(FactorBlendOp op)
+	{
+		restitution_blend_op = op;
+	}
+
+	void set_friction_blend_op(FactorBlendOp op)
+	{
+		friction_blend_op = op;
+	}
+
 	glm::vec2 State::linear_velocity_at(glm::vec2 contact) const
 	{
 		return linear_velocity + angular_velocity * glm::vec2{ -contact.y, contact.x };
@@ -13,8 +26,11 @@ namespace oly::physics
 
 	State::FrictionType State::friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold) const
 	{
-		return near_zero(tangent.dot(linear_velocity_at(contact) - other.linear_velocity_at(contact + position - other.position)), speed_threshold)
-			? FrictionType::STATIC : FrictionType::KINEMATIC;
+		bool sliding = !near_zero(tangent.dot(linear_velocity_at(contact) - other.linear_velocity_at(contact + position - other.position)), speed_threshold);
+		if (sliding)
+			return FrictionType::KINEMATIC;
+		else // TODO more sophisticated distinction between STATIC/ROLLING - check for locked together case.
+			return near_zero(angular_velocity) && near_zero(other.angular_velocity) ? FrictionType::STATIC : FrictionType::ROLLING;
 	}
 
 	glm::vec2 Properties::dv_psi() const
@@ -85,16 +101,66 @@ namespace oly::physics
 
 	float Material::restitution_with(const Material& mat) const
 	{
-		return std::min(restitution, mat.restitution); // TODO other strategies
+		switch (restitution_blend_op)
+		{
+		case FactorBlendOp::MINIMUM:
+			return std::min(restitution, mat.restitution);
+		case FactorBlendOp::ARITHMETIC_MEAN:
+			return 0.5f * (restitution + mat.restitution);
+		case FactorBlendOp::GEOMETRIC_MEAN:
+			// TODO
+		case FactorBlendOp::ACTIVE:
+			return restitution;
+		}
+		return 0.0f;
 	}
 
 	float Material::friction_with(glm::vec2 contact, UnitVector2D tangent, const State& state, const Material& mat, const State& other_state, PositiveFloat speed_threshold) const
 	{
 		State::FrictionType friction_type = state.friction_type(contact, tangent, other_state, speed_threshold);
 		if (friction_type == State::FrictionType::STATIC)
-			return _sqrt_static_friction * mat._sqrt_static_friction; // TODO other strategies;
-		else // TODO else if == KINEMATIC, then else ROLLING
-			return _sqrt_kinematic_friction * mat._sqrt_kinematic_friction; // TODO other strategies;
+		{
+			switch (friction_blend_op)
+			{
+			case FactorBlendOp::MINIMUM:
+				return std::min(_static_friction, mat._static_friction);
+			case FactorBlendOp::ARITHMETIC_MEAN:
+				return 0.5f * (_static_friction + mat._static_friction);
+			case FactorBlendOp::GEOMETRIC_MEAN:
+				return _sqrt_static_friction * mat._sqrt_static_friction;
+			case FactorBlendOp::ACTIVE:
+				return _static_friction;
+			}
+		}
+		else if (friction_type == State::FrictionType::KINEMATIC)
+		{
+			switch (friction_blend_op)
+			{
+			case FactorBlendOp::MINIMUM:
+				return std::min(_kinematic_friction, mat._kinematic_friction);
+			case FactorBlendOp::ARITHMETIC_MEAN:
+				return 0.5f * (_kinematic_friction + mat._kinematic_friction);
+			case FactorBlendOp::GEOMETRIC_MEAN:
+				return _sqrt_kinematic_friction * mat._sqrt_kinematic_friction;
+			case FactorBlendOp::ACTIVE:
+				return _kinematic_friction;
+			}
+		}
+		else if (friction_type == State::FrictionType::ROLLING)
+		{
+			switch (friction_blend_op)
+			{
+			case FactorBlendOp::MINIMUM:
+				return std::min(_rolling_friction, mat._rolling_friction);
+			case FactorBlendOp::ARITHMETIC_MEAN:
+				return 0.5f * (_rolling_friction + mat._rolling_friction);
+			case FactorBlendOp::GEOMETRIC_MEAN:
+				return _sqrt_rolling_friction * mat._sqrt_rolling_friction;
+			case FactorBlendOp::ACTIVE:
+				return _rolling_friction;
+			}
+		}
+		return 0.0f;
 	}
 
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
@@ -104,6 +170,8 @@ namespace oly::physics
 		else if (dynamics.flag == Flag::KINEMATIC)
 			kinematic_collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
 	}
+
+	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
 
 	void DynamicsComponent::on_tick() const
 	{
@@ -117,14 +185,12 @@ namespace oly::physics
 
 			// 2. update linear velocity
 
-			glm::vec2 dv = properties.dv_psi() + j_c * properties.mass_inverse();
-			state.linear_velocity += dv;
+			state.linear_velocity += properties.dv_psi() + j_c * properties.mass_inverse();
 			state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>() * properties.mass_inverse());
 
 			// 3. update angular velocity
 
-			float dw = properties.dw_psi() + h_c * properties.moi_inverse();
-			state.angular_velocity += dw;
+			state.angular_velocity += properties.dw_psi() + h_c * properties.moi_inverse();
 			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>() * properties.moi_inverse());
 
 			// 4. update position
@@ -161,7 +227,7 @@ namespace oly::physics
 				dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
 			}
 
-			state.position += dtheta;
+			state.rotation += dtheta;
 		}
 
 		// 6. clean up
@@ -175,6 +241,8 @@ namespace oly::physics
 
 	void DynamicsComponent::compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse) const
 	{
+		// TODO cache kinematic impulse in other dynamics component so it doesn't need to recalculate. use map of pointer->impulse that's cleared after compute_collision_response().
+
 		linear_impulse = {};
 		angular_impulse = 0.0f;
 		if (kinematic_collisions.size() == 1)
@@ -190,7 +258,7 @@ namespace oly::physics
 
 			float mu = material.friction_with(kinematic_collision.contact, kinematic_collision.normal.get_quarter_turn(),
 				state, kinematic_collision.dynamics->material, kinematic_collision.dynamics->state);
-			glm::vec2 proj = kinematic_collision.normal.normal_project(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity);
+			glm::vec2 proj = kinematic_collision.normal.normal_project(state.linear_velocity - kinematic_collision.dynamics->state.linear_velocity); // TODO use linear + angular velocity?
 			glm::vec2 j_f = -mu * glm::length(j_r) * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj));
 
 			linear_impulse = j_r + j_f;
@@ -264,9 +332,10 @@ namespace oly::physics
 			std::vector<glm::vec2> jf(N);
 			for (size_t i = 0; i < N; ++i)
 			{
+				// TODO for friction calculations, pre-emptively clamp it so that resultant motion isn't opposite to current tangential velocity. Don't wait for tangential velocity to reach zero to stop applying friction. Check what the resultant velocity would be, and clamp it before applying friction.
 				float mu = material.friction_with(kinematic_collisions[i].contact, kinematic_collisions[i].normal.get_quarter_turn(),
 					state, kinematic_collisions[i].dynamics->material, kinematic_collisions[i].dynamics->state);
-				glm::vec2 proj = kinematic_collisions[i].normal.normal_project(state.linear_velocity - kinematic_collisions[i].dynamics->state.linear_velocity);
+				glm::vec2 proj = kinematic_collisions[i].normal.normal_project(state.linear_velocity - kinematic_collisions[i].dynamics->state.linear_velocity); // TODO use linear + angular velocity?
 				jf[i] = -mu * j[i] * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj)); // TODO { 0.0f, 0.0f } state for UnitVector2D
 			}
 
@@ -289,7 +358,7 @@ namespace oly::physics
 
 			float mu = material.friction_with(static_collision.contact, static_collision.normal.get_quarter_turn(),
 				state, static_collision.dynamics->material, static_collision.dynamics->state);
-			glm::vec2 proj = static_collision.normal.normal_project(state.linear_velocity);
+			glm::vec2 proj = static_collision.normal.normal_project(state.linear_velocity); // TODO use linear + angular velocity?
 			glm::vec2 j_f = -mu * glm::length(j_r) * (near_zero(math::mag_sqrd(proj)) ? glm::vec2{} : (glm::vec2)UnitVector2D(proj));
 
 			linear_impulse += j_r + j_f;
@@ -297,35 +366,55 @@ namespace oly::physics
 		}
 	}
 
-	float moment_of_inertia(const math::Polygon2D& p, float mass)
+	static float moment_of_inertia(const math::Polygon2D& p, float mass, glm::vec2 offset = {})
 	{
 		float sum = 0.0f;
 		for (size_t i = 0; i < p.size(); ++i)
 		{
-			glm::vec2 curr = p[i];
-			glm::vec2 next = p[(i + 1) % p.size()];
+			glm::vec2 curr = p[i] - offset;
+			glm::vec2 next = p[(i + 1) % p.size()] - offset;
 			sum += math::cross(curr, next) * (math::mag_sqrd(curr) + glm::dot(curr, next) + math::mag_sqrd(next));
 		}
 		return sum * mass / (6.0f * math::signed_area(p));
 	}
 
-	float moment_of_inertia(const std::array<glm::vec2, 4>& p, float mass)
+	static float moment_of_inertia(const std::array<glm::vec2, 4>& p, float mass, glm::vec2 offset = {})
 	{
-		return moment_of_inertia(math::Polygon2D{ p[0], p[1], p[2], p[3] }, mass);
+		return moment_of_inertia(math::Polygon2D{ p[0], p[1], p[2], p[3] }, mass, offset);
 	}
 
-	float moment_of_inertia(col2d::ElementParam e, float mass)
+	float moment_of_inertia(col2d::ElementParam e, float mass, bool relative_to_cm)
 	{
-		return std::visit([mass](const auto& e) {
+		return std::visit([mass, relative_to_cm](const auto& e) {
 			if constexpr (visiting_class_is<decltype(*e), col2d::Circle>)
 			{
-				if (col2d::internal::CircleGlobalAccess::has_no_global(*e))
-					return 0.5f * mass * e->radius * e->radius;
+				if (relative_to_cm)
+				{
+					if (col2d::internal::CircleGlobalAccess::has_no_global(*e))
+						return 0.5f * mass * e->radius * e->radius;
+					else
+					{
+						const glm::mat2 ltl = glm::transpose(col2d::internal::CircleGlobalAccess::get_global(*e)) * col2d::internal::CircleGlobalAccess::get_global(*e);
+						return 0.25f * mass * e->radius * e->radius * (ltl[0][0] + ltl[1][1]);
+					}
+				}
 				else
 				{
-					const glm::mat2 ltl = glm::transpose(col2d::internal::CircleGlobalAccess::get_global(*e)) * col2d::internal::CircleGlobalAccess::get_global(*e);
-					return 0.25f * mass * e->radius * e->radius * (ltl[0][0] + ltl[1][1]) + mass * math::mag_sqrd(col2d::internal::CircleGlobalAccess::global_center(*e));
+					if (col2d::internal::CircleGlobalAccess::has_no_global(*e))
+						return 0.5f * mass * e->radius * e->radius + mass * math::mag_sqrd(col2d::internal::CircleGlobalAccess::global_center(*e));
+					else
+					{
+						const glm::mat2 ltl = glm::transpose(col2d::internal::CircleGlobalAccess::get_global(*e)) * col2d::internal::CircleGlobalAccess::get_global(*e);
+						return 0.25f * mass * e->radius * e->radius * (ltl[0][0] + ltl[1][1]) + mass * math::mag_sqrd(col2d::internal::CircleGlobalAccess::global_center(*e));
+					}
 				}
+			}
+			else if (relative_to_cm)
+			{
+				if constexpr (visiting_class_is<decltype(*e), col2d::OBB>)
+					return moment_of_inertia(e->points(), mass, e->center);
+				else
+					return moment_of_inertia(e->points(), mass, e->center());
 			}
 			else
 				return moment_of_inertia(e->points(), mass);

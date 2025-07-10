@@ -640,7 +640,7 @@ namespace oly::debug
 		return view;
 	}
 
-	// LATER update_view can be better specialized. can check if view is vector of #X objects, and individually update them.
+	// TODO update_view can be better specialized. can check if view is vector of #X objects, and individually update them.
 	inline void update_view(CollisionView& view, const col2d::CircleCast& cast, glm::vec4 color, glm::vec4 arrow_color)
 	{
 		update_view(view, cast.finite_capsule(INFINITE_RAY_LENGTH).compound(), color);

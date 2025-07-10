@@ -86,7 +86,8 @@ namespace oly::rendering
 		StrictIDGenerator<Index> id_generator;
 	};
 
-	class StaticPolygon // TODO asset
+	// ASSET
+	class StaticPolygon
 	{
 		friend PolygonBatch;
 		PolygonBatch::PolygonID id;
