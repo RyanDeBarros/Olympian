@@ -132,35 +132,37 @@ namespace oly
 			else if (parent != new_parent)
 			{
 				if (parent)
-					parent->children.erase(this);
+				{
+					parent->children[index_in_parent] = parent->children.back();
+					parent->children.pop_back();
+					if (index_in_parent < parent->children.size())
+						parent->children[index_in_parent]->index_in_parent = index_in_parent;
+				}
 				parent = new_parent;
-				parent->children.insert(this);
+				index_in_parent = parent->children.size();
+				parent->children.push_back(this);
 				post_set();
 			}
 		}
 	}
 
-	void Transformer2D::insert_chain(Transformer2D* parent_chain)
+	void Transformer2D::attach_child(Transformer2D* child)
 	{
-		if (!parent_chain || parent_chain == this)
-			return;
-		if (parent)
-		{
-			parent->children.erase(this);
-			Transformer2D* chain_top = parent_chain->top_level_parent();
-			parent->children.insert(chain_top);
-			chain_top->parent = parent;
-		}
-		parent = parent_chain;
-		parent->children.insert(this);
-		post_set();
+		if (child)
+			child->attach_parent(this);
 	}
 
 	void Transformer2D::unparent()
 	{
 		if (parent)
-			parent->children.erase(this);
+		{
+			parent->children[index_in_parent] = parent->children.back();
+			parent->children.pop_back();
+			if (index_in_parent < parent->children.size())
+				parent->children[index_in_parent]->index_in_parent = index_in_parent;
+		}
 		parent = nullptr;
+		index_in_parent = size_t(-1);
 		post_set();
 	}
 
@@ -179,7 +181,10 @@ namespace oly
 		if (parent)
 		{
 			for (Transformer2D* child : children)
-				parent->children.insert(child);
+			{
+				child->index_in_parent = parent->children.size();
+				parent->children.push_back(child);
+			}
 		}
 		for (Transformer2D* child : children)
 		{
@@ -312,42 +317,44 @@ namespace oly
 
 	void Transformer3D::attach_parent(Transformer3D* new_parent)
 	{
-		if (new_parent == this)
+		if (new_parent != this)
 		{
 			if (!new_parent)
 				unparent();
 			else if (parent != new_parent)
 			{
 				if (parent)
-					parent->children.erase(this);
+				{
+					parent->children[index_in_parent] = parent->children.back();
+					parent->children.pop_back();
+					if (index_in_parent < parent->children.size())
+						parent->children[index_in_parent]->index_in_parent = index_in_parent;
+				}
 				parent = new_parent;
-				parent->children.insert(this);
+				index_in_parent = parent->children.size();
+				parent->children.push_back(this);
 				post_set();
 			}
 		}
 	}
 
-	void Transformer3D::insert_chain(Transformer3D* parent_chain)
+	void Transformer3D::attach_child(Transformer3D* child)
 	{
-		if (!parent_chain || parent_chain == this)
-			return;
-		if (parent)
-		{
-			parent->children.erase(this);
-			Transformer3D* chain_top = parent_chain->top_level_parent();
-			parent->children.insert(chain_top);
-			chain_top->parent = parent;
-		}
-		parent = parent_chain;
-		parent->children.insert(this);
-		post_set();
+		if (child)
+			child->attach_parent(this);
 	}
 
 	void Transformer3D::unparent()
 	{
 		if (parent)
-			parent->children.erase(this);
+		{
+			parent->children[index_in_parent] = parent->children.back();
+			parent->children.pop_back();
+			if (index_in_parent < parent->children.size())
+				parent->children[index_in_parent]->index_in_parent = index_in_parent;
+		}
 		parent = nullptr;
+		index_in_parent = size_t(-1);
 		post_set();
 	}
 
@@ -366,7 +373,10 @@ namespace oly
 		if (parent)
 		{
 			for (Transformer3D* child : children)
-				parent->children.insert(child);
+			{
+				child->index_in_parent = parent->children.size();
+				parent->children.push_back(child);
+			}
 		}
 		for (Transformer3D* child : children)
 		{

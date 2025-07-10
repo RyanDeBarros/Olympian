@@ -72,6 +72,7 @@ int main()
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
+	// TODO in archetypes, renderable/physics data members should be unique_ptrs or handles to registries.
 	oly::gen::BKG bkg;
 	oly::gen::PolygonCrop polygon_crop;
 	oly::gen::SpriteMatch sprite_match;

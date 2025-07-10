@@ -72,7 +72,8 @@ namespace oly
 		mutable bool _dirty_internal = true;
 		mutable bool _dirty_external = true;
 		Transformer2D* parent = nullptr;
-		std::unordered_set<Transformer2D*> children;
+		size_t index_in_parent = size_t(-1);
+		std::vector<Transformer2D*> children;
 		std::unique_ptr<TransformModifier2D> modifier;
 
 	public:
@@ -109,7 +110,7 @@ namespace oly
 		const Transformer2D* top_level_parent() const;
 		Transformer2D* top_level_parent();
 		void attach_parent(Transformer2D* parent);
-		void insert_chain(Transformer2D* parent_chain);
+		void attach_child(Transformer2D* child);
 		void unparent();
 		void clear_children();
 		void pop_from_chain();
@@ -212,14 +213,15 @@ namespace oly
 		mutable bool _dirty_internal = true;
 		mutable bool _dirty_external = true;
 		Transformer3D* parent = nullptr;
-		std::unordered_set<Transformer3D*> children;
+		size_t index_in_parent = size_t(-1);
+		std::vector<Transformer3D*> children;
 		std::unique_ptr<TransformModifier3D> modifier;
 
 	public:
 		Transformer3D(const Transform3D& local = {}, std::unique_ptr<TransformModifier3D>&& modifier = std::make_unique<TransformModifier3D>()) : local(local), modifier(std::move(modifier)) {}
 		Transformer3D(const Transformer3D&);
 		Transformer3D(Transformer3D&&) noexcept;
-		virtual ~Transformer3D();
+		~Transformer3D();
 		Transformer3D& operator=(const Transformer3D&);
 		Transformer3D& operator=(Transformer3D&&) noexcept;
 
@@ -249,7 +251,7 @@ namespace oly
 		const Transformer3D* top_level_parent() const;
 		Transformer3D* top_level_parent();
 		void attach_parent(Transformer3D* parent);
-		void insert_chain(Transformer3D* parent_chain);
+		void attach_child(Transformer3D* child);
 		void unparent();
 		void clear_children();
 		void pop_from_chain();

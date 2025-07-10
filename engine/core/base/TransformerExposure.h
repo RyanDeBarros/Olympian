@@ -59,11 +59,11 @@ namespace oly
 			transformer.attach_parent(&parent.transformer);
 		}
 
-		void attach_child(Transformer2D& child) requires (and_(Params, TExposureParams::ATTACH_CHILD)) { child.attach_parent(&transformer); }
+		void attach_child(Transformer2D* child) requires (and_(Params, TExposureParams::ATTACH_CHILD)) { transformer.attach_child(child); }
 		template<TExposureParams OtherParams>
 		void attach_child(Transformer2DExposure& child) requires (and_(Params, TExposureParams::ATTACH_CHILD) && and_(OtherParams, TExposureParams::ATTACH_PARENT))
 		{
-			child.transformer.attach_parent(&transformer);
+			transformer.attach_child(&child.transformer);
 		}
 
 		void clear_children() requires (and_(Params, TExposureParams::CLEAR_CHILDREN)) { transformer.clear_children(); }
