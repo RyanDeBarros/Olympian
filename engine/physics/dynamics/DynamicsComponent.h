@@ -13,8 +13,6 @@ namespace oly::physics
 		glm::vec2 linear_velocity = {};
 		float angular_velocity = 0.0f;
 
-		glm::vec2 linear_velocity_at(glm::vec2 contact) const;
-
 		enum class FrictionType
 		{
 			STATIC,
@@ -24,6 +22,8 @@ namespace oly::physics
 
 		FrictionType friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE) const;
 	};
+
+	extern glm::vec2 linear_velocity_at(glm::vec2 linear_velocity, float angular_velocity, glm::vec2 contact);
 
 	struct AppliedAcceleration
 	{
@@ -48,11 +48,11 @@ namespace oly::physics
 	struct Properties
 	{
 	private:
-		PositiveFloat _mass = 1.0f;
-		PositiveFloat _mass_inverse = 1.0f;
+		StrictlyPositiveFloat _mass = 1.0f;
+		StrictlyPositiveFloat _mass_inverse = 1.0f;
 		// moment of inertia
-		PositiveFloat _moi = 1.0f;
-		PositiveFloat _moi_inverse = 1.0f;
+		StrictlyPositiveFloat _moi = 1.0f;
+		StrictlyPositiveFloat _moi_inverse = 1.0f;
 
 		std::vector<AppliedAcceleration> applied_accelerations;
 		std::vector<AppliedForce> applied_forces;
@@ -116,9 +116,10 @@ namespace oly::physics
 		PositiveFloat _sqrt_kinematic_friction = glm::sqrt(_kinematic_friction);
 		PositiveFloat _rolling_friction = 0.4f;
 		PositiveFloat _sqrt_rolling_friction = glm::sqrt(_rolling_friction);
+		BoundedFloat<0.0f, 1.0f> _restitution = 0.2f;
+		BoundedFloat<0.0f, 1.0f> _sqrt_restitution = glm::sqrt(_restitution);
 
 	public:
-		BoundedFloat<0.0f, 1.0f> restitution = 0.2f;
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 0.0f;
 		// Resolution bias controls collision response:
@@ -139,6 +140,10 @@ namespace oly::physics
 		float sqrt_rolling_friction() const { return _sqrt_rolling_friction; }
 		void set_rolling_friction(float mu) { _rolling_friction.set(mu); _sqrt_rolling_friction.set(glm::sqrt(_rolling_friction)); }
 
+		float restitution() const { return _restitution; }
+		float sqrt_restitution() const { return _sqrt_restitution; }
+		void set_restitution(float e) { _restitution.set(e); _sqrt_restitution.set(glm::sqrt(_restitution)); }
+
 	private:
 		friend class DynamicsComponent;
 		float restitution_with(const Material& mat) const;
@@ -156,6 +161,7 @@ namespace oly::physics
 	class DynamicsComponent
 	{
 		mutable State state;
+		// TODO possibly only need one vector
 		mutable std::vector<CollisionResponse> static_collisions;
 		mutable std::vector<CollisionResponse> kinematic_collisions;
 
@@ -178,7 +184,7 @@ namespace oly::physics
 		bool is_colliding() const { return !static_collisions.empty() || !kinematic_collisions.empty(); }
 
 	private:
-		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse) const;
+		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
 	};
 
 	extern float moment_of_inertia(col2d::ElementParam e, float mass, bool relative_to_cm = false);

@@ -17,6 +17,8 @@
 \DeclareMathOperator{\avg}{avg}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\eff}{eff}
+\DeclareMathOperator{\rel}{rel}
 
 \colorlet{shadecolor}{yellow!10}
 \newtheorem{theorem}{Theorem}
@@ -160,7 +162,26 @@ If the resolution bias is 0, the position should be overridden via:
  The rotation should thus be overriden via:
 \begin{equation}\Delta\boldsymbol{v}=\frac{1}{\Delta t}\boldsymbol{\zeta}\implies \boldsymbol{J}=m\Delta\boldsymbol{v}=\frac{m}{\Delta t}\boldsymbol{\zeta}\implies H=\boldsymbol{\chi}\times\boldsymbol{J}=\frac{m}{\Delta t}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
 \begin{equation}\implies\Delta\omega=\frac{H}{I}=\frac{m}{I\Delta t}\boldsymbol{\chi}\times\boldsymbol{\zeta}\implies\Delta\theta=\Delta\theta_T:=\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
-However, the above impulses are never used for updating linear/angular velocity.
+However, the above impulses are never used for updating linear/angular velocity. Additionally, to prevent overcorrection, the teleportation vector must be shared across both bodies:
+\begin{equation}\Delta\boldsymbol{x}_{T,A}-\Delta\boldsymbol{x}_{T,B}=\boldsymbol{\zeta}\end{equation}
+Given that both displacements are along the normal,
+\begin{equation}\Delta\boldsymbol{x}_{T,A}=\eta_A\boldsymbol{\zeta},\quad\Delta\boldsymbol{x}_{T,B}=-\eta_B\boldsymbol{\zeta},\quad\eta\in[0,1]\end{equation}
+\begin{equation}\implies\eta_A\boldsymbol{\zeta}+\eta_B\boldsymbol{\zeta}=\boldsymbol{\zeta}\implies\eta_A+\eta_B=1\end{equation}
+The conservation of linear momentum over the frame is:
+\begin{equation}m_A\Delta\boldsymbol{v}_A+m_B\Delta\boldsymbol{v}_B=\boldsymbol{0}\end{equation}
+By assuming the correction begins with a frame where both bodies are stationary:
+\begin{equation}m_A\boldsymbol{v}_A^*+m_B\boldsymbol{v}_B^*=\boldsymbol{0}\end{equation}
+\begin{equation}m_A\frac{\Delta\boldsymbol{x}_{T,A}}{\Delta t}+m_B\frac{\Delta\boldsymbol{x}_{T,B}}{\Delta t}=\boldsymbol{0}\end{equation}
+\begin{equation}m_A\Delta\boldsymbol{x}_{T,A}+m_B\Delta\boldsymbol{x}_{T,B}=\boldsymbol{0}\end{equation}
+\begin{equation}m_A\eta_A\boldsymbol{\zeta}-m_B\eta_B\boldsymbol{\zeta}=\boldsymbol{0}\end{equation}
+\begin{equation}m_A\eta_A=m_B\eta_B\end{equation}
+Plugging back into the prior result:
+\begin{equation}m_B\eta_A+m_A\eta_A=m_B\end{equation}
+\begin{equation}\eta_A=\frac{m_B}{m_A+m_B}\end{equation}
+Therefore, the actual teleportation is:
+\begin{equation}\Delta\boldsymbol{x}_{T,A}=\frac{m_B}{m_A+m_B}\boldsymbol{\zeta}\end{equation}
+\begin{equation}\Delta\theta_{T,A}=\frac{m_Am_B}{I_A(m_A+m_B)}\boldsymbol{\chi}_A\times\boldsymbol{\zeta}\end{equation}
+Against a static body, the actual teleportation is the original one derived.
 
 \subsubsection{Restitution contribution}
 During a collision, there is a restitution impulse applied equally against the two objects. The restitution of the collision can be computed via several strategies:
@@ -170,33 +191,47 @@ During a collision, there is a restitution impulse applied equally against the t
 \item $\varepsilon=\frac{1}{2}(\varepsilon_A+\varepsilon_B)$
 \item $\varepsilon=\varepsilon_A$
 \end{itemize}
-Supposing the impulse on A is:
-\begin{equation}\boldsymbol{J}_R=m_A\Delta\boldsymbol{v}_A\end{equation}
-Then via the conservation of linear momentum:
-\begin{equation}m_A\Delta\boldsymbol{v}_A+m_B\Delta\boldsymbol{v}_B=0\implies m_B\Delta\boldsymbol{v}_B=-\boldsymbol{J}_R\end{equation}
+Define the relative velocity at a contact point as:
+\begin{equation}\boldsymbol{v}_{AB,\boldsymbol{\chi}}=\boldsymbol{v}_A+\omega_A\boldsymbol{\chi}_A^\perp-\boldsymbol{v}_B-\omega_B\boldsymbol{\chi}_B^\perp\end{equation}
+The impulse on A by B is:
+\begin{equation}\boldsymbol{J}_R=j\braket{\boldsymbol{\zeta}}\end{equation}
+Then by the conservation of linear momentum:
+\begin{equation}\Delta\boldsymbol{v}_A=\frac{j}{m_A}\braket{\boldsymbol{\zeta}},\quad\Delta\boldsymbol{v}_B=-\frac{j}{m_B}\braket{\boldsymbol{\zeta}}\end{equation}
+Thus, the angular change in velocity is:
+\begin{equation}\Delta\omega_A=\frac{\boldsymbol{\chi}_A\times j\braket{\boldsymbol{\zeta}}}{I_A},\quad\Delta\omega_B=-\frac{\boldsymbol{\chi}_B\times j\braket{\boldsymbol{\zeta}}}{I_B}\end{equation}
+Therefore:
+\begin{equation}\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}=\Delta\boldsymbol{v}_A+\Delta\omega_A\boldsymbol{\chi}_A^\perp-\Delta\boldsymbol{v}_B-\Delta\omega_B\boldsymbol{\chi}_B^\perp\end{equation}
+\begin{equation}\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}=\frac{j}{m_A}\braket{\boldsymbol{\zeta}}+\frac{\boldsymbol{\chi}_A\times j\braket{\boldsymbol{\zeta}}}{I_A}\boldsymbol{\chi}_A^\perp+\frac{j}{m_B}\braket{\boldsymbol{\zeta}}+\frac{\boldsymbol{\chi}_B\times j\braket{\boldsymbol{\zeta}}}{I_B}\boldsymbol{\chi}_B^\perp\end{equation}
+\begin{equation}\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}=j\left(\frac{1}{m_A}\braket{\boldsymbol{\zeta}}+\frac{\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}}{I_A}\boldsymbol{\chi}_A^\perp+\frac{1}{m_B}\braket{\boldsymbol{\zeta}}+\frac{\boldsymbol{\chi}_B\times\braket{\boldsymbol{\zeta}}}{I_B}\boldsymbol{\chi}_B^\perp\right)\end{equation}
+\begin{equation}\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\braket{\boldsymbol{\zeta}}=j\left(\frac{1}{m_A}+\frac{\left(\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)^2}{I_A}+\frac{1}{m_B}+\frac{\left(\boldsymbol{\chi}_B\times\braket{\boldsymbol{\zeta}}\right)^2}{I_B}\right)\end{equation}
+\begin{equation}\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\braket{\boldsymbol{\zeta}}=\frac{1}{m_{\eff}}j\end{equation}
+This is the definition of \textit{effective mass} at the contact point $\boldsymbol{\chi}$:
+\begin{equation}m_{\eff}=\left(\frac{1}{m_A}+\frac{\left(\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)^2}{I_A}+\frac{1}{m_B}+\frac{\left(\boldsymbol{\chi}_B\times\braket{\boldsymbol{\zeta}}\right)^2}{I_B}\right)^{-1}\end{equation}
 The definition for elasticity is:
-\begin{equation}\varepsilon=-\frac{(\boldsymbol{v}_B^*+\omega_B^*\boldsymbol{\chi}_B^\perp-\boldsymbol{v}_A^*-\omega_A^*\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}}{(\boldsymbol{v}_B+\omega_B\boldsymbol{\chi}_B^\perp-\boldsymbol{v}_A-\omega_A\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}}\end{equation}
-\begin{equation}
-(\boldsymbol{v}_A^*-\boldsymbol{v}_B^*)\cdot\boldsymbol{\zeta}+(\omega_A^*\boldsymbol{\chi}_A^\perp-\omega_B^*\boldsymbol{v}_B^\perp)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}+\varepsilon(\omega_B\boldsymbol{\chi}_B^\perp-\omega_A\boldsymbol{\chi}_A^\perp)\cdot\boldsymbol{\zeta}
-\end{equation}
-This can be used in combination with both conservation of linear momentum and conservation of angular momentum. Or, we can isolate the independent linear portion:
-\begin{equation}(\boldsymbol{v}_A+\Delta\boldsymbol{v}_A-\boldsymbol{v}_B-\Delta\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}=\varepsilon(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
-\begin{equation}\left(\frac{1}{m_A}\boldsymbol{J}_R+\frac{1}{m_B}\boldsymbol{J}_R\right)\cdot\boldsymbol{\zeta}=(1+\varepsilon)(\boldsymbol{v}_B-\boldsymbol{v}_A)\cdot\boldsymbol{\zeta}\end{equation}
-\begin{equation}\boldsymbol{J}_R\cdot\boldsymbol{\zeta}=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)(\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\end{equation}
-\begin{equation}\boldsymbol{J}_R=-\frac{m_Am_B}{m_A+m_B}(1+\varepsilon)\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}\end{equation}
-\begin{equation}\boldsymbol{J}_R=-\frac{1+\varepsilon}{\|\boldsymbol{\zeta}\|^2\left(m_A^{-1}+m_B^{-1}\right)}\left((\boldsymbol{v}_A-\boldsymbol{v}_B)\cdot\boldsymbol{\zeta}\right)\boldsymbol{\zeta}\end{equation}
-And only now compute the angular impulse applied:
+\begin{equation}\varepsilon=-\frac{\boldsymbol{v}^*_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}}{\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}}\implies\boldsymbol{v}^*_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}=-\varepsilon\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}\end{equation}
+\begin{equation}\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}+\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}=-\varepsilon\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}\implies\Delta\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}=-(1+\varepsilon)\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\boldsymbol{\zeta}\end{equation}
+Plugging the effective mass in:
+\begin{equation}\frac{j}{m_{\eff}}=-(1+\varepsilon)\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\braket{\boldsymbol{\zeta}}\implies j=\max(-m_{\eff}(1+\varepsilon)\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\braket{\boldsymbol{\zeta}}, 0)\end{equation}
+\begin{equation}\boldsymbol{J}_R=\max\left(-m_{\eff}(1+\varepsilon)\left(\boldsymbol{v}_{AB,\boldsymbol{\chi}}\cdot\braket{\boldsymbol{\zeta}}\right), 0\right)\braket{\boldsymbol{\zeta}}\end{equation}
+As for the angular impulse:
 \begin{equation}H_R=\boldsymbol{\chi}\times\boldsymbol{J}_R\end{equation}
 
 \subsubsection{Restitution contribution against a static object}
-Suppose $B$ is a static body, i.e. $m_B=\infty$, $\boldsymbol{v_B}=\boldsymbol{0}$.
-\begin{equation}\boldsymbol{J}_R=-m_A(1+\varepsilon)\left(\boldsymbol{v}_A\cdot\braket{\boldsymbol{\zeta}}\right)\braket{\boldsymbol{\zeta}}=-\frac{m_A(1+\varepsilon)}{\|\boldsymbol{\zeta}\|^2}\left(\boldsymbol{v}_A\cdot\boldsymbol{\zeta}\right)\boldsymbol{\zeta}\end{equation}
+Suppose $B$ is a static body, i.e. $m_B=\infty$, $I_B=\infty$, $\boldsymbol{v_B}=\boldsymbol{0}$, and $\omega_B=0$. Then:
+\begin{equation}\boldsymbol{v}_{AB,\boldsymbol{\chi}}=\boldsymbol{v}_A+\omega_A\boldsymbol{\chi}_A^\perp\end{equation}
+\begin{equation}m_{\eff}=\left(\frac{1}{m_A}+\frac{\left(\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)^2}{I_A}\right)^{-1}=\frac{m_AI_A}{I_A+m_A\left(\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)^2}\end{equation}
+\begin{equation}\boldsymbol{J}_R=-\frac{m_AI_A(1+\varepsilon)\left(\boldsymbol{v}_A\cdot\braket{\boldsymbol{\zeta}}+\omega_A\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)}{I_A+m_A\left(\boldsymbol{\chi}_A\times\braket{\boldsymbol{\zeta}}\right)^2}\braket{\boldsymbol{\zeta}}\end{equation}
 
 \subsubsection{Friction contribution}
-The restitution impulse acts as an instantaneous normal force, which causes friction. First, define the following notation:
-\begin{equation}\boldsymbol{T}_{\boldsymbol{u}}(\boldsymbol{v})=\braket{\boldsymbol{v}-(\boldsymbol{v}\cdot\braket{\boldsymbol{u}})\braket{\boldsymbol{u}}}\end{equation}
-Then:
-\begin{equation}\boldsymbol{J}_f=-\mu\|\boldsymbol{N}\Delta t\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_A-\boldsymbol{v}_B)=-\mu\left\|\boldsymbol{J}_R\right\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_A-\boldsymbol{v}_B)\end{equation}
+The restitution impulse acts as an instantaneous normal force, which causes friction.
+\begin{equation}\|\boldsymbol{J}_f\|\leq\mu\|\boldsymbol{N}\Delta t\|=\mu\left\|\boldsymbol{J}_R\right\|\end{equation}
+Define the following notation:
+\begin{equation}\boldsymbol{T}_{\boldsymbol{u}}(\boldsymbol{v})=\boldsymbol{v}-(\boldsymbol{v}\cdot\braket{\boldsymbol{u}})\braket{\boldsymbol{u}}\end{equation}
+Then, if $\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_{AB,\boldsymbol{\chi}})\approx\boldsymbol{0}$, static or rolling friction will apply. Otherwise kinetic friction applies. In either case:
+\begin{equation}\braket{\boldsymbol{J}_f}=-\braket{\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_{AB,\boldsymbol{\chi}}^*)}\end{equation}
+Where the (*) velocity is determined by non-friction forces. But the body cannot move in the direction of friction. In fact, if $\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_{AB,\boldsymbol{\chi}}^*)\approx\boldsymbol{0}$, then $\boldsymbol{J}_f=\boldsymbol{0}$. Otherwise,
+\begin{equation}\frac{1}{m_{\eff}}\|\boldsymbol{J}_f\|\leq\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_{AB,\boldsymbol{\chi}}^*)\|\end{equation}
+\begin{equation}\implies\|\boldsymbol{J}_f\|=\min(\mu\|\boldsymbol{J}_R\|, m_{\eff}\|\boldsymbol{T}_{\boldsymbol{\zeta}}(\boldsymbol{v}_{AB,\boldsymbol{\chi}}^*)\|)\end{equation}
 Just like with restitution, combine $\mu_A$ with $\mu_B$ ($\mu=\sqrt{\mu_A\mu_B}$ is the recommended strategy). There is also an angular impulse contribution:
 \begin{equation}H_f=\boldsymbol{\chi}\times\boldsymbol{J}_f\end{equation}
 
@@ -217,107 +252,12 @@ Note that this is used for positioning when resolution bias is 1. In full:
 \begin{equation}\Delta\omega=\Delta\omega_\Psi+\frac{1}{I}\boldsymbol{\chi}\times\boldsymbol{J}_C\end{equation}
 
 \subsubsection{Multiplicative acceleration due to drag}
-\begin{equation}\boldsymbol{F}_\delta=-\delta\boldsymbol{v}\implies m\frac{d\boldsymbol{v}}{dt}=-\delta\boldsymbol{v}\implies\boldsymbol{v}=\boldsymbol{C}e^{-\frac{\delta}{m}t}\end{equation}
+\begin{equation}\frac{d\boldsymbol{v}}{dt}=-\delta\boldsymbol{v}\implies\boldsymbol{v}=\boldsymbol{C}e^{-\delta t}\end{equation}
 Velocity on next frame ($\boldsymbol{v}^*$) due to drag is:
-\begin{equation}\boldsymbol{v}^*=\boldsymbol{C}e^{-\frac{\delta}{m}(t+\Delta t)}=\boldsymbol{C}e^{-\frac{\delta}{m}t}e^{-\frac{\delta}{m}\Delta t}=\boldsymbol{v}e^{-\frac{\delta}{m}\Delta t}\end{equation}
-\begin{equation}(\boldsymbol{v}^*/\boldsymbol{v})_\delta=e^{-\frac{\delta}{m}\Delta t}\end{equation}
+\begin{equation}\boldsymbol{v}^*=\boldsymbol{C}e^{-\delta(t+\Delta t)}=\boldsymbol{C}e^{-\delta t}e^{-\delta\Delta t}=\boldsymbol{v}e^{-\delta\Delta t}\end{equation}
+\begin{equation}(\boldsymbol{v}^*/\boldsymbol{v})_\delta=e^{-\delta\Delta t}\end{equation}
 Therefore, unlike adding $\Delta\boldsymbol{v}$ to velocity like with standard acceleration, multiply by $\boldsymbol{v}^*/\boldsymbol{v}$. Likewise;
-\begin{equation}(\omega^*/\omega)_\sigma=e^{-\frac{\sigma}{I}\Delta t}\end{equation}
-
-\subsection{Dynamics response for multiple collisions}
-Suppose there is a set of collisions $\{(\boldsymbol{\zeta}_i,\boldsymbol{\chi}_i)\}_{i=1}^N$. Then the active body has mass $m_0$, velocity $\boldsymbol{v}_0$, and restitution $\varepsilon_0$. Every other body has mass $m_i$, velocity $\boldsymbol{v}_i$, and restitution $\varepsilon_i$. Let $\varepsilon_0^i=\min(\varepsilon_0,\varepsilon_i)$ or whatever other strategy is used. Then there are $N$ equations:
-\begin{equation}\varepsilon_0^i=-\frac{(\boldsymbol{v}_i^*-\boldsymbol{v}_0^*)\cdot\boldsymbol{\zeta}_i}{(\boldsymbol{v}_i-\boldsymbol{v}_0)\cdot\boldsymbol{\zeta}_i}\implies(\boldsymbol{v}_i^*-\boldsymbol{v}_0^*)\cdot\boldsymbol{\zeta}_i=-\varepsilon_0^i(\boldsymbol{v}_i-\boldsymbol{v}_0)\cdot\boldsymbol{\zeta}_i\end{equation}
-\begin{equation}\implies(\Delta\boldsymbol{v}_0-\Delta\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i=-(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i\end{equation}
-There is also the full conservation of momentum:
-\begin{equation}\sum_{i=0}^Nm_i\Delta\boldsymbol{v}_i=\boldsymbol{0}\end{equation}
-Let $\boldsymbol{J}_i$ be the impulse applied by object $i$:
-\begin{equation}\boldsymbol{J}_i=-m_i\Delta\boldsymbol{v}_i=j_i\braket{\boldsymbol{\zeta}_i}\end{equation}
-Then via the conservation of momentum,
-\begin{equation}m_0\Delta\boldsymbol{v}_0=\boldsymbol{J}_0=\sum_{i=1}^N\boldsymbol{J}_i\end{equation}
-Plugging back into the elasticity equations:
-\begin{equation}(\frac{1}{m_0}\boldsymbol{J}_0-\frac{1}{m_i}\boldsymbol{J}_i)\cdot\boldsymbol{\zeta}_i=-(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\boldsymbol{\zeta}_i\end{equation}
-\begin{equation}(m_i\boldsymbol{J}_0-m_0\boldsymbol{J}_i)\cdot\braket{\boldsymbol{\zeta}_i}=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
-\begin{equation}m_i\boldsymbol{J}_0\cdot\braket{\boldsymbol{\zeta}_i}-m_0\boldsymbol{J}_i\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
-\begin{equation}m_i\sum_{k=1}^N\boldsymbol{J}_k\cdot\braket{\boldsymbol{\zeta}_i}-m_0j_i=C_i\end{equation}
-\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
-This is now a linear system of $N$ equations. Define $\boldsymbol{j}=[j_i]_{i=1}^N$, and
-\begin{equation}C_i=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
-\begin{equation}M_{rc}=\begin{cases}m_r-m_0&\mbox{if }r=c\\m_r\braket{\boldsymbol{\zeta}_r}\cdot\braket{\boldsymbol{\zeta}_c}&\mbox{otherwise}\end{cases}\end{equation}
-Then:
-\begin{equation}M\boldsymbol{j}=\boldsymbol{C}\implies\boldsymbol{j}=M^{-1}\boldsymbol{C}\implies j_i=[M^{-1}\boldsymbol{C}]_i\end{equation}
-So the overall impulse is calculated as:
-\begin{equation}\boldsymbol{J}_R=\boldsymbol{J}_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\braket{\boldsymbol{\zeta}_i}\end{equation}
-\begin{equation}H_R=H_0=\sum_{i=1}^N[M^{-1}\boldsymbol{C}]_i\boldsymbol{\chi}_i\times\braket{\boldsymbol{\zeta}_i}\end{equation}
-For the sake of potential numerical inconsistencies, clamp $j_i\geq0$.
-
-\subsubsection{Static bodies}
-Suppose body $\beta$ is static. Then we know that the impulse exterted by it on the active body is:
-\begin{equation}j_\beta=-m_0(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
-Thus, this can be simplified for $i\neq\beta$:
-\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i\end{equation}
-\begin{equation}(m_i-m_0)j_i+m_i\sum_{k=1,k\neq i,k\neq\beta}^Nj_k\braket{\boldsymbol{\zeta}_k}\cdot\braket{\boldsymbol{\zeta}_i}=C_i-m_ij_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}\end{equation}
-Equivalently, undergo the normal procedure excluding all static bodies, but swap $\boldsymbol{C}$ for $\boldsymbol{C}'$:
-\begin{equation}C_i'=C_i-m_i\sum_\beta j_\beta\braket{\boldsymbol{\zeta}_\beta}\cdot\braket{\boldsymbol{\zeta}_i}=C_i+m_0m_i\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
-\begin{equation}C_i'=-m_0m_i(1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}+m_0m_i\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\end{equation}
-\begin{equation}C_i'=-m_0m_i\left((1+\varepsilon_0^i)(\boldsymbol{v}_0-\boldsymbol{v}_i)\cdot\braket{\boldsymbol{\zeta}_i}-\sum_\beta(1+\varepsilon_0^\beta)\left(\boldsymbol{v}_0\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\left(\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_\beta}\right)\right)\end{equation}
-
-\subsubsection{Friction}
-Each individual friction impulse is:
-\begin{equation}\boldsymbol{J}_{i,f}=-\mu_0^i\|\boldsymbol{N}_i\Delta t\|\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)=-\mu_0^i\left\|\boldsymbol{J}_{i,R}\right\|\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)=-\mu_0^ij_i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
-So:
-\begin{equation}\boldsymbol{J}_f=-\sum_{i=1}^N\mu_0^ij_i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
-\begin{equation}\boldsymbol{J}_C=\boldsymbol{J}_R+\boldsymbol{J}_f\end{equation}
-\begin{equation}H_f=-\sum_{i=1}^N\mu_0^ij_i\boldsymbol{\chi}_i\times\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\end{equation}
-\begin{equation}H_C=H_R+H_f=\sum_{i=1}^Nj_i\boldsymbol{\chi}_i\times\left(\braket{\boldsymbol{\zeta}_i}-\mu_0^i\boldsymbol{T}_{\boldsymbol{\zeta}_i}(\boldsymbol{v}_0-\boldsymbol{v}_i)\right)\end{equation}
-
-\subsubsection{Inverting the impulse matrix}
-Recall the definition of the impulse matrix:
-\begin{equation}M_{rc}=\begin{cases}m_r-m_0&\mbox{if }r=c\\m_r\braket{\boldsymbol{\zeta}_r}\cdot\braket{\boldsymbol{\zeta}_c}&\mbox{otherwise}\end{cases}\end{equation}
-Equivalently,
-\begin{equation}M=DZ-m_0I\end{equation}
-where:
-\begin{equation}D_{ij}=\delta_i^jm_i,\quad Z_{ij}=\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}\end{equation}
-$Z$ can be written as:
-\begin{equation}Z=EE^T\end{equation}
-where $E\in\mathbb{R}^{N\times2}$ with rows $\braket{\boldsymbol{\zeta}_i}^T$. Thus, $Z$ is a symmetric, positive semi-definite matrix of rank at most 2. So:
-\begin{equation}M=DEE^T-m_0I=-m_0I+DEI_2E^T\end{equation}
-The \textit{Woodbury matrix identity} states that:
-\begin{equation}(A+UBV)^{-1}=A^{-1}-A^{-1}U(B^{-1}+VA^{-1}U)^{-1}VA^{-1}\end{equation}
-where $A$ and $B$ are invertible matrices. In our situation, let $A=-m_0I$, $U=DE$, $B=I_2$, and $V=E^T$. Then:
-\begin{equation}M^{-1}=(-m_0I)^{-1}-(-m_0I)^{-1}DE(I_2^{-1}+E^T(-m_0I)^{-1}DE)^{-1}E^T(-m_0I)^{-1}\end{equation}
-\begin{equation}M^{-1}=-\frac{1}{m_0}\left(I+DE(m_0I_2-E^TDE)^{-1}E^T\right)\end{equation}
-We can further simplify this using component notation:
-\begin{equation}[DE]_{ij}=\sum_{k=1}^ND_{ik}E_{kj}=\sum_{k=1}^Nm_i\delta_i^k\braket{\boldsymbol{\zeta}_k}_j=m_i\braket{\boldsymbol{\zeta}_i}_j\end{equation}
-\begin{equation}[E^TDE]_{ij}=\sum_{k=1}^N[E^T]_{ik}[DE]_{kj}=\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j\end{equation}
-\begin{equation}[m_0I_2-E^TDE]_{ij}=m_0\delta_i^j+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j\end{equation}
-\begin{equation}\det(m_0I_2-E^TDE)=\left(m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_1^2\right)\left(m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_2^2\right)-\left(\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_k}_2\right)^2\end{equation}
-\begin{equation}\det(m_0I_2-E^TDE)=m_0^2+m_0\sum_{k=1}^Nm_k+\sum_{k=1}^N\sum_{l=1}^Nm_km_l\left(\braket{\boldsymbol{\zeta}_k}_1^2\braket{\boldsymbol{\zeta}_l}_2^2-\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_k}_2\braket{\boldsymbol{\zeta}_l}_1\braket{\boldsymbol{\zeta}_l}_2\right)\end{equation}
-\begin{equation}\boxed{\Gamma:=\det(m_0I_2-E^TDE)=m_0^2+m_0\sum_{k=1}^Nm_k+\sum_{k=1}^N\sum_{l=1}^Nm_km_l\braket{\boldsymbol{\zeta}_k}_1\braket{\boldsymbol{\zeta}_l}_2(\braket{\boldsymbol{\zeta}_k}\times\braket{\boldsymbol{\zeta}_l})}\end{equation}
-\begin{equation}[m_0I_2-E^TDE]^{-1}_{ij}=\frac{1}{\Gamma}\begin{cases}m_0+\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-i}^2&\mbox{if }i=j\\-\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_i\braket{\boldsymbol{\zeta}_k}_j&\mbox{otherwise}\end{cases}\end{equation}
-\begin{equation}[(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\sum_{k=1}^2[(m_0I_2-E^TDE)^{-1}]_{ik}\braket{\boldsymbol{\zeta}_j}_k\end{equation}
-\begin{equation}[(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{1}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_j}_i+(-1)^{i-1}\braket{\boldsymbol{\zeta}_j}\times\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-i}\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
-\begin{equation}[DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{m_i}{\Gamma}\left(m_0\sum_{l=1}^2\braket{\boldsymbol{\zeta}_i}_l\braket{\boldsymbol{\zeta}_j}_l+\sum_{l=1}^2(-1)^{l-1}\braket{\boldsymbol{\zeta}_i}_l\braket{\boldsymbol{\zeta}_j}\times\sum_{k=1}^Nm_k\braket{\boldsymbol{\zeta}_k}_{3-l}\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
-\begin{equation}[DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\frac{m_i}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\end{equation}
-\begin{equation}[I+DE(m_0I_2-E^TDE)^{-1}E^T]_{ij}=\delta_i^j+\frac{m_i}{\Gamma}\left(m_0\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}+\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)\end{equation}
-\begin{equation}\boxed{[M^{-1}]_{ij}=-\frac{\delta_i^j}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_j}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_j}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)}\end{equation}
-
-\noindent With the inverse, we can solve directly for $\boldsymbol{j}$:
-\begin{equation}\boldsymbol{j}=M^{-1}\boldsymbol{C}\end{equation}
-\begin{equation}j_i=[M^{-1}\boldsymbol{C}]_i=\sum_{u=1}^N[M^{-1}]_{iu}C_u\end{equation}
-\begin{equation}j_i=\sum_{u=1}^N\left(-\frac{\delta_i^u}{m_0}-\frac{m_i\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_u}}{\Gamma}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_u}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\right)C_u\end{equation}
-\begin{equation}j_i=-\frac{C_i}{m_0}-\frac{m_i}{\Gamma}\sum_{u=1}^NC_u\braket{\boldsymbol{\zeta}_i}\cdot\braket{\boldsymbol{\zeta}_u}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\sum_{u=1}^NC_u\left(\braket{\boldsymbol{\zeta}_u}\times\braket{\boldsymbol{\zeta}_k}\right)\end{equation}
-Let
-\begin{equation}\mathcal{C}:=\sum_{i=1}^NC_i\braket{\boldsymbol{\zeta}_i}\end{equation}
-Then:
-\begin{equation}\boxed{j_i=-\frac{C_i}{m_0}-\frac{m_i}{\Gamma}\mathcal{C}\cdot\braket{\boldsymbol{\zeta}_i}-\frac{m_i}{\Gamma m_0}\sum_{k=1}^Nm_k\left(\braket{\boldsymbol{\zeta}_i}\times\braket{\boldsymbol{\zeta}_k}\right)\left(\mathcal{C}\times\braket{\boldsymbol{\zeta}_k}\right)}\end{equation}
-
-\subsubsection{Corrective positioning}
-Previously, we defined:
-\begin{equation}\Delta\boldsymbol{x}_T=\boldsymbol{\zeta}\end{equation}
-\begin{equation}\Delta\theta_T=\frac{m}{I}\boldsymbol{\chi}\times\boldsymbol{\zeta}\end{equation}
-Given multiple collisions, the accumulation can be used:
-\begin{equation}\Delta\boldsymbol{x}_T=\sum_{i=1}^N\boldsymbol{\zeta}_i\end{equation}
-\begin{equation}\Delta\theta_T=\frac{m}{I}\sum_{i=1}^N\boldsymbol{\chi}_i\times\boldsymbol{\zeta}_i\end{equation}
+\begin{equation}(\omega^*/\omega)_\sigma=e^{-\sigma\Delta t}\end{equation}
 
 \subsection{Moment of Inertia}
 

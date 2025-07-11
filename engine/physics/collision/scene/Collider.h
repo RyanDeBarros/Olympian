@@ -41,6 +41,8 @@ namespace oly::col2d
 		};
 	}
 
+	// TODO some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only.
+
 	class Collider
 	{
 		// LATER movable/static Colliders for optimization in CollisionTree flushing.

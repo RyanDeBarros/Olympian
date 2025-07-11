@@ -65,6 +65,7 @@ namespace oly
 	using BoundedUInt = BoundedValue<unsigned int, Min, Max>;
 
 	using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
+	using StrictlyPositiveFloat = BoundedFloat<0.000001f, nmax<float>()>;
 }
 
 template<>

@@ -79,6 +79,8 @@ namespace oly::col2d
 		return axes;
 	}
 
+	// TODO candidate axes for circle is axis from center to closest point on entire other compound, not for each subelement of the other compound.
+
 	static std::set<UnitVector2D> candidate_axes(const Circle& c, const ElementParam& other)
 	{
 		static const auto closest_point_on_polygon = [](const auto& points, glm::vec2 center) -> glm::vec2 {
@@ -222,6 +224,10 @@ namespace oly::col2d
 			static_max_proj = std::max(static_max_proj, projection_max(axis, param(static_elements[i])));
 		return static_max_proj - active_min_proj;
 	}
+
+	// TODO optimize compound_collision/compound_contact so that candidate axes are processed as separation is calculated, rather than bulk storing the axes. That way, could exit early if separation is < 0.
+	// TODO further optimize by increasing tolerance in merge_axes. The tolerance can depend on the size/complexity of elements. Other factors could be, distance between positions (if transform elements), whether or not the compounds previously overlapped, etc. 1 degrees should be a good baseline. Make an engine setting for it.
+	// TODO However, it's a good idea to always allow exact cardinal/45deg axes.
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
