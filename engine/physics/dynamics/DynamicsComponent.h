@@ -161,9 +161,7 @@ namespace oly::physics
 	class DynamicsComponent
 	{
 		mutable State state;
-		// TODO possibly only need one vector
-		mutable std::vector<CollisionResponse> static_collisions;
-		mutable std::vector<CollisionResponse> kinematic_collisions;
+		mutable std::vector<CollisionResponse> collisions;
 
 	public:
 		// TODO use handle to Material registry.
@@ -173,15 +171,17 @@ namespace oly::physics
 		enum class Flag
 		{
 			STATIC,
-			KINEMATIC
+			KINEMATIC,
+			LINEAR
 		} flag = Flag::STATIC;
 
 		void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;
 
 		void on_tick() const;
 		State get_state() const { return state; }
+		void sync_state(const glm::mat3& global);
 
-		bool is_colliding() const { return !static_collisions.empty() || !kinematic_collisions.empty(); }
+		bool is_colliding() const { return !collisions.empty(); }
 
 	private:
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;

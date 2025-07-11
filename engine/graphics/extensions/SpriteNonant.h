@@ -7,8 +7,9 @@ namespace oly::rendering
 {
 	class SpriteNonant
 	{
-		// TODO use fixed vector. SpriteNonant is almost 2000 bytes!
-		mutable Sprite sprites[3][3];
+		mutable FixedVector<Sprite> sprites;
+
+		Sprite& sprite(unsigned char x, unsigned char y) const;
 
 		glm::vec2 nsize{};
 		glm::vec2 regular_dimensions{};
@@ -30,8 +31,6 @@ namespace oly::rendering
 
 	public:
 		SpriteNonant();
-		SpriteNonant(const SpriteNonant&);
-		SpriteNonant& operator=(const SpriteNonant&);
 
 		void draw() const;
 

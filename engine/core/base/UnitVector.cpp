@@ -2,8 +2,6 @@
 
 namespace oly
 {
-	// TODO { 1.0f, 0.0f } should be smallest, not largest.
-
 	bool UnitVector2D::operator<(const UnitVector2D& rhs) const
 	{
 		if (above_zero(_direction.y))
@@ -12,6 +10,8 @@ namespace oly
 				return true;
 			else if (above_zero(rhs._direction.y))
 				return _direction.x > rhs._direction.x;
+			else if (rhs._direction.x == 1.0f)
+				return false;
 			else
 				return rhs._direction.x < 0.0f;
 		}
@@ -24,6 +24,8 @@ namespace oly
 			else
 				return false;
 		}
+		else if (_direction.x == 1.0f)
+			return true;
 		else
 		{
 			if (above_zero(rhs._direction.y))

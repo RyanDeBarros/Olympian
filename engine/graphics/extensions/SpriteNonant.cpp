@@ -4,43 +4,23 @@
 
 namespace oly::rendering
 {
+	Sprite& SpriteNonant::sprite(unsigned char x, unsigned char y) const
+	{
+		return sprites[3 * y + x];
+	}
+
 	SpriteNonant::SpriteNonant()
+		: sprites(9)
 	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
 			{
-				sprites[i][j].transformer.attach_parent(&transformer);
+				sprite(x, y).transformer.attach_parent(&transformer);
 				PivotTransformModifier2D modifier;
-				modifier.pivot.x = -0.5f * j + 1.0f;
-				modifier.pivot.y = -0.5f * i + 1.0f;
-				sprites[i][j].transformer.set_modifier() = move_unique(std::move(modifier));
+				modifier.pivot.x = -0.5f * x + 1.0f;
+				modifier.pivot.y = -0.5f * y + 1.0f;
+				sprite(x, y).transformer.set_modifier() = move_unique(std::move(modifier));
 			}
-	}
-
-	SpriteNonant::SpriteNonant(const SpriteNonant& other)
-		: transformer(other.transformer), regular_dimensions(other.regular_dimensions), regular_uvs(other.regular_uvs),
-		offsets(other.offsets), regular_modulation(other.regular_modulation)
-	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j] = other.sprites[i][j];
-	}
-
-	SpriteNonant& SpriteNonant::operator=(const SpriteNonant& other)
-	{
-		if (this != &other)
-		{
-			for (int i = 0; i < 3; ++i)
-				for (int j = 0; j < 3; ++j)
-					sprites[i][j] = other.sprites[i][j];
-
-			transformer = other.transformer;
-			regular_dimensions = other.regular_dimensions;
-			regular_uvs = other.regular_uvs;
-			offsets = other.offsets;
-			regular_modulation = other.regular_modulation;
-		}
-		return *this;
 	}
 
 	void SpriteNonant::draw() const
@@ -56,9 +36,9 @@ namespace oly::rendering
 			sync_modulation();
 			dirty.modulation = false;
 		}
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].draw();
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).draw();
 	}
 
 	void SpriteNonant::copy_sprite_attributes(const Sprite& sprite)
@@ -69,9 +49,9 @@ namespace oly::rendering
 		// set texture
 		glm::vec2 dimensions;
 		auto texture = sprite.get_texture(dimensions);
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_texture(texture, dimensions);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				this->sprite(x, y).set_texture(texture, dimensions);
 		regular_dimensions = dimensions;
 		nsize = regular_dimensions;
 
@@ -87,9 +67,9 @@ namespace oly::rendering
 
 	void SpriteNonant::set_texture(const std::string& texture_file, unsigned int texture_index)
 	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_texture(texture_file, texture_index);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_texture(texture_file, texture_index);
 		regular_dimensions = context::get_texture_dimensions(texture_file, texture_index);
 		nsize = regular_dimensions;
 		dirty.grid = true;
@@ -97,9 +77,9 @@ namespace oly::rendering
 
 	void SpriteNonant::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index)
 	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_texture(texture_file, svg_scale, texture_index);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_texture(texture_file, svg_scale, texture_index);
 		regular_dimensions = context::get_texture_dimensions(texture_file, texture_index);
 		nsize = regular_dimensions;
 		dirty.grid = true;
@@ -107,9 +87,9 @@ namespace oly::rendering
 
 	void SpriteNonant::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
 	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_texture(texture, dimensions);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_texture(texture, dimensions);
 		regular_dimensions = dimensions;
 		nsize = regular_dimensions;
 		dirty.grid = true;
@@ -135,20 +115,20 @@ namespace oly::rendering
 	
 	void SpriteNonant::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_frame_format(anim);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_frame_format(anim);
 	}
 
 	graphics::BindlessTextureRes SpriteNonant::get_texture() const
 	{
-		return sprites[0][0].get_texture();
+		return sprite(0, 0).get_texture();
 	}
 
 	graphics::BindlessTextureRes SpriteNonant::get_texture(glm::vec2& dimensions) const
 	{
 		dimensions = regular_dimensions;
-		return sprites[0][0].get_texture();
+		return sprite(0, 0).get_texture();
 	}
 
 	math::Rect2D SpriteNonant::get_tex_coords() const
@@ -163,7 +143,7 @@ namespace oly::rendering
 
 	graphics::AnimFrameFormat SpriteNonant::get_frame_format() const
 	{
-		return sprites[0][0].get_frame_format();
+		return sprite(0, 0).get_frame_format();
 	}
 
 	void SpriteNonant::set_x_left_offset(float xoff)
@@ -252,9 +232,9 @@ namespace oly::rendering
 		// set texture
 		glm::vec2 dimensions;
 		auto texture = copy.get_texture(dimensions);
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				sprites[i][j].set_texture(texture, dimensions);
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_texture(texture, dimensions);
 		regular_dimensions = dimensions;
 		nsize = regular_dimensions;
 
@@ -298,15 +278,15 @@ namespace oly::rendering
 		float xpos[3]{ -0.5f * widths[1], 0.0f, 0.5f * widths[1] };
 		float ypos[3]{ -0.5f * heights[1], 0.0f, 0.5f * heights[1] };
 
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
 			{
-				sprites[i][j].set_tex_coords(math::Rect2D{ .x1 = xuvs[j], .x2 = xuvs[j + 1], .y1 = yuvs[i], .y2 = yuvs[i + 1] });
-				glm::vec2 size = { widths[j], heights[i] };
-				sprites[i][j].transformer.ref_modifier<PivotTransformModifier2D>().size = size;
-				Transform2D& local = sprites[i][j].set_local();
+				sprite(x, y).set_tex_coords(math::Rect2D{.x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1]});
+				glm::vec2 size = { widths[x], heights[y] };
+				sprite(x, y).transformer.ref_modifier<PivotTransformModifier2D>().size = size;
+				Transform2D& local = sprite(x, y).set_local();
 				local.scale = size / regular_dimensions;
-				local.position = glm::vec2{ xpos[j], ypos[i] };
+				local.position = glm::vec2{ xpos[x], ypos[y] };
 			}
 
 		sync_modulation();
@@ -317,15 +297,15 @@ namespace oly::rendering
 		float xcuvs[4]{ 0.0f, offsets.x_left / nsize.x, 1.0f - offsets.x_right / nsize.x, 1.0f };
 		float ycuvs[4]{ 0.0f, offsets.y_bottom / nsize.y, 1.0f - offsets.y_top / nsize.y, 1.0f };
 
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
 			{
 				ModulationRect mod;
-				mod.colors[0] = regular_modulation.mix({ xcuvs[j]    , ycuvs[i]     });
-				mod.colors[1] = regular_modulation.mix({ xcuvs[j + 1], ycuvs[i]     });
-				mod.colors[2] = regular_modulation.mix({ xcuvs[j + 1], ycuvs[i + 1] });
-				mod.colors[3] = regular_modulation.mix({ xcuvs[j]    , ycuvs[i + 1] });
-				sprites[i][j].set_modulation(mod);
+				mod.colors[0] = regular_modulation.mix({ xcuvs[x]    , ycuvs[y]     });
+				mod.colors[1] = regular_modulation.mix({ xcuvs[x + 1], ycuvs[y]     });
+				mod.colors[2] = regular_modulation.mix({ xcuvs[x + 1], ycuvs[y + 1] });
+				mod.colors[3] = regular_modulation.mix({ xcuvs[x]    , ycuvs[y + 1] });
+				sprite(x, y).set_modulation(mod);
 			}
 	}
 }

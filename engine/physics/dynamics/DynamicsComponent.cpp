@@ -166,22 +166,19 @@ namespace oly::physics
 
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
 	{
-		if (dynamics.flag == Flag::STATIC)
-			static_collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
-		else if (dynamics.flag == Flag::KINEMATIC)
-			kinematic_collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
+		collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
 	}
 
 	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
 
 	void DynamicsComponent::on_tick() const
 	{
-		if (flag == Flag::KINEMATIC)
+		if (flag != Flag::STATIC)
 		{
 			// 1. update velocity from non-collision stimuli
 
 			glm::vec2 new_linear_velocity = state.linear_velocity + properties.dv_psi();
-			float new_angular_velocity = state.angular_velocity + properties.dw_psi();
+			float new_angular_velocity = flag == Flag::KINEMATIC ? state.angular_velocity + properties.dw_psi() : 0.0f;
 
 			// 2. compute collision response
 
@@ -192,14 +189,16 @@ namespace oly::physics
 			// 3. update velocity from collision stimuli
 
 			state.linear_velocity = new_linear_velocity + j_c * properties.mass_inverse();
-			state.angular_velocity = new_angular_velocity + h_c * properties.moi_inverse();
+			if (flag == Flag::KINEMATIC)
+				state.angular_velocity = new_angular_velocity + h_c * properties.moi_inverse();
 
 			// 4. apply drag
 
 			if (material.linear_drag > 0.0f)
 				state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
-			if (material.angular_drag > 0.0f)
-				state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
+			if (flag == Flag::KINEMATIC)
+				if (material.angular_drag > 0.0f)
+					state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
 
 			// 5. update position
 
@@ -211,10 +210,14 @@ namespace oly::physics
 				if (material.resolution_bias < 1.0f)
 				{
 					glm::vec2 dx_t = {};
-					for (const CollisionResponse& collision : static_collisions)
-						dx_t += collision.mtv;
-					for (const CollisionResponse& collision : kinematic_collisions)
-						dx_t += collision.dynamics->properties.mass() * collision.mtv / (properties.mass() + collision.dynamics->properties.mass());
+					for (const CollisionResponse& collision : collisions)
+					{
+						glm::vec2 teleport = collision.mtv;
+						if (collision.dynamics->flag != Flag::STATIC)
+							teleport *= collision.dynamics->properties.mass() / (properties.mass() + collision.dynamics->properties.mass());
+						
+						dx_t += teleport;
+					}
 
 					dx += (1.0f - material.resolution_bias.get()) * dx_t;
 				}
@@ -224,29 +227,35 @@ namespace oly::physics
 
 			state.position += dx;
 
-			// 6. update rotation
-
-			float dtheta = 0.0f;
-			if (is_colliding())
+			if (flag == Flag::KINEMATIC)
 			{
-				if (material.resolution_bias > 0.0f)
-					dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
-				if (material.resolution_bias < 1.0f)
+				// 6. update rotation
+
+				float dtheta = 0.0f;
+				if (is_colliding())
 				{
-					float dtheta_t = 0.0f;
-					for (const CollisionResponse& collision : static_collisions)
-						dtheta_t += math::cross(collision.contact, collision.mtv);
-					for (const CollisionResponse& collision : kinematic_collisions)
-						dtheta_t += properties.mass() * collision.dynamics->properties.mass() * math::cross(collision.contact, collision.mtv) * properties.moi_inverse()
-							/ (properties.mass() + collision.dynamics->properties.mass());
+					if (material.resolution_bias > 0.0f)
+						dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
+					if (material.resolution_bias < 1.0f)
+					{
+						float dtheta_t = 0.0f;
+						for (const CollisionResponse& collision : collisions)
+						{
+							float teleport = math::cross(collision.contact, collision.mtv);
+							if (collision.dynamics->flag != Flag::STATIC)
+								teleport *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass());
 
-					dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
+							dtheta_t += teleport;
+						}
+
+						dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
+					}
 				}
-			}
-			else
-				dtheta += state.angular_velocity * TIME.delta<>();
+				else
+					dtheta += state.angular_velocity * TIME.delta<>();
 
-			state.rotation += dtheta;
+				state.rotation += dtheta;
+			}
 		}
 
 		// 7. clean up
@@ -254,28 +263,48 @@ namespace oly::physics
 		properties.applied_impulses.clear();
 		properties.net_linear_impulse = {};
 		properties.net_angular_impulse = 0.0f;
-		static_collisions.clear();
-		kinematic_collisions.clear();
+		collisions.clear();
+	}
+
+	void DynamicsComponent::sync_state(const glm::mat3& global)
+	{
+		state.position = global[2];
+		state.rotation = UnitVector2D(global[0]).rotation();
 	}
 
 	void DynamicsComponent::compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, const glm::vec2 new_linear_velocity, const float new_angular_velocity) const
 	{
-		// TODO cache kinematic impulse in other dynamics component so it doesn't need to recalculate. use map of pointer->impulse that's cleared after compute_collision_response(). Same goes for resolution bias teleportation and friction.
-
 		linear_impulse = {};
 		angular_impulse = 0.0f;
-		for (const CollisionResponse& collision : static_collisions)
+		for (const CollisionResponse& collision : collisions)
 		{
-			float cross = math::cross(collision.contact, collision.normal);
-			float effective_mass = 1.0f / (properties.mass_inverse() + properties.moi_inverse() * cross * cross);
-			float restitution = material.restitution_with(collision.dynamics->material);
-			float j = -effective_mass * (1.0f + restitution) * collision.normal.dot(linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact));
-			if (j < 0.0f)
-				j = 0.0f;
-			glm::vec2 j_r = j * (glm::vec2)collision.normal;
-			glm::vec2 impulse = j_r;
+			const float cross1 = math::cross(collision.contact, collision.normal);
+			float effective_mass_denominator = properties.mass_inverse() + properties.moi_inverse() * cross1 * cross1;
+			if (collision.dynamics->flag != Flag::STATIC)
+			{
+				const float cross2 = math::cross(state.position + collision.contact - collision.dynamics->state.position, collision.normal);
+				effective_mass_denominator += collision.dynamics->properties.mass_inverse() + collision.dynamics->properties.moi_inverse() * cross2 * cross2;
+			}
+			const float effective_mass = 1.0f / effective_mass_denominator;
 
-			glm::vec2 new_tangent_velocity = collision.normal.normal_project(linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact));
+			glm::vec2 other_contact_velocity = {};
+			if (collision.dynamics->flag != Flag::STATIC)
+				other_contact_velocity = linear_velocity_at(collision.dynamics->state.linear_velocity, collision.dynamics->state.angular_velocity,
+					state.position + collision.contact - collision.dynamics->state.position);
+
+			glm::vec2 relative_velocity = linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact);
+			if (collision.dynamics->flag != Flag::STATIC)
+				relative_velocity -= other_contact_velocity;
+
+			const float restitution = material.restitution_with(collision.dynamics->material);
+			const float j = std::max(-effective_mass * (1.0f + restitution) * collision.normal.dot(relative_velocity), 0.0f);
+			glm::vec2 impulse = j * (glm::vec2)collision.normal;
+
+			glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact);
+			if (collision.dynamics->flag != Flag::STATIC)
+				new_relative_velocity -= other_contact_velocity; // TODO use other's new velocity as well??
+
+			glm::vec2 new_tangent_velocity = collision.normal.normal_project(new_relative_velocity);
 			float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
 			if (!col2d::near_zero(new_tangent_velocity_sqrd))
 			{
@@ -286,37 +315,8 @@ namespace oly::physics
 			}
 
 			linear_impulse += impulse;
-			angular_impulse += math::cross(collision.contact, impulse);
-		}
-		for (const CollisionResponse& collision : kinematic_collisions)
-		{
-			glm::vec2 other_contact = state.position + collision.contact - collision.dynamics->state.position;
-			float cross1 = math::cross(collision.contact, collision.normal);
-			float cross2 = math::cross(other_contact, collision.normal);
-			float effective_mass = 1.0f / (properties.mass_inverse() + collision.dynamics->properties.mass_inverse()
-				+ properties.moi_inverse() * cross1 * cross1 + collision.dynamics->properties.moi_inverse() * cross2 * cross2);
-			float restitution = material.restitution_with(collision.dynamics->material);
-			float j = -effective_mass * (1.0f + restitution) * collision.normal.dot(linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact)
-				- linear_velocity_at(collision.dynamics->state.linear_velocity, collision.dynamics->state.angular_velocity, other_contact));
-			if (j < 0.0f)
-				j = 0.0f;
-			glm::vec2 j_r = j * (glm::vec2)collision.normal;
-			glm::vec2 impulse = j_r;
-
-			glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact)
-				- linear_velocity_at(collision.dynamics->state.linear_velocity, collision.dynamics->state.angular_velocity, other_contact); // TODO use other's new velocity as well??
-			glm::vec2 new_tangent_velocity = collision.normal.normal_project(linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact));
-			float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
-			if (!col2d::near_zero(new_tangent_velocity_sqrd))
-			{
-				float mu = material.friction_with(collision.contact, collision.normal.get_quarter_turn(), state, collision.dynamics->material, collision.dynamics->state);
-				float friction = std::min(mu * j, effective_mass * glm::sqrt(new_tangent_velocity_sqrd));
-				glm::vec2 j_f = -glm::normalize(new_tangent_velocity) * friction;
-				impulse += j_f;
-			}
-
-			linear_impulse += impulse;
-			angular_impulse += math::cross(collision.contact, impulse);
+			if (flag == Flag::KINEMATIC)
+				angular_impulse += math::cross(collision.contact, impulse);
 		}
 	}
 
