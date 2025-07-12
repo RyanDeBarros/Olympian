@@ -11,7 +11,7 @@ namespace oly::rendering
 		Transformer2D _transformer;
 		glm::vec2 start = {}, end = {};
 		float head_width = 3.0f, head_height = 3.0f;
-		glm::vec4 start_color = {}, end_color = {};
+		glm::vec4 start_color = glm::vec4(1.0f), end_color = glm::vec4(1.0f);
 		float width = 1.0f;
 		mutable bool dirty = false;
 		mutable bool can_draw_body = false, can_draw_head = false;
@@ -62,7 +62,7 @@ namespace oly::rendering
 		mutable StaticPolygon body, head;
 		glm::vec2 start = {}, end = {};
 		float head_width = 3.0f, head_height = 3.0f;
-		glm::vec4 start_color = {}, end_color = {};
+		glm::vec4 start_color = glm::vec4(1.0f), end_color = glm::vec4(1.0f);
 		float width = 1.0f;
 		mutable bool dirty = false;
 		mutable bool can_draw_body = false, can_draw_head = false;

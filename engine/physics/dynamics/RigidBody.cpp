@@ -120,6 +120,11 @@ namespace oly::physics
 		colliders[i]->update_view(view, color);
 	}
 
+	void RigidBody::update_view(size_t i, debug::CollisionView& view) const
+	{
+		colliders[i]->update_view(view);
+	}
+
 	void RigidBody::on_tick()
 	{
 		dynamics.sync_state(transformer.global());

@@ -59,6 +59,7 @@ namespace oly::physics
 
 		debug::CollisionView collision_view(size_t i, glm::vec4 color) const;
 		void update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const;
+		void update_view(size_t i, debug::CollisionView& view) const;
 
 		void on_tick();
 

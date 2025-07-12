@@ -24,6 +24,7 @@ namespace oly::col2d::internal
 	extern bool lut_is_dirty(const ColliderObject&);
 	extern debug::CollisionView lut_collision_view(const ColliderObject&, glm::vec4);
 	extern void lut_update_view(debug::CollisionView&, const ColliderObject&, glm::vec4, size_t);
+	extern void lut_update_view_no_color(debug::CollisionView&, const ColliderObject&, size_t);
 
 	extern const Transformer2D& lut_transformer(const ColliderObject&);
 	extern Transformer2D& lut_transformer(ColliderObject&);

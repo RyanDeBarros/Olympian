@@ -3,7 +3,7 @@
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/SAT.h"
 #include "physics/collision/methods/KDOPCollide.h"
-#include "physics/collision/debugging/CollisionView.h"
+#include "physics/collision/debugging/CommonViews.h"
 #include "physics/collision/objects/Capsule.h"
 #include "physics/collision/objects/Combinations.h"
 #include "physics/collision/objects/Polygon.h"
@@ -237,15 +237,16 @@ int main()
 	//oly::debug::CollisionView rect_cast_cv = oly::debug::collision_view(rect_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
-	auto cv_obstacle0 = obstacle0.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	// TODO test obstacles under single combined rigid body
+	auto cv_obstacle0 = obstacle0.collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle0);
-	auto cv_obstacle1 = obstacle1.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	auto cv_obstacle1 = obstacle1.collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle1);
-	auto cv_obstacle2 = obstacle2.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	auto cv_obstacle2 = obstacle2.collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle2);
-	auto cv_obstacle3 = obstacle3.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	auto cv_obstacle3 = obstacle3.collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle3);
-	auto cv_obstacle4 = obstacle4.collision_view(0, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	auto cv_obstacle4 = obstacle4.collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle4);
 
 	auto ground_cv = ground.collision_view(0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
@@ -306,12 +307,12 @@ int main()
 		obstacle3.on_tick();
 		obstacle4.on_tick();
 
-		player.update_view(0, player_cv, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-		obstacle0.update_view(0, cv_obstacle0, oly::colors::BLUE * oly::colors::alpha(0.8f));
-		obstacle1.update_view(0, cv_obstacle1, oly::colors::BLUE * oly::colors::alpha(0.8f));
-		obstacle2.update_view(0, cv_obstacle2, oly::colors::BLUE * oly::colors::alpha(0.8f));
-		obstacle3.update_view(0, cv_obstacle3, oly::colors::BLUE * oly::colors::alpha(0.8f));
-		obstacle4.update_view(0, cv_obstacle4, oly::colors::BLUE * oly::colors::alpha(0.8f));
+		player.update_view(0, player_cv);
+		obstacle0.update_view(0, cv_obstacle0);
+		obstacle1.update_view(0, cv_obstacle1);
+		obstacle2.update_view(0, cv_obstacle2);
+		obstacle3.update_view(0, cv_obstacle3);
+		obstacle4.update_view(0, cv_obstacle4);
 
 		//player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };
