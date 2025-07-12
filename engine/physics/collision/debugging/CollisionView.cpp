@@ -124,6 +124,78 @@ namespace oly::debug
 		view_changed();
 	}
 
+	size_t CollisionView::view_size() const
+	{
+		if (obj.index() == CollisionObjectViewType::EMPTY)
+			return 0;
+		else if (obj.index() == CollisionObjectViewType::SINGLE)
+			return 1;
+		else
+			return std::get<CollisionObjectViewType::GROUP>(obj).size();
+	}
+
+	void CollisionView::resize_view(size_t size)
+	{
+		if (size == 0)
+			clear_view();
+		else if (obj.index() == CollisionObjectViewType::EMPTY)
+		{
+			if (size == 1)
+			{
+				obj = CollisionObject();
+				view_changed();
+			}
+			else if (size > 1)
+			{
+				obj = CollisionObjectGroup(size);
+				view_changed();
+			}
+		}
+		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		{
+			if (size > 1)
+			{
+				CollisionObject old_obj = std::move(std::get<CollisionObjectViewType::SINGLE>(obj));
+				obj = CollisionObjectGroup(size);
+				std::get<CollisionObjectViewType::GROUP>(obj)[0] = std::move(old_obj);
+				view_changed();
+			}
+		}
+		else
+		{
+			if (size == 1)
+			{
+				CollisionObject old_obj = std::move(std::get<CollisionObjectViewType::GROUP>(obj)[0]);
+				obj = std::move(old_obj);
+				view_changed();
+			}
+			else
+			{
+				std::get<CollisionObjectViewType::GROUP>(obj).resize(size);
+				view_changed();
+			}
+		}
+	}
+
+	void CollisionView::set_view(size_t i, CollisionObject&& obj)
+	{
+		if (obj.index() == CollisionObjectViewType::EMPTY || obj.index() == CollisionObjectViewType::SINGLE)
+		{
+			if (i == 0)
+			{
+				this->obj = std::move(obj);
+				view_changed();
+			}
+			else
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		}
+		else
+		{
+			std::get<CollisionObjectViewType::GROUP>(this->obj)[i] = std::move(obj);
+			view_changed();
+		}
+	}
+
 	void CollisionView::merge(CollisionView&& other)
 	{
 		if (other.obj.index() == CollisionObjectViewType::EMPTY)
@@ -171,10 +243,76 @@ namespace oly::debug
 		}
 	}
 
+	const CollisionObject& CollisionView::get_view(size_t i) const
+	{
+		if (obj.index() == CollisionObjectViewType::EMPTY)
+			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		{
+			if (i == 0)
+				return std::get<CollisionObjectViewType::SINGLE>(obj);
+			else
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		}
+		else
+			return std::get<CollisionObjectViewType::GROUP>(obj)[i];
+	}
+
+	CollisionObject& CollisionView::get_view(size_t i)
+	{
+		if (obj.index() == CollisionObjectViewType::EMPTY)
+			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		{
+			if (i == 0)
+				return std::get<CollisionObjectViewType::SINGLE>(obj);
+			else
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		}
+		else
+			return std::get<CollisionObjectViewType::GROUP>(obj)[i];
+	}
+
 	void CollisionView::view_changed() const
 	{
 		for (CollisionLayer* layer : layers)
 			layer->dirty_views = true;
+	}
+
+	void CollisionView::update_color(glm::vec4 color)
+	{
+		static const auto update_color = [](CollisionObject& obj, glm::vec4 color) {
+			std::visit([color](auto&& obj) {
+				if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
+					obj.set_color().fill_outer = color;
+				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticPolygon>)
+				{
+					obj.polygon.colors = { color };
+					obj.send_colors_only();
+				}
+				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
+					obj.set_color(color);
+				}, obj);
+			};
+
+		bool updated = std::visit([color](auto&& obj) -> bool {
+			if constexpr (visiting_class_is<decltype(obj), CollisionObject>)
+			{
+				update_color(obj, color);
+				return true;
+			}
+			else if constexpr (visiting_class_is<decltype(obj), CollisionObjectGroup>)
+			{
+				for (CollisionObject& subobj : obj)
+					update_color(subobj, color);
+				return !obj.empty();
+			}
+			else
+				return false;
+			}, obj);
+
+		if (updated)
+			view_changed();
 	}
 
 	CollisionLayer::WindowResizeHandler::WindowResizeHandler()

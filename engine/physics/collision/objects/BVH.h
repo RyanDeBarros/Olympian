@@ -289,9 +289,9 @@ namespace oly::col2d
 		}
 
 	public:
-		std::vector<std::variant<const Shape*, ElementParam>> build_layer(size_t at_depth) const
+		std::vector<ElementParam> build_layer(size_t at_depth) const
 		{
-			std::vector<std::variant<const Shape*, ElementParam>> layer;
+			std::vector<ElementParam> layer;
 			DoubleBuffer<const Node*> nodes;
 			nodes.back.push_back(&root());
 
@@ -318,7 +318,7 @@ namespace oly::col2d
 				if (node->is_leaf())
 					layer.push_back(param(elements[node->start_index]));
 				else
-					layer.push_back(&*node->shape);
+					layer.push_back(param(*node->shape));
 			}
 			return layer;
 		}
@@ -520,7 +520,7 @@ namespace oly::col2d
 		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
 		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
 
-		std::vector<std::variant<const Shape*, ElementParam>> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
+		std::vector<ElementParam> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
 
 		float projection_max(const UnitVector2D& axis) const
 		{

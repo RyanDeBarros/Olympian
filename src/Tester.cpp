@@ -152,7 +152,7 @@ int main()
 	player.material().resolution_bias = 0.5f;
 
 	player.add_collider(star.as_convex_tcompound());
-	player.collider()->layer() |= CollisionLayers::L_PLAYER; // TODO put get_layer/set_layer/get_mask/set_mask on Collider. it should not set the dirty flag.
+	player.collider()->layer() |= CollisionLayers::L_PLAYER;
 	player.collider()->mask() |= CollisionMasks::M_OBSTACLE;
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();

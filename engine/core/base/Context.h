@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/base/SimpleMath.h"
 #include "core/platform/Platform.h"
 #include "core/platform/WindowResize.h"
 
@@ -8,13 +9,31 @@
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/text/Paragraph.h"
 
-#include "physics/collision/scene/CollisionDispatcher.h"
+namespace oly
+{
+	namespace col2d
+	{
+		class CollisionDispatcher;
+	}
 
-#include "registries/Loader.h"
-#include "registries/graphics/TextureRegistry.h"
-#include "registries/graphics/extensions/TileSetRegistry.h"
-#include "registries/graphics/text/FontFaceRegistry.h"
-#include "registries/graphics/text/FontAtlasRegistry.h"
+	namespace graphics
+	{
+		class NSVGContext;
+	}
+
+	namespace rendering
+	{
+		class TileSet;
+	}
+
+	namespace reg
+	{
+		class TextureRegistry;
+		class TileSetRegistry;
+		class FontFaceRegistry;
+		class FontAtlasRegistry;
+	}
+}
 
 namespace oly::context
 {
@@ -74,7 +93,7 @@ namespace oly::context
 	extern void render_polygons();
 	extern void render_ellipses();
 
-	extern rendering::TileSetRes load_tileset(const std::string& file);
+	extern std::shared_ptr<rendering::TileSet> load_tileset(const std::string& file);
 	extern rendering::FontFaceRes load_font_face(const std::string& file);
 	extern rendering::FontAtlasRes load_font_atlas(const std::string& file, unsigned int index = 0);
 

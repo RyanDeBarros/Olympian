@@ -4,10 +4,18 @@
 
 #include "core/util/IO.h"
 #include "core/util/Time.h"
+
 #include "graphics/resources/Resources.h"
+
 #include "registries/Loader.h"
 #include "registries/platform/Input.h"
+#include "registries/graphics/TextureRegistry.h"
+#include "registries/graphics/extensions/TileSetRegistry.h"
+#include "registries/graphics/text/FontFaceRegistry.h"
+#include "registries/graphics/text/FontAtlasRegistry.h"
+
 #include "physics/collision/scene/LUT.h"
+#include "physics/collision/scene/CollisionDispatcher.h"
 
 namespace oly::context
 {

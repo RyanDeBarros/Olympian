@@ -1,11 +1,14 @@
 #include "Textures.h"
 
 #include "external/STB.h"
+
 #include "core/base/Context.h"
 #include "core/base/Errors.h"
 #include "core/base/Assert.h"
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
+
+#include "registries/graphics/TextureRegistry.h"
 
 namespace oly::graphics
 {
