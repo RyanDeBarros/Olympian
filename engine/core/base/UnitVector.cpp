@@ -68,7 +68,7 @@ namespace oly
 		}
 	}
 
-	bool UnitVector2D::near_standard(double tolerance) const
+	bool UnitVector2D::near_cardinal(double tolerance) const
 	{
 		return near_zero(_direction.x, tolerance) || near_zero(_direction.y, tolerance);
 	}

@@ -90,6 +90,11 @@ namespace oly::col2d
 		Transformer2DConstExposure get_transformer() const { return internal::lut_transformer(obj); }
 		Transformer2DExposure<exposure::FULL> set_transformer() { return internal::lut_transformer(obj); }
 
+		Layer layer() const { return internal::lut_layer(obj); }
+		Layer& layer() { return internal::lut_layer(obj); }
+		Mask mask() const { return internal::lut_mask(obj); }
+		Mask& mask() { return internal::lut_mask(obj); }
+
 	private:
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
 		void flush() const;

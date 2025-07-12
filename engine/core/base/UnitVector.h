@@ -57,7 +57,7 @@ namespace oly
 		float x() const { return _direction.x; }
 		float y() const { return _direction.y; }
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
-		bool near_standard(double tolerance = Tolerance<float>) const;
+		bool near_cardinal(double tolerance = Tolerance<float>) const;
 
 		glm::vec2 normal_project(glm::vec2 v) const;
 

@@ -79,7 +79,7 @@ namespace oly::physics
 			dirty_angular_applied_accelerations = false;
 			_net_angular_applied_acceleration = 0.0f;
 			for (AppliedAcceleration accel : applied_accelerations)
-				_net_angular_applied_acceleration += math::cross(accel.contact, accel.acceleration);
+				_net_angular_applied_acceleration += math::cross(accel.contact - center_of_mass, accel.acceleration);
 		}
 		dw += _net_angular_applied_acceleration * TIME.delta<>() * _mass * _moi_inverse;
 
@@ -88,13 +88,13 @@ namespace oly::physics
 			dirty_angular_applied_forces = false;
 			_net_angular_applied_force = 0.0f;
 			for (AppliedForce force : applied_forces)
-				_net_angular_applied_force += math::cross(force.contact, force.force);
+				_net_angular_applied_force += math::cross(force.contact - center_of_mass, force.force);
 		}
 		dw += _net_angular_applied_force * TIME.delta<>() * _moi_inverse;
 
 		float net_applied_angular_impulse = 0.0f;
 		for (AppliedImpulse impulse : applied_impulses)
-			net_applied_angular_impulse += math::cross(impulse.contact, impulse.impulse);
+			net_applied_angular_impulse += math::cross(impulse.contact - center_of_mass, impulse.impulse);
 		dw += net_applied_angular_impulse * _moi_inverse;
 
 		return dw;
@@ -217,6 +217,7 @@ namespace oly::physics
 							teleport *= collision.dynamics->properties.mass() / (properties.mass() + collision.dynamics->properties.mass());
 						
 						dx_t += teleport;
+						// TODO test teleport - seems like it's too big
 					}
 
 					dx += (1.0f - material.resolution_bias.get()) * dx_t;
@@ -241,7 +242,7 @@ namespace oly::physics
 						float dtheta_t = 0.0f;
 						for (const CollisionResponse& collision : collisions)
 						{
-							float teleport = math::cross(collision.contact, collision.mtv);
+							float teleport = math::cross(collision.contact - properties.center_of_mass, collision.mtv);
 							if (collision.dynamics->flag != Flag::STATIC)
 								teleport *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass());
 
@@ -278,11 +279,11 @@ namespace oly::physics
 		angular_impulse = 0.0f;
 		for (const CollisionResponse& collision : collisions)
 		{
-			const float cross1 = math::cross(collision.contact, collision.normal);
+			const float cross1 = math::cross(collision.contact - properties.center_of_mass, collision.normal);
 			float effective_mass_denominator = properties.mass_inverse() + properties.moi_inverse() * cross1 * cross1;
 			if (collision.dynamics->flag != Flag::STATIC)
 			{
-				const float cross2 = math::cross(state.position + collision.contact - collision.dynamics->state.position, collision.normal);
+				const float cross2 = math::cross(state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position, collision.normal);
 				effective_mass_denominator += collision.dynamics->properties.mass_inverse() + collision.dynamics->properties.moi_inverse() * cross2 * cross2;
 			}
 			const float effective_mass = 1.0f / effective_mass_denominator;
@@ -290,9 +291,9 @@ namespace oly::physics
 			glm::vec2 other_contact_velocity = {};
 			if (collision.dynamics->flag != Flag::STATIC)
 				other_contact_velocity = linear_velocity_at(collision.dynamics->state.linear_velocity, collision.dynamics->state.angular_velocity,
-					state.position + collision.contact - collision.dynamics->state.position);
+					state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position);
 
-			glm::vec2 relative_velocity = linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact);
+			glm::vec2 relative_velocity = linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact - properties.center_of_mass);
 			if (collision.dynamics->flag != Flag::STATIC)
 				relative_velocity -= other_contact_velocity;
 
@@ -300,7 +301,7 @@ namespace oly::physics
 			const float j = std::max(-effective_mass * (1.0f + restitution) * collision.normal.dot(relative_velocity), 0.0f);
 			glm::vec2 impulse = j * (glm::vec2)collision.normal;
 
-			glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact);
+			glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact - properties.center_of_mass);
 			if (collision.dynamics->flag != Flag::STATIC)
 				new_relative_velocity -= other_contact_velocity; // TODO use other's new velocity as well??
 
@@ -308,7 +309,8 @@ namespace oly::physics
 			float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
 			if (!col2d::near_zero(new_tangent_velocity_sqrd))
 			{
-				float mu = material.friction_with(collision.contact, collision.normal.get_quarter_turn(), state, collision.dynamics->material, collision.dynamics->state);
+				float mu = material.friction_with(collision.contact - properties.center_of_mass, collision.normal.get_quarter_turn(),
+					state, collision.dynamics->material, collision.dynamics->state);
 				float friction = std::min(mu * j, effective_mass * glm::sqrt(new_tangent_velocity_sqrd));
 				glm::vec2 j_f = -glm::normalize(new_tangent_velocity) * friction;
 				impulse += j_f;
@@ -316,7 +318,7 @@ namespace oly::physics
 
 			linear_impulse += impulse;
 			if (flag == Flag::KINEMATIC)
-				angular_impulse += math::cross(collision.contact, impulse);
+				angular_impulse += math::cross(collision.contact - properties.center_of_mass, impulse);
 		}
 	}
 

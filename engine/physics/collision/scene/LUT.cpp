@@ -18,7 +18,11 @@ namespace oly::col2d::internal
 	using CollisionViewFn = debug::CollisionView(*)(const void*, glm::vec4);
 	using UpdateViewFn = void(*)(debug::CollisionView&, const void*, glm::vec4);
 
-	using TransformerFn = const Transformer2D&(*)(const void*);
+	using TransformerFn = const Transformer2D& (*)(const void*);
+	using ConstLayerFn = Layer (*)(const void*);
+	using LayerFn = Layer& (*)(void*);
+	using ConstMaskFn = Mask (*)(const void*);
+	using MaskFn = Mask& (*)(void*);
 		
 	struct LUT
 	{
@@ -37,49 +41,53 @@ namespace oly::col2d::internal
 		UpdateViewFn update_view_[CObjID::_COUNT];
 
 		TransformerFn transformer_[CObjID::_COUNT];
+		ConstLayerFn layer_const_[CObjID::_COUNT];
+		LayerFn layer_[CObjID::_COUNT];
+		ConstMaskFn mask_const_[CObjID::_COUNT];
+		MaskFn mask_[CObjID::_COUNT];
+
+#define OLY_LUT_LIST_TBVH(Macro)\
+			Macro(TBVH<AABB>)\
+			Macro(TBVH<OBB>)\
+			Macro(TBVH<KDOP2>)\
+			Macro(TBVH<KDOP3>)\
+			Macro(TBVH<KDOP4>)
+
+#define OLY_LUT_LIST(Macro)\
+			Macro(TPrimitive)\
+			Macro(TCompound)\
+			OLY_LUT_LIST_TBVH(Macro)
+
+#define OLY_LUT_LIST_TBVH_INNER(Macro, Class)\
+			Macro(Class, TBVH<AABB>)\
+			Macro(Class, TBVH<OBB>)\
+			Macro(Class, TBVH<KDOP2>)\
+			Macro(Class, TBVH<KDOP3>)\
+			Macro(Class, TBVH<KDOP4>)
+
+#define OLY_LUT_LIST_INNER(Macro, Class)\
+			Macro(Class, TPrimitive)\
+			Macro(Class, TCompound)\
+			OLY_LUT_LIST_TBVH_INNER(Macro, Class)
 
 		void load_point_hits()
 		{
 #define OLY_LUT_POINT_HITS(Class) point_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, glm::vec2 test) { return point_hits(*static_cast<const Class*>(ptr), test); };
-
-			OLY_LUT_POINT_HITS(TPrimitive);
-			OLY_LUT_POINT_HITS(TCompound);
-			OLY_LUT_POINT_HITS(TBVH<AABB>);
-			OLY_LUT_POINT_HITS(TBVH<OBB>);
-			OLY_LUT_POINT_HITS(TBVH<KDOP2>);
-			OLY_LUT_POINT_HITS(TBVH<KDOP3>);
-			OLY_LUT_POINT_HITS(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_POINT_HITS);
 #undef OLY_LUT_POINT_HITS
 		}
 
 		void load_ray_hits()
 		{
 #define OLY_LUT_RAY_HITS(Class) ray_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const Ray& ray) { return ray_hits(*static_cast<const Class*>(ptr), ray); };
-
-			OLY_LUT_RAY_HITS(TPrimitive);
-			OLY_LUT_RAY_HITS(TCompound);
-			OLY_LUT_RAY_HITS(TBVH<AABB>);
-			OLY_LUT_RAY_HITS(TBVH<OBB>);
-			OLY_LUT_RAY_HITS(TBVH<KDOP2>);
-			OLY_LUT_RAY_HITS(TBVH<KDOP3>);
-			OLY_LUT_RAY_HITS(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_RAY_HITS);
 #undef OLY_LUT_RAY_HITS
 		}
 
 		void load_raycast()
 		{
 #define OLY_LUT_RAYCAST(Class) raycast_[CObjIDTrait<Class>::ID] = [](const void* ptr, const Ray& ray) { return raycast(*static_cast<const Class*>(ptr), ray); };
-
-			OLY_LUT_RAYCAST(TPrimitive);
-			OLY_LUT_RAYCAST(TCompound);
-			OLY_LUT_RAYCAST(TBVH<AABB>);
-			OLY_LUT_RAYCAST(TBVH<OBB>);
-			OLY_LUT_RAYCAST(TBVH<KDOP2>);
-			OLY_LUT_RAYCAST(TBVH<KDOP3>);
-			OLY_LUT_RAYCAST(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_RAYCAST);
 #undef OLY_LUT_RAYCAST
 		}
 
@@ -87,25 +95,9 @@ namespace oly::col2d::internal
 		{
 #define OLY_LUT_OVERLAPS(Class1, Class2) overlaps_[CObjIDTrait<Class1>::ID][CObjIDTrait<Class2>::ID] = [](const void* ptr1, const void* ptr2)\
 				{ return overlaps(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
-
-#define OLY_LUT_OVERLAPS_LIST(Class)\
-			OLY_LUT_OVERLAPS(Class, TPrimitive);\
-			OLY_LUT_OVERLAPS(Class, TCompound);\
-			OLY_LUT_OVERLAPS(Class, TBVH<AABB>);\
-			OLY_LUT_OVERLAPS(Class, TBVH<OBB>);\
-			OLY_LUT_OVERLAPS(Class, TBVH<KDOP2>);\
-			OLY_LUT_OVERLAPS(Class, TBVH<KDOP3>);\
-			OLY_LUT_OVERLAPS(Class, TBVH<KDOP4>);
-
-			OLY_LUT_OVERLAPS_LIST(TPrimitive);
-			OLY_LUT_OVERLAPS_LIST(TCompound);
-			OLY_LUT_OVERLAPS_LIST(TBVH<AABB>);
-			OLY_LUT_OVERLAPS_LIST(TBVH<OBB>);
-			OLY_LUT_OVERLAPS_LIST(TBVH<KDOP2>);
-			OLY_LUT_OVERLAPS_LIST(TBVH<KDOP3>);
-			OLY_LUT_OVERLAPS_LIST(TBVH<KDOP4>);
-
-#undef OLY_LUT_OVERLAPS_LIST
+#define OLY_LUT_OVERLAPS_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_OVERLAPS, Class);
+			OLY_LUT_LIST(OLY_LUT_OVERLAPS_INNER);
+#undef OLY_LUT_OVERLAPS_INNER
 #undef OLY_LUT_OVERLAPS
 		}
 
@@ -113,25 +105,9 @@ namespace oly::col2d::internal
 		{
 #define OLY_LUT_COLLIDES(Class1, Class2) collides_[CObjIDTrait<Class1>::ID][CObjIDTrait<Class2>::ID] = [](const void* ptr1, const void* ptr2)\
 				{ return collides(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
-
-#define OLY_LUT_COLLIDES_LIST(Class)\
-			OLY_LUT_COLLIDES(Class, TPrimitive);\
-			OLY_LUT_COLLIDES(Class, TCompound);\
-			OLY_LUT_COLLIDES(Class, TBVH<AABB>);\
-			OLY_LUT_COLLIDES(Class, TBVH<OBB>);\
-			OLY_LUT_COLLIDES(Class, TBVH<KDOP2>);\
-			OLY_LUT_COLLIDES(Class, TBVH<KDOP3>);\
-			OLY_LUT_COLLIDES(Class, TBVH<KDOP4>);
-
-			OLY_LUT_COLLIDES_LIST(TPrimitive);
-			OLY_LUT_COLLIDES_LIST(TCompound);
-			OLY_LUT_COLLIDES_LIST(TBVH<AABB>);
-			OLY_LUT_COLLIDES_LIST(TBVH<OBB>);
-			OLY_LUT_COLLIDES_LIST(TBVH<KDOP2>);
-			OLY_LUT_COLLIDES_LIST(TBVH<KDOP3>);
-			OLY_LUT_COLLIDES_LIST(TBVH<KDOP4>);
-
-#undef OLY_LUT_COLLIDES_LIST
+#define OLY_LUT_COLLIDES_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_COLLIDES, Class);
+			OLY_LUT_LIST(OLY_LUT_COLLIDES_INNER);
+#undef OLY_LUT_COLLIDES_INNER
 #undef OLY_LUT_COLLIDES
 		}
 
@@ -139,56 +115,24 @@ namespace oly::col2d::internal
 		{
 #define OLY_LUT_CONTACTS(Class1, Class2) contacts_[CObjIDTrait<Class1>::ID][CObjIDTrait<Class2>::ID] = [](const void* ptr1, const void* ptr2)\
 				{ return contacts(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
-
-#define OLY_LUT_CONTACTS_LIST(Class)\
-			OLY_LUT_CONTACTS(Class, TPrimitive);\
-			OLY_LUT_CONTACTS(Class, TCompound);\
-			OLY_LUT_CONTACTS(Class, TBVH<AABB>);\
-			OLY_LUT_CONTACTS(Class, TBVH<OBB>);\
-			OLY_LUT_CONTACTS(Class, TBVH<KDOP2>);\
-			OLY_LUT_CONTACTS(Class, TBVH<KDOP3>);\
-			OLY_LUT_CONTACTS(Class, TBVH<KDOP4>);
-
-			OLY_LUT_CONTACTS_LIST(TPrimitive);
-			OLY_LUT_CONTACTS_LIST(TCompound);
-			OLY_LUT_CONTACTS_LIST(TBVH<AABB>);
-			OLY_LUT_CONTACTS_LIST(TBVH<OBB>);
-			OLY_LUT_CONTACTS_LIST(TBVH<KDOP2>);
-			OLY_LUT_CONTACTS_LIST(TBVH<KDOP3>);
-			OLY_LUT_CONTACTS_LIST(TBVH<KDOP4>);
-
-#undef OLY_LUT_CONTACTS_LIST
+#define OLY_LUT_CONTACTS_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_CONTACTS, Class);
+			OLY_LUT_LIST(OLY_LUT_CONTACTS_INNER);
+#undef OLY_LUT_CONTACTS_INNER
 #undef OLY_LUT_CONTACTS
 		}
 
 		void load_circle_cast_hits()
 		{
-#define OLY_LUT_CIRCLE_CAST_HITS(Class) circle_cast_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const CircleCast& cast) { return circle_cast_hits(*static_cast<const Class*>(ptr), cast); }
-
-			OLY_LUT_CIRCLE_CAST_HITS(TPrimitive);
-			OLY_LUT_CIRCLE_CAST_HITS(TCompound);
-			OLY_LUT_CIRCLE_CAST_HITS(TBVH<AABB>);
-			OLY_LUT_CIRCLE_CAST_HITS(TBVH<OBB>);
-			OLY_LUT_CIRCLE_CAST_HITS(TBVH<KDOP2>);
-			OLY_LUT_CIRCLE_CAST_HITS(TBVH<KDOP3>);
-			OLY_LUT_CIRCLE_CAST_HITS(TBVH<KDOP4>);
-
+#define OLY_LUT_CIRCLE_CAST_HITS(Class) circle_cast_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const CircleCast& cast) { return circle_cast_hits(*static_cast<const Class*>(ptr), cast); };
+			OLY_LUT_LIST(OLY_LUT_CIRCLE_CAST_HITS);
 #undef OLY_LUT_CIRCLE_CAST_HITS
 		}
 
 		void load_rect_cast_hits()
 		{
-#define OLY_LUT_RECT_CAST_HITS(Class) rect_cast_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const RectCast& cast) { return rect_cast_hits(*static_cast<const Class*>(ptr), cast); }
-
-			OLY_LUT_RECT_CAST_HITS(TPrimitive);
-			OLY_LUT_RECT_CAST_HITS(TCompound);
-			OLY_LUT_RECT_CAST_HITS(TBVH<AABB>);
-			OLY_LUT_RECT_CAST_HITS(TBVH<OBB>);
-			OLY_LUT_RECT_CAST_HITS(TBVH<KDOP2>);
-			OLY_LUT_RECT_CAST_HITS(TBVH<KDOP3>);
-			OLY_LUT_RECT_CAST_HITS(TBVH<KDOP4>);
-
-#undef OLY_LUT_CIRCLE_CAST_HITS
+#define OLY_LUT_RECT_CAST_HITS(Class) rect_cast_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const RectCast& cast) { return rect_cast_hits(*static_cast<const Class*>(ptr), cast); };
+			OLY_LUT_LIST(OLY_LUT_RECT_CAST_HITS);
+#undef OLY_LUT_RECT_CAST_HITS
 		}
 
 		void load_flush()
@@ -197,75 +141,64 @@ namespace oly::col2d::internal
 			flush_[CObjIDTrait<TCompound>::ID] = [](const void* ptr) { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(), static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
 
 #define OLY_LUT_FLUSH_BVH(Class) flush_[CObjIDTrait<Class>::ID] = [](const void* ptr) { return Wrap<AABB>{}(&static_cast<const Class*>(ptr)->root_shape()).rect(); };
-
-			OLY_LUT_FLUSH_BVH(TBVH<AABB>);
-			OLY_LUT_FLUSH_BVH(TBVH<OBB>);
-			OLY_LUT_FLUSH_BVH(TBVH<KDOP2>);
-			OLY_LUT_FLUSH_BVH(TBVH<KDOP3>);
-			OLY_LUT_FLUSH_BVH(TBVH<KDOP4>);
-
+			OLY_LUT_LIST_TBVH(OLY_LUT_FLUSH_BVH);
 #undef OLY_LUT_FLUSH_BVH
 		}
 
 		void load_is_dirty()
 		{
 #define OLY_LUT_IS_DIRTY(Class) is_dirty_[CObjIDTrait<Class>::ID] = [](const void* ptr) { return static_cast<const Class*>(ptr)->is_dirty(); };
-
-			OLY_LUT_IS_DIRTY(TPrimitive);
-			OLY_LUT_IS_DIRTY(TCompound);
-			OLY_LUT_IS_DIRTY(TBVH<AABB>);
-			OLY_LUT_IS_DIRTY(TBVH<OBB>);
-			OLY_LUT_IS_DIRTY(TBVH<KDOP2>);
-			OLY_LUT_IS_DIRTY(TBVH<KDOP3>);
-			OLY_LUT_IS_DIRTY(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_IS_DIRTY)
 #undef OLY_LUT_IS_DIRTY
 		}
 
 		void load_collision_view()
 		{
 #define OLY_LUT_COLLISION_VIEW(Class) collision_view_[CObjIDTrait<Class>::ID] = [](const void* ptr, glm::vec4 color) { return debug::collision_view(*static_cast<const Class*>(ptr), color); };
-
-			OLY_LUT_COLLISION_VIEW(TPrimitive);
-			OLY_LUT_COLLISION_VIEW(TCompound);
-			OLY_LUT_COLLISION_VIEW(TBVH<AABB>);
-			OLY_LUT_COLLISION_VIEW(TBVH<OBB>);
-			OLY_LUT_COLLISION_VIEW(TBVH<KDOP2>);
-			OLY_LUT_COLLISION_VIEW(TBVH<KDOP3>);
-			OLY_LUT_COLLISION_VIEW(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_COLLISION_VIEW);
 #undef OLY_LUT_COLLISION_VIEW
 		}
 
 		void load_update_view()
 		{
 #define OLY_LUT_UPDATE_VIEW(Class) update_view_[CObjIDTrait<Class>::ID] = [](debug::CollisionView& view, const void* ptr, glm::vec4 color) { debug::update_view(view, *static_cast<const Class*>(ptr), color); };
-
-			OLY_LUT_UPDATE_VIEW(TPrimitive);
-			OLY_LUT_UPDATE_VIEW(TCompound);
-			OLY_LUT_UPDATE_VIEW(TBVH<AABB>);
-			OLY_LUT_UPDATE_VIEW(TBVH<OBB>);
-			OLY_LUT_UPDATE_VIEW(TBVH<KDOP2>);
-			OLY_LUT_UPDATE_VIEW(TBVH<KDOP3>);
-			OLY_LUT_UPDATE_VIEW(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_UPDATE_VIEW)
 #undef OLY_LUT_UPDATE_VIEW
 		}
 
 		void load_transformer()
 		{
 #define OLY_LUT_TRANSFORMER(Class) transformer_[CObjIDTrait<Class>::ID] = [](const void* ptr) -> const Transformer2D& { return static_cast<const Class*>(ptr)->transformer; };
-
-			OLY_LUT_TRANSFORMER(TPrimitive);
-			OLY_LUT_TRANSFORMER(TCompound);
-			OLY_LUT_TRANSFORMER(TBVH<AABB>);
-			OLY_LUT_TRANSFORMER(TBVH<OBB>);
-			OLY_LUT_TRANSFORMER(TBVH<KDOP2>);
-			OLY_LUT_TRANSFORMER(TBVH<KDOP3>);
-			OLY_LUT_TRANSFORMER(TBVH<KDOP4>);
-
+			OLY_LUT_LIST(OLY_LUT_TRANSFORMER);
 #undef OLY_LUT_TRANSFORMER
 		}
+
+		void load_layer()
+		{
+#define OLY_LUT_CONST_LAYER(Class) layer_const_[CObjIDTrait<Class>::ID] = [](const void* ptr) -> Layer { return static_cast<const Class*>(ptr)->layer(); };
+			OLY_LUT_LIST(OLY_LUT_CONST_LAYER);
+#undef OLY_LUT_CONST_LAYER
+
+#define OLY_LUT_LAYER(Class) layer_[CObjIDTrait<Class>::ID] = [](void* ptr) -> Layer& { return static_cast<Class*>(ptr)->layer(); };
+			OLY_LUT_LIST(OLY_LUT_LAYER);
+#undef OLY_LUT_LAYER
+		}
+
+		void load_mask()
+		{
+#define OLY_LUT_CONST_MASK(Class) mask_const_[CObjIDTrait<Class>::ID] = [](const void* ptr) -> Mask { return static_cast<const Class*>(ptr)->mask(); };
+			OLY_LUT_LIST(OLY_LUT_CONST_MASK);
+#undef OLY_LUT_CONST_MASK
+
+#define OLY_LUT_MASK(Class) mask_[CObjIDTrait<Class>::ID] = [](void* ptr) -> Mask& { return static_cast<Class*>(ptr)->mask(); };
+			OLY_LUT_LIST(OLY_LUT_MASK);
+#undef OLY_LUT_MASK
+		}
+
+#undef OLY_LUT_LIST_INNER
+#undef OLY_LUT_LIST_TBVH_INNER
+#undef OLY_LUT_LIST
+#undef OLY_LUT_LIST_TBVH
 	} static lut;
 
 	void load_luts()
@@ -285,6 +218,8 @@ namespace oly::col2d::internal
 		lut.load_update_view();
 
 		lut.load_transformer();
+		lut.load_layer();
+		lut.load_mask();
 
 		load_variant_luts();
 	}
@@ -356,6 +291,26 @@ namespace oly::col2d::internal
 
 	Transformer2D& lut_transformer(ColliderObject& c)
 	{
-		return *const_cast<Transformer2D*>(&(lut.transformer_[c.id()])(const_cast<void*>(c.raw_obj())));
+		return *const_cast<Transformer2D*>(&(lut.transformer_[c.id()])(c.raw_obj()));
+	}
+
+	Layer lut_layer(const ColliderObject& c)
+	{
+		return (lut.layer_const_[c.id()])(c.raw_obj());
+	}
+
+	Layer& lut_layer(ColliderObject& c)
+	{
+		return (lut.layer_[c.id()])(c.raw_obj());
+	}
+
+	Mask lut_mask(const ColliderObject& c)
+	{
+		return (lut.mask_const_[c.id()])(c.raw_obj());
+	}
+
+	Mask& lut_mask(ColliderObject& c)
+	{
+		return (lut.mask_[c.id()])(c.raw_obj());
 	}
 }

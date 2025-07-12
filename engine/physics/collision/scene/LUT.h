@@ -27,4 +27,9 @@ namespace oly::col2d::internal
 
 	extern const Transformer2D& lut_transformer(const ColliderObject&);
 	extern Transformer2D& lut_transformer(ColliderObject&);
+
+	extern Layer lut_layer(const ColliderObject&);
+	extern Layer& lut_layer(ColliderObject&);
+	extern Mask lut_mask(const ColliderObject&);
+	extern Mask& lut_mask(ColliderObject&);
 }

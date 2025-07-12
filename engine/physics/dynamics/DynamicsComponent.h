@@ -74,6 +74,8 @@ namespace oly::physics
 		float net_torque = 0.0f;
 		mutable float net_angular_impulse = 0.0f;
 
+		glm::vec2 center_of_mass = {};
+
 	private:
 		friend class DynamicsComponent;
 		glm::vec2 dv_psi() const;

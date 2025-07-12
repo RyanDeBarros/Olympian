@@ -1,6 +1,7 @@
 #include "Element.h"
 
 #include "core/base/Transforms.h"
+#include "physics/collision/methods/Collide.h"
 
 #include <set>
 
@@ -46,151 +47,57 @@ namespace oly::col2d
 		return greedy;
 	}
 
-	static std::set<UnitVector2D> candidate_axes(const AABB&)
+	static void add_candidate_axis(std::set<UnitVector2D>& into, UnitVector2D axis)
 	{
-		return { UnitVector2D::RIGHT, UnitVector2D::UP, UnitVector2D::LEFT, UnitVector2D::DOWN };
-	}
+		// LATER ANGULAR_TOLERANCE should be engine setting.
+		constexpr float ANGULAR_TOLERANCE = glm::radians(1.5f / 360.0f);
 
-	static std::set<UnitVector2D> candidate_axes(const OBB& c)
-	{
-		return { c.get_major_axis(), c.get_minor_axis(), -c.get_major_axis(), -c.get_minor_axis() };
-	}
-
-	static std::set<UnitVector2D> candidate_axes(const ConvexHull& c)
-	{
-		std::set<UnitVector2D> axes;
-		for (size_t i = 0; i < c.size(); ++i)
+		if (near_zero(axis.x()))
 		{
-			axes.insert(c.edge_normal(i));
-			axes.insert(-c.edge_normal(i));
-		}
-		return axes;
-	}
-
-	template<size_t K>
-	static std::set<UnitVector2D> candidate_axes(const KDOP<K>& c)
-	{
-		std::set<UnitVector2D> axes;
-		for (size_t i = 0; i < K; ++i)
-		{
-			axes.insert(c.edge_normal(i));
-			axes.insert(-c.edge_normal(i));
-		}
-		return axes;
-	}
-
-	// TODO candidate axes for circle is axis from center to closest point on entire other compound, not for each subelement of the other compound.
-
-	static std::set<UnitVector2D> candidate_axes(const Circle& c, const ElementParam& other)
-	{
-		static const auto closest_point_on_polygon = [](const auto& points, glm::vec2 center) -> glm::vec2 {
-			float closest_dist_sqrd = nmax<float>();
-			glm::vec2 closest_point{};
-			for (size_t i = 0; i < points.size(); ++i)
-			{
-				glm::vec2 pt = math::closest_point_on_line_segment(center, points[i], points[(i + 1) % points.size()]);
-				float dist_sqrd = math::mag_sqrd(pt - center);
-				if (dist_sqrd < closest_dist_sqrd)
-				{
-					closest_dist_sqrd = dist_sqrd;
-					closest_point = pt;
-					if (near_zero(closest_dist_sqrd))
-						break;
-				}
-			}
-			return closest_point;
-			};
-
-		glm::vec2 axis = std::visit([&c](auto&& other) {
-			glm::vec2 center = internal::CircleGlobalAccess::global_center(c);
-			if constexpr (visiting_class_is<decltype(*other), Circle>)
-				return internal::CircleGlobalAccess::global_center(*other) - center;
+			if (axis.y() > 0.0f)
+				into.insert(UnitVector2D::UP);
 			else
-				return closest_point_on_polygon(other->points(), center) - center;
-			}, other);
-		return { UnitVector2D(axis), UnitVector2D(-axis) };
-	}
-	
-	static std::set<UnitVector2D> candidate_axes(const ElementParam& reference, const ElementParam& other)
-	{
-		return std::visit([&other](auto&& c) {
-			if constexpr (visiting_class_is<decltype(*c), Circle>)
-				return candidate_axes(*c, other);
-			else
-				return candidate_axes(*c);
-			}, reference);
-	}
-
-	static void merge_axes(std::set<UnitVector2D>& into, const std::set<UnitVector2D>& from)
-	{
-		for (UnitVector2D v : from)
+				into.insert(UnitVector2D::DOWN);
+		}
+		else if (near_zero(axis.y()))
 		{
-			if (into.empty())
-				into.insert(v);
-			else if (into.size() == 1)
+			if (axis.x() > 0.0f)
+				into.insert(UnitVector2D::RIGHT);
+			else
+				into.insert(UnitVector2D::LEFT);
+		}
+		else if (into.empty())
+			into.insert(axis);
+		else if (into.size() == 1)
+		{
+			if (!oly::approx(*into.begin(), axis, ANGULAR_TOLERANCE))
+				into.insert(axis);
+		}
+		else
+		{
+			auto lb = into.lower_bound(axis);
+			if (lb == into.begin())
 			{
-				if (!col2d::approx(*into.begin(), v))
-					into.insert(v);
+				auto prev = into.rbegin();
+				if (!oly::approx(*prev, axis, ANGULAR_TOLERANCE) && !oly::approx(*into.begin(), axis, ANGULAR_TOLERANCE))
+					into.insert(axis);
 			}
 			else
 			{
-				auto lb = into.lower_bound(v);
-				if (lb == into.begin())
+				auto prev = lb;
+				--prev;
+				if (lb == into.end())
 				{
-					auto prev = into.rbegin();
-					if (!col2d::approx(*prev, v) && !col2d::approx(*into.begin(), v))
-						into.insert(v);
+					if (!oly::approx(*prev, axis, ANGULAR_TOLERANCE) && !oly::approx(*into.begin(), axis, ANGULAR_TOLERANCE))
+						into.insert(axis);
 				}
 				else
 				{
-					auto prev = lb;
-					--prev;
-					if (lb == into.end())
-					{
-						if (!col2d::approx(*prev, v) && !col2d::approx(*into.begin(), v))
-							into.insert(v);
-					}
-					else
-					{
-						if (!col2d::approx(*prev, v) && !col2d::approx(*lb, v))
-							into.insert(v);
-					}
+					if (!oly::approx(*prev, axis, ANGULAR_TOLERANCE) && !oly::approx(*lb, axis, ANGULAR_TOLERANCE))
+						into.insert(axis);
 				}
 			}
 		}
-	}
-
-	static std::set<UnitVector2D> candidate_axes(const ElementParam& reference, const Element* others, const size_t num_others)
-	{
-		return std::visit([others, num_others](auto&& c) {
-			if constexpr (visiting_class_is<decltype(*c), Circle>)
-			{
-				std::set<UnitVector2D> axes;
-				for (size_t i = 0; i < num_others; ++i)
-					merge_axes(axes, candidate_axes(*c, param(others[i])));
-				return axes;
-			}
-			else
-				return candidate_axes(*c);
-			}, reference);
-	}
-
-	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
-	{
-		std::set<UnitVector2D> axes = candidate_axes(static_element, active_elements, num_active_elements);
-		for (size_t i = 0; i < num_active_elements; ++i)
-			merge_axes(axes, candidate_axes(param(active_elements[i]), static_element));
-		return axes;
-	}
-
-	static std::set<UnitVector2D> candidate_axes(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
-	{
-		std::set<UnitVector2D> axes;
-		for (size_t i = 0; i < num_active_elements; ++i)
-			merge_axes(axes, candidate_axes(param(active_elements[i]), static_elements, num_static_elements));
-		for (size_t i = 0; i < num_static_elements; ++i)
-			merge_axes(axes, candidate_axes(param(static_elements[i]), active_elements, num_active_elements));
-		return axes;
 	}
 
 	static float projection_max(const UnitVector2D& axis, const ElementParam& el)
@@ -225,13 +132,16 @@ namespace oly::col2d
 		return static_max_proj - active_min_proj;
 	}
 
-	// TODO optimize compound_collision/compound_contact so that candidate axes are processed as separation is calculated, rather than bulk storing the axes. That way, could exit early if separation is < 0.
-	// TODO further optimize by increasing tolerance in merge_axes. The tolerance can depend on the size/complexity of elements. Other factors could be, distance between positions (if transform elements), whether or not the compounds previously overlapped, etc. 1 degrees should be a good baseline. Make an engine setting for it.
-	// TODO However, it's a good idea to always allow exact cardinal/45deg axes.
-
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
-		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
+		std::set<UnitVector2D> separating_axes;
+		for (size_t i = 0; i < num_active_elements; ++i)
+		{
+			CollisionResult result = collides(param(active_elements[i]), static_element);
+			if (result.overlap)
+				add_candidate_axis(separating_axes, result.unit_impulse);
+		}
+
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
@@ -250,7 +160,15 @@ namespace oly::col2d
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_elements, num_static_elements);
+		std::set<UnitVector2D> separating_axes;
+		for (size_t i = 0; i < num_active_elements; ++i)
+			for (size_t j = 0; j < num_static_elements; ++j)
+			{
+				CollisionResult result = collides(active_elements[i], static_elements[j]);
+				if (result.overlap)
+					add_candidate_axis(separating_axes, result.unit_impulse);
+			}
+
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
@@ -313,10 +231,17 @@ namespace oly::col2d
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
+		std::set<UnitVector2D> separating_axes;
+		for (size_t i = 0; i < num_active_elements; ++i)
+		{
+			CollisionResult result = collides(param(active_elements[i]), static_element);
+			if (result.overlap)
+				add_candidate_axis(separating_axes, result.unit_impulse);
+		}
+
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		size_t most_significant_active_element = 0;
 
-		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_element);
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			size_t _most_significant_active_element;
@@ -346,10 +271,18 @@ namespace oly::col2d
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
+		std::set<UnitVector2D> separating_axes;
+		for (size_t i = 0; i < num_active_elements; ++i)
+			for (size_t j = 0; j < num_static_elements; ++j)
+			{
+				CollisionResult result = collides(active_elements[i], static_elements[j]);
+				if (result.overlap)
+					add_candidate_axis(separating_axes, result.unit_impulse);
+			}
+
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		size_t most_significant_active_element = 0, most_significant_static_element = 0;
 
-		std::set<UnitVector2D> separating_axes = candidate_axes(active_elements, num_active_elements, static_elements, num_static_elements);
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			size_t _most_significant_active_element, _most_significant_static_element;
@@ -478,7 +411,7 @@ namespace oly::col2d
 			for (size_t i = 0; i < 4; ++i)
 				points[i] = transform_point(m, points[i]);
 
-			if (right.near_standard(LINEAR_TOLERANCE))
+			if (right.near_cardinal(LINEAR_TOLERANCE))
 			{
 				// AABB
 				return AABB{

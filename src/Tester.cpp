@@ -152,8 +152,8 @@ int main()
 	player.material().resolution_bias = 0.5f;
 
 	player.add_collider(star.as_convex_tcompound());
-	player.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_PLAYER; // TODO put get_layer/set_layer/get_mask/set_mask on Collider. it should not set the dirty flag.
-	player.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_OBSTACLE;
+	player.collider()->layer() |= CollisionLayers::L_PLAYER; // TODO put get_layer/set_layer/get_mask/set_mask on Collider. it should not set the dirty flag.
+	player.collider()->mask() |= CollisionMasks::M_OBSTACLE;
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
@@ -169,37 +169,42 @@ int main()
 	oly::physics::RigidBody obstacle0;
 	obstacle0.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
 	obstacle0.add_collider(capsule);
-	obstacle0.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+	obstacle0.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle0.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle0.properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle1;
 	obstacle1.add_collider(capsule);
-	obstacle1.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle1.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+	obstacle1.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle1.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle1.properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle2;
 	obstacle2.add_collider(capsule);
-	obstacle2.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle2.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+	obstacle2.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle2.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle2.properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle3;
 	obstacle3.add_collider(capsule);
-	obstacle3.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle3.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+	obstacle3.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle3.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle3.properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle4;
 	obstacle4.add_collider(capsule);
-	obstacle4.collider()->set<oly::col2d::TCompound>().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle4.collider()->set<oly::col2d::TCompound>().mask() |= CollisionMasks::M_PLAYER;
+	obstacle4.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle4.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle4.properties().center_of_mass = capsule.center;
 
 	oly::physics::RigidBody ground;
 	ground.add_collider(oly::col2d::AABB{ .x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f });
-	ground.collider()->set<oly::col2d::TPrimitive>().layer() |= CollisionLayers::L_OBSTACLE;
-	ground.collider()->set<oly::col2d::TPrimitive>().mask() |= CollisionMasks::M_PLAYER;
+	ground.collider()->layer() |= CollisionLayers::L_OBSTACLE;
+	ground.collider()->mask() |= CollisionMasks::M_PLAYER;
 
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .width = 25.0f, .depth = 15.0f};
 	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .width = 25.0f, .depth = 15.0f};
