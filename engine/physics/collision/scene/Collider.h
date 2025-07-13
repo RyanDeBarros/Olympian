@@ -88,7 +88,8 @@ namespace oly::col2d
 		Transform2D& set_local() { return internal::lut_transformer(obj).set_local(); }
 
 		Transformer2DConstExposure get_transformer() const { return internal::lut_transformer(obj); }
-		Transformer2DExposure<exposure::FULL> set_transformer() { return internal::lut_transformer(obj); }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }>
+			set_transformer() { return internal::lut_transformer(obj); }
 
 		Layer layer() const { return internal::lut_layer(obj); }
 		Layer& layer() { return internal::lut_layer(obj); }

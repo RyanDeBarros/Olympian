@@ -110,7 +110,7 @@ namespace oly::col2d
 			}
 		}
 
-		bool CollisionNode::subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const
+		bool CollisionNode::subnode_coordinates(math::Rect2D b, unsigned int& x, unsigned int& y) const
 		{
 			static const auto coord = [](unsigned int degree, float val, float rel, float len) {
 				return (float)degree * (val - rel) / len;
@@ -154,6 +154,15 @@ namespace oly::col2d
 				.x1 = glm::mix(bounds.x1, bounds.x2, float(x) * tree->inv_degree.x), .x2 = glm::mix(bounds.x1, bounds.x2, (float(x) + 1.0f) * tree->inv_degree.x),
 				.y1 = glm::mix(bounds.y1, bounds.y2, float(y) * tree->inv_degree.y), .y2 = glm::mix(bounds.y1, bounds.y2, (float(y) + 1.0f) * tree->inv_degree.y)
 			};
+		}
+
+		void CollisionNode::set_bounds(math::Rect2D b)
+		{
+			bounds = b;
+			for (unsigned int x = 0; x < tree->degree.x; ++x)
+				for (unsigned int y = 0; y < tree->degree.y; ++y)
+					if (CollisionNode* subnode = subnodes[idx(x, y)].get())
+						subnode->set_bounds(subdivision(x, y));
 		}
 	}
 
@@ -326,6 +335,11 @@ namespace oly::col2d
 	CollisionTree::BFSColliderIterator CollisionTree::query(const math::Rect2D bounds) const
 	{
 		return BFSColliderIterator(root.get(), bounds);
+	}
+
+	void CollisionTree::set_bounds(math::Rect2D bounds)
+	{
+		root->set_bounds(bounds);
 	}
 
 	internal::CollisionNode* CollisionTree::BFSIterator::next()

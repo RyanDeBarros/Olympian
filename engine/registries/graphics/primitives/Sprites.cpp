@@ -93,10 +93,8 @@ namespace oly::reg
 				}
 				else if (type == "pivot-shear")
 				{
-					PivotShearTransformModifier2D modifier;
-					parse_vec2(node["shearing"].as_array(), modifier.shearing);
-					parse_vec2(node["pivot"].as_array(), modifier.pivot);
-					parse_vec2(node["size"].as_array(), modifier.size);
+					OffsetTransformModifier2D modifier;
+					parse_vec2(node["offset"].as_array(), modifier.offset);
 					params.modifier = modifier;
 				}
 			}

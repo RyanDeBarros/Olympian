@@ -155,6 +155,8 @@ namespace oly::context
 	}
 }
 
+// TODO Log engine initialization/terminatation steps.
+
 namespace oly::context
 {
 	static void init(const char* context_filepath)

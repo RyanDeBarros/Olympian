@@ -27,7 +27,7 @@ namespace oly::physics
 		RigidBody& operator=(RigidBody&&) noexcept;
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 

@@ -14,26 +14,69 @@ namespace oly
 
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
-	};
 
-	enum TExposureParams
-	{
-		SET_LOCAL = 0b1,
-		ATTACH_PARENT = 0b10,
-		ATTACH_CHILD = 0b100,
-		CLEAR_CHILDREN = 0b1000
+		template<std::derived_from<TransformModifier2D> T>
+		const T& get_modifier() const { return transformer.get_modifier<T>(); }
 	};
-
-	constexpr TExposureParams operator&(TExposureParams a, TExposureParams b) { return (TExposureParams)((int)a & (int)b); }
-	constexpr TExposureParams operator|(TExposureParams a, TExposureParams b) { return (TExposureParams)((int)a | (int)b); }
-	constexpr TExposureParams operator~(TExposureParams a) { return (TExposureParams)(~(int)a); }
-	constexpr bool and_(TExposureParams a, TExposureParams b) { return (a & b) != 0; }
 
 	namespace exposure
 	{
-		constexpr TExposureParams STANDARD_HIDDEN = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD;
-		constexpr TExposureParams FULL = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD | TExposureParams::CLEAR_CHILDREN;
+		namespace local
+		{
+			enum Params
+			{
+				NONE = 0,
+				SET_LOCAL = 1,
+				FULL = SET_LOCAL
+			};
+
+			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+		}
+
+		namespace chain
+		{
+			enum Params
+			{
+				NONE = 0,
+				ATTACH_PARENT = 1,
+				ATTACH_CHILD = 2,
+				CLEAR_CHILDREN = 4,
+				ATTACH_ONLY = ATTACH_PARENT | ATTACH_CHILD,
+				FULL = ATTACH_PARENT | ATTACH_CHILD | CLEAR_CHILDREN
+			};
+
+			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+		}
+
+		namespace modifier
+		{
+			enum Params
+			{
+				NONE = 0,
+				REF_MODIFIER = 1,
+				SET_MODIFIER = 2,
+				FULL = REF_MODIFIER | SET_MODIFIER
+			};
+
+			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+		}
 	}
+
+	struct TExposureParams
+	{
+		exposure::local::Params local = exposure::local::Params::NONE;
+		exposure::chain::Params chain = exposure::chain::Params::NONE;
+		exposure::modifier::Params modifier = exposure::modifier::Params::NONE;
+	};
+
+	//namespace exposure
+	//{
+	//	constexpr TExposureParams STANDARD_HIDDEN = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD;
+	//	constexpr TExposureParams FULL = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD | TExposureParams::CLEAR_CHILDREN | TExposureParams::MODIFIER;
+	//}
 
 	template<TExposureParams Params>
 	struct Transformer2DExposure
@@ -50,22 +93,31 @@ namespace oly
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 
-		Transform2D& set_local() requires (and_(Params, TExposureParams::SET_LOCAL)) { return transformer.set_local(); }
+		Transform2D& set_local() requires (Params.local & exposure::local::SET_LOCAL) { return transformer.set_local(); }
 
-		void attach_parent(Transformer2D* parent) requires (and_(Params, TExposureParams::ATTACH_PARENT)) { transformer.attach_parent(parent); }
+		void attach_parent(Transformer2D* parent) requires (Params.chain & exposure::chain::ATTACH_PARENT) { transformer.attach_parent(parent); }
 		template<TExposureParams OtherParams>
-		void attach_parent(Transformer2DExposure& parent) requires (and_(Params, TExposureParams::ATTACH_PARENT) && and_(OtherParams, TExposureParams::ATTACH_CHILD))
+		void attach_parent(Transformer2DExposure<OtherParams>& parent)
+			requires ((Params.chain & exposure::chain::ATTACH_PARENT) && (OtherParams.chain & exposure::chain::ATTACH_CHILD))
 		{
 			transformer.attach_parent(&parent.transformer);
 		}
 
-		void attach_child(Transformer2D* child) requires (and_(Params, TExposureParams::ATTACH_CHILD)) { transformer.attach_child(child); }
+		void attach_child(Transformer2D* child) requires (Params.chain & exposure::chain::ATTACH_CHILD) { transformer.attach_child(child); }
 		template<TExposureParams OtherParams>
-		void attach_child(Transformer2DExposure& child) requires (and_(Params, TExposureParams::ATTACH_CHILD) && and_(OtherParams, TExposureParams::ATTACH_PARENT))
+		void attach_child(Transformer2DExposure<OtherParams>& child)
+			requires ((Params.chain & exposure::chain::ATTACH_CHILD) && (OtherParams.chain & exposure::chain::ATTACH_PARENT))
 		{
 			transformer.attach_child(&child.transformer);
 		}
 
-		void clear_children() requires (and_(Params, TExposureParams::CLEAR_CHILDREN)) { transformer.clear_children(); }
+		void clear_children() requires (Params.chain & exposure::chain::CLEAR_CHILDREN) { transformer.clear_children(); }
+
+		template<std::derived_from<TransformModifier2D> T>
+		const T& get_modifier() const { return transformer.get_modifier<T>(); }
+
+		std::unique_ptr<TransformModifier2D>& set_modifier() requires (Params.modifier & exposure::modifier::SET_MODIFIER) { return transformer.set_modifier(); }
+		template<std::derived_from<TransformModifier2D> T>
+		T& ref_modifier() requires (Params.modifier & exposure::modifier::REF_MODIFIER) { return transformer.ref_modifier<T>(); }
 	};
 }

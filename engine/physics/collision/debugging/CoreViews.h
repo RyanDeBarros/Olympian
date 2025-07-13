@@ -19,7 +19,7 @@ namespace oly::debug
 	inline void update_view(CollisionView& view, const col2d::Circle& c, glm::vec4 color, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
 				return true;
 			else
@@ -49,7 +49,7 @@ namespace oly::debug
 	inline void update_view_no_color(CollisionView& view, const col2d::Circle& c, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
 				return true;
 			else
@@ -99,7 +99,7 @@ namespace oly::debug
 			}
 
 			CollisionObject& obj = view.get_view(view_index);
-			bool modify = std::visit([](auto&& obj) -> bool {
+			bool modify = std::visit([](const auto& obj) -> bool {
 				if constexpr (visiting_class_is<decltype(obj), rendering::StaticPolygon>)
 					return true;
 				else
@@ -135,7 +135,7 @@ namespace oly::debug
 			}
 
 			CollisionObject& obj = view.get_view(view_index);
-			bool modify = std::visit([](auto&& obj) -> bool {
+			bool modify = std::visit([](const auto& obj) -> bool {
 				if constexpr (visiting_class_is<decltype(obj), rendering::StaticPolygon>)
 					return true;
 				else
@@ -186,7 +186,7 @@ namespace oly::debug
 		internal::polygon_update_view(view, c.points(), color, view_index);
 	}
 
-	inline void update_view_no_color(CollisionView& view, const col2d::OBB& c, glm::vec4 color, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, const col2d::OBB& c, size_t view_index = 0)
 	{
 		internal::polygon_update_view_no_color(view, c.points(), view_index);
 	}
@@ -226,32 +226,32 @@ namespace oly::debug
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)
 	{
-		return std::visit([color](auto&& e) { return collision_view(*e, color); }, param(c));
+		return std::visit([color](const auto& e) { return collision_view(*e, color); }, param(c));
 	}
 
 	inline void update_view(CollisionView& view, const col2d::Element& c, glm::vec4 color, size_t view_index = 0)
 	{
-		std::visit([&view, color, view_index](auto&& e) { update_view(view, *e, color, view_index); }, param(c));
+		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, param(c));
 	}
 
 	inline void update_view_no_color(CollisionView& view, const col2d::Element& c, size_t view_index = 0)
 	{
-		std::visit([&view, view_index](auto&& e) { update_view_no_color(view, *e, view_index); }, param(c));
+		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, param(c));
 	}
 
 	inline CollisionView collision_view(const col2d::ElementParam& c, glm::vec4 color)
 	{
-		return std::visit([color](auto&& e) { return collision_view(*e, color); }, c);
+		return std::visit([color](const auto& e) { return collision_view(*e, color); }, c);
 	}
 
 	inline void update_view(CollisionView& view, const col2d::ElementParam& c, glm::vec4 color, size_t view_index = 0)
 	{
-		std::visit([&view, color, view_index](auto&& e) { update_view(view, *e, color, view_index); }, c);
+		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, c);
 	}
 
 	inline void update_view_no_color(CollisionView& view, const col2d::ElementParam& c, size_t view_index = 0)
 	{
-		std::visit([&view, view_index](auto&& e) { update_view_no_color(view, *e, view_index); }, c);
+		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, c);
 	}
 
 	inline CollisionView collision_view(const col2d::Primitive& c, glm::vec4 color)
@@ -370,7 +370,7 @@ namespace oly::debug
 	}
 
 	template<typename Shape>
-	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color, size_t view_index = 0)
+	inline void update_view(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, glm::vec4 color, size_t view_index)
 	{
 		update_view(view, c.build_layer(depth), color, view_index);
 	}
@@ -382,7 +382,7 @@ namespace oly::debug
 	}
 
 	template<typename Shape>
-	inline void update_view_no_color(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, const col2d::BVH<Shape>& c, size_t depth, size_t view_index)
 	{
 		update_view_no_color(view, c.build_layer(depth), view_index);
 	}
@@ -406,7 +406,7 @@ namespace oly::debug
 	}
 
 	template<typename Shape>
-	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color, size_t view_index = 0)
+	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, glm::vec4 color, size_t view_index)
 	{
 		update_view(view, c.build_layer(depth), color, view_index);
 	}
@@ -418,7 +418,7 @@ namespace oly::debug
 	}
 
 	template<typename Shape>
-	inline void update_view(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, const col2d::TBVH<Shape>& c, size_t depth, size_t view_index)
 	{
 		update_view_no_color(view, c.build_layer(depth), view_index);
 	}

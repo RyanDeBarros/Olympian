@@ -194,6 +194,21 @@ namespace oly
 		children.clear();
 	}
 
+	void PivotTransformModifier2D::operator()(glm::mat3& global) const
+	{
+		global = pivot_matrix(pivot, size) * global;
+	}
+
+	void ShearTransformModifier2D::operator()(glm::mat3& global) const
+	{
+		global = global * shearing_matrix(shearing);
+	}
+
+	void OffsetTransformModifier2D::operator()(glm::mat3& global) const
+	{
+		global = translation_matrix(offset) * global;
+	}
+
 	Transformer3D::Transformer3D(const Transformer3D& other)
 		: local(other.local), modifier(other.modifier->clone()), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
 	{
@@ -384,6 +399,21 @@ namespace oly
 			child->post_set();
 		}
 		children.clear();
+	}
+
+	void PivotTransformModifier3D::operator()(glm::mat4& global) const
+	{
+		global = pivot_matrix(pivot, size) * global;
+	}
+
+	void ShearTransformModifier3D::operator()(glm::mat4& global) const
+	{
+		global = global * shearing_matrix(shearing);
+	}
+
+	void OffsetTransformModifier3D::operator()(glm::mat4& global) const
+	{
+		global = translation_matrix(offset) * global;
 	}
 
 	glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point)

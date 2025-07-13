@@ -38,7 +38,6 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 int main()
 {
-	// TODO Log engine initialization/terminatation steps.
 	oly::context::Context oly_context("../../../res/context.toml");
 
 	PlayerController pc;
@@ -56,10 +55,10 @@ int main()
 	key_handler.attach(&oly::get_platform().window().handlers.key);
 
 	oly::Transformer2D flag_tesselation_parent;
-	flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotShearTransformModifier2D>();
+	flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 	flag_tesselation_parent.set_local().position.y = -100;
-	auto& flag_tesselation_modifier = flag_tesselation_parent.ref_modifier<oly::PivotShearTransformModifier2D>();
-	flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 }, { 0, 1 } };
+	auto& flag_tesselation_modifier = flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
+	flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 	std::vector<oly::Sprite> flag_tesselation;
 	const int flag_rows = 8, flag_cols = 8;
 	flag_tesselation.reserve(flag_rows * flag_cols);
@@ -145,6 +144,7 @@ int main()
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
 	player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
+	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi(2000.0f);
 	player.properties().net_force += oly::physics::GRAVITY;
@@ -171,7 +171,10 @@ int main()
 	obstacle0.add_collider(capsule);
 	obstacle0.collider()->layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle0.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle0.collider()->set_local().position = -capsule.center;
+	obstacle0.set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0.properties().center_of_mass = capsule.center;
+	obstacle0.properties().net_angular_impulse += 0.1f;
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle1;

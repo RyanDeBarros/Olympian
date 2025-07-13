@@ -38,7 +38,8 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<exposure::STANDARD_HIDDEN> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::ATTACH_ONLY, .modifier = exposure::modifier::FULL }>
+			set_transformer() { return transformer; }
 
 		void copy_sprite_attributes(const Sprite& sprite);
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);

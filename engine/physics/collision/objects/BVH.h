@@ -502,7 +502,7 @@ namespace oly::col2d
 		bool is_dirty() const { return local_dirty || transformer.dirty(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<exposure::FULL> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }

@@ -33,7 +33,7 @@ namespace oly::reg
 				CUSTOM
 			};
 			std::optional<std::variant<SingleFrameFormat, AutoFrameFormat, graphics::AnimFrameFormat>> frame_format;
-			std::optional<std::variant<ShearTransformModifier2D, PivotTransformModifier2D, PivotShearTransformModifier2D>> modifier;
+			std::optional<std::variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
 		};
 	}
 

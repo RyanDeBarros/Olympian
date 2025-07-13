@@ -17,7 +17,7 @@ namespace oly::debug
 	inline void update_view(CollisionView& view, const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 				return true;
 			else
@@ -47,7 +47,7 @@ namespace oly::debug
 	inline void update_view_no_color(CollisionView& view, const col2d::ContactResult::Feature& feature, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 				return true;
 			else
@@ -88,7 +88,7 @@ namespace oly::debug
 	inline void update_view(CollisionView& view, const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 				return true;
 			else
@@ -118,7 +118,7 @@ namespace oly::debug
 	inline void update_view_no_color(CollisionView& view, const col2d::Ray& ray, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
-		bool modify = std::visit([](auto&& obj) -> bool {
+		bool modify = std::visit([](const auto& obj) -> bool {
 			if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 				return true;
 			else

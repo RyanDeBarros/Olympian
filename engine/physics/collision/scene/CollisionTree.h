@@ -48,10 +48,12 @@ namespace oly::col2d
 
 			void subdivide();
 
-			bool subnode_coordinates(const math::Rect2D& b, unsigned int& x, unsigned int& y) const;
+			bool subnode_coordinates(math::Rect2D b, unsigned int& x, unsigned int& y) const;
 			size_t idx(unsigned int x, unsigned int y) const;
 
 			math::Rect2D subdivision(int x, int y) const;
+
+			void set_bounds(math::Rect2D b);
 
 		public:
 			const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
@@ -144,7 +146,7 @@ namespace oly::col2d
 		BFSColliderIterator query(const Collider& collider) const;
 		BFSColliderIterator query(const math::Rect2D bounds) const;
 		PairIterator iterator() const { return PairIterator(root.get(), root->bounds); }
-
-		// TODO set_bounds()
+		
+		void set_bounds(math::Rect2D bounds);
 	};
 }
