@@ -130,7 +130,7 @@ namespace oly::col2d::sat
 				for (size_t i = 0; i < c.points().size(); ++i)
 				{
 					UnitVector2D axis = c.edge_normal(i);
-					if (sat(c, other, axis) < 0.0f)
+					if (sat(c, other, axis) <= 0.0f)
 						return false;
 				}
 				return true;
@@ -146,7 +146,7 @@ namespace oly::col2d::sat
 				{
 					UnitVector2D axis = c.edge_normal(i);
 					float depth = sat(c, other, axis);
-					if (depth < 0.0f)
+					if (depth <= 0.0f)
 					{
 						info.overlap = false;
 						info.penetration_depth = 0.0f;
@@ -169,14 +169,14 @@ namespace oly::col2d::sat
 				{
 					UnitVector2D axis = UnitVector2D::RIGHT;
 					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(c.x1, c.x2, min2, max2, axis) < 0.0f)
+					if (sat(c.x1, c.x2, min2, max2, axis) <= 0.0f)
 						return false;
 				}
 
 				{
 					UnitVector2D axis = UnitVector2D::UP;
 					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(c.y1, c.y2, min2, max2, axis) < 0.0f)
+					if (sat(c.y1, c.y2, min2, max2, axis) <= 0.0f)
 						return false;
 				}
 
@@ -191,7 +191,7 @@ namespace oly::col2d::sat
 			{
 				UnitVector2D axis = UnitVector2D::RIGHT;
 				float depth = sat(c, other, axis);
-				if (depth < 0.0f)
+				if (depth <= 0.0f)
 				{
 					info.overlap = false;
 					info.penetration_depth = 0.0f;
@@ -204,7 +204,7 @@ namespace oly::col2d::sat
 				}
 				axis = UnitVector2D::UP;
 				depth = sat(c, other, axis);
-				if (depth < 0.0f)
+				if (depth <= 0.0f)
 				{
 					info.overlap = false;
 					info.penetration_depth = 0.0f;
@@ -226,7 +226,7 @@ namespace oly::col2d::sat
 					UnitVector2D axis = c.get_major_axis();
 					float cw = axis.dot(c.center);
 					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(cw - 0.5f * c.width, cw + 0.5f * c.width, min2, max2, axis) < 0.0f)
+					if (sat(cw - 0.5f * c.width, cw + 0.5f * c.width, min2, max2, axis) <= 0.0f)
 						return false;
 				}
 
@@ -234,7 +234,7 @@ namespace oly::col2d::sat
 					UnitVector2D axis = c.get_minor_axis();
 					float ch = axis.dot(c.center);
 					auto [min2, max2]  = other.projection_interval(axis);
-					if (sat(ch - 0.5f * c.height, ch + 0.5f * c.height, min2, max2, axis) < 0.0f)
+					if (sat(ch - 0.5f * c.height, ch + 0.5f * c.height, min2, max2, axis) <= 0.0f)
 						return false;
 				}
 
@@ -249,7 +249,7 @@ namespace oly::col2d::sat
 			{
 				UnitVector2D axis = c.get_major_axis();
 				float depth = sat(c, other, axis);
-				if (depth < 0.0f)
+				if (depth <= 0.0f)
 				{
 					info.overlap = false;
 					info.penetration_depth = 0.0f;
@@ -262,7 +262,7 @@ namespace oly::col2d::sat
 				}
 				axis = c.get_minor_axis();
 				depth = sat(c, other, axis);
-				if (depth < 0.0f)
+				if (depth <= 0.0f)
 				{
 					info.overlap = false;
 					info.penetration_depth = 0.0f;
@@ -283,7 +283,7 @@ namespace oly::col2d::sat
 				for (size_t i = 0; i < K; ++i)
 				{
 					const fpair i2 = other.projection_interval(c.edge_normal(i));
-					if (std::min(c.global_clipped_maximum(i), i2.second) - std::max(c.global_clipped_minimum(i), i2.first) < 0.0f)
+					if (std::min(c.global_clipped_maximum(i), i2.second) - std::max(c.global_clipped_minimum(i), i2.first) <= 0.0f)
 						return false;
 				}
 				return true;
@@ -300,7 +300,7 @@ namespace oly::col2d::sat
 					UnitVector2D axis = c.edge_normal(i);
 					const auto [min2, max2] = other.projection_interval(axis);
 					const float depth = sat(c.global_clipped_minimum(i), c.global_clipped_maximum(i), min2, max2, axis);
-					if (depth < 0.0f)
+					if (depth <= 0.0f)
 					{
 						info.overlap = false;
 						info.penetration_depth = 0.0f;
@@ -326,7 +326,7 @@ namespace oly::col2d::sat
 					for (int i = 0; i < K; ++i)
 					{
 						const int j = sign2 * i + offset2;
-						if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(j)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(j)) < 0.0f)
+						if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(j)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(j)) <= 0.0f)
 							return false;
 					}
 					return true;
@@ -350,7 +350,7 @@ namespace oly::col2d::sat
 						UnitVector2D axis = c1.edge_normal(i);
 						const int j = sign2 * i + offset2;
 						const float depth = sat(c1.global_clipped_minimum(i), c1.global_clipped_maximum(i), c2.global_clipped_minimum(j), c2.global_clipped_maximum(j), axis);
-						if (depth < 0.0f)
+						if (depth <= 0.0f)
 							return { .overlap = false };
 						else if (depth < info.penetration_depth)
 						{

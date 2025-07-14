@@ -146,7 +146,7 @@ namespace oly::col2d
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			float sep = separation(axis, active_elements, num_active_elements, static_element);
-			if (sep < 0.0f)
+			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
@@ -173,7 +173,7 @@ namespace oly::col2d
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements);
-			if (sep < 0.0f)
+			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
@@ -260,7 +260,7 @@ namespace oly::col2d
 		{
 			size_t _most_significant_active_element;
 			float sep = separation(axis, active_elements, num_active_elements, static_element, _most_significant_active_element);
-			if (sep < 0.0f)
+			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
@@ -291,7 +291,7 @@ namespace oly::col2d
 		{
 			size_t _most_significant_active_element, _most_significant_static_element;
 			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, _most_significant_active_element, _most_significant_static_element);
-			if (sep < 0.0f)
+			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{

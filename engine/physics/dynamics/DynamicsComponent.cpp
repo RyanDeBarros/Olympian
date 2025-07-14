@@ -171,91 +171,111 @@ namespace oly::physics
 
 	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
 
+	// TODO update DOC on resolution bias removal
+
 	void DynamicsComponent::on_tick() const
 	{
 		if (flag != Flag::STATIC)
 		{
-			// 1. update velocity from non-collision stimuli
-
-			glm::vec2 new_linear_velocity = state.linear_velocity + properties.dv_psi();
-			float new_angular_velocity = flag == Flag::KINEMATIC ? state.angular_velocity + properties.dw_psi() : 0.0f;
-
-			// 2. compute collision response
-
-			glm::vec2 j_c = {};
-			float h_c = 0.0f;
-			compute_collision_response(j_c, h_c, new_linear_velocity, new_angular_velocity);
-
-			// 3. update velocity from collision stimuli
-
-			state.linear_velocity = new_linear_velocity + j_c * properties.mass_inverse();
-			if (flag == Flag::KINEMATIC)
-				state.angular_velocity = new_angular_velocity + h_c * properties.moi_inverse();
-
-			// 4. apply drag
-
-			if (material.linear_drag > 0.0f)
-				state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
-			if (flag == Flag::KINEMATIC)
-				if (material.angular_drag > 0.0f)
-					state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
-
-			// 5. update position
-
-			glm::vec2 dx = {};
 			if (is_colliding())
 			{
-				if (material.resolution_bias > 0.0f)
-					dx += material.resolution_bias.get() * state.linear_velocity * TIME.delta<>();
-				if (material.resolution_bias < 1.0f)
+				// 1. update velocity from non-collision stimuli
+
+				glm::vec2 new_linear_velocity = state.linear_velocity + properties.dv_psi();
+				float new_angular_velocity = flag == Flag::KINEMATIC ? state.angular_velocity + properties.dw_psi() : 0.0f;
+
+				// 2. compute collision response
+
+				glm::vec2 j_c = {};
+				float h_c = 0.0f;
+				compute_collision_response(j_c, h_c, new_linear_velocity, new_angular_velocity);
+
+				// 3. update position
+
+				glm::vec2 dx = {};
+				glm::vec2 teleport = {};
+				for (const CollisionResponse& collision : collisions)
 				{
-					glm::vec2 dx_t = {};
+					glm::vec2 dx_t = collision.mtv;
+					if (collision.dynamics->flag != Flag::STATIC)
+						dx_t *= collision.dynamics->properties.mass() / (properties.mass() + collision.dynamics->properties.mass());
+					// TODO smarter accumulation of teleport than addition
+					teleport += dx_t;
+				}
+				dx += teleport;
+
+				UnitVector2D teleport_axis(teleport);
+				glm::vec2 dx_v = new_linear_velocity * TIME.delta<>();
+				float along_teleport_axis = teleport_axis.dot(dx_v);
+				glm::vec2 perp_teleport_axis = dx_v - along_teleport_axis * (glm::vec2)teleport_axis;
+				dx_v = perp_teleport_axis + std::max(along_teleport_axis, 0.0f) * (glm::vec2)teleport_axis;
+				dx += dx_v;
+				state.position += dx;
+
+				// 4. update linear velocity
+
+				state.linear_velocity = dx_v * TIME.inverse_delta<>() + j_c * properties.mass_inverse();
+				if (material.linear_drag > 0.0f)
+					state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
+
+				if (flag == Flag::KINEMATIC)
+				{
+					// 5. update rotation
+
+					float dtheta = 0.0f;
+					float teleport = 0.0f;
 					for (const CollisionResponse& collision : collisions)
 					{
-						glm::vec2 teleport = collision.mtv;
+						float dtheta_t = math::cross(collision.contact - properties.center_of_mass, collision.mtv);
 						if (collision.dynamics->flag != Flag::STATIC)
-							teleport *= collision.dynamics->properties.mass() / (properties.mass() + collision.dynamics->properties.mass());
-						
-						dx_t += teleport;
-						// TODO test teleport - seems like it's too big
+							dtheta_t *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass());
+						// TODO smarter accumulation of teleport than addition
+						teleport += dtheta_t;
 					}
+					teleport *= properties.mass() * properties.moi_inverse();
+					dtheta += teleport;
 
-					dx += (1.0f - material.resolution_bias.get()) * dx_t;
+					float dtheta_w = new_angular_velocity * TIME.delta<>();
+					if (above_zero(teleport))
+						dtheta_w = std::min(0.0f, dtheta_w);
+					else if (below_zero(teleport))
+						dtheta_w = std::max(0.0f, dtheta_w);
+					dtheta += dtheta_w;
+					state.rotation += dtheta;
+
+					// 6. update angular velocity
+
+					state.angular_velocity = dtheta_w * TIME.inverse_delta<>() + h_c * properties.moi_inverse();
+					if (material.angular_drag > 0.0f)
+						state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
 				}
 			}
 			else
-				dx += state.linear_velocity * TIME.delta<>();
-
-			state.position += dx;
-
-			if (flag == Flag::KINEMATIC)
 			{
-				// 6. update rotation
+				// 1. update velocity from stimuli
 
-				float dtheta = 0.0f;
-				if (is_colliding())
+				state.linear_velocity += properties.dv_psi();
+				if (flag == Flag::KINEMATIC)
+					state.angular_velocity += properties.dw_psi();
+
+				// 2. apply drag
+
+				if (material.linear_drag > 0.0f)
+					state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
+				if (flag == Flag::KINEMATIC)
+					if (material.angular_drag > 0.0f)
+						state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta<>());
+
+				// 3. update position
+
+				state.position += state.linear_velocity * TIME.delta<>();
+
+				if (flag == Flag::KINEMATIC)
 				{
-					if (material.resolution_bias > 0.0f)
-						dtheta += material.resolution_bias.get() * state.angular_velocity * TIME.delta<>();
-					if (material.resolution_bias < 1.0f)
-					{
-						float dtheta_t = 0.0f;
-						for (const CollisionResponse& collision : collisions)
-						{
-							float teleport = math::cross(collision.contact - properties.center_of_mass, collision.mtv);
-							if (collision.dynamics->flag != Flag::STATIC)
-								teleport *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass());
+					// 4. update rotation
 
-							dtheta_t += teleport;
-						}
-
-						dtheta += (1.0f - material.resolution_bias.get()) * dtheta_t * properties.mass() * properties.moi_inverse();
-					}
+					state.rotation += state.angular_velocity * TIME.delta<>();
 				}
-				else
-					dtheta += state.angular_velocity * TIME.delta<>();
-
-				state.rotation += dtheta;
 			}
 		}
 
@@ -298,7 +318,7 @@ namespace oly::physics
 				relative_velocity -= other_contact_velocity;
 
 			const float restitution = material.restitution_with(collision.dynamics->material);
-			const float j = std::max(-effective_mass * (1.0f + restitution) * collision.normal.dot(relative_velocity), 0.0f);
+			const float j = std::max(-effective_mass * restitution * collision.normal.dot(relative_velocity), 0.0f);
 			glm::vec2 impulse = j * (glm::vec2)collision.normal;
 
 			glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact - properties.center_of_mass);

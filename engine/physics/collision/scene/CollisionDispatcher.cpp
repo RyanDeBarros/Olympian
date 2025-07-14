@@ -105,12 +105,18 @@ namespace oly::col2d
 		if (!c1)
 		{
 			handlers.erase(it_1);
-			it_2 = handlers.find(second);
-		}
-		if (!c2)
-			handlers.erase(it_2);
-		if (!c1 || !c2)
+			if (!c2)
+			{
+				it_2 = handlers.find(second);
+				handlers.erase(it_2);
+			}
 			return;
+		}
+		else if (!c2)
+		{
+			handlers.erase(it_2);
+			return;
+		}
 
 		EventData data((c1->*method)(*c2), first, second, phase_tracker.prior_phase(first, second));
 		phase_tracker.lazy_update_phase(first, second, data.phase);

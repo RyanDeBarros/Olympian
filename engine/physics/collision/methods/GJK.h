@@ -76,7 +76,7 @@ namespace oly::col2d::gjk
 		for (size_t i = 0; i < max_iterations; ++i)
 		{
 			glm::vec2 p = support(c1, c2, axis);
-			if (axis.dot(p) < 0.0f)
+			if (axis.dot(p) <= 0.0f)
 				return false;
 
 			simplex.push_back(p);
@@ -100,7 +100,7 @@ namespace oly::col2d::gjk
 		for (size_t i = 0; i < gjk_max_iterations; ++i)
 		{
 			glm::vec2 p = support(c1, c2, axis);
-			if (axis.dot(p) < 0.0f)
+			if (axis.dot(p) <= 0.0f)
 				return { .overlap = false };
 
 			simplex.push_back(p);

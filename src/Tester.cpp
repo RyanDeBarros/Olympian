@@ -136,14 +136,15 @@ int main()
 
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
-	player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
-	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
+	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
+	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi(2000.0f);
 	player.properties().net_force += oly::physics::GRAVITY;
 	player.material().angular_drag = 1.0f;
 	player.material().resolution_bias = 0.5f;
-	// TODO when resolution bias is 1.0, player just sinks slowly through ground. at 0.0, player bounces slightly on ground.
+	player.material().set_restitution(0.5f);
+	oly::physics::set_restitution_blend_op(oly::physics::FactorBlendOp::ACTIVE);
 
 	player.add_collider(player_collider);
 	//player.add_collider(star.as_convex_tcompound());

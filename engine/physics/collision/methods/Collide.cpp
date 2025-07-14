@@ -177,11 +177,11 @@ namespace oly::col2d
 			float m2 = left + (right - left) * inv_golden_ratio();
 			UnitVector2D a1(m1);
 			float d1 = circle_penetration_depth(c1, c2, a1);
-			if (d1 < 0.0f)
+			if (d1 <= 0.0f)
 				return false;
 			UnitVector2D a2(m2);
 			float d2 = circle_penetration_depth(c1, c2, a2);
-			if (d2 < 0.0f)
+			if (d2 <= 0.0f)
 				return false;
 			if (d1 < d2)
 			{
