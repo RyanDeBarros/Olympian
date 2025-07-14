@@ -5,6 +5,7 @@
 #include "core/base/SimpleMath.h"
 #include "core/math/Geometry.h"
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
 #include <array>
 
@@ -31,7 +32,7 @@ namespace oly::col2d
 		fpair projection_interval(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
-		glm::vec2 deepest_point(const UnitVector2D& axis) const;
+		ContactManifold deepest_manifold(const UnitVector2D& axis) const;
 		math::Rect2D rect() const;
 	};
 

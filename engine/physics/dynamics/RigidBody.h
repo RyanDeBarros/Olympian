@@ -67,6 +67,7 @@ namespace oly::physics
 		Material& material() { return dynamics.material; }
 		const Properties& properties() const { return dynamics.properties; }
 		Properties& properties() { return dynamics.properties; }
+		State state() const { return dynamics.get_state(); }
 		DynamicsComponent::Flag get_flag() const { return dynamics.flag; }
 		void set_flag(DynamicsComponent::Flag flag);
 		bool is_colliding() const { return dynamics.is_colliding(); }

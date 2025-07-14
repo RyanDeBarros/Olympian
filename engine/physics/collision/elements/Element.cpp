@@ -229,6 +229,20 @@ namespace oly::col2d
 		return static_max_proj - active_min_proj;
 	}
 
+	static ContactResult param_contact_result(const ElementParam& e1, const ElementParam& e2, const CollisionResult& collision)
+	{
+		ContactResult contact{ .overlap = collision.overlap };
+		if (contact.overlap)
+		{
+			contact.active_feature.impulse = collision.mtv();
+			contact.active_feature.position = std::visit([axis = -collision.unit_impulse](const auto& ae) { return ae->deepest_manifold(axis).pt(); }, e1);
+
+			contact.passive_feature.impulse = -collision.mtv();
+			contact.passive_feature.position = std::visit([axis = collision.unit_impulse](const auto& se) { return se->deepest_manifold(axis).pt(); }, e2);
+		}
+		return contact;
+	}
+
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		std::set<UnitVector2D> separating_axes;
@@ -256,17 +270,7 @@ namespace oly::col2d
 				most_significant_active_element = _most_significant_active_element;
 			}
 		}
-
-		ContactResult contact{ .overlap = laziest.overlap };
-		if (contact.overlap)
-		{
-			contact.active_feature.impulse = laziest.mtv();
-			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
-
-			contact.passive_feature.impulse = -laziest.mtv();
-			contact.passive_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, static_element);
-		}
-		return contact;
+		return param_contact_result(param(active_elements[most_significant_active_element]), static_element, laziest);
 	}
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
@@ -298,17 +302,7 @@ namespace oly::col2d
 				most_significant_static_element = _most_significant_static_element;
 			}
 		}
-
-		ContactResult contact{ .overlap = laziest.overlap };
-		if (contact.overlap)
-		{
-			contact.active_feature.impulse = laziest.mtv();
-			contact.active_feature.position = std::visit([axis = -laziest.unit_impulse](auto&& ae) { return ae->deepest_point(axis); }, param(active_elements[most_significant_active_element]));
-
-			contact.passive_feature.impulse = -laziest.mtv();
-			contact.passive_feature.position = std::visit([axis = laziest.unit_impulse](auto&& se) { return se->deepest_point(axis); }, param(static_elements[most_significant_static_element]));
-		}
-		return contact;
+		return param_contact_result(param(active_elements[most_significant_active_element]), param(static_elements[most_significant_static_element]), laziest);
 	}
 
 	static bool only_translation_and_scale(const glm::mat3& m)

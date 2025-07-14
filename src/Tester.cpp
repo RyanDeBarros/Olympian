@@ -1,13 +1,6 @@
 ﻿#include "Olympian.h"
 
-#include "physics/collision/methods/Collide.h"
-#include "physics/collision/methods/SAT.h"
-#include "physics/collision/methods/KDOPCollide.h"
 #include "physics/collision/debugging/CommonViews.h"
-#include "physics/collision/objects/Capsule.h"
-#include "physics/collision/objects/Combinations.h"
-#include "physics/collision/objects/Polygon.h"
-#include "physics/collision/scene/CollisionDispatcher.h"
 #include "physics/dynamics/RigidBody.h"
 #include "physics/dynamics/Constants.h"
 
@@ -111,7 +104,7 @@ int main()
 	//oly::col2d::TPrimitive block(oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f));
 	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -200.0f, .x2 = 50.0f, .y1 = -200.0f, .y2 = 300.0f } };
 	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
-	//oly::col2d::TPrimitive block(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
+	oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
 
 	oly::col2d::ConvexHull hull_pts;
 	const int _npts = 5;
@@ -150,8 +143,10 @@ int main()
 	player.properties().net_force += oly::physics::GRAVITY;
 	player.material().angular_drag = 1.0f;
 	player.material().resolution_bias = 0.5f;
+	// TODO when resolution bias is 1.0, player just sinks slowly through ground. at 0.0, player bounces slightly on ground.
 
-	player.add_collider(star.as_convex_tcompound());
+	player.add_collider(player_collider);
+	//player.add_collider(star.as_convex_tcompound());
 	player.collider()->layer() |= CollisionLayers::L_PLAYER;
 	player.collider()->mask() |= CollisionMasks::M_OBSTACLE;
 	//oly::col2d::TCompound player = star.as_convex_tcompound();

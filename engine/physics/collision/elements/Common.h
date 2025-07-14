@@ -4,6 +4,7 @@
 #include "core/base/Constants.h"
 #include "core/base/Assert.h"
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
 namespace oly::col2d::internal
 {
@@ -189,13 +190,13 @@ namespace oly::col2d::internal
 	}
 
 	template<typename Polygon>
-	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis, int& starting_index)
+	ContactManifold polygon_deepest_manifold(const Polygon& polygon, const UnitVector2D& axis, int& starting_index)
 	{
 		bool forward = true;
 		int offset = 0;
 		const size_t n = polygon.size();
-		glm::vec2 deepest = polygon[unsigned_mod(starting_index + offset++, n)];
-		float max_proj = axis.dot(deepest);
+		ContactManifold deepest = { .p1 = polygon[unsigned_mod(starting_index + offset++, n)] };
+		float max_proj = axis.dot(deepest.p1);
 		int num_deepest_points = 1;
 		
 		while (offset < n)
@@ -204,19 +205,23 @@ namespace oly::col2d::internal
 			float proj = axis.dot(point);
 			if (approx(proj, max_proj))
 			{
-				deepest += point;
+				deepest.p2 = point;
+				deepest.single = false;
 				++num_deepest_points;
 			}
 			else if (proj > max_proj)
 			{
 				max_proj = proj;
-				deepest = point;
+				deepest.p1 = point;
+				deepest.single = true;
 				num_deepest_points = 1;
 				forward = true;
 				break;
 			}
 			else
 			{
+				if (!deepest.single)
+					std::swap(deepest.p1, deepest.p2);
 				forward = false;
 				break;
 			}
@@ -224,7 +229,7 @@ namespace oly::col2d::internal
 		if (offset == n)
 		{
 			starting_index = unsigned_mod(starting_index - 1, n);
-			return deepest /= (float)num_deepest_points;
+			return deepest;
 		}
 
 		if (forward)
@@ -236,13 +241,15 @@ namespace oly::col2d::internal
 				float proj = axis.dot(point);
 				if (approx(proj, max_proj))
 				{
-					deepest += point;
+					deepest.p2 = point;
+					deepest.single = false;
 					++num_deepest_points;
 				}
 				else if (proj > max_proj)
 				{
 					max_proj = proj;
-					deepest = point;
+					deepest.p1 = point;
+					deepest.single = true;
 					num_deepest_points = 1;
 				}
 				else
@@ -260,13 +267,15 @@ namespace oly::col2d::internal
 				float proj = axis.dot(point);
 				if (approx(proj, max_proj))
 				{
-					deepest += point;
+					deepest.p2 = point;
+					deepest.single = false;
 					++num_deepest_points;
 				}
 				else if (proj > max_proj)
 				{
 					max_proj = proj;
-					deepest = point;
+					deepest.p1 = point;
+					deepest.single = true;
 					num_deepest_points = 1;
 				}
 				else
@@ -275,19 +284,19 @@ namespace oly::col2d::internal
 			}
 			starting_index = unsigned_mod(starting_index + i + num_deepest_points, n);
 		}
-		return deepest /= (float)num_deepest_points;
+		return deepest;
 	}
 
 	template<typename Polygon>
-	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis)
+	ContactManifold polygon_deepest_manifold(const Polygon& polygon, const UnitVector2D& axis)
 	{
 		int starting_index = 0;
-		return polygon_deepest_point(polygon, axis, starting_index);
+		return polygon_deepest_manifold(polygon, axis, starting_index);
 	}
 
 	template<typename Polygon>
-	glm::vec2 polygon_deepest_point(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
+	ContactManifold polygon_deepest_manifold(const Polygon& polygon, const UnitVector2D& axis, ProjectionCache& cache)
 	{
-		return polygon_deepest_point(polygon, axis, cache.index_deepest);
+		return polygon_deepest_manifold(polygon, axis, cache.index_deepest);
 	}
 }

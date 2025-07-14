@@ -157,8 +157,8 @@ namespace oly::col2d
 		return internal::polygon_projection_max(points(), axis);
 	}
 
-	glm::vec2 OBB::deepest_point(const UnitVector2D& axis) const
+	ContactManifold OBB::deepest_manifold(const UnitVector2D& axis) const
 	{
-		return internal::polygon_deepest_point(points(), axis);
+		return internal::polygon_deepest_manifold(points(), axis);
 	}
 }

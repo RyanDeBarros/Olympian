@@ -109,8 +109,8 @@ namespace oly::col2d
 		{
 			return std::visit([&major_axis, &minor_axis](auto&& element) -> AABB {
 				if constexpr (visiting_class_is<decltype(element), Circle>)
-					return { .x1 = (-major_axis).dot(element.deepest_point(-major_axis)), .x2 = major_axis.dot(element.deepest_point(major_axis)),
-							 .y1 = (-minor_axis).dot(element.deepest_point(-minor_axis)), .y2 = minor_axis.dot(element.deepest_point(minor_axis)) };
+					return { .x1 = (-major_axis).dot(element.deepest_manifold(-major_axis).pt()), .x2 = major_axis.dot(element.deepest_manifold(major_axis).pt()),
+							 .y1 = (-minor_axis).dot(element.deepest_manifold(-minor_axis).pt()), .y2 = minor_axis.dot(element.deepest_manifold(minor_axis).pt()) };
 				else if constexpr (visiting_class_is<decltype(element), AABB, OBB, ConvexHull>)
 				{
 					AABB bounds = AABB::DEFAULT;

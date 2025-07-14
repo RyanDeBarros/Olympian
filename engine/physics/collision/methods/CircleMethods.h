@@ -195,20 +195,6 @@ namespace oly::col2d::internal
 	template<typename Shape, typename Polygon>
 	inline ContactResult circle_contacts_polygon(const Circle& c, const Shape& other, const Polygon& polygon)
 	{
-		CollisionResult collision = circle_collides_polygon(c, polygon);
-		if (!collision.overlap)
-			return { .overlap = false };
-
-		return {
-			.overlap = true,
-			.active_feature = {
-				.position = c.deepest_point(-collision.unit_impulse),
-				.impulse = (glm::vec2)collision.unit_impulse * collision.penetration_depth
-			},
-			.passive_feature = {
-				.position = other.deepest_point(collision.unit_impulse),
-				.impulse = -(glm::vec2)collision.unit_impulse * collision.penetration_depth,
-			}
-		};
+		return standard_contact_result(c, other, circle_collides_polygon(c, polygon));
 	}
 }

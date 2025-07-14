@@ -52,12 +52,12 @@ namespace oly::col2d
 			return axis.dot(global * center + global_offset) + radius * glm::length(glm::transpose(global) * axis);
 	}
 
-	glm::vec2 Circle::deepest_point(const UnitVector2D& axis) const
+	ContactManifold Circle::deepest_manifold(const UnitVector2D& axis) const
 	{
 		if (global == glm::mat2(1.0f))
-			return center + global_offset + radius * (glm::vec2)axis;
+			return { .p1 = center + global_offset + radius * (glm::vec2)axis };
 		else
-			return global * center + global_offset + radius * (glm::vec2)axis * math::inv_magnitude(global_inverse * axis);
+			return { .p1 = global * center + global_offset + radius * (glm::vec2)axis * math::inv_magnitude(global_inverse * axis) };
 	}
 
 	namespace internal

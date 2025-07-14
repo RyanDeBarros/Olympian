@@ -10,6 +10,7 @@
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/Common.h"
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
 #include "core/containers/CopyPtr.h"
 
@@ -231,7 +232,8 @@ namespace oly::col2d
 				return { global_clipped_minimum(j), global_clipped_maximum(j) };
 			}
 			else
-				return { global_extremum(local_axis, local_axis.dot(local_deepest_point(-local_axis))), global_extremum(local_axis, local_axis.dot(local_deepest_point(local_axis))) };
+				return { global_extremum(local_axis, local_axis.dot(local_deepest_manifold(-local_axis).pt())),
+					global_extremum(local_axis, local_axis.dot(local_deepest_manifold(local_axis).pt())) };
 		}
 
 		float projection_min(const UnitVector2D& axis) const
@@ -241,7 +243,7 @@ namespace oly::col2d
 			if (near_multiple(i, 1.0f))
 				return global_clipped_minimum(unsigned_mod(roundi(i), 2 * K));
 			else
-				return global_extremum(local_axis, local_axis.dot(local_deepest_point(-local_axis)));
+				return global_extremum(local_axis, local_axis.dot(local_deepest_manifold(-local_axis).pt()));
 		}
 
 		float projection_max(const UnitVector2D& axis) const
@@ -251,7 +253,7 @@ namespace oly::col2d
 			if (near_multiple(i, 1.0f))
 				return global_clipped_maximum(unsigned_mod(roundi(i), 2 * K));
 			else
-				return global_extremum(local_axis, local_axis.dot(local_deepest_point(local_axis)));
+				return global_extremum(local_axis, local_axis.dot(local_deepest_manifold(local_axis).pt()));
 		}
 
 		UnitVector2D edge_normal(size_t i) const
@@ -259,40 +261,44 @@ namespace oly::col2d
 			return UnitVector2D(glm::transpose(global_inverse) * uniform_axis(i));
 		}
 
-		glm::vec2 deepest_point(const UnitVector2D& axis) const
+		ContactManifold deepest_manifold(const UnitVector2D& axis) const
 		{
-			return global * local_deepest_point(get_local_axis(axis)) + global_offset;
+			ContactManifold local_manifold = local_deepest_manifold(get_local_axis(axis));
+			ContactManifold global_manifold;
+			global_manifold.p1 = global * local_manifold.p1 + global_offset;
+			if (!local_manifold.single)
+			{
+				global_manifold.single = false;
+				global_manifold.p2 = global * local_manifold.p2 + global_offset;
+			}
+			return global_manifold;
 		}
 		
 	private:
-		glm::vec2 local_deepest_point(const UnitVector2D& axis) const
+		glm::vec2 corner_intersection(int i1, int i2) const
+		{
+			glm::vec2 p1 = (i1 < K ? get_clipped_maximum(i1) : get_clipped_minimum(i1 - K)) * (glm::vec2)uniform_axis(i1 % K);
+			glm::vec2 p2 = (i2 < K ? get_clipped_maximum(i2) : get_clipped_minimum(i2 - K)) * (glm::vec2)uniform_axis(i2 % K);
+			return math::intersection_by_normals(p1, uniform_axis(i1), p2, uniform_axis(i2));
+		}
+
+		ContactManifold local_deepest_manifold(const UnitVector2D& axis) const
 		{
 			float i = axis.rotation() * K * glm::one_over_pi<float>();
 			if (near_multiple(i, 1.0f))
 			{
+				ContactManifold manifold;
+				manifold.single = false;
 				int j = unsigned_mod(roundi(i), 2 * K);
-				return (j < K ? get_clipped_maximum(j) : get_clipped_minimum(j - K)) * (glm::vec2)uniform_axis(j % K);
+				manifold.p1 = corner_intersection(j, unsigned_mod(j + 1, 2 * K));
+				manifold.p2 = corner_intersection(unsigned_mod(j - 1, 2 * K), j);
+				return manifold;
 			}
 			else
 			{
 				int i1 = unsigned_mod((int)floorf(i), 2 * K);
-				glm::vec2 p1 = (i1 < K ? get_clipped_maximum(i1) : get_clipped_minimum(i1 - K)) * (glm::vec2)uniform_axis(i1 % K);
-				float m1 = math::mag_sqrd(p1);
-				
 				int i2 = unsigned_mod((int)ceilf(i), 2 * K);
-				glm::vec2 p2 = (i2 < K ? get_clipped_maximum(i2) : get_clipped_minimum(i2 - K)) * (glm::vec2)uniform_axis(i2 % K);
-				float m2 = math::mag_sqrd(p2);
-
-				glm::vec2 xpt = math::intersection_by_normals(p1, uniform_axis(i1), p2, uniform_axis(i2));
-				float m3 = math::mag_sqrd(xpt);
-				
-				size_t sel = max_of(m1, m2, m3);
-				if (sel == 0)
-					return p1;
-				else if (sel == 0)
-					return p2;
-				else
-					return xpt;
+				return { .p1 = corner_intersection(i1, i2) };
 			}
 		}
 	};

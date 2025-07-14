@@ -16,7 +16,7 @@ namespace oly::col2d::gjk
 	template<typename Shape1, typename Shape2>
 	inline glm::vec2 support(const Shape1& c1, const Shape2& c2, const UnitVector2D& axis)
 	{
-		return c1.deepest_point(axis) - c2.deepest_point(-axis);
+		return c1.deepest_manifold(axis).pt() - c2.deepest_manifold(-axis).pt();
 	}
 
 	inline bool handle_simplex(std::vector<glm::vec2>& simplex, UnitVector2D& axis)
@@ -163,20 +163,6 @@ namespace oly::col2d::gjk
 	template<typename Shape1, typename Shape2>
 	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = LINEAR_TOLERANCE)
 	{
-		CollisionResult collision = collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon);
-		if (!collision.overlap)
-			return { .overlap = false };
-
-		return {
-			.overlap = true,
-			.active_feature = {
-				.position = c1.deepest_point(-collision.unit_impulse),
-				.impulse = (glm::vec2)collision.unit_impulse * collision.penetration_depth
-			},
-			.passive_feature = {
-				.position = c2.deepest_point(collision.unit_impulse),
-				.impulse = -(glm::vec2)collision.unit_impulse * collision.penetration_depth,
-			}
-		};
+		return standard_contact_result(c1, c2, collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon));
 	}
 }

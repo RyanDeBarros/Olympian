@@ -104,8 +104,8 @@ namespace oly::col2d
 		return internal::polygon_edge_normal(_points, i);
 	}
 
-	glm::vec2 ConvexHull::deepest_point(const UnitVector2D& axis) const
+	ContactManifold ConvexHull::deepest_manifold(const UnitVector2D& axis) const
 	{
-		return internal::polygon_deepest_point(_points, axis, proj_cache);
+		return internal::polygon_deepest_manifold(_points, axis, proj_cache);
 	}
 }

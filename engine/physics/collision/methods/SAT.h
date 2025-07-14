@@ -65,21 +65,7 @@ namespace oly::col2d::sat
 	template<typename Shape1, typename Shape2>
 	inline ContactResult contacts(const Shape1& c1, const Shape2& c2)
 	{
-		CollisionResult collision = collides(c1, c2);
-		if (!collision.overlap)
-			return { .overlap = false };
-
-		return {
-			.overlap = true,
-			.active_feature = {
-				.position = c1.deepest_point(-collision.unit_impulse),
-				.impulse = (glm::vec2)collision.unit_impulse * collision.penetration_depth
-			},
-			.passive_feature = {
-				.position = c2.deepest_point(collision.unit_impulse),
-				.impulse = -(glm::vec2)collision.unit_impulse * collision.penetration_depth,
-			}
-		};
+		return standard_contact_result(c1, c2, collides(c1, c2));
 	}
 
 	namespace internal

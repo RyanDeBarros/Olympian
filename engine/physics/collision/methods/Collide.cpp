@@ -281,9 +281,7 @@ namespace oly::col2d
 			float depth;
 			if (!circle_penetration_depth(c1, c2, axis, depth))
 				return { .overlap = false };
-
-			return ContactResult{ .overlap = true, .active_feature = { .position = c1.deepest_point(-axis), .impulse = depth * (glm::vec2)axis },
-				.passive_feature = { .position = c2.deepest_point(axis), .impulse = depth * (glm::vec2)-axis } };
+			return standard_contact_result(c1, c2, axis, depth);
 		}
 	}
 

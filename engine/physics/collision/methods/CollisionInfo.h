@@ -7,6 +7,13 @@
 
 namespace oly::col2d
 {
+	struct ContactManifold
+	{
+		glm::vec2 p1 = {}, p2 = {};
+		bool single = true;
+		glm::vec2 pt() const { return single ? p1 : 0.5f * (p1 + p2); }
+	};
+
 	struct OverlapResult
 	{
 		bool overlap = false;
@@ -44,6 +51,31 @@ namespace oly::col2d
 
 		ContactResult& invert() { std::swap(active_feature, passive_feature); return *this; }
 	};
+
+	template<typename C1, typename C2>
+	inline ContactResult standard_contact_result(const C1& c1, const C2& c2, UnitVector2D axis, float depth)
+	{
+		return {
+			.overlap = true,
+			.active_feature = {
+				.position = c1.deepest_manifold(-axis).pt(),
+				.impulse = depth * (glm::vec2)axis
+			},
+			.passive_feature = {
+				.position = c2.deepest_manifold(axis).pt(),
+				.impulse = -depth * (glm::vec2)axis
+			}
+		};
+	}
+
+	template<typename C1, typename C2>
+	inline ContactResult standard_contact_result(const C1& c1, const C2& c2, const CollisionResult& collision)
+	{
+		if (collision.overlap)
+			return standard_contact_result(c1, c2, collision.unit_impulse, collision.penetration_depth);
+		else
+			return { .overlap = false };
+	}
 
 	struct Ray
 	{
