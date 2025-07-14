@@ -181,6 +181,8 @@ namespace oly::physics
 		bool is_colliding() const { return !collisions.empty(); }
 
 	private:
+		void update_colliding_linear_motion(glm::vec2 new_velocity, glm::vec2 collision_impulse) const;
+		void update_colliding_angular_motion(float new_velocity, float collision_impulse) const;
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
 	};
 

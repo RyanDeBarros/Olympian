@@ -142,8 +142,7 @@ int main()
 	player.properties().set_moi(2000.0f);
 	player.properties().net_force += oly::physics::GRAVITY;
 	player.material().angular_drag = 1.0f;
-	player.material().resolution_bias = 0.5f;
-	player.material().set_restitution(0.5f);
+	player.material().set_restitution(0.0f);
 	oly::physics::set_restitution_blend_op(oly::physics::FactorBlendOp::ACTIVE);
 
 	player.add_collider(player_collider);
@@ -201,7 +200,11 @@ int main()
 	obstacle4.properties().center_of_mass = capsule.center;
 
 	oly::physics::RigidBody ground;
-	ground.add_collider(oly::col2d::AABB{ .x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f });
+	//ground.add_collider(oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f });
+	ground.add_collider(oly::col2d::TCompound({
+		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
+		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
+		}));
 	ground.collider()->layer() |= CollisionLayers::L_OBSTACLE;
 	ground.collider()->mask() |= CollisionMasks::M_PLAYER;
 
@@ -312,6 +315,12 @@ int main()
 		obstacle2.update_view(0, cv_obstacle2);
 		obstacle3.update_view(0, cv_obstacle3);
 		obstacle4.update_view(0, cv_obstacle4);
+
+		//oly::LOG << player.state().linear_velocity << oly::LOG.nl;
+
+		bool overlap = player.collider()->collides(*ground.collider()).overlap;
+		oly::LOG << overlap << oly::LOG.nl;
+
 
 		//player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };

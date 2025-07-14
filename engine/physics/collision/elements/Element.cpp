@@ -110,42 +110,46 @@ namespace oly::col2d
 		return std::visit([&axis](auto&& el) { return el->projection_min(axis); }, el);
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	static float separation(const UnitVector2D& axis, const std::unordered_set<const Element*>& active_elements, const ElementParam& static_element)
 	{
 		// Find what length is necessary to separate compound objects along axis
 		float active_min_proj = nmax<float>();
-		for (size_t i = 0; i < num_active_elements; ++i)
-			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
+		for (auto it = active_elements.begin(); it != active_elements.end(); ++it)
+			active_min_proj = std::min(active_min_proj, projection_min(axis, param(**it)));
 		float static_max_proj = projection_max(axis, static_element);
 		return static_max_proj - active_min_proj;
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	static float separation(const UnitVector2D& axis, const std::unordered_set<const Element*>& active_elements, const std::unordered_set<const Element*>& static_elements)
 	{
 		// Find what length is necessary to separate compound objects along axis
 		float active_min_proj = nmax<float>();
-		for (size_t i = 0; i < num_active_elements; ++i)
-			active_min_proj = std::min(active_min_proj, projection_min(axis, param(active_elements[i])));
+		for (auto it = active_elements.begin(); it != active_elements.end(); ++it)
+			active_min_proj = std::min(active_min_proj, projection_min(axis, param(**it)));
 		float static_max_proj = -nmax<float>();
-		for (size_t i = 0; i < num_static_elements; ++i)
-			static_max_proj = std::max(static_max_proj, projection_max(axis, param(static_elements[i])));
+		for (auto it = static_elements.begin(); it != static_elements.end(); ++it)
+			static_max_proj = std::max(static_max_proj, projection_max(axis, param(**it)));
 		return static_max_proj - active_min_proj;
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
+		std::unordered_set<const Element*> overlapping_active_elements;
 		std::set<UnitVector2D> separating_axes;
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
 			CollisionResult result = collides(param(active_elements[i]), static_element);
 			if (result.overlap)
+			{
 				add_candidate_axis(separating_axes, result.unit_impulse);
+				overlapping_active_elements.insert(active_elements + i);
+			}
 		}
 
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
-			float sep = separation(axis, active_elements, num_active_elements, static_element);
+			float sep = separation(axis, overlapping_active_elements, static_element);
 			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
@@ -160,19 +164,24 @@ namespace oly::col2d
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
+		std::unordered_set<const Element*> overlapping_active_elements, overlapping_static_elements;
 		std::set<UnitVector2D> separating_axes;
 		for (size_t i = 0; i < num_active_elements; ++i)
 			for (size_t j = 0; j < num_static_elements; ++j)
 			{
 				CollisionResult result = collides(active_elements[i], static_elements[j]);
 				if (result.overlap)
+				{
 					add_candidate_axis(separating_axes, result.unit_impulse);
+					overlapping_active_elements.insert(active_elements + i);
+					overlapping_static_elements.insert(static_elements + j);
+				}
 			}
 
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
 		for (const UnitVector2D& axis : separating_axes)
 		{
-			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements);
+			float sep = separation(axis, overlapping_active_elements, overlapping_static_elements);
 			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
@@ -185,46 +194,52 @@ namespace oly::col2d
 		return laziest;
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element, size_t& most_significant_active_element)
+	static float separation(const UnitVector2D& axis, const std::unordered_set<const Element*>& active_elements, const ElementParam& static_element, size_t& most_significant_active_element)
 	{
 		// Find what length is necessary to separate compound objects along axis, and which element contributes the largest translation
 		float active_min_proj = nmax<float>();
-		for (size_t i = 0; i < num_active_elements; ++i)
+		size_t i = 0;
+		for (auto it = active_elements.begin(); it != active_elements.end(); ++it)
 		{
-			float proj = projection_min(axis, param(active_elements[i]));
+			float proj = projection_min(axis, param(**it));
 			if (proj < active_min_proj)
 			{
 				active_min_proj = proj;
 				most_significant_active_element = i;
 			}
+			++i;
 		}
 		float static_max_proj = projection_max(axis, static_element);
 		return static_max_proj - active_min_proj;
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements,
+	static float separation(const UnitVector2D& axis, const std::unordered_set<const Element*>& active_elements, const std::unordered_set<const Element*>& static_elements,
 		size_t& most_significant_active_element, size_t& most_significant_static_element)
 	{
 		// Find what length is necessary to separate compound objects along axis, and which element contributes the largest translation
 		float active_min_proj = nmax<float>();
-		for (size_t i = 0; i < num_active_elements; ++i)
+		size_t i = 0;
+		for (auto it = active_elements.begin(); it != active_elements.end(); ++it)
 		{
-			float proj = projection_min(axis, param(active_elements[i]));
+			float proj = projection_min(axis, param(**it));
 			if (proj < active_min_proj)
 			{
 				active_min_proj = proj;
 				most_significant_active_element = i;
 			}
+			++i;
 		}
 		float static_max_proj = -nmax<float>();
-		for (size_t i = 0; i < num_static_elements; ++i)
+		i = 0;
+		for (auto it = static_elements.begin(); it != static_elements.end(); ++it)
 		{
-			float proj = projection_max(axis, param(static_elements[i]));
+			float proj = projection_max(axis, param(**it));
 			if (proj > static_max_proj)
 			{
 				static_max_proj = proj;
 				most_significant_static_element = i;
 			}
+			++i;
 		}
 		return static_max_proj - active_min_proj;
 	}
@@ -245,12 +260,16 @@ namespace oly::col2d
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
+		std::unordered_set<const Element*> overlapping_active_elements;
 		std::set<UnitVector2D> separating_axes;
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
 			CollisionResult result = collides(param(active_elements[i]), static_element);
 			if (result.overlap)
+			{
 				add_candidate_axis(separating_axes, result.unit_impulse);
+				overlapping_active_elements.insert(active_elements + i);
+			}
 		}
 
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
@@ -259,7 +278,7 @@ namespace oly::col2d
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			size_t _most_significant_active_element;
-			float sep = separation(axis, active_elements, num_active_elements, static_element, _most_significant_active_element);
+			float sep = separation(axis, overlapping_active_elements, static_element, _most_significant_active_element);
 			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
@@ -275,13 +294,18 @@ namespace oly::col2d
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
+		std::unordered_set<const Element*> overlapping_active_elements, overlapping_static_elements;
 		std::set<UnitVector2D> separating_axes;
 		for (size_t i = 0; i < num_active_elements; ++i)
 			for (size_t j = 0; j < num_static_elements; ++j)
 			{
 				CollisionResult result = collides(active_elements[i], static_elements[j]);
 				if (result.overlap)
+				{
 					add_candidate_axis(separating_axes, result.unit_impulse);
+					overlapping_active_elements.insert(active_elements + i);
+					overlapping_static_elements.insert(static_elements + j);
+				}
 			}
 
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
@@ -290,7 +314,7 @@ namespace oly::col2d
 		for (const UnitVector2D& axis : separating_axes)
 		{
 			size_t _most_significant_active_element, _most_significant_static_element;
-			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, _most_significant_active_element, _most_significant_static_element);
+			float sep = separation(axis, overlapping_active_elements, overlapping_static_elements, _most_significant_active_element, _most_significant_static_element);
 			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
