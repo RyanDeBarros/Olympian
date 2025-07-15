@@ -136,8 +136,8 @@ int main()
 
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
-	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
-	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
+	player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
+	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi(2000.0f);
 	player.properties().net_force += oly::physics::GRAVITY;
@@ -300,7 +300,11 @@ int main()
 
 		flag_state_timer.poll();
 		
-		//collision_dispatcher.emit(player);
+		// TODO unit impulse seems correct, so "jump" on step looks like caused by physics response.
+		auto result = player.collider()->collides(*ground.collider());
+		glm::vec2 impulse = result.unit_impulse;
+		if (result.overlap)
+			oly::LOG << impulse << oly::LOG.nl;
 
 		player.on_tick();
 		obstacle0.on_tick();
@@ -317,10 +321,6 @@ int main()
 		obstacle4.update_view(0, cv_obstacle4);
 
 		//oly::LOG << player.state().linear_velocity << oly::LOG.nl;
-
-		bool overlap = player.collider()->collides(*ground.collider()).overlap;
-		oly::LOG << overlap << oly::LOG.nl;
-
 
 		//player.set_local().position = oly::context::get_cursor_view_pos();
 		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };

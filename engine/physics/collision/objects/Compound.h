@@ -76,13 +76,19 @@ namespace oly::col2d
 		template<typename Comp1, typename Comp2>
 		inline CollisionResult collides(const Comp1& c1, const Comp2& c2)
 		{
-			return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			if (overlaps(c1, c2))
+				return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			else
+				return CollisionResult{ .overlap = false };
 		}
 
 		template<typename Comp1, typename Comp2>
 		inline ContactResult contacts(const Comp1& c1, const Comp2& c2)
 		{
-			return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			if (overlaps(c1, c2))
+				return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+			else
+				return ContactResult{ .overlap = false };
 		}
 
 		template<typename Comp>
@@ -99,13 +105,19 @@ namespace oly::col2d
 		template<typename Comp>
 		CollisionResult collides(const Comp& c1, const ElementParam& c2)
 		{
-			return compound_collision(element_array(c1).data(), element_array(c1).size(), c2);
+			if (overlaps(c1, c2))
+				return compound_collision(element_array(c1).data(), element_array(c1).size(), c2);
+			else
+				return CollisionResult{ .overlap = false };
 		}
 
 		template<typename Comp>
 		ContactResult contacts(const Comp& c1, const ElementParam& c2)
 		{
-			return compound_contact(element_array(c1).data(), element_array(c1).size(), c2);
+			if (overlaps(c1, c2))
+				return compound_contact(element_array(c1).data(), element_array(c1).size(), c2);
+			else
+				return ContactResult{ .overlap = false };
 		}
 	}
 
