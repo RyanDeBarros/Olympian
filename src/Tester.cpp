@@ -136,8 +136,8 @@ int main()
 
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
-	player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
-	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
+	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
+	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi(2000.0f);
 	player.properties().net_force += oly::physics::GRAVITY;

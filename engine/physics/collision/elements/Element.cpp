@@ -1,6 +1,7 @@
 #include "Element.h"
 
 #include "core/base/Transforms.h"
+#include "core/algorithms/GoldenSearch.h"
 #include "physics/collision/methods/Collide.h"
 
 namespace oly::col2d
@@ -147,16 +148,19 @@ namespace oly::col2d
 		return mtvs;
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	template<typename SeparationFunc>
+	CollisionResult compound_collision_generic(SeparationFunc separation)
 	{
-		std::vector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
 		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
-		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions
+
+		// coarse sweep
+		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions (16-32).
 		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
+		int minimizing_axis = 0;
 		for (size_t i = 0; i < DIVISIONS; ++i)
 		{
 			UnitVector2D axis((float)i * TWO_PI_OVER_DIVISIONS);
-			float sep = separation(axis, active_elements, num_active_elements, static_element, mtvs);
+			float sep = separation(axis);
 			if (sep <= 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
@@ -164,33 +168,58 @@ namespace oly::col2d
 				laziest.overlap = true;
 				laziest.penetration_depth = sep;
 				laziest.unit_impulse = axis;
+				minimizing_axis = (int)i;
 			}
 		}
-		// TODO golden-search refinement here
+
+		// golden-search refinement
+		MinimizingGoldenSearch search((float)(minimizing_axis - 1) * TWO_PI_OVER_DIVISIONS, (float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f)); // TODO pass optional parameter for error
+		while (search.next())
+		{
+			UnitVector2D axis1(search.lower());
+			float sep1 = separation(axis1);
+			if (sep1 <= 0.0f)
+				return { .overlap = false };
+
+			UnitVector2D axis2(search.upper());
+			float sep2 = separation(axis2);
+			if (sep2 <= 0.0f)
+				return { .overlap = false };
+
+			float sep = 0.0f;
+			UnitVector2D axis;
+			if (search.step(sep1, sep2))
+			{
+				sep = sep1;
+				axis = axis1;
+			}
+			else
+			{
+				sep = sep2;
+				axis = axis2;
+			}
+
+			if (sep < laziest.penetration_depth)
+			{
+				laziest.overlap = true;
+				laziest.penetration_depth = sep;
+				laziest.unit_impulse = axis;
+			}
+		}
+
 		return laziest;
+	}
+
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	{
+		const std::vector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
+		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_element, mtvs); });
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		std::vector<std::vector<MTVPosNeg>> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
-		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
-		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions
-		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
-		for (size_t i = 0; i < DIVISIONS; ++i)
-		{
-			UnitVector2D axis((float)i * TWO_PI_OVER_DIVISIONS);
-			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs);
-			if (sep <= 0.0f)
-				return { .overlap = false };
-			else if (sep < laziest.penetration_depth)
-			{
-				laziest.overlap = true;
-				laziest.penetration_depth = sep;
-				laziest.unit_impulse = axis;
-			}
-		}
-		// TODO golden-search refinement here
-		return laziest;
+		const std::vector<std::vector<MTVPosNeg>> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
+		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs); });
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
@@ -245,50 +274,20 @@ namespace oly::col2d
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
-		std::vector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
-		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
-		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions
-		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
+		const std::vector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
 		size_t most_significant_active_element = 0;
-		for (size_t i = 0; i < DIVISIONS; ++i)
-		{
-			UnitVector2D axis((float)i * TWO_PI_OVER_DIVISIONS);
-			float sep = separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs);
-			if (sep <= 0.0f)
-				return { .overlap = false };
-			else if (sep < laziest.penetration_depth)
-			{
-				laziest.overlap = true;
-				laziest.penetration_depth = sep;
-				laziest.unit_impulse = axis;
-			}
-		}
-		// TODO golden-search refinement here
-		return param_contact_result(param(active_elements[most_significant_active_element]), static_element, laziest);
+		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
+			{ return separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs); });
+		return param_contact_result(param(active_elements[most_significant_active_element]), static_element, collision);
 	}
 
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		std::vector<std::vector<MTVPosNeg>> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
-		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
-		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions
-		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
+		const std::vector<std::vector<MTVPosNeg>> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
 		size_t most_significant_active_element = 0, most_significant_static_element = 0;
-		for (size_t i = 0; i < DIVISIONS; ++i)
-		{
-			UnitVector2D axis((float)i * TWO_PI_OVER_DIVISIONS);
-			float sep = separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, most_significant_active_element, most_significant_static_element, mtvs);
-			if (sep <= 0.0f)
-				return { .overlap = false };
-			else if (sep < laziest.penetration_depth)
-			{
-				laziest.overlap = true;
-				laziest.penetration_depth = sep;
-				laziest.unit_impulse = axis;
-			}
-		}
-		// TODO golden-search refinement here
-		return param_contact_result(param(active_elements[most_significant_active_element]), param(static_elements[most_significant_static_element]), laziest);
+		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
+			{ return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, most_significant_active_element, most_significant_static_element, mtvs); });
+		return param_contact_result(param(active_elements[most_significant_active_element]), param(static_elements[most_significant_static_element]), collision);
 	}
 
 	static bool only_translation_and_scale(const glm::mat3& m)

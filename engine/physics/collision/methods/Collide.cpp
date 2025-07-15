@@ -9,6 +9,7 @@
 #include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/math/Solvers.h"
+#include "core/algorithms/GoldenSearch.h"
 
 namespace oly::col2d
 {
@@ -170,28 +171,30 @@ namespace oly::col2d
 
 	static bool circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& minimizing_axis, float& depth)
 	{
-		float left = -glm::pi<float>(), right = glm::pi<float>();
-		for (size_t i = 0; i < golden_iterations(1.0f / 360.0f) && right > left; ++i)
+		minimizing_axis = UnitVector2D::LEFT;
+		depth = circle_penetration_depth(c1, c2, minimizing_axis);
+		if (depth <= 0.0f)
+			return false;
+
+		MinimizingGoldenSearch search(-glm::pi<float>(), glm::pi<float>(), glm::radians(1.0f));
+		while (search.next())
 		{
-			float m1 = right - (right - left) * inv_golden_ratio();
-			float m2 = left + (right - left) * inv_golden_ratio();
-			UnitVector2D a1(m1);
+			UnitVector2D a1(search.lower());
 			float d1 = circle_penetration_depth(c1, c2, a1);
 			if (d1 <= 0.0f)
 				return false;
-			UnitVector2D a2(m2);
+			UnitVector2D a2(search.upper());
 			float d2 = circle_penetration_depth(c1, c2, a2);
 			if (d2 <= 0.0f)
 				return false;
-			if (d1 < d2)
+			
+			if (search.step(d1, d2))
 			{
-				right = m2;
 				minimizing_axis = a1;
 				depth = d1;
 			}
 			else
 			{
-				left = m1;
 				minimizing_axis = a2;
 				depth = d2;
 			}
