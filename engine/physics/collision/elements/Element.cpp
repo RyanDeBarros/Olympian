@@ -1,7 +1,7 @@
 #include "Element.h"
 
 #include "core/base/Transforms.h"
-#include "core/algorithms/GoldenSearch.h"
+#include "core/algorithms/GoldenSectionSearch.h"
 #include "physics/collision/methods/Collide.h"
 
 namespace oly::col2d
@@ -139,7 +139,7 @@ namespace oly::col2d
 	template<typename SeparationFunc>
 	CollisionResult compound_collision_generic(SeparationFunc separation)
 	{
-		CollisionResult laziest{ .overlap = false, .penetration_depth = nmax<float>() };
+		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
 
 		// coarse sweep
 		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions (16-32).
@@ -153,7 +153,6 @@ namespace oly::col2d
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
-				laziest.overlap = true;
 				laziest.penetration_depth = sep;
 				laziest.unit_impulse = axis;
 				minimizing_axis = (int)i;
@@ -161,40 +160,17 @@ namespace oly::col2d
 		}
 
 		// golden-search refinement
-		MinimizingGoldenSearch search((float)(minimizing_axis - 1) * TWO_PI_OVER_DIVISIONS, (float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f)); // TODO pass optional parameter for error
-		while (search.next())
+		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); }, (float)(minimizing_axis - 1) * TWO_PI_OVER_DIVISIONS,
+			(float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f), 0.0f); // TODO pass optional parameter for error
+
+		if (search_result.early_exited)
+			return { .overlap = false };
+
+		if (search_result.output < laziest.penetration_depth)
 		{
-			UnitVector2D axis1(search.lower());
-			float sep1 = separation(axis1);
-			if (sep1 <= 0.0f)
-				return { .overlap = false };
-
-			UnitVector2D axis2(search.upper());
-			float sep2 = separation(axis2);
-			if (sep2 <= 0.0f)
-				return { .overlap = false };
-
-			float sep = 0.0f;
-			UnitVector2D axis;
-			if (search.step(sep1, sep2))
-			{
-				sep = sep1;
-				axis = axis1;
-			}
-			else
-			{
-				sep = sep2;
-				axis = axis2;
-			}
-
-			if (sep < laziest.penetration_depth)
-			{
-				laziest.overlap = true;
-				laziest.penetration_depth = sep;
-				laziest.unit_impulse = axis;
-			}
+			laziest.unit_impulse = UnitVector2D(search_result.input);
+			laziest.penetration_depth = search_result.output;
 		}
-
 		return laziest;
 	}
 
