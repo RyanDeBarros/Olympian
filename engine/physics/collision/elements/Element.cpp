@@ -54,8 +54,17 @@ namespace oly::col2d
 		return std::visit([&axis](auto&& el) { return el->projection_min(axis); }, el);
 	}
 
+	//struct FullMTVResult
+	//{
+	//	bool overlap;
+	//	UnitVector2D unit_impulse;
+	//	float penetration_depth;
+	//	float active_
+	//};
+
 	struct MTVPosNeg
 	{
+		bool overlap = false;
 		UnitVector2D unit_impulse;
 		float forward_depth = 0.0f;
 		float backward_depth = 0.0f;
@@ -64,61 +73,52 @@ namespace oly::col2d
 		glm::vec2 backward_mtv() const { return backward_depth * (glm::vec2)-unit_impulse; }
 	};
 
+	static MTVPosNeg generate_mtv(const ElementParam& active_element, const ElementParam& static_element)
+	{
+		MTVPosNeg mtv;
+		CollisionResult collision = collides(active_element, static_element);
+		if (collision.overlap)
+		{
+			mtv.overlap = true;
+			mtv.unit_impulse = collision.unit_impulse;
+			mtv.forward_depth = collision.penetration_depth;
+			mtv.backward_depth = projection_max(-mtv.unit_impulse, static_element) - projection_min(-mtv.unit_impulse, active_element);
+		}
+		return mtv;
+	}
+
 	static float separation(const UnitVector2D& axis, const ElementParam& active_element, const ElementParam& static_element, const MTVPosNeg& mtv)
 	{
-		if (col2d::approx(axis, mtv.unit_impulse))
-			return mtv.forward_depth;
-		else if (col2d::approx(axis, -mtv.unit_impulse))
-			return mtv.backward_depth;
+		if (mtv.overlap)
+		{
+			if (col2d::approx(axis, mtv.unit_impulse))
+				return mtv.forward_depth;
+			else if (col2d::approx(axis, -mtv.unit_impulse))
+				return mtv.backward_depth;
+			else
+			{
+				float separation_along_axis = projection_max(axis, static_element) - projection_min(axis, active_element);
+				float overfitting_depth = 0.0f;
+				if (axis.dot(mtv.unit_impulse) > 0.0f)
+					overfitting_depth = mtv.forward_depth * mtv.forward_depth / axis.dot(mtv.forward_mtv());
+				else
+					overfitting_depth = mtv.backward_depth * mtv.backward_depth / axis.dot(mtv.backward_mtv());
+				// this upper bound is only possible because Elements are convex.
+				return std::min(overfitting_depth, separation_along_axis);
+			}
+		}
 		else
 		{
-			float separation_along_axis = projection_max(axis, static_element) - projection_min(axis, active_element);
-			float overfitting_depth = 0.0f;
-			if (axis.dot(mtv.unit_impulse) > 0.0f)
-				overfitting_depth = mtv.forward_depth * mtv.forward_depth / axis.dot(mtv.forward_mtv());
-			else
-				overfitting_depth = mtv.backward_depth * mtv.backward_depth / axis.dot(mtv.backward_mtv());
-			return std::min(overfitting_depth, separation_along_axis);
+			// TODO ? pre-emptive check if active will overlap static if travelling on some separation interval. If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0, else return additional separation needed for active to overtake/pass static.
+			return 0.0f;
 		}
-	}
-
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const std::vector<MTVPosNeg>& mtvs)
-	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-			max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), static_element, mtvs[i]));
-		return max_sep;
-	}
-
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const std::vector<std::vector<MTVPosNeg>>& mtvs)
-	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-			for (size_t j = 0; j < num_static_elements; ++j)
-				max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), param(static_elements[j]), mtvs[i][j]));
-		return max_sep;
 	}
 
 	static std::vector<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
 	{
 		std::vector<MTVPosNeg> mtvs(num_active_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
-		{
-			CollisionResult collision = collides(param(active_elements[i]), static_element);
-			if (collision.overlap)
-			{
-				mtvs[i].unit_impulse = collision.unit_impulse;
-				mtvs[i].forward_depth = collision.penetration_depth;
-			}
-			else
-			{
-				mtvs[i].unit_impulse = UnitVector2D::RIGHT;
-				mtvs[i].forward_depth = projection_max(collision.unit_impulse, static_element) - projection_min(collision.unit_impulse, param(active_elements[i]));
-			}
-			mtvs[i].backward_depth = projection_max(-collision.unit_impulse, static_element) - projection_min(-collision.unit_impulse, param(active_elements[i]));
-		}
+			mtvs[i] = generate_mtv(param(active_elements[i]), static_element);
 		return mtvs;
 	}
 
@@ -128,22 +128,10 @@ namespace oly::col2d
 		std::vector<std::vector<MTVPosNeg>> mtvs(num_active_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
 		{
-			mtvs[i].resize(num_static_elements);
+			std::vector<MTVPosNeg>& mtv_list = mtvs[i];
+			mtv_list.resize(num_static_elements);
 			for (size_t j = 0; j < num_static_elements; ++j)
-			{
-				CollisionResult collision = collides(param(active_elements[i]), param(static_elements[j]));
-				if (collision.overlap)
-				{
-					mtvs[i][j].unit_impulse = collision.unit_impulse;
-					mtvs[i][j].forward_depth = collision.penetration_depth;
-				}
-				else
-				{
-					mtvs[i][j].unit_impulse = UnitVector2D::RIGHT;
-					mtvs[i][j].forward_depth = projection_max(collision.unit_impulse, param(static_elements[j])) - projection_min(collision.unit_impulse, param(active_elements[i]));
-				}
-				mtvs[i][j].backward_depth = projection_max(-collision.unit_impulse, param(static_elements[j])) - projection_min(-collision.unit_impulse, param(active_elements[i]));
-			}
+				mtv_list[j] = generate_mtv(param(active_elements[i]), param(static_elements[j]));
 		}
 		return mtvs;
 	}
@@ -208,6 +196,25 @@ namespace oly::col2d
 		}
 
 		return laziest;
+	}
+
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
+		const ElementParam& static_element, const std::vector<MTVPosNeg>& mtvs)
+	{
+		float max_sep = 0.0f;
+		for (size_t i = 0; i < num_active_elements; ++i)
+			max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), static_element, mtvs[i]));
+		return max_sep;
+	}
+
+	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
+		const Element* static_elements, const size_t num_static_elements, const std::vector<std::vector<MTVPosNeg>>& mtvs)
+	{
+		float max_sep = 0.0f;
+		for (size_t i = 0; i < num_active_elements; ++i)
+			for (size_t j = 0; j < num_static_elements; ++j)
+				max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), param(static_elements[j]), mtvs[i][j]));
+		return max_sep;
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)

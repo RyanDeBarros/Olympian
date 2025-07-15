@@ -234,6 +234,8 @@ namespace oly::physics
 
 	void DynamicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity, glm::vec2 collision_impulse) const
 	{
+		// collision position update
+
 		glm::vec2 teleport = {};
 		for (const CollisionResponse& collision : collisions)
 		{
@@ -242,7 +244,11 @@ namespace oly::physics
 				dx_t *= collision.dynamics->properties.mass() / (properties.mass() + collision.dynamics->properties.mass());
 			// TODO smarter accumulation of teleport than addition
 			teleport += dx_t;
+
+			//LOG << collision.mtv << LOG.nl;
 		}
+
+		// natural position update
 
 		UnitVector2D teleport_axis(teleport);
 		glm::vec2 dx_v = new_velocity * TIME.delta<>();
@@ -251,6 +257,8 @@ namespace oly::physics
 		dx_v = perp_teleport_axis + std::max(along_teleport_axis, 0.0f) * (glm::vec2)teleport_axis;
 		state.position += teleport + dx_v;
 
+		// velocity update
+
 		state.linear_velocity = dx_v * TIME.inverse_delta<>() + collision_impulse * properties.mass_inverse();
 		if (material.linear_drag > 0.0f)
 			state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta<>());
@@ -258,16 +266,32 @@ namespace oly::physics
 
 	void DynamicsComponent::update_colliding_angular_motion(float new_velocity, float collision_impulse) const
 	{
+		// collision rotation update
+
 		float teleport = 0.0f;
 		for (const CollisionResponse& collision : collisions)
 		{
 			float dtheta_t = math::cross(collision.contact - properties.center_of_mass, collision.mtv);
 			if (collision.dynamics->flag != Flag::STATIC)
-				dtheta_t *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass());
+				dtheta_t *= properties.mass() * collision.dynamics->properties.mass() * properties.moi_inverse() / (properties.mass() + collision.dynamics->properties.mass()); // TODO use effective mass instead?
 			// TODO smarter accumulation of teleport than addition
 			teleport += dtheta_t;
 		}
 		teleport *= properties.mass() * properties.moi_inverse();
+
+		// position adjustment
+
+		// TODO fix position adjustment - teleport has a jump
+		//glm::mat2 teleport_matrix = rotation_matrix_2x2(teleport);
+		//teleport_matrix = glm::mat2(1.0f) - teleport_matrix;
+		//glm::vec2 linear_teleport_adjustment = {};
+		//for (const CollisionResponse& collision : collisions)
+		//	linear_teleport_adjustment += teleport_matrix * (collision.contact - properties.center_of_mass);
+		////LOG << linear_teleport_adjustment << LOG.nl;
+		//LOG << teleport << "\t\t" << collisions[0].contact << LOG.nl;
+		//state.position += linear_teleport_adjustment;
+
+		// natural rotation udpate
 
 		float dtheta_w = new_velocity * TIME.delta<>();
 		if (above_zero(teleport))
@@ -276,7 +300,7 @@ namespace oly::physics
 			dtheta_w = std::max(0.0f, dtheta_w);
 		state.rotation += teleport + dtheta_w;
 
-		// 6. update angular velocity
+		// velocity update
 
 		state.angular_velocity = dtheta_w * TIME.inverse_delta<>() + collision_impulse * properties.moi_inverse();
 		if (material.angular_drag > 0.0f)
@@ -289,6 +313,10 @@ namespace oly::physics
 		angular_impulse = 0.0f;
 		for (const CollisionResponse& collision : collisions)
 		{
+			const float restitution = material.restitution_with(collision.dynamics->material);
+			if (near_zero(restitution))
+				continue;
+
 			const float cross1 = math::cross(collision.contact - properties.center_of_mass, collision.normal);
 			float effective_mass_denominator = properties.mass_inverse() + properties.moi_inverse() * cross1 * cross1;
 			if (collision.dynamics->flag != Flag::STATIC)
@@ -307,7 +335,6 @@ namespace oly::physics
 			if (collision.dynamics->flag != Flag::STATIC)
 				relative_velocity -= other_contact_velocity;
 
-			const float restitution = material.restitution_with(collision.dynamics->material);
 			const float j = std::max(-effective_mass * restitution * collision.normal.dot(relative_velocity), 0.0f);
 			glm::vec2 impulse = j * (glm::vec2)collision.normal;
 

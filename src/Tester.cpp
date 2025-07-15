@@ -136,6 +136,7 @@ int main()
 
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
+	// TODO KINEMATIC needs lots of work for angular response to collision.
 	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
 	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
@@ -300,12 +301,6 @@ int main()
 
 		flag_state_timer.poll();
 		
-		// TODO unit impulse seems correct, so "jump" on step looks like caused by physics response.
-		auto result = player.collider()->collides(*ground.collider());
-		glm::vec2 impulse = result.unit_impulse;
-		if (result.overlap)
-			oly::LOG << impulse << oly::LOG.nl;
-
 		player.on_tick();
 		obstacle0.on_tick();
 		obstacle1.on_tick();
