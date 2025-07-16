@@ -50,9 +50,11 @@ namespace oly::physics
 	private:
 		StrictlyPositiveFloat _mass = 1.0f;
 		StrictlyPositiveFloat _mass_inverse = 1.0f;
-		// moment of inertia
+
 		StrictlyPositiveFloat _moi = 1.0f;
 		StrictlyPositiveFloat _moi_inverse = 1.0f;
+
+		StrictlyPositiveFloat _moi_multiplier = 1.0f;
 
 		std::vector<AppliedAcceleration> applied_accelerations;
 		std::vector<AppliedForce> applied_forces;
@@ -60,11 +62,15 @@ namespace oly::physics
 	public:
 		float mass() const { return _mass; }
 		float mass_inverse() const { return _mass_inverse; }
-		void set_mass(float m) { _mass.set(m); _mass_inverse.set(1.0f / m); }
+		void set_mass(float m);
 
 		float moi() const { return _moi; }
 		float moi_inverse() const { return _moi_inverse; }
-		void set_moi(float m) { _moi.set(m); _moi_inverse.set(1.0f / m); }
+		void set_moi(float m);
+
+		bool use_moi_multiplier = true;
+		float moi_multiplier() const { return use_moi_multiplier ? (float)_moi_multiplier : _moi * _mass_inverse; }
+		void set_moi_multiplier(float mult);
 
 		mutable std::vector<AppliedImpulse> applied_impulses;
 		glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
@@ -122,10 +128,19 @@ namespace oly::physics
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 0.0f;
 
-		// penetration damping controls how much penetration motion into another collider is clamped.
-		// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
-		// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
-		BoundedFloat<0.0f, 1.0f> penetration_damping = 0.5f;
+		struct
+		{
+			// linear penetration damping controls how much penetration motion into another collider is clamped.
+			// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
+			// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
+			BoundedFloat<0.0f, 1.0f> linear_penetration = 0.5f;
+			// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.
+			// At 0.0 - no damping, which causes large angular bounces from collisions.
+			// At 1.0 - full damping, which prevents any angular response to collisions.
+			BoundedFloat<0.0f, 1.0f> angular_teleportation = 0.7f;
+			// angular teleportation values under jitter threshold are fully dampened.
+			PositiveFloat angular_jitter_threshold = 0.0005f;
+		} collision_damping;
 
 		struct
 		{
@@ -165,7 +180,7 @@ namespace oly::physics
 		const DynamicsComponent* dynamics;
 
 		glm::vec2 dx_teleport(float active_mass) const;
-		float dtheta_teleport(glm::vec2 active_center_of_mass, float active_mass, float active_moi_inverse) const;
+		float dtheta_teleport(float active_mass, glm::vec2 active_center_of_mass) const;
 	};
 
 	class DynamicsComponent

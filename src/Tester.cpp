@@ -136,13 +136,13 @@ int main()
 
 	oly::physics::RigidBody player;
 	pc.rigid_body = &player;
-	// TODO KINEMATIC needs lots of work for angular response to collision.
-	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
-	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
+	player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
+	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
-	player.properties().set_moi(2000.0f); // TODO set MOI multiplier instead - so if mass is doubled, internal MOI is doubled automatically. MOI will always be 2000 times the mass.
-	player.properties().net_force += oly::physics::GRAVITY;
+	player.properties().set_moi_multiplier(2000.0f);
+	player.properties().net_force += oly::physics::GRAVITY; // TODO gravity should be added to acceleration, not force.
 	player.material().angular_drag = 1.0f;
+	player.properties().set_mass(0.5f);
 
 	player.add_collider(player_collider);
 	//player.add_collider(star.as_convex_tcompound());
@@ -207,10 +207,7 @@ int main()
 	ground.collider()->layer() |= CollisionLayers::L_OBSTACLE;
 	ground.collider()->mask() |= CollisionMasks::M_PLAYER;
 
-	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .width = 25.0f, .depth = 15.0f};
-	//oly::col2d::RectCast rect_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .width = 25.0f, .depth = 15.0f};
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
-	//oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 0.0f }, .radius = 25.0f };
 
 	// LATER anti-aliasing settings
 	
@@ -230,12 +227,8 @@ int main()
 
 	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
 	oly::debug::CollisionView player_cv = player.collision_view(0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	//oly::debug::CollisionView player_cv = oly::debug::collision_view(player, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	//oly::debug::CollisionView block_cv = oly::debug::collision_view(block, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView block_cv = block.collision_view(oly::colors::BLUE * oly::colors::alpha(0.8f));
-	//oly::debug::CollisionView block_cv = oly::debug::collision_view(capsule, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
-	//oly::debug::CollisionView rect_cast_cv = oly::debug::collision_view(rect_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 	// TODO test obstacles under single combined rigid body
@@ -313,66 +306,7 @@ int main()
 		obstacle3.update_view(0, cv_obstacle3);
 		obstacle4.update_view(0, cv_obstacle4);
 
-		//oly::LOG << player.state().linear_velocity << oly::LOG.nl;
-
-		//player.set_local().position = oly::context::get_cursor_view_pos();
-		//player.set<oly::col2d::TCompound>().set_local().position = { -300.0f, -400.0f };
-		//oly::LOG << player.get_local().position << oly::LOG.nl;
-
-		//bool point_hits = oly::col2d::point_hits(block, player.get_local().position);
-		//bool player_block_overlap = oly::col2d::overlaps(player, block);
-		//bool player_block_overlap = player.overlaps(block);
-		//bool player_block_overlap = oly::col2d::overlaps(player, capsule);
-
-		//auto collide = oly::col2d::collides(player, block);
-		//auto collide = player.collides(block);
-		//auto collide = oly::col2d::collides(player, capsule);
-		//auto contact = oly::col2d::contacts(player, block);
-		//auto contact = player.contacts(block);
-		//auto contact = oly::col2d::contacts(player, capsule);
-
-		//if (collide.overlap)
-			//oly::LOG << collide.mtv() << oly::LOG.nl;
-
-		//bool ray_hits = oly::col2d::ray_hits(player, ray);
-		//bool ray_hits = player.ray_hits(ray);
-
-		//if (contact.overlap)
-		//{
-		//	oly::debug::update_view(block_impulse_cv, contact.passive_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-		//	oly::debug::update_view(player_impulse_cv, contact.active_feature, oly::colors::WHITE * oly::colors::alpha(0.8f));
-		//}
-		//else
-		//{
-		//	block_impulse_cv.clear_view();
-		//	player_impulse_cv.clear_view();
-		//}
-
-		//if (fmod(oly::TIME.now<float>(), 2.0f) < 1.0f)
-			//oly::debug::update_view(player_cv, player, (ray_hits ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-		//else
-			//oly::debug::update_view(player_cv, player, 2, (point_hits ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-		
-		//oly::debug::update_view(player_cv, player, (contact.overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-		//bool special_cast_overlap = oly::col2d::rect_cast_hits(player, rect_cast);
-		//bool special_cast_overlap = oly::col2d::circle_cast_hits(player, circle_cast);
-		//bool special_cast_overlap = player.circle_cast_hits(circle_cast);
-		//player.update_view(player_cv, (special_cast_overlap ? oly::colors::RED : oly::colors::YELLOW) * oly::colors::alpha(0.8f));
-
-		//oly::debug::update_view_color(block_cv, (contact.overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
-		//oly::debug::update_view_color(block_cv, (point_hits ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
-		//oly::debug::update_view_color(block_cv, (player_block_overlap ? oly::colors::MAGENTA : oly::colors::BLUE) * oly::colors::alpha(0.8f));
-
-		//auto raycast_result = oly::col2d::raycast(player, ray);
-		//auto raycast_result = player.raycast(ray);
-		//if (raycast_result.hit == decltype(raycast_result.hit)::NO_HIT)
-		//	oly::debug::update_view_color(ray_cv, oly::colors::WHITE * oly::colors::alpha(0.8f));
-		//else if (raycast_result.hit == decltype(raycast_result.hit)::EMBEDDED_ORIGIN)
-		//	oly::debug::update_view_color(ray_cv, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-		//else if (raycast_result.hit == decltype(raycast_result.hit)::TRUE_HIT)
-		//	oly::debug::update_view_color(ray_cv, oly::colors::ORANGE * oly::colors::alpha(0.8f));
-
-		//oly::debug::update_view(raycast_result_cv, raycast_result, oly::colors::WHITE* oly::colors::alpha(0.8f));
+		//oly::LOG << player.is_colliding() << oly::LOG.nl;
 
 		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta());
 

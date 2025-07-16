@@ -21,6 +21,36 @@ namespace oly::physics
 			return near_zero(angular_velocity) && near_zero(other.angular_velocity) ? FrictionType::STATIC : FrictionType::ROLLING;
 	}
 
+	void Properties::set_mass(float m)
+	{
+		_mass = m;
+		_mass_inverse = 1.0f / _mass;
+		if (use_moi_multiplier)
+		{
+			_moi = m * _moi_multiplier;
+			_moi_inverse = 1.0f / _moi;
+		}
+	}
+
+	void Properties::set_moi(float m)
+	{
+		_moi = m;
+		_moi_inverse = 1.0f / _moi;
+		if (use_moi_multiplier)
+		{
+			_mass = _moi / _moi_multiplier;
+			_mass_inverse = 1.0f / _mass;
+		}
+	}
+
+	void Properties::set_moi_multiplier(float mult)
+	{
+		use_moi_multiplier = true;
+		_moi_multiplier = mult;
+		_moi = _moi_multiplier * _mass;
+		_moi_inverse = 1.0f / _moi;
+	}
+
 	glm::vec2 Properties::dv_psi() const
 	{
 		glm::vec2 dv = {};
@@ -158,11 +188,11 @@ namespace oly::physics
 		return dx_t;
 	}
 
-	float CollisionResponse::dtheta_teleport(glm::vec2 active_center_of_mass, float active_mass, float active_moi_inverse) const
+	float CollisionResponse::dtheta_teleport(float active_mass, glm::vec2 active_center_of_mass) const
 	{
 		float dtheta_t = math::cross(contact - active_center_of_mass, mtv);
 		if (dynamics->flag != DynamicsComponent::Flag::STATIC)
-			dtheta_t *= active_mass * active_moi_inverse * dynamics->properties.mass() / (active_mass + dynamics->properties.mass()); // TODO use effective mass instead?
+			dtheta_t *= dynamics->properties.mass() / (active_mass + dynamics->properties.mass());
 		return dtheta_t;
 	}
 
@@ -173,7 +203,7 @@ namespace oly::physics
 
 	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
 
-	// TODO update DOC on resolution bias removal and penetration damping.
+	// TODO update DOC on resolution bias removal and collision damping variables.
 
 	void DynamicsComponent::on_tick() const
 	{
@@ -253,7 +283,7 @@ namespace oly::physics
 		float along_teleport_axis = teleport_axis.dot(dx_v);
 		glm::vec2 perp_teleport_axis = dx_v - along_teleport_axis * (glm::vec2)teleport_axis;
 		if (along_teleport_axis < 0.0f)
-			along_teleport_axis = (1.0f - material.penetration_damping) * glm::max(along_teleport_axis, -glm::length(teleport));
+			along_teleport_axis = (1.0f - material.collision_damping.linear_penetration) * glm::max(along_teleport_axis, -glm::length(teleport));
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 		state.position += teleport + dx_v;
 
@@ -272,34 +302,21 @@ namespace oly::physics
 		for (const CollisionResponse& collision : collisions)
 		{
 			// TODO smarter accumulation of teleport than addition
-			teleport += collision.dtheta_teleport(properties.center_of_mass, properties.mass(), properties.moi_inverse());
+			teleport += collision.dtheta_teleport(properties.mass(), properties.center_of_mass);
 		}
 		teleport *= properties.mass() * properties.moi_inverse();
-
-		// position adjustment
-
-		// TODO fix position adjustment - teleport has a jump
-		//glm::mat2 teleport_matrix = rotation_matrix_2x2(teleport);
-		//teleport_matrix = glm::mat2(1.0f) - teleport_matrix;
-		//glm::vec2 linear_teleport_adjustment = {};
-		//for (const CollisionResponse& collision : collisions)
-		//	linear_teleport_adjustment += teleport_matrix * (collision.contact - properties.center_of_mass);
-		////LOG << linear_teleport_adjustment << LOG.nl;
-		//LOG << teleport << "\t\t" << collisions[0].contact << LOG.nl;
-		//state.position += linear_teleport_adjustment;
+		if (glm::length(teleport) > material.collision_damping.angular_jitter_threshold)
+			teleport *= 1.0f - material.collision_damping.angular_teleportation;
+		else
+			teleport = 0.0f;
 
 		// natural rotation udpate
 
-		float dtheta_w = new_velocity * TIME.delta();
-		if (above_zero(teleport))
-			dtheta_w = std::min(0.0f, dtheta_w);
-		else if (below_zero(teleport))
-			dtheta_w = std::max(0.0f, dtheta_w);
-		state.rotation += teleport + dtheta_w;
+		state.rotation += new_velocity * TIME.delta();
 
 		// velocity update
 
-		state.angular_velocity = dtheta_w * TIME.inverse_delta() + collision_impulse * properties.moi_inverse();
+		state.angular_velocity = new_velocity + teleport * TIME.inverse_delta() + collision_impulse * properties.moi_inverse();
 		if (material.angular_drag > 0.0f)
 			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta());
 	}
