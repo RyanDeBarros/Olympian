@@ -140,11 +140,9 @@ int main()
 	//player.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
 	player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
-	player.properties().set_moi(2000.0f);
+	player.properties().set_moi(2000.0f); // TODO set MOI multiplier instead - so if mass is doubled, internal MOI is doubled automatically. MOI will always be 2000 times the mass.
 	player.properties().net_force += oly::physics::GRAVITY;
 	player.material().angular_drag = 1.0f;
-	player.material().set_restitution(0.0f);
-	oly::physics::set_restitution_blend_op(oly::physics::FactorBlendOp::ACTIVE);
 
 	player.add_collider(player_collider);
 	//player.add_collider(star.as_convex_tcompound());
@@ -376,7 +374,7 @@ int main()
 
 		//oly::debug::update_view(raycast_result_cv, raycast_result, oly::colors::WHITE* oly::colors::alpha(0.8f));
 
-		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta<>());
+		jumble.nonant_panel.set_width(jumble.nonant_panel.width() - 10.0f * oly::TIME.delta());
 
 		jumble.octagon.base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
 		jumble.octagon.base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
@@ -384,17 +382,17 @@ int main()
 		jumble.octagon.base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
 		jumble.octagon.send_polygon();
 
-		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta<>();
+		jumble.concave_shape.set_local().rotation += 0.5f * oly::TIME.delta();
 
 		jumble.sprite1.set_local().rotation = oly::TIME.now<float>();
-		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta<>();
+		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta();
 		
-		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta<>());
-		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta<>();
+		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta());
+		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta();
 		flag_tesselation_parent.flush();
 
 		jumble.on_tick();
-		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta<>() * 0.1f;
+		jumble.grass_tilemap.set_local().rotation += oly::TIME.delta() * 0.1f;
 
 		// draw
 		render_frame(); // LATER put in context::frame()?

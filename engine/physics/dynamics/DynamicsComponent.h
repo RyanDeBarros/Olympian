@@ -16,7 +16,7 @@ namespace oly::physics
 		enum class FrictionType
 		{
 			STATIC,
-			KINEMATIC,
+			KINETIC,
 			ROLLING
 		};
 
@@ -102,11 +102,8 @@ namespace oly::physics
 		MINIMUM,
 		GEOMETRIC_MEAN,
 		ARITHMETIC_MEAN,
-		ACTIVE,
+		ACTIVE
 	};
-
-	extern void set_restitution_blend_op(FactorBlendOp op);
-	extern void set_friction_blend_op(FactorBlendOp op);
 
 	// LATER density
 	struct Material
@@ -114,8 +111,8 @@ namespace oly::physics
 	private:
 		PositiveFloat _static_friction = 0.5f;
 		PositiveFloat _sqrt_static_friction = glm::sqrt(_static_friction);
-		PositiveFloat _kinematic_friction = 0.3f;
-		PositiveFloat _sqrt_kinematic_friction = glm::sqrt(_kinematic_friction);
+		PositiveFloat _kinetic_friction = 0.3f;
+		PositiveFloat _sqrt_kinetic_friction = glm::sqrt(_kinetic_friction);
 		PositiveFloat _rolling_friction = 0.4f;
 		PositiveFloat _sqrt_rolling_friction = glm::sqrt(_rolling_friction);
 		BoundedFloat<0.0f, 1.0f> _restitution = 0.2f;
@@ -125,13 +122,26 @@ namespace oly::physics
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 0.0f;
 
+		// penetration damping controls how much penetration motion into another collider is clamped.
+		// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
+		// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
+		BoundedFloat<0.0f, 1.0f> penetration_damping = 0.5f;
+
+		struct
+		{
+			FactorBlendOp restitution = FactorBlendOp::MINIMUM;
+			FactorBlendOp static_friction = FactorBlendOp::GEOMETRIC_MEAN;
+			FactorBlendOp kinetic_friction = FactorBlendOp::GEOMETRIC_MEAN;
+			FactorBlendOp rolling_friction = FactorBlendOp::GEOMETRIC_MEAN;
+		} blending;
+
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }
 		void set_static_friction(float mu) { _static_friction.set(mu); _sqrt_static_friction.set(glm::sqrt(_static_friction)); }
 
-		float kinematic_friction() const { return _kinematic_friction; }
-		float sqrt_kinematic_friction() const { return _sqrt_kinematic_friction; }
-		void set_kinematic_friction(float mu) { _kinematic_friction.set(mu); _sqrt_kinematic_friction.set(glm::sqrt(_kinematic_friction)); }
+		float kinetic_friction() const { return _kinetic_friction; }
+		float sqrt_kinetic_friction() const { return _sqrt_kinetic_friction; }
+		void set_kinetic_friction(float mu) { _kinetic_friction.set(mu); _sqrt_kinetic_friction.set(glm::sqrt(_kinetic_friction)); }
 		
 		float rolling_friction() const { return _rolling_friction; }
 		float sqrt_rolling_friction() const { return _sqrt_rolling_friction; }
@@ -144,7 +154,7 @@ namespace oly::physics
 	private:
 		friend class DynamicsComponent;
 		float restitution_with(const Material& mat) const;
-		float friction_with(glm::vec2 contact, UnitVector2D tangent, const State& state, const Material& mat, const State& other_state, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE) const;
+		float friction_with(const Material& mat, State::FrictionType friction_type) const;
 	};
 
 	struct CollisionResponse
@@ -153,12 +163,16 @@ namespace oly::physics
 		glm::vec2 contact;
 		UnitVector2D normal;
 		const DynamicsComponent* dynamics;
+
+		glm::vec2 dx_teleport(float active_mass) const;
+		float dtheta_teleport(glm::vec2 active_center_of_mass, float active_mass, float active_moi_inverse) const;
 	};
 
 	class DynamicsComponent
 	{
 		mutable State state;
 		mutable std::vector<CollisionResponse> collisions;
+		mutable bool was_colliding = false;
 
 	public:
 		// TODO use handle to Material registry.
@@ -178,12 +192,17 @@ namespace oly::physics
 		State get_state() const { return state; }
 		void sync_state(const glm::mat3& global);
 
-		bool is_colliding() const { return !collisions.empty(); }
+		bool is_colliding() const { return was_colliding; }
 
 	private:
 		void update_colliding_linear_motion(glm::vec2 new_velocity, glm::vec2 collision_impulse) const;
 		void update_colliding_angular_motion(float new_velocity, float collision_impulse) const;
+
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
+		glm::vec2 compute_other_contact_velocity(const CollisionResponse& collision) const;
+		float effective_mass(const CollisionResponse& collision) const;
+		glm::vec2 restitution_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity) const;
+		glm::vec2 friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
 	};
 
 	extern float moment_of_inertia(col2d::ElementParam e, float mass, bool relative_to_cm = false);
