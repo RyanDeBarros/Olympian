@@ -137,9 +137,9 @@ namespace oly::physics
 			// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.
 			// At 0.0 - no damping, which causes large angular bounces from collisions.
 			// At 1.0 - full damping, which prevents any angular response to collisions.
-			BoundedFloat<0.0f, 1.0f> angular_teleportation = 0.7f;
+			BoundedFloat<0.0f, 1.0f> angular_teleportation = 0.8f;
 			// angular teleportation values under jitter threshold are fully dampened.
-			PositiveFloat angular_jitter_threshold = 0.0005f;
+			PositiveFloat angular_jitter_threshold = 0.001f;
 		} collision_damping;
 
 		struct
@@ -178,9 +178,6 @@ namespace oly::physics
 		glm::vec2 contact;
 		UnitVector2D normal;
 		const DynamicsComponent* dynamics;
-
-		glm::vec2 dx_teleport(float active_mass) const;
-		float dtheta_teleport(float active_mass, glm::vec2 active_center_of_mass) const;
 	};
 
 	class DynamicsComponent
@@ -190,16 +187,24 @@ namespace oly::physics
 		mutable bool was_colliding = false;
 
 	public:
-		// TODO use handle to Material registry.
-		Material material;
-		Properties properties;
-
 		enum class Flag
 		{
 			STATIC,
 			KINEMATIC,
 			LINEAR
 		} flag = Flag::STATIC;
+
+	private:
+		mutable size_t primary_collision_mtv_idx = 0;
+		mutable size_t secondary_collision_mtv_idx = 0;
+		mutable bool found_secondary_collision_mtv_idx = false;
+
+	public:
+		bool complex_teleportation = false;
+
+		// TODO use handle to Material registry.
+		Material material;
+		Properties properties;
 
 		void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;
 
@@ -212,6 +217,9 @@ namespace oly::physics
 	private:
 		void update_colliding_linear_motion(glm::vec2 new_velocity, glm::vec2 collision_impulse) const;
 		void update_colliding_angular_motion(float new_velocity, float collision_impulse) const;
+		void compute_collision_mtv_idxs() const;
+
+		float teleport_factor(const DynamicsComponent& other) const;
 
 		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
 		glm::vec2 compute_other_contact_velocity(const CollisionResponse& collision) const;

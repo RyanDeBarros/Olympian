@@ -86,9 +86,7 @@ namespace oly::physics
 		float dw = 0.0f;
 
 		dw += net_angular_acceleration * TIME.delta();
-
 		dw += net_torque * TIME.delta() * _moi_inverse;
-
 		dw += net_angular_impulse * _moi_inverse;
 
 		if (dirty_angular_applied_accelerations)
@@ -180,22 +178,6 @@ namespace oly::physics
 		return 0.0f;
 	}
 
-	glm::vec2 CollisionResponse::dx_teleport(float active_mass) const
-	{
-		glm::vec2 dx_t = mtv;
-		if (dynamics->flag != DynamicsComponent::Flag::STATIC)
-			dx_t *= dynamics->properties.mass() / (active_mass + dynamics->properties.mass());
-		return dx_t;
-	}
-
-	float CollisionResponse::dtheta_teleport(float active_mass, glm::vec2 active_center_of_mass) const
-	{
-		float dtheta_t = math::cross(contact - active_center_of_mass, mtv);
-		if (dynamics->flag != DynamicsComponent::Flag::STATIC)
-			dtheta_t *= dynamics->properties.mass() / (active_mass + dynamics->properties.mass());
-		return dtheta_t;
-	}
-
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
 	{
 		collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
@@ -219,6 +201,7 @@ namespace oly::physics
 				glm::vec2 j_c = {};
 				float h_c = 0.0f;
 				compute_collision_response(j_c, h_c, new_linear_velocity, new_angular_velocity);
+				compute_collision_mtv_idxs();
 
 				// 3. update linear motion
 				update_colliding_linear_motion(new_linear_velocity, j_c);
@@ -269,11 +252,12 @@ namespace oly::physics
 	{
 		// collision position update
 
-		glm::vec2 teleport = {};
-		for (const CollisionResponse& collision : collisions)
+		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
+		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
+		if (found_secondary_collision_mtv_idx)
 		{
-			// TODO smarter accumulation of teleport than addition
-			teleport += collision.dx_teleport(properties.mass());
+			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
+			teleport += primary_collision.normal.normal_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
 		}
 
 		// natural position update
@@ -298,12 +282,15 @@ namespace oly::physics
 	{
 		// collision rotation update
 
-		float teleport = 0.0f;
-		for (const CollisionResponse& collision : collisions)
+		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
+		float teleport = math::cross(primary_collision.contact - properties.center_of_mass, primary_collision.mtv) * teleport_factor(*primary_collision.dynamics);
+		if (found_secondary_collision_mtv_idx)
 		{
-			// TODO smarter accumulation of teleport than addition
-			teleport += collision.dtheta_teleport(properties.mass(), properties.center_of_mass);
+			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
+			glm::vec2 mtv = primary_collision.normal.normal_project(secondary_collision.mtv);
+			teleport += math::cross(secondary_collision.contact - properties.center_of_mass, mtv) * teleport_factor(*secondary_collision.dynamics);
 		}
+
 		teleport *= properties.mass() * properties.moi_inverse();
 		if (glm::length(teleport) > material.collision_damping.angular_jitter_threshold)
 			teleport *= 1.0f - material.collision_damping.angular_teleportation;
@@ -319,6 +306,48 @@ namespace oly::physics
 		state.angular_velocity = new_velocity + teleport * TIME.inverse_delta() + collision_impulse * properties.moi_inverse();
 		if (material.angular_drag > 0.0f)
 			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta());
+	}
+
+	// TODO test simultaneous collision with multiple objects with complex_teleportation = true/false.
+	void DynamicsComponent::compute_collision_mtv_idxs() const
+	{
+		primary_collision_mtv_idx = 0;
+		float max_mag_sqrd = 0.0f;
+		for (size_t i = 0; i < collisions.size(); ++i)
+		{
+			float mag_sqrd = math::mag_sqrd(collisions[i].mtv);
+			if (mag_sqrd > max_mag_sqrd)
+			{
+				max_mag_sqrd = mag_sqrd;
+				primary_collision_mtv_idx = i;
+			}
+		}
+
+		secondary_collision_mtv_idx = 0;
+		found_secondary_collision_mtv_idx = false;
+		if (complex_teleportation)
+		{
+			UnitVector2D primary_normal = collisions[primary_collision_mtv_idx].normal.get_quarter_turn();
+			float max_abs_proj = 0.0f;
+			for (size_t i = 0; i < collisions.size(); ++i)
+			{
+				if (i != primary_collision_mtv_idx)
+				{
+					float abs_proj = glm::abs(primary_normal.dot(collisions[i].mtv));
+					if (abs_proj > max_abs_proj)
+					{
+						max_abs_proj = abs_proj;
+						secondary_collision_mtv_idx = i;
+						found_secondary_collision_mtv_idx = true;
+					}
+				}
+			}
+		}
+	}
+
+	float DynamicsComponent::teleport_factor(const DynamicsComponent& other) const
+	{
+		return other.flag != DynamicsComponent::Flag::STATIC ? other.properties.mass() / (properties.mass() + other.properties.mass()) : 1.0f;
 	}
 
 	void DynamicsComponent::compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, const glm::vec2 new_linear_velocity, const float new_angular_velocity) const
@@ -383,7 +412,7 @@ namespace oly::physics
 			return {};
 
 
-		float normal_impulse = collision.normal.dot(collision.dx_teleport(properties.mass()) * properties.mass() * TIME.inverse_delta());
+		float normal_impulse = collision.normal.dot(collision.mtv * teleport_factor(*collision.dynamics) * properties.mass() * TIME.inverse_delta());
 		float friction = std::min(mu * normal_impulse, eff_mass * glm::sqrt(new_tangent_velocity_sqrd));
 		if (above_zero(friction))
 			return -glm::normalize(new_tangent_velocity) * friction;
