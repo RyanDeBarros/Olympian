@@ -45,6 +45,43 @@ namespace oly
 		inputs.inner_right = split_right(inputs.outer_left, inputs.outer_right);
 		outputs.inner_right = func(inputs.inner_right);
 	}
+	
+	template<typename Comparator>
+	static GoldenSearchResult golden_search_result(const std::function<float(float)>& func, Quadruple inputs, Quadruple outputs, Comparator comparator)
+	{
+		if (comparator(outputs.inner_left, outputs.inner_right))
+		{
+			if (comparator(outputs.outer_left, outputs.inner_left))
+				return GoldenSearchResult{ .input = inputs.outer_left, .output = outputs.outer_left };
+			else if (comparator(outputs.inner_left, outputs.outer_left))
+				return GoldenSearchResult{ .input = inputs.inner_left, .output = outputs.inner_left };
+			else
+			{
+				GoldenSearchResult result{ .input = 0.5f * (inputs.outer_left + inputs.inner_left) };
+				result.output = func(result.input);
+				return result;
+			}
+		}
+		else if (comparator(outputs.inner_right, outputs.inner_left))
+		{
+			if (comparator(outputs.outer_right, outputs.inner_right))
+				return GoldenSearchResult{ .input = inputs.outer_right, .output = outputs.outer_right };
+			else if (comparator(outputs.inner_right, outputs.outer_right))
+				return GoldenSearchResult{ .input = inputs.inner_right, .output = outputs.inner_right };
+			else
+			{
+				GoldenSearchResult result{ .input = 0.5f * (inputs.outer_right + inputs.inner_right) };
+				result.output = func(result.input);
+				return result;
+			}
+		}
+		else
+		{
+			GoldenSearchResult result{ .input = 0.5f * (inputs.inner_left + inputs.inner_right) };
+			result.output = func(result.input);
+			return result;
+		}
+	}
 
 	template<typename Comparator>
 	GoldenSearchResult generic_golden_search(const std::function<float(float)>& func, float lower_bound, float upper_bound, float input_error_threshold, Comparator comparator)
@@ -61,9 +98,7 @@ namespace oly
 				select_right(func, inputs, outputs);
 		}
 
-		GoldenSearchResult result{ .input = 0.5f * (inputs.outer_left + inputs.outer_right) };
-		result.output = func(result.input);
-		return result;
+		return golden_search_result(func, inputs, outputs, comparator);
 	}
 
 	template<typename Comparator, typename InclusiveComparator>
@@ -102,12 +137,9 @@ namespace oly
 			}
 		}
 
-		EarlyExitGoldenSearchResult result{ .early_exited = false, .input = 0.5f * (inputs.outer_left + inputs.outer_right) };
-		result.output = func(result.input);
-		if (inclusive_comparator(result.output, early_exit_inclusive_extremum))
-			return EarlyExitGoldenSearchResult{ .early_exited = true };
-		else
-			return result;
+		GoldenSearchResult result = golden_search_result(func, inputs, outputs, comparator);
+		return inclusive_comparator(result.output, early_exit_inclusive_extremum) ? EarlyExitGoldenSearchResult{ .early_exited = true }
+			: EarlyExitGoldenSearchResult{ .early_exited = false, .input = result.input, .output = result.output };
 	}
 
 	GoldenSearchResult minimizing_golden_search(const std::function<float(float)>& func, float lower_bound, float upper_bound, float input_error_threshold)

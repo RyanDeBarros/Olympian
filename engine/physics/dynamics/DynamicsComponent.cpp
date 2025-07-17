@@ -185,7 +185,7 @@ namespace oly::physics
 
 	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
 
-	// TODO update DOC on resolution bias removal and collision damping variables.
+	// DOC update latex on resolution bias removal and collision damping variables.
 
 	void DynamicsComponent::on_tick() const
 	{
@@ -292,8 +292,10 @@ namespace oly::physics
 		}
 
 		teleport *= properties.mass() * properties.moi_inverse();
-		if (glm::length(teleport) > material.collision_damping.angular_jitter_threshold)
-			teleport *= 1.0f - material.collision_damping.angular_teleportation;
+		if (glm::abs(teleport) < 1.0f)
+			LOG << glm::abs(teleport) << LOG.nl;
+		if (glm::abs(teleport) > material.collision_damping.angular_jitter_threshold)
+			teleport *= 1.0f - material.collision_damping.angular_teleportation.inner();
 		else
 			teleport = 0.0f;
 
@@ -378,12 +380,20 @@ namespace oly::physics
 
 	float DynamicsComponent::effective_mass(const CollisionResponse& collision) const
 	{
-		const float cross1 = math::cross(collision.contact - properties.center_of_mass, collision.normal);
-		float effective_mass_denominator = properties.mass_inverse() + properties.moi_inverse() * cross1 * cross1;
+		float effective_mass_denominator = properties.mass_inverse();
+		if (flag != Flag::LINEAR)
+		{
+			const float cross1 = math::cross(collision.contact - properties.center_of_mass, collision.normal);
+			effective_mass_denominator += properties.moi_inverse() * cross1 * cross1;
+		}
 		if (collision.dynamics->flag != Flag::STATIC)
 		{
-			const float cross2 = math::cross(state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position, collision.normal);
-			effective_mass_denominator += collision.dynamics->properties.mass_inverse() + collision.dynamics->properties.moi_inverse() * cross2 * cross2;
+			effective_mass_denominator += collision.dynamics->properties.mass_inverse();
+			if (collision.dynamics->flag != Flag::LINEAR)
+			{
+				const float cross2 = math::cross(state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position, collision.normal);
+				effective_mass_denominator += collision.dynamics->properties.moi_inverse() * cross2 * cross2;
+			}
 		}
 		return 1.0f / effective_mass_denominator;
 	}
@@ -405,7 +415,7 @@ namespace oly::physics
 		if (col2d::near_zero(mu))
 			return {};
 
-		glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact - properties.center_of_mass) - other_contact_velocity; // TODO use other's new velocity as well??
+		glm::vec2 new_relative_velocity = linear_velocity_at(new_linear_velocity, new_angular_velocity, collision.contact - properties.center_of_mass) - other_contact_velocity;
 		glm::vec2 new_tangent_velocity = collision.normal.normal_project(new_relative_velocity);
 		float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
 		if (col2d::near_zero(new_tangent_velocity_sqrd))

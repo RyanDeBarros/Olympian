@@ -41,31 +41,6 @@ namespace oly
 	};
 
 	typedef std::pair<float, float> fpair;
-
-	template<typename T, T Min, T Max>
-	struct BoundedValue
-	{
-	private:
-		T val;
-
-	public:
-		BoundedValue(T val = Min) { set(val); }
-
-		T get() const { return val; }
-		void set(T v) { val = glm::clamp(v, Min, Max); }
-		operator T() const { return val; }
-		BoundedValue<T, Min, Max>& operator=(T v) { set(v); return *this; }
-	};
-
-	template<float Min, float Max>
-	using BoundedFloat = BoundedValue<float, Min, Max>;
-	template<int Min, int Max>
-	using BoundedInt = BoundedValue<int, Min, Max>;
-	template<unsigned int Min, unsigned int Max>
-	using BoundedUInt = BoundedValue<unsigned int, Min, Max>;
-
-	using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
-	using StrictlyPositiveFloat = BoundedFloat<0.000001f, nmax<float>()>;
 }
 
 template<>

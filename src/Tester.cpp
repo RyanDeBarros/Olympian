@@ -140,9 +140,9 @@ int main()
 	//player.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi_multiplier(2000.0f);
-	player.properties().net_force += oly::physics::GRAVITY; // TODO gravity should be added to acceleration, not force.
+	player.properties().net_linear_acceleration += oly::physics::GRAVITY;
 	player.material().angular_drag = 1.0f;
-	player.properties().set_mass(0.5f);
+	player.properties().set_mass(50.0f);
 
 	player.add_collider(player_collider);
 	//player.add_collider(star.as_convex_tcompound());
@@ -164,11 +164,13 @@ int main()
 	obstacle0.set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
 	obstacle0.add_collider(capsule);
 	obstacle0.collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0.collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle0.collider()->mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
 	obstacle0.collider()->set_local().position = -capsule.center;
 	obstacle0.set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
+	obstacle0.set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0.properties().center_of_mass = capsule.center;
-	obstacle0.properties().net_angular_impulse += 0.1f;
+	obstacle0.properties().net_torque += 300.0f;
+	obstacle0.properties().set_moi_multiplier(2000.0f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle1;
@@ -176,6 +178,7 @@ int main()
 	obstacle1.collider()->layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle1.collider()->mask() |= CollisionMasks::M_PLAYER;
 	obstacle1.properties().center_of_mass = capsule.center;
+	obstacle1.set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBody obstacle2;

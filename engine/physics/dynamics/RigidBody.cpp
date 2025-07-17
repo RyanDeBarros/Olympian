@@ -134,28 +134,28 @@ namespace oly::physics
 
 	void RigidBody::set_flag(DynamicsComponent::Flag flag)
 	{
-		if (flag == DynamicsComponent::Flag::STATIC)
+		if (dynamics.flag == DynamicsComponent::Flag::STATIC)
 		{
-			if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
+			if (flag == DynamicsComponent::Flag::KINEMATIC)
 				bind_contacts_handler();
-			else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
+			else if (flag == DynamicsComponent::Flag::LINEAR)
 				bind_collides_handler();
 		}
-		else if (flag == DynamicsComponent::Flag::KINEMATIC)
+		else if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
 		{
-			if (dynamics.flag == DynamicsComponent::Flag::STATIC)
+			if (flag == DynamicsComponent::Flag::STATIC)
 				unbind_contacts_handler();
-			else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
+			else if (flag == DynamicsComponent::Flag::LINEAR)
 			{
 				unbind_contacts_handler();
 				bind_collides_handler();
 			}
 		}
-		else if (flag == DynamicsComponent::Flag::LINEAR)
+		else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
 		{
-			if (dynamics.flag == DynamicsComponent::Flag::STATIC)
+			if (flag == DynamicsComponent::Flag::STATIC)
 				unbind_collides_handler();
-			else if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
+			else if (flag == DynamicsComponent::Flag::KINEMATIC)
 			{
 				unbind_collides_handler();
 				bind_contacts_handler();

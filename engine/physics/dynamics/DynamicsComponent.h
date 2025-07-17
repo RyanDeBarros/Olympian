@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/TransformerExposure.h"
-#include "core/base/SimpleMath.h"
+#include "core/base/Parameters.h"
 #include "physics/collision/scene/Collider.h"
 
 namespace oly::physics
@@ -126,7 +126,7 @@ namespace oly::physics
 
 	public:
 		PositiveFloat linear_drag = 0.0f;
-		PositiveFloat angular_drag = 0.0f;
+		PositiveFloat angular_drag = 1.0f;
 
 		struct
 		{
@@ -137,7 +137,7 @@ namespace oly::physics
 			// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.
 			// At 0.0 - no damping, which causes large angular bounces from collisions.
 			// At 1.0 - full damping, which prevents any angular response to collisions.
-			BoundedFloat<0.0f, 1.0f> angular_teleportation = 0.8f;
+			PowerInterval angular_teleportation = PowerInterval(0.85f);
 			// angular teleportation values under jitter threshold are fully dampened.
 			PositiveFloat angular_jitter_threshold = 0.001f;
 		} collision_damping;
