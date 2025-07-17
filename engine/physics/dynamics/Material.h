@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/base/Parameters.h"
+#include "core/types/Handle.h"
 
 namespace oly::physics
 {
@@ -77,4 +78,6 @@ namespace oly::physics
 		float restitution_with(const Material& mat) const;
 		float friction_with(const Material& mat, FrictionType friction_type) const;
 	};
+
+	typedef Handle<Material> MaterialRef;
 }

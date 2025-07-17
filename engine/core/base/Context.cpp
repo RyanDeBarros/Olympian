@@ -16,6 +16,7 @@
 
 #include "physics/collision/scene/LUT.h"
 #include "physics/collision/scene/CollisionDispatcher.h"
+#include "physics/dynamics/Material.h"
 
 namespace oly::context
 {
@@ -346,9 +347,13 @@ namespace oly::context
 			(*internal::render_frame)();
 		if (!internal::platform->frame())
 			return false;
+		
 		TIME.sync();
 		++internal::this_frame;
 		internal::collision_dispatcher.poll();
+
+		physics::MaterialRef::pool().clean();
+
 		return true;
 	}
 

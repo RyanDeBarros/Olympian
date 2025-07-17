@@ -3,7 +3,7 @@
 #include "core/base/TransformerExposure.h"
 #include "core/base/Parameters.h"
 #include "physics/collision/scene/Collider.h"
-#include "physics/dynamics/materials/MaterialRef.h"
+#include "physics/dynamics/Material.h"
 
 namespace oly::physics
 {
