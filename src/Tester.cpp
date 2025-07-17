@@ -141,7 +141,6 @@ int main()
 	//player.properties().set_moi(oly::physics::moment_of_inertia(oly::col2d::param(star.as_convex_primitive().element), 1.0f) * 1.2f);
 	player.properties().set_moi_multiplier(2000.0f);
 	player.properties().net_linear_acceleration += oly::physics::GRAVITY;
-	player.material().angular_drag = 1.0f;
 	player.properties().set_mass(50.0f);
 
 	player.add_collider(player_collider);

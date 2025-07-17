@@ -11,7 +11,7 @@ namespace oly::physics
 		return linear_velocity + angular_velocity * glm::vec2{ -contact.y, contact.x };
 	}
 
-	State::FrictionType State::friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold) const
+	FrictionType State::friction_type(glm::vec2 contact, UnitVector2D tangent, const State& other, PositiveFloat speed_threshold) const
 	{
 		bool sliding = !near_zero(tangent.dot(linear_velocity_at(linear_velocity, angular_velocity, contact)
 			- linear_velocity_at(other.linear_velocity, other.angular_velocity, contact + position - other.position)), speed_threshold);
@@ -115,69 +115,6 @@ namespace oly::physics
 		return dw;
 	}
 
-	float Material::restitution_with(const Material& mat) const
-	{
-		switch (blending.restitution)
-		{
-		case FactorBlendOp::MINIMUM:
-			return std::min(_restitution, mat._restitution);
-		case FactorBlendOp::ARITHMETIC_MEAN:
-			return 0.5f * (_restitution + mat._restitution);
-		case FactorBlendOp::GEOMETRIC_MEAN:
-			return _sqrt_restitution * mat._sqrt_restitution;
-		case FactorBlendOp::ACTIVE:
-			return _restitution;
-		}
-		return 0.0f;
-	}
-
-	float Material::friction_with(const Material& mat, State::FrictionType friction_type) const
-	{
-		if (friction_type == State::FrictionType::STATIC)
-		{
-			switch (blending.static_friction)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_static_friction, mat._static_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_static_friction + mat._static_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_static_friction * mat._sqrt_static_friction;
-			case FactorBlendOp::ACTIVE:
-				return _static_friction;
-			}
-		}
-		else if (friction_type == State::FrictionType::KINETIC)
-		{
-			switch (blending.kinetic_friction)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_kinetic_friction, mat._kinetic_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_kinetic_friction + mat._kinetic_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_kinetic_friction * mat._sqrt_kinetic_friction;
-			case FactorBlendOp::ACTIVE:
-				return _kinetic_friction;
-			}
-		}
-		else if (friction_type == State::FrictionType::ROLLING)
-		{
-			switch (blending.rolling_friction)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_rolling_friction, mat._rolling_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_rolling_friction + mat._rolling_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_rolling_friction * mat._sqrt_rolling_friction;
-			case FactorBlendOp::ACTIVE:
-				return _rolling_friction;
-			}
-		}
-		return 0.0f;
-	}
-
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
 	{
 		collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
@@ -218,11 +155,11 @@ namespace oly::physics
 					state.angular_velocity += properties.dw_psi();
 
 				// 2. apply drag
-				if (material.linear_drag > 0.0f)
-					state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta());
+				if (material->linear_drag > 0.0f)
+					state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
 				if (flag == Flag::KINEMATIC)
-					if (material.angular_drag > 0.0f)
-						state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta());
+					if (material->angular_drag > 0.0f)
+						state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 
 				// 3. update position
 				state.position += state.linear_velocity * TIME.delta();
@@ -266,16 +203,19 @@ namespace oly::physics
 		glm::vec2 dx_v = new_velocity * TIME.delta();
 		float along_teleport_axis = teleport_axis.dot(dx_v);
 		glm::vec2 perp_teleport_axis = dx_v - along_teleport_axis * (glm::vec2)teleport_axis;
+
+		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
 		if (along_teleport_axis < 0.0f)
-			along_teleport_axis = (1.0f - material.collision_damping.linear_penetration) * glm::max(along_teleport_axis, -glm::length(teleport));
+			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration; // TODO multiplier should decrease to 0 as along_teleport_axis increases.
+		
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 		state.position += teleport + dx_v;
 
 		// velocity update
 
 		state.linear_velocity = dx_v * TIME.inverse_delta() + collision_impulse * properties.mass_inverse();
-		if (material.linear_drag > 0.0f)
-			state.linear_velocity *= glm::exp(-material.linear_drag * TIME.delta());
+		if (material->linear_drag > 0.0f)
+			state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
 	}
 
 	void DynamicsComponent::update_colliding_angular_motion(float new_velocity, float collision_impulse) const
@@ -294,8 +234,8 @@ namespace oly::physics
 		teleport *= properties.mass() * properties.moi_inverse();
 		if (glm::abs(teleport) < 1.0f)
 			LOG << glm::abs(teleport) << LOG.nl;
-		if (glm::abs(teleport) > material.collision_damping.angular_jitter_threshold)
-			teleport *= 1.0f - material.collision_damping.angular_teleportation.inner();
+		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
+			teleport *= 1.0f - material->collision_damping.angular_teleportation.inner();
 		else
 			teleport = 0.0f;
 
@@ -306,8 +246,8 @@ namespace oly::physics
 		// velocity update
 
 		state.angular_velocity = new_velocity + teleport * TIME.inverse_delta() + collision_impulse * properties.moi_inverse();
-		if (material.angular_drag > 0.0f)
-			state.angular_velocity *= glm::exp(-material.angular_drag * TIME.delta());
+		if (material->angular_drag > 0.0f)
+			state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 	}
 
 	// TODO test simultaneous collision with multiple objects with complex_teleportation = true/false.
@@ -400,7 +340,7 @@ namespace oly::physics
 
 	glm::vec2 DynamicsComponent::restitution_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity) const
 	{
-		const float restitution = material.restitution_with(collision.dynamics->material);
+		const float restitution = material->restitution_with(*collision.dynamics->material);
 		if (near_zero(restitution))
 			return {};
 
@@ -410,8 +350,8 @@ namespace oly::physics
 
 	glm::vec2 DynamicsComponent::friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity, glm::vec2 new_linear_velocity, float new_angular_velocity) const
 	{
-		State::FrictionType friction_type = state.friction_type(collision.contact - properties.center_of_mass, collision.normal.get_quarter_turn(), collision.dynamics->state);
-		float mu = material.friction_with(collision.dynamics->material, friction_type);
+		FrictionType friction_type = state.friction_type(collision.contact - properties.center_of_mass, collision.normal.get_quarter_turn(), collision.dynamics->state);
+		float mu = material->friction_with(*collision.dynamics->material, friction_type);
 		if (col2d::near_zero(mu))
 			return {};
 

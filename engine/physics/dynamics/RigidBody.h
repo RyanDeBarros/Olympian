@@ -63,8 +63,8 @@ namespace oly::physics
 
 		void on_tick();
 
-		const Material& material() const { return dynamics.material; }
-		Material& material() { return dynamics.material; }
+		const MaterialRef& material() const { return dynamics.material; }
+		MaterialRef& material() { return dynamics.material; }
 		const Properties& properties() const { return dynamics.properties; }
 		Properties& properties() { return dynamics.properties; }
 		State state() const { return dynamics.get_state(); }

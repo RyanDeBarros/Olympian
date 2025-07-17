@@ -73,7 +73,7 @@ namespace oly::col2d
 				++it;
 		}
 	}
-	
+
 	void CollisionPhaseTracker::erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2)
 	{
 		map.erase({ c1, c2 });
