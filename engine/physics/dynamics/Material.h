@@ -43,12 +43,18 @@ namespace oly::physics
 			// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
 			// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
 			BoundedFloat<0.0f, 1.0f> linear_penetration = 0.5f;
+			
 			// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.
 			// At 0.0 - no damping, which causes large angular bounces from collisions.
 			// At 1.0 - full damping, which prevents any angular response to collisions.
 			PowerInterval angular_teleportation = PowerInterval(0.85f);
+			
+			// angular teleport inverse drag controls how higher teleportation levels are shrunken. A smaller inverse drag results in more overall teleportation damping.
+			BoundedFloat<0.0f, 1.0f> angular_teleport_inverse_drag = 0.6f;
+			
 			// angular teleportation values under jitter threshold are fully dampened.
 			PositiveFloat angular_jitter_threshold = 0.001f;
+
 		} collision_damping;
 
 		struct
@@ -58,6 +64,8 @@ namespace oly::physics
 			FactorBlendOp kinetic_friction = FactorBlendOp::GEOMETRIC_MEAN;
 			FactorBlendOp rolling_friction = FactorBlendOp::GEOMETRIC_MEAN;
 		} blending;
+
+		// TODO option to clamp rotations to certain angles - if angular velocity is below threshold and rotation is close to a multiple of a certain angle, clamp it to that angle. For example, with squares, it might be useful to clamp to multiples of 90 degrees if close enough and slow enough.
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }

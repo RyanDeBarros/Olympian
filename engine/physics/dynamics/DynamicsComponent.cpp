@@ -206,7 +206,7 @@ namespace oly::physics
 
 		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
 		if (along_teleport_axis < 0.0f)
-			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration; // TODO multiplier should decrease to 0 as along_teleport_axis increases.
+			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
 		
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 		state.position += teleport + dx_v;
@@ -232,10 +232,9 @@ namespace oly::physics
 		}
 
 		teleport *= properties.mass() * properties.moi_inverse();
-		if (glm::abs(teleport) < 1.0f)
-			LOG << glm::abs(teleport) << LOG.nl;
 		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
-			teleport *= 1.0f - material->collision_damping.angular_teleportation.inner();
+			teleport = (1.0f - material->collision_damping.angular_teleportation.inner())
+				* glm::log(teleport * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
 		else
 			teleport = 0.0f;
 
