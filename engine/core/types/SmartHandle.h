@@ -12,19 +12,53 @@ namespace oly
 
 	namespace internal
 	{
+		struct ICleanable
+		{
+			virtual ~ICleanable() = default;
+			virtual void clean() = 0;
+		};
+
+		class BatchCleaner
+		{
+			std::unordered_set<ICleanable*> to_clean;
+
+			BatchCleaner() = default;
+			BatchCleaner(const BatchCleaner&) = delete;
+			BatchCleaner(BatchCleaner&&) = delete;
+			~BatchCleaner() = default;
+
+		public:
+			static BatchCleaner& instance()
+			{
+				static BatchCleaner cleaner;
+				return cleaner;
+			}
+
+			void insert(ICleanable* cleanable) { to_clean.insert(cleanable); }
+			void remove(ICleanable* cleanable) { to_clean.erase(cleanable); }
+
+			void clean()
+			{
+				for (ICleanable* cleanable : to_clean)
+					cleanable->clean();
+			}
+
+			void clear() { to_clean.clear(); }
+		};
+
 		// LATER multi-threading and thead safety
 		template<typename Object>
-		class SmartHandlePool
+		class SmartHandlePool : public ICleanable
 		{
 			std::vector<Object> objects;
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
 			std::vector<SmartHandle<Object>*> reference_heads;
 
-			SmartHandlePool() = default;
+			SmartHandlePool() { BatchCleaner::instance().insert(this); }
 			SmartHandlePool(const SmartHandlePool<Object>&) = delete;
 			SmartHandlePool(SmartHandlePool<Object>&&) = delete;
-			~SmartHandlePool() { clean(); }
+			~SmartHandlePool() { BatchCleaner::instance().remove(this); clean(); }
 
 		public:
 			static SmartHandlePool& instance()
@@ -33,7 +67,7 @@ namespace oly
 				return pool;
 			}
 
-			void clean();
+			virtual void clean() override;
 
 		private:
 			friend struct SmartHandle<Object>;
@@ -379,6 +413,7 @@ namespace oly
 				return other.valid();
 		}
 
+	private:
 		static internal::SmartHandlePool<Object>& pool()
 		{
 			return internal::SmartHandlePool<Object>::instance();

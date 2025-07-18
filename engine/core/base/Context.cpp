@@ -208,8 +208,8 @@ namespace oly::context
 
 		internal::platform.reset();
 
-		physics::MaterialRef::pool().clean();
-		// TODO clean all other pools too. Here and in frame()
+		oly::internal::BatchCleaner::instance().clean();
+		oly::internal::BatchCleaner::instance().clear();
 
 		graphics::internal::unload_resources();
 		glfwTerminate();
@@ -355,7 +355,7 @@ namespace oly::context
 		++internal::this_frame;
 		internal::collision_dispatcher.poll();
 
-		physics::MaterialRef::pool().clean();
+		oly::internal::BatchCleaner::instance().clean();
 
 		return true;
 	}
