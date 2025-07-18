@@ -10,7 +10,7 @@ namespace oly::reg
 		tilesets.clear();
 	}
 
-	rendering::TileSetRes TileSetRegistry::load_tileset(const std::string& file)
+	rendering::TileSetRef TileSetRegistry::load_tileset(const std::string& file)
 	{
 		auto it = tilesets.find(file);
 		if (it != tilesets.end())
@@ -168,7 +168,7 @@ namespace oly::reg
 				});
 		}
 
-		rendering::TileSetRes tileset = std::make_shared<rendering::TileSet>(assignments);
+		rendering::TileSetRef tileset(assignments);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			tilesets.emplace(file, tileset);
 		return tileset;

@@ -3,9 +3,12 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <memory>
 
 #include "external/GLM.h"
 #include "external/NSVG.h"
+
+#include "core/types/SmartHandle.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
@@ -26,7 +29,7 @@ namespace oly::graphics
 		operator GLuint () const { return id; }
 	};
 
-	typedef std::shared_ptr<Texture> TextureRes;
+	typedef SmartHandle<Texture> TextureRef;
 
 	class BindlessTexture
 	{
@@ -39,7 +42,6 @@ namespace oly::graphics
 		BindlessTexture();
 		BindlessTexture(GLenum target);
 		BindlessTexture(Texture&& texture);
-		BindlessTexture(TextureRes&& texture);
 		BindlessTexture(const BindlessTexture&) = delete;
 		BindlessTexture(BindlessTexture&&) noexcept;
 		~BindlessTexture();
@@ -55,7 +57,7 @@ namespace oly::graphics
 		void disuse_handle() const;
 	};
 
-	typedef std::shared_ptr<BindlessTexture> BindlessTextureRes;
+	typedef SmartHandle<BindlessTexture> BindlessTextureRef;
 
 	extern GLenum texture_internal_format(int cpp);
 	extern GLenum texture_format(int cpp);
@@ -112,7 +114,7 @@ namespace oly::graphics
 		void delete_buffer();
 	};
 
-	typedef std::shared_ptr<Image> ImageRes;
+	typedef SmartHandle<Image> ImageRef;
 
 	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
 	inline Texture load_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
@@ -193,7 +195,7 @@ namespace oly::graphics
 		void delete_buffer();
 	};
 
-	typedef std::shared_ptr<Anim> AnimRes;
+	typedef SmartHandle<Anim> AnimRef;
 
 	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
 	inline Texture load_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
@@ -266,23 +268,23 @@ namespace oly::graphics
 		NSVGContext& operator=(NSVGContext&&) noexcept;
 
 		Image rasterize(const NSVGAbstract& abstract, float scale) const;
-		ImageRes rasterize_res(const NSVGAbstract& abstract, float scale) const;
+		ImageRef rasterize_res(const NSVGAbstract& abstract, float scale) const;
 
 	private:
 		void rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const;
 	};
 
-	struct VectorImageRes
+	struct VectorImageRef
 	{
-		ImageRes image;
+		ImageRef image;
 		float scale;
 	};
 
-	extern Texture load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps = false);
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps = false)
+	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps = false);
+	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps));
 	}
 	// texture needs to be bound to GL_TEXTURE_2D before calling nsvg_manually_generate_mipmaps()
-	extern void nsvg_manually_generate_mipmaps(const VectorImageRes& image, const NSVGAbstract& abstract, const NSVGContext& context);
+	extern void nsvg_manually_generate_mipmaps(const VectorImageRef& image, const NSVGAbstract& abstract, const NSVGContext& context);
 }

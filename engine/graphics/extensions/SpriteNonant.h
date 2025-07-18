@@ -44,14 +44,14 @@ namespace oly::rendering
 		void copy_sprite_attributes(const Sprite& sprite);
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);
 		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0);
-		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
+		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_tex_coords(const math::Rect2D& rect);
 		void set_modulation(const ModulationRect& modulation);
 		void set_modulation(glm::vec4 modulation);
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 
-		graphics::BindlessTextureRes get_texture() const;
-		graphics::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+		graphics::BindlessTextureRef get_texture() const;
+		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
 		math::Rect2D get_tex_coords() const;
 		ModulationRect get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;

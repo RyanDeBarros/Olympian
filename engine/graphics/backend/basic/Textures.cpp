@@ -58,12 +58,6 @@ namespace oly::graphics
 	{
 	}
 
-	BindlessTexture::BindlessTexture(TextureRes&& texture)
-		: t(std::move(*texture))
-	{
-		texture.reset();
-	}
-
 	BindlessTexture::BindlessTexture(BindlessTexture&& other) noexcept
 		: t(std::move(other.t)), handle(other.handle), _tex_handle(other._tex_handle), _sampler_handles(std::move(other._sampler_handles))
 	{
@@ -478,12 +472,12 @@ namespace oly::graphics
 		return Image(buf, dim);
 	}
 
-	ImageRes NSVGContext::rasterize_res(const NSVGAbstract& abstract, float scale) const
+	ImageRef NSVGContext::rasterize_res(const NSVGAbstract& abstract, float scale) const
 	{
 		unsigned char* buf;
 		ImageDimensions dim;
 		rasterize_unsafe(abstract, scale, buf, dim);
-		return std::make_shared<Image>(buf, dim);
+		return ImageRef(buf, dim);
 	}
 
 	void NSVGContext::rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const
@@ -505,7 +499,7 @@ namespace oly::graphics
 		delete[] temp;
 	}
 
-	Texture load_nsvg_texture_2d(const VectorImageRes& image, bool generate_mipmaps)
+	Texture load_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps)
 	{
 		Texture texture(GL_TEXTURE_2D);;
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -518,7 +512,7 @@ namespace oly::graphics
 		return texture;
 	}
 
-	void nsvg_manually_generate_mipmaps(const VectorImageRes& image, const NSVGAbstract& abstract, const NSVGContext& context)
+	void nsvg_manually_generate_mipmaps(const VectorImageRef& image, const NSVGAbstract& abstract, const NSVGContext& context)
 	{
 		if (image.image->dim().w <= 1 && image.image->dim().h <= 1)
 			return;

@@ -139,35 +139,35 @@ namespace oly::rendering
 		{
 			struct SizedTexture
 			{
-				graphics::BindlessTextureRes texture;
+				graphics::BindlessTextureRef texture;
 				glm::vec2 dimensions = {};
 
 				bool operator==(const SizedTexture& t) const = default;
 			};
 			struct SizedTextureHash
 			{
-				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRes>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
+				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
 			};
 			graphics::UsageSlotTracker<SizedTexture, SizedTextureHash> textures;
 			graphics::UsageSlotTracker<UVRect, UVRectHash> tex_coords;
 			graphics::UsageSlotTracker<ModulationRect, ModulationHash> modulations;
 			graphics::UsageSlotTracker<graphics::AnimFrameFormat, AnimHash> anims;
 
-			std::unordered_map<graphics::BindlessTextureRes, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
+			std::unordered_map<graphics::BindlessTextureRef, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
 		} quad_info_store;
 
-		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions);
+		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_tex_coords(GLuint vb_pos, const UVRect& uvs);
 		void set_modulation(GLuint vb_pos, const ModulationRect& modulation);
 		void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
 
-		graphics::BindlessTextureRes get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+		graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 		UVRect get_tex_coords(GLuint vb_pos) const;
 		ModulationRect get_modulation(GLuint vb_pos) const;
 		graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 
 	public:
-		void update_texture_handle(const graphics::BindlessTextureRes& texture);
+		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
 
 	// ASSET
@@ -187,7 +187,7 @@ namespace oly::rendering
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0) const;
-		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const;
+		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
 		void set_modulation(const ModulationRect& modulation) const;
@@ -195,8 +195,8 @@ namespace oly::rendering
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 		void set_transform(const glm::mat3& transform);
 
-		graphics::BindlessTextureRes get_texture() const;
-		graphics::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+		graphics::BindlessTextureRef get_texture() const;
+		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
 		UVRect get_tex_coords() const;
 		ModulationRect get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;
@@ -221,15 +221,15 @@ namespace oly::rendering
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0) const;
-		void set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const;
+		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
 		void set_modulation(const ModulationRect& modulation) const;
 		void set_modulation(glm::vec4 modulation) const;
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 
-		graphics::BindlessTextureRes get_texture() const;
-		graphics::BindlessTextureRes get_texture(glm::vec2& dimensions) const;
+		graphics::BindlessTextureRef get_texture() const;
+		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
 		UVRect get_tex_coords() const;
 		ModulationRect get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;

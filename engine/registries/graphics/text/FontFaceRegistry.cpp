@@ -10,7 +10,7 @@ namespace oly::reg
 		font_faces.clear();
 	}
 
-	rendering::FontFaceRes FontFaceRegistry::load_font_face(const std::string& file)
+	rendering::FontFaceRef FontFaceRegistry::load_font_face(const std::string& file)
 	{
 		auto it = font_faces.find(file);
 		if (it != font_faces.end())
@@ -56,7 +56,7 @@ namespace oly::reg
 				});
 		}
 
-		rendering::FontFaceRes font_face = std::make_shared<rendering::FontFace>((context::context_filepath() + file).c_str(), std::move(kerning));
+		rendering::FontFaceRef font_face((context::context_filepath() + file).c_str(), std::move(kerning));
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_faces.emplace(file, font_face);
 		return font_face;

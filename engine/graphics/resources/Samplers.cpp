@@ -2,6 +2,8 @@
 
 #include "graphics/backend/basic/Sampler.h"
 
+#include <memory>
+
 namespace oly::graphics::samplers
 {
 	static std::unique_ptr<Sampler> _linear = nullptr;

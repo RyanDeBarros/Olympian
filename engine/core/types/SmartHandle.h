@@ -8,38 +8,54 @@
 namespace oly
 {
 	template<typename Object>
-	struct Handle;
+	struct SmartHandle;
 
 	namespace internal
 	{
 		// LATER multi-threading and thead safety
-		// TODO replace many uses of shared_ptr with Handle system.
 		template<typename Object>
-		class HandlePool
+		class SmartHandlePool
 		{
 			std::vector<Object> objects;
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
-			std::vector<Handle<Object>*> reference_heads;
+			std::vector<SmartHandle<Object>*> reference_heads;
 
-			HandlePool() = default;
-			HandlePool(const HandlePool<Object>&) = delete;
-			HandlePool(HandlePool<Object>&&) = delete;
-			~HandlePool() { clean(); }
+			SmartHandlePool() = default;
+			SmartHandlePool(const SmartHandlePool<Object>&) = delete;
+			SmartHandlePool(SmartHandlePool<Object>&&) = delete;
+			~SmartHandlePool() { clean(); }
 
 		public:
-			static HandlePool& instance()
+			static SmartHandlePool& instance()
 			{
-				static HandlePool pool;
+				static SmartHandlePool pool;
 				return pool;
 			}
 
 			void clean();
 
 		private:
-			friend struct Handle<Object>;
+			friend struct SmartHandle<Object>;
 
-			size_t init_slot(const Object& obj = {})
+			size_t init_slot()
+			{
+				if (unoccupied.empty())
+				{
+					objects.push_back(Object());
+					reference_heads.push_back(nullptr);
+					return objects.size() - 1;
+				}
+				else
+				{
+					size_t next_slot = unoccupied.top();
+					objects[next_slot] = {};
+					unoccupied.pop();
+					return next_slot;
+				}
+			}
+
+			size_t init_slot(const Object& obj)
 			{
 				if (unoccupied.empty())
 				{
@@ -51,6 +67,23 @@ namespace oly
 				{
 					size_t next_slot = unoccupied.top();
 					objects[next_slot] = obj;
+					unoccupied.pop();
+					return next_slot;
+				}
+			}
+
+			size_t init_slot(Object&& obj)
+			{
+				if (unoccupied.empty())
+				{
+					objects.push_back(std::move(obj));
+					reference_heads.push_back(nullptr);
+					return objects.size() - 1;
+				}
+				else
+				{
+					size_t next_slot = unoccupied.top();
+					objects[next_slot] = std::move(obj);
 					unoccupied.pop();
 					return next_slot;
 				}
@@ -71,42 +104,70 @@ namespace oly
 				return marked_for_deletion.count(idx);
 			}
 			
-			void increment_references(size_t idx, Handle<Object>* handle);
-			void decrement_references(size_t idx, Handle<Object>* handle);
-			void swap_references(size_t idx, Handle<Object>* existing, Handle<Object>* with);
+			void increment_references(size_t idx, SmartHandle<Object>* handle);
+			void decrement_references(size_t idx, SmartHandle<Object>* handle);
+			void replace_references(size_t idx, SmartHandle<Object>* existing, SmartHandle<Object>* with);
 		};
 	}
 
 	template<typename Object>
-	struct Handle
+	struct SmartHandle
 	{
 	private:
-		friend class internal::HandlePool<Object>;
-
-		size_t pool_idx = size_t(-1);
-		Handle<Object>* prev_adj_reference = nullptr;
-		Handle<Object>* next_adj_reference = nullptr;
+		struct _Init {};
 
 	public:
-		Handle(bool init = false)
-		{
-			if (init)
-				this->init();
-		}
+		static inline const _Init INIT;
 
-		Handle(const Handle<Object>& other)
-			: pool_idx(other.pool_idx)
-		{
-			pool().increment_references(pool_idx, this);
-		}
+	private:
+		friend class internal::SmartHandlePool<Object>;
 
-		Handle(Handle<Object>&& other) noexcept
-			: pool_idx(other.pool_idx)
+		size_t pool_idx = size_t(-1);
+		SmartHandle<Object>* prev_adj_reference = nullptr;
+		SmartHandle<Object>* next_adj_reference = nullptr;
+
+	public:
+		SmartHandle() = default;
+
+		SmartHandle(nullptr_t) {}
+
+		SmartHandle(_Init)
 		{
-			pool().swap_references(pool_idx, &other, this);
+			init();
 		}
 		
-		Handle<Object>& operator=(const Handle<Object>& other)
+		SmartHandle(const Object& obj)
+		{
+			init(obj);
+		}
+		
+		SmartHandle(Object&& obj)
+		{
+			init(std::move(obj));
+		}
+
+		template<typename... Args, typename = std::enable_if_t<sizeof...(Args) != 1
+			|| !same_as_any<Args, nullptr_t, _Init, Object, SmartHandle<Object>>>>
+		SmartHandle(Args&&... args)
+		{
+			init(Object(std::forward<Args>(args)...));
+		}
+
+		SmartHandle(const SmartHandle<Object>& other)
+			: pool_idx(other.pool_idx)
+		{
+			if (other.valid())
+				pool().increment_references(pool_idx, this);
+		}
+
+		SmartHandle(SmartHandle<Object>&& other) noexcept
+			: pool_idx(other.pool_idx)
+		{
+			if (other.valid())
+				pool().replace_references(pool_idx, &other, this);
+		}
+		
+		SmartHandle<Object>& operator=(const SmartHandle<Object>& other)
 		{
 			if (this != &other)
 			{
@@ -136,7 +197,7 @@ namespace oly
 			return *this;
 		}
 		
-		Handle<Object>& operator=(Handle<Object>&& other) noexcept
+		SmartHandle<Object>& operator=(SmartHandle<Object>&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -148,7 +209,7 @@ namespace oly
 						{
 							pool().decrement_references(pool_idx, this);
 							pool_idx = other.pool_idx;
-							pool().swap_references(pool_idx, &other, this);
+							pool().replace_references(pool_idx, &other, this);
 						}
 						else
 							pool().decrement_references(pool_idx, &other);
@@ -161,14 +222,14 @@ namespace oly
 					if (other.valid())
 					{
 						pool_idx = other.pool_idx;
-						pool().swap_references(pool_idx, &other, this);
+						pool().replace_references(pool_idx, &other, this);
 					}
 				}
 			}
 			return *this;
 		}
 		
-		~Handle()
+		~SmartHandle()
 		{
 			invalidate();
 		}
@@ -219,7 +280,7 @@ namespace oly
 			else
 				return false;
 		}
-		
+
 		void init()
 		{
 			if (valid())
@@ -229,6 +290,24 @@ namespace oly
 			pool().increment_references(pool_idx, this);
 		}
 		
+		void init(const Object& obj)
+		{
+			if (valid())
+				pool().decrement_references(pool_idx, this);
+
+			pool_idx = pool().init_slot(obj);
+			pool().increment_references(pool_idx, this);
+		}
+
+		void init(Object&& obj)
+		{
+			if (valid())
+				pool().decrement_references(pool_idx, this);
+
+			pool_idx = pool().init_slot(std::move(obj));
+			pool().increment_references(pool_idx, this);
+		}
+
 		void clone()
 		{
 			if (valid())
@@ -240,9 +319,9 @@ namespace oly
 			}
 		}
 		
-		Handle<Object> get_clone() const
+		SmartHandle<Object> get_clone() const
 		{
-			Handle<Object> cloned;
+			SmartHandle<Object> cloned;
 			if (valid())
 			{
 				cloned.pool_idx = pool().init_slot(pool().objects[pool_idx]);
@@ -275,29 +354,48 @@ namespace oly
 				throw Error(ErrorCode::NULL_POINTER);
 		}
 		
+		SmartHandle<Object>& operator=(std::nullptr_t)
+		{
+			invalidate();
+			return *this;
+		}
+
 		void invalidate()
 		{
 			if (valid())
 				pool().decrement_references(pool_idx, this);
 		}
 
-		static internal::HandlePool<Object>& pool()
+		size_t hash() const
 		{
-			return internal::HandlePool<Object>::instance();
+			return std::hash<size_t>{}(valid() ? pool_idx : size_t(-1));
+		}
+
+		bool operator==(const SmartHandle<Object>& other) const
+		{
+			if (valid())
+				return other.valid() && pool_idx == other.pool_idx;
+			else
+				return other.valid();
+		}
+
+		static internal::SmartHandlePool<Object>& pool()
+		{
+			return internal::SmartHandlePool<Object>::instance();
 		}
 	};
 
 	namespace internal
 	{
 		template<typename Object>
-		void HandlePool<Object>::clean()
+		void SmartHandlePool<Object>::clean()
 		{
 			for (size_t idx : marked_for_deletion)
 			{
 				while (reference_heads[idx])
 				{
 					reference_heads[idx]->prev_adj_reference = nullptr;
-					Handle<Object>* next = reference_heads[idx]->next_adj_reference;
+					SmartHandle<Object>* next = reference_heads[idx]->next_adj_reference;
 					reference_heads[idx]->next_adj_reference = nullptr;
 					reference_heads[idx] = next;
 				}
@@ -307,26 +405,33 @@ namespace oly
 		}
 
 		template<typename Object>
-		inline void HandlePool<Object>::increment_references(size_t idx, Handle<Object>* handle)
+		inline void SmartHandlePool<Object>::increment_references(size_t idx, SmartHandle<Object>* handle)
 		{
 			if (reference_heads[idx])
 			{
-				Handle<Object>* next = reference_heads[idx]->next_adj_reference;
+				SmartHandle<Object>* next = reference_heads[idx]->next_adj_reference;
 				reference_heads[idx]->next_adj_reference = handle;
 				handle->prev_adj_reference = reference_heads[idx];
-				handle->next_adj_reference = next;
 				if (next)
+				{
+					handle->next_adj_reference = next;
 					next->prev_adj_reference = handle;
+				}
+				else
+				{
+					handle->next_adj_reference = reference_heads[idx];
+					reference_heads[idx]->prev_adj_reference = handle;
+				}
 			}
 			else
 				reference_heads[idx] = handle;
 		}
 
 		template<typename Object>
-		inline void HandlePool<Object>::decrement_references(size_t idx, Handle<Object>* handle)
+		inline void SmartHandlePool<Object>::decrement_references(size_t idx, SmartHandle<Object>* handle)
 		{
-			Handle<Object>* prev = handle->prev_adj_reference;
-			Handle<Object>* next = handle->next_adj_reference;
+			SmartHandle<Object>* prev = handle->prev_adj_reference;
+			SmartHandle<Object>* next = handle->next_adj_reference;
 			
 			if (next == prev)
 			{
@@ -358,10 +463,10 @@ namespace oly
 		}
 
 		template<typename Object>
-		inline void HandlePool<Object>::swap_references(size_t idx, Handle<Object>* existing, Handle<Object>* with)
+		inline void SmartHandlePool<Object>::replace_references(size_t idx, SmartHandle<Object>* existing, SmartHandle<Object>* with)
 		{
-			Handle<Object>* prev = existing->prev_adj_reference;
-			Handle<Object>* next = existing->next_adj_reference;
+			SmartHandle<Object>* prev = existing->prev_adj_reference;
+			SmartHandle<Object>* next = existing->next_adj_reference;
 
 			existing->prev_adj_reference = nullptr;
 			existing->next_adj_reference = nullptr;
@@ -379,3 +484,12 @@ namespace oly
 		}
 	}
 }
+
+template<typename T>
+struct std::hash<oly::SmartHandle<T>>
+{
+	size_t operator()(const oly::SmartHandle<T>& h) const
+	{
+		return h.hash();
+	}
+};

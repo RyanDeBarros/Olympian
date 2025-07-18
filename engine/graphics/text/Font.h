@@ -1,10 +1,10 @@
 #pragma once
 
 #include <unordered_map>
-#include <memory>
 
 #include "external/STB.h"
 
+#include "core/types/SmartHandle.h"
 #include "core/math/Shapes.h"
 #include "core/util/UTF.h"
 
@@ -52,7 +52,7 @@ namespace oly::rendering
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
 	};
-	typedef std::shared_ptr<FontFace> FontFaceRes;
+	typedef SmartHandle<FontFace> FontFaceRef;
 
 	// LATER manual generation of mipmaps
 
@@ -62,7 +62,7 @@ namespace oly::rendering
 		int index = 0;
 		math::IRect2D box;
 		int advance_width = 0, left_bearing = 0;
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 		size_t buffer_pos = -1;
 
 		FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos);
@@ -80,7 +80,7 @@ namespace oly::rendering
 
 	class FontAtlas
 	{
-		FontFaceRes font;
+		FontFaceRef font;
 		friend struct FontGlyph;
 		std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
 		FontOptions options;
@@ -88,10 +88,10 @@ namespace oly::rendering
 		int ascent = 0, descent = 0, linegap = 0;
 		float baseline = 0.0f, space_width = 0.0f;
 		graphics::ImageDimensions common_dim;
-		graphics::BindlessTextureRes common_texture;
+		graphics::BindlessTextureRef common_texture;
 
 	public:
-		FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
+		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
 
 		bool cache(utf::Codepoint codepoint);
 		void cache_all(const FontAtlas& other);
@@ -108,5 +108,5 @@ namespace oly::rendering
 		float get_scale() const { return scale; }
 		float get_space_width() const { return space_width; }
 	};
-	typedef std::shared_ptr<FontAtlas> FontAtlasRes;
+	typedef SmartHandle<FontAtlas> FontAtlasRef;
 }

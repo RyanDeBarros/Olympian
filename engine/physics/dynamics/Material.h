@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/Parameters.h"
-#include "core/types/Handle.h"
+#include "core/types/SmartHandle.h"
 
 namespace oly::physics
 {
@@ -87,5 +87,5 @@ namespace oly::physics
 		float friction_with(const Material& mat, FrictionType friction_type) const;
 	};
 
-	typedef Handle<Material> MaterialRef;
+	typedef SmartHandle<Material> MaterialRef;
 }

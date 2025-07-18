@@ -1,8 +1,7 @@
 #pragma once
 
-#include <memory>
-
 #include "external/GL.h"
+#include "core/types/SmartHandle.h"
 
 namespace oly::graphics
 {
@@ -25,5 +24,5 @@ namespace oly::graphics
 		void set_parameter_fv(GLenum param, const GLfloat* values) const;
 	};
 
-	typedef std::shared_ptr<Sampler> SamplerRes;
+	typedef SmartHandle<Sampler> SamplerRef;
 }

@@ -213,7 +213,7 @@ int main()
 
 	// LATER anti-aliasing settings
 	
-	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) {
+	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
 		else if (state == 1)

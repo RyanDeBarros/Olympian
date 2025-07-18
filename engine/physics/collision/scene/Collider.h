@@ -48,7 +48,8 @@ namespace oly::col2d
 		// LATER movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
 		friend class internal::CollisionNode;
-
+		
+		// TODO don't use soft references at all. Instead, use SmartHandle.
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:

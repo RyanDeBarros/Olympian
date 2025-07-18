@@ -36,15 +36,15 @@ namespace oly::reg
 				{ return std::hash<std::string>{}(k.file) ^ std::hash<unsigned int>{}(k.index) ^ std::hash<float>{}(k.scale); }
 		};
 
-		std::unordered_map<TextureKey, graphics::ImageRes, TextureHash> images;
-		std::unordered_map<TextureKey, graphics::AnimRes, TextureHash> anims;
-		std::unordered_map<TextureKey, graphics::VectorImageRes, TextureHash> vector_images;
-		std::unordered_map<TextureKey, graphics::BindlessTextureRes, TextureHash> textures;
-		std::unordered_map<SVGTextureKey, graphics::BindlessTextureRes, SVGTextureHash> svg_textures;
+		std::unordered_map<TextureKey, graphics::ImageRef, TextureHash> images;
+		std::unordered_map<TextureKey, graphics::AnimRef, TextureHash> anims;
+		std::unordered_map<TextureKey, graphics::VectorImageRef, TextureHash> vector_images;
+		std::unordered_map<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
+		std::unordered_map<SVGTextureKey, graphics::BindlessTextureRef, SVGTextureHash> svg_textures;
 		std::unordered_map<TextureKey, graphics::NSVGAbstract, TextureHash> nsvg_abstracts;
 
 	public:
-		typedef std::variant<graphics::ImageRes, graphics::AnimRes, graphics::VectorImageRes> CPUBuffer;
+		typedef std::variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
 
 		enum class ImageStorageOverride
 		{
@@ -83,18 +83,18 @@ namespace oly::reg
 			bool set_and_use = true;
 		};
 
-		graphics::BindlessTextureRes load_texture(const std::string& file, LoadParams params = {});
-		graphics::BindlessTextureRes load_svg_texture(const std::string& file, float scale = 1.0f, SVGLoadParams params = {});
-		graphics::BindlessTextureRes load_temp_texture(const std::string& file, TempLoadParams params = {}) const;
-		graphics::BindlessTextureRes load_temp_svg_texture(const std::string& file, float scale = 1.0f, TempSVGLoadParams params = {}) const;
+		graphics::BindlessTextureRef load_texture(const std::string& file, LoadParams params = {});
+		graphics::BindlessTextureRef load_svg_texture(const std::string& file, float scale = 1.0f, SVGLoadParams params = {});
+		graphics::BindlessTextureRef load_temp_texture(const std::string& file, TempLoadParams params = {}) const;
+		graphics::BindlessTextureRef load_temp_svg_texture(const std::string& file, float scale = 1.0f, TempSVGLoadParams params = {}) const;
 
 		void clear();
 
 		glm::vec2 get_dimensions(const std::string& file, unsigned int texture_index = 0);
 		graphics::ImageDimensions get_image_dimensions(const std::string& file, unsigned int texture_index = 0) const;
 		std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const std::string& file, unsigned int texture_index = 0) const;
-		graphics::ImageRes get_image_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
-		graphics::AnimRes get_anim_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
+		graphics::ImageRef get_image_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
+		graphics::AnimRef get_anim_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
 		const graphics::NSVGAbstract& get_nsvg_abstract(const std::string& file, unsigned int texture_index = 0) const;
 
 		void free_texture(const std::string& file, unsigned int texture_index = 0);

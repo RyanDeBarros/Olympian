@@ -208,6 +208,9 @@ namespace oly::context
 
 		internal::platform.reset();
 
+		physics::MaterialRef::pool().clean();
+		// TODO clean all other pools too. Here and in frame()
+
 		graphics::internal::unload_resources();
 		glfwTerminate();
 
@@ -362,12 +365,12 @@ namespace oly::context
 		return internal::this_frame;
 	}
 
-	graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index)
+	graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index)
 	{
 		return internal::texture_registry.load_texture(file, { .texture_index = texture_index });
 	}
 
-	graphics::BindlessTextureRes load_svg_texture(const std::string& file, float svg_scale, unsigned int texture_index)
+	graphics::BindlessTextureRef load_svg_texture(const std::string& file, float svg_scale, unsigned int texture_index)
 	{
 		return internal::texture_registry.load_svg_texture(file, svg_scale, { .texture_index = texture_index });
 	}
@@ -377,7 +380,7 @@ namespace oly::context
 		return internal::texture_registry.get_dimensions(file, texture_index);
 	}
 
-	void sync_texture_handle(const graphics::BindlessTextureRes& texture)
+	void sync_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		internal::sprite_batch->update_texture_handle(texture);
 	}
@@ -400,17 +403,17 @@ namespace oly::context
 		internal::last_internal_batch_rendered = InternalBatch::ELLIPSE;
 	}
 
-	rendering::TileSetRes load_tileset(const std::string& file)
+	rendering::TileSetRef load_tileset(const std::string& file)
 	{
 		return internal::tileset_registry.load_tileset(file);
 	}
 
-	rendering::FontFaceRes load_font_face(const std::string& file)
+	rendering::FontFaceRef load_font_face(const std::string& file)
 	{
 		return internal::font_face_registry.load_font_face(file);
 	}
 
-	rendering::FontAtlasRes load_font_atlas(const std::string& file, unsigned int index)
+	rendering::FontAtlasRef load_font_atlas(const std::string& file, unsigned int index)
 	{
 		return internal::font_atlas_registry.load_font_atlas(file, index);
 	}

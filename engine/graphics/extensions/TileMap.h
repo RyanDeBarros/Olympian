@@ -7,7 +7,7 @@ namespace oly::rendering
 {
 	struct TileMapLayer
 	{
-		TileSetRes tileset;
+		TileSetRef tileset;
 		
 	private:
 		std::unordered_map<glm::ivec2, Sprite> sprite_map;

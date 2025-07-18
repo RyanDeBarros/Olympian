@@ -45,7 +45,7 @@ namespace oly::rendering
 		std::vector<TextGlyph> glyphs;
 		std::vector<bool> visible;
 		utf::String text;
-		FontAtlasRes font;
+		FontAtlasRef font;
 		ParagraphFormat format;
 
 	public:
@@ -58,13 +58,13 @@ namespace oly::rendering
 		TextBatch::TextColor default_text_color;
 		Transformer2D transformer;
 
-		Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat& format = {}, utf::String&& text = "");
+		Paragraph(TextBatch& text_batch, const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
 
 		const utf::String& get_text() const { return text; }
 		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }
 		void set_text(const utf::String& text) { this->text = text; build_layout(); }
-		const FontAtlasRes& get_font() const { return font; }
-		void set_font(const FontAtlasRes& font) { this->font = font; build_layout(); }
+		const FontAtlasRef& get_font() const { return font; }
+		void set_font(const FontAtlasRef& font) { this->font = font; build_layout(); }
 		const ParagraphFormat& get_format() const { return format;  }
 		void set_format(const ParagraphFormat& format) { this->format = format; build_layout(); }
 

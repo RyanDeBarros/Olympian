@@ -86,20 +86,18 @@ namespace oly
 	template<typename T>
 	concept numeric = std::integral<T> || std::floating_point<T>;
 
-	template<typename T>
-	inline std::shared_ptr<T> move_shared(T&& obj) { return std::make_shared<T>(std::move(obj)); }
-	template<typename T>
-	inline std::unique_ptr<T> move_unique(T&& obj) { return std::make_unique<T>(std::move(obj)); }
-
 	template<typename ToOptional, typename FromOptional>
 	inline std::optional<ToOptional> convert_optional(const std::optional<FromOptional>& from)
 	{
 		return from ? std::make_optional<ToOptional>((ToOptional)*from) : std::nullopt;
 	}
 
+	template<typename From, typename To>
+	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
+
 	template<typename T, typename... Class>
 	constexpr bool visiting_class_is = std::disjunction_v<std::is_same<std::decay_t<T>, Class>...>;
 
-	template<typename From, typename To>
-	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
+	template<typename T, typename... Candidates>
+	constexpr bool same_as_any = visiting_class_is<T, Candidates...>;
 }

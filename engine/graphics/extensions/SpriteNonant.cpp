@@ -19,7 +19,7 @@ namespace oly::rendering
 				PivotTransformModifier2D modifier;
 				modifier.pivot.x = -0.5f * x + 1.0f;
 				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = move_unique(std::move(modifier));
+				sprite(x, y).transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>(std::move(modifier));
 			}
 	}
 
@@ -85,7 +85,7 @@ namespace oly::rendering
 		dirty.grid = true;
 	}
 
-	void SpriteNonant::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
+	void SpriteNonant::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -120,12 +120,12 @@ namespace oly::rendering
 				sprite(x, y).set_frame_format(anim);
 	}
 
-	graphics::BindlessTextureRes SpriteNonant::get_texture() const
+	graphics::BindlessTextureRef SpriteNonant::get_texture() const
 	{
 		return sprite(0, 0).get_texture();
 	}
 
-	graphics::BindlessTextureRes SpriteNonant::get_texture(glm::vec2& dimensions) const
+	graphics::BindlessTextureRef SpriteNonant::get_texture(glm::vec2& dimensions) const
 	{
 		dimensions = regular_dimensions;
 		return sprite(0, 0).get_texture();

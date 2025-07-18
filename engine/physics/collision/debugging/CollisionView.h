@@ -84,7 +84,7 @@ namespace oly::debug
 
 		rendering::StaticSprite sprite;
 		graphics::Framebuffer framebuffer;
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 		glm::ivec2 dimensions;
 		mutable bool dirty_views = false;
 		std::unordered_set<CollisionView*> collision_views;

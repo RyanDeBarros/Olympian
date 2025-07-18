@@ -4,7 +4,7 @@
 
 namespace oly::graphics::textures
 {
-	BindlessTextureRes white1x1_1;
+	BindlessTextureRef white1x1_1;
 
 	void internal::load()
 	{
@@ -13,13 +13,14 @@ namespace oly::graphics::textures
 			unsigned char* buf = dim.pxnew();
 			buf[0] = 255;
 			Image image(buf, dim);
-			white1x1_1 = move_shared(load_bindless_texture_2d(image));
+			white1x1_1 = graphics::BindlessTextureRef(load_bindless_texture_2d(image));
 			white1x1_1->set_and_use_handle();
 		}
 	}
 
 	void internal::unload()
 	{
-		white1x1_1.reset();
+		white1x1_1.mark_for_deletion();
+		white1x1_1.invalidate();
 	}
 }

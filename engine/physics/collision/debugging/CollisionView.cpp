@@ -332,21 +332,21 @@ namespace oly::debug
 	}
 
 	CollisionLayer::CollisionLayer()
+		: texture(GL_TEXTURE_2D)
 	{
 		window_resize_handler.layer = this;
-		texture = std::make_shared<graphics::BindlessTexture>(GL_TEXTURE_2D);
 		setup_texture();
 	}
 
 	CollisionLayer::CollisionLayer(const CollisionLayer& other)
-		: sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), collision_views(other.collision_views)
+		: sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), collision_views(other.collision_views),
+		texture(GL_TEXTURE_2D)
 	{
 		window_resize_handler.layer = this;
 		for (CollisionView* view : collision_views)
 			view->layers.insert(this);
 
 		const int cpp = 4;
-		texture = std::make_shared<graphics::BindlessTexture>(GL_TEXTURE_2D);
 		graphics::pixel_alignment_pre_send(cpp);
 		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
 		glCopyImageSubData(*other.texture, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);

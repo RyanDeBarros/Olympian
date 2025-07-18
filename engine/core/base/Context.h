@@ -83,19 +83,19 @@ namespace oly::context
 	extern bool frame();
 	extern BigSize this_frame();
 
-	extern graphics::BindlessTextureRes load_texture(const std::string& file, unsigned int texture_index = 0);
-	extern graphics::BindlessTextureRes load_svg_texture(const std::string& file, float svg_scale = 1.0f, unsigned int texture_index = 0);
+	extern graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index = 0);
+	extern graphics::BindlessTextureRef load_svg_texture(const std::string& file, float svg_scale = 1.0f, unsigned int texture_index = 0);
 	extern glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index = 0);
 
-	extern void sync_texture_handle(const graphics::BindlessTextureRes& texture);
+	extern void sync_texture_handle(const graphics::BindlessTextureRef& texture);
 
 	extern void render_sprites();
 	extern void render_polygons();
 	extern void render_ellipses();
 
-	extern std::shared_ptr<rendering::TileSet> load_tileset(const std::string& file);
-	extern rendering::FontFaceRes load_font_face(const std::string& file);
-	extern rendering::FontAtlasRes load_font_atlas(const std::string& file, unsigned int index = 0);
+	extern SmartHandle<rendering::TileSet> load_tileset(const std::string& file);
+	extern rendering::FontFaceRef load_font_face(const std::string& file);
+	extern rendering::FontAtlasRef load_font_atlas(const std::string& file, unsigned int index = 0);
 
 	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "", unsigned int atlas_index = 0);
 	extern void render_text();

@@ -10,7 +10,7 @@ namespace oly::reg
 		font_atlases.clear();
 	}
 
-	rendering::FontAtlasRes FontAtlasRegistry::load_font_atlas(const std::string& file, unsigned int index)
+	rendering::FontAtlasRef FontAtlasRegistry::load_font_atlas(const std::string& file, unsigned int index)
 	{
 		auto it = font_atlases.find(file);
 		if (it != font_atlases.end())
@@ -55,7 +55,7 @@ namespace oly::reg
 		else if (auto _common_buffer = node["common buffer"].value<std::string>())
 			common_buffer = _common_buffer.value();
 
-		rendering::FontAtlasRes font_atlas = std::make_shared<rendering::FontAtlas>(context::load_font_face(file), options, common_buffer);
+		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_atlases.emplace(file, font_atlas);
 		return font_atlas;

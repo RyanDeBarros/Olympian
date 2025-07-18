@@ -24,29 +24,29 @@ namespace oly::reg
 			texture.set_and_use_handle();
 	}
 
-	static graphics::BindlessTextureRes load_image(const graphics::Image& image, const TOMLNode& node, bool set_and_use)
+	static graphics::BindlessTextureRef load_image(const graphics::Image& image, const TOMLNode& node, bool set_and_use)
 	{
 		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, node["generate mipmaps"].value<bool>().value_or(false));
 		setup_texture(texture, node, GL_TEXTURE_2D, set_and_use);
-		return move_shared(std::move(texture));
+		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
-	static graphics::BindlessTextureRes load_anim(const graphics::Anim& anim, const TOMLNode& node, bool set_and_use)
+	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, const TOMLNode& node, bool set_and_use)
 	{
 		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, node["generate mipmaps"].value<bool>().value_or(false));
 		setup_texture(texture, node, GL_TEXTURE_2D_ARRAY, set_and_use);
-		return move_shared(std::move(texture));
+		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
-	static graphics::BindlessTextureRes load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRes& image, const TOMLNode& node, bool set_and_use)
+	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, const TOMLNode& node, bool set_and_use)
 	{
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 		std::string generate_mipmaps = node["generate mipmaps"].value<std::string>().value_or("off");
 		if (generate_mipmaps == "auto")
-			texture = move_shared(graphics::load_bindless_nsvg_texture_2d(image, true));
+			texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, true));
 		else
 		{
-			texture = move_shared(graphics::load_bindless_nsvg_texture_2d(image, false));
+			texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, false));
 			if (generate_mipmaps == "manual")
 				graphics::nsvg_manually_generate_mipmaps(image, abstract, context::nsvg_context());
 		}
@@ -101,7 +101,7 @@ namespace oly::reg
 		return options;
 	}
 
-	graphics::BindlessTextureRes TextureRegistry::load_texture(const std::string& file, LoadParams params)
+	graphics::BindlessTextureRef TextureRegistry::load_texture(const std::string& file, LoadParams params)
 	{
 		if (file.ends_with(".svg"))
 		{
@@ -127,7 +127,7 @@ namespace oly::reg
 
 		bool store_buffer = should_store(texture_node, "storage", params.storage);
 
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 
 		if (file.ends_with(".gif"))
 		{
@@ -135,7 +135,7 @@ namespace oly::reg
 			texture = load_anim(anim, texture_node, params.set_and_use);
 			if (!store_buffer)
 				anim.delete_buffer();
-			anims[tkey] = move_shared(std::move(anim));
+			anims[tkey] = graphics::AnimRef(std::move(anim));
 		}
 		else
 		{
@@ -145,7 +145,7 @@ namespace oly::reg
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (!store_buffer)
 					anim.delete_buffer();
-				anims[tkey] = move_shared(std::move(anim));
+				anims[tkey] = graphics::AnimRef(std::move(anim));
 			}
 			else
 			{
@@ -153,7 +153,7 @@ namespace oly::reg
 				texture = load_image(image, texture_node, params.set_and_use);
 				if (!store_buffer)
 					image.delete_buffer();
-				images[tkey] = move_shared(std::move(image));
+				images[tkey] = graphics::ImageRef(std::move(image));
 			}
 		}
 
@@ -166,7 +166,7 @@ namespace oly::reg
 		return graphics::NSVGAbstract(full_path, texture_node["svg units"].value<std::string>().value_or("px").c_str(), (float)texture_node["svg dpi"].value<double>().value_or(96.0f));
 	}
 
-	graphics::BindlessTextureRes TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
+	graphics::BindlessTextureRef TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
 	{
 		if (!file.ends_with(".svg"))
 			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "attempting to load non-svg file as svg texture: " << file << LOG.nl << LOG.end_temp;
@@ -185,7 +185,7 @@ namespace oly::reg
 		bool store_abstract = should_store(texture_node, "abstract storage", params.abstract_storage);
 		bool store_image = should_store(texture_node, "image storage", params.image_storage);
 
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 
 		if (texture_node["anim"].value<bool>().value_or(false))
 		{
@@ -196,7 +196,7 @@ namespace oly::reg
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (!store_image)
 					anim.delete_buffer();
-				anims[tkey] = move_shared(std::move(anim));
+				anims[tkey] = graphics::AnimRef(std::move(anim));
 			}
 			else
 			{
@@ -205,7 +205,7 @@ namespace oly::reg
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (!store_image)
 					anim.delete_buffer();
-				anims[tkey] = move_shared(std::move(anim));
+				anims[tkey] = graphics::AnimRef(std::move(anim));
 				if (store_abstract)
 					nsvg_abstracts.emplace(file, std::move(abstract));
 			}
@@ -215,7 +215,7 @@ namespace oly::reg
 			auto ait = nsvg_abstracts.find(tkey);
 			if (ait != nsvg_abstracts.end())
 			{
-				graphics::VectorImageRes image;
+				graphics::VectorImageRef image;
 				image.scale = scale;
 				image.image = context::nsvg_context().rasterize_res(ait->second, scale);
 				texture = load_svg(ait->second, image, texture_node, params.set_and_use);
@@ -226,7 +226,7 @@ namespace oly::reg
 			else
 			{
 				graphics::NSVGAbstract abstract = create_abstract(texture_node, full_path);
-				graphics::VectorImageRes image;
+				graphics::VectorImageRef image;
 				image.scale = scale;
 				image.image = context::nsvg_context().rasterize_res(abstract, scale);
 				texture = load_svg(abstract, image, texture_node, params.set_and_use);
@@ -242,7 +242,7 @@ namespace oly::reg
 		return texture;
 	}
 	
-	graphics::BindlessTextureRes TextureRegistry::load_temp_texture(const std::string& file, TempLoadParams params) const
+	graphics::BindlessTextureRef TextureRegistry::load_temp_texture(const std::string& file, TempLoadParams params) const
 	{
 		if (file.ends_with(".svg"))
 		{
@@ -259,14 +259,14 @@ namespace oly::reg
 		TOMLNode texture_node;
 		load_texture_node(file, toml, texture_node, params.texture_index);
 
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 
 		if (file.ends_with(".gif"))
 		{
 			graphics::Anim anim(file.c_str());
 			texture = load_anim(anim, texture_node, params.set_and_use);
 			if (params.cpubuffer)
-				*params.cpubuffer = new CPUBuffer(move_shared(std::move(anim)));
+				*params.cpubuffer = new CPUBuffer(graphics::AnimRef(std::move(anim)));
 		}
 		else
 		{
@@ -275,21 +275,21 @@ namespace oly::reg
 				graphics::Anim anim(file.c_str(), parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (params.cpubuffer)
-					*params.cpubuffer = new CPUBuffer(move_shared(std::move(anim)));
+					*params.cpubuffer = new CPUBuffer(graphics::AnimRef(std::move(anim)));
 			}
 			else
 			{
 				graphics::Image image(file.c_str());
 				texture = load_image(image, texture_node, params.set_and_use);
 				if (params.cpubuffer)
-					*params.cpubuffer = new CPUBuffer(move_shared(std::move(image)));
+					*params.cpubuffer = new CPUBuffer(graphics::ImageRef(std::move(image)));
 			}
 		}
 
 		return texture;
 	}
 	
-	graphics::BindlessTextureRes TextureRegistry::load_temp_svg_texture(const std::string& file, float scale, TempSVGLoadParams params) const
+	graphics::BindlessTextureRef TextureRegistry::load_temp_svg_texture(const std::string& file, float scale, TempSVGLoadParams params) const
 	{
 		if (!file.ends_with(".svg"))
 			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "attempting to load non-svg file as svg texture: " << file << LOG.nl << LOG.end_temp;
@@ -298,7 +298,7 @@ namespace oly::reg
 		TOMLNode texture_node;
 		load_texture_node(file, toml, texture_node, params.texture_index);
 
-		graphics::BindlessTextureRes texture;
+		graphics::BindlessTextureRef texture;
 
 		if (texture_node["anim"].value<bool>().value_or(false))
 		{
@@ -306,14 +306,14 @@ namespace oly::reg
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
 			texture = load_anim(anim, texture_node, params.set_and_use);
 			if (params.cpubuffer)
-				*params.cpubuffer = new CPUBuffer(move_shared(std::move(anim)));
+				*params.cpubuffer = new CPUBuffer(graphics::AnimRef(std::move(anim)));
 			if (params.abstract)
 				*params.abstract = new graphics::NSVGAbstract(std::move(abstract));
 		}
 		else
 		{
 			graphics::NSVGAbstract abstract = create_abstract(texture_node, file);
-			graphics::VectorImageRes image;
+			graphics::VectorImageRef image;
 			image.scale = scale;
 			image.image = context::nsvg_context().rasterize_res(abstract, scale);
 			texture = load_svg(abstract, image, texture_node, params.set_and_use);
@@ -382,7 +382,7 @@ namespace oly::reg
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	graphics::ImageRes TextureRegistry::get_image_pixel_buffer(const std::string& file, unsigned int texture_index)
+	graphics::ImageRef TextureRegistry::get_image_pixel_buffer(const std::string& file, unsigned int texture_index)
 	{
 		auto it = vector_images.find({ .file = file, .index = texture_index });
 		if (it != vector_images.end())
@@ -391,7 +391,7 @@ namespace oly::reg
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	graphics::AnimRes TextureRegistry::get_anim_pixel_buffer(const std::string& file, unsigned int texture_index)
+	graphics::AnimRef TextureRegistry::get_anim_pixel_buffer(const std::string& file, unsigned int texture_index)
 	{
 		auto it = anims.find({ .file = file, .index = texture_index });
 		if (it != anims.end())

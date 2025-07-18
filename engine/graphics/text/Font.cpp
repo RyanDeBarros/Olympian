@@ -99,7 +99,7 @@ namespace oly
 			font.font->make_bitmap(buffer, box.width(), box.height(), font.scale, index);
 		}
 
-		FontAtlas::FontAtlas(const std::shared_ptr<FontFace>& font, FontOptions options, const utf::String& common_buffer)
+		FontAtlas::FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer)
 			: font(font), options(options)
 		{
 			common_dim.cpp = 1;
@@ -137,7 +137,7 @@ namespace oly
 					it->second.render_on_bitmap_shared(*this, common_buf + it->second.buffer_pos, common_dim.w, common_dim.h, 1, 1, 1, 1);
 				}
 				graphics::Image common_image(common_buf, common_dim);
-				common_texture = move_shared(graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
+				common_texture = graphics::BindlessTextureRef(graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, options.min_filter);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, options.mag_filter);
 				common_texture->set_and_use_handle();
@@ -166,7 +166,7 @@ namespace oly
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, options.min_filter);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, options.mag_filter);
 			texture.set_and_use_handle();
-			glyph.texture = move_shared(std::move(texture));
+			glyph.texture = graphics::BindlessTextureRef(std::move(texture));
 			glyphs.emplace(codepoint, std::move(glyph));
 			return true;
 		}

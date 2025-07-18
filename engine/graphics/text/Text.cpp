@@ -69,7 +69,7 @@ namespace oly::rendering
 		glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
 	}
 		
-	void TextBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture)
+	void TextBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture)
 	{
 		if (glyph_info_store.textures.set_object<GLuint64>(tex_handles_ssbo, glyph_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos, texture, texture->get_handle()))
 			glyph_ssbo_block.flag<INFO>(vb_pos);
@@ -87,7 +87,7 @@ namespace oly::rendering
 			glyph_ssbo_block.flag<INFO>(vb_pos);
 	}
 		
-	graphics::BindlessTextureRes TextBatch::get_texture(GLuint vb_pos) const
+	graphics::BindlessTextureRef TextBatch::get_texture(GLuint vb_pos) const
 	{
 		GLuint slot = get_glyph_info(vb_pos).tex_slot;
 		return slot != 0 ? glyph_info_store.textures.get_object(slot) : nullptr;
@@ -139,7 +139,7 @@ namespace oly::rendering
 		return { bl.x, tr.x, bl.y, tr.y };
 	}
 		
-	void TextBatch::update_texture_handle(const graphics::BindlessTextureRes& texture)
+	void TextBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		GLuint slot;
 		if (glyph_info_store.textures.get_slot({ texture }, slot))
@@ -223,7 +223,7 @@ namespace oly::rendering
 		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
 	}
 		
-	void TextGlyph::set_texture(const graphics::BindlessTextureRes& texture) const
+	void TextGlyph::set_texture(const graphics::BindlessTextureRef& texture) const
 	{
 		batch->set_texture(vbid.get(), texture);
 	}
@@ -248,7 +248,7 @@ namespace oly::rendering
 		batch->set_modulation(vbid.get(), modulation);
 	}
 		
-	graphics::BindlessTextureRes TextGlyph::get_texture() const
+	graphics::BindlessTextureRef TextGlyph::get_texture() const
 	{
 		return batch->get_texture(vbid.get());
 	}

@@ -5,7 +5,7 @@
 
 namespace oly::rendering
 {
-	Paragraph::Paragraph(TextBatch& text_batch, const FontAtlasRes& font, const ParagraphFormat& format, utf::String&& text)
+	Paragraph::Paragraph(TextBatch& text_batch, const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
 		: text_batch(&text_batch), format(format), font(font), bkg(text_batch)
 	{
 		bkg.transformer.attach_parent(&transformer);

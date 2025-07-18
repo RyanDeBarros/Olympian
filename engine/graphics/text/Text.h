@@ -117,16 +117,16 @@ namespace oly::rendering
 
 		struct GlyphInfoStore
 		{
-			graphics::UsageSlotTracker<graphics::BindlessTextureRes> textures;
+			graphics::UsageSlotTracker<graphics::BindlessTextureRef> textures;
 			graphics::UsageSlotTracker<TextColor, TextColorHash> text_colors;
 			graphics::UsageSlotTracker<ModulationRect, ModulationHash> modulations;
 		} glyph_info_store;
 
-		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture);
+		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture);
 		void set_text_color(GLuint vb_pos, const TextColor& text_color);
 		void set_modulation(GLuint vb_pos, const ModulationRect& modulation);
 
-		graphics::BindlessTextureRes get_texture(GLuint vb_pos) const;
+		graphics::BindlessTextureRef get_texture(GLuint vb_pos) const;
 		TextColor get_text_color(GLuint vb_pos) const;
 		ModulationRect get_modulation(GLuint vb_pos) const;
 
@@ -137,7 +137,7 @@ namespace oly::rendering
 		math::Rect2D get_tex_coords(GLuint vb_pos) const;
 
 	public:
-		void update_texture_handle(const graphics::BindlessTextureRes& texture);
+		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
 
 	struct TextGlyph
@@ -159,13 +159,13 @@ namespace oly::rendering
 
 		void draw() const;
 
-		void set_texture(const graphics::BindlessTextureRes& texture) const;
+		void set_texture(const graphics::BindlessTextureRef& texture) const;
 		void set_vertex_positions(const math::Rect2D& rect) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
 		void set_text_color(const TextBatch::TextColor& text_color) const;
 		void set_modulation(const TextBatch::ModulationRect& modulation) const;
 
-		graphics::BindlessTextureRes get_texture() const;
+		graphics::BindlessTextureRef get_texture() const;
 		math::Rect2D get_vertex_positions() const;
 		math::Rect2D get_tex_coords() const;
 		TextBatch::TextColor get_text_color() const;

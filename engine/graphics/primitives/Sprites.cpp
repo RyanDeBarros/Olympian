@@ -92,7 +92,7 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRes& texture, glm::vec2 dimensions)
+	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
 		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
@@ -120,7 +120,7 @@ namespace oly::rendering
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	graphics::BindlessTextureRes SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
+	graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 	{
 		GLuint slot = get_quad_info(vb_pos).tex_slot;
 		if (slot == 0)
@@ -148,7 +148,7 @@ namespace oly::rendering
 		return slot != 0 ? quad_info_store.anims.get_object(slot) : graphics::AnimFrameFormat{};
 	}
 
-	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRes& texture)
+	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		auto iter = quad_info_store.dimensionless_texture_slot_map.find(texture);
 		if (iter != quad_info_store.dimensionless_texture_slot_map.end())
@@ -228,7 +228,7 @@ namespace oly::rendering
 		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
-	void StaticSprite::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const
+	void StaticSprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
 		context::sprite_batch().set_texture(vbid.get(), texture, dimensions);
 	}
@@ -263,13 +263,13 @@ namespace oly::rendering
 		context::sprite_batch().quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transform;
 	}
 
-	graphics::BindlessTextureRes StaticSprite::get_texture() const
+	graphics::BindlessTextureRef StaticSprite::get_texture() const
 	{
 		glm::vec2 _;
 		return context::sprite_batch().get_texture(vbid.get(), _);
 	}
 
-	graphics::BindlessTextureRes StaticSprite::get_texture(glm::vec2& dimensions) const
+	graphics::BindlessTextureRef StaticSprite::get_texture(glm::vec2& dimensions) const
 	{
 		return context::sprite_batch().get_texture(vbid.get(), dimensions);
 	}
@@ -368,7 +368,7 @@ namespace oly::rendering
 		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
-	void Sprite::set_texture(const graphics::BindlessTextureRes& texture, glm::vec2 dimensions) const
+	void Sprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
 		context::sprite_batch().set_texture(vbid.get(), texture, dimensions);
 	}
@@ -398,13 +398,13 @@ namespace oly::rendering
 		context::sprite_batch().set_frame_format(vbid.get(), anim);
 	}
 
-	graphics::BindlessTextureRes Sprite::get_texture() const
+	graphics::BindlessTextureRef Sprite::get_texture() const
 	{
 		glm::vec2 _;
 		return context::sprite_batch().get_texture(vbid.get(), _);
 	}
 
-	graphics::BindlessTextureRes Sprite::get_texture(glm::vec2& dimensions) const
+	graphics::BindlessTextureRef Sprite::get_texture(glm::vec2& dimensions) const
 	{
 		return context::sprite_batch().get_texture(vbid.get(), dimensions);
 	}
