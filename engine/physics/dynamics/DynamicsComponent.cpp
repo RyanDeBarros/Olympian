@@ -142,7 +142,7 @@ namespace oly::physics
 
 				// 3. update linear motion
 				update_colliding_linear_motion(new_linear_velocity, j_c);
-				
+
 				// 4. update angular motion
 				if (flag == Flag::KINEMATIC)
 					update_colliding_angular_motion(new_angular_velocity, h_c);
@@ -233,8 +233,8 @@ namespace oly::physics
 
 		teleport *= properties.mass() * properties.moi_inverse();
 		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
-			teleport = (1.0f - material->collision_damping.angular_teleportation.inner())
-				* glm::log(teleport * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
+			teleport = glm::sign(teleport) * (1.0f - material->collision_damping.angular_teleportation.inner())
+				* glm::log(glm::abs(teleport) * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
 		else
 			teleport = 0.0f;
 

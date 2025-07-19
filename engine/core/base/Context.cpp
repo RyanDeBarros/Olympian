@@ -196,6 +196,8 @@ namespace oly::context
 	{
 		internal::collision_dispatcher.clear();
 
+		oly::internal::PoolBatch::instance().clear();
+
 		internal::texture_registry.clear();
 		internal::tileset_registry.clear();
 		internal::font_face_registry.clear();
@@ -208,10 +210,8 @@ namespace oly::context
 
 		internal::platform.reset();
 
-		oly::internal::BatchCleaner::instance().clean();
-		oly::internal::BatchCleaner::instance().clear();
-
 		graphics::internal::unload_resources();
+		
 		glfwTerminate();
 
 		LOG.flush();
@@ -355,7 +355,7 @@ namespace oly::context
 		++internal::this_frame;
 		internal::collision_dispatcher.poll();
 
-		oly::internal::BatchCleaner::instance().clean();
+		oly::internal::PoolBatch::instance().clean();
 
 		return true;
 	}

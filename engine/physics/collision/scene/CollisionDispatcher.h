@@ -213,7 +213,8 @@ namespace oly::col2d
 		}
 		void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::ContactConstHandler handler, const ConstSoftReference<CollisionController>& controller)
 		{
-			contact_handlers[collider].insert(ContactConstHandlerRef{ handler, controller });
+			ContactConstHandlerRef ref{ handler, controller };
+			contact_handlers[collider].insert(ref);
 		}
 
 		template<std::derived_from<CollisionController> Controller>

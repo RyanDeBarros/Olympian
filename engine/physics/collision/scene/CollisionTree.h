@@ -78,7 +78,6 @@ namespace oly::col2d
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 		CollisionTree(const CollisionTree&);
 		CollisionTree(CollisionTree&&) noexcept;
-		~CollisionTree();
 		CollisionTree& operator=(const CollisionTree&);
 		CollisionTree& operator=(CollisionTree&&) noexcept;
 

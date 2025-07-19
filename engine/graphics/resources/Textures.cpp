@@ -20,7 +20,6 @@ namespace oly::graphics::textures
 
 	void internal::unload()
 	{
-		white1x1_1.mark_for_deletion();
 		white1x1_1.invalidate();
 	}
 }

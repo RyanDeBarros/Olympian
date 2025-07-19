@@ -17,7 +17,7 @@ def constructor(tilemap) -> str:
 
             c += write_vec2_vector(layer, 'layer.tiles', 'tiles', 4)
 
-            c += f"\t\t\t\t{tilemap['name']}.layers.push_back(std::move(layer));\n"
+            c += f"\t\t\t\t{tilemap['name']}->layers.push_back(std::move(layer));\n"
             c += "\t\t\t}\n"
 
     return c

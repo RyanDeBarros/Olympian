@@ -5,7 +5,7 @@
 namespace oly::physics
 {
 	RigidBody::RigidBody(const RigidBody& other)
-		: colliders(other.colliders), dynamics(other.dynamics)
+		: colliders(other.colliders), transformer(other.transformer), dynamics(other.dynamics)
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
@@ -16,7 +16,7 @@ namespace oly::physics
 	}
 	
 	RigidBody::RigidBody(RigidBody&& other) noexcept
-		: colliders(std::move(other.colliders)), dynamics(std::move(other.dynamics))
+		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer)), dynamics(std::move(other.dynamics))
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
@@ -38,6 +38,7 @@ namespace oly::physics
 		{
 			clear_colliders();
 			colliders = other.colliders;
+			transformer = other.transformer;
 			dynamics = other.dynamics;
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
@@ -55,6 +56,7 @@ namespace oly::physics
 		{
 			clear_colliders();
 			colliders = std::move(other.colliders);
+			transformer = std::move(other.transformer);
 			dynamics = std::move(other.dynamics);
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
@@ -129,7 +131,7 @@ namespace oly::physics
 	{
 		dynamics.sync_state(transformer.global());
 		dynamics.on_tick();
-		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation }.matrix());
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
 	}
 
 	void RigidBody::set_flag(DynamicsComponent::Flag flag)

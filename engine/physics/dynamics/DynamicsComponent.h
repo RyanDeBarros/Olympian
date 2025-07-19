@@ -127,7 +127,7 @@ namespace oly::physics
 	public:
 		bool complex_teleportation = false;
 
-		MaterialRef material = MaterialRef(MaterialRef::INIT);
+		MaterialRef material = REF_INIT;
 		Properties properties;
 
 		void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;

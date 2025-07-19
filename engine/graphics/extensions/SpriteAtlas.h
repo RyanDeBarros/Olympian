@@ -23,4 +23,6 @@ namespace oly::rendering
 		void select(GLuint frame) const;
 		mutable GLuint current_frame = -1;
 	};
+
+	typedef SmartHandle<SpriteAtlas> SpriteAtlasRef;
 }

@@ -40,8 +40,8 @@ namespace oly::col2d
 			{
 				if (const Collider* c = collider.get())
 				{
-					c->handles.handles.get(tree) = nullptr;
-					c->handles.handles[tree] = this;
+					c->handles.handles.erase(tree);
+					c->handles.handles[new_tree] = this;
 				}
 			}
 
@@ -56,7 +56,7 @@ namespace oly::col2d
 		{
 			for (const ConstSoftReference<Collider>& collider : colliders)
 				if (const Collider* c = collider.get())
-					c->handles.handles.get(tree) = nullptr;
+					c->handles.handles.erase(tree);
 		}
 
 		std::unique_ptr<CollisionNode> CollisionNode::instantiate(const CollisionTree* tree, math::Rect2D bounds)
@@ -185,17 +185,6 @@ namespace oly::col2d
 	{
 		root = std::move(other.root);
 		root->assign_tree(this);
-	}
-
-	CollisionTree::~CollisionTree()
-	{
-		BFSIterator it(root.get());
-		while (internal::CollisionNode* node = it.next())
-		{
-			for (const ConstSoftReference<Collider>& collider : node->colliders)
-				if (const Collider* c = collider.get())
-					c->handles.handles.erase(this);
-		}
 	}
 
 	CollisionTree& CollisionTree::operator=(const CollisionTree& other)

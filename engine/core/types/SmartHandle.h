@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/base/Errors.h"
+#include "core/algorithms/STLUtils.h"
 
 #include <stack>
 #include <unordered_set>
@@ -12,53 +13,59 @@ namespace oly
 
 	namespace internal
 	{
-		struct ICleanable
+		struct IPool
 		{
-			virtual ~ICleanable() = default;
+			virtual ~IPool() = default;
 			virtual void clean() = 0;
+			virtual void clear() = 0;
 		};
 
-		class BatchCleaner
+		class PoolBatch
 		{
-			std::unordered_set<ICleanable*> to_clean;
+			std::unordered_set<IPool*> pools;
 
-			BatchCleaner() = default;
-			BatchCleaner(const BatchCleaner&) = delete;
-			BatchCleaner(BatchCleaner&&) = delete;
-			~BatchCleaner() = default;
+			PoolBatch() = default;
+			PoolBatch(const PoolBatch&) = delete;
+			PoolBatch(PoolBatch&&) = delete;
+			~PoolBatch() = default;
 
 		public:
-			static BatchCleaner& instance()
+			static PoolBatch& instance()
 			{
-				static BatchCleaner cleaner;
-				return cleaner;
+				static PoolBatch batch;
+				return batch;
 			}
 
-			void insert(ICleanable* cleanable) { to_clean.insert(cleanable); }
-			void remove(ICleanable* cleanable) { to_clean.erase(cleanable); }
+			void insert(IPool* pool) { pools.insert(pool); }
+			void remove(IPool* pool) { pools.erase(pool); }
 
 			void clean()
 			{
-				for (ICleanable* cleanable : to_clean)
-					cleanable->clean();
+				for (IPool* pool : pools)
+					pool->clean();
 			}
 
-			void clear() { to_clean.clear(); }
+			void clear()
+			{
+				for (IPool* pool : pools)
+					pool->clear();
+				pools.clear();
+			}
 		};
 
 		// LATER multi-threading and thead safety
 		template<typename Object>
-		class SmartHandlePool : public ICleanable
+		class SmartHandlePool : public IPool
 		{
 			std::vector<Object> objects;
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
 			std::vector<SmartHandle<Object>*> reference_heads;
 
-			SmartHandlePool() { BatchCleaner::instance().insert(this); }
+			SmartHandlePool() { PoolBatch::instance().insert(this); }
 			SmartHandlePool(const SmartHandlePool<Object>&) = delete;
 			SmartHandlePool(SmartHandlePool<Object>&&) = delete;
-			~SmartHandlePool() { BatchCleaner::instance().remove(this); clean(); }
+			~SmartHandlePool() { PoolBatch::instance().remove(this); clean(); }
 
 		public:
 			static SmartHandlePool& instance()
@@ -70,13 +77,16 @@ namespace oly
 			virtual void clean() override;
 
 		private:
+			friend class PoolBatch;
+			virtual void clear() override;
+
 			friend struct SmartHandle<Object>;
 
 			size_t init_slot()
 			{
 				if (unoccupied.empty())
 				{
-					objects.push_back(Object());
+					objects.emplace_back();
 					reference_heads.push_back(nullptr);
 					return objects.size() - 1;
 				}
@@ -142,17 +152,19 @@ namespace oly
 			void decrement_references(size_t idx, SmartHandle<Object>* handle);
 			void replace_references(size_t idx, SmartHandle<Object>* existing, SmartHandle<Object>* with);
 		};
+
+		struct RefInit
+		{
+		};
 	}
+
+	constexpr internal::RefInit REF_INIT;
+
+	// TODO polymorphism
 
 	template<typename Object>
 	struct SmartHandle
 	{
-	private:
-		struct _Init {};
-
-	public:
-		static inline const _Init INIT;
-
 	private:
 		friend class internal::SmartHandlePool<Object>;
 
@@ -165,7 +177,7 @@ namespace oly
 
 		SmartHandle(nullptr_t) {}
 
-		SmartHandle(_Init)
+		SmartHandle(internal::RefInit)
 		{
 			init();
 		}
@@ -181,7 +193,7 @@ namespace oly
 		}
 
 		template<typename... Args, typename = std::enable_if_t<sizeof...(Args) != 1
-			|| !same_as_any<Args, nullptr_t, _Init, Object, SmartHandle<Object>>>>
+			|| !same_as_any<Args, nullptr_t, internal::RefInit, Object, SmartHandle<Object>>>>
 		SmartHandle(Args&&... args)
 		{
 			init(Object(std::forward<Args>(args)...));
@@ -307,12 +319,7 @@ namespace oly
 		
 		bool valid() const
 		{
-			if (next_adj_reference)
-				return true;
-			if (pool_idx < pool().reference_heads.size())
-				return pool().reference_heads[pool_idx] == this;
-			else
-				return false;
+			return next_adj_reference || (pool_idx < pool().reference_heads.size() ? pool().reference_heads[pool_idx] == this : false);
 		}
 
 		void init()
@@ -437,6 +444,25 @@ namespace oly
 			}
 
 			marked_for_deletion.clear();
+		}
+
+		template<typename Object>
+		inline void SmartHandlePool<Object>::clear()
+		{
+			clear_stack(unoccupied);
+			marked_for_deletion.clear();
+			for (SmartHandle<Object>* reference_head : reference_heads)
+			{
+				while (reference_head)
+				{
+					reference_head->prev_adj_reference = nullptr;
+					SmartHandle<Object>* next = reference_head->next_adj_reference;
+					reference_head->next_adj_reference = nullptr;
+					reference_head = next;
+				}
+			}
+			reference_heads.clear();
+			objects.clear();
 		}
 
 		template<typename Object>

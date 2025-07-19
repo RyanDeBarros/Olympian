@@ -5,6 +5,8 @@
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/DynamicsComponent.h"
 
+#include "core/types/SmartHandle.h"
+
 namespace oly::physics
 {
 	class RigidBody : public col2d::CollisionController
@@ -83,4 +85,6 @@ namespace oly::physics
 		void bind_by_flag(const col2d::Collider& collider) const;
 		void unbind_by_flag(const col2d::Collider& collider) const;
 	};
+
+	typedef SmartHandle<RigidBody> RigidBodyRef;
 }

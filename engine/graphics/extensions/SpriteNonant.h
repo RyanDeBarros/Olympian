@@ -85,4 +85,6 @@ namespace oly::rendering
 		void sync_grid() const;
 		void sync_modulation() const;
 	};
+
+	typedef SmartHandle<SpriteNonant> SpriteNonantRef;
 }

@@ -237,4 +237,6 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 	};
+
+	typedef SmartHandle<Sprite> SpriteRef;
 }

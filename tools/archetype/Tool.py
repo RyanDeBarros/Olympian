@@ -97,15 +97,15 @@ class Archetype:
 
     def declarations(self) -> str:
         decl = ""
-        decl += self.write_declarations(self.sprites, "Sprite", "rendering", 2)
-        decl += self.write_declarations(self.polygons, "Polygon", "rendering", 2)
-        decl += self.write_declarations(self.poly_composites, "PolyComposite", "rendering", 2)
-        decl += self.write_declarations(self.ngons, "NGon", "rendering", 2)
-        decl += self.write_declarations(self.ellipses, "Ellipse", "rendering", 2)
-        decl += self.write_declarations(self.paragraphs, "Paragraph", "rendering", 2)
-        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "rendering", 2)
-        decl += self.write_declarations(self.tilemaps, "TileMap", "rendering", 2)
-        decl += self.write_declarations(self.sprite_nonants, "SpriteNonant", "rendering", 2)
+        decl += self.write_declarations(self.sprites, "SpriteRef", "rendering", 2)
+        decl += self.write_declarations(self.polygons, "PolygonRef", "rendering", 2)
+        decl += self.write_declarations(self.poly_composites, "PolyCompositeRef", "rendering", 2)
+        decl += self.write_declarations(self.ngons, "NGonRef", "rendering", 2)
+        decl += self.write_declarations(self.ellipses, "EllipseRef", "rendering", 2)
+        decl += self.write_declarations(self.paragraphs, "ParagraphRef", "rendering", 2)
+        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlasRef", "rendering", 2)
+        decl += self.write_declarations(self.tilemaps, "TileMapRef", "rendering", 2)
+        decl += self.write_declarations(self.sprite_nonants, "SpriteNonantRef", "rendering", 2)
         return decl
 
     def constructor_declarations(self) -> str:

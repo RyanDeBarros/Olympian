@@ -5,6 +5,7 @@
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
+#include "core/types/SmartHandle.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
@@ -141,6 +142,8 @@ namespace oly::rendering
 		virtual void draw_triangulation(GLuint initial_vertex) const = 0;
 	};
 
+	typedef SmartHandle<Polygonal> PolygonalRef;
+
 	struct Polygon : public Polygonal
 	{
 		cmath::Polygon2D polygon;
@@ -160,6 +163,8 @@ namespace oly::rendering
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
+	typedef SmartHandle<Polygon> PolygonRef;
+
 	struct PolyComposite : public Polygonal
 	{
 		cmath::Polygon2DComposite composite;
@@ -175,6 +180,8 @@ namespace oly::rendering
 		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
+
+	typedef SmartHandle<PolyComposite> PolyCompositeRef;
 
 	struct NGon : public Polygonal
 	{
@@ -195,4 +202,6 @@ namespace oly::rendering
 		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
+
+	typedef SmartHandle<NGon> NGonRef;
 }

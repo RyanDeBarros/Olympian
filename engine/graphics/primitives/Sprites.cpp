@@ -82,10 +82,15 @@ namespace oly::rendering
 			const QuadInfo& quad_info = quad_ssbo_block.buf.at<INFO>(id.get());
 			if (auto texture = quad_info_store.textures.decrement_usage(quad_info.tex_slot))
 			{
-				auto& slots = quad_info_store.dimensionless_texture_slot_map.find(texture.value().texture)->second;
-				slots.erase(quad_info.tex_slot);
-				if (slots.empty())
-					quad_info_store.dimensionless_texture_slot_map.erase(texture.value().texture);
+				auto& map = quad_info_store.dimensionless_texture_slot_map;
+				auto it = map.find(texture.value().texture);
+				if (it != map.end())
+				{
+					auto& slots = it->second;
+					slots.erase(quad_info.tex_slot);
+					if (slots.empty())
+						map.erase(it);
+				}
 			}
 			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
