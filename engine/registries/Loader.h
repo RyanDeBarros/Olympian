@@ -38,4 +38,15 @@ namespace oly::reg
 	extern bool parse_min_filter(const toml::table& node, const std::string& name, GLenum& min_filter);
 	extern bool parse_wrap(const TOMLNode& node, const std::string& name, GLenum& wrap);
 	extern bool parse_wrap(const toml::table& node, const std::string& name, GLenum& wrap);
+
+	namespace params
+	{
+		struct Transformer2D
+		{
+			Transform2D local;
+			std::optional<std::variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
+		};
+	}
+
+	extern Transformer2D load_transformer_2d(const params::Transformer2D& params);
 }

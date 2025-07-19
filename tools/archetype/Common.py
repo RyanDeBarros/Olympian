@@ -47,10 +47,6 @@ def write_named_transformer_2d(renderable: dict, name: str, tabs=2) -> str:
     return c
 
 
-def write_transformer_2d(renderable: dict, tabs=2) -> str:
-    return write_named_transformer_2d(renderable, renderable['name'], tabs)
-
-
 def write_vec2_vector(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
     c = ""
     if parameter in renderable and len(renderable[parameter]) > 0:

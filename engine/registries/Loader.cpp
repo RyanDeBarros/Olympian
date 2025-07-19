@@ -285,4 +285,13 @@ namespace oly::reg
 			return false;
 		return true;
 	}
+
+	Transformer2D load_transformer_2d(const params::Transformer2D& params)
+	{
+		Transformer2D transformer;
+		transformer.set_local() = params.local;
+		if (params.modifier)
+			transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
+		return transformer;
+	}
 }

@@ -323,7 +323,7 @@ int main()
 		jumble.concave_shape->set_local().rotation += 0.5f * oly::TIME.delta();
 
 		jumble.sprite1->set_local().rotation = oly::TIME.now<float>();
-		sprite_match.sprite2.transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta();
+		sprite_match.sprite2->transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta();
 		
 		flag_tesselation_modifier.pivot += glm::vec2(0.05f * oly::TIME.delta());
 		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta();

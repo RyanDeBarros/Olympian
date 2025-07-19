@@ -1,7 +1,7 @@
 from .Common import *
 
 
-def sprite_constructor(sprite, name) -> str:
+def params_constructor(sprite, name) -> str:
     c = write_named_transformer_2d(sprite, name, 3)
 
     if 'texture' in sprite:
@@ -75,4 +75,9 @@ def sprite_constructor(sprite, name) -> str:
 
 
 def constructor(sprite) -> str:
-    return sprite_constructor(sprite, sprite['name'])
+    return f"""
+        {{
+            reg::params::Sprite params;
+{params_constructor(sprite, 'params')}
+            {sprite['name']}.init(reg::load_sprite(params));
+        }}"""

@@ -1,8 +1,8 @@
 from .Common import *
 
 
-def constructor(tilemap) -> str:
-    c = write_transformer_2d(tilemap, 3)
+def params_constructor(tilemap, name) -> str:
+    c = write_named_transformer_2d(tilemap, name, 3)
 
     if 'layer' in tilemap:
         for layer in tilemap['layer']:
@@ -17,7 +17,16 @@ def constructor(tilemap) -> str:
 
             c += write_vec2_vector(layer, 'layer.tiles', 'tiles', 4)
 
-            c += f"\t\t\t\t{tilemap['name']}->layers.push_back(std::move(layer));\n"
+            c += f"\t\t\t\t{name}.layers.push_back(std::move(layer));\n"
             c += "\t\t\t}\n"
 
     return c
+
+
+def constructor(tilemap) -> str:
+    return f"""
+        {{
+            reg::params::TileMap params;
+{params_constructor(tilemap, 'params')}
+            {tilemap['name']}.init(reg::load_tilemap(params));
+        }}"""

@@ -24,7 +24,10 @@ RESERVED_NAMES = [
     "transformer",
     "draw",
     "on_tick",
-    "free_constructor"
+    "params",
+    "frame_format",
+    "_method",
+    "_layer",
 ]
 
 
@@ -70,8 +73,8 @@ class Archetype:
         register_batch(self.tilemaps, Batch.SPRITE)
         register_batch(self.sprite_nonants, Batch.SPRITE)
 
-    def includes(self) -> str:
-        incl = ""
+    def registry_includes(self) -> str:
+        incl = "#include \"registries/Loader.h\"\n"
         if len(self.sprites) > 0:
             incl += "#include \"registries/graphics/primitives/Sprites.h\"\n"
         if len(self.polygons) > 0 or len(self.poly_composites) > 0 or len(self.ngons) > 0:
@@ -89,40 +92,33 @@ class Archetype:
         return incl
 
     @staticmethod
-    def write_declarations(renderables: [], class_name: str, prefix: str, tabs: int) -> str:
+    def write_declarations(renderables: [], class_name: str, tabs: int) -> str:
         decl = ""
         for renderable in renderables:
-            decl += "\t" * tabs + f"{prefix}::{class_name} {renderable['name']};\n"
+            decl += "\t" * tabs + f"{class_name} {renderable['name']};\n"
         return decl
 
-    def declarations(self) -> str:
+    def data_members(self) -> str:
         decl = ""
-        decl += self.write_declarations(self.sprites, "SpriteRef", "rendering", 2)
-        decl += self.write_declarations(self.polygons, "PolygonRef", "rendering", 2)
-        decl += self.write_declarations(self.poly_composites, "PolyCompositeRef", "rendering", 2)
-        decl += self.write_declarations(self.ngons, "NGonRef", "rendering", 2)
-        decl += self.write_declarations(self.ellipses, "EllipseRef", "rendering", 2)
-        decl += self.write_declarations(self.paragraphs, "ParagraphRef", "rendering", 2)
-        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlasRef", "rendering", 2)
-        decl += self.write_declarations(self.tilemaps, "TileMapRef", "rendering", 2)
-        decl += self.write_declarations(self.sprite_nonants, "SpriteNonantRef", "rendering", 2)
+        decl += self.write_declarations(self.sprites, "rendering::SpriteRef", 2)
+        decl += self.write_declarations(self.polygons, "rendering::PolygonRef", 2)
+        decl += self.write_declarations(self.poly_composites, "rendering::PolyCompositeRef", 2)
+        decl += self.write_declarations(self.ngons, "rendering::NGonRef", 2)
+        decl += self.write_declarations(self.ellipses, "rendering::EllipseRef", 2)
+        decl += self.write_declarations(self.paragraphs, "rendering::ParagraphRef", 2)
+        decl += self.write_declarations(self.sprite_atlases, "rendering::SpriteAtlasRef", 2)
+        decl += self.write_declarations(self.tilemaps, "rendering::TileMapRef", 2)
+        decl += self.write_declarations(self.sprite_nonants, "rendering::SpriteNonantRef", 2)
         return decl
 
-    def constructor_declarations(self) -> str:
-        decl = ""
-        decl += self.write_declarations(self.sprites, "Sprite", "reg::params", 3)
-        decl += self.write_declarations(self.polygons, "Polygon", "reg::params", 3)
-        decl += self.write_declarations(self.poly_composites, "PolyComposite", "reg::params", 3)
-        decl += self.write_declarations(self.ngons, "NGon", "reg::params", 3)
-        decl += self.write_declarations(self.ellipses, "Ellipse", "reg::params", 3)
-        decl += self.write_declarations(self.paragraphs, "Paragraph", "reg::params", 3)
-        decl += self.write_declarations(self.sprite_atlases, "SpriteAtlas", "reg::params", 3)
-        decl += self.write_declarations(self.tilemaps, "TileMap", "reg::params", 3)
-        decl += self.write_declarations(self.sprite_nonants, "SpriteNonant", "reg::params", 3)
-        return decl
-
-    def constructors(self) -> str:
-        c = Common.write_named_transformer_2d(self.archetype, 'transformer')
+    def initialization(self) -> str:
+        c =\
+f"""        {{
+            reg::params::Transformer2D params;
+{Common.write_named_transformer_2d(self.archetype, 'params', 3)}
+            transformer = reg::load_transformer_2d(params);
+        }}
+"""
         for sprite in self.sprites:
             c += Sprite.constructor(sprite) + "\n"
         for polygon in self.polygons:
@@ -153,24 +149,11 @@ class Archetype:
                 ini += f"\t\t{renderable['name']}(reg::{load}(constructor().{renderable['name']})),\n"
         return ini
 
-    def initializer_list(self) -> str:
-        ini = ""
-        ini += self.write_initializer(self.sprites, "load_sprite")
-        ini += self.write_initializer(self.polygons, "load_polygon")
-        ini += self.write_initializer(self.poly_composites, "load_poly_composite")
-        ini += self.write_initializer(self.ngons, "load_ngon")
-        ini += self.write_initializer(self.ellipses, "load_ellipse")
-        ini += self.write_initializer(self.paragraphs, "load_paragraph")
-        ini += self.write_initializer(self.sprite_atlases, "load_sprite_atlas")
-        ini += self.write_initializer(self.tilemaps, "load_tilemap")
-        ini += self.write_initializer(self.sprite_nonants, "load_sprite_nonant")
-        return ini[:-1] if len(ini) > 0 else ""  # don't keep last \n
-
     @staticmethod
     def write_transformer_attachment(renderables, transformer_accessor="transformer"):
         att = ""
         for renderable in renderables:
-            att += f"\t\t{renderable['name']}.{transformer_accessor}.attach_parent(&transformer);\n"
+            att += f"\n\t\t{renderable['name']}->{transformer_accessor}.attach_parent(&transformer);"
         return att
 
     def transformer_attachments(self) -> str:
@@ -181,10 +164,9 @@ class Archetype:
         att += self.write_transformer_attachment(self.ngons)
         att += self.write_transformer_attachment(self.ellipses)
         att += self.write_transformer_attachment(self.paragraphs)
+        att += self.write_transformer_attachment(self.sprite_atlases, "sprite.transformer")
         att += self.write_transformer_attachment(self.tilemaps, "set_transformer()")
         att += self.write_transformer_attachment(self.sprite_nonants, "set_transformer()")
-        for renderable in self.sprite_atlases:
-            att += f"\t\t{renderable['name']}.sprite.transformer.attach_parent(&transformer);\n"
         return att
 
     @staticmethod
@@ -218,7 +200,7 @@ class Archetype:
             if rb != batch and batch != -1:
                 draw += self.write_render(batch)
             batch = rb
-            draw += f"\t\t{renderable}.draw();\n"
+            draw += f"\t\t{renderable}->draw();\n"
         if batch != -1:
             draw += f"\t\tif ({self.batch_flush()})\n"
             draw += "\t" + self.write_render(batch)
@@ -227,130 +209,61 @@ class Archetype:
     def on_tick(self) -> str:
         tick = ""
         for sprite_atlas in self.sprite_atlases:
-            tick += f"\t\t{sprite_atlas['name']}.on_tick();\n"
+            tick += f"\t\t{sprite_atlas['name']}->on_tick();\n"
         return tick
 
 
 def generate_header(proto: Archetype) -> str:
-    hdr = """#pragma once
+    return f"""#pragma once
 
 #include "Olympian.h"
 
-"""
-
-    hdr += proto.includes()
-
-    hdr += f"""
 namespace oly::gen
 {{
-\tstruct {proto.name}
-\t{{
-\t\tstatic void free_constructor();
+    struct {proto.name}
+    {{
+        Transformer2D transformer;
+{proto.data_members()}
+        {proto.name}();
+        {proto.name}(const {proto.name}&) = default;
+        {proto.name}({proto.name}&&) = default;
+        {proto.name}& operator=(const {proto.name}&) = default;
+        {proto.name}& operator=({proto.name}&&) = default;
 
-\t\tTransformer2D transformer;
-\t\tconst Transform2D& get_local() const {{ return transformer.get_local(); }}
-\t\tTransform2D& set_local() {{ return transformer.set_local(); }}
-
-"""
-
-    hdr += proto.declarations()
-
-    hdr += f"""
-\t\t{proto.name}();
-\t\t{proto.name}(const {proto.name}&) = default;
-\t\t{proto.name}({proto.name}&&) = default;
-\t\t{proto.name}& operator=(const {proto.name}&) = default;
-\t\t{proto.name}& operator=({proto.name}&&) = default;
-
-\t\tvoid draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const;
-
-\t\tvoid on_tick() const;
-\t}};
+        const Transform2D& get_local() const {{ return transformer.get_local(); }}
+        Transform2D& set_local() {{ return transformer.set_local(); }}
+{f"""
+        void draw(bool {proto.batch_flush()}) const;
+""" if len(proto.draw_list) > 0 else ""}
+        void on_tick() const;
+    }};
 }}
 """
-    return hdr
 
 
 def generate_cpp(proto: Archetype) -> str:
-    cpp = f"""#include \"{proto.name}.h\"
+    return f"""#include \"{proto.name}.h\"
 
+{proto.registry_includes()}
 namespace oly::gen
-{{"""
+{{
+    {proto.name}::{proto.name}()
+    {{
+{proto.initialization()}
+{proto.transformer_attachments()}
+    }}
+{f"""
 
-    cpp += """
-\tnamespace
-\t{
-\t\tstruct Constructor
-\t\t{
-\t\t\tstruct
-\t\t\t{
-\t\t\t\tTransform2D local;
-\t\t\t\tstd::unique_ptr<TransformModifier2D> modifier;
-\t\t\t} transformer;
+    void {proto.name}::draw(bool {proto.batch_flush()}) const
+    {{
+{proto.draw_calls()}\t}}
+""" if len(proto.draw_list) > 0 else ""}
+
+    void {proto.name}::on_tick() const
+    {{
+{proto.on_tick()}\t}}
+}}
 """
-
-    cpp += proto.constructor_declarations()
-
-    cpp += f"""
-\t\t\tConstructor();
-\t\t}};
-
-\t\tConstructor::Constructor()
-\t\t{{
-"""
-    cpp += proto.constructors()
-
-    cpp += f"""\t\t}}
-
-\t\tstatic std::unique_ptr<Constructor> _c;
-\t\tstatic Constructor& constructor()
-\t\t{{
-\t\t\tif (!_c)
-\t\t\t\t_c = std::make_unique<Constructor>();
-\t\t\treturn *_c;
-\t\t}}
-\t}}
-
-\tvoid {proto.name}::free_constructor()
-\t{{
-\t\t_c.reset();
-\t}}
-
-\t{proto.name}::{proto.name}() :
-"""
-
-    cpp += proto.initializer_list()
-
-    cpp += f"""
-\t\ttransformer(constructor().transformer.local, std::make_unique<TransformModifier2D>(*constructor().transformer.modifier))
-\t{{\n"""
-
-    cpp += proto.transformer_attachments()
-
-    if proto.singleton:
-        cpp += "\t\tfree_constructor();\n"
-
-    cpp += f"""\t}}
-
-\tvoid {proto.name}::draw({f"bool {proto.batch_flush()}" if len(proto.draw_list) > 0 else ""}) const
-\t{{
-"""
-
-    cpp += proto.draw_calls()
-
-    cpp += f"""\t}}
-
-\tvoid {proto.name}::on_tick() const
-\t{{
-"""
-
-    cpp += proto.on_tick()
-
-    cpp += """\t}
-}
-"""
-
-    return cpp
 
 
 class Cache:
