@@ -3,11 +3,11 @@
 #include "core/base/Context.h"
 #include "registries/Loader.h"
 
-// TODO log warnings in all registries when format is incompatible (currently, it's quietly ingored).
+// TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ingored).
 
-// TODO OREPL commands for signal assets
-// TODO modifiers for signals, like swizzle/negate/etc.
-// TODO allow for key signals to generate non-bool values, like float/glm::vec2
+// TODO v3 OREPL commands for signal assets
+// TODO v3 modifiers for signals, like swizzle/negate/etc.
+// TODO v3 allow for key signals to generate non-bool values, like float/glm::vec2
 
 namespace oly::reg
 {

@@ -65,7 +65,7 @@ namespace oly::physics
 			FactorBlendOp rolling_friction = FactorBlendOp::GEOMETRIC_MEAN;
 		} blending;
 
-		// TODO option to clamp rotations to certain angles - if angular velocity is below threshold and rotation is close to a multiple of a certain angle, clamp it to that angle. For example, with squares, it might be useful to clamp to multiples of 90 degrees if close enough and slow enough.
+		// TODO v2 option to clamp rotations to certain angles - if angular velocity is below threshold and rotation is close to a multiple of a certain angle, clamp it to that angle. For example, with squares, it might be useful to clamp to multiples of 90 degrees if close enough and slow enough. Similar thing can be done with linear motion as well.
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }

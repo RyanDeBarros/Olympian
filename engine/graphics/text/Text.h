@@ -78,7 +78,7 @@ namespace oly::rendering
 		};
 
 	private:
-		// TODO option for textured background
+		// TODO v3 option for textured background
 		struct UBO
 		{
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> text_color, modulation;
@@ -97,7 +97,7 @@ namespace oly::rendering
 				: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 			{
 				OLY_ASSERT(4 * initial_glyphs <= nmax<unsigned int>());
-				OLY_ASSERT(text_colors <= 1000); // TODO here and elsewhere, enforce this constraint when resizing -> add max_size to mutable specialized buffers
+				OLY_ASSERT(text_colors <= 1000); // TODO v3 Here and elsewhere, enforce this constraint when resizing -> add max_size to mutable specialized buffers
 				OLY_ASSERT(modulations <= 250);
 			}
 

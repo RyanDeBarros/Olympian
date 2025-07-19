@@ -110,7 +110,7 @@ namespace oly::col2d
 		}
 		else
 		{
-			// TODO ? pre-emptive check if active will overlap static if travelling on some separation interval. If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0, else return additional separation needed for active to overtake/pass static.
+			// TODO v2 ? pre-emptive check if active will overlap static if travelling on some separation interval. If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0, else return additional separation needed for active to overtake/pass static.
 			return 0.0f;
 		}
 	}
@@ -138,7 +138,7 @@ namespace oly::col2d
 		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
 
 		// coarse sweep
-		static constexpr size_t DIVISIONS = 24; // TODO pass optional complexity parameter for number of divisions (16-32).
+		static constexpr size_t DIVISIONS = 24; // TODO v2 pass optional complexity parameter for number of divisions (16-32).
 		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
 		int minimizing_axis = 0;
 		for (size_t i = 0; i < DIVISIONS; ++i)
@@ -157,7 +157,7 @@ namespace oly::col2d
 
 		// golden-search refinement
 		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); }, (float)(minimizing_axis - 1) * TWO_PI_OVER_DIVISIONS,
-			(float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f), 0.0f); // TODO pass optional parameter for error
+			(float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f), 0.0f); // TODO v2 pass optional parameter for error
 
 		if (search_result.early_exited)
 			return { .overlap = false };

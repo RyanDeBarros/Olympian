@@ -13,7 +13,7 @@ CACHE_PATH = 'archetype/cache.json'
 GEN_PATH = '../gen/archetypes'
 
 
-# TODO only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
+# TODO v3 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
 class Batch(Enum):
     SPRITE = 0,
     POLYGON = 1,

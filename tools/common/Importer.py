@@ -103,5 +103,5 @@ def import_manifest(package: str, importer: type[Importer]):
         prune = folder['prune'] if 'prune' in folder else True
         default = folder['default'] if 'default' in folder else False
         clear = folder['clear'] if 'clear' in folder else False
-        # TODO these parameters should only use deepest manifest settings for the folder, i.e., if a defines default=true, and a/b defines default=false, then use default=false within a/b and default=true elsewhere in a.
+        # TODO v3 these parameters should only use deepest manifest settings for the folder, i.e., if a defines default=true, and a/b defines default=false, then use default=false within a/b and default=true elsewhere in a.
         importer(folder=folder['path'], recur=recur, prune=prune, default=default, clear=clear).run()

@@ -54,7 +54,7 @@ namespace oly::col2d
 	inline Element element(const KDOP8& c) { return CopyPtr<KDOP8>(c); }
 	inline Element element(KDOP8&& c) { return CopyPtr<KDOP8>(std::move(c)); }
 
-	// TODO wrap const void* and use id + static_cast instead of variant
+	// TODO v2 wrap const void* and use id + static_cast instead of variant
 	using ElementParam = std::variant<
 		const Circle*,
 		const AABB*,

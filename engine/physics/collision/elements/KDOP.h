@@ -225,7 +225,7 @@ namespace oly::col2d
 		fpair projection_interval(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO fix global_clipped_* for near_multiple branch
+			// TODO v2 fix global_clipped_* for near_multiple branch
 			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			//if (near_multiple(i, 1.0f))
 			//{
@@ -240,7 +240,7 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO fix global_clipped_* for near_multiple branch
+			// TODO v2 fix global_clipped_* for near_multiple branch
 			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			//if (near_multiple(i, 1.0f))
 				//return global_clipped_minimum(unsigned_mod(roundi(i), 2 * K));
@@ -251,7 +251,7 @@ namespace oly::col2d
 		float projection_max(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO fix global_clipped_* for near_multiple branch
+			// TODO v2 fix global_clipped_* for near_multiple branch
 			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
 			//if (near_multiple(i, 1.0f))
 				//return global_clipped_maximum(unsigned_mod(roundi(i), 2 * K));

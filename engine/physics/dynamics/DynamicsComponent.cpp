@@ -17,8 +17,8 @@ namespace oly::physics
 			- linear_velocity_at(other.linear_velocity, other.angular_velocity, contact + position - other.position)), speed_threshold);
 		if (sliding)
 			return FrictionType::KINETIC;
-		else // TODO more sophisticated distinction between STATIC/ROLLING - check for locked together case.
-			return near_zero(angular_velocity) && near_zero(other.angular_velocity) ? FrictionType::STATIC : FrictionType::ROLLING;
+		else
+			return near_zero(tangent.dot(linear_velocity) - tangent.dot(other.linear_velocity), speed_threshold) ? FrictionType::STATIC : FrictionType::ROLLING;
 	}
 
 	void Properties::set_mass(float m)
@@ -249,7 +249,7 @@ namespace oly::physics
 			state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 	}
 
-	// TODO test simultaneous collision with multiple objects with complex_teleportation = true/false.
+	// TODO v2 test simultaneous collision with multiple objects with complex_teleportation = true/false.
 	void DynamicsComponent::compute_collision_mtv_idxs() const
 	{
 		primary_collision_mtv_idx = 0;
