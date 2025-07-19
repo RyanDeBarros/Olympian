@@ -7,17 +7,17 @@ def params_constructor(tilemap, name) -> str:
     if 'layer' in tilemap:
         for layer in tilemap['layer']:
             c += "\t\t\t{\n"
-            c += "\t\t\t\treg::params::TileMap::Layer layer;\n"
+            c += "\t\t\t\treg::params::TileMap::Layer _layer;\n"
 
             if 'tileset' in layer:
-                c += f"\t\t\t\tlayer.tileset = \"{layer['tileset']}\";\n"
+                c += f"\t\t\t\t_layer.tileset = \"{layer['tileset']}\";\n"
 
             if 'z' in layer:
-                c += f"\t\t\t\tlayer.z = (size_t){layer['z']};\n"
+                c += f"\t\t\t\t_layer.z = (size_t){layer['z']};\n"
 
-            c += write_vec2_vector(layer, 'layer.tiles', 'tiles', 4)
+            c += write_vec2_vector(layer, '_layer.tiles', 'tiles', 4)
 
-            c += f"\t\t\t\t{name}.layers.push_back(std::move(layer));\n"
+            c += f"\t\t\t\t{name}.layers.push_back(std::move(_layer));\n"
             c += "\t\t\t}\n"
 
     return c

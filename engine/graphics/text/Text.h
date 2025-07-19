@@ -78,6 +78,7 @@ namespace oly::rendering
 		};
 
 	private:
+		// TODO option for textured background
 		struct UBO
 		{
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> text_color, modulation;

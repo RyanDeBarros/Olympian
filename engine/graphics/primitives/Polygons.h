@@ -142,8 +142,6 @@ namespace oly::rendering
 		virtual void draw_triangulation(GLuint initial_vertex) const = 0;
 	};
 
-	typedef SmartHandle<Polygonal> PolygonalRef;
-
 	struct Polygon : public Polygonal
 	{
 		cmath::Polygon2D polygon;
@@ -163,8 +161,6 @@ namespace oly::rendering
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
-	typedef SmartHandle<Polygon> PolygonRef;
-
 	struct PolyComposite : public Polygonal
 	{
 		cmath::Polygon2DComposite composite;
@@ -180,8 +176,6 @@ namespace oly::rendering
 		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
-
-	typedef SmartHandle<PolyComposite> PolyCompositeRef;
 
 	struct NGon : public Polygonal
 	{
@@ -202,6 +196,18 @@ namespace oly::rendering
 		virtual void subinit() const override;
 		virtual void draw_triangulation(GLuint initial_vertex) const override;
 	};
+}
 
-	typedef SmartHandle<NGon> NGonRef;
+namespace oly
+{
+	namespace rendering { typedef SmartHandle<Polygonal> PolygonalRef; }
+
+	OLY_SMART_POOL_BASE(rendering::Polygon, rendering::Polygonal);
+	namespace rendering { typedef SmartHandle<Polygon> PolygonRef; }
+
+	OLY_SMART_POOL_BASE(rendering::PolyComposite, rendering::Polygonal);
+	namespace rendering { typedef SmartHandle<PolyComposite> PolyCompositeRef; }
+
+	OLY_SMART_POOL_BASE(rendering::NGon, rendering::Polygonal);
+	namespace rendering { typedef SmartHandle<NGon> NGonRef; }
 }
