@@ -296,6 +296,8 @@ namespace oly
 				using T = std::decay_t<std::tuple_element_t<0, std::tuple<Args...>>>;
 				return !std::is_same_v<T, nullptr_t>
 					&& !std::is_same_v<T, internal::RefInit>
+					&& !std::is_same_v<T, Object>
+					&& !std::is_same_v<T, SmartHandle<Object>>
 					&& !shares_smart_pool_base<T, Object>
 					&& !IsSmartHandleWithSharedPoolBase<T>::value;
 			}
@@ -341,6 +343,13 @@ namespace oly
 			init(Object(std::forward<Args>(args)...));
 		}
 
+		SmartHandle(const SmartHandle<Object>& other)
+			: pool_idx(other.pool_idx)
+		{
+			if (other.valid())
+				increment();
+		}
+
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
 		SmartHandle(const SmartHandle<T>& other)
 			: pool_idx(other.pool_idx)
@@ -349,12 +358,49 @@ namespace oly
 				increment();
 		}
 
+		SmartHandle(SmartHandle<Object>&& other) noexcept
+			: pool_idx(other.pool_idx)
+		{
+			if (other.valid())
+				replace(other);
+		}
+
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
 		SmartHandle(SmartHandle<T>&& other) noexcept
 			: pool_idx(other.pool_idx)
 		{
 			if (other.valid())
 				replace(other);
+		}
+
+		SmartHandle<Object>& operator=(const SmartHandle<Object>& other)
+		{
+			if (this != &other)
+			{
+				if (valid())
+				{
+					if (other.valid())
+					{
+						if (pool_idx != other.pool_idx)
+						{
+							decrement();
+							pool_idx = other.pool_idx;
+							increment();
+						}
+					}
+					else
+						decrement();
+				}
+				else
+				{
+					if (other.valid())
+					{
+						pool_idx = other.pool_idx;
+						increment();
+					}
+				}
+			}
+			return *this;
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
@@ -382,6 +428,38 @@ namespace oly
 					{
 						pool_idx = other.pool_idx;
 						increment();
+					}
+				}
+			}
+			return *this;
+		}
+
+		SmartHandle<Object>& operator=(SmartHandle<Object>&& other) noexcept
+		{
+			if (this != &other)
+			{
+				if (valid())
+				{
+					if (other.valid())
+					{
+						if (pool_idx != other.pool_idx)
+						{
+							decrement();
+							pool_idx = other.pool_idx;
+							replace(other);
+						}
+						else
+							other.decrement();
+					}
+					else
+						decrement();
+				}
+				else
+				{
+					if (other.valid())
+					{
+						pool_idx = other.pool_idx;
+						replace(other);
 					}
 				}
 			}
@@ -420,7 +498,7 @@ namespace oly
 			}
 			return *this;
 		}
-		
+
 		~SmartHandle()
 		{
 			invalidate();
@@ -447,7 +525,7 @@ namespace oly
 			if (valid())
 				return static_cast<const Object*>(pool().objects[pool_idx].get());
 			else
-				return nullptr;
+				throw Error(ErrorCode::NULL_POINTER);
 		}
 		
 		Object* operator->()
@@ -455,7 +533,7 @@ namespace oly
 			if (valid())
 				return static_cast<Object*>(pool().objects[pool_idx].get());
 			else
-				return nullptr;
+				throw Error(ErrorCode::NULL_POINTER);
 		}
 
 		const PoolBase* base() const
