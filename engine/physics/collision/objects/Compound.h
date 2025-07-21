@@ -16,6 +16,8 @@ namespace oly::col2d
 		Mask mask = 0;
 		Layer layer = 0;
 
+		CompoundPerfParameters perf = {};
+
 		float projection_max(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 	};
@@ -54,6 +56,9 @@ namespace oly::col2d
 		Layer layer() const { return compound.layer; }
 		Layer& layer() { return compound.layer; }
 
+		const CompoundPerfParameters& perf() const { return compound.perf; }
+		CompoundPerfParameters& perf() { return compound.perf; }
+
 		float projection_max(const UnitVector2D& axis) const;
 		float projection_min(const UnitVector2D& axis) const;
 	};
@@ -62,6 +67,8 @@ namespace oly::col2d
 	{
 		inline const std::vector<Element>& element_array(const Compound& c) { return c.elements; }
 		inline const std::vector<Element>& element_array(const TCompound& c) { return c.get_baked(); }
+		inline CompoundPerfParameters perf(const Compound& c) { return c.perf; }
+		inline CompoundPerfParameters perf(const TCompound& c) { return c.perf(); }
 
 		template<typename Comp1, typename Comp2>
 		inline OverlapResult overlaps(const Comp1& c1, const Comp2& c2)
@@ -77,7 +84,7 @@ namespace oly::col2d
 		inline CollisionResult collides(const Comp1& c1, const Comp2& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+				return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size(), CompoundPerfParameters::greedy(perf(c1), perf(c2)));
 			else
 				return CollisionResult{ .overlap = false };
 		}
@@ -86,7 +93,7 @@ namespace oly::col2d
 		inline ContactResult contacts(const Comp1& c1, const Comp2& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size());
+				return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size(), CompoundPerfParameters::greedy(perf(c1), perf(c2)));
 			else
 				return ContactResult{ .overlap = false };
 		}
@@ -106,7 +113,7 @@ namespace oly::col2d
 		CollisionResult collides(const Comp& c1, const ElementParam& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_collision(element_array(c1).data(), element_array(c1).size(), c2);
+				return compound_collision(element_array(c1).data(), element_array(c1).size(), c2, perf(c1));
 			else
 				return CollisionResult{ .overlap = false };
 		}
@@ -115,7 +122,7 @@ namespace oly::col2d
 		ContactResult contacts(const Comp& c1, const ElementParam& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_contact(element_array(c1).data(), element_array(c1).size(), c2);
+				return compound_contact(element_array(c1).data(), element_array(c1).size(), c2, perf(c1));
 			else
 				return ContactResult{ .overlap = false };
 		}

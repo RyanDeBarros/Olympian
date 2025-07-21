@@ -241,6 +241,8 @@ namespace oly::col2d
 		Mask mask = 0;
 		Layer layer = 0;
 
+		CompoundPerfParameters perf = {};
+
 		BVH() = default;
 		explicit BVH(const std::vector<Element>& elements) : elements(elements) {}
 		explicit BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
@@ -349,25 +351,63 @@ namespace oly::col2d
 		template<typename S>
 		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps<S>(root(), elements.data(), bvh.root(), bvh.elements.data()); }
 
-		CollisionResult raw_collides(const Element& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e)) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const ElementParam& e) const { return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const Primitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element)) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const TPrimitive& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.get_baked())) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const Compound& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const TCompound& c) const { return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size()) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const Element& e) const
+			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e), perf) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const ElementParam& e) const
+			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e, perf) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const Primitive& c) const
+			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element), perf) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const TPrimitive& c) const
+			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.get_baked()), perf) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(const Compound& c) const
+		{
+			return raw_overlaps(c)
+				? compound_collision(elements.data(), elements.size(), c.elements.data(), c.elements.size(), CompoundPerfParameters::greedy(perf, c.perf))
+				: CollisionResult{ .overlap = false };
+		}
+		CollisionResult raw_collides(const TCompound& c) const
+		{
+			return raw_overlaps(c)
+				? compound_collision(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size(), CompoundPerfParameters::greedy(perf, c.perf()))
+				: CollisionResult{ .overlap = false };
+		}
 
 		template<typename S>
-		CollisionResult raw_collides(const BVH<S>& bvh) const { return raw_overlaps(bvh) ? compound_collision(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size()) : CollisionResult{.overlap = false}; }
+		CollisionResult raw_collides(const BVH<S>& bvh) const
+		{
+			return raw_overlaps(bvh)
+				? compound_collision(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size(), CompoundPerfParameters::greedy(perf, bvh.perf))
+				: CollisionResult{.overlap = false};
+		}
 
-		ContactResult raw_contacts(const Element& e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), param(e)) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const ElementParam& e) const { return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const Primitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.element)) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const TPrimitive& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.get_baked())) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const Compound& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.elements.data(), c.elements.size()) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const TCompound& c) const { return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size()) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const Element& e) const
+			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), param(e), perf) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const ElementParam& e) const
+			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e, perf) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const Primitive& c) const
+			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.element), perf) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const TPrimitive& c) const
+			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.get_baked()), perf) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const Compound& c) const
+		{
+			return raw_overlaps(c)
+				? compound_contact(elements.data(), elements.size(), c.elements.data(), c.elements.size(), CompoundPerfParameters::greedy(perf, c.perf))
+				: ContactResult{ .overlap = false };
+		}
+		ContactResult raw_contacts(const TCompound& c) const
+		{
+			return raw_overlaps(c)
+				? compound_contact(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size(), CompoundPerfParameters::greedy(perf, c.perf()))
+				: ContactResult{ .overlap = false };
+		}
 
 		template<typename S>
-		ContactResult raw_contacts(const BVH<S>& bvh) const { return raw_overlaps(bvh) ? compound_contact(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size()) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(const BVH<S>& bvh) const
+		{
+			return raw_overlaps(bvh)
+				? compound_contact(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size(), CompoundPerfParameters::greedy(perf, bvh.perf))
+				: ContactResult{ .overlap = false };
+		}
 
 	private:
 		static OverlapResult point_hits(const Node& node, const Element* elements, glm::vec2 test)
@@ -516,6 +556,9 @@ namespace oly::col2d
 		Layer layer() const { return _bvh.layer; }
 		Layer& layer() { return _bvh.layer; }
 
+		const CompoundPerfParameters& perf() const { return _bvh.perf; }
+		CompoundPerfParameters& perf() { return _bvh.perf; }
+		
 		Heuristic get_heuristic() const { return _bvh.get_heuristic(); }
 		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
 		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }

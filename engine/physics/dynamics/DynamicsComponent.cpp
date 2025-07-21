@@ -253,7 +253,7 @@ namespace oly::physics
 			state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 	}
 
-	// TODO v2 test simultaneous collision with multiple objects with complex_teleportation = true/false.
+	// LATER test simultaneous collision with multiple objects with complex_teleportation = true/false.
 	void DynamicsComponent::compute_collision_mtv_idxs() const
 	{
 		primary_collision_mtv_idx = 0;

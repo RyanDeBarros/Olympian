@@ -17,34 +17,6 @@ namespace oly::col2d
 			}, e);
 	}
 
-	CollisionResult greedy_collision(const std::vector<CollisionResult>& collisions)
-	{
-		CollisionResult greedy{ .overlap = true, .penetration_depth = 0.0f };
-		for (const CollisionResult& collision : collisions)
-			if (collision.overlap && collision.penetration_depth > greedy.penetration_depth)
-				greedy = collision;
-		return greedy;
-	}
-
-	ContactResult greedy_contact(const std::vector<ContactResult>& contacts)
-	{
-		ContactResult greedy{ .overlap = true };
-		float greedy_depth_sqrd = 0.0f;
-		for (const ContactResult& contact : contacts)
-		{
-			if (contact.overlap)
-			{
-				float depth_sqrd = math::mag_sqrd(contact.active_feature.impulse);
-				if (depth_sqrd > greedy_depth_sqrd)
-				{
-					greedy_depth_sqrd = depth_sqrd;
-					greedy = contact;
-				}
-			}
-		}
-		return greedy;
-	}
-
 	static float projection_max(const UnitVector2D& axis, const ElementParam& el)
 	{
 		return std::visit([&axis](auto&& el) { return el->projection_max(axis); }, el);
@@ -110,7 +82,9 @@ namespace oly::col2d
 		}
 		else
 		{
-			// TODO v2 ? pre-emptive check if active will overlap static if travelling on some separation interval. If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0, else return additional separation needed for active to overtake/pass static.
+			// TODO v2 ? pre-emptive check if active will overlap static if travelling on some separation interval.
+			// If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0,
+			// else return additional separation needed for active to overtake/pass static.
 			return 0.0f;
 		}
 	}
@@ -133,17 +107,15 @@ namespace oly::col2d
 	}
 
 	template<typename SeparationFunc>
-	CollisionResult compound_collision_generic(SeparationFunc separation)
+	CollisionResult compound_collision_generic(SeparationFunc separation, const CompoundPerfParameters perf)
 	{
 		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
 
 		// coarse sweep
-		static constexpr size_t DIVISIONS = 24; // TODO v2 pass optional complexity parameter for number of divisions (16-32).
-		static constexpr float TWO_PI_OVER_DIVISIONS = glm::two_pi<float>() / DIVISIONS;
 		int minimizing_axis = 0;
-		for (size_t i = 0; i < DIVISIONS; ++i)
+		for (size_t i = 0; i < perf.get_coarse_sweep_divisions(); ++i)
 		{
-			UnitVector2D axis((float)i * TWO_PI_OVER_DIVISIONS);
+			UnitVector2D axis((float)i * perf.get_two_pi_over_divisions());
 			float sep = separation(axis);
 			if (sep <= 0.0f)
 				return { .overlap = false };
@@ -156,8 +128,8 @@ namespace oly::col2d
 		}
 
 		// golden-search refinement
-		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); }, (float)(minimizing_axis - 1) * TWO_PI_OVER_DIVISIONS,
-			(float)(minimizing_axis + 1) * TWO_PI_OVER_DIVISIONS, glm::radians(1.5f), 0.0f); // TODO v2 pass optional parameter for error
+		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
+			(float)(minimizing_axis - 1) * perf.get_two_pi_over_divisions(), (float)(minimizing_axis + 1) * perf.get_two_pi_over_divisions(), perf.refinement_error_threshold, 0.0f);
 
 		if (search_result.early_exited)
 			return { .overlap = false };
@@ -189,16 +161,18 @@ namespace oly::col2d
 		return max_sep;
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
+		const ElementParam& static_element, const CompoundPerfParameters perf)
 	{
 		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
-		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_element, mtvs); });
+		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_element, mtvs); }, perf);
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
+		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
 	{
 		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
-		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs); });
+		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs); }, perf);
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
@@ -251,21 +225,24 @@ namespace oly::col2d
 		return contact;
 	}
 
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
+		const ElementParam& static_element, const CompoundPerfParameters perf)
 	{
 		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
 		size_t most_significant_active_element = 0;
 		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
-			{ return separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs); });
+			{ return separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs); }, perf);
 		return param_contact_result(param(active_elements[most_significant_active_element]), static_element, collision);
 	}
 
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
+		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
 	{
 		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
 		size_t most_significant_active_element = 0, most_significant_static_element = 0;
 		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
-			{ return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, most_significant_active_element, most_significant_static_element, mtvs); });
+			{ return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements,
+				most_significant_active_element, most_significant_static_element, mtvs); }, perf);
 		return param_contact_result(param(active_elements[most_significant_active_element]), param(static_elements[most_significant_static_element]), collision);
 	}
 
