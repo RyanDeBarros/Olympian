@@ -99,11 +99,6 @@ int main()
 		M_OBSTACLE = 0b10
 	};
 
-	//oly::col2d::AABB block{ .x1 = -300.0f, .x2 = 100.0f, .y1 = -400.0f, .y2 = 500.0f };
-	//oly::col2d::OBB block{ .center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = glm::pi<float>() / 8 };
-	//oly::col2d::TPrimitive block(oly::col2d::Circle({ -100.0f, 50.0f }, 200.0f));
-	//oly::col2d::TPrimitive block = { oly::col2d::AABB{.x1 = -200.0f, .x2 = 50.0f, .y1 = -200.0f, .y2 = 300.0f } };
-	//oly::col2d::TPrimitive block = { oly::col2d::OBB{.center = { -100.0f, 50.0f }, .width = 400.0f, .height = 600.0f, .rotation = -glm::pi<float>() / 6 } };
 	oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
 
 	oly::col2d::ConvexHull hull_pts;
@@ -153,7 +148,6 @@ int main()
 	//oly::col2d::TBVH<oly::col2d::KDOP5> player = star.as_convex_tbvh<oly::col2d::KDOP5>();
 	//player->set_heuristic(oly::col2d::Heuristic::MIN_Y_MIN_X);
 	//auto player = oly::col2d::Capsule{ .center = {}, .obb_width = 50.0f, .obb_height = 50.0f, .rotation = 0.1f }.tcompound();
-	oly::physics::RigidBody* py1 = &*player;
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 	
@@ -161,7 +155,6 @@ int main()
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::physics::RigidBodyRef obstacle0 = oly::REF_INIT;
-	oly::physics::RigidBody* py2 = &*player;
 	obstacle0->set_flag(oly::physics::DynamicsComponent::Flag::KINEMATIC);
 	obstacle0->add_collider(capsule);
 	obstacle0->collider()->layer() |= CollisionLayers::L_OBSTACLE;
@@ -309,8 +302,6 @@ int main()
 		obstacle2->update_view(0, cv_obstacle2);
 		obstacle3->update_view(0, cv_obstacle3);
 		obstacle4->update_view(0, cv_obstacle4);
-
-		//oly::LOG << player->is_colliding() << oly::LOG.nl;
 
 		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::TIME.delta());
 

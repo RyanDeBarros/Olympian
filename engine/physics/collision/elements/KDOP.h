@@ -214,25 +214,24 @@ namespace oly::col2d
 	public:
 		float global_clipped_minimum(size_t i) const
 		{
-			return i < K ? global_extremum(uniform_axis(i), get_clipped_minimum(i)) : -global_extremum(uniform_axis(i - K), -get_clipped_maximum(i - K));
+			return i < K ? global_extremum(uniform_axis(i), get_clipped_minimum(i)) : global_extremum(-uniform_axis(i - K), -get_clipped_maximum(i - K));
 		}
 
 		float global_clipped_maximum(size_t i) const
 		{
-			return i < K ? global_extremum(uniform_axis(i), get_clipped_maximum(i)) : -global_extremum(uniform_axis(i - K), -get_clipped_minimum(i - K));
+			return i < K ? global_extremum(uniform_axis(i), get_clipped_maximum(i)) : global_extremum(-uniform_axis(i - K), -get_clipped_minimum(i - K));
 		}
 
 		fpair projection_interval(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO v2 fix global_clipped_* for near_multiple branch
-			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
-			//if (near_multiple(i, 1.0f))
-			//{
-				//int j = unsigned_mod(roundi(i), 2 * K);
-				//return { global_clipped_minimum(j), global_clipped_maximum(j) };
-			//}
-			//else
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
+			{
+				int j = unsigned_mod(roundi(i), 2 * K);
+				return { global_clipped_minimum(j), global_clipped_maximum(j) };
+			}
+			else
 				return { global_extremum(local_axis, local_axis.dot(local_deepest_manifold(-local_axis).pt())),
 					global_extremum(local_axis, local_axis.dot(local_deepest_manifold(local_axis).pt())) };
 		}
@@ -240,22 +239,20 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO v2 fix global_clipped_* for near_multiple branch
-			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
-			//if (near_multiple(i, 1.0f))
-				//return global_clipped_minimum(unsigned_mod(roundi(i), 2 * K));
-			//else
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
+				return global_clipped_minimum(unsigned_mod(roundi(i), 2 * K));
+			else
 				return global_extremum(local_axis, local_axis.dot(local_deepest_manifold(-local_axis).pt()));
 		}
 
 		float projection_max(const UnitVector2D& axis) const
 		{
 			UnitVector2D local_axis = get_local_axis(axis);
-			// TODO v2 fix global_clipped_* for near_multiple branch
-			//float i = local_axis.rotation() * K * glm::one_over_pi<float>();
-			//if (near_multiple(i, 1.0f))
-				//return global_clipped_maximum(unsigned_mod(roundi(i), 2 * K));
-			//else
+			float i = local_axis.rotation() * K * glm::one_over_pi<float>();
+			if (near_multiple(i, 1.0f))
+				return global_clipped_maximum(unsigned_mod(roundi(i), 2 * K));
+			else
 				return global_extremum(local_axis, local_axis.dot(local_deepest_manifold(local_axis).pt()));
 		}
 

@@ -17,8 +17,12 @@ namespace oly::physics
 			- linear_velocity_at(other.linear_velocity, other.angular_velocity, contact + position - other.position)), speed_threshold);
 		if (sliding)
 			return FrictionType::KINETIC;
+		else if (!near_zero(tangent.dot(linear_velocity) - tangent.dot(other.linear_velocity), speed_threshold))
+			return FrictionType::ROLLING;
+		else if (glm::sign(angular_velocity) != glm::sign(other.angular_velocity))
+			return FrictionType::ROLLING;
 		else
-			return near_zero(tangent.dot(linear_velocity) - tangent.dot(other.linear_velocity), speed_threshold) ? FrictionType::STATIC : FrictionType::ROLLING;
+			return FrictionType::STATIC;
 	}
 
 	void Properties::set_mass(float m)

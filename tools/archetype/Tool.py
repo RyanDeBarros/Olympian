@@ -14,6 +14,7 @@ GEN_PATH = '../gen/archetypes'
 
 
 # TODO v3 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
+# TODO v3 combine SPRITE and TEXT shaders.
 class Batch(Enum):
     SPRITE = 0,
     POLYGON = 1,

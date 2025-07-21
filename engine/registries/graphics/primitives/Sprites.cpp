@@ -119,13 +119,13 @@ namespace oly::reg
 			if (params.svg_scale)
 			{
 				reg::TextureRegistry::SVGLoadParams lparams{ .texture_index = params.texture_index };
-				auto btex = context::texture_registry().load_svg_texture(params.texture.value(), params.svg_scale.value(), lparams);
+				graphics::BindlessTextureRef btex = context::texture_registry().load_svg_texture(params.texture.value(), params.svg_scale.value(), lparams);
 				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
 			}
 			else
 			{
 				reg::TextureRegistry::LoadParams lparams{ .texture_index = params.texture_index };
-				auto btex = context::texture_registry().load_texture(params.texture.value(), lparams);
+				graphics::BindlessTextureRef btex = context::texture_registry().load_texture(params.texture.value(), lparams);
 				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
 			}
 		}
