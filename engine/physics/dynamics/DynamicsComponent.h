@@ -76,6 +76,14 @@ namespace oly::physics
 
 		glm::vec2 center_of_mass = {};
 
+		bool complex_teleportation = false;
+
+		struct
+		{
+			bool enable = true;
+			bool only_colliding = false;
+		} angular_snapping;
+
 	private:
 		friend class DynamicsComponent;
 		glm::vec2 dv_psi() const;
@@ -123,10 +131,10 @@ namespace oly::physics
 		mutable size_t primary_collision_mtv_idx = 0;
 		mutable size_t secondary_collision_mtv_idx = 0;
 		mutable bool found_secondary_collision_mtv_idx = false;
+		mutable glm::vec2 collision_linear_impulse = {};
+		mutable float collision_angular_impulse = 0.0f;
 
 	public:
-		bool complex_teleportation = false;
-
 		MaterialRef material = REF_INIT;
 		Properties properties;
 
@@ -139,17 +147,19 @@ namespace oly::physics
 		bool is_colliding() const { return was_colliding; }
 
 	private:
-		void update_colliding_linear_motion(glm::vec2 new_velocity, glm::vec2 collision_impulse) const;
-		void update_colliding_angular_motion(float new_velocity, float collision_impulse) const;
+		void update_colliding_linear_motion(glm::vec2 new_velocity) const;
+		void update_colliding_angular_motion(float new_velocity) const;
 		void compute_collision_mtv_idxs() const;
 
 		float teleport_factor(const DynamicsComponent& other) const;
 
-		void compute_collision_response(glm::vec2& linear_impulse, float& angular_impulse, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
+		void compute_collision_response(glm::vec2 new_linear_velocity, float new_angular_velocity) const;
 		glm::vec2 compute_other_contact_velocity(const CollisionResponse& collision) const;
 		float effective_mass(const CollisionResponse& collision) const;
 		glm::vec2 restitution_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity) const;
 		glm::vec2 friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
+
+		void snap_motion() const;
 	};
 
 	extern float moment_of_inertia(col2d::ElementParam e, float mass, bool relative_to_cm = false);

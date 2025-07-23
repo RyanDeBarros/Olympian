@@ -30,8 +30,8 @@ namespace oly::physics
 		PositiveFloat _sqrt_kinetic_friction = glm::sqrt(_kinetic_friction);
 		PositiveFloat _rolling_friction = 0.4f;
 		PositiveFloat _sqrt_rolling_friction = glm::sqrt(_rolling_friction);
-		BoundedFloat<0.0f, 1.0f> _restitution = 0.2f;
-		BoundedFloat<0.0f, 1.0f> _sqrt_restitution = glm::sqrt(_restitution);
+		BoundedUnitInterval _restitution = 0.2f;
+		BoundedUnitInterval _sqrt_restitution = glm::sqrt(_restitution);
 
 	public:
 		PositiveFloat linear_drag = 0.0f;
@@ -42,7 +42,7 @@ namespace oly::physics
 			// linear penetration damping controls how much penetration motion into another collider is clamped.
 			// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
 			// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
-			BoundedFloat<0.0f, 1.0f> linear_penetration = 0.5f;
+			BoundedUnitInterval linear_penetration = 0.5f;
 			
 			// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.
 			// At 0.0 - no damping, which causes large angular bounces from collisions.
@@ -50,7 +50,7 @@ namespace oly::physics
 			PowerInterval angular_teleportation = PowerInterval(0.85f);
 			
 			// angular teleport inverse drag controls how higher teleportation levels are shrunken. A smaller inverse drag results in more overall teleportation damping.
-			BoundedFloat<0.0f, 1.0f> angular_teleport_inverse_drag = 0.6f;
+			BoundedUnitInterval angular_teleport_inverse_drag = 0.6f;
 			
 			// angular teleportation values under jitter threshold are fully dampened.
 			PositiveFloat angular_jitter_threshold = 0.001f;
@@ -65,7 +65,14 @@ namespace oly::physics
 			FactorBlendOp rolling_friction = FactorBlendOp::GEOMETRIC_MEAN;
 		} blending;
 
-		// TODO v2 option to clamp rotations to certain angles - if angular velocity is below threshold and rotation is close to a multiple of a certain angle, clamp it to that angle. For example, with squares, it might be useful to clamp to multiples of 90 degrees if close enough and slow enough. Similar thing can be done with linear motion as well.
+		struct
+		{
+			PositiveFloat speed_threshold = 0.1f;
+			PositiveFloat angle_threshold = glm::radians(10.0f);
+			std::set<BoundedRadians> snaps;
+			StrictlyPositiveFloat strength = 1.0f;
+			BoundedUnitInterval strength_offset = 0.2f;
+		} angular_snapping;
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }

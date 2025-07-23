@@ -17,6 +17,12 @@ namespace oly
 		return unsigned_mod(pos, (int)mod);
 	}
 
+	constexpr float unsigned_fmod(float x, float mod)
+	{
+		x = x - static_cast<float>(static_cast<int>(x / mod)) * mod;
+		return x >= 0.0f ? x : x + mod;
+	}
+
 	constexpr int roundi(float v)
 	{
 		return (v >= 0.0f) ? static_cast<int>(v + 0.5f) : static_cast<int>(v - 0.5f);

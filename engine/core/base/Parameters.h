@@ -43,13 +43,15 @@ namespace oly
 
 	using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
 	using StrictlyPositiveFloat = BoundedFloat<0.000001f, nmax<float>()>;
+	using BoundedUnitInterval = BoundedFloat<0.0f, 1.0f>;
+	using BoundedRadians = BoundedFloat<0.0f, glm::two_pi<float>()>;
 
 	struct PowerInterval
 	{
 	private:
-		BoundedFloat<0.0f, 1.0f> _inner = 0.5f;
-		BoundedFloat<0.0f, 1.0f> _outer = 0.5f;
-		BoundedFloat<0.0f, 1.0f> _inner_midpoint = 0.5f;
+		BoundedUnitInterval _inner = 0.5f;
+		BoundedUnitInterval _outer = 0.5f;
+		BoundedUnitInterval _inner_midpoint = 0.5f;
 		PositiveFloat _power = 1.0f;
 
 		void sync_inner() { _inner = near_zero(_outer) ? 0.0f : near_zero(1.0f - _outer) ? 1.0f : glm::pow(_outer, _power); }

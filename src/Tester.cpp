@@ -99,8 +99,6 @@ int main()
 		M_OBSTACLE = 0b10
 	};
 
-	oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
-
 	oly::col2d::ConvexHull hull_pts;
 	const int _npts = 5;
 	for (int i = 0; i < _npts; ++i)
@@ -138,6 +136,8 @@ int main()
 	player->properties().net_linear_acceleration += oly::physics::GRAVITY;
 	player->properties().set_mass(50.0f);
 
+	//oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
+	oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f }));
 	player->add_collider(player_collider);
 	//player->add_collider(star.as_convex_tcompound());
 	player->collider()->layer() |= CollisionLayers::L_PLAYER;
@@ -150,7 +150,13 @@ int main()
 	//auto player = oly::col2d::Capsule{ .center = {}, .obb_width = 50.0f, .obb_height = 50.0f, .rotation = 0.1f }.tcompound();
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
-	
+
+	//const size_t angles = 3;
+	const size_t angles = 2;
+	for (size_t i = 0; i < 2 * angles; ++i)
+		player->material()->angular_snapping.snaps.insert(i * glm::pi<float>() / angles);
+	player->material()->angular_snapping.angle_threshold = 0.5f * glm::pi<float>() / angles;
+
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
