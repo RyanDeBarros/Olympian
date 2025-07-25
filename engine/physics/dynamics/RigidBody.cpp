@@ -4,9 +4,15 @@
 
 namespace oly::physics
 {
+	RigidBody::RigidBody()
+	{
+		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
+	}
+
 	RigidBody::RigidBody(const RigidBody& other)
 		: colliders(other.colliders), transformer(other.transformer), dynamics(other.dynamics)
 	{
+		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			(*it)->rigid_body = this;
@@ -18,6 +24,7 @@ namespace oly::physics
 	RigidBody::RigidBody(RigidBody&& other) noexcept
 		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer)), dynamics(std::move(other.dynamics))
 	{
+		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			(*it)->rigid_body = this;
@@ -29,6 +36,7 @@ namespace oly::physics
 	
 	RigidBody::~RigidBody()
 	{
+		internal::RigidBodyManager::instance().rigid_bodies.erase(this);
 		clear_colliders();
 	}
 	
@@ -127,10 +135,14 @@ namespace oly::physics
 		colliders[i]->update_view(view);
 	}
 
-	void RigidBody::on_tick()
+	void RigidBody::physics_pre_tick()
 	{
-		dynamics.sync_state(transformer.global());
-		dynamics.on_tick();
+		dynamics.pre_tick(transformer.global());
+	}
+
+	void RigidBody::physics_post_tick()
+	{
+		dynamics.post_tick();
 		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
 	}
 
@@ -220,5 +232,13 @@ namespace oly::physics
 			context::collision_dispatcher().unregister_handler(collider.cref(), &RigidBody::handle_contacts, cref());
 		else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
 			context::collision_dispatcher().unregister_handler(collider.cref(), &RigidBody::handle_collides, cref());
+	}
+
+	void internal::RigidBodyManager::on_tick() const
+	{
+		for (RigidBody* rigid_body : rigid_bodies)
+			rigid_body->physics_pre_tick();
+		for (RigidBody* rigid_body : rigid_bodies)
+			rigid_body->physics_post_tick();
 	}
 }

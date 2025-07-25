@@ -156,6 +156,7 @@ int main()
 	for (size_t i = 0; i < 2 * angles; ++i)
 		player->material()->angular_snapping.snaps.insert(i * glm::pi<float>() / angles);
 	player->material()->angular_snapping.angle_threshold = 0.5f * glm::pi<float>() / angles;
+	player->properties().set_mass(10.0f);
 
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
@@ -179,6 +180,7 @@ int main()
 	obstacle1->collider()->mask() |= CollisionMasks::M_PLAYER;
 	obstacle1->properties().center_of_mass = capsule.center;
 	obstacle1->set_flag(oly::physics::DynamicsComponent::Flag::LINEAR);
+	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::RigidBodyRef obstacle2 = oly::REF_INIT;
@@ -295,13 +297,6 @@ int main()
 
 		flag_state_timer.poll();
 		
-		player->on_tick();
-		obstacle0->on_tick();
-		obstacle1->on_tick();
-		obstacle2->on_tick();
-		obstacle3->on_tick();
-		obstacle4->on_tick();
-
 		player->update_view(0, player_cv);
 		obstacle0->update_view(0, cv_obstacle0);
 		obstacle1->update_view(0, cv_obstacle1);

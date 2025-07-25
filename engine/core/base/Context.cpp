@@ -17,6 +17,7 @@
 #include "physics/collision/scene/LUT.h"
 #include "physics/collision/scene/CollisionDispatcher.h"
 #include "physics/dynamics/Material.h"
+#include "physics/dynamics/RigidBody.h"
 
 namespace oly::context
 {
@@ -196,6 +197,8 @@ namespace oly::context
 	{
 		internal::collision_dispatcher.clear();
 
+		physics::internal::RigidBodyManager::instance().clear();
+
 		oly::internal::PoolBatch::instance().clear();
 
 		internal::texture_registry.clear();
@@ -356,6 +359,8 @@ namespace oly::context
 		internal::collision_dispatcher.poll();
 
 		oly::internal::PoolBatch::instance().clean();
+
+		physics::internal::RigidBodyManager::instance().on_tick();
 
 		return true;
 	}

@@ -71,8 +71,11 @@ namespace oly::col2d
 			else
 			{
 				float separation_along_axis = projection_max(axis, static_element) - projection_min(axis, active_element);
+				float dot = axis.dot(mtv.unit_impulse);
+				if (near_zero(dot))
+					return separation_along_axis;
 				float overfitting_depth = 0.0f;
-				if (axis.dot(mtv.unit_impulse) > 0.0f)
+				if (dot > 0.0f)
 					overfitting_depth = mtv.forward_depth * mtv.forward_depth / axis.dot(mtv.forward_mtv());
 				else
 					overfitting_depth = mtv.backward_depth * mtv.backward_depth / axis.dot(mtv.backward_mtv());
@@ -216,11 +219,16 @@ namespace oly::col2d
 		ContactResult contact{ .overlap = collision.overlap };
 		if (contact.overlap)
 		{
-			contact.active_feature.impulse = collision.mtv();
-			contact.active_feature.position = std::visit([axis = -collision.unit_impulse](const auto& ae) { return ae->deepest_manifold(axis).pt(); }, e1);
+			contact.active_contact.impulse = collision.mtv();
+			contact.passive_contact.impulse = -contact.active_contact.impulse;
 
-			contact.passive_feature.impulse = -collision.mtv();
-			contact.passive_feature.position = std::visit([axis = collision.unit_impulse](const auto& se) { return se->deepest_manifold(axis).pt(); }, e2);
+			ContactManifold c1 = std::visit([axis = -collision.unit_impulse](const auto& e) { return e->deepest_manifold(axis); }, e1);
+			ContactManifold c2 = std::visit([axis = collision.unit_impulse](const auto& e) { return e->deepest_manifold(axis); }, e2);
+			glm::vec2 p1 = {}, p2 = {};
+			ContactManifold::clamp(collision.unit_impulse, c1, c2, p1, p2);
+
+			contact.active_contact.position = p1;
+			contact.passive_contact.position = p2;
 		}
 		return contact;
 	}

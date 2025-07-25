@@ -45,16 +45,8 @@ namespace oly::col2d
 
 	struct ContactEventData
 	{
-		struct Contact
-		{
-			glm::vec2 position;
-			glm::vec2 impulse;
-
-			Contact(ContactResult::Feature feature) : position(feature.position), impulse(feature.impulse) {}
-		};
-
 		Phase phase;
-		Contact active_contact, passive_contact;
+		ContactResult::Contact active_contact, passive_contact;
 		ConstSoftReference<Collider> active_collider, passive_collider;
 
 		ContactEventData(const ContactResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);

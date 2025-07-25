@@ -80,7 +80,7 @@ namespace oly::physics
 
 		struct
 		{
-			bool enable = true;
+			bool enable = false;
 			bool only_colliding = false;
 		} angular_snapping;
 
@@ -115,7 +115,8 @@ namespace oly::physics
 
 	class DynamicsComponent
 	{
-		mutable State state;
+		mutable State pre_state;
+		mutable State post_state;
 		mutable std::vector<CollisionResponse> collisions;
 		mutable bool was_colliding = false;
 
@@ -140,9 +141,9 @@ namespace oly::physics
 
 		void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;
 
-		void on_tick() const;
-		State get_state() const { return state; }
-		void sync_state(const glm::mat3& global);
+		void pre_tick(const glm::mat3& global);
+		void post_tick() const;
+		State get_state() const { return post_state; }
 
 		bool is_colliding() const { return was_colliding; }
 

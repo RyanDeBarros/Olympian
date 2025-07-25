@@ -128,15 +128,22 @@ namespace oly::physics
 
 	// DOC update latex on resolution bias removal and collision damping variables.
 
-	void DynamicsComponent::on_tick() const
+	void DynamicsComponent::pre_tick(const glm::mat3& global)
+	{
+		post_state.position = global[2];
+		post_state.rotation = UnitVector2D(global[0]).rotation();
+		pre_state = post_state;
+	}
+
+	void DynamicsComponent::post_tick() const
 	{
 		if (flag != Flag::STATIC)
 		{
 			if (!collisions.empty())
 			{
 				// 1. update velocity from non-collision stimuli
-				glm::vec2 new_linear_velocity = state.linear_velocity + properties.dv_psi();
-				float new_angular_velocity = flag == Flag::KINEMATIC ? state.angular_velocity + properties.dw_psi() : 0.0f;
+				glm::vec2 new_linear_velocity = pre_state.linear_velocity + properties.dv_psi();
+				float new_angular_velocity = flag == Flag::KINEMATIC ? pre_state.angular_velocity + properties.dw_psi() : 0.0f;
 
 				// 2. compute collision response
 				compute_collision_response(new_linear_velocity, new_angular_velocity);
@@ -152,29 +159,29 @@ namespace oly::physics
 			else
 			{
 				// 1. update velocity from stimuli
-				state.linear_velocity += properties.dv_psi();
+				post_state.linear_velocity += properties.dv_psi();
 				if (flag == Flag::KINEMATIC)
-					state.angular_velocity += properties.dw_psi();
+					post_state.angular_velocity += properties.dw_psi();
 
 				// 2. apply drag
 				if (material->linear_drag > 0.0f)
-					state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
+					post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
 				if (flag == Flag::KINEMATIC)
 					if (material->angular_drag > 0.0f)
-						state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
+						post_state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 
 				// 3. update position
-				state.position += state.linear_velocity * TIME.delta();
+				post_state.position += post_state.linear_velocity * TIME.delta();
 
 				// 4. update rotation
 				if (flag == Flag::KINEMATIC)
-					state.rotation += state.angular_velocity * TIME.delta();
+					post_state.rotation += post_state.angular_velocity * TIME.delta();
 			}
 		}
 
 		// 5. normalize rotation
 
-		state.rotation = unsigned_fmod(state.rotation, glm::two_pi<float>());
+		post_state.rotation = unsigned_fmod(post_state.rotation, glm::two_pi<float>());
 
 		// 6. snap motion
 
@@ -191,22 +198,24 @@ namespace oly::physics
 		collisions.clear();
 	}
 
-	void DynamicsComponent::sync_state(const glm::mat3& global)
-	{
-		state.position = global[2];
-		state.rotation = UnitVector2D(global[0]).rotation();
-	}
-
 	void DynamicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity) const
 	{
 		// collision position update
 
 		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
 		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
+		
+		if (flag == Flag::KINEMATIC)
+			collision_angular_impulse += math::cross(primary_collision.contact - properties.center_of_mass, teleport * TIME.inverse_delta() * properties.mass());
+
 		if (found_secondary_collision_mtv_idx)
 		{
 			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
-			teleport += primary_collision.normal.normal_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
+			glm::vec2 secondary_teleport = primary_collision.normal.normal_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
+			teleport += secondary_teleport;
+
+			if (flag == Flag::KINEMATIC)
+				collision_angular_impulse += math::cross(secondary_collision.contact - properties.center_of_mass, secondary_teleport * TIME.inverse_delta() * properties.mass());
 		}
 
 		// natural position update
@@ -221,13 +230,13 @@ namespace oly::physics
 			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
 		
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
-		state.position += teleport + dx_v;
+		post_state.position += teleport + dx_v;
 
 		// velocity update
 
-		state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
+		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
 		if (material->linear_drag > 0.0f)
-			state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
+			post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
 	}
 
 	void DynamicsComponent::update_colliding_angular_motion(float new_velocity) const
@@ -252,13 +261,14 @@ namespace oly::physics
 
 		// natural rotation udpate
 
-		state.rotation += new_velocity * TIME.delta();
+		new_velocity += collision_angular_impulse * properties.moi_inverse();
+		post_state.rotation += new_velocity * TIME.delta();
 
 		// velocity update
 
-		state.angular_velocity = new_velocity + teleport * TIME.inverse_delta() + collision_angular_impulse * properties.moi_inverse();
+		post_state.angular_velocity = new_velocity + teleport * TIME.inverse_delta();
 		if (material->angular_drag > 0.0f)
-			state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
+			post_state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 	}
 
 	// LATER test simultaneous collision with multiple objects with complex_teleportation = true/false.
@@ -324,8 +334,8 @@ namespace oly::physics
 	{
 		glm::vec2 other_contact_velocity = {};
 		if (collision.dynamics->flag != Flag::STATIC)
-			other_contact_velocity = linear_velocity_at(collision.dynamics->state.linear_velocity, collision.dynamics->state.angular_velocity,
-				state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position);
+			other_contact_velocity = linear_velocity_at(collision.dynamics->pre_state.linear_velocity, collision.dynamics->pre_state.angular_velocity,
+				pre_state.position + collision.contact - properties.center_of_mass - collision.dynamics->pre_state.position);
 		return other_contact_velocity;
 	}
 
@@ -342,7 +352,7 @@ namespace oly::physics
 			effective_mass_denominator += collision.dynamics->properties.mass_inverse();
 			if (collision.dynamics->flag != Flag::LINEAR)
 			{
-				const float cross2 = math::cross(state.position + collision.contact - properties.center_of_mass - collision.dynamics->state.position, collision.normal);
+				const float cross2 = math::cross(pre_state.position + collision.contact - properties.center_of_mass - collision.dynamics->pre_state.position, collision.normal);
 				effective_mass_denominator += collision.dynamics->properties.moi_inverse() * cross2 * cross2;
 			}
 		}
@@ -355,13 +365,13 @@ namespace oly::physics
 		if (near_zero(restitution))
 			return {};
 
-		glm::vec2 relative_velocity = linear_velocity_at(state.linear_velocity, state.angular_velocity, collision.contact - properties.center_of_mass) - other_contact_velocity;
+		glm::vec2 relative_velocity = linear_velocity_at(pre_state.linear_velocity, pre_state.angular_velocity, collision.contact - properties.center_of_mass) - other_contact_velocity;
 		return std::max(-eff_mass * restitution * collision.normal.dot(relative_velocity), 0.0f) * (glm::vec2)collision.normal;
 	}
 
 	glm::vec2 DynamicsComponent::friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 other_contact_velocity, glm::vec2 new_linear_velocity, float new_angular_velocity) const
 	{
-		FrictionType friction_type = state.friction_type(collision.contact - properties.center_of_mass, collision.normal.get_quarter_turn(), collision.dynamics->state);
+		FrictionType friction_type = pre_state.friction_type(collision.contact - properties.center_of_mass, collision.normal.get_quarter_turn(), collision.dynamics->pre_state);
 		float mu = material->friction_with(*collision.dynamics->material, friction_type);
 		if (col2d::near_zero(mu))
 			return {};
@@ -389,12 +399,12 @@ namespace oly::physics
 			const auto& angular_snapping = material->angular_snapping;
 			if (!angular_snapping.snaps.empty())
 			{
-				if (glm::abs(state.angular_velocity) <= angular_snapping.speed_threshold)
+				if (glm::abs(post_state.angular_velocity) <= angular_snapping.speed_threshold)
 				{
-					float snap_angle = find_closest(angular_snapping.snaps, state.rotation,
+					float snap_angle = find_closest(angular_snapping.snaps, post_state.rotation,
 						[](decltype(angular_snapping.snaps)::key_type a, decltype(angular_snapping.snaps)::key_type b) { return unsigned_fmod(b - a, glm::two_pi<float>()); });
 
-					float snap_by = snap_angle - state.rotation;
+					float snap_by = snap_angle - post_state.rotation;
 					// rotate by shortest angle
 					if (snap_by > glm::pi<float>())
 						snap_by -= glm::two_pi<float>();
@@ -404,7 +414,7 @@ namespace oly::physics
 					if (glm::abs(snap_by) <= angular_snapping.angle_threshold)
 					{
 						snap_by *= 1.0f + (angular_snapping.strength_offset - 1.0f) * glm::pow(glm::abs(snap_by / angular_snapping.angle_threshold), angular_snapping.strength);
-						state.rotation += snap_by;
+						post_state.rotation += snap_by;
 					}
 				}
 			}

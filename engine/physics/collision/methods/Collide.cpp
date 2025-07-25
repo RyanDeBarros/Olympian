@@ -243,14 +243,14 @@ namespace oly::col2d
 			info.overlap = overlaps(c1, c2);
 
 			UnitVector2D d(internal::CircleGlobalAccess::global_center(c2) - internal::CircleGlobalAccess::global_center(c1));
-			info.active_feature.position = internal::CircleGlobalAccess::global_center(c1) + c1.radius * (glm::vec2)d;
-			info.passive_feature.position = internal::CircleGlobalAccess::global_center(c2) - c2.radius * (glm::vec2)d;
+			info.active_contact.position = internal::CircleGlobalAccess::global_center(c1) + c1.radius * (glm::vec2)d;
+			info.passive_contact.position = internal::CircleGlobalAccess::global_center(c2) - c2.radius * (glm::vec2)d;
 
 			if (info.overlap)
 			{
-				info.active_feature.impulse = -(glm::vec2)d * (c1.radius + c2.radius
+				info.active_contact.impulse = -(glm::vec2)d * (c1.radius + c2.radius
 					- math::magnitude(internal::CircleGlobalAccess::global_center(c1) - internal::CircleGlobalAccess::global_center(c2)));
-				info.passive_feature.impulse = -info.active_feature.impulse;
+				info.passive_contact.impulse = -info.active_contact.impulse;
 			}
 
 			return info;
@@ -368,23 +368,31 @@ namespace oly::col2d
 
 		if (info.overlap)
 		{
-			float dx1 = c1.x2 - c2.x1;
-			float dx2 = c2.x2 - c1.x1;
-			float dy1 = c1.y2 - c2.y1;
-			float dy2 = c2.y2 - c1.y1;
+			const float dx1 = c1.x2 - c2.x1;
+			const float dx2 = c2.x2 - c1.x1;
+			const float dy1 = c1.y2 - c2.y1;
+			const float dy2 = c2.y2 - c1.y1;
 
-			float overlapX = std::min(glm::abs(dx1), glm::abs(dx2));
-			float overlapY = std::min(glm::abs(dy1), glm::abs(dy2));
+			const float overlapX = std::min(glm::abs(dx1), glm::abs(dx2));
+			const float overlapY = std::min(glm::abs(dy1), glm::abs(dy2));
 
 			if (overlapX < overlapY)
 			{
 				info.penetration_depth = overlapX;
-				info.unit_impulse = { -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2)), 0.0f };
+				const float sgn = -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2));
+				if (sgn > 0.0f)
+					info.unit_impulse = UnitVector2D::RIGHT;
+				else
+					info.unit_impulse = UnitVector2D::LEFT;
 			}
 			else
 			{
 				info.penetration_depth = overlapY;
-				info.unit_impulse = { 0.0f, -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2)) };
+				const float sgn = -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2));
+				if (sgn > 0.0f)
+					info.unit_impulse = UnitVector2D::UP;
+				else
+					info.unit_impulse = UnitVector2D::DOWN;
 			}
 		}
 
@@ -410,78 +418,78 @@ namespace oly::col2d
 			{
 				if (glm::abs(dx1) < glm::abs(dx2))
 				{
-					info.active_feature.position.x = c1.x2;
-					info.passive_feature.position.x = c2.x1;
+					info.active_contact.position.x = c1.x2;
+					info.passive_contact.position.x = c2.x1;
 
-					info.active_feature.impulse.x = -overlapX;
+					info.active_contact.impulse.x = -overlapX;
 				}
 				else
 				{
-					info.active_feature.position.x = c1.x1;
-					info.passive_feature.position.x = c2.x2;
+					info.active_contact.position.x = c1.x1;
+					info.passive_contact.position.x = c2.x2;
 
-					info.active_feature.impulse.x = overlapX;
+					info.active_contact.impulse.x = overlapX;
 				}
 
-				info.active_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
-				info.passive_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
+				info.active_contact.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
+				info.passive_contact.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
 
-				info.active_feature.impulse.y = 0.0f;
-				info.passive_feature.impulse.x = -info.active_feature.impulse.x;
-				info.passive_feature.impulse.y = 0.0f;
+				info.active_contact.impulse.y = 0.0f;
+				info.passive_contact.impulse.x = -info.active_contact.impulse.x;
+				info.passive_contact.impulse.y = 0.0f;
 			}
 			else
 			{
 				if (glm::abs(dy1) < glm::abs(dy2))
 				{
-					info.active_feature.position.y = c1.y2;
-					info.passive_feature.position.y = c2.y1;
+					info.active_contact.position.y = c1.y2;
+					info.passive_contact.position.y = c2.y1;
 
-					info.active_feature.impulse.y = -overlapY;
+					info.active_contact.impulse.y = -overlapY;
 				}
 				else
 				{
-					info.active_feature.position.y = c1.y1;
-					info.passive_feature.position.y = c2.y2;
+					info.active_contact.position.y = c1.y1;
+					info.passive_contact.position.y = c2.y2;
 
-					info.active_feature.impulse.y = overlapY;
+					info.active_contact.impulse.y = overlapY;
 				}
 
-				info.active_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
-				info.passive_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
+				info.active_contact.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
+				info.passive_contact.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
 
-				info.active_feature.impulse.x = 0.0f;
-				info.passive_feature.impulse.x = 0.0f;
-				info.passive_feature.impulse.y = -info.active_feature.impulse.y;
+				info.active_contact.impulse.x = 0.0f;
+				info.passive_contact.impulse.x = 0.0f;
+				info.passive_contact.impulse.y = -info.active_contact.impulse.y;
 			}
 		}
 		else // witness points - closest points on each AABB
 		{
 			if (c1.x1 > c2.x2) // c1 is right of c2
 			{
-				info.active_feature.position.x = c1.x1;
-				info.passive_feature.position.x = c2.x2;
+				info.active_contact.position.x = c1.x1;
+				info.passive_contact.position.x = c2.x2;
 			}
 			else if (c2.x1 > c1.x2) // c2 is right of c1
 			{
-				info.active_feature.position.x = c1.x2;
-				info.passive_feature.position.x = c2.x1;
+				info.active_contact.position.x = c1.x2;
+				info.passive_contact.position.x = c2.x1;
 			}
 			else // c1 and c2 overlap horizontally
-				info.passive_feature.position.x = info.active_feature.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
+				info.passive_contact.position.x = info.active_contact.position.x = 0.5f * (std::max(c1.x1, c2.x1) + std::min(c1.x2, c2.x2));
 
 			if (c1.y1 > c2.y2) // c1 is above c2
 			{
-				info.active_feature.position.y = c1.y1;
-				info.passive_feature.position.y = c2.y2;
+				info.active_contact.position.y = c1.y1;
+				info.passive_contact.position.y = c2.y2;
 			}
 			else if (c2.y1 > c1.y2) // c2 is above c1
 			{
-				info.active_feature.position.y = c1.y2;
-				info.passive_feature.position.y = c2.y1;
+				info.active_contact.position.y = c1.y2;
+				info.passive_contact.position.y = c2.y1;
 			}
 			else // c1 and c2 overlap vertically
-				info.passive_feature.position.y = info.active_feature.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
+				info.passive_contact.position.y = info.active_contact.position.y = 0.5f * (std::max(c1.y1, c2.y1) + std::min(c1.y2, c2.y2));
 		}
 
 		return info;
@@ -665,34 +673,34 @@ namespace oly::col2d
 		{
 			CollisionResult info{};
 
-			glm::vec2 center = internal::CircleGlobalAccess::global_center(c1);
+			const glm::vec2 center = internal::CircleGlobalAccess::global_center(c1);
 			// closest point on AABB to center of circle
-			glm::vec2 closest_point = { glm::clamp(center.x, c2.x1, c2.x2), glm::clamp(center.y, c2.y1, c2.y2) };
+			const glm::vec2 closest_point = { glm::clamp(center.x, c2.x1, c2.x2), glm::clamp(center.y, c2.y1, c2.y2) };
 
-			float dist_sqrd = math::mag_sqrd(center - closest_point);
+			const float dist_sqrd = math::mag_sqrd(center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;
 
 			if (info.overlap)
 			{
 				if (near_zero(dist_sqrd)) // circle center is inside AABB
 				{
-					float dx1 = center.x - c2.x1;
-					float dx2 = c2.x2 - center.x;
-					float dy1 = center.y - c2.y1;
-					float dy2 = c2.y2 - center.y;
+					const float dx1 = center.x - c2.x1;
+					const float dx2 = c2.x2 - center.x;
+					const float dy1 = center.y - c2.y1;
+					const float dy2 = c2.y2 - center.y;
 
-					float dx = std::min(dx1, dx2);
-					float dy = std::min(dy1, dy2);
+					const float dx = std::min(dx1, dx2);
+					const float dy = std::min(dy1, dy2);
 
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
 					}
 				}
 				else // circle center is outside AABB
@@ -736,28 +744,28 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
-						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
-						info.active_feature.position = center + glm::vec2{ dirX * c1.radius, 0.0f };
-						info.passive_feature.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, center.y };
+						info.active_contact.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
+						info.active_contact.position = center + glm::vec2{ dirX * c1.radius, 0.0f };
+						info.passive_contact.position = glm::vec2{ dx1 < dx2 ? c2.x1 : c2.x2, center.y };
 					}
 					else
 					{
 						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
-						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
-						info.active_feature.position = center + glm::vec2{ 0.0f, dirY * c1.radius };
-						info.passive_feature.position = glm::vec2{ center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
+						info.active_contact.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
+						info.active_contact.position = center + glm::vec2{ 0.0f, dirY * c1.radius };
+						info.passive_contact.position = glm::vec2{ center.x, dy1 < dy2 ? c2.y1 : c2.y2 };
 					}
-					info.passive_feature.impulse = -info.active_feature.impulse;
+					info.passive_contact.impulse = -info.active_contact.impulse;
 				}
 				else // circle center is outside AABB
 				{
 					UnitVector2D displacement(closest_point - center);
 
-					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
-					info.active_feature.position = center + c1.radius * (glm::vec2)displacement;
+					info.active_contact.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
+					info.active_contact.position = center + c1.radius * (glm::vec2)displacement;
 
-					info.passive_feature.impulse = -info.active_feature.impulse;
-					info.passive_feature.position = closest_point;
+					info.passive_contact.impulse = -info.active_contact.impulse;
+					info.passive_contact.position = closest_point;
 				}
 			}
 
@@ -790,38 +798,38 @@ namespace oly::col2d
 		{
 			CollisionResult info{};
 
-			glm::vec2 center = internal::CircleGlobalAccess::global_center(c1);
+			const glm::vec2 center = internal::CircleGlobalAccess::global_center(c1);
 			// closest point on OBB to center of circle
-			glm::mat2 rot = c2.get_rotation_matrix();
-			glm::mat2 inv_rot = glm::inverse(rot);
-			glm::vec2 local_c1_center = inv_rot * center;
-			glm::vec2 local_c2_center = inv_rot * c2.center;
-			AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
-			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
-			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
+			const glm::mat2 rot = c2.get_rotation_matrix();
+			const glm::mat2 inv_rot = glm::inverse(rot);
+			const glm::vec2 local_c1_center = inv_rot * center;
+			const glm::vec2 local_c2_center = inv_rot * c2.center;
+			const AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
+			const glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
+			const float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;
 
 			if (info.overlap)
 			{
 				if (near_zero(dist_sqrd)) // circle center is inside OBB
 				{
-					float dx1 = local_c1_center.x - b2.x1;
-					float dx2 = b2.x2 - center.x;
-					float dy1 = local_c1_center.y - b2.y1;
-					float dy2 = b2.y2 - center.y;
+					const float dx1 = local_c1_center.x - b2.x1;
+					const float dx2 = b2.x2 - center.x;
+					const float dy1 = local_c1_center.y - b2.y1;
+					const float dy2 = b2.y2 - center.y;
 
-					float dx = std::min(dx1, dx2);
-					float dy = std::min(dy1, dy2);
+					const float dx = std::min(dx1, dx2);
+					const float dy = std::min(dy1, dy2);
 
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = { dx1 < dx2 ? -1.0f : 1.0f, 0.0f };
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = { 0.0f, dy1 < dy2 ? -1.0f : 1.0f };
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
 					}
 				}
 				else // circle center is outside OBB
@@ -874,35 +882,35 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						float dirX = dx1 < dx2 ? 1.0f : -1.0f;
-						info.active_feature.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
-						info.active_feature.position = local_c1_center + glm::vec2{ dirX * c1.radius, 0.0f };
-						info.passive_feature.position = glm::vec2{ dx1 < dx2 ? b2.x1 : b2.x2, local_c1_center.y };
+						info.active_contact.impulse = (dx + c1.radius) * glm::vec2{ -dirX, 0.0f };
+						info.active_contact.position = local_c1_center + glm::vec2{ dirX * c1.radius, 0.0f };
+						info.passive_contact.position = glm::vec2{ dx1 < dx2 ? b2.x1 : b2.x2, local_c1_center.y };
 					}
 					else
 					{
 						float dirY = dy1 < dy2 ? 1.0f : -1.0f;
-						info.active_feature.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
-						info.active_feature.position = local_c1_center + glm::vec2{ 0.0f, dirY * c1.radius };
-						info.passive_feature.position = glm::vec2{ local_c1_center.x, dy1 < dy2 ? b2.y1 : b2.y2 };
+						info.active_contact.impulse = (dy + c1.radius) * glm::vec2{ 0.0f, -dirY };
+						info.active_contact.position = local_c1_center + glm::vec2{ 0.0f, dirY * c1.radius };
+						info.passive_contact.position = glm::vec2{ local_c1_center.x, dy1 < dy2 ? b2.y1 : b2.y2 };
 					}
-					info.passive_feature.impulse = -info.active_feature.impulse;
+					info.passive_contact.impulse = -info.active_contact.impulse;
 				}
 				else // circle center is outside OBB
 				{
 					UnitVector2D displacement(closest_point - local_c1_center);
 
-					info.active_feature.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
-					info.active_feature.position = local_c1_center + c1.radius * (glm::vec2)displacement;
+					info.active_contact.impulse = (glm::sqrt(dist_sqrd) - c1.radius) * (glm::vec2)displacement;
+					info.active_contact.position = local_c1_center + c1.radius * (glm::vec2)displacement;
 
-					info.passive_feature.impulse = -info.active_feature.impulse;
-					info.passive_feature.position = closest_point;
+					info.passive_contact.impulse = -info.active_contact.impulse;
+					info.passive_contact.position = closest_point;
 				}
 			}
 
-			info.active_feature.impulse = rot * info.active_feature.impulse;
-			info.active_feature.position = rot * info.active_feature.position;
-			info.passive_feature.impulse = rot * info.passive_feature.impulse;
-			info.passive_feature.position = rot * info.passive_feature.position;
+			info.active_contact.impulse = rot * info.active_contact.impulse;
+			info.active_contact.position = rot * info.active_contact.position;
+			info.passive_contact.impulse = rot * info.passive_contact.impulse;
+			info.passive_contact.position = rot * info.passive_contact.position;
 
 			return info;
 		}

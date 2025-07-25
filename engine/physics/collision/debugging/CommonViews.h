@@ -4,17 +4,17 @@
 
 namespace oly::debug
 {
-	inline CollisionView collision_view(const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f)
+	inline CollisionView collision_view(const col2d::ContactResult::Contact& contact, glm::vec4 color, float arrow_width = 6.0f)
 	{
 		rendering::StaticArrowExtension impulse;
 		impulse.set_color(color);
 		impulse.adjust_standard_head_for_width(arrow_width);
-		impulse.set_start() = feature.position;
-		impulse.set_end() = feature.position + feature.impulse;
+		impulse.set_start() = contact.position;
+		impulse.set_end() = contact.position + contact.impulse;
 		return CollisionView(std::move(impulse));
 	}
 
-	inline void update_view(CollisionView& view, const col2d::ContactResult::Feature& feature, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
+	inline void update_view(CollisionView& view, const col2d::ContactResult::Contact& contact, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
 		bool modify = std::visit([](const auto& obj) -> bool {
@@ -29,8 +29,8 @@ namespace oly::debug
 			rendering::StaticArrowExtension& impulse = std::get<CollisionObjectType::ARROW>(obj);
 			impulse.set_color(color);
 			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = feature.position;
-			impulse.set_end() = feature.position + feature.impulse;
+			impulse.set_start() = contact.position;
+			impulse.set_end() = contact.position + contact.impulse;
 			view.view_changed();
 		}
 		else
@@ -38,13 +38,13 @@ namespace oly::debug
 			rendering::StaticArrowExtension impulse;
 			impulse.set_color(color);
 			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = feature.position;
-			impulse.set_end() = feature.position + feature.impulse;
+			impulse.set_start() = contact.position;
+			impulse.set_end() = contact.position + contact.impulse;
 			view.set_view(std::move(impulse));
 		}
 	}
 
-	inline void update_view_no_color(CollisionView& view, const col2d::ContactResult::Feature& feature, float arrow_width = 6.0f, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, const col2d::ContactResult::Contact& contact, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
 		bool modify = std::visit([](const auto& obj) -> bool {
@@ -58,16 +58,16 @@ namespace oly::debug
 		{
 			rendering::StaticArrowExtension& impulse = std::get<CollisionObjectType::ARROW>(obj);
 			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = feature.position;
-			impulse.set_end() = feature.position + feature.impulse;
+			impulse.set_start() = contact.position;
+			impulse.set_end() = contact.position + contact.impulse;
 			view.view_changed();
 		}
 		else
 		{
 			rendering::StaticArrowExtension impulse;
 			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = feature.position;
-			impulse.set_end() = feature.position + feature.impulse;
+			impulse.set_start() = contact.position;
+			impulse.set_end() = contact.position + contact.impulse;
 			view.set_view(std::move(impulse));
 		}
 	}

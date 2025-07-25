@@ -18,7 +18,16 @@ namespace oly
 	public:
 		UnitVector2D() : _direction({ 1.0f, 0.0f }) {}
 		UnitVector2D(glm::vec2 direction) : _direction(glm::normalize(direction)) {}
-		UnitVector2D(float angle) : _direction(glm::cos(angle), glm::sin(angle)) {}
+		UnitVector2D(float angle, float tolerance = 1e-7f) : _direction(glm::cos(angle), glm::sin(angle))
+		{
+			if (tolerance > 0.0f)
+			{
+				const float inv_tolerance = 1.0f / tolerance;
+				_direction.x = roundf(_direction.x * inv_tolerance) * tolerance;
+				_direction.y = roundf(_direction.y * inv_tolerance) * tolerance;
+				_direction = glm::normalize(_direction);
+			}
+		}
 
 	private:
 		UnitVector2D(glm::vec2 direction, _direct) : _direction(direction) {}

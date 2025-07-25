@@ -29,7 +29,7 @@ namespace oly::col2d
 
 	ContactEventData::ContactEventData(const ContactResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior)
 		: phase(next_phase(result.overlap, prior)), active_collider(active_collider), passive_collider(passive_collider),
-		active_contact(result.active_feature), passive_contact(result.passive_feature)
+		active_contact(result.active_contact), passive_contact(result.passive_contact)
 	{
 	}
 

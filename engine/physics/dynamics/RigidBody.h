@@ -9,6 +9,8 @@
 
 namespace oly::physics
 {
+	namespace internal { class RigidBodyManager; }
+
 	class RigidBody : public col2d::CollisionController
 	{
 		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
@@ -21,7 +23,7 @@ namespace oly::physics
 		DynamicsComponent dynamics;
 
 	public:
-		RigidBody() = default;
+		RigidBody();
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
 		~RigidBody();
@@ -63,8 +65,12 @@ namespace oly::physics
 		void update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const;
 		void update_view(size_t i, debug::CollisionView& view) const;
 
-		void on_tick();
+	private:
+		friend class internal::RigidBodyManager;
+		void physics_pre_tick();
+		void physics_post_tick();
 
+	public:
 		const MaterialRef& material() const { return dynamics.material; }
 		MaterialRef& material() { return dynamics.material; }
 		const Properties& properties() const { return dynamics.properties; }
@@ -87,4 +93,32 @@ namespace oly::physics
 	};
 
 	typedef SmartHandle<RigidBody> RigidBodyRef;
+
+	namespace internal
+	{
+		class RigidBodyManager
+		{
+			friend class RigidBody;
+			std::unordered_set<RigidBody*> rigid_bodies;
+
+			RigidBodyManager() = default;
+			RigidBodyManager(const RigidBodyManager&) = delete;
+			RigidBodyManager(RigidBodyManager&&) = delete;
+			~RigidBodyManager() { clear(); }
+
+		public:
+			static RigidBodyManager& instance()
+			{
+				static RigidBodyManager manager;
+				return manager;
+			}
+
+			void on_tick() const;
+
+			void clear()
+			{
+				rigid_bodies.clear();
+			}
+		};
+	}
 }
