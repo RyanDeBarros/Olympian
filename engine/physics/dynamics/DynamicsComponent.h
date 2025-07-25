@@ -84,6 +84,18 @@ namespace oly::physics
 			bool only_colliding = false;
 		} angular_snapping;
 
+		struct
+		{
+			bool enable = false;
+			bool only_colliding = false;
+		} linear_x_snapping;
+
+		struct
+		{
+			bool enable = false;
+			bool only_colliding = false;
+		} linear_y_snapping;
+
 	private:
 		friend class DynamicsComponent;
 		glm::vec2 dv_psi() const;

@@ -37,7 +37,7 @@ namespace oly::physics
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 1.0f;
 
-		struct
+		struct CollisionDamping
 		{
 			// linear penetration damping controls how much penetration motion into another collider is clamped.
 			// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
@@ -61,7 +61,7 @@ namespace oly::physics
 			PositiveFloat angular_bounce_jitter_threshold = 0.001f;
 		} collision_damping;
 
-		struct
+		struct Blending
 		{
 			FactorBlendOp restitution = FactorBlendOp::MINIMUM;
 			FactorBlendOp static_friction = FactorBlendOp::GEOMETRIC_MEAN;
@@ -69,14 +69,43 @@ namespace oly::physics
 			FactorBlendOp rolling_friction = FactorBlendOp::GEOMETRIC_MEAN;
 		} blending;
 
-		struct
+		struct AngularSnapping
 		{
 			PositiveFloat speed_threshold = 0.1f;
 			PositiveFloat angle_threshold = glm::radians(10.0f);
 			std::set<BoundedRadians> snaps;
 			StrictlyPositiveFloat strength = 1.0f;
 			BoundedUnitInterval strength_offset = 0.2f;
+
+			void set_uniformly_spaced_without_threshold(const size_t angles, float angle_offset = 0.0f)
+			{
+				snaps.clear();
+				const float multiple = glm::two_pi<float>() / angles;
+				for (size_t i = 0; i < angles; ++i)
+					snaps.insert(i * multiple + angle_offset);
+			}
+
+			void set_uniformly_spaced(const size_t angles, float angle_offset = 0.0f)
+			{
+				snaps.clear();
+				const float multiple = glm::two_pi<float>() / angles;
+				for (size_t i = 0; i < angles; ++i)
+					snaps.insert(i * multiple + angle_offset);
+				angle_threshold = glm::pi<float>() / angles;
+			}
 		} angular_snapping;
+
+		struct LinearSnapping
+		{
+			PositiveFloat speed_threshold = 0.1f;
+			PositiveFloat position_threshold = 3.0f;
+			float snap_width = 50.0f;
+			float snap_offset = 0.0f;
+			StrictlyPositiveFloat strength = 1.0f;
+			BoundedUnitInterval strength_offset = 0.2f;
+		};
+
+		LinearSnapping linear_x_snapping, linear_y_snapping;
 
 		float static_friction() const { return _static_friction; }
 		float sqrt_static_friction() const { return _sqrt_static_friction; }

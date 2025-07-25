@@ -200,7 +200,8 @@ namespace oly::physics
 
 	void DynamicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity) const
 	{
-		// collision position update
+		// determine teleportation
+		// update angular collision impulse
 
 		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
 		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
@@ -218,7 +219,7 @@ namespace oly::physics
 				collision_angular_impulse += math::cross(secondary_collision.contact - properties.center_of_mass, secondary_teleport * TIME.inverse_delta() * properties.mass());
 		}
 
-		// natural position update
+		// restrict velocity-based motion against teleportation
 
 		UnitVector2D teleport_axis(teleport);
 		glm::vec2 dx_v = new_velocity * TIME.delta();
@@ -230,9 +231,12 @@ namespace oly::physics
 			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
 		
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
+
+		// update position
+
 		post_state.position += teleport + dx_v;
 
-		// velocity update
+		// update velocity
 
 		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
 		if (material->linear_drag > 0.0f)
@@ -241,7 +245,7 @@ namespace oly::physics
 
 	void DynamicsComponent::update_colliding_angular_motion(float new_velocity) const
 	{
-		// collision rotation update
+		// determine teleportation
 
 		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
 		float teleport = math::cross(primary_collision.contact - properties.center_of_mass, primary_collision.mtv) * teleport_factor(*primary_collision.dynamics);
@@ -252,6 +256,8 @@ namespace oly::physics
 			teleport += math::cross(secondary_collision.contact - properties.center_of_mass, mtv) * teleport_factor(*secondary_collision.dynamics);
 		}
 
+		// dampen teleportation
+
 		teleport *= properties.mass() * properties.moi_inverse();
 		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
 			teleport = glm::sign(teleport) * (1.0f - material->collision_damping.angular_teleportation.inner())
@@ -259,23 +265,26 @@ namespace oly::physics
 		else
 			teleport = 0.0f;
 
+		// dampen bounce
+
 		float bounce = collision_angular_impulse * properties.moi_inverse();
-		LOG << bounce << "\t";
 		if (glm::abs(bounce) > material->collision_damping.angular_bounce_jitter_threshold)
 			bounce = glm::sign(bounce) * (1.0f - material->collision_damping.angular_restitution.inner())
 				* glm::log(glm::abs(bounce) * material->collision_damping.angular_bounce_inverse_drag + 1.0f);
 		else
 			bounce = 0.0f;
-		LOG << bounce << LOG.nl;
 
-		// natural rotation udpate
+		// update new velocity
 
-		new_velocity += bounce;
+		new_velocity += bounce + teleport * TIME.inverse_delta();
+
+		// update rotation
+
 		post_state.rotation += new_velocity * TIME.delta();
 
-		// velocity update
+		// update velocity
 
-		post_state.angular_velocity = new_velocity + teleport * TIME.inverse_delta();
+		post_state.angular_velocity = new_velocity;
 		if (material->angular_drag > 0.0f)
 			post_state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
 	}
@@ -410,10 +419,10 @@ namespace oly::physics
 			{
 				if (glm::abs(post_state.angular_velocity) <= angular_snapping.speed_threshold)
 				{
-					float snap_angle = find_closest(angular_snapping.snaps, post_state.rotation,
+					const float snap_to = find_closest(angular_snapping.snaps, post_state.rotation,
 						[](decltype(angular_snapping.snaps)::key_type a, decltype(angular_snapping.snaps)::key_type b) { return unsigned_fmod(b - a, glm::two_pi<float>()); });
 
-					float snap_by = snap_angle - post_state.rotation;
+					float snap_by = snap_to - post_state.rotation;
 					// rotate by shortest angle
 					if (snap_by > glm::pi<float>())
 						snap_by -= glm::two_pi<float>();
@@ -422,14 +431,33 @@ namespace oly::physics
 
 					if (glm::abs(snap_by) <= angular_snapping.angle_threshold)
 					{
-						snap_by *= 1.0f + (angular_snapping.strength_offset - 1.0f) * glm::pow(glm::abs(snap_by / angular_snapping.angle_threshold), angular_snapping.strength);
-						post_state.rotation += snap_by;
+						const float proportion = glm::abs(snap_by / angular_snapping.angle_threshold);
+						post_state.rotation += snap_by * (1.0f + (angular_snapping.strength_offset - 1.0f) * glm::pow(proportion, angular_snapping.strength));
 					}
 				}
 			}
 		}
 
-		// TODO v2 linear snapping
+		// linear snapping
+		static const auto linear_snapping = [](const Material::LinearSnapping& snapping, State& state, glm::length_t dim) {
+			if (glm::abs(state.linear_velocity[dim]) <= snapping.speed_threshold)
+			{
+				float snap_by = int((state.position[dim] - snapping.snap_offset) / snapping.snap_width) * snapping.snap_width + snapping.snap_offset - state.position[dim];
+				if (glm::abs(snap_by) <= snapping.position_threshold)
+				{
+					const float proportion = glm::abs(snap_by / snapping.position_threshold);
+					state.position[dim] = snap_by * (1.0f + (snapping.strength_offset - 1.0f) * glm::pow(proportion, snapping.strength));
+				}
+			}
+			};
+
+		// linear snapping (X)
+		if (properties.linear_x_snapping.enable && (!collisions.empty() || !properties.linear_x_snapping.only_colliding))
+			linear_snapping(material->linear_x_snapping, post_state, 0);
+
+		// linear snapping (Y)
+		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
+			linear_snapping(material->linear_y_snapping, post_state, 1);
 	}
 
 	static float moment_of_inertia(const math::Polygon2D& p, float mass, glm::vec2 offset = {})
