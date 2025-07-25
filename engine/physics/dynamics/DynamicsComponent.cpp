@@ -259,9 +259,18 @@ namespace oly::physics
 		else
 			teleport = 0.0f;
 
+		float bounce = collision_angular_impulse * properties.moi_inverse();
+		LOG << bounce << "\t";
+		if (glm::abs(bounce) > material->collision_damping.angular_bounce_jitter_threshold)
+			bounce = glm::sign(bounce) * (1.0f - material->collision_damping.angular_restitution.inner())
+				* glm::log(glm::abs(bounce) * material->collision_damping.angular_bounce_inverse_drag + 1.0f);
+		else
+			bounce = 0.0f;
+		LOG << bounce << LOG.nl;
+
 		// natural rotation udpate
 
-		new_velocity += collision_angular_impulse * properties.moi_inverse();
+		new_velocity += bounce;
 		post_state.rotation += new_velocity * TIME.delta();
 
 		// velocity update

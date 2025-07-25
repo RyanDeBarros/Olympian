@@ -53,8 +53,12 @@ namespace oly::physics
 			BoundedUnitInterval angular_teleport_inverse_drag = 0.6f;
 			
 			// angular teleportation values under jitter threshold are fully dampened.
-			PositiveFloat angular_jitter_threshold = 0.001f;
+			PositiveFloat angular_jitter_threshold = 0.005f;
 
+			// Same parameters but for angular impulse due to restitution, not teleportation.
+			PowerInterval angular_restitution = PowerInterval(0.5f);
+			BoundedUnitInterval angular_bounce_inverse_drag = 0.9f;
+			PositiveFloat angular_bounce_jitter_threshold = 0.001f;
 		} collision_damping;
 
 		struct

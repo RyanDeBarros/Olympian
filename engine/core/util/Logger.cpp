@@ -196,6 +196,12 @@ namespace oly
 		return *this;
 	}
 
+	Logger& Logger::operator<<(const void* c)
+	{
+		stream << c;
+		return *this;
+	}
+
 	Logger& Logger::operator<<(const char* c)
 	{
 		stream << c;

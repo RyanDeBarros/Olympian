@@ -83,6 +83,7 @@ namespace oly
 		Logger& operator<<(const _begin_temp&);
 		Logger& operator<<(const _end_temp&);
 
+		Logger& operator<<(const void*);
 		Logger& operator<<(const char*);
 		Logger& operator<<(const std::string&);
 		Logger& operator<<(bool);
