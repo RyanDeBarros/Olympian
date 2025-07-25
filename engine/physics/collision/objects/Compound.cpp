@@ -4,35 +4,35 @@
 
 namespace oly::col2d
 {
-	float Compound::projection_max(const UnitVector2D& axis) const
+	float Compound::projection_max(UnitVector2D axis) const
 	{
 		float proj_max = -nmax<float>();
 		for (const Element& element : elements)
-			proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+			proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
 		return proj_max;
 	}
 	
-	float Compound::projection_min(const UnitVector2D& axis) const
+	float Compound::projection_min(UnitVector2D axis) const
 	{
 		float proj_min = nmax<float>();
 		for (const Element& element : elements)
-			proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+			proj_min = std::min(proj_min, ElementPtr(element).projection_min(axis));
 		return proj_min;
 	}
 
-	float TCompound::projection_max(const UnitVector2D& axis) const
+	float TCompound::projection_max(UnitVector2D axis) const
 	{
 		float proj_max = -nmax<float>();
 		for (const Element& element : get_baked())
-			proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+			proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
 		return proj_max;
 	}
 
-	float TCompound::projection_min(const UnitVector2D& axis) const
+	float TCompound::projection_min(UnitVector2D axis) const
 	{
 		float proj_min = nmax<float>();
 		for (const Element& element : get_baked())
-			proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+			proj_min = std::min(proj_min, ElementPtr(element).projection_min(axis));
 		return proj_min;
 	}
 
@@ -46,7 +46,7 @@ namespace oly::col2d
 		return false;
 	}
 
-	OverlapResult ray_hits(const Compound& c, const Ray& ray)
+	OverlapResult ray_hits(const Compound& c, Ray ray)
 	{
 		for (const auto& element : c.elements)
 		{
@@ -56,7 +56,7 @@ namespace oly::col2d
 		return false;
 	}
 
-	RaycastResult raycast(const Compound& c, const Ray& ray)
+	RaycastResult raycast(const Compound& c, Ray ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::NO_HIT };
 		float closest_dist_sqrd = nmax<float>();
@@ -83,7 +83,7 @@ namespace oly::col2d
 		baked.resize(compound.elements.size());
 		glm::mat3 g = transformer.global();
 		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& e) { return transform_element(param(e), g); }, compound.elements[i]);
+			baked[i] = std::visit([&g](auto&& e) { return ElementPtr(e).transformed(g); }, compound.elements[i]);
 		dirty = false;
 	}
 
@@ -93,7 +93,7 @@ namespace oly::col2d
 		return point_hits(c.get_compound(), local_test);
 	}
 	
-	OverlapResult ray_hits(const TCompound& c, const Ray& ray)
+	OverlapResult ray_hits(const TCompound& c, Ray ray)
 	{
 		glm::mat3 m = glm::inverse(c.get_transformer().global());
 		Ray local_ray = { .origin = transform_point(m, ray.origin) };
@@ -111,7 +111,7 @@ namespace oly::col2d
 		return ray_hits(c.get_compound(), local_ray);
 	}
 	
-	RaycastResult raycast(const TCompound& c, const Ray& ray)
+	RaycastResult raycast(const TCompound& c, Ray ray)
 	{
 		glm::mat3 g = c.get_transformer().global();
 		glm::mat3 m = glm::inverse(g);

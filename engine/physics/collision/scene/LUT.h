@@ -12,8 +12,8 @@ namespace oly::col2d::internal
 	extern void load_luts();
 
 	extern OverlapResult lut_point_hits(const ColliderObject&, glm::vec2);
-	extern OverlapResult lut_ray_hits(const ColliderObject&, const Ray&);
-	extern RaycastResult lut_raycast(const ColliderObject&, const Ray&);
+	extern OverlapResult lut_ray_hits(const ColliderObject&, Ray);
+	extern RaycastResult lut_raycast(const ColliderObject&, Ray);
 	extern OverlapResult lut_overlaps(const ColliderObject&, const ColliderObject&);
 	extern CollisionResult lut_collides(const ColliderObject&, const ColliderObject&);
 	extern ContactResult lut_contacts(const ColliderObject&, const ColliderObject&);

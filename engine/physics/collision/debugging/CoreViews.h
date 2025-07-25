@@ -226,32 +226,32 @@ namespace oly::debug
 
 	inline CollisionView collision_view(const col2d::Element& c, glm::vec4 color)
 	{
-		return std::visit([color](const auto& e) { return collision_view(*e, color); }, param(c));
+		return std::visit([color](const auto& e) { return collision_view(*e, color); }, col2d::ElementPtr(c).variant());
 	}
 
 	inline void update_view(CollisionView& view, const col2d::Element& c, glm::vec4 color, size_t view_index = 0)
 	{
-		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, param(c));
+		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, col2d::ElementPtr(c).variant());
 	}
 
 	inline void update_view_no_color(CollisionView& view, const col2d::Element& c, size_t view_index = 0)
 	{
-		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, param(c));
+		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, col2d::ElementPtr(c).variant());
 	}
 
-	inline CollisionView collision_view(const col2d::ElementParam& c, glm::vec4 color)
+	inline CollisionView collision_view(col2d::ElementPtr c, glm::vec4 color)
 	{
-		return std::visit([color](const auto& e) { return collision_view(*e, color); }, c);
+		return std::visit([color](const auto& e) { return collision_view(*e, color); }, c.variant());
 	}
 
-	inline void update_view(CollisionView& view, const col2d::ElementParam& c, glm::vec4 color, size_t view_index = 0)
+	inline void update_view(CollisionView& view, col2d::ElementPtr c, glm::vec4 color, size_t view_index = 0)
 	{
-		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, c);
+		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, c.variant());
 	}
 
-	inline void update_view_no_color(CollisionView& view, const col2d::ElementParam& c, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, col2d::ElementPtr c, size_t view_index = 0)
 	{
-		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, c);
+		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, c.variant());
 	}
 
 	inline CollisionView collision_view(const col2d::Primitive& c, glm::vec4 color)

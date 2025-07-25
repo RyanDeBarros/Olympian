@@ -1,258 +1,209 @@
 #include "Element.h"
 
 #include "core/base/Transforms.h"
-#include "core/algorithms/GoldenSectionSearch.h"
-#include "core/containers/FixedVector.h"
 #include "physics/collision/methods/Collide.h"
+#include "physics/collision/methods/KDOPCollide.h"
 
 namespace oly::col2d
 {
-	ElementParam param(const Element& e)
+	void ElementPtr::set(const Element& e)
 	{
-		return std::visit([](auto&& e) -> ElementParam {
-			if constexpr (is_copy_ptr<decltype(e)>)
-				return e.get();
-			else
-				return &e;
+#define OLY_ELEMENT_REGULAR_SET(Class, Enum)\
+		if constexpr (visiting_class_is<decltype(e), Class>)\
+		{\
+			ptr = &e;\
+			id = Enum;\
+		}
+
+#define OLY_ELEMENT_COPY_PTR_SET(Class, Enum)\
+		if constexpr (visiting_class_is<decltype(e), CopyPtr<Class>>)\
+		{\
+			ptr = &e;\
+			id = Enum;\
+		}
+
+		std::visit([this](const auto& e) {
+			ptr = nullptr;
+			id = ID::NONE;
+			OLY_ELEMENT_REGULAR_SET(Circle, ID::CIRCLE);
+			OLY_ELEMENT_REGULAR_SET(AABB, ID::AABB);
+			OLY_ELEMENT_REGULAR_SET(OBB, ID::OBB);
+			OLY_ELEMENT_REGULAR_SET(ConvexHull, ID::CONVEX_HULL);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP2, ID::KDOP2);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP3, ID::KDOP3);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP4, ID::KDOP4);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP5, ID::KDOP5);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP6, ID::KDOP6);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP7, ID::KDOP7);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP8, ID::KDOP8);
 			}, e);
+
+#undef OLY_ELEMENT_REGULAR_SET
+#undef OLY_ELEMENT_COPY_PTR_SET
 	}
 
-	static float projection_max(const UnitVector2D& axis, const ElementParam& el)
-	{
-		return std::visit([&axis](auto&& el) { return el->projection_max(axis); }, el);
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class, Enum)\
+	case Enum:\
+		Macro(static_cast<const Class*>(ptr))\
+		break;
+
+#define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
+	switch (id)\
+	{\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle, ID::CIRCLE);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB, ID::AABB);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, OBB, ID::OBB);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, ConvexHull, ID::CONVEX_HULL);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP2, ID::KDOP2);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP2, ID::KDOP3);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP4, ID::KDOP4);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP5, ID::KDOP5);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP6, ID::KDOP6);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7, ID::KDOP7);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8, ID::KDOP8);\
+		default:\
+			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
 	}
 
-	static float projection_min(const UnitVector2D& axis, const ElementParam& el)
+	float ElementPtr::projection_max(UnitVector2D axis) const
 	{
-		return std::visit([&axis](auto&& el) { return el->projection_min(axis); }, el);
+#define OLY_ELEMENT_PROJECTION_MAX(p) return p->projection_max(axis);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_PROJECTION_MAX);
+#undef OLY_ELEMENT_PROJECTION_MAX
 	}
 
-	//struct FullMTVResult
-	//{
-	//	bool overlap;
-	//	UnitVector2D unit_impulse;
-	//	float penetration_depth;
-	//	float active_
-	//};
-
-	struct MTVPosNeg
+	float ElementPtr::projection_min(UnitVector2D axis) const
 	{
-		bool overlap = false;
-		UnitVector2D unit_impulse;
-		float forward_depth = 0.0f;
-		float backward_depth = 0.0f;
-
-		glm::vec2 forward_mtv() const { return forward_depth * (glm::vec2)unit_impulse; }
-		glm::vec2 backward_mtv() const { return backward_depth * (glm::vec2)-unit_impulse; }
-	};
-
-	static MTVPosNeg generate_mtv(const ElementParam& active_element, const ElementParam& static_element)
-	{
-		MTVPosNeg mtv;
-		CollisionResult collision = collides(active_element, static_element);
-		if (collision.overlap)
-		{
-			mtv.overlap = true;
-			mtv.unit_impulse = collision.unit_impulse;
-			mtv.forward_depth = collision.penetration_depth;
-			mtv.backward_depth = projection_max(-mtv.unit_impulse, static_element) - projection_min(-mtv.unit_impulse, active_element);
-		}
-		return mtv;
+#define OLY_ELEMENT_PROJECTION_MIN(p) return p->projection_min(axis);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_PROJECTION_MIN);
+#undef OLY_ELEMENT_PROJECTION_MIN
 	}
 
-	static float separation(const UnitVector2D& axis, const ElementParam& active_element, const ElementParam& static_element, const MTVPosNeg& mtv)
+	fpair ElementPtr::projection_interval(UnitVector2D axis) const
 	{
-		if (mtv.overlap)
-		{
-			if (col2d::approx(axis, mtv.unit_impulse))
-				return mtv.forward_depth;
-			else if (col2d::approx(axis, -mtv.unit_impulse))
-				return mtv.backward_depth;
-			else
-			{
-				float separation_along_axis = projection_max(axis, static_element) - projection_min(axis, active_element);
-				float dot = axis.dot(mtv.unit_impulse);
-				if (near_zero(dot))
-					return separation_along_axis;
-				float overfitting_depth = 0.0f;
-				if (dot > 0.0f)
-					overfitting_depth = mtv.forward_depth * mtv.forward_depth / axis.dot(mtv.forward_mtv());
-				else
-					overfitting_depth = mtv.backward_depth * mtv.backward_depth / axis.dot(mtv.backward_mtv());
-				// this upper bound is only possible because Elements are convex.
-				return std::min(overfitting_depth, separation_along_axis);
-			}
-		}
-		else
-		{
-			// LATER ? pre-emptive check if active will overlap static if travelling on some separation interval.
-			// If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0,
-			// else return additional separation needed for active to overtake/pass static.
-			return 0.0f;
-		}
+#define OLY_ELEMENT_PROJECTION_INTERVAL(p) return p->projection_interval(axis);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_PROJECTION_INTERVAL);
+#undef OLY_ELEMENT_PROJECTION_INTERVAL
 	}
 
-	static FixedVector<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const ElementParam& static_element)
+	ContactManifold ElementPtr::deepest_manifold(UnitVector2D axis) const
 	{
-		FixedVector<MTVPosNeg> mtvs(num_active_elements);
-		for (size_t i = 0; i < num_active_elements; ++i)
-			mtvs[i] = generate_mtv(param(active_elements[i]), static_element);
-		return mtvs;
+#define OLY_ELEMENT_PROJECTION_DEEPEST_MANIFOLD(p) return p->deepest_manifold(axis);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_PROJECTION_DEEPEST_MANIFOLD);
+#undef OLY_ELEMENT_PROJECTION_DEEPEST_MANIFOLD
 	}
 
-	static FixedVector<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	Element ElementPtr::transformed(const glm::mat3& m) const
 	{
-		FixedVector<MTVPosNeg> mtvs(num_active_elements * num_static_elements);
-		for (size_t i = 0; i < num_active_elements; ++i)
-			for (size_t j = 0; j < num_static_elements; ++j)
-				mtvs[i * num_static_elements + j] = generate_mtv(param(active_elements[i]), param(static_elements[j]));
-		return mtvs;
+#define OLY_ELEMENT_TRANSFORMED(p) return internal::transform_element(*p, m);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_TRANSFORMED);
+#undef OLY_ELEMENT_TRANSFORMED
 	}
 
-	template<typename SeparationFunc>
-	CollisionResult compound_collision_generic(SeparationFunc separation, const CompoundPerfParameters perf)
+	ElementPtr::ElementVariant ElementPtr::variant() const
 	{
-		CollisionResult laziest{ .overlap = true, .penetration_depth = nmax<float>() };
+#define OLY_ELEMENT_VARIANT(p) return p;
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_VARIANT);
+#undef OLY_ELEMENT_VARIANT
+	}
 
-		// coarse sweep
-		int minimizing_axis = 0;
-		for (size_t i = 0; i < perf.get_coarse_sweep_divisions(); ++i)
-		{
-			UnitVector2D axis((float)i * perf.get_two_pi_over_divisions());
-			float sep = separation(axis);
-			if (sep <= 0.0f)
-				return { .overlap = false };
-			else if (sep < laziest.penetration_depth)
-			{
-				laziest.penetration_depth = sep;
-				laziest.unit_impulse = axis;
-				minimizing_axis = (int)i;
-			}
+	AABB ElementPtr::aabb_wrap() const
+	{
+		if (id == ID::AABB)
+			return *static_cast<const AABB*>(ptr);
+
+#define OLY_ELEMENT_AABB_WRAP(p)\
+		{\
+			fpair ix = p->projection_interval(UnitVector2D::RIGHT);\
+			fpair iy = p->projection_interval(UnitVector2D::UP);\
+			return AABB{ .x1 = ix.first, .x2 = ix.second, .y1 = iy.first, .y2 = iy.second };\
 		}
 
-		// golden-search refinement
-		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
-			(float)(minimizing_axis - 1) * perf.get_two_pi_over_divisions(), (float)(minimizing_axis + 1) * perf.get_two_pi_over_divisions(), perf.refinement_error_threshold, 0.0f);
-
-		if (search_result.early_exited)
-			return { .overlap = false };
-
-		if (search_result.output < laziest.penetration_depth)
-		{
-			laziest.unit_impulse = UnitVector2D(search_result.input);
-			laziest.penetration_depth = search_result.output;
-		}
-		return laziest;
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_AABB_WRAP);
+#undef OLY_ELEMENT_AABB_WRAP
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const FixedVector<MTVPosNeg>& mtvs)
+	OverlapResult ElementPtr::point_hits(glm::vec2 test) const
 	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-			max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), static_element, mtvs[i]));
-		return max_sep;
+#define OLY_ELEMENT_POINT_HITS(p) return col2d::point_hits(*p, test);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_POINT_HITS);
+#undef OLY_ELEMENT_POINT_HITS
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const FixedVector<MTVPosNeg>& mtvs)
+	OverlapResult ElementPtr::ray_hits(Ray ray) const
 	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-			for (size_t j = 0; j < num_static_elements; ++j)
-				max_sep = std::max(max_sep, separation(axis, param(active_elements[i]), param(static_elements[j]), mtvs[i * num_static_elements + j]));
-		return max_sep;
+#define OLY_ELEMENT_RAY_HITS(p) return col2d::ray_hits(*p, ray);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_RAY_HITS);
+#undef OLY_ELEMENT_RAY_HITS
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const CompoundPerfParameters perf)
+	RaycastResult ElementPtr::raycast(Ray ray) const
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
-		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_element, mtvs); }, perf);
+#define OLY_ELEMENT_RAYCAST(p) return col2d::raycast(*p, ray);
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_RAYCAST);
+#undef OLY_ELEMENT_RAYCAST
 	}
 
-	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class, Enum)\
+	case Enum:\
+		Macro(p, static_cast<const Class*>(c.ptr))\
+		break;
+
+#define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
+	switch (c.id)\
+	{\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle, ID::CIRCLE);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB, ID::AABB);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, OBB, ID::OBB);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, ConvexHull, ID::CONVEX_HULL);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP2, ID::KDOP2);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP2, ID::KDOP3);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP4, ID::KDOP4);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP5, ID::KDOP5);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP6, ID::KDOP6);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7, ID::KDOP7);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8, ID::KDOP8);\
+		default:\
+			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
+	}
+
+	OverlapResult ElementPtr::overlaps(ElementPtr c) const
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
-		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs); }, perf);
+#define OLY_ELEMENT_OVERLAPS(p1, p2) return col2d::overlaps(*p1, *p2);
+#define OLY_ELEMENT_OVERLAPS_INNER(p) OLY_ELEMENT_IMPL_INNER_SWITCH(OLY_ELEMENT_OVERLAPS, p);
+
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_OVERLAPS_INNER);
+
+#undef OLY_ELEMENT_OVERLAPS_INNER
+#undef OLY_ELEMENT_OVERLAPS
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, size_t& most_significant_active_element, const FixedVector<MTVPosNeg>& mtvs)
+	CollisionResult ElementPtr::collides(ElementPtr c) const
 	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-		{
-			float sep = separation(axis, param(active_elements[i]), static_element, mtvs[i]);
-			if (sep > max_sep)
-			{
-				max_sep = sep;
-				most_significant_active_element = i;
-			}
-		}
-		return max_sep;
+#define OLY_ELEMENT_COLLIDES(p1, p2) return col2d::collides(*p1, *p2);
+#define OLY_ELEMENT_COLLIDES_INNER(p) OLY_ELEMENT_IMPL_INNER_SWITCH(OLY_ELEMENT_COLLIDES, p);
+
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_COLLIDES_INNER);
+
+#undef OLY_ELEMENT_COLLIDES_INNER
+#undef OLY_ELEMENT_COLLIDES
 	}
 
-	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements,
-		const size_t num_static_elements, size_t& most_significant_active_element, size_t& most_significant_static_element, const FixedVector<MTVPosNeg>& mtvs)
+	ContactResult ElementPtr::contacts(ElementPtr c) const
 	{
-		float max_sep = 0.0f;
-		for (size_t i = 0; i < num_active_elements; ++i)
-		{
-			for (size_t j = 0; j < num_static_elements; ++j)
-			{
-				float sep = separation(axis, param(active_elements[i]), param(static_elements[j]), mtvs[i * num_static_elements + j]);
-				if (sep > max_sep)
-				{
-					max_sep = sep;
-					most_significant_active_element = i;
-					most_significant_static_element = j;
-				}
-			}
-		}
-		return max_sep;
+#define OLY_ELEMENT_CONTACTS(p1, p2) return col2d::contacts(*p1, *p2);
+#define OLY_ELEMENT_CONTACTS_INNER(p) OLY_ELEMENT_IMPL_INNER_SWITCH(OLY_ELEMENT_CONTACTS, p);
+
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_CONTACTS_INNER);
+
+#undef OLY_ELEMENT_CONTACTS_INNER
+#undef OLY_ELEMENT_CONTACTS
 	}
 
-	static ContactResult param_contact_result(const ElementParam& e1, const ElementParam& e2, const CollisionResult& collision)
-	{
-		ContactResult contact{ .overlap = collision.overlap };
-		if (contact.overlap)
-		{
-			contact.active_contact.impulse = collision.mtv();
-			contact.passive_contact.impulse = -contact.active_contact.impulse;
-
-			ContactManifold c1 = std::visit([axis = -collision.unit_impulse](const auto& e) { return e->deepest_manifold(axis); }, e1);
-			ContactManifold c2 = std::visit([axis = collision.unit_impulse](const auto& e) { return e->deepest_manifold(axis); }, e2);
-			glm::vec2 p1 = {}, p2 = {};
-			ContactManifold::clamp(collision.unit_impulse, c1, c2, p1, p2);
-
-			contact.active_contact.position = p1;
-			contact.passive_contact.position = p2;
-		}
-		return contact;
-	}
-
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const CompoundPerfParameters perf)
-	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
-		size_t most_significant_active_element = 0;
-		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
-			{ return separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs); }, perf);
-		return param_contact_result(param(active_elements[most_significant_active_element]), static_element, collision);
-	}
-
-	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
-	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
-		size_t most_significant_active_element = 0, most_significant_static_element = 0;
-		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
-			{ return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements,
-				most_significant_active_element, most_significant_static_element, mtvs); }, perf);
-		return param_contact_result(param(active_elements[most_significant_active_element]), param(static_elements[most_significant_static_element]), collision);
-	}
+#undef OLY_ELEMENT_IMPL_INNER_SWITCH
+#undef OLY_ELEMENT_IMPL_INNER_SWITCH_CASE
+#undef OLY_ELEMENT_IMPL_FULL_SWITCH
+#undef OLY_ELEMENT_IMPL_SWITCH_CASE
 
 	static bool only_translation_and_scale(const glm::mat3& m)
 	{

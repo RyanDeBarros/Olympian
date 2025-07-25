@@ -21,6 +21,7 @@ namespace oly::col2d
 	using KDOP7 = KDOP<7>;
 	using KDOP8 = KDOP<8>;
 
+	// TODO v2 black box with id instead of variant
 	using Element = std::variant<
 		Circle,
 		AABB,
@@ -55,73 +56,85 @@ namespace oly::col2d
 	inline Element element(const KDOP8& c) { return CopyPtr<KDOP8>(c); }
 	inline Element element(KDOP8&& c) { return CopyPtr<KDOP8>(std::move(c)); }
 
-	// TODO v2 wrap const void* and use id + static_cast instead of variant
-	using ElementParam = std::variant<
-		const Circle*,
-		const AABB*,
-		const OBB*,
-		const ConvexHull*,
-		const KDOP2*,
-		const KDOP3*,
-		const KDOP4*,
-		const KDOP5*,
-		const KDOP6*,
-		const KDOP7*,
-		const KDOP8*
-	>;
-
-	extern ElementParam param(const Element& e);
-	inline ElementParam param(const Circle& c) { return &c; }
-	inline ElementParam param(const AABB& c) { return &c; }
-	inline ElementParam param(const OBB& c) { return &c; }
-	inline ElementParam param(const ConvexHull& c) { return &c; }
-	inline ElementParam param(const KDOP2& c) { return &c; }
-	inline ElementParam param(const KDOP3& c) { return &c; }
-	inline ElementParam param(const KDOP4& c) { return &c; }
-	inline ElementParam param(const KDOP5& c) { return &c; }
-	inline ElementParam param(const KDOP6& c) { return &c; }
-	inline ElementParam param(const KDOP7& c) { return &c; }
-	inline ElementParam param(const KDOP8& c) { return &c; }
-
-	class CompoundPerfParameters
+	struct ElementPtr
 	{
-		static const size_t MIN_DIVISIONS = 16;
-		static const size_t MAX_DIVISIONS = 32;
-		size_t coarse_sweep_divisions = 24;
-		float two_pi_over_divisions = glm::two_pi<float>() / coarse_sweep_divisions;
+	private:
+		enum class ID
+		{
+			NONE,
+			CIRCLE,
+			AABB,
+			OBB,
+			CONVEX_HULL,
+			KDOP2,
+			KDOP3,
+			KDOP4,
+			KDOP5,
+			KDOP6,
+			KDOP7,
+			KDOP8
+		} id = ID::NONE;
+
+		const void* ptr = nullptr;
 
 	public:
-		StrictlyPositiveFloat refinement_error_threshold = glm::radians(1.5f);
+		ElementPtr() = default;
+		explicit ElementPtr(const Element& e)    { set(e); }
+		explicit ElementPtr(const Circle& c)     { set(c); }
+		explicit ElementPtr(const AABB& c)       { set(c); }
+		explicit ElementPtr(const OBB& c)        { set(c); }
+		explicit ElementPtr(const ConvexHull& c) { set(c); }
+		explicit ElementPtr(const KDOP2& c)      { set(c); }
+		explicit ElementPtr(const KDOP3& c)      { set(c); }
+		explicit ElementPtr(const KDOP4& c)      { set(c); }
+		explicit ElementPtr(const KDOP5& c)      { set(c); }
+		explicit ElementPtr(const KDOP6& c)      { set(c); }
+		explicit ElementPtr(const KDOP7& c)      { set(c); }
+		explicit ElementPtr(const KDOP8& c)      { set(c); }
 
-		void set_coarse_sweep_divisions(size_t divisions)
-		{
-			coarse_sweep_divisions = glm::clamp(divisions, MIN_DIVISIONS, MAX_DIVISIONS);
-			two_pi_over_divisions = glm::two_pi<float>() / coarse_sweep_divisions;
-		}
+		void set(const Element& e);
+		void set(const Circle& c)     { ptr = &c; id = ID::CIRCLE; }
+		void set(const AABB& c)       { ptr = &c; id = ID::AABB; }
+		void set(const OBB& c)        { ptr = &c; id = ID::OBB; }
+		void set(const ConvexHull& c) { ptr = &c; id = ID::CONVEX_HULL; }
+		void set(const KDOP2& c)      { ptr = &c; id = ID::KDOP2; }
+		void set(const KDOP3& c)      { ptr = &c; id = ID::KDOP3; }
+		void set(const KDOP4& c)      { ptr = &c; id = ID::KDOP4; }
+		void set(const KDOP5& c)      { ptr = &c; id = ID::KDOP5; }
+		void set(const KDOP6& c)      { ptr = &c; id = ID::KDOP6; }
+		void set(const KDOP7& c)      { ptr = &c; id = ID::KDOP7; }
+		void set(const KDOP8& c)      { ptr = &c; id = ID::KDOP8; }
 
-		size_t get_coarse_sweep_divisions() const { return coarse_sweep_divisions; }
+		float projection_max(UnitVector2D axis) const;
+		float projection_min(UnitVector2D axis) const;
+		fpair projection_interval(UnitVector2D axis) const;
+		ContactManifold deepest_manifold(UnitVector2D axis) const;
+		Element transformed(const glm::mat3& m) const;
+		
+		using ElementVariant = std::variant<
+			const Circle*,
+			const AABB*,
+			const OBB*,
+			const ConvexHull*,
+			const KDOP2*,
+			const KDOP3*,
+			const KDOP4*,
+			const KDOP5*,
+			const KDOP6*,
+			const KDOP7*,
+			const KDOP8*
+		>;
 
-		float get_two_pi_over_divisions() const { return two_pi_over_divisions; }
+		ElementVariant variant() const;
+		AABB aabb_wrap() const;
 
-		static CompoundPerfParameters greedy(const CompoundPerfParameters p1, const CompoundPerfParameters p2)
-		{
-			CompoundPerfParameters pg;
-			pg.set_coarse_sweep_divisions(std::max(p1.get_coarse_sweep_divisions(), p2.get_coarse_sweep_divisions()));
-			pg.refinement_error_threshold = std::max(p1.refinement_error_threshold, p2.refinement_error_threshold);
-			return pg;
-		}
+		OverlapResult point_hits(glm::vec2 test) const;
+		OverlapResult ray_hits(Ray ray) const;
+		RaycastResult raycast(Ray ray) const;
+		OverlapResult overlaps(ElementPtr c) const;
+		CollisionResult collides(ElementPtr c) const;
+		ContactResult contacts(ElementPtr c) const;
 	};
-
-	// LATER utility functions for common CompoundPerfParameters for known shapes.
-
-	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const CompoundPerfParameters perf = {});
-	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf = {});
-	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
-		const ElementParam& static_element, const CompoundPerfParameters perf = {});
-	extern ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf = {});
 
 	namespace internal
 	{
@@ -137,8 +150,6 @@ namespace oly::col2d
 		extern Element transform_element(const KDOP8& c, const glm::mat3& m);
 		extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
 	}
-
-	inline Element transform_element(const ElementParam& c, const glm::mat3& m) { return std::visit([&m](auto&& c) { return internal::transform_element(*c, m); }, c); }
 
 	typedef int Mask;
 	typedef int Layer;

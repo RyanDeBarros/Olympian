@@ -28,7 +28,7 @@ namespace oly::col2d
 		struct Wrap<AABB>
 		{
 			AABB operator()(const Element* elements, size_t count) const;
-			AABB operator()(const ElementParam& element) const;
+			AABB operator()(ElementPtr element) const;
 		};
 
 		template<>
@@ -78,14 +78,12 @@ namespace oly::col2d
 				kdop.fill_invalid();
 				for (size_t i = 0; i < count; ++i)
 				{
-					std::visit([&kdop](auto&& element) {
-						for (size_t j = 0; j < K; ++j)
-						{
-							fpair interval = element->projection_interval(KDOP<K>::uniform_axis(j));
-							kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
-							kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
-						}
-						}, param(elements[i]));
+					for (size_t j = 0; j < K; ++j)
+					{
+						fpair interval = ElementPtr(elements[i]).projection_interval(KDOP<K>::uniform_axis(j));
+						kdop.set_minimum(j, std::min(kdop.get_minimum(j), interval.first));
+						kdop.set_maximum(j, std::max(kdop.get_maximum(j), interval.second));
+					}
 				}
 				return kdop;
 			}
@@ -120,15 +118,15 @@ namespace oly::col2d
 			{
 				float(*bx)(const Element& e) = nullptr;
 				if constexpr (MinX)
-					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::LEFT); }, param(e)); };
+					bx = [](const Element& e) -> float { return ElementPtr(e).projection_max(UnitVector2D::LEFT); };
 				else
-					bx = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::RIGHT); }, param(e)); };
+					bx = [](const Element& e) -> float { return ElementPtr(e).projection_max(UnitVector2D::RIGHT); };
 				
 				float(*by)(const Element& e) = nullptr;
 				if constexpr (MinY)
-					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::DOWN); }, param(e)); };
+					by = [](const Element& e) -> float { return ElementPtr(e).projection_max(UnitVector2D::DOWN); };
 				else
-					by = [](const Element& e) -> float { return std::visit([](auto&& e) -> float { return e->projection_max(UnitVector2D::UP); }, param(e)); };
+					by = [](const Element& e) -> float { return ElementPtr(e).projection_min(UnitVector2D::UP); };
 
 				if constexpr (XY)
 				{
@@ -196,7 +194,8 @@ namespace oly::col2d
 			}
 
 			Node(const Node& other)
-				: shape(other.shape), start_index(other.start_index), count(other.count), left(other.left ? std::make_unique<Node>(*other.left) : nullptr), right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
+				: shape(other.shape), start_index(other.start_index), count(other.count), left(other.left ? std::make_unique<Node>(*other.left) : nullptr),
+				right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
 			{}
 
 			Node(Node&& other) noexcept
@@ -291,9 +290,9 @@ namespace oly::col2d
 		}
 
 	public:
-		std::vector<ElementParam> build_layer(size_t at_depth) const
+		std::vector<ElementPtr> build_layer(size_t at_depth) const
 		{
-			std::vector<ElementParam> layer;
+			std::vector<ElementPtr> layer;
 			DoubleBuffer<const Node*> nodes;
 			nodes.back.push_back(&root());
 
@@ -305,7 +304,7 @@ namespace oly::col2d
 				for (const Node* node : nodes.front)
 				{
 					if (node->is_leaf())
-						layer.push_back(param(elements[node->start_index]));
+						layer.push_back(ElementPtr(elements[node->start_index]));
 					else
 					{
 						nodes.back.push_back(node->left.get());
@@ -318,9 +317,9 @@ namespace oly::col2d
 			for (const Node* node : nodes.front)
 			{
 				if (node->is_leaf())
-					layer.push_back(param(elements[node->start_index]));
+					layer.push_back(ElementPtr(elements[node->start_index]));
 				else
-					layer.push_back(param(*node->shape));
+					layer.push_back(ElementPtr(*node->shape));
 			}
 			return layer;
 		}
@@ -329,7 +328,7 @@ namespace oly::col2d
 		{
 			float proj_max = -nmax<float>();
 			for (const Element& element : elements)
-				proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+				proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
 			return proj_max;
 		}
 
@@ -337,28 +336,28 @@ namespace oly::col2d
 		{
 			float proj_min = nmax<float>();
 			for (const Element& element : elements)
-				proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+				proj_min = std::max(proj_min, ElementPtr(element).projection_min(axis));
 			return proj_min;
 		}
 
 		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), elements.data(), test); }
-		OverlapResult ray_hits(const Ray& ray) const { return ray_hits(root(), elements.data(), ray); }
-		RaycastResult raycast(const Ray& ray) const { return raycast(root(), elements.data(), ray); }
+		OverlapResult ray_hits(Ray ray) const { return ray_hits(root(), elements.data(), ray); }
+		RaycastResult raycast(Ray ray) const { return raycast(root(), elements.data(), ray); }
 		
-		OverlapResult raw_overlaps(const Element& e) const { return overlaps(root(), elements.data(), param(e)); }
+		OverlapResult raw_overlaps(const Element& e) const { return overlaps(root(), elements.data(), ElementPtr(e)); }
 		template<typename Other>
 		OverlapResult raw_overlaps(const Other& c) const { return overlaps(root(), elements.data(), c); }
 		template<typename S>
 		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps<S>(root(), elements.data(), bvh.root(), bvh.elements.data()); }
 
 		CollisionResult raw_collides(const Element& e) const
-			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), param(e), perf) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const ElementParam& e) const
+			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), ElementPtr(e), perf) : CollisionResult{ .overlap = false }; }
+		CollisionResult raw_collides(ElementPtr e) const
 			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e, perf) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const Primitive& c) const
-			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.element), perf) : CollisionResult{ .overlap = false }; }
+			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), ElementPtr(c.element), perf) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const TPrimitive& c) const
-			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), param(c.get_baked()), perf) : CollisionResult{ .overlap = false }; }
+			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), ElementPtr(c.get_baked()), perf) : CollisionResult{ .overlap = false }; }
 		CollisionResult raw_collides(const Compound& c) const
 		{
 			return raw_overlaps(c)
@@ -381,13 +380,13 @@ namespace oly::col2d
 		}
 
 		ContactResult raw_contacts(const Element& e) const
-			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), param(e), perf) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const ElementParam& e) const
+			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), ElementPtr(e), perf) : ContactResult{ .overlap = false }; }
+		ContactResult raw_contacts(ElementPtr e) const
 			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e, perf) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const Primitive& c) const
-			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.element), perf) : ContactResult{ .overlap = false }; }
+			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), ElementPtr(c.element), perf) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const TPrimitive& c) const
-			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), param(c.get_baked()), perf) : ContactResult{ .overlap = false }; }
+			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), ElementPtr(c.get_baked()), perf) : ContactResult{ .overlap = false }; }
 		ContactResult raw_contacts(const Compound& c) const
 		{
 			return raw_overlaps(c)
@@ -420,7 +419,7 @@ namespace oly::col2d
 				return point_hits(*node.left, elements, test) || point_hits(*node.right, elements, test);
 		}
 
-		static OverlapResult ray_hits(const Node& node, const Element* elements, const Ray& ray)
+		static OverlapResult ray_hits(const Node& node, const Element* elements, Ray ray)
 		{
 			if (node.is_leaf())
 				return col2d::ray_hits(elements[node.start_index], ray);
@@ -430,7 +429,7 @@ namespace oly::col2d
 				return ray_hits(*node.left, elements, ray) || ray_hits(*node.right, elements, ray);
 		}
 
-		static RaycastResult raycast(const Node& node, const Element* elements, const Ray& ray)
+		static RaycastResult raycast(const Node& node, const Element* elements, Ray ray)
 		{
 			if (node.is_leaf())
 				return col2d::raycast(elements[node.start_index], ray);
@@ -470,12 +469,12 @@ namespace oly::col2d
 				if (other_node.is_leaf())
 					return col2d::overlaps(my_elements[my_node.start_index], other_elements[other_node.start_index]);
 				else
-					return BVH<OtherShape>::overlaps(other_node, other_elements, param(my_elements[my_node.start_index]));
+					return BVH<OtherShape>::overlaps(other_node, other_elements, ElementPtr(my_elements[my_node.start_index]));
 			}
 			else
 			{
 				if (other_node.is_leaf())
-					return overlaps(my_node, my_elements, param(other_elements[other_node.start_index]));
+					return overlaps(my_node, my_elements, ElementPtr(other_elements[other_node.start_index]));
 				else
 				{
 					if (!col2d::overlaps(my_node.shape.value(), other_node.shape.value()))
@@ -493,8 +492,8 @@ namespace oly::col2d
 		static OverlapResult overlaps(const Node& node, const Element* elements, const Other& c)
 		{
 			if (node.is_leaf())
-				return col2d::overlaps(param(elements[node.start_index]), c);
-			else if (!col2d::overlaps(param(node.shape.value()), c))
+				return col2d::overlaps(ElementPtr(elements[node.start_index]), c);
+			else if (!col2d::overlaps(ElementPtr(node.shape.value()), c))
 				return false;
 			else
 				return overlaps(*node.left, elements, c) || overlaps(*node.right, elements, c);
@@ -525,7 +524,7 @@ namespace oly::col2d
 				std::vector<Element>& global_elements = _bvh.set_elements();
 				global_elements.resize(local_elements.size());
 				for (size_t i = 0; i < local_elements.size(); ++i)
-					global_elements[i] = transform_element(param(local_elements[i]), m);
+					global_elements[i] = ElementPtr(local_elements[i]).transformed(m);
 			}
 			return _bvh;
 		}
@@ -563,13 +562,13 @@ namespace oly::col2d
 		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
 		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
 
-		std::vector<ElementParam> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
+		std::vector<ElementPtr> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
 
 		float projection_max(const UnitVector2D& axis) const
 		{
 			float proj_max = -nmax<float>();
 			for (const Element& element : bvh().get_elements())
-				proj_max = std::max(proj_max, std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)));
+				proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
 			return proj_max;
 		}
 
@@ -577,13 +576,13 @@ namespace oly::col2d
 		{
 			float proj_min = nmax<float>();
 			for (const Element& element : bvh().get_elements())
-				proj_min = std::min(proj_min, std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)));
+				proj_min = std::min(proj_min, ElementPtr(element).projection_min(axis));
 			return proj_min;
 		}
 
 		OverlapResult point_hits(glm::vec2 test) const { return bvh().point_hits(test); }
-		OverlapResult ray_hits(const Ray& ray) const { return bvh().ray_hits(ray); }
-		RaycastResult raycast(const Ray& ray) const { return bvh().raycast(ray); }
+		OverlapResult ray_hits(Ray ray) const { return bvh().ray_hits(ray); }
+		RaycastResult raycast(Ray ray) const { return bvh().raycast(ray); }
 
 		template<typename Other>
 		OverlapResult raw_overlaps(const Other& c) const { return bvh().raw_overlaps(c); }

@@ -74,7 +74,7 @@ namespace oly::debug
 
 	constexpr float INFINITE_RAY_LENGTH = 1'000'000.0f;
 
-	inline CollisionView collision_view(const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f)
+	inline CollisionView collision_view(col2d::Ray ray, glm::vec4 color, float arrow_width = 6.0f)
 	{
 		rendering::StaticArrowExtension arrow;
 		arrow.set_color(color);
@@ -85,7 +85,7 @@ namespace oly::debug
 		return CollisionView(std::move(arrow));
 	}
 
-	inline void update_view(CollisionView& view, const col2d::Ray& ray, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
+	inline void update_view(CollisionView& view, col2d::Ray ray, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
 		bool modify = std::visit([](const auto& obj) -> bool {
@@ -115,7 +115,7 @@ namespace oly::debug
 		}
 	}
 
-	inline void update_view_no_color(CollisionView& view, const col2d::Ray& ray, float arrow_width = 6.0f, size_t view_index = 0)
+	inline void update_view_no_color(CollisionView& view, col2d::Ray ray, float arrow_width = 6.0f, size_t view_index = 0)
 	{
 		CollisionObject& obj = view.get_view(view_index);
 		bool modify = std::visit([](const auto& obj) -> bool {

@@ -15,7 +15,7 @@ namespace oly::col2d
 {
 	namespace internal
 	{
-		OverlapResult ray_hits_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis)
+		OverlapResult ray_hits_slab(float min_proj, float max_proj, Ray ray, const UnitVector2D& axis)
 		{
 			float proj_origin = axis.dot(ray.origin);
 			float proj_direction = axis.dot(ray.direction);
@@ -39,7 +39,7 @@ namespace oly::col2d
 			return proj_max >= min_proj && proj_min <= max_proj;
 		}
 
-		bool raycast_update_on_slab(float min_proj, float max_proj, const Ray& ray, const UnitVector2D& axis, RaycastResult& info, float& max_entry)
+		bool raycast_update_on_slab(float min_proj, float max_proj, Ray ray, const UnitVector2D& axis, RaycastResult& info, float& max_entry)
 		{
 			float proj_origin = axis.dot(ray.origin);
 			float proj_direction = axis.dot(ray.direction);
@@ -98,7 +98,7 @@ namespace oly::col2d
 		return math::mag_sqrd(local - c.center) <= c.radius * c.radius;
 	}
 
-	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray, float& t1, float& t2)
+	static OverlapResult ray_contact_circle(const Circle& c, Ray ray, float& t1, float& t2)
 	{
 		Ray local_ray{ .origin = internal::CircleGlobalAccess::local_point(c, ray.origin) };
 		if (ray.clip == 0.0f)
@@ -135,18 +135,18 @@ namespace oly::col2d
 		return contact;
 	}
 
-	static OverlapResult ray_contact_circle(const Circle& c, const Ray& ray)
+	static OverlapResult ray_contact_circle(const Circle& c, Ray ray)
 	{
 		float t1, t2;
 		return ray_contact_circle(c, ray, t1, t2);
 	}
 
-	OverlapResult ray_hits(const Circle& c, const Ray& ray)
+	OverlapResult ray_hits(const Circle& c, Ray ray)
 	{
 		return ray_contact_circle(c, ray);
 	}
 
-	RaycastResult raycast(const Circle& c, const Ray& ray)
+	RaycastResult raycast(const Circle& c, Ray ray)
 	{
 		if (point_hits(c, ray.origin))
 			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
@@ -273,7 +273,7 @@ namespace oly::col2d
 		return test.x >= c.x1 && test.x <= c.x2 && test.y >= c.y1 && test.y <= c.y2;
 	}
 
-	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, const Ray& ray, float& t1, float& t2)
+	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, Ray ray, float& t1, float& t2)
 	{
 		if (math::cross(ray.direction, a - b) != 0.0f) // ray and line segment are not parallel
 		{
@@ -332,18 +332,18 @@ namespace oly::col2d
 			return false;
 	}
 
-	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, const Ray& ray)
+	static OverlapResult ray_contact_line_segment(glm::vec2 a, glm::vec2 b, Ray ray)
 	{
 		float t1, t2;
 		return ray_contact_line_segment(a, b, ray, t1, t2);
 	}
 
-	OverlapResult ray_hits(const AABB& c, const Ray& ray)
+	OverlapResult ray_hits(const AABB& c, Ray ray)
 	{
 		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::UP);
 	}
 
-	RaycastResult raycast(const AABB& c, const Ray& ray)
+	RaycastResult raycast(const AABB& c, Ray ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = -nmax<float>();
@@ -501,7 +501,7 @@ namespace oly::col2d
 		return glm::abs(local.x) <= 0.5f * c.width && glm::abs(local.y) <= 0.5f * c.height;
 	}
 
-	OverlapResult ray_hits(const OBB& c, const Ray& ray)
+	OverlapResult ray_hits(const OBB& c, Ray ray)
 	{
 		auto proj = c.get_major_axis_projection_interval();
 		if (!internal::ray_hits_slab(proj.first, proj.second, ray, c.get_major_axis()))
@@ -510,7 +510,7 @@ namespace oly::col2d
 		return internal::ray_hits_slab(proj.first, proj.second, ray, c.get_minor_axis());
 	}
 
-	RaycastResult raycast(const OBB& c, const Ray& ray)
+	RaycastResult raycast(const OBB& c, Ray ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		float max_entry = -nmax<float>();
@@ -553,7 +553,7 @@ namespace oly::col2d
 		return true;
 	}
 
-	OverlapResult ray_hits(const ConvexHull& c, const Ray& ray)
+	OverlapResult ray_hits(const ConvexHull& c, Ray ray)
 	{
 		// origin is already in polygon
 		if (point_hits(c, ray.origin))
@@ -568,7 +568,7 @@ namespace oly::col2d
 		return false;
 	}
 
-	RaycastResult raycast(const ConvexHull& c, const Ray& ray)
+	RaycastResult raycast(const ConvexHull& c, Ray ray)
 	{
 		// origin is already in polygon
 		if (point_hits(c, ray.origin))
@@ -1086,33 +1086,33 @@ namespace oly::col2d
 		return sat::contacts(c1, c2);
 	}
 
-	OverlapResult point_hits(const ElementParam& c, glm::vec2 test)
+	OverlapResult point_hits(ElementPtr c, glm::vec2 test)
 	{
-		return std::visit([test](auto&& c) { return point_hits(*c, test); }, c);
+		return c.point_hits(test);
 	}
 
-	OverlapResult ray_hits(const ElementParam& c, const Ray& ray)
+	OverlapResult ray_hits(ElementPtr c, Ray ray)
 	{
-		return std::visit([&ray](auto&& c) { return ray_hits(*c, ray); }, c);
+		return c.ray_hits(ray);
 	}
 
-	RaycastResult raycast(const ElementParam& c, const Ray& ray)
+	RaycastResult raycast(ElementPtr c, Ray ray)
 	{
-		return std::visit([&ray](auto&& c) { return raycast(*c, ray); }, c);
+		return c.raycast(ray);
 	}
 
-	OverlapResult overlaps(const ElementParam& c1, const ElementParam& c2)
+	OverlapResult overlaps(ElementPtr c1, ElementPtr c2)
 	{
-		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return overlaps(*c1, *c2); }, c2); }, c1);
+		return c1.overlaps(c2);
 	}
 
-	CollisionResult collides(const ElementParam& c1, const ElementParam& c2)
+	CollisionResult collides(ElementPtr c1, ElementPtr c2)
 	{
-		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return collides(*c1, *c2); }, c2); }, c1);
+		return c1.collides(c2);
 	}
 	
-	ContactResult contacts(const ElementParam& c1, const ElementParam& c2)
+	ContactResult contacts(ElementPtr c1, ElementPtr c2)
 	{
-		return std::visit([c2](auto&& c1) { return std::visit([c1](auto&& c2) { return contacts(*c1, *c2); }, c2); }, c1);
+		return c1.contacts(c2);
 	}
 }

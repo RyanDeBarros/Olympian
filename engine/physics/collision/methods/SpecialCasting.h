@@ -37,10 +37,10 @@ namespace oly::col2d
 		{
 			RectCast finite = cast;
 			finite.ray.clip = std::max(c.projection_max(cast.ray.direction) - cast.ray.direction.dot(cast.ray.origin), 0.0f);
-			return overlaps(c, param(finite.finite_obb()));
+			return overlaps(c, ElementPtr(finite.finite_obb()));
 		}
 		else
-			return overlaps(c, param(cast.finite_obb()));
+			return overlaps(c, ElementPtr(cast.finite_obb()));
 	}
 
 	template<typename Shape>

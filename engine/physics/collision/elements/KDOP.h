@@ -434,7 +434,7 @@ namespace oly::col2d
 				return glm::transpose(c.global) * n;
 			}
 
-			static Ray local_ray(const KDOP<K>& c, const Ray& ray)
+			static Ray local_ray(const KDOP<K>& c, Ray ray)
 			{
 				Ray local_ray = { .origin = local_point(c, ray.origin) };
 				if (ray.clip == 0.0f)

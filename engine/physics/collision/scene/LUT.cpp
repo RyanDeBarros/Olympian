@@ -6,8 +6,8 @@
 namespace oly::col2d::internal
 {
 	using PointHitsFn = OverlapResult(*)(const void*, glm::vec2);
-	using RayHitsFn = OverlapResult(*)(const void*, const Ray&);
-	using RaycastFn = RaycastResult(*)(const void*, const Ray&);
+	using RayHitsFn = OverlapResult(*)(const void*, Ray);
+	using RaycastFn = RaycastResult(*)(const void*, Ray);
 	using OverlapsFn = OverlapResult(*)(const void*, const void*);
 	using CollidesFn = CollisionResult(*)(const void*, const void*);
 	using ContactsFn = ContactResult(*)(const void*, const void*);
@@ -82,14 +82,14 @@ namespace oly::col2d::internal
 
 		void load_ray_hits()
 		{
-#define OLY_LUT_RAY_HITS(Class) ray_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, const Ray& ray) { return ray_hits(*static_cast<const Class*>(ptr), ray); };
+#define OLY_LUT_RAY_HITS(Class) ray_hits_[CObjIDTrait<Class>::ID] = [](const void* ptr, Ray ray) { return ray_hits(*static_cast<const Class*>(ptr), ray); };
 			OLY_LUT_LIST(OLY_LUT_RAY_HITS);
 #undef OLY_LUT_RAY_HITS
 		}
 
 		void load_raycast()
 		{
-#define OLY_LUT_RAYCAST(Class) raycast_[CObjIDTrait<Class>::ID] = [](const void* ptr, const Ray& ray) { return raycast(*static_cast<const Class*>(ptr), ray); };
+#define OLY_LUT_RAYCAST(Class) raycast_[CObjIDTrait<Class>::ID] = [](const void* ptr, Ray ray) { return raycast(*static_cast<const Class*>(ptr), ray); };
 			OLY_LUT_LIST(OLY_LUT_RAYCAST);
 #undef OLY_LUT_RAYCAST
 		}
@@ -140,10 +140,11 @@ namespace oly::col2d::internal
 
 		void load_flush()
 		{
-			flush_[CObjIDTrait<TPrimitive>::ID] = [](const void* ptr) { return Wrap<AABB>{}(param(static_cast<const TPrimitive*>(ptr)->get_baked())).rect(); };
-			flush_[CObjIDTrait<TCompound>::ID] = [](const void* ptr) { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(), static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
+			flush_[CObjIDTrait<TPrimitive>::ID] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(ElementPtr(static_cast<const TPrimitive*>(ptr)->get_baked())).rect(); };
+			flush_[CObjIDTrait<TCompound>::ID] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(), static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
 
-#define OLY_LUT_FLUSH_BVH(Class) flush_[CObjIDTrait<Class>::ID] = [](const void* ptr) { return Wrap<AABB>{}(&static_cast<const Class*>(ptr)->root_shape()).rect(); };
+
+#define OLY_LUT_FLUSH_BVH(Class) flush_[CObjIDTrait<Class>::ID] = [](const void* ptr) { return Wrap<AABB>{}(ElementPtr(static_cast<const Class*>(ptr)->root_shape())).rect(); };
 			OLY_LUT_LIST_TBVH(OLY_LUT_FLUSH_BVH);
 #undef OLY_LUT_FLUSH_BVH
 		}
@@ -242,12 +243,12 @@ namespace oly::col2d::internal
 		return (lut.point_hits_[c.id()])(c.raw_obj(), test);
 	}
 
-	OverlapResult lut_ray_hits(const ColliderObject& c, const Ray& ray)
+	OverlapResult lut_ray_hits(const ColliderObject& c, Ray ray)
 	{
 		return (lut.ray_hits_[c.id()])(c.raw_obj(), ray);
 	}
 
-	RaycastResult lut_raycast(const ColliderObject& c, const Ray& ray)
+	RaycastResult lut_raycast(const ColliderObject& c, Ray ray)
 	{
 		return (lut.raycast_[c.id()])(c.raw_obj(), ray);
 	}

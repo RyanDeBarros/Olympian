@@ -34,7 +34,7 @@ namespace oly::col2d
 	}
 	
 	template<size_t K>
-	inline OverlapResult ray_hits(const KDOP<K>& c, const Ray& ray)
+	inline OverlapResult ray_hits(const KDOP<K>& c, Ray ray)
 	{
 		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
 		for (size_t i = 0; i < K; ++i)
@@ -46,7 +46,7 @@ namespace oly::col2d
 	}
 	
 	template<size_t K>
-	inline RaycastResult raycast(const KDOP<K>& c, const Ray& ray)
+	inline RaycastResult raycast(const KDOP<K>& c, Ray ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
 		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);

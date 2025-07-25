@@ -16,14 +16,15 @@ namespace oly::col2d
 		Mask mask = 0;
 		Layer layer = 0;
 
-		float projection_max(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(element)); }
-		float projection_min(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(element)); }
-		fpair projection_interval(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_interval(axis); }, param(element)); }
+		float projection_max(UnitVector2D axis) const { return ElementPtr(element).projection_max(axis); }
+		float projection_min(UnitVector2D axis) const { return ElementPtr(element).projection_min(axis); }
+		fpair projection_interval(UnitVector2D axis) const { return ElementPtr(element).projection_interval(axis); }
+		ContactManifold deepest_manifold(UnitVector2D axis) const { return ElementPtr(element).deepest_manifold(axis); }
 	};
 
 	inline OverlapResult point_hits(const Primitive& c, glm::vec2 test) { return point_hits(c.element, test); }
-	inline OverlapResult ray_hits(const Primitive& c, const Ray& ray) { return ray_hits(c.element, ray); }
-	inline RaycastResult raycast(const Primitive& c, const Ray& ray) { return raycast(c.element, ray); }
+	inline OverlapResult ray_hits(const Primitive& c, Ray ray) { return ray_hits(c.element, ray); }
+	inline RaycastResult raycast(const Primitive& c, Ray ray) { return raycast(c.element, ray); }
 
 #define OLY_ELEMENTS_OVERLAP 
 
@@ -44,7 +45,7 @@ namespace oly::col2d
 		void bake() const
 		{
 			glm::mat3 g = transformer.global();
-			baked = std::visit([&g](auto&& e) { return transform_element(param(e), g); }, primitive.element);
+			baked = std::visit([&g](auto&& e) { return ElementPtr(e).transformed(g); }, primitive.element);
 			dirty = false;
 		}
 
@@ -69,14 +70,15 @@ namespace oly::col2d
 		Layer layer() const { return primitive.layer; }
 		Layer& layer() { return primitive.layer; }
 
-		float projection_max(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_max(axis); }, param(get_baked())); }
-		float projection_min(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_min(axis); }, param(get_baked())); }
-		fpair projection_interval(const UnitVector2D& axis) const { return std::visit([axis](auto&& e) { return e->projection_interval(axis); }, param(get_baked())); }
+		float projection_max(UnitVector2D axis) const { return ElementPtr(get_baked()).projection_max(axis); }
+		float projection_min(UnitVector2D axis) const { return ElementPtr(get_baked()).projection_min(axis); }
+		fpair projection_interval(UnitVector2D axis) const { return ElementPtr(get_baked()).projection_interval(axis); }
+		ContactManifold deepest_manifold(UnitVector2D axis) const { return ElementPtr(get_baked()).deepest_manifold(axis); }
 	};
 
 	inline OverlapResult point_hits(const TPrimitive& c, glm::vec2 test) { return point_hits(c.get_baked(), test); }
-	inline OverlapResult ray_hits(const TPrimitive& c, const Ray& ray) { return ray_hits(c.get_baked(), ray); }
-	inline RaycastResult raycast(const TPrimitive& c, const Ray& ray) { return raycast(c.get_baked(), ray); }
+	inline OverlapResult ray_hits(const TPrimitive& c, Ray ray) { return ray_hits(c.get_baked(), ray); }
+	inline RaycastResult raycast(const TPrimitive& c, Ray ray) { return raycast(c.get_baked(), ray); }
 
 	inline OverlapResult overlaps(const TPrimitive& c1, const TPrimitive& c2) { return (c1.mask() & c2.layer()) && overlaps(c1.get_baked(), c2.get_baked()); }
 	inline OverlapResult overlaps(const TPrimitive& c1, const Primitive& c2) { return (c1.mask() & c2.layer) && overlaps(c1.get_baked(), c2.element); }
@@ -88,17 +90,17 @@ namespace oly::col2d
 	inline ContactResult contacts(const TPrimitive& c1, const Primitive& c2) { return (c1.mask() & c2.layer) ? contacts(c1.get_baked(), c2.element) : ContactResult{ .overlap = false }; }
 	inline ContactResult contacts(const Primitive& c1, const TPrimitive& c2) { return (c1.mask & c2.layer()) ? contacts(c1.element, c2.get_baked()) : ContactResult{ .overlap = false }; }
 
-	inline OverlapResult overlaps(const Primitive& c1, const ElementParam& c2) { return overlaps(param(c1.element), c2); }
-	inline OverlapResult overlaps(const ElementParam& c1, const Primitive& c2) { return overlaps(c1, param(c2.element)); }
-	inline CollisionResult collides(const Primitive& c1, const ElementParam& c2) { return collides(param(c1.element), c2); }
-	inline CollisionResult collides(const ElementParam& c1, const Primitive& c2) { return collides(c1, param(c2.element)); }
-	inline ContactResult contacts(const Primitive& c1, const ElementParam& c2) { return contacts(param(c1.element), c2); }
-	inline ContactResult contacts(const ElementParam& c1, const Primitive& c2) { return contacts(c1, param(c2.element)); }
+	inline OverlapResult overlaps(const Primitive& c1, ElementPtr c2) { return overlaps(ElementPtr(c1.element), c2); }
+	inline OverlapResult overlaps(ElementPtr c1, const Primitive& c2) { return overlaps(c1, ElementPtr(c2.element)); }
+	inline CollisionResult collides(const Primitive& c1, ElementPtr c2) { return collides(ElementPtr(c1.element), c2); }
+	inline CollisionResult collides(ElementPtr c1, const Primitive& c2) { return collides(c1, ElementPtr(c2.element)); }
+	inline ContactResult contacts(const Primitive& c1, ElementPtr c2) { return contacts(ElementPtr(c1.element), c2); }
+	inline ContactResult contacts(ElementPtr c1, const Primitive& c2) { return contacts(c1, ElementPtr(c2.element)); }
 
-	inline OverlapResult overlaps(const TPrimitive& c1, const ElementParam& c2) { return overlaps(param(c1.get_baked()), c2); }
-	inline OverlapResult overlaps(const ElementParam& c1, const TPrimitive& c2) { return overlaps(c1, param(c2.get_baked())); }
-	inline CollisionResult collides(const TPrimitive& c1, const ElementParam& c2) { return collides(param(c1.get_baked()), c2); }
-	inline CollisionResult collides(const ElementParam& c1, const TPrimitive& c2) { return collides(c1, param(c2.get_baked())); }
-	inline ContactResult contacts(const TPrimitive& c1, const ElementParam& c2) { return contacts(param(c1.get_baked()), c2); }
-	inline ContactResult contacts(const ElementParam& c1, const TPrimitive& c2) { return contacts(c1, param(c2.get_baked())); }
+	inline OverlapResult overlaps(const TPrimitive& c1, ElementPtr c2) { return overlaps(ElementPtr(c1.get_baked()), c2); }
+	inline OverlapResult overlaps(ElementPtr c1, const TPrimitive& c2) { return overlaps(c1, ElementPtr(c2.get_baked())); }
+	inline CollisionResult collides(const TPrimitive& c1, ElementPtr c2) { return collides(ElementPtr(c1.get_baked()), c2); }
+	inline CollisionResult collides(ElementPtr c1, const TPrimitive& c2) { return collides(c1, ElementPtr(c2.get_baked())); }
+	inline ContactResult contacts(const TPrimitive& c1, ElementPtr c2) { return contacts(ElementPtr(c1.get_baked()), c2); }
+	inline ContactResult contacts(ElementPtr c1, const TPrimitive& c2) { return contacts(c1, ElementPtr(c2.get_baked())); }
 }

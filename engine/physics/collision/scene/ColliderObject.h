@@ -8,6 +8,7 @@
 
 namespace oly::col2d::internal
 {
+	// TODO v2 add TBVH_KDOP5, TBVH_KDOP6, TBVH_KDOP7, TBVH_KDOP8
 	enum CObjID : unsigned int
 	{
 		TPRIMITIVE,

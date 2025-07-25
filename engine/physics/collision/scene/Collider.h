@@ -103,8 +103,8 @@ namespace oly::col2d
 
 	public:
 		OverlapResult point_hits(glm::vec2 test) const { return internal::lut_point_hits(obj, test); }
-		OverlapResult ray_hits(const Ray& ray) const { return internal::lut_ray_hits(obj, ray); }
-		RaycastResult raycast(const Ray& ray) const { return internal::lut_raycast(obj, ray); }
+		OverlapResult ray_hits(Ray ray) const { return internal::lut_ray_hits(obj, ray); }
+		RaycastResult raycast(Ray ray) const { return internal::lut_raycast(obj, ray); }
 		OverlapResult overlaps(const Collider& other) const { return internal::lut_overlaps(obj, other.obj); }
 		CollisionResult collides(const Collider& other) const { return internal::lut_collides(obj, other.obj); }
 		ContactResult contacts(const Collider& other) const { return internal::lut_contacts(obj, other.obj); }
