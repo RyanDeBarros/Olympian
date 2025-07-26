@@ -9,7 +9,7 @@
 namespace oly::col2d::internal
 {
 	// TODO v2 add TBVH_KDOP5, TBVH_KDOP6, TBVH_KDOP7, TBVH_KDOP8
-	enum CObjID : unsigned int
+	enum class CObjID : unsigned int
 	{
 		TPRIMITIVE,
 		TCOMPOUND,
@@ -23,6 +23,9 @@ namespace oly::col2d::internal
 
 	template<typename T>
 	struct CObjIDTrait;
+
+	template<typename T>
+	constexpr size_t cobj_id_of = (size_t)CObjIDTrait<std::decay_t<T>>::ID;
 
 	template<>
 	struct CObjIDTrait<TPrimitive>
@@ -67,7 +70,7 @@ namespace oly::col2d::internal
 	};
 
 	template<typename T>
-	concept IsColliderObject = requires { { CObjIDTrait<T>::ID } -> std::convertible_to<CObjID>; };
+	concept ColliderObjectShape = requires { { CObjIDTrait<std::decay_t<T>>::ID } -> std::convertible_to<CObjID>; };
 
 	class ColliderObject
 	{
@@ -75,7 +78,7 @@ namespace oly::col2d::internal
 		CObjID _id;
 
 	public:
-		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
+		template<ColliderObjectShape CObj>
 		ColliderObject(CObj&& obj) : _obj(std::forward<CObj>(obj)), _id(CObjIDTrait<std::decay_t<CObj>>::ID) {}
 
 		ColliderObject() : _obj(TPrimitive()), _id(CObjIDTrait<TPrimitive>::ID) {}
@@ -86,9 +89,9 @@ namespace oly::col2d::internal
 
 		const void* raw_obj() const { return _obj.raw(); }
 		void* raw_obj() { return _obj.raw(); }
-		CObjID id() const { return _id; }
+		size_t id() const { return (size_t)_id; }
 
-		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
+		template<ColliderObjectShape CObj>
 		const CObj& get() const
 		{
 			if (CObjIDTrait<CObj>::ID == _id)
@@ -97,7 +100,7 @@ namespace oly::col2d::internal
 				throw Error(ErrorCode::INVALID_TYPE);
 		}
 
-		template<typename CObj, typename = std::enable_if_t<internal::IsColliderObject<std::decay_t<CObj>>>>
+		template<ColliderObjectShape CObj>
 		CObj& set()
 		{
 			if (CObjIDTrait<CObj>::ID == _id)

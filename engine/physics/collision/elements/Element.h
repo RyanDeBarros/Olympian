@@ -9,6 +9,7 @@
 #include "physics/collision/Tolerance.h"
 
 #include "core/containers/CopyPtr.h"
+#include "core/containers/BlackBox.h"
 #include "core/base/Parameters.h"
 
 namespace oly::col2d
@@ -21,7 +22,7 @@ namespace oly::col2d
 	using KDOP7 = KDOP<7>;
 	using KDOP8 = KDOP<8>;
 
-	// TODO v2 black box with id instead of variant
+	// TODO v2 black box with id instead of variant. At that point, might as well use KDOP directly instead of CopyPtr.
 	using Element = std::variant<
 		Circle,
 		AABB,
@@ -56,10 +57,9 @@ namespace oly::col2d
 	inline Element element(const KDOP8& c) { return CopyPtr<KDOP8>(c); }
 	inline Element element(KDOP8&& c) { return CopyPtr<KDOP8>(std::move(c)); }
 
-	struct ElementPtr
+	namespace internal
 	{
-	private:
-		enum class ID
+		enum class ElementID
 		{
 			NONE,
 			CIRCLE,
@@ -73,7 +73,85 @@ namespace oly::col2d
 			KDOP6,
 			KDOP7,
 			KDOP8
-		} id = ID::NONE;
+		};
+
+		template<typename T>
+		struct ElementIDTrait;
+
+		template<typename T>
+		concept ElementShape = requires { { ElementIDTrait<std::decay_t<T>>::ID } -> std::convertible_to<ElementID>; };
+
+		template<>
+		struct ElementIDTrait<Circle>
+		{
+			static constexpr ElementID ID = ElementID::CIRCLE;
+		};
+
+		template<>
+		struct ElementIDTrait<AABB>
+		{
+			static constexpr ElementID ID = ElementID::AABB;
+		};
+
+		template<>
+		struct ElementIDTrait<OBB>
+		{
+			static constexpr ElementID ID = ElementID::OBB;
+		};
+
+		template<>
+		struct ElementIDTrait<ConvexHull>
+		{
+			static constexpr ElementID ID = ElementID::CONVEX_HULL;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP2>
+		{
+			static constexpr ElementID ID = ElementID::KDOP2;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP3>
+		{
+			static constexpr ElementID ID = ElementID::KDOP3;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP4>
+		{
+			static constexpr ElementID ID = ElementID::KDOP4;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP5>
+		{
+			static constexpr ElementID ID = ElementID::KDOP5;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP6>
+		{
+			static constexpr ElementID ID = ElementID::KDOP6;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP7>
+		{
+			static constexpr ElementID ID = ElementID::KDOP7;
+		};
+
+		template<>
+		struct ElementIDTrait<KDOP8>
+		{
+			static constexpr ElementID ID = ElementID::KDOP8;
+		};
+	}
+
+	struct ElementPtr
+	{
+	private:
+		internal::ElementID id = internal::ElementID::NONE;
 
 		const void* ptr = nullptr;
 
@@ -93,17 +171,8 @@ namespace oly::col2d
 		explicit ElementPtr(const KDOP8& c)      { set(c); }
 
 		void set(const Element& e);
-		void set(const Circle& c)     { ptr = &c; id = ID::CIRCLE; }
-		void set(const AABB& c)       { ptr = &c; id = ID::AABB; }
-		void set(const OBB& c)        { ptr = &c; id = ID::OBB; }
-		void set(const ConvexHull& c) { ptr = &c; id = ID::CONVEX_HULL; }
-		void set(const KDOP2& c)      { ptr = &c; id = ID::KDOP2; }
-		void set(const KDOP3& c)      { ptr = &c; id = ID::KDOP3; }
-		void set(const KDOP4& c)      { ptr = &c; id = ID::KDOP4; }
-		void set(const KDOP5& c)      { ptr = &c; id = ID::KDOP5; }
-		void set(const KDOP6& c)      { ptr = &c; id = ID::KDOP6; }
-		void set(const KDOP7& c)      { ptr = &c; id = ID::KDOP7; }
-		void set(const KDOP8& c)      { ptr = &c; id = ID::KDOP8; }
+		template<internal::ElementShape E>
+		void set(const E& e) { ptr = &e; id = internal::ElementIDTrait<std::decay_t<E>>::ID; }
 
 		float projection_max(UnitVector2D axis) const;
 		float projection_min(UnitVector2D axis) const;

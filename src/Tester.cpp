@@ -64,7 +64,6 @@ int main()
 		flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 	}
 
-	// TODO in archetypes, renderable/physics data members should be unique_ptrs or handles to registries.
 	oly::gen::BKG bkg;
 	oly::gen::PolygonCrop polygon_crop;
 	oly::gen::SpriteMatch sprite_match;
@@ -232,7 +231,6 @@ int main()
 	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
-	// TODO test obstacles under single combined rigid body
 	auto cv_obstacle0 = obstacle0->collision_view(0, oly::debug::STANDARD_BLUE);
 	obstacle_layer.assign(cv_obstacle0);
 	auto cv_obstacle1 = obstacle1->collision_view(0, oly::debug::STANDARD_BLUE);
@@ -266,7 +264,7 @@ int main()
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
-		polygon_crop.draw(true); // TODO automatic internal batch tracking
+		polygon_crop.draw(true); // TODO v3 automatic internal batch tracking
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
 		sprite_match.draw(true);

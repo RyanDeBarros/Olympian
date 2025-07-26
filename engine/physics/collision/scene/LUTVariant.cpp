@@ -7,13 +7,13 @@ namespace oly::col2d::internal
 
 	struct LUTVariant
 	{
-		VariantFn variant[CObjID::_COUNT];
-		ConstVariantFn const_variant[CObjID::_COUNT];
+		VariantFn variant[(size_t)CObjID::_COUNT];
+		ConstVariantFn const_variant[(size_t)CObjID::_COUNT];
 	} lut;
 
 	static void load_variant_lut()
 	{
-#define OLY_LUT_VARIANT(Class) lut.variant[CObjIDTrait<Class>::ID] = [](void* ptr) -> ColliderObjectVariant { return static_cast<Class*>(ptr); };
+#define OLY_LUT_VARIANT(Class) lut.variant[cobj_id_of<Class>] = [](void* ptr) -> ColliderObjectVariant { return static_cast<Class*>(ptr); };
 
 		OLY_LUT_VARIANT(TPrimitive);
 		OLY_LUT_VARIANT(TCompound);
@@ -28,7 +28,7 @@ namespace oly::col2d::internal
 
 	static void load_const_variant_lut()
 	{
-#define OLY_LUT_CONST_VARIANT(Class) lut.const_variant[CObjIDTrait<Class>::ID] = [](const void* ptr) -> ColliderObjectConstVariant { return static_cast<const Class*>(ptr); };
+#define OLY_LUT_CONST_VARIANT(Class) lut.const_variant[cobj_id_of<Class>] = [](const void* ptr) -> ColliderObjectConstVariant { return static_cast<const Class*>(ptr); };
 
 		OLY_LUT_CONST_VARIANT(TPrimitive);
 		OLY_LUT_CONST_VARIANT(TCompound);

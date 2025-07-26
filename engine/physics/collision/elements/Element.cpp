@@ -8,59 +8,59 @@ namespace oly::col2d
 {
 	void ElementPtr::set(const Element& e)
 	{
-#define OLY_ELEMENT_REGULAR_SET(Class, Enum)\
+#define OLY_ELEMENT_REGULAR_SET(Class)\
 		if constexpr (visiting_class_is<decltype(e), Class>)\
 		{\
 			ptr = &e;\
-			id = Enum;\
+			id = internal::ElementIDTrait<Class>::ID;\
 		}
 
-#define OLY_ELEMENT_COPY_PTR_SET(Class, Enum)\
+#define OLY_ELEMENT_COPY_PTR_SET(Class)\
 		if constexpr (visiting_class_is<decltype(e), CopyPtr<Class>>)\
 		{\
 			ptr = &e;\
-			id = Enum;\
+			id = internal::ElementIDTrait<Class>::ID;\
 		}
 
 		std::visit([this](const auto& e) {
 			ptr = nullptr;
-			id = ID::NONE;
-			OLY_ELEMENT_REGULAR_SET(Circle, ID::CIRCLE);
-			OLY_ELEMENT_REGULAR_SET(AABB, ID::AABB);
-			OLY_ELEMENT_REGULAR_SET(OBB, ID::OBB);
-			OLY_ELEMENT_REGULAR_SET(ConvexHull, ID::CONVEX_HULL);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP2, ID::KDOP2);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP3, ID::KDOP3);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP4, ID::KDOP4);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP5, ID::KDOP5);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP6, ID::KDOP6);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP7, ID::KDOP7);
-			OLY_ELEMENT_COPY_PTR_SET(KDOP8, ID::KDOP8);
+			id = internal::ElementID::NONE;
+			OLY_ELEMENT_REGULAR_SET(Circle);
+			OLY_ELEMENT_REGULAR_SET(AABB);
+			OLY_ELEMENT_REGULAR_SET(OBB);
+			OLY_ELEMENT_REGULAR_SET(ConvexHull);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP2);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP3);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP4);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP5);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP6);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP7);
+			OLY_ELEMENT_COPY_PTR_SET(KDOP8);
 			}, e);
 
 #undef OLY_ELEMENT_REGULAR_SET
 #undef OLY_ELEMENT_COPY_PTR_SET
 	}
 
-#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class, Enum)\
-	case Enum:\
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class)\
+	case internal::ElementIDTrait<Class>::ID:\
 		Macro(static_cast<const Class*>(ptr))\
 		break;
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
 	switch (id)\
 	{\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle, ID::CIRCLE);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB, ID::AABB);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, OBB, ID::OBB);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, ConvexHull, ID::CONVEX_HULL);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP2, ID::KDOP2);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP2, ID::KDOP3);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP4, ID::KDOP4);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP5, ID::KDOP5);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP6, ID::KDOP6);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7, ID::KDOP7);\
-		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8, ID::KDOP8);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, OBB);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, ConvexHull);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP2);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP3);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP4);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP5);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP6);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7);\
+		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8);\
 		default:\
 			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
 	}
@@ -109,7 +109,7 @@ namespace oly::col2d
 
 	AABB ElementPtr::aabb_wrap() const
 	{
-		if (id == ID::AABB)
+		if (id == internal::ElementID::AABB)
 			return *static_cast<const AABB*>(ptr);
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
@@ -144,25 +144,25 @@ namespace oly::col2d
 #undef OLY_ELEMENT_RAYCAST
 	}
 
-#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class, Enum)\
-	case Enum:\
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class)\
+	case internal::ElementIDTrait<Class>::ID:\
 		Macro(p, static_cast<const Class*>(c.ptr))\
 		break;
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
 	switch (c.id)\
 	{\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle, ID::CIRCLE);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB, ID::AABB);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, OBB, ID::OBB);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, ConvexHull, ID::CONVEX_HULL);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP2, ID::KDOP2);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP2, ID::KDOP3);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP4, ID::KDOP4);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP5, ID::KDOP5);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP6, ID::KDOP6);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7, ID::KDOP7);\
-		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8, ID::KDOP8);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, OBB);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, ConvexHull);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP2);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP3);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP4);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP5);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP6);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7);\
+		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8);\
 		default:\
 			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
 	}

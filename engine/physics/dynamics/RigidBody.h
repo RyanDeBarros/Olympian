@@ -51,7 +51,7 @@ namespace oly::physics
 		SoftReference<col2d::Collider> add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }
 		SoftReference<col2d::Collider> add_collider(const col2d::PolygonCollision& polygon) { return add_collider(polygon.as_convex_tbvh<col2d::OBB>()); }
 
-		template<typename CObj, typename = std::enable_if_t<col2d::internal::IsColliderObject<std::decay_t<CObj>>>>
+		template<col2d::internal::ColliderObjectShape CObj>
 		SoftReference<col2d::Collider> add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
 		SoftReference<col2d::Collider> add_collider(col2d::Collider&& collider);
 		
