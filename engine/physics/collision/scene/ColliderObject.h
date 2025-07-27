@@ -8,7 +8,6 @@
 
 namespace oly::col2d::internal
 {
-	// TODO v2 add TBVH_KDOP5, TBVH_KDOP6, TBVH_KDOP7, TBVH_KDOP8
 	enum class CObjID : unsigned int
 	{
 		TPRIMITIVE,
@@ -18,6 +17,10 @@ namespace oly::col2d::internal
 		TBVH_KDOP2,
 		TBVH_KDOP3,
 		TBVH_KDOP4,
+		TBVH_KDOP5,
+		TBVH_KDOP6,
+		TBVH_KDOP7,
+		TBVH_KDOP8,
 		_COUNT
 	};
 
@@ -65,6 +68,30 @@ namespace oly::col2d::internal
 
 	template<>
 	struct CObjIDTrait<TBVH<KDOP4>>
+	{
+		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
+	};
+
+	template<>
+	struct CObjIDTrait<TBVH<KDOP5>>
+	{
+		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
+	};
+
+	template<>
+	struct CObjIDTrait<TBVH<KDOP6>>
+	{
+		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
+	};
+
+	template<>
+	struct CObjIDTrait<TBVH<KDOP7>>
+	{
+		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
+	};
+
+	template<>
+	struct CObjIDTrait<TBVH<KDOP8>>
 	{
 		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
 	};

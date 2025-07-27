@@ -54,7 +54,11 @@ namespace oly::col2d::internal
 			Macro(TBVH<OBB>)\
 			Macro(TBVH<KDOP2>)\
 			Macro(TBVH<KDOP3>)\
-			Macro(TBVH<KDOP4>)
+			Macro(TBVH<KDOP4>)\
+			Macro(TBVH<KDOP5>)\
+			Macro(TBVH<KDOP6>)\
+			Macro(TBVH<KDOP7>)\
+			Macro(TBVH<KDOP8>)
 
 #define OLY_LUT_LIST(Macro)\
 			Macro(TPrimitive)\
@@ -66,7 +70,11 @@ namespace oly::col2d::internal
 			Macro(Class, TBVH<OBB>)\
 			Macro(Class, TBVH<KDOP2>)\
 			Macro(Class, TBVH<KDOP3>)\
-			Macro(Class, TBVH<KDOP4>)
+			Macro(Class, TBVH<KDOP4>)\
+			Macro(Class, TBVH<KDOP5>)\
+			Macro(Class, TBVH<KDOP6>)\
+			Macro(Class, TBVH<KDOP7>)\
+			Macro(Class, TBVH<KDOP8>)
 
 #define OLY_LUT_LIST_INNER(Macro, Class)\
 			Macro(Class, TPrimitive)\
