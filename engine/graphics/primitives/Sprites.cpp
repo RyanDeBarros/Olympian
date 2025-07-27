@@ -32,7 +32,8 @@ namespace oly::rendering
 	}
 
 	SpriteBatch::SpriteBatch(Capacity capacity)
-		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData)), quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims)
+		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
+		quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims)
 	{
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");

@@ -41,7 +41,7 @@ namespace oly::col2d
 		};
 	}
 
-	// TODO v3 some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only. Like a one-way gate. 
+	// TODO v4 some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only. Like a one-way gate. 
 	// Note that this doesn't impede on active rigid body, rather a body's one-wayness is imacted on other objects to allow/disallow them penetration into the body.
 
 	class Collider

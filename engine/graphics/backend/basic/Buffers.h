@@ -26,11 +26,6 @@ namespace oly::graphics
 		GLBuffer& operator=(GLBuffer&&) noexcept;
 
 		operator GLuint () const { return id; }
-
-		void mutable_resize(GLsizeiptr new_size, GLenum usage);
-		void mutable_resize(GLsizeiptr new_size, GLenum usage, GLsizeiptr old_size);
-		void mutable_grow(GLsizeiptr new_size, GLenum usage);
-		void mutable_grow(GLsizeiptr new_size, GLenum usage, GLsizeiptr old_size);
 	};
 
 	template<size_t N>

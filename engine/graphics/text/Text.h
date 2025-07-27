@@ -28,13 +28,14 @@ namespace oly::rendering
 		};
 		graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec2> vbo_block;
 
+		graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_handles_ssbo;
+
 		struct GlyphInfo
 		{
 			GLuint tex_slot;
 			GLuint text_color_slot;
 			GLuint modulation_slot;
 		};
-		graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_handles_ssbo;
 
 		enum
 		{
@@ -78,12 +79,16 @@ namespace oly::rendering
 		};
 
 	private:
+		static const GLuint max_text_colors = 1000;
+		static const GLuint max_modulations = 250;
+
 		struct UBO
 		{
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> text_color, modulation;
 
 			UBO(GLuint text_colors, GLuint modulations)
-				: text_color(text_colors * sizeof(TextColor)), modulation(modulations * sizeof(ModulationRect)) {}
+				: text_color(text_colors * sizeof(TextColor), max_text_colors * sizeof(TextColor)),
+				modulation(modulations * sizeof(ModulationRect), max_modulations * sizeof(ModulationRect)) {}
 		} ubo;
 
 	public:
@@ -96,8 +101,8 @@ namespace oly::rendering
 				: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 			{
 				OLY_ASSERT(4 * initial_glyphs <= nmax<unsigned int>());
-				OLY_ASSERT(text_colors <= 1000); // TODO v3 Here and elsewhere, enforce this constraint when resizing -> add max_size to mutable specialized buffers
-				OLY_ASSERT(modulations <= 250);
+				OLY_ASSERT(text_colors <= max_text_colors);
+				OLY_ASSERT(modulations <= max_modulations);
 			}
 
 		private:

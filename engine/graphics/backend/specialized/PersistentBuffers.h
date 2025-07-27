@@ -18,7 +18,7 @@ namespace oly::graphics
 		};
 	}
 
-	template<typename Struct, internal::PersistentOptions options = internal::PersistentOptions{} >
+	template<typename Struct, internal::PersistentOptions options = internal::PersistentOptions{}>
 	class PersistentGPUBuffer
 	{
 		GLBuffer buf;
@@ -37,7 +37,8 @@ namespace oly::graphics
 			glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 			data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 		}
-		PersistentGPUBuffer(const PersistentGPUBuffer&) = delete;
+		PersistentGPUBuffer(const PersistentGPUBuffer&) = delete; // TODO v3 implement copy semantics
+		PersistentGPUBuffer(PersistentGPUBuffer&&) = delete; // TODO v3 implement move semantics
 
 		GLuint get_size() const { return size; }
 		GLuint get_buffer() const { return buf; }

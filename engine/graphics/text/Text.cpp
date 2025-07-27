@@ -16,7 +16,8 @@ namespace oly::rendering
 	}
 
 	TextBatch::TextBatch(Capacity capacity)
-		: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64)), vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.text_colors, capacity.modulations)
+		: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
+		vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.text_colors, capacity.modulations)
 	{
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::text_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::text_batch, "uGlobalModulation");

@@ -34,45 +34,6 @@ namespace oly::graphics
 		return *this;
 	}
 
-	void GLBuffer::mutable_resize(GLsizeiptr new_size, GLenum usage)
-	{
-		GLint old_size;
-		glGetNamedBufferParameteriv(id, GL_BUFFER_SIZE, &old_size);
-		mutable_resize(new_size, usage, old_size);
-	}
-
-	void GLBuffer::mutable_resize(GLsizeiptr new_size, GLenum usage, GLsizeiptr old_size)
-	{
-		if (new_size != old_size)
-		{
-			GLuint newid;
-			glCreateBuffers(1, &newid);
-			glNamedBufferData(newid, new_size, nullptr, usage);
-			glCopyNamedBufferSubData(id, newid, 0, 0, std::min(new_size, old_size));
-			glDeleteBuffers(1, &id);
-			id = newid;
-		}
-	}
-
-	void GLBuffer::mutable_grow(GLsizeiptr new_size, GLenum usage)
-	{
-		GLint old_size;
-		glGetNamedBufferParameteriv(id, GL_BUFFER_SIZE, &old_size);
-		mutable_grow(new_size, usage, old_size);
-	}
-
-	void GLBuffer::mutable_grow(GLsizeiptr new_size, GLenum usage, GLsizeiptr old_size)
-	{
-		if (new_size > old_size)
-		{
-			GLuint newid;
-			glCreateBuffers(1, &newid);
-			glNamedBufferData(newid, new_size, nullptr, usage);
-			glCopyNamedBufferSubData(id, newid, 0, 0, std::min(new_size, old_size));
-			glDeleteBuffers(1, &id);
-			id = newid;
-		}
-	}
 
 	GLBufferBlock<0>::GLBufferBlock(GLsizei count)
 		: ids(new GLuint[count]), count(count)

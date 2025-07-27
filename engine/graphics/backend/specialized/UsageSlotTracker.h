@@ -92,7 +92,7 @@ namespace oly::graphics
 				slot_lookup[stored_obj] = slot;
 				OLY_ASSERT(slot * sizeof(BufferObjectType) <= (GLuint)buffer.get_size());
 				if (slot * sizeof(BufferObjectType) == buffer.get_size())
-					buffer.grow(buffer.get_size() + sizeof(BufferObjectType));
+					buffer.resize(buffer.get_size() + sizeof(BufferObjectType));
 				buffer.send<BufferObjectType>(slot, buffer_obj);
 			}
 			return true; // slot has changed
