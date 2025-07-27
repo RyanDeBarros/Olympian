@@ -8,7 +8,7 @@ namespace oly::col2d
 	{
 		float proj_max = -nmax<float>();
 		for (const Element& element : elements)
-			proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
+			proj_max = std::max(proj_max, element.projection_max(axis));
 		return proj_max;
 	}
 	
@@ -16,7 +16,7 @@ namespace oly::col2d
 	{
 		float proj_min = nmax<float>();
 		for (const Element& element : elements)
-			proj_min = std::min(proj_min, ElementPtr(element).projection_min(axis));
+			proj_min = std::min(proj_min, element.projection_min(axis));
 		return proj_min;
 	}
 
@@ -24,7 +24,7 @@ namespace oly::col2d
 	{
 		float proj_max = -nmax<float>();
 		for (const Element& element : get_baked())
-			proj_max = std::max(proj_max, ElementPtr(element).projection_max(axis));
+			proj_max = std::max(proj_max, element.projection_max(axis));
 		return proj_max;
 	}
 
@@ -32,7 +32,7 @@ namespace oly::col2d
 	{
 		float proj_min = nmax<float>();
 		for (const Element& element : get_baked())
-			proj_min = std::min(proj_min, ElementPtr(element).projection_min(axis));
+			proj_min = std::min(proj_min, element.projection_min(axis));
 		return proj_min;
 	}
 
@@ -83,7 +83,7 @@ namespace oly::col2d
 		baked.resize(compound.elements.size());
 		glm::mat3 g = transformer.global();
 		for (size_t i = 0; i < baked.size(); ++i)
-			baked[i] = std::visit([&g](auto&& e) { return ElementPtr(e).transformed(g); }, compound.elements[i]);
+			baked[i] = compound.elements[i].transformed(g);
 		dirty = false;
 	}
 

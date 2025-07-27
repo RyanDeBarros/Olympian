@@ -140,11 +140,11 @@ namespace oly::col2d::internal
 
 		void load_flush()
 		{
-			flush_[cobj_id_of<TPrimitive>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(ElementPtr(static_cast<const TPrimitive*>(ptr)->get_baked())).rect(); };
-			flush_[cobj_id_of<TCompound>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(), static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
+			flush_[cobj_id_of<TPrimitive>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TPrimitive*>(ptr)->get_baked()).rect(); };
+			flush_[cobj_id_of<TCompound>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(),
+				static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
 
-
-#define OLY_LUT_FLUSH_BVH(Class) flush_[cobj_id_of<Class>] = [](const void* ptr) { return Wrap<AABB>{}(ElementPtr(static_cast<const Class*>(ptr)->root_shape())).rect(); };
+#define OLY_LUT_FLUSH_BVH(Class) flush_[cobj_id_of<Class>] = [](const void* ptr) { return Wrap<AABB>{}(static_cast<const Class*>(ptr)->root_shape()).rect(); };
 			OLY_LUT_LIST_TBVH(OLY_LUT_FLUSH_BVH);
 #undef OLY_LUT_FLUSH_BVH
 		}

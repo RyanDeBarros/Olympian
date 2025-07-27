@@ -21,7 +21,7 @@ namespace oly::physics
 		return moment_of_inertia(math::Polygon2D{ p[0], p[1], p[2], p[3] }, mass, offset);
 	}
 
-	float moment_of_inertia(col2d::ElementPtr e, float mass, bool relative_to_cm)
+	float moment_of_inertia(const col2d::Element& e, float mass, bool relative_to_cm)
 	{
 		return std::visit([mass, relative_to_cm](const auto& e) {
 			if constexpr (visiting_class_is<decltype(*e), col2d::Circle>)

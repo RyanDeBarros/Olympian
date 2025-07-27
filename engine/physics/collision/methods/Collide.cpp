@@ -1086,32 +1086,32 @@ namespace oly::col2d
 		return sat::contacts(c1, c2);
 	}
 
-	OverlapResult point_hits(ElementPtr c, glm::vec2 test)
+	OverlapResult point_hits(const Element& c, glm::vec2 test)
 	{
 		return c.point_hits(test);
 	}
 
-	OverlapResult ray_hits(ElementPtr c, Ray ray)
+	OverlapResult ray_hits(const Element& c, Ray ray)
 	{
 		return c.ray_hits(ray);
 	}
 
-	RaycastResult raycast(ElementPtr c, Ray ray)
+	RaycastResult raycast(const Element& c, Ray ray)
 	{
 		return c.raycast(ray);
 	}
 
-	OverlapResult overlaps(ElementPtr c1, ElementPtr c2)
+	OverlapResult overlaps(const Element& c1, const Element& c2)
 	{
 		return c1.overlaps(c2);
 	}
 
-	CollisionResult collides(ElementPtr c1, ElementPtr c2)
+	CollisionResult collides(const Element& c1, const Element& c2)
 	{
 		return c1.collides(c2);
 	}
 	
-	ContactResult contacts(ElementPtr c1, ElementPtr c2)
+	ContactResult contacts(const Element& c1, const Element& c2)
 	{
 		return c1.contacts(c2);
 	}

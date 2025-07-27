@@ -329,17 +329,6 @@ namespace oly::col2d
 				return tc;
 			}
 
-			static CopyPtr<KDOP<K>> create_affine_kdop_ptr(const KDOP<K>& c, const glm::mat3x2& g)
-			{
-				CopyPtr<KDOP<K>> tc(c);
-				glm::mat3x2 full = augment(g) * augment(c.global, c.global_offset);
-				tc->global = glm::mat2(full);
-				tc->global_offset = full[2];
-				tc->global_inverse = glm::inverse(tc->global);
-				tc->flag();
-				return tc;
-			}
-
 			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2, int& offset2, int& sign2)
 			{
 				static const auto nonrotated_compatible_globals = [](UnitVector2D v10, UnitVector2D v11, UnitVector2D v20, UnitVector2D v21, int& offset2, int& sign2) -> bool {

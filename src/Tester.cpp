@@ -135,8 +135,8 @@ int main()
 	player->properties().net_linear_acceleration += oly::physics::GRAVITY;
 	player->properties().set_mass(50.0f);
 
-	//oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f })));
-	oly::col2d::TPrimitive player_collider(oly::col2d::element(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f }));
+	//oly::col2d::TPrimitive player_collider(oly::col2d::KDOP3({ -300.0f, -100.0f, -100.0f }, { 100.0f, 100.0f, 100.0f }));
+	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
 	//player->add_collider(star.as_convex_tcompound());
 	player->collider()->layer() |= CollisionLayers::L_PLAYER;

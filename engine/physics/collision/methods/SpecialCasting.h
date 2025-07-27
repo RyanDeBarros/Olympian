@@ -26,7 +26,8 @@ namespace oly::col2d
 		Capsule finite_capsule(float infinite_clip = 0.0f) const
 		{
 			float clip = ray.clip == 0.0f ? infinite_clip : ray.clip;
-			return Capsule{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .obb_width = 2.0f * radius, .obb_height = clip, .rotation = (-ray.direction.get_quarter_turn()).rotation()};
+			return Capsule{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .obb_width = 2.0f * radius,
+				.obb_height = clip, .rotation = (-ray.direction.get_quarter_turn()).rotation()};
 		}
 	};
 
@@ -37,10 +38,10 @@ namespace oly::col2d
 		{
 			RectCast finite = cast;
 			finite.ray.clip = std::max(c.projection_max(cast.ray.direction) - cast.ray.direction.dot(cast.ray.origin), 0.0f);
-			return overlaps(c, ElementPtr(finite.finite_obb()));
+			return overlaps(c, finite.finite_obb());
 		}
 		else
-			return overlaps(c, ElementPtr(cast.finite_obb()));
+			return overlaps(c, cast.finite_obb());
 	}
 
 	template<typename Shape>

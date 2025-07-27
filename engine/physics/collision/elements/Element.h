@@ -22,41 +22,6 @@ namespace oly::col2d
 	using KDOP7 = KDOP<7>;
 	using KDOP8 = KDOP<8>;
 
-	// TODO v2 black box with id instead of variant. At that point, might as well use KDOP directly instead of CopyPtr.
-	using Element = std::variant<
-		Circle,
-		AABB,
-		OBB,
-		ConvexHull,
-		CopyPtr<KDOP2>,
-		CopyPtr<KDOP3>,
-		CopyPtr<KDOP4>,
-		CopyPtr<KDOP5>,
-		CopyPtr<KDOP6>,
-		CopyPtr<KDOP7>,
-		CopyPtr<KDOP8>
-	>;
-
-	inline Element element(const Circle& c) { return c; }
-	inline Element element(const AABB& c) { return c; }
-	inline Element element(const OBB& c) { return c; }
-	inline Element element(const ConvexHull& c) { return c; }
-	inline Element element(ConvexHull&& c) { return std::move(c); }
-	inline Element element(const KDOP2& c) { return CopyPtr<KDOP2>(c); }
-	inline Element element(KDOP2&& c) { return CopyPtr<KDOP2>(std::move(c)); }
-	inline Element element(const KDOP3& c) { return CopyPtr<KDOP3>(c); }
-	inline Element element(KDOP3&& c) { return CopyPtr<KDOP3>(std::move(c)); }
-	inline Element element(const KDOP4& c) { return CopyPtr<KDOP4>(c); }
-	inline Element element(KDOP4&& c) { return CopyPtr<KDOP4>(std::move(c)); }
-	inline Element element(const KDOP5& c) { return CopyPtr<KDOP5>(c); }
-	inline Element element(KDOP5&& c) { return CopyPtr<KDOP5>(std::move(c)); }
-	inline Element element(const KDOP6& c) { return CopyPtr<KDOP6>(c); }
-	inline Element element(KDOP6&& c) { return CopyPtr<KDOP6>(std::move(c)); }
-	inline Element element(const KDOP7& c) { return CopyPtr<KDOP7>(c); }
-	inline Element element(KDOP7&& c) { return CopyPtr<KDOP7>(std::move(c)); }
-	inline Element element(const KDOP8& c) { return CopyPtr<KDOP8>(c); }
-	inline Element element(KDOP8&& c) { return CopyPtr<KDOP8>(std::move(c)); }
-
 	namespace internal
 	{
 		enum class ElementID
@@ -148,38 +113,35 @@ namespace oly::col2d
 		};
 	}
 
-	struct ElementPtr
+	class Element
 	{
-	private:
 		internal::ElementID id = internal::ElementID::NONE;
-
-		const void* ptr = nullptr;
+		BlackBox<true> obj;
 
 	public:
-		ElementPtr() = default;
-		explicit ElementPtr(const Element& e)    { set(e); }
-		explicit ElementPtr(const Circle& c)     { set(c); }
-		explicit ElementPtr(const AABB& c)       { set(c); }
-		explicit ElementPtr(const OBB& c)        { set(c); }
-		explicit ElementPtr(const ConvexHull& c) { set(c); }
-		explicit ElementPtr(const KDOP2& c)      { set(c); }
-		explicit ElementPtr(const KDOP3& c)      { set(c); }
-		explicit ElementPtr(const KDOP4& c)      { set(c); }
-		explicit ElementPtr(const KDOP5& c)      { set(c); }
-		explicit ElementPtr(const KDOP6& c)      { set(c); }
-		explicit ElementPtr(const KDOP7& c)      { set(c); }
-		explicit ElementPtr(const KDOP8& c)      { set(c); }
+		Element() = default;
+		template<internal::ElementShape Shape>
+		Element(Shape&& shape) : obj(std::forward<Shape>(shape)) { id = internal::ElementIDTrait<std::decay_t<Shape>>::ID; }
 
-		void set(const Element& e);
-		template<internal::ElementShape E>
-		void set(const E& e) { ptr = &e; id = internal::ElementIDTrait<std::decay_t<E>>::ID; }
+		template<internal::ElementShape Shape>
+		Element& operator=(Shape&& shape)
+		{
+			if (internal::ElementIDTrait<std::decay_t<Shape>>::ID == id)
+				*obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
+			else
+			{
+				obj = BlackBox<true>(std::forward<Shape>(shape));
+				id = internal::ElementIDTrait<std::decay_t<Shape>>::ID;
+			}
+			return *this;
+		}
 
 		float projection_max(UnitVector2D axis) const;
 		float projection_min(UnitVector2D axis) const;
 		fpair projection_interval(UnitVector2D axis) const;
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
-		
+
 		using ElementVariant = std::variant<
 			const Circle*,
 			const AABB*,
@@ -200,25 +162,10 @@ namespace oly::col2d
 		OverlapResult point_hits(glm::vec2 test) const;
 		OverlapResult ray_hits(Ray ray) const;
 		RaycastResult raycast(Ray ray) const;
-		OverlapResult overlaps(ElementPtr c) const;
-		CollisionResult collides(ElementPtr c) const;
-		ContactResult contacts(ElementPtr c) const;
+		OverlapResult overlaps(const Element& c) const;
+		CollisionResult collides(const Element& c) const;
+		ContactResult contacts(const Element& c) const;
 	};
-
-	namespace internal
-	{
-		extern Element transform_element(const Circle& c, const glm::mat3& m);
-		extern Element transform_element(const AABB& c, const glm::mat3& m);
-		extern Element transform_element(const OBB& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP2& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP3& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP4& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP5& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP6& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP7& c, const glm::mat3& m);
-		extern Element transform_element(const KDOP8& c, const glm::mat3& m);
-		extern Element transform_element(const ConvexHull& c, const glm::mat3& m);
-	}
 
 	typedef int Mask;
 	typedef int Layer;

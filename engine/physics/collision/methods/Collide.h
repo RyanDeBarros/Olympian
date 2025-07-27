@@ -117,22 +117,12 @@ namespace oly::col2d
 	// ######################################################################################################################################################
 
 	// ######################################################################################################################################################
-	// ElementPtr
-	extern OverlapResult point_hits(ElementPtr c, glm::vec2 test);
-	extern OverlapResult ray_hits(ElementPtr c, Ray ray);
-	extern RaycastResult raycast(ElementPtr c, Ray ray);
-	extern OverlapResult overlaps(ElementPtr c1, ElementPtr c2);
-	extern CollisionResult collides(ElementPtr c1, ElementPtr c2);
-	extern ContactResult contacts(ElementPtr c1, ElementPtr c2);
-	// ######################################################################################################################################################
-
-	// ######################################################################################################################################################
 	// Element
-	inline OverlapResult point_hits(const Element& c, glm::vec2 test) { return point_hits(ElementPtr(c), test); }
-	inline OverlapResult ray_hits(const Element& c, Ray ray) { return ray_hits(ElementPtr(c), ray); }
-	inline RaycastResult raycast(const Element& c, Ray ray) { return raycast(ElementPtr(c), ray); }
-	inline OverlapResult overlaps(const Element& c1, const Element& c2) { return overlaps(ElementPtr(c1), ElementPtr(c2)); }
-	inline CollisionResult collides(const Element& c1, const Element& c2) { return collides(ElementPtr(c1), ElementPtr(c2)); }
-	inline ContactResult contacts(const Element& c1, const Element& c2) { return contacts(ElementPtr(c1), ElementPtr(c2)); }
+	extern OverlapResult point_hits(const Element& c, glm::vec2 test);
+	extern OverlapResult ray_hits(const Element& c, Ray ray);
+	extern RaycastResult raycast(const Element& c, Ray ray);
+	extern OverlapResult overlaps(const Element& c1, const Element& c2);
+	extern CollisionResult collides(const Element& c1, const Element& c2);
+	extern ContactResult contacts(const Element& c1, const Element& c2);
 	// ######################################################################################################################################################
 }
