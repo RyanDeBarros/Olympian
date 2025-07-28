@@ -10,34 +10,32 @@ namespace oly::physics
 	}
 
 	RigidBody::RigidBody(const RigidBody& other)
-		: colliders(other.colliders), transformer(other.transformer), dynamics(other.dynamics)
+		: colliders(other.colliders), transformer(other.transformer)
 	{
 		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			(*it)->rigid_body = this;
 			(*it)->set_transformer().attach_parent(&transformer);
-			bind_by_flag(**it);
 		}
 	}
 	
 	RigidBody::RigidBody(RigidBody&& other) noexcept
-		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer)), dynamics(std::move(other.dynamics))
+		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer))
 	{
 		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			(*it)->rigid_body = this;
 			(*it)->set_transformer().attach_parent(&transformer);
-			bind_by_flag(**it);
-			other.unbind_by_flag(**it);
+			other.unbind(**it);
 		}
 	}
 	
 	RigidBody::~RigidBody()
 	{
 		internal::RigidBodyManager::instance().rigid_bodies.erase(this);
-		clear_colliders();
+		colliders.clear();
 	}
 	
 	RigidBody& RigidBody::operator=(const RigidBody& other)
@@ -47,12 +45,11 @@ namespace oly::physics
 			clear_colliders();
 			colliders = other.colliders;
 			transformer = other.transformer;
-			dynamics = other.dynamics;
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
 				(*it)->rigid_body = this;
 				(*it)->set_transformer().attach_parent(&transformer);
-				bind_by_flag(**it);
+				bind(**it);
 			}
 		}
 		return *this;
@@ -65,13 +62,12 @@ namespace oly::physics
 			clear_colliders();
 			colliders = std::move(other.colliders);
 			transformer = std::move(other.transformer);
-			dynamics = std::move(other.dynamics);
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
 				(*it)->rigid_body = this;
 				(*it)->set_transformer().attach_parent(&transformer);
-				bind_by_flag(**it);
-				other.unbind_by_flag(**it);
+				bind(**it);
+				other.unbind(**it);
 			}
 		}
 		return *this;
@@ -85,13 +81,13 @@ namespace oly::physics
 		c->rigid_body = this;
 		c->set_transformer().attach_parent(&transformer);
 		c->handles.attach();
-		bind_by_flag(*c);
+		bind(*c);
 		return c->ref();
 	}
 
 	void RigidBody::erase_collider(size_t i)
 	{
-		unbind_by_flag(*colliders[i]);
+		unbind(*colliders[i]);
 		colliders.erase(colliders.begin() + i);
 	}
 
@@ -101,7 +97,7 @@ namespace oly::physics
 		{
 			if (it->get() == collider.get())
 			{
-				unbind_by_flag(**it);
+				unbind(**it);
 				colliders.erase(it);
 				return;
 			}
@@ -111,7 +107,7 @@ namespace oly::physics
 	void RigidBody::clear_colliders()
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			unbind_by_flag(**it);
+			unbind(**it);
 		colliders.clear();
 	}
 
@@ -135,103 +131,20 @@ namespace oly::physics
 		colliders[i]->update_view(view);
 	}
 
-	void RigidBody::physics_pre_tick()
-	{
-		dynamics.pre_tick(transformer.global());
-	}
-
-	void RigidBody::physics_post_tick()
-	{
-		dynamics.post_tick();
-		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
-	}
-
-	void RigidBody::set_flag(DynamicsComponent::Flag flag)
-	{
-		if (dynamics.flag == DynamicsComponent::Flag::STATIC)
-		{
-			if (flag == DynamicsComponent::Flag::KINEMATIC)
-				bind_contacts_handler();
-			else if (flag == DynamicsComponent::Flag::LINEAR)
-				bind_collides_handler();
-		}
-		else if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
-		{
-			if (flag == DynamicsComponent::Flag::STATIC)
-				unbind_contacts_handler();
-			else if (flag == DynamicsComponent::Flag::LINEAR)
-			{
-				unbind_contacts_handler();
-				bind_collides_handler();
-			}
-		}
-		else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
-		{
-			if (flag == DynamicsComponent::Flag::STATIC)
-				unbind_collides_handler();
-			else if (flag == DynamicsComponent::Flag::KINEMATIC)
-			{
-				unbind_collides_handler();
-				bind_contacts_handler();
-			}
-		}
-		dynamics.flag = flag;
-	}
-
-	void RigidBody::handle_collides(const col2d::CollisionEventData& data) const
-	{
-		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			if (RigidBody* other = data.passive_collider->rigid_body)
-				if (other != this)
-					dynamics.add_collision(data.mtv(), {}, other->dynamics);
-	}
-
-	void RigidBody::handle_contacts(const col2d::ContactEventData& data) const
-	{
-		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			if (RigidBody* other = data.passive_collider->rigid_body)
-				if (other != this)
-					dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, other->dynamics);
-	}
-
-	void RigidBody::bind_collides_handler() const
+	void RigidBody::bind_all() const
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().register_handler((*it)->cref(), &RigidBody::handle_collides, cref());
+			bind(**it);
 	}
-
-	void RigidBody::bind_contacts_handler() const
+	void RigidBody::unbind_all() const
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().register_handler((*it)->cref(), &RigidBody::handle_contacts, cref());
+			unbind(**it);
 	}
 
-	void RigidBody::unbind_collides_handler() const
+	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider) const
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().unregister_handler((*it)->cref(), &RigidBody::handle_collides, cref());
-	}
-
-	void RigidBody::unbind_contacts_handler() const
-	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			context::collision_dispatcher().unregister_handler((*it)->cref(), &RigidBody::handle_contacts, cref());
-	}
-
-	void RigidBody::bind_by_flag(const col2d::Collider& collider) const
-	{
-		if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
-			context::collision_dispatcher().register_handler(collider.cref(), &RigidBody::handle_contacts, cref());
-		else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
-			context::collision_dispatcher().register_handler(collider.cref(), &RigidBody::handle_collides, cref());
-	}
-	
-	void RigidBody::unbind_by_flag(const col2d::Collider& collider) const
-	{
-		if (dynamics.flag == DynamicsComponent::Flag::KINEMATIC)
-			context::collision_dispatcher().unregister_handler(collider.cref(), &RigidBody::handle_contacts, cref());
-		else if (dynamics.flag == DynamicsComponent::Flag::LINEAR)
-			context::collision_dispatcher().unregister_handler(collider.cref(), &RigidBody::handle_collides, cref());
+		return collider.rigid_body;
 	}
 
 	void internal::RigidBodyManager::on_tick() const
@@ -240,5 +153,158 @@ namespace oly::physics
 			rigid_body->physics_pre_tick();
 		for (RigidBody* rigid_body : rigid_bodies)
 			rigid_body->physics_post_tick();
+	}
+
+	StaticBody::StaticBody()
+		: RigidBody()
+	{
+	}
+
+	StaticBody::StaticBody(const StaticBody& other)
+		: RigidBody(other), dynamics(other.dynamics)
+	{
+		bind_all();
+	}
+
+	StaticBody::StaticBody(StaticBody&& other) noexcept
+		: RigidBody(std::move(other)), dynamics(std::move(other.dynamics))
+	{
+		bind_all();
+	}
+
+	StaticBody::~StaticBody()
+	{
+		unbind_all();
+	}
+
+	void StaticBody::physics_pre_tick()
+	{
+		dynamics.pre_tick(transformer.global());
+	}
+
+	void StaticBody::physics_post_tick()
+	{
+		dynamics.post_tick();
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
+	}
+
+	void StaticBody::handle_overlaps(const col2d::OverlapEventData& data) const
+	{
+		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+			if (const RigidBody* other = rigid_body(*data.passive_collider))
+				if (other != this)
+					dynamics.add_collision({}, {}, dynamics_of(*other));
+	}
+
+	void StaticBody::bind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().register_handler(collider.cref(), &StaticBody::handle_overlaps, cref());
+	}
+
+	void StaticBody::unbind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().unregister_handler(collider.cref(), &StaticBody::handle_overlaps, cref());
+	}
+
+	LinearBody::LinearBody()
+		: RigidBody()
+	{
+	}
+
+	LinearBody::LinearBody(const LinearBody& other)
+		: RigidBody(other), dynamics(other.dynamics)
+	{
+		bind_all();
+	}
+
+	LinearBody::LinearBody(LinearBody&& other) noexcept
+		: RigidBody(std::move(other)), dynamics(std::move(other.dynamics))
+	{
+		bind_all();
+	}
+
+	LinearBody::~LinearBody()
+	{
+		unbind_all();
+	}
+
+	void LinearBody::physics_pre_tick()
+	{
+		dynamics.pre_tick(transformer.global());
+	}
+
+	void LinearBody::physics_post_tick()
+	{
+		dynamics.post_tick();
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
+	}
+
+	void LinearBody::handle_collides(const col2d::CollisionEventData& data) const
+	{
+		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+			if (const RigidBody* other = rigid_body(*data.passive_collider))
+				if (other != this)
+					dynamics.add_collision(data.mtv(), {}, dynamics_of(*other));
+	}
+
+	void LinearBody::bind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().register_handler(collider.cref(), &LinearBody::handle_collides, cref());
+	}
+
+	void LinearBody::unbind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().unregister_handler(collider.cref(), &LinearBody::handle_collides, cref());
+	}
+
+	KinematicBody::KinematicBody()
+		: RigidBody()
+	{
+	}
+
+	KinematicBody::KinematicBody(const KinematicBody& other)
+		: RigidBody(other), dynamics(other.dynamics)
+	{
+		bind_all();
+	}
+
+	KinematicBody::KinematicBody(KinematicBody&& other) noexcept
+		: RigidBody(std::move(other)), dynamics(std::move(other.dynamics))
+	{
+		bind_all();
+	}
+
+	KinematicBody::~KinematicBody()
+	{
+		unbind_all();
+	}
+
+	void KinematicBody::physics_pre_tick()
+	{
+		dynamics.pre_tick(transformer.global());
+	}
+
+	void KinematicBody::physics_post_tick()
+	{
+		dynamics.post_tick();
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
+	}
+
+	void KinematicBody::handle_contacts(const col2d::ContactEventData& data) const
+	{
+		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+			if (const RigidBody* other = rigid_body(*data.passive_collider))
+				if (other != this)
+					dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, dynamics_of(*other));
+	}
+
+	void KinematicBody::bind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().register_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
+	}
+
+	void KinematicBody::unbind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().unregister_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
 	}
 }

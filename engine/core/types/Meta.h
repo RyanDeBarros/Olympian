@@ -95,6 +95,9 @@ namespace oly
 	template<typename From, typename To>
 	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 
+	template<typename From, typename To>
+	concept PolymorphicBaseOf = std::is_polymorphic_v<To> && std::is_base_of_v<To, From>;
+
 	template<typename T, typename... Class>
 	constexpr bool visiting_class_is = std::disjunction_v<std::is_same<std::decay_t<T>, Class>...>;
 

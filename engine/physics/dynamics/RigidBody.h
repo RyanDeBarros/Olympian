@@ -15,18 +15,15 @@ namespace oly::physics
 	{
 		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
 
-	private:
+	protected:
 		std::vector<CopyPtr<col2d::Collider>> colliders;
 		Transformer2D transformer;
-
-		friend class DynamicsComponent;
-		DynamicsComponent dynamics;
 
 	public:
 		RigidBody();
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
-		~RigidBody();
+		virtual ~RigidBody();
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
@@ -35,26 +32,15 @@ namespace oly::physics
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		SoftReference<col2d::Collider> add_collider(const col2d::AABB& obj) { return add_collider(col2d::TPrimitive(obj)); }
-		SoftReference<col2d::Collider> add_collider(col2d::AABB&& obj) { return add_collider(col2d::TPrimitive(std::move(obj))); }
-		SoftReference<col2d::Collider> add_collider(const col2d::OBB& obj) { return add_collider(col2d::TPrimitive(obj)); }
-		SoftReference<col2d::Collider> add_collider(col2d::OBB&& obj) { return add_collider(col2d::TPrimitive(std::move(obj))); }
-		SoftReference<col2d::Collider> add_collider(const col2d::ConvexHull& obj) { return add_collider(col2d::TPrimitive(obj)); }
-		SoftReference<col2d::Collider> add_collider(col2d::ConvexHull&& obj) { return add_collider(col2d::TPrimitive(std::move(obj))); }
-		SoftReference<col2d::Collider> add_collider(const col2d::Circle& obj) { return add_collider(col2d::TPrimitive(obj)); }
-		SoftReference<col2d::Collider> add_collider(col2d::Circle&& obj) { return add_collider(col2d::TPrimitive(std::move(obj))); }
-		template<size_t K>
-		SoftReference<col2d::Collider> add_collider(const col2d::KDOP<K>& obj) { return add_collider(col2d::TPrimitive(obj)); }
-		template<size_t K>
-		SoftReference<col2d::Collider> add_collider(col2d::KDOP<K>&& obj) { return add_collider(col2d::TPrimitive(std::move(obj))); }
-
+		template<col2d::internal::ElementShape Shape>
+		SoftReference<col2d::Collider> add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
 		SoftReference<col2d::Collider> add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }
 		SoftReference<col2d::Collider> add_collider(const col2d::PolygonCollision& polygon) { return add_collider(polygon.as_convex_tbvh<col2d::OBB>()); }
 
 		template<col2d::internal::ColliderObjectShape CObj>
 		SoftReference<col2d::Collider> add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
 		SoftReference<col2d::Collider> add_collider(col2d::Collider&& collider);
-		
+
 		void erase_collider(size_t i);
 		void remove_collider(const SoftReference<col2d::Collider>& collider);
 		void clear_colliders();
@@ -67,32 +53,23 @@ namespace oly::physics
 
 	private:
 		friend class internal::RigidBodyManager;
-		void physics_pre_tick();
-		void physics_post_tick();
+		virtual void physics_pre_tick() = 0;
+		virtual void physics_post_tick() = 0;
 
 	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
-		const Properties& properties() const { return dynamics.properties; }
-		Properties& properties() { return dynamics.properties; }
-		State state() const { return dynamics.get_state(); }
-		DynamicsComponent::Flag get_flag() const { return dynamics.flag; }
-		void set_flag(DynamicsComponent::Flag flag);
-		bool is_colliding() const { return dynamics.is_colliding(); }
+		virtual State state() const = 0;
+		virtual bool is_colliding() const = 0;
 
-	private:
-		void handle_collides(const col2d::CollisionEventData& data) const;
-		void handle_contacts(const col2d::ContactEventData& data) const;
+	protected:
+		virtual void bind(const col2d::Collider& collider) const = 0;
+		virtual void unbind(const col2d::Collider& collider) const = 0;
+		void bind_all() const;
+		void unbind_all() const;
 
-		void bind_collides_handler() const;
-		void bind_contacts_handler() const;
-		void unbind_collides_handler() const;
-		void unbind_contacts_handler() const;
-		void bind_by_flag(const col2d::Collider& collider) const;
-		void unbind_by_flag(const col2d::Collider& collider) const;
+		virtual const DynamicsComponent& get_dynamics() const = 0;
+		const RigidBody* rigid_body(const col2d::Collider& collider) const;
+		const DynamicsComponent& dynamics_of(const RigidBody& other) const { return other.get_dynamics(); }
 	};
-
-	typedef SmartHandle<RigidBody> RigidBodyRef;
 
 	namespace internal
 	{
@@ -121,4 +98,116 @@ namespace oly::physics
 			}
 		};
 	}
+
+	class StaticBody : public RigidBody
+	{
+		OLY_COLLISION_CONTROLLER_HEADER(StaticBody);
+
+	private:
+		DynamicsComponent dynamics;
+
+	public:
+		StaticBody();
+		StaticBody(const StaticBody&);
+		StaticBody(StaticBody&&) noexcept;
+		~StaticBody();
+
+	protected:
+		void physics_pre_tick() override;
+		void physics_post_tick() override;
+
+	public:
+		const MaterialRef& material() const { return dynamics.material; }
+		MaterialRef& material() { return dynamics.material; }
+
+		State state() const override { return dynamics.get_state(); }
+		bool is_colliding() const override { return dynamics.is_colliding(); }
+
+	protected:
+		void bind(const col2d::Collider& collider) const override;
+		void unbind(const col2d::Collider& collider) const override;
+
+		const DynamicsComponent& get_dynamics() const override { return dynamics; }
+
+	private:
+		void handle_overlaps(const col2d::OverlapEventData& data) const;
+	};
+
+	typedef SmartHandle<StaticBody> StaticBodyRef;
+
+	class LinearBody : public RigidBody
+	{
+		OLY_COLLISION_CONTROLLER_HEADER(LinearBody);
+
+	private:
+		LinearPhysicsComponent dynamics;
+
+	public:
+		LinearBody();
+		LinearBody(const LinearBody&);
+		LinearBody(LinearBody&&) noexcept;
+		~LinearBody();
+
+	protected:
+		void physics_pre_tick() override;
+		void physics_post_tick() override;
+
+	public:
+		const MaterialRef& material() const { return dynamics.material; }
+		MaterialRef& material() { return dynamics.material; }
+		const LinearPhysicsProperties& properties() const { return dynamics.properties; }
+		LinearPhysicsProperties& properties() { return dynamics.properties; }
+
+		State state() const override { return dynamics.get_state(); }
+		bool is_colliding() const override { return dynamics.is_colliding(); }
+
+	protected:
+		void bind(const col2d::Collider& collider) const override;
+		void unbind(const col2d::Collider& collider) const override;
+
+		const DynamicsComponent& get_dynamics() const override { return dynamics; }
+
+	private:
+		void handle_collides(const col2d::CollisionEventData& data) const;
+	};
+
+	typedef SmartHandle<LinearBody> LinearBodyRef;
+
+	class KinematicBody : public RigidBody
+	{
+		OLY_COLLISION_CONTROLLER_HEADER(KinematicBody);
+
+	private:
+		KinematicPhysicsComponent dynamics;
+
+	public:
+		KinematicBody();
+		KinematicBody(const KinematicBody&);
+		KinematicBody(KinematicBody&&) noexcept;
+		~KinematicBody();
+
+	protected:
+		void physics_pre_tick() override;
+		void physics_post_tick() override;
+
+	public:
+		const MaterialRef& material() const { return dynamics.material; }
+		MaterialRef& material() { return dynamics.material; }
+		const KinematicPhysicsProperties& properties() const { return dynamics.properties; }
+		KinematicPhysicsProperties& properties() { return dynamics.properties; }
+
+		State state() const override { return dynamics.get_state(); }
+		bool is_colliding() const override { return dynamics.is_colliding(); }
+
+	protected:
+		void bind(const col2d::Collider& collider) const override;
+		void unbind(const col2d::Collider& collider) const override;
+
+		const DynamicsComponent& get_dynamics() const override { return dynamics; }
+
+	private:
+		void handle_contacts(const col2d::ContactEventData& data) const;
+	};
+
+	typedef SmartHandle<KinematicBody> KinematicBodyRef;
 }

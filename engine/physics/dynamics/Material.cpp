@@ -2,66 +2,83 @@
 
 namespace oly::physics
 {
-	float Material::restitution_with(const Material& mat) const
+	float Restitution::restitution_with(Restitution other) const
 	{
-		switch (blending.restitution)
+		switch (mode)
 		{
 		case FactorBlendOp::MINIMUM:
-			return std::min(_restitution, mat._restitution);
+			return std::min(_value, other._value);
 		case FactorBlendOp::ARITHMETIC_MEAN:
-			return 0.5f * (_restitution + mat._restitution);
+			return 0.5f * (_value + other._value);
 		case FactorBlendOp::GEOMETRIC_MEAN:
-			return _sqrt_restitution * mat._sqrt_restitution;
+			return _sqrt * other._sqrt;
 		case FactorBlendOp::ACTIVE:
-			return _restitution;
+			return _value;
 		}
 		return 0.0f;
 	}
 
-	float Material::friction_with(const Material& mat, FrictionType friction_type) const
+	float Friction::friction_with(Friction other, FrictionType type) const
 	{
-		if (friction_type == FrictionType::STATIC)
+		switch (type)
 		{
-			switch (blending.static_friction)
+		case FrictionType::STATIC:
+			switch (static_mode)
 			{
 			case FactorBlendOp::MINIMUM:
-				return std::min(_static_friction, mat._static_friction);
+				return std::min(_static_friction, other._static_friction);
 			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_static_friction + mat._static_friction);
+				return 0.5f * (_static_friction + other._static_friction);
 			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_static_friction * mat._sqrt_static_friction;
+				return _sqrt_static_friction * other._sqrt_static_friction;
 			case FactorBlendOp::ACTIVE:
 				return _static_friction;
 			}
-		}
-		else if (friction_type == FrictionType::KINETIC)
-		{
-			switch (blending.kinetic_friction)
+			break;
+		case FrictionType::KINETIC:
+			switch (kinetic_mode)
 			{
 			case FactorBlendOp::MINIMUM:
-				return std::min(_kinetic_friction, mat._kinetic_friction);
+				return std::min(_kinetic_friction, other._kinetic_friction);
 			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_kinetic_friction + mat._kinetic_friction);
+				return 0.5f * (_kinetic_friction + other._kinetic_friction);
 			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_kinetic_friction * mat._sqrt_kinetic_friction;
+				return _sqrt_kinetic_friction * other._sqrt_kinetic_friction;
 			case FactorBlendOp::ACTIVE:
 				return _kinetic_friction;
 			}
-		}
-		else if (friction_type == FrictionType::ROLLING)
-		{
-			switch (blending.rolling_friction)
+			break;
+		case FrictionType::ROLLING:
+			switch (rolling_mode)
 			{
 			case FactorBlendOp::MINIMUM:
-				return std::min(_rolling_friction, mat._rolling_friction);
+				return std::min(_rolling_friction, other._rolling_friction);
 			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_rolling_friction + mat._rolling_friction);
+				return 0.5f * (_rolling_friction + other._rolling_friction);
 			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_rolling_friction * mat._sqrt_rolling_friction;
+				return _sqrt_rolling_friction * other._sqrt_rolling_friction;
 			case FactorBlendOp::ACTIVE:
 				return _rolling_friction;
 			}
+			break;
 		}
 		return 0.0f;
+	}
+
+	void AngularSnapping::set_uniformly_spaced_without_threshold(const size_t angles, float angle_offset)
+	{
+		snaps.clear();
+		const float multiple = glm::two_pi<float>() / angles;
+		for (size_t i = 0; i < angles; ++i)
+			snaps.insert(i * multiple + angle_offset);
+	}
+
+	void AngularSnapping::set_uniformly_spaced(const size_t angles, float angle_offset)
+	{
+		snaps.clear();
+		const float multiple = glm::two_pi<float>() / angles;
+		for (size_t i = 0; i < angles; ++i)
+			snaps.insert(i * multiple + angle_offset);
+		angle_threshold = glm::pi<float>() / angles;
 	}
 }

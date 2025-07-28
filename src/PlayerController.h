@@ -13,7 +13,7 @@ public:
 	glm::vec2 ref_cursor_pos = {};
 	glm::vec2 ref_text_pos = {};
 	oly::rendering::ParagraphRef test_text = nullptr;
-	oly::physics::RigidBodyRef rigid_body = nullptr;
+	oly::physics::KinematicBodyRef rigid_body = nullptr;
 
 	bool jump(oly::input::Signal signal);
 	bool click(oly::input::Signal signal);

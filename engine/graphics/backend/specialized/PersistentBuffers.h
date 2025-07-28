@@ -174,7 +174,8 @@ namespace oly::graphics
 			data.fill(nullptr);
 			init(std::make_index_sequence<N>{});
 		}
-		PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
+		PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete; // TODO v3 copy semantics
+		PersistentGPUBufferBlock(PersistentGPUBufferBlock&&) = delete; // TODO v3 copy semantics
 
 		template<size_t n>
 		GLuint get_size() const { return size[n]; }

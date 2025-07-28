@@ -31,7 +31,7 @@ namespace oly::col2d
 			math::Rect2D bounds;
 			CollisionNode* parent = nullptr;
 			FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-			ContiguousSet<ConstSoftReference<Collider>> colliders;
+			ContiguousSet<ConstSoftReference<Collider>> colliders; // TODO use pointers, not soft references.
 
 			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
 			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);

@@ -6,6 +6,8 @@
 
 namespace oly
 {
+	// TODO v3 remove SoftReference.
+
 	/*
 	 * Soft references allow for safe, non-dangling, non-owning references to objects of any allocation type (stack, unique, shared, etc.) using CRTP instead of inheritance.
 	 * Optimal way of dereferencing a soft reference is via:
