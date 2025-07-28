@@ -1,303 +1,10 @@
-#include "DynamicsComponent.h"
+#include "KinematicBody.h"
 
+#include "core/base/Context.h"
 #include "core/util/Time.h"
-#include "core/math/Geometry.h"
-#include "physics/dynamics/RigidBody.h"
 
 namespace oly::physics
 {
-	FrictionType friction_type(UnitVector2D tangent, glm::vec2 relative_contact_velocity, glm::vec2 relative_linear_velocity, float angular_velocity_A, float angular_velocity_B, PositiveFloat speed_threshold)
-	{
-		if (!near_zero(tangent.dot(relative_contact_velocity), speed_threshold))
-			return FrictionType::KINETIC;
-		else if (!near_zero(tangent.dot(relative_linear_velocity), speed_threshold))
-			return FrictionType::ROLLING;
-		else if (glm::sign(angular_velocity_A) != glm::sign(angular_velocity_B))
-			return FrictionType::ROLLING;
-		else
-			return FrictionType::STATIC;
-	}
-
-	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
-	{
-		collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);
-	}
-
-	void DynamicsComponent::pre_tick(const glm::mat3& global) const
-	{
-		post_state.position = global[2];
-		post_state.rotation = UnitVector2D(global[0]).rotation();
-		pre_state = post_state;
-	}
-
-	void DynamicsComponent::post_tick() const
-	{
-		was_colliding = !collisions.empty();
-		collisions.clear();
-	}
-
-	float DynamicsComponent::teleport_factor(const DynamicsComponent& other) const
-	{
-		std::optional<float> m1 = teleport_mass();
-		if (m1.has_value())
-		{
-			std::optional<float> m2 = other.teleport_mass();
-			if (m2.has_value())
-				return m2.value() / (m1.value() + m2.value());
-			else
-				return 1.0f;
-		}
-		else
-			return 0.0f;
-	}
-
-	float DynamicsComponent::effective_mass(const CollisionResponse& collision) const
-	{
-		float denom = eff_mass_denom_factor(collision.contact, collision.normal)
-			+ collision.dynamics->eff_mass_denom_factor(collision.contact + pre_state.position - collision.dynamics->pre_state.position, collision.normal);
-		return denom != 0.0f ? 1.0f / denom : 0.0f;
-	}
-
-	glm::vec2 DynamicsComponent::other_contact_velocity(const CollisionResponse& collision) const
-	{
-		return collision.dynamics->contact_velocity(collision.contact + pre_state.position - collision.dynamics->pre_state.position);
-	}
-
-	glm::vec2 DynamicsComponent::relative_contact_velocity(const CollisionResponse& collision) const
-	{
-		return contact_velocity(collision.contact) - other_contact_velocity(collision);
-	}
-
-	float DynamicsComponent::restitution_with(const CollisionResponse& collision) const
-	{
-		return material->restitution.restitution_with(collision.dynamics->material->restitution);
-	}
-
-	float DynamicsComponent::friction_with(const CollisionResponse& collision) const
-	{
-		FrictionType friction_type = physics::friction_type(collision.normal.get_quarter_turn(), relative_contact_velocity(collision),
-			pre_state.linear_velocity - collision.dynamics->pre_state.linear_velocity, pre_state.angular_velocity, collision.dynamics->pre_state.angular_velocity); // TODO v3 speed threshold?
-		return material->friction.friction_with(collision.dynamics->material->friction, friction_type);
-	}
-
-	glm::vec2 LinearPhysicsProperties::dv_psi() const
-	{
-		glm::vec2 dv = {};
-
-		if (dirty_applied_accelerations)
-		{
-			dirty_applied_accelerations = false;
-			_net_applied_acceleration = {};
-			for (glm::vec2 accel : applied_accelerations)
-				_net_applied_acceleration += accel;
-		}
-		dv += (net_acceleration + _net_applied_acceleration) * TIME.delta();
-
-		if (dirty_applied_forces)
-		{
-			dirty_applied_forces = false;
-			_net_applied_force = {};
-			for (glm::vec2 force : applied_forces)
-				_net_applied_force += force;
-		}
-		dv += (net_force + _net_applied_force) * TIME.delta() * _mass_inverse.get();
-
-		glm::vec2 accumul_net_impulse = net_impulse;
-		for (glm::vec2 impulse : applied_impulses)
-			accumul_net_impulse += impulse;
-		dv += accumul_net_impulse * _mass_inverse.get();
-
-		return dv;
-	}
-
-	void LinearPhysicsComponent::post_tick() const
-	{
-		if (!collisions.empty())
-		{
-			// 1. update velocity from non-collision stimuli
-			glm::vec2 new_velocity = pre_state.linear_velocity + properties.dv_psi();
-
-			// 2. compute collision response
-			compute_collision_response(new_velocity);
-			compute_collision_mtv_idxs();
-
-			// 3. update linear motion
-			update_colliding_linear_motion(new_velocity);
-		}
-		else
-		{
-			// 1. update velocity from stimuli
-			post_state.linear_velocity += properties.dv_psi();
-
-			// 2. apply drag
-			if (material->linear_drag > 0.0f)
-				post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
-
-			// 3. update position
-			post_state.position += post_state.linear_velocity * TIME.delta();
-		}
-
-		// 6. snap motion
-
-		snap_motion();
-
-		// 7. clean up
-
-		collision_linear_impulse = {};
-		properties.applied_impulses.clear();
-		properties.net_impulse = {};
-		was_colliding = !collisions.empty();
-		collisions.clear();
-	}
-
-	void LinearPhysicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity) const
-	{
-		// determine teleportation
-		// update angular collision impulse
-
-		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
-		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
-
-		if (found_secondary_collision_mtv_idx)
-		{
-			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
-			glm::vec2 secondary_teleport = primary_collision.normal.normal_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
-			teleport += secondary_teleport;
-		}
-
-		// restrict velocity-based motion against teleportation
-
-		UnitVector2D teleport_axis(teleport);
-		glm::vec2 dx_v = new_velocity * TIME.delta();
-		float along_teleport_axis = teleport_axis.dot(dx_v);
-		glm::vec2 perp_teleport_axis = dx_v - along_teleport_axis * (glm::vec2)teleport_axis;
-
-		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
-		if (along_teleport_axis < 0.0f)
-			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
-
-		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
-
-		// update position
-
-		post_state.position += teleport + dx_v;
-
-		// update velocity
-
-		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
-		if (material->linear_drag > 0.0f)
-			post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
-	}
-
-	// LATER test simultaneous collision with multiple objects with complex_teleportation = true/false.
-	void LinearPhysicsComponent::compute_collision_mtv_idxs() const
-	{
-		primary_collision_mtv_idx = 0;
-		float max_mag_sqrd = 0.0f;
-		for (size_t i = 0; i < collisions.size(); ++i)
-		{
-			float mag_sqrd = math::mag_sqrd(collisions[i].mtv);
-			if (mag_sqrd > max_mag_sqrd)
-			{
-				max_mag_sqrd = mag_sqrd;
-				primary_collision_mtv_idx = i;
-			}
-		}
-
-		secondary_collision_mtv_idx = 0;
-		found_secondary_collision_mtv_idx = false;
-		if (properties.complex_teleportation)
-		{
-			UnitVector2D primary_normal = collisions[primary_collision_mtv_idx].normal.get_quarter_turn();
-			float max_abs_proj = 0.0f;
-			for (size_t i = 0; i < collisions.size(); ++i)
-			{
-				if (i != primary_collision_mtv_idx)
-				{
-					float abs_proj = glm::abs(primary_normal.dot(collisions[i].mtv));
-					if (abs_proj > max_abs_proj)
-					{
-						max_abs_proj = abs_proj;
-						secondary_collision_mtv_idx = i;
-						found_secondary_collision_mtv_idx = true;
-					}
-				}
-			}
-		}
-	}
-
-	void LinearPhysicsComponent::compute_collision_response(const glm::vec2 new_velocity) const
-	{
-		collision_linear_impulse = {};
-		for (const CollisionResponse& collision : collisions)
-		{
-			float eff_mass = effective_mass(collision);
-			glm::vec2 j_r = restitution_impulse(collision, eff_mass);
-			glm::vec2 j_f = friction_impulse(collision, eff_mass, new_velocity);
-			glm::vec2 impulse = j_r + j_f;
-			collision_linear_impulse += impulse;
-		}
-	}
-
-	float LinearPhysicsComponent::eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const
-	{
-		return properties.mass_inverse();
-	}
-
-	glm::vec2 LinearPhysicsComponent::restitution_impulse(const CollisionResponse& collision, float eff_mass) const
-	{
-		const float restitution = restitution_with(collision);
-		if (near_zero(restitution))
-			return {};
-
-		return std::max(-eff_mass * restitution * collision.normal.dot(relative_contact_velocity(collision)), 0.0f) * (glm::vec2)collision.normal;
-	}
-
-	glm::vec2 LinearPhysicsComponent::friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 new_velocity) const
-	{
-		const float mu = friction_with(collision);
-		if (col2d::near_zero(mu))
-			return {};
-
-		glm::vec2 new_relative_velocity = new_velocity - other_contact_velocity(collision);
-		glm::vec2 new_tangent_velocity = collision.normal.normal_project(new_relative_velocity);
-		float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
-		if (col2d::near_zero(new_tangent_velocity_sqrd))
-			return {};
-
-
-		float normal_impulse = collision.normal.dot(collision.mtv * teleport_factor(*collision.dynamics) * properties.mass() * TIME.inverse_delta());
-		float friction = std::min(mu * normal_impulse, eff_mass * glm::sqrt(new_tangent_velocity_sqrd));
-		if (above_zero(friction))
-			return -glm::normalize(new_tangent_velocity) * friction;
-		else
-			return {};
-	}
-
-	void LinearPhysicsComponent::snap_motion() const
-	{
-		// linear snapping
-		static const auto linear_snapping = [](const LinearSnapping& snapping, State& state, glm::length_t dim) {
-			if (glm::abs(state.linear_velocity[dim]) <= snapping.speed_threshold)
-			{
-				float snap_by = int((state.position[dim] - snapping.snap_offset) / snapping.snap_width) * snapping.snap_width + snapping.snap_offset - state.position[dim];
-				if (glm::abs(snap_by) <= snapping.position_threshold)
-				{
-					const float proportion = glm::abs(snap_by / snapping.position_threshold);
-					state.position[dim] = snap_by * (1.0f + (snapping.strength_offset - 1.0f) * glm::pow(proportion, snapping.strength));
-				}
-			}
-			};
-
-		// linear snapping (X)
-		if (properties.linear_x_snapping.enable && (!collisions.empty() || !properties.linear_x_snapping.only_colliding))
-			linear_snapping(material->linear_x_snapping, post_state, 0);
-
-		// linear snapping (Y)
-		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
-			linear_snapping(material->linear_y_snapping, post_state, 1);
-	}
-
 	void KinematicPhysicsProperties::set_mass(float m)
 	{
 		_mass = m;
@@ -392,8 +99,6 @@ namespace oly::physics
 		return dw;
 	}
 
-	// LATER pausing mechanism for RigidBody/TIME so that dt doesn't keep increasing as game is paused. + Time dilation (slo-mo).
-
 	// DOC update latex on resolution bias removal and collision damping variables.
 
 	void KinematicPhysicsComponent::post_tick() const
@@ -479,7 +184,7 @@ namespace oly::physics
 		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
 		if (along_teleport_axis < 0.0f)
 			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
-		
+
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 
 		// update position
@@ -511,7 +216,7 @@ namespace oly::physics
 		teleport *= properties.mass() * properties.moi_inverse();
 		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
 			teleport = glm::sign(teleport) * (1.0f - material->collision_damping.angular_teleportation.inner())
-				* glm::log(glm::abs(teleport) * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
+			* glm::log(glm::abs(teleport) * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
 		else
 			teleport = 0.0f;
 
@@ -520,7 +225,7 @@ namespace oly::physics
 		float bounce = collision_angular_impulse * properties.moi_inverse();
 		if (glm::abs(bounce) > material->collision_damping.angular_bounce_jitter_threshold)
 			bounce = glm::sign(bounce) * (1.0f - material->collision_damping.angular_restitution.inner())
-				* glm::log(glm::abs(bounce) * material->collision_damping.angular_bounce_inverse_drag + 1.0f);
+			* glm::log(glm::abs(bounce) * material->collision_damping.angular_bounce_inverse_drag + 1.0f);
 		else
 			bounce = 0.0f;
 
@@ -635,7 +340,7 @@ namespace oly::physics
 	}
 
 	void KinematicPhysicsComponent::snap_motion() const
-	{	
+	{
 		// angular snapping
 		if (properties.angular_snapping.enable && (!collisions.empty() || !properties.angular_snapping.only_colliding))
 		{
@@ -683,5 +388,56 @@ namespace oly::physics
 		// linear snapping (Y)
 		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
 			linear_snapping(material->linear_y_snapping, post_state, 1);
+	}
+
+	KinematicBody::KinematicBody()
+		: RigidBody()
+	{
+	}
+
+	KinematicBody::KinematicBody(const KinematicBody& other)
+		: RigidBody(other), dynamics(other.dynamics)
+	{
+		bind_all();
+	}
+
+	KinematicBody::KinematicBody(KinematicBody&& other) noexcept
+		: RigidBody(std::move(other)), dynamics(std::move(other.dynamics))
+	{
+		bind_all();
+	}
+
+	KinematicBody::~KinematicBody()
+	{
+		unbind_all();
+	}
+
+	void KinematicBody::physics_pre_tick()
+	{
+		dynamics.pre_tick(transformer.global());
+	}
+
+	void KinematicBody::physics_post_tick()
+	{
+		dynamics.post_tick();
+		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
+	}
+
+	void KinematicBody::handle_contacts(const col2d::ContactEventData& data) const
+	{
+		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+			if (const RigidBody* other = rigid_body(*data.passive_collider))
+				if (other != this)
+					dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, dynamics_of(*other));
+	}
+
+	void KinematicBody::bind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().register_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
+	}
+
+	void KinematicBody::unbind(const col2d::Collider& collider) const
+	{
+		context::collision_dispatcher().unregister_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
 	}
 }

@@ -3,7 +3,7 @@
 #include "physics/collision/scene/CollisionDispatcher.h"
 #include "physics/collision/objects/Capsule.h"
 #include "physics/collision/objects/Polygon.h"
-#include "physics/dynamics/DynamicsComponent.h"
+#include "physics/dynamics/bodies/DynamicsComponent.h"
 
 #include "core/types/SmartHandle.h"
 
@@ -99,115 +99,5 @@ namespace oly::physics
 		};
 	}
 
-	class StaticBody : public RigidBody
-	{
-		OLY_COLLISION_CONTROLLER_HEADER(StaticBody);
-
-	private:
-		DynamicsComponent dynamics;
-
-	public:
-		StaticBody();
-		StaticBody(const StaticBody&);
-		StaticBody(StaticBody&&) noexcept;
-		~StaticBody();
-
-	protected:
-		void physics_pre_tick() override;
-		void physics_post_tick() override;
-
-	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
-
-		State state() const override { return dynamics.get_state(); }
-		bool is_colliding() const override { return dynamics.is_colliding(); }
-
-	protected:
-		void bind(const col2d::Collider& collider) const override;
-		void unbind(const col2d::Collider& collider) const override;
-
-		const DynamicsComponent& get_dynamics() const override { return dynamics; }
-
-	private:
-		void handle_overlaps(const col2d::OverlapEventData& data) const;
-	};
-
-	typedef SmartHandle<StaticBody> StaticBodyRef;
-
-	class LinearBody : public RigidBody
-	{
-		OLY_COLLISION_CONTROLLER_HEADER(LinearBody);
-
-	private:
-		LinearPhysicsComponent dynamics;
-
-	public:
-		LinearBody();
-		LinearBody(const LinearBody&);
-		LinearBody(LinearBody&&) noexcept;
-		~LinearBody();
-
-	protected:
-		void physics_pre_tick() override;
-		void physics_post_tick() override;
-
-	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
-		const LinearPhysicsProperties& properties() const { return dynamics.properties; }
-		LinearPhysicsProperties& properties() { return dynamics.properties; }
-
-		State state() const override { return dynamics.get_state(); }
-		bool is_colliding() const override { return dynamics.is_colliding(); }
-
-	protected:
-		void bind(const col2d::Collider& collider) const override;
-		void unbind(const col2d::Collider& collider) const override;
-
-		const DynamicsComponent& get_dynamics() const override { return dynamics; }
-
-	private:
-		void handle_collides(const col2d::CollisionEventData& data) const;
-	};
-
-	typedef SmartHandle<LinearBody> LinearBodyRef;
-
-	class KinematicBody : public RigidBody
-	{
-		OLY_COLLISION_CONTROLLER_HEADER(KinematicBody);
-
-	private:
-		KinematicPhysicsComponent dynamics;
-
-	public:
-		KinematicBody();
-		KinematicBody(const KinematicBody&);
-		KinematicBody(KinematicBody&&) noexcept;
-		~KinematicBody();
-
-	protected:
-		void physics_pre_tick() override;
-		void physics_post_tick() override;
-
-	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
-		const KinematicPhysicsProperties& properties() const { return dynamics.properties; }
-		KinematicPhysicsProperties& properties() { return dynamics.properties; }
-
-		State state() const override { return dynamics.get_state(); }
-		bool is_colliding() const override { return dynamics.is_colliding(); }
-
-	protected:
-		void bind(const col2d::Collider& collider) const override;
-		void unbind(const col2d::Collider& collider) const override;
-
-		const DynamicsComponent& get_dynamics() const override { return dynamics; }
-
-	private:
-		void handle_contacts(const col2d::ContactEventData& data) const;
-	};
-
-	typedef SmartHandle<KinematicBody> KinematicBodyRef;
+	// TODO v3 CharacterBody
 }

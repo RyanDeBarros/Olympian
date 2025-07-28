@@ -17,7 +17,7 @@
 #include "physics/collision/scene/LUT.h"
 #include "physics/collision/scene/CollisionDispatcher.h"
 #include "physics/dynamics/Material.h"
-#include "physics/dynamics/RigidBody.h"
+#include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::context
 {

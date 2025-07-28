@@ -2,7 +2,7 @@
 
 #include "Olympian.h"
 
-#include "physics/dynamics/RigidBody.h"
+#include "physics/dynamics/bodies/KinematicBody.h"
 
 struct PlayerController : public oly::InputController
 {

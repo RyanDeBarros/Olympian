@@ -1,7 +1,9 @@
 ﻿#include "Olympian.h"
 
 #include "physics/collision/debugging/CommonViews.h"
-#include "physics/dynamics/RigidBody.h"
+#include "physics/dynamics/bodies/StaticBody.h"
+#include "physics/dynamics/bodies/LinearBody.h"
+#include "physics/dynamics/bodies/KinematicBody.h"
 #include "physics/dynamics/Constants.h"
 
 #include "archetypes/PolygonCrop.h"
