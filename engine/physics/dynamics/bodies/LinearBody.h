@@ -121,5 +121,5 @@ namespace oly::physics
 		void handle_collides(const col2d::CollisionEventData& data) const;
 	};
 
-	typedef SmartHandle<LinearBody> LinearBodyRef;
+	typedef SmartReference<LinearBody> LinearBodyRef;
 }

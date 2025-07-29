@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/Parameters.h"
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 namespace oly::physics
 {
@@ -134,6 +134,6 @@ namespace oly::physics
 		LinearSnapping linear_x_snapping, linear_y_snapping;
 	};
 
-	typedef SmartHandle<Material> MaterialRef;
+	typedef SmartReference<Material> MaterialRef;
 	// TODO MaterialRegistry for Material assets
 }

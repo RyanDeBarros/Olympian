@@ -1,7 +1,7 @@
 #pragma once
 
 #include "graphics/primitives/Sprites.h"
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 namespace oly::rendering
 {
@@ -114,7 +114,7 @@ namespace oly::rendering
 		Tile get_assignment(Configuration config, Transformation& transformation) const;
 		static Configuration get_configuration(PaintedTile tile);
 	};
-	typedef SmartHandle<TileSet> TileSetRef;
+	typedef SmartReference<TileSet> TileSetRef;
 
 	inline TileSet::Transformation operator&(TileSet::Transformation a, TileSet::Transformation b) { return (TileSet::Transformation)((char)a & (char)b); }
 	inline TileSet::Transformation& operator&=(TileSet::Transformation& a, TileSet::Transformation b) { return a = a & b; }

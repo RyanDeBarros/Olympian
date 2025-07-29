@@ -93,9 +93,9 @@ namespace oly::context
 	extern void render_polygons();
 	extern void render_ellipses();
 
-	extern SmartHandle<rendering::TileSet> load_tileset(const std::string& file);
-	extern SmartHandle<rendering::FontFace> load_font_face(const std::string& file);
-	extern SmartHandle<rendering::FontAtlas> load_font_atlas(const std::string& file, unsigned int index = 0);
+	extern SmartReference<rendering::TileSet> load_tileset(const std::string& file);
+	extern SmartReference<rendering::FontFace> load_font_face(const std::string& file);
+	extern SmartReference<rendering::FontAtlas> load_font_atlas(const std::string& file, unsigned int index = 0);
 
 	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "", unsigned int atlas_index = 0);
 	extern void render_text();

@@ -171,5 +171,5 @@ namespace oly::physics
 		void handle_contacts(const col2d::ContactEventData& data) const;
 	};
 
-	typedef SmartHandle<KinematicBody> KinematicBodyRef;
+	typedef SmartReference<KinematicBody> KinematicBodyRef;
 }

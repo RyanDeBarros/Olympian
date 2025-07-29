@@ -191,6 +191,8 @@ namespace oly::context
 		oly::internal::check_errors();
 
 		col2d::internal::load_luts();
+
+		oly::internal::PoolBatch::instance().init();
 	}
 
 	static void terminate()

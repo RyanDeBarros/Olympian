@@ -5,7 +5,7 @@
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
@@ -200,14 +200,14 @@ namespace oly::rendering
 
 namespace oly
 {
-	namespace rendering { typedef SmartHandle<Polygonal> PolygonalRef; }
+	namespace rendering { typedef SmartReference<Polygonal> PolygonalRef; }
 
 	OLY_SMART_POOL_BASE(rendering::Polygon, rendering::Polygonal);
-	namespace rendering { typedef SmartHandle<Polygon> PolygonRef; }
+	namespace rendering { typedef SmartReference<Polygon> PolygonRef; }
 
 	OLY_SMART_POOL_BASE(rendering::PolyComposite, rendering::Polygonal);
-	namespace rendering { typedef SmartHandle<PolyComposite> PolyCompositeRef; }
+	namespace rendering { typedef SmartReference<PolyComposite> PolyCompositeRef; }
 
 	OLY_SMART_POOL_BASE(rendering::NGon, rendering::Polygonal);
-	namespace rendering { typedef SmartHandle<NGon> NGonRef; }
+	namespace rendering { typedef SmartReference<NGon> NGonRef; }
 }

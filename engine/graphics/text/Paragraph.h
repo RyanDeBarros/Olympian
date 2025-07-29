@@ -140,5 +140,5 @@ namespace oly::rendering
 		float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint);
 	};
 
-	typedef SmartHandle<Paragraph> ParagraphRef;
+	typedef SmartReference<Paragraph> ParagraphRef;
 }

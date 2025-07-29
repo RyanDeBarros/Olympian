@@ -4,7 +4,7 @@
 
 #include "external/STB.h"
 
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 #include "core/math/Shapes.h"
 #include "core/util/UTF.h"
 
@@ -52,7 +52,7 @@ namespace oly::rendering
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
 	};
-	typedef SmartHandle<FontFace> FontFaceRef;
+	typedef SmartReference<FontFace> FontFaceRef;
 
 	// LATER manual generation of mipmaps
 
@@ -108,5 +108,5 @@ namespace oly::rendering
 		float get_scale() const { return scale; }
 		float get_space_width() const { return space_width; }
 	};
-	typedef SmartHandle<FontAtlas> FontAtlasRef;
+	typedef SmartReference<FontAtlas> FontAtlasRef;
 }

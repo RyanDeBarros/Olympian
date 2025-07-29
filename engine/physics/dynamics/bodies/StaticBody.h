@@ -38,5 +38,5 @@ namespace oly::physics
 		void handle_overlaps(const col2d::OverlapEventData& data) const;
 	};
 
-	typedef SmartHandle<StaticBody> StaticBodyRef;
+	typedef SmartReference<StaticBody> StaticBodyRef;
 }

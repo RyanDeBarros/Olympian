@@ -5,7 +5,7 @@
 #include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -118,5 +118,5 @@ namespace oly::rendering
 		void set_color(glm::vec4 color);
 	};
 
-	typedef SmartHandle<Ellipse> EllipseRef;
+	typedef SmartReference<Ellipse> EllipseRef;
 }

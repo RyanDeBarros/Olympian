@@ -8,7 +8,7 @@
 #include "external/GLM.h"
 #include "external/NSVG.h"
 
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
@@ -29,7 +29,7 @@ namespace oly::graphics
 		operator GLuint () const { return id; }
 	};
 
-	typedef SmartHandle<Texture> TextureRef;
+	typedef SmartReference<Texture> TextureRef;
 
 	class BindlessTexture
 	{
@@ -57,7 +57,7 @@ namespace oly::graphics
 		void disuse_handle() const;
 	};
 
-	typedef SmartHandle<BindlessTexture> BindlessTextureRef;
+	typedef SmartReference<BindlessTexture> BindlessTextureRef;
 
 	extern GLenum texture_internal_format(int cpp);
 	extern GLenum texture_format(int cpp);
@@ -114,7 +114,7 @@ namespace oly::graphics
 		void delete_buffer();
 	};
 
-	typedef SmartHandle<Image> ImageRef;
+	typedef SmartReference<Image> ImageRef;
 
 	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
 	inline Texture load_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
@@ -195,7 +195,7 @@ namespace oly::graphics
 		void delete_buffer();
 	};
 
-	typedef SmartHandle<Anim> AnimRef;
+	typedef SmartReference<Anim> AnimRef;
 
 	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
 	inline Texture load_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)

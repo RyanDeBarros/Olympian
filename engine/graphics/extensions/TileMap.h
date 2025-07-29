@@ -50,5 +50,5 @@ namespace oly::rendering
 		void register_layer(size_t z, TileMapLayer&& layer);
 	};
 
-	typedef SmartHandle<TileMap> TileMapRef;
+	typedef SmartReference<TileMap> TileMapRef;
 }

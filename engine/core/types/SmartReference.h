@@ -25,7 +25,7 @@ namespace oly
 		static_assert(std::is_base_of_v<Base, Class>, "OLY_SMART_POOL_BASE: Class must derive from base."); };
 
 	template<typename>
-	struct SmartHandle;
+	struct SmartReference;
 
 	namespace internal
 	{
@@ -33,6 +33,7 @@ namespace oly
 		{
 			virtual ~IPool() = default;
 			virtual void clean() = 0;
+			virtual void init() = 0;
 			virtual void clear() = 0;
 		};
 
@@ -61,6 +62,12 @@ namespace oly
 					pool->clean();
 			}
 
+			void init()
+			{
+				for (IPool* pool : pools)
+					pool->init();
+			}
+
 			void clear()
 			{
 				for (IPool* pool : pools)
@@ -69,30 +76,30 @@ namespace oly
 			}
 		};
 
-		struct SmartHandleLink
+		struct SmartReferenceLink
 		{
-			SmartHandleLink* prev = nullptr;
-			SmartHandleLink* next = nullptr;
+			SmartReferenceLink* prev = nullptr;
+			SmartReferenceLink* next = nullptr;
 		};
 
 		// LATER multi-threading and thead safety
 		template<typename Object>
-		class SmartHandlePool : public IPool
+		class SmartReferencePool : public IPool
 		{
 			std::vector<std::unique_ptr<Object>> objects;
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
-			std::vector<SmartHandleLink*> reference_heads;
+			std::vector<SmartReferenceLink*> reference_heads;
 
-			SmartHandlePool() { PoolBatch::instance().insert(this); }
-			SmartHandlePool(const SmartHandlePool<Object>&) = delete;
-			SmartHandlePool(SmartHandlePool<Object>&&) = delete;
-			~SmartHandlePool() { PoolBatch::instance().remove(this); clean(); }
+			SmartReferencePool() { PoolBatch::instance().insert(this); }
+			SmartReferencePool(const SmartReferencePool<Object>&) = delete;
+			SmartReferencePool(SmartReferencePool<Object>&&) = delete;
+			~SmartReferencePool() { PoolBatch::instance().remove(this); clean(); }
 
 		public:
-			static SmartHandlePool& instance()
+			static SmartReferencePool& instance()
 			{
-				static SmartHandlePool pool;
+				static SmartReferencePool pool;
 				return pool;
 			}
 
@@ -103,7 +110,7 @@ namespace oly
 					while (reference_heads[idx])
 					{
 						reference_heads[idx]->prev = nullptr;
-						SmartHandleLink* next = reference_heads[idx]->next;
+						SmartReferenceLink* next = reference_heads[idx]->next;
 						reference_heads[idx]->next = nullptr;
 						reference_heads[idx] = next;
 					}
@@ -114,26 +121,11 @@ namespace oly
 
 		private:
 			friend class PoolBatch;
-			virtual void clear() override
-			{
-				clear_stack(unoccupied);
-				marked_for_deletion.clear();
-				for (SmartHandleLink* reference_head : reference_heads)
-				{
-					while (reference_head)
-					{
-						reference_head->prev = nullptr;
-						SmartHandleLink* next = reference_head->next;
-						reference_head->next = nullptr;
-						reference_head = next;
-					}
-				}
-				reference_heads.clear();
-				objects.clear();
-			}
+			virtual void init() override;
+			virtual void clear() override;
 
 			template<typename>
-			friend struct SmartHandle;
+			friend struct SmartReference;
 
 			size_t init_slot()
 			{
@@ -185,32 +177,32 @@ namespace oly
 				return marked_for_deletion.count(idx);
 			}
 			
-			void increment_references(size_t idx, SmartHandleLink* handle)
+			void increment_references(size_t idx, SmartReferenceLink* link)
 			{
 				if (reference_heads[idx])
 				{
 					auto* next = reference_heads[idx]->next;
-					reference_heads[idx]->next = handle;
-					handle->prev = reference_heads[idx];
+					reference_heads[idx]->next = link;
+					link->prev = reference_heads[idx];
 					if (next)
 					{
-						handle->next = next;
-						next->prev = handle;
+						link->next = next;
+						next->prev = link;
 					}
 					else
 					{
-						handle->next = reference_heads[idx];
-						reference_heads[idx]->prev = handle;
+						link->next = reference_heads[idx];
+						reference_heads[idx]->prev = link;
 					}
 				}
 				else
-					reference_heads[idx] = handle;
+					reference_heads[idx] = link;
 			}
 
-			void decrement_references(size_t idx, SmartHandleLink* handle)
+			void decrement_references(size_t idx, SmartReferenceLink* link)
 			{
-				SmartHandleLink* prev = handle->prev;
-				SmartHandleLink* next = handle->next;
+				SmartReferenceLink* prev = link->prev;
+				SmartReferenceLink* next = link->next;
 
 				if (next == prev)
 				{
@@ -228,11 +220,11 @@ namespace oly
 						prev->next = next;
 				}
 
-				if (reference_heads[idx] == handle)
+				if (reference_heads[idx] == link)
 					reference_heads[idx] = next;
 
-				handle->prev = nullptr;
-				handle->next = nullptr;
+				link->prev = nullptr;
+				link->next = nullptr;
 
 				if (!reference_heads[idx])
 				{
@@ -241,10 +233,10 @@ namespace oly
 				}
 			}
 
-			void replace_references(size_t idx, SmartHandleLink* existing, SmartHandleLink* with)
+			void replace_references(size_t idx, SmartReferenceLink* existing, SmartReferenceLink* with)
 			{
-				SmartHandleLink* prev = existing->prev;
-				SmartHandleLink* next = existing->next;
+				SmartReferenceLink* prev = existing->prev;
+				SmartReferenceLink* next = existing->next;
 
 				existing->prev = nullptr;
 				existing->next = nullptr;
@@ -262,31 +254,37 @@ namespace oly
 			}
 		};
 
-		struct RefInit
-		{
-		};
+		struct RefInit {};
+		struct RefDefault {};
 	}
 
 	constexpr internal::RefInit REF_INIT;
+	constexpr internal::RefDefault REF_DEFAULT;
 
 	template<typename Object>
-	struct SmartHandle : private internal::SmartHandleLink
+	struct SmartReference : private internal::SmartReferenceLink
 	{
 		using PoolBase = SmartPoolBaseType<Object>;
 
 	private:
-		friend class internal::SmartHandlePool<PoolBase>;
+		friend class internal::SmartReferencePool<PoolBase>;
+
+		static SmartReference<Object>& default_ref()
+		{
+			static SmartReference<Object> def;
+			return def;
+		}
 
 		size_t pool_idx = size_t(-1);
 
-		const SmartHandleLink* link() const { return static_cast<const SmartHandleLink*>(this); }
-		SmartHandleLink* link() { return static_cast<SmartHandleLink*>(this); }
+		const SmartReferenceLink* link() const { return static_cast<const SmartReferenceLink*>(this); }
+		SmartReferenceLink* link() { return static_cast<SmartReferenceLink*>(this); }
 
 		template<typename T>
-		struct IsSmartHandleWithSharedPoolBase : public std::false_type {};
+		struct IsSmartReferenceWithSharedPoolBase : public std::false_type {};
 
 		template<typename T>
-		struct IsSmartHandleWithSharedPoolBase<SmartHandle<T>> : public std::bool_constant<shares_smart_pool_base<T, Object>> {};
+		struct IsSmartReferenceWithSharedPoolBase<SmartReference<T>> : public std::bool_constant<shares_smart_pool_base<T, Object>> {};
 
 		template<typename... Args>
 		static constexpr bool valid_object_args()
@@ -296,10 +294,11 @@ namespace oly
 				using T = std::decay_t<std::tuple_element_t<0, std::tuple<Args...>>>;
 				return !std::is_same_v<T, nullptr_t>
 					&& !std::is_same_v<T, internal::RefInit>
+					&& !std::is_same_v<T, internal::RefDefault>
 					&& !std::is_same_v<T, Object>
-					&& !std::is_same_v<T, SmartHandle<Object>>
+					&& !std::is_same_v<T, SmartReference<Object>>
 					&& !shares_smart_pool_base<T, Object>
-					&& !IsSmartHandleWithSharedPoolBase<T>::value;
+					&& !IsSmartReferenceWithSharedPoolBase<T>::value;
 			}
 			else
 				return sizeof...(Args) > 1;
@@ -318,32 +317,39 @@ namespace oly
 		using PreventUnconstTo = std::enable_if_t<!std::is_const_v<Object> || std::is_const_v<T>>;
 
 	public:
-		SmartHandle() = default;
+		SmartReference() {}
 
-		SmartHandle(nullptr_t) {}
+		SmartReference(nullptr_t) {}
 
-		SmartHandle(internal::RefInit)
+		SmartReference(internal::RefInit) requires (std::is_default_constructible_v<Object>)
 		{
 			init();
 		}
 		
-		SmartHandle(const Object& obj)
+		SmartReference(internal::RefDefault) requires (std::is_default_constructible_v<Object>)
+			: pool_idx(default_ref().pool_idx)
+		{
+			if (default_ref().valid())
+				increment();
+		}
+
+		SmartReference(const Object& obj)
 		{
 			init(obj);
 		}
 		
-		SmartHandle(Object&& obj)
+		SmartReference(Object&& obj)
 		{
 			init(std::move(obj));
 		}
 
 		template<typename... Args, typename = EnableObjectArgs<Args...>>
-		SmartHandle(Args&&... args)
+		SmartReference(Args&&... args)
 		{
 			init(Object(std::forward<Args>(args)...));
 		}
 
-		SmartHandle(const SmartHandle<Object>& other)
+		SmartReference(const SmartReference<Object>& other)
 			: pool_idx(other.pool_idx)
 		{
 			if (other.valid())
@@ -351,14 +357,14 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
-		SmartHandle(const SmartHandle<T>& other)
+		SmartReference(const SmartReference<T>& other)
 			: pool_idx(other.pool_idx)
 		{
 			if (other.valid())
 				increment();
 		}
 
-		SmartHandle(SmartHandle<Object>&& other) noexcept
+		SmartReference(SmartReference<Object>&& other) noexcept
 			: pool_idx(other.pool_idx)
 		{
 			if (other.valid())
@@ -366,14 +372,14 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
-		SmartHandle(SmartHandle<T>&& other) noexcept
+		SmartReference(SmartReference<T>&& other) noexcept
 			: pool_idx(other.pool_idx)
 		{
 			if (other.valid())
 				replace(other);
 		}
 
-		SmartHandle<Object>& operator=(const SmartHandle<Object>& other)
+		SmartReference<Object>& operator=(const SmartReference<Object>& other)
 		{
 			if (this != &other)
 			{
@@ -404,7 +410,7 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
-		SmartHandle<Object>& operator=(const SmartHandle<T>& other)
+		SmartReference<Object>& operator=(const SmartReference<T>& other)
 		{
 			if (this != &other)
 			{
@@ -434,7 +440,7 @@ namespace oly
 			return *this;
 		}
 
-		SmartHandle<Object>& operator=(SmartHandle<Object>&& other) noexcept
+		SmartReference<Object>& operator=(SmartReference<Object>&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -467,7 +473,7 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstFrom<T>>
-		SmartHandle<Object>& operator=(SmartHandle<T>&& other) noexcept
+		SmartReference<Object>& operator=(SmartReference<T>&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -499,7 +505,7 @@ namespace oly
 			return *this;
 		}
 
-		~SmartHandle()
+		~SmartReference()
 		{
 			invalidate();
 		}
@@ -553,15 +559,15 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstTo<T>>
-		SmartHandle<const T> as() const
+		SmartReference<const T> as() const
 		{
-			return SmartHandle<const T>(*this);
+			return SmartReference<const T>(*this);
 		}
 
 		template<typename T, typename = SharesPoolBase<T>, typename = PreventUnconstTo<T>>
-		SmartHandle<T> as()
+		SmartReference<T> as()
 		{
-			return SmartHandle<T>(*this);
+			return SmartReference<T>(*this);
 		}
 
 		operator bool() const
@@ -574,7 +580,7 @@ namespace oly
 			return next || (pool_idx < pool().reference_heads.size() ? pool().reference_heads[pool_idx] == link() : false);
 		}
 
-		void init()
+		void init() requires (std::is_default_constructible_v<Object>)
 		{
 			if (valid())
 				decrement();
@@ -622,9 +628,9 @@ namespace oly
 			}
 		}
 		
-		SmartHandle<Object> get_clone() const
+		SmartReference<Object> get_clone() const
 		{
-			SmartHandle<Object> cloned;
+			SmartReference<Object> cloned;
 			if (valid())
 			{
 				cloned.pool_idx = pool().init_slot(*pool().objects[pool_idx]);
@@ -657,7 +663,7 @@ namespace oly
 				throw Error(ErrorCode::NULL_POINTER);
 		}
 		
-		SmartHandle<Object>& operator=(std::nullptr_t)
+		SmartReference<Object>& operator=(std::nullptr_t)
 		{
 			invalidate();
 			return *this;
@@ -674,7 +680,7 @@ namespace oly
 			return std::hash<size_t>{}(valid() ? pool_idx : size_t(-1));
 		}
 
-		bool operator==(const SmartHandle<Object>& other) const
+		bool operator==(const SmartReference<Object>& other) const
 		{
 			if (valid())
 				return other.valid() && pool_idx == other.pool_idx;
@@ -683,9 +689,9 @@ namespace oly
 		}
 
 	private:
-		static internal::SmartHandlePool<PoolBase>& pool()
+		static internal::SmartReferencePool<PoolBase>& pool()
 		{
-			return internal::SmartHandlePool<PoolBase>::instance();
+			return internal::SmartReferencePool<PoolBase>::instance();
 		}
 
 		void increment()
@@ -699,17 +705,47 @@ namespace oly
 		}
 
 		template<typename T, typename = SharesPoolBase<T>>
-		void replace(SmartHandle<T>& other)
+		void replace(SmartReference<T>& other)
 		{
 			pool().replace_references(pool_idx, other.link(), link());
 		}
 	};
+
+	namespace internal
+	{
+		template<typename Object>
+		inline void SmartReferencePool<Object>::init()
+		{
+			if constexpr (std::is_default_constructible_v<Object>)
+				SmartReference<Object>::default_ref().init();
+		}
+
+		template<typename Object>
+		inline void SmartReferencePool<Object>::clear()
+		{
+			SmartReference<Object>::default_ref().invalidate();
+			clear_stack(unoccupied);
+			marked_for_deletion.clear();
+			for (SmartReferenceLink* reference_head : reference_heads)
+			{
+				while (reference_head)
+				{
+					reference_head->prev = nullptr;
+					SmartReferenceLink* next = reference_head->next;
+					reference_head->next = nullptr;
+					reference_head = next;
+				}
+			}
+			reference_heads.clear();
+			objects.clear();
+		}
+	}
 }
 
 template<typename T>
-struct std::hash<oly::SmartHandle<T>>
+struct std::hash<oly::SmartReference<T>>
 {
-	size_t operator()(const oly::SmartHandle<T>& h) const
+	size_t operator()(const oly::SmartReference<T>& h) const
 	{
 		return h.hash();
 	}

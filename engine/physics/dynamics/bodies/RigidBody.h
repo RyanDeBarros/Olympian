@@ -5,7 +5,7 @@
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/bodies/DynamicsComponent.h"
 
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 namespace oly::physics
 {

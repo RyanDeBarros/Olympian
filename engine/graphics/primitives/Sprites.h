@@ -245,5 +245,5 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 	};
 
-	typedef SmartHandle<Sprite> SpriteRef;
+	typedef SmartReference<Sprite> SpriteRef;
 }

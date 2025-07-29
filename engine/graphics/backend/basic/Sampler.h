@@ -1,7 +1,7 @@
 #pragma once
 
 #include "external/GL.h"
-#include "core/types/SmartHandle.h"
+#include "core/types/SmartReference.h"
 
 namespace oly::graphics
 {
@@ -24,5 +24,5 @@ namespace oly::graphics
 		void set_parameter_fv(GLenum param, const GLfloat* values) const;
 	};
 
-	typedef SmartHandle<Sampler> SamplerRef;
+	typedef SmartReference<Sampler> SamplerRef;
 }

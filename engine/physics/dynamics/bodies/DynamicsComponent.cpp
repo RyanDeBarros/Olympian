@@ -6,7 +6,8 @@
 
 namespace oly::physics
 {
-	FrictionType friction_type(UnitVector2D tangent, glm::vec2 relative_contact_velocity, glm::vec2 relative_linear_velocity, float angular_velocity_A, float angular_velocity_B, PositiveFloat speed_threshold)
+	FrictionType friction_type(UnitVector2D tangent, glm::vec2 relative_contact_velocity, glm::vec2 relative_linear_velocity,
+		float angular_velocity_A, float angular_velocity_B, PositiveFloat speed_threshold)
 	{
 		if (!near_zero(tangent.dot(relative_contact_velocity), speed_threshold))
 			return FrictionType::KINETIC;
@@ -78,7 +79,7 @@ namespace oly::physics
 	float DynamicsComponent::friction_with(const CollisionResponse& collision) const
 	{
 		FrictionType friction_type = physics::friction_type(collision.normal.get_quarter_turn(), relative_contact_velocity(collision),
-			pre_state.linear_velocity - collision.dynamics->pre_state.linear_velocity, pre_state.angular_velocity, collision.dynamics->pre_state.angular_velocity); // TODO v3 speed threshold?
+			pre_state.linear_velocity - collision.dynamics->pre_state.linear_velocity, pre_state.angular_velocity, collision.dynamics->pre_state.angular_velocity, (float)col2d::LINEAR_TOLERANCE);
 		return material->friction.friction_with(collision.dynamics->material->friction, friction_type);
 	}
 }

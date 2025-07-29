@@ -24,5 +24,5 @@ namespace oly::rendering
 		mutable GLuint current_frame = -1;
 	};
 
-	typedef SmartHandle<SpriteAtlas> SpriteAtlasRef;
+	typedef SmartReference<SpriteAtlas> SpriteAtlasRef;
 }

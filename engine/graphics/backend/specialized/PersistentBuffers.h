@@ -37,8 +37,8 @@ namespace oly::graphics
 			glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 			data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 		}
-		PersistentGPUBuffer(const PersistentGPUBuffer&) = delete; // TODO v3 implement copy semantics
-		PersistentGPUBuffer(PersistentGPUBuffer&&) = delete; // TODO v3 implement move semantics
+		PersistentGPUBuffer(const PersistentGPUBuffer&) = delete;
+		PersistentGPUBuffer(PersistentGPUBuffer&&) = delete;
 
 		GLuint get_size() const { return size; }
 		GLuint get_buffer() const { return buf; }
@@ -174,8 +174,8 @@ namespace oly::graphics
 			data.fill(nullptr);
 			init(std::make_index_sequence<N>{});
 		}
-		PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete; // TODO v3 copy semantics
-		PersistentGPUBufferBlock(PersistentGPUBufferBlock&&) = delete; // TODO v3 copy semantics
+		PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
+		PersistentGPUBufferBlock(PersistentGPUBufferBlock&&) = delete;
 
 		template<size_t n>
 		GLuint get_size() const { return size[n]; }
