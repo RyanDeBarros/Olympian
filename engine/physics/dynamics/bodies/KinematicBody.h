@@ -2,6 +2,7 @@
 
 #include "physics/dynamics/bodies/RigidBody.h"
 #include "physics/dynamics/bodies/DynamicsComponent.h"
+#include "physics/dynamics/SubMaterialComponents.h"
 
 namespace oly::physics
 {
@@ -105,6 +106,20 @@ namespace oly::physics
 		std::vector<AppliedForce>& set_applied_forces() { dirty_linear_applied_forces = true; dirty_angular_applied_forces = true; return applied_forces; }
 	};
 
+	struct KinematicSubMaterial
+	{
+		PositiveFloat linear_drag = 0.0f;
+		PositiveFloat angular_drag = 1.0f;
+
+		LinearCollisionDamping linear_collision_damping;
+		AngularCollisionDamping angular_collision_damping;
+
+		AngularSnapping angular_snapping;
+		LinearSnapping linear_x_snapping, linear_y_snapping;
+	};
+
+	typedef SmartReference<KinematicSubMaterial> KinematicSubMaterialRef;
+
 	class KinematicPhysicsComponent : public DynamicsComponent
 	{
 		mutable size_t primary_collision_mtv_idx = 0;
@@ -114,6 +129,7 @@ namespace oly::physics
 		mutable float collision_angular_impulse = 0.0f;
 
 	public:
+		KinematicSubMaterialRef submaterial = REF_DEFAULT;
 		KinematicPhysicsProperties properties;
 
 		void post_tick() const override;
@@ -155,6 +171,8 @@ namespace oly::physics
 	public:
 		const MaterialRef& material() const { return dynamics.material; }
 		MaterialRef& material() { return dynamics.material; }
+		const KinematicSubMaterialRef& sub_material() const { return dynamics.submaterial; }
+		KinematicSubMaterialRef& sub_material() { return dynamics.submaterial; }
 		const KinematicPhysicsProperties& properties() const { return dynamics.properties; }
 		KinematicPhysicsProperties& properties() { return dynamics.properties; }
 

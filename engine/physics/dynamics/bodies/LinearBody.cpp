@@ -55,8 +55,8 @@ namespace oly::physics
 			post_state.linear_velocity += properties.dv_psi();
 
 			// 2. apply drag
-			if (material->linear_drag > 0.0f)
-				post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
+			if (submaterial->drag > 0.0f)
+				post_state.linear_velocity *= glm::exp(-submaterial->drag * TIME.delta());
 
 			// 3. update position
 			post_state.position += post_state.linear_velocity * TIME.delta();
@@ -99,7 +99,7 @@ namespace oly::physics
 
 		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
 		if (along_teleport_axis < 0.0f)
-			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
+			along_teleport_axis *= 1.0f - submaterial->collision_damping.penetration;
 
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 
@@ -110,8 +110,8 @@ namespace oly::physics
 		// update velocity
 
 		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
-		if (material->linear_drag > 0.0f)
-			post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
+		if (submaterial->drag > 0.0f)
+			post_state.linear_velocity *= glm::exp(-submaterial->drag * TIME.delta());
 	}
 
 	// LATER test simultaneous collision with multiple objects with complex_teleportation = true/false.
@@ -216,11 +216,11 @@ namespace oly::physics
 
 		// linear snapping (X)
 		if (properties.linear_x_snapping.enable && (!collisions.empty() || !properties.linear_x_snapping.only_colliding))
-			linear_snapping(material->linear_x_snapping, post_state, 0);
+			linear_snapping(submaterial->x_snapping, post_state, 0);
 
 		// linear snapping (Y)
 		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
-			linear_snapping(material->linear_y_snapping, post_state, 1);
+			linear_snapping(submaterial->y_snapping, post_state, 1);
 	}
 
 	LinearBody::LinearBody()

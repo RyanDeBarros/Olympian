@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/dynamics/bodies/RigidBody.h"
+#include "physics/dynamics/SubMaterialComponents.h"
 
 namespace oly::physics
 {
@@ -58,6 +59,15 @@ namespace oly::physics
 		std::vector<glm::vec2>& set_applied_forces() { dirty_applied_forces = true; return applied_forces; }
 	};
 
+	struct LinearSubMaterial
+	{
+		PositiveFloat drag = 0.0f;
+		LinearCollisionDamping collision_damping;
+		LinearSnapping x_snapping, y_snapping;
+	};
+
+	typedef SmartReference<LinearSubMaterial> LinearSubMaterialRef;
+
 	class LinearPhysicsComponent : public DynamicsComponent
 	{
 		mutable size_t primary_collision_mtv_idx = 0;
@@ -66,6 +76,7 @@ namespace oly::physics
 		mutable glm::vec2 collision_linear_impulse = {};
 
 	public:
+		LinearSubMaterialRef submaterial = REF_DEFAULT;
 		LinearPhysicsProperties properties;
 
 		void post_tick() const override;
@@ -105,6 +116,8 @@ namespace oly::physics
 	public:
 		const MaterialRef& material() const { return dynamics.material; }
 		MaterialRef& material() { return dynamics.material; }
+		const LinearSubMaterialRef& sub_material() const { return dynamics.submaterial; }
+		LinearSubMaterialRef& sub_material() { return dynamics.submaterial; }
 		const LinearPhysicsProperties& properties() const { return dynamics.properties; }
 		LinearPhysicsProperties& properties() { return dynamics.properties; }
 

@@ -126,10 +126,10 @@ namespace oly::physics
 			post_state.angular_velocity += properties.dw_psi();
 
 			// 2. apply drag
-			if (material->linear_drag > 0.0f)
-				post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
-			if (material->angular_drag > 0.0f)
-				post_state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
+			if (submaterial->linear_drag > 0.0f)
+				post_state.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
+			if (submaterial->angular_drag > 0.0f)
+				post_state.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
 
 			// 3. update position
 			post_state.position += post_state.linear_velocity * TIME.delta();
@@ -183,7 +183,7 @@ namespace oly::physics
 
 		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
 		if (along_teleport_axis < 0.0f)
-			along_teleport_axis *= 1.0f - material->collision_damping.linear_penetration;
+			along_teleport_axis *= 1.0f - submaterial->linear_collision_damping.penetration;
 
 		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 
@@ -194,8 +194,8 @@ namespace oly::physics
 		// update velocity
 
 		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
-		if (material->linear_drag > 0.0f)
-			post_state.linear_velocity *= glm::exp(-material->linear_drag * TIME.delta());
+		if (submaterial->linear_drag > 0.0f)
+			post_state.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
 	}
 
 	void KinematicPhysicsComponent::update_colliding_angular_motion(float new_velocity) const
@@ -214,18 +214,18 @@ namespace oly::physics
 		// dampen teleportation
 
 		teleport *= properties.mass() * properties.moi_inverse();
-		if (glm::abs(teleport) > material->collision_damping.angular_jitter_threshold)
-			teleport = glm::sign(teleport) * (1.0f - material->collision_damping.angular_teleportation.inner())
-			* glm::log(glm::abs(teleport) * material->collision_damping.angular_teleport_inverse_drag + 1.0f);
+		if (glm::abs(teleport) > submaterial->angular_collision_damping.teleportation_jitter_threshold)
+			teleport = glm::sign(teleport) * (1.0f - submaterial->angular_collision_damping.teleportation.inner())
+			* glm::log(glm::abs(teleport) * submaterial->angular_collision_damping.teleportation_inverse_drag + 1.0f);
 		else
 			teleport = 0.0f;
 
 		// dampen bounce
 
 		float bounce = collision_angular_impulse * properties.moi_inverse();
-		if (glm::abs(bounce) > material->collision_damping.angular_bounce_jitter_threshold)
-			bounce = glm::sign(bounce) * (1.0f - material->collision_damping.angular_restitution.inner())
-			* glm::log(glm::abs(bounce) * material->collision_damping.angular_bounce_inverse_drag + 1.0f);
+		if (glm::abs(bounce) > submaterial->angular_collision_damping.restitution_jitter_threshold)
+			bounce = glm::sign(bounce) * (1.0f - submaterial->angular_collision_damping.restitution.inner())
+			* glm::log(glm::abs(bounce) * submaterial->angular_collision_damping.restitution_inverse_drag + 1.0f);
 		else
 			bounce = 0.0f;
 
@@ -240,8 +240,8 @@ namespace oly::physics
 		// update velocity
 
 		post_state.angular_velocity = new_velocity;
-		if (material->angular_drag > 0.0f)
-			post_state.angular_velocity *= glm::exp(-material->angular_drag * TIME.delta());
+		if (submaterial->angular_drag > 0.0f)
+			post_state.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
 	}
 
 	// LATER test simultaneous collision with multiple objects with complex_teleportation = true/false.
@@ -344,7 +344,7 @@ namespace oly::physics
 		// angular snapping
 		if (properties.angular_snapping.enable && (!collisions.empty() || !properties.angular_snapping.only_colliding))
 		{
-			const auto& angular_snapping = material->angular_snapping;
+			const auto& angular_snapping = submaterial->angular_snapping;
 			if (!angular_snapping.snaps.empty())
 			{
 				if (glm::abs(post_state.angular_velocity) <= angular_snapping.speed_threshold)
@@ -383,11 +383,11 @@ namespace oly::physics
 
 		// linear snapping (X)
 		if (properties.linear_x_snapping.enable && (!collisions.empty() || !properties.linear_x_snapping.only_colliding))
-			linear_snapping(material->linear_x_snapping, post_state, 0);
+			linear_snapping(submaterial->linear_x_snapping, post_state, 0);
 
 		// linear snapping (Y)
 		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
-			linear_snapping(material->linear_y_snapping, post_state, 1);
+			linear_snapping(submaterial->linear_y_snapping, post_state, 1);
 	}
 
 	KinematicBody::KinematicBody()

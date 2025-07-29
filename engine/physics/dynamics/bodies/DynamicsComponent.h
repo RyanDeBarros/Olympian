@@ -38,9 +38,6 @@ namespace oly::physics
 		mutable State post_state;
 
 	public:
-		// TODO v3 only restitution and friction are needed. Make CollisionDamping, Blending, AngularSnapping, and LinearSnapping optional components in Material.
-		// The optional-ness can be set in constructor - Create FixedOptional struct that is an std::optional but once set/not set, cannot be set/unset.
-		// Then in StaticPhysics/LinearPhysics/KinematicPhysics, construct it with proper state.
 		MaterialRef material = REF_DEFAULT;
 
 		virtual ~DynamicsComponent() = default;

@@ -150,7 +150,7 @@ int main()
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 
-	player->material()->angular_snapping.set_uniformly_spaced(4);
+	player->sub_material()->angular_snapping.set_uniformly_spaced(4);
 	player->properties().set_mass(10.0f);
 
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };

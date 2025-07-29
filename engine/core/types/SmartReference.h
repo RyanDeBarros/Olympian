@@ -33,7 +33,6 @@ namespace oly
 		{
 			virtual ~IPool() = default;
 			virtual void clean() = 0;
-			virtual void init() = 0;
 			virtual void clear() = 0;
 		};
 
@@ -60,12 +59,6 @@ namespace oly
 			{
 				for (IPool* pool : pools)
 					pool->clean();
-			}
-
-			void init()
-			{
-				for (IPool* pool : pools)
-					pool->init();
 			}
 
 			void clear()
@@ -121,8 +114,7 @@ namespace oly
 
 		private:
 			friend class PoolBatch;
-			virtual void init() override;
-			virtual void clear() override;
+			void clear() override;
 
 			template<typename>
 			friend struct SmartReference;
@@ -269,9 +261,11 @@ namespace oly
 	private:
 		friend class internal::SmartReferencePool<PoolBase>;
 
-		static SmartReference<Object>& default_ref()
+		static SmartReference<Object>& default_ref() requires (std::is_default_constructible_v<Object>)
 		{
 			static SmartReference<Object> def;
+			if (!def.valid())
+				def.init();
 			return def;
 		}
 
@@ -327,10 +321,9 @@ namespace oly
 		}
 		
 		SmartReference(internal::RefDefault) requires (std::is_default_constructible_v<Object>)
-			: pool_idx(default_ref().pool_idx)
 		{
-			if (default_ref().valid())
-				increment();
+			pool_idx = default_ref().pool_idx;
+			increment();
 		}
 
 		SmartReference(const Object& obj)
@@ -714,16 +707,11 @@ namespace oly
 	namespace internal
 	{
 		template<typename Object>
-		inline void SmartReferencePool<Object>::init()
-		{
-			if constexpr (std::is_default_constructible_v<Object>)
-				SmartReference<Object>::default_ref().init();
-		}
-
-		template<typename Object>
 		inline void SmartReferencePool<Object>::clear()
 		{
-			SmartReference<Object>::default_ref().invalidate();
+			if constexpr (std::is_default_constructible_v<Object>)
+				SmartReference<Object>::default_ref().invalidate();
+
 			clear_stack(unoccupied);
 			marked_for_deletion.clear();
 			for (SmartReferenceLink* reference_head : reference_heads)
