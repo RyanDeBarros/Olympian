@@ -6,8 +6,10 @@
 // TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ignored).
 
 // TODO v3 OREPL commands for signal assets
-// TODO v3 modifiers for signals, like swizzle/negate/etc.
-// TODO v3 allow for key signals to generate non-bool values, like float/glm::vec2
+
+// TODO v3 add modifier section to signal assets
+
+// TODO v3 in assets, use shorthand and less verbose nomenclature. shift towards a conservative, minimal, custom file format. this is especially convenient for independent files like signals or tilesets or import files, not yet necessarily for compound files like archetypes.
 
 namespace oly::reg
 {
@@ -17,10 +19,10 @@ namespace oly::reg
 		if (!key)
 			return;
 		input::KeyBinding b{ .key = (int)key.value() };
-		b.required_mods = (int)node["required mods"].value<int64_t>().value_or(0);
-		b.forbidden_mods = (int)node["forbidden mods"].value<int64_t>().value_or(0);
+		b.required_key_mods = (int)node["req key mods"].value<int64_t>().value_or(0);
+		b.forbidden_key_mods = (int)node["ban key mods"].value<int64_t>().value_or(0);
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_mouse_button_binding(const TOMLNode& node, const std::string& id)
@@ -29,10 +31,10 @@ namespace oly::reg
 		if (!button)
 			return;
 		input::MouseButtonBinding b{ .button = (int)button.value() };
-		b.required_mods = (int)node["required mods"].value<int64_t>().value_or(0);
-		b.forbidden_mods = (int)node["forbidden mods"].value<int64_t>().value_or(0);
+		b.required_button_mods = (int)node["req btn mods"].value<int64_t>().value_or(0);
+		b.forbidden_button_mods = (int)node["ban btn mods"].value<int64_t>().value_or(0);
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_gamepad_button_binding(const TOMLNode& node, const std::string& id)
@@ -42,7 +44,7 @@ namespace oly::reg
 			return;
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)(int)button.value() };
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_gamepad_axis_1d_binding(const TOMLNode& node, const std::string& id)
@@ -53,7 +55,7 @@ namespace oly::reg
 		input::GamepadAxis1DBinding b{ .axis = (input::GamepadAxis1D)(int)axis1d.value() };
 		b.deadzone = (float)node["deadzone"].value<double>().value_or(0.0);
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_gamepad_axis_2d_binding(const TOMLNode& node, const std::string& id)
@@ -64,21 +66,21 @@ namespace oly::reg
 		input::GamepadAxis2DBinding b{ .axis = (input::GamepadAxis2D)(int)axis2d.value() };
 		b.deadzone = (float)node["deadzone"].value<double>().value_or(0.0);
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_cursor_pos_binding(const TOMLNode& node, const std::string& id)
 	{
 		input::CursorPosBinding b{};
 
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	static void load_scroll_binding(const TOMLNode& node, const std::string& id)
 	{
 		input::ScrollBinding b{};
 			
-		context::get_platform().binding_context().register_signal(context::get_platform().signal_table().get(id), b);
+		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
 	void load_signal(const TOMLNode& node)

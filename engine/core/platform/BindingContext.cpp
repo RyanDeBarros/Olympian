@@ -5,8 +5,8 @@
 
 namespace oly::platform
 {
-	InputBindingContext::InputBindingContext(int num_gamepads)
-		: gamepad_polls(glm::clamp(num_gamepads, 0, GLFW_JOYSTICK_LAST))
+	InputBindingContext::InputBindingContext(unsigned int num_gamepads)
+		: gamepad_polls(std::min(num_gamepads, (unsigned int)GLFW_JOYSTICK_LAST))
 	{
 	}
 
@@ -80,10 +80,15 @@ namespace oly::platform
 				return;
 		}
 
-		input::Signal signal(phase, state != GLFW_RELEASE, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
-		for (const auto& binding : gmpd_button_bindings)
-			if (binding.second.matches(input::GamepadButton(button)) && dispatch(binding.first, signal))
-				break;
+		for (const auto& [id, bindings] : gmpd_button_bindings)
+		{
+			for (const input::GamepadButtonBinding& binding : bindings)
+			{
+				std::optional<input::Signal> signal = binding.signal(phase, input::GamepadButton(button), controller);
+				if (signal)
+					dispatch(id, *signal);
+			}
+		}
 	}
 
 	void InputBindingContext::poll_gamepad_axis_1d(int controller, int axis)
@@ -115,10 +120,15 @@ namespace oly::platform
 				return;
 		}
 
-		input::Signal signal(phase, state, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
-		for (const auto& binding : gmpd_axis_1d_bindings)
-			if (binding.second.matches(input::GamepadAxis1D(axis), state) && dispatch(binding.first, signal))
-				break;
+		for (const auto& [id, bindings] : gmpd_axis_1d_bindings)
+		{
+			for (const input::GamepadAxis1DBinding& binding : bindings)
+			{
+				std::optional<input::Signal> signal = binding.signal(phase, input::GamepadAxis1D(axis), state, controller);
+				if (signal)
+					dispatch(id, *signal);
+			}
+		}
 	}
 
 	void InputBindingContext::poll_gamepad_axis_2d(int controller, int axis)
@@ -150,10 +160,15 @@ namespace oly::platform
 				return;
 		}
 
-		input::Signal signal(phase, state, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
-		for (const auto& binding : gmpd_axis_2d_bindings)
-			if (binding.second.matches(input::GamepadAxis2D(axis), state) && dispatch(binding.first, signal))
-				break;
+		for (const auto& [id, bindings] : gmpd_axis_2d_bindings)
+		{
+			for (const input::GamepadAxis2DBinding& binding : bindings)
+			{
+				std::optional<input::Signal> signal = binding.signal(phase, input::GamepadAxis2D(axis), state, controller);
+				if (signal)
+					dispatch(id, *signal);
+			}
+		}
 	}
 
 	bool InputBindingContext::get_phase(int action, input::Phase& phase) const
@@ -198,13 +213,18 @@ namespace oly::platform
 		input::Phase phase;
 		if (!get_phase(data.action, phase))
 			return false;
-		input::Signal signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::KEYBOARD);
-		for (const auto& binding : key_bindings)
+
+		bool consumed = false;
+		for (const auto& [id, bindings] : key_bindings)
 		{
-			if (binding.second.matches(data.key, data.mods) && dispatch(binding.first, signal))
-				return true;
+			for (const input::KeyBinding& binding : bindings)
+			{
+				std::optional<input::Signal> signal = binding.signal(phase, data.key, data.mods);
+				if (signal && dispatch(id, *signal))
+					consumed = true;
+			}
 		}
-		return false;
+		return consumed;
 	}
 
 	bool InputBindingContext::consume(const input::MouseButtonEventData& data)
@@ -212,13 +232,18 @@ namespace oly::platform
 		input::Phase phase;
 		if (!get_phase(data.action, phase))
 			return false;
-		input::Signal signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::MOUSE);
-		for (const auto& binding : mb_bindings)
+
+		bool consumed = false;
+		for (const auto& [id, bindings] : mb_bindings)
 		{
-			if (binding.second.matches(data.button, data.mods) && dispatch(binding.first, signal))
-				return true;
+			for (const input::MouseButtonBinding& binding : bindings)
+			{
+				std::optional<input::Signal> signal = binding.signal(phase, data.button, data.mods);
+				if (signal && dispatch(id, *signal))
+					consumed = true;
+			}
 		}
-		return false;
+		return consumed;
 	}
 
 	bool InputBindingContext::consume(const input::CursorPosEventData& data)
@@ -231,13 +256,16 @@ namespace oly::platform
 		cpos_poll.moving = true;
 		cpos_poll.callback_time = TIME.now<double>();
 
-		input::Signal signal(phase, { (float)data.x, (float)data.y }, input::Signal::Signal::MOUSE);
-		for (const auto& binding : cpos_bindings)
+		bool consumed = false;
+		for (const auto& [id, bindings] : cpos_bindings)
 		{
-			if (dispatch(binding.first, signal))
-				return true;
+			for (const input::CursorPosBinding& binding : bindings)
+			{
+				if (dispatch(id, binding.signal(phase, { (float)data.x, (float)data.y })))
+					consumed = true;
+			}
 		}
-		return false;
+		return consumed;
 	}
 
 	bool InputBindingContext::consume(const input::ScrollEventData& data)
@@ -250,12 +278,15 @@ namespace oly::platform
 		scroll_poll.moving = true;
 		scroll_poll.callback_time = TIME.now<double>();
 
-		input::Signal signal(phase, { (float)data.xoff, (float)data.yoff }, input::Signal::Signal::MOUSE);
-		for (const auto& binding : scroll_bindings)
+		bool consumed = false;
+		for (const auto& [id, bindings] : scroll_bindings)
 		{
-			if (dispatch(binding.first, signal))
-				return true;
+			for (const input::ScrollBinding& binding : bindings)
+			{
+				if (dispatch(id, binding.signal(phase, { (float)data.xoff, (float)data.yoff })))
+					consumed = true;
+			}
 		}
-		return false;
+		return consumed;
 	}
 }
