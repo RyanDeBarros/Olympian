@@ -3,7 +3,7 @@
 #include "core/base/Context.h"
 #include "registries/Loader.h"
 
-// TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ingored).
+// TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ignored).
 
 // TODO v3 OREPL commands for signal assets
 // TODO v3 modifiers for signals, like swizzle/negate/etc.

@@ -11,7 +11,7 @@
 #include "graphics/extensions/Arrow.h"
 #include "graphics/backend/basic/Framebuffers.h"
 
-#include "core/platform/Input.h"
+#include "core/platform/WindowEvents.h"
 
 namespace oly::debug
 {

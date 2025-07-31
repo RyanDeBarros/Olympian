@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Input.h"
+#include "core/platform/WindowEvents.h"
 
 namespace oly::platform
 {

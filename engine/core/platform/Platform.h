@@ -4,6 +4,8 @@
 
 #include "external/TOML.h"
 #include "core/platform/Window.h"
+#include "core/platform/Gamepad.h"
+#include "core/platform/BindingContext.h"
 
 namespace oly::platform
 {

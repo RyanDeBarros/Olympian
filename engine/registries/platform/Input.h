@@ -2,8 +2,6 @@
 
 #include "external/TOML.h"
 
-#include "core/platform/Input.h"
-
 namespace oly::reg
 {
 	extern void load_signal(const TOMLNode& node);

@@ -1,0 +1,261 @@
+#include "BindingContext.h"
+
+#include "core/base/Context.h"
+#include "core/util/Time.h"
+
+namespace oly::platform
+{
+	InputBindingContext::InputBindingContext(int num_gamepads)
+		: gamepad_polls(glm::clamp(num_gamepads, 0, GLFW_JOYSTICK_LAST))
+	{
+	}
+
+	void InputBindingContext::poll()
+	{
+		poll_cursor_pos();
+		poll_scroll();
+
+		for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+			context::get_platform().gamepad(g).poll();
+
+		for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+			for (int i = 0; i <= input::GamepadButton::LAST; ++i)
+				poll_gamepad_button(g, i);
+
+		for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+			for (int i = 0; i <= input::GamepadAxis1D::LAST; ++i)
+				poll_gamepad_axis_1d(g, i);
+
+		for (int g = 0; g < (int)gamepad_polls.size(); ++g)
+			for (int i = 0; i <= input::GamepadAxis2D::LAST; ++i)
+				poll_gamepad_axis_2d(g, i);
+	}
+
+	void InputBindingContext::poll_cursor_pos()
+	{
+		if (cpos_poll.moving && (TIME.now<double>() > cpos_poll.callback_time))
+		{
+			cpos_poll.moving = false;
+			double x, y;
+			glfwGetCursorPos(context::get_platform().window(), &x, &y);
+			input::Signal signal(input::Phase::COMPLETED, { (float)x, (float)y }, input::Signal::Source::MOUSE);
+			for (const auto& binding : cpos_bindings)
+				if (dispatch(binding.first, signal))
+					break;
+		}
+	}
+
+	void InputBindingContext::poll_scroll()
+	{
+		if (scroll_poll.moving && (TIME.now<double>() > scroll_poll.callback_time))
+		{
+			scroll_poll.moving = false;
+			input::Signal signal(input::Phase::COMPLETED, glm::vec2{}, input::Signal::Source::MOUSE);
+			for (const auto& binding : scroll_bindings)
+				if (dispatch(binding.first, signal))
+					break;
+		}
+	}
+
+	void InputBindingContext::poll_gamepad_button(int controller, int button)
+	{
+		int state = context::get_platform().gamepad(controller).button_state(input::GamepadButton(button));
+		ButtonPoll& bpoll = gamepad_polls[controller].button_polls[button];
+		int prev_action = bpoll.action;
+		bpoll.action = state;
+
+		input::Phase phase;
+		if (prev_action == GLFW_PRESS)
+		{
+			if (state == GLFW_PRESS)
+				phase = input::Phase::ONGOING;
+			else
+				phase = input::Phase::COMPLETED;
+		}
+		else
+		{
+			if (state == GLFW_PRESS)
+				phase = input::Phase::STARTED;
+			else
+				return;
+		}
+
+		input::Signal signal(phase, state != GLFW_RELEASE, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
+		for (const auto& binding : gmpd_button_bindings)
+			if (binding.second.matches(input::GamepadButton(button)) && dispatch(binding.first, signal))
+				break;
+	}
+
+	void InputBindingContext::poll_gamepad_axis_1d(int controller, int axis)
+	{
+		float state = context::get_platform().gamepad(controller).axis_1d_state(input::GamepadAxis1D(axis));
+		Axis1DPoll& apoll = gamepad_polls[controller].axis_1d_polls[axis];
+		float prev_axis = apoll.axis;
+		apoll.axis = state;
+
+		input::Phase phase;
+		if (prev_axis != state)
+		{
+			if (apoll.moving)
+				phase = input::Phase::ONGOING;
+			else
+			{
+				phase = input::Phase::STARTED;
+				apoll.moving = true;
+			}
+		}
+		else
+		{
+			if (apoll.moving)
+			{
+				phase = input::Phase::COMPLETED;
+				apoll.moving = false;
+			}
+			else
+				return;
+		}
+
+		input::Signal signal(phase, state, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
+		for (const auto& binding : gmpd_axis_1d_bindings)
+			if (binding.second.matches(input::GamepadAxis1D(axis), state) && dispatch(binding.first, signal))
+				break;
+	}
+
+	void InputBindingContext::poll_gamepad_axis_2d(int controller, int axis)
+	{
+		glm::vec2 state = context::get_platform().gamepad(controller).axis_2d_state(input::GamepadAxis2D(axis));
+		Axis2DPoll& apoll = gamepad_polls[controller].axis_2d_polls[axis];
+		glm::vec2 prev_axis = apoll.axis;
+		apoll.axis = state;
+
+		input::Phase phase;
+		if (prev_axis != state)
+		{
+			if (apoll.moving)
+				phase = input::Phase::ONGOING;
+			else
+			{
+				phase = input::Phase::STARTED;
+				apoll.moving = true;
+			}
+		}
+		else
+		{
+			if (apoll.moving)
+			{
+				phase = input::Phase::COMPLETED;
+				apoll.moving = false;
+			}
+			else
+				return;
+		}
+
+		input::Signal signal(phase, state, input::Signal::Source(input::Signal::Source::JOYSTICK + controller));
+		for (const auto& binding : gmpd_axis_2d_bindings)
+			if (binding.second.matches(input::GamepadAxis2D(axis), state) && dispatch(binding.first, signal))
+				break;
+	}
+
+	bool InputBindingContext::get_phase(int action, input::Phase& phase) const
+	{
+		switch (action)
+		{
+		case GLFW_PRESS:
+			phase = input::Phase::STARTED;
+			return true;
+		case GLFW_RELEASE:
+			phase = input::Phase::COMPLETED;
+			return true;
+		case GLFW_REPEAT:
+			phase = input::Phase::ONGOING;
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	bool InputBindingContext::dispatch(input::SignalID id, input::Signal signal)
+	{
+		static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
+
+		auto it = handler_map.find(id);
+		if (it != handler_map.end())
+		{
+			if (std::visit(invalid_controller, it->second))
+			{
+				handler_map.erase(it);
+				return false;
+			}
+			else
+				return std::visit([signal](auto&& ref) { return (ref.controller.get()->*ref.handler)(signal); }, it->second);
+		}
+		else
+			return false;
+	}
+
+	bool InputBindingContext::consume(const input::KeyEventData& data)
+	{
+		input::Phase phase;
+		if (!get_phase(data.action, phase))
+			return false;
+		input::Signal signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::KEYBOARD);
+		for (const auto& binding : key_bindings)
+		{
+			if (binding.second.matches(data.key, data.mods) && dispatch(binding.first, signal))
+				return true;
+		}
+		return false;
+	}
+
+	bool InputBindingContext::consume(const input::MouseButtonEventData& data)
+	{
+		input::Phase phase;
+		if (!get_phase(data.action, phase))
+			return false;
+		input::Signal signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::MOUSE);
+		for (const auto& binding : mb_bindings)
+		{
+			if (binding.second.matches(data.button, data.mods) && dispatch(binding.first, signal))
+				return true;
+		}
+		return false;
+	}
+
+	bool InputBindingContext::consume(const input::CursorPosEventData& data)
+	{
+		input::Phase phase;
+		if (cpos_poll.moving)
+			phase = input::Phase::ONGOING;
+		else
+			phase = input::Phase::STARTED;
+		cpos_poll.moving = true;
+		cpos_poll.callback_time = TIME.now<double>();
+
+		input::Signal signal(phase, { (float)data.x, (float)data.y }, input::Signal::Signal::MOUSE);
+		for (const auto& binding : cpos_bindings)
+		{
+			if (dispatch(binding.first, signal))
+				return true;
+		}
+		return false;
+	}
+
+	bool InputBindingContext::consume(const input::ScrollEventData& data)
+	{
+		input::Phase phase;
+		if (scroll_poll.moving)
+			phase = input::Phase::ONGOING;
+		else
+			phase = input::Phase::STARTED;
+		scroll_poll.moving = true;
+		scroll_poll.callback_time = TIME.now<double>();
+
+		input::Signal signal(phase, { (float)data.xoff, (float)data.yoff }, input::Signal::Signal::MOUSE);
+		for (const auto& binding : scroll_bindings)
+		{
+			if (dispatch(binding.first, signal))
+				return true;
+		}
+		return false;
+	}
+}
