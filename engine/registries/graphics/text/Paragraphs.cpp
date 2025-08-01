@@ -12,15 +12,15 @@ namespace oly::reg
 		glm::vec2 v2;
 		float v1;
 
-		if (parse_vec2(node, "pivot", v2))
+		if (parse_vec(node["pivot"].as_array(), v2))
 			format.pivot = v2;
 		if (parse_float(node, "line spacing", v1))
 			format.line_spacing = v1;
 		if (parse_float(node, "linebreak spacing", v1))
 			format.linebreak_spacing = v1;
-		if (parse_vec2(node, "min size", v2))
+		if (parse_vec(node["min size"].as_array(), v2))
 			format.min_size = v2;
-		if (parse_vec2(node, "padding", v2))
+		if (parse_vec(node["padding"].as_array(), v2))
 			format.padding = v2;
 		if (parse_float(node, "text wrap", v1))
 			format.text_wrap = v1;
@@ -81,9 +81,9 @@ namespace oly::reg
 		params.local = load_transform_2d(node, "transform");
 
 		glm::vec4 v;
-		if (parse_vec4(node, "bkg color", v))
+		if (parse_vec(node["bkg color"].as_array(), v))
 			params.bkg_color = v;
-		if (parse_vec4(node, "text color", v))
+		if (parse_vec(node["text color"].as_array(), v))
 			params.text_color = v;
 
 		auto glyph_colors = node["glyph colors"].as_table();
@@ -92,7 +92,7 @@ namespace oly::reg
 			for (const auto& [k, v] : *glyph_colors)
 			{
 				glm::vec4 gc;
-				if (parse_vec4(v.as_array(), gc))
+				if (parse_vec(v.as_array(), gc))
 					params.glyph_colors.push_back({ std::stoi(k.data()), { gc } });
 			}
 		}

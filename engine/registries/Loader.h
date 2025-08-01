@@ -15,18 +15,47 @@ namespace oly::reg
 	extern bool parse_float(const TOMLNode& node, const std::string& name, float& v);
 	extern bool parse_float(const CTOMLNode& node, const std::string& name, float& v);
 	extern bool parse_float(const toml::table& node, const std::string& name, float& v);
-	extern bool parse_vec2(const toml::v3::array* arr, glm::vec2& v);
-	inline bool parse_vec2(const TOMLNode& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
-	inline bool parse_vec2(const CTOMLNode& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
-	inline bool parse_vec2(const toml::table& node, const std::string& name, glm::vec2& v) { return parse_vec2(node[name].as_array(), v); }
-	extern bool parse_ivec2(const toml::v3::array* arr, glm::ivec2& v);
-	inline bool parse_ivec2(const TOMLNode& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
-	inline bool parse_ivec2(const CTOMLNode& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
-	inline bool parse_ivec2(const toml::table& node, const std::string& name, glm::ivec2& v) { return parse_ivec2(node[name].as_array(), v); }
-	extern bool parse_vec4(const toml::v3::array* arr, glm::vec4& v);
-	inline bool parse_vec4(const TOMLNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
-	inline bool parse_vec4(const CTOMLNode& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
-	inline bool parse_vec4(const toml::table& node, const std::string& name, glm::vec4& v) { return parse_vec4(node[name].as_array(), v); }
+
+	template<size_t N>
+	inline bool parse_vec(const toml::v3::array* arr, glm::vec<N, float>& v)
+	{
+		if (arr && arr->size() == N)
+		{
+			glm::vec<N, float> u;
+			for (int i = 0; i < N; ++i)
+			{
+				if (auto d = arr->get_as<double>(i))
+					u[i] = (float)d->get();
+				else if (auto n = arr->get_as<int64_t>(i))
+					u[i] = (float)n->get();
+				else
+					return false;
+			}
+			v = u;
+			return true;
+		}
+		return false;
+	}
+
+	template<size_t N>
+	inline bool parse_ivec(const toml::v3::array* arr, glm::vec<N, int>& v)
+	{
+		if (arr && arr->size() == N)
+		{
+			glm::vec<N, int> u;
+			for (int i = 0; i < N; ++i)
+			{
+				if (auto n = arr->get_as<int64_t>(i))
+					u[i] = (int)n->get();
+				else
+					return false;
+			}
+			v = u;
+			return true;
+		}
+		return false;
+	}
+
 	extern Transform2D load_transform_2d(const TOMLNode& node);
 	extern Transform2D load_transform_2d(const CTOMLNode& node);
 	inline Transform2D load_transform_2d(const toml::table& node, const char* name) { return load_transform_2d((const TOMLNode&)node[name]); }

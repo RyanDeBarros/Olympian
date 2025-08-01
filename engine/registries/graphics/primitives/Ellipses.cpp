@@ -11,13 +11,13 @@ namespace oly::reg
 		params.local = load_transform_2d(node, "transform");
 
 		glm::vec4 v4;
-		if (parse_vec4(node, "border inner color", v4))
+		if (parse_vec(node["border inner color"].as_array(), v4))
 			params.color.border_inner = v4;
-		if (parse_vec4(node, "border outer color", v4))
+		if (parse_vec(node["border outer color"].as_array(), v4))
 			params.color.border_outer = v4;
-		if (parse_vec4(node, "fill inner color", v4))
+		if (parse_vec(node["fill inner color"].as_array(), v4))
 			params.color.fill_inner = v4;
-		if (parse_vec4(node, "fill outer color", v4))
+		if (parse_vec(node["fill outer color"].as_array(), v4))
 			params.color.fill_outer = v4;
 
 		float v1;

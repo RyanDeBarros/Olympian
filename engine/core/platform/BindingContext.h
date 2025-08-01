@@ -22,17 +22,77 @@ namespace oly
 
 	namespace input
 	{
-		struct Modifier
+		struct ModifierBase
 		{
-			/* TODO v3:
-			 * - data type (bool, float, or vec2) -> conversions to those types from native event types
-			 * - swizzle
-			 * - negate
-			 * - etc.
-			 */
-			Signal modified(Signal native) const { return native; }
+			std::array<bool, 3> invert = { false, false, false };
+			glm::vec3 multiplier = glm::vec3(1.0f);
+			enum class Swizzle
+			{
+				NONE,
+				YX,
+				XZY,
+				YXZ,
+				YZX,
+				ZXY,
+				ZYX
+			} swizzle = Swizzle::NONE;
 
-			bool operator==(const Modifier&) const = default;
+			bool modify(bool value) const;
+			float modify(float value) const;
+			glm::vec2 modify(glm::vec2 value) const;
+			glm::vec3 modify(glm::vec3 value) const;
+
+			bool operator==(const ModifierBase&) const = default;
+		};
+
+		struct Axis0DModifier : public ModifierBase
+		{
+			enum class Conversion
+			{
+				NONE,
+				TO_1D,
+				TO_2D,
+				TO_3D
+			} conversion = Conversion::NONE;
+
+			Signal signal(Phase phase, bool value, Signal::Source source) const;
+
+			bool operator==(const Axis0DModifier&) const = default;
+		};
+
+		struct Axis1DModifier : public ModifierBase
+		{
+			enum class Conversion
+			{
+				NONE,
+				TO_0D,
+				TO_2D,
+				TO_3D
+			} conversion = Conversion::NONE;
+
+			Signal signal(Phase phase, float value, Signal::Source source) const;
+
+			bool operator==(const Axis1DModifier&) const = default;
+		};
+
+		struct Axis2DModifier : public ModifierBase
+		{
+			enum class Conversion
+			{
+				NONE,
+				TO_0D_X,
+				TO_0D_Y,
+				TO_0D_XY,
+				TO_1D_X,
+				TO_1D_Y,
+				TO_1D_XY,
+				TO_3D_0,
+				TO_3D_1
+			} conversion = Conversion::NONE;
+
+			Signal signal(Phase phase, glm::vec2 value, Signal::Source source) const;
+
+			bool operator==(const Axis2DModifier&) const = default;
 		};
 
 		struct KeyBinding
@@ -40,7 +100,7 @@ namespace oly
 			int key;
 			int required_key_mods = 0;
 			int forbidden_key_mods = 0;
-			Modifier modifier;
+			Axis0DModifier modifier;
 
 			std::optional<Signal> signal(Phase phase, int key, int mods) const
 			{
@@ -51,7 +111,7 @@ namespace oly
 				if ((mods & forbidden_key_mods) != 0)
 					return std::nullopt;
 
-				return modifier.modified(Signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::KEYBOARD));
+				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::KEYBOARD);
 			}
 
 			bool operator==(const KeyBinding&) const = default;
@@ -62,7 +122,7 @@ namespace oly
 			int button;
 			int required_button_mods = 0;
 			int forbidden_button_mods = 0;
-			Modifier modifier;
+			Axis0DModifier modifier;
 
 			std::optional<Signal> signal(Phase phase, int button, int mods) const
 			{
@@ -73,7 +133,7 @@ namespace oly
 				if ((mods & forbidden_button_mods) != 0)
 					return std::nullopt;
 
-				return modifier.modified(Signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::MOUSE));
+				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::MOUSE);
 			}
 
 			bool operator==(const MouseButtonBinding&) const = default;
@@ -82,14 +142,14 @@ namespace oly
 		struct GamepadButtonBinding
 		{
 			GamepadButton button;
-			Modifier modifier;
+			Axis0DModifier modifier;
 
 			std::optional<Signal> signal(Phase phase, GamepadButton button, int controller) const
 			{
 				if (button != this->button)
 					return std::nullopt;
 
-				return modifier.modified(input::Signal(phase, phase != input::Phase::COMPLETED, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller)));
+				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
 			}
 
 			bool operator==(const GamepadButtonBinding&) const = default;
@@ -99,14 +159,14 @@ namespace oly
 		{
 			GamepadAxis1D axis;
 			float deadzone = 0.0f;
-			Modifier modifier;
+			Axis1DModifier modifier;
 
 			std::optional<Signal> signal(Phase phase, GamepadAxis1D axis, float value, int controller) const
 			{
 				if (axis != this->axis || glm::abs(value) < glm::abs(deadzone))
 					return std::nullopt;
 
-				return modifier.modified(input::Signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller)));
+				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
 			}
 
 			bool operator==(const GamepadAxis1DBinding&) const = default;
@@ -116,14 +176,14 @@ namespace oly
 		{
 			GamepadAxis2D axis;
 			float deadzone = 0.0f;
-			Modifier modifier;
+			Axis2DModifier modifier;
 
 			std::optional<Signal> signal(Phase phase, GamepadAxis2D axis, glm::vec2 value, int controller) const
 			{
 				if (axis != this->axis || glm::dot(value, value) < deadzone * deadzone)
 					return std::nullopt;
 
-				return modifier.modified(input::Signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller)));
+				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
 			}
 
 			bool operator==(const GamepadAxis2DBinding&) const = default;
@@ -131,11 +191,11 @@ namespace oly
 
 		struct CursorPosBinding
 		{
-			Modifier modifier;
+			Axis2DModifier modifier;
 
 			Signal signal(Phase phase, glm::vec2 pos) const
 			{
-				return modifier.modified(input::Signal(phase, pos, input::Signal::Signal::MOUSE));
+				return modifier.signal(phase, pos, input::Signal::Signal::MOUSE);
 			}
 
 			bool operator==(const CursorPosBinding&) const = default;
@@ -143,11 +203,11 @@ namespace oly
 
 		struct ScrollBinding
 		{
-			Modifier modifier;
+			Axis2DModifier modifier;
 
 			Signal signal(Phase phase, glm::vec2 scroll) const
 			{
-				return modifier.modified(input::Signal(phase, scroll, input::Signal::Signal::MOUSE));
+				return modifier.signal(phase, scroll, input::Signal::Signal::MOUSE);
 			}
 
 			bool operator==(const ScrollBinding&) const = default;

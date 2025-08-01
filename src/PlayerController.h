@@ -21,8 +21,5 @@ public:
 	bool drag(glm::vec2 cursor_pos);
 	glm::vec2 screen_to_world_coords(glm::vec2 coords);
 	bool zoom_camera(oly::input::Signal signal);
-	bool move_left(oly::input::Signal signal);
-	bool move_right(oly::input::Signal signal);
-	bool move_up(oly::input::Signal signal);
-	bool move_down(oly::input::Signal signal);
+	bool move(oly::input::Signal signal);
 };

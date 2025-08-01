@@ -32,7 +32,7 @@ namespace oly::reg
 							if (auto _tile = toml_tile.as_array())
 							{
 								glm::ivec2 tile{};
-								if (parse_ivec2(_tile, tile))
+								if (parse_ivec(_tile, tile))
 									lparams.tiles.push_back(tile);
 							}
 						}

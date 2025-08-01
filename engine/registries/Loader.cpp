@@ -89,70 +89,15 @@ namespace oly::reg
 		return false;
 	}
 
-	template<size_t N>
-	static bool parse_vec(const toml::v3::array* arr, glm::vec<N, float>& v)
-	{
-		if (arr && arr->size() == N)
-		{
-			glm::vec<N, float> u;
-			for (int i = 0; i < N; ++i)
-			{
-				if (auto d = arr->get_as<double>(i))
-					u[i] = (float)d->get();
-				else if (auto n = arr->get_as<int64_t>(i))
-					u[i] = (float)n->get();
-				else
-					return false;
-			}
-			v = u;
-			return true;
-		}
-		return false;
-	}
-
-	template<size_t N>
-	static bool parse_ivec(const toml::v3::array* arr, glm::vec<N, int>& v)
-	{
-		if (arr && arr->size() == N)
-		{
-			glm::vec<N, int> u;
-			for (int i = 0; i < N; ++i)
-			{
-				if (auto n = arr->get_as<int64_t>(i))
-					u[i] = (int)n->get();
-				else
-					return false;
-			}
-			v = u;
-			return true;
-		}
-		return false;
-	}
-
-	bool parse_vec2(const toml::v3::array* arr, glm::vec2& v)
-	{
-		return parse_vec(arr, v);
-	}
-
-	bool parse_ivec2(const toml::v3::array* arr, glm::ivec2& v)
-	{
-		return parse_ivec(arr, v);
-	}
-
-	bool parse_vec4(const toml::v3::array* arr, glm::vec4& v)
-	{
-		return parse_vec(arr, v);
-	}
-
 	Transform2D load_transform_2d(const TOMLNode& node)
 	{
 		Transform2D transform;
 		if (!node)
 			return transform;
-		parse_vec2(node, "position", transform.position);
+		parse_vec(node["position"].as_array(), transform.position);
 		if (auto rotation = node["rotation"].value<double>())
 			transform.rotation = (float)rotation.value();
-		parse_vec2(node, "scale", transform.scale);
+		parse_vec(node["scale"].as_array(), transform.scale);
 		return transform;
 	}
 
@@ -161,10 +106,10 @@ namespace oly::reg
 		Transform2D transform;
 		if (!node)
 			return transform;
-		parse_vec2(node, "position", transform.position);
+		parse_vec(node["position"].as_array(), transform.position);
 		if (auto rotation = node["rotation"].value<double>())
 			transform.rotation = (float)rotation.value();
-		parse_vec2(node, "scale", transform.scale);
+		parse_vec(node["scale"].as_array(), transform.scale);
 		return transform;
 	}
 

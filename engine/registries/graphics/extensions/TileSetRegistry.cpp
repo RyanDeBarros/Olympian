@@ -35,7 +35,7 @@ namespace oly::reg
 
 					assignment.desc.name = _texture.value();
 					glm::vec4 uvs{};
-					if (reg::parse_vec4(node, "uvs", uvs))
+					if (reg::parse_vec(node["uvs"].as_array(), uvs))
 					{
 						assignment.desc.uvs.x1 = uvs[0];
 						assignment.desc.uvs.x2 = uvs[1];

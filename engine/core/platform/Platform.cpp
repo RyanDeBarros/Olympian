@@ -22,7 +22,7 @@ namespace oly::platform
 
 		if (auto toml_window_hint = node["window_hint"])
 		{
-			reg::parse_vec4(toml_window_hint, "clear color", window_hint.context.clear_color);
+			reg::parse_vec(toml_window_hint["clear color"].as_array(), window_hint.context.clear_color);
 			window_hint.context.swap_interval      = (int)toml_window_hint["swap interval"].value<int64_t>().value_or(1);
 			window_hint.window.resizable                = toml_window_hint["resizable"].value<bool>().value_or(true);
 			window_hint.window.visible                  = toml_window_hint["visible"].value<bool>().value_or(true);

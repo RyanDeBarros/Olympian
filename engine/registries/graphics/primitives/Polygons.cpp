@@ -18,7 +18,7 @@ namespace oly::reg
 			for (const auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (parse_vec2(toml_point.as_array(), pt))
+				if (parse_vec(toml_point.as_array(), pt))
 					params.points.push_back(pt);
 			}
 		}
@@ -29,7 +29,7 @@ namespace oly::reg
 			for (const auto& toml_color : *toml_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec4(toml_color.as_array(), col))
+				if (parse_vec(toml_color.as_array(), col))
 					params.colors.push_back(col);
 			}
 		}
@@ -81,7 +81,7 @@ namespace oly::reg
 					for (const auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec2(toml_point.as_array(), pt))
+						if (parse_vec(toml_point.as_array(), pt))
 							method.points.push_back(pt);
 					}
 				}
@@ -92,7 +92,7 @@ namespace oly::reg
 					for (const auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec4(toml_color.as_array(), col))
+						if (parse_vec(toml_color.as_array(), col))
 							method.colors.push_back(col);
 					}
 				}
@@ -109,7 +109,7 @@ namespace oly::reg
 					for (const auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec2(toml_point.as_array(), pt))
+						if (parse_vec(toml_point.as_array(), pt))
 							method.ngon_base.points.push_back(pt);
 					}
 				}
@@ -120,7 +120,7 @@ namespace oly::reg
 					for (const auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec4(toml_color.as_array(), col))
+						if (parse_vec(toml_color.as_array(), col))
 							method.ngon_base.fill_colors.push_back(col);
 					}
 				}
@@ -131,7 +131,7 @@ namespace oly::reg
 					for (const auto& toml_color : *toml_border_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec4(toml_color.as_array(), col))
+						if (parse_vec(toml_color.as_array(), col))
 							method.ngon_base.border_colors.push_back(col);
 					}
 				}
@@ -164,7 +164,7 @@ namespace oly::reg
 					for (const auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec2(toml_point.as_array(), pt))
+						if (parse_vec(toml_point.as_array(), pt))
 							method.points.push_back(pt);
 					}
 				}
@@ -260,7 +260,7 @@ namespace oly::reg
 			for (const auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (parse_vec2(toml_point.as_array(), pt))
+				if (parse_vec(toml_point.as_array(), pt))
 					params.ngon_base.points.push_back(pt);
 			}
 		}
@@ -271,7 +271,7 @@ namespace oly::reg
 			for (const auto& toml_color : *toml_fill_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec4(toml_color.as_array(), col))
+				if (parse_vec(toml_color.as_array(), col))
 					params.ngon_base.fill_colors.push_back(col);
 			}
 		}
@@ -282,7 +282,7 @@ namespace oly::reg
 			for (const auto& toml_color : *toml_border_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec4(toml_color.as_array(), col))
+				if (parse_vec(toml_color.as_array(), col))
 					params.ngon_base.border_colors.push_back(col);
 			}
 		}

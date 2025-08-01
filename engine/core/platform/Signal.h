@@ -37,7 +37,8 @@ namespace oly::input
 		{
 			BOOL,
 			AXIS1D,
-			AXIS2D
+			AXIS2D,
+			AXIS3D
 		};
 
 		enum Source
@@ -56,12 +57,14 @@ namespace oly::input
 			bool bool_value;
 			float axis_1d_value;
 			glm::vec2 axis_2d_value;
+			glm::vec3 axis_3d_value;
 		};
 
 	public:
 		Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::BOOL), bool_value(v), source(source) {}
 		Signal(Phase phase, float v, Source source) : phase(phase), type(Type::AXIS1D), axis_1d_value(v), source(source) {}
 		Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::AXIS2D), axis_2d_value(v), source(source) {}
+		Signal(Phase phase, glm::vec3 v, Source source) : phase(phase), type(Type::AXIS3D), axis_3d_value(v), source(source) {}
 
 		template<typename T>
 		T get() const
@@ -91,6 +94,14 @@ namespace oly::input
 			if (type != Type::AXIS2D)
 				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
 			return axis_2d_value;
+		}
+
+		template<>
+		glm::vec3 get<glm::vec3>() const
+		{
+			if (type != Type::AXIS3D)
+				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+			return axis_3d_value;
 		}
 
 		bool from_controller() const { return source >= Source::JOYSTICK_BASE; }

@@ -70,41 +70,11 @@ bool PlayerController::zoom_camera(oly::input::Signal signal)
 	return false;
 }
 
-bool PlayerController::move_left(oly::input::Signal signal)
+bool PlayerController::move(oly::input::Signal signal)
 {
 	if (signal.phase == oly::input::Phase::STARTED)
 	{
-		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * glm::vec2{ -50.0f, 0.0f };
-		return true;
-	}
-	return false;
-}
-
-bool PlayerController::move_right(oly::input::Signal signal)
-{
-	if (signal.phase == oly::input::Phase::STARTED)
-	{
-		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * glm::vec2{ 50.0f, 0.0f };
-		return true;
-	}
-	return false;
-}
-
-bool PlayerController::move_up(oly::input::Signal signal)
-{
-	if (signal.phase == oly::input::Phase::STARTED)
-	{
-		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * glm::vec2{ 0.0f, 50.0f };
-		return true;
-	}
-	return false;
-}
-
-bool PlayerController::move_down(oly::input::Signal signal)
-{
-	if (signal.phase == oly::input::Phase::STARTED)
-	{
-		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * glm::vec2{ 0.0f, -50.0f };
+		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * 50.0f * signal.get<glm::vec2>();
 		return true;
 	}
 	return false;

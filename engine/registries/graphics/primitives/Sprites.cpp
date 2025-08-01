@@ -22,16 +22,16 @@ namespace oly::reg
 				if (toml_modulation->get(0)->is_array())
 				{
 					rendering::ModulationRect modulation;
-					if (parse_vec4(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
-						&& parse_vec4(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
-						&& parse_vec4(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
-						&& parse_vec4(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
+					if (parse_vec(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
+						&& parse_vec(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
+						&& parse_vec(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
+						&& parse_vec(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
 						params.modulation = modulation;
 				}
 				else
 				{
 					glm::vec4 modulation;
-					if (parse_vec4(toml_modulation, modulation))
+					if (parse_vec(toml_modulation, modulation))
 						params.modulation = modulation;
 				}
 			}
@@ -42,10 +42,10 @@ namespace oly::reg
 			if (toml_tex_coords->size() == 4)
 			{
 				rendering::UVRect uvs;
-				if (parse_vec2(toml_tex_coords->get_as<toml::array>(0), uvs.uvs[0])
-					&& parse_vec2(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
-					&& parse_vec2(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
-					&& parse_vec2(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
+				if (parse_vec(toml_tex_coords->get_as<toml::array>(0), uvs.uvs[0])
+					&& parse_vec(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
+					&& parse_vec(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
+					&& parse_vec(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
 					params.tex_coords = uvs;
 			}
 		}
@@ -81,20 +81,20 @@ namespace oly::reg
 				if (type == "shear")
 				{
 					ShearTransformModifier2D modifier;
-					parse_vec2(node["shearing"].as_array(), modifier.shearing);
+					parse_vec(node["shearing"].as_array(), modifier.shearing);
 					params.modifier = modifier;
 				}
 				else if (type == "pivot")
 				{
 					PivotTransformModifier2D modifier;
-					parse_vec2(node["pivot"].as_array(), modifier.pivot);
-					parse_vec2(node["size"].as_array(), modifier.size);
+					parse_vec(node["pivot"].as_array(), modifier.pivot);
+					parse_vec(node["size"].as_array(), modifier.size);
 					params.modifier = modifier;
 				}
 				else if (type == "pivot-shear")
 				{
 					OffsetTransformModifier2D modifier;
-					parse_vec2(node["offset"].as_array(), modifier.offset);
+					parse_vec(node["offset"].as_array(), modifier.offset);
 					params.modifier = modifier;
 				}
 			}

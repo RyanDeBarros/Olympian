@@ -10,7 +10,7 @@ namespace oly::reg
 
 		params.sprite_params = sprite_params(node["sprite"]);
 
-		parse_vec2(node, "nsize", params.nsize);
+		parse_vec(node["nsize"].as_array(), params.nsize);
 
 		parse_float(node, "left offset", params.offsets.x_left);
 		parse_float(node, "right offset", params.offsets.x_right);

@@ -41,10 +41,10 @@ int main()
 	oly::get_platform().bind_signal("drag", &PlayerController::drag, pc);
 	oly::get_platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
 
-	oly::get_platform().bind_signal("move left", &PlayerController::move_left, pc);
-	oly::get_platform().bind_signal("move right", &PlayerController::move_right, pc);
-	oly::get_platform().bind_signal("move up", &PlayerController::move_up, pc);
-	oly::get_platform().bind_signal("move down", &PlayerController::move_down, pc);
+	oly::get_platform().bind_signal("move left", &PlayerController::move, pc);
+	oly::get_platform().bind_signal("move right", &PlayerController::move, pc);
+	oly::get_platform().bind_signal("move up", &PlayerController::move, pc);
+	oly::get_platform().bind_signal("move down", &PlayerController::move, pc);
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly::get_platform().window().handlers.key);
