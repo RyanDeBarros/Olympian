@@ -13,7 +13,7 @@
 
 namespace oly::reg
 {
-	static void load_modifier_base(input::ModifierBase& modifier, const TOMLNode& mnode)
+	static void load_modifier_base(input::ModifierBase& modifier, const CTOMLNode& mnode)
 	{
 		if (auto swizzle = mnode["swizzle"].value<std::string>())
 		{
@@ -49,10 +49,10 @@ namespace oly::reg
 		}
 	}
 		
-	static input::Axis0DModifier load_modifier_0d(const TOMLNode& node)
+	static input::Axis0DModifier load_modifier_0d(const CTOMLNode& node)
 	{
 		input::Axis0DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		CTOMLNode mnode = node["modifier"];
 
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
@@ -70,10 +70,10 @@ namespace oly::reg
 		return modifier;
 	}
 
-	static input::Axis1DModifier load_modifier_1d(const TOMLNode& node)
+	static input::Axis1DModifier load_modifier_1d(const CTOMLNode& node)
 	{
 		input::Axis1DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		CTOMLNode mnode = node["modifier"];
 
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
@@ -91,10 +91,10 @@ namespace oly::reg
 		return modifier;
 	}
 
-	static input::Axis2DModifier load_modifier_2d(const TOMLNode& node)
+	static input::Axis2DModifier load_modifier_2d(const CTOMLNode& node)
 	{
 		input::Axis2DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		CTOMLNode mnode = node["modifier"];
 
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
@@ -122,7 +122,7 @@ namespace oly::reg
 		return modifier;
 	}
 
-	static void load_key_binding(const TOMLNode& node, const std::string& id)
+	static void load_key_binding(const CTOMLNode& node, const std::string& id)
 	{
 		auto key = node["key"].value<int64_t>();
 		if (!key)
@@ -135,7 +135,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_mouse_button_binding(const TOMLNode& node, const std::string& id)
+	static void load_mouse_button_binding(const CTOMLNode& node, const std::string& id)
 	{
 		auto button = node["button"].value<int64_t>();
 		if (!button)
@@ -148,7 +148,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_button_binding(const TOMLNode& node, const std::string& id)
+	static void load_gamepad_button_binding(const CTOMLNode& node, const std::string& id)
 	{
 		auto button = node["button"].value<int64_t>();
 		if (!button)
@@ -159,7 +159,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_1d_binding(const TOMLNode& node, const std::string& id)
+	static void load_gamepad_axis_1d_binding(const CTOMLNode& node, const std::string& id)
 	{
 		auto axis1d = node["axis1d"].value<int64_t>();
 		if (!axis1d)
@@ -171,7 +171,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_2d_binding(const TOMLNode& node, const std::string& id)
+	static void load_gamepad_axis_2d_binding(const CTOMLNode& node, const std::string& id)
 	{
 		auto axis2d = node["axis2d"].value<int64_t>();
 		if (!axis2d)
@@ -183,7 +183,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_cursor_pos_binding(const TOMLNode& node, const std::string& id)
+	static void load_cursor_pos_binding(const CTOMLNode& node, const std::string& id)
 	{
 		input::CursorPosBinding b{};
 		b.modifier = load_modifier_2d(node);
@@ -191,7 +191,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	static void load_scroll_binding(const TOMLNode& node, const std::string& id)
+	static void load_scroll_binding(const CTOMLNode& node, const std::string& id)
 	{
 		input::ScrollBinding b{};
 		b.modifier = load_modifier_2d(node);
@@ -199,7 +199,7 @@ namespace oly::reg
 		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
 	}
 
-	void load_signal(const TOMLNode& node)
+	void load_signal(const CTOMLNode& node)
 	{
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
@@ -224,15 +224,44 @@ namespace oly::reg
 			load_scroll_binding(node, toml_id.value());
 	}
 
+	void load_signal_mapping(const CTOMLNode& node)
+	{
+		auto toml_id = node["id"].value<std::string>();
+		if (!toml_id)
+			return;
+
+		if (auto toml_signals = node["signals"].as_array())
+		{
+			std::vector<std::string> signals;
+			for (size_t i = 0; i < toml_signals->size(); ++i)
+			{
+				if (auto signal = toml_signals->get_as<std::string>(i))
+					signals.push_back(signal->get());
+			}
+			context::get_platform().assign_signal_mapping(toml_id.value(), std::move(signals));
+		}
+	}
+
 	void load_signals(const char* signal_registry_filepath)
 	{
 		auto toml = load_toml(signal_registry_filepath);
+		
 		auto signals = toml["signal"].as_array();
-		if (!signals)
-			return;
-		signals->for_each([](auto&& node) {
-			if constexpr (toml::is_table<decltype(node)>)
-				load_signal((TOMLNode)node);
-			});
+		if (signals)
+		{
+			signals->for_each([](const auto& node) {
+				if constexpr (toml::is_table<decltype(node)>)
+					load_signal((CTOMLNode)node);
+				});
+		}
+
+		auto mappings = toml["mapping"].as_array();
+		if (mappings)
+		{
+			mappings->for_each([](const auto& node) {
+				if constexpr (toml::is_table<decltype(node)>)
+					load_signal_mapping((CTOMLNode)node);
+				});
+		}
 	}
 }

@@ -45,3 +45,7 @@
 "binding" = "key"
 "key"     = 264 # DOWN
 "modifier" = { "conversion" = "TO_2D", "multiplier" = [0.0, -1.0] }
+
+[[mapping]]
+"id" = "move"
+"signals" = ["move left", "move right", "move up", "move down"]

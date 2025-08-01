@@ -22,6 +22,8 @@ namespace oly::input
 		}
 	};
 
+	typedef std::unordered_map<std::string, std::vector<std::string>> SignalMappingTable;
+
 	enum class Phase
 	{
 		STARTED,
