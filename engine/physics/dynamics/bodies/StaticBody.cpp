@@ -1,6 +1,6 @@
 #include "StaticBody.h"
 
-#include "core/base/Context.h"
+#include "core/context/Platform.h"
 
 namespace oly::physics
 {

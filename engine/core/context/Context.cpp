@@ -1,5 +1,14 @@
 #include "Context.h"
 
+
+
+// TODO v3 move into Rendering.cpp/Platform.cpp/Registries.cpp
+#include "Rendering.h"
+#include "Platform.h"
+#include "Registries.h"
+
+
+
 #include <filesystem>
 
 #include "core/util/IO.h"
@@ -35,12 +44,12 @@ namespace oly::context
 		std::unique_ptr<rendering::PolygonBatch> polygon_batch;
 		std::unique_ptr<rendering::EllipseBatch> ellipse_batch;
 		std::unique_ptr<rendering::TextBatch> text_batch;
-		
+
 		InternalBatch last_internal_batch_rendered = InternalBatch::NONE;
 
 		graphics::NSVGContext nsvg_context;
 		reg::TextureRegistry texture_registry;
-		reg::TileSetRegistry tileset_registry;			
+		reg::TileSetRegistry tileset_registry;
 		reg::FontFaceRegistry font_face_registry;
 		reg::FontAtlasRegistry font_atlas_registry;
 
@@ -187,7 +196,7 @@ namespace oly::context
 		init_polygon_batch(toml_context);
 		init_ellipse_batch(toml_context);
 		init_text_batch(toml_context);
-		
+
 		autoload_signals(toml_context);
 		init_viewport(toml_context);
 
@@ -217,7 +226,7 @@ namespace oly::context
 		internal::platform.reset();
 
 		graphics::internal::unload_resources();
-		
+
 		glfwTerminate();
 
 		LOG.flush();
@@ -236,30 +245,30 @@ namespace oly::context
 	{
 		++active_contexts;
 	}
-		
+
 	Context::Context(Context&&) noexcept
 	{
 		++active_contexts;
 	}
-		
+
 	Context::~Context()
 	{
 		--active_contexts;
 		if (active_contexts == 0)
 			terminate();
 	}
-		
+
 	Context& Context::operator=(const Context& other)
 	{
 		return *this;
 	}
-		
+
 	Context& Context::operator=(Context&&) noexcept
 	{
 		return *this;
 	}
 
-	const std::string& resource_file(const std::string& file)
+	std::string resource_file(const std::string& file)
 	{
 		return internal::resource_root + file;
 	}
@@ -319,7 +328,7 @@ namespace oly::context
 	{
 		return internal::texture_registry;
 	}
-		
+
 	InternalBatch last_internal_batch_rendered()
 	{
 		return internal::last_internal_batch_rendered;
@@ -334,12 +343,12 @@ namespace oly::context
 	{
 		return internal::tileset_registry;
 	}
-		
+
 	reg::FontFaceRegistry& font_face_registry()
 	{
 		return internal::font_face_registry;
 	}
-		
+
 	reg::FontAtlasRegistry& font_atlas_registry()
 	{
 		return internal::font_atlas_registry;
@@ -441,7 +450,7 @@ namespace oly::context
 	{
 		double x, y;
 		glfwGetCursorPos(internal::platform->window(), &x, &y);
-		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y};
+		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y };
 	}
 
 	glm::vec2 get_initial_window_size()

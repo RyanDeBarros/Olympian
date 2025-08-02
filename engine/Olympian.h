@@ -1,6 +1,11 @@
 #pragma once
 
-#include "core/base/Context.h"
+// TODO v3 core/context/Public.h
+#include "core/context/Context.h"
+#include "core/context/Rendering.h"
+#include "core/context/Platform.h"
+#include "core/context/Registries.h"
+
 #include "core/base/Colors.h"
 #include "core/base/SimpleMath.h"
 #include "core/util/Logger.h"

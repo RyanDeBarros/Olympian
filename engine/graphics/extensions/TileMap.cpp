@@ -1,6 +1,6 @@
 #include "TileMap.h"
 
-#include "core/base/Context.h"
+#include "core/context/Registries.h"
 #include "registries/Loader.h"
 #include "registries/graphics/TextureRegistry.h"
 

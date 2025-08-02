@@ -1,6 +1,6 @@
 #include "LinearBody.h"
 
-#include "core/base/Context.h"
+#include "core/context/Platform.h"
 #include "core/util/Time.h"
 
 namespace oly::physics

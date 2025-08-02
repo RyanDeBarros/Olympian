@@ -1,6 +1,5 @@
 #include "Text.h"
 
-#include "core/base/Context.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering

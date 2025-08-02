@@ -1,6 +1,5 @@
 #include "Font.h"
 
-#include "core/base/Context.h"
 #include "core/base/Errors.h"
 #include "core/util/IO.h"
 #include "core/util/Logger.h"

@@ -1,6 +1,5 @@
 #include "Polygons.h"
 
-#include "core/base/Context.h"
 #include "core/cmath/Triangulation.h"
 #include "registries/Loader.h"
 

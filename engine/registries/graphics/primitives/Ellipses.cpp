@@ -1,6 +1,5 @@
 #include "Ellipses.h"
 
-#include "core/base/Context.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

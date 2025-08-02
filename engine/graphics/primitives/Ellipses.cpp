@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "core/base/Context.h"
+#include "core/context/Rendering.h"
 #include "graphics/resources/Shaders.h"
 #include "Ellipses.h"
 

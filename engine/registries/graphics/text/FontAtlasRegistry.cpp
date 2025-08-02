@@ -1,6 +1,7 @@
 #include "FontAtlasRegistry.h"
 
-#include "core/base/Context.h"
+#include "core/context/Context.h"
+#include "core/context/Registries.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

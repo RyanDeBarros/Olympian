@@ -1,6 +1,8 @@
 #include "WindowResize.h"
 
-#include "core/base/Context.h"
+#include "core/context/Context.h"
+#include "core/context/Rendering.h"
+#include "core/context/Platform.h"
 
 namespace oly::platform
 {

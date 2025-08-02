@@ -1,6 +1,5 @@
 #include "Arrow.h"
 
-#include "core/base/Context.h"
 #include "core/cmath/Triangulation.h"
 #include "core/types/Approximate.h"
 

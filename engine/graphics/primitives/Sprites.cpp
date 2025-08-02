@@ -1,6 +1,7 @@
 #include "Sprites.h"
 
-#include "core/base/Context.h"
+#include "core/context/Rendering.h"
+#include "core/context/Registries.h"
 #include "core/util/Time.h"
 #include "graphics/resources/Shaders.h"
 

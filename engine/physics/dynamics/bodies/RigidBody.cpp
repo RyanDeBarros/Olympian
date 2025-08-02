@@ -1,7 +1,5 @@
 #include "RigidBody.h"
 
-#include "core/base/Context.h"
-
 namespace oly::physics
 {
 	RigidBody::RigidBody()

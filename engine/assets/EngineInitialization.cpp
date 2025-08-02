@@ -1,6 +1,9 @@
 #include "EngineInitialization.h"
 
-#include "core/base/Context.h"
+#include "core/context/Context.h"
+#include "core/base/Errors.h"
+#include "core/util/Logger.h"
+#include "core/algorithms/STLUtils.h"
 
 namespace oly::assets::internal
 {

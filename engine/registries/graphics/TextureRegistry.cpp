@@ -1,6 +1,8 @@
 #include "TextureRegistry.h"
 
-#include "core/base/Context.h"
+#include "core/context/Context.h"
+#include "core/context/Rendering.h"
+
 #include "core/types/Meta.h"
 #include "registries/Loader.h"
 

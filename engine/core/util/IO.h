@@ -18,5 +18,5 @@ namespace oly::io
 	extern std::string file_extension(const char* filepath);
 	inline std::string file_extension(const std::string& filepath) { return file_extension(filepath.c_str()); }
 	extern std::string directory_of(const char* filepath);
-	inline std::string directory_of(const char* filepath) { return directory_of(filepath); }
+	inline std::string directory_of(const std::string& filepath) { return directory_of(filepath.c_str()); }
 }

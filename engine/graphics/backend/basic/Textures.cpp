@@ -2,7 +2,9 @@
 
 #include "external/STB.h"
 
-#include "core/base/Context.h"
+#include "core/context/Rendering.h"
+#include "core/context/Registries.h"
+
 #include "core/base/Errors.h"
 #include "core/base/Assert.h"
 #include "core/util/IO.h"

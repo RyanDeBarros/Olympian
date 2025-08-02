@@ -1,6 +1,6 @@
 #include "Input.h"
 
-#include "core/base/Context.h"
+#include "core/context/Platform.h"
 #include "registries/Loader.h"
 
 // TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ignored).
