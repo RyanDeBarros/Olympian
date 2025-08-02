@@ -16,7 +16,7 @@ namespace oly::reg
 		if (it != font_atlases.end())
 			return it->second;
 
-		auto toml = load_toml(context::context_filepath() + file + ".oly");
+		auto toml = load_toml(context::resource_file(file + ".oly"));
 		auto font_atlas_list = toml["font_atlas"].as_array();
 		if (font_atlas_list->empty())
 			throw Error(ErrorCode::LOAD_ASSET);

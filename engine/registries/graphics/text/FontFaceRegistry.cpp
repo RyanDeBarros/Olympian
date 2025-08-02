@@ -16,7 +16,7 @@ namespace oly::reg
 		if (it != font_faces.end())
 			return it->second;
 
-		auto toml = load_toml(context::context_filepath() + file + ".oly");
+		auto toml = load_toml(context::resource_file(file + ".oly"));
 		auto node = toml["font_face"];
 
 		rendering::Kerning kerning;
@@ -56,7 +56,7 @@ namespace oly::reg
 				});
 		}
 
-		rendering::FontFaceRef font_face((context::context_filepath() + file).c_str(), std::move(kerning));
+		rendering::FontFaceRef font_face(context::resource_file(file).c_str(), std::move(kerning));
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_faces.emplace(file, font_face);
 		return font_face;

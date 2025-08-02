@@ -50,6 +50,11 @@ namespace oly::platform
 		num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
 	}
 
+	std::unique_ptr<Platform> internal::create_platform(const PlatformSetup& setup)
+	{
+		return std::unique_ptr<Platform>(new Platform(setup));
+	}
+
 	Platform::Platform(const PlatformSetup& setup)
 		: _window(setup.window_width, setup.window_height, setup.window_title.c_str(), setup.window_hint), _num_gamepads(setup.num_gamepads), _gamepads(setup.num_gamepads, 0), _binding_context(setup.num_gamepads)
 	{
@@ -65,7 +70,7 @@ namespace oly::platform
 	bool Platform::frame()
 	{
 		_window.swap_buffers();
-		internal::check_errors();
+		oly::internal::check_errors();
 		LOG.flush();
 		glfwPollEvents();
 		_binding_context.poll();

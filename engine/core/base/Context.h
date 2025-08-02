@@ -40,7 +40,7 @@ namespace oly::context
 	class Context
 	{
 	public:
-		Context(const char* context_filepath);
+		Context(const char* resource_root);
 		Context(const Context&);
 		Context(Context&&) noexcept;
 		~Context();
@@ -48,7 +48,7 @@ namespace oly::context
 		Context& operator=(Context&&) noexcept;
 	};
 
-	extern const std::string& context_filepath();
+	extern const std::string& resource_file(const std::string& file);
 	extern platform::Platform& get_platform();
 	extern void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame);
 	extern void set_window_resize_mode(bool boxed = true, bool stretch = true);

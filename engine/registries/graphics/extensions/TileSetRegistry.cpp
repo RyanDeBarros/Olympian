@@ -16,7 +16,7 @@ namespace oly::reg
 		if (it != tilesets.end())
 			return it->second;
 
-		auto toml = load_toml(context::context_filepath() + file);
+		auto toml = load_toml(context::resource_file(file));
 		auto node = toml["tileset"];
 		auto toml_assignments = node["assignment"].as_array();
 		

@@ -9,21 +9,26 @@
 
 namespace oly::platform
 {
-	class PlatformSetup
+	struct PlatformSetup
 	{
-		friend class Platform;
-
 		WindowHint window_hint;
 		int window_width, window_height;
 		std::string window_title;
 
 		int num_gamepads;
 
-	public:
+		PlatformSetup() = default;
 		PlatformSetup(const TOMLNode& node);
 
 		glm::ivec2 window_size() const { return { window_width, window_height }; }
 	};
+
+	class Platform;
+
+	namespace internal
+	{
+		extern std::unique_ptr<Platform> create_platform(const PlatformSetup&);
+	}
 
 	class Platform
 	{
@@ -34,9 +39,12 @@ namespace oly::platform
 		input::SignalMappingTable _signal_mapping_table;
 		InputBindingContext _binding_context;
 
-	public:
+		friend std::unique_ptr<Platform> internal::create_platform(const PlatformSetup&);
 		Platform(const PlatformSetup& setup);
+
+	public:
 		Platform(const Platform&) = delete;
+		Platform(Platform&& platform) noexcept = default;
 
 		GLenum per_frame_clear_mask = GL_COLOR_BUFFER_BIT;
 		bool frame();

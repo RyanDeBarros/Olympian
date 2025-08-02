@@ -33,7 +33,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 int main()
 {
-	oly::context::Context oly_context("../../../res/context.toml");
+	oly::context::Context oly_context("../../../res");
 
 	PlayerController pc;
 	oly::get_platform().bind_signal("jump", &PlayerController::jump, pc);

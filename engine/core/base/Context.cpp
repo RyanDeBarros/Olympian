@@ -7,6 +7,8 @@
 
 #include "graphics/resources/Resources.h"
 
+#include "assets/EngineInitialization.h"
+
 #include "registries/Loader.h"
 #include "registries/platform/Input.h"
 #include "registries/graphics/TextureRegistry.h"
@@ -23,7 +25,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		std::string context_filepath;
+		std::string resource_root;
 		std::unique_ptr<platform::Platform> platform;
 		std::shared_ptr<Functor<void()>> render_frame;
 		size_t this_frame = 0;
@@ -58,7 +60,7 @@ namespace oly::context
 			if (logfile)
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile((internal::context_filepath + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
+				LOG.set_logfile((internal::resource_root + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
 				LOG.flush();
 			}
 			else
@@ -142,7 +144,7 @@ namespace oly::context
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signals((internal::context_filepath + file.value()).c_str());
+					reg::load_signals((internal::resource_root + file.value()).c_str());
 		}
 	}
 
@@ -161,22 +163,23 @@ namespace oly::context
 
 namespace oly::context
 {
-	static void init(const char* context_filepath)
+	static void init(const std::string& resource_root)
 	{
 		if (glfwInit() != GLFW_TRUE)
 			throw oly::Error(oly::ErrorCode::GLFW_INIT);
 		stbi_set_flip_vertically_on_load(true);
 
 		internal::this_frame = 0;
-		internal::context_filepath = io::directory_of(context_filepath);
+		internal::resource_root = resource_root;
 
-		auto toml = reg::load_toml(context_filepath);
+		assets::internal::init_engine();
+		auto toml = load_toml("context.toml");
 		const TOMLNode& toml_context = (const TOMLNode&)toml["context"];
 		init_logger(toml_context);
 
 		platform::PlatformSetup platform_setup(toml_context);
 		internal::initial_window_size = platform_setup.window_size();
-		internal::platform = std::make_unique<platform::Platform>(platform_setup);
+		internal::platform = platform::internal::create_platform(platform_setup);
 		TIME.init();
 		graphics::internal::load_resources();
 
@@ -222,10 +225,10 @@ namespace oly::context
 
 	static size_t active_contexts = 0;
 
-	Context::Context(const char* context_filepath)
+	Context::Context(const char* resource_root)
 	{
 		if (active_contexts == 0)
-			init(context_filepath);
+			init(resource_root + std::string("/"));
 		++active_contexts;
 	}
 
@@ -256,9 +259,9 @@ namespace oly::context
 		return *this;
 	}
 
-	const std::string& context_filepath()
+	const std::string& resource_file(const std::string& file)
 	{
-		return internal::context_filepath;
+		return internal::resource_root + file;
 	}
 
 	platform::Platform& get_platform()
@@ -344,7 +347,7 @@ namespace oly::context
 
 	toml::parse_result load_toml(const char* file)
 	{
-		return reg::load_toml(context_filepath() + file);
+		return reg::load_toml(resource_file(file));
 	}
 
 	bool frame()
@@ -353,7 +356,7 @@ namespace oly::context
 			(*internal::render_frame)();
 		if (!internal::platform->frame())
 			return false;
-		
+
 		TIME.sync();
 		++internal::this_frame;
 		internal::collision_dispatcher.poll();

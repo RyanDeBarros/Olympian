@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <string_view>
 
 #include "external/GL.h"
 #include "external/GLM.h"
@@ -86,6 +87,7 @@ namespace oly
 		Logger& operator<<(const void*);
 		Logger& operator<<(const char*);
 		Logger& operator<<(const std::string&);
+		Logger& operator<<(std::string_view);
 		Logger& operator<<(bool);
 		template<numeric T>
 		Logger& operator<<(T v) { return *this << std::to_string(v); }

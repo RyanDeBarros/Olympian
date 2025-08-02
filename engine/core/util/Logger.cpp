@@ -214,6 +214,12 @@ namespace oly
 		return *this;
 	}
 
+	Logger& Logger::operator<<(std::string_view s)
+	{
+		stream << s;
+		return *this;
+	}
+
 	Logger& Logger::operator<<(bool b)
 	{
 		return *this << (b ? "true" : "false");

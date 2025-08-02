@@ -2,6 +2,8 @@
 
 #include <stack>
 #include <set>
+#include <vector>
+#include <string_view>
 
 #include "core/base/Errors.h"
 
@@ -59,4 +61,6 @@ namespace oly
 	{
 		return const_cast<T&>(find_closest_with_mod(const_cast<const std::set<T>&>(set), to, mod));
 	}
+
+	extern std::vector<std::string_view> split(std::string_view sv, char delimiter);
 }

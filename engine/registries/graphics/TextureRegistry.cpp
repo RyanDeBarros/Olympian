@@ -120,7 +120,7 @@ namespace oly::reg
 		if (it != textures.end())
 			return it->second;
 
-		std::string full_path = context::context_filepath() + file;
+		std::string full_path = context::resource_file(file);
 		toml::parse_result toml;
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, params.texture_index);
@@ -177,7 +177,7 @@ namespace oly::reg
 			return it->second;
 
 		TextureKey tkey{ file, params.texture_index };
-		std::string full_path = context::context_filepath() + file;
+		std::string full_path = context::resource_file(file);
 		toml::parse_result toml;
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, params.texture_index);

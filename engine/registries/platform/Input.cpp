@@ -7,9 +7,9 @@
 
 // TODO v3 OREPL commands for signal assets
 
-// TODO v3 add modifier section to signal assets
-
 // TODO v3 in assets, use shorthand and less verbose nomenclature. shift towards a conservative, minimal, custom file format. this is especially convenient for independent files like signals or tilesets or import files, not yet necessarily for compound files like archetypes.
+// load a folder of files into concise map of filename -> string so as not to re-read files constantly. Once a file is read it should be stored in this map, unless marked as 'single-use' (come up with better name).
+// create reference document in doc/ folder for shorthand notation used in these asset files so they can still be edited manually.
 
 namespace oly::reg
 {
