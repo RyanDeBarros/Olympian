@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "external/TOML.h"
 #include "core/base/SimpleMath.h"
 
 namespace oly::context
@@ -21,4 +22,7 @@ namespace oly::context
 
 	extern bool frame();
 	extern BigSize this_frame();
+
+	extern toml::parse_result load_toml(const char* file);
+	inline toml::parse_result load_toml(const std::string& file) { return load_toml(file.c_str()); }
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/base/Errors.h"
 #include "external/GLM.h"
+#include "core/base/Errors.h"
+#include "core/types/DeferredFalse.h"
 
 namespace oly::input
 {
@@ -71,7 +72,7 @@ namespace oly::input
 		template<typename T>
 		T get() const
 		{
-			static_assert(false, "Signal::get<T>() does not support the invoked type.");
+			static_assert(deferred_false<T>, "Signal::get<T>() does not support the invoked type.");
 		}
 
 		template<>

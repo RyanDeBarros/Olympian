@@ -1,6 +1,6 @@
 #include "Sprites.h"
 
-#include "core/context/Registries.h"
+#include "core/context/rendering/Textures.h"
 #include "registries/Loader.h"
 #include "registries/graphics/TextureRegistry.h"
 

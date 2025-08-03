@@ -1,16 +1,18 @@
 #pragma once
 
+#include "physics/collision/Tolerance.h"
 #include "physics/collision/elements/Element.h"
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
 #include "physics/collision/objects/Primitive.h"
 #include "physics/collision/objects/Compound.h"
+
 #include "core/base/Transforms.h"
 #include "core/base/TransformerExposure.h"
-#include "core/math/Solvers.h"
 #include "core/base/Assert.h"
+#include "core/types/DeferredFalse.h"
+#include "core/math/Solvers.h"
 #include "core/containers/DoubleBuffer.h"
-#include "physics/collision/Tolerance.h"
 
 #include <algorithm>
 
@@ -21,7 +23,7 @@ namespace oly::col2d
 		template<typename Shape>
 		struct Wrap
 		{
-			Shape operator()(const Element* elements, size_t count) const { static_assert(false, "oly::col2d::internal::wrap() not defined for the provided Shape"); }
+			Shape operator()(const Element* elements, size_t count) const { static_assert(deferred_false<Shape>, "oly::col2d::internal::wrap() not defined for the provided Shape"); }
 		};
 
 		template<>

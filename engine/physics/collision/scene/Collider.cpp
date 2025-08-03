@@ -1,6 +1,6 @@
 #include "Collider.h"
 
-#include "core/context/Platform.h"
+#include "core/context/Collision.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::col2d

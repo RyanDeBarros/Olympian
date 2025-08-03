@@ -1,8 +1,15 @@
 #include "WindowResize.h"
 
 #include "core/context/Context.h"
-#include "core/context/Rendering.h"
+#include "core/context/rendering/Sprites.h"
+#include "core/context/rendering/Ellipses.h"
+#include "core/context/rendering/Polygons.h"
+#include "core/context/rendering/Text.h"
 #include "core/context/Platform.h"
+
+#include "graphics/primitives/Sprites.h"
+#include "graphics/primitives/Polygons.h"
+#include "graphics/primitives/Ellipses.h"
 
 namespace oly::platform
 {

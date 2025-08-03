@@ -1,6 +1,6 @@
 #include "TileMaps.h"
 
-#include "core/context/Registries.h"
+#include "core/context/rendering/Tilesets.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

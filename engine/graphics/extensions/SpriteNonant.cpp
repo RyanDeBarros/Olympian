@@ -1,6 +1,6 @@
 #include "SpriteNonant.h"
 
-#include "core/context/Registries.h"
+#include "core/context/rendering/Textures.h"
 
 namespace oly::rendering
 {

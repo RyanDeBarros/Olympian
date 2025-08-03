@@ -9,6 +9,7 @@
 #include "external/NSVG.h"
 
 #include "core/types/SmartReference.h"
+#include "core/types/DeferredFalse.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
@@ -72,6 +73,8 @@ namespace oly::graphics
 		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
 	};
 
+	// LATER support for other pixel types
+
 	template<typename Pixel = unsigned char>
 	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, const Pixel* pixels, GLint level = 0)
 	{
@@ -79,7 +82,7 @@ namespace oly::graphics
 		if constexpr (std::is_same_v<Pixel, unsigned char>)
 			data_type = GL_UNSIGNED_BYTE;
 		else
-			static_assert(false, "Unsupported pixel type in tex_image_2d().");
+			static_assert(deferred_false<Pixel>, "Unsupported pixel type in tex_image_2d().");
 		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, pixels);
 	}
 
@@ -90,7 +93,7 @@ namespace oly::graphics
 		if constexpr (std::is_same_v<Pixel, unsigned char>)
 			data_type = GL_UNSIGNED_BYTE;
 		else
-			static_assert(false, "Unsupported pixel type in tex_image_2d().");
+			static_assert(deferred_false<Pixel>, "Unsupported pixel type in tex_image_2d().");
 		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, nullptr);
 	}
 

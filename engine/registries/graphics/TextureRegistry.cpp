@@ -1,9 +1,11 @@
 #include "TextureRegistry.h"
 
 #include "core/context/Context.h"
-#include "core/context/Rendering.h"
+#include "core/context/rendering/Textures.h"
 
 #include "core/types/Meta.h"
+#include "core/util/Logger.h"
+
 #include "registries/Loader.h"
 
 namespace oly::reg

@@ -1,7 +1,10 @@
 #include "CollisionView.h"
 
-#include "core/context/Rendering.h"
 #include "core/context/Platform.h"
+#include "core/context/rendering/Rendering.h"
+#include "core/context/rendering/Sprites.h"
+#include "core/context/rendering/Ellipses.h"
+#include "core/context/rendering/Polygons.h"
 
 namespace oly::debug
 {

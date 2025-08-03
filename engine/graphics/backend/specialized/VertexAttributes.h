@@ -3,13 +3,14 @@
 #include <variant>
 
 #include "external/GL.h"
+#include "core/types/DeferredFalse.h"
 
 namespace oly::graphics
 {
 	template<typename T>
 	struct VertexAttribute
 	{
-		static_assert(false);
+		static_assert(deferred_false<T>);
 	};
 
 	template<>

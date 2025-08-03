@@ -1,9 +1,11 @@
 #include "Sprites.h"
 
-#include "core/context/Rendering.h"
-#include "core/context/Registries.h"
+#include "core/context/rendering/Sprites.h"
+#include "core/context/rendering/Textures.h"
 #include "core/util/Time.h"
 #include "graphics/resources/Shaders.h"
+#include "Sprites.h"
+#include "Sprites.h"
 
 namespace oly::rendering
 {

@@ -1,6 +1,6 @@
 #include "Paragraphs.h"
 
-#include "core/context/Registries.h"
+#include "core/context/rendering/Text.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

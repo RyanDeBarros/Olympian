@@ -2,8 +2,7 @@
 
 #include "external/STB.h"
 
-#include "core/context/Rendering.h"
-#include "core/context/Registries.h"
+#include "core/context/rendering/Textures.h"
 
 #include "core/base/Errors.h"
 #include "core/base/Assert.h"
@@ -11,6 +10,8 @@
 #include "core/types/Approximate.h"
 
 #include "registries/graphics/TextureRegistry.h"
+#include "Textures.h"
+#include "Textures.h"
 
 namespace oly::graphics
 {
