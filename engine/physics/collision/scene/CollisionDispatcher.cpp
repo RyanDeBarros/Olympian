@@ -87,8 +87,11 @@ namespace oly::col2d
 			{
 				for (auto it = outer_it->second.begin(); it != outer_it->second.end(); )
 				{
-					if (std::visit([](const auto& ref) -> bool { return ref.controller; }, *it))
-						std::visit([&data](auto&& ref) { (ref.controller.get()->*ref.handler)(data); }, *it++);
+					if ((*it)->controller)
+					{
+						(*it)->invoke(data);
+						++it;
+					}
 					else
 						it = outer_it->second.erase(it);
 				}
@@ -137,7 +140,7 @@ namespace oly::col2d
 			handlers.erase(it_2);
 	}
 
-	void CollisionDispatcher::poll() const
+	void internal::CollisionDispatcher::poll() const
 	{
 		phase_tracker.flush();
 		for (const CollisionTree& tree : trees)
@@ -157,15 +160,13 @@ namespace oly::col2d
 	template<typename HandlerRef>
 	static void clean_handlers(std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers)
 	{
-		static const auto valid_controller = [](const auto& ref) -> bool { return ref.controller; };
-
 		for (auto it = handlers.begin(); it != handlers.end(); )
 		{
 			if (it->first)
 			{
 				for (auto inner_it = it->second.begin(); inner_it != it->second.end(); )
 				{
-					if (std::visit(valid_controller, *inner_it))
+					if ((*inner_it)->controller)
 						++inner_it;
 					else
 						inner_it = it->second.erase(inner_it);
@@ -180,14 +181,14 @@ namespace oly::col2d
 		}
 	}
 
-	void CollisionDispatcher::clean()
+	void internal::CollisionDispatcher::clean()
 	{
 		clean_handlers(overlap_handlers);
 		clean_handlers(collision_handlers);
 		clean_handlers(contact_handlers);
 	}
 
-	void CollisionDispatcher::emit(const Collider& from)
+	void internal::CollisionDispatcher::emit(const Collider& from)
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
 		for (const CollisionTree& tree : trees)
@@ -225,32 +226,32 @@ namespace oly::col2d
 		}
 	}
 	
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapHandler only_handler, const SoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<OverlapResult, OverlapEventData>(trees, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
 	}
 
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::OverlapConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<OverlapResult, OverlapEventData>(trees, from, only_handler, only_controller, &Collider::overlaps, phase_tracker);
 	}
 	
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionHandler only_handler, const SoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<CollisionResult, CollisionEventData>(trees, from, only_handler, only_controller, &Collider::collides, phase_tracker);
 	}
 
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::CollisionConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<CollisionResult, CollisionEventData>(trees, from, only_handler, only_controller, &Collider::collides, phase_tracker);
 	}
 	
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactHandler only_handler, const SoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::ContactHandler only_handler, const SoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<ContactResult, ContactEventData>(trees, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
 	}
 
-	void CollisionDispatcher::emit(const Collider& from, CollisionController::ContactConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
+	void internal::CollisionDispatcher::emit(const Collider& from, CollisionController::ContactConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const
 	{
 		emit_from<ContactResult, ContactEventData>(trees, from, only_handler, only_controller, &Collider::contacts, phase_tracker);
 	}

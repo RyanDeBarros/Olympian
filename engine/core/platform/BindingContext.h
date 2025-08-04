@@ -301,7 +301,7 @@ namespace oly
 				{
 					InputController::Handler handler = nullptr;
 
-					HandlerRef(InputController::Handler handler, InputController& controller) : handler(handler), ControllerHandler(&controller) {}
+					HandlerRef(InputController& controller, InputController::Handler handler) : ControllerHandler(&controller), handler(handler) {}
 
 					bool invoke(input::Signal signal) const override { return (const_cast<InputController*>(controller)->*handler)(signal); }
 				};
@@ -310,7 +310,7 @@ namespace oly
 				{
 					InputController::ConstHandler handler = nullptr;
 
-					ConstHandlerRef(InputController::ConstHandler handler, const InputController& controller) : handler(handler), ControllerHandler(&controller) {}
+					ConstHandlerRef(const InputController& controller, InputController::ConstHandler handler) : ControllerHandler(&controller), handler(handler) {}
 
 					bool invoke(input::Signal signal) const override { return (controller->*handler)(signal); }
 				};

@@ -1,11 +1,8 @@
 #pragma once
 
-namespace oly
+namespace oly::col2d::internal
 {
-	namespace col2d
-	{
-		class CollisionDispatcher;
-	}
+	class CollisionDispatcher;
 }
 
 namespace oly::context
@@ -16,5 +13,5 @@ namespace oly::context
 		extern void frame_collision();
 	}
 
-	extern col2d::CollisionDispatcher& collision_dispatcher();
+	extern col2d::internal::CollisionDispatcher& collision_dispatcher();
 }

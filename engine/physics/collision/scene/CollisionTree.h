@@ -60,13 +60,17 @@ namespace oly::col2d
 		};
 	}
 
-	class CollisionDispatcher;
+	namespace internal
+	{
+		class CollisionDispatcher;
+	}
+
 	class CollisionTree
 	{
 		friend class internal::CollisionNode;
 		friend class internal::TreeHandleMap;
 		friend class Collider;
-		friend class CollisionDispatcher;
+		friend class internal::CollisionDispatcher;
 
 		size_t cell_capacity;
 		glm::uvec2 degree;

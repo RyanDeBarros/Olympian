@@ -65,12 +65,12 @@ namespace oly
 				existing_controller->signals.erase(sig);
 				signals.push_back(signal);
 			}
-			it->second = std::make_unique<input::internal::InputBindingContext::HandlerRef>(handler, *this);
+			it->second = std::make_unique<input::internal::InputBindingContext::HandlerRef>(*this, handler);
 		}
 		else
 		{
 			signals.push_back(signal);
-			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::HandlerRef>(handler, *this);
+			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::HandlerRef>(*this, handler);
 		}
 	}
 
@@ -87,12 +87,12 @@ namespace oly
 				existing_controller->signals.erase(sig);
 				signals.push_back(signal);
 			}
-			it->second = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(handler, *this);
+			it->second = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(*this, handler);
 		}
 		else
 		{
 			signals.push_back(signal);
-			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(handler, *this);
+			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(*this, handler);
 		}
 	}
 
