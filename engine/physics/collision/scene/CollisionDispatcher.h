@@ -67,6 +67,68 @@ namespace oly::col2d
 		using CollisionConstHandler = void(CollisionController::*)(const CollisionEventData&) const;
 		using ContactHandler = void(CollisionController::*)(const ContactEventData&);
 		using ContactConstHandler = void(CollisionController::*)(const ContactEventData&) const;
+
+		void bind(const ConstSoftReference<Collider>& collider, OverlapHandler handler);
+		void bind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const;
+		void unbind(const ConstSoftReference<Collider>& collider, OverlapHandler handler);
+		void unbind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const;
+
+		void bind(const ConstSoftReference<Collider>& collider, CollisionHandler handler);
+		void bind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const;
+		void unbind(const ConstSoftReference<Collider>& collider, CollisionHandler handler);
+		void unbind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const;
+
+		void bind(const ConstSoftReference<Collider>& collider, ContactHandler handler);
+		void bind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const;
+		void unbind(const ConstSoftReference<Collider>& collider, ContactHandler handler);
+		void unbind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const;
+
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&)) { bind(collider, static_cast<OverlapHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&) const) const { bind(collider, static_cast<OverlapConstHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&)) { unbind(collider, static_cast<OverlapHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&) const) const { unbind(collider, static_cast<OverlapConstHandler>(handler)); }
+
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&)) { bind(collider, static_cast<CollisionHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&) const) const { bind(collider, static_cast<CollisionConstHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&)) { unbind(collider, static_cast<CollisionHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&) const) const { unbind(collider, static_cast<CollisionConstHandler>(handler)); }
+
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&)) { bind(collider, static_cast<ContactHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void bind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&) const) const { bind(collider, static_cast<ContactConstHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&)) { unbind(collider, static_cast<ContactHandler>(handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void unbind(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&) const) const { unbind(collider, static_cast<ContactConstHandler>(handler)); }
+
+		void emit(const Collider& from, OverlapHandler only_handler);
+		void emit(const Collider& from, OverlapConstHandler only_handler) const;
+		void emit(const Collider& from, CollisionHandler only_handler);
+		void emit(const Collider& from, CollisionConstHandler only_handler) const;
+		void emit(const Collider& from, ContactHandler only_handler);
+		void emit(const Collider& from, ContactConstHandler only_handler) const;
+
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const OverlapEventData&)) { emit(from, static_cast<OverlapHandler>(only_handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const OverlapEventData&) const) const { emit(from, static_cast<OverlapConstHandler>(only_handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const CollisionEventData&)) { emit(from, static_cast<CollisionHandler>(only_handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const CollisionEventData&) const) const { emit(from, static_cast<CollisionConstHandler>(only_handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const ContactEventData&)) { emit(from, static_cast<ContactHandler>(only_handler)); }
+		template<std::derived_from<CollisionController> Controller>
+		void emit(const Collider& from, void(Controller::* only_handler)(const ContactEventData&) const) const { emit(from, static_cast<ContactConstHandler>(only_handler)); }
 	};
 
 #define OLY_COLLISION_CONTROLLER_HEADER(Class)\
@@ -113,6 +175,9 @@ namespace oly::col2d
 				virtual ~OverlapHandlerBase() = default;
 
 				virtual void invoke(const OverlapEventData&) const = 0;
+				virtual const void* raw_handler() const = 0;
+
+				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
 			};
 
 			struct OverlapHandlerRef : OverlapHandlerBase
@@ -122,6 +187,7 @@ namespace oly::col2d
 				OverlapHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::OverlapHandler handler) : OverlapHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const OverlapEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			struct OverlapConstHandlerRef : OverlapHandlerBase
@@ -131,6 +197,7 @@ namespace oly::col2d
 				OverlapConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::OverlapConstHandler handler) : OverlapHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const OverlapEventData& data) const override { (controller.get()->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			struct CollisionHandlerBase
@@ -142,6 +209,9 @@ namespace oly::col2d
 				virtual ~CollisionHandlerBase() = default;
 
 				virtual void invoke(const CollisionEventData&) const = 0;
+				virtual const void* raw_handler() const = 0;
+
+				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
 			};
 
 			struct CollisionHandlerRef : CollisionHandlerBase
@@ -151,6 +221,7 @@ namespace oly::col2d
 				CollisionHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::CollisionHandler handler) : CollisionHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const CollisionEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			struct CollisionConstHandlerRef : CollisionHandlerBase
@@ -160,6 +231,7 @@ namespace oly::col2d
 				CollisionConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::CollisionConstHandler handler) : CollisionHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const CollisionEventData& data) const override { (controller.get()->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			struct ContactHandlerBase
@@ -171,6 +243,9 @@ namespace oly::col2d
 				virtual ~ContactHandlerBase() = default;
 
 				virtual void invoke(const ContactEventData&) const = 0;
+				virtual const void* raw_handler() const = 0;
+
+				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
 			};
 
 			struct ContactHandlerRef : ContactHandlerBase
@@ -180,6 +255,7 @@ namespace oly::col2d
 				ContactHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::ContactHandler handler) : ContactHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const ContactEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			struct ContactConstHandlerRef : ContactHandlerBase
@@ -189,6 +265,7 @@ namespace oly::col2d
 				ContactConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::ContactConstHandler handler) : ContactHandlerBase(controller), handler(handler) {}
 
 				virtual void invoke(const ContactEventData& data) const override { (controller.get()->*handler)(data); }
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
 			};
 
 			template<typename T>
@@ -202,9 +279,50 @@ namespace oly::col2d
 				}
 			};
 
-			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<OverlapHandlerBase>>> overlap_handlers;
-			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<CollisionHandlerBase>>> collision_handlers;
-			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<ContactHandlerBase>>> contact_handlers;
+			struct OverlapHash
+			{
+				size_t operator()(const std::unique_ptr<OverlapHandlerBase>& ptr) const { return ptr->hash(); }
+			};
+
+			struct OverlapEqual
+			{
+				bool operator()(const std::unique_ptr<OverlapHandlerBase>& a, const std::unique_ptr<OverlapHandlerBase>& b) const
+				{
+					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
+				}
+			};
+
+			struct CollisionHash
+			{
+				size_t operator()(const std::unique_ptr<CollisionHandlerBase>& ptr) const { return ptr->hash(); }
+			};
+
+			struct CollisionEqual
+			{
+				bool operator()(const std::unique_ptr<CollisionHandlerBase>& a, const std::unique_ptr<CollisionHandlerBase>& b) const
+				{
+					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
+				}
+			};
+
+			struct ContactHash
+			{
+				size_t operator()(const std::unique_ptr<ContactHandlerBase>& ptr) const { return ptr->hash(); }
+			};
+
+			struct ContactEqual
+			{
+				bool operator()(const std::unique_ptr<ContactHandlerBase>& a, const std::unique_ptr<ContactHandlerBase>& b) const
+				{
+					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
+				}
+			};
+
+			friend struct CollisionController;
+
+			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<OverlapHandlerBase>, OverlapHash, OverlapEqual>> overlap_handlers;
+			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<CollisionHandlerBase>, CollisionHash, CollisionEqual>> collision_handlers;
+			mutable std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<ContactHandlerBase>, ContactHash, ContactEqual>> contact_handlers;
 
 			std::vector<CollisionTree> trees;
 			mutable CollisionPhaseTracker phase_tracker;
@@ -223,198 +341,6 @@ namespace oly::col2d
 
 			void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
 
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::OverlapHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				overlap_handlers[collider].insert(std::make_unique<OverlapHandlerRef>(controller, handler));
-			}
-			
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::OverlapConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				overlap_handlers[collider].insert(std::make_unique<OverlapConstHandlerRef>(controller, handler));
-			}
-			
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::CollisionHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				collision_handlers[collider].insert(std::make_unique<CollisionHandlerRef>(controller, handler));
-			}
-			
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::CollisionConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				collision_handlers[collider].insert(std::make_unique<CollisionConstHandlerRef>(controller, handler));
-			}
-			
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::ContactHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				contact_handlers[collider].insert(std::make_unique<ContactHandlerRef>(controller, handler));
-			}
-
-			void register_handler(const ConstSoftReference<Collider>& collider, CollisionController::ContactConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				contact_handlers[collider].insert(std::make_unique<ContactConstHandlerRef>(controller, handler));
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&), const SoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::OverlapHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::OverlapConstHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&), const SoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::CollisionHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::CollisionConstHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&), const SoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::ContactHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void register_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				register_handler(collider, static_cast<CollisionController::ContactConstHandler>(handler), controller);
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::OverlapHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				auto it = overlap_handlers.find(collider);
-				if (it != overlap_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<OverlapHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							overlap_handlers.erase(it);
-					}
-				}
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::OverlapConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				auto it = overlap_handlers.find(collider);
-				if (it != overlap_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<OverlapConstHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							overlap_handlers.erase(it);
-					}
-				}
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::CollisionHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				auto it = collision_handlers.find(collider);
-				if (it != collision_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<CollisionHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							collision_handlers.erase(it);
-					}
-				}
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::CollisionConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				auto it = collision_handlers.find(collider);
-				if (it != collision_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<CollisionConstHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							collision_handlers.erase(it);
-					}
-				}
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::ContactHandler handler, const SoftReference<CollisionController>& controller)
-			{
-				auto it = contact_handlers.find(collider);
-				if (it != contact_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<ContactHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							contact_handlers.erase(it);
-					}
-				}
-			}
-
-			void unregister_handler(const ConstSoftReference<Collider>& collider, CollisionController::ContactConstHandler handler, const ConstSoftReference<CollisionController>& controller)
-			{
-				auto it = contact_handlers.find(collider);
-				if (it != contact_handlers.end())
-				{
-					auto inner_it = it->second.find(std::make_unique<ContactConstHandlerRef>(controller, handler));
-					if (inner_it != it->second.end())
-					{
-						it->second.erase(inner_it);
-						if (it->second.empty())
-							contact_handlers.erase(it);
-					}
-				}
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&), const SoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::OverlapHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const OverlapEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::OverlapConstHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&), const SoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::CollisionHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const CollisionEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::CollisionConstHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&), const SoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::ContactHandler>(handler), controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void unregister_handler(const ConstSoftReference<Collider>& collider, void(Controller::* handler)(const ContactEventData&) const, const ConstSoftReference<Controller>& controller)
-			{
-				unregister_handler(collider, static_cast<CollisionController::ContactConstHandler>(handler), controller);
-			}
-
 			void unregister_overlap_handlers(const ConstSoftReference<Collider>& collider) { overlap_handlers.erase(collider); }
 			void unregister_collision_handlers(const ConstSoftReference<Collider>& collider) { collision_handlers.erase(collider); }
 			void unregister_contact_handlers(const ConstSoftReference<Collider>& collider) { contact_handlers.erase(collider); }
@@ -425,48 +351,6 @@ namespace oly::col2d
 			void clean();
 
 			void emit(const Collider& from);
-			void emit(const Collider& from, CollisionController::OverlapHandler only_handler, const SoftReference<CollisionController>& only_controller) const;
-			void emit(const Collider& from, CollisionController::OverlapConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const;
-			void emit(const Collider& from, CollisionController::CollisionHandler only_handler, const SoftReference<CollisionController>& only_controller) const;
-			void emit(const Collider& from, CollisionController::CollisionConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const;
-			void emit(const Collider& from, CollisionController::ContactHandler only_handler, const SoftReference<CollisionController>& only_controller) const;
-			void emit(const Collider& from, CollisionController::ContactConstHandler only_handler, const ConstSoftReference<CollisionController>& only_controller) const;
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const OverlapEventData&), const SoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::OverlapHandler>(only_handler), only_controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const OverlapEventData&) const, const ConstSoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::OverlapConstHandler>(only_handler), only_controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const CollisionEventData&), const SoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::CollisionHandler>(only_handler), only_controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const CollisionEventData&) const, const ConstSoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::CollisionConstHandler>(only_handler), only_controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const ContactEventData&), const SoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::ContactHandler>(only_handler), only_controller);
-			}
-
-			template<std::derived_from<CollisionController> Controller>
-			void emit(const Collider& from, void(Controller::* only_handler)(const ContactEventData&) const, const ConstSoftReference<Controller>& only_controller) const
-			{
-				emit(from, static_cast<CollisionController::ContactConstHandler>(only_handler), only_controller);
-			}
 		};
 	}
 }

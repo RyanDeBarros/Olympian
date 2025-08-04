@@ -47,11 +47,11 @@ namespace oly::physics
 
 	void StaticBody::bind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().register_handler(collider.cref(), &StaticBody::handle_overlaps, cref());
+		col2d::CollisionController::bind(collider.cref(), &StaticBody::handle_overlaps);
 	}
 
 	void StaticBody::unbind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().unregister_handler(collider.cref(), &StaticBody::handle_overlaps, cref());
+		col2d::CollisionController::unbind(collider.cref(), &StaticBody::handle_overlaps);
 	}
 }

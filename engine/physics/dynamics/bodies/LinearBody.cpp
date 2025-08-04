@@ -266,11 +266,11 @@ namespace oly::physics
 
 	void LinearBody::bind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().register_handler(collider.cref(), &LinearBody::handle_collides, cref());
+		col2d::CollisionController::bind(collider.cref(), &LinearBody::handle_collides);
 	}
 
 	void LinearBody::unbind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().unregister_handler(collider.cref(), &LinearBody::handle_collides, cref());
+		col2d::CollisionController::unbind(collider.cref(), &LinearBody::handle_collides);
 	}
 }

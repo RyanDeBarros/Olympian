@@ -433,11 +433,11 @@ namespace oly::physics
 
 	void KinematicBody::bind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().register_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
+		col2d::CollisionController::bind(collider.cref(), &KinematicBody::handle_contacts);
 	}
 
 	void KinematicBody::unbind(const col2d::Collider& collider) const
 	{
-		context::collision_dispatcher().unregister_handler(collider.cref(), &KinematicBody::handle_contacts, cref());
+		col2d::CollisionController::unbind(collider.cref(), &KinematicBody::handle_contacts);
 	}
 }
