@@ -17,13 +17,10 @@ namespace oly::col2d
 		CollisionNode::CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other)
 			: tree(tree), bounds(other.bounds), parent(parent), subnodes(tree->degree.x * tree->degree.y)
 		{
-			for (const ConstSoftReference<Collider>& collider : other.colliders)
+			for (const Collider* collider : other.colliders)
 			{
-				if (const Collider* c = collider.get())
-				{
-					colliders.insert(collider);
-					c->handles.handles[tree] = this;
-				}
+				colliders.insert(collider);
+				collider->handles.handles[tree] = this;
 			}
 
 			for (size_t i = 0; i < other.subnodes.size(); ++i)
@@ -36,13 +33,10 @@ namespace oly::col2d
 
 		void CollisionNode::assign_tree(const CollisionTree* new_tree)
 		{
-			for (const ConstSoftReference<Collider>& collider : colliders)
+			for (const Collider* collider : colliders)
 			{
-				if (const Collider* c = collider.get())
-				{
-					c->handles.handles.erase(tree);
-					c->handles.handles[new_tree] = this;
-				}
+				collider->handles.handles.erase(tree);
+				collider->handles.handles[new_tree] = this;
 			}
 
 			tree = new_tree;
@@ -54,9 +48,8 @@ namespace oly::col2d
 
 		CollisionNode::~CollisionNode()
 		{
-			for (const ConstSoftReference<Collider>& collider : colliders)
-				if (const Collider* c = collider.get())
-					c->handles.handles.erase(tree);
+			for (const Collider* collider : colliders)
+				collider->handles.handles.erase(tree);
 		}
 
 		std::unique_ptr<CollisionNode> CollisionNode::instantiate(const CollisionTree* tree, math::Rect2D bounds)
@@ -66,7 +59,7 @@ namespace oly::col2d
 
 		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
 		{
-			colliders.erase(collider.cref());
+			colliders.erase(&collider);
 			node = nullptr;
 			insert_upwards(collider, node);
 		}
@@ -75,7 +68,7 @@ namespace oly::col2d
 		{
 			if (collider.quad_wrap.strict_inside(bounds))
 			{
-				if (colliders.insert(collider.cref()))
+				if (colliders.insert(&collider))
 					node = this;
 			}
 			else if (parent)
@@ -227,10 +220,9 @@ namespace oly::col2d
 			size_t i = 0;
 			while (i < node->colliders.size())
 			{
-				const ConstSoftReference<Collider>& collider = node->colliders[i];
-				if (auto c = collider.get())
+				if (const Collider* collider = node->colliders[i])
 				{
-					c->flush();
+					collider->flush();
 					++i;
 				}
 				else
@@ -286,11 +278,10 @@ namespace oly::col2d
 						const size_t transfers = std::min(cell_capacity - parent->colliders.size(), indexer.node->colliders.size());
 						for (size_t _ = 0; _ < transfers; ++_)
 						{
-							ConstSoftReference<Collider> collider = indexer.node->colliders.pop();
-							if (auto c = collider.get())
+							if (const Collider* collider = indexer.node->colliders.pop())
 							{
 								parent->colliders.insert(collider);
-								c->handles.handles.get(this) = parent;
+								collider->handles.handles.get(this) = parent;
 							}
 						}
 					}
@@ -380,9 +371,9 @@ namespace oly::col2d
 		current = nullptr;
 	}
 
-	ConstSoftReference<Collider> CollisionTree::BFSColliderIterator::next()
+	const Collider* CollisionTree::BFSColliderIterator::next()
 	{
-		ConstSoftReference<Collider> og = current;
+		const Collider* og = current;
 		increment_current();
 		return og;
 	}

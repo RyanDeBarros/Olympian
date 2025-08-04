@@ -2,6 +2,7 @@
 
 #include "physics/collision/scene/CollisionTree.h"
 #include "core/base/TransformerExposure.h"
+#include "core/types/SoftReference.h"
 
 namespace oly::physics { class RigidBody; };
 

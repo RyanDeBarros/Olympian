@@ -3,7 +3,6 @@
 #include "core/containers/FixedVector.h"
 #include "core/containers/ContiguousSet.h"
 #include "core/containers/ContiguousMap.h"
-#include "core/types/SoftReference.h"
 
 #include "physics/collision/scene/LUT.h"
 #include "physics/collision/scene/LUTVariant.h"
@@ -31,7 +30,7 @@ namespace oly::col2d
 			math::Rect2D bounds;
 			CollisionNode* parent = nullptr;
 			FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-			ContiguousSet<ConstSoftReference<Collider>> colliders; // TODO use pointers, not soft references.
+			ContiguousSet<const Collider*> colliders;
 
 			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
 			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
@@ -56,7 +55,7 @@ namespace oly::col2d
 			void set_bounds(math::Rect2D b);
 
 		public:
-			const ContiguousSet<ConstSoftReference<Collider>>& get_colliders() const { return colliders; }
+			const ContiguousSet<const Collider*>& get_colliders() const { return colliders; }
 		};
 	}
 
@@ -104,13 +103,15 @@ namespace oly::col2d
 			internal::CollisionNode* next();
 		};
 
+		// TODO v3 especially for multi-threading contexts, keep track of live iterators in collision tree, and invalidate them when structure changes in an invalidating way, such as colliders being added/removed/moved.
+
 		class BFSColliderIterator
 		{
 			friend class CollisionTree;
 			const math::Rect2D bounds;
 			std::queue<const internal::CollisionNode*> nodes;
 			size_t i = 0;
-			ConstSoftReference<Collider> current = nullptr;
+			const Collider* current = nullptr;
 			BFSColliderIterator(const math::Rect2D bounds) : bounds(bounds) {}
 			BFSColliderIterator(const internal::CollisionNode* root, const math::Rect2D bounds);
 
@@ -120,7 +121,7 @@ namespace oly::col2d
 
 		public:
 			bool done() const { return !current; }
-			ConstSoftReference<Collider> next();
+			const Collider* next();
 		};
 
 		class PairIterator
@@ -130,8 +131,8 @@ namespace oly::col2d
 			BFSColliderIterator first, second;
 			struct ColliderPtrPair
 			{
-				ConstSoftReference<Collider> first = nullptr;
-				ConstSoftReference<Collider> second = nullptr;
+				const Collider* first = nullptr;
+				const Collider* second = nullptr;
 
 				operator bool () const { return first && second; }
 			} current;

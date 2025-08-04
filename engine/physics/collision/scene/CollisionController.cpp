@@ -129,14 +129,11 @@ namespace oly::col2d
 			auto it = tree.query(from);
 			while (!it.done())
 			{
-				ConstSoftReference<Collider> other = it.next();
-				if (const Collider* c2 = other.get())
-				{
-					EventData data((from.*method)(*c2), c1, other, phase_tracker.prior_phase(c1, other));
-					phase_tracker.lazy_update_phase(c1, other, data.phase);
-					if (data.phase != Phase::EXPIRED)
-						(only_controller.*only_handler)(data);
-				}
+				const Collider* other = it.next();
+				EventData data((from.*method)(*other), c1, other->cref(), phase_tracker.prior_phase(c1, other->cref()));
+				phase_tracker.lazy_update_phase(c1, other->cref(), data.phase);
+				if (data.phase != Phase::EXPIRED)
+					(only_controller.*only_handler)(data);
 			}
 		}
 	}
