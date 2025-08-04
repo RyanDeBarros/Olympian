@@ -2,6 +2,11 @@ import ToolRegistry
 from ToolNode import var_cmd, varinput, print_error
 
 
+# TODO v3 GUI app for editing files - use PySide6 or TKinter
+
+# TODO v3 OREPL commands for signal assets
+
+
 DESCRIPTION_OFFSET = 64
 
 

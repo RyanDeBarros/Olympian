@@ -1,7 +1,5 @@
 #pragma once
 
-// TODO v3 separate Rendering.h and Registries.h into different files in subfolder corresponding to each type - one file for sprites, another for polygons, etc.
-
 #include "core/types/Functor.h"
 
 #include "graphics/primitives/Polygons.h"

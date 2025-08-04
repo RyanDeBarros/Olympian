@@ -16,8 +16,6 @@
 
 #include "core/util/Time.h"
 
-#include "assets/EngineInitialization.h"
-
 #include "registries/platform/Input.h"
 
 #include "physics/dynamics/bodies/RigidBody.h"
@@ -79,9 +77,9 @@ namespace oly::context
 		internal::this_frame = 0;
 		internal::resource_root = resource_root;
 
-		assets::internal::init_engine();
 		auto toml = load_toml("context.toml");
-		const TOMLNode& toml_context = (const TOMLNode&)toml["context"];
+		TOMLNode toml_context = toml["context"];
+
 		init_logger(toml_context);
 
 		internal::init_platform(toml_context);

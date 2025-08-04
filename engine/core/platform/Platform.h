@@ -17,9 +17,6 @@ namespace oly::platform
 
 		int num_gamepads;
 
-		PlatformSetup() = default;
-		PlatformSetup(const TOMLNode& node);
-
 		glm::ivec2 window_size() const { return { window_width, window_height }; }
 	};
 
