@@ -261,11 +261,12 @@ namespace oly
 	private:
 		friend class internal::SmartReferencePool<PoolBase>;
 
+		static inline bool default_valid = false;
+
 		static SmartReference<Object>& default_ref() requires (std::is_default_constructible_v<Object>)
 		{
-			static SmartReference<Object> def;
-			if (!def.valid())
-				def.init();
+			static SmartReference<Object> def = REF_INIT;
+			default_valid = true;
 			return def;
 		}
 
@@ -710,8 +711,10 @@ namespace oly
 		inline void SmartReferencePool<Object>::clear()
 		{
 			if constexpr (std::is_default_constructible_v<Object>)
-				// TODO v3 if default is invalid, then this will create new default_ref just to invalidate it - this doesn't make sense. Make default_valid a static bool in SmartReference.
-				SmartReference<Object>::default_ref().invalidate();
+			{
+				if (SmartReference<Object>::default_valid)
+					SmartReference<Object>::default_ref().invalidate();
+			}
 
 			clear_stack(unoccupied);
 			marked_for_deletion.clear();
