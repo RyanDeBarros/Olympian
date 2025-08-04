@@ -8,21 +8,18 @@
 
 namespace oly
 {
-	namespace internal
+	namespace input::internal
 	{
 		class InputBindingContext;
 	}
 
 	class InputController
 	{
-		OLY_SOFT_REFERENCE_BASE_DECLARATION(InputController);
-
-	private:
-		friend class internal::InputBindingContext;
-		std::vector<input::SignalID> signals;
+		friend class input::internal::InputBindingContext;
+		mutable std::vector<input::SignalID> signals;
 
 	public:
-		InputController();
+		InputController() = default;
 		InputController(const InputController&);
 		InputController(InputController&&) noexcept;
 		virtual ~InputController();
@@ -31,6 +28,10 @@ namespace oly
 
 		using Handler = bool(InputController::*)(input::Signal);
 		using ConstHandler = bool(InputController::*)(input::Signal) const;
+
+		void bind(input::SignalID signal, InputController::Handler handler);
+		void bind(input::SignalID signal, InputController::ConstHandler handler) const;
+		void unbind(input::SignalID signal) const;
 	};
 
 #define OLY_INPUT_CONTROLLER_HEADER(Class)\
@@ -280,44 +281,43 @@ namespace oly
 				};
 				FixedVector<GamepadPoll> gamepad_polls;
 
-				// TODO v3 don't use soft references. InputController base class should implement node system with binding context.
-
 				struct ControllerHandler
 				{
+					const InputController* controller = nullptr;
+
+					ControllerHandler(InputController* controller) : controller(controller) {}
+					ControllerHandler(const InputController* controller) : controller(controller) {}
 					virtual ~ControllerHandler() = default;
 
-					virtual const InputController* get_controller() const = 0;
 					virtual bool invoke(input::Signal) const = 0;
 				};
 
 				struct HandlerRef : ControllerHandler
 				{
 					InputController::Handler handler = nullptr;
-					SoftReference<InputController> controller = nullptr;
 
-					HandlerRef(InputController::Handler handler, const SoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+					HandlerRef(InputController::Handler handler, InputController& controller) : handler(handler), ControllerHandler(&controller) {}
 
-					const InputController* get_controller() const override { return controller.get(); }
-					bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
+					bool invoke(input::Signal signal) const override { return (const_cast<InputController*>(controller)->*handler)(signal); }
 				};
 
 				struct ConstHandlerRef : ControllerHandler
 				{
 					InputController::ConstHandler handler = nullptr;
-					ConstSoftReference<InputController> controller = nullptr;
 
-					ConstHandlerRef(InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+					ConstHandlerRef(InputController::ConstHandler handler, const InputController& controller) : handler(handler), ControllerHandler(&controller) {}
 
-					const InputController* get_controller() const override { return controller.get(); }
-					bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
+					bool invoke(input::Signal signal) const override { return (controller->*handler)(signal); }
 				};
 
+				friend class InputController;
 				std::unordered_map<input::SignalID, std::unique_ptr<ControllerHandler>> handler_map;
 
 			public:
 				InputBindingContext(unsigned int num_gamepads);
 				InputBindingContext(const InputBindingContext&) = delete;
 				InputBindingContext(InputBindingContext&&) = delete;
+				~InputBindingContext();
 
 			private:
 				friend class platform::Platform;
@@ -346,10 +346,6 @@ namespace oly
 				REGISTER_SIGNAL(input::ScrollBinding, scroll_bindings);
 
 #undef REGISTER_SIGNAL
-
-				void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller);
-				void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller);
-				void unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller);
 
 				// call poll() after glfwPollEvents() but before TIME.sync()
 				void poll();

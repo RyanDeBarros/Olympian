@@ -5,31 +5,35 @@
 
 namespace oly
 {
-	// TODO v3
-
-	InputController::InputController()
-	{
-	}
-	
 	InputController::InputController(const InputController& other)
-		: signals(other.signals)
 	{
+		// don't copy signals
 	}
 	
 	InputController::InputController(InputController&& other) noexcept
 		: signals(std::move(other.signals))
 	{
+		auto& handler_map = context::input_binding_context().handler_map;
+		for (input::SignalID signal : signals)
+			handler_map.find(signal)->second->controller = this;
 	}
 	
 	InputController::~InputController()
 	{
+		auto& handler_map = context::input_binding_context().handler_map;
+		for (input::SignalID signal : signals)
+			handler_map.erase(signal);
 	}
 	
 	InputController& InputController::operator=(const InputController& other)
 	{
 		if (this != &other)
 		{
-			signals = other.signals;
+			auto& handler_map = context::input_binding_context().handler_map;
+			for (input::SignalID signal : signals)
+				handler_map.erase(signal);
+			// don't copy signals
+			signals.clear();
 		}
 		return *this;
 	}
@@ -38,9 +42,70 @@ namespace oly
 	{
 		if (this != &other)
 		{
+			auto& handler_map = context::input_binding_context().handler_map;
+			for (input::SignalID signal : signals)
+				handler_map.erase(signal);
 			signals = std::move(other.signals);
+			for (input::SignalID signal : signals)
+				handler_map.find(signal)->second->controller = this;
 		}
 		return *this;
+	}
+
+	void InputController::bind(input::SignalID signal, InputController::Handler handler)
+	{
+		auto& handler_map = context::input_binding_context().handler_map;
+		auto it = handler_map.find(signal);
+		if (it != handler_map.end())
+		{
+			const InputController* existing_controller = it->second->controller;
+			if (existing_controller != this)
+			{
+				auto sig = std::find(existing_controller->signals.begin(), existing_controller->signals.end(), signal);
+				existing_controller->signals.erase(sig);
+				signals.push_back(signal);
+			}
+			it->second = std::make_unique<input::internal::InputBindingContext::HandlerRef>(handler, *this);
+		}
+		else
+		{
+			signals.push_back(signal);
+			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::HandlerRef>(handler, *this);
+		}
+	}
+
+	void InputController::bind(input::SignalID signal, InputController::ConstHandler handler) const
+	{
+		auto& handler_map = context::input_binding_context().handler_map;
+		auto it = handler_map.find(signal);
+		if (it != handler_map.end())
+		{
+			const InputController* existing_controller = it->second->controller;
+			if (existing_controller != this)
+			{
+				auto sig = std::find(existing_controller->signals.begin(), existing_controller->signals.end(), signal);
+				existing_controller->signals.erase(sig);
+				signals.push_back(signal);
+			}
+			it->second = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(handler, *this);
+		}
+		else
+		{
+			signals.push_back(signal);
+			handler_map[signal] = std::make_unique<input::internal::InputBindingContext::ConstHandlerRef>(handler, *this);
+		}
+	}
+
+	void InputController::unbind(input::SignalID signal) const
+	{
+		auto& handler_map = context::input_binding_context().handler_map;
+		auto it = handler_map.find(signal);
+		if (it != handler_map.end() && it->second->controller == this)
+		{
+			auto sig = std::find(signals.begin(), signals.end(), signal);
+			signals.erase(sig);
+			handler_map.erase(it);
+		}
 	}
 
 	namespace input
@@ -179,21 +244,10 @@ namespace oly
 			{
 			}
 
-			void InputBindingContext::bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller)
+			InputBindingContext::~InputBindingContext()
 			{
-				handler_map[signal] = std::make_unique<HandlerRef>(handler, controller);
-			}
-
-			void InputBindingContext::bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller)
-			{
-				handler_map[signal] = std::make_unique<ConstHandlerRef>(handler, controller);
-			}
-
-			void InputBindingContext::unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller)
-			{
-				auto it = handler_map.find(signal);
-				if (it != handler_map.end() && it->second->get_controller() == controller.get())
-					handler_map.erase(it);
+				for (auto& [signal_id, handler] : handler_map)
+					handler->controller->signals.clear();
 			}
 
 			void InputBindingContext::poll()
@@ -379,13 +433,9 @@ namespace oly
 			{
 				auto it = handler_map.find(id);
 				if (it != handler_map.end())
-				{
-					if (it->second->get_controller())
-						return it->second->invoke(signal);
-					else
-						handler_map.erase(it);
-				}
-				return false;
+					return it->second->invoke(signal);
+				else
+					return false;
 			}
 
 			bool InputBindingContext::consume(const input::KeyEventData& data)

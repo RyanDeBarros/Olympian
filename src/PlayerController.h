@@ -6,9 +6,6 @@
 
 struct PlayerController : public oly::InputController
 {
-	OLY_INPUT_CONTROLLER_HEADER(PlayerController);
-
-public:
 	bool dragging = false;
 	glm::vec2 ref_cursor_pos = {};
 	glm::vec2 ref_text_pos = {};

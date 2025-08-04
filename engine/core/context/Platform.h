@@ -33,67 +33,27 @@ namespace oly::context
 	extern void unassign_signal_mapping(const std::string& mapping_name);
 
 	template<std::derived_from<InputController> Controller>
-	inline void bind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
+	inline void bind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
 	{
-		input_binding_context().bind(signal_table().get(signal), static_cast<InputController::Handler>(handler), controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void bind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
-	{
-		input_binding_context().bind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler), controller);
+		controller.bind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler));
 	}
 
 	template<std::derived_from<InputController> Controller>
 	inline void bind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 	{
-		input_binding_context().bind(signal_table().get(signal), static_cast<InputController::Handler>(handler), controller.ref());
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void bind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
-	{
-		input_binding_context().bind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler), controller.cref());
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void unbind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
-	{
-		input_binding_context().unbind(signal_table().get(signal), static_cast<InputController::Handler>(handler), controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void unbind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
-	{
-		input_binding_context().unbind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler), controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void unbind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal), Controller& controller)
-	{
-		input_binding_context().unbind(signal_table().get(signal), static_cast<InputController::Handler>(handler), controller.ref());
+		controller.bind(signal_table().get(signal), static_cast<InputController::Handler>(handler));
 	}
 
 	template<std::derived_from<InputController> Controller>
 	inline void unbind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal) const, const Controller& controller)
 	{
-		input_binding_context().unbind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler), controller.cref());
+		controller.unbind(signal_table().get(signal), static_cast<InputController::ConstHandler>(handler));
 	}
 
 	template<std::derived_from<InputController> Controller>
-	inline void bind_signal_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
+	inline void unbind_signal(const std::string& signal, bool(Controller::* handler)(input::Signal), Controller& controller)
 	{
-		const std::vector<std::string>& signals = signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			bind_signal(signal, handler, controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void bind_signal_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
-	{
-		const std::vector<std::string>& signals = signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			bind_signal(signal, handler, controller);
+		controller.unbind(signal_table().get(signal), static_cast<InputController::Handler>(handler));
 	}
 
 	template<std::derived_from<InputController> Controller>
@@ -110,22 +70,6 @@ namespace oly::context
 		const std::vector<std::string>& signals = signal_mapping_table()[mapping];
 		for (const std::string& signal : signals)
 			bind_signal(signal, handler, controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void unbind_signal_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
-	{
-		const std::vector<std::string>& signals = signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			unbind_signal(signal, handler, controller);
-	}
-
-	template<std::derived_from<InputController> Controller>
-	inline void unbind_signal_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal) const, const ConstSoftReference<Controller>& controller)
-	{
-		const std::vector<std::string>& signals = signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			unbind_signal(signal, handler, controller);
 	}
 
 	template<std::derived_from<InputController> Controller>
