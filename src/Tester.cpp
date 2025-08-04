@@ -131,8 +131,8 @@ int main()
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
 	//player->add_collider(star.as_convex_tcompound());
-	player->collider()->layer() |= CollisionLayers::L_PLAYER;
-	player->collider()->mask() |= CollisionMasks::M_OBSTACLE;
+	player->collider().layer() |= CollisionLayers::L_PLAYER;
+	player->collider().mask() |= CollisionMasks::M_OBSTACLE;
 	//oly::col2d::TCompound player = star.as_convex_tcompound();
 	//oly::col2d::TBVH<oly::col2d::AABB> player = star.as_convex_tbvh<oly::col2d::AABB>();
 	//oly::col2d::TBVH<oly::col2d::OBB> player = star.as_convex_tbvh<oly::col2d::OBB>();
@@ -150,9 +150,9 @@ int main()
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
-	obstacle0->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0->collider()->mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
-	obstacle0->collider()->set_local().position = -capsule.center;
+	obstacle0->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
+	obstacle0->collider().set_local().position = -capsule.center;
 	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0->properties().center_of_mass = capsule.center;
@@ -162,30 +162,30 @@ int main()
 	capsule.center.y += 200.0f;
 	oly::physics::LinearBodyRef obstacle1 = oly::REF_INIT;
 	obstacle1->add_collider(capsule);
-	obstacle1->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle1->collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle1->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle1->collider().mask() |= CollisionMasks::M_PLAYER;
 	//obstacle1->properties().center_of_mass = capsule.center;
 	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle2 = oly::REF_INIT;
 	obstacle2->add_collider(capsule);
-	obstacle2->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle2->collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle2->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle2->collider().mask() |= CollisionMasks::M_PLAYER;
 	//obstacle2->properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle3 = oly::REF_INIT;
 	obstacle3->add_collider(capsule);
-	obstacle3->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle3->collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle3->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle3->collider().mask() |= CollisionMasks::M_PLAYER;
 	//obstacle3->properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle4 = oly::REF_INIT;
 	obstacle4->add_collider(capsule);
-	obstacle4->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle4->collider()->mask() |= CollisionMasks::M_PLAYER;
+	obstacle4->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	obstacle4->collider().mask() |= CollisionMasks::M_PLAYER;
 	//obstacle4->properties().center_of_mass = capsule.center;
 
 	oly::physics::StaticBodyRef ground = oly::REF_INIT;
@@ -194,8 +194,8 @@ int main()
 		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
 		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
 		}));
-	ground->collider()->layer() |= CollisionLayers::L_OBSTACLE;
-	ground->collider()->mask() |= CollisionMasks::M_PLAYER;
+	ground->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	ground->collider().mask() |= CollisionMasks::M_PLAYER;
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 

@@ -1,17 +1,6 @@
 #pragma once
 
-#include <variant>
-#include <unordered_map>
-#include <string>
-#include <array>
-
 #include "external/GL.h"
-#include "external/GLM.h"
-
-#include "core/platform/EventHandler.h"
-#include "core/containers/FixedVector.h"
-#include "core/types/Meta.h"
-#include "core/types/SoftReference.h"
 
 namespace oly
 {

@@ -3,8 +3,13 @@
 #include "core/platform/Signal.h"
 #include "core/platform/Gamepad.h"
 #include "core/platform/WindowEvents.h"
+#include "core/platform/EventHandler.h"
+#include "core/containers/FixedVector.h"
 
 #include <vector>
+#include <array>
+#include <optional>
+#include <memory>
 
 namespace oly
 {

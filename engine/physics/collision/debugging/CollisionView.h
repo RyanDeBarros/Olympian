@@ -12,6 +12,7 @@
 #include "graphics/backend/basic/Framebuffers.h"
 
 #include "core/platform/WindowEvents.h"
+#include "core/platform/EventHandler.h"
 
 namespace oly::debug
 {

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "external/GLM.h"
 #include "core/platform/WindowEvents.h"
+#include "core/platform/EventHandler.h"
 
 namespace oly::platform
 {

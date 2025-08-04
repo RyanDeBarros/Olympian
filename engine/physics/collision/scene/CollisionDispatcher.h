@@ -99,6 +99,7 @@ namespace oly::col2d
 		void erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
 	};
 
+	// TODO v3 move to internal and remove soft reference
 	class CollisionDispatcher
 	{
 		struct OverlapHandlerRef

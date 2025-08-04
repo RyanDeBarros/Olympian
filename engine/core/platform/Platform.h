@@ -5,6 +5,7 @@
 #include "external/TOML.h"
 #include "core/platform/Window.h"
 #include "core/platform/Gamepad.h"
+#include "core/containers/FixedVector.h"
 
 namespace oly::platform
 {

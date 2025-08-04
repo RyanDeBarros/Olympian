@@ -16,7 +16,7 @@ namespace oly::physics
 		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
 
 	protected:
-		std::vector<CopyPtr<col2d::Collider>> colliders;
+		std::vector<col2d::Collider> colliders;
 		Transformer2D transformer;
 
 	public:
@@ -32,19 +32,24 @@ namespace oly::physics
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		template<col2d::internal::ElementShape Shape>
-		SoftReference<col2d::Collider> add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
-		SoftReference<col2d::Collider> add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }
-		SoftReference<col2d::Collider> add_collider(const col2d::PolygonCollision& polygon) { return add_collider(polygon.as_convex_tbvh<col2d::OBB>()); }
-
+		col2d::Collider& add_collider(col2d::Collider&& collider);
 		template<col2d::internal::ColliderObjectShape CObj>
-		SoftReference<col2d::Collider> add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
-		SoftReference<col2d::Collider> add_collider(col2d::Collider&& collider);
+		col2d::Collider& add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
+		template<col2d::internal::ElementShape Shape>
+		col2d::Collider& add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
+
+		col2d::Collider& add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }
+		col2d::Collider& add_collider(const col2d::PolygonCollision& polygon) { return add_collider(polygon.as_convex_tbvh<col2d::OBB>()); }
 
 		void erase_collider(size_t i);
-		void remove_collider(const SoftReference<col2d::Collider>& collider);
+
+	private:
+		void remove_collider(const col2d::Collider& collider);
+
+	public:
 		void clear_colliders();
-		SoftReference<col2d::Collider> collider(size_t i = 0);
+		const col2d::Collider& collider(size_t i = 0) const;
+		col2d::Collider& collider(size_t i = 0);
 		size_t num_colliders() const { return colliders.size(); }
 
 		debug::CollisionView collision_view(size_t i, glm::vec4 color) const;

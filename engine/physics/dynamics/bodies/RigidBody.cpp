@@ -13,8 +13,8 @@ namespace oly::physics
 		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
-			(*it)->rigid_body = this;
-			(*it)->set_transformer().attach_parent(&transformer);
+			it->rigid_body = this;
+			it->set_transformer().attach_parent(&transformer);
 		}
 	}
 	
@@ -24,9 +24,9 @@ namespace oly::physics
 		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
-			(*it)->rigid_body = this;
-			(*it)->set_transformer().attach_parent(&transformer);
-			other.unbind(**it);
+			it->rigid_body = this;
+			it->set_transformer().attach_parent(&transformer);
+			other.unbind(*it);
 		}
 	}
 	
@@ -45,9 +45,9 @@ namespace oly::physics
 			transformer = other.transformer;
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
-				(*it)->rigid_body = this;
-				(*it)->set_transformer().attach_parent(&transformer);
-				bind(**it);
+				it->rigid_body = this;
+				it->set_transformer().attach_parent(&transformer);
+				bind(*it);
 			}
 		}
 		return *this;
@@ -62,40 +62,40 @@ namespace oly::physics
 			transformer = std::move(other.transformer);
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
-				(*it)->rigid_body = this;
-				(*it)->set_transformer().attach_parent(&transformer);
-				bind(**it);
-				other.unbind(**it);
+				it->rigid_body = this;
+				it->set_transformer().attach_parent(&transformer);
+				bind(*it);
+				other.unbind(*it);
 			}
 		}
 		return *this;
 	}
 	
-	SoftReference<col2d::Collider> RigidBody::add_collider(col2d::Collider&& collider)
+	col2d::Collider& RigidBody::add_collider(col2d::Collider&& collider)
 	{
 		if (collider.rigid_body)
-			collider.rigid_body->remove_collider(collider.ref());
-		CopyPtr<col2d::Collider>& c = colliders.emplace_back(std::move(collider));
-		c->rigid_body = this;
-		c->set_transformer().attach_parent(&transformer);
-		c->handles.attach();
-		bind(*c);
-		return c->ref();
+			collider.rigid_body->remove_collider(collider);
+		col2d::Collider& c = colliders.emplace_back(std::move(collider));
+		c.rigid_body = this;
+		c.set_transformer().attach_parent(&transformer);
+		c.handles.attach();
+		bind(c);
+		return c;
 	}
 
 	void RigidBody::erase_collider(size_t i)
 	{
-		unbind(*colliders[i]);
+		unbind(colliders[i]);
 		colliders.erase(colliders.begin() + i);
 	}
 
-	void RigidBody::remove_collider(const SoftReference<col2d::Collider>& collider)
+	void RigidBody::remove_collider(const col2d::Collider& collider)
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
-			if (it->get() == collider.get())
+			if (&*it == &collider)
 			{
-				unbind(**it);
+				unbind(*it);
 				colliders.erase(it);
 				return;
 			}
@@ -105,39 +105,44 @@ namespace oly::physics
 	void RigidBody::clear_colliders()
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			unbind(**it);
+			unbind(*it);
 		colliders.clear();
 	}
 
-	SoftReference<col2d::Collider> RigidBody::collider(size_t i)
+	const col2d::Collider& RigidBody::collider(size_t i) const
 	{
-		return colliders[i]->ref();
+		return colliders[i];
+	}
+
+	col2d::Collider& RigidBody::collider(size_t i)
+	{
+		return colliders[i];
 	}
 
 	debug::CollisionView RigidBody::collision_view(size_t i, glm::vec4 color) const
 	{
-		return colliders[i]->collision_view(color);
+		return colliders[i].collision_view(color);
 	}
 
 	void RigidBody::update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const
 	{
-		colliders[i]->update_view(view, color);
+		colliders[i].update_view(view, color);
 	}
 
 	void RigidBody::update_view(size_t i, debug::CollisionView& view) const
 	{
-		colliders[i]->update_view(view);
+		colliders[i].update_view(view);
 	}
 
 	void RigidBody::bind_all() const
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			bind(**it);
+			bind(*it);
 	}
 	void RigidBody::unbind_all() const
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
-			unbind(**it);
+			unbind(*it);
 	}
 
 	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider) const
