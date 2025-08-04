@@ -140,6 +140,21 @@ namespace oly::col2d
 			handlers.erase(it_2);
 	}
 
+	size_t internal::CollisionDispatcher::add_tree(const math::Rect2D bounds, const glm::uvec2 degree, const size_t cell_capacity)
+	{
+		trees.emplace_back(bounds, degree, cell_capacity);
+		return trees.size() - 1;
+	}
+
+	void internal::CollisionDispatcher::clear()
+	{
+		trees.clear();
+		overlap_handlers.clear();
+		collision_handlers.clear();
+		contact_handlers.clear();
+		phase_tracker.clear();
+	}
+
 	void internal::CollisionDispatcher::poll() const
 	{
 		phase_tracker.flush();

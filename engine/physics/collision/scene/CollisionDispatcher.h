@@ -86,157 +86,49 @@ namespace oly::col2d
 		// TODO v3 remove soft references
 		class CollisionDispatcher
 		{
-			struct OverlapHandlerBase
-			{
-				ConstSoftReference<CollisionController> controller = nullptr;
-
-				OverlapHandlerBase(const SoftReference<CollisionController>& controller) : controller(controller) {}
-				OverlapHandlerBase(const ConstSoftReference<CollisionController>& controller) : controller(controller) {}
-				virtual ~OverlapHandlerBase() = default;
-
-				virtual void invoke(const OverlapEventData&) const = 0;
-				virtual const void* raw_handler() const = 0;
-
-				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
+#define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
+			{\
+				ConstSoftReference<CollisionController> controller = nullptr;\
+				Type##HandlerBase(const SoftReference<CollisionController>& controller) : controller(controller) {}\
+				Type##HandlerBase(const ConstSoftReference<CollisionController>& controller) : controller(controller) {}\
+				virtual ~Type##HandlerBase() = default;\
+				virtual void invoke(const Type##EventData&) const = 0;\
+				virtual const void* raw_handler() const = 0;\
+				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }\
+			};\
+			struct Type##HandlerRef : Type##HandlerBase\
+			{\
+				CollisionController::Type##Handler handler = nullptr;\
+				Type##HandlerRef(const SoftReference<CollisionController>& controller, CollisionController::Type##Handler handler)\
+					: Type##HandlerBase(controller), handler(handler) {}\
+				virtual void invoke(const Type##EventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }\
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }\
+			};\
+			struct Type##ConstHandlerRef : Type##HandlerBase\
+			{\
+				CollisionController::Type##ConstHandler handler = nullptr;\
+				Type##ConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::Type##ConstHandler handler)\
+					: Type##HandlerBase(controller), handler(handler) {}\
+				virtual void invoke(const Type##EventData& data) const override { (controller.get()->*handler)(data); }\
+				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }\
+			};\
+			struct Type##Hash\
+			{\
+				size_t operator()(const std::unique_ptr<Type##HandlerBase>& ptr) const { return ptr->hash(); }\
+			};\
+			struct Type##Equal\
+			{\
+				bool operator()(const std::unique_ptr<Type##HandlerBase>& a, const std::unique_ptr<Type##HandlerBase>& b) const\
+				{\
+					return a->controller == b->controller && a->raw_handler() == b->raw_handler();\
+				}\
 			};
 
-			struct OverlapHandlerRef : OverlapHandlerBase
-			{
-				CollisionController::OverlapHandler handler = nullptr;
+			DECLARE_HANDLER_REFS(Overlap);
+			DECLARE_HANDLER_REFS(Collision);
+			DECLARE_HANDLER_REFS(Contact);
 
-				OverlapHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::OverlapHandler handler) : OverlapHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const OverlapEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			struct OverlapConstHandlerRef : OverlapHandlerBase
-			{
-				CollisionController::OverlapConstHandler handler = nullptr;
-
-				OverlapConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::OverlapConstHandler handler) : OverlapHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const OverlapEventData& data) const override { (controller.get()->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			struct CollisionHandlerBase
-			{
-				ConstSoftReference<CollisionController> controller = nullptr;
-
-				CollisionHandlerBase(const SoftReference<CollisionController>& controller) : controller(controller) {}
-				CollisionHandlerBase(const ConstSoftReference<CollisionController>& controller) : controller(controller) {}
-				virtual ~CollisionHandlerBase() = default;
-
-				virtual void invoke(const CollisionEventData&) const = 0;
-				virtual const void* raw_handler() const = 0;
-
-				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
-			};
-
-			struct CollisionHandlerRef : CollisionHandlerBase
-			{
-				CollisionController::CollisionHandler handler = nullptr;
-
-				CollisionHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::CollisionHandler handler) : CollisionHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const CollisionEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			struct CollisionConstHandlerRef : CollisionHandlerBase
-			{
-				CollisionController::CollisionConstHandler handler = nullptr;
-
-				CollisionConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::CollisionConstHandler handler) : CollisionHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const CollisionEventData& data) const override { (controller.get()->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			struct ContactHandlerBase
-			{
-				ConstSoftReference<CollisionController> controller = nullptr;
-
-				ContactHandlerBase(const SoftReference<CollisionController>& controller) : controller(controller) {}
-				ContactHandlerBase(const ConstSoftReference<CollisionController>& controller) : controller(controller) {}
-				virtual ~ContactHandlerBase() = default;
-
-				virtual void invoke(const ContactEventData&) const = 0;
-				virtual const void* raw_handler() const = 0;
-
-				size_t hash() const { return std::hash<const void*>{}(raw_handler()) ^ controller.hash(); }
-			};
-
-			struct ContactHandlerRef : ContactHandlerBase
-			{
-				CollisionController::ContactHandler handler = nullptr;
-
-				ContactHandlerRef(const SoftReference<CollisionController>& controller, CollisionController::ContactHandler handler) : ContactHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const ContactEventData& data) const override { (const_cast<CollisionController*>(controller.get())->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			struct ContactConstHandlerRef : ContactHandlerBase
-			{
-				CollisionController::ContactConstHandler handler = nullptr;
-
-				ContactConstHandlerRef(const ConstSoftReference<CollisionController>& controller, CollisionController::ContactConstHandler handler) : ContactHandlerBase(controller), handler(handler) {}
-
-				virtual void invoke(const ContactEventData& data) const override { (controller.get()->*handler)(data); }
-				virtual const void* raw_handler() const override { return reinterpret_cast<const void*>(&handler); }
-			};
-
-			template<typename T>
-			struct HandlerRefHash
-			{
-				size_t operator()(const T& v) const
-				{
-					return std::visit([](const auto& v) {
-						return std::hash<const void*>{}(reinterpret_cast<const void*>(&v.handler)) ^ std::hash<decltype(v.controller)>{}(v.controller);
-						}, v);
-				}
-			};
-
-			struct OverlapHash
-			{
-				size_t operator()(const std::unique_ptr<OverlapHandlerBase>& ptr) const { return ptr->hash(); }
-			};
-
-			struct OverlapEqual
-			{
-				bool operator()(const std::unique_ptr<OverlapHandlerBase>& a, const std::unique_ptr<OverlapHandlerBase>& b) const
-				{
-					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
-				}
-			};
-
-			struct CollisionHash
-			{
-				size_t operator()(const std::unique_ptr<CollisionHandlerBase>& ptr) const { return ptr->hash(); }
-			};
-
-			struct CollisionEqual
-			{
-				bool operator()(const std::unique_ptr<CollisionHandlerBase>& a, const std::unique_ptr<CollisionHandlerBase>& b) const
-				{
-					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
-				}
-			};
-
-			struct ContactHash
-			{
-				size_t operator()(const std::unique_ptr<ContactHandlerBase>& ptr) const { return ptr->hash(); }
-			};
-
-			struct ContactEqual
-			{
-				bool operator()(const std::unique_ptr<ContactHandlerBase>& a, const std::unique_ptr<ContactHandlerBase>& b) const
-				{
-					return a->controller == b->controller && a->raw_handler() == b->raw_handler();
-				}
-			};
+#undef DECLARE_HANDLER_REFS
 
 			friend struct CollisionController;
 
@@ -250,16 +142,10 @@ namespace oly::col2d
 		public:
 			CollisionDispatcher() = default;
 
-			void add_tree(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4)
-			{
-				trees.emplace_back(bounds, degree, cell_capacity);
-			}
-
-			void clear() { trees.clear(); overlap_handlers.clear(); collision_handlers.clear(); contact_handlers.clear(); phase_tracker.clear(); }
-
+			size_t add_tree(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4);
 			const CollisionTree& get_tree(size_t i = 0) const { return trees[i]; }
-
 			void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
+			void clear();
 
 			void unregister_overlap_handlers(const ConstSoftReference<Collider>& collider) { overlap_handlers.erase(collider); }
 			void unregister_collision_handlers(const ConstSoftReference<Collider>& collider) { collision_handlers.erase(collider); }
@@ -268,7 +154,7 @@ namespace oly::col2d
 
 			// call poll() after all collision objects have moved, but before handling events
 			void poll() const;
-			void clean();
+			void clean(); // TODO v3 remove clean() once all soft references are removed
 
 			void emit(const Collider& from);
 		};
