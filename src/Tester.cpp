@@ -152,7 +152,7 @@ int main()
 	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
+	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE; // TODO v3 collider is not colliding with M_OBSTACLE
 	obstacle0->collider().set_local().position = -capsule.center;
 	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
