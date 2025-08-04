@@ -57,11 +57,21 @@ namespace oly::col2d
 			return std::unique_ptr<CollisionNode>(new CollisionNode(tree, bounds));
 		}
 
+		// TODO v3
+		//ContiguousSet<const Collider*> CollisionNode::set_colliders()
+		//{
+		//	tree->invalidate_iterators();
+		//	return _colliders;
+		//}
+
 		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
 		{
-			colliders.erase(&collider);
-			node = nullptr;
-			insert_upwards(collider, node);
+			if (!collider.quad_wrap.strict_inside(bounds) && parent)
+			{
+				colliders.erase(&collider);
+				node = nullptr;
+				parent->insert_upwards(collider, node);
+			}
 		}
 
 		void CollisionNode::insert_upwards(const Collider& collider, CollisionNode*& node)
@@ -214,20 +224,27 @@ namespace oly::col2d
 
 	void CollisionTree::flush_update_colliders() const
 	{
-		BFSIterator it(root.get());
-		while (internal::CollisionNode* node = it.next())
+		// BFS
+		std::queue<internal::CollisionNode*> nodes;
+		nodes.push(root.get());
+		while (!nodes.empty())
 		{
+			internal::CollisionNode* node = nodes.front();
+			nodes.pop();
+
+			for (const Collider* collider : node->colliders)
+				collider->flush();
+
 			size_t i = 0;
 			while (i < node->colliders.size())
 			{
-				if (const Collider* collider = node->colliders[i])
-				{
-					collider->flush();
-					++i;
-				}
-				else
-					node->colliders.remove(i);
+				node->colliders[i]->flush();
+				++i;
 			}
+
+			for (std::unique_ptr<internal::CollisionNode>& subnode : node->subnodes)
+				if (internal::CollisionNode* sub = subnode.get())
+					nodes.push(sub);
 		}
 	}
 
@@ -307,14 +324,27 @@ namespace oly::col2d
 		}
 	}
 
+	void CollisionTree::invalidate_iterators() const
+	{
+		while (!bfs_collider_iterators.empty())
+			(*bfs_collider_iterators.begin())->invalidate();
+		while (!pair_iterators.empty())
+			(*bfs_collider_iterators.begin())->invalidate();
+	}
+
 	CollisionTree::BFSColliderIterator CollisionTree::query(const Collider& collider) const
 	{
-		return BFSColliderIterator(root.get(), collider.quad_wrap);
+		return BFSColliderIterator(*this, collider.quad_wrap);
 	}
 
 	CollisionTree::BFSColliderIterator CollisionTree::query(const math::Rect2D bounds) const
 	{
-		return BFSColliderIterator(root.get(), bounds);
+		return BFSColliderIterator(*this, bounds);
+	}
+
+	CollisionTree::PairIterator CollisionTree::iterator() const
+	{
+		return PairIterator(*this, root->bounds);
 	}
 
 	void CollisionTree::set_bounds(math::Rect2D bounds)
@@ -322,26 +352,76 @@ namespace oly::col2d
 		root->set_bounds(bounds);
 	}
 
-	internal::CollisionNode* CollisionTree::BFSIterator::next()
+	CollisionTree::BFSColliderIterator::BFSColliderIterator(const CollisionTree& tree, const math::Rect2D bounds)
+		: tree(&tree), bounds(bounds)
 	{
-		if (nodes.empty())
-			return nullptr;
-
-		internal::CollisionNode* node = nodes.front();
-		nodes.pop();
-
-		for (std::unique_ptr<internal::CollisionNode>& subnode : node->subnodes)
-			if (internal::CollisionNode* sub = subnode.get())
-				nodes.push(sub);
-
-		return node;
+		tree.bfs_collider_iterators.insert(this);
+		nodes.push(tree.root.get());
+		increment_current();
 	}
 
-	CollisionTree::BFSColliderIterator::BFSColliderIterator(const internal::CollisionNode* root, const math::Rect2D bounds)
-		: bounds(bounds)
+	CollisionTree::BFSColliderIterator::BFSColliderIterator(const BFSColliderIterator& other)
+		: tree(other.tree), bounds(other.bounds), nodes(other.nodes), i(other.i), current(other.current)
 	{
-		nodes.push(root);
-		increment_current();
+		if (tree)
+			tree->bfs_collider_iterators.insert(this);
+	}
+
+	CollisionTree::BFSColliderIterator::BFSColliderIterator(BFSColliderIterator&& other)
+		: tree(other.tree), bounds(other.bounds), nodes(std::move(other.nodes)), i(other.i), current(other.current)
+	{
+		if (tree)
+		{
+			tree->bfs_collider_iterators.erase(&other);
+			other.tree = nullptr;
+			tree->bfs_collider_iterators.insert(this);
+		}
+	}
+
+	CollisionTree::BFSColliderIterator::~BFSColliderIterator()
+	{
+		if (tree)
+			tree->bfs_collider_iterators.erase(this);
+	}
+
+	CollisionTree::BFSColliderIterator& CollisionTree::BFSColliderIterator::operator=(const BFSColliderIterator& other)
+	{
+		if (this != &other)
+		{
+			if (tree)
+				tree->bfs_collider_iterators.erase(this);
+			tree = other.tree;
+			if (tree)
+				tree->bfs_collider_iterators.insert(this);
+
+			bounds = other.bounds;
+			nodes = other.nodes;
+			i = other.i;
+			current = other.current;
+		}
+		return *this;
+	}
+
+	CollisionTree::BFSColliderIterator& CollisionTree::BFSColliderIterator::operator=(BFSColliderIterator&& other)
+	{
+		if (this != &other)
+		{
+			if (tree)
+				tree->bfs_collider_iterators.erase(this);
+			tree = other.tree;
+			if (tree)
+			{
+				tree->bfs_collider_iterators.erase(&other);
+				other.tree = nullptr;
+				tree->bfs_collider_iterators.insert(this);
+			}
+
+			bounds = other.bounds;
+			nodes = std::move(other.nodes);
+			i = other.i;
+			current = other.current;
+		}
+		return *this;
 	}
 
 	void CollisionTree::BFSColliderIterator::set(const BFSColliderIterator& other)
@@ -373,15 +453,93 @@ namespace oly::col2d
 
 	const Collider* CollisionTree::BFSColliderIterator::next()
 	{
+		assert_valid();
 		const Collider* og = current;
 		increment_current();
 		return og;
 	}
 
-	CollisionTree::PairIterator::PairIterator(internal::CollisionNode* node, const math::Rect2D bounds)
-		: first(node, bounds), second(bounds)
+	void CollisionTree::BFSColliderIterator::assert_valid() const
 	{
+		if (!tree)
+			throw Error(ErrorCode::INVALID_ITERATOR);
+	}
+
+	void CollisionTree::BFSColliderIterator::invalidate() const
+	{
+		tree->bfs_collider_iterators.erase(this);
+		tree = nullptr;
+	}
+
+	CollisionTree::PairIterator::PairIterator(const CollisionTree& tree, const math::Rect2D bounds)
+		: tree(&tree), first(tree, bounds), second(bounds)
+	{
+		second.tree = &tree;
+		tree.bfs_collider_iterators.insert(&second);
+		tree.pair_iterators.insert(this);
 		increment_current();
+	}
+
+	CollisionTree::PairIterator::PairIterator(const PairIterator& other)
+		: tree(other.tree), first(other.first), second(other.second), current(other.current)
+	{
+		if (tree)
+			tree->pair_iterators.insert(this);
+	}
+
+	CollisionTree::PairIterator::PairIterator(PairIterator&& other)
+		: tree(other.tree), first(std::move(other.first)), second(std::move(other.second)), current(other.current)
+	{
+		if (tree)
+		{
+			tree->pair_iterators.erase(&other);
+			other.tree = nullptr;
+			tree->pair_iterators.insert(this);
+		}
+	}
+
+	CollisionTree::PairIterator::~PairIterator()
+	{
+		if (tree)
+			tree->pair_iterators.erase(this);
+	}
+
+	CollisionTree::PairIterator& CollisionTree::PairIterator::operator=(const PairIterator& other)
+	{
+		if (this != &other)
+		{
+			if (tree)
+				tree->pair_iterators.erase(this);
+			tree = other.tree;
+			if (tree)
+				tree->pair_iterators.insert(this);
+
+			first = other.first;
+			second = other.second;
+			current = other.current;
+		}
+		return *this;
+	}
+
+	CollisionTree::PairIterator& CollisionTree::PairIterator::operator=(PairIterator&& other)
+	{
+		if (this != &other)
+		{
+			if (tree)
+				tree->pair_iterators.erase(this);
+			tree = other.tree;
+			if (tree)
+			{
+				tree->pair_iterators.erase(&other);
+				other.tree = nullptr;
+				tree->pair_iterators.insert(this);
+			}
+
+			first = std::move(other.first);
+			second = std::move(other.second);
+			current = other.current;
+		}
+		return *this;
 	}
 
 	void CollisionTree::PairIterator::increment_current()
@@ -403,8 +561,21 @@ namespace oly::col2d
 
 	CollisionTree::PairIterator::ColliderPtrPair CollisionTree::PairIterator::next()
 	{
+		assert_valid();
 		ColliderPtrPair og = current;
 		increment_current();
 		return og;
+	}
+
+	void CollisionTree::PairIterator::assert_valid() const
+	{
+		if (!tree)
+			throw Error(ErrorCode::INVALID_ITERATOR);
+	}
+
+	void CollisionTree::PairIterator::invalidate() const
+	{
+		tree->pair_iterators.erase(this);
+		tree = nullptr;
 	}
 }
