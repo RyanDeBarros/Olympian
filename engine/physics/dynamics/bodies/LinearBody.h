@@ -98,9 +98,6 @@ namespace oly::physics
 
 	class LinearBody : public RigidBody
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(LinearBody);
-
-	private:
 		LinearPhysicsComponent dynamics;
 
 	public:

@@ -12,16 +12,11 @@ namespace oly
 	struct InputController
 	{
 		InputController();
-		InputController(const InputController&);
-		InputController(InputController&&) noexcept;
+		InputController(const InputController&) = delete;
+		InputController(InputController&&) noexcept = delete;
 		virtual ~InputController();
-		InputController& operator=(const InputController&);
-		InputController& operator=(InputController&&) noexcept;
 
 	private:
-		void move_controller(InputController&&) const;
-		void erase_controller() const;
-
 		void insert_signal(input::SignalID) const;
 		void erase_signal(input::SignalID) const;
 
@@ -51,6 +46,4 @@ namespace oly
 		template<std::derived_from<InputController> Controller>
 		void bind_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal) const) const { bind_mapping(mapping, static_cast<ConstHandler>(handler)); }
 	};
-
-#define OLY_INPUT_CONTROLLER_HEADER(Class) OLY_SOFT_REFERENCE_PUBLIC(Class)
 }

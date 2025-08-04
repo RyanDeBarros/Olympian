@@ -10,10 +10,10 @@ namespace oly::col2d
 
 	struct CollisionController
 	{
-		OLY_SOFT_REFERENCE_BASE_DECLARATION(CollisionController);
-
-	public:
-		virtual ~CollisionController() = default;
+		CollisionController();
+		CollisionController(const CollisionController&) = delete;
+		CollisionController(CollisionController&&) noexcept = delete;
+		virtual ~CollisionController();
 
 		using OverlapHandler = void(CollisionController::*)(const OverlapEventData&);
 		using OverlapConstHandler = void(CollisionController::*)(const OverlapEventData&) const;
@@ -84,6 +84,4 @@ namespace oly::col2d
 		template<std::derived_from<CollisionController> Controller>
 		void emit(const Collider& from, void(Controller::* only_handler)(const ContactEventData&) const) const { emit(from, static_cast<ContactConstHandler>(only_handler)); }
 	};
-
-#define OLY_COLLISION_CONTROLLER_HEADER(Class) OLY_SOFT_REFERENCE_PUBLIC(Class)
 }

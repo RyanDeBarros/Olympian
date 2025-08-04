@@ -153,9 +153,6 @@ namespace oly::physics
 
 	class KinematicBody : public RigidBody
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(KinematicBody);
-
-	private:
 		KinematicPhysicsComponent dynamics;
 
 	public:

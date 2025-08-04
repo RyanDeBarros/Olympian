@@ -294,7 +294,7 @@ namespace oly
 
 				friend struct InputController;
 				std::unordered_map<input::SignalID, std::unique_ptr<ControllerHandler>> handler_map;
-				std::unordered_map<const InputController*, std::unordered_set<input::SignalID>> controller_signals;
+				std::unordered_map<const InputController*, std::unordered_set<input::SignalID>> controller_lut;
 
 			public:
 				InputBindingContext(unsigned int num_gamepads);

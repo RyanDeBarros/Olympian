@@ -139,6 +139,7 @@ namespace oly::physics
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			bind(*it);
 	}
+
 	void RigidBody::unbind_all() const
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)

@@ -10,6 +10,9 @@ namespace oly
 	{
 		T* _ptr = nullptr;
 
+		template<typename>
+		friend class CopyPtr;
+
 	public:
 		CopyPtr() = default;
 

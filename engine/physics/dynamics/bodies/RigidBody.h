@@ -13,8 +13,6 @@ namespace oly::physics
 
 	class RigidBody : public col2d::CollisionController
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(RigidBody);
-
 	protected:
 		std::vector<col2d::Collider> colliders;
 		Transformer2D transformer;

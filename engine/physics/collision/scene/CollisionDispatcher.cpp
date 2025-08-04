@@ -149,13 +149,57 @@ namespace oly::col2d
 	void internal::CollisionDispatcher::clear()
 	{
 		trees.clear();
-		overlap_handlers.clear();
-		collision_handlers.clear();
-		contact_handlers.clear();
+		
+		overlap_handler_map.clear();
+		collision_handler_map.clear();
+		contact_handler_map.clear();
+		
+		overlap_controller_lut.clear();
+		collision_controller_lut.clear();
+		contact_controller_lut.clear();
+		
 		phase_tracker.clear();
 	}
 
-	void internal::CollisionDispatcher::poll() const
+	template<typename Map, typename LUT>
+	static void unregister_handlers_impl(const ConstSoftReference<Collider>& collider, Map& map, LUT& lut)
+	{
+		auto it = map.find(collider);
+		if (it != map.end())
+		{
+			auto& handlers = it->second;
+			for (auto& ref : handlers)
+			{
+				auto& lut_set = lut.find(ref->controller)->second;
+				lut_set.erase(std::make_pair(collider, ref->clone()));
+			}
+			map.erase(it);
+		}
+	}
+
+	void internal::CollisionDispatcher::unregister_overlap_handlers(const ConstSoftReference<Collider>& collider)
+	{
+		unregister_handlers_impl(collider, overlap_handler_map, overlap_controller_lut);
+	}
+
+	void internal::CollisionDispatcher::unregister_collision_handlers(const ConstSoftReference<Collider>& collider)
+	{
+		unregister_handlers_impl(collider, collision_handler_map, collision_controller_lut);
+	}
+
+	void internal::CollisionDispatcher::unregister_contact_handlers(const ConstSoftReference<Collider>& collider)
+	{
+		unregister_handlers_impl(collider, contact_handler_map, contact_controller_lut);
+	}
+
+	void internal::CollisionDispatcher::unregister_handlers(const ConstSoftReference<Collider>& collider)
+	{
+		unregister_overlap_handlers(collider);
+		unregister_collision_handlers(collider);
+		unregister_contact_handlers(collider);
+	}
+
+	void internal::CollisionDispatcher::poll()
 	{
 		phase_tracker.flush();
 		for (const CollisionTree& tree : trees)
@@ -165,42 +209,41 @@ namespace oly::col2d
 			while (!it.done())
 			{
 				auto pair = it.next();
-				dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handlers, &Collider::overlaps, phase_tracker);
-				dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handlers, &Collider::collides, phase_tracker);
-				dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handlers, &Collider::contacts, phase_tracker);
+				dispatch<OverlapResult, OverlapEventData>(pair.first, pair.second, overlap_handler_map, &Collider::overlaps, phase_tracker);
+				dispatch<CollisionResult, CollisionEventData>(pair.first, pair.second, collision_handler_map, &Collider::collides, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(pair.first, pair.second, contact_handler_map, &Collider::contacts, phase_tracker);
 			}
 		}
 	}
 
-	template<typename HandlerRef>
-	static void clean_handlers(std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers)
+	template<typename HandlerMap, typename LUT>
+	static void clean_handlers(HandlerMap& handlers, LUT& lut)
 	{
 		for (auto it = handlers.begin(); it != handlers.end(); )
 		{
 			if (it->first)
-			{
-				for (auto inner_it = it->second.begin(); inner_it != it->second.end(); )
-				{
-					if ((*inner_it)->controller)
-						++inner_it;
-					else
-						inner_it = it->second.erase(inner_it);
-				}
-				if (it->second.empty())
-					it = handlers.erase(it);
-				else
-					++it;
-			}
+				++it;
 			else
 				it = handlers.erase(it);
+		}
+
+		for (auto it = lut.begin(); it != lut.end(); ++it)
+		{
+			for (auto inner_it = it->second.begin(); inner_it != it->second.end(); )
+			{
+				if (inner_it->first)
+					++inner_it;
+				else
+					inner_it = it->second.erase(inner_it);
+			}
 		}
 	}
 
 	void internal::CollisionDispatcher::clean()
 	{
-		clean_handlers(overlap_handlers);
-		clean_handlers(collision_handlers);
-		clean_handlers(contact_handlers);
+		clean_handlers(overlap_handler_map, overlap_controller_lut);
+		clean_handlers(collision_handler_map, collision_controller_lut);
+		clean_handlers(contact_handler_map, contact_controller_lut);
 	}
 
 	void internal::CollisionDispatcher::emit(const Collider& from)
@@ -212,9 +255,9 @@ namespace oly::col2d
 			while (!it.done())
 			{
 				ConstSoftReference<Collider> c2 = it.next();
-				dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handlers, &Collider::overlaps, phase_tracker);
-				dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handlers, &Collider::collides, phase_tracker);
-				dispatch<ContactResult, ContactEventData>(c1, c2, contact_handlers, &Collider::contacts, phase_tracker);
+				dispatch<OverlapResult, OverlapEventData>(c1, c2, overlap_handler_map, &Collider::overlaps, phase_tracker);
+				dispatch<CollisionResult, CollisionEventData>(c1, c2, collision_handler_map, &Collider::collides, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(c1, c2, contact_handler_map, &Collider::contacts, phase_tracker);
 			}
 		}
 	}

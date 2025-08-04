@@ -6,9 +6,6 @@ namespace oly::physics
 {
 	class StaticBody : public RigidBody
 	{
-		OLY_COLLISION_CONTROLLER_HEADER(StaticBody);
-
-	private:
 		DynamicsComponent dynamics;
 
 	public:

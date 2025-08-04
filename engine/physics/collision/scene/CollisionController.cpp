@@ -5,137 +5,119 @@
 
 namespace oly::col2d
 {
+	CollisionController::CollisionController()
+	{
+		context::collision_dispatcher().overlap_controller_lut[this];
+		context::collision_dispatcher().collision_controller_lut[this];
+		context::collision_dispatcher().contact_controller_lut[this];
+	}
+	
+	template<typename LUT, typename Map>
+	static void remove_controller(const CollisionController& controller, LUT& lut, Map& map)
+	{
+		auto it = lut.find(&controller);
+		if (it != lut.end())
+		{
+			auto& lut_set = lut.find(&controller)->second;
+			for (const auto& [collider, ref] : lut_set)
+			{
+				auto& handlers = map.find(collider)->second;
+				handlers.erase(ref);
+				if (handlers.empty())
+					map.erase(collider);
+			}
+			lut.erase(it);
+		}
+	}
+
+	CollisionController::~CollisionController()
+	{
+		auto& dispatcher = context::collision_dispatcher();
+		remove_controller(*this, dispatcher.overlap_controller_lut, dispatcher.overlap_handler_map);
+		remove_controller(*this, dispatcher.collision_controller_lut, dispatcher.collision_handler_map);
+		remove_controller(*this, dispatcher.contact_controller_lut, dispatcher.contact_handler_map);
+	}
+
+#define BIND_HANDLER(Type, type)\
+		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
+		dispatcher.type##_handler_map[collider].insert(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));
+
+#define UNBIND_HANDLER(Type, type)\
+		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
+		auto it = dispatcher.type##_handler_map.find(collider);\
+		if (it != dispatcher.type##_handler_map.end())\
+		{\
+			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));\
+			if (inner_it != it->second.end())\
+			{\
+				it->second.erase(inner_it);\
+				if (it->second.empty())\
+					dispatcher.type##_handler_map.erase(it);\
+			}\
+		}
+
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, OverlapHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.overlap_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::OverlapHandlerRef>(ref(), handler));
+		BIND_HANDLER(Overlap, overlap);
 	}
 
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.overlap_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::OverlapConstHandlerRef>(cref(), handler));
+		BIND_HANDLER(OverlapConst, overlap);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, OverlapHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.overlap_handlers.find(collider);
-		if (it != dispatcher.overlap_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::OverlapHandlerRef>(ref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.overlap_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(Overlap, overlap);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.overlap_handlers.find(collider);
-		if (it != dispatcher.overlap_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::OverlapConstHandlerRef>(cref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.overlap_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(OverlapConst, overlap);
 	}
 
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, CollisionHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.collision_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::CollisionHandlerRef>(ref(), handler));
+		BIND_HANDLER(Collision, collision);
 	}
 
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.collision_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::CollisionConstHandlerRef>(cref(), handler));
+		BIND_HANDLER(CollisionConst, collision);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, CollisionHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.collision_handlers.find(collider);
-		if (it != dispatcher.collision_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::CollisionHandlerRef>(ref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.collision_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(Collision, collision);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.collision_handlers.find(collider);
-		if (it != dispatcher.collision_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::CollisionConstHandlerRef>(cref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.collision_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(CollisionConst, collision);
 	}
 
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, ContactHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.contact_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::ContactHandlerRef>(ref(), handler));
+		BIND_HANDLER(Contact, contact);
 	}
 
 	void CollisionController::bind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		dispatcher.contact_handlers[collider].insert(std::make_unique<internal::CollisionDispatcher::ContactConstHandlerRef>(cref(), handler));
+		BIND_HANDLER(ContactConst, contact);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, ContactHandler handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.contact_handlers.find(collider);
-		if (it != dispatcher.contact_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::ContactHandlerRef>(ref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.contact_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(Contact, contact);
 	}
 
 	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
-		auto it = dispatcher.contact_handlers.find(collider);
-		if (it != dispatcher.contact_handlers.end())
-		{
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::ContactConstHandlerRef>(cref(), handler));
-			if (inner_it != it->second.end())
-			{
-				it->second.erase(inner_it);
-				if (it->second.empty())
-					dispatcher.contact_handlers.erase(it);
-			}
-		}
+		UNBIND_HANDLER(ContactConst, contact);
 	}
+
+#undef BIND_HANDLER
+#undef UNBIND_HANDLER
 
 	template<typename Result, typename EventData, typename Handler>
 	static void emit_from(const std::vector<CollisionTree>& trees, const Collider& from, Handler only_handler, CollisionController& only_controller,
