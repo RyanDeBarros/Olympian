@@ -17,6 +17,10 @@ namespace oly::context
 
 		platform::WRViewport wr_viewport;
 		platform::WRDrawer wr_drawer;
+
+		std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
+		input::SignalTable signal_table;
+		input::SignalMappingTable signal_mapping_table;
 	}
 
 	void internal::init_platform(const TOMLNode& node)
@@ -64,6 +68,7 @@ namespace oly::context
 		}
 
 		platform_setup.num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
+		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::initial_window_size = platform_setup.window_size();
 		internal::platform = platform::internal::create_platform(platform_setup);
@@ -82,6 +87,7 @@ namespace oly::context
 	void internal::terminate_platform()
 	{
 		internal::platform.reset();
+		internal::input_binding_context.reset();
 	}
 
 	bool internal::frame_platform()
@@ -141,5 +147,30 @@ namespace oly::context
 	glm::vec2 get_cursor_view_pos()
 	{
 		return get_cursor_screen_pos() / get_view_stretch();
+	}
+
+	input::internal::InputBindingContext& input_binding_context()
+	{
+		return *internal::input_binding_context;
+	}
+
+	input::SignalTable& signal_table()
+	{
+		return internal::signal_table;
+	}
+
+	input::SignalMappingTable& signal_mapping_table()
+	{
+		return internal::signal_mapping_table;
+	}
+
+	void assign_signal_mapping(const std::string& mapping_name, std::vector<std::string>&& signal_names)
+	{
+		internal::signal_mapping_table[mapping_name] = std::move(signal_names);
+	}
+
+	void unassign_signal_mapping(const std::string& mapping_name)
+	{
+		internal::signal_mapping_table.erase(mapping_name);
 	}
 }

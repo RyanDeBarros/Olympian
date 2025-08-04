@@ -33,6 +33,8 @@
 
 namespace oly
 {
-	using context::get_platform;
 	using rendering::Sprite;
+	
+	inline platform::Window& context_window() { return context::get_platform().window(); }
+	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 }

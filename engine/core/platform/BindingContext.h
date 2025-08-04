@@ -4,14 +4,30 @@
 #include "core/platform/Gamepad.h"
 #include "core/platform/WindowEvents.h"
 
+#include <vector>
+
 namespace oly
 {
+	namespace internal
+	{
+		class InputBindingContext;
+	}
+
 	class InputController
 	{
 		OLY_SOFT_REFERENCE_BASE_DECLARATION(InputController);
 
+	private:
+		friend class internal::InputBindingContext;
+		std::vector<input::SignalID> signals;
+
 	public:
-		virtual ~InputController() = default;
+		InputController();
+		InputController(const InputController&);
+		InputController(InputController&&) noexcept;
+		virtual ~InputController();
+		InputController& operator=(const InputController&);
+		InputController& operator=(InputController&&) noexcept;
 
 		using Handler = bool(InputController::*)(input::Signal);
 		using ConstHandler = bool(InputController::*)(input::Signal) const;
@@ -19,6 +35,11 @@ namespace oly
 
 #define OLY_INPUT_CONTROLLER_HEADER(Class)\
 	OLY_SOFT_REFERENCE_PUBLIC(Class)
+
+	namespace platform
+	{
+		class Platform;
+	}
 
 	namespace input
 	{
@@ -212,101 +233,102 @@ namespace oly
 
 			bool operator==(const ScrollBinding&) const = default;
 		};
-	}
 
-	namespace platform
-	{
-		class InputBindingContext : public EventHandler<input::KeyEventData>, public EventHandler<input::MouseButtonEventData>,
-			public EventHandler<input::CursorPosEventData>, public EventHandler<input::ScrollEventData>
+		namespace internal
 		{
+			class InputBindingContext : public EventHandler<input::KeyEventData>, public EventHandler<input::MouseButtonEventData>,
+				public EventHandler<input::CursorPosEventData>, public EventHandler<input::ScrollEventData>
+			{
 #define BINDING_STRUCTURE(Binding) std::unordered_map<input::SignalID, std::vector<Binding>>
 
-			BINDING_STRUCTURE(input::KeyBinding) key_bindings;
-			BINDING_STRUCTURE(input::MouseButtonBinding) mb_bindings;
-			BINDING_STRUCTURE(input::GamepadButtonBinding) gmpd_button_bindings;
-			BINDING_STRUCTURE(input::GamepadAxis1DBinding) gmpd_axis_1d_bindings;
-			BINDING_STRUCTURE(input::GamepadAxis2DBinding) gmpd_axis_2d_bindings;
-			BINDING_STRUCTURE(input::CursorPosBinding) cpos_bindings;
-			BINDING_STRUCTURE(input::ScrollBinding) scroll_bindings;
+				BINDING_STRUCTURE(input::KeyBinding) key_bindings;
+				BINDING_STRUCTURE(input::MouseButtonBinding) mb_bindings;
+				BINDING_STRUCTURE(input::GamepadButtonBinding) gmpd_button_bindings;
+				BINDING_STRUCTURE(input::GamepadAxis1DBinding) gmpd_axis_1d_bindings;
+				BINDING_STRUCTURE(input::GamepadAxis2DBinding) gmpd_axis_2d_bindings;
+				BINDING_STRUCTURE(input::CursorPosBinding) cpos_bindings;
+				BINDING_STRUCTURE(input::ScrollBinding) scroll_bindings;
 
 #undef BINDING_STRUCTURE
 
-			struct CallbackPoll
-			{
-				double callback_time = 0.0;
-				bool moving = false;
-			};
-			CallbackPoll cpos_poll, scroll_poll;
+				struct CallbackPoll
+				{
+					double callback_time = 0.0;
+					bool moving = false;
+				};
+				CallbackPoll cpos_poll, scroll_poll;
 
-			struct ButtonPoll
-			{
-				int action = GLFW_RELEASE;
-			};
-			struct Axis1DPoll
-			{
-				float axis = 0.0f;
-				bool moving = false;
-			};
-			struct Axis2DPoll
-			{
-				glm::vec2 axis = { 0.0f, 0.0f };
-				bool moving = false;
-			};
-			struct GamepadPoll
-			{
-				std::array<ButtonPoll, input::GamepadButton::LAST + 1> button_polls;
-				std::array<Axis1DPoll, input::GamepadAxis1D::LAST + 1> axis_1d_polls;
-				std::array<Axis2DPoll, input::GamepadAxis2D::LAST + 1> axis_2d_polls;
-			};
-			FixedVector<GamepadPoll> gamepad_polls;
+				struct ButtonPoll
+				{
+					int action = GLFW_RELEASE;
+				};
+				struct Axis1DPoll
+				{
+					float axis = 0.0f;
+					bool moving = false;
+				};
+				struct Axis2DPoll
+				{
+					glm::vec2 axis = { 0.0f, 0.0f };
+					bool moving = false;
+				};
+				struct GamepadPoll
+				{
+					std::array<ButtonPoll, input::GamepadButton::LAST + 1> button_polls;
+					std::array<Axis1DPoll, input::GamepadAxis1D::LAST + 1> axis_1d_polls;
+					std::array<Axis2DPoll, input::GamepadAxis2D::LAST + 1> axis_2d_polls;
+				};
+				FixedVector<GamepadPoll> gamepad_polls;
 
-			// TODO v3 don't use soft references. InputController base class should implement node system with binding context.
-			
-			struct ControllerHandler
-			{
-				virtual ~ControllerHandler() = default;
+				// TODO v3 don't use soft references. InputController base class should implement node system with binding context.
 
-				virtual const InputController* get_controller() const = 0;
-				virtual bool invoke(input::Signal) const = 0;
-			};
+				struct ControllerHandler
+				{
+					virtual ~ControllerHandler() = default;
 
-			struct HandlerRef : ControllerHandler
-			{
-				InputController::Handler handler = nullptr;
-				SoftReference<InputController> controller = nullptr;
+					virtual const InputController* get_controller() const = 0;
+					virtual bool invoke(input::Signal) const = 0;
+				};
 
-				HandlerRef(InputController::Handler handler, const SoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+				struct HandlerRef : ControllerHandler
+				{
+					InputController::Handler handler = nullptr;
+					SoftReference<InputController> controller = nullptr;
 
-				const InputController* get_controller() const override { return controller.get(); }
-				bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
-			};
-			
-			struct ConstHandlerRef : ControllerHandler
-			{
-				InputController::ConstHandler handler = nullptr;
-				ConstSoftReference<InputController> controller = nullptr;
+					HandlerRef(InputController::Handler handler, const SoftReference<InputController>& controller) : handler(handler), controller(controller) {}
 
-				ConstHandlerRef(InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+					const InputController* get_controller() const override { return controller.get(); }
+					bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
+				};
 
-				const InputController* get_controller() const override { return controller.get(); }
-				bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
-			};
+				struct ConstHandlerRef : ControllerHandler
+				{
+					InputController::ConstHandler handler = nullptr;
+					ConstSoftReference<InputController> controller = nullptr;
 
-			std::unordered_map<input::SignalID, std::unique_ptr<ControllerHandler>> handler_map;
+					ConstHandlerRef(InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) : handler(handler), controller(controller) {}
 
-			friend class Platform;
-			InputBindingContext(unsigned int num_gamepads);
-			InputBindingContext(const InputBindingContext&) = delete;
-			InputBindingContext(InputBindingContext&&) = delete;
+					const InputController* get_controller() const override { return controller.get(); }
+					bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
+				};
 
-			void attach_key(EventHandler<input::KeyEventData>* parent) { EventHandler<input::KeyEventData>::attach(parent); }
-			void attach_mouse_button(EventHandler<input::MouseButtonEventData>* parent) { EventHandler<input::MouseButtonEventData>::attach(parent); }
-			void attach_cursor_pos(EventHandler<input::CursorPosEventData>* parent) { EventHandler<input::CursorPosEventData>::attach(parent); }
-			void attach_scroll(EventHandler<input::ScrollEventData>* parent) { EventHandler<input::ScrollEventData>::attach(parent); }
-			void detach_key() { EventHandler<input::KeyEventData>::detach(); }
-			void detach_mouse_button() { EventHandler<input::MouseButtonEventData>::detach(); }
-			void detach_cusor_pos() { EventHandler<input::CursorPosEventData>::detach(); }
-			void detach_scroll() { EventHandler<input::ScrollEventData>::detach(); }
+				std::unordered_map<input::SignalID, std::unique_ptr<ControllerHandler>> handler_map;
+
+			public:
+				InputBindingContext(unsigned int num_gamepads);
+				InputBindingContext(const InputBindingContext&) = delete;
+				InputBindingContext(InputBindingContext&&) = delete;
+
+			private:
+				friend class platform::Platform;
+				void attach_key(EventHandler<input::KeyEventData>* parent) { EventHandler<input::KeyEventData>::attach(parent); }
+				void attach_mouse_button(EventHandler<input::MouseButtonEventData>* parent) { EventHandler<input::MouseButtonEventData>::attach(parent); }
+				void attach_cursor_pos(EventHandler<input::CursorPosEventData>* parent) { EventHandler<input::CursorPosEventData>::attach(parent); }
+				void attach_scroll(EventHandler<input::ScrollEventData>* parent) { EventHandler<input::ScrollEventData>::attach(parent); }
+				void detach_key() { EventHandler<input::KeyEventData>::detach(); }
+				void detach_mouse_button() { EventHandler<input::MouseButtonEventData>::detach(); }
+				void detach_cusor_pos() { EventHandler<input::CursorPosEventData>::detach(); }
+				void detach_scroll() { EventHandler<input::ScrollEventData>::detach(); }
 
 #define REGISTER_SIGNAL(Binding, binding_structure)\
 			void register_signal_binding(input::SignalID signal, Binding binding) { binding_structure[signal].push_back(binding); }\
@@ -314,39 +336,40 @@ namespace oly
 			{ std::vector<Binding>& vector = binding_structure[signal];\
 				vector.erase(std::find(vector.begin(), vector.end(), binding)); }
 
-		public:
-			REGISTER_SIGNAL(input::KeyBinding, key_bindings);
-			REGISTER_SIGNAL(input::MouseButtonBinding, mb_bindings);
-			REGISTER_SIGNAL(input::GamepadButtonBinding, gmpd_button_bindings);
-			REGISTER_SIGNAL(input::GamepadAxis1DBinding, gmpd_axis_1d_bindings);
-			REGISTER_SIGNAL(input::GamepadAxis2DBinding, gmpd_axis_2d_bindings);
-			REGISTER_SIGNAL(input::CursorPosBinding, cpos_bindings);
-			REGISTER_SIGNAL(input::ScrollBinding, scroll_bindings);
+			public:
+				REGISTER_SIGNAL(input::KeyBinding, key_bindings);
+				REGISTER_SIGNAL(input::MouseButtonBinding, mb_bindings);
+				REGISTER_SIGNAL(input::GamepadButtonBinding, gmpd_button_bindings);
+				REGISTER_SIGNAL(input::GamepadAxis1DBinding, gmpd_axis_1d_bindings);
+				REGISTER_SIGNAL(input::GamepadAxis2DBinding, gmpd_axis_2d_bindings);
+				REGISTER_SIGNAL(input::CursorPosBinding, cpos_bindings);
+				REGISTER_SIGNAL(input::ScrollBinding, scroll_bindings);
 
 #undef REGISTER_SIGNAL
 
-			void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller);
-			void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller);
-			void unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller);
+				void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller);
+				void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller);
+				void unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller);
 
-			// call poll() after glfwPollEvents() but before TIME.sync()
-			void poll();
+				// call poll() after glfwPollEvents() but before TIME.sync()
+				void poll();
 
-		private:
-			void poll_cursor_pos();
-			void poll_scroll();
-			void poll_gamepad_button(int controller, int button);
-			void poll_gamepad_axis_1d(int controller, int axis);
-			void poll_gamepad_axis_2d(int controller, int axis);
+			private:
+				void poll_cursor_pos();
+				void poll_scroll();
+				void poll_gamepad_button(int controller, int button);
+				void poll_gamepad_axis_1d(int controller, int axis);
+				void poll_gamepad_axis_2d(int controller, int axis);
 
-			bool get_phase(int action, input::Phase& phase) const;
-			bool dispatch(input::SignalID id, input::Signal signal);
+				bool get_phase(int action, input::Phase& phase) const;
+				bool dispatch(input::SignalID id, input::Signal signal);
 
-		public:
-			bool consume(const input::KeyEventData& data) override;
-			bool consume(const input::MouseButtonEventData& data) override;
-			bool consume(const input::CursorPosEventData& data) override;
-			bool consume(const input::ScrollEventData& data) override;
-		};
+			public:
+				bool consume(const input::KeyEventData& data) override;
+				bool consume(const input::MouseButtonEventData& data) override;
+				bool consume(const input::CursorPosEventData& data) override;
+				bool consume(const input::ScrollEventData& data) override;
+			};
+		}
 	}
 }

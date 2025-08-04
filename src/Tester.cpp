@@ -32,14 +32,14 @@ int main()
 	oly::context::Context oly_context("../../../res");
 
 	PlayerController pc;
-	oly::get_platform().bind_signal("jump", &PlayerController::jump, pc);
-	oly::get_platform().bind_signal("click", &PlayerController::click, pc);
-	oly::get_platform().bind_signal("drag", &PlayerController::drag, pc);
-	oly::get_platform().bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
-	oly::get_platform().bind_signal_mapping("move", &PlayerController::move, pc);
+	oly::context::bind_signal("jump", &PlayerController::jump, pc);
+	oly::context::bind_signal("click", &PlayerController::click, pc);
+	oly::context::bind_signal("drag", &PlayerController::drag, pc);
+	oly::context::bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
+	oly::context::bind_signal_mapping("move", &PlayerController::move, pc);
 
 	KeyHandler key_handler;
-	key_handler.attach(&oly::get_platform().window().handlers.key);
+	key_handler.attach(&oly::context_window().handlers.key);
 
 	oly::Transformer2D flag_tesselation_parent;
 	flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();

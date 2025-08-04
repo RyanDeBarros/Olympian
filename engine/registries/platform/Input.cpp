@@ -126,7 +126,7 @@ namespace oly::reg
 		b.forbidden_key_mods = (int)node["ban key mods"].value<int64_t>().value_or(0);
 		b.modifier = load_modifier_0d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_mouse_button_binding(const CTOMLNode& node, const std::string& id)
@@ -139,7 +139,7 @@ namespace oly::reg
 		b.forbidden_button_mods = (int)node["ban btn mods"].value<int64_t>().value_or(0);
 		b.modifier = load_modifier_0d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_gamepad_button_binding(const CTOMLNode& node, const std::string& id)
@@ -150,7 +150,7 @@ namespace oly::reg
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)(int)button.value() };
 		b.modifier = load_modifier_0d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_gamepad_axis_1d_binding(const CTOMLNode& node, const std::string& id)
@@ -162,7 +162,7 @@ namespace oly::reg
 		b.deadzone = (float)node["deadzone"].value<double>().value_or(0.0);
 		b.modifier = load_modifier_1d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_gamepad_axis_2d_binding(const CTOMLNode& node, const std::string& id)
@@ -174,7 +174,7 @@ namespace oly::reg
 		b.deadzone = (float)node["deadzone"].value<double>().value_or(0.0);
 		b.modifier = load_modifier_2d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_cursor_pos_binding(const CTOMLNode& node, const std::string& id)
@@ -182,7 +182,7 @@ namespace oly::reg
 		input::CursorPosBinding b{};
 		b.modifier = load_modifier_2d(node);
 
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	static void load_scroll_binding(const CTOMLNode& node, const std::string& id)
@@ -190,7 +190,7 @@ namespace oly::reg
 		input::ScrollBinding b{};
 		b.modifier = load_modifier_2d(node);
 			
-		context::get_platform().binding_context().register_signal_binding(context::get_platform().signal_table().get(id), b);
+		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
 	void load_signal(const CTOMLNode& node)
@@ -232,7 +232,7 @@ namespace oly::reg
 				if (auto signal = toml_signals->get_as<std::string>(i))
 					signals.push_back(signal->get());
 			}
-			context::get_platform().assign_signal_mapping(toml_id.value(), std::move(signals));
+			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
 	}
 
