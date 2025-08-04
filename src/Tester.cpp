@@ -32,11 +32,12 @@ int main()
 	oly::context::Context oly_context("../../../res");
 
 	PlayerController pc;
-	oly::context::bind_signal("jump", &PlayerController::jump, pc);
-	oly::context::bind_signal("click", &PlayerController::click, pc);
-	oly::context::bind_signal("drag", &PlayerController::drag, pc);
-	oly::context::bind_signal("zoom camera", &PlayerController::zoom_camera, pc);
-	oly::context::bind_signal_mapping("move", &PlayerController::move, pc);
+	pc.bind("jump", &PlayerController::jump);
+	pc.bind("jump", &PlayerController::jump);
+	pc.bind("click", &PlayerController::click);
+	pc.bind("drag", &PlayerController::drag);
+	pc.bind("zoom camera", &PlayerController::zoom_camera);
+	pc.bind_mapping("move", &PlayerController::move);
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly::context_window().handlers.key);
