@@ -142,6 +142,23 @@ namespace oly
 		{
 		}
 
+		void InputBindingContext::bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller)
+		{
+			handler_map[signal] = std::make_unique<HandlerRef>(handler, controller);
+		}
+
+		void InputBindingContext::bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller)
+		{
+			handler_map[signal] = std::make_unique<ConstHandlerRef>(handler, controller);
+		}
+
+		void InputBindingContext::unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller)
+		{
+			auto it = handler_map.find(signal);
+			if (it != handler_map.end() && it->second->get_controller() == controller.get())
+				handler_map.erase(it);
+		}
+
 		void InputBindingContext::poll()
 		{
 			poll_cursor_pos();
@@ -323,21 +340,15 @@ namespace oly
 
 		bool InputBindingContext::dispatch(input::SignalID id, input::Signal signal)
 		{
-			static const auto invalid_controller = [](auto&& ref) { return !ref.controller; };
-
 			auto it = handler_map.find(id);
 			if (it != handler_map.end())
 			{
-				if (std::visit(invalid_controller, it->second))
-				{
-					handler_map.erase(it);
-					return false;
-				}
+				if (it->second->get_controller())
+					return it->second->invoke(signal);
 				else
-					return std::visit([signal](auto&& ref) { return (ref.controller.get()->*ref.handler)(signal); }, it->second);
+					handler_map.erase(it);
 			}
-			else
-				return false;
+			return false;
 		}
 
 		bool InputBindingContext::consume(const input::KeyEventData& data)

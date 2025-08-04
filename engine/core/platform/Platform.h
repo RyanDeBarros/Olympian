@@ -113,11 +113,6 @@ namespace oly::platform
 			_binding_context.unbind(_signal_table.get(signal), static_cast<InputController::ConstHandler>(handler), controller.cref());
 		}
 
-		void unbind_signal(const std::string& signal)
-		{
-			_binding_context.unbind(_signal_table.get(signal));
-		}
-
 		template<std::derived_from<InputController> Controller>
 		void bind_signal_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal), const SoftReference<Controller>& controller)
 		{
@@ -180,13 +175,6 @@ namespace oly::platform
 			const std::vector<std::string>& signals = _signal_mapping_table[mapping];
 			for (const std::string& signal : signals)
 				unbind_signal(signal, handler, controller);
-		}
-
-		void unbind_signal_mapping(const std::string& mapping)
-		{
-			const std::vector<std::string>& signals = _signal_mapping_table[mapping];
-			for (const std::string& signal : signals)
-				unbind_signal(signal);
 		}
 	};
 }

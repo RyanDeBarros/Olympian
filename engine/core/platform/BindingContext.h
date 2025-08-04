@@ -261,19 +261,38 @@ namespace oly
 			FixedVector<GamepadPoll> gamepad_polls;
 
 			// TODO v3 don't use soft references. InputController base class should implement node system with binding context.
-			struct HandlerRef
+			
+			struct ControllerHandler
+			{
+				virtual ~ControllerHandler() = default;
+
+				virtual const InputController* get_controller() const = 0;
+				virtual bool invoke(input::Signal) const = 0;
+			};
+
+			struct HandlerRef : ControllerHandler
 			{
 				InputController::Handler handler = nullptr;
 				SoftReference<InputController> controller = nullptr;
+
+				HandlerRef(InputController::Handler handler, const SoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+
+				const InputController* get_controller() const override { return controller.get(); }
+				bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
 			};
-			struct ConstHandlerRef
+			
+			struct ConstHandlerRef : ControllerHandler
 			{
 				InputController::ConstHandler handler = nullptr;
 				ConstSoftReference<InputController> controller = nullptr;
+
+				ConstHandlerRef(InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) : handler(handler), controller(controller) {}
+
+				const InputController* get_controller() const override { return controller.get(); }
+				bool invoke(input::Signal signal) const override { return (controller.get()->*handler)(signal); }
 			};
 
-			// TODO v3 something better than variant
-			std::unordered_map<input::SignalID, std::variant<HandlerRef, ConstHandlerRef>> handler_map;
+			std::unordered_map<input::SignalID, std::unique_ptr<ControllerHandler>> handler_map;
 
 			friend class Platform;
 			InputBindingContext(unsigned int num_gamepads);
@@ -306,37 +325,9 @@ namespace oly
 
 #undef REGISTER_SIGNAL
 
-			void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller) { handler_map[signal] = HandlerRef{ handler, controller }; }
-			void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller) { handler_map[signal] = ConstHandlerRef{ handler, controller }; }
-			void unbind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller)
-			{
-				auto it = handler_map.find(signal);
-				if (it != handler_map.end())
-				{
-					if (std::visit([handler, &controller](auto&& ref) {
-						if constexpr (visiting_class_is<decltype(ref), HandlerRef>)
-							return ref.handler == handler && ref.controller == controller;
-						else
-							return false;
-						}, it->second))
-						handler_map.erase(it);
-				}
-			}
-			void unbind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller)
-			{
-				auto it = handler_map.find(signal);
-				if (it != handler_map.end())
-				{
-					if (std::visit([handler, controller](auto&& ref) {
-						if constexpr (visiting_class_is<decltype(ref), ConstHandlerRef>)
-							return ref.handler == handler && ref.controller == controller;
-						else
-							return false;
-						}, it->second))
-						handler_map.erase(it);
-				}
-			}
-			void unbind(input::SignalID signal) { handler_map.erase(signal); }
+			void bind(input::SignalID signal, InputController::Handler handler, const SoftReference<InputController>& controller);
+			void bind(input::SignalID signal, InputController::ConstHandler handler, const ConstSoftReference<InputController>& controller);
+			void unbind(input::SignalID signal, const ConstSoftReference<InputController>& controller);
 
 			// call poll() after glfwPollEvents() but before TIME.sync()
 			void poll();
