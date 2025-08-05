@@ -137,6 +137,7 @@ namespace oly::col2d
 #undef DECLARE_HANDLER_REFS
 
 			friend struct CollisionController;
+			friend struct ColliderDispatchHandle;
 
 #define HANDLER_MAP(Type) std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<Type##HandlerBase>, Type##Hash, Type##Equal>>
 

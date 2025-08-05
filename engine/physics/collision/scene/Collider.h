@@ -42,6 +42,28 @@ namespace oly::col2d
 		};
 	}
 
+	class Collider;
+
+	namespace internal
+	{
+		struct ColliderDispatchHandle
+		{
+			const Collider& collider;
+
+			ColliderDispatchHandle(const Collider&);
+			ColliderDispatchHandle(const Collider&, const ColliderDispatchHandle&);
+			ColliderDispatchHandle(const Collider&, ColliderDispatchHandle&&) noexcept;
+			~ColliderDispatchHandle();
+			ColliderDispatchHandle& operator=(const ColliderDispatchHandle&);
+			ColliderDispatchHandle& operator=(ColliderDispatchHandle&&) noexcept;
+
+		private:
+			void copy_handlers(const ColliderDispatchHandle&);
+			void move_handlers(ColliderDispatchHandle&&);
+			void remove_handlers();
+		};
+	}
+
 	// TODO v4 some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only. Like a one-way gate. 
 	// Note that this doesn't impede on active rigid body, rather a body's one-wayness is imacted on other objects to allow/disallow them penetration into the body.
 
@@ -61,16 +83,18 @@ namespace oly::col2d
 		friend class physics::RigidBody;
 		physics::RigidBody* rigid_body = nullptr;
 
+		internal::ColliderDispatchHandle dispatch_handle;
+
 	protected:
 		mutable math::Rect2D quad_wrap;
 
 	public:
 		internal::TreeHandleMap handles = internal::TreeHandleMap(*this);
 
-		Collider() = default;
+		Collider() : dispatch_handle(*this) {}
 		template<internal::ColliderObjectShape CObj>
-		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)) {}
-		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)) {}
+		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)), dispatch_handle(*this) {}
+		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)), dispatch_handle(*this) {}
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
 		Collider& operator=(const Collider&);
