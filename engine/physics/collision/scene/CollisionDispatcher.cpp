@@ -33,7 +33,7 @@ namespace oly::col2d
 	{
 	}
 
-	Phase CollisionPhaseTracker::prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2)
+	Phase internal::CollisionPhaseTracker::prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2)
 	{
 		auto it = map.find({ c1, c2 });
 		if (it != map.end())
@@ -41,16 +41,18 @@ namespace oly::col2d
 		else
 		{
 			map[{ c1, c2 }] = Phase::EXPIRED;
+			lut[c1].insert(c2);
+			lut[c2].insert(c1);
 			return Phase::EXPIRED;
 		}
 	}
 	
-	void CollisionPhaseTracker::lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase)
+	void internal::CollisionPhaseTracker::lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase)
 	{
 		lazy_updates[{ c1, c2 }] = phase;
 	}
 	
-	void CollisionPhaseTracker::flush()
+	void internal::CollisionPhaseTracker::flush()
 	{
 		for (const auto& [pair, phase] : lazy_updates)
 			if (pair.c1 && pair.c2)
@@ -58,30 +60,82 @@ namespace oly::col2d
 		lazy_updates.clear();
 	}
 	
-	void CollisionPhaseTracker::clear()
+	void internal::CollisionPhaseTracker::clear()
 	{
 		map.clear();
+		lazy_updates.clear();
+		lut.clear();
 	}
 
-	void CollisionPhaseTracker::clean()
+	void internal::CollisionPhaseTracker::clean()
 	{
 		for (auto it = map.begin(); it != map.end(); )
 		{
 			if (!it->first.c1 || !it->first.c2)
+			{
+				if (!it->first.c1)
+					lut.erase(it->first.c1);
+				if (!it->first.c2)
+					lut.erase(it->first.c2);
 				it = map.erase(it);
+			}
 			else
 				++it;
 		}
 	}
 
-	void CollisionPhaseTracker::erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2)
+	void internal::CollisionPhaseTracker::copy_all(const ConstSoftReference<Collider>& from, const ConstSoftReference<Collider>& to)
 	{
-		map.erase({ c1, c2 });
+		flush();
+
+		auto it = lut.find(from);
+		if (it != lut.end())
+		{
+			auto& lut_og = it->second;
+			auto& lut_copy = lut[to];
+			for (const ConstSoftReference<Collider>& c : lut_og)
+			{
+				lut_copy.insert(c);
+				map[{ to, c }] = map.find({ from, c })->second;
+			}
+		}
+	}
+
+	void internal::CollisionPhaseTracker::replace_all(const ConstSoftReference<Collider>& at, const ConstSoftReference<Collider>& with)
+	{
+		flush();
+
+		auto it = lut.find(with);
+		if (it != lut.end())
+		{
+			auto& lut_og = it->second;
+			auto& lut_copy = lut[at];
+			for (const ConstSoftReference<Collider>& c : lut_og)
+			{
+				lut_copy.insert(c);
+				map[{ at, c }] = map.find({ with, c })->second;
+				map.erase({ with, c });
+			}
+			lut.erase(with);
+		}
+	}
+
+	void internal::CollisionPhaseTracker::erase_all(const ConstSoftReference<Collider>& c)
+	{
+		flush();
+
+		auto it = lut.find(c);
+		if (it != lut.end())
+		{
+			for (const ConstSoftReference<Collider>& col : it->second)
+				map.erase({ c, col });
+			lut.erase(it);
+		}
 	}
 
 	template<typename Result, typename EventData, typename HandlerRef>
 	static void dispatch(const Collider* c1, const Collider* c2, std::unordered_map<ConstSoftReference<Collider>, HandlerRef>& handlers,
-		Result(Collider::*method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
+		Result(Collider::*method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker)
 	{
 		static const auto handler_loop = [](const auto& outer_it, const auto& data)
 			{
@@ -239,6 +293,7 @@ namespace oly::col2d
 
 	void internal::CollisionDispatcher::clean()
 	{
+		phase_tracker.clean();
 		clean_handlers(overlap_handler_map, overlap_controller_lut);
 		clean_handlers(collision_handler_map, collision_controller_lut);
 		clean_handlers(contact_handler_map, contact_controller_lut);

@@ -121,7 +121,7 @@ namespace oly::col2d
 
 	template<typename Result, typename EventData, typename Handler>
 	static void emit_from(const std::vector<CollisionTree>& trees, const Collider& from, Handler only_handler, CollisionController& only_controller,
-		Result(Collider::* method)(const Collider&) const, CollisionPhaseTracker& phase_tracker)
+		Result(Collider::* method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker)
 	{
 		ConstSoftReference<Collider> c1 = from.cref();
 		for (const CollisionTree& tree : trees)

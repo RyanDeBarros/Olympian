@@ -54,35 +54,39 @@ namespace oly::col2d
 		ContactEventData& invert() { std::swap(active_contact, passive_contact); std::swap(active_collider, passive_collider); return *this; }
 	};
 
-	class CollisionPhaseTracker
-	{
-		struct ColliderUnorderedPair
-		{
-			ConstSoftReference<Collider> c1;
-			ConstSoftReference<Collider> c2;
-
-			bool operator==(const ColliderUnorderedPair& other) const { return (c1 == other.c1 && c2 == other.c2) || (c1 == other.c2 && c2 == other.c1); }
-		};
-
-		struct ColliderUnorderedPairHash
-		{
-			size_t operator()(const ColliderUnorderedPair& pair) const { return pair.c1.hash() ^ pair.c2.hash(); }
-		};
-		
-		std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> map;
-		std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> lazy_updates;
-
-	public:
-		Phase prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
-		void lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase);
-		void flush();
-		void clear();
-		void clean();
-		void erase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
-	};
-
 	namespace internal
 	{
+		class CollisionPhaseTracker
+		{
+			struct ColliderUnorderedPair
+			{
+				ConstSoftReference<Collider> c1;
+				ConstSoftReference<Collider> c2;
+
+				bool operator==(const ColliderUnorderedPair& other) const { return (c1 == other.c1 && c2 == other.c2) || (c1 == other.c2 && c2 == other.c1); }
+			};
+
+			struct ColliderUnorderedPairHash
+			{
+				size_t operator()(const ColliderUnorderedPair& pair) const { return pair.c1.hash() ^ pair.c2.hash(); }
+			};
+
+			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> map;
+			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> lazy_updates;
+			std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<ConstSoftReference<Collider>>> lut;
+
+		public:
+			Phase prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
+			void lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase);
+			void flush();
+			void clear();
+			void clean(); // TODO v3 remove when no more soft references
+
+			void copy_all(const ConstSoftReference<Collider>& from, const ConstSoftReference<Collider>& to);
+			void replace_all(const ConstSoftReference<Collider>& at, const ConstSoftReference<Collider>& with);
+			void erase_all(const ConstSoftReference<Collider>& c);
+		};
+
 		// TODO v3 remove soft references
 		class CollisionDispatcher
 		{
