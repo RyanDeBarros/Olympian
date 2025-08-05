@@ -168,15 +168,15 @@ namespace oly::col2d
 		template<typename Map, typename LUT>
 		static void copy_dispatch_handle(const Collider& collider, const Collider& other_collider, Map& handler_map, LUT& controller_lut)
 		{
-			auto it = handler_map.find(other_collider.cref());
+			auto it = handler_map.find(&other_collider);
 			if (it != handler_map.end())
 			{
-				auto& copy_set = handler_map[collider.cref()];
+				auto& copy_set = handler_map[&collider];
 				for (const auto& handler : it->second)
 				{
 					copy_set.insert(handler->clone());
 					auto& lut_set = controller_lut.find(handler->controller)->second;
-					lut_set.insert(std::make_pair(collider.cref(), handler->clone()));
+					lut_set.insert(std::make_pair(&collider, handler->clone()));
 				}
 			}
 		}
@@ -187,22 +187,22 @@ namespace oly::col2d
 			copy_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 			copy_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			copy_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-			dispatcher.phase_tracker.copy_all(other.collider.cref(), collider.cref());
+			dispatcher.phase_tracker.copy_all(other.collider, collider);
 		}
 
 		template<typename Map, typename LUT>
 		static void move_dispatch_handle(const Collider& collider, const Collider& other_collider, Map& handler_map, LUT& controller_lut)
 		{
-			auto it = handler_map.find(other_collider.cref());
+			auto it = handler_map.find(&other_collider);
 			if (it != handler_map.end())
 			{
 				for (auto& handler : it->second)
 				{
 					auto& lut_set = controller_lut.find(handler->controller)->second;
-					lut_set.erase(std::make_pair(other_collider.cref(), handler->clone()));
-					lut_set.insert(std::make_pair(collider.cref(), handler->clone()));
+					lut_set.erase(std::make_pair(&other_collider, handler->clone()));
+					lut_set.insert(std::make_pair(&collider, handler->clone()));
 				}
-				handler_map[collider.cref()] = std::move(it->second);
+				handler_map[&collider] = std::move(it->second);
 				handler_map.erase(it);
 			}
 		}
@@ -213,19 +213,19 @@ namespace oly::col2d
 			move_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 			move_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			move_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-			dispatcher.phase_tracker.replace_all(collider.cref(), other.collider.cref());
+			dispatcher.phase_tracker.replace_all(collider, other.collider);
 		}
 
 		template<typename Map, typename LUT>
 		static void remove_dispatch_handle(const Collider& collider, Map& handler_map, LUT& controller_lut)
 		{
-			auto it = handler_map.find(collider.cref());
+			auto it = handler_map.find(&collider);
 			if (it != handler_map.end())
 			{
 				for (const auto& handler : it->second)
 				{
 					auto& lut_set = controller_lut.find(handler->controller)->second;
-					lut_set.erase(std::make_pair(collider.cref(), handler->clone()));
+					lut_set.erase(std::make_pair(&collider, handler->clone()));
 				}
 				handler_map.erase(it);
 			}
@@ -237,7 +237,7 @@ namespace oly::col2d
 			remove_dispatch_handle(collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 			remove_dispatch_handle(collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			remove_dispatch_handle(collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-			dispatcher.phase_tracker.erase_all(collider.cref());
+			dispatcher.phase_tracker.erase_all(collider);
 		}
 	}
 

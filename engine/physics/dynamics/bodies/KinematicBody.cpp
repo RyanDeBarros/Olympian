@@ -426,18 +426,18 @@ namespace oly::physics
 	void KinematicBody::handle_contacts(const col2d::ContactEventData& data) const
 	{
 		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			if (const RigidBody* other = rigid_body(*data.passive_collider))
+			if (const RigidBody* other = rigid_body(data.passive_collider))
 				if (other != this)
 					dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, dynamics_of(*other));
 	}
 
 	void KinematicBody::bind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::bind(collider.cref(), &KinematicBody::handle_contacts);
+		col2d::CollisionController::bind(collider, &KinematicBody::handle_contacts);
 	}
 
 	void KinematicBody::unbind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::unbind(collider.cref(), &KinematicBody::handle_contacts);
+		col2d::CollisionController::unbind(collider, &KinematicBody::handle_contacts);
 	}
 }

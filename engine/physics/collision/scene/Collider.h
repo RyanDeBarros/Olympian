@@ -2,7 +2,6 @@
 
 #include "physics/collision/scene/CollisionTree.h"
 #include "core/base/TransformerExposure.h"
-#include "core/types/SoftReference.h"
 
 namespace oly::physics { class RigidBody; };
 
@@ -72,8 +71,6 @@ namespace oly::col2d
 		// LATER movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
 		friend class internal::CollisionNode;
-		
-		OLY_SOFT_REFERENCE_BASE_DECLARATION(Collider);
 
 	private:
 		internal::ColliderObject obj;

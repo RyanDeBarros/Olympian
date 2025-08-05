@@ -40,11 +40,11 @@ namespace oly::col2d
 
 #define BIND_HANDLER(Type, type)\
 		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
-		dispatcher.type##_handler_map[collider].insert(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));
+		dispatcher.type##_handler_map[&collider].insert(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));
 
 #define UNBIND_HANDLER(Type, type)\
 		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
-		auto it = dispatcher.type##_handler_map.find(collider);\
+		auto it = dispatcher.type##_handler_map.find(&collider);\
 		if (it != dispatcher.type##_handler_map.end())\
 		{\
 			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));\
@@ -56,62 +56,62 @@ namespace oly::col2d
 			}\
 		}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, OverlapHandler handler)
+	void CollisionController::bind(const Collider& collider, OverlapHandler handler)
 	{
 		BIND_HANDLER(Overlap, overlap);
 	}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const
+	void CollisionController::bind(const Collider& collider, OverlapConstHandler handler) const
 	{
 		BIND_HANDLER(OverlapConst, overlap);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, OverlapHandler handler)
+	void CollisionController::unbind(const Collider& collider, OverlapHandler handler)
 	{
 		UNBIND_HANDLER(Overlap, overlap);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, OverlapConstHandler handler) const
+	void CollisionController::unbind(const Collider& collider, OverlapConstHandler handler) const
 	{
 		UNBIND_HANDLER(OverlapConst, overlap);
 	}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, CollisionHandler handler)
+	void CollisionController::bind(const Collider& collider, CollisionHandler handler)
 	{
 		BIND_HANDLER(Collision, collision);
 	}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const
+	void CollisionController::bind(const Collider& collider, CollisionConstHandler handler) const
 	{
 		BIND_HANDLER(CollisionConst, collision);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, CollisionHandler handler)
+	void CollisionController::unbind(const Collider& collider, CollisionHandler handler)
 	{
 		UNBIND_HANDLER(Collision, collision);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, CollisionConstHandler handler) const
+	void CollisionController::unbind(const Collider& collider, CollisionConstHandler handler) const
 	{
 		UNBIND_HANDLER(CollisionConst, collision);
 	}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, ContactHandler handler)
+	void CollisionController::bind(const Collider& collider, ContactHandler handler)
 	{
 		BIND_HANDLER(Contact, contact);
 	}
 
-	void CollisionController::bind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const
+	void CollisionController::bind(const Collider& collider, ContactConstHandler handler) const
 	{
 		BIND_HANDLER(ContactConst, contact);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, ContactHandler handler)
+	void CollisionController::unbind(const Collider& collider, ContactHandler handler)
 	{
 		UNBIND_HANDLER(Contact, contact);
 	}
 
-	void CollisionController::unbind(const ConstSoftReference<Collider>& collider, ContactConstHandler handler) const
+	void CollisionController::unbind(const Collider& collider, ContactConstHandler handler) const
 	{
 		UNBIND_HANDLER(ContactConst, contact);
 	}
@@ -123,15 +123,14 @@ namespace oly::col2d
 	static void emit_from(const std::vector<CollisionTree>& trees, const Collider& from, Handler only_handler, CollisionController& only_controller,
 		Result(Collider::* method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker)
 	{
-		ConstSoftReference<Collider> c1 = from.cref();
 		for (const CollisionTree& tree : trees)
 		{
 			auto it = tree.query(from);
 			while (!it.done())
 			{
 				const Collider* other = it.next();
-				EventData data((from.*method)(*other), c1, other->cref(), phase_tracker.prior_phase(c1, other->cref()));
-				phase_tracker.lazy_update_phase(c1, other->cref(), data.phase);
+				EventData data((from.*method)(*other), from, *other, phase_tracker.prior_phase(from, *other));
+				phase_tracker.lazy_update_phase(from, *other, data.phase);
 				if (data.phase != Phase::EXPIRED)
 					(only_controller.*only_handler)(data);
 			}

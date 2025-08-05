@@ -23,36 +23,69 @@ namespace oly::col2d
 	struct OverlapEventData
 	{
 		Phase phase;
-		ConstSoftReference<Collider> active_collider, passive_collider;
+		const Collider& active_collider;
+		const Collider& passive_collider;
 
-		OverlapEventData(OverlapResult result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+		OverlapEventData(OverlapResult result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
 
-		OverlapEventData& invert() { std::swap(active_collider, passive_collider); return *this; }
+		OverlapEventData(Phase phase, const Collider& active_collider, const Collider& passive_collider)
+			: phase(phase), active_collider(active_collider), passive_collider(passive_collider) {}
+
+		OverlapEventData(const OverlapEventData& other)
+			: phase(other.phase), active_collider(other.active_collider), passive_collider(other.passive_collider) {}
 	};
+
+	inline OverlapEventData invert_event_data(const OverlapEventData& data)
+	{
+		return OverlapEventData(data.phase, data.passive_collider, data.active_collider);
+	}
 
 	struct CollisionEventData
 	{
 		Phase phase;
 		float penetration_depth;
 		UnitVector2D unit_impulse;
-		ConstSoftReference<Collider> active_collider, passive_collider;
+		const Collider& active_collider;
+		const Collider& passive_collider;
 
-		CollisionEventData(const CollisionResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+		CollisionEventData(const CollisionResult& result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
 
-		CollisionEventData& invert() { unit_impulse = -unit_impulse; std::swap(active_collider, passive_collider); return *this; }
+		CollisionEventData(Phase phase, float penetration_depth, UnitVector2D unit_impulse, const Collider& active_collider, const Collider& passive_collider)
+			: phase(phase), penetration_depth(penetration_depth), unit_impulse(unit_impulse), active_collider(active_collider), passive_collider(passive_collider) {}
+
+		CollisionEventData(const CollisionEventData& other)
+			: phase(other.phase), penetration_depth(other.penetration_depth), unit_impulse(other.unit_impulse),
+			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
+
 		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
 	};
+
+	inline CollisionEventData invert_event_data(const CollisionEventData& data)
+	{
+		return CollisionEventData(data.phase, data.penetration_depth, -data.unit_impulse, data.passive_collider, data.active_collider);
+	}
 
 	struct ContactEventData
 	{
 		Phase phase;
 		ContactResult::Contact active_contact, passive_contact;
-		ConstSoftReference<Collider> active_collider, passive_collider;
+		const Collider& active_collider;
+		const Collider& passive_collider;
 
-		ContactEventData(const ContactResult& result, const ConstSoftReference<Collider>& active_collider, const ConstSoftReference<Collider>& passive_collider, Phase prior);
+		ContactEventData(const ContactResult& result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
 
-		ContactEventData& invert() { std::swap(active_contact, passive_contact); std::swap(active_collider, passive_collider); return *this; }
+		ContactEventData(Phase phase, ContactResult::Contact active_contact, ContactResult::Contact passive_contact, const Collider& active_collider, const Collider& passive_collider)
+			: phase(phase), active_contact(active_contact), passive_contact(passive_contact), active_collider(active_collider), passive_collider(passive_collider) {}
+
+		ContactEventData(const ContactEventData& other)
+			: phase(other.phase), active_contact(other.active_contact), passive_contact(other.passive_contact),
+			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
 	};
+
+	inline ContactEventData invert_event_data(const ContactEventData& data)
+	{
+		return ContactEventData(data.phase, data.passive_contact, data.active_contact, data.passive_collider, data.active_collider);
+	}
 
 	namespace internal
 	{
@@ -60,34 +93,32 @@ namespace oly::col2d
 		{
 			struct ColliderUnorderedPair
 			{
-				ConstSoftReference<Collider> c1;
-				ConstSoftReference<Collider> c2;
+				const Collider* c1;
+				const Collider* c2;
 
 				bool operator==(const ColliderUnorderedPair& other) const { return (c1 == other.c1 && c2 == other.c2) || (c1 == other.c2 && c2 == other.c1); }
 			};
 
 			struct ColliderUnorderedPairHash
 			{
-				size_t operator()(const ColliderUnorderedPair& pair) const { return pair.c1.hash() ^ pair.c2.hash(); }
+				size_t operator()(const ColliderUnorderedPair& pair) const { return std::hash<const void*>{}(pair.c1) ^ std::hash<const void*>{}(pair.c2); }
 			};
 
 			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> map;
 			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> lazy_updates;
-			std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<ConstSoftReference<Collider>>> lut;
+			std::unordered_map<const Collider*, std::unordered_set<const Collider*>> lut;
 
 		public:
-			Phase prior_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2);
-			void lazy_update_phase(const ConstSoftReference<Collider>& c1, const ConstSoftReference<Collider>& c2, Phase phase);
+			Phase prior_phase(const Collider& c1, const Collider& c2);
+			void lazy_update_phase(const Collider& c1, const Collider& c2, Phase phase);
 			void flush();
 			void clear();
-			void clean(); // TODO v3 remove when no more soft references
 
-			void copy_all(const ConstSoftReference<Collider>& from, const ConstSoftReference<Collider>& to);
-			void replace_all(const ConstSoftReference<Collider>& at, const ConstSoftReference<Collider>& with);
-			void erase_all(const ConstSoftReference<Collider>& c);
+			void copy_all(const Collider& from, const Collider& to);
+			void replace_all(const Collider& at, const Collider& with);
+			void erase_all(const Collider& c);
 		};
 
-		// TODO v3 remove soft references
 		class CollisionDispatcher
 		{
 #define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
@@ -122,15 +153,15 @@ namespace oly::col2d
 			{\
 				typedef std::unique_ptr<Type##HandlerBase> Ptr;\
 				size_t operator()(const Ptr& a) const { return std::hash<const void*>{}(a->controller) ^ (std::hash<const void*>{}(a->raw_handler()) << 1); }\
-				size_t operator()(const std::pair<ConstSoftReference<Collider>, Ptr>& a) const\
-				{ return a.first.hash() ^ (Type##Hash{}(a.second) << 1); }\
+				size_t operator()(const std::pair<const Collider*, Ptr>& a) const\
+				{ return std::hash<const void*>{}(a.first) ^ (Type##Hash{}(a.second) << 1); }\
 			};\
 			struct Type##Equal\
 			{\
 				typedef std::unique_ptr<Type##HandlerBase> Ptr;\
 				bool operator()(const Ptr& a, const Ptr& b) const\
 				{ return a->controller == b->controller && a->raw_handler() == b->raw_handler(); }\
-				bool operator()(const std::pair<ConstSoftReference<Collider>, Ptr>& a, const std::pair<ConstSoftReference<Collider>, Ptr>& b) const\
+				bool operator()(const std::pair<const Collider*, Ptr>& a, const std::pair<const Collider*, Ptr>& b) const\
 				{ return a.first == b.first && Type##Equal{}(a.second, b.second); }\
 			};
 
@@ -143,7 +174,7 @@ namespace oly::col2d
 			friend struct CollisionController;
 			friend struct ColliderDispatchHandle;
 
-#define HANDLER_MAP(Type) std::unordered_map<ConstSoftReference<Collider>, std::unordered_set<std::unique_ptr<Type##HandlerBase>, Type##Hash, Type##Equal>>
+#define HANDLER_MAP(Type) std::unordered_map<const Collider*, std::unordered_set<std::unique_ptr<Type##HandlerBase>, Type##Hash, Type##Equal>>
 
 			HANDLER_MAP(Overlap) overlap_handler_map;
 			HANDLER_MAP(Collision) collision_handler_map;
@@ -151,7 +182,7 @@ namespace oly::col2d
 
 #undef HANDLER_MAP
 
-#define CONTROLLER_LUT(Type) std::unordered_map<const CollisionController*, std::unordered_set<std::pair<ConstSoftReference<Collider>, std::unique_ptr<Type##HandlerBase>>, Type##Hash, Type##Equal>>
+#define CONTROLLER_LUT(Type) std::unordered_map<const CollisionController*, std::unordered_set<std::pair<const Collider*, std::unique_ptr<Type##HandlerBase>>, Type##Hash, Type##Equal>>
 
 			CONTROLLER_LUT(Overlap) overlap_controller_lut;
 			CONTROLLER_LUT(Collision) collision_controller_lut;
@@ -172,14 +203,13 @@ namespace oly::col2d
 			void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
 			void clear();
 
-			void unregister_overlap_handlers(const ConstSoftReference<Collider>& collider);
-			void unregister_collision_handlers(const ConstSoftReference<Collider>& collider);
-			void unregister_contact_handlers(const ConstSoftReference<Collider>& collider);
-			void unregister_handlers(const ConstSoftReference<Collider>& collider);
+			void unregister_overlap_handlers(const Collider& collider);
+			void unregister_collision_handlers(const Collider& collider);
+			void unregister_contact_handlers(const Collider& collider);
+			void unregister_handlers(const Collider& collider);
 
 			// call poll() after all collision objects have moved, but before handling events
 			void poll();
-			void clean(); // TODO v3 remove clean() once all soft references are removed
 
 			void emit(const Collider& from);
 		};

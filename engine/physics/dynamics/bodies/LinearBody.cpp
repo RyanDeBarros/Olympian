@@ -259,18 +259,18 @@ namespace oly::physics
 	void LinearBody::handle_collides(const col2d::CollisionEventData& data) const
 	{
 		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			if (const RigidBody* other = rigid_body(*data.passive_collider))
+			if (const RigidBody* other = rigid_body(data.passive_collider))
 				if (other != this)
 					dynamics.add_collision(data.mtv(), {}, dynamics_of(*other));
 	}
 
 	void LinearBody::bind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::bind(collider.cref(), &LinearBody::handle_collides);
+		col2d::CollisionController::bind(collider, &LinearBody::handle_collides);
 	}
 
 	void LinearBody::unbind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::unbind(collider.cref(), &LinearBody::handle_collides);
+		col2d::CollisionController::unbind(collider, &LinearBody::handle_collides);
 	}
 }

@@ -40,18 +40,18 @@ namespace oly::physics
 	void StaticBody::handle_overlaps(const col2d::OverlapEventData& data) const
 	{
 		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
-			if (const RigidBody* other = rigid_body(*data.passive_collider))
+			if (const RigidBody* other = rigid_body(data.passive_collider))
 				if (other != this)
 					dynamics.add_collision({}, {}, dynamics_of(*other));
 	}
 
 	void StaticBody::bind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::bind(collider.cref(), &StaticBody::handle_overlaps);
+		col2d::CollisionController::bind(collider, &StaticBody::handle_overlaps);
 	}
 
 	void StaticBody::unbind(const col2d::Collider& collider) const
 	{
-		col2d::CollisionController::unbind(collider.cref(), &StaticBody::handle_overlaps);
+		col2d::CollisionController::unbind(collider, &StaticBody::handle_overlaps);
 	}
 }
