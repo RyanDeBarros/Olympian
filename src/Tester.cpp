@@ -149,7 +149,7 @@ int main()
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
-	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
+	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT; // TODO v3 fix kinematic-kinematic collision
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE; // TODO v3 collider is not colliding with M_OBSTACLE
@@ -158,7 +158,7 @@ int main()
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0->properties().center_of_mass = capsule.center;
 	obstacle0->properties().net_torque += 300.0f;
-	obstacle0->properties().set_moi_multiplier(2000.0f);
+	obstacle0->properties().set_moi_multiplier(4000.0f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::LinearBodyRef obstacle1 = oly::REF_INIT;

@@ -17,9 +17,9 @@ namespace oly::col2d
 		CollisionNode::CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other)
 			: tree(tree), bounds(other.bounds), parent(parent), subnodes(tree->degree.x * tree->degree.y)
 		{
-			for (const Collider* collider : other.colliders)
+			for (const Collider* collider : other.get_colliders())
 			{
-				colliders.insert(collider);
+				set_colliders().insert(collider);
 				collider->handles.handles[tree] = this;
 			}
 
@@ -33,7 +33,7 @@ namespace oly::col2d
 
 		void CollisionNode::assign_tree(const CollisionTree* new_tree)
 		{
-			for (const Collider* collider : colliders)
+			for (const Collider* collider : get_colliders())
 			{
 				collider->handles.handles.erase(tree);
 				collider->handles.handles[new_tree] = this;
@@ -48,7 +48,7 @@ namespace oly::col2d
 
 		CollisionNode::~CollisionNode()
 		{
-			for (const Collider* collider : colliders)
+			for (const Collider* collider : get_colliders())
 				collider->handles.handles.erase(tree);
 		}
 
@@ -57,18 +57,17 @@ namespace oly::col2d
 			return std::unique_ptr<CollisionNode>(new CollisionNode(tree, bounds));
 		}
 
-		// TODO v3
-		//ContiguousSet<const Collider*> CollisionNode::set_colliders()
-		//{
-		//	tree->invalidate_iterators();
-		//	return _colliders;
-		//}
+		ContiguousSet<const Collider*>& CollisionNode::set_colliders()
+		{
+			tree->invalidate_iterators();
+			return _colliders;
+		}
 
 		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
 		{
 			if (!collider.quad_wrap.strict_inside(bounds) && parent)
 			{
-				colliders.erase(&collider);
+				set_colliders().erase(&collider);
 				node = nullptr;
 				parent->insert_upwards(collider, node);
 			}
@@ -78,7 +77,7 @@ namespace oly::col2d
 		{
 			if (collider.quad_wrap.strict_inside(bounds))
 			{
-				if (colliders.insert(&collider))
+				if (set_colliders().insert(&collider))
 					node = this;
 			}
 			else if (parent)
@@ -87,13 +86,13 @@ namespace oly::col2d
 
 		void CollisionNode::subdivide()
 		{
-			if (colliders.size() >= tree->cell_capacity)
+			if (get_colliders().size() >= tree->cell_capacity)
 			{
 				size_t i = 0;
-				while (i < colliders.size())
+				while (i < get_colliders().size())
 				{
 					unsigned int x, y;
-					if (subnode_coordinates(colliders[i]->quad_wrap, x, y))
+					if (subnode_coordinates(get_colliders()[i]->quad_wrap, x, y))
 					{
 						std::unique_ptr<CollisionNode>& sub = subnodes[idx(x, y)];
 						if (!sub.get())
@@ -101,10 +100,10 @@ namespace oly::col2d
 							sub = instantiate(tree, subdivision(x, y));
 							sub->parent = this;
 						}
-						sub->colliders.insert(colliders[i]);
-						colliders[i]->handles.handles.get(tree) = sub.get();
-						colliders.remove(i);
-						if (colliders.size() < tree->cell_capacity)
+						sub->set_colliders().insert(get_colliders()[i]);
+						get_colliders()[i]->handles.handles.get(tree) = sub.get();
+						set_colliders().remove(i);
+						if (get_colliders().size() < tree->cell_capacity)
 							return;
 					}
 					else
@@ -232,13 +231,13 @@ namespace oly::col2d
 			internal::CollisionNode* node = nodes.front();
 			nodes.pop();
 
-			for (const Collider* collider : node->colliders)
+			for (const Collider* collider : node->get_colliders())
 				collider->flush();
 
 			size_t i = 0;
-			while (i < node->colliders.size())
+			while (i < node->get_colliders().size())
 			{
-				node->colliders[i]->flush();
+				node->get_colliders()[i]->flush();
 				++i;
 			}
 
@@ -289,21 +288,21 @@ namespace oly::col2d
 				if (internal::CollisionNode* parent = indexer.node->parent) // non-root
 				{
 					// due to traversal, it is guaranteed that node has no subnodes
-					if (parent->colliders.size() < cell_capacity)
+					if (parent->get_colliders().size() < cell_capacity)
 					{
 						// transfer some colliders over to parent from node
-						const size_t transfers = std::min(cell_capacity - parent->colliders.size(), indexer.node->colliders.size());
+						const size_t transfers = std::min(cell_capacity - parent->get_colliders().size(), indexer.node->get_colliders().size());
 						for (size_t _ = 0; _ < transfers; ++_)
 						{
-							if (const Collider* collider = indexer.node->colliders.pop())
+							if (const Collider* collider = indexer.node->set_colliders().pop())
 							{
-								parent->colliders.insert(collider);
+								parent->set_colliders().insert(collider);
 								collider->handles.handles.get(this) = parent;
 							}
 						}
 					}
 
-					if (indexer.node->colliders.empty())
+					if (indexer.node->get_colliders().empty())
 					{
 						// node is an empty subnode
 						parent->subnodes[indexer.index_in_parent].reset();
@@ -436,9 +435,9 @@ namespace oly::col2d
 		while (!nodes.empty())
 		{
 			const internal::CollisionNode* node = nodes.front();
-			if (i < node->colliders.size())
+			if (i < node->get_colliders().size())
 			{
-				current = node->colliders[i++];
+				current = node->get_colliders()[i++];
 				return;
 			}
 

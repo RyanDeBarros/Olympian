@@ -12,7 +12,7 @@ namespace oly::col2d
 		{
 			for (auto& [tree, node] : handles)
 				if (node)
-					node->colliders.insert(&collider);
+					node->set_colliders().insert(&collider);
 		}
 
 		TreeHandleMap::TreeHandleMap(Collider& collider, TreeHandleMap&& other) noexcept
@@ -20,7 +20,7 @@ namespace oly::col2d
 		{
 			for (auto& [tree, node] : handles)
 				if (node)
-					node->colliders.replace(&other.collider, &collider);
+					node->set_colliders().replace(&other.collider, &collider);
 		}
 
 		TreeHandleMap::~TreeHandleMap()
@@ -45,7 +45,7 @@ namespace oly::col2d
 					if (!handles.count(it->key))
 					{
 						if (it->value)
-							it->value->colliders.insert(&collider);
+							it->value->set_colliders().insert(&collider);
 						handles.insert(it->key, it->value);
 					}
 				}
@@ -61,7 +61,7 @@ namespace oly::col2d
 				handles = std::move(other.handles);
 				for (auto& [tree, node] : handles)
 					if (node)
-						node->colliders.replace(&other.collider, &collider);
+						node->set_colliders().replace(&other.collider, &collider);
 			}
 			return *this;
 		}
@@ -74,7 +74,7 @@ namespace oly::col2d
 					node->update(collider, node);
 				else
 				{
-					tree->root->colliders.insert(&collider);
+					tree->root->set_colliders().insert(&collider);
 					node = tree->root.get();
 				}
 			}
@@ -84,7 +84,7 @@ namespace oly::col2d
 		{
 			if (!handles.count(&tree))
 			{
-				tree.root->colliders.insert(&collider);
+				tree.root->set_colliders().insert(&collider);
 				handles.insert(&tree, tree.root.get());
 			}
 		}
@@ -100,7 +100,7 @@ namespace oly::col2d
 			if (it != handles.end())
 			{
 				if (it->value)
-					it->value->colliders.erase(&collider);
+					it->value->set_colliders().erase(&collider);
 				handles.erase(it);
 			}
 		}
@@ -119,7 +119,7 @@ namespace oly::col2d
 		{
 			for (auto& [tree, node] : handles)
 				if (node)
-					node->colliders.erase(&collider);
+					node->set_colliders().erase(&collider);
 			handles.clear();
 		}
 	}
