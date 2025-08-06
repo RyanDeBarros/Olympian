@@ -1,1 +1,1 @@
-from . import manifest
+from . import startmenu
