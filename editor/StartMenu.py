@@ -19,9 +19,8 @@ class StartMenuWindow(QMainWindow):
 		self.setCentralWidget(StartMenuWidget(self))
 
 	def open(self, project_filepath):
-		# TODO
-		print(f"Opening {project_filepath}...")
 		self.close()
+		# TODO v3 open project window
 
 
 class StartMenuWidget(QWidget):
@@ -35,6 +34,12 @@ class StartMenuWidget(QWidget):
 		self.open_tab = OpenTab(self)
 		self.recent_tab = RecentTab(self)
 		self.delete_tab = DeleteTab(self)
+
+		self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)
+
+	def on_tab_changed(self):
+		if self.ui.tabWidget.currentWidget() == self.ui.recentTab:
+			self.recent_tab.sync_combo()
 
 	def open_project(self, project_filepath):
 		MANIFEST.push_to_top_of_recent(project_filepath)
@@ -155,15 +160,17 @@ class RecentTab:
 		self.combo_box = start_menu.ui.recentCombo
 		self.open_recent_button = start_menu.ui.openRecentProjectButton
 
-		filepaths = MANIFEST.get_recent_project_filepaths()
-		self.combo_box.addItems(filepaths)
-
 		self.open_recent_button.clicked.connect(self.open_recent)
 
 	def open_recent(self):
 		filepath = self.combo_box.currentText()
 		if filepath != "":
 			self.start_menu.open_project(filepath)
+
+	def sync_combo(self):
+		self.combo_box.clear()
+		filepaths = MANIFEST.get_recent_project_filepaths()
+		self.combo_box.addItems(filepaths)
 
 
 class DeleteTab:
@@ -172,14 +179,15 @@ class DeleteTab:
 		self.browse = start_menu.ui.deleteBrowseButton
 		self.delete_project_filepath = start_menu.ui.deleteProject
 		self.delete_project_button = start_menu.ui.deleteProjectButton
+		self.clean_manifest_button = start_menu.ui.cleanManifestButton
 
 		self.browse.clicked.connect(self.open_browse)
 		self.delete_project_filepath.textChanged.connect(self.sync_project_filepath)
 		self.delete_project_button.clicked.connect(self.delete_project)
+		self.clean_manifest_button.clicked.connect(self.clean_manifest)
 
 	def open_browse(self):
-		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", MANIFEST.get_last_file_dialog_dir(),
-												  filter="Oly files (*.oly)")
+		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", MANIFEST.get_last_file_dialog_dir(), filter="Oly files (*.oly)")
 		if filepath and MANIFEST.is_valid_project_file(filepath):
 			MANIFEST.set_last_file_dialog_dir(os.path.dirname(filepath))
 			self.delete_project_filepath.setText(filepath)
@@ -194,4 +202,10 @@ class DeleteTab:
 									QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
 			MANIFEST.delete_project(self.delete_project_filepath.text())
+			self.delete_project_filepath.clear()
+
+	def clean_manifest(self):
+		current_to_delete = self.delete_project_filepath.text()
+		removed = MANIFEST.remove_nonexistent_projects()
+		if current_to_delete in removed:
 			self.delete_project_filepath.clear()

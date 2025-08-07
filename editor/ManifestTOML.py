@@ -111,7 +111,20 @@ class ManifestTOML:
 			self.project_list().remove(project_filepath)
 			self.recent_list().remove(project_filepath)
 			self.dump()
-			# TODO make note that files are not deleted - they are simply removed from editor manifest, so as it to prevent unsafe folder deletion.
+			# TODO v3 make a note in documentation that files are not deleted - they are simply removed from editor manifest, so as it to prevent unsafe folder deletion.
+
+	def remove_nonexistent_projects(self):
+		keep = []
+		removed = []
+		for project_filepath in self.project_list():
+			if os.path.exists(project_filepath):
+				keep.append(project_filepath)
+			else:
+				removed.append(project_filepath)
+				self.recent_list().remove(project_filepath)
+		self.toml['projects'] = keep
+		self.dump()
+		return removed
 
 
 MANIFEST = ManifestTOML()
