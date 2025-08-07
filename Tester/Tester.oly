@@ -1,5 +1,7 @@
 [context]
 gamepads = 1
+"signals"                 = [ "assets/signals.toml" ]
+"tileset registries"      = [ "assets/grass_tileset.toml" ]
 
 [context.window_hint]
 
@@ -7,3 +9,22 @@ gamepads = 1
 width = 1440
 height = 1080
 title = "Olympian Engine"
+
+[context.logger]
+logfile = "D:\\Projects\\Visual Studio\\Olympian\\Tester\\Tester.log"
+append = true
+console = true
+
+[context.sprite_batch]
+"initial sprites" = 100
+"new textures" = 10
+
+[context.polygon_batch]
+primitives = 100
+
+[context.ellipse_batch]
+ellipses = 100
+
+[context.text_batch]
+"initial glyphs" = 100
+"new textures" = 10

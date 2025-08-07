@@ -39,7 +39,7 @@ namespace oly::context
 			if (logfile)
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile((internal::resource_root + logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
+				LOG.set_logfile(resource_file(logfile.value()).c_str(), toml_logger["append"].value<bool>().value_or(true));
 				LOG.flush();
 			}
 			else

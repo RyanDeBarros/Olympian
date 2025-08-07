@@ -426,8 +426,8 @@ doc/*.synctex.gz
 doc/*.toc
 
 # PyCharm
-.idea/
+**/.idea/
 
 # Olympian
 tools/archetype/cache.json
-gen/
+**/.gen/

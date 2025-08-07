@@ -5,6 +5,7 @@ import textures
 import fonts
 
 
+# TODO generate PreBuild in project folder. Remove tools/ and just use PreBuild.py
 if __name__ == "__main__":
     start_time = time.time()
 

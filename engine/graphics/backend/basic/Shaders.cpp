@@ -97,6 +97,7 @@ namespace oly::graphics
 		}
 	}
 
+	// TODO v3 are these necessary? Could just create Shader directly, such as in constructor. Also, remove OLYMPIAN_* macros from CMake.
 	static std::unique_ptr<Shader> create_linked_shader(GLuint vert, GLuint frag)
 	{
 		std::unique_ptr<Shader> shader = std::make_unique<Shader>();

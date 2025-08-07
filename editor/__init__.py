@@ -1,2 +1,2 @@
-from ManifestTOML import ManifestTOML
+from ManifestTOML import MANIFEST
 from StartMenu import StartMenuWidget

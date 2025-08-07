@@ -32,6 +32,7 @@ namespace oly::graphics
 		PersistentGPUBuffer(GLuint size)
 			: size(size)
 		{
+			// TODO v3 allow size == 0.
 			if (size == 0)
 				throw Error(ErrorCode::NULL_STORAGE);
 			glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);

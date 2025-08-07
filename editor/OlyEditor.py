@@ -11,8 +11,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Olympian Editor")
         # TODO v3 create and set window icon
 
-        self.manifest_toml = ManifestTOML()
-        self.setCentralWidget(StartMenuWidget(self.manifest_toml))
+        self.setCentralWidget(StartMenuWidget())
 
 
 if __name__ == "__main__":

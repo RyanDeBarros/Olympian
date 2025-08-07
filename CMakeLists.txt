@@ -1,81 +1,11 @@
-﻿# CMakeList.txt : CMake project for Olympian
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
+project(Olympian)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
+# Set C++ standard globally (for all subprojects)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project ("Olympian")
-
-# Run automatic tools
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/PreBuild.py"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tools"
-	RESULT_VARIABLE PREBUILD_RESULT
-)
-
-if (NOT PREBUILD_RESULT EQUAL 0)
-	message(FATAL_ERROR "PreBuild.py failed with code ${PREBUILD_RESULT}")
-endif()
-
-# Variables
-set(LIBRARIES_DIR "D:/Libraries")
-
-# Library directories
-link_directories(
-	"${LIBRARIES_DIR}/glew-2.1.0/lib/Release/x64"
-	"${LIBRARIES_DIR}/glfw-3.4/lib-vc2022/x64"
-)
-add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
-
-# Include directories
-include_directories(
-	"${CMAKE_SOURCE_DIR}/src"
-	"${CMAKE_SOURCE_DIR}/engine"
-	"${CMAKE_SOURCE_DIR}/gen"
-	"${LIBRARIES_DIR}/glew-2.1.0/include"
-	"${LIBRARIES_DIR}/glfw-3.4/include"
-	"${LIBRARIES_DIR}/glm/include"
-	"${LIBRARIES_DIR}/stb/include"
-	"${LIBRARIES_DIR}/toml/include"
-	"${LIBRARIES_DIR}/nanosvg/include"
-	"${LIBRARIES_DIR}/Quartic/include"
-)
-target_include_directories(Quartic PUBLIC "${LIBRARIES_DIR}/Quartic/include")
-
-# Find OpenGL
-find_package(OpenGL REQUIRED)
-
-# Add source to this project's executable.
-file(GLOB_RECURSE ENGINE_FILES "engine/*.cpp" "engine/*.h")
-file(GLOB_RECURSE GEN_FILES "gen/*.cpp" "gen/*.h")
-file(GLOB_RECURSE SRC_FILES "src/*.cpp" "src/*.h")
-
-add_executable (Olympian ${ENGINE_FILES} ${GEN_FILES} ${SRC_FILES})
-
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET Olympian PROPERTY CXX_STANDARD 20)
-endif()
-
-if (MSVC)
-  target_compile_options(Olympian PRIVATE /Zc:__cplusplus)
-endif()
-
-# Dependency configuration macros
-target_compile_definitions(Olympian PRIVATE GLEW_STATIC)
-
-# Olympian configuration macros
-target_compile_definitions(Olympian PRIVATE OLYMPIAN_SUBSHADER_VALIDATION)
-target_compile_definitions(Olympian PRIVATE OLYMPIAN_SHADER_VALIDATION)
-
-# Link libraries
-target_link_libraries(Olympian
-	PRIVATE OpenGL::GL
-	PRIVATE glew32s		# link against static GLEW library
-	PRIVATE glfw3		# link against GLFW library
-	PRIVATE Quartic
-)
+# Add subdirectories
+add_subdirectory(engine)
+# TODO v4 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this
+add_subdirectory(Tester)

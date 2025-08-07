@@ -4,7 +4,11 @@
 
 namespace oly::graphics::internal_shaders
 {
-	static std::string shaders_dir = "../../../engine/internal/shaders/"; // LATER embed shaders into built binary
+#ifndef OLYMPIAN_ENGINE_ABS_PATH
+#error "OLYMPIAN_ENGINE_ABS_PATH macro is not defined! Did you forget to configure CMake?"
+#endif
+
+	static std::string shaders_dir = OLYMPIAN_ENGINE_ABS_PATH + std::string("/internal/shaders/"); // LATER embed shaders into built binary
 
 	static std::unique_ptr<Shader> _sprite_batch = nullptr;
 	GLuint sprite_batch;
