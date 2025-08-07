@@ -1,5 +1,7 @@
 ﻿#include "Olympian.h"
 
+#include "ProjectContext.h"
+
 #include "registries/graphics/primitives/Sprites.h"
 
 #include "archetypes/PolygonCrop.h"
@@ -29,7 +31,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 int main()
 {
-	oly::context::Context oly_context("../../../res");
+	oly::ProjectContext context;
 
 	PlayerController pc;
 	pc.bind("jump", &PlayerController::jump);

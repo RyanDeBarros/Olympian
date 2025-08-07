@@ -10,7 +10,7 @@ from ToolNode import ToolNode, print_info, print_error, varinput
 
 MANIFEST_PATH = 'archetype/manifest.txt'
 CACHE_PATH = 'archetype/cache.json'
-GEN_PATH = '../gen/archetypes'
+GEN_PATH = '../.gen/archetypes'
 
 
 # TODO v3 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.

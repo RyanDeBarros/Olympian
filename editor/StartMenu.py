@@ -1,7 +1,8 @@
+import pathlib
 import posixpath
 import re
 
-from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 import ui
 from editor import ManifestTOML
@@ -17,10 +18,12 @@ class StartMenuWidget(QWidget):
 		self.new_tab = NewTab(self)
 		self.open_tab = OpenTab(self)
 		self.recent_tab = RecentTab(self)
+		self.delete_tab = DeleteTab(self)
 
 	def open_project(self, project_filepath):
 		# TODO
 		print(f"Opening {project_filepath}...")
+		self.manifest.push_to_top_of_recent(project_filepath)
 		self.close()
 
 
@@ -52,32 +55,32 @@ class NewTab:
 			return False
 		return bool(re.fullmatch(r'[A-Za-z0-9_\- ]+', name))
 
-	def generated_path(self, path):
-		project = self.project_name.text()
+	def get_project_name(self):
+		return self.project_name.text().strip()
+
+	def generated_project_folder(self):
+		project = self.get_project_name()
 		folder = self.project_folder.text()
 		if NewTab.is_valid_project_name(project) and len(folder) > 0:
 			if self.create_project_folder.isChecked():
 				folder = posixpath.join(folder, project)
-			return posixpath.join(folder, path)
+			return folder
 		else:
 			return ""
 
-	def generated_src_folder(self):
-		return self.generated_path("src/")
-
-	def generated_res_folder(self):
-		return self.generated_path("res/")
-
-	def generated_gen_folder(self):
-		return self.generated_path(".gen/")
-
 	def generated_project_filepath(self):
-		return self.generated_path(f"{self.project_name.text()}.oly")
+		project_folder = self.generated_project_folder()
+		project_name = self.get_project_name()
+		if project_folder != "" and project_name != "":
+			return self.start_menu.manifest.get_project_file(project_folder, project_name)
+		else:
+			return ""
 
 	def sync_project_name(self):
-		self.src_folder.setText(self.generated_src_folder())
-		self.res_folder.setText(self.generated_res_folder())
-		self.gen_folder.setText(self.generated_gen_folder())
+		project_folder = self.generated_project_folder()
+		self.src_folder.setText(self.start_menu.manifest.get_src_folder(project_folder))
+		self.res_folder.setText(self.start_menu.manifest.get_res_folder(project_folder))
+		self.gen_folder.setText(self.start_menu.manifest.get_gen_folder(project_folder))
 		project_filepath = self.generated_project_filepath()
 		self.project_filepath.setText(project_filepath)
 
@@ -85,22 +88,12 @@ class NewTab:
 		if disable:
 			self.error_message.setText("")
 		else:
-			disable = self.project_is_contained_in_existing_project()
+			disable = self.start_menu.manifest.is_filepath_relative_to_existing_project(project_filepath)
 			if disable:
-				self.error_message.setText("A project already exists in a parent folder!")
+				self.error_message.setText("The project filepath is relative to an existing project!")
 			else:
 				self.error_message.setText("")
 		self.create_project_button.setDisabled(disable)
-
-	def project_is_contained_in_existing_project(self):
-		project = self.project_name.text()
-		folder = self.project_folder.text()
-		if NewTab.is_valid_project_name(project) and len(folder) > 0:
-			if self.create_project_folder.isChecked():
-				folder = posixpath.join(folder, project)
-			return self.start_menu.manifest.filepath_is_contained_in_existing_project(folder)
-		else:
-			return False
 
 	def open_browse(self):
 		folder_path = QFileDialog.getExistingDirectory(self.start_menu, "Select Folder")
@@ -108,13 +101,9 @@ class NewTab:
 			self.project_folder.setText(folder_path)
 
 	def create_project(self):
-		self.start_menu.manifest.create_project(
-			project_filepath=self.generated_project_filepath(),
-			src_folder=self.generated_src_folder(),
-			res_folder=self.generated_res_folder(),
-			gen_folder=self.generated_gen_folder()
-		)
-		self.start_menu.open_project(self.generated_project_filepath())
+		project_filepath = self.generated_project_filepath()
+		self.start_menu.manifest.create_project(project_filepath)
+		self.start_menu.open_project(project_filepath)
 
 
 class OpenTab:
@@ -126,12 +115,12 @@ class OpenTab:
 
 		self.browse.clicked.connect(self.open_browse)
 		self.open_project_filepath.textChanged.connect(self.sync_project_filepath)
+		self.open_project_button.clicked.connect(self.open_project)
 
 	def open_browse(self):
-		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", selectedFilter="*.oly")
-		if filepath:
-			if self.start_menu.manifest.is_valid_project_file(filepath):
-				self.open_project_filepath.setText(filepath)
+		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", filter="Oly files (*.oly)")
+		if filepath and self.start_menu.manifest.is_valid_project_file(filepath):
+			self.open_project_filepath.setText(filepath)
 
 	def sync_project_filepath(self):
 		disable = self.open_project_filepath.text() == ""
@@ -156,3 +145,32 @@ class RecentTab:
 		filepath = self.combo_box.currentText()
 		if filepath != "":
 			self.start_menu.open_project(filepath)
+
+
+class DeleteTab:
+	def __init__(self, start_menu: StartMenuWidget):
+		self.start_menu = start_menu
+		self.browse = start_menu.ui.deleteBrowseButton
+		self.delete_project_filepath = start_menu.ui.deleteProject
+		self.delete_project_button = start_menu.ui.deleteProjectButton
+
+		self.browse.clicked.connect(self.open_browse)
+		self.delete_project_filepath.textChanged.connect(self.sync_project_filepath)
+		self.delete_project_button.clicked.connect(self.delete_project)
+
+	def open_browse(self):
+		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", filter="Oly files (*.oly)")
+		if filepath and self.start_menu.manifest.is_valid_project_file(filepath):
+			self.delete_project_filepath.setText(filepath)
+
+	def sync_project_filepath(self):
+		disable = self.delete_project_filepath.text() == ""
+		self.delete_project_button.setDisabled(disable)
+
+	def delete_project(self):
+		reply = QMessageBox.warning(self.start_menu, "Confirm",
+									f"Delete project {pathlib.Path(self.delete_project_filepath.text()).stem}?",
+									QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+		if reply == QMessageBox.StandardButton.Yes:
+			self.start_menu.manifest.delete_project(self.delete_project_filepath.text())
+			self.delete_project_filepath.clear()

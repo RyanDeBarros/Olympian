@@ -68,7 +68,7 @@ namespace oly::context
 
 namespace oly::context
 {
-	static void init(const std::string& resource_root)
+	static void init(const char* project_file, const std::string& resource_root)
 	{
 		if (glfwInit() != GLFW_TRUE)
 			throw oly::Error(oly::ErrorCode::GLFW_INIT);
@@ -76,8 +76,7 @@ namespace oly::context
 
 		internal::this_frame = 0;
 		internal::resource_root = resource_root;
-
-		auto toml = load_toml("context.toml");
+		auto toml = reg::load_toml(project_file);
 		TOMLNode toml_context = toml["context"];
 
 		init_logger(toml_context);
@@ -127,10 +126,10 @@ namespace oly::context
 
 	static size_t active_contexts = 0;
 
-	Context::Context(const char* resource_root)
+	Context::Context(const char* project_file, const char* resource_root)
 	{
 		if (active_contexts == 0)
-			init(resource_root + std::string("/"));
+			init(project_file, resource_root);
 		++active_contexts;
 	}
 
