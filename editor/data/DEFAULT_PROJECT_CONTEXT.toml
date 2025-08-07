@@ -1,0 +1,28 @@
+[context]
+gamepads = 1
+
+[context.window_hint]
+
+[context.window]
+width = 1440
+height = 1080
+title = "Olympian Engine"
+
+[context.logger]
+logfile = "{{LOGFILE}}"
+append = true
+console = true
+
+[context.sprite_batch]
+"initial sprites" = 100
+"new textures" = 10
+
+[context.polygon_batch]
+primitives = 100
+
+[context.ellipse_batch]
+ellipses = 100
+
+[context.text_batch]
+"initial glyphs" = 100
+"new textures" = 10

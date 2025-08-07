@@ -1,89 +1,32 @@
 import os
+import re
 from pathlib import Path
 import posixpath
 
 import toml
 
 
-def default_context_toml(project_folder, project_name):
-	return {
-        "context": {
-			"window_hint": {},
-			"window": {
-				"width": 1440,
-				"height": 1080,
-				"title": "Olympian Engine"
-			},
-			"gamepads": 1,
-			"logger": {
-				"logfile": os.path.join(project_folder, f"{project_name}.log"),
-				"append": True,
-				"console": True
-			},
-			"sprite_batch": {
-				"initial sprites": 100,
-				"new textures": 10
-			},
-			"polygon_batch": {
-				"primitives": 0
-			},
-			"ellipse_batch": {
-				"ellipses": 0
-			},
-			"text_batch": {
-				"initial glyphs": 100,
-				"new textures": 10
-			}
-		}
-	}
-
-
-def project_context_header():
-	return """#pragma once
-
-#include \"Olympian.h\"
-
-namespace oly
-{
-    struct ProjectContext
-    {
-        ProjectContext();
-        ProjectContext(const ProjectContext&) = delete;
-        ProjectContext(ProjectContext&&) = delete;
-        
-    private:
-        context::Context context;
-    };
-}
-"""
-
-def project_context_cpp():
-	return f"""#include "ProjectContext.h"
-
-#ifndef OLYMPIAN_CONTEXT_PROJECT_FILE
-#error "OLYMPIAN_CONTEXT_PROJECT_FILE macro is not defined! Did you forget to configure CMake?"
-#endif
-
-#ifndef OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR
-#error "OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR macro is not defined! Did you forget to configure CMake?"
-#endif
-
-namespace oly
-{{
-	ProjectContext::ProjectContext() : context(OLYMPIAN_CONTEXT_PROJECT_FILE, OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR) {{}}
-}}
-"""
-
-
 class ManifestTOML:
 	def __init__(self):
-		self.filepath = 'data/manifest.toml'
-		with open(self.filepath, 'r') as f:
+		self.toml_filepath = 'data/manifest.toml'
+		with open(self.toml_filepath, 'r') as f:
 			self.toml = toml.load(f)
 
+		with open('data/PROJECT_CONTEXT_H', 'r') as f:
+			self.project_context_h = f.read()
+
+		with open('data/PROJECT_CONTEXT_CPP', 'r') as f:
+			self.project_context_cpp = f.read()
+
 	def dump(self):
-		with open(self.filepath, 'w') as f:
+		with open(self.toml_filepath, 'w') as f:
 			toml.dump(self.toml, f)
+
+	def get_default_project_context(self, project_folder, project_name):
+		logfile = posixpath.join(project_folder, f"{project_name}.log")
+		with open('data/DEFAULT_PROJECT_CONTEXT.toml', 'r') as f:
+			content = f.read()
+		return re.sub(r'\{\{LOGFILE}}', logfile, content)
 
 	def get_last_file_dialog_dir(self):
 		folder = self.toml['last file dialog dir'] if 'last file dialog dir' in self.toml else os.getcwd()
@@ -104,8 +47,10 @@ class ManifestTOML:
 		return self.toml['recent']
 
 	def is_filepath_relative_to_existing_project(self, filepath):
+		folder = os.path.dirname(filepath)
 		for project_filepath in self.project_list():
-			if Path(filepath).is_relative_to(project_filepath) or Path(project_filepath).is_relative_to(filepath):
+			project_folder = os.path.dirname(project_filepath)
+			if Path(folder).is_relative_to(project_folder) or Path(project_folder).is_relative_to(folder):
 				return True
 		return False
 
@@ -148,13 +93,13 @@ class ManifestTOML:
 		Path(gen_folder).mkdir(parents=True, exist_ok=True)
 
 		with open(project_filepath, 'w') as f:
-			toml.dump(default_context_toml(project_folder, project_name), f)
+			f.write(self.get_default_project_context(project_folder, project_name))
 
 		with open(posixpath.join(src_folder, "ProjectContext.h"), 'w') as f:
-			f.write(project_context_header())
+			f.write(self.project_context_h)
 
 		with open(posixpath.join(src_folder, "ProjectContext.cpp"), 'w') as f:
-			f.write(project_context_cpp(project_filepath, res_folder))
+			f.write(self.project_context_cpp)
 
 		# TODO CMakeLists.txt, LICENSE
 
