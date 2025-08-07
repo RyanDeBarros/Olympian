@@ -1,0 +1,9 @@
+[context]
+gamepads = 1
+
+[context.window_hint]
+
+[context.window]
+width = 1440
+height = 1080
+title = "Olympian Engine"
