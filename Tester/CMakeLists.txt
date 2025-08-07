@@ -11,8 +11,8 @@ endif()
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/PreBuild.py"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tools"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/PreBuild.py"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/res"
 	RESULT_VARIABLE PREBUILD_RESULT
 )
 
@@ -40,6 +40,12 @@ file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h")
 
 # Define executable
 add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
+
+# Project context macros
+target_compile_definitions(Olympian PUBLIC
+	OLYMPIAN_CONTEXT_PROJECT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/Tester.oly"
+	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res/"
+)
 
 # Link engine
 target_link_libraries(Olympian PRIVATE OlympianEngine)

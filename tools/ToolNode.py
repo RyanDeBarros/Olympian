@@ -5,13 +5,6 @@ from colorama import Fore, Style
 import re
 
 
-RES_PATH = "../res/"
-
-
-def res_path(path: str) -> str:
-    return os.path.join(RES_PATH, path)
-
-
 class ToolNode:
     def __init__(self, name, description="", action=None):
         self.name = name

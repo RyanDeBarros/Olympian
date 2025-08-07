@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(OlympianEngine)
+project(OlympianEngine VERSION 1.0.0 LANGUAGES CXX)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -65,3 +65,5 @@ target_link_libraries(OlympianEngine PUBLIC
 	glfw3
 	Quartic
 )
+
+# TODO v3 install OlympianEngine so as to use find_package(Olympian) in project cmake

@@ -8,8 +8,9 @@ import toml
 from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
 from ToolNode import ToolNode, print_info, print_error, varinput
 
-MANIFEST_PATH = 'archetype/manifest.txt'
-CACHE_PATH = 'archetype/cache.json'
+# MANIFEST_PATH = 'archetype/manifest.txt'
+# CACHE_PATH = 'archetype/cache.json'
+CACHE_PATH = 'D:/Visual Studio '
 GEN_PATH = '../.gen/archetypes'
 
 
@@ -304,6 +305,7 @@ class Cache:
 
 def generate(asset_filepath: str):
     with open(asset_filepath, 'r') as f:
+        print("filepath: " + asset_filepath)
         tml = toml.load(f)
         if 'archetype' not in tml:
             return
@@ -325,10 +327,11 @@ def read_manifest_folders():
 
 
 def generate_manifest():
-    asset_folders = read_manifest_folders()
+    # asset_folders = read_manifest_folders()
+    asset_folders = ["assets/archetypes"]
 
     def generate_folder(folder):
-        with os.scandir(os.path.join('../res', folder)) as entries:
+        with os.scandir(os.path.join(os.getcwd(), folder)) as entries:
             for entry in entries:
                 if entry.is_file():
                     cache.mark(entry.path)

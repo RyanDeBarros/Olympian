@@ -1,6 +1,6 @@
 import os
 
-from common import *
+from tools.common import *
 
 IMPORT_FILE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".svg", ".gif")
 IMPORT_FILE_EXTENSIONS_IMAGES = (".png", ".jpg", ".jpeg", ".bmp")
@@ -96,6 +96,7 @@ def generate_spritesheet():
     filepath = ""
     while len(filepath) == 0:
         filepath = varinput("Texture filepath: ")
+    # TODO v3 fix res path
     filepath = res_path(filepath)
 
     if not filepath.endswith(IMPORT_FILE_EXTENSIONS_SPRITESHEETABLE):
