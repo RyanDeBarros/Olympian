@@ -10,8 +10,9 @@ from editor import MANIFEST
 
 
 class StartMenuWindow(QMainWindow):
-	def __init__(self):
+	def __init__(self, open_project):
 		super().__init__()
+		self.open_project = open_project
 
 		self.setWindowTitle("Olympian Editor")
 		# TODO v3 create and set window icon
@@ -20,14 +21,14 @@ class StartMenuWindow(QMainWindow):
 
 	def open(self, project_filepath):
 		self.close()
-		# TODO v3 open project window
+		self.open_project(project_filepath)
 
 
 class StartMenuWidget(QWidget):
 	def __init__(self, win):
 		super().__init__()
 		self.win = win
-		self.ui = ui.startmenu.Ui_Form()
+		self.ui = ui.StartMenu.Ui_Form()
 		self.ui.setupUi(self)
 
 		self.new_tab = NewTab(self)
