@@ -1,0 +1,7 @@
+"abstract storage" = "discard"
+"image storage" = "discard"
+"min filter" = "nearest"
+"mag filter" = "nearest"
+"generate mipmaps" = "off"
+"wrap s" = "clamp to edge"
+"wrap t" = "clamp to edge"

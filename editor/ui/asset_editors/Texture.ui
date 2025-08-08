@@ -48,7 +48,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="editTab">
       <attribute name="title">
@@ -273,7 +273,7 @@
                    </widget>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QComboBox" name="editImageWrapT">
+                   <widget class="QComboBox" name="editImageWrapS">
                     <item>
                      <property name="text">
                       <string>Clamp To Edge</string>
@@ -309,7 +309,7 @@
                    </widget>
                   </item>
                   <item row="5" column="1">
-                   <widget class="QComboBox" name="editImageWrapS">
+                   <widget class="QComboBox" name="editImageWrapT">
                     <item>
                      <property name="text">
                       <string>Clamp To Edge</string>
@@ -853,7 +853,7 @@
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QComboBox" name="defaultImageWrapT">
+              <widget class="QComboBox" name="defaultImageWrapS">
                <item>
                 <property name="text">
                  <string>Clamp To Edge</string>
@@ -882,7 +882,7 @@
               </widget>
              </item>
              <item row="5" column="1">
-              <widget class="QComboBox" name="defaultEditImageWrapS">
+              <widget class="QComboBox" name="defaultImageWrapT">
                <item>
                 <property name="text">
                  <string>Clamp To Edge</string>
@@ -929,7 +929,7 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QComboBox" name="defaultImageStorage_2">
+              <widget class="QComboBox" name="defaultSVGAbstractStorage">
                <item>
                 <property name="text">
                  <string>Discard</string>
@@ -950,7 +950,7 @@
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QComboBox" name="defaultImageMinFilter_2">
+              <widget class="QComboBox" name="defaultSVGMinFilter">
                <item>
                 <property name="text">
                  <string>Nearest</string>
@@ -991,7 +991,7 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QComboBox" name="defaultImageMagFilter_2">
+              <widget class="QComboBox" name="defaultSVGMagFilter">
                <item>
                 <property name="text">
                  <string>Nearest</string>
@@ -1026,7 +1026,7 @@
               </widget>
              </item>
              <item row="5" column="1">
-              <widget class="QComboBox" name="defaultImageWrapT_2">
+              <widget class="QComboBox" name="defaultSVGWrapS">
                <item>
                 <property name="text">
                  <string>Clamp To Edge</string>
@@ -1055,7 +1055,7 @@
               </widget>
              </item>
              <item row="6" column="1">
-              <widget class="QComboBox" name="defaultEditImageWrapS_2">
+              <widget class="QComboBox" name="defaultSVGWrapT">
                <item>
                 <property name="text">
                  <string>Clamp To Edge</string>
@@ -1091,7 +1091,7 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QComboBox" name="comboBox">
+              <widget class="QComboBox" name="defaultSVGImageStorage">
                <item>
                 <property name="text">
                  <string>Discard</string>
@@ -1105,7 +1105,7 @@
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QComboBox" name="comboBox_2">
+              <widget class="QComboBox" name="defaultSVGMipmaps">
                <item>
                 <property name="text">
                  <string>Off</string>
@@ -1127,6 +1127,13 @@
            </item>
           </layout>
          </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="saveDefaultsButton">
+         <property name="text">
+          <string>Save Defaults</string>
+         </property>
         </widget>
        </item>
       </layout>
