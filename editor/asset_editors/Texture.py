@@ -1,5 +1,9 @@
+import os
+import posixpath
+from pathlib import Path
+
 import toml
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QFileDialog, QLayout
 
 from editor import ui
 
@@ -16,11 +20,58 @@ class TextureEditorWidget(QWidget):
 		self.defaults_tab = DefaultsTab(self)
 		self.import_tab = ImportTab(self)
 
+		self.last_file_dialog_dir = posixpath.join(posixpath.dirname(win.project_filepath), "res")
+
 
 class EditTab:
 	def __init__(self, texture_editor: TextureEditorWidget):
 		self.editor = texture_editor
-		self.texture = {}
+		self.ui = self.editor.ui
+		self.texture = []
+
+		self.ui.editTextureBrowse.clicked.connect(self.browse_texture)
+		self.ui.editTextureFilepath.textChanged.connect(self.texture_filepath_changed)
+		self.ui.editSpritesheet.checkStateChanged.connect(self.spritesheet_checked_changed)
+
+		self.texture_filepath_changed()
+
+	def browse_texture(self):
+		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir,
+												  filter="Image files (*.png *.gif *.svg *.jpg *.jpeg *.bmp *.tga)")
+		if filepath:
+			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
+			self.ui.editTextureFilepath.setText(filepath)
+
+	def texture_filepath_changed(self):
+		filepath = self.ui.editTextureFilepath.text()
+		if len(filepath) > 0:
+			self.ui.paramsLayout.show()
+			self.ui.editTextureSlotCombo.setCurrentIndex(0)
+
+			if Path(filepath).suffix != ".svg":
+				self.ui.editParams.setCurrentWidget(self.ui.editImageParams)
+			else:
+				self.ui.editParams.setCurrentWidget(self.ui.editSVGParams)
+
+			if Path(filepath).suffix != ".gif":
+				self.ui.editSpritesheetWidget.show()
+
+				# TODO v3 check if spritesheet exists at slot 0
+				self.ui.editSpritesheet.setChecked(False)
+				self.spritesheet_checked_changed()
+			else:
+				self.ui.editSpritesheetWidget.hide()
+
+			# TODO v3 load or create self.texture
+		else:
+			self.ui.paramsLayout.hide()
+
+	def spritesheet_checked_changed(self):
+		if self.ui.editSpritesheet.isChecked():
+			# TODO v3 load spritesheet params if exist in import
+			self.ui.editSpritesheetParams.show()
+		else:
+			self.ui.editSpritesheetParams.hide()
 
 
 class DefaultsTab:
