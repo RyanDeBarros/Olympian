@@ -62,11 +62,8 @@ namespace oly::reg
 	inline Transform2D load_transform_2d(const TOMLNode& node, const char* name) { return load_transform_2d(node[name]); }
 
 	extern bool parse_mag_filter(const TOMLNode& node, const std::string& name, GLenum& mag_filter);
-	extern bool parse_mag_filter(const toml::table& node, const std::string& name, GLenum& mag_filter);
 	extern bool parse_min_filter(const TOMLNode& node, const std::string& name, GLenum& min_filter);
-	extern bool parse_min_filter(const toml::table& node, const std::string& name, GLenum& min_filter);
 	extern bool parse_wrap(const TOMLNode& node, const std::string& name, GLenum& wrap);
-	extern bool parse_wrap(const toml::table& node, const std::string& name, GLenum& wrap);
 
 	namespace params
 	{

@@ -1,6 +1,6 @@
 storage = "discard"
-"min filter" = "nearest"
-"mag filter" = "nearest"
+"min filter" = 9728
+"mag filter" = 9728
 "generate mipmaps" = false
-"wrap s" = "clamp to edge"
-"wrap t" = "clamp to edge"
+"wrap s" = 33071
+"wrap t" = 33071

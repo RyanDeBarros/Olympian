@@ -3,9 +3,10 @@ import posixpath
 from pathlib import Path
 
 import toml
-from PySide6.QtWidgets import QWidget, QFileDialog, QLayout
+from PySide6.QtWidgets import QWidget, QFileDialog
 
 from editor import ui
+from editor.GLParams import *
 
 
 class TextureEditorWidget(QWidget):
@@ -89,11 +90,11 @@ class DefaultsTab:
 	def _get_default_raster_dict(self):
 		return {
 			'storage': self.ui.defaultImageStorage.currentText().lower(),
-			'min filter': self.ui.defaultImageMinFilter.currentText().lower(),
-			'mag filter': self.ui.defaultImageMagFilter.currentText().lower(),
+			'min filter': GL_PARAM_LIST.get_value(self.ui.defaultImageMinFilter.currentText()),
+			'mag filter': GL_PARAM_LIST.get_value(self.ui.defaultImageMagFilter.currentText()),
 			'generate mipmaps': self.ui.defaultImageMipmaps.isChecked(),
-			'wrap s': self.ui.defaultImageWrapS.currentText().lower(),
-			'wrap t': self.ui.defaultImageWrapT.currentText().lower()
+			'wrap s': GL_PARAM_LIST.get_value(self.ui.defaultImageWrapS.currentText()),
+			'wrap t': GL_PARAM_LIST.get_value(self.ui.defaultImageWrapT.currentText())
 		}
 
 	def get_stored_default_svg_dict(self):
@@ -104,30 +105,30 @@ class DefaultsTab:
 		return {
 			'abstract storage': self.ui.defaultSVGAbstractStorage.currentText().lower(),
 			'image storage': self.ui.defaultSVGImageStorage.currentText().lower(),
-			'min filter': self.ui.defaultSVGMinFilter.currentText().lower(),
-			'mag filter': self.ui.defaultSVGMagFilter.currentText().lower(),
+			'min filter': GL_PARAM_LIST.get_value(self.ui.defaultSVGMinFilter.currentText()),
+			'mag filter': GL_PARAM_LIST.get_value(self.ui.defaultSVGMagFilter.currentText()),
 			'generate mipmaps': self.ui.defaultSVGMipmaps.currentText().lower(),
-			'wrap s': self.ui.defaultSVGWrapS.currentText().lower(),
-			'wrap t': self.ui.defaultSVGWrapT.currentText().lower()
+			'wrap s': GL_PARAM_LIST.get_value(self.ui.defaultSVGWrapS.currentText()),
+			'wrap t': GL_PARAM_LIST.get_value(self.ui.defaultSVGWrapT.currentText())
 		}
 
 	def load_defaults(self):
 		defaults = self.get_stored_default_raster_dict()
 		self.ui.defaultImageStorage.setCurrentText(defaults['storage'].title())
-		self.ui.defaultImageMinFilter.setCurrentText(defaults['min filter'].title())
-		self.ui.defaultImageMagFilter.setCurrentText(defaults['mag filter'].title())
+		self.ui.defaultImageMinFilter.setCurrentText(GL_PARAM_LIST.get_name(defaults['min filter']))
+		self.ui.defaultImageMagFilter.setCurrentText(GL_PARAM_LIST.get_name(defaults['mag filter']))
 		self.ui.defaultImageMipmaps.setChecked(defaults['generate mipmaps'])
-		self.ui.defaultImageWrapS.setCurrentText(defaults['wrap s'].title())
-		self.ui.defaultImageWrapT.setCurrentText(defaults['wrap t'].title())
+		self.ui.defaultImageWrapS.setCurrentText(GL_PARAM_LIST.get_name(defaults['wrap s']))
+		self.ui.defaultImageWrapT.setCurrentText(GL_PARAM_LIST.get_name(defaults['wrap t']))
 
 		defaults = self.get_stored_default_svg_dict()
 		self.ui.defaultSVGAbstractStorage.setCurrentText(defaults['abstract storage'].title())
 		self.ui.defaultSVGImageStorage.setCurrentText(defaults['image storage'].title())
-		self.ui.defaultSVGMinFilter.setCurrentText(defaults['min filter'].title())
-		self.ui.defaultSVGMagFilter.setCurrentText(defaults['mag filter'].title())
+		self.ui.defaultSVGMinFilter.setCurrentText(GL_PARAM_LIST.get_name(defaults['min filter']))
+		self.ui.defaultSVGMagFilter.setCurrentText(GL_PARAM_LIST.get_name(defaults['mag filter']))
 		self.ui.defaultSVGMipmaps.setCurrentText(defaults['generate mipmaps'].title())
-		self.ui.defaultSVGWrapS.setCurrentText(defaults['wrap s'].title())
-		self.ui.defaultSVGWrapT.setCurrentText(defaults['wrap t'].title())
+		self.ui.defaultSVGWrapS.setCurrentText(GL_PARAM_LIST.get_name(defaults['wrap s']))
+		self.ui.defaultSVGWrapT.setCurrentText(GL_PARAM_LIST.get_name(defaults['wrap t']))
 
 	def save_defaults(self):
 		with open('data/asset_defaults/raster_texture.toml', 'w') as f:
