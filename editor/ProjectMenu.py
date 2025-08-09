@@ -5,10 +5,9 @@ import asset_editors
 
 
 class ProjectWindow(QMainWindow):
-	def __init__(self, open_start_menu, project_filepath):
+	def __init__(self, open_start_menu):
 		super().__init__()
 		self.open_start = open_start_menu
-		self.project_filepath = project_filepath
 
 		self.setWindowTitle("Olympian Editor")
 		# TODO v3 create and set window icon

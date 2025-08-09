@@ -22,6 +22,7 @@ The engine uses the following libraries:
 The editor uses the following libraries:
 
 - **PySide6**
+- **Send2Trash**
 
 ### Other
 

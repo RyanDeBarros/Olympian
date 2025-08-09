@@ -7,7 +7,8 @@ This project is licensed under the GNU General Public License v3.0 (GPLv3).
 This project includes:
 
 - Code licensed under GPLv3
-- Third-party components licensed under MIT, BSD 3-Clause, Apache 2.0, zlib, Happy Bunny (Modified MIT)
+- Third-party components in engine licensed under MIT, BSD 3-Clause, Apache 2.0, zlib, Happy Bunny (Modified MIT).
+- Third-party components in editor licensed under LGPLv3, BSD 3-Clause.
 - Fonts licensed under the SIL Open Font License 1.1 are licensed separately.
 
 See the licenses/ folder for individual third-party licenses.
