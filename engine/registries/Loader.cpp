@@ -117,7 +117,7 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			mag_filter = v.value(); // TODO v3 check that value is among acceptable enum values
+			mag_filter = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
 			return true;
 		}
 
@@ -138,7 +138,7 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			min_filter = v.value(); // TODO v3 check that value is among acceptable enum values
+			min_filter = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
 			return true;
 		}
 
@@ -167,7 +167,7 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			wrap = v.value(); // TODO v3 check that value is among acceptable enum values
+			wrap = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
 			return true;
 		}
 

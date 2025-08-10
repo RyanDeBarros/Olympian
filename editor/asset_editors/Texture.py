@@ -1,9 +1,10 @@
 import os
 import posixpath
 from pathlib import Path
+from typing import List, Optional
 
 import toml
-from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from editor import ui, MANIFEST, ProjectContext
 from editor.Params import *
@@ -24,55 +25,230 @@ class TextureEditorWidget(QWidget):
 		self.last_file_dialog_dir = posixpath.join(posixpath.dirname(ProjectContext.PROJECT_FILE), "res")
 
 
+class Texture:
+	def __init__(self, filepath):
+		self.filepath = filepath
+		with open(f"{filepath}.oly", 'r') as f:
+			self.slots: List[dict] = toml.load(f)['texture']
+		self.is_svg = Path(filepath).suffix == ".svg"
+		self.is_gif = Path(filepath).suffix == ".gif"
+
+	def dump(self):
+		with open(f"{self.filepath}.oly", 'w') as f:
+			toml.dump({'texture': self.slots}, f)
+
+
 class EditTab:
 	def __init__(self, texture_editor: TextureEditorWidget):
 		self.editor = texture_editor
 		self.ui = self.editor.ui
-		self.texture = []
+		self.texture: Optional[Texture] = None
 
 		self.ui.editTextureBrowse.clicked.connect(self.browse_texture)
 		self.ui.editTextureFilepath.textChanged.connect(self.texture_filepath_changed)
+
+		self.ui.editTextureSlotCombo.currentIndexChanged.connect(self.load_texture_slot)
 		self.ui.editSpritesheet.checkStateChanged.connect(self.spritesheet_checked_changed)
+		self.ui.editTextureNewSlot.clicked.connect(self.add_new_slot)
+		self.ui.editTextureDeleteSlot.clicked.connect(self.delete_slot)
+
+		self.ui.applySlotSettings.clicked.connect(self.apply_slot_settings)
+		self.ui.cancelSlotSettings.clicked.connect(self.cancel_slot_settings)
+		self.ui.resetSlotSettings.clicked.connect(self.reset_slot_settings)
 
 		self.texture_filepath_changed()
 
 	def browse_texture(self):
 		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir,
-												  filter="Image files (*.png *.gif *.svg *.jpg *.jpeg *.bmp *.tga)")
+													filter="Image files (*.png *.gif *.svg *.jpg *.jpeg *.bmp *.tga)")
 		if filepath:
 			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
-			self.ui.editTextureFilepath.setText(filepath)
+			if self.ui.editTextureFilepath.text() == filepath:
+				self.texture_filepath_changed()
+			else:
+				self.ui.editTextureFilepath.setText(filepath)
 
 	def texture_filepath_changed(self):
 		filepath = self.ui.editTextureFilepath.text()
 		if len(filepath) > 0:
+			try:
+				self.texture = Texture(filepath)
+				assert len(self.texture.slots) >= 1
+			except Exception:
+				self.texture = None
+				self.ui.paramsLayout.hide()
+				self.ui.editTextureDeleteSlot.setDisabled(True)
+				QMessageBox.warning(self.editor, "Error", f"Could not load texture {filepath}.")
+				return
+
 			self.ui.paramsLayout.show()
-			self.ui.editTextureSlotCombo.setCurrentIndex(0)
-
-			if Path(filepath).suffix != ".svg":
-				self.ui.editParams.setCurrentWidget(self.ui.editImageParams)
-			else:
+			if self.texture.is_svg:
 				self.ui.editParams.setCurrentWidget(self.ui.editSVGParams)
-
-			if Path(filepath).suffix != ".gif":
-				self.ui.editSpritesheetWidget.show()
-
-				# TODO v3 check if spritesheet exists at slot 0
-				self.ui.editSpritesheet.setChecked(False)
-				self.spritesheet_checked_changed()
 			else:
-				self.ui.editSpritesheetWidget.hide()
+				self.ui.editParams.setCurrentWidget(self.ui.editImageParams)
 
-			# TODO v3 load or create self.texture
+			self.ui.editTextureSlotCombo.blockSignals(True)
+			self.ui.editTextureSlotCombo.clear()
+			for i in range(len(self.texture.slots)):
+				self.ui.editTextureSlotCombo.addItem(f"{i}")
+			self.ui.editTextureSlotCombo.blockSignals(False)
+
+			self.ui.editTextureDeleteSlot.setDisabled(self.ui.editTextureSlotCombo.count() == 1)
+
+			if self.ui.editTextureSlotCombo.currentIndex() == 0:
+				self.load_texture_slot()
+			else:
+				self.ui.editTextureSlotCombo.setCurrentIndex(0)
 		else:
 			self.ui.paramsLayout.hide()
+			self.ui.editTextureDeleteSlot.setDisabled(True)
 
 	def spritesheet_checked_changed(self):
 		if self.ui.editSpritesheet.isChecked():
-			# TODO v3 load spritesheet params if exist in import
 			self.ui.editSpritesheetParams.show()
+
+			slot = self.ui.editTextureSlotCombo.currentIndex()
+			tex = self.texture.slots[slot]
+
+			self.ui.spritesheetRows.setValue(tex.get('rows', 1))
+			self.ui.spritesheetColumns.setValue(tex.get('cols', 1))
+			self.ui.spritesheetCellWidthOverride.setValue(tex.get('cell width override', 0))
+			self.ui.spritesheetCellHeightOverride.setValue(tex.get('cell height override', 0))
+			self.ui.spritesheetDelayCS.setValue(tex.get('delay cs', 0))
+			self.ui.spritesheetRowMajor.setChecked(tex.get('row major', True))
+			self.ui.spritesheetRowUp.setChecked(tex.get('row up', True))
 		else:
 			self.ui.editSpritesheetParams.hide()
+
+	def load_texture_slot(self):
+		if self.texture is None:
+			return
+
+		slot = self.ui.editTextureSlotCombo.currentIndex()
+		tex = self.texture.slots[slot]
+
+		# regular settings
+		if self.texture.is_svg:
+			self.load_svg_dict_into_slot(tex)
+		else:
+			self.load_raster_dict_into_slot(tex)
+
+		# spritesheet settings
+		if self.texture.is_gif:
+			self.ui.editSpritesheetWidget.hide()
+		else:
+			self.ui.editSpritesheetWidget.show()
+			if 'anim' in tex and tex['anim']:
+				self.ui.editSpritesheetParams.show()
+				if self.ui.editSpritesheet.isChecked():
+					self.spritesheet_checked_changed()
+				else:
+					self.ui.editSpritesheet.setChecked(True)
+			else:
+				self.ui.editSpritesheetParams.hide()
+				if self.ui.editSpritesheet.isChecked():
+					self.ui.editSpritesheet.setChecked(False)
+				else:
+					self.spritesheet_checked_changed()
+
+	def load_raster_dict_into_slot(self, tex):
+		defaults = self.editor.defaults_tab.get_stored_default_raster_dict()
+		self.ui.editImageStorage.setCurrentText(PARAM_LIST.get_name(tex.get('storage', defaults['storage'])))
+		self.ui.editImageMinFilter.setCurrentText(PARAM_LIST.get_name(tex.get('min filter', defaults['min filter'])))
+		self.ui.editImageMagFilter.setCurrentText(PARAM_LIST.get_name(tex.get('mag filter', defaults['mag filter'])))
+		self.ui.editImageMipmaps.setChecked(tex.get('generate mipmaps', defaults['generate mipmaps']))
+		self.ui.editImageWrapS.setCurrentText(PARAM_LIST.get_name(tex.get('wrap s', defaults['wrap s'])))
+		self.ui.editImageWrapT.setCurrentText(PARAM_LIST.get_name(tex.get('wrap t', defaults['wrap t'])))
+
+	def load_svg_dict_into_slot(self, tex):
+		defaults = self.editor.defaults_tab.get_stored_default_svg_dict()
+		self.ui.editSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(tex.get('abstract storage', defaults['abstract storage'])))
+		self.ui.editSVGImageStorage.setCurrentText(PARAM_LIST.get_name(tex.get('image storage', defaults['image storage'])))
+		self.ui.editSVGMinFilter.setCurrentText(PARAM_LIST.get_name(tex.get('min filter', defaults['min filter'])))
+		self.ui.editSVGMagFilter.setCurrentText(PARAM_LIST.get_name(tex.get('mag filter', defaults['mag filter'])))
+		self.ui.editSVGMipmaps.setCurrentText(PARAM_LIST.get_name(tex.get('generate mipmaps', defaults['generate mipmaps'])))
+		self.ui.editSVGWrapS.setCurrentText(PARAM_LIST.get_name(tex.get('wrap s', defaults['wrap s'])))
+		self.ui.editSVGWrapT.setCurrentText(PARAM_LIST.get_name(tex.get('wrap t', defaults['wrap t'])))
+
+	def add_new_slot(self):
+		if self.texture is not None:
+			slot = self.ui.editTextureSlotCombo.count()
+			self.ui.editTextureSlotCombo.addItem(f"{slot}")
+			if self.texture.is_svg:
+				self.texture.slots.append(self.editor.defaults_tab.get_stored_default_svg_dict())
+			else:
+				self.texture.slots.append(self.editor.defaults_tab.get_stored_default_raster_dict())
+			self.ui.editTextureSlotCombo.setCurrentIndex(slot)
+			self.texture.dump()
+			self.ui.editTextureDeleteSlot.setDisabled(False)
+
+	def delete_slot(self):
+		if self.texture is not None and len(self.texture.slots) > 1:
+			slot = self.ui.editTextureSlotCombo.currentIndex()
+			self.texture.slots.pop(slot)
+			self.texture.dump()
+
+			for i in range(slot + 1, self.ui.editTextureSlotCombo.count()):
+				self.ui.editTextureSlotCombo.setItemText(i, f"{i - 1}")
+			self.ui.editTextureSlotCombo.removeItem(slot)
+			if self.ui.editTextureSlotCombo.count() == 1:
+				self.ui.editTextureDeleteSlot.setDisabled(True)
+
+	def apply_slot_settings(self):
+		if self.texture is not None:
+			slot = self.ui.editTextureSlotCombo.currentIndex()
+			tex = self.texture.slots[slot]
+
+			if self.texture.is_svg:
+				tex['abstract storage'] = PARAM_LIST.get_value(self.ui.editSVGAbstractStorage.currentText())
+				tex['image storage'] = PARAM_LIST.get_value(self.ui.editSVGImageStorage.currentText())
+				tex['min filter'] = PARAM_LIST.get_value(self.ui.defaultSVGMinFilter.currentText())
+				tex['mag filter'] = PARAM_LIST.get_value(self.ui.defaultSVGMagFilter.currentText())
+				tex['generate mipmaps'] = PARAM_LIST.get_value(self.ui.editSVGMipmaps.currentText())
+				tex['wrap s'] = PARAM_LIST.get_value(self.ui.editSVGWrapS.currentText())
+				tex['wrap t'] = PARAM_LIST.get_value(self.ui.editSVGWrapT.currentText())
+			else:
+				tex['storage'] = PARAM_LIST.get_value(self.ui.editImageStorage.currentText())
+				tex['min filter'] = PARAM_LIST.get_value(self.ui.editImageMinFilter.currentText())
+				tex['mag filter'] = PARAM_LIST.get_value(self.ui.editImageMagFilter.currentText())
+				tex['generate mipmaps'] = self.ui.editImageMipmaps.isChecked()
+				tex['wrap s'] = PARAM_LIST.get_value(self.ui.editImageWrapS.currentText())
+				tex['wrap t'] = PARAM_LIST.get_value(self.ui.editImageWrapT.currentText())
+
+			if self.ui.editSpritesheet.isChecked():
+				assert not self.texture.is_gif
+				tex['anim'] = True
+				tex['rows'] = self.ui.spritesheetRows.value()
+				tex['cols'] = self.ui.spritesheetColumns.value()
+				tex['cell width override'] = self.ui.spritesheetCellWidthOverride.value()
+				tex['cell height override'] = self.ui.spritesheetCellHeightOverride.value()
+				tex['delay cs'] = self.ui.spritesheetDelayCS.value()
+				tex['row major'] = self.ui.spritesheetRowMajor.isChecked()
+				tex['row up'] = self.ui.spritesheetRowUp.isChecked()
+			else:
+				tex.pop('anim', None)
+				tex.pop('rows', None)
+				tex.pop('cols', None)
+				tex.pop('cell width override', None)
+				tex.pop('cell height override', None)
+				tex.pop('delay cs', None)
+				tex.pop('row major', None)
+				tex.pop('row up', None)
+
+			self.texture.dump()
+
+	def cancel_slot_settings(self):
+		if self.texture is not None:
+			self.load_texture_slot()
+
+	def reset_slot_settings(self):
+		if self.texture is not None:
+			if self.texture.is_svg:
+				defaults = self.editor.defaults_tab.get_stored_default_svg_dict()
+				self.load_svg_dict_into_slot(defaults)
+			else:
+				defaults = self.editor.defaults_tab.get_stored_default_raster_dict()
+				self.load_raster_dict_into_slot(defaults)
 
 
 class DefaultsTab:

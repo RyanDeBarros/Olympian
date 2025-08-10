@@ -698,34 +698,23 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
-               <widget class="QPushButton" name="resetSlotParametersToDefault">
+               <widget class="QPushButton" name="applySlotSettings">
                 <property name="text">
-                 <string>Reset Slot Parameters To Default</string>
+                 <string>Apply Changes To Slot Settings</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="resetTextureParametersToDefault">
+               <widget class="QPushButton" name="cancelSlotSettings">
                 <property name="text">
-                 <string>Reset Texture Parameters To Default</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <item>
-               <widget class="QPushButton" name="applySlotParameters">
-                <property name="text">
-                 <string>Apply Slot Parameters</string>
+                 <string>Cancel Changes To Slot Settings</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="applyTextureParameters">
+               <widget class="QPushButton" name="resetSlotSettings">
                 <property name="text">
-                 <string>Apply Texture Parameters</string>
+                 <string>Reset Slot Settings To Default</string>
                 </property>
                </widget>
               </item>
@@ -1167,7 +1156,7 @@
      </widget>
      <widget class="QWidget" name="importTab">
       <attribute name="title">
-       <string>Import</string>
+       <string>Re-import</string>
       </attribute>
      </widget>
     </widget>

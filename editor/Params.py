@@ -12,8 +12,8 @@ class ParamList:
 	def get_name(self, value):
 		if value in self.value_to_name:
 			return self.value_to_name[value]
-		elif value is str:
-			return value
+		elif type(value) is str:
+			return value.title()
 		else:
 			raise KeyError(f"No GL Param with value {value}.")
 

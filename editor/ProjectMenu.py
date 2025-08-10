@@ -4,13 +4,14 @@ import ui
 import asset_editors
 
 
+# TODO v3 use watchdog to auto-import assets
 class ProjectWindow(QMainWindow):
 	def __init__(self, open_start_menu):
 		super().__init__()
 		self.open_start = open_start_menu
 
 		self.setWindowTitle("Olympian Editor")
-		# TODO v3 create and set window icon
+		# LATER create and set window icon
 
 		self.ui = ui.ProjectWindow.Ui_MainWindow()
 		self.ui.setupUi(self)

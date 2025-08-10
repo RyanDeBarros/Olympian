@@ -110,7 +110,7 @@ class ManifestTOML:
 		with open(posixpath.join(src_folder, "ProjectContext.cpp"), 'w') as f:
 			f.write(self.project_context_cpp)
 
-		# TODO CMakeLists.txt, LICENSE
+		# TODO v4 create project CMakeLists.txt, LICENSE
 
 		if len(self.project_id_stack()) == 0:
 			if 'project next id' not in self.toml:
@@ -134,7 +134,7 @@ class ManifestTOML:
 			del self.project_dict()[project_filepath]
 			self.recent_list().remove(project_filepath)
 			self.dump()
-		# TODO v3 make a note in documentation that files are not deleted - they are simply removed from editor manifest, so as it to prevent unsafe folder deletion.
+		# TODO v4 make a note in documentation that files are not deleted - they are simply removed from editor manifest, so as it to prevent unsafe folder deletion.
 
 	def remove_nonexistent_projects(self):
 		keep = []

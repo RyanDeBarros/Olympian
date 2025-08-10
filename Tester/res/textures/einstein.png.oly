@@ -1,6 +1,8 @@
 [[texture]]
 storage = "discard"
-"min filter" = "nearest"
-"mag filter" = "nearest"
+"min filter" = 9728
+"mag filter" = 9729
 "generate mipmaps" = false
+"wrap s" = 33071
+"wrap t" = 33071
 
