@@ -4,7 +4,8 @@ from pathlib import Path
 import posixpath
 
 import toml
-import send2trash
+
+from editor import FileIO
 
 
 class ManifestTOML:
@@ -125,7 +126,7 @@ class ManifestTOML:
 
 	def remove_project_id(self, project_id):
 		self.project_id_stack().append(project_id)
-		send2trash.send2trash(f"projects/{project_id}")
+		FileIO.move_to_trash(f"projects/{project_id}")
 
 	def delete_project(self, project_filepath):
 		if project_filepath in self.project_dict():
