@@ -7,8 +7,8 @@ import toml
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from editor import ui, MANIFEST
-from editor.asset_editors.Common import SettingsForm, SettingsParameter
 from editor.util import *
+from .Common import SettingsForm, SettingsParameter
 
 
 class TextureEditorWidget(QWidget):
@@ -68,7 +68,7 @@ class EditTab:
 		self.ui.cancelSlotSettings.clicked.connect(self.cancel_slot_settings)
 		self.ui.resetSlotSettings.clicked.connect(self.reset_slot_settings)
 
-		self.rasterForm = SettingsForm([
+		self.raster_form = SettingsForm([
 			SettingsParameter('storage', self.ui.editImageStorage),
 			SettingsParameter('min filter', self.ui.editImageMinFilter),
 			SettingsParameter('mag filter', self.ui.editImageMagFilter),
@@ -77,7 +77,7 @@ class EditTab:
 			SettingsParameter('wrap t', self.ui.editImageWrapT)
 		])
 
-		self.svgForm = SettingsForm([
+		self.svg_form = SettingsForm([
 			SettingsParameter('abstract storage', self.ui.editSVGAbstractStorage),
 			SettingsParameter('image storage', self.ui.editSVGImageStorage),
 			SettingsParameter('min filter', self.ui.editSVGMinFilter),
@@ -87,7 +87,7 @@ class EditTab:
 			SettingsParameter('wrap t', self.ui.editSVGWrapT)
 		])
 
-		self.spritesheetForm = SettingsForm([
+		self.spritesheet_form = SettingsForm([
 			SettingsParameter('rows', self.ui.spritesheetRows),
 			SettingsParameter('cols', self.ui.spritesheetColumns),
 			SettingsParameter('cell width override', self.ui.spritesheetCellWidthOverride),
@@ -163,7 +163,7 @@ class EditTab:
 
 			slot = self.ui.editTextureSlotCombo.currentIndex()
 			tex = self.texture.slots[slot]
-			self.spritesheetForm.load_dict(tex, self.spritesheet_defaults)
+			self.spritesheet_form.load_dict(tex, self.spritesheet_defaults)
 		else:
 			self.ui.editSpritesheetParams.hide()
 
@@ -199,10 +199,10 @@ class EditTab:
 					self.spritesheet_checked_changed()
 
 	def load_raster_dict_into_slot(self, tex):
-		self.rasterForm.load_dict(tex, self.editor.defaults_tab.get_stored_default_raster_dict())
+		self.raster_form.load_dict(tex, self.editor.defaults_tab.get_stored_default_raster_dict())
 
 	def load_svg_dict_into_slot(self, tex):
-		self.svgForm.load_dict(tex, self.editor.defaults_tab.get_stored_default_svg_dict())
+		self.svg_form.load_dict(tex, self.editor.defaults_tab.get_stored_default_svg_dict())
 
 	def add_new_slot(self):
 		if self.texture is not None:
@@ -234,17 +234,17 @@ class EditTab:
 			tex = self.texture.slots[slot]
 
 			if self.texture.is_svg:
-				tex.update(self.svgForm.get_dict())
+				tex.update(self.svg_form.get_dict())
 			else:
-				tex.update(self.rasterForm.get_dict())
+				tex.update(self.raster_form.get_dict())
 
 			if self.ui.editSpritesheet.isChecked():
 				assert not self.texture.is_gif
 				tex['anim'] = True
-				tex.update(self.spritesheetForm.get_dict())
+				tex.update(self.spritesheet_form.get_dict())
 			else:
 				tex.pop('anim', None)
-				for name in self.spritesheetForm.params:
+				for name in self.spritesheet_form.params:
 					tex.pop(name, None)
 
 			self.texture.dump()
@@ -269,7 +269,7 @@ class DefaultsTab:
 		self.ui = self.editor.ui
 		self.ui.saveDefaultsButton.clicked.connect(self.save_defaults)
 
-		self.rasterForm = SettingsForm([
+		self.raster_form = SettingsForm([
 			SettingsParameter('storage', self.ui.defaultImageStorage),
 			SettingsParameter('min filter', self.ui.defaultImageMinFilter),
 			SettingsParameter('mag filter', self.ui.defaultImageMagFilter),
@@ -278,7 +278,7 @@ class DefaultsTab:
 			SettingsParameter('wrap t', self.ui.defaultImageWrapT)
 		])
 
-		self.svgForm = SettingsForm([
+		self.svg_form = SettingsForm([
 			SettingsParameter('abstract storage', self.ui.defaultSVGAbstractStorage),
 			SettingsParameter('image storage', self.ui.defaultSVGImageStorage),
 			SettingsParameter('min filter', self.ui.defaultSVGMinFilter),
@@ -320,8 +320,8 @@ class DefaultsTab:
 			return toml.load(f)
 
 	def load_defaults(self):
-		self.rasterForm.load_dict(self.get_stored_default_raster_dict())
-		self.svgForm.load_dict(self.get_stored_default_svg_dict())
+		self.raster_form.load_dict(self.get_stored_default_raster_dict())
+		self.svg_form.load_dict(self.get_stored_default_svg_dict())
 
 	def save_defaults(self):
 		self.save_raster_defaults()
@@ -329,11 +329,11 @@ class DefaultsTab:
 
 	def save_raster_defaults(self):
 		with open(self.default_raster_texture_filepath(), 'w') as f:
-			toml.dump(self.rasterForm.get_dict(), f)
+			toml.dump(self.raster_form.get_dict(), f)
 
 	def save_svg_defaults(self):
 		with open(self.default_svg_texture_filepath(), 'w') as f:
-			toml.dump(self.svgForm.get_dict(), f)
+			toml.dump(self.svg_form.get_dict(), f)
 
 
 # TODO v3 allow selection of specific (even multiple) files, rather than folder

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>534</width>
-    <height>641</height>
+    <width>468</width>
+    <height>536</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -114,15 +114,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="editTextureNewSlot">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
                 <property name="maximumSize">
                  <size>
-                  <width>20</width>
+                  <width>30</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -133,15 +127,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="editTextureDeleteSlot">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
                 <property name="maximumSize">
                  <size>
-                  <width>20</width>
+                  <width>30</width>
                   <height>16777215</height>
                  </size>
                 </property>

@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox
+from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox
 
 from editor.util import *
 
@@ -29,6 +29,8 @@ class SettingsForm:
 				d[name] = control.isChecked()
 			elif isinstance(control, QSpinBox):
 				d[name] = control.value()
+			elif isinstance(control, QDoubleSpinBox):
+				d[name] = control.value()
 		return d
 
 	def load_dict(self, d, defaults=None):
@@ -42,4 +44,6 @@ class SettingsForm:
 			elif isinstance(control, QCheckBox):
 				control.setChecked(value)
 			elif isinstance(control, QSpinBox):
+				control.setValue(value)
+			elif isinstance(control, QDoubleSpinBox):
 				control.setValue(value)

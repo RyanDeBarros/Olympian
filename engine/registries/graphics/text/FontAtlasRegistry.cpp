@@ -13,7 +13,8 @@ namespace oly::reg
 
 	rendering::FontAtlasRef FontAtlasRegistry::load_font_atlas(const std::string& file, unsigned int index)
 	{
-		auto it = font_atlases.find(file);
+		FontAtlasKey key{ .file = file, .index = index };
+		auto it = font_atlases.find(key);
 		if (it != font_atlases.end())
 			return it->second;
 
@@ -58,12 +59,12 @@ namespace oly::reg
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
-			font_atlases.emplace(file, font_atlas);
+			font_atlases.emplace(key, font_atlas);
 		return font_atlas;
 	}
 
-	void FontAtlasRegistry::free_font_atlas(const std::string& file)
+	void FontAtlasRegistry::free_font_atlas(const std::string& file, unsigned int index)
 	{
-		font_atlases.erase(file);
+		font_atlases.erase({ file, index });
 	}
 }
