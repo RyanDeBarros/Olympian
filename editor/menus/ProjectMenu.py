@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QMainWindow
 
-import ui
-import asset_editors
+from editor import ui
+from editor import asset_editors
 
 
 # TODO v3 use watchdog to auto-import assets

@@ -1,3 +1,3 @@
-from Params import *
-import ProjectContext
-import FileIO
+from .Params import *
+from . import ProjectContext
+from . import FileIO
