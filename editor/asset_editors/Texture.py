@@ -6,9 +6,9 @@ from typing import List, Optional
 import toml
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
-from editor import ui, MANIFEST, ProjectContext
-from editor import FileIO
-from editor.Params import *
+from editor import ui, MANIFEST
+from editor.asset_editors.Common import SettingsForm, SettingsParameter
+from editor.util import *
 
 
 class TextureEditorWidget(QWidget):
@@ -24,6 +24,7 @@ class TextureEditorWidget(QWidget):
 		self.import_tab = ImportTab(self)
 
 		self.last_file_dialog_dir = posixpath.join(posixpath.dirname(ProjectContext.PROJECT_FILE), "res")
+
 
 TEXTURE_FILE_EXTENSIONS = [
 	".png",
@@ -66,6 +67,45 @@ class EditTab:
 		self.ui.applySlotSettings.clicked.connect(self.apply_slot_settings)
 		self.ui.cancelSlotSettings.clicked.connect(self.cancel_slot_settings)
 		self.ui.resetSlotSettings.clicked.connect(self.reset_slot_settings)
+
+		self.rasterForm = SettingsForm([
+			SettingsParameter('storage', self.ui.editImageStorage),
+			SettingsParameter('min filter', self.ui.editImageMinFilter),
+			SettingsParameter('mag filter', self.ui.editImageMagFilter),
+			SettingsParameter('generate mipmaps', self.ui.editImageMipmaps),
+			SettingsParameter('wrap s', self.ui.editImageWrapS),
+			SettingsParameter('wrap t', self.ui.editImageWrapT)
+		])
+
+		self.svgForm = SettingsForm([
+			SettingsParameter('abstract storage', self.ui.editSVGAbstractStorage),
+			SettingsParameter('image storage', self.ui.editSVGImageStorage),
+			SettingsParameter('min filter', self.ui.editSVGMinFilter),
+			SettingsParameter('mag filter', self.ui.editSVGMagFilter),
+			SettingsParameter('generate mipmaps', self.ui.editSVGMipmaps),
+			SettingsParameter('wrap s', self.ui.editSVGWrapS),
+			SettingsParameter('wrap t', self.ui.editSVGWrapT)
+		])
+
+		self.spritesheetForm = SettingsForm([
+			SettingsParameter('rows', self.ui.spritesheetRows),
+			SettingsParameter('cols', self.ui.spritesheetColumns),
+			SettingsParameter('cell width override', self.ui.spritesheetCellWidthOverride),
+			SettingsParameter('cell height override', self.ui.spritesheetCellHeightOverride),
+			SettingsParameter('delay cs', self.ui.spritesheetDelayCS),
+			SettingsParameter('row major', self.ui.spritesheetRowMajor),
+			SettingsParameter('row up', self.ui.spritesheetRowUp),
+		])
+
+		self.spritesheet_defaults = {
+			'rows': 1,
+			'cols': 1,
+			'cell width override': 0,
+			'cell height override': 0,
+			'delay cs': 0,
+			'row major': True,
+			'row up': True
+		}
 
 		self.texture_filepath_changed()
 
@@ -123,14 +163,7 @@ class EditTab:
 
 			slot = self.ui.editTextureSlotCombo.currentIndex()
 			tex = self.texture.slots[slot]
-
-			self.ui.spritesheetRows.setValue(tex.get('rows', 1))
-			self.ui.spritesheetColumns.setValue(tex.get('cols', 1))
-			self.ui.spritesheetCellWidthOverride.setValue(tex.get('cell width override', 0))
-			self.ui.spritesheetCellHeightOverride.setValue(tex.get('cell height override', 0))
-			self.ui.spritesheetDelayCS.setValue(tex.get('delay cs', 0))
-			self.ui.spritesheetRowMajor.setChecked(tex.get('row major', True))
-			self.ui.spritesheetRowUp.setChecked(tex.get('row up', True))
+			self.spritesheetForm.load_dict(tex, self.spritesheet_defaults)
 		else:
 			self.ui.editSpritesheetParams.hide()
 
@@ -166,23 +199,10 @@ class EditTab:
 					self.spritesheet_checked_changed()
 
 	def load_raster_dict_into_slot(self, tex):
-		defaults = self.editor.defaults_tab.get_stored_default_raster_dict()
-		self.ui.editImageStorage.setCurrentText(PARAM_LIST.get_name(tex.get('storage', defaults['storage'])))
-		self.ui.editImageMinFilter.setCurrentText(PARAM_LIST.get_name(tex.get('min filter', defaults['min filter'])))
-		self.ui.editImageMagFilter.setCurrentText(PARAM_LIST.get_name(tex.get('mag filter', defaults['mag filter'])))
-		self.ui.editImageMipmaps.setChecked(tex.get('generate mipmaps', defaults['generate mipmaps']))
-		self.ui.editImageWrapS.setCurrentText(PARAM_LIST.get_name(tex.get('wrap s', defaults['wrap s'])))
-		self.ui.editImageWrapT.setCurrentText(PARAM_LIST.get_name(tex.get('wrap t', defaults['wrap t'])))
+		self.rasterForm.load_dict(tex, self.editor.defaults_tab.get_stored_default_raster_dict())
 
 	def load_svg_dict_into_slot(self, tex):
-		defaults = self.editor.defaults_tab.get_stored_default_svg_dict()
-		self.ui.editSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(tex.get('abstract storage', defaults['abstract storage'])))
-		self.ui.editSVGImageStorage.setCurrentText(PARAM_LIST.get_name(tex.get('image storage', defaults['image storage'])))
-		self.ui.editSVGMinFilter.setCurrentText(PARAM_LIST.get_name(tex.get('min filter', defaults['min filter'])))
-		self.ui.editSVGMagFilter.setCurrentText(PARAM_LIST.get_name(tex.get('mag filter', defaults['mag filter'])))
-		self.ui.editSVGMipmaps.setCurrentText(PARAM_LIST.get_name(tex.get('generate mipmaps', defaults['generate mipmaps'])))
-		self.ui.editSVGWrapS.setCurrentText(PARAM_LIST.get_name(tex.get('wrap s', defaults['wrap s'])))
-		self.ui.editSVGWrapT.setCurrentText(PARAM_LIST.get_name(tex.get('wrap t', defaults['wrap t'])))
+		self.svgForm.load_dict(tex, self.editor.defaults_tab.get_stored_default_svg_dict())
 
 	def add_new_slot(self):
 		if self.texture is not None:
@@ -214,40 +234,18 @@ class EditTab:
 			tex = self.texture.slots[slot]
 
 			if self.texture.is_svg:
-				tex['abstract storage'] = PARAM_LIST.get_value(self.ui.editSVGAbstractStorage.currentText())
-				tex['image storage'] = PARAM_LIST.get_value(self.ui.editSVGImageStorage.currentText())
-				tex['min filter'] = PARAM_LIST.get_value(self.ui.defaultSVGMinFilter.currentText())
-				tex['mag filter'] = PARAM_LIST.get_value(self.ui.defaultSVGMagFilter.currentText())
-				tex['generate mipmaps'] = PARAM_LIST.get_value(self.ui.editSVGMipmaps.currentText())
-				tex['wrap s'] = PARAM_LIST.get_value(self.ui.editSVGWrapS.currentText())
-				tex['wrap t'] = PARAM_LIST.get_value(self.ui.editSVGWrapT.currentText())
+				tex.update(self.svgForm.get_dict())
 			else:
-				tex['storage'] = PARAM_LIST.get_value(self.ui.editImageStorage.currentText())
-				tex['min filter'] = PARAM_LIST.get_value(self.ui.editImageMinFilter.currentText())
-				tex['mag filter'] = PARAM_LIST.get_value(self.ui.editImageMagFilter.currentText())
-				tex['generate mipmaps'] = self.ui.editImageMipmaps.isChecked()
-				tex['wrap s'] = PARAM_LIST.get_value(self.ui.editImageWrapS.currentText())
-				tex['wrap t'] = PARAM_LIST.get_value(self.ui.editImageWrapT.currentText())
+				tex.update(self.rasterForm.get_dict())
 
 			if self.ui.editSpritesheet.isChecked():
 				assert not self.texture.is_gif
 				tex['anim'] = True
-				tex['rows'] = self.ui.spritesheetRows.value()
-				tex['cols'] = self.ui.spritesheetColumns.value()
-				tex['cell width override'] = self.ui.spritesheetCellWidthOverride.value()
-				tex['cell height override'] = self.ui.spritesheetCellHeightOverride.value()
-				tex['delay cs'] = self.ui.spritesheetDelayCS.value()
-				tex['row major'] = self.ui.spritesheetRowMajor.isChecked()
-				tex['row up'] = self.ui.spritesheetRowUp.isChecked()
+				tex.update(self.spritesheetForm.get_dict())
 			else:
 				tex.pop('anim', None)
-				tex.pop('rows', None)
-				tex.pop('cols', None)
-				tex.pop('cell width override', None)
-				tex.pop('cell height override', None)
-				tex.pop('delay cs', None)
-				tex.pop('row major', None)
-				tex.pop('row up', None)
+				for name in self.spritesheetForm.params:
+					tex.pop(name, None)
 
 			self.texture.dump()
 
@@ -270,6 +268,25 @@ class DefaultsTab:
 		self.editor = texture_editor
 		self.ui = self.editor.ui
 		self.ui.saveDefaultsButton.clicked.connect(self.save_defaults)
+
+		self.rasterForm = SettingsForm([
+			SettingsParameter('storage', self.ui.defaultImageStorage),
+			SettingsParameter('min filter', self.ui.defaultImageMinFilter),
+			SettingsParameter('mag filter', self.ui.defaultImageMagFilter),
+			SettingsParameter('generate mipmaps', self.ui.defaultImageMipmaps),
+			SettingsParameter('wrap s', self.ui.defaultImageWrapS),
+			SettingsParameter('wrap t', self.ui.defaultImageWrapT)
+		])
+
+		self.svgForm = SettingsForm([
+			SettingsParameter('abstract storage', self.ui.defaultSVGAbstractStorage),
+			SettingsParameter('image storage', self.ui.defaultSVGImageStorage),
+			SettingsParameter('min filter', self.ui.defaultSVGMinFilter),
+			SettingsParameter('mag filter', self.ui.defaultSVGMagFilter),
+			SettingsParameter('generate mipmaps', self.ui.defaultSVGMipmaps),
+			SettingsParameter('wrap s', self.ui.defaultSVGWrapS),
+			SettingsParameter('wrap t', self.ui.defaultSVGWrapT)
+		])
 
 		self.validate_project_filepaths()
 
@@ -298,48 +315,13 @@ class DefaultsTab:
 		with open(self.default_raster_texture_filepath(), 'r') as f:
 			return toml.load(f)
 
-	def _get_default_raster_dict(self):
-		return {
-			'storage': PARAM_LIST.get_value(self.ui.defaultImageStorage.currentText()),
-			'min filter': PARAM_LIST.get_value(self.ui.defaultImageMinFilter.currentText()),
-			'mag filter': PARAM_LIST.get_value(self.ui.defaultImageMagFilter.currentText()),
-			'generate mipmaps': self.ui.defaultImageMipmaps.isChecked(),
-			'wrap s': PARAM_LIST.get_value(self.ui.defaultImageWrapS.currentText()),
-			'wrap t': PARAM_LIST.get_value(self.ui.defaultImageWrapT.currentText())
-		}
-
 	def get_stored_default_svg_dict(self):
 		with open(self.default_svg_texture_filepath(), 'r') as f:
 			return toml.load(f)
 
-	def _get_default_svg_dict(self):
-		return {
-			'abstract storage': PARAM_LIST.get_value(self.ui.defaultSVGAbstractStorage.currentText()),
-			'image storage': PARAM_LIST.get_value(self.ui.defaultSVGImageStorage.currentText()),
-			'min filter': PARAM_LIST.get_value(self.ui.defaultSVGMinFilter.currentText()),
-			'mag filter': PARAM_LIST.get_value(self.ui.defaultSVGMagFilter.currentText()),
-			'generate mipmaps': PARAM_LIST.get_value(self.ui.defaultSVGMipmaps.currentText()),
-			'wrap s': PARAM_LIST.get_value(self.ui.defaultSVGWrapS.currentText()),
-			'wrap t': PARAM_LIST.get_value(self.ui.defaultSVGWrapT.currentText())
-		}
-
 	def load_defaults(self):
-		defaults = self.get_stored_default_raster_dict()
-		self.ui.defaultImageStorage.setCurrentText(PARAM_LIST.get_name(defaults['storage']))
-		self.ui.defaultImageMinFilter.setCurrentText(PARAM_LIST.get_name(defaults['min filter']))
-		self.ui.defaultImageMagFilter.setCurrentText(PARAM_LIST.get_name(defaults['mag filter']))
-		self.ui.defaultImageMipmaps.setChecked(defaults['generate mipmaps'])
-		self.ui.defaultImageWrapS.setCurrentText(PARAM_LIST.get_name(defaults['wrap s']))
-		self.ui.defaultImageWrapT.setCurrentText(PARAM_LIST.get_name(defaults['wrap t']))
-
-		defaults = self.get_stored_default_svg_dict()
-		self.ui.defaultSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(defaults['abstract storage']))
-		self.ui.defaultSVGImageStorage.setCurrentText(PARAM_LIST.get_name(defaults['image storage']))
-		self.ui.defaultSVGMinFilter.setCurrentText(PARAM_LIST.get_name(defaults['min filter']))
-		self.ui.defaultSVGMagFilter.setCurrentText(PARAM_LIST.get_name(defaults['mag filter']))
-		self.ui.defaultSVGMipmaps.setCurrentText(PARAM_LIST.get_name(defaults['generate mipmaps']))
-		self.ui.defaultSVGWrapS.setCurrentText(PARAM_LIST.get_name(defaults['wrap s']))
-		self.ui.defaultSVGWrapT.setCurrentText(PARAM_LIST.get_name(defaults['wrap t']))
+		self.rasterForm.load_dict(self.get_stored_default_raster_dict())
+		self.svgForm.load_dict(self.get_stored_default_svg_dict())
 
 	def save_defaults(self):
 		self.save_raster_defaults()
@@ -347,11 +329,11 @@ class DefaultsTab:
 
 	def save_raster_defaults(self):
 		with open(self.default_raster_texture_filepath(), 'w') as f:
-			toml.dump(self._get_default_raster_dict(), f)
+			toml.dump(self.rasterForm.get_dict(), f)
 
 	def save_svg_defaults(self):
 		with open(self.default_svg_texture_filepath(), 'w') as f:
-			toml.dump(self._get_default_svg_dict(), f)
+			toml.dump(self.svgForm.get_dict(), f)
 
 
 # TODO v3 allow selection of specific (even multiple) files, rather than folder

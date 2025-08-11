@@ -5,7 +5,7 @@ import posixpath
 
 import toml
 
-from editor import FileIO
+from editor.util import FileIO
 
 
 class ManifestTOML:

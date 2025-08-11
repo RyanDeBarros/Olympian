@@ -1,7 +1,5 @@
-from Params import *
+from editor.util.Params import *
 
 from ManifestTOML import MANIFEST
-from StartMenu import StartMenuWindow
-from ProjectMenu import ProjectWindow
+from editor.menus.ProjectMenu import ProjectWindow
 
-from ProjectContext import PROJECT_FILE
