@@ -1,5 +1,4 @@
 import os
-import posixpath
 from pathlib import Path
 from typing import List, Optional
 
@@ -23,7 +22,7 @@ class TextureEditorWidget(QWidget):
 		self.defaults_tab = DefaultsTab(self)
 		self.import_tab = ImportTab(self)
 
-		self.last_file_dialog_dir = posixpath.join(posixpath.dirname(ProjectContext.PROJECT_FILE), "res")
+		self.last_file_dialog_dir = ProjectContext.project_resource_folder()
 
 
 TEXTURE_FILE_EXTENSIONS = [
@@ -336,7 +335,6 @@ class DefaultsTab:
 			toml.dump(self.svg_form.get_dict(), f)
 
 
-# TODO v3 allow selection of specific (even multiple) files, rather than folder
 class ImportTab:
 	def __init__(self, texture_editor: TextureEditorWidget):
 		self.editor = texture_editor
@@ -351,79 +349,23 @@ class ImportTab:
 			self.editor.last_file_dialog_dir = folder
 			self.ui.importFolder.setText(folder)
 
-	def get_texture_files(self, folder):
-		files = set()
-		for entry in os.listdir(folder):
-			path = os.path.join(folder, entry)
-			if os.path.isfile(path):
-				_, ext = os.path.splitext(path)
-				if ext in TEXTURE_FILE_EXTENSIONS:
-					files.add(path)
-		return files
-
-	def get_texture_imports(self, folder):
-		imports = set()
-		for entry in os.listdir(folder):
-			path = os.path.join(folder, entry)
-			if os.path.isfile(path) and path.endswith(".oly"):
-				_, ext = os.path.splitext(path[:-len(".oly")])
-				if ext in TEXTURE_FILE_EXTENSIONS:
-					try:
-						with open(path, 'r') as f:
-							tex = toml.load(f)
-						if 'texture' in tex and len(tex['texture']) > 0:
-							imports.add(path)
-					except toml.TomlDecodeError:
-						pass
-		return imports
-
 	def execute(self):
-		if len(self.ui.importFolder.text()) == 0:
-			return
-
 		root_folder = self.ui.importFolder.text()
-		recursive = self.ui.importRecursiveSearch.isChecked()
-		clear = self.ui.importClear.isChecked()
-		clean_unused = self.ui.importCleanUnused.isChecked()
-		import_unimported = self.ui.importUnimported.isChecked()
-
-		def execute_on_folder(folder):
-			if clear:
-				texture_imports = self.get_texture_imports(folder)
-				for texture_import in texture_imports:
-					FileIO.move_to_trash(texture_import)
-			elif clean_unused:
-				texture_imports = self.get_texture_imports(folder)
-				for texture_import in texture_imports:
-					if not os.path.exists(texture_import[:-len(".oly")]):
-						FileIO.move_to_trash(texture_import)
-			if import_unimported:
-				texture_files = self.get_texture_files(folder)
-				for texture_file in texture_files:
-					if not self.has_texture_import(texture_file):
-						self.create_default_texture_import(texture_file)
-
-		if recursive:
-			for root, dirs, files in os.walk(root_folder):
-				execute_on_folder(root)
-		else:
-			execute_on_folder(root_folder)
-
-	def has_texture_import(self, filepath):
-		if not os.path.exists(f"{filepath}.oly"):
-			return False
-		try:
-			with open(f"{filepath}.oly", 'r') as f:
-				tex = toml.load(f)
-				return 'texture' in tex and len(tex['texture']) > 0
-		except toml.TomlDecodeError:
-			return False
+		if len(root_folder) > 0:
+			FileIO.execute_standard_import_on_folder(
+				root_folder=root_folder,
+				recursive=self.ui.importRecursiveSearch.isChecked(),
+				clear=self.ui.importClear.isChecked(),
+				clean_unused=self.ui.importCleanUnused.isChecked(),
+				import_unimported=self.ui.importUnimported.isChecked(),
+				extensions=TEXTURE_FILE_EXTENSIONS,
+				content_condition=lambda tex: 'texture' in tex and len(tex['texture']) > 0,
+				create_default_import=self.create_default_texture_import
+			)
 
 	def create_default_texture_import(self, filepath):
 		if Path(filepath).suffix == ".svg":
 			defaults = self.editor.defaults_tab.get_stored_default_svg_dict()
 		else:
 			defaults = self.editor.defaults_tab.get_stored_default_raster_dict()
-
-		with open(f"{filepath}.oly", 'w') as f:
-			toml.dump({'texture': [defaults]}, f)
+		FileIO.create_default_import_file(filepath, {'texture': [defaults]})

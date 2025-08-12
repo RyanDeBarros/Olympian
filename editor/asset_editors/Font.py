@@ -1,11 +1,11 @@
 import os
 
 import toml
-from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton
+from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog
 
 from editor import ui, MANIFEST, PARAM_LIST
 from .Common import SettingsForm, SettingsParameter
-from ..util import ProjectContext
+from ..util import ProjectContext, FileIO
 
 
 class FontEditorWidget(QWidget):
@@ -19,6 +19,14 @@ class FontEditorWidget(QWidget):
 		self.edit_tab = EditTab(self)
 		self.defaults_tab = DefaultsTab(self)
 		self.import_tab = ImportTab(self)
+
+		self.last_file_dialog_dir = ProjectContext.project_resource_folder()
+
+
+FONT_FILE_EXTENSIONS = [
+	".ttf",
+	".otf"
+]
 
 
 # TODO add ? info buttons to UI, like for the syntax used by kerning pairs
@@ -155,31 +163,29 @@ class DefaultsTab:
 	def load_defaults(self):
 		d = self.get_stored_default_dict()
 		self.font_face_form.load_dict(d['font face'])
-		self.font_atlas_form.load_dict(d['font atlas'])
-		common_buffer = d['common buffer']
-		if common_buffer['use preset']:
+		font_atlas = d['font atlas'][0]
+		self.font_atlas_form.load_dict(font_atlas)
+		if 'common buffer preset' in font_atlas:
 			self.ui.defaultRadioUsePreset.click()
-			self.ui.defaultFontAtlasCommonPreset.setCurrentText(PARAM_LIST.get_name(common_buffer['common buffer preset']))
+			self.ui.defaultFontAtlasCommonPreset.setCurrentText(PARAM_LIST.get_name(font_atlas['common buffer preset']))
 			self.ui.defaultFontAtlasCommonBuffer.clear()
 		else:
 			self.select_manual_set()
 			self.ui.defaultRadioManualSet.click()
 			self.ui.defaultFontAtlasCommonPreset.setCurrentIndex(0)
-			self.ui.defaultFontAtlasCommonBuffer.setText(common_buffer['common buffer'])
+			self.ui.defaultFontAtlasCommonBuffer.setText(font_atlas['common buffer'])
 
 	def save_defaults(self):
 		with open(self.default_font_filepath(), 'w') as f:
+			font_atlas = self.font_atlas_form.get_dict()
+			if self.ui.defaultRadioUsePreset.isChecked():
+				font_atlas['common buffer preset'] = PARAM_LIST.get_value(self.ui.defaultFontAtlasCommonPreset.currentText())
+			else:
+				font_atlas['common buffer'] = self.ui.defaultFontAtlasCommonBuffer.text()
 			d = {
 				'font face': self.font_face_form.get_dict(),
-				'font atlas': self.font_atlas_form.get_dict(),
-				'common buffer': {
-					'use preset': self.ui.defaultRadioUsePreset.isChecked()
-				}
+				'font atlas': [font_atlas]
 			}
-			if self.ui.defaultRadioUsePreset.isChecked():
-				d['common buffer']['common buffer preset'] = PARAM_LIST.get_value(self.ui.defaultFontAtlasCommonPreset.currentText())
-			else:
-				d['common buffer']['common buffer'] = self.ui.defaultFontAtlasCommonBuffer.text()
 			toml.dump(d, f)
 
 
@@ -187,3 +193,29 @@ class ImportTab:
 	def __init__(self, editor: FontEditorWidget):
 		self.editor = editor
 		self.ui = self.editor.ui
+
+		self.ui.importBrowseButton.clicked.connect(self.browse_folder)
+		self.ui.executeImportButton.clicked.connect(self.execute)
+
+	def browse_folder(self):
+		folder = QFileDialog.getExistingDirectory(self.editor, "Select Folder", self.editor.last_file_dialog_dir)
+		if folder:
+			self.editor.last_file_dialog_dir = folder
+			self.ui.importFolder.setText(folder)
+
+	def execute(self):
+		root_folder = self.ui.importFolder.text()
+		if len(root_folder) > 0:
+			FileIO.execute_standard_import_on_folder(
+				root_folder=root_folder,
+				recursive=self.ui.importRecursiveSearch.isChecked(),
+				clear=self.ui.importClear.isChecked(),
+				clean_unused=self.ui.importCleanUnused.isChecked(),
+				import_unimported=self.ui.importUnimported.isChecked(),
+				extensions=FONT_FILE_EXTENSIONS,
+				content_condition=lambda font: 'font face' in font and 'font atlas' in font and len(font['font atlas']) > 0,
+				create_default_import=self.create_default_font_import
+			)
+
+	def create_default_font_import(self, filepath):
+		FileIO.create_default_import_file(filepath, self.editor.defaults_tab.get_stored_default_dict())
