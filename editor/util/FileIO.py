@@ -9,6 +9,10 @@ def move_to_trash(path):
 	send2trash.send2trash(Path(path).resolve())
 
 
+def file_extension_filter(display, extensions):
+	return f"{display} ({" ".join([f"*{ext}" for ext in extensions])})"
+
+
 def get_files_of_certain_extensions(folder, extensions):
 	files = set()
 	for entry in os.listdir(folder):

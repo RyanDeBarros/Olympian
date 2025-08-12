@@ -332,7 +332,7 @@ namespace oly::rendering
 	float Paragraph::advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint)
 	{
 		float adv = font_glyph.advance_width * font->get_scale();
-		if (typeset.prev_codepoint)
+		if (typeset.prev_codepoint) // TODO v3 FIX: kerning is being applied on the spacing of subsequent pair of glyphs
 			adv += font->kerning_of(typeset.prev_codepoint, codepoint, font->get_glyph_index(typeset.prev_codepoint), font_glyph.index);
 		typeset.prev_codepoint = codepoint;
 		return adv;

@@ -43,6 +43,7 @@ class Texture:
 			self.slots: List[dict] = toml.load(f)['texture']
 		self.is_svg = Path(filepath).suffix == ".svg"
 		self.is_gif = Path(filepath).suffix == ".gif"
+		assert len(self.slots) > 0
 
 	def dump(self):
 		with open(f"{self.filepath}.oly", 'w') as f:
@@ -56,7 +57,6 @@ class EditTab:
 		self.texture: Optional[Texture] = None
 
 		self.ui.editTextureBrowse.clicked.connect(self.browse_texture)
-		self.ui.editTextureFilepath.textChanged.connect(self.texture_filepath_changed)
 
 		self.ui.editTextureSlotCombo.currentIndexChanged.connect(self.load_texture_slot)
 		self.ui.editSpritesheet.checkStateChanged.connect(self.spritesheet_checked_changed)
@@ -109,14 +109,12 @@ class EditTab:
 		self.texture_filepath_changed()
 
 	def browse_texture(self):
-		filter = f"Image files ({" ".join([f"*{ext}" for ext in TEXTURE_FILE_EXTENSIONS])})"
+		filter = FileIO.file_extension_filter("Image files", TEXTURE_FILE_EXTENSIONS)
 		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir, filter=filter)
 		if filepath:
 			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
-			if self.ui.editTextureFilepath.text() == filepath:
-				self.texture_filepath_changed()
-			else:
-				self.ui.editTextureFilepath.setText(filepath)
+			self.ui.editTextureFilepath.setText(filepath)
+			self.texture_filepath_changed()
 
 	def texture_filepath_changed(self):
 		filepath = self.ui.editTextureFilepath.text()
@@ -126,7 +124,6 @@ class EditTab:
 
 			try:
 				self.texture = Texture(filepath)
-				assert len(self.texture.slots) >= 1
 			except Exception:
 				self.texture = None
 				self.ui.paramsLayout.hide()

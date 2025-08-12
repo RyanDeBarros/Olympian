@@ -57,4 +57,5 @@ class SettingsForm:
 			fit_with_defaults(d, defaults)
 
 		for name, value in d.items():
-			SettingsForm.set_value(self.params[name], value)
+			if name in self.params:
+				SettingsForm.set_value(self.params[name], value)

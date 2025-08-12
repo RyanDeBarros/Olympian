@@ -1,18 +1,18 @@
-[font_face]
-"storage" = "discard"
-	
-	[[font_face.kerning]]
-	pair = [ "e", "U+78" ]
-	dist = 150
-	
-	[[font_face.kerning]]
-	pair = [ "H", "e" ]
-	dist = -200
-
 [[font_atlas]]
-"storage"              = "discard"
-"font size"            = 96
-"mag filter"           = "linear"
-"min filter"           = "linear mipmap linear"
-"generate mipmaps"     = true
+storage = "discard"
+"font size" = 96
+"mag filter" = "linear"
+"min filter" = "linear mipmap linear"
+"generate mipmaps" = true
 "common buffer preset" = "common"
+
+[font_face]
+storage = "discard"
+[[font_face.kerning]]
+pair = [ "e", "U+78",]
+dist = 150
+
+[[font_face.kerning]]
+pair = [ "H", "e",]
+dist = -200
+
