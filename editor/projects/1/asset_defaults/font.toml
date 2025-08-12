@@ -1,0 +1,13 @@
+["font face"]
+storage = "discard"
+
+["font atlas"]
+"font size" = 96.0
+storage = "discard"
+"min filter" = 9728
+"mag filter" = 9728
+"generate mipmaps" = false
+
+["common buffer"]
+"use preset" = true
+"common buffer preset" = "common"

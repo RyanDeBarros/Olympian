@@ -1,7 +1,11 @@
-from PySide6.QtWidgets import QWidget, QLineEdit, QSpinBox, QHeaderView, QPushButton
+import os
 
-from editor import ui
+import toml
+from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton
+
+from editor import ui, MANIFEST, PARAM_LIST
 from .Common import SettingsForm, SettingsParameter
+from ..util import ProjectContext
 
 
 class FontEditorWidget(QWidget):
@@ -13,8 +17,11 @@ class FontEditorWidget(QWidget):
 		self.ui.setupUi(self)
 
 		self.edit_tab = EditTab(self)
+		self.defaults_tab = DefaultsTab(self)
+		self.import_tab = ImportTab(self)
 
 
+# TODO add ? info buttons to UI, like for the syntax used by kerning pairs
 class EditTab:
 	def __init__(self, editor: FontEditorWidget):
 		self.editor = editor
@@ -71,12 +78,12 @@ class EditTab:
 		self.ui.kerningTable.setRowCount(0)
 
 	def select_use_preset(self):
-		self.ui.editFontAtlasCommonPreset.setDisabled(False)
-		self.ui.editFontAtlasCommonBuffer.setDisabled(True)
+		self.ui.editFontAtlasCommonPreset.show()
+		self.ui.editFontAtlasCommonBuffer.hide()
 
 	def select_manual_set(self):
-		self.ui.editFontAtlasCommonPreset.setDisabled(True)
-		self.ui.editFontAtlasCommonBuffer.setDisabled(False)
+		self.ui.editFontAtlasCommonPreset.hide()
+		self.ui.editFontAtlasCommonBuffer.show()
 
 	def apply_font_face_settings(self):
 		pass  # TODO
@@ -95,3 +102,88 @@ class EditTab:
 
 	def reset_font_atlas_settings(self):
 		pass  # TODO
+
+
+class DefaultsTab:
+	def __init__(self, editor: FontEditorWidget):
+		self.editor = editor
+		self.ui = self.editor.ui
+
+		self.ui.defaultRadioUsePreset.clicked.connect(self.select_use_preset)
+		self.ui.defaultRadioManualSet.clicked.connect(self.select_manual_set)
+		self.select_use_preset()
+
+		self.font_face_form = SettingsForm([
+			SettingsParameter('storage', self.ui.defaultFontFaceStorage)
+		])
+
+		self.font_atlas_form = SettingsForm([
+			SettingsParameter('font size', self.ui.defaultFontSize),
+			SettingsParameter('storage', self.ui.defaultFontAtlasStorage),
+			SettingsParameter('min filter', self.ui.defaultFontMinFilter),
+			SettingsParameter('mag filter', self.ui.defaultFontMagFilter),
+			SettingsParameter('generate mipmaps', self.ui.defaultFontMipmaps),
+		])
+
+		self.ui.saveDefaultsButton.clicked.connect(self.save_defaults)
+		self.ui.cancelDefaultsButton.clicked.connect(self.load_defaults)
+		self.validate_project_filepaths()
+		self.load_defaults()
+
+	def select_use_preset(self):
+		self.ui.defaultFontAtlasCommonPreset.show()
+		self.ui.defaultFontAtlasCommonBuffer.hide()
+
+	def select_manual_set(self):
+		self.ui.defaultFontAtlasCommonPreset.hide()
+		self.ui.defaultFontAtlasCommonBuffer.show()
+
+	def default_font_filepath(self):
+		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
+		return f'projects/{project_id}/asset_defaults/font.toml'
+
+	def validate_project_filepaths(self):
+		filepath = self.default_font_filepath()
+		os.makedirs(os.path.dirname(filepath), exist_ok=True)
+		if not os.path.exists(filepath):
+			self.save_defaults()
+
+	def get_stored_default_dict(self):
+		with open(self.default_font_filepath(), 'r') as f:
+			return toml.load(f)
+
+	def load_defaults(self):
+		d = self.get_stored_default_dict()
+		self.font_face_form.load_dict(d['font face'])
+		self.font_atlas_form.load_dict(d['font atlas'])
+		common_buffer = d['common buffer']
+		if common_buffer['use preset']:
+			self.ui.defaultRadioUsePreset.click()
+			self.ui.defaultFontAtlasCommonPreset.setCurrentText(PARAM_LIST.get_name(common_buffer['common buffer preset']))
+			self.ui.defaultFontAtlasCommonBuffer.clear()
+		else:
+			self.select_manual_set()
+			self.ui.defaultRadioManualSet.click()
+			self.ui.defaultFontAtlasCommonPreset.setCurrentIndex(0)
+			self.ui.defaultFontAtlasCommonBuffer.setText(common_buffer['common buffer'])
+
+	def save_defaults(self):
+		with open(self.default_font_filepath(), 'w') as f:
+			d = {
+				'font face': self.font_face_form.get_dict(),
+				'font atlas': self.font_atlas_form.get_dict(),
+				'common buffer': {
+					'use preset': self.ui.defaultRadioUsePreset.isChecked()
+				}
+			}
+			if self.ui.defaultRadioUsePreset.isChecked():
+				d['common buffer']['common buffer preset'] = PARAM_LIST.get_value(self.ui.defaultFontAtlasCommonPreset.currentText())
+			else:
+				d['common buffer']['common buffer'] = self.ui.defaultFontAtlasCommonBuffer.text()
+			toml.dump(d, f)
+
+
+class ImportTab:
+	def __init__(self, editor: FontEditorWidget):
+		self.editor = editor
+		self.ui = self.editor.ui

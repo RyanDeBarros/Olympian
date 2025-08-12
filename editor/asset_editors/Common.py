@@ -20,30 +20,41 @@ class SettingsForm:
 	def __init__(self, params: List[SettingsParameter]):
 		self.params = {p.name: p.control for p in params}
 
+	@staticmethod
+	def get_value(control):
+		if isinstance(control, QComboBox):
+			return PARAM_LIST.get_value(control.currentText())
+		elif isinstance(control, QCheckBox):
+			return control.isChecked()
+		elif isinstance(control, QSpinBox):
+			return control.value()
+		elif isinstance(control, QDoubleSpinBox):
+			return control.value()
+		else:
+			return None
+
 	def get_dict(self):
 		d = {}
 		for name, control in self.params.items():
-			if isinstance(control, QComboBox):
-				d[name] = PARAM_LIST.get_value(control.currentText())
-			elif isinstance(control, QCheckBox):
-				d[name] = control.isChecked()
-			elif isinstance(control, QSpinBox):
-				d[name] = control.value()
-			elif isinstance(control, QDoubleSpinBox):
-				d[name] = control.value()
+			value = SettingsForm.get_value(control)
+			if value is not None:
+				d[name] = value
 		return d
+
+	@staticmethod
+	def set_value(control, value):
+		if isinstance(control, QComboBox):
+			control.setCurrentText(PARAM_LIST.get_name(value))
+		elif isinstance(control, QCheckBox):
+			control.setChecked(value)
+		elif isinstance(control, QSpinBox):
+			control.setValue(value)
+		elif isinstance(control, QDoubleSpinBox):
+			control.setValue(value)
 
 	def load_dict(self, d, defaults=None):
 		if defaults is not None:
 			fit_with_defaults(d, defaults)
 
 		for name, value in d.items():
-			control = self.params[name]
-			if isinstance(control, QComboBox):
-				control.setCurrentText(PARAM_LIST.get_name(value))
-			elif isinstance(control, QCheckBox):
-				control.setChecked(value)
-			elif isinstance(control, QSpinBox):
-				control.setValue(value)
-			elif isinstance(control, QDoubleSpinBox):
-				control.setValue(value)
+			SettingsForm.set_value(self.params[name], value)

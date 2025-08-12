@@ -267,7 +267,6 @@ class DefaultsTab:
 	def __init__(self, texture_editor: TextureEditorWidget):
 		self.editor = texture_editor
 		self.ui = self.editor.ui
-		self.ui.saveDefaultsButton.clicked.connect(self.save_defaults)
 
 		self.raster_form = SettingsForm([
 			SettingsParameter('storage', self.ui.defaultImageStorage),
@@ -288,9 +287,18 @@ class DefaultsTab:
 			SettingsParameter('wrap t', self.ui.defaultSVGWrapT)
 		])
 
+		self.ui.saveDefaultsButton.clicked.connect(self.save_defaults)
+		self.ui.cancelDefaultsButton.clicked.connect(self.load_defaults)
 		self.validate_project_filepaths()
-
 		self.load_defaults()
+
+	def default_raster_texture_filepath(self):
+		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
+		return f'projects/{project_id}/asset_defaults/raster_texture.toml'
+
+	def default_svg_texture_filepath(self):
+		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
+		return f'projects/{project_id}/asset_defaults/svg_texture.toml'
 
 	def validate_project_filepaths(self):
 		filepath = self.default_raster_texture_filepath()
@@ -302,14 +310,6 @@ class DefaultsTab:
 		os.makedirs(os.path.dirname(filepath), exist_ok=True)
 		if not os.path.exists(filepath):
 			self.save_svg_defaults()
-
-	def default_raster_texture_filepath(self):
-		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
-		return f'projects/{project_id}/asset_defaults/raster_texture.toml'
-
-	def default_svg_texture_filepath(self):
-		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
-		return f'projects/{project_id}/asset_defaults/svg_texture.toml'
 
 	def get_stored_default_raster_dict(self):
 		with open(self.default_raster_texture_filepath(), 'r') as f:
