@@ -2,7 +2,7 @@
 
 namespace oly::col2d
 {
-	Logger& operator<<(Logger& log, Phase phase)
+	Logger::Impl operator<<(Logger::Impl log, Phase phase)
 	{
 #pragma warning(suppress : 26813)
 		return log << (phase == Phase::STARTED ? "started" : phase == Phase::ONGOING ? "ongoing" : phase == Phase::COMPLETED ? "completed" : "expired");

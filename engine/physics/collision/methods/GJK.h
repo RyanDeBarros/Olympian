@@ -84,7 +84,7 @@ namespace oly::col2d::gjk
 				return true;
 		}
 
-		LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+		LOG.warning() << "GJK overflow" << LOG.nl;
 		throw Error(ErrorCode::GJK_OVERFLOW);
 	}
 
@@ -112,7 +112,7 @@ namespace oly::col2d::gjk
 		}
 		if (!intersecting)
 		{
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "GJK overflow" << LOG.nl << LOG.end_temp;
+			LOG.warning() << "GJK overflow" << LOG.nl;
 			throw Error(ErrorCode::GJK_OVERFLOW);
 		}
 
@@ -156,7 +156,7 @@ namespace oly::col2d::gjk
 			simplex.insert(simplex.begin() + edge.index + 1, p);
 		}
 
-		LOG << LOG.begin_temp(LOG.warning) << LOG.start << "EPA overflow" << LOG.nl << LOG.end_temp;
+		LOG.warning() << "EPA overflow" << LOG.nl;
 		throw Error(ErrorCode::EPA_OVERFLOW);
 	}
 

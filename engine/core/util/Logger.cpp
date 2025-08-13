@@ -10,9 +10,15 @@
 
 namespace oly
 {
-	Logger::_start_prefix Logger::start_timestamp()
+	void Logger::pass_timestamp()
 	{
-		return _start_prefix{ std::to_string(TIME.now<>()) };
+		auto now = std::chrono::system_clock::now();
+		auto time = std::chrono::system_clock::to_time_t(now);
+#pragma warning(suppress : 4996)
+		auto current_time = std::localtime(&time);
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+		stream << std::put_time(current_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
 	}
 
 	void Logger::set_logfile(const char* filepath, bool append)
@@ -27,12 +33,12 @@ namespace oly
 		const char* log_end = " ---";
 		auto setw = std::setw(sizeof(log_start) - 1 + 32 + sizeof(log_end) - 1);
 		stream << std::setfill('-') << setw << "" << '\n' << log_start;
-		*this << timestamp;
+		pass_timestamp();
 		stream << log_end << '\n' << std::setfill('-') << setw << "" << '\n';
 		file.flush();
 	}
 
-	Logger& Logger::flush()
+	void Logger::flush()
 	{
 		if (target.console)
 		{
@@ -46,197 +52,197 @@ namespace oly
 		}
 		stream.str(std::string());
 		stream.clear();
-		return *this;
 	}
 
-	Logger& Logger::operator<<(const _timestamp&)
+	void Logger::start(const char* level, bool timestamp, const char* prefix)
 	{
-		auto now = std::chrono::system_clock::now();
-		auto time = std::chrono::system_clock::to_time_t(now);
-#pragma warning(suppress : 4996)
-		auto current_time = std::localtime(&time);
-		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-		stream << std::put_time(current_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
-		return *this;
-	}
-
-	Logger& Logger::operator<<(const _nl&)
-	{
-		return *this << "\n";
-	}
-
-	Logger& Logger::operator<<(const _endl&)
-	{
-		return (*this << nl).flush();
-	}
-
-	Logger& Logger::operator<<(const _start&)
-	{
-		switch (level)
+		if (timestamp)
 		{
-		case Level::DEBUG:
-			if (enable.debug)
-				return *this << "[DEBUG] ";
-			break;
-		case Level::INFO:
-			if (enable.info)
-				return *this << "[INFO] ";
-			break;
-		case Level::WARNING:
-			if (enable.warning)
-				return *this << "[WARNING] ";
-			break;
-		case Level::ERROR:
-			if (enable.error)
-				return *this << "[ERROR] ";
-			break;
-		case Level::FATAL:
-			if (enable.fatal)
-				return *this << "[FATAL] ";
-			break;
+			pass_timestamp();
+			stream << " ";
 		}
-		return *this;
+		if (prefix)
+			stream << "[" << level << " - " << prefix << "] ";
+		else
+			stream << "[" << level << "] ";
 	}
 
-	Logger& Logger::operator<<(const _start_opengl& start_gl)
+	void Logger::start(const char* level, Logger::_opengl g)
 	{
-		switch (level)
+		pass_timestamp();
+		stream << " [" << level << " - GL" << g.code << "] ";
+	}
+
+	void Logger::start(const char* level, Logger::_glfw g)
+	{
+		pass_timestamp();
+		stream << " [" << level << " - GLFW" << g.code << "] ";
+	}
+
+	Logger::Impl Logger::untagged(bool timestamp)
+	{
+		if (timestamp)
 		{
-		case Level::DEBUG:
-			if (enable.debug)
-				return *this << "[DEBUG - GL" << start_gl.code << "] ";
-			break;
-		case Level::INFO:
-			if (enable.info)
-				return *this << "[INFO - GL" << start_gl.code << "] ";
-			break;
-		case Level::WARNING:
-			if (enable.warning)
-				return *this << "[WARNING - GL" << start_gl.code << "] ";
-			break;
-		case Level::ERROR:
-			if (enable.error)
-				return *this << "[ERROR - GL" << start_gl.code << "] ";
-			break;
-		case Level::FATAL:
-			if (enable.fatal)
-				return *this << "[FATAL - GL" << start_gl.code << "] ";
-			break;
+			pass_timestamp();
+			stream << " ";
 		}
-		return *this;
+		return Impl(true);
 	}
 
-	Logger& Logger::operator<<(const _start_glfw& start_glfw)
+	Logger::Impl Logger::debug(bool timestamp, const char* prefix)
 	{
-		switch (level)
-		{
-		case Level::DEBUG:
-			if (enable.debug)
-				return *this << "[DEBUG - GLFW" << start_glfw.code << "] ";
-			break;
-		case Level::INFO:
-			if (enable.info)
-				return *this << "[INFO - GLFW" << start_glfw.code << "] ";
-			break;
-		case Level::WARNING:
-			if (enable.warning)
-				return *this << "[WARNING - GLFW" << start_glfw.code << "] ";
-			break;
-		case Level::ERROR:
-			if (enable.error)
-				return *this << "[ERROR - GLFW" << start_glfw.code << "] ";
-			break;
-		case Level::FATAL:
-			if (enable.fatal)
-				return *this << "[FATAL - GLFW" << start_glfw.code << "] ";
-			break;
-		}
-		return *this;
+		if (enable.debug)
+			start("DEBUG", timestamp, prefix);
+		return Impl(enable.debug);
 	}
 
-	Logger& Logger::operator<<(const _start_prefix& start_prefix)
+	Logger::Impl Logger::debug(Logger::_opengl g)
 	{
-		switch (level)
-		{
-		case Level::DEBUG:
-			if (enable.debug)
-				return *this << "[DEBUG - " << start_prefix.prefix << "] ";
-			break;
-		case Level::INFO:
-			if (enable.info)
-				return *this << "[INFO - " << start_prefix.prefix << "] ";
-			break;
-		case Level::WARNING:
-			if (enable.warning)
-				return *this << "[WARNING - " << start_prefix.prefix << "] ";
-			break;
-		case Level::ERROR:
-			if (enable.error)
-				return *this << "[ERROR - " << start_prefix.prefix << "] ";
-			break;
-		case Level::FATAL:
-			if (enable.fatal)
-				return *this << "[FATAL - " << start_prefix.prefix << "] ";
-			break;
-		}
-		return *this;
+		if (enable.debug)
+			start("DEBUG", g);
+		return Impl(enable.debug);
 	}
 
-	Logger& Logger::operator<<(const _begin_temp& temp)
+	Logger::Impl Logger::debug(Logger::_glfw g)
 	{
-		normal_level = level;
-		level = temp.level;
-		return *this;
+		if (enable.debug)
+			start("DEBUG", g);
+		return Impl(enable.debug);
 	}
 
-	Logger& Logger::operator<<(const _end_temp&)
+	Logger::Impl Logger::info(bool timestamp, const char* prefix)
 	{
-		level = normal_level;
-		return *this;
+		if (enable.info)
+			start("INFO", timestamp, prefix);
+		return Impl(enable.info);
 	}
 
-	Logger& Logger::operator<<(const void* c)
+	Logger::Impl Logger::info(Logger::_opengl g)
 	{
-		stream << c;
-		return *this;
+		if (enable.info)
+			start("INFO", g);
+		return Impl(enable.info);
 	}
 
-	Logger& Logger::operator<<(const char* c)
+	Logger::Impl Logger::info(Logger::_glfw g)
 	{
-		stream << c;
-		return *this;
+		if (enable.info)
+			start("INFO", g);
+		return Impl(enable.info);
 	}
 
-	Logger& Logger::operator<<(const std::string& s)
+	Logger::Impl Logger::warning(bool timestamp, const char* prefix)
 	{
-		stream << s;
-		return *this;
+		if (enable.warning)
+			start("WARNING", timestamp, prefix);
+		return Impl(enable.warning);
 	}
 
-	Logger& Logger::operator<<(std::string_view s)
+	Logger::Impl Logger::warning(Logger::_opengl g)
 	{
-		stream << s;
-		return *this;
+		if (enable.warning)
+			start("WARNING", g);
+		return Impl(enable.warning);
 	}
 
-	Logger& Logger::operator<<(bool b)
+	Logger::Impl Logger::warning(Logger::_glfw g)
 	{
-		return *this << (b ? "true" : "false");
+		if (enable.warning)
+			start("WARNING", g);
+		return Impl(enable.warning);
 	}
 
-	Logger& Logger::operator<<(glm::vec2 v)
+	Logger::Impl Logger::error(bool timestamp, const char* prefix)
 	{
-		return *this << "(" << v.x << ", " << v.y << ")";
+		if (enable.error)
+			start("ERROR", timestamp, prefix);
+		return Impl(enable.error);
+	}
+
+	Logger::Impl Logger::error(Logger::_opengl g)
+	{
+		if (enable.error)
+			start("ERROR", g);
+		return Impl(enable.error);
+	}
+
+	Logger::Impl Logger::error(Logger::_glfw g)
+	{
+		if (enable.error)
+			start("ERROR", g);
+		return Impl(enable.error);
+	}
+
+	Logger::Impl Logger::fatal(bool timestamp, const char* prefix)
+	{
+		if (enable.fatal)
+			start("FATAL", timestamp, prefix);
+		return Impl(enable.fatal);
+	}
+
+	Logger::Impl Logger::fatal(Logger::_opengl g)
+	{
+		if (enable.fatal)
+			start("FATAL", g);
+		return Impl(enable.fatal);
+	}
+
+	Logger::Impl Logger::fatal(Logger::_glfw g)
+	{
+		if (enable.fatal)
+			start("FATAL", g);
+		return Impl(enable.fatal);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, Logger::_nl)
+	{
+		return impl.stream('\n');
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, Logger::_endl)
+	{
+		impl << LOG.nl;
+		LOG.flush();
+		return impl;
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, const void* c)
+	{
+		return impl.stream(c);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, const char* c)
+	{
+		return impl.stream(c);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, const std::string& s)
+	{
+		return impl.stream(s);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, std::string_view s)
+	{
+		return impl.stream(s);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, bool b)
+	{
+		return impl << (b ? "true" : "false");
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, glm::vec2 v)
+	{
+		return impl << "(" << v.x << ", " << v.y << ")";
 	}
 	
-	Logger& Logger::operator<<(glm::vec3 v)
+	Logger::Impl operator<<(Logger::Impl impl, glm::vec3 v)
 	{
-		return *this << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+		return impl << "(" << v.x << ", " << v.y << ", " << v.z << ")";
 	}
 	
-	Logger& Logger::operator<<(glm::vec4 v)
+	Logger::Impl operator<<(Logger::Impl impl, glm::vec4 v)
 	{
-		return *this << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+		return impl << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
 	}
 }

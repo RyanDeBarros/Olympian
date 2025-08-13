@@ -19,11 +19,11 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 		if (data.action == GLFW_PRESS)
 		{
 			if (data.key == GLFW_KEY_A)
-				oly::LOG << "A" << oly::LOG.endl;
+				oly::LOG.info(true) << "A" << oly::LOG.endl;
 			else if (data.key == GLFW_KEY_B)
-				oly::LOG << "B" << oly::LOG.endl;
+				oly::LOG.info(true) << "B" << oly::LOG.endl;
 			else
-				oly::LOG << "?" << oly::LOG.endl;
+				oly::LOG.info(true) << "?" << oly::LOG.endl;
 		}
 		return false;
 	}

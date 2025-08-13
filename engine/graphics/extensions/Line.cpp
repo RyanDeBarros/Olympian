@@ -46,7 +46,7 @@ namespace oly::rendering
 				if (e.code == ErrorCode::TRIANGULATION)
 				{
 					can_draw = false;
-					LOG << LOG.begin_temp(LOG.warning) << LOG.start_timestamp() << "Could not send polygon - bad triangulation." << LOG.end_temp << LOG.nl;
+					LOG.warning() << "Could not send polygon - bad triangulation." << LOG.nl;
 				}
 				else
 					throw e;

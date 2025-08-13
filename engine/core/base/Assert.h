@@ -13,9 +13,9 @@ namespace oly::internal
 		if (!condition)
 		{
 			if (file)
-				LOG << LOG.begin_temp(LOG.error) << LOG.start_prefix("ASSERT") << description << " at " << file << ":" << line << LOG.end_temp << LOG.nl;
+				LOG.error(true, "ASSERT") << description << " at " << file << ":" << line << LOG.nl;
 			else
-				LOG << LOG.begin_temp(LOG.error) << LOG.start_prefix("ASSERT") << description << LOG.end_temp << LOG.nl;
+				LOG.error(true, "ASSERT") << description << LOG.nl;
 			// LATER configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
 			__debugbreak();
 		}

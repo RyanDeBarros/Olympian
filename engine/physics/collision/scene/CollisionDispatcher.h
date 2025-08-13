@@ -18,7 +18,7 @@ namespace oly::col2d
 	constexpr Phase operator|(Phase a, Phase b) { return (Phase)((unsigned char)a | (unsigned char)b); }
 	constexpr Phase operator~(Phase a) { return (Phase)(~(unsigned char)a); }
 
-	extern Logger& operator<<(Logger&, Phase);
+	extern Logger::Impl operator<<(Logger::Impl, Phase);
 
 	struct OverlapEventData
 	{

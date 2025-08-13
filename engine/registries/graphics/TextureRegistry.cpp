@@ -71,12 +71,12 @@ namespace oly::reg
 				texture_node = TOMLNode(*texture_array->get(texture_index));
 			}
 			else
-				LOG << LOG.begin_temp(LOG.warning) << LOG.start << "texture table does not exist in texture import file: " << oly_file << LOG.nl << LOG.end_temp;
+				LOG.warning() << "texture table does not exist in texture import file: " << oly_file << LOG.nl;
 		}
 		catch (Error e)
 		{
 			if (e.code == ErrorCode::TOML_PARSE)
-				LOG << LOG.begin_temp(LOG.warning) << LOG.start << "cannot parse texture import file: " << oly_file << LOG.nl << LOG.end_temp;
+				LOG.warning() << "cannot parse texture import file: " << oly_file << LOG.nl;
 			else
 				throw e;
 		}
@@ -173,7 +173,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
 	{
 		if (!file.ends_with(".svg"))
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "attempting to load non-svg file as svg texture: " << file << LOG.nl << LOG.end_temp;
+			LOG.warning() << "attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		SVGTextureKey svg_tkey{ file, params.texture_index, scale };
 		auto it = svg_textures.find(svg_tkey);
@@ -296,7 +296,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_temp_svg_texture(const std::string& file, float scale, TempSVGLoadParams params) const
 	{
 		if (!file.ends_with(".svg"))
-			LOG << LOG.begin_temp(LOG.warning) << LOG.start << "attempting to load non-svg file as svg texture: " << file << LOG.nl << LOG.end_temp;
+			LOG.warning() << "attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
 		TOMLNode texture_node;
