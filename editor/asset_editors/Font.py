@@ -94,8 +94,7 @@ class EditTab:
 
 	def browse_font(self):
 		filter = FileIO.file_extension_filter("Font files", FONT_FILE_EXTENSIONS)
-		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir,
-												  filter=filter)
+		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir, filter=filter)
 		if filepath:
 			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
 			self.ui.editFontFilepath.setText(filepath)
@@ -113,8 +112,7 @@ class EditTab:
 				self.font = None
 				self.ui.paramsLayout.hide()
 				self.ui.editAtlasDeleteSlot.setDisabled(True)
-				QMessageBox.warning(self.editor, "Error",
-									f"Could not load font {filepath} - the import file is corrupted.")
+				QMessageBox.warning(self.editor, "Error", f"Could not load font {filepath} - the import file is corrupted.")
 				return
 
 			self.ui.paramsLayout.show()
@@ -307,7 +305,8 @@ class DefaultsTab:
 		self.ui.defaultFontAtlasCommonPreset.hide()
 		self.ui.defaultFontAtlasCommonBuffer.show()
 
-	def default_font_filepath(self):
+	@staticmethod
+	def default_font_filepath():
 		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
 		return f'projects/{project_id}/asset_defaults/font.toml'
 

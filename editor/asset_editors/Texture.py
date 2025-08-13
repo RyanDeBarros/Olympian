@@ -288,11 +288,13 @@ class DefaultsTab:
 		self.validate_project_filepaths()
 		self.load_defaults()
 
-	def default_raster_texture_filepath(self):
+	@staticmethod
+	def default_raster_texture_filepath():
 		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
 		return f'projects/{project_id}/asset_defaults/raster_texture.toml'
 
-	def default_svg_texture_filepath(self):
+	@staticmethod
+	def default_svg_texture_filepath():
 		project_id = MANIFEST.get_project_id(ProjectContext.PROJECT_FILE)
 		return f'projects/{project_id}/asset_defaults/svg_texture.toml'
 
