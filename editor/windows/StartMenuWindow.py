@@ -5,8 +5,7 @@ import re
 
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox, QMainWindow
 
-import ui
-from editor import MANIFEST
+from editor import MANIFEST, ui
 
 
 class StartMenuWindow(QMainWindow):

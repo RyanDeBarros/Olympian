@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QMainWindow
 
 from editor import ui
-from editor import asset_editors
-from editor.ProjectSettings import ProjectSettingsWidget
+from editor.subeditors import *
 
 
 # TODO v3 use watchdog to auto-import assets
@@ -33,7 +32,7 @@ class ProjectWindow(QMainWindow):
 		self.setCentralWidget(ProjectSettingsWidget(self))
 
 	def open_texture_editor(self):
-		self.setCentralWidget(asset_editors.TextureEditorWidget(self))
+		self.setCentralWidget(TextureEditorWidget(self))
 
 	def open_font_editor(self):
-		self.setCentralWidget(asset_editors.FontEditorWidget(self))
+		self.setCentralWidget(FontEditorWidget(self))

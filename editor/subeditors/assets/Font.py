@@ -5,8 +5,8 @@ import toml
 from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QTableWidgetItem
 
 from editor import ui, MANIFEST, PARAM_LIST
-from .Common import SettingsForm, SettingsParameter, fit_with_defaults
-from ..util import ProjectContext, FileIO
+from editor.util import ProjectContext, FileIO
+from ..Common import SettingsForm, SettingsParameter, fit_with_defaults
 
 
 class FontEditorWidget(QWidget):
@@ -14,7 +14,7 @@ class FontEditorWidget(QWidget):
 		super().__init__()
 		self.win = win
 
-		self.ui = ui.asset_editors.Font.Ui_Form()
+		self.ui = ui.Font.Ui_Form()
 		self.ui.setupUi(self)
 
 		self.edit_tab = EditTab(self)

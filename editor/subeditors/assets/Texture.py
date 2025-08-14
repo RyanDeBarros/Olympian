@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import toml
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from editor import ui, MANIFEST
 from editor.util import *
-from .Common import SettingsForm, SettingsParameter
+from ..Common import SettingsForm, SettingsParameter
 
 
 class TextureEditorWidget(QWidget):
@@ -15,7 +15,7 @@ class TextureEditorWidget(QWidget):
 		super().__init__()
 		self.win = win
 
-		self.ui = ui.asset_editors.Texture.Ui_Form()
+		self.ui = ui.Texture.Ui_Form()
 		self.ui.setupUi(self)
 
 		self.edit_tab = EditTab(self)

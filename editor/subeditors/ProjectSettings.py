@@ -2,8 +2,8 @@ import toml
 from PySide6.QtWidgets import QWidget
 
 from editor import ui
-from editor.asset_editors.Common import SettingsForm, SettingsParameter
 from editor.util import ProjectContext
+from .Common import SettingsForm, SettingsParameter
 
 
 # TODO v3 key shortcuts like CTRL+S to save
@@ -33,17 +33,22 @@ class ProjectSettingsWidget(QWidget):
 		with open(ProjectContext.PROJECT_FILE, 'r') as f:
 			self.settings = toml.load(f)
 		assert 'context' in self.settings
+		self.context = self.settings['context']
+		assert 'window' in self.context
+		self.window_settings = self.context['window']
+		assert 'logger' in self.context
+		self.logger_settings = self.context['logger']
 
 		self.last_file_dialog_dir = ProjectContext.project_resource_folder()
 
 		self.cancel_settings()
 
 	def cancel_settings(self):
-		self.window_form.load_dict(self.settings['context']['window'])
-		self.logger_form.load_dict(self.settings['context']['logger'])
+		self.window_form.load_dict(self.window_settings)
+		self.logger_form.load_dict(self.logger_settings)
 
 	def apply_settings(self):
-		self.settings['context']['window'] = self.window_form.get_dict()
-		self.settings['context']['logger'] = self.logger_form.get_dict()
+		self.window_settings = self.window_form.get_dict()
+		self.logger_settings = self.logger_form.get_dict()
 		with open(ProjectContext.PROJECT_FILE, 'w') as f:
 			toml.dump(self.settings, f)

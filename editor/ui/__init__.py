@@ -1,2 +1,2 @@
-from . import StartMenu, ProjectWindow, ProjectSettings
-from . import asset_editors
+from . import StartMenu, ProjectWindow
+from .subeditors import *

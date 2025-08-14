@@ -1,11 +1,11 @@
 import os
+import posixpath
 import re
 from pathlib import Path
-import posixpath
 
 import toml
 
-from editor.util import FileIO
+from .util import FileIO
 
 
 class ManifestTOML:
