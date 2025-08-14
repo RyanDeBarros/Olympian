@@ -44,7 +44,7 @@ namespace oly::reg
 							if (sc.substr(0, 3) == "&#x" && sc.ends_with(";"))
 								return utf::Codepoint(std::stoi(sc.substr(3, sc.size() - 3 - 1), nullptr, 16));
 						}
-						else if (sc.empty())
+						else if (sc.empty() || sc.size() == 2)
 							return utf::Codepoint(0);
 						return utf::Codepoint(sc[0]);
 						};

@@ -2,7 +2,8 @@ import os
 from typing import Optional
 
 import toml
-from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QTableWidgetItem
+from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QTableWidgetItem, \
+	QLineEdit
 
 from editor import ui, MANIFEST, PARAM_LIST
 from editor.util import ProjectContext, FileIO
@@ -133,12 +134,9 @@ class EditTab:
 	def new_kerning_pair(self):
 		row = self.ui.kerningTable.rowCount()
 		self.ui.kerningTable.insertRow(row)
-		self.ui.kerningTable.setItem(row, 0, QTableWidgetItem(""))
-		self.ui.kerningTable.setItem(row, 1, QTableWidgetItem(""))
-		kerning = QSpinBox()
-		kerning.setMaximum(2048)
-		kerning.setMinimum(-2048)
-		self.ui.kerningTable.setCellWidget(row, 2, kerning)
+		self.ui.kerningTable.setCellWidget(row, 0, QLineEdit())
+		self.ui.kerningTable.setCellWidget(row, 1, QLineEdit())
+		self.ui.kerningTable.setCellWidget(row, 2, QSpinBox(maximum=2048, minimum=-2048))
 		delete_button = QPushButton("🗑")
 		delete_button.clicked.connect(lambda checked, b=delete_button: self.on_kerning_deleted(b))
 		self.ui.kerningTable.setCellWidget(row, 3, delete_button)
@@ -163,8 +161,8 @@ class EditTab:
 		return [
 			{
 				'pair': [
-					self.ui.kerningTable.item(row, 0).text(),
-					self.ui.kerningTable.item(row, 1).text()
+					self.ui.kerningTable.cellWidget(row, 0).text(),
+					self.ui.kerningTable.cellWidget(row, 1).text()
 				],
 				'dist': self.ui.kerningTable.cellWidget(row, 2).value()
 			} for row in range(self.ui.kerningTable.rowCount())
@@ -182,8 +180,8 @@ class EditTab:
 			for i in range(len(kerning)):
 				self.new_kerning_pair()
 				k = kerning[i]
-				self.ui.kerningTable.item(i, 0).setText(k['pair'][0])
-				self.ui.kerningTable.item(i, 1).setText(k['pair'][1])
+				self.ui.kerningTable.cellWidget(i, 0).setText(k['pair'][0])
+				self.ui.kerningTable.cellWidget(i, 1).setText(k['pair'][1])
 				self.ui.kerningTable.cellWidget(i, 2).setValue(k['dist'])
 
 	def apply_font_face_settings(self):

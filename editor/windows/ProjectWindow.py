@@ -1,4 +1,6 @@
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtCore import QKeyCombination, Qt
+from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
 from editor import ui
 from editor.subeditors import *
@@ -22,11 +24,25 @@ class ProjectWindow(QMainWindow):
 		self.ui.actionTexture.triggered.connect(self.open_texture_editor)
 		self.ui.actionFont.triggered.connect(self.open_font_editor)
 
+		self.ui.actionEnter_Help_Mode.triggered.connect(self.enter_help_mode)
+		enter_help_mode_shortcut = QShortcut(
+			QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Question)), self)
+		enter_help_mode_shortcut.activated.connect(self.enter_help_mode)
+		self.ui.actionDocumentation.triggered.connect(self.open_documentation)
+
 		self.ui.actionProjectSettings.trigger()
 
 	def open_start_menu(self):
 		self.close()
 		self.open_start()
+
+	@staticmethod
+	def enter_help_mode():
+		QWhatsThis.enterWhatsThisMode()
+
+	@staticmethod
+	def open_documentation():
+		pass  # TODO v4 open documentation webpage
 
 	def open_project_settings(self):
 		self.setCentralWidget(ProjectSettingsWidget(self))
