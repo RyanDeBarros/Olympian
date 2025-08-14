@@ -1,14 +1,20 @@
 from typing import List
 
-from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox
+from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit
 
 from editor.util import *
+
+
+def validate_control_type(control):
+	if type(control) not in (QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit):
+		raise TypeError(f"Unknown control type {type(control)}")
 
 
 class SettingsParameter:
 	def __init__(self, name, control):
 		self.name = name
 		self.control = control
+		validate_control_type(self.control)
 
 
 def fit_with_defaults(d, defaults):
@@ -30,8 +36,10 @@ class SettingsForm:
 			return control.value()
 		elif isinstance(control, QDoubleSpinBox):
 			return control.value()
+		elif isinstance(control, QLineEdit):
+			return control.text()
 		else:
-			return None
+			raise TypeError(f"Unknown control type {type(control)}")
 
 	def get_dict(self):
 		d = {}
@@ -51,6 +59,10 @@ class SettingsForm:
 			control.setValue(value)
 		elif isinstance(control, QDoubleSpinBox):
 			control.setValue(value)
+		elif isinstance(control, QLineEdit):
+			control.setText(value)
+		else:
+			raise TypeError(f"Unknown control type {type(control)}")
 
 	def load_dict(self, d, defaults=None):
 		if defaults is not None:

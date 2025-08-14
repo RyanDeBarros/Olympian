@@ -28,6 +28,8 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen_Start_Menu"/>
+    <addaction name="separator"/>
+    <addaction name="actionProjectSettings"/>
    </widget>
    <widget class="QMenu" name="menuEditor">
     <property name="title">
@@ -55,9 +57,9 @@
     <string>Open Start Menu</string>
    </property>
   </action>
-  <action name="actionSpritesheet">
+  <action name="actionProjectSettings">
    <property name="text">
-    <string>Spritesheet</string>
+    <string>Project Settings</string>
    </property>
   </action>
  </widget>

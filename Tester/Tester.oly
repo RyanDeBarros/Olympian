@@ -1,7 +1,7 @@
 [context]
 gamepads = 1
-"signals"                 = [ "assets/signals.toml" ]
-"tileset registries"      = [ "assets/grass_tileset.toml" ]
+signals = [ "assets/signals.toml",]
+"tileset registries" = [ "assets/grass_tileset.toml",]
 
 [context.window_hint]
 

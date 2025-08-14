@@ -40,14 +40,15 @@ class Texture:
 	def __init__(self, filepath):
 		self.filepath = filepath
 		with open(f"{filepath}.oly", 'r') as f:
-			self.slots: List[dict] = toml.load(f)['texture']
+			self.content = toml.load(f)
+		self.slots = self.content['texture']
 		self.is_svg = Path(filepath).suffix == ".svg"
 		self.is_gif = Path(filepath).suffix == ".gif"
 		assert len(self.slots) > 0
 
 	def dump(self):
 		with open(f"{self.filepath}.oly", 'w') as f:
-			toml.dump({'texture': self.slots}, f)
+			toml.dump(self.content, f)
 
 
 class EditTab:

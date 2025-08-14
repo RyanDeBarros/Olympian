@@ -34,17 +34,14 @@ class Font:
 	def __init__(self, filepath):
 		self.filepath = filepath
 		with open(f"{filepath}.oly", 'r') as f:
-			content = toml.load(f)
-		self.font_face = content['font_face']
-		self.font_atlases = content['font_atlas']
+			self.content = toml.load(f)
+		self.font_face = self.content['font_face']
+		self.font_atlases = self.content['font_atlas']
 		assert len(self.font_atlases) > 0
 
 	def dump(self):
 		with open(f"{self.filepath}.oly", 'w') as f:
-			toml.dump({
-				'font_face': self.font_face,
-				'font_atlas': self.font_atlases
-			}, f)
+			toml.dump(self.content, f)
 
 
 # TODO v3 add ? info buttons to UI, like for the syntax used by kerning pairs
