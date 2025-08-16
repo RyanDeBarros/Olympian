@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>807</width>
+    <height>731</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="mainTabHolder"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>807</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>Project</string>
+    </property>
+    <addaction name="actionOpen_Start_Menu"/>
+    <addaction name="separator"/>
+    <addaction name="actionContent_Browser"/>
+    <addaction name="separator"/>
+    <addaction name="actionProject_Settings"/>
+    <addaction name="actionAsset_Defaults"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionOpen_Docs"/>
+    <addaction name="separator"/>
+    <addaction name="actionHelp_Mode"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="contentBrowser">
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="ContentBrowser" name="CBWidget">
+    <layout class="QVBoxLayout" name="verticalLayout_2"/>
+   </widget>
+  </widget>
+  <action name="actionOpen_Start_Menu">
+   <property name="text">
+    <string>Open Start Menu</string>
+   </property>
+  </action>
+  <action name="actionProject_Settings">
+   <property name="text">
+    <string>Project Settings</string>
+   </property>
+  </action>
+  <action name="actionAsset_Defaults">
+   <property name="text">
+    <string>Asset Defaults</string>
+   </property>
+  </action>
+  <action name="actionOpen_Docs">
+   <property name="text">
+    <string>Open Docs</string>
+   </property>
+  </action>
+  <action name="actionHelp_Mode">
+   <property name="text">
+    <string>Help Mode (Ctrl+?)</string>
+   </property>
+  </action>
+  <action name="actionContent_Browser">
+   <property name="text">
+    <string>Content Browser (Ctrl+Space)</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ContentBrowser</class>
+   <extends>QWidget</extends>
+   <header location="global">editor.windows.ContentBrowser</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
