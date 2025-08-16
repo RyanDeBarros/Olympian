@@ -1,28 +1,4 @@
 [[signal]]
-"id"      = "jump"
-"binding" = "key"
-"key"     = 32 # space
-
-[[signal]]
-"id"      = "click"
-"binding" = "mouse button"
-"button"  = 0 # LMB
-
-[[signal]]
-"id"      = "drag"
-"binding" = "cursor pos"
-
-[[signal]]
-"id"       = "pan camera"
-"binding"  = "gamepad axis 2d"
-"axis2d"   = 1 # RIGHT_XY
-"deadzone" = 0.018
-
-[[signal]]
-"id"      = "zoom camera"
-"binding" = "scroll"
-
-[[signal]]
 "id"      = "move left"
 "binding" = "key"
 "key"     = 263 # LEFT

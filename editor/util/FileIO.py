@@ -57,7 +57,6 @@ def create_default_import_file(filepath, d):
 		toml.dump(d, f)
 
 
-# TODO v3 allow selection of specific (even multiple) files, rather than folder
 def execute_standard_import_on_folder(root_folder, recursive, clear, clean_unused, import_unimported, extensions,
 									  content_condition, create_default_import):
 	def execute_on_folder(folder):

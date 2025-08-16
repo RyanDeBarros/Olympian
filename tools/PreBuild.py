@@ -3,6 +3,7 @@ import time
 import archetype
 
 
+# TODO v3 PreBuild should be in a prebuild top-level folder
 if __name__ == "__main__":
     start_time = time.time()
 

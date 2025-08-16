@@ -45,7 +45,6 @@ class Font:
 			toml.dump(self.content, f)
 
 
-# TODO v3 add ? info buttons to UI, like for the syntax used by kerning pairs
 class EditTab:
 	def __init__(self, editor: FontEditorWidget):
 		self.editor = editor

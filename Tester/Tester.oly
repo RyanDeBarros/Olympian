@@ -1,6 +1,6 @@
 [context]
 gamepads = 1
-signals = [ "assets/signals.toml",]
+signals = [ "signals/Camera.oly", "signals/Click.oly", "signals/Drag.oly", "signals/Jump.oly", "signals/Move.oly",]
 "tileset registries" = [ "assets/grass_tileset.toml",]
 
 [context.window_hint]

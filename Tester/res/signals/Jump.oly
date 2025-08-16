@@ -1,0 +1,4 @@
+[[signal]]
+"id"      = "jump"
+"binding" = "key"
+"key"     = 32 # space

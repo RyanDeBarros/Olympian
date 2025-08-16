@@ -1,0 +1,3 @@
+[[signal]]
+"id"      = "drag"
+"binding" = "cursor pos"

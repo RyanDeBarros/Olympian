@@ -6,6 +6,7 @@ from editor.util import ProjectContext
 from .Common import SettingsForm, SettingsParameter
 
 
+# TODO v3 indicate unsaved changes - prompt modal if user tries to change assets or close editor with unsaved changes
 # TODO v3 key shortcuts like CTRL+S to save
 class ProjectSettingsWidget(QWidget):
 	def __init__(self, win):

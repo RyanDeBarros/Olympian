@@ -1,0 +1,4 @@
+[[signal]]
+"id"      = "click"
+"binding" = "mouse button"
+"button"  = 0 # LMB
