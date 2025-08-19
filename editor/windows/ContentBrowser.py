@@ -1,18 +1,28 @@
+import os
+import platform
+import subprocess
+from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt
-from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction
+from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu
 
 from editor import ui
 from editor.util import ProjectContext
 
 
+class FileType(Enum):
+	UNKNOWN = auto()
+	DIRECTORY = auto()
+	TEXT = auto()
+
+
 class PathItem:
-	def __init__(self, name, is_file):
+	def __init__(self, name, ftype: FileType):
 		self.name = name
-		self.is_file = is_file
+		self.ftype = ftype
 
 
 class ContentBrowserFolderView(QListView):
@@ -36,13 +46,16 @@ class ContentBrowserFolderView(QListView):
 		self.setModel(self.model)
 		self.model.itemChanged.connect(self.item_renamed)
 		self.doubleClicked.connect(self.item_double_clicked)
-		self.path_items = {}
+		self.setEditTriggers(QAbstractItemView.EditTrigger.EditKeyPressed)
+		self.path_items: dict[QModelIndex, PathItem] = {}
+
+		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+		self.customContextMenuRequested.connect(self.show_context_menu)
 
 	def add_item(self, pi: PathItem):
 		item = QStandardItem()
 		item.setText(pi.name)
-		# TODO v3 detect file type and use different icons
-		item.setIcon(QIcon("res/images/file.svg" if pi.is_file else "res/images/folder.svg"))
+		item.setIcon(QIcon(self.item_icon_path(pi.ftype)))
 		item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
 		self.model.appendRow(item)
 		self.path_items[item.index()] = pi
@@ -54,6 +67,14 @@ class ContentBrowserFolderView(QListView):
 	def clear_items(self):
 		self.model.clear()
 
+	@staticmethod
+	def item_icon_path(ftype: FileType):
+		match ftype:
+			case FileType.DIRECTORY:
+				return "res/images/folder.svg"
+			case FileType.TEXT:
+				return "res/images/file.svg"
+
 	def item_renamed(self, item: QStandardItem):
 		pi = self.path_items[item.index()]
 		if pi.name != item.text():
@@ -63,10 +84,39 @@ class ContentBrowserFolderView(QListView):
 				item.setText(pi.name)
 
 	def item_double_clicked(self, index: QModelIndex):
-		pi = self.path_items[index]
-		if not pi.is_file:
-			item = self.model.itemFromIndex(index)
-			self.content_browser.open_relative_folder(item.text())
+		self.content_browser.open_item(self.path_items[index])
+
+	def show_context_menu(self, pos):
+		index = self.indexAt(pos)
+		menu = QMenu(self)
+
+		# TODO v3 custom icons for actions
+		if index.isValid():
+			rename = QAction(QIcon("res/images/file.svg"), "Rename")
+			rename.triggered.connect(lambda: self.edit(index))
+			menu.addAction(rename)
+
+			delete = QAction(QIcon("res/images/file.svg"), "Delete")
+			delete.triggered.connect(lambda: self.delete_item(index))
+			menu.addAction(delete)
+		else:
+			new_asset_menu = QMenu("New Asset")
+			new_asset_menu.setIcon(QIcon("res/images/file.svg"))
+
+			txt = QAction(QIcon("res/images/file.svg"), "Text File")
+			txt.triggered.connect(self.content_browser.new_text_file)
+			new_asset_menu.addAction(txt)
+
+			menu.addMenu(new_asset_menu)
+
+			new_folder = QAction(QIcon("res/images/file.svg"), "New Folder")
+			new_folder.triggered.connect(self.content_browser.new_folder)
+			menu.addAction(new_folder)
+
+		menu.exec(self.viewport().mapToGlobal(pos))
+
+	def delete_item(self, index: QModelIndex):
+		pass  # TODO
 
 
 class ContentBrowser(QWidget):
@@ -81,8 +131,8 @@ class ContentBrowser(QWidget):
 
 		self.res_folder = ProjectContext.project_resource_folder()
 
-		self.ui.newAsset.clicked.connect(self.new_asset)
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
+		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
 
 		self.current_folder = self.res_folder
 		self.last_file_dialog_dir = self.current_folder
@@ -94,8 +144,14 @@ class ContentBrowser(QWidget):
 			self.last_file_dialog_dir = folder
 			self.open_folder(folder)
 
-	def new_asset(self):
-		pass  # TODO
+	def open_in_explorer(self):
+		system = platform.system()
+		if system == "Windows":
+			os.startfile(os.path.normpath(self.current_folder))
+		elif system == "Darwin":
+			subprocess.run(["open", self.current_folder])
+		else:
+			subprocess.run(["xdg-open", self.current_folder])
 
 	def open_folder(self, folder):
 		resolved_folder = Path(folder).resolve()
@@ -107,9 +163,6 @@ class ContentBrowser(QWidget):
 		self.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
 		self.populate()
 
-	def open_relative_folder(self, folder):
-		self.open_folder(Path(self.current_folder).joinpath(folder))
-
 	def rename_relative_file(self, old_name, new_name):
 		old_name = Path(self.current_folder).joinpath(old_name)
 		new_name = Path(self.current_folder).joinpath(new_name)
@@ -118,11 +171,31 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [PathItem("..", False)]
+		items = [PathItem("..", FileType.DIRECTORY)]
 		for path in Path(self.current_folder).iterdir():
 			if path.is_dir():
-				items.append(PathItem(path.name, False))
+				items.append(PathItem(path.name, FileType.DIRECTORY))
 		for path in Path(self.current_folder).iterdir():
 			if path.is_file():
-				items.append(PathItem(path.name, True))
+				# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
+				items.append(PathItem(path.name, FileType.TEXT))
 		self.folder_view.add_items(items)
+
+	def new_folder(self):
+		pass  # TODO
+
+	def new_text_file(self):
+		pass  # TODO
+
+	def open_item(self, pi: PathItem):
+		match pi.ftype:
+			case FileType.DIRECTORY:
+				self.open_relative_folder(pi.name)
+			case FileType.TEXT:
+				self.open_text_file(pi.name)
+
+	def open_relative_folder(self, folder):
+		self.open_folder(Path(self.current_folder).joinpath(folder))
+
+	def open_text_file(self, filepath):
+		pass  # TODO
