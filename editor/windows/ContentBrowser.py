@@ -54,7 +54,7 @@ class ContentBrowserFolderView(QListView):
 		self.setModel(self.model)
 		self.model.itemChanged.connect(self.item_renamed)
 		self.setEditTriggers(QAbstractItemView.EditTrigger.EditKeyPressed)
-		self.path_items: dict[QModelIndex, PathItem] = {}
+		self.path_items: list[PathItem] = []
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
@@ -74,7 +74,7 @@ class ContentBrowserFolderView(QListView):
 			else:
 				return 2, item.name.lower()
 
-		sorted_items = sorted(self.path_items.values(), key=sort_key)
+		sorted_items = sorted(self.path_items, key=sort_key)
 		self.clear_items()
 		self.add_items(sorted_items, sort=False)
 
@@ -84,17 +84,17 @@ class ContentBrowserFolderView(QListView):
 		item.setIcon(QIcon(self.item_icon_path(pi.ftype)))
 		item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
 		self.model.appendRow(item)
-		self.path_items[item.index()] = pi
+		self.path_items.insert(item.row(), pi)
 
 		if sort:
 			self.sort()
 
 		if editing:
 			if sort:
-				index = next((sorted_index for sorted_index, sorted_item in self.path_items.items() if sorted_item == pi), None)
+				index = self.path_items.index(pi)
 			else:
-				index = self.model.indexFromItem(item)
-			self.edit(index)
+				index = item.row()
+			self.edit(self.model.index(index, 0))
 
 	def add_items(self, items: List[PathItem], sort=True):
 		for pi in items:
@@ -115,10 +115,10 @@ class ContentBrowserFolderView(QListView):
 				return "res/images/file.svg"
 
 	def item_renamed(self, item: QStandardItem):
-		pi = self.path_items[item.index()]
+		pi = self.path_items[item.row()]
 		if pi.name != item.text():
 			if self.content_browser.rename_relative_file(pi.name, item.text()):
-				self.path_items[item.index()].name = item.text()
+				self.path_items[item.row()].name = item.text()
 				self.sort()
 			else:
 				item.setText(pi.name)
@@ -128,7 +128,7 @@ class ContentBrowserFolderView(QListView):
 		if event.button() == Qt.MouseButton.LeftButton:
 			index = self.indexAt(event.pos())
 			if index.isValid():
-				self.content_browser.open_item(self.path_items[index])
+				self.content_browser.open_item(self.path_items[index.row()])
 			else:
 				event.ignore()
 		else:
@@ -185,31 +185,39 @@ class ContentBrowserFolderView(QListView):
 
 		menu.exec(self.viewport().mapToGlobal(pos))
 
-	# TODO v3 delete import file as well -> should be a method in PathItem
-	def delete_item(self, index: QModelIndex):
+	def delete_item_impl(self, index: QModelIndex):
 		if not index.isValid():
 			return False
 
-		pi = self.path_items.get(index)
-		if pi is None:
-			return False
+		assert index.row() < len(self.path_items)
+		pi = self.path_items[index.row()]
 
 		# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
 		try:
 			FileIO.move_to_trash(Path(self.content_browser.current_folder).joinpath(pi.name))
-			del self.path_items[index]
-			item = self.model.itemFromIndex(index)
-			self.model.removeRow(item.row())
+			self.path_items.pop(index.row())
+			self.model.removeRow(index.row())
 			return True
 		except Exception as e:
 			alert_error(self.content_browser, "Error - cannot delete item", str(e))
 			return False
 
+	# TODO v3 delete import file as well -> should be a method in PathItem
+	def delete_item(self, index: QModelIndex):
+		reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
+									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+		if reply == QMessageBox.StandardButton.Yes:
+			self.delete_item_impl(index)
+
 	def delete_selected_items(self):
-		while self.selectedIndexes():
-			index = self.selectedIndexes()[0]
-			if not self.delete_item(index):
-				break
+		if self.selectedIndexes():
+			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
+										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+			if reply == QMessageBox.StandardButton.Yes:
+				while self.selectedIndexes():
+					index = self.selectedIndexes()[0]
+					if not self.delete_item_impl(index):
+						break
 
 	def refresh_view(self):
 		self.clear_items()
