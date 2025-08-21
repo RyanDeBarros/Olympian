@@ -48,7 +48,16 @@
     <addaction name="separator"/>
     <addaction name="actionHelp_Mode"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="actionShow_Undo_Stack"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -90,12 +99,27 @@
     <string>Content Browser (Ctrl+Space)</string>
    </property>
   </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo (Ctrl+Z)</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo (Ctrl+Shift+Z)</string>
+   </property>
+  </action>
+  <action name="actionShow_Undo_Stack">
+   <property name="text">
+    <string>Show Undo Stack</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>ContentBrowser</class>
    <extends>QWidget</extends>
-   <header location="global">editor.windows.ContentBrowser</header>
+   <header location="global">editor.core.ContentBrowser</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

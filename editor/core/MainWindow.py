@@ -1,8 +1,9 @@
 from PySide6.QtCore import QKeyCombination
 from PySide6.QtGui import QShortcut, QKeySequence, Qt
-from PySide6.QtWidgets import QMainWindow, QWhatsThis
+from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
 
 from editor import ui
+from editor.core import ProjectContext
 
 
 class MainWindow(QMainWindow):
@@ -12,6 +13,8 @@ class MainWindow(QMainWindow):
 
 		self.setWindowTitle("Olympian Editor")
 		# TODO v4 create and set window icon
+
+		ProjectContext.UNDO_STACK.clear()
 
 		self.ui = ui.MainWindow.Ui_MainWindow()
 		self.ui.setupUi(self)
@@ -26,8 +29,11 @@ class MainWindow(QMainWindow):
 		self.ui.actionProject_Settings.triggered.connect(self.open_project_settings)
 		self.ui.actionAsset_Defaults.triggered.connect(self.open_asset_defaults)
 
-		self.ui.actionOpen_Docs.triggered.connect(self.open_documentation)
+		self.ui.actionUndo.triggered.connect(ProjectContext.UNDO_STACK.undo)
+		self.ui.actionRedo.triggered.connect(ProjectContext.UNDO_STACK.redo)
+		self.ui.actionShow_Undo_Stack.triggered.connect(self.show_undo_stack)
 
+		self.ui.actionOpen_Docs.triggered.connect(self.open_documentation)
 		self.ui.actionHelp_Mode.triggered.connect(self.enter_help_mode)
 		enter_help_mode_shortcut = QShortcut(
 			QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Question)), self)
@@ -48,6 +54,13 @@ class MainWindow(QMainWindow):
 
 	def open_asset_defaults(self):
 		pass  # TODO v3
+
+	def show_undo_stack(self):
+		dialog = QDialog(self)
+		dialog.setWindowTitle("Undo Stack")
+		layout = QVBoxLayout(dialog)
+		layout.addWidget(QUndoView(ProjectContext.UNDO_STACK))
+		dialog.exec()
 
 	@staticmethod
 	def open_documentation():

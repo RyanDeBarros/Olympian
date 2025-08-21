@@ -48,7 +48,7 @@
   <customwidget>
    <class>ContentBrowserFolderView</class>
    <extends>QTableView</extends>
-   <header location="global">editor.windows.ContentBrowser</header>
+   <header location="global">editor.core.ContentBrowser</header>
   </customwidget>
  </customwidgets>
  <resources/>
