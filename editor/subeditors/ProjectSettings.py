@@ -2,7 +2,7 @@ import toml
 from PySide6.QtWidgets import QWidget
 
 from editor import ui
-from editor.util import ProjectContext
+from editor.core import ProjectContext
 from .Common import SettingsForm, SettingsParameter
 
 

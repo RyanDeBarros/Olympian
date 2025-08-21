@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QApplication
 
-from editor.util import ProjectContext
-from editor.windows import StartMenuWindow, MainWindow
+from editor.core import StartMenuWindow, MainWindow, ProjectContext
 
 windows = {}
 

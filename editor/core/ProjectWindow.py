@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
 from editor import ui
 from editor.subeditors import *
+from editor.core import ProjectContext
 
 
 # TODO v3 use watchdog to auto-import assets
@@ -11,6 +12,7 @@ class ProjectWindow(QMainWindow):
 	def __init__(self, open_start_menu):
 		super().__init__()
 		self.open_start = open_start_menu
+		ProjectContext.UNDO_STACK.clear()
 
 		self.setWindowTitle("Olympian Editor")
 		# LATER create and set window icon

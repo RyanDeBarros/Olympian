@@ -6,6 +6,7 @@ import toml
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from editor import ui, MANIFEST
+from editor.core import ProjectContext
 from editor.util import *
 from ..Common import SettingsForm, SettingsParameter
 

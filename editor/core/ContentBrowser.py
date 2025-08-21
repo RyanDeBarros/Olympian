@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QUndoCommand
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox
 
 from editor import ui
-from editor.util import ProjectContext, FileIO
+from editor.util import FileIO
+from editor.core import ProjectContext
 
 
 def alert_error(parent, title, desc):

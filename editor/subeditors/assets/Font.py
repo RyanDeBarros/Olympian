@@ -2,11 +2,11 @@ import os
 from typing import Optional
 
 import toml
-from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QTableWidgetItem, \
-	QLineEdit
+from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QLineEdit
 
-from editor import ui, MANIFEST, PARAM_LIST
-from editor.util import ProjectContext, FileIO
+from editor import ui, MANIFEST
+from editor.core import ProjectContext
+from editor.util import FileIO, PARAM_LIST
 from ..Common import SettingsForm, SettingsParameter, fit_with_defaults
 
 
