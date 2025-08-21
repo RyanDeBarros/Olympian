@@ -5,7 +5,7 @@ from pathlib import Path
 
 import toml
 
-from .util import FileIO
+from .util import FIOMachine
 
 
 class ManifestTOML:
@@ -24,7 +24,8 @@ class ManifestTOML:
 		with open(self.toml_filepath, 'w') as f:
 			toml.dump(self.toml, f)
 
-	def get_default_project_context(self, project_folder, project_name):
+	@staticmethod
+	def get_default_project_context(project_folder, project_name):
 		logfile = posixpath.join(project_folder, f"{project_name}.log")
 		with open('data/DEFAULT_PROJECT_CONTEXT.toml', 'r') as f:
 			content = f.read()
@@ -76,19 +77,24 @@ class ManifestTOML:
 	def get_recent_project_filepaths(self):
 		return self.recent_list()
 
-	def get_project_file(self, project_folder, project_name):
+	@staticmethod
+	def get_project_file(project_folder, project_name):
 		return posixpath.join(project_folder, f"{project_name}.oly")
 
-	def get_project_folder(self, project_file):
+	@staticmethod
+	def get_project_folder(project_file):
 		return posixpath.dirname(project_file)
 
-	def get_src_folder(self, project_folder):
+	@staticmethod
+	def get_src_folder(project_folder):
 		return posixpath.join(project_folder, "src/") if project_folder != "" else ""
 
-	def get_res_folder(self, project_folder):
+	@staticmethod
+	def get_res_folder(project_folder):
 		return posixpath.join(project_folder, "res/") if project_folder != "" else ""
 
-	def get_gen_folder(self, project_folder):
+	@staticmethod
+	def get_gen_folder(project_folder):
 		return posixpath.join(project_folder, ".gen/") if project_folder != "" else ""
 
 	def create_project(self, project_filepath):
@@ -126,7 +132,7 @@ class ManifestTOML:
 
 	def remove_project_id(self, project_id):
 		self.project_id_stack().append(project_id)
-		FileIO.move_to_trash(f"projects/{project_id}")
+		FIOMachine._send_to_trash(f"projects/{project_id}")
 
 	def delete_project(self, project_filepath):
 		if project_filepath in self.project_dict():

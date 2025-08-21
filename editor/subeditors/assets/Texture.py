@@ -6,7 +6,7 @@ import toml
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from editor import ui, MANIFEST
-from editor.core import ProjectContext
+from ...util import ProjectContext
 from editor.util import *
 from ..Common import SettingsForm, SettingsParameter
 
@@ -112,7 +112,7 @@ class EditTab:
 
 	def browse_texture(self):
 		filter = FileIO.file_extension_filter("Image files", TEXTURE_FILE_EXTENSIONS)
-		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir, filter=filter)
+		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", str(self.editor.last_file_dialog_dir), filter=filter)
 		if filepath:
 			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
 			self.ui.editTextureFilepath.setText(filepath)
@@ -345,7 +345,7 @@ class ImportTab:
 		self.ui.executeImportButton.clicked.connect(self.execute)
 
 	def browse_folder(self):
-		folder = QFileDialog.getExistingDirectory(self.editor, "Select Folder", self.editor.last_file_dialog_dir)
+		folder = QFileDialog.getExistingDirectory(self.editor, "Select Folder", str(self.editor.last_file_dialog_dir))
 		if folder:
 			self.editor.last_file_dialog_dir = folder
 			self.ui.importFolder.setText(folder)

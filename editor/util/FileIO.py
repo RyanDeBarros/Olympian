@@ -1,12 +1,7 @@
 import os
-from pathlib import Path
 
 import send2trash
 import toml
-
-
-def move_to_trash(path):
-	send2trash.send2trash(Path(path).resolve())
 
 
 def file_extension_filter(display, extensions):
@@ -63,12 +58,12 @@ def execute_standard_import_on_folder(root_folder, recursive, clear, clean_unuse
 		if clear:
 			import_files = get_import_files_of_certain_extensions(folder, extensions, content_condition)
 			for import_file in import_files:
-				move_to_trash(import_file)
+				send2trash.send2trash(import_file)
 		elif clean_unused:
 			import_files = get_import_files_of_certain_extensions(folder, extensions, content_condition)
 			for import_file in import_files:
 				if not os.path.exists(import_file[:-len(".oly")]):
-					move_to_trash(import_file)
+					send2trash.send2trash(import_file)
 		if import_unimported:
 			asset_files = get_files_of_certain_extensions(folder, extensions)
 			for asset_file in asset_files:

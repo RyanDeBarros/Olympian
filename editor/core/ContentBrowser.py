@@ -6,12 +6,11 @@ from pathlib import Path
 from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QUndoCommand
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox
 
 from editor import ui
-from editor.util import FileIO
-from editor.core import ProjectContext
+from editor.util import ProjectContext, FIOMachine
 
 
 def alert_error(parent, title, desc):
@@ -195,7 +194,7 @@ class ContentBrowserFolderView(QListView):
 
 		# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
 		try:
-			FileIO.move_to_trash(Path(self.content_browser.current_folder).joinpath(pi.name))
+			FIOMachine.remove(self.content_browser.current_folder.joinpath(pi.name))
 			self.path_items.pop(index.row())
 			self.model.removeRow(index.row())
 			return True
@@ -205,6 +204,7 @@ class ContentBrowserFolderView(QListView):
 
 	# TODO v3 delete import file as well -> should be a method in PathItem
 	def delete_item(self, index: QModelIndex):
+		# TODO v3 editor setting for whether to prompt every time
 		reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
 									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
@@ -246,7 +246,7 @@ class ContentBrowser(QWidget):
 		self.open_folder(self.current_folder)
 
 	def browse_folder(self):
-		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir)
+		folder = QFileDialog.getExistingDirectory(self, "Select Folder", str(self.last_file_dialog_dir))
 		if folder:
 			self.last_file_dialog_dir = folder
 			self.open_folder(folder)
@@ -315,7 +315,7 @@ class ContentBrowser(QWidget):
 				self.open_text_file(pi.name)
 
 	def open_relative_folder(self, folder):
-		self.open_folder(Path(self.current_folder).joinpath(folder))
+		self.open_folder(self.current_folder.joinpath(folder))
 
 	def open_text_file(self, filepath):
 		pass  # TODO

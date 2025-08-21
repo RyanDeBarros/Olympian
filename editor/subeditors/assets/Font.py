@@ -5,8 +5,7 @@ import toml
 from PySide6.QtWidgets import QWidget, QSpinBox, QHeaderView, QPushButton, QFileDialog, QMessageBox, QLineEdit
 
 from editor import ui, MANIFEST
-from editor.core import ProjectContext
-from editor.util import FileIO, PARAM_LIST
+from editor.util import FileIO, PARAM_LIST, ProjectContext
 from ..Common import SettingsForm, SettingsParameter, fit_with_defaults
 
 
@@ -91,7 +90,7 @@ class EditTab:
 
 	def browse_font(self):
 		filter = FileIO.file_extension_filter("Font files", FONT_FILE_EXTENSIONS)
-		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", self.editor.last_file_dialog_dir, filter=filter)
+		filepath, _ = QFileDialog.getOpenFileName(self.editor, "Select File", str(self.editor.last_file_dialog_dir), filter=filter)
 		if filepath:
 			self.editor.last_file_dialog_dir = os.path.dirname(filepath)
 			self.ui.editFontFilepath.setText(filepath)
@@ -352,7 +351,7 @@ class ImportTab:
 		self.ui.executeImportButton.clicked.connect(self.execute)
 
 	def browse_folder(self):
-		folder = QFileDialog.getExistingDirectory(self.editor, "Select Folder", self.editor.last_file_dialog_dir)
+		folder = QFileDialog.getExistingDirectory(self.editor, "Select Folder", str(self.editor.last_file_dialog_dir))
 		if folder:
 			self.editor.last_file_dialog_dir = folder
 			self.ui.importFolder.setText(folder)

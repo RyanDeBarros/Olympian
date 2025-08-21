@@ -55,6 +55,8 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="actionShow_Undo_Stack"/>
+    <addaction name="separator"/>
+    <addaction name="actionEditor_Preferences"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -112,6 +114,11 @@
   <action name="actionShow_Undo_Stack">
    <property name="text">
     <string>Show Undo Stack</string>
+   </property>
+  </action>
+  <action name="actionEditor_Preferences">
+   <property name="text">
+    <string>Editor Preferences</string>
    </property>
   </action>
  </widget>
