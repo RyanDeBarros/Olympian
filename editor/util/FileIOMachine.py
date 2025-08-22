@@ -39,7 +39,7 @@ class FileIOMachine:
 	def refresh_folder_view(self):
 		return self.project_context.main_window.content_browser.folder_view.refresh_view()
 
-	def _trash_folder(self) -> Path:  # TODO v3 add .trash to project-specific .gitignore
+	def _trash_folder(self) -> Path:
 		return self.project_context.project_folder.joinpath(".trash")
 
 	def remove(self, path):

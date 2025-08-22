@@ -10,7 +10,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox
 
 from editor import ui
-from editor.core import MainWindow
+from editor.core import MainWindow, PREFERENCES
 from editor.util import FileIOMachine
 
 
@@ -33,6 +33,12 @@ class PathItem:
 		self.name = name
 		self.ftype = ftype
 
+	def icon_path(self):
+		match self.ftype:
+			case FileType.DIRECTORY:
+				return "res/images/folder.svg"
+			case FileType.TEXT:
+				return "res/images/file.svg"
 
 class ContentBrowserFolderView(QListView):
 	def __init__(self, parent=None):
@@ -88,7 +94,7 @@ class ContentBrowserFolderView(QListView):
 	def add_item(self, pi: PathItem, editing=False, sort=True):
 		item = QStandardItem()
 		item.setText(pi.name)
-		item.setIcon(QIcon(self.item_icon_path(pi.ftype)))
+		item.setIcon(QIcon(pi.icon_path()))
 		item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
 		self.model.appendRow(item)
 		self.path_items.insert(item.row(), pi)
@@ -112,14 +118,6 @@ class ContentBrowserFolderView(QListView):
 	def clear_items(self):
 		self.model.clear()
 		self.path_items.clear()
-
-	@staticmethod
-	def item_icon_path(ftype: FileType):
-		match ftype:
-			case FileType.DIRECTORY:
-				return "res/images/folder.svg"
-			case FileType.TEXT:
-				return "res/images/file.svg"
 
 	def item_renamed(self, item: QStandardItem):
 		pi = self.path_items[item.row()]
@@ -193,22 +191,28 @@ class ContentBrowserFolderView(QListView):
 		menu.exec(self.viewport().mapToGlobal(pos))
 
 	# TODO v3 delete import file as well -> should be a method in PathItem
-	def delete_item(self, index: QModelIndex):
-		# TODO v3 editor setting for whether to prompt every time
-		reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
-									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-		if reply == QMessageBox.StandardButton.Yes:
+	def delete_item(self, index: QModelIndex, flush_to_disk: bool = True):
+		follow_through = True
+		if PREFERENCES.prompt_user_when_deleting_paths:
+			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
+										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+			follow_through = reply != QMessageBox.StandardButton.Yes
+		if follow_through:
 			assert index.row() < len(self.path_items)
 			pi = self.path_items.pop(index.row())
 			self.model.removeRow(index.row())
-			# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
-			self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
+			if flush_to_disk:
+				self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
 
-	def delete_selected_items(self):
+	# TODO v3 delete import files as well -> should be a method in PathItem
+	def delete_selected_items(self, flush_to_disk: bool = True):
 		if self.selectedIndexes():
-			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
-										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-			if reply == QMessageBox.StandardButton.Yes:
+			follow_through = True
+			if PREFERENCES.prompt_user_when_deleting_paths:
+				reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
+											 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+				follow_through = reply != QMessageBox.StandardButton.Yes
+			if follow_through:
 				indexes = self.selectedIndexes()
 				indexes.sort(key=lambda index: index.row(), reverse=True)
 				remove_paths = []
@@ -221,8 +225,8 @@ class ContentBrowserFolderView(QListView):
 					index = self.selectedIndexes()[0]
 					self.model.removeRow(index.row())
 
-				# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
-				self.file_machine.remove_together(remove_paths)
+				if flush_to_disk:
+					self.file_machine.remove_together(remove_paths)
 
 	def refresh_view(self):
 		self.clear_items()
@@ -302,14 +306,15 @@ class ContentBrowser(QWidget):
 					items.append(PathItem(name=path.name, ftype=FileType.TEXT))
 		self.folder_view.add_items(items)
 
-	def new_folder(self):
+	def new_folder(self, flush_to_disk: bool = True):
 		folder_name = "NewFolder"
 		i = 1
 		while os.path.exists(os.path.join(self.current_folder, folder_name)):
 			folder_name = f"NewFolder ({i})"
 			i = i + 1
 		folder_path = os.path.join(self.current_folder, folder_name)
-		os.makedirs(folder_path)
+		if flush_to_disk:
+			os.makedirs(folder_path)
 		self.folder_view.add_item(PathItem(name=folder_name, ftype=FileType.DIRECTORY), editing=True)
 
 	def new_text_file(self):
