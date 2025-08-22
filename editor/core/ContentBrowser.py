@@ -192,40 +192,36 @@ class ContentBrowserFolderView(QListView):
 
 		menu.exec(self.viewport().mapToGlobal(pos))
 
-	def delete_item_impl(self, index: QModelIndex):
-		if not index.isValid():
-			return False
-
-		assert index.row() < len(self.path_items)
-		pi = self.path_items[index.row()]
-
-		# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
-		try:
-			self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
-			self.path_items.pop(index.row())
-			self.model.removeRow(index.row())
-			return True
-		except Exception as e:
-			alert_error(self.content_browser, "Error - cannot delete item", str(e))
-			return False
-
 	# TODO v3 delete import file as well -> should be a method in PathItem
 	def delete_item(self, index: QModelIndex):
 		# TODO v3 editor setting for whether to prompt every time
 		reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
 									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
-			self.delete_item_impl(index)
+			assert index.row() < len(self.path_items)
+			pi = self.path_items.pop(index.row())
+			self.model.removeRow(index.row())
+			# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
+			self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
 
 	def delete_selected_items(self):
 		if self.selectedIndexes():
 			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
 										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 			if reply == QMessageBox.StandardButton.Yes:
+				indexes = self.selectedIndexes()
+				remove_paths = []
+				for index in indexes:
+					assert index.row() < len(self.path_items)
+					pi = self.path_items.pop(index.row())
+					remove_paths.append(self.content_browser.current_folder.joinpath(pi.name))
+
 				while self.selectedIndexes():
 					index = self.selectedIndexes()[0]
-					if not self.delete_item_impl(index):
-						break
+					self.model.removeRow(index.row())
+
+				# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
+				self.file_machine.remove_together(remove_paths)
 
 	def refresh_view(self):
 		self.clear_items()

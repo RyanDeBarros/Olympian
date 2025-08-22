@@ -31,7 +31,19 @@ class FileIOMachine:
 		path = Path(path)
 		relative_path = path.relative_to(self.project_context.project_folder)
 		hash_container = self._generate_hash_container()
-		#  TODO v3 use hash_container in undo command
+		# TODO v3 use hash_container in undo command
 		trash_path = self._trash_folder().joinpath(hash_container).joinpath(relative_path)
 		os.makedirs(os.path.dirname(trash_path))
 		os.rename(path, trash_path)
+
+	def remove_together(self, paths):
+		paths = [Path(path) for path in paths]
+		relative_paths = [path.relative_to(self.project_context.project_folder) for path in paths]
+		hash_container = self._generate_hash_container()
+		# TODO v3 use hash_container in undo command
+		trash_paths = [self._trash_folder().joinpath(hash_container).joinpath(relative_path) for relative_path in relative_paths]
+		for i in range(len(paths)):
+			path = paths[i]
+			trash_path = trash_paths[i]
+			os.makedirs(os.path.dirname(trash_path), exist_ok=True)
+			os.rename(path, trash_path)
