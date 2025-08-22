@@ -10,7 +10,8 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox
 
 from editor import ui
-from editor.util import ProjectContext, FIOMachine
+from editor.core import MainWindow
+from editor.util import FileIOMachine
 
 
 def alert_error(parent, title, desc):
@@ -58,6 +59,12 @@ class ContentBrowserFolderView(QListView):
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
+
+		self.file_machine: Optional[FileIOMachine] = None
+
+	def init(self, content_browser):
+		self.content_browser = content_browser
+		self.file_machine = self.content_browser.win.project_context.file_machine
 
 	def keyPressEvent(self, event):
 		if event.key() == Qt.Key.Key_Delete:
@@ -194,7 +201,7 @@ class ContentBrowserFolderView(QListView):
 
 		# TODO v3 in all File IO operations, provide 'flush_to_disk' boolean parameter that determines whether changes should be applied in OS
 		try:
-			FIOMachine.remove(self.content_browser.current_folder.joinpath(pi.name))
+			self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
 			self.path_items.pop(index.row())
 			self.model.removeRow(index.row())
 			return True
@@ -229,21 +236,25 @@ class ContentBrowserFolderView(QListView):
 class ContentBrowser(QWidget):
 	def __init__(self):
 		super().__init__()
-		self.win = None
 		self.ui = ui.ContentBrowser.Ui_ContentBrowser()
 		self.ui.setupUi(self)
+		self.win: Optional[MainWindow] = None
 
 		self.folder_view = self.ui.CBFolderView
-		self.folder_view.content_browser = self
-
-		self.res_folder = ProjectContext.project_resource_folder()
 
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
 		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
 
-		self.current_folder = self.res_folder
+		self.current_folder: Optional[Path] = None
+		self.last_file_dialog_dir: Optional[Path] = None
+
+	def init(self, win: MainWindow):
+		self.win = win
+		self.current_folder = self.win.project_context.res_folder
 		self.last_file_dialog_dir = self.current_folder
 		self.open_folder(self.current_folder)
+
+		self.folder_view.init(self)
 
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", str(self.last_file_dialog_dir))
@@ -262,11 +273,11 @@ class ContentBrowser(QWidget):
 
 	def open_folder(self, folder):
 		resolved_folder = Path(folder).resolve()
-		if not resolved_folder.is_relative_to(self.res_folder):
+		if not resolved_folder.is_relative_to(self.win.project_context.res_folder):
 			return
 
 		self.current_folder = folder
-		rel_folder = resolved_folder.relative_to(self.res_folder)
+		rel_folder = resolved_folder.relative_to(self.win.project_context.res_folder)
 		self.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
 		self.populate()
 

@@ -3,19 +3,18 @@ from PySide6.QtGui import QShortcut, QKeySequence, Qt
 from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
 
 from editor import ui
-from editor.util import ProjectContext
+from editor.core.ProjectContext import ProjectContext
 
 
 class MainWindow(QMainWindow):
-	def __init__(self, open_start_menu):
+	def __init__(self, open_start_menu, project_file):
 		super().__init__()
 		self.open_start = open_start_menu
 
 		self.setWindowTitle("Olympian Editor")
 		# TODO v4 create and set window icon
 
-		self.undo_stack = ProjectContext.UNDO_STACK
-		self.undo_stack.clear()
+		self.project_context = ProjectContext(project_file)
 
 		self.ui = ui.MainWindow.Ui_MainWindow()
 		self.ui.setupUi(self)
@@ -30,8 +29,8 @@ class MainWindow(QMainWindow):
 		self.ui.actionProject_Settings.triggered.connect(self.open_project_settings)
 		self.ui.actionAsset_Defaults.triggered.connect(self.open_asset_defaults)
 
-		self.ui.actionUndo.triggered.connect(self.undo_stack.undo)
-		self.ui.actionRedo.triggered.connect(self.undo_stack.redo)
+		self.ui.actionUndo.triggered.connect(self.project_context.undo_stack.undo)
+		self.ui.actionRedo.triggered.connect(self.project_context.undo_stack.redo)
 		self.ui.actionShow_Undo_Stack.triggered.connect(self.show_undo_stack)
 
 		self.ui.actionEditor_Preferences.triggered.connect(self.open_editor_preferences)
@@ -43,7 +42,7 @@ class MainWindow(QMainWindow):
 		enter_help_mode_shortcut.activated.connect(self.enter_help_mode)
 
 		self.content_browser = self.ui.CBWidget
-		self.content_browser.win = self
+		self.content_browser.init(self)
 
 	def open_start_menu(self):
 		self.close()
@@ -62,7 +61,7 @@ class MainWindow(QMainWindow):
 		dialog = QDialog(self)
 		dialog.setWindowTitle("Undo Stack")
 		layout = QVBoxLayout(dialog)
-		layout.addWidget(QUndoView(self.undo_stack))
+		layout.addWidget(QUndoView(self.project_context.undo_stack))
 		dialog.exec()
 
 	def open_editor_preferences(self):

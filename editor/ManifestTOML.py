@@ -3,9 +3,8 @@ import posixpath
 import re
 from pathlib import Path
 
+import send2trash
 import toml
-
-from .util import FIOMachine
 
 
 class ManifestTOML:
@@ -132,7 +131,7 @@ class ManifestTOML:
 
 	def remove_project_id(self, project_id):
 		self.project_id_stack().append(project_id)
-		FIOMachine._send_to_trash(f"projects/{project_id}")
+		send2trash.send2trash(f"projects/{project_id}")
 
 	def delete_project(self, project_filepath):
 		if project_filepath in self.project_dict():

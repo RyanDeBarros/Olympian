@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QApplication
 
 from editor.core import StartMenuWindow, MainWindow
-from editor.util import ProjectContext
 
 windows = {}
 
@@ -12,8 +11,7 @@ def open_start_menu():
 
 
 def open_project(project_filepath):
-	ProjectContext.PROJECT_FILE = project_filepath
-	windows['project'] = MainWindow(open_start_menu)
+	windows['project'] = MainWindow(open_start_menu, project_filepath)
 	windows['project'].show()
 
 
