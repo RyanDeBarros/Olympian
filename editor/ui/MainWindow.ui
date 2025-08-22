@@ -55,6 +55,7 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="actionShow_Undo_Stack"/>
+    <addaction name="actionClear_Undo_Stack"/>
     <addaction name="separator"/>
     <addaction name="actionEditor_Preferences"/>
    </widget>
@@ -119,6 +120,11 @@
   <action name="actionEditor_Preferences">
    <property name="text">
     <string>Editor Preferences</string>
+   </property>
+  </action>
+  <action name="actionClear_Undo_Stack">
+   <property name="text">
+    <string>Clear Undo Stack</string>
    </property>
   </action>
  </widget>

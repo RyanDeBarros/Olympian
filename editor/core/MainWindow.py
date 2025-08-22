@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
 															   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Z)), self)
 		redo_shortcut.activated.connect(self.project_context.undo_stack.redo)
 		self.ui.actionShow_Undo_Stack.triggered.connect(self.show_undo_stack)
+		self.ui.actionClear_Undo_Stack.triggered.connect(self.clear_undo_stack)
 
 		self.ui.actionEditor_Preferences.triggered.connect(self.open_editor_preferences)
 
@@ -68,6 +69,10 @@ class MainWindow(QMainWindow):
 		layout = QVBoxLayout(dialog)
 		layout.addWidget(QUndoView(self.project_context.undo_stack))
 		dialog.exec()
+
+	def clear_undo_stack(self):
+		self.project_context.undo_stack.clear()
+		self.project_context.file_machine.clear_trash()
 
 	def open_editor_preferences(self):
 		pass  # TODO v3

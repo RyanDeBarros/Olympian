@@ -429,4 +429,5 @@ doc/*.toc
 **/.idea/
 
 # Olympian
-tools/archetype/cache.json
+.gen
+.trash

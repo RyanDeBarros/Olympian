@@ -48,6 +48,9 @@ class FileIOMachine:
 	def remove_together(self, paths):
 		self.undo_stack.push(UCDeletePaths(self, [Path(path).resolve() for path in paths]))
 
+	def clear_trash(self):
+		self._send_to_trash(self._trash_folder())
+
 
 class UCDeletePaths(QUndoCommand):
 	def __init__(self, machine: FileIOMachine, paths: list[Path]):

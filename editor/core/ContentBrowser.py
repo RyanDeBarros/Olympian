@@ -313,7 +313,7 @@ class ContentBrowser(QWidget):
 		self.folder_view.add_item(PathItem(name=folder_name, ftype=FileType.DIRECTORY), editing=True)
 
 	def new_text_file(self):
-		pass  # TODO
+		pass  # TODO v3
 
 	def open_item(self, pi: PathItem):
 		match pi.ftype:
@@ -326,4 +326,4 @@ class ContentBrowser(QWidget):
 		self.open_folder(self.current_folder.joinpath(folder))
 
 	def open_text_file(self, filepath):
-		pass  # TODO
+		pass  # TODO v3
