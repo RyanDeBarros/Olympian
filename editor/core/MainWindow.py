@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("Olympian Editor")
 		# TODO v4 create and set window icon
 
-		self.project_context = ProjectContext(project_file)
+		self.project_context = ProjectContext(project_file, self)
 
 		self.ui = ui.MainWindow.Ui_MainWindow()
 		self.ui.setupUi(self)
@@ -30,7 +30,12 @@ class MainWindow(QMainWindow):
 		self.ui.actionAsset_Defaults.triggered.connect(self.open_asset_defaults)
 
 		self.ui.actionUndo.triggered.connect(self.project_context.undo_stack.undo)
+		undo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Z)), self)
+		undo_shortcut.activated.connect(self.project_context.undo_stack.undo)
 		self.ui.actionRedo.triggered.connect(self.project_context.undo_stack.redo)
+		redo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
+															   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Z)), self)
+		redo_shortcut.activated.connect(self.project_context.undo_stack.redo)
 		self.ui.actionShow_Undo_Stack.triggered.connect(self.show_undo_stack)
 
 		self.ui.actionEditor_Preferences.triggered.connect(self.open_editor_preferences)

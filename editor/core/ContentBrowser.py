@@ -210,6 +210,7 @@ class ContentBrowserFolderView(QListView):
 										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 			if reply == QMessageBox.StandardButton.Yes:
 				indexes = self.selectedIndexes()
+				indexes.sort(key=lambda index: index.row(), reverse=True)
 				remove_paths = []
 				for index in indexes:
 					assert index.row() < len(self.path_items)
