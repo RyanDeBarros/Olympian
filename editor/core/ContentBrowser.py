@@ -121,14 +121,23 @@ class ContentBrowserFolderView(QListView):
 		self.model.clear()
 		self.path_items.clear()
 
-	def item_renamed(self, item: QStandardItem):
+	def item_renamed(self, item: QStandardItem, **kwargs):
+		flush_to_disk = kwargs.get('flush_to_disk', True)
 		pi = self.path_items[item.row()]
 		if pi.name != item.text():
-			if self.content_browser.rename_relative_file(pi.name, item.text()):
-				self.path_items[item.row()].name = item.text()
-				self.sort()
-			else:
-				item.setText(pi.name)
+			if flush_to_disk:
+				old_name = Path(self.content_browser.current_folder).joinpath(pi.name)
+				new_name = Path(self.content_browser.current_folder).joinpath(item.text())
+				if old_name.exists() and not new_name.exists():
+					try:
+						self.file_machine.rename(old_name, new_name)
+					except OSError as e:
+						alert_error(self, "Error - cannot rename item", str(e))
+						item.setText(pi.name)
+						return
+
+			self.path_items[item.row()].name = item.text()
+			self.sort()
 
 	# TODO v3 do something similar that only allows left click to select items
 	def mouseDoubleClickEvent(self, event):
@@ -197,12 +206,13 @@ class ContentBrowserFolderView(QListView):
 		menu.exec(self.viewport().mapToGlobal(pos))
 
 	# TODO v3 delete import file as well -> should be a method in PathItem
-	def delete_item(self, index: QModelIndex, flush_to_disk: bool = True):
+	def delete_item(self, index: QModelIndex, **kwargs):
+		flush_to_disk = kwargs.get('flush_to_disk', True)
 		follow_through = True
 		if PREFERENCES.prompt_user_when_deleting_paths:
 			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
 										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-			follow_through = reply != QMessageBox.StandardButton.Yes
+			follow_through = reply == QMessageBox.StandardButton.Yes
 		if follow_through:
 			assert index.row() < len(self.path_items)
 			pi = self.path_items.pop(index.row())
@@ -211,13 +221,14 @@ class ContentBrowserFolderView(QListView):
 				self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
 
 	# TODO v3 delete import files as well -> should be a method in PathItem
-	def delete_selected_items(self, flush_to_disk: bool = True):
+	def delete_selected_items(self, **kwargs):
+		flush_to_disk = kwargs.get('flush_to_disk', True)
 		if self.selectedIndexes():
 			follow_through = True
 			if PREFERENCES.prompt_user_when_deleting_paths:
 				reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
 											 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-				follow_through = reply != QMessageBox.StandardButton.Yes
+				follow_through = reply == QMessageBox.StandardButton.Yes
 			if follow_through:
 				indexes = self.selectedIndexes()
 				indexes.sort(key=lambda index: index.row(), reverse=True)
@@ -289,18 +300,6 @@ class ContentBrowser(QWidget):
 		self.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
 		self.populate()
 
-	def rename_relative_file(self, old_name, new_name):
-		old_name = Path(self.current_folder).joinpath(old_name)
-		new_name = Path(self.current_folder).joinpath(new_name)
-		if old_name.exists() and not new_name.exists():
-			try:
-				os.rename(old_name, new_name)
-				return True
-			except OSError as e:
-				alert_error(self, "Error - cannot rename item", str(e))
-				return False
-		return False
-
 	def populate(self):
 		self.folder_view.clear_items()
 		items = [PathItem(name="..", ftype=FileType.DIRECTORY)]
@@ -316,7 +315,8 @@ class ContentBrowser(QWidget):
 					items.append(PathItem(name=path.name, ftype=FileType.FILE))
 		self.folder_view.add_items(items)
 
-	def new_folder(self, flush_to_disk: bool = True):
+	def new_folder(self, **kwargs):
+		flush_to_disk = kwargs.get('flush_to_disk', True)
 		folder_name = "NewFolder"
 		i = 1
 		while os.path.exists(os.path.join(self.current_folder, folder_name)):
@@ -324,7 +324,7 @@ class ContentBrowser(QWidget):
 			i = i + 1
 		folder_path = os.path.join(self.current_folder, folder_name)
 		if flush_to_disk:
-			os.makedirs(folder_path)
+			self.folder_view.file_machine.new_folder(folder_path)
 		self.folder_view.add_item(PathItem(name=folder_name, ftype=FileType.DIRECTORY), editing=True)
 
 	def new_file(self):
