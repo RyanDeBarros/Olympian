@@ -1,6 +1,6 @@
 from PySide6.QtCore import QKeyCombination
-from PySide6.QtGui import QShortcut, QKeySequence, Qt
-from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
+from PySide6.QtGui import QShortcut, QKeySequence, Qt, QIcon
+from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView, QWidget
 
 from editor.core.ProjectContext import ProjectContext
 
@@ -50,6 +50,10 @@ class MainWindow(QMainWindow):
 		self.content_browser = self.ui.CBWidget
 		self.content_browser.init(self)
 
+		from editor.core.MainTabWidget import MainTabWidget
+		self.tab_holder: MainTabWidget = self.ui.mainTabHolder
+		self.tab_holder.init(self)
+
 	def open_start_menu(self):
 		self.close()
 		self.open_start()
@@ -84,3 +88,8 @@ class MainWindow(QMainWindow):
 	@staticmethod
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
+
+	def open_standard_file(self, filepath, name, icon: QIcon):
+		from .tabs import StandardFile
+		tab = StandardFile(self, filepath)
+		self.tab_holder.add_tab(filepath, tab, icon, name)

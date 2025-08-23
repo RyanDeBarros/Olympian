@@ -16,7 +16,17 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTabWidget" name="mainTabHolder"/>
+     <widget class="MainTabWidget" name="mainTabHolder">
+      <property name="documentMode">
+       <bool>false</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -133,6 +143,12 @@
    <class>ContentBrowser</class>
    <extends>QWidget</extends>
    <header location="global">editor.core.ContentBrowser</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MainTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header location="global">editor.core.MainTabWidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
