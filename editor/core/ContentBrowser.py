@@ -5,8 +5,9 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QSize, QModelIndex, QEvent
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QPixmap, QCursor
+from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QKeyCombination, QItemSelection
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QPixmap, QCursor, QShortcut, \
+	QKeySequence
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip
 
 from editor.core import MainWindow, PREFERENCES
@@ -67,6 +68,8 @@ class ContentBrowserFolderView(QListView):
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
+		select_all_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A)), self)
+		select_all_shortcut.activated.connect(self.selectAll)
 
 		self.file_machine: Optional[FileIOMachine] = None
 
@@ -89,6 +92,34 @@ class ContentBrowserFolderView(QListView):
 			self.delete_selected_items()
 		else:
 			super().keyPressEvent(event)
+
+	def mousePressEvent(self, event):
+		if event.button() == Qt.MouseButton.LeftButton:
+			super().mousePressEvent(event)
+		else:
+			event.ignore()
+
+	def mouseDoubleClickEvent(self, event):
+		if event.button() == Qt.MouseButton.LeftButton:
+			index = self.indexAt(event.pos())
+			if index.isValid():
+				self.content_browser.open_item(self.path_items[index.row()])
+			else:
+				event.ignore()
+		else:
+			event.ignore()
+
+	def selectionCommand(self, index, event=None):
+		if index.row() == 0:
+			return QItemSelectionModel.SelectionFlag.NoUpdate
+		return super().selectionCommand(index, event)
+
+	def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection):
+		super().selectionChanged(selected, deselected)
+
+		index0 = self.model.index(0, 0)
+		if self.selectionModel().isSelected(index0):
+			self.selectionModel().select(index0, QItemSelectionModel.SelectionFlag.Deselect)
 
 	def sort(self):
 		def sort_key(item: PathItem):
@@ -149,17 +180,6 @@ class ContentBrowserFolderView(QListView):
 			self.path_items[item.row()].name = item.text()
 			self.sort()
 
-	# TODO v3 do something similar that only allows left click to select items
-	def mouseDoubleClickEvent(self, event):
-		if event.button() == Qt.MouseButton.LeftButton:
-			index = self.indexAt(event.pos())
-			if index.isValid():
-				self.content_browser.open_item(self.path_items[index.row()])
-			else:
-				event.ignore()
-		else:
-			event.ignore()
-
 	def fill_no_item_context_menu(self, menu: QMenu):
 		new_file = QAction(QIcon("res/images/File.png"), "New File", menu)
 		new_file.triggered.connect(self.content_browser.new_file)
@@ -183,6 +203,9 @@ class ContentBrowserFolderView(QListView):
 		menu.addAction(refresh)
 
 	def fill_single_item_context_menu(self, menu: QMenu, index: QModelIndex):
+		if index.row() == 0:
+			return
+
 		rename = QAction(QIcon("res/images/Rename.png"), "Rename", menu)
 		rename.triggered.connect(lambda: self.edit(index))
 		menu.addAction(rename)
@@ -240,12 +263,12 @@ class ContentBrowserFolderView(QListView):
 											 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 				follow_through = reply == QMessageBox.StandardButton.Yes
 			if follow_through:
-				indexes = self.selectedIndexes()
-				indexes.sort(key=lambda index: index.row(), reverse=True)
+				indexes = [index.row() for index in self.selectedIndexes()]
+				indexes.sort(reverse=True)
 				remove_paths = []
 				for index in indexes:
-					assert index.row() < len(self.path_items)
-					pi = self.path_items.pop(index.row())
+					assert index < len(self.path_items)
+					pi = self.path_items.pop(index)
 					remove_paths.append(self.content_browser.current_folder.joinpath(pi.name))
 
 				while self.selectedIndexes():
