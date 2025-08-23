@@ -32,10 +32,11 @@ class FileType(Enum):
 
 
 class PathItem:
-	def __init__(self, parent_folder: Path, name: str, ftype: FileType):
+	def __init__(self, parent_folder: Path, name: str, ftype: FileType, oly_suffix: bool):
 		self.full_path = parent_folder.resolve().joinpath(name)
 		self.name = name
 		self.ftype = ftype
+		self.oly_suffix = oly_suffix
 
 	def icon(self, size: QSize):
 		match self.ftype:
@@ -43,6 +44,10 @@ class PathItem:
 				return QIcon(QPixmap("res/images/Folder.png").scaled(size))
 			case FileType.FILE:
 				return QIcon(QPixmap("res/images/File.png").scaled(size))
+			case FileType.TEXTURE:
+				return QIcon(QPixmap(self.full_path).scaled(size))
+			case FileType.SIGNAL:
+				return QIcon(QPixmap("res/images/InputSignal.png").scaled(size))
 			case _:
 				raise RuntimeError(f"icon_path(): unsupported file type {self.ftype}")
 
@@ -136,7 +141,7 @@ class ContentBrowserFolderView(QListView):
 
 	def add_item(self, pi: PathItem, editing=False, sort=True):
 		item = QStandardItem()
-		item.setText(pi.name)
+		item.setText(pi.name[:-len('.oly')] if pi.oly_suffix else pi.name)
 		item.setIcon(pi.icon(self.iconSize()))
 		item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
 		self.model.appendRow(item)
@@ -167,8 +172,10 @@ class ContentBrowserFolderView(QListView):
 		pi = self.path_items[item.row()]
 		if pi.name != item.text():
 			if flush_to_disk:
-				old_name = Path(self.content_browser.current_folder).joinpath(pi.name)
+				old_name = pi.full_path
 				new_name = Path(self.content_browser.current_folder).joinpath(item.text())
+				if pi.oly_suffix:
+					new_name = Path(str(new_name) + '.oly')
 				if old_name.exists() and not new_name.exists():
 					try:
 						self.file_machine.rename(old_name, new_name)
@@ -334,17 +341,17 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [PathItem(parent_folder=self.current_folder, name="..", ftype=FileType.DIRECTORY)]
+		items = [PathItem(parent_folder=self.current_folder, name="..", ftype=FileType.DIRECTORY, oly_suffix=False)]
 		for path in Path(self.current_folder).iterdir():
 			if path.is_dir():
-				items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.DIRECTORY))
+				items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.DIRECTORY, oly_suffix=False))
 			elif path.is_file():
 				# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
 				if path.suffix == ".oly":
 					pass  # TODO v3 add if asset and not import
 				else:
 					# TODO v3 check for existing import file
-					items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.FILE))
+					items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.FILE, oly_suffix=False))
 		self.folder_view.add_items(items)
 
 	def new_folder(self, **kwargs):
@@ -357,7 +364,7 @@ class ContentBrowser(QWidget):
 		folder_path = os.path.join(self.current_folder, folder_name)
 		if flush_to_disk:
 			self.folder_view.file_machine.new_folder(folder_path)
-		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=folder_name, ftype=FileType.DIRECTORY), editing=True)
+		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=folder_name, ftype=FileType.DIRECTORY, oly_suffix=False), editing=True)
 
 	def new_file(self, **kwargs):
 		flush_to_disk = kwargs.get('flush_to_disk', True)
@@ -369,10 +376,17 @@ class ContentBrowser(QWidget):
 		file_path = os.path.join(self.current_folder, file_name)
 		if flush_to_disk:
 			self.folder_view.file_machine.new_file(file_path)
-		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.FILE), editing=True)
+		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.FILE, oly_suffix=False), editing=True)
 
 	def new_signal_asset(self):
-		pass  # TODO v3
+		file_name = "NewSignal.oly"
+		i = 1
+		while os.path.exists(os.path.join(self.current_folder, file_name)):
+			file_name = f"NewSignal ({i}).oly"
+			i = i + 1
+		file_path = os.path.join(self.current_folder, file_name)
+		self.folder_view.file_machine.new_file(file_path)
+		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.SIGNAL, oly_suffix=True), editing=True)
 
 	def open_item(self, pi: PathItem):
 		match pi.ftype:
