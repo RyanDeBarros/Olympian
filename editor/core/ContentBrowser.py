@@ -5,9 +5,9 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QSize, QModelIndex
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QPixmap
-from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox
+from PySide6.QtCore import QSize, QModelIndex, QEvent
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QPixmap, QCursor
+from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip
 
 from editor.core import MainWindow, PREFERENCES
 from editor.util import FileIOMachine
@@ -31,7 +31,8 @@ class FileType(Enum):
 
 
 class PathItem:
-	def __init__(self, name, ftype: FileType):
+	def __init__(self, parent_folder: Path, name: str, ftype: FileType):
+		self.full_path = parent_folder.resolve().joinpath(name)
 		self.name = name
 		self.ftype = ftype
 
@@ -66,13 +67,22 @@ class ContentBrowserFolderView(QListView):
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
-		# TODO v3 hovering over item displays its full path
 
 		self.file_machine: Optional[FileIOMachine] = None
 
 	def init(self, content_browser):
 		self.content_browser = content_browser
 		self.file_machine = self.content_browser.win.project_context.file_machine
+
+	def event(self, event):
+		if event.type() == QEvent.Type.ToolTip:
+			index = self.indexAt(event.pos())
+			if index.isValid():
+				pi = self.path_items[index.row()]
+				if pi:
+					QToolTip.showText(QCursor.pos(), str(pi.full_path), self)
+					return True
+		return super().event(event)
 
 	def keyPressEvent(self, event):
 		if event.key() == Qt.Key.Key_Delete:
@@ -302,17 +312,17 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [PathItem(name="..", ftype=FileType.DIRECTORY)]
+		items = [PathItem(parent_folder=self.current_folder, name="..", ftype=FileType.DIRECTORY)]
 		for path in Path(self.current_folder).iterdir():
 			if path.is_dir():
-				items.append(PathItem(name=path.name, ftype=FileType.DIRECTORY))
+				items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.DIRECTORY))
 			elif path.is_file():
 				# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
 				if path.suffix == ".oly":
 					pass  # TODO v3 add if asset and not import
 				else:
 					# TODO v3 check for existing import file
-					items.append(PathItem(name=path.name, ftype=FileType.FILE))
+					items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.FILE))
 		self.folder_view.add_items(items)
 
 	def new_folder(self, **kwargs):
@@ -325,7 +335,7 @@ class ContentBrowser(QWidget):
 		folder_path = os.path.join(self.current_folder, folder_name)
 		if flush_to_disk:
 			self.folder_view.file_machine.new_folder(folder_path)
-		self.folder_view.add_item(PathItem(name=folder_name, ftype=FileType.DIRECTORY), editing=True)
+		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=folder_name, ftype=FileType.DIRECTORY), editing=True)
 
 	def new_file(self):
 		pass  # TODO v3
