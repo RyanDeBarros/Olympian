@@ -219,7 +219,6 @@ class ContentBrowserFolderView(QListView):
 		delete.triggered.connect(lambda: self.delete_selected_items())
 		menu.addAction(delete)
 
-	# TODO v3 custom icons for actions
 	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files
 	def show_context_menu(self, pos):
 		menu = QMenu(self)
@@ -360,8 +359,17 @@ class ContentBrowser(QWidget):
 			self.folder_view.file_machine.new_folder(folder_path)
 		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=folder_name, ftype=FileType.DIRECTORY), editing=True)
 
-	def new_file(self):
-		pass  # TODO v3
+	def new_file(self, **kwargs):
+		flush_to_disk = kwargs.get('flush_to_disk', True)
+		file_name = "NewFile"
+		i = 1
+		while os.path.exists(os.path.join(self.current_folder, file_name)):
+			file_name = f"NewFile ({i})"
+			i = i + 1
+		file_path = os.path.join(self.current_folder, file_name)
+		if flush_to_disk:
+			self.folder_view.file_machine.new_file(file_path)
+		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.FILE), editing=True)
 
 	def new_signal_asset(self):
 		pass  # TODO v3

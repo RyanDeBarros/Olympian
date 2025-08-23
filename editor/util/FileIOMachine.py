@@ -21,6 +21,7 @@ class FileIOMachine:
 
 	def clear_trash(self):
 		self._send_to_trash(self._trash_folder())
+		os.makedirs(self._trash_folder())
 
 	def _generate_hash_container(self):
 		h = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
@@ -45,10 +46,13 @@ class FileIOMachine:
 		self.undo_stack.push(UCDeletePaths(self, [Path(path).resolve() for path in paths]))
 
 	def rename(self, old_path: Path, new_path: Path):
-		self.undo_stack.push(UCRenamePath(self, old_path, new_path))
+		self.undo_stack.push(UCRenamePath(self, Path(old_path).resolve(), Path(new_path).resolve()))
 
 	def new_folder(self, folder: Path):
 		self.undo_stack.push(UCNewFolder(self, Path(folder).resolve()))
+
+	def new_file(self, file: Path):
+		self.undo_stack.push(UCNewFile(self, Path(file).resolve()))
 
 
 class UCDeletePaths(QUndoCommand):
@@ -145,6 +149,44 @@ class UCNewFolder(QUndoCommand):
 			assert not os.path.exists(self.folder)
 			os.makedirs(os.path.dirname(self.folder), exist_ok=True)
 			os.rename(self.trash_path, self.folder)
+
+			for root, dirs, _ in os.walk(self.hash_path, topdown=False):
+				for d in dirs:
+					os.rmdir(os.path.join(root, d))
+			os.rmdir(self.hash_path)
+			self.trash_path = None
+			self.hash_path = None
+			self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just add the item if in currently open folder
+
+
+class UCNewFile(QUndoCommand):
+	def __init__(self, machine: FileIOMachine, file: Path):
+		super().__init__("New File")
+		self.machine = machine
+		self.file = file
+		self.touch = True
+		self.hash_path: Optional[Path] = None
+		self.trash_path: Optional[Path] = None
+
+	def _generate_trash_path(self):
+		self.hash_path = self.machine.generate_hash_path()
+		self.trash_path = self.hash_path.joinpath(self.file.relative_to(self.machine.project_context.project_folder))
+
+	def undo(self):
+		self._generate_trash_path()
+		assert not os.path.exists(self.trash_path)
+		os.makedirs(os.path.dirname(self.trash_path), exist_ok=True)
+		os.rename(self.file, self.trash_path)
+		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just remove the item if in currently open folder
+
+	def redo(self):
+		if self.touch:
+			self.touch = False
+			self.file.touch(exist_ok=False)
+		else:
+			assert not os.path.exists(self.file)
+			os.makedirs(os.path.dirname(self.file), exist_ok=True)
+			os.rename(self.trash_path, self.file)
 
 			for root, dirs, _ in os.walk(self.hash_path, topdown=False):
 				for d in dirs:
