@@ -2,7 +2,6 @@ from PySide6.QtCore import QKeyCombination
 from PySide6.QtGui import QShortcut, QKeySequence, Qt
 from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
 
-from editor import ui
 from editor.core.ProjectContext import ProjectContext
 
 
@@ -16,6 +15,7 @@ class MainWindow(QMainWindow):
 
 		self.project_context = ProjectContext(project_file, self)
 
+		from editor import ui
 		self.ui = ui.MainWindow.Ui_MainWindow()
 		self.ui.setupUi(self)
 
