@@ -1,6 +1,6 @@
 from PySide6.QtCore import QKeyCombination
 from PySide6.QtGui import QShortcut, QKeySequence, Qt, QIcon
-from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView, QWidget
+from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
 
 from editor.core.ProjectContext import ProjectContext
 
@@ -54,6 +54,19 @@ class MainWindow(QMainWindow):
 		self.tab_holder: MainTabWidget = self.ui.mainTabHolder
 		self.tab_holder.init(self)
 
+		self.ui.actionSave.triggered.connect(self.tab_holder.save)
+		save_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_S)), self)
+		save_shortcut.activated.connect(self.tab_holder.save)
+		self.ui.actionSave_All.triggered.connect(self.tab_holder.save_all)
+		save_all_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
+																   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_S)), self)
+		save_all_shortcut.activated.connect(self.tab_holder.save_all)
+		self.ui.actionRevert_Changes.triggered.connect(self.tab_holder.revert_changes)
+		revert_changes_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
+																   | Qt.KeyboardModifier.ShiftModifier
+																   | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_R)), self)
+		revert_changes_shortcut.activated.connect(self.tab_holder.revert_changes)
+
 	def open_start_menu(self):
 		self.close()
 		self.open_start()
@@ -91,5 +104,5 @@ class MainWindow(QMainWindow):
 
 	def open_standard_file(self, filepath, name, icon: QIcon):
 		from .tabs import StandardFile
-		tab = StandardFile(self, filepath)
+		tab = StandardFile(self, filepath, name)
 		self.tab_holder.add_tab(filepath, tab, icon, name)

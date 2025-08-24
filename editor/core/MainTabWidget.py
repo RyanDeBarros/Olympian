@@ -37,3 +37,23 @@ class MainTabWidget(QTabWidget):
 			index = self.addTab(tab, icon, name)
 			self.setCurrentIndex(index)
 			self.uids.insert(index, uid)
+
+	def save(self):
+		widget = self.currentWidget()
+		if hasattr(widget, "save_changes") and callable(widget.save_changes):
+			widget.save_changes()
+
+	def save_all(self):
+		for i in range(self.count()):
+			widget = self.widget(i)
+			if hasattr(widget, "save_changes") and callable(widget.save_changes):
+				widget.save_changes()
+
+	def revert_changes(self):
+		widget = self.currentWidget()
+		if hasattr(widget, "revert_changes") and callable(widget.revert_changes):
+			widget.revert_changes()
+
+	def set_tab_name(self, tab: QWidget, name: str):
+		index = self.indexOf(tab)
+		self.setTabText(index, name)

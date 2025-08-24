@@ -47,6 +47,10 @@
     <addaction name="separator"/>
     <addaction name="actionContent_Browser"/>
     <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_All"/>
+    <addaction name="actionRevert_Changes"/>
+    <addaction name="separator"/>
     <addaction name="actionProject_Settings"/>
     <addaction name="actionAsset_Defaults"/>
    </widget>
@@ -135,6 +139,21 @@
   <action name="actionClear_Undo_Stack">
    <property name="text">
     <string>Clear Undo Stack</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save (Ctrl+S)</string>
+   </property>
+  </action>
+  <action name="actionSave_All">
+   <property name="text">
+    <string>Save All (Ctrl+Shift+S)</string>
+   </property>
+  </action>
+  <action name="actionRevert_Changes">
+   <property name="text">
+    <string>Revert Changes (Ctrl+Alt+Shift+R)</string>
    </property>
   </action>
  </widget>

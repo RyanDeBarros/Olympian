@@ -56,10 +56,14 @@ class PathItem:
 		return self.name[:-len('.oly')] if self.oly_suffix else self.name
 
 	def renamed_filepath(self, name: str):
-		new_name = self.parent_folder.joinpath(name)
+		path = self.parent_folder.joinpath(name)
 		if self.oly_suffix:
-			new_name = Path(str(new_name) + '.oly')
-		return new_name
+			path = Path(str(path) + '.oly')
+		return path
+
+	def rename_to(self, name: str):
+		self.name = name
+		self.full_path = self.renamed_filepath(self.name)
 
 
 class ContentBrowserFolderView(QListView):
@@ -191,7 +195,7 @@ class ContentBrowserFolderView(QListView):
 						item.setText(pi.name)
 						return
 
-			self.path_items[item.row()].name = item.text()
+			self.path_items[item.row()].rename_to(item.text())
 			self.sort()
 
 	def fill_no_item_context_menu(self, menu: QMenu):
