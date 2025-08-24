@@ -68,6 +68,15 @@ class ContentBrowserFolderView(QListView):
 	def mousePressEvent(self, event):
 		if event.button() == Qt.MouseButton.LeftButton:
 			super().mousePressEvent(event)
+		elif event.button() == Qt.MouseButton.RightButton:
+			index = self.indexAt(event.pos())
+			if index.isValid():
+				if index not in self.selectedIndexes():
+					self.selectionModel().clearSelection()
+				self.selectionModel().select(index, QItemSelectionModel.SelectionFlag.Select)
+				super().mousePressEvent(event)
+			else:
+				self.selectionModel().clearSelection()
 		else:
 			event.ignore()
 
