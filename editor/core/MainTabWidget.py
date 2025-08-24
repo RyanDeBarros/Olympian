@@ -1,6 +1,6 @@
 from typing import Optional
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, Qt
 from PySide6.QtWidgets import QTabWidget, QWidget
 
 from editor.core import MainWindow
@@ -20,6 +20,11 @@ class MainTabWidget(QTabWidget):
 	def init(self, win):
 		self.win = win
 		self.file_machine = self.win.project_context.file_machine
+
+	def mouseReleaseEvent(self, event):
+		if event.button() == Qt.MouseButton.MiddleButton:
+			index = self.tabBar().tabAt(event.pos())
+			self.close_tab(index)
 
 	def tab_moved(self, from_index, to_index):
 		uid = self.uids.pop(from_index)

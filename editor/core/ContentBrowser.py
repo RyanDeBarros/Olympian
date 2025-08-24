@@ -108,6 +108,10 @@ class ContentBrowserFolderView(QListView):
 	def keyPressEvent(self, event):
 		if event.key() == Qt.Key.Key_Delete:
 			self.delete_selected_items()
+		elif event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
+			indexes = self.selectedIndexes()
+			if len(indexes) == 1:
+				self.content_browser.open_item(self.path_items[indexes[0].row()])
 		else:
 			super().keyPressEvent(event)
 

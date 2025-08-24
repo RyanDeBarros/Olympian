@@ -1,9 +1,12 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import QEvent
+from PySide6.QtGui import QShortcut, Qt, QWheelEvent
+from PySide6.QtWidgets import QWidget, QTextEdit
 
 from editor import ui
 from editor.core import MainWindow
+
 
 
 class StandardFile(QWidget):
@@ -18,9 +21,18 @@ class StandardFile(QWidget):
 
 		self.ui = ui.StandardFile.Ui_StandardFile()
 		self.ui.setupUi(self)
+		self.text_edit = self.ui.textEdit
+		self.text_edit.init()
+
+		lose_focus_shortcut = QShortcut(Qt.Key.Key_Escape, self)
+		lose_focus_shortcut.activated.connect(self.lose_focus)
 
 		self.load_file()
-		self.ui.textEdit.textChanged.connect(self.text_changed)
+		self.text_edit.textChanged.connect(self.text_changed)
+
+	def lose_focus(self):
+		if self.text_edit.hasFocus():
+			self.text_edit.clearFocus()
 
 	def save_changes(self):
 		self.save_file()
@@ -36,11 +48,11 @@ class StandardFile(QWidget):
 
 	def load_file(self):
 		with open(self.filepath, 'r') as f:
-			self.ui.textEdit.setPlainText(f.read())
+			self.text_edit.setPlainText(f.read())
 
 	def save_file(self):
 		with open(self.filepath, 'w') as f:
-			f.write(self.ui.textEdit.toPlainText())
+			f.write(self.text_edit.toPlainText())
 
 	def text_changed(self):
 		if not self.asterisk:

@@ -3,3 +3,5 @@ from .ContentBrowser import ContentBrowser
 from .MainWindow import MainWindow
 from .ProjectContext import ProjectContext
 from .StartMenuWindow import StartMenuWindow
+from .common import *
+from .tabs import *
