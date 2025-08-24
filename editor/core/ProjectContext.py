@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PySide6.QtGui import QUndoStack
 
-from editor.core import PREFERENCES
+from editor.core.EditorPreferences import PREFERENCES
 
 
 class ProjectContext:

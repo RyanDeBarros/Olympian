@@ -1,69 +1,19 @@
 import os
 import platform
 import subprocess
-from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QKeyCombination, QItemSelection
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QPixmap, QCursor, QShortcut, \
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip
 
-from editor.core import MainWindow, PREFERENCES
+from editor.core.common import Alerts
+from editor.core.path_items import *
+from editor.core.EditorPreferences import PREFERENCES
+from editor.core import MainWindow
 from editor.util import FileIOMachine
-
-
-def alert_error(parent, title, desc):
-	msg = QMessageBox(parent)
-	msg.setIcon(QMessageBox.Icon.Warning)
-	msg.setWindowTitle(title)
-	msg.setText(desc)
-	msg.exec()
-
-
-class FileType(Enum):
-	UNKNOWN = auto()
-	DIRECTORY = auto()
-	FILE = auto()
-	TEXTURE = auto()
-	FONT = auto()
-	SIGNAL = auto()
-
-
-class PathItem:
-	def __init__(self, parent_folder: Path, name: str, ftype: FileType, oly_suffix: bool):
-		self.parent_folder = parent_folder.resolve()
-		self.full_path = self.parent_folder.joinpath(name)
-		self.name = name
-		self.ftype = ftype
-		self.oly_suffix = oly_suffix
-
-	def icon(self, size: QSize):
-		match self.ftype:
-			case FileType.DIRECTORY:
-				return QIcon(QPixmap("res/images/Folder.png").scaled(size))
-			case FileType.FILE:
-				return QIcon(QPixmap("res/images/File.png").scaled(size))
-			case FileType.TEXTURE:
-				return QIcon(QPixmap(self.full_path).scaled(size))
-			case FileType.SIGNAL:
-				return QIcon(QPixmap("res/images/InputSignal.png").scaled(size))
-			case _:
-				raise RuntimeError(f"icon_path(): unsupported file type {self.ftype}")
-
-	def ui_name(self):
-		return self.name[:-len('.oly')] if self.oly_suffix else self.name
-
-	def renamed_filepath(self, name: str):
-		path = self.parent_folder.joinpath(name)
-		if self.oly_suffix:
-			path = Path(str(path) + '.oly')
-		return path
-
-	def rename_to(self, name: str):
-		self.name = name
-		self.full_path = self.renamed_filepath(self.name)
 
 
 class ContentBrowserFolderView(QListView):
@@ -84,7 +34,7 @@ class ContentBrowserFolderView(QListView):
 		self.setModel(self.model)
 		self.model.itemChanged.connect(self.item_renamed)
 		self.setEditTriggers(QAbstractItemView.EditTrigger.EditKeyPressed)
-		self.path_items: list[PathItem] = []
+		self.path_items: list[AbstractPathItem] = []
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
@@ -111,7 +61,7 @@ class ContentBrowserFolderView(QListView):
 		elif event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
 			indexes = self.selectedIndexes()
 			if len(indexes) == 1:
-				self.content_browser.open_item(self.path_items[indexes[0].row()])
+				self.path_items[indexes[0].row()].open(self.content_browser)
 		else:
 			super().keyPressEvent(event)
 
@@ -125,7 +75,7 @@ class ContentBrowserFolderView(QListView):
 		if event.button() == Qt.MouseButton.LeftButton:
 			index = self.indexAt(event.pos())
 			if index.isValid():
-				self.content_browser.open_item(self.path_items[index.row()])
+				self.path_items[index.row()].open(self.content_browser)
 			else:
 				event.ignore()
 		else:
@@ -144,19 +94,14 @@ class ContentBrowserFolderView(QListView):
 			self.selectionModel().select(index0, QItemSelectionModel.SelectionFlag.Deselect)
 
 	def sort(self):
-		def sort_key(item: PathItem):
-			if item.name == "..":
-				return 0,
-			elif item.ftype == FileType.DIRECTORY:
-				return 1, item.name.lower()
-			else:
-				return 2, item.name.lower()
+		def sort_key(item: AbstractPathItem):
+			return item.sorting_key()
 
 		sorted_items = sorted(self.path_items, key=sort_key)
 		self.clear_items()
 		self.add_items(sorted_items, sort=False)
 
-	def add_item(self, pi: PathItem, editing=False, sort=True):
+	def add_item(self, pi: AbstractPathItem, editing=False, sort=True):
 		item = QStandardItem()
 		item.setText(pi.ui_name())
 		item.setIcon(pi.icon(self.iconSize()))
@@ -174,7 +119,7 @@ class ContentBrowserFolderView(QListView):
 				index = item.row()
 			self.edit(self.model.index(index, 0))
 
-	def add_items(self, items: List[PathItem], sort=True):
+	def add_items(self, items: List[AbstractPathItem], sort=True):
 		for pi in items:
 			self.add_item(pi, sort=False)
 		if sort:
@@ -195,7 +140,7 @@ class ContentBrowserFolderView(QListView):
 					try:
 						self.file_machine.rename(old_name, new_name)
 					except OSError as e:
-						alert_error(self, "Error - cannot rename item", str(e))
+						Alerts.alert_error(self, "Error - cannot rename item", str(e))
 						item.setText(pi.name)
 						return
 
@@ -356,63 +301,24 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [PathItem(parent_folder=self.current_folder, name="..", ftype=FileType.DIRECTORY, oly_suffix=False)]
+		items = [FolderPathItem(parent_folder=self.current_folder, name="..")]
 		for path in Path(self.current_folder).iterdir():
 			if path.is_dir():
-				items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.DIRECTORY, oly_suffix=False))
+				items.append(FolderPathItem(parent_folder=self.current_folder, name=path.name))
 			elif path.is_file():
 				# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
 				if path.suffix == ".oly":
 					pass  # TODO v3 add if asset and not import
 				else:
 					# TODO v3 check for existing import file
-					items.append(PathItem(parent_folder=self.current_folder, name=path.name, ftype=FileType.FILE, oly_suffix=False))
+					items.append(StandardFilePathItem(parent_folder=self.current_folder, name=path.name))
 		self.folder_view.add_items(items)
 
-	def new_folder(self, **kwargs):
-		flush_to_disk = kwargs.get('flush_to_disk', True)
-		folder_name = "NewFolder"
-		i = 1
-		while os.path.exists(os.path.join(self.current_folder, folder_name)):
-			folder_name = f"NewFolder ({i})"
-			i = i + 1
-		folder_path = os.path.join(self.current_folder, folder_name)
-		if flush_to_disk:
-			self.folder_view.file_machine.new_folder(folder_path)
-		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=folder_name, ftype=FileType.DIRECTORY, oly_suffix=False), editing=True)
+	def new_folder(self):
+		FolderPathItem(Path(), "").new_item(self)
 
-	def new_file(self, **kwargs):
-		flush_to_disk = kwargs.get('flush_to_disk', True)
-		file_name = "NewFile"
-		i = 1
-		while os.path.exists(os.path.join(self.current_folder, file_name)):
-			file_name = f"NewFile ({i})"
-			i = i + 1
-		file_path = os.path.join(self.current_folder, file_name)
-		if flush_to_disk:
-			self.folder_view.file_machine.new_file(file_path)
-		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.FILE, oly_suffix=False), editing=True)
+	def new_file(self):
+		StandardFilePathItem(Path(), "").new_item(self)
 
 	def new_signal_asset(self):
-		file_name = "NewSignal.oly"
-		i = 1
-		while os.path.exists(os.path.join(self.current_folder, file_name)):
-			file_name = f"NewSignal ({i}).oly"
-			i = i + 1
-		file_path = os.path.join(self.current_folder, file_name)
-		self.folder_view.file_machine.new_file(file_path)
-		self.folder_view.add_item(PathItem(parent_folder=self.current_folder, name=file_name, ftype=FileType.SIGNAL, oly_suffix=True), editing=True)
-		# TODO v3 add signal to project file's list of input signals, and initialize data of file
-
-	def open_item(self, pi: PathItem):
-		match pi.ftype:
-			case FileType.DIRECTORY:
-				self.open_relative_folder(pi.name)
-			case FileType.FILE:
-				self.win.open_standard_file(pi.full_path, pi.ui_name(), pi.icon(QSize(64, 64)))
-
-	def open_relative_folder(self, folder):
-		self.open_folder(self.current_folder.joinpath(folder))
-
-	def open_signal_asset(self, filepath):
-		pass  # TODO v3
+		InputSignalPathItem(Path(), "").new_item(self)
