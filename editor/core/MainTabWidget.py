@@ -11,7 +11,6 @@ class MainTabWidget(QTabWidget):
 	def __init__(self, parent):
 		super().__init__(parent)
 		self.win: Optional[MainWindow] = None
-		self.file_machine: Optional[FileIOMachine] = None
 		self.uids = []
 
 		self.tabBar().tabMoved.connect(self.tab_moved)
@@ -19,7 +18,6 @@ class MainTabWidget(QTabWidget):
 
 	def init(self, win):
 		self.win = win
-		self.file_machine = self.win.project_context.file_machine
 
 	def mouseReleaseEvent(self, event):
 		if event.button() == Qt.MouseButton.MiddleButton:

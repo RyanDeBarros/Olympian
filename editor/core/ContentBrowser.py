@@ -6,8 +6,9 @@ from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QKeyCombination, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
-	QKeySequence
-from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip
+	QKeySequence, QUndoStack
+from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
+	QVBoxLayout, QUndoView, QToolButton
 
 from editor.core.common import Alerts
 from editor.core.path_items import *
@@ -43,7 +44,7 @@ class ContentBrowserFolderView(QListView):
 
 	def init(self, content_browser):
 		self.content_browser = content_browser
-		self.file_machine = self.content_browser.win.project_context.file_machine
+		self.file_machine = self.content_browser.file_machine
 
 	def event(self, event):
 		if event.type() == QEvent.Type.ToolTip:
@@ -268,9 +269,32 @@ class ContentBrowser(QWidget):
 		self.win: Optional[MainWindow] = None
 
 		self.folder_view = self.ui.CBFolderView
+		self.undo_stack = QUndoStack()
+		self.file_machine: Optional[FileIOMachine] = None
 
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
 		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
+
+		self.ui.undoButton.setIcon(QIcon("res/images/Undo.png"))
+		self.ui.undoButton.clicked.connect(self.undo_stack.undo)
+		undo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Z)), self)
+		undo_shortcut.activated.connect(self.undo_stack.undo)
+
+		self.ui.redoButton.setIcon(QIcon("res/images/Redo.png"))
+		self.ui.redoButton.clicked.connect(self.undo_stack.redo)
+		redo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
+															   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Z)), self)
+		redo_shortcut.activated.connect(self.undo_stack.redo)
+
+		history_menu = QMenu(self.ui.historyToolButton)
+		history_show = QAction("Show", history_menu)
+		history_show.triggered.connect(self.show_undo_stack)
+		history_menu.addAction(history_show)
+		history_clear = QAction("Clear", history_menu)
+		history_clear.triggered.connect(self.clear_undo_stack)
+		history_menu.addAction(history_clear)
+		self.ui.historyToolButton.setMenu(history_menu)
+		self.ui.historyToolButton.clicked.connect(lambda: self.ui.historyToolButton.showMenu())
 
 		self.current_folder: Optional[Path] = None
 		self.last_file_dialog_dir: Optional[Path] = None
@@ -281,7 +305,19 @@ class ContentBrowser(QWidget):
 		self.last_file_dialog_dir = self.current_folder
 		self.open_folder(self.current_folder)
 
+		self.file_machine = FileIOMachine(self.win.project_context)
 		self.folder_view.init(self)
+
+	def show_undo_stack(self):
+		dialog = QDialog(self)
+		dialog.setWindowTitle("Undo Stack")
+		layout = QVBoxLayout(dialog)
+		layout.addWidget(QUndoView(self.undo_stack))
+		dialog.exec()
+
+	def clear_undo_stack(self):
+		self.undo_stack.clear()
+		self.file_machine.clear_trash()
 
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", str(self.last_file_dialog_dir))

@@ -1,6 +1,6 @@
 from PySide6.QtCore import QKeyCombination
 from PySide6.QtGui import QShortcut, QKeySequence, Qt, QIcon
-from PySide6.QtWidgets import QMainWindow, QWhatsThis, QDialog, QVBoxLayout, QUndoView
+from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
 from editor.core.ProjectContext import ProjectContext
 
@@ -28,16 +28,6 @@ class MainWindow(QMainWindow):
 
 		self.ui.actionProject_Settings.triggered.connect(self.open_project_settings)
 		self.ui.actionAsset_Defaults.triggered.connect(self.open_asset_defaults)
-
-		self.ui.actionUndo.triggered.connect(self.project_context.undo_stack.undo)
-		undo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Z)), self)
-		undo_shortcut.activated.connect(self.project_context.undo_stack.undo)
-		self.ui.actionRedo.triggered.connect(self.project_context.undo_stack.redo)
-		redo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
-															   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Z)), self)
-		redo_shortcut.activated.connect(self.project_context.undo_stack.redo)
-		self.ui.actionShow_Undo_Stack.triggered.connect(self.show_undo_stack)
-		self.ui.actionClear_Undo_Stack.triggered.connect(self.clear_undo_stack)
 
 		self.ui.actionEditor_Preferences.triggered.connect(self.open_editor_preferences)
 
@@ -79,17 +69,6 @@ class MainWindow(QMainWindow):
 
 	def open_asset_defaults(self):
 		pass  # TODO v3
-
-	def show_undo_stack(self):
-		dialog = QDialog(self)
-		dialog.setWindowTitle("Undo Stack")
-		layout = QVBoxLayout(dialog)
-		layout.addWidget(QUndoView(self.project_context.undo_stack))
-		dialog.exec()
-
-	def clear_undo_stack(self):
-		self.project_context.undo_stack.clear()
-		self.project_context.file_machine.clear_trash()
 
 	def open_editor_preferences(self):
 		pass  # TODO v3

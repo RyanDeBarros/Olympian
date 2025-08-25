@@ -13,7 +13,8 @@ from editor.core import ProjectContext
 class FileIOMachine:
 	def __init__(self, project_context: ProjectContext):
 		self.project_context = project_context
-		self.undo_stack = self.project_context.undo_stack
+		self.content_browser = self.project_context.main_window.content_browser
+		self.undo_stack = self.content_browser.undo_stack
 
 	@staticmethod
 	def _send_to_trash(path):
@@ -34,7 +35,7 @@ class FileIOMachine:
 		return self._trash_folder().joinpath(self._generate_hash_container())
 
 	def refresh_folder_view(self):
-		return self.project_context.main_window.content_browser.folder_view.refresh_view()
+		return self.content_browser.folder_view.refresh_view()
 
 	def _trash_folder(self) -> Path:
 		return self.project_context.project_folder.joinpath(".trash")
