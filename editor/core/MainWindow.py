@@ -1,6 +1,8 @@
-from PySide6.QtGui import QShortcut, QKeySequence, QIcon
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
+from editor.core import StandardFilePathItem
 from editor.core.ProjectContext import ProjectContext
 
 
@@ -35,10 +37,10 @@ class MainWindow(QMainWindow):
 		enter_help_mode_shortcut.activated.connect(self.enter_help_mode)
 
 		self.content_browser = self.ui.CBWidget
-		self.content_browser.init(self)
-
 		from editor.core.MainTabWidget import MainTabWidget
 		self.tab_holder: MainTabWidget = self.ui.mainTabHolder
+
+		self.content_browser.init(self)
 		self.tab_holder.init(self)
 
 		self.ui.actionSave.triggered.connect(self.tab_holder.save)
@@ -75,7 +77,7 @@ class MainWindow(QMainWindow):
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
 
-	def open_standard_file(self, filepath, name, icon: QIcon):
+	def open_standard_file(self, item: StandardFilePathItem, icon_size: QSize = QSize(64, 64)):
 		from .tabs import StandardFile
-		tab = StandardFile(self, filepath, name)
-		self.tab_holder.add_tab(filepath, tab, icon, name)
+		tab = StandardFile(self, item)
+		self.tab_holder.add_tab(uid=item.full_path, tab=tab, icon=item.icon(icon_size), name=item.ui_name())

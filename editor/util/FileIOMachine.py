@@ -14,6 +14,7 @@ class FileIOMachine:
 	def __init__(self, project_context: ProjectContext):
 		self.project_context = project_context
 		self.content_browser = self.project_context.main_window.content_browser
+		self.main_tab_holder = self.project_context.main_window.tab_holder
 		self.undo_stack = self.content_browser.undo_stack
 
 	@staticmethod
@@ -52,23 +53,69 @@ class FileIOMachine:
 	def new_file(self, file: Path):
 		self.undo_stack.push(UCNewFile(self, Path(file).resolve()))
 
-	def uc_add_path(self, path: Path):
+	def uc_browser_add_path(self, path: Path):
 		if self.content_browser.should_display_path(path):
 			self.content_browser.add_path(path)
 
-	def uc_add_paths(self, paths: list[Path]):
+	def uc_browser_add_paths(self, paths: list[Path]):
 		paths = [path for path in paths if self.content_browser.should_display_path(path)]
 		if len(paths) > 0:
 			self.content_browser.add_paths(paths)
 
-	def uc_remove_path(self, path: Path):
+	def uc_browser_remove_path(self, path: Path):
 		if self.content_browser.should_display_path(path):
 			self.content_browser.remove_path(path)
 
-	def uc_remove_paths(self, paths: list[Path]):
+	def uc_browser_remove_paths(self, paths: list[Path]):
 		paths = [path for path in paths if self.content_browser.should_display_path(path)]
 		if len(paths) > 0:
 			self.content_browser.remove_paths(paths)
+
+	def _main_tab_remove_path(self, path: Path):
+		uids = self.main_tab_holder.uids
+		if path in uids:
+			self.main_tab_holder.close_tab(uids.index(path))
+
+	def uc_main_tab_remove_path(self, path: Path):
+		if path.is_dir():
+			for dirpath, dirnames, filenames in os.walk(path):
+				parent_path = Path(dirpath)
+				for folder in dirnames:
+					self._main_tab_remove_path(parent_path.joinpath(folder))
+				for file in filenames:
+					self._main_tab_remove_path(parent_path.joinpath(file))
+		else:
+			self._main_tab_remove_path(path)
+
+	def uc_main_tab_remove_paths(self, paths: list[Path]):
+		for path in paths:
+			self.uc_main_tab_remove_path(path)
+
+	def _main_tab_rename_path(self, old_path: Path, new_path: Path):
+		uids = self.main_tab_holder.uids
+		if old_path in uids:
+			assert new_path not in uids
+			item = self.content_browser.create_item(old_path)
+			assert item is not None
+			item.full_path = new_path
+			index = uids.index(old_path)
+			uids.pop(index)
+			uids.insert(index, new_path)
+			tab = self.main_tab_holder.widget(index)
+			if hasattr(tab, "rename") and callable(tab.rename):
+				tab.rename(item)
+
+	def uc_main_tab_rename_path(self, old_path: Path, new_path: Path):
+		if old_path.is_dir():
+			for dirpath, dirnames, filenames in os.walk(old_path):
+				old_parent_path = Path(dirpath)
+				new_parent_path = new_path.joinpath(old_parent_path.relative_to(old_path))
+				for folder in dirnames:
+					self._main_tab_rename_path(old_parent_path.joinpath(folder), new_parent_path.joinpath(folder))
+				for file in filenames:
+					self._main_tab_rename_path(old_parent_path.joinpath(file), new_parent_path.joinpath(file))
+		else:
+			self._main_tab_rename_path(old_path, new_path)
 
 
 def _move_to(old_path: Path, new_path: Path):
@@ -104,11 +151,12 @@ class UCDeletePaths(QUndoCommand):
 		_rm_all_dirs(self.hash_path)
 		self.trash_paths = None
 		self.hash_path = None
-		self.machine.uc_add_paths(self.paths)
+		self.machine.uc_browser_add_paths(self.paths)
 
 	def redo(self):
 		self._generate_trash_paths()
-		self.machine.uc_remove_paths(self.paths)
+		self.machine.uc_browser_remove_paths(self.paths)
+		self.machine.uc_main_tab_remove_paths(self.paths)
 		for i in range(self.num_paths):
 			_move_to(self.paths[i], self.trash_paths[i])
 
@@ -121,14 +169,16 @@ class UCRenamePath(QUndoCommand):
 		self.new_path = new_path
 
 	def undo(self):
-		self.machine.uc_remove_path(self.new_path)
+		self.machine.uc_browser_remove_path(self.new_path)
+		self.machine.uc_main_tab_rename_path(self.new_path, self.old_path)
 		_move_to(self.new_path, self.old_path)
-		self.machine.uc_add_path(self.old_path)
+		self.machine.uc_browser_add_path(self.old_path)
 
 	def redo(self):
-		self.machine.uc_remove_path(self.old_path)
+		self.machine.uc_browser_remove_path(self.old_path)
+		self.machine.uc_main_tab_rename_path(self.old_path, self.new_path)
 		_move_to(self.old_path, self.new_path)
-		self.machine.uc_add_path(self.new_path)
+		self.machine.uc_browser_add_path(self.new_path)
 
 
 class UCNewFolder(QUndoCommand):
@@ -146,7 +196,7 @@ class UCNewFolder(QUndoCommand):
 
 	def undo(self):
 		self._generate_trash_path()
-		self.machine.uc_remove_path(self.folder)
+		self.machine.uc_browser_remove_path(self.folder)
 		_move_to(self.folder, self.trash_path)
 
 	def redo(self):
@@ -158,7 +208,7 @@ class UCNewFolder(QUndoCommand):
 			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
-			self.machine.uc_add_path(self.folder)
+			self.machine.uc_browser_add_path(self.folder)
 
 
 class UCNewFile(QUndoCommand):
@@ -176,7 +226,8 @@ class UCNewFile(QUndoCommand):
 
 	def undo(self):
 		self._generate_trash_path()
-		self.machine.uc_remove_path(self.file)
+		self.machine.uc_browser_remove_path(self.file)
+		self.machine.uc_main_tab_remove_path(self.file)
 		_move_to(self.file, self.trash_path)
 
 	def redo(self):
@@ -188,4 +239,4 @@ class UCNewFile(QUndoCommand):
 			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
-			self.machine.uc_add_path(self.file)
+			self.machine.uc_browser_add_path(self.file)

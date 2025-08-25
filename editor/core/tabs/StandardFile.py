@@ -1,19 +1,16 @@
-from pathlib import Path
-
 from PySide6.QtGui import QShortcut, Qt
 from PySide6.QtWidgets import QWidget
 
 from editor import ui
-from editor.core import MainWindow
+from editor.core import MainWindow, StandardFilePathItem
 
 
 class StandardFile(QWidget):
-	def __init__(self, win: MainWindow, filepath: Path, name: str):
+	def __init__(self, win: MainWindow, item: StandardFilePathItem):
 		super().__init__()
 		self.win = win
 		self.holder = self.win.tab_holder
-		self.filepath = filepath
-		self.name = name
+		self.item = item
 
 		self.asterisk = False
 
@@ -36,23 +33,27 @@ class StandardFile(QWidget):
 		self.save_file()
 		if self.asterisk:
 			self.asterisk = False
-			self.holder.set_tab_name(self, self.name)
+			self.holder.set_tab_name(self, self.item.ui_name())
 
 	def revert_changes(self):
 		self.load_file()
 		if self.asterisk:
 			self.asterisk = False
-			self.holder.set_tab_name(self, self.name)
+			self.holder.set_tab_name(self, self.item.ui_name())
 
 	def load_file(self):
-		with open(self.filepath, 'r') as f:
+		with open(self.item.full_path, 'r') as f:
 			self.text_edit.setPlainText(f.read())
 
 	def save_file(self):
-		with open(self.filepath, 'w') as f:
+		with open(self.item.full_path, 'w') as f:
 			f.write(self.text_edit.toPlainText())
+
+	def rename(self, item: StandardFilePathItem):
+		self.item = item
+		self.holder.set_tab_name(self, f"* {self.item.ui_name()}" if self.asterisk else self.item.ui_name())
 
 	def text_changed(self):
 		if not self.asterisk:
 			self.asterisk = True
-			self.holder.set_tab_name(self, f"* {self.name}")
+			self.holder.set_tab_name(self, f"* {self.item.ui_name()}")

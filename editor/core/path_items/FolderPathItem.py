@@ -19,11 +19,11 @@ class FolderPathItem(AbstractPathItem):
 
 	@override
 	def ui_name(self):
-		return self.name
+		return self.full_path.name
 
 	@override
 	def renamed_filepath(self, name: str):
-		return self.parent_folder.joinpath(name)
+		return self.full_path.parent.joinpath(name)
 
 	@override
 	def sorting_key(self):

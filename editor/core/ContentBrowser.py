@@ -145,19 +145,17 @@ class ContentBrowserFolderView(QListView):
 		self.model.clear()
 		self.path_items.clear()
 
-	def item_renamed(self, item: QStandardItem, **kwargs):
-		flush_to_disk = kwargs.get('flush_to_disk', True)
+	def item_renamed(self, item: QStandardItem):
 		pi = self.path_items[item.row()]
-		if pi.name != item.text():
-			if flush_to_disk:
-				old_name = pi.full_path
-				new_name = pi.renamed_filepath(item.text())
-				if old_name.exists() and not new_name.exists():
-					try:
-						self.file_machine.rename(old_name, new_name)
-					except OSError as e:
-						Alerts.alert_error(self, "Error - cannot rename item", str(e))
-						item.setText(pi.name)
+		if pi.ui_name() != item.text():
+			old_name = pi.full_path
+			new_name = pi.renamed_filepath(item.text())
+			if old_name.exists() and not new_name.exists():
+				try:
+					self.file_machine.rename(old_name, new_name)
+				except OSError as e:
+					Alerts.alert_error(self, "Error - cannot rename item", str(e))
+					item.setText(pi.ui_name())
 
 	def fill_no_item_context_menu(self, menu: QMenu):
 		new_file = QAction(QIcon("res/images/File.png"), "New File", menu)
@@ -217,8 +215,7 @@ class ContentBrowserFolderView(QListView):
 		menu.exec(self.viewport().mapToGlobal(pos))
 
 	# TODO v3 delete import file as well -> should be a method in PathItem
-	def delete_item(self, index: QModelIndex, **kwargs):
-		flush_to_disk = kwargs.get('flush_to_disk', True)
+	def delete_item(self, index: QModelIndex):
 		follow_through = True
 		if PREFERENCES.prompt_user_when_deleting_paths:
 			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
@@ -228,12 +225,10 @@ class ContentBrowserFolderView(QListView):
 			assert index.row() < len(self.path_items)
 			pi = self.path_items.pop(index.row())
 			self.model.removeRow(index.row())
-			if flush_to_disk:
-				self.file_machine.remove(self.content_browser.current_folder.joinpath(pi.name))
+			self.file_machine.remove(pi.full_path)
 
 	# TODO v3 delete import files as well -> should be a method in PathItem
-	def delete_selected_items(self, **kwargs):
-		flush_to_disk = kwargs.get('flush_to_disk', True)
+	def delete_selected_items(self):
 		if self.selectedIndexes():
 			follow_through = True
 			if PREFERENCES.prompt_user_when_deleting_paths:
@@ -247,16 +242,16 @@ class ContentBrowserFolderView(QListView):
 				for index in indexes:
 					assert index < len(self.path_items)
 					pi = self.path_items.pop(index)
-					remove_paths.append(self.content_browser.current_folder.joinpath(pi.name))
+					remove_paths.append(pi.full_path)
 
 				while self.selectedIndexes():
 					index = self.selectedIndexes()[0]
 					self.model.removeRow(index.row())
 
-				if flush_to_disk:
-					self.file_machine.remove_together(remove_paths)
+				self.file_machine.remove_together(remove_paths)
 
 	def refresh_view(self):
+		# TODO v3 handle the case where the current folder is removed -> go to parent folder that exists. Also, refreshing might need to clear history if items before and items after don't match.
 		self.clear_items()
 		self.content_browser.populate()
 

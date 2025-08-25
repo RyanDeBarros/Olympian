@@ -12,9 +12,7 @@ if TYPE_CHECKING:
 
 class AbstractPathItem(ABC):
 	def __init__(self, parent_folder: Path, name: str):
-		self.parent_folder = parent_folder.resolve()
-		self.full_path = self.parent_folder.joinpath(name)
-		self.name = name
+		self.full_path = parent_folder.resolve().joinpath(name)
 
 	def __eq__(self, other):
 		return type(self) is type(other) and self.__dict__ == other.__dict__
@@ -35,8 +33,7 @@ class AbstractPathItem(ABC):
 		return 2, self.ui_name().lower()
 
 	def rename_to(self, name: str):
-		self.name = name
-		self.full_path = self.renamed_filepath(self.name)
+		self.full_path = self.renamed_filepath(name)
 
 	@abstractmethod
 	def new_item(self, browser: ContentBrowser):

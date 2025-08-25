@@ -20,11 +20,11 @@ class InputSignalPathItem(AbstractPathItem):
 
 	@override
 	def ui_name(self):
-		return self.name[:-len('.oly')]
+		return self.full_path.stem
 
 	@override
 	def renamed_filepath(self, name: str):
-		return Path(str(self.parent_folder.joinpath(name)) + '.oly')
+		return Path(str(self.full_path.parent.joinpath(name)) + '.oly')
 
 	@override
 	def new_item(self, browser: ContentBrowser):

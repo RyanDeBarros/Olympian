@@ -19,11 +19,11 @@ class StandardFilePathItem(AbstractPathItem):
 
 	@override
 	def ui_name(self):
-		return self.name
+		return self.full_path.name
 
 	@override
 	def renamed_filepath(self, name: str):
-		return self.parent_folder.joinpath(name)
+		return self.full_path.parent.joinpath(name)
 
 	@override
 	def new_item(self, browser: ContentBrowser):
@@ -39,4 +39,4 @@ class StandardFilePathItem(AbstractPathItem):
 
 	@override
 	def open(self, browser: ContentBrowser):
-		browser.win.open_standard_file(self.full_path, self.ui_name(), self.icon(QSize(64, 64)))
+		browser.win.open_standard_file(self)
