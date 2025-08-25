@@ -1,19 +1,20 @@
+import bisect
 import os
 import platform
 import subprocess
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QKeyCombination, QItemSelection
+from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence, QUndoStack, QUndoCommand
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
-	QVBoxLayout, QUndoView, QToolButton
+	QVBoxLayout, QUndoView
 
+from editor.core import MainWindow
+from editor.core.EditorPreferences import PREFERENCES
 from editor.core.common import Alerts
 from editor.core.path_items import *
-from editor.core.EditorPreferences import PREFERENCES
-from editor.core import MainWindow
 from editor.util import FileIOMachine
 
 
@@ -39,7 +40,7 @@ class ContentBrowserFolderView(QListView):
 
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
-		select_all_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A)), self)
+		select_all_shortcut = QShortcut(QKeySequence("Ctrl+A"), self)
 		select_all_shortcut.activated.connect(self.selectAll)
 
 	def init(self, content_browser):
@@ -60,9 +61,12 @@ class ContentBrowserFolderView(QListView):
 		if event.key() == Qt.Key.Key_Delete:
 			self.delete_selected_items()
 		elif event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
-			indexes = self.selectedIndexes()
-			if len(indexes) == 1:
-				self.path_items[indexes[0].row()].open(self.content_browser)
+			if self.state() != QAbstractItemView.State.EditingState:
+				indexes = self.selectedIndexes()
+				if len(indexes) == 1:
+					self.path_items[indexes[0].row()].open(self.content_browser)
+			else:
+				super().keyPressEvent(event)
 		else:
 			super().keyPressEvent(event)
 
@@ -103,37 +107,39 @@ class ContentBrowserFolderView(QListView):
 		if self.selectionModel().isSelected(index0):
 			self.selectionModel().select(index0, QItemSelectionModel.SelectionFlag.Deselect)
 
-	def sort(self):
-		def sort_key(item: AbstractPathItem):
-			return item.sorting_key()
+	def sorted_item_index(self, item: AbstractPathItem):
+		return bisect.bisect_left([item.sorting_key() for item in self.path_items], item.sorting_key())
 
-		sorted_items = sorted(self.path_items, key=sort_key)
-		self.clear_items()
-		self.add_items(sorted_items, sort=False)
+	def add_item(self, pi: AbstractPathItem, editing=False):
+		if pi in self.path_items:
+			return
 
-	def add_item(self, pi: AbstractPathItem, editing=False, sort=True):
+		index = self.sorted_item_index(pi)
+		self.path_items.insert(index, pi)
+
 		item = QStandardItem()
 		item.setText(pi.ui_name())
 		item.setIcon(pi.icon(self.iconSize()))
 		item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
-		self.model.appendRow(item)
-		self.path_items.insert(item.row(), pi)
-
-		if sort:
-			self.sort()
+		self.model.insertRow(index, item)
 
 		if editing:
-			if sort:
-				index = self.path_items.index(pi)
-			else:
-				index = item.row()
 			self.edit(self.model.index(index, 0))
 
-	def add_items(self, items: List[AbstractPathItem], sort=True):
-		for pi in items:
-			self.add_item(pi, sort=False)
-		if sort:
-			self.sort()
+	def add_items(self, items: List[AbstractPathItem]):
+		for item in items:
+			self.add_item(item)
+
+	def remove_item(self, item: AbstractPathItem):
+		if item not in self.path_items:
+			return
+		index = self.path_items.index(item)
+		self.model.removeRow(index)
+		self.path_items.pop(index)
+
+	def remove_items(self, items: list[AbstractPathItem]):
+		for item in items:
+			self.remove_item(item)
 
 	def clear_items(self):
 		self.model.clear()
@@ -152,10 +158,6 @@ class ContentBrowserFolderView(QListView):
 					except OSError as e:
 						Alerts.alert_error(self, "Error - cannot rename item", str(e))
 						item.setText(pi.name)
-						return
-
-			self.path_items[item.row()].rename_to(item.text())
-			self.sort()
 
 	def fill_no_item_context_menu(self, menu: QMenu):
 		new_file = QAction(QIcon("res/images/File.png"), "New File", menu)
@@ -259,7 +261,6 @@ class ContentBrowserFolderView(QListView):
 		self.content_browser.populate()
 
 
-# TODO v3 add optional tree view to the left of CBFolderView
 class ContentBrowser(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -277,13 +278,12 @@ class ContentBrowser(QWidget):
 
 		self.ui.undoButton.setIcon(QIcon("res/images/Undo.png"))
 		self.ui.undoButton.clicked.connect(self.undo_stack.undo)
-		undo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Z)), self)
+		undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
 		undo_shortcut.activated.connect(self.undo_stack.undo)
 
 		self.ui.redoButton.setIcon(QIcon("res/images/Redo.png"))
 		self.ui.redoButton.clicked.connect(self.undo_stack.redo)
-		redo_shortcut = QShortcut(QKeySequence(QKeyCombination(Qt.KeyboardModifier.ControlModifier
-															   | Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Z)), self)
+		redo_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Z"), self)
 		redo_shortcut.activated.connect(self.undo_stack.redo)
 
 		history_menu = QMenu(self.ui.historyToolButton)
@@ -322,8 +322,10 @@ class ContentBrowser(QWidget):
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", str(self.last_file_dialog_dir))
 		if folder:
-			self.last_file_dialog_dir = folder
-			self.open_folder(folder)
+			folder = Path(folder).resolve()
+			if folder:
+				self.last_file_dialog_dir = folder
+				self.open_folder(folder)
 
 	def open_in_explorer(self):
 		system = platform.system()
@@ -335,8 +337,8 @@ class ContentBrowser(QWidget):
 			subprocess.run(["xdg-open", self.current_folder])
 
 	def open_folder(self, folder, add_to_history: bool = True):
-		resolved_folder = Path(folder).resolve()
-		if not resolved_folder.is_relative_to(self.win.project_context.res_folder):
+		folder = Path(folder).resolve()
+		if not folder.is_relative_to(self.win.project_context.res_folder):
 			return
 
 		class UCOpenFolder(QUndoCommand):
@@ -348,7 +350,7 @@ class ContentBrowser(QWidget):
 
 			def open(self, folder):
 				self.browser.current_folder = folder
-				rel_folder = resolved_folder.relative_to(self.browser.win.project_context.res_folder)
+				rel_folder = folder.relative_to(self.browser.win.project_context.res_folder)
 				self.browser.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
 				self.browser.populate()
 
@@ -364,20 +366,60 @@ class ContentBrowser(QWidget):
 		else:
 			cmd.redo()
 
+	def should_display_path(self, path: Path):
+		return path.parent == self.current_folder
+
 	def populate(self):
 		self.folder_view.clear_items()
 		items = [FolderPathItem(parent_folder=self.current_folder, name="..")]
 		for path in Path(self.current_folder).iterdir():
-			if path.is_dir():
-				items.append(FolderPathItem(parent_folder=self.current_folder, name=path.name))
-			elif path.is_file():
-				# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
-				if path.suffix == ".oly":
-					pass  # TODO v3 add if asset and not import
-				else:
-					# TODO v3 check for existing import file
-					items.append(StandardFilePathItem(parent_folder=self.current_folder, name=path.name))
+			item = self.create_item(path)
+			if item is not None:
+				items.append(item)
 		self.folder_view.add_items(items)
+
+	def add_path(self, path: Path):
+		assert path.resolve().parent == self.current_folder
+		item = self.create_item(path)
+		if item is not None:
+			self.folder_view.add_item(item)
+
+	def add_paths(self, paths: list[Path]):
+		items = []
+		for path in paths:
+			assert path.resolve().parent == self.current_folder
+			item = self.create_item(path)
+			if item is not None:
+				items.append(item)
+		self.folder_view.add_items(items)
+
+	def remove_path(self, path: Path):
+		assert path.resolve().parent == self.current_folder
+		item = self.create_item(path)
+		if item is not None:
+			self.folder_view.remove_item(item)
+
+	def remove_paths(self, paths: list[Path]):
+		items = []
+		for path in paths:
+			assert path.resolve().parent == self.current_folder
+			item = self.create_item(path)
+			if item is not None:
+				items.append(item)
+		self.folder_view.remove_items(items)
+
+	def create_item(self, path: Path):
+		if path.is_dir():
+			return FolderPathItem(parent_folder=self.current_folder, name=path.name)
+		elif path.is_file():
+			# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
+			if path.suffix == ".oly":
+				return None  # TODO v3 add if asset and not import
+			else:
+				# TODO v3 check for existing import file
+				return StandardFilePathItem(parent_folder=self.current_folder, name=path.name)
+		else:
+			return None
 
 	def new_folder(self):
 		FolderPathItem(Path(), "").new_item(self)

@@ -4,9 +4,9 @@ from PySide6.QtGui import QIcon, Qt
 from PySide6.QtWidgets import QTabWidget, QWidget
 
 from editor.core import MainWindow
-from editor.util import FileIOMachine
 
 
+# TODO v3 update tabs if files are renamed/moved/deleted
 class MainTabWidget(QTabWidget):
 	def __init__(self, parent):
 		super().__init__(parent)

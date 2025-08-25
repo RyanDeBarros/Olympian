@@ -34,9 +34,6 @@ class FileIOMachine:
 	def generate_hash_path(self):
 		return self._trash_folder().joinpath(self._generate_hash_container())
 
-	def refresh_folder_view(self):
-		return self.content_browser.folder_view.refresh_view()
-
 	def _trash_folder(self) -> Path:
 		return self.project_context.project_folder.joinpath(".trash")
 
@@ -55,6 +52,37 @@ class FileIOMachine:
 	def new_file(self, file: Path):
 		self.undo_stack.push(UCNewFile(self, Path(file).resolve()))
 
+	def uc_add_path(self, path: Path):
+		if self.content_browser.should_display_path(path):
+			self.content_browser.add_path(path)
+
+	def uc_add_paths(self, paths: list[Path]):
+		paths = [path for path in paths if self.content_browser.should_display_path(path)]
+		if len(paths) > 0:
+			self.content_browser.add_paths(paths)
+
+	def uc_remove_path(self, path: Path):
+		if self.content_browser.should_display_path(path):
+			self.content_browser.remove_path(path)
+
+	def uc_remove_paths(self, paths: list[Path]):
+		paths = [path for path in paths if self.content_browser.should_display_path(path)]
+		if len(paths) > 0:
+			self.content_browser.remove_paths(paths)
+
+
+def _move_to(old_path: Path, new_path: Path):
+	assert not os.path.exists(new_path)
+	os.makedirs(os.path.dirname(new_path), exist_ok=True)
+	os.rename(old_path, new_path)
+
+
+def _rm_all_dirs(folder: Path):
+	for root, dirs, _ in os.walk(folder, topdown=False):
+		for d in dirs:
+			os.rmdir(os.path.join(root, d))
+	os.rmdir(folder)
+
 
 class UCDeletePaths(QUndoCommand):
 	def __init__(self, machine: FileIOMachine, paths: list[Path]):
@@ -72,30 +100,17 @@ class UCDeletePaths(QUndoCommand):
 
 	def undo(self):
 		for i in range(self.num_paths):
-			path = self.paths[i]
-			trash_path = self.trash_paths[i]
-			assert not os.path.exists(path)
-			os.makedirs(os.path.dirname(path), exist_ok=True)
-			os.rename(trash_path, path)
-
-		for root, dirs, _ in os.walk(self.hash_path, topdown=False):
-			for d in dirs:
-				os.rmdir(os.path.join(root, d))
-		os.rmdir(self.hash_path)
-		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just add the paths that were added to the currently open folder
+			_move_to(self.trash_paths[i], self.paths[i])
+		_rm_all_dirs(self.hash_path)
 		self.trash_paths = None
 		self.hash_path = None
+		self.machine.uc_add_paths(self.paths)
 
 	def redo(self):
 		self._generate_trash_paths()
+		self.machine.uc_remove_paths(self.paths)
 		for i in range(self.num_paths):
-			path = self.paths[i]
-			trash_path = self.trash_paths[i]
-			assert not os.path.exists(trash_path)
-			os.makedirs(os.path.dirname(trash_path), exist_ok=True)
-			os.rename(path, trash_path)
-
-		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just remove the paths that were removed from the currently open folder
+			_move_to(self.paths[i], self.trash_paths[i])
 
 
 class UCRenamePath(QUndoCommand):
@@ -104,22 +119,16 @@ class UCRenamePath(QUndoCommand):
 		self.machine = machine
 		self.old_path = old_path
 		self.new_path = new_path
-		self.do_refresh = False
 
 	def undo(self):
-		assert not os.path.exists(self.old_path)
-		os.makedirs(os.path.dirname(self.old_path), exist_ok=True)
-		os.rename(self.new_path, self.old_path)
-		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just rename the item if in currently open folder
+		self.machine.uc_remove_path(self.new_path)
+		_move_to(self.new_path, self.old_path)
+		self.machine.uc_add_path(self.old_path)
 
 	def redo(self):
-		assert not os.path.exists(self.new_path)
-		os.makedirs(os.path.dirname(self.new_path), exist_ok=True)
-		os.rename(self.old_path, self.new_path)
-		if self.do_refresh:
-			self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just rename the item if in currently open folder
-		else:
-			self.do_refresh = True
+		self.machine.uc_remove_path(self.old_path)
+		_move_to(self.old_path, self.new_path)
+		self.machine.uc_add_path(self.new_path)
 
 
 class UCNewFolder(QUndoCommand):
@@ -137,27 +146,19 @@ class UCNewFolder(QUndoCommand):
 
 	def undo(self):
 		self._generate_trash_path()
-		assert not os.path.exists(self.trash_path)
-		os.makedirs(os.path.dirname(self.trash_path), exist_ok=True)
-		os.rename(self.folder, self.trash_path)
-		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just remove the item if in currently open folder
+		self.machine.uc_remove_path(self.folder)
+		_move_to(self.folder, self.trash_path)
 
 	def redo(self):
 		if self.makedirs:
 			self.makedirs = False
 			os.makedirs(self.folder)
 		else:
-			assert not os.path.exists(self.folder)
-			os.makedirs(os.path.dirname(self.folder), exist_ok=True)
-			os.rename(self.trash_path, self.folder)
-
-			for root, dirs, _ in os.walk(self.hash_path, topdown=False):
-				for d in dirs:
-					os.rmdir(os.path.join(root, d))
-			os.rmdir(self.hash_path)
+			_move_to(self.trash_path, self.folder)
+			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
-			self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just add the item if in currently open folder
+			self.machine.uc_add_path(self.folder)
 
 
 class UCNewFile(QUndoCommand):
@@ -175,24 +176,16 @@ class UCNewFile(QUndoCommand):
 
 	def undo(self):
 		self._generate_trash_path()
-		assert not os.path.exists(self.trash_path)
-		os.makedirs(os.path.dirname(self.trash_path), exist_ok=True)
-		os.rename(self.file, self.trash_path)
-		self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just remove the item if in currently open folder
+		self.machine.uc_remove_path(self.file)
+		_move_to(self.file, self.trash_path)
 
 	def redo(self):
 		if self.touch:
 			self.touch = False
 			self.file.touch(exist_ok=False)
 		else:
-			assert not os.path.exists(self.file)
-			os.makedirs(os.path.dirname(self.file), exist_ok=True)
-			os.rename(self.trash_path, self.file)
-
-			for root, dirs, _ in os.walk(self.hash_path, topdown=False):
-				for d in dirs:
-					os.rmdir(os.path.join(root, d))
-			os.rmdir(self.hash_path)
+			_move_to(self.trash_path, self.file)
+			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
-			self.machine.refresh_folder_view()  # TODO v3 instead of refreshing the entire view, just add the item if in currently open folder
+			self.machine.uc_add_path(self.file)

@@ -16,6 +16,9 @@ class AbstractPathItem(ABC):
 		self.full_path = self.parent_folder.joinpath(name)
 		self.name = name
 
+	def __eq__(self, other):
+		return type(self) is type(other) and self.__dict__ == other.__dict__
+
 	@abstractmethod
 	def icon(self, size: QSize):
 		pass

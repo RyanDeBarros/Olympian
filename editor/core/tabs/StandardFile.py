@@ -1,12 +1,10 @@
 from pathlib import Path
 
-from PySide6.QtCore import QEvent
-from PySide6.QtGui import QShortcut, Qt, QWheelEvent
-from PySide6.QtWidgets import QWidget, QTextEdit
+from PySide6.QtGui import QShortcut, Qt
+from PySide6.QtWidgets import QWidget
 
 from editor import ui
 from editor.core import MainWindow
-
 
 
 class StandardFile(QWidget):
