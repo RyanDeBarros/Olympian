@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QKeyCombination, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
-	QKeySequence, QUndoStack
+	QKeySequence, QUndoStack, QUndoCommand
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
 	QVBoxLayout, QUndoView, QToolButton
 
@@ -303,7 +303,7 @@ class ContentBrowser(QWidget):
 		self.win = win
 		self.current_folder = self.win.project_context.res_folder
 		self.last_file_dialog_dir = self.current_folder
-		self.open_folder(self.current_folder)
+		self.open_folder(self.current_folder, add_to_history=False)
 
 		self.file_machine = FileIOMachine(self.win.project_context)
 		self.folder_view.init(self)
@@ -334,15 +334,35 @@ class ContentBrowser(QWidget):
 		else:
 			subprocess.run(["xdg-open", self.current_folder])
 
-	def open_folder(self, folder):
+	def open_folder(self, folder, add_to_history: bool = True):
 		resolved_folder = Path(folder).resolve()
 		if not resolved_folder.is_relative_to(self.win.project_context.res_folder):
 			return
 
-		self.current_folder = folder
-		rel_folder = resolved_folder.relative_to(self.win.project_context.res_folder)
-		self.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
-		self.populate()
+		class UCOpenFolder(QUndoCommand):
+			def __init__(self, browser: ContentBrowser, old_folder: Path, new_folder: Path):
+				super().__init__("Navigate Browser")
+				self.browser = browser
+				self.old_folder = old_folder
+				self.new_folder = new_folder
+
+			def open(self, folder):
+				self.browser.current_folder = folder
+				rel_folder = resolved_folder.relative_to(self.browser.win.project_context.res_folder)
+				self.browser.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
+				self.browser.populate()
+
+			def undo(self):
+				self.open(self.old_folder)
+
+			def redo(self):
+				self.open(self.new_folder)
+
+		cmd = UCOpenFolder(self, self.current_folder, folder)
+		if self.current_folder != folder and add_to_history:
+			self.undo_stack.push(cmd)
+		else:
+			cmd.redo()
 
 	def populate(self):
 		self.folder_view.clear_items()
