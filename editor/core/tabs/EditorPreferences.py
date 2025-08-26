@@ -36,7 +36,7 @@ class EditorPreferencesTab(EditorTab):
 
 	@override
 	def icon(self, size: QSize):
-		return QIcon(QPixmap("res/images/File.png").scaled(size))  # TODO v3 editor preferences icon
+		return QIcon(QPixmap("res/images/Gear.png").scaled(size))
 
 	@override
 	def name(self):

@@ -1,5 +1,4 @@
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
 from editor.core import StandardFilePathItem
@@ -23,13 +22,17 @@ class MainWindow(QMainWindow):
 		self.ui.actionOpen_Start_Menu.triggered.connect(self.open_start_menu)
 
 		self.ui.actionContent_Browser.triggered.connect(self.open_content_browser)
+		self.ui.actionContent_Browser.setIcon(QIcon("res/images/Folder.png"))
 		content_browser_shortcut = QShortcut(QKeySequence("Ctrl+Space"), self)
 		content_browser_shortcut.activated.connect(self.open_content_browser)
 
 		self.ui.actionProject_Settings.triggered.connect(self.open_project_settings)
+		self.ui.actionProject_Settings.setIcon(QIcon("res/images/Gear.png"))
 		self.ui.actionAsset_Defaults.triggered.connect(self.open_asset_defaults)
+		self.ui.actionAsset_Defaults.setIcon(QIcon("res/images/Gear.png"))
 
 		self.ui.actionEditor_Preferences.triggered.connect(self.open_editor_preferences)
+		self.ui.actionEditor_Preferences.setIcon(QIcon("res/images/Gear.png"))
 
 		self.ui.actionOpen_Docs.triggered.connect(self.open_documentation)
 		self.ui.actionHelp_Mode.triggered.connect(self.enter_help_mode)
@@ -44,12 +47,15 @@ class MainWindow(QMainWindow):
 		self.tab_holder.init(self)
 
 		self.ui.actionSave.triggered.connect(self.tab_holder.save)
+		self.ui.actionSave.setIcon(QIcon("res/images/Save.png"))
 		save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
 		save_shortcut.activated.connect(self.tab_holder.save)
 		self.ui.actionSave_All.triggered.connect(self.tab_holder.save_all)
+		self.ui.actionSave_All.setIcon(QIcon("res/images/SaveAll.png"))
 		save_all_shortcut = QShortcut(QKeySequence("Ctrl+Shift+S"), self)
 		save_all_shortcut.activated.connect(self.tab_holder.save_all)
 		self.ui.actionRevert_Changes.triggered.connect(self.tab_holder.revert_changes)
+		self.ui.actionRevert_Changes.setIcon(QIcon("res/images/Undo.png"))
 		revert_changes_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Shift+R"), self)
 		revert_changes_shortcut.activated.connect(self.tab_holder.revert_changes)
 
