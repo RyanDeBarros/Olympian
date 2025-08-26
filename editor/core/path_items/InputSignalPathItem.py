@@ -38,8 +38,9 @@ class InputSignalPathItem(AbstractPathItem):
 		browser.folder_view.add_item(InputSignalPathItem(parent_folder=browser.current_folder, name=file_name),
 									 editing=True)
 
-	# TODO v3 add signal to project file's list of input signals, and initialize data of file
+		# TODO v3 add signal to project file's list of input signals
 
 	@override
 	def open(self, browser: ContentBrowser):
-		pass  # TODO v3
+		from ..tabs import InputSignalTab
+		browser.win.tab_holder.add_tab(InputSignalTab(browser.win, self))

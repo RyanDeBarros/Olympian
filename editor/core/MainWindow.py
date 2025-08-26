@@ -84,7 +84,3 @@ class MainWindow(QMainWindow):
 	@staticmethod
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
-
-	def open_standard_file(self, item: StandardFilePathItem):
-		from .tabs import StandardFileTab
-		self.tab_holder.add_tab(StandardFileTab(self, item))

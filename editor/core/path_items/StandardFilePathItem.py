@@ -39,4 +39,5 @@ class StandardFilePathItem(AbstractPathItem):
 
 	@override
 	def open(self, browser: ContentBrowser):
-		browser.win.open_standard_file(self)
+		from ..tabs import StandardFileTab
+		browser.win.tab_holder.add_tab(StandardFileTab(browser.win, self))

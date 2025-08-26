@@ -249,7 +249,7 @@ namespace oly::reg
 				});
 		}
 
-		auto mappings = toml["mapping"].as_array();
+		auto mappings = toml["mapping"].as_array(); // TODO v3 use 'signal_mapping' instead of generic 'mapping'
 		if (mappings)
 		{
 			mappings->for_each([](const auto& node) {
