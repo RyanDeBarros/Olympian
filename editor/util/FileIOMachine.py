@@ -74,7 +74,7 @@ class FileIOMachine:
 	def _main_tab_remove_path(self, path: Path):
 		uids = self.main_tab_holder.uids
 		if path in uids:
-			self.main_tab_holder.close_tab(uids.index(path))
+			self.main_tab_holder.remove_tab(uids.index(path))
 
 	def uc_main_tab_remove_path(self, path: Path):
 		if path.is_dir():

@@ -2,9 +2,10 @@ from abc import ABC, abstractmethod, ABCMeta
 from typing import Optional
 
 from PySide6.QtGui import QIcon, Qt
-from PySide6.QtWidgets import QTabWidget, QWidget
+from PySide6.QtWidgets import QTabWidget, QWidget, QMessageBox
 
 from editor.core import MainWindow, AbstractPathItem
+from editor.core.common import Alerts
 
 
 class MetaEditorTab(type(QWidget), ABCMeta):
@@ -60,7 +61,6 @@ class EditorTab(QWidget, ABC, metaclass=MetaEditorTab):
 		self.set_asterisk(False)
 
 
-# TODO v3 update tabs if files are renamed/moved/deleted
 class MainTabHolder(QTabWidget):
 	def __init__(self, parent):
 		super().__init__(parent)
@@ -83,7 +83,19 @@ class MainTabHolder(QTabWidget):
 		self.uids.insert(to_index, uid)
 
 	def close_tab(self, index):
-		# TODO v3 prompt user if unsaved changes
+		tab = self.editor_tab_at(index)
+		if tab.asterisk:
+			reply = QMessageBox.question(self, f"{tab.name()} has unsaved changes", "Do you want to save these changes?",
+										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+										 QMessageBox.StandardButton.Cancel)
+			if reply == QMessageBox.StandardButton.Cancel:
+				return
+			if reply == QMessageBox.StandardButton.Yes:
+				tab.save_changes()
+		self.removeTab(index)
+		self.uids.pop(index)
+
+	def remove_tab(self, index):
 		self.removeTab(index)
 		self.uids.pop(index)
 
