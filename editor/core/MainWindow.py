@@ -58,7 +58,8 @@ class MainWindow(QMainWindow):
 		self.open_start()
 
 	def open_project_settings(self):
-		pass  # TODO v3
+		from .tabs import ProjectSettingsTab
+		self.tab_holder.add_tab(ProjectSettingsTab(self))
 
 	def open_content_browser(self):
 		self.ui.contentBrowser.show()
@@ -77,7 +78,6 @@ class MainWindow(QMainWindow):
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
 
-	def open_standard_file(self, item: StandardFilePathItem, icon_size: QSize = QSize(64, 64)):
-		from .tabs import StandardFile
-		tab = StandardFile(self, item)
-		self.tab_holder.add_tab(uid=item.full_path, tab=tab, icon=item.icon(icon_size), name=item.ui_name())
+	def open_standard_file(self, item: StandardFilePathItem):
+		from .tabs import StandardFileTab
+		self.tab_holder.add_tab(StandardFileTab(self, item))

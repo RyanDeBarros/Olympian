@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="MainTabWidget" name="mainTabHolder">
+     <widget class="MainTabHolder" name="mainTabHolder">
       <property name="documentMode">
        <bool>false</bool>
       </property>
@@ -160,9 +160,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MainTabWidget</class>
+   <class>MainTabHolder</class>
    <extends>QTabWidget</extends>
-   <header location="global">editor.core.MainTabWidget</header>
+   <header location="global">editor.core.MainTabHolder</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional
 
+import toml
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence, QUndoStack, QUndoCommand
@@ -196,7 +197,7 @@ class ContentBrowserFolderView(QListView):
 		delete.triggered.connect(lambda: self.delete_selected_items())
 		menu.addAction(delete)
 
-	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files
+	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files)
 	def show_context_menu(self, pos):
 		menu = QMenu(self)
 
@@ -409,9 +410,13 @@ class ContentBrowser(QWidget):
 		elif path.is_file():
 			# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
 			if path.suffix == ".oly":
+				with open(path, 'r') as f:
+					d = toml.load(f)
+				if 'signal' in d or 'mapping' in d:
+					return InputSignalPathItem(parent_folder=self.current_folder, name=path.name)
 				return None  # TODO v3 add if asset and not import
 			else:
-				# TODO v3 check for existing import file
+				# TODO v3 check for existing import file - use ImportedFilePathItem, which still refers to file, not import file, but recognizes that there exists an import.
 				return StandardFilePathItem(parent_folder=self.current_folder, name=path.name)
 		else:
 			return None

@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Optional
 
-from PySide6.QtGui import QIcon, Qt
+from PySide6.QtCore import QSize
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QTabWidget, QWidget, QMessageBox
 
 from editor.core import MainWindow, AbstractPathItem
-from editor.core.common import Alerts
 
 
 class MetaEditorTab(type(QWidget), ABCMeta):
@@ -19,6 +19,14 @@ class EditorTab(QWidget, ABC, metaclass=MetaEditorTab):
 		self.holder = self.win.tab_holder
 
 		self.asterisk = False
+
+	@abstractmethod
+	def uid(self):
+		pass
+
+	@abstractmethod
+	def icon(self, size: QSize):
+		pass
 
 	@abstractmethod
 	def name(self):
@@ -109,11 +117,12 @@ class MainTabHolder(QTabWidget):
 		assert isinstance(widget, EditorTab)
 		return widget
 
-	def add_tab(self, uid, tab: QWidget, icon: QIcon, name: str):
+	def add_tab(self, tab: EditorTab):
+		uid = tab.uid()
 		if uid in self.uids:
 			self.setCurrentIndex(self.uids.index(uid))
 		else:
-			index = self.addTab(tab, icon, name)
+			index = self.addTab(tab, tab.icon(QSize(64, 64)), tab.name())
 			self.setCurrentIndex(index)
 			self.uids.insert(index, uid)
 

@@ -1,1 +1,2 @@
-from .StandardFile import StandardFile
+from .StandardFile import StandardFileTab
+from .ProjectSettings import ProjectSettingsTab

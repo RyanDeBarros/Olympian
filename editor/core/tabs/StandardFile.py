@@ -1,5 +1,6 @@
 from typing import override
 
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QShortcut, Qt
 
 from editor import ui
@@ -7,7 +8,7 @@ from editor.core import MainWindow, StandardFilePathItem
 from editor.core.MainTabHolder import EditorTab
 
 
-class StandardFile(EditorTab):
+class StandardFileTab(EditorTab):
 	def __init__(self, win: MainWindow, item: StandardFilePathItem):
 		super().__init__(win)
 		self.item = item
@@ -20,8 +21,16 @@ class StandardFile(EditorTab):
 		lose_focus_shortcut = QShortcut(Qt.Key.Key_Escape, self)
 		lose_focus_shortcut.activated.connect(self.lose_focus)
 
-		self.load_file()
-		self.text_edit.textChanged.connect(self.text_changed)
+		self.revert_changes_impl()
+		self.text_edit.textChanged.connect(lambda: self.set_asterisk(True))
+
+	@override
+	def uid(self):
+		return self.item.full_path
+
+	@override
+	def icon(self, size: QSize):
+		return self.item.icon(size)
 
 	@override
 	def name(self):
@@ -29,28 +38,19 @@ class StandardFile(EditorTab):
 
 	@override
 	def save_changes_impl(self):
-		self.save_file()
+		with open(self.item.full_path, 'w') as f:
+			f.write(self.text_edit.toPlainText())
 
 	@override
 	def revert_changes_impl(self):
-		self.load_file()
+		with open(self.item.full_path, 'r') as f:
+			self.text_edit.setPlainText(f.read())
 
 	def lose_focus(self):
 		if self.text_edit.hasFocus():
 			self.text_edit.clearFocus()
 
-	def load_file(self):
-		with open(self.item.full_path, 'r') as f:
-			self.text_edit.setPlainText(f.read())
-
-	def save_file(self):
-		with open(self.item.full_path, 'w') as f:
-			f.write(self.text_edit.toPlainText())
-
 	@override
 	def rename_impl(self, item: StandardFilePathItem):
 		assert isinstance(item, StandardFilePathItem)
 		self.item = item
-
-	def text_changed(self):
-		self.set_asterisk(True)
