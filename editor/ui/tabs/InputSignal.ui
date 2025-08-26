@@ -141,6 +141,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QSpinBox" name="keySelectSpinBox">
+            <property name="minimum">
+             <number>32</number>
+            </property>
+            <property name="maximum">
+             <number>348</number>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item row="5" column="0">

@@ -3,7 +3,7 @@ from typing import override, Optional
 
 import toml
 from PySide6.QtCore import QSize, QObject, QEvent
-from PySide6.QtGui import QKeyEvent, Qt
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QApplication
 
 from editor import ui
@@ -53,12 +53,11 @@ class InputSignalTab(EditorTab):
 		self.ui.dimensionConversion1D.currentIndexChanged.connect(self.conversion_1d_changed)
 		self.ui.dimensionConversion2D.currentIndexChanged.connect(self.conversion_2d_changed)
 
-		self.captured_key: Optional[int] = None
-		self.captured_key_text: Optional[str] = None
 		self.key_capture_filter: Optional[KeyCaptureFilter] = None
 		self.destroyed.connect(lambda: QApplication.instance().removeEventFilter(self.key_capture_filter))
-		# TODO v3 manual way of setting key code - if key doesn't exist on keyboard it can't be listened to
 		self.ui.keyListenButton.clicked.connect(self.start_listening_for_key)
+		self.ui.keySelectSpinBox.valueChanged.connect(self.key_select_spinbox_changed)
+		self.key_select_spinbox_changed()
 
 		self.revert_changes_impl()
 
@@ -190,8 +189,16 @@ class InputSignalTab(EditorTab):
 		self.key_capture_filter = None
 		k = KEY_MAP.get_from_qt(key.key(), key.modifiers())
 		if k is not None:
-			self.captured_key = k.glfw_code
-			self.captured_key_text = k.text
-			self.ui.keySelectDisplay.setText(self.captured_key_text)
+			self.ui.keySelectDisplay.setText(k.text)
+			self.ui.keySelectSpinBox.blockSignals(True)
+			self.ui.keySelectSpinBox.setValue(k.glfw_code)
+			self.ui.keySelectSpinBox.blockSignals(False)
 		else:
 			Alerts.alert_error(self, "Unrecognized key", "Please manually enter the GLFW key code")
+
+	def key_select_spinbox_changed(self):
+		k = KEY_MAP.get_from_glfw(self.ui.keySelectSpinBox.value())
+		if k is not None:
+			self.ui.keySelectDisplay.setText(k.text)
+		else:
+			self.ui.keySelectDisplay.setText("Unrecognized key code")
