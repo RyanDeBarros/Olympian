@@ -20,18 +20,18 @@ class ProjectSettingsTab(EditorTab):
 
 		self.settings = {}
 		self.context = {}
-		self.window_settings = {}
-		self.logger_settings = {}
 
 		self.ui = ui.ProjectSettings.Ui_ProjectSettings()
 		self.ui.setupUi(self)
 
+		self.window_settings = {}
 		self.window_form = SettingsForm([
 			SettingsParameter('width', self.ui.windowWidth),
 			SettingsParameter('height', self.ui.windowHeight),
 			SettingsParameter('title', self.ui.windowTitle)
 		])
 
+		self.logger_settings = {}
 		self.logger_form = SettingsForm([
 			SettingsParameter('logfile', self.ui.logfile),
 			SettingsParameter('append', self.ui.appendLogfile),
@@ -58,6 +58,7 @@ class ProjectSettingsTab(EditorTab):
 	def save_changes_impl(self):
 		self.window_settings.update(self.window_form.get_dict())
 		self.logger_settings.update(self.logger_form.get_dict())
+
 		with open(self.win.project_context.project_file, 'w') as f:
 			toml.dump(self.settings, f)
 
@@ -65,14 +66,14 @@ class ProjectSettingsTab(EditorTab):
 	def revert_changes_impl(self):
 		with open(self.win.project_context.project_file, 'r') as f:
 			self.settings = toml.load(f)
+
 		assert 'context' in self.settings
 		self.context = self.settings['context']
 		assert 'window' in self.context
 		self.window_settings = self.context['window']
+		self.window_form.load_dict(self.window_settings)
 		assert 'logger' in self.context
 		self.logger_settings = self.context['logger']
-
-		self.window_form.load_dict(self.window_settings)
 		self.logger_form.load_dict(self.logger_settings)
 
 	@override

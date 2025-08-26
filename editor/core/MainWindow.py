@@ -68,7 +68,8 @@ class MainWindow(QMainWindow):
 		pass  # TODO v3
 
 	def open_editor_preferences(self):
-		pass  # TODO v3
+		from .tabs import EditorPreferencesTab
+		self.tab_holder.add_tab(EditorPreferencesTab(self))
 
 	@staticmethod
 	def open_documentation():
