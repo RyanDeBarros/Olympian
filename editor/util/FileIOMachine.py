@@ -101,9 +101,8 @@ class FileIOMachine:
 			index = uids.index(old_path)
 			uids.pop(index)
 			uids.insert(index, new_path)
-			tab = self.main_tab_holder.widget(index)
-			if hasattr(tab, "rename") and callable(tab.rename):
-				tab.rename(item)
+			tab = self.main_tab_holder.editor_tab_at(index)
+			tab.rename(item)
 
 	def uc_main_tab_rename_path(self, old_path: Path, new_path: Path):
 		if old_path.is_dir():

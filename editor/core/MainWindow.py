@@ -37,8 +37,8 @@ class MainWindow(QMainWindow):
 		enter_help_mode_shortcut.activated.connect(self.enter_help_mode)
 
 		self.content_browser = self.ui.CBWidget
-		from editor.core.MainTabWidget import MainTabWidget
-		self.tab_holder: MainTabWidget = self.ui.mainTabHolder
+		from editor.core.MainTabHolder import MainTabHolder
+		self.tab_holder: MainTabHolder = self.ui.mainTabHolder
 
 		self.content_browser.init(self)
 		self.tab_holder.init(self)
