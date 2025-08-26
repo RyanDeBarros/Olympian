@@ -9,6 +9,8 @@ from PySide6.QtWidgets import QApplication
 from editor import ui
 from editor.core import MainWindow, InputSignalPathItem
 from editor.core.MainTabHolder import EditorTab
+from editor.core.common import Alerts
+from editor.core.tabs.KeyMap import KEY_MAP
 
 
 class InputType(IntEnum):
@@ -30,7 +32,7 @@ class KeyCaptureFilter(QObject):
 	def eventFilter(self, obj, event):
 		if event.type() == QEvent.Type.KeyPress and isinstance(event, QKeyEvent) and not self.captured:
 			self.captured = True
-			self.callback(event.key(), event.text())
+			self.callback(event)
 			return True
 		return False
 
@@ -183,39 +185,13 @@ class InputSignalTab(EditorTab):
 		self.key_capture_filter = KeyCaptureFilter(self.key_captured)
 		QApplication.instance().installEventFilter(self.key_capture_filter)
 
-	def key_captured(self, key, text):
+	def key_captured(self, key: QKeyEvent):
 		QApplication.instance().removeEventFilter(self.key_capture_filter)
 		self.key_capture_filter = None
-		self.captured_key = key
-
-		special_keys = {
-			Qt.Key.Key_Space: "[SPACE]",
-			Qt.Key.Key_Enter: "[ENTER]",
-			Qt.Key.Key_Return: "[RETURN]",
-			Qt.Key.Key_Tab: "[TAB]",
-			Qt.Key.Key_Backspace: "[BACKSPACE]",
-			Qt.Key.Key_Left: "[LEFT]",
-			Qt.Key.Key_Right: "[RIGHT]",
-			Qt.Key.Key_Up: "[UP]",
-			Qt.Key.Key_Down: "[DOWN]",
-			Qt.Key.Key_Escape: "[ESCAPE]",
-			Qt.Key.Key_Shift: "[SHIFT]",
-			Qt.Key.Key_Control: "[CTRL]",
-			Qt.Key.Key_Alt: "[ALT]",
-			Qt.Key.Key_Delete: "[DEL]",
-			Qt.Key.Key_Insert: "[INS]",
-		}
-
-		if len(text) == 0 or text.isspace() or text == '\x08':
-			if key in special_keys:
-				self.captured_key_text = special_keys[key]
-			elif Qt.Key.Key_F1 <= key <= Qt.Key.Key_F35:
-				self.captured_key_text = f"[F{key - Qt.Key.Key_F1 + 1}]"
-			else:
-				self.captured_key_text = f"U+{key:04X}"
+		k = KEY_MAP.get_from_qt(key.key(), key.modifiers())
+		if k is not None:
+			self.captured_key = k.glfw_code
+			self.captured_key_text = k.text
+			self.ui.keySelectDisplay.setText(self.captured_key_text)
 		else:
-			self.captured_key_text = text
-		self.display_captured_key()
-
-	def display_captured_key(self):
-		self.ui.keySelectDisplay.setText(self.captured_key_text)
+			Alerts.alert_error(self, "Unrecognized key", "Please manually enter the GLFW key code")

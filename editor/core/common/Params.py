@@ -1,4 +1,4 @@
-class ParamList:
+class _ParamList:
 	def __init__(self):
 		self.name_to_value = {}
 		self.value_to_name = {}
@@ -18,7 +18,7 @@ class ParamList:
 			raise KeyError(f"No GL Param with value {value}.")
 
 
-PARAM_LIST = ParamList()
+PARAM_LIST = _ParamList()
 
 
 class Param:
