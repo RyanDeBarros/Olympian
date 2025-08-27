@@ -281,19 +281,20 @@ class InputSignalTab(EditorTab):
 		else:
 			self.ui.keySelectDisplay.setText("Unrecognized key code")
 
+	def signal_exists(self, signal):
+		for i in range(self.ui.selectSignal.count()):
+			if i != self.ui.selectSignal.currentIndex():
+				if signal == self.ui.selectSignal.itemText(i):
+					return True
+		return False
+
 	def new_signal(self):
 		index = self.ui.selectSignal.count()
+		name = f"New Signal ({index})"
+		while self.signal_exists(name):
+			name = f"{name}*"
+
 		with block_signals(self.ui.selectSignal) as selectSignal:
-			name = f"New Signal ({index})"
-			cont = True
-			while cont:
-				cont = False
-				for i in range(selectSignal.count()):
-					if i != selectSignal.currentIndex():
-						if name == selectSignal.itemText(i):
-							name = f"{name}*"
-							cont = True
-							break
 			selectSignal.addItem(name)
 			selectSignal.setCurrentIndex(index)
 
@@ -341,20 +342,17 @@ class InputSignalTab(EditorTab):
 
 	def signal_name_changed(self):
 		name = self.ui.signalName.text()
-		cont = True
-		while cont:
-			cont = False
-			for i in range(self.ui.selectSignal.count()):
-				if i != self.ui.selectSignal.currentIndex():
-					if name == self.ui.selectSignal.itemText(i):
-						name = f"{name}*"
-						cont = True
-						break
+		while self.signal_exists(name):
+			name = f"{name}*"
 
 		previous_name = self.ui.selectSignal.currentText()
-		self.ui.selectSignal.setItemText(self.ui.selectSignal.currentIndex(), name)
+		index = self.ui.selectSignal.currentIndex()
+		if index >= 0:
+			self.ui.selectSignal.setItemText(index, name)
 		with block_signals(self.ui.signalName) as signalName:
 			signalName.setText(name)
+		if index >= 0:
+			self.scratch_signals[self.ui.selectSignal.currentIndex()].basic.name = name
 		self.rename_signal_in_mapping_combos(previous_name, name)
 
 	def convert_signal_from_ui(self) -> Signal.EditorSignal:
@@ -444,19 +442,20 @@ class InputSignalTab(EditorTab):
 		self.ui.invertY.setChecked(signal.conversion.invert[1])
 		self.ui.invertZ.setChecked(signal.conversion.invert[2])
 
+	def mapping_exists(self, mapping):
+		for i in range(self.ui.selectMapping.count()):
+			if i != self.ui.selectMapping.currentIndex():
+				if mapping == self.ui.selectMapping.itemText(i):
+					return True
+		return False
+
 	def new_mapping(self):
 		index = self.ui.selectMapping.count()
+		name = f"New Mapping ({index})"
+		while self.mapping_exists(name):
+			name = f"{name}*"
+
 		with block_signals(self.ui.selectMapping) as selectMapping:
-			name = f"New Mapping ({index})"
-			cont = True
-			while cont:
-				cont = False
-				for i in range(selectMapping.count()):
-					if i != selectMapping.currentIndex():
-						if name == selectMapping.itemText(i):
-							name = f"{name}*"
-							cont = True
-							break
 			selectMapping.addItem(name)
 			selectMapping.setCurrentIndex(index)
 
@@ -496,19 +495,16 @@ class InputSignalTab(EditorTab):
 
 	def mapping_name_changed(self):
 		name = self.ui.mappingName.text()
-		cont = True
-		while cont:
-			cont = False
-			for i in range(self.ui.selectMapping.count()):
-				if i != self.ui.selectMapping.currentIndex():
-					if name == self.ui.selectMapping.itemText(i):
-						name = f"{name}*"
-						cont = True
-						break
+		while self.mapping_exists(name):
+			name = f"{name}*"
 
-		self.ui.selectMapping.setItemText(self.ui.selectMapping.currentIndex(), name)
+		index = self.ui.selectMapping.currentIndex()
+		if index >= 0:
+			self.ui.selectMapping.setItemText(index, name)
 		with block_signals(self.ui.mappingName) as mappingName:
 			mappingName.setText(name)
+		if index >= 0:
+			self.scratch_mappings[index].name = name
 
 	def convert_mapping_from_ui(self) -> Signal.EditorMapping:
 		mapping = Signal.EditorMapping(name=self.ui.mappingName.text())
@@ -631,12 +627,18 @@ class InputSignalTab(EditorTab):
 			with block_signals(combo):
 				if combo.currentText() == signal:
 					self.remove_mapping_signal(row)
-					return
+					break
 				else:
 					for i in range(combo.count()):
 						if combo.itemText(i) == signal:
 							combo.removeItem(i)
 							break
+
+		for mapping in self.scratch_mappings:
+			for i in range(len(mapping.signals)):
+				if mapping.signals[i] == signal:
+					mapping.signals.pop(i)
+					break
 
 	def rename_signal_in_mapping_combos(self, previous_signal, new_signal):
 		for row in range(self.ui.mappingSignalTable.rowCount()):
@@ -645,9 +647,15 @@ class InputSignalTab(EditorTab):
 			with block_signals(combo):
 				if combo.currentText() == previous_signal:
 					combo.setItemText(combo.currentIndex(), new_signal)
-					return
+					break
 				else:
 					for i in range(combo.count()):
 						if combo.itemText(i) == previous_signal:
 							combo.setItemText(i, new_signal)
 							break
+
+		for mapping in self.scratch_mappings:
+			for i in range(len(mapping.signals)):
+				if mapping.signals[i] == previous_signal:
+					mapping.signals[i] = new_signal
+					break
