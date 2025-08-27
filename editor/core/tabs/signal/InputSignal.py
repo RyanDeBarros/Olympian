@@ -35,7 +35,7 @@ class InputSignalTab(EditorTab):
 		self.item = item
 
 		self.scratch_signals: list[Signal.EditorSignal] = []
-		self.scratch_mappings: list[dict] = []
+		self.scratch_mappings: list[Signal.EditorMapping] = []
 		self.ui = ui.InputSignal.Ui_InputSignal()
 		self.ui.setupUi(self)
 
@@ -58,6 +58,13 @@ class InputSignalTab(EditorTab):
 		self.ui.selectSignal.currentIndexChanged.connect(self.select_signal)
 		self.ui.signalName.editingFinished.connect(self.signal_name_changed)
 		self.ui.signalName.returnPressed.connect(lambda: self.ui.signalName.clearFocus())
+
+		self.last_mapping_index = -1
+		self.ui.newMapping.clicked.connect(self.new_mapping)
+		self.ui.deleteMapping.clicked.connect(self.delete_mapping)
+		self.ui.selectMapping.currentIndexChanged.connect(self.select_mapping)
+		self.ui.mappingName.editingFinished.connect(self.mapping_name_changed)
+		self.ui.mappingName.returnPressed.connect(lambda: self.ui.mappingName.clearFocus())
 
 		self.revert_changes_impl()
 		handle_all_children_modification(self, lambda: self.set_asterisk(True))
@@ -82,8 +89,11 @@ class InputSignalTab(EditorTab):
 		for signal in self.scratch_signals:
 			signals.append(Signal.convert_signal_from_editor_to_oly_format(signal).to_dict())
 
-		# TODO v3 update mappings
+		if len(self.scratch_mappings) > 0:
+			self.scratch_mappings[self.ui.selectSignal.currentIndex()] = self.convert_mapping_from_ui()
 		mappings = []
+		for mapping in self.scratch_mappings:
+			mappings.append(Signal.convert_mapping_from_editor_to_oly_format(mapping).to_dict())
 
 		content = {'header': 'signal', 'signal': signals, 'mapping': mappings}
 		with open(self.item.full_path, 'w') as f:
@@ -112,11 +122,25 @@ class InputSignalTab(EditorTab):
 			self.ui.selectSignal.blockSignals(False)
 			self.convert_signal_to_ui(self.scratch_signals[0])
 
+		self.signal_type_changed()
+
 		self.scratch_mappings.clear()
 		mappings = content['mapping'] if 'mapping' in content else []
-		# TODO v3 do the same for mappings
 
-		self.signal_type_changed()
+		self.ui.selectMapping.clear()
+		self.disable_mapping_page()
+
+		if len(mappings) > 0:
+			self.enable_mapping_page()
+			self.ui.selectMapping.blockSignals(True)
+			for i in range(len(mappings)):
+				self.scratch_mappings.append(
+					Signal.convert_mapping_from_oly_to_editor_format(Signal.OlyMapping.from_dict(mappings[i])))
+				self.ui.selectMapping.addItem(self.scratch_mappings[-1].name)
+			self.ui.selectMapping.setCurrentIndex(0)
+			self.last_mapping_index = 0
+			self.ui.selectMapping.blockSignals(False)
+			self.convert_mapping_to_ui(self.scratch_mappings[0])
 
 	@override
 	def rename_impl(self, item: InputSignalPathItem):
@@ -250,7 +274,17 @@ class InputSignalTab(EditorTab):
 	def new_signal(self):
 		index = self.ui.selectSignal.count()
 		self.ui.selectSignal.blockSignals(True)
-		self.ui.selectSignal.addItem(f"New Signal ({index})")
+		name = f"New Signal ({index})"
+		cont = True
+		while cont:
+			cont = False
+			for i in range(self.ui.selectSignal.count()):
+				if i != self.ui.selectSignal.currentIndex():
+					if name == self.ui.selectSignal.itemText(i):
+						name = f"{name}*"
+						cont = True
+						break
+		self.ui.selectSignal.addItem(name)
 		self.ui.selectSignal.setCurrentIndex(index)
 		self.ui.selectSignal.blockSignals(False)
 
@@ -355,7 +389,9 @@ class InputSignalTab(EditorTab):
 		return signal
 
 	def convert_signal_to_ui(self, signal: Signal.EditorSignal):
+		self.ui.signalName.blockSignals(True)
 		self.ui.signalName.setText(signal.basic.name)
+		self.ui.signalName.blockSignals(False)
 		self.signal_name_changed()
 		self.ui.signalTypeSelect.setCurrentIndex(signal.basic.type)
 		match signal.basic.type:
@@ -396,3 +432,84 @@ class InputSignalTab(EditorTab):
 		self.ui.invertX.setChecked(signal.conversion.invert[0])
 		self.ui.invertY.setChecked(signal.conversion.invert[1])
 		self.ui.invertZ.setChecked(signal.conversion.invert[2])
+
+	def new_mapping(self):
+		index = self.ui.selectMapping.count()
+		self.ui.selectMapping.blockSignals(True)
+		name = f"New Mapping ({index})"
+		cont = True
+		while cont:
+			cont = False
+			for i in range(self.ui.selectMapping.count()):
+				if i != self.ui.selectMapping.currentIndex():
+					if name == self.ui.selectMapping.itemText(i):
+						name = f"{name}*"
+						cont = True
+						break
+		self.ui.selectMapping.addItem(name)
+		self.ui.selectMapping.setCurrentIndex(index)
+		self.ui.selectMapping.blockSignals(False)
+
+		self.scratch_mappings.append(Signal.EditorMapping(name=self.ui.mappingName.text()))
+		self.enable_mapping_page()
+		self.convert_mapping_to_ui(self.scratch_mappings[index])
+
+	def delete_mapping(self):
+		index = self.ui.selectMapping.currentIndex()
+		self.scratch_mappings.pop(index)
+		self.ui.selectMapping.blockSignals(True)
+		self.ui.selectMapping.removeItem(index)
+		self.ui.selectMapping.blockSignals(False)
+		if self.ui.selectMapping.count() == 0:
+			self.disable_mapping_page()
+		else:
+			self.convert_mapping_to_ui(self.scratch_mappings[self.ui.selectMapping.currentIndex()])
+
+	def enable_mapping_page(self):
+		self.ui.selectMapping.setDisabled(False)
+		self.ui.deleteMapping.setDisabled(False)
+		self.ui.mappingInfoGroupBox.setDisabled(False)
+
+	def disable_mapping_page(self):
+		self.convert_mapping_to_ui(Signal.EditorMapping(name=""))
+		self.ui.selectMapping.setDisabled(True)
+		self.ui.deleteMapping.setDisabled(True)
+		self.ui.mappingInfoGroupBox.setDisabled(True)
+
+	def select_mapping(self):
+		if self.last_mapping_index >= 0:
+			self.scratch_mappings[self.last_mapping_index] = self.convert_mapping_from_ui()
+		self.last_mapping_index = self.ui.selectMapping.currentIndex()
+		self.ui.mappingName.blockSignals(True)
+		self.ui.mappingName.setText(self.ui.selectMapping.currentText())
+		self.ui.mappingName.blockSignals(False)
+		self.convert_mapping_to_ui(self.scratch_mappings[self.last_mapping_index])
+
+	def mapping_name_changed(self):
+		name = self.ui.mappingName.text()
+		cont = True
+		while cont:
+			cont = False
+			for i in range(self.ui.selectMapping.count()):
+				if i != self.ui.selectMapping.currentIndex():
+					if name == self.ui.selectMapping.itemText(i):
+						name = f"{name}*"
+						cont = True
+						break
+
+		self.ui.selectMapping.setItemText(self.ui.selectMapping.currentIndex(), name)
+		self.ui.mappingName.blockSignals(True)
+		self.ui.mappingName.setText(name)
+		self.ui.mappingName.blockSignals(False)
+
+	def convert_mapping_from_ui(self) -> Signal.EditorMapping:
+		mapping = Signal.EditorMapping(name=self.ui.mappingName.text())
+		# TODO v3 load signals array
+		return mapping
+
+	def convert_mapping_to_ui(self, mapping: Signal.EditorMapping):
+		self.ui.mappingName.blockSignals(True)
+		self.ui.mappingName.setText(mapping.name)
+		self.ui.mappingName.blockSignals(False)
+		self.mapping_name_changed()
+	# TODO v3 load signals array

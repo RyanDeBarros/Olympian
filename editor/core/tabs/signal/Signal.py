@@ -258,3 +258,33 @@ def convert_signal_from_oly_to_editor_format(signal: OlySignal) -> EditorSignal:
 					d.conversion.dim = OLY_CONVERSION_2D_NAMES.index(signal.modifier.conversion) + 1
 
 	return d
+
+
+@dataclass
+class EditorMapping:
+	name: str
+	signals: list[str] = field(default_factory=lambda: [])
+
+
+@dataclass
+class OlyMapping:
+	id: str
+	signals: list[str] = field(default_factory=lambda: [])
+
+	@staticmethod
+	def from_dict(d: dict) -> OlyMapping:
+		return OlyMapping(id=d['id'], signals=d['signals'] if 'signals' in d else [])
+
+	def to_dict(self) -> dict:
+		return {
+			'id': self.id,
+			'signals': self.signals
+		}
+
+
+def convert_mapping_from_editor_to_oly_format(mapping: EditorMapping) -> OlyMapping:
+	return OlyMapping(id=mapping.name, signals=mapping.signals)
+
+
+def convert_mapping_from_oly_to_editor_format(mapping: OlyMapping) -> EditorMapping:
+	return EditorMapping(name=mapping.id, signals=mapping.signals)
