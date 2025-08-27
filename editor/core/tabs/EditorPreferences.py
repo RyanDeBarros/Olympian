@@ -5,8 +5,9 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QPixmap, QIcon
 
 from editor import ui
-from editor.core import PREFERENCES, MainWindow, AbstractPathItem, SettingsParameter, SettingsForm
+from editor.core import MainWindow, AbstractPathItem, SettingsParameter, SettingsForm
 from editor.core.MainTabHolder import EditorTab
+from editor.core.EditorPreferences import PREFERENCES
 
 
 class EditorPreferencesTab(EditorTab):

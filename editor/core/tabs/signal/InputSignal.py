@@ -73,6 +73,12 @@ class InputSignalTab(EditorTab):
 
 		self.revert_changes_impl()
 		handle_all_children_modification(self, lambda: self.set_asterisk(True))
+		self.ui.newSignal.clicked.connect(lambda: self.set_asterisk(True))
+		self.ui.deleteSignal.clicked.connect(lambda: self.set_asterisk(True))
+		self.ui.newMapping.clicked.connect(lambda: self.set_asterisk(True))
+		self.ui.deleteMapping.clicked.connect(lambda: self.set_asterisk(True))
+		self.ui.mappingAppendSignal.clicked.connect(lambda: self.set_asterisk(True))
+		self.ui.mappingClearSignals.clicked.connect(lambda: self.set_asterisk(True))
 
 	@override
 	def uid(self):
@@ -540,6 +546,7 @@ class InputSignalTab(EditorTab):
 
 		delete = QPushButton(QIcon('res/images/Delete.png'), "")
 		delete.clicked.connect(lambda: self.remove_mapping_signal(row))
+		delete.clicked.connect(lambda: self.set_asterisk(True))
 
 		self.ui.mappingSignalTable.insertRow(row)
 		self.ui.mappingSignalTable.setCellWidget(row, 0, combo)
@@ -560,6 +567,7 @@ class InputSignalTab(EditorTab):
 			assert isinstance(delete, QPushButton)
 			delete.clicked.disconnect()
 			delete.clicked.connect(lambda: self.remove_mapping_signal(i))
+			delete.clicked.connect(lambda: self.set_asterisk(True))
 		self.mapping_signal_combo_changed()
 
 	def get_signal_list(self):

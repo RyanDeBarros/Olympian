@@ -1,16 +1,15 @@
 import os
+import random
 import string
 from pathlib import Path
-import random
 from typing import Optional
 
 import send2trash
 from PySide6.QtGui import QUndoCommand
 
-from editor.core import ProjectContext
-
 
 class FileIOMachine:
+	from editor.core import ProjectContext
 	def __init__(self, project_context: ProjectContext):
 		self.project_context = project_context
 		self.content_browser = self.project_context.main_window.content_browser

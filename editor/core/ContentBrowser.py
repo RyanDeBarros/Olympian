@@ -13,10 +13,10 @@ from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView
 	QVBoxLayout, QUndoView
 
 from editor.core import MainWindow
+from editor.core.FileIOMachine import FileIOMachine
 from editor.core.EditorPreferences import PREFERENCES
 from editor.core.common import Alerts
 from editor.core.path_items import *
-from editor.util import FileIOMachine
 
 
 class ContentBrowserFolderView(QListView):

@@ -1,9 +1,6 @@
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
-from editor.core import StandardFilePathItem
-from editor.core.ProjectContext import ProjectContext
-
 
 class MainWindow(QMainWindow):
 	def __init__(self, open_start_menu, project_file):
@@ -13,6 +10,7 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("Olympian Editor")
 		# TODO v4 create and set window icon
 
+		from editor.core.ProjectContext import ProjectContext
 		self.project_context = ProjectContext(project_file, self)
 
 		from editor import ui
