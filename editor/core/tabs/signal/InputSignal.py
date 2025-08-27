@@ -1,4 +1,3 @@
-from enum import IntEnum
 from typing import override, Optional
 
 import toml
@@ -7,20 +6,13 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QApplication
 
 from editor import ui
-from editor.core import MainWindow, InputSignalPathItem, GLFW_MOD_CONTROL, GLFW_MOD_ALT, GLFW_MOD_SHIFT
+from editor.core import MainWindow, InputSignalPathItem
 from editor.core.MainTabHolder import EditorTab
 from editor.core.common import Alerts
-from editor.core.tabs.KeyMap import KEY_MAP
-
-
-class InputType(IntEnum):
-	KEY = 0
-	MOUSE_BUTTON = 1
-	GAMEPAD_BUTTON = 2
-	GAMEPAD_1D_AXIS = 3
-	GAMEPAD_2D_AXIS = 4
-	CURSOR_POSITION = 5
-	SCROLL = 6
+from editor.core.common.SettingsForm import handle_all_children_modification
+from editor.core.tabs.signal import Signal
+from editor.core.tabs.signal.KeyMap import KEY_MAP
+from editor.core.tabs.signal.Signal import InputType
 
 
 class KeyCaptureFilter(QObject):
@@ -42,7 +34,7 @@ class InputSignalTab(EditorTab):
 		super().__init__(win)
 		self.item = item
 
-		self.scratch_signals: list[dict] = []
+		self.scratch_signals: list[Signal.EditorSignal] = []
 		self.scratch_mappings: list[dict] = []
 		self.ui = ui.InputSignal.Ui_InputSignal()
 		self.ui.setupUi(self)
@@ -68,6 +60,7 @@ class InputSignalTab(EditorTab):
 		self.ui.signalName.returnPressed.connect(lambda: self.ui.signalName.clearFocus())
 
 		self.revert_changes_impl()
+		handle_all_children_modification(self, lambda: self.set_asterisk(True))
 
 	@override
 	def uid(self):
@@ -87,7 +80,7 @@ class InputSignalTab(EditorTab):
 			self.scratch_signals[self.ui.selectSignal.currentIndex()] = self.convert_signal_from_ui()
 		signals = []
 		for signal in self.scratch_signals:
-			signals.append(self.convert_signal_to_oly_format(signal))
+			signals.append(Signal.convert_signal_from_editor_to_oly_format(signal).to_dict())
 
 		# TODO v3 update mappings
 		mappings = []
@@ -111,8 +104,9 @@ class InputSignalTab(EditorTab):
 			self.enable_signal_page()
 			self.ui.selectSignal.blockSignals(True)
 			for i in range(len(signals)):
-				self.scratch_signals.append(self.convert_signal_from_oly_format(signals[i]))
-				self.ui.selectSignal.addItem(self.scratch_signals[-1]['basic']['name'])
+				self.scratch_signals.append(
+					Signal.convert_signal_from_oly_to_editor_format(Signal.OlySignal.from_dict(signals[i])))
+				self.ui.selectSignal.addItem(self.scratch_signals[-1].basic.name)
 			self.ui.selectSignal.setCurrentIndex(0)
 			self.last_signal_index = 0
 			self.ui.selectSignal.blockSignals(False)
@@ -153,10 +147,13 @@ class InputSignalTab(EditorTab):
 		self._set_layout_visible(self.ui.signalGamepad1DAxisLayout, stype == InputType.GAMEPAD_1D_AXIS)
 		self._set_widget_visible(self.ui.signalGamepad2DAxisLabel, stype == InputType.GAMEPAD_2D_AXIS)
 		self._set_layout_visible(self.ui.signalGamepad2DAxisLayout, stype == InputType.GAMEPAD_2D_AXIS)
-		self._set_widget_visible(self.ui.signalDeadzoneLabel, stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
-		self._set_widget_visible(self.ui.signalDeadzone, stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
-		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear.
-		self.ui.preDeadzoneSpacer.changeSize(0, 10 if stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS) else 0)
+		self._set_widget_visible(self.ui.signalDeadzoneLabel,
+								 stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
+		self._set_widget_visible(self.ui.signalDeadzone,
+								 stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
+		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear. sometimes the post swizzle spacer doesn't appear either.
+		self.ui.preDeadzoneSpacer.changeSize(0, 10 if stype in (InputType.GAMEPAD_1D_AXIS,
+																InputType.GAMEPAD_2D_AXIS) else 0)
 
 		self._set_widget_visible(self.ui.dimensionConversionLabel0D,
 								 stype in (InputType.KEY, InputType.MOUSE_BUTTON, InputType.GAMEPAD_BUTTON))
@@ -251,14 +248,14 @@ class InputSignalTab(EditorTab):
 			self.ui.keySelectDisplay.setText("Unrecognized key code")
 
 	def new_signal(self):
-		self.scratch_signals.append({})
 		index = self.ui.selectSignal.count()
 		self.ui.selectSignal.blockSignals(True)
 		self.ui.selectSignal.addItem(f"New Signal ({index})")
 		self.ui.selectSignal.setCurrentIndex(index)
 		self.ui.selectSignal.blockSignals(False)
 
-		self.scratch_signals[index] = self.default_signal(self.ui.signalName.text())
+		self.scratch_signals.append(
+			Signal.EditorSignal(basic=Signal.BasicSection(name=self.ui.signalName.text(), type=InputType.KEY, key=32)))
 		self.enable_signal_page()
 		self.convert_signal_to_ui(self.scratch_signals[index])
 
@@ -281,7 +278,7 @@ class InputSignalTab(EditorTab):
 		self.ui.signalConversionGroupBox.setDisabled(False)
 
 	def disable_signal_page(self):
-		self.convert_signal_to_ui(self.default_signal(""))
+		self.convert_signal_to_ui(Signal.EditorSignal(basic=Signal.BasicSection(name="", type=InputType.KEY, key=32)))
 		self.ui.selectSignal.setDisabled(True)
 		self.ui.deleteSignal.setDisabled(True)
 		self.ui.signalBasicGroupBox.setDisabled(True)
@@ -314,254 +311,88 @@ class InputSignalTab(EditorTab):
 		self.ui.signalName.setText(name)
 		self.ui.signalName.blockSignals(False)
 
-	@staticmethod
-	def default_signal(name):
-		return {
-			'basic': {'name': name, 'type': InputType.KEY, 'key': 32},
-			'mods': {'ctrl': 0, 'shift': 0, 'alt': 0},
-			'conversion': {'dim': 0, 'multiplier': [1.0, 1.0, 1.0], 'invert': [False, False, False]}
-		}
+	def convert_signal_from_ui(self) -> Signal.EditorSignal:
+		signal = Signal.EditorSignal(
+			Signal.BasicSection(name=self.ui.signalName.text(), type=self.ui.signalTypeSelect.currentIndex()))
 
-	def convert_signal_from_ui(self):
-		signal = {}
-		basic = {
-			'name': self.ui.signalName.text(),
-			'type': self.ui.signalTypeSelect.currentIndex()
-		}
-		match basic['type']:
+		match signal.basic.type:
 			case InputType.KEY:
-				basic['key'] = self.ui.keySelectSpinBox.value()
+				signal.basic.key = self.ui.keySelectSpinBox.value()
 			case InputType.MOUSE_BUTTON:
-				basic['button'] = self.ui.mouseButtonSelect.currentIndex()
+				signal.basic.button = self.ui.mouseButtonSelect.currentIndex()
 			case InputType.GAMEPAD_BUTTON:
-				basic['button'] = self.ui.gamepadButtonSelect.currentIndex()
+				signal.basic.button = self.ui.gamepadButtonSelect.currentIndex()
 			case InputType.GAMEPAD_1D_AXIS:
-				basic['axis1d'] = self.ui.gamepad1DAxisSelect.currentIndex()
-				basic['deadzone'] = self.ui.signalDeadzone.value()
+				signal.basic.axis1d = self.ui.gamepad1DAxisSelect.currentIndex()
+				signal.basic.deadzone = self.ui.signalDeadzone.value()
 			case InputType.GAMEPAD_2D_AXIS:
-				basic['axis2d'] = self.ui.gamepad2DAxisSelect.currentIndex()
-				basic['deadzone'] = self.ui.signalDeadzone.value()
+				signal.basic.axis2d = self.ui.gamepad2DAxisSelect.currentIndex()
+				signal.basic.deadzone = self.ui.signalDeadzone.value()
 
-		if basic['type'] in (InputType.KEY, InputType.MOUSE_BUTTON):
-			signal['mods'] = {
-				'ctrl': self.ui.keyModCtrl.currentIndex(),
-				'shift': self.ui.keyModShift.currentIndex(),
-				'alt': self.ui.keyModAlt.currentIndex(),
-			}
+		if signal.basic.type in (InputType.KEY, InputType.MOUSE_BUTTON):
+			signal.mods = Signal.ModSection(
+				ctrl=self.ui.keyModCtrl.currentIndex(),
+				shift=self.ui.keyModShift.currentIndex(),
+				alt=self.ui.keyModAlt.currentIndex()
+			)
 
-		conversion = {
-			'multiplier': [self.ui.multiplierX.value(), self.ui.multiplierY.value(), self.ui.multiplierZ.value()],
-			'invert': [self.ui.invertX.isChecked(), self.ui.invertY.isChecked(), self.ui.invertZ.isChecked()]
-		}
-		match basic['type']:
+		signal.conversion.multiplier = [self.ui.multiplierX.value(), self.ui.multiplierY.value(),
+										self.ui.multiplierZ.value()]
+		signal.conversion.invert = [self.ui.invertX.isChecked(), self.ui.invertY.isChecked(),
+									self.ui.invertZ.isChecked()]
+		match signal.basic.type:
 			case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-				conversion['dim'] = self.ui.dimensionConversion0D.currentIndex()
+				signal.conversion.dim = self.ui.dimensionConversion0D.currentIndex()
 			case InputType.GAMEPAD_1D_AXIS:
-				conversion['dim'] = self.ui.dimensionConversion1D.currentIndex()
+				signal.conversion.dim = self.ui.dimensionConversion1D.currentIndex()
 			case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
-				conversion['dim'] = self.ui.dimensionConversion2D.currentIndex()
+				signal.conversion.dim = self.ui.dimensionConversion2D.currentIndex()
 		if self.ui.swizzle2D.isVisible():
-			conversion['swizzle'] = self.ui.swizzle2D.currentText()
+			signal.conversion.swizzle = self.ui.swizzle2D.currentText()
 		elif self.ui.swizzle3D.isVisible():
-			conversion['swizzle'] = self.ui.swizzle3D.currentText()
+			signal.conversion.swizzle = self.ui.swizzle3D.currentText()
 
-		signal.update({
-			'basic': basic,
-			'conversion': conversion
-		})
 		return signal
 
-	def convert_signal_to_ui(self, signal):
-		basic = signal['basic']
-		self.ui.signalName.setText(basic['name'])
+	def convert_signal_to_ui(self, signal: Signal.EditorSignal):
+		self.ui.signalName.setText(signal.basic.name)
 		self.signal_name_changed()
-		self.ui.signalTypeSelect.setCurrentIndex(basic['type'])
-		match basic['type']:
+		self.ui.signalTypeSelect.setCurrentIndex(signal.basic.type)
+		match signal.basic.type:
 			case InputType.KEY:
-				self.ui.keySelectSpinBox.setValue(basic['key'])
+				self.ui.keySelectSpinBox.setValue(signal.basic.key)
 			case InputType.MOUSE_BUTTON:
-				self.ui.mouseButtonSelect.setCurrentIndex(basic['button'])
+				self.ui.mouseButtonSelect.setCurrentIndex(signal.basic.button)
 			case InputType.GAMEPAD_BUTTON:
-				self.ui.gamepadButtonSelect.setCurrentIndex(basic['button'])
+				self.ui.gamepadButtonSelect.setCurrentIndex(signal.basic.button)
 			case InputType.GAMEPAD_1D_AXIS:
-				self.ui.gamepad1DAxisSelect.setCurrentIndex(basic['axis1d'])
-				self.ui.signalDeadzone.setValue(basic['deadzone'])
+				self.ui.gamepad1DAxisSelect.setCurrentIndex(signal.basic.axis1d)
+				self.ui.signalDeadzone.setValue(signal.basic.deadzone)
 			case InputType.GAMEPAD_2D_AXIS:
-				self.ui.gamepad2DAxisSelect.setCurrentIndex(basic['axis2d'])
-				self.ui.signalDeadzone.setValue(basic['deadzone'])
+				self.ui.gamepad2DAxisSelect.setCurrentIndex(signal.basic.axis2d)
+				self.ui.signalDeadzone.setValue(signal.basic.deadzone)
 
-		if 'mods' in signal:
-			mods = signal['mods']
-			self.ui.keyModCtrl.setCurrentIndex(mods['ctrl'])
-			self.ui.keyModShift.setCurrentIndex(mods['shift'])
-			self.ui.keyModAlt.setCurrentIndex(mods['alt'])
+		if signal.mods is not None:
+			self.ui.keyModCtrl.setCurrentIndex(signal.mods.ctrl)
+			self.ui.keyModShift.setCurrentIndex(signal.mods.shift)
+			self.ui.keyModAlt.setCurrentIndex(signal.mods.alt)
 
-		conversion = signal['conversion']
-		match basic['type']:
+		match signal.basic.type:
 			case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-				self.ui.dimensionConversion0D.setCurrentIndex(conversion['dim'])
+				self.ui.dimensionConversion0D.setCurrentIndex(signal.conversion.dim)
 			case InputType.GAMEPAD_1D_AXIS:
-				self.ui.dimensionConversion1D.setCurrentIndex(conversion['dim'])
+				self.ui.dimensionConversion1D.setCurrentIndex(signal.conversion.dim)
 			case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
-				self.ui.dimensionConversion2D.setCurrentIndex(conversion['dim'])
+				self.ui.dimensionConversion2D.setCurrentIndex(signal.conversion.dim)
 		if self.ui.swizzle2D.isVisible():
-			self.ui.swizzle2D.setCurrentText(conversion.get('swizzle', 'None'))
+			swizzle = signal.conversion.swizzle
+			self.ui.swizzle2D.setCurrentText(swizzle if swizzle is not None else 'None')
 		elif self.ui.swizzle3D.isVisible():
-			self.ui.swizzle3D.setCurrentText(conversion.get('swizzle', 'None'))
-		self.ui.multiplierX.setValue(conversion['multiplier'][0])
-		self.ui.multiplierY.setValue(conversion['multiplier'][1])
-		self.ui.multiplierZ.setValue(conversion['multiplier'][2])
-		self.ui.invertX.setChecked(conversion['invert'][0])
-		self.ui.invertY.setChecked(conversion['invert'][1])
-		self.ui.invertZ.setChecked(conversion['invert'][2])
-
-	@staticmethod
-	def convert_signal_to_oly_format(signal):
-		basic = signal['basic']
-
-		d = {
-			'id': basic['name'],
-			'binding':
-				['key', 'mouse button', 'gamepad button', 'gamepad axis 1d', 'gamepad axis 2d', 'cursor pos', 'scroll'][
-					basic['type']]
-		}
-
-		match basic['type']:
-			case 0:
-				d['key'] = basic['key']
-			case 1:
-				d['button'] = basic['button']
-			case 2:
-				d['button'] = basic['button']
-			case 3:
-				d['axis1d'] = basic['axis1d']
-				d['deadzone'] = basic['deadzone']
-			case 4:
-				d['axis2d'] = basic['axis2d']
-				d['deadzone'] = basic['deadzone']
-
-		if 'mods' in signal:
-			d['req mods'] = 0
-			d['ban mods'] = 0
-			mods = signal['mods']
-			if mods['ctrl'] == 1:
-				d['req mods'] |= GLFW_MOD_CONTROL.value
-			elif mods['ctrl'] == 2:
-				d['ban mods'] |= GLFW_MOD_CONTROL.value
-			if mods['shift'] == 1:
-				d['req mods'] |= GLFW_MOD_SHIFT.value
-			elif mods['shift'] == 2:
-				d['ban mods'] |= GLFW_MOD_SHIFT.value
-			if mods['alt'] == 1:
-				d['req mods'] |= GLFW_MOD_ALT.value
-			elif mods['alt'] == 2:
-				d['ban mods'] |= GLFW_MOD_ALT.value
-		# TODO v3 add mods support for SUPER, CAPS_LOCK, and NUM_LOCK
-
-		conversion = signal['conversion']
-		d['modifier'] = {}
-		modifier: dict = d['modifier']
-		if 'swizzle' in conversion and conversion['swizzle'] != 'None':
-			modifier['swizzle'] = conversion['swizzle']
-		modifier['multiplier'] = conversion['multiplier']
-		modifier['invert'] = conversion['invert']
-
-		dim = conversion['dim']
-		if dim > 0:
-			match basic['type']:
-				case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-					modifier['conversion'] = ['TO_1D', 'TO_2D', 'TO_3D'][dim - 1]
-				case InputType.GAMEPAD_1D_AXIS:
-					modifier['conversion'] = ['TO_0D', 'TO_2D', 'TO_3D'][dim - 1]
-				case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
-					modifier['conversion'] = \
-						['TO_0D_X', 'TO_0D_Y', 'TO_0D_XY', 'TO_1D_X', 'TO_1D_Y', 'TO_1D_XY', 'TO_3D_0', 'TO_3D_1'][dim - 1]
-
-		return d
-
-	@staticmethod
-	def convert_signal_from_oly_format(signal):
-		d = {
-			'basic': {
-				'name': signal['id'],
-				'type': ['key', 'mouse button', 'gamepad button', 'gamepad axis 1d', 'gamepad axis 2d', 'cursor pos',
-						 'scroll'].index(signal['binding'])
-			},
-			'conversion': {
-				'dim': 0,
-				'multiplier': [1.0, 1.0, 1.0],
-				'invert': [False, False, False]
-			}
-		}
-		basic = d['basic']
-
-		match basic['type']:
-			case 0:
-				basic['key'] = signal['key']
-			case 1:
-				basic['button'] = signal['button']
-			case 2:
-				basic['button'] = signal['button']
-			case 3:
-				basic['axis1d'] = signal['axis1d']
-				basic['deadzone'] = signal['deadzone']
-			case 4:
-				basic['axis2d'] = signal['axis2d']
-				basic['deadzone'] = signal['deadzone']
-
-		if basic['type'] in (InputType.KEY, InputType.MOUSE_BUTTON):
-			d['mods'] = {
-				'ctrl': 0,
-				'shift': 0,
-				'alt': 0
-			}
-
-			if 'req mods' in signal:
-				if signal['req mods'] & GLFW_MOD_CONTROL.value:
-					d['mods']['ctrl'] = 1
-				if signal['req mods'] & GLFW_MOD_SHIFT.value:
-					d['mods']['shift'] = 1
-				if signal['req mods'] & GLFW_MOD_ALT.value:
-					d['mods']['alt'] = 1
-
-			if 'ban mods' in signal:
-				if signal['ban mods'] & GLFW_MOD_CONTROL.value:
-					d['mods']['ctrl'] = 2
-				if signal['ban mods'] & GLFW_MOD_SHIFT.value:
-					d['mods']['shift'] = 2
-				if signal['ban mods'] & GLFW_MOD_ALT.value:
-					d['mods']['alt'] = 2
-
-		if 'modifier' in signal:
-			modifier = signal['modifier']
-			conversion = d['conversion']
-			if 'swizzle' in modifier:
-				conversion['swizzle'] = modifier['swizzle']
-			if 'multiplier' in modifier:
-				multiplier = modifier['multiplier']
-				if len(multiplier) >= 1:
-					conversion['multiplier'][0] = multiplier[0]
-				if len(multiplier) >= 2:
-					conversion['multiplier'][1] = multiplier[1]
-				if len(multiplier) >= 3:
-					conversion['multiplier'][2] = multiplier[2]
-			if 'invert' in modifier:
-				invert = modifier['invert']
-				if len(invert) >= 1:
-					conversion['invert'][0] = invert[0]
-				if len(invert) >= 2:
-					conversion['invert'][1] = invert[1]
-				if len(invert) >= 3:
-					conversion['invert'][2] = invert[2]
-			if 'conversion' in modifier:
-				dim = modifier['conversion']
-				match basic['type']:
-					case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-						conversion['dim'] = ['TO_1D', 'TO_2D', 'TO_3D'].index(dim) + 1
-					case InputType.GAMEPAD_1D_AXIS:
-						conversion['dim'] = ['TO_0D', 'TO_2D', 'TO_3D'].index(dim) + 1
-					case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
-						conversion['dim'] = ['TO_0D_X', 'TO_0D_Y', 'TO_0D_XY', 'TO_1D_X', 'TO_1D_Y', 'TO_1D_XY',
-											 'TO_3D_0', 'TO_3D_1'].index(dim) + 1
-
-		return d
+			swizzle = signal.conversion.swizzle
+			self.ui.swizzle3D.setCurrentText(swizzle if swizzle is not None else 'None')
+		self.ui.multiplierX.setValue(signal.conversion.multiplier[0])
+		self.ui.multiplierY.setValue(signal.conversion.multiplier[1])
+		self.ui.multiplierZ.setValue(signal.conversion.multiplier[2])
+		self.ui.invertX.setChecked(signal.conversion.invert[0])
+		self.ui.invertY.setChecked(signal.conversion.invert[1])
+		self.ui.invertZ.setChecked(signal.conversion.invert[2])

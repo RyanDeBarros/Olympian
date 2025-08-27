@@ -6,44 +6,44 @@ header = "signal"
 [[signal]]
 id = "move left"
 binding = "key"
+req_mods = 0
+ban_mods = 0
 key = 263
-"req mods" = 0
-"ban mods" = 0
 
 [signal.modifier]
+conversion = "TO_2D"
 multiplier = [ -1.0, 0.0, 1.0,]
 invert = [ false, false, false,]
-conversion = "TO_2D"
 [[signal]]
 id = "move right"
 binding = "key"
+req_mods = 0
+ban_mods = 0
 key = 262
-"req mods" = 0
-"ban mods" = 0
 
 [signal.modifier]
+conversion = "TO_2D"
 multiplier = [ 1.0, 0.0, 1.0,]
 invert = [ false, false, false,]
-conversion = "TO_2D"
-[[signal]]
-id = "move down"
-binding = "key"
-key = 264
-"req mods" = 0
-"ban mods" = 0
-
-[signal.modifier]
-multiplier = [ 0.0, -1.0, 1.0,]
-invert = [ false, false, false,]
-conversion = "TO_2D"
 [[signal]]
 id = "move up"
 binding = "key"
+req_mods = 0
+ban_mods = 0
 key = 265
-"req mods" = 0
-"ban mods" = 0
 
 [signal.modifier]
+conversion = "TO_2D"
 multiplier = [ 0.0, 1.0, 1.0,]
 invert = [ false, false, false,]
+[[signal]]
+id = "move down"
+binding = "key"
+req_mods = 0
+ban_mods = 0
+key = 264
+
+[signal.modifier]
 conversion = "TO_2D"
+multiplier = [ 0.0, -1.0, 1.0,]
+invert = [ false, false, false,]

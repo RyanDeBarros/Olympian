@@ -122,8 +122,8 @@ namespace oly::reg
 		if (!key)
 			return;
 		input::KeyBinding b{ .key = (int)key.value() };
-		b.required_key_mods = (int)node["req mods"].value<int64_t>().value_or(0);
-		b.forbidden_key_mods = (int)node["ban mods"].value<int64_t>().value_or(0);
+		b.required_key_mods = (int)node["req_mods"].value<int64_t>().value_or(0);
+		b.forbidden_key_mods = (int)node["ban_mods"].value<int64_t>().value_or(0);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -135,8 +135,8 @@ namespace oly::reg
 		if (!button)
 			return;
 		input::MouseButtonBinding b{ .button = (int)button.value() };
-		b.required_button_mods = (int)node["req mods"].value<int64_t>().value_or(0);
-		b.forbidden_button_mods = (int)node["ban mods"].value<int64_t>().value_or(0);
+		b.required_button_mods = (int)node["req_mods"].value<int64_t>().value_or(0);
+		b.forbidden_button_mods = (int)node["ban_mods"].value<int64_t>().value_or(0);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);

@@ -1,5 +1,9 @@
 header = "signal"
-
+mapping = []
 [[signal]]
-"id"      = "drag"
-"binding" = "cursor pos"
+id = "drag"
+binding = "cursor pos"
+
+[signal.modifier]
+multiplier = [ 1.0, 1.0, 1.0,]
+invert = [ false, false, false,]

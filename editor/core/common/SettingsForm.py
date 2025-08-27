@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit
+from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QWidget
 
 from editor.core.common import PARAM_LIST
 
@@ -74,19 +74,32 @@ class SettingsForm:
 
 	@staticmethod
 	def modified_event(control):
-			if isinstance(control, QComboBox):
-				return control.currentIndexChanged
-			elif isinstance(control, QCheckBox):
-				return control.stateChanged
-			elif isinstance(control, QSpinBox):
-				return control.valueChanged
-			elif isinstance(control, QDoubleSpinBox):
-				return control.valueChanged
-			elif isinstance(control, QLineEdit):
-				return control.textChanged
-			else:
-				raise TypeError(f"Unknown control type {type(control)}")
+		if isinstance(control, QComboBox):
+			return control.currentIndexChanged
+		elif isinstance(control, QCheckBox):
+			return control.stateChanged
+		elif isinstance(control, QSpinBox):
+			return control.valueChanged
+		elif isinstance(control, QDoubleSpinBox):
+			return control.valueChanged
+		elif isinstance(control, QLineEdit):
+			return control.textChanged
+		else:
+			raise TypeError(f"Unknown control type {type(control)}")
 
 	def connect_modified(self, handler):
 		for control in self.params.values():
 			SettingsForm.modified_event(control).connect(handler)
+
+
+def handle_all_children_modification(widget: QWidget, handler):
+	for child in widget.findChildren(QComboBox):
+		child.currentIndexChanged.connect(handler)
+	for child in widget.findChildren(QCheckBox):
+		child.stateChanged.connect(handler)
+	for child in widget.findChildren(QSpinBox):
+		child.valueChanged.connect(handler)
+	for child in widget.findChildren(QDoubleSpinBox):
+		child.valueChanged.connect(handler)
+	for child in widget.findChildren(QLineEdit):
+		child.textChanged.connect(handler)
