@@ -294,16 +294,20 @@ class InputSignalTab(EditorTab):
 		self.scratch_signals.append(Signal.EditorSignal(basic=Signal.BasicSection(name=name, type=InputType.KEY, key=32)))
 		self.enable_signal_page()
 		self.select_signal()
+		self.append_signal_to_mapping_combos(name)
 
 	def delete_signal(self):
 		index = self.ui.selectSignal.currentIndex()
+		name = self.ui.selectSignal.currentText()
 		self.scratch_signals.pop(index)
 		with block_signals(self.ui.selectSignal) as selectSignal:
 			selectSignal.removeItem(index)
 		if self.ui.selectSignal.count() == 0:
 			self.disable_signal_page()
+			self.mapping_clear_signals()
 		else:
 			self.convert_signal_to_ui(self.scratch_signals[self.ui.selectSignal.currentIndex()])
+			self.remove_signal_from_mapping_combos(name)
 
 	def enable_signal_page(self):
 		self.ui.selectSignal.setDisabled(False)
@@ -321,11 +325,12 @@ class InputSignalTab(EditorTab):
 		self.ui.signalConversionGroupBox.setDisabled(True)
 
 	def select_signal(self):
+		with block_signals(self.ui.signalName) as signalName:
+			signalName.setText(self.ui.selectSignal.currentText())
+			self.scratch_signals[self.ui.selectSignal.currentIndex()].basic.name = signalName.text()
 		if self.last_signal_index >= 0:
 			self.scratch_signals[self.last_signal_index] = self.convert_signal_from_ui()
 		self.last_signal_index = self.ui.selectSignal.currentIndex()
-		with block_signals(self.ui.signalName) as signalName:
-			signalName.setText(self.ui.selectSignal.currentText())
 		self.convert_signal_to_ui(self.scratch_signals[self.last_signal_index])
 
 	def signal_name_changed(self):
@@ -340,9 +345,11 @@ class InputSignalTab(EditorTab):
 						cont = True
 						break
 
+		previous_name = self.ui.selectSignal.currentText()
 		self.ui.selectSignal.setItemText(self.ui.selectSignal.currentIndex(), name)
 		with block_signals(self.ui.signalName) as signalName:
 			signalName.setText(name)
+		self.rename_signal_in_mapping_combos(previous_name, name)
 
 	def convert_signal_from_ui(self) -> Signal.EditorSignal:
 		signal = Signal.EditorSignal(
@@ -473,11 +480,12 @@ class InputSignalTab(EditorTab):
 		self.ui.mappingInfoGroupBox.setDisabled(True)
 
 	def select_mapping(self):
+		with block_signals(self.ui.mappingName) as mappingName:
+			mappingName.setText(self.ui.selectMapping.currentText())
+			self.scratch_mappings[self.ui.selectMapping.currentIndex()].name = mappingName.text()
 		if self.last_mapping_index >= 0:
 			self.scratch_mappings[self.last_mapping_index] = self.convert_mapping_from_ui()
 		self.last_mapping_index = self.ui.selectMapping.currentIndex()
-		with block_signals(self.ui.mappingName) as mappingName:
-			mappingName.setText(self.ui.selectMapping.currentText())
 		self.convert_mapping_to_ui(self.scratch_mappings[self.last_mapping_index])
 
 	def mapping_name_changed(self):
@@ -600,3 +608,38 @@ class InputSignalTab(EditorTab):
 				if not inserted:
 					combo.addItem(current_signal)
 					combo.setCurrentIndex(len(unused_signals))
+
+	def append_signal_to_mapping_combos(self, signal):
+		for row in range(self.ui.mappingSignalTable.rowCount()):
+			combo = self.ui.mappingSignalTable.cellWidget(row, 0)
+			assert isinstance(combo, QComboBox)
+			with block_signals(combo):
+				combo.addItem(signal)
+
+	def remove_signal_from_mapping_combos(self, signal):
+		for row in range(self.ui.mappingSignalTable.rowCount()):
+			combo = self.ui.mappingSignalTable.cellWidget(row, 0)
+			assert isinstance(combo, QComboBox)
+			with block_signals(combo):
+				if combo.currentText() == signal:
+					self.remove_mapping_signal(row)
+					return
+				else:
+					for i in range(combo.count()):
+						if combo.itemText(i) == signal:
+							combo.removeItem(i)
+							break
+
+	def rename_signal_in_mapping_combos(self, previous_signal, new_signal):
+		for row in range(self.ui.mappingSignalTable.rowCount()):
+			combo = self.ui.mappingSignalTable.cellWidget(row, 0)
+			assert isinstance(combo, QComboBox)
+			with block_signals(combo):
+				if combo.currentText() == previous_signal:
+					combo.setItemText(combo.currentIndex(), new_signal)
+					return
+				else:
+					for i in range(combo.count()):
+						if combo.itemText(i) == previous_signal:
+							combo.setItemText(i, new_signal)
+							break
