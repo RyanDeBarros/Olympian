@@ -6,7 +6,7 @@ from PySide6.QtGui import QKeyEvent, QIcon
 from PySide6.QtWidgets import QApplication, QComboBox, QPushButton, QMessageBox, QHeaderView
 
 from editor import ui
-from editor.core import MainWindow, InputSignalPathItem
+from editor.core import MainWindow, InputSignalPathItem, block_signals
 from editor.core.MainTabHolder import EditorTab
 from editor.core.common import Alerts
 from editor.core.common.SettingsForm import handle_all_children_modification
@@ -109,7 +109,8 @@ class InputSignalTab(EditorTab):
 		with open(self.item.full_path, 'r') as f:
 			content = toml.load(f)
 
-		self.ui.selectSignal.clear()
+		with block_signals(self.ui.selectSignal) as selectSignal:
+			selectSignal.clear()
 		self.disable_signal_page()
 
 		self.scratch_signals.clear()
@@ -117,14 +118,13 @@ class InputSignalTab(EditorTab):
 
 		if len(signals) > 0:
 			self.enable_signal_page()
-			self.ui.selectSignal.blockSignals(True)
-			for i in range(len(signals)):
-				self.scratch_signals.append(
-					Signal.convert_signal_from_oly_to_editor_format(Signal.OlySignal.from_dict(signals[i])))
-				self.ui.selectSignal.addItem(self.scratch_signals[-1].basic.name)
-			self.ui.selectSignal.setCurrentIndex(0)
-			self.last_signal_index = 0
-			self.ui.selectSignal.blockSignals(False)
+			with block_signals(self.ui.selectSignal) as selectSignal:
+				for i in range(len(signals)):
+					self.scratch_signals.append(
+						Signal.convert_signal_from_oly_to_editor_format(Signal.OlySignal.from_dict(signals[i])))
+					selectSignal.addItem(self.scratch_signals[-1].basic.name)
+				selectSignal.setCurrentIndex(0)
+				self.last_signal_index = 0
 			self.convert_signal_to_ui(self.scratch_signals[0])
 
 		self.signal_type_changed()
@@ -132,19 +132,19 @@ class InputSignalTab(EditorTab):
 		self.scratch_mappings.clear()
 		mappings = content['mapping'] if 'mapping' in content else []
 
-		self.ui.selectMapping.clear()
+		with block_signals(self.ui.selectMapping) as selectMapping:
+			selectMapping.clear()
 		self.disable_mapping_page()
 
 		if len(mappings) > 0:
 			self.enable_mapping_page()
-			self.ui.selectMapping.blockSignals(True)
-			for i in range(len(mappings)):
-				self.scratch_mappings.append(
-					Signal.convert_mapping_from_oly_to_editor_format(Signal.OlyMapping.from_dict(mappings[i])))
-				self.ui.selectMapping.addItem(self.scratch_mappings[-1].name)
-			self.ui.selectMapping.setCurrentIndex(0)
-			self.last_mapping_index = 0
-			self.ui.selectMapping.blockSignals(False)
+			with block_signals(self.ui.selectMapping) as selectMapping:
+				for i in range(len(mappings)):
+					self.scratch_mappings.append(
+						Signal.convert_mapping_from_oly_to_editor_format(Signal.OlyMapping.from_dict(mappings[i])))
+					selectMapping.addItem(self.scratch_mappings[-1].name)
+				selectMapping.setCurrentIndex(0)
+				self.last_mapping_index = 0
 			self.convert_mapping_to_ui(self.scratch_mappings[0])
 
 	@override
@@ -263,9 +263,8 @@ class InputSignalTab(EditorTab):
 		k = KEY_MAP.get_from_qt(key.key(), key.modifiers())
 		if k is not None:
 			self.ui.keySelectDisplay.setText(k.text)
-			self.ui.keySelectSpinBox.blockSignals(True)
-			self.ui.keySelectSpinBox.setValue(k.glfw_code)
-			self.ui.keySelectSpinBox.blockSignals(False)
+			with block_signals(self.ui.keySelectSpinBox) as keySelectSpinBox:
+				keySelectSpinBox.setValue(k.glfw_code)
 		else:
 			Alerts.alert_error(self, "Unrecognized key", "Please manually enter the GLFW key code")
 
@@ -278,20 +277,19 @@ class InputSignalTab(EditorTab):
 
 	def new_signal(self):
 		index = self.ui.selectSignal.count()
-		self.ui.selectSignal.blockSignals(True)
-		name = f"New Signal ({index})"
-		cont = True
-		while cont:
-			cont = False
-			for i in range(self.ui.selectSignal.count()):
-				if i != self.ui.selectSignal.currentIndex():
-					if name == self.ui.selectSignal.itemText(i):
-						name = f"{name}*"
-						cont = True
-						break
-		self.ui.selectSignal.addItem(name)
-		self.ui.selectSignal.setCurrentIndex(index)
-		self.ui.selectSignal.blockSignals(False)
+		with block_signals(self.ui.selectSignal) as selectSignal:
+			name = f"New Signal ({index})"
+			cont = True
+			while cont:
+				cont = False
+				for i in range(selectSignal.count()):
+					if i != selectSignal.currentIndex():
+						if name == selectSignal.itemText(i):
+							name = f"{name}*"
+							cont = True
+							break
+			selectSignal.addItem(name)
+			selectSignal.setCurrentIndex(index)
 
 		self.scratch_signals.append(Signal.EditorSignal(basic=Signal.BasicSection(name=name, type=InputType.KEY, key=32)))
 		self.enable_signal_page()
@@ -300,9 +298,8 @@ class InputSignalTab(EditorTab):
 	def delete_signal(self):
 		index = self.ui.selectSignal.currentIndex()
 		self.scratch_signals.pop(index)
-		self.ui.selectSignal.blockSignals(True)
-		self.ui.selectSignal.removeItem(index)
-		self.ui.selectSignal.blockSignals(False)
+		with block_signals(self.ui.selectSignal) as selectSignal:
+			selectSignal.removeItem(index)
 		if self.ui.selectSignal.count() == 0:
 			self.disable_signal_page()
 		else:
@@ -327,9 +324,8 @@ class InputSignalTab(EditorTab):
 		if self.last_signal_index >= 0:
 			self.scratch_signals[self.last_signal_index] = self.convert_signal_from_ui()
 		self.last_signal_index = self.ui.selectSignal.currentIndex()
-		self.ui.signalName.blockSignals(True)
-		self.ui.signalName.setText(self.ui.selectSignal.currentText())
-		self.ui.signalName.blockSignals(False)
+		with block_signals(self.ui.signalName) as signalName:
+			signalName.setText(self.ui.selectSignal.currentText())
 		self.convert_signal_to_ui(self.scratch_signals[self.last_signal_index])
 
 	def signal_name_changed(self):
@@ -345,9 +341,8 @@ class InputSignalTab(EditorTab):
 						break
 
 		self.ui.selectSignal.setItemText(self.ui.selectSignal.currentIndex(), name)
-		self.ui.signalName.blockSignals(True)
-		self.ui.signalName.setText(name)
-		self.ui.signalName.blockSignals(False)
+		with block_signals(self.ui.signalName) as signalName:
+			signalName.setText(name)
 
 	def convert_signal_from_ui(self) -> Signal.EditorSignal:
 		signal = Signal.EditorSignal(
@@ -393,9 +388,8 @@ class InputSignalTab(EditorTab):
 		return signal
 
 	def convert_signal_to_ui(self, signal: Signal.EditorSignal):
-		self.ui.signalName.blockSignals(True)
-		self.ui.signalName.setText(signal.basic.name)
-		self.ui.signalName.blockSignals(False)
+		with block_signals(self.ui.signalName) as signalName:
+			signalName.setText(signal.basic.name)
 		self.signal_name_changed()
 		self.ui.signalTypeSelect.setCurrentIndex(signal.basic.type)
 		match signal.basic.type:
@@ -439,20 +433,19 @@ class InputSignalTab(EditorTab):
 
 	def new_mapping(self):
 		index = self.ui.selectMapping.count()
-		self.ui.selectMapping.blockSignals(True)
-		name = f"New Mapping ({index})"
-		cont = True
-		while cont:
-			cont = False
-			for i in range(self.ui.selectMapping.count()):
-				if i != self.ui.selectMapping.currentIndex():
-					if name == self.ui.selectMapping.itemText(i):
-						name = f"{name}*"
-						cont = True
-						break
-		self.ui.selectMapping.addItem(name)
-		self.ui.selectMapping.setCurrentIndex(index)
-		self.ui.selectMapping.blockSignals(False)
+		with block_signals(self.ui.selectMapping) as selectMapping:
+			name = f"New Mapping ({index})"
+			cont = True
+			while cont:
+				cont = False
+				for i in range(selectMapping.count()):
+					if i != selectMapping.currentIndex():
+						if name == selectMapping.itemText(i):
+							name = f"{name}*"
+							cont = True
+							break
+			selectMapping.addItem(name)
+			selectMapping.setCurrentIndex(index)
 
 		self.scratch_mappings.append(Signal.EditorMapping(name=name))
 		self.enable_mapping_page()
@@ -461,9 +454,8 @@ class InputSignalTab(EditorTab):
 	def delete_mapping(self):
 		index = self.ui.selectMapping.currentIndex()
 		self.scratch_mappings.pop(index)
-		self.ui.selectMapping.blockSignals(True)
-		self.ui.selectMapping.removeItem(index)
-		self.ui.selectMapping.blockSignals(False)
+		with block_signals(self.ui.selectMapping) as selectMapping:
+			selectMapping.removeItem(index)
 		if self.ui.selectMapping.count() == 0:
 			self.disable_mapping_page()
 		else:
@@ -484,9 +476,8 @@ class InputSignalTab(EditorTab):
 		if self.last_mapping_index >= 0:
 			self.scratch_mappings[self.last_mapping_index] = self.convert_mapping_from_ui()
 		self.last_mapping_index = self.ui.selectMapping.currentIndex()
-		self.ui.mappingName.blockSignals(True)
-		self.ui.mappingName.setText(self.ui.selectMapping.currentText())
-		self.ui.mappingName.blockSignals(False)
+		with block_signals(self.ui.mappingName) as mappingName:
+			mappingName.setText(self.ui.selectMapping.currentText())
 		self.convert_mapping_to_ui(self.scratch_mappings[self.last_mapping_index])
 
 	def mapping_name_changed(self):
@@ -502,9 +493,8 @@ class InputSignalTab(EditorTab):
 						break
 
 		self.ui.selectMapping.setItemText(self.ui.selectMapping.currentIndex(), name)
-		self.ui.mappingName.blockSignals(True)
-		self.ui.mappingName.setText(name)
-		self.ui.mappingName.blockSignals(False)
+		with block_signals(self.ui.mappingName) as mappingName:
+			mappingName.setText(name)
 
 	def convert_mapping_from_ui(self) -> Signal.EditorMapping:
 		mapping = Signal.EditorMapping(name=self.ui.mappingName.text())
@@ -515,9 +505,8 @@ class InputSignalTab(EditorTab):
 		return mapping
 
 	def convert_mapping_to_ui(self, mapping: Signal.EditorMapping):
-		self.ui.mappingName.blockSignals(True)
-		self.ui.mappingName.setText(mapping.name)
-		self.ui.mappingName.blockSignals(False)
+		with block_signals(self.ui.mappingName) as mappingName:
+			mappingName.setText(mapping.name)
 		self.mapping_name_changed()
 		for _ in range(self.ui.mappingSignalTable.rowCount()):
 			self.ui.mappingSignalTable.removeRow(0)
@@ -595,20 +584,19 @@ class InputSignalTab(EditorTab):
 		for row in range(self.ui.mappingSignalTable.rowCount()):
 			combo = self.ui.mappingSignalTable.cellWidget(row, 0)
 			assert isinstance(combo, QComboBox)
-			combo.blockSignals(True)
-			current_signal = combo.currentText()
-			combo.clear()
-			for signal in unused_signals:
-				combo.addItem(signal)
+			with block_signals(combo):
+				current_signal = combo.currentText()
+				combo.clear()
+				for signal in unused_signals:
+					combo.addItem(signal)
 
-			inserted = False
-			for i, signal in enumerate(unused_signals):
-				if ordering[current_signal] < ordering[signal]:
-					combo.insertItem(i, current_signal)
-					combo.setCurrentIndex(i)
-					inserted = True
-					break
-			if not inserted:
-				combo.addItem(current_signal)
-				combo.setCurrentIndex(len(unused_signals))
-			combo.blockSignals(False)
+				inserted = False
+				for i, signal in enumerate(unused_signals):
+					if ordering[current_signal] < ordering[signal]:
+						combo.insertItem(i, current_signal)
+						combo.setCurrentIndex(i)
+						inserted = True
+						break
+				if not inserted:
+					combo.addItem(current_signal)
+					combo.setCurrentIndex(len(unused_signals))
