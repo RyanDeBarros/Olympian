@@ -106,15 +106,20 @@ class InputSignalTab(EditorTab):
 
 		self.scratch_signals.clear()
 		signals = content['signal'] if 'signal' in content else []
-		self.scratch_mappings.clear()
-		mappings = content['mapping'] if 'mapping' in content else []
 
 		if len(signals) > 0:
 			self.enable_signal_page()
-		for i in range(len(signals)):
-			self.ui.selectSignal.addItem("")
-			self.scratch_signals.append(self.convert_signal_from_oly_format(signals[i]))
-			self.convert_signal_to_ui(self.scratch_signals[i])
+			self.ui.selectSignal.blockSignals(True)
+			for i in range(len(signals)):
+				self.scratch_signals.append(self.convert_signal_from_oly_format(signals[i]))
+				self.ui.selectSignal.addItem(self.scratch_signals[-1]['basic']['name'])
+			self.ui.selectSignal.setCurrentIndex(0)
+			self.last_signal_index = 0
+			self.ui.selectSignal.blockSignals(False)
+			self.convert_signal_to_ui(self.scratch_signals[0])
+
+		self.scratch_mappings.clear()
+		mappings = content['mapping'] if 'mapping' in content else []
 		# TODO v3 do the same for mappings
 
 		self.signal_type_changed()
@@ -148,10 +153,8 @@ class InputSignalTab(EditorTab):
 		self._set_layout_visible(self.ui.signalGamepad1DAxisLayout, stype == InputType.GAMEPAD_1D_AXIS)
 		self._set_widget_visible(self.ui.signalGamepad2DAxisLabel, stype == InputType.GAMEPAD_2D_AXIS)
 		self._set_layout_visible(self.ui.signalGamepad2DAxisLayout, stype == InputType.GAMEPAD_2D_AXIS)
-		self._set_widget_visible(self.ui.signal1DAxisDeadzoneLabel, stype == InputType.GAMEPAD_1D_AXIS)
-		self._set_widget_visible(self.ui.signal1DAxisDeadzone, stype == InputType.GAMEPAD_1D_AXIS)
-		self._set_widget_visible(self.ui.signal2DAxisDeadzoneLabel, stype == InputType.GAMEPAD_2D_AXIS)
-		self._set_widget_visible(self.ui.signal2DAxisDeadzone, stype == InputType.GAMEPAD_2D_AXIS)
+		self._set_widget_visible(self.ui.signalDeadzoneLabel, stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
+		self._set_widget_visible(self.ui.signalDeadzone, stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
 		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear.
 		self.ui.preDeadzoneSpacer.changeSize(0, 10 if stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS) else 0)
 
@@ -250,8 +253,10 @@ class InputSignalTab(EditorTab):
 	def new_signal(self):
 		self.scratch_signals.append({})
 		index = self.ui.selectSignal.count()
+		self.ui.selectSignal.blockSignals(True)
 		self.ui.selectSignal.addItem(f"New Signal ({index})")
 		self.ui.selectSignal.setCurrentIndex(index)
+		self.ui.selectSignal.blockSignals(False)
 
 		self.scratch_signals[index] = self.default_signal(self.ui.signalName.text())
 		self.enable_signal_page()
@@ -260,11 +265,13 @@ class InputSignalTab(EditorTab):
 	def delete_signal(self):
 		index = self.ui.selectSignal.currentIndex()
 		self.scratch_signals.pop(index)
+		self.ui.selectSignal.blockSignals(True)
 		self.ui.selectSignal.removeItem(index)
+		self.ui.selectSignal.blockSignals(False)
 		if self.ui.selectSignal.count() == 0:
 			self.disable_signal_page()
 		else:
-			self.convert_signal_to_ui(self.ui.selectSignal.currentIndex())
+			self.convert_signal_to_ui(self.scratch_signals[self.ui.selectSignal.currentIndex()])
 
 	def enable_signal_page(self):
 		self.ui.selectSignal.setDisabled(False)
@@ -288,6 +295,7 @@ class InputSignalTab(EditorTab):
 		self.ui.signalName.blockSignals(True)
 		self.ui.signalName.setText(self.ui.selectSignal.currentText())
 		self.ui.signalName.blockSignals(False)
+		self.convert_signal_to_ui(self.scratch_signals[self.last_signal_index])
 
 	def signal_name_changed(self):
 		name = self.ui.signalName.text()
@@ -329,8 +337,10 @@ class InputSignalTab(EditorTab):
 				basic['button'] = self.ui.gamepadButtonSelect.currentIndex()
 			case InputType.GAMEPAD_1D_AXIS:
 				basic['axis1d'] = self.ui.gamepad1DAxisSelect.currentIndex()
+				basic['deadzone'] = self.ui.signalDeadzone.value()
 			case InputType.GAMEPAD_2D_AXIS:
 				basic['axis2d'] = self.ui.gamepad2DAxisSelect.currentIndex()
+				basic['deadzone'] = self.ui.signalDeadzone.value()
 
 		if basic['type'] in (InputType.KEY, InputType.MOUSE_BUTTON):
 			signal['mods'] = {
@@ -375,8 +385,10 @@ class InputSignalTab(EditorTab):
 				self.ui.gamepadButtonSelect.setCurrentIndex(basic['button'])
 			case InputType.GAMEPAD_1D_AXIS:
 				self.ui.gamepad1DAxisSelect.setCurrentIndex(basic['axis1d'])
+				self.ui.signalDeadzone.setValue(basic['deadzone'])
 			case InputType.GAMEPAD_2D_AXIS:
 				self.ui.gamepad2DAxisSelect.setCurrentIndex(basic['axis2d'])
+				self.ui.signalDeadzone.setValue(basic['deadzone'])
 
 		if 'mods' in signal:
 			mods = signal['mods']
@@ -393,9 +405,9 @@ class InputSignalTab(EditorTab):
 			case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
 				self.ui.dimensionConversion2D.setCurrentIndex(conversion['dim'])
 		if self.ui.swizzle2D.isVisible():
-			self.ui.swizzle2D.setCurrentText(conversion['swizzle'])
+			self.ui.swizzle2D.setCurrentText(conversion.get('swizzle', 'None'))
 		elif self.ui.swizzle3D.isVisible():
-			self.ui.swizzle3D.setCurrentText(conversion['swizzle'])
+			self.ui.swizzle3D.setCurrentText(conversion.get('swizzle', 'None'))
 		self.ui.multiplierX.setValue(conversion['multiplier'][0])
 		self.ui.multiplierY.setValue(conversion['multiplier'][1])
 		self.ui.multiplierZ.setValue(conversion['multiplier'][2])
@@ -423,8 +435,10 @@ class InputSignalTab(EditorTab):
 				d['button'] = basic['button']
 			case 3:
 				d['axis1d'] = basic['axis1d']
+				d['deadzone'] = basic['deadzone']
 			case 4:
 				d['axis2d'] = basic['axis2d']
+				d['deadzone'] = basic['deadzone']
 
 		if 'mods' in signal:
 			d['req mods'] = 0
@@ -456,12 +470,12 @@ class InputSignalTab(EditorTab):
 		if dim > 0:
 			match basic['type']:
 				case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-					modifier['conversion'] = ['TO_1D', 'TO_2D', 'TO_3D'][dim]
+					modifier['conversion'] = ['TO_1D', 'TO_2D', 'TO_3D'][dim - 1]
 				case InputType.GAMEPAD_1D_AXIS:
-					modifier['conversion'] = ['TO_0D', 'TO_2D', 'TO_3D'][dim]
+					modifier['conversion'] = ['TO_0D', 'TO_2D', 'TO_3D'][dim - 1]
 				case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
 					modifier['conversion'] = \
-						['TO_0D_X', 'TO_0D_Y', 'TO_0D_XY', 'TO_1D_X', 'TO_1D_Y', 'TO_1D_XY', 'TO_3D_0', 'TO_3D_1'][dim]
+						['TO_0D_X', 'TO_0D_Y', 'TO_0D_XY', 'TO_1D_X', 'TO_1D_Y', 'TO_1D_XY', 'TO_3D_0', 'TO_3D_1'][dim - 1]
 
 		return d
 
@@ -490,8 +504,10 @@ class InputSignalTab(EditorTab):
 				basic['button'] = signal['button']
 			case 3:
 				basic['axis1d'] = signal['axis1d']
+				basic['deadzone'] = signal['deadzone']
 			case 4:
 				basic['axis2d'] = signal['axis2d']
+				basic['deadzone'] = signal['deadzone']
 
 		if basic['type'] in (InputType.KEY, InputType.MOUSE_BUTTON):
 			d['mods'] = {
@@ -541,11 +557,11 @@ class InputSignalTab(EditorTab):
 				dim = modifier['conversion']
 				match basic['type']:
 					case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:
-						conversion['dim'] = ['TO_1D', 'TO_2D', 'TO_3D'].index(dim)
+						conversion['dim'] = ['TO_1D', 'TO_2D', 'TO_3D'].index(dim) + 1
 					case InputType.GAMEPAD_1D_AXIS:
-						conversion['dim'] = ['TO_0D', 'TO_2D', 'TO_3D'].index(dim)
+						conversion['dim'] = ['TO_0D', 'TO_2D', 'TO_3D'].index(dim) + 1
 					case InputType.GAMEPAD_2D_AXIS | InputType.CURSOR_POSITION | InputType.SCROLL:
 						conversion['dim'] = ['TO_0D_X', 'TO_0D_Y', 'TO_0D_XY', 'TO_1D_X', 'TO_1D_Y', 'TO_1D_XY',
-											 'TO_3D_0', 'TO_3D_1'].index(dim)
+											 'TO_3D_0', 'TO_3D_1'].index(dim) + 1
 
 		return d

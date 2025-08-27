@@ -90,6 +90,7 @@ class MainTabHolder(QTabWidget):
 		uid = self.uids.pop(from_index)
 		self.uids.insert(to_index, uid)
 
+	# TODO if there are unsaved changes when editor is requested to close, prompt user
 	def close_tab(self, index):
 		tab = self.editor_tab_at(index)
 		if tab.asterisk:

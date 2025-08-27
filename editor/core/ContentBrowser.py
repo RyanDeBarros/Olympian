@@ -272,15 +272,17 @@ class ContentBrowser(QWidget):
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
 		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
 
+		# TODO v3 undo/redo shortcuts are disabled - they were activating when focus is unintentionally on ContentBrowser
+
 		self.ui.undoButton.setIcon(QIcon("res/images/Undo.png"))
 		self.ui.undoButton.clicked.connect(self.undo_stack.undo)
 		undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
-		undo_shortcut.activated.connect(self.undo_stack.undo)
+		# undo_shortcut.activated.connect(self.undo_stack.undo)
 
 		self.ui.redoButton.setIcon(QIcon("res/images/Redo.png"))
 		self.ui.redoButton.clicked.connect(self.undo_stack.redo)
 		redo_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Z"), self)
-		redo_shortcut.activated.connect(self.undo_stack.redo)
+		# redo_shortcut.activated.connect(self.undo_stack.redo)
 
 		history_menu = QMenu(self.ui.historyToolButton)
 		history_show = QAction("Show", history_menu)

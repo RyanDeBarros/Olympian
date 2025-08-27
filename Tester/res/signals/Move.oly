@@ -1,29 +1,49 @@
 header = "signal"
-
-[[signal]]
-"id"      = "move left"
-"binding" = "key"
-"key"     = 263 # LEFT
-"modifier" = { "conversion" = "TO_2D", "multiplier" = [-1.0, 0.0] }
-
-[[signal]]
-"id"      = "move right"
-"binding" = "key"
-"key"     = 262 # RIGHT
-"modifier" = { "conversion" = "TO_2D", "multiplier" = [1.0, 0.0] }
-
-[[signal]]
-"id"      = "move up"
-"binding" = "key"
-"key"     = 265 # UP
-"modifier" = { "conversion" = "TO_2D", "multiplier" = [0.0, 1.0] }
-
-[[signal]]
-"id"      = "move down"
-"binding" = "key"
-"key"     = 264 # DOWN
-"modifier" = { "conversion" = "TO_2D", "multiplier" = [0.0, -1.0] }
-
 [[mapping]]
 "id" = "move"
 "signals" = ["move left", "move right", "move up", "move down"]
+
+[[signal]]
+id = "move left"
+binding = "key"
+key = 263
+"req mods" = 0
+"ban mods" = 0
+
+[signal.modifier]
+multiplier = [ -1.0, 0.0, 1.0,]
+invert = [ false, false, false,]
+conversion = "TO_2D"
+[[signal]]
+id = "move right"
+binding = "key"
+key = 262
+"req mods" = 0
+"ban mods" = 0
+
+[signal.modifier]
+multiplier = [ 1.0, 0.0, 1.0,]
+invert = [ false, false, false,]
+conversion = "TO_2D"
+[[signal]]
+id = "move down"
+binding = "key"
+key = 264
+"req mods" = 0
+"ban mods" = 0
+
+[signal.modifier]
+multiplier = [ 0.0, -1.0, 1.0,]
+invert = [ false, false, false,]
+conversion = "TO_2D"
+[[signal]]
+id = "move up"
+binding = "key"
+key = 265
+"req mods" = 0
+"ban mods" = 0
+
+[signal.modifier]
+multiplier = [ 0.0, 1.0, 1.0,]
+invert = [ false, false, false,]
+conversion = "TO_2D"

@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
 
 		self.content_browser.init(self)
 		self.tab_holder.init(self)
+		self.resize(1440, 1080)
 
 		self.ui.actionSave.triggered.connect(self.tab_holder.save)
 		self.ui.actionSave.setIcon(QIcon("res/images/Save.png"))
