@@ -54,3 +54,7 @@ class StandardFileTab(EditorTab):
 	def rename_impl(self, item: StandardFilePathItem):
 		assert isinstance(item, StandardFilePathItem)
 		self.item = item
+
+	@override
+	def refresh_impl(self):
+		pass

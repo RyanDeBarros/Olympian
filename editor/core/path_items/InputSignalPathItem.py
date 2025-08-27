@@ -27,27 +27,42 @@ class InputSignalPathItem(AbstractPathItem):
 	def renamed_filepath(self, name: str):
 		return Path(str(self.full_path.parent.joinpath(name)) + '.oly')
 
-	@override
-	def new_item(self, browser: ContentBrowser):
+	@staticmethod
+	def new_item(browser: ContentBrowser):
 		file_name = "NewSignal.oly"
 		i = 1
-		while os.path.exists(os.path.join(browser.current_folder, file_name)):
+		while os.path.exists(browser.current_folder.joinpath(file_name).resolve()):
 			file_name = f"NewSignal ({i}).oly"
 			i = i + 1
-		file_path = os.path.join(browser.current_folder, file_name)
-		browser.folder_view.file_machine.new_file(file_path)
-		item = InputSignalPathItem(parent_folder=browser.current_folder, name=file_name)
-		browser.folder_view.add_item(item, editing=True)
+		file_path = browser.current_folder.joinpath(file_name).resolve()
 
 		initial_data = {
 			"header": "signal"
 		}
-		with open(item.full_path, 'w') as f:
+		with open(file_path, 'w') as f:
 			toml.dump(initial_data, f)
 
-		# TODO v3 add signal to project file's list of input signals
+		browser.folder_view.file_machine.new_file(file_path)
+		item = InputSignalPathItem(file_path)
+		browser.folder_view.add_item(item, editing=True)
 
 	@override
 	def open(self, browser: ContentBrowser):
 		from ..tabs import InputSignalTab
 		browser.win.tab_holder.add_tab(InputSignalTab(browser.win, self))
+
+	@override
+	def on_new(self, browser: ContentBrowser):
+		project_context = browser.win.project_context
+		project_context.input_signal_registry.add_signal_asset(self.full_path.relative_to(project_context.res_folder))
+
+	@override
+	def on_delete(self, browser: ContentBrowser):
+		project_context = browser.win.project_context
+		project_context.input_signal_registry.remove_signal_asset(self.full_path.relative_to(project_context.res_folder))
+
+	@override
+	def on_rename(self, browser: ContentBrowser, old_path: Path):
+		project_context = browser.win.project_context
+		project_context.input_signal_registry.rename_signal_asset(old_path.relative_to(project_context.res_folder),
+																  self.full_path.relative_to(project_context.res_folder))

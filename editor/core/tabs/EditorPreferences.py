@@ -66,3 +66,7 @@ class EditorPreferencesTab(EditorTab):
 	@override
 	def rename_impl(self, item: AbstractPathItem):
 		raise RuntimeError("Editor preferences tab cannot be renamed")
+
+	@override
+	def refresh_impl(self):
+		pass

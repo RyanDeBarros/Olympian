@@ -10,3 +10,5 @@ class ProjectContext:
 		self.project_folder = Path(posixpath.dirname(self.project_file))
 		self.res_folder = self.project_folder.joinpath("res")
 		self.main_window = main_window
+		from editor.core.InputSignalRegistry import InputSignalRegistry
+		self.input_signal_registry = InputSignalRegistry(self)

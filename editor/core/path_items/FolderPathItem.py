@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QSize
@@ -32,8 +33,8 @@ class FolderPathItem(AbstractPathItem):
 		else:
 			return 1, self.ui_name().lower()
 
-	@override
-	def new_item(self, browser: ContentBrowser):
+	@staticmethod
+	def new_item(browser: ContentBrowser):
 		folder_name = "NewFolder"
 		i = 1
 		while os.path.exists(os.path.join(browser.current_folder, folder_name)):
@@ -41,9 +42,21 @@ class FolderPathItem(AbstractPathItem):
 			i = i + 1
 		folder_path = os.path.join(browser.current_folder, folder_name)
 		browser.folder_view.file_machine.new_folder(folder_path)
-		browser.folder_view.add_item(FolderPathItem(parent_folder=browser.current_folder, name=folder_name),
+		browser.folder_view.add_item(FolderPathItem(browser.current_folder.joinpath(folder_name).resolve()),
 									 editing=True)
+
+	@override
+	def on_new(self, browser: ContentBrowser):
+		pass
 
 	@override
 	def open(self, browser: ContentBrowser):
 		browser.open_folder(self.full_path)
+
+	@override
+	def on_delete(self, browser: ContentBrowser):
+		pass
+
+	@override
+	def on_rename(self, browser: ContentBrowser, old_path: Path):
+		pass

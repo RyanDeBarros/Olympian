@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QSize
@@ -25,8 +26,8 @@ class StandardFilePathItem(AbstractPathItem):
 	def renamed_filepath(self, name: str):
 		return self.full_path.parent.joinpath(name)
 
-	@override
-	def new_item(self, browser: ContentBrowser):
+	@staticmethod
+	def new_item(browser: ContentBrowser):
 		file_name = "NewFile"
 		i = 1
 		while os.path.exists(os.path.join(browser.current_folder, file_name)):
@@ -34,10 +35,22 @@ class StandardFilePathItem(AbstractPathItem):
 			i = i + 1
 		file_path = os.path.join(browser.current_folder, file_name)
 		browser.folder_view.file_machine.new_file(file_path)
-		browser.folder_view.add_item(StandardFilePathItem(parent_folder=browser.current_folder, name=file_name),
+		browser.folder_view.add_item(StandardFilePathItem(browser.current_folder.joinpath(file_name).resolve()),
 									 editing=True)
 
 	@override
 	def open(self, browser: ContentBrowser):
 		from ..tabs import StandardFileTab
 		browser.win.tab_holder.add_tab(StandardFileTab(browser.win, self))
+
+	@override
+	def on_new(self, browser: ContentBrowser):
+		pass
+
+	@override
+	def on_delete(self, browser: ContentBrowser):
+		pass
+
+	@override
+	def on_rename(self, browser: ContentBrowser, old_path: Path):
+		pass

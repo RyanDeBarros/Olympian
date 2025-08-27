@@ -68,6 +68,10 @@ class EditorTab(QWidget, ABC, metaclass=MetaEditorTab):
 		self.revert_changes_impl()
 		self.set_asterisk(False)
 
+	@abstractmethod
+	def refresh_impl(self):
+		pass
+
 
 class MainTabHolder(QTabWidget):
 	def __init__(self, parent):
@@ -77,6 +81,7 @@ class MainTabHolder(QTabWidget):
 
 		self.tabBar().tabMoved.connect(self.tab_moved)
 		self.tabCloseRequested.connect(self.close_tab)
+		self.tabBar().currentChanged.connect(self.tab_changed)
 
 	def init(self, win):
 		self.win = win
@@ -110,12 +115,12 @@ class MainTabHolder(QTabWidget):
 
 	def current_editor_tab(self):
 		widget = self.currentWidget()
-		assert isinstance(widget, EditorTab)
+		assert isinstance(widget, EditorTab) or widget is None
 		return widget
 
 	def editor_tab_at(self, index):
 		widget = self.widget(index)
-		assert isinstance(widget, EditorTab)
+		assert isinstance(widget, EditorTab) or widget is None
 		return widget
 
 	def add_tab(self, tab: EditorTab):
@@ -136,3 +141,6 @@ class MainTabHolder(QTabWidget):
 
 	def revert_changes(self):
 		self.current_editor_tab().revert_changes()
+
+	def tab_changed(self):
+		self.current_editor_tab().refresh_impl()

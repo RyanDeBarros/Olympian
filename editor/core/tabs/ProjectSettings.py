@@ -79,3 +79,7 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def rename_impl(self, item: AbstractPathItem):
 		raise RuntimeError("Project settings tab cannot be renamed")
+
+	@override
+	def refresh_impl(self):
+		pass

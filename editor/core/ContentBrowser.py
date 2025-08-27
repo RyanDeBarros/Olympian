@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional
 
-import toml
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence, QUndoStack, QUndoCommand
@@ -13,8 +12,8 @@ from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView
 	QVBoxLayout, QUndoView
 
 from editor.core import MainWindow
-from editor.core.FileIOMachine import FileIOMachine
 from editor.core.EditorPreferences import PREFERENCES
+from editor.core.FileIOMachine import FileIOMachine
 from editor.core.common import Alerts
 from editor.core.path_items import *
 
@@ -369,16 +368,16 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [FolderPathItem(parent_folder=self.current_folder, name="..")]
+		items = [FolderPathItem(self.current_folder.joinpath("..").resolve())]
 		for path in Path(self.current_folder).iterdir():
-			item = self.create_item(path)
+			item = get_path_item(self.current_folder.joinpath(path))
 			if item is not None:
 				items.append(item)
 		self.folder_view.add_items(items)
 
 	def add_path(self, path: Path):
 		assert path.resolve().parent == self.current_folder
-		item = self.create_item(path)
+		item = get_path_item(self.current_folder.joinpath(path))
 		if item is not None:
 			self.folder_view.add_item(item)
 
@@ -386,14 +385,14 @@ class ContentBrowser(QWidget):
 		items = []
 		for path in paths:
 			assert path.resolve().parent == self.current_folder
-			item = self.create_item(path)
+			item = get_path_item(self.current_folder.joinpath(path))
 			if item is not None:
 				items.append(item)
 		self.folder_view.add_items(items)
 
 	def remove_path(self, path: Path):
 		assert path.resolve().parent == self.current_folder
-		item = self.create_item(path)
+		item = get_path_item(self.current_folder.joinpath(path))
 		if item is not None:
 			self.folder_view.remove_item(item)
 
@@ -401,33 +400,16 @@ class ContentBrowser(QWidget):
 		items = []
 		for path in paths:
 			assert path.resolve().parent == self.current_folder
-			item = self.create_item(path)
+			item = get_path_item(self.current_folder.joinpath(path))
 			if item is not None:
 				items.append(item)
 		self.folder_view.remove_items(items)
 
-	def create_item(self, path: Path):
-		if path.is_dir():
-			return FolderPathItem(parent_folder=self.current_folder, name=path.name)
-		elif path.is_file():
-			# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
-			if path.suffix == ".oly":
-				with open(path, 'r') as f:
-					d = toml.load(f)
-				if 'header' in d and d['header'] == 'signal':
-					return InputSignalPathItem(parent_folder=self.current_folder, name=path.name)
-				return None  # TODO v3 add if asset and not import
-			else:
-				# TODO v3 check for existing import file - use ImportedFilePathItem, which still refers to file, not import file, but recognizes that there exists an import.
-				return StandardFilePathItem(parent_folder=self.current_folder, name=path.name)
-		else:
-			return None
-
 	def new_folder(self):
-		FolderPathItem(Path(), "").new_item(self)
+		FolderPathItem.new_item(self)
 
 	def new_file(self):
-		StandardFilePathItem(Path(), "").new_item(self)
+		StandardFilePathItem.new_item(self)
 
 	def new_signal_asset(self):
-		InputSignalPathItem(Path(), "").new_item(self)
+		InputSignalPathItem.new_item(self)

@@ -158,6 +158,10 @@ class InputSignalTab(EditorTab):
 		assert isinstance(item, InputSignalPathItem)
 		self.item = item
 
+	@override
+	def refresh_impl(self):
+		pass
+
 	@staticmethod
 	def _set_widget_visible(widget, visible):
 		if visible:
@@ -172,44 +176,52 @@ class InputSignalTab(EditorTab):
 
 	def signal_type_changed(self):
 		stype = self.ui.signalTypeSelect.currentIndex()
-		self._set_widget_visible(self.ui.signalKeyLabel, stype == InputType.KEY)
-		self._set_layout_visible(self.ui.signalKeyLayout, stype == InputType.KEY)
-		self._set_widget_visible(self.ui.signalMouseButtonLabel, stype == InputType.MOUSE_BUTTON)
-		self._set_layout_visible(self.ui.signalMouseButtonLayout, stype == InputType.MOUSE_BUTTON)
-		self._set_widget_visible(self.ui.signalGamepadButtonLabel, stype == InputType.GAMEPAD_BUTTON)
-		self._set_layout_visible(self.ui.signalGamepadButtonLayout, stype == InputType.GAMEPAD_BUTTON)
-		self._set_widget_visible(self.ui.signalGamepad1DAxisLabel, stype == InputType.GAMEPAD_1D_AXIS)
-		self._set_layout_visible(self.ui.signalGamepad1DAxisLayout, stype == InputType.GAMEPAD_1D_AXIS)
-		self._set_widget_visible(self.ui.signalGamepad2DAxisLabel, stype == InputType.GAMEPAD_2D_AXIS)
-		self._set_layout_visible(self.ui.signalGamepad2DAxisLayout, stype == InputType.GAMEPAD_2D_AXIS)
-		self._set_widget_visible(self.ui.signalDeadzoneLabel,
-								 stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
-		self._set_widget_visible(self.ui.signalDeadzone,
-								 stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS))
-		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear. sometimes the post swizzle spacer doesn't appear either.
-		self.ui.preDeadzoneSpacer.changeSize(0, 10 if stype in (InputType.GAMEPAD_1D_AXIS,
-																InputType.GAMEPAD_2D_AXIS) else 0)
 
-		self._set_widget_visible(self.ui.dimensionConversionLabel0D,
-								 stype in (InputType.KEY, InputType.MOUSE_BUTTON, InputType.GAMEPAD_BUTTON))
-		if not self.ui.dimensionConversion0D.isVisible() and stype in (InputType.KEY, InputType.MOUSE_BUTTON,
-																	   InputType.GAMEPAD_BUTTON):
+		key = stype == InputType.KEY
+		self._set_widget_visible(self.ui.signalKeyLabel, key)
+		self._set_layout_visible(self.ui.signalKeyLayout, key)
+
+		mb = stype == InputType.MOUSE_BUTTON
+		self._set_widget_visible(self.ui.signalMouseButtonLabel, mb)
+		self._set_layout_visible(self.ui.signalMouseButtonLayout, mb)
+
+		gpb = stype == InputType.GAMEPAD_BUTTON
+		self._set_widget_visible(self.ui.signalGamepadButtonLabel, gpb)
+		self._set_layout_visible(self.ui.signalGamepadButtonLayout, gpb)
+
+		gp1a = stype == InputType.GAMEPAD_1D_AXIS
+		self._set_widget_visible(self.ui.signalGamepad1DAxisLabel, gp1a)
+		self._set_layout_visible(self.ui.signalGamepad1DAxisLayout, gp1a)
+
+		gp2a = stype == InputType.GAMEPAD_2D_AXIS
+		self._set_widget_visible(self.ui.signalGamepad2DAxisLabel, gp2a)
+		self._set_layout_visible(self.ui.signalGamepad2DAxisLayout, gp2a)
+
+		deadzone = stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS)
+		self._set_widget_visible(self.ui.signalDeadzoneLabel, deadzone)
+		self._set_widget_visible(self.ui.signalDeadzone, deadzone)
+		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear. sometimes the post swizzle spacer doesn't appear either.
+		self.ui.preDeadzoneSpacer.changeSize(0, 10 if deadzone else 0)
+
+		dim0 = stype in (InputType.KEY, InputType.MOUSE_BUTTON, InputType.GAMEPAD_BUTTON)
+		self._set_widget_visible(self.ui.dimensionConversionLabel0D, dim0)
+		if not self.ui.dimensionConversion0D.isVisible() and dim0:
 			self.conversion_0d_changed()
-		self._set_widget_visible(self.ui.dimensionConversion0D,
-								 stype in (InputType.KEY, InputType.MOUSE_BUTTON, InputType.GAMEPAD_BUTTON))
-		self._set_widget_visible(self.ui.dimensionConversionLabel1D, stype == InputType.GAMEPAD_1D_AXIS)
-		if not self.ui.dimensionConversion1D.isVisible() and stype == InputType.GAMEPAD_1D_AXIS:
+		self._set_widget_visible(self.ui.dimensionConversion0D, dim0)
+
+		dim1 = stype == InputType.GAMEPAD_1D_AXIS
+		self._set_widget_visible(self.ui.dimensionConversionLabel1D, dim1)
+		if not self.ui.dimensionConversion1D.isVisible() and dim1:
 			self.conversion_1d_changed()
-		self._set_widget_visible(self.ui.dimensionConversion1D, stype == InputType.GAMEPAD_1D_AXIS)
-		self._set_widget_visible(self.ui.dimensionConversionLabel2D,
-								 stype in (InputType.GAMEPAD_2D_AXIS, InputType.CURSOR_POSITION, InputType.SCROLL))
-		if not self.ui.dimensionConversion2D.isVisible() and stype in (InputType.GAMEPAD_2D_AXIS,
-																	   InputType.CURSOR_POSITION, InputType.SCROLL):
+		self._set_widget_visible(self.ui.dimensionConversion1D, dim1)
+
+		dim2 = stype in (InputType.GAMEPAD_2D_AXIS, InputType.CURSOR_POSITION, InputType.SCROLL)
+		self._set_widget_visible(self.ui.dimensionConversionLabel2D, dim2)
+		if not self.ui.dimensionConversion2D.isVisible() and dim2:
 			self.conversion_2d_changed()
-		self._set_widget_visible(self.ui.dimensionConversion2D,
-								 stype in (InputType.GAMEPAD_2D_AXIS, InputType.CURSOR_POSITION, InputType.SCROLL))
-		self._set_widget_visible(self.ui.signalModsGroupBox, stype in (InputType.KEY,
-																	   InputType.MOUSE_BUTTON))  # TODO v3 support for cursor pos and scroll as well
+		self._set_widget_visible(self.ui.dimensionConversion2D, dim2)
+
+		self._set_widget_visible(self.ui.signalModsGroupBox, stype in (InputType.KEY, InputType.MOUSE_BUTTON))
 
 	def conversion_0d_changed(self):
 		ctype = self.ui.dimensionConversion0D.currentIndex()
@@ -298,7 +310,8 @@ class InputSignalTab(EditorTab):
 			selectSignal.addItem(name)
 			selectSignal.setCurrentIndex(index)
 
-		self.scratch_signals.append(Signal.EditorSignal(basic=Signal.BasicSection(name=name, type=InputType.KEY, key=32)))
+		self.scratch_signals.append(
+			Signal.EditorSignal(basic=Signal.BasicSection(name=name, type=InputType.KEY, key=32)))
 		self.enable_signal_page()
 		self.select_signal()
 		self.append_signal_to_mapping_combos(name)

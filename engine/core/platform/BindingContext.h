@@ -191,7 +191,6 @@ namespace oly
 		struct CursorPosBinding
 		{
 			Axis2DModifier modifier;
-			// TODO v3 required/forbidden mods
 
 			Signal signal(Phase phase, glm::vec2 pos) const
 			{
@@ -204,7 +203,6 @@ namespace oly
 		struct ScrollBinding
 		{
 			Axis2DModifier modifier;
-			// TODO v3 required/forbidden mods
 
 			Signal signal(Phase phase, glm::vec2 scroll) const
 			{

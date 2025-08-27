@@ -7,9 +7,11 @@ from typing import Optional
 import send2trash
 from PySide6.QtGui import QUndoCommand
 
+from editor.core.path_items import get_path_item
+
 
 class FileIOMachine:
-	from editor.core import ProjectContext
+	from editor.core.ProjectContext import ProjectContext
 	def __init__(self, project_context: ProjectContext):
 		self.project_context = project_context
 		self.content_browser = self.project_context.main_window.content_browser
@@ -94,7 +96,7 @@ class FileIOMachine:
 		uids = self.main_tab_holder.uids
 		if old_path in uids:
 			assert new_path not in uids
-			item = self.content_browser.create_item(old_path)
+			item = get_path_item(self.content_browser.current_folder.joinpath(old_path))
 			assert item is not None
 			item.full_path = new_path
 			index = uids.index(old_path)
@@ -151,10 +153,21 @@ class UCDeletePaths(QUndoCommand):
 		self.hash_path = None
 		self.machine.uc_browser_add_paths(self.paths)
 
+		for path in self.paths:
+			item = get_path_item(path)
+			assert item is not None
+			item.on_new(self.machine.content_browser)
+
 	def redo(self):
 		self._generate_trash_paths()
 		self.machine.uc_browser_remove_paths(self.paths)
 		self.machine.uc_main_tab_remove_paths(self.paths)
+
+		for path in self.paths:
+			item = get_path_item(path)
+			assert item is not None
+			item.on_delete(self.machine.content_browser)
+
 		for i in range(self.num_paths):
 			_move_to(self.paths[i], self.trash_paths[i])
 
@@ -172,11 +185,19 @@ class UCRenamePath(QUndoCommand):
 		_move_to(self.new_path, self.old_path)
 		self.machine.uc_browser_add_path(self.old_path)
 
+		item = get_path_item(self.old_path)
+		assert item is not None
+		item.on_rename(self.machine.content_browser, self.new_path)
+
 	def redo(self):
 		self.machine.uc_browser_remove_path(self.old_path)
 		self.machine.uc_main_tab_rename_path(self.old_path, self.new_path)
 		_move_to(self.old_path, self.new_path)
 		self.machine.uc_browser_add_path(self.new_path)
+
+		item = get_path_item(self.new_path)
+		assert item is not None
+		item.on_rename(self.machine.content_browser, self.old_path)
 
 
 class UCNewFolder(QUndoCommand):
@@ -195,6 +216,11 @@ class UCNewFolder(QUndoCommand):
 	def undo(self):
 		self._generate_trash_path()
 		self.machine.uc_browser_remove_path(self.folder)
+
+		item = get_path_item(self.folder)
+		assert item is not None
+		item.on_delete(self.machine.content_browser)
+
 		_move_to(self.folder, self.trash_path)
 
 	def redo(self):
@@ -207,6 +233,10 @@ class UCNewFolder(QUndoCommand):
 			self.trash_path = None
 			self.hash_path = None
 			self.machine.uc_browser_add_path(self.folder)
+
+		item = get_path_item(self.folder)
+		assert item is not None
+		item.on_new(self.machine.content_browser)
 
 
 class UCNewFile(QUndoCommand):
@@ -226,15 +256,24 @@ class UCNewFile(QUndoCommand):
 		self._generate_trash_path()
 		self.machine.uc_browser_remove_path(self.file)
 		self.machine.uc_main_tab_remove_path(self.file)
+
+		item = get_path_item(self.file)
+		assert item is not None
+		item.on_delete(self.machine.content_browser)
+
 		_move_to(self.file, self.trash_path)
 
 	def redo(self):
 		if self.touch:
 			self.touch = False
-			self.file.touch(exist_ok=False)
+			self.file.touch()
 		else:
 			_move_to(self.trash_path, self.file)
 			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
 			self.machine.uc_browser_add_path(self.file)
+
+		item = get_path_item(self.file)
+		assert item is not None
+		item.on_new(self.machine.content_browser)
