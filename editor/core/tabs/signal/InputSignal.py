@@ -2,8 +2,8 @@ from typing import override, Optional
 
 import toml
 from PySide6.QtCore import QSize, QObject, QEvent
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QKeyEvent, QIcon
+from PySide6.QtWidgets import QApplication, QComboBox, QPushButton, QMessageBox, QHeaderView
 
 from editor import ui
 from editor.core import MainWindow, InputSignalPathItem
@@ -66,6 +66,11 @@ class InputSignalTab(EditorTab):
 		self.ui.mappingName.editingFinished.connect(self.mapping_name_changed)
 		self.ui.mappingName.returnPressed.connect(lambda: self.ui.mappingName.clearFocus())
 
+		self.ui.mappingAppendSignal.clicked.connect(self.mapping_append_signal)
+		self.ui.mappingClearSignals.clicked.connect(self.mapping_clear_signals)
+		self.ui.mappingSignalTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+		self.ui.mappingSignalTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+
 		self.revert_changes_impl()
 		handle_all_children_modification(self, lambda: self.set_asterisk(True))
 
@@ -90,7 +95,7 @@ class InputSignalTab(EditorTab):
 			signals.append(Signal.convert_signal_from_editor_to_oly_format(signal).to_dict())
 
 		if len(self.scratch_mappings) > 0:
-			self.scratch_mappings[self.ui.selectSignal.currentIndex()] = self.convert_mapping_from_ui()
+			self.scratch_mappings[self.ui.selectMapping.currentIndex()] = self.convert_mapping_from_ui()
 		mappings = []
 		for mapping in self.scratch_mappings:
 			mappings.append(Signal.convert_mapping_from_editor_to_oly_format(mapping).to_dict())
@@ -288,10 +293,9 @@ class InputSignalTab(EditorTab):
 		self.ui.selectSignal.setCurrentIndex(index)
 		self.ui.selectSignal.blockSignals(False)
 
-		self.scratch_signals.append(
-			Signal.EditorSignal(basic=Signal.BasicSection(name=self.ui.signalName.text(), type=InputType.KEY, key=32)))
+		self.scratch_signals.append(Signal.EditorSignal(basic=Signal.BasicSection(name=name, type=InputType.KEY, key=32)))
 		self.enable_signal_page()
-		self.convert_signal_to_ui(self.scratch_signals[index])
+		self.select_signal()
 
 	def delete_signal(self):
 		index = self.ui.selectSignal.currentIndex()
@@ -450,9 +454,9 @@ class InputSignalTab(EditorTab):
 		self.ui.selectMapping.setCurrentIndex(index)
 		self.ui.selectMapping.blockSignals(False)
 
-		self.scratch_mappings.append(Signal.EditorMapping(name=self.ui.mappingName.text()))
+		self.scratch_mappings.append(Signal.EditorMapping(name=name))
 		self.enable_mapping_page()
-		self.convert_mapping_to_ui(self.scratch_mappings[index])
+		self.select_mapping()
 
 	def delete_mapping(self):
 		index = self.ui.selectMapping.currentIndex()
@@ -504,7 +508,10 @@ class InputSignalTab(EditorTab):
 
 	def convert_mapping_from_ui(self) -> Signal.EditorMapping:
 		mapping = Signal.EditorMapping(name=self.ui.mappingName.text())
-		# TODO v3 load signals array
+		for i in range(self.ui.mappingSignalTable.rowCount()):
+			combo = self.ui.mappingSignalTable.cellWidget(i, 0)
+			assert isinstance(combo, QComboBox)
+			mapping.signals.append(combo.currentText())
 		return mapping
 
 	def convert_mapping_to_ui(self, mapping: Signal.EditorMapping):
@@ -512,4 +519,96 @@ class InputSignalTab(EditorTab):
 		self.ui.mappingName.setText(mapping.name)
 		self.ui.mappingName.blockSignals(False)
 		self.mapping_name_changed()
-	# TODO v3 load signals array
+		for _ in range(self.ui.mappingSignalTable.rowCount()):
+			self.ui.mappingSignalTable.removeRow(0)
+		for i in range(len(mapping.signals)):
+			self.mapping_append_signal()
+			combo = self.ui.mappingSignalTable.cellWidget(i, 0)
+			assert isinstance(combo, QComboBox)
+			combo.setCurrentText(mapping.signals[i])
+
+	def mapping_append_signal(self):
+		row = self.ui.mappingSignalTable.rowCount()
+		if row >= len(self.scratch_signals):
+			QMessageBox.information(self, 'Unable to complete action', 'There are no more signals in list')
+			return
+
+		combo = QComboBox()
+		unused_signals = self.get_mapping_unused_signals()
+		assert len(unused_signals) > 0
+		for signal in unused_signals:
+			combo.addItem(signal)
+		combo.setCurrentIndex(0)
+		combo.currentIndexChanged.connect(self.mapping_signal_combo_changed)
+
+		delete = QPushButton(QIcon('res/images/Delete.png'), "")
+		delete.clicked.connect(lambda: self.remove_mapping_signal(row))
+
+		self.ui.mappingSignalTable.insertRow(row)
+		self.ui.mappingSignalTable.setCellWidget(row, 0, combo)
+		self.ui.mappingSignalTable.setCellWidget(row, 1, delete)
+		self.scratch_mappings[self.ui.selectMapping.currentIndex()].signals.append(combo.currentText())
+		self.mapping_signal_combo_changed()
+
+	def mapping_clear_signals(self):
+		self.scratch_mappings[self.ui.selectMapping.currentIndex()].signals.clear()
+		for _ in range(self.ui.mappingSignalTable.rowCount()):
+			self.ui.mappingSignalTable.removeRow(0)
+
+	def remove_mapping_signal(self, row):
+		self.scratch_mappings[self.ui.selectMapping.currentIndex()].signals.pop(row)
+		self.ui.mappingSignalTable.removeRow(row)
+		for i in range(row, self.ui.mappingSignalTable.rowCount()):
+			delete = self.ui.mappingSignalTable.cellWidget(i, 1)
+			assert isinstance(delete, QPushButton)
+			delete.clicked.disconnect()
+			delete.clicked.connect(lambda: self.remove_mapping_signal(i))
+		self.mapping_signal_combo_changed()
+
+	def get_signal_list(self):
+		signals = []
+		for i in range(self.ui.selectSignal.count()):
+			signals.append(self.ui.selectSignal.itemText(i))
+		return signals
+
+	def get_mapping_unused_signals(self):
+		signals = self.get_signal_list()
+		i = 0
+		while i < len(signals):
+			remove = False
+			for row in range(self.ui.mappingSignalTable.rowCount()):
+				combo = self.ui.mappingSignalTable.cellWidget(row, 0)
+				assert isinstance(combo, QComboBox)
+				if combo.currentText() == signals[i]:
+					remove = True
+					break
+			if remove:
+				signals.pop(i)
+			else:
+				i += 1
+		return signals
+
+	def mapping_signal_combo_changed(self):
+		signal_list = self.get_signal_list()
+		ordering = {signal: i for i, signal in enumerate(signal_list)}
+		unused_signals = self.get_mapping_unused_signals()
+		for row in range(self.ui.mappingSignalTable.rowCount()):
+			combo = self.ui.mappingSignalTable.cellWidget(row, 0)
+			assert isinstance(combo, QComboBox)
+			combo.blockSignals(True)
+			current_signal = combo.currentText()
+			combo.clear()
+			for signal in unused_signals:
+				combo.addItem(signal)
+
+			inserted = False
+			for i, signal in enumerate(unused_signals):
+				if ordering[current_signal] < ordering[signal]:
+					combo.insertItem(i, current_signal)
+					combo.setCurrentIndex(i)
+					inserted = True
+					break
+			if not inserted:
+				combo.addItem(current_signal)
+				combo.setCurrentIndex(len(unused_signals))
+			combo.blockSignals(False)
