@@ -1,3 +1,5 @@
+header = "signal"
+
 [[signal]]
 "id"      = "drag"
 "binding" = "cursor pos"

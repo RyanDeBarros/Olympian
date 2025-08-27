@@ -412,7 +412,7 @@ class ContentBrowser(QWidget):
 			if path.suffix == ".oly":
 				with open(path, 'r') as f:
 					d = toml.load(f)
-				if 'signal' in d or 'mapping' in d:
+				if 'header' in d and d['header'] == 'signal':
 					return InputSignalPathItem(parent_folder=self.current_folder, name=path.name)
 				return None  # TODO v3 add if asset and not import
 			else:

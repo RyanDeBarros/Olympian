@@ -1,3 +1,5 @@
+header = "signal"
+
 [[signal]]
 "id"      = "jump"
 "binding" = "key"

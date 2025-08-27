@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import override, TYPE_CHECKING
 
+import toml
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon, QPixmap
 
@@ -35,8 +36,14 @@ class InputSignalPathItem(AbstractPathItem):
 			i = i + 1
 		file_path = os.path.join(browser.current_folder, file_name)
 		browser.folder_view.file_machine.new_file(file_path)
-		browser.folder_view.add_item(InputSignalPathItem(parent_folder=browser.current_folder, name=file_name),
-									 editing=True)
+		item = InputSignalPathItem(parent_folder=browser.current_folder, name=file_name)
+		browser.folder_view.add_item(item, editing=True)
+
+		initial_data = {
+			"header": "signal"
+		}
+		with open(item.full_path, 'w') as f:
+			toml.dump(initial_data, f)
 
 		# TODO v3 add signal to project file's list of input signals
 

@@ -42,6 +42,13 @@ GL_MIRRORED_REPEAT = Param(0x8370, "Mirrored Repeat")
 GL_REPEAT = Param(0x2901, "Repeat")
 GL_MIRROR_CLAMP_TO_EDGE = Param(0x8743, "Mirror Clamp To Edge")
 
+GLFW_MOD_SHIFT = Param(0x0001, 'Mod Shift')
+GLFW_MOD_CONTROL = Param(0x0002, 'Mod Ctrl')
+GLFW_MOD_ALT = Param(0x0004, 'Mod Alt')
+GLFW_MOD_SUPER = Param(0x0008, 'Mod Super')
+GLFW_MOD_CAPS_LOCK = Param(0x0010, 'Mod Caps Lock')
+GLFW_MOD_NUM_LOCK = Param(0x0020, 'Mod Num Lock')
+
 OLY_DISCARD = Param("discard", "Discard")
 OLY_KEEP = Param("keep", "Keep")
 
