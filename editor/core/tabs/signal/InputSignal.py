@@ -200,7 +200,6 @@ class InputSignalTab(EditorTab):
 		deadzone = stype in (InputType.GAMEPAD_1D_AXIS, InputType.GAMEPAD_2D_AXIS)
 		self._set_widget_visible(self.ui.signalDeadzoneLabel, deadzone)
 		self._set_widget_visible(self.ui.signalDeadzone, deadzone)
-		# TODO v3 FIX change from Key -> Gamepad 1D Axis; the spacer doesn't appear. sometimes the post swizzle spacer doesn't appear either.
 		self.ui.preDeadzoneSpacer.changeSize(0, 10 if deadzone else 0)
 
 		dim0 = stype in (InputType.KEY, InputType.MOUSE_BUTTON, InputType.GAMEPAD_BUTTON)
@@ -222,6 +221,9 @@ class InputSignalTab(EditorTab):
 		self._set_widget_visible(self.ui.dimensionConversion2D, dim2)
 
 		self._set_widget_visible(self.ui.signalModsGroupBox, stype in (InputType.KEY, InputType.MOUSE_BUTTON))
+
+		self.ui.signalBasicForm.invalidate()
+		self.ui.signalConversionForm.invalidate()
 
 	def conversion_0d_changed(self):
 		ctype = self.ui.dimensionConversion0D.currentIndex()
