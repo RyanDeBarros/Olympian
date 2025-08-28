@@ -6,27 +6,85 @@ from editor.core import GL_NEAREST, GL_CLAMP_TO_EDGE, OLY_DISCARD, OLY_OFF, OLY_
 
 
 @dataclass
-class TextureDefaults:
-	raster_storage: str = OLY_DISCARD.value  # regular storage
-	svg_storage: str = OLY_DISCARD.value  # svg image_storage
-	abstract_storage: str = OLY_DISCARD.value  # svg abstract_storage
-	raster_generate_mipmaps: bool = False
-	svg_generate_mipmaps: str = OLY_OFF.value
+class RasterTextureDefaults:
+	storage: str = OLY_DISCARD.value
+	generate_mipmaps: bool = False
 	min_filter: int = GL_NEAREST.value
 	mag_filter: int = GL_NEAREST.value
 	wrap_s: int = GL_CLAMP_TO_EDGE.value
 	wrap_t: int = GL_CLAMP_TO_EDGE.value
 
 	@staticmethod
-	def from_dict(d: dict) -> Defaults:
+	def from_dict(d: dict) -> RasterTextureDefaults:
 		init_values = {}
 		if d is not None:
-			for f in fields(Defaults):
+			for f in fields(RasterTextureDefaults):
 				if f.name in d:
 					match f.name:
 						case _:
 							init_values[f.name] = d[f.name]
-		return Defaults(**init_values)
+		return RasterTextureDefaults(**init_values)
+
+	def to_dict(self) -> dict:
+		d = {}
+		for key, value in self.__dict__.items():
+			if hasattr(value, "to_dict"):
+				d[key] = value.to_dict()
+			else:
+				d[key] = value
+		return d
+
+
+@dataclass
+class SVGTextureDefaults:
+	image_storage: str = OLY_DISCARD.value
+	abstract_storage: str = OLY_DISCARD.value
+	generate_mipmaps: str = OLY_OFF.value
+	min_filter: int = GL_NEAREST.value
+	mag_filter: int = GL_NEAREST.value
+	wrap_s: int = GL_CLAMP_TO_EDGE.value
+	wrap_t: int = GL_CLAMP_TO_EDGE.value
+
+	@staticmethod
+	def from_dict(d: dict) -> SVGTextureDefaults:
+		init_values = {}
+		if d is not None:
+			for f in fields(SVGTextureDefaults):
+				if f.name in d:
+					match f.name:
+						case _:
+							init_values[f.name] = d[f.name]
+		return SVGTextureDefaults(**init_values)
+
+	def to_dict(self) -> dict:
+		d = {}
+		for key, value in self.__dict__.items():
+			if hasattr(value, "to_dict"):
+				d[key] = value.to_dict()
+			else:
+				d[key] = value
+		return d
+
+
+@dataclass
+class TextureDefaults:
+	raster: RasterTextureDefaults = field(default_factory=lambda: RasterTextureDefaults())
+	svg: SVGTextureDefaults = field(default_factory=lambda: SVGTextureDefaults())
+
+	@staticmethod
+	def from_dict(d: dict) -> TextureDefaults:
+		init_values = {}
+		if d is not None:
+			for f in fields(TextureDefaults):
+				if f.name in d:
+					match f.name:
+						case 'raster':
+							init_values[f.name] = RasterTextureDefaults.from_dict(d[f.name])
+						case 'svg':
+							init_values[f.name] = SVGTextureDefaults.from_dict(d[f.name])
+						case _:
+							init_values[f.name] = d[f.name]
+		return TextureDefaults(**init_values)
 
 	def to_dict(self) -> dict:
 		d = {}
@@ -42,15 +100,15 @@ class FontFaceDefaults:
 	storage: str = OLY_DISCARD.value
 
 	@staticmethod
-	def from_dict(d: dict) -> Defaults:
+	def from_dict(d: dict) -> FontFaceDefaults:
 		init_values = {}
 		if d is not None:
-			for f in fields(Defaults):
+			for f in fields(FontFaceDefaults):
 				if f.name in d:
 					match f.name:
 						case _:
 							init_values[f.name] = d[f.name]
-		return Defaults(**init_values)
+		return FontFaceDefaults(**init_values)
 
 	def to_dict(self) -> dict:
 		d = {}
@@ -72,15 +130,15 @@ class FontAtlasDefaults:
 	common_buffer: str = ""
 
 	@staticmethod
-	def from_dict(d: dict) -> Defaults:
+	def from_dict(d: dict) -> FontAtlasDefaults:
 		init_values = {}
 		if d is not None:
-			for f in fields(Defaults):
+			for f in fields(FontAtlasDefaults):
 				if f.name in d:
 					match f.name:
 						case _:
 							init_values[f.name] = d[f.name]
-		return Defaults(**init_values)
+		return FontAtlasDefaults(**init_values)
 
 	def to_dict(self) -> dict:
 		d = {}
@@ -97,10 +155,10 @@ class FontDefaults:
 	font_atlas: FontAtlasDefaults = field(default_factory=lambda: FontAtlasDefaults())
 
 	@staticmethod
-	def from_dict(d: dict) -> Defaults:
+	def from_dict(d: dict) -> FontDefaults:
 		init_values = {}
 		if d is not None:
-			for f in fields(Defaults):
+			for f in fields(FontDefaults):
 				if f.name in d:
 					match f.name:
 						case 'font_face':
@@ -109,7 +167,7 @@ class FontDefaults:
 							init_values[f.name] = FontAtlasDefaults.from_dict(d[f.name])
 						case _:
 							init_values[f.name] = d[f.name]
-		return Defaults(**init_values)
+		return FontDefaults(**init_values)
 
 	def to_dict(self) -> dict:
 		d = {}

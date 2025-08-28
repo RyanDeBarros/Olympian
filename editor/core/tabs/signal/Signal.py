@@ -19,8 +19,8 @@ class InputType(IntEnum):
 
 
 class ModPolicy(IntEnum):
-	IGNORE = 0,
-	REQUIRED = 1,
+	IGNORE = 0
+	REQUIRED = 1
 	FORBIDDEN = 2
 
 

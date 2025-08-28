@@ -1,12 +1,19 @@
+from enum import IntEnum
 from typing import override
 
 from PySide6.QtCore import QSize
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, AbstractPathItem, nice_icon
-from editor.core.common.SettingsForm import handle_all_children_modification
+from editor.core import MainWindow, AbstractPathItem, nice_icon, SettingsParameter
+from editor.core.common.SettingsForm import handle_all_children_modification, SettingsForm
 from editor.core.tabs.EditorTab import EditorTab
-from . import DefaultPODs
+from . import DefaultPODs, Converters
+
+
+class TypeIndex(IntEnum):
+	EMPTY = 0
+	TEXTURE = 1
+	FONT = 2
 
 
 class AssetDefaultsTab(EditorTab):
@@ -67,7 +74,15 @@ class AssetDefaultsTab(EditorTab):
 		self.load_ui_from_defaults()
 
 	def load_ui_from_defaults(self):
-		pass  # TODO v3
+		match self.ui.stackedWidget.currentIndex():
+			case TypeIndex.TEXTURE:
+				Converters.convert_to_ui_from_texture(self.ui, self.defaults.texture)
+			case TypeIndex.FONT:
+				Converters.convert_to_ui_from_font(self.ui, self.defaults.font)
 
 	def load_defaults_from_ui(self):
-		pass  # TODO v3
+		match self.ui.stackedWidget.currentIndex():
+			case TypeIndex.TEXTURE:
+				self.defaults.texture = Converters.convert_to_texture_from_ui(self.ui)
+			case TypeIndex.FONT:
+				self.defaults.font = Converters.convert_to_font_from_ui(self.ui)

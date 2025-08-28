@@ -1,0 +1,47 @@
+from editor.ui import AssetDefaults
+from . import DefaultPODs
+from ... import PARAM_LIST
+
+
+def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults) -> DefaultPODs.TextureDefaults:
+	texture = DefaultPODs.TextureDefaults()
+
+	texture.raster.storage = PARAM_LIST.get_value(ui.textureRasterStorage.currentText())
+	texture.raster.generate_mipmaps = ui.textureRasterMipmaps.isChecked()
+	texture.raster.min_filter = PARAM_LIST.get_value(ui.textureRasterMinFilter.currentText())
+	texture.raster.mag_filter = PARAM_LIST.get_value(ui.textureRasterMagFilter.currentText())
+	texture.raster.wrap_s = PARAM_LIST.get_value(ui.textureRasterWrapS.currentText())
+	texture.raster.wrap_t = PARAM_LIST.get_value(ui.textureRasterWrapT.currentText())
+
+	texture.svg.image_storage = PARAM_LIST.get_value(ui.textureSVGImageStorage.currentText())
+	texture.svg.abstract_storage = PARAM_LIST.get_value(ui.textureSVGAbstractStorage.currentText())
+	texture.svg.generate_mipmaps = PARAM_LIST.get_value(ui.textureSVGMipmaps.currentText())
+	texture.svg.min_filter = PARAM_LIST.get_value(ui.textureSVGMinFilter.currentText())
+	texture.svg.mag_filter = PARAM_LIST.get_value(ui.textureSVGMagFilter.currentText())
+	texture.svg.wrap_s = PARAM_LIST.get_value(ui.textureSVGWrapS.currentText())
+	texture.svg.wrap_t = PARAM_LIST.get_value(ui.textureSVGWrapT.currentText())
+
+	return texture
+
+def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: DefaultPODs.TextureDefaults):
+	ui.textureRasterStorage.setCurrentText(PARAM_LIST.get_name(texture.raster.storage))
+	ui.textureRasterMipmaps.setChecked(texture.raster.generate_mipmaps)
+	ui.textureRasterMinFilter.setCurrentText(PARAM_LIST.get_name(texture.raster.min_filter))
+	ui.textureRasterMagFilter.setCurrentText(PARAM_LIST.get_name(texture.raster.mag_filter))
+	ui.textureRasterWrapS.setCurrentText(PARAM_LIST.get_name(texture.raster.wrap_s))
+	ui.textureRasterWrapT.setCurrentText(PARAM_LIST.get_name(texture.raster.wrap_t))
+
+	ui.textureSVGImageStorage.setCurrentText(PARAM_LIST.get_name(texture.svg.image_storage))
+	ui.textureSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(texture.svg.abstract_storage))
+	ui.textureSVGMipmaps.setCurrentText(PARAM_LIST.get_name(texture.svg.generate_mipmaps))
+	ui.textureSVGMinFilter.setCurrentText(PARAM_LIST.get_name(texture.svg.min_filter))
+	ui.textureSVGMagFilter.setCurrentText(PARAM_LIST.get_name(texture.svg.mag_filter))
+	ui.textureSVGWrapS.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_s))
+	ui.textureSVGWrapT.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_t))
+
+def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults) -> DefaultPODs.FontDefaults:
+	pass  # TODO v3
+
+def convert_to_ui_from_font(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPODs.FontDefaults):
+	pass  # TODO v3
+
