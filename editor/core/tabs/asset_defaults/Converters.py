@@ -1,11 +1,9 @@
 from editor.ui import AssetDefaults
 from . import DefaultPODs
-from ... import PARAM_LIST
+from editor.core import PARAM_LIST
 
 
-def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults) -> DefaultPODs.TextureDefaults:
-	texture = DefaultPODs.TextureDefaults()
-
+def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults, texture: DefaultPODs.TextureDefaults):
 	texture.raster.storage = PARAM_LIST.get_value(ui.textureRasterStorage.currentText())
 	texture.raster.generate_mipmaps = ui.textureRasterMipmaps.isChecked()
 	texture.raster.min_filter = PARAM_LIST.get_value(ui.textureRasterMinFilter.currentText())
@@ -21,7 +19,6 @@ def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults) -> DefaultPOD
 	texture.svg.wrap_s = PARAM_LIST.get_value(ui.textureSVGWrapS.currentText())
 	texture.svg.wrap_t = PARAM_LIST.get_value(ui.textureSVGWrapT.currentText())
 
-	return texture
 
 def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: DefaultPODs.TextureDefaults):
 	ui.textureRasterStorage.setCurrentText(PARAM_LIST.get_name(texture.raster.storage))
@@ -39,9 +36,26 @@ def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: Defa
 	ui.textureSVGWrapS.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_s))
 	ui.textureSVGWrapT.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_t))
 
-def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults) -> DefaultPODs.FontDefaults:
-	pass  # TODO v3
+
+def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPODs.FontDefaults):
+	font.font_face.storage = PARAM_LIST.get_value(ui.fontFaceStorage.currentText())
+
+	font.font_atlas.storage = PARAM_LIST.get_value(ui.fontAtlasStorage.currentText())
+	font.font_atlas.font_size = ui.fontSize.value()
+	font.font_atlas.min_filter = PARAM_LIST.get_value(ui.fontMinFilter.currentText())
+	font.font_atlas.mag_filter = PARAM_LIST.get_value(ui.fontMagFilter.currentText())
+	font.font_atlas.generate_mipmaps = ui.fontMipmaps.isChecked()
+	font.font_atlas.common_buffer_preset = PARAM_LIST.get_value(ui.fontCommonBufferPreset.currentText())
+	font.font_atlas.common_buffer = ui.fontCommonBuffer.text()
+
 
 def convert_to_ui_from_font(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPODs.FontDefaults):
-	pass  # TODO v3
+	ui.fontFaceStorage.setCurrentText(PARAM_LIST.get_name(font.font_face.storage))
 
+	ui.fontAtlasStorage.setCurrentText(PARAM_LIST.get_name(font.font_atlas.storage))
+	ui.fontSize.setValue(font.font_atlas.font_size)
+	ui.fontMinFilter.setCurrentText(PARAM_LIST.get_name(font.font_atlas.min_filter))
+	ui.fontMagFilter.setCurrentText(PARAM_LIST.get_name(font.font_atlas.mag_filter))
+	ui.fontMipmaps.setChecked(font.font_atlas.generate_mipmaps)
+	ui.fontCommonBufferPreset.setCurrentText(PARAM_LIST.get_name(font.font_atlas.common_buffer_preset))
+	ui.fontCommonBuffer.setText(font.font_atlas.common_buffer)

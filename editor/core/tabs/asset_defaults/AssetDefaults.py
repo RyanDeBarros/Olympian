@@ -4,8 +4,8 @@ from typing import override
 from PySide6.QtCore import QSize
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, AbstractPathItem, nice_icon, SettingsParameter
-from editor.core.common.SettingsForm import handle_all_children_modification, SettingsForm
+from editor.core import MainWindow, AbstractPathItem, nice_icon
+from editor.core.common.SettingsForm import handle_all_children_modification
 from editor.core.tabs.EditorTab import EditorTab
 from . import DefaultPODs, Converters
 
@@ -31,6 +31,8 @@ class AssetDefaultsTab(EditorTab):
 		self.ui.setupUi(self)
 
 		self.ui.assetTypeSelect.currentIndexChanged.connect(self.select_asset_type)
+
+		self.ui.fontCommonBuffer.editingFinished.connect(lambda: self.ui.fontCommonBuffer.clearFocus())
 
 		self.revert_changes_impl()
 		handle_all_children_modification(self.ui.stackedWidget, self.control_modified)
@@ -83,6 +85,6 @@ class AssetDefaultsTab(EditorTab):
 	def load_defaults_from_ui(self):
 		match self.ui.stackedWidget.currentIndex():
 			case TypeIndex.TEXTURE:
-				self.defaults.texture = Converters.convert_to_texture_from_ui(self.ui)
+				Converters.convert_to_texture_from_ui(self.ui, self.defaults.texture)
 			case TypeIndex.FONT:
-				self.defaults.font = Converters.convert_to_font_from_ui(self.ui)
+				Converters.convert_to_font_from_ui(self.ui, self.defaults.font)

@@ -509,7 +509,228 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="fontPage"/>
+     <widget class="QWidget" name="fontPage">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Font Face Storage</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>Font Atlas Storage</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Font Size</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Min Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>Mag Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Generate Mipmaps</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_21">
+              <property name="text">
+               <string>Common Buffer Preset</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_22">
+              <property name="text">
+               <string>Common Buffer</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLineEdit" name="fontCommonBuffer"/>
+            </item>
+            <item row="6" column="1">
+             <widget class="QComboBox" name="fontCommonBufferPreset">
+              <item>
+               <property name="text">
+                <string>Common</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Alpha Numeric</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Numeric</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Alphabet</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Alphabet (lowercase)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Alphabet (uppercase)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QCheckBox" name="fontMipmaps">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="fontMinFilter">
+              <item>
+               <property name="text">
+                <string>Nearest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Linear</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Nearest Mipmap Nearest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Linear Mipmap Nearest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Nearest Mipmap Linear</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Linear Mipmap Linear</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="fontMagFilter">
+              <item>
+               <property name="text">
+                <string>Nearest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Linear</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="fontFaceStorage">
+              <item>
+               <property name="text">
+                <string>Discard</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Keep</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="fontAtlasStorage">
+              <item>
+               <property name="text">
+                <string>Discard</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Keep</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="fontSize">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>2048.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>32.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>163</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
