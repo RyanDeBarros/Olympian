@@ -5,7 +5,7 @@ from PySide6.QtGui import QShortcut, Qt
 
 from editor import ui
 from editor.core import MainWindow, StandardFilePathItem
-from editor.core.MainTabHolder import EditorTab
+from .EditorTab import EditorTab
 
 
 class StandardFileTab(EditorTab):

@@ -1,12 +1,11 @@
 from typing import override
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QPixmap, QIcon
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, AbstractPathItem, SettingsParameter, SettingsForm
-from editor.core.MainTabHolder import EditorTab
+from editor.core import MainWindow, AbstractPathItem, SettingsParameter, SettingsForm, nice_icon
 from editor.core.EditorPreferences import PREFERENCES
+from .EditorTab import EditorTab
 
 
 class EditorPreferencesTab(EditorTab):
@@ -36,7 +35,7 @@ class EditorPreferencesTab(EditorTab):
 
 	@override
 	def icon(self, size: QSize):
-		return QIcon(QPixmap("res/images/Gear.png").scaled(size))
+		return nice_icon("res/images/Gear.png", size)
 
 	@override
 	def name(self):

@@ -1,3 +1,5 @@
+#meta type=texture
+
 [[texture]]
 storage = "discard"
 "min filter" = "nearest"

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import override, TYPE_CHECKING
 
@@ -13,10 +12,16 @@ if TYPE_CHECKING:
 	from editor.core.ContentBrowser import ContentBrowser
 
 
-class StandardFilePathItem(AbstractPathItem):
+# TODO v3 context menu option when right-clicking to re-import
+
+class ImportedTexturePathItem(AbstractPathItem):
+	def __init__(self, full_path):
+		super().__init__(full_path)
+		self.import_path = Path(str(full_path) + '.oly')
+
 	@override
 	def icon(self, size: QSize):
-		return nice_icon("res/images/File.png", size)
+		return nice_icon(self.full_path, size)
 
 	@override
 	def ui_name(self):
@@ -26,31 +31,19 @@ class StandardFilePathItem(AbstractPathItem):
 	def renamed_filepath(self, name: str):
 		return self.full_path.parent.joinpath(name)
 
-	@staticmethod
-	def new_item(browser: ContentBrowser):
-		file_name = "NewFile"
-		i = 1
-		while os.path.exists(os.path.join(browser.current_folder, file_name)):
-			file_name = f"NewFile ({i})"
-			i = i + 1
-		file_path = os.path.join(browser.current_folder, file_name)
-		browser.folder_view.file_machine.new_file(file_path)
-		browser.folder_view.add_item(StandardFilePathItem(browser.current_folder.joinpath(file_name).resolve()),
-									 editing=True)
-
 	@override
 	def open(self, browser: ContentBrowser):
-		from ..tabs import StandardFileTab
-		browser.win.tab_holder.add_tab(StandardFileTab(browser.win, self))
+		from ..tabs import TextureTab
+		browser.win.tab_holder.add_tab(TextureTab(browser.win, self))
 
 	@override
 	def on_new(self, browser: ContentBrowser):
-		pass
+		pass  # TODO v3 create import file if it doesn't exist - if on_new is called on a file being moved from trash, bring import file back from trash as well instead of creating new import file
 
 	@override
 	def on_delete(self, browser: ContentBrowser):
-		pass
+		pass  # TODO v3 delete import file if it doesn't exist -> move to trash folder where texture went
 
 	@override
 	def on_rename(self, browser: ContentBrowser, old_path: Path):
-		pass
+		self.import_path = Path(str(self.full_path) + '.oly')

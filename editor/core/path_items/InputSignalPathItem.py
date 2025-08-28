@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon, QPixmap
 
 from editor import TOMLAdapter
-from editor.core.path_items.AbstractPathItem import AbstractPathItem
+from .AbstractPathItem import AbstractPathItem
+from .. import nice_icon
 
 if TYPE_CHECKING:
 	from editor.core.ContentBrowser import ContentBrowser
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class InputSignalPathItem(AbstractPathItem):
 	@override
 	def icon(self, size: QSize):
-		return QIcon(QPixmap("res/images/InputSignal.png").scaled(size))
+		return nice_icon("res/images/InputSignal.png", size)
 
 	@override
 	def ui_name(self):

@@ -6,12 +6,12 @@ from PySide6.QtWidgets import QApplication, QComboBox, QPushButton, QMessageBox,
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, InputSignalPathItem, block_signals
-from editor.core.MainTabHolder import EditorTab
 from editor.core.common import Alerts
 from editor.core.common.SettingsForm import handle_all_children_modification
 from editor.core.tabs.signal import Signal
 from editor.core.tabs.signal.KeyMap import KEY_MAP
 from editor.core.tabs.signal.Signal import InputType
+from ..EditorTab import EditorTab
 
 
 class KeyCaptureFilter(QObject):

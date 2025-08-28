@@ -1,3 +1,5 @@
+#meta type=font
+
 [[font_atlas]]
 storage = "discard"
 "font size" = 96

@@ -1,3 +1,5 @@
+#meta type=texture
+
 [[texture]]
 "abstract storage" = "keep"
 "image storage" = "discard"
