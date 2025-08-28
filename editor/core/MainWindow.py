@@ -58,6 +58,12 @@ class MainWindow(QMainWindow):
 		revert_changes_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Shift+R"), self)
 		revert_changes_shortcut.activated.connect(self.tab_holder.revert_changes)
 
+	def closeEvent(self, event):
+		if self.tab_holder.close_all():
+			event.accept()
+		else:
+			event.ignore()
+
 	def open_start_menu(self):
 		self.close()
 		self.open_start()

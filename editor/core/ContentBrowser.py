@@ -252,6 +252,7 @@ class ContentBrowserFolderView(QListView):
 
 	def refresh_view(self):
 		# TODO v3 handle the case where the current folder is removed -> go to parent folder that exists. Also, refreshing might need to clear history if items before and items after don't match.
+		self.content_browser.win.project_context.refresh()
 		self.clear_items()
 		self.content_browser.populate()
 

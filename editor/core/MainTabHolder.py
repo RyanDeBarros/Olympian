@@ -95,7 +95,6 @@ class MainTabHolder(QTabWidget):
 		uid = self.uids.pop(from_index)
 		self.uids.insert(to_index, uid)
 
-	# TODO if there are unsaved changes when editor is requested to close, prompt user
 	def close_tab(self, index):
 		tab = self.editor_tab_at(index)
 		if tab.asterisk:
@@ -103,11 +102,18 @@ class MainTabHolder(QTabWidget):
 										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
 										 QMessageBox.StandardButton.Cancel)
 			if reply == QMessageBox.StandardButton.Cancel:
-				return
+				return False
 			if reply == QMessageBox.StandardButton.Yes:
 				tab.save_changes()
 		self.removeTab(index)
 		self.uids.pop(index)
+		return True
+
+	def close_all(self):
+		while len(self.uids) > 0:
+			if not self.close_tab(0):
+				return False
+		return True
 
 	def remove_tab(self, index):
 		self.removeTab(index)
@@ -133,14 +139,20 @@ class MainTabHolder(QTabWidget):
 			self.uids.insert(index, uid)
 
 	def save(self):
-		self.current_editor_tab().save_changes()
+		tab = self.current_editor_tab()
+		if tab is not None:
+			tab.save_changes()
 
 	def save_all(self):
 		for i in range(self.count()):
 			self.editor_tab_at(i).save_changes()
 
 	def revert_changes(self):
-		self.current_editor_tab().revert_changes()
+		tab = self.current_editor_tab()
+		if tab is not None:
+			tab.revert_changes()
 
 	def tab_changed(self):
-		self.current_editor_tab().refresh_impl()
+		tab = self.current_editor_tab()
+		if tab is not None:
+			tab.refresh_impl()

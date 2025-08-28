@@ -12,3 +12,6 @@ class ProjectContext:
 		self.main_window = main_window
 		from editor.core.InputSignalRegistry import InputSignalRegistry
 		self.input_signal_registry = InputSignalRegistry(self)
+
+	def refresh(self):
+		self.input_signal_registry.load()
