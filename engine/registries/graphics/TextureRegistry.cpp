@@ -13,10 +13,10 @@ namespace oly::reg
 	static void setup_texture(graphics::BindlessTexture& texture, const TOMLNode& node, GLenum target, bool set_and_use)
 	{
 		GLenum min_filter, mag_filter, wrap_s, wrap_t;
-		if (!parse_min_filter(node, "min filter", min_filter))
+		if (!parse_min_filter(node, "min_filter", min_filter))
 			min_filter = GL_NEAREST;
 		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
-		if (!parse_mag_filter(node, "mag filter", mag_filter))
+		if (!parse_mag_filter(node, "mag_filter", mag_filter))
 			mag_filter = GL_NEAREST;
 		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
 		if (parse_wrap(node, "wrap s", wrap_s))
@@ -30,14 +30,14 @@ namespace oly::reg
 
 	static graphics::BindlessTextureRef load_image(const graphics::Image& image, const TOMLNode& node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, node["generate mipmaps"].value<bool>().value_or(false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, node["generate_mipmaps"].value<bool>().value_or(false));
 		setup_texture(texture, node, GL_TEXTURE_2D, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
 	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, const TOMLNode& node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, node["generate mipmaps"].value<bool>().value_or(false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, node["generate_mipmaps"].value<bool>().value_or(false));
 		setup_texture(texture, node, GL_TEXTURE_2D_ARRAY, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
@@ -45,7 +45,7 @@ namespace oly::reg
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, const TOMLNode& node, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		std::string generate_mipmaps = node["generate mipmaps"].value<std::string>().value_or("off");
+		std::string generate_mipmaps = node["generate_mipmaps"].value<std::string>().value_or("off");
 		if (generate_mipmaps == "auto")
 			texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, true));
 		else
@@ -97,11 +97,11 @@ namespace oly::reg
 		graphics::SpritesheetOptions options;
 		options.rows                 = (GLuint)texture_node["rows"                ].value<int64_t>().value_or(1);
 		options.cols                 = (GLuint)texture_node["cols"                ].value<int64_t>().value_or(1);
-		options.cell_width_override  = (GLuint)texture_node["cell width override" ].value<int64_t>().value_or(0);
-		options.cell_height_override = (GLuint)texture_node["cell height override"].value<int64_t>().value_or(0);
-		options.delay_cs             = (int)   texture_node["delay cs"            ].value<int64_t>().value_or(0);
-		options.row_major            = (bool)  texture_node["row major"           ].value<bool>().value_or(true);
-		options.row_up               = (bool)  texture_node["row up"              ].value<bool>().value_or(true);
+		options.cell_width_override  = (GLuint)texture_node["cell_width_override" ].value<int64_t>().value_or(0);
+		options.cell_height_override = (GLuint)texture_node["cell_height_override"].value<int64_t>().value_or(0);
+		options.delay_cs             = (int)   texture_node["delay_cs"            ].value<int64_t>().value_or(0);
+		options.row_major            = (bool)  texture_node["row_major"           ].value<bool>().value_or(true);
+		options.row_up               = (bool)  texture_node["row_up"              ].value<bool>().value_or(true);
 		return options;
 	}
 
@@ -186,8 +186,8 @@ namespace oly::reg
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, params.texture_index);
 
-		bool store_abstract = should_store(texture_node, "abstract storage", params.abstract_storage);
-		bool store_image = should_store(texture_node, "image storage", params.image_storage);
+		bool store_abstract = should_store(texture_node, "abstract_storage", params.abstract_storage);
+		bool store_image = should_store(texture_node, "image_storage", params.image_storage);
 
 		graphics::BindlessTextureRef texture;
 

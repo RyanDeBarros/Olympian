@@ -1,3 +1,4 @@
+from . import AssetDefaults
 from . import EditorPreferences
 from . import InputSignal
 from . import ProjectSettings

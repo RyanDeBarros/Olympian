@@ -25,36 +25,36 @@ namespace oly::reg
 		index = glm::clamp(index, (unsigned int)0, (unsigned int)font_atlas_list->size() - 1);
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
-		auto _font_size_double = node["font size"].value<double>();
-		auto _font_size_int = node["font size"].value<int64_t>();
+		auto _font_size_double = node["font_size"].value<double>();
+		auto _font_size_int = node["font_size"].value<int64_t>();
 		if (!_font_size_double && !_font_size_int)
 			throw Error(ErrorCode::LOAD_ASSET);
 
 		rendering::FontOptions options;
 
 		options.font_size = _font_size_double ? (float)_font_size_double.value() : (float)_font_size_int.value();
-		parse_min_filter(node, "min filter", options.min_filter);
-		parse_mag_filter(node, "mag filter", options.mag_filter);
-		options.auto_generate_mipmaps = node["generate mipmaps"].value<bool>().value_or(false);
+		parse_min_filter(node, "min_filter", options.min_filter);
+		parse_mag_filter(node, "mag_filter", options.mag_filter);
+		options.auto_generate_mipmaps = node["generate_mipmaps"].value<bool>().value_or(false);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (auto _common_buffer_preset = node["common buffer preset"].value<std::string>())
+		if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
 		{
 			const std::string& common_buffer_preset = _common_buffer_preset.value();
 			if (common_buffer_preset == "common")
 				; // already initialized to common
-			else if (common_buffer_preset == "alpha numeric")
+			else if (common_buffer_preset == "alpha_numeric")
 				common_buffer = rendering::glyphs::ALPHA_NUMERIC;
 			else if (common_buffer_preset == "numeric")
 				common_buffer = rendering::glyphs::NUMERIC;
 			else if (common_buffer_preset == "alphabet")
 				common_buffer = rendering::glyphs::ALPHABET;
-			else if (common_buffer_preset == "alphabet lowercase")
+			else if (common_buffer_preset == "alphabet_lowercase")
 				common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-			else if (common_buffer_preset == "alphabet uppercase")
+			else if (common_buffer_preset == "alphabet_uppercase")
 				common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
 		}
-		else if (auto _common_buffer = node["common buffer"].value<std::string>())
+		else if (auto _common_buffer = node["common_buffer"].value<std::string>())
 			common_buffer = _common_buffer.value();
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);

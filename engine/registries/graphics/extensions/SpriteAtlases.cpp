@@ -20,8 +20,8 @@ namespace oly::reg
 				.rows = (GLuint)_rows.value(),
 				.cols = (GLuint)_cols.value(),
 				.delay_seconds = (float)_delay_seconds.value(),
-				.row_major = node["row major"].value<bool>().value_or(true),
-				.row_up = node["row up"].value<bool>().value_or(true)
+				.row_major = node["row_major"].value<bool>().value_or(true),
+				.row_up = node["row_up"].value<bool>().value_or(true)
 			};
 		}
 		else if (auto _static_frame = node["static frame"].value<int64_t>())

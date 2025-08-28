@@ -2,17 +2,17 @@
 
 [[texture]]
 storage = "discard"
-"min filter" = "nearest"
-"mag filter" = "nearest"
-"generate mipmaps" = false
+"min_filter" = "nearest"
+"mag_filter" = "nearest"
+"generate_mipmaps" = false
 anim = true
 rows = 2
 cols = 3
-"delay cs" = 10
+"delay_cs" = 10
 
 [[texture]]
 storage = "discard"
-"min filter" = "nearest"
-"mag filter" = "nearest"
-"generate mipmaps" = false
+"min_filter" = "nearest"
+"mag_filter" = "nearest"
+"generate_mipmaps" = false
 

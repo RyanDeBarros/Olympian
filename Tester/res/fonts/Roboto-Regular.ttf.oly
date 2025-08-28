@@ -2,11 +2,11 @@
 
 [[font_atlas]]
 storage = "discard"
-"font size" = 96
-"mag filter" = "linear"
-"min filter" = "linear mipmap linear"
-"generate mipmaps" = true
-"common buffer preset" = "common"
+"font_size" = 96
+"mag_filter" = "linear"
+"min_filter" = "linear mipmap linear"
+"generate_mipmaps" = true
+"common_buffer_preset" = "common"
 
 [font_face]
 storage = "discard"

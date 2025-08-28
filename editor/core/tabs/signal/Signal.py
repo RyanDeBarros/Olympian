@@ -135,12 +135,14 @@ class OlySignal:
 	@staticmethod
 	def from_dict(d: dict) -> OlySignal:
 		init_values = {}
-		for f in fields(OlySignal):
-			if f.name in d:
-				if f.name == 'modifier' and d[f.name] is not None:
-					init_values[f.name] = ModifierSection.from_dict(d[f.name])
-				else:
-					init_values[f.name] = d[f.name]
+		if d is not None:
+			for f in fields(OlySignal):
+				if f.name in d:
+					match f.name:
+						case 'modifier':
+							init_values[f.name] = ModifierSection.from_dict(d[f.name])
+						case _:
+							init_values[f.name] = d[f.name]
 		return OlySignal(**init_values)
 
 	def to_dict(self) -> dict:

@@ -23,21 +23,18 @@ class FileIOMachine:
 		send2trash.send2trash(Path(path).resolve())
 
 	def clear_trash(self):
-		self._send_to_trash(self._trash_folder())
-		os.makedirs(self._trash_folder())
+		self._send_to_trash(self.project_context.trash_folder)
+		os.makedirs(self.project_context.trash_folder)
 
 	def _generate_hash_container(self):
 		h = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-		if os.path.exists(self._trash_folder().joinpath(h)):
+		if os.path.exists(self.project_context.trash_folder.joinpath(h)):
 			return self._generate_hash_container()
 		else:
 			return h
 
 	def generate_hash_path(self):
-		return self._trash_folder().joinpath(self._generate_hash_container())
-
-	def _trash_folder(self) -> Path:
-		return self.project_context.project_folder.joinpath(".trash")
+		return self.project_context.trash_folder.joinpath(self._generate_hash_container())
 
 	def remove(self, path: Path):
 		self.undo_stack.push(UCDeletePaths(self, [Path(path).resolve()]))

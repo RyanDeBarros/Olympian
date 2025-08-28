@@ -42,4 +42,4 @@ class FontTab(EditorTab):
 
 	@override
 	def refresh_impl(self):
-		pass
+		pass  # TODO v3 update 'reset to default' button states next to fields

@@ -1,3 +1,5 @@
+#meta type=project
+
 [context]
 gamepads = 1
 signals = [ "signals/Camera.oly", "signals/Click.oly", "signals/Drag.oly", "signals/Jump.oly", "signals/Move.oly",]

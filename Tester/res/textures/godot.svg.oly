@@ -1,9 +1,9 @@
 #meta type=texture
 
 [[texture]]
-"abstract storage" = "keep"
-"image storage" = "discard"
-"min filter" = "linear"
-"mag filter" = "linear"
-"generate mipmaps" = "off"
+"abstract_storage" = "keep"
+"image_storage" = "discard"
+"min_filter" = "linear"
+"mag_filter" = "linear"
+"generate_mipmaps" = "off"
 

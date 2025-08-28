@@ -49,6 +49,8 @@ GLFW_MOD_SUPER = Param(0x0008, 'Mod Super')
 GLFW_MOD_CAPS_LOCK = Param(0x0010, 'Mod Caps Lock')
 GLFW_MOD_NUM_LOCK = Param(0x0020, 'Mod Num Lock')
 
+# TODO v3 use numerical codes instead to reduce file size (low priority)
+
 OLY_DISCARD = Param("discard", "Discard")
 OLY_KEEP = Param("keep", "Keep")
 
@@ -57,8 +59,8 @@ OLY_AUTO = Param("auto", "Auto")
 OLY_MANUAL = Param("manual", "Manual")
 
 OLY_COMMON = Param("common", "Common")
-OLY_ALPHA_NUMERIC = Param("alpha numeric", "Alpha Numeric")
+OLY_ALPHA_NUMERIC = Param("alpha_numeric", "Alpha Numeric")
 OLY_NUMERIC = Param("numeric", "Numeric")
 OLY_ALPHABET = Param("alphabet", "Alphabet")
-OLY_ALPHABET_LOWERCASE = Param("alphabet lowercase", "Alphabet (lowercase)")
-OLY_ALPHABET_UPPERCASE = Param("alphabet uppercase", "Alphabet (uppercase)")
+OLY_ALPHABET_LOWERCASE = Param("alphabet_lowercase", "Alphabet (lowercase)")
+OLY_ALPHABET_UPPERCASE = Param("alphabet_uppercase", "Alphabet (uppercase)")

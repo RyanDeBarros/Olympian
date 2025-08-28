@@ -76,7 +76,8 @@ class MainWindow(QMainWindow):
 		self.ui.contentBrowser.show()
 
 	def open_asset_defaults(self):
-		pass  # TODO v3
+		from .tabs import AssetDefaultsTab
+		self.tab_holder.add_tab(AssetDefaultsTab(self))
 
 	def open_editor_preferences(self):
 		from .tabs import EditorPreferencesTab
