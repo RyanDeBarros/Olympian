@@ -1,4 +1,5 @@
-header = "signal"
+#meta type=signal
+
 mapping = []
 [[signal]]
 id = "drag"

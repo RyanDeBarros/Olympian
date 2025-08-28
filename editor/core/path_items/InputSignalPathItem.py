@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 from typing import override, TYPE_CHECKING
 
-import toml
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon, QPixmap
 
+from editor import TOMLAdapter
 from editor.core.path_items.AbstractPathItem import AbstractPathItem
 
 if TYPE_CHECKING:
@@ -36,11 +36,10 @@ class InputSignalPathItem(AbstractPathItem):
 			i = i + 1
 		file_path = browser.current_folder.joinpath(file_name).resolve()
 
-		initial_data = {
-			"header": "signal"
+		meta = {
+			'type': 'signal'
 		}
-		with open(file_path, 'w') as f:
-			toml.dump(initial_data, f)
+		TOMLAdapter.dump(file_path, {}, meta)
 
 		browser.folder_view.file_machine.new_file(file_path)
 		item = InputSignalPathItem(file_path)

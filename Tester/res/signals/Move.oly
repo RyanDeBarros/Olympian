@@ -1,4 +1,5 @@
-header = "signal"
+#meta type=signal
+
 [[mapping]]
 "id" = "move"
 "signals" = ["move left", "move right", "move up", "move down"]

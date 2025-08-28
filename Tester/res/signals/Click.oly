@@ -1,4 +1,4 @@
-header = "signal"
+#meta type=signal
 
 [[signal]]
 "id"      = "click"

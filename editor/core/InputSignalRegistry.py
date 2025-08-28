@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import toml
+from editor import TOMLAdapter
 
 
 class InputSignalRegistry:
@@ -10,24 +10,19 @@ class InputSignalRegistry:
 		self._signal_items: list[Path] = []
 		self.load()
 
-	# TODO v3 with custom formats, loading/dumping can be more efficient
-
 	def load(self):
-		with open(self.project_context.project_file, 'r') as f:
-			content = toml.load(f)
+		content = TOMLAdapter.load(self.project_context.project_file)
 		if 'context' in content and 'signals' in content['context']:
 			self._signal_items = [Path(path) for path in content['context']['signals']]
 		else:
 			self._signal_items = []
 
 	def dump(self):
-		with open(self.project_context.project_file, 'r') as f:
-			content = toml.load(f)
+		content = TOMLAdapter.load(self.project_context.project_file)
 		if 'context' not in content:
 			content['context'] = {}
 		content['context']['signals'] = [path.as_posix() for path in self._signal_items]
-		with open(self.project_context.project_file, 'w') as f:
-			toml.dump(content, f)
+		TOMLAdapter.dump(self.project_context.project_file, content)
 
 	def add_signal_asset(self, asset: Path):
 		assert asset not in self._signal_items

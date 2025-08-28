@@ -1,11 +1,10 @@
 from typing import override, Optional
 
-import toml
 from PySide6.QtCore import QSize, QObject, QEvent
 from PySide6.QtGui import QKeyEvent, QIcon
 from PySide6.QtWidgets import QApplication, QComboBox, QPushButton, QMessageBox, QHeaderView
 
-from editor import ui
+from editor import ui, TOMLAdapter
 from editor.core import MainWindow, InputSignalPathItem, block_signals
 from editor.core.MainTabHolder import EditorTab
 from editor.core.common import Alerts
@@ -107,13 +106,11 @@ class InputSignalTab(EditorTab):
 			mappings.append(Signal.convert_mapping_from_editor_to_oly_format(mapping).to_dict())
 
 		content = {'header': 'signal', 'signal': signals, 'mapping': mappings}
-		with open(self.item.full_path, 'w') as f:
-			toml.dump(content, f)
+		TOMLAdapter.dump(self.item.full_path, content)
 
 	@override
 	def revert_changes_impl(self):
-		with open(self.item.full_path, 'r') as f:
-			content = toml.load(f)
+		content = TOMLAdapter.load(self.item.full_path)
 
 		with block_signals(self.ui.selectSignal) as selectSignal:
 			selectSignal.clear()

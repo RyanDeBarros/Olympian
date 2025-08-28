@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import toml
+from editor import TOMLAdapter
 
 
 def get_path_item(path: Path):
@@ -8,15 +8,25 @@ def get_path_item(path: Path):
 	if path.is_dir():
 		return FolderPathItem(path)
 	elif path.is_file():
-		# TODO v3 peek file to get type. With TOML, must load entire file, but with custom format, can peek to N characters.
 		if path.suffix == ".oly":
-			with open(path, 'r') as f:
-				d = toml.load(f)
-			if 'header' in d and d['header'] == 'signal':
-				return InputSignalPathItem(path)
-			return None  # TODO v3 add if asset and not import
+			meta = TOMLAdapter.meta(path)
+			if 'type' in meta:
+				match meta['type']:
+					case 'signal':
+						return InputSignalPathItem(path)
+			return None
 		else:
-			# TODO v3 check for existing import file - use ImportedFilePathItem, which still refers to file, not import file, but recognizes that there exists an import.
+			import_path = Path(str(path) + '.oly')
+			if import_path.exists():
+				meta = TOMLAdapter.meta(import_path)
+				# TODO v3 Use ImportedFilePathItem, which still refers to file, not import file, but recognizes that there exists an import.
+				if 'type' in meta:
+					match meta['type']:
+						case 'texture':
+							pass  # TODO v3
+						case 'font':
+							pass  # TODO v3
+				return None
 			return StandardFilePathItem(path)
 	else:
 		return None

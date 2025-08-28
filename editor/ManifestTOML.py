@@ -4,14 +4,14 @@ import re
 from pathlib import Path
 
 import send2trash
-import toml
+
+from editor import TOMLAdapter
 
 
 class ManifestTOML:
 	def __init__(self):
 		self.toml_filepath = 'projects/manifest.toml'
-		with open(self.toml_filepath, 'r') as f:
-			self.toml = toml.load(f)
+		self.toml = TOMLAdapter.load(self.toml_filepath)
 
 		with open('data/PROJECT_CONTEXT_H', 'r') as f:
 			self.project_context_h = f.read()
@@ -20,8 +20,7 @@ class ManifestTOML:
 			self.project_context_cpp = f.read()
 
 	def dump(self):
-		with open(self.toml_filepath, 'w') as f:
-			toml.dump(self.toml, f)
+		TOMLAdapter.dump(self.toml_filepath, self.toml)
 
 	@staticmethod
 	def get_default_project_context(project_folder, project_name):

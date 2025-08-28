@@ -1,10 +1,9 @@
 from typing import override
 
-import toml
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QPixmap, QIcon
 
-from editor import ui
+from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, SettingsParameter, SettingsForm
 from editor.core.MainTabHolder import EditorTab
 from editor.core.EditorPreferences import PREFERENCES
@@ -47,14 +46,11 @@ class EditorPreferencesTab(EditorTab):
 	def save_changes_impl(self):
 		self.nav_settings.update(self.nav_form.get_dict())
 		PREFERENCES.prompt_user_when_deleting_paths = self.nav_settings['prompt on delete']
-
-		with open('data/PREFERENCES.toml', 'w') as f:
-			toml.dump(self.preferences, f)
+		TOMLAdapter.dump('data/PREFERENCES.toml', self.preferences)
 
 	@override
 	def revert_changes_impl(self):
-		with open('data/PREFERENCES.toml', 'r') as f:
-			self.preferences = toml.load(f)
+		self.preferences = TOMLAdapter.load('data/PREFERENCES.toml')
 
 		if 'navigation' not in self.preferences:
 			self.preferences['navigation'] = {}

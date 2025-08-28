@@ -1,10 +1,9 @@
 from typing import override
 
-import toml
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon, QPixmap
 
-from editor import ui
+from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem
 from editor.core.MainTabHolder import EditorTab
 from editor.core.common import SettingsForm, SettingsParameter
@@ -58,15 +57,11 @@ class ProjectSettingsTab(EditorTab):
 	def save_changes_impl(self):
 		self.window_settings.update(self.window_form.get_dict())
 		self.logger_settings.update(self.logger_form.get_dict())
-
-		with open(self.win.project_context.project_file, 'w') as f:
-			toml.dump(self.settings, f)
+		TOMLAdapter.dump(self.win.project_context.project_file, self.settings)
 
 	@override
 	def revert_changes_impl(self):
-		with open(self.win.project_context.project_file, 'r') as f:
-			self.settings = toml.load(f)
-
+		self.settings = TOMLAdapter.load(self.win.project_context.project_file)
 		assert 'context' in self.settings
 		self.context = self.settings['context']
 		assert 'window' in self.context
