@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field, fields
 from enum import IntEnum
 from typing import Optional
 
-from editor.core import GLFW_MOD_CONTROL, GLFW_MOD_SHIFT, GLFW_MOD_ALT
+from editor.core import GLFW_MOD_CONTROL, GLFW_MOD_SHIFT, GLFW_MOD_ALT, GLFW_MOD_SUPER, GLFW_MOD_CAPS_LOCK, \
+	GLFW_MOD_NUM_LOCK
 
 
 class InputType(IntEnum):
@@ -69,9 +71,12 @@ class BasicSection:
 
 @dataclass
 class ModSection:
-	ctrl: int = 0
 	shift: int = 0
+	ctrl: int = 0
 	alt: int = 0
+	super: int = 0
+	caps_lock: int = 0
+	num_lock: int = 0
 
 
 @dataclass
@@ -168,19 +173,30 @@ def convert_signal_from_editor_to_oly_format(signal: EditorSignal) -> OlySignal:
 	if signal.mods is not None:
 		d.req_mods = 0
 		d.ban_mods = 0
-		if signal.mods.ctrl == ModPolicy.REQUIRED:
-			d.req_mods |= GLFW_MOD_CONTROL.value
-		elif signal.mods.ctrl == ModPolicy.FORBIDDEN:
-			d.ban_mods |= GLFW_MOD_CONTROL.value
 		if signal.mods.shift == ModPolicy.REQUIRED:
 			d.req_mods |= GLFW_MOD_SHIFT.value
 		elif signal.mods.shift == ModPolicy.FORBIDDEN:
 			d.ban_mods |= GLFW_MOD_SHIFT.value
+		if signal.mods.ctrl == ModPolicy.REQUIRED:
+			d.req_mods |= GLFW_MOD_CONTROL.value
+		elif signal.mods.ctrl == ModPolicy.FORBIDDEN:
+			d.ban_mods |= GLFW_MOD_CONTROL.value
 		if signal.mods.alt == ModPolicy.REQUIRED:
 			d.req_mods |= GLFW_MOD_ALT.value
 		elif signal.mods.alt == ModPolicy.FORBIDDEN:
 			d.ban_mods |= GLFW_MOD_ALT.value
-	# TODO v3 add mods support for SUPER, CAPS_LOCK, and NUM_LOCK
+		if signal.mods.super == ModPolicy.REQUIRED:
+			d.req_mods |= GLFW_MOD_SUPER.value
+		elif signal.mods.super == ModPolicy.FORBIDDEN:
+			d.ban_mods |= GLFW_MOD_SUPER.value
+		if signal.mods.caps_lock == ModPolicy.REQUIRED:
+			d.req_mods |= GLFW_MOD_CAPS_LOCK.value
+		elif signal.mods.caps_lock == ModPolicy.FORBIDDEN:
+			d.ban_mods |= GLFW_MOD_CAPS_LOCK.value
+		if signal.mods.num_lock == ModPolicy.REQUIRED:
+			d.req_mods |= GLFW_MOD_NUM_LOCK.value
+		elif signal.mods.num_lock == ModPolicy.FORBIDDEN:
+			d.ban_mods |= GLFW_MOD_NUM_LOCK.value
 
 	d.modifier = ModifierSection()
 	if signal.conversion.swizzle != 'None':
@@ -222,20 +238,32 @@ def convert_signal_from_oly_to_editor_format(signal: OlySignal) -> EditorSignal:
 		d.mods = ModSection()
 
 		if signal.req_mods is not None:
-			if signal.req_mods & GLFW_MOD_CONTROL.value:
-				d.mods.ctrl = ModPolicy.REQUIRED
 			if signal.req_mods & GLFW_MOD_SHIFT.value:
 				d.mods.shift = ModPolicy.REQUIRED
+			if signal.req_mods & GLFW_MOD_CONTROL.value:
+				d.mods.ctrl = ModPolicy.REQUIRED
 			if signal.req_mods & GLFW_MOD_ALT.value:
 				d.mods.alt = ModPolicy.REQUIRED
+			if signal.req_mods & GLFW_MOD_SUPER.value:
+				d.mods.super = ModPolicy.REQUIRED
+			if signal.req_mods & GLFW_MOD_CAPS_LOCK.value:
+				d.mods.caps_lock = ModPolicy.REQUIRED
+			if signal.req_mods & GLFW_MOD_NUM_LOCK.value:
+				d.mods.num_lock = ModPolicy.REQUIRED
 
 		if signal.ban_mods is not None:
-			if signal.ban_mods & GLFW_MOD_CONTROL.value:
-				d.mods.ctrl = ModPolicy.FORBIDDEN
 			if signal.ban_mods & GLFW_MOD_SHIFT.value:
 				d.mods.shift = ModPolicy.FORBIDDEN
+			if signal.ban_mods & GLFW_MOD_CONTROL.value:
+				d.mods.ctrl = ModPolicy.FORBIDDEN
 			if signal.ban_mods & GLFW_MOD_ALT.value:
 				d.mods.alt = ModPolicy.FORBIDDEN
+			if signal.ban_mods & GLFW_MOD_SUPER.value:
+				d.mods.super = ModPolicy.FORBIDDEN
+			if signal.ban_mods & GLFW_MOD_CAPS_LOCK.value:
+				d.mods.caps_lock = ModPolicy.FORBIDDEN
+			if signal.ban_mods & GLFW_MOD_NUM_LOCK.value:
+				d.mods.num_lock = ModPolicy.FORBIDDEN
 
 	if signal.modifier is not None:
 		if signal.modifier.swizzle is not None:

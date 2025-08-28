@@ -388,9 +388,12 @@ class InputSignalTab(EditorTab):
 
 		if signal.basic.type in (InputType.KEY, InputType.MOUSE_BUTTON):
 			signal.mods = Signal.ModSection(
-				ctrl=self.ui.keyModCtrl.currentIndex(),
 				shift=self.ui.keyModShift.currentIndex(),
-				alt=self.ui.keyModAlt.currentIndex()
+				ctrl=self.ui.keyModCtrl.currentIndex(),
+				alt=self.ui.keyModAlt.currentIndex(),
+				super=self.ui.keyModSuper.currentIndex(),
+				caps_lock=self.ui.keyModCapsLock.currentIndex(),
+				num_lock=self.ui.keyModNumLock.currentIndex()
 			)
 
 		signal.conversion.multiplier = [self.ui.multiplierX.value(), self.ui.multiplierY.value(),
@@ -431,9 +434,12 @@ class InputSignalTab(EditorTab):
 				self.ui.signalDeadzone.setValue(signal.basic.deadzone)
 
 		if signal.mods is not None:
-			self.ui.keyModCtrl.setCurrentIndex(signal.mods.ctrl)
 			self.ui.keyModShift.setCurrentIndex(signal.mods.shift)
+			self.ui.keyModCtrl.setCurrentIndex(signal.mods.ctrl)
 			self.ui.keyModAlt.setCurrentIndex(signal.mods.alt)
+			self.ui.keyModSuper.setCurrentIndex(signal.mods.super)
+			self.ui.keyModCapsLock.setCurrentIndex(signal.mods.caps_lock)
+			self.ui.keyModNumLock.setCurrentIndex(signal.mods.num_lock)
 
 		match signal.basic.type:
 			case InputType.KEY | InputType.MOUSE_BUTTON | InputType.GAMEPAD_BUTTON:

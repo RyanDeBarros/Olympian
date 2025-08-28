@@ -447,50 +447,17 @@
         <property name="title">
          <string>Modifiers</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
-          <layout class="QFormLayout" name="formLayout_2">
+          <layout class="QFormLayout" name="formLayout_3">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Ctrl</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
             <widget class="QLabel" name="label_10">
              <property name="text">
               <string>Shift</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Alt</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
-            <widget class="QComboBox" name="keyModCtrl">
-             <item>
-              <property name="text">
-               <string>Ignore</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Required</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Forbidden</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="1">
             <widget class="QComboBox" name="keyModShift">
              <item>
               <property name="text">
@@ -509,8 +476,123 @@
              </item>
             </widget>
            </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Ctrl</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="keyModCtrl">
+             <item>
+              <property name="text">
+               <string>Ignore</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Required</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Forbidden</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Alt</string>
+             </property>
+            </widget>
+           </item>
            <item row="2" column="1">
             <widget class="QComboBox" name="keyModAlt">
+             <item>
+              <property name="text">
+               <string>Ignore</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Required</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Forbidden</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Super</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="keyModSuper">
+             <item>
+              <property name="text">
+               <string>Ignore</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Required</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Forbidden</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Caps Lock</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="keyModCapsLock">
+             <item>
+              <property name="text">
+               <string>Ignore</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Required</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Forbidden</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Num Lock</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="keyModNumLock">
              <item>
               <property name="text">
                <string>Ignore</string>

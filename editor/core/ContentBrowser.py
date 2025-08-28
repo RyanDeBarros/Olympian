@@ -369,7 +369,7 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [FolderPathItem(self.current_folder.joinpath("..").resolve())]
+		items = [FolderPathItem(self.current_folder.joinpath(".."))]
 		for path in Path(self.current_folder).iterdir():
 			item = get_path_item(self.current_folder.joinpath(path))
 			if item is not None:
