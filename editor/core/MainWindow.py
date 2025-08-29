@@ -90,3 +90,6 @@ class MainWindow(QMainWindow):
 	@staticmethod
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
+
+	def quit_project(self, code):
+		exit(code)

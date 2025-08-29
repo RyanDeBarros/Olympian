@@ -8,8 +8,7 @@ from editor import ui, TOMLAdapter
 from editor.core import MainWindow, ImportedFontPathItem, block_signals
 from . import Converters
 from ..EditorTab import EditorTab
-from ..asset_defaults.Defaults import Defaults
-from ..asset_structures import FontFace, FontAtlas, Kerning
+from ..asset_structures import Font, FontFace, FontAtlas, Kerning
 from ...common import SettingsForm
 from ...common.SettingsForm import handle_all_children_modification
 
@@ -130,7 +129,7 @@ class FontTab(EditorTab):
 		self.update_reset_states()
 
 	def get_defaults(self):
-		return Defaults.from_dict(TOMLAdapter.load(self.win.project_context.asset_defaults_file)).font
+		return Font.from_dict(TOMLAdapter.load(self.win.project_context.asset_defaults_directory.font_file))
 
 	def toggle_common_buffer(self):
 		if self.ui.fontUseBufferPreset.isChecked():

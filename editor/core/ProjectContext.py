@@ -1,5 +1,17 @@
 import posixpath
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass
+class AssetDefaultsDirectory:
+	folder_path: Path
+	texture_file: Path
+	font_file: Path
+
+	def touch(self):
+		self.texture_file.touch(exist_ok=True)
+		self.font_file.touch(exist_ok=True)
 
 
 class ProjectContext:
@@ -15,9 +27,12 @@ class ProjectContext:
 		self.settings_folder = self.project_folder.joinpath(".settings")
 		self.settings_folder.mkdir(exist_ok=True)
 
-		# TODO v3 use different files for defaults of each asset
-		self.asset_defaults_file = self.settings_folder.joinpath("AssetDefaults.toml")
-		self.asset_defaults_file.touch(exist_ok=True)
+		self.asset_defaults_directory = AssetDefaultsDirectory(
+			folder_path=self.settings_folder,
+			texture_file=self.settings_folder.joinpath("TextureDefaults.toml"),
+			font_file=self.settings_folder.joinpath("FontDefaults.toml")
+		)
+		self.asset_defaults_directory.touch()
 
 		self.main_window = main_window
 		from editor.core.InputSignalRegistry import InputSignalRegistry

@@ -213,7 +213,6 @@ class ContentBrowserFolderView(QListView):
 
 		menu.exec(self.viewport().mapToGlobal(pos))
 
-	# TODO v3 delete import file as well -> should be a method in PathItem
 	def delete_item(self, index: QModelIndex):
 		follow_through = True
 		if PREFERENCES.prompt_user_when_deleting_paths:
@@ -226,7 +225,6 @@ class ContentBrowserFolderView(QListView):
 			self.model.removeRow(index.row())
 			self.file_machine.remove(pi.full_path)
 
-	# TODO v3 delete import files as well -> should be a method in PathItem
 	def delete_selected_items(self):
 		if self.selectedIndexes():
 			follow_through = True
@@ -250,9 +248,19 @@ class ContentBrowserFolderView(QListView):
 				self.file_machine.remove_together(remove_paths)
 
 	def refresh_view(self):
-		# TODO v3 handle the case where the current folder is removed -> go to parent folder that exists. Also, refreshing might need to clear history if items before and items after don't match.
+		current_folder = self.content_browser.current_folder
+		while not current_folder.exists():
+			if current_folder.is_relative_to(self.content_browser.win.project_context.res_folder):
+				current_folder = current_folder.parent
+			else:
+				Alerts.alert_error(self, 'Error - cannot load project filesystem', 'Likely cause is external modification of filesystem. Force closing editor...')
+				self.content_browser.win.quit_project(1)
+
+		if current_folder != self.content_browser.current_folder:
+			self.content_browser.current_folder = current_folder
+			rel_folder = current_folder.relative_to(self.content_browser.win.project_context.res_folder)
+			self.content_browser.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
 		self.content_browser.win.project_context.refresh()
-		self.clear_items()
 		self.content_browser.populate()
 
 
@@ -271,17 +279,15 @@ class ContentBrowser(QWidget):
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
 		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
 
-		# TODO v3 undo/redo shortcuts are disabled - they were activating when focus is unintentionally on ContentBrowser
-
 		self.ui.undoButton.setIcon(QIcon("res/images/Undo.png"))
 		self.ui.undoButton.clicked.connect(self.undo_stack.undo)
 		undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
-		# undo_shortcut.activated.connect(self.undo_stack.undo)
+		undo_shortcut.activated.connect(self.undo_in_context)
 
 		self.ui.redoButton.setIcon(QIcon("res/images/Redo.png"))
 		self.ui.redoButton.clicked.connect(self.undo_stack.redo)
 		redo_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Z"), self)
-		# redo_shortcut.activated.connect(self.undo_stack.redo)
+		redo_shortcut.activated.connect(self.redo_in_context)
 
 		history_menu = QMenu(self.ui.historyToolButton)
 		history_show = QAction("Show", history_menu)
@@ -315,6 +321,14 @@ class ContentBrowser(QWidget):
 	def clear_undo_stack(self):
 		self.undo_stack.clear()
 		self.file_machine.clear_trash()
+
+	def undo_in_context(self):
+		if self.underMouse():
+			self.undo_stack.undo()
+
+	def redo_in_context(self):
+		if self.underMouse():
+			self.undo_stack.redo()
 
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())

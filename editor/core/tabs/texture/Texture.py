@@ -6,11 +6,11 @@ from PySide6.QtWidgets import QWidget, QPushButton, QFrame
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, ImportedTexturePathItem, nice_pixmap, block_signals, PARAM_LIST
-from editor.core.common.SettingsForm import handle_all_children_modification, SettingsForm
 from . import Converters
 from .Converters import TextureSlot
 from ..EditorTab import EditorTab
-from ..asset_defaults.Defaults import Defaults
+from ..asset_structures import Texture
+from ...common.SettingsForm import handle_all_children_modification, SettingsForm
 
 
 class TextureTab(EditorTab):
@@ -120,7 +120,7 @@ class TextureTab(EditorTab):
 		self.update_reset_states()
 
 	def get_defaults(self):
-		return Defaults.from_dict(TOMLAdapter.load(self.win.project_context.asset_defaults_file)).texture
+		return Texture.from_dict(TOMLAdapter.load(self.win.project_context.asset_defaults_directory.texture_file))
 
 	@staticmethod
 	def _setup_reset_callback(control: QWidget, reset_button: QPushButton, default):

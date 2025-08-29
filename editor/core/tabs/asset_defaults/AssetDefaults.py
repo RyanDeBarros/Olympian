@@ -5,9 +5,10 @@ from PySide6.QtCore import QSize
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, nice_icon
-from editor.core.common.SettingsForm import handle_all_children_modification
-from editor.core.tabs.EditorTab import EditorTab
 from . import Defaults, Converters
+from ..EditorTab import EditorTab
+from ..asset_structures import Texture, Font
+from ...common.SettingsForm import handle_all_children_modification
 
 
 class TypeIndex(IntEnum):
@@ -25,7 +26,7 @@ class AssetDefaultsTab(EditorTab):
 		super().__init__(win)
 
 		self.defaults = Defaults.Defaults()
-		self.filepath = self.win.project_context.asset_defaults_file
+		self.directory = self.win.project_context.asset_defaults_directory
 
 		self.ui = ui.AssetDefaults.Ui_AssetDefaults()
 		self.ui.setupUi(self)
@@ -56,11 +57,13 @@ class AssetDefaultsTab(EditorTab):
 	@override
 	def save_changes_impl(self):
 		self.load_defaults_from_ui()
-		TOMLAdapter.dump(self.filepath, self.defaults.to_dict(), {'type': 'asset_defaults'})
+		TOMLAdapter.dump(self.directory.texture_file, self.defaults.texture.to_dict(), {'type': 'texture_defaults'})
+		TOMLAdapter.dump(self.directory.font_file, self.defaults.font.to_dict(), {'type': 'font_defaults'})
 
 	@override
 	def revert_changes_impl(self):
-		self.defaults = Defaults.Defaults.from_dict(TOMLAdapter.load(self.filepath))
+		self.defaults.texture = Texture.from_dict(TOMLAdapter.load(self.directory.texture_file))
+		self.defaults.font = Font.from_dict(TOMLAdapter.load(self.directory.font_file))
 		self.load_ui_from_defaults()
 
 	@override
