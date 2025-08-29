@@ -7,7 +7,7 @@ from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, nice_icon
 from editor.core.common.SettingsForm import handle_all_children_modification
 from editor.core.tabs.EditorTab import EditorTab
-from . import DefaultPODs, Converters
+from . import Defaults, Converters
 
 
 class TypeIndex(IntEnum):
@@ -24,7 +24,7 @@ class AssetDefaultsTab(EditorTab):
 	def __init__(self, win: MainWindow):
 		super().__init__(win)
 
-		self.defaults = DefaultPODs.Defaults()
+		self.defaults = Defaults.Defaults()
 		self.filepath = self.win.project_context.asset_defaults_file
 
 		self.ui = ui.AssetDefaults.Ui_AssetDefaults()
@@ -60,7 +60,7 @@ class AssetDefaultsTab(EditorTab):
 
 	@override
 	def revert_changes_impl(self):
-		self.defaults = DefaultPODs.Defaults.from_dict(TOMLAdapter.load(self.filepath))
+		self.defaults = Defaults.Defaults.from_dict(TOMLAdapter.load(self.filepath))
 		self.load_ui_from_defaults()
 
 	@override

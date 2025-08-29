@@ -2,12 +2,12 @@ from typing import override
 
 from PySide6.QtCore import QSize
 
-from editor.core import MainWindow, ImportedTexturePathItem
-from .EditorTab import EditorTab
+from editor.core import MainWindow, ImportedFontPathItem
+from editor.core.tabs.EditorTab import EditorTab
 
 
-class TextureTab(EditorTab):
-	def __init__(self, win: MainWindow, item: ImportedTexturePathItem):
+class FontTab(EditorTab):
+	def __init__(self, win: MainWindow, item: ImportedFontPathItem):
 		super().__init__(win)
 		self.item = item
 
@@ -36,8 +36,8 @@ class TextureTab(EditorTab):
 		pass  # TODo v3
 
 	@override
-	def rename_impl(self, item: ImportedTexturePathItem):
-		assert isinstance(item, ImportedTexturePathItem)
+	def rename_impl(self, item: ImportedFontPathItem):
+		assert isinstance(item, ImportedFontPathItem)
 		self.item = item
 
 	@override

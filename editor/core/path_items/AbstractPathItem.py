@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class AbstractPathItem(ABC):
-	def __init__(self, full_path):
+	def __init__(self, full_path: Path):
 		self.full_path = full_path
 
 	def __eq__(self, other):

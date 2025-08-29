@@ -1,9 +1,9 @@
 from editor.ui import AssetDefaults
-from . import DefaultPODs
 from editor.core import PARAM_LIST
+from ..asset_structures import Texture, Font
 
 
-def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults, texture: DefaultPODs.TextureDefaults):
+def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults, texture: Texture):
 	texture.raster.storage = PARAM_LIST.get_value(ui.textureRasterStorage.currentText())
 	texture.raster.generate_mipmaps = ui.textureRasterMipmaps.isChecked()
 	texture.raster.min_filter = PARAM_LIST.get_value(ui.textureRasterMinFilter.currentText())
@@ -20,7 +20,7 @@ def convert_to_texture_from_ui(ui: AssetDefaults.Ui_AssetDefaults, texture: Defa
 	texture.svg.wrap_t = PARAM_LIST.get_value(ui.textureSVGWrapT.currentText())
 
 
-def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: DefaultPODs.TextureDefaults):
+def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: Texture):
 	ui.textureRasterStorage.setCurrentText(PARAM_LIST.get_name(texture.raster.storage))
 	ui.textureRasterMipmaps.setChecked(texture.raster.generate_mipmaps)
 	ui.textureRasterMinFilter.setCurrentText(PARAM_LIST.get_name(texture.raster.min_filter))
@@ -37,7 +37,7 @@ def convert_to_ui_from_texture(ui: AssetDefaults.Ui_AssetDefaults, texture: Defa
 	ui.textureSVGWrapT.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_t))
 
 
-def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPODs.FontDefaults):
+def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults, font: Font):
 	font.font_face.storage = PARAM_LIST.get_value(ui.fontFaceStorage.currentText())
 
 	font.font_atlas.storage = PARAM_LIST.get_value(ui.fontAtlasStorage.currentText())
@@ -49,7 +49,7 @@ def convert_to_font_from_ui(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPOD
 	font.font_atlas.common_buffer = ui.fontCommonBuffer.text()
 
 
-def convert_to_ui_from_font(ui: AssetDefaults.Ui_AssetDefaults, font: DefaultPODs.FontDefaults):
+def convert_to_ui_from_font(ui: AssetDefaults.Ui_AssetDefaults, font: Font):
 	ui.fontFaceStorage.setCurrentText(PARAM_LIST.get_name(font.font_face.storage))
 
 	ui.fontAtlasStorage.setCurrentText(PARAM_LIST.get_name(font.font_atlas.storage))

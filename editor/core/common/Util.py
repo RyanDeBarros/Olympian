@@ -19,6 +19,17 @@ def block_signals(widget: T) -> Generator[T, None, None]:
 
 
 @contextmanager
+def block_all_signals(widget: T) -> Generator[T, None, None]:
+	widgets = [widget, *widget.findChildren(QWidget)]
+	block_initially = [w.blockSignals(True) for w in widgets]
+	try:
+		yield widget
+	finally:
+		for w, block in zip(widgets, block_initially):
+			w.blockSignals(block)
+
+
+@contextmanager
 def create_painter(pixmap: QPixmap) -> Generator[QPainter, None, None]:
 	painter = QPainter(pixmap)
 	try:
@@ -27,8 +38,7 @@ def create_painter(pixmap: QPixmap) -> Generator[QPainter, None, None]:
 		painter.end()
 
 
-def nice_icon(path: Path | str, size: QSize) -> QIcon | None:
-	pixmap = QPixmap(path)
+def nice_pixmap(pixmap: QPixmap, size: QSize) -> QPixmap | None:
 	if pixmap.isNull():
 		return None
 	if pixmap.height() == 0 or size.height() == 0:
@@ -38,7 +48,7 @@ def nice_icon(path: Path | str, size: QSize) -> QIcon | None:
 	target_ratio = size.width() / size.height()
 	pixmap = pixmap.scaled(size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
 	if abs(original_ratio - target_ratio) < 0.01:
-		return QIcon(pixmap)
+		return pixmap
 
 	final_pixmap = QPixmap(size)
 	final_pixmap.fill(Qt.GlobalColor.transparent)
@@ -46,4 +56,12 @@ def nice_icon(path: Path | str, size: QSize) -> QIcon | None:
 	y = (size.height() - pixmap.height()) // 2
 	with create_painter(final_pixmap) as painter:
 		painter.drawPixmap(x, y, pixmap)
-	return QIcon(final_pixmap)
+	return final_pixmap
+
+
+def nice_icon(path: Path | str, size: QSize) -> QIcon | None:
+	pixmap = nice_pixmap(QPixmap(path), size)
+	if pixmap is not None:
+		return QIcon(pixmap)
+	else:
+		return None

@@ -62,9 +62,8 @@ class ContentBrowserFolderView(QListView):
 			self.delete_selected_items()
 		elif event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
 			if self.state() != QAbstractItemView.State.EditingState:
-				indexes = self.selectedIndexes()
-				if len(indexes) == 1:
-					self.path_items[indexes[0].row()].open(self.content_browser)
+				for index in self.selectedIndexes():
+					self.path_items[index.row()].open(self.content_browser)
 			else:
 				super().keyPressEvent(event)
 		else:
