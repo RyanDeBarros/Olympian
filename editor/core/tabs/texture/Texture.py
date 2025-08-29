@@ -1,11 +1,11 @@
-from typing import override
+from typing import override, Optional
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QWidget, QPushButton
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, ImportedTexturePathItem, nice_pixmap, block_signals
+from editor.core import MainWindow, ImportedTexturePathItem, nice_pixmap, block_signals, PARAM_LIST
 from editor.core.common.SettingsForm import handle_all_children_modification, SettingsForm
 from . import Converters
 from ..EditorTab import EditorTab
@@ -13,7 +13,6 @@ from ..asset_defaults.Defaults import Defaults
 from ..asset_structures import RasterTexture, SVGTexture
 
 
-# TODO v3 should abstract storage be top level, rather than in svg section, since it applies to all texture slots?
 # TODO v3 implement spritesheets
 
 class TextureTab(EditorTab):
@@ -25,6 +24,7 @@ class TextureTab(EditorTab):
 
 		self.is_raster = self.item.full_path.suffix not in ('.svg', '.SVG')
 		self.scratch_textures: list[RasterTexture | SVGTexture] = []
+		self.scratch_abstract_storage: Optional[str] = ""
 
 		self.ui = ui.Texture.Ui_Texture()
 		self.ui.setupUi(self)
@@ -60,14 +60,23 @@ class TextureTab(EditorTab):
 	def save_changes_impl(self):
 		textures = []
 		for texture in self.scratch_textures:
-			textures.append(texture.to_dict())
-		TOMLAdapter.dump(self.import_filepath, {'texture': textures}, {'type': 'texture'})
+			d = texture.to_dict()
+			if not self.is_raster:
+				del d['abstract_storage']
+			textures.append(d)
+
+		content = {'texture': textures, 'abstract_storage': self.scratch_abstract_storage}
+		TOMLAdapter.dump(self.import_filepath, content, {'type': 'texture'})
 
 	@override
 	def revert_changes_impl(self):
-		textures = TOMLAdapter.load(self.import_filepath)['texture']
+		content = TOMLAdapter.load(self.import_filepath)
+		self.scratch_abstract_storage = content['abstract_storage']
+		textures = content['texture']
 		self.scratch_textures.clear()
 		for texture in textures:
+			if not self.is_raster:
+				texture['abstract_storage'] = self.scratch_abstract_storage
 			self.scratch_textures.append(RasterTexture.from_dict(texture) if self.is_raster else SVGTexture.from_dict(texture))
 
 		with block_signals(self.ui.textureSlotSelect) as textureSlotSelect:
@@ -198,10 +207,13 @@ class TextureTab(EditorTab):
 			Converters.convert_to_raster_texture_from_ui(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
 		else:
 			Converters.convert_to_svg_texture_from_ui(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+			self.scratch_abstract_storage = PARAM_LIST.get_value(self.ui.textureSVGAbstractStorage.currentText())
 
 	def convert_to_ui_from_texture(self):
 		if self.is_raster:
 			Converters.convert_to_ui_from_raster_texture(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
 		else:
 			Converters.convert_to_ui_from_svg_texture(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+			with block_signals(self.ui.textureSVGAbstractStorage) as textureSVGAbstractStorage:
+				textureSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(self.scratch_abstract_storage))
 		self.update_reset_states()

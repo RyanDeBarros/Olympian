@@ -394,18 +394,6 @@ namespace oly::graphics
 		return setup_anim_frame_format_single(*context::texture_registry().get_anim_dimensions(texture_file).lock(), frame);
 	}
 
-	NSVGAbstract::NSVGAbstract(const char* filepath)
-		: i(nsvgParseFromFile(filepath, "px", 96))
-	{
-		if (!i) throw Error(ErrorCode::NSVG_PARSING);
-	}
-
-	NSVGAbstract::NSVGAbstract(const std::string& filepath)
-		: i(nsvgParseFromFile(filepath.c_str(), "px", 96))
-	{
-		if (!i) throw Error(ErrorCode::NSVG_PARSING);
-	}
-		
 	NSVGAbstract::NSVGAbstract(const char* filepath, const char* units, float dpi)
 		: i(nsvgParseFromFile(filepath, units, dpi))
 	{

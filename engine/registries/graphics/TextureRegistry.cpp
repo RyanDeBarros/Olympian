@@ -164,11 +164,6 @@ namespace oly::reg
 		textures[tkey] = texture;
 		return texture;
 	}
-	
-	static graphics::NSVGAbstract create_abstract(const TOMLNode& texture_node, const std::string& full_path)
-	{
-		return graphics::NSVGAbstract(full_path, texture_node["svg units"].value<std::string>().value_or("px").c_str(), (float)texture_node["svg dpi"].value<double>().value_or(96.0f));
-	}
 
 	graphics::BindlessTextureRef TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
 	{
@@ -186,7 +181,7 @@ namespace oly::reg
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, params.texture_index);
 
-		bool store_abstract = should_store(texture_node, "abstract_storage", params.abstract_storage);
+		bool store_abstract = should_store((TOMLNode)toml, "abstract_storage", params.abstract_storage);
 		bool store_image = should_store(texture_node, "image_storage", params.image_storage);
 
 		graphics::BindlessTextureRef texture;
@@ -204,7 +199,7 @@ namespace oly::reg
 			}
 			else
 			{
-				graphics::NSVGAbstract abstract = create_abstract(texture_node, full_path);
+				graphics::NSVGAbstract abstract(full_path);
 				graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (!store_image)
@@ -229,7 +224,7 @@ namespace oly::reg
 			}
 			else
 			{
-				graphics::NSVGAbstract abstract = create_abstract(texture_node, full_path);
+				graphics::NSVGAbstract abstract(full_path);
 				graphics::VectorImageRef image;
 				image.scale = scale;
 				image.image = context::nsvg_context().rasterize_res(abstract, scale);
@@ -306,7 +301,7 @@ namespace oly::reg
 
 		if (texture_node["anim"].value<bool>().value_or(false))
 		{
-			graphics::NSVGAbstract abstract = create_abstract(texture_node, file);
+			graphics::NSVGAbstract abstract(file);
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
 			texture = load_anim(anim, texture_node, params.set_and_use);
 			if (params.cpubuffer)
@@ -316,7 +311,7 @@ namespace oly::reg
 		}
 		else
 		{
-			graphics::NSVGAbstract abstract = create_abstract(texture_node, file);
+			graphics::NSVGAbstract abstract(file);
 			graphics::VectorImageRef image;
 			image.scale = scale;
 			image.image = context::nsvg_context().rasterize_res(abstract, scale);

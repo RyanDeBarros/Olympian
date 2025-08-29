@@ -246,10 +246,8 @@ namespace oly::graphics
 		mutable NSVGimage* i = nullptr;
 
 	public:
-		NSVGAbstract(const char* filepath);
-		NSVGAbstract(const std::string& filepath);
-		NSVGAbstract(const char* filepath, const char* units, float dpi);
-		NSVGAbstract(const std::string& filepath, const char* units, float dpi);
+		NSVGAbstract(const char* filepath, const char* units = "px", float dpi = 96.0f);
+		NSVGAbstract(const std::string& filepath, const char* units = "px", float dpi = 96.0f);
 		NSVGAbstract(const NSVGAbstract&) = delete;
 		NSVGAbstract(NSVGAbstract&&) noexcept;
 		~NSVGAbstract();

@@ -24,7 +24,6 @@ def convert_to_ui_from_raster_texture(ui: ui.Texture.Ui_Texture, texture: Raster
 
 def convert_to_svg_texture_from_ui(ui: ui.Texture.Ui_Texture, texture: SVGTexture):
 	texture.image_storage = PARAM_LIST.get_value(ui.textureSVGImageStorage.currentText())
-	texture.abstract_storage = PARAM_LIST.get_value(ui.textureSVGAbstractStorage.currentText())
 	texture.generate_mipmaps = PARAM_LIST.get_value(ui.textureSVGMipmaps.currentText())
 	texture.min_filter = PARAM_LIST.get_value(ui.textureSVGMinFilter.currentText())
 	texture.mag_filter = PARAM_LIST.get_value(ui.textureSVGMagFilter.currentText())
@@ -35,7 +34,6 @@ def convert_to_svg_texture_from_ui(ui: ui.Texture.Ui_Texture, texture: SVGTextur
 def convert_to_ui_from_svg_texture(ui: ui.Texture.Ui_Texture, texture: SVGTexture):
 	with block_all_signals(ui.svgSettings):
 		ui.textureSVGImageStorage.setCurrentText(PARAM_LIST.get_name(texture.image_storage))
-		ui.textureSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(texture.abstract_storage))
 		ui.textureSVGMipmaps.setCurrentText(PARAM_LIST.get_name(texture.generate_mipmaps))
 		ui.textureSVGMinFilter.setCurrentText(PARAM_LIST.get_name(texture.min_filter))
 		ui.textureSVGMagFilter.setCurrentText(PARAM_LIST.get_name(texture.mag_filter))

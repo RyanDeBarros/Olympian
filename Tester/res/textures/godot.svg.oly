@@ -1,8 +1,8 @@
 #meta type="texture"
 
+abstract_storage = "keep"
 [[texture]]
 image_storage = "discard"
-abstract_storage = "keep"
 generate_mipmaps = "off"
 min_filter = 9729
 mag_filter = 9729
