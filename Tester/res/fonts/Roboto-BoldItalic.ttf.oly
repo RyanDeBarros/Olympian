@@ -1,12 +1,15 @@
-#meta type=font
+#meta type="font"
 
 [[font_atlas]]
 storage = "discard"
-"font_size" = 96
-"mag_filter" = "linear"
-"min_filter" = "linear"
-"generate_mipmaps" = false
-"common_buffer_preset" = "common"
+font_size = 96.0
+min_filter = 9729
+mag_filter = 9729
+generate_mipmaps = false
+common_buffer_preset = "common"
+common_buffer = ""
+use_common_buffer_preset = true
 
 [font_face]
 storage = "discard"
+kerning = []

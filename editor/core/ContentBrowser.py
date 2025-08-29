@@ -53,7 +53,7 @@ class ContentBrowserFolderView(QListView):
 			if index.isValid():
 				pi = self.path_items[index.row()]
 				if pi:
-					QToolTip.showText(QCursor.pos(), str(pi.full_path), self)
+					QToolTip.showText(QCursor.pos(), pi.full_path.as_posix(), self)
 					return True
 		return super().event(event)
 
@@ -317,7 +317,7 @@ class ContentBrowser(QWidget):
 		self.file_machine.clear_trash()
 
 	def browse_folder(self):
-		folder = QFileDialog.getExistingDirectory(self, "Select Folder", str(self.last_file_dialog_dir))
+		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())
 		if folder:
 			folder = Path(folder).resolve()
 			if folder:

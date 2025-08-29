@@ -16,7 +16,7 @@ def get_path_item(path: Path):
 						return InputSignalPathItem(path)
 			return None
 		else:
-			import_path = Path(str(path) + '.oly')
+			import_path = Path(path.as_posix() + '.oly')
 			if import_path.exists():
 				meta = TOMLAdapter.meta(import_path)
 				if 'type' in meta:

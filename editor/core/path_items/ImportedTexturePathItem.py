@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class ImportedTexturePathItem(AbstractPathItem):
 	def __init__(self, full_path):
 		super().__init__(full_path)
-		self.import_path = Path(str(full_path) + '.oly')
+		self.import_path = Path(full_path.as_posix() + '.oly')
 
 	@override
 	def icon(self, size: QSize):
@@ -46,4 +46,4 @@ class ImportedTexturePathItem(AbstractPathItem):
 
 	@override
 	def on_rename(self, browser: ContentBrowser, old_path: Path):
-		self.import_path = Path(str(self.full_path) + '.oly')
+		self.import_path = Path(self.full_path.as_posix() + '.oly')

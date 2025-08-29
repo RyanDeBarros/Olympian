@@ -38,6 +38,7 @@ class FontAtlas:
 	generate_mipmaps: bool = False
 	common_buffer_preset: str = OLY_COMMON.value
 	common_buffer: str = ""
+	use_common_buffer_preset: bool = True
 
 	@staticmethod
 	def from_dict(d: dict) -> FontAtlas:
@@ -78,6 +79,32 @@ class Font:
 						case _:
 							init_values[f.name] = d[f.name]
 		return Font(**init_values)
+
+	def to_dict(self) -> dict:
+		d = {}
+		for key, value in self.__dict__.items():
+			if hasattr(value, "to_dict"):
+				d[key] = value.to_dict()
+			else:
+				d[key] = value
+		return d
+
+
+@dataclass
+class Kerning:
+	pair: list[str] = field(default_factory=lambda: ["", ""])
+	dist: int = 0
+
+	@staticmethod
+	def from_dict(d: dict) -> Kerning:
+		init_values = {}
+		if d is not None:
+			for f in fields(Kerning):
+				if f.name in d:
+					match f.name:
+						case _:
+							init_values[f.name] = d[f.name]
+		return Kerning(**init_values)
 
 	def to_dict(self) -> dict:
 		d = {}

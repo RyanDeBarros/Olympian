@@ -38,24 +38,30 @@ namespace oly::reg
 		options.auto_generate_mipmaps = node["generate_mipmaps"].value<bool>().value_or(false);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
+		if (node["use_common_buffer_preset"].value_or<bool>(true))
 		{
-			const std::string& common_buffer_preset = _common_buffer_preset.value();
-			if (common_buffer_preset == "common")
-				; // already initialized to common
-			else if (common_buffer_preset == "alpha_numeric")
-				common_buffer = rendering::glyphs::ALPHA_NUMERIC;
-			else if (common_buffer_preset == "numeric")
-				common_buffer = rendering::glyphs::NUMERIC;
-			else if (common_buffer_preset == "alphabet")
-				common_buffer = rendering::glyphs::ALPHABET;
-			else if (common_buffer_preset == "alphabet_lowercase")
-				common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-			else if (common_buffer_preset == "alphabet_uppercase")
-				common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
+			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
+			{
+				const std::string& common_buffer_preset = _common_buffer_preset.value();
+				if (common_buffer_preset == "common")
+					; // already initialized to common
+				else if (common_buffer_preset == "alpha_numeric")
+					common_buffer = rendering::glyphs::ALPHA_NUMERIC;
+				else if (common_buffer_preset == "numeric")
+					common_buffer = rendering::glyphs::NUMERIC;
+				else if (common_buffer_preset == "alphabet")
+					common_buffer = rendering::glyphs::ALPHABET;
+				else if (common_buffer_preset == "alphabet_lowercase")
+					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
+				else if (common_buffer_preset == "alphabet_uppercase")
+					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
+			}
 		}
-		else if (auto _common_buffer = node["common_buffer"].value<std::string>())
-			common_buffer = _common_buffer.value();
+		else
+		{
+			if (auto _common_buffer = node["common_buffer"].value<std::string>())
+				common_buffer = _common_buffer.value();
+		}
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")

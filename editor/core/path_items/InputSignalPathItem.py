@@ -25,7 +25,7 @@ class InputSignalPathItem(AbstractPathItem):
 
 	@override
 	def renamed_filepath(self, name: str):
-		return Path(str(self.full_path.parent.joinpath(name)) + '.oly')
+		return Path(self.full_path.parent.joinpath(name).as_posix() + '.oly')
 
 	@staticmethod
 	def new_item(browser: ContentBrowser):

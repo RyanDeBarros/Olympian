@@ -48,6 +48,8 @@ def convert_to_font_from_ui(ui: Ui_AssetDefaults, font: Font):
 	font.font_atlas.common_buffer_preset = PARAM_LIST.get_value(ui.fontCommonBufferPreset.currentText())
 	font.font_atlas.common_buffer = ui.fontCommonBuffer.text()
 
+	font.use_buffer_preset = ui.fontUseBufferPreset.isChecked()
+
 
 def convert_to_ui_from_font(ui: Ui_AssetDefaults, font: Font):
 	ui.fontFaceStorage.setCurrentText(PARAM_LIST.get_name(font.font_face.storage))
@@ -59,3 +61,5 @@ def convert_to_ui_from_font(ui: Ui_AssetDefaults, font: Font):
 	ui.fontMipmaps.setChecked(font.font_atlas.generate_mipmaps)
 	ui.fontCommonBufferPreset.setCurrentText(PARAM_LIST.get_name(font.font_atlas.common_buffer_preset))
 	ui.fontCommonBuffer.setText(font.font_atlas.common_buffer)
+
+	ui.fontUseBufferPreset.setChecked(font.use_buffer_preset)

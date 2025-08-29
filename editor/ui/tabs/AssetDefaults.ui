@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>866</width>
+    <width>640</width>
     <height>502</height>
    </rect>
   </property>
@@ -64,6 +64,9 @@
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="emptyPage"/>
      <widget class="QWidget" name="texturePage">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -708,6 +711,20 @@
               </property>
               <property name="value">
                <double>32.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="text">
+               <string>Use Common Buffer Preset</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="QCheckBox" name="fontUseBufferPreset">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>

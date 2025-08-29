@@ -29,7 +29,11 @@ class TextureTab(EditorTab):
 
 		self.ui.stackedWidget.setFrameShape(QFrame.Shape.NoFrame)
 
-		self.match_texture_type()
+		if self.is_raster:
+			self.ui.stackedWidget.setCurrentWidget(self.ui.rasterPage)
+		else:
+			self.ui.stackedWidget.setCurrentWidget(self.ui.svgPage)
+		self.ui.spritesheetSettings.setVisible(not self.is_gif)
 		self.setup_preview()
 
 		self.ui.textureSlotSelect.currentIndexChanged.connect(self.select_texture_slot)
@@ -101,13 +105,6 @@ class TextureTab(EditorTab):
 	def refresh_impl(self):
 		self.setup_preview()
 		self.update_reset_states()
-
-	def match_texture_type(self):
-		if self.is_raster:
-			self.ui.stackedWidget.setCurrentWidget(self.ui.rasterPage)
-		else:
-			self.ui.stackedWidget.setCurrentWidget(self.ui.svgPage)
-		self.ui.spritesheetSettings.setVisible(not self.is_gif)
 
 	def setup_preview(self):
 		pixmap = QPixmap(self.item.full_path)
