@@ -1,18 +1,26 @@
-#meta type=texture
+#meta type="texture"
 
 [[texture]]
 storage = "discard"
-"min_filter" = "nearest"
-"mag_filter" = "nearest"
-"generate_mipmaps" = false
+generate_mipmaps = false
+min_filter = "nearest"
+mag_filter = "nearest"
+wrap_s = 33071
+wrap_t = 33071
 anim = true
 rows = 2
 cols = 3
-"delay_cs" = 10
+cell_width_override = 0
+cell_height_override = 0
+delay_cs = 10
+row_major = true
+row_up = true
 
 [[texture]]
 storage = "discard"
-"min_filter" = "nearest"
-"mag_filter" = "nearest"
-"generate_mipmaps" = false
+generate_mipmaps = false
+min_filter = "nearest"
+mag_filter = "nearest"
+wrap_s = 33071
+wrap_t = 33071
 

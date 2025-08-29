@@ -2,32 +2,32 @@ from typing import override, Optional
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QWidget, QPushButton
+from PySide6.QtWidgets import QWidget, QPushButton, QFrame
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, ImportedTexturePathItem, nice_pixmap, block_signals, PARAM_LIST
 from editor.core.common.SettingsForm import handle_all_children_modification, SettingsForm
 from . import Converters
+from .Converters import TextureSlot
 from ..EditorTab import EditorTab
 from ..asset_defaults.Defaults import Defaults
-from ..asset_structures import RasterTexture, SVGTexture
 
-
-# TODO v3 implement spritesheets
 
 class TextureTab(EditorTab):
 	def __init__(self, win: MainWindow, item: ImportedTexturePathItem):
 		super().__init__(win)
 		self.item = item
-		self.import_filepath = self.item.import_path
-		self.import_filepath.touch()
+		self.item.import_path.touch()
 
 		self.is_raster = self.item.full_path.suffix not in ('.svg', '.SVG')
-		self.scratch_textures: list[RasterTexture | SVGTexture] = []
+		self.is_gif = self.item.full_path.suffix in ('.gif', '.GIF')
+		self.scratch_textures: list[TextureSlot] = []
 		self.scratch_abstract_storage: Optional[str] = ""
 
 		self.ui = ui.Texture.Ui_Texture()
 		self.ui.setupUi(self)
+
+		self.ui.stackedWidget.setFrameShape(QFrame.Shape.NoFrame)
 
 		self.match_texture_type()
 		self.setup_preview()
@@ -37,9 +37,13 @@ class TextureTab(EditorTab):
 		self.ui.deleteTextureSlot.clicked.connect(self.delete_texture_slot)
 		self.setup_reset_callbacks()
 
+		self.ui.createSpritesheet.checkStateChanged.connect(self.spritesheet_toggled)
+		self.spritesheet_toggled()
+
 		self.revert_changes_impl()
 
 		handle_all_children_modification(self.ui.stackedWidget, self.control_modified)
+		handle_all_children_modification(self.ui.spritesheetSettings, self.control_modified)
 		self.ui.newTextureSlot.clicked.connect(self.control_modified)
 		self.ui.deleteTextureSlot.clicked.connect(self.control_modified)
 		self.update_reset_states()
@@ -60,24 +64,26 @@ class TextureTab(EditorTab):
 	def save_changes_impl(self):
 		textures = []
 		for texture in self.scratch_textures:
-			d = texture.to_dict()
-			if not self.is_raster:
-				del d['abstract_storage']
-			textures.append(d)
+			textures.append(texture.get_dict())
 
-		content = {'texture': textures, 'abstract_storage': self.scratch_abstract_storage}
-		TOMLAdapter.dump(self.import_filepath, content, {'type': 'texture'})
+		content: dict = {'texture': textures}
+		if not self.is_raster:
+			content['abstract_storage'] = self.scratch_abstract_storage
+		TOMLAdapter.dump(self.item.import_path, content, {'type': 'texture'})
 
 	@override
 	def revert_changes_impl(self):
-		content = TOMLAdapter.load(self.import_filepath)
-		self.scratch_abstract_storage = content['abstract_storage']
+		content = TOMLAdapter.load(self.item.import_path)
+		if not self.is_raster:
+			self.scratch_abstract_storage = content['abstract_storage']
 		textures = content['texture']
 		self.scratch_textures.clear()
 		for texture in textures:
 			if not self.is_raster:
 				texture['abstract_storage'] = self.scratch_abstract_storage
-			self.scratch_textures.append(RasterTexture.from_dict(texture) if self.is_raster else SVGTexture.from_dict(texture))
+			slot = TextureSlot(self.is_raster, self.is_gif)
+			slot.load_dict(texture)
+			self.scratch_textures.append(slot)
 
 		with block_signals(self.ui.textureSlotSelect) as textureSlotSelect:
 			textureSlotSelect.clear()
@@ -101,6 +107,7 @@ class TextureTab(EditorTab):
 			self.ui.stackedWidget.setCurrentWidget(self.ui.rasterPage)
 		else:
 			self.ui.stackedWidget.setCurrentWidget(self.ui.svgPage)
+		self.ui.spritesheetSettings.setVisible(not self.is_gif)
 
 	def setup_preview(self):
 		pixmap = QPixmap(self.item.full_path)
@@ -173,47 +180,58 @@ class TextureTab(EditorTab):
 			self._update_reset_state(self.ui.textureSVGWrapS, default.svg.wrap_s, self.ui.textureSVGWrapSReset)
 			self._update_reset_state(self.ui.textureSVGWrapT, default.svg.wrap_t, self.ui.textureSVGWrapTReset)
 
+	def spritesheet_toggled(self):
+		for i in range(self.ui.spritesheetForm.count()):
+			item = self.ui.spritesheetForm.itemAt(i)
+			item.widget().show() if self.ui.createSpritesheet.isChecked() else item.widget().hide()
+
 	def select_texture_slot(self):
 		self.convert_to_ui_from_texture()
 
 	def new_texture_slot(self):
 		defaults = self.get_defaults()
-		texture = defaults.raster if self.is_raster else defaults.svg
-		self.scratch_textures.append(texture)
-		slot = self.ui.textureSlotSelect.count()
+		slot = TextureSlot(self.is_raster, self.is_gif)
+		if self.is_raster:
+			slot.raster = defaults.raster
+		else:
+			slot.svg = defaults.svg
+		self.scratch_textures.append(slot)
+		index = self.ui.textureSlotSelect.count()
 		with block_signals(self.ui.textureSlotSelect) as textureSlotSelect:
-			textureSlotSelect.addItem(f"{slot}")
-		self.ui.textureSlotSelect.setCurrentIndex(slot)
+			textureSlotSelect.addItem(f"{index}")
+		self.ui.textureSlotSelect.setCurrentIndex(index)
 
 	def delete_texture_slot(self):
-		slot = self.ui.textureSlotSelect.currentIndex()
+		index = self.ui.textureSlotSelect.currentIndex()
 
 		if len(self.scratch_textures) > 1:
-			self.scratch_textures.pop(slot)
+			self.scratch_textures.pop(index)
 			with block_signals(self.ui.textureSlotSelect) as textureSlotSelect:
-				textureSlotSelect.removeItem(slot)
-				for i in range(slot, textureSlotSelect.count()):
+				textureSlotSelect.removeItem(index)
+				for i in range(index, textureSlotSelect.count()):
 					textureSlotSelect.setItemText(i, f"{i}")
 		else:
-			assert slot == 0
+			assert index == 0
 			defaults = self.get_defaults()
-			texture = defaults.raster if self.is_raster else defaults.svg
-			self.scratch_textures[slot] = texture
+			slot = TextureSlot(self.is_raster, self.is_gif)
+			if self.is_raster:
+				slot.raster = defaults.raster
+			else:
+				slot.svg = defaults.svg
+			self.scratch_textures[index] = slot
 
 		self.select_texture_slot()
 
 	def convert_to_texture_from_ui(self):
-		if self.is_raster:
-			Converters.convert_to_raster_texture_from_ui(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
-		else:
-			Converters.convert_to_svg_texture_from_ui(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+		Converters.convert_to_texture_from_ui(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+		if not self.is_raster:
 			self.scratch_abstract_storage = PARAM_LIST.get_value(self.ui.textureSVGAbstractStorage.currentText())
 
 	def convert_to_ui_from_texture(self):
-		if self.is_raster:
-			Converters.convert_to_ui_from_raster_texture(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
-		else:
-			Converters.convert_to_ui_from_svg_texture(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+		Converters.convert_to_ui_from_texture(self.ui, self.scratch_textures[self.ui.textureSlotSelect.currentIndex()])
+		if not self.is_raster:
 			with block_signals(self.ui.textureSVGAbstractStorage) as textureSVGAbstractStorage:
 				textureSVGAbstractStorage.setCurrentText(PARAM_LIST.get_name(self.scratch_abstract_storage))
+		if not self.is_gif:
+			self.spritesheet_toggled()
 		self.update_reset_states()

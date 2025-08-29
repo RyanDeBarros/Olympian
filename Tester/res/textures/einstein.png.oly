@@ -1,10 +1,10 @@
-#meta type=texture
+#meta type="texture"
 
 [[texture]]
 storage = "discard"
-"min_filter" = 9728
-"mag_filter" = 9729
-"generate_mipmaps" = false
-"wrap s" = 33071
-"wrap t" = 33071
+generate_mipmaps = false
+min_filter = 9728
+mag_filter = 9729
+wrap_s = 33071
+wrap_t = 33071
 

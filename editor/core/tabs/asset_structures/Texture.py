@@ -93,3 +93,35 @@ class Texture:
 			else:
 				d[key] = value
 		return d
+
+
+@dataclass
+class Spritesheet:
+	anim: bool = False
+	rows: int = 1
+	cols: int = 1
+	cell_width_override: int = 0
+	cell_height_override: int = 0
+	delay_cs: int = 0
+	row_major: bool = True
+	row_up: bool = True
+
+	@staticmethod
+	def from_dict(d: dict) -> Spritesheet:
+		init_values = {}
+		if d is not None:
+			for f in fields(Spritesheet):
+				if f.name in d:
+					match f.name:
+						case _:
+							init_values[f.name] = d[f.name]
+		return Spritesheet(**init_values)
+
+	def to_dict(self) -> dict:
+		d = {}
+		for key, value in self.__dict__.items():
+			if hasattr(value, "to_dict"):
+				d[key] = value.to_dict()
+			else:
+				d[key] = value
+		return d
