@@ -68,6 +68,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="openFavorites">
+       <property name="toolTip">
+        <string>Open Favorites menu (Shift+Alt+F)</string>
+       </property>
+       <property name="text">
+        <string>Favorites</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="openInExplorer">
        <property name="text">
         <string>Open In Explorer</string>

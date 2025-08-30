@@ -7,15 +7,15 @@ class MainWindow(QMainWindow):
 		super().__init__()
 		self.open_start = open_start_menu
 
-		self.setWindowTitle("Olympian Editor")
-		# TODO v4 create and set window icon
-
 		from editor.core.ProjectContext import ProjectContext
 		self.project_context = ProjectContext(project_file, self)
 
 		from editor import ui
 		self.ui = ui.MainWindow.Ui_MainWindow()
 		self.ui.setupUi(self)
+
+		self.setWindowTitle(f"Olympian Editor - {self.project_context.project_file.stem}")
+		# TODO v3 create and set window icon
 
 		self.ui.actionOpen_Start_Menu.triggered.connect(self.open_start_menu)
 

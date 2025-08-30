@@ -1,2 +1,2 @@
-from . import StartMenu, ProjectWindow, MainWindow, ContentBrowser
+from . import StartMenu, ProjectWindow, MainWindow, ContentBrowser, ContentBrowserFavorites
 from .tabs import *

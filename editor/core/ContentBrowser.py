@@ -441,8 +441,8 @@ class ContentBrowserFolderView(QListView):
 
 		if current_folder != self.content_browser.current_folder:
 			self.content_browser.current_folder = current_folder
-			rel_folder = current_folder.relative_to(self.content_browser.win.project_context.res_folder)
-			self.content_browser.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
+			friendly_folder = self.content_browser.win.project_context.to_friendly_resource_path(current_folder)
+			self.content_browser.ui.folderLineEdit.setText(friendly_folder)
 		self.content_browser.win.project_context.refresh()
 		self.content_browser.populate()
 
@@ -494,9 +494,13 @@ class ContentBrowser(QWidget):
 		self.ui.historyToolButton.setMenu(history_menu)
 		self.ui.historyToolButton.clicked.connect(lambda: self.ui.historyToolButton.showMenu())
 
+		from .FavoritesDialog import FavoritesDialog
+		self.ui.openFavorites.clicked.connect(lambda: FavoritesDialog(self).exec())
+		favorites_shortcut = QShortcut(QKeySequence("Shift+Alt+F"), self)
+		favorites_shortcut.activated.connect(lambda: FavoritesDialog(self).exec() if self.underMouse() else None)
+
 		self.current_folder: Optional[Path] = None
 		self.last_file_dialog_dir: Optional[Path] = None
-		pass  # TODO v3 favorites combo box
 
 	def init(self, win: MainWindow):
 		self.win = win
@@ -578,8 +582,8 @@ class ContentBrowser(QWidget):
 
 			def open(self, folder):
 				self.browser.current_folder = folder
-				rel_folder = folder.relative_to(self.browser.win.project_context.res_folder)
-				self.browser.ui.folderLineEdit.setText("RES://" + (rel_folder.as_posix() if str(rel_folder) != "." else ""))
+				friendly_folder = self.browser.win.project_context.to_friendly_resource_path(folder)
+				self.browser.ui.folderLineEdit.setText(friendly_folder)
 				self.browser.populate()
 
 			def undo(self):
