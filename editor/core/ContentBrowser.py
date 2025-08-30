@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import bisect
 import os
 import platform
 import subprocess
+from enum import IntEnum
 from pathlib import Path
 from typing import List, Optional
 
@@ -9,7 +12,7 @@ from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QIte
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence, QUndoStack, QUndoCommand
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
-	QVBoxLayout, QUndoView
+	QVBoxLayout, QUndoView, QCheckBox
 
 from editor.core import MainWindow
 from editor.core.EditorPreferences import PREFERENCES
@@ -313,97 +316,119 @@ class ContentBrowserFolderView(QListView):
 			renamed_path = Path(f"{path} ({index})")
 		return renamed_path
 
+	class _DuplicatePathAction(IntEnum):
+		REPLACE = 0
+		RENAME = 1
+		CANCEL_INDIVIDUAL = 2
+
+	@staticmethod
+	def _prompt_duplicate_path_action(duplicate_path: Path, action_name: str) -> tuple[_DuplicatePathAction, bool] | None:
+		alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {duplicate_path} already exists.\nHow do you want to handle the {action_name}?")
+		rename = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
+		replace = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
+		cancel_individual = alert.addButton(f"Cancel individual {action_name}", QMessageBox.ButtonRole.RejectRole)
+		alert.addButton(f"Cancel all {action_name}s", QMessageBox.ButtonRole.RejectRole)
+		checkbox = QCheckBox("Do selected action for all items")
+		alert.setCheckBox(checkbox)
+		alert.exec()
+		if alert.clickedButton() == replace:
+			action = ContentBrowserFolderView._DuplicatePathAction.REPLACE
+		elif alert.clickedButton() == rename:
+			action = ContentBrowserFolderView._DuplicatePathAction.RENAME
+		elif alert.clickedButton() == cancel_individual:
+			action = ContentBrowserFolderView._DuplicatePathAction.CANCEL_INDIVIDUAL
+		else:
+			return None
+		return action, checkbox.isChecked()
+
+	class _PathTransferData:
+		def __init__(self, from_path: Path, to_path: Path, additional_existing_paths: list[Path]):
+			self.from_path = from_path
+			self.to_path = to_path
+			self.additional_existing_paths = additional_existing_paths
+			self.can_transfer = True
+			self.replace_duplicate = False
+			assert from_path.exists()
+
+		def will_duplicate(self):
+			return self.to_path.exists() or self.to_path in self.additional_existing_paths
+
+		def handle_duplicate(self, action: ContentBrowserFolderView._DuplicatePathAction):
+			match action:
+				case ContentBrowserFolderView._DuplicatePathAction.REPLACE:
+					self.replace_duplicate = True
+				case ContentBrowserFolderView._DuplicatePathAction.RENAME:
+					if self.from_path.is_file():
+						self.to_path = ContentBrowserFolderView.get_next_available_file(self.to_path, self.additional_existing_paths)
+					else:
+						self.to_path = ContentBrowserFolderView.get_next_available_folder(self.to_path, self.additional_existing_paths)
+				case ContentBrowserFolderView._DuplicatePathAction.CANCEL_INDIVIDUAL:
+					self.can_transfer = False
+
+		def can_append(self):
+			return self.can_transfer and not (self.replace_duplicate and self.from_path == self.to_path)
+
+	class _MultiPathTransferData:
+		def __init__(self, to_folder: Path, action_name: str):
+			self.to_folder = to_folder
+			self.action_name = action_name
+			self.from_paths: list[Path] = []
+			self.to_paths: list[Path] = []
+			self.replace_existing: list[bool] = []
+			self.repeated_action: Optional[ContentBrowserFolderView._DuplicatePathAction] = None
+
+		def _process(self, from_path: Path):
+			transfer_data = ContentBrowserFolderView._PathTransferData(from_path=from_path, to_path=self.to_folder.joinpath(from_path.name),
+																	   additional_existing_paths=self.to_paths)
+			if transfer_data.will_duplicate():
+				if self.repeated_action is not None:
+					action = self.repeated_action
+				else:
+					reply = ContentBrowserFolderView._prompt_duplicate_path_action(transfer_data.to_path, self.action_name)
+					if reply is None:
+						return
+					action, repeat = reply
+					if repeat:
+						self.repeated_action = action
+				transfer_data.handle_duplicate(action)
+
+			if transfer_data.can_append():
+				self.from_paths.append(transfer_data.from_path)
+				self.to_paths.append(transfer_data.to_path)
+				self.replace_existing.append(transfer_data.replace_duplicate)
+
+		def process_transfer(self, paths: list[Path]):
+			for path in paths:
+				self._process(from_path=path)
+
+		def can_transfer(self):
+			return len(self.from_paths) > 0
+
+
 	def move_items(self, indexes: list[QModelIndex]):
 		folder = QFileDialog.getExistingDirectory(self, "Move To", self.content_browser.current_folder.as_posix())
 		if folder:
 			folder = Path(folder).resolve()
 			if folder and folder.is_relative_to(self.content_browser.win.project_context.res_folder) and folder != self.content_browser.current_folder:
-				old_paths: list[Path] = []
-				new_paths: list[Path] = []
-				replace_existing: list[bool] = []
-				for index in indexes:
-					pi = self.path_items[index.row()]
-					old_path = pi.full_path
-					new_path = folder.joinpath(pi.full_path.name)
-					assert old_path.exists()
-					can_move = True
-					replace = False
-					if new_path.exists() or new_path in new_paths:
-						# TODO v3 option to do action for rest of items
-						alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {new_path} already exists.\nHow do you want to handle the move?")
-						rename_ = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
-						replace_ = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
-						cancel_individual_ = alert.addButton(f"Cancel individual move", QMessageBox.ButtonRole.RejectRole)
-						alert.addButton(f"Cancel all moves", QMessageBox.ButtonRole.RejectRole)
-						alert.exec()
-						if alert.clickedButton() == replace_:
-							replace = True
-						elif alert.clickedButton() == rename_:
-							if old_path.is_file():
-								new_path = self.get_next_available_file(new_path, new_paths)
-							else:
-								new_path = self.get_next_available_folder(new_path, new_paths)
-						elif alert.clickedButton() == cancel_individual_:
-							can_move = False
-						else:
-							return
-
-					if can_move:
-						old_paths.append(old_path)
-						new_paths.append(new_path)
-						replace_existing.append(replace)
-
-				try:
-					self.file_machine.rename_all(old_paths, new_paths, replace_existing)
-				except OSError as e:
-					Alerts.alert_error(self, "Error - cannot complete move", str(e))
+				multi_move_data = ContentBrowserFolderView._MultiPathTransferData(to_folder=folder, action_name="move")
+				multi_move_data.process_transfer([self.path_items[index.row()].full_path for index in indexes])
+				if multi_move_data.can_transfer():
+					try:
+						self.file_machine.rename_all(multi_move_data.from_paths, multi_move_data.to_paths, multi_move_data.replace_existing)
+					except OSError as e:
+						Alerts.alert_error(self, "Error - cannot complete move", str(e))
 
 	def copy_items(self, indexes: list[QModelIndex]):
 		self.clipboard_paths = [self.path_items[index.row()].full_path for index in indexes]
 
 	def paste_items(self):
-		copied_paths: list[Path] = []
-		pasted_paths: list[Path] = []
-		replace_existing: list[bool] = []
-		for clipboard_path in self.clipboard_paths:
-			if not clipboard_path.exists():
-				continue
-
-			pasted_path = self.content_browser.current_folder.joinpath(clipboard_path.name)
-			can_paste = True
-			replace = False
-			if pasted_path.exists() or pasted_path in pasted_paths:
-				# TODO v3 option to do action for rest of items
-				alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {pasted_path} already exists.\nHow do you want to handle the paste?")
-				rename_ = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
-				replace_ = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
-				cancel_individual_ = alert.addButton(f"Cancel individual paste", QMessageBox.ButtonRole.RejectRole)
-				alert.addButton(f"Cancel all pastes", QMessageBox.ButtonRole.RejectRole)
-				alert.exec()
-				if alert.clickedButton() == replace_:
-					replace = True
-				elif alert.clickedButton() == rename_:
-					if clipboard_path.is_file():
-						pasted_path = self.get_next_available_file(pasted_path, pasted_paths)
-					else:
-						pasted_path = self.get_next_available_folder(pasted_path, pasted_paths)
-				elif alert.clickedButton() == cancel_individual_:
-					can_paste = False
-				else:
-					return
-
-			if can_paste and not (replace and clipboard_path == pasted_path):
-				copied_paths.append(clipboard_path)
-				pasted_paths.append(pasted_path)
-				replace_existing.append(replace)
-
-		if len(copied_paths) == 0:
-			return
-		try:
-			self.file_machine.copy_paste(copied_paths, pasted_paths, replace_existing)
-		except OSError as e:
-			Alerts.alert_error(self, "Error - cannot complete paste", str(e))
-
+		multi_paste_data = ContentBrowserFolderView._MultiPathTransferData(to_folder=self.content_browser.current_folder, action_name="paste")
+		multi_paste_data.process_transfer([clipboard_path for clipboard_path in self.clipboard_paths if clipboard_path.exists()])
+		if multi_paste_data.can_transfer():
+			try:
+				self.file_machine.copy_paste(multi_paste_data.from_paths, multi_paste_data.to_paths, multi_paste_data.replace_existing)
+			except OSError as e:
+				Alerts.alert_error(self, "Error - cannot complete paste", str(e))
 
 	def refresh_view(self):
 		current_folder = self.content_browser.current_folder
@@ -447,6 +472,15 @@ class ContentBrowser(QWidget):
 		redo_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Z"), self)
 		redo_shortcut.activated.connect(self.redo_in_context)
 
+		move_shortcut = QShortcut(QKeySequence("Ctrl+M"), self)
+		move_shortcut.activated.connect(self.move_in_context)
+
+		copy_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
+		copy_shortcut.activated.connect(self.copy_in_context)
+
+		paste_shortcut = QShortcut(QKeySequence("Ctrl+V"), self)
+		paste_shortcut.activated.connect(self.paste_in_context)
+
 		history_menu = QMenu(self.ui.historyToolButton)
 		history_show = QAction("Show History", history_menu)
 		history_show.triggered.connect(self.show_undo_stack)
@@ -462,6 +496,7 @@ class ContentBrowser(QWidget):
 
 		self.current_folder: Optional[Path] = None
 		self.last_file_dialog_dir: Optional[Path] = None
+		pass  # TODO v3 favorites combo box
 
 	def init(self, win: MainWindow):
 		self.win = win
@@ -500,7 +535,17 @@ class ContentBrowser(QWidget):
 		if self.underMouse():
 			self.undo_stack.redo()
 
-# TODO v3 copy_in_context (Ctrl+C)/paste_in_context (Ctrl+V)/move_in_context (Ctrl+M)
+	def move_in_context(self):
+		if self.underMouse():
+			self.folder_view.move_items(self.folder_view.selectedIndexes())
+
+	def copy_in_context(self):
+		if self.underMouse():
+			self.folder_view.copy_items(self.folder_view.selectedIndexes())
+
+	def paste_in_context(self):
+		if self.underMouse():
+			self.folder_view.paste_items()
 
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())

@@ -267,11 +267,11 @@ class UCCopyPastePaths(QUndoCommand):
 		self.replacers = [UCDeletePaths(self.machine, [pasted_path]) if replace else None for replace, pasted_path in
 						 zip(replace_existing, self.pasted_paths)]
 		self.first_paste = True
-		self.paste_deleters = [UCDeletePaths(self.machine, self.pasted_paths)]
+		self.paste_deleter = UCDeletePaths(self.machine, self.pasted_paths)
 
 	def undo(self):
+		self.paste_deleter.redo()
 		for i in range(self.num_paths):
-			self.paste_deleters[i].redo()
 			if self.replacers[i] is not None:
 				self.replacers[i].undo()
 
@@ -279,7 +279,9 @@ class UCCopyPastePaths(QUndoCommand):
 		for i in range(self.num_paths):
 			if self.replacers[i] is not None:
 				self.replacers[i].redo()
-			if self.first_paste:
+
+		if self.first_paste:
+			for i in range(self.num_paths):
 				if self.copied_paths[i].is_file():
 					shutil.copy2(self.copied_paths[i], self.pasted_paths[i])
 					import_file = Path(self.copied_paths[i].as_posix() + '.oly')
@@ -289,8 +291,8 @@ class UCCopyPastePaths(QUndoCommand):
 					shutil.copytree(self.copied_paths[i], self.pasted_paths[i])
 				else:
 					assert False
-			else:
-				self.paste_deleters[i].undo()
+		else:
+			self.paste_deleter.undo()
 
 		if self.first_paste:
 			self.first_paste = False
