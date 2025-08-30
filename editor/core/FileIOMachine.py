@@ -1,5 +1,6 @@
 import os
 import random
+import shutil
 import string
 from pathlib import Path
 from typing import Optional
@@ -51,7 +52,14 @@ class FileIOMachine:
 			self.rename(old_paths[0], new_paths[0], replace_existing[0])
 		else:
 			self.undo_stack.push(UCRenameMultiplePaths(self, [Path(old_path).resolve() for old_path in old_paths],
-												   [Path(new_path).resolve() for new_path in new_paths], replace_existing))
+													   [Path(new_path).resolve() for new_path in new_paths],
+													   replace_existing))
+
+	def copy_paste(self, copied_paths: list[Path], pasted_paths: list[Path], replace_existing: list[bool]):
+		assert len(copied_paths) == len(pasted_paths) and len(copied_paths) == len(replace_existing)
+		self.undo_stack.push(UCCopyPastePaths(self, [Path(copied_path).resolve() for copied_path in copied_paths],
+											  [Path(pasted_path).resolve() for pasted_path in pasted_paths],
+											  replace_existing))
 
 	def new_folder(self, folder: Path):
 		self.undo_stack.push(UCNewFolder(self, Path(folder).resolve()))
@@ -229,12 +237,14 @@ class UCRenamePath(QUndoCommand):
 
 
 class UCRenameMultiplePaths(QUndoCommand):
-	def __init__(self, machine: FileIOMachine, old_paths: list[Path], new_paths: list[Path], replace_existing: list[bool]):
+	def __init__(self, machine: FileIOMachine, old_paths: list[Path], new_paths: list[Path],
+				 replace_existing: list[bool]):
 		super().__init__("Rename Multiple Paths")
 		self.machine = machine
 		assert len(old_paths) == len(new_paths) and len(old_paths) == len(replace_existing)
 		self.num_paths = len(old_paths)
-		self.renamers = [UCRenamePath(self.machine, old_path, new_path, replace) for old_path, new_path, replace in zip(old_paths, new_paths, replace_existing)]
+		self.renamers = [UCRenamePath(self.machine, old_path, new_path, replace) for old_path, new_path, replace in
+						 zip(old_paths, new_paths, replace_existing)]
 
 	def undo(self):
 		for i in range(self.num_paths):
@@ -243,6 +253,53 @@ class UCRenameMultiplePaths(QUndoCommand):
 	def redo(self):
 		for i in range(self.num_paths):
 			self.renamers[i].redo()
+
+
+class UCCopyPastePaths(QUndoCommand):
+	def __init__(self, machine: FileIOMachine, copied_paths: list[Path], pasted_paths: list[Path],
+				 replace_existing: list[bool]):
+		super().__init__("Paste Copied Paths")
+		self.machine = machine
+		assert len(copied_paths) == len(pasted_paths) and len(copied_paths) == len(replace_existing)
+		self.copied_paths = copied_paths
+		self.pasted_paths = pasted_paths
+		self.num_paths = len(self.copied_paths)
+		self.replacers = [UCDeletePaths(self.machine, [pasted_path]) if replace else None for replace, pasted_path in
+						 zip(replace_existing, self.pasted_paths)]
+		self.first_paste = True
+		self.paste_deleters = [UCDeletePaths(self.machine, self.pasted_paths)]
+
+	def undo(self):
+		for i in range(self.num_paths):
+			self.paste_deleters[i].redo()
+			if self.replacers[i] is not None:
+				self.replacers[i].undo()
+
+	def redo(self):
+		for i in range(self.num_paths):
+			if self.replacers[i] is not None:
+				self.replacers[i].redo()
+			if self.first_paste:
+				if self.copied_paths[i].is_file():
+					shutil.copy2(self.copied_paths[i], self.pasted_paths[i])
+					import_file = Path(self.copied_paths[i].as_posix() + '.oly')
+					if import_file.exists():
+						shutil.copy2(import_file, Path(self.pasted_paths[i].as_posix() + '.oly'))
+				elif self.copied_paths[i].is_dir():
+					shutil.copytree(self.copied_paths[i], self.pasted_paths[i])
+				else:
+					assert False
+			else:
+				self.paste_deleters[i].undo()
+
+		if self.first_paste:
+			self.first_paste = False
+			for i in range(self.num_paths):
+				self.machine.uc_browser_add_path(self.pasted_paths[i])
+
+				item = get_path_item(self.pasted_paths[i])
+				assert item is not None
+				item.on_new(self.machine.content_browser)
 
 
 class UCNewFolder(QUndoCommand):

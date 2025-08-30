@@ -32,6 +32,8 @@ class MainTabHolder(QTabWidget):
 
 	def close_tab(self, index):
 		tab = self.editor_tab_at(index)
+		if tab is None:
+			return False
 		if tab.asterisk:
 			reply = QMessageBox.question(self, f"{tab.name()} has unsaved changes",
 										 "Do you want to save these changes?",

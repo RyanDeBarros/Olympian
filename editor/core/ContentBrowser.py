@@ -23,6 +23,7 @@ class ContentBrowserFolderView(QListView):
 		super().__init__(parent)
 		self.content_browser: Optional[ContentBrowser] = None
 		self.file_machine: Optional[FileIOMachine] = None
+		self.clipboard_paths: list[Path] = []
 
 		self.setViewMode(QListView.ViewMode.IconMode)
 		self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -174,6 +175,14 @@ class ContentBrowserFolderView(QListView):
 		new_folder.triggered.connect(self.content_browser.new_folder)
 		menu.addAction(new_folder)
 
+		menu.addSeparator()
+
+		paste = QAction(QIcon("res/images/Paste.png"), "Paste", menu)
+		paste.triggered.connect(lambda: self.paste_items())
+		menu.addAction(paste)
+
+		menu.addSeparator()
+
 		refresh = QAction(QIcon("res/images/Refresh.png"), "Refresh", menu)
 		refresh.triggered.connect(self.refresh_view)
 		menu.addAction(refresh)
@@ -181,6 +190,22 @@ class ContentBrowserFolderView(QListView):
 	def fill_single_item_context_menu(self, menu: QMenu, index: QModelIndex):
 		if index.row() == 0:
 			return
+
+		copy = QAction(QIcon("res/images/Copy.png"), "Copy", menu)
+		copy.triggered.connect(lambda: self.copy_items([index]))
+		menu.addAction(copy)
+
+		move = QAction(QIcon("res/images/Move.png"), "Move", menu)
+		move.triggered.connect(lambda: self.move_items([index]))
+		menu.addAction(move)
+
+		menu.addSeparator()
+
+		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
+		reimport.triggered.connect(lambda: self.import_items([index]))
+		menu.addAction(reimport)
+
+		menu.addSeparator()
 
 		rename = QAction(QIcon("res/images/Rename.png"), "Rename", menu)
 		rename.triggered.connect(lambda: self.edit(index))
@@ -190,28 +215,27 @@ class ContentBrowserFolderView(QListView):
 		delete.triggered.connect(lambda: self.delete_item(index))
 		menu.addAction(delete)
 
-		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
-		reimport.triggered.connect(lambda: self.import_items([index]))
-		menu.addAction(reimport)
-
-		move = QAction(QIcon("res/images/Move.png"), "Move", menu)
-		move.triggered.connect(lambda: self.move_items([index]))
-		menu.addAction(move)
-
 	def fill_multi_item_context_menu(self, menu: QMenu):
-		delete = QAction(QIcon("res/images/Delete.png"), "Delete", menu)
-		delete.triggered.connect(lambda: self.delete_selected_items())
-		menu.addAction(delete)
-
-		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
-		reimport.triggered.connect(lambda: self.import_items(self.selectedIndexes()))
-		menu.addAction(reimport)
+		copy = QAction(QIcon("res/images/Copy.png"), "Copy", menu)
+		copy.triggered.connect(lambda: self.copy_items(self.selectedIndexes()))
+		menu.addAction(copy)
 
 		move = QAction(QIcon("res/images/Move.png"), "Move", menu)
 		move.triggered.connect(lambda: self.move_items(self.selectedIndexes()))
 		menu.addAction(move)
 
-	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files)
+		menu.addSeparator()
+
+		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
+		reimport.triggered.connect(lambda: self.import_items(self.selectedIndexes()))
+		menu.addAction(reimport)
+
+		menu.addSeparator()
+
+		delete = QAction(QIcon("res/images/Delete.png"), "Delete", menu)
+		delete.triggered.connect(lambda: self.delete_selected_items())
+		menu.addAction(delete)
+
 	def show_context_menu(self, pos):
 		menu = QMenu(self)
 
@@ -267,6 +291,28 @@ class ContentBrowserFolderView(QListView):
 		for index in indexes:
 			self.path_items[index.row()].on_import(self.content_browser)
 
+	@staticmethod
+	def get_next_available_file(path: Path, existing_paths: list[Path]):
+		index = 0
+		base_file = path
+		for _ in path.suffixes:
+			base_file = base_file.with_suffix('')
+		extension = ''.join(path.suffixes)
+		renamed_path = path
+		while renamed_path.exists() or renamed_path in existing_paths:
+			index += 1
+			renamed_path = Path(f"{base_file} ({index}){extension}")
+		return renamed_path
+
+	@staticmethod
+	def get_next_available_folder(path: Path, existing_paths: list[Path]):
+		index = 0
+		renamed_path = path
+		while renamed_path.exists() or renamed_path in existing_paths:
+			index += 1
+			renamed_path = Path(f"{path} ({index})")
+		return renamed_path
+
 	def move_items(self, indexes: list[QModelIndex]):
 		folder = QFileDialog.getExistingDirectory(self, "Move To", self.content_browser.current_folder.as_posix())
 		if folder:
@@ -278,11 +324,12 @@ class ContentBrowserFolderView(QListView):
 				for index in indexes:
 					pi = self.path_items[index.row()]
 					old_path = pi.full_path
-					new_path = folder.joinpath(pi.full_path.relative_to(self.content_browser.current_folder))
+					new_path = folder.joinpath(pi.full_path.name)
 					assert old_path.exists()
 					can_move = True
 					replace = False
 					if new_path.exists() or new_path in new_paths:
+						# TODO v3 option to do action for rest of items
 						alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {new_path} already exists.\nHow do you want to handle the move?")
 						rename_ = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
 						replace_ = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
@@ -292,23 +339,10 @@ class ContentBrowserFolderView(QListView):
 						if alert.clickedButton() == replace_:
 							replace = True
 						elif alert.clickedButton() == rename_:
-							index = 0
 							if old_path.is_file():
-								base_file = new_path
-								for _ in new_path.suffixes:
-									base_file = base_file.with_suffix('')
-								extension = ''.join(new_path.suffixes)
-								renamed_path = new_path
-								while renamed_path.exists() or renamed_path in new_paths:
-									index += 1
-									renamed_path = Path(f"{base_file} ({index}){extension}")
-								new_path = renamed_path
+								new_path = self.get_next_available_file(new_path, new_paths)
 							else:
-								renamed_path = new_path
-								while renamed_path.exists() or renamed_path in new_paths:
-									index += 1
-									renamed_path = Path(f"{new_path} ({index})")
-								new_path = renamed_path
+								new_path = self.get_next_available_folder(new_path, new_paths)
 						elif alert.clickedButton() == cancel_individual_:
 							can_move = False
 						else:
@@ -323,6 +357,53 @@ class ContentBrowserFolderView(QListView):
 					self.file_machine.rename_all(old_paths, new_paths, replace_existing)
 				except OSError as e:
 					Alerts.alert_error(self, "Error - cannot complete move", str(e))
+
+	def copy_items(self, indexes: list[QModelIndex]):
+		self.clipboard_paths = [self.path_items[index.row()].full_path for index in indexes]
+
+	def paste_items(self):
+		copied_paths: list[Path] = []
+		pasted_paths: list[Path] = []
+		replace_existing: list[bool] = []
+		for clipboard_path in self.clipboard_paths:
+			if not clipboard_path.exists():
+				continue
+
+			pasted_path = self.content_browser.current_folder.joinpath(clipboard_path.name)
+			can_paste = True
+			replace = False
+			if pasted_path.exists() or pasted_path in pasted_paths:
+				# TODO v3 option to do action for rest of items
+				alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {pasted_path} already exists.\nHow do you want to handle the paste?")
+				rename_ = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
+				replace_ = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
+				cancel_individual_ = alert.addButton(f"Cancel individual paste", QMessageBox.ButtonRole.RejectRole)
+				alert.addButton(f"Cancel all pastes", QMessageBox.ButtonRole.RejectRole)
+				alert.exec()
+				if alert.clickedButton() == replace_:
+					replace = True
+				elif alert.clickedButton() == rename_:
+					if clipboard_path.is_file():
+						pasted_path = self.get_next_available_file(pasted_path, pasted_paths)
+					else:
+						pasted_path = self.get_next_available_folder(pasted_path, pasted_paths)
+				elif alert.clickedButton() == cancel_individual_:
+					can_paste = False
+				else:
+					return
+
+			if can_paste and not (replace and clipboard_path == pasted_path):
+				copied_paths.append(clipboard_path)
+				pasted_paths.append(pasted_path)
+				replace_existing.append(replace)
+
+		if len(copied_paths) == 0:
+			return
+		try:
+			self.file_machine.copy_paste(copied_paths, pasted_paths, replace_existing)
+		except OSError as e:
+			Alerts.alert_error(self, "Error - cannot complete paste", str(e))
+
 
 	def refresh_view(self):
 		current_folder = self.content_browser.current_folder
@@ -367,12 +448,15 @@ class ContentBrowser(QWidget):
 		redo_shortcut.activated.connect(self.redo_in_context)
 
 		history_menu = QMenu(self.ui.historyToolButton)
-		history_show = QAction("Show", history_menu)
+		history_show = QAction("Show History", history_menu)
 		history_show.triggered.connect(self.show_undo_stack)
 		history_menu.addAction(history_show)
-		history_clear = QAction("Clear", history_menu)
+		history_clear = QAction("Clear History", history_menu)
 		history_clear.triggered.connect(self.clear_undo_stack)
 		history_menu.addAction(history_clear)
+		trash_clear = QAction("Clear History + Trash", history_menu)
+		trash_clear.triggered.connect(self.clear_history_and_trash)
+		history_menu.addAction(trash_clear)
 		self.ui.historyToolButton.setMenu(history_menu)
 		self.ui.historyToolButton.clicked.connect(lambda: self.ui.historyToolButton.showMenu())
 
@@ -396,8 +480,17 @@ class ContentBrowser(QWidget):
 		dialog.exec()
 
 	def clear_undo_stack(self):
-		self.undo_stack.clear()
-		self.file_machine.clear_trash()
+		reply = QMessageBox.question(self, "Confirm history clear", "Are you sure you want to delete the content browser's undo history? This action cannot be undone.",
+									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+		if reply == QMessageBox.StandardButton.Yes:
+			self.undo_stack.clear()
+
+	def clear_history_and_trash(self):
+		reply = QMessageBox.question(self, "Confirm history + trash clear", "Are you sure you want to delete the content browser's undo history and the recycling bin? This action cannot be undone.",
+									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+		if reply == QMessageBox.StandardButton.Yes:
+			self.undo_stack.clear()
+			self.file_machine.clear_trash()
 
 	def undo_in_context(self):
 		if self.underMouse():
@@ -406,6 +499,8 @@ class ContentBrowser(QWidget):
 	def redo_in_context(self):
 		if self.underMouse():
 			self.undo_stack.redo()
+
+# TODO v3 copy_in_context (Ctrl+C)/paste_in_context (Ctrl+V)/move_in_context (Ctrl+M)
 
 	def browse_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())
