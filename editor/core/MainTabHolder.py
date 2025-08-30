@@ -43,17 +43,22 @@ class MainTabHolder(QTabWidget):
 				tab.save_changes()
 		self.removeTab(index)
 		self.uids.pop(index)
+		if len(self.uids) == 0:
+			self.win.enable_tab_menu_actions(False)
 		return True
 
 	def close_all(self):
 		while len(self.uids) > 0:
 			if not self.close_tab(0):
 				return False
+		self.win.enable_tab_menu_actions(False)
 		return True
 
 	def remove_tab(self, index):
 		self.removeTab(index)
 		self.uids.pop(index)
+		if len(self.uids) == 0:
+			self.win.enable_tab_menu_actions(False)
 
 	def current_editor_tab(self):
 		widget = self.currentWidget()
@@ -73,6 +78,7 @@ class MainTabHolder(QTabWidget):
 			index = self.addTab(tab, tab.icon(QSize(64, 64)), tab.name())
 			self.setCurrentIndex(index)
 			self.uids.insert(index, uid)
+		self.win.enable_tab_menu_actions(True)
 
 	def save(self):
 		tab = self.current_editor_tab()

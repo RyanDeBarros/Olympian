@@ -57,12 +57,18 @@ class MainWindow(QMainWindow):
 		self.ui.actionRevert_Changes.setIcon(QIcon("res/images/Undo.png"))
 		revert_changes_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Shift+R"), self)
 		revert_changes_shortcut.activated.connect(self.tab_holder.revert_changes)
+		self.enable_tab_menu_actions(False)
 
 	def closeEvent(self, event):
 		if self.tab_holder.close_all():
 			event.accept()
 		else:
 			event.ignore()
+
+	def enable_tab_menu_actions(self, enable: bool):
+		self.ui.actionSave.setEnabled(enable)
+		self.ui.actionSave_All.setEnabled(enable)
+		self.ui.actionRevert_Changes.setEnabled(enable)
 
 	def open_start_menu(self):
 		self.close()

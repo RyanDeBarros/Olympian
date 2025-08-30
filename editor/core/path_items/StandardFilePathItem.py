@@ -45,12 +45,12 @@ class StandardFilePathItem(AbstractPathItem):
 
 	@override
 	def on_import(self, browser: ContentBrowser):
-		# TODO v3 put recognized suffixes in editor preferences
-		if self.full_path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.svg'):
+		from editor.core.EditorPreferences import PREFERENCES
+		if self.full_path.suffix.lower() in PREFERENCES.texture_file_extensions:
 			from . import ImportedTexturePathItem
 			ImportedTexturePathItem(self.full_path).on_import(browser)
 			browser.refresh_item(self)
-		elif self.full_path.suffix.lower() in ('.ttf', '.otf'):
+		elif self.full_path.suffix.lower() in PREFERENCES.font_file_extensions:
 			from . import ImportedFontPathItem
 			ImportedFontPathItem(self.full_path).on_import(browser)
 			browser.refresh_item(self)

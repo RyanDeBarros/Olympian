@@ -23,11 +23,18 @@ class EditorPreferencesTab(EditorTab):
 
 		self.nav_settings = {}
 		self.nav_form = SettingsForm([
-			SettingsParameter('prompt on delete', self.ui.navPromptOnDelete)
+			SettingsParameter('prompt_on_delete', self.ui.navPromptOnDelete)
+		])
+
+		self.import_settings = {}
+		self.import_form = SettingsForm([
+			SettingsParameter('texture_file_extensions', self.ui.textureFileExtensions),
+			SettingsParameter('font_file_extensions', self.ui.fontFileExtensions)
 		])
 
 		self.revert_changes_impl()
 		self.nav_form.connect_modified(lambda: self.set_asterisk(True))
+		self.import_form.connect_modified(lambda: self.set_asterisk(True))
 
 	@override
 	def uid(self):
@@ -44,7 +51,10 @@ class EditorPreferencesTab(EditorTab):
 	@override
 	def save_changes_impl(self):
 		self.nav_settings.update(self.nav_form.get_dict())
-		PREFERENCES.prompt_user_when_deleting_paths = self.nav_settings['prompt on delete']
+		PREFERENCES.prompt_user_when_deleting_paths = self.nav_settings['prompt_on_delete']
+		self.import_settings.update(self.import_form.get_dict())
+		PREFERENCES.texture_file_extensions = self.import_settings['texture_file_extensions'].split(';')
+		PREFERENCES.font_file_extensions = self.import_settings['font_file_extensions'].split(';')
 		TOMLAdapter.dump('data/PREFERENCES.toml', self.preferences)
 
 	@override
@@ -55,7 +65,15 @@ class EditorPreferencesTab(EditorTab):
 			self.preferences['navigation'] = {}
 		self.nav_settings = self.preferences['navigation']
 		self.nav_form.load_dict(self.nav_settings, {
-			'prompt on delete': True
+			'prompt_on_delete': True
+		})
+
+		if 'file_imports' not in self.preferences:
+			self.preferences['file_imports'] = {}
+		self.import_settings = self.preferences['file_imports']
+		self.import_form.load_dict(self.import_settings, {
+			'texture_file_extensions': '.png;.jpg;.jpeg;.bmp;.gif;.svg',
+			'font_file_extensions': '.ttf;.otf'
 		})
 
 	@override

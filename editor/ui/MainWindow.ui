@@ -111,29 +111,9 @@
     <string>Content Browser (Ctrl+Space)</string>
    </property>
   </action>
-  <action name="actionUndo">
-   <property name="text">
-    <string>Undo (Ctrl+Z)</string>
-   </property>
-  </action>
-  <action name="actionRedo">
-   <property name="text">
-    <string>Redo (Ctrl+Shift+Z)</string>
-   </property>
-  </action>
-  <action name="actionShow_Undo_Stack">
-   <property name="text">
-    <string>Show Undo Stack</string>
-   </property>
-  </action>
   <action name="actionEditor_Preferences">
    <property name="text">
     <string>Editor Preferences</string>
-   </property>
-  </action>
-  <action name="actionClear_Undo_Stack">
-   <property name="text">
-    <string>Clear Undo Stack</string>
    </property>
   </action>
   <action name="actionSave">
