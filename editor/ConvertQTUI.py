@@ -1,4 +1,3 @@
-import os
 import subprocess
 from asyncio import Future
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -37,16 +36,12 @@ def run():
 	with caching() as cache:
 		tasks: list[tuple[str, int, Future]] = []
 		with ThreadPoolExecutor() as executor:
-			for root, dirs, files in os.walk(SEARCH_FOLDER):
-				for file in files:
-					if file.endswith('.ui'):
-						ui_path = Path(root) / file
-						py_path = ui_path.with_suffix('.py')
-						key = ui_path.as_posix()
-						mtime = int(ui_path.stat().st_mtime)
-
-						if cache.get(key) != mtime:
-							tasks.append((key, mtime, executor.submit(convert, ui_path, py_path)))
+			for ui_path in SEARCH_FOLDER.rglob('*.ui'):
+				py_path = ui_path.with_suffix('.py')
+				key = ui_path.as_posix()
+				mtime = int(ui_path.stat().st_mtime)
+				if cache.get(key) != mtime:
+					tasks.append((key, mtime, executor.submit(convert, ui_path, py_path)))
 
 			for key, mtime, future in tasks:
 				future.result()
