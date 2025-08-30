@@ -42,6 +42,10 @@ class AbstractPathItem(ABC):
 		pass
 
 	@abstractmethod
+	def on_import(self, browser: ContentBrowser):
+		pass
+
+	@abstractmethod
 	def on_new(self, browser: ContentBrowser):
 		pass
 

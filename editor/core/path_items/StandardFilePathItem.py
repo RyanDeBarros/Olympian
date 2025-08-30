@@ -44,6 +44,18 @@ class StandardFilePathItem(AbstractPathItem):
 		browser.win.tab_holder.add_tab(StandardFileTab(browser.win, self))
 
 	@override
+	def on_import(self, browser: ContentBrowser):
+		# TODO v3 put recognized suffixes in editor preferences
+		if self.full_path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.svg'):
+			from . import ImportedTexturePathItem
+			ImportedTexturePathItem(self.full_path).on_import(browser)
+			browser.refresh_item(self)
+		elif self.full_path.suffix.lower() in ('.ttf', '.otf'):
+			from . import ImportedFontPathItem
+			ImportedFontPathItem(self.full_path).on_import(browser)
+			browser.refresh_item(self)
+
+	@override
 	def on_new(self, browser: ContentBrowser):
 		pass
 

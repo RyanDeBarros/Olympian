@@ -50,18 +50,28 @@ class InputSignalPathItem(AbstractPathItem):
 		from ..tabs import InputSignalTab
 		browser.win.tab_holder.add_tab(InputSignalTab(browser.win, self))
 
+	@staticmethod
+	def _registry(browser: ContentBrowser):
+		return browser.win.project_context.input_signal_registry
+
+	def _asset_path(self, browser: ContentBrowser, path=None):
+		if path is None:
+			path = self.full_path
+		return path.relative_to(browser.win.project_context.res_folder)
+
+	@override
+	def on_import(self, browser: ContentBrowser):
+		if not self._registry(browser).has_signal_asset(self._asset_path(browser)):
+			self._registry(browser).add_signal_asset(self._asset_path(browser))
+
 	@override
 	def on_new(self, browser: ContentBrowser):
-		project_context = browser.win.project_context
-		project_context.input_signal_registry.add_signal_asset(self.full_path.relative_to(project_context.res_folder))
+		self._registry(browser).add_signal_asset(self._asset_path(browser))
 
 	@override
 	def on_delete(self, browser: ContentBrowser):
-		project_context = browser.win.project_context
-		project_context.input_signal_registry.remove_signal_asset(self.full_path.relative_to(project_context.res_folder))
+		self._registry(browser).remove_signal_asset(self._asset_path(browser))
 
 	@override
 	def on_rename(self, browser: ContentBrowser, old_path: Path):
-		project_context = browser.win.project_context
-		project_context.input_signal_registry.rename_signal_asset(old_path.relative_to(project_context.res_folder),
-																  self.full_path.relative_to(project_context.res_folder))
+		self._registry(browser).rename_signal_asset(self._asset_path(browser, old_path), self._asset_path(browser))

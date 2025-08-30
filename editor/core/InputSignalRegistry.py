@@ -24,6 +24,9 @@ class InputSignalRegistry:
 		content['context']['signals'] = [path.as_posix() for path in self._signal_items]
 		TOMLAdapter.dump(self.project_context.project_file, content)
 
+	def has_signal_asset(self, asset: Path):
+		return asset in self._signal_items
+
 	def add_signal_asset(self, asset: Path):
 		assert asset not in self._signal_items
 		self._signal_items.append(asset)

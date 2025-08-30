@@ -50,6 +50,14 @@ class FolderPathItem(AbstractPathItem):
 		pass
 
 	@override
+	def on_import(self, browser: ContentBrowser):
+		from . import get_path_item
+		for path in self.full_path.iterdir():
+			item = get_path_item(path)
+			if item is not None:
+				item.on_import(browser)
+
+	@override
 	def open(self, browser: ContentBrowser):
 		browser.open_folder(self.full_path)
 

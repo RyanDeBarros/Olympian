@@ -190,10 +190,18 @@ class ContentBrowserFolderView(QListView):
 		delete.triggered.connect(lambda: self.delete_item(index))
 		menu.addAction(delete)
 
+		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
+		reimport.triggered.connect(lambda: self.import_items([index]))
+		menu.addAction(reimport)
+
 	def fill_multi_item_context_menu(self, menu: QMenu):
 		delete = QAction(QIcon("res/images/Delete.png"), "Delete", menu)
 		delete.triggered.connect(lambda: self.delete_selected_items())
 		menu.addAction(delete)
+
+		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
+		reimport.triggered.connect(lambda: self.import_items(self.selectedIndexes()))
+		menu.addAction(reimport)
 
 	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files)
 	def show_context_menu(self, pos):
@@ -246,6 +254,10 @@ class ContentBrowserFolderView(QListView):
 					self.model.removeRow(index.row())
 
 				self.file_machine.remove_together(remove_paths)
+
+	def import_items(self, indexes: list[QModelIndex]):
+		for index in indexes:
+			self.path_items[index.row()].on_import(self.content_browser)
 
 	def refresh_view(self):
 		current_folder = self.content_browser.current_folder
@@ -418,6 +430,11 @@ class ContentBrowser(QWidget):
 			if item is not None:
 				items.append(item)
 		self.folder_view.remove_items(items)
+
+	def refresh_item(self, item: AbstractPathItem):
+		if item.full_path.resolve().parent == self.current_folder:
+			self.folder_view.remove_item(item)
+			self.add_path(item.full_path)
 
 	def new_folder(self):
 		FolderPathItem.new_item(self)
