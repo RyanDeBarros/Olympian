@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import override, TYPE_CHECKING
 
@@ -53,11 +54,11 @@ class ImportedFontPathItem(AbstractPathItem):
 
 	@override
 	def on_new(self, browser: ContentBrowser):
-		pass  # TODO v3 create import file if it doesn't exist - if on_new is called on a file being moved from trash, bring import file back from trash as well instead of creating new import file
+		pass
 
 	@override
 	def on_delete(self, browser: ContentBrowser):
-		pass  # TODO v3 delete import file if it doesn't exist -> move to trash folder where texture went
+		pass
 
 	@override
 	def on_rename(self, browser: ContentBrowser, old_path: Path):

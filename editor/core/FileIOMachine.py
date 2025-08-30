@@ -118,7 +118,10 @@ class FileIOMachine:
 def _move_to(old_path: Path, new_path: Path):
 	assert not os.path.exists(new_path)
 	os.makedirs(os.path.dirname(new_path), exist_ok=True)
-	os.rename(old_path, new_path)
+	if not new_path.exists():
+		os.rename(old_path, new_path)
+	else:
+		raise RuntimeError(f"File {new_path} already exists.")
 
 
 def _rm_all_dirs(folder: Path):
@@ -145,6 +148,9 @@ class UCDeletePaths(QUndoCommand):
 	def undo(self):
 		for i in range(self.num_paths):
 			_move_to(self.trash_paths[i], self.paths[i])
+			import_path = Path(self.trash_paths[i].as_posix() + '.oly')
+			if import_path.exists():
+				_move_to(import_path, Path(self.paths[i].as_posix() + '.oly'))
 		_rm_all_dirs(self.hash_path)
 		self.trash_paths = None
 		self.hash_path = None
@@ -167,6 +173,9 @@ class UCDeletePaths(QUndoCommand):
 
 		for i in range(self.num_paths):
 			_move_to(self.paths[i], self.trash_paths[i])
+			import_path = Path(self.paths[i].as_posix() + '.oly')
+			if import_path.exists():
+				_move_to(import_path, Path(self.trash_paths[i].as_posix() + '.oly'))
 
 
 class UCRenamePath(QUndoCommand):
@@ -180,6 +189,9 @@ class UCRenamePath(QUndoCommand):
 		self.machine.uc_browser_remove_path(self.new_path)
 		self.machine.uc_main_tab_rename_path(self.new_path, self.old_path)
 		_move_to(self.new_path, self.old_path)
+		import_path = Path(self.new_path.as_posix() + '.oly')
+		if import_path.exists():
+			_move_to(import_path, Path(self.old_path.as_posix() + '.oly'))
 		self.machine.uc_browser_add_path(self.old_path)
 
 		item = get_path_item(self.old_path)
@@ -190,6 +202,9 @@ class UCRenamePath(QUndoCommand):
 		self.machine.uc_browser_remove_path(self.old_path)
 		self.machine.uc_main_tab_rename_path(self.old_path, self.new_path)
 		_move_to(self.old_path, self.new_path)
+		import_path = Path(self.old_path.as_posix() + '.oly')
+		if import_path.exists():
+			_move_to(import_path, Path(self.new_path.as_posix() + '.oly'))
 		self.machine.uc_browser_add_path(self.new_path)
 
 		item = get_path_item(self.new_path)
@@ -259,6 +274,9 @@ class UCNewFile(QUndoCommand):
 		item.on_delete(self.machine.content_browser)
 
 		_move_to(self.file, self.trash_path)
+		import_path = Path(self.file.as_posix() + '.oly')
+		if import_path.exists():
+			_move_to(import_path, Path(self.trash_path.as_posix() + '.oly'))
 
 	def redo(self):
 		if self.touch:
@@ -266,6 +284,9 @@ class UCNewFile(QUndoCommand):
 			self.file.touch()
 		else:
 			_move_to(self.trash_path, self.file)
+			import_path = Path(self.trash_path.as_posix() + '.oly')
+			if import_path.exists():
+				_move_to(import_path, Path(self.file.as_posix() + '.oly'))
 			_rm_all_dirs(self.hash_path)
 			self.trash_path = None
 			self.hash_path = None
