@@ -151,7 +151,7 @@ class ContentBrowserFolderView(QListView):
 			new_name = pi.renamed_filepath(item.text())
 			if old_name.exists() and not new_name.exists():
 				try:
-					self.file_machine.rename(old_name, new_name)
+					self.file_machine.rename(old_name, new_name, False)
 				except OSError as e:
 					Alerts.alert_error(self, "Error - cannot rename item", str(e))
 					item.setText(pi.ui_name())
@@ -194,6 +194,10 @@ class ContentBrowserFolderView(QListView):
 		reimport.triggered.connect(lambda: self.import_items([index]))
 		menu.addAction(reimport)
 
+		move = QAction("Move", menu)  # TODO v3 icon
+		move.triggered.connect(lambda: self.move_items([index]))
+		menu.addAction(move)
+
 	def fill_multi_item_context_menu(self, menu: QMenu):
 		delete = QAction(QIcon("res/images/Delete.png"), "Delete", menu)
 		delete.triggered.connect(lambda: self.delete_selected_items())
@@ -202,6 +206,10 @@ class ContentBrowserFolderView(QListView):
 		reimport = QAction(QIcon("res/images/Import.png"), "Import", menu)
 		reimport.triggered.connect(lambda: self.import_items(self.selectedIndexes()))
 		menu.addAction(reimport)
+
+		move = QAction("Move", menu)  # TODO v3 icon
+		move.triggered.connect(lambda: self.move_items(self.selectedIndexes()))
+		menu.addAction(move)
 
 	# TODO v3 copy/cut/paste options (these need to carry over when navigating through files)
 	def show_context_menu(self, pos):
@@ -258,6 +266,63 @@ class ContentBrowserFolderView(QListView):
 	def import_items(self, indexes: list[QModelIndex]):
 		for index in indexes:
 			self.path_items[index.row()].on_import(self.content_browser)
+
+	def move_items(self, indexes: list[QModelIndex]):
+		folder = QFileDialog.getExistingDirectory(self, "Move To", self.content_browser.current_folder.as_posix())
+		if folder:
+			folder = Path(folder).resolve()
+			if folder and folder.is_relative_to(self.content_browser.win.project_context.res_folder) and folder != self.content_browser.current_folder:
+				old_paths: list[Path] = []
+				new_paths: list[Path] = []
+				replace_existing: list[bool] = []
+				for index in indexes:
+					pi = self.path_items[index.row()]
+					old_path = pi.full_path
+					new_path = folder.joinpath(pi.full_path.relative_to(self.content_browser.current_folder))
+					assert old_path.exists()
+					can_move = True
+					replace = False
+					if new_path.exists() or new_path in new_paths:
+						alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {new_path} already exists.\nHow do you want to handle the move?")
+						rename_ = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
+						replace_ = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
+						cancel_individual_ = alert.addButton(f"Cancel individual move", QMessageBox.ButtonRole.RejectRole)
+						alert.addButton(f"Cancel all moves", QMessageBox.ButtonRole.RejectRole)
+						alert.exec()
+						if alert.clickedButton() == replace_:
+							replace = True
+						elif alert.clickedButton() == rename_:
+							index = 0
+							if old_path.is_file():
+								base_file = new_path
+								for _ in new_path.suffixes:
+									base_file = base_file.with_suffix('')
+								extension = ''.join(new_path.suffixes)
+								renamed_path = new_path
+								while renamed_path.exists() or renamed_path in new_paths:
+									index += 1
+									renamed_path = Path(f"{base_file} ({index}){extension}")
+								new_path = renamed_path
+							else:
+								renamed_path = new_path
+								while renamed_path.exists() or renamed_path in new_paths:
+									index += 1
+									renamed_path = Path(f"{new_path} ({index})")
+								new_path = renamed_path
+						elif alert.clickedButton() == cancel_individual_:
+							can_move = False
+						else:
+							return
+
+					if can_move:
+						old_paths.append(old_path)
+						new_paths.append(new_path)
+						replace_existing.append(replace)
+
+				try:
+					self.file_machine.rename_all(old_paths, new_paths, replace_existing)
+				except OSError as e:
+					Alerts.alert_error(self, "Error - cannot complete move", str(e))
 
 	def refresh_view(self):
 		current_folder = self.content_browser.current_folder
@@ -346,7 +411,7 @@ class ContentBrowser(QWidget):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())
 		if folder:
 			folder = Path(folder).resolve()
-			if folder:
+			if folder and folder.is_relative_to(self.win.project_context.res_folder):
 				self.last_file_dialog_dir = folder
 				self.open_folder(folder)
 

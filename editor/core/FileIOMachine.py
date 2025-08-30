@@ -42,8 +42,16 @@ class FileIOMachine:
 	def remove_together(self, paths: list[Path]):
 		self.undo_stack.push(UCDeletePaths(self, [Path(path).resolve() for path in paths]))
 
-	def rename(self, old_path: Path, new_path: Path):
-		self.undo_stack.push(UCRenamePath(self, Path(old_path).resolve(), Path(new_path).resolve()))
+	def rename(self, old_path: Path, new_path: Path, replace_existing: bool):
+		self.undo_stack.push(UCRenamePath(self, Path(old_path).resolve(), Path(new_path).resolve(), replace_existing))
+
+	def rename_all(self, old_paths: list[Path], new_paths: list[Path], replace_existing: list[bool]):
+		assert len(old_paths) == len(new_paths) and len(old_paths) == len(replace_existing)
+		if len(old_paths) == 1:
+			self.rename(old_paths[0], new_paths[0], replace_existing[0])
+		else:
+			self.undo_stack.push(UCRenameMultiplePaths(self, [Path(old_path).resolve() for old_path in old_paths],
+												   [Path(new_path).resolve() for new_path in new_paths], replace_existing))
 
 	def new_folder(self, folder: Path):
 		self.undo_stack.push(UCNewFolder(self, Path(folder).resolve()))
@@ -143,7 +151,8 @@ class UCDeletePaths(QUndoCommand):
 
 	def _generate_trash_paths(self):
 		self.hash_path = self.machine.generate_hash_path()
-		self.trash_paths = [self.hash_path.joinpath(path.relative_to(self.machine.project_context.project_folder)) for path in self.paths]
+		self.trash_paths = [self.hash_path.joinpath(path.relative_to(self.machine.project_context.project_folder)) for
+							path in self.paths]
 
 	def undo(self):
 		for i in range(self.num_paths):
@@ -179,11 +188,12 @@ class UCDeletePaths(QUndoCommand):
 
 
 class UCRenamePath(QUndoCommand):
-	def __init__(self, machine: FileIOMachine, old_path: Path, new_path: Path):
+	def __init__(self, machine: FileIOMachine, old_path: Path, new_path: Path, replace_existing: bool):
 		super().__init__("Rename Path")
 		self.machine = machine
 		self.old_path = old_path
 		self.new_path = new_path
+		self.replacer = UCDeletePaths(self.machine, [self.new_path]) if replace_existing else None
 
 	def undo(self):
 		self.machine.uc_browser_remove_path(self.new_path)
@@ -198,7 +208,13 @@ class UCRenamePath(QUndoCommand):
 		assert item is not None
 		item.on_rename(self.machine.content_browser, self.new_path)
 
+		if self.replacer is not None:
+			self.replacer.undo()
+
 	def redo(self):
+		if self.replacer is not None:
+			self.replacer.redo()
+
 		self.machine.uc_browser_remove_path(self.old_path)
 		self.machine.uc_main_tab_rename_path(self.old_path, self.new_path)
 		_move_to(self.old_path, self.new_path)
@@ -210,6 +226,23 @@ class UCRenamePath(QUndoCommand):
 		item = get_path_item(self.new_path)
 		assert item is not None
 		item.on_rename(self.machine.content_browser, self.old_path)
+
+
+class UCRenameMultiplePaths(QUndoCommand):
+	def __init__(self, machine: FileIOMachine, old_paths: list[Path], new_paths: list[Path], replace_existing: list[bool]):
+		super().__init__("Rename Multiple Paths")
+		self.machine = machine
+		assert len(old_paths) == len(new_paths) and len(old_paths) == len(replace_existing)
+		self.num_paths = len(old_paths)
+		self.renamers = [UCRenamePath(self.machine, old_path, new_path, replace) for old_path, new_path, replace in zip(old_paths, new_paths, replace_existing)]
+
+	def undo(self):
+		for i in range(self.num_paths):
+			self.renamers[i].undo()
+
+	def redo(self):
+		for i in range(self.num_paths):
+			self.renamers[i].redo()
 
 
 class UCNewFolder(QUndoCommand):
@@ -226,14 +259,14 @@ class UCNewFolder(QUndoCommand):
 		self.trash_path = self.hash_path.joinpath(self.folder.relative_to(self.machine.project_context.project_folder))
 
 	def undo(self):
-		self._generate_trash_path()
-		self.machine.uc_browser_remove_path(self.folder)
-
 		item = get_path_item(self.folder)
 		assert item is not None
 		item.on_delete(self.machine.content_browser)
 
 		_move_to(self.folder, self.trash_path)
+
+		self._generate_trash_path()
+		self.machine.uc_browser_remove_path(self.folder)
 
 	def redo(self):
 		if self.makedirs:
