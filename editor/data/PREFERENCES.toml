@@ -1,0 +1,6 @@
+[navigation]
+prompt_on_delete = true
+
+[file_imports]
+texture_file_extensions = ".png;.jpg;.jpeg;.bmp;.gif;.svg"
+font_file_extensions = ".ttf;.otf"

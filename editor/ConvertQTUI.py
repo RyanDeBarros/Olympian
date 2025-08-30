@@ -1,20 +1,50 @@
 import os
 import subprocess
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Generator
+
+import toml
+
+CACHE_FILE = Path('.dev/qtconv.toml')
+SEARCH_FOLDER = Path('ui')
 
 
-# TODO v3 maintain cache
+@contextmanager
+def caching() -> Generator[dict, None, None]:
+	if CACHE_FILE.exists():
+		with open(CACHE_FILE, 'r') as f:
+			cache = toml.load(f).get("files", {})
+	else:
+		cache = {}
+	try:
+		yield cache
+	finally:
+		cache = {k: v for k, v in cache.items() if Path(k).exists()}
+		CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+		with open(CACHE_FILE, 'w') as f:
+			toml.dump({'files': cache}, f)
+
+
+def convert(ui_path: Path, py_path: Path):
+	print(f"Converting {ui_path.as_posix()} -> {py_path.as_posix()}")
+	subprocess.run(['pyside6-uic', ui_path, '-o', py_path], check=True)
+
+
+def run():
+	with caching() as cache:
+		for root, dirs, files in os.walk(SEARCH_FOLDER):
+			for file in files:
+				if file.endswith('.ui'):
+					ui_path = Path(root) / file
+					py_path = ui_path.with_suffix('.py')
+
+					mtime = int(ui_path.stat().st_mtime)
+					if cache.get(ui_path.as_posix()) == mtime:
+						continue
+					convert(ui_path, py_path)
+					cache[ui_path.as_posix()] = mtime
+
+
 if __name__ == "__main__":
-    folder = "ui"
-
-    def path(filename):
-        return os.path.join(folder, os.path.relpath(os.path.join(root, filename), folder))
-
-    for root, dirs, files in os.walk(folder):
-        for file in files:
-            if file.endswith(".ui"):
-                ui_path = path(file)
-                py_file = file.replace(".ui", ".py")
-                py_path = path(py_file)
-
-                print(f"Converting {ui_path} -> {py_path}")
-                subprocess.run(["pyside6-uic", ui_path, "-o", py_path], check=True)
+	run()
