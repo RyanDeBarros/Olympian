@@ -194,7 +194,7 @@ class ContentBrowserFolderView(QListView):
 		reimport.triggered.connect(lambda: self.import_items([index]))
 		menu.addAction(reimport)
 
-		move = QAction("Move", menu)  # TODO v3 icon
+		move = QAction(QIcon("res/images/Move.png"), "Move", menu)
 		move.triggered.connect(lambda: self.move_items([index]))
 		menu.addAction(move)
 
@@ -207,7 +207,7 @@ class ContentBrowserFolderView(QListView):
 		reimport.triggered.connect(lambda: self.import_items(self.selectedIndexes()))
 		menu.addAction(reimport)
 
-		move = QAction("Move", menu)  # TODO v3 icon
+		move = QAction(QIcon("res/images/Move.png"), "Move", menu)
 		move.triggered.connect(lambda: self.move_items(self.selectedIndexes()))
 		menu.addAction(move)
 
