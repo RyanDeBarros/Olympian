@@ -3,6 +3,7 @@ import pathlib
 import posixpath
 import re
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox, QMainWindow
 
 from editor import MANIFEST, ui
@@ -14,7 +15,7 @@ class StartMenuWindow(QMainWindow):
 		self.open_project = open_project
 
 		self.setWindowTitle("Olympian Editor")
-		# LATER and set window icon
+		self.setWindowIcon(QIcon("res/images/Olympian.png"))
 
 		self.setCentralWidget(StartMenuWidget(self))
 

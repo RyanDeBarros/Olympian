@@ -15,6 +15,7 @@ class MainWindow(QMainWindow):
 		self.ui.setupUi(self)
 
 		self.setWindowTitle(f"Olympian Editor - {self.project_context.project_file.stem}")
+		self.setWindowIcon(QIcon("res/images/Olympian.png"))
 		# TODO v3 create and set window icon
 
 		self.ui.actionOpen_Start_Menu.triggered.connect(self.open_start_menu)

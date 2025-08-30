@@ -25,6 +25,7 @@ class FavoritesDialog(QDialog):
 		self.ui.setupUi(self)
 
 		self.setWindowTitle("Favorites")
+		self.setWindowIcon(QIcon("res/images/Olympian.png"))
 
 		self.ui.favoritesTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 		self.ui.favoritesTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
