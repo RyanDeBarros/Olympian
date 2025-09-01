@@ -11,6 +11,11 @@
 
 namespace oly
 {
+	namespace internal
+	{
+		struct LogAccess;
+	}
+
 	class Logger
 	{
 		Logger() = default;
@@ -59,7 +64,7 @@ namespace oly
 		void start(const char* level, _opengl);
 		void start(const char* level, _glfw);
 
-	public:
+		friend struct internal::LogAccess;
 		Impl untagged(bool timestamp = false);
 		Impl debug(bool timestamp = false, const char* prefix = nullptr);
 		Impl debug(_opengl);
@@ -77,6 +82,7 @@ namespace oly
 		Impl fatal(_opengl);
 		Impl fatal(_glfw);
 
+	public:
 		struct
 		{
 			// TODO v3 add these to project config.
@@ -106,6 +112,29 @@ namespace oly
 
 	inline Logger& LOG = Logger::instance();
 
+	namespace internal
+	{
+		struct LogAccess
+		{
+			Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
+			Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }
+			Logger::Impl debug(Logger::_opengl g) { return LOG.debug(g); }
+			Logger::Impl debug(Logger::_glfw g) { return LOG.debug(g); }
+			Logger::Impl info(bool timestamp = false, const char* prefix = nullptr) { return LOG.info(timestamp, prefix); }
+			Logger::Impl info(Logger::_opengl g) { return LOG.info(g); }
+			Logger::Impl info(Logger::_glfw g) { return LOG.info(g); }
+			Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr) { return LOG.warning(timestamp, prefix); }
+			Logger::Impl warning(Logger::_opengl g) { return LOG.warning(g); }
+			Logger::Impl warning(Logger::_glfw g) { return LOG.warning(g); }
+			Logger::Impl error(bool timestamp = false, const char* prefix = nullptr) { return LOG.error(timestamp, prefix); }
+			Logger::Impl error(Logger::_opengl g) { return LOG.error(g); }
+			Logger::Impl error(Logger::_glfw g) { return LOG.error(g); }
+			Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr) { return LOG.fatal(timestamp, prefix); }
+			Logger::Impl fatal(Logger::_opengl g) { return LOG.fatal(g); }
+			Logger::Impl fatal(Logger::_glfw g) { return LOG.fatal(g); }
+		};
+	}
+
 	extern Logger::Impl operator<<(Logger::Impl, Logger::_nl);
 	extern Logger::Impl operator<<(Logger::Impl, Logger::_endl);
 
@@ -122,9 +151,9 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec4);
 }
 
-// TODO v3 use these macros and make regular debug/info/etc. methods private. These implement short-circuiting
-#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::LOG.debug(__VA_ARGS__)
-#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::LOG.info(__VA_ARGS__)
-#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::LOG.warning(__VA_ARGS__)
-#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::LOG.error(__VA_ARGS__)
-#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::LOG.fatal(__VA_ARGS__)
+#define OLY_LOG(...) oly::internal::LogAccess{}.untagged(__VA_ARGS__)
+#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::internal::LogAccess{}.debug(__VA_ARGS__)
+#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::internal::LogAccess{}.info(__VA_ARGS__)
+#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess{}.warning(__VA_ARGS__)
+#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess{}.error(__VA_ARGS__)
+#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess{}.fatal(__VA_ARGS__)

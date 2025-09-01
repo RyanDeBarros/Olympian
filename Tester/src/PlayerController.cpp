@@ -4,7 +4,7 @@ bool PlayerController::jump(oly::input::Signal signal)
 {
 	if (signal.phase == oly::input::Phase::STARTED)
 	{
-		oly::LOG.untagged(true) << "Jump!" << oly::LOG.endl;
+		OLY_LOG(true) << "Jump!" << oly::LOG.endl;
 		return true;
 	}
 	return false;
