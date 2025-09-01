@@ -30,3 +30,10 @@ ellipses = 100
 [context.text_batch]
 "initial glyphs" = 100
 "new textures" = 10
+
+[context.logger.enable]
+debug = false
+info = true
+warning = true
+error = true
+fatal = true

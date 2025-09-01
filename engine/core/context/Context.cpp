@@ -44,6 +44,15 @@ namespace oly::context
 			}
 			else
 				LOG.target.logfile = false;
+			
+			if (auto logger_enable = toml_logger["enable"])
+			{
+				LOG.enable.debug = logger_enable["debug"].value_or<bool>(false);
+				LOG.enable.info = logger_enable["info"].value_or<bool>(true);
+				LOG.enable.warning = logger_enable["warning"].value_or<bool>(true);
+				LOG.enable.error = logger_enable["error"].value_or<bool>(true);
+				LOG.enable.fatal = logger_enable["fatal"].value_or<bool>(true);
+			}
 		}
 		else
 		{

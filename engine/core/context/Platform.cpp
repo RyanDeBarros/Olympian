@@ -28,13 +28,19 @@ namespace oly::context
 		platform::PlatformSetup platform_setup;
 
 		auto toml_window = node["window"];
-		if (!toml_window)
+		if (!toml_window.as_table())
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
+		}
 		auto width = toml_window["width"].value<int64_t>();
 		auto height = toml_window["height"].value<int64_t>();
 		auto title = toml_window["title"].value<std::string>();
 		if (!width || !height || !title)
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"width\", \"height\", and/or \"title\" fields." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
+		}
 
 		platform_setup.window_width = (int)width.value();
 		platform_setup.window_height = (int)height.value();
@@ -42,29 +48,29 @@ namespace oly::context
 
 		if (auto toml_window_hint = node["window_hint"])
 		{
-			reg::parse_vec(toml_window_hint["clear color"].as_array(), platform_setup.window_hint.context.clear_color);
-			platform_setup.window_hint.context.swap_interval = (int)toml_window_hint["swap interval"].value<int64_t>().value_or(1);
+			reg::parse_vec(toml_window_hint["clear_color"].as_array(), platform_setup.window_hint.context.clear_color);
+			platform_setup.window_hint.context.swap_interval = (int)toml_window_hint["swap_interval"].value<int64_t>().value_or(1);
 			platform_setup.window_hint.window.resizable = toml_window_hint["resizable"].value<bool>().value_or(true);
 			platform_setup.window_hint.window.visible = toml_window_hint["visible"].value<bool>().value_or(true);
 			platform_setup.window_hint.window.decorated = toml_window_hint["decorated"].value<bool>().value_or(true);
 			platform_setup.window_hint.window.focused = toml_window_hint["focused"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.auto_iconify = toml_window_hint["auto iconify"].value<bool>().value_or(true);
+			platform_setup.window_hint.window.auto_iconify = toml_window_hint["auto_iconify"].value<bool>().value_or(true);
 			platform_setup.window_hint.window.floating = toml_window_hint["floating"].value<bool>().value_or(false);
 			platform_setup.window_hint.window.maximized = toml_window_hint["maximized"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.center_cursor = toml_window_hint["center cursor"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.transparent_framebuffer = toml_window_hint["transparent framebuffer"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.focus_on_show = toml_window_hint["focus on show"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.scale_to_monitor = toml_window_hint["scale to monitor"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.scale_framebuffer = toml_window_hint["scale framebuffer"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.mouse_passthrough = toml_window_hint["mouse passthrough"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.position_x = (unsigned int)toml_window_hint["position x"].value<int64_t>().value_or(GLFW_ANY_POSITION);
-			platform_setup.window_hint.window.position_y = (unsigned int)toml_window_hint["position y"].value<int64_t>().value_or(GLFW_ANY_POSITION);
-			platform_setup.window_hint.window.refresh_rate = (int)toml_window_hint["refresh rate"].value<int64_t>().value_or(GLFW_DONT_CARE);
+			platform_setup.window_hint.window.center_cursor = toml_window_hint["center_cursor"].value<bool>().value_or(true);
+			platform_setup.window_hint.window.transparent_framebuffer = toml_window_hint["transparent_framebuffer"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.focus_on_show = toml_window_hint["focus_on_show"].value<bool>().value_or(true);
+			platform_setup.window_hint.window.scale_to_monitor = toml_window_hint["scale_to_monitor"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.scale_framebuffer = toml_window_hint["scale_framebuffer"].value<bool>().value_or(true);
+			platform_setup.window_hint.window.mouse_passthrough = toml_window_hint["mouse_passthrough"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.position_x = (unsigned int)toml_window_hint["position_x"].value<int64_t>().value_or(GLFW_ANY_POSITION);
+			platform_setup.window_hint.window.position_y = (unsigned int)toml_window_hint["position_y"].value<int64_t>().value_or(GLFW_ANY_POSITION);
+			platform_setup.window_hint.window.refresh_rate = (int)toml_window_hint["refresh_rate"].value<int64_t>().value_or(GLFW_DONT_CARE);
 			platform_setup.window_hint.window.stereo = toml_window_hint["stereo"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.srgb_capable = toml_window_hint["srgb capable"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.double_buffer = toml_window_hint["double buffer"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.opengl_forward_compat = toml_window_hint["opengl forward_compat"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.context_debug = toml_window_hint["context debug"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.srgb_capable = toml_window_hint["srgb_capable"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.double_buffer = toml_window_hint["double_buffer"].value<bool>().value_or(true);
+			platform_setup.window_hint.window.opengl_forward_compat = toml_window_hint["opengl_forward_compat"].value<bool>().value_or(false);
+			platform_setup.window_hint.window.context_debug = toml_window_hint["context_debug"].value<bool>().value_or(false);
 		}
 
 		platform_setup.num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
@@ -76,6 +82,7 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
+		// TODO v3 error handling. Add to project config
 		wr_viewport.boxed = node["window"]["boxed"].value_or<bool>(true);
 		wr_viewport.stretch = node["window"]["stretch"].value_or<bool>(true);
 
