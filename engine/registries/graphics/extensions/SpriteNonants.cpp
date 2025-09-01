@@ -12,10 +12,10 @@ namespace oly::reg
 
 		parse_vec(node["nsize"].as_array(), params.nsize);
 
-		parse_float(node, "left offset", params.offsets.x_left);
-		parse_float(node, "right offset", params.offsets.x_right);
-		parse_float(node, "bottom offset", params.offsets.y_bottom);
-		parse_float(node, "top offset", params.offsets.y_top);
+		parse_float(node, "left_offset", params.offsets.x_left);
+		parse_float(node, "right_offset", params.offsets.x_right);
+		parse_float(node, "bottom_offset", params.offsets.y_bottom);
+		parse_float(node, "top_offset", params.offsets.y_top);
 
 		return load_sprite_nonant(params);
 	}

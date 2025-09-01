@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <string_view>
+#include <source_location>
 
 #include "external/GL.h"
 #include "external/GLM.h"
@@ -78,7 +79,7 @@ namespace oly
 
 		struct
 		{
-			// LATER use macros or config parameters to set debug/info enable in debug/release builds.
+			// TODO v3 add these to project config.
 			bool debug = true;
 			bool info = true;
 			bool warning = true;
@@ -91,6 +92,16 @@ namespace oly
 
 		void set_logfile(const char* filepath, bool append);
 		void flush();
+
+		struct SourceInfo
+		{
+			std::string file_name(std::source_location location = std::source_location::current()) const;
+			std::string line(std::source_location location = std::source_location::current()) const;
+			std::string column(std::source_location location = std::source_location::current()) const;
+			std::string function_name(std::source_location location = std::source_location::current()) const;
+
+			std::string full_source(std::source_location location = std::source_location::current()) const;
+		} source_info;
 	};
 
 	inline Logger& LOG = Logger::instance();
@@ -110,3 +121,10 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec3);
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec4);
 }
+
+// TODO v3 use these macros and make regular debug/info/etc. methods private. These implement short-circuiting
+#define OLY_LOG_DEBUG(...) if (!(LOG.enable.debug)) ; else LOG.debug(__VA_ARGS__)
+#define OLY_LOG_INFO(...) if (!(LOG.enable.info)) ; else LOG.info(__VA_ARGS__)
+#define OLY_LOG_WARNING(...) if (!(LOG.enable.warning)) ; else LOG.warning(__VA_ARGS__)
+#define OLY_LOG_ERROR(...) if (!(LOG.enable.error)) ; else LOG.error(__VA_ARGS__)
+#define OLY_LOG_FATAL(...) if (!(LOG.enable.fatal)) ; else LOG.fatal(__VA_ARGS__)

@@ -12,8 +12,8 @@ namespace oly::reg
 
 		params.local = load_transform_2d(node, "transform");
 		params.texture = node["texture"].value<std::string>();
-		params.texture_index = (unsigned int)node["texture index"].value<int64_t>().value_or(0);
-		params.svg_scale = convert_optional<float>(node["svg scale"].value<double>());
+		params.texture_index = (unsigned int)node["texture_index"].value<int64_t>().value_or(0);
+		params.svg_scale = convert_optional<float>(node["svg_scale"].value<double>());
 
 		if (auto toml_modulation = node["modulation"].as_array())
 		{
@@ -27,17 +27,21 @@ namespace oly::reg
 						&& parse_vec(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
 						&& parse_vec(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
 						params.modulation = modulation;
+					else
+						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 				}
 				else
 				{
 					glm::vec4 modulation;
 					if (parse_vec(toml_modulation, modulation))
 						params.modulation = modulation;
+					else
+						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 				}
 			}
 		}
 
-		if (auto toml_tex_coords = node["tex coords"].as_array())
+		if (auto toml_tex_coords = node["tex_coords"].as_array())
 		{
 			if (toml_tex_coords->size() == 4)
 			{
@@ -47,6 +51,8 @@ namespace oly::reg
 					&& parse_vec(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
 					&& parse_vec(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
 					params.tex_coords = uvs;
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
 			}
 		}
 
@@ -55,19 +61,22 @@ namespace oly::reg
 			auto mode = toml_frame_format["mode"].value<std::string>();
 			if (mode)
 			{
-				if (mode == "single")
+				std::string mode_str = mode.value();
+				if (mode_str == "single")
 					params.frame_format = params::Sprite::SingleFrameFormat{ .frame = (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0) };
-				else if (mode == "auto")
+				else if (mode_str == "auto")
 					params.frame_format = params::Sprite::AutoFrameFormat{ .speed = (float)toml_frame_format["speed"].value<double>().value_or(1.0),
-						.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0) };
+						.starting_frame = (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0) };
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{
 				params.frame_format = graphics::AnimFrameFormat{
-					.starting_frame = (GLuint)toml_frame_format["starting frame"].value<int64_t>().value_or(0),
+					.starting_frame = (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0),
 					.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0),
-					.starting_time = (float)toml_frame_format["starting time"].value<double>().value_or(0.0),
-					.delay_seconds = (float)toml_frame_format["delay seconds"].value<double>().value_or(0.0)
+					.starting_time = (float)toml_frame_format["starting_time"].value<double>().value_or(0.0),
+					.delay_seconds = (float)toml_frame_format["delay_seconds"].value<double>().value_or(0.0)
 				};
 			}
 		}
@@ -97,6 +106,8 @@ namespace oly::reg
 					parse_vec(node["offset"].as_array(), modifier.offset);
 					params.modifier = modifier;
 				}
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 			}
 		}
 
@@ -152,7 +163,8 @@ namespace oly::reg
 		}
 
 		if (params.modifier)
-			sprite.transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
+			sprite.transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D>
+				{ return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
 
 		return sprite;
 	}

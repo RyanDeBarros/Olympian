@@ -194,6 +194,33 @@ namespace oly
 		return Impl(enable.fatal);
 	}
 
+	std::string Logger::SourceInfo::file_name(std::source_location location) const
+	{
+		return location.file_name();
+	}
+	
+	std::string Logger::SourceInfo::line(std::source_location location) const
+	{
+		return std::to_string(location.line());
+	}
+	
+	std::string Logger::SourceInfo::column(std::source_location location) const
+	{
+		return std::to_string(location.column());
+	}
+	
+	std::string Logger::SourceInfo::function_name(std::source_location location) const
+	{
+		return location.function_name();
+	}
+	
+	std::string Logger::SourceInfo::full_source(std::source_location location) const
+	{
+		std::stringstream ss;
+		ss << location.file_name() << "(" << location.line() << ":" << location.column() << ") `" << location.function_name() << "`: ";
+		return ss.str();
+	}
+
 	Logger::Impl operator<<(Logger::Impl impl, Logger::_nl)
 	{
 		return impl.stream('\n');

@@ -13,6 +13,7 @@ from ...common import SettingsForm
 from ...common.SettingsForm import handle_all_children_modification
 
 
+# TODO v3 help mode for kerning glyph syntax
 class FontTab(EditorTab):
 	def __init__(self, win: MainWindow, item: ImportedFontPathItem):
 		super().__init__(win)

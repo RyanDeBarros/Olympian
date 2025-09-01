@@ -23,13 +23,23 @@ namespace oly::reg
 		std::vector<rendering::TileSet::Assignment> assignments;
 		if (toml_assignments)
 		{
-			toml_assignments->for_each([&assignments](auto&& node) {
+			size_t _a_idx = 0;
+			toml_assignments->for_each([&assignments, &_a_idx](auto&& node) {
+				const size_t a_idx = _a_idx++;
 				if constexpr (toml::is_table<decltype(node)>)
 				{
 					auto _config = node["config"].value<std::string>();
-					auto _texture = node["texture"].value<std::string>();
-					if (!_config || !_texture)
+					if (!_config)
+					{
+						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"config\" field." << LOG.nl;
 						return;
+					}
+					auto _texture = node["texture"].value<std::string>();
+					if (!_texture)
+					{
+						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"texture\" field." << LOG.nl;
+						return;
+					}
 
 					rendering::TileSet::Assignment assignment;
 
@@ -45,6 +55,7 @@ namespace oly::reg
 
 					if (auto transformations = node["trfm"].as_array())
 					{
+						size_t tr_idx = 0;
 						for (const auto& trfm : *transformations)
 						{
 							if (auto transformation = trfm.value<std::string>())
@@ -60,12 +71,20 @@ namespace oly::reg
 									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_180;
 								else if (tr == "R270")
 									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
+								else
+									LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+															 << " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
 							}
+							else
+								LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+														 << ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
+							++tr_idx;
 						}
 					}
 
 					const std::string& config = _config.value();
 
+					// TODO v4 use static map
 					if (config == "S")
 						assignment.config = rendering::TileSet::Configuration::SINGLE;
 					else if (config == "E1")
@@ -161,10 +180,15 @@ namespace oly::reg
 					else if (config == "M'")
 						assignment.config = rendering::TileSet::Configuration::MIDDLE_PRIME;
 					else
+					{
+						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx << ", unrecognized configuration \"" << config << "\"." << LOG.nl;
 						return;
+					}
 
 					assignments.push_back(assignment);
 				}
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
 				});
 		}
 

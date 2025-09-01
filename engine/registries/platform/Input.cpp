@@ -1,9 +1,10 @@
 #include "Input.h"
 
 #include "core/context/Platform.h"
+#include "core/util/Logger.h"
 #include "registries/Loader.h"
 
-// TODO v3 log warnings in all registries when format is incompatible (currently, it's quietly ignored).
+// TODO v3 Before parsing an asset, log a "parsing <asset-type> <name>" in the Debug stream with timestamps, so warnings can be identifiable. Do the same once parsing is complete. Also do the same for loops.
 
 namespace oly::reg
 {
@@ -24,6 +25,8 @@ namespace oly::reg
 				modifier.swizzle = input::ModifierBase::Swizzle::ZXY;
 			else if (swizz == "ZYX")
 				modifier.swizzle = input::ModifierBase::Swizzle::ZYX;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
 		}
 
 		if (!parse_float(mnode, "multiplier", modifier.multiplier.x))
@@ -57,6 +60,8 @@ namespace oly::reg
 				modifier.conversion = input::Axis0DModifier::Conversion::TO_2D;
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis0DModifier::Conversion::TO_3D;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -78,6 +83,8 @@ namespace oly::reg
 				modifier.conversion = input::Axis1DModifier::Conversion::TO_2D;
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis1DModifier::Conversion::TO_3D;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -109,6 +116,8 @@ namespace oly::reg
 				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_0;
 			else if (conv == "TO_3D_1")
 				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_1;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -216,6 +225,8 @@ namespace oly::reg
 			load_cursor_pos_binding(node, toml_id.value());
 		else if (binding == "scroll")
 			load_scroll_binding(node, toml_id.value());
+		else
+			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
 	}
 
 	void load_signal_mapping(const CTOMLNode& node)

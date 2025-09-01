@@ -60,26 +60,15 @@ namespace oly::reg
 
 	static void load_texture_node(const std::string& file, toml::parse_result& toml, TOMLNode& texture_node, size_t texture_index)
 	{
-		std::string oly_file = file + ".oly";
-		try
+		toml = load_toml(file + ".oly");
+		auto texture_array = toml["texture"].as_array();
+		if (texture_array && !texture_array->empty())
 		{
-			toml = load_toml(oly_file);
-			auto texture_array = toml["texture"].as_array();
-			if (texture_array && !texture_array->empty())
-			{
-				texture_index = glm::clamp(texture_index, size_t(0), texture_array->size() - size_t(1));
-				texture_node = TOMLNode(*texture_array->get(texture_index));
-			}
-			else
-				LOG.warning() << "texture table does not exist in texture import file: " << oly_file << LOG.nl;
+			texture_index = glm::clamp(texture_index, size_t(0), texture_array->size() - size_t(1));
+			texture_node = TOMLNode(*texture_array->get(texture_index));
 		}
-		catch (Error e)
-		{
-			if (e.code == ErrorCode::TOML_PARSE)
-				LOG.warning() << "cannot parse texture import file: " << oly_file << LOG.nl;
-			else
-				throw e;
-		}
+		else
+			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
 	}
 
 	static bool should_store(const TOMLNode& texture_node, const char* storage_key, TextureRegistry::ImageStorageOverride storage_override)
@@ -168,7 +157,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
 	{
 		if (!file.ends_with(".svg"))
-			LOG.warning() << "attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		SVGTextureKey svg_tkey{ file, params.texture_index, scale };
 		auto it = svg_textures.find(svg_tkey);
@@ -291,7 +280,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_temp_svg_texture(const std::string& file, float scale, TempSVGLoadParams params) const
 	{
 		if (!file.ends_with(".svg"))
-			LOG.warning() << "attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
 		TOMLNode texture_node;

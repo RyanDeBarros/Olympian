@@ -12,7 +12,7 @@ namespace oly::reg
 
 		auto _rows = node["rows"].value<int64_t>();
 		auto _cols = node["cols"].value<int64_t>();
-		auto _delay_seconds = node["delay seconds"].value<double>();
+		auto _delay_seconds = node["delay_seconds"].value<double>();
 
 		if (_rows && _cols && _delay_seconds)
 		{
@@ -24,13 +24,13 @@ namespace oly::reg
 				.row_up = node["row_up"].value<bool>().value_or(true)
 			};
 		}
-		else if (auto _static_frame = node["static frame"].value<int64_t>())
+		else if (auto _static_frame = node["static_frame"].value<int64_t>())
 		{
 			params.frame = params::SpriteAtlas::StaticFrame{ .frame = (GLuint)_static_frame.value() };
 		}
 
-		params.starting_frame = convert_optional<GLuint>(node["starting frame"].value<int64_t>());
-		params.starting_time = convert_optional<float>(node["starting time"].value<double>());
+		params.starting_frame = convert_optional<GLuint>(node["starting_frame"].value<int64_t>());
+		params.starting_time = convert_optional<float>(node["starting_time"].value<double>());
 
 		return load_sprite_atlas(params);
 	}

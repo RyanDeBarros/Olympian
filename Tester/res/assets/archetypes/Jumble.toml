@@ -20,12 +20,12 @@ draw = [
 name = "sprite3"
 "texture"    = "textures/serotonin.gif"
 transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
-frame_format = { "num frames" = 59, "delay seconds" = -0.05 }
+frame_format = { "num frames" = 59, "delay_seconds" = -0.05 }
 
 [[archetype.sprite]]
 name = "sprite4"
 "texture"       = "textures/tux.png"
-"texture index" = 1
+"texture_index" = 1
 transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
 [[archetype.sprite]]
@@ -46,8 +46,8 @@ transform = { "position" = [300, 200], "scale" = [200, 200] }
 	[      0,     -1 ],
 	[  0.707, -0.707 ]
 ]
-"fill colors" = [[0.0, 1.0, 0.0, 0.7]]
-"border colors" = [
+"fill_colors" = [[0.0, 1.0, 0.0, 0.7]]
+"border_colors" = [
 	[ 0.25,  0.0,  0.5, 1.0 ],
 	[  0.0, 0.25, 0.25, 1.0 ],
 	[ 0.25,  0.5,  0.0, 1.0 ],
@@ -58,7 +58,7 @@ transform = { "position" = [300, 200], "scale" = [200, 200] }
 	[  0.5, 0.25, 0.75, 1.0 ]
 ]
 "bordered" = true
-"border width" = 0.05
+"border_width" = 0.05
 
 [[archetype.sprite]]
 name = "sprite1"
@@ -73,7 +73,7 @@ name = "sprite1"
 [[archetype.sprite]]
 name = "godot_icon"
 "texture" = "textures/godot.svg"
-"svg scale" = 3.0
+"svg_scale" = 3.0
 transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [[archetype.sprite]]
@@ -85,7 +85,7 @@ frame_format = { "mode" = "auto" }
 [[archetype.poly_composite]]
 name = "concave_shape"
 transform = { "position" = [-200, 200], "scale" = [60, 60] }
-"method" = "convex decomposition"
+"method" = "convex_decomposition"
 "points" = [
 	[ -4,  0 ],
 	[ -2, -2 ],
@@ -103,18 +103,18 @@ transform = { "position" = [-200, 200], "scale" = [60, 60] }
 name            = "atlased_knight"
 "rows"          = 2
 "cols"          = 3
-"delay seconds" = 0.1
+"delay_seconds" = 0.1
 	[archetype.sprite_atlas.sprite]
 	"texture" = "textures/knight.png"
-	"texture index" = 1
+	"texture_index" = 1
 	transform = { "position" = [300, -200], "scale" = [20, 20] }
 
 [[archetype.sprite_nonant]]
 name            = "nonant_panel"
-"left offset"   = 6
-"right offset"  = 6
-"bottom offset" = 6
-"top offset"    = 6
+"left_offset"   = 6
+"right_offset"  = 6
+"bottom_offset" = 6
+"top_offset"    = 6
 "nsize"         = [ 128, 0 ]
 [archetype.sprite_nonant.sprite]
 "texture" = "textures/panel.png"

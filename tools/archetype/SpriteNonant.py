@@ -7,14 +7,14 @@ def params_constructor(sprite_nonant, name) -> str:
     if 'nsize' in sprite_nonant:
         c += f"\t\t\t{name}.nsize = {{ (float){sprite_nonant['nsize'][0]}, (float){sprite_nonant['nsize'][1]} }};\n"
 
-    if 'left offset' in sprite_nonant:
-        c += f"\t\t\t{name}.offsets.x_left = (float){sprite_nonant['left offset']};\n"
-    if 'right offset' in sprite_nonant:
-        c += f"\t\t\t{name}.offsets.x_right = (float){sprite_nonant['right offset']};\n"
-    if 'bottom offset' in sprite_nonant:
-        c += f"\t\t\t{name}.offsets.y_bottom = (float){sprite_nonant['bottom offset']};\n"
-    if 'top offset' in sprite_nonant:
-        c += f"\t\t\t{name}.offsets.y_top = (float){sprite_nonant['top offset']};\n"
+    if 'left_offset' in sprite_nonant:
+        c += f"\t\t\t{name}.offsets.x_left = (float){sprite_nonant['left_offset']};\n"
+    if 'right_offset' in sprite_nonant:
+        c += f"\t\t\t{name}.offsets.x_right = (float){sprite_nonant['right_offset']};\n"
+    if 'bottom_offset' in sprite_nonant:
+        c += f"\t\t\t{name}.offsets.y_bottom = (float){sprite_nonant['bottom_offset']};\n"
+    if 'top_offset' in sprite_nonant:
+        c += f"\t\t\t{name}.offsets.y_top = (float){sprite_nonant['top_offset']};\n"
     return c
 
 

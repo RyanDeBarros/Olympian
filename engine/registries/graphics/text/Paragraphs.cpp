@@ -42,6 +42,8 @@ namespace oly::reg
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
 			else if (align == "full justify")
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized horizontal alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		if (auto valign = node["vertical align"].value<std::string>())
@@ -57,6 +59,8 @@ namespace oly::reg
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
 			else if (align == "full justify")
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
+			else
+				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		return format;
@@ -94,6 +98,8 @@ namespace oly::reg
 				glm::vec4 gc;
 				if (parse_vec(v.as_array(), gc))
 					params.glyph_colors.push_back({ std::stoi(k.data()), { gc } });
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized glyph color for glyh #" << k.data() << "." << LOG.nl;
 			}
 		}
 

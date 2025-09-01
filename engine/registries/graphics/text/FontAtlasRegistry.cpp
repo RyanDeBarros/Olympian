@@ -2,6 +2,7 @@
 
 #include "core/context/Context.h"
 #include "core/context/rendering/Fonts.h"
+#include "core/util/Logger.h"
 #include "registries/Loader.h"
 
 namespace oly::reg
@@ -20,15 +21,21 @@ namespace oly::reg
 
 		auto toml = load_toml(context::resource_file(file + ".oly"));
 		auto font_atlas_list = toml["font_atlas"].as_array();
-		if (font_atlas_list->empty())
+		if (!font_atlas_list || font_atlas_list->empty())
+		{
+			LOG.error(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"font_atlas\" array field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
+		}
 		index = glm::clamp(index, (unsigned int)0, (unsigned int)font_atlas_list->size() - 1);
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
 		auto _font_size_double = node["font_size"].value<double>();
 		auto _font_size_int = node["font_size"].value<int64_t>();
 		if (!_font_size_double && !_font_size_int)
+		{
+			LOG.error(true, "REG") << LOG.source_info.full_source() << "Missing \"font_size\" field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
+		}
 
 		rendering::FontOptions options;
 
@@ -55,6 +62,8 @@ namespace oly::reg
 					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
 				else if (common_buffer_preset == "alphabet_uppercase")
 					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
+				else
+					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
 			}
 		}
 		else
