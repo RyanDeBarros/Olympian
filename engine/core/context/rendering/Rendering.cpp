@@ -12,6 +12,11 @@ namespace oly::context
 		return internal::last_internal_batch_rendered;
 	}
 
+	void invalidate_internal_batch_tracking()
+	{
+		internal::set_last_internal_batch_rendered(InternalBatch::NONE);
+	}
+
 	void internal::set_last_internal_batch_rendered(InternalBatch batch)
 	{
 		internal::last_internal_batch_rendered = batch;

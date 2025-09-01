@@ -65,6 +65,12 @@ namespace oly
 		return internal::min_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(Args)>{});
 	}
 
+	template <typename T, typename... Set>
+	constexpr bool is_in(const T& v, const Set&... set)
+	{
+		return ((v == set) || ...);
+	}
+
 	template<typename T>
 	inline T dupl(const T& obj)
 	{

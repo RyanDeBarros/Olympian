@@ -117,8 +117,14 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			mag_filter = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
-			return true;
+			GLenum val = (GLenum)v.value();
+			if (is_in(val, GL_NEAREST, GL_LINEAR))
+			{
+				mag_filter = val;
+				return true;
+			}
+			else
+				return false;
 		}
 
 		auto _v = node[name].value<std::string>();
@@ -138,8 +144,14 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			min_filter = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
-			return true;
+			GLenum val = (GLenum)v.value();
+			if (is_in(val, GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR))
+			{
+				min_filter = val;
+				return true;
+			}
+			else
+				return false;
 		}
 
 		auto _v = node[name].value<std::string>();
@@ -167,8 +179,14 @@ namespace oly::reg
 	{
 		if (auto v = node[name].value<int64_t>())
 		{
-			wrap = (GLenum)v.value(); // TODO v3 check that value is among acceptable enum values
-			return true;
+			GLenum val = (GLenum)v.value();
+			if (is_in(val, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER, GL_MIRRORED_REPEAT, GL_REPEAT, GL_MIRROR_CLAMP_TO_EDGE))
+			{
+				wrap = val;
+				return true;
+			}
+			else
+				return false;
 		}
 
 		auto _v = node[name].value<std::string>();

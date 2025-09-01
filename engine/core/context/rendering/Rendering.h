@@ -20,7 +20,7 @@ namespace oly::context
 	};
 	extern InternalBatch last_internal_batch_rendered();
 	
-	// TODO v3 set internal batch to NONE when rendering from outside engine pipeline (custom shader/rendering)
+	extern void invalidate_internal_batch_tracking();
 
 	namespace internal
 	{

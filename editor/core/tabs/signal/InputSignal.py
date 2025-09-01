@@ -292,6 +292,7 @@ class InputSignalTab(EditorTab):
 		else:
 			self.ui.keySelectDisplay.setText("Unrecognized key code")
 
+	# TODO v4 check input signal registry
 	def signal_exists(self, signal):
 		for i in range(self.ui.selectSignal.count()):
 			if i != self.ui.selectSignal.currentIndex():
@@ -460,6 +461,7 @@ class InputSignalTab(EditorTab):
 		self.ui.invertY.setChecked(signal.conversion.invert[1])
 		self.ui.invertZ.setChecked(signal.conversion.invert[2])
 
+	# TODO v4 check input signal registry
 	def mapping_exists(self, mapping):
 		for i in range(self.ui.selectMapping.count()):
 			if i != self.ui.selectMapping.currentIndex():

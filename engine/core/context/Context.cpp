@@ -64,7 +64,7 @@ namespace oly::context
 	}
 }
 
-// TODO v3 Log engine initialization/terminatation steps.
+// TODO v4 Log engine initialization/terminatation steps.
 
 namespace oly::context
 {
