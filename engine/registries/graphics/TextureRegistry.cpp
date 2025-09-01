@@ -64,6 +64,12 @@ namespace oly::reg
 		auto texture_array = toml["texture"].as_array();
 		if (texture_array && !texture_array->empty())
 		{
+			if (LOG.enable.debug)
+			{
+				auto src = toml["source"].value<std::string>();
+				OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing texture [" << (src ? *src : "") << "]." << LOG.nl;
+			}
+
 			texture_index = glm::clamp(texture_index, size_t(0), texture_array->size() - size_t(1));
 			texture_node = TOMLNode(*texture_array->get(texture_index));
 		}
@@ -150,6 +156,12 @@ namespace oly::reg
 			}
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = toml["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		textures[tkey] = texture;
 		return texture;
 	}
@@ -226,6 +238,12 @@ namespace oly::reg
 			}
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = toml["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		svg_textures[svg_tkey] = texture;
 		return texture;
 	}
@@ -274,6 +292,12 @@ namespace oly::reg
 			}
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = toml["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return texture;
 	}
 	
@@ -309,6 +333,12 @@ namespace oly::reg
 				*params.cpubuffer = new CPUBuffer(image);
 			if (params.abstract)
 				*params.abstract = new graphics::NSVGAbstract(std::move(abstract));
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = toml["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return texture;

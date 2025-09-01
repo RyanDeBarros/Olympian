@@ -25,6 +25,12 @@ namespace oly::reg
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font face [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		rendering::Kerning kerning;
 		if (auto kerning_arr = node["kerning"].as_array())
 		{
@@ -88,6 +94,13 @@ namespace oly::reg
 		rendering::FontFaceRef font_face(context::resource_file(file).c_str(), std::move(kerning));
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_faces.emplace(file, font_face);
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Font face [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return font_face;
 	}
 

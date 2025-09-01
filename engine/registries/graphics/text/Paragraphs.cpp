@@ -7,6 +7,12 @@ namespace oly::reg
 {
 	static rendering::ParagraphFormat create_format(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph format [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		rendering::ParagraphFormat format;
 
 		glm::vec2 v2;
@@ -63,34 +69,46 @@ namespace oly::reg
 				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical alignment \"" << align << "\"." << LOG.nl;
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Paragraph format [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return format;
 	}
 
 	rendering::Paragraph load_paragraph(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::Paragraph params;
 
-		auto font_atlas = node["font atlas"].value<std::string>();
+		auto font_atlas = node["font_atlas"].value<std::string>();
 		if (!font_atlas)
 			throw Error(ErrorCode::LOAD_ASSET);
 
 		params.font_atlas = font_atlas.value();
-		if (auto index = node["atlas index"].value<int64_t>())
+		if (auto index = node["atlas_index"].value<int64_t>())
 			params.atlas_index = (unsigned int)index.value();
 		params.format = create_format(node["format"]);
 		params.text = node["text"].value<std::string>().value_or("");
 
-		if (auto draw_bkg = node["draw bkg"].value<bool>())
+		if (auto draw_bkg = node["draw_bkg"].value<bool>())
 			params.draw_bkg = draw_bkg.value();
 		params.local = load_transform_2d(node, "transform");
 
 		glm::vec4 v;
-		if (parse_vec(node["bkg color"].as_array(), v))
+		if (parse_vec(node["bkg_color"].as_array(), v))
 			params.bkg_color = v;
-		if (parse_vec(node["text color"].as_array(), v))
+		if (parse_vec(node["text_color"].as_array(), v))
 			params.text_color = v;
 
-		auto glyph_colors = node["glyph colors"].as_table();
+		auto glyph_colors = node["glyph_colors"].as_table();
 		if (glyph_colors)
 		{
 			for (const auto& [k, v] : *glyph_colors)
@@ -99,8 +117,14 @@ namespace oly::reg
 				if (parse_vec(v.as_array(), gc))
 					params.glyph_colors.push_back({ std::stoi(k.data()), { gc } });
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized glyph color for glyh #" << k.data() << "." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized glyph color for glyph #" << k.data() << "." << LOG.nl;
 			}
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return load_paragraph(std::move(params));

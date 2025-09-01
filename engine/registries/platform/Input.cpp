@@ -4,8 +4,6 @@
 #include "core/util/Logger.h"
 #include "registries/Loader.h"
 
-// TODO v3 Before parsing an asset, log a "parsing <asset-type> <name>" in the Debug stream with timestamps, so warnings can be identifiable. Do the same once parsing is complete. Also do the same for loops.
-
 namespace oly::reg
 {
 	static void load_modifier_base(input::ModifierBase& modifier, const CTOMLNode& mnode)
@@ -204,12 +202,25 @@ namespace oly::reg
 
 	void load_signal(const CTOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing input signal [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
 			return;
+		}
 		auto toml_binding = node["binding"].value<std::string>();
 		if (!toml_binding)
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"binding\" field." << LOG.endl;
 			return;
+		}
+
 		const std::string& binding = toml_binding.value();
 		if (binding == "key")
 			load_key_binding(node, toml_id.value());
@@ -226,14 +237,32 @@ namespace oly::reg
 		else if (binding == "scroll")
 			load_scroll_binding(node, toml_id.value());
 		else
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
+			return;
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Input signal [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
 	}
 
 	void load_signal_mapping(const CTOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
 			return;
+		}
 
 		if (auto toml_signals = node["signals"].as_array())
 		{
@@ -242,15 +271,23 @@ namespace oly::reg
 			{
 				if (auto signal = toml_signals->get_as<std::string>(i))
 					signals.push_back(signal->get());
+				else
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
 			}
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Input signal mapping [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 	}
 
 	void load_signals(const char* signal_registry_filepath)
 	{
 		auto toml = load_toml(signal_registry_filepath);
-		
+
 		auto signals = toml["signal"].as_array();
 		if (signals)
 		{

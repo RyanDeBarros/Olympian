@@ -7,6 +7,12 @@ namespace oly::reg
 {
 	rendering::TileMap load_tilemap(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing tilemap [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::TileMap params;
 
 		params.local = reg::load_transform_2d(node, "transform");
@@ -56,6 +62,12 @@ namespace oly::reg
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - not a TOML table." << LOG.nl;
 				});
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Tilemap [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return load_tilemap(params);

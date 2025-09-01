@@ -29,6 +29,12 @@ namespace oly::reg
 		index = glm::clamp(index, (unsigned int)0, (unsigned int)font_atlas_list->size() - 1);
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font_atlas [" << (src ? *src : "") << "] at index #" << index << "." << LOG.nl;
+		}
+
 		auto _font_size_double = node["font_size"].value<double>();
 		auto _font_size_int = node["font_size"].value<int64_t>();
 		if (!_font_size_double && !_font_size_int)
@@ -75,6 +81,13 @@ namespace oly::reg
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_atlases.emplace(key, font_atlas);
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Font atlas [" << (src ? *src : "") << "] at index #" << index << " parsed." << LOG.nl;
+		}
+
 		return font_atlas;
 	}
 

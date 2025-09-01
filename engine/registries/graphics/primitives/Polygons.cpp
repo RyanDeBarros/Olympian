@@ -7,6 +7,12 @@ namespace oly::reg
 {
 	rendering::Polygon load_polygon(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing polygon [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::Polygon params;
 
 		params.local = load_transform_2d(node, "transform");
@@ -41,6 +47,12 @@ namespace oly::reg
 			}
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Polygon [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return load_polygon(std::move(params));
 	}
 
@@ -70,6 +82,12 @@ namespace oly::reg
 
 	rendering::PolyComposite load_poly_composite(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing poly composite [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::PolyComposite params;
 
 		params.local = load_transform_2d(node, "transform");
@@ -206,6 +224,12 @@ namespace oly::reg
 			}
 		}
 
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Poly composite [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return load_poly_composite(std::move(params));
 	}
 
@@ -284,6 +308,12 @@ namespace oly::reg
 
 	rendering::NGon load_ngon(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing ngon [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::NGon params;
 
 		params.local = load_transform_2d(node, "transform");
@@ -351,6 +381,12 @@ namespace oly::reg
 		}
 		else if (auto flt_border_pivot = border_pivot.value<double>())
 			params.ngon_base.border_pivot = (float)flt_border_pivot.value();
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Ngon [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
 
 		return load_ngon(std::move(params));
 	}

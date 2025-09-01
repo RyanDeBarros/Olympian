@@ -8,6 +8,12 @@ namespace oly::reg
 {
 	params::Sprite sprite_params(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing sprite [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::Sprite params;
 
 		params.local = load_transform_2d(node, "transform");
@@ -109,6 +115,12 @@ namespace oly::reg
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 			}
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Sprite [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return params;

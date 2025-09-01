@@ -7,7 +7,7 @@
 namespace oly::reg
 {
 	extern toml::v3::parse_result load_toml(const char* file);
-	extern toml::v3::parse_result load_toml(const std::string& file);
+	inline toml::v3::parse_result load_toml(const std::string& file) { return load_toml(file.c_str()); }
 
 	extern bool parse_int(const TOMLNode& node, const std::string& name, int& v);
 	extern bool parse_int(const CTOMLNode& node, const std::string& name, int& v);

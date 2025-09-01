@@ -6,6 +6,13 @@ namespace oly::reg
 {
 	rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node)
 	{
+		// TODO v4 implement "source" field in assets and archetypes.
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing sprite atlas [" << (src ? *src: "") << "]." << LOG.nl;
+		}
+
 		params::SpriteAtlas params;
 
 		params.sprite_params = sprite_params(node["sprite"]);
@@ -31,6 +38,12 @@ namespace oly::reg
 
 		params.starting_frame = convert_optional<GLuint>(node["starting_frame"].value<int64_t>());
 		params.starting_time = convert_optional<float>(node["starting_time"].value<double>());
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Sprite atlas [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
 
 		return load_sprite_atlas(params);
 	}

@@ -10,18 +10,7 @@ namespace oly::reg
 	{
 		try
 		{
-			return toml::parse_file(file);
-		}
-		catch (const toml::parse_error& err)
-		{
-			throw Error(ErrorCode::TOML_PARSE, err.description().data());
-		}
-	}
-
-	toml::v3::parse_result load_toml(const std::string& file)
-	{
-		try
-		{
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Loading TOML file \"" << file << "\"" << LOG.nl;
 			return toml::parse_file(file);
 		}
 		catch (const toml::parse_error& err)

@@ -21,7 +21,7 @@ namespace oly::context
 			int new_textures = 0;
 			reg::parse_int(toml_text_batch, "new textures", new_textures);
 			int new_text_colors = 0;
-			reg::parse_int(toml_text_batch, "new text colors", new_text_colors);
+			reg::parse_int(toml_text_batch, "new text_colors", new_text_colors);
 			int new_modulations = 0;
 			reg::parse_int(toml_text_batch, "new modulations", new_modulations);
 

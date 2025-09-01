@@ -6,6 +6,12 @@ namespace oly::reg
 {
 	rendering::Ellipse oly::reg::load_ellipse(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing ellipse [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::Ellipse params;
 		params.local = load_transform_2d(node, "transform");
 
@@ -30,6 +36,12 @@ namespace oly::reg
 			params.dimension.rx = v1;
 		if (parse_float(node, "ry", v1))
 			params.dimension.ry = v1;
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Ellipse [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
 
 		return load_ellipse(params);
 	}

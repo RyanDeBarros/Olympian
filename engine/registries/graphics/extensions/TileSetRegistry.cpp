@@ -18,6 +18,18 @@ namespace oly::reg
 
 		auto toml = load_toml(context::resource_file(file));
 		auto node = toml["tileset"];
+		if (!node.as_table())
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load tileset \"" << file << "\" - missing \"tileset\" table." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing tileset [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		auto toml_assignments = node["assignment"].as_array();
 		
 		std::vector<rendering::TileSet::Assignment> assignments;
@@ -195,6 +207,13 @@ namespace oly::reg
 		rendering::TileSetRef tileset(assignments);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			tilesets.emplace(file, tileset);
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Tileset [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
+
 		return tileset;
 	}
 

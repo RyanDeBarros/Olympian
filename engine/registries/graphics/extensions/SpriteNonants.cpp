@@ -6,6 +6,12 @@ namespace oly::reg
 {
 	rendering::SpriteNonant load_sprite_nonant(const TOMLNode& node)
 	{
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing sprite nonant [" << (src ? *src : "") << "]." << LOG.nl;
+		}
+
 		params::SpriteNonant params;
 
 		params.sprite_params = sprite_params(node["sprite"]);
@@ -16,6 +22,12 @@ namespace oly::reg
 		parse_float(node, "right_offset", params.offsets.x_right);
 		parse_float(node, "bottom_offset", params.offsets.y_bottom);
 		parse_float(node, "top_offset", params.offsets.y_top);
+
+		if (LOG.enable.debug)
+		{
+			auto src = node["source"].value<std::string>();
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Sprite nonant [" << (src ? *src : "") << "] parsed." << LOG.nl;
+		}
 
 		return load_sprite_nonant(params);
 	}
