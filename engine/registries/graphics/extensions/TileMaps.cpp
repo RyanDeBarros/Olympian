@@ -22,7 +22,7 @@ namespace oly::reg
 					auto tileset = node["tileset"].value<std::string>();
 					if (!tileset)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
 						return;
 					}
 
@@ -41,8 +41,8 @@ namespace oly::reg
 								if (parse_ivec(_tile, tile))
 									lparams.tiles.push_back(tile);
 								else
-									LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
-															  << ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
+									OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
+																 << ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
 							}
 							++tile_idx;
 						}
@@ -54,7 +54,7 @@ namespace oly::reg
 					params.layers.push_back(std::move(lparams));
 				}
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - not a TOML table." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - not a TOML table." << LOG.nl;
 				});
 		}
 

@@ -21,7 +21,7 @@ namespace oly::reg
 		auto node = toml["font_face"];
 		if (!node.as_table())
 		{
-			LOG.error(true, "REG") << LOG.source_info.full_source() << "Cannot load font face \"" << file << "\" - missing \"font_face\" table." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load font face \"" << file << "\" - missing \"font_face\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
@@ -36,18 +36,18 @@ namespace oly::reg
 					auto pair = node["pair"].as_array();
 					if (!pair)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
 						return;
 					}
 					if (pair->size() != 2)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
 						return;
 					}
 					auto dist = node["dist"].value<int64_t>();
 					if (!dist)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
 						return;
 					}
 
@@ -55,7 +55,7 @@ namespace oly::reg
 					auto tc1 = pair->get_as<std::string>(1);
 					if (!tc0 || !tc1)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
 						return;
 					}
 
@@ -77,11 +77,11 @@ namespace oly::reg
 					if (c1 && c2)
 						kerning.map.emplace(std::make_pair(c1, c2), (int)dist.value());
 					else
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In kerning #" << k_idx
 												 << " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
 				}
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse kerning #" << k_idx << " - not a TOML table." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse kerning #" << k_idx << " - not a TOML table." << LOG.nl;
 				});
 		}
 

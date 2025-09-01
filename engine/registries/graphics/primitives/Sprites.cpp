@@ -28,7 +28,7 @@ namespace oly::reg
 						&& parse_vec(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
 						params.modulation = modulation;
 					else
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 				}
 				else
 				{
@@ -36,7 +36,7 @@ namespace oly::reg
 					if (parse_vec(toml_modulation, modulation))
 						params.modulation = modulation;
 					else
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 				}
 			}
 		}
@@ -52,7 +52,7 @@ namespace oly::reg
 					&& parse_vec(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
 					params.tex_coords = uvs;
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace oly::reg
 					params.frame_format = params::Sprite::AutoFrameFormat{ .speed = (float)toml_frame_format["speed"].value<double>().value_or(1.0),
 						.starting_frame = (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0) };
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{
@@ -107,7 +107,7 @@ namespace oly::reg
 					params.modifier = modifier;
 				}
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 			}
 		}
 

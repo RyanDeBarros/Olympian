@@ -123,8 +123,8 @@ namespace oly
 }
 
 // TODO v3 use these macros and make regular debug/info/etc. methods private. These implement short-circuiting
-#define OLY_LOG_DEBUG(...) if (!(LOG.enable.debug)) ; else LOG.debug(__VA_ARGS__)
-#define OLY_LOG_INFO(...) if (!(LOG.enable.info)) ; else LOG.info(__VA_ARGS__)
-#define OLY_LOG_WARNING(...) if (!(LOG.enable.warning)) ; else LOG.warning(__VA_ARGS__)
-#define OLY_LOG_ERROR(...) if (!(LOG.enable.error)) ; else LOG.error(__VA_ARGS__)
-#define OLY_LOG_FATAL(...) if (!(LOG.enable.fatal)) ; else LOG.fatal(__VA_ARGS__)
+#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::LOG.debug(__VA_ARGS__)
+#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::LOG.info(__VA_ARGS__)
+#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::LOG.warning(__VA_ARGS__)
+#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::LOG.error(__VA_ARGS__)
+#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::LOG.fatal(__VA_ARGS__)

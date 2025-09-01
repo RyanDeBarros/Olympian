@@ -58,13 +58,13 @@ bool PlayerController::zoom_camera(oly::input::Signal signal)
 	switch (signal.phase)
 	{
 	case oly::input::Phase::STARTED:
-		oly::LOG.info() << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
 	case oly::input::Phase::ONGOING:
-		oly::LOG.info() << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
 	case oly::input::Phase::COMPLETED:
-		oly::LOG.info() << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
 	}
 	return false;

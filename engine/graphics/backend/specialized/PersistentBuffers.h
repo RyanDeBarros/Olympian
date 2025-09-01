@@ -137,8 +137,8 @@ namespace oly::graphics
 					accessible = true;
 					return;
 				}
-				// LATER alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
-				LOG.error() << "Timeout in persistent buffer sync" << LOG.nl;
+				// TODO v5 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync" << LOG.nl;
 			}
 			accessible = false;
 			throw Error(ErrorCode::OUT_OF_TIME);
@@ -321,8 +321,8 @@ namespace oly::graphics
 					accessible[n] = true;
 					return;
 				}
-				// LATER alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
-				LOG.error() << "Timeout in persistent buffer sync" << LOG.nl;
+				// TODO v5 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync" << LOG.nl;
 			}
 			accessible[n] = false;
 			throw Error(ErrorCode::OUT_OF_TIME);

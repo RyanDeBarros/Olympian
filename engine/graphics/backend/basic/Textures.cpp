@@ -155,7 +155,7 @@ namespace oly::graphics
 	{
 		_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, 0);
 		if (!_buf)
-			throw Error(ErrorCode::IMAGE_LOAD);
+			throw Error(ErrorCode::LOAD_IMAGE);
 	}
 
 	Image::Image(unsigned char* buf, ImageDimensions dim)

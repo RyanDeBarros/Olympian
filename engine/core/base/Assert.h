@@ -13,9 +13,9 @@ namespace oly::internal
 		if (!condition)
 		{
 			if (file)
-				LOG.error(true, "ASSERT") << description << " at " << file << ":" << line << LOG.nl;
+				OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << LOG.nl;
 			else
-				LOG.error(true, "ASSERT") << description << LOG.nl;
+				OLY_LOG_ERROR(true, "ASSERT") << description << LOG.nl;
 			// LATER configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
 			__debugbreak();
 		}

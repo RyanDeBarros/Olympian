@@ -26,7 +26,7 @@ namespace oly::reg
 			else if (swizz == "ZYX")
 				modifier.swizzle = input::ModifierBase::Swizzle::ZYX;
 			else
-				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
 		}
 
 		if (!parse_float(mnode, "multiplier", modifier.multiplier.x))
@@ -61,7 +61,7 @@ namespace oly::reg
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis0DModifier::Conversion::TO_3D;
 			else
-				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -84,7 +84,7 @@ namespace oly::reg
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis1DModifier::Conversion::TO_3D;
 			else
-				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -117,7 +117,7 @@ namespace oly::reg
 			else if (conv == "TO_3D_1")
 				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_1;
 			else
-				LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -226,7 +226,7 @@ namespace oly::reg
 		else if (binding == "scroll")
 			load_scroll_binding(node, toml_id.value());
 		else
-			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
 	}
 
 	void load_signal_mapping(const CTOMLNode& node)

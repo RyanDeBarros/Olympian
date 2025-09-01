@@ -224,7 +224,7 @@ namespace oly::rendering
 		catch (Error e)
 		{
 			if (e.code == ErrorCode::TRIANGULATION)
-				LOG.warning() << "Could not send polygon - bad triangulation." << LOG.nl;
+				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Could not send polygon - bad triangulation." << LOG.nl;
 			else
 				throw e;
 		}
@@ -292,7 +292,7 @@ namespace oly::rendering
 		catch (Error e)
 		{
 			if (e.code == ErrorCode::TRIANGULATION)
-				LOG.warning() << "Could not send polygon - bad triangulation." << LOG.nl;
+				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Could not send polygon - bad triangulation." << LOG.nl;
 			else
 				throw e;
 		}

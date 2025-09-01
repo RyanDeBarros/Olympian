@@ -68,7 +68,7 @@ namespace oly::reg
 			texture_node = TOMLNode(*texture_array->get(texture_index));
 		}
 		else
-			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
 	}
 
 	static bool should_store(const TOMLNode& texture_node, const char* storage_key, TextureRegistry::ImageStorageOverride storage_override)
@@ -157,7 +157,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_svg_texture(const std::string& file, float scale, SVGLoadParams params)
 	{
 		if (!file.ends_with(".svg"))
-			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		SVGTextureKey svg_tkey{ file, params.texture_index, scale };
 		auto it = svg_textures.find(svg_tkey);
@@ -280,7 +280,7 @@ namespace oly::reg
 	graphics::BindlessTextureRef TextureRegistry::load_temp_svg_texture(const std::string& file, float scale, TempSVGLoadParams params) const
 	{
 		if (!file.ends_with(".svg"))
-			LOG.warning(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
 		TOMLNode texture_node;

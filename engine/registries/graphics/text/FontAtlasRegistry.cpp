@@ -23,7 +23,7 @@ namespace oly::reg
 		auto font_atlas_list = toml["font_atlas"].as_array();
 		if (!font_atlas_list || font_atlas_list->empty())
 		{
-			LOG.error(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"font_atlas\" array field." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"font_atlas\" array field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 		index = glm::clamp(index, (unsigned int)0, (unsigned int)font_atlas_list->size() - 1);
@@ -33,7 +33,7 @@ namespace oly::reg
 		auto _font_size_int = node["font_size"].value<int64_t>();
 		if (!_font_size_double && !_font_size_int)
 		{
-			LOG.error(true, "REG") << LOG.source_info.full_source() << "Missing \"font_size\" field." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"font_size\" field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
@@ -63,7 +63,7 @@ namespace oly::reg
 				else if (common_buffer_preset == "alphabet_uppercase")
 					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
 			}
 		}
 		else

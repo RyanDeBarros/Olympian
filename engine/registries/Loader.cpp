@@ -26,7 +26,7 @@ namespace oly::reg
 		}
 		catch (const toml::parse_error& err)
 		{
-			LOG.error(true, "REG") << LOG.source_info.full_source() << "Cannot load TOML file \"" << file << "\"." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load TOML file \"" << file << "\"." << LOG.nl;
 			throw Error(ErrorCode::TOML_PARSE, err.description().data());
 		}
 	}

@@ -13,7 +13,10 @@ namespace oly
 			: info{}, data(io::read_file_uc(font_file)), kerning(std::move(kerning))
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
-				LOG.fatal() << "Cannot initialize font" << LOG.endl;
+			{
+				OLY_LOG_ERROR(true, "RENDERING") << LOG.source_info.full_source() << "Cannot initialize font" << LOG.endl;
+				throw Error(ErrorCode::LOAD_FONT);
+			}
 		}
 
 		float FontFace::scale_for_pixel_height(float font_size) const

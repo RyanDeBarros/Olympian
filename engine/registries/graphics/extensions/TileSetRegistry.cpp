@@ -31,13 +31,13 @@ namespace oly::reg
 					auto _config = node["config"].value<std::string>();
 					if (!_config)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"config\" field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"config\" field." << LOG.nl;
 						return;
 					}
 					auto _texture = node["texture"].value<std::string>();
 					if (!_texture)
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"texture\" field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"texture\" field." << LOG.nl;
 						return;
 					}
 
@@ -72,12 +72,12 @@ namespace oly::reg
 								else if (tr == "R270")
 									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
 								else
-									LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-															 << " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
+									OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+																 << " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
 							}
 							else
-								LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-														 << ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
+								OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+															 << ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
 							++tr_idx;
 						}
 					}
@@ -181,14 +181,14 @@ namespace oly::reg
 						assignment.config = rendering::TileSet::Configuration::MIDDLE_PRIME;
 					else
 					{
-						LOG.warning(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx << ", unrecognized configuration \"" << config << "\"." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx << ", unrecognized configuration \"" << config << "\"." << LOG.nl;
 						return;
 					}
 
 					assignments.push_back(assignment);
 				}
 				else
-					LOG.warning(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
 				});
 		}
 
