@@ -72,7 +72,8 @@ namespace oly::rendering
 			MIDDLE_DIAGONAL_2,
 			MIDDLE_DIAGONAL_3,
 			MIDDLE_DIAGONAL_4,
-			MIDDLE_PRIME
+			MIDDLE_PRIME,
+			_COUNT
 		};
 
 		struct Tile

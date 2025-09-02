@@ -5,6 +5,57 @@
 
 namespace oly::reg
 {
+	// TODO v4 in assets, just use enum value instead of string.
+	static constexpr std::array<std::pair<std::string_view, rendering::TileSet::Configuration>, (size_t)rendering::TileSet::Configuration::_COUNT> config_lut = { {
+		{ "S", rendering::TileSet::Configuration::SINGLE },
+		{ "E1", rendering::TileSet::Configuration::END_1 },
+		{ "E2", rendering::TileSet::Configuration::END_2 },
+		{ "E3", rendering::TileSet::Configuration::END_3 },
+		{ "E4", rendering::TileSet::Configuration::END_4 },
+		{ "C1", rendering::TileSet::Configuration::CORNER_1 },
+		{ "C2", rendering::TileSet::Configuration::CORNER_2 },
+		{ "C3", rendering::TileSet::Configuration::CORNER_3 },
+		{ "C4", rendering::TileSet::Configuration::CORNER_4 },
+		{ "I1", rendering::TileSet::Configuration::ILINE_1 },
+		{ "I2", rendering::TileSet::Configuration::ILINE_2 },
+		{ "T1", rendering::TileSet::Configuration::TBONE_1 },
+		{ "T2", rendering::TileSet::Configuration::TBONE_2 },
+		{ "T3", rendering::TileSet::Configuration::TBONE_3 },
+		{ "T4", rendering::TileSet::Configuration::TBONE_4 },
+		{ "M", rendering::TileSet::Configuration::MIDDLE },
+		{ "C1'", rendering::TileSet::Configuration::CORNER_PRIME_1 },
+		{ "C2'", rendering::TileSet::Configuration::CORNER_PRIME_2 },
+		{ "C3'", rendering::TileSet::Configuration::CORNER_PRIME_3 },
+		{ "C4'", rendering::TileSet::Configuration::CORNER_PRIME_4 },
+		{ "T1+", rendering::TileSet::Configuration::TBONE_PLUS_1 },
+		{ "T2+", rendering::TileSet::Configuration::TBONE_PLUS_2 },
+		{ "T3+", rendering::TileSet::Configuration::TBONE_PLUS_3 },
+		{ "T4+", rendering::TileSet::Configuration::TBONE_PLUS_4 },
+		{ "T1-", rendering::TileSet::Configuration::TBONE_MINUS_1 },
+		{ "T2-", rendering::TileSet::Configuration::TBONE_MINUS_2 },
+		{ "T3-", rendering::TileSet::Configuration::TBONE_MINUS_3 },
+		{ "T4-", rendering::TileSet::Configuration::TBONE_MINUS_4 },
+		{ "T1'", rendering::TileSet::Configuration::TBONE_PRIME_1 },
+		{ "T2'", rendering::TileSet::Configuration::TBONE_PRIME_2 },
+		{ "T3'", rendering::TileSet::Configuration::TBONE_PRIME_3 },
+		{ "T4'", rendering::TileSet::Configuration::TBONE_PRIME_4 },
+		{ "MC1", rendering::TileSet::Configuration::MIDDLE_CORNER_1 },
+		{ "MC2", rendering::TileSet::Configuration::MIDDLE_CORNER_2 },
+		{ "MC3", rendering::TileSet::Configuration::MIDDLE_CORNER_3 },
+		{ "MC4", rendering::TileSet::Configuration::MIDDLE_CORNER_4 },
+		{ "MT1", rendering::TileSet::Configuration::MIDDLE_TBONE_1 },
+		{ "MT2", rendering::TileSet::Configuration::MIDDLE_TBONE_2 },
+		{ "MT3", rendering::TileSet::Configuration::MIDDLE_TBONE_3 },
+		{ "MT4", rendering::TileSet::Configuration::MIDDLE_TBONE_4 },
+		{ "MA1", rendering::TileSet::Configuration::MIDDLE_ACROSS_1 },
+		{ "MA2", rendering::TileSet::Configuration::MIDDLE_ACROSS_2 },
+		{ "MD1", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_1 },
+		{ "MD2", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_2 },
+		{ "MD3", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_3 },
+		{ "MD4", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_4 },
+		{ "M'", rendering::TileSet::Configuration::MIDDLE_PRIME },
+	} };
+
 	void TileSetRegistry::clear()
 	{
 		tilesets.clear();
@@ -40,20 +91,53 @@ namespace oly::reg
 				const size_t a_idx = _a_idx++;
 				if constexpr (toml::is_table<decltype(node)>)
 				{
-					auto _config = node["config"].value<std::string>();
-					if (!_config)
-					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"config\" field." << LOG.nl;
-						return;
-					}
 					auto _texture = node["texture"].value<std::string>();
 					if (!_texture)
 					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - missing \"texture\" field." << LOG.nl;
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+													 << " - missing \"texture\" field." << LOG.nl;
+						return;
+					}
+
+					auto _config = node["config"];
+					if (!_config)
+					{
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+													 << " - missing \"config\" field." << LOG.nl;
 						return;
 					}
 
 					rendering::TileSet::Assignment assignment;
+
+					if (auto config = _config.value<int64_t>())
+					{
+						if (*config >= 0 && *config < (int64_t)rendering::TileSet::Configuration::_COUNT)
+							assignment.config = (rendering::TileSet::Configuration)*config;
+						else
+						{
+							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+														 << ", unrecognized configuration #" << *config << "." << LOG.nl;
+							return;
+						}
+					}
+					else if (auto config = _config.value<std::string>())
+					{
+						auto config_it = std::find_if(config_lut.begin(), config_lut.end(), [&config](const auto& pair) { return pair.first == *config; });
+						if (config_it != config_lut.end())
+							assignment.config = config_it->second;
+						else
+						{
+							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+														 << ", unrecognized configuration \"" << *config << "\"." << LOG.nl;
+							return;
+						}
+					}
+					else
+					{
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+													 << " - \"config\" field is neither int nor string." << LOG.nl;
+						return;
+					}
 
 					assignment.desc.name = _texture.value();
 					glm::vec4 uvs{};
@@ -92,109 +176,6 @@ namespace oly::reg
 															 << ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
 							++tr_idx;
 						}
-					}
-
-					const std::string& config = _config.value();
-
-					// TODO v4 use static map
-					if (config == "S")
-						assignment.config = rendering::TileSet::Configuration::SINGLE;
-					else if (config == "E1")
-						assignment.config = rendering::TileSet::Configuration::END_1;
-					else if (config == "E2")
-						assignment.config = rendering::TileSet::Configuration::END_2;
-					else if (config == "E3")
-						assignment.config = rendering::TileSet::Configuration::END_3;
-					else if (config == "E4")
-						assignment.config = rendering::TileSet::Configuration::END_4;
-					else if (config == "C1")
-						assignment.config = rendering::TileSet::Configuration::CORNER_1;
-					else if (config == "C2")
-						assignment.config = rendering::TileSet::Configuration::CORNER_2;
-					else if (config == "C3")
-						assignment.config = rendering::TileSet::Configuration::CORNER_3;
-					else if (config == "C4")
-						assignment.config = rendering::TileSet::Configuration::CORNER_4;
-					else if (config == "I1")
-						assignment.config = rendering::TileSet::Configuration::ILINE_1;
-					else if (config == "I2")
-						assignment.config = rendering::TileSet::Configuration::ILINE_2;
-					else if (config == "T1")
-						assignment.config = rendering::TileSet::Configuration::TBONE_1;
-					else if (config == "T2")
-						assignment.config = rendering::TileSet::Configuration::TBONE_2;
-					else if (config == "T3")
-						assignment.config = rendering::TileSet::Configuration::TBONE_3;
-					else if (config == "T4")
-						assignment.config = rendering::TileSet::Configuration::TBONE_4;
-					else if (config == "M")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE;
-					else if (config == "C1'")
-						assignment.config = rendering::TileSet::Configuration::CORNER_PRIME_1;
-					else if (config == "C2'")
-						assignment.config = rendering::TileSet::Configuration::CORNER_PRIME_2;
-					else if (config == "C3'")
-						assignment.config = rendering::TileSet::Configuration::CORNER_PRIME_3;
-					else if (config == "C4'")
-						assignment.config = rendering::TileSet::Configuration::CORNER_PRIME_4;
-					else if (config == "T1+")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PLUS_1;
-					else if (config == "T2+")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PLUS_2;
-					else if (config == "T3+")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PLUS_3;
-					else if (config == "T4+")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PLUS_4;
-					else if (config == "T1-")
-						assignment.config = rendering::TileSet::Configuration::TBONE_MINUS_1;
-					else if (config == "T2-")
-						assignment.config = rendering::TileSet::Configuration::TBONE_MINUS_2;
-					else if (config == "T3-")
-						assignment.config = rendering::TileSet::Configuration::TBONE_MINUS_3;
-					else if (config == "T4-")
-						assignment.config = rendering::TileSet::Configuration::TBONE_MINUS_4;
-					else if (config == "T1'")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PRIME_1;
-					else if (config == "T2'")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PRIME_2;
-					else if (config == "T3'")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PRIME_3;
-					else if (config == "T4'")
-						assignment.config = rendering::TileSet::Configuration::TBONE_PRIME_4;
-					else if (config == "MC1")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_CORNER_1;
-					else if (config == "MC2")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_CORNER_2;
-					else if (config == "MC3")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_CORNER_3;
-					else if (config == "MC4")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_CORNER_4;
-					else if (config == "MT1")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_TBONE_1;
-					else if (config == "MT2")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_TBONE_2;
-					else if (config == "MT3")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_TBONE_3;
-					else if (config == "MT4")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_TBONE_4;
-					else if (config == "MA1")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_ACROSS_1;
-					else if (config == "MA2")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_ACROSS_2;
-					else if (config == "MD1")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_DIAGONAL_1;
-					else if (config == "MD2")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_DIAGONAL_2;
-					else if (config == "MD3")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_DIAGONAL_3;
-					else if (config == "MD4")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_DIAGONAL_4;
-					else if (config == "M'")
-						assignment.config = rendering::TileSet::Configuration::MIDDLE_PRIME;
-					else
-					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx << ", unrecognized configuration \"" << config << "\"." << LOG.nl;
-						return;
 					}
 
 					assignments.push_back(assignment);
