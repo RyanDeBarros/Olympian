@@ -257,7 +257,7 @@ int main()
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
-		polygon_crop.draw(true); // TODO v3 automatic internal batch tracking
+		polygon_crop.draw(true); // TODO v4 automatic internal batch tracking
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
 		sprite_match.draw(true);
