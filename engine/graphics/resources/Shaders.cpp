@@ -21,13 +21,13 @@ namespace oly::graphics::internal_shaders
 
 	void load()
 	{
-		_sprite_batch = load_shader((shaders_dir + "sprite_batch.vert").c_str(), (shaders_dir + "sprite_batch.frag").c_str());
+		_sprite_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "sprite_batch.vert", .fragment_path = shaders_dir + "sprite_batch.frag" });
 		sprite_batch = *_sprite_batch;
-		_polygon_batch = load_shader((shaders_dir + "polygon_batch.vert").c_str(), (shaders_dir + "polygon_batch.frag").c_str());
+		_polygon_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "polygon_batch.vert", .fragment_path = shaders_dir + "polygon_batch.frag" });
 		polygon_batch = *_polygon_batch;
-		_ellipse_batch = load_shader((shaders_dir + "ellipse_batch.vert").c_str(), (shaders_dir + "ellipse_batch.frag").c_str());
+		_ellipse_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "ellipse_batch.vert", .fragment_path = shaders_dir + "ellipse_batch.frag" });
 		ellipse_batch = *_ellipse_batch;
-		_text_batch = load_shader((shaders_dir + "text_batch.vert").c_str(), (shaders_dir + "text_batch.frag").c_str());
+		_text_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "text_batch.vert", .fragment_path = shaders_dir + "text_batch.frag" });
 		text_batch = *_text_batch;
 	}
 

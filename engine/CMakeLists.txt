@@ -47,12 +47,6 @@ target_compile_definitions(OlympianEngine PUBLIC
     OLYMPIAN_ENGINE_ABS_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\"
 )
 
-# Engine configuration macros
-target_compile_definitions(OlympianEngine PUBLIC
-	OLYMPIAN_SUBSHADER_VALIDATION
-	OLYMPIAN_SHADER_VALIDATION
-)
-
 # Engine compile options (MSVC specific)
 if (MSVC)
 	target_compile_options(OlympianEngine PRIVATE /Zc:__cplusplus)

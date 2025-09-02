@@ -7,33 +7,6 @@
 
 namespace oly::graphics
 {
-	Shader::Shader()
-		: id(glCreateProgram())
-	{
-	}
-
-	Shader::Shader(Shader&& other) noexcept
-		: id(other.id)
-	{
-		other.id = 0;
-	}
-
-	Shader::~Shader()
-	{
-		glDeleteProgram(id);
-	}
-
-	Shader& Shader::operator=(Shader&& other) noexcept
-	{
-		if (this != &other)
-		{
-			glDeleteProgram(id);
-			id = other.id;
-			other.id = 0;
-		}
-		return *this;
-	}
-
 	static void validate_subshader(GLuint& subshader)
 	{
 		GLint result;
@@ -60,16 +33,14 @@ namespace oly::graphics
 		}
 	}
 
-	static GLuint create_compiled_subshader(const char* source, GLint source_length, GLenum type)
+	static GLuint create_compiled_subshader(const std::string& source, GLenum type)
 	{
 		GLuint subshader = glCreateShader(type);
-		glShaderSource(subshader, 1, &source, &source_length);
+		const GLchar* src = source.c_str();
+		GLint src_length = (GLint)source.size();
+		glShaderSource(subshader, 1, &src, &src_length);
 		glCompileShader(subshader);
-
-#ifdef OLYMPIAN_SUBSHADER_VALIDATION
 		validate_subshader(subshader);
-#endif
-
 		return subshader;
 	}
 
@@ -97,215 +68,73 @@ namespace oly::graphics
 		}
 	}
 
-	// TODO v3 are these necessary? Could just create Shader directly, such as in constructor. Also, remove OLYMPIAN_* macros from CMake.
-	static std::unique_ptr<Shader> create_linked_shader(GLuint vert, GLuint frag)
+	static GLuint create_shader(const ShaderBufferSource& buffer_source)
 	{
-		std::unique_ptr<Shader> shader = std::make_unique<Shader>();
-		glAttachShader(*shader, vert);
-		glAttachShader(*shader, frag);
-		glLinkProgram(*shader);
+		GLuint shader = glCreateProgram();
+		GLuint vert = create_compiled_subshader(buffer_source.vertex_buffer, GL_VERTEX_SHADER);
+		GLuint frag = create_compiled_subshader(buffer_source.fragment_buffer, GL_FRAGMENT_SHADER);
+		GLuint geom = buffer_source.geometry_buffer ? create_compiled_subshader(*buffer_source.geometry_buffer, GL_GEOMETRY_SHADER) : 0;
+
+		glAttachShader(shader, vert);
+		glAttachShader(shader, frag);
+		if (geom)
+			glAttachShader(shader, geom);
+
+		glLinkProgram(shader);
+
 		glDeleteShader(vert);
 		glDeleteShader(frag);
+		if (geom)
+			glDeleteShader(geom);
 
-#ifdef OLYMPIAN_SHADER_VALIDATION
-		validate_shader(*shader);
-#endif
-
+		validate_shader(shader);
 		return shader;
 	}
 
-	static std::unique_ptr<Shader> create_linked_shader(GLuint vert, GLuint frag, GLuint geom)
+	static GLuint create_shader(const ShaderPathSource& path_source)
 	{
-		std::unique_ptr<Shader> shader = std::make_unique<Shader>();
-		glAttachShader(*shader, vert);
-		glAttachShader(*shader, frag);
-		glAttachShader(*shader, geom);
-		glLinkProgram(*shader);
-		glDeleteShader(vert);
-		glDeleteShader(frag);
-		glDeleteShader(geom);
-
-#ifdef OLYMPIAN_SHADER_VALIDATION
-		validate_shader(*shader);
-#endif
-
-		return shader;
+		ShaderBufferSource buffer_source;
+		buffer_source.vertex_buffer = io::read_file(path_source.vertex_path);
+		buffer_source.fragment_buffer = io::read_file(path_source.fragment_path);
+		if (path_source.geometry_path)
+			buffer_source.geometry_buffer = io::read_file(*path_source.geometry_path);
+		return create_shader(buffer_source);
 	}
 
-	struct parsed_glsl_source
+	Shader::Shader()
+		: id(glCreateProgram())
 	{
-		std::string vertex, fragment, geometry;
-	};
+	}
 
-	static int parse_glsl_source(const std::string& glsl, parsed_glsl_source& full_source)
+	Shader::Shader(const ShaderBufferSource& buffer_source)
+		: id(create_shader(buffer_source))
 	{
-		full_source.vertex.clear();
-		full_source.fragment.clear();
-		full_source.geometry.clear();
+	}
 
-		std::istringstream stream(glsl);
-		std::string line;
+	Shader::Shader(const ShaderPathSource& path_source)
+		: id(create_shader(path_source))
+	{
+	}
 
-		std::string source;
-		enum
+	Shader::Shader(Shader&& other) noexcept
+		: id(other.id)
+	{
+		other.id = 0;
+	}
+
+	Shader::~Shader()
+	{
+		glDeleteProgram(id);
+	}
+
+	Shader& Shader::operator=(Shader&& other) noexcept
+	{
+		if (this != &other)
 		{
-			V, F, G, NONE
-		} type = NONE;
-
-		while (std::getline(stream, line))
-		{
-			if (line.find("***vert***") != std::string::npos || line.find("***VERT***") != std::string::npos)
-			{
-				if (!full_source.vertex.empty())
-					return 1;
-				switch (type)
-				{
-				case F:
-					full_source.fragment = std::move(source);
-					break;
-				case G:
-					full_source.geometry = std::move(source);
-					break;
-				}
-				type = V;
-				source.clear();
-			}
-			else if (line.find("***frag***") != std::string::npos || line.find("***FRAG***") != std::string::npos)
-			{
-				if (!full_source.fragment.empty())
-					return 2;
-				switch (type)
-				{
-				case V:
-					full_source.vertex = std::move(source);
-					break;
-				case G:
-					full_source.geometry = std::move(source);
-					break;
-				}
-				type = F;
-				source.clear();
-			}
-			else if (line.find("***geom***") != std::string::npos || line.find("***GEOM***") != std::string::npos)
-			{
-				if (!full_source.geometry.empty())
-					return 3;
-				switch (type)
-				{
-				case V:
-					full_source.vertex = std::move(source);
-					break;
-				case F:
-					full_source.fragment = std::move(source);
-					break;
-				}
-				type = G;
-				source.clear();
-			}
-			else
-				source += line + "\n";
+			glDeleteProgram(id);
+			id = other.id;
+			other.id = 0;
 		}
-		switch (type)
-		{
-		case V:
-			full_source.vertex = std::move(source);
-			break;
-		case F:
-			full_source.fragment = std::move(source);
-			break;
-		case G:
-			full_source.geometry = std::move(source);
-			break;
-		}
-
-		return 0;
-	}
-
-	std::unique_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader)
-	{
-		std::string file_content;
-		file_content = io::read_file(vertex_shader.path);
-		GLuint vert = create_compiled_subshader(file_content.c_str(), (GLint)file_content.length(), GL_VERTEX_SHADER);
-		file_content = io::read_file(fragment_shader.path);
-		GLuint frag = create_compiled_subshader(file_content.c_str(), (GLint)file_content.length(), GL_FRAGMENT_SHADER);
-
-		return create_linked_shader(vert, frag);
-	}
-
-	std::unique_ptr<Shader> load_shader(vertex_path vertex_shader, fragment_path fragment_shader, geometry_path geometry_shader)
-	{
-		std::string file_content;
-		file_content = io::read_file(vertex_shader.path);
-		GLuint vert = create_compiled_subshader(file_content.c_str(), (GLint)file_content.length(), GL_VERTEX_SHADER);
-		file_content = io::read_file(fragment_shader.path);
-		GLuint frag = create_compiled_subshader(file_content.c_str(), (GLint)file_content.length(), GL_FRAGMENT_SHADER);
-		file_content = io::read_file(geometry_shader.path);
-		GLuint geom = create_compiled_subshader(file_content.c_str(), (GLint)file_content.length(), GL_GEOMETRY_SHADER);
-
-		return create_linked_shader(vert, frag, geom);
-	}
-
-	std::unique_ptr<Shader> load_shader(glsl_path glsl_shader)
-	{
-		std::string file_content = io::read_file(glsl_shader.path);
-		parsed_glsl_source source;
-		int res = parse_glsl_source(file_content, source);
-		if (res == 1)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated vertex subshader in GLSL file");
-		else if (res == 2)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated fragment subshader in GLSL file");
-		else if (res == 3)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated geometry subshader in GLSL file");
-		else if (source.vertex.empty() || source.fragment.empty())
-			throw Error(ErrorCode::SHADER_LINKAGE, "no vertex or fragment subshader exists in GLSL file");
-
-		GLuint vert = create_compiled_subshader(source.vertex.c_str(), (GLint)source.vertex.length(), GL_VERTEX_SHADER);
-		GLuint frag = create_compiled_subshader(source.fragment.c_str(), (GLint)source.fragment.length(), GL_FRAGMENT_SHADER);
-		if (source.geometry.empty())
-			return create_linked_shader(vert, frag);
-		else
-		{
-			GLuint geom = create_compiled_subshader(source.geometry.c_str(), (GLint)source.geometry.length(), GL_GEOMETRY_SHADER);
-			return create_linked_shader(vert, frag, geom);
-		}
-	}
-
-	std::unique_ptr<Shader> load_shader(vertex_source vertex_shader, fragment_source fragment_shader)
-	{
-		GLuint vert = create_compiled_subshader(vertex_shader.source, vertex_shader.length, GL_VERTEX_SHADER);
-		GLuint frag = create_compiled_subshader(fragment_shader.source, fragment_shader.length, GL_FRAGMENT_SHADER);
-		return create_linked_shader(vert, frag);
-	}
-
-	std::unique_ptr<Shader> load_shader(vertex_source vertex_shader, fragment_source fragment_shader, geometry_source geometry_shader)
-	{
-		GLuint vert = create_compiled_subshader(vertex_shader.source, vertex_shader.length, GL_VERTEX_SHADER);
-		GLuint frag = create_compiled_subshader(fragment_shader.source, fragment_shader.length, GL_FRAGMENT_SHADER);
-		GLuint geom = create_compiled_subshader(geometry_shader.source, geometry_shader.length, GL_GEOMETRY_SHADER);
-		return create_linked_shader(vert, frag, geom);
-	}
-
-	std::unique_ptr<Shader> load_shader(glsl_source glsl_shader)
-	{
-		parsed_glsl_source source;
-		int res = parse_glsl_source(glsl_shader.source, source);
-		if (res == 1)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated vertex subshader in GLSL source");
-		else if (res == 2)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated fragment subshader in GLSL source");
-		else if (res == 3)
-			throw Error(ErrorCode::SUBSHADER_COMPILATION, "repeated geometry subshader in GLSL source");
-		else if (source.vertex.empty() || source.fragment.empty())
-			throw Error(ErrorCode::SHADER_LINKAGE, "no vertex or fragment subshader exists in GLSL file");
-
-		GLuint vert = create_compiled_subshader(source.vertex.c_str(), (GLint)source.vertex.length(), GL_VERTEX_SHADER);
-		GLuint frag = create_compiled_subshader(source.fragment.c_str(), (GLint)source.fragment.length(), GL_FRAGMENT_SHADER);
-		if (source.geometry.empty())
-			return create_linked_shader(vert, frag);
-		else
-		{
-			GLuint geom = create_compiled_subshader(source.geometry.c_str(), (GLint)source.geometry.length(), GL_GEOMETRY_SHADER);
-			return create_linked_shader(vert, frag, geom);
-		}
+		return *this;
 	}
 }
