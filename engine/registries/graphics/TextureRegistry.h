@@ -21,26 +21,10 @@ namespace oly::reg
 			size_t operator()(const TextureKey& k) const { return std::hash<std::string>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
 		};
 
-		struct SVGTextureKey
-		{
-			std::string file;
-			unsigned int index;
-			float scale;
-
-			bool operator==(const SVGTextureKey&) const = default;
-		};
-
-		struct SVGTextureHash
-		{
-			size_t operator()(const SVGTextureKey& k) const
-				{ return std::hash<std::string>{}(k.file) ^ std::hash<unsigned int>{}(k.index) ^ std::hash<float>{}(k.scale); }
-		};
-
 		std::unordered_map<TextureKey, graphics::ImageRef, TextureHash> images;
 		std::unordered_map<TextureKey, graphics::AnimRef, TextureHash> anims;
 		std::unordered_map<TextureKey, graphics::VectorImageRef, TextureHash> vector_images;
 		std::unordered_map<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
-		std::unordered_map<SVGTextureKey, graphics::BindlessTextureRef, SVGTextureHash> svg_textures;
 		std::unordered_map<TextureKey, graphics::NSVGAbstract, TextureHash> nsvg_abstracts;
 
 	public:
@@ -55,14 +39,12 @@ namespace oly::reg
 
 		struct LoadParams
 		{
-			unsigned int texture_index = 0;
 			ImageStorageOverride storage = ImageStorageOverride::DEFAULT;
 			bool set_and_use = true;
 		};
 
 		struct SVGLoadParams
 		{
-			unsigned int texture_index = 0;
 			ImageStorageOverride abstract_storage = ImageStorageOverride::DEFAULT;
 			ImageStorageOverride image_storage = ImageStorageOverride::DEFAULT;
 			bool set_and_use = true;
@@ -70,23 +52,21 @@ namespace oly::reg
 
 		struct TempLoadParams
 		{
-			unsigned int texture_index = 0;
 			CPUBuffer** cpubuffer = nullptr;
 			bool set_and_use = true;
 		};
 
 		struct TempSVGLoadParams
 		{
-			unsigned int texture_index = 0;
 			CPUBuffer** cpubuffer = nullptr;
 			graphics::NSVGAbstract** abstract = nullptr;
 			bool set_and_use = true;
 		};
 
-		graphics::BindlessTextureRef load_texture(const std::string& file, LoadParams params = {});
-		graphics::BindlessTextureRef load_svg_texture(const std::string& file, float scale = 1.0f, SVGLoadParams params = {});
-		graphics::BindlessTextureRef load_temp_texture(const std::string& file, TempLoadParams params = {}) const;
-		graphics::BindlessTextureRef load_temp_svg_texture(const std::string& file, float scale = 1.0f, TempSVGLoadParams params = {}) const;
+		graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index = 0, LoadParams params = {});
+		graphics::BindlessTextureRef load_svg_texture(const std::string& file, unsigned int texture_index = 0, SVGLoadParams params = {});
+		graphics::BindlessTextureRef load_temp_texture(const std::string& file, unsigned int texture_index = 0, TempLoadParams params = {}) const;
+		graphics::BindlessTextureRef load_temp_svg_texture(const std::string& file, unsigned int texture_index = 0, TempSVGLoadParams params = {}) const;
 
 		void clear();
 
@@ -98,7 +78,7 @@ namespace oly::reg
 		const graphics::NSVGAbstract& get_nsvg_abstract(const std::string& file, unsigned int texture_index = 0) const;
 
 		void free_texture(const std::string& file, unsigned int texture_index = 0);
-		void free_svg_texture(const std::string& file, float scale = 1.0f, unsigned int texture_index = 0);
+		void free_svg_texture(const std::string& file, unsigned int texture_index = 0);
 		void free_nsvg_abstract(const std::string& file, unsigned int texture_index = 0);
 	};
 }

@@ -73,7 +73,7 @@ name = "sprite1"
 [[archetype.sprite]]
 name = "godot_icon"
 "texture" = "textures/godot.svg"
-"svg_scale" = 3.0
+"texture_index" = 1
 transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [[archetype.sprite]]

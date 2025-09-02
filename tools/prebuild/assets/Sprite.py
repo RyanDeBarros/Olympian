@@ -8,8 +8,6 @@ def params_constructor(sprite, name) -> str:
         c += f"\t\t\t{name}.texture = \"{sprite['texture']}\";\n"
     if 'texture_index' in sprite:
         c += f"\t\t\t{name}.texture_index = (unsigned int){sprite['texture_index']};\n"
-    if 'svg_scale' in sprite:
-        c += f"\t\t\t{name}.svg_scale = (float){sprite['svg_scale']};\n"
 
     if 'modulation' in sprite:
         if isinstance(sprite['modulation'][0], list):

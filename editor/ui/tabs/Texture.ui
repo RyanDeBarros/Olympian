@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>705</width>
-    <height>768</height>
+    <width>647</width>
+    <height>686</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -449,28 +449,28 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
+              <item row="4" column="0">
                <widget class="QLabel" name="label_10">
                 <property name="text">
                  <string>Min Filter</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="5" column="0">
                <widget class="QLabel" name="label_13">
                 <property name="text">
                  <string>Mag Filter</string>
                 </property>
                </widget>
               </item>
-              <item row="5" column="0">
+              <item row="6" column="0">
                <widget class="QLabel" name="label_12">
                 <property name="text">
                  <string>Wrap S</string>
                 </property>
                </widget>
               </item>
-              <item row="6" column="0">
+              <item row="7" column="0">
                <widget class="QLabel" name="label_14">
                 <property name="text">
                  <string>Wrap T</string>
@@ -539,7 +539,7 @@
                 </item>
                </layout>
               </item>
-              <item row="3" column="1">
+              <item row="4" column="1">
                <layout class="QHBoxLayout" name="horizontalLayout_11">
                 <item>
                  <widget class="QComboBox" name="textureSVGMinFilter">
@@ -626,7 +626,7 @@
                 </item>
                </layout>
               </item>
-              <item row="4" column="1">
+              <item row="5" column="1">
                <layout class="QHBoxLayout" name="horizontalLayout_13">
                 <item>
                  <widget class="QComboBox" name="textureSVGMagFilter">
@@ -657,7 +657,7 @@
                 </item>
                </layout>
               </item>
-              <item row="5" column="1">
+              <item row="6" column="1">
                <layout class="QHBoxLayout" name="horizontalLayout_14">
                 <item>
                  <widget class="QComboBox" name="textureSVGWrapS">
@@ -703,7 +703,7 @@
                 </item>
                </layout>
               </item>
-              <item row="6" column="1">
+              <item row="7" column="1">
                <layout class="QHBoxLayout" name="horizontalLayout_15">
                 <item>
                  <widget class="QComboBox" name="textureSVGWrapT">
@@ -755,6 +755,46 @@
                  <string>Abstract Storage</string>
                 </property>
                </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_22">
+                <property name="text">
+                 <string>Scale</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_16">
+                <item>
+                 <widget class="QDoubleSpinBox" name="textureSVGScale">
+                  <property name="decimals">
+                   <number>3</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.001000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>10000.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="textureSVGScaleReset">
+                  <property name="maximumSize">
+                   <size>
+                    <width>60</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Reset</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>

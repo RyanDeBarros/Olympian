@@ -317,42 +317,42 @@
                 </item>
                </widget>
               </item>
-              <item row="2" column="0">
+              <item row="3" column="0">
                <widget class="QLabel" name="label_10">
                 <property name="text">
                  <string>Generate Mipmaps</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
+              <item row="4" column="0">
                <widget class="QLabel" name="label_11">
                 <property name="text">
                  <string>Min Filter</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="5" column="0">
                <widget class="QLabel" name="label_12">
                 <property name="text">
                  <string>Mag Filter</string>
                 </property>
                </widget>
               </item>
-              <item row="5" column="0">
+              <item row="6" column="0">
                <widget class="QLabel" name="label_13">
                 <property name="text">
                  <string>Wrap S</string>
                 </property>
                </widget>
               </item>
-              <item row="6" column="0">
+              <item row="7" column="0">
                <widget class="QLabel" name="label_14">
                 <property name="text">
                  <string>Wrap T</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
+              <item row="3" column="1">
                <widget class="QComboBox" name="textureSVGMipmaps">
                 <item>
                  <property name="text">
@@ -371,7 +371,7 @@
                 </item>
                </widget>
               </item>
-              <item row="3" column="1">
+              <item row="4" column="1">
                <widget class="QComboBox" name="textureSVGMinFilter">
                 <item>
                  <property name="text">
@@ -405,7 +405,7 @@
                 </item>
                </widget>
               </item>
-              <item row="4" column="1">
+              <item row="5" column="1">
                <widget class="QComboBox" name="textureSVGMagFilter">
                 <item>
                  <property name="text">
@@ -419,7 +419,7 @@
                 </item>
                </widget>
               </item>
-              <item row="5" column="1">
+              <item row="6" column="1">
                <widget class="QComboBox" name="textureSVGWrapS">
                 <item>
                  <property name="text">
@@ -448,7 +448,7 @@
                 </item>
                </widget>
               </item>
-              <item row="6" column="1">
+              <item row="7" column="1">
                <widget class="QComboBox" name="textureSVGWrapT">
                 <item>
                  <property name="text">
@@ -475,6 +475,29 @@
                   <string>Mirror Clamp To Edge</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="textureSVGScale">
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="minimum">
+                 <double>0.001000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>10000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>1.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_24">
+                <property name="text">
+                 <string>Scale</string>
+                </property>
                </widget>
               </item>
              </layout>

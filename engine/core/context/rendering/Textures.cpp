@@ -34,12 +34,12 @@ namespace oly::context
 
 	graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.load_texture(file, { .texture_index = texture_index });
+		return internal::texture_registry.load_texture(file, texture_index);
 	}
 
-	graphics::BindlessTextureRef load_svg_texture(const std::string& file, float svg_scale, unsigned int texture_index)
+	graphics::BindlessTextureRef load_svg_texture(const std::string& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.load_svg_texture(file, svg_scale, { .texture_index = texture_index });
+		return internal::texture_registry.load_svg_texture(file, texture_index);
 	}
 
 	glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index)

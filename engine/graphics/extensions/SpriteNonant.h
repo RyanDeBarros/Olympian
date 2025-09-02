@@ -43,7 +43,6 @@ namespace oly::rendering
 
 		void copy_sprite_attributes(const Sprite& sprite);
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);
-		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0);
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_tex_coords(const math::Rect2D& rect);
 		void set_modulation(const ModulationRect& modulation);

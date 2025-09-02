@@ -45,6 +45,7 @@ def convert_to_texture_from_ui(ui: Ui_Texture, texture: TextureSlot):
 	else:
 		texture.svg.image_storage = PARAM_LIST.get_value(ui.textureSVGImageStorage.currentText())
 		texture.svg.generate_mipmaps = PARAM_LIST.get_value(ui.textureSVGMipmaps.currentText())
+		texture.svg.svg_scale = ui.textureSVGScale.value()
 		texture.svg.min_filter = PARAM_LIST.get_value(ui.textureSVGMinFilter.currentText())
 		texture.svg.mag_filter = PARAM_LIST.get_value(ui.textureSVGMagFilter.currentText())
 		texture.svg.wrap_s = PARAM_LIST.get_value(ui.textureSVGWrapS.currentText())
@@ -73,6 +74,7 @@ def convert_to_ui_from_texture(ui: Ui_Texture, texture: TextureSlot):
 		with block_all_signals(ui.svgSettings):
 			ui.textureSVGImageStorage.setCurrentText(PARAM_LIST.get_name(texture.svg.image_storage))
 			ui.textureSVGMipmaps.setCurrentText(PARAM_LIST.get_name(texture.svg.generate_mipmaps))
+			ui.textureSVGScale.setValue(texture.svg.svg_scale)
 			ui.textureSVGMinFilter.setCurrentText(PARAM_LIST.get_name(texture.svg.min_filter))
 			ui.textureSVGMagFilter.setCurrentText(PARAM_LIST.get_name(texture.svg.mag_filter))
 			ui.textureSVGWrapS.setCurrentText(PARAM_LIST.get_name(texture.svg.wrap_s))

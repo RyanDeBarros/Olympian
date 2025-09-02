@@ -193,7 +193,6 @@ namespace oly::rendering
 		void draw() const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
-		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0) const;
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
@@ -227,7 +226,6 @@ namespace oly::rendering
 		void draw() const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
-		void set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index = 0) const;
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 		void set_tex_coords(const UVRect& tex_coords) const;
 		void set_tex_coords(const math::Rect2D& rect) const;

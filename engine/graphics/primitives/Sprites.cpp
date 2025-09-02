@@ -231,12 +231,6 @@ namespace oly::rendering
 		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
-	void StaticSprite::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index) const
-	{
-		auto texture = context::load_svg_texture(texture_file, svg_scale, texture_index);
-		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
-	}
-
 	void StaticSprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
 		context::sprite_batch().set_texture(vbid.get(), texture, dimensions);
@@ -368,12 +362,6 @@ namespace oly::rendering
 	void Sprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
 		auto texture = context::load_texture(texture_file, texture_index);
-		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
-	}
-
-	void Sprite::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index) const
-	{
-		auto texture = context::load_svg_texture(texture_file, svg_scale, texture_index);
 		set_texture(texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 

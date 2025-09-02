@@ -39,6 +39,7 @@ class SVGTexture:
 	image_storage: str = OLY_DISCARD.value
 	abstract_storage: str = OLY_DISCARD.value
 	generate_mipmaps: str = OLY_OFF.value
+	svg_scale: float = 1.0
 	min_filter: int = GL_NEAREST.value
 	mag_filter: int = GL_NEAREST.value
 	wrap_s: int = GL_CLAMP_TO_EDGE.value

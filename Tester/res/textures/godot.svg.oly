@@ -8,4 +8,14 @@ min_filter = 9729
 mag_filter = 9729
 wrap_s = 33071
 wrap_t = 33071
+svg_scale = 1.0
+
+[[texture]]
+image_storage = "discard"
+generate_mipmaps = "off"
+min_filter = 9729
+mag_filter = 9729
+wrap_s = 33071
+wrap_t = 33071
+svg_scale = 3.0
 

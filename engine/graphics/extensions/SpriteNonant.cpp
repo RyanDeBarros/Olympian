@@ -75,16 +75,6 @@ namespace oly::rendering
 		dirty.grid = true;
 	}
 
-	void SpriteNonant::set_texture(const std::string& texture_file, float svg_scale, unsigned int texture_index)
-	{
-		for (unsigned char x = 0; x < 3; ++x)
-			for (unsigned char y = 0; y < 3; ++y)
-				sprite(x, y).set_texture(texture_file, svg_scale, texture_index);
-		regular_dimensions = context::get_texture_dimensions(texture_file, texture_index);
-		nsize = regular_dimensions;
-		dirty.grid = true;
-	}
-
 	void SpriteNonant::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		for (unsigned char x = 0; x < 3; ++x)

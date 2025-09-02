@@ -26,6 +26,6 @@ namespace oly::context
 	extern void sync_texture_handle(const graphics::BindlessTextureRef& texture);
 
 	extern graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index = 0);
-	extern graphics::BindlessTextureRef load_svg_texture(const std::string& file, float svg_scale = 1.0f, unsigned int texture_index = 0);
+	extern graphics::BindlessTextureRef load_svg_texture(const std::string& file, unsigned int texture_index = 0);
 	extern glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index = 0);
 }

@@ -19,7 +19,6 @@ namespace oly::reg
 		params.local = load_transform_2d(node, "transform");
 		params.texture = node["texture"].value<std::string>();
 		params.texture_index = (unsigned int)node["texture_index"].value<int64_t>().value_or(0);
-		params.svg_scale = convert_optional<float>(node["svg_scale"].value<double>());
 
 		if (auto toml_modulation = node["modulation"].as_array())
 		{
@@ -139,18 +138,8 @@ namespace oly::reg
 
 		if (params.texture)
 		{
-			if (params.svg_scale)
-			{
-				reg::TextureRegistry::SVGLoadParams lparams{ .texture_index = params.texture_index };
-				graphics::BindlessTextureRef btex = context::texture_registry().load_svg_texture(params.texture.value(), params.svg_scale.value(), lparams);
-				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
-			}
-			else
-			{
-				reg::TextureRegistry::LoadParams lparams{ .texture_index = params.texture_index };
-				graphics::BindlessTextureRef btex = context::texture_registry().load_texture(params.texture.value(), lparams);
-				sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
-			}
+			graphics::BindlessTextureRef btex = context::texture_registry().load_texture(params.texture.value(), params.texture_index);
+			sprite.set_texture(btex, context::texture_registry().get_dimensions(params.texture.value(), params.texture_index));
 		}
 
 		if (params.modulation)
