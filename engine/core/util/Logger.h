@@ -85,7 +85,6 @@ namespace oly
 	public:
 		struct
 		{
-			// TODO v3 add these to project config.
 			bool debug = false;
 			bool info = true;
 			bool warning = true;

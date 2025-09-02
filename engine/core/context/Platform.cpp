@@ -82,9 +82,15 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
-		// TODO v3 error handling. Add to project config
-		wr_viewport.boxed = node["window"]["boxed"].value_or<bool>(true);
-		wr_viewport.stretch = node["window"]["stretch"].value_or<bool>(true);
+		// TODO Add to project config
+		if (auto window = node["window"])
+		{
+			if (auto viewport = window["viewport"])
+			{
+				wr_viewport.boxed = viewport["boxed"].value_or<bool>(true);
+				wr_viewport.stretch = viewport["stretch"].value_or<bool>(true);
+			}
+		}
 
 		platform::internal::invoke_initialize_viewport(internal::wr_viewport);
 		wr_viewport.attach(&internal::platform->window().handlers.window_resize);

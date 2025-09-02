@@ -31,6 +31,10 @@ ellipses = 100
 "initial glyphs" = 100
 "new textures" = 10
 
+[context.window.viewport]
+boxed = true
+stretch = true
+
 [context.logger.enable]
 debug = false
 info = true

@@ -30,6 +30,12 @@ class ProjectSettingsTab(EditorTab):
 		])
 		# TODO v4 window hints. Eventually use collapsible sections.
 
+		self.viewport_settings = {}
+		self.viewport_form = SettingsForm([
+			SettingsParameter('boxed', self.ui.viewportBoxed),
+			SettingsParameter('stretch', self.ui.viewportStretch)
+		])
+
 		self.logger_settings = {}
 		self.logger_form = SettingsForm([
 			SettingsParameter('logfile', self.ui.logfile),
@@ -49,6 +55,7 @@ class ProjectSettingsTab(EditorTab):
 
 		self.revert_changes_impl()
 		self.window_form.connect_modified(lambda: self.set_asterisk(True))
+		self.viewport_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_enable_form.connect_modified(lambda: self.set_asterisk(True))  # TODO v4 with nested SettingsForm, logger_enable_form should already be connected due to logger_form being connected.
 
@@ -67,6 +74,7 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def save_changes_impl(self):
 		self.window_settings.update(self.window_form.get_dict())
+		self.viewport_settings.update(self.viewport_form.get_dict())
 		self.logger_settings.update(self.logger_form.get_dict())
 		self.logger_enable_settings.update(self.logger_enable_form.get_dict())
 		TOMLAdapter.dump(self.win.project_context.project_file, self.settings)
@@ -74,20 +82,30 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def revert_changes_impl(self):
 		self.settings = TOMLAdapter.load(self.win.project_context.project_file)
+
 		if 'context' not in self.settings:
 			self.settings['context'] = {}
 		self.context = self.settings['context']
+
 		if 'window' not in self.context:
 			self.context['window'] = {}
 		self.window_settings = self.context['window']
 		self.window_form.load_dict(self.window_settings)
+
+		if 'viewport' not in self.window_settings:
+			self.window_settings['viewport'] = {}
+		self.viewport_settings = self.window_settings['viewport']
+		self.viewport_form.load_dict(self.viewport_settings)
+
 		if 'logger' not in self.context:
 			self.context['logger'] = {}
 		self.logger_settings = self.context['logger']
 		self.logger_form.load_dict(self.logger_settings)
+
 		if 'enable' not in self.logger_settings:
 			self.logger_settings['enable'] = {}
 		self.logger_enable_settings = self.logger_settings['enable']
+		self.logger_enable_form.load_dict(self.logger_enable_settings)
 
 	@override
 	def rename_impl(self, item: AbstractPathItem):
