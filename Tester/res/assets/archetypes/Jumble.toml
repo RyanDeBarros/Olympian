@@ -152,7 +152,7 @@ transform = { "scale" = [ 100, 100 ] }
 [[archetype.paragraph]]
 name           = "test_text"
 "font_atlas"   = "fonts/Roboto-Regular.ttf"
-"text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+"text"         = "He\nrgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 "draw_bkg"     = true
 transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 "bkg_color"    = [ 0.5, 0.4, 0.2, 0.8 ]

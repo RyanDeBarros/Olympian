@@ -2,14 +2,15 @@ import json
 import os
 import shutil
 from enum import Enum
+from pathlib import Path
 
 import toml
 
 from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
 
-MANIFEST_PATH = 'archetype/manifest.txt'
-CACHE_PATH = 'archetype/cache.json'
-GEN_PATH = '../.gen/archetypes'
+MANIFEST_PATH = Path('.gen/manifest.txt').resolve()
+CACHE_PATH = Path('.gen/cache.json').resolve()
+ARCHETYPE_GEN_PATH = Path('.gen/archetypes').resolve()
 
 
 # TODO v4 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
@@ -274,7 +275,7 @@ namespace oly::gen
 class Cache:
 	def __init__(self):
 		self.cache = {}
-		if os.path.exists(CACHE_PATH):
+		if CACHE_PATH.exists():
 			with open(CACHE_PATH, 'r') as f:
 				try:
 					self.cache: dict = json.load(f)
@@ -301,8 +302,8 @@ class Cache:
 		self.cache.clear()
 		self.marked.clear()
 		self.dump()
-		shutil.rmtree(GEN_PATH)
-		os.makedirs(GEN_PATH)
+		shutil.rmtree(ARCHETYPE_GEN_PATH)
+		os.makedirs(ARCHETYPE_GEN_PATH)
 
 
 def generate(asset_filepath: str):
@@ -313,7 +314,7 @@ def generate(asset_filepath: str):
 			return
 		proto = Archetype(tml)
 
-	gen_folder = os.path.join(GEN_PATH, proto.gen_folder)
+	gen_folder = os.path.join(ARCHETYPE_GEN_PATH, proto.gen_folder)
 	hdr = generate_header(proto)
 	cpp = generate_cpp(proto)
 
@@ -329,8 +330,7 @@ def read_manifest_folders():
 
 
 def generate_manifest():
-	# asset_folders = read_manifest_folders()
-	asset_folders = ["assets/archetypes"]
+	asset_folders = read_manifest_folders()
 
 	def generate_folder(folder):
 		with os.scandir(os.path.join(os.getcwd(), folder)) as entries:

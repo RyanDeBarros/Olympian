@@ -7,23 +7,27 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# Variables
+
+# TODO v4 this won't be the case for ENGINE_DIR when building project separately.
+set(ENGINE_DIR "${CMAKE_SOURCE_DIR}")
+set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
+set(PROJECT_RES_DIR "${PROJECT_DIR}/res")
+set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen")
+
 # Run automatic tools
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/PreBuild.py"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/res"
+    COMMAND ${Python3_EXECUTABLE} "${ENGINE_DIR}/tools/PreBuild.py" 
+    WORKING_DIRECTORY "${PROJECT_DIR}"
 	RESULT_VARIABLE PREBUILD_RESULT
 )
 
 if (NOT PREBUILD_RESULT EQUAL 0)
 	message(FATAL_ERROR "PreBuild.py failed with code ${PREBUILD_RESULT}")
 endif()
-
-# Variables
-
-set(PROJECT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(PROJECT_GEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.gen")
 
 # Include directories
 include_directories(
@@ -43,8 +47,8 @@ add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
 
 # Project context macros
 target_compile_definitions(Olympian PUBLIC
-	OLYMPIAN_CONTEXT_PROJECT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/Tester.oly"
-	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res/"
+	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
+	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"
 )
 
 # Link engine
