@@ -20,7 +20,7 @@ set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen")
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${ENGINE_DIR}/tools/PreBuild.py" 
+    COMMAND ${Python3_EXECUTABLE} "${ENGINE_DIR}/tools/prebuild/PreBuild.py" 
     WORKING_DIRECTORY "${PROJECT_DIR}"
 	RESULT_VARIABLE PREBUILD_RESULT
 )

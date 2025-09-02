@@ -6,7 +6,7 @@ from pathlib import Path
 
 import toml
 
-from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
+from assets import *
 
 MANIFEST_PATH = Path('.gen/manifest.txt').resolve()
 CACHE_PATH = Path('.gen/cache.json').resolve()
@@ -114,8 +114,8 @@ class Archetype:
 		return decl
 
 	def initialization(self) -> str:
-		c =\
-f"""        {{
+		c = \
+			f"""        {{
 			reg::params::Transformer2D params;
 {Common.write_named_transformer_2d(self.archetype, 'params', 3)}
 			transformer = reg::load_transformer_2d(params);
