@@ -202,7 +202,7 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
-	// LATER anti-aliasing settings
+	// TODO v5 anti-aliasing settings
 	
 	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
@@ -247,7 +247,7 @@ int main()
 	//rect_cast_cv.assign(ray_layer);
 	circle_cast_cv.assign(ray_layer);
 
-	// LATER begin play on initial actors here
+	// TODO v5 begin play on initial actors here
 
 	glEnable(GL_BLEND);
 
@@ -312,6 +312,6 @@ int main()
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
 
 		// draw
-		render_frame(); // LATER put in context::frame()?
+		render_frame(); // TODO v4 put in context::frame()?
 	}
 }

@@ -22,13 +22,15 @@ namespace oly::graphics
 				glGetShaderInfoLog(subshader, length, &length, message.data());
 				glDeleteShader(subshader);
 				subshader = 0;
-				throw oly::Error(oly::ErrorCode::SUBSHADER_COMPILATION, "Subshader compilation failed - " + message);
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Subshader compilation failed - " << message << LOG.nl;
+				throw Error(ErrorCode::SUBSHADER_COMPILATION);
 			}
 			else
 			{
 				glDeleteShader(subshader);
 				subshader = 0;
-				throw oly::Error(oly::ErrorCode::SUBSHADER_COMPILATION, "Subshader compilation failed - no info log provided");
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Subshader compilation failed - no info log provided" << LOG.nl;
+				throw Error(ErrorCode::SUBSHADER_COMPILATION);
 			}
 		}
 	}
@@ -58,12 +60,14 @@ namespace oly::graphics
 				message.resize(length);
 				glGetProgramInfoLog(shader, length, &length, message.data());
 				glDeleteProgram(shader);
-				throw oly::Error(oly::ErrorCode::SHADER_LINKAGE, "Shader linkage failed - " + message);
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Shader linkage failed - " << message << LOG.nl;
+				throw Error(ErrorCode::SHADER_LINKAGE);
 			}
 			else
 			{
 				glDeleteProgram(shader);
-				throw oly::Error(oly::ErrorCode::SHADER_LINKAGE, "Shader linkage failed - no info log provided");
+				OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Shader linkage failed - no info log provided" << LOG.nl;
+				throw Error(ErrorCode::SHADER_LINKAGE);
 			}
 		}
 	}

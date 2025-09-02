@@ -73,7 +73,7 @@ namespace oly::graphics
 		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
 	};
 
-	// LATER support for other pixel types
+	// TODO v5 support for other pixel types
 
 	template<typename Pixel = unsigned char>
 	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, const Pixel* pixels, GLint level = 0)

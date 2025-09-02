@@ -91,7 +91,7 @@ namespace oly::debug
 
 	void CollisionView::draw(Batch& current_batch) const
 	{
-		// LATER specialized shader for collision view
+		// TODO v5 specialized shader for collision view
 		static const auto draw_object = [](auto&& obj, Batch& current_batch) { std::visit([&current_batch](auto&& obj) {
 			if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
 			{

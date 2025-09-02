@@ -5,8 +5,8 @@
 #include <iostream>
 #include <chrono>
 
-// LATER detect size of file when appending and warn when file is getting too large. additional behaviour to create a new file using (i) notation (i.e. olympian.log -> olympian (1).log -> olympian (2).log).
-// LATER default behaviour of removing excess initial logs when file is getting too large.
+// TODO v4 detect size of file when appending and warn when file is getting too large. additional behaviour to create a new file using (i) notation (i.e. olympian.log -> olympian (1).log -> olympian (2).log).
+// TODO v4 default behaviour of removing excess initial logs when file is getting too large.
 
 namespace oly
 {

@@ -97,5 +97,20 @@ namespace oly::utf
 	};
 }
 
-template<> struct std::hash<oly::utf::String> { size_t operator()(const oly::utf::String& string) const { return string.hash(); } };
-template<> struct std::hash<oly::utf::Codepoint> { size_t operator()(const oly::utf::Codepoint& c) const { return std::hash<int>{}(c); } };
+template<>
+struct std::hash<oly::utf::String>
+{
+	size_t operator()(const oly::utf::String& string) const
+	{
+		return string.hash();
+	}
+};
+
+template<>
+struct std::hash<oly::utf::Codepoint>
+{
+	size_t operator()(const oly::utf::Codepoint& c) const
+	{
+		return std::hash<int>{}(c);
+	}
+};

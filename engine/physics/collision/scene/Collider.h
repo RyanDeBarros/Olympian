@@ -68,7 +68,7 @@ namespace oly::col2d
 
 	class Collider
 	{
-		// LATER movable/static Colliders for optimization in CollisionTree flushing.
+		// TODO v4 movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
 		friend class internal::CollisionNode;
 

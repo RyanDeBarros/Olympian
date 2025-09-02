@@ -73,20 +73,26 @@ namespace oly::context
 	}
 }
 
-// TODO v4 Log engine initialization/terminatation steps.
-
 namespace oly::context
 {
 	static void init(const char* project_file, const std::string& resource_root)
 	{
 		if (glfwInit() != GLFW_TRUE)
-			throw oly::Error(oly::ErrorCode::GLFW_INIT);
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "glfwInit() failed." << LOG.nl;
+			throw Error(ErrorCode::GLFW_INIT);
+		}
 		stbi_set_flip_vertically_on_load(true);
 
 		internal::this_frame = 0;
 		internal::resource_root = resource_root;
 		auto toml = reg::load_toml(project_file);
 		TOMLNode toml_context = toml["context"];
+		if (!toml_context)
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Project file missing \"context\" table." << LOG.nl;
+			throw Error(ErrorCode::CONTEXT_INIT);
+		}
 
 		init_logger(toml_context);
 

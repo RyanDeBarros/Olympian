@@ -74,7 +74,7 @@ namespace oly::physics
 		float friction_with(Friction other, FrictionType type) const;
 	};
 
-	// LATER density
+	// TODO v5 density
 	struct Material
 	{
 		Restitution restitution;

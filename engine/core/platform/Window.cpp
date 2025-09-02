@@ -48,10 +48,16 @@ namespace oly::platform
 		hint.window_hint();
 		w = glfwCreateWindow(width, height, title, monitor, share);
 		if (!w)
+		{
+			OLY_LOG_FATAL(true, "PLATFORM") << LOG.source_info.full_source() << "glfwCreateWindow() failed." << LOG.nl;
 			throw Error(ErrorCode::WINDOW_CREATION);
+		}
 		make_context_current();
 		if (glewInit() != GLEW_OK)
-			throw oly::Error(oly::ErrorCode::GLEW_INIT);
+		{
+			OLY_LOG_FATAL(true, "PLATFORM") << LOG.source_info.full_source() << "glewInit() failed." << LOG.nl;
+			throw Error(ErrorCode::GLEW_INIT);
+		}
 		hint.context_hint();
 		input::init_handlers(w);
 		glfwSetWindowUserPointer(w, this);

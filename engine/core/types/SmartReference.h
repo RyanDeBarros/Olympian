@@ -75,7 +75,7 @@ namespace oly
 			SmartReferenceLink* next = nullptr;
 		};
 
-		// LATER multi-threading and thead safety
+		// TODO v5 multi-threading and thead safety
 		template<typename Object>
 		class SmartReferencePool : public IPool
 		{

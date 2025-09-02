@@ -19,7 +19,7 @@ namespace oly::rendering
 		return *this;
 	}
 
-	glm::vec4 oly::rendering::ModulationRect::mix(glm::vec2 uv) const
+	glm::vec4 ModulationRect::mix(glm::vec2 uv) const
 	{
 		return glm::mix(glm::mix(colors[0], colors[1], uv.x), glm::mix(colors[3], colors[2], uv.x), uv.y);
 	}

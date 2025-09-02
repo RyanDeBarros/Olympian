@@ -4,7 +4,7 @@
 
 namespace oly::reg
 {
-	rendering::Ellipse oly::reg::load_ellipse(const TOMLNode& node)
+	rendering::Ellipse load_ellipse(const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{

@@ -33,7 +33,7 @@ namespace oly::col2d
 		}
 	};
 
-	// LATER utility functions for common CompoundPerfParameters for known shapes.
+	// TODO v4 utility functions for common CompoundPerfParameters for known shapes.
 
 	extern CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
 		const Element& static_element, const CompoundPerfParameters perf = {});
