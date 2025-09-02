@@ -115,17 +115,20 @@ namespace oly::rendering
 		typeset_text(&Paragraph::write_space, &Paragraph::write_tab, &Paragraph::write_newline, &Paragraph::write_glyph);
 	}
 
-	void Paragraph::typeset_text(void(Paragraph::* space)(), void(Paragraph::* tab)(), bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx))
+	void Paragraph::typeset_text(void(Paragraph::* space)(utf::Codepoint), void(Paragraph::* tab)(utf::Codepoint),
+		bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx))
 	{
 		typeset = {};
 		auto iter = text.begin();
 		while (iter)
 		{
 			utf::Codepoint codepoint = iter.advance();
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : utf::Codepoint(0);
+
 			if (codepoint == ' ')
-				(this->*space)();
+				(this->*space)(next_codepoint);
 			else if (codepoint == '\t')
-				(this->*tab)();
+				(this->*tab)(next_codepoint);
 			else if (utf::is_n_or_r(codepoint))
 			{
 				if (iter && utf::is_rn(codepoint, iter.codepoint()))
@@ -136,7 +139,7 @@ namespace oly::rendering
 			else if (font->cache(codepoint))
 			{
 				const FontGlyph& font_glyph = font->get_glyph(codepoint);
-				float dx = advance_width(font_glyph, codepoint);
+				float dx = advance_width(font_glyph, codepoint, next_codepoint);
 				if (format.text_wrap > 0.0f && typeset.x + dx > format.text_wrap)
 				{
 					if ((this->*newline)())
@@ -147,9 +150,9 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::build_space()
+	void Paragraph::build_space(utf::Codepoint next_codepoint)
 	{
-		float dx = space_width();
+		float dx = space_width(next_codepoint);
 		typeset.x += dx;
 		pagedata.lines.back().width += dx;
 		pagedata.lines.back().spaces += dx;
@@ -157,9 +160,9 @@ namespace oly::rendering
 		pagedata.width = std::max(pagedata.width, typeset.x);
 	}
 
-	void Paragraph::build_tab()
+	void Paragraph::build_tab(utf::Codepoint next_codepoint)
 	{
-		float dx = tab_width();
+		float dx = tab_width(next_codepoint);
 		typeset.x += dx;
 		pagedata.lines.back().width += dx;
 		pagedata.lines.back().spaces += dx;
@@ -181,7 +184,6 @@ namespace oly::rendering
 		if (typeset.x == 0.0f)
 			pagedata.blank_lines += line_height();
 		typeset.x = 0.0f;
-		typeset.prev_codepoint = utf::Codepoint(0);
 		pagedata.lines.push_back({});
 		return true;
 	}
@@ -194,14 +196,14 @@ namespace oly::rendering
 		pagedata.width = std::max(pagedata.width, typeset.x);
 	}
 
-	void Paragraph::write_space()
+	void Paragraph::write_space(utf::Codepoint next_codepoint)
 	{
-		typeset.x += space_width() * space_width_mult();
+		typeset.x += space_width(next_codepoint) * space_width_mult();
 	}
 
-	void Paragraph::write_tab()
+	void Paragraph::write_tab(utf::Codepoint next_codepoint)
 	{
-		typeset.x += tab_width() * space_width_mult();
+		typeset.x += tab_width(next_codepoint) * space_width_mult();
 	}
 
 	bool Paragraph::write_newline()
@@ -216,7 +218,6 @@ namespace oly::rendering
 		++typeset.line;
 		typeset.y -= dy;
 		typeset.x = 0.0f;
-		typeset.prev_codepoint = utf::Codepoint(0);
 		return true;
 	}
 
@@ -313,28 +314,26 @@ namespace oly::rendering
 		return format.linebreak_spacing;
 	}
 
-	float Paragraph::space_width()
+	float Paragraph::space_width(utf::Codepoint next_codepoint)
 	{
 		float adv = font->get_space_width();
-		if (typeset.prev_codepoint)
-			adv += font->kerning_of(typeset.prev_codepoint, utf::Codepoint(' '));
-		typeset.prev_codepoint = utf::Codepoint(' ');
+		if (next_codepoint)
+			adv += font->kerning_of(next_codepoint, utf::Codepoint(' '));
 		return adv;
 	}
 
-	float Paragraph::tab_width()
+	float Paragraph::tab_width(utf::Codepoint next_codepoint)
 	{
-		float first = space_width();
-		float rest = space_width() * (format.tab_spaces - 1.0f);
+		float first = space_width(next_codepoint);
+		float rest = space_width(next_codepoint) * (format.tab_spaces - 1.0f);
 		return first + rest;
 	}
 		
-	float Paragraph::advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint)
+	float Paragraph::advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint)
 	{
 		float adv = font_glyph.advance_width * font->get_scale();
-		if (typeset.prev_codepoint) // TODO v3 FIX: kerning is being applied on the spacing of subsequent pair of glyphs
-			adv += font->kerning_of(typeset.prev_codepoint, codepoint, font->get_glyph_index(typeset.prev_codepoint), font_glyph.index);
-		typeset.prev_codepoint = codepoint;
+		if (next_codepoint)
+			adv += font->kerning_of(codepoint, next_codepoint, font_glyph.index, font->get_glyph_index(next_codepoint));
 		return adv;
 	}
 }

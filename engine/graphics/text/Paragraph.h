@@ -93,15 +93,16 @@ namespace oly::rendering
 		void build_layout();
 		void build_page();
 		void write_glyphs();
-		void typeset_text(void(Paragraph::* space)(), void(Paragraph::* tab)(), bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx));
+		void typeset_text(void(Paragraph::* space)(utf::Codepoint next_codepoint), void(Paragraph::* tab)(utf::Codepoint next_codepoint),
+			bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx));
 
-		void build_space();
-		void build_tab();
+		void build_space(utf::Codepoint next_codepoint);
+		void build_tab(utf::Codepoint next_codepoint);
 		bool build_newline();
 		void build_glyph(utf::Codepoint c, float dx);
 
-		void write_space();
-		void write_tab();
+		void write_space(utf::Codepoint next_codepoint);
+		void write_tab(utf::Codepoint next_codepoint);
 		bool write_newline();
 		void write_glyph(utf::Codepoint c, float dx);
 
@@ -129,15 +130,14 @@ namespace oly::rendering
 		{
 			float x = 0.0f, y = 0.0f;
 			size_t line = 0;
-			utf::Codepoint prev_codepoint;
 		} typeset = {};
 
 		float space_width_mult() const;
 		float content_height() const;
 		float linebreak_mult() const;
-		float space_width();
-		float tab_width();
-		float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint);
+		float space_width(utf::Codepoint next_codepoint);
+		float tab_width(utf::Codepoint next_codepoint);
+		float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint);
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
