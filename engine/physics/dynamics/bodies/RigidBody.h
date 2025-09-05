@@ -102,5 +102,5 @@ namespace oly::physics
 		};
 	}
 
-	// TODO v4 CharacterBody
+	// TODO v4 CharacterBody - don't include friction or restitution in material.
 }

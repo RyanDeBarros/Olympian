@@ -73,7 +73,7 @@ namespace oly
 		return near_zero(_direction.x, tolerance) || near_zero(_direction.y, tolerance);
 	}
 
-	glm::vec2 UnitVector2D::normal_project(glm::vec2 v) const
+	glm::vec2 UnitVector2D::perp_project(glm::vec2 v) const
 	{
 		return v - glm::dot(v, _direction) * _direction;
 	}

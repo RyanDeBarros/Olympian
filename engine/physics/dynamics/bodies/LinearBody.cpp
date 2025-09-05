@@ -86,7 +86,7 @@ namespace oly::physics
 		if (found_secondary_collision_mtv_idx)
 		{
 			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
-			glm::vec2 secondary_teleport = primary_collision.normal.normal_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
+			glm::vec2 secondary_teleport = primary_collision.normal.perp_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
 			teleport += secondary_teleport;
 		}
 
@@ -158,7 +158,7 @@ namespace oly::physics
 		{
 			float eff_mass = effective_mass(collision);
 			glm::vec2 j_r = restitution_impulse(collision, eff_mass);
-			glm::vec2 j_f = friction_impulse(collision, eff_mass, new_velocity);
+			glm::vec2 j_f = friction_impulse(collision, eff_mass, j_r, new_velocity);
 			glm::vec2 impulse = j_r + j_f;
 			collision_linear_impulse += impulse;
 		}
@@ -178,20 +178,19 @@ namespace oly::physics
 		return std::max(-eff_mass * restitution * collision.normal.dot(relative_contact_velocity(collision)), 0.0f) * (glm::vec2)collision.normal;
 	}
 
-	glm::vec2 LinearPhysicsComponent::friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 new_velocity) const
+	glm::vec2 LinearPhysicsComponent::friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 collision_impulse, glm::vec2 new_velocity) const
 	{
 		const float mu = friction_with(collision);
 		if (col2d::near_zero(mu))
 			return {};
 
 		glm::vec2 new_relative_velocity = new_velocity - other_contact_velocity(collision);
-		glm::vec2 new_tangent_velocity = collision.normal.normal_project(new_relative_velocity);
+		glm::vec2 new_tangent_velocity = collision.normal.perp_project(new_relative_velocity);
 		float new_tangent_velocity_sqrd = math::mag_sqrd(new_tangent_velocity);
 		if (col2d::near_zero(new_tangent_velocity_sqrd))
 			return {};
 
-
-		float normal_impulse = collision.normal.dot(collision.mtv * teleport_factor(*collision.dynamics) * properties.mass() * TIME.inverse_delta());
+		float normal_impulse = glm::length(collision.mtv) * teleport_factor(*collision.dynamics) * properties.mass() * TIME.inverse_delta();
 		float friction = std::min(mu * normal_impulse, eff_mass * glm::sqrt(new_tangent_velocity_sqrd));
 		if (above_zero(friction))
 			return -glm::normalize(new_tangent_velocity) * friction;

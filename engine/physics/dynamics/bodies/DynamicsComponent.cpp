@@ -56,8 +56,8 @@ namespace oly::physics
 
 	float DynamicsComponent::effective_mass(const CollisionResponse& collision) const
 	{
-		float denom = eff_mass_denom_factor(collision.contact, collision.normal)
-			+ collision.dynamics->eff_mass_denom_factor(collision.contact + pre_state.position - collision.dynamics->pre_state.position, collision.normal);
+		float denom = eff_mass_denom_factor(collision.contact, -collision.normal)
+			+ collision.dynamics->eff_mass_denom_factor(collision.contact + pre_state.position - collision.dynamics->pre_state.position, -collision.normal);
 		return denom != 0.0f ? 1.0f / denom : 0.0f;
 	}
 
@@ -78,8 +78,10 @@ namespace oly::physics
 
 	float DynamicsComponent::friction_with(const CollisionResponse& collision) const
 	{
-		FrictionType friction_type = physics::friction_type(collision.normal.get_quarter_turn(), relative_contact_velocity(collision),
-			pre_state.linear_velocity - collision.dynamics->pre_state.linear_velocity, pre_state.angular_velocity, collision.dynamics->pre_state.angular_velocity, (float)col2d::LINEAR_TOLERANCE);
+		UnitVector2D tangent = -collision.normal.get_quarter_turn();
+		glm::vec2 relative_linear_velocity = pre_state.linear_velocity - collision.dynamics->pre_state.linear_velocity;
+		FrictionType friction_type = physics::friction_type(tangent, relative_contact_velocity(collision),
+			relative_linear_velocity, pre_state.angular_velocity, collision.dynamics->pre_state.angular_velocity, (float)col2d::LINEAR_TOLERANCE);
 		return material->friction.friction_with(collision.dynamics->material->friction, friction_type);
 	}
 }

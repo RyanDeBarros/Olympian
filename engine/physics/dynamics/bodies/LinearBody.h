@@ -91,7 +91,7 @@ namespace oly::physics
 
 		void compute_collision_response(glm::vec2 new_velocity) const;
 		glm::vec2 restitution_impulse(const CollisionResponse& collision, float eff_mass) const;
-		glm::vec2 friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 new_linear_velocity) const;
+		glm::vec2 friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 collision_impulse, glm::vec2 new_linear_velocity) const;
 
 		void snap_motion() const;
 	};

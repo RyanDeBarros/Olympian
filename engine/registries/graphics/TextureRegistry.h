@@ -25,7 +25,7 @@ namespace oly::reg
 		std::unordered_map<TextureKey, graphics::AnimRef, TextureHash> anims;
 		std::unordered_map<TextureKey, graphics::VectorImageRef, TextureHash> vector_images;
 		std::unordered_map<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
-		std::unordered_map<std::string, graphics::NSVGAbstract, TextureHash> nsvg_abstracts;
+		std::unordered_map<std::string, graphics::NSVGAbstract> nsvg_abstracts;
 
 	public:
 		typedef std::variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;

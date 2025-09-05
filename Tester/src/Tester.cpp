@@ -151,14 +151,13 @@ int main()
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
-	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT; // TODO v4 fix kinematic-kinematic collision
+	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE; // TODO v4 collider is not colliding with M_OBSTACLE
+	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
 	obstacle0->collider().set_local().position = -capsule.center;
 	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
-	obstacle0->properties().center_of_mass = capsule.center;
 	obstacle0->properties().net_torque += 300.0f;
 	obstacle0->properties().set_moi_multiplier(4000.0f);
 
@@ -167,7 +166,6 @@ int main()
 	obstacle1->add_collider(capsule);
 	obstacle1->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle1->collider().mask() |= CollisionMasks::M_PLAYER;
-	//obstacle1->properties().center_of_mass = capsule.center;
 	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
@@ -175,24 +173,20 @@ int main()
 	obstacle2->add_collider(capsule);
 	obstacle2->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle2->collider().mask() |= CollisionMasks::M_PLAYER;
-	//obstacle2->properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle3 = oly::REF_INIT;
 	obstacle3->add_collider(capsule);
 	obstacle3->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle3->collider().mask() |= CollisionMasks::M_PLAYER;
-	//obstacle3->properties().center_of_mass = capsule.center;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle4 = oly::REF_INIT;
 	obstacle4->add_collider(capsule);
 	obstacle4->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	obstacle4->collider().mask() |= CollisionMasks::M_PLAYER;
-	//obstacle4->properties().center_of_mass = capsule.center;
 
 	oly::physics::StaticBodyRef ground = oly::REF_INIT;
-	//ground->add_collider(oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f });
 	ground->add_collider(oly::col2d::TCompound({
 		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
 		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
@@ -282,7 +276,7 @@ int main()
 	{
 		// logic update
 
-		flag_state_timer.poll();
+		flag_state_timer.poll(); // TODO v4 internal timer registry that automatically polls timers in frame()
 
 		player->update_view(0, player_cv);
 		obstacle0->update_view(0, cv_obstacle0);

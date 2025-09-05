@@ -68,7 +68,7 @@ namespace oly
 		float dot(glm::vec2 v) const { return glm::dot(v, _direction); }
 		bool near_cardinal(double tolerance = Tolerance<float>) const;
 
-		glm::vec2 normal_project(glm::vec2 v) const;
+		glm::vec2 perp_project(glm::vec2 v) const;
 
 		enum ParallelState
 		{
