@@ -25,7 +25,7 @@ namespace oly::reg
 		std::unordered_map<TextureKey, graphics::AnimRef, TextureHash> anims;
 		std::unordered_map<TextureKey, graphics::VectorImageRef, TextureHash> vector_images;
 		std::unordered_map<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
-		std::unordered_map<TextureKey, graphics::NSVGAbstract, TextureHash> nsvg_abstracts;
+		std::unordered_map<std::string, graphics::NSVGAbstract, TextureHash> nsvg_abstracts;
 
 	public:
 		typedef std::variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
@@ -75,10 +75,10 @@ namespace oly::reg
 		std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const std::string& file, unsigned int texture_index = 0) const;
 		graphics::ImageRef get_image_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
 		graphics::AnimRef get_anim_pixel_buffer(const std::string& file, unsigned int texture_index = 0);
-		const graphics::NSVGAbstract& get_nsvg_abstract(const std::string& file, unsigned int texture_index = 0) const;
+		const graphics::NSVGAbstract& get_nsvg_abstract(const std::string& file) const;
 
 		void free_texture(const std::string& file, unsigned int texture_index = 0);
 		void free_svg_texture(const std::string& file, unsigned int texture_index = 0);
-		void free_nsvg_abstract(const std::string& file, unsigned int texture_index = 0);
+		void free_nsvg_abstract(const std::string& file);
 	};
 }

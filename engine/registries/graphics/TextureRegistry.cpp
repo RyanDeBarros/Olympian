@@ -187,7 +187,7 @@ namespace oly::reg
 
 		if (texture_node["anim"].value<bool>().value_or(false))
 		{
-			auto ait = nsvg_abstracts.find(key);
+			auto ait = nsvg_abstracts.find(file);
 			if (ait != nsvg_abstracts.end())
 			{
 				graphics::Anim anim(ait->second, scale, parse_spritesheet_options(texture_node));
@@ -210,7 +210,7 @@ namespace oly::reg
 		}
 		else
 		{
-			auto ait = nsvg_abstracts.find(key);
+			auto ait = nsvg_abstracts.find(file);
 			if (ait != nsvg_abstracts.end())
 			{
 				graphics::VectorImageRef image;
@@ -415,9 +415,9 @@ namespace oly::reg
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	const graphics::NSVGAbstract& TextureRegistry::get_nsvg_abstract(const std::string& file, unsigned int texture_index) const
+	const graphics::NSVGAbstract& TextureRegistry::get_nsvg_abstract(const std::string& file) const
 	{
-		auto it = nsvg_abstracts.find({ .file = file, .index = texture_index });
+		auto it = nsvg_abstracts.find(file);
 		if (it != nsvg_abstracts.end())
 			return it->second;
 		throw Error(ErrorCode::UNREGISTERED_NSVG_ABSTRACT);
@@ -480,10 +480,9 @@ namespace oly::reg
 		}
 	}
 
-	void TextureRegistry::free_nsvg_abstract(const std::string& file, unsigned int texture_index)
+	void TextureRegistry::free_nsvg_abstract(const std::string& file)
 	{
-		TextureKey key{ file, texture_index };
-		auto it = nsvg_abstracts.find(key);
+		auto it = nsvg_abstracts.find(file);
 		if (it != nsvg_abstracts.end())
 			nsvg_abstracts.erase(it);
 	}
