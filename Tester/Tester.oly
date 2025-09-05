@@ -14,7 +14,7 @@ title = "Olympian Engine"
 
 [context.logger]
 logfile = "D:\\Projects\\Visual Studio\\Olympian\\Tester\\Tester.log"
-append = true
+append = false
 console = true
 
 [context.sprite_batch]

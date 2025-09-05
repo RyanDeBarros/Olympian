@@ -260,7 +260,7 @@ class ContentBrowserFolderView(QListView):
 		follow_through = True
 		if PREFERENCES.prompt_user_when_deleting_paths:
 			reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item?",
-										 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+										 defaultButton=QMessageBox.StandardButton.No)
 			follow_through = reply == QMessageBox.StandardButton.Yes
 		if follow_through:
 			assert index.row() < len(self.path_items)
@@ -273,7 +273,7 @@ class ContentBrowserFolderView(QListView):
 			follow_through = True
 			if PREFERENCES.prompt_user_when_deleting_paths:
 				reply = QMessageBox.question(self, f"Confirm Action", f"Are you sure you want to delete the selected item(s)?",
-											 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+											 defaultButton=QMessageBox.StandardButton.No)
 				follow_through = reply == QMessageBox.StandardButton.Yes
 			if follow_through:
 				indexes = [index.row() for index in self.selectedIndexes()]
@@ -323,7 +323,8 @@ class ContentBrowserFolderView(QListView):
 
 	@staticmethod
 	def _prompt_duplicate_path_action(duplicate_path: Path, action_name: str) -> tuple[_DuplicatePathAction, bool] | None:
-		alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists", f"Path {duplicate_path} already exists.\nHow do you want to handle the {action_name}?")
+		alert = QMessageBox(QMessageBox.Icon.Warning, f"Path already exists",
+							f"Path {duplicate_path} already exists.\nHow do you want to handle the {action_name}?")
 		rename = alert.addButton(f"Rename with (*) counter", QMessageBox.ButtonRole.ActionRole)
 		replace = alert.addButton(f"Replace existing", QMessageBox.ButtonRole.ActionRole)
 		cancel_individual = alert.addButton(f"Cancel individual {action_name}", QMessageBox.ButtonRole.RejectRole)
@@ -521,13 +522,13 @@ class ContentBrowser(QWidget):
 
 	def clear_undo_stack(self):
 		reply = QMessageBox.question(self, "Confirm history clear", "Are you sure you want to delete the content browser's undo history? This action cannot be undone.",
-									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+									 defaultButton=QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
 			self.undo_stack.clear()
 
 	def clear_history_and_trash(self):
 		reply = QMessageBox.question(self, "Confirm history + trash clear", "Are you sure you want to delete the content browser's undo history and the recycling bin? This action cannot be undone.",
-									 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+									 defaultButton=QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
 			self.undo_stack.clear()
 			self.file_machine.clear_trash()

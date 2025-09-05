@@ -28,6 +28,9 @@ namespace oly
 	public:
 		static Logger& instance() { static Logger logger; return logger; }
 
+		void set_logfile(const char* filepath, bool append);
+		void flush();
+
 		struct
 		{
 			bool console = true;
@@ -35,6 +38,7 @@ namespace oly
 		} target;
 
 	private:
+		void reopen_file(const char* filepath, bool append);
 		void pass_timestamp();
 
 	public:
@@ -94,9 +98,6 @@ namespace oly
 
 		struct _nl {} nl;
 		struct _endl {} endl;
-
-		void set_logfile(const char* filepath, bool append);
-		void flush();
 
 		struct SourceInfo
 		{

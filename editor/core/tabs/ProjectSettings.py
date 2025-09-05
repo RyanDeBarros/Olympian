@@ -1,6 +1,9 @@
+from pathlib import Path
 from typing import override
 
 from PySide6.QtCore import QSize
+import send2trash
+from PySide6.QtWidgets import QMessageBox
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, nice_icon
@@ -42,6 +45,8 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('append', self.ui.appendLogfile),
 			SettingsParameter('console', self.ui.logToConsole)
 		])
+
+		self.ui.loggerClearLog.clicked.connect(self.clear_logger_log)
 
 		# TODO v4 nested SettingsForms
 		self.logger_enable_settings = {}
@@ -114,3 +119,11 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def refresh_impl(self):
 		pass
+
+	def clear_logger_log(self):
+		logfile = Path(self.ui.logfile.text())
+		if logfile.exists():
+			reply = QMessageBox.question(self, "Confirm Action", "Are you sure you want to clear the project log?",
+										 defaultButton=QMessageBox.StandardButton.No)
+			if reply == QMessageBox.StandardButton.Yes:
+				send2trash.send2trash(logfile)

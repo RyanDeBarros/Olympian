@@ -5,29 +5,11 @@
 #include <iostream>
 #include <chrono>
 
-// TODO v4 detect size of file when appending and warn when file is getting too large. additional behaviour to create a new file using (i) notation (i.e. olympian.log -> olympian (1).log -> olympian (2).log).
-// TODO v4 default behaviour of removing excess initial logs when file is getting too large.
-
 namespace oly
 {
-	void Logger::pass_timestamp()
-	{
-		auto now = std::chrono::system_clock::now();
-		auto time = std::chrono::system_clock::to_time_t(now);
-#pragma warning(suppress : 4996)
-		auto current_time = std::localtime(&time);
-		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-		stream << std::put_time(current_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
-	}
-
 	void Logger::set_logfile(const char* filepath, bool append)
 	{
-		file.close();
-		if (append)
-			file.open(filepath, std::ios_base::app);
-		else
-			file.open(filepath);
+		reopen_file(filepath, append);
 
 		const char* log_start = "--- LOG started at ";
 		const char* log_end = " ---";
@@ -52,6 +34,26 @@ namespace oly
 		}
 		stream.str(std::string());
 		stream.clear();
+	}
+
+	void Logger::reopen_file(const char* filepath, bool append)
+	{
+		file.close();
+		if (append)
+			file.open(filepath, std::ios_base::app);
+		else
+			file.open(filepath);
+	}
+
+	void Logger::pass_timestamp()
+	{
+		auto now = std::chrono::system_clock::now();
+		auto time = std::chrono::system_clock::to_time_t(now);
+#pragma warning(suppress : 4996)
+		auto current_time = std::localtime(&time);
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+		stream << std::put_time(current_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
 	}
 
 	void Logger::start(const char* level, bool timestamp, const char* prefix)
