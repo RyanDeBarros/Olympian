@@ -198,7 +198,7 @@ int main()
 
 	// TODO v5 anti-aliasing settings
 	
-	oly::CallbackStateTimer flag_state_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
+	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
 		else if (state == 1)
@@ -275,8 +275,6 @@ int main()
 	while (oly::context::frame())
 	{
 		// logic update
-
-		flag_state_timer.poll(); // TODO v4 internal timer registry that automatically polls timers in frame()
 
 		player->update_view(0, player_cv);
 		obstacle0->update_view(0, cv_obstacle0);

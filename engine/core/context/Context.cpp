@@ -15,6 +15,7 @@
 #include "graphics/resources/Resources.h"
 
 #include "core/util/Time.h"
+#include "core/util/Timers.h"
 
 #include "registries/platform/Input.h"
 
@@ -197,12 +198,18 @@ namespace oly::context
 		if (!internal::frame_platform())
 			return false;
 
+		// Time / frame counter
 		TIME.sync();
 		++internal::this_frame;
-		internal::frame_collision();
 
+		// Clean references
 		oly::internal::PoolBatch::instance().clean();
 
+		// Poll timers
+		oly::internal::TimerRegistry::instance().poll_all();
+
+		// Update physics
+		internal::frame_collision();
 		physics::internal::RigidBodyManager::instance().on_tick();
 
 		return true;

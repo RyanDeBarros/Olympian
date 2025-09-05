@@ -115,7 +115,7 @@ class ManifestTOML:
 		with open(posixpath.join(src_folder, "ProjectContext.cpp"), 'w') as f:
 			f.write(self.project_context_cpp)
 
-		# TODO v4 create project CMakeLists.txt, LICENSE
+		# TODO v5 create project CMakeLists.txt, LICENSE
 
 		if len(self.project_id_stack()) == 0:
 			if 'project next id' not in self.toml:
