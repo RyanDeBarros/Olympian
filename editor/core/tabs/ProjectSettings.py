@@ -58,11 +58,17 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('fatal', self.ui.logStreamFatalEnable),
 		])
 
+		self.framerate_settings = {}
+		self.framerate_form = SettingsForm([
+			SettingsParameter('frame_length_clip', self.ui.framerateClip)
+		])
+
 		self.revert_changes_impl()
 		self.window_form.connect_modified(lambda: self.set_asterisk(True))
 		self.viewport_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_enable_form.connect_modified(lambda: self.set_asterisk(True))  # TODO v4 with nested SettingsForm, logger_enable_form should already be connected due to logger_form being connected.
+		self.framerate_form.connect_modified(lambda: self.set_asterisk(True))
 
 	@override
 	def uid(self):
@@ -82,6 +88,7 @@ class ProjectSettingsTab(EditorTab):
 		self.viewport_settings.update(self.viewport_form.get_dict())
 		self.logger_settings.update(self.logger_form.get_dict())
 		self.logger_enable_settings.update(self.logger_enable_form.get_dict())
+		self.framerate_settings.update(self.framerate_form.get_dict())
 		TOMLAdapter.dump(self.win.project_context.project_file, self.settings)
 
 	@override
@@ -111,6 +118,11 @@ class ProjectSettingsTab(EditorTab):
 			self.logger_settings['enable'] = {}
 		self.logger_enable_settings = self.logger_settings['enable']
 		self.logger_enable_form.load_dict(self.logger_enable_settings)
+
+		if 'framerate' not in self.context:
+			self.context['framerate'] = {}
+		self.framerate_settings = self.context['framerate']
+		self.framerate_form.load_dict(self.framerate_settings)
 
 	@override
 	def rename_impl(self, item: AbstractPathItem):

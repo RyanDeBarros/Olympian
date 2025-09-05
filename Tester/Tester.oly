@@ -31,6 +31,9 @@ ellipses = 100
 "initial glyphs" = 100
 "new textures" = 10
 
+[context.framerate]
+frame_length_clip = 0.2
+
 [context.window.viewport]
 boxed = true
 stretch = true

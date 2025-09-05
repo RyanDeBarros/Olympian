@@ -32,8 +32,7 @@ namespace oly::context
 
 	static void init_logger(const TOMLNode& node)
 	{
-		auto toml_logger = node["logger"];
-		if (toml_logger)
+		if (auto toml_logger = node["logger"])
 		{
 			LOG.target.console = toml_logger["console"].value<bool>().value_or(true);
 			auto logfile = toml_logger["logfile"].value<std::string>();
@@ -62,6 +61,16 @@ namespace oly::context
 		}
 	}
 
+	static void init_time(const TOMLNode& node)
+	{
+		if (auto framerate = node["framerate"])
+		{
+			if (auto frame_length_clip = framerate["frame_length_clip"].value<double>())
+				TIME.frame_length_clip = *frame_length_clip;
+		}
+		TIME.init();
+	}
+
 	static void autoload_signals(const TOMLNode& node)
 	{
 		auto register_files = node["signals"].as_array();
@@ -72,10 +81,7 @@ namespace oly::context
 					reg::load_signals((internal::resource_root + file.value()).c_str());
 		}
 	}
-}
 
-namespace oly::context
-{
 	static void init(const char* project_file, const std::string& resource_root)
 	{
 		if (glfwInit() != GLFW_TRUE)
@@ -98,7 +104,7 @@ namespace oly::context
 		init_logger(toml_context);
 
 		internal::init_platform(toml_context);
-		TIME.init();
+		init_time(toml_context);
 		graphics::internal::load_resources();
 
 		internal::init_sprites(toml_context);

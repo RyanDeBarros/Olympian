@@ -4,6 +4,8 @@ from editor.core import StartMenuWindow, MainWindow
 
 windows = {}
 
+# TODO v4 use window icon for application icon
+
 
 def open_start_menu():
 	windows['start'] = StartMenuWindow(open_project)
