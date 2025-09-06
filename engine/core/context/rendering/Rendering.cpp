@@ -1,11 +1,16 @@
 #include "Rendering.h"
 
+#include "core/context/rendering/Sprites.h"
+#include "core/context/rendering/Polygons.h"
+#include "core/context/rendering/Ellipses.h"
+#include "core/context/rendering/Text.h"
+
 namespace oly::context
 {
 	namespace internal
 	{
 		const IRenderPipeline* render_pipeline = nullptr;
-		InternalBatch last_internal_batch_rendered = InternalBatch::NONE;
+		bool batch_tracking[(int)InternalBatch::_COUNT] = { false };
 	}
 
 	void set_render_pipeline(const IRenderPipeline* pipeline)
@@ -17,21 +22,41 @@ namespace oly::context
 	{
 		if (internal::render_pipeline)
 			internal::render_pipeline->render_frame();
+		flush_internal_rendering();
 	}
 
-	InternalBatch last_internal_batch_rendered()
+	bool batch_is_rendering(InternalBatch batch)
 	{
-		return internal::last_internal_batch_rendered;
+		return internal::batch_tracking[(int)batch];
 	}
 
-	void invalidate_internal_batch_tracking()
+	void flush_internal_rendering()
 	{
-		internal::set_last_internal_batch_rendered(InternalBatch::NONE);
+		if (internal::batch_tracking[(int)InternalBatch::SPRITE])
+			render_sprites();
+		if (internal::batch_tracking[(int)InternalBatch::POLYGON])
+			render_polygons();
+		if (internal::batch_tracking[(int)InternalBatch::ELLIPSE])
+			render_ellipses();
+		if (internal::batch_tracking[(int)InternalBatch::TEXT])
+			render_text();
 	}
 
-	void internal::set_last_internal_batch_rendered(InternalBatch batch)
+	void internal::set_batch_rendering_tracker(InternalBatch batch, bool ongoing)
 	{
-		internal::last_internal_batch_rendered = batch;
+		internal::batch_tracking[(int)batch] = ongoing;
+	}
+
+	void internal::flush_batches_except(InternalBatch batch)
+	{
+		if (batch != InternalBatch::SPRITE && internal::batch_tracking[(int)InternalBatch::SPRITE])
+			render_sprites();
+		if (batch != InternalBatch::POLYGON && internal::batch_tracking[(int)InternalBatch::POLYGON])
+			render_polygons();
+		if (batch != InternalBatch::ELLIPSE && internal::batch_tracking[(int)InternalBatch::ELLIPSE])
+			render_ellipses();
+		if (batch != InternalBatch::TEXT && internal::batch_tracking[(int)InternalBatch::TEXT])
+			render_text();
 	}
 
 	bool blend_enabled()

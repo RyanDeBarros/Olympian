@@ -7,6 +7,7 @@
 #include "core/containers/IDGenerator.h"
 #include "core/types/SmartReference.h"
 
+#include "graphics/BatchBarrier.h"
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
@@ -92,7 +93,7 @@ namespace oly::rendering
 			const glm::mat3& get_transform() const;
 			glm::mat3& set_transform();
 
-			void draw() const;
+			void draw(BatchBarrier barrier = batch::BARRIER) const;
 		};
 		friend class EllipseReference;
 	};
@@ -113,7 +114,7 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_color(glm::vec4 color);
 	};

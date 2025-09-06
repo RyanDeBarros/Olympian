@@ -25,21 +25,22 @@ namespace oly::context
 		extern void render_frame();
 	}
 
-	enum class InternalBatch
+	enum class InternalBatch : int
 	{
-		NONE,
 		SPRITE,
 		POLYGON,
 		ELLIPSE,
-		TEXT
+		TEXT,
+		_COUNT
 	};
-	extern InternalBatch last_internal_batch_rendered();
-	
-	extern void invalidate_internal_batch_tracking();
+
+	extern bool batch_is_rendering(InternalBatch batch);
+	extern void flush_internal_rendering();
 
 	namespace internal
 	{
-		extern void set_last_internal_batch_rendered(InternalBatch);
+		extern void set_batch_rendering_tracker(InternalBatch batch, bool ongoing);
+		extern void flush_batches_except(InternalBatch batch);
 	}
 
 	extern bool blend_enabled();

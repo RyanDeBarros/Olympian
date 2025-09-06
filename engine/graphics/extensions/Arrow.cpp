@@ -25,7 +25,7 @@ namespace oly::rendering
 		head.init();
 	}
 
-	void ArrowExtension::draw() const
+	void ArrowExtension::draw(BatchBarrier barrier) const
 	{
 		if (dirty)
 		{
@@ -90,9 +90,9 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw_body)
-			body.draw();
+			body.draw(barrier);
 		if (can_draw_head)
-			head.draw();
+			head.draw(barrier);
 	}
 
 	StaticArrowExtension::StaticArrowExtension()
@@ -113,7 +113,7 @@ namespace oly::rendering
 		head.init();
 	}
 
-	void StaticArrowExtension::draw() const
+	void StaticArrowExtension::draw(BatchBarrier barrier) const
 	{
 		if (dirty)
 		{
@@ -178,8 +178,8 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw_body)
-			body.draw();
+			body.draw(barrier);
 		if (can_draw_head)
-			head.draw();
+			head.draw(barrier);
 	}
 }

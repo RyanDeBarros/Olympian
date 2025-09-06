@@ -36,6 +36,6 @@ namespace oly::context
 	void render_ellipses()
 	{
 		internal::ellipse_batch->render();
-		internal::set_last_internal_batch_rendered(InternalBatch::ELLIPSE);
+		internal::set_batch_rendering_tracker(InternalBatch::ELLIPSE, false);
 	}
 }

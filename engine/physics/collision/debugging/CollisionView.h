@@ -53,13 +53,7 @@ namespace oly::debug
 		CollisionView& operator=(CollisionView&&) noexcept;
 
 	private:
-		enum class Batch
-		{
-			NONE,
-			POLYGON,
-			ELLIPSE
-		};
-		void draw(Batch& current_batch) const;
+		void draw() const;
 
 	public:
 		void clear_view();
@@ -113,7 +107,7 @@ namespace oly::debug
 		void set_sprite_scale(glm::vec2 scale);
 
 	public:
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void assign(CollisionView& view);
 		void unassign(CollisionView& view);

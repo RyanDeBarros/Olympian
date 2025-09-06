@@ -32,7 +32,7 @@ namespace oly::rendering
 	public:
 		SpriteNonant();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

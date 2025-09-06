@@ -16,14 +16,10 @@ namespace oly::context
 	{
 		if (auto toml_text_batch = node["text_batch"])
 		{
-			int initial_glyphs = 0;
-			reg::parse_int(toml_text_batch, "initial glyphs", initial_glyphs);
-			int new_textures = 0;
-			reg::parse_int(toml_text_batch, "new textures", new_textures);
-			int new_text_colors = 0;
-			reg::parse_int(toml_text_batch, "new text_colors", new_text_colors);
-			int new_modulations = 0;
-			reg::parse_int(toml_text_batch, "new modulations", new_modulations);
+			int initial_glyphs = (int)toml_text_batch["initial_glyphs"].value_or<int64_t>(0);
+			int new_textures = (int)toml_text_batch["new_textures"].value_or<int64_t>(0);
+			int new_text_colors = (int)toml_text_batch["new_text_colors"].value_or<int64_t>(0);
+			int new_modulations = (int)toml_text_batch["new_modulations"].value_or<int64_t>(0);
 
 			rendering::TextBatch::Capacity capacity{ (GLuint)initial_glyphs, (GLuint)new_textures, (GLuint)new_text_colors, (GLuint)new_modulations };
 			internal::text_batch = std::make_unique<rendering::TextBatch>(capacity);
@@ -48,6 +44,6 @@ namespace oly::context
 	void render_text()
 	{
 		internal::text_batch->render();
-		internal::set_last_internal_batch_rendered(InternalBatch::TEXT);
+		internal::set_batch_rendering_tracker(InternalBatch::TEXT, false);
 	}
 }

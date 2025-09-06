@@ -12,7 +12,7 @@ namespace oly::rendering
 		poly.init();
 	}
 
-	void LineExtension::draw() const
+	void LineExtension::draw(BatchBarrier barrier) const
 	{
 		if (dirty)
 		{
@@ -53,7 +53,7 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw)
-			poly.draw();
+			poly.draw(barrier);
 	}
 
 	void LineExtension::set_default_polygon() const

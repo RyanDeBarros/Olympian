@@ -7,6 +7,7 @@
 #include "core/math/Shapes.h"
 #include "core/containers/IDGenerator.h"
 
+#include "graphics/BatchBarrier.h"
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/UsageSlotTracker.h"
@@ -190,7 +191,7 @@ namespace oly::rendering
 		StaticSprite& operator=(StaticSprite&&) noexcept;
 		~StaticSprite();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
@@ -223,7 +224,7 @@ namespace oly::rendering
 		Sprite& operator=(Sprite&&) noexcept;
 		~Sprite();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;

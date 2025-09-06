@@ -80,28 +80,29 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.draw(true);
+		bkg.draw();
+		oly::context::flush_internal_rendering(); // flush internal rendering before initiating stencil
+
 		oly::stencil::begin();
 		oly::stencil::enable_drawing();
 		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
 		oly::stencil::draw::replace();
-		polygon_crop.draw(true); // TODO v4 automatic internal batch tracking
+		polygon_crop.draw();
 		oly::stencil::disable_drawing();
 		oly::stencil::crop::match();
-		sprite_match.draw(true);
+		sprite_match.draw();
 		oly::stencil::end();
-		ellipse_pair.draw(true);
+
+		ellipse_pair.draw();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
-		oly::context::render_sprites();
-		jumble.draw(true);
+		jumble.draw();
 
 		obstacle_layer.draw();
 		player_layer.draw();
 		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
-		oly::debug::render_layers();
 	}
 
 	void logic_update()
@@ -292,6 +293,13 @@ int main()
 		}, false);
 
 	// TODO v5 begin play on initial actors here
+	player->update_view(0, player_cv);
+	obstacle0->update_view(0, cv_obstacle0);
+	obstacle1->update_view(0, cv_obstacle1);
+	obstacle2->update_view(0, cv_obstacle2);
+	obstacle3->update_view(0, cv_obstacle3);
+	obstacle4->update_view(0, cv_obstacle4);
+	pipeline.logic_update();
 
 	while (oly::context::frame())
 	{

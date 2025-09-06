@@ -87,7 +87,7 @@ namespace oly::rendering
 		float height() const { return pagedata.height; }
 		glm::vec2 size() const { return { pagedata.width, pagedata.height }; }
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 	private:
 		void build_layout();

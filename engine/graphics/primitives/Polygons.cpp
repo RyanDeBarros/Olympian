@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Polygons.h"
 #include "core/math/Triangulation.h"
 #include "graphics/resources/Shaders.h"
@@ -239,8 +240,10 @@ namespace oly::rendering
 		}
 	}
 
-	void StaticPolygon::draw() const
+	void StaticPolygon::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::POLYGON);
 		GLuint initial_vertex = context::polygon_batch().get_vertex_range(id.get()).initial;
 		for (size_t i = 0; i < triangulation.size(); ++i)
 		{
@@ -248,6 +251,7 @@ namespace oly::rendering
 			context::polygon_batch().ebo.draw_primitive()[0] = triangulation[i][1] + initial_vertex;
 			context::polygon_batch().ebo.draw_primitive()[0] = triangulation[i][2] + initial_vertex;
 		}
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::POLYGON, true);
 	}
 
 	Polygonal::Polygonal()
@@ -298,11 +302,14 @@ namespace oly::rendering
 		}
 	}
 		
-	void Polygonal::draw() const
+	void Polygonal::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::POLYGON);
 		if (transformer.flush())
 			context::polygon_batch().set_polygon_transform(id.get(), transformer.global());
 		draw_triangulation(context::polygon_batch().get_vertex_range(id.get()).initial);
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::POLYGON, true);
 	}
 
 	void Polygonal::set_polygon(const cmath::Polygon2D& polygon) const

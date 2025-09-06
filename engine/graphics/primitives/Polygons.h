@@ -7,6 +7,7 @@
 #include "core/containers/IDGenerator.h"
 #include "core/types/SmartReference.h"
 
+#include "graphics/BatchBarrier.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
 
@@ -107,7 +108,7 @@ namespace oly::rendering
 		void init();
 		void send_polygon() const;
 		void send_colors_only() const;
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 	};
 
 	class Polygonal
@@ -130,7 +131,7 @@ namespace oly::rendering
 		void init();
 		void send_polygon();
 		virtual GLuint num_vertices() const = 0;
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 	protected:
 		void set_polygon(const cmath::Polygon2D& polygon) const;

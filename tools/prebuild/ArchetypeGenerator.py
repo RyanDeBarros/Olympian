@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-from enum import Enum
 from pathlib import Path
 
 import toml
@@ -12,14 +11,8 @@ MANIFEST_PATH = Path('.gen/manifest.txt').resolve()
 CACHE_PATH = Path('.gen/cache.json').resolve()
 ARCHETYPE_GEN_PATH = Path('.gen/archetypes').resolve()
 
-
 # TODO v4 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
 # TODO v4 combine SPRITE and TEXT shaders.
-class Batch(Enum):
-	SPRITE = 0,
-	POLYGON = 1,
-	ELLIPSE = 2,
-	TEXT = 3
 
 
 RESERVED_NAMES = [
@@ -54,26 +47,26 @@ class Archetype:
 		self.draw_list = self.archetype['draw'] if 'draw' in self.archetype else []
 		self.singleton: bool = 'singleton' in self.archetype and self.archetype['singleton']
 
-		self.batch_map = {}
+		self.variable_list = set()
 
-		def register_batch(renderables, batch: Batch):
+		def register_batch(renderables):
 			for renderable in renderables:
 				name = renderable['name']
 				assert name not in RESERVED_NAMES, f"'{name}' is a reserved name"
 				assert len(name) > 0 and (name[0].isalpha() or name[0] == "_") and not any(
 					c.isspace() for c in name), f"Invalid variable name '{name}'"
-				assert name not in self.batch_map, f"Repeated variable name '{name}'"
-				self.batch_map[name] = batch
+				assert name not in self.variable_list, f"Repeated variable name '{name}'"
+				self.variable_list.add(name)
 
-		register_batch(self.sprites, Batch.SPRITE)
-		register_batch(self.polygons, Batch.POLYGON)
-		register_batch(self.poly_composites, Batch.POLYGON)
-		register_batch(self.ngons, Batch.POLYGON)
-		register_batch(self.ellipses, Batch.ELLIPSE)
-		register_batch(self.paragraphs, Batch.TEXT)
-		register_batch(self.sprite_atlases, Batch.SPRITE)
-		register_batch(self.tilemaps, Batch.SPRITE)
-		register_batch(self.sprite_nonants, Batch.SPRITE)
+		register_batch(self.sprites)
+		register_batch(self.polygons)
+		register_batch(self.poly_composites)
+		register_batch(self.ngons)
+		register_batch(self.ellipses)
+		register_batch(self.paragraphs)
+		register_batch(self.sprite_atlases)
+		register_batch(self.tilemaps)
+		register_batch(self.sprite_nonants)
 
 	def registry_includes(self) -> str:
 		incl = "#include \"registries/Loader.h\"\n"
@@ -171,45 +164,10 @@ class Archetype:
 		att += self.write_transformer_attachment(self.sprite_nonants, "set_transformer()")
 		return att
 
-	@staticmethod
-	def write_render(batch) -> str | None:
-		match batch:
-			case Batch.SPRITE:
-				return "\t\tcontext::render_sprites();\n"
-			case Batch.POLYGON:
-				return "\t\tcontext::render_polygons();\n"
-			case Batch.ELLIPSE:
-				return "\t\tcontext::render_ellipses();\n"
-			case Batch.TEXT:
-				return "\t\tcontext::render_text();\n"
-			case _:
-				return None
-
-	def batch_flush(self) -> str | None:
-		match self.batch_map[self.draw_list[-1]]:
-			case Batch.SPRITE:
-				return "flush_sprites"
-			case Batch.POLYGON:
-				return "flush_polygons"
-			case Batch.ELLIPSE:
-				return "flush_ellipses"
-			case Batch.TEXT:
-				return "flush_text"
-			case _:
-				return None
-
 	def draw_calls(self) -> str:
 		draw = ""
-		batch = -1
 		for renderable in self.draw_list:
-			rb = self.batch_map[renderable]
-			if rb != batch and batch != -1:
-				draw += self.write_render(batch)
-			batch = rb
 			draw += f"\t\t{renderable}->draw();\n"
-		if batch != -1:
-			draw += f"\t\tif ({self.batch_flush()})\n"
-			draw += "\t" + self.write_render(batch)
 		return draw
 
 	def on_tick(self) -> str:
@@ -239,7 +197,7 @@ namespace oly::gen
 		const Transform2D& get_local() const {{ return transformer.get_local(); }}
 		Transform2D& set_local() {{ return transformer.set_local(); }}
 {f"""
-		void draw(bool {proto.batch_flush()}) const;
+		void draw() const;
 """ if len(proto.draw_list) > 0 else ""}
 		void on_tick() const;
 	}};
@@ -259,12 +217,10 @@ namespace oly::gen
 {proto.transformer_attachments()}
 	}}
 {f"""
-
-	void {proto.name}::draw(bool {proto.batch_flush()}) const
+	void {proto.name}::draw() const
 	{{
 {proto.draw_calls()}\t}}
 """ if len(proto.draw_list) > 0 else ""}
-
 	void {proto.name}::on_tick() const
 	{{
 {proto.on_tick()}\t}}
@@ -274,14 +230,14 @@ namespace oly::gen
 
 class Cache:
 	def __init__(self):
-		self.cache = {}
+		self.cache: dict[str, float] = {}
 		if CACHE_PATH.exists():
 			with open(CACHE_PATH, 'r') as f:
 				try:
 					self.cache: dict = json.load(f)
 				except json.JSONDecodeError:
 					pass
-		self.marked = []
+		self.marked: list[str] = []
 
 	def dump(self):
 		self.cache = {file: self.cache[file] for file in self.marked}
@@ -289,14 +245,14 @@ class Cache:
 		with open(CACHE_PATH, 'w') as f:
 			json.dump(self.cache, f)
 
-	def is_dirty(self, file: str) -> bool:
-		return file not in self.cache or self.cache[file] != os.path.getmtime(file)
+	def is_dirty(self, file: Path) -> bool:
+		return file.as_posix() not in self.cache or self.cache[file.as_posix()] != file.stat().st_mtime
 
-	def update(self, file: str):
-		self.cache[file] = os.path.getmtime(file)
+	def update(self, file: Path):
+		self.cache[file.as_posix()] = file.stat().st_mtime
 
-	def mark(self, file: str):
-		self.marked.append(file)
+	def mark(self, file: Path):
+		self.marked.append(file.as_posix())
 
 	def clear(self):
 		self.cache.clear()
@@ -306,9 +262,8 @@ class Cache:
 		os.makedirs(ARCHETYPE_GEN_PATH)
 
 
-def generate(asset_filepath: str):
+def generate(asset_filepath: Path):
 	with open(asset_filepath, 'r') as f:
-		print("filepath: " + asset_filepath)
 		tml = toml.load(f)
 		if 'archetype' not in tml:
 			return
@@ -333,15 +288,11 @@ def generate_manifest():
 	asset_folders = read_manifest_folders()
 
 	def generate_folder(folder):
-		with os.scandir(os.path.join(os.getcwd(), folder)) as entries:
-			for entry in entries:
-				if entry.is_file():
-					cache.mark(entry.path)
-					if cache.is_dirty(entry.path):
-						generate(entry.path)
-						cache.update(entry.path)
-				elif entry.is_dir():
-					generate_folder(entry)
+		for path in Path(folder).rglob("*.toml"):
+			cache.mark(path)
+			if cache.is_dirty(path):
+				generate(path)
+				cache.update(path)
 
 	cache = Cache()
 	for asset_folder in asset_folders:

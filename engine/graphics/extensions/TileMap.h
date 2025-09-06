@@ -18,7 +18,7 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void paint_tile(glm::ivec2 tile);
 		void unpaint_tile(glm::ivec2 tile);
@@ -44,7 +44,7 @@ namespace oly::rendering
 		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::ATTACH_ONLY, .modifier = exposure::modifier::FULL }>
 			set_transformer() { return transformer; }
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);

@@ -6,10 +6,13 @@
 
 namespace oly::rendering
 {
-	void TileMapLayer::draw() const
+	void TileMapLayer::draw(BatchBarrier barrier) const
 	{
-		for (const auto& [tile, sprite] : sprite_map)
-			sprite.draw();
+		auto it = sprite_map.begin();
+		if (it != sprite_map.end())
+			it++->second.draw(barrier);
+		while (it != sprite_map.end())
+			it++->second.draw(batch::PARALLEL);
 	}
 
 	void TileMapLayer::paint_tile(glm::ivec2 tile)
@@ -88,10 +91,11 @@ namespace oly::rendering
 		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.name);
 	}
 
-	void TileMap::draw() const
+	void TileMap::draw(BatchBarrier barrier) const
 	{
-		for (const auto& layer : layers)
-			layer.draw();
+		layers[0].draw(barrier);
+		for (size_t i = 1; i < layers.size(); ++i)
+			layers[i].draw(batch::PARALLEL);
 	}
 
 	void TileMap::register_layer(TileMapLayer&& layer)

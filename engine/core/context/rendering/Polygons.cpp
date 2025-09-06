@@ -38,6 +38,6 @@ namespace oly::context
 	void render_polygons()
 	{
 		internal::polygon_batch->render();
-		internal::set_last_internal_batch_rendered(InternalBatch::POLYGON);
+		internal::set_batch_rendering_tracker(InternalBatch::POLYGON, false);
 	}
 }

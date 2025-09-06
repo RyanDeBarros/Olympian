@@ -19,7 +19,7 @@ namespace oly::rendering
 	public:
 		ArrowExtension();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }
@@ -70,7 +70,7 @@ namespace oly::rendering
 	public:
 		StaticArrowExtension();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }

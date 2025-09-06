@@ -89,30 +89,15 @@ namespace oly::debug
 		return *this;
 	}
 
-	void CollisionView::draw(Batch& current_batch) const
+	void CollisionView::draw() const
 	{
 		// TODO v5 specialized shader for collision view
-		static const auto draw_object = [](auto&& obj, Batch& current_batch) { std::visit([&current_batch](auto&& obj) {
-			if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
-			{
-				if (current_batch == Batch::POLYGON)
-					context::render_polygons();
-				current_batch = Batch::ELLIPSE;
-			}
-			else
-			{
-				if (current_batch == Batch::ELLIPSE)
-					context::render_ellipses();
-				current_batch = Batch::POLYGON;
-			}
-			obj.draw();
-			}, obj); };
-		std::visit([&current_batch](auto&& view) {
+		std::visit([](const auto& view) {
 			if constexpr (visiting_class_is<decltype(view), CollisionObject>)
-				draw_object(view, current_batch);
+				std::visit([](const auto& obj) { obj.draw(); }, view);
 			else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
-				for (const auto& obj : view)
-					draw_object(obj, current_batch);
+				for (const auto& v : view)
+					std::visit([](const auto& obj) { obj.draw(); }, v);
 			}, obj);
 	}
 
@@ -459,6 +444,10 @@ namespace oly::debug
 	{
 		bool was_blending = context::blend_enabled();
 		glm::vec4 clear_color = context::clear_color();
+		// TODO v4 currently, it's necessary to flush the internal batches when switching framebuffers.
+		// Ideally, make batches instances instead of singletons - and attach a batch per framebuffer + screen framebuffer.
+		// Then, in sprite/ellipse/etc. constructor, attach to a particular batch - use internal pointer.
+		context::flush_internal_rendering();
 		framebuffer.bind();
 		glViewport(0, 0, dimensions.x, dimensions.y);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -466,12 +455,12 @@ namespace oly::debug
 		if (was_blending)
 			glDisable(GL_BLEND);
 
-		CollisionView::Batch current_batch = CollisionView::Batch::NONE;
 		for (const auto& collision_view : collision_views)
-			collision_view->draw(current_batch);
-		context::render_polygons();
-		context::render_ellipses();
+			collision_view->draw();
+		context::polygon_batch().render();
+		context::ellipse_batch().render();
 
+		context::flush_internal_rendering();
 		framebuffer.unbind();
 		context::set_standard_viewport();
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
@@ -487,14 +476,14 @@ namespace oly::debug
 		sprite.set_transform(m);
 	}
 
-	void CollisionLayer::draw() const
+	void CollisionLayer::draw(BatchBarrier barrier) const
 	{
 		if (dirty_views)
 		{
 			dirty_views = false;
 			write_texture();
 		}
-		sprite.draw();
+		sprite.draw(barrier);
 	}
 
 	void CollisionLayer::assign(CollisionView& view)

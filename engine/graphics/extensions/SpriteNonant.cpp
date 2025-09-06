@@ -23,7 +23,7 @@ namespace oly::rendering
 			}
 	}
 
-	void SpriteNonant::draw() const
+	void SpriteNonant::draw(BatchBarrier barrier) const
 	{
 		if (dirty.grid)
 		{
@@ -38,7 +38,7 @@ namespace oly::rendering
 		}
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
-				sprite(x, y).draw();
+				sprite(x, y).draw(x == 0 && y == 0 ? barrier : batch::PARALLEL);
 	}
 
 	void SpriteNonant::copy_sprite_attributes(const Sprite& sprite)

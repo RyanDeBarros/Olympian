@@ -1,5 +1,6 @@
 #include "Text.h"
 
+#include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
@@ -216,11 +217,14 @@ namespace oly::rendering
 			batch->erase_glyph_id(vbid.get());
 	}
 		
-	void TextGlyph::draw() const
+	void TextGlyph::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::TEXT);
 		if (transformer.flush())
 			batch->glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
 		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::TEXT, true);
 	}
 		
 	void TextGlyph::set_texture(const graphics::BindlessTextureRef& texture) const

@@ -19,7 +19,7 @@ console = true
 
 [context.sprite_batch]
 "initial sprites" = 100
-"new textures" = 10
+"new_textures" = 10
 
 [context.polygon_batch]
 primitives = 100
@@ -28,8 +28,8 @@ primitives = 100
 ellipses = 100
 
 [context.text_batch]
-"initial glyphs" = 100
-"new textures" = 10
+"initial_glyphs" = 100
+"new_textures" = 10
 
 [context.framerate]
 frame_length_clip = 0.2

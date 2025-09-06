@@ -16,7 +16,7 @@ namespace oly::rendering
 	public:
 		LineExtension();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }

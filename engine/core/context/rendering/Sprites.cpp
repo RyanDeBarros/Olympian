@@ -17,11 +17,11 @@ namespace oly::context
 			int initial_sprites = 0;
 			reg::parse_int(toml_sprite_batch, "initial sprites", initial_sprites);
 			int new_textures = 0;
-			reg::parse_int(toml_sprite_batch, "new textures", new_textures);
+			reg::parse_int(toml_sprite_batch, "new_textures", new_textures);
 			int new_uvs = 0;
 			reg::parse_int(toml_sprite_batch, "new uvs", new_uvs);
 			int new_modulations = 0;
-			reg::parse_int(toml_sprite_batch, "new modulations", new_modulations);
+			reg::parse_int(toml_sprite_batch, "new_modulations", new_modulations);
 			int num_anims = 0;
 			reg::parse_int(toml_sprite_batch, "num anims", num_anims);
 
@@ -43,6 +43,6 @@ namespace oly::context
 	void render_sprites()
 	{
 		internal::sprite_batch->render();
-		internal::set_last_internal_batch_rendered(InternalBatch::SPRITE);
+		internal::set_batch_rendering_tracker(InternalBatch::SPRITE, false);
 	}
 }

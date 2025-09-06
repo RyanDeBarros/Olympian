@@ -5,6 +5,7 @@
 #include "core/math/Shapes.h"
 #include "core/containers/IDGenerator.h"
 
+#include "graphics/BatchBarrier.h"
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
@@ -162,7 +163,7 @@ namespace oly::rendering
 		TextGlyph& operator=(TextGlyph&&) noexcept;
 		~TextGlyph();
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_texture(const graphics::BindlessTextureRef& texture) const;
 		void set_vertex_positions(const math::Rect2D& rect) const;

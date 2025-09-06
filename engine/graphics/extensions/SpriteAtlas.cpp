@@ -9,9 +9,9 @@ namespace oly::rendering
 	{
 	}
 
-	void SpriteAtlas::draw() const
+	void SpriteAtlas::draw(BatchBarrier barrier) const
 	{
-		sprite.draw();
+		sprite.draw(barrier);
 	}
 
 	void SpriteAtlas::on_tick() const

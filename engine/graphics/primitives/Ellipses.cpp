@@ -2,9 +2,9 @@
 
 #include <algorithm>
 
+#include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Ellipses.h"
 #include "graphics/resources/Shaders.h"
-#include "Ellipses.h"
 
 namespace oly::rendering
 {
@@ -95,9 +95,12 @@ namespace oly::rendering
 		return context::ellipse_batch().ssbo_block.set<TRANSFORM>(pos.get());
 	}
 
-	void EllipseBatch::EllipseReference::draw() const
+	void EllipseBatch::EllipseReference::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::ELLIPSE);
 		graphics::quad_indices(context::ellipse_batch().ebo.draw_primitive().data(), pos.get());
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::ELLIPSE, true);
 	}
 
 	Ellipse::Ellipse(float r, glm::vec4 color)
@@ -114,11 +117,11 @@ namespace oly::rendering
 		set_color(color);
 	}
 
-	void Ellipse::draw() const
+	void Ellipse::draw(BatchBarrier barrier) const
 	{
 		if (transformer.flush())
 			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
-		ellipse.draw();
+		ellipse.draw(barrier);
 	}
 
 	void Ellipse::set_color(glm::vec4 color)

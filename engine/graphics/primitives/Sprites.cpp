@@ -1,11 +1,10 @@
 #include "Sprites.h"
 
+#include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
 #include "core/util/Time.h"
 #include "graphics/resources/Shaders.h"
-#include "Sprites.h"
-#include "Sprites.h"
 
 namespace oly::rendering
 {
@@ -220,9 +219,12 @@ namespace oly::rendering
 		context::sprite_batch().erase_sprite_id(vbid);
 	}
 
-	void StaticSprite::draw() const
+	void StaticSprite::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		graphics::quad_indices(context::sprite_batch().ebo.draw_primitive().data(), vbid.get());
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
 	void StaticSprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
@@ -352,11 +354,14 @@ namespace oly::rendering
 		context::sprite_batch().erase_sprite_id(vbid);
 	}
 
-	void Sprite::draw() const
+	void Sprite::draw(BatchBarrier barrier) const
 	{
+		if (barrier) [[likely]]
+			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		if (transformer.flush())
 			context::sprite_batch().quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
 		graphics::quad_indices(context::sprite_batch().ebo.draw_primitive().data(), vbid.get());
+		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
 	void Sprite::set_texture(const std::string& texture_file, unsigned int texture_index) const

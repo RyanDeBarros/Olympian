@@ -12,7 +12,7 @@ namespace oly::rendering
 
 		SpriteAtlas(Sprite&& sprite);
 
-		void draw() const;
+		void draw(BatchBarrier barrier = batch::BARRIER) const;
 		void on_tick() const;
 
 		void select_static_frame(GLuint frame);
