@@ -6,7 +6,6 @@ namespace oly::reg
 {
 	rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node)
 	{
-		// TODO v4 implement "source" field in assets and archetypes.
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();

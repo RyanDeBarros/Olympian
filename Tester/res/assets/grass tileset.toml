@@ -2,65 +2,65 @@
 "storage" = "discard"
 
 [[tileset.assignment]]
-"config"  = "S"
+"config"  = 0
 "texture" = "textures/grass tileset/S.png"
 
 [[tileset.assignment]]
-"config"  = "M'"
+"config"  = 46
 "texture" = "textures/grass tileset/M.png"
 
 [[tileset.assignment]]
-"config"  = "C1'"
+"config"  = 16
 "texture" = "textures/grass tileset/BL.png"
 
 [[tileset.assignment]]
-"config"  = "C2'"
+"config"  = 17
 "texture" = "textures/grass tileset/BR.png"
 
 [[tileset.assignment]]
-"config"  = "C3'"
+"config"  = 18
 "texture" = "textures/grass tileset/TR.png"
 
 [[tileset.assignment]]
-"config"  = "C4'"
+"config"  = 19
 "texture" = "textures/grass tileset/TL.png"
 
 [[tileset.assignment]]
-"config"  = "T1'"
+"config"  = 28
 "texture" = "textures/grass tileset/LE.png"
 
 [[tileset.assignment]]
-"config"  = "T2'"
+"config"  = 29
 "texture" = "textures/grass tileset/BE.png"
 
 [[tileset.assignment]]
-"config"  = "T3'"
+"config"  = 30
 "texture" = "textures/grass tileset/RE.png"
 
 [[tileset.assignment]]
-"config"  = "T4'"
+"config"  = 31
 "texture" = "textures/grass tileset/TE.png"
 
 [[tileset.assignment]]
-"config"  = "E1"
+"config"  = 1
 "texture" = "textures/grass tileset/LT.png"
 
 [[tileset.assignment]]
-"config"  = "E2"
+"config"  = 2
 "texture" = "textures/grass tileset/BT.png"
 
 [[tileset.assignment]]
-"config"  = "E3"
+"config"  = 3
 "texture" = "textures/grass tileset/RT.png"
 
 [[tileset.assignment]]
-"config"  = "E4"
+"config"  = 4
 "texture" = "textures/grass tileset/TT.png"
 
 [[tileset.assignment]]
-"config"  = "I1"
+"config"  = 9
 "texture" = "textures/grass tileset/I1.png"
 
 [[tileset.assignment]]
-"config"  = "I2"
+"config"  = 10
 "texture" = "textures/grass tileset/I2.png"

@@ -5,57 +5,6 @@
 
 namespace oly::reg
 {
-	// TODO v4 in assets, just use enum value instead of string.
-	static constexpr std::array<std::pair<std::string_view, rendering::TileSet::Configuration>, (size_t)rendering::TileSet::Configuration::_COUNT> config_lut = { {
-		{ "S", rendering::TileSet::Configuration::SINGLE },
-		{ "E1", rendering::TileSet::Configuration::END_1 },
-		{ "E2", rendering::TileSet::Configuration::END_2 },
-		{ "E3", rendering::TileSet::Configuration::END_3 },
-		{ "E4", rendering::TileSet::Configuration::END_4 },
-		{ "C1", rendering::TileSet::Configuration::CORNER_1 },
-		{ "C2", rendering::TileSet::Configuration::CORNER_2 },
-		{ "C3", rendering::TileSet::Configuration::CORNER_3 },
-		{ "C4", rendering::TileSet::Configuration::CORNER_4 },
-		{ "I1", rendering::TileSet::Configuration::ILINE_1 },
-		{ "I2", rendering::TileSet::Configuration::ILINE_2 },
-		{ "T1", rendering::TileSet::Configuration::TBONE_1 },
-		{ "T2", rendering::TileSet::Configuration::TBONE_2 },
-		{ "T3", rendering::TileSet::Configuration::TBONE_3 },
-		{ "T4", rendering::TileSet::Configuration::TBONE_4 },
-		{ "M", rendering::TileSet::Configuration::MIDDLE },
-		{ "C1'", rendering::TileSet::Configuration::CORNER_PRIME_1 },
-		{ "C2'", rendering::TileSet::Configuration::CORNER_PRIME_2 },
-		{ "C3'", rendering::TileSet::Configuration::CORNER_PRIME_3 },
-		{ "C4'", rendering::TileSet::Configuration::CORNER_PRIME_4 },
-		{ "T1+", rendering::TileSet::Configuration::TBONE_PLUS_1 },
-		{ "T2+", rendering::TileSet::Configuration::TBONE_PLUS_2 },
-		{ "T3+", rendering::TileSet::Configuration::TBONE_PLUS_3 },
-		{ "T4+", rendering::TileSet::Configuration::TBONE_PLUS_4 },
-		{ "T1-", rendering::TileSet::Configuration::TBONE_MINUS_1 },
-		{ "T2-", rendering::TileSet::Configuration::TBONE_MINUS_2 },
-		{ "T3-", rendering::TileSet::Configuration::TBONE_MINUS_3 },
-		{ "T4-", rendering::TileSet::Configuration::TBONE_MINUS_4 },
-		{ "T1'", rendering::TileSet::Configuration::TBONE_PRIME_1 },
-		{ "T2'", rendering::TileSet::Configuration::TBONE_PRIME_2 },
-		{ "T3'", rendering::TileSet::Configuration::TBONE_PRIME_3 },
-		{ "T4'", rendering::TileSet::Configuration::TBONE_PRIME_4 },
-		{ "MC1", rendering::TileSet::Configuration::MIDDLE_CORNER_1 },
-		{ "MC2", rendering::TileSet::Configuration::MIDDLE_CORNER_2 },
-		{ "MC3", rendering::TileSet::Configuration::MIDDLE_CORNER_3 },
-		{ "MC4", rendering::TileSet::Configuration::MIDDLE_CORNER_4 },
-		{ "MT1", rendering::TileSet::Configuration::MIDDLE_TBONE_1 },
-		{ "MT2", rendering::TileSet::Configuration::MIDDLE_TBONE_2 },
-		{ "MT3", rendering::TileSet::Configuration::MIDDLE_TBONE_3 },
-		{ "MT4", rendering::TileSet::Configuration::MIDDLE_TBONE_4 },
-		{ "MA1", rendering::TileSet::Configuration::MIDDLE_ACROSS_1 },
-		{ "MA2", rendering::TileSet::Configuration::MIDDLE_ACROSS_2 },
-		{ "MD1", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_1 },
-		{ "MD2", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_2 },
-		{ "MD3", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_3 },
-		{ "MD4", rendering::TileSet::Configuration::MIDDLE_DIAGONAL_4 },
-		{ "M'", rendering::TileSet::Configuration::MIDDLE_PRIME },
-	} };
-
 	void TileSetRegistry::clear()
 	{
 		tilesets.clear();
@@ -120,22 +69,10 @@ namespace oly::reg
 							return;
 						}
 					}
-					else if (auto config = _config.value<std::string>())
-					{
-						auto config_it = std::find_if(config_lut.begin(), config_lut.end(), [&config](const auto& pair) { return pair.first == *config; });
-						if (config_it != config_lut.end())
-							assignment.config = config_it->second;
-						else
-						{
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-														 << ", unrecognized configuration \"" << *config << "\"." << LOG.nl;
-							return;
-						}
-					}
 					else
 					{
 						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
-													 << " - \"config\" field is neither int nor string." << LOG.nl;
+													 << " - \"config\" field is missing or not an int." << LOG.nl;
 						return;
 					}
 
