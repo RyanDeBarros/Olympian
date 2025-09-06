@@ -60,7 +60,8 @@ class ProjectSettingsTab(EditorTab):
 
 		self.framerate_settings = {}
 		self.framerate_form = SettingsForm([
-			SettingsParameter('frame_length_clip', self.ui.framerateClip)
+			SettingsParameter('frame_length_clip', self.ui.framerateClip),
+			SettingsParameter('time_scale', self.ui.framerateTimeScale)
 		])
 
 		self.revert_changes_impl()

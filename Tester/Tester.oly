@@ -33,6 +33,7 @@ ellipses = 100
 
 [context.framerate]
 frame_length_clip = 0.2
+time_scale = 1.0
 
 [context.window.viewport]
 boxed = true

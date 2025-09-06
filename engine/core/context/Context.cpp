@@ -67,6 +67,8 @@ namespace oly::context
 		{
 			if (auto frame_length_clip = framerate["frame_length_clip"].value<double>())
 				TIME.frame_length_clip = *frame_length_clip;
+			if (auto time_scale = framerate["time_scale"].value<double>())
+				TIME.time_scale = *time_scale;
 		}
 		TIME.init();
 	}

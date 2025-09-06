@@ -2,25 +2,27 @@
 
 namespace oly::internal
 {
+	void TimeImpl::process()
+	{
+		_processed_now = _raw_now * time_scale;
+		_inv_processed_now = 1.0 / _processed_now;
+
+		_processed_delta = std::min(_raw_delta, frame_length_clip) * time_scale;
+		_inv_processed_delta = 1.0 / _processed_delta;
+	}
+
 	void TimeImpl::init()
 	{
-		_delta = 1.0 / 60.0;
-		_lagged = 0.0;
-		
-		_now = glfwGetTime();
-		_inv_now = 1.0 / _now;
-		_inv_delta = 1.0 / _delta;
+		_raw_delta = 1.0 / 60.0;
+		_raw_now = glfwGetTime();
+		process();
 	}
 
 	void TimeImpl::sync()
 	{
 		double n = glfwGetTime();
-		_delta = n - _now;
-		_lagged += std::max(_delta - frame_length_clip, 0.0);
-		_delta = std::min(_delta, frame_length_clip);
-
-		_now = n;
-		_inv_now = 1.0 / _now;
-		_inv_delta = 1.0 / _delta;
+		_raw_delta = n - _raw_now;
+		_raw_now = n;
+		process();
 	}
 }
