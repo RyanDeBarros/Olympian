@@ -19,8 +19,6 @@ namespace oly::physics
 			return FrictionType::STATIC;
 	}
 
-	// TODO v4 Time dilation (slo-mo).
-
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const
 	{
 		collisions.emplace_back(mtv, contact, UnitVector2D(mtv), &dynamics);

@@ -26,7 +26,6 @@ namespace oly::context
 	namespace internal
 	{
 		std::string resource_root;
-		std::shared_ptr<Functor<void()>> render_frame;
 		size_t this_frame = 0;
 	}
 
@@ -189,11 +188,6 @@ namespace oly::context
 		return internal::resource_root + file;
 	}
 
-	void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame)
-	{
-		internal::render_frame = render_frame;
-	}
-
 	toml::parse_result load_toml(const char* file)
 	{
 		return reg::load_toml(resource_file(file));
@@ -201,8 +195,7 @@ namespace oly::context
 
 	bool frame()
 	{
-		if (internal::render_frame)
-			(*internal::render_frame)();
+		internal::render_frame();
 		if (!internal::frame_platform())
 			return false;
 

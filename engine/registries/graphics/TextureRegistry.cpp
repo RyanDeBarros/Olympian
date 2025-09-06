@@ -1,6 +1,5 @@
 #include "TextureRegistry.h"
 
-#include "core/context/Context.h"
 #include "core/context/rendering/Textures.h"
 
 #include "core/types/Meta.h"
@@ -117,7 +116,7 @@ namespace oly::reg
 		if (it != textures.end())
 			return it->second;
 
-		std::string full_path = context::resource_file(file);
+		std::string full_path = file;
 		toml::parse_result toml;
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, texture_index);
@@ -174,7 +173,7 @@ namespace oly::reg
 		if (it != textures.end())
 			return it->second;
 
-		std::string full_path = context::resource_file(file);
+		std::string full_path = file;
 		toml::parse_result toml;
 		TOMLNode texture_node;
 		load_texture_node(full_path, toml, texture_node, texture_index);

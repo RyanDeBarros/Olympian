@@ -6,9 +6,24 @@
 #include "graphics/primitives/Ellipses.h"
 #include "graphics/text/Paragraph.h"
 
+namespace oly
+{
+	struct IRenderPipeline
+	{
+		virtual ~IRenderPipeline() = default;
+		virtual void render_frame() const {}
+	};
+}
+
 namespace oly::context
 {
-	extern void set_render_function(const std::shared_ptr<Functor<void()>>& render_frame);
+
+	extern void set_render_pipeline(const IRenderPipeline* pipeline);
+	
+	namespace internal
+	{
+		extern void render_frame();
+	}
 
 	enum class InternalBatch
 	{

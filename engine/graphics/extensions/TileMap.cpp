@@ -84,9 +84,8 @@ namespace oly::rendering
 			sprite.set_local().rotation = glm::radians(270.0f);
 		else
 			sprite.set_local().rotation = 0.0f;
-			
-		auto idim = context::texture_registry().get_image_dimensions(tile_desc.name);
-		sprite.set_local().scale = { 1.0f / idim.w, 1.0f / idim.h };
+		
+		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.name);
 	}
 
 	void TileMap::draw() const

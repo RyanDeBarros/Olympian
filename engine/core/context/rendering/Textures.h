@@ -28,4 +28,6 @@ namespace oly::context
 	extern graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index = 0);
 	extern graphics::BindlessTextureRef load_svg_texture(const std::string& file, unsigned int texture_index = 0);
 	extern glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index = 0);
+	extern graphics::ImageDimensions get_image_dimensions(const std::string& file, unsigned int texture_index = 0);
+	extern std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const std::string& file, unsigned int texture_index = 0);
 }
