@@ -1,5 +1,9 @@
 # Olympian
-Olympian Engine is a game engine framework written with C++ OpenGL to make future graphics projects easier, faster, and safer.
+Olympian Engine is a game engine written with C++ OpenGL to make future graphics projects easier, faster, and safer. It consists of two major components - the game framework (located in engine/), and the editor (located in editor/), which are subject to different licenses.
+
+The engine/ folder contains source code for the framework, and the general public API is included in engine/Olympian.h. For specialized features, refer to the (future) web documentation for which files to include.
+
+To build the editor, simply run editor/Build.py. This will build an executable, editor/OlyEditor.exe. Do not move the executable from editor/.
 
 ## Licensing
 

@@ -15,7 +15,6 @@ class StartMenuWindow(QMainWindow):
 		self.open_project = open_project
 
 		self.setWindowTitle("Olympian Editor")
-		self.setWindowIcon(QIcon("res/images/Olympian.png"))
 
 		self.setCentralWidget(StartMenuWidget(self))
 

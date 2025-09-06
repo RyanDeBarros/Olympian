@@ -515,7 +515,6 @@ class ContentBrowser(QWidget):
 	def show_undo_stack(self):
 		dialog = QDialog(self)
 		dialog.setWindowTitle("Undo Stack")
-		dialog.setWindowIcon(QIcon("res/images/Olympian.png"))
 		layout = QVBoxLayout(dialog)
 		layout.addWidget(QUndoView(self.undo_stack))
 		dialog.exec()
