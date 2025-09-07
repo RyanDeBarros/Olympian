@@ -62,7 +62,6 @@ namespace oly::physics
 	struct LinearSubMaterial
 	{
 		PositiveFloat drag = 0.0f;
-		LinearCollisionDamping collision_damping;
 		LinearSnapping x_snapping, y_snapping;
 	};
 

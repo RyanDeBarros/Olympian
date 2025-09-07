@@ -195,7 +195,7 @@ int main()
 	pc.rigid_body = player;
 	player->properties().set_moi_multiplier(2000.0f);
 	player->properties().net_linear_acceleration += oly::physics::GRAVITY;
-	player->properties().set_mass(50.0f);
+	player->properties().set_mass(15.0f);
 
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
@@ -204,8 +204,9 @@ int main()
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 
+	player->properties().angular_snapping.enable = true;
+	player->properties().angular_snapping.only_colliding = true;
 	player->sub_material()->angular_snapping.set_uniformly_spaced(4);
-	player->properties().set_mass(10.0f);
 
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
@@ -293,13 +294,6 @@ int main()
 		}, false);
 
 	// TODO v5 begin play on initial actors here
-	player->update_view(0, player_cv);
-	obstacle0->update_view(0, cv_obstacle0);
-	obstacle1->update_view(0, cv_obstacle1);
-	obstacle2->update_view(0, cv_obstacle2);
-	obstacle3->update_view(0, cv_obstacle3);
-	obstacle4->update_view(0, cv_obstacle4);
-	pipeline.logic_update();
 
 	while (oly::context::frame())
 	{

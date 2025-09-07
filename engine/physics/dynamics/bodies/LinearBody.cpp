@@ -78,7 +78,6 @@ namespace oly::physics
 	void LinearPhysicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity) const
 	{
 		// determine teleportation
-		// update angular collision impulse
 
 		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
 		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
@@ -93,23 +92,18 @@ namespace oly::physics
 		// restrict velocity-based motion against teleportation
 
 		UnitVector2D teleport_axis(teleport);
-		glm::vec2 dx_v = new_velocity * TIME.delta();
-		float along_teleport_axis = teleport_axis.dot(dx_v);
-		glm::vec2 perp_teleport_axis = dx_v - along_teleport_axis * (glm::vec2)teleport_axis;
-
-		along_teleport_axis = glm::max(along_teleport_axis, -glm::length(teleport));
-		if (along_teleport_axis < 0.0f)
-			along_teleport_axis *= 1.0f - submaterial->collision_damping.penetration;
-
-		dx_v = perp_teleport_axis + along_teleport_axis * (glm::vec2)teleport_axis;
+		float along_teleport_axis = std::max(teleport_axis.dot(new_velocity), 0.0f);
+		UnitVector2D tangent_axis = teleport_axis.get_quarter_turn();
+		float along_tangent_axis = tangent_axis.dot(new_velocity);
+		new_velocity = along_tangent_axis * (glm::vec2)tangent_axis + along_teleport_axis * (glm::vec2)teleport_axis;
 
 		// update position
 
-		post_state.position += teleport + dx_v;
+		post_state.position += teleport + new_velocity * TIME.delta();
 
 		// update velocity
 
-		post_state.linear_velocity = dx_v * TIME.inverse_delta() + collision_linear_impulse * properties.mass_inverse();
+		post_state.linear_velocity = new_velocity + collision_linear_impulse * properties.mass_inverse();
 		if (submaterial->drag > 0.0f)
 			post_state.linear_velocity *= glm::exp(-submaterial->drag * TIME.delta());
 	}

@@ -111,7 +111,6 @@ namespace oly::physics
 		PositiveFloat linear_drag = 0.0f;
 		PositiveFloat angular_drag = 1.0f;
 
-		LinearCollisionDamping linear_collision_damping;
 		AngularCollisionDamping angular_collision_damping;
 
 		AngularSnapping angular_snapping;

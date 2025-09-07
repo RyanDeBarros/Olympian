@@ -6,14 +6,6 @@
 
 namespace oly::physics
 {
-	struct LinearCollisionDamping
-	{
-		// linear penetration damping controls how much penetration motion into another collider is clamped.
-		// At 0.0 - no clamping, which may cause clipping and significant friction due to high normal force.
-		// At 1.0 - complete clamping, which may cause slight jitteriness or alternating colliding states.
-		BoundedUnitInterval penetration = 0.5f;
-	};
-
 	struct AngularCollisionDamping
 	{
 		// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.

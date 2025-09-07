@@ -23,13 +23,13 @@ namespace oly::physics
 	struct Restitution
 	{
 	private:
-		BoundedUnitInterval _value = 0.2f;
-		BoundedUnitInterval _sqrt = glm::sqrt(_value);
+		BoundedUnitInterval _value;
+		BoundedUnitInterval _sqrt;
 
 	public:
 		FactorBlendOp mode = FactorBlendOp::MINIMUM;
 
-		Restitution(BoundedUnitInterval v = 0.2f) : _value(v), _sqrt(glm::sqrt(_value)) {}
+		Restitution(BoundedUnitInterval v = 0.3f) : _value(v), _sqrt(glm::sqrt(_value)) {}
 
 		float value() const { return _value; }
 		float sqrt() const { return _sqrt; }
