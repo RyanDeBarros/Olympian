@@ -6,6 +6,12 @@
 
 namespace oly::physics
 {
+	struct LinearCollisionDamping
+	{
+		// linear teleportation values under jitter threshold are fully dampened.
+		PositiveFloat teleportation_jitter_threshold = 0.1f;
+	};
+	
 	struct AngularCollisionDamping
 	{
 		// angular teleportation damping controls how much corrective angular impulse is accumulated from collisions.

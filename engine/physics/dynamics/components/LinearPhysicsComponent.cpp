@@ -96,6 +96,9 @@ namespace oly::physics
 		UnitVector2D tangent_axis = teleport_axis.get_quarter_turn();
 		float along_tangent_axis = tangent_axis.dot(new_velocity);
 		new_velocity = along_tangent_axis * (glm::vec2)tangent_axis + along_teleport_axis * (glm::vec2)teleport_axis;
+		
+		if (glm::length(teleport) < submaterial->linear_collision_damping.teleportation_jitter_threshold)
+			teleport = glm::vec2(0.0f);
 
 		// update position
 

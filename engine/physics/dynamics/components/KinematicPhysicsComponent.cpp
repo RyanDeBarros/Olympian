@@ -173,8 +173,6 @@ namespace oly::physics
 			teleport += secondary_teleport;
 		}
 
-		// TODO v4 if teleport is under a small amount, then don't teleport - this causes microscopic jittering, not noticable but enough to flicker grounded state.
-
 		// restrict velocity-based motion against teleportation
 
 		UnitVector2D teleport_axis(teleport);
@@ -182,6 +180,9 @@ namespace oly::physics
 		UnitVector2D tangent_axis = teleport_axis.get_quarter_turn();
 		float along_tangent_axis = tangent_axis.dot(new_velocity);
 		new_velocity = along_tangent_axis * (glm::vec2)tangent_axis + along_teleport_axis * (glm::vec2)teleport_axis;
+
+		if (glm::length(teleport) < submaterial->linear_collision_damping.teleportation_jitter_threshold)
+			teleport = glm::vec2(0.0f);
 
 		// update position
 
@@ -210,7 +211,7 @@ namespace oly::physics
 		// dampen teleportation
 
 		teleport *= properties.mass() * properties.moi_inverse();
-		if (glm::abs(teleport) > submaterial->angular_collision_damping.teleportation_jitter_threshold)
+		if (glm::abs(teleport) >= submaterial->angular_collision_damping.teleportation_jitter_threshold)
 			teleport = glm::sign(teleport) * (1.0f - submaterial->angular_collision_damping.teleportation.inner())
 			* glm::log(glm::abs(teleport) * submaterial->angular_collision_damping.teleportation_inverse_drag + 1.0f);
 		else
@@ -219,7 +220,7 @@ namespace oly::physics
 		// dampen bounce
 
 		float bounce = collision_angular_impulse * properties.moi_inverse();
-		if (glm::abs(bounce) > submaterial->angular_collision_damping.restitution_jitter_threshold)
+		if (glm::abs(bounce) >= submaterial->angular_collision_damping.restitution_jitter_threshold)
 			bounce = glm::sign(bounce) * (1.0f - submaterial->angular_collision_damping.restitution.inner())
 			* glm::log(glm::abs(bounce) * submaterial->angular_collision_damping.restitution_inverse_drag + 1.0f);
 		else
