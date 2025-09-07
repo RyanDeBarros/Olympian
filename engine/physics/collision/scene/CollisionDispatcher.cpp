@@ -35,16 +35,7 @@ namespace oly::col2d
 
 	Phase internal::CollisionPhaseTracker::prior_phase(const Collider& c1, const Collider& c2)
 	{
-		auto it = map.find({ &c1, &c2 });
-		if (it != map.end())
-			return it->second;
-		else
-		{
-			map[{ &c1, &c2 }] = Phase::EXPIRED;
-			lut[&c1].insert(&c2);
-			lut[&c2].insert(&c1);
-			return Phase::EXPIRED;
-		}
+		return map.get_or(c1, c2, Phase::EXPIRED);
 	}
 	
 	void internal::CollisionPhaseTracker::lazy_update_phase(const Collider& c1, const Collider& c2, Phase phase)
@@ -55,8 +46,7 @@ namespace oly::col2d
 	void internal::CollisionPhaseTracker::flush()
 	{
 		for (const auto& [pair, phase] : lazy_updates)
-			if (pair.c1 && pair.c2)
-				map[pair] = phase;
+			map.set(pair, phase);
 		lazy_updates.clear();
 	}
 	
@@ -64,61 +54,72 @@ namespace oly::col2d
 	{
 		map.clear();
 		lazy_updates.clear();
-		lut.clear();
 	}
 
 	void internal::CollisionPhaseTracker::copy_all(const Collider& from, const Collider& to)
 	{
 		flush();
-
-		auto it = lut.find(&from);
-		if (it != lut.end())
-		{
-			auto& lut_og = it->second;
-			auto& lut_copy = lut[&to];
-			for (const Collider* c : lut_og)
-			{
-				lut_copy.insert(c);
-				map[{ &to, c }] = map.find({ &from, c })->second;
-			}
-		}
+		map.copy_all(from, to);
 	}
 
 	void internal::CollisionPhaseTracker::replace_all(const Collider& at, const Collider& with)
 	{
 		flush();
-
-		auto it = lut.find(&with);
-		if (it != lut.end())
-		{
-			auto& lut_og = it->second;
-			auto& lut_copy = lut[&at];
-			for (const Collider* c : lut_og)
-			{
-				lut_copy.insert(c);
-				map[{ &at, c }] = map.find({ &with, c })->second;
-				map.erase({ &with, c });
-			}
-			lut.erase(&with);
-		}
+		map.replace_all(at, with);
 	}
 
 	void internal::CollisionPhaseTracker::erase_all(const Collider& c)
 	{
 		flush();
+		map.erase_all(c);
+	}
 
-		auto it = lut.find(&c);
-		if (it != lut.end())
-		{
-			for (const Collider* col : it->second)
-				map.erase({ &c, col });
-			lut.erase(it);
-		}
+	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const OverlapEventData& data)
+	{
+		overlaps.set(c1, c2, data);
+	}
+
+	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const CollisionEventData& data)
+	{
+		collisions.set(c1, c2, data);
+	}
+	
+	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const ContactEventData& data)\
+	{
+		contacts.set(c1, c2, data);
+	}
+
+	void internal::CollisionCache::clear()
+	{
+		overlaps.clear();
+		collisions.clear();
+		contacts.clear();
+	}
+
+	void internal::CollisionCache::copy_all(const Collider& from, const Collider& to)
+	{
+		overlaps.copy_all(from, to);
+		collisions.copy_all(from, to);
+		contacts.copy_all(from, to);
+	}
+
+	void internal::CollisionCache::replace_all(const Collider& at, const Collider& with)
+	{
+		overlaps.replace_all(at, with);
+		collisions.replace_all(at, with);
+		contacts.replace_all(at, with);
+	}
+
+	void internal::CollisionCache::erase_all(const Collider& c)
+	{
+		overlaps.erase_all(c);
+		collisions.erase_all(c);
+		contacts.erase_all(c);
 	}
 
 	template<typename Result, typename EventData, typename HandlerRef>
 	static void dispatch(const Collider& c1, const Collider& c2, std::unordered_map<const Collider*, HandlerRef>& handlers,
-		Result(Collider::*method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker)
+		Result(Collider::*method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker, internal::CollisionCache& cache)
 	{
 		auto it_1 = handlers.find(&c1);
 		auto it_2 = handlers.find(&c2);
@@ -126,7 +127,16 @@ namespace oly::col2d
 		if (it_1 == handlers.end() && it_2 == handlers.end())
 			return;
 
-		EventData data1((c1.*method)(c2), c1, c2, phase_tracker.prior_phase(c1, c2));
+		EventData* data = nullptr;
+		if (const std::optional<EventData>& d = cache.get<EventData>(c1, c2))
+			data = new EventData(*d);
+		else
+		{
+			data = new EventData((c1.*method)(c2), c1, c2, phase_tracker.prior_phase(c1, c2));
+			cache.update(c1, c2, *data);
+		}
+
+		EventData& data1 = *data;
 		phase_tracker.lazy_update_phase(c1, c2, data1.phase);
 		if (data1.phase != Phase::EXPIRED)
 		{
@@ -141,6 +151,8 @@ namespace oly::col2d
 					handler->invoke(data2);
 			}
 		}
+
+		data = nullptr;
 	}
 
 	size_t internal::CollisionDispatcher::add_tree(const math::Rect2D bounds, const glm::uvec2 degree, const size_t cell_capacity)
@@ -161,6 +173,7 @@ namespace oly::col2d
 		collision_controller_lut.clear();
 		contact_controller_lut.clear();
 		
+		collision_cache.clear();
 		phase_tracker.clear();
 	}
 
@@ -204,6 +217,7 @@ namespace oly::col2d
 
 	void internal::CollisionDispatcher::poll()
 	{
+		collision_cache.clear();
 		phase_tracker.flush();
 		for (const CollisionTree& tree : trees)
 		{
@@ -212,9 +226,9 @@ namespace oly::col2d
 			while (!it.done())
 			{
 				auto pair = it.next();
-				dispatch<OverlapResult, OverlapEventData>(*pair.first, *pair.second, overlap_handler_map, &Collider::overlaps, phase_tracker);
-				dispatch<CollisionResult, CollisionEventData>(*pair.first, *pair.second, collision_handler_map, &Collider::collides, phase_tracker);
-				dispatch<ContactResult, ContactEventData>(*pair.first, *pair.second, contact_handler_map, &Collider::contacts, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(*pair.first, *pair.second, contact_handler_map, &Collider::contacts, phase_tracker, collision_cache);
+				dispatch<CollisionResult, CollisionEventData>(*pair.first, *pair.second, collision_handler_map, &Collider::collides, phase_tracker, collision_cache);
+				dispatch<OverlapResult, OverlapEventData>(*pair.first, *pair.second, overlap_handler_map, &Collider::overlaps, phase_tracker, collision_cache);
 			}
 		}
 	}
@@ -227,9 +241,9 @@ namespace oly::col2d
 			while (!it.done())
 			{
 				const Collider* c2 = it.next();
-				dispatch<OverlapResult, OverlapEventData>(from, *c2, overlap_handler_map, &Collider::overlaps, phase_tracker);
-				dispatch<CollisionResult, CollisionEventData>(from, *c2, collision_handler_map, &Collider::collides, phase_tracker);
-				dispatch<ContactResult, ContactEventData>(from, *c2, contact_handler_map, &Collider::contacts, phase_tracker);
+				dispatch<ContactResult, ContactEventData>(from, *c2, contact_handler_map, &Collider::contacts, phase_tracker, collision_cache);
+				dispatch<CollisionResult, CollisionEventData>(from, *c2, collision_handler_map, &Collider::collides, phase_tracker, collision_cache);
+				dispatch<OverlapResult, OverlapEventData>(from, *c2, overlap_handler_map, &Collider::overlaps, phase_tracker, collision_cache);
 			}
 		}
 	}

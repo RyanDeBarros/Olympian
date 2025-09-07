@@ -188,6 +188,7 @@ namespace oly::col2d
 			copy_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			copy_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
 			dispatcher.phase_tracker.copy_all(other.collider, collider);
+			dispatcher.collision_cache.copy_all(other.collider, collider);
 		}
 
 		template<typename Map, typename LUT>
@@ -214,6 +215,7 @@ namespace oly::col2d
 			move_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			move_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
 			dispatcher.phase_tracker.replace_all(collider, other.collider);
+			dispatcher.collision_cache.replace_all(collider, other.collider);
 		}
 
 		template<typename Map, typename LUT>
@@ -238,6 +240,7 @@ namespace oly::col2d
 			remove_dispatch_handle(collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 			remove_dispatch_handle(collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
 			dispatcher.phase_tracker.erase_all(collider);
+			dispatcher.collision_cache.erase_all(collider);
 		}
 	}
 

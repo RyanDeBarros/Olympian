@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/collision/scene/CollisionController.h"
+#include "core/containers/SymmetricRefMap.h"
 
 #include <unordered_set>
 
@@ -8,10 +9,10 @@ namespace oly::col2d
 {
 	enum Phase : unsigned char
 	{
-		EXPIRED = 0,
-		STARTED = 0b1,
-		ONGOING = 0b10,
-		COMPLETED = 0b100
+		EXPIRED   = 0b1,
+		STARTED   = 0b10,
+		ONGOING   = 0b100,
+		COMPLETED = 0b1000
 	};
 
 	constexpr Phase operator&(Phase a, Phase b) { return (Phase)((unsigned char)a & (unsigned char)b); }
@@ -58,6 +59,11 @@ namespace oly::col2d
 			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
 
 		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
+
+		OverlapEventData overlap_event() const
+		{
+			return OverlapEventData(phase, active_collider, passive_collider);
+		}
 	};
 
 	inline CollisionEventData invert_event_data(const CollisionEventData& data)
@@ -80,6 +86,16 @@ namespace oly::col2d
 		ContactEventData(const ContactEventData& other)
 			: phase(other.phase), active_contact(other.active_contact), passive_contact(other.passive_contact),
 			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
+
+		OverlapEventData overlap_event() const
+		{
+			return OverlapEventData(phase, active_collider, passive_collider);
+		}
+
+		CollisionEventData collision_event() const
+		{
+			return CollisionEventData(phase, glm::length(active_contact.impulse), UnitVector2D(active_contact.impulse), active_collider, passive_collider);
+		}
 	};
 
 	inline ContactEventData invert_event_data(const ContactEventData& data)
@@ -91,27 +107,100 @@ namespace oly::col2d
 	{
 		class CollisionPhaseTracker
 		{
-			struct ColliderUnorderedPair
-			{
-				const Collider* c1;
-				const Collider* c2;
-
-				bool operator==(const ColliderUnorderedPair& other) const { return (c1 == other.c1 && c2 == other.c2) || (c1 == other.c2 && c2 == other.c1); }
-			};
-
-			struct ColliderUnorderedPairHash
-			{
-				size_t operator()(const ColliderUnorderedPair& pair) const { return std::hash<const void*>{}(pair.c1) ^ std::hash<const void*>{}(pair.c2); }
-			};
-
-			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> map;
-			std::unordered_map<ColliderUnorderedPair, Phase, ColliderUnorderedPairHash> lazy_updates;
-			std::unordered_map<const Collider*, std::unordered_set<const Collider*>> lut;
+			SymmetricRefMap<Collider, Phase> map;
+			SymmetricRefMap<Collider, Phase>::MapType lazy_updates;
 
 		public:
 			Phase prior_phase(const Collider& c1, const Collider& c2);
 			void lazy_update_phase(const Collider& c1, const Collider& c2, Phase phase);
 			void flush();
+			void clear();
+
+			void copy_all(const Collider& from, const Collider& to);
+			void replace_all(const Collider& at, const Collider& with);
+			void erase_all(const Collider& c);
+		};
+
+		class CollisionCache
+		{
+			SymmetricRefMap<Collider, OverlapEventData> overlaps;
+			SymmetricRefMap<Collider, CollisionEventData> collisions;
+			SymmetricRefMap<Collider, ContactEventData> contacts;
+
+		public:
+			void update(const Collider& c1, const Collider& c2, const OverlapEventData& data);
+			void update(const Collider& c1, const Collider& c2, const CollisionEventData& data);
+			void update(const Collider& c1, const Collider& c2, const ContactEventData& data);
+
+			template<typename T>
+			std::optional<T> get(const Collider& c1, const Collider& c2) const
+			{
+				static_assert(deferred_false<T>, "CollisionCache::get<T>() does not support the invoked type.");
+			}
+
+			template<>
+			std::optional<OverlapEventData> get<OverlapEventData>(const Collider& c1, const Collider& c2) const
+			{
+				if (auto data = overlaps.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return *data;
+					else
+						return invert_event_data(*data);
+				}
+				else if (auto data = collisions.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return data->overlap_event();
+					else
+						return invert_event_data(data->overlap_event());
+				}
+				else if (auto data = contacts.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return data->overlap_event();
+					else
+						return invert_event_data(data->overlap_event());
+				}
+				else
+					return std::nullopt;
+			}
+
+			template<>
+			std::optional<CollisionEventData> get<CollisionEventData>(const Collider& c1, const Collider& c2) const
+			{
+				if (auto data = collisions.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return *data;
+					else
+						return invert_event_data(*data);
+				}
+				else if (auto data = contacts.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return data->collision_event();
+					else
+						return invert_event_data(data->collision_event());
+				}
+				else
+					return std::nullopt;
+			}
+
+			template<>
+			std::optional<ContactEventData> get<ContactEventData>(const Collider& c1, const Collider& c2) const
+			{
+				if (auto data = contacts.get(c1, c2))
+				{
+					if (&data->active_collider == &c1)
+						return *data;
+					else
+						return invert_event_data(*data);
+				}
+				else
+					return std::nullopt;
+			}
+
 			void clear();
 
 			void copy_all(const Collider& from, const Collider& to);
@@ -192,6 +281,7 @@ namespace oly::col2d
 
 			std::vector<CollisionTree> trees;
 			mutable CollisionPhaseTracker phase_tracker;
+			mutable CollisionCache collision_cache;
 
 		public:
 			CollisionDispatcher() = default;

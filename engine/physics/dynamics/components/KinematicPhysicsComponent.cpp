@@ -173,6 +173,8 @@ namespace oly::physics
 			teleport += secondary_teleport;
 		}
 
+		// TODO v4 if teleport is under a small amount, then don't teleport - this causes microscopic jittering, not noticable but enough to flicker grounded state.
+
 		// restrict velocity-based motion against teleportation
 
 		UnitVector2D teleport_axis(teleport);

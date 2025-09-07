@@ -91,7 +91,7 @@ namespace oly::col2d
 		{
 			UnitVector2D axis((float)i * perf.get_two_pi_over_divisions());
 			float sep = separation(axis);
-			if (sep <= 0.0f)
+			if (sep < 0.0f)
 				return { .overlap = false };
 			else if (sep < laziest.penetration_depth)
 			{
