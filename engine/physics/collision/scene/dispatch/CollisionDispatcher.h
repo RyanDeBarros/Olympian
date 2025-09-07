@@ -1,9 +1,8 @@
 #pragma once
 
 #include "physics/collision/scene/dispatch/CollisionController.h"
+#include "physics/collision/scene/dispatch/CollisionTree.h"
 #include "core/containers/SymmetricRefMap.h"
-
-#include <unordered_set>
 
 namespace oly::col2d
 {

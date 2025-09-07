@@ -1,68 +1,16 @@
 #pragma once
 
-#include "physics/collision/scene/dispatch/CollisionTree.h"
 #include "core/base/TransformerExposure.h"
+#include "physics/collision/scene/colliders/TreeHandleMap.h"
+#include "physics/collision/scene/colliders/ColliderDispatchHandle.h"
+#include "physics/collision/scene/colliders/ColliderObject.h"
+#include "physics/collision/scene/luts/LUT.h"
+#include "physics/collision/scene/luts/LUTVariant.h"
 
 namespace oly::physics { class RigidBody; };
 
 namespace oly::col2d
 {
-	namespace internal
-	{
-		class TreeHandleMap
-		{
-			friend class internal::CollisionNode;
-			friend class CollisionTree;
-			friend class Collider;
-			Collider& collider;
-			mutable ContiguousMap<const CollisionTree*, internal::CollisionNode*> handles;
-
-			TreeHandleMap(Collider& collider) : collider(collider) {}
-			TreeHandleMap(const TreeHandleMap&) = delete;
-			TreeHandleMap(TreeHandleMap&&) = delete;
-			TreeHandleMap(Collider&, const TreeHandleMap&);
-			TreeHandleMap(Collider&, TreeHandleMap&&) noexcept;
-			~TreeHandleMap();
-
-			TreeHandleMap& operator=(const TreeHandleMap&);
-			TreeHandleMap& operator=(TreeHandleMap&&) noexcept;
-
-			void flush() const;
-
-		public:
-			void attach(const CollisionTree& tree);
-			void attach(size_t context_tree_index = 0);
-			void detach(const CollisionTree& tree);
-			void detach(size_t context_tree_index = 0);
-			bool is_attached(const CollisionTree& tree) const { return handles.count(&tree); }
-			bool is_attached(size_t context_tree_index = 0) const;
-			void clear();
-			size_t size() const { return handles.size(); }
-		};
-	}
-
-	class Collider;
-
-	namespace internal
-	{
-		struct ColliderDispatchHandle
-		{
-			const Collider& collider;
-
-			ColliderDispatchHandle(const Collider&);
-			ColliderDispatchHandle(const Collider&, const ColliderDispatchHandle&);
-			ColliderDispatchHandle(const Collider&, ColliderDispatchHandle&&) noexcept;
-			~ColliderDispatchHandle();
-			ColliderDispatchHandle& operator=(const ColliderDispatchHandle&);
-			ColliderDispatchHandle& operator=(ColliderDispatchHandle&&) noexcept;
-
-		private:
-			void copy_handlers(const ColliderDispatchHandle&);
-			void move_handlers(ColliderDispatchHandle&&);
-			void remove_handlers();
-		};
-	}
-
 	// TODO v4 some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only. Like a one-way gate. 
 	// Note that this doesn't impede on active rigid body, rather a body's one-wayness is imacted on other objects to allow/disallow them penetration into the body.
 
