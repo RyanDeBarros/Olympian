@@ -119,6 +119,15 @@ namespace oly::physics
 		return colliders[i];
 	}
 
+	size_t RigidBody::collider_index(const col2d::Collider& col) const
+	{
+		auto it = std::find_if(colliders.begin(), colliders.end(), [&col](const col2d::Collider& c) { return &c == &col; });
+		if (it != colliders.end())
+			return it - colliders.begin();
+		else
+			throw Error(ErrorCode::DOES_NOT_EXIST);
+	}
+
 	debug::CollisionView RigidBody::collision_view(size_t i, glm::vec4 color) const
 	{
 		return colliders[i].collision_view(color);

@@ -2,6 +2,7 @@
 
 #include "physics/dynamics/bodies/RigidBody.h"
 #include "physics/dynamics/components/KinematicPhysicsComponent.h"
+#include "core/base/ActionDelegate.h"
 
 namespace oly::physics
 {
@@ -10,6 +11,8 @@ namespace oly::physics
 		KinematicPhysicsComponent dynamics;
 
 	public:
+		ActionDelegator<col2d::ContactEventData> delegator;
+
 		KinematicBody();
 		KinematicBody(const KinematicBody&);
 		KinematicBody(KinematicBody&&) noexcept;

@@ -46,6 +46,7 @@ namespace oly::physics
 		const col2d::Collider& collider(size_t i = 0) const;
 		col2d::Collider& collider(size_t i = 0);
 		size_t num_colliders() const { return colliders.size(); }
+		size_t collider_index(const col2d::Collider& col) const;
 
 		debug::CollisionView collision_view(size_t i, glm::vec4 color) const;
 		void update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const;

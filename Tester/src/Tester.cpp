@@ -208,6 +208,11 @@ int main()
 	player->properties().angular_snapping.only_colliding = true;
 	player->sub_material()->angular_snapping.set_uniformly_spaced(4);
 
+	oly::ActionFunctionReceiver<oly::col2d::ContactEventData> receiver([](const oly::col2d::ContactEventData& data) {
+		OLY_LOG() << data.phase << oly::LOG.nl;
+		});
+	player->delegator.connect(receiver);
+
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };

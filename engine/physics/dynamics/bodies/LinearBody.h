@@ -2,6 +2,7 @@
 
 #include "physics/dynamics/bodies/RigidBody.h"
 #include "physics/dynamics/components/LinearPhysicsComponent.h"
+#include "core/base/ActionDelegate.h"
 
 namespace oly::physics
 {
@@ -10,6 +11,8 @@ namespace oly::physics
 		LinearPhysicsComponent dynamics;
 
 	public:
+		ActionDelegator<col2d::CollisionEventData> delegator;
+
 		LinearBody();
 		LinearBody(const LinearBody&);
 		LinearBody(LinearBody&&) noexcept;

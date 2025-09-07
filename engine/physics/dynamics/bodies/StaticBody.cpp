@@ -43,6 +43,7 @@ namespace oly::physics
 			if (const RigidBody* other = rigid_body(data.passive_collider))
 				if (other != this)
 					dynamics.add_collision({}, {}, dynamics_of(*other));
+		delegator.emit(data);
 	}
 
 	void StaticBody::bind(const col2d::Collider& collider) const
