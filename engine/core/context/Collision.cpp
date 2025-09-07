@@ -1,6 +1,6 @@
 #include "Collision.h"
 
-#include "physics/collision/scene/CollisionDispatcher.h"
+#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 
 namespace oly::context
 {

@@ -1,6 +1,6 @@
 #include "LUT.h"
 
-#include "physics/collision/scene/LUTVariant.h"
+#include "physics/collision/scene/luts/LUTVariant.h"
 #include "physics/collision/debugging/CoreViews.h"
 
 namespace oly::col2d::internal

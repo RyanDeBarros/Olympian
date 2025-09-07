@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/scene/CollisionTree.h"
+#include "physics/collision/scene/dispatch/CollisionTree.h"
 #include "core/base/TransformerExposure.h"
 
 namespace oly::physics { class RigidBody; };

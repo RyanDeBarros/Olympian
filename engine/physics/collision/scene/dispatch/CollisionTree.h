@@ -4,8 +4,8 @@
 #include "core/containers/ContiguousSet.h"
 #include "core/containers/ContiguousMap.h"
 
-#include "physics/collision/scene/LUT.h"
-#include "physics/collision/scene/LUTVariant.h"
+#include "physics/collision/scene/luts/LUT.h"
+#include "physics/collision/scene/luts/LUTVariant.h"
 #include "physics/collision/Tolerance.h"
 
 #include <memory>

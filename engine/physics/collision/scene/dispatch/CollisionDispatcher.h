@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/scene/CollisionController.h"
+#include "physics/collision/scene/dispatch/CollisionController.h"
 #include "core/containers/SymmetricRefMap.h"
 
 #include <unordered_set>

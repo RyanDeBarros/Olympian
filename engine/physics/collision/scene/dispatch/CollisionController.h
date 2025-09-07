@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/scene/Collider.h"
+#include "physics/collision/scene/colliders/Collider.h"
 
 namespace oly::col2d
 {

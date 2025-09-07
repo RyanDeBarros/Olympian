@@ -1,6 +1,6 @@
 #include "CollisionTree.h"
 
-#include "physics/collision/scene/Collider.h"
+#include "physics/collision/scene/colliders/Collider.h"
 #include "core/base/Assert.h"
 
 #include <stack>

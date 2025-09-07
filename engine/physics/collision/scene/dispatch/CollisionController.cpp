@@ -1,6 +1,6 @@
 #include "CollisionController.h"
 
-#include "physics/collision/scene/CollisionDispatcher.h"
+#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "core/context/Collision.h"
 
 namespace oly::col2d

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/collision/scene/CollisionDispatcher.h"
+#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/components/DynamicsComponent.h"
 
