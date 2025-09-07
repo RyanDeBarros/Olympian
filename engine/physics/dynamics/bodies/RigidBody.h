@@ -1,11 +1,8 @@
 #pragma once
 
 #include "physics/collision/scene/CollisionDispatcher.h"
-#include "physics/collision/objects/Capsule.h"
 #include "physics/collision/objects/Polygon.h"
-#include "physics/dynamics/bodies/DynamicsComponent.h"
-
-#include "core/types/SmartReference.h"
+#include "physics/dynamics/components/DynamicsComponent.h"
 
 namespace oly::physics
 {
@@ -71,7 +68,7 @@ namespace oly::physics
 
 		virtual const DynamicsComponent& get_dynamics() const = 0;
 		const RigidBody* rigid_body(const col2d::Collider& collider) const;
-		const DynamicsComponent& dynamics_of(const RigidBody& other) const { return other.get_dynamics(); }
+		static const DynamicsComponent& dynamics_of(const RigidBody& other) { return other.get_dynamics(); }
 	};
 
 	namespace internal
@@ -101,6 +98,4 @@ namespace oly::physics
 			}
 		};
 	}
-
-	// TODO v4 CharacterBody - don't include friction or restitution in material.
 }

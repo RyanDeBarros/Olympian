@@ -1,9 +1,8 @@
 #pragma once
 
-#include "core/base/TransformerExposure.h"
-#include "core/base/Parameters.h"
-#include "physics/collision/scene/Collider.h"
-#include "physics/dynamics/Material.h"
+#include "physics/dynamics/components/materials/Material.h"
+#include "physics/collision/Tolerance.h"
+#include "core/base/UnitVector.h"
 
 namespace oly::physics
 {

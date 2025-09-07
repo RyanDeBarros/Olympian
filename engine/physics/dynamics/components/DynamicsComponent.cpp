@@ -1,9 +1,5 @@
 #include "DynamicsComponent.h"
 
-#include "core/util/Time.h"
-#include "core/math/Geometry.h"
-#include "physics/dynamics/bodies/RigidBody.h"
-
 namespace oly::physics
 {
 	FrictionType friction_type(UnitVector2D tangent, glm::vec2 relative_contact_velocity, glm::vec2 relative_linear_velocity,
