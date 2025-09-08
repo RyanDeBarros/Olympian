@@ -1,14 +1,15 @@
 from pathlib import Path
 from typing import override
 
-from PySide6.QtCore import QSize
 import send2trash
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QMessageBox, QGridLayout, QLabel, QLineEdit, QHBoxLayout, QSpacerItem, QSizePolicy
 
 from editor import ui, TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, nice_icon
 from editor.core.common import SettingsForm, SettingsParameter
 from .EditorTab import EditorTab
+from ..CollapsibleBox import CollapsibleBox
 
 
 class ProjectSettingsTab(EditorTab):
@@ -64,11 +65,17 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('time_scale', self.ui.framerateTimeScale)
 		])
 
+		self.ui.collisionMasksCollapsibleBox.set_title("Masks")
+		self.init_collision_name_list(self.ui.collisionMasksCollapsibleBox, "Mask")
+		self.ui.collisionLayersCollapsibleBox.set_title("Layers")
+		self.init_collision_name_list(self.ui.collisionLayersCollapsibleBox, "Layer")
+
 		self.revert_changes_impl()
 		self.window_form.connect_modified(lambda: self.set_asterisk(True))
 		self.viewport_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_form.connect_modified(lambda: self.set_asterisk(True))
-		self.logger_enable_form.connect_modified(lambda: self.set_asterisk(True))  # TODO v4 with nested SettingsForm, logger_enable_form should already be connected due to logger_form being connected.
+		# TODO v4 with nested SettingsForm, logger_enable_form should already be connected due to logger_form being connected.
+		self.logger_enable_form.connect_modified(lambda: self.set_asterisk(True))
 		self.framerate_form.connect_modified(lambda: self.set_asterisk(True))
 
 	@override
@@ -132,6 +139,24 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def refresh_impl(self):
 		pass
+
+	@staticmethod
+	def init_collision_name_list(box: CollapsibleBox, label_prefix: str):
+		grid = QGridLayout()
+		rows = 8
+		cols = 4
+
+		for row in range(rows):
+			for col in range(cols):
+				layout = QHBoxLayout()
+				spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+				layout.addItem(spacer)
+				layout.addWidget(QLabel(f"{label_prefix} {row * cols + col}"))
+				layout.addWidget(QLineEdit())
+				layout.addItem(spacer)
+				grid.addLayout(layout, row, col)
+
+		box.ui.contentArea.setLayout(grid)
 
 	def clear_logger_log(self):
 		logfile = Path(self.ui.logfile.text())

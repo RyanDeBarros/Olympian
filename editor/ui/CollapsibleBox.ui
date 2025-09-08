@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CollapsibleBox</class>
+ <widget class="QFrame" name="CollapsibleBox">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>437</width>
+    <height>227</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Frame</string>
+  </property>
+  <property name="frameShape">
+   <enum>QFrame::Shape::StyledPanel</enum>
+  </property>
+  <property name="frameShadow">
+   <enum>QFrame::Shadow::Raised</enum>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QToolButton" name="toggleButton">
+     <property name="styleSheet">
+      <string notr="true">QToolButton { border: none; }</string>
+     </property>
+     <property name="text">
+      <string> Title</string>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>6</width>
+       <height>6</height>
+      </size>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+     </property>
+     <property name="arrowType">
+      <enum>Qt::ArrowType::RightArrow</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="contentArea" native="true"/>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
