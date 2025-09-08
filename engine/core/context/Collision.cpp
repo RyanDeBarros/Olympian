@@ -12,7 +12,6 @@ namespace oly::context
 
 	void internal::init_collision(const TOMLNode& node)
 	{
-		// TODO v4 add to editor
 		if (auto collision_node = node["collision"])
 		{
 			if (auto masks = collision_node["masks"].as_array())

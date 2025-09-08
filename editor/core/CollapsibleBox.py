@@ -6,7 +6,7 @@ from editor.core import block_signals
 
 
 class CollapsibleBox(QFrame):
-	def __init__(self, title="", expanded=False, parent=None):
+	def __init__(self, title: str = "", expanded: bool = False, parent: QWidget | None = None):
 		super().__init__(parent)
 
 		self.ui = ui.CollapsibleBox.Ui_CollapsibleBox()
@@ -29,7 +29,7 @@ class CollapsibleBox(QFrame):
 		self.ui.toggleButton.setChecked(expanded)
 
 	@staticmethod
-	def convert_group_box(group_box: QGroupBox, expanded: bool):
+	def convert_group_box(group_box: QGroupBox, expanded: bool = False):
 		parent = group_box.parentWidget()
 		if parent is None:
 			raise RuntimeError("GroupBox must have a parent layout")

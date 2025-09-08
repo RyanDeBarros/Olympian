@@ -3,10 +3,11 @@ from typing import override
 
 import send2trash
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QMessageBox, QGridLayout, QLabel, QLineEdit, QHBoxLayout, QSpacerItem, QSizePolicy
+from PySide6.QtWidgets import QMessageBox, QGridLayout, QLabel, QLineEdit, QHBoxLayout, QSpacerItem, QSizePolicy, \
+	QWidget
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, AbstractPathItem, nice_icon
+from editor.core import MainWindow, AbstractPathItem, nice_icon, block_signals
 from editor.core.common import SettingsForm, SettingsParameter
 from .EditorTab import EditorTab
 from ..CollapsibleBox import CollapsibleBox
@@ -32,7 +33,7 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('height', self.ui.windowHeight),
 			SettingsParameter('title', self.ui.windowTitle)
 		])
-		# TODO v4 window hints. Eventually use collapsible sections.
+		# TODO v4 window hints
 
 		self.viewport_settings = {}
 		self.viewport_form = SettingsForm([
@@ -49,7 +50,7 @@ class ProjectSettingsTab(EditorTab):
 
 		self.ui.loggerClearLog.clicked.connect(self.clear_logger_log)
 
-		self.ui.loggerStreamsBox = CollapsibleBox.convert_group_box(self.ui.loggerStreamsBox, False)
+		self.ui.loggerStreamsBox = CollapsibleBox.convert_group_box(self.ui.loggerStreamsBox)
 
 		# TODO v4 nested SettingsForms
 		self.logger_enable_settings = {}
@@ -67,10 +68,11 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('time_scale', self.ui.framerateTimeScale)
 		])
 
-		self.ui.collisionMasksCollapsibleBox.set_title("Masks")
-		self.init_collision_name_list(self.ui.collisionMasksCollapsibleBox, "Mask")
-		self.ui.collisionLayersCollapsibleBox.set_title("Layers")
-		self.init_collision_name_list(self.ui.collisionLayersCollapsibleBox, "Layer")
+		self.collision_settings = {}
+		self.ui.collisionMasksCollapsibleBox = CollapsibleBox.convert_group_box(self.ui.collisionMasksCollapsibleBox)
+		self.collision_mask_name_edits = self.init_collision_name_list(self.ui.collisionMasksCollapsibleBox, "Mask")
+		self.ui.collisionLayersCollapsibleBox = CollapsibleBox.convert_group_box(self.ui.collisionLayersCollapsibleBox)
+		self.collision_layer_name_edits = self.init_collision_name_list(self.ui.collisionLayersCollapsibleBox, "Layer")
 
 		self.revert_changes_impl()
 		self.window_form.connect_modified(lambda: self.set_asterisk(True))
@@ -99,6 +101,8 @@ class ProjectSettingsTab(EditorTab):
 		self.logger_settings.update(self.logger_form.get_dict())
 		self.logger_enable_settings.update(self.logger_enable_form.get_dict())
 		self.framerate_settings.update(self.framerate_form.get_dict())
+		self.collision_settings['masks'] = self.get_collision_names(self.collision_mask_name_edits)
+		self.collision_settings['layers'] = self.get_collision_names(self.collision_layer_name_edits)
 		TOMLAdapter.dump(self.win.project_context.project_file, self.settings)
 
 	@override
@@ -134,6 +138,12 @@ class ProjectSettingsTab(EditorTab):
 		self.framerate_settings = self.context['framerate']
 		self.framerate_form.load_dict(self.framerate_settings)
 
+		if 'collision' not in self.context:
+			self.context['collision'] = {}
+		self.collision_settings = self.context['collision']
+		self.load_collision_names(self.collision_settings.get('masks', []), self.collision_mask_name_edits)
+		self.load_collision_names(self.collision_settings.get('layers', []), self.collision_layer_name_edits)
+
 	@override
 	def rename_impl(self, item: AbstractPathItem):
 		raise RuntimeError("Project settings tab cannot be renamed")
@@ -142,23 +152,70 @@ class ProjectSettingsTab(EditorTab):
 	def refresh_impl(self):
 		pass
 
-	@staticmethod
-	def init_collision_name_list(box: CollapsibleBox, label_prefix: str):
-		grid = QGridLayout()
+	def init_collision_name_list(self, box: CollapsibleBox, label_prefix: str) -> list[QLineEdit]:
+		grid_widget = QWidget()
+		grid = QGridLayout(grid_widget)
 		rows = 8
 		cols = 4
 
+		name_edits = []
 		for row in range(rows):
 			for col in range(cols):
 				layout = QHBoxLayout()
 				spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 				layout.addItem(spacer)
 				layout.addWidget(QLabel(f"{label_prefix} {row * cols + col}"))
-				layout.addWidget(QLineEdit())
+				name_edit = QLineEdit()
+				name_edits.append(name_edit)
+				layout.addWidget(name_edit)
 				layout.addItem(spacer)
 				grid.addLayout(layout, row, col)
 
-		box.ui.contentArea.layout().addChildLayout(grid)
+		for name_edit in name_edits:
+			# noinspection PyShadowingNames
+			def callback(name_edit=name_edit):
+				name = name_edit.text()
+				name_edit.clearFocus()
+				if name == "":
+					return
+				names = self.get_collision_names(name_edits)
+				index = name_edits.index(name_edit)
+
+				def name_exists(nm):
+					# noinspection PyShadowingNames
+					for i in range(len(names)):
+						if i != index and names[i] == nm:
+							return True
+					return False
+
+				base_name = name
+				i = 1
+				while name_exists(name):
+					name = f"{base_name} ({i})"
+					i += 1
+				with block_signals(name_edit):
+					name_edit.setText(name)
+
+			name_edit.editingFinished.connect(callback)
+			name_edit.textChanged.connect(lambda: self.set_asterisk(True))
+
+		box.ui.contentArea.layout().addWidget(grid_widget)
+		return name_edits
+
+	@staticmethod
+	def load_collision_names(names: list[str], name_edits: list[QLineEdit]):
+		seen_names = []
+		for i in range(len(name_edits)):
+			with block_signals(name_edits[i]) as name_edit:
+				name_edit.setText(names[i] if i < len(names) and names[i] not in seen_names else "")
+				seen_names.append(name_edit.text())
+
+	@staticmethod
+	def get_collision_names(name_edits: list[QLineEdit]) -> list[str]:
+		names = []
+		for name_edit in name_edits:
+			names.append(name_edit.text())
+		return names
 
 	def clear_logger_log(self):
 		logfile = Path(self.ui.logfile.text())

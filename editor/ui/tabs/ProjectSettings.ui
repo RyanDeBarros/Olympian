@@ -391,22 +391,16 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
-              <widget class="CollapsibleBox" name="collisionMasksCollapsibleBox">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Shadow::Raised</enum>
+              <widget class="QGroupBox" name="collisionMasksCollapsibleBox">
+               <property name="title">
+                <string>Masks</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="CollapsibleBox" name="collisionLayersCollapsibleBox">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Shadow::Raised</enum>
+              <widget class="QGroupBox" name="collisionLayersCollapsibleBox">
+               <property name="title">
+                <string>Layers</string>
                </property>
               </widget>
              </item>
@@ -435,14 +429,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CollapsibleBox</class>
-   <extends>QFrame</extends>
-   <header location="global">editor.core.CollapsibleBox</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
