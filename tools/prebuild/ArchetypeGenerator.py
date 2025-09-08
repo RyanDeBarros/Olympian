@@ -288,7 +288,7 @@ def generate_manifest():
 	asset_folders = read_manifest_folders()
 
 	def generate_folder(folder):
-		for path in Path(folder).rglob("*.toml"):
+		for path in Path(folder).rglob("*.toml"):  # TODO v4 use TOMLAdapter to check meta fields for archetype flag
 			cache.mark(path)
 			if cache.is_dirty(path):
 				generate(path)
@@ -296,5 +296,5 @@ def generate_manifest():
 
 	cache = Cache()
 	for asset_folder in asset_folders:
-		generate_folder(asset_folder)
+		generate_folder(f"res/{asset_folder}")
 	cache.dump()

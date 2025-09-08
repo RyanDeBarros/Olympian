@@ -3,7 +3,7 @@ import pathlib
 import posixpath
 import re
 
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox, QMainWindow
 
 from editor import MANIFEST, ui
@@ -15,6 +15,7 @@ class StartMenuWindow(QMainWindow):
 		self.open_project = open_project
 
 		self.setWindowTitle("Olympian Editor")
+		self.setMinimumSize(QSize(600, 300))
 
 		self.setCentralWidget(StartMenuWidget(self))
 
@@ -36,6 +37,7 @@ class StartMenuWidget(QWidget):
 		self.delete_tab = DeleteTab(self)
 
 		self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)
+		self.recent_tab.sync_combo()
 
 	def on_tab_changed(self):
 		if self.ui.tabWidget.currentWidget() == self.ui.recentTab:

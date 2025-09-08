@@ -13,6 +13,8 @@ class ManifestTOML:
 		self.toml_filepath = 'projects/manifest.toml'
 		self.toml = TOMLAdapter.load(self.toml_filepath)
 
+		# TODO v4 option in editor to re-generate these files. This would need to be done if the project is moved, or renamed. In fact, add option to rename project.
+
 		with open('data/PROJECT_CONTEXT_H', 'r') as f:
 			self.project_context_h = f.read()
 
@@ -139,7 +141,6 @@ class ManifestTOML:
 			del self.project_dict()[project_filepath]
 			self.recent_list().remove(project_filepath)
 			self.dump()
-		# TODO v4 make a note in documentation that files are not deleted - they are simply removed from editor manifest, so as it to prevent unsafe folder deletion.
 
 	def remove_nonexistent_projects(self):
 		keep = []
