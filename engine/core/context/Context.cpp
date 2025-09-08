@@ -114,6 +114,7 @@ namespace oly::context
 		internal::init_text(toml_context);
 
 		autoload_signals(toml_context);
+		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 
 		oly::internal::check_errors();

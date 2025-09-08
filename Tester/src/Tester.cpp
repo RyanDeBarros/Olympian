@@ -129,22 +129,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	}
 };
 
-// TODO v4 mask/layer string id table
-
-enum CollisionLayers
-{
-	L_NONE = 0,
-	L_PLAYER = 0b1,
-	L_OBSTACLE = 0b10
-};
-
-enum CollisionMasks
-{
-	M_NONE = 0,
-	M_PLAYER = 0b1,
-	M_OBSTACLE = 0b10
-};
-
 int main()
 {
 	oly::ProjectContext context;
@@ -201,8 +185,8 @@ int main()
 
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
-	player->collider().layer() |= CollisionLayers::L_PLAYER;
-	player->collider().mask() |= CollisionMasks::M_OBSTACLE;
+	player->collider().layer() |= oly::context::get_collision_layer("player");
+	player->collider().mask() |= oly::context::get_collision_mask("obstacle");
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 
@@ -215,8 +199,8 @@ int main()
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
-	obstacle0->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle0->collider().mask() |= CollisionMasks::M_PLAYER | CollisionMasks::M_OBSTACLE;
+	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
 	obstacle0->collider().set_local().position = -capsule.center;
 	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
@@ -226,40 +210,40 @@ int main()
 	capsule.center.y += 200.0f;
 	oly::physics::LinearBodyRef obstacle1 = oly::REF_INIT;
 	obstacle1->add_collider(capsule);
-	obstacle1->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle1->collider().mask() |= CollisionMasks::M_PLAYER;
+	obstacle1->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	obstacle1->collider().mask() |= oly::context::get_collision_mask("player");
 	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle2 = oly::REF_INIT;
 	obstacle2->add_collider(capsule);
-	obstacle2->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle2->collider().mask() |= CollisionMasks::M_PLAYER;
+	obstacle2->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	obstacle2->collider().mask() |= oly::context::get_collision_mask("player");
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle3 = oly::REF_INIT;
 	obstacle3->add_collider(capsule);
-	obstacle3->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle3->collider().mask() |= CollisionMasks::M_PLAYER;
+	obstacle3->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	obstacle3->collider().mask() |= oly::context::get_collision_mask("player");
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle4 = oly::REF_INIT;
 	obstacle4->add_collider(capsule);
-	obstacle4->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	obstacle4->collider().mask() |= CollisionMasks::M_PLAYER;
+	obstacle4->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	obstacle4->collider().mask() |= oly::context::get_collision_mask("player");
 
 	oly::physics::StaticBodyRef ground = oly::REF_INIT;
 	ground->add_collider(oly::col2d::TCompound({
 		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
 		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
 		}));
-	ground->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	ground->collider().mask() |= CollisionMasks::M_PLAYER;
+	ground->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	ground->collider().mask() |= oly::context::get_collision_mask("player");
 
 	oly::physics::StaticBodyRef semi_solid = oly::REF_INIT;
 	semi_solid->add_collider(oly::col2d::AABB{ .x1 = -100.0f, .x2 = 300.0f, .y1 = 300.0f, .y2 = 400.0f });
-	semi_solid->collider().layer() |= CollisionLayers::L_OBSTACLE;
-	semi_solid->collider().mask() |= CollisionMasks::M_PLAYER;
+	semi_solid->collider().layer() |= oly::context::get_collision_layer("obstacle");
+	semi_solid->collider().mask() |= oly::context::get_collision_mask("player");
 	semi_solid->collider().one_way_blocking = oly::UnitVector2D::UP;
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };

@@ -35,6 +35,10 @@ ellipses = 100
 frame_length_clip = 0.2
 time_scale = 1.0
 
+[context.collision]
+masks = ["player", "obstacle"]
+layers = ["player", "obstacle"]
+
 [context.window.viewport]
 boxed = true
 stretch = true

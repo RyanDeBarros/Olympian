@@ -167,6 +167,6 @@ namespace oly::col2d
 		ContactResult contacts(const Element& c) const;
 	};
 
-	typedef int Mask;
-	typedef int Layer;
+	typedef unsigned int Mask;
+	typedef unsigned int Layer;
 }
