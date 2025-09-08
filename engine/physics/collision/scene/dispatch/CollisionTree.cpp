@@ -234,13 +234,6 @@ namespace oly::col2d
 			for (const Collider* collider : node->get_colliders())
 				collider->flush();
 
-			size_t i = 0;
-			while (i < node->get_colliders().size())
-			{
-				node->get_colliders()[i]->flush();
-				++i;
-			}
-
 			for (std::unique_ptr<internal::CollisionNode>& subnode : node->subnodes)
 				if (internal::CollisionNode* sub = subnode.get())
 					nodes.push(sub);

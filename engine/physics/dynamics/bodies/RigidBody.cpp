@@ -155,7 +155,7 @@ namespace oly::physics
 			unbind(*it);
 	}
 
-	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider) const
+	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
 	{
 		return collider.rigid_body;
 	}

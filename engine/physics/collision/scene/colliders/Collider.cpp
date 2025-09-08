@@ -40,6 +40,11 @@ namespace oly::col2d
 		return *this;
 	}
 
+	bool Collider::one_way_blocks(const Collider& active) const
+	{
+		return !active.rigid_body || !one_way_blocking || one_way_blocking->dot(active.rigid_body->state().linear_velocity) < 0.0f;
+	}
+	
 	void Collider::flush() const
 	{
 		if (!is_dirty())

@@ -129,6 +129,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	}
 };
 
+// TODO v4 mask/layer string id table
+
 enum CollisionLayers
 {
 	L_NONE = 0,
@@ -208,11 +210,6 @@ int main()
 	player->properties().angular_snapping.only_colliding = true;
 	player->sub_material()->angular_snapping.set_uniformly_spaced(4);
 
-	oly::ActionFunctionReceiver<oly::col2d::ContactEventData> receiver([](const oly::col2d::ContactEventData& data) {
-		OLY_LOG() << data.phase << oly::LOG.nl;
-		});
-	player->delegator.connect(receiver);
-
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
@@ -259,6 +256,12 @@ int main()
 	ground->collider().layer() |= CollisionLayers::L_OBSTACLE;
 	ground->collider().mask() |= CollisionMasks::M_PLAYER;
 
+	oly::physics::StaticBodyRef semi_solid = oly::REF_INIT;
+	semi_solid->add_collider(oly::col2d::AABB{ .x1 = -100.0f, .x2 = 300.0f, .y1 = 300.0f, .y2 = 400.0f });
+	semi_solid->collider().layer() |= CollisionLayers::L_OBSTACLE;
+	semi_solid->collider().mask() |= CollisionMasks::M_PLAYER;
+	semi_solid->collider().one_way_blocking = oly::UnitVector2D::UP;
+
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
 	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
@@ -280,6 +283,9 @@ int main()
 
 	auto ground_cv = ground->collision_view(0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 	ground_cv.assign(pipeline.obstacle_layer);
+
+	auto semi_solid_cv = semi_solid->collision_view(0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	semi_solid_cv.assign(pipeline.obstacle_layer);
 
 	player_cv.assign(pipeline.player_layer);
 	block_cv.assign(pipeline.obstacle_layer);

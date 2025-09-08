@@ -21,7 +21,7 @@ namespace oly
 	public:
 		ActionDelegator() = default;
 		
-		ActionDelegator(const ActionDelegator<Args...>&) = delete; // TODO v4 delete transformer copy constructor
+		ActionDelegator(const ActionDelegator<Args...>&) = delete;
 		
 		ActionDelegator(ActionDelegator<Args...>&& other) noexcept
 			: receivers(std::move(other))

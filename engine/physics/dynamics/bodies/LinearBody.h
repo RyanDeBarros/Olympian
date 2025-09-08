@@ -39,6 +39,10 @@ namespace oly::physics
 
 		const DynamicsComponent& get_dynamics() const override { return dynamics; }
 
+	public:
+		const LinearPhysicsComponent& linear_dynamics() const { return dynamics; }
+		LinearPhysicsComponent& linear_dynamics() { return dynamics; }
+
 	private:
 		void handle_collides(const col2d::CollisionEventData& data) const;
 	};

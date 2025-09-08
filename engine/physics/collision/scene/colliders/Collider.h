@@ -11,12 +11,8 @@ namespace oly::physics { class RigidBody; };
 
 namespace oly::col2d
 {
-	// TODO v4 some mechanism to limit the direction that a rigid body/collider can collide with. For example, horizontal-only collision, or vertical-only. Like a one-way gate. 
-	// Note that this doesn't impede on active rigid body, rather a body's one-wayness is imacted on other objects to allow/disallow them penetration into the body.
-
 	class Collider
 	{
-		// TODO v4 movable/static Colliders for optimization in CollisionTree flushing.
 		friend class CollisionTree;
 		friend class internal::CollisionNode;
 
@@ -66,6 +62,9 @@ namespace oly::col2d
 		Layer& layer() { return internal::lut_layer(obj); }
 		Mask mask() const { return internal::lut_mask(obj); }
 		Mask& mask() { return internal::lut_mask(obj); }
+
+		std::optional<UnitVector2D> one_way_blocking;
+		bool one_way_blocks(const Collider& active) const;
 
 	private:
 		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }

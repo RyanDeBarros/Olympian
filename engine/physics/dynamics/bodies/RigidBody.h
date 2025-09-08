@@ -68,7 +68,7 @@ namespace oly::physics
 		void unbind_all() const;
 
 		virtual const DynamicsComponent& get_dynamics() const = 0;
-		const RigidBody* rigid_body(const col2d::Collider& collider) const;
+		static const RigidBody* rigid_body(const col2d::Collider& collider);
 		static const DynamicsComponent& dynamics_of(const RigidBody& other) { return other.get_dynamics(); }
 	};
 

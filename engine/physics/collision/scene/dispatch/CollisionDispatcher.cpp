@@ -132,7 +132,10 @@ namespace oly::col2d
 			data = new EventData(*d);
 		else
 		{
-			data = new EventData((c1.*method)(c2), c1, c2, phase_tracker.prior_phase(c1, c2));
+			if (!c1.one_way_blocks(c2) || !c2.one_way_blocks(c1))
+				data = new EventData(Result(), c1, c2, phase_tracker.prior_phase(c1, c2));
+			else
+				data = new EventData((c1.*method)(c2), c1, c2, phase_tracker.prior_phase(c1, c2));
 			cache.update(c1, c2, *data);
 		}
 

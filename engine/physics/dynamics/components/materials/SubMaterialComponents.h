@@ -31,6 +31,7 @@ namespace oly::physics
 		PositiveFloat restitution_jitter_threshold = 0.001f;
 	};
 
+	// TODO v4 doc
 	struct AngularSnapping
 	{
 		PositiveFloat speed_threshold = 0.1f;
@@ -43,6 +44,7 @@ namespace oly::physics
 		void set_uniformly_spaced(const size_t angles, float angle_offset = 0.0f);
 	};
 
+	// TODO v4 doc
 	struct LinearSnapping
 	{
 		PositiveFloat speed_threshold = 0.1f;

@@ -39,6 +39,10 @@ namespace oly::physics
 
 		const DynamicsComponent& get_dynamics() const override { return dynamics; }
 
+	public:
+		const KinematicPhysicsComponent& kinematic_dynamics() const { return dynamics; }
+		KinematicPhysicsComponent& kinematic_dynamics() { return dynamics; }
+
 	private:
 		void handle_contacts(const col2d::ContactEventData& data) const;
 	};

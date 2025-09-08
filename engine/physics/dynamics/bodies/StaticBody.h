@@ -34,6 +34,10 @@ namespace oly::physics
 
 		const DynamicsComponent& get_dynamics() const override { return dynamics; }
 
+	public:
+		const DynamicsComponent& static_dynamics() const { return dynamics; }
+		DynamicsComponent& static_dynamics() { return dynamics; }
+
 	private:
 		void handle_overlaps(const col2d::OverlapEventData& data) const;
 	};
