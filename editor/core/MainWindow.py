@@ -1,3 +1,5 @@
+import subprocess
+
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
@@ -90,11 +92,12 @@ class MainWindow(QMainWindow):
 
 	@staticmethod
 	def open_documentation():
-		pass  # TODO v4 open documentation webpage
+		subprocess.run(["python", "Serve.py"], cwd="../mkdocs")
 
 	@staticmethod
 	def enter_help_mode():
 		QWhatsThis.enterWhatsThisMode()
 
-	def quit_project(self, code):
+	@staticmethod
+	def quit_project(code):
 		exit(code)

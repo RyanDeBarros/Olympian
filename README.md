@@ -5,6 +5,8 @@ The engine/ folder contains source code for the framework, and the general publi
 
 To build the editor, simply run editor/Build.py. This will build an executable, editor/OlyEditor.exe. Do not move the executable from editor/.
 
+To access the web documentation, run mkdocs/Serve.py.
+
 ## Licensing
 
 All third-party licenses can be found in the licenses/ folder.
@@ -27,6 +29,13 @@ The editor uses the following libraries:
 
 - **PySide6**
 - **Send2Trash**
+
+### Documentation
+
+The documentation webpage uses the following libraries:
+
+- **mkdocs**
+- **mkdocs-material**
 
 ### Other
 

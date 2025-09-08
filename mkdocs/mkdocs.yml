@@ -1,0 +1,20 @@
+site_name: Olympian Engine Docs
+theme:
+  name: material
+  features:
+    - navigation.expand
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - search.highlight
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Engine:
+    - Overview: engine/overview.md
+    - Physics:
+      - Dynamics:
+        - Rigid Bodies: engine/physics/dynamics/rigidbodies.md
+  - Editor:
+    - Overview: editor/overview.md
