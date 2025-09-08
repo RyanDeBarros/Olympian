@@ -31,27 +31,40 @@ namespace oly::physics
 		PositiveFloat restitution_jitter_threshold = 0.001f;
 	};
 
-	// TODO v4 doc
 	struct AngularSnapping
 	{
+		// snapping occurs when speed is under speed_threshold
 		PositiveFloat speed_threshold = 0.1f;
+		// snapping occurs when angle is within angle_threshold of the snapping rays
 		PositiveFloat angle_threshold = glm::radians(10.0f);
+		// defines the angles of the snapping rays
 		std::set<BoundedRadians> snaps;
+		// exponent on snapping proportion -> higher means faster snapping
 		StrictlyPositiveFloat strength = 1.0f;
+		// offset to snapping proportion after exponentiated:
+		// At 0.0 - proportion has full effect on speed
+		// At 1.0 - proportion has no effect on speed
 		BoundedUnitInterval strength_offset = 0.2f;
 
 		void set_uniformly_spaced_without_threshold(const size_t angles, float angle_offset = 0.0f);
 		void set_uniformly_spaced(const size_t angles, float angle_offset = 0.0f);
 	};
 
-	// TODO v4 doc
 	struct LinearSnapping
 	{
+		// snapping occurs when speed is under speed_threshold
 		PositiveFloat speed_threshold = 0.1f;
+		// snapping occurs when position is within position_threshold of the snapping grid
 		PositiveFloat position_threshold = 3.0f;
+		// defines the width of cells in the snapping grid
 		float snap_width = 50.0f;
+		// defines the offset of the first cell in the snapping grid
 		float snap_offset = 0.0f;
+		// exponent on snapping proportion -> higher means faster snapping
 		StrictlyPositiveFloat strength = 1.0f;
+		// offset to snapping proportion after exponentiated:
+		// At 0.0 - proportion has full effect on speed
+		// At 1.0 - proportion has no effect on speed
 		BoundedUnitInterval strength_offset = 0.2f;
 	};
 }

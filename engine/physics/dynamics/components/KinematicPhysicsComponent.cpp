@@ -368,11 +368,11 @@ namespace oly::physics
 		static const auto linear_snapping = [](const LinearSnapping& snapping, State& state, glm::length_t dim) {
 			if (glm::abs(state.linear_velocity[dim]) <= snapping.speed_threshold)
 			{
-				float snap_by = int((state.position[dim] - snapping.snap_offset) / snapping.snap_width) * snapping.snap_width + snapping.snap_offset - state.position[dim];
+				float snap_by = round((state.position[dim] - snapping.snap_offset) / snapping.snap_width) * snapping.snap_width + snapping.snap_offset - state.position[dim];
 				if (glm::abs(snap_by) <= snapping.position_threshold)
 				{
 					const float proportion = glm::abs(snap_by / snapping.position_threshold);
-					state.position[dim] = snap_by * (1.0f + (snapping.strength_offset - 1.0f) * glm::pow(proportion, snapping.strength));
+					state.position[dim] += snap_by * (1.0f + (snapping.strength_offset - 1.0f) * glm::pow(proportion, snapping.strength));
 				}
 			}
 			};
