@@ -49,6 +49,8 @@ class ProjectSettingsTab(EditorTab):
 
 		self.ui.loggerClearLog.clicked.connect(self.clear_logger_log)
 
+		self.ui.loggerStreamsBox = CollapsibleBox.convert_group_box(self.ui.loggerStreamsBox, False)
+
 		# TODO v4 nested SettingsForms
 		self.logger_enable_settings = {}
 		self.logger_enable_form = SettingsForm([
@@ -156,7 +158,7 @@ class ProjectSettingsTab(EditorTab):
 				layout.addItem(spacer)
 				grid.addLayout(layout, row, col)
 
-		box.ui.contentArea.setLayout(grid)
+		box.ui.contentArea.layout().addChildLayout(grid)
 
 	def clear_logger_log(self):
 		logfile = Path(self.ui.logfile.text())

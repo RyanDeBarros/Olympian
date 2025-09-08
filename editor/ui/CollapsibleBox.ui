@@ -46,7 +46,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="contentArea" native="true"/>
+    <widget class="QWidget" name="contentArea" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout_3"/>
+    </widget>
    </item>
   </layout>
  </widget>

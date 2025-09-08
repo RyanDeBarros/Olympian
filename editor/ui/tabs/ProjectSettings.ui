@@ -216,7 +216,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_3">
+           <widget class="QGroupBox" name="loggerStreamsBox">
             <property name="title">
              <string>Streams</string>
             </property>
