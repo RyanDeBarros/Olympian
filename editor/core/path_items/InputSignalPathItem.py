@@ -25,16 +25,16 @@ class InputSignalPathItem(AbstractPathItem):
 
 	@override
 	def renamed_filepath(self, name: str):
-		return Path(self.full_path.parent.joinpath(name).as_posix() + '.oly')
+		return Path((self.full_path.parent / name).as_posix() + '.oly')
 
 	@staticmethod
 	def new_item(browser: ContentBrowser):
 		file_name = "NewSignal.oly"
 		i = 1
-		while os.path.exists(browser.current_folder.joinpath(file_name).resolve()):
+		while (browser.current_folder / file_name).exists():
 			file_name = f"NewSignal ({i}).oly"
 			i = i + 1
-		file_path = browser.current_folder.joinpath(file_name).resolve()
+		file_path = (browser.current_folder / file_name).resolve()
 
 		meta = {
 			'type': 'signal'

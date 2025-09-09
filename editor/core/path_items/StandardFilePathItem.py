@@ -24,7 +24,7 @@ class StandardFilePathItem(AbstractPathItem):
 
 	@override
 	def renamed_filepath(self, name: str):
-		return self.full_path.parent.joinpath(name)
+		return self.full_path.parent / name
 
 	@staticmethod
 	def new_item(browser: ContentBrowser):
@@ -35,8 +35,7 @@ class StandardFilePathItem(AbstractPathItem):
 			i = i + 1
 		file_path = os.path.join(browser.current_folder, file_name)
 		browser.folder_view.file_machine.new_file(file_path)
-		browser.folder_view.add_item(StandardFilePathItem(browser.current_folder.joinpath(file_name).resolve()),
-									 editing=True)
+		browser.folder_view.add_item(StandardFilePathItem((browser.current_folder / file_name).resolve()), editing=True)
 
 	@override
 	def open(self, browser: ContentBrowser):

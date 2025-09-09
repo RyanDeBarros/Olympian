@@ -380,7 +380,7 @@ class ContentBrowserFolderView(QListView):
 			self.repeated_action: Optional[ContentBrowserFolderView._DuplicatePathAction] = None
 
 		def _process(self, from_path: Path):
-			transfer_data = ContentBrowserFolderView._PathTransferData(from_path=from_path, to_path=self.to_folder.joinpath(from_path.name),
+			transfer_data = ContentBrowserFolderView._PathTransferData(from_path=from_path, to_path=self.to_folder / from_path.name,
 																	   additional_existing_paths=self.to_paths)
 			if transfer_data.will_duplicate():
 				if self.repeated_action is not None:
@@ -603,16 +603,16 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [FolderPathItem(self.current_folder.joinpath("../.."))]
+		items = [FolderPathItem(self.current_folder / "..")]
 		for path in Path(self.current_folder).iterdir():
-			item = get_path_item(self.current_folder.joinpath(path))
+			item = get_path_item(self.current_folder / path)
 			if item is not None:
 				items.append(item)
 		self.folder_view.add_items(items)
 
 	def add_path(self, path: Path):
 		assert path.resolve().parent == self.current_folder
-		item = get_path_item(self.current_folder.joinpath(path))
+		item = get_path_item(self.current_folder / path)
 		if item is not None:
 			self.folder_view.add_item(item)
 
@@ -620,14 +620,14 @@ class ContentBrowser(QWidget):
 		items = []
 		for path in paths:
 			assert path.resolve().parent == self.current_folder
-			item = get_path_item(self.current_folder.joinpath(path))
+			item = get_path_item(self.current_folder / path)
 			if item is not None:
 				items.append(item)
 		self.folder_view.add_items(items)
 
 	def remove_path(self, path: Path):
 		assert path.resolve().parent == self.current_folder
-		item = get_path_item(self.current_folder.joinpath(path))
+		item = get_path_item(self.current_folder / path)
 		if item is not None:
 			self.folder_view.remove_item(item)
 
@@ -635,7 +635,7 @@ class ContentBrowser(QWidget):
 		items = []
 		for path in paths:
 			assert path.resolve().parent == self.current_folder
-			item = get_path_item(self.current_folder.joinpath(path))
+			item = get_path_item(self.current_folder / path)
 			if item is not None:
 				items.append(item)
 		self.folder_view.remove_items(items)

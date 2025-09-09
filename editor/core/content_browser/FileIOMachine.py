@@ -29,13 +29,13 @@ class FileIOMachine:
 
 	def _generate_hash_container(self):
 		h = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-		if os.path.exists(self.project_context.trash_folder.joinpath(h)):
+		if os.path.exists(self.project_context.trash_folder / h):
 			return self._generate_hash_container()
 		else:
 			return h
 
 	def generate_hash_path(self):
-		return self.project_context.trash_folder.joinpath(self._generate_hash_container())
+		return self.project_context.trash_folder / self._generate_hash_container()
 
 	def remove(self, path: Path):
 		self.undo_stack.push(UCDeletePaths(self, [Path(path).resolve()]))
@@ -95,9 +95,9 @@ class FileIOMachine:
 			for dirpath, dirnames, filenames in os.walk(path):
 				parent_path = Path(dirpath)
 				for folder in dirnames:
-					self._main_tab_remove_path(parent_path.joinpath(folder))
+					self._main_tab_remove_path(parent_path / folder)
 				for file in filenames:
-					self._main_tab_remove_path(parent_path.joinpath(file))
+					self._main_tab_remove_path(parent_path / file)
 		else:
 			self._main_tab_remove_path(path)
 
@@ -109,7 +109,7 @@ class FileIOMachine:
 		uids = self.main_tab_holder.uids
 		if old_path in uids:
 			assert new_path not in uids
-			item = get_path_item(self.content_browser.current_folder.joinpath(old_path))
+			item = get_path_item(self.content_browser.current_folder / old_path)
 			assert item is not None
 			item.full_path = new_path
 			index = uids.index(old_path)
@@ -122,11 +122,11 @@ class FileIOMachine:
 		if old_path.is_dir():
 			for dirpath, dirnames, filenames in os.walk(old_path):
 				old_parent_path = Path(dirpath)
-				new_parent_path = new_path.joinpath(old_parent_path.relative_to(old_path))
+				new_parent_path = new_path / old_parent_path.relative_to(old_path)
 				for folder in dirnames:
-					self._main_tab_rename_path(old_parent_path.joinpath(folder), new_parent_path.joinpath(folder))
+					self._main_tab_rename_path(old_parent_path / folder, new_parent_path / folder)
 				for file in filenames:
-					self._main_tab_rename_path(old_parent_path.joinpath(file), new_parent_path.joinpath(file))
+					self._main_tab_rename_path(old_parent_path / file, new_parent_path / file)
 		else:
 			self._main_tab_rename_path(old_path, new_path)
 
@@ -159,7 +159,7 @@ class UCDeletePaths(QUndoCommand):
 
 	def _generate_trash_paths(self):
 		self.hash_path = self.machine.generate_hash_path()
-		self.trash_paths = [self.hash_path.joinpath(path.relative_to(self.machine.project_context.project_folder)) for
+		self.trash_paths = [self.hash_path / path.relative_to(self.machine.project_context.project_folder) for
 							path in self.paths]
 
 	def undo(self):
@@ -315,7 +315,7 @@ class UCNewFolder(QUndoCommand):
 
 	def _generate_trash_path(self):
 		self.hash_path = self.machine.generate_hash_path()
-		self.trash_path = self.hash_path.joinpath(self.folder.relative_to(self.machine.project_context.project_folder))
+		self.trash_path = self.hash_path / self.folder.relative_to(self.machine.project_context.project_folder)
 
 	def undo(self):
 		item = get_path_item(self.folder)
@@ -354,7 +354,7 @@ class UCNewFile(QUndoCommand):
 
 	def _generate_trash_path(self):
 		self.hash_path = self.machine.generate_hash_path()
-		self.trash_path = self.hash_path.joinpath(self.file.relative_to(self.machine.project_context.project_folder))
+		self.trash_path = self.hash_path / self.file.relative_to(self.machine.project_context.project_folder)
 
 	def undo(self):
 		self._generate_trash_path()

@@ -28,7 +28,7 @@ class ImportedFontPathItem(AbstractPathItem):
 
 	@override
 	def renamed_filepath(self, name: str):
-		return self.full_path.parent.joinpath(name)
+		return self.full_path.parent / name
 
 	@override
 	def open(self, browser: ContentBrowser):

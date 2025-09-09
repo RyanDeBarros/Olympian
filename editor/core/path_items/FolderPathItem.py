@@ -24,7 +24,7 @@ class FolderPathItem(AbstractPathItem):
 
 	@override
 	def renamed_filepath(self, name: str):
-		return self.full_path.parent.joinpath(name)
+		return self.full_path.parent / name
 
 	@override
 	def sorting_key(self):
@@ -42,8 +42,7 @@ class FolderPathItem(AbstractPathItem):
 			i = i + 1
 		folder_path = os.path.join(browser.current_folder, folder_name)
 		browser.folder_view.file_machine.new_folder(folder_path)
-		browser.folder_view.add_item(FolderPathItem(browser.current_folder.joinpath(folder_name).resolve()),
-									 editing=True)
+		browser.folder_view.add_item(FolderPathItem((browser.current_folder / folder_name).resolve()), editing=True)
 
 	@override
 	def on_new(self, browser: ContentBrowser):

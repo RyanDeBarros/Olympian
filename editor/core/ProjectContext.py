@@ -19,22 +19,22 @@ class ProjectContext:
 	def __init__(self, project_file: Path, main_window: MainWindow):
 		self.project_file = project_file.resolve()
 		self.project_folder = self.project_file.parent
-		self.res_folder = self.project_folder.joinpath("res")
+		self.res_folder = self.project_folder / "res"
 		self.res_friendly_prefix = "RES://"
 
-		self.trash_folder = self.project_folder.joinpath(".trash")
+		self.trash_folder = self.project_folder / ".trash"
 		self.trash_folder.mkdir(exist_ok=True)
-		self.settings_folder = self.project_folder.joinpath(".settings")
+		self.settings_folder = self.project_folder / ".settings"
 		self.settings_folder.mkdir(exist_ok=True)
 
 		self.asset_defaults_directory = AssetDefaultsDirectory(
 			folder_path=self.settings_folder,
-			texture_file=self.settings_folder.joinpath("TextureDefaults.toml"),
-			font_file=self.settings_folder.joinpath("FontDefaults.toml")
+			texture_file=self.settings_folder / "TextureDefaults.toml",
+			font_file=self.settings_folder / "FontDefaults.toml"
 		)
 		self.asset_defaults_directory.touch()
 
-		self.favorites_file = self.settings_folder.joinpath("ResFavorites.toml")
+		self.favorites_file = self.settings_folder / "ResFavorites.toml"
 		self.favorites_file.touch()
 
 		self.main_window = main_window
@@ -52,4 +52,4 @@ class ProjectContext:
 		relative = resource[len(self.res_friendly_prefix):]
 		if relative == "":
 			relative = "."
-		return self.res_folder.joinpath(Path(relative))
+		return self.res_folder / relative
