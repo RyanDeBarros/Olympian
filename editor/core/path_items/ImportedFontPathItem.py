@@ -23,14 +23,6 @@ class ImportedFontPathItem(AbstractPathItem):
 		return nice_icon("res/images/Font.png", size)
 
 	@override
-	def ui_name(self):
-		return self.full_path.name
-
-	@override
-	def renamed_filepath(self, name: str):
-		return self.full_path.parent / name
-
-	@override
 	def open(self, browser: ContentBrowser):
 		from ..tabs import FontTab
 		browser.win.tab_holder.add_tab(FontTab(browser.win, self))

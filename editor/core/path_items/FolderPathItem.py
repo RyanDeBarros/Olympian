@@ -19,14 +19,6 @@ class FolderPathItem(AbstractPathItem):
 		return nice_icon("res/images/Folder.png", size)
 
 	@override
-	def ui_name(self):
-		return self.full_path.name
-
-	@override
-	def renamed_filepath(self, name: str):
-		return self.full_path.parent / name
-
-	@override
 	def sorting_key(self):
 		if self.ui_name() == "..":
 			return 0,

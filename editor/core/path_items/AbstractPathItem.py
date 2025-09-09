@@ -21,13 +21,11 @@ class AbstractPathItem(ABC):
 	def icon(self, size: QSize):
 		pass
 
-	@abstractmethod
 	def ui_name(self):
-		pass
+		return self.full_path.name
 
-	@abstractmethod
 	def renamed_filepath(self, name: str):
-		pass
+		return self.full_path.parent / name
 
 	def sorting_key(self):
 		return 2, self.ui_name().lower()

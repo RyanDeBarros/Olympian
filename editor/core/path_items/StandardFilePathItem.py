@@ -18,14 +18,6 @@ class StandardFilePathItem(AbstractPathItem):
 	def icon(self, size: QSize):
 		return nice_icon("res/images/File.png", size)
 
-	@override
-	def ui_name(self):
-		return self.full_path.name
-
-	@override
-	def renamed_filepath(self, name: str):
-		return self.full_path.parent / name
-
 	@staticmethod
 	def new_item(browser: ContentBrowser):
 		file_name = "NewFile"
