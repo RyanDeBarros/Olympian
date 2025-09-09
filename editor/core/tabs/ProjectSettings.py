@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QMessageBox, QGridLayout, QLabel, QLineEdit, QHBox
 	QWidget
 
 from editor import ui, TOMLAdapter
-from editor.core import MainWindow, AbstractPathItem, nice_icon, block_signals
+from editor.core import MainWindow, AbstractPathItem, nice_icon, block_signals, GLFW_ANY_POSITION, GLFW_DONT_CARE
 from editor.core.common import SettingsForm, SettingsParameter
 from .EditorTab import EditorTab
 from ..CollapsibleBox import CollapsibleBox
@@ -33,7 +33,32 @@ class ProjectSettingsTab(EditorTab):
 			SettingsParameter('height', self.ui.windowHeight),
 			SettingsParameter('title', self.ui.windowTitle)
 		])
-		# TODO v4 window hints
+
+		self.window_hint_settings = {}
+		self.ui.windowHintsBox = CollapsibleBox.convert_group_box(self.ui.windowHintsBox)
+		self.ui.windowHintSwapIntervalAdaptive.checkStateChanged.connect(self.window_hint_swap_interval_adaptive_toggled)
+		self.ui.windowHintPositionXAny.checkStateChanged.connect(self.window_hint_position_x_any_toggled)
+		self.ui.windowHintPositionYAny.checkStateChanged.connect(self.window_hint_position_y_any_toggled)
+		self.ui.windowHintRefreshRateDontCare.checkStateChanged.connect(self.window_hint_refresh_rate_dont_care_toggled)
+		self.window_hint_form = SettingsForm([
+			SettingsParameter('resizable', self.ui.windowHintResizable),
+			SettingsParameter('visible', self.ui.windowHintVisible),
+			SettingsParameter('decorated', self.ui.windowHintDecorated),
+			SettingsParameter('focused', self.ui.windowHintFocused),
+			SettingsParameter('auto_iconify', self.ui.windowHintAutoIconify),
+			SettingsParameter('floating', self.ui.windowHintFloating),
+			SettingsParameter('maximized', self.ui.windowHintMaximized),
+			SettingsParameter('transparent_framebuffer', self.ui.windowHintTransparentFramebuffer),
+			SettingsParameter('focus_on_show', self.ui.windowHintFocusOnShow),
+			SettingsParameter('scale_to_monitor', self.ui.windowHintScaleToMonitor),
+			SettingsParameter('scale_framebuffer', self.ui.windowHintScaleFramebuffer),
+			SettingsParameter('mouse_passthrough', self.ui.windowHintMousePassthrough),
+			SettingsParameter('stereo', self.ui.windowHintStereo),
+			SettingsParameter('srgb_capable', self.ui.windowHintSRGBCapable),
+			SettingsParameter('double_buffer', self.ui.windowHintDoubleBuffer),
+			SettingsParameter('opengl_forward_compat', self.ui.windowHintOpenGLForwardCompat),
+			SettingsParameter('context_debug', self.ui.windowHintContextDebug)
+		])
 
 		self.viewport_settings = {}
 		self.viewport_form = SettingsForm([
@@ -69,14 +94,30 @@ class ProjectSettingsTab(EditorTab):
 		])
 
 		self.collision_settings = {}
-		self.ui.collisionMasksCollapsibleBox = CollapsibleBox.convert_group_box(self.ui.collisionMasksCollapsibleBox)
-		self.collision_mask_name_edits = self.init_collision_name_list(self.ui.collisionMasksCollapsibleBox, "Mask")
-		self.ui.collisionLayersCollapsibleBox = CollapsibleBox.convert_group_box(self.ui.collisionLayersCollapsibleBox)
-		self.collision_layer_name_edits = self.init_collision_name_list(self.ui.collisionLayersCollapsibleBox, "Layer")
+		self.ui.collisionMasksBox = CollapsibleBox.convert_group_box(self.ui.collisionMasksBox)
+		self.collision_mask_name_edits = self.init_collision_name_list(self.ui.collisionMasksBox, "Mask")
+		self.ui.collisionLayersBox = CollapsibleBox.convert_group_box(self.ui.collisionLayersBox)
+		self.collision_layer_name_edits = self.init_collision_name_list(self.ui.collisionLayersBox, "Layer")
 
 		self.revert_changes_impl()
 		self.window_form.connect_modified(lambda: self.set_asterisk(True))
+		for control in [
+			self.ui.windowHintClearColorR,
+			self.ui.windowHintClearColorG,
+			self.ui.windowHintClearColorB,
+			self.ui.windowHintClearColorA,
+			self.ui.windowHintSwapInterval,
+			self.ui.windowHintSwapIntervalAdaptive,
+			self.ui.windowHintPositionX,
+			self.ui.windowHintPositionXAny,
+			self.ui.windowHintPositionY,
+			self.ui.windowHintPositionYAny,
+			self.ui.windowHintRefreshRate,
+			self.ui.windowHintRefreshRateDontCare
+		]:
+			SettingsForm.modified_event(control).connect(lambda: self.set_asterisk(True))
 		self.viewport_form.connect_modified(lambda: self.set_asterisk(True))
+		self.window_hint_form.connect_modified(lambda: self.set_asterisk(True))
 		self.logger_form.connect_modified(lambda: self.set_asterisk(True))
 		# TODO v4 with nested SettingsForm, logger_enable_form should already be connected due to logger_form being connected.
 		self.logger_enable_form.connect_modified(lambda: self.set_asterisk(True))
@@ -96,33 +137,98 @@ class ProjectSettingsTab(EditorTab):
 
 	@override
 	def save_changes_impl(self):
+		# window
 		self.window_settings.update(self.window_form.get_dict())
+
+		# window hints
+		self.window_hint_settings.update(self.window_hint_form.get_dict())
+		self.window_hint_settings['clear_color'] = [
+			self.ui.windowHintClearColorR.value(),
+			self.ui.windowHintClearColorG.value(),
+			self.ui.windowHintClearColorB.value(),
+			self.ui.windowHintClearColorA.value()
+		]
+		self.window_hint_settings['swap_interval'] = self.ui.windowHintSwapInterval.value() if not self.ui.windowHintSwapIntervalAdaptive.isChecked() else -1
+		self.window_hint_settings['position_x'] = self.ui.windowHintPositionX.value() if not self.ui.windowHintPositionXAny.isChecked() else GLFW_ANY_POSITION
+		self.window_hint_settings['position_y'] = self.ui.windowHintPositionY.value() if not self.ui.windowHintPositionYAny.isChecked() else GLFW_ANY_POSITION
+		self.window_hint_settings['refresh_rate'] = self.ui.windowHintRefreshRate.value() if not self.ui.windowHintRefreshRateDontCare.isChecked() else GLFW_DONT_CARE
+
+		# viewport
 		self.viewport_settings.update(self.viewport_form.get_dict())
+
+		# logger
 		self.logger_settings.update(self.logger_form.get_dict())
 		self.logger_enable_settings.update(self.logger_enable_form.get_dict())
+
+		# framerate
 		self.framerate_settings.update(self.framerate_form.get_dict())
+
+		# collision
 		self.collision_settings['masks'] = self.get_collision_names(self.collision_mask_name_edits)
 		self.collision_settings['layers'] = self.get_collision_names(self.collision_layer_name_edits)
+
+		# dump
 		TOMLAdapter.dump(self.win.project_context.project_file, self.settings)
 
 	@override
 	def revert_changes_impl(self):
+		# load
 		self.settings = TOMLAdapter.load(self.win.project_context.project_file)
 
+		# context
 		if 'context' not in self.settings:
 			self.settings['context'] = {}
 		self.context = self.settings['context']
 
+		# window
 		if 'window' not in self.context:
 			self.context['window'] = {}
 		self.window_settings = self.context['window']
 		self.window_form.load_dict(self.window_settings)
 
+		# window hints
+		if 'window_hint' not in self.window_settings:
+			self.window_settings['window_hint'] = {}
+		self.window_hint_settings = self.window_settings['window_hint']
+		self.window_hint_form.load_dict(self.window_hint_settings)
+
+		clear_color = self.window_hint_settings.get('clear_color', [0.0, 0.0, 0.0, 1.0])
+		self.ui.windowHintClearColorR.setValue(clear_color[0])
+		self.ui.windowHintClearColorG.setValue(clear_color[1])
+		self.ui.windowHintClearColorB.setValue(clear_color[2])
+		self.ui.windowHintClearColorA.setValue(clear_color[3])
+
+		swap_interval = self.window_hint_settings.get('swap_interval', 1)
+		self.ui.windowHintSwapInterval.setValue(swap_interval if swap_interval >= 0 else 1)
+		with block_signals(self.ui.windowHintSwapIntervalAdaptive) as windowHintSwapIntervalAdaptive:
+			windowHintSwapIntervalAdaptive.setChecked(swap_interval == -1)
+		self.window_hint_swap_interval_adaptive_toggled()
+
+		position_x = self.window_hint_settings.get('position_x', GLFW_ANY_POSITION)
+		self.ui.windowHintPositionX.setValue(position_x if position_x != GLFW_ANY_POSITION else 0)
+		with block_signals(self.ui.windowHintPositionXAny) as windowHintPositionXAny:
+			windowHintPositionXAny.setChecked(position_x == GLFW_ANY_POSITION)
+		self.window_hint_position_x_any_toggled()
+
+		position_y = self.window_hint_settings.get('position_y', GLFW_ANY_POSITION)
+		self.ui.windowHintPositionY.setValue(position_y if position_y != GLFW_ANY_POSITION else 0)
+		with block_signals(self.ui.windowHintPositionYAny) as windowHintPositionYAny:
+			windowHintPositionYAny.setChecked(position_y == GLFW_ANY_POSITION)
+		self.window_hint_position_y_any_toggled()
+
+		refresh_rate = self.window_hint_settings.get('refresh_rate', GLFW_DONT_CARE)
+		self.ui.windowHintRefreshRate.setValue(refresh_rate if refresh_rate != GLFW_DONT_CARE else 0)
+		with block_signals(self.ui.windowHintRefreshRateDontCare) as windowHintRefreshRateDontCare:
+			windowHintRefreshRateDontCare.setChecked(refresh_rate == GLFW_DONT_CARE)
+		self.window_hint_refresh_rate_dont_care_toggled()
+
+		# viewport
 		if 'viewport' not in self.window_settings:
 			self.window_settings['viewport'] = {}
 		self.viewport_settings = self.window_settings['viewport']
 		self.viewport_form.load_dict(self.viewport_settings)
 
+		# logger
 		if 'logger' not in self.context:
 			self.context['logger'] = {}
 		self.logger_settings = self.context['logger']
@@ -133,11 +239,13 @@ class ProjectSettingsTab(EditorTab):
 		self.logger_enable_settings = self.logger_settings['enable']
 		self.logger_enable_form.load_dict(self.logger_enable_settings)
 
+		# framerate
 		if 'framerate' not in self.context:
 			self.context['framerate'] = {}
 		self.framerate_settings = self.context['framerate']
 		self.framerate_form.load_dict(self.framerate_settings)
 
+		# collision
 		if 'collision' not in self.context:
 			self.context['collision'] = {}
 		self.collision_settings = self.context['collision']
@@ -151,6 +259,18 @@ class ProjectSettingsTab(EditorTab):
 	@override
 	def refresh_impl(self):
 		pass
+
+	def window_hint_swap_interval_adaptive_toggled(self):
+		self.ui.windowHintSwapInterval.setDisabled(self.ui.windowHintSwapIntervalAdaptive.isChecked())
+
+	def window_hint_position_x_any_toggled(self):
+		self.ui.windowHintPositionX.setDisabled(self.ui.windowHintPositionXAny.isChecked())
+
+	def window_hint_position_y_any_toggled(self):
+		self.ui.windowHintPositionY.setDisabled(self.ui.windowHintPositionYAny.isChecked())
+
+	def window_hint_refresh_rate_dont_care_toggled(self):
+		self.ui.windowHintRefreshRate.setDisabled(self.ui.windowHintRefreshRateDontCare.isChecked())
 
 	def init_collision_name_list(self, box: CollapsibleBox, label_prefix: str) -> list[QLineEdit]:
 		grid_widget = QWidget()

@@ -49,6 +49,9 @@ GLFW_MOD_SUPER = Param(0x0008, 'Mod Super')
 GLFW_MOD_CAPS_LOCK = Param(0x0010, 'Mod Caps Lock')
 GLFW_MOD_NUM_LOCK = Param(0x0020, 'Mod Num Lock')
 
+GLFW_ANY_POSITION = 0x80000000
+GLFW_DONT_CARE = -1
+
 OLY_DISCARD = Param("discard", "Discard")
 OLY_KEEP = Param("keep", "Keep")
 

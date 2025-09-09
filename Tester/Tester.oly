@@ -43,6 +43,30 @@ layers = [ "player", "obstacle", "", "", "", "", "", "", "", "", "", "", "", "",
 boxed = true
 stretch = true
 
+[context.window.window_hint]
+resizable = true
+visible = true
+clear_color = [ 0.0, 0.0, 0.0, 1.0,]
+swap_interval = 1
+decorated = true
+focused = true
+auto_iconify = true
+floating = false
+maximized = false
+transparent_framebuffer = false
+focus_on_show = true
+scale_to_monitor = false
+scale_framebuffer = true
+mouse_passthrough = false
+stereo = false
+srgb_capable = false
+double_buffer = true
+opengl_forward_compat = false
+context_debug = false
+position_x = 2147483648
+position_y = 2147483648
+refresh_rate = -1
+
 [context.logger.enable]
 debug = false
 info = true
