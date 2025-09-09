@@ -4,7 +4,8 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QWidget, QPushButton, QFrame
 
-from editor import ui, TOMLAdapter
+from editor import ui
+from editor.tools import TOMLAdapter
 from editor.core import MainWindow, ImportedTexturePathItem, nice_pixmap, block_signals, PARAM_LIST
 from . import Converters
 from .Converters import TextureSlot

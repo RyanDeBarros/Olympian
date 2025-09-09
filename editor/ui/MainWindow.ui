@@ -131,6 +131,11 @@
     <string>Revert Changes (Ctrl+Alt+Shift+R)</string>
    </property>
   </action>
+  <action name="actionGenerate_archetypes">
+   <property name="text">
+    <string>Generate Archetypes</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

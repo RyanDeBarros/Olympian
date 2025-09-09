@@ -2,7 +2,8 @@ from typing import override
 
 from PySide6.QtCore import QSize
 
-from editor import ui, TOMLAdapter
+from editor import ui
+from editor.tools import TOMLAdapter
 from editor.core import MainWindow, AbstractPathItem, nice_icon
 from .LoggerSettings import LoggerSettingsManager
 from .PhysicsSettings import PhysicsSettingsManager

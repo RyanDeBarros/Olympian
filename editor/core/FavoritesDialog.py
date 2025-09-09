@@ -4,7 +4,8 @@ from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QHeaderView, QAbstractScrollArea
 
-from editor import ui, TOMLAdapter
+from editor import ui
+from ..tools import TOMLAdapter
 from .ContentBrowser import ContentBrowser
 from editor.core import block_signals
 from editor.core.common import Alerts

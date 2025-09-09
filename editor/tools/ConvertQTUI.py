@@ -7,8 +7,8 @@ from typing import Generator
 
 import toml
 
-CACHE_FILE = Path('.dev/qtconv.toml')
-SEARCH_FOLDER = Path('ui')
+CACHE_FILE = Path('../.dev/qtconv.toml')
+SEARCH_FOLDER = Path('../ui')
 
 
 @contextmanager

@@ -7,7 +7,7 @@ from PySide6.QtCore import QSize
 
 from .AbstractPathItem import AbstractPathItem
 from .. import nice_icon
-from ... import TOMLAdapter
+from ...tools import TOMLAdapter
 
 if TYPE_CHECKING:
 	from editor.core.ContentBrowser import ContentBrowser

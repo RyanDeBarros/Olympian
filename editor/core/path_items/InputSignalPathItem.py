@@ -6,7 +6,7 @@ from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QSize
 
-from editor import TOMLAdapter
+from ...tools import TOMLAdapter
 from .AbstractPathItem import AbstractPathItem
 from .. import nice_icon
 

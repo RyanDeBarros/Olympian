@@ -4,7 +4,8 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QFontDatabase, QIcon
 from PySide6.QtWidgets import QWidget, QPushButton, QHeaderView, QLineEdit, QSpinBox, QAbstractScrollArea
 
-from editor import ui, TOMLAdapter
+from editor import ui
+from editor.tools import TOMLAdapter
 from editor.core import MainWindow, ImportedFontPathItem, block_signals
 from . import Converters
 from ..EditorTab import EditorTab

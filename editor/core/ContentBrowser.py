@@ -501,7 +501,7 @@ class ContentBrowser(QWidget):
 		favorites_shortcut.activated.connect(lambda: FavoritesDialog(self).exec() if self.underMouse() else None)
 
 		self.current_folder: Optional[Path] = None
-		self.last_file_dialog_dir: Optional[Path] = None
+		self.last_file_dialog_dir: Optional[Path] = None  # TODO v4 create utility to wrap QFileDialog/QExistingDialog with last file dialog dir
 
 	def init(self, win: MainWindow):
 		self.win = win
@@ -581,6 +581,7 @@ class ContentBrowser(QWidget):
 				self.old_folder = old_folder
 				self.new_folder = new_folder
 
+			# noinspection PyShadowingNames
 			def open(self, folder):
 				self.browser.current_folder = folder
 				friendly_folder = self.browser.win.project_context.to_friendly_resource_path(folder)

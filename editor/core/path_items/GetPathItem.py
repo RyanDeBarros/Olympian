@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from editor import TOMLAdapter
+from editor.tools import TOMLAdapter
 
 
 def get_path_item(path: Path):

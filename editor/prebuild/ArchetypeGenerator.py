@@ -6,9 +6,8 @@ from pathlib import Path
 import toml
 
 from assets import *
+from editor.tools.TOMLAdapter import meta
 
-MANIFEST_PATH = Path('.gen/manifest.txt').resolve()
-CACHE_PATH = Path('.gen/cache.json').resolve()
 ARCHETYPE_GEN_PATH = Path('.gen/archetypes').resolve()
 
 # TODO v4 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
@@ -228,11 +227,13 @@ namespace oly::gen
 """
 
 
+# TODO v4 move Cache and manifest generator into different file from source code generator above
 class Cache:
 	def __init__(self):
+		self.cache_path = Path('.gen/cache.json').resolve()
 		self.cache: dict[str, float] = {}
-		if CACHE_PATH.exists():
-			with open(CACHE_PATH, 'r') as f:
+		if self.cache_path.exists():
+			with open(self.cache_path, 'r') as f:
 				try:
 					self.cache: dict = json.load(f)
 				except json.JSONDecodeError:
@@ -242,7 +243,7 @@ class Cache:
 	def dump(self):
 		self.cache = {file: self.cache[file] for file in self.marked}
 		self.marked.clear()
-		with open(CACHE_PATH, 'w') as f:
+		with open(self.cache_path, 'w') as f:
 			json.dump(self.cache, f)
 
 	def is_dirty(self, file: Path) -> bool:
@@ -280,21 +281,26 @@ def generate(asset_filepath: Path):
 		f.write(cpp)
 
 
-def read_manifest_folders():
-	return open(MANIFEST_PATH, 'r').read().splitlines()
-
-
 def generate_manifest():
-	asset_folders = read_manifest_folders()
+	def generate_file(file: Path):
+		if file.suffix == ".toml":
+			m = meta(file)
+			if 'type' in m and m['type'] == 'archetype':
+				cache.mark(file)
+				if cache.is_dirty(file):
+					generate(file)
+					cache.update(file)
 
 	def generate_folder(folder):
-		for path in Path(folder).rglob("*.toml"):  # TODO v4 use TOMLAdapter to check meta fields for archetype flag
-			cache.mark(path)
-			if cache.is_dirty(path):
-				generate(path)
-				cache.update(path)
+		for file in Path(folder).rglob("*.toml"):
+			generate_file(file)
 
+	assets = Path('.gen/manifest.txt').read_text().splitlines()
 	cache = Cache()
-	for asset_folder in asset_folders:
-		generate_folder(f"res/{asset_folder}")
+	for asset in assets:
+		asset_path = Path(f"res/{asset}")
+		if asset_path.is_file():
+			generate_file(asset_path)
+		elif asset_path.is_dir():
+			generate_folder(asset_path)
 	cache.dump()

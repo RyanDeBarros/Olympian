@@ -4,7 +4,8 @@ from PySide6.QtCore import QSize, QObject, QEvent
 from PySide6.QtGui import QKeyEvent, QIcon
 from PySide6.QtWidgets import QApplication, QComboBox, QPushButton, QMessageBox, QHeaderView
 
-from editor import ui, TOMLAdapter
+from editor import ui
+from editor.tools import TOMLAdapter
 from editor.core import MainWindow, InputSignalPathItem, block_signals
 from editor.core.common import Alerts
 from editor.core.common.SettingsForm import handle_all_children_modification

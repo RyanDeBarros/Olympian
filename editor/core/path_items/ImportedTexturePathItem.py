@@ -7,7 +7,7 @@ from PySide6.QtCore import QSize
 
 from .AbstractPathItem import AbstractPathItem
 from .. import nice_icon
-from ... import TOMLAdapter
+from ...tools import TOMLAdapter
 
 if TYPE_CHECKING:
 	from editor.core.ContentBrowser import ContentBrowser
@@ -48,7 +48,8 @@ class ImportedTexturePathItem(AbstractPathItem):
 			is_raster = self.full_path.suffix not in ('.svg', '.SVG')
 			is_gif = self.full_path.suffix in ('.gif', '.GIF')
 			slot = TextureSlot(is_raster, is_gif)
-			defaults = Texture.from_dict(TOMLAdapter.load(browser.win.project_context.asset_defaults_directory.texture_file))
+			defaults = Texture.from_dict(
+				TOMLAdapter.load(browser.win.project_context.asset_defaults_directory.texture_file))
 			slot.load_dict(defaults.to_dict())
 			textures = [slot.get_dict()]
 

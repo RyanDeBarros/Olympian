@@ -6,13 +6,15 @@ import re
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox, QMainWindow
 
-from editor import MANIFEST, ui
+from editor import ui
+from editor.core.EditorManifest import EditorManifest
 
 
 class StartMenuWindow(QMainWindow):
 	def __init__(self, open_project):
 		super().__init__()
 		self.open_project = open_project
+		self.editor_manifest = EditorManifest()
 
 		self.setWindowTitle("Olympian Editor")
 		self.setMinimumSize(QSize(600, 300))
@@ -44,7 +46,7 @@ class StartMenuWidget(QWidget):
 			self.recent_tab.sync_combo()
 
 	def open_project(self, project_filepath):
-		MANIFEST.push_to_top_of_recent(project_filepath)
+		self.win.editor_manifest.push_to_top_of_recent(project_filepath)
 		self.close()
 		self.win.open(project_filepath)
 
@@ -94,15 +96,15 @@ class NewTab:
 		project_folder = self.generated_project_folder()
 		project_name = self.get_project_name()
 		if project_folder != "" and project_name != "":
-			return MANIFEST.get_project_file(project_folder, project_name)
+			return self.start_menu.win.editor_manifest.get_project_file(project_folder, project_name)
 		else:
 			return ""
 
 	def sync_project_name(self):
 		project_folder = self.generated_project_folder()
-		self.src_folder.setText(MANIFEST.get_src_folder(project_folder))
-		self.res_folder.setText(MANIFEST.get_res_folder(project_folder))
-		self.gen_folder.setText(MANIFEST.get_gen_folder(project_folder))
+		self.src_folder.setText(self.start_menu.win.editor_manifest.get_src_folder(project_folder))
+		self.res_folder.setText(self.start_menu.win.editor_manifest.get_res_folder(project_folder))
+		self.gen_folder.setText(self.start_menu.win.editor_manifest.get_gen_folder(project_folder))
 		project_filepath = self.generated_project_filepath()
 		self.project_filepath.setText(project_filepath)
 
@@ -110,7 +112,7 @@ class NewTab:
 		if disable:
 			self.error_message.setText("")
 		else:
-			disable = MANIFEST.is_filepath_relative_to_existing_project(project_filepath)
+			disable = self.start_menu.win.editor_manifest.is_filepath_relative_to_existing_project(project_filepath)
 			if disable:
 				self.error_message.setText("The project filepath is relative to an existing project!")
 			else:
@@ -119,14 +121,14 @@ class NewTab:
 
 	def open_browse(self):
 		folder_path = QFileDialog.getExistingDirectory(self.start_menu, "Select Folder",
-													   MANIFEST.get_last_file_dialog_dir())
+													   self.start_menu.win.editor_manifest.get_last_file_dialog_dir())
 		if folder_path:
-			MANIFEST.set_last_file_dialog_dir(folder_path)
+			self.start_menu.win.editor_manifest.set_last_file_dialog_dir(folder_path)
 			self.project_folder.setText(folder_path)
 
 	def create_project(self):
 		project_filepath = self.generated_project_filepath()
-		MANIFEST.create_project(project_filepath)
+		self.start_menu.win.editor_manifest.create_project(project_filepath)
 		self.start_menu.open_project(project_filepath)
 
 
@@ -142,10 +144,11 @@ class OpenTab:
 		self.open_project_button.clicked.connect(self.open_project)
 
 	def open_browse(self):
-		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", MANIFEST.get_last_file_dialog_dir(),
+		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project",
+												  self.start_menu.win.editor_manifest.get_last_file_dialog_dir(),
 												  filter="Oly files (*.oly)")
-		if filepath and MANIFEST.is_valid_project_file(filepath):
-			MANIFEST.set_last_file_dialog_dir(os.path.dirname(filepath))
+		if filepath and self.start_menu.win.editor_manifest.is_valid_project_file(filepath):
+			self.start_menu.win.editor_manifest.set_last_file_dialog_dir(os.path.dirname(filepath))
 			self.open_project_filepath.setText(filepath)
 
 	def sync_project_filepath(self):
@@ -171,7 +174,7 @@ class RecentTab:
 
 	def sync_combo(self):
 		self.combo_box.clear()
-		filepaths = MANIFEST.get_recent_project_filepaths()
+		filepaths = self.start_menu.win.editor_manifest.get_recent_project_filepaths()
 		self.combo_box.addItems(filepaths)
 
 
@@ -189,9 +192,11 @@ class DeleteTab:
 		self.clean_manifest_button.clicked.connect(self.clean_manifest)
 
 	def open_browse(self):
-		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project", MANIFEST.get_last_file_dialog_dir(), filter="Oly files (*.oly)")
-		if filepath and MANIFEST.is_valid_project_file(filepath):
-			MANIFEST.set_last_file_dialog_dir(os.path.dirname(filepath))
+		filepath, _ = QFileDialog.getOpenFileName(self.start_menu, "Open Project",
+												  self.start_menu.win.editor_manifest.get_last_file_dialog_dir(),
+												  filter="Oly files (*.oly)")
+		if filepath and self.start_menu.win.editor_manifest.is_valid_project_file(filepath):
+			self.start_menu.win.editor_manifest.set_last_file_dialog_dir(os.path.dirname(filepath))
 			self.delete_project_filepath.setText(filepath)
 
 	def sync_project_filepath(self):
@@ -203,11 +208,11 @@ class DeleteTab:
 									f"Delete project {pathlib.Path(self.delete_project_filepath.text()).stem}?",
 									QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 		if reply == QMessageBox.StandardButton.Yes:
-			MANIFEST.delete_project(self.delete_project_filepath.text())
+			self.start_menu.win.editor_manifest.delete_project(self.delete_project_filepath.text())
 			self.delete_project_filepath.clear()
 
 	def clean_manifest(self):
 		current_to_delete = self.delete_project_filepath.text()
-		removed = MANIFEST.remove_nonexistent_projects()
+		removed = self.start_menu.win.editor_manifest.remove_nonexistent_projects()
 		if current_to_delete in removed:
 			self.delete_project_filepath.clear()

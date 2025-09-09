@@ -82,5 +82,5 @@ namespace oly::physics
 	};
 
 	typedef SmartReference<Material> MaterialRef;
-	// TODO v4 MaterialRegistry for Material assets. + SubMaterial assets.
+	// TODO v5 MaterialRegistry for Material assets. + SubMaterial assets. + every other ___Ref asset.
 }

@@ -5,13 +5,13 @@ from pathlib import Path
 
 import send2trash
 
-from editor import TOMLAdapter
+from editor.tools import TOMLAdapter
 
 
-class ManifestTOML:
+class EditorManifest:
 	def __init__(self):
-		self.toml_filepath = 'projects/manifest.toml'
-		self.toml = TOMLAdapter.load(self.toml_filepath)
+		self.manifest_filepath = Path('projects/manifest.toml').resolve()
+		self.toml = TOMLAdapter.load(self.manifest_filepath)
 
 		# TODO v4 option in editor to re-generate these files. This would need to be done if the project is moved, or renamed. In fact, add option to rename project.
 
@@ -22,12 +22,12 @@ class ManifestTOML:
 			self.project_context_cpp = f.read()
 
 	def dump(self):
-		TOMLAdapter.dump(self.toml_filepath, self.toml)
+		TOMLAdapter.dump(self.manifest_filepath, self.toml)
 
 	@staticmethod
 	def get_default_project_context(project_folder, project_name):
 		logfile = posixpath.join(project_folder, f"{project_name}.log")
-		with open('data/DEFAULT_PROJECT_CONTEXT.toml', 'r') as f:
+		with open('../data/DEFAULT_PROJECT_CONTEXT.toml', 'r') as f:
 			content = f.read()
 		return re.sub(r'\{\{LOGFILE}}', logfile, content)
 
@@ -155,6 +155,3 @@ class ManifestTOML:
 		self.toml['projects'] = keep
 		self.dump()
 		return removed
-
-
-MANIFEST = ManifestTOML()

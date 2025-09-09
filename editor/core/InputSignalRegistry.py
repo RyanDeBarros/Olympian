@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from editor import TOMLAdapter
+from editor.tools import TOMLAdapter
 
 
 class InputSignalRegistry:
