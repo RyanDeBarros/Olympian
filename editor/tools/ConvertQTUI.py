@@ -13,18 +13,13 @@ SEARCH_FOLDER = Path('../ui')
 
 @contextmanager
 def caching() -> Generator[dict, None, None]:
-	if CACHE_FILE.exists():
-		with open(CACHE_FILE, 'r') as f:
-			cache = toml.load(f).get("files", {})
-	else:
-		cache = {}
+	cache = toml.loads(CACHE_FILE.read_text()).get('files', {}) if CACHE_FILE.exists() else {}
 	try:
 		yield cache
 	finally:
 		cache = {k: v for k, v in cache.items() if Path(k).exists()}
 		CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-		with open(CACHE_FILE, 'w') as f:
-			toml.dump({'files': cache}, f)
+		CACHE_FILE.write_text(toml.dumps({'files': cache}))
 
 
 def convert(ui_path: Path, py_path: Path):

@@ -38,13 +38,11 @@ class StandardFileTab(EditorTab):
 
 	@override
 	def save_changes_impl(self):
-		with open(self.item.full_path, 'w') as f:
-			f.write(self.text_edit.toPlainText())
+		self.item.full_path.write_text(self.text_edit.toPlainText())
 
 	@override
 	def revert_changes_impl(self):
-		with open(self.item.full_path, 'r') as f:
-			self.text_edit.setPlainText(f.read())
+		self.text_edit.setPlainText(self.item.full_path.read_text())
 
 	def lose_focus(self):
 		if self.text_edit.hasFocus():

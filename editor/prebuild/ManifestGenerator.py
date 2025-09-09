@@ -15,18 +15,16 @@ class Cache:
 		self.cache_path = Path('.gen/cache.json').resolve()
 		self.cache: dict[str, float] = {}
 		if self.cache_path.exists():
-			with open(self.cache_path, 'r') as f:
-				try:
-					self.cache: dict = json.load(f)
-				except json.JSONDecodeError:
-					pass
+			try:
+				json.loads(self.cache_path.read_text())
+			except json.JSONDecodeError:
+				pass
 		self.marked: list[str] = []
 
 	def dump(self):
 		self.cache = {file: self.cache[file] for file in self.marked}
 		self.marked.clear()
-		with open(self.cache_path, 'w') as f:
-			json.dump(self.cache, f)
+		self.cache_path.write_text(json.dumps(self.cache))
 
 	def is_dirty(self, file: Path) -> bool:
 		return file.as_posix() not in self.cache or self.cache[file.as_posix()] != file.stat().st_mtime
