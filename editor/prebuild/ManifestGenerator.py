@@ -9,7 +9,6 @@ from editor.tools import TOMLAdapter
 ARCHETYPE_GEN_PATH = Path('.gen/archetypes').resolve()
 
 
-# TODO v4 move Cache and manifest generator into different file from source code generator above
 class Cache:
 	def __init__(self):
 		self.cache_path = Path('.gen/cache.json').resolve()

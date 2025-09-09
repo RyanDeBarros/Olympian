@@ -14,7 +14,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction,
 from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
 	QVBoxLayout, QUndoView, QCheckBox
 
-from editor.core import MainWindow
+from editor.core import MainWindow, FileDialog
 from editor.core.EditorPreferences import PREFERENCES
 from editor.core.common import Alerts
 from editor.core.path_items import *
@@ -408,17 +408,15 @@ class ContentBrowserFolderView(QListView):
 
 
 	def move_items(self, indexes: list[QModelIndex]):
-		folder = QFileDialog.getExistingDirectory(self, "Move To", self.content_browser.current_folder.as_posix())
-		if folder:
-			folder = Path(folder).resolve()
-			if folder and folder.is_relative_to(self.content_browser.win.project_context.res_folder) and folder != self.content_browser.current_folder:
-				multi_move_data = ContentBrowserFolderView._MultiPathTransferData(to_folder=folder, action_name="move")
-				multi_move_data.process_transfer([self.path_items[index.row()].full_path for index in indexes])
-				if multi_move_data.can_transfer():
-					try:
-						self.file_machine.rename_all(multi_move_data.from_paths, multi_move_data.to_paths, multi_move_data.replace_existing)
-					except OSError as e:
-						Alerts.alert_error(self, "Error - cannot complete move", str(e))
+		folder = FileDialog(self.content_browser.current_folder).get_existing_directory(parent=self, caption="Move To")
+		if folder and folder.is_relative_to(self.content_browser.win.project_context.res_folder) and folder != self.content_browser.current_folder:
+			multi_move_data = ContentBrowserFolderView._MultiPathTransferData(to_folder=folder, action_name="move")
+			multi_move_data.process_transfer([self.path_items[index.row()].full_path for index in indexes])
+			if multi_move_data.can_transfer():
+				try:
+					self.file_machine.rename_all(multi_move_data.from_paths, multi_move_data.to_paths, multi_move_data.replace_existing)
+				except OSError as e:
+					Alerts.alert_error(self, "Error - cannot complete move", str(e))
 
 	def copy_items(self, indexes: list[QModelIndex]):
 		self.clipboard_paths = [self.path_items[index.row()].full_path for index in indexes]
@@ -501,12 +499,12 @@ class ContentBrowser(QWidget):
 		favorites_shortcut.activated.connect(lambda: FavoritesDialog(self).exec() if self.underMouse() else None)
 
 		self.current_folder: Optional[Path] = None
-		self.last_file_dialog_dir: Optional[Path] = None  # TODO v4 create utility to wrap QFileDialog/QExistingDialog with last file dialog dir -> also pass/return the path as a Path
+		self.browse_file_dialog: Optional[FileDialog] = None
 
 	def init(self, win: MainWindow):
 		self.win = win
 		self.current_folder = self.win.project_context.res_folder
-		self.last_file_dialog_dir = self.current_folder
+		self.browse_file_dialog = FileDialog(self.current_folder)
 		self.open_folder(self.current_folder, add_to_history=False)
 
 		self.file_machine = FileIOMachine(self.win.project_context)
@@ -553,12 +551,12 @@ class ContentBrowser(QWidget):
 			self.folder_view.paste_items()
 
 	def browse_folder(self):
-		folder = QFileDialog.getExistingDirectory(self, "Select Folder", self.last_file_dialog_dir.as_posix())
+		folder = self.browse_file_dialog.get_existing_directory(parent=self, caption="Select Folder")
 		if folder:
-			folder = Path(folder).resolve()
-			if folder and folder.is_relative_to(self.win.project_context.res_folder):
-				self.last_file_dialog_dir = folder
+			if folder.is_relative_to(self.win.project_context.res_folder):
 				self.open_folder(folder)
+			else:
+				self.browse_file_dialog.reset_last_dir()
 
 	def open_in_explorer(self):
 		system = platform.system()

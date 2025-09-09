@@ -4,6 +4,7 @@ from pathlib import Path
 
 import send2trash
 
+from editor.core import FileDialog
 from editor.tools import TOMLAdapter
 
 
@@ -15,7 +16,10 @@ class EditorManifest:
 		self.project_context_h = Path('data/PROJECT_CONTEXT_H').read_text()
 		self.project_context_cpp = Path('data/PROJECT_CONTEXT_CPP').read_text()
 
+		self.browse_file_dialog = FileDialog(Path(self.toml.get('last_file_dialog_dir', os.getcwd())))
+
 	def dump(self):
+		self.toml['last_file_dialog_dir'] = self.browse_file_dialog.last_dir.as_posix()
 		TOMLAdapter.dump(self.manifest_filepath, self.toml)
 
 	@staticmethod
@@ -23,14 +27,6 @@ class EditorManifest:
 		logfile = project_folder / f"{project_name}.log"
 		content = Path('../data/DEFAULT_PROJECT_CONTEXT.toml').read_text()
 		return re.sub(r'\{\{LOGFILE}}', logfile.as_posix(), content)
-
-	def get_last_file_dialog_dir(self) -> Path | None:
-		folder = Path(self.toml.get('last file dialog dir', os.getcwd()))
-		return folder if folder.exists() and folder.is_dir() else None
-
-	def set_last_file_dialog_dir(self, folder: Path):
-		self.toml['last file dialog dir'] = folder.as_posix()
-		self.dump()
 
 	def project_dict(self) -> dict:
 		if 'projects' not in self.toml:
