@@ -16,8 +16,8 @@ class AssetDefaultsDirectory:
 class ProjectContext:
 	from editor.core import MainWindow
 
-	def __init__(self, project_file, main_window: MainWindow):
-		self.project_file = Path(project_file).resolve()
+	def __init__(self, project_file: Path, main_window: MainWindow):
+		self.project_file = project_file.resolve()
 		self.project_folder = self.project_file.parent
 		self.res_folder = self.project_folder.joinpath("res")
 		self.res_friendly_prefix = "RES://"

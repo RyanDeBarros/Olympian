@@ -1,11 +1,12 @@
 import subprocess
+from pathlib import Path
 
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtWidgets import QMainWindow, QWhatsThis
 
 
 class MainWindow(QMainWindow):
-	def __init__(self, open_start_menu, project_file):
+	def __init__(self, open_start_menu, project_file: Path):
 		super().__init__()
 		self.open_start = open_start_menu
 

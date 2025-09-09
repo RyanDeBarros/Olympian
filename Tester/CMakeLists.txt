@@ -46,6 +46,8 @@ file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h")
 add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
 
 # Project context macros
+
+# TODO v5 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
 target_compile_definitions(Olympian PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"

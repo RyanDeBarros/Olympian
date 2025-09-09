@@ -16,7 +16,7 @@ def open_start_menu():
 	windows['start'].show()
 
 
-def open_project(project_filepath):
+def open_project(project_filepath: Path):
 	windows['project'] = MainWindow(open_start_menu, project_filepath)
 	windows['project'].show()
 
