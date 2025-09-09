@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 import bisect
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QHeaderView, QAbstractScrollArea
 
 from editor import ui
-from ..tools import TOMLAdapter
-from .ContentBrowser import ContentBrowser
+from editor.tools import TOMLAdapter
 from editor.core import block_signals
 from editor.core.common import Alerts
+
+if TYPE_CHECKING:
+	from .ContentBrowser import ContentBrowser
 
 
 class FavoritesDialog(QDialog):

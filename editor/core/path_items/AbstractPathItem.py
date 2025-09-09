@@ -7,7 +7,7 @@ from PySide6.QtCore import QSize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-	from editor.core.ContentBrowser import ContentBrowser
+	from ..content_browser import ContentBrowser
 
 
 class AbstractPathItem(ABC):

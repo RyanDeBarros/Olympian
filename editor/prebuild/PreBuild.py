@@ -1,8 +1,8 @@
-import os
 import sys
 import time
+from pathlib import Path
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.append(Path(__file__).parent.parent.parent.as_posix())
 
 import ArchetypeGenerator
 

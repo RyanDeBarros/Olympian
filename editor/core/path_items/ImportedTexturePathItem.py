@@ -10,7 +10,7 @@ from .. import nice_icon
 from ...tools import TOMLAdapter
 
 if TYPE_CHECKING:
-	from editor.core.ContentBrowser import ContentBrowser
+	from ..content_browser import ContentBrowser
 
 
 class ImportedTexturePathItem(AbstractPathItem):

@@ -141,7 +141,7 @@
   <customwidget>
    <class>ContentBrowser</class>
    <extends>QWidget</extends>
-   <header location="global">editor.core.ContentBrowser</header>
+   <header location="global">editor.core.content_browser.ContentBrowser</header>
    <container>1</container>
   </customwidget>
   <customwidget>

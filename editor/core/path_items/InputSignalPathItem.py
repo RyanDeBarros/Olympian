@@ -11,7 +11,7 @@ from .AbstractPathItem import AbstractPathItem
 from .. import nice_icon
 
 if TYPE_CHECKING:
-	from editor.core.ContentBrowser import ContentBrowser
+	from ..content_browser import ContentBrowser
 
 
 class InputSignalPathItem(AbstractPathItem):

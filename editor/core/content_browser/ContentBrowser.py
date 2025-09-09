@@ -16,9 +16,10 @@ from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView
 
 from editor.core import MainWindow
 from editor.core.EditorPreferences import PREFERENCES
-from editor.core.FileIOMachine import FileIOMachine
 from editor.core.common import Alerts
 from editor.core.path_items import *
+from .FavoritesDialog import FavoritesDialog
+from .FileIOMachine import FileIOMachine
 
 
 class ContentBrowserFolderView(QListView):
@@ -495,7 +496,6 @@ class ContentBrowser(QWidget):
 		self.ui.historyToolButton.setMenu(history_menu)
 		self.ui.historyToolButton.clicked.connect(lambda: self.ui.historyToolButton.showMenu())
 
-		from .FavoritesDialog import FavoritesDialog
 		self.ui.openFavorites.clicked.connect(lambda: FavoritesDialog(self).exec())
 		favorites_shortcut = QShortcut(QKeySequence("Shift+Alt+F"), self)
 		favorites_shortcut.activated.connect(lambda: FavoritesDialog(self).exec() if self.underMouse() else None)
@@ -605,7 +605,7 @@ class ContentBrowser(QWidget):
 
 	def populate(self):
 		self.folder_view.clear_items()
-		items = [FolderPathItem(self.current_folder.joinpath(".."))]
+		items = [FolderPathItem(self.current_folder.joinpath("../.."))]
 		for path in Path(self.current_folder).iterdir():
 			item = get_path_item(self.current_folder.joinpath(path))
 			if item is not None:
