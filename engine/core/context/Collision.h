@@ -20,10 +20,8 @@ namespace oly::context
 	extern col2d::internal::CollisionDispatcher& collision_dispatcher();
 
     extern col2d::Mask get_collision_mask(const std::string& name);
-    extern void set_collision_mask(col2d::Mask mask, const std::string& name);
     extern void set_collision_mask_index(int index, const std::string& name);
 
     extern col2d::Layer get_collision_layer(const std::string& name);
-    extern void set_collision_layer(col2d::Layer layer, const std::string& name);
     extern void set_collision_layer_index(int index, const std::string& name);
 }

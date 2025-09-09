@@ -55,6 +55,8 @@ namespace oly::context
 
 	col2d::Mask get_collision_mask(const std::string& name)
 	{
+		if (name == "")
+			return 0;
 		auto it = std::find(internal::collision_mask_names.begin(), internal::collision_mask_names.end(), name);
 		if (it != internal::collision_mask_names.end())
 			return col2d::Mask(1 << (it - internal::collision_mask_names.begin()));
@@ -62,25 +64,25 @@ namespace oly::context
 			return 0;
 	}
 
-	void set_collision_mask(col2d::Mask mask, const std::string& name)
-	{
-		for (int i = 0; i < internal::collision_mask_names.size(); ++i)
-			if ((1 << i) != mask && internal::collision_mask_names[i] == name)
-				throw Error(ErrorCode::DUPLICATE_KEY);
-
-		internal::collision_mask_names[mask] = name;
-	}
-
 	void set_collision_mask_index(int index, const std::string& name)
 	{
 		if (index >= 0 && index < 32)
-			set_collision_mask(col2d::Mask(1 << index), name);
+		{
+			if (name != "")
+				for (int i = 0; i < internal::collision_mask_names.size(); ++i)
+					if (i != index && internal::collision_mask_names[i] == name)
+						throw Error(ErrorCode::DUPLICATE_KEY);
+
+			internal::collision_mask_names[index] = name;
+		}
 		else
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 	}
 
 	col2d::Layer get_collision_layer(const std::string& name)
 	{
+		if (name == "")
+			return 0;
 		auto it = std::find(internal::collision_layer_names.begin(), internal::collision_layer_names.end(), name);
 		if (it != internal::collision_layer_names.end())
 			return col2d::Layer(1 << (it - internal::collision_layer_names.begin()));
@@ -88,19 +90,17 @@ namespace oly::context
 			return 0;
 	}
 
-	void set_collision_layer(col2d::Layer layer, const std::string& name)
-	{
-		for (int i = 0; i < internal::collision_layer_names.size(); ++i)
-			if ((1 << i) != layer && internal::collision_layer_names[i] == name)
-				throw Error(ErrorCode::DUPLICATE_KEY);
-
-		internal::collision_layer_names[layer] = name;
-	}
-
 	void set_collision_layer_index(int index, const std::string& name)
 	{
 		if (index >= 0 && index < 32)
-			set_collision_layer(col2d::Layer(1 << index), name);
+		{
+			if (name != "")
+				for (int i = 0; i < internal::collision_layer_names.size(); ++i)
+					if (i != index && internal::collision_layer_names[i] == name)
+						throw Error(ErrorCode::DUPLICATE_KEY);
+
+			internal::collision_layer_names[index] = name;
+		}
 		else
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 	}
