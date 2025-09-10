@@ -1,6 +1,7 @@
 #include "Text.h"
 
 #include "core/context/rendering/Rendering.h"
+#include "core/context/rendering/Text.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
@@ -62,12 +63,15 @@ namespace oly::rendering
 		return id;
 	}
 		
-	void TextBatch::erase_glyph_id(GLuint id)
+	void TextBatch::erase_glyph_id(const VBID& id)
 	{
-		const GlyphInfo& glyph_info = glyph_ssbo_block.buf.at<INFO>(id);
-		glyph_info_store.textures.decrement_usage(glyph_info.tex_slot);
-		glyph_info_store.text_colors.decrement_usage(glyph_info.text_color_slot);
-		glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
+		if (id.is_valid())
+		{
+			const GlyphInfo& glyph_info = glyph_ssbo_block.buf.at<INFO>(id.get());
+			glyph_info_store.textures.decrement_usage(glyph_info.tex_slot);
+			glyph_info_store.text_colors.decrement_usage(glyph_info.text_color_slot);
+			glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
+		}
 	}
 		
 	void TextBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture)
@@ -147,19 +151,16 @@ namespace oly::rendering
 			tex_handles_ssbo.send(slot, texture->get_handle());
 	}
 		
-	TextGlyph::TextGlyph(TextBatch& text_batch)
-		: batch(&text_batch)
+	TextGlyph::TextGlyph(TextBatch* batch)
+		: batch(batch ? *batch : context::text_batch())
 	{
-		vbid = batch->gen_glyph_id();
+		vbid = this->batch.gen_glyph_id();
 	}
 		
 	TextGlyph::TextGlyph(const TextGlyph& other)
 		: batch(other.batch), transformer(other.transformer)
 	{
-		if (batch)
-			vbid = batch->gen_glyph_id();
-		else
-			throw Error(ErrorCode::NULL_POINTER);
+		vbid = batch.gen_glyph_id();
 
 		set_texture(other.get_texture());
 		set_tex_coords(other.get_tex_coords());
@@ -170,23 +171,12 @@ namespace oly::rendering
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
 		: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 	{
-		other.batch = nullptr;
 	}
 		
 	TextGlyph& TextGlyph::operator=(const TextGlyph& other)
 	{
 		if (this != &other)
 		{
-			if (batch != other.batch)
-			{
-				if (batch)
-					batch->erase_glyph_id(vbid.get());
-				batch = other.batch;
-				if (batch)
-					vbid = batch->gen_glyph_id();
-				else
-					throw Error(ErrorCode::NULL_POINTER);
-			}
 			transformer = other.transformer;
 
 			set_texture(other.get_texture());
@@ -201,20 +191,27 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch)
-				batch->erase_glyph_id(vbid.get());
-			batch = other.batch;
-			vbid = std::move(other.vbid);
 			transformer = std::move(other.transformer);
-			other.batch = nullptr;
+
+			if (&batch == &other.batch)
+			{
+				batch.erase_glyph_id(vbid);
+				vbid = std::move(other.vbid);
+			}
+			else
+			{
+				set_texture(other.get_texture());
+				set_tex_coords(other.get_tex_coords());
+				set_text_color(other.get_text_color());
+				set_modulation(other.get_modulation());
+			}
 		}
 		return *this;
 	}
 		
 	TextGlyph::~TextGlyph()
 	{
-		if (batch)
-			batch->erase_glyph_id(vbid.get());
+		batch.erase_glyph_id(vbid);
 	}
 		
 	void TextGlyph::draw(BatchBarrier barrier) const
@@ -222,58 +219,58 @@ namespace oly::rendering
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::TEXT);
 		if (transformer.flush())
-			batch->glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
-		graphics::quad_indices(batch->ebo.draw_primitive().data(), vbid.get());
+			batch.glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
+		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::TEXT, true);
 	}
 		
 	void TextGlyph::set_texture(const graphics::BindlessTextureRef& texture) const
 	{
-		batch->set_texture(vbid.get(), texture);
+		batch.set_texture(vbid.get(), texture);
 	}
 
 	void TextGlyph::set_vertex_positions(const math::Rect2D& rect) const
 	{
-		batch->set_vertex_positions(vbid.get(), rect);
+		batch.set_vertex_positions(vbid.get(), rect);
 	}
 		
 	void TextGlyph::set_tex_coords(const math::Rect2D& rect) const
 	{
-		batch->set_tex_coords(vbid.get(), rect);
+		batch.set_tex_coords(vbid.get(), rect);
 	}
 		
 	void TextGlyph::set_text_color(const TextBatch::TextColor& text_color) const
 	{
-		batch->set_text_color(vbid.get(), text_color);
+		batch.set_text_color(vbid.get(), text_color);
 	}
 		
 	void TextGlyph::set_modulation(const TextBatch::ModulationRect& modulation) const
 	{
-		batch->set_modulation(vbid.get(), modulation);
+		batch.set_modulation(vbid.get(), modulation);
 	}
 		
 	graphics::BindlessTextureRef TextGlyph::get_texture() const
 	{
-		return batch->get_texture(vbid.get());
+		return batch.get_texture(vbid.get());
 	}
 		
 	math::Rect2D TextGlyph::get_vertex_positions() const
 	{
-		return batch->get_vertex_positions(vbid.get());
+		return batch.get_vertex_positions(vbid.get());
 	}
 		
 	math::Rect2D TextGlyph::get_tex_coords() const
 	{
-		return batch->get_tex_coords(vbid.get());
+		return batch.get_tex_coords(vbid.get());
 	}
 		
 	TextBatch::TextColor TextGlyph::get_text_color() const
 	{
-		return batch->get_text_color(vbid.get());
+		return batch.get_text_color(vbid.get());
 	}
 		
 	TextBatch::ModulationRect TextGlyph::get_modulation() const
 	{
-		return batch->get_modulation(vbid.get());
+		return batch.get_modulation(vbid.get());
 	}
 }

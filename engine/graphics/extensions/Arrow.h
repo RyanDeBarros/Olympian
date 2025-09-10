@@ -17,7 +17,7 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		ArrowExtension();
+		ArrowExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
@@ -68,7 +68,7 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		StaticArrowExtension();
+		StaticArrowExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 

@@ -1,7 +1,9 @@
 #pragma once
 
-#include "graphics/primitives/Sprites.h"
 #include "core/types/SmartReference.h"
+#include "core/math/Shapes.h"
+
+#include <unordered_set>
 
 namespace oly::rendering
 {

@@ -164,24 +164,25 @@ namespace oly::rendering
 		return polygon_indexer.count(id);
 	}
 
-	StaticPolygon::StaticPolygon()
+	StaticPolygon::StaticPolygon(PolygonBatch* batch)
+		: batch(batch ? *batch : context::polygon_batch())
 	{
 	}
 
 	StaticPolygon::StaticPolygon(const StaticPolygon& other)
-		: triangulation(other.triangulation), polygon(other.polygon)
+		: batch(other.batch), triangulation(other.triangulation), polygon(other.polygon)
 	{
 		init();
 	}
 
 	StaticPolygon::StaticPolygon(StaticPolygon&& other) noexcept
-		: id(std::move(other.id)), triangulation(std::move(other.triangulation)), polygon(std::move(other.polygon))
+		: batch(other.batch), id(std::move(other.id)), triangulation(std::move(other.triangulation)), polygon(std::move(other.polygon))
 	{
 	}
 
 	StaticPolygon::~StaticPolygon()
 	{
-		context::polygon_batch().terminate_id(id);
+		batch.terminate_id(id);
 	}
 
 	StaticPolygon& StaticPolygon::operator=(const StaticPolygon& other)
@@ -190,7 +191,7 @@ namespace oly::rendering
 		{
 			polygon = other.polygon;
 			triangulation = other.triangulation;
-			context::polygon_batch().set_polygon(id.get(), polygon);
+			batch.set_polygon(id.get(), polygon);
 		}
 		return *this;
 	}
@@ -199,10 +200,16 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			context::polygon_batch().terminate_id(id);
-			id = std::move(other.id);
-			triangulation = std::move(other.triangulation);
-			polygon = std::move(other.polygon);
+			if (&batch == &other.batch)
+			{
+				batch.terminate_id(id);
+				id = std::move(other.id);
+			}
+			else
+			{
+				triangulation = std::move(other.triangulation);
+				polygon = std::move(other.polygon);
+			}
 		}
 		return *this;
 	}
@@ -210,9 +217,9 @@ namespace oly::rendering
 	void StaticPolygon::init()
 	{
 		triangulation = math::triangulate(polygon.points);
-		context::polygon_batch().resize_range(id, (PolygonBatch::Index)polygon.points.size());
-		context::polygon_batch().set_polygon(id.get(), polygon);
-		context::polygon_batch().set_polygon_transform(id.get(), glm::mat3(1.0f));
+		batch.resize_range(id, (PolygonBatch::Index)polygon.points.size());
+		batch.set_polygon(id.get(), polygon);
+		batch.set_polygon_transform(id.get(), glm::mat3(1.0f));
 	}
 
 	void StaticPolygon::send_polygon() const
@@ -220,7 +227,7 @@ namespace oly::rendering
 		try
 		{
 			triangulation = math::triangulate(polygon.points);
-			context::polygon_batch().set_polygon(id.get(), polygon);
+			batch.set_polygon(id.get(), polygon);
 		}
 		catch (Error e)
 		{
@@ -233,10 +240,10 @@ namespace oly::rendering
 
 	void StaticPolygon::send_colors_only() const
 	{
-		if (context::polygon_batch().is_valid_id(id.get()))
+		if (batch.is_valid_id(id.get()))
 		{
-			auto vertex_range = context::polygon_batch().get_vertex_range(id.get());
-			context::polygon_batch().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+			auto vertex_range = batch.get_vertex_range(id.get());
+			batch.set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
 		}
 	}
 
@@ -244,36 +251,40 @@ namespace oly::rendering
 	{
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::POLYGON);
-		GLuint initial_vertex = context::polygon_batch().get_vertex_range(id.get()).initial;
+		GLuint initial_vertex = batch.get_vertex_range(id.get()).initial;
 		for (size_t i = 0; i < triangulation.size(); ++i)
 		{
-			context::polygon_batch().ebo.draw_primitive()[0] = triangulation[i][0] + initial_vertex;
-			context::polygon_batch().ebo.draw_primitive()[0] = triangulation[i][1] + initial_vertex;
-			context::polygon_batch().ebo.draw_primitive()[0] = triangulation[i][2] + initial_vertex;
+			batch.ebo.draw_primitive()[0] = triangulation[i][0] + initial_vertex;
+			batch.ebo.draw_primitive()[0] = triangulation[i][1] + initial_vertex;
+			batch.ebo.draw_primitive()[0] = triangulation[i][2] + initial_vertex;
 		}
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::POLYGON, true);
 	}
 
-	Polygonal::Polygonal()
+	Polygonal::Polygonal(PolygonBatch* batch)
+		: batch(batch ? *batch : context::polygon_batch())
 	{
 	}
 
 	Polygonal::Polygonal(Polygonal&& other) noexcept
-		: id(std::move(other.id)), transformer(std::move(other.transformer))
+		: batch(other.batch), id(std::move(other.id)), transformer(std::move(other.transformer))
 	{
 	}
 
 	Polygonal::~Polygonal()
 	{
-		context::polygon_batch().terminate_id(id);
+		batch.terminate_id(id);
 	}
 
 	Polygonal& Polygonal::operator=(Polygonal&& other) noexcept
 	{
 		if (this != &other)
 		{
-			context::polygon_batch().terminate_id(id);
-			id = std::move(other.id);
+			if (&batch == &other.batch)
+			{
+				batch.terminate_id(id);
+				id = std::move(other.id);
+			}
 			transformer = std::move(other.transformer);
 		}
 		return *this;
@@ -282,7 +293,7 @@ namespace oly::rendering
 	void Polygonal::init()
 	{
 		subinit();
-		context::polygon_batch().resize_range(id, num_vertices());
+		batch.resize_range(id, num_vertices());
 		impl_set_polygon();
 	}
 
@@ -307,29 +318,29 @@ namespace oly::rendering
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::POLYGON);
 		if (transformer.flush())
-			context::polygon_batch().set_polygon_transform(id.get(), transformer.global());
-		draw_triangulation(context::polygon_batch().get_vertex_range(id.get()).initial);
+			batch.set_polygon_transform(id.get(), transformer.global());
+		draw_triangulation(batch.get_vertex_range(id.get()).initial);
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::POLYGON, true);
 	}
 
 	void Polygonal::set_polygon(const cmath::Polygon2D& polygon) const
 	{
-		context::polygon_batch().set_polygon(id.get(), polygon);
+		batch.set_polygon(id.get(), polygon);
 	}
 
 	void Polygonal::set_polygon(const std::vector<cmath::Polygon2D>& polygons) const
 	{
-		context::polygon_batch().set_polygon(id.get(), polygons);
+		batch.set_polygon(id.get(), polygons);
 	}
 
 	void Polygonal::set_polygon(const cmath::Polygon2DComposite& composite) const
 	{
-		context::polygon_batch().set_polygon(id.get(), composite);
+		batch.set_polygon(id.get(), composite);
 	}
 
 	GLuint& Polygonal::draw_index() const
 	{
-		return context::polygon_batch().ebo.draw_primitive()[0];
+		return batch.ebo.draw_primitive()[0];
 	}
 
 	GLuint Polygon::num_vertices() const

@@ -177,14 +177,17 @@ namespace oly::rendering
 	public:
 		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
+	
+	constexpr SpriteBatch* CONTEXT_SPRITE_BATCH = nullptr;
 
 	// ASSET
 	class StaticSprite
 	{
+		SpriteBatch& batch;
 		SpriteBatch::VBID vbid;
 
 	public:
-		StaticSprite();
+		StaticSprite(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
 		StaticSprite(const StaticSprite&);
 		StaticSprite(StaticSprite&&) noexcept;
 		StaticSprite& operator=(const StaticSprite&);
@@ -212,12 +215,13 @@ namespace oly::rendering
 
 	class Sprite
 	{
+		SpriteBatch& batch;
 		SpriteBatch::VBID vbid;
 
 	public:
 		Transformer2D transformer;
 
-		Sprite();
+		Sprite(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
 		Sprite(const Sprite&);
 		Sprite(Sprite&&) noexcept;
 		Sprite& operator=(const Sprite&);

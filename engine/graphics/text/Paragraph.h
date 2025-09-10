@@ -40,7 +40,7 @@ namespace oly::rendering
 	*/
 	class Paragraph
 	{
-		TextBatch* text_batch;
+		TextBatch& batch;
 		TextGlyph bkg;
 		std::vector<TextGlyph> glyphs;
 		std::vector<bool> visible;
@@ -58,7 +58,7 @@ namespace oly::rendering
 		TextBatch::TextColor default_text_color;
 		Transformer2D transformer;
 
-		Paragraph(TextBatch& text_batch, const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
+		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", TextBatch* batch = CONTEXT_TEXT_BATCH);
 
 		const utf::String& get_text() const { return text; }
 		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }
@@ -141,4 +141,6 @@ namespace oly::rendering
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
+
+	// TODO v4 RichText, which uses a vector of strings which can each have their own font, color, etc, but is still formatted as one paragraph. Thus, remove individual glypph colors from regular Paragraph.
 }

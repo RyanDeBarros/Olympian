@@ -1,11 +1,49 @@
 #include "TileMap.h"
 
 #include "core/context/rendering/Textures.h"
+#include "core/context/rendering/Sprites.h"
 #include "registries/Loader.h"
 #include "registries/graphics/TextureRegistry.h"
 
 namespace oly::rendering
 {
+	TileMapLayer::TileMapLayer(SpriteBatch* batch)
+		: batch(batch ? *batch : context::sprite_batch())
+	{
+	}
+
+	TileMapLayer::TileMapLayer(const TileMapLayer& other)
+		: batch(other.batch), tileset(other.tileset), sprite_map(other.sprite_map), transformer(other.transformer)
+	{
+	}
+
+	TileMapLayer::TileMapLayer(TileMapLayer&& other) noexcept
+		: batch(other.batch), tileset(std::move(other.tileset)), sprite_map(std::move(other.sprite_map)), transformer(std::move(other.transformer))
+	{
+	}
+
+	TileMapLayer& TileMapLayer::operator=(const TileMapLayer& other)
+	{
+		if (this != &other)
+		{
+			tileset = other.tileset;
+			sprite_map = other.sprite_map;
+			transformer = other.transformer;
+		}
+		return *this;
+	}
+
+	TileMapLayer& TileMapLayer::operator=(TileMapLayer&& other) noexcept
+	{
+		if (this != &other)
+		{
+			tileset = std::move(other.tileset);
+			sprite_map = std::move(other.sprite_map);
+			transformer = std::move(other.transformer);
+		}
+		return *this;
+	}
+
 	void TileMapLayer::draw(BatchBarrier barrier) const
 	{
 		auto it = sprite_map.begin();
@@ -19,7 +57,7 @@ namespace oly::rendering
 	{
 		if (!sprite_map.count(tile))
 		{
-			auto& sprite = sprite_map.emplace(tile, Sprite()).first->second;
+			auto& sprite = sprite_map.emplace(tile, &batch).first->second;
 			sprite.transformer.attach_parent(&transformer);
 			update_configuration(tile);
 			update_neighbour_configurations(tile);

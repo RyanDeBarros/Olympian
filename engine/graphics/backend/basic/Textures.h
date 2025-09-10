@@ -288,4 +288,6 @@ namespace oly::graphics
 	}
 	// texture needs to be bound to GL_TEXTURE_2D before calling nsvg_manually_generate_mipmaps()
 	extern void nsvg_manually_generate_mipmaps(const VectorImageRef& image, const NSVGAbstract& abstract, const NSVGContext& context);
+
+	// TODO v5 texture streaming
 }

@@ -12,6 +12,7 @@ namespace oly::context
 	}
 
 	extern rendering::TextBatch& text_batch();
-	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "", unsigned int atlas_index = 0);
+	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "",
+		unsigned int atlas_index = 0, rendering::TextBatch* batch = rendering::CONTEXT_TEXT_BATCH);
 	extern void render_text();
 }

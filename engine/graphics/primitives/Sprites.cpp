@@ -168,14 +168,16 @@ namespace oly::rendering
 		}
 	}
 
-	StaticSprite::StaticSprite()
+	StaticSprite::StaticSprite(SpriteBatch* batch)
+		: batch(batch ? *batch : context::sprite_batch())
 	{
-		vbid = context::sprite_batch().gen_sprite_id();
+		vbid = this->batch.gen_sprite_id();
 	}
 
 	StaticSprite::StaticSprite(const StaticSprite& other)
+		: batch(other.batch)
 	{
-		vbid = context::sprite_batch().gen_sprite_id();
+		vbid = batch.gen_sprite_id();
 
 		glm::vec2 dim;
 		auto tex = other.get_texture(dim);
@@ -186,7 +188,7 @@ namespace oly::rendering
 	}
 
 	StaticSprite::StaticSprite(StaticSprite&& other) noexcept
-		: vbid(std::move(other.vbid))
+		: batch(other.batch), vbid(std::move(other.vbid))
 	{
 	}
 
@@ -208,22 +210,34 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			context::sprite_batch().erase_sprite_id(vbid);
-			vbid = std::move(other.vbid);
+			if (&batch == &other.batch)
+			{
+				batch.erase_sprite_id(vbid);
+				vbid = std::move(other.vbid);
+			}
+			else
+			{
+				glm::vec2 dim;
+				auto tex = other.get_texture(dim);
+				set_texture(tex, dim);
+				set_tex_coords(other.get_tex_coords());
+				set_modulation(other.get_modulation());
+				set_frame_format(other.get_frame_format());
+			}
 		}
 		return *this;
 	}
 
 	StaticSprite::~StaticSprite()
 	{
-		context::sprite_batch().erase_sprite_id(vbid);
+		batch.erase_sprite_id(vbid);
 	}
 
 	void StaticSprite::draw(BatchBarrier barrier) const
 	{
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
-		graphics::quad_indices(context::sprite_batch().ebo.draw_primitive().data(), vbid.get());
+		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
@@ -235,79 +249,80 @@ namespace oly::rendering
 
 	void StaticSprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		context::sprite_batch().set_texture(vbid.get(), texture, dimensions);
+		batch.set_texture(vbid.get(), texture, dimensions);
 	}
 
 	void StaticSprite::set_tex_coords(const UVRect& tex_coords) const
 	{
-		context::sprite_batch().set_tex_coords(vbid.get(), tex_coords);
+		batch.set_tex_coords(vbid.get(), tex_coords);
 	}
 
 	void StaticSprite::set_tex_coords(const math::Rect2D& rect) const
 	{
-		context::sprite_batch().set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
+		batch.set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
 	}
 
 	void StaticSprite::set_modulation(const ModulationRect& modulation) const
 	{
-		context::sprite_batch().set_modulation(vbid.get(), modulation);
+		batch.set_modulation(vbid.get(), modulation);
 	}
 
 	void StaticSprite::set_modulation(glm::vec4 modulation) const
 	{
-		context::sprite_batch().set_modulation(vbid.get(), { modulation, modulation, modulation, modulation });
+		batch.set_modulation(vbid.get(), { modulation, modulation, modulation, modulation });
 	}
 
 	void StaticSprite::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
-		context::sprite_batch().set_frame_format(vbid.get(), anim);
+		batch.set_frame_format(vbid.get(), anim);
 	}
 
 	void StaticSprite::set_transform(const glm::mat3& transform)
 	{
-		context::sprite_batch().quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transform;
+		batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transform;
 	}
 
 	graphics::BindlessTextureRef StaticSprite::get_texture() const
 	{
 		glm::vec2 _;
-		return context::sprite_batch().get_texture(vbid.get(), _);
+		return batch.get_texture(vbid.get(), _);
 	}
 
 	graphics::BindlessTextureRef StaticSprite::get_texture(glm::vec2& dimensions) const
 	{
-		return context::sprite_batch().get_texture(vbid.get(), dimensions);
+		return batch.get_texture(vbid.get(), dimensions);
 	}
 
 	UVRect StaticSprite::get_tex_coords() const
 	{
-		return context::sprite_batch().get_tex_coords(vbid.get());
+		return batch.get_tex_coords(vbid.get());
 	}
 
 	ModulationRect StaticSprite::get_modulation() const
 	{
-		return context::sprite_batch().get_modulation(vbid.get());
+		return batch.get_modulation(vbid.get());
 	}
 
 	graphics::AnimFrameFormat StaticSprite::get_frame_format() const
 	{
-		return context::sprite_batch().get_frame_format(vbid.get());
+		return batch.get_frame_format(vbid.get());
 	}
 
 	glm::mat3 StaticSprite::get_transform() const
 	{
-		return context::sprite_batch().quad_ssbo_block.get<SpriteBatch::TRANSFORM>(vbid.get());
+		return batch.quad_ssbo_block.get<SpriteBatch::TRANSFORM>(vbid.get());
 	}
 
-	Sprite::Sprite()
+	Sprite::Sprite(SpriteBatch* batch)
+		: batch(batch ? *batch : context::sprite_batch())
 	{
-		vbid = context::sprite_batch().gen_sprite_id();
+		vbid = this->batch.gen_sprite_id();
 	}
 
 	Sprite::Sprite(const Sprite& other)
-		: transformer(other.transformer)
+		: batch(other.batch), transformer(other.transformer)
 	{
-		vbid = context::sprite_batch().gen_sprite_id();
+		vbid = batch.gen_sprite_id();
 
 		glm::vec2 dim;
 		auto tex = other.get_texture(dim);
@@ -318,7 +333,7 @@ namespace oly::rendering
 	}
 
 	Sprite::Sprite(Sprite&& other) noexcept
-		: vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
+		: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 	{
 	}
 
@@ -342,16 +357,29 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			context::sprite_batch().erase_sprite_id(vbid);
-			vbid = std::move(other.vbid);
 			transformer = std::move(other.transformer);
+
+			if (&batch == &other.batch)
+			{
+				batch.erase_sprite_id(vbid);
+				vbid = std::move(other.vbid);
+			}
+			else
+			{
+				glm::vec2 dim;
+				auto tex = other.get_texture(dim);
+				set_texture(tex, dim);
+				set_tex_coords(other.get_tex_coords());
+				set_modulation(other.get_modulation());
+				set_frame_format(other.get_frame_format());
+			}
 		}
 		return *this;
 	}
 
 	Sprite::~Sprite()
 	{
-		context::sprite_batch().erase_sprite_id(vbid);
+		batch.erase_sprite_id(vbid);
 	}
 
 	void Sprite::draw(BatchBarrier barrier) const
@@ -359,8 +387,8 @@ namespace oly::rendering
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		if (transformer.flush())
-			context::sprite_batch().quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
-		graphics::quad_indices(context::sprite_batch().ebo.draw_primitive().data(), vbid.get());
+			batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
+		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
@@ -372,57 +400,57 @@ namespace oly::rendering
 
 	void Sprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		context::sprite_batch().set_texture(vbid.get(), texture, dimensions);
+		batch.set_texture(vbid.get(), texture, dimensions);
 	}
 
 	void Sprite::set_tex_coords(const UVRect& tex_coords) const
 	{
-		context::sprite_batch().set_tex_coords(vbid.get(), tex_coords);
+		batch.set_tex_coords(vbid.get(), tex_coords);
 	}
 
 	void Sprite::set_tex_coords(const math::Rect2D& rect) const
 	{
-		context::sprite_batch().set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
+		batch.set_tex_coords(vbid.get(), UVRect{}.from_rect(rect));
 	}
 
 	void Sprite::set_modulation(const ModulationRect& modulation) const
 	{
-		context::sprite_batch().set_modulation(vbid.get(), modulation);
+		batch.set_modulation(vbid.get(), modulation);
 	}
 
 	void Sprite::set_modulation(glm::vec4 modulation) const
 	{
-		context::sprite_batch().set_modulation(vbid.get(), { modulation, modulation, modulation, modulation });
+		batch.set_modulation(vbid.get(), { modulation, modulation, modulation, modulation });
 	}
 
 	void Sprite::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
-		context::sprite_batch().set_frame_format(vbid.get(), anim);
+		batch.set_frame_format(vbid.get(), anim);
 	}
 
 	graphics::BindlessTextureRef Sprite::get_texture() const
 	{
 		glm::vec2 _;
-		return context::sprite_batch().get_texture(vbid.get(), _);
+		return batch.get_texture(vbid.get(), _);
 	}
 
 	graphics::BindlessTextureRef Sprite::get_texture(glm::vec2& dimensions) const
 	{
-		return context::sprite_batch().get_texture(vbid.get(), dimensions);
+		return batch.get_texture(vbid.get(), dimensions);
 	}
 
 	UVRect Sprite::get_tex_coords() const
 	{
-		return context::sprite_batch().get_tex_coords(vbid.get());
+		return batch.get_tex_coords(vbid.get());
 	}
 
 	ModulationRect Sprite::get_modulation() const
 	{
-		return context::sprite_batch().get_modulation(vbid.get());
+		return batch.get_modulation(vbid.get());
 	}
 
 	graphics::AnimFrameFormat Sprite::get_frame_format() const
 	{
-		return context::sprite_batch().get_frame_format(vbid.get());
+		return batch.get_frame_format(vbid.get());
 	}
 }

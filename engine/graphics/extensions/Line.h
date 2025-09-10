@@ -14,7 +14,7 @@ namespace oly::rendering
 		mutable bool can_draw = true;
 
 	public:
-		LineExtension();
+		LineExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 

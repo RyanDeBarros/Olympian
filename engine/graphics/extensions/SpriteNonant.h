@@ -30,7 +30,7 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 	public:
-		SpriteNonant();
+		SpriteNonant(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 

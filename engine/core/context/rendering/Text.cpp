@@ -36,9 +36,9 @@ namespace oly::context
 		return *internal::text_batch;
 	}
 
-	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index)
+	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index, rendering::TextBatch* batch)
 	{
-		return rendering::Paragraph(*internal::text_batch, font_atlas_registry().load_font_atlas(font_atlas, atlas_index), format, std::move(text));
+		return rendering::Paragraph(font_atlas_registry().load_font_atlas(font_atlas, atlas_index), format, std::move(text), batch);
 	}
 
 	void render_text()

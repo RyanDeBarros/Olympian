@@ -2,6 +2,7 @@
 
 #include "graphics/extensions/TileSet.h"
 #include "core/base/TransformerExposure.h"
+#include "graphics/primitives/Sprites.h"
 
 namespace oly::rendering
 {
@@ -10,10 +11,17 @@ namespace oly::rendering
 		TileSetRef tileset;
 		
 	private:
+		SpriteBatch& batch;
 		std::unordered_map<glm::ivec2, Sprite> sprite_map;
 		
 	public:
 		Transformer2D transformer;
+
+		TileMapLayer(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+		TileMapLayer(const TileMapLayer&);
+		TileMapLayer(TileMapLayer&&) noexcept;
+		TileMapLayer& operator=(const TileMapLayer&);
+		TileMapLayer& operator=(TileMapLayer&&) noexcept;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

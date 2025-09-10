@@ -190,7 +190,7 @@ int main()
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 
-	player->properties().angular_snapping.enable = true;
+	//player->properties().angular_snapping.enable = true;
 	player->properties().angular_snapping.only_colliding = true;
 	player->sub_material()->angular_snapping.set_uniformly_spaced(4);
 

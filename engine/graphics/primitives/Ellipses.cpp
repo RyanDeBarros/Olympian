@@ -38,17 +38,19 @@ namespace oly::rendering
 		return pos_generator.generate();
 	}
 
-	EllipseBatch::EllipseReference::EllipseReference()
+	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
+		: batch(batch ? *batch : context::ellipse_batch())
 	{
-		pos = context::ellipse_batch().generate_id();
+		pos = this->batch.generate_id();
 		set_dimension() = {};
 		set_color() = {};
 		set_transform() = 1.0f;
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
+		: batch(other.batch)
 	{
-		pos = context::ellipse_batch().generate_id();
+		pos = batch.generate_id();
 		set_dimension() = other.get_dimension();
 		set_color() = other.get_color();
 		set_transform() = other.get_transform();
@@ -67,39 +69,39 @@ namespace oly::rendering
 
 	const EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::get_dimension() const
 	{
-		return context::ellipse_batch().ssbo_block.get<DIMENSION>(pos.get());
+		return batch.ssbo_block.get<DIMENSION>(pos.get());
 	}
 
 	EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::set_dimension()
 	{
-		return context::ellipse_batch().ssbo_block.set<DIMENSION>(pos.get());
+		return batch.ssbo_block.set<DIMENSION>(pos.get());
 	}
 
 	const EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::get_color() const
 	{
-		return context::ellipse_batch().ssbo_block.get<COLOR>(pos.get());
+		return batch.ssbo_block.get<COLOR>(pos.get());
 	}
 
 	EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::set_color()
 	{
-		return context::ellipse_batch().ssbo_block.set<COLOR>(pos.get());
+		return batch.ssbo_block.set<COLOR>(pos.get());
 	}
 
 	const glm::mat3& EllipseBatch::EllipseReference::get_transform() const
 	{
-		return context::ellipse_batch().ssbo_block.get<TRANSFORM>(pos.get());
+		return batch.ssbo_block.get<TRANSFORM>(pos.get());
 	}
 
 	glm::mat3& EllipseBatch::EllipseReference::set_transform()
 	{
-		return context::ellipse_batch().ssbo_block.set<TRANSFORM>(pos.get());
+		return batch.ssbo_block.set<TRANSFORM>(pos.get());
 	}
 
 	void EllipseBatch::EllipseReference::draw(BatchBarrier barrier) const
 	{
 		if (barrier) [[likely]]
 			context::internal::flush_batches_except(context::InternalBatch::ELLIPSE);
-		graphics::quad_indices(context::ellipse_batch().ebo.draw_primitive().data(), pos.get());
+		graphics::quad_indices(batch.ebo.draw_primitive().data(), pos.get());
 		context::internal::set_batch_rendering_tracker(context::InternalBatch::ELLIPSE, true);
 	}
 

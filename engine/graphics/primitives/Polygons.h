@@ -13,6 +13,8 @@
 
 #include <map>
 
+// TODO v4 re-design SpriteBatch to more modular, so that polygons can use it instead of separate PolygonBatch. Just use white 1x1 texture with custom vertices and color modulation.
+
 namespace oly::rendering
 {
 	class StaticPolygon;
@@ -88,17 +90,20 @@ namespace oly::rendering
 		StrictIDGenerator<Index> id_generator;
 	};
 
+	constexpr PolygonBatch* CONTEXT_POLYGON_BATCH = nullptr;
+
 	// ASSET
 	class StaticPolygon
 	{
 		friend PolygonBatch;
+		PolygonBatch& batch;
 		PolygonBatch::PolygonID id;
 		mutable math::Triangulation triangulation;
 
 	public:
 		cmath::Polygon2D polygon;
 
-		StaticPolygon();
+		StaticPolygon(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
 		StaticPolygon(const StaticPolygon&);
 		StaticPolygon(StaticPolygon&&) noexcept;
 		~StaticPolygon();
@@ -114,12 +119,13 @@ namespace oly::rendering
 	class Polygonal
 	{
 		friend PolygonBatch;
+		PolygonBatch& batch;
 		PolygonBatch::PolygonID id;
 
 	public:
 		Transformer2D transformer;
 
-		Polygonal();
+		Polygonal(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
 		Polygonal(const Polygonal&) = delete;
 		Polygonal(Polygonal&&) noexcept;
 		virtual ~Polygonal();
@@ -148,8 +154,6 @@ namespace oly::rendering
 		cmath::Polygon2D polygon;
 
 		using Polygonal::Polygonal;
-		Polygon(Polygon&&) noexcept = default;
-		Polygon& operator=(Polygon&&) noexcept = default;
 
 		virtual GLuint num_vertices() const override;
 
@@ -167,8 +171,6 @@ namespace oly::rendering
 		cmath::Polygon2DComposite composite;
 
 		using Polygonal::Polygonal;
-		PolyComposite(PolyComposite&&) noexcept = default;
-		PolyComposite& operator=(PolyComposite&&) noexcept = default;
 
 		virtual GLuint num_vertices() const override;
 
@@ -184,8 +186,6 @@ namespace oly::rendering
 		cmath::NGonBase base;
 
 		using Polygonal::Polygonal;
-		NGon(NGon&&) noexcept = default;
-		NGon& operator=(NGon&&) noexcept = default;
 
 		virtual GLuint num_vertices() const override;
 

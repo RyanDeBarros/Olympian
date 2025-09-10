@@ -11,9 +11,14 @@
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
+// TODO v4 can create a Painter system that allows for drawing on a framebuffer -> texture on a separate thread. This would happen once per ellipse, and then just use it as a texture in a Sprite, rather than drawing in a separate batch. Can even re-use say, a giant white ellipse texture that can be scaled down and colored via modulation in sprite.
+
 namespace oly::rendering
 {
 	struct Ellipse;
+	class EllipseBatch;
+
+	constexpr EllipseBatch* CONTEXT_ELLIPSE_BATCH = nullptr;
 
 	class EllipseBatch
 	{
@@ -77,10 +82,11 @@ namespace oly::rendering
 		{
 			friend class EllipseBatch;
 			friend struct Ellipse;
+			EllipseBatch& batch;
 			EllipseID pos;
 
 		public:
-			EllipseReference();
+			EllipseReference(EllipseBatch* batch = CONTEXT_ELLIPSE_BATCH);
 			EllipseReference(const EllipseReference&);
 			EllipseReference(EllipseReference&&) noexcept = default;
 			EllipseReference& operator=(const EllipseReference&);
@@ -103,7 +109,7 @@ namespace oly::rendering
 		EllipseBatch::EllipseReference ellipse;
 		Transformer2D transformer;
 
-		Ellipse() = default;
+		Ellipse(EllipseBatch* batch = CONTEXT_ELLIPSE_BATCH) : ellipse(batch) {}
 		Ellipse(float r, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(const Ellipse&) = default;

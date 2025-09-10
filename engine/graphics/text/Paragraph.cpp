@@ -1,12 +1,13 @@
 #include "Paragraph.h"
 
 #include "core/base/Errors.h"
+#include "core/context/rendering/Text.h"
 #include "graphics/resources/Textures.h"
 
 namespace oly::rendering
 {
-	Paragraph::Paragraph(TextBatch& text_batch, const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
-		: text_batch(&text_batch), format(format), font(font), bkg(text_batch)
+	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text, TextBatch* batch)
+		: batch(batch ? *batch : context::text_batch()), format(format), font(font), bkg(batch)
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
@@ -232,7 +233,7 @@ namespace oly::rendering
 
 	void Paragraph::create_glyph()
 	{
-		TextGlyph glyph(*text_batch);
+		TextGlyph glyph(&batch);
 		glyph.transformer.attach_parent(&transformer);
 		glyph.set_text_color(default_text_color);
 		glyphs.emplace_back(std::move(glyph));

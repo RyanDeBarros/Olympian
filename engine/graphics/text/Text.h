@@ -119,7 +119,7 @@ namespace oly::rendering
 		StrictIDGenerator<GLuint> vbid_generator;
 		typedef StrictIDGenerator<GLuint>::ID VBID;
 		VBID gen_glyph_id();
-		void erase_glyph_id(GLuint id);
+		void erase_glyph_id(const VBID& id);
 
 		struct GlyphInfoStore
 		{
@@ -146,17 +146,19 @@ namespace oly::rendering
 		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
 
+	constexpr TextBatch* CONTEXT_TEXT_BATCH = nullptr;
+
 	struct TextGlyph
 	{
 	private:
 		friend class TextBatch;
-		TextBatch* batch;
+		TextBatch& batch;
 		TextBatch::VBID vbid;
 
 	public:
 		Transformer2D transformer;
 
-		TextGlyph(TextBatch& text_batch);
+		TextGlyph(TextBatch* batch = CONTEXT_TEXT_BATCH);
 		TextGlyph(const TextGlyph&);
 		TextGlyph(TextGlyph&&) noexcept;
 		TextGlyph& operator=(const TextGlyph&);
@@ -177,8 +179,6 @@ namespace oly::rendering
 		TextBatch::TextColor get_text_color() const;
 		TextBatch::ModulationRect get_modulation() const;
 
-		const TextBatch& get_batch() const { return *batch; }
-		TextBatch& get_batch() { return *batch; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 	};

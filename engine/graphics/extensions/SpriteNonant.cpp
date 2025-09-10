@@ -9,8 +9,8 @@ namespace oly::rendering
 		return sprites[3 * y + x];
 	}
 
-	SpriteNonant::SpriteNonant()
-		: sprites(9)
+	SpriteNonant::SpriteNonant(SpriteBatch* batch)
+		: sprites(9, batch)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)

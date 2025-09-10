@@ -1,6 +1,7 @@
 #include "TileSetRegistry.h"
 
 #include "core/context/Context.h"
+#include "core/util/Logger.h"
 #include "registries/Loader.h"
 
 namespace oly::reg

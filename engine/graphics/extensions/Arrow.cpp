@@ -5,7 +5,8 @@
 
 namespace oly::rendering
 {
-	ArrowExtension::ArrowExtension()
+	ArrowExtension::ArrowExtension(PolygonBatch* batch)
+		: body(batch), head(batch)
 	{
 		body.transformer.attach_parent(&_transformer);
 		body.polygon.points.resize(4);
@@ -95,7 +96,8 @@ namespace oly::rendering
 			head.draw(barrier);
 	}
 
-	StaticArrowExtension::StaticArrowExtension()
+	StaticArrowExtension::StaticArrowExtension(PolygonBatch* batch)
+		: body(batch), head(batch)
 	{
 		body.polygon.points.resize(4);
 		body.polygon.points[0] = { 0.0f, -0.5f };
