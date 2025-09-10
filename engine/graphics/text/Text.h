@@ -153,6 +153,7 @@ namespace oly::rendering
 	private:
 		friend class TextBatch;
 		TextBatch& batch;
+		const bool in_context;
 		TextBatch::VBID vbid;
 
 	public:

@@ -184,6 +184,7 @@ namespace oly::rendering
 	class StaticSprite
 	{
 		SpriteBatch& batch;
+		const bool in_context;
 		SpriteBatch::VBID vbid;
 
 	public:
@@ -216,6 +217,7 @@ namespace oly::rendering
 	class Sprite
 	{
 		SpriteBatch& batch;
+		const bool in_context;
 		SpriteBatch::VBID vbid;
 
 	public:

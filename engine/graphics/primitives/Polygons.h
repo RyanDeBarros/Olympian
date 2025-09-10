@@ -97,6 +97,7 @@ namespace oly::rendering
 	{
 		friend PolygonBatch;
 		PolygonBatch& batch;
+		const bool in_context;
 		PolygonBatch::PolygonID id;
 		mutable math::Triangulation triangulation;
 
@@ -120,6 +121,7 @@ namespace oly::rendering
 	{
 		friend PolygonBatch;
 		PolygonBatch& batch;
+		const bool in_context;
 		PolygonBatch::PolygonID id;
 
 	public:

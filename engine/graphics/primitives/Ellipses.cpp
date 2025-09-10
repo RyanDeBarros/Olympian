@@ -39,7 +39,7 @@ namespace oly::rendering
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
-		: batch(batch ? *batch : context::ellipse_batch())
+		: batch(batch ? *batch : context::ellipse_batch()), in_context(!batch)
 	{
 		pos = this->batch.generate_id();
 		set_dimension() = {};
@@ -48,23 +48,38 @@ namespace oly::rendering
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
-		: batch(other.batch)
+		: batch(other.batch), in_context(other.in_context)
 	{
 		pos = batch.generate_id();
-		set_dimension() = other.get_dimension();
-		set_color() = other.get_color();
-		set_transform() = other.get_transform();
+		copy_attributes(other);
+	}
+
+	EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
+		: batch(other.batch), in_context(other.in_context)
+	{
+		pos = std::move(other.pos);
+		copy_attributes(other);
 	}
 
 	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
-		{
-			set_dimension() = other.get_dimension();
-			set_color() = other.get_color();
-			set_transform() = other.get_transform();
-		}
+			copy_attributes(other);
 		return *this;
+	}
+
+	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(EllipseReference&& other) noexcept
+	{
+		if (this != &other)
+			copy_attributes(other);
+		return *this;
+	}
+
+	void EllipseBatch::EllipseReference::copy_attributes(const EllipseReference& other)
+	{
+		set_dimension() = other.get_dimension();
+		set_color() = other.get_color();
+		set_transform() = other.get_transform();
 	}
 
 	const EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::get_dimension() const
@@ -99,10 +114,12 @@ namespace oly::rendering
 
 	void EllipseBatch::EllipseReference::draw(BatchBarrier barrier) const
 	{
-		if (barrier) [[likely]]
-			context::internal::flush_batches_except(context::InternalBatch::ELLIPSE);
+		if (in_context) [[likely]]
+			if (barrier) [[likely]]
+				context::internal::flush_batches_except(context::InternalBatch::ELLIPSE);
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), pos.get());
-		context::internal::set_batch_rendering_tracker(context::InternalBatch::ELLIPSE, true);
+		if (in_context) [[likely]]
+			context::internal::set_batch_rendering_tracker(context::InternalBatch::ELLIPSE, true);
 	}
 
 	Ellipse::Ellipse(float r, glm::vec4 color)

@@ -83,14 +83,17 @@ namespace oly::rendering
 			friend class EllipseBatch;
 			friend struct Ellipse;
 			EllipseBatch& batch;
+			const bool in_context;
 			EllipseID pos;
 
 		public:
 			EllipseReference(EllipseBatch* batch = CONTEXT_ELLIPSE_BATCH);
 			EllipseReference(const EllipseReference&);
-			EllipseReference(EllipseReference&&) noexcept = default;
+			EllipseReference(EllipseReference&&) noexcept;
 			EllipseReference& operator=(const EllipseReference&);
-			EllipseReference& operator=(EllipseReference&&) noexcept = default;
+			EllipseReference& operator=(EllipseReference&&) noexcept;
+
+			void copy_attributes(const EllipseReference& other);
 
 			const EllipseDimension& get_dimension() const;
 			EllipseDimension& set_dimension();

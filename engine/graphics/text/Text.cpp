@@ -152,13 +152,13 @@ namespace oly::rendering
 	}
 		
 	TextGlyph::TextGlyph(TextBatch* batch)
-		: batch(batch ? *batch : context::text_batch())
+		: batch(batch ? *batch : context::text_batch()), in_context(!batch)
 	{
 		vbid = this->batch.gen_glyph_id();
 	}
 		
 	TextGlyph::TextGlyph(const TextGlyph& other)
-		: batch(other.batch), transformer(other.transformer)
+		: batch(other.batch), in_context(other.in_context), transformer(other.transformer)
 	{
 		vbid = batch.gen_glyph_id();
 
@@ -169,7 +169,7 @@ namespace oly::rendering
 	}
 		
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
-		: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
+		: batch(other.batch), in_context(other.in_context), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 	{
 	}
 		
@@ -216,12 +216,14 @@ namespace oly::rendering
 		
 	void TextGlyph::draw(BatchBarrier barrier) const
 	{
-		if (barrier) [[likely]]
-			context::internal::flush_batches_except(context::InternalBatch::TEXT);
+		if (in_context) [[likely]]
+			if (barrier) [[likely]]
+				context::internal::flush_batches_except(context::InternalBatch::TEXT);
 		if (transformer.flush())
 			batch.glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
-		context::internal::set_batch_rendering_tracker(context::InternalBatch::TEXT, true);
+		if (in_context) [[likely]]
+			context::internal::set_batch_rendering_tracker(context::InternalBatch::TEXT, true);
 	}
 		
 	void TextGlyph::set_texture(const graphics::BindlessTextureRef& texture) const

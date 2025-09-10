@@ -169,13 +169,13 @@ namespace oly::rendering
 	}
 
 	StaticSprite::StaticSprite(SpriteBatch* batch)
-		: batch(batch ? *batch : context::sprite_batch())
+		: batch(batch ? *batch : context::sprite_batch()), in_context(!batch)
 	{
 		vbid = this->batch.gen_sprite_id();
 	}
 
 	StaticSprite::StaticSprite(const StaticSprite& other)
-		: batch(other.batch)
+		: batch(other.batch), in_context(other.in_context)
 	{
 		vbid = batch.gen_sprite_id();
 
@@ -188,7 +188,7 @@ namespace oly::rendering
 	}
 
 	StaticSprite::StaticSprite(StaticSprite&& other) noexcept
-		: batch(other.batch), vbid(std::move(other.vbid))
+		: batch(other.batch), in_context(other.in_context), vbid(std::move(other.vbid))
 	{
 	}
 
@@ -235,10 +235,12 @@ namespace oly::rendering
 
 	void StaticSprite::draw(BatchBarrier barrier) const
 	{
-		if (barrier) [[likely]]
-			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
+		if (in_context) [[likely]]
+			if (barrier) [[likely]]
+				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
-		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
+		if (in_context) [[likely]]
+			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
 	void StaticSprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
@@ -314,13 +316,13 @@ namespace oly::rendering
 	}
 
 	Sprite::Sprite(SpriteBatch* batch)
-		: batch(batch ? *batch : context::sprite_batch())
+		: batch(batch ? *batch : context::sprite_batch()), in_context(!batch)
 	{
 		vbid = this->batch.gen_sprite_id();
 	}
 
 	Sprite::Sprite(const Sprite& other)
-		: batch(other.batch), transformer(other.transformer)
+		: batch(other.batch), in_context(other.in_context), transformer(other.transformer)
 	{
 		vbid = batch.gen_sprite_id();
 
@@ -333,7 +335,7 @@ namespace oly::rendering
 	}
 
 	Sprite::Sprite(Sprite&& other) noexcept
-		: batch(other.batch), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
+		: batch(other.batch), in_context(other.in_context), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
 	{
 	}
 
@@ -384,12 +386,14 @@ namespace oly::rendering
 
 	void Sprite::draw(BatchBarrier barrier) const
 	{
-		if (barrier) [[likely]]
-			context::internal::flush_batches_except(context::InternalBatch::SPRITE);
+		if (in_context) [[likely]]
+			if (barrier) [[likely]]
+				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		if (transformer.flush())
 			batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(vbid.get()) = transformer.global();
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
-		context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
+		if (in_context) [[likely]]
+			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
 	void Sprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
