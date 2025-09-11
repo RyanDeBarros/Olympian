@@ -5,6 +5,7 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Ellipses.h"
 #include "core/context/rendering/Polygons.h"
+#include "core/context/rendering/Scopes.h"
 
 namespace oly::debug
 {
@@ -503,33 +504,11 @@ namespace oly::debug
 
 	void CollisionLayer::write_texture() const
 	{
-		bool was_blending = context::blend_enabled();
-		glm::vec4 clear_color = context::clear_color();
-		// TODO v4 currently, it's necessary to flush the internal batches when switching framebuffers.
-		// Ideally, make batches instances instead of singletons - and attach a batch per framebuffer + screen framebuffer.
-		// Then, in sprite/ellipse/etc. constructor, attach to a particular batch - use internal pointer.
-		//context::flush_internal_rendering();
-		framebuffer.bind();
-		glViewport(0, 0, dimensions.x, dimensions.y);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (was_blending)
-			glDisable(GL_BLEND);
-
+		context::ScopedFullFramebufferDrawing drawing(framebuffer, dimensions);
 		for (const auto& collision_view : collision_views)
 			collision_view->draw();
-		//context::polygon_batch().render();
-		//context::ellipse_batch().render();
-
 		polygon_batch.render();
 		ellipse_batch.render();
-
-		//context::flush_internal_rendering();
-		framebuffer.unbind();
-		context::set_standard_viewport();
-		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-		if (was_blending)
-			glEnable(GL_BLEND);
 	}
 
 	void CollisionLayer::set_sprite_scale(glm::vec2 scale)
