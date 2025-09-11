@@ -248,6 +248,8 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
+	// TODO v4 one of the rays aren't rendering the head.
+
 	oly::debug::CollisionView player_impulse_cv(pipeline.impulse_layer), block_impulse_cv(pipeline.impulse_layer), raycast_result_cv(pipeline.raycast_result_layer);
 	oly::debug::CollisionView player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	oly::debug::CollisionView block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));

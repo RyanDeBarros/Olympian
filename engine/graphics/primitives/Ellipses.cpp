@@ -51,35 +51,43 @@ namespace oly::rendering
 		: batch(other.batch), in_context(other.in_context)
 	{
 		pos = batch.generate_id();
-		copy_attributes(other);
+		set_dimension() = other.get_dimension();
+		set_color() = other.get_color();
+		set_transform() = other.get_transform();
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
 		: batch(other.batch), in_context(other.in_context)
 	{
+		EllipseDimension dimension = other.get_dimension();
+		ColorGradient color = other.get_color();
+		glm::mat3 transform = other.get_transform();
 		pos = std::move(other.pos);
-		copy_attributes(other);
+		set_dimension() = dimension;
+		set_color() = color;
+		set_transform() = transform;
 	}
 
 	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
-			copy_attributes(other);
+		{
+			set_dimension() = other.get_dimension();
+			set_color() = other.get_color();
+			set_transform() = other.get_transform();
+		}
 		return *this;
 	}
 
 	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(EllipseReference&& other) noexcept
 	{
 		if (this != &other)
-			copy_attributes(other);
+		{
+			set_dimension() = other.get_dimension();
+			set_color() = other.get_color();
+			set_transform() = other.get_transform();
+		}
 		return *this;
-	}
-
-	void EllipseBatch::EllipseReference::copy_attributes(const EllipseReference& other)
-	{
-		set_dimension() = other.get_dimension();
-		set_color() = other.get_color();
-		set_transform() = other.get_transform();
 	}
 
 	const EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::get_dimension() const

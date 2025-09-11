@@ -47,7 +47,7 @@ namespace oly::graphics
 		}
 	};
 
-	template<size_t PrimitiveIndices = 6>
+	template<size_t PrimitiveIndices>
 	class PersistentEBO
 	{
 		mutable LazyPersistentGPUBuffer<std::array<GLuint, PrimitiveIndices>> ebo;

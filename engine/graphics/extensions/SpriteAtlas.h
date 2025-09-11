@@ -7,7 +7,7 @@ namespace oly::rendering
 	struct SpriteAtlas
 	{
 		Sprite sprite;
-		UVAtlas atlas;
+		std::vector<UVRect> atlas;
 		graphics::AnimFrameFormat anim_format;
 
 		SpriteAtlas(Sprite&& sprite);

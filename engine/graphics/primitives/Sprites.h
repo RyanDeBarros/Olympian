@@ -22,7 +22,7 @@ namespace oly::rendering
 
 		UVRect& from_rect(const math::Rect2D& rect);
 	};
-	typedef std::vector<UVRect> UVAtlas;
+
 	struct UVRectHash
 	{
 		size_t operator()(const UVRect& uvs) const {
@@ -39,6 +39,7 @@ namespace oly::rendering
 
 		bool operator==(const ModulationRect&) const = default;
 	};
+
 	struct ModulationHash
 	{
 		size_t operator()(const ModulationRect& mod) const {
@@ -47,16 +48,17 @@ namespace oly::rendering
 		}
 	};
 
-	class Sprite;
-	class StaticSprite;
+	namespace internal
+	{
+		struct SpriteReference;
+	}
 
 	class SpriteBatch
 	{
-		friend class Sprite;
-		friend class StaticSprite;
+		friend struct internal::SpriteReference;
 
 		graphics::VertexArray vao;
-		graphics::PersistentEBO<> ebo;
+		graphics::PersistentEBO<6> ebo;
 
 		struct TexData
 		{
@@ -139,10 +141,10 @@ namespace oly::rendering
 		void render() const;
 
 	private:
-		StrictIDGenerator<GLuint> vbid_generator;
-		typedef StrictIDGenerator<GLuint>::ID VBID;
-		VBID gen_sprite_id();
-		void erase_sprite_id(const VBID& id);
+		typedef StrictIDGenerator<GLuint>::ID SpriteID;
+		StrictIDGenerator<GLuint> id_generator;
+		SpriteID gen_sprite_id();
+		void erase_sprite_id(const SpriteID& id);
 
 		struct QuadInfoStore
 		{
@@ -178,15 +180,49 @@ namespace oly::rendering
 	public:
 		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
-	
+
 	constexpr SpriteBatch* CONTEXT_SPRITE_BATCH = nullptr;
+
+	namespace internal
+	{
+		struct SpriteReference
+		{
+			SpriteBatch& batch;
+			const bool in_context;
+			SpriteBatch::SpriteID id;
+
+			SpriteReference(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+			SpriteReference(const SpriteReference&);
+			SpriteReference(SpriteReference&&) noexcept;
+			~SpriteReference();
+			SpriteReference& operator=(const SpriteReference&);
+			SpriteReference& operator=(SpriteReference&&) noexcept;
+
+			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
+			void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+			void set_tex_coords(const UVRect& uvs) const;
+			void set_tex_coords(const math::Rect2D& rect) const;
+			void set_modulation(const ModulationRect& modulation) const;
+			void set_modulation(glm::vec4 modulation) const;
+			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+			void set_transform(const glm::mat3& transform) const;
+
+			graphics::BindlessTextureRef get_texture() const;
+			graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
+			UVRect get_tex_coords() const;
+			ModulationRect get_modulation() const;
+			graphics::AnimFrameFormat get_frame_format() const;
+			glm::mat3 get_transform() const;
+
+			std::invoke_result_t<decltype(&decltype(SpriteBatch::ebo)::draw_primitive), decltype(SpriteBatch::ebo)> draw_primitive() const;
+			void draw_quad() const;
+		};
+	}
 
 	// ASSET
 	class StaticSprite
 	{
-		SpriteBatch& batch;
-		const bool in_context;
-		SpriteBatch::VBID vbid;
+		internal::SpriteReference ref;
 
 	public:
 		StaticSprite(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
@@ -217,9 +253,7 @@ namespace oly::rendering
 
 	class Sprite
 	{
-		SpriteBatch& batch;
-		const bool in_context;
-		SpriteBatch::VBID vbid;
+		internal::SpriteReference ref;
 
 	public:
 		Transformer2D transformer;

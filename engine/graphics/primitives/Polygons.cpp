@@ -146,9 +146,12 @@ namespace oly::rendering
 
 	void PolygonBatch::resize_range(PolygonID& id, Index vertices)
 	{
-		if (is_valid_id(id.get()) && vertices == get_vertex_range(id.get()).length)
-			return;
-		terminate_id(id);
+		if (id.is_valid())
+		{
+			if (is_valid_id(id.get()) && vertices == get_vertex_range(id.get()).length)
+				return;
+			terminate_id(id);
+		}
 		id = generate_id(vertices);
 	}
 

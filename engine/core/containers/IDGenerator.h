@@ -2,6 +2,8 @@
 
 #include <stack>
 
+#include "core/base/Errors.h"
+
 namespace oly
 {
 	template<std::unsigned_integral T>
@@ -76,7 +78,7 @@ namespace oly
 					generator->yielded.push(id);
 			}
 
-			T get() const { return id; }
+			T get() const { if (valid) return id; else throw Error(ErrorCode::INVALID_ID); }
 			bool is_valid() const { return valid; }
 		};
 

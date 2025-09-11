@@ -11,7 +11,9 @@
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
-// TODO v4 can create a Painter system that allows for drawing on a framebuffer -> texture on a separate thread. This would happen once per ellipse, and then just use it as a texture in a Sprite, rather than drawing in a separate batch. Can even re-use say, a giant white ellipse texture that can be scaled down and colored via modulation in sprite.
+// TODO v4 can create a Painter system that allows for drawing on a framebuffer -> texture on a separate thread.
+// This would happen once per ellipse, and then just use it as a texture in a Sprite, rather than drawing in a separate batch.
+// Can even re-use say, a giant white ellipse texture that can be scaled down and colored via modulation in sprite.
 
 namespace oly::rendering
 {
@@ -29,7 +31,7 @@ namespace oly::rendering
 
 	private:
 		graphics::VertexArray vao;
-		graphics::PersistentEBO<> ebo;
+		graphics::PersistentEBO<6> ebo;
 			
 	public:
 		struct EllipseDimension
@@ -93,8 +95,6 @@ namespace oly::rendering
 			EllipseReference(EllipseReference&&) noexcept;
 			EllipseReference& operator=(const EllipseReference&);
 			EllipseReference& operator=(EllipseReference&&) noexcept;
-
-			void copy_attributes(const EllipseReference& other);
 
 			const EllipseDimension& get_dimension() const;
 			EllipseDimension& set_dimension();

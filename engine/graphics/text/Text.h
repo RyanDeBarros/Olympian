@@ -20,7 +20,7 @@ namespace oly::rendering
 		friend struct TextGlyph;
 
 		graphics::VertexArray vao;
-		graphics::PersistentEBO<> ebo;
+		graphics::PersistentEBO<6> ebo;
 
 		enum
 		{
