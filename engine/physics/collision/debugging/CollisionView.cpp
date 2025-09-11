@@ -96,14 +96,14 @@ namespace oly::debug
 	CollisionView::CollisionView(const CollisionView& other)
 		: layer(other.layer), obj(other.valid() ? std::make_unique<CollisionObjectView>(*other.obj) : nullptr)
 	{
-		if (layer)
+		if (valid())
 			layer->assign(this);
 	}
 
 	CollisionView::CollisionView(CollisionView&& other) noexcept
 		: layer(other.layer), obj(std::move(other.obj))
 	{
-		if (layer)
+		if (valid())
 		{
 			layer->collision_views.erase(&other);
 			layer->collision_views.insert(this);
@@ -112,7 +112,7 @@ namespace oly::debug
 
 	CollisionView::~CollisionView()
 	{
-		if (layer)
+		if (valid())
 			layer->unassign(this);
 	}
 
@@ -134,6 +134,38 @@ namespace oly::debug
 			view_changed();
 		}
 		return *this;
+	}
+
+	void CollisionView::init_on_layer(CollisionLayer& layer)
+	{
+		if (valid())
+		{
+			if (this->layer == &layer)
+				return;
+
+			this->layer->unassign(this);
+			this->layer = &layer;
+			this->layer->assign(this);
+			if (obj->view.index() == CollisionObjectView::Type::SINGLE)
+			{
+				CollisionObject old_obj = std::move(std::get<CollisionObjectView::Type::SINGLE>(obj->view));
+				obj = std::make_unique<CollisionObjectView>(CollisionObject(layer, std::move(*old_obj.v)));
+			}
+			else if (obj->view.index() == CollisionObjectView::Type::GROUP)
+			{
+				std::vector<CollisionObject> old_objs = std::move(std::get<CollisionObjectView::Type::GROUP>(obj->view));
+				std::vector<CollisionObject> new_objs = CollisionObjectGroup(old_objs.size(), CollisionObject(layer));
+				for (size_t i = 0; i < new_objs.size(); ++i)
+					new_objs[i] = std::move(old_objs[i]);
+				obj = std::make_unique<CollisionObjectView>(std::move(new_objs));
+			}
+		}
+		else
+		{
+			this->layer = &layer;
+			this->layer->assign(this);
+			obj = std::make_unique<CollisionObjectView>(EmptyCollision{});
+		}
 	}
 
 	void CollisionView::draw() const

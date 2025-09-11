@@ -69,7 +69,7 @@ namespace oly::debug
 		friend class CollisionLayer;
 
 		CollisionLayer* layer;
-		std::unique_ptr<CollisionObjectView> obj; // TODO v4 support setting layer, which will duplicate obj to use the new layer's batch.
+		std::unique_ptr<CollisionObjectView> obj;
 
 		void invalidate_layer() { layer = nullptr; obj.reset(); }
 		bool valid() const { return obj && layer; }
@@ -84,6 +84,8 @@ namespace oly::debug
 		~CollisionView();
 		CollisionView& operator=(const CollisionView&);
 		CollisionView& operator=(CollisionView&&) noexcept;
+
+		void init_on_layer(CollisionLayer& layer);
 
 	private:
 		void draw() const;
