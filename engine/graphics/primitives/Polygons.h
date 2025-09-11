@@ -49,7 +49,8 @@ namespace oly::rendering
 			Index vertices = 0;
 			Index indices = 0;
 
-			Capacity(Index primitives, Index degree = 6)
+			// TODO v4 generate id sometimes fails if primitives is too low. Should no longer be an issue when polygons are merged with sprite batch pipeline.
+			Capacity(Index primitives = 100, Index degree = 6)
 			{
 				OLY_ASSERT(degree >= 3);
 				OLY_ASSERT(degree * primitives <= nmax<unsigned int>());
@@ -65,7 +66,8 @@ namespace oly::rendering
 			}
 		};
 
-		PolygonBatch(Capacity capacity);
+		PolygonBatch(Capacity capacity = {});
+		PolygonBatch(const PolygonBatch&) = delete;
 
 		void render() const;
 			

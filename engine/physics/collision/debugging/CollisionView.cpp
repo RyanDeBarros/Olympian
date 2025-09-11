@@ -8,21 +8,101 @@
 
 namespace oly::debug
 {
-	CollisionView::CollisionView(const CollisionView& other)
-		: obj(other.obj)
+	CollisionObject::CollisionObject(CollisionLayer& layer, Variant&& v)
+		: layer(layer)
 	{
-		for (CollisionLayer* layer : other.layers)
+		init((Type)v.index());
+		*this->v = std::move(v);
+	}
+
+	CollisionObject::CollisionObject(const CollisionObject& other)
+		: layer(other.layer), v(std::make_unique<Variant>(*other.v))
+	{
+	}
+
+	CollisionObject::CollisionObject(CollisionObject&& other) noexcept
+		: layer(other.layer), v(std::move(other.v))
+	{
+	}
+
+	CollisionObject& CollisionObject::operator=(const CollisionObject& other)
+	{
+		if (this != &other)
 		{
-			layers.insert(layer);
-			layer->collision_views.insert(this);
-			layer->dirty_views = true;
+			if (v->index() != other.v->index() && &layer != &other.layer)
+				init((Type)other.v->index());
+			*v = *other.v;
+		}
+		return *this;
+	}
+
+	CollisionObject& CollisionObject::operator=(CollisionObject&& other) noexcept
+	{
+		if (this != &other)
+		{
+			if (&layer == &other.layer)
+				v = std::move(other.v);
+			else
+			{
+				if (v->index() != other.v->index())
+					init((Type)other.v->index());
+				*v = std::move(*other.v);
+			}
+		}
+		return *this;
+	}
+
+	void CollisionObject::init(CollisionObject::Type type)
+	{
+		switch (type)
+		{
+		case Type::ELLIPSE:
+			v = std::make_unique<Variant>(rendering::EllipseBatch::EllipseReference(&layer.ellipse_batch));
+			break;
+		case Type::POLYGON:
+			v = std::make_unique<Variant>(rendering::StaticPolygon(&layer.polygon_batch));
+			break;
+		case Type::ARROW:
+			v = std::make_unique<Variant>(rendering::StaticArrowExtension(&layer.polygon_batch));
+			break;
 		}
 	}
 
-	CollisionView::CollisionView(CollisionView&& other) noexcept
-		: obj(std::move(other.obj)), layers(std::move(other.layers))
+	CollisionView::CollisionView(CollisionLayer& layer)
+		: layer(&layer), obj(std::make_unique<CollisionObjectView>(EmptyCollision{}))
 	{
-		for (CollisionLayer* layer : layers)
+		layer.assign(this);
+	}
+
+	CollisionView::CollisionView(CollisionLayer& layer, rendering::EllipseBatch::EllipseReference&& obj)
+		: layer(&layer), obj(std::make_unique<CollisionObjectView>(CollisionObject(layer, std::move(obj))))
+	{
+		layer.assign(this);
+	}
+
+	CollisionView::CollisionView(CollisionLayer& layer, rendering::StaticPolygon&& obj)
+		: layer(&layer), obj(std::make_unique<CollisionObjectView>(CollisionObject(layer, std::move(obj))))
+	{
+		layer.assign(this);
+	}
+
+	CollisionView::CollisionView(CollisionLayer& layer, rendering::StaticArrowExtension&& obj)
+		: layer(&layer), obj(std::make_unique<CollisionObjectView>(CollisionObject(layer, std::move(obj))))
+	{
+		layer.assign(this);
+	}
+
+	CollisionView::CollisionView(const CollisionView& other)
+		: layer(other.layer), obj(other.valid() ? std::make_unique<CollisionObjectView>(*other.obj) : nullptr)
+	{
+		if (layer)
+			layer->assign(this);
+	}
+
+	CollisionView::CollisionView(CollisionView&& other) noexcept
+		: layer(other.layer), obj(std::move(other.obj))
+	{
+		if (layer)
 		{
 			layer->collision_views.erase(&other);
 			layer->collision_views.insert(this);
@@ -31,38 +111,16 @@ namespace oly::debug
 
 	CollisionView::~CollisionView()
 	{
-		for (CollisionLayer* layer : layers)
-		{
-			layer->collision_views.erase(this);
-			layer->dirty_views = true;
-		}
+		if (layer)
+			layer->unassign(this);
 	}
 
 	CollisionView& CollisionView::operator=(const CollisionView& other)
 	{
 		if (this != &other)
 		{
-			for (CollisionLayer* layer : layers)
-			{
-				if (!other.layers.count(layer))
-				{
-					layer->collision_views.erase(this);
-					layer->dirty_views = true;
-				}
-			}
-
-			obj = other.obj;
-			
-			for (CollisionLayer* layer : other.layers)
-			{
-				if (!layers.count(layer))
-				{
-					layer->collision_views.insert(this);
-					layer->dirty_views = true;
-				}
-			}
-
-			layers = other.layers;
+			obj = other.valid() ? std::make_unique<CollisionObjectView>(*other.obj) : nullptr;
+			view_changed();
 		}
 		return *this;
 	}
@@ -71,96 +129,119 @@ namespace oly::debug
 	{
 		if (this != &other)
 		{
-			for (CollisionLayer* layer : layers)
-			{
-				layer->collision_views.erase(this);
-				layer->dirty_views = true;
-			}
-			
 			obj = std::move(other.obj);
-			layers = std::move(other.layers);
-			
-			for (CollisionLayer* layer : layers)
-			{
-				layer->collision_views.erase(&other);
-				layer->collision_views.insert(this);
-			}
+			view_changed();
 		}
 		return *this;
 	}
 
 	void CollisionView::draw() const
 	{
-		// TODO v5 specialized shader for collision view
-		std::visit([](const auto& view) {
-			if constexpr (visiting_class_is<decltype(view), CollisionObject>)
-				std::visit([](const auto& obj) { obj.draw(); }, view);
-			else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
-				for (const auto& v : view)
-					std::visit([](const auto& obj) { obj.draw(); }, v);
-			}, obj);
+		// TODO v5 specialized shader for collision view, especially since it's rendered on a separate framebuffer.
+		if (valid())
+		{
+			std::visit([](const auto& view) {
+				if constexpr (visiting_class_is<decltype(view), CollisionObject>)
+					std::visit([](const auto& obj) { obj.draw(); }, *view);
+				else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
+					for (const auto& v : view)
+						std::visit([](const auto& obj) { obj.draw(); }, *v);
+				}, obj->view);
+		}
 	}
 
 	void CollisionView::clear_view()
 	{
-		obj = EmptyCollision{};
-		view_changed();
+		if (valid())
+		{
+			obj->view = EmptyCollision{};
+			view_changed();
+		}
 	}
 
 	void CollisionView::set_view(CollisionObjectView&& obj)
 	{
-		this->obj = std::move(obj);
-		view_changed();
+		if (valid())
+		{
+			*this->obj = std::move(obj);
+			view_changed();
+		}
+	}
+
+	void CollisionView::set_view(rendering::EllipseBatch::EllipseReference&& obj)
+	{
+		if (valid())
+			set_view(CollisionObjectView(CollisionObject(*layer, std::move(obj))));
+	}
+
+	void CollisionView::set_view(rendering::StaticPolygon&& obj)
+	{
+		if (valid())
+			set_view(CollisionObjectView(CollisionObject(*layer, std::move(obj))));
+	}
+
+	void CollisionView::set_view(rendering::StaticArrowExtension&& obj)
+	{
+		if (valid())
+			set_view(CollisionObjectView(CollisionObject(*layer, std::move(obj))));
 	}
 
 	size_t CollisionView::view_size() const
 	{
-		if (obj.index() == CollisionObjectViewType::EMPTY)
-			return 0;
-		else if (obj.index() == CollisionObjectViewType::SINGLE)
-			return 1;
+		if (valid())
+		{
+			if (obj->view.index() == CollisionObjectView::Type::EMPTY)
+				return 0;
+			else if (obj->view.index() == CollisionObjectView::Type::SINGLE)
+				return 1;
+			else
+				return std::get<CollisionObjectView::Type::GROUP>(obj->view).size();
+		}
 		else
-			return std::get<CollisionObjectViewType::GROUP>(obj).size();
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void CollisionView::resize_view(size_t size)
 	{
+		if (!valid())
+			throw Error(ErrorCode::NULL_POINTER);
+
 		if (size == 0)
 			clear_view();
-		else if (obj.index() == CollisionObjectViewType::EMPTY)
+		else if (obj->view.index() == CollisionObjectView::Type::EMPTY)
 		{
 			if (size == 1)
 			{
-				obj = CollisionObject();
+				obj->view = CollisionObject(*layer);
 				view_changed();
 			}
 			else if (size > 1)
 			{
-				obj = CollisionObjectGroup(size);
+				obj->view = CollisionObjectGroup(size, CollisionObject(*layer));
 				view_changed();
 			}
 		}
-		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		else if (obj->view.index() == CollisionObjectView::Type::SINGLE)
 		{
 			if (size > 1)
 			{
-				CollisionObject old_obj = std::move(std::get<CollisionObjectViewType::SINGLE>(obj));
-				obj = CollisionObjectGroup(size);
-				std::get<CollisionObjectViewType::GROUP>(obj)[0] = std::move(old_obj);
+				CollisionObject old_obj = std::move(std::get<CollisionObjectView::Type::SINGLE>(obj->view));
+				obj->view = CollisionObjectGroup(size, CollisionObject(*layer));
+				std::get<CollisionObjectView::Type::GROUP>(obj->view)[0] = std::move(old_obj);
 				view_changed();
 			}
 		}
-		else
+		else if (obj->view.index() == CollisionObjectView::Type::GROUP)
 		{
 			if (size == 1)
 			{
-				CollisionObject old_obj = std::move(std::get<CollisionObjectViewType::GROUP>(obj)[0]);
-				obj = std::move(old_obj);
+				CollisionObject old_obj = std::move(std::get<CollisionObjectView::Type::GROUP>(obj->view)[0]);
+				obj->view = std::move(old_obj);
 				view_changed();
 			}
 			else
 			{
-				std::get<CollisionObjectViewType::GROUP>(obj).resize(size);
+				std::get<CollisionObjectView::Type::GROUP>(obj->view).resize(size, CollisionObject(*layer));
 				view_changed();
 			}
 		}
@@ -168,11 +249,14 @@ namespace oly::debug
 
 	void CollisionView::set_view(size_t i, CollisionObject&& obj)
 	{
-		if (obj.index() == CollisionObjectViewType::EMPTY || obj.index() == CollisionObjectViewType::SINGLE)
+		if (!valid())
+			throw Error(ErrorCode::NULL_POINTER);
+
+		if (this->obj->view.index() == CollisionObjectView::Type::EMPTY || this->obj->view.index() == CollisionObjectView::Type::SINGLE)
 		{
 			if (i == 0)
 			{
-				this->obj = std::move(obj);
+				this->obj->view = std::move(obj);
 				view_changed();
 			}
 			else
@@ -180,96 +264,89 @@ namespace oly::debug
 		}
 		else
 		{
-			std::get<CollisionObjectViewType::GROUP>(this->obj)[i] = std::move(obj);
+			std::get<CollisionObjectView::Type::GROUP>(this->obj->view)[i] = std::move(obj);
 			view_changed();
 		}
 	}
 
 	void CollisionView::merge(CollisionView&& other)
 	{
-		if (other.obj.index() == CollisionObjectViewType::EMPTY)
+		if (!valid() || !other.valid())
 			return;
 
-		if (obj.index() == CollisionObjectViewType::EMPTY)
+		if (other.obj->view.index() == CollisionObjectView::Type::EMPTY)
+			return;
+
+		if (obj->view.index() == CollisionObjectView::Type::EMPTY)
 		{
-			set_view(std::move(other.obj));
+			set_view(std::move(*other.obj));
 			return;
 		}
 
-		if (obj.index() == CollisionObjectViewType::SINGLE)
+		if (obj->view.index() == CollisionObjectView::Type::SINGLE)
 		{
-			CollisionObject old_view = std::move(std::get<CollisionObjectViewType::SINGLE>(obj));
-			obj = CollisionObjectGroup();
-			std::get<CollisionObjectViewType::GROUP>(obj).push_back(std::move(old_view));
+			CollisionObject old_view = std::move(std::get<CollisionObjectView::Type::SINGLE>(obj->view));
+			obj->view = CollisionObjectGroup();
+			std::get<CollisionObjectView::Type::GROUP>(obj->view).push_back(std::move(old_view));
 		}
 
-		std::visit([&view = std::get<CollisionObjectViewType::GROUP>(obj)](auto&& other_view) {
+		std::visit([&view = std::get<CollisionObjectView::Type::GROUP>(obj->view)](auto&& other_view) {
 			if constexpr (visiting_class_is<decltype(other_view), CollisionObject>)
 				view.push_back(std::move(other_view));
 			else if constexpr (visiting_class_is<decltype(other_view), CollisionObjectGroup>)
 				view.insert(view.end(), std::make_move_iterator(other_view.begin()), std::make_move_iterator(other_view.end()));
-			}, std::move(other.obj));
+			}, std::move(other.obj->view));
 
 		view_changed();
 	}
 
-	void CollisionView::assign(CollisionLayer& layer)
-	{
-		if (std::find(layers.begin(), layers.end(), &layer) == layers.end())
-		{
-			layers.insert(&layer);
-			layer.collision_views.insert(this);
-			layer.dirty_views = true;
-		}
-	}
-
-	void CollisionView::unassign(CollisionLayer& layer)
-	{
-		if (layers.erase(&layer))
-		{
-			layer.collision_views.erase(this);
-			layer.dirty_views = true;
-		}
-	}
-
 	const CollisionObject& CollisionView::get_view(size_t i) const
 	{
-		if (obj.index() == CollisionObjectViewType::EMPTY)
+		if (!valid())
+			throw Error(ErrorCode::NULL_POINTER);
+
+		if (obj->view.index() == CollisionObjectView::Type::EMPTY)
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
-		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		else if (obj->view.index() == CollisionObjectView::Type::SINGLE)
 		{
 			if (i == 0)
-				return std::get<CollisionObjectViewType::SINGLE>(obj);
+				return std::get<CollisionObjectView::Type::SINGLE>(obj->view);
 			else
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 		}
 		else
-			return std::get<CollisionObjectViewType::GROUP>(obj)[i];
+			return std::get<CollisionObjectView::Type::GROUP>(obj->view)[i];
 	}
 
 	CollisionObject& CollisionView::get_view(size_t i)
 	{
-		if (obj.index() == CollisionObjectViewType::EMPTY)
+		if (!valid())
+			throw Error(ErrorCode::NULL_POINTER);
+
+		if (obj->view.index() == CollisionObjectView::Type::EMPTY)
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
-		else if (obj.index() == CollisionObjectViewType::SINGLE)
+		else if (obj->view.index() == CollisionObjectView::Type::SINGLE)
 		{
 			if (i == 0)
-				return std::get<CollisionObjectViewType::SINGLE>(obj);
+				return std::get<CollisionObjectView::Type::SINGLE>(obj->view);
 			else
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 		}
 		else
-			return std::get<CollisionObjectViewType::GROUP>(obj)[i];
+			return std::get<CollisionObjectView::Type::GROUP>(obj->view)[i];
 	}
 
 	void CollisionView::view_changed() const
 	{
-		for (CollisionLayer* layer : layers)
+		if (valid())
 			layer->dirty_views = true;
 	}
 
 	void CollisionView::update_color(glm::vec4 color)
 	{
+		if (!valid())
+			throw Error(ErrorCode::NULL_POINTER);
+
 		static const auto update_color = [](CollisionObject& obj, glm::vec4 color) {
 			std::visit([color](auto&& obj) {
 				if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
@@ -281,7 +358,7 @@ namespace oly::debug
 				}
 				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 					obj.set_color(color);
-				}, obj);
+				}, *obj);
 			};
 
 		bool updated = std::visit([color](auto&& obj) -> bool {
@@ -298,15 +375,17 @@ namespace oly::debug
 			}
 			else
 				return false;
-			}, obj);
+			}, obj->view);
 
 		if (updated)
 			view_changed();
 	}
 
-	CollisionLayer::WindowResizeHandler::WindowResizeHandler()
+	CollisionLayer::WindowResizeHandler::WindowResizeHandler(CollisionLayer* layer)
+		: layer(layer)
 	{
 		attach(&context::get_wr_drawer());
+		set_projection();
 	}
 
 	bool CollisionLayer::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
@@ -316,25 +395,29 @@ namespace oly::debug
 		{
 			layer->set_sprite_scale(wr.get_size() / glm::vec2(layer->dimensions));
 			layer->dirty_views = true;
+			set_projection();
 		}
 		return false;
 	}
 
-	CollisionLayer::CollisionLayer()
-		: texture(GL_TEXTURE_2D)
+	void CollisionLayer::WindowResizeHandler::set_projection()
 	{
-		window_resize_handler.layer = this;
+		auto viewport = context::get_wr_viewport().get_viewport();
+		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
+		glm::mat3 projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
+		layer->polygon_batch.projection = projection;
+		layer->ellipse_batch.projection = projection;
+	}
+
+	CollisionLayer::CollisionLayer()
+		: texture(GL_TEXTURE_2D), window_resize_handler(this)
+	{
 		setup_texture();
 	}
 
 	CollisionLayer::CollisionLayer(const CollisionLayer& other)
-		: sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), collision_views(other.collision_views),
-		texture(GL_TEXTURE_2D)
+		: window_resize_handler(this), sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), texture(GL_TEXTURE_2D)
 	{
-		window_resize_handler.layer = this;
-		for (CollisionView* view : collision_views)
-			view->layers.insert(this);
-
 		const int cpp = 4;
 		graphics::pixel_alignment_pre_send(cpp);
 		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
@@ -354,22 +437,16 @@ namespace oly::debug
 	}
 
 	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
-		: sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
+		: window_resize_handler(this), sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
 		dimensions(other.dimensions), collision_views(std::move(other.collision_views)), dirty_views(other.dirty_views)
 	{
-		window_resize_handler.layer = this;
-		for (CollisionView* view : collision_views)
-		{
-			view->layers.erase(&other);
-			view->layers.insert(this);
-		}
 	}
 
 	CollisionLayer::~CollisionLayer()
 	{
 		window_resize_handler.detach();
 		for (CollisionView* view : collision_views)
-			view->layers.erase(std::find(view->layers.begin(), view->layers.end(), this));
+			view->invalidate_layer();
 	}
 
 	CollisionLayer& CollisionLayer::operator=(const CollisionLayer& other)
@@ -377,10 +454,8 @@ namespace oly::debug
 		if (this != &other)
 		{
 			for (CollisionView* view : collision_views)
-			{
-				if (!other.collision_views.count(view))
-					view->layers.erase(this);
-			}
+				view->invalidate_layer();
+			collision_views.clear();
 
 			sprite = other.sprite;
 			dimensions = other.dimensions;
@@ -405,14 +480,6 @@ namespace oly::debug
 
 			set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
 			sprite.set_texture(texture, dimensions);
-			
-			for (CollisionView* view : other.collision_views)
-			{
-				if (!collision_views.count(view))
-					view->layers.insert(this);
-			}
-
-			collision_views = other.collision_views;
 		}
 		return *this;
 	}
@@ -422,20 +489,14 @@ namespace oly::debug
 		if (this != &other)
 		{
 			for (CollisionView* view : collision_views)
-				view->layers.erase(std::find(view->layers.begin(), view->layers.end(), this));
+				view->invalidate_layer();
+			collision_views.clear();
 			
 			sprite = std::move(other.sprite);
 			framebuffer = std::move(other.framebuffer);
 			texture = std::move(other.texture);
 			dimensions = other.dimensions;
-			collision_views = std::move(other.collision_views);
 			dirty_views = other.dirty_views;
-			
-			for (CollisionView* view : collision_views)
-			{
-				view->layers.erase(&other);
-				view->layers.insert(this);
-			}
 		}
 		return *this;
 	}
@@ -447,7 +508,7 @@ namespace oly::debug
 		// TODO v4 currently, it's necessary to flush the internal batches when switching framebuffers.
 		// Ideally, make batches instances instead of singletons - and attach a batch per framebuffer + screen framebuffer.
 		// Then, in sprite/ellipse/etc. constructor, attach to a particular batch - use internal pointer.
-		context::flush_internal_rendering();
+		//context::flush_internal_rendering();
 		framebuffer.bind();
 		glViewport(0, 0, dimensions.x, dimensions.y);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -457,10 +518,13 @@ namespace oly::debug
 
 		for (const auto& collision_view : collision_views)
 			collision_view->draw();
-		context::polygon_batch().render();
-		context::ellipse_batch().render();
+		//context::polygon_batch().render();
+		//context::ellipse_batch().render();
 
-		context::flush_internal_rendering();
+		polygon_batch.render();
+		ellipse_batch.render();
+
+		//context::flush_internal_rendering();
 		framebuffer.unbind();
 		context::set_standard_viewport();
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
@@ -476,6 +540,18 @@ namespace oly::debug
 		sprite.set_transform(m);
 	}
 
+	void CollisionLayer::assign(CollisionView* view)
+	{
+		if (collision_views.insert(view).second)
+			dirty_views = true;
+	}
+
+	void CollisionLayer::unassign(CollisionView* view)
+	{
+		if (collision_views.erase(view))
+			dirty_views = true;
+	}
+
 	void CollisionLayer::draw(BatchBarrier barrier) const
 	{
 		if (dirty_views)
@@ -484,25 +560,6 @@ namespace oly::debug
 			write_texture();
 		}
 		sprite.draw(barrier);
-	}
-
-	void CollisionLayer::assign(CollisionView& view)
-	{
-		if (std::find(collision_views.begin(), collision_views.end(), &view) == collision_views.end())
-		{
-			collision_views.insert(&view);
-			view.layers.insert(this);
-			dirty_views = true;
-		}
-	}
-
-	void CollisionLayer::unassign(CollisionView& view)
-	{
-		if (collision_views.erase(&view))
-		{
-			view.layers.erase(this);
-			dirty_views = true;
-		}
 	}
 
 	void CollisionLayer::regen_to_current_resolution()

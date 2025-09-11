@@ -98,7 +98,7 @@ namespace oly::rendering
 
 		struct Capacity
 		{
-			Capacity(GLuint initial_glyphs, GLuint new_textures, GLuint new_text_colors = 0, GLuint new_modulations = 0)
+			Capacity(GLuint initial_glyphs = 1, GLuint new_textures = 0, GLuint new_text_colors = 0, GLuint new_modulations = 0)
 				: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
 			{
 				OLY_ASSERT(4 * initial_glyphs <= nmax<unsigned int>());
@@ -111,7 +111,8 @@ namespace oly::rendering
 			GLuint glyphs, textures, text_colors, modulations;
 		};
 
-		TextBatch(Capacity capacity);
+		TextBatch(Capacity capacity = {});
+		TextBatch(const TextBatch&) = delete;
 
 		void render() const;
 

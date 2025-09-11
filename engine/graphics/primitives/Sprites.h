@@ -119,7 +119,7 @@ namespace oly::rendering
 
 		struct Capacity
 		{
-			Capacity(GLuint initial_sprites, GLuint new_textures, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_anims = 0)
+			Capacity(GLuint initial_sprites = 1, GLuint new_textures = 0, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_anims = 0)
 				: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), anims(num_anims + 1)
 			{
 				OLY_ASSERT(4 * initial_sprites <= nmax<unsigned int>());
@@ -133,7 +133,8 @@ namespace oly::rendering
 			GLuint sprites, textures, uvs, modulations, anims;
 		};
 
-		SpriteBatch(Capacity capacity);
+		SpriteBatch(Capacity capacity = {});
+		SpriteBatch(const SpriteBatch&) = delete;
 
 		void render() const;
 

@@ -128,9 +128,9 @@ namespace oly::physics
 			throw Error(ErrorCode::DOES_NOT_EXIST);
 	}
 
-	debug::CollisionView RigidBody::collision_view(size_t i, glm::vec4 color) const
+	debug::CollisionView RigidBody::collision_view(debug::CollisionLayer& layer, size_t i, glm::vec4 color) const
 	{
-		return colliders[i].collision_view(color);
+		return colliders[i].collision_view(layer, color);
 	}
 
 	void RigidBody::update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const

@@ -248,36 +248,21 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
-	oly::debug::CollisionView player_impulse_cv, block_impulse_cv, raycast_result_cv;
-	oly::debug::CollisionView player_cv = player->collision_view(0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView block_cv = block.collision_view(oly::colors::BLUE * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView ray_cv = oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView player_impulse_cv(pipeline.impulse_layer), block_impulse_cv(pipeline.impulse_layer), raycast_result_cv(pipeline.raycast_result_layer);
+	oly::debug::CollisionView player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView ray_cv = oly::debug::collision_view(pipeline.ray_layer, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(pipeline.ray_layer, circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
-	auto cv_obstacle0 = obstacle0->collision_view(0, oly::debug::STANDARD_BLUE);
-	pipeline.obstacle_layer.assign(cv_obstacle0);
-	auto cv_obstacle1 = obstacle1->collision_view(0, oly::debug::STANDARD_BLUE);
-	pipeline.obstacle_layer.assign(cv_obstacle1);
-	auto cv_obstacle2 = obstacle2->collision_view(0, oly::debug::STANDARD_BLUE);
-	pipeline.obstacle_layer.assign(cv_obstacle2);
-	auto cv_obstacle3 = obstacle3->collision_view(0, oly::debug::STANDARD_BLUE);
-	pipeline.obstacle_layer.assign(cv_obstacle3);
-	auto cv_obstacle4 = obstacle4->collision_view(0, oly::debug::STANDARD_BLUE);
-	pipeline.obstacle_layer.assign(cv_obstacle4);
+	auto cv_obstacle0 = obstacle0->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle1 = obstacle1->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle2 = obstacle2->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle3 = obstacle3->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle4 = obstacle4->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 
-	auto ground_cv = ground->collision_view(0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
-	ground_cv.assign(pipeline.obstacle_layer);
+	auto ground_cv = ground->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
-	auto semi_solid_cv = semi_solid->collision_view(0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
-	semi_solid_cv.assign(pipeline.obstacle_layer);
-
-	player_cv.assign(pipeline.player_layer);
-	block_cv.assign(pipeline.obstacle_layer);
-	player_impulse_cv.assign(pipeline.impulse_layer);
-	block_impulse_cv.assign(pipeline.impulse_layer);
-	ray_cv.assign(pipeline.ray_layer);
-	raycast_result_cv.assign(pipeline.raycast_result_layer);
-	circle_cast_cv.assign(pipeline.ray_layer);
+	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
 	auto flag_texture = oly::context::load_texture("textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {

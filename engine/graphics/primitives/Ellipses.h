@@ -58,7 +58,7 @@ namespace oly::rendering
 	public:
 		struct Capacity
 		{
-			Capacity(Index ellipses) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= nmax<unsigned int>()); }
+			Capacity(Index ellipses = 1) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= nmax<unsigned int>()); }
 
 		private:
 			friend class EllipseBatch;
@@ -66,7 +66,8 @@ namespace oly::rendering
 		};
 
 	public:
-		EllipseBatch(Capacity capacity);
+		EllipseBatch(Capacity capacity = {});
+		EllipseBatch(const EllipseBatch&) = delete;
 
 		void render() const;
 
