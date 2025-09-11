@@ -4,7 +4,7 @@ from pathlib import Path
 from .assets import *
 from editor.tools import TOMLAdapter
 
-# TODO v4 only support SPRITE and TEXT - POLYGON/ELLIPSE are probably only useful for debugging or prototyping, but aren't efficient for rendering in large numbers.
+# TODO v4 only support SPRITE and TEXT - POLYGON is only used for debugging or prototyping, and ellipses can be pre-baked textures.
 # TODO v4 combine SPRITE and TEXT shaders?
 
 # TODO v4 archetypes should not be POD containers? Could inherit from Archetype class or something. A KinematicBody archhetype would for example inherit from KinematicBody.

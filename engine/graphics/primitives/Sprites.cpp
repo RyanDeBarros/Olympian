@@ -23,6 +23,12 @@ namespace oly::rendering
 		return glm::mix(glm::mix(colors[0], colors[1], uv.x), glm::mix(colors[3], colors[2], uv.x), uv.y);
 	}
 
+	void internal::SpriteBatchRegistry::update_texture_handle(const graphics::BindlessTextureRef& texture)
+	{
+		for (SpriteBatch* batch : batches)
+			batch->update_texture_handle(texture);
+	}
+
 	const SpriteBatch::QuadInfo& SpriteBatch::get_quad_info(GLuint vb_pos) const
 	{
 		return quad_ssbo_block.get<INFO>(vb_pos);
@@ -37,6 +43,8 @@ namespace oly::rendering
 		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
 		quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims)
 	{
+		internal::SpriteBatchRegistry::instance().batches.insert(this);
+
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
@@ -44,6 +52,11 @@ namespace oly::rendering
 		ubo.tex_coords.send<UVRect>(0, {});
 		ubo.modulation.send<ModulationRect>(0, {});
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
+	}
+
+	SpriteBatch::~SpriteBatch()
+	{
+		internal::SpriteBatchRegistry::instance().batches.erase(this);
 	}
 
 	void SpriteBatch::render() const
@@ -358,76 +371,6 @@ namespace oly::rendering
 			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 
-	void StaticSprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
-	{
-		ref.set_texture(texture_file, texture_index);
-	}
-
-	void StaticSprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
-	{
-		ref.set_texture(texture, dimensions);
-	}
-
-	void StaticSprite::set_tex_coords(const UVRect& tex_coords) const
-	{
-		ref.set_tex_coords(tex_coords);
-	}
-
-	void StaticSprite::set_tex_coords(const math::Rect2D& rect) const
-	{
-		ref.set_tex_coords(rect);
-	}
-
-	void StaticSprite::set_modulation(const ModulationRect& modulation) const
-	{
-		ref.set_modulation(modulation);
-	}
-
-	void StaticSprite::set_modulation(glm::vec4 modulation) const
-	{
-		ref.set_modulation(modulation);
-	}
-
-	void StaticSprite::set_frame_format(const graphics::AnimFrameFormat& anim) const
-	{
-		ref.set_frame_format(anim);
-	}
-
-	void StaticSprite::set_transform(const glm::mat3& transform)
-	{
-		ref.set_transform(transform);
-	}
-
-	graphics::BindlessTextureRef StaticSprite::get_texture() const
-	{
-		return ref.get_texture();
-	}
-
-	graphics::BindlessTextureRef StaticSprite::get_texture(glm::vec2& dimensions) const
-	{
-		return ref.get_texture(dimensions);
-	}
-
-	UVRect StaticSprite::get_tex_coords() const
-	{
-		return ref.get_tex_coords();
-	}
-
-	ModulationRect StaticSprite::get_modulation() const
-	{
-		return ref.get_modulation();
-	}
-
-	graphics::AnimFrameFormat StaticSprite::get_frame_format() const
-	{
-		return ref.get_frame_format();
-	}
-
-	glm::mat3 StaticSprite::get_transform() const
-	{
-		return ref.get_transform();
-	}
-
 	Sprite::Sprite(SpriteBatch* batch)
 		: ref(batch)
 	{
@@ -498,65 +441,5 @@ namespace oly::rendering
 		ref.draw_quad();
 		if (ref.in_context) [[likely]]
 			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
-	}
-
-	void Sprite::set_texture(const std::string& texture_file, unsigned int texture_index) const
-	{
-		ref.set_texture(texture_file, texture_index);
-	}
-
-	void Sprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
-	{
-		ref.set_texture(texture, dimensions);
-	}
-
-	void Sprite::set_tex_coords(const UVRect& tex_coords) const
-	{
-		ref.set_tex_coords(tex_coords);
-	}
-
-	void Sprite::set_tex_coords(const math::Rect2D& rect) const
-	{
-		ref.set_tex_coords(rect);
-	}
-
-	void Sprite::set_modulation(const ModulationRect& modulation) const
-	{
-		ref.set_modulation(modulation);
-	}
-
-	void Sprite::set_modulation(glm::vec4 modulation) const
-	{
-		ref.set_modulation(modulation);
-	}
-
-	void Sprite::set_frame_format(const graphics::AnimFrameFormat& anim) const
-	{
-		ref.set_frame_format(anim);
-	}
-
-	graphics::BindlessTextureRef Sprite::get_texture() const
-	{
-		return ref.get_texture();
-	}
-
-	graphics::BindlessTextureRef Sprite::get_texture(glm::vec2& dimensions) const
-	{
-		return ref.get_texture(dimensions);
-	}
-
-	UVRect Sprite::get_tex_coords() const
-	{
-		return ref.get_tex_coords();
-	}
-
-	ModulationRect Sprite::get_modulation() const
-	{
-		return ref.get_modulation();
-	}
-
-	graphics::AnimFrameFormat Sprite::get_frame_format() const
-	{
-		return ref.get_frame_format();
 	}
 }

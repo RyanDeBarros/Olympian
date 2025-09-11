@@ -113,6 +113,7 @@ namespace oly::rendering
 
 		TextBatch(Capacity capacity = {});
 		TextBatch(const TextBatch&) = delete;
+		TextBatch(TextBatch&&) = delete;
 
 		void render() const;
 

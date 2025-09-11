@@ -30,8 +30,7 @@ namespace oly::context
 
 	void sync_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
-		sprite_batch().update_texture_handle(texture);
-		// TODO v4 need to also sync with other sprite batches. Create an internal registry.
+		rendering::internal::SpriteBatchRegistry::instance().update_texture_handle(texture);
 	}
 
 	graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index)

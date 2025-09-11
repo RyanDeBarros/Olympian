@@ -48,9 +48,26 @@ namespace oly::rendering
 		}
 	};
 
+	class SpriteBatch;
+
 	namespace internal
 	{
 		struct SpriteReference;
+
+		class SpriteBatchRegistry
+		{
+			friend class SpriteBatch;
+			std::unordered_set<SpriteBatch*> batches;
+
+			SpriteBatchRegistry() = default;
+			SpriteBatchRegistry(const SpriteBatchRegistry&) = delete;
+			SpriteBatchRegistry(SpriteBatchRegistry&&) = delete;
+
+		public:
+			void update_texture_handle(const graphics::BindlessTextureRef& texture);
+
+			static SpriteBatchRegistry& instance() { static SpriteBatchRegistry reg; return reg; }
+		};
 	}
 
 	class SpriteBatch
@@ -137,6 +154,8 @@ namespace oly::rendering
 
 		SpriteBatch(Capacity capacity = {});
 		SpriteBatch(const SpriteBatch&) = delete;
+		SpriteBatch(SpriteBatch&&) = delete;
+		~SpriteBatch();
 
 		void render() const;
 
@@ -234,21 +253,21 @@ namespace oly::rendering
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
-		void set_tex_coords(const UVRect& tex_coords) const;
-		void set_tex_coords(const math::Rect2D& rect) const;
-		void set_modulation(const ModulationRect& modulation) const;
-		void set_modulation(glm::vec4 modulation) const;
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
-		void set_transform(const glm::mat3& transform);
+		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
+		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
+		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
+		void set_modulation(const ModulationRect& modulation) const { ref.set_modulation(modulation); }
+		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
+		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
+		void set_transform(const glm::mat3& transform) { ref.set_transform(transform); }
 
-		graphics::BindlessTextureRef get_texture() const;
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
-		UVRect get_tex_coords() const;
-		ModulationRect get_modulation() const;
-		graphics::AnimFrameFormat get_frame_format() const;
-		glm::mat3 get_transform() const;
+		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
+		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
+		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
+		ModulationRect get_modulation() const { return ref.get_modulation(); }
+		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
+		glm::mat3 get_transform() const { return ref.get_transform(); }
 	};
 
 	class Sprite
@@ -267,19 +286,19 @@ namespace oly::rendering
 
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
-		void set_tex_coords(const UVRect& tex_coords) const;
-		void set_tex_coords(const math::Rect2D& rect) const;
-		void set_modulation(const ModulationRect& modulation) const;
-		void set_modulation(glm::vec4 modulation) const;
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
+		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
+		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
+		void set_modulation(const ModulationRect& modulation) const { ref.set_modulation(modulation); }
+		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
+		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
 
-		graphics::BindlessTextureRef get_texture() const;
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
-		UVRect get_tex_coords() const;
-		ModulationRect get_modulation() const;
-		graphics::AnimFrameFormat get_frame_format() const;
+		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
+		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
+		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
+		ModulationRect get_modulation() const { return ref.get_modulation(); }
+		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

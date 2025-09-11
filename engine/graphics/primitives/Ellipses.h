@@ -14,6 +14,8 @@
 // TODO v4 can create a Painter system that allows for drawing on a framebuffer -> texture on a separate thread.
 // This would happen once per ellipse, and then just use it as a texture in a Sprite, rather than drawing in a separate batch.
 // Can even re-use say, a giant white ellipse texture that can be scaled down and colored via modulation in sprite.
+// Only keep ellipse batcher for use in collision debug drawing, but perhaps combine ellipse and polygon shaders at that point.
+// Also, remove ellipse/polygon batch from context - they can be used manually.
 
 namespace oly::rendering
 {
@@ -70,6 +72,7 @@ namespace oly::rendering
 	public:
 		EllipseBatch(Capacity capacity = {});
 		EllipseBatch(const EllipseBatch&) = delete;
+		EllipseBatch(EllipseBatch&&) = delete;
 
 		void render() const;
 

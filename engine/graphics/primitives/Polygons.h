@@ -13,8 +13,6 @@
 
 #include <map>
 
-// TODO v4 re-design SpriteBatch to more modular, so that polygons can use it instead of separate PolygonBatch. Just use white 1x1 texture with custom vertices and color modulation.
-
 namespace oly::rendering
 {
 	class StaticPolygon;
@@ -49,7 +47,7 @@ namespace oly::rendering
 			Index vertices = 0;
 			Index indices = 0;
 
-			// TODO v4 generate id sometimes fails if primitives is too low. Should no longer be an issue when polygons are merged with sprite batch pipeline.
+			// TODO v4 generate id sometimes fails if primitives is too low. Some kind of miscommunication between id generator, free space tracker, and buffer growth, perhaps?
 			Capacity(Index primitives = 100, Index degree = 6)
 			{
 				OLY_ASSERT(degree >= 3);
@@ -68,6 +66,7 @@ namespace oly::rendering
 
 		PolygonBatch(Capacity capacity = {});
 		PolygonBatch(const PolygonBatch&) = delete;
+		PolygonBatch(PolygonBatch&&) = delete;
 
 		void render() const;
 			
