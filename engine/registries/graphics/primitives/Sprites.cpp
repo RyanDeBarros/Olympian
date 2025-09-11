@@ -22,28 +22,11 @@ namespace oly::reg
 
 		if (auto toml_modulation = node["modulation"].as_array())
 		{
-			if (toml_modulation->size() == 4)
-			{
-				if (toml_modulation->get(0)->is_array())
-				{
-					rendering::ModulationRect modulation;
-					if (parse_vec(toml_modulation->get_as<toml::array>(0), modulation.colors[0])
-						&& parse_vec(toml_modulation->get_as<toml::array>(1), modulation.colors[1])
-						&& parse_vec(toml_modulation->get_as<toml::array>(2), modulation.colors[2])
-						&& parse_vec(toml_modulation->get_as<toml::array>(3), modulation.colors[3]))
-						params.modulation = modulation;
-					else
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
-				}
-				else
-				{
-					glm::vec4 modulation;
-					if (parse_vec(toml_modulation, modulation))
-						params.modulation = modulation;
-					else
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
-				}
-			}
+			glm::vec4 modulation;
+			if (parse_vec(toml_modulation, modulation))
+				params.modulation = modulation;
+			else
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 		}
 
 		if (auto toml_tex_coords = node["tex_coords"].as_array())
@@ -66,7 +49,7 @@ namespace oly::reg
 			auto mode = toml_frame_format["mode"].value<std::string>();
 			if (mode)
 			{
-				std::string mode_str = mode.value();
+				std::string mode_str = *mode;
 				if (mode_str == "single")
 					params.frame_format = params::Sprite::SingleFrameFormat{ .frame = (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0) };
 				else if (mode_str == "auto")
@@ -91,7 +74,7 @@ namespace oly::reg
 			auto toml_type = toml_transformer_modifier["type"].value<std::string>();
 			if (toml_type)
 			{
-				std::string type = toml_type.value();
+				std::string type = *toml_type;
 				if (type == "shear")
 				{
 					ShearTransformModifier2D modifier;
@@ -138,34 +121,34 @@ namespace oly::reg
 
 		if (params.texture)
 		{
-			graphics::BindlessTextureRef btex = context::load_texture(params.texture.value(), params.texture_index);
-			sprite.set_texture(btex, context::get_texture_dimensions(params.texture.value(), params.texture_index));
+			graphics::BindlessTextureRef btex = context::load_texture(*params.texture, params.texture_index);
+			sprite.set_texture(btex, context::get_texture_dimensions(*params.texture, params.texture_index));
 		}
 
 		if (params.modulation)
-			std::visit([&sprite](auto&& m) { return sprite.set_modulation(m); }, params.modulation.value());
+			sprite.set_modulation(*params.modulation);
 
 		if (params.tex_coords)
-			sprite.set_tex_coords(params.tex_coords.value());
+			sprite.set_tex_coords(*params.tex_coords);
 
 		if (params.frame_format)
 		{
-			const auto& frame_format = params.frame_format.value();
+			const auto& frame_format = *params.frame_format;
 			if (frame_format.index() == params::Sprite::FrameFormatIndex::CUSTOM)
 				sprite.set_frame_format(std::get<params::Sprite::FrameFormatIndex::CUSTOM>(frame_format));
 			else if (params.texture)
 			{
 				if (frame_format.index() == params::Sprite::FrameFormatIndex::SINGLE)
-					sprite.set_frame_format(graphics::setup_anim_frame_format_single(params.texture.value(), std::get<params::Sprite::FrameFormatIndex::SINGLE>(frame_format).frame));
+					sprite.set_frame_format(graphics::setup_anim_frame_format_single(*params.texture, std::get<params::Sprite::FrameFormatIndex::SINGLE>(frame_format).frame));
 				else if (frame_format.index() == params::Sprite::FrameFormatIndex::AUTO)
-					sprite.set_frame_format(graphics::setup_anim_frame_format(params.texture.value(), std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).speed,
+					sprite.set_frame_format(graphics::setup_anim_frame_format(*params.texture, std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).speed,
 						std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).starting_frame));
 			}
 		}
 
 		if (params.modifier)
 			sprite.transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D>
-				{ return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
+				{ return std::make_unique<std::decay_t<decltype(m)>>(m); }, *params.modifier);
 
 		return sprite;
 	}

@@ -34,6 +34,8 @@ layout(std430, binding = 2) readonly buffer QuadTransforms {
 	Mat3 uTransforms[];
 };
 
+// TODO v4 const size allocation for uniform buffers could be overkill for framebuffer draws. Make it a template variable.
+
 struct TexUVRect
 {
 	vec4 uvs[2];
@@ -42,12 +44,10 @@ layout(std140, binding = 0) uniform TextureCoords {
 	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B = #500
 };
 
-struct Modulation
-{
-	vec4 colors[4];
-};
+// TODO v4 utilize optional modulation textures in addition to solid color modulation.
+
 layout(std140, binding = 1) uniform Modulations {
-	Modulation uModulation[250]; // guaranteed 16KB / 64B = #250
+	vec4 uModulation[1000]; // guaranteed 16KB / 16B = #1000
 };
 
 struct AnimFrameFormat
@@ -63,8 +63,10 @@ layout(std140, binding = 2) uniform Anims {
 
 out vec2 tTexCoord;
 flat out uint tTexSlot;
-out vec4 tModulation;
+flat out vec4 tModulation;
 flat out uint tFramePlusOne;
+
+// TODO v4 use math over switch statements
 
 vec2 position(vec2 dimensions) {
 	switch (gl_VertexID % 4) {
@@ -98,7 +100,7 @@ void main() {
 		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
-		tModulation = uModulation[quad.colorSlot].colors[gl_VertexID % 4];
+		tModulation = uModulation[quad.colorSlot];
 		if (quad.frameSlot > 0) {
 			AnimFrameFormat anim = uAnims[quad.frameSlot];
 			int frame_offset = 0;

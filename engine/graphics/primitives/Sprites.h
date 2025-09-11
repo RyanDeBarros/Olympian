@@ -31,23 +31,6 @@ namespace oly::rendering
 		}
 	};
 
-	struct ModulationRect
-	{
-		glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
-
-		glm::vec4 mix(glm::vec2 uv) const;
-
-		bool operator==(const ModulationRect&) const = default;
-	};
-
-	struct ModulationHash
-	{
-		size_t operator()(const ModulationRect& mod) const {
-			return std::hash<glm::vec4>{}(mod.colors[0]) ^ (std::hash<glm::vec4>{}(mod.colors[1]) << 1)
-				^ (std::hash<glm::vec4>{}(mod.colors[2]) << 2) ^ (std::hash<glm::vec4>{}(mod.colors[3]) << 3);
-		}
-	};
-
 	class SpriteBatch;
 
 	namespace internal
@@ -119,7 +102,7 @@ namespace oly::rendering
 
 	private:
 		static const GLuint max_tex_coords = 500;
-		static const GLuint max_modulations = 250;
+		static const GLuint max_modulations = 1000;
 		static const GLuint max_anims = 1000;
 
 		struct UBO
@@ -128,7 +111,7 @@ namespace oly::rendering
 
 			UBO(GLuint uvs, GLuint modulations, GLuint anims)
 				: tex_coords(uvs * sizeof(UVRect), max_tex_coords * sizeof(UVRect)),
-				modulation(modulations * sizeof(ModulationRect), max_modulations * sizeof(ModulationRect)),
+				modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)),
 				anim(anims * sizeof(graphics::AnimFrameFormat), max_anims * sizeof(graphics::AnimFrameFormat)) {}
 		} ubo;
 
@@ -180,7 +163,7 @@ namespace oly::rendering
 			};
 			graphics::UsageSlotTracker<SizedTexture, SizedTextureHash> textures;
 			graphics::UsageSlotTracker<UVRect, UVRectHash> tex_coords;
-			graphics::UsageSlotTracker<ModulationRect, ModulationHash> modulations;
+			graphics::UsageSlotTracker<glm::vec4> modulations;
 			graphics::UsageSlotTracker<graphics::AnimFrameFormat, AnimHash> anims;
 
 			std::unordered_map<graphics::BindlessTextureRef, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
@@ -188,12 +171,12 @@ namespace oly::rendering
 
 		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_tex_coords(GLuint vb_pos, const UVRect& uvs);
-		void set_modulation(GLuint vb_pos, const ModulationRect& modulation);
+		void set_modulation(GLuint vb_pos, glm::vec4 modulation);
 		void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
 
 		graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 		UVRect get_tex_coords(GLuint vb_pos) const;
-		ModulationRect get_modulation(GLuint vb_pos) const;
+		glm::vec4 get_modulation(GLuint vb_pos) const;
 		graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 
 	public:
@@ -221,7 +204,6 @@ namespace oly::rendering
 			void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const UVRect& uvs) const;
 			void set_tex_coords(const math::Rect2D& rect) const;
-			void set_modulation(const ModulationRect& modulation) const;
 			void set_modulation(glm::vec4 modulation) const;
 			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 			void set_transform(const glm::mat3& transform) const;
@@ -229,7 +211,7 @@ namespace oly::rendering
 			graphics::BindlessTextureRef get_texture() const;
 			graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
 			UVRect get_tex_coords() const;
-			ModulationRect get_modulation() const;
+			glm::vec4 get_modulation() const;
 			graphics::AnimFrameFormat get_frame_format() const;
 			glm::mat3 get_transform() const;
 
@@ -257,7 +239,6 @@ namespace oly::rendering
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
 		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
-		void set_modulation(const ModulationRect& modulation) const { ref.set_modulation(modulation); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
 		void set_transform(const glm::mat3& transform) { ref.set_transform(transform); }
@@ -265,7 +246,7 @@ namespace oly::rendering
 		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
 		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
 		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		ModulationRect get_modulation() const { return ref.get_modulation(); }
+		glm::vec4 get_modulation() const { return ref.get_modulation(); }
 		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
 		glm::mat3 get_transform() const { return ref.get_transform(); }
 	};
@@ -290,14 +271,13 @@ namespace oly::rendering
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
 		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
-		void set_modulation(const ModulationRect& modulation) const { ref.set_modulation(modulation); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
 
 		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
 		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
 		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		ModulationRect get_modulation() const { return ref.get_modulation(); }
+		glm::vec4 get_modulation() const { return ref.get_modulation(); }
 		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }

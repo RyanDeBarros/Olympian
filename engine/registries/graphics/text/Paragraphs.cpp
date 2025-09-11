@@ -20,22 +20,22 @@ namespace oly::reg
 
 		if (parse_vec(node["pivot"].as_array(), v2))
 			format.pivot = v2;
-		if (parse_float(node, "line spacing", v1))
+		if (parse_float(node, "line_spacing", v1))
 			format.line_spacing = v1;
-		if (parse_float(node, "linebreak spacing", v1))
+		if (parse_float(node, "linebreak_spacing", v1))
 			format.linebreak_spacing = v1;
-		if (parse_vec(node["min size"].as_array(), v2))
+		if (parse_vec(node["min_size"].as_array(), v2))
 			format.min_size = v2;
 		if (parse_vec(node["padding"].as_array(), v2))
 			format.padding = v2;
-		if (parse_float(node, "text wrap", v1))
+		if (parse_float(node, "text_wrap", v1))
 			format.text_wrap = v1;
-		if (parse_float(node, "max height", v1))
+		if (parse_float(node, "max_height", v1))
 			format.max_height = v1;
-		if (parse_float(node, "tab spaces", v1))
+		if (parse_float(node, "tab_spaces", v1))
 			format.tab_spaces = v1;
 
-		if (auto halign = node["horizontal align"].value<std::string>())
+		if (auto halign = node["horizontal_align"].value<std::string>())
 		{
 			const std::string& align = halign.value();
 			if (align == "left")
@@ -46,13 +46,13 @@ namespace oly::reg
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
 			else if (align == "justify")
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
-			else if (align == "full justify")
+			else if (align == "full_justify")
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized horizontal alignment \"" << align << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
 		}
 
-		if (auto valign = node["vertical align"].value<std::string>())
+		if (auto valign = node["vertical_align"].value<std::string>())
 		{
 			const std::string& align = valign.value();
 			if (align == "top")
@@ -63,10 +63,10 @@ namespace oly::reg
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
 			else if (align == "justify")
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
-			else if (align == "full justify")
+			else if (align == "full_justify")
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical alignment \"" << align << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		if (LOG.enable.debug)
@@ -134,14 +134,14 @@ namespace oly::reg
 	{
 		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, dupl(params.text), params.atlas_index);
 		if (params.draw_bkg)
-			paragraph.draw_bkg = params.draw_bkg.value();
+			paragraph.draw_bkg = *params.draw_bkg;
 		paragraph.set_local() = params.local;
 
 		if (params.bkg_color)
-			paragraph.set_bkg_color({ params.bkg_color.value() });
+			paragraph.set_bkg_color(*params.bkg_color);
 		if (params.text_color)
 		{
-			paragraph.default_text_color.color = params.text_color.value();
+			paragraph.default_text_color = *params.text_color;
 			paragraph.recolor_text_with_default();
 		}
 
@@ -155,14 +155,14 @@ namespace oly::reg
 	{
 		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, std::move(params.text), params.atlas_index);
 		if (params.draw_bkg)
-			paragraph.draw_bkg = params.draw_bkg.value();
+			paragraph.draw_bkg = *params.draw_bkg;
 		paragraph.set_local() = params.local;
 
 		if (params.bkg_color)
-			paragraph.set_bkg_color({ params.bkg_color.value() });
+			paragraph.set_bkg_color(*params.bkg_color);
 		if (params.text_color)
 		{
-			paragraph.default_text_color.color = params.text_color.value();
+			paragraph.default_text_color = *params.text_color;
 			paragraph.recolor_text_with_default();
 		}
 

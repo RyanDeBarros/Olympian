@@ -34,7 +34,6 @@ namespace oly::rendering
 		struct GlyphInfo
 		{
 			GLuint tex_slot;
-			GLuint text_color_slot;
 			GLuint modulation_slot;
 		};
 
@@ -53,43 +52,14 @@ namespace oly::rendering
 			GLuint projection, modulation;
 		} shader_locations;
 
-	public:
-		struct TextColor
-		{
-			glm::vec4 color = glm::vec4(1.0f);
-
-			bool operator==(const TextColor&) const = default;
-		};
-		struct TextColorHash
-		{
-			size_t operator()(const TextColor& c) const {
-				return std::hash<glm::vec4>{}(c.color);
-			}
-		};
-		struct ModulationRect
-		{
-			glm::vec4 colors[4] = { glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
-
-			bool operator==(const ModulationRect&) const = default;
-		};
-		struct ModulationHash
-		{
-			size_t operator()(const ModulationRect& mod) const {
-				return std::hash<glm::vec4>{}(mod.colors[0]) ^ (std::hash<glm::vec4>{}(mod.colors[1]) << 1) ^ (std::hash<glm::vec4>{}(mod.colors[2]) << 2) ^ (std::hash<glm::vec4>{}(mod.colors[3]) << 3);
-			}
-		};
-
-	private:
-		static const GLuint max_text_colors = 1000;
-		static const GLuint max_modulations = 250;
+		static const GLuint max_modulations = 1000;
 
 		struct UBO
 		{
-			graphics::LightweightUBO<graphics::Mutability::MUTABLE> text_color, modulation;
+			graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation;
 
-			UBO(GLuint text_colors, GLuint modulations)
-				: text_color(text_colors * sizeof(TextColor), max_text_colors * sizeof(TextColor)),
-				modulation(modulations * sizeof(ModulationRect), max_modulations * sizeof(ModulationRect)) {}
+			UBO(GLuint modulations)
+				: modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)) {}
 		} ubo;
 
 	public:
@@ -98,11 +68,10 @@ namespace oly::rendering
 
 		struct Capacity
 		{
-			Capacity(GLuint initial_glyphs = 1, GLuint new_textures = 0, GLuint new_text_colors = 0, GLuint new_modulations = 0)
-				: glyphs(initial_glyphs), textures(new_textures + 1), text_colors(new_text_colors + 1), modulations(new_modulations + 1)
+			Capacity(GLuint initial_glyphs = 1, GLuint new_textures = 0, GLuint new_modulations = 0)
+				: glyphs(initial_glyphs), textures(new_textures + 1), modulations(new_modulations + 1)
 			{
 				OLY_ASSERT(4 * initial_glyphs <= nmax<unsigned int>());
-				OLY_ASSERT(text_colors <= max_text_colors);
 				OLY_ASSERT(modulations <= max_modulations);
 			}
 
@@ -126,17 +95,14 @@ namespace oly::rendering
 		struct GlyphInfoStore
 		{
 			graphics::UsageSlotTracker<graphics::BindlessTextureRef> textures;
-			graphics::UsageSlotTracker<TextColor, TextColorHash> text_colors;
-			graphics::UsageSlotTracker<ModulationRect, ModulationHash> modulations;
+			graphics::UsageSlotTracker<glm::vec4> modulations;
 		} glyph_info_store;
 
 		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture);
-		void set_text_color(GLuint vb_pos, const TextColor& text_color);
-		void set_modulation(GLuint vb_pos, const ModulationRect& modulation);
+		void set_text_color(GLuint vb_pos, const glm::vec4 text_color);
 
 		graphics::BindlessTextureRef get_texture(GLuint vb_pos) const;
-		TextColor get_text_color(GLuint vb_pos) const;
-		ModulationRect get_modulation(GLuint vb_pos) const;
+		glm::vec4 get_text_color(GLuint vb_pos) const;
 
 		void set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect);
 		void set_tex_coords(GLuint vb_pos, const math::Rect2D& rect);
@@ -173,14 +139,12 @@ namespace oly::rendering
 		void set_texture(const graphics::BindlessTextureRef& texture) const;
 		void set_vertex_positions(const math::Rect2D& rect) const;
 		void set_tex_coords(const math::Rect2D& rect) const;
-		void set_text_color(const TextBatch::TextColor& text_color) const;
-		void set_modulation(const TextBatch::ModulationRect& modulation) const;
+		void set_text_color(glm::vec4 text_color) const;
 
 		graphics::BindlessTextureRef get_texture() const;
 		math::Rect2D get_vertex_positions() const;
 		math::Rect2D get_tex_coords() const;
-		TextBatch::TextColor get_text_color() const;
-		TextBatch::ModulationRect get_modulation() const;
+		glm::vec4 get_text_color() const;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

@@ -18,10 +18,9 @@ namespace oly::context
 		{
 			int initial_glyphs = (int)toml_text_batch["initial_glyphs"].value_or<int64_t>(0);
 			int new_textures = (int)toml_text_batch["new_textures"].value_or<int64_t>(0);
-			int new_text_colors = (int)toml_text_batch["new_text_colors"].value_or<int64_t>(0);
 			int new_modulations = (int)toml_text_batch["new_modulations"].value_or<int64_t>(0);
 
-			rendering::TextBatch::Capacity capacity{ (GLuint)initial_glyphs, (GLuint)new_textures, (GLuint)new_text_colors, (GLuint)new_modulations };
+			rendering::TextBatch::Capacity capacity{ (GLuint)initial_glyphs, (GLuint)new_textures, (GLuint)new_modulations };
 			internal::text_batch = std::make_unique<rendering::TextBatch>(capacity);
 		}
 	}

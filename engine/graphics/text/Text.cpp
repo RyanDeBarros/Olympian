@@ -18,13 +18,12 @@ namespace oly::rendering
 
 	TextBatch::TextBatch(Capacity capacity)
 		: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
-		vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.text_colors, capacity.modulations)
+		vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.modulations)
 	{
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::text_batch, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::text_batch, "uGlobalModulation");
 
-		ubo.text_color.send<TextColor>(0, {});
-		ubo.modulation.send<ModulationRect>(0, {});
+		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
 
 		vbo_block.attributes[VERTEX_POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
 		vbo_block.attributes[TEX_COORD] = graphics::VertexAttribute<float>{ 1, 2 };
@@ -47,8 +46,7 @@ namespace oly::rendering
 		tex_handles_ssbo.bind_base(0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glyph_ssbo_block.buf.get_buffer<INFO>());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glyph_ssbo_block.buf.get_buffer<TRANSFORM>());
-		ubo.text_color.bind_base(0);
-		ubo.modulation.bind_base(1);
+		ubo.modulation.bind_base(0);
 		ebo.render_elements(GL_TRIANGLES);
 
 		vbo_block.post_draw_all();
@@ -69,7 +67,6 @@ namespace oly::rendering
 		{
 			const GlyphInfo& glyph_info = glyph_ssbo_block.buf.at<INFO>(id.get());
 			glyph_info_store.textures.decrement_usage(glyph_info.tex_slot);
-			glyph_info_store.text_colors.decrement_usage(glyph_info.text_color_slot);
 			glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
 		}
 	}
@@ -80,15 +77,9 @@ namespace oly::rendering
 			glyph_ssbo_block.flag<INFO>(vb_pos);
 	}
 		
-	void TextBatch::set_text_color(GLuint vb_pos, const TextColor& text_color)
+	void TextBatch::set_text_color(GLuint vb_pos, glm::vec4 text_color)
 	{
-		if (glyph_info_store.text_colors.set_object(ubo.text_color, glyph_ssbo_block.buf.at<INFO>(vb_pos).text_color_slot, vb_pos, text_color))
-			glyph_ssbo_block.flag<INFO>(vb_pos);
-	}
-		
-	void TextBatch::set_modulation(GLuint vb_pos, const ModulationRect& modulation)
-	{
-		if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_slot, vb_pos, modulation))
+		if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_slot, vb_pos, text_color))
 			glyph_ssbo_block.flag<INFO>(vb_pos);
 	}
 		
@@ -98,16 +89,10 @@ namespace oly::rendering
 		return slot != 0 ? glyph_info_store.textures.get_object(slot) : nullptr;
 	}
 		
-	TextBatch::TextColor TextBatch::get_text_color(GLuint vb_pos) const
-	{
-		GLuint slot = get_glyph_info(vb_pos).text_color_slot;
-		return slot != 0 ? glyph_info_store.text_colors.get_object(slot) : TextColor{};
-	}
-		
-	TextBatch::ModulationRect TextBatch::get_modulation(GLuint vb_pos) const
+	glm::vec4 TextBatch::get_text_color(GLuint vb_pos) const
 	{
 		GLuint slot = get_glyph_info(vb_pos).modulation_slot;
-		return slot != 0 ? glyph_info_store.modulations.get_object(slot) : ModulationRect{};
+		return slot != 0 ? glyph_info_store.modulations.get_object(slot) : glm::vec4(1.0f);
 	}
 
 	void TextBatch::set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect)
@@ -165,7 +150,6 @@ namespace oly::rendering
 		set_texture(other.get_texture());
 		set_tex_coords(other.get_tex_coords());
 		set_text_color(other.get_text_color());
-		set_modulation(other.get_modulation());
 	}
 		
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
@@ -182,7 +166,6 @@ namespace oly::rendering
 			set_texture(other.get_texture());
 			set_tex_coords(other.get_tex_coords());
 			set_text_color(other.get_text_color());
-			set_modulation(other.get_modulation());
 		}
 		return *this;
 	}
@@ -203,7 +186,6 @@ namespace oly::rendering
 				set_texture(other.get_texture());
 				set_tex_coords(other.get_tex_coords());
 				set_text_color(other.get_text_color());
-				set_modulation(other.get_modulation());
 			}
 		}
 		return *this;
@@ -241,14 +223,9 @@ namespace oly::rendering
 		batch.set_tex_coords(vbid.get(), rect);
 	}
 		
-	void TextGlyph::set_text_color(const TextBatch::TextColor& text_color) const
+	void TextGlyph::set_text_color(glm::vec4 text_color) const
 	{
 		batch.set_text_color(vbid.get(), text_color);
-	}
-		
-	void TextGlyph::set_modulation(const TextBatch::ModulationRect& modulation) const
-	{
-		batch.set_modulation(vbid.get(), modulation);
 	}
 		
 	graphics::BindlessTextureRef TextGlyph::get_texture() const
@@ -266,13 +243,8 @@ namespace oly::rendering
 		return batch.get_tex_coords(vbid.get());
 	}
 		
-	TextBatch::TextColor TextGlyph::get_text_color() const
+	glm::vec4 TextGlyph::get_text_color() const
 	{
 		return batch.get_text_color(vbid.get());
-	}
-		
-	TextBatch::ModulationRect TextGlyph::get_modulation() const
-	{
-		return batch.get_modulation(vbid.get());
 	}
 }

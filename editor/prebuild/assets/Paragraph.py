@@ -40,25 +40,25 @@ def params_constructor(paragraph, name) -> str:
         if 'pivot' in format:
             vec2 = format['pivot']
             c += f"\t\t\t{name}.format.pivot = {{ (float){vec2[0]}, (float){vec2[1]} }};\n"
-        if 'line spacing' in format:
-            c += f"\t\t\t{name}.format.line_spacing = (float){format['line spacing']};\n"
-        if 'linebreak spacing' in format:
-            c += f"\t\t\t{name}.format.linebreak_spacing = (float){format['linebreak spacing']};\n"
-        if 'min size' in format:
-            vec2 = format['min size']
+        if 'line_spacing' in format:
+            c += f"\t\t\t{name}.format.line_spacing = (float){format['line_spacing']};\n"
+        if 'linebreak_spacing' in format:
+            c += f"\t\t\t{name}.format.linebreak_spacing = (float){format['linebreak_spacing']};\n"
+        if 'min_size' in format:
+            vec2 = format['min_size']
             c += f"\t\t\t{name}.format.min_size = {{ (float){vec2[0]}, (float){vec2[1]} }};\n"
         if 'padding' in format:
             vec2 = format['padding']
             c += f"\t\t\t{name}.format.padding = {{ (float){vec2[0]}, (float){vec2[1]} }};\n"
-        if 'text wrap' in format:
-            c += f"\t\t\t{name}.format.text_wrap = (float){format['text wrap']};\n"
-        if 'max height' in format:
-            c += f"\t\t\t{name}.format.max_height = (float){format['max height']};\n"
-        if 'tab spaces' in format:
-            c += f"\t\t\t{name}.format.tab_spaces = (float){format['tab spaces']};\n"
+        if 'text_wrap' in format:
+            c += f"\t\t\t{name}.format.text_wrap = (float){format['text_wrap']};\n"
+        if 'max_height' in format:
+            c += f"\t\t\t{name}.format.max_height = (float){format['max_height']};\n"
+        if 'tab_spaces' in format:
+            c += f"\t\t\t{name}.format.tab_spaces = (float){format['tab_spaces']};\n"
 
-        if 'horizontal align' in format:
-            match format['horizontal align']:
+        if 'horizontal_align' in format:
+            match format['horizontal_align']:
                 case 'left':
                     c += f"\t\t\t{name}.format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::LEFT;\n"
                 case 'center':
@@ -67,11 +67,11 @@ def params_constructor(paragraph, name) -> str:
                     c += f"\t\t\t{name}.format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;\n"
                 case 'justify':
                     c += f"\t\t\t{name}.format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;\n"
-                case 'full justify':
+                case 'full_justify':
                     c += f"\t\t\t{name}.format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;\n"
 
-        if 'vertical align' in format:
-            match format['vertical align']:
+        if 'vertical_align' in format:
+            match format['vertical_align']:
                 case 'top':
                     c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::TOP;\n"
                 case 'middle':
@@ -80,7 +80,7 @@ def params_constructor(paragraph, name) -> str:
                     c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;\n"
                 case 'justify':
                     c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;\n"
-                case 'full justify':
+                case 'full_justify':
                     c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;\n"
 
     return c

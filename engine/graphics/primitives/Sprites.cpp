@@ -18,11 +18,6 @@ namespace oly::rendering
 		return *this;
 	}
 
-	glm::vec4 ModulationRect::mix(glm::vec2 uv) const
-	{
-		return glm::mix(glm::mix(colors[0], colors[1], uv.x), glm::mix(colors[3], colors[2], uv.x), uv.y);
-	}
-
 	void internal::SpriteBatchRegistry::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		for (SpriteBatch* batch : batches)
@@ -50,7 +45,7 @@ namespace oly::rendering
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
 
 		ubo.tex_coords.send<UVRect>(0, {});
-		ubo.modulation.send<ModulationRect>(0, {});
+		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}
 
@@ -129,7 +124,7 @@ namespace oly::rendering
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	void SpriteBatch::set_modulation(GLuint vb_pos, const ModulationRect& modulation)
+	void SpriteBatch::set_modulation(GLuint vb_pos, glm::vec4 modulation)
 	{
 		if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, vb_pos, modulation))
 			quad_ssbo_block.flag<INFO>(vb_pos);
@@ -157,10 +152,10 @@ namespace oly::rendering
 		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : UVRect{};
 	}
 
-	ModulationRect SpriteBatch::get_modulation(GLuint vb_pos) const
+	glm::vec4 SpriteBatch::get_modulation(GLuint vb_pos) const
 	{
 		GLuint slot = get_quad_info(vb_pos).color_slot;
-		return slot != 0 ? quad_info_store.modulations.get_object(slot) : ModulationRect{};
+		return slot != 0 ? quad_info_store.modulations.get_object(slot) : glm::vec4(1.0f);
 	}
 
 	graphics::AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
@@ -241,15 +236,10 @@ namespace oly::rendering
 	{
 		batch.set_tex_coords(id.get(), UVRect{}.from_rect(rect));
 	}
-
-	void internal::SpriteReference::set_modulation(const ModulationRect& modulation) const
-	{
-		batch.set_modulation(id.get(), modulation);
-	}
-
+	
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
 	{
-		batch.set_modulation(id.get(), {modulation, modulation, modulation, modulation});
+		batch.set_modulation(id.get(), modulation);
 	}
 
 	void internal::SpriteReference::set_frame_format(const graphics::AnimFrameFormat& anim) const
@@ -278,7 +268,7 @@ namespace oly::rendering
 		return batch.get_tex_coords(id.get());
 	}
 
-	ModulationRect internal::SpriteReference::get_modulation() const
+	glm::vec4 internal::SpriteReference::get_modulation() const
 	{
 		return batch.get_modulation(id.get());
 	}

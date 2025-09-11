@@ -1,3 +1,5 @@
+#meta type=archetype
+
 [archetype]
 name = "Jumble"
 "singleton" = true
@@ -63,12 +65,13 @@ transform = { "position" = [300, 200], "scale" = [200, 200] }
 [[archetype.sprite]]
 name = "sprite1"
 "texture" = "textures/einstein.png"
-"modulation" = [
-	[1.0, 1.0, 0.2, 0.7],
-	[0.2, 1.0, 1.0, 0.7],
-	[1.0, 0.2, 1.0, 0.7],
-	[0.5, 0.5, 0.5, 0.7]
-]
+# TODO v4 use modulation texture
+#"modulation" = [
+#	[1.0, 1.0, 0.2, 0.7],
+#	[0.2, 1.0, 1.0, 0.7],
+#	[1.0, 0.2, 1.0, 0.7],
+#	[0.5, 0.5, 0.5, 0.7]
+#]
 
 [[archetype.sprite]]
 name = "godot_icon"
@@ -119,12 +122,13 @@ name            = "nonant_panel"
 [archetype.sprite_nonant.sprite]
 "texture" = "textures/panel.png"
 transform = { "scale" = [ 10.0, 10.0 ] }
-modulation = [
-	[ 1.0, 0.3, 0.3, 1.0 ],
-	[ 0.3, 0.3, 0.3, 1.0 ],
-	[ 0.3, 0.3, 1.0, 1.0 ],
-	[ 0.3, 0.3, 0.3, 1.0 ]
-]
+# TODO v4 modulation texture
+#modulation = [
+#	[ 1.0, 0.3, 0.3, 1.0 ],
+#	[ 0.3, 0.3, 0.3, 1.0 ],
+#	[ 0.3, 0.3, 1.0, 1.0 ],
+#	[ 0.3, 0.3, 0.3, 1.0 ]
+#]
 
 [[archetype.tilemap]]
 name = "grass_tilemap"
@@ -160,9 +164,9 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 "glyph_colors" = { "0" = [ 1.0, 0.0, 0.0, 1.0 ], "1" = [ 0.0, 1.0, 0.0, 1.0 ], "2" = [ 0.0, 0.0, 1.0, 1.0 ] }
 	[archetype.paragraph.format]
 	"pivot"             = [ 0.0, 1.0 ]
-	"line spacing"      = 1.5
-	"linebreak spacing" = 2.0
-	"min size"          = [ 800, 800 ]
+	"line_spacing"      = 1.5
+	"linebreak_spacing" = 2.0
+	"min_size"          = [ 800, 800 ]
 	"padding"           = [ 50, 50 ]
-	"horizontal align"  = "center"
-	"vertical align"    = "middle"
+	"horizontal_align"  = "center"
+	"vertical_align"    = "middle"

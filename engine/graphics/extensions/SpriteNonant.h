@@ -14,7 +14,7 @@ namespace oly::rendering
 		glm::vec2 nsize{};
 		glm::vec2 regular_dimensions{};
 		math::Rect2D regular_uvs{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
-		ModulationRect regular_modulation{};
+		glm::vec4 regular_modulation = glm::vec4(1.0f);
 
 		struct
 		{
@@ -45,14 +45,13 @@ namespace oly::rendering
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_tex_coords(const math::Rect2D& rect);
-		void set_modulation(const ModulationRect& modulation);
 		void set_modulation(glm::vec4 modulation);
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 
 		graphics::BindlessTextureRef get_texture() const;
 		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
 		math::Rect2D get_tex_coords() const;
-		ModulationRect get_modulation() const;
+		glm::vec4 get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;
 
 		void set_x_left_offset(float xoff);

@@ -13,7 +13,7 @@ namespace oly::rendering
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
 		bkg.set_texture(graphics::textures::white1x1_1);
 
-		set_bkg_color({ { 0.0f, 0.0f, 0.0f, 1.0f } });
+		set_bkg_color({ 0.0f, 0.0f, 0.0f, 1.0f });
 		if (!text.empty())
 			set_text(std::move(text));
 	}
@@ -24,44 +24,24 @@ namespace oly::rendering
 			glyph.set_text_color(default_text_color);
 	}
 
-	TextBatch::TextColor Paragraph::get_glyph_color(size_t pos) const
+	glm::vec4 Paragraph::get_glyph_color(size_t pos) const
 	{
 		return glyphs[pos].get_text_color();
 	}
 
-	void Paragraph::set_glyph_color(size_t pos, const TextBatch::TextColor& color)
+	void Paragraph::set_glyph_color(size_t pos, glm::vec4 color)
 	{
 		glyphs[pos].set_text_color(color);
 	}
 
-	TextBatch::ModulationRect Paragraph::get_modulation(size_t pos) const
-	{
-		return glyphs[pos].get_modulation();
-	}
-
-	void Paragraph::set_modulation(size_t pos, const TextBatch::ModulationRect& modulation)
-	{
-		glyphs[pos].set_modulation(modulation);
-	}
-
-	TextBatch::TextColor Paragraph::get_bkg_color() const
+	glm::vec4 Paragraph::get_bkg_color() const
 	{
 		return bkg.get_text_color();
 	}
 
-	void Paragraph::set_bkg_color(const TextBatch::TextColor& color)
+	void Paragraph::set_bkg_color(glm::vec4 color)
 	{
 		bkg.set_text_color(color);
-	}
-
-	TextBatch::ModulationRect Paragraph::get_bkg_modulation() const
-	{
-		return bkg.get_modulation();
-	}
-
-	void Paragraph::set_bkg_modulation(const TextBatch::ModulationRect& modulation)
-	{
-		bkg.set_modulation(modulation);
 	}
 
 	bool Paragraph::is_visible(size_t pos) const

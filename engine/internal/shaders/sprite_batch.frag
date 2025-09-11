@@ -7,7 +7,7 @@ layout(location = 0) out vec4 oColor;
 
 in vec2 tTexCoord;
 flat in uint tTexSlot;
-in vec4 tModulation;
+flat in vec4 tModulation;
 flat in uint tFramePlusOne;
 
 struct TexData

@@ -29,9 +29,8 @@ namespace oly::rendering
 		{
 			sync_grid();
 			dirty.grid = false;
-			dirty.modulation = false; // sync_modulation() is already called in sync_grid()
 		}
-		else if (dirty.modulation)
+		if (dirty.modulation)
 		{
 			sync_modulation();
 			dirty.modulation = false;
@@ -62,6 +61,7 @@ namespace oly::rendering
 		// set modulation
 		regular_modulation = sprite.get_modulation();
 
+		dirty.modulation = true;
 		dirty.grid = true;
 	}
 
@@ -91,18 +91,12 @@ namespace oly::rendering
 		dirty.grid = true;
 	}
 
-	void SpriteNonant::set_modulation(const ModulationRect& modulation)
+	void SpriteNonant::set_modulation(glm::vec4 modulation)
 	{
 		regular_modulation = modulation;
 		dirty.modulation = true;
 	}
 
-	void SpriteNonant::set_modulation(glm::vec4 modulation)
-	{
-		regular_modulation = { modulation, modulation, modulation, modulation };
-		dirty.modulation = true;
-	}
-	
 	void SpriteNonant::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
 		for (unsigned char x = 0; x < 3; ++x)
@@ -126,7 +120,7 @@ namespace oly::rendering
 		return regular_uvs;
 	}
 
-	ModulationRect SpriteNonant::get_modulation() const
+	glm::vec4 SpriteNonant::get_modulation() const
 	{
 		return regular_modulation;
 	}
@@ -238,6 +232,7 @@ namespace oly::rendering
 		// set modulation
 		regular_modulation = copy.get_modulation();
 
+		dirty.modulation = true;
 		dirty.grid = true;
 	}
 
@@ -278,24 +273,12 @@ namespace oly::rendering
 				local.scale = size / regular_dimensions;
 				local.position = glm::vec2{ xpos[x], ypos[y] };
 			}
-
-		sync_modulation();
 	}
 
 	void SpriteNonant::sync_modulation() const
 	{
-		float xcuvs[4]{ 0.0f, offsets.x_left / nsize.x, 1.0f - offsets.x_right / nsize.x, 1.0f };
-		float ycuvs[4]{ 0.0f, offsets.y_bottom / nsize.y, 1.0f - offsets.y_top / nsize.y, 1.0f };
-
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
-			{
-				ModulationRect mod;
-				mod.colors[0] = regular_modulation.mix({ xcuvs[x]    , ycuvs[y]     });
-				mod.colors[1] = regular_modulation.mix({ xcuvs[x + 1], ycuvs[y]     });
-				mod.colors[2] = regular_modulation.mix({ xcuvs[x + 1], ycuvs[y + 1] });
-				mod.colors[3] = regular_modulation.mix({ xcuvs[x]    , ycuvs[y + 1] });
-				sprite(x, y).set_modulation(mod);
-			}
+				sprite(x, y).set_modulation(regular_modulation);
 	}
 }

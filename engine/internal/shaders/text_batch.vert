@@ -12,7 +12,6 @@ layout(std430, binding = 0) readonly buffer TextureHandles {
 struct GlyphInfo
 {
 	uint texSlot;
-	uint textColorSlot;
 	uint modulationSlot;
 };
 layout(std430, binding = 1) readonly buffer GlyphInfos {
@@ -30,22 +29,13 @@ layout(std430, binding = 2) readonly buffer QuadTransforms {
 	Mat3 uTransforms[];
 };
 
-layout(std140, binding = 0) uniform TextColors {
-	vec4 uTextColors[1000]; // guaranteed 16KB / 16B = #1000
-};
-
-struct Modulation
-{
-	vec4 colors[4];
-};
-layout(std140, binding = 1) uniform Modulations {
-	Modulation uModulation[250]; // guaranteed 16KB / 64B = #250
+layout(std140, binding = 0) uniform Modulations {
+	vec4 uModulation[1000]; // guaranteed 16KB / 16B = #1000
 };
 
 out vec2 tTexCoord;
 flat out uint tTexSlot;
-flat out vec4 tTextColor;
-out vec4 tModulation;
+flat out vec4 tModulation;
 
 void main() {
 	GlyphInfo glyph = uGlyphInfo[gl_VertexID / 4];
@@ -53,8 +43,7 @@ void main() {
 		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(iPosition, 1.0)).xy;
 		tTexCoord = iTexCoord;
 		tTexSlot = glyph.texSlot;
-		tTextColor = uTextColors[glyph.textColorSlot];
-		tModulation = uModulation[glyph.modulationSlot].colors[gl_VertexID % 4];
+		tModulation = uModulation[glyph.modulationSlot];
 	}
 	else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
