@@ -34,6 +34,7 @@ namespace oly::math
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
 		float width() const { return x2 - x1; }
 		float height() const { return y2 - y1; }
+		glm::vec2 size() const { return { x2 - x1, y2 - y1 }; }
 		
 		std::array<glm::vec2, 4> uvs() const
 		{

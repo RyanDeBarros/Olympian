@@ -201,6 +201,7 @@ namespace oly::rendering
 			SpriteReference& operator=(SpriteReference&&) noexcept;
 
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
+			void set_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(const UVRect& uvs) const;
 			void set_tex_coords(const math::Rect2D& rect) const;
@@ -236,6 +237,7 @@ namespace oly::rendering
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
 		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
@@ -268,6 +270,7 @@ namespace oly::rendering
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
 		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }

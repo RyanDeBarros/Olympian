@@ -2,16 +2,18 @@
 
 #include "core/base/Errors.h"
 #include "core/context/rendering/Text.h"
+#include "core/context/rendering/Sprites.h"
+#include "core/context/rendering/Textures.h"
 #include "graphics/resources/Textures.h"
 
 namespace oly::rendering
 {
-	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text, TextBatch* batch)
-		: batch(batch ? *batch : context::text_batch()), format(format), font(font), bkg(batch)
+	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text, SpriteBatch* batch)
+		: batch(batch ? *batch : context::sprite_batch()), format(format), font(font), bkg(batch)
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
-		bkg.set_texture(graphics::textures::white1x1);
+		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
 
 		set_bkg_color({ 0.0f, 0.0f, 0.0f, 1.0f });
 		if (!text.empty())
@@ -21,27 +23,27 @@ namespace oly::rendering
 	void Paragraph::recolor_text_with_default()
 	{
 		for (auto& glyph : glyphs)
-			glyph.set_text_color(default_text_color);
+			glyph.set_modulation(default_text_color);
 	}
 
 	glm::vec4 Paragraph::get_glyph_color(size_t pos) const
 	{
-		return glyphs[pos].get_text_color();
+		return glyphs[pos].get_modulation();
 	}
 
 	void Paragraph::set_glyph_color(size_t pos, glm::vec4 color)
 	{
-		glyphs[pos].set_text_color(color);
+		glyphs[pos].set_modulation(color);
 	}
 
 	glm::vec4 Paragraph::get_bkg_color() const
 	{
-		return bkg.get_text_color();
+		return bkg.get_modulation();
 	}
 
 	void Paragraph::set_bkg_color(glm::vec4 color)
 	{
-		bkg.set_text_color(color);
+		bkg.set_modulation(color);
 	}
 
 	bool Paragraph::is_visible(size_t pos) const
@@ -78,7 +80,7 @@ namespace oly::rendering
 		vps.x2 = -vps.x1;
 		vps.y1 = -0.5f * height() - format.padding.y;
 		vps.y2 = -vps.y1;
-		bkg.set_vertex_positions(vps);
+		bkg.set_local() = { .position = vps.center(), .scale = vps.size() };
 	}
 
 	void Paragraph::build_page()
@@ -213,9 +215,9 @@ namespace oly::rendering
 
 	void Paragraph::create_glyph()
 	{
-		TextGlyph glyph(&batch);
+		Sprite glyph;
 		glyph.transformer.attach_parent(&transformer);
-		glyph.set_text_color(default_text_color);
+		glyph.set_modulation(default_text_color);
 		glyphs.emplace_back(std::move(glyph));
 		visible.push_back(true);
 	}
@@ -224,15 +226,15 @@ namespace oly::rendering
 	{
 		if (glyphs_drawn >= glyphs.size())
 			create_glyph();
-		TextGlyph& glyph = glyphs[glyphs_drawn];
+		Sprite& glyph = glyphs[glyphs_drawn];
 
-		glyph.set_texture(font_glyph.texture);
+		glyph.set_texture(font_glyph.texture, { 1.0f, 1.0f });
 		math::Rect2D vps{};
 		vps.x1 = (float) font_glyph.box.x1;
 		vps.x2 = (float) font_glyph.box.x2;
 		vps.y1 = (float)-font_glyph.box.y2;
 		vps.y2 = (float)-font_glyph.box.y1;
-		glyph.set_vertex_positions(vps);
+		glyph.set_local() = { .position = vps.center(), .scale = vps.size() };
 		glyph.set_tex_coords(font->uvs(font_glyph));
 
 		float line_start_x = 0.0f;

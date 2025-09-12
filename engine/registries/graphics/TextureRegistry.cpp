@@ -111,9 +111,9 @@ namespace oly::reg
 			return load_svg_texture(file, texture_index, svg_params);
 		}
 		
-		TextureKey tkey { file, texture_index };
-		auto it = textures.find(tkey);
-		if (it != textures.end())
+		TextureKey key { file, texture_index };
+		auto it = textures.find_forward_iterator(key);
+		if (it != textures.forward_end())
 			return it->second;
 
 		std::string full_path = file;
@@ -131,7 +131,7 @@ namespace oly::reg
 			texture = load_anim(anim, texture_node, params.set_and_use);
 			if (!store_buffer)
 				anim.delete_buffer();
-			anims[tkey] = graphics::AnimRef(std::move(anim));
+			anims[key] = graphics::AnimRef(std::move(anim));
 		}
 		else
 		{
@@ -141,7 +141,7 @@ namespace oly::reg
 				texture = load_anim(anim, texture_node, params.set_and_use);
 				if (!store_buffer)
 					anim.delete_buffer();
-				anims[tkey] = graphics::AnimRef(std::move(anim));
+				anims[key] = graphics::AnimRef(std::move(anim));
 			}
 			else
 			{
@@ -149,7 +149,7 @@ namespace oly::reg
 				texture = load_image(image, texture_node, params.set_and_use);
 				if (!store_buffer)
 					image.delete_buffer();
-				images[tkey] = graphics::ImageRef(std::move(image));
+				images[key] = graphics::ImageRef(std::move(image));
 			}
 		}
 
@@ -159,7 +159,7 @@ namespace oly::reg
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
-		textures[tkey] = texture;
+		textures.set(key, texture);
 		return texture;
 	}
 
@@ -169,8 +169,8 @@ namespace oly::reg
 			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		TextureKey key{ file, texture_index };
-		auto it = textures.find(key);
-		if (it != textures.end())
+		auto it = textures.find_forward_iterator(key);
+		if (it != textures.forward_end())
 			return it->second;
 
 		std::string full_path = file;
@@ -241,7 +241,7 @@ namespace oly::reg
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
-		textures[key] = texture;
+		textures.set(key, texture);
 		return texture;
 	}
 	
@@ -350,64 +350,132 @@ namespace oly::reg
 		nsvg_abstracts.clear();
 	}
 
-	glm::vec2 TextureRegistry::get_dimensions(const std::string& file, unsigned int texture_index)
+	glm::vec2 TextureRegistry::get_dimensions(const std::string& file, unsigned int texture_index) const
 	{
-		TextureKey tkey{ .file = file, .index = texture_index };
-		{
-			auto it = images.find(tkey);
-			if (it != images.end())
-				return it->second->dim().dimensions();
-		}
-		{
-			auto it = anims.find(tkey);
-			if (it != anims.end())
-				return it->second->dimensions();
-		}
-		{
-			auto it = vector_images.find(tkey);
-			if (it != vector_images.end())
-				return it->second.image->dim().dimensions();
-		}
-		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_dimensions({ .file = file, .index = texture_index });
 	}
 
 	graphics::ImageDimensions TextureRegistry::get_image_dimensions(const std::string& file, unsigned int texture_index) const
 	{
-		TextureKey tkey{ .file = file, .index = texture_index };
-		{
-			auto it = images.find(tkey);
-			if (it != images.end())
-				return it->second->dim();
-		}
-		{
-			auto it = vector_images.find(tkey);
-			if (it != vector_images.end())
-				return it->second.image->dim();
-		}
-		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_image_dimensions({ .file = file, .index = texture_index });
 	}
 
 	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const std::string& file, unsigned int texture_index) const
 	{
-		auto it = anims.find({ .file = file, .index = texture_index });
+		return get_anim_dimensions({ .file = file, .index = texture_index });
+	}
+
+	graphics::ImageRef TextureRegistry::get_image_pixel_buffer(const std::string& file, unsigned int texture_index)
+	{
+		return get_image_pixel_buffer({ .file = file, .index = texture_index });
+	}
+
+	graphics::AnimRef TextureRegistry::get_anim_pixel_buffer(const std::string& file, unsigned int texture_index)
+	{
+		return get_anim_pixel_buffer({ .file = file, .index = texture_index });
+	}
+
+	glm::vec2 TextureRegistry::get_dimensions(const graphics::BindlessTextureRef& texture) const
+	{
+		auto it = textures.find_backward_iterator(texture);
+		if (it == textures.backward_end())
+			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_dimensions(it->second);
+	}
+
+	graphics::ImageDimensions TextureRegistry::get_image_dimensions(const graphics::BindlessTextureRef& texture) const
+	{
+		auto it = textures.find_backward_iterator(texture);
+		if (it == textures.backward_end())
+			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_image_dimensions(it->second);
+	}
+
+	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const graphics::BindlessTextureRef& texture) const
+	{
+		auto it = textures.find_backward_iterator(texture);
+		if (it == textures.backward_end())
+			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_anim_dimensions(it->second);
+	}
+
+	graphics::ImageRef TextureRegistry::get_image_pixel_buffer(const graphics::BindlessTextureRef& texture)
+	{
+		auto it = textures.find_backward_iterator(texture);
+		if (it == textures.backward_end())
+			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_image_pixel_buffer(it->second);
+	}
+
+	graphics::AnimRef TextureRegistry::get_anim_pixel_buffer(const graphics::BindlessTextureRef& texture)
+	{
+		auto it = textures.find_backward_iterator(texture);
+		if (it == textures.backward_end())
+			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		return get_anim_pixel_buffer(it->second);
+	}
+
+	glm::vec2 TextureRegistry::get_dimensions(const TextureKey& key) const
+	{
+		{
+			auto it = images.find(key);
+			if (it != images.end())
+				return it->second->dim().dimensions();
+		}
+
+		{
+			auto it = anims.find(key);
+			if (it != anims.end())
+				return it->second->dimensions();
+		}
+		
+		{
+			auto it = vector_images.find(key);
+			if (it != vector_images.end())
+				return it->second.image->dim().dimensions();
+		}
+		
+		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+	}
+
+	graphics::ImageDimensions TextureRegistry::get_image_dimensions(const TextureKey& key) const
+	{
+		{
+			auto it = images.find(key);
+			if (it != images.end())
+				return it->second->dim();
+		}
+
+		{
+			auto it = vector_images.find(key);
+			if (it != vector_images.end())
+				return it->second.image->dim();
+		}
+		
+		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+	}
+
+	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const TextureKey& key) const
+	{
+		auto it = anims.find(key);
 		if (it != anims.end())
 			return it->second->dim();
 		else
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	graphics::ImageRef TextureRegistry::get_image_pixel_buffer(const std::string& file, unsigned int texture_index)
+	graphics::ImageRef TextureRegistry::get_image_pixel_buffer(const TextureKey& key)
 	{
-		auto it = vector_images.find({ .file = file, .index = texture_index });
+		auto it = vector_images.find(key);
 		if (it != vector_images.end())
 			return it->second.image;
 		else
 			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	graphics::AnimRef TextureRegistry::get_anim_pixel_buffer(const std::string& file, unsigned int texture_index)
+	graphics::AnimRef TextureRegistry::get_anim_pixel_buffer(const TextureKey& key)
 	{
-		auto it = anims.find({ .file = file, .index = texture_index });
+		auto it = anims.find(key);
 		if (it != anims.end())
 			return it->second;
 		else
@@ -424,26 +492,29 @@ namespace oly::reg
 
 	void TextureRegistry::free_texture(const std::string& file, unsigned int texture_index)
 	{
-		TextureKey tkey{ file, texture_index };
+		TextureKey key{ file, texture_index };
+
 		{
-			auto it = textures.find(tkey);
-			if (it == textures.end())
+			auto it = textures.find_forward_iterator(key);
+			if (it == textures.forward_end())
 			{
 				free_svg_texture(file, texture_index);
 				return;
 			}
-			textures.erase(it);
+			textures.forward_erase(it);
 		}
+
 		{
-			auto it = images.find(tkey);
+			auto it = images.find(key);
 			if (it != images.end())
 			{
 				images.erase(it);
 				return;
 			}
 		}
+
 		{
-			auto it = anims.find(tkey);
+			auto it = anims.find(key);
 			if (it != anims.end())
 			{
 				anims.erase(it);
@@ -455,12 +526,14 @@ namespace oly::reg
 	void TextureRegistry::free_svg_texture(const std::string& file, unsigned int texture_index)
 	{
 		TextureKey key{ file, texture_index };
+
 		{
-			auto it = textures.find(key);
-			if (it == textures.end())
+			auto it = textures.find_forward_iterator(key);
+			if (it == textures.forward_end())
 				return;
-			textures.erase(it);
+			textures.forward_erase(it);
 		}
+
 		{
 			auto it = vector_images.find(key);
 			if (it != vector_images.end())
@@ -469,6 +542,7 @@ namespace oly::reg
 				return;
 			}
 		}
+
 		{
 			auto it = anims.find(key);
 			if (it != anims.end())

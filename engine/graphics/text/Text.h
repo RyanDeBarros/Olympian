@@ -77,7 +77,7 @@ namespace oly::rendering
 
 		private:
 			friend class TextBatch;
-			GLuint glyphs, textures, text_colors, modulations;
+			GLuint glyphs, textures, modulations;
 		};
 
 		TextBatch(Capacity capacity = {});

@@ -53,7 +53,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	oly::debug::CollisionLayer player_layer;
 	oly::debug::CollisionLayer obstacle_layer;
-	oly::debug::CollisionLayer ground_layer;
 	oly::debug::CollisionLayer ray_layer;
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
@@ -61,7 +60,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	TesterRenderPipeline()
 		: bkg(batch)
 	{
-
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
@@ -86,8 +84,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	{
 		bkg.bkg_rect.draw();
 		batch.render();
-		sprite_match.draw();
 
+		sprite_match.draw();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		jumble.draw();
@@ -97,8 +95,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
-
-		ground_layer.draw();
 	}
 
 	void logic_update()
@@ -250,7 +246,7 @@ int main()
 	auto cv_obstacle3 = obstacle3->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 	auto cv_obstacle4 = obstacle4->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 
-	auto ground_cv = ground->collision_view(pipeline.ground_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	auto ground_cv = ground->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
 	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 

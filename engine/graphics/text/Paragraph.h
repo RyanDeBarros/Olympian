@@ -2,6 +2,7 @@
 
 #include "graphics/text/Text.h"
 #include "graphics/text/Font.h"
+#include "graphics/sprites/Sprites.h"
 
 namespace oly::rendering
 {
@@ -40,9 +41,9 @@ namespace oly::rendering
 	*/
 	class Paragraph
 	{
-		TextBatch& batch;
-		TextGlyph bkg;
-		std::vector<TextGlyph> glyphs;
+		SpriteBatch& batch;
+		Sprite bkg;
+		std::vector<Sprite> glyphs;
 		std::vector<bool> visible;
 		utf::String text;
 		FontAtlasRef font;
@@ -58,7 +59,7 @@ namespace oly::rendering
 		glm::vec4 default_text_color = glm::vec4(1.0f);
 		Transformer2D transformer;
 
-		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", TextBatch* batch = CONTEXT_TEXT_BATCH);
+		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
 
 		const utf::String& get_text() const { return text; }
 		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }

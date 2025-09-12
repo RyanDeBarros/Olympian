@@ -48,13 +48,28 @@ namespace oly::context
 		return internal::texture_registry.get_dimensions(resource_file(file), texture_index);
 	}
 
+	glm::vec2 get_texture_dimensions(const graphics::BindlessTextureRef& texture)
+	{
+		return internal::texture_registry.get_dimensions(texture);
+	}
+
 	graphics::ImageDimensions get_image_dimensions(const std::string& file, unsigned int texture_index)
 	{
 		return internal::texture_registry.get_image_dimensions(resource_file(file), texture_index);
 	}
 
+	graphics::ImageDimensions get_image_dimensions(const graphics::BindlessTextureRef& texture)
+	{
+		return internal::texture_registry.get_image_dimensions(texture);
+	}
+
 	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const std::string& file, unsigned int texture_index)
 	{
 		return internal::texture_registry.get_anim_dimensions(resource_file(file), texture_index);
+	}
+
+	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture)
+	{
+		return internal::texture_registry.get_anim_dimensions(texture);
 	}
 }

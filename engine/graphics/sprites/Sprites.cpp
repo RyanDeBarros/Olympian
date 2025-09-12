@@ -222,6 +222,11 @@ namespace oly::rendering
 		batch.set_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
 	}
 
+	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture) const
+	{
+		batch.set_texture(id.get(), texture, context::get_texture_dimensions(texture));
+	}
+
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
 		batch.set_texture(id.get(), texture, dimensions);
