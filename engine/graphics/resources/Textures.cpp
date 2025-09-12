@@ -10,9 +10,12 @@ namespace oly::graphics::textures
 	void internal::load()
 	{
 		{
-			ImageDimensions dim{ .w = 1, .h = 1, .cpp = 1 };
+			ImageDimensions dim{ .w = 1, .h = 1, .cpp = 4 };
 			unsigned char* buf = dim.pxnew();
 			buf[0] = 255;
+			buf[1] = 255;
+			buf[2] = 255;
+			buf[3] = 255;
 			white1x1 = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
 			white1x1->set_and_use_handle();
 		}

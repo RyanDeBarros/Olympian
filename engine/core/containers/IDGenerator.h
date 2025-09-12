@@ -6,6 +6,8 @@
 
 namespace oly
 {
+	// TODO implement ID cap for things like modulation UBO
+
 	template<std::unsigned_integral T>
 	class SoftIDGenerator
 	{

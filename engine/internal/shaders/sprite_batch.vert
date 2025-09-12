@@ -12,12 +12,15 @@ layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
+// TODO v4 can implement clever compression techniques to reduce size of info when adding more properties.
+
 struct QuadInfo
 {
 	uint texSlot;
 	uint texCoordSlot;
 	uint colorSlot;
 	uint frameSlot;
+	uint isTextGlyph;
 };
 layout(std430, binding = 1) readonly buffer QuadInfos {
 	QuadInfo uQuadInfo[];
@@ -61,11 +64,6 @@ layout(std140, binding = 2) uniform Anims {
 	AnimFrameFormat uAnims[1000]; // guaranteed 16KB / 16B = #1000
 };
 
-out vec2 tTexCoord;
-flat out uint tTexSlot;
-flat out vec4 tModulation;
-flat out uint tFramePlusOne;
-
 // TODO v4 use math over switch statements
 
 vec2 position(vec2 dimensions) {
@@ -94,9 +92,15 @@ vec2 coords(TexUVRect rect) {
 	}
 }
 
+out vec2 tTexCoord;
+flat out uint tTexSlot;
+flat out vec4 tModulation;
+flat out uint tFramePlusOne;
+flat out uint tIsTextGlyph;
+
 void main() {
 	QuadInfo quad = uQuadInfo[gl_VertexID / 4];
-	if (quad.texSlot > 0) {
+	if (quad.texSlot > 0) { // TODO v4 don't use 1-indexed buffers
 		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
@@ -110,6 +114,7 @@ void main() {
 		} else {
 			tFramePlusOne = 0;
 		}
+		tIsTextGlyph = quad.isTextGlyph;
 	}
 	else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC

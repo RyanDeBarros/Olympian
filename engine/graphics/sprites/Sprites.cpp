@@ -136,6 +136,11 @@ namespace oly::rendering
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
+	void SpriteBatch::set_text_glyph(GLuint vb_pos, bool is_text_glyph)
+	{
+		set_quad_info(vb_pos).is_text_glyph = is_text_glyph;
+	}
+
 	graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 	{
 		GLuint slot = get_quad_info(vb_pos).tex_slot;
@@ -162,6 +167,11 @@ namespace oly::rendering
 	{
 		GLuint slot = get_quad_info(vb_pos).frame_slot;
 		return slot != 0 ? quad_info_store.anims.get_object(slot) : graphics::AnimFrameFormat{};
+	}
+
+	bool SpriteBatch::is_text_glyph(GLuint vb_pos) const
+	{
+		return get_quad_info(vb_pos).is_text_glyph;
 	}
 
 	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
@@ -252,6 +262,11 @@ namespace oly::rendering
 		batch.set_frame_format(id.get(), anim);
 	}
 
+	void internal::SpriteReference::set_text_glyph(bool is_text_glyph) const
+	{
+		batch.set_text_glyph(id.get(), is_text_glyph);
+	}
+
 	void internal::SpriteReference::set_transform(const glm::mat3& transform) const
 	{
 		batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id.get()) = transform;
@@ -281,6 +296,11 @@ namespace oly::rendering
 	graphics::AnimFrameFormat internal::SpriteReference::get_frame_format() const
 	{
 		return batch.get_frame_format(id.get());
+	}
+
+	bool internal::SpriteReference::is_text_glyph() const
+	{
+		return batch.is_text_glyph(id.get());
 	}
 
 	glm::mat3 internal::SpriteReference::get_transform() const

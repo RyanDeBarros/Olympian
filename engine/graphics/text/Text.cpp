@@ -1,250 +1,87 @@
 #include "Text.h"
 
 #include "core/context/rendering/Rendering.h"
-#include "core/context/rendering/Text.h"
-#include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
 {
-	const TextBatch::GlyphInfo& TextBatch::get_glyph_info(GLuint vb_pos) const
+	TextGlyph::TextGlyph(SpriteBatch* batch)
+		: ref(batch)
 	{
-		return glyph_ssbo_block.get<INFO>(vb_pos);
+		ref.set_text_glyph(true);
 	}
 
-	TextBatch::GlyphInfo& TextBatch::set_glyph_info(GLuint vb_pos)
-	{
-		return glyph_ssbo_block.set<INFO>(vb_pos);
-	}
-
-	TextBatch::TextBatch(Capacity capacity)
-		: ebo(vao, capacity.glyphs), tex_handles_ssbo(capacity.textures * sizeof(GLuint64), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
-		vbo_block(vao, capacity.glyphs * 4), glyph_ssbo_block(capacity.glyphs), ubo(capacity.modulations)
-	{
-		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::text_batch, "uProjection");
-		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::text_batch, "uGlobalModulation");
-
-		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
-
-		vbo_block.attributes[VERTEX_POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
-		vbo_block.attributes[TEX_COORD] = graphics::VertexAttribute<float>{ 1, 2 };
-		vbo_block.setup();
-	}
-
-	void TextBatch::render() const
-	{
-		if (ebo.empty())
-			return;
-
-		vbo_block.pre_draw_all();
-		glyph_ssbo_block.pre_draw_all();
-
-		glBindVertexArray(vao);
-		glUseProgram(graphics::internal_shaders::text_batch);
-		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
-		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
-
-		tex_handles_ssbo.bind_base(0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glyph_ssbo_block.buf.get_buffer<INFO>());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glyph_ssbo_block.buf.get_buffer<TRANSFORM>());
-		ubo.modulation.bind_base(0);
-		ebo.render_elements(GL_TRIANGLES);
-
-		vbo_block.post_draw_all();
-		glyph_ssbo_block.post_draw_all();
-	}
-		
-	TextBatch::VBID TextBatch::gen_glyph_id()
-	{
-		VBID id = vbid_generator.generate();
-		glyph_ssbo_block.set<INFO>(id.get()) = {};
-		glyph_ssbo_block.set<TRANSFORM>(id.get()) = 1.0f;
-		return id;
-	}
-		
-	void TextBatch::erase_glyph_id(const VBID& id)
-	{
-		if (id.is_valid())
-		{
-			const GlyphInfo& glyph_info = glyph_ssbo_block.buf.at<INFO>(id.get());
-			glyph_info_store.textures.decrement_usage(glyph_info.tex_slot);
-			glyph_info_store.modulations.decrement_usage(glyph_info.modulation_slot);
-		}
-	}
-		
-	void TextBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture)
-	{
-		if (glyph_info_store.textures.set_object<GLuint64>(tex_handles_ssbo, glyph_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, vb_pos, texture, texture->get_handle()))
-			glyph_ssbo_block.flag<INFO>(vb_pos);
-	}
-		
-	void TextBatch::set_text_color(GLuint vb_pos, glm::vec4 text_color)
-	{
-		if (glyph_info_store.modulations.set_object(ubo.modulation, glyph_ssbo_block.buf.at<INFO>(vb_pos).modulation_slot, vb_pos, text_color))
-			glyph_ssbo_block.flag<INFO>(vb_pos);
-	}
-		
-	graphics::BindlessTextureRef TextBatch::get_texture(GLuint vb_pos) const
-	{
-		GLuint slot = get_glyph_info(vb_pos).tex_slot;
-		return slot != 0 ? glyph_info_store.textures.get_object(slot) : nullptr;
-	}
-		
-	glm::vec4 TextBatch::get_text_color(GLuint vb_pos) const
-	{
-		GLuint slot = get_glyph_info(vb_pos).modulation_slot;
-		return slot != 0 ? glyph_info_store.modulations.get_object(slot) : glm::vec4(1.0f);
-	}
-
-	void TextBatch::set_vertex_positions(GLuint vb_pos, const math::Rect2D& rect)
-	{
-		glm::vec2* vertex_positions = vbo_block.set<VERTEX_POSITION>(4 * vb_pos, 4);
-		auto uvs = rect.uvs();
-		vertex_positions[0] = uvs[0];
-		vertex_positions[1] = uvs[1];
-		vertex_positions[2] = uvs[2];
-		vertex_positions[3] = uvs[3];
-	}
-
-	void TextBatch::set_tex_coords(GLuint vb_pos, const math::Rect2D& rect)
-	{
-		glm::vec2* tex_coords = vbo_block.set<TEX_COORD>(4 * vb_pos, 4);
-		auto uvs = rect.uvs();
-		tex_coords[0] = uvs[0];
-		tex_coords[1] = uvs[1];
-		tex_coords[2] = uvs[2];
-		tex_coords[3] = uvs[3];
-	}
-
-	math::Rect2D TextBatch::get_vertex_positions(GLuint vb_pos) const
-	{
-		glm::vec2 bl = vbo_block.get<VERTEX_POSITION>(4 * vb_pos);
-		glm::vec2 tr = vbo_block.get<VERTEX_POSITION>(4 * vb_pos + 2);
-		return { bl.x, tr.x, bl.y, tr.y };
-	}
-
-	math::Rect2D TextBatch::get_tex_coords(GLuint vb_pos) const
-	{
-		glm::vec2 bl = vbo_block.get<TEX_COORD>(4 * vb_pos);
-		glm::vec2 tr = vbo_block.get<TEX_COORD>(4 * vb_pos + 2);
-		return { bl.x, tr.x, bl.y, tr.y };
-	}
-		
-	void TextBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
-	{
-		GLuint slot;
-		if (glyph_info_store.textures.get_slot({ texture }, slot))
-			tex_handles_ssbo.send(slot, texture->get_handle());
-	}
-		
-	TextGlyph::TextGlyph(TextBatch* batch)
-		: batch(batch ? *batch : context::text_batch()), in_context(!batch)
-	{
-		vbid = this->batch.gen_glyph_id();
-	}
-		
 	TextGlyph::TextGlyph(const TextGlyph& other)
-		: batch(other.batch), in_context(other.in_context), transformer(other.transformer)
+		: ref(other.ref), transformer(other.transformer)
 	{
-		vbid = batch.gen_glyph_id();
+		ref.set_text_glyph(true);
 
-		set_texture(other.get_texture());
-		set_tex_coords(other.get_tex_coords());
-		set_text_color(other.get_text_color());
+		glm::vec2 dim;
+		auto tex = other.ref.get_texture(dim);
+		ref.set_texture(tex, dim);
+		ref.set_tex_coords(other.ref.get_tex_coords());
+		ref.set_modulation(other.ref.get_modulation());
 	}
-		
+
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
-		: batch(other.batch), in_context(other.in_context), vbid(std::move(other.vbid)), transformer(std::move(other.transformer))
+		: ref(std::move(other.ref)), transformer(std::move(other.transformer))
 	{
+		ref.set_text_glyph(true);
 	}
-		
+
 	TextGlyph& TextGlyph::operator=(const TextGlyph& other)
 	{
 		if (this != &other)
 		{
+			ref = other.ref;
 			transformer = other.transformer;
 
-			set_texture(other.get_texture());
-			set_tex_coords(other.get_tex_coords());
-			set_text_color(other.get_text_color());
+			glm::vec2 dim;
+			auto tex = other.ref.get_texture(dim);
+			ref.set_texture(tex, dim);
+			ref.set_tex_coords(other.ref.get_tex_coords());
+			ref.set_modulation(other.ref.get_modulation());
 		}
 		return *this;
 	}
-		
+
 	TextGlyph& TextGlyph::operator=(TextGlyph&& other) noexcept
 	{
 		if (this != &other)
 		{
+			ref = std::move(other.ref);
 			transformer = std::move(other.transformer);
-
-			if (&batch == &other.batch)
+			if (&ref.batch != &other.ref.batch)
 			{
-				batch.erase_glyph_id(vbid);
-				vbid = std::move(other.vbid);
-			}
-			else
-			{
-				set_texture(other.get_texture());
-				set_tex_coords(other.get_tex_coords());
-				set_text_color(other.get_text_color());
+				glm::vec2 dim;
+				auto tex = other.ref.get_texture(dim);
+				ref.set_texture(tex, dim);
+				ref.set_tex_coords(other.ref.get_tex_coords());
+				ref.set_modulation(other.ref.get_modulation());
 			}
 		}
 		return *this;
 	}
-		
+
 	TextGlyph::~TextGlyph()
 	{
-		batch.erase_glyph_id(vbid);
-	}
-		
-	void TextGlyph::draw(BatchBarrier barrier) const
-	{
-		if (in_context) [[likely]]
-			if (barrier) [[likely]]
-				context::internal::flush_batches_except(context::InternalBatch::TEXT);
-		if (transformer.flush())
-			batch.glyph_ssbo_block.set<TextBatch::TRANSFORM>(vbid.get()) = transformer.global();
-		graphics::quad_indices(batch.ebo.draw_primitive().data(), vbid.get());
-		if (in_context) [[likely]]
-			context::internal::set_batch_rendering_tracker(context::InternalBatch::TEXT, true);
-	}
-		
-	void TextGlyph::set_texture(const graphics::BindlessTextureRef& texture) const
-	{
-		batch.set_texture(vbid.get(), texture);
 	}
 
-	void TextGlyph::set_vertex_positions(const math::Rect2D& rect) const
+	void TextGlyph::draw(BatchBarrier barrier) const
 	{
-		batch.set_vertex_positions(vbid.get(), rect);
+		if (ref.in_context) [[likely]]
+			if (barrier) [[likely]]
+				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
+		if (transformer.flush())
+			ref.set_transform(transformer.global());
+		ref.draw_quad();
+		if (ref.in_context) [[likely]]
+			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
-		
-	void TextGlyph::set_tex_coords(const math::Rect2D& rect) const
+
+	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos)
 	{
-		batch.set_tex_coords(vbid.get(), rect);
-	}
-		
-	void TextGlyph::set_text_color(glm::vec4 text_color) const
-	{
-		batch.set_text_color(vbid.get(), text_color);
-	}
-		
-	graphics::BindlessTextureRef TextGlyph::get_texture() const
-	{
-		return batch.get_texture(vbid.get());
-	}
-		
-	math::Rect2D TextGlyph::get_vertex_positions() const
-	{
-		return batch.get_vertex_positions(vbid.get());
-	}
-		
-	math::Rect2D TextGlyph::get_tex_coords() const
-	{
-		return batch.get_tex_coords(vbid.get());
-	}
-		
-	glm::vec4 TextGlyph::get_text_color() const
-	{
-		return batch.get_text_color(vbid.get());
+		ref.set_texture(glyph.texture, { 1.0f, 1.0f } );
+		set_local() = { .position = pos - 0.5f * glm::vec2{ glyph.box.x1 + glyph.box.x2, glyph.box.y1 + glyph.box.y2 }, .scale = glyph.box.size() };
+		ref.set_tex_coords(atlas.uvs(glyph));
 	}
 }

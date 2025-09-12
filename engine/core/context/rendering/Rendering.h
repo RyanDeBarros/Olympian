@@ -24,7 +24,6 @@ namespace oly::context
 	enum class InternalBatch : int
 	{
 		SPRITE,
-		TEXT,
 		_COUNT
 	};
 

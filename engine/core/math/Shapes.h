@@ -66,6 +66,7 @@ namespace oly::math
 		glm::ivec2 clamp(glm::ivec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
 		int width() const { return x2 - x1; }
 		int height() const { return y2 - y1; }
+		glm::ivec2 size() const { return { x2 - x1, y2 - y1 }; }
 
 		bool operator==(const IRect2D&) const = default;
 	};

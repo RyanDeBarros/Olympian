@@ -2,7 +2,6 @@
 
 #include "graphics/text/Text.h"
 #include "graphics/text/Font.h"
-#include "graphics/sprites/Sprites.h"
 
 namespace oly::rendering
 {
@@ -43,7 +42,7 @@ namespace oly::rendering
 	{
 		SpriteBatch& batch;
 		Sprite bkg;
-		std::vector<Sprite> glyphs;
+		std::vector<TextGlyph> glyphs;
 		std::vector<bool> visible;
 		utf::String text;
 		FontAtlasRef font;

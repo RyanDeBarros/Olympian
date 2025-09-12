@@ -104,7 +104,7 @@ transform = { "scale" = [ 100, 100 ] }
 		[  2,  3 ],
 		[  3,  3 ],
 	]
-
+	
 [[archetype.paragraph]]
 name           = "test_text"
 "font_atlas"   = "fonts/Roboto-Regular.ttf"

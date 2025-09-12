@@ -16,8 +16,6 @@ namespace oly::graphics::internal_shaders
 	GLuint polygon_batch;
 	static std::unique_ptr<Shader> _ellipse_batch = nullptr;
 	GLuint ellipse_batch;
-	static std::unique_ptr<Shader> _text_batch = nullptr;
-	GLuint text_batch;
 
 	void load()
 	{
@@ -27,8 +25,6 @@ namespace oly::graphics::internal_shaders
 		polygon_batch = *_polygon_batch;
 		_ellipse_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "ellipse_batch.vert", .fragment_path = shaders_dir + "ellipse_batch.frag" });
 		ellipse_batch = *_ellipse_batch;
-		_text_batch = std::make_unique<Shader>(ShaderPathSource{ .vertex_path = shaders_dir + "text_batch.vert", .fragment_path = shaders_dir + "text_batch.frag" });
-		text_batch = *_text_batch;
 	}
 
 	void unload()
@@ -39,7 +35,5 @@ namespace oly::graphics::internal_shaders
 		polygon_batch = 0;
 		_ellipse_batch.reset();
 		ellipse_batch = 0;
-		_text_batch.reset();
-		text_batch = 0;
 	}
 }

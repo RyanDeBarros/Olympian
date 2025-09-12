@@ -107,7 +107,6 @@ namespace oly::context
 		graphics::internal::load_resources();
 
 		internal::init_sprites(toml_context);
-		internal::init_text(toml_context);
 
 		autoload_signals(toml_context);
 		internal::init_collision(toml_context);
@@ -131,7 +130,6 @@ namespace oly::context
 		internal::terminate_fonts();
 
 		internal::terminate_sprites();
-		internal::terminate_text();
 
 		internal::terminate_platform();
 

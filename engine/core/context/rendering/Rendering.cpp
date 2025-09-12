@@ -33,8 +33,6 @@ namespace oly::context
 	{
 		if (internal::batch_tracking[(int)InternalBatch::SPRITE])
 			render_sprites();
-		if (internal::batch_tracking[(int)InternalBatch::TEXT])
-			render_text();
 	}
 
 	void internal::set_batch_rendering_tracker(InternalBatch batch, bool ongoing)
@@ -42,12 +40,11 @@ namespace oly::context
 		internal::batch_tracking[(int)batch] = ongoing;
 	}
 
+	// TODO v4 just use render_sprites once sprites and text are merged.
 	void internal::flush_batches_except(InternalBatch batch)
 	{
 		if (batch != InternalBatch::SPRITE && internal::batch_tracking[(int)InternalBatch::SPRITE])
 			render_sprites();
-		if (batch != InternalBatch::TEXT && internal::batch_tracking[(int)InternalBatch::TEXT])
-			render_text();
 	}
 
 	bool blend_enabled()

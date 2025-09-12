@@ -23,17 +23,17 @@ namespace oly::rendering
 	void Paragraph::recolor_text_with_default()
 	{
 		for (auto& glyph : glyphs)
-			glyph.set_modulation(default_text_color);
+			glyph.set_text_color(default_text_color);
 	}
 
 	glm::vec4 Paragraph::get_glyph_color(size_t pos) const
 	{
-		return glyphs[pos].get_modulation();
+		return glyphs[pos].get_text_color();
 	}
 
 	void Paragraph::set_glyph_color(size_t pos, glm::vec4 color)
 	{
-		glyphs[pos].set_modulation(color);
+		glyphs[pos].set_text_color(color);
 	}
 
 	glm::vec4 Paragraph::get_bkg_color() const
@@ -209,34 +209,21 @@ namespace oly::rendering
 
 	void Paragraph::write_glyph(utf::Codepoint c, float dx)
 	{
-		write_glyph(font->get_glyph(c));
 		typeset.x += dx;
+		write_glyph(font->get_glyph(c));
 	}
 
 	void Paragraph::create_glyph()
 	{
-		Sprite glyph;
+		TextGlyph glyph;
 		glyph.transformer.attach_parent(&transformer);
-		glyph.set_modulation(default_text_color);
+		glyph.set_text_color(default_text_color);
 		glyphs.emplace_back(std::move(glyph));
 		visible.push_back(true);
 	}
 
 	void Paragraph::write_glyph(const FontGlyph& font_glyph)
 	{
-		if (glyphs_drawn >= glyphs.size())
-			create_glyph();
-		Sprite& glyph = glyphs[glyphs_drawn];
-
-		glyph.set_texture(font_glyph.texture, { 1.0f, 1.0f });
-		math::Rect2D vps{};
-		vps.x1 = (float) font_glyph.box.x1;
-		vps.x2 = (float) font_glyph.box.x2;
-		vps.y1 = (float)-font_glyph.box.y2;
-		vps.y2 = (float)-font_glyph.box.y1;
-		glyph.set_local() = { .position = vps.center(), .scale = vps.size() };
-		glyph.set_tex_coords(font->uvs(font_glyph));
-
 		float line_start_x = 0.0f;
 		if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::RIGHT)
 			line_start_x = pagedata.width - pagedata.lines[typeset.line].width;
@@ -264,9 +251,14 @@ namespace oly::rendering
 				typeset_mult_y = (pagedata.height - font->line_height()) / (content_height() - font->line_height());
 		}
 
-		glyph.set_local().position.x = line_start_x + typeset.x * typeset_mult_x - format.pivot.x * pagedata.width + format.padding.x;
-		glyph.set_local().position.y = -line_start_y + typeset.y * typeset_mult_y - font->get_ascent() + (1.0f - format.pivot.y) * pagedata.height - format.padding.y;
-		++glyphs_drawn;
+		glm::vec2 glyph_pos = {
+			line_start_x + typeset.x * typeset_mult_x - format.pivot.x * pagedata.width + format.padding.x,
+			-line_start_y + typeset.y * typeset_mult_y - font->get_ascent() + (1.0f - format.pivot.y) * pagedata.height - format.padding.y
+		};
+
+		if (glyphs_drawn >= glyphs.size())
+			create_glyph();
+		glyphs[glyphs_drawn++].set_glyph(*font, font_glyph, glyph_pos);
 	}
 
 	float Paragraph::line_height() const
