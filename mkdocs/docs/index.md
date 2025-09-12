@@ -11,7 +11,7 @@ ProjectName/
 │   └── ProjectName.cpp         (program entry point)
 ├── res/                        (game assets)
 ├── .gen/                       (auto-generated code)
-│   ├── archetypes/
+│   ├── code/
 │   ├── manifest.txt            (list of folders in res/ to search for archetypes)
 │   └── cache.json
 ├── .settings/                  (internal settings used by editor)

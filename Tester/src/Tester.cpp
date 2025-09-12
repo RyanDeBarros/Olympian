@@ -3,13 +3,11 @@
 #include "ProjectContext.h"
 
 #include "registries/graphics/sprites/Sprites.h"
+#include "registries/graphics/shapes/Polygons.h"
 #include "registries/graphics/TextureRegistry.h"
 
-#include "archetypes/PolygonCrop.h"
-#include "archetypes/SpriteMatch.h"
-#include "archetypes/EllipsePair.h"
-#include "archetypes/Jumble.h"
-#include "archetypes/BKG.h"
+#include "assets/archetypes/SpriteMatch.h"
+#include "assets/archetypes/Jumble.h"
 
 #include "PlayerController.h"
 
@@ -30,12 +28,23 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 	}
 };
 
+struct BKG
+{
+	oly::rendering::Polygon bkg_rect; // TODO v4 error when using PolygonRef
+
+	BKG(oly::rendering::PolygonBatch& batch)
+		: bkg_rect(oly::reg::load_polygon(batch, oly::context::load_toml("assets/BKG.toml")["polygon"]))
+	{
+		bkg_rect.init();
+	}
+};
+
 struct TesterRenderPipeline : public oly::IRenderPipeline
 {
-	oly::gen::BKG bkg;
-	oly::gen::PolygonCrop polygon_crop;
+	oly::rendering::PolygonBatch batch;
+
+	BKG bkg;
 	oly::gen::SpriteMatch sprite_match;
-	oly::gen::EllipsePair ellipse_pair;
 	oly::gen::Jumble jumble;
 
 	std::vector<oly::Sprite> flag_tesselation;
@@ -44,19 +53,14 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	oly::debug::CollisionLayer player_layer;
 	oly::debug::CollisionLayer obstacle_layer;
+	oly::debug::CollisionLayer ground_layer;
 	oly::debug::CollisionLayer ray_layer;
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
 
 	TesterRenderPipeline()
+		: bkg(batch)
 	{
-		for (auto& tp : jumble.concave_shape->composite)
-		{
-			tp.polygon.colors[0].r = (float)rand() / RAND_MAX;
-			tp.polygon.colors[0].g = (float)rand() / RAND_MAX;
-			tp.polygon.colors[0].b = (float)rand() / RAND_MAX;
-		}
-		jumble.concave_shape->send_polygon();
 
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
@@ -64,7 +68,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::reg::load_sprite(oly::context::load_toml("assets/sprites/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::reg::load_sprite(oly::context::load_toml("assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);
@@ -80,20 +84,10 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.draw();
-		oly::context::flush_internal_rendering(); // flush internal rendering before initiating stencil
-
-		oly::stencil::begin();
-		oly::stencil::enable_drawing();
-		glClear(GL_STENCIL_BUFFER_BIT); // must be called after enabling stencil drawing
-		oly::stencil::draw::replace();
-		polygon_crop.draw();
-		oly::stencil::disable_drawing();
-		oly::stencil::crop::match();
+		bkg.bkg_rect.draw();
+		batch.render();
 		sprite_match.draw();
-		oly::stencil::end();
 
-		ellipse_pair.draw();
 		for (const auto& sprite : flag_tesselation)
 			sprite.draw();
 		jumble.draw();
@@ -103,19 +97,13 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
+
+		ground_layer.draw();
 	}
 
 	void logic_update()
 	{
 		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::TIME.delta());
-
-		jumble.octagon->base.fill_colors[0].r = fmod(oly::TIME.now<float>(), 1.0f);
-		jumble.octagon->base.fill_colors[0].b = fmod(oly::TIME.now<float>(), 1.0f);
-		jumble.octagon->base.border_width = fmod(oly::TIME.now<float>() * 0.05f, 0.1f);
-		jumble.octagon->base.points[6].x = fmod(oly::TIME.now<float>(), 0.6f) - 0.3f;
-		jumble.octagon->send_polygon();
-
-		jumble.concave_shape->set_local().rotation += 0.5f * oly::TIME.delta();
 
 		jumble.sprite1->set_local().rotation = oly::TIME.now<float>();
 		sprite_match.sprite2->transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta();
@@ -262,7 +250,7 @@ int main()
 	auto cv_obstacle3 = obstacle3->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 	auto cv_obstacle4 = obstacle4->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 
-	auto ground_cv = ground->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	auto ground_cv = ground->collision_view(pipeline.ground_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
 	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 

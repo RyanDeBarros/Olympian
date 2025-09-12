@@ -8,7 +8,7 @@ namespace oly::debug
 
 	inline CollisionView collision_view(CollisionLayer& layer, const col2d::Circle& c, glm::vec4 color)
 	{
-		rendering::EllipseBatch::EllipseReference ellipse;
+		rendering::EllipseBatch::EllipseReference ellipse(layer.get_ellipse_batch());
 		ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 		auto& dim = ellipse.set_dimension();
 		dim.ry = dim.rx = c.radius;
@@ -30,7 +30,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::EllipseBatch::EllipseReference ellipse;
+			rendering::EllipseBatch::EllipseReference ellipse(view.get_layer().get_ellipse_batch());
 			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 			auto& dim = ellipse.set_dimension();
 			dim.ry = dim.rx = c.radius;
@@ -52,7 +52,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::EllipseBatch::EllipseReference ellipse;
+			rendering::EllipseBatch::EllipseReference ellipse(view.get_layer().get_ellipse_batch());
 			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
 			auto& dim = ellipse.set_dimension();
 			dim.ry = dim.rx = c.radius;
@@ -68,7 +68,7 @@ namespace oly::debug
 			if (points.size() < 3)
 				return CollisionView(layer);
 
-			rendering::StaticPolygon polygon;
+			rendering::StaticPolygon polygon(layer.get_polygon_batch());
 			polygon.polygon.colors = { color };
 			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
 			polygon.init();
@@ -97,7 +97,7 @@ namespace oly::debug
 			}
 			else
 			{
-				rendering::StaticPolygon polygon;
+				rendering::StaticPolygon polygon(view.get_layer().get_polygon_batch());
 				polygon.polygon.colors = { color };
 				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
 				polygon.init();
@@ -125,7 +125,7 @@ namespace oly::debug
 			}
 			else
 			{
-				rendering::StaticPolygon polygon;
+				rendering::StaticPolygon polygon(view.get_layer().get_polygon_batch());
 				polygon.polygon.colors = { glm::vec4{ 0.0f, 0.0f, 1.0f, 0.8f } };
 				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
 				polygon.init();

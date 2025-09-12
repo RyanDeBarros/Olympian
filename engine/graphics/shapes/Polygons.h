@@ -7,11 +7,8 @@
 #include "core/containers/IDGenerator.h"
 #include "core/types/SmartReference.h"
 
-#include "graphics/BatchBarrier.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
-
-#include <map>
 
 namespace oly::rendering
 {
@@ -91,21 +88,18 @@ namespace oly::rendering
 		StrictIDGenerator<Index> id_generator;
 	};
 
-	constexpr PolygonBatch* CONTEXT_POLYGON_BATCH = nullptr;
-
 	// ASSET
 	class StaticPolygon
 	{
 		friend PolygonBatch;
 		PolygonBatch& batch;
-		const bool in_context;
 		PolygonBatch::PolygonID id;
 		mutable math::Triangulation triangulation;
 
 	public:
 		cmath::Polygon2D polygon;
 
-		StaticPolygon(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
+		StaticPolygon(PolygonBatch& batch);
 		StaticPolygon(const StaticPolygon&);
 		StaticPolygon(StaticPolygon&&) noexcept;
 		~StaticPolygon();
@@ -115,20 +109,19 @@ namespace oly::rendering
 		void init();
 		void send_polygon() const;
 		void send_colors_only() const;
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 	};
 
 	class Polygonal
 	{
 		friend PolygonBatch;
 		PolygonBatch& batch;
-		const bool in_context;
 		PolygonBatch::PolygonID id;
 
 	public:
 		Transformer2D transformer;
 
-		Polygonal(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
+		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = delete;
 		Polygonal(Polygonal&&) noexcept;
 		virtual ~Polygonal();
@@ -140,7 +133,7 @@ namespace oly::rendering
 		void init();
 		void send_polygon();
 		virtual GLuint num_vertices() const = 0;
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 	protected:
 		void set_polygon(const cmath::Polygon2D& polygon) const;

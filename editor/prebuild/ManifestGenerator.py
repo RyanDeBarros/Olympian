@@ -6,7 +6,8 @@ from pathlib import Path
 from editor.prebuild import Archetype
 from editor.tools import TOMLAdapter
 
-ARCHETYPE_GEN_PATH = Path('.gen/archetypes').resolve()
+ARCHETYPE_RES_PATH = Path('res')
+ARCHETYPE_GEN_PATH = Path('.gen/code')
 
 
 class Cache:
@@ -21,6 +22,7 @@ class Cache:
 		self.marked: list[str] = []
 
 	def dump(self):
+		self.prune()
 		self.cache = {file: self.cache[file] for file in self.marked}
 		self.marked.clear()
 		self.cache_path.write_text(json.dumps(self.cache))
@@ -41,13 +43,23 @@ class Cache:
 		shutil.rmtree(ARCHETYPE_GEN_PATH)
 		os.makedirs(ARCHETYPE_GEN_PATH)
 
+	def prune(self):
+		for path in ARCHETYPE_GEN_PATH.rglob("*"):
+			if path.is_file():
+				if (ARCHETYPE_RES_PATH / path.relative_to(ARCHETYPE_GEN_PATH).with_suffix(".toml")).as_posix() not in self.marked:
+					path.unlink()
+
+		for path in sorted(ARCHETYPE_GEN_PATH.rglob("*"), reverse=True):
+			if path.is_dir() and not any(path.iterdir()):
+				path.rmdir()
+
 
 def generate_manifest():
 	def generate_file(file: Path):
 		if TOMLAdapter.meta(file).get('type') == 'archetype':
 			cache.mark(file)
 			if cache.is_dirty(file):
-				Archetype.generate_archetype(file, ARCHETYPE_GEN_PATH)
+				Archetype.generate_archetype(file.resolve(), ARCHETYPE_GEN_PATH, ARCHETYPE_RES_PATH)
 				cache.update(file)
 
 	def generate_folder(folder):
@@ -57,7 +69,7 @@ def generate_manifest():
 	assets = Path('.gen/manifest.txt').read_text().splitlines()
 	cache = Cache()
 	for asset in assets:
-		asset_path = Path(f"res/{asset}")
+		asset_path = ARCHETYPE_RES_PATH / asset
 		if asset_path.is_file():
 			generate_file(asset_path)
 		elif asset_path.is_dir():

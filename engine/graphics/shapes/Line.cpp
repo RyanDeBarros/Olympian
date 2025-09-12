@@ -4,7 +4,7 @@
 
 namespace oly::rendering
 {
-	LineExtension::LineExtension(PolygonBatch* batch)
+	LineExtension::LineExtension(PolygonBatch& batch)
 		: poly(batch)
 	{
 		poly.polygon.colors.reserve(4);
@@ -13,7 +13,7 @@ namespace oly::rendering
 		poly.init();
 	}
 
-	void LineExtension::draw(BatchBarrier barrier) const
+	void LineExtension::draw() const
 	{
 		if (dirty)
 		{
@@ -54,7 +54,7 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw)
-			poly.draw(barrier);
+			poly.draw();
 	}
 
 	void LineExtension::set_default_polygon() const

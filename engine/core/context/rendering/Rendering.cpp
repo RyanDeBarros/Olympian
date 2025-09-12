@@ -1,8 +1,6 @@
 #include "Rendering.h"
 
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Polygons.h"
-#include "core/context/rendering/Ellipses.h"
 #include "core/context/rendering/Text.h"
 
 namespace oly::context
@@ -30,14 +28,11 @@ namespace oly::context
 		return internal::batch_tracking[(int)batch];
 	}
 
+	// TODO v4 just use render_sprites once sprites and text are merged.
 	void flush_internal_rendering()
 	{
 		if (internal::batch_tracking[(int)InternalBatch::SPRITE])
 			render_sprites();
-		if (internal::batch_tracking[(int)InternalBatch::POLYGON])
-			render_polygons();
-		if (internal::batch_tracking[(int)InternalBatch::ELLIPSE])
-			render_ellipses();
 		if (internal::batch_tracking[(int)InternalBatch::TEXT])
 			render_text();
 	}
@@ -51,10 +46,6 @@ namespace oly::context
 	{
 		if (batch != InternalBatch::SPRITE && internal::batch_tracking[(int)InternalBatch::SPRITE])
 			render_sprites();
-		if (batch != InternalBatch::POLYGON && internal::batch_tracking[(int)InternalBatch::POLYGON])
-			render_polygons();
-		if (batch != InternalBatch::ELLIPSE && internal::batch_tracking[(int)InternalBatch::ELLIPSE])
-			render_ellipses();
 		if (batch != InternalBatch::TEXT && internal::batch_tracking[(int)InternalBatch::TEXT])
 			render_text();
 	}

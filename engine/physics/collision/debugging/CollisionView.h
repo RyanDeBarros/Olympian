@@ -30,7 +30,7 @@ namespace oly::debug
 
 		CollisionLayer& layer;
 		std::unique_ptr<Variant> v;
-		CollisionObject(CollisionLayer& layer, Variant&& v = {});
+		CollisionObject(CollisionLayer& layer, Variant&& v);
 		CollisionObject(const CollisionObject&);
 		CollisionObject(CollisionObject&&) noexcept;
 		CollisionObject& operator=(const CollisionObject&);
@@ -61,7 +61,7 @@ namespace oly::debug
 
 		Variant view;
 
-		CollisionObjectView(Variant&& view) : view(view) {}
+		CollisionObjectView(Variant&& view) : view(std::move(view)) {}
 	};
 
 	class CollisionView
@@ -86,6 +86,8 @@ namespace oly::debug
 		CollisionView& operator=(CollisionView&&) noexcept;
 
 		void init_on_layer(CollisionLayer& layer);
+		const CollisionLayer& get_layer() const;
+		CollisionLayer& get_layer();
 
 	private:
 		void draw() const;
@@ -135,7 +137,7 @@ namespace oly::debug
 		friend struct WindowResizeHandler;
 
 	public:
-		CollisionLayer();
+		CollisionLayer(); // TODO v4 pass optional sprite batch
 		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
@@ -153,9 +155,13 @@ namespace oly::debug
 		void draw(BatchBarrier barrier = batch::BARRIER) const;
 		void regen_to_current_resolution();
 
+		const rendering::PolygonBatch& get_polygon_batch() const { return polygon_batch; }
+		rendering::PolygonBatch& get_polygon_batch() { return polygon_batch; }
+		const rendering::EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
+		rendering::EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
+		CollisionObject default_collision_object();
+
 	private:
 		void setup_texture();
 	};
-	
-	extern void render_layers();
 }

@@ -3,8 +3,6 @@
 #include "core/context/Platform.h"
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Ellipses.h"
-#include "core/context/rendering/Polygons.h"
 #include "core/context/rendering/Scopes.h"
 
 namespace oly::debug
@@ -58,13 +56,13 @@ namespace oly::debug
 		switch (type)
 		{
 		case Type::ELLIPSE:
-			v = std::make_unique<Variant>(rendering::EllipseBatch::EllipseReference(&layer.ellipse_batch));
+			v = std::make_unique<Variant>(rendering::EllipseBatch::EllipseReference(layer.ellipse_batch));
 			break;
 		case Type::POLYGON:
-			v = std::make_unique<Variant>(rendering::StaticPolygon(&layer.polygon_batch));
+			v = std::make_unique<Variant>(rendering::StaticPolygon(layer.polygon_batch));
 			break;
 		case Type::ARROW:
-			v = std::make_unique<Variant>(rendering::StaticArrowExtension(&layer.polygon_batch));
+			v = std::make_unique<Variant>(rendering::StaticArrowExtension(layer.polygon_batch));
 			break;
 		}
 	}
@@ -154,7 +152,7 @@ namespace oly::debug
 			else if (obj->view.index() == CollisionObjectView::Type::GROUP)
 			{
 				std::vector<CollisionObject> old_objs = std::move(std::get<CollisionObjectView::Type::GROUP>(obj->view));
-				std::vector<CollisionObject> new_objs = CollisionObjectGroup(old_objs.size(), CollisionObject(layer));
+				std::vector<CollisionObject> new_objs = CollisionObjectGroup(old_objs.size(), layer.default_collision_object());
 				for (size_t i = 0; i < new_objs.size(); ++i)
 					new_objs[i] = std::move(old_objs[i]);
 				obj = std::make_unique<CollisionObjectView>(std::move(new_objs));
@@ -166,6 +164,22 @@ namespace oly::debug
 			this->layer->assign(this);
 			obj = std::make_unique<CollisionObjectView>(EmptyCollision{});
 		}
+	}
+
+	const CollisionLayer& CollisionView::get_layer() const
+	{
+		if (valid())
+			return *layer;
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
+	CollisionLayer& CollisionView::get_layer()
+	{
+		if (valid())
+			return *layer;
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void CollisionView::draw() const
@@ -245,12 +259,12 @@ namespace oly::debug
 		{
 			if (size == 1)
 			{
-				obj->view = CollisionObject(*layer);
+				obj->view = layer->default_collision_object();
 				view_changed();
 			}
 			else if (size > 1)
 			{
-				obj->view = CollisionObjectGroup(size, CollisionObject(*layer));
+				obj->view = CollisionObjectGroup(size, layer->default_collision_object());
 				view_changed();
 			}
 		}
@@ -259,7 +273,7 @@ namespace oly::debug
 			if (size > 1)
 			{
 				CollisionObject old_obj = std::move(std::get<CollisionObjectView::Type::SINGLE>(obj->view));
-				obj->view = CollisionObjectGroup(size, CollisionObject(*layer));
+				obj->view = CollisionObjectGroup(size, layer->default_collision_object());
 				std::get<CollisionObjectView::Type::GROUP>(obj->view)[0] = std::move(old_obj);
 				view_changed();
 			}
@@ -274,7 +288,7 @@ namespace oly::debug
 			}
 			else
 			{
-				std::get<CollisionObjectView::Type::GROUP>(obj->view).resize(size, CollisionObject(*layer));
+				std::get<CollisionObjectView::Type::GROUP>(obj->view).resize(size, layer->default_collision_object());
 				view_changed();
 			}
 		}
@@ -602,8 +616,8 @@ namespace oly::debug
 		sprite.set_texture(texture, dimensions);
 	}
 
-	void render_layers()
+	CollisionObject CollisionLayer::default_collision_object()
 	{
-		context::render_sprites();
+		return CollisionObject(*this, rendering::EllipseBatch::EllipseReference(ellipse_batch));
 	}
 }

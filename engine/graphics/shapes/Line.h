@@ -14,9 +14,9 @@ namespace oly::rendering
 		mutable bool can_draw = true;
 
 	public:
-		LineExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
+		LineExtension(PolygonBatch& batch);
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }

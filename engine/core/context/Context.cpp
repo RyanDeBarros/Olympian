@@ -6,8 +6,6 @@
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Ellipses.h"
-#include "core/context/rendering/Polygons.h"
 #include "core/context/rendering/Text.h"
 #include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Tilesets.h"
@@ -109,8 +107,6 @@ namespace oly::context
 		graphics::internal::load_resources();
 
 		internal::init_sprites(toml_context);
-		internal::init_polygons(toml_context);
-		internal::init_ellipses(toml_context);
 		internal::init_text(toml_context);
 
 		autoload_signals(toml_context);
@@ -135,8 +131,6 @@ namespace oly::context
 		internal::terminate_fonts();
 
 		internal::terminate_sprites();
-		internal::terminate_polygons();
-		internal::terminate_ellipses();
 		internal::terminate_text();
 
 		internal::terminate_platform();

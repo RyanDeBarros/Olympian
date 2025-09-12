@@ -1,5 +1,6 @@
-import os
 from pathlib import Path
+
+import send2trash
 
 from .assets import *
 from editor.tools import TOMLAdapter
@@ -23,8 +24,9 @@ RESERVED_NAMES = [
 
 
 class Archetype:
-	def __init__(self, tml):
-		self.archetype = tml['archetype']
+	def __init__(self, name, toml):
+		self.name = name
+		self.archetype = toml['archetype']
 		self.sprites = self.archetype['sprite'] if 'sprite' in self.archetype else []
 		self.polygons = self.archetype['polygon'] if 'polygon' in self.archetype else []
 		self.poly_composites = self.archetype['poly_composite'] if 'poly_composite' in self.archetype else []
@@ -35,13 +37,8 @@ class Archetype:
 		self.tilemaps = self.archetype['tilemap'] if 'tilemap' in self.archetype else []
 		self.sprite_nonants = self.archetype['sprite_nonant'] if 'sprite_nonant' in self.archetype else []
 
-		self.name: str = self.archetype['name']
-		self.gen_folder = ""
-		if 'gen folder' in self.archetype:
-			self.gen_folder = self.archetype['gen folder']
 		assert len(self.name) > 0 and self.name[0].isalpha(), "Invalid archetype name"
 		self.draw_list = self.archetype['draw'] if 'draw' in self.archetype else []
-		self.singleton: bool = 'singleton' in self.archetype and self.archetype['singleton']
 
 		self.variable_list = set()
 
@@ -130,16 +127,6 @@ class Archetype:
 			c += SpriteNonant.constructor(sprite_nonant) + "\n"
 		return c[:-1] if len(c) > 0 else ""  # don't keep last \n
 
-	def write_initializer(self, renderables, load):
-		ini = ""
-		if self.singleton:
-			for renderable in renderables:
-				ini += f"\t\t{renderable['name']}(reg::{load}(std::move(constructor().{renderable['name']}))),\n"
-		else:
-			for renderable in renderables:
-				ini += f"\t\t{renderable['name']}(reg::{load}(constructor().{renderable['name']})),\n"
-		return ini
-
 	@staticmethod
 	def write_transformer_attachment(renderables, transformer_accessor="transformer"):
 		att = ""
@@ -224,15 +211,15 @@ namespace oly::gen
 """
 
 
-def generate_archetype(asset_filepath: Path, gen_root: Path):
+def generate_archetype(asset_filepath: Path, gen_root: Path, res_folder: Path):
 	if TOMLAdapter.meta(asset_filepath).get('type') != 'archetype':
 		return
 	toml = TOMLAdapter.load(asset_filepath)
 	if 'archetype' not in toml:
 		return
-	proto = Archetype(toml)
+	proto = Archetype(asset_filepath.stem, toml)
 
-	gen_folder = gen_root / proto.gen_folder
-	gen_folder.mkdir(exist_ok=True)
+	gen_folder = gen_root / asset_filepath.relative_to(res_folder.resolve()).parent
+	gen_folder.mkdir(parents=True, exist_ok=True)
 	(gen_folder / f"{proto.name}.h").write_text(generate_header(proto))
 	(gen_folder / f"{proto.name}.cpp").write_text(generate_cpp(proto))

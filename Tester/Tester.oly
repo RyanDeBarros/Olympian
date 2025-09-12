@@ -21,12 +21,6 @@ console = true
 "initial sprites" = 100
 new_textures = 10
 
-[context.polygon_batch]
-primitives = 100
-
-[context.ellipse_batch]
-ellipses = 100
-
 [context.text_batch]
 initial_glyphs = 100
 new_textures = 10

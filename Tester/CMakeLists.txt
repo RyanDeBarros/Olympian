@@ -14,7 +14,7 @@ set(ENGINE_DIR "${CMAKE_SOURCE_DIR}")
 set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
 set(PROJECT_RES_DIR "${PROJECT_DIR}/res")
-set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen")
+set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen/code")
 
 # Run automatic tools
 find_package(Python3 REQUIRED COMPONENTS Interpreter)

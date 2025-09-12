@@ -4,7 +4,7 @@
 
 namespace oly::graphics::textures
 {
-	extern BindlessTextureRef white1x1_1;
+	extern BindlessTextureRef white1x1;
 
 	namespace internal
 	{

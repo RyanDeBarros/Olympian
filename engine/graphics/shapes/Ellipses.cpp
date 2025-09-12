@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "core/context/rendering/Rendering.h"
-#include "core/context/rendering/Ellipses.h"
 #include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
@@ -38,8 +37,8 @@ namespace oly::rendering
 		return pos_generator.generate();
 	}
 
-	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch* batch)
-		: batch(batch ? *batch : context::ellipse_batch()), in_context(!batch)
+	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch& batch)
+		: batch(batch)
 	{
 		pos = this->batch.generate_id();
 		set_dimension() = {};
@@ -48,7 +47,7 @@ namespace oly::rendering
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
-		: batch(other.batch), in_context(other.in_context)
+		: batch(other.batch)
 	{
 		pos = batch.generate_id();
 		set_dimension() = other.get_dimension();
@@ -57,7 +56,7 @@ namespace oly::rendering
 	}
 
 	EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
-		: batch(other.batch), in_context(other.in_context)
+		: batch(other.batch)
 	{
 		EllipseDimension dimension = other.get_dimension();
 		ColorGradient color = other.get_color();
@@ -120,35 +119,32 @@ namespace oly::rendering
 		return batch.ssbo_block.set<TRANSFORM>(pos.get());
 	}
 
-	void EllipseBatch::EllipseReference::draw(BatchBarrier barrier) const
+	void EllipseBatch::EllipseReference::draw() const
 	{
-		if (in_context) [[likely]]
-			if (barrier) [[likely]]
-				context::internal::flush_batches_except(context::InternalBatch::ELLIPSE);
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), pos.get());
-		if (in_context) [[likely]]
-			context::internal::set_batch_rendering_tracker(context::InternalBatch::ELLIPSE, true);
 	}
 
-	Ellipse::Ellipse(float r, glm::vec4 color)
+	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = r;
 		ellipse.set_dimension().ry = r;
 		set_color(color);
 	}
 
-	Ellipse::Ellipse(float rx, float ry, glm::vec4 color)
+	Ellipse::Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = rx;
 		ellipse.set_dimension().ry = ry;
 		set_color(color);
 	}
 
-	void Ellipse::draw(BatchBarrier barrier) const
+	void Ellipse::draw() const
 	{
 		if (transformer.flush())
 			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
-		ellipse.draw(barrier);
+		ellipse.draw();
 	}
 
 	void Ellipse::set_color(glm::vec4 color)

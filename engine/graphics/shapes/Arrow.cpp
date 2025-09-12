@@ -5,7 +5,7 @@
 
 namespace oly::rendering
 {
-	ArrowExtension::ArrowExtension(PolygonBatch* batch)
+	ArrowExtension::ArrowExtension(PolygonBatch& batch)
 		: body(batch), head(batch)
 	{
 		body.transformer.attach_parent(&_transformer);
@@ -26,7 +26,7 @@ namespace oly::rendering
 		head.init();
 	}
 
-	void ArrowExtension::draw(BatchBarrier barrier) const
+	void ArrowExtension::draw() const
 	{
 		if (dirty)
 		{
@@ -91,12 +91,12 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw_body)
-			body.draw(barrier);
+			body.draw();
 		if (can_draw_head)
-			head.draw(barrier);
+			head.draw();
 	}
 
-	StaticArrowExtension::StaticArrowExtension(PolygonBatch* batch)
+	StaticArrowExtension::StaticArrowExtension(PolygonBatch& batch)
 		: body(batch), head(batch)
 	{
 		body.polygon.points.resize(4);
@@ -115,7 +115,7 @@ namespace oly::rendering
 		head.init();
 	}
 
-	void StaticArrowExtension::draw(BatchBarrier barrier) const
+	void StaticArrowExtension::draw() const
 	{
 		if (dirty)
 		{
@@ -180,8 +180,8 @@ namespace oly::rendering
 			}
 		}
 		if (can_draw_body)
-			body.draw(barrier);
+			body.draw();
 		if (can_draw_head)
-			head.draw(barrier);
+			head.draw();
 	}
 }

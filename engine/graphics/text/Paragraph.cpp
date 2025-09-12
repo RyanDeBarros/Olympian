@@ -11,7 +11,7 @@ namespace oly::rendering
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
-		bkg.set_texture(graphics::textures::white1x1_1);
+		bkg.set_texture(graphics::textures::white1x1);
 
 		set_bkg_color({ 0.0f, 0.0f, 0.0f, 1.0f });
 		if (!text.empty())

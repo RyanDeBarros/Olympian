@@ -17,9 +17,9 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		ArrowExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
+		ArrowExtension(PolygonBatch& batch);
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }
@@ -68,9 +68,9 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		StaticArrowExtension(PolygonBatch* batch = CONTEXT_POLYGON_BATCH);
+		StaticArrowExtension(PolygonBatch& batch);
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		glm::vec2 get_start() const { return start; }
 		glm::vec2& set_start() { dirty = true; return start; }

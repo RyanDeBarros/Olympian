@@ -1,7 +1,6 @@
 #meta type=archetype
 
 [archetype]
-name = "SpriteMatch"
 draw = [
 	"sprite0",
 	"sprite2"

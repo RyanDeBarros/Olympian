@@ -2,8 +2,6 @@
 
 #include "core/context/Context.h"
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Ellipses.h"
-#include "core/context/rendering/Polygons.h"
 #include "core/context/rendering/Text.h"
 #include "core/context/Platform.h"
 
@@ -23,8 +21,6 @@ namespace oly::platform
 		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
 		projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
 		context::sprite_batch().projection = projection;
-		context::polygon_batch().projection = projection;
-		context::ellipse_batch().projection = projection;
 		context::text_batch().projection = projection;
 	}
 

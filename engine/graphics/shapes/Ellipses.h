@@ -7,7 +7,6 @@
 #include "core/containers/IDGenerator.h"
 #include "core/types/SmartReference.h"
 
-#include "graphics/BatchBarrier.h"
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
@@ -21,8 +20,6 @@ namespace oly::rendering
 {
 	struct Ellipse;
 	class EllipseBatch;
-
-	constexpr EllipseBatch* CONTEXT_ELLIPSE_BATCH = nullptr;
 
 	class EllipseBatch
 	{
@@ -89,11 +86,10 @@ namespace oly::rendering
 			friend class EllipseBatch;
 			friend struct Ellipse;
 			EllipseBatch& batch;
-			const bool in_context;
 			EllipseID pos;
 
 		public:
-			EllipseReference(EllipseBatch* batch = CONTEXT_ELLIPSE_BATCH);
+			EllipseReference(EllipseBatch& batch);
 			EllipseReference(const EllipseReference&);
 			EllipseReference(EllipseReference&&) noexcept;
 			EllipseReference& operator=(const EllipseReference&);
@@ -106,7 +102,7 @@ namespace oly::rendering
 			const glm::mat3& get_transform() const;
 			glm::mat3& set_transform();
 
-			void draw(BatchBarrier barrier = batch::BARRIER) const;
+			void draw() const;
 		};
 		friend class EllipseReference;
 	};
@@ -116,9 +112,9 @@ namespace oly::rendering
 		EllipseBatch::EllipseReference ellipse;
 		Transformer2D transformer;
 
-		Ellipse(EllipseBatch* batch = CONTEXT_ELLIPSE_BATCH) : ellipse(batch) {}
-		Ellipse(float r, glm::vec4 color = glm::vec4(1.0f));
-		Ellipse(float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
+		Ellipse(EllipseBatch& batch) : ellipse(batch) {}
+		Ellipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
+		Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(const Ellipse&) = default;
 		Ellipse(Ellipse&&) noexcept = default;
 		Ellipse& operator=(const Ellipse&) = default;
@@ -127,7 +123,7 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		void set_color(glm::vec4 color);
 	};

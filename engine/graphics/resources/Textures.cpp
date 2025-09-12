@@ -4,22 +4,22 @@
 
 namespace oly::graphics::textures
 {
-	BindlessTextureRef white1x1_1;
+	// TODO v4 load these from actual image files in internal/textures. Allow assets to access them using a special filepath format - instead of RES://, use some other prefix. Also, when loading textures in general, use these prefixes.
+	BindlessTextureRef white1x1;
 
 	void internal::load()
 	{
 		{
-			ImageDimensions dim{ 1, 1, 1 };
+			ImageDimensions dim{ .w = 1, .h = 1, .cpp = 1 };
 			unsigned char* buf = dim.pxnew();
 			buf[0] = 255;
-			Image image(buf, dim);
-			white1x1_1 = graphics::BindlessTextureRef(load_bindless_texture_2d(image));
-			white1x1_1->set_and_use_handle();
+			white1x1 = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
+			white1x1->set_and_use_handle();
 		}
 	}
 
 	void internal::unload()
 	{
-		white1x1_1.invalidate();
+		white1x1.invalidate();
 	}
 }
