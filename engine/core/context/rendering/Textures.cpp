@@ -3,7 +3,7 @@
 #include "core/context/Context.h"
 #include "core/context/rendering/Sprites.h"
 #include "registries/graphics/TextureRegistry.h"
-#include "registries/graphics/primitives/Sprites.h"
+#include "registries/graphics/sprites/Sprites.h"
 
 namespace oly::context
 {

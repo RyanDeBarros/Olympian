@@ -1,6 +1,6 @@
 #include "Tilesets.h"
 
-#include "registries/graphics/extensions/TileSetRegistry.h"
+#include "registries/graphics/sprites/TileSetRegistry.h"
 
 namespace oly::context
 {

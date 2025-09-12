@@ -2,7 +2,7 @@
 
 #include "external/TOML.h"
 
-#include "graphics/primitives/Ellipses.h"
+#include "graphics/shapes/Ellipses.h"
 
 namespace oly::reg
 {

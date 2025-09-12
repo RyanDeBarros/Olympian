@@ -2,8 +2,8 @@
 
 #include "external/TOML.h"
 
-#include "graphics/extensions/SpriteAtlas.h"
-#include "registries/graphics/primitives/Sprites.h"
+#include "graphics/sprites/SpriteAtlas.h"
+#include "registries/graphics/sprites/Sprites.h"
 
 namespace oly::reg
 {

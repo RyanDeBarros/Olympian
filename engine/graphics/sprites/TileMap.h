@@ -1,8 +1,8 @@
 #pragma once
 
-#include "graphics/extensions/TileSet.h"
+#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/TileSet.h"
 #include "core/base/TransformerExposure.h"
-#include "graphics/primitives/Sprites.h"
 
 namespace oly::rendering
 {

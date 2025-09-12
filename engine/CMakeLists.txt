@@ -49,7 +49,7 @@ target_compile_definitions(OlympianEngine PUBLIC
 
 # Engine compile options (MSVC specific)
 if (MSVC)
-	target_compile_options(OlympianEngine PRIVATE /Zc:__cplusplus)
+	target_compile_options(OlympianEngine PUBLIC /Zc:__cplusplus)
 endif()
 
 # Link engine dependencies

@@ -1,6 +1,6 @@
 #include "SpriteAtlases.h"
 
-#include "registries/graphics/primitives/Sprites.h"
+#include "registries/graphics/sprites/Sprites.h"
 
 namespace oly::reg
 {

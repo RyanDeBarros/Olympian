@@ -1,7 +1,7 @@
 #include "Ellipses.h"
 
 #include "core/context/rendering/Rendering.h"
-#include "graphics/primitives/Ellipses.h"
+#include "graphics/shapes/Ellipses.h"
 #include "registries/Loader.h"
 
 namespace oly::context

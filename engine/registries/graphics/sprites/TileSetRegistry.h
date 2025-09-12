@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/extensions/TileSet.h"
+#include "graphics/sprites/TileSet.h"
 
 namespace oly::reg
 {

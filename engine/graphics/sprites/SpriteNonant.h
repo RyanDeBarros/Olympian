@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/primitives/Sprites.h"
+#include "graphics/sprites/Sprites.h"
 #include "core/base/TransformerExposure.h"
 
 namespace oly::rendering

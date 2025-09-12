@@ -1,7 +1,7 @@
 #include "Polygons.h"
 
 #include "core/context/rendering/Rendering.h"
-#include "graphics/primitives/Polygons.h"
+#include "graphics/shapes/Polygons.h"
 #include "registries/Loader.h"
 
 namespace oly::context

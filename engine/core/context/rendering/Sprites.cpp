@@ -1,7 +1,7 @@
 #include "Sprites.h"
 
 #include "core/context/rendering/Rendering.h"
-#include "graphics/primitives/Sprites.h"
+#include "graphics/sprites/Sprites.h"
 
 namespace oly::context
 {

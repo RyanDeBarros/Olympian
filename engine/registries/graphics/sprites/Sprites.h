@@ -2,7 +2,7 @@
 
 #include "external/TOML.h"
 
-#include "graphics/primitives/Sprites.h"
+#include "graphics/sprites/Sprites.h"
 
 namespace oly::reg
 {
@@ -20,17 +20,20 @@ namespace oly::reg
 			{
 				GLuint frame = 0;
 			};
+
 			struct AutoFrameFormat
 			{
 				float speed = 1.0f;
 				GLuint starting_frame = 0;
 			};
+
 			enum FrameFormatIndex
 			{
 				SINGLE,
 				AUTO,
 				CUSTOM
 			};
+			
 			std::optional<std::variant<SingleFrameFormat, AutoFrameFormat, graphics::AnimFrameFormat>> frame_format;
 			std::optional<std::variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
 		};

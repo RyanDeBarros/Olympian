@@ -2,7 +2,7 @@
 
 #include "ProjectContext.h"
 
-#include "registries/graphics/primitives/Sprites.h"
+#include "registries/graphics/sprites/Sprites.h"
 #include "registries/graphics/TextureRegistry.h"
 
 #include "archetypes/PolygonCrop.h"

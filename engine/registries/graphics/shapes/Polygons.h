@@ -2,7 +2,7 @@
 
 #include "external/TOML.h"
 
-#include "graphics/primitives/Polygons.h"
+#include "graphics/shapes/Polygons.h"
 
 namespace oly::reg
 {

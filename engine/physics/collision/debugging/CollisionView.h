@@ -5,10 +5,10 @@
 #include "physics/collision/objects/BVH.h"
 #include "physics/collision/methods/SpecialCasting.h"
 
-#include "graphics/primitives/Sprites.h"
-#include "graphics/primitives/Ellipses.h"
-#include "graphics/primitives/Polygons.h"
-#include "graphics/extensions/Arrow.h"
+#include "graphics/sprites/Sprites.h"
+#include "graphics/shapes/Ellipses.h"
+#include "graphics/shapes/Polygons.h"
+#include "graphics/shapes/Arrow.h"
 #include "graphics/backend/basic/Framebuffers.h"
 
 #include "core/platform/WindowEvents.h"

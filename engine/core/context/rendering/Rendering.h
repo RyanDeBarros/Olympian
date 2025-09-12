@@ -1,10 +1,6 @@
 #pragma once
 
-#include "core/types/Functor.h"
-
-#include "graphics/primitives/Polygons.h"
-#include "graphics/primitives/Ellipses.h"
-#include "graphics/text/Paragraph.h"
+#include "external/GLM.h"
 
 namespace oly
 {

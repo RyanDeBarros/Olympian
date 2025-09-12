@@ -67,19 +67,19 @@ class Archetype:
 	def registry_includes(self) -> str:
 		incl = "#include \"registries/Loader.h\"\n"
 		if len(self.sprites) > 0:
-			incl += "#include \"registries/graphics/primitives/Sprites.h\"\n"
+			incl += "#include \"registries/graphics/sprites/Sprites.h\"\n"
 		if len(self.polygons) > 0 or len(self.poly_composites) > 0 or len(self.ngons) > 0:
-			incl += "#include \"registries/graphics/primitives/Polygons.h\"\n"
+			incl += "#include \"registries/graphics/shapes/Polygons.h\"\n"
 		if len(self.ellipses) > 0:
-			incl += "#include \"registries/graphics/primitives/Ellipses.h\"\n"
+			incl += "#include \"registries/graphics/shapes/Ellipses.h\"\n"
 		if len(self.paragraphs) > 0:
 			incl += "#include \"registries/graphics/text/Paragraphs.h\"\n"
 		if len(self.sprite_atlases) > 0:
-			incl += "#include \"registries/graphics/extensions/SpriteAtlases.h\"\n"
+			incl += "#include \"registries/graphics/sprites/SpriteAtlases.h\"\n"
 		if len(self.tilemaps) > 0:
-			incl += "#include \"registries/graphics/extensions/TileMaps.h\"\n"
+			incl += "#include \"registries/graphics/sprites/TileMaps.h\"\n"
 		if len(self.tilemaps) > 0:
-			incl += "#include \"registries/graphics/extensions/SpriteNonants.h\"\n"
+			incl += "#include \"registries/graphics/sprites/SpriteNonants.h\"\n"
 		return incl
 
 	@staticmethod

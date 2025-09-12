@@ -2,7 +2,7 @@
 
 #include "external/TOML.h"
 
-#include "graphics/extensions/TileMap.h"
+#include "graphics/sprites/TileMap.h"
 
 namespace oly::reg
 {

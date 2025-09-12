@@ -16,13 +16,11 @@
 #include "graphics/resources/Samplers.h"
 #include "graphics/Stencil.h"
 
-#include "graphics/primitives/Sprites.h"
-#include "graphics/primitives/Polygons.h"
-#include "graphics/primitives/Ellipses.h"
-#include "graphics/extensions/TileMap.h"
-#include "graphics/extensions/SpriteAtlas.h"
-#include "graphics/extensions/SpriteNonant.h"
+#include "graphics/sprites/Sprites.h"
 #include "graphics/text/Paragraph.h"
+#include "graphics/sprites/TileMap.h"
+#include "graphics/sprites/SpriteAtlas.h"
+#include "graphics/sprites/SpriteNonant.h"
 
 #include "physics/collision/debugging/CommonViews.h"
 
