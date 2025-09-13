@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QPlainTextEdit, QWidget
+from PySide6.QtWidgets import QPlainTextEdit
 
 
 class ZoomableTextEdit(QPlainTextEdit):

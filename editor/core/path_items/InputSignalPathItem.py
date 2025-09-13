@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QSize
 
-from ...tools import TOMLAdapter
 from .AbstractPathItem import AbstractPathItem
 from .. import nice_icon
+from ...tools import TOMLAdapter
 
 if TYPE_CHECKING:
 	from ..content_browser import ContentBrowser

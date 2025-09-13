@@ -1,14 +1,9 @@
 from pathlib import Path
 
-import send2trash
-
-from .assets import *
 from editor.tools import TOMLAdapter
+from .assets import *
 
-# TODO v4 only support SPRITE and TEXT - POLYGON is only used for debugging or prototyping, and ellipses can be pre-baked textures.
-# TODO v4 combine SPRITE and TEXT shaders?
-
-# TODO v4 archetypes should not be POD containers? Could inherit from Archetype class or something. A KinematicBody archhetype would for example inherit from KinematicBody.
+# TODO v4 archetypes should not be POD containers? Could inherit from Archetype class or something. A KinematicBody archetype would for example inherit from KinematicBody.
 # TODO v4 generating manifest should load a giant dictionary of names to archetypes before processing any specific ones, so that referenced sub-archetypes don't need to be re-loaded from file. If there's a duplicate name, generate a build error. Within archetypes, reference by name not by file path.
 
 
@@ -28,10 +23,6 @@ class Archetype:
 		self.name = name
 		self.archetype = toml['archetype']
 		self.sprites = self.archetype['sprite'] if 'sprite' in self.archetype else []
-		self.polygons = self.archetype['polygon'] if 'polygon' in self.archetype else []
-		self.poly_composites = self.archetype['poly_composite'] if 'poly_composite' in self.archetype else []
-		self.ngons = self.archetype['ngon'] if 'ngon' in self.archetype else []
-		self.ellipses = self.archetype['ellipse'] if 'ellipse' in self.archetype else []
 		self.paragraphs = self.archetype['paragraph'] if 'paragraph' in self.archetype else []
 		self.sprite_atlases = self.archetype['sprite_atlas'] if 'sprite_atlas' in self.archetype else []
 		self.tilemaps = self.archetype['tilemap'] if 'tilemap' in self.archetype else []
@@ -44,6 +35,7 @@ class Archetype:
 
 		def register_batch(renderables):
 			for renderable in renderables:
+				# noinspection PyShadowingNames
 				name = renderable['name']
 				assert name not in RESERVED_NAMES, f"'{name}' is a reserved name"
 				assert len(name) > 0 and (name[0].isalpha() or name[0] == "_") and not any(
@@ -52,10 +44,6 @@ class Archetype:
 				self.variable_list.add(name)
 
 		register_batch(self.sprites)
-		register_batch(self.polygons)
-		register_batch(self.poly_composites)
-		register_batch(self.ngons)
-		register_batch(self.ellipses)
 		register_batch(self.paragraphs)
 		register_batch(self.sprite_atlases)
 		register_batch(self.tilemaps)
@@ -65,10 +53,6 @@ class Archetype:
 		incl = "#include \"registries/Loader.h\"\n"
 		if len(self.sprites) > 0:
 			incl += "#include \"registries/graphics/sprites/Sprites.h\"\n"
-		if len(self.polygons) > 0 or len(self.poly_composites) > 0 or len(self.ngons) > 0:
-			incl += "#include \"registries/graphics/shapes/Polygons.h\"\n"
-		if len(self.ellipses) > 0:
-			incl += "#include \"registries/graphics/shapes/Ellipses.h\"\n"
 		if len(self.paragraphs) > 0:
 			incl += "#include \"registries/graphics/text/Paragraphs.h\"\n"
 		if len(self.sprite_atlases) > 0:
@@ -89,10 +73,6 @@ class Archetype:
 	def data_members(self) -> str:
 		decl = ""
 		decl += self.write_declarations(self.sprites, "rendering::SpriteRef", 2)
-		decl += self.write_declarations(self.polygons, "rendering::PolygonRef", 2)
-		decl += self.write_declarations(self.poly_composites, "rendering::PolyCompositeRef", 2)
-		decl += self.write_declarations(self.ngons, "rendering::NGonRef", 2)
-		decl += self.write_declarations(self.ellipses, "rendering::EllipseRef", 2)
 		decl += self.write_declarations(self.paragraphs, "rendering::ParagraphRef", 2)
 		decl += self.write_declarations(self.sprite_atlases, "rendering::SpriteAtlasRef", 2)
 		decl += self.write_declarations(self.tilemaps, "rendering::TileMapRef", 2)
@@ -109,14 +89,6 @@ class Archetype:
 """
 		for sprite in self.sprites:
 			c += Sprite.constructor(sprite) + "\n"
-		for polygon in self.polygons:
-			c += Polygon.constructor(polygon) + "\n"
-		for poly_composite in self.poly_composites:
-			c += PolyComposite.constructor(poly_composite) + "\n"
-		for ngon in self.ngons:
-			c += NGon.constructor(ngon) + "\n"
-		for ellipse in self.ellipses:
-			c += Ellipse.constructor(ellipse) + "\n"
 		for paragraph in self.paragraphs:
 			c += Paragraph.constructor(paragraph) + "\n"
 		for sprite_atlas in self.sprite_atlases:
@@ -137,10 +109,6 @@ class Archetype:
 	def transformer_attachments(self) -> str:
 		att = ""
 		att += self.write_transformer_attachment(self.sprites)
-		att += self.write_transformer_attachment(self.polygons)
-		att += self.write_transformer_attachment(self.poly_composites)
-		att += self.write_transformer_attachment(self.ngons)
-		att += self.write_transformer_attachment(self.ellipses)
 		att += self.write_transformer_attachment(self.paragraphs)
 		att += self.write_transformer_attachment(self.sprite_atlases, "sprite.transformer")
 		att += self.write_transformer_attachment(self.tilemaps, "set_transformer()")

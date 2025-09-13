@@ -11,7 +11,7 @@ from typing import List, Optional
 from PySide6.QtCore import QSize, QModelIndex, QEvent, QItemSelectionModel, QItemSelection
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon, Qt, QAction, QCursor, QShortcut, \
 	QKeySequence, QUndoStack, QUndoCommand
-from PySide6.QtWidgets import QWidget, QFileDialog, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
+from PySide6.QtWidgets import QWidget, QAbstractItemView, QListView, QMenu, QMessageBox, QToolTip, QDialog, \
 	QVBoxLayout, QUndoView, QCheckBox
 
 from editor.core import MainWindow, FileDialog

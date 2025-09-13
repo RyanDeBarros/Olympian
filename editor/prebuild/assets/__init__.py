@@ -1,1 +1,1 @@
-from . import Ellipse, NGon, Paragraph, PolyComposite, Polygon, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common
+from . import Paragraph, Sprite, SpriteAtlas, TileMap, SpriteNonant, Common

@@ -1,4 +1,3 @@
-from idlelib.outwin import file_line_pats
 from pathlib import Path
 
 from PySide6.QtWidgets import QWidget, QFileDialog
