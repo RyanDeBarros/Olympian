@@ -5,7 +5,7 @@
 #include "physics/collision/objects/BVH.h"
 #include "physics/collision/methods/SpecialCasting.h"
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 #include "graphics/shapes/Ellipses.h"
 #include "graphics/shapes/Polygons.h"
 #include "graphics/shapes/Arrow.h"
@@ -152,7 +152,7 @@ namespace oly::debug
 		void unassign(CollisionView* view);
 
 	public:
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 		void regen_to_current_resolution();
 
 		const rendering::PolygonBatch& get_polygon_batch() const { return polygon_batch; }

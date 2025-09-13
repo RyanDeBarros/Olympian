@@ -1,10 +1,9 @@
-#include "Sprites.h"
+#include "SpriteBatch.h"
 
-#include "core/context/rendering/Rendering.h"
+#include "graphics/resources/Shaders.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
 #include "core/util/Time.h"
-#include "graphics/resources/Shaders.h"
 
 namespace oly::rendering
 {
@@ -251,7 +250,7 @@ namespace oly::rendering
 	{
 		batch.set_tex_coords(id.get(), UVRect{}.from_rect(rect));
 	}
-	
+
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
 	{
 		batch.set_modulation(id.get(), modulation);
@@ -316,145 +315,5 @@ namespace oly::rendering
 	void internal::SpriteReference::draw_quad() const
 	{
 		graphics::quad_indices(draw_primitive().data(), id.get());
-	}
-
-	StaticSprite::StaticSprite(SpriteBatch* batch)
-		: ref(batch)
-	{
-	}
-
-	StaticSprite::StaticSprite(const StaticSprite& other)
-		: ref(other.ref)
-	{
-		glm::vec2 dim;
-		auto tex = other.get_texture(dim);
-		set_texture(tex, dim);
-		set_tex_coords(other.get_tex_coords());
-		set_modulation(other.get_modulation());
-		set_frame_format(other.get_frame_format());
-	}
-
-	StaticSprite::StaticSprite(StaticSprite&& other) noexcept
-		: ref(other.ref)
-	{
-	}
-
-	StaticSprite& StaticSprite::operator=(const StaticSprite& other)
-	{
-		if (this != &other)
-		{
-			ref = other.ref;
-			glm::vec2 dim;
-			auto tex = other.get_texture(dim);
-			set_texture(tex, dim);
-			set_tex_coords(other.get_tex_coords());
-			set_modulation(other.get_modulation());
-			set_frame_format(other.get_frame_format());
-		}
-		return *this;
-	}
-
-	StaticSprite& StaticSprite::operator=(StaticSprite&& other) noexcept
-	{
-		if (this != &other)
-		{
-			ref = std::move(other.ref);
-			if (&ref.batch != &other.ref.batch)
-			{
-				glm::vec2 dim;
-				auto tex = other.get_texture(dim);
-				set_texture(tex, dim);
-				set_tex_coords(other.get_tex_coords());
-				set_modulation(other.get_modulation());
-				set_frame_format(other.get_frame_format());
-			}
-		}
-		return *this;
-	}
-
-	StaticSprite::~StaticSprite()
-	{
-	}
-
-	void StaticSprite::draw(BatchBarrier barrier) const
-	{
-		if (ref.in_context) [[likely]]
-			if (barrier) [[likely]]
-				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
-		ref.draw_quad();
-		if (ref.in_context) [[likely]]
-			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
-	}
-
-	Sprite::Sprite(SpriteBatch* batch)
-		: ref(batch)
-	{
-	}
-
-	Sprite::Sprite(const Sprite& other)
-		: ref(other.ref), transformer(other.transformer)
-	{
-		glm::vec2 dim;
-		auto tex = other.get_texture(dim);
-		set_texture(tex, dim);
-		set_tex_coords(other.get_tex_coords());
-		set_modulation(other.get_modulation());
-		set_frame_format(other.get_frame_format());
-	}
-
-	Sprite::Sprite(Sprite&& other) noexcept
-		: ref(std::move(other.ref)), transformer(std::move(other.transformer))
-	{
-	}
-
-	Sprite& Sprite::operator=(const Sprite& other)
-	{
-		if (this != &other)
-		{
-			ref = other.ref;
-			transformer = other.transformer;
-			glm::vec2 dim;
-			auto tex = other.get_texture(dim);
-			set_texture(tex, dim);
-			set_tex_coords(other.get_tex_coords());
-			set_modulation(other.get_modulation());
-			set_frame_format(other.get_frame_format());
-		}
-		return *this;
-	}
-
-	Sprite& Sprite::operator=(Sprite&& other) noexcept
-	{
-		if (this != &other)
-		{
-			ref = std::move(other.ref);
-			transformer = std::move(other.transformer);
-			if (&ref.batch != &other.ref.batch)
-			{
-				glm::vec2 dim;
-				auto tex = other.get_texture(dim);
-				set_texture(tex, dim);
-				set_tex_coords(other.get_tex_coords());
-				set_modulation(other.get_modulation());
-				set_frame_format(other.get_frame_format());
-			}
-		}
-		return *this;
-	}
-
-	Sprite::~Sprite()
-	{
-	}
-
-	void Sprite::draw(BatchBarrier barrier) const
-	{
-		if (ref.in_context) [[likely]]
-			if (barrier) [[likely]]
-				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
-		if (transformer.flush())
-			ref.set_transform(transformer.global());
-		ref.draw_quad();
-		if (ref.in_context) [[likely]]
-			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
 	}
 }

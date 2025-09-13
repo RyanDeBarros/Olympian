@@ -577,14 +577,14 @@ namespace oly::debug
 			dirty_views = true;
 	}
 
-	void CollisionLayer::draw(BatchBarrier barrier) const
+	void CollisionLayer::draw() const
 	{
 		if (dirty_views)
 		{
 			dirty_views = false;
 			write_texture();
 		}
-		sprite.draw(barrier);
+		sprite.draw();
 	}
 
 	void CollisionLayer::regen_to_current_resolution()

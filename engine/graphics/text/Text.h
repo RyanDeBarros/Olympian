@@ -1,7 +1,8 @@
 #pragma once
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/SpriteBatch.h"
 #include "graphics/text/Font.h"
+#include "core/base/Transforms.h"
 
 namespace oly::rendering
 {
@@ -12,14 +13,14 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
-		TextGlyph(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+		TextGlyph(SpriteBatch* batch = nullptr);
 		TextGlyph(const TextGlyph&);
 		TextGlyph(TextGlyph&&) noexcept;
 		TextGlyph& operator=(const TextGlyph&);
 		TextGlyph& operator=(TextGlyph&&) noexcept;
 		~TextGlyph();
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		void set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos);
 		void set_text_color(glm::vec4 color) const { ref.set_modulation(color); }

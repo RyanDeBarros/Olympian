@@ -4,14 +4,19 @@
 
 namespace oly::rendering
 {
+	SpriteAtlas::SpriteAtlas(SpriteBatch* batch)
+		: sprite(batch)
+	{
+	}
+
 	SpriteAtlas::SpriteAtlas(Sprite&& sprite)
 		: sprite(std::move(sprite))
 	{
 	}
 
-	void SpriteAtlas::draw(BatchBarrier barrier) const
+	void SpriteAtlas::draw() const
 	{
-		sprite.draw(barrier);
+		sprite.draw();
 	}
 
 	void SpriteAtlas::on_tick() const

@@ -1,6 +1,6 @@
 #include "Text.h"
 
-#include "core/context/rendering/Rendering.h"
+#include "core/context/rendering/Sprites.h"
 
 namespace oly::rendering
 {
@@ -66,16 +66,13 @@ namespace oly::rendering
 	{
 	}
 
-	void TextGlyph::draw(BatchBarrier barrier) const
+	void TextGlyph::draw() const
 	{
-		if (ref.in_context) [[likely]]
-			if (barrier) [[likely]]
-				context::internal::flush_batches_except(context::InternalBatch::SPRITE);
 		if (transformer.flush())
 			ref.set_transform(transformer.global());
 		ref.draw_quad();
-		if (ref.in_context) [[likely]]
-			context::internal::set_batch_rendering_tracker(context::InternalBatch::SPRITE, true);
+		if (ref.is_in_context()) [[likely]]
+			context::internal::set_sprite_batch_rendering(true);
 	}
 
 	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos)

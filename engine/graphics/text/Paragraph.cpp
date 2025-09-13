@@ -56,16 +56,13 @@ namespace oly::rendering
 		this->visible[pos] = visible;
 	}
 
-	void Paragraph::draw(BatchBarrier barrier) const
+	void Paragraph::draw() const
 	{
 		if (draw_bkg)
-			bkg.draw(barrier);
+			bkg.draw();
 		for (size_t i = 0; i < glyphs_drawn; ++i)
 			if (visible[i])
-			{
-				glyphs[i].draw(barrier);
-				barrier = batch::PARALLEL;
-			}
+				glyphs[i].draw();
 	}
 
 	void Paragraph::build_layout()

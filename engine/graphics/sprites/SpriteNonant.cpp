@@ -6,7 +6,7 @@ namespace oly::rendering
 {
 	Sprite& SpriteNonant::sprite(unsigned char x, unsigned char y) const
 	{
-		return sprites[3 * y + x];
+		return sprites[size_t(3 * y + x)];
 	}
 
 	SpriteNonant::SpriteNonant(SpriteBatch* batch)
@@ -23,7 +23,7 @@ namespace oly::rendering
 			}
 	}
 
-	void SpriteNonant::draw(BatchBarrier barrier) const
+	void SpriteNonant::draw() const
 	{
 		if (dirty.grid)
 		{
@@ -37,7 +37,7 @@ namespace oly::rendering
 		}
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
-				sprite(x, y).draw(x == 0 && y == 0 ? barrier : batch::PARALLEL);
+				sprite(x, y).draw();
 	}
 
 	void SpriteNonant::copy_sprite_attributes(const Sprite& sprite)

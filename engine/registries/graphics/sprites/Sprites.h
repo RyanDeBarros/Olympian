@@ -2,7 +2,7 @@
 
 #include "external/TOML.h"
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 
 namespace oly::reg
 {

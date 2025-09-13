@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 #include "graphics/sprites/TileSet.h"
 #include "core/base/TransformerExposure.h"
 
@@ -17,7 +17,7 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
-		TileMapLayer(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+		TileMapLayer(SpriteBatch* batch = nullptr);
 		TileMapLayer(const TileMapLayer&);
 		TileMapLayer(TileMapLayer&&) noexcept;
 		TileMapLayer& operator=(const TileMapLayer&);
@@ -26,7 +26,7 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		void paint_tile(glm::ivec2 tile);
 		void unpaint_tile(glm::ivec2 tile);
@@ -52,7 +52,7 @@ namespace oly::rendering
 		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::ATTACH_ONLY, .modifier = exposure::modifier::FULL }>
 			set_transformer() { return transformer; }
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);

@@ -2,6 +2,7 @@
 
 #include "graphics/text/Text.h"
 #include "graphics/text/Font.h"
+#include "graphics/sprites/Sprite.h"
 
 namespace oly::rendering
 {
@@ -58,7 +59,7 @@ namespace oly::rendering
 		glm::vec4 default_text_color = glm::vec4(1.0f);
 		Transformer2D transformer;
 
-		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", SpriteBatch* batch = nullptr);
 
 		const utf::String& get_text() const { return text; }
 		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }
@@ -83,7 +84,7 @@ namespace oly::rendering
 		float height() const { return pagedata.height; }
 		glm::vec2 size() const { return { pagedata.width, pagedata.height }; }
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 	private:
 		void build_layout();

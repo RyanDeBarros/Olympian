@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 
 namespace oly::rendering
 {
@@ -10,9 +10,10 @@ namespace oly::rendering
 		std::vector<UVRect> atlas;
 		graphics::AnimFrameFormat anim_format;
 
+		SpriteAtlas(SpriteBatch* batch = nullptr);
 		SpriteAtlas(Sprite&& sprite);
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 		void on_tick() const;
 
 		void select_static_frame(GLuint frame);

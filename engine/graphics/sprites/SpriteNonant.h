@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 #include "core/base/TransformerExposure.h"
 
 namespace oly::rendering
@@ -30,9 +30,9 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 	public:
-		SpriteNonant(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+		SpriteNonant(SpriteBatch* batch = nullptr);
 
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
+		void draw() const;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

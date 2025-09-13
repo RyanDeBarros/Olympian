@@ -13,27 +13,11 @@ namespace oly
 
 namespace oly::context
 {
-
 	extern void set_render_pipeline(const IRenderPipeline* pipeline);
 	
 	namespace internal
 	{
 		extern void render_frame();
-	}
-
-	enum class InternalBatch : int
-	{
-		SPRITE,
-		_COUNT
-	};
-
-	extern bool batch_is_rendering(InternalBatch batch);
-	extern void flush_internal_rendering();
-
-	namespace internal
-	{
-		extern void set_batch_rendering_tracker(InternalBatch batch, bool ongoing);
-		extern void flush_batches_except(InternalBatch batch);
 	}
 
 	extern bool blend_enabled();

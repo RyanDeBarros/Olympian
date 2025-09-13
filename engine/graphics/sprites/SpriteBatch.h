@@ -1,16 +1,11 @@
 #pragma once
 
-#include "external/GLM.h"
-
-#include "core/base/Transforms.h"
-#include "core/base/Constants.h"
-#include "core/math/Shapes.h"
-#include "core/containers/IDGenerator.h"
-
-#include "graphics/BatchBarrier.h"
-#include "graphics/backend/basic/Textures.h"
-#include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/UsageSlotTracker.h"
+#include "graphics/backend/specialized/ElementBuffers.h"
+#include "graphics/backend/basic/Textures.h"
+
+#include "core/math/Shapes.h"
+#include "core/base/Constants.h"
 
 namespace oly::rendering
 {
@@ -91,7 +86,7 @@ namespace oly::rendering
 		{
 			GLuint projection, modulation, time;
 		} shader_locations;
-		
+
 	public:
 		struct AnimHash
 		{
@@ -113,7 +108,8 @@ namespace oly::rendering
 			UBO(GLuint uvs, GLuint modulations, GLuint anims)
 				: tex_coords(uvs * sizeof(UVRect), max_tex_coords * sizeof(UVRect)),
 				modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)),
-				anim(anims * sizeof(graphics::AnimFrameFormat), max_anims * sizeof(graphics::AnimFrameFormat)) {}
+				anim(anims * sizeof(graphics::AnimFrameFormat), max_anims * sizeof(graphics::AnimFrameFormat)) {
+			}
 		} ubo;
 
 	public:
@@ -186,8 +182,6 @@ namespace oly::rendering
 		void update_texture_handle(const graphics::BindlessTextureRef& texture);
 	};
 
-	constexpr SpriteBatch* CONTEXT_SPRITE_BATCH = nullptr;
-
 	namespace internal
 	{
 		struct SpriteReference
@@ -196,12 +190,14 @@ namespace oly::rendering
 			const bool in_context;
 			SpriteBatch::SpriteID id;
 
-			SpriteReference(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
+			SpriteReference(SpriteBatch* batch = nullptr);
 			SpriteReference(const SpriteReference&);
 			SpriteReference(SpriteReference&&) noexcept;
 			~SpriteReference();
 			SpriteReference& operator=(const SpriteReference&);
 			SpriteReference& operator=(SpriteReference&&) noexcept;
+
+			bool is_in_context() const { return in_context; }
 
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;
@@ -225,72 +221,4 @@ namespace oly::rendering
 			void draw_quad() const;
 		};
 	}
-
-	// ASSET
-	class StaticSprite
-	{
-		internal::SpriteReference ref;
-
-	public:
-		StaticSprite(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
-		StaticSprite(const StaticSprite&);
-		StaticSprite(StaticSprite&&) noexcept;
-		StaticSprite& operator=(const StaticSprite&);
-		StaticSprite& operator=(StaticSprite&&) noexcept;
-		~StaticSprite();
-
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
-
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
-		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
-		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
-		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
-		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-		void set_transform(const glm::mat3& transform) { ref.set_transform(transform); }
-
-		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
-		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		glm::vec4 get_modulation() const { return ref.get_modulation(); }
-		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
-		glm::mat3 get_transform() const { return ref.get_transform(); }
-	};
-
-	class Sprite
-	{
-		internal::SpriteReference ref;
-
-	public:
-		Transformer2D transformer;
-
-		Sprite(SpriteBatch* batch = CONTEXT_SPRITE_BATCH);
-		Sprite(const Sprite&);
-		Sprite(Sprite&&) noexcept;
-		Sprite& operator=(const Sprite&);
-		Sprite& operator=(Sprite&&) noexcept;
-		~Sprite();
-
-		void draw(BatchBarrier barrier = batch::BARRIER) const;
-
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
-		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
-		void set_tex_coords(const UVRect& tex_coords) const { ref.set_tex_coords(tex_coords); }
-		void set_tex_coords(const math::Rect2D& rect) const { ref.set_tex_coords(rect); }
-		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-
-		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
-		UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		glm::vec4 get_modulation() const { return ref.get_modulation(); }
-		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
-
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
-	};
-
-	typedef SmartReference<Sprite> SpriteRef;
 }

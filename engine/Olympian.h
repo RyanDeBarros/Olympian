@@ -16,7 +16,7 @@
 #include "graphics/resources/Samplers.h"
 #include "graphics/Stencil.h"
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 #include "graphics/text/Paragraph.h"
 #include "graphics/sprites/TileMap.h"
 #include "graphics/sprites/SpriteAtlas.h"

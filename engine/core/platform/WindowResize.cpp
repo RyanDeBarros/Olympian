@@ -5,7 +5,7 @@
 #include "core/context/rendering/Text.h"
 #include "core/context/Platform.h"
 
-#include "graphics/sprites/Sprites.h"
+#include "graphics/sprites/Sprite.h"
 #include "graphics/shapes/Polygons.h"
 #include "graphics/shapes/Ellipses.h"
 
