@@ -64,32 +64,18 @@ layout(std140, binding = 2) uniform Anims {
 	AnimFrameFormat uAnims[1000]; // guaranteed 16KB / 16B = #1000
 };
 
-// TODO v4 use math over switch statements
-
-vec2 position(vec2 dimensions) {
-	switch (gl_VertexID % 4) {
-	case 0:
-		return vec2(-dimensions[0] / 2, -dimensions[1] / 2);
-	case 1:
-		return vec2(dimensions[0] / 2, -dimensions[1] / 2);
-	case 2:
-		return vec2(dimensions[0] / 2, dimensions[1] / 2);
-	case 3:
-		return vec2(-dimensions[0] / 2, dimensions[1] / 2);
-	}
+vec2 calc_position(vec2 dimensions) {
+	return dimensions * (vec2(((gl_VertexID + 1) >> 1) & 1, (gl_VertexID >> 1) & 1) - 0.5);
 }
 
-vec2 coords(TexUVRect rect) {
-	switch (gl_VertexID % 4) {
-	case 0:
-		return rect.uvs[0].xy;
-	case 1:
-		return rect.uvs[0].zw;
-	case 2:
-		return rect.uvs[1].xy;
-	case 3:
-		return rect.uvs[1].zw;
-	}
+vec2 calc_tex_coords(TexUVRect rect) {
+	vec4 coords_pair = rect.uvs[(gl_VertexID & 2) >> 1];
+	return mix(coords_pair.xy, coords_pair.zw, gl_VertexID & 1);
+}
+
+uint calc_frame(AnimFrameFormat anim) {
+	int frame_offset = anim.delay_seconds == 0.0 ? 0 : int(floor((uTime - anim.starting_time) / anim.delay_seconds));
+	return (anim.starting_frame + frame_offset) % anim.num_frames;
 }
 
 out vec2 tTexCoord;
@@ -99,24 +85,15 @@ flat out uint tFramePlusOne;
 flat out uint tIsTextGlyph;
 
 void main() {
-	QuadInfo quad = uQuadInfo[gl_VertexID / 4];
+	QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
 	if (quad.texSlot > 0) { // TODO v4 don't use 1-indexed buffers
-		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
-		tTexCoord = coords(uTexCoords[quad.texCoordSlot]);
+		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
+		tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
 		tModulation = uModulation[quad.colorSlot];
-		if (quad.frameSlot > 0) {
-			AnimFrameFormat anim = uAnims[quad.frameSlot];
-			int frame_offset = 0;
-			if (anim.delay_seconds != 0.0)
-				frame_offset = int(floor((uTime - anim.starting_time) / anim.delay_seconds));
-			tFramePlusOne = 1 + (anim.starting_frame + frame_offset) % anim.num_frames;
-		} else {
-			tFramePlusOne = 0;
-		}
 		tIsTextGlyph = quad.isTextGlyph;
-	}
-	else {
+		tFramePlusOne = quad.frameSlot > 0 ? 1 + calc_frame(uAnims[quad.frameSlot]) : 0;
+	} else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
 	}
 }
