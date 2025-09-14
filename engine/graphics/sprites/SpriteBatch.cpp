@@ -25,7 +25,8 @@ namespace oly::rendering
 
 	SpriteBatch::SpriteBatch(Capacity capacity)
 		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
-		quad_ssbo_block(capacity.sprites), ubo(capacity.uvs, capacity.modulations, capacity.anims)
+		quad_ssbo_block(capacity.sprites), tex_coords_ssbo(capacity.uvs * sizeof(math::Rect2D), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
+		ubo(capacity.modulations, capacity.anims)
 	{
 		internal::SpriteBatchRegistry::instance().batches.insert(this);
 
@@ -33,7 +34,7 @@ namespace oly::rendering
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
 
-		ubo.tex_coords.send<math::Rect2D>(0, { .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f });
+		tex_coords_ssbo.send<math::Rect2D>(0, { .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f });
 		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}
@@ -59,7 +60,7 @@ namespace oly::rendering
 		tex_data_ssbo.bind_base(0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_ssbo_block.buf.get_buffer<INFO>());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_ssbo_block.buf.get_buffer<TRANSFORM>());
-		ubo.tex_coords.bind_base(0);
+		tex_coords_ssbo.bind_base(3);
 		ubo.modulation.bind_base(1);
 		ubo.anim.bind_base(2);
 		ebo.render_elements(GL_TRIANGLES);
@@ -109,7 +110,7 @@ namespace oly::rendering
 
 	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::Rect2D uvs)
 	{
-		if (quad_info_store.tex_coords.set_object(ubo.tex_coords, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
+		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 

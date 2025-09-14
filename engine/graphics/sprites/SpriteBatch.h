@@ -65,6 +65,8 @@ namespace oly::rendering
 		const QuadInfo& get_quad_info(GLuint vb_pos) const;
 		QuadInfo& set_quad_info(GLuint vb_pos);
 
+		graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_coords_ssbo;
+
 		struct
 		{
 			GLuint projection, modulation, time;
@@ -80,17 +82,15 @@ namespace oly::rendering
 		};
 
 	private:
-		static const GLuint max_tex_coords = 1000;
 		static const GLuint max_modulations = 1000;
 		static const GLuint max_anims = 1000;
 
 		struct UBO
 		{
-			graphics::LightweightUBO<graphics::Mutability::MUTABLE> tex_coords, modulation, anim;
+			graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
 
-			UBO(GLuint uvs, GLuint modulations, GLuint anims)
-				: tex_coords(uvs * sizeof(math::Rect2D), max_tex_coords * sizeof(math::Rect2D)),
-				modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)),
+			UBO(GLuint modulations, GLuint anims)
+				: modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)),
 				anim(anims * sizeof(graphics::AnimFrameFormat), max_anims * sizeof(graphics::AnimFrameFormat)) {
 			}
 		} ubo;
@@ -105,7 +105,6 @@ namespace oly::rendering
 				: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), anims(num_anims + 1)
 			{
 				OLY_ASSERT(4 * initial_sprites <= nmax<unsigned int>());
-				OLY_ASSERT(uvs <= max_tex_coords);
 				OLY_ASSERT(modulations <= max_modulations);
 				OLY_ASSERT(anims <= max_anims);
 			}

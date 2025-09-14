@@ -37,12 +37,11 @@ layout(std430, binding = 2) readonly buffer QuadTransforms {
 	Mat3 uTransforms[];
 };
 
-// TODO v4 const size allocation for uniform buffers could be overkill for framebuffer draws. Make it a template variable.
-
-layout(std140, binding = 0) uniform TextureCoords {
-	vec4 uTexCoords[1000]; // guaranteed 16KB / 16B = #1000
+layout(std430, binding = 3) readonly buffer TextureCoords {
+	vec4 uTexCoords[];
 };
 
+// TODO v4 const size allocation for uniform buffers could be overkill for framebuffer draws. Make it a template variable.
 // TODO v4 utilize optional modulation textures in addition to solid color modulation.
 
 layout(std140, binding = 1) uniform Modulations {
