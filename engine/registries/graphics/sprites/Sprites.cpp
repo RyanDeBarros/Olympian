@@ -31,17 +31,11 @@ namespace oly::reg
 
 		if (auto toml_tex_coords = node["tex_coords"].as_array())
 		{
-			if (toml_tex_coords->size() == 4)
-			{
-				rendering::UVRect uvs;
-				if (parse_vec(toml_tex_coords->get_as<toml::array>(0), uvs.uvs[0])
-					&& parse_vec(toml_tex_coords->get_as<toml::array>(1), uvs.uvs[1])
-					&& parse_vec(toml_tex_coords->get_as<toml::array>(2), uvs.uvs[2])
-					&& parse_vec(toml_tex_coords->get_as<toml::array>(3), uvs.uvs[3]))
-					params.tex_coords = uvs;
-				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
-			}
+			glm::vec4 uvs;
+			if (parse_vec(toml_tex_coords, uvs))
+				params.tex_coords = { .x1 = uvs[0], .x2 = uvs[1], .y1 = uvs[2], .y2 = uvs[3] };
+			else
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
 		}
 
 		if (auto toml_frame_format = node["frame_format"])

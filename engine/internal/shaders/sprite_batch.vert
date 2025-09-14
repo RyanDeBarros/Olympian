@@ -39,12 +39,8 @@ layout(std430, binding = 2) readonly buffer QuadTransforms {
 
 // TODO v4 const size allocation for uniform buffers could be overkill for framebuffer draws. Make it a template variable.
 
-struct TexUVRect
-{
-	vec4 uvs[2];
-};
 layout(std140, binding = 0) uniform TextureCoords {
-	TexUVRect uTexCoords[500]; // guaranteed 16KB / 32B = #500
+	vec4 uTexCoords[1000]; // guaranteed 16KB / 16B = #1000
 };
 
 // TODO v4 utilize optional modulation textures in addition to solid color modulation.
@@ -68,9 +64,8 @@ vec2 calc_position(vec2 dimensions) {
 	return dimensions * (vec2(((gl_VertexID + 1) >> 1) & 1, (gl_VertexID >> 1) & 1) - 0.5);
 }
 
-vec2 calc_tex_coords(TexUVRect rect) {
-	vec4 coords_pair = rect.uvs[(gl_VertexID & 2) >> 1];
-	return mix(coords_pair.xy, coords_pair.zw, gl_VertexID & 1);
+vec2 calc_tex_coords(vec4 uvs) {
+	return vec2(uvs[((gl_VertexID + 1) >> 1) & 1], uvs[2 + ((gl_VertexID >> 1) & 1)]);
 }
 
 uint calc_frame(AnimFrameFormat anim) {

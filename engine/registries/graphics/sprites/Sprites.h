@@ -14,7 +14,7 @@ namespace oly::reg
 			std::optional<std::string> texture;
 			unsigned int texture_index = 0;
 			std::optional<glm::vec4> modulation;
-			std::optional<rendering::UVRect> tex_coords;
+			std::optional<math::Rect2D> tex_coords;
 
 			struct SingleFrameFormat
 			{

@@ -39,13 +39,8 @@ namespace oly::rendering
 	void SpriteAtlas::setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major, bool row_up)
 	{
 		atlas.clear();
-		static const auto uv_rect = [](GLuint row, GLuint col, GLuint rows, GLuint cols) -> UVRect {
-			return { {
-				{       col / (float)cols,       row / (float)rows },
-				{ (col + 1) / (float)cols,       row / (float)rows },
-				{ (col + 1) / (float)cols, (row + 1) / (float)rows },
-				{       col / (float)cols, (row + 1) / (float)rows }
-			} };
+		static const auto uv_rect = [](GLuint row, GLuint col, GLuint rows, GLuint cols) -> math::Rect2D {
+			return { .x1 = col / (float)cols, .x2 = (col + 1) / (float)cols, .y1 = row / (float)rows, .y2 = (row + 1) / (float)rows };
 			};
 		if (row_major)
 		{

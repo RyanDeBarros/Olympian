@@ -10,23 +10,10 @@ def params_constructor(sprite, name) -> str:
 		c += f"\t\t\t{name}.texture_index = (unsigned int){sprite['texture_index']};\n"
 
 	if 'modulation' in sprite:
-		if isinstance(sprite['modulation'][0], list):
-			c += f"\t\t\t{name}.modulation = rendering::ModulationRect{{\n"
-			c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][0][0]}, (float){sprite['modulation'][0][1]}, (float){sprite['modulation'][0][2]}, (float){sprite['modulation'][0][3]} }},\n"
-			c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][1][0]}, (float){sprite['modulation'][1][1]}, (float){sprite['modulation'][1][2]}, (float){sprite['modulation'][1][3]} }},\n"
-			c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][2][0]}, (float){sprite['modulation'][2][1]}, (float){sprite['modulation'][2][2]}, (float){sprite['modulation'][2][3]} }},\n"
-			c += f"\t\t\t\tglm::vec4{{ (float){sprite['modulation'][3][0]}, (float){sprite['modulation'][3][1]}, (float){sprite['modulation'][3][2]}, (float){sprite['modulation'][3][3]} }}\n"
-			c += "\t\t\t};\n"
-		else:
-			c += f"\t\t\t{name}.modulation = {{ (float){sprite['modulation'][0]}, (float){sprite['modulation'][1]}, (float){sprite['modulation'][2]}, (float){sprite['modulation'][3]} }};\n"
+		c += f"\t\t\t{name}.modulation = {{ (float){sprite['modulation'][0]}, (float){sprite['modulation'][1]}, (float){sprite['modulation'][2]}, (float){sprite['modulation'][3]} }};\n"
 
 	if 'tex_coords' in sprite:
-		c += f"\t\t\t{name}.tex_coords = rendering::SpriteBatch::UVRect{{\n"
-		c += f"\t\t\t\tglm::vec4{{ (float){sprite['tex_coords'][0][0]}, (float){sprite['tex_coords'][0][1]} }},\n"
-		c += f"\t\t\t\tglm::vec4{{ (float){sprite['tex_coords'][1][0]}, (float){sprite['tex_coords'][1][1]} }},\n"
-		c += f"\t\t\t\tglm::vec4{{ (float){sprite['tex_coords'][2][0]}, (float){sprite['tex_coords'][2][1]} }},\n"
-		c += f"\t\t\t\tglm::vec4{{ (float){sprite['tex_coords'][3][0]}, (float){sprite['tex_coords'][3][1]} }}\n"
-		c += "\t\t\t};\n"
+		c += f"\t\t\t{name}.tex_coords = math::Rect2D{{ .x1 = (float){sprite['tex_coords'][0]}, .x2 = (float){sprite['tex_coords'][1]}, .y1 = (float){sprite['tex_coords'][2]}, .y2 = (float){sprite['tex_coords'][3]} }};\n"
 
 	if 'frame_format' in sprite:
 		frame_format = sprite['frame_format']

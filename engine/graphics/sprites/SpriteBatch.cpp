@@ -7,16 +7,6 @@
 
 namespace oly::rendering
 {
-	UVRect& UVRect::from_rect(const math::Rect2D& rect)
-	{
-		auto rect_uvs = rect.uvs();
-		uvs[0] = rect_uvs[0];
-		uvs[1] = rect_uvs[1];
-		uvs[2] = rect_uvs[2];
-		uvs[3] = rect_uvs[3];
-		return *this;
-	}
-
 	void internal::SpriteBatchRegistry::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		for (SpriteBatch* batch : batches)
@@ -43,7 +33,7 @@ namespace oly::rendering
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
 
-		ubo.tex_coords.send<UVRect>(0, {});
+		ubo.tex_coords.send<math::Rect2D>(0, { .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f });
 		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}
@@ -117,7 +107,7 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_tex_coords(GLuint vb_pos, const UVRect& uvs)
+	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::Rect2D uvs)
 	{
 		if (quad_info_store.tex_coords.set_object(ubo.tex_coords, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
@@ -150,10 +140,10 @@ namespace oly::rendering
 		return tex.texture;
 	}
 
-	UVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
+	math::Rect2D SpriteBatch::get_tex_coords(GLuint vb_pos) const
 	{
 		GLuint slot = get_quad_info(vb_pos).tex_coord_slot;
-		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : UVRect{};
+		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::Rect2D{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
 	}
 
 	glm::vec4 SpriteBatch::get_modulation(GLuint vb_pos) const
@@ -241,14 +231,9 @@ namespace oly::rendering
 		batch.set_texture(id.get(), texture, dimensions);
 	}
 
-	void internal::SpriteReference::set_tex_coords(const UVRect& uvs) const
+	void internal::SpriteReference::set_tex_coords(math::Rect2D rect) const
 	{
-		batch.set_tex_coords(id.get(), uvs);
-	}
-
-	void internal::SpriteReference::set_tex_coords(const math::Rect2D& rect) const
-	{
-		batch.set_tex_coords(id.get(), UVRect{}.from_rect(rect));
+		batch.set_tex_coords(id.get(), rect);
 	}
 
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
@@ -282,7 +267,7 @@ namespace oly::rendering
 		return batch.get_texture(id.get(), dimensions);
 	}
 
-	UVRect internal::SpriteReference::get_tex_coords() const
+	math::Rect2D internal::SpriteReference::get_tex_coords() const
 	{
 		return batch.get_tex_coords(id.get());
 	}

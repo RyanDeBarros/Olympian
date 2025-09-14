@@ -55,8 +55,7 @@ namespace oly::rendering
 		nsize = regular_dimensions;
 
 		// set tex_coords
-		auto tex_coords = sprite.get_tex_coords();
-		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
+		regular_uvs = sprite.get_tex_coords();
 
 		// set modulation
 		regular_modulation = sprite.get_modulation();
@@ -226,8 +225,7 @@ namespace oly::rendering
 		clamp_nsize(size);
 
 		// set tex_coords
-		auto tex_coords = copy.get_tex_coords();
-		regular_uvs = { .x1 = tex_coords.uvs[0].x, .x2 = tex_coords.uvs[1].x, .y1 = tex_coords.uvs[0].y, .y2 = tex_coords.uvs[2].y };
+		regular_uvs = copy.get_tex_coords();
 
 		// set modulation
 		regular_modulation = copy.get_modulation();

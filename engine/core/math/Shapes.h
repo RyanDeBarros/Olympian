@@ -71,3 +71,23 @@ namespace oly::math
 		bool operator==(const IRect2D&) const = default;
 	};
 }
+
+template<>
+struct std::hash<oly::math::Rect2D>
+{
+	size_t operator()(oly::math::Rect2D r) const
+	{
+		return std::hash<float>{}(r.x1) ^ (std::hash<float>{}(r.x2) << 1) ^ (std::hash<float>{}(r.y1) << 2)
+			^ (std::hash<float>{}(r.y2) << 3);
+	}
+};
+
+template<>
+struct std::hash<oly::math::IRect2D>
+{
+	size_t operator()(oly::math::IRect2D r) const
+	{
+		return std::hash<int>{}(r.x1) ^ (std::hash<int>{}(r.x2) << 1) ^ (std::hash<int>{}(r.y1) << 2)
+			^ (std::hash<int>{}(r.y2) << 3);
+	}
+};

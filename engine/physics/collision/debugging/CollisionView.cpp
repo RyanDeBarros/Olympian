@@ -456,8 +456,8 @@ namespace oly::debug
 		layer->ellipse_batch.projection = projection;
 	}
 
-	CollisionLayer::CollisionLayer()
-		: texture(GL_TEXTURE_2D), window_resize_handler(this)
+	CollisionLayer::CollisionLayer(rendering::SpriteBatch* batch)
+		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this)
 	{
 		setup_texture();
 	}

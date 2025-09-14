@@ -246,10 +246,10 @@ namespace oly
 			}
 			else
 			{
-				b.x1 = 0;
-				b.x2 = 1;
-				b.y1 = 0;
-				b.y2 = 1;
+				b.x1 = 0.0f;
+				b.x2 = 1.0f;
+				b.y1 = 0.0f;
+				b.y2 = 1.0f;
 			}
 			return b;
 		}

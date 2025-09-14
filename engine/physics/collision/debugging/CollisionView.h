@@ -137,7 +137,7 @@ namespace oly::debug
 		friend struct WindowResizeHandler;
 
 	public:
-		CollisionLayer(); // TODO v4 pass optional sprite batch
+		CollisionLayer(rendering::SpriteBatch* batch = nullptr);
 		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
