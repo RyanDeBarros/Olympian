@@ -12,14 +12,14 @@
 
 namespace oly::rendering
 {
-	class StaticPolygon;
-	class Polygonal;
+	namespace internal
+	{
+		class PolygonReference;
+	}
 
 	class PolygonBatch
 	{
-		friend class StaticPolygon;
-		friend class Polygonal;
-		typedef GLuint Index;
+		friend class internal::PolygonReference;
 
 		GLuint projection_location;
 
@@ -37,6 +37,7 @@ namespace oly::rendering
 		graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
 	public:
+		typedef GLuint Index;
 		typedef StrictIDGenerator<Index>::ID PolygonID;
 
 		struct Capacity
@@ -72,28 +73,58 @@ namespace oly::rendering
 	private:
 		void set_primitive_points(Range<Index> vbo_range, const glm::vec2* points, Index count);
 		void set_primitive_colors(Range<Index> vbo_range, const glm::vec4* colors, Index count);
-		void set_polygon(Index id, const cmath::Polygon2D& polygon);
-		void set_polygon(Index id, const std::vector<cmath::Polygon2D>& polygons);
-		void set_polygon(Index id, const cmath::Polygon2DComposite& composite);
-		void set_polygon_transform(Index id, const glm::mat3& transform);
+		void set_polygon(const PolygonID& id, const cmath::Polygon2D& polygon);
+		void set_polygon(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons);
+		void set_polygon(const PolygonID& id, const cmath::Polygon2DComposite& composite);
+		void set_polygon_transform(const PolygonID& id, const glm::mat3& transform);
 
 		PolygonID generate_id(Index vertices);
 		void terminate_id(const PolygonID& id);
 		void resize_range(PolygonID& id, Index vertices);
-		Range<Index> get_vertex_range(Index id) const;
-		bool is_valid_id(Index id) const;
+		Range<Index> get_vertex_range(const PolygonID& id) const;
+		bool is_valid_id(const PolygonID& id) const;
 
 		StrictFreeSpaceTracker<Index> vertex_free_space;
 		std::unordered_map<Index, Range<Index>> polygon_indexer;
 		StrictIDGenerator<Index> id_generator;
 	};
 
+	namespace internal
+	{
+		// TODO v4 support setting different batch
+		class PolygonReference
+		{
+			friend class PolygonBatch;
+			PolygonBatch* batch;
+			PolygonBatch::PolygonID id;
+			
+		public:
+			PolygonReference(PolygonBatch& batch);
+			PolygonReference(const PolygonReference&);
+			PolygonReference(PolygonReference&&) noexcept;
+			~PolygonReference();
+			PolygonReference& operator=(const PolygonReference&);
+			PolygonReference& operator=(PolygonReference&&) noexcept;
+
+			void resize_range(PolygonBatch::Index vertices);
+			Range<PolygonBatch::Index> get_vertex_range() const;
+
+			void set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const;
+			void set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const;
+			template<typename Polygon>
+			void set_polygon(const Polygon& polygon) const { if (batch) batch->set_polygon(id, polygon); }
+			void set_polygon_transform(const glm::mat3& transform) const { if (batch) batch->set_polygon_transform(id, transform); }
+
+			GLuint& draw_index() const;
+		};
+	}
+
+	// TODO v4 separate PolygonBatch.h and Polygons.h
+
 	// ASSET
 	class StaticPolygon
 	{
-		friend PolygonBatch;
-		PolygonBatch& batch;
-		PolygonBatch::PolygonID id;
+		internal::PolygonReference ref;
 		mutable math::Triangulation triangulation;
 
 	public:
@@ -101,10 +132,9 @@ namespace oly::rendering
 
 		StaticPolygon(PolygonBatch& batch);
 		StaticPolygon(const StaticPolygon&);
-		StaticPolygon(StaticPolygon&&) noexcept;
-		~StaticPolygon();
+		StaticPolygon(StaticPolygon&&) noexcept = default;
 		StaticPolygon& operator=(const StaticPolygon&);
-		StaticPolygon& operator=(StaticPolygon&&) noexcept;
+		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
 
 		void init();
 		void send_polygon() const;
@@ -114,18 +144,17 @@ namespace oly::rendering
 
 	class Polygonal
 	{
-		friend PolygonBatch;
-		PolygonBatch& batch;
-		PolygonBatch::PolygonID id;
+		internal::PolygonReference ref;
 
 	public:
 		Transformer2D transformer;
 
 		Polygonal(PolygonBatch& batch);
-		Polygonal(const Polygonal&) = delete;
-		Polygonal(Polygonal&&) noexcept;
-		virtual ~Polygonal();
-		Polygonal& operator=(Polygonal&&) noexcept;
+		Polygonal(const Polygonal&) = default;
+		Polygonal(Polygonal&&) noexcept = default;
+		virtual ~Polygonal() = default;
+		Polygonal& operator=(const Polygonal&) = default;
+		Polygonal& operator=(Polygonal&&) noexcept = default;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <memory>
 
 #include "core/base/Errors.h"
 
@@ -35,31 +36,43 @@ namespace oly
 		friend class ID;
 		T next = initial;
 		std::stack<T> yielded;
+		std::shared_ptr<bool> valid;
 
 	public:
+		StrictIDGenerator()
+		{
+			valid = std::make_shared<bool>(true);
+		}
+
+		StrictIDGenerator(const StrictIDGenerator&) = delete;
+		StrictIDGenerator(StrictIDGenerator&&) = delete;
+
 		class ID
 		{
 			friend class StrictIDGenerator;
 			StrictIDGenerator* generator = nullptr;
 			T id = T(-1);
-			bool valid = false;
+			std::weak_ptr<bool> valid;
 
-			ID(StrictIDGenerator* generator) : generator(generator)
+			ID(StrictIDGenerator& generator) : generator(&generator)
 			{
-				valid = true;
-				if (generator->yielded.empty())
-					id = generator->next++;
+				valid = generator.valid;
+				if (generator.yielded.empty())
+					id = generator.next++;
 				else
 				{
-					id = generator->yielded.top();
-					generator->yielded.pop();
+					id = generator.yielded.top();
+					generator.yielded.pop();
 				}
 			}
 
 		public:
 			ID() = default;
+
 			ID(const ID&) = delete;
-			ID(ID&& other) noexcept : generator(other.generator), id(other.id), valid(other.valid) { other.generator = nullptr; other.valid = false; }
+
+			ID(ID&& other) noexcept : generator(other.generator), id(other.id), valid(std::move(other.valid)) { other.generator = nullptr; }
+
 			ID& operator=(ID&& other) noexcept
 			{
 				if (this != &other)
@@ -68,22 +81,22 @@ namespace oly
 						generator->yielded.push(id);
 					generator = other.generator;
 					id = other.id;
-					valid = other.valid;
+					valid = std::move(other.valid);
 					other.generator = nullptr;
-					other.valid = false;
 				}
 				return *this;
 			}
+
 			~ID()
 			{
-				if (generator && valid)
+				if (generator && is_valid())
 					generator->yielded.push(id);
 			}
 
-			T get() const { if (valid) return id; else throw Error(ErrorCode::INVALID_ID); }
-			bool is_valid() const { return valid; }
+			T get() const { if (is_valid()) return id; else throw Error(ErrorCode::INVALID_ID); }
+			bool is_valid() const { return !valid.expired(); }
 		};
 
-		ID generate() { return ID(this); }
+		ID generate() { return ID(*this); }
 	};
 }

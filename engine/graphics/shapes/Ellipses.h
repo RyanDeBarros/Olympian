@@ -10,11 +10,7 @@
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
-// TODO v4 can create a Painter system that allows for drawing on a framebuffer -> texture on a separate thread.
-// This would happen once per ellipse, and then just use it as a texture in a Sprite, rather than drawing in a separate batch.
-// Can even re-use say, a giant white ellipse texture that can be scaled down and colored via modulation in sprite.
-// Only keep ellipse batcher for use in collision debug drawing, but perhaps combine ellipse and polygon shaders at that point.
-// Also, remove ellipse/polygon batch from context - they can be used manually.
+// TODO v4 create a GeometryPainter class that draws ellipses/polygons onto a framebuffer texture on a separate thread, and holds a sprite with that texture. Combine Ellipse and Polygon shaders. CollisionLayer can then internally used the abstracted GeometryPainter class.
 
 namespace oly::rendering
 {
@@ -57,17 +53,7 @@ namespace oly::rendering
 		GLuint projection_location;
 
 	public:
-		struct Capacity
-		{
-			Capacity(Index ellipses = 1) : ellipses(ellipses) { OLY_ASSERT(4 * ellipses <= nmax<unsigned int>()); }
-
-		private:
-			friend class EllipseBatch;
-			Index ellipses;
-		};
-
-	public:
-		EllipseBatch(Capacity capacity = {});
+		EllipseBatch();
 		EllipseBatch(const EllipseBatch&) = delete;
 		EllipseBatch(EllipseBatch&&) = delete;
 

@@ -7,8 +7,8 @@
 
 namespace oly::rendering
 {
-	EllipseBatch::EllipseBatch(Capacity capacity)
-		: ebo(vao, capacity.ellipses), ssbo_block(capacity.ellipses)
+	EllipseBatch::EllipseBatch()
+		: ebo(vao)
 	{
 		projection_location = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uProjection");
 	}

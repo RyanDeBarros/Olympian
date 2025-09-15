@@ -30,12 +30,12 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct BKG
 {
-	oly::rendering::Polygon bkg_rect; // TODO v4 error when using PolygonRef
+	oly::rendering::PolygonRef bkg_rect; // TODO v4 error when using PolygonRef
 
 	BKG(oly::rendering::PolygonBatch& batch)
 		: bkg_rect(oly::reg::load_polygon(batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
 	{
-		bkg_rect.init();
+		bkg_rect->init();
 	}
 };
 
@@ -82,7 +82,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.bkg_rect.draw();
+		bkg.bkg_rect->draw();
 		batch.render();
 
 		sprite_match.draw();
