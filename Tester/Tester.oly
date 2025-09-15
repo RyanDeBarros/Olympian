@@ -17,14 +17,6 @@ logfile = "D:\\Projects\\Visual Studio\\Olympian\\Tester\\Tester.log"
 append = false
 console = true
 
-[context.sprite_batch]
-"initial sprites" = 100
-new_textures = 10
-
-[context.text_batch]
-initial_glyphs = 100
-new_textures = 10
-
 [context.framerate]
 frame_length_clip = 0.2
 time_scale = 1.0

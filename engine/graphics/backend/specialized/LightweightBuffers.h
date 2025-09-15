@@ -18,12 +18,12 @@ namespace oly::graphics
 		LightweightBuffer(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT) requires (M == Mutability::IMMUTABLE)
 			: size(size_in_bytes)
 		{
-			if (size < 0)
+			if (size <= 0)
 				throw Error(ErrorCode::INVALID_SIZE);
 			glNamedBufferStorage(buf, size, nullptr, flags);
 		}
 
-		LightweightBuffer(GLsizeiptr size_in_bytes, GLsizeiptr max_size_in_bytes, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE)
+		LightweightBuffer(GLsizeiptr max_size_in_bytes, GLsizeiptr size_in_bytes = 0, GLenum usage = GL_DYNAMIC_DRAW) requires (M == Mutability::MUTABLE)
 			: max_size(max_size_in_bytes)
 		{
 			if (max_size < 0)

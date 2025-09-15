@@ -28,7 +28,7 @@ namespace oly::graphics
 		} draw_spec;
 
 	public:
-		CPUSideEBO(IndexType size) : LazyBuffer<ElementAlias, IndexType, M>(size, {}) { set_draw_spec(0, size); }
+		CPUSideEBO(IndexType size = 0) : LazyBuffer<ElementAlias, IndexType, M>(size, {}) { set_draw_spec(0, size); }
 
 		void get_draw_spec(IndexType& first, IndexType& count) const { first = draw_spec.first; count = draw_spec.count; }
 		void set_draw_spec(IndexType first, IndexType count)
@@ -57,7 +57,7 @@ namespace oly::graphics
 	public:
 		GLuint offset = 0;
 
-		PersistentEBO(const VertexArray& vao, GLuint primitives)
+		PersistentEBO(const VertexArray& vao, GLuint primitives = 0)
 			: ebo(primitives), vao(vao)
 		{
 			bind_to_vao();

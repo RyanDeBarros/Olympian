@@ -29,19 +29,23 @@ namespace oly::graphics
 	public:
 		using StructAlias = Struct;
 
-		PersistentGPUBuffer(GLuint size)
+		PersistentGPUBuffer(GLuint size = 0)
 			: size(size)
 		{
-			if (size == 0)
-				throw Error(ErrorCode::NULL_STORAGE);
-			glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-			data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+			if (size)
+			{
+				glNamedBufferStorage(buf, (GLsizeiptr)(size * sizeof(Struct)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+				data = glMapNamedBufferRange(buf, 0, (GLsizeiptr)(size * sizeof(Struct)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+			}
 		}
+
 		PersistentGPUBuffer(const PersistentGPUBuffer&) = delete;
 		PersistentGPUBuffer(PersistentGPUBuffer&&) = delete;
 
 		GLuint get_size() const { return size; }
+		
 		GLuint get_buffer() const { return buf; }
+		
 		bool is_accessible() const { return accessible; }
 
 		const Struct& operator[](GLuint i) const
@@ -161,13 +165,14 @@ namespace oly::graphics
 		std::array<void*, N> data;
 
 	public:
-		PersistentGPUBufferBlock(GLuint size)
+		PersistentGPUBufferBlock(GLuint size = 0)
 		{
 			accessible.fill(true);
 			this->size.fill(size);
 			data.fill(nullptr);
 			init(std::make_index_sequence<N>{});
 		}
+
 		PersistentGPUBufferBlock(const std::array<GLuint, N>& sizes)
 			: size(sizes)
 		{
@@ -175,13 +180,16 @@ namespace oly::graphics
 			data.fill(nullptr);
 			init(std::make_index_sequence<N>{});
 		}
+		
 		PersistentGPUBufferBlock(const PersistentGPUBufferBlock&) = delete;
 		PersistentGPUBufferBlock(PersistentGPUBufferBlock&&) = delete;
 
 		template<size_t n>
 		GLuint get_size() const { return size[n]; }
+
 		template<size_t n>
 		GLuint get_buffer() const { return buf[n]; }
+		
 		template<size_t n>
 		bool is_accessible() const { return accessible[n]; }
 
@@ -345,8 +353,12 @@ namespace oly::graphics
 		void init(std::index_sequence<Indices...>)
 		{
 			((
-				glNamedBufferStorage(buf[Indices], (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT),
-				data[Indices] = glMapNamedBufferRange(buf[Indices], 0, (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
+				size[Indices] > 0 ?
+				(
+					glNamedBufferStorage(buf[Indices], (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT),
+					data[Indices] = glMapNamedBufferRange(buf[Indices], 0, (GLsizeiptr)(size[Indices] * sizeof(StructAlias<Indices>)), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+					0
+				) : 0
 				), ...);
 		}
 	};
@@ -360,9 +372,10 @@ namespace oly::graphics
 		mutable RangeMerger<GLuint> dirty;
 
 	public:
-		LazyPersistentGPUBuffer(GLuint size) : buf(size) {}
+		LazyPersistentGPUBuffer(GLuint size = 0) : buf(size) {}
 
 		void flag(GLuint pos) const { dirty.insert({ pos, 1 }); }
+
 		void pre_draw() const
 		{
 			for (Range<GLuint> range : dirty)
@@ -424,7 +437,7 @@ namespace oly::graphics
 		mutable std::array<RangeMerger<GLuint>, N> dirty;
 
 	public:
-		LazyPersistentGPUBufferBlock(GLuint size) : buf(size) {}
+		LazyPersistentGPUBufferBlock(GLuint size = 0) : buf(size) {}
 		LazyPersistentGPUBufferBlock(const std::array<GLuint, N>& sizes) : buf(sizes) {}
 
 		template<size_t n>
@@ -433,6 +446,7 @@ namespace oly::graphics
 			static_assert(n < N);
 			dirty[n].insert({ pos, 1 });
 		}
+
 		template<size_t n>
 		void pre_draw() const
 		{
@@ -462,6 +476,7 @@ namespace oly::graphics
 	public:
 		template<size_t n>
 		void post_draw() const { static_assert(n < N); buf.post_draw<n>(); }
+
 		void post_draw_all() const { post_draw_impl(std::make_index_sequence<N>{}); }
 
 	private:
@@ -471,6 +486,7 @@ namespace oly::graphics
 	public:
 		template<size_t n>
 		void grow() { static_assert(n < N); buf.grow<n>(); buf.pre_draw<n>(); dirty[n].clear(); }
+
 		void grow_all() const { grow_impl(std::make_index_sequence<N>{}); }
 
 	private:

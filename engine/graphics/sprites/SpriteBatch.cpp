@@ -23,10 +23,8 @@ namespace oly::rendering
 		return quad_ssbo_block.set<INFO>(vb_pos);
 	}
 
-	SpriteBatch::SpriteBatch(Capacity capacity)
-		: ebo(vao, capacity.sprites), tex_data_ssbo(capacity.textures * sizeof(TexData), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
-		quad_ssbo_block(capacity.sprites), tex_coords_ssbo(capacity.uvs * sizeof(math::Rect2D), graphics::SHADER_STORAGE_MAX_BUFFER_SIZE),
-		ubo(capacity.modulations, capacity.anims)
+	SpriteBatch::SpriteBatch()
+		: ebo(vao), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)), tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect))
 	{
 		internal::SpriteBatchRegistry::instance().batches.insert(this);
 
@@ -34,7 +32,7 @@ namespace oly::rendering
 		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
 
-		tex_coords_ssbo.send<math::Rect2D>(0, { .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f });
+		tex_coords_ssbo.send<math::UVRect>(0, {});
 		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}

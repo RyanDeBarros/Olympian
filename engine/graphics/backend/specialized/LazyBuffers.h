@@ -84,7 +84,8 @@ namespace oly::graphics
 		GLBuffer buf;
 
 	public:
-		CPUSideBuffer(size_t size, const StructType& default_value = StructType()) : cpudata(size, default_value) {}
+		CPUSideBuffer(size_t size = 0, const StructType& default_value = StructType()) : cpudata(size, default_value) {}
+		
 		virtual ~CPUSideBuffer() = default;
 
 		const VectorAlias& vector() const { return cpudata; }
@@ -95,6 +96,7 @@ namespace oly::graphics
 		{
 			glNamedBufferStorage(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), flags);
 		}
+
 		void init(GLenum usage = GL_DYNAMIC_DRAW) const requires (M == Mutability::MUTABLE)
 		{
 			glNamedBufferData(this->buf, this->cpudata.size() * sizeof(StructType), this->cpudata.data(), usage);
@@ -110,7 +112,9 @@ namespace oly::graphics
 		using CPUSideBuffer<StructType, M>::CPUSideBuffer;
 
 		void lazy_send(IndexType pos) const { dirty.insert(pos); }
+
 		void clear_dirty() const { dirty.clear(); }
+		
 		void flush(BufferSendType send_type = BufferSendType::SUBDATA) const
 		{
 			batch_send(dirty.begin(), dirty.end(), this->buf, this->cpudata.data(), sizeof(StructType), (IndexType)this->cpudata.size(), send_type); dirty.clear();

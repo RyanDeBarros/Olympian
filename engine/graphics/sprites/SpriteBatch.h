@@ -84,6 +84,7 @@ namespace oly::rendering
 		};
 
 	private:
+		// TODO v4 once these are template variables in shader, make these max variables configurable to match.
 		static const GLuint max_modulations = 1000;
 		static const GLuint max_anims = 1000;
 
@@ -91,32 +92,14 @@ namespace oly::rendering
 		{
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
 
-			UBO(GLuint modulations, GLuint anims)
-				: modulation(modulations * sizeof(glm::vec4), max_modulations * sizeof(glm::vec4)),
-				anim(anims * sizeof(graphics::AnimFrameFormat), max_anims * sizeof(graphics::AnimFrameFormat)) {
-			}
+			UBO() : modulation(max_modulations * sizeof(glm::vec4), sizeof(glm::vec4)), anim(max_anims * sizeof(graphics::AnimFrameFormat), sizeof(graphics::AnimFrameFormat)) {}
 		} ubo;
 
 	public:
 		glm::mat3 projection = 1.0f;
 		glm::vec4 global_modulation = glm::vec4(1.0f);
 
-		struct Capacity
-		{
-			Capacity(GLuint initial_sprites = 1, GLuint new_textures = 0, GLuint new_uvs = 0, GLuint new_modulations = 0, GLuint num_anims = 0)
-				: sprites(initial_sprites), textures(new_textures + 1), uvs(new_uvs + 1), modulations(new_modulations + 1), anims(num_anims + 1)
-			{
-				OLY_ASSERT(4 * initial_sprites <= nmax<unsigned int>());
-				OLY_ASSERT(modulations <= max_modulations);
-				OLY_ASSERT(anims <= max_anims);
-			}
-
-		private:
-			friend class SpriteBatch;
-			GLuint sprites, textures, uvs, modulations, anims;
-		};
-
-		SpriteBatch(Capacity capacity = {});
+		SpriteBatch();
 		SpriteBatch(const SpriteBatch&) = delete;
 		SpriteBatch(SpriteBatch&&) = delete;
 		~SpriteBatch();
