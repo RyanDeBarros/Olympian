@@ -7,7 +7,7 @@
 
 namespace oly
 {
-	// TODO implement ID cap for things like modulation UBO
+	// TODO v4 implement ID cap for things like modulation UBO
 
 	template<std::unsigned_integral T>
 	class SoftIDGenerator
@@ -36,27 +36,43 @@ namespace oly
 		friend class ID;
 		T next = initial;
 		std::stack<T> yielded;
-		std::shared_ptr<bool> valid;
+		// TODO v4 for other node systems, consider using this design of shared_ptr<Owner*> for faster move semantics, rather than using set of pointers to node.
+		std::shared_ptr<StrictIDGenerator<T, initial>*> generator_source;
 
 	public:
 		StrictIDGenerator()
 		{
-			valid = std::make_shared<bool>(true);
+			generator_source = std::make_shared<StrictIDGenerator<T, initial>*>(this);
 		}
 
-		StrictIDGenerator(const StrictIDGenerator&) = delete;
-		StrictIDGenerator(StrictIDGenerator&&) = delete;
+		StrictIDGenerator(const StrictIDGenerator<T, initial>&) = delete;
+
+		StrictIDGenerator(StrictIDGenerator<T, initial>&& other) noexcept
+			: next(other.next), yielded(std::move(other.yielded)), generator_source(std::move(other.generator_source))
+		{
+			*generator_source = this;
+		}
+
+		StrictIDGenerator& operator=(StrictIDGenerator<T, initial>&& other) noexcept
+		{
+			if (this != &other)
+			{
+				next = other.next;
+				yielded = other.yielded;
+				generator_source = std::move(other.generator_source);
+				*generator_source = this;
+			}
+			return *this;
+		}
 
 		class ID
 		{
 			friend class StrictIDGenerator;
-			StrictIDGenerator* generator = nullptr;
+			std::weak_ptr<StrictIDGenerator<T, initial>*> generator;
 			T id = T(-1);
-			std::weak_ptr<bool> valid;
 
-			ID(StrictIDGenerator& generator) : generator(&generator)
+			ID(StrictIDGenerator& generator) : generator(generator.generator_source)
 			{
-				valid = generator.valid;
 				if (generator.yielded.empty())
 					id = generator.next++;
 				else
@@ -71,30 +87,31 @@ namespace oly
 
 			ID(const ID&) = delete;
 
-			ID(ID&& other) noexcept : generator(other.generator), id(other.id), valid(std::move(other.valid)) { other.generator = nullptr; }
+			ID(ID&& other) noexcept
+				: generator(std::move(other.generator)), id(other.id)
+			{
+			}
 
 			ID& operator=(ID&& other) noexcept
 			{
 				if (this != &other)
 				{
-					if (generator)
-						generator->yielded.push(id);
-					generator = other.generator;
+					if (auto g = generator.lock())
+						(*g)->yielded.push(id);
+					generator = std::move(other.generator);
 					id = other.id;
-					valid = std::move(other.valid);
-					other.generator = nullptr;
 				}
 				return *this;
 			}
 
 			~ID()
 			{
-				if (generator && is_valid())
-					generator->yielded.push(id);
+				if (auto g = generator.lock())
+					(*g)->yielded.push(id);
 			}
 
 			T get() const { if (is_valid()) return id; else throw Error(ErrorCode::INVALID_ID); }
-			bool is_valid() const { return !valid.expired(); }
+			bool is_valid() const { return !generator.expired(); }
 		};
 
 		ID generate() { return ID(*this); }
