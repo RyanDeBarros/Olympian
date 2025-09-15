@@ -119,8 +119,6 @@ namespace oly::rendering
 		};
 	}
 
-	// TODO v4 separate PolygonBatch.h and Polygons.h
-
 	// ASSET
 	class StaticPolygon
 	{

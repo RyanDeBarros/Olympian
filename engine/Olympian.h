@@ -37,7 +37,6 @@ namespace oly
 	inline platform::Window& context_window() { return context::get_platform().window(); }
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
-	// TODO v4 use likely/unlikely branching attributes.
 	// TODO v4 Modular particle system, perlin noise generation.
 	// TODO v5 lighting engine, ui widgets, thread safety + multi-threading.
 	// TODO v5 network communication - online/local multiplayer.

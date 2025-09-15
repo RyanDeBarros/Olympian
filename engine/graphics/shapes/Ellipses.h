@@ -14,12 +14,11 @@
 
 namespace oly::rendering
 {
-	struct Ellipse;
-	class EllipseBatch;
+	class EllipseReference;
 
 	class EllipseBatch
 	{
-		friend struct Ellipse;
+		friend class EllipseReference;
 
 	public:
 		using Index = GLuint;
@@ -34,6 +33,7 @@ namespace oly::rendering
 			float rx = 0.0f, ry = 0.0f, border = 0.0f;
 			float fill_exp = 0.0f, border_exp = 0.0f;
 		};
+
 		struct ColorGradient {
 			glm::vec4 fill_inner = glm::vec4(1.0f);
 			glm::vec4 fill_outer = glm::vec4(1.0f);
@@ -65,37 +65,35 @@ namespace oly::rendering
 		StrictIDGenerator<Index> pos_generator;
 		typedef StrictIDGenerator<Index>::ID EllipseID;
 		EllipseID generate_id();
+	};
+
+	// TODO v4 support setting different batch
+	class EllipseReference
+	{
+		friend class EllipseBatch;
+		EllipseBatch& batch;
+		EllipseBatch::EllipseID pos;
 
 	public:
-		class EllipseReference
-		{
-			friend class EllipseBatch;
-			friend struct Ellipse;
-			EllipseBatch& batch;
-			EllipseID pos;
+		EllipseReference(EllipseBatch& batch);
+		EllipseReference(const EllipseReference&);
+		EllipseReference(EllipseReference&&) noexcept;
+		EllipseReference& operator=(const EllipseReference&);
+		EllipseReference& operator=(EllipseReference&&) noexcept;
 
-		public:
-			EllipseReference(EllipseBatch& batch);
-			EllipseReference(const EllipseReference&);
-			EllipseReference(EllipseReference&&) noexcept;
-			EllipseReference& operator=(const EllipseReference&);
-			EllipseReference& operator=(EllipseReference&&) noexcept;
+		const EllipseBatch::EllipseDimension& get_dimension() const;
+		EllipseBatch::EllipseDimension& set_dimension();
+		const EllipseBatch::ColorGradient& get_color() const;
+		EllipseBatch::ColorGradient& set_color();
+		const glm::mat3& get_transform() const;
+		glm::mat3& set_transform();
 
-			const EllipseDimension& get_dimension() const;
-			EllipseDimension& set_dimension();
-			const ColorGradient& get_color() const;
-			ColorGradient& set_color();
-			const glm::mat3& get_transform() const;
-			glm::mat3& set_transform();
-
-			void draw() const;
-		};
-		friend class EllipseReference;
+		void draw() const;
 	};
 
 	struct Ellipse
 	{
-		EllipseBatch::EllipseReference ellipse;
+		EllipseReference ellipse;
 		Transformer2D transformer;
 
 		Ellipse(EllipseBatch& batch) : ellipse(batch) {}

@@ -30,7 +30,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct BKG
 {
-	oly::rendering::PolygonRef bkg_rect; // TODO v4 error when using PolygonRef
+	oly::rendering::PolygonRef bkg_rect;
 
 	BKG(oly::rendering::PolygonBatch& batch)
 		: bkg_rect(oly::reg::load_polygon(batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))

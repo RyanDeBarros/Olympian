@@ -37,7 +37,7 @@ namespace oly::rendering
 		return pos_generator.generate();
 	}
 
-	EllipseBatch::EllipseReference::EllipseReference(EllipseBatch& batch)
+	EllipseReference::EllipseReference(EllipseBatch& batch)
 		: batch(batch)
 	{
 		pos = this->batch.generate_id();
@@ -46,7 +46,7 @@ namespace oly::rendering
 		set_transform() = 1.0f;
 	}
 
-	EllipseBatch::EllipseReference::EllipseReference(const EllipseReference& other)
+	EllipseReference::EllipseReference(const EllipseReference& other)
 		: batch(other.batch)
 	{
 		pos = batch.generate_id();
@@ -55,11 +55,11 @@ namespace oly::rendering
 		set_transform() = other.get_transform();
 	}
 
-	EllipseBatch::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
+	EllipseReference::EllipseReference(EllipseReference&& other) noexcept
 		: batch(other.batch)
 	{
-		EllipseDimension dimension = other.get_dimension();
-		ColorGradient color = other.get_color();
+		EllipseBatch::EllipseDimension dimension = other.get_dimension();
+		EllipseBatch::ColorGradient color = other.get_color();
 		glm::mat3 transform = other.get_transform();
 		pos = std::move(other.pos);
 		set_dimension() = dimension;
@@ -67,7 +67,7 @@ namespace oly::rendering
 		set_transform() = transform;
 	}
 
-	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(const EllipseReference& other)
+	EllipseReference& EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
 		{
@@ -78,7 +78,7 @@ namespace oly::rendering
 		return *this;
 	}
 
-	EllipseBatch::EllipseReference& EllipseBatch::EllipseReference::operator=(EllipseReference&& other) noexcept
+	EllipseReference& EllipseReference::operator=(EllipseReference&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -89,37 +89,37 @@ namespace oly::rendering
 		return *this;
 	}
 
-	const EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::get_dimension() const
+	const EllipseBatch::EllipseDimension& EllipseReference::get_dimension() const
 	{
-		return batch.ssbo_block.get<DIMENSION>(pos.get());
+		return batch.ssbo_block.get<EllipseBatch::DIMENSION>(pos.get());
 	}
 
-	EllipseBatch::EllipseDimension& EllipseBatch::EllipseReference::set_dimension()
+	EllipseBatch::EllipseDimension& EllipseReference::set_dimension()
 	{
-		return batch.ssbo_block.set<DIMENSION>(pos.get());
+		return batch.ssbo_block.set<EllipseBatch::DIMENSION>(pos.get());
 	}
 
-	const EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::get_color() const
+	const EllipseBatch::ColorGradient& EllipseReference::get_color() const
 	{
-		return batch.ssbo_block.get<COLOR>(pos.get());
+		return batch.ssbo_block.get<EllipseBatch::COLOR>(pos.get());
 	}
 
-	EllipseBatch::ColorGradient& EllipseBatch::EllipseReference::set_color()
+	EllipseBatch::ColorGradient& EllipseReference::set_color()
 	{
-		return batch.ssbo_block.set<COLOR>(pos.get());
+		return batch.ssbo_block.set<EllipseBatch::COLOR>(pos.get());
 	}
 
-	const glm::mat3& EllipseBatch::EllipseReference::get_transform() const
+	const glm::mat3& EllipseReference::get_transform() const
 	{
-		return batch.ssbo_block.get<TRANSFORM>(pos.get());
+		return batch.ssbo_block.get<EllipseBatch::TRANSFORM>(pos.get());
 	}
 
-	glm::mat3& EllipseBatch::EllipseReference::set_transform()
+	glm::mat3& EllipseReference::set_transform()
 	{
-		return batch.ssbo_block.set<TRANSFORM>(pos.get());
+		return batch.ssbo_block.set<EllipseBatch::TRANSFORM>(pos.get());
 	}
 
-	void EllipseBatch::EllipseReference::draw() const
+	void EllipseReference::draw() const
 	{
 		graphics::quad_indices(batch.ebo.draw_primitive().data(), pos.get());
 	}
@@ -143,7 +143,7 @@ namespace oly::rendering
 	void Ellipse::draw() const
 	{
 		if (transformer.flush())
-			const_cast<EllipseBatch::EllipseReference&>(ellipse).set_transform() = transformer.global();
+			const_cast<EllipseReference&>(ellipse).set_transform() = transformer.global();
 		ellipse.draw();
 	}
 

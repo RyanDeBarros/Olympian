@@ -26,7 +26,7 @@ namespace oly::debug
 			POLYGON,
 			ARROW
 		};
-		using Variant = std::variant<rendering::EllipseBatch::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
+		using Variant = std::variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		CollisionLayer& layer;
 		std::unique_ptr<Variant> v;
@@ -76,7 +76,7 @@ namespace oly::debug
 
 	public:
 		CollisionView(CollisionLayer& layer);
-		CollisionView(CollisionLayer& layer, rendering::EllipseBatch::EllipseReference&& obj);
+		CollisionView(CollisionLayer& layer, rendering::EllipseReference&& obj);
 		CollisionView(CollisionLayer& layer, rendering::StaticPolygon&& obj);
 		CollisionView(CollisionLayer& layer, rendering::StaticArrowExtension&& obj);
 		CollisionView(const CollisionView&);
@@ -95,7 +95,7 @@ namespace oly::debug
 	public:
 		void clear_view();
 		void set_view(CollisionObjectView&& obj);
-		void set_view(rendering::EllipseBatch::EllipseReference&& obj);
+		void set_view(rendering::EllipseReference&& obj);
 		void set_view(rendering::StaticPolygon&& obj);
 		void set_view(rendering::StaticArrowExtension&& obj);
 		size_t view_size() const;

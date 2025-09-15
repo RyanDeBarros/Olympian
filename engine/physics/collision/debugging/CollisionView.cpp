@@ -56,7 +56,7 @@ namespace oly::debug
 		switch (type)
 		{
 		case Type::ELLIPSE:
-			v = std::make_unique<Variant>(rendering::EllipseBatch::EllipseReference(layer.ellipse_batch));
+			v = std::make_unique<Variant>(rendering::EllipseReference(layer.ellipse_batch));
 			break;
 		case Type::POLYGON:
 			v = std::make_unique<Variant>(rendering::StaticPolygon(layer.polygon_batch));
@@ -73,7 +73,7 @@ namespace oly::debug
 		layer.assign(this);
 	}
 
-	CollisionView::CollisionView(CollisionLayer& layer, rendering::EllipseBatch::EllipseReference&& obj)
+	CollisionView::CollisionView(CollisionLayer& layer, rendering::EllipseReference&& obj)
 		: layer(&layer), obj(std::make_unique<CollisionObjectView>(CollisionObject(layer, std::move(obj))))
 	{
 		layer.assign(this);
@@ -215,7 +215,7 @@ namespace oly::debug
 		}
 	}
 
-	void CollisionView::set_view(rendering::EllipseBatch::EllipseReference&& obj)
+	void CollisionView::set_view(rendering::EllipseReference&& obj)
 	{
 		if (valid())
 			set_view(CollisionObjectView(CollisionObject(*layer, std::move(obj))));
@@ -396,7 +396,7 @@ namespace oly::debug
 
 		static const auto update_color = [](CollisionObject& obj, glm::vec4 color) {
 			std::visit([color](auto&& obj) {
-				if constexpr (visiting_class_is<decltype(obj), rendering::EllipseBatch::EllipseReference>)
+				if constexpr (visiting_class_is<decltype(obj), rendering::EllipseReference>)
 					obj.set_color().fill_outer = color;
 				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticPolygon>)
 				{
@@ -576,7 +576,7 @@ namespace oly::debug
 
 	CollisionObject CollisionLayer::default_collision_object()
 	{
-		return CollisionObject(*this, rendering::EllipseBatch::EllipseReference(ellipse_batch));
+		return CollisionObject(*this, rendering::EllipseReference(ellipse_batch));
 	}
 
 	void CollisionLayer::setup_texture()

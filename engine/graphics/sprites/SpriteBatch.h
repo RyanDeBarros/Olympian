@@ -155,6 +155,7 @@ namespace oly::rendering
 
 	namespace internal
 	{
+		// TODO v4 support setting different batch
 		struct SpriteReference
 		{
 			SpriteBatch& batch;
