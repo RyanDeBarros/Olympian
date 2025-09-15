@@ -1,6 +1,8 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 
 uniform mat3 uProjection;
+uniform vec4 uGlobalModulation;
 uniform float uTime;
 
 struct TexData
@@ -12,15 +14,15 @@ layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
-// TODO v4 can implement clever compression techniques to reduce size of info when adding more properties.
-
 struct QuadInfo
 {
-	uint texSlot;
-	uint texCoordSlot;
-	uint colorSlot;
-	uint frameSlot;
-	uint isTextGlyph;
+	uint16_t texSlot;
+	uint16_t texCoordSlot;
+	uint16_t colorSlot;
+	uint16_t frameSlot;
+	uint16_t isTextGlyph;
+	uint16_t modTexSlot;
+	uint16_t modTexCoordSlot;
 };
 layout(std430, binding = 1) readonly buffer QuadInfos {
 	QuadInfo uQuadInfo[];
@@ -67,26 +69,30 @@ vec2 calc_tex_coords(vec4 uvs) {
 	return vec2(uvs[((gl_VertexID + 1) >> 1) & 1], uvs[2 + ((gl_VertexID >> 1) & 1)]);
 }
 
-uint calc_frame(AnimFrameFormat anim) {
+uint16_t calc_frame(AnimFrameFormat anim) {
 	int frame_offset = anim.delay_seconds == 0.0 ? 0 : int(floor((uTime - anim.starting_time) / anim.delay_seconds));
-	return (anim.starting_frame + frame_offset) % anim.num_frames;
+	return uint16_t((anim.starting_frame + frame_offset) % anim.num_frames);
 }
 
 out vec2 tTexCoord;
-flat out uint tTexSlot;
+flat out uint16_t tTexSlot;
 flat out vec4 tModulation;
-flat out uint tFramePlusOne;
-flat out uint tIsTextGlyph;
+flat out uint16_t tFramePlusOne;
+flat out uint16_t tIsTextGlyph;
+out vec2 tModTexCoord;
+flat out uint16_t tModTexSlot;
 
 void main() {
 	QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
-	if (quad.texSlot > 0) { // TODO v4 don't use 1-indexed buffers
+	if (quad.texSlot > uint16_t(0)) { // TODO v4 don't use 1-indexed buffers
 		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
-		tModulation = uModulation[quad.colorSlot];
+		tModulation = uGlobalModulation * uModulation[quad.colorSlot];
+		tFramePlusOne = quad.frameSlot > uint16_t(0) ? uint16_t(1) + calc_frame(uAnims[quad.frameSlot]) : uint16_t(0);
 		tIsTextGlyph = quad.isTextGlyph;
-		tFramePlusOne = quad.frameSlot > 0 ? 1 + calc_frame(uAnims[quad.frameSlot]) : 0;
+		tModTexCoord = calc_tex_coords(uTexCoords[quad.modTexCoordSlot]);
+		tModTexSlot = quad.modTexSlot;
 	} else {
 		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
 	}

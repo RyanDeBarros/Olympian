@@ -1,15 +1,16 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 #extension GL_ARB_bindless_texture : require
-
-uniform vec4 uGlobalModulation;
 
 layout(location = 0) out vec4 oColor;
 
 in vec2 tTexCoord;
-flat in uint tTexSlot;
+flat in uint16_t tTexSlot;
 flat in vec4 tModulation;
-flat in uint tFramePlusOne;
-flat in uint tIsTextGlyph;
+flat in uint16_t tFramePlusOne;
+flat in uint16_t tIsTextGlyph;
+in vec2 tModTexCoord;
+flat in uint16_t tModTexSlot;
 
 struct TexData
 {
@@ -20,14 +21,20 @@ layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
+vec4 sampleModTex() {
+	return tModTexSlot > uint16_t(0) ? texture(sampler2D(uTexData[tModTexSlot].handle), tModTexCoord) : vec4(1.0);
+}
+
 void main() {
-	if (tIsTextGlyph == 0) {
-		if (tFramePlusOne == 0)
-			oColor = uGlobalModulation * tModulation * texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
+	vec4 baseColor;
+	if (tIsTextGlyph == uint16_t(0)) {
+		if (tFramePlusOne == uint16_t(0))
+			baseColor = texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord);
 		else
-			oColor = uGlobalModulation * tModulation * texture(sampler2DArray(uTexData[tTexSlot].handle), vec3(tTexCoord.x, tTexCoord.y, tFramePlusOne - 1));
+			baseColor = texture(sampler2DArray(uTexData[tTexSlot].handle), vec3(tTexCoord.x, tTexCoord.y, tFramePlusOne - uint16_t(1)));
 	} else {
 		float alpha = texture(sampler2D(uTexData[tTexSlot].handle), tTexCoord).r;
-		oColor = uGlobalModulation * mix(vec4(0.0), tModulation, alpha);
+		baseColor = mix(vec4(0.0), vec4(1.0), alpha);
 	}
+	oColor = tModulation * sampleModTex() * baseColor;
 }

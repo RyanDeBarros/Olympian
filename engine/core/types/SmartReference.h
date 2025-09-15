@@ -679,7 +679,7 @@ namespace oly
 			if (valid())
 				return other.valid() && pool_idx == other.pool_idx;
 			else
-				return other.valid();
+				return !other.valid();
 		}
 
 	private:

@@ -10,25 +10,25 @@ namespace oly::internal
 			switch (err)
 			{
 			case GL_INVALID_ENUM:
-				description = "invalid enum";
+				description = "Invalid Enum";
 				break;
 			case GL_INVALID_VALUE:
-				description = "invalid value";
+				description = "Invalid Value";
 				break;
 			case GL_INVALID_OPERATION:
-				description = "invalid operation";
+				description = "Invalid Operation";
 				break;
 			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				description = "invalid framebuffer operation";
+				description = "Invalid Framebuffer Operation";
 				break;
 			case GL_OUT_OF_MEMORY:
-				description = "out of memory";
+				description = "Out of Memory";
 				break;
 			case GL_STACK_UNDERFLOW:
-				description = "stack underflow";
+				description = "Stack Underflow";
 				break;
 			case GL_STACK_OVERFLOW:
-				description = "stack overflow";
+				description = "Stack Overflow";
 				break;
 			}
 			OLY_LOG_ERROR(LOG.opengl(err)) << description << LOG.nl;

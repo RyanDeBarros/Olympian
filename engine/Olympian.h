@@ -14,6 +14,7 @@
 
 #include "graphics/backend/basic/Framebuffers.h"
 #include "graphics/resources/Samplers.h"
+#include "graphics/resources/Textures.h"
 #include "graphics/Stencil.h"
 
 #include "graphics/sprites/Sprite.h"

@@ -9,7 +9,7 @@
 
 namespace oly::graphics
 {
-	template<typename StoredObjectType, typename StoredObjectTypeHash = std::hash<StoredObjectType>>
+	template<typename StoredObjectType, std::integral SlotType, typename StoredObjectTypeHash = std::hash<StoredObjectType>>
 	class UsageSlotTracker
 	{
 		struct UsageHolder
@@ -18,11 +18,11 @@ namespace oly::graphics
 			GLuint usage = 0;
 		};
 
-		std::unordered_map<GLuint, UsageHolder> usages;
-		std::unordered_map<StoredObjectType, GLuint, StoredObjectTypeHash> slot_lookup;
-		SoftIDGenerator<GLuint> pos_generator;
+		std::unordered_map<SlotType, UsageHolder> usages;
+		std::unordered_map<StoredObjectType, SlotType, StoredObjectTypeHash> slot_lookup;
+		SoftIDGenerator<SlotType> pos_generator;
 
-		std::optional<StoredObjectType> _decrement_usage(GLuint i)
+		std::optional<StoredObjectType> _decrement_usage(SlotType i)
 		{
 			auto it = usages.find(i);
 			--it->second.usage;
@@ -44,7 +44,7 @@ namespace oly::graphics
 	public:
 		UsageSlotTracker() { pos_generator.gen(); /* waste 0th slot */ }
 
-		std::optional<StoredObjectType> decrement_usage(GLuint i)
+		std::optional<StoredObjectType> decrement_usage(SlotType i)
 		{
 			if (i != 0)
 				return _decrement_usage(i);
@@ -52,13 +52,13 @@ namespace oly::graphics
 				return std::nullopt;
 		}
 
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj)
+		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj)
 		{
-			return set_object<StoredObjectType>(buffer, slot, pos, stored_obj, stored_obj);
+			return set_object<StoredObjectType>(buffer, slot, stored_obj, stored_obj);
 		}
 
 		template<typename BufferObjectType>
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, GLuint& slot, GLuint pos, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
+		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
 		{
 			if (stored_obj == StoredObjectType{}) // remove object from sprite
 			{
@@ -98,17 +98,17 @@ namespace oly::graphics
 			return true; // slot has changed
 		}
 
-		const StoredObjectType& get_object(GLuint slot) const
+		const StoredObjectType& get_object(SlotType slot) const
 		{
 			return usages.find(slot)->second.obj;
 		}
 
-		StoredObjectType& get_object(GLuint slot)
+		StoredObjectType& get_object(SlotType slot)
 		{
 			return usages.find(slot)->second.obj;
 		}
 
-		bool get_slot(const StoredObjectType& obj, GLuint& slot) const
+		bool get_slot(const StoredObjectType& obj, SlotType& slot) const
 		{
 			auto it = slot_lookup.find(obj);
 			if (it != slot_lookup.end())

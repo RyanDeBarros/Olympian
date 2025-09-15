@@ -4,6 +4,7 @@
 #include "core/context/rendering/Sprites.h"
 #include "registries/graphics/TextureRegistry.h"
 #include "registries/graphics/sprites/Sprites.h"
+#include "Textures.h"
 
 namespace oly::context
 {

@@ -259,6 +259,14 @@ int main()
 		oly::context::sync_texture_handle(flag_texture);
 		}, false);
 
+	auto modtex = oly::graphics::textures::mod2x2(
+		glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f },
+		glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f },
+		glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f },
+		glm::vec4{ 1.0f, 1.0f, 0.0f, 1.0f }
+	);
+	pipeline.jumble.nonant_panel->set_mod_texture(modtex, { 2, 2 });
+
 	// TODO v5 begin play on initial actors here
 
 	while (oly::context::frame())

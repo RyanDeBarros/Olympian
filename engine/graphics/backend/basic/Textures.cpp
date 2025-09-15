@@ -97,6 +97,7 @@ namespace oly::graphics
 	void BindlessTexture::set_handle(GLuint sampler)
 	{
 		disuse_handle();
+		// TODO v4 not likely that samplers will change, especially not quickly. So no need to cache handles.
 		for (auto iter = _sampler_handles.begin(); iter != _sampler_handles.end(); ++iter)
 		{
 			if (iter->first == sampler)
@@ -136,6 +137,8 @@ namespace oly::graphics
 			: cpp == 3 ? GL_RGB
 			: GL_RGBA;
 	}
+
+	// TODO v4 context manager for pre/post send.
 
 	void pixel_alignment_pre_send(int cpp)
 	{

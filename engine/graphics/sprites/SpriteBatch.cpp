@@ -78,21 +78,26 @@ namespace oly::rendering
 
 	void SpriteBatch::erase_sprite_id(const SpriteID& id)
 	{
-		if (id.is_valid())
-		{
-			const QuadInfo& quad_info = quad_ssbo_block.buf.at<INFO>(id.get());
-			if (auto texture = quad_info_store.textures.decrement_usage(quad_info.tex_slot))
+		const auto decrement_texture = [this](GLushort slot) {
+			if (auto texture = quad_info_store.textures.decrement_usage(slot))
 			{
 				auto& map = quad_info_store.dimensionless_texture_slot_map;
 				auto it = map.find(texture.value().texture);
 				if (it != map.end())
 				{
 					auto& slots = it->second;
-					slots.erase(quad_info.tex_slot);
+					slots.erase(slot);
 					if (slots.empty())
 						map.erase(it);
 				}
 			}
+			};
+
+		if (id.is_valid())
+		{
+			const QuadInfo& quad_info = quad_ssbo_block.buf.at<INFO>(id.get());
+			decrement_texture(quad_info.tex_slot);
+			decrement_texture(quad_info.mod_tex_slot);
 			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
 		}
@@ -101,7 +106,7 @@ namespace oly::rendering
 	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, vb_pos, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
 		{
 			quad_ssbo_block.flag<INFO>(vb_pos);
 			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);
@@ -110,25 +115,42 @@ namespace oly::rendering
 
 	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::Rect2D uvs)
 	{
-		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, vb_pos, uvs))
+		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
 	void SpriteBatch::set_modulation(GLuint vb_pos, glm::vec4 modulation)
 	{
-		if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, vb_pos, modulation))
+		if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, modulation))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
 	void SpriteBatch::set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim)
 	{
-		if (quad_info_store.anims.set_object(ubo.anim, quad_ssbo_block.buf.at<INFO>(vb_pos).frame_slot, vb_pos, anim))
+		if (quad_info_store.anims.set_object(ubo.anim, quad_ssbo_block.buf.at<INFO>(vb_pos).frame_slot, anim))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
 	void SpriteBatch::set_text_glyph(GLuint vb_pos, bool is_text_glyph)
 	{
 		set_quad_info(vb_pos).is_text_glyph = is_text_glyph;
+	}
+
+	void SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+	{
+		auto& mod_tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_slot;
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, mod_tex_slot, QuadInfoStore::SizedTexture{ texture, texture ? dimensions : glm::vec2(0.0f) },
+			TexData{texture ? texture->get_handle() : 0, texture ? dimensions : glm::vec2(0.0f) }))
+		{
+			quad_ssbo_block.flag<INFO>(vb_pos);
+			quad_info_store.dimensionless_texture_slot_map[texture].insert(mod_tex_slot);
+		}
+	}
+
+	void SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::Rect2D uvs)
+	{
+		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_coord_slot, uvs))
+			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
 	graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
@@ -162,6 +184,22 @@ namespace oly::rendering
 	bool SpriteBatch::is_text_glyph(GLuint vb_pos) const
 	{
 		return get_quad_info(vb_pos).is_text_glyph;
+	}
+
+	graphics::BindlessTextureRef SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const
+	{
+		GLuint slot = get_quad_info(vb_pos).mod_tex_slot;
+		if (slot == 0)
+			return nullptr;
+		QuadInfoStore::SizedTexture tex = quad_info_store.textures.get_object(slot);
+		dimensions = tex.dimensions;
+		return tex.texture;
+	}
+
+	math::Rect2D SpriteBatch::get_mod_tex_coords(GLuint vb_pos) const
+	{
+		GLuint slot = get_quad_info(vb_pos).mod_tex_coord_slot;
+		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::Rect2D{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
 	}
 
 	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
@@ -252,6 +290,27 @@ namespace oly::rendering
 		batch.set_text_glyph(id.get(), is_text_glyph);
 	}
 
+	void internal::SpriteReference::set_mod_texture(const std::string& texture_file, unsigned int texture_index) const
+	{
+		auto texture = context::load_texture(texture_file, texture_index);
+		batch.set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
+	}
+
+	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture) const
+	{
+		batch.set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture));
+	}
+
+	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
+	{
+		batch.set_mod_texture(id.get(), texture, dimensions);
+	}
+
+	void internal::SpriteReference::set_mod_tex_coords(math::Rect2D rect) const
+	{
+		batch.set_mod_tex_coords(id.get(), rect);
+	}
+
 	void internal::SpriteReference::set_transform(const glm::mat3& transform) const
 	{
 		batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id.get()) = transform;
@@ -286,6 +345,22 @@ namespace oly::rendering
 	bool internal::SpriteReference::is_text_glyph() const
 	{
 		return batch.is_text_glyph(id.get());
+	}
+
+	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture() const
+	{
+		glm::vec2 _;
+		return batch.get_mod_texture(id.get(), _);
+	}
+
+	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture(glm::vec2& dimensions) const
+	{
+		return batch.get_mod_texture(id.get(), dimensions);
+	}
+
+	math::Rect2D internal::SpriteReference::get_mod_tex_coords() const
+	{
+		return batch.get_mod_tex_coords(id.get());
 	}
 
 	glm::mat3 internal::SpriteReference::get_transform() const
