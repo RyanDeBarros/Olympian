@@ -155,7 +155,7 @@ namespace oly::col2d
 			}
 		}
 
-		data = nullptr;
+		delete data;
 	}
 
 	size_t internal::CollisionDispatcher::add_tree(const math::Rect2D bounds, const glm::uvec2 degree, const size_t cell_capacity)
