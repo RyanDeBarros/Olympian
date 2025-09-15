@@ -7,7 +7,7 @@ namespace oly::rendering
 	struct SpriteAtlas
 	{
 		Sprite sprite;
-		std::vector<math::Rect2D> atlas;
+		std::vector<math::UVRect> atlas;
 		graphics::AnimFrameFormat anim_format;
 
 		SpriteAtlas(SpriteBatch* batch = nullptr);

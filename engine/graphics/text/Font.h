@@ -104,7 +104,7 @@ namespace oly::rendering
 		float get_ascent() const;
 		float get_descent() const;
 		float get_linegap() const;
-		math::Rect2D uvs(const FontGlyph& glyph) const;
+		math::UVRect uvs(const FontGlyph& glyph) const;
 		float get_scale() const { return scale; }
 		float get_space_width() const { return space_width; }
 	};

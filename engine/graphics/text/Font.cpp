@@ -234,24 +234,19 @@ namespace oly
 			return linegap * scale;
 		}
 
-		math::Rect2D FontAtlas::uvs(const FontGlyph& glyph) const
+		math::UVRect FontAtlas::uvs(const FontGlyph& glyph) const
 		{
-			math::Rect2D b{};
-			if (glyph.buffer_pos != size_t(-1))
+			if (glyph.buffer_pos != size_t(-1)) [[likely]]
 			{
-				b.x1 = float(glyph.buffer_pos + 1) / common_dim.w;
-				b.x2 = float(glyph.buffer_pos + 1 + glyph.box.width()) / common_dim.w;
-				b.y1 = 0.0f;
-				b.y2 = float(glyph.box.height()) / common_dim.h;
+				return {
+					.x1 = float(glyph.buffer_pos + 1) / common_dim.w,
+					.x2 = float(glyph.buffer_pos + 1 + glyph.box.width()) / common_dim.w,
+					.y1 = 0.0f,
+					.y2 = float(glyph.box.height()) / common_dim.h
+				};
 			}
 			else
-			{
-				b.x1 = 0.0f;
-				b.x2 = 1.0f;
-				b.y1 = 0.0f;
-				b.y2 = 1.0f;
-			}
-			return b;
+				return {};
 		}
 	}
 }

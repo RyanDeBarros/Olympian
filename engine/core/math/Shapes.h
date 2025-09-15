@@ -70,6 +70,21 @@ namespace oly::math
 
 		bool operator==(const IRect2D&) const = default;
 	};
+
+	struct UVRect
+	{
+		float x1 = 0.0f, x2 = 1.0f, y1 = 0.0f, y2 = 1.0f;
+
+		float interp_x(float alpha) const { return (x2 - x1) * alpha + x1; }
+		float interp_y(float alpha) const { return (y2 - y1) * alpha + y1; }
+
+		static UVRect from_grid(unsigned int row, unsigned int col, unsigned int rows, unsigned int cols)
+		{
+			return { .x1 = col / (float)cols, .x2 = (col + 1) / (float)cols, .y1 = row / (float)rows, .y2 = (row + 1) / (float)rows };
+		}
+
+		bool operator==(const UVRect&) const = default;
+	};
 }
 
 template<>
@@ -89,5 +104,15 @@ struct std::hash<oly::math::IRect2D>
 	{
 		return std::hash<int>{}(r.x1) ^ (std::hash<int>{}(r.x2) << 1) ^ (std::hash<int>{}(r.y1) << 2)
 			^ (std::hash<int>{}(r.y2) << 3);
+	}
+};
+
+template<>
+struct std::hash<oly::math::UVRect>
+{
+	size_t operator()(oly::math::UVRect r) const
+	{
+		return std::hash<float>{}(r.x1) ^ (std::hash<float>{}(r.x2) << 1) ^ (std::hash<float>{}(r.y1) << 2)
+			^ (std::hash<float>{}(r.y2) << 3);
 	}
 };

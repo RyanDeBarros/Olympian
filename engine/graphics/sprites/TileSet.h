@@ -87,7 +87,7 @@ namespace oly::rendering
 		struct TileDesc
 		{
 			std::string name;
-			math::Rect2D uvs = { 0, 1, 0, 1 };
+			math::UVRect uvs;
 
 			bool operator==(const TileDesc&) const = default;
 		};

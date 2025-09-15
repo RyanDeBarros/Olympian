@@ -39,22 +39,19 @@ namespace oly::rendering
 	void SpriteAtlas::setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major, bool row_up)
 	{
 		atlas.clear();
-		static const auto uv_rect = [](GLuint row, GLuint col, GLuint rows, GLuint cols) -> math::Rect2D {
-			return { .x1 = col / (float)cols, .x2 = (col + 1) / (float)cols, .y1 = row / (float)rows, .y2 = (row + 1) / (float)rows };
-			};
 		if (row_major)
 		{
 			if (row_up)
 			{
 				for (GLuint row = 0; row < rows; ++row)
 					for (GLuint col = 0; col < cols; ++col)
-						atlas.push_back(uv_rect(row, col, rows, cols));
+						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
 			}
 			else
 			{
 				for (int row = rows - 1; row >= 0; --row)
 					for (GLuint col = 0; col < cols; ++col)
-						atlas.push_back(uv_rect(row, col, rows, cols));
+						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
 			}
 		}
 		else
@@ -63,13 +60,13 @@ namespace oly::rendering
 			{
 				for (GLuint col = 0; col < cols; ++col)
 					for (GLuint row = 0; row < rows; ++row)
-						atlas.push_back(uv_rect(row, col, rows, cols));
+						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
 			}
 			else
 			{
 				for (GLuint col = 0; col < cols; ++col)
 					for (int row = rows - 1; row >= 0; --row)
-						atlas.push_back(uv_rect(row, col, rows, cols));
+						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
 			}
 		}
 		uvs_changed();

@@ -143,7 +143,7 @@ namespace oly::rendering
 				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
 			};
 			graphics::UsageSlotTracker<SizedTexture, GLushort, SizedTextureHash> textures;
-			graphics::UsageSlotTracker<math::Rect2D, GLushort> tex_coords;
+			graphics::UsageSlotTracker<math::UVRect, GLushort> tex_coords;
 			graphics::UsageSlotTracker<glm::vec4, GLushort> modulations;
 			graphics::UsageSlotTracker<graphics::AnimFrameFormat, GLushort, AnimHash> anims;
 
@@ -151,20 +151,20 @@ namespace oly::rendering
 		} quad_info_store;
 
 		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
-		void set_tex_coords(GLuint vb_pos, math::Rect2D uvs);
+		void set_tex_coords(GLuint vb_pos, math::UVRect uvs);
 		void set_modulation(GLuint vb_pos, glm::vec4 modulation);
 		void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
 		void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
 		void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
-		void set_mod_tex_coords(GLuint vb_pos, math::Rect2D uvs);
+		void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
 
 		graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
-		math::Rect2D get_tex_coords(GLuint vb_pos) const;
+		math::UVRect get_tex_coords(GLuint vb_pos) const;
 		glm::vec4 get_modulation(GLuint vb_pos) const;
 		graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 		bool is_text_glyph(GLuint vb_pos) const;
 		graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
-		math::Rect2D get_mod_tex_coords(GLuint vb_pos) const;
+		math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
 
 	public:
 		void update_texture_handle(const graphics::BindlessTextureRef& texture);
@@ -190,25 +190,25 @@ namespace oly::rendering
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
-			void set_tex_coords(math::Rect2D uvs) const;
+			void set_tex_coords(math::UVRect uvs) const;
 			void set_modulation(glm::vec4 modulation) const;
 			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 			void set_text_glyph(bool is_text_glyph) const;
 			void set_mod_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
-			void set_mod_tex_coords(math::Rect2D uvs) const;
+			void set_mod_tex_coords(math::UVRect uvs) const;
 			void set_transform(const glm::mat3& transform) const;
 
 			graphics::BindlessTextureRef get_texture() const;
 			graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
-			math::Rect2D get_tex_coords() const;
+			math::UVRect get_tex_coords() const;
 			glm::vec4 get_modulation() const;
 			graphics::AnimFrameFormat get_frame_format() const;
 			bool is_text_glyph() const;
 			graphics::BindlessTextureRef get_mod_texture() const;
 			graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
-			math::Rect2D get_mod_tex_coords() const;
+			math::UVRect get_mod_tex_coords() const;
 			glm::mat3 get_transform() const;
 
 			std::invoke_result_t<decltype(&decltype(SpriteBatch::ebo)::draw_primitive), decltype(SpriteBatch::ebo)> draw_primitive() const;

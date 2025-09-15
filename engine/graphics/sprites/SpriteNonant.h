@@ -13,10 +13,10 @@ namespace oly::rendering
 
 		glm::vec2 nsize{};
 		glm::vec2 regular_dimensions{};
-		math::Rect2D regular_uvs{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
+		math::UVRect regular_uvs;
 		glm::vec4 regular_modulation = glm::vec4(1.0f);
 		glm::vec2 regular_mod_dimensions{};
-		math::Rect2D regular_mod_uvs{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
+		math::UVRect regular_mod_uvs;
 
 		struct
 		{
@@ -48,22 +48,22 @@ namespace oly::rendering
 		void set_texture(const std::string& texture_file, unsigned int texture_index = 0);
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_texture(const graphics::BindlessTextureRef& texture);
-		void set_tex_coords(const math::Rect2D& rect);
+		void set_tex_coords(math::UVRect rect);
 		void set_modulation(glm::vec4 modulation);
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 		void set_mod_texture(const std::string& texture_file, unsigned int texture_index = 0);
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_mod_texture(const graphics::BindlessTextureRef& texture);
-		void set_mod_tex_coords(const math::Rect2D& rect);
+		void set_mod_tex_coords(math::UVRect rect);
 
 		graphics::BindlessTextureRef get_texture() const;
 		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
-		math::Rect2D get_tex_coords() const;
+		math::UVRect get_tex_coords() const;
 		glm::vec4 get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;
 		graphics::BindlessTextureRef get_mod_texture() const;
 		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
-		math::Rect2D get_mod_tex_coords() const;
+		math::UVRect get_mod_tex_coords() const;
 
 		void set_x_left_offset(float xoff);
 		void set_x_right_offset(float xoff);

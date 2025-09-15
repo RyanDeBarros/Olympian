@@ -110,7 +110,7 @@ namespace oly::rendering
 		dirty.mod_grid = true;
 	}
 
-	void SpriteNonant::set_tex_coords(const math::Rect2D& rect)
+	void SpriteNonant::set_tex_coords(math::UVRect rect)
 	{
 		regular_uvs = rect;
 		dirty.grid = true;
@@ -154,7 +154,7 @@ namespace oly::rendering
 		regular_mod_dimensions = dimensions;
 	}
 
-	void SpriteNonant::set_mod_tex_coords(const math::Rect2D& rect)
+	void SpriteNonant::set_mod_tex_coords(math::UVRect rect)
 	{
 		regular_mod_uvs = rect;
 		dirty.mod_grid = true;
@@ -171,7 +171,7 @@ namespace oly::rendering
 		return sprite(0, 0).get_texture();
 	}
 
-	math::Rect2D SpriteNonant::get_tex_coords() const
+	math::UVRect SpriteNonant::get_tex_coords() const
 	{
 		return regular_uvs;
 	}
@@ -197,7 +197,7 @@ namespace oly::rendering
 		return sprite(0, 0).get_mod_texture();
 	}
 
-	math::Rect2D SpriteNonant::get_mod_tex_coords() const
+	math::UVRect SpriteNonant::get_mod_tex_coords() const
 	{
 		return regular_mod_uvs;
 	}
@@ -301,8 +301,8 @@ namespace oly::rendering
 
 		for (size_t n = 0; n < 4; ++n)
 		{
-			xuvs[n] = xuvs[n] * (regular_uvs.x2 - regular_uvs.x1) + regular_uvs.x1;
-			yuvs[n] = yuvs[n] * (regular_uvs.y2 - regular_uvs.y1) + regular_uvs.y1;
+			xuvs[n] = regular_uvs.interp_x(xuvs[n]);
+			yuvs[n] = regular_uvs.interp_y(yuvs[n]);
 		}
 
 		float widths[3]{ offsets.x_left, nsize.x - offsets.x_left - offsets.x_right, offsets.x_right };
@@ -314,7 +314,7 @@ namespace oly::rendering
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
 			{
-				sprite(x, y).set_tex_coords(math::Rect2D{.x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1]});
+				sprite(x, y).set_tex_coords({.x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1]});
 				glm::vec2 size = { widths[x], heights[y] };
 				sprite(x, y).transformer.ref_modifier<PivotTransformModifier2D>().size = size;
 				Transform2D& local = sprite(x, y).set_local();
@@ -341,12 +341,12 @@ namespace oly::rendering
 
 		for (size_t n = 0; n < 4; ++n)
 		{
-			xuvs[n] = xuvs[n] * regular_mod_uvs.width() + regular_mod_uvs.x1;
-			yuvs[n] = yuvs[n] * regular_mod_uvs.height() + regular_mod_uvs.y1;
+			xuvs[n] = regular_mod_uvs.interp_x(xuvs[n]);
+			yuvs[n] = regular_mod_uvs.interp_y(yuvs[n]);
 		}
 
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
-				sprite(x, y).set_mod_tex_coords(math::Rect2D{ .x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1] });
+				sprite(x, y).set_mod_tex_coords({ .x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1] });
 	}
 }

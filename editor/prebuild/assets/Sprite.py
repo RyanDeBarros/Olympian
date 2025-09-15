@@ -13,7 +13,7 @@ def params_constructor(sprite, name) -> str:
 		c += f"\t\t\t{name}.modulation = {{ (float){sprite['modulation'][0]}, (float){sprite['modulation'][1]}, (float){sprite['modulation'][2]}, (float){sprite['modulation'][3]} }};\n"
 
 	if 'tex_coords' in sprite:
-		c += f"\t\t\t{name}.tex_coords = math::Rect2D{{ .x1 = (float){sprite['tex_coords'][0]}, .x2 = (float){sprite['tex_coords'][1]}, .y1 = (float){sprite['tex_coords'][2]}, .y2 = (float){sprite['tex_coords'][3]} }};\n"
+		c += f"\t\t\t{name}.tex_coords = {{ .x1 = (float){sprite['tex_coords'][0]}, .x2 = (float){sprite['tex_coords'][1]}, .y1 = (float){sprite['tex_coords'][2]}, .y2 = (float){sprite['tex_coords'][3]} }};\n"
 
 	if 'frame_format' in sprite:
 		frame_format = sprite['frame_format']

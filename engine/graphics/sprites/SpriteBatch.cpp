@@ -113,7 +113,7 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::Rect2D uvs)
+	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::UVRect uvs)
 	{
 		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
@@ -147,7 +147,7 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::Rect2D uvs)
+	void SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs)
 	{
 		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_coord_slot, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
@@ -163,10 +163,10 @@ namespace oly::rendering
 		return tex.texture;
 	}
 
-	math::Rect2D SpriteBatch::get_tex_coords(GLuint vb_pos) const
+	math::UVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
 	{
 		GLuint slot = get_quad_info(vb_pos).tex_coord_slot;
-		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::Rect2D{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
+		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::UVRect{};
 	}
 
 	glm::vec4 SpriteBatch::get_modulation(GLuint vb_pos) const
@@ -196,10 +196,10 @@ namespace oly::rendering
 		return tex.texture;
 	}
 
-	math::Rect2D SpriteBatch::get_mod_tex_coords(GLuint vb_pos) const
+	math::UVRect SpriteBatch::get_mod_tex_coords(GLuint vb_pos) const
 	{
 		GLuint slot = get_quad_info(vb_pos).mod_tex_coord_slot;
-		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::Rect2D{ .x1 = 0.0f, .x2 = 1.0f, .y1 = 0.0f, .y2 = 1.0f };
+		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::UVRect{};
 	}
 
 	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
@@ -270,7 +270,7 @@ namespace oly::rendering
 		batch.set_texture(id.get(), texture, dimensions);
 	}
 
-	void internal::SpriteReference::set_tex_coords(math::Rect2D rect) const
+	void internal::SpriteReference::set_tex_coords(math::UVRect rect) const
 	{
 		batch.set_tex_coords(id.get(), rect);
 	}
@@ -306,7 +306,7 @@ namespace oly::rendering
 		batch.set_mod_texture(id.get(), texture, dimensions);
 	}
 
-	void internal::SpriteReference::set_mod_tex_coords(math::Rect2D rect) const
+	void internal::SpriteReference::set_mod_tex_coords(math::UVRect rect) const
 	{
 		batch.set_mod_tex_coords(id.get(), rect);
 	}
@@ -327,7 +327,7 @@ namespace oly::rendering
 		return batch.get_texture(id.get(), dimensions);
 	}
 
-	math::Rect2D internal::SpriteReference::get_tex_coords() const
+	math::UVRect internal::SpriteReference::get_tex_coords() const
 	{
 		return batch.get_tex_coords(id.get());
 	}
@@ -358,7 +358,7 @@ namespace oly::rendering
 		return batch.get_mod_texture(id.get(), dimensions);
 	}
 
-	math::Rect2D internal::SpriteReference::get_mod_tex_coords() const
+	math::UVRect internal::SpriteReference::get_mod_tex_coords() const
 	{
 		return batch.get_mod_tex_coords(id.get());
 	}

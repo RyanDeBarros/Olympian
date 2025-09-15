@@ -72,12 +72,7 @@ namespace oly::rendering
 		auto& bkg_modifier = bkg.transformer.ref_modifier<PivotTransformModifier2D>();
 		bkg_modifier.size = size() + 2.0f * format.padding;
 		bkg_modifier.pivot = format.pivot;
-		math::Rect2D vps{};
-		vps.x1 = -0.5f * width() - format.padding.x;
-		vps.x2 = -vps.x1;
-		vps.y1 = -0.5f * height() - format.padding.y;
-		vps.y2 = -vps.y1;
-		bkg.set_local() = { .position = vps.center(), .scale = vps.size() };
+		bkg.set_local().scale = bkg_modifier.size;
 	}
 
 	void Paragraph::build_page()
