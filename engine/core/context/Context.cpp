@@ -178,7 +178,7 @@ namespace oly::context
 
 	std::string resource_file(const std::string& file)
 	{
-		return internal::resource_root + file;
+		return internal::resource_root + file.substr(strlen(OLY_RES_PREFIX));
 	}
 
 	toml::parse_result load_toml(const char* file)

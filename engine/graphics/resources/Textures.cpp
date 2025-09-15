@@ -6,7 +6,6 @@
 
 namespace oly::graphics::textures
 {
-	// TODO v4 load these from actual image files in internal/textures. Allow assets to access them using a special filepath format - instead of RES://, use some other prefix. Also, when loading textures in general, use these prefixes.
 	BindlessTextureRef white1x1;
 
 	void internal::load()

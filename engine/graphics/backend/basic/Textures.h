@@ -36,8 +36,6 @@ namespace oly::graphics
 	{
 		Texture t;
 		GLuint64 handle = 0;
-		GLuint64 _tex_handle = 0;
-		std::vector<std::pair<GLuint, GLuint64>> _sampler_handles;
 
 	public:
 		BindlessTexture();
@@ -49,10 +47,10 @@ namespace oly::graphics
 		BindlessTexture& operator=(BindlessTexture&&) noexcept;
 
 		operator GLuint () const { return t; }
-		void set_handle(); // texture becomes immutable
-		void set_handle(GLuint sampler); // texture becomes immutable
-		void set_and_use_handle() { set_handle(); use_handle(); }  // texture becomes immutable
-		void set_and_use_handle(GLuint sampler) { set_handle(sampler); use_handle(); }  // texture becomes immutable
+		void set_handle();
+		void set_handle(GLuint sampler);
+		void set_and_use_handle() { set_handle(); use_handle(); }
+		void set_and_use_handle(GLuint sampler) { set_handle(sampler); use_handle(); }
 		GLuint64 get_handle() const { return handle; }
 		void use_handle() const;
 		void disuse_handle() const;
@@ -62,8 +60,17 @@ namespace oly::graphics
 
 	extern GLenum texture_internal_format(int cpp);
 	extern GLenum texture_format(int cpp);
-	extern void pixel_alignment_pre_send(int cpp);
-	extern void pixel_alignment_post_send(int cpp);
+	
+	class ScopedPixelAlignment
+	{
+		int cpp;
+
+	public:
+		ScopedPixelAlignment(int cpp);
+		ScopedPixelAlignment(const ScopedPixelAlignment&) = delete;
+		ScopedPixelAlignment(ScopedPixelAlignment&&) = delete;
+		~ScopedPixelAlignment();
+	};
 
 	struct ImageDimensions
 	{
@@ -73,7 +80,7 @@ namespace oly::graphics
 		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
 	};
 
-	// TODO v5 support for other pixel types
+	// TODO v4 support for other pixel types
 
 	template<typename Pixel = unsigned char>
 	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, const Pixel* pixels, GLint level = 0)

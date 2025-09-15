@@ -465,20 +465,10 @@ namespace oly::debug
 	CollisionLayer::CollisionLayer(const CollisionLayer& other)
 		: window_resize_handler(this), sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), texture(GL_TEXTURE_2D)
 	{
-		const int cpp = 4;
-		graphics::pixel_alignment_pre_send(cpp);
-		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
-		glCopyImageSubData(*other.texture, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
-		graphics::pixel_alignment_post_send(cpp);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		texture->set_and_use_handle();
-
-		framebuffer.bind();
-		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-		framebuffer.unbind();
-
+		tex_image();
+		copy_texture(*other.texture);
+		set_and_use_texture_handle();
+		setup_framebuffer();
 		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
 		sprite.set_texture(texture, dimensions);
 	}
@@ -510,21 +500,11 @@ namespace oly::debug
 
 			*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
 
-			const int cpp = 4;
 			glBindTexture(GL_TEXTURE_2D, *texture);
-			graphics::pixel_alignment_pre_send(cpp);
-			graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
-			glCopyImageSubData(*other.texture, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
-			graphics::pixel_alignment_post_send(cpp);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			texture->set_and_use_handle();
-
-			framebuffer.bind();
-			framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-			OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-			framebuffer.unbind();
-
+			tex_image();
+			copy_texture(*other.texture);
+			set_and_use_texture_handle();
+			setup_framebuffer();
 			set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
 			sprite.set_texture(texture, dimensions);
 		}
@@ -594,30 +574,46 @@ namespace oly::debug
 		dirty_views = true;
 	}
 
+	CollisionObject CollisionLayer::default_collision_object()
+	{
+		return CollisionObject(*this, rendering::EllipseBatch::EllipseReference(ellipse_batch));
+	}
+
 	void CollisionLayer::setup_texture()
 	{
 		dimensions = context::get_platform().window().get_size();
 
-		const int cpp = 4;
 		glBindTexture(GL_TEXTURE_2D, *texture);
-		graphics::pixel_alignment_pre_send(cpp);
-		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = cpp });
-		graphics::pixel_alignment_post_send(cpp);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		texture->set_and_use_handle();
-
-		framebuffer.bind();
-		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-		framebuffer.unbind();
-
+		tex_image();
+		set_and_use_texture_handle();
+		setup_framebuffer();
 		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
 		sprite.set_texture(texture, dimensions);
 	}
 
-	CollisionObject CollisionLayer::default_collision_object()
+	void CollisionLayer::tex_image()
 	{
-		return CollisionObject(*this, rendering::EllipseBatch::EllipseReference(ellipse_batch));
+		graphics::ScopedPixelAlignment pixel_align(TEXTURE_CPP);
+		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = TEXTURE_CPP });
+	}
+
+	void CollisionLayer::copy_texture(const graphics::BindlessTexture& other)
+	{
+		glCopyImageSubData(other, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
+	}
+
+	void CollisionLayer::set_and_use_texture_handle()
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		texture->set_and_use_handle();
+	}
+
+	void CollisionLayer::setup_framebuffer()
+	{
+		framebuffer.bind();
+		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
+		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+		framebuffer.unbind();
 	}
 }

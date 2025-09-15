@@ -62,7 +62,7 @@ namespace oly::graphics
 	}
 
 	BindlessTexture::BindlessTexture(BindlessTexture&& other) noexcept
-		: t(std::move(other.t)), handle(other.handle), _tex_handle(other._tex_handle), _sampler_handles(std::move(other._sampler_handles))
+		: t(std::move(other.t)), handle(other.handle)
 	{
 		other.handle = 0;
 	}
@@ -79,8 +79,6 @@ namespace oly::graphics
 			disuse_handle();
 			t = std::move(other.t);
 			handle = other.handle;
-			_tex_handle = other._tex_handle;
-			_sampler_handles = std::move(other._sampler_handles);
 			other.handle = 0;
 		}
 		return *this;
@@ -89,25 +87,13 @@ namespace oly::graphics
 	void BindlessTexture::set_handle()
 	{
 		disuse_handle();
-		if (!_tex_handle)
-			_tex_handle = glGetTextureHandleARB(t);
-		handle = _tex_handle;
+		handle = glGetTextureHandleARB(t);
 	}
 
 	void BindlessTexture::set_handle(GLuint sampler)
 	{
 		disuse_handle();
-		// TODO v4 not likely that samplers will change, especially not quickly. So no need to cache handles.
-		for (auto iter = _sampler_handles.begin(); iter != _sampler_handles.end(); ++iter)
-		{
-			if (iter->first == sampler)
-			{
-				handle = iter->second;
-				return;
-			}
-		}
 		handle = glGetTextureSamplerHandleARB(t, sampler);
-		_sampler_handles.push_back({ sampler, handle });
 	}
 
 	void BindlessTexture::use_handle() const
@@ -138,9 +124,8 @@ namespace oly::graphics
 			: GL_RGBA;
 	}
 
-	// TODO v4 context manager for pre/post send.
-
-	void pixel_alignment_pre_send(int cpp)
+	ScopedPixelAlignment::ScopedPixelAlignment(int cpp)
+		: cpp(cpp)
 	{
 		if (cpp == 1 || cpp == 3)
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -148,7 +133,7 @@ namespace oly::graphics
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
 	}
 
-	void pixel_alignment_post_send(int cpp)
+	ScopedPixelAlignment::~ScopedPixelAlignment()
 	{
 		if (cpp != 4)
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -199,10 +184,9 @@ namespace oly::graphics
 	{
 		Texture texture(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		const auto& dim = image.dim();
-		pixel_alignment_pre_send(dim.cpp);
+		ImageDimensions dim = image.dim();
+		ScopedPixelAlignment pixel_align(dim.cpp);
 		tex_image_2d(GL_TEXTURE_2D, dim, image.buf());
-		pixel_alignment_post_send(dim.cpp);
 		if (generate_mipmaps)
 			glGenerateMipmap(GL_TEXTURE_2D);
 		return texture;
@@ -366,11 +350,10 @@ namespace oly::graphics
 		Texture texture(GL_TEXTURE_2D_ARRAY);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
 		const auto& dim = anim.dim().lock();
-		pixel_alignment_pre_send(dim->cpp);
+		ScopedPixelAlignment pixel_align(dim->cpp);
 		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, texture_internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, texture_format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
 		for (GLuint i = 0; i < dim->frames(); ++i)
 			glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, texture_format(dim->cpp), GL_UNSIGNED_BYTE, anim.buf() + i * dim->w * dim->h * dim->cpp);
-		pixel_alignment_post_send(dim->cpp);
 		if (generate_mipmaps)
 			glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 		return texture;
@@ -498,9 +481,8 @@ namespace oly::graphics
 		Texture texture(GL_TEXTURE_2D);;
 		glBindTexture(GL_TEXTURE_2D, texture);
 		const auto& dim = image.image->dim();
-		pixel_alignment_pre_send(dim.cpp);
+		ScopedPixelAlignment pixel_align(dim.cpp);
 		tex_image_2d(GL_TEXTURE_2D, dim, image.image->buf());
-		pixel_alignment_post_send(dim.cpp);
 		if (generate_mipmaps)
 			glGenerateMipmap(GL_TEXTURE_2D);
 		return texture;
@@ -512,7 +494,7 @@ namespace oly::graphics
 			return;
 		float scale = image.scale;
 		GLint level = 0;
-		pixel_alignment_pre_send(image.image->dim().cpp);
+		ScopedPixelAlignment pixel_align(image.image->dim().cpp);
 		while (true)
 		{
 			{
@@ -527,7 +509,6 @@ namespace oly::graphics
 			if (img.dim().w == 1 && img.dim().h == 1)
 				break;
 		}
-		pixel_alignment_post_send(image.image->dim().cpp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level);
 	}
 }

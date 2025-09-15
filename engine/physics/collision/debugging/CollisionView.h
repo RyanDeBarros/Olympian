@@ -115,6 +115,8 @@ namespace oly::debug
 		friend struct CollisionObject;
 		friend class CollisionView;
 
+		static const int TEXTURE_CPP = 4;
+
 		rendering::PolygonBatch polygon_batch;
 		rendering::EllipseBatch ellipse_batch;
 		rendering::StaticSprite sprite;
@@ -163,5 +165,9 @@ namespace oly::debug
 
 	private:
 		void setup_texture();
+		void tex_image();
+		void copy_texture(const graphics::BindlessTexture& other);
+		void set_and_use_texture_handle();
+		void setup_framebuffer();
 	};
 }

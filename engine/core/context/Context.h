@@ -18,6 +18,8 @@ namespace oly::context
 		Context& operator=(Context&&) noexcept;
 	};
 
+#define OLY_RES_PREFIX "RES://"
+
 	extern std::string resource_file(const std::string& file);
 
 	extern bool frame();

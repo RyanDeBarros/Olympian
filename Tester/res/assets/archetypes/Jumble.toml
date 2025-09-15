@@ -16,41 +16,34 @@ draw = [
 
 [[archetype.sprite]]
 name = "sprite3"
-"texture"    = "textures/serotonin.gif"
+"texture"    = "RES://textures/serotonin.gif"
 transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
 frame_format = { "num frames" = 59, "delay_seconds" = -0.05 }
 
 [[archetype.sprite]]
 name = "sprite4"
-"texture"       = "textures/tux.png"
+"texture"       = "RES://textures/tux.png"
 "texture_index" = 1
 transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
 [[archetype.sprite]]
 name = "sprite5"
-"texture" = "textures/tux.png"
+"texture" = "RES://textures/tux.png"
 transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
 [[archetype.sprite]]
 name = "sprite1"
-"texture" = "textures/einstein.png"
-# TODO v4 use modulation texture
-#"modulation" = [
-#	[1.0, 1.0, 0.2, 0.7],
-#	[0.2, 1.0, 1.0, 0.7],
-#	[1.0, 0.2, 1.0, 0.7],
-#	[0.5, 0.5, 0.5, 0.7]
-#]
+"texture" = "RES://textures/einstein.png"
 
 [[archetype.sprite]]
 name = "godot_icon"
-"texture" = "textures/godot.svg"
+"texture" = "RES://textures/godot.svg"
 "texture_index" = 1
 transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [[archetype.sprite]]
 name = "knight"
-"texture"    = "textures/knight.png"
+"texture"    = "RES://textures/knight.png"
 transform    = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
@@ -60,7 +53,7 @@ name            = "atlased_knight"
 "cols"          = 3
 "delay_seconds" = 0.1
 	[archetype.sprite_atlas.sprite]
-	"texture" = "textures/knight.png"
+	"texture" = "RES://textures/knight.png"
 	"texture_index" = 1
 	transform = { "position" = [300, -200], "scale" = [20, 20] }
 
@@ -72,15 +65,8 @@ name            = "nonant_panel"
 "top_offset"    = 6
 "nsize"         = [ 128, 0 ]
 [archetype.sprite_nonant.sprite]
-"texture" = "textures/panel.png"
+"texture" = "RES://textures/panel.png"
 transform = { "scale" = [ 10.0, 10.0 ] }
-# TODO v4 modulation texture
-#modulation = [
-#	[ 1.0, 0.3, 0.3, 1.0 ],
-#	[ 0.3, 0.3, 0.3, 1.0 ],
-#	[ 0.3, 0.3, 1.0, 1.0 ],
-#	[ 0.3, 0.3, 0.3, 1.0 ]
-#]
 
 [[archetype.tilemap]]
 name = "grass_tilemap"
@@ -88,7 +74,7 @@ transform = { "scale" = [ 100, 100 ] }
 
 	[[archetype.tilemap.layer]]
 	"z" = 0
-	"tileset" = "assets/grass tileset.toml"
+	"tileset" = "RES://assets/grass tileset.toml"
 	"tiles" = [
 		[ -1, -1 ],
 		[  0, -1 ],
@@ -107,7 +93,7 @@ transform = { "scale" = [ 100, 100 ] }
 	
 [[archetype.paragraph]]
 name           = "test_text"
-"font_atlas"   = "fonts/Roboto-Regular.ttf"
+"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
 "text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 "draw_bkg"     = true
 transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
