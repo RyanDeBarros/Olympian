@@ -9,19 +9,19 @@
 
 namespace oly::reg
 {
-	static void setup_texture(graphics::BindlessTexture& texture, const TOMLNode& node, GLenum target, bool set_and_use)
+	static void setup_texture(graphics::BindlessTexture& texture, const TOMLNode& node, bool set_and_use)
 	{
 		GLenum min_filter, mag_filter, wrap_s, wrap_t;
 		if (!parse_min_filter(node, "min_filter", min_filter))
 			min_filter = GL_NEAREST;
-		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
+		glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, min_filter);
 		if (!parse_mag_filter(node, "mag_filter", mag_filter))
 			mag_filter = GL_NEAREST;
-		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
+		glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, mag_filter);
 		if (parse_wrap(node, "wrap s", wrap_s))
-			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_S, wrap_s);
 		if (parse_wrap(node, "wrap t", wrap_t))
-			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_T, wrap_t);
 
 		if (set_and_use)
 			texture.set_and_use_handle();
@@ -30,14 +30,14 @@ namespace oly::reg
 	static graphics::BindlessTextureRef load_image(const graphics::Image& image, const TOMLNode& node, bool set_and_use)
 	{
 		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, node["generate_mipmaps"].value<bool>().value_or(false));
-		setup_texture(texture, node, GL_TEXTURE_2D, set_and_use);
+		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
 	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, const TOMLNode& node, bool set_and_use)
 	{
 		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, node["generate_mipmaps"].value<bool>().value_or(false));
-		setup_texture(texture, node, GL_TEXTURE_2D_ARRAY, set_and_use);
+		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
@@ -45,15 +45,12 @@ namespace oly::reg
 	{
 		graphics::BindlessTextureRef texture;
 		std::string generate_mipmaps = node["generate_mipmaps"].value<std::string>().value_or("off");
-		if (generate_mipmaps == "auto")
-			texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, true));
-		else
-		{
-			texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, false));
-			if (generate_mipmaps == "manual")
-				graphics::nsvg_manually_generate_mipmaps(image, abstract, context::nsvg_context());
-		}
-		setup_texture(*texture, node, GL_TEXTURE_2D, set_and_use);
+		graphics::SVGMipmapGenerationMode mipmaps_mode
+			= generate_mipmaps == "auto" ? graphics::SVGMipmapGenerationMode::AUTO
+			: generate_mipmaps == "manual" ? graphics::SVGMipmapGenerationMode::MANUAL
+			: graphics::SVGMipmapGenerationMode::OFF;
+		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::MANUAL ? &abstract : nullptr));
+		setup_texture(*texture, node, set_and_use);
 		return texture;
 	}
 

@@ -38,18 +38,19 @@ namespace oly::rendering
 
 	public:
 		typedef GLuint Index;
+		// ID refers to the index of a polygon in transform SSBO. It also indexes a set of ranges in the VBO block.
 		typedef StrictIDGenerator<Index>::ID PolygonID;
 
+		// TODO v4 remove capacity
 		struct Capacity
 		{
 			Index vertices = 0;
 			Index indices = 0;
 
-			// TODO v4 generate id sometimes fails if primitives is too low. Some kind of miscommunication between id generator, free space tracker, and buffer growth, perhaps?
-			Capacity(Index primitives = 100, Index degree = 6)
+			Capacity(Index primitives = 1, Index degree = 3)
 			{
 				OLY_ASSERT(degree >= 3);
-				OLY_ASSERT(degree * primitives <= nmax<unsigned int>());
+				OLY_ASSERT(degree * primitives <= nmax<Index>());
 
 				// max(F) = V - 2 + 2H
 				// max(H) = [V / 3] - 1

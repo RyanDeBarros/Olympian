@@ -500,7 +500,6 @@ namespace oly::debug
 
 			*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
 
-			glBindTexture(GL_TEXTURE_2D, *texture);
 			tex_image();
 			copy_texture(*other.texture);
 			set_and_use_texture_handle();
@@ -583,7 +582,6 @@ namespace oly::debug
 	{
 		dimensions = context::get_platform().window().get_size();
 
-		glBindTexture(GL_TEXTURE_2D, *texture);
 		tex_image();
 		set_and_use_texture_handle();
 		setup_framebuffer();
@@ -593,8 +591,7 @@ namespace oly::debug
 
 	void CollisionLayer::tex_image()
 	{
-		graphics::ScopedPixelAlignment pixel_align(TEXTURE_CPP);
-		graphics::tex_image_2d(GL_TEXTURE_2D, graphics::ImageDimensions{ .w = dimensions.x, .h = dimensions.y, .cpp = TEXTURE_CPP });
+		graphics::tex::storage_2d(*texture, { .w = dimensions.x, .h = dimensions.y, .cpp = TEXTURE_CPP });
 	}
 
 	void CollisionLayer::copy_texture(const graphics::BindlessTexture& other)
@@ -604,8 +601,8 @@ namespace oly::debug
 
 	void CollisionLayer::set_and_use_texture_handle()
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(*texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(*texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		texture->set_and_use_handle();
 	}
 

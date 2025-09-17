@@ -10,6 +10,7 @@
 
 #include "core/types/SmartReference.h"
 #include "core/types/DeferredFalse.h"
+#include "core/math/Shapes.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
@@ -58,9 +59,6 @@ namespace oly::graphics
 
 	typedef SmartReference<BindlessTexture> BindlessTextureRef;
 
-	extern GLenum texture_internal_format(int cpp);
-	extern GLenum texture_format(int cpp);
-	
 	class ScopedPixelAlignment
 	{
 		int cpp;
@@ -80,28 +78,55 @@ namespace oly::graphics
 		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
 	};
 
-	// TODO v4 support for other pixel types
-
-	template<typename Pixel = unsigned char>
-	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, const Pixel* pixels, GLint level = 0)
+	struct Image3DDimensions
 	{
-		GLenum data_type;
-		if constexpr (std::is_same_v<Pixel, unsigned char>)
-			data_type = GL_UNSIGNED_BYTE;
-		else
-			static_assert(deferred_false<Pixel>, "Unsupported pixel type in tex_image_2d().");
-		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, pixels);
-	}
+		int w = 0, h = 0, d = 0, cpp = 4;
+	};
 
-	template<typename Pixel = unsigned char>
-	inline void tex_image_2d(GLenum target, const ImageDimensions& dim, GLint level = 0)
+	namespace tex
 	{
-		GLenum data_type;
-		if constexpr (std::is_same_v<Pixel, unsigned char>)
-			data_type = GL_UNSIGNED_BYTE;
-		else
-			static_assert(deferred_false<Pixel>, "Unsupported pixel type in tex_image_2d().");
-		glTexImage2D(target, level, texture_internal_format(dim.cpp), dim.w, dim.h, 0, texture_format(dim.cpp), data_type, nullptr);
+		extern GLenum internal_format(int cpp);
+		extern GLenum format(int cpp);
+		extern GLint mipmap_levels(int w, int h);
+
+		// TODO v4 support for other pixel types
+
+		extern void storage_2d(GLuint texture, ImageDimensions dim, GLsizei levels = 1);
+
+		template<typename Pixel = unsigned char>
+		inline void subimage_2d(GLuint texture, const Pixel* pixels, math::IArea2D subarea, int cpp, GLint level = 0)
+		{
+			GLenum data_type;
+			if constexpr (std::is_same_v<Pixel, unsigned char>)
+				data_type = GL_UNSIGNED_BYTE;
+			else
+				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_2d().");
+			ScopedPixelAlignment pixel_align(cpp);
+			glTextureSubImage2D(texture, level, subarea.x, subarea.y, subarea.w, subarea.h, format(cpp), data_type, pixels);
+		}
+
+		template<typename Pixel = unsigned char>
+		inline void image_2d(GLuint texture, const Pixel* pixels, ImageDimensions dim, bool mipmaps)
+		{
+			storage_2d(texture, dim, mipmaps ? mipmap_levels(dim.w, dim.h) : 1);
+			subimage_2d(texture, pixels, { .w = dim.w, .h = dim.h }, dim.cpp);
+			if (mipmaps)
+				glGenerateTextureMipmap(texture);
+		}
+
+		extern void storage_3d(GLuint texture, Image3DDimensions dim, GLsizei levels = 1);
+
+		template<typename Pixel = unsigned char>
+		inline void subimage_3d(GLuint texture, const Pixel* pixels, math::IArea3D subarea, int cpp, GLint level = 0)
+		{
+			GLenum data_type;
+			if constexpr (std::is_same_v<Pixel, unsigned char>)
+				data_type = GL_UNSIGNED_BYTE;
+			else
+				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_3d().");
+			ScopedPixelAlignment pixel_align(cpp);
+			glTextureSubImage3D(texture, level, subarea.x, subarea.y, subarea.z, subarea.w, subarea.h, subarea.d, format(cpp), data_type, pixels);
+		}
 	}
 
 	class Image
@@ -288,13 +313,18 @@ namespace oly::graphics
 		float scale;
 	};
 
-	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps = false);
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps = false)
+	enum class SVGMipmapGenerationMode
 	{
-		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps));
+		AUTO,
+		OFF,
+		MANUAL
+	};
+
+	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr);
+	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr)
+	{
+		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}
-	// texture needs to be bound to GL_TEXTURE_2D before calling nsvg_manually_generate_mipmaps()
-	extern void nsvg_manually_generate_mipmaps(const VectorImageRef& image, const NSVGAbstract& abstract, const NSVGContext& context);
 
 	// TODO v5 texture streaming
 }

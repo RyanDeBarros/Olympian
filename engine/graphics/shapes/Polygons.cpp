@@ -10,7 +10,7 @@ namespace oly::rendering
 {
 	PolygonBatch::PolygonBatch(Capacity capacity)
 		: ebo(vao, capacity.indices), vbo_block(vao, { capacity.vertices, capacity.vertices, capacity.vertices }), transform_ssbo(capacity.indices),
-		vertex_free_space({ 0, capacity.indices })
+		vertex_free_space({ 0, nmax<Index>() })
 	{
 		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
 
@@ -112,15 +112,7 @@ namespace oly::rendering
 	void PolygonBatch::set_polygon_transform(const PolygonID& id, const glm::mat3& transform)
 	{
 		if (is_valid_id(id))
-		{
-			if (id.get() >= transform_ssbo.buf.get_size())
-			{
-				transform_ssbo.grow();
-				vertex_free_space.extend_rightward(transform_ssbo.buf.get_size());
-			}
-			transform_ssbo.buf[id.get()] = transform;
-			transform_ssbo.flag(id.get());
-		}
+			transform_ssbo.set(id.get()) = transform;
 	}
 
 	PolygonBatch::PolygonID PolygonBatch::generate_id(Index vertices)

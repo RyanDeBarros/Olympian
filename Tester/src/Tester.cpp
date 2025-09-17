@@ -235,10 +235,10 @@ int main()
 	// TODO v4 one of the rays aren't rendering the head.
 
 	oly::debug::CollisionView player_impulse_cv(pipeline.impulse_layer), block_impulse_cv(pipeline.impulse_layer), raycast_result_cv(pipeline.raycast_result_layer);
-	oly::debug::CollisionView player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView ray_cv = oly::debug::collision_view(pipeline.ray_layer, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
-	oly::debug::CollisionView circle_cast_cv = oly::debug::collision_view(pipeline.ray_layer, circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
+	auto player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+	auto block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	auto ray_cv = oly::debug::collision_view(pipeline.ray_layer, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
+	auto circle_cast_cv = oly::debug::collision_view(pipeline.ray_layer, circle_cast, oly::colors::GREEN * oly::colors::alpha(0.8f), oly::colors::WHITE * oly::colors::alpha(0.8f));
 
 	auto cv_obstacle0 = obstacle0->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 	auto cv_obstacle1 = obstacle1->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);

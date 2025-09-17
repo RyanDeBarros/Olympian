@@ -108,22 +108,6 @@ namespace oly::graphics
 			glMakeTextureHandleNonResidentARB(handle);
 	}
 
-	GLenum texture_internal_format(int cpp)
-	{
-		return cpp == 1 ? GL_R8
-			: cpp == 2 ? GL_RG8
-			: cpp == 3 ? GL_RGB8
-			: GL_RGBA8;
-	}
-
-	GLenum texture_format(int cpp)
-	{
-		return cpp == 1 ? GL_RED
-			: cpp == 2 ? GL_RG
-			: cpp == 3 ? GL_RGB
-			: GL_RGBA;
-	}
-
 	ScopedPixelAlignment::ScopedPixelAlignment(int cpp)
 		: cpp(cpp)
 	{
@@ -137,6 +121,37 @@ namespace oly::graphics
 	{
 		if (cpp != 4)
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	}
+
+	GLenum tex::internal_format(int cpp)
+	{
+		return cpp == 1 ? GL_R8
+			: cpp == 2 ? GL_RG8
+			: cpp == 3 ? GL_RGB8
+			: GL_RGBA8;
+	}
+
+	GLenum tex::format(int cpp)
+	{
+		return cpp == 1 ? GL_RED
+			: cpp == 2 ? GL_RG
+			: cpp == 3 ? GL_RGB
+			: GL_RGBA;
+	}
+
+	GLint tex::mipmap_levels(int w, int h)
+	{
+		return GLint(glm::log2((float)glm::max(w, h))) + 1;
+	}
+
+	void tex::storage_2d(GLuint texture, ImageDimensions dim, GLsizei levels)
+	{
+		glTextureStorage2D(texture, levels, internal_format(dim.cpp), dim.w, dim.h);
+	}
+
+	void tex::storage_3d(GLuint texture, Image3DDimensions dim, GLsizei levels)
+	{
+		glTextureStorage3D(texture, levels, internal_format(dim.cpp), dim.w, dim.h, dim.d);
 	}
 
 	Image::Image(const char* filepath)
@@ -183,12 +198,7 @@ namespace oly::graphics
 	Texture load_texture_2d(const Image& image, bool generate_mipmaps)
 	{
 		Texture texture(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		ImageDimensions dim = image.dim();
-		ScopedPixelAlignment pixel_align(dim.cpp);
-		tex_image_2d(GL_TEXTURE_2D, dim, image.buf());
-		if (generate_mipmaps)
-			glGenerateMipmap(GL_TEXTURE_2D);
+		tex::image_2d(texture, image.buf(), image.dim(), generate_mipmaps);
 		return texture;
 	}
 
@@ -348,14 +358,12 @@ namespace oly::graphics
 	Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
 	{
 		Texture texture(GL_TEXTURE_2D_ARRAY);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
 		const auto& dim = anim.dim().lock();
-		ScopedPixelAlignment pixel_align(dim->cpp);
-		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, texture_internal_format(dim->cpp), dim->w, dim->h, dim->frames(), 0, texture_format(dim->cpp), GL_UNSIGNED_BYTE, nullptr);
+		tex::storage_3d(texture, { .w = dim->w, .h = dim->h, .d = (int)dim->frames(), .cpp = dim->cpp }, generate_mipmaps ? tex::mipmap_levels(dim->w, dim->h) : 1);
 		for (GLuint i = 0; i < dim->frames(); ++i)
-			glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, dim->w, dim->h, 1, texture_format(dim->cpp), GL_UNSIGNED_BYTE, anim.buf() + i * dim->w * dim->h * dim->cpp);
+			tex::subimage_3d(texture, anim.buf() + i * dim->w * dim->h * dim->cpp, { .z = (int)i, .w = dim->w, .h = dim->h, .d = 1 }, dim->cpp);
 		if (generate_mipmaps)
-			glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+			glGenerateTextureMipmap(texture);
 		return texture;
 	}
 
@@ -476,39 +484,35 @@ namespace oly::graphics
 		delete[] temp;
 	}
 
-	Texture load_nsvg_texture_2d(const VectorImageRef& image, bool generate_mipmaps)
+	Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
 	{
-		Texture texture(GL_TEXTURE_2D);;
-		glBindTexture(GL_TEXTURE_2D, texture);
-		const auto& dim = image.image->dim();
-		ScopedPixelAlignment pixel_align(dim.cpp);
-		tex_image_2d(GL_TEXTURE_2D, dim, image.image->buf());
-		if (generate_mipmaps)
-			glGenerateMipmap(GL_TEXTURE_2D);
-		return texture;
-	}
+		if (generate_mipmaps == SVGMipmapGenerationMode::MANUAL && !abstract)
+			generate_mipmaps = SVGMipmapGenerationMode::AUTO;
 
-	void nsvg_manually_generate_mipmaps(const VectorImageRef& image, const NSVGAbstract& abstract, const NSVGContext& context)
-	{
-		if (image.image->dim().w <= 1 && image.image->dim().h <= 1)
-			return;
-		float scale = image.scale;
-		GLint level = 0;
-		ScopedPixelAlignment pixel_align(image.image->dim().cpp);
-		while (true)
+		Texture texture(GL_TEXTURE_2D);
+		switch (generate_mipmaps)
 		{
+		case oly::graphics::SVGMipmapGenerationMode::AUTO:
+			tex::image_2d(texture, image.image->buf(), image.image->dim(), true);
+			break;
+		case oly::graphics::SVGMipmapGenerationMode::OFF:
+			tex::image_2d(texture, image.image->buf(), image.image->dim(), false);
+			break;
+		case oly::graphics::SVGMipmapGenerationMode::MANUAL:
+		{
+			const ImageDimensions dim = image.image->dim();
+			const GLsizei levels = tex::mipmap_levels(dim.w, dim.h);
+			tex::storage_2d(texture, dim, levels);
+			float subscale = image.scale;
+			for (GLsizei level = 0; level < levels; ++level)
 			{
-				float new_scale = scale / 2;
-				if (approx(new_scale, scale))
-					break;
-				scale = new_scale;
+				Image subimage = context::nsvg_context().rasterize(*abstract, subscale);
+				subscale *= 0.5f;
+				tex::subimage_2d(texture, subimage.buf(), { .w = glm::max(subimage.dim().w, 1), .h = glm::max(subimage.dim().h, 1)}, dim.cpp, level);
 			}
-
-			auto img = context.rasterize(abstract, scale);
-			tex_image_2d(GL_TEXTURE_2D, img.dim(), img.buf(), ++level);
-			if (img.dim().w == 1 && img.dim().h == 1)
-				break;
+			break;
 		}
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level);
+		}
+		return texture;
 	}
 }

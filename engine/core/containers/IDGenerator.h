@@ -36,7 +36,7 @@ namespace oly
 		friend class ID;
 		T next = initial;
 		std::stack<T> yielded;
-		// TODO v4 for other node systems, consider using this design of shared_ptr<Owner*> for faster move semantics, rather than using set of pointers to node.
+		// TODO v4 for other node systems, consider using this design of shared_ptr<Owner*> for faster move semantics, rather than using set of pointers to node. Unless of course it's necessary to refer to nodes.
 		std::shared_ptr<StrictIDGenerator<T, initial>*> generator_source;
 
 	public:

@@ -19,6 +19,7 @@ namespace oly::graphics
 		std::array<VertexAttributeVariant, N> attributes;
 
 		PersistentVertexBufferBlock(GLuint vao, GLuint size) : vao(vao), buf(size) {}
+
 		PersistentVertexBufferBlock(GLuint vao, const std::array<GLuint, N>& sizes) : vao(vao), buf(sizes) {}
 
 		void setup()
@@ -61,19 +62,28 @@ namespace oly::graphics
 	public:
 		template<size_t n>
 		GLuint buffer() const { return buf.buf.get_buffer<n>(); }
+
 		template<size_t n>
 		GLuint size() const { return buf.buf.get_size<n>(); }
+		
 		template<size_t n>
 		void pre_draw() const { buf.pre_draw<n>(); }
+		
 		void pre_draw_all() const { buf.pre_draw_all(); }
+		
 		template<size_t n>
 		void post_draw() const { buf.post_draw<n>(); }
+		
 		void post_draw_all() const { buf.post_draw_all(); }
+		
 		template<size_t n>
 		void grow() { buf.grow<n>(); setup_single<n>(); }
+		
 		void grow_all() const { buf.grow_all(); setup(); }
+		
 		template<size_t n>
 		const StructAlias<n>& get(GLuint i) const { return buf.get<n>(i); }
+		
 		template<size_t n>
 		StructAlias<n>& set(GLuint i)
 		{
@@ -83,8 +93,10 @@ namespace oly::graphics
 				setup_single<n>();
 			return el;
 		}
+
 		template<size_t n>
 		const StructAlias<n>* get(GLuint offset, GLuint length) const { return buf.get<n>(offset, length); }
+		
 		template<size_t n>
 		StructAlias<n>* set(GLuint offset, GLuint length)
 		{

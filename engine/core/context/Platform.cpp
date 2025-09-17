@@ -82,7 +82,6 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
-		// TODO Add to project config
 		if (auto window = node["window"])
 		{
 			if (auto viewport = window["viewport"])

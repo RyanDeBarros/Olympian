@@ -85,6 +85,16 @@ namespace oly::math
 
 		bool operator==(const UVRect&) const = default;
 	};
+
+	struct IArea2D
+	{
+		int x = 0, y = 0, w = 1, h = 1;
+	};
+
+	struct IArea3D
+	{
+		int x = 0, y = 0, z = 0, w = 1, h = 1, d = 1;
+	};
 }
 
 template<>
