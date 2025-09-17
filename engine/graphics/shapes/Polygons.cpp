@@ -8,8 +8,8 @@
 
 namespace oly::rendering
 {
-	PolygonBatch::PolygonBatch(Capacity capacity)
-		: ebo(vao, capacity.indices), vbo_block(vao, { capacity.vertices, capacity.vertices, capacity.vertices }), transform_ssbo(capacity.indices),
+	PolygonBatch::PolygonBatch()
+		: ebo(vao), vbo_block(vao),
 		vertex_free_space({ 0, nmax<Index>() })
 	{
 		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");

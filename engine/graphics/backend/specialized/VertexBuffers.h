@@ -18,7 +18,7 @@ namespace oly::graphics
 
 		std::array<VertexAttributeVariant, N> attributes;
 
-		PersistentVertexBufferBlock(GLuint vao, GLuint size) : vao(vao), buf(size) {}
+		PersistentVertexBufferBlock(GLuint vao, GLuint size = 0) : vao(vao), buf(size) {}
 
 		PersistentVertexBufferBlock(GLuint vao, const std::array<GLuint, N>& sizes) : vao(vao), buf(sizes) {}
 

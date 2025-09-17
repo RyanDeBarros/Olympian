@@ -41,29 +41,7 @@ namespace oly::rendering
 		// ID refers to the index of a polygon in transform SSBO. It also indexes a set of ranges in the VBO block.
 		typedef StrictIDGenerator<Index>::ID PolygonID;
 
-		// TODO v4 remove capacity
-		struct Capacity
-		{
-			Index vertices = 0;
-			Index indices = 0;
-
-			Capacity(Index primitives = 1, Index degree = 3)
-			{
-				OLY_ASSERT(degree >= 3);
-				OLY_ASSERT(degree * primitives <= nmax<Index>());
-
-				// max(F) = V - 2 + 2H
-				// max(H) = [V / 3] - 1
-				// --> max(F) = V + 2 * [V / 3] - 4
-				// --> index count = 3 * max(F)
-				Index polygon_index_count(3 * degree + 6 * (degree / 3) - 12);
-
-				vertices = primitives * degree;
-				indices = primitives * polygon_index_count;
-			}
-		};
-
-		PolygonBatch(Capacity capacity = {});
+		PolygonBatch();
 		PolygonBatch(const PolygonBatch&) = delete;
 		PolygonBatch(PolygonBatch&&) = delete;
 
