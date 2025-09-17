@@ -118,16 +118,12 @@ namespace oly::rendering
 	PolygonBatch::PolygonID PolygonBatch::generate_id(Index vertices)
 	{
 		PolygonID id = id_generator.generate();
-		auto it = polygon_indexer.find(id.get());
-		if (it == polygon_indexer.end())
-		{
-			Range<Index> vertex_range;
-			OLY_ASSERT(vertex_free_space.next_free(vertices, vertex_range));
-			vertex_free_space.reserve(vertex_range);
-			polygon_indexer[id.get()] = vertex_range;
-			for (Index v = 0; v < vertex_range.length; ++v)
-				vbo_block.set<INDEX>(vertex_range.initial + v) = id.get();
-		}
+		Range<Index> vertex_range;
+		OLY_ASSERT(vertex_free_space.next_free(vertices, vertex_range));
+		vertex_free_space.reserve(vertex_range);
+		polygon_indexer[id.get()] = vertex_range;
+		for (Index v = 0; v < vertex_range.length; ++v)
+			vbo_block.set<INDEX>(vertex_range.initial + v) = id.get();
 		return id;
 	}
 

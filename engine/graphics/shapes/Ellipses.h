@@ -10,8 +10,6 @@
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 
-// TODO v4 create a GeometryPainter class that draws ellipses/polygons onto a framebuffer texture on a separate thread, and holds a sprite with that texture. Combine Ellipse and Polygon shaders. CollisionLayer can then internally used the abstracted GeometryPainter class.
-
 namespace oly::rendering
 {
 	class EllipseReference;

@@ -1,10 +1,5 @@
 #include "CollisionView.h"
 
-#include "core/context/Platform.h"
-#include "core/context/rendering/Rendering.h"
-#include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Scopes.h"
-
 namespace oly::debug
 {
 	CollisionObject::CollisionObject(CollisionLayer& layer, Variant&& v)
@@ -56,13 +51,13 @@ namespace oly::debug
 		switch (type)
 		{
 		case Type::ELLIPSE:
-			v = std::make_unique<Variant>(rendering::EllipseReference(layer.ellipse_batch));
+			v = std::make_unique<Variant>(layer.create_ellipse());
 			break;
 		case Type::POLYGON:
-			v = std::make_unique<Variant>(rendering::StaticPolygon(layer.polygon_batch));
+			v = std::make_unique<Variant>(layer.create_polygon());
 			break;
 		case Type::ARROW:
-			v = std::make_unique<Variant>(rendering::StaticArrowExtension(layer.polygon_batch));
+			v = std::make_unique<Variant>(layer.create_arrow());
 			break;
 		}
 	}
@@ -386,7 +381,7 @@ namespace oly::debug
 	void CollisionView::view_changed() const
 	{
 		if (valid())
-			layer->dirty_views = true;
+			layer->painter.flag_dirty();
 	}
 
 	void CollisionView::update_color(glm::vec4 color)
@@ -428,60 +423,26 @@ namespace oly::debug
 			view_changed();
 	}
 
-	CollisionLayer::WindowResizeHandler::WindowResizeHandler(CollisionLayer* layer)
-		: layer(layer)
-	{
-		attach(&context::get_wr_drawer());
-		set_projection();
-	}
-
-	bool CollisionLayer::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
-	{
-		auto& wr = context::get_wr_viewport();
-		if (!wr.stretch)
-		{
-			layer->set_sprite_scale(wr.get_size() / glm::vec2(layer->dimensions));
-			layer->dirty_views = true;
-			set_projection();
-		}
-		return false;
-	}
-
-	void CollisionLayer::WindowResizeHandler::set_projection()
-	{
-		auto viewport = context::get_wr_viewport().get_viewport();
-		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
-		glm::mat3 projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
-		layer->polygon_batch.projection = projection;
-		layer->ellipse_batch.projection = projection;
-	}
-
 	CollisionLayer::CollisionLayer(rendering::SpriteBatch* batch)
-		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this)
+		: painter(paint_fn(), batch)
 	{
-		setup_texture();
+		painter.paint_fn = paint_fn();
 	}
 
 	CollisionLayer::CollisionLayer(const CollisionLayer& other)
-		: window_resize_handler(this), sprite(other.sprite), dimensions(other.dimensions), dirty_views(other.dirty_views), texture(GL_TEXTURE_2D)
+		: painter(other.painter)
 	{
-		tex_image();
-		copy_texture(*other.texture);
-		set_and_use_texture_handle();
-		setup_framebuffer();
-		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
-		sprite.set_texture(texture, dimensions);
+		painter.paint_fn = paint_fn();
 	}
 
 	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
-		: window_resize_handler(this), sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
-		dimensions(other.dimensions), collision_views(std::move(other.collision_views)), dirty_views(other.dirty_views)
+		: painter(std::move(other.painter)), collision_views(std::move(other.collision_views))
 	{
+		painter.paint_fn = paint_fn();
 	}
 
 	CollisionLayer::~CollisionLayer()
 	{
-		window_resize_handler.detach();
 		for (CollisionView* view : collision_views)
 			view->invalidate_layer();
 	}
@@ -493,19 +454,8 @@ namespace oly::debug
 			for (CollisionView* view : collision_views)
 				view->invalidate_layer();
 			collision_views.clear();
-
-			sprite = other.sprite;
-			dimensions = other.dimensions;
-			dirty_views = other.dirty_views;
-
-			*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
-
-			tex_image();
-			copy_texture(*other.texture);
-			set_and_use_texture_handle();
-			setup_framebuffer();
-			set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
-			sprite.set_texture(texture, dimensions);
+			painter = other.painter;
+			painter.paint_fn = paint_fn();
 		}
 		return *this;
 	}
@@ -517,100 +467,54 @@ namespace oly::debug
 			for (CollisionView* view : collision_views)
 				view->invalidate_layer();
 			collision_views.clear();
-			
-			sprite = std::move(other.sprite);
-			framebuffer = std::move(other.framebuffer);
-			texture = std::move(other.texture);
-			dimensions = other.dimensions;
-			dirty_views = other.dirty_views;
+			painter = std::move(other.painter);
+			painter.paint_fn = paint_fn();
 		}
 		return *this;
 	}
 
-	void CollisionLayer::write_texture() const
+	std::function<void()> CollisionLayer::paint_fn() const
 	{
-		context::ScopedFullFramebufferDrawing drawing(framebuffer, dimensions);
-		for (const auto& collision_view : collision_views)
-			collision_view->draw();
-		polygon_batch.render();
-		ellipse_batch.render();
-	}
-
-	void CollisionLayer::set_sprite_scale(glm::vec2 scale)
-	{
-		glm::mat3 m = 1.0f;
-		m[0][0] = scale.x;
-		m[1][1] = scale.y;
-		sprite.set_transform(m);
+		return [this]() {
+			for (const auto& collision_view : collision_views)
+				collision_view->draw();
+			};
 	}
 
 	void CollisionLayer::assign(CollisionView* view)
 	{
 		if (collision_views.insert(view).second)
-			dirty_views = true;
+			painter.flag_dirty();
 	}
 
 	void CollisionLayer::unassign(CollisionView* view)
 	{
 		if (collision_views.erase(view))
-			dirty_views = true;
+			painter.flag_dirty();
 	}
 
 	void CollisionLayer::draw() const
 	{
-		if (dirty_views)
-		{
-			dirty_views = false;
-			write_texture();
-		}
-		sprite.draw();
-	}
-
-	void CollisionLayer::regen_to_current_resolution()
-	{
-		*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
-		setup_texture();
-		dirty_views = true;
+		painter.draw();
 	}
 
 	CollisionObject CollisionLayer::default_collision_object()
 	{
-		return CollisionObject(*this, rendering::EllipseReference(ellipse_batch));
+		return CollisionObject(*this, create_ellipse());
 	}
 
-	void CollisionLayer::setup_texture()
+	rendering::EllipseReference CollisionLayer::create_ellipse()
 	{
-		dimensions = context::get_platform().window().get_size();
-
-		tex_image();
-		set_and_use_texture_handle();
-		setup_framebuffer();
-		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
-		sprite.set_texture(texture, dimensions);
+		return rendering::EllipseReference(painter.get_ellipse_batch());
 	}
 
-	void CollisionLayer::tex_image()
+	rendering::StaticPolygon CollisionLayer::create_polygon()
 	{
-		graphics::tex::storage_2d(*texture, { .w = dimensions.x, .h = dimensions.y, .cpp = TEXTURE_CPP });
+		return rendering::StaticPolygon(painter.get_polygon_batch());
 	}
-
-	void CollisionLayer::copy_texture(const graphics::BindlessTexture& other)
+	
+	rendering::StaticArrowExtension CollisionLayer::create_arrow()
 	{
-		glCopyImageSubData(other, GL_TEXTURE_2D, 0, 0, 0, 0, *texture, GL_TEXTURE_2D, 0, 0, 0, 0, dimensions.x, dimensions.y, 1);
-	}
-
-	void CollisionLayer::set_and_use_texture_handle()
-	{
-		texture->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		texture->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		texture->set_and_use_handle();
-	}
-
-	void CollisionLayer::setup_framebuffer()
-	{
-		framebuffer.bind();
-		framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-		framebuffer.unbind();
+		return rendering::StaticArrowExtension(painter.get_polygon_batch());
 	}
 }

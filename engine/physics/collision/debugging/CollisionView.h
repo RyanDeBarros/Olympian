@@ -5,11 +5,8 @@
 #include "physics/collision/objects/BVH.h"
 #include "physics/collision/methods/SpecialCasting.h"
 
-#include "graphics/sprites/Sprite.h"
-#include "graphics/shapes/Ellipses.h"
-#include "graphics/shapes/Polygons.h"
+#include "graphics/shapes/GeometryPainter.h"
 #include "graphics/shapes/Arrow.h"
-#include "graphics/backend/basic/Framebuffers.h"
 
 #include "core/platform/WindowEvents.h"
 #include "core/platform/EventHandler.h"
@@ -115,28 +112,8 @@ namespace oly::debug
 		friend struct CollisionObject;
 		friend class CollisionView;
 
-		static const int TEXTURE_CPP = 4;
-
-		rendering::PolygonBatch polygon_batch;
-		rendering::EllipseBatch ellipse_batch;
-		rendering::StaticSprite sprite;
-		graphics::Framebuffer framebuffer;
-		graphics::BindlessTextureRef texture;
-		glm::ivec2 dimensions;
-		mutable bool dirty_views = false;
+		rendering::GeometryPainter painter;
 		std::unordered_set<CollisionView*> collision_views;
-
-		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
-		{
-			CollisionLayer* layer = nullptr;
-
-			WindowResizeHandler(CollisionLayer* layer);
-
-			bool consume(const input::WindowResizeEventData& data) override;
-
-			void set_projection();
-		} window_resize_handler;
-		friend struct WindowResizeHandler;
 
 	public:
 		CollisionLayer(rendering::SpriteBatch* batch = nullptr);
@@ -147,27 +124,16 @@ namespace oly::debug
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
 
 	private:
-		void write_texture() const;
-		void set_sprite_scale(glm::vec2 scale);
-
+		std::function<void()> paint_fn() const;
+		
 		void assign(CollisionView* view);
 		void unassign(CollisionView* view);
 
 	public:
 		void draw() const;
-		void regen_to_current_resolution();
-
-		const rendering::PolygonBatch& get_polygon_batch() const { return polygon_batch; }
-		rendering::PolygonBatch& get_polygon_batch() { return polygon_batch; }
-		const rendering::EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
-		rendering::EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
 		CollisionObject default_collision_object();
-
-	private:
-		void setup_texture();
-		void tex_image();
-		void copy_texture(const graphics::BindlessTexture& other);
-		void set_and_use_texture_handle();
-		void setup_framebuffer();
+		rendering::EllipseReference create_ellipse();
+		rendering::StaticPolygon create_polygon();
+		rendering::StaticArrowExtension create_arrow();
 	};
 }

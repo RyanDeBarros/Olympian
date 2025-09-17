@@ -6,7 +6,7 @@ namespace oly::debug
 {
 	inline CollisionView collision_view(CollisionLayer& layer, const col2d::ContactResult::Contact& contact, glm::vec4 color, float arrow_width = 6.0f)
 	{
-		rendering::StaticArrowExtension impulse(layer.get_polygon_batch());
+		rendering::StaticArrowExtension impulse = layer.create_arrow();
 		impulse.set_color(color);
 		impulse.adjust_standard_head_for_width(arrow_width);
 		impulse.set_start() = contact.position;
@@ -28,7 +28,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::StaticArrowExtension impulse(view.get_layer().get_polygon_batch());
+			rendering::StaticArrowExtension impulse = view.get_layer().create_arrow();
 			impulse.set_color(color);
 			impulse.adjust_standard_head_for_width(arrow_width);
 			impulse.set_start() = contact.position;
@@ -50,7 +50,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::StaticArrowExtension impulse(view.get_layer().get_polygon_batch());
+			rendering::StaticArrowExtension impulse = view.get_layer().create_arrow();
 			impulse.adjust_standard_head_for_width(arrow_width);
 			impulse.set_start() = contact.position;
 			impulse.set_end() = contact.position + contact.impulse;
@@ -62,7 +62,7 @@ namespace oly::debug
 
 	inline CollisionView collision_view(CollisionLayer& layer, col2d::Ray ray, glm::vec4 color, float arrow_width = 6.0f)
 	{
-		rendering::StaticArrowExtension arrow(layer.get_polygon_batch());
+		rendering::StaticArrowExtension arrow = layer.create_arrow();
 		arrow.set_color(color);
 		arrow.adjust_standard_head_for_width(arrow_width);
 		arrow.set_start() = ray.origin;
@@ -85,7 +85,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::StaticArrowExtension arrow(view.get_layer().get_polygon_batch());
+			rendering::StaticArrowExtension arrow = view.get_layer().create_arrow();
 			arrow.set_color(color);
 			arrow.adjust_standard_head_for_width(arrow_width);
 			arrow.set_start() = ray.origin;
@@ -107,7 +107,7 @@ namespace oly::debug
 		}
 		else
 		{
-			rendering::StaticArrowExtension arrow(view.get_layer().get_polygon_batch());
+			rendering::StaticArrowExtension arrow = view.get_layer().create_arrow();
 			arrow.adjust_standard_head_for_width(arrow_width);
 			arrow.set_start() = ray.origin;
 			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
