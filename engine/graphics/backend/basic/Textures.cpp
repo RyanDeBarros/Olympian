@@ -47,6 +47,11 @@ namespace oly::graphics
 		return *this;
 	}
 
+	void Texture::set_parameter(GLenum param, GLint value) const
+	{
+		glTextureParameteri(id, param, value);
+	}
+
 	BindlessTexture::BindlessTexture()
 	{
 	}

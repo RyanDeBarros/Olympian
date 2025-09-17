@@ -33,8 +33,8 @@ namespace oly::graphics::textures
 		memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(unsigned char));
 		memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(unsigned char));
 		auto tex = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
-		glTextureParameteri(*tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(*tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		tex->set_and_use_handle();
 		return tex;
 	}

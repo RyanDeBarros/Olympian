@@ -601,8 +601,8 @@ namespace oly::debug
 
 	void CollisionLayer::set_and_use_texture_handle()
 	{
-		glTextureParameteri(*texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(*texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		texture->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		texture->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		texture->set_and_use_handle();
 	}
 

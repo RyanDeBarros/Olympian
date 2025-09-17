@@ -713,7 +713,12 @@ namespace oly
 			if constexpr (std::is_default_constructible_v<Object>)
 			{
 				if (SmartReference<Object>::default_valid)
+				{
+#ifndef NDEBUG
+					SmartReference<Object>::default_ref().base();
+#endif
 					SmartReference<Object>::default_ref().invalidate();
+				}
 			}
 
 			clear_stack(unoccupied);
@@ -730,6 +735,15 @@ namespace oly
 			}
 			reference_heads.clear();
 			objects.clear();
+		}
+	}
+
+	namespace internal
+	{
+		template<typename Object>
+		void force_smart_reference_base_instantiation() {
+			(void)static_cast<typename SmartReference<Object>::PoolBase* (SmartReference<Object>::*)()>(&SmartReference<Object>::base);
+			(void)static_cast<const typename SmartReference<Object>::PoolBase* (SmartReference<Object>::*)() const>(&SmartReference<Object>::base);
 		}
 	}
 }

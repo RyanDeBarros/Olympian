@@ -140,9 +140,8 @@ namespace oly
 				}
 				graphics::Image common_image(common_buf, common_dim);
 				common_texture = graphics::BindlessTextureRef(graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
-				// TODO v4 make all DSA calls actual methods on texture/bindless-texture
-				glTextureParameteri(*common_texture, GL_TEXTURE_MIN_FILTER, options.min_filter);
-				glTextureParameteri(*common_texture, GL_TEXTURE_MAG_FILTER, options.mag_filter);
+				common_texture->texture().set_parameter(GL_TEXTURE_MIN_FILTER, options.min_filter);
+				common_texture->texture().set_parameter(GL_TEXTURE_MAG_FILTER, options.mag_filter);
 				common_texture->set_and_use_handle();
 				for (auto& [codepoint, glyph] : glyphs)
 					glyph.texture = common_texture;
@@ -166,8 +165,8 @@ namespace oly
 
 			graphics::Image image(bmp, dim);
 			graphics::BindlessTexture texture = load_bindless_texture_2d(image, options.auto_generate_mipmaps);
-			glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, options.min_filter);
-			glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, options.mag_filter);
+			texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, options.min_filter);
+			texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, options.mag_filter);
 			texture.set_and_use_handle();
 			glyph.texture = graphics::BindlessTextureRef(std::move(texture));
 			glyphs.emplace(codepoint, std::move(glyph));

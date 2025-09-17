@@ -29,6 +29,8 @@ namespace oly::graphics
 		Texture& operator=(Texture&&) noexcept;
 
 		operator GLuint () const { return id; }
+
+		void set_parameter(GLenum param, GLint value) const;
 	};
 
 	typedef SmartReference<Texture> TextureRef;
@@ -55,6 +57,8 @@ namespace oly::graphics
 		GLuint64 get_handle() const { return handle; }
 		void use_handle() const;
 		void disuse_handle() const;
+
+		const Texture& texture() const { return t; }
 	};
 
 	typedef SmartReference<BindlessTexture> BindlessTextureRef;

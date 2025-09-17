@@ -14,14 +14,14 @@ namespace oly::reg
 		GLenum min_filter, mag_filter, wrap_s, wrap_t;
 		if (!parse_min_filter(node, "min_filter", min_filter))
 			min_filter = GL_NEAREST;
-		glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, min_filter);
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, min_filter);
 		if (!parse_mag_filter(node, "mag_filter", mag_filter))
 			mag_filter = GL_NEAREST;
-		glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, mag_filter);
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, mag_filter);
 		if (parse_wrap(node, "wrap s", wrap_s))
-			glTextureParameteri(texture, GL_TEXTURE_WRAP_S, wrap_s);
+			texture.texture().set_parameter(GL_TEXTURE_WRAP_S, wrap_s);
 		if (parse_wrap(node, "wrap t", wrap_t))
-			glTextureParameteri(texture, GL_TEXTURE_WRAP_T, wrap_t);
+			texture.texture().set_parameter(GL_TEXTURE_WRAP_T, wrap_t);
 
 		if (set_and_use)
 			texture.set_and_use_handle();
