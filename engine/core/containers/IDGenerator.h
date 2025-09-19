@@ -7,19 +7,27 @@
 
 namespace oly
 {
-	// TODO v4 implement ID cap for things like modulation UBO
-
 	template<std::unsigned_integral T>
 	class SoftIDGenerator
 	{
-		T next = 0;
+		T next;
+		T max;
 		std::stack<T> yielded;
 
 	public:
+		SoftIDGenerator(T initial = T(0), T max = nmax<T>())
+			: next(initial), max(max)
+		{
+		}
+
 		T gen()
 		{
 			if (yielded.empty())
+			{
+				if (next > max)
+					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 				return next++;
+			}
 			T id = yielded.top();
 			yielded.pop();
 			return id;
@@ -39,11 +47,12 @@ namespace oly
 			using Super = Issuer<StrictIDGenerator<T>>;
 			friend class ID;
 			T next;
+			T max;
 			std::stack<T> yielded;
 
 		public:
-			StrictIDGenerator(T initial)
-				: next(initial)
+			StrictIDGenerator(T initial, T max)
+				: next(initial), max(max)
 			{
 			}
 
@@ -66,7 +75,11 @@ namespace oly
 					if (StrictIDGenerator<T>* generator = accessor.get())
 					{
 						if (generator->yielded.empty())
+						{
+							if (generator->next > generator->max)
+								throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 							id = generator->next++;
+						}
 						else
 						{
 							id = generator->yielded.top();
@@ -122,9 +135,9 @@ namespace oly
 	public:
 		using ID = Generator::ID;
 
-		StrictIDGenerator(T initial = T(0))
+		StrictIDGenerator(T initial = T(0), T max = nmax<T>())
 		{
-			generator = std::make_shared<Generator>(initial);
+			generator = std::make_shared<Generator>(initial, max);
 		}
 
 		StrictIDGenerator(const StrictIDGenerator&) = delete;
