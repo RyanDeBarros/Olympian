@@ -11,7 +11,7 @@ endif()
 set(LIBRARIES_DIR "D:/Libraries")
 
 # Add Quartic static library
-add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
+add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp" "core/types/Issuer.h")
 target_include_directories(Quartic PUBLIC "${LIBRARIES_DIR}/Quartic/include")
 
 # Find OpenGL
@@ -22,7 +22,7 @@ file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURR
 
 # TODO v5 licensing may require engine to be dynamically linked?
 # Create the engine as a static library
-add_library(OlympianEngine STATIC ${ENGINE_FILES})
+add_library(OlympianEngine STATIC ${ENGINE_FILES} "core/types/Issuer.h")
 
 # TODO v5 use FetchContent, or vendor subdirectory, or something similar, rather than using LIBRARIES_DIR.
 

@@ -1,10 +1,10 @@
-﻿#include "Olympian.h"
+﻿#include <Olympian.h>
 
 #include "ProjectContext.h"
 
-#include "registries/graphics/sprites/Sprites.h"
-#include "registries/graphics/shapes/Polygons.h"
-#include "registries/graphics/TextureRegistry.h"
+#include <registries/graphics/sprites/Sprites.h>
+#include <registries/graphics/shapes/Polygons.h>
+#include <registries/graphics/TextureRegistry.h>
 
 #include "assets/archetypes/SpriteMatch.h"
 #include "assets/archetypes/Jumble.h"

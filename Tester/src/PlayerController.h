@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Olympian.h"
+#include <Olympian.h>
 
-#include "physics/dynamics/bodies/KinematicBody.h"
+#include <physics/dynamics/bodies/KinematicBody.h>
 
 struct PlayerController : public oly::InputController
 {

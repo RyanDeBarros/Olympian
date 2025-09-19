@@ -1,9 +1,9 @@
 #pragma once
 
 #include <stack>
-#include <memory>
 
 #include "core/base/Errors.h"
+#include "core/types/Issuer.h"
 
 namespace oly
 {
@@ -30,90 +30,106 @@ namespace oly
 		}
 	};
 
-	template<std::unsigned_integral T, T initial = T(0)>
-	class StrictIDGenerator
+	namespace internal
 	{
-		friend class ID;
-		T next = initial;
-		std::stack<T> yielded;
-		// TODO v4 for other node systems, consider using this design of shared_ptr<Owner*> for faster move semantics, rather than using set of pointers to node. Unless of course it's necessary to refer to nodes.
-		std::shared_ptr<StrictIDGenerator<T, initial>*> generator_source;
-
-	public:
-		StrictIDGenerator()
+		// StrictIDGenerator must be allocated on heap.
+		template<std::unsigned_integral T>
+		class StrictIDGenerator : public Issuer<StrictIDGenerator<T>>
 		{
-			generator_source = std::make_shared<StrictIDGenerator<T, initial>*>(this);
-		}
-
-		StrictIDGenerator(const StrictIDGenerator<T, initial>&) = delete;
-
-		StrictIDGenerator(StrictIDGenerator<T, initial>&& other) noexcept
-			: next(other.next), yielded(std::move(other.yielded)), generator_source(std::move(other.generator_source))
-		{
-			*generator_source = this;
-		}
-
-		StrictIDGenerator& operator=(StrictIDGenerator<T, initial>&& other) noexcept
-		{
-			if (this != &other)
-			{
-				next = other.next;
-				yielded = other.yielded;
-				generator_source = std::move(other.generator_source);
-				*generator_source = this;
-			}
-			return *this;
-		}
-
-		class ID
-		{
-			friend class StrictIDGenerator;
-			std::weak_ptr<StrictIDGenerator<T, initial>*> generator;
-			T id = T(-1);
-
-			ID(StrictIDGenerator& generator) : generator(generator.generator_source)
-			{
-				if (generator.yielded.empty())
-					id = generator.next++;
-				else
-				{
-					id = generator.yielded.top();
-					generator.yielded.pop();
-				}
-			}
+			using Super = Issuer<StrictIDGenerator<T>>;
+			friend class ID;
+			T next;
+			std::stack<T> yielded;
 
 		public:
-			ID() = default;
-
-			ID(const ID&) = delete;
-
-			ID(ID&& other) noexcept
-				: generator(std::move(other.generator)), id(other.id)
+			StrictIDGenerator(T initial)
+				: next(initial)
 			{
 			}
 
-			ID& operator=(ID&& other) noexcept
+			StrictIDGenerator(const StrictIDGenerator<T>&) = delete;
+
+			StrictIDGenerator(StrictIDGenerator<T>&& other) noexcept = default;
+
+			StrictIDGenerator<T>& operator=(StrictIDGenerator<T>&& other) noexcept = default;
+
+			class ID : public Issuer<StrictIDGenerator<T>>::Handle
 			{
-				if (this != &other)
+				using Super = Issuer<StrictIDGenerator<T>>::Handle;
+				friend class StrictIDGenerator<T>;
+				T id = T(-1);
+
+				ID(Super&& super)
+					: Super(std::move(super))
 				{
-					if (auto g = generator.lock())
-						(*g)->yielded.push(id);
-					generator = std::move(other.generator);
-					id = other.id;
+					auto accessor = Super::lock();
+					if (StrictIDGenerator<T>* generator = accessor.get())
+					{
+						if (generator->yielded.empty())
+							id = generator->next++;
+						else
+						{
+							id = generator->yielded.top();
+							generator->yielded.pop();
+						}
+					}
 				}
-				return *this;
-			}
 
-			~ID()
-			{
-				if (auto g = generator.lock())
-					(*g)->yielded.push(id);
-			}
+			public:
+				ID() = default;
 
-			T get() const { if (is_valid()) return id; else throw Error(ErrorCode::INVALID_ID); }
-			bool is_valid() const { return !generator.expired(); }
+				ID(const ID&) = delete;
+
+				ID(ID&&) noexcept = default;
+
+				ID& operator=(const ID&) = delete;
+
+				ID& operator=(ID&& other) noexcept
+				{
+					if (this != &other)
+					{
+						{
+							auto accessor = Super::lock();
+							if (StrictIDGenerator<T>* generator = accessor.get())
+								generator->yielded.push(id);
+						}
+						Super::operator=(std::move(other));
+						id = other.id;
+					}
+					return *this;
+				}
+
+				~ID()
+				{
+					auto accessor = Super::lock();
+					if (StrictIDGenerator<T>* generator = accessor.get())
+						generator->yielded.push(id);
+				}
+
+				T get() const { if (Super::is_valid()) return id; else throw Error(ErrorCode::INVALID_ID); }
+			};
+
+			ID generate() { return Super::issue(); }
 		};
+	}
 
-		ID generate() { return ID(*this); }
+	template<std::unsigned_integral T>
+	class StrictIDGenerator
+	{
+		using Generator = internal::StrictIDGenerator<T>;
+		std::shared_ptr<Generator> generator;
+
+	public:
+		using ID = Generator::ID;
+
+		StrictIDGenerator(T initial = T(0))
+		{
+			generator = std::make_shared<Generator>(initial);
+		}
+
+		StrictIDGenerator(const StrictIDGenerator&) = delete;
+		StrictIDGenerator(StrictIDGenerator&&) = default;
+
+		ID generate() { return generator->generate(); }
 	};
 }

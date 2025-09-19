@@ -131,7 +131,7 @@ class Archetype:
 def generate_header(proto: Archetype) -> str:
 	return f"""#pragma once
 
-#include "Olympian.h"
+#include <Olympian.h>
 
 namespace oly::gen
 {{

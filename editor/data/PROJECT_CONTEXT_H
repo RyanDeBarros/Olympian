@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Olympian.h"
+#include <Olympian.h>
 
 namespace oly
 {

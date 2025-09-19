@@ -71,6 +71,7 @@ namespace oly
 		return std::make_unique<Class>(*this);\
 	}
 
+	// TODO v4 use central data structure for transform chains.
 	class Transformer2D
 	{
 		Transform2D local;
