@@ -17,7 +17,11 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
+		ArrowExtension() = default;
 		ArrowExtension(PolygonBatch& batch);
+
+		PolygonBatch* get_batch() const { return body.get_batch(); }
+		void set_batch(PolygonBatch* batch) { body.set_batch(batch); head.set_batch(batch); }
 
 		void draw() const;
 
@@ -68,7 +72,11 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
+		StaticArrowExtension() = default;
 		StaticArrowExtension(PolygonBatch& batch);
+
+		PolygonBatch* get_batch() const { return body.get_batch(); }
+		void set_batch(PolygonBatch* batch) { body.set_batch(batch); head.set_batch(batch); }
 
 		void draw() const;
 

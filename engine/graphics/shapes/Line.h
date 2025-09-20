@@ -14,7 +14,11 @@ namespace oly::rendering
 		mutable bool can_draw = true;
 
 	public:
+		LineExtension() = default;
 		LineExtension(PolygonBatch& batch);
+
+		PolygonBatch* get_batch() const { return poly.get_batch(); }
+		void set_batch(PolygonBatch* batch) { poly.set_batch(batch); }
 
 		void draw() const;
 

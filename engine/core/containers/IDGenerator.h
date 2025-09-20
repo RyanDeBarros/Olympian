@@ -68,8 +68,7 @@ namespace oly
 				friend class StrictIDGenerator<T>;
 				T id = T(-1);
 
-				ID(Super&& super)
-					: Super(std::move(super))
+				void init()
 				{
 					auto accessor = Super::lock();
 					if (StrictIDGenerator<T>* generator = accessor.get())
@@ -88,38 +87,73 @@ namespace oly
 					}
 				}
 
-			public:
-				ID() = default;
-
-				ID(const ID&) = delete;
-
-				ID(ID&&) noexcept = default;
-
-				ID& operator=(const ID&) = delete;
-
-				ID& operator=(ID&& other) noexcept
-				{
-					if (this != &other)
-					{
-						{
-							auto accessor = Super::lock();
-							if (StrictIDGenerator<T>* generator = accessor.get())
-								generator->yielded.push(id);
-						}
-						Super::operator=(std::move(other));
-						id = other.id;
-					}
-					return *this;
-				}
-
-				~ID()
+				void del()
 				{
 					auto accessor = Super::lock();
 					if (StrictIDGenerator<T>* generator = accessor.get())
 						generator->yielded.push(id);
 				}
 
-				T get() const { if (Super::is_valid()) return id; else throw Error(ErrorCode::INVALID_ID); }
+				ID(Super&& super)
+					: Super(std::move(super))
+				{
+					init();
+				}
+
+			public:
+				ID() = default;
+
+				ID(const ID& other)
+					: Super(other)
+				{
+					init();
+				}
+
+				ID(ID&& other) noexcept
+					: Super(std::move(other)), id(other.id)
+				{
+					other.id = T(-1);
+				}
+
+				ID& operator=(const ID& other)
+				{
+					if (this != &other)
+					{
+						del();
+						Super::operator=(other);
+						init();
+					}
+				}
+
+				ID& operator=(ID&& other) noexcept
+				{
+					if (this != &other)
+					{
+						del();
+						Super::operator=(std::move(other));
+						id = other.id;
+						other.id = T(-1);
+					}
+					return *this;
+				}
+
+				~ID()
+				{
+					del();
+				}
+
+				T get() const
+				{
+					if (Super::is_valid())
+						return id;
+					else
+						throw Error(ErrorCode::INVALID_ID);
+				}
+				
+				void yield()
+				{
+					del();
+				}
 			};
 
 			ID generate() { return Super::issue(); }

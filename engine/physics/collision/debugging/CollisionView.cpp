@@ -500,7 +500,7 @@ namespace oly::debug
 
 	CollisionObject CollisionLayer::default_collision_object()
 	{
-		return CollisionObject(*this, create_ellipse());
+		return CollisionObject(*this, rendering::EllipseReference());
 	}
 
 	rendering::EllipseReference CollisionLayer::create_ellipse()

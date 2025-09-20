@@ -65,21 +65,24 @@ namespace oly::rendering
 		EllipseID generate_id();
 	};
 
-	// TODO v4 support setting different batch
 	class EllipseReference
 	{
 		friend class EllipseBatch;
-		EllipseBatch& batch;
+		EllipseBatch* batch = nullptr;
 		EllipseBatch::EllipseID pos;
 
 	public:
+		EllipseReference() = default;
 		EllipseReference(EllipseBatch& batch);
 		EllipseReference(const EllipseReference&);
 		EllipseReference(EllipseReference&&) noexcept;
 		EllipseReference& operator=(const EllipseReference&);
 		EllipseReference& operator=(EllipseReference&&) noexcept;
 
-		const EllipseBatch::EllipseDimension& get_dimension() const;
+		EllipseBatch* get_batch() const { return batch; }
+		void set_batch(EllipseBatch* batch);
+
+		EllipseBatch::EllipseDimension get_dimension() const;
 		EllipseBatch::EllipseDimension& set_dimension();
 		const EllipseBatch::ColorGradient& get_color() const;
 		EllipseBatch::ColorGradient& set_color();
@@ -87,6 +90,30 @@ namespace oly::rendering
 		glm::mat3& set_transform();
 
 		void draw() const;
+
+	private:
+		struct Attributes
+		{
+			EllipseBatch::EllipseDimension dimension = {};
+			EllipseBatch::ColorGradient color = {};
+			glm::mat3 transform = 1.0f;
+		};
+
+		Attributes get_attributes() const
+		{
+			return {
+				.dimension = get_dimension(),
+				.color = get_color(),
+				.transform = get_transform()
+			};
+		}
+
+		void set_attributes(const Attributes& attr = {})
+		{
+			set_dimension() = attr.dimension;
+			set_color() = attr.color;
+			set_transform() = attr.transform;
+		}
 	};
 
 	struct Ellipse
@@ -94,6 +121,7 @@ namespace oly::rendering
 		EllipseReference ellipse;
 		Transformer2D transformer;
 
+		Ellipse() = default;
 		Ellipse(EllipseBatch& batch) : ellipse(batch) {}
 		Ellipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));

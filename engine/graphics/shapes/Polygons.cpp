@@ -187,9 +187,7 @@ namespace oly::rendering
 	internal::PolygonReference& internal::PolygonReference::operator=(const PolygonReference& other)
 	{
 		if (this != &other)
-		{
-			// TODO v4 support setting batch
-		}
+			set_batch(other.batch);
 		return *this;
 	}
 
@@ -205,9 +203,20 @@ namespace oly::rendering
 					id = std::move(other.id);
 				}
 			}
-			// TODO v4 support setting batch
+			else
+				set_batch(other.batch);
 		}
 		return *this;
+	}
+
+	void internal::PolygonReference::set_batch(PolygonBatch* batch)
+	{
+		if (this->batch != batch)
+		{
+			id.yield();
+			this->batch = batch;
+			resize_range(3);
+		}
 	}
 
 	void internal::PolygonReference::resize_range(PolygonBatch::Index vertices)
@@ -363,6 +372,45 @@ namespace oly::rendering
 	{
 		return ref.draw_index();
 	}
+	
+	Polygon::Polygon(PolygonBatch& batch)
+		: Polygonal(batch)
+	{
+	}
+	
+	Polygon::Polygon(const Polygon& other)
+		: Polygonal(other), polygon(other.polygon), cache(other.cache)
+	{
+		send_polygon();
+	}
+	
+	Polygon::Polygon(Polygon&& other) noexcept
+		: Polygonal(std::move(other)), polygon(std::move(other.polygon)), cache(std::move(other.cache))
+	{
+	}
+	
+	Polygon& Polygon::operator=(const Polygon& other)
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(other);
+			polygon = other.polygon;
+			cache = other.cache;
+			send_polygon();
+		}
+		return *this;
+	}
+	
+	Polygon& Polygon::operator=(Polygon&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(std::move(other));
+			polygon = std::move(other.polygon);
+			cache = std::move(other.cache);
+		}
+		return *this;
+	}
 
 	GLuint Polygon::num_vertices() const
 	{
@@ -387,6 +435,43 @@ namespace oly::rendering
 			draw_index() = cache[i][1] + initial_vertex;
 			draw_index() = cache[i][2] + initial_vertex;
 		}
+	}
+
+	PolyComposite::PolyComposite(PolygonBatch& batch)
+		: Polygonal(batch)
+	{
+	}
+
+	PolyComposite::PolyComposite(const PolyComposite& other)
+		: Polygonal(other), composite(other.composite)
+	{
+		send_polygon();
+	}
+
+	PolyComposite::PolyComposite(PolyComposite&& other) noexcept
+		: Polygonal(std::move(other)), composite(std::move(other.composite))
+	{
+	}
+
+	PolyComposite& PolyComposite::operator=(const PolyComposite& other)
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(other);
+			composite = other.composite;
+			send_polygon();
+		}
+		return *this;
+	}
+
+	PolyComposite& PolyComposite::operator=(PolyComposite&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(std::move(other));
+			composite = std::move(other.composite);
+		}
+		return *this;
 	}
 
 	GLuint PolyComposite::num_vertices() const
@@ -420,6 +505,47 @@ namespace oly::rendering
 			}
 			offset += (GLuint)tp.polygon.points.size();
 		}
+	}
+
+	NGon::NGon(PolygonBatch& batch)
+		: Polygonal(batch)
+	{
+	}
+
+	NGon::NGon(const NGon& other)
+		: Polygonal(other), bordered(other.bordered), base(other.base), cache(other.cache)
+	{
+		send_polygon();
+	}
+
+	NGon::NGon(NGon&& other) noexcept
+		: Polygonal(std::move(other)), bordered(other.bordered), base(std::move(other.base)), cache(std::move(other.cache))
+	{
+	}
+
+	NGon& NGon::operator=(const NGon& other)
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(other);
+			bordered = other.bordered;
+			base = other.base;
+			cache = other.cache;
+			send_polygon();
+		}
+		return *this;
+	}
+
+	NGon& NGon::operator=(NGon&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Polygonal::operator=(std::move(other));
+			bordered = std::move(other.bordered);
+			base = std::move(other.base);
+			cache = std::move(other.cache);
+		}
+		return *this;
 	}
 
 	GLuint NGon::num_vertices() const

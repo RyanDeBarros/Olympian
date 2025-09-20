@@ -70,20 +70,23 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		// TODO v4 support setting different batch
 		class PolygonReference
 		{
 			friend class PolygonBatch;
-			PolygonBatch* batch;
+			PolygonBatch* batch = nullptr;
 			PolygonBatch::PolygonID id;
 			
 		public:
+			PolygonReference() = default;
 			PolygonReference(PolygonBatch& batch);
 			PolygonReference(const PolygonReference&);
 			PolygonReference(PolygonReference&&) noexcept;
 			~PolygonReference();
 			PolygonReference& operator=(const PolygonReference&);
 			PolygonReference& operator=(PolygonReference&&) noexcept;
+
+			PolygonBatch* get_batch() const { return batch; }
+			void set_batch(PolygonBatch* batch);
 
 			void resize_range(PolygonBatch::Index vertices);
 			Range<PolygonBatch::Index> get_vertex_range() const;
@@ -98,6 +101,8 @@ namespace oly::rendering
 		};
 	}
 
+	// TODO v4 remove init() - it should be called automatically when sending polygons/colors/transforms.
+
 	// ASSET
 	class StaticPolygon
 	{
@@ -107,11 +112,15 @@ namespace oly::rendering
 	public:
 		cmath::Polygon2D polygon;
 
+		StaticPolygon() = default;
 		StaticPolygon(PolygonBatch& batch);
 		StaticPolygon(const StaticPolygon&);
 		StaticPolygon(StaticPolygon&&) noexcept = default;
 		StaticPolygon& operator=(const StaticPolygon&);
 		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
+
+		PolygonBatch* get_batch() const { return ref.get_batch(); }
+		void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
 
 		void init();
 		void send_polygon() const;
@@ -126,12 +135,16 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
+		Polygonal() = default;
 		Polygonal(PolygonBatch& batch);
 		Polygonal(const Polygonal&) = default;
 		Polygonal(Polygonal&&) noexcept = default;
 		virtual ~Polygonal() = default;
 		Polygonal& operator=(const Polygonal&) = default;
 		Polygonal& operator=(Polygonal&&) noexcept = default;
+
+		PolygonBatch* get_batch() const { return ref.get_batch(); }
+		void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
@@ -155,7 +168,12 @@ namespace oly::rendering
 	{
 		cmath::Polygon2D polygon;
 
-		using Polygonal::Polygonal;
+		Polygon() = default;
+		Polygon(PolygonBatch& batch);
+		Polygon(const Polygon&);
+		Polygon(Polygon&&) noexcept;
+		Polygon& operator=(const Polygon&);
+		Polygon& operator=(Polygon&&) noexcept;
 
 		virtual GLuint num_vertices() const override;
 
@@ -172,7 +190,12 @@ namespace oly::rendering
 	{
 		cmath::Polygon2DComposite composite;
 
-		using Polygonal::Polygonal;
+		PolyComposite() = default;
+		PolyComposite(PolygonBatch& batch);
+		PolyComposite(const PolyComposite&);
+		PolyComposite(PolyComposite&&) noexcept;
+		PolyComposite& operator=(const PolyComposite&);
+		PolyComposite& operator=(PolyComposite&&) noexcept;
 
 		virtual GLuint num_vertices() const override;
 
@@ -187,7 +210,12 @@ namespace oly::rendering
 		bool bordered = false;
 		cmath::NGonBase base;
 
-		using Polygonal::Polygonal;
+		NGon() = default;
+		NGon(PolygonBatch& batch);
+		NGon(const NGon&);
+		NGon(NGon&&) noexcept;
+		NGon& operator=(const NGon&);
+		NGon& operator=(NGon&&) noexcept;
 
 		virtual GLuint num_vertices() const override;
 

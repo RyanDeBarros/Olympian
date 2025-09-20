@@ -38,42 +38,40 @@ namespace oly::rendering
 	}
 
 	EllipseReference::EllipseReference(EllipseBatch& batch)
-		: batch(batch)
+		: batch(&batch)
 	{
-		pos = this->batch.generate_id();
-		set_dimension() = {};
-		set_color() = {};
-		set_transform() = 1.0f;
+		pos = this->batch->generate_id();
+		set_attributes();
 	}
 
 	EllipseReference::EllipseReference(const EllipseReference& other)
 		: batch(other.batch)
 	{
-		pos = batch.generate_id();
-		set_dimension() = other.get_dimension();
-		set_color() = other.get_color();
-		set_transform() = other.get_transform();
+		if (batch)
+		{
+			pos = batch->generate_id();
+			set_attributes(other.get_attributes());
+		}
 	}
 
 	EllipseReference::EllipseReference(EllipseReference&& other) noexcept
-		: batch(other.batch)
+		: batch(other.batch), pos(std::move(other.pos))
 	{
-		EllipseBatch::EllipseDimension dimension = other.get_dimension();
-		EllipseBatch::ColorGradient color = other.get_color();
-		glm::mat3 transform = other.get_transform();
-		pos = std::move(other.pos);
-		set_dimension() = dimension;
-		set_color() = color;
-		set_transform() = transform;
 	}
 
 	EllipseReference& EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
 		{
-			set_dimension() = other.get_dimension();
-			set_color() = other.get_color();
-			set_transform() = other.get_transform();
+			if (batch != other.batch)
+			{
+				pos.yield();
+				batch = other.batch;
+				if (batch)
+					pos = batch->generate_id();
+			}
+			if (batch)
+				set_attributes(other.get_attributes());
 		}
 		return *this;
 	}
@@ -82,46 +80,100 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			set_dimension() = other.get_dimension();
-			set_color() = other.get_color();
-			set_transform() = other.get_transform();
+			if (batch != other.batch)
+			{
+				batch = other.batch;
+				pos = std::move(other.pos);
+			}
+			else if (batch)
+				set_attributes(other.get_attributes());
 		}
 		return *this;
 	}
 
-	const EllipseBatch::EllipseDimension& EllipseReference::get_dimension() const
+	void EllipseReference::set_batch(EllipseBatch* batch)
 	{
-		return batch.ssbo_block.get<EllipseBatch::DIMENSION>(pos.get());
+		if (this->batch == batch)
+			return;
+
+		if (this->batch)
+		{
+			if (batch)
+			{
+				Attributes attr = get_attributes();
+				pos.yield();
+				this->batch = batch;
+				pos = this->batch->generate_id();
+				set_attributes(attr);
+			}
+			else
+			{
+				pos.yield();
+				this->batch = batch;
+			}
+		}
+		else
+		{
+			this->batch = batch;
+			pos = this->batch->generate_id();
+			set_attributes();
+		}
+	}
+
+	EllipseBatch::EllipseDimension EllipseReference::get_dimension() const
+	{
+		if (batch)
+			return batch->ssbo_block.get<EllipseBatch::DIMENSION>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	EllipseBatch::EllipseDimension& EllipseReference::set_dimension()
 	{
-		return batch.ssbo_block.set<EllipseBatch::DIMENSION>(pos.get());
+		if (batch)
+			return batch->ssbo_block.set<EllipseBatch::DIMENSION>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	const EllipseBatch::ColorGradient& EllipseReference::get_color() const
 	{
-		return batch.ssbo_block.get<EllipseBatch::COLOR>(pos.get());
+		if (batch)
+			return batch->ssbo_block.get<EllipseBatch::COLOR>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	EllipseBatch::ColorGradient& EllipseReference::set_color()
 	{
-		return batch.ssbo_block.set<EllipseBatch::COLOR>(pos.get());
+		if (batch)
+			return batch->ssbo_block.set<EllipseBatch::COLOR>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	const glm::mat3& EllipseReference::get_transform() const
 	{
-		return batch.ssbo_block.get<EllipseBatch::TRANSFORM>(pos.get());
+		if (batch)
+			return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	glm::mat3& EllipseReference::set_transform()
 	{
-		return batch.ssbo_block.set<EllipseBatch::TRANSFORM>(pos.get());
+		if (batch)
+			return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void EllipseReference::draw() const
 	{
-		graphics::quad_indices(batch.ebo.draw_primitive().data(), pos.get());
+		if (batch)
+			graphics::quad_indices(batch->ebo.draw_primitive().data(), pos.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
