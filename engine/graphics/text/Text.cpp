@@ -14,56 +14,12 @@ namespace oly::rendering
 		: ref(other.ref), transformer(other.transformer)
 	{
 		ref.set_text_glyph(true);
-
-		glm::vec2 dim;
-		auto tex = other.ref.get_texture(dim);
-		ref.set_texture(tex, dim);
-		ref.set_tex_coords(other.ref.get_tex_coords());
-		ref.set_modulation(other.ref.get_modulation());
 	}
 
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
 		: ref(std::move(other.ref)), transformer(std::move(other.transformer))
 	{
 		ref.set_text_glyph(true);
-	}
-
-	TextGlyph& TextGlyph::operator=(const TextGlyph& other)
-	{
-		if (this != &other)
-		{
-			ref = other.ref;
-			transformer = other.transformer;
-
-			glm::vec2 dim;
-			auto tex = other.ref.get_texture(dim);
-			ref.set_texture(tex, dim);
-			ref.set_tex_coords(other.ref.get_tex_coords());
-			ref.set_modulation(other.ref.get_modulation());
-		}
-		return *this;
-	}
-
-	TextGlyph& TextGlyph::operator=(TextGlyph&& other) noexcept
-	{
-		if (this != &other)
-		{
-			ref = std::move(other.ref);
-			transformer = std::move(other.transformer);
-			if (&ref.batch != &other.ref.batch)
-			{
-				glm::vec2 dim;
-				auto tex = other.ref.get_texture(dim);
-				ref.set_texture(tex, dim);
-				ref.set_tex_coords(other.ref.get_tex_coords());
-				ref.set_modulation(other.ref.get_modulation());
-			}
-		}
-		return *this;
-	}
-
-	TextGlyph::~TextGlyph()
-	{
 	}
 
 	void TextGlyph::draw() const

@@ -92,6 +92,8 @@ namespace oly
 					auto accessor = Super::lock();
 					if (StrictIDGenerator<T>* generator = accessor.get())
 						generator->yielded.push(id);
+					Super::reset();
+					id = T(-1);
 				}
 
 				ID(Super&& super)

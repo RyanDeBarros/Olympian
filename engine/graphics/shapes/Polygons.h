@@ -77,8 +77,7 @@ namespace oly::rendering
 			PolygonBatch::PolygonID id;
 			
 		public:
-			PolygonReference() = default;
-			PolygonReference(PolygonBatch& batch);
+			PolygonReference(PolygonBatch* batch = nullptr);
 			PolygonReference(const PolygonReference&);
 			PolygonReference(PolygonReference&&) noexcept;
 			~PolygonReference();
@@ -112,8 +111,7 @@ namespace oly::rendering
 	public:
 		cmath::Polygon2D polygon;
 
-		StaticPolygon() = default;
-		StaticPolygon(PolygonBatch& batch);
+		StaticPolygon(PolygonBatch* batch = nullptr);
 		StaticPolygon(const StaticPolygon&);
 		StaticPolygon(StaticPolygon&&) noexcept = default;
 		StaticPolygon& operator=(const StaticPolygon&);
@@ -135,8 +133,7 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
-		Polygonal() = default;
-		Polygonal(PolygonBatch& batch);
+		Polygonal(PolygonBatch* batch = nullptr);
 		Polygonal(const Polygonal&) = default;
 		Polygonal(Polygonal&&) noexcept = default;
 		virtual ~Polygonal() = default;
@@ -168,8 +165,7 @@ namespace oly::rendering
 	{
 		cmath::Polygon2D polygon;
 
-		Polygon() = default;
-		Polygon(PolygonBatch& batch);
+		Polygon(PolygonBatch* batch = nullptr);
 		Polygon(const Polygon&);
 		Polygon(Polygon&&) noexcept;
 		Polygon& operator=(const Polygon&);
@@ -190,8 +186,7 @@ namespace oly::rendering
 	{
 		cmath::Polygon2DComposite composite;
 
-		PolyComposite() = default;
-		PolyComposite(PolygonBatch& batch);
+		PolyComposite(PolygonBatch* batch = nullptr);
 		PolyComposite(const PolyComposite&);
 		PolyComposite(PolyComposite&&) noexcept;
 		PolyComposite& operator=(const PolyComposite&);
@@ -210,8 +205,7 @@ namespace oly::rendering
 		bool bordered = false;
 		cmath::NGonBase base;
 
-		NGon() = default;
-		NGon(PolygonBatch& batch);
+		NGon(PolygonBatch* batch = nullptr);
 		NGon(const NGon&);
 		NGon(NGon&&) noexcept;
 		NGon& operator=(const NGon&);

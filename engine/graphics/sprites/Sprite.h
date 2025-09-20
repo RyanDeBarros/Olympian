@@ -11,12 +11,15 @@ namespace oly::rendering
 		internal::SpriteReference ref;
 
 	public:
-		StaticSprite(SpriteBatch* batch = nullptr);
-		StaticSprite(const StaticSprite&);
-		StaticSprite(StaticSprite&&) noexcept;
-		StaticSprite& operator=(const StaticSprite&);
-		StaticSprite& operator=(StaticSprite&&) noexcept;
-		~StaticSprite();
+		StaticSprite() = default;
+		StaticSprite(SpriteBatch* batch) : ref(batch) {}
+		StaticSprite(const StaticSprite&) = default;
+		StaticSprite(StaticSprite&&) noexcept = default;
+		StaticSprite& operator=(const StaticSprite&) = default;
+		StaticSprite& operator=(StaticSprite&&) noexcept = default;
+
+		SpriteBatch* get_batch() const { return ref.get_batch(); }
+		void set_batch(SpriteBatch* batch) { ref.set_batch(batch); }
 
 		void draw() const;
 
@@ -50,12 +53,15 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
-		Sprite(SpriteBatch* batch = nullptr);
-		Sprite(const Sprite&);
-		Sprite(Sprite&&) noexcept;
-		Sprite& operator=(const Sprite&);
-		Sprite& operator=(Sprite&&) noexcept;
-		~Sprite();
+		Sprite() = default;
+		Sprite(SpriteBatch* batch) : ref(batch) {}
+		Sprite(const Sprite&) = default;
+		Sprite(Sprite&&) noexcept = default;
+		Sprite& operator=(const Sprite&) = default;
+		Sprite& operator=(Sprite&&) noexcept = default;
+
+		SpriteBatch* get_batch() const { return ref.get_batch(); }
+		void set_batch(SpriteBatch* batch) { ref.set_batch(batch); }
 
 		void draw() const;
 

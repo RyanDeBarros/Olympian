@@ -4,7 +4,7 @@
 
 namespace oly::rendering
 {
-	LineExtension::LineExtension(PolygonBatch& batch)
+	LineExtension::LineExtension(PolygonBatch* batch)
 		: poly(batch)
 	{
 		poly.polygon.colors.reserve(4);

@@ -52,13 +52,13 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::Polygon load_polygon(rendering::PolygonBatch& batch, const TOMLNode& node);
-	extern rendering::Polygon load_polygon(rendering::PolygonBatch& batch, const params::Polygon& params);
-	extern rendering::Polygon load_polygon(rendering::PolygonBatch& batch, params::Polygon&& params);
-	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, const TOMLNode& node);
-	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, const params::PolyComposite& params);
-	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, params::PolyComposite&& params);
-	extern rendering::NGon load_ngon(rendering::PolygonBatch& batch, const TOMLNode& node);
-	extern rendering::NGon load_ngon(rendering::PolygonBatch& batch, const params::NGon& params);
-	extern rendering::NGon load_ngon(rendering::PolygonBatch& batch, params::NGon&& params);
+	extern rendering::Polygon load_polygon(rendering::PolygonBatch* batch, const TOMLNode& node);
+	extern rendering::Polygon load_polygon(rendering::PolygonBatch* batch, const params::Polygon& params);
+	extern rendering::Polygon load_polygon(rendering::PolygonBatch* batch, params::Polygon&& params);
+	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, const TOMLNode& node);
+	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, const params::PolyComposite& params);
+	extern rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, params::PolyComposite&& params);
+	extern rendering::NGon load_ngon(rendering::PolygonBatch* batch, const TOMLNode& node);
+	extern rendering::NGon load_ngon(rendering::PolygonBatch* batch, const params::NGon& params);
+	extern rendering::NGon load_ngon(rendering::PolygonBatch* batch, params::NGon&& params);
 }

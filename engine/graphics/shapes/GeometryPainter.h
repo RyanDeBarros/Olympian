@@ -20,9 +20,9 @@ namespace oly::rendering
 	{
 		static const int TEXTURE_CPP = 4;
 
-		rendering::PolygonBatch polygon_batch;
-		rendering::EllipseBatch ellipse_batch;
-		rendering::StaticSprite sprite;
+		PolygonBatch polygon_batch;
+		EllipseBatch ellipse_batch;
+		StaticSprite sprite;
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRef texture;
 		glm::ivec2 dimensions;
@@ -43,7 +43,8 @@ namespace oly::rendering
 	public:
 		std::function<void()> paint_fn = []() {};
 
-		GeometryPainter(const std::function<void()>& paint_fn, rendering::SpriteBatch* batch = nullptr);
+		GeometryPainter(const std::function<void()>& paint_fn);
+		GeometryPainter(const std::function<void()>& paint_fn, SpriteBatch* batch);
 		GeometryPainter(const GeometryPainter&);
 		GeometryPainter(GeometryPainter&&) noexcept;
 		~GeometryPainter();
@@ -59,10 +60,13 @@ namespace oly::rendering
 		void flag_dirty() const { dirty = true; }
 		void regen_to_current_resolution();
 
-		const rendering::PolygonBatch& get_polygon_batch() const { return polygon_batch; }
-		rendering::PolygonBatch& get_polygon_batch() { return polygon_batch; }
-		const rendering::EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
-		rendering::EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
+		SpriteBatch* get_sprite_batch() const { return sprite.get_batch(); }
+		void set_sprite_batch(SpriteBatch* batch) { sprite.set_batch(batch); }
+
+		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
+		PolygonBatch& get_polygon_batch() { return polygon_batch; }
+		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
+		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
 
 	private:
 		void setup_texture();

@@ -163,8 +163,8 @@ namespace oly::rendering
 		return id.is_valid() && polygon_indexer.count(id.get());
 	}
 
-	internal::PolygonReference::PolygonReference(PolygonBatch& batch)
-		: batch(&batch)
+	internal::PolygonReference::PolygonReference(PolygonBatch* batch)
+		: batch(batch)
 	{
 	}
 
@@ -221,7 +221,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::resize_range(PolygonBatch::Index vertices)
 	{
-		if (batch)
+		if (batch) [[likely]]
 			batch->resize_range(id, vertices);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -229,7 +229,7 @@ namespace oly::rendering
 
 	Range<PolygonBatch::Index> internal::PolygonReference::get_vertex_range() const
 	{
-		if (batch)
+		if (batch) [[likely]]
 			return batch->get_vertex_range(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -237,25 +237,25 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const
 	{
-		if (batch)
+		if (batch) [[likely]]
 			batch->set_primitive_points(batch->get_vertex_range(id), points, count);
 	}
 
 	void internal::PolygonReference::set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const
 	{
-		if (batch)
+		if (batch) [[likely]]
 			batch->set_primitive_colors(batch->get_vertex_range(id), colors, count);
 	}
 
 	GLuint& internal::PolygonReference::draw_index() const
 	{
-		if (batch)
+		if (batch) [[likely]]
 			return batch->ebo.draw_primitive()[0];
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	StaticPolygon::StaticPolygon(PolygonBatch& batch)
+	StaticPolygon::StaticPolygon(PolygonBatch* batch)
 		: ref(batch)
 	{
 	}
@@ -318,7 +318,7 @@ namespace oly::rendering
 		}
 	}
 
-	Polygonal::Polygonal(PolygonBatch& batch)
+	Polygonal::Polygonal(PolygonBatch* batch)
 		: ref(batch)
 	{
 	}
@@ -373,7 +373,7 @@ namespace oly::rendering
 		return ref.draw_index();
 	}
 	
-	Polygon::Polygon(PolygonBatch& batch)
+	Polygon::Polygon(PolygonBatch* batch)
 		: Polygonal(batch)
 	{
 	}
@@ -437,7 +437,7 @@ namespace oly::rendering
 		}
 	}
 
-	PolyComposite::PolyComposite(PolygonBatch& batch)
+	PolyComposite::PolyComposite(PolygonBatch* batch)
 		: Polygonal(batch)
 	{
 	}
@@ -507,7 +507,7 @@ namespace oly::rendering
 		}
 	}
 
-	NGon::NGon(PolygonBatch& batch)
+	NGon::NGon(PolygonBatch* batch)
 		: Polygonal(batch)
 	{
 	}

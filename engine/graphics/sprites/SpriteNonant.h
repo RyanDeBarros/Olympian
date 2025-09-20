@@ -33,7 +33,11 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 	public:
-		SpriteNonant(SpriteBatch* batch = nullptr);
+		SpriteNonant();
+		SpriteNonant(SpriteBatch* batch);
+
+		SpriteBatch* get_batch() const { return sprite(0, 0).get_batch(); }
+		void set_batch(SpriteBatch* batch);
 
 		void draw() const;
 

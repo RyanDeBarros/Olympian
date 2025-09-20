@@ -13,7 +13,7 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		struct SpriteReference;
+		class SpriteReference;
 
 		class SpriteBatchRegistry
 		{
@@ -33,7 +33,7 @@ namespace oly::rendering
 
 	class SpriteBatch
 	{
-		friend struct internal::SpriteReference;
+		friend class internal::SpriteReference;
 
 		graphics::VertexArray vao;
 		graphics::PersistentEBO<6> ebo;
@@ -110,7 +110,7 @@ namespace oly::rendering
 		typedef StrictIDGenerator<GLuint>::ID SpriteID;
 		StrictIDGenerator<GLuint> id_generator;
 		SpriteID gen_sprite_id();
-		void erase_sprite_id(const SpriteID& id);
+		void erase_sprite_id(SpriteID& id);
 
 		struct QuadInfoStore
 		{
@@ -156,20 +156,23 @@ namespace oly::rendering
 	namespace internal
 	{
 		// TODO v4 support setting different batch
-		struct SpriteReference
+		class SpriteReference
 		{
-			SpriteBatch& batch;
-			const bool in_context;
+			SpriteBatch* batch = nullptr;
 			SpriteBatch::SpriteID id;
 
-			SpriteReference(SpriteBatch* batch = nullptr);
+		public:
+			SpriteReference();
+			SpriteReference(SpriteBatch* batch);
 			SpriteReference(const SpriteReference&);
 			SpriteReference(SpriteReference&&) noexcept;
 			~SpriteReference();
 			SpriteReference& operator=(const SpriteReference&);
 			SpriteReference& operator=(SpriteReference&&) noexcept;
 
-			bool is_in_context() const { return in_context; }
+			bool is_in_context() const { return batch; }
+			SpriteBatch* get_batch() const { return batch; }
+			void set_batch(SpriteBatch* batch);
 
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;
@@ -195,7 +198,6 @@ namespace oly::rendering
 			math::UVRect get_mod_tex_coords() const;
 			glm::mat3 get_transform() const;
 
-			std::invoke_result_t<decltype(&decltype(SpriteBatch::ebo)::draw_primitive), decltype(SpriteBatch::ebo)> draw_primitive() const;
 			void draw_quad() const;
 		};
 	}

@@ -62,6 +62,11 @@ namespace oly::internal
 			{
 				return Accessor(issuer.lock());
 			}
+
+			void reset()
+			{
+				issuer.reset();
+			}
 		};
 
 		Handle issue()

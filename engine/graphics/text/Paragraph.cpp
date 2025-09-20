@@ -8,8 +8,19 @@
 
 namespace oly::rendering
 {
-	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text, SpriteBatch* batch)
-		: batch(batch ? *batch : context::sprite_batch()), format(format), font(font), bkg(batch)
+	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
+		: format(format), font(font), bkg()
+	{
+		init(std::move(text));
+	}
+
+	Paragraph::Paragraph(SpriteBatch* batch, const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
+		: format(format), font(font), bkg(batch)
+	{
+		init(std::move(text));
+	}
+
+	void Paragraph::init(utf::String&& text)
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
@@ -18,6 +29,13 @@ namespace oly::rendering
 		set_bkg_color({ 0.0f, 0.0f, 0.0f, 1.0f });
 		if (!text.empty())
 			set_text(std::move(text));
+	}
+
+	void Paragraph::set_batch(SpriteBatch* batch)
+	{
+		bkg.set_batch(batch);
+		for (auto& glyph : glyphs)
+			glyph.set_batch(batch);
 	}
 
 	void Paragraph::recolor_text_with_default()

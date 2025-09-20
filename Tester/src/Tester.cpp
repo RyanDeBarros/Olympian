@@ -33,7 +33,7 @@ struct BKG
 	oly::rendering::PolygonRef bkg_rect;
 
 	BKG(oly::rendering::PolygonBatch& batch)
-		: bkg_rect(oly::reg::load_polygon(batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
+		: bkg_rect(oly::reg::load_polygon(&batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
 	{
 		bkg_rect->init();
 	}
@@ -234,7 +234,6 @@ int main()
 
 	// TODO v4 one of the rays aren't rendering the head.
 
-	oly::debug::CollisionView player_impulse_cv(pipeline.impulse_layer), block_impulse_cv(pipeline.impulse_layer), raycast_result_cv(pipeline.raycast_result_layer);
 	auto player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	auto block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	auto ray_cv = oly::debug::collision_view(pipeline.ray_layer, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));

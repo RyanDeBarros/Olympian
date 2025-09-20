@@ -35,6 +35,13 @@ namespace oly::rendering
 		painter->ellipse_batch.projection = projection;
 	}
 
+	GeometryPainter::GeometryPainter(const std::function<void()>& paint_fn)
+		: sprite(), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
+	{
+		dimensions = context::get_platform().window().get_size();
+		setup_texture();
+	}
+
 	GeometryPainter::GeometryPainter(const std::function<void()>& paint_fn, rendering::SpriteBatch* batch)
 		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
 	{

@@ -116,12 +116,16 @@ namespace oly::debug
 		std::unordered_set<CollisionView*> collision_views;
 
 	public:
-		CollisionLayer(rendering::SpriteBatch* batch = nullptr);
+		CollisionLayer();
+		CollisionLayer(rendering::SpriteBatch* batch);
 		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
 		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
+
+		rendering::SpriteBatch* get_batch() const { return painter.get_sprite_batch(); }
+		void set_batch(rendering::SpriteBatch* batch) { painter.set_sprite_batch(batch); }
 
 	private:
 		std::function<void()> paint_fn() const;

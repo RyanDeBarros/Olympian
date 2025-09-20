@@ -10,7 +10,8 @@ namespace oly::rendering
 		std::vector<math::UVRect> atlas;
 		graphics::AnimFrameFormat anim_format;
 
-		SpriteAtlas(SpriteBatch* batch = nullptr);
+		SpriteAtlas() = default;
+		SpriteAtlas(SpriteBatch* batch);
 		SpriteAtlas(Sprite&& sprite);
 
 		void draw() const;

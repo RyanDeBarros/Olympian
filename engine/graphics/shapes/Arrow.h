@@ -18,7 +18,7 @@ namespace oly::rendering
 
 	public:
 		ArrowExtension() = default;
-		ArrowExtension(PolygonBatch& batch);
+		ArrowExtension(PolygonBatch* batch);
 
 		PolygonBatch* get_batch() const { return body.get_batch(); }
 		void set_batch(PolygonBatch* batch) { body.set_batch(batch); head.set_batch(batch); }
@@ -73,7 +73,7 @@ namespace oly::rendering
 
 	public:
 		StaticArrowExtension() = default;
-		StaticArrowExtension(PolygonBatch& batch);
+		StaticArrowExtension(PolygonBatch* batch);
 
 		PolygonBatch* get_batch() const { return body.get_batch(); }
 		void set_batch(PolygonBatch* batch) { body.set_batch(batch); head.set_batch(batch); }

@@ -5,7 +5,7 @@
 
 namespace oly::reg
 {
-	rendering::Polygon load_polygon(rendering::PolygonBatch& batch, const TOMLNode& node)
+	rendering::Polygon load_polygon(rendering::PolygonBatch* batch, const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -56,7 +56,7 @@ namespace oly::reg
 		return load_polygon(batch, std::move(params));
 	}
 
-	rendering::Polygon load_polygon(rendering::PolygonBatch& batch, const params::Polygon& params)
+	rendering::Polygon load_polygon(rendering::PolygonBatch* batch, const params::Polygon& params)
 	{
 		rendering::Polygon polygon(batch);
 
@@ -68,7 +68,7 @@ namespace oly::reg
 		return polygon;
 	}
 
-	rendering::Polygon load_polygon(rendering::PolygonBatch& batch, params::Polygon&& params)
+	rendering::Polygon load_polygon(rendering::PolygonBatch* batch, params::Polygon&& params)
 	{
 		rendering::Polygon polygon(batch);
 
@@ -80,7 +80,7 @@ namespace oly::reg
 		return polygon;
 	}
 
-	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, const TOMLNode& node)
+	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -233,7 +233,7 @@ namespace oly::reg
 		return load_poly_composite(batch, std::move(params));
 	}
 
-	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, const params::PolyComposite& params)
+	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, const params::PolyComposite& params)
 	{
 		rendering::PolyComposite composite(batch);
 
@@ -269,7 +269,7 @@ namespace oly::reg
 		return composite;
 	}
 
-	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch& batch, params::PolyComposite&& params)
+	rendering::PolyComposite load_poly_composite(rendering::PolygonBatch* batch, params::PolyComposite&& params)
 	{
 		rendering::PolyComposite composite(batch);
 
@@ -306,7 +306,7 @@ namespace oly::reg
 		return composite;
 	}
 
-	rendering::NGon load_ngon(rendering::PolygonBatch& batch, const TOMLNode& node)
+	rendering::NGon load_ngon(rendering::PolygonBatch* batch, const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -391,7 +391,7 @@ namespace oly::reg
 		return load_ngon(batch, std::move(params));
 	}
 
-	rendering::NGon load_ngon(rendering::PolygonBatch& batch, const params::NGon& params)
+	rendering::NGon load_ngon(rendering::PolygonBatch* batch, const params::NGon& params)
 	{
 		rendering::NGon ngon(batch);
 
@@ -403,7 +403,7 @@ namespace oly::reg
 		return ngon;
 	}
 
-	rendering::NGon load_ngon(rendering::PolygonBatch& batch, params::NGon&& params)
+	rendering::NGon load_ngon(rendering::PolygonBatch* batch, params::NGon&& params)
 	{
 		rendering::NGon ngon(batch);
 

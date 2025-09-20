@@ -41,7 +41,6 @@ namespace oly::rendering
 	*/
 	class Paragraph
 	{
-		SpriteBatch& batch;
 		Sprite bkg;
 		std::vector<TextGlyph> glyphs;
 		std::vector<bool> visible;
@@ -59,7 +58,15 @@ namespace oly::rendering
 		glm::vec4 default_text_color = glm::vec4(1.0f);
 		Transformer2D transformer;
 
-		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "", SpriteBatch* batch = nullptr);
+		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
+		Paragraph(SpriteBatch* batch, const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
+
+	private:
+		void init(utf::String&& text);
+
+	public:
+		SpriteBatch* get_batch() const { return bkg.get_batch(); }
+		void set_batch(SpriteBatch* batch);
 
 		const utf::String& get_text() const { return text; }
 		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }

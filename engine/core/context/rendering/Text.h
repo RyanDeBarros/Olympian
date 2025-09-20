@@ -6,5 +6,7 @@
 namespace oly::context
 {
 	extern rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "",
-		unsigned int atlas_index = 0, rendering::SpriteBatch* batch = nullptr);
+		unsigned int atlas_index = 0);
+	extern rendering::Paragraph paragraph(rendering::SpriteBatch* batch, const std::string& font_atlas, const rendering::ParagraphFormat& format = {}, utf::String&& text = "",
+		unsigned int atlas_index = 0);
 }

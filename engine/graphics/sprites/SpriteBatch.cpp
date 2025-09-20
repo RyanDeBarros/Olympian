@@ -1,4 +1,4 @@
-#include "SpriteBatch.h"
+#include "Spritebatch.h"
 
 #include "graphics/resources/Shaders.h"
 #include "core/context/rendering/Sprites.h"
@@ -74,7 +74,7 @@ namespace oly::rendering
 		return id;
 	}
 
-	void SpriteBatch::erase_sprite_id(const SpriteID& id)
+	void SpriteBatch::erase_sprite_id(SpriteID& id)
 	{
 		const auto decrement_texture = [this](GLushort slot) {
 			if (auto texture = quad_info_store.textures.decrement_usage(slot))
@@ -98,6 +98,7 @@ namespace oly::rendering
 			decrement_texture(quad_info.mod_tex_slot);
 			quad_info_store.tex_coords.decrement_usage(quad_info.tex_coord_slot);
 			quad_info_store.modulations.decrement_usage(quad_info.color_slot);
+			id.yield();
 		}
 	}
 
@@ -212,30 +213,147 @@ namespace oly::rendering
 		}
 	}
 
-	internal::SpriteReference::SpriteReference(SpriteBatch* batch)
-		: batch(batch ? *batch : context::sprite_batch()), in_context(!batch)
+	struct Attributes
 	{
-		id = this->batch.gen_sprite_id();
+		graphics::BindlessTextureRef texture = nullptr;
+		glm::vec2 texture_dimensions = {};
+		math::UVRect tex_coords = {};
+		glm::vec4 modulation = glm::vec4(1.0f);
+		graphics::AnimFrameFormat frame_format = {};
+		bool is_text_glyph = false;
+		graphics::BindlessTextureRef mod_texture = nullptr;
+		glm::vec2 mod_texture_dimensions = {};
+		math::UVRect mod_tex_coords = {};
+		glm::mat3 transform = 1.0f;
+	};
+
+	struct AttributesRef
+	{
+		graphics::BindlessTextureRef texture;
+		glm::vec2 texture_dimensions;
+		math::UVRect tex_coords;
+		glm::vec4 modulation;
+		graphics::AnimFrameFormat frame_format;
+		bool is_text_glyph;
+		graphics::BindlessTextureRef mod_texture;
+		glm::vec2 mod_texture_dimensions;
+		math::UVRect mod_tex_coords;
+		const glm::mat3& transform;
+	};
+
+	static Attributes get_attributes(const internal::SpriteReference& ref)
+	{
+		glm::vec2 texture_dimensions{}, mod_texture_dimensions{};
+		Attributes attr{
+			.texture = ref.get_texture(texture_dimensions),
+			.tex_coords = ref.get_tex_coords(),
+			.modulation = ref.get_modulation(),
+			.frame_format = ref.get_frame_format(),
+			.is_text_glyph = ref.is_text_glyph(),
+			.mod_texture = ref.get_mod_texture(mod_texture_dimensions),
+			.mod_tex_coords = ref.get_mod_tex_coords(),
+			.transform = ref.get_transform()
+		};
+		attr.texture_dimensions = texture_dimensions;
+		attr.mod_texture_dimensions = mod_texture_dimensions;
+		return attr;
+	}
+
+	static AttributesRef get_attributes_ref(const internal::SpriteReference& ref)
+	{
+		glm::vec2 texture_dimensions{}, mod_texture_dimensions{};
+		AttributesRef attr{
+			.texture = ref.get_texture(texture_dimensions),
+			.tex_coords = ref.get_tex_coords(),
+			.modulation = ref.get_modulation(),
+			.frame_format = ref.get_frame_format(),
+			.is_text_glyph = ref.is_text_glyph(),
+			.mod_texture = ref.get_mod_texture(mod_texture_dimensions),
+			.mod_tex_coords = ref.get_mod_tex_coords(),
+			.transform = ref.get_transform()
+		};
+		attr.texture_dimensions = texture_dimensions;
+		attr.mod_texture_dimensions = mod_texture_dimensions;
+		return attr;
+	}
+
+	static void set_attributes(internal::SpriteReference& ref, const Attributes& attr)
+	{
+		ref.set_texture(attr.texture, attr.texture_dimensions);
+		ref.set_tex_coords(attr.tex_coords);
+		ref.set_modulation(attr.modulation);
+		ref.set_frame_format(attr.frame_format);
+		ref.set_text_glyph(attr.is_text_glyph);
+		ref.set_mod_texture(attr.mod_texture, attr.mod_texture_dimensions);
+		ref.set_mod_tex_coords(attr.mod_tex_coords);
+		ref.set_transform(attr.transform);
+	}
+
+	static void set_attributes(internal::SpriteReference& ref, const AttributesRef& attr)
+	{
+		ref.set_texture(attr.texture, attr.texture_dimensions);
+		ref.set_tex_coords(attr.tex_coords);
+		ref.set_modulation(attr.modulation);
+		ref.set_frame_format(attr.frame_format);
+		ref.set_text_glyph(attr.is_text_glyph);
+		ref.set_mod_texture(attr.mod_texture, attr.mod_texture_dimensions);
+		ref.set_mod_tex_coords(attr.mod_tex_coords);
+		ref.set_transform(attr.transform);
+	}
+
+	internal::SpriteReference::SpriteReference()
+		: batch(&context::sprite_batch())
+	{
+		id = this->batch->gen_sprite_id();
+		set_attributes(*this, Attributes{});
+	}
+
+	internal::SpriteReference::SpriteReference(SpriteBatch* batch)
+		: batch(batch)
+	{
+		if (this->batch)
+		{
+			id = this->batch->gen_sprite_id();
+			set_attributes(*this, Attributes{});
+		}
 	}
 
 	internal::SpriteReference::SpriteReference(const SpriteReference& other)
-		: batch(other.batch), in_context(other.in_context)
+		: batch(other.batch)
 	{
-		id = batch.gen_sprite_id();
+		if (batch)
+		{
+			id = batch->gen_sprite_id();
+			set_attributes(*this, get_attributes_ref(other));
+		}
 	}
 
 	internal::SpriteReference::SpriteReference(SpriteReference&& other) noexcept
-		: batch(other.batch), in_context(other.in_context), id(std::move(other.id))
+		: batch(other.batch), id(std::move(other.id))
 	{
 	}
 
 	internal::SpriteReference::~SpriteReference()
 	{
-		batch.erase_sprite_id(id);
+		if (batch)
+			batch->erase_sprite_id(id);
 	}
 
 	internal::SpriteReference& internal::SpriteReference::operator=(const SpriteReference& other)
 	{
+		if (this != &other)
+		{
+			if (batch != other.batch)
+			{
+				if (batch)
+					batch->erase_sprite_id(id);
+				batch = other.batch;
+				if (batch)
+					batch->gen_sprite_id();
+			}
+			if (batch)
+				set_attributes(*this, get_attributes_ref(other));
+		}
 		return *this;
 	}
 
@@ -243,136 +361,241 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (&batch == &other.batch)
+			if (batch != other.batch)
 			{
-				batch.erase_sprite_id(id);
+				if (batch)
+					batch->erase_sprite_id(id);
+				batch = other.batch;
 				id = std::move(other.id);
 			}
+			else if (batch)
+				set_attributes(*this, get_attributes_ref(other));
 		}
 		return *this;
 	}
 
+	void internal::SpriteReference::set_batch(SpriteBatch* batch)
+	{
+		if (this->batch == batch)
+			return;
+
+		if (this->batch)
+		{
+			if (batch)
+			{
+				Attributes attr = get_attributes(*this);
+				this->batch->erase_sprite_id(id);
+				this->batch = batch;
+				id = this->batch->gen_sprite_id();
+				set_attributes(*this, attr);
+			}
+			else
+			{
+				this->batch->erase_sprite_id(id);
+				this->batch = batch;
+			}
+		}
+		else
+		{
+			this->batch = batch;
+			id = this->batch->gen_sprite_id();
+			set_attributes(*this, Attributes{});
+		}
+	}
+
 	void internal::SpriteReference::set_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
-		auto texture = context::load_texture(texture_file, texture_index);
-		batch.set_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
+		if (batch) [[likely]]
+		{
+			auto texture = context::load_texture(texture_file, texture_index);
+			batch->set_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
+		}
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture) const
 	{
-		batch.set_texture(id.get(), texture, context::get_texture_dimensions(texture));
+		if (batch) [[likely]]
+			batch->set_texture(id.get(), texture, context::get_texture_dimensions(texture));
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		batch.set_texture(id.get(), texture, dimensions);
+		if (batch) [[likely]]
+			batch->set_texture(id.get(), texture, dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_tex_coords(math::UVRect rect) const
 	{
-		batch.set_tex_coords(id.get(), rect);
+		if (batch) [[likely]]
+			batch->set_tex_coords(id.get(), rect);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
 	{
-		batch.set_modulation(id.get(), modulation);
+		if (batch) [[likely]]
+			batch->set_modulation(id.get(), modulation);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
-		batch.set_frame_format(id.get(), anim);
+		if (batch) [[likely]]
+			batch->set_frame_format(id.get(), anim);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_text_glyph(bool is_text_glyph) const
 	{
-		batch.set_text_glyph(id.get(), is_text_glyph);
+		if (batch) [[likely]]
+			batch->set_text_glyph(id.get(), is_text_glyph);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
-		auto texture = context::load_texture(texture_file, texture_index);
-		batch.set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
+		if (batch) [[likely]]
+		{
+			auto texture = context::load_texture(texture_file, texture_index);
+			batch->set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture_file, texture_index));
+		}
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture) const
 	{
-		batch.set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture));
+		if (batch) [[likely]]
+			batch->set_mod_texture(id.get(), texture, context::get_texture_dimensions(texture));
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		batch.set_mod_texture(id.get(), texture, dimensions);
+		if (batch) [[likely]]
+			batch->set_mod_texture(id.get(), texture, dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_tex_coords(math::UVRect rect) const
 	{
-		batch.set_mod_tex_coords(id.get(), rect);
+		if (batch) [[likely]]
+			batch->set_mod_tex_coords(id.get(), rect);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_transform(const glm::mat3& transform) const
 	{
-		batch.quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id.get()) = transform;
+		if (batch) [[likely]]
+			batch->quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id.get()) = transform;
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture() const
 	{
-		glm::vec2 _;
-		return batch.get_texture(id.get(), _);
+		if (batch) [[likely]]
+		{
+			glm::vec2 _;
+			return batch->get_texture(id.get(), _);
+		}
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture(glm::vec2& dimensions) const
 	{
-		return batch.get_texture(id.get(), dimensions);
+		if (batch) [[likely]]
+			return batch->get_texture(id.get(), dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	math::UVRect internal::SpriteReference::get_tex_coords() const
 	{
-		return batch.get_tex_coords(id.get());
+		if (batch) [[likely]]
+			return batch->get_tex_coords(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	glm::vec4 internal::SpriteReference::get_modulation() const
 	{
-		return batch.get_modulation(id.get());
+		if (batch) [[likely]]
+			return batch->get_modulation(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::AnimFrameFormat internal::SpriteReference::get_frame_format() const
 	{
-		return batch.get_frame_format(id.get());
+		if (batch) [[likely]]
+			return batch->get_frame_format(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	bool internal::SpriteReference::is_text_glyph() const
 	{
-		return batch.is_text_glyph(id.get());
+		if (batch) [[likely]]
+			return batch->is_text_glyph(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture() const
 	{
-		glm::vec2 _;
-		return batch.get_mod_texture(id.get(), _);
+		if (batch) [[likely]]
+		{
+			glm::vec2 _;
+			return batch->get_mod_texture(id.get(), _);
+		}
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture(glm::vec2& dimensions) const
 	{
-		return batch.get_mod_texture(id.get(), dimensions);
+		if (batch) [[likely]]
+			return batch->get_mod_texture(id.get(), dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	math::UVRect internal::SpriteReference::get_mod_tex_coords() const
 	{
-		return batch.get_mod_tex_coords(id.get());
+		if (batch) [[likely]]
+			return batch->get_mod_tex_coords(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	glm::mat3 internal::SpriteReference::get_transform() const
 	{
-		return batch.quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id.get());
-	}
-
-	std::invoke_result_t<decltype(&decltype(SpriteBatch::ebo)::draw_primitive), decltype(SpriteBatch::ebo)> internal::SpriteReference::draw_primitive() const
-	{
-		return batch.ebo.draw_primitive();
+		if (batch) [[likely]]
+			return batch->quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::draw_quad() const
 	{
-		graphics::quad_indices(draw_primitive().data(), id.get());
+		if (batch) [[likely]]
+			graphics::quad_indices(batch->ebo.draw_primitive().data(), id.get());
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 }

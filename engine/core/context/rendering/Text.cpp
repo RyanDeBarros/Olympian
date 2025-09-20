@@ -5,8 +5,13 @@
 
 namespace oly::context
 {
-	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index, rendering::SpriteBatch* batch)
+	rendering::Paragraph paragraph(const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index)
 	{
-		return rendering::Paragraph(font_atlas_registry().load_font_atlas(font_atlas, atlas_index), format, std::move(text), batch);
+		return rendering::Paragraph(font_atlas_registry().load_font_atlas(font_atlas, atlas_index), format, std::move(text));
+	}
+
+	rendering::Paragraph paragraph(rendering::SpriteBatch* batch, const std::string& font_atlas, const rendering::ParagraphFormat& format, utf::String&& text, unsigned int atlas_index)
+	{
+		return rendering::Paragraph(batch, font_atlas_registry().load_font_atlas(font_atlas, atlas_index), format, std::move(text));
 	}
 }

@@ -4,7 +4,7 @@
 
 namespace oly::reg
 {
-	rendering::Ellipse load_ellipse(rendering::EllipseBatch& batch, const TOMLNode& node)
+	rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -46,7 +46,7 @@ namespace oly::reg
 		return load_ellipse(batch, params);
 	}
 
-	rendering::Ellipse load_ellipse(rendering::EllipseBatch& batch, const params::Ellipse& params)
+	rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const params::Ellipse& params)
 	{
 		rendering::Ellipse ellipse(batch);
 
