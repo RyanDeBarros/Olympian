@@ -174,12 +174,20 @@ namespace oly::rendering
 	{
 		if (this->batch != batch)
 		{
-			id.yield();
-			this->batch = batch;
-			// TODO v4 copy raw data over
-			//resize_range(3);
-			//set_polygon(cmath::Polygon2D{ .points = { {}, {}, {} }, .colors = { glm::vec4(1.0f) }});
-			//set_polygon_transform(glm::mat3(1.0f));
+			if (batch && this->batch && this->batch->is_valid_id(id))
+			{
+				GLuint num_vertices = this->batch->get_vertex_range(id).length;
+				glm::mat3 transform = this->batch->get_polygon_transform(id);
+				id.yield();
+				this->batch = batch;
+				id = this->batch->generate_id(num_vertices);
+				this->batch->set_polygon_transform(id, transform);
+			}
+			else
+			{
+				id.yield();
+				this->batch = batch;
+			}
 		}
 	}
 

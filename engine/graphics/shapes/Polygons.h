@@ -168,7 +168,7 @@ namespace oly::rendering
 		virtual ~Polygonal() = default;
 
 		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
-		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); }
+		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); flag_all(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
