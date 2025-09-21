@@ -79,7 +79,8 @@ namespace oly::graphics
 		int w = 0, h = 0, cpp = 4;
 
 		glm::vec2 dimensions() const { return { w, h }; }
-		unsigned char* pxnew() const { return new unsigned char[w * h * cpp]; }
+		template<typename Pixel = unsigned char>
+		Pixel* pxnew() const { return new Pixel[w * h * cpp]; }
 	};
 
 	struct Image3DDimensions
@@ -93,8 +94,6 @@ namespace oly::graphics
 		extern GLenum format(int cpp);
 		extern GLint mipmap_levels(int w, int h);
 
-		// TODO v4 support for other pixel types
-
 		extern void storage_2d(GLuint texture, ImageDimensions dim, GLsizei levels = 1);
 
 		template<typename Pixel = unsigned char>
@@ -103,6 +102,8 @@ namespace oly::graphics
 			GLenum data_type;
 			if constexpr (std::is_same_v<Pixel, unsigned char>)
 				data_type = GL_UNSIGNED_BYTE;
+			else if constexpr (std::is_same_v<Pixel, float>)
+				data_type = GL_FLOAT;
 			else
 				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_2d().");
 			ScopedPixelAlignment pixel_align(cpp);
@@ -126,6 +127,8 @@ namespace oly::graphics
 			GLenum data_type;
 			if constexpr (std::is_same_v<Pixel, unsigned char>)
 				data_type = GL_UNSIGNED_BYTE;
+			else if constexpr (std::is_same_v<Pixel, float>)
+				data_type = GL_FLOAT;
 			else
 				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_3d().");
 			ScopedPixelAlignment pixel_align(cpp);

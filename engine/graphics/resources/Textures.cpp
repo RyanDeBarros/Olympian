@@ -39,12 +39,20 @@ namespace oly::graphics::textures
 		return tex;
 	}
 
-	// TODO v4 maybe float version can send a texture that uses floats instead of unsigned char for pixel data type.
 	BindlessTextureRef mod2x2(glm::vec4 c1, glm::vec4 c2, glm::vec4 c3, glm::vec4 c4)
 	{
-		return mod2x2(glm::vec<4, unsigned char>(round(c1 * 255.0f)),
-			glm::vec<4, unsigned char>(round(c2 * 255.0f)),
-			glm::vec<4, unsigned char>(round(c3 * 255.0f)),
-			glm::vec<4, unsigned char>(round(c4 * 255.0f)));
+		ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
+		float* buf = dim.pxnew<float>();
+		memcpy(buf + 4 * 0, glm::value_ptr(c1), 4 * sizeof(float));
+		memcpy(buf + 4 * 1, glm::value_ptr(c2), 4 * sizeof(float));
+		memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(float));
+		memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(float));
+		Texture texture(GL_TEXTURE_2D);
+		tex::image_2d(texture, buf, dim, false);
+		graphics::BindlessTextureRef tex(std::move(texture));
+		tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		tex->set_and_use_handle();
+		return tex;
 	}
 }
