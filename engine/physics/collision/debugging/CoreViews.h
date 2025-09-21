@@ -69,9 +69,8 @@ namespace oly::debug
 				return CollisionView(layer);
 
 			rendering::StaticPolygon polygon = layer.create_polygon();
-			polygon.polygon.colors = { color };
-			polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-			polygon.init();
+			polygon.set_colors() = {color};
+			polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 			return CollisionView(layer, std::move(polygon));
 		}
 
@@ -89,18 +88,16 @@ namespace oly::debug
 			if (obj->index() == CollisionObject::Type::POLYGON)
 			{
 				rendering::StaticPolygon& polygon = std::get<CollisionObject::Type::POLYGON>(*obj);
-				polygon.polygon.colors = { color };
-				polygon.polygon.points.clear();
-				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-				polygon.send_polygon();
+				polygon.set_colors() = {color};
+				polygon.set_points().clear();
+				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.view_changed();
 			}
 			else
 			{
 				rendering::StaticPolygon polygon = view.get_layer().create_polygon();
-				polygon.polygon.colors = { color };
-				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-				polygon.init();
+				polygon.set_colors() = {color};
+				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.set_view(std::move(polygon));
 			}
 		}
@@ -118,17 +115,15 @@ namespace oly::debug
 			if (obj->index() == CollisionObject::Type::POLYGON)
 			{
 				rendering::StaticPolygon& polygon = std::get<CollisionObject::Type::POLYGON>(*obj);
-				polygon.polygon.points.clear();
-				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-				polygon.send_polygon();
+				polygon.set_points().clear();
+				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.view_changed();
 			}
 			else
 			{
 				rendering::StaticPolygon polygon = view.get_layer().create_polygon();
-				polygon.polygon.colors = { glm::vec4{ 0.0f, 0.0f, 1.0f, 0.8f } };
-				polygon.polygon.points.insert(polygon.polygon.points.end(), points.begin(), points.end());
-				polygon.init();
+				polygon.set_colors() = {glm::vec4{0.0f, 0.0f, 1.0f, 0.8f}};
+				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.set_view(std::move(polygon));
 			}
 		}

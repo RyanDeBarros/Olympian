@@ -13,7 +13,7 @@
 namespace oly::rendering
 {
 	// TODO v4 add to mkdocs - especially PaintSupport
-	// TODO v4 combine ellipse and polygon shaders.
+	// TODO v6 combine ellipse and polygon shaders.
 	// TODO v6 write texture in separate thread
 	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.
 	class GeometryPainter

@@ -7,10 +7,9 @@ namespace oly::rendering
 	LineExtension::LineExtension(PolygonBatch* batch)
 		: poly(batch)
 	{
-		poly.polygon.colors.reserve(4);
-		poly.polygon.points.reserve(4);
+		poly.set_colors().reserve(4);
+		poly.set_points().reserve(4);
 		set_default_polygon();
-		poly.init();
 	}
 
 	void LineExtension::draw() const
@@ -29,44 +28,27 @@ namespace oly::rendering
 				};
 
 				for (size_t i = 0; i < 4; ++i)
-					poly.polygon.points[i] = rotation * poly.polygon.points[i];
+					poly.set_points()[i] = rotation * poly.get_points()[i];
 			}
 
-			poly.polygon.points[0] += start;
-			poly.polygon.points[1] += end;
-			poly.polygon.points[2] += end;
-			poly.polygon.points[3] += start;
-
-			try
-			{
-				poly.send_polygon();
-				can_draw = true;
-			}
-			catch (Error e)
-			{
-				if (e.code == ErrorCode::TRIANGULATION)
-				{
-					can_draw = false;
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Could not send polygon - bad triangulation." << LOG.nl;
-				}
-				else
-					throw e;
-			}
+			poly.set_points()[0] += start;
+			poly.set_points()[1] += end;
+			poly.set_points()[2] += end;
+			poly.set_points()[3] += start;
 		}
-		if (can_draw)
-			poly.draw();
+		poly.draw();
 	}
 
 	void LineExtension::set_default_polygon() const
 	{
-		poly.polygon.colors[0] = start_color;
-		poly.polygon.colors[1] = end_color;
-		poly.polygon.colors[2] = end_color;
-		poly.polygon.colors[3] = start_color;
+		poly.set_colors()[0] = start_color;
+		poly.set_colors()[1] = end_color;
+		poly.set_colors()[2] = end_color;
+		poly.set_colors()[3] = start_color;
 
-		poly.polygon.points[0] = 0.5f * glm::vec2{ 0.0f, -width };
-		poly.polygon.points[1] = 0.5f * glm::vec2{ 0.0f, -width };
-		poly.polygon.points[2] = 0.5f * glm::vec2{ 0.0f,  width };
-		poly.polygon.points[3] = 0.5f * glm::vec2{ 0.0f,  width };
+		poly.set_points()[0] = 0.5f * glm::vec2{ 0.0f, -width };
+		poly.set_points()[1] = 0.5f * glm::vec2{ 0.0f, -width };
+		poly.set_points()[2] = 0.5f * glm::vec2{ 0.0f,  width };
+		poly.set_points()[3] = 0.5f * glm::vec2{ 0.0f,  width };
 	}
 }

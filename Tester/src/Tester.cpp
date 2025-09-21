@@ -35,7 +35,6 @@ struct BKG
 	BKG(oly::rendering::PolygonBatch& batch)
 		: bkg_rect(oly::reg::load_polygon(&batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
 	{
-		bkg_rect->init();
 	}
 };
 

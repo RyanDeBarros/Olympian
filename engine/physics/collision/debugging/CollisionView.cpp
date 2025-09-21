@@ -410,10 +410,7 @@ namespace oly::debug
 				if constexpr (visiting_class_is<decltype(obj), rendering::EllipseReference>)
 					obj.set_color().fill_outer = color;
 				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticPolygon>)
-				{
-					obj.polygon.colors = { color };
-					obj.send_colors_only();
-				}
+					obj.set_colors() = { color };
 				else if constexpr (visiting_class_is<decltype(obj), rendering::StaticArrowExtension>)
 					obj.set_color(color);
 				}, *obj);
