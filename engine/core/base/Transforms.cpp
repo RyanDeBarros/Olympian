@@ -2,35 +2,291 @@
 
 namespace oly
 {
-	Transformer2D::Transformer2D(const Transformer2D& other)
-		: local(other.local), modifier(other.modifier->clone()), _global(other._global)
+	void internal::Transformer2DRegistry::Handle::init(Transformer2D* transformer)
 	{
-		attach_parent(other.parent);
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		id = registry.id_generator.gen();
+		if (id == registry.transformers.size())
+		{
+			registry.transformers.push_back(transformer);
+			registry.parent.push_back(NULL_INDEX);
+			registry.index_in_parent.push_back(NULL_INDEX);
+			registry.children.push_back({});
+		}
+		else
+		{
+			registry.transformers[id] = transformer;
+			registry.parent[id] = NULL_INDEX;
+			registry.index_in_parent[id] = NULL_INDEX;
+			registry.children[id].clear();
+		}
+	}
+
+	void internal::Transformer2DRegistry::Handle::del()
+	{
+		if (id != NULL_INDEX)
+		{
+			clear_children();
+			unparent();
+			internal::Transformer2DRegistry::instance().id_generator.yield(id);
+			id = NULL_INDEX;
+		}
+	}
+
+	internal::Transformer2DRegistry::Handle::Handle(Transformer2D* transformer)
+	{
+		init(transformer);
+	}
+
+	internal::Transformer2DRegistry::Handle::Handle(Transformer2D* transformer, const Handle& other)
+	{
+		init(transformer);
+
+		if (other.id != NULL_INDEX)
+			set_parent(internal::Transformer2DRegistry::instance().parent[other.id]);
+	}
+
+	internal::Transformer2DRegistry::Handle::Handle(Transformer2D* transformer, Handle&& other) noexcept
+		: id(other.id)
+	{
+		other.id = NULL_INDEX;
+
+		if (id != NULL_INDEX)
+			internal::Transformer2DRegistry::instance().transformers[id] = transformer;
+	}
+
+	internal::Transformer2DRegistry::Handle::~Handle()
+	{
+		del();
+	}
+
+	internal::Transformer2DRegistry::Handle& internal::Transformer2DRegistry::Handle::operator=(const Handle& other)
+	{
+		if (this != &other)
+		{
+			if (other.id != NULL_INDEX)
+			{
+				set_parent(internal::Transformer2DRegistry::instance().parent[other.id]);
+				clear_children();
+			}
+			else
+				del();
+		}
+		return *this;
+	}
+
+	internal::Transformer2DRegistry::Handle& internal::Transformer2DRegistry::Handle::operator=(Handle&& other) noexcept
+	{
+		if (this != &other)
+		{
+			internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+			Transformer2D* transformer = id != NULL_INDEX ? registry.transformers[id] : nullptr;
+
+			del();
+			id = other.id;
+			other.id = NULL_INDEX;
+
+			if (id != NULL_INDEX)
+				registry.transformers[id] = transformer;
+		}
+		return *this;
+	}
+
+	void internal::Transformer2DRegistry::Handle::unparent() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		const Index parent = registry.parent[id];
+		if (parent != NULL_INDEX)
+		{
+			std::vector<Index>& pc = registry.children[parent];
+			const Index index_in_parent = registry.index_in_parent[id];
+			pc[index_in_parent] = pc.back();
+			pc.pop_back();
+			if (index_in_parent < pc.size())
+				registry.index_in_parent[pc[index_in_parent]] = index_in_parent;
+			registry.transformers[id]->post_set();
+		}
+	}
+
+	void internal::Transformer2DRegistry::Handle::clear_children() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		std::vector<Index>& children = registry.children[id];
+		for (Index child : children)
+		{
+			registry.parent[child] = NULL_INDEX;
+			registry.transformers[child]->post_set();
+		}
+		children.clear();
+	}
+
+	Transformer2D* internal::Transformer2DRegistry::Handle::get_parent() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		Index parent = registry.parent[id];
+		return parent != NULL_INDEX ? registry.transformers[parent] : nullptr;
+	}
+
+	void internal::Transformer2DRegistry::Handle::set_parent(Index new_parent) const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		const Index parent = registry.parent[id];
+
+		if (new_parent == parent)
+			return;
+
+		if (parent != NULL_INDEX)
+		{
+			std::vector<Index>& pc = registry.children[parent];
+			const Index index_in_parent = registry.index_in_parent[id];
+			pc[index_in_parent] = pc.back();
+			pc.pop_back();
+			if (index_in_parent < pc.size())
+				registry.index_in_parent[pc[index_in_parent]] = index_in_parent;
+		}
+
+		if (new_parent != NULL_INDEX)
+		{
+			registry.parent[id] = new_parent;
+			std::vector<Index>& pc = registry.children[new_parent];
+			registry.index_in_parent[id] = pc.size();
+			pc.push_back(id);
+		}
+
+		registry.transformers[id]->post_set();
+	}
+
+	void internal::Transformer2DRegistry::Handle::children_post_set_internal() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		for (Index child : registry.children[id])
+			registry.transformers[child]->post_set_internal();
+	}
+
+	void internal::Transformer2DRegistry::Handle::children_post_set_external() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		for (Index child : registry.children[id])
+			registry.transformers[child]->post_set_external();
+	}
+
+	Transformer2D* internal::Transformer2DRegistry::Handle::get_top_level_parent() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		Transformer2D* top = get_parent();
+		if (!top)
+			return internal::Transformer2DRegistry::instance().transformers[id];
+
+		Transformer2D* top_parent = top->get_handle().get_parent();
+		while (top_parent)
+		{
+			top = top_parent;
+			top_parent = top ? top->get_handle().get_parent() : nullptr;
+		}
+		return top;
+	}
+
+	void internal::Transformer2DRegistry::Handle::attach_parent(Transformer2D* parent) const
+	{
+		set_parent(parent ? parent->get_handle().id : NULL_INDEX);
+	}
+
+	void internal::Transformer2DRegistry::Handle::attach_child(Transformer2D& child) const
+	{
+		child.get_handle().set_parent(id);
+	}
+
+	internal::Transformer2DRegistry::Index internal::Transformer2DRegistry::Handle::children_count() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		return (Index)internal::Transformer2DRegistry::instance().children[id].size();
+	}
+	
+	Transformer2D* internal::Transformer2DRegistry::Handle::get_child(Index index) const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		return registry.transformers[registry.children[id][index]];
+	}
+
+	void internal::Transformer2DRegistry::Handle::break_from_chain() const
+	{
+		if (id == NULL_INDEX)
+			throw Error(ErrorCode::INVALID_ID);
+
+		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
+		const Index parent = registry.parent[id];
+
+		if (parent != NULL_INDEX)
+		{
+			std::vector<Index>& pc = registry.children[parent];
+			for (Index child : registry.children[id])
+			{
+				registry.index_in_parent[child] = pc.size();
+				pc.push_back(child);
+			}
+		}
+
+		for (Index child : registry.children[id])
+		{
+			registry.parent[child] = parent;
+			registry.transformers[child]->post_set();
+		}
+
+		registry.children[id].clear();
+		unparent();
+	}
+
+	Transformer2D::Transformer2D(Transform2D local, std::unique_ptr<TransformModifier2D>&& modifier)
+		: local(local), handle(this), modifier(std::move(modifier))
+	{
+	}
+
+	Transformer2D::Transformer2D(const Transformer2D& other)
+		: local(other.local), handle(this, other.handle), modifier(other.modifier->clone()), _global(other._global)
+	{
 		post_set();
 	}
 
 	Transformer2D::Transformer2D(Transformer2D&& other) noexcept
-		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
+		: local(other.local), handle(this, std::move(other.handle)), modifier(std::move(other.modifier)), _global(other._global),
+		_dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
 	{
-		attach_parent(other.parent);
-		other.unparent();
-		for (Transformer2D* child : children)
-			child->parent = this;
 	}
 
 	Transformer2D::~Transformer2D()
 	{
-		unparent();
-		clear_children();
 	}
 
 	Transformer2D& Transformer2D::operator=(const Transformer2D& other)
 	{
 		if (this != &other)
 		{
-			clear_children();
-			attach_parent(other.parent);
-
+			handle = other.handle;
 			local = other.local;
 			modifier = other.modifier->clone();
 			_global = other._global;
@@ -44,13 +300,7 @@ namespace oly
 	{
 		if (this != &other)
 		{
-			clear_children();
-			attach_parent(other.parent);
-			other.unparent();
-			children = std::move(other.children);
-			for (Transformer2D* child : children)
-				child->parent = this;
-
+			handle = std::move(other.handle);
 			local = other.local;
 			modifier = std::move(other.modifier);
 			_global = other._global;
@@ -71,16 +321,14 @@ namespace oly
 		if (!_dirty_internal)
 		{
 			_dirty_internal = true;
-			for (Transformer2D* child : children)
-				child->post_set_internal();
+			handle.children_post_set_internal();
 		}
 	}
 
 	void Transformer2D::post_set_external() const
 	{
 		_dirty_external = true;
-		for (Transformer2D* child : children)
-			child->post_set_external();
+		handle.children_post_set_external();
 	}
 
 	void Transformer2D::pre_get() const
@@ -88,6 +336,7 @@ namespace oly
 		if (_dirty_internal)
 		{
 			_dirty_internal = false;
+			Transformer2D* parent = handle.get_parent();
 			if (parent)
 			{
 				parent->pre_get();
@@ -108,93 +357,6 @@ namespace oly
 		bool was_dirty = _dirty_external;
 		_dirty_external = false;
 		return was_dirty;
-	}
-
-	const Transformer2D* Transformer2D::top_level_parent() const
-	{
-		const Transformer2D* top = this;
-		while (top->parent)
-			top = top->parent;
-		return top;
-	}
-
-	Transformer2D* Transformer2D::top_level_parent()
-	{
-		Transformer2D* top = this;
-		while (top->parent)
-			top = top->parent;
-		return top;
-	}
-
-	void Transformer2D::attach_parent(Transformer2D* new_parent)
-	{
-		if (new_parent != this)
-		{
-			if (!new_parent)
-				unparent();
-			else if (parent != new_parent)
-			{
-				if (parent)
-				{
-					parent->children[index_in_parent] = parent->children.back();
-					parent->children.pop_back();
-					if (index_in_parent < parent->children.size())
-						parent->children[index_in_parent]->index_in_parent = index_in_parent;
-				}
-				parent = new_parent;
-				index_in_parent = parent->children.size();
-				parent->children.push_back(this);
-				post_set();
-			}
-		}
-	}
-
-	void Transformer2D::attach_child(Transformer2D* child)
-	{
-		if (child)
-			child->attach_parent(this);
-	}
-
-	void Transformer2D::unparent()
-	{
-		if (parent)
-		{
-			parent->children[index_in_parent] = parent->children.back();
-			parent->children.pop_back();
-			if (index_in_parent < parent->children.size())
-				parent->children[index_in_parent]->index_in_parent = index_in_parent;
-		}
-		parent = nullptr;
-		index_in_parent = size_t(-1);
-		post_set();
-	}
-
-	void Transformer2D::clear_children()
-	{
-		for (Transformer2D* child : children)
-		{
-			child->parent = nullptr;
-			child->post_set();
-		}
-		children.clear();
-	}
-
-	void Transformer2D::pop_from_chain()
-	{
-		if (parent)
-		{
-			for (Transformer2D* child : children)
-			{
-				child->index_in_parent = parent->children.size();
-				parent->children.push_back(child);
-			}
-		}
-		for (Transformer2D* child : children)
-		{
-			child->parent = parent;
-			child->post_set();
-		}
-		children.clear();
 	}
 
 	void PivotTransformModifier2D::operator()(glm::mat3& global) const

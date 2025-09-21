@@ -5,6 +5,8 @@
 
 #include "external/GLM.h"
 #include "core/base/UnitVector.h"
+#include "core/containers/IDGenerator.h"
+#include "core/base/Constants.h"
 
 namespace oly
 {
@@ -71,25 +73,96 @@ namespace oly
 		return std::make_unique<Class>(*this);\
 	}
 
-	// TODO v4 use central data structure for transform chains.
+	class Transformer2D;
+
+	namespace internal
+	{
+		class Transformer2DRegistry
+		{
+			typedef glm::uint Index;
+
+			oly::SoftIDGenerator<Index> id_generator;
+			static const Index NULL_INDEX = Index(-1);
+
+			Transformer2DRegistry()
+				: id_generator(0, nmax<Index>() - 1)
+			{
+			}
+
+			Transformer2DRegistry(const Transformer2DRegistry&) = delete;
+			Transformer2DRegistry(Transformer2DRegistry&&) = delete;
+
+			std::vector<Transformer2D*> transformers;
+			std::vector<Index> parent;
+			std::vector<Index> index_in_parent;
+			std::vector<std::vector<Index>> children;
+
+		public:
+			static Transformer2DRegistry& instance() { static Transformer2DRegistry reg; return reg; }
+
+			class Handle
+			{
+				friend class Transformer2D;
+
+				Index id;
+
+				void init(Transformer2D* transformer);
+				void del();
+
+				Handle(Transformer2D* transformer);
+				Handle(Transformer2D* transformer, const Handle&);
+				Handle(Transformer2D* transformer, Handle&&) noexcept;
+
+			public:
+				~Handle();
+
+			private:
+				Handle& operator=(const Handle&);
+				Handle& operator=(Handle&&) noexcept;
+
+			public:
+				void unparent() const;
+				void clear_children() const;
+				Transformer2D* get_parent() const;
+
+			private:
+				void set_parent(Index new_parent) const;
+				void children_post_set_internal() const;
+				void children_post_set_external() const;
+
+			public:
+				Transformer2D* get_top_level_parent() const;
+
+				void attach_parent(Transformer2D* parent) const;
+				void attach_child(Transformer2D& child) const;
+				Index children_count() const;
+				Transformer2D* get_child(Index index) const;
+
+				void break_from_chain() const;
+			};
+		};
+	}
+
 	class Transformer2D
 	{
+		friend class internal::Transformer2DRegistry::Handle;
+
 		Transform2D local;
+		internal::Transformer2DRegistry::Handle handle;
 		mutable glm::mat3 _global = glm::mat3(1.0f);
 		mutable bool _dirty_internal = true;
 		mutable bool _dirty_external = true;
-		Transformer2D* parent = nullptr;
-		size_t index_in_parent = size_t(-1);
-		std::vector<Transformer2D*> children;
 		std::unique_ptr<TransformModifier2D> modifier;
 
 	public:
-		Transformer2D(Transform2D local = {}, std::unique_ptr<TransformModifier2D>&& modifier = std::make_unique<TransformModifier2D>()) : local(local), modifier(std::move(modifier)) {}
+		Transformer2D(Transform2D local = {}, std::unique_ptr<TransformModifier2D>&& modifier = std::make_unique<TransformModifier2D>());
 		Transformer2D(const Transformer2D&);
 		Transformer2D(Transformer2D&&) noexcept;
 		~Transformer2D();
 		Transformer2D& operator=(const Transformer2D&);
 		Transformer2D& operator=(Transformer2D&&) noexcept;
+
+		const internal::Transformer2DRegistry::Handle& get_handle() const { return handle; }
 
 		glm::mat3 global() const { pre_get(); return _global; }
 		void set_global(const glm::mat3& g) { _global = g; post_set(); _dirty_internal = false; }
@@ -112,15 +185,7 @@ namespace oly
 		template<std::derived_from<TransformModifier2D> T>
 		T& ref_modifier() { post_set(); return *static_cast<T*>(modifier.get()); }
 
-		const Transformer2D* get_parent() const { return parent; }
-		Transformer2D* get_parent() { return parent; }
-		const Transformer2D* top_level_parent() const;
-		Transformer2D* top_level_parent();
-		void attach_parent(Transformer2D* parent);
-		void attach_child(Transformer2D* child);
-		void unparent();
-		void clear_children();
-		void pop_from_chain();
+		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
 	};
 
 	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)

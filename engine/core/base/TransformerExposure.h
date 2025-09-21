@@ -72,12 +72,6 @@ namespace oly
 		exposure::modifier::Params modifier = exposure::modifier::Params::NONE;
 	};
 
-	//namespace exposure
-	//{
-	//	constexpr TExposureParams STANDARD_HIDDEN = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD;
-	//	constexpr TExposureParams FULL = TExposureParams::SET_LOCAL | TExposureParams::ATTACH_PARENT | TExposureParams::ATTACH_CHILD | TExposureParams::CLEAR_CHILDREN | TExposureParams::MODIFIER;
-	//}
-
 	template<TExposureParams Params>
 	struct Transformer2DExposure
 	{
@@ -108,10 +102,10 @@ namespace oly
 		void attach_child(Transformer2DExposure<OtherParams>& child)
 			requires ((Params.chain & exposure::chain::ATTACH_CHILD) && (OtherParams.chain & exposure::chain::ATTACH_PARENT))
 		{
-			transformer.attach_child(&child.transformer);
+			transformer.get_handle().attach_child(&child.transformer);
 		}
 
-		void clear_children() requires (Params.chain & exposure::chain::CLEAR_CHILDREN) { transformer.clear_children(); }
+		void clear_children() requires (Params.chain & exposure::chain::CLEAR_CHILDREN) { transformer.get_handle().clear_children(); }
 
 		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return transformer.get_modifier<T>(); }
