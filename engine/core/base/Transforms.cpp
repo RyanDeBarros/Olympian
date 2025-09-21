@@ -28,7 +28,9 @@ namespace oly
 	{
 		if (this != &other)
 		{
+			clear_children();
 			attach_parent(other.parent);
+
 			local = other.local;
 			modifier = other.modifier->clone();
 			_global = other._global;
@@ -43,13 +45,14 @@ namespace oly
 		if (this != &other)
 		{
 			clear_children();
-			local = other.local;
-			modifier = std::move(other.modifier);
 			attach_parent(other.parent);
 			other.unparent();
 			children = std::move(other.children);
 			for (Transformer2D* child : children)
 				child->parent = this;
+
+			local = other.local;
+			modifier = std::move(other.modifier);
 			_global = other._global;
 			_dirty_internal = other._dirty_internal;
 			_dirty_external = other._dirty_external;
@@ -205,213 +208,6 @@ namespace oly
 	}
 
 	void OffsetTransformModifier2D::operator()(glm::mat3& global) const
-	{
-		global = translation_matrix(offset) * global;
-	}
-
-	Transformer3D::Transformer3D(const Transformer3D& other)
-		: local(other.local), modifier(other.modifier->clone()), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
-	{
-		attach_parent(other.parent);
-		post_set();
-	}
-
-	Transformer3D::Transformer3D(Transformer3D&& other) noexcept
-		: local(other.local), modifier(std::move(other.modifier)), children(std::move(other.children)), _global(other._global), _dirty_internal(other._dirty_internal), _dirty_external(other._dirty_external)
-	{
-		attach_parent(other.parent);
-		other.unparent();
-		for (Transformer3D* child : children)
-			child->parent = this;
-	}
-
-	Transformer3D::~Transformer3D()
-	{
-		unparent();
-		clear_children();
-	}
-
-	Transformer3D& Transformer3D::operator=(const Transformer3D& other)
-	{
-		if (this != &other)
-		{
-			attach_parent(other.parent);
-			local = other.local;
-			modifier = other.modifier->clone();
-			_global = other._global;
-			_dirty_internal = other._dirty_internal;
-			_dirty_external = other._dirty_external;
-		}
-		return *this;
-	}
-
-	Transformer3D& Transformer3D::operator=(Transformer3D&& other) noexcept
-	{
-		if (this != &other)
-		{
-			clear_children();
-			local = other.local;
-			modifier = std::move(other.modifier);
-			attach_parent(other.parent);
-			other.unparent();
-			children = std::move(other.children);
-			for (Transformer3D* child : children)
-				child->parent = this;
-			_global = other._global;
-			_dirty_internal = other._dirty_internal;
-			_dirty_external = other._dirty_external;
-		}
-		return *this;
-	}
-
-	void Transformer3D::post_set() const
-	{
-		post_set_internal();
-		post_set_external();
-	}
-
-	void Transformer3D::post_set_internal() const
-	{
-		if (!_dirty_internal)
-		{
-			_dirty_internal = true;
-			for (Transformer3D* child : children)
-				child->post_set_internal();
-		}
-	}
-
-	void Transformer3D::post_set_external() const
-	{
-		_dirty_external = true;
-		for (Transformer3D* child : children)
-			child->post_set_external();
-	}
-
-	void Transformer3D::pre_get() const
-	{
-		if (_dirty_internal)
-		{
-			_dirty_internal = false;
-			if (parent)
-			{
-				parent->pre_get();
-				_global = local.matrix();
-				(*modifier)(_global);
-				_global = parent->_global * _global;
-			}
-			else
-			{
-				_global = local.matrix();
-				(*modifier)(_global);
-			}
-		}
-	}
-
-	bool Transformer3D::flush() const
-	{
-		bool was_dirty = _dirty_external;
-		_dirty_external = false;
-		return was_dirty;
-	}
-
-	const Transformer3D* Transformer3D::top_level_parent() const
-	{
-		const Transformer3D* top = this;
-		while (top->parent)
-			top = top->parent;
-		return top;
-	}
-
-	Transformer3D* Transformer3D::top_level_parent()
-	{
-		Transformer3D* top = this;
-		while (top->parent)
-			top = top->parent;
-		return top;
-	}
-
-	void Transformer3D::attach_parent(Transformer3D* new_parent)
-	{
-		if (new_parent != this)
-		{
-			if (!new_parent)
-				unparent();
-			else if (parent != new_parent)
-			{
-				if (parent)
-				{
-					parent->children[index_in_parent] = parent->children.back();
-					parent->children.pop_back();
-					if (index_in_parent < parent->children.size())
-						parent->children[index_in_parent]->index_in_parent = index_in_parent;
-				}
-				parent = new_parent;
-				index_in_parent = parent->children.size();
-				parent->children.push_back(this);
-				post_set();
-			}
-		}
-	}
-
-	void Transformer3D::attach_child(Transformer3D* child)
-	{
-		if (child)
-			child->attach_parent(this);
-	}
-
-	void Transformer3D::unparent()
-	{
-		if (parent)
-		{
-			parent->children[index_in_parent] = parent->children.back();
-			parent->children.pop_back();
-			if (index_in_parent < parent->children.size())
-				parent->children[index_in_parent]->index_in_parent = index_in_parent;
-		}
-		parent = nullptr;
-		index_in_parent = size_t(-1);
-		post_set();
-	}
-
-	void Transformer3D::clear_children()
-	{
-		for (Transformer3D* child : children)
-		{
-			child->parent = nullptr;
-			child->post_set();
-		}
-		children.clear();
-	}
-
-	void Transformer3D::pop_from_chain()
-	{
-		if (parent)
-		{
-			for (Transformer3D* child : children)
-			{
-				child->index_in_parent = parent->children.size();
-				parent->children.push_back(child);
-			}
-		}
-		for (Transformer3D* child : children)
-		{
-			child->parent = parent;
-			child->post_set();
-		}
-		children.clear();
-	}
-
-	void PivotTransformModifier3D::operator()(glm::mat4& global) const
-	{
-		global = pivot_matrix(pivot, size) * global;
-	}
-
-	void ShearTransformModifier3D::operator()(glm::mat4& global) const
-	{
-		global = global * shearing_matrix(shearing);
-	}
-
-	void OffsetTransformModifier3D::operator()(glm::mat4& global) const
 	{
 		global = translation_matrix(offset) * global;
 	}
