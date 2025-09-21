@@ -50,17 +50,8 @@ namespace oly::rendering
 		glm::mat3 projection = 1.0f;
 
 	private:
-		void set_primitive_points(Range<Index> vbo_range, const glm::vec2* points, Index count);
-		void set_primitive_colors(Range<Index> vbo_range, const glm::vec4* colors, Index count);
-		void set_polygon_points(const PolygonID& id, const cmath::Polygon2D& polygon);
-		void set_polygon_points(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons);
-		void set_polygon_points(const PolygonID& id, const cmath::Polygon2DComposite& composite);
-		void set_polygon_colors(const PolygonID& id, const cmath::Polygon2D& polygon);
-		void set_polygon_colors(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons);
-		void set_polygon_colors(const PolygonID& id, const cmath::Polygon2DComposite& composite);
-		void set_polygon(const PolygonID& id, const cmath::Polygon2D& polygon);
-		void set_polygon(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons);
-		void set_polygon(const PolygonID& id, const cmath::Polygon2DComposite& composite);
+		void set_primitive_points(Range<Index> vertex_range, const glm::vec2* points, Index count);
+		void set_primitive_colors(Range<Index> vertex_range, const glm::vec4* colors, Index count);
 		void set_polygon_transform(const PolygonID& id, const glm::mat3& transform);
 		const glm::mat3& get_polygon_transform(const PolygonID& id);
 
@@ -97,111 +88,94 @@ namespace oly::rendering
 			bool resize_range(PolygonBatch::Index vertices) const;
 			Range<PolygonBatch::Index> get_vertex_range() const;
 
-			void set_polygon_points(const cmath::Polygon2D& polygon) const;
-			void set_polygon_points(const std::vector<cmath::Polygon2D>& polygons) const;
-			void set_polygon_points(const cmath::Polygon2DComposite& composite) const;
-			void set_polygon_colors(const cmath::Polygon2D& polygon) const;
-			void set_polygon_colors(const std::vector<cmath::Polygon2D>& polygons) const;
-			void set_polygon_colors(const cmath::Polygon2DComposite& composite) const;
-			void set_polygon(const cmath::Polygon2D& polygon) const;
-			void set_polygon(const std::vector<cmath::Polygon2D>& polygons) const;
-			void set_polygon(const cmath::Polygon2DComposite& composite) const;
+			void set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, PolygonBatch::Index count) const;
+			void set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, PolygonBatch::Index count) const;
+			void set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const;
+			void set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
 
 			GLuint& draw_index() const;
 		};
+
+		class PolygonSubmitter
+		{
+			PolygonReference ref;
+			mutable bool points = true;
+			mutable bool colors = true;
+
+		public:
+			PolygonSubmitter(PolygonBatch* batch = nullptr);
+			PolygonSubmitter(const PolygonSubmitter&);
+			PolygonSubmitter(PolygonSubmitter&&) noexcept = default;
+			PolygonSubmitter& operator=(const PolygonSubmitter&);
+			PolygonSubmitter& operator=(PolygonSubmitter&&) noexcept = default;
+			virtual ~PolygonSubmitter() = default;
+
+		protected:
+			const internal::PolygonReference& get_ref() const { return ref; }
+			void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
+
+			void flag_points() { points = true; }
+			void flag_colors() { colors = true; }
+			void flag_all() { points = true; colors = true; }
+
+			void submit_dirty() const;
+
+			virtual void triangulate() const = 0;
+			virtual PolygonBatch::Index num_vertices() const = 0;
+			virtual void impl_set_polygon() const = 0;
+			virtual void impl_set_polygon_points() const = 0;
+			virtual void impl_set_polygon_colors() const = 0;
+		};
 	}
 
 	// ASSET
-	class StaticPolygon
+	class StaticPolygon : protected internal::PolygonSubmitter
 	{
-		internal::PolygonReference ref;
 		mutable math::Triangulation triangulation;
 		cmath::Polygon2D polygon;
 
-		struct
-		{
-			bool points = true;
-			bool colors = true;
-		} mutable dirty;
-
 	public:
-		StaticPolygon(PolygonBatch* batch = nullptr);
-		StaticPolygon(const StaticPolygon&);
-		StaticPolygon(StaticPolygon&&) noexcept = default;
-		StaticPolygon& operator=(const StaticPolygon&);
-		StaticPolygon& operator=(StaticPolygon&&) noexcept = default;
+		using internal::PolygonSubmitter::PolygonSubmitter;
 
-		PolygonBatch* get_batch() const { return ref.get_batch(); }
-		void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
+		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
+		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); }
 
 		const cmath::Polygon2D& get_polygon() const { return polygon; }
 		const std::vector<glm::vec2>& get_points() const { return polygon.points; }
 		const std::vector<glm::vec4>& get_colors() const { return polygon.colors; }
 
-		cmath::Polygon2D& set_polygon() { dirty.points = true; dirty.colors = true; return polygon; }
-		std::vector<glm::vec2>& set_points() { dirty.points = true; return polygon.points; }
-		std::vector<glm::vec4>& set_colors() { dirty.colors = true; return polygon.colors; }
+		cmath::Polygon2D& set_polygon() { flag_all(); return polygon; }
+		std::vector<glm::vec2>& set_points() { flag_points(); return polygon.points; }
+		std::vector<glm::vec4>& set_colors() { flag_colors(); return polygon.colors; }
 
 		void draw() const;
 
 	private:
-		void submit_dirty() const;
+		void triangulate() const override;
+		PolygonBatch::Index num_vertices() const override;
+		void impl_set_polygon() const override;
+		void impl_set_polygon_points() const override;
+		void impl_set_polygon_colors() const override;
 	};
 
-	class Polygonal
+	class Polygonal : protected internal::PolygonSubmitter
 	{
-		internal::PolygonReference ref;
-
-		struct
-		{
-			bool points = true;
-			bool colors = true;
-		} mutable dirty;
-
 	public:
 		Transformer2D transformer;
 
-		Polygonal(PolygonBatch* batch = nullptr);
-		Polygonal(const Polygonal&);
-		Polygonal(Polygonal&&) noexcept = default;
+		using internal::PolygonSubmitter::PolygonSubmitter;
 		virtual ~Polygonal() = default;
-		Polygonal& operator=(const Polygonal&);
-		Polygonal& operator=(Polygonal&&) noexcept = default;
 
-		PolygonBatch* get_batch() const { return ref.get_batch(); }
-		void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
+		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
+		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		virtual GLuint num_vertices() const = 0;
 		void draw() const;
 
-	private:
-		void submit_dirty() const;
-
 	protected:
-		void flag_dirty_points() const { dirty.points = true; }
-		void flag_dirty_colors() const { dirty.colors = true; }
-		void flag_dirty() const { dirty.points = true;  dirty.colors = true; }
-
-		void set_polygon_points(const cmath::Polygon2D& polygon) const { ref.set_polygon_points(polygon); }
-		void set_polygon_points(const std::vector<cmath::Polygon2D>& polygons) const { ref.set_polygon_points(polygons); }
-		void set_polygon_points(const cmath::Polygon2DComposite& composite) const { ref.set_polygon_points(composite); }
-		void set_polygon_colors(const cmath::Polygon2D& polygon) const { ref.set_polygon_colors(polygon); }
-		void set_polygon_colors(const std::vector<cmath::Polygon2D>& polygons) const { ref.set_polygon_colors(polygons); }
-		void set_polygon_colors(const cmath::Polygon2DComposite& composite) const { ref.set_polygon_colors(composite); }
-		void set_polygon(const cmath::Polygon2D& polygon) const { ref.set_polygon(polygon); }
-		void set_polygon(const std::vector<cmath::Polygon2D>& polygons) const { ref.set_polygon(polygons); }
-		void set_polygon(const cmath::Polygon2DComposite& composite) const { ref.set_polygon(composite); }
-
-		GLuint& draw_index() const;
-		
-		virtual void impl_set_polygon() const = 0;
-		virtual void impl_set_polygon_points() const = 0;
-		virtual void impl_set_polygon_colors() const = 0;
-		virtual void triangulate() const = 0;
 		virtual void draw_triangulation(GLuint initial_vertex) const = 0;
 	};
 
@@ -210,31 +184,27 @@ namespace oly::rendering
 		cmath::Polygon2D polygon;
 
 	public:
-		Polygon(PolygonBatch* batch = nullptr);
-		Polygon(const Polygon&);
-		Polygon(Polygon&&) noexcept;
-		Polygon& operator=(const Polygon&);
-		Polygon& operator=(Polygon&&) noexcept;
+		using Polygonal::Polygonal;
 
 		const cmath::Polygon2D& get_polygon() const { return polygon; }
 		const std::vector<glm::vec2>& get_points() const { return polygon.points; }
 		const std::vector<glm::vec4>& get_colors() const { return polygon.colors; }
 
-		cmath::Polygon2D& set_polygon() { flag_dirty(); return polygon; }
-		std::vector<glm::vec2>& set_points() { flag_dirty_points(); return polygon.points; }
-		std::vector<glm::vec4>& set_colors() { flag_dirty_colors(); return polygon.colors; }
+		cmath::Polygon2D& set_polygon() { flag_all(); return polygon; }
+		std::vector<glm::vec2>& set_points() { flag_points(); return polygon.points; }
+		std::vector<glm::vec4>& set_colors() { flag_colors(); return polygon.colors; }
 
-		virtual GLuint num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	private:
 		mutable math::Triangulation cache;
 
 	protected:
-		virtual void impl_set_polygon() const override;
-		virtual void impl_set_polygon_points() const override;
-		virtual void impl_set_polygon_colors() const override;
-		virtual void triangulate() const override;
-		virtual void draw_triangulation(GLuint initial_vertex) const override;
+		void impl_set_polygon() const override;
+		void impl_set_polygon_points() const override;
+		void impl_set_polygon_colors() const override;
+		void triangulate() const override;
+		void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
 	class PolyComposite : public Polygonal
@@ -242,11 +212,7 @@ namespace oly::rendering
 		cmath::Polygon2DComposite composite;
 
 	public:
-		PolyComposite(PolygonBatch* batch = nullptr);
-		PolyComposite(const PolyComposite&);
-		PolyComposite(PolyComposite&&) noexcept;
-		PolyComposite& operator=(const PolyComposite&);
-		PolyComposite& operator=(PolyComposite&&) noexcept;
+		using Polygonal::Polygonal;
 
 		const cmath::Polygon2DComposite& get_composite() const { return composite; }
 		const cmath::TriangulatedPolygon2D& get_triangulated_polygon(size_t i) const { return composite[i]; }
@@ -255,21 +221,21 @@ namespace oly::rendering
 		const std::vector<glm::vec2>& get_points(size_t i) const { return composite[i].polygon.points; }
 		const std::vector<glm::vec4>& get_colors(size_t i) const { return composite[i].polygon.colors; }
 
-		cmath::Polygon2DComposite& set_composite() { flag_dirty(); return composite; }
-		cmath::TriangulatedPolygon2D& set_triangulated_polygon(size_t i) { flag_dirty(); return composite[i]; }
-		math::Triangulation& set_triangulation(size_t i) { flag_dirty_points(); return composite[i].triangulation; }
-		cmath::Polygon2D& set_polygon(size_t i) { flag_dirty(); return composite[i].polygon; }
-		std::vector<glm::vec2>& set_points(size_t i) { flag_dirty_points(); return composite[i].polygon.points; }
-		std::vector<glm::vec4>& set_colors(size_t i) { flag_dirty_colors(); return composite[i].polygon.colors; }
+		cmath::Polygon2DComposite& set_composite() { flag_all(); return composite; }
+		cmath::TriangulatedPolygon2D& set_triangulated_polygon(size_t i) { flag_all(); return composite[i]; }
+		math::Triangulation& set_triangulation(size_t i) { flag_points(); return composite[i].triangulation; }
+		cmath::Polygon2D& set_polygon(size_t i) { flag_all(); return composite[i].polygon; }
+		std::vector<glm::vec2>& set_points(size_t i) { flag_points(); return composite[i].polygon.points; }
+		std::vector<glm::vec4>& set_colors(size_t i) { flag_colors(); return composite[i].polygon.colors; }
 
-		virtual GLuint num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	protected:
-		virtual void impl_set_polygon() const override;
-		virtual void impl_set_polygon_points() const override;
-		virtual void impl_set_polygon_colors() const override;
-		virtual void triangulate() const override;
-		virtual void draw_triangulation(GLuint initial_vertex) const override;
+		void impl_set_polygon() const override;
+		void impl_set_polygon_points() const override;
+		void impl_set_polygon_colors() const override;
+		void triangulate() const override;
+		void draw_triangulation(GLuint initial_vertex) const override;
 	};
 
 	class NGon : public Polygonal
@@ -278,11 +244,7 @@ namespace oly::rendering
 		cmath::NGonBase base;
 
 	public:
-		NGon(PolygonBatch* batch = nullptr);
-		NGon(const NGon&);
-		NGon(NGon&&) noexcept;
-		NGon& operator=(const NGon&);
-		NGon& operator=(NGon&&) noexcept;
+		using Polygonal::Polygonal;
 
 		bool is_bordered() const { return bordered; }
 		const cmath::NGonBase& get_base() const { return base; }
@@ -292,25 +254,25 @@ namespace oly::rendering
 		float get_border_width() const { return base.border_width; }
 		cmath::BorderPivot get_border_pivot() const { return base.border_pivot; }
 
-		void set_bordered(bool b) { flag_dirty(); bordered = b; }
-		cmath::NGonBase& set_base() { flag_dirty(); return base; }
-		std::vector<glm::vec2>& set_points() { flag_dirty_points(); return base.points; }
-		std::vector<glm::vec4>& set_fill_colors() { flag_dirty_colors(); return base.fill_colors; }
-		std::vector<glm::vec4>& set_border_colors() { flag_dirty_colors(); return base.border_colors; }
-		void set_border_width(float bw) { flag_dirty_points(); base.border_width = bw; }
-		void set_border_pivot(cmath::BorderPivot pivot) { flag_dirty_points(); base.border_pivot = pivot; }
+		void set_bordered(bool b) { flag_all(); bordered = b; }
+		cmath::NGonBase& set_base() { flag_all(); return base; }
+		std::vector<glm::vec2>& set_points() { flag_points(); return base.points; }
+		std::vector<glm::vec4>& set_fill_colors() { flag_colors(); return base.fill_colors; }
+		std::vector<glm::vec4>& set_border_colors() { flag_colors(); return base.border_colors; }
+		void set_border_width(float bw) { flag_points(); base.border_width = bw; }
+		void set_border_pivot(cmath::BorderPivot pivot) { flag_points(); base.border_pivot = pivot; }
 
-		virtual GLuint num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	private:
 		mutable cmath::Polygon2DComposite cache;
 
 	protected:
-		virtual void impl_set_polygon() const override;
-		virtual void impl_set_polygon_points() const override;
-		virtual void impl_set_polygon_colors() const override;
-		virtual void triangulate() const override;
-		virtual void draw_triangulation(GLuint initial_vertex) const override;
+		void impl_set_polygon() const override;
+		void impl_set_polygon_points() const override;
+		void impl_set_polygon_colors() const override;
+		void triangulate() const override;
+		void draw_triangulation(GLuint initial_vertex) const override;
 	};
 }
 

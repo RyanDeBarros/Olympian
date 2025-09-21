@@ -59,121 +59,6 @@ namespace oly::rendering
 		}
 	}
 
-	void PolygonBatch::set_polygon_points(const PolygonID& id, const cmath::Polygon2D& polygon)
-	{
-		set_primitive_points(get_vertex_range(id), polygon.points.data(), (Index)polygon.points.size());
-	}
-
-	void PolygonBatch::set_polygon_points(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::Polygon2D& poly : polygons)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_points(poly_range, poly.points.data(), (Index)poly.points.size());
-			offset += (Index)poly.points.size();
-		}
-	}
-
-	void PolygonBatch::set_polygon_points(const PolygonID& id, const cmath::Polygon2DComposite& composite)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::TriangulatedPolygon2D& poly : composite)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_points(poly_range, poly.polygon.points.data(), (Index)poly.polygon.points.size());
-			offset += (Index)poly.polygon.points.size();
-		}
-	}
-
-	void PolygonBatch::set_polygon_colors(const PolygonID& id, const cmath::Polygon2D& polygon)
-	{
-		set_primitive_colors(get_vertex_range(id), polygon.colors.data(), (Index)polygon.colors.size());
-	}
-
-	void PolygonBatch::set_polygon_colors(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::Polygon2D& poly : polygons)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_colors(poly_range, poly.colors.data(), (Index)poly.colors.size());
-			offset += (Index)poly.points.size();
-		}
-	}
-	
-	void PolygonBatch::set_polygon_colors(const PolygonID& id, const cmath::Polygon2DComposite& composite)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::TriangulatedPolygon2D& poly : composite)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_colors(poly_range, poly.polygon.colors.data(), (Index)poly.polygon.colors.size());
-			offset += (Index)poly.polygon.points.size();
-		}
-	}
-
-	void PolygonBatch::set_polygon(const PolygonID& id, const cmath::Polygon2D& polygon)
-	{
-		auto vertex_range = get_vertex_range(id);
-		set_primitive_points(vertex_range, polygon.points.data(), (Index)polygon.points.size());
-		set_primitive_colors(vertex_range, polygon.colors.data(), (Index)polygon.colors.size());
-	}
-
-	void PolygonBatch::set_polygon(const PolygonID& id, const std::vector<cmath::Polygon2D>& polygons)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::Polygon2D& poly : polygons)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_points(poly_range, poly.points.data(), (Index)poly.points.size());
-			set_primitive_colors(poly_range, poly.colors.data(), (Index)poly.colors.size());
-			offset += (Index)poly.points.size();
-		}
-	}
-
-	void PolygonBatch::set_polygon(const PolygonID& id, const cmath::Polygon2DComposite& composite)
-	{
-		auto vertex_range = get_vertex_range(id);
-		Index offset = 0;
-		for (const cmath::TriangulatedPolygon2D& poly : composite)
-		{
-			Range<Index> poly_range;
-			poly_range.initial = vertex_range.initial + offset;
-			if (poly_range.initial >= vertex_range.end())
-				return;
-			poly_range.length = std::min((Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			set_primitive_points(poly_range, poly.polygon.points.data(), (Index)poly.polygon.points.size());
-			set_primitive_colors(poly_range, poly.polygon.colors.data(), (Index)poly.polygon.colors.size());
-			offset += (Index)poly.polygon.points.size();
-		}
-	}
-
 	void PolygonBatch::set_polygon_transform(const PolygonID& id, const glm::mat3& transform)
 	{
 		if (is_valid_id(id))
@@ -292,9 +177,9 @@ namespace oly::rendering
 			id.yield();
 			this->batch = batch;
 			// TODO v4 copy raw data over
-			resize_range(3);
-			set_polygon(cmath::Polygon2D{ .points = { {}, {}, {} }, .colors = { glm::vec4(1.0f) }});
-			set_polygon_transform(glm::mat3(1.0f));
+			//resize_range(3);
+			//set_polygon(cmath::Polygon2D{ .points = { {}, {}, {} }, .colors = { glm::vec4(1.0f) }});
+			//set_polygon_transform(glm::mat3(1.0f));
 		}
 	}
 
@@ -320,74 +205,34 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void internal::PolygonReference::set_polygon_points(const cmath::Polygon2D& polygon) const
+	void internal::PolygonReference::set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, PolygonBatch::Index count) const
 	{
 		if (batch) [[likely]]
-			batch->set_polygon_points(id, polygon);
-		else
-			throw Error(ErrorCode::NULL_POINTER);
-	}
-	
-	void internal::PolygonReference::set_polygon_points(const std::vector<cmath::Polygon2D>& polygons) const
-	{
-		if (batch) [[likely]]
-			batch->set_polygon_points(id, polygons);
-		else
-			throw Error(ErrorCode::NULL_POINTER);
-	}
-	
-	void internal::PolygonReference::set_polygon_points(const cmath::Polygon2DComposite& composite) const
-	{
-		if (batch) [[likely]]
-			batch->set_polygon_points(id, composite);
-		else
-			throw Error(ErrorCode::NULL_POINTER);
-	}
-	
-	void internal::PolygonReference::set_polygon_colors(const cmath::Polygon2D& polygon) const
-	{
-		if (batch) [[likely]]
-			batch->set_polygon_colors(id, polygon);
-		else
-			throw Error(ErrorCode::NULL_POINTER);
-	}
-	
-	void internal::PolygonReference::set_polygon_colors(const std::vector<cmath::Polygon2D>& polygons) const
-	{
-		if (batch) [[likely]]
-			batch->set_polygon_colors(id, polygons);
-		else
-			throw Error(ErrorCode::NULL_POINTER);
-	}
-	
-	void internal::PolygonReference::set_polygon_colors(const cmath::Polygon2DComposite& composite) const
-	{
-		if (batch) [[likely]]
-			batch->set_polygon_colors(id, composite);
+			batch->set_primitive_points(vertex_range, points, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void internal::PolygonReference::set_polygon(const cmath::Polygon2D& polygon) const
+	void internal::PolygonReference::set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, PolygonBatch::Index count) const
 	{
 		if (batch) [[likely]]
-			batch->set_polygon(id, polygon);
+			batch->set_primitive_colors(vertex_range, colors, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
-	
-	void internal::PolygonReference::set_polygon(const std::vector<cmath::Polygon2D>& polygons) const
+
+	void internal::PolygonReference::set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const
 	{
 		if (batch) [[likely]]
-			batch->set_polygon(id, polygons);
+			batch->set_primitive_points(batch->get_vertex_range(id), points, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
-	
-	void internal::PolygonReference::set_polygon(const cmath::Polygon2DComposite& composite) const
+
+	void internal::PolygonReference::set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const
 	{
 		if (batch) [[likely]]
-			batch->set_polygon(id, composite);
+			batch->set_primitive_colors(batch->get_vertex_range(id), colors, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -408,109 +253,31 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	StaticPolygon::StaticPolygon(PolygonBatch* batch)
+	internal::PolygonSubmitter::PolygonSubmitter(PolygonBatch* batch)
 		: ref(batch)
 	{
 	}
 
-	StaticPolygon::StaticPolygon(const StaticPolygon& other)
-		: ref(other.ref), triangulation(other.triangulation), polygon(other.polygon)
+	internal::PolygonSubmitter::PolygonSubmitter(const PolygonSubmitter& other)
+		: ref(other.ref)
 	{
 	}
 
-	StaticPolygon& StaticPolygon::operator=(const StaticPolygon& other)
-	{
-		if (this != &other)
-		{
-			polygon = other.polygon;
-			triangulation = other.triangulation;
-			ref = other.ref;
-			dirty = {};
-		}
-		return *this;
-	}
-
-	void StaticPolygon::draw() const
-	{
-		submit_dirty();
-		GLuint initial_vertex = ref.get_vertex_range().initial;
-		for (size_t i = 0; i < triangulation.size(); ++i)
-		{
-			ref.draw_index() = triangulation[i][0] + initial_vertex;
-			ref.draw_index() = triangulation[i][1] + initial_vertex;
-			ref.draw_index() = triangulation[i][2] + initial_vertex;
-		}
-	}
-
-	void StaticPolygon::submit_dirty() const
-	{
-		if (dirty.points)
-		{
-			dirty.points = false;
-
-			try
-			{
-				triangulation = math::triangulate(polygon.points);
-			}
-			catch (Error e)
-			{
-				if (e.code == ErrorCode::TRIANGULATION)
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Could not send polygon - bad triangulation." << LOG.nl;
-				else
-					throw e;
-			}
-
-			ref.resize_range((PolygonBatch::Index)polygon.points.size());
-
-			if (dirty.colors)
-			{
-				dirty.colors = false;
-				ref.set_polygon(polygon);
-			}
-			else
-				ref.set_polygon_points(polygon);
-		}
-		else if (dirty.colors)
-		{
-			dirty.colors = false;
-			ref.set_polygon_colors(polygon);
-		}
-	}
-
-	Polygonal::Polygonal(PolygonBatch* batch)
-		: ref(batch)
-	{
-	}
-
-	Polygonal::Polygonal(const Polygonal& other)
-		: ref(other.ref), transformer(other.transformer)
-	{
-	}
-
-	Polygonal& Polygonal::operator=(const Polygonal& other)
+	internal::PolygonSubmitter& internal::PolygonSubmitter::operator=(const PolygonSubmitter& other)
 	{
 		if (this != &other)
 		{
 			ref = other.ref;
-			transformer = other.transformer;
-			dirty = {};
+			flag_all();
 		}
 		return *this;
 	}
 
-	void Polygonal::draw() const
+	void internal::PolygonSubmitter::submit_dirty() const
 	{
-		submit_dirty();
-		if (transformer.flush())
-			ref.set_polygon_transform(transformer.global());
-		draw_triangulation(ref.get_vertex_range().initial);
-	}
-
-	void Polygonal::submit_dirty() const
-	{
-		if (dirty.points)
+		if (points)
 		{
-			dirty.points = false;
+			points = false;
 
 			try
 			{
@@ -519,68 +286,73 @@ namespace oly::rendering
 			catch (Error e)
 			{
 				if (e.code == ErrorCode::TRIANGULATION)
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Could not send polygon - bad triangulation." << LOG.nl;
+					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Error occurred during polygon triangulation." << LOG.nl;
 				else
 					throw e;
 			}
 
 			ref.resize_range(num_vertices());
 
-			if (dirty.colors)
+			if (colors)
 			{
-				dirty.colors = false;
+				colors = false;
 				impl_set_polygon();
 			}
 			else
 				impl_set_polygon_points();
 		}
-		else if (dirty.colors)
+		else if (colors)
 		{
-			dirty.colors = false;
+			colors = false;
 			impl_set_polygon_colors();
 		}
 	}
 
-	GLuint& Polygonal::draw_index() const
+	void StaticPolygon::draw() const
 	{
-		return ref.draw_index();
-	}
-	
-	Polygon::Polygon(PolygonBatch* batch)
-		: Polygonal(batch)
-	{
-	}
-	
-	Polygon::Polygon(const Polygon& other)
-		: Polygonal(other), polygon(other.polygon), cache(other.cache)
-	{
-	}
-	
-	Polygon::Polygon(Polygon&& other) noexcept
-		: Polygonal(std::move(other)), polygon(std::move(other.polygon)), cache(std::move(other.cache))
-	{
-	}
-	
-	Polygon& Polygon::operator=(const Polygon& other)
-	{
-		if (this != &other)
+		submit_dirty();
+		GLuint initial_vertex = get_ref().get_vertex_range().initial;
+		for (size_t i = 0; i < triangulation.size(); ++i)
 		{
-			Polygonal::operator=(other);
-			polygon = other.polygon;
-			cache = other.cache;
+			get_ref().draw_index() = triangulation[i][0] + initial_vertex;
+			get_ref().draw_index() = triangulation[i][1] + initial_vertex;
+			get_ref().draw_index() = triangulation[i][2] + initial_vertex;
 		}
-		return *this;
+	}
+
+	void StaticPolygon::triangulate() const
+	{
+		triangulation = math::triangulate(polygon.points);
 	}
 	
-	Polygon& Polygon::operator=(Polygon&& other) noexcept
+	PolygonBatch::Index StaticPolygon::num_vertices() const
 	{
-		if (this != &other)
-		{
-			Polygonal::operator=(std::move(other));
-			polygon = std::move(other.polygon);
-			cache = std::move(other.cache);
-		}
-		return *this;
+		return (PolygonBatch::Index)polygon.points.size();
+	}
+	
+	void StaticPolygon::impl_set_polygon() const
+	{
+		auto vertex_range = get_ref().get_vertex_range();
+		get_ref().set_primitive_points(vertex_range, polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
+		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+	}
+	
+	void StaticPolygon::impl_set_polygon_points() const
+	{
+		get_ref().set_primitive_points(polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
+	}
+	
+	void StaticPolygon::impl_set_polygon_colors() const
+	{
+		get_ref().set_primitive_colors(polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+	}
+
+	void Polygonal::draw() const
+	{
+		submit_dirty();
+		if (transformer.flush())
+			get_ref().set_polygon_transform(transformer.global());
+		draw_triangulation(get_ref().get_vertex_range().initial);
 	}
 
 	GLuint Polygon::num_vertices() const
@@ -590,17 +362,19 @@ namespace oly::rendering
 
 	void Polygon::impl_set_polygon() const
 	{
-		Polygonal::set_polygon(polygon);
+		auto vertex_range = get_ref().get_vertex_range();
+		get_ref().set_primitive_points(vertex_range, polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
+		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
 	}
 
 	void Polygon::impl_set_polygon_points() const
 	{
-		Polygonal::set_polygon_points(polygon);
+		get_ref().set_primitive_points(polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
 	}
 
 	void Polygon::impl_set_polygon_colors() const
 	{
-		Polygonal::set_polygon_colors(polygon);
+		get_ref().set_primitive_colors(polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
 	}
 
 	void Polygon::triangulate() const
@@ -612,45 +386,10 @@ namespace oly::rendering
 	{
 		for (size_t i = 0; i < cache.size(); ++i)
 		{
-			draw_index() = cache[i][0] + initial_vertex;
-			draw_index() = cache[i][1] + initial_vertex;
-			draw_index() = cache[i][2] + initial_vertex;
+			get_ref().draw_index() = cache[i][0] + initial_vertex;
+			get_ref().draw_index() = cache[i][1] + initial_vertex;
+			get_ref().draw_index() = cache[i][2] + initial_vertex;
 		}
-	}
-
-	PolyComposite::PolyComposite(PolygonBatch* batch)
-		: Polygonal(batch)
-	{
-	}
-
-	PolyComposite::PolyComposite(const PolyComposite& other)
-		: Polygonal(other), composite(other.composite)
-	{
-	}
-
-	PolyComposite::PolyComposite(PolyComposite&& other) noexcept
-		: Polygonal(std::move(other)), composite(std::move(other.composite))
-	{
-	}
-
-	PolyComposite& PolyComposite::operator=(const PolyComposite& other)
-	{
-		if (this != &other)
-		{
-			Polygonal::operator=(other);
-			composite = other.composite;
-		}
-		return *this;
-	}
-
-	PolyComposite& PolyComposite::operator=(PolyComposite&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Polygonal::operator=(std::move(other));
-			composite = std::move(other.composite);
-		}
-		return *this;
 	}
 
 	GLuint PolyComposite::num_vertices() const
@@ -661,19 +400,68 @@ namespace oly::rendering
 		return vertices;
 	}
 
+	static void set_polygon_composite(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
+	{
+		auto vertex_range = ref.get_vertex_range();
+		PolygonBatch::Index offset = 0;
+		for (const cmath::TriangulatedPolygon2D& poly : composite)
+		{
+			Range<PolygonBatch::Index> poly_range;
+			poly_range.initial = vertex_range.initial + offset;
+			if (poly_range.initial >= vertex_range.end())
+				return;
+			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_points(poly_range, poly.polygon.points.data(), (PolygonBatch::Index)poly.polygon.points.size());
+			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (PolygonBatch::Index)poly.polygon.colors.size());
+			offset += (PolygonBatch::Index)poly.polygon.points.size();
+		}
+	}
+
 	void PolyComposite::impl_set_polygon() const
 	{
-		Polygonal::set_polygon(composite);
+		set_polygon_composite(get_ref(), composite);
+	}
+
+	static void set_polygon_points(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
+	{
+		auto vertex_range = ref.get_vertex_range();
+		PolygonBatch::Index offset = 0;
+		for (const cmath::TriangulatedPolygon2D& poly : composite)
+		{
+			Range<PolygonBatch::Index> poly_range;
+			poly_range.initial = vertex_range.initial + offset;
+			if (poly_range.initial >= vertex_range.end())
+				return;
+			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_points(poly_range, poly.polygon.points.data(), (PolygonBatch::Index)poly.polygon.points.size());
+			offset += (PolygonBatch::Index)poly.polygon.points.size();
+		}
 	}
 
 	void PolyComposite::impl_set_polygon_points() const
 	{
-		Polygonal::set_polygon_points(composite);
+		set_polygon_points(get_ref(), composite);
+	}
+
+	static void set_polygon_colors(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
+	{
+		auto vertex_range = ref.get_vertex_range();
+		PolygonBatch::Index offset = 0;
+		for (const cmath::TriangulatedPolygon2D& poly : composite)
+		{
+			Range<PolygonBatch::Index> poly_range;
+			poly_range.initial = vertex_range.initial + offset;
+			if (poly_range.initial >= vertex_range.end())
+				return;
+			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (PolygonBatch::Index)poly.polygon.colors.size());
+			offset += (PolygonBatch::Index)poly.polygon.points.size();
+		}
 	}
 
 	void PolyComposite::impl_set_polygon_colors() const
 	{
-		Polygonal::set_polygon_colors(composite);
+		set_polygon_colors(get_ref(), composite);
 	}
 
 	void PolyComposite::triangulate() const
@@ -688,51 +476,12 @@ namespace oly::rendering
 			const auto& faces = tp.triangulation;
 			for (size_t i = 0; i < faces.size(); ++i)
 			{
-				draw_index() = faces[i][0] + initial_vertex + offset;
-				draw_index() = faces[i][1] + initial_vertex + offset;
-				draw_index() = faces[i][2] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][0] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][1] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][2] + initial_vertex + offset;
 			}
 			offset += (GLuint)tp.polygon.points.size();
 		}
-	}
-
-	NGon::NGon(PolygonBatch* batch)
-		: Polygonal(batch)
-	{
-	}
-
-	NGon::NGon(const NGon& other)
-		: Polygonal(other), bordered(other.bordered), base(other.base), cache(other.cache)
-	{
-	}
-
-	NGon::NGon(NGon&& other) noexcept
-		: Polygonal(std::move(other)), bordered(other.bordered), base(std::move(other.base)), cache(std::move(other.cache))
-	{
-	}
-
-	NGon& NGon::operator=(const NGon& other)
-	{
-		if (this != &other)
-		{
-			Polygonal::operator=(other);
-			bordered = other.bordered;
-			base = other.base;
-			cache = other.cache;
-		}
-		return *this;
-	}
-
-	NGon& NGon::operator=(NGon&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Polygonal::operator=(std::move(other));
-			bordered = std::move(other.bordered);
-			base = std::move(other.base);
-			cache = std::move(other.cache);
-		}
-		return *this;
 	}
 
 	GLuint NGon::num_vertices() const
@@ -745,17 +494,17 @@ namespace oly::rendering
 
 	void NGon::impl_set_polygon() const
 	{
-		Polygonal::set_polygon(cache);
+		set_polygon_composite(get_ref(), cache);
 	}
 
 	void NGon::impl_set_polygon_points() const
 	{
-		Polygonal::set_polygon_points(cache);
+		set_polygon_points(get_ref(), cache);
 	}
 
 	void NGon::impl_set_polygon_colors() const
 	{
-		Polygonal::set_polygon_colors(cache);
+		set_polygon_colors(get_ref(), cache);
 	}
 
 	void NGon::triangulate() const
@@ -771,9 +520,9 @@ namespace oly::rendering
 			const auto& faces = tp.triangulation;
 			for (size_t i = 0; i < faces.size(); ++i)
 			{
-				draw_index() = faces[i][0] + initial_vertex + offset;
-				draw_index() = faces[i][1] + initial_vertex + offset;
-				draw_index() = faces[i][2] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][0] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][1] + initial_vertex + offset;
+				get_ref().draw_index() = faces[i][2] + initial_vertex + offset;
 			}
 			offset += (GLuint)tp.polygon.points.size();
 		}
