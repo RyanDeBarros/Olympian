@@ -35,14 +35,37 @@ namespace oly::rendering
 		painter->ellipse_batch.projection = projection;
 	}
 
-	GeometryPainter::GeometryPainter(const std::function<void()>& paint_fn)
+	void GeometryPainter::PaintSupport::pre_polygon_draw()
+	{
+		if (batch == Batch::ELLIPSE)
+			painter.ellipse_batch.render();
+		batch = Batch::POLYGON;
+	}
+
+	void GeometryPainter::PaintSupport::pre_ellipse_draw()
+	{
+		if (batch == Batch::POLYGON)
+			painter.polygon_batch.render();
+		batch = Batch::ELLIPSE;
+	}
+
+	void GeometryPainter::PaintSupport::final_flush()
+	{
+		if (batch == Batch::ELLIPSE)
+			painter.ellipse_batch.render();
+		else if (batch == Batch::POLYGON)
+			painter.polygon_batch.render();
+		batch = Batch::NONE;
+	}
+
+	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn)
 		: sprite(), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
 	{
 		dimensions = context::get_platform().window().get_size();
 		setup_texture();
 	}
 
-	GeometryPainter::GeometryPainter(const std::function<void()>& paint_fn, rendering::SpriteBatch* batch)
+	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, rendering::SpriteBatch* batch)
 		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
 	{
 		dimensions = context::get_platform().window().get_size();
@@ -98,9 +121,9 @@ namespace oly::rendering
 	void GeometryPainter::write_texture() const
 	{
 		context::ScopedFullFramebufferDrawing drawing(framebuffer, dimensions);
-		paint_fn();
-		polygon_batch.render();
-		ellipse_batch.render();
+		PaintSupport ps(*this);
+		paint_fn(ps);
+		ps.final_flush();
 	}
 
 	void GeometryPainter::set_sprite_scale(glm::vec2 scale)

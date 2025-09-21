@@ -89,7 +89,7 @@ namespace oly::platform
 	{
 		auto& wr_viewport = context::get_wr_viewport();
 		if (wr_viewport.boxed)
-			glClear(GL_COLOR_BUFFER_BIT); // TODO v5 clear depth buffer too?
+			glClear(GL_COLOR_BUFFER_BIT); // TODO v6 clear depth buffer too?
 		wr_viewport.set_viewport();
 		return !context::frame();
 	}

@@ -12,9 +12,9 @@
 
 namespace oly::rendering
 {
-	// TODO v4 add to mkdocs
+	// TODO v4 add to mkdocs - especially PaintSupport
 	// TODO v4 combine ellipse and polygon shaders.
-	// TODO v5 write texture in separate thread
+	// TODO v6 write texture in separate thread
 	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.
 	class GeometryPainter
 	{
@@ -41,10 +41,34 @@ namespace oly::rendering
 		friend struct WindowResizeHandler;
 
 	public:
-		std::function<void()> paint_fn = []() {};
+		class PaintSupport
+		{
+			const GeometryPainter& painter;
 
-		GeometryPainter(const std::function<void()>& paint_fn);
-		GeometryPainter(const std::function<void()>& paint_fn, SpriteBatch* batch);
+			enum class Batch
+			{
+				NONE,
+				POLYGON,
+				ELLIPSE
+			} batch = Batch::NONE;
+
+			friend class GeometryPainter;
+			PaintSupport(const GeometryPainter& painter) : painter(painter) {}
+
+		public:
+			void pre_polygon_draw();
+			void pre_ellipse_draw();
+
+		private:
+			void final_flush();
+		};
+
+		using PaintFunction = std::function<void(PaintSupport&)>;
+
+		PaintFunction paint_fn = [](PaintSupport) {};
+
+		GeometryPainter(const PaintFunction& paint_fn);
+		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch* batch);
 		GeometryPainter(const GeometryPainter&);
 		GeometryPainter(GeometryPainter&&) noexcept;
 		~GeometryPainter();

@@ -62,6 +62,22 @@ namespace oly::debug
 		}
 	}
 
+	void CollisionObject::draw(rendering::GeometryPainter::PaintSupport& ps) const
+	{
+		std::visit([&ps](const auto& v) {
+			if constexpr (visiting_class_is<decltype(v), rendering::EllipseReference>)
+			{
+				ps.pre_ellipse_draw();
+				v.draw();
+			}
+			else if constexpr (visiting_class_is<decltype(v), rendering::StaticPolygon, rendering::StaticArrowExtension>)
+			{
+				ps.pre_polygon_draw();
+				v.draw();
+			}
+			}, *v);
+	}
+
 	CollisionView::CollisionView(CollisionLayer& layer)
 		: layer(&layer), obj(std::make_unique<CollisionObjectView>(EmptyCollision{}))
 	{
@@ -177,17 +193,17 @@ namespace oly::debug
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void CollisionView::draw() const
+	void CollisionView::draw(rendering::GeometryPainter::PaintSupport& ps) const
 	{
 		// TODO v5 specialized shader for collision view, especially since it's rendered on a separate framebuffer.
 		if (valid())
 		{
-			std::visit([](const auto& view) {
+			std::visit([&ps](const auto& view) {
 				if constexpr (visiting_class_is<decltype(view), CollisionObject>)
-					std::visit([](const auto& obj) { obj.draw(); }, *view);
+					view.draw(ps);
 				else if constexpr (visiting_class_is<decltype(view), CollisionObjectGroup>)
 					for (const auto& v : view)
-						std::visit([](const auto& obj) { obj.draw(); }, *v);
+						v.draw(ps);
 				}, obj->view);
 		}
 	}
@@ -479,11 +495,11 @@ namespace oly::debug
 		return *this;
 	}
 
-	std::function<void()> CollisionLayer::paint_fn() const
+	rendering::GeometryPainter::PaintFunction CollisionLayer::paint_fn() const
 	{
-		return [this]() {
+		return [this](rendering::GeometryPainter::PaintSupport& ps) {
 			for (const auto& collision_view : collision_views)
-				collision_view->draw();
+				collision_view->draw(ps);
 			};
 	}
 

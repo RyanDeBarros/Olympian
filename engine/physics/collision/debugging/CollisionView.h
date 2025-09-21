@@ -41,6 +41,8 @@ namespace oly::debug
 		const Variant& operator*() const { return *v; }
 		Variant* operator->() { return v.get(); }
 		const Variant* operator->() const { return v.get(); }
+
+		void draw(rendering::GeometryPainter::PaintSupport&) const;
 	};
 
 	struct EmptyCollision {};
@@ -87,7 +89,7 @@ namespace oly::debug
 		CollisionLayer& get_layer();
 
 	private:
-		void draw() const;
+		void draw(rendering::GeometryPainter::PaintSupport&) const;
 
 	public:
 		void clear_view();
@@ -128,7 +130,7 @@ namespace oly::debug
 		void set_batch(rendering::SpriteBatch* batch) { painter.set_sprite_batch(batch); }
 
 	private:
-		std::function<void()> paint_fn() const;
+		rendering::GeometryPainter::PaintFunction paint_fn() const;
 		
 		void assign(CollisionView* view);
 		void unassign(CollisionView* view);

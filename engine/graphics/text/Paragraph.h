@@ -146,5 +146,5 @@ namespace oly::rendering
 
 	typedef SmartReference<Paragraph> ParagraphRef;
 
-	// TODO v4 RichText, which uses a vector of strings which can each have their own font, color, etc, but is still formatted as one paragraph. Thus, remove individual glypph colors from regular Paragraph.
+	// TODO v5 RichText, which uses a vector of strings which can each have their own font, color, etc, but is still formatted as one paragraph. Thus, remove individual glypph colors from regular Paragraph.
 }

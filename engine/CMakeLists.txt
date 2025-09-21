@@ -20,11 +20,11 @@ find_package(OpenGL REQUIRED)
 # Add engine sources
 file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
-# TODO v5 licensing may require engine to be dynamically linked?
+# TODO v6 licensing may require engine to be dynamically linked?
 # Create the engine as a static library
 add_library(OlympianEngine STATIC ${ENGINE_FILES} "core/types/Issuer.h")
 
-# TODO v5 use FetchContent, or vendor subdirectory, or something similar, rather than using LIBRARIES_DIR.
+# TODO v6 use FetchContent, or vendor subdirectory, or something similar, rather than using LIBRARIES_DIR.
 
 # Include directories
 target_include_directories(OlympianEngine PUBLIC
@@ -62,4 +62,4 @@ target_link_libraries(OlympianEngine PUBLIC
 	Quartic
 )
 
-# TODO v5 install OlympianEngine so as to use find_package(Olympian) in project cmake
+# TODO v6 install OlympianEngine so as to use find_package(Olympian) in project cmake

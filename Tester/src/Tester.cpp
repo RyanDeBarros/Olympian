@@ -77,7 +77,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		glEnable(GL_BLEND);
 
-		// TODO v5 anti-aliasing settings
+		// TODO v6 anti-aliasing settings
 	}
 
 	void render_frame() const override
@@ -232,8 +232,6 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
-	// TODO v4 one of the rays aren't rendering the head.
-
 	auto player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	auto block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
 	auto ray_cv = oly::debug::collision_view(pipeline.ray_layer, ray, oly::colors::WHITE * oly::colors::alpha(0.8f));
@@ -266,7 +264,7 @@ int main()
 	);
 	pipeline.jumble.nonant_panel->set_mod_texture(modtex, { 2, 2 });
 
-	// TODO v5 begin play on initial actors here
+	// TODO v6 begin play on initial actors here
 
 	while (oly::context::frame())
 	{

@@ -3,8 +3,8 @@ from pathlib import Path
 from editor.tools import TOMLAdapter
 from .assets import *
 
-# TODO v4 archetypes should not be POD containers? Could inherit from Archetype class or something. A KinematicBody archetype would for example inherit from KinematicBody.
-# TODO v4 generating manifest should load a giant dictionary of names to archetypes before processing any specific ones, so that referenced sub-archetypes don't need to be re-loaded from file. If there's a duplicate name, generate a build error. Within archetypes, reference by name not by file path.
+# TODO v5 archetypes should not be POD containers? Could inherit from Archetype class or something. A KinematicBody archetype would for example inherit from KinematicBody.
+# TODO v5 generating manifest should load a giant dictionary of names to archetypes before processing any specific ones, so that referenced sub-archetypes don't need to be re-loaded from file. If there's a duplicate name, generate a build error. Within archetypes, reference by name not by file path.
 
 
 RESERVED_NAMES = [

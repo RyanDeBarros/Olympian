@@ -16,7 +16,7 @@ namespace oly::internal
 				OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << LOG.nl;
 			else
 				OLY_LOG_ERROR(true, "ASSERT") << description << LOG.nl;
-			// TODO v5 configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
+			// TODO v6 configure different kinds of asserts using macros (debug vs release, oly vs game), and whether they should debug break
 			__debugbreak();
 		}
 	}
