@@ -23,14 +23,15 @@ namespace oly::rendering
 		return quad_ssbo_block.set<INFO>(vb_pos);
 	}
 
-	SpriteBatch::SpriteBatch()
-		: ebo(vao), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)), tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect))
+	SpriteBatch::SpriteBatch(UBOCapacity capacity)
+		: ebo(vao), shader(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims())), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)),
+		tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect)), ubo(capacity)
 	{
 		internal::SpriteBatchRegistry::instance().batches.insert(this);
 
-		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uProjection");
-		shader_locations.modulation = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uGlobalModulation");
-		shader_locations.time = glGetUniformLocation(graphics::internal_shaders::sprite_batch, "uTime");
+		shader_locations.projection = glGetUniformLocation(shader, "uProjection");
+		shader_locations.modulation = glGetUniformLocation(shader, "uGlobalModulation");
+		shader_locations.time = glGetUniformLocation(shader, "uTime");
 
 		tex_coords_ssbo.send<math::UVRect>(0, {});
 		ubo.modulation.send<glm::vec4>(0, glm::vec4(1.0f));
@@ -50,7 +51,7 @@ namespace oly::rendering
 		quad_ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);
-		glUseProgram(graphics::internal_shaders::sprite_batch);
+		glUseProgram(shader);
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
 		glUniform1f(shader_locations.time, TIME.now<>());
@@ -105,7 +106,8 @@ namespace oly::rendering
 	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot,
+			QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
 		{
 			quad_ssbo_block.flag<INFO>(vb_pos);
 			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);

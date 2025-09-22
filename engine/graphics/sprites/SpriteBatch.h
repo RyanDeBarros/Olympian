@@ -37,6 +37,7 @@ namespace oly::rendering
 
 		graphics::VertexArray vao;
 		graphics::PersistentEBO<6> ebo;
+		GLuint shader;
 
 		struct TexData
 		{
@@ -74,7 +75,6 @@ namespace oly::rendering
 			GLuint projection, modulation, time;
 		} shader_locations;
 
-	public:
 		struct AnimHash
 		{
 			size_t operator()(const graphics::AnimFrameFormat& anim) const {
@@ -83,23 +83,42 @@ namespace oly::rendering
 			}
 		};
 
-	private:
-		// TODO v4 once these are template variables in shader, make these max variables configurable to match.
-		static const GLuint max_modulations = 1000;
-		static const GLuint max_anims = 1000;
+	public:
+		class UBOCapacity
+		{
+			static const GLuint max_modulations = 1000; // guaranteed 16KB / 16B = #1000
+			static const GLuint max_anims = 1000; // guaranteed 16KB / 16B = #1000
 
+			GLushort _modulations;
+			GLushort _anims;
+
+		public:
+			UBOCapacity(GLushort modulations = max_modulations, GLushort anims = max_anims)
+				: _modulations(glm::min(modulations, (GLushort)max_modulations)), _anims(glm::min(anims, (GLushort)max_anims))
+			{
+			}
+
+			GLushort modulations() const { return _modulations; }
+			GLushort anims() const { return _anims; }
+		};
+
+	private:
 		struct UBO
 		{
 			graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
 
-			UBO() : modulation(max_modulations * sizeof(glm::vec4), sizeof(glm::vec4)), anim(max_anims * sizeof(graphics::AnimFrameFormat), sizeof(graphics::AnimFrameFormat)) {}
+			UBO(UBOCapacity capacity)
+				: modulation(capacity.modulations() * sizeof(glm::vec4), sizeof(glm::vec4)),
+				anim(capacity.anims() * sizeof(graphics::AnimFrameFormat), sizeof(graphics::AnimFrameFormat))
+			{
+			}
 		} ubo;
 
 	public:
 		glm::mat3 projection = 1.0f;
 		glm::vec4 global_modulation = glm::vec4(1.0f);
 
-		SpriteBatch();
+		SpriteBatch(UBOCapacity = {});
 		SpriteBatch(const SpriteBatch&) = delete;
 		SpriteBatch(SpriteBatch&&) = delete;
 		~SpriteBatch();
@@ -121,10 +140,12 @@ namespace oly::rendering
 
 				bool operator==(const SizedTexture& t) const = default;
 			};
+			
 			struct SizedTextureHash
 			{
 				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
 			};
+
 			graphics::UsageSlotTracker<SizedTexture, GLushort, SizedTextureHash> textures;
 			graphics::UsageSlotTracker<math::UVRect, GLushort> tex_coords;
 			graphics::UsageSlotTracker<glm::vec4, GLushort> modulations;

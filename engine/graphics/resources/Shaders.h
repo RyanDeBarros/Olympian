@@ -4,7 +4,7 @@
 
 namespace oly::graphics::internal_shaders
 {
-	extern GLuint sprite_batch;
+	extern GLuint sprite_batch(GLushort modulations, GLushort anims);
 	extern GLuint polygon_batch;
 	extern GLuint ellipse_batch;
 		

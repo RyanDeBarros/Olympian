@@ -43,10 +43,8 @@ layout(std430, binding = 3) readonly buffer TextureCoords {
 	vec4 uTexCoords[];
 };
 
-// TODO v4 const size allocation for uniform buffers could be overkill for framebuffer draws. Make it a template variable.
-
 layout(std140, binding = 1) uniform Modulations {
-	vec4 uModulation[1000]; // guaranteed 16KB / 16B = #1000
+	vec4 uModulation[/*$MODULATIONS*/];
 };
 
 struct AnimFrameFormat
@@ -57,7 +55,7 @@ struct AnimFrameFormat
 	float delay_seconds;
 };
 layout(std140, binding = 2) uniform Anims {
-	AnimFrameFormat uAnims[1000]; // guaranteed 16KB / 16B = #1000
+	AnimFrameFormat uAnims[/*$ANIMS*/];
 };
 
 vec2 calc_position(vec2 dimensions) {
@@ -83,7 +81,7 @@ flat out uint16_t tModTexSlot;
 
 void main() {
 	QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
-	if (quad.texSlot > uint16_t(0)) { // TODO v4 do quad.texSlot - 1 --> 0th element in buffer shouldn't be empty.
+	if (quad.texSlot > uint16_t(0)) {
 		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
