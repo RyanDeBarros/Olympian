@@ -38,7 +38,7 @@ namespace oly::rendering
 
 	struct TextElement
 	{
-		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. also add x/y offset as a manual kerning between elements. if consecutive elements use the same font face, then they can use normal kerning.
+		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. also add x/y offset as a manual kerning between elements.
 		FontAtlasRef font;
 		utf::String text = "";
 		glm::vec4 text_color = glm::vec4(1.0f);
@@ -91,8 +91,9 @@ namespace oly::rendering
 
 			void draw() const;
 
-			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset) const;
-			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset) const;
+			utf::Codepoint first_codepoint() const;
+			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const;
+			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const;
 
 		private:
 			void build_space(PageData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
@@ -167,8 +168,7 @@ namespace oly::rendering
 		void build_layout() const;
 		PageData build_page() const;
 		void write_glyphs(const PageData& pagedata) const;
-
-		float content_height() const;
+		utf::Codepoint next_first_codepoint(size_t i) const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;

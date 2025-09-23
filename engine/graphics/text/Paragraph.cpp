@@ -24,8 +24,14 @@ namespace oly::rendering
 		for (const TextGlyph& glyph : glyphs)
 			glyph.draw();
 	}
+	
+	utf::Codepoint Paragraph::GlyphGroup::first_codepoint() const
+	{
+		auto iter = element.text.begin();
+		return iter ? iter.codepoint() : utf::Codepoint(0);
+	}
 
-	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset) const
+	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
 	{
 		auto iter = element.text.begin();
 		if (iter)
@@ -34,7 +40,7 @@ namespace oly::rendering
 		while (iter)
 		{
 			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : utf::Codepoint(0);
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_first_codepoint;
 
 			if (codepoint == ' ')
 				build_space(pagedata, typeset, next_codepoint);
@@ -66,7 +72,7 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset) const
+	void Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
 	{
 		glyphs.clear();
 
@@ -74,7 +80,7 @@ namespace oly::rendering
 		while (iter)
 		{
 			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : utf::Codepoint(0);
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_first_codepoint;
 
 			if (codepoint == ' ')
 				write_space(pagedata, paragraph.format, typeset, next_codepoint);
@@ -182,8 +188,8 @@ namespace oly::rendering
 
 	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const
 	{
-		typeset.x += dx;
 		write_glyph(paragraph, pagedata, typeset, element.font->get_glyph(c));
+		typeset.x += dx;
 	}
 
 	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, const FontGlyph& font_glyph) const
@@ -402,8 +408,8 @@ namespace oly::rendering
 		pagedata.lines.push_back({});
 
 		TypesetData typeset = {};
-		for (const GlyphGroup& glyph_group : glyph_groups)
-			glyph_group.build_page_section(*this, pagedata, typeset);
+		for (size_t i = 0; i < glyph_groups.size(); ++i)
+			glyph_groups[i].build_page_section(*this, pagedata, typeset, next_first_codepoint(i));
 
 		for (const auto& line : pagedata.lines)
 			pagedata.height += line.height;
@@ -426,7 +432,21 @@ namespace oly::rendering
 	{
 		glyphs_drawn = 0;
 		TypesetData typeset = {};
-		for (const GlyphGroup& glyph_group : glyph_groups)
-			glyph_group.write_glyph_section(*this, pagedata, typeset);
+		for (size_t i = 0; i < glyph_groups.size(); ++i)
+			glyph_groups[i].write_glyph_section(*this, pagedata, typeset, next_first_codepoint(i));
+	}
+
+	utf::Codepoint Paragraph::next_first_codepoint(size_t i) const
+	{
+		if (i + 1 >= glyph_groups.size())
+			return utf::Codepoint(0);
+
+		const GlyphGroup& current_glyph = glyph_groups[i];
+		const GlyphGroup& next_glyph = glyph_groups[i + 1];
+
+		if (current_glyph.element.font->font_face() == next_glyph.element.font->font_face())
+			return next_glyph.first_codepoint();
+		else
+			return utf::Codepoint(0);
 	}
 }

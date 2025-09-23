@@ -93,6 +93,8 @@ namespace oly::rendering
 	public:
 		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
 
+		const FontFaceRef& font_face() const { return font; }
+
 		bool cache(utf::Codepoint codepoint) const;
 		void cache_all(const FontAtlas& other) const;
 		const FontGlyph& get_glyph(utf::Codepoint codepoint) const;

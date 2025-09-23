@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields, field
 
-from editor.core import GL_NEAREST, OLY_DISCARD, OLY_COMMON
+from editor.core import GL_NEAREST, OLY_DISCARD, OLY_COMMON, OLY_KEEP
 
 
 @dataclass
 class FontFace:
-	storage: str = OLY_DISCARD.value
+	storage: str = OLY_KEEP.value
 
 	@staticmethod
 	def from_dict(d: dict) -> FontFace:

@@ -9,7 +9,7 @@ storage = "discard"
 "common_buffer_preset" = "common"
 
 [font_face]
-storage = "discard"
+storage = "keep"
 [[font_face.kerning]]
 pair = [ "e", "U+78",]
 dist = 150
@@ -17,4 +17,3 @@ dist = 150
 [[font_face.kerning]]
 pair = [ "H", "e",]
 dist = -200
-
