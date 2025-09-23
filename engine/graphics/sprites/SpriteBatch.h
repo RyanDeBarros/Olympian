@@ -126,6 +126,7 @@ namespace oly::rendering
 		void render() const;
 
 	private:
+		// TODO v5 no need for StrictIDGenerator if SpriteReference manages id lifetime. Use SoftIDGenerator instead. Probably applicable to ellipses/polygons as well.
 		typedef StrictIDGenerator<GLuint>::ID SpriteID;
 		StrictIDGenerator<GLuint> id_generator;
 		SpriteID gen_sprite_id();

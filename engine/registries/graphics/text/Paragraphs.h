@@ -10,13 +10,18 @@ namespace oly::reg
 	{
 		struct Paragraph
 		{
-			std::string font_atlas;
-			unsigned int atlas_index = 0;
-			utf::String text;
+			struct TextElement
+			{
+				std::string font_atlas;
+				unsigned int atlas_index = 0;
+				utf::String text;
+				std::optional<glm::vec4> text_color;
+			};
+
+			std::vector<TextElement> elements;
 			Transform2D local;
 			std::optional<bool> draw_bkg;
-			std::optional<glm::vec4> bkg_color, text_color;
-			std::vector<std::pair<int, glm::vec4>> glyph_colors;
+			std::optional<glm::vec4> bkg_color;
 
 			rendering::ParagraphFormat format;
 		};

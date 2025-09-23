@@ -65,7 +65,7 @@ namespace oly::rendering
 		graphics::BindlessTextureRef texture;
 		size_t buffer_pos = -1;
 
-		FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos);
+		FontGlyph(const FontAtlas& font, int index, float scale, size_t buffer_pos);
 
 		void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
 		void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
@@ -82,7 +82,7 @@ namespace oly::rendering
 	{
 		FontFaceRef font;
 		friend struct FontGlyph;
-		std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
+		mutable std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
 		FontOptions options;
 		float scale = 1.0f;
 		int ascent = 0, descent = 0, linegap = 0;
@@ -93,8 +93,8 @@ namespace oly::rendering
 	public:
 		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
 
-		bool cache(utf::Codepoint codepoint);
-		void cache_all(const FontAtlas& other);
+		bool cache(utf::Codepoint codepoint) const;
+		void cache_all(const FontAtlas& other) const;
 		const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
 		int get_glyph_index(utf::Codepoint codepoint) const;
 		bool supports(utf::Codepoint codepoint) const;

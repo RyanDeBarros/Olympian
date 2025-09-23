@@ -70,7 +70,7 @@ namespace oly
 			return get_kerning(c1, c2, g1, g2);
 		}
 
-		FontGlyph::FontGlyph(FontAtlas& font, int index, float scale, size_t buffer_pos)
+		FontGlyph::FontGlyph(const FontAtlas& font, int index, float scale, size_t buffer_pos)
 			: index(index), buffer_pos(buffer_pos)
 		{
 			font.font->get_glyph_horizontal_metrics(index, advance_width, left_bearing);
@@ -151,7 +151,7 @@ namespace oly
 			space_width = space_advance_width * scale;
 		}
 
-		bool FontAtlas::cache(utf::Codepoint codepoint)
+		bool FontAtlas::cache(utf::Codepoint codepoint) const
 		{
 			if (glyphs.find(codepoint) != glyphs.end())
 				return true;
@@ -173,7 +173,7 @@ namespace oly
 			return true;
 		}
 
-		void FontAtlas::cache_all(const FontAtlas& other)
+		void FontAtlas::cache_all(const FontAtlas& other) const
 		{
 			for (const auto& [codepoint, glyph] : other.glyphs)
 				cache(codepoint);

@@ -93,13 +93,9 @@ transform = { "scale" = [ 100, 100 ] }
 	
 [[archetype.paragraph]]
 name           = "test_text"
-"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
-"text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 "draw_bkg"     = true
 transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 "bkg_color"    = [ 0.5, 0.4, 0.2, 0.8 ]
-"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
-"glyph_colors" = { "0" = [ 1.0, 0.0, 0.0, 1.0 ], "1" = [ 0.0, 1.0, 0.0, 1.0 ], "2" = [ 0.0, 0.0, 1.0, 1.0 ] }
 	[archetype.paragraph.format]
 	"pivot"             = [ 0.0, 1.0 ]
 	"line_spacing"      = 1.5
@@ -108,3 +104,19 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"padding"           = [ 50, 50 ]
 	"horizontal_align"  = "center"
 	"vertical_align"    = "middle"
+	[[archetype.paragraph.element]]
+	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"text"         = "r"
+	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
+	[[archetype.paragraph.element]]
+	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"text"         = "g"
+	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
+	[[archetype.paragraph.element]]
+	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"text"         = "b"
+	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
+	[[archetype.paragraph.element]]
+	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"text"         = " x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]

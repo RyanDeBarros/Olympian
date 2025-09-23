@@ -36,115 +36,140 @@ namespace oly::rendering
 		} vertical_alignment = VerticalAlignment::TOP;
 	};
 
+	struct TextElement
+	{
+		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. also add x/y offset as a manual kerning between elements. if consecutive elements use the same font face, then they can use normal kerning.
+		FontAtlasRef font;
+		utf::String text = "";
+		glm::vec4 text_color = glm::vec4(1.0f);
+	};
+
 	/*
 	* A Paragraph represents a collection of glyphs that use the same transform and layout, under a common font.
 	*/
 	class Paragraph
 	{
-		Sprite bkg;
-		std::vector<TextGlyph> glyphs;
-		std::vector<bool> visible;
-		utf::String text;
-		FontAtlasRef font;
+		struct PageData
+		{
+			float width = 0.0f, height = 0.0f;
+			float content_width = 0.0f, content_height = 0.0f;
+
+			struct Line
+			{
+				float width = 0.0f;
+				float height = 0.0f;
+				float spaces = 0.0f;
+				float final_advance = 0.0f;
+
+				void fit_height(float h)
+				{
+					height = glm::max(height, h);
+				}
+			};
+			std::vector<Line> lines;
+
+			float blank_lines = 0.0f;
+		};
+
+		struct TypesetData
+		{
+			float x = 0.0f, y = 0.0f;
+			size_t line = 0;
+		};
+
+		mutable Sprite bkg;
 		ParagraphFormat format;
+
+		struct GlyphGroup
+		{
+			TextElement element;
+			mutable std::vector<TextGlyph> glyphs;
+
+			GlyphGroup(TextElement&& element);
+
+			void set_batch(SpriteBatch* batch);
+
+			void draw() const;
+
+			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset) const;
+			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset) const;
+
+		private:
+			void build_space(PageData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void build_tab(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			bool build_newline(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
+			void build_glyph(PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
+
+			void write_space(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void write_tab(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			bool write_newline(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
+			void write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
+			void write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, const FontGlyph& font_glyph) const;
+
+			float line_height(const ParagraphFormat& format) const;
+			
+			float space_width_mult(const PageData& pagedata, const ParagraphFormat& format, const TypesetData& typeset) const;
+			float linebreak_mult(const PageData& pagedata, const ParagraphFormat& format) const;
+			
+			float space_width(utf::Codepoint next_codepoint) const;
+			float tab_width(const ParagraphFormat& format, utf::Codepoint next_codepoint) const;
+			float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
+
+			TextGlyph create_glyph(const Paragraph& paragraph) const;
+			void set_glyph_attributes() const;
+		};
+		std::vector<GlyphGroup> glyph_groups;
+
+		mutable size_t glyphs_drawn = 0;
+		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
+		mutable bool dirty_layout = true;
+		void flag_dirty() { dirty_layout = true; }
+
+		mutable glm::vec2 page_size = {};
 
 	public:
 		bool draw_bkg = false;
+		// TODO v5 use exposure, since transformer is now mutable (since glyphs need to attach dynamically in draw()).
+		mutable Transformer2D transformer;
+
+		Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
+		Paragraph(SpriteBatch* batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
 
 	private:
-		size_t glyphs_drawn = 0;
-
-	public:
-		glm::vec4 default_text_color = glm::vec4(1.0f);
-		Transformer2D transformer;
-
-		Paragraph(const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
-		Paragraph(SpriteBatch* batch, const FontAtlasRef& font, const ParagraphFormat& format = {}, utf::String&& text = "");
-
-	private:
-		void init(utf::String&& text);
+		void init(std::vector<TextElement>&& elements);
 
 	public:
 		SpriteBatch* get_batch() const { return bkg.get_batch(); }
 		void set_batch(SpriteBatch* batch);
 
-		const utf::String& get_text() const { return text; }
-		void set_text(utf::String&& text) { this->text = std::move(text); build_layout(); }
-		void set_text(const utf::String& text) { this->text = text; build_layout(); }
-		const FontAtlasRef& get_font() const { return font; }
-		void set_font(const FontAtlasRef& font) { this->font = font; build_layout(); }
-		const ParagraphFormat& get_format() const { return format;  }
-		void set_format(const ParagraphFormat& format) { this->format = format; build_layout(); }
+		const ParagraphFormat& get_format() const;
+		ParagraphFormat& set_format();
+		glm::vec4 get_bkg_color() const;
+		void set_bkg_color(glm::vec4 color);
+
+		const TextElement& get_element(size_t i = 0) const;
+		TextElement& set_element(size_t i = 0);
+		size_t get_element_count() const;
+		void add_element(TextElement&& element);
+		void insert_element(size_t i, TextElement&& element);
+		void erase_element(size_t i);
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		void recolor_text_with_default();
-		glm::vec4 get_glyph_color(size_t pos) const;
-		void set_glyph_color(size_t pos, glm::vec4 color);
-		glm::vec4 get_bkg_color() const;
-		void set_bkg_color(glm::vec4 color);
-		bool is_visible(size_t pos) const;
-		void set_visible(size_t pos, bool visible);
-
-		float width() const { return pagedata.width; }
-		float height() const { return pagedata.height; }
-		glm::vec2 size() const { return { pagedata.width, pagedata.height }; }
+		float width() const { return page_size.x; }
+		float height() const { return page_size.y; }
+		glm::vec2 size() const { return page_size; }
 
 		void draw() const;
 
 	private:
-		void build_layout();
-		void build_page();
-		void write_glyphs();
-		void typeset_text(void(Paragraph::* space)(utf::Codepoint next_codepoint), void(Paragraph::* tab)(utf::Codepoint next_codepoint),
-			bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx));
+		void build_layout() const;
+		PageData build_page() const;
+		void write_glyphs(const PageData& pagedata) const;
 
-		void build_space(utf::Codepoint next_codepoint);
-		void build_tab(utf::Codepoint next_codepoint);
-		bool build_newline();
-		void build_glyph(utf::Codepoint c, float dx);
-
-		void write_space(utf::Codepoint next_codepoint);
-		void write_tab(utf::Codepoint next_codepoint);
-		bool write_newline();
-		void write_glyph(utf::Codepoint c, float dx);
-
-		void create_glyph();
-		void write_glyph(const FontGlyph& font_glyph);
-
-		float line_height() const;
-
-		struct PageData
-		{
-			float width = 0.0f, height = 0.0f;
-
-			struct Line
-			{
-				float width = 0.0f;
-				float spaces = 0.0f;
-				float final_advance = 0.0f;
-			};
-			std::vector<Line> lines;
-
-			float blank_lines = 0.0f;
-				
-		} pagedata = {};
-		struct TypesetData
-		{
-			float x = 0.0f, y = 0.0f;
-			size_t line = 0;
-		} typeset = {};
-
-		float space_width_mult() const;
 		float content_height() const;
-		float linebreak_mult() const;
-		float space_width(utf::Codepoint next_codepoint);
-		float tab_width(utf::Codepoint next_codepoint);
-		float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint);
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
-
-	// TODO v5 RichText, which uses a vector of strings which can each have their own font, color, etc, but is still formatted as one paragraph. Thus, remove individual glypph colors from regular Paragraph.
 }

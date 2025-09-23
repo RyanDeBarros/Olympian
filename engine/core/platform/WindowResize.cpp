@@ -2,12 +2,9 @@
 
 #include "core/context/Context.h"
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Text.h"
 #include "core/context/Platform.h"
 
 #include "graphics/sprites/Sprite.h"
-#include "graphics/shapes/Polygons.h"
-#include "graphics/shapes/Ellipses.h"
 
 namespace oly::platform
 {

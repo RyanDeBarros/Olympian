@@ -1,6 +1,6 @@
 #include "Paragraphs.h"
 
-#include "core/context/rendering/Text.h"
+#include "core/context/rendering/Fonts.h"
 #include "registries/Loader.h"
 
 namespace oly::reg
@@ -88,15 +88,42 @@ namespace oly::reg
 
 		params::Paragraph params;
 
-		auto font_atlas = node["font_atlas"].value<std::string>();
-		if (!font_atlas)
-			throw Error(ErrorCode::LOAD_ASSET);
+		if (auto element_array = node["element"].as_array())
+		{
+			for (size_t i = 0; i < element_array->size(); ++i)
+			{
+				if (auto element = TOMLNode(*element_array->get(i)))
+				{
+					params::Paragraph::TextElement element_params;
+					if (auto font_atlas = element["font_atlas"].value<std::string>())
+						element_params.font_atlas = *font_atlas;
+					else
+					{
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+						continue;
+					}
 
-		params.font_atlas = font_atlas.value();
-		if (auto index = node["atlas_index"].value<int64_t>())
-			params.atlas_index = (unsigned int)index.value();
+					if (auto atlas_index = element["atlas_index"].value<int64_t>())
+						element_params.atlas_index = (unsigned int)*atlas_index;
+
+					if (auto text = element["text"].value<std::string>())
+						element_params.text = *text;
+					else
+					{
+						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+						continue;
+					}
+
+					glm::vec4 v;
+					if (parse_vec(node["text_color"].as_array(), v))
+						element_params.text_color = v;
+
+					params.elements.emplace_back(std::move(element_params));
+				}
+			}
+		}
+
 		params.format = create_format(node["format"]);
-		params.text = node["text"].value<std::string>().value_or("");
 
 		if (auto draw_bkg = node["draw_bkg"].value<bool>())
 			params.draw_bkg = draw_bkg.value();
@@ -105,21 +132,6 @@ namespace oly::reg
 		glm::vec4 v;
 		if (parse_vec(node["bkg_color"].as_array(), v))
 			params.bkg_color = v;
-		if (parse_vec(node["text_color"].as_array(), v))
-			params.text_color = v;
-
-		auto glyph_colors = node["glyph_colors"].as_table();
-		if (glyph_colors)
-		{
-			for (const auto& [k, v] : *glyph_colors)
-			{
-				glm::vec4 gc;
-				if (parse_vec(v.as_array(), gc))
-					params.glyph_colors.push_back({ std::stoi(k.data()), { gc } });
-				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized glyph color for glyph #" << k.data() << "." << LOG.nl;
-			}
-		}
 
 		if (LOG.enable.debug)
 		{
@@ -132,42 +144,46 @@ namespace oly::reg
 
 	rendering::Paragraph load_paragraph(const params::Paragraph& params)
 	{
-		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, dupl(params.text), params.atlas_index);
-		if (params.draw_bkg)
-			paragraph.draw_bkg = *params.draw_bkg;
-		paragraph.set_local() = params.local;
-
-		if (params.bkg_color)
-			paragraph.set_bkg_color(*params.bkg_color);
-		if (params.text_color)
+		std::vector<rendering::TextElement> elements;
+		for (const params::Paragraph::TextElement& pelement : params.elements)
 		{
-			paragraph.default_text_color = *params.text_color;
-			paragraph.recolor_text_with_default();
+			rendering::TextElement element{ .font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), .text = pelement.text };
+			if (pelement.text_color)
+				element.text_color = *pelement.text_color;
+			elements.emplace_back(std::move(element));
 		}
 
-		for (const auto& gc : params.glyph_colors)
-			paragraph.set_glyph_color(gc.first, { gc.second });
+		rendering::Paragraph paragraph(std::move(elements), params.format);
+
+		paragraph.set_local() = params.local;
+
+		if (params.draw_bkg)
+			paragraph.draw_bkg = *params.draw_bkg;
+		if (params.bkg_color)
+			paragraph.set_bkg_color(*params.bkg_color);
 
 		return paragraph;
 	}
 
 	rendering::Paragraph load_paragraph(params::Paragraph&& params)
 	{
-		rendering::Paragraph paragraph = context::paragraph(params.font_atlas, params.format, std::move(params.text), params.atlas_index);
-		if (params.draw_bkg)
-			paragraph.draw_bkg = *params.draw_bkg;
-		paragraph.set_local() = params.local;
-
-		if (params.bkg_color)
-			paragraph.set_bkg_color(*params.bkg_color);
-		if (params.text_color)
+		std::vector<rendering::TextElement> elements;
+		for (const params::Paragraph::TextElement& pelement : params.elements)
 		{
-			paragraph.default_text_color = *params.text_color;
-			paragraph.recolor_text_with_default();
+			rendering::TextElement element{ .font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), .text = std::move(pelement.text) };
+			if (pelement.text_color)
+				element.text_color = *pelement.text_color;
+			elements.emplace_back(std::move(element));
 		}
 
-		for (const auto& gc : params.glyph_colors)
-			paragraph.set_glyph_color(gc.first, { gc.second });
+		rendering::Paragraph paragraph(std::move(elements), params.format);
+
+		paragraph.set_local() = params.local;
+
+		if (params.draw_bkg)
+			paragraph.draw_bkg = *params.draw_bkg;
+		if (params.bkg_color)
+			paragraph.set_bkg_color(*params.bkg_color);
 
 		return paragraph;
 	}

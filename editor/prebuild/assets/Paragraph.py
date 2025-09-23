@@ -17,22 +17,11 @@ def escape_text(text: str) -> str:
 
 def params_constructor(paragraph, name) -> str:
 	c = write_named_transformer_2d(paragraph, name, 3)
-	c += f"\t\t\t{name}.font_atlas = \"{paragraph['font_atlas']}\";\n"
 
-	if 'atlas_index' in paragraph:
-		c += f"\t\t\t{name}.atlas_index = (unsigned int){paragraph['atlas_index']};\n"
-	if 'text' in paragraph:
-		c += f"\t\t\t{name}.text = \"{escape_text(paragraph['text'])}\";\n"
 	if 'draw_bkg' in paragraph:
 		c += f"\t\t\t{name}.draw_bkg = {'true' if paragraph['draw_bkg'] else 'false'};\n"
 
 	c += write_vec4(paragraph, f'{name}.bkg_color', 'bkg_color', 3)
-	c += write_vec4(paragraph, f'{name}.text_color', 'text_color', 3)
-
-	if 'glyph_colors' in paragraph:
-		c += f"\t\t\t{name}.glyph_colors.reserve({len(paragraph['glyph_colors'])});\n"
-		for index, color in paragraph['glyph_colors'].items():
-			c += f"\t\t\t{name}.glyph_colors.push_back({{ {int(index)}, {{ (float){color[0]}, (float){color[1]}, (float){color[2]}, (float){color[3]} }} }});\n"
 
 	if 'format' in paragraph:
 		# noinspection PyShadowingBuiltins
@@ -83,6 +72,22 @@ def params_constructor(paragraph, name) -> str:
 					c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;\n"
 				case 'full_justify':
 					c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;\n"
+
+	elements = paragraph.get('element', [])
+	for element in elements:
+		c += "\t\t\t{\n"
+		c += "\t\t\t\treg::params::Paragraph::TextElement element;\n"
+		if 'font_atlas' in element:
+			c += f"\t\t\t\telement.font_atlas = \"{element['font_atlas']}\";\n"
+		if 'atlas_index' in element:
+			c += f"\t\t\t\telement.atlas_index = (unsigned int){element['atlas_index']};\n"
+		if 'text' in element:
+			c += f"\t\t\t\telement.text = \"{escape_text(element['text'])}\";\n"
+		c += write_vec4(element, 'element.text_color', 'text_color', 4)
+		c += "\t\t\t\tparams.elements.emplace_back(std::move(element));\n"
+		c += "\t\t\t}\n"
+
+	c += write_vec4(paragraph, f'{name}.text_color', 'text_color', 3)
 
 	return c
 
