@@ -25,15 +25,13 @@ namespace oly::rendering
 			glyph.draw();
 	}
 	
-	utf::Codepoint Paragraph::GlyphGroup::first_codepoint() const
+	Paragraph::GlyphGroup::PeekData Paragraph::GlyphGroup::peek() const
 	{
 		auto iter = element.text.begin();
-		return iter ? iter.codepoint() : utf::Codepoint(0);
+		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
 	}
 
-	// TODO v5 extract common process in build_page_section/write_glyph_section
-
-	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
+	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, PeekData next_peek) const
 	{
 		auto iter = element.text.begin();
 		if (iter)
@@ -47,13 +45,18 @@ namespace oly::rendering
 					return;
 			}
 			else
+			{
 				typeset.x += element.adj_offset;
+				pagedata.lines.back().width += element.adj_offset;
+				pagedata.lines.back().final_advance = element.adj_offset;
+				pagedata.lines.back().visual_width += element.adj_offset;
+			}
 		}
 
 		while (iter)
 		{
 			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_first_codepoint;
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
 
 			if (codepoint == ' ')
 				build_space(pagedata, typeset, next_codepoint);
@@ -85,10 +88,11 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
+	void Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, PeekData next_peek) const
 	{
 		glyphs.clear();
 
+		// TODO v5 shouldn't just be element.adj_offset, but element.adj_offset * typeset mult x
 		if (element.adj_offset > 0.0f && typeset.x > 0.0f)
 		{
 			if (paragraph.format.text_wrap > 0.0f && typeset.x + element.adj_offset > paragraph.format.text_wrap)
@@ -104,7 +108,7 @@ namespace oly::rendering
 		while (iter)
 		{
 			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_first_codepoint;
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
 
 			if (codepoint == ' ')
 				write_space(pagedata, paragraph.format, typeset, next_codepoint);
@@ -133,6 +137,8 @@ namespace oly::rendering
 		set_glyph_attributes(); // TODO v5 if changing text color, no need to re-build/write entire section - just call set_glyph_attributes. use separate dirty flag
 	}
 
+#undef OLY_PROCESS_ADJ_OFFSET
+
 	void Paragraph::GlyphGroup::build_space(PageData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		float dx = space_width(next_codepoint);
@@ -140,7 +146,7 @@ namespace oly::rendering
 		pagedata.lines.back().width += dx;
 		pagedata.lines.back().spaces += dx;
 		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
+		pagedata.lines.back().visual_width += dx;
 	}
 
 	void Paragraph::GlyphGroup::build_tab(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const
@@ -150,7 +156,7 @@ namespace oly::rendering
 		pagedata.lines.back().width += dx;
 		pagedata.lines.back().spaces += dx;
 		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
+		pagedata.lines.back().visual_width += dx;
 	}
 
 	bool Paragraph::GlyphGroup::build_newline(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const
@@ -167,7 +173,9 @@ namespace oly::rendering
 		typeset.y -= dy;
 		if (typeset.x == 0.0f)
 		{
-			pagedata.height += line_height(format) * (format.linebreak_spacing - 1.0f);
+			// TODO v5 can cache line_height() at beginning of build_page_section()
+			pagedata.height += dy - line_height(format);
+			pagedata.visual_height += dy - line_height(format);
 			pagedata.blank_lines += line_height(format);
 		}
 		typeset.x = 0.0f;
@@ -182,7 +190,8 @@ namespace oly::rendering
 		typeset.x += dx;
 		pagedata.lines.back().width += dx;
 		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
+		pagedata.lines.back().visual_width += glm::max(dx, (float)element.font->get_glyph(c).box.x2);
+		pagedata.lines.back().visual_height = glm::max(pagedata.lines.back().visual_height, (float)element.font->get_glyph(c).box.height());
 	}
 
 	void Paragraph::GlyphGroup::write_space(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const
@@ -213,12 +222,15 @@ namespace oly::rendering
 
 	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const
 	{
+		const FontGlyph& g = element.font->get_glyph(c);
+
 		float line_start_x = 0.0f;
 		if (paragraph.format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::RIGHT)
 			line_start_x = pagedata.width - pagedata.lines[typeset.line].width;
 		else if (paragraph.format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::CENTER)
 			line_start_x = 0.5f * (pagedata.width - pagedata.lines[typeset.line].width);
 
+		// TODO v5 stuff like this can be cached in Paragraph -> also, changing the alignment shouldn't require rebuilding everything, only re-writing everything.
 		float line_start_y = 0.0f;
 		if (paragraph.format.vertical_alignment == ParagraphFormat::VerticalAlignment::BOTTOM)
 			line_start_y = pagedata.height - pagedata.content_height;
@@ -242,11 +254,11 @@ namespace oly::rendering
 
 		glm::vec2 glyph_pos = {
 			line_start_x + typeset.x * typeset_mult_x - paragraph.format.pivot.x * pagedata.width + paragraph.format.padding.x,
-			-line_start_y + typeset.y * typeset_mult_y - element.font->get_ascent() + (1.0f - paragraph.format.pivot.y) * pagedata.height - paragraph.format.padding.y
+			-line_start_y + typeset.y * typeset_mult_y + (1.0f - paragraph.format.pivot.y) * pagedata.height - paragraph.format.padding.y
 		};
 
 		TextGlyph glyph = create_glyph(paragraph);
-		glyph.set_glyph(*element.font, element.font->get_glyph(c), glyph_pos);
+		glyph.set_glyph(*element.font, g, glyph_pos);
 		glyphs.emplace_back(std::move(glyph));
 
 		typeset.x += dx;
@@ -280,7 +292,7 @@ namespace oly::rendering
 
 	float Paragraph::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
 	{
-		float adv = element.font->get_space_width();
+		float adv = element.font->get_space_advance_width();
 		if (next_codepoint)
 			adv += element.font->kerning_of(next_codepoint, utf::Codepoint(' '));
 		return adv;
@@ -430,21 +442,25 @@ namespace oly::rendering
 
 		TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
-			glyph_groups[i].build_page_section(*this, pagedata, typeset, next_first_codepoint(i));
+			glyph_groups[i].build_page_section(*this, pagedata, typeset, peek_next(i));
 
 		for (const auto& line : pagedata.lines)
+		{
 			pagedata.height += line.height;
+			pagedata.visual_height += line.height;
+			pagedata.width = glm::max(pagedata.width, line.width);
+			pagedata.visual_width = glm::max(pagedata.visual_width, line.visual_width);
+		}
 
 		pagedata.content_width = pagedata.width;
 		pagedata.content_height = pagedata.height;
 
-		// TODO v5 remove this check since pagedata.width should never really be greater than min size -> then can remove content_width as well
-		if (pagedata.width < format.min_size.x)
-			pagedata.width = format.min_size.x;
-		if (pagedata.height < format.min_size.y)
-			pagedata.height = format.min_size.y;
+		pagedata.width = glm::max(pagedata.width, format.min_size.x);
+		pagedata.height = glm::max(pagedata.height, format.min_size.y);
+		pagedata.visual_width = glm::max(pagedata.visual_width, format.min_size.x);
+		pagedata.visual_height = glm::max(pagedata.visual_height, format.min_size.y);
 
-		page_size = { pagedata.width, pagedata.height };
+		page_size = { pagedata.visual_width, pagedata.visual_height };
 
 		return pagedata;
 	}
@@ -454,20 +470,20 @@ namespace oly::rendering
 		glyphs_drawn = 0;
 		TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
-			glyph_groups[i].write_glyph_section(*this, pagedata, typeset, next_first_codepoint(i));
+			glyph_groups[i].write_glyph_section(*this, pagedata, typeset, peek_next(i));
 	}
 
-	utf::Codepoint Paragraph::next_first_codepoint(size_t i) const
+	Paragraph::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
 	{
 		if (i + 1 >= glyph_groups.size())
-			return utf::Codepoint(0);
+			return {};
 
 		const GlyphGroup& current_glyph = glyph_groups[i];
 		const GlyphGroup& next_glyph = glyph_groups[i + 1];
 
 		if (current_glyph.element.font->font_face() == next_glyph.element.font->font_face())
-			return next_glyph.first_codepoint();
+			return next_glyph.peek();
 		else
-			return utf::Codepoint(0);
+			return {};
 	}
 }

@@ -12,6 +12,7 @@ draw = [
 	"grass_tilemap",
 	"test_text",
 	"nonant_panel",
+	"smol_text"
 ]
 
 [[archetype.sprite]]
@@ -106,7 +107,7 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"vertical_align"    = "middle"
 	[[archetype.paragraph.element]]
 	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
-	"text"         = "r"
+	"text"         = "rgb"
 	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
 	[[archetype.paragraph.element]]
 	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
@@ -118,5 +119,20 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
 	[[archetype.paragraph.element]]
 	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
-	"text"         = " x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
+	"adj_offset"   = 50
+
+[[archetype.paragraph]]
+name = "smol_text"
+draw_bkg = true
+transform = { "position" = [ 400, -400 ] }
+bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
+	[archetype.paragraph.format]
+	"pivot"             = [ 0.0, 1.0 ]
+	"horizontal_align"  = "center"
+	"vertical_align"    = "middle"
+	[[archetype.paragraph.element]]
+	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"text"         = "abcdef"
+	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

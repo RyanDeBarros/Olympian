@@ -84,6 +84,8 @@ def params_constructor(paragraph, name) -> str:
 		if 'text' in element:
 			c += f"\t\t\t\telement.text = \"{escape_text(element['text'])}\";\n"
 		c += write_vec4(element, 'element.text_color', 'text_color', 4)
+		if 'adj_offset' in element:
+			c += f"\t\t\t\telement.adj_offset = (float){element['adj_offset']};\n"
 		c += "\t\t\t\tparams.elements.emplace_back(std::move(element));\n"
 		c += "\t\t\t}\n"
 

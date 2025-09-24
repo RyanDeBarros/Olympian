@@ -146,9 +146,9 @@ namespace oly
 				for (auto& [codepoint, glyph] : glyphs)
 					glyph.texture = common_texture;
 			}
-			int space_advance_width, space_left_bearing;
-			font->get_codepoint_horizontal_metrics(utf::Codepoint(' '), space_advance_width, space_left_bearing);
-			space_width = space_advance_width * scale;
+			int _space_advance_width, _space_left_bearing;
+			font->get_codepoint_horizontal_metrics(utf::Codepoint(' '), _space_advance_width, _space_left_bearing);
+			space_advance_width = _space_advance_width * scale;
 		}
 
 		bool FontAtlas::cache(utf::Codepoint codepoint) const

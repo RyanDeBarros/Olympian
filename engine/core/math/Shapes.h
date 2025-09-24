@@ -61,6 +61,8 @@ namespace oly::math
 	{
 		int x1, x2, y1, y2;
 
+		float center_x() const { return 0.5f * (x1 + x2); }
+		float center_y() const { return 0.5f * (y1 + y2); }
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
 		bool contains(glm::ivec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
 		glm::ivec2 clamp(glm::ivec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }

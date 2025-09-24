@@ -89,11 +89,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			sprite.draw();
 		jumble.draw();
 
-		obstacle_layer.draw();
-		player_layer.draw();
-		impulse_layer.draw();
-		ray_layer.draw();
-		raycast_result_layer.draw();
+		//obstacle_layer.draw();
+		//player_layer.draw();
+		//impulse_layer.draw();
+		//ray_layer.draw();
+		//raycast_result_layer.draw();
 	}
 
 	void logic_update()

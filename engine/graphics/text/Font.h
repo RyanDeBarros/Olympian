@@ -86,7 +86,7 @@ namespace oly::rendering
 		FontOptions options;
 		float scale = 1.0f;
 		int ascent = 0, descent = 0, linegap = 0;
-		float baseline = 0.0f, space_width = 0.0f;
+		float baseline = 0.0f, space_advance_width = 0.0f;
 		graphics::ImageDimensions common_dim;
 		graphics::BindlessTextureRef common_texture;
 
@@ -108,7 +108,7 @@ namespace oly::rendering
 		float get_linegap() const;
 		math::UVRect uvs(const FontGlyph& glyph) const;
 		float get_scale() const { return scale; }
-		float get_space_width() const { return space_width; }
+		float get_space_advance_width() const { return space_advance_width; }
 	};
 	typedef SmartReference<FontAtlas> FontAtlasRef;
 }

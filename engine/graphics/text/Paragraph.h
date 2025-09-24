@@ -54,6 +54,7 @@ namespace oly::rendering
 		{
 			float width = 0.0f, height = 0.0f;
 			float content_width = 0.0f, content_height = 0.0f;
+			float visual_width = 0.0f, visual_height = 0.0f;
 
 			struct Line
 			{
@@ -61,10 +62,13 @@ namespace oly::rendering
 				float height = 0.0f;
 				float spaces = 0.0f;
 				float final_advance = 0.0f;
+				float visual_width = 0.0f;
+				float visual_height = 0.0f;
 
 				void fit_height(float h)
 				{
 					height = glm::max(height, h);
+					visual_height = glm::max(visual_height, height);
 				}
 			};
 			std::vector<Line> lines;
@@ -92,9 +96,14 @@ namespace oly::rendering
 
 			void draw() const;
 
-			utf::Codepoint first_codepoint() const;
-			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const;
-			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const;
+			struct PeekData
+			{
+				utf::Codepoint first_codepoint = utf::Codepoint(0);
+			};
+
+			PeekData peek() const;
+			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, PeekData next_peek) const;
+			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, PeekData next_peek) const;
 
 		private:
 			void build_space(PageData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
@@ -158,9 +167,10 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		float width() const { return page_size.x; }
-		float height() const { return page_size.y; }
-		glm::vec2 size() const { return page_size; }
+		// TODO v5 cache more properties, like page_size() and content_size().
+		float visual_width() const { return page_size.x; }
+		float visual_height() const { return page_size.y; }
+		glm::vec2 visual_size() const { return page_size; }
 
 		void draw() const;
 
@@ -168,7 +178,7 @@ namespace oly::rendering
 		void build_layout() const;
 		PageData build_page() const;
 		void write_glyphs(const PageData& pagedata) const;
-		utf::Codepoint next_first_codepoint(size_t i) const;
+		GlyphGroup::PeekData peek_next(size_t i) const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
