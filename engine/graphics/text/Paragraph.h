@@ -38,10 +38,11 @@ namespace oly::rendering
 
 	struct TextElement
 	{
-		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. also add x/y offset as a manual kerning between elements.
+		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. add y pivot - if text element is smaller than line height, should it be align to top, middle, or bottom.
 		FontAtlasRef font;
 		utf::String text = "";
 		glm::vec4 text_color = glm::vec4(1.0f);
+		float adj_offset = 0.0f;
 	};
 
 	/*
@@ -105,7 +106,6 @@ namespace oly::rendering
 			void write_tab(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			bool write_newline(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
 			void write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
-			void write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, const FontGlyph& font_glyph) const;
 
 			float line_height(const ParagraphFormat& format) const;
 			

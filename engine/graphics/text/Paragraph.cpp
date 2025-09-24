@@ -31,11 +31,24 @@ namespace oly::rendering
 		return iter ? iter.codepoint() : utf::Codepoint(0);
 	}
 
+	// TODO v5 extract common process in build_page_section/write_glyph_section
+
 	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
 	{
 		auto iter = element.text.begin();
 		if (iter)
 			pagedata.lines.back().fit_height(element.font->line_height());
+
+		if (element.adj_offset > 0.0f && typeset.x > 0.0f)
+		{
+			if (paragraph.format.text_wrap > 0.0f && typeset.x + element.adj_offset > paragraph.format.text_wrap)
+			{
+				if (!build_newline(pagedata, paragraph.format, typeset))
+					return;
+			}
+			else
+				typeset.x += element.adj_offset;
+		}
 
 		while (iter)
 		{
@@ -64,7 +77,7 @@ namespace oly::rendering
 				float dx = advance_width(font_glyph, codepoint, next_codepoint);
 				if (paragraph.format.text_wrap > 0.0f && typeset.x + dx > paragraph.format.text_wrap)
 				{
-					if (build_newline(pagedata, paragraph.format, typeset))
+					if (!build_newline(pagedata, paragraph.format, typeset))
 						break;
 				}
 				build_glyph(pagedata, typeset, codepoint, dx);
@@ -75,6 +88,17 @@ namespace oly::rendering
 	void Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint next_first_codepoint) const
 	{
 		glyphs.clear();
+
+		if (element.adj_offset > 0.0f && typeset.x > 0.0f)
+		{
+			if (paragraph.format.text_wrap > 0.0f && typeset.x + element.adj_offset > paragraph.format.text_wrap)
+			{
+				if (!write_newline(pagedata, paragraph.format, typeset))
+					return;
+			}
+			else
+				typeset.x += element.adj_offset;
+		}
 
 		auto iter = element.text.begin();
 		while (iter)
@@ -99,7 +123,7 @@ namespace oly::rendering
 				float dx = advance_width(font_glyph, codepoint, next_codepoint);
 				if (paragraph.format.text_wrap > 0.0f && typeset.x + dx > paragraph.format.text_wrap)
 				{
-					if (write_newline(pagedata, paragraph.format, typeset))
+					if (!write_newline(pagedata, paragraph.format, typeset))
 						break;
 				}
 				write_glyph(paragraph, pagedata, typeset, codepoint, dx);
@@ -180,6 +204,7 @@ namespace oly::rendering
 			dy = line_height(format);
 		if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
 			return false;
+
 		++typeset.line;
 		typeset.y -= dy;
 		typeset.x = 0.0f;
@@ -187,12 +212,6 @@ namespace oly::rendering
 	}
 
 	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const
-	{
-		write_glyph(paragraph, pagedata, typeset, element.font->get_glyph(c));
-		typeset.x += dx;
-	}
-
-	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, const FontGlyph& font_glyph) const
 	{
 		float line_start_x = 0.0f;
 		if (paragraph.format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::RIGHT)
@@ -227,8 +246,10 @@ namespace oly::rendering
 		};
 
 		TextGlyph glyph = create_glyph(paragraph);
-		glyph.set_glyph(*element.font, font_glyph, glyph_pos);
+		glyph.set_glyph(*element.font, element.font->get_glyph(c), glyph_pos);
 		glyphs.emplace_back(std::move(glyph));
+
+		typeset.x += dx;
 	}
 
 	float Paragraph::GlyphGroup::line_height(const ParagraphFormat& format) const

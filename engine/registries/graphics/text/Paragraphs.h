@@ -16,6 +16,7 @@ namespace oly::reg
 				unsigned int atlas_index = 0;
 				utf::String text;
 				std::optional<glm::vec4> text_color;
+				float adj_offset = 0.0f;
 			};
 
 			std::vector<TextElement> elements;

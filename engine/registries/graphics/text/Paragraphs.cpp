@@ -3,6 +3,8 @@
 #include "core/context/rendering/Fonts.h"
 #include "registries/Loader.h"
 
+// TODO v5 devise a better design for asset loading. Right now, essentially the same parsing is done three times: 1. convert TOML to params. 2. convert params to actual object. 3. in editor archetype prebuild, convert TOML to params.
+
 namespace oly::reg
 {
 	static rendering::ParagraphFormat create_format(const TOMLNode& node)
@@ -115,8 +117,11 @@ namespace oly::reg
 					}
 
 					glm::vec4 v;
-					if (parse_vec(node["text_color"].as_array(), v))
+					if (parse_vec(element["text_color"].as_array(), v))
 						element_params.text_color = v;
+
+					if (auto adj_offset = element["adj_offset"].value<double>())
+						element_params.adj_offset = *adj_offset;
 
 					params.elements.emplace_back(std::move(element_params));
 				}
@@ -147,7 +152,11 @@ namespace oly::reg
 		std::vector<rendering::TextElement> elements;
 		for (const params::Paragraph::TextElement& pelement : params.elements)
 		{
-			rendering::TextElement element{ .font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), .text = pelement.text };
+			rendering::TextElement element{
+				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
+				.text = pelement.text,
+				.adj_offset = pelement.adj_offset
+			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
@@ -168,9 +177,13 @@ namespace oly::reg
 	rendering::Paragraph load_paragraph(params::Paragraph&& params)
 	{
 		std::vector<rendering::TextElement> elements;
-		for (const params::Paragraph::TextElement& pelement : params.elements)
+		for (params::Paragraph::TextElement& pelement : params.elements)
 		{
-			rendering::TextElement element{ .font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), .text = std::move(pelement.text) };
+			rendering::TextElement element{
+				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
+				.text = std::move(pelement.text),
+				.adj_offset = pelement.adj_offset
+			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
