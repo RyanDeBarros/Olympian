@@ -113,6 +113,7 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
+	"scale"        = [ 2.0, 0.5 ]
 	[[archetype.paragraph.element]]
 	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
 	"text"         = "b"

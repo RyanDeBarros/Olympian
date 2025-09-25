@@ -78,16 +78,17 @@ namespace oly::rendering
 		void set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment);
 	};
 
-	// TODO v5 spacer elements to insert between text elements
-
 	// TODO v5 TextElementExposure
 	struct TextElement
 	{
-		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. add y pivot - if text element is smaller than line height, should it be align to top, middle, or bottom.
+		// TODO v5 add y pivot - if text element is smaller than line height, should it be align to top, middle, or bottom.
 		FontAtlasRef font;
 		utf::String text = "";
 		glm::vec4 text_color = glm::vec4(1.0f);
 		float adj_offset = 0.0f;
+		glm::vec2 scale = glm::vec2(1.0f);
+
+		float line_height() const { return font->line_height() * scale.y; }
 	};
 
 	/*

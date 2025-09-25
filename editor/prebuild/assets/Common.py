@@ -67,6 +67,12 @@ def write_vec4_vector(renderable: dict, variable: str, parameter: str, tabs: int
 			c += "\t" * tabs + f"{variable}.push_back({{ (float){vec2[0]}, (float){vec2[1]}, (float){vec2[2]}, (float){vec2[3]} }});\n"
 	return c
 
+def write_vec2(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
+	c = ""
+	if parameter in renderable:
+		vec2 = renderable[parameter]
+		c += "\t" * tabs + f"{variable} = {{ (float){vec2[0]}, (float){vec2[1]} }};\n"
+	return c
 
 def write_vec4(renderable: dict, variable: str, parameter: str, tabs: int) -> str:
 	c = ""

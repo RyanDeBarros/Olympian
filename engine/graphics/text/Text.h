@@ -23,7 +23,7 @@ namespace oly::rendering
 
 		void draw() const;
 
-		void set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos);
+		void set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale);
 		void set_text_color(glm::vec4 color) const { ref.set_modulation(color); }
 		glm::vec4 get_text_color() const { return ref.get_modulation(); }
 

@@ -31,10 +31,22 @@ namespace oly::rendering
 			context::internal::set_sprite_batch_rendering(true);
 	}
 
-	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos)
+	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)
 	{
 		ref.set_texture(glyph.texture, { 1.0f, 1.0f } );
-		set_local() = { .position = pos + glm::vec2{ 0.5f * glyph.box.width() + atlas.get_scale() * glyph.left_bearing, -glyph.box.center_y() - atlas.get_ascent() }, .scale = glyph.box.size()};
+		const math::Rect2D box{
+			.x1 = glyph.box.x1 * scale.x,
+			.x2 = glyph.box.x2 * scale.x,
+			.y1 = glyph.box.y1 * scale.y,
+			.y2 = glyph.box.y2 * scale.y
+		};
+		set_local() = {
+			.position = pos + glm::vec2{
+				0.5f * box.width() + atlas.get_scale() * glyph.left_bearing,
+				-box.center_y() - atlas.get_ascent()
+			},
+			.scale = box.size()
+		};
 		ref.set_tex_coords(atlas.uvs(glyph));
 	}
 }

@@ -31,6 +31,8 @@ namespace oly::math
 	{
 		float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
 
+		float center_x() const { return 0.5f * (x1 + x2); }
+		float center_y() const { return 0.5f * (y1 + y2); }
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
 		float width() const { return x2 - x1; }
 		float height() const { return y2 - y1; }

@@ -102,7 +102,7 @@ namespace oly::rendering
 		if (!iter)
 			return;
 
-		pagedata.current_line().max_height = glm::max(pagedata.current_line().max_height, element.font->line_height());
+		pagedata.current_line().max_height = glm::max(pagedata.current_line().max_height, element.line_height());
 		build_adj_offset(pagedata, paragraph.format, typeset, next_peek);
 
 		while (iter)
@@ -120,7 +120,7 @@ namespace oly::rendering
 					++iter;
 				build_newline(pagedata, paragraph.format, typeset);
 				if (iter.codepoint()) // next codepoint in group
-					pagedata.current_line().max_height = element.font->line_height();
+					pagedata.current_line().max_height = element.line_height();
 			}
 			else if (element.font->cache(codepoint))
 			{
@@ -215,7 +215,7 @@ namespace oly::rendering
 		{
 			build_newline(pagedata, format, typeset);
 			if (iter.codepoint()) // next codepoint in group
-				pagedata.current_line().max_height = element.font->line_height();
+				pagedata.current_line().max_height = element.line_height();
 		}
 	}
 
@@ -312,7 +312,7 @@ namespace oly::rendering
 	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment) const
 	{
 		TextGlyph glyph = create_glyph(paragraph);
-		glyph.set_glyph(*element.font, element.font->get_glyph(c), alignment.position(typeset));
+		glyph.set_glyph(*element.font, element.font->get_glyph(c), alignment.position(typeset), element.scale);
 		glyphs.emplace_back(std::move(glyph));
 		typeset.x += dx;
 		++typeset.character;
@@ -323,14 +323,12 @@ namespace oly::rendering
 		float adv = element.font->get_space_advance_width();
 		if (next_codepoint)
 			adv += element.font->kerning_of(next_codepoint, utf::Codepoint(' '));
-		return adv;
+		return adv * element.scale.x;
 	}
 
 	float Paragraph::GlyphGroup::tab_width(const ParagraphFormat& format, utf::Codepoint next_codepoint) const
 	{
-		float first = space_width(next_codepoint);
-		float rest = space_width(next_codepoint) * (format.tab_spaces - 1.0f);
-		return first + rest;
+		return space_width(next_codepoint) * format.tab_spaces * element.scale.x;
 	}
 
 	float Paragraph::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
@@ -339,7 +337,7 @@ namespace oly::rendering
 		float adv = font_glyph.advance_width * element.font->get_scale();
 		if (next_codepoint)
 			adv += element.font->kerning_of(codepoint, next_codepoint, font_glyph.index, element.font->get_glyph_index(next_codepoint));
-		return adv;
+		return adv * element.scale.x;
 	}
 
 	TextGlyph Paragraph::GlyphGroup::create_glyph(const Paragraph& paragraph) const

@@ -116,12 +116,16 @@ namespace oly::reg
 						continue;
 					}
 
-					glm::vec4 v;
-					if (parse_vec(element["text_color"].as_array(), v))
-						element_params.text_color = v;
+					{
+						glm::vec4 v;
+						if (parse_vec(element["text_color"].as_array(), v))
+							element_params.text_color = v;
+					}
 
 					if (auto adj_offset = element["adj_offset"].value<double>())
 						element_params.adj_offset = *adj_offset;
+
+					parse_vec(element["scale"].as_array(), element_params.scale);
 
 					params.elements.emplace_back(std::move(element_params));
 				}
@@ -155,7 +159,8 @@ namespace oly::reg
 			rendering::TextElement element{
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
 				.text = pelement.text,
-				.adj_offset = pelement.adj_offset
+				.adj_offset = pelement.adj_offset,
+				.scale = pelement.scale
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
@@ -182,7 +187,8 @@ namespace oly::reg
 			rendering::TextElement element{
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
 				.text = std::move(pelement.text),
-				.adj_offset = pelement.adj_offset
+				.adj_offset = pelement.adj_offset,
+				.scale = pelement.scale
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
