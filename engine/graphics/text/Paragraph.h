@@ -99,7 +99,6 @@ namespace oly::rendering
 		{
 			glm::vec2 content_size;
 			glm::vec2 fitted_size;
-			glm::vec2 visual_size;
 		};
 
 		struct PageBuildData
@@ -179,17 +178,25 @@ namespace oly::rendering
 
 			PeekData peek() const;
 			void build_page_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek) const;
-			void write_glyph_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
+
+			enum class WriteResult
+			{
+				CONTINUE,
+				BREAK
+			};
+			WriteResult write_glyph_section(const Paragraph& paragraph, const PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
 
 		private:
 			bool can_fit_on_line(const ParagraphFormat& format, const TypesetData& typeset, float dx) const;
 			bool can_fit_vertically(const ParagraphFormat& format, const TypesetData& typeset, float dy) const;
 
+			void build_adj_offset(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, PeekData next_peek) const;
 			void build_space(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			void build_tab(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			bool build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
-			void build_glyph(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
+			void build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
+			void build_glyph(PageBuildData& pagedata, TypesetData& typeset, float dx) const;
 
+			bool write_adj_offset(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
 			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
 			void write_tab(const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
 			bool write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment) const;
