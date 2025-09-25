@@ -109,7 +109,7 @@ class Archetype:
 	def transformer_attachments(self) -> str:
 		att = ""
 		att += self.write_transformer_attachment(self.sprites)
-		att += self.write_transformer_attachment(self.paragraphs)
+		att += self.write_transformer_attachment(self.paragraphs, "set_transformer()")
 		att += self.write_transformer_attachment(self.sprite_atlases, "sprite.transformer")
 		att += self.write_transformer_attachment(self.tilemaps, "set_transformer()")
 		att += self.write_transformer_attachment(self.sprite_nonants, "set_transformer()")

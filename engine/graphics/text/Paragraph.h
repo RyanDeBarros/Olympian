@@ -3,9 +3,30 @@
 #include "graphics/text/Text.h"
 #include "graphics/text/Font.h"
 #include "graphics/sprites/Sprite.h"
+#include "core/base/TransformerExposure.h"
 
 namespace oly::rendering
 {
+	namespace internal
+	{
+		enum DirtyParagraph
+		{
+			REBUILD_LAYOUT = 1 << 0,
+			REALIGN_X = 1 << 1,
+			REALIGN_Y = 1 << 2
+		};
+
+		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
+
+		inline DirtyParagraph operator|(DirtyParagraph a, DirtyParagraph b) { return DirtyParagraph((int)a | (int)b); }
+		inline DirtyParagraph& operator|=(DirtyParagraph& a, DirtyParagraph b) { a = a | b; return a; }
+
+		inline DirtyParagraph operator&(DirtyParagraph a, DirtyParagraph b) { return DirtyParagraph((int)a & (int)b); }
+		inline DirtyParagraph& operator&=(DirtyParagraph& a, DirtyParagraph b) { a = a & b; return a; }
+	}
+
+	class Paragraph;
+
 	struct ParagraphFormat
 	{
 		float line_spacing = 1.0f;
@@ -36,6 +57,30 @@ namespace oly::rendering
 		} vertical_alignment = VerticalAlignment::TOP;
 	};
 
+	struct ParagraphFormatExposure
+	{
+	private:
+		friend class Paragraph;
+		Paragraph& paragraph;
+
+		ParagraphFormatExposure(Paragraph& paragraph);
+
+	public:
+		void set_line_spacing(float line_spacing);
+		void set_tab_spaces(float tab_spaces);
+		void set_linebreak_spacing(float linebreak_spacing);
+		void set_pivot(glm::vec2 pivot);
+		void set_min_size(glm::vec2 min_size);
+		void set_text_wrap(float text_wrap);
+		void set_max_height(float max_height);
+		void set_padding(glm::vec2 padding);
+		void set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment);
+		void set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment);
+	};
+
+	// TODO v5 spacer elements to insert between text elements
+
+	// TODO v5 TextElementExposure
 	struct TextElement
 	{
 		// TODO v5 add scale as an alternative to setting font size without requiring new rasterization. add y pivot - if text element is smaller than line height, should it be align to top, middle, or bottom.
@@ -50,40 +95,71 @@ namespace oly::rendering
 	*/
 	class Paragraph
 	{
-		struct PageData
+		struct PageLayout
 		{
-			float width = 0.0f, height = 0.0f;
-			float content_width = 0.0f, content_height = 0.0f;
-			float visual_width = 0.0f, visual_height = 0.0f;
+			glm::vec2 content_size;
+			glm::vec2 fitted_size;
+			glm::vec2 visual_size;
+		};
 
+		struct PageBuildData
+		{
 			struct Line
 			{
 				float width = 0.0f;
-				float height = 0.0f;
-				float spaces = 0.0f;
-				float final_advance = 0.0f;
-				float visual_width = 0.0f;
-				float visual_height = 0.0f;
+				float max_height = 0.0f;
+				float space_width = 0.0f;
+				float final_advance_width = 0.0f;
+				GLuint characters = 0;
 
-				void fit_height(float h)
-				{
-					height = glm::max(height, h);
-					visual_height = glm::max(visual_height, height);
-				}
+				float spaced_height(const ParagraphFormat& format) const { return max_height * (width == 0.0f ? format.linebreak_spacing : format.line_spacing); }
 			};
-			std::vector<Line> lines;
 
-			float blank_lines = 0.0f;
+			std::vector<Line> lines;
+			GLuint linebreaks = 0;
+
+			const Line& current_line() const { return lines.back(); }
+			Line& current_line() { return lines.back(); }
 		};
 
 		struct TypesetData
 		{
 			float x = 0.0f, y = 0.0f;
+			GLuint character = 0;
 			size_t line = 0;
+		};
+
+		struct AlignmentCache
+		{
+			struct Line
+			{
+				float start = 0.0f;
+				float character_shift = 0.0f;
+				float space_width_mult = 1.0f;
+				float height = 0.0f;
+			};
+
+			std::vector<Line> lines;
+
+			glm::vec2 pivot_offset = {};
+			glm::vec2 padding_offset = {};
+			float valign_offset = 0.0f;
+
+			glm::vec2 position(const TypesetData& typeset) const
+			{
+				return pivot_offset + padding_offset + glm::vec2{ typeset.x, typeset.y } + glm::vec2{
+					lines[typeset.line].start + lines[typeset.line].character_shift * typeset.character,
+					valign_offset
+				};
+			}
 		};
 
 		mutable Sprite bkg;
 		ParagraphFormat format;
+
+		friend struct ParagraphFormatExposure;
+		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
+		mutable internal::DirtyParagraph dirty_layout = ~internal::DirtyParagraph(0);
 
 		struct GlyphGroup
 		{
@@ -102,48 +178,51 @@ namespace oly::rendering
 			};
 
 			PeekData peek() const;
-			void build_page_section(const Paragraph& paragraph, PageData& pagedata, TypesetData& typeset, PeekData next_peek) const;
-			void write_glyph_section(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, PeekData next_peek) const;
+			void build_page_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek) const;
+			void write_glyph_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
 
 		private:
-			void build_space(PageData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			void build_tab(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			bool build_newline(PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
-			void build_glyph(PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
+			bool can_fit_on_line(const ParagraphFormat& format, const TypesetData& typeset, float dx) const;
+			bool can_fit_vertically(const ParagraphFormat& format, const TypesetData& typeset, float dy) const;
 
-			void write_space(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			void write_tab(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			bool write_newline(const PageData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
-			void write_glyph(const Paragraph& paragraph, const PageData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
+			void build_space(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void build_tab(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			bool build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
+			void build_glyph(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint c, float dx) const;
 
-			float line_height(const ParagraphFormat& format) const;
-			
-			float space_width_mult(const PageData& pagedata, const ParagraphFormat& format, const TypesetData& typeset) const;
-			float linebreak_mult(const PageData& pagedata, const ParagraphFormat& format) const;
-			
+			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
+			void write_tab(const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
+			bool write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment) const;
+			void write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment) const;
+
+		public:
 			float space_width(utf::Codepoint next_codepoint) const;
 			float tab_width(const ParagraphFormat& format, utf::Codepoint next_codepoint) const;
-			float advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
+			float advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
 
+		private:
 			TextGlyph create_glyph(const Paragraph& paragraph) const;
 			void set_glyph_attributes() const;
 		};
 		std::vector<GlyphGroup> glyph_groups;
 
-		mutable size_t glyphs_drawn = 0;
-		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
-		mutable bool dirty_layout = true;
-		void flag_dirty() { dirty_layout = true; }
+		mutable PageBuildData pagedata;
+		mutable PageLayout page_layout;
 
-		mutable glm::vec2 page_size = {};
+		mutable Transformer2D _transformer;
 
 	public:
 		bool draw_bkg = false;
-		// TODO v5 use exposure, since transformer is now mutable (since glyphs need to attach dynamically in draw()).
-		mutable Transformer2D transformer;
 
 		Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
 		Paragraph(SpriteBatch* batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
+
+		Transformer2DConstExposure get_transformer() const { return _transformer; }
+		Transformer2DExposure < TExposureParams{
+			.local = exposure::local::FULL,
+			.chain = exposure::chain::ATTACH_ONLY,
+			.modifier = exposure::modifier::FULL
+		} > set_transformer() { return _transformer; }
 
 	private:
 		void init(std::vector<TextElement>&& elements);
@@ -152,8 +231,8 @@ namespace oly::rendering
 		SpriteBatch* get_batch() const { return bkg.get_batch(); }
 		void set_batch(SpriteBatch* batch);
 
-		const ParagraphFormat& get_format() const;
-		ParagraphFormat& set_format();
+		const ParagraphFormat& get_format() const { return format; }
+		ParagraphFormatExposure set_format() { return ParagraphFormatExposure(*this); }
 		glm::vec4 get_bkg_color() const;
 		void set_bkg_color(glm::vec4 color);
 
@@ -164,20 +243,18 @@ namespace oly::rendering
 		void insert_element(size_t i, TextElement&& element);
 		void erase_element(size_t i);
 
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
+		const Transform2D& get_local() const { return _transformer.get_local(); }
+		Transform2D& set_local() { return _transformer.set_local(); }
 
-		// TODO v5 cache more properties, like page_size() and content_size().
-		float visual_width() const { return page_size.x; }
-		float visual_height() const { return page_size.y; }
-		glm::vec2 visual_size() const { return page_size; }
+		PageLayout get_page_layout() const { return page_layout; }
 
 		void draw() const;
 
 	private:
 		void build_layout() const;
-		PageData build_page() const;
-		void write_glyphs(const PageData& pagedata) const;
+		void build_page() const;
+		void write_glyphs() const;
+		AlignmentCache get_alignment_cache() const;
 		GlyphGroup::PeekData peek_next(size_t i) const;
 	};
 
