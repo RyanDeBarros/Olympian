@@ -4,10 +4,23 @@ namespace oly
 {
 	static void init_intervals(std::vector<float>& cumulative_intervals, float& total_length)
 	{
-		for (size_t i = 0; i < cumulative_intervals.size(); ++i)
+		if (cumulative_intervals.size() > 1)
 		{
-			total_length += cumulative_intervals[i];
-			cumulative_intervals[i] = total_length;
+			for (size_t i = 0; i < cumulative_intervals.size(); ++i)
+			{
+				total_length += cumulative_intervals[i];
+				cumulative_intervals[i] = total_length;
+			}
+		}
+		else if (cumulative_intervals.size() == 1)
+		{
+			cumulative_intervals = { cumulative_intervals[0], 2.0f * cumulative_intervals[0] };
+			total_length = cumulative_intervals[1];
+		}
+		else
+		{
+			total_length = 0.0f;
+			cumulative_intervals = { 0.0f };
 		}
 	}
 
@@ -104,7 +117,7 @@ namespace oly
 			return;
 		}
 
-		float local_time = fmod(elapsed, total_length);
+		const float local_time = fmod(elapsed, total_length);
 		if (local_time < cumulative_intervals[_state])
 		{
 			if (_state != 0 && local_time < cumulative_intervals[_state - 1]) // earlier than _state

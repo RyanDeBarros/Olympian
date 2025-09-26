@@ -130,6 +130,8 @@ namespace oly::reg
 					if (auto line_y_pivot = element["line_y_pivot"].value<double>())
 						element_params.line_y_pivot = *line_y_pivot;
 
+					parse_vec(element["jitter_offset"].as_array(), element_params.jitter_offset);
+
 					params.elements.emplace_back(std::move(element_params));
 				}
 			}
@@ -164,7 +166,8 @@ namespace oly::reg
 				.text = pelement.text,
 				.adj_offset = pelement.adj_offset,
 				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot
+				.line_y_pivot = pelement.line_y_pivot,
+				.jitter_offset = pelement.jitter_offset
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
@@ -193,7 +196,8 @@ namespace oly::reg
 				.text = std::move(pelement.text),
 				.adj_offset = pelement.adj_offset,
 				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot
+				.line_y_pivot = pelement.line_y_pivot,
+				.jitter_offset = pelement.jitter_offset
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;

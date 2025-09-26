@@ -47,6 +47,7 @@ namespace oly
 		State state() const;
 	};
 
+	// TODO v5 getters/setters for data members, especially callback
 	class CallbackTimer
 	{
 		friend class internal::TimerRegistry;

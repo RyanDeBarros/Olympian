@@ -19,6 +19,7 @@ namespace oly::reg
 				float adj_offset = 0.0f;
 				glm::vec2 scale = glm::vec2(1.0f);
 				float line_y_pivot = 0.0f;
+				glm::vec2 jitter_offset = {};
 			};
 
 			std::vector<TextElement> elements;

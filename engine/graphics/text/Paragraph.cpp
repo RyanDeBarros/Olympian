@@ -15,62 +15,92 @@ namespace oly::rendering
 	
 	void ParagraphFormatExposure::set_line_spacing(float line_spacing)
 	{
-		paragraph.format.line_spacing = line_spacing;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 line spacing dirty flag
+		if (paragraph.format.line_spacing != line_spacing)
+		{
+			paragraph.format.line_spacing = line_spacing;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 line spacing dirty flag
+		}
 	}
 	
 	void ParagraphFormatExposure::set_tab_spaces(float tab_spaces)
 	{
-		paragraph.format.tab_spaces = tab_spaces;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (paragraph.format.tab_spaces != tab_spaces)
+		{
+			paragraph.format.tab_spaces = tab_spaces;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void ParagraphFormatExposure::set_linebreak_spacing(float linebreak_spacing)
 	{
-		paragraph.format.linebreak_spacing = linebreak_spacing;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 linebreak spacing dirty flag
+		if (paragraph.format.linebreak_spacing != linebreak_spacing)
+		{
+			paragraph.format.linebreak_spacing = linebreak_spacing;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 linebreak spacing dirty flag
+		}
 	}
 	
 	void ParagraphFormatExposure::set_pivot(glm::vec2 pivot)
 	{
-		paragraph.format.pivot = pivot;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 pivot dirty flag
+		if (paragraph.format.pivot != pivot)
+		{
+			paragraph.format.pivot = pivot;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 pivot dirty flag
+		}
 	}
 	
 	void ParagraphFormatExposure::set_min_size(glm::vec2 min_size)
 	{
-		paragraph.format.min_size = min_size;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 min size flag
+		if (paragraph.format.min_size != min_size)
+		{
+			paragraph.format.min_size = min_size;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 min size flag
+		}
 	}
 	
 	void ParagraphFormatExposure::set_text_wrap(float text_wrap)
 	{
-		paragraph.format.text_wrap = text_wrap;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (paragraph.format.text_wrap != text_wrap)
+		{
+			paragraph.format.text_wrap = text_wrap;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void ParagraphFormatExposure::set_max_height(float max_height)
 	{
-		paragraph.format.max_height = max_height;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (paragraph.format.max_height != max_height)
+		{
+			paragraph.format.max_height = max_height;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 
 	void ParagraphFormatExposure::set_padding(glm::vec2 padding)
 	{
-		paragraph.format.padding = padding;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 padding flag
+		if (paragraph.format.padding != padding)
+		{
+			paragraph.format.padding = padding;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 padding flag
+		}
 	}
 	
 	void ParagraphFormatExposure::set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment)
 	{
-		paragraph.format.horizontal_alignment = alignment;
-		paragraph.dirty_layout |= internal::DirtyParagraph::HORIZONTAL_ALIGN;
+		if (paragraph.format.horizontal_alignment != alignment)
+		{
+			paragraph.format.horizontal_alignment = alignment;
+			paragraph.dirty_layout |= internal::DirtyParagraph::HORIZONTAL_ALIGN;
+		}
 	}
 	
 	void ParagraphFormatExposure::set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment)
 	{
-		paragraph.format.vertical_alignment = alignment;
-		paragraph.dirty_layout |= internal::DirtyParagraph::VERTICAL_ALIGN;
+		if (paragraph.format.vertical_alignment != alignment)
+		{
+			paragraph.format.vertical_alignment = alignment;
+			paragraph.dirty_layout |= internal::DirtyParagraph::VERTICAL_ALIGN;
+		}
 	}
 
 	internal::GlyphGroup::GlyphGroup(TextElement&& element)
@@ -88,6 +118,8 @@ namespace oly::rendering
 	{
 		if (dirty & DirtyGlyphGroup::LINE_ALIGNMENT)
 			realign_lines();
+		if (dirty & DirtyGlyphGroup::JITTER_OFFSET)
+			reposition_jitter();
 		if (dirty & DirtyGlyphGroup::RECOLOR)
 			recolor();
 
@@ -139,7 +171,7 @@ namespace oly::rendering
 
 	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek) const
 	{
-		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
+		dirty = internal::DirtyGlyphGroup(0);
 		clear_cache();
 
 		auto iter = element.text.begin();
@@ -334,7 +366,7 @@ namespace oly::rendering
 			.alignment_position = paragraph->alignment_cache.position(typeset)
 		};
 		glyph.transformer.attach_parent(&paragraph->transformer);
-		glyph.set_glyph(*element.font, element.font->get_glyph(c), cache.alignment_position + glm::vec2{ 0.0f, cache.line_y_offset }, element.scale);
+		glyph.set_glyph(*element.font, element.font->get_glyph(c), cache.alignment_position + glm::vec2{ 0.0f, cache.line_y_offset } + element.jitter_offset, element.scale);
 		glyphs.push_back(std::move(glyph));
 		cached_info.push_back(std::move(cache));
 		typeset.x += dx;
@@ -394,6 +426,13 @@ namespace oly::rendering
 		}
 	}
 
+	void internal::GlyphGroup::reposition_jitter() const
+	{
+		dirty &= ~DirtyGlyphGroup::JITTER_OFFSET;
+		for (TextGlyph& glyph : glyphs)
+			glyph.set_local().position += element.jitter_offset - last_jitter_offset;
+	}
+
 	void internal::GlyphGroup::rewrite_alignment_positions() const
 	{
 		for (size_t i = 0; i < glyphs.size(); ++i)
@@ -416,38 +455,68 @@ namespace oly::rendering
 
 	void TextElementExposure::set_font(const FontAtlasRef& font)
 	{
-		glyph_group.element.font = font;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (glyph_group.element.font != font)
+		{
+			glyph_group.element.font = font;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void TextElementExposure::set_text(utf::String&& text)
 	{
-		glyph_group.element.text = std::move(text);
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (glyph_group.element.text != text)
+		{
+			glyph_group.element.text = std::move(text);
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void TextElementExposure::set_text_color(glm::vec4 color)
 	{
-		glyph_group.element.text_color = color;
-		glyph_group.dirty |= internal::DirtyGlyphGroup::RECOLOR;
+		if (glyph_group.element.text_color != color)
+		{
+			glyph_group.element.text_color = color;
+			glyph_group.dirty |= internal::DirtyGlyphGroup::RECOLOR;
+		}
 	}
 	
 	void TextElementExposure::set_adj_offset(float adj_offset)
 	{
-		glyph_group.element.adj_offset = adj_offset;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (glyph_group.element.adj_offset != adj_offset)
+		{
+			glyph_group.element.adj_offset = adj_offset;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void TextElementExposure::set_scale(glm::vec2 scale)
 	{
-		glyph_group.element.scale = scale;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		if (glyph_group.element.scale != scale)
+		{
+			glyph_group.element.scale = scale;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 	
 	void TextElementExposure::set_line_y_pivot(float line_y_pivot)
 	{
-		glyph_group.element.line_y_pivot = line_y_pivot;
-		glyph_group.dirty |= internal::DirtyGlyphGroup::LINE_ALIGNMENT;
+		if (glyph_group.element.line_y_pivot != line_y_pivot)
+		{
+			glyph_group.element.line_y_pivot = line_y_pivot;
+			glyph_group.dirty |= internal::DirtyGlyphGroup::LINE_ALIGNMENT;
+		}
+	}
+
+	void TextElementExposure::set_jitter_offset(glm::vec2 jitter_offset)
+	{
+		if (glyph_group.dirty & internal::DirtyGlyphGroup::JITTER_OFFSET)
+			glyph_group.element.jitter_offset = jitter_offset;
+		else if (glyph_group.element.jitter_offset != jitter_offset)
+		{
+			glyph_group.dirty |= internal::DirtyGlyphGroup::JITTER_OFFSET;
+			glyph_group.last_jitter_offset = glyph_group.element.jitter_offset;
+			glyph_group.element.jitter_offset = jitter_offset;
+		}
 	}
 
 	Paragraph::Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format)

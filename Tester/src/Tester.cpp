@@ -56,8 +56,10 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
 
+	oly::CallbackTimer text_jitter_timer;
+
 	TesterRenderPipeline()
-		: bkg(batch)
+		: bkg(batch), text_jitter_timer({ 0.05f }, [this](size_t) { text_jitter_callback(); })
 	{
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
@@ -109,6 +111,17 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
+	}
+
+	void text_jitter_callback()
+	{
+		// TODO v5 rng utility
+		glm::vec2 jitter = {
+			10.0f * (float)((double)rand() / RAND_MAX),
+			10.0f * (float)((double)rand() / RAND_MAX)
+		};
+
+		jumble.test_text->set_element(2).set_jitter_offset(jitter);
 	}
 };
 

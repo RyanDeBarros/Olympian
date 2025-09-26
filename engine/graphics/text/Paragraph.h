@@ -30,7 +30,8 @@ namespace oly::rendering
 		enum DirtyGlyphGroup
 		{
 			RECOLOR = 1 << 0,
-			LINE_ALIGNMENT = 1 << 1
+			LINE_ALIGNMENT = 1 << 1,
+			JITTER_OFFSET = 1 << 2
 		};
 
 		inline DirtyGlyphGroup operator~(DirtyGlyphGroup a) { return DirtyGlyphGroup(~(int)a); }
@@ -95,7 +96,6 @@ namespace oly::rendering
 		void set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment);
 	};
 
-	// TODO v5 jitter_offset - for text shake effects. it's a simple vec2 offset.
 	struct TextElement
 	{
 		FontAtlasRef font;
@@ -104,6 +104,7 @@ namespace oly::rendering
 		float adj_offset = 0.0f;
 		glm::vec2 scale = glm::vec2(1.0f);
 		BoundedFloat<0.0f, 1.0f> line_y_pivot = 0.0f;
+		glm::vec2 jitter_offset = {};
 
 		float line_height() const { return font->line_height() * scale.y; }
 	};
@@ -186,6 +187,7 @@ namespace oly::rendering
 				glm::vec2 alignment_position;
 			};
 			mutable std::vector<CachedGlyphInfo> cached_info;
+			mutable glm::vec2 last_jitter_offset = {};
 
 			mutable DirtyGlyphGroup dirty = ~DirtyGlyphGroup(0);
 
@@ -241,6 +243,7 @@ namespace oly::rendering
 		private:
 			void recolor() const;
 			void realign_lines() const;
+			void reposition_jitter() const;
 
 		public:
 			void rewrite_alignment_positions() const;
@@ -264,6 +267,7 @@ namespace oly::rendering
 		void set_adj_offset(float adj_offset);
 		void set_scale(glm::vec2 scale);
 		void set_line_y_pivot(float line_y_pivot);
+		void set_jitter_offset(glm::vec2 jitter_offset);
 	};
 
 	class Paragraph
@@ -275,8 +279,7 @@ namespace oly::rendering
 		mutable Sprite bkg;
 		ParagraphFormat format;
 
-		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
-		mutable internal::DirtyParagraph dirty_layout = ~internal::DirtyParagraph(0);
+		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::REBUILD_LAYOUT;
 
 		std::vector<internal::GlyphGroup> glyph_groups;
 
