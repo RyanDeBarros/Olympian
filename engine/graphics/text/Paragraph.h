@@ -176,7 +176,16 @@ namespace oly::rendering
 			friend class TextElementExposure;
 			const Paragraph* paragraph;
 			TextElement element;
+
 			mutable std::vector<TextGlyph> glyphs;
+
+			struct CachedGlyphInfo
+			{
+				float line_y_offset;
+				size_t line;
+			};
+			mutable std::vector<CachedGlyphInfo> cached_info;
+
 			mutable DirtyGlyphGroup dirty = ~DirtyGlyphGroup(0);
 
 		public:

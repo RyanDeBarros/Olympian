@@ -141,6 +141,7 @@ namespace oly::rendering
 	{
 		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
 		glyphs.clear();
+		cached_info.clear();
 
 		auto iter = element.text.begin();
 		if (!iter)
@@ -324,7 +325,8 @@ namespace oly::rendering
 		TextGlyph glyph;
 		glyph.transformer.attach_parent(&paragraph->transformer);
 		glyph.set_glyph(*element.font, element.font->get_glyph(c), alignment.position(typeset) + glm::vec2{ 0.0f, line.y_offset }, element.scale);
-		glyphs.emplace_back(std::move(glyph));
+		glyphs.push_back(std::move(glyph));
+		cached_info.push_back(CachedGlyphInfo{ .line_y_offset = line.y_offset, .line = typeset.line });
 		typeset.x += dx;
 		++typeset.character;
 	}
@@ -362,7 +364,24 @@ namespace oly::rendering
 	{
 		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
 
-		// TODO v5 store line alignments for each line, and just recalculate here and reposition.
+		float new_line_y_offset = 0.0f;
+		size_t last_line = -1;
+
+		for (size_t i = 0; i < glyphs.size(); ++i)
+		{
+			CachedGlyphInfo& info = cached_info[i];
+
+			if (info.line != last_line)
+				new_line_y_offset = element.line_y_pivot * (paragraph->pagedata.lines[info.line].max_height - element.line_height());
+
+			if (info.line_y_offset != new_line_y_offset)
+			{
+				TextGlyph& glyph = glyphs[i];
+				glyph.set_local().position.y -= info.line_y_offset;
+				info.line_y_offset = new_line_y_offset;
+				glyph.set_local().position.y += info.line_y_offset;
+			}
+		}
 	}
 
 	TextElementExposure::TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group)
