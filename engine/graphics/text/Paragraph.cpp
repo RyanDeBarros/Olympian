@@ -73,30 +73,30 @@ namespace oly::rendering
 		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 	}
 
-	Paragraph::GlyphGroup::GlyphGroup(TextElement&& element)
+	internal::GlyphGroup::GlyphGroup(TextElement&& element)
 		: element(std::move(element))
 	{
 	}
 
-	void Paragraph::GlyphGroup::set_batch(SpriteBatch* batch)
+	void internal::GlyphGroup::set_batch(SpriteBatch* batch)
 	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(batch);
 	}
 
-	void Paragraph::GlyphGroup::draw() const
+	void internal::GlyphGroup::draw() const
 	{
 		for (const TextGlyph& glyph : glyphs)
 			glyph.draw();
 	}
 	
-	Paragraph::GlyphGroup::PeekData Paragraph::GlyphGroup::peek() const
+	internal::GlyphGroup::PeekData internal::GlyphGroup::peek() const
 	{
 		auto iter = element.text.begin();
 		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
 	}
 
-	void Paragraph::GlyphGroup::build_page_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek) const
+	void internal::GlyphGroup::build_page_section(const Paragraph& paragraph, PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek) const
 	{
 		auto iter = element.text.begin();
 		if (!iter)
@@ -132,7 +132,7 @@ namespace oly::rendering
 		}
 	}
 
-	Paragraph::GlyphGroup::WriteResult Paragraph::GlyphGroup::write_glyph_section(const Paragraph& paragraph,
+	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(const Paragraph& paragraph,
 		const PageBuildData& pagedata, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const
 	{
 		glyphs.clear();
@@ -178,17 +178,17 @@ namespace oly::rendering
 		return WriteResult::CONTINUE;
 	}
 
-	bool Paragraph::GlyphGroup::can_fit_on_line(const ParagraphFormat& format, const TypesetData& typeset, float dx) const
+	bool internal::GlyphGroup::can_fit_on_line(const ParagraphFormat& format, const TypesetData& typeset, float dx) const
 	{
 		return format.text_wrap <= 0.0f || typeset.x + dx <= format.text_wrap;
 	}
 
-	bool Paragraph::GlyphGroup::can_fit_vertically(const ParagraphFormat& format, const TypesetData& typeset, float dy) const
+	bool internal::GlyphGroup::can_fit_vertically(const ParagraphFormat& format, const TypesetData& typeset, float dy) const
 	{
 		return format.max_height <= 0.0f || -typeset.y + dy <= format.max_height;
 	}
 
-	void Paragraph::GlyphGroup::build_adj_offset(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, PeekData next_peek) const
+	void internal::GlyphGroup::build_adj_offset(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, PeekData next_peek) const
 	{
 		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return;
@@ -221,7 +221,7 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::GlyphGroup::build_space(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::build_space(PageBuildData& pagedata, TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		const float dx = space_width(next_codepoint);
 		typeset.x += dx;
@@ -229,7 +229,7 @@ namespace oly::rendering
 		++pagedata.current_line().characters;
 	}
 
-	void Paragraph::GlyphGroup::build_tab(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::build_tab(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		const float dx = tab_width(format, next_codepoint);
 		typeset.x += dx;
@@ -237,7 +237,7 @@ namespace oly::rendering
 		++pagedata.current_line().characters;
 	}
 
-	void Paragraph::GlyphGroup::build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const
+	void internal::GlyphGroup::build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const
 	{
 		if (typeset.x == 0.0f)
 			++pagedata.linebreaks;
@@ -249,14 +249,14 @@ namespace oly::rendering
 		pagedata.lines.emplace_back();
 	}
 
-	void Paragraph::GlyphGroup::build_glyph(PageBuildData& pagedata, TypesetData& typeset, float dx) const
+	void internal::GlyphGroup::build_glyph(PageBuildData& pagedata, TypesetData& typeset, float dx) const
 	{
 		typeset.x += dx;
 		pagedata.current_line().final_advance_width = dx;
 		++pagedata.current_line().characters;
 	}
 
-	bool Paragraph::GlyphGroup::write_adj_offset(const PageBuildData& pagedata, const ParagraphFormat& format,
+	bool internal::GlyphGroup::write_adj_offset(const PageBuildData& pagedata, const ParagraphFormat& format,
 		TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment, LineAlignment& line) const
 	{
 		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
@@ -286,19 +286,19 @@ namespace oly::rendering
 			return write_newline(pagedata, format, typeset, alignment, line);
 	}
 
-	void Paragraph::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
+	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
 	{
 		typeset.x += space_width(next_codepoint) * alignment.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	void Paragraph::GlyphGroup::write_tab(const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
+	void internal::GlyphGroup::write_tab(const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
 	{
 		typeset.x += tab_width(format, next_codepoint) * alignment.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	bool Paragraph::GlyphGroup::write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment, LineAlignment& line) const
+	bool internal::GlyphGroup::write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment, LineAlignment& line) const
 	{
 		const float dy = alignment.lines[typeset.line].height;
 		if (!can_fit_vertically(format, typeset, dy))
@@ -315,7 +315,7 @@ namespace oly::rendering
 		return true;
 	}
 
-	void Paragraph::GlyphGroup::write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment, LineAlignment line) const
+	void internal::GlyphGroup::write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment, LineAlignment line) const
 	{
 		TextGlyph glyph = create_glyph(paragraph);
 		glyph.set_glyph(*element.font, element.font->get_glyph(c), alignment.position(typeset) + glm::vec2{ 0.0f, line.y_offset }, element.scale);
@@ -324,7 +324,7 @@ namespace oly::rendering
 		++typeset.character;
 	}
 
-	float Paragraph::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
+	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
 	{
 		float adv = element.font->get_space_advance_width();
 		if (next_codepoint)
@@ -332,12 +332,12 @@ namespace oly::rendering
 		return adv * element.scale.x;
 	}
 
-	float Paragraph::GlyphGroup::tab_width(const ParagraphFormat& format, utf::Codepoint next_codepoint) const
+	float internal::GlyphGroup::tab_width(const ParagraphFormat& format, utf::Codepoint next_codepoint) const
 	{
 		return space_width(next_codepoint) * format.tab_spaces * element.scale.x;
 	}
 
-	float Paragraph::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
+	float internal::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
 	{
 		const FontGlyph& font_glyph = element.font->get_glyph(codepoint);
 		float adv = font_glyph.advance_width * element.font->get_scale();
@@ -346,14 +346,14 @@ namespace oly::rendering
 		return adv * element.scale.x;
 	}
 
-	TextGlyph Paragraph::GlyphGroup::create_glyph(const Paragraph& paragraph) const
+	TextGlyph internal::GlyphGroup::create_glyph(const Paragraph& paragraph) const
 	{
 		TextGlyph glyph;
 		glyph.transformer.attach_parent(&paragraph._transformer);
 		return glyph;
 	}
 	
-	void Paragraph::GlyphGroup::set_glyph_attributes() const
+	void internal::GlyphGroup::set_glyph_attributes() const
 	{
 		for (TextGlyph& glyph : glyphs)
 			glyph.set_text_color(element.text_color);
@@ -447,7 +447,7 @@ namespace oly::rendering
 
 		if (draw_bkg)
 			bkg.draw();
-		for (const GlyphGroup& glyph_group : glyph_groups)
+		for (const internal::GlyphGroup& glyph_group : glyph_groups)
 			glyph_group.draw();
 	}
 
@@ -468,14 +468,14 @@ namespace oly::rendering
 		pagedata = {};
 		pagedata.lines.push_back({});
 
-		TypesetData typeset = {};
+		internal::TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
 			glyph_groups[i].build_page_section(*this, pagedata, typeset, peek_next(i));
 		pagedata.current_line().width = typeset.x;
 
 		for (size_t i = 0; i < pagedata.lines.size(); ++i)
 		{
-			const PageBuildData::Line line = pagedata.lines[i];
+			const internal::PageBuildData::Line line = pagedata.lines[i];
 			page_layout.content_size.x = glm::max(page_layout.content_size.x, line.width);
 			if (i + 1 < pagedata.lines.size())
 				page_layout.content_size.y += line.spaced_height(format);
@@ -488,18 +488,18 @@ namespace oly::rendering
 
 	void Paragraph::write_glyphs() const
 	{
-		TypesetData typeset = {};
+		internal::TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
 		{
-			GlyphGroup::WriteResult result = glyph_groups[i].write_glyph_section(*this, pagedata, typeset, peek_next(i), get_alignment_cache());
-			if (result == GlyphGroup::WriteResult::BREAK)
+			internal::GlyphGroup::WriteResult result = glyph_groups[i].write_glyph_section(*this, pagedata, typeset, peek_next(i), get_alignment_cache());
+			if (result == internal::GlyphGroup::WriteResult::BREAK)
 				break;
 		}
 	}
 
-	Paragraph::AlignmentCache Paragraph::get_alignment_cache() const
+	internal::AlignmentCache Paragraph::get_alignment_cache() const
 	{
-		AlignmentCache alignment_cache{};
+		internal::AlignmentCache alignment_cache{};
 		alignment_cache.lines.resize(pagedata.lines.size());
 
 		// line height
@@ -552,7 +552,7 @@ namespace oly::rendering
 		case ParagraphFormat::HorizontalAlignment::JUSTIFY:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 			{
-				const PageBuildData::Line line = pagedata.lines[i];
+				const internal::PageBuildData::Line line = pagedata.lines[i];
 				if (line.space_width > 0.0f)
 					alignment_cache.lines[i].space_width_mult = 1.0f + (page_layout.fitted_size.x - line.width) / line.space_width;
 			}
@@ -560,7 +560,7 @@ namespace oly::rendering
 		case ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 			{
-				const PageBuildData::Line line = pagedata.lines[i];
+				const internal::PageBuildData::Line line = pagedata.lines[i];
 				alignment_cache.lines[i].character_shift = line.characters > 1 ? (page_layout.fitted_size.x - line.width) / (line.characters - 1) : 0.0f;
 			}
 			break;
@@ -573,13 +573,13 @@ namespace oly::rendering
 		return alignment_cache;
 	}
 
-	Paragraph::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
+	internal::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
 	{
 		if (i + 1 >= glyph_groups.size())
 			return {};
 
-		const GlyphGroup& current_glyph = glyph_groups[i];
-		const GlyphGroup& next_glyph = glyph_groups[i + 1];
+		const internal::GlyphGroup& current_glyph = glyph_groups[i];
+		const internal::GlyphGroup& next_glyph = glyph_groups[i + 1];
 
 		if (current_glyph.element.font->font_face() == next_glyph.element.font->font_face())
 			return next_glyph.peek();

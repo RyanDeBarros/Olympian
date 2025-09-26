@@ -37,8 +37,8 @@ namespace oly::rendering
 		float linebreak_spacing = 1.0f;
 		glm::vec2 pivot = { 0.5f, 0.5f };
 		glm::vec2 min_size = {};
-		float text_wrap = 0.0f; // a standard glyph is around 42
-		float max_height = 0.0f; // a standard line is around 115
+		float text_wrap = 0.0f;
+		float max_height = 0.0f;
 		glm::vec2 padding = {};
 
 		enum class HorizontalAlignment
@@ -93,10 +93,7 @@ namespace oly::rendering
 		float line_height() const { return font->line_height() * scale.y; }
 	};
 
-	/*
-	* A Paragraph represents a collection of glyphs that use the same transform and layout, under a common font.
-	*/
-	class Paragraph
+	namespace internal
 	{
 		struct PageLayout
 		{
@@ -156,18 +153,13 @@ namespace oly::rendering
 			}
 		};
 
-		mutable Sprite bkg;
-		ParagraphFormat format;
-
-		friend struct ParagraphFormatExposure;
-		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
-		mutable internal::DirtyParagraph dirty_layout = ~internal::DirtyParagraph(0);
-
-		struct GlyphGroup
+		class GlyphGroup
 		{
+			friend class Paragraph;
 			TextElement element;
 			mutable std::vector<TextGlyph> glyphs;
 
+		public:
 			GlyphGroup(TextElement&& element);
 
 			void set_batch(SpriteBatch* batch);
@@ -220,10 +212,23 @@ namespace oly::rendering
 			TextGlyph create_glyph(const Paragraph& paragraph) const;
 			void set_glyph_attributes() const;
 		};
-		std::vector<GlyphGroup> glyph_groups;
+	}
 
-		mutable PageBuildData pagedata;
-		mutable PageLayout page_layout;
+	class Paragraph
+	{
+		friend class internal::GlyphGroup;
+		friend struct ParagraphFormatExposure;
+
+		mutable Sprite bkg;
+		ParagraphFormat format;
+
+		// TODO v5 perhaps keep dirty flag per glyph group to individually update text colors, etc.
+		mutable internal::DirtyParagraph dirty_layout = ~internal::DirtyParagraph(0);
+
+		std::vector<internal::GlyphGroup> glyph_groups;
+
+		mutable internal::PageBuildData pagedata;
+		mutable internal::PageLayout page_layout;
 
 		mutable Transformer2D _transformer;
 
@@ -234,11 +239,11 @@ namespace oly::rendering
 		Paragraph(SpriteBatch* batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
 
 		Transformer2DConstExposure get_transformer() const { return _transformer; }
-		Transformer2DExposure < TExposureParams{
+		Transformer2DExposure<TExposureParams{
 			.local = exposure::local::FULL,
 			.chain = exposure::chain::ATTACH_ONLY,
 			.modifier = exposure::modifier::FULL
-		} > set_transformer() { return _transformer; }
+		}> set_transformer() { return _transformer; }
 
 	private:
 		void init(std::vector<TextElement>&& elements);
@@ -262,7 +267,8 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return _transformer.get_local(); }
 		Transform2D& set_local() { return _transformer.set_local(); }
 
-		PageLayout get_page_layout() const { return page_layout; }
+		glm::vec2 get_content_size() const { return page_layout.content_size; }
+		glm::vec2 get_fitted_size() const { return page_layout.fitted_size; }
 
 		void draw() const;
 
@@ -270,8 +276,8 @@ namespace oly::rendering
 		void build_layout() const;
 		void build_page() const;
 		void write_glyphs() const;
-		AlignmentCache get_alignment_cache() const;
-		GlyphGroup::PeekData peek_next(size_t i) const;
+		internal::AlignmentCache get_alignment_cache() const;
+		internal::GlyphGroup::PeekData peek_next(size_t i) const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
