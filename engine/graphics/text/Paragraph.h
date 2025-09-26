@@ -4,6 +4,9 @@
 #include "graphics/text/Font.h"
 #include "graphics/sprites/Sprite.h"
 #include "core/base/TransformerExposure.h"
+#include "core/base/Parameters.h"
+
+// TODO v5 RasterTextGlyph and RasterParagraph that does paragraph layout for text that doesn't use font files - pixel art fonts, etc.
 
 namespace oly::rendering
 {
@@ -81,13 +84,12 @@ namespace oly::rendering
 	// TODO v5 TextElementExposure
 	struct TextElement
 	{
-		// TODO v5 add y pivot - if text element is smaller than line height, should it be align to top, middle, or bottom.
 		FontAtlasRef font;
 		utf::String text = "";
 		glm::vec4 text_color = glm::vec4(1.0f);
 		float adj_offset = 0.0f;
 		glm::vec2 scale = glm::vec2(1.0f);
-
+		BoundedFloat<0.0f, 1.0f> line_y_pivot = 0.0f;
 		float line_height() const { return font->line_height() * scale.y; }
 	};
 
@@ -197,11 +199,17 @@ namespace oly::rendering
 			void build_newline(PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset) const;
 			void build_glyph(PageBuildData& pagedata, TypesetData& typeset, float dx) const;
 
-			bool write_adj_offset(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
+			struct LineAlignment
+			{
+				float y_offset;
+			};
+
+			bool write_adj_offset(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset,
+				PeekData next_peek, const AlignmentCache& alignment, LineAlignment& line) const;
 			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
 			void write_tab(const ParagraphFormat& format, TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
-			bool write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment) const;
-			void write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment) const;
+			bool write_newline(const PageBuildData& pagedata, const ParagraphFormat& format, TypesetData& typeset, const AlignmentCache& alignment, LineAlignment& line) const;
+			void write_glyph(const Paragraph& paragraph, TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment, LineAlignment line) const;
 
 		public:
 			float space_width(utf::Codepoint next_codepoint) const;

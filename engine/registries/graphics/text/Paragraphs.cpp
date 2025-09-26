@@ -127,6 +127,9 @@ namespace oly::reg
 
 					parse_vec(element["scale"].as_array(), element_params.scale);
 
+					if (auto line_y_pivot = element["line_y_pivot"].value<double>())
+						element_params.line_y_pivot = *line_y_pivot;
+
 					params.elements.emplace_back(std::move(element_params));
 				}
 			}
@@ -160,7 +163,8 @@ namespace oly::reg
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
 				.text = pelement.text,
 				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale
+				.scale = pelement.scale,
+				.line_y_pivot = pelement.line_y_pivot
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;
@@ -188,7 +192,8 @@ namespace oly::reg
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
 				.text = std::move(pelement.text),
 				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale
+				.scale = pelement.scale,
+				.line_y_pivot = pelement.line_y_pivot
 			};
 			if (pelement.text_color)
 				element.text_color = *pelement.text_color;

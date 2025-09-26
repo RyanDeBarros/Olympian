@@ -18,6 +18,7 @@ namespace oly::reg
 				std::optional<glm::vec4> text_color;
 				float adj_offset = 0.0f;
 				glm::vec2 scale = glm::vec2(1.0f);
+				float line_y_pivot = 0.0f;
 			};
 
 			std::vector<TextElement> elements;

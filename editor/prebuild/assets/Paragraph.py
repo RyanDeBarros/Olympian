@@ -87,6 +87,8 @@ def params_constructor(paragraph, name) -> str:
 		if 'adj_offset' in element:
 			c += f"\t\t\t\telement.adj_offset = (float){element['adj_offset']};\n"
 		c += write_vec2(element, 'element.scale', 'scale', 4)
+		if 'line_y_pivot' in element:
+			c += f"\t\t\t\telement.line_y_pivot = (float){element['line_y_pivot']};\n"
 		c += "\t\t\t\tparams.elements.emplace_back(std::move(element));\n"
 		c += "\t\t\t}\n"
 
