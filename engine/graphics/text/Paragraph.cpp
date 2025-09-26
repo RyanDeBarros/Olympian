@@ -16,7 +16,7 @@ namespace oly::rendering
 	void ParagraphFormatExposure::set_line_spacing(float line_spacing)
 	{
 		paragraph.format.line_spacing = line_spacing;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 line spacing dirty flag
 	}
 	
 	void ParagraphFormatExposure::set_tab_spaces(float tab_spaces)
@@ -28,19 +28,19 @@ namespace oly::rendering
 	void ParagraphFormatExposure::set_linebreak_spacing(float linebreak_spacing)
 	{
 		paragraph.format.linebreak_spacing = linebreak_spacing;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 linebreak spacing dirty flag
 	}
 	
 	void ParagraphFormatExposure::set_pivot(glm::vec2 pivot)
 	{
 		paragraph.format.pivot = pivot;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 pivot dirty flag
 	}
 	
 	void ParagraphFormatExposure::set_min_size(glm::vec2 min_size)
 	{
 		paragraph.format.min_size = min_size;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 min size flag
 	}
 	
 	void ParagraphFormatExposure::set_text_wrap(float text_wrap)
@@ -58,19 +58,19 @@ namespace oly::rendering
 	void ParagraphFormatExposure::set_padding(glm::vec2 padding)
 	{
 		paragraph.format.padding = padding;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 PADDING flag
+		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 padding flag
 	}
 	
 	void ParagraphFormatExposure::set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment)
 	{
 		paragraph.format.horizontal_alignment = alignment;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 HORIZONTAL_ALIGNMENT flag
+		paragraph.dirty_layout |= internal::DirtyParagraph::HORIZONTAL_ALIGN;
 	}
 	
 	void ParagraphFormatExposure::set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment)
 	{
 		paragraph.format.vertical_alignment = alignment;
-		paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 VERTICAL_ALIGNMENT flag
+		paragraph.dirty_layout |= internal::DirtyParagraph::VERTICAL_ALIGN;
 	}
 
 	internal::GlyphGroup::GlyphGroup(TextElement&& element)
@@ -87,7 +87,7 @@ namespace oly::rendering
 	void internal::GlyphGroup::draw() const
 	{
 		if (dirty & DirtyGlyphGroup::LINE_ALIGNMENT)
-			realign_line();
+			realign_lines();
 		if (dirty & DirtyGlyphGroup::RECOLOR)
 			recolor();
 
@@ -107,7 +107,7 @@ namespace oly::rendering
 		if (!iter)
 			return;
 
-		paragraph->pagedata.current_line().max_height = glm::max(paragraph->pagedata.current_line().max_height, element.line_height());
+		paragraph->page_data.current_line().max_height = glm::max(paragraph->page_data.current_line().max_height, element.line_height());
 		build_adj_offset(typeset, next_peek);
 
 		while (iter)
@@ -125,7 +125,7 @@ namespace oly::rendering
 					++iter;
 				build_newline(typeset);
 				if (iter.codepoint()) // next codepoint in group
-					paragraph->pagedata.current_line().max_height = element.line_height();
+					paragraph->page_data.current_line().max_height = element.line_height();
 			}
 			else if (element.font->cache(codepoint))
 			{
@@ -137,19 +137,18 @@ namespace oly::rendering
 		}
 	}
 
-	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const
+	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek) const
 	{
 		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
-		glyphs.clear();
-		cached_info.clear();
+		clear_cache();
 
 		auto iter = element.text.begin();
 		if (!iter)
 			return WriteResult::CONTINUE;
 
-		LineAlignment line{ .y_offset = element.line_y_pivot * (paragraph->pagedata.lines[typeset.line].max_height - element.line_height()) };
+		LineAlignment line{ .y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height()) };
 
-		if (!write_adj_offset(typeset, next_peek, alignment, line))
+		if (!write_adj_offset(typeset, next_peek, line))
 			return WriteResult::BREAK;
 
 		while (iter)
@@ -158,14 +157,14 @@ namespace oly::rendering
 			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
 
 			if (codepoint == ' ')
-				write_space(typeset, next_codepoint, alignment);
+				write_space(typeset, next_codepoint);
 			else if (codepoint == '\t')
-				write_tab(typeset, next_codepoint, alignment);
+				write_tab(typeset, next_codepoint);
 			else if (utf::is_n_or_r(codepoint))
 			{
 				if (iter && utf::is_rn(codepoint, next_codepoint))
 					++iter;
-				if (!write_newline(typeset, alignment, line))
+				if (!write_newline(typeset, line))
 					return WriteResult::BREAK;
 			}
 			else if (element.font->cache(codepoint))
@@ -173,15 +172,21 @@ namespace oly::rendering
 				float dx = advance_width(codepoint, next_codepoint);
 				if (!can_fit_on_line(typeset, dx))
 				{
-					if (!write_newline(typeset, alignment, line))
+					if (!write_newline(typeset, line))
 						return WriteResult::BREAK;
 				}
-				write_glyph(typeset, codepoint, dx, alignment, line);
+				write_glyph(typeset, codepoint, dx, line);
 			}
 		}
 
 		recolor();
 		return WriteResult::CONTINUE;
+	}
+
+	void internal::GlyphGroup::clear_cache() const
+	{
+		glyphs.clear();
+		cached_info.clear();
 	}
 
 	bool internal::GlyphGroup::can_fit_on_line(const TypesetData& typeset, float dx) const
@@ -216,14 +221,14 @@ namespace oly::rendering
 		if (can_fit_on_line(typeset, element.adj_offset + dx))
 		{
 			typeset.x += element.adj_offset;
-			paragraph->pagedata.current_line().space_width += element.adj_offset;
-			++paragraph->pagedata.current_line().characters;
+			paragraph->page_data.current_line().space_width += element.adj_offset;
+			++paragraph->page_data.current_line().characters;
 		}
 		else
 		{
 			build_newline(typeset);
 			if (iter.codepoint()) // next codepoint in group
-				paragraph->pagedata.current_line().max_height = element.line_height();
+				paragraph->page_data.current_line().max_height = element.line_height();
 		}
 	}
 
@@ -231,38 +236,38 @@ namespace oly::rendering
 	{
 		const float dx = space_width(next_codepoint);
 		typeset.x += dx;
-		paragraph->pagedata.current_line().space_width += dx;
-		++paragraph->pagedata.current_line().characters;
+		paragraph->page_data.current_line().space_width += dx;
+		++paragraph->page_data.current_line().characters;
 	}
 
 	void internal::GlyphGroup::build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		const float dx = tab_width(next_codepoint);
 		typeset.x += dx;
-		paragraph->pagedata.current_line().space_width += dx;
-		++paragraph->pagedata.current_line().characters;
+		paragraph->page_data.current_line().space_width += dx;
+		++paragraph->page_data.current_line().characters;
 	}
 
 	void internal::GlyphGroup::build_newline(TypesetData& typeset) const
 	{
 		if (typeset.x == 0.0f)
-			++paragraph->pagedata.linebreaks;
+			++paragraph->page_data.linebreaks;
 
-		paragraph->pagedata.current_line().width = typeset.x;
+		paragraph->page_data.current_line().width = typeset.x;
 		++typeset.line;
-		typeset.y -= paragraph->pagedata.current_line().spaced_height(paragraph->format);
+		typeset.y -= paragraph->page_data.current_line().spaced_height(paragraph->format);
 		typeset.x = 0.0f;
-		paragraph->pagedata.lines.emplace_back();
+		paragraph->page_data.lines.emplace_back();
 	}
 
 	void internal::GlyphGroup::build_glyph(TypesetData& typeset, float dx) const
 	{
 		typeset.x += dx;
-		paragraph->pagedata.current_line().final_advance_width = dx;
-		++paragraph->pagedata.current_line().characters;
+		paragraph->page_data.current_line().final_advance_width = dx;
+		++paragraph->page_data.current_line().characters;
 	}
 
-	bool internal::GlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment, LineAlignment& line) const
+	bool internal::GlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const
 	{
 		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return true;
@@ -283,29 +288,29 @@ namespace oly::rendering
 
 		if (can_fit_on_line(typeset, element.adj_offset + dx))
 		{
-			typeset.x += element.adj_offset * alignment.lines[typeset.line].space_width_mult;
+			typeset.x += element.adj_offset * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 			++typeset.character;
 			return true;
 		}
 		else
-			return write_newline(typeset, alignment, line);
+			return write_newline(typeset, line);
 	}
 
-	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
+	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
-		typeset.x += space_width(next_codepoint) * alignment.lines[typeset.line].space_width_mult;
+		typeset.x += space_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	void internal::GlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const
+	void internal::GlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
-		typeset.x += tab_width(next_codepoint) * alignment.lines[typeset.line].space_width_mult;
+		typeset.x += tab_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	bool internal::GlyphGroup::write_newline(TypesetData& typeset, const AlignmentCache& alignment, LineAlignment& line) const
+	bool internal::GlyphGroup::write_newline(TypesetData& typeset, LineAlignment& line) const
 	{
-		const float dy = alignment.lines[typeset.line].height;
+		const float dy = paragraph->alignment_cache.lines[typeset.line].height;
 		if (!can_fit_vertically(typeset, dy))
 			return false;
 
@@ -314,19 +319,24 @@ namespace oly::rendering
 		typeset.x = 0.0f;
 		typeset.character = 0;
 
-		if (typeset.line < alignment.lines.size())
-			line.y_offset = element.line_y_pivot * (paragraph->pagedata.lines[typeset.line].max_height - element.line_height());
+		if (typeset.line < paragraph->alignment_cache.lines.size())
+			line.y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height());
 
 		return true;
 	}
 
-	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment, LineAlignment line) const
+	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const
 	{
 		TextGlyph glyph;
+		CachedGlyphInfo cache{
+			.typeset = typeset,
+			.line_y_offset = line.y_offset,
+			.alignment_position = paragraph->alignment_cache.position(typeset)
+		};
 		glyph.transformer.attach_parent(&paragraph->transformer);
-		glyph.set_glyph(*element.font, element.font->get_glyph(c), alignment.position(typeset) + glm::vec2{ 0.0f, line.y_offset }, element.scale);
+		glyph.set_glyph(*element.font, element.font->get_glyph(c), cache.alignment_position + glm::vec2{ 0.0f, cache.line_y_offset }, element.scale);
 		glyphs.push_back(std::move(glyph));
-		cached_info.push_back(CachedGlyphInfo{ .line_y_offset = line.y_offset, .line = typeset.line });
+		cached_info.push_back(std::move(cache));
 		typeset.x += dx;
 		++typeset.character;
 	}
@@ -360,7 +370,7 @@ namespace oly::rendering
 			glyph.set_text_color(element.text_color);
 	}
 
-	void internal::GlyphGroup::realign_line() const
+	void internal::GlyphGroup::realign_lines() const
 	{
 		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
 
@@ -371,8 +381,8 @@ namespace oly::rendering
 		{
 			CachedGlyphInfo& info = cached_info[i];
 
-			if (info.line != last_line)
-				new_line_y_offset = element.line_y_pivot * (paragraph->pagedata.lines[info.line].max_height - element.line_height());
+			if (info.typeset.line != last_line)
+				new_line_y_offset = element.line_y_pivot * (paragraph->page_data.lines[info.typeset.line].max_height - element.line_height());
 
 			if (info.line_y_offset != new_line_y_offset)
 			{
@@ -380,6 +390,21 @@ namespace oly::rendering
 				glyph.set_local().position.y -= info.line_y_offset;
 				info.line_y_offset = new_line_y_offset;
 				glyph.set_local().position.y += info.line_y_offset;
+			}
+		}
+	}
+
+	void internal::GlyphGroup::rewrite_alignment_positions() const
+	{
+		for (size_t i = 0; i < glyphs.size(); ++i)
+		{
+			CachedGlyphInfo& info = cached_info[i];
+			glm::vec2 new_alignment_position = paragraph->alignment_cache.position(info.typeset);
+			if (info.alignment_position != new_alignment_position)
+			{
+				glyphs[i].set_local().position -= info.alignment_position;
+				info.alignment_position = new_alignment_position;
+				glyphs[i].set_local().position += info.alignment_position;
 			}
 		}
 	}
@@ -439,7 +464,7 @@ namespace oly::rendering
 
 	Paragraph::Paragraph(const Paragraph& other)
 		: bkg(other.bkg), format(other.format), dirty_layout(other.dirty_layout), glyph_groups(other.glyph_groups),
-		pagedata(other.pagedata), page_layout(other.page_layout), transformer(other.transformer), draw_bkg(other.draw_bkg)
+		page_data(other.page_data), page_layout(other.page_layout), transformer(other.transformer), draw_bkg(other.draw_bkg)
 	{
 		bkg.transformer.attach_parent(&transformer);
 		
@@ -449,7 +474,7 @@ namespace oly::rendering
 
 	Paragraph::Paragraph(Paragraph&& other) noexcept
 		: bkg(std::move(other.bkg)), format(std::move(other.format)), dirty_layout(other.dirty_layout), glyph_groups(std::move(other.glyph_groups)),
-		pagedata(std::move(other.pagedata)), page_layout(std::move(other.page_layout)), transformer(std::move(other.transformer)), draw_bkg(other.draw_bkg)
+		page_data(std::move(other.page_data)), page_layout(std::move(other.page_layout)), transformer(std::move(other.transformer)), draw_bkg(other.draw_bkg)
 	{
 		for (internal::GlyphGroup& glyph_group : glyph_groups)
 			glyph_group.paragraph = this;
@@ -470,7 +495,7 @@ namespace oly::rendering
 			format = std::move(other.format);
 			dirty_layout = other.dirty_layout;
 			glyph_groups = std::move(other.glyph_groups);
-			pagedata = std::move(other.pagedata);
+			page_data = std::move(other.page_data);
 			page_layout = std::move(other.page_layout);
 			transformer = std::move(other.transformer);
 			draw_bkg = other.draw_bkg;
@@ -540,14 +565,11 @@ namespace oly::rendering
 	void Paragraph::draw() const
 	{
 		if (dirty_layout & internal::DirtyParagraph::REBUILD_LAYOUT)
-		{
 			build_layout();
-			dirty_layout = internal::DirtyParagraph(0);
-		}
-		else
-		{
-			
-		}
+		if (dirty_layout & internal::DirtyParagraph::HORIZONTAL_ALIGN)
+			realign_horizontally();
+		if (dirty_layout & internal::DirtyParagraph::VERTICAL_ALIGN)
+			realign_vertically();
 
 		if (draw_bkg)
 			bkg.draw();
@@ -557,6 +579,7 @@ namespace oly::rendering
 
 	void Paragraph::build_layout() const
 	{
+		dirty_layout = internal::DirtyParagraph(0);
 		build_page();
 		write_glyphs();
 
@@ -569,19 +592,19 @@ namespace oly::rendering
 	void Paragraph::build_page() const
 	{
 		page_layout = {};
-		pagedata = {};
-		pagedata.lines.push_back({});
+		page_data = {};
+		page_data.lines.push_back({});
 
 		internal::TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
 			glyph_groups[i].build_page_section(typeset, peek_next(i));
-		pagedata.current_line().width = typeset.x;
+		page_data.current_line().width = typeset.x;
 
-		for (size_t i = 0; i < pagedata.lines.size(); ++i)
+		for (size_t i = 0; i < page_data.lines.size(); ++i)
 		{
-			const internal::PageBuildData::Line line = pagedata.lines[i];
+			const internal::PageBuildData::Line line = page_data.lines[i];
 			page_layout.content_size.x = glm::max(page_layout.content_size.x, line.width);
-			if (i + 1 < pagedata.lines.size())
+			if (i + 1 < page_data.lines.size())
 				page_layout.content_size.y += line.spaced_height(format);
 			else
 				page_layout.content_size.y += line.max_height;
@@ -592,27 +615,44 @@ namespace oly::rendering
 
 	void Paragraph::write_glyphs() const
 	{
+		compute_alignment_cache();
 		internal::TypesetData typeset = {};
+		bool writing = true;
+		written_glyph_groups = glyph_groups.size();
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
 		{
-			internal::GlyphGroup::WriteResult result = glyph_groups[i].write_glyph_section(typeset, peek_next(i), get_alignment_cache());
-			if (result == internal::GlyphGroup::WriteResult::BREAK)
-				break;
+			if (writing)
+			{
+				if (glyph_groups[i].write_glyph_section(typeset, peek_next(i)) == internal::GlyphGroup::WriteResult::BREAK)
+				{
+					written_glyph_groups = i + 1;
+					writing = false;
+				}
+			}
+			else
+				glyph_groups[i].clear_cache();
 		}
 	}
 
-	internal::AlignmentCache Paragraph::get_alignment_cache() const
+	void Paragraph::compute_alignment_cache() const
 	{
-		internal::AlignmentCache alignment_cache{};
-		alignment_cache.lines.resize(pagedata.lines.size());
+		alignment_cache = {};
+		alignment_cache.lines.resize(page_data.lines.size());
 
-		// line height
 		for (size_t i = 0; i + 1 < alignment_cache.lines.size(); ++i)
-			alignment_cache.lines[i].height = pagedata.lines[i].spaced_height(format);
+			alignment_cache.lines[i].height = page_data.lines[i].spaced_height(format);
 		if (!alignment_cache.lines.empty())
-			alignment_cache.lines.back().height = pagedata.lines.back().max_height;
+			alignment_cache.lines.back().height = page_data.lines.back().max_height;
 
-		// vertical alignment
+		recompute_vertical_alignment();
+		recompute_horizontal_alignment();
+
+		alignment_cache.pivot_offset = page_layout.fitted_size * (glm::vec2{ 0.0f, 1.0f } - format.pivot);
+		alignment_cache.padding_offset = format.padding * glm::vec2{ 1.0f, -1.0f };
+	}
+
+	void Paragraph::recompute_horizontal_alignment() const
+	{
 		switch (format.vertical_alignment)
 		{
 		case ParagraphFormat::VerticalAlignment::BOTTOM:
@@ -622,41 +662,43 @@ namespace oly::rendering
 			alignment_cache.valign_offset = -0.5f * (page_layout.fitted_size.y - page_layout.content_size.y);
 			break;
 		case ParagraphFormat::VerticalAlignment::JUSTIFY:
-			if (pagedata.linebreaks > 0)
+			if (page_data.linebreaks > 0)
 			{
-				const float extra_linebreak = (page_layout.fitted_size.y - page_layout.content_size.y) / pagedata.linebreaks;
+				const float extra_linebreak = (page_layout.fitted_size.y - page_layout.content_size.y) / page_data.linebreaks;
 				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 				{
-					if (pagedata.lines[i].width == 0.0f)
+					if (page_data.lines[i].width == 0.0f)
 						alignment_cache.lines[i].height += extra_linebreak;
 				}
 			}
 			break;
 		case ParagraphFormat::VerticalAlignment::FULL_JUSTIFY:
-			if (!pagedata.lines.empty() && page_layout.content_size.y - pagedata.lines.back().max_height > 0.0f)
+			if (!page_data.lines.empty() && page_layout.content_size.y - page_data.lines.back().max_height > 0.0f)
 			{
-				const float line_mult = (page_layout.fitted_size.y - pagedata.lines.back().max_height) / (page_layout.content_size.y - pagedata.lines.back().max_height);
+				const float line_mult = (page_layout.fitted_size.y - page_data.lines.back().max_height) / (page_layout.content_size.y - page_data.lines.back().max_height);
 				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 					alignment_cache.lines[i].height *= line_mult;
 			}
 			break;
 		}
+	}
 
-		// horizontal alignment
+	void Paragraph::recompute_vertical_alignment() const
+	{
 		switch (format.horizontal_alignment)
 		{
 		case ParagraphFormat::HorizontalAlignment::RIGHT:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
-				alignment_cache.lines[i].start = page_layout.fitted_size.x - pagedata.lines[i].width;
+				alignment_cache.lines[i].start = page_layout.fitted_size.x - page_data.lines[i].width;
 			break;
 		case ParagraphFormat::HorizontalAlignment::CENTER:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
-				alignment_cache.lines[i].start = 0.5f * (page_layout.fitted_size.x - pagedata.lines[i].width);
+				alignment_cache.lines[i].start = 0.5f * (page_layout.fitted_size.x - page_data.lines[i].width);
 			break;
 		case ParagraphFormat::HorizontalAlignment::JUSTIFY:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 			{
-				const internal::PageBuildData::Line line = pagedata.lines[i];
+				const internal::PageBuildData::Line line = page_data.lines[i];
 				if (line.space_width > 0.0f)
 					alignment_cache.lines[i].space_width_mult = 1.0f + (page_layout.fitted_size.x - line.width) / line.space_width;
 			}
@@ -664,17 +706,11 @@ namespace oly::rendering
 		case ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY:
 			for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
 			{
-				const internal::PageBuildData::Line line = pagedata.lines[i];
+				const internal::PageBuildData::Line line = page_data.lines[i];
 				alignment_cache.lines[i].character_shift = line.characters > 1 ? (page_layout.fitted_size.x - line.width) / (line.characters - 1) : 0.0f;
 			}
 			break;
 		}
-
-		// page offsets
-		alignment_cache.pivot_offset = page_layout.fitted_size * (glm::vec2{ 0.0f, 1.0f } - format.pivot);
-		alignment_cache.padding_offset = format.padding * glm::vec2{ 1.0f, -1.0f };
-
-		return alignment_cache;
 	}
 
 	internal::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
@@ -689,5 +725,21 @@ namespace oly::rendering
 			return next_glyph.peek();
 		else
 			return {};
+	}
+
+	void Paragraph::realign_horizontally() const
+	{
+		dirty_layout &= ~internal::DirtyParagraph::HORIZONTAL_ALIGN;
+		recompute_horizontal_alignment();
+		for (size_t i = 0; i < written_glyph_groups; ++i)
+			glyph_groups[i].rewrite_alignment_positions();
+	}
+
+	void Paragraph::realign_vertically() const
+	{
+		dirty_layout &= ~internal::DirtyParagraph::VERTICAL_ALIGN;
+		recompute_vertical_alignment();
+		for (size_t i = 0; i < written_glyph_groups; ++i)
+			glyph_groups[i].rewrite_alignment_positions();
 	}
 }

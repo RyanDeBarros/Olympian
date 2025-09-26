@@ -15,8 +15,8 @@ namespace oly::rendering
 		enum DirtyParagraph
 		{
 			REBUILD_LAYOUT = 1 << 0,
-			REALIGN_X = 1 << 1,
-			REALIGN_Y = 1 << 2
+			HORIZONTAL_ALIGN = 1 << 1,
+			VERTICAL_ALIGN = 1 << 2
 		};
 
 		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
@@ -174,15 +174,16 @@ namespace oly::rendering
 		{
 			friend class Paragraph;
 			friend class TextElementExposure;
-			const Paragraph* paragraph;
+			const Paragraph* paragraph = nullptr;
 			TextElement element;
 
 			mutable std::vector<TextGlyph> glyphs;
 
 			struct CachedGlyphInfo
 			{
+				TypesetData typeset;
 				float line_y_offset;
-				size_t line;
+				glm::vec2 alignment_position;
 			};
 			mutable std::vector<CachedGlyphInfo> cached_info;
 
@@ -208,7 +209,8 @@ namespace oly::rendering
 				CONTINUE,
 				BREAK
 			};
-			WriteResult write_glyph_section(TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment) const;
+			WriteResult write_glyph_section(TypesetData& typeset, PeekData next_peek) const;
+			void clear_cache() const;
 
 		private:
 			bool can_fit_on_line(const TypesetData& typeset, float dx) const;
@@ -225,11 +227,11 @@ namespace oly::rendering
 				float y_offset;
 			};
 
-			bool write_adj_offset(TypesetData& typeset, PeekData next_peek, const AlignmentCache& alignment, LineAlignment& line) const;
-			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
-			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint, const AlignmentCache& alignment) const;
-			bool write_newline(TypesetData& typeset, const AlignmentCache& alignment, LineAlignment& line) const;
-			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, const AlignmentCache& alignment, LineAlignment line) const;
+			bool write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const;
+			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			bool write_newline(TypesetData& typeset, LineAlignment& line) const;
+			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
 
 		public:
 			float space_width(utf::Codepoint next_codepoint) const;
@@ -238,7 +240,10 @@ namespace oly::rendering
 
 		private:
 			void recolor() const;
-			void realign_line() const;
+			void realign_lines() const;
+
+		public:
+			void rewrite_alignment_positions() const;
 		};
 	}
 
@@ -275,8 +280,10 @@ namespace oly::rendering
 
 		std::vector<internal::GlyphGroup> glyph_groups;
 
-		mutable internal::PageBuildData pagedata;
+		mutable internal::PageBuildData page_data;
 		mutable internal::PageLayout page_layout;
+		mutable internal::AlignmentCache alignment_cache;
+		mutable size_t written_glyph_groups = 0;
 
 		mutable Transformer2D transformer;
 
@@ -328,8 +335,13 @@ namespace oly::rendering
 		void build_layout() const;
 		void build_page() const;
 		void write_glyphs() const;
-		internal::AlignmentCache get_alignment_cache() const;
+		void compute_alignment_cache() const;
+		void recompute_horizontal_alignment() const;
+		void recompute_vertical_alignment() const;
 		internal::GlyphGroup::PeekData peek_next(size_t i) const;
+
+		void realign_horizontally() const;
+		void realign_vertically() const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
