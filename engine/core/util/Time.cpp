@@ -7,7 +7,6 @@ namespace oly::internal
 		_processed_now = _raw_now * time_scale;
 		_inv_processed_now = 1.0 / _processed_now;
 
-		// TODO v5 should this impact everything? Should there be an alternative time structure for real-time timers? OR should everything use game time as processed here?
 		_processed_delta = std::min(_raw_delta, frame_length_clip) * time_scale;
 		_inv_processed_delta = 1.0 / _processed_delta;
 	}
@@ -24,6 +23,25 @@ namespace oly::internal
 		double n = glfwGetTime();
 		_raw_delta = n - _raw_now;
 		_raw_now = n;
+		process();
+	}
+
+	void RealTimeImpl::process()
+	{
+		_inv_now = 1.0 / _now;
+		_inv_delta = 1.0 / _delta;
+	}
+	void RealTimeImpl::init()
+	{
+		_delta = 1.0 / 60.0;
+		_now = glfwGetTime();
+	}
+
+	void RealTimeImpl::sync()
+	{
+		double n = glfwGetTime();
+		_delta = n - _now;
+		_now = n;
 		process();
 	}
 }
