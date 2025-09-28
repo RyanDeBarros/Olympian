@@ -20,6 +20,7 @@ namespace oly::rendering
 			PADDING = 1 << 3,
 			PIVOT = 1 << 4,
 			LINE_SPACING = 1 << 5,
+			MIN_SIZE = 1 << 6
 		};
 
 		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
@@ -187,7 +188,6 @@ namespace oly::rendering
 			{
 				TypesetData typeset;
 				float line_y_offset;
-				glm::vec2 alignment_position;
 			};
 			mutable std::vector<CachedGlyphInfo> cached_info;
 			mutable glm::vec2 last_jitter_offset = {};
@@ -237,6 +237,7 @@ namespace oly::rendering
 			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			bool write_newline(TypesetData& typeset, LineAlignment& line) const;
 			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
+			glm::vec2 get_glyph_position(size_t i) const;
 
 		public:
 			float space_width(utf::Codepoint next_codepoint) const;
@@ -249,8 +250,7 @@ namespace oly::rendering
 			void reposition_jitter() const;
 
 		public:
-			void rewrite_alignment_positions() const;
-			void translate_glyphs(glm::vec2 translation) const;
+			void reposition_glyphs() const;
 		};
 	}
 
@@ -342,16 +342,22 @@ namespace oly::rendering
 		void clean_dirty_layout() const;
 		void build_layout() const;
 		void write_glyphs() const;
-		void compute_alignment_cache() const;
-		void recompute_horizontal_alignment() const;
-		void recompute_vertical_alignment() const;
-		internal::GlyphGroup::PeekData peek_next(size_t i) const;
 
-		void realign_horizontally() const;
-		void realign_vertically() const;
-		void repad_layout() const;
-		void repivot_layout() const;
-		void rebuild_line_spacing() const;
+		enum AlignmentFlags
+		{
+			RESIZE_LINES = 1 << 0,
+			VERTICAL = 1 << 1,
+			HORIZONTAL = 1 << 2,
+			PIVOT = 1 << 3,
+			PADDING = 1 << 4
+		};
+		void compute_alignment_cache(AlignmentFlags flags) const;
+
+		internal::GlyphGroup::PeekData peek_next(size_t i) const;
+		void recompute_content_size_x() const;
+		void recompute_content_size_y() const;
+		void recompute_fitted_size_x() const;
+		void recompute_fitted_size_y() const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
