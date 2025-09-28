@@ -4,6 +4,7 @@
 
 #include "core/base/Colors.h"
 #include "core/base/SimpleMath.h"
+#include "core/base/Random.h"
 
 #include "core/util/Logger.h"
 #include "core/util/Time.h"

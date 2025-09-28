@@ -115,13 +115,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void text_jitter_callback()
 	{
-		// TODO v5 rng utility
-		glm::vec2 jitter = {
-			10.0f * (float)((double)rand() / RAND_MAX),
-			10.0f * (float)((double)rand() / RAND_MAX)
-		};
-
-		jumble.test_text->set_element(2).set_jitter_offset(jitter);
+		jumble.test_text->set_element(2).set_jitter_offset({ oly::Random<float>::range(-5.0f, 5.0f), oly::Random<float>::range(-5.0f, 5.0f) });
 	}
 };
 
