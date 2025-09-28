@@ -123,6 +123,4 @@ namespace oly::graphics
 		indices[4] = Type(3 + 4 * quad_index);
 		indices[5] = Type(0 + 4 * quad_index);
 	}
-
-	// TODO v5 "static" drawing where element buffer isn't overwritten every frame by each renderable?
 }

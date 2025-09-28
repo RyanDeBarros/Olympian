@@ -39,6 +39,7 @@ namespace oly::rendering
 	public:
 		typedef GLuint Index;
 		// ID refers to the index of a polygon in transform SSBO. It also indexes a set of ranges in the VBO block.
+		// TODO v5 no need for StrictIDGenerator if PolygonReference manages id lifetime. Use SoftIDGenerator instead.
 		typedef StrictIDGenerator<Index>::ID PolygonID;
 
 		PolygonBatch();

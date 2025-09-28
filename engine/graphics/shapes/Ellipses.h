@@ -60,6 +60,7 @@ namespace oly::rendering
 		glm::mat3 projection = 1.0f;
 
 	private:
+		// TODO v5 no need for StrictIDGenerator if EllipseReference manages id lifetime. Use SoftIDGenerator instead.
 		StrictIDGenerator<Index> pos_generator;
 		typedef StrictIDGenerator<Index>::ID EllipseID;
 		EllipseID generate_id();

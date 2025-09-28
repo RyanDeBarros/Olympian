@@ -126,11 +126,10 @@ namespace oly::rendering
 		void render() const;
 
 	private:
-		// TODO v5 no need for StrictIDGenerator if SpriteReference manages id lifetime. Use SoftIDGenerator instead. Probably applicable to ellipses/polygons as well.
-		typedef StrictIDGenerator<GLuint>::ID SpriteID;
-		StrictIDGenerator<GLuint> id_generator;
-		SpriteID gen_sprite_id();
-		void erase_sprite_id(SpriteID& id);
+		SoftIDGenerator<GLuint> id_generator;
+		static const GLuint NULL_ID = GLuint(-1);
+		GLuint gen_sprite_id();
+		void erase_sprite_id(GLuint id);
 
 		struct QuadInfoStore
 		{
@@ -180,7 +179,7 @@ namespace oly::rendering
 		class SpriteReference
 		{
 			SpriteBatch* batch = nullptr;
-			SpriteBatch::SpriteID id;
+			GLuint id = SpriteBatch::NULL_ID;
 
 		public:
 			SpriteReference();
