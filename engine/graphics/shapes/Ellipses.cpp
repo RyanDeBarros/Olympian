@@ -32,6 +32,12 @@ namespace oly::rendering
 		ssbo_block.post_draw_all();
 	}
 
+	void EllipseBatch::assert_valid_id(Index id)
+	{
+		if (id == NULL_ID) [[unlikely]]
+			throw Error(ErrorCode::INVALID_ID);
+	}
+
 	EllipseBatch::Index EllipseBatch::generate_id()
 	{
 		GLuint id = id_generator.gen();
@@ -136,24 +142,11 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch != other.batch)
-			{
-				if (batch)
-					batch->erase_id(id);
-				batch = other.batch;
-				id = other.id;
-				other.id = EllipseBatch::NULL_ID;
-			}
-			else if (batch)
-			{
-				if (other.id != EllipseBatch::NULL_ID)
-					set_attributes(*this, get_attributes_ref(other));
-				else
-				{
-					batch->erase_id(id);
-					id = EllipseBatch::NULL_ID;
-				}
-			}
+			if (batch)
+				batch->erase_id(id);
+			batch = other.batch;
+			id = other.id;
+			other.id = EllipseBatch::NULL_ID;
 		}
 		return *this;
 	}
@@ -167,7 +160,7 @@ namespace oly::rendering
 		{
 			if (batch)
 			{
-				Attributes attr = get_attributes(*this);
+				const Attributes attr = id != EllipseBatch::NULL_ID ? get_attributes(*this) : Attributes{};
 				this->batch->erase_id(id);
 				this->batch = batch;
 				id = this->batch->generate_id();
@@ -191,10 +184,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.get<EllipseBatch::DIMENSION>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<EllipseBatch::DIMENSION>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -204,10 +195,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.set<EllipseBatch::DIMENSION>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<EllipseBatch::DIMENSION>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -217,10 +206,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.get<EllipseBatch::COLOR>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<EllipseBatch::COLOR>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -230,10 +217,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.set<EllipseBatch::COLOR>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<EllipseBatch::COLOR>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -243,10 +228,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -256,10 +239,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -269,10 +250,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			if (id != EllipseBatch::NULL_ID) [[likely]]
-				graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
-			else
-				throw Error(ErrorCode::INVALID_ID);
+			EllipseBatch::assert_valid_id(id);
+			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);

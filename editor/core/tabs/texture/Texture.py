@@ -14,6 +14,8 @@ from ..asset_structures import Texture
 from ...common.SettingsForm import handle_all_children_modification, SettingsForm
 
 
+# TODO v5 add option to view spritesheet when editing spritesheet parameters - in preview image, separate slong axes.
+
 class TextureTab(EditorTab):
 	def __init__(self, win: MainWindow, item: ImportedTexturePathItem):
 		super().__init__(win)

@@ -126,8 +126,10 @@ namespace oly::rendering
 		void render() const;
 
 	private:
+		// TODO v5 use Index typedef for GLuint like with ellipse/polygon batches.
 		SoftIDGenerator<GLuint> id_generator;
 		static const GLuint NULL_ID = GLuint(-1);
+		static void assert_valid_id(GLuint id);
 		GLuint gen_sprite_id();
 		void erase_sprite_id(GLuint id);
 

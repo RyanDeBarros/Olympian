@@ -30,7 +30,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct BKG
 {
-	oly::rendering::PolygonRef bkg_rect;
+	oly::rendering::Polygon bkg_rect;
 
 	BKG(oly::rendering::PolygonBatch& batch)
 		: bkg_rect(oly::reg::load_polygon(&batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
@@ -83,7 +83,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.bkg_rect->draw();
+		bkg.bkg_rect.draw();
 		batch.render();
 
 		sprite_match.draw();

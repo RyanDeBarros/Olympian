@@ -59,39 +59,38 @@ namespace oly::rendering
 		}
 	}
 
-	void PolygonBatch::set_polygon_transform(const PolygonID& id, const glm::mat3& transform)
+	void PolygonBatch::set_polygon_transform(Index id, const glm::mat3& transform)
 	{
-		if (is_valid_id(id))
-			transform_ssbo.set(id.get()) = transform;
-		else
-			throw Error(ErrorCode::INVALID_ID);
+		assert_valid_id(id);
+		transform_ssbo.set(id) = transform;
 	}
 
-	const glm::mat3& PolygonBatch::get_polygon_transform(const PolygonID& id)
+	const glm::mat3& PolygonBatch::get_polygon_transform(Index id)
 	{
-		if (is_valid_id(id)) [[likely]]
-			return transform_ssbo.get(id.get());
-		else
-			throw Error(ErrorCode::INVALID_ID);
+		assert_valid_id(id);
+		return transform_ssbo.get(id);
 	}
 
-	PolygonBatch::PolygonID PolygonBatch::generate_id(Index vertices)
+	PolygonBatch::Index PolygonBatch::generate_id(Index vertices)
 	{
-		PolygonID id = id_generator.generate();
+		Index id = id_generator.gen();
+		if (id == NULL_ID) [[unlikely]]
+			throw Error(ErrorCode::STORAGE_OVERFLOW);
+
 		Range<Index> vertex_range;
 		OLY_ASSERT(vertex_free_space.next_free(vertices, vertex_range));
 		vertex_free_space.reserve(vertex_range);
-		polygon_indexer[id.get()] = vertex_range;
+		polygon_indexer[id] = vertex_range;
 		for (Index v = 0; v < vertex_range.length; ++v)
-			vbo_block.set<INDEX>(vertex_range.initial + v) = id.get();
+			vbo_block.set<INDEX>(vertex_range.initial + v) = id;
 		return id;
 	}
 
-	void PolygonBatch::terminate_id(const PolygonID& id)
+	void PolygonBatch::terminate_id(Index id)
 	{
-		if (id.is_valid())
+		if (is_valid_id(id))
 		{
-			auto it = polygon_indexer.find(id.get());
+			auto it = polygon_indexer.find(id);
 			if (it != polygon_indexer.end())
 			{
 				vertex_free_space.release(it->second);
@@ -100,11 +99,11 @@ namespace oly::rendering
 		}
 	}
 
-	bool PolygonBatch::resize_range(PolygonID& id, Index vertices)
+	bool PolygonBatch::resize_range(Index& id, Index vertices)
 	{
-		if (id.is_valid())
+		if (is_valid_id(id))
 		{
-			if (polygon_indexer.count(id.get()) && vertices == get_vertex_range(id).length)
+			if (vertices == get_vertex_range(id).length)
 				return false;
 			terminate_id(id);
 		}
@@ -112,16 +111,21 @@ namespace oly::rendering
 		return true;
 	}
 
-	Range<PolygonBatch::Index> PolygonBatch::get_vertex_range(const PolygonID& id) const
+	Range<PolygonBatch::Index> PolygonBatch::get_vertex_range(Index id) const
+	{
+		assert_valid_id(id);
+		return polygon_indexer.find(id)->second;
+	}
+
+	bool PolygonBatch::is_valid_id(Index id) const
+	{
+		return id != NULL_ID && polygon_indexer.count(id);
+	}
+
+	void PolygonBatch::assert_valid_id(Index id) const
 	{
 		if (!is_valid_id(id))
 			throw Error(ErrorCode::INVALID_ID);
-		return polygon_indexer.find(id.get())->second;
-	}
-
-	bool PolygonBatch::is_valid_id(const PolygonID& id) const
-	{
-		return id.is_valid() && polygon_indexer.count(id.get());
 	}
 
 	internal::PolygonReference::PolygonReference(PolygonBatch* batch)
@@ -135,8 +139,9 @@ namespace oly::rendering
 	}
 
 	internal::PolygonReference::PolygonReference(PolygonReference&& other) noexcept
-		: batch(other.batch), id(std::move(other.id))
+		: batch(other.batch), id(other.id)
 	{
+		other.id = PolygonBatch::NULL_ID;
 	}
 
 	internal::PolygonReference::~PolygonReference()
@@ -148,7 +153,7 @@ namespace oly::rendering
 	internal::PolygonReference& internal::PolygonReference::operator=(const PolygonReference& other)
 	{
 		if (this != &other)
-			set_batch(other.batch);
+			*this = dupl(other);
 		return *this;
 	}
 
@@ -156,38 +161,35 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch == other.batch)
-			{
-				if (batch)
-				{
-					batch->terminate_id(id);
-					id = std::move(other.id);
-				}
-			}
-			else
-				set_batch(other.batch);
+			if (batch)
+				batch->terminate_id(id);
+			batch = other.batch;
+			id = other.id;
+			other.id = PolygonBatch::NULL_ID;
 		}
 		return *this;
 	}
 
 	void internal::PolygonReference::set_batch(PolygonBatch* batch)
 	{
-		if (this->batch != batch)
+		if (this->batch == batch)
+			return;
+
+		if (this->batch && batch && this->batch->is_valid_id(id))
 		{
-			if (batch && this->batch && this->batch->is_valid_id(id))
-			{
-				GLuint num_vertices = this->batch->get_vertex_range(id).length;
-				glm::mat3 transform = this->batch->get_polygon_transform(id);
-				id.yield();
-				this->batch = batch;
-				id = this->batch->generate_id(num_vertices);
-				this->batch->set_polygon_transform(id, transform);
-			}
-			else
-			{
-				id.yield();
-				this->batch = batch;
-			}
+			const GLuint num_vertices = this->batch->get_vertex_range(id).length;
+			const glm::mat3 transform = this->batch->get_polygon_transform(id);
+			this->batch->terminate_id(id);
+			this->batch = batch;
+			id = this->batch->generate_id(num_vertices);
+			this->batch->set_polygon_transform(id, transform);
+		}
+		else
+		{
+			if (this->batch)
+				this->batch->terminate_id(id);
+			id = PolygonBatch::NULL_ID;
+			this->batch = batch;
 		}
 	}
 
@@ -195,8 +197,8 @@ namespace oly::rendering
 	{
 		if (batch) [[likely]]
 		{
-			glm::mat3 transform = batch->is_valid_id(id) ? batch->get_polygon_transform(id) : 1.0f;
-			bool resized = batch->resize_range(id, vertices);
+			const glm::mat3 transform = batch->is_valid_id(id) ? batch->get_polygon_transform(id) : 1.0f;
+			const bool resized = batch->resize_range(id, vertices);
 			if (resized)
 				batch->set_polygon_transform(id, transform);
 			return resized;
@@ -213,18 +215,18 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void internal::PolygonReference::set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, PolygonBatch::Index count) const
+	void internal::PolygonReference::set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, size_t count) const
 	{
 		if (batch) [[likely]]
-			batch->set_primitive_points(vertex_range, points, count);
+			batch->set_primitive_points(vertex_range, points, (PolygonBatch::Index)count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void internal::PolygonReference::set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, PolygonBatch::Index count) const
+	void internal::PolygonReference::set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, size_t count) const
 	{
 		if (batch) [[likely]]
-			batch->set_primitive_colors(vertex_range, colors, count);
+			batch->set_primitive_colors(vertex_range, colors, (PolygonBatch::Index)count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -256,7 +258,10 @@ namespace oly::rendering
 	GLuint& internal::PolygonReference::draw_index() const
 	{
 		if (batch) [[likely]]
+		{
+			batch->assert_valid_id(id);
 			return batch->ebo.draw_primitive()[0];
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -333,26 +338,26 @@ namespace oly::rendering
 		triangulation = math::triangulate(polygon.points);
 	}
 	
-	PolygonBatch::Index StaticPolygon::num_vertices() const
+	size_t StaticPolygon::num_vertices() const
 	{
-		return (PolygonBatch::Index)polygon.points.size();
+		return polygon.points.size();
 	}
 	
 	void StaticPolygon::impl_set_polygon() const
 	{
 		auto vertex_range = get_ref().get_vertex_range();
-		get_ref().set_primitive_points(vertex_range, polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
-		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+		get_ref().set_primitive_points(vertex_range, polygon.points.data(), polygon.points.size());
+		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), polygon.colors.size());
 	}
 	
 	void StaticPolygon::impl_set_polygon_points() const
 	{
-		get_ref().set_primitive_points(polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
+		get_ref().set_primitive_points(polygon.points.data(), polygon.points.size());
 	}
 	
 	void StaticPolygon::impl_set_polygon_colors() const
 	{
-		get_ref().set_primitive_colors(polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+		get_ref().set_primitive_colors(polygon.colors.data(), polygon.colors.size());
 	}
 
 	void Polygonal::draw() const
@@ -363,26 +368,26 @@ namespace oly::rendering
 		draw_triangulation(get_ref().get_vertex_range().initial);
 	}
 
-	GLuint Polygon::num_vertices() const
+	size_t Polygon::num_vertices() const
 	{
-		return (GLuint)polygon.points.size();
+		return polygon.points.size();
 	}
 
 	void Polygon::impl_set_polygon() const
 	{
 		auto vertex_range = get_ref().get_vertex_range();
-		get_ref().set_primitive_points(vertex_range, polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
-		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+		get_ref().set_primitive_points(vertex_range, polygon.points.data(), polygon.points.size());
+		get_ref().set_primitive_colors(vertex_range, polygon.colors.data(), polygon.colors.size());
 	}
 
 	void Polygon::impl_set_polygon_points() const
 	{
-		get_ref().set_primitive_points(polygon.points.data(), (PolygonBatch::Index)polygon.points.size());
+		get_ref().set_primitive_points(polygon.points.data(), polygon.points.size());
 	}
 
 	void Polygon::impl_set_polygon_colors() const
 	{
-		get_ref().set_primitive_colors(polygon.colors.data(), (PolygonBatch::Index)polygon.colors.size());
+		get_ref().set_primitive_colors(polygon.colors.data(), polygon.colors.size());
 	}
 
 	void Polygon::triangulate() const
@@ -400,28 +405,28 @@ namespace oly::rendering
 		}
 	}
 
-	GLuint PolyComposite::num_vertices() const
+	size_t PolyComposite::num_vertices() const
 	{
-		GLuint vertices = 0;
+		size_t vertices = 0;
 		for (const auto& primitive : composite)
-			vertices += (GLuint)primitive.polygon.points.size();
+			vertices += primitive.polygon.points.size();
 		return vertices;
 	}
 
 	static void set_polygon_composite(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
 	{
 		auto vertex_range = ref.get_vertex_range();
-		PolygonBatch::Index offset = 0;
+		GLuint offset = 0;
 		for (const cmath::TriangulatedPolygon2D& poly : composite)
 		{
-			Range<PolygonBatch::Index> poly_range;
+			Range<GLuint> poly_range;
 			poly_range.initial = vertex_range.initial + offset;
 			if (poly_range.initial >= vertex_range.end())
 				return;
-			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			ref.set_primitive_points(poly_range, poly.polygon.points.data(), (PolygonBatch::Index)poly.polygon.points.size());
-			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (PolygonBatch::Index)poly.polygon.colors.size());
-			offset += (PolygonBatch::Index)poly.polygon.points.size();
+			poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_points(poly_range, poly.polygon.points.data(), poly.polygon.points.size());
+			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), poly.polygon.colors.size());
+			offset += (GLuint)poly.polygon.points.size();
 		}
 	}
 
@@ -433,16 +438,16 @@ namespace oly::rendering
 	static void set_polygon_points(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
 	{
 		auto vertex_range = ref.get_vertex_range();
-		PolygonBatch::Index offset = 0;
+		GLuint offset = 0;
 		for (const cmath::TriangulatedPolygon2D& poly : composite)
 		{
-			Range<PolygonBatch::Index> poly_range;
+			Range<GLuint> poly_range;
 			poly_range.initial = vertex_range.initial + offset;
 			if (poly_range.initial >= vertex_range.end())
 				return;
-			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			ref.set_primitive_points(poly_range, poly.polygon.points.data(), (PolygonBatch::Index)poly.polygon.points.size());
-			offset += (PolygonBatch::Index)poly.polygon.points.size();
+			poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_points(poly_range, poly.polygon.points.data(), poly.polygon.points.size());
+			offset += (GLuint)poly.polygon.points.size();
 		}
 	}
 
@@ -454,16 +459,16 @@ namespace oly::rendering
 	static void set_polygon_colors(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
 	{
 		auto vertex_range = ref.get_vertex_range();
-		PolygonBatch::Index offset = 0;
+		GLuint offset = 0;
 		for (const cmath::TriangulatedPolygon2D& poly : composite)
 		{
-			Range<PolygonBatch::Index> poly_range;
+			Range<GLuint> poly_range;
 			poly_range.initial = vertex_range.initial + offset;
 			if (poly_range.initial >= vertex_range.end())
 				return;
-			poly_range.length = std::min((PolygonBatch::Index)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (PolygonBatch::Index)poly.polygon.colors.size());
-			offset += (PolygonBatch::Index)poly.polygon.points.size();
+			poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
+			ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), poly.polygon.colors.size());
+			offset += (GLuint)poly.polygon.points.size();
 		}
 	}
 
@@ -492,11 +497,11 @@ namespace oly::rendering
 		}
 	}
 
-	GLuint NGon::num_vertices() const
+	size_t NGon::num_vertices() const
 	{
-		GLuint vertices = 0;
+		size_t vertices = 0;
 		for (const auto& primitive : cache)
-			vertices += (GLuint)primitive.polygon.points.size();
+			vertices += primitive.polygon.points.size();
 		return vertices;
 	}
 

@@ -17,11 +17,8 @@ namespace oly::rendering
 	class EllipseBatch
 	{
 		friend class EllipseReference;
-
-	public:
 		using Index = GLuint;
 
-	private:
 		graphics::VertexArray vao;
 		graphics::PersistentEBO<6> ebo;
 			
@@ -62,6 +59,7 @@ namespace oly::rendering
 	private:
 		SoftIDGenerator<Index> id_generator;
 		static const Index NULL_ID = Index(-1);
+		static void assert_valid_id(Index id);
 		Index generate_id();
 		void erase_id(Index id);
 	};
