@@ -45,7 +45,7 @@ namespace oly::rendering
 		if (paragraph.format.pivot != pivot)
 		{
 			paragraph.format.pivot = pivot;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 pivot dirty flag
+			paragraph.dirty_layout |= internal::DirtyParagraph::PIVOT;
 		}
 	}
 	
@@ -54,7 +54,7 @@ namespace oly::rendering
 		if (paragraph.format.min_size != min_size)
 		{
 			paragraph.format.min_size = min_size;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 min size flag
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
 	
@@ -647,6 +647,8 @@ namespace oly::rendering
 			realign_vertically();
 		if (dirty_layout & internal::DirtyParagraph::PADDING)
 			repad_layout();
+		if (dirty_layout & internal::DirtyParagraph::PIVOT)
+			repivot_layout();
 
 		if (draw_bkg)
 			bkg.draw();
@@ -830,6 +832,19 @@ namespace oly::rendering
 			glm::vec2 padding_change = alignment_cache.padding_offset - prev_padding_offset;
 			for (size_t i = 0; i < written_glyph_groups; ++i)
 				glyph_groups[i].translate_glyphs(padding_change);
+		}
+	}
+	
+	void Paragraph::repivot_layout() const
+	{
+		dirty_layout &= ~internal::DirtyParagraph::PIVOT;
+		glm::vec2 prev_pivot_offset = alignment_cache.pivot_offset;
+		alignment_cache.pivot_offset = page_layout.fitted_size * (glm::vec2{ 0.0f, 1.0f } - format.pivot);
+		if (alignment_cache.pivot_offset != prev_pivot_offset)
+		{
+			glm::vec2 pivot_change = alignment_cache.pivot_offset - prev_pivot_offset;
+			for (size_t i = 0; i < written_glyph_groups; ++i)
+				glyph_groups[i].translate_glyphs(pivot_change);
 		}
 	}
 }
