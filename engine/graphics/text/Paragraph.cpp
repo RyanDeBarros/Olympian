@@ -18,7 +18,10 @@ namespace oly::rendering
 		if (paragraph.format.line_spacing != line_spacing)
 		{
 			paragraph.format.line_spacing = line_spacing;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 line spacing dirty flag
+			if (paragraph.format.max_height > 0.0f)
+				paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+			else
+				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
 		}
 	}
 	
@@ -36,7 +39,10 @@ namespace oly::rendering
 		if (paragraph.format.linebreak_spacing != linebreak_spacing)
 		{
 			paragraph.format.linebreak_spacing = linebreak_spacing;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 linebreak spacing dirty flag
+			if (paragraph.format.max_height > 0.0f)
+				paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+			else
+				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
 		}
 	}
 	
@@ -54,7 +60,7 @@ namespace oly::rendering
 		if (paragraph.format.min_size != min_size)
 		{
 			paragraph.format.min_size = min_size;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v4 min size dirty flag
 		}
 	}
 	
@@ -639,6 +645,17 @@ namespace oly::rendering
 
 	void Paragraph::draw() const
 	{
+		clean_dirty_layout();
+		if (draw_bkg)
+			bkg.draw();
+		for (const internal::GlyphGroup& glyph_group : glyph_groups)
+			glyph_group.draw();
+	}
+
+	void Paragraph::clean_dirty_layout() const
+	{
+		const bool rewrite_paragraph = dirty_layout != internal::DirtyParagraph(0);
+
 		if (dirty_layout & internal::DirtyParagraph::REBUILD_LAYOUT)
 			build_layout();
 		if (dirty_layout & internal::DirtyParagraph::HORIZONTAL_ALIGN)
@@ -649,27 +666,24 @@ namespace oly::rendering
 			repad_layout();
 		if (dirty_layout & internal::DirtyParagraph::PIVOT)
 			repivot_layout();
+		if (dirty_layout & internal::DirtyParagraph::LINE_SPACING)
+			rebuild_line_spacing();
 
-		if (draw_bkg)
-			bkg.draw();
-		for (const internal::GlyphGroup& glyph_group : glyph_groups)
-			glyph_group.draw();
+		if (rewrite_paragraph)
+		{
+			write_glyphs();
+
+			auto& bkg_modifier = bkg.transformer.ref_modifier<PivotTransformModifier2D>();
+			bkg_modifier.size = page_layout.fitted_size + 2.0f * format.padding;
+			bkg_modifier.pivot = format.pivot;
+			bkg.set_local().scale = bkg_modifier.size;
+		}
 	}
 
 	void Paragraph::build_layout() const
 	{
 		dirty_layout = internal::DirtyParagraph(0);
-		build_page();
-		write_glyphs();
 
-		auto& bkg_modifier = bkg.transformer.ref_modifier<PivotTransformModifier2D>();
-		bkg_modifier.size = page_layout.fitted_size + 2.0f * format.padding;
-		bkg_modifier.pivot = format.pivot;
-		bkg.set_local().scale = bkg_modifier.size;
-	}
-
-	void Paragraph::build_page() const
-	{
 		page_layout = {};
 		page_data = {};
 		page_data.lines.push_back({});
@@ -690,11 +704,12 @@ namespace oly::rendering
 		}
 
 		page_layout.fitted_size = { glm::max(page_layout.content_size.x, format.min_size.x), glm::max(page_layout.content_size.y, format.min_size.y) };
+
+		compute_alignment_cache();
 	}
 
 	void Paragraph::write_glyphs() const
 	{
-		compute_alignment_cache();
 		internal::TypesetData typeset = {};
 		bool writing = true;
 		written_glyph_groups = glyph_groups.size();
@@ -846,5 +861,22 @@ namespace oly::rendering
 			for (size_t i = 0; i < written_glyph_groups; ++i)
 				glyph_groups[i].translate_glyphs(pivot_change);
 		}
+	}
+	
+	void Paragraph::rebuild_line_spacing() const
+	{
+		dirty_layout &= ~internal::DirtyParagraph::LINE_SPACING;
+
+		page_layout.content_size.y = 0.0f;
+		for (size_t i = 0; i < page_data.lines.size(); ++i)
+		{
+			if (i + 1 < page_data.lines.size())
+				alignment_cache.lines[i].height = page_data.lines[i].spaced_height(format);
+			else
+				alignment_cache.lines[i].height = page_data.lines[i].max_height;
+			page_layout.content_size.y += alignment_cache.lines[i].height;
+		}
+
+		page_layout.fitted_size.y = glm::max(page_layout.content_size.y, format.min_size.y);
 	}
 }

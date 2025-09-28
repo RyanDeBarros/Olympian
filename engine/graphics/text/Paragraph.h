@@ -19,6 +19,7 @@ namespace oly::rendering
 			VERTICAL_ALIGN = 1 << 2,
 			PADDING = 1 << 3,
 			PIVOT = 1 << 4,
+			LINE_SPACING = 1 << 5,
 		};
 
 		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
@@ -338,8 +339,8 @@ namespace oly::rendering
 		void draw() const;
 
 	private:
+		void clean_dirty_layout() const;
 		void build_layout() const;
-		void build_page() const;
 		void write_glyphs() const;
 		void compute_alignment_cache() const;
 		void recompute_horizontal_alignment() const;
@@ -350,6 +351,7 @@ namespace oly::rendering
 		void realign_vertically() const;
 		void repad_layout() const;
 		void repivot_layout() const;
+		void rebuild_line_spacing() const;
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;
