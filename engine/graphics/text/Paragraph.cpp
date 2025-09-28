@@ -81,7 +81,7 @@ namespace oly::rendering
 		if (paragraph.format.padding != padding)
 		{
 			paragraph.format.padding = padding;
-			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT; // TODO v5 padding flag
+			paragraph.dirty_layout |= internal::DirtyParagraph::PADDING;
 		}
 	}
 	
@@ -448,6 +448,12 @@ namespace oly::rendering
 		}
 	}
 
+	void internal::GlyphGroup::translate_glyphs(glm::vec2 translation) const
+	{
+		for (TextGlyph& glyph : glyphs)
+			glyph.set_local().position += translation;
+	}
+
 	TextElementExposure::TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group)
 		: paragraph(paragraph), glyph_group(glyph_group)
 	{
@@ -639,6 +645,8 @@ namespace oly::rendering
 			realign_horizontally();
 		if (dirty_layout & internal::DirtyParagraph::VERTICAL_ALIGN)
 			realign_vertically();
+		if (dirty_layout & internal::DirtyParagraph::PADDING)
+			repad_layout();
 
 		if (draw_bkg)
 			bkg.draw();
@@ -810,5 +818,18 @@ namespace oly::rendering
 		recompute_vertical_alignment();
 		for (size_t i = 0; i < written_glyph_groups; ++i)
 			glyph_groups[i].rewrite_alignment_positions();
+	}
+
+	void Paragraph::repad_layout() const
+	{
+		dirty_layout &= ~internal::DirtyParagraph::PADDING;
+		glm::vec2 prev_padding_offset = alignment_cache.padding_offset;
+		alignment_cache.padding_offset = format.padding * glm::vec2{ 1.0f, -1.0f };
+		if (alignment_cache.padding_offset != prev_padding_offset)
+		{
+			glm::vec2 padding_change = alignment_cache.padding_offset - prev_padding_offset;
+			for (size_t i = 0; i < written_glyph_groups; ++i)
+				glyph_groups[i].translate_glyphs(padding_change);
+		}
 	}
 }
