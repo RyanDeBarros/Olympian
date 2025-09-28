@@ -34,6 +34,13 @@ namespace oly
 			return REAL_TIME.delta();
 	}
 
+	StateTimer::StateTimer(float interval, bool one_shot, bool playing, TimeMode mode)
+		: cumulative_intervals({ interval }), one_shot(one_shot), playing(playing), mode(mode)
+	{
+		init_intervals(cumulative_intervals, total_length);
+		internal::TimerRegistry::instance().state_timers.insert(this);
+	}
+
 	StateTimer::StateTimer(const std::vector<float>& intervals, bool one_shot, bool playing, TimeMode mode)
 		: cumulative_intervals(intervals), one_shot(one_shot), playing(playing), mode(mode)
 	{
@@ -95,6 +102,13 @@ namespace oly
 		}
 
 		throw Error(ErrorCode::UNREACHABLE_CODE);
+	}
+
+	CallbackTimer::CallbackTimer(float interval, const Callback& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)
+		: callback(callback), cumulative_intervals({ interval }), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
+	{
+		init_intervals(cumulative_intervals, total_length);
+		internal::TimerRegistry::instance().callback_timers.insert(this);
 	}
 
 	CallbackTimer::CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)

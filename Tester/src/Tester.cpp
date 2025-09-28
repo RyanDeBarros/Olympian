@@ -59,7 +59,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	TesterRenderPipeline()
-		: bkg(batch), text_jitter_timer({ 0.05f }, [this](size_t) { text_jitter_callback(); })
+		: bkg(batch), text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
 	{
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
