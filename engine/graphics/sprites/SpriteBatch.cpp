@@ -638,7 +638,12 @@ namespace oly::rendering
 	glm::mat3 internal::SpriteReference::get_transform() const
 	{
 		if (batch) [[likely]]
-			return batch->quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id);
+		{
+			if (id != SpriteBatch::NULL_ID) [[likely]]
+				return batch->quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -646,7 +651,12 @@ namespace oly::rendering
 	void internal::SpriteReference::draw_quad() const
 	{
 		if (batch) [[likely]]
-			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
+		{
+			if (id != SpriteBatch::NULL_ID) [[likely]]
+				graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}

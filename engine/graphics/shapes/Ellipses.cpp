@@ -190,7 +190,12 @@ namespace oly::rendering
 	EllipseBatch::EllipseDimension EllipseReference::get_dimension() const
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::DIMENSION>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.get<EllipseBatch::DIMENSION>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -198,7 +203,12 @@ namespace oly::rendering
 	EllipseBatch::EllipseDimension& EllipseReference::set_dimension()
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::DIMENSION>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.set<EllipseBatch::DIMENSION>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -206,7 +216,12 @@ namespace oly::rendering
 	const EllipseBatch::ColorGradient& EllipseReference::get_color() const
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::COLOR>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.get<EllipseBatch::COLOR>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -214,7 +229,12 @@ namespace oly::rendering
 	EllipseBatch::ColorGradient& EllipseReference::set_color()
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::COLOR>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.set<EllipseBatch::COLOR>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -222,7 +242,12 @@ namespace oly::rendering
 	const glm::mat3& EllipseReference::get_transform() const
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -230,7 +255,12 @@ namespace oly::rendering
 	glm::mat3& EllipseReference::set_transform()
 	{
 		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
@@ -238,7 +268,12 @@ namespace oly::rendering
 	void EllipseReference::draw() const
 	{
 		if (batch) [[likely]]
-			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
+		{
+			if (id != EllipseBatch::NULL_ID) [[likely]]
+				graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
+			else
+				throw Error(ErrorCode::INVALID_ID);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
