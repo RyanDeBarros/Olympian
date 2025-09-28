@@ -60,17 +60,17 @@ namespace oly::rendering
 		glm::mat3 projection = 1.0f;
 
 	private:
-		// TODO v5 no need for StrictIDGenerator if EllipseReference manages id lifetime. Use SoftIDGenerator instead.
-		StrictIDGenerator<Index> pos_generator;
-		typedef StrictIDGenerator<Index>::ID EllipseID;
-		EllipseID generate_id();
+		SoftIDGenerator<Index> id_generator;
+		static const Index NULL_ID = Index(-1);
+		Index generate_id();
+		void erase_id(Index id);
 	};
 
 	class EllipseReference
 	{
 		friend class EllipseBatch;
 		EllipseBatch* batch = nullptr;
-		EllipseBatch::EllipseID pos;
+		EllipseBatch::Index id = EllipseBatch::NULL_ID;
 
 	public:
 		EllipseReference(EllipseBatch* batch = nullptr);
@@ -78,6 +78,7 @@ namespace oly::rendering
 		EllipseReference(EllipseReference&&) noexcept;
 		EllipseReference& operator=(const EllipseReference&);
 		EllipseReference& operator=(EllipseReference&&) noexcept;
+		~EllipseReference();
 
 		EllipseBatch* get_batch() const { return batch; }
 		void set_batch(EllipseBatch* batch);
