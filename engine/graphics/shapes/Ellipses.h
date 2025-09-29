@@ -4,6 +4,7 @@
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/SmartReference.h"
+#include "core/types/Issuer.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -11,63 +12,65 @@
 
 namespace oly::rendering
 {
-	class EllipseReference;
-
-	class EllipseBatch
+	struct EllipseDimension
 	{
-		friend class EllipseReference;
-		using Index = GLuint;
-
-		graphics::VertexArray vao;
-		graphics::PersistentEBO<6> ebo;
-			
-	public:
-		struct EllipseDimension
-		{
-			float rx = 0.0f, ry = 0.0f, border = 0.0f;
-			float fill_exp = 0.0f, border_exp = 0.0f;
-		};
-
-		struct ColorGradient {
-			glm::vec4 fill_inner = glm::vec4(1.0f);
-			glm::vec4 fill_outer = glm::vec4(1.0f);
-			glm::vec4 border_inner = glm::vec4(1.0f);
-			glm::vec4 border_outer = glm::vec4(1.0f);
-		};
-
-	private:
-		enum
-		{
-			DIMENSION,
-			COLOR,
-			TRANSFORM
-		};
-		graphics::LazyPersistentGPUBufferBlock<EllipseDimension, ColorGradient, glm::mat3> ssbo_block;
-
-		GLuint projection_location;
-
-	public:
-		EllipseBatch();
-		EllipseBatch(const EllipseBatch&) = delete;
-		EllipseBatch(EllipseBatch&&) = delete;
-
-		void render() const;
-
-		glm::mat3 projection = 1.0f;
-
-	private:
-		SoftIDGenerator<Index> id_generator;
-		static const Index NULL_ID = Index(-1);
-		static void assert_valid_id(Index id);
-		Index generate_id();
-		void erase_id(Index id);
+		float rx = 0.0f, ry = 0.0f, border = 0.0f;
+		float fill_exp = 0.0f, border_exp = 0.0f;
 	};
 
-	class EllipseReference
+	struct EllipseColorGradient {
+		glm::vec4 fill_inner = glm::vec4(1.0f);
+		glm::vec4 fill_outer = glm::vec4(1.0f);
+		glm::vec4 border_inner = glm::vec4(1.0f);
+		glm::vec4 border_outer = glm::vec4(1.0f);
+	};
+
+	class EllipseReference;
+
+	namespace internal
 	{
-		friend class EllipseBatch;
-		EllipseBatch* batch = nullptr;
-		EllipseBatch::Index id = EllipseBatch::NULL_ID;
+		class EllipseBatch : public oly::internal::Issuer<EllipseBatch>
+		{
+			friend class EllipseReference;
+			using Index = GLuint;
+
+			graphics::VertexArray vao;
+			graphics::PersistentEBO<6> ebo;
+			
+			enum
+			{
+				DIMENSION,
+				COLOR,
+				TRANSFORM
+			};
+			graphics::LazyPersistentGPUBufferBlock<EllipseDimension, EllipseColorGradient, glm::mat3> ssbo_block;
+
+			GLuint projection_location;
+
+		public:
+			EllipseBatch();
+			EllipseBatch(const EllipseBatch&) = delete;
+			EllipseBatch(EllipseBatch&&) = delete;
+
+			void render() const;
+
+			glm::mat3 projection = 1.0f;
+
+		private:
+			SoftIDGenerator<Index> id_generator;
+			static const Index NULL_ID = Index(-1);
+			static void assert_valid_id(Index id);
+			Index generate_id();
+			void erase_id(Index id);
+		};
+	}
+
+	using EllipseBatch = PublicIssuer<internal::EllipseBatch>;
+
+	class EllipseReference : public PublicIssuerHandle<internal::EllipseBatch>
+	{
+		using Super = PublicIssuerHandle<internal::EllipseBatch>;
+		internal::EllipseBatch::Index id = internal::EllipseBatch::NULL_ID;
 
 	public:
 		EllipseReference(Unbatched = UNBATCHED);
@@ -78,14 +81,14 @@ namespace oly::rendering
 		EllipseReference& operator=(EllipseReference&&) noexcept;
 		~EllipseReference();
 
-		EllipseBatch* get_batch() const { return batch; }
+		auto get_batch() const { return lock(); }
 		void set_batch(Unbatched);
 		void set_batch(EllipseBatch& batch);
 
-		EllipseBatch::EllipseDimension get_dimension() const;
-		EllipseBatch::EllipseDimension& set_dimension();
-		const EllipseBatch::ColorGradient& get_color() const;
-		EllipseBatch::ColorGradient& set_color();
+		EllipseDimension get_dimension() const;
+		EllipseDimension& set_dimension();
+		const EllipseColorGradient& get_color() const;
+		EllipseColorGradient& set_color();
 		const glm::mat3& get_transform() const;
 		glm::mat3& set_transform();
 

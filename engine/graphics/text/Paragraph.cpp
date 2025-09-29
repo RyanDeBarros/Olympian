@@ -120,7 +120,7 @@ namespace oly::rendering
 			glyph.set_batch(UNBATCHED);
 	}
 
-	void internal::GlyphGroup::set_batch(SpriteBatch& batch)
+	void internal::GlyphGroup::set_batch(rendering::SpriteBatch& batch)
 	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(batch);

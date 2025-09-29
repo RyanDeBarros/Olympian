@@ -30,7 +30,7 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 
 struct BKG
 {
-	oly::rendering::Polygon bkg_rect;
+	oly::rendering::PolygonRef bkg_rect;
 
 	BKG()
 		: bkg_rect(oly::reg::load_polygon(oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
@@ -61,7 +61,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
 	{
-		bkg.bkg_rect.set_batch(batch);
+		bkg.bkg_rect->set_batch(batch);
 
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
@@ -85,8 +85,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.bkg_rect.draw();
-		batch.render();
+		bkg.bkg_rect->draw();
+		batch->render();
 
 		sprite_match.draw();
 		for (const auto& sprite : flag_tesselation)

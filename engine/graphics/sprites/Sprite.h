@@ -13,6 +13,7 @@ namespace oly::rendering
 	public:
 		StaticSprite() = default;
 		StaticSprite(Unbatched) : ref(UNBATCHED) {}
+		StaticSprite(internal::SpriteBatch& batch) : ref(batch) {}
 		StaticSprite(SpriteBatch& batch) : ref(batch) {}
 		StaticSprite(const StaticSprite&) = default;
 		StaticSprite(StaticSprite&&) noexcept = default;
@@ -57,6 +58,7 @@ namespace oly::rendering
 
 		Sprite() = default;
 		Sprite(Unbatched) : ref(UNBATCHED) {}
+		Sprite(internal::SpriteBatch& batch) : ref(batch) {}
 		Sprite(SpriteBatch& batch) : ref(batch) {}
 		Sprite(const Sprite&) = default;
 		Sprite(Sprite&&) noexcept = default;

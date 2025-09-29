@@ -8,7 +8,7 @@
 
 namespace oly::rendering
 {
-	PolygonBatch::PolygonBatch()
+	internal::PolygonBatch::PolygonBatch()
 		: ebo(vao), vbo_block(vao),
 		vertex_free_space({ 0, nmax<Index>() })
 	{
@@ -20,7 +20,7 @@ namespace oly::rendering
 		vbo_block.setup();
 	}
 
-	void PolygonBatch::render() const
+	void internal::PolygonBatch::render() const
 	{
 		if (ebo.empty())
 			return;
@@ -37,14 +37,14 @@ namespace oly::rendering
 		transform_ssbo.post_draw();
 	}
 
-	void PolygonBatch::set_primitive_points(Range<Index> range, const glm::vec2* points, Index count)
+	void internal::PolygonBatch::set_primitive_points(Range<Index> range, const glm::vec2* points, Index count)
 	{
 		count = std::min(range.length, count);
 		for (Index v = 0; v < count; ++v)
 			vbo_block.set<POSITION>(range.initial + v) = points[v];
 	}
 
-	void PolygonBatch::set_primitive_colors(Range<Index> range, const glm::vec4* colors, Index count)
+	void internal::PolygonBatch::set_primitive_colors(Range<Index> range, const glm::vec4* colors, Index count)
 	{
 		count = std::min(range.length, count);
 		if (count == 1)
@@ -59,19 +59,19 @@ namespace oly::rendering
 		}
 	}
 
-	void PolygonBatch::set_polygon_transform(Index id, const glm::mat3& transform)
+	void internal::PolygonBatch::set_polygon_transform(Index id, const glm::mat3& transform)
 	{
 		assert_valid_id(id);
 		transform_ssbo.set(id) = transform;
 	}
 
-	const glm::mat3& PolygonBatch::get_polygon_transform(Index id)
+	const glm::mat3& internal::PolygonBatch::get_polygon_transform(Index id)
 	{
 		assert_valid_id(id);
 		return transform_ssbo.get(id);
 	}
 
-	PolygonBatch::Index PolygonBatch::generate_id(Index vertices)
+	internal::PolygonBatch::Index internal::PolygonBatch::generate_id(Index vertices)
 	{
 		Index id = id_generator.gen();
 		if (id == NULL_ID) [[unlikely]]
@@ -86,7 +86,7 @@ namespace oly::rendering
 		return id;
 	}
 
-	void PolygonBatch::terminate_id(Index id)
+	void internal::PolygonBatch::terminate_id(Index id)
 	{
 		if (is_valid_id(id))
 		{
@@ -99,7 +99,7 @@ namespace oly::rendering
 		}
 	}
 
-	bool PolygonBatch::resize_range(Index& id, Index vertices)
+	bool internal::PolygonBatch::resize_range(Index& id, Index vertices)
 	{
 		if (is_valid_id(id))
 		{
@@ -111,18 +111,18 @@ namespace oly::rendering
 		return true;
 	}
 
-	Range<PolygonBatch::Index> PolygonBatch::get_vertex_range(Index id) const
+	Range<internal::PolygonBatch::Index> internal::PolygonBatch::get_vertex_range(Index id) const
 	{
 		assert_valid_id(id);
 		return polygon_indexer.find(id)->second;
 	}
 
-	bool PolygonBatch::is_valid_id(Index id) const
+	bool internal::PolygonBatch::is_valid_id(Index id) const
 	{
 		return id != NULL_ID && polygon_indexer.count(id);
 	}
 
-	void PolygonBatch::assert_valid_id(Index id) const
+	void internal::PolygonBatch::assert_valid_id(Index id) const
 	{
 		if (!is_valid_id(id))
 			throw Error(ErrorCode::INVALID_ID);
@@ -132,26 +132,35 @@ namespace oly::rendering
 	{
 	}
 
-	internal::PolygonReference::PolygonReference(PolygonBatch& batch)
+	internal::PolygonReference::PolygonReference(rendering::PolygonBatch& batch)
 	{
 		set_batch(batch);
 	}
 
 	internal::PolygonReference::PolygonReference(const PolygonReference& other)
+		: Super(other)
 	{
-		if (other.batch)
-			set_batch(*other.batch);
+		if (auto batch = lock())
+		{
+			if (batch->is_valid_id(other.id))
+			{
+				const GLuint num_vertices = batch->get_vertex_range(other.id).length;
+				const glm::mat3 transform = batch->get_polygon_transform(other.id);
+				id = batch->generate_id(num_vertices);
+				batch->set_polygon_transform(id, transform);
+			}
+		}
 	}
 
 	internal::PolygonReference::PolygonReference(PolygonReference&& other) noexcept
-		: batch(other.batch), id(other.id)
+		: Super(std::move(other)), id(other.id)
 	{
 		other.id = PolygonBatch::NULL_ID;
 	}
 
 	internal::PolygonReference::~PolygonReference()
 	{
-		if (batch)
+		if (auto batch = lock())
 			batch->terminate_id(id);
 	}
 
@@ -166,9 +175,9 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch)
+			if (auto batch = lock())
 				batch->terminate_id(id);
-			batch = other.batch;
+			Super::operator=(std::move(other));
 			id = other.id;
 			other.id = PolygonBatch::NULL_ID;
 		}
@@ -177,40 +186,39 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_batch(Unbatched)
 	{
-		if (batch)
-		{
+		if (auto batch = lock())
 			batch->terminate_id(id);
-			id = PolygonBatch::NULL_ID;
-			batch = nullptr;
-		}
+		id = PolygonBatch::NULL_ID;
+		reset();
 	}
 
-	void internal::PolygonReference::set_batch(PolygonBatch& batch)
+	void internal::PolygonReference::set_batch(rendering::PolygonBatch& new_batch)
 	{
-		if (this->batch == &batch)
-			return;
-
-		if (this->batch && this->batch->is_valid_id(id))
+		if (auto batch = lock())
 		{
-			const GLuint num_vertices = this->batch->get_vertex_range(id).length;
-			const glm::mat3 transform = this->batch->get_polygon_transform(id);
-			this->batch->terminate_id(id);
-			this->batch = &batch;
-			id = this->batch->generate_id(num_vertices);
-			this->batch->set_polygon_transform(id, transform);
+			if (batch.get() == new_batch.address())
+				return;
+
+			if (batch->is_valid_id(id))
+			{
+				const GLuint num_vertices = batch->get_vertex_range(id).length;
+				const glm::mat3 transform = batch->get_polygon_transform(id);
+				batch->terminate_id(id);
+				reset(*new_batch);
+				batch = lock();
+				id = batch->generate_id(num_vertices);
+				batch->set_polygon_transform(id, transform);
+			}
+			else
+				reset(*new_batch);
 		}
 		else
-		{
-			if (this->batch)
-				this->batch->terminate_id(id);
-			id = PolygonBatch::NULL_ID;
-			this->batch = &batch;
-		}
+			reset(*new_batch);
 	}
 
 	bool internal::PolygonReference::resize_range(PolygonBatch::Index vertices) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			const glm::mat3 transform = batch->is_valid_id(id) ? batch->get_polygon_transform(id) : 1.0f;
 			const bool resized = batch->resize_range(id, vertices);
@@ -222,9 +230,9 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	Range<PolygonBatch::Index> internal::PolygonReference::get_vertex_range() const
+	Range<internal::PolygonBatch::Index> internal::PolygonReference::get_vertex_range() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_vertex_range(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -232,7 +240,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, size_t count) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(vertex_range, points, (PolygonBatch::Index)count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -240,7 +248,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, size_t count) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(vertex_range, colors, (PolygonBatch::Index)count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -248,7 +256,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(batch->get_vertex_range(id), points, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -256,7 +264,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(batch->get_vertex_range(id), colors, count);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -264,7 +272,7 @@ namespace oly::rendering
 
 	void internal::PolygonReference::set_polygon_transform(const glm::mat3& transform) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			batch->set_polygon_transform(id, transform);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -272,7 +280,7 @@ namespace oly::rendering
 
 	GLuint& internal::PolygonReference::draw_index() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			batch->assert_valid_id(id);
 			return batch->ebo.draw_primitive()[0];
@@ -286,7 +294,7 @@ namespace oly::rendering
 	{
 	}
 
-	internal::PolygonSubmitter::PolygonSubmitter(PolygonBatch& batch)
+	internal::PolygonSubmitter::PolygonSubmitter(rendering::PolygonBatch& batch)
 		: ref(batch)
 	{
 	}

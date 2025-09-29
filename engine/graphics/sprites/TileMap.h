@@ -6,10 +6,10 @@
 
 namespace oly::rendering
 {
-	struct TileMapLayer : public oly::internal::Issuer<SpriteBatch>::Handle
+	struct TileMapLayer : public PublicIssuerHandle<internal::SpriteBatch>
 	{
 	private:
-		using Super = oly::internal::Issuer<SpriteBatch>::Handle;
+		using Super = PublicIssuerHandle<internal::SpriteBatch>;
 
 	public:
 		TileSetRef tileset;

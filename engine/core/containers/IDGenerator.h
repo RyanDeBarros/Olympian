@@ -40,7 +40,6 @@ namespace oly
 
 	namespace internal
 	{
-		// StrictIDGenerator must be allocated on heap.
 		template<std::unsigned_integral T>
 		class StrictIDGenerator : public Issuer<StrictIDGenerator<T>>
 		{
@@ -163,22 +162,5 @@ namespace oly
 	}
 
 	template<std::unsigned_integral T>
-	class StrictIDGenerator
-	{
-		using Generator = internal::StrictIDGenerator<T>;
-		std::shared_ptr<Generator> generator;
-
-	public:
-		using ID = Generator::ID;
-
-		StrictIDGenerator(T initial = T(0), T max = nmax<T>())
-		{
-			generator = std::make_shared<Generator>(initial, max);
-		}
-
-		StrictIDGenerator(const StrictIDGenerator&) = delete;
-		StrictIDGenerator(StrictIDGenerator&&) = default;
-
-		ID generate() { return generator->generate(); }
-	};
+	using StrictIDGenerator = PublicIssuer<internal::StrictIDGenerator<T>>;
 }

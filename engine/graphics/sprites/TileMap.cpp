@@ -8,7 +8,7 @@
 namespace oly::rendering
 {
 	TileMapLayer::TileMapLayer()
-		: Super(context::sprite_batch().weak_from_this())
+		: Super(context::sprite_batch()->weak_from_this())
 	{
 	}
 
@@ -17,7 +17,7 @@ namespace oly::rendering
 	}
 
 	TileMapLayer::TileMapLayer(SpriteBatch& batch)
-		: Super(batch.weak_from_this())
+		: Super(batch->weak_from_this())
 	{
 	}
 
@@ -36,7 +36,7 @@ namespace oly::rendering
 
 	void TileMapLayer::set_batch(SpriteBatch& batch)
 	{
-		reset(batch);
+		reset(*batch);
 		for (auto& [_, sprite] : sprite_map)
 			sprite.set_batch(batch);
 	}

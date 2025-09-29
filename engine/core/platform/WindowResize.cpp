@@ -17,7 +17,7 @@ namespace oly::platform
 	{
 		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
 		projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
-		context::sprite_batch().projection = projection;
+		context::sprite_batch()->projection = projection;
 	}
 
 	void WRViewport::initialize_viewport()

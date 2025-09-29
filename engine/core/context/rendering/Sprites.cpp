@@ -1,19 +1,18 @@
 #include "Sprites.h"
 
 #include "core/context/rendering/Rendering.h"
-#include "graphics/sprites/Sprite.h"
 
 namespace oly::context
 {
 	namespace internal
 	{
-		std::shared_ptr<rendering::SpriteBatch> sprite_batch;
+		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
 		bool sprite_batch_rendering = false;
 	}
 
 	void internal::init_sprites(const TOMLNode& node)
 	{
-		internal::sprite_batch = rendering::SpriteBatch::instantiate();
+		internal::sprite_batch = std::make_unique<rendering::SpriteBatch>();
 	}
 
 	void internal::terminate_sprites()
@@ -38,7 +37,7 @@ namespace oly::context
 
 	void render_sprites()
 	{
-		internal::sprite_batch->render();
+		(*internal::sprite_batch)->render();
 		internal::set_sprite_batch_rendering(false);
 	}
 }

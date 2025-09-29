@@ -198,7 +198,7 @@ namespace oly::rendering
 			GlyphGroup(TextElement&& element);
 
 			void set_batch(Unbatched);
-			void set_batch(SpriteBatch& batch);
+			void set_batch(rendering::SpriteBatch& batch);
 
 			void draw() const;
 

@@ -20,7 +20,7 @@ namespace oly::rendering
 		ArrowExtension(Unbatched = UNBATCHED);
 		ArrowExtension(PolygonBatch& batch);
 
-		PolygonBatch* get_batch() const { return body.get_batch(); }
+		auto get_batch() const { return body.get_batch(); }
 		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
 
@@ -76,7 +76,7 @@ namespace oly::rendering
 		StaticArrowExtension(Unbatched = UNBATCHED);
 		StaticArrowExtension(PolygonBatch& batch);
 
-		PolygonBatch* get_batch() const { return body.get_batch(); }
+		auto get_batch() const { return body.get_batch(); }
 		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
 

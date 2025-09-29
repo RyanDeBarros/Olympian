@@ -13,21 +13,21 @@ namespace oly::rendering
 			batch->update_texture_handle(texture);
 	}
 
-	const SpriteBatch::QuadInfo& SpriteBatch::get_quad_info(GLuint vb_pos) const
+	const internal::SpriteBatch::QuadInfo& internal::SpriteBatch::get_quad_info(GLuint vb_pos) const
 	{
 		return quad_ssbo_block.get<INFO>(vb_pos);
 	}
 
-	SpriteBatch::QuadInfo& SpriteBatch::set_quad_info(GLuint vb_pos)
+	internal::SpriteBatch::QuadInfo& internal::SpriteBatch::set_quad_info(GLuint vb_pos)
 	{
 		return quad_ssbo_block.set<INFO>(vb_pos);
 	}
 
-	SpriteBatch::SpriteBatch(UBOCapacity capacity)
+	internal::SpriteBatch::SpriteBatch(UBOCapacity capacity)
 		: ebo(vao), shader(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims())), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)),
 		tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect)), ubo(capacity)
 	{
-		internal::SpriteBatchRegistry::instance().batches.insert(this);
+		SpriteBatchRegistry::instance().batches.insert(this);
 
 		shader_locations.projection = glGetUniformLocation(shader, "uProjection");
 		shader_locations.modulation = glGetUniformLocation(shader, "uGlobalModulation");
@@ -38,12 +38,12 @@ namespace oly::rendering
 		ubo.anim.send<graphics::AnimFrameFormat>(0, {});
 	}
 
-	SpriteBatch::~SpriteBatch()
+	internal::SpriteBatch::~SpriteBatch()
 	{
-		internal::SpriteBatchRegistry::instance().batches.erase(this);
+		SpriteBatchRegistry::instance().batches.erase(this);
 	}
 
-	void SpriteBatch::render() const
+	void internal::SpriteBatch::render() const
 	{
 		if (ebo.empty())
 			return;
@@ -67,13 +67,13 @@ namespace oly::rendering
 		quad_ssbo_block.post_draw_all();
 	}
 
-	void SpriteBatch::assert_valid_id(GLuint id)
+	void internal::SpriteBatch::assert_valid_id(GLuint id)
 	{
 		if (id == NULL_ID) [[unlikely]]
 			throw Error(ErrorCode::INVALID_ID);
 	}
 
-	GLuint SpriteBatch::gen_sprite_id()
+	GLuint internal::SpriteBatch::gen_sprite_id()
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID)
@@ -84,7 +84,7 @@ namespace oly::rendering
 		return id;
 	}
 
-	void SpriteBatch::erase_sprite_id(GLuint id)
+	void internal::SpriteBatch::erase_sprite_id(GLuint id)
 	{
 		const auto decrement_texture = [this](GLushort slot) {
 			if (auto texture = quad_info_store.textures.decrement_usage(slot))
@@ -112,7 +112,7 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+	void internal::SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
@@ -124,34 +124,34 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_tex_coords(GLuint vb_pos, math::UVRect uvs)
+	void internal::SpriteBatch::set_tex_coords(GLuint vb_pos, math::UVRect uvs)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_coord_slot, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	void SpriteBatch::set_modulation(GLuint vb_pos, glm::vec4 modulation)
+	void internal::SpriteBatch::set_modulation(GLuint vb_pos, glm::vec4 modulation)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		if (quad_info_store.modulations.set_object(ubo.modulation, quad_ssbo_block.buf.at<INFO>(vb_pos).color_slot, modulation))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	void SpriteBatch::set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim)
+	void internal::SpriteBatch::set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		if (quad_info_store.anims.set_object(ubo.anim, quad_ssbo_block.buf.at<INFO>(vb_pos).frame_slot, anim))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	void SpriteBatch::set_text_glyph(GLuint vb_pos, bool is_text_glyph)
+	void internal::SpriteBatch::set_text_glyph(GLuint vb_pos, bool is_text_glyph)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		set_quad_info(vb_pos).is_text_glyph = is_text_glyph;
 	}
 
-	void SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+	void internal::SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		auto& mod_tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_slot;
@@ -163,14 +163,14 @@ namespace oly::rendering
 		}
 	}
 
-	void SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs)
+	void internal::SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		if (quad_info_store.tex_coords.set_object(tex_coords_ssbo, quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_coord_slot, uvs))
 			quad_ssbo_block.flag<INFO>(vb_pos);
 	}
 
-	graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
+	graphics::BindlessTextureRef internal::SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).tex_slot;
@@ -181,34 +181,34 @@ namespace oly::rendering
 		return tex.texture;
 	}
 
-	math::UVRect SpriteBatch::get_tex_coords(GLuint vb_pos) const
+	math::UVRect internal::SpriteBatch::get_tex_coords(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).tex_coord_slot;
 		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::UVRect{};
 	}
 
-	glm::vec4 SpriteBatch::get_modulation(GLuint vb_pos) const
+	glm::vec4 internal::SpriteBatch::get_modulation(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).color_slot;
 		return slot != 0 ? quad_info_store.modulations.get_object(slot) : glm::vec4(1.0f);
 	}
 
-	graphics::AnimFrameFormat SpriteBatch::get_frame_format(GLuint vb_pos) const
+	graphics::AnimFrameFormat internal::SpriteBatch::get_frame_format(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).frame_slot;
 		return slot != 0 ? quad_info_store.anims.get_object(slot) : graphics::AnimFrameFormat{};
 	}
 
-	bool SpriteBatch::is_text_glyph(GLuint vb_pos) const
+	bool internal::SpriteBatch::is_text_glyph(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		return get_quad_info(vb_pos).is_text_glyph;
 	}
 
-	graphics::BindlessTextureRef SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const
+	graphics::BindlessTextureRef internal::SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).mod_tex_slot;
@@ -219,14 +219,14 @@ namespace oly::rendering
 		return tex.texture;
 	}
 
-	math::UVRect SpriteBatch::get_mod_tex_coords(GLuint vb_pos) const
+	math::UVRect internal::SpriteBatch::get_mod_tex_coords(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).mod_tex_coord_slot;
 		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::UVRect{};
 	}
 
-	void SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
+	void internal::SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		auto iter = quad_info_store.dimensionless_texture_slot_map.find(texture);
 		if (iter != quad_info_store.dimensionless_texture_slot_map.end())
@@ -327,7 +327,7 @@ namespace oly::rendering
 	}
 
 	internal::SpriteReference::SpriteReference()
-		: Super(context::sprite_batch().weak_from_this())
+		: Super(context::sprite_batch()->weak_from_this())
 	{
 		if (auto batch = lock())
 		{
@@ -343,11 +343,15 @@ namespace oly::rendering
 	internal::SpriteReference::SpriteReference(SpriteBatch& batch)
 		: Super(batch.weak_from_this())
 	{
-		if (auto batch = lock())
-		{
-			id = batch->gen_sprite_id();
-			set_attributes(*this, Attributes{});
-		}
+		id = batch.gen_sprite_id();
+		set_attributes(*this, Attributes{});
+	}
+
+	internal::SpriteReference::SpriteReference(rendering::SpriteBatch& batch)
+		: Super(batch->weak_from_this())
+	{
+		id = batch->gen_sprite_id();
+		set_attributes(*this, Attributes{});
 	}
 
 	internal::SpriteReference::SpriteReference(const SpriteReference& other)
@@ -398,36 +402,35 @@ namespace oly::rendering
 	bool internal::SpriteReference::is_in_context() const
 	{
 		if (auto batch = lock())
-			return batch.get() == &context::sprite_batch();
+			return batch.get() == context::sprite_batch().address();
 		return false;
 	}
 
 	void internal::SpriteReference::set_batch(Unbatched)
 	{
 		if (auto batch = lock())
-		{
 			batch->erase_sprite_id(id);
-			reset();
-		}
+		id = SpriteBatch::NULL_ID;
+		reset();
 	}
 
-	void internal::SpriteReference::set_batch(SpriteBatch& new_batch)
+	void internal::SpriteReference::set_batch(rendering::SpriteBatch& new_batch)
 	{
 		if (auto batch = lock())
 		{
-			if (batch.get() == &new_batch)
+			if (batch.get() == new_batch.address())
 				return;
 
 			const Attributes attr = id != SpriteBatch::NULL_ID ? get_attributes(*this) : Attributes{};
 			batch->erase_sprite_id(id);
-			reset(new_batch);
+			reset(*new_batch);
 			batch = lock();
 			id = batch->gen_sprite_id();
 			set_attributes(*this, attr);
 		}
 		else
 		{
-			reset(new_batch);
+			reset(*new_batch);
 			batch = lock();
 			id = batch->gen_sprite_id();
 			set_attributes(*this, Attributes{});

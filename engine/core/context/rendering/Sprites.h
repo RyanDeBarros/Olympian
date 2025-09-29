@@ -1,11 +1,7 @@
 #pragma once
 
 #include "registries/Loader.h"
-
-namespace oly::rendering
-{
-	class SpriteBatch;
-}
+#include "graphics/sprites/Sprite.h"
 
 namespace oly::context
 {

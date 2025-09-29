@@ -11,11 +11,9 @@
 
 namespace oly::rendering
 {
-	class SpriteBatch;
-
 	namespace internal
 	{
-		class SpriteReference;
+		class SpriteBatch;
 
 		class SpriteBatchRegistry
 		{
@@ -31,165 +29,169 @@ namespace oly::rendering
 
 			static SpriteBatchRegistry& instance() { static SpriteBatchRegistry reg; return reg; }
 		};
-	}
 
-	// TODO v5 make EllipseBatch and PolygonBatch issuers as well.
-	class SpriteBatch : public oly::internal::Issuer<SpriteBatch>
-	{
-		friend class internal::SpriteReference;
+		class SpriteReference;
 
-		graphics::VertexArray vao;
-		graphics::PersistentEBO<6> ebo;
-		GLuint shader;
-
-		struct TexData
+		class SpriteBatch : public oly::internal::Issuer<SpriteBatch>
 		{
-			GLuint64 handle = 0;
-			glm::vec2 dimensions = {};
-		};
+			friend class SpriteReference;
 
-		graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_data_ssbo;
+			graphics::VertexArray vao;
+			graphics::PersistentEBO<6> ebo;
+			GLuint shader;
 
-		struct QuadInfo
-		{
-			GLushort tex_slot = 0;
-			GLushort tex_coord_slot = 0;
-			GLushort color_slot = 0;
-			GLushort frame_slot = 0;
-			GLushort is_text_glyph = 0;
-			GLushort mod_tex_slot = 0;
-			GLushort mod_tex_coord_slot = 0;
-		};
+			struct
+			{
+				GLuint projection, modulation, time;
+			} shader_locations;
 
-		enum
-		{
-			INFO,
-			TRANSFORM
-		};
-		graphics::LazyPersistentGPUBufferBlock<QuadInfo, glm::mat3> quad_ssbo_block;
+			struct TexData
+			{
+				GLuint64 handle = 0;
+				glm::vec2 dimensions = {};
+			};
 
-		const QuadInfo& get_quad_info(GLuint vb_pos) const;
-		QuadInfo& set_quad_info(GLuint vb_pos);
+			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_data_ssbo;
 
-		graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_coords_ssbo;
+			struct QuadInfo
+			{
+				GLushort tex_slot = 0;
+				GLushort tex_coord_slot = 0;
+				GLushort color_slot = 0;
+				GLushort frame_slot = 0;
+				GLushort is_text_glyph = 0;
+				GLushort mod_tex_slot = 0;
+				GLushort mod_tex_coord_slot = 0;
+			};
 
-		struct
-		{
-			GLuint projection, modulation, time;
-		} shader_locations;
+			enum
+			{
+				INFO,
+				TRANSFORM
+			};
+			graphics::LazyPersistentGPUBufferBlock<QuadInfo, glm::mat3> quad_ssbo_block;
 
-		struct AnimHash
-		{
-			size_t operator()(const graphics::AnimFrameFormat& anim) const {
-				return std::hash<GLuint>{}(anim.starting_frame) ^ (std::hash<GLuint>{}(anim.num_frames) << 1)
-					^ (std::hash<float>{}(anim.starting_time) << 2) ^ (std::hash<float>{}(anim.delay_seconds) << 3);
-			}
-		};
+			const QuadInfo& get_quad_info(GLuint vb_pos) const;
+			QuadInfo& set_quad_info(GLuint vb_pos);
 
-	public:
-		class UBOCapacity
-		{
-			static const GLuint max_modulations = 1000; // guaranteed 16KB / 16B = #1000
-			static const GLuint max_anims = 1000; // guaranteed 16KB / 16B = #1000
+			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_coords_ssbo;
 
-			GLushort _modulations;
-			GLushort _anims;
+			struct AnimHash
+			{
+				size_t operator()(const graphics::AnimFrameFormat& anim) const {
+					return std::hash<GLuint>{}(anim.starting_frame) ^ (std::hash<GLuint>{}(anim.num_frames) << 1)
+						^ (std::hash<float>{}(anim.starting_time) << 2) ^ (std::hash<float>{}(anim.delay_seconds) << 3);
+				}
+			};
 
 		public:
-			UBOCapacity(GLushort modulations = max_modulations, GLushort anims = max_anims)
-				: _modulations(glm::min(modulations, (GLushort)max_modulations)), _anims(glm::min(anims, (GLushort)max_anims))
+			class UBOCapacity
 			{
-			}
+				static const GLuint max_modulations = 1000; // guaranteed 16KB / 16B = #1000
+				static const GLuint max_anims = 1000; // guaranteed 16KB / 16B = #1000
 
-			GLushort modulations() const { return _modulations; }
-			GLushort anims() const { return _anims; }
+				GLushort _modulations;
+				GLushort _anims;
+
+			public:
+				UBOCapacity(GLushort modulations = max_modulations, GLushort anims = max_anims)
+					: _modulations(glm::min(modulations, (GLushort)max_modulations)), _anims(glm::min(anims, (GLushort)max_anims))
+				{
+				}
+
+				GLushort modulations() const { return _modulations; }
+				GLushort anims() const { return _anims; }
+			};
+
+		private:
+			struct UBO
+			{
+				graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
+
+				UBO(UBOCapacity capacity)
+					: modulation(capacity.modulations() * sizeof(glm::vec4), sizeof(glm::vec4)),
+					anim(capacity.anims() * sizeof(graphics::AnimFrameFormat), sizeof(graphics::AnimFrameFormat))
+				{
+				}
+			} ubo;
+
+		public:
+			glm::mat3 projection = 1.0f;
+			glm::vec4 global_modulation = glm::vec4(1.0f);
+
+			SpriteBatch(UBOCapacity = {});
+			SpriteBatch(const SpriteBatch&) = delete;
+			SpriteBatch(SpriteBatch&&) = delete;
+			~SpriteBatch();
+
+			void render() const;
+
+		private:
+			// TODO v5 use Index typedef for GLuint like with ellipse/polygon batches.
+			SoftIDGenerator<GLuint> id_generator;
+			static const GLuint NULL_ID = GLuint(-1);
+			static void assert_valid_id(GLuint id);
+			GLuint gen_sprite_id();
+			void erase_sprite_id(GLuint id);
+
+			struct QuadInfoStore
+			{
+				struct SizedTexture
+				{
+					graphics::BindlessTextureRef texture;
+					glm::vec2 dimensions = {};
+
+					bool operator==(const SizedTexture& t) const = default;
+				};
+
+				struct SizedTextureHash
+				{
+					size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
+				};
+
+				graphics::UsageSlotTracker<SizedTexture, GLushort, SizedTextureHash> textures;
+				graphics::UsageSlotTracker<math::UVRect, GLushort> tex_coords;
+				graphics::UsageSlotTracker<glm::vec4, GLushort> modulations;
+				graphics::UsageSlotTracker<graphics::AnimFrameFormat, GLushort, AnimHash> anims;
+
+				std::unordered_map<graphics::BindlessTextureRef, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
+			} quad_info_store;
+
+			void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+			void set_tex_coords(GLuint vb_pos, math::UVRect uvs);
+			void set_modulation(GLuint vb_pos, glm::vec4 modulation);
+			void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
+			void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
+			void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+			void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
+
+			graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+			math::UVRect get_tex_coords(GLuint vb_pos) const;
+			glm::vec4 get_modulation(GLuint vb_pos) const;
+			graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
+			bool is_text_glyph(GLuint vb_pos) const;
+			graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+			math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
+
+		public:
+			void update_texture_handle(const graphics::BindlessTextureRef& texture);
 		};
+	}
 
-	private:
-		struct UBO
-		{
-			graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
-
-			UBO(UBOCapacity capacity)
-				: modulation(capacity.modulations() * sizeof(glm::vec4), sizeof(glm::vec4)),
-				anim(capacity.anims() * sizeof(graphics::AnimFrameFormat), sizeof(graphics::AnimFrameFormat))
-			{
-			}
-		} ubo;
-
-	public:
-		glm::mat3 projection = 1.0f;
-		glm::vec4 global_modulation = glm::vec4(1.0f);
-
-		SpriteBatch(UBOCapacity = {});
-		SpriteBatch(const SpriteBatch&) = delete;
-		SpriteBatch(SpriteBatch&&) = delete;
-		~SpriteBatch();
-
-		void render() const;
-
-	private:
-		// TODO v5 use Index typedef for GLuint like with ellipse/polygon batches.
-		SoftIDGenerator<GLuint> id_generator;
-		static const GLuint NULL_ID = GLuint(-1);
-		static void assert_valid_id(GLuint id);
-		GLuint gen_sprite_id();
-		void erase_sprite_id(GLuint id);
-
-		struct QuadInfoStore
-		{
-			struct SizedTexture
-			{
-				graphics::BindlessTextureRef texture;
-				glm::vec2 dimensions = {};
-
-				bool operator==(const SizedTexture& t) const = default;
-			};
-			
-			struct SizedTextureHash
-			{
-				size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
-			};
-
-			graphics::UsageSlotTracker<SizedTexture, GLushort, SizedTextureHash> textures;
-			graphics::UsageSlotTracker<math::UVRect, GLushort> tex_coords;
-			graphics::UsageSlotTracker<glm::vec4, GLushort> modulations;
-			graphics::UsageSlotTracker<graphics::AnimFrameFormat, GLushort, AnimHash> anims;
-
-			std::unordered_map<graphics::BindlessTextureRef, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
-		} quad_info_store;
-
-		void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
-		void set_tex_coords(GLuint vb_pos, math::UVRect uvs);
-		void set_modulation(GLuint vb_pos, glm::vec4 modulation);
-		void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
-		void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
-		void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
-		void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
-
-		graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
-		math::UVRect get_tex_coords(GLuint vb_pos) const;
-		glm::vec4 get_modulation(GLuint vb_pos) const;
-		graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
-		bool is_text_glyph(GLuint vb_pos) const;
-		graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
-		math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
-
-	public:
-		void update_texture_handle(const graphics::BindlessTextureRef& texture);
-	};
+	using SpriteBatch = PublicIssuer<internal::SpriteBatch>;
 
 	namespace internal
 	{
-		class SpriteReference : public oly::internal::Issuer<SpriteBatch>::Handle
+		class SpriteReference : public PublicIssuerHandle<SpriteBatch>
 		{
-			using Super = oly::internal::Issuer<SpriteBatch>::Handle;
+			using Super = PublicIssuerHandle<SpriteBatch>;
 			GLuint id = SpriteBatch::NULL_ID;
 
 		public:
 			SpriteReference();
 			SpriteReference(Unbatched);
 			SpriteReference(SpriteBatch& batch);
+			SpriteReference(rendering::SpriteBatch& batch);
 			SpriteReference(const SpriteReference&);
 			SpriteReference(SpriteReference&&) noexcept;
 			~SpriteReference();
@@ -199,7 +201,7 @@ namespace oly::rendering
 			bool is_in_context() const;
 			auto get_batch() const { return lock(); }
 			void set_batch(Unbatched);
-			void set_batch(SpriteBatch& batch);
+			void set_batch(rendering::SpriteBatch& batch);
 
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;

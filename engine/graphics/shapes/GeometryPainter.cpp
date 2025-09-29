@@ -31,30 +31,30 @@ namespace oly::rendering
 		auto viewport = context::get_wr_viewport().get_viewport();
 		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
 		glm::mat3 projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
-		painter->polygon_batch.projection = projection;
-		painter->ellipse_batch.projection = projection;
+		painter->polygon_batch->projection = projection;
+		painter->ellipse_batch->projection = projection;
 	}
 
 	void GeometryPainter::PaintSupport::pre_polygon_draw()
 	{
 		if (batch == Batch::ELLIPSE)
-			painter.ellipse_batch.render();
+			painter.ellipse_batch->render();
 		batch = Batch::POLYGON;
 	}
 
 	void GeometryPainter::PaintSupport::pre_ellipse_draw()
 	{
 		if (batch == Batch::POLYGON)
-			painter.polygon_batch.render();
+			painter.polygon_batch->render();
 		batch = Batch::ELLIPSE;
 	}
 
 	void GeometryPainter::PaintSupport::final_flush()
 	{
 		if (batch == Batch::ELLIPSE)
-			painter.ellipse_batch.render();
+			painter.ellipse_batch->render();
 		else if (batch == Batch::POLYGON)
-			painter.polygon_batch.render();
+			painter.polygon_batch->render();
 		batch = Batch::NONE;
 	}
 
