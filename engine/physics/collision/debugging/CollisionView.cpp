@@ -442,7 +442,13 @@ namespace oly::debug
 		painter.paint_fn = paint_fn();
 	}
 
-	CollisionLayer::CollisionLayer(rendering::SpriteBatch* batch)
+	CollisionLayer::CollisionLayer(rendering::Unbatched)
+		: painter(paint_fn(), rendering::UNBATCHED)
+	{
+		painter.paint_fn = paint_fn();
+	}
+
+	CollisionLayer::CollisionLayer(rendering::SpriteBatch& batch)
 		: painter(paint_fn(), batch)
 	{
 		painter.paint_fn = paint_fn();

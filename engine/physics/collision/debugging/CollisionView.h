@@ -119,15 +119,17 @@ namespace oly::debug
 
 	public:
 		CollisionLayer();
-		CollisionLayer(rendering::SpriteBatch* batch);
+		CollisionLayer(rendering::Unbatched);
+		CollisionLayer(rendering::SpriteBatch& batch);
 		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
 		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
 
-		rendering::SpriteBatch* get_batch() const { return painter.get_sprite_batch(); }
-		void set_batch(rendering::SpriteBatch* batch) { painter.set_sprite_batch(batch); }
+		auto get_batch() const { return painter.get_sprite_batch(); }
+		void set_batch(rendering::Unbatched) { painter.set_sprite_batch(rendering::UNBATCHED); }
+		void set_batch(rendering::SpriteBatch& batch) { painter.set_sprite_batch(batch); }
 
 	private:
 		rendering::GeometryPainter::PaintFunction paint_fn() const;

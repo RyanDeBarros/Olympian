@@ -65,7 +65,14 @@ namespace oly::rendering
 		setup_texture();
 	}
 
-	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, rendering::SpriteBatch* batch)
+	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, Unbatched)
+		: sprite(UNBATCHED), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
+	{
+		dimensions = context::get_platform().window().get_size();
+		setup_texture();
+	}
+
+	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, rendering::SpriteBatch& batch)
 		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
 	{
 		dimensions = context::get_platform().window().get_size();

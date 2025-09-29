@@ -34,10 +34,16 @@ namespace oly::rendering
 
 	public:
 		SpriteNonant();
-		SpriteNonant(SpriteBatch* batch);
+		SpriteNonant(Unbatched);
+		SpriteNonant(SpriteBatch& batch);
 
-		SpriteBatch* get_batch() const { return sprite(0, 0).get_batch(); }
-		void set_batch(SpriteBatch* batch);
+	private:
+		void init();
+
+	public:
+		auto get_batch() const { return sprite(0, 0).get_batch(); }
+		void set_batch(Unbatched);
+		void set_batch(SpriteBatch& batch);
 
 		void draw() const;
 

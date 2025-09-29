@@ -7,13 +7,13 @@ namespace oly::context
 {
 	namespace internal
 	{
-		std::unique_ptr<rendering::SpriteBatch> sprite_batch;
+		std::shared_ptr<rendering::SpriteBatch> sprite_batch;
 		bool sprite_batch_rendering = false;
 	}
 
 	void internal::init_sprites(const TOMLNode& node)
 	{
-		internal::sprite_batch = std::make_unique<rendering::SpriteBatch>();
+		internal::sprite_batch = rendering::SpriteBatch::instantiate();
 	}
 
 	void internal::terminate_sprites()

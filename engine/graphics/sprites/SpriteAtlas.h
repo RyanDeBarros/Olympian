@@ -11,7 +11,8 @@ namespace oly::rendering
 		graphics::AnimFrameFormat anim_format;
 
 		SpriteAtlas() = default;
-		SpriteAtlas(SpriteBatch* batch);
+		SpriteAtlas(Unbatched);
+		SpriteAtlas(SpriteBatch& batch);
 		SpriteAtlas(Sprite&& sprite);
 
 		void draw() const;

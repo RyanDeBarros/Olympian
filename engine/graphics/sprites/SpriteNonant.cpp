@@ -12,19 +12,22 @@ namespace oly::rendering
 	SpriteNonant::SpriteNonant()
 		: sprites(9, Sprite())
 	{
-		for (unsigned char x = 0; x < 3; ++x)
-			for (unsigned char y = 0; y < 3; ++y)
-			{
-				sprite(x, y).transformer.attach_parent(&transformer);
-				PivotTransformModifier2D modifier;
-				modifier.pivot.x = -0.5f * x + 1.0f;
-				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>(std::move(modifier));
-			}
+		init();
 	}
 
-	SpriteNonant::SpriteNonant(SpriteBatch* batch)
+	SpriteNonant::SpriteNonant(Unbatched)
+		: sprites(9, Sprite(UNBATCHED))
+	{
+		init();
+	}
+
+	SpriteNonant::SpriteNonant(SpriteBatch& batch)
 		: sprites(9, Sprite(batch))
+	{
+		init();
+	}
+
+	void SpriteNonant::init()
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -37,7 +40,14 @@ namespace oly::rendering
 			}
 	}
 
-	void SpriteNonant::set_batch(SpriteBatch* batch)
+	void SpriteNonant::set_batch(Unbatched)
+	{
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_batch(UNBATCHED);
+	}
+
+	void SpriteNonant::set_batch(SpriteBatch& batch)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)

@@ -114,7 +114,13 @@ namespace oly::rendering
 	{
 	}
 
-	void internal::GlyphGroup::set_batch(SpriteBatch* batch)
+	void internal::GlyphGroup::set_batch(Unbatched)
+	{
+		for (auto& glyph : glyphs)
+			glyph.set_batch(UNBATCHED);
+	}
+
+	void internal::GlyphGroup::set_batch(SpriteBatch& batch)
 	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(batch);
@@ -523,7 +529,13 @@ namespace oly::rendering
 		init(std::move(elements));
 	}
 
-	Paragraph::Paragraph(SpriteBatch* batch, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+	Paragraph::Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+		: format(format), bkg(UNBATCHED)
+	{
+		init(std::move(elements));
+	}
+
+	Paragraph::Paragraph(SpriteBatch& batch, std::vector<TextElement>&& elements, const ParagraphFormat& format)
 		: format(format), bkg(batch)
 	{
 		init(std::move(elements));
@@ -584,7 +596,14 @@ namespace oly::rendering
 			add_element(std::move(element));
 	}
 
-	void Paragraph::set_batch(SpriteBatch* batch)
+	void Paragraph::set_batch(Unbatched)
+	{
+		bkg.set_batch(UNBATCHED);
+		for (auto& glyph_group : glyph_groups)
+			glyph_group.set_batch(UNBATCHED);
+	}
+
+	void Paragraph::set_batch(SpriteBatch& batch)
 	{
 		bkg.set_batch(batch);
 		for (auto& glyph_group : glyph_groups)

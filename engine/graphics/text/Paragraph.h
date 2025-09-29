@@ -197,7 +197,8 @@ namespace oly::rendering
 		public:
 			GlyphGroup(TextElement&& element);
 
-			void set_batch(SpriteBatch* batch);
+			void set_batch(Unbatched);
+			void set_batch(SpriteBatch& batch);
 
 			void draw() const;
 
@@ -298,7 +299,8 @@ namespace oly::rendering
 		bool draw_bkg = false;
 
 		Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
-		Paragraph(SpriteBatch* batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
+		Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
+		Paragraph(SpriteBatch& batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
 		Paragraph(const Paragraph&);
 		Paragraph(Paragraph&&) noexcept;
 		Paragraph& operator=(const Paragraph&);
@@ -315,8 +317,9 @@ namespace oly::rendering
 		void init(std::vector<TextElement>&& elements);
 
 	public:
-		SpriteBatch* get_batch() const { return bkg.get_batch(); }
-		void set_batch(SpriteBatch* batch);
+		auto get_batch() const { return bkg.get_batch(); }
+		void set_batch(Unbatched);
+		void set_batch(SpriteBatch& batch);
 
 		const ParagraphFormat& get_format() const { return format; }
 		ParagraphFormatExposure set_format() { return ParagraphFormatExposure(*this); }

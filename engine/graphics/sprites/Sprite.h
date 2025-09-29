@@ -12,14 +12,16 @@ namespace oly::rendering
 
 	public:
 		StaticSprite() = default;
-		StaticSprite(SpriteBatch* batch) : ref(batch) {}
+		StaticSprite(Unbatched) : ref(UNBATCHED) {}
+		StaticSprite(SpriteBatch& batch) : ref(batch) {}
 		StaticSprite(const StaticSprite&) = default;
 		StaticSprite(StaticSprite&&) noexcept = default;
 		StaticSprite& operator=(const StaticSprite&) = default;
 		StaticSprite& operator=(StaticSprite&&) noexcept = default;
 
-		SpriteBatch* get_batch() const { return ref.get_batch(); }
-		void set_batch(SpriteBatch* batch) { ref.set_batch(batch); }
+		auto get_batch() const { return ref.get_batch(); }
+		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
 
 		void draw() const;
 
@@ -54,14 +56,16 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		Sprite() = default;
-		Sprite(SpriteBatch* batch) : ref(batch) {}
+		Sprite(Unbatched) : ref(UNBATCHED) {}
+		Sprite(SpriteBatch& batch) : ref(batch) {}
 		Sprite(const Sprite&) = default;
 		Sprite(Sprite&&) noexcept = default;
 		Sprite& operator=(const Sprite&) = default;
 		Sprite& operator=(Sprite&&) noexcept = default;
 
-		SpriteBatch* get_batch() const { return ref.get_batch(); }
-		void set_batch(SpriteBatch* batch) { ref.set_batch(batch); }
+		auto get_batch() const { return ref.get_batch(); }
+		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
 
 		void draw() const;
 
@@ -89,5 +93,6 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 	};
 
+	// TODO v5 shouldn't really use smart references for sprites, polygons, and ellipses.
 	typedef SmartReference<Sprite> SpriteRef;
 }

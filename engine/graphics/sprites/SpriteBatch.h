@@ -6,9 +6,17 @@
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
+#include "core/types/Issuer.h"
 
 namespace oly::rendering
 {
+	// TODO v5 use in ellipse/polygons - put in separate Tags.h
+	struct Unbatched
+	{
+	};
+
+	constexpr Unbatched UNBATCHED;
+
 	class SpriteBatch;
 
 	namespace internal
@@ -31,7 +39,8 @@ namespace oly::rendering
 		};
 	}
 
-	class SpriteBatch
+	// TODO v5 make EllipseBatch and PolygonBatch issuers as well.
+	class SpriteBatch : public oly::internal::Issuer<SpriteBatch>
 	{
 		friend class internal::SpriteReference;
 
@@ -178,23 +187,25 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		class SpriteReference
+		class SpriteReference : public oly::internal::Issuer<SpriteBatch>::Handle
 		{
-			SpriteBatch* batch = nullptr;
+			using Super = oly::internal::Issuer<SpriteBatch>::Handle;
 			GLuint id = SpriteBatch::NULL_ID;
 
 		public:
 			SpriteReference();
-			SpriteReference(SpriteBatch* batch);
+			SpriteReference(Unbatched);
+			SpriteReference(SpriteBatch& batch);
 			SpriteReference(const SpriteReference&);
 			SpriteReference(SpriteReference&&) noexcept;
 			~SpriteReference();
 			SpriteReference& operator=(const SpriteReference&);
 			SpriteReference& operator=(SpriteReference&&) noexcept;
 
-			bool is_in_context() const { return batch; }
-			SpriteBatch* get_batch() const { return batch; }
-			void set_batch(SpriteBatch* batch);
+			bool is_in_context() const;
+			auto get_batch() const { return lock(); }
+			void set_batch(Unbatched);
+			void set_batch(SpriteBatch& batch);
 
 			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;

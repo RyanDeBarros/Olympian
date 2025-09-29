@@ -4,7 +4,12 @@
 
 namespace oly::rendering
 {
-	TextGlyph::TextGlyph(SpriteBatch* batch)
+	TextGlyph::TextGlyph(Unbatched)
+		: ref(UNBATCHED)
+	{
+	}
+
+	TextGlyph::TextGlyph(SpriteBatch& batch)
 		: ref(batch)
 	{
 		ref.set_text_glyph(true);
@@ -19,6 +24,12 @@ namespace oly::rendering
 	TextGlyph::TextGlyph(TextGlyph&& other) noexcept
 		: ref(std::move(other.ref)), transformer(std::move(other.transformer))
 	{
+		ref.set_text_glyph(true);
+	}
+
+	void TextGlyph::set_batch(SpriteBatch& batch)
+	{
+		ref.set_batch(batch);
 		ref.set_text_glyph(true);
 	}
 

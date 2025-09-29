@@ -327,41 +327,51 @@ namespace oly::rendering
 	}
 
 	internal::SpriteReference::SpriteReference()
-		: batch(&context::sprite_batch())
+		: Super(context::sprite_batch().weak_from_this())
 	{
-		id = this->batch->gen_sprite_id();
-		set_attributes(*this, Attributes{});
+		if (auto batch = lock())
+		{
+			id = batch->gen_sprite_id();
+			set_attributes(*this, Attributes{});
+		}
 	}
 
-	internal::SpriteReference::SpriteReference(SpriteBatch* batch)
-		: batch(batch)
+	internal::SpriteReference::SpriteReference(Unbatched)
 	{
-		if (this->batch)
+	}
+
+	internal::SpriteReference::SpriteReference(SpriteBatch& batch)
+		: Super(batch.weak_from_this())
+	{
+		if (auto batch = lock())
 		{
-			id = this->batch->gen_sprite_id();
+			id = batch->gen_sprite_id();
 			set_attributes(*this, Attributes{});
 		}
 	}
 
 	internal::SpriteReference::SpriteReference(const SpriteReference& other)
-		: batch(other.batch)
+		: Super(other)
 	{
-		if (batch && other.id != SpriteBatch::NULL_ID)
+		if (other.id != SpriteBatch::NULL_ID)
 		{
-			id = batch->gen_sprite_id();
-			set_attributes(*this, get_attributes_ref(other));
+			if (auto batch = lock())
+			{
+				id = batch->gen_sprite_id();
+				set_attributes(*this, get_attributes_ref(other));
+			}
 		}
 	}
 
 	internal::SpriteReference::SpriteReference(SpriteReference&& other) noexcept
-		: batch(other.batch), id(other.id)
+		: Super(std::move(other)), id(other.id)
 	{
 		other.id = SpriteBatch::NULL_ID;
 	}
 
 	internal::SpriteReference::~SpriteReference()
 	{
-		if (batch)
+		if (auto batch = lock())
 			batch->erase_sprite_id(id);
 	}
 
@@ -376,47 +386,57 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch)
+			if (auto batch = lock())
 				batch->erase_sprite_id(id);
-			batch = other.batch;
+			Super::operator=(std::move(other));
 			id = other.id;
 			other.id = SpriteBatch::NULL_ID;
 		}
 		return *this;
 	}
 
-	void internal::SpriteReference::set_batch(SpriteBatch* batch)
+	bool internal::SpriteReference::is_in_context() const
 	{
-		if (this->batch == batch)
-			return;
+		if (auto batch = lock())
+			return batch.get() == &context::sprite_batch();
+		return false;
+	}
 
-		if (this->batch)
+	void internal::SpriteReference::set_batch(Unbatched)
+	{
+		if (auto batch = lock())
 		{
-			if (batch)
-			{
-				const Attributes attr = id != SpriteBatch::NULL_ID ? get_attributes(*this) : Attributes{};
-				this->batch->erase_sprite_id(id);
-				this->batch = batch;
-				id = this->batch->gen_sprite_id();
-				set_attributes(*this, attr);
-			}
-			else
-			{
-				this->batch->erase_sprite_id(id);
-				this->batch = batch;
-			}
+			batch->erase_sprite_id(id);
+			reset();
+		}
+	}
+
+	void internal::SpriteReference::set_batch(SpriteBatch& new_batch)
+	{
+		if (auto batch = lock())
+		{
+			if (batch.get() == &new_batch)
+				return;
+
+			const Attributes attr = id != SpriteBatch::NULL_ID ? get_attributes(*this) : Attributes{};
+			batch->erase_sprite_id(id);
+			reset(new_batch);
+			batch = lock();
+			id = batch->gen_sprite_id();
+			set_attributes(*this, attr);
 		}
 		else
 		{
-			this->batch = batch;
-			id = this->batch->gen_sprite_id();
+			reset(new_batch);
+			batch = lock();
+			id = batch->gen_sprite_id();
 			set_attributes(*this, Attributes{});
 		}
 	}
 
 	void internal::SpriteReference::set_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			SpriteBatch::assert_valid_id(id);
 			graphics::BindlessTextureRef texture = context::load_texture(texture_file, texture_index);
@@ -430,37 +450,55 @@ namespace oly::rendering
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture) const
 	{
 		SpriteBatch::assert_valid_id(id);
-		batch->set_texture(id, texture, context::get_texture_dimensions(texture));
+		if (auto batch = lock()) [[likely]]
+			batch->set_texture(id, texture, context::get_texture_dimensions(texture));
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		batch->set_texture(id, texture, dimensions);
+		if (auto batch = lock()) [[likely]]
+			batch->set_texture(id, texture, dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_tex_coords(math::UVRect rect) const
 	{
-		batch->set_tex_coords(id, rect);
+		if (auto batch = lock()) [[likely]]
+			batch->set_tex_coords(id, rect);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
 	{
-		batch->set_modulation(id, modulation);
+		if (auto batch = lock()) [[likely]]
+			batch->set_modulation(id, modulation);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_frame_format(const graphics::AnimFrameFormat& anim) const
 	{
-		batch->set_frame_format(id, anim);
+		if (auto batch = lock()) [[likely]]
+			batch->set_frame_format(id, anim);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_text_glyph(bool is_text_glyph) const
 	{
-		batch->set_text_glyph(id, is_text_glyph);
+		if (auto batch = lock()) [[likely]]
+			batch->set_text_glyph(id, is_text_glyph);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const std::string& texture_file, unsigned int texture_index) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			SpriteBatch::assert_valid_id(id);
 			auto texture = context::load_texture(texture_file, texture_index);
@@ -473,28 +511,40 @@ namespace oly::rendering
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture) const
 	{
 		SpriteBatch::assert_valid_id(id);
-		batch->set_mod_texture(id, texture, context::get_texture_dimensions(texture));
+		if (auto batch = lock()) [[likely]]
+			batch->set_mod_texture(id, texture, context::get_texture_dimensions(texture));
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
 	{
-		batch->set_mod_texture(id, texture, dimensions);
+		if (auto batch = lock()) [[likely]]
+			batch->set_mod_texture(id, texture, dimensions);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_mod_tex_coords(math::UVRect rect) const
 	{
-		batch->set_mod_tex_coords(id, rect);
+		if (auto batch = lock()) [[likely]]
+			batch->set_mod_tex_coords(id, rect);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void internal::SpriteReference::set_transform(const glm::mat3& transform) const
 	{
 		SpriteBatch::assert_valid_id(id);
-		batch->quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id) = transform;
+		if (auto batch = lock()) [[likely]]
+			batch->quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id) = transform;
+		else
+			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			glm::vec2 _;
 			return batch->get_texture(id, _);
@@ -505,7 +555,7 @@ namespace oly::rendering
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture(glm::vec2& dimensions) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_texture(id, dimensions);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -513,7 +563,7 @@ namespace oly::rendering
 
 	math::UVRect internal::SpriteReference::get_tex_coords() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_tex_coords(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -521,7 +571,7 @@ namespace oly::rendering
 
 	glm::vec4 internal::SpriteReference::get_modulation() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_modulation(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -529,7 +579,7 @@ namespace oly::rendering
 
 	graphics::AnimFrameFormat internal::SpriteReference::get_frame_format() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_frame_format(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -537,7 +587,7 @@ namespace oly::rendering
 
 	bool internal::SpriteReference::is_text_glyph() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->is_text_glyph(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -545,7 +595,7 @@ namespace oly::rendering
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			glm::vec2 _;
 			return batch->get_mod_texture(id, _);
@@ -556,7 +606,7 @@ namespace oly::rendering
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture(glm::vec2& dimensions) const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_mod_texture(id, dimensions);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -564,7 +614,7 @@ namespace oly::rendering
 
 	math::UVRect internal::SpriteReference::get_mod_tex_coords() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 			return batch->get_mod_tex_coords(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
@@ -572,7 +622,7 @@ namespace oly::rendering
 
 	glm::mat3 internal::SpriteReference::get_transform() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			SpriteBatch::assert_valid_id(id);
 			return batch->quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id);
@@ -583,7 +633,7 @@ namespace oly::rendering
 
 	void internal::SpriteReference::draw_quad() const
 	{
-		if (batch) [[likely]]
+		if (auto batch = lock()) [[likely]]
 		{
 			SpriteBatch::assert_valid_id(id);
 			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);

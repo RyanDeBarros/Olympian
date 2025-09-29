@@ -67,7 +67,8 @@ namespace oly::rendering
 		PaintFunction paint_fn = [](PaintSupport) {};
 
 		GeometryPainter(const PaintFunction& paint_fn);
-		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch* batch);
+		GeometryPainter(const PaintFunction& paint_fn, Unbatched);
+		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch& batch);
 		GeometryPainter(const GeometryPainter&);
 		GeometryPainter(GeometryPainter&&) noexcept;
 		~GeometryPainter();
@@ -83,8 +84,9 @@ namespace oly::rendering
 		void flag_dirty() const { dirty = true; }
 		void regen_to_current_resolution();
 
-		SpriteBatch* get_sprite_batch() const { return sprite.get_batch(); }
-		void set_sprite_batch(SpriteBatch* batch) { sprite.set_batch(batch); }
+		auto get_sprite_batch() const { return sprite.get_batch(); }
+		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); }
+		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); }
 
 		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
 		PolygonBatch& get_polygon_batch() { return polygon_batch; }

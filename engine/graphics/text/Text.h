@@ -14,12 +14,14 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		TextGlyph() = default;
-		TextGlyph(SpriteBatch* batch);
+		TextGlyph(Unbatched);
+		TextGlyph(SpriteBatch& batch);
 		TextGlyph(const TextGlyph&);
 		TextGlyph(TextGlyph&&) noexcept;
 
-		SpriteBatch* get_batch() const { return ref.get_batch(); }
-		void set_batch(SpriteBatch* batch) { ref.set_batch(batch); }
+		auto get_batch() const { return ref.get_batch(); }
+		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(SpriteBatch& batch);
 
 		void draw() const;
 
