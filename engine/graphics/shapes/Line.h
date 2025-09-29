@@ -13,11 +13,12 @@ namespace oly::rendering
 		mutable bool dirty = false;
 
 	public:
-		LineExtension() = default;
-		LineExtension(PolygonBatch* batch);
+		LineExtension(Unbatched = UNBATCHED);
+		LineExtension(PolygonBatch& batch);
 
 		PolygonBatch* get_batch() const { return poly.get_batch(); }
-		void set_batch(PolygonBatch* batch) { poly.set_batch(batch); }
+		void set_batch(Unbatched) { poly.set_batch(UNBATCHED); }
+		void set_batch(PolygonBatch& batch) { poly.set_batch(batch); }
 
 		void draw() const;
 

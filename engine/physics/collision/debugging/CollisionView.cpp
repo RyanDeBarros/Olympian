@@ -530,16 +530,16 @@ namespace oly::debug
 
 	rendering::EllipseReference CollisionLayer::create_ellipse()
 	{
-		return rendering::EllipseReference(&painter.get_ellipse_batch());
+		return rendering::EllipseReference(painter.get_ellipse_batch());
 	}
 
 	rendering::StaticPolygon CollisionLayer::create_polygon()
 	{
-		return rendering::StaticPolygon(&painter.get_polygon_batch());
+		return rendering::StaticPolygon(painter.get_polygon_batch());
 	}
 	
 	rendering::StaticArrowExtension CollisionLayer::create_arrow()
 	{
-		return rendering::StaticArrowExtension(&painter.get_polygon_batch());
+		return rendering::StaticArrowExtension(painter.get_polygon_batch());
 	}
 }

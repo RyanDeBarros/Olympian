@@ -22,6 +22,6 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const TOMLNode& node);
-	extern rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const params::Ellipse& params);
+	extern rendering::Ellipse load_ellipse(const TOMLNode& node);
+	extern rendering::Ellipse load_ellipse(const params::Ellipse& params);
 }

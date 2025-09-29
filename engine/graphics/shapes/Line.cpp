@@ -4,11 +4,14 @@
 
 namespace oly::rendering
 {
-	LineExtension::LineExtension(PolygonBatch* batch)
+	LineExtension::LineExtension(Unbatched)
+		: poly(UNBATCHED)
+	{
+	}
+
+	LineExtension::LineExtension(PolygonBatch& batch)
 		: poly(batch)
 	{
-		poly.set_colors().reserve(4);
-		poly.set_points().reserve(4);
 		set_default_polygon();
 	}
 
@@ -41,6 +44,9 @@ namespace oly::rendering
 
 	void LineExtension::set_default_polygon() const
 	{
+		poly.set_colors().resize(4);
+		poly.set_points().resize(4);
+
 		poly.set_colors()[0] = start_color;
 		poly.set_colors()[1] = end_color;
 		poly.set_colors()[2] = end_color;

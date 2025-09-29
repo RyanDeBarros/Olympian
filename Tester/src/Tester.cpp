@@ -32,8 +32,8 @@ struct BKG
 {
 	oly::rendering::Polygon bkg_rect;
 
-	BKG(oly::rendering::PolygonBatch& batch)
-		: bkg_rect(oly::reg::load_polygon(&batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
+	BKG()
+		: bkg_rect(oly::reg::load_polygon(oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
 	{
 	}
 };
@@ -59,8 +59,10 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	TesterRenderPipeline()
-		: bkg(batch), text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
+		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
 	{
+		bkg.bkg_rect.set_batch(batch);
+
 		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
@@ -91,11 +93,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			sprite.draw();
 		jumble.draw();
 
-		//obstacle_layer.draw();
-		//player_layer.draw();
-		//impulse_layer.draw();
-		//ray_layer.draw();
-		//raycast_result_layer.draw();
+		obstacle_layer.draw();
+		player_layer.draw();
+		impulse_layer.draw();
+		ray_layer.draw();
+		raycast_result_layer.draw();
 	}
 
 	void logic_update()

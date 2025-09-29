@@ -1,7 +1,5 @@
 #pragma once
 
-#include <unordered_set>
-
 #include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
@@ -9,6 +7,7 @@
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
+#include "graphics/Tags.h"
 
 namespace oly::rendering
 {
@@ -71,7 +70,8 @@ namespace oly::rendering
 		EllipseBatch::Index id = EllipseBatch::NULL_ID;
 
 	public:
-		EllipseReference(EllipseBatch* batch = nullptr);
+		EllipseReference(Unbatched = UNBATCHED);
+		EllipseReference(EllipseBatch& batch);
 		EllipseReference(const EllipseReference&);
 		EllipseReference(EllipseReference&&) noexcept;
 		EllipseReference& operator=(const EllipseReference&);
@@ -79,7 +79,8 @@ namespace oly::rendering
 		~EllipseReference();
 
 		EllipseBatch* get_batch() const { return batch; }
-		void set_batch(EllipseBatch* batch);
+		void set_batch(Unbatched);
+		void set_batch(EllipseBatch& batch);
 
 		EllipseBatch::EllipseDimension get_dimension() const;
 		EllipseBatch::EllipseDimension& set_dimension();
@@ -96,7 +97,8 @@ namespace oly::rendering
 		EllipseReference ellipse;
 		Transformer2D transformer;
 
-		Ellipse(EllipseBatch* batch = nullptr) : ellipse(batch) {}
+		Ellipse(Unbatched = UNBATCHED) : ellipse(UNBATCHED) {}
+		Ellipse(EllipseBatch& batch) : ellipse(batch) {}
 		Ellipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(const Ellipse&) = default;

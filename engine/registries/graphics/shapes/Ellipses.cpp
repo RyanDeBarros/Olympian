@@ -4,7 +4,7 @@
 
 namespace oly::reg
 {
-	rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const TOMLNode& node)
+	rendering::Ellipse load_ellipse(const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -43,12 +43,12 @@ namespace oly::reg
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Ellipse [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
-		return load_ellipse(batch, params);
+		return load_ellipse(params);
 	}
 
-	rendering::Ellipse load_ellipse(rendering::EllipseBatch* batch, const params::Ellipse& params)
+	rendering::Ellipse load_ellipse(const params::Ellipse& params)
 	{
-		rendering::Ellipse ellipse(batch);
+		rendering::Ellipse ellipse;
 
 		ellipse.set_local() = params.local;
 

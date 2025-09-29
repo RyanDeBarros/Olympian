@@ -128,14 +128,19 @@ namespace oly::rendering
 			throw Error(ErrorCode::INVALID_ID);
 	}
 
-	internal::PolygonReference::PolygonReference(PolygonBatch* batch)
+	internal::PolygonReference::PolygonReference(Unbatched)
+	{
+	}
+
+	internal::PolygonReference::PolygonReference(PolygonBatch& batch)
 	{
 		set_batch(batch);
 	}
 
 	internal::PolygonReference::PolygonReference(const PolygonReference& other)
 	{
-		set_batch(other.batch);
+		if (other.batch)
+			set_batch(*other.batch);
 	}
 
 	internal::PolygonReference::PolygonReference(PolygonReference&& other) noexcept
@@ -170,17 +175,27 @@ namespace oly::rendering
 		return *this;
 	}
 
-	void internal::PolygonReference::set_batch(PolygonBatch* batch)
+	void internal::PolygonReference::set_batch(Unbatched)
 	{
-		if (this->batch == batch)
+		if (batch)
+		{
+			batch->terminate_id(id);
+			id = PolygonBatch::NULL_ID;
+			batch = nullptr;
+		}
+	}
+
+	void internal::PolygonReference::set_batch(PolygonBatch& batch)
+	{
+		if (this->batch == &batch)
 			return;
 
-		if (this->batch && batch && this->batch->is_valid_id(id))
+		if (this->batch && this->batch->is_valid_id(id))
 		{
 			const GLuint num_vertices = this->batch->get_vertex_range(id).length;
 			const glm::mat3 transform = this->batch->get_polygon_transform(id);
 			this->batch->terminate_id(id);
-			this->batch = batch;
+			this->batch = &batch;
 			id = this->batch->generate_id(num_vertices);
 			this->batch->set_polygon_transform(id, transform);
 		}
@@ -189,7 +204,7 @@ namespace oly::rendering
 			if (this->batch)
 				this->batch->terminate_id(id);
 			id = PolygonBatch::NULL_ID;
-			this->batch = batch;
+			this->batch = &batch;
 		}
 	}
 
@@ -266,7 +281,12 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	internal::PolygonSubmitter::PolygonSubmitter(PolygonBatch* batch)
+	internal::PolygonSubmitter::PolygonSubmitter(Unbatched)
+		: ref(UNBATCHED)
+	{
+	}
+
+	internal::PolygonSubmitter::PolygonSubmitter(PolygonBatch& batch)
 		: ref(batch)
 	{
 	}

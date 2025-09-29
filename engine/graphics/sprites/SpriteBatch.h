@@ -3,6 +3,7 @@
 #include "graphics/backend/specialized/UsageSlotTracker.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/basic/Textures.h"
+#include "graphics/Tags.h"
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
@@ -10,13 +11,6 @@
 
 namespace oly::rendering
 {
-	// TODO v5 use in ellipse/polygons - put in separate Tags.h
-	struct Unbatched
-	{
-	};
-
-	constexpr Unbatched UNBATCHED;
-
 	class SpriteBatch;
 
 	namespace internal

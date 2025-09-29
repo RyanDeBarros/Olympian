@@ -99,14 +99,16 @@ namespace oly::rendering
 		ref.set_transform() = attr.transform;
 	}
 
-	EllipseReference::EllipseReference(EllipseBatch* batch)
-		: batch(batch)
+	EllipseReference::EllipseReference(Unbatched)
+		: batch(nullptr)
 	{
-		if (this->batch)
-		{
-			id = this->batch->generate_id();
-			set_attributes(*this, Attributes{});
-		}
+	}
+
+	EllipseReference::EllipseReference(EllipseBatch& batch)
+		: batch(&batch)
+	{
+		id = batch.generate_id();
+		set_attributes(*this, Attributes{});
 	}
 
 	EllipseReference::EllipseReference(const EllipseReference& other)
@@ -151,33 +153,29 @@ namespace oly::rendering
 		return *this;
 	}
 
-	void EllipseReference::set_batch(EllipseBatch* batch)
+	void EllipseReference::set_batch(Unbatched)
 	{
-		if (this->batch == batch)
+		if (batch)
+		{
+			batch->erase_id(id);
+			batch = nullptr;
+		}
+	}
+
+	void EllipseReference::set_batch(EllipseBatch& batch)
+	{
+		if (this->batch == &batch)
 			return;
 
-		if (this->batch)
+		Attributes attr{};
+		if (this->batch && id != EllipseBatch::NULL_ID)
 		{
-			if (batch)
-			{
-				const Attributes attr = id != EllipseBatch::NULL_ID ? get_attributes(*this) : Attributes{};
-				this->batch->erase_id(id);
-				this->batch = batch;
-				id = this->batch->generate_id();
-				set_attributes(*this, attr);
-			}
-			else
-			{
-				this->batch->erase_id(id);
-				this->batch = batch;
-			}
+			attr = get_attributes(*this);
+			this->batch->erase_id(id);
 		}
-		else
-		{
-			this->batch = batch;
-			id = this->batch->generate_id();
-			set_attributes(*this, Attributes{});
-		}
+		this->batch = &batch;
+		id = batch.generate_id();
+		set_attributes(*this, attr);
 	}
 
 	EllipseBatch::EllipseDimension EllipseReference::get_dimension() const
@@ -258,7 +256,7 @@ namespace oly::rendering
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
-		: ellipse(&batch)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = r;
 		ellipse.set_dimension().ry = r;
@@ -266,7 +264,7 @@ namespace oly::rendering
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
-		: ellipse(&batch)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = rx;
 		ellipse.set_dimension().ry = ry;

@@ -9,6 +9,7 @@
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
+#include "graphics/Tags.h"
 
 namespace oly::rendering
 {
@@ -76,7 +77,8 @@ namespace oly::rendering
 			mutable PolygonBatch::Index id = PolygonBatch::NULL_ID;
 			
 		public:
-			PolygonReference(PolygonBatch* batch = nullptr);
+			PolygonReference(Unbatched = UNBATCHED);
+			PolygonReference(PolygonBatch& batch);
 			PolygonReference(const PolygonReference&);
 			PolygonReference(PolygonReference&&) noexcept;
 			~PolygonReference();
@@ -84,7 +86,8 @@ namespace oly::rendering
 			PolygonReference& operator=(PolygonReference&&) noexcept;
 
 			PolygonBatch* get_batch() const { return batch; }
-			void set_batch(PolygonBatch* batch);
+			void set_batch(Unbatched);
+			void set_batch(PolygonBatch& batch);
 
 			bool resize_range(PolygonBatch::Index vertices) const;
 			Range<PolygonBatch::Index> get_vertex_range() const;
@@ -105,7 +108,8 @@ namespace oly::rendering
 			mutable bool colors = true;
 
 		public:
-			PolygonSubmitter(PolygonBatch* batch = nullptr);
+			PolygonSubmitter(Unbatched = UNBATCHED);
+			PolygonSubmitter(PolygonBatch& batch);
 			PolygonSubmitter(const PolygonSubmitter&);
 			PolygonSubmitter(PolygonSubmitter&&) noexcept = default;
 			PolygonSubmitter& operator=(const PolygonSubmitter&);
@@ -114,7 +118,8 @@ namespace oly::rendering
 
 		protected:
 			const internal::PolygonReference& get_ref() const { return ref; }
-			void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
+			void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+			void set_batch(PolygonBatch& batch) { ref.set_batch(batch); }
 
 			void flag_points() { points = true; }
 			void flag_colors() { colors = true; }
@@ -140,7 +145,8 @@ namespace oly::rendering
 		using internal::PolygonSubmitter::PolygonSubmitter;
 
 		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
-		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); }
+		void set_batch(Unbatched = UNBATCHED) { internal::PolygonSubmitter::set_batch(UNBATCHED); }
+		void set_batch(PolygonBatch& batch) { internal::PolygonSubmitter::set_batch(batch); }
 
 		const cmath::Polygon2D& get_polygon() const { return polygon; }
 		const std::vector<glm::vec2>& get_points() const { return polygon.points; }
@@ -169,7 +175,8 @@ namespace oly::rendering
 		virtual ~Polygonal() = default;
 
 		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
-		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); flag_all(); }
+		void set_batch(Unbatched = UNBATCHED) { internal::PolygonSubmitter::set_batch(UNBATCHED); flag_all(); }
+		void set_batch(PolygonBatch& batch) { internal::PolygonSubmitter::set_batch(batch); flag_all(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
