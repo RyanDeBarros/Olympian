@@ -37,8 +37,6 @@ namespace oly::rendering
 
 			graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
-			typedef GLuint Index;
-
 		public:
 			PolygonBatch();
 			PolygonBatch(const PolygonBatch&) = delete;
@@ -49,22 +47,22 @@ namespace oly::rendering
 			glm::mat3 projection = 1.0f;
 
 		private:
-			void set_primitive_points(Range<Index> vertex_range, const glm::vec2* points, Index count);
-			void set_primitive_colors(Range<Index> vertex_range, const glm::vec4* colors, Index count);
-			void set_polygon_transform(Index id, const glm::mat3& transform);
-			const glm::mat3& get_polygon_transform(Index id);
+			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count);
+			void set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count);
+			void set_polygon_transform(GLuint id, const glm::mat3& transform);
+			const glm::mat3& get_polygon_transform(GLuint id);
 
-			Index generate_id(Index vertices);
-			void terminate_id(Index id);
-			bool resize_range(Index& id, Index vertices);
-			Range<Index> get_vertex_range(Index id) const;
-			bool is_valid_id(Index id) const;
+			GLuint generate_id(GLuint vertices);
+			void terminate_id(GLuint id);
+			bool resize_range(GLuint& id, GLuint vertices);
+			Range<GLuint> get_vertex_range(GLuint id) const;
+			bool is_valid_id(GLuint id) const;
 
-			StrictFreeSpaceTracker<Index> vertex_free_space;
-			std::unordered_map<Index, Range<Index>> polygon_indexer;
-			SoftIDGenerator<Index> id_generator;
-			static const Index NULL_ID = Index(-1);
-			void assert_valid_id(Index id) const;
+			StrictFreeSpaceTracker<GLuint> vertex_free_space;
+			std::unordered_map<GLuint, Range<GLuint>> polygon_indexer;
+			SoftIDGenerator<GLuint> id_generator;
+			static const GLuint NULL_ID = GLuint(-1);
+			void assert_valid_id(GLuint id) const;
 		};
 	}
 
@@ -76,7 +74,7 @@ namespace oly::rendering
 		{
 			using Super = PublicIssuerHandle<PolygonBatch>;
 			// ID refers to the index of a polygon in transform SSBO. It also indexes the set of ranges in the VBO block.
-			mutable PolygonBatch::Index id = PolygonBatch::NULL_ID;
+			mutable GLuint id = PolygonBatch::NULL_ID;
 			
 		public:
 			PolygonReference(Unbatched = UNBATCHED);
@@ -91,13 +89,13 @@ namespace oly::rendering
 			void set_batch(Unbatched);
 			void set_batch(rendering::PolygonBatch& batch);
 
-			bool resize_range(PolygonBatch::Index vertices) const;
-			Range<PolygonBatch::Index> get_vertex_range() const;
+			bool resize_range(GLuint vertices) const;
+			Range<GLuint> get_vertex_range() const;
 
-			void set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, size_t count) const;
-			void set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, size_t count) const;
-			void set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const;
-			void set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const;
+			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count) const;
+			void set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count) const;
+			void set_primitive_points(const glm::vec2* points, GLuint count) const;
+			void set_primitive_colors(const glm::vec4* colors, GLuint count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
 
 			GLuint& draw_index() const;
@@ -132,7 +130,7 @@ namespace oly::rendering
 			void submit_dirty() const;
 
 			virtual void triangulate() const = 0;
-			virtual size_t num_vertices() const = 0;
+			virtual GLuint num_vertices() const = 0;
 			virtual void impl_set_polygon() const = 0;
 			virtual void impl_set_polygon_points() const = 0;
 			virtual void impl_set_polygon_colors() const = 0;
@@ -160,7 +158,7 @@ namespace oly::rendering
 
 	private:
 		void triangulate() const override;
-		size_t num_vertices() const override;
+		GLuint num_vertices() const override;
 		void impl_set_polygon() const override;
 		void impl_set_polygon_points() const override;
 		void impl_set_polygon_colors() const override;
@@ -198,7 +196,7 @@ namespace oly::rendering
 		std::vector<glm::vec2>& set_points() { flag_points(); return polygon.points; }
 		std::vector<glm::vec4>& set_colors() { flag_colors(); return polygon.colors; }
 
-		size_t num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	private:
 		mutable math::Triangulation cache;
@@ -232,7 +230,7 @@ namespace oly::rendering
 		std::vector<glm::vec2>& set_points(size_t i) { flag_points(); return composite[i].polygon.points; }
 		std::vector<glm::vec4>& set_colors(size_t i) { flag_colors(); return composite[i].polygon.colors; }
 
-		size_t num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	protected:
 		void impl_set_polygon() const override;
@@ -266,7 +264,7 @@ namespace oly::rendering
 		void set_border_width(float bw) { flag_points(); base.border_width = bw; }
 		void set_border_pivot(cmath::BorderPivot pivot) { flag_points(); base.border_pivot = pivot; }
 
-		size_t num_vertices() const override;
+		GLuint num_vertices() const override;
 
 	private:
 		mutable cmath::Polygon2DComposite cache;

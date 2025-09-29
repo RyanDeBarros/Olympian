@@ -32,13 +32,13 @@ namespace oly::rendering
 		ssbo_block.post_draw_all();
 	}
 
-	void internal::EllipseBatch::assert_valid_id(Index id)
+	void internal::EllipseBatch::assert_valid_id(GLuint id)
 	{
 		if (id == NULL_ID) [[unlikely]]
 			throw Error(ErrorCode::INVALID_ID);
 	}
 
-	internal::EllipseBatch::Index internal::EllipseBatch::generate_id()
+	GLuint internal::EllipseBatch::generate_id()
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID)
@@ -47,7 +47,7 @@ namespace oly::rendering
 			return id;
 	}
 
-	void internal::EllipseBatch::erase_id(Index id)
+	void internal::EllipseBatch::erase_id(GLuint id)
 	{
 		if (id != NULL_ID) [[likely]]
 			id_generator.yield(id);

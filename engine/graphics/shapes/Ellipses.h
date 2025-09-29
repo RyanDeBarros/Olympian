@@ -32,7 +32,6 @@ namespace oly::rendering
 		class EllipseBatch : public oly::internal::Issuer<EllipseBatch>
 		{
 			friend class EllipseReference;
-			using Index = GLuint;
 
 			graphics::VertexArray vao;
 			graphics::PersistentEBO<6> ebo;
@@ -57,11 +56,11 @@ namespace oly::rendering
 			glm::mat3 projection = 1.0f;
 
 		private:
-			SoftIDGenerator<Index> id_generator;
-			static const Index NULL_ID = Index(-1);
-			static void assert_valid_id(Index id);
-			Index generate_id();
-			void erase_id(Index id);
+			SoftIDGenerator<GLuint> id_generator;
+			static const GLuint NULL_ID = GLuint(-1);
+			static void assert_valid_id(GLuint id);
+			GLuint generate_id();
+			void erase_id(GLuint id);
 		};
 	}
 
@@ -70,7 +69,7 @@ namespace oly::rendering
 	class EllipseReference : public PublicIssuerHandle<internal::EllipseBatch>
 	{
 		using Super = PublicIssuerHandle<internal::EllipseBatch>;
-		internal::EllipseBatch::Index id = internal::EllipseBatch::NULL_ID;
+		GLuint id = internal::EllipseBatch::NULL_ID;
 
 	public:
 		EllipseReference(Unbatched = UNBATCHED);

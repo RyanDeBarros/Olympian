@@ -23,20 +23,20 @@ namespace oly
 	{
 		namespace local
 		{
-			enum Params
+			enum Params : char
 			{
 				NONE = 0,
 				SET_LOCAL = 1,
 				FULL = SET_LOCAL
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+			constexpr bool operator&(Params a, Params b) { return ((char)a & (char)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((char)a | (char)b); }
 		}
 
 		namespace chain
 		{
-			enum Params
+			enum Params : char
 			{
 				NONE = 0,
 				ATTACH_PARENT = 1,
@@ -46,13 +46,13 @@ namespace oly
 				FULL = ATTACH_PARENT | ATTACH_CHILD | CLEAR_CHILDREN
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+			constexpr bool operator&(Params a, Params b) { return ((char)a & (char)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((char)a | (char)b); }
 		}
 
 		namespace modifier
 		{
-			enum Params
+			enum Params : char
 			{
 				NONE = 0,
 				REF_MODIFIER = 1,
@@ -60,8 +60,8 @@ namespace oly
 				FULL = REF_MODIFIER | SET_MODIFIER
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+			constexpr bool operator&(Params a, Params b) { return ((char)a & (char)b) != 0; }
+			constexpr Params operator|(Params a, Params b) { return (Params)((char)a | (char)b); }
 		}
 	}
 

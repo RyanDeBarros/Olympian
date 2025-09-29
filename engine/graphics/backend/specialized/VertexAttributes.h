@@ -16,8 +16,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<float>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLenum type = GL_FLOAT;
 		GLint cols = 1;
 		GLboolean normalized = GL_FALSE;
@@ -43,8 +43,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<int>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLenum type = GL_UNSIGNED_INT;
 		GLint cols = 1;
 		GLsizei stride = 0;
@@ -69,8 +69,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<double>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLint cols = 1;
 		GLsizei stride = 0;
 		GLsizei offset = 0;
