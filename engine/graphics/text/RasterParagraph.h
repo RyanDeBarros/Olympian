@@ -1,25 +1,23 @@
 #pragma once
 
 #include "graphics/text/Text.h"
-#include "graphics/text/Font.h"
+#include "graphics/text/RasterFont.h"
 #include "graphics/text/Typesetting.h"
 #include "graphics/sprites/Sprite.h"
 
 #include "core/base/TransformerExposure.h"
 
-// TODO v5 RasterTextGlyph and RasterParagraph that does paragraph layout for text that doesn't use font files - pixel art fonts, etc.
-
 namespace oly::rendering
 {
-	class Paragraph;
+	class RasterParagraph;
 
-	struct ParagraphFormatExposure
+	struct RasterParagraphFormatExposure
 	{
 	private:
-		friend class Paragraph;
-		Paragraph& paragraph;
+		friend class RasterParagraph;
+		RasterParagraph& paragraph;
 
-		ParagraphFormatExposure(Paragraph& paragraph);
+		RasterParagraphFormatExposure(RasterParagraph& paragraph);
 
 	public:
 		void set_line_spacing(float line_spacing);
@@ -34,24 +32,24 @@ namespace oly::rendering
 		void set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment);
 	};
 
-	struct TextElement
+	struct RasterTextElement
 	{
-		FontAtlasRef font;
+		RasterFontRef font;
 		TextElementBase base;
 
 		float line_height() const { return font->line_height() * base.scale.y; }
 	};
 
-	class TextElementExposure;
-	
+	class RasterTextElementExposure;
+
 	namespace internal
 	{
-		class GlyphGroup
+		class RasterGlyphGroup
 		{
-			friend class Paragraph;
-			friend class TextElementExposure;
-			const Paragraph* paragraph = nullptr;
-			TextElement element;
+			friend class RasterParagraph;
+			friend class RasterTextElementExposure;
+			const RasterParagraph* paragraph = nullptr;
+			RasterTextElement element;
 
 			mutable std::vector<TextGlyph> glyphs;
 
@@ -66,7 +64,7 @@ namespace oly::rendering
 			mutable DirtyGlyphGroup dirty = ~DirtyGlyphGroup(0);
 
 		public:
-			GlyphGroup(TextElement&& element);
+			RasterGlyphGroup(RasterTextElement&& element);
 
 			void set_batch(Unbatched);
 			void set_batch(rendering::SpriteBatch& batch);
@@ -126,18 +124,18 @@ namespace oly::rendering
 		};
 	}
 
-	struct TextElementExposure
+	struct RasterTextElementExposure
 	{
 	private:
-		friend class Paragraph;
-		friend class internal::GlyphGroup;
-		Paragraph& paragraph;
-		internal::GlyphGroup& glyph_group;
+		friend class RasterParagraph;
+		friend class internal::RasterGlyphGroup;
+		RasterParagraph& paragraph;
+		internal::RasterGlyphGroup& glyph_group;
 
-		TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group);
+		RasterTextElementExposure(RasterParagraph& paragraph, internal::RasterGlyphGroup& glyph_group);
 
 	public:
-		void set_font(const FontAtlasRef& font);
+		void set_font(const RasterFontRef& font);
 		void set_text(utf::String&& text);
 		void set_text_color(glm::vec4 color);
 		void set_adj_offset(float adj_offset);
@@ -146,18 +144,18 @@ namespace oly::rendering
 		void set_jitter_offset(glm::vec2 jitter_offset);
 	};
 
-	class Paragraph
+	class RasterParagraph
 	{
-		friend class internal::GlyphGroup;
-		friend struct ParagraphFormatExposure;
-		friend struct TextElementExposure;
+		friend class internal::RasterGlyphGroup;
+		friend struct RasterParagraphFormatExposure;
+		friend struct RasterTextElementExposure;
 
 		mutable Sprite bkg;
 		ParagraphFormat format;
 
 		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::REBUILD_LAYOUT;
 
-		std::vector<internal::GlyphGroup> glyph_groups;
+		std::vector<internal::RasterGlyphGroup> glyph_groups;
 
 		mutable internal::PageBuildData page_data;
 		mutable internal::PageLayout page_layout;
@@ -169,23 +167,23 @@ namespace oly::rendering
 	public:
 		bool draw_bkg = false;
 
-		Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
-		Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
-		Paragraph(SpriteBatch& batch, std::vector<TextElement>&& elements, const ParagraphFormat& format = {});
-		Paragraph(const Paragraph&);
-		Paragraph(Paragraph&&) noexcept;
-		Paragraph& operator=(const Paragraph&);
-		Paragraph& operator=(Paragraph&&) noexcept;
+		RasterParagraph(std::vector<RasterTextElement>&& elements, const ParagraphFormat& format = {});
+		RasterParagraph(Unbatched, std::vector<RasterTextElement>&& elements, const ParagraphFormat& format = {});
+		RasterParagraph(SpriteBatch& batch, std::vector<RasterTextElement>&& elements, const ParagraphFormat& format = {});
+		RasterParagraph(const RasterParagraph&);
+		RasterParagraph(RasterParagraph&&) noexcept;
+		RasterParagraph& operator=(const RasterParagraph&);
+		RasterParagraph& operator=(RasterParagraph&&) noexcept;
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{
+		Transformer2DExposure < TExposureParams{
 			.local = exposure::local::FULL,
 			.chain = exposure::chain::ATTACH_ONLY,
 			.modifier = exposure::modifier::FULL
-		}> set_transformer() { return transformer; }
+		} > set_transformer() { return transformer; }
 
 	private:
-		void init(std::vector<TextElement>&& elements);
+		void init(std::vector<RasterTextElement>&& elements);
 
 	public:
 		auto get_batch() const { return bkg.get_batch(); }
@@ -193,15 +191,15 @@ namespace oly::rendering
 		void set_batch(SpriteBatch& batch);
 
 		const ParagraphFormat& get_format() const { return format; }
-		ParagraphFormatExposure set_format() { return ParagraphFormatExposure(*this); }
+		RasterParagraphFormatExposure set_format() { return RasterParagraphFormatExposure(*this); }
 		glm::vec4 get_bkg_color() const;
 		void set_bkg_color(glm::vec4 color);
 
-		const TextElement& get_element(size_t i = 0) const { return glyph_groups[i].element; }
-		TextElementExposure set_element(size_t i = 0) { return TextElementExposure(*this, glyph_groups[i]); }
+		const RasterTextElement& get_element(size_t i = 0) const { return glyph_groups[i].element; }
+		RasterTextElementExposure set_element(size_t i = 0) { return RasterTextElementExposure(*this, glyph_groups[i]); }
 		size_t get_element_count() const;
-		void add_element(TextElement&& element);
-		void insert_element(size_t i, TextElement&& element);
+		void add_element(RasterTextElement&& element);
+		void insert_element(size_t i, RasterTextElement&& element);
 		void erase_element(size_t i);
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
@@ -227,12 +225,12 @@ namespace oly::rendering
 		};
 		void compute_alignment_cache(AlignmentFlags flags) const;
 
-		internal::GlyphGroup::PeekData peek_next(size_t i) const;
+		internal::RasterGlyphGroup::PeekData peek_next(size_t i) const;
 		void recompute_content_size_x() const;
 		void recompute_content_size_y() const;
 		void recompute_fitted_size_x() const;
 		void recompute_fitted_size_y() const;
 	};
 
-	typedef SmartReference<Paragraph> ParagraphRef;
+	typedef SmartReference<RasterParagraph> RasterParagraphRef;
 }

@@ -111,4 +111,6 @@ namespace oly::rendering
 			return _space_advance_width * font_scale.x;
 		}
 	};
+
+	typedef SmartReference<RasterFont> RasterFontRef;
 }

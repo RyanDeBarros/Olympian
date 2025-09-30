@@ -163,14 +163,16 @@ namespace oly::reg
 		{
 			rendering::TextElement element{
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
-				.text = pelement.text,
-				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot,
-				.jitter_offset = pelement.jitter_offset
+				.base = {
+					.text = pelement.text,
+					.adj_offset = pelement.adj_offset,
+					.scale = pelement.scale,
+					.line_y_pivot = pelement.line_y_pivot,
+					.jitter_offset = pelement.jitter_offset
+				}
 			};
 			if (pelement.text_color)
-				element.text_color = *pelement.text_color;
+				element.base.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
 		}
 
@@ -193,14 +195,16 @@ namespace oly::reg
 		{
 			rendering::TextElement element{
 				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
-				.text = std::move(pelement.text),
-				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot,
-				.jitter_offset = pelement.jitter_offset
+				.base = {
+					.text = std::move(pelement.text),
+					.adj_offset = pelement.adj_offset,
+					.scale = pelement.scale,
+					.line_y_pivot = pelement.line_y_pivot,
+					.jitter_offset = pelement.jitter_offset
+				}
 			};
 			if (pelement.text_color)
-				element.text_color = *pelement.text_color;
+				element.base.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
 		}
 

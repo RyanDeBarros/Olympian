@@ -40,6 +40,7 @@ namespace oly::rendering
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
 	};
+
 	typedef SmartReference<FontFace> FontFaceRef;
 
 	// TODO v5 manual generation of mipmaps
@@ -97,5 +98,6 @@ namespace oly::rendering
 		float get_scale() const { return scale; }
 		float get_space_advance_width() const { return space_advance_width; }
 	};
+
 	typedef SmartReference<FontAtlas> FontAtlasRef;
 }

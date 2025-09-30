@@ -1,4 +1,4 @@
-#include "Paragraph.h"
+#include "RasterParagraph.h"
 
 #include "core/base/Errors.h"
 #include "core/context/rendering/Fonts.h"
@@ -8,12 +8,12 @@
 
 namespace oly::rendering
 {
-	ParagraphFormatExposure::ParagraphFormatExposure(Paragraph& paragraph)
+	RasterParagraphFormatExposure::RasterParagraphFormatExposure(RasterParagraph& paragraph)
 		: paragraph(paragraph)
 	{
 	}
-	
-	void ParagraphFormatExposure::set_line_spacing(float line_spacing)
+
+	void RasterParagraphFormatExposure::set_line_spacing(float line_spacing)
 	{
 		if (paragraph.format.line_spacing != line_spacing)
 		{
@@ -24,8 +24,8 @@ namespace oly::rendering
 				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_tab_spaces(float tab_spaces)
+
+	void RasterParagraphFormatExposure::set_tab_spaces(float tab_spaces)
 	{
 		if (paragraph.format.tab_spaces != tab_spaces)
 		{
@@ -33,8 +33,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_linebreak_spacing(float linebreak_spacing)
+
+	void RasterParagraphFormatExposure::set_linebreak_spacing(float linebreak_spacing)
 	{
 		if (paragraph.format.linebreak_spacing != linebreak_spacing)
 		{
@@ -45,8 +45,8 @@ namespace oly::rendering
 				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_pivot(glm::vec2 pivot)
+
+	void RasterParagraphFormatExposure::set_pivot(glm::vec2 pivot)
 	{
 		if (paragraph.format.pivot != pivot)
 		{
@@ -54,8 +54,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::PIVOT;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_min_size(glm::vec2 min_size)
+
+	void RasterParagraphFormatExposure::set_min_size(glm::vec2 min_size)
 	{
 		if (paragraph.format.min_size != min_size)
 		{
@@ -63,8 +63,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::MIN_SIZE;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_text_wrap(float text_wrap)
+
+	void RasterParagraphFormatExposure::set_text_wrap(float text_wrap)
 	{
 		if (paragraph.format.text_wrap != text_wrap)
 		{
@@ -72,8 +72,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_max_height(float max_height)
+
+	void RasterParagraphFormatExposure::set_max_height(float max_height)
 	{
 		if (paragraph.format.max_height != max_height)
 		{
@@ -82,7 +82,7 @@ namespace oly::rendering
 		}
 	}
 
-	void ParagraphFormatExposure::set_padding(glm::vec2 padding)
+	void RasterParagraphFormatExposure::set_padding(glm::vec2 padding)
 	{
 		if (paragraph.format.padding != padding)
 		{
@@ -90,8 +90,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::PADDING;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment)
+
+	void RasterParagraphFormatExposure::set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment)
 	{
 		if (paragraph.format.horizontal_alignment != alignment)
 		{
@@ -99,8 +99,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::HORIZONTAL_ALIGN;
 		}
 	}
-	
-	void ParagraphFormatExposure::set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment)
+
+	void RasterParagraphFormatExposure::set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment)
 	{
 		if (paragraph.format.vertical_alignment != alignment)
 		{
@@ -109,24 +109,24 @@ namespace oly::rendering
 		}
 	}
 
-	internal::GlyphGroup::GlyphGroup(TextElement&& element)
+	internal::RasterGlyphGroup::RasterGlyphGroup(RasterTextElement&& element)
 		: element(std::move(element))
 	{
 	}
 
-	void internal::GlyphGroup::set_batch(Unbatched)
+	void internal::RasterGlyphGroup::set_batch(Unbatched)
 	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(UNBATCHED);
 	}
 
-	void internal::GlyphGroup::set_batch(rendering::SpriteBatch& batch)
+	void internal::RasterGlyphGroup::set_batch(rendering::SpriteBatch& batch)
 	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(batch);
 	}
 
-	void internal::GlyphGroup::draw() const
+	void internal::RasterGlyphGroup::draw() const
 	{
 		if (dirty & DirtyGlyphGroup::LINE_ALIGNMENT)
 			realign_lines();
@@ -138,14 +138,14 @@ namespace oly::rendering
 		for (const TextGlyph& glyph : glyphs)
 			glyph.draw();
 	}
-	
-	internal::GlyphGroup::PeekData internal::GlyphGroup::peek() const
+
+	internal::RasterGlyphGroup::PeekData internal::RasterGlyphGroup::peek() const
 	{
 		auto iter = element.base.text.begin();
 		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
 	}
 
-	void internal::GlyphGroup::build_page_section(TypesetData& typeset, PeekData next_peek) const
+	void internal::RasterGlyphGroup::build_page_section(TypesetData& typeset, PeekData next_peek) const
 	{
 		auto iter = element.base.text.begin();
 		if (!iter)
@@ -171,7 +171,7 @@ namespace oly::rendering
 				if (iter.codepoint()) // next codepoint in group
 					paragraph->page_data.current_line().max_height = element.line_height();
 			}
-			else if (element.font->cache(codepoint))
+			else if (element.font->supports(codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
 				if (!can_fit_on_line(typeset, dx))
@@ -185,7 +185,7 @@ namespace oly::rendering
 		}
 	}
 
-	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek) const
+	internal::RasterGlyphGroup::WriteResult internal::RasterGlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek) const
 	{
 		dirty = internal::DirtyGlyphGroup(0);
 		clear_cache();
@@ -215,7 +215,7 @@ namespace oly::rendering
 				if (!write_newline(typeset, line))
 					return WriteResult::BREAK;
 			}
-			else if (element.font->cache(codepoint))
+			else if (element.font->supports(codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
 				if (!can_fit_on_line(typeset, dx))
@@ -235,23 +235,23 @@ namespace oly::rendering
 		return WriteResult::CONTINUE;
 	}
 
-	void internal::GlyphGroup::clear_cache() const
+	void internal::RasterGlyphGroup::clear_cache() const
 	{
 		glyphs.clear();
 		cached_info.clear();
 	}
 
-	bool internal::GlyphGroup::can_fit_on_line(const TypesetData& typeset, float dx) const
+	bool internal::RasterGlyphGroup::can_fit_on_line(const TypesetData& typeset, float dx) const
 	{
 		return paragraph->format.text_wrap <= 0.0f || typeset.x + dx <= paragraph->format.text_wrap;
 	}
 
-	bool internal::GlyphGroup::can_fit_vertically(const TypesetData& typeset, float dy) const
+	bool internal::RasterGlyphGroup::can_fit_vertically(const TypesetData& typeset, float dy) const
 	{
 		return paragraph->format.max_height <= 0.0f || -typeset.y + dy <= paragraph->format.max_height;
 	}
 
-	void internal::GlyphGroup::build_adj_offset(TypesetData& typeset, PeekData next_peek) const
+	void internal::RasterGlyphGroup::build_adj_offset(TypesetData& typeset, PeekData next_peek) const
 	{
 		if (element.base.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return;
@@ -267,7 +267,7 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (element.font->cache(codepoint))
+		else if (element.font->supports(codepoint))
 			dx = advance_width(codepoint, next_codepoint);
 		else
 		{
@@ -288,7 +288,7 @@ namespace oly::rendering
 		}
 	}
 
-	void internal::GlyphGroup::build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::RasterGlyphGroup::build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		const float dx = space_width(next_codepoint);
 		typeset.x += dx;
@@ -296,7 +296,7 @@ namespace oly::rendering
 		++paragraph->page_data.current_line().characters;
 	}
 
-	void internal::GlyphGroup::build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::RasterGlyphGroup::build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		const float dx = tab_width(next_codepoint);
 		typeset.x += dx;
@@ -304,7 +304,7 @@ namespace oly::rendering
 		++paragraph->page_data.current_line().characters;
 	}
 
-	void internal::GlyphGroup::build_newline(TypesetData& typeset) const
+	void internal::RasterGlyphGroup::build_newline(TypesetData& typeset) const
 	{
 		if (typeset.x == 0.0f)
 			++paragraph->page_data.linebreaks;
@@ -316,14 +316,14 @@ namespace oly::rendering
 		paragraph->page_data.lines.emplace_back();
 	}
 
-	void internal::GlyphGroup::build_glyph(TypesetData& typeset, float dx) const
+	void internal::RasterGlyphGroup::build_glyph(TypesetData& typeset, float dx) const
 	{
 		typeset.x += dx;
 		paragraph->page_data.current_line().final_advance_width = dx;
 		++paragraph->page_data.current_line().characters;
 	}
 
-	bool internal::GlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const
+	bool internal::RasterGlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const
 	{
 		if (element.base.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return true;
@@ -339,7 +339,7 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (element.font->cache(codepoint))
+		else if (element.font->supports(codepoint))
 			dx = advance_width(codepoint, next_codepoint);
 		else
 		{
@@ -356,19 +356,19 @@ namespace oly::rendering
 			return write_newline(typeset, line);
 	}
 
-	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::RasterGlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		typeset.x += space_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	void internal::GlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::RasterGlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
 	{
 		typeset.x += tab_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	bool internal::GlyphGroup::write_newline(TypesetData& typeset, LineAlignment& line) const
+	bool internal::RasterGlyphGroup::write_newline(TypesetData& typeset, LineAlignment& line) const
 	{
 		const float dy = paragraph->alignment_cache.lines[typeset.line].height;
 		if (!can_fit_vertically(typeset, dy))
@@ -385,7 +385,7 @@ namespace oly::rendering
 		return true;
 	}
 
-	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const
+	void internal::RasterGlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const
 	{
 		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
 		TextGlyph glyph;
@@ -396,13 +396,13 @@ namespace oly::rendering
 		++typeset.character;
 	}
 
-	glm::vec2 internal::GlyphGroup::get_glyph_position(size_t i) const
+	glm::vec2 internal::RasterGlyphGroup::get_glyph_position(size_t i) const
 	{
 		const CachedGlyphInfo& cache = cached_info[i];
 		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.base.jitter_offset;
 	}
 
-	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
+	float internal::RasterGlyphGroup::space_width(utf::Codepoint next_codepoint) const
 	{
 		float adv = element.font->get_space_advance_width();
 		if (next_codepoint)
@@ -410,28 +410,28 @@ namespace oly::rendering
 		return adv * element.base.scale.x;
 	}
 
-	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
+	float internal::RasterGlyphGroup::tab_width(utf::Codepoint next_codepoint) const
 	{
 		return space_width(next_codepoint) * paragraph->format.tab_spaces * element.base.scale.x;
 	}
 
-	float internal::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
+	float internal::RasterGlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
 	{
-		const FontGlyph& font_glyph = element.font->get_glyph(codepoint);
-		float adv = font_glyph.advance_width * element.font->get_scale();
+		const RasterFontGlyph& font_glyph = element.font->get_glyph(codepoint);
+		float adv = font_glyph.advance_width * element.font->get_scale().x;
 		if (next_codepoint)
-			adv += element.font->kerning_of(codepoint, next_codepoint, font_glyph.index, element.font->get_glyph_index(next_codepoint));
+			adv += element.font->kerning_of(codepoint, next_codepoint);
 		return adv * element.base.scale.x;
 	}
 
-	void internal::GlyphGroup::recolor() const
+	void internal::RasterGlyphGroup::recolor() const
 	{
 		dirty &= ~DirtyGlyphGroup::RECOLOR;
 		for (TextGlyph& glyph : glyphs)
 			glyph.set_text_color(element.base.text_color);
 	}
 
-	void internal::GlyphGroup::realign_lines() const
+	void internal::RasterGlyphGroup::realign_lines() const
 	{
 		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
 
@@ -455,25 +455,25 @@ namespace oly::rendering
 		}
 	}
 
-	void internal::GlyphGroup::reposition_jitter() const
+	void internal::RasterGlyphGroup::reposition_jitter() const
 	{
 		dirty &= ~DirtyGlyphGroup::JITTER_OFFSET;
 		for (TextGlyph& glyph : glyphs)
 			glyph.set_local().position += element.base.jitter_offset - last_jitter_offset;
 	}
 
-	void internal::GlyphGroup::reposition_glyphs() const
+	void internal::RasterGlyphGroup::reposition_glyphs() const
 	{
 		for (size_t i = 0; i < glyphs.size(); ++i)
 			glyphs[i].set_local().position = get_glyph_position(i);
 	}
 
-	TextElementExposure::TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group)
+	RasterTextElementExposure::RasterTextElementExposure(RasterParagraph& paragraph, internal::RasterGlyphGroup& glyph_group)
 		: paragraph(paragraph), glyph_group(glyph_group)
 	{
 	}
 
-	void TextElementExposure::set_font(const FontAtlasRef& font)
+	void RasterTextElementExposure::set_font(const RasterFontRef& font)
 	{
 		if (glyph_group.element.font != font)
 		{
@@ -481,8 +481,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void TextElementExposure::set_text(utf::String&& text)
+
+	void RasterTextElementExposure::set_text(utf::String&& text)
 	{
 		if (glyph_group.element.base.text != text)
 		{
@@ -490,8 +490,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void TextElementExposure::set_text_color(glm::vec4 color)
+
+	void RasterTextElementExposure::set_text_color(glm::vec4 color)
 	{
 		if (glyph_group.element.base.text_color != color)
 		{
@@ -499,8 +499,8 @@ namespace oly::rendering
 			glyph_group.dirty |= internal::DirtyGlyphGroup::RECOLOR;
 		}
 	}
-	
-	void TextElementExposure::set_adj_offset(float adj_offset)
+
+	void RasterTextElementExposure::set_adj_offset(float adj_offset)
 	{
 		if (glyph_group.element.base.adj_offset != adj_offset)
 		{
@@ -508,8 +508,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void TextElementExposure::set_scale(glm::vec2 scale)
+
+	void RasterTextElementExposure::set_scale(glm::vec2 scale)
 	{
 		if (glyph_group.element.base.scale != scale)
 		{
@@ -517,8 +517,8 @@ namespace oly::rendering
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
-	
-	void TextElementExposure::set_line_y_pivot(float line_y_pivot)
+
+	void RasterTextElementExposure::set_line_y_pivot(float line_y_pivot)
 	{
 		if (glyph_group.element.base.line_y_pivot != line_y_pivot)
 		{
@@ -527,7 +527,7 @@ namespace oly::rendering
 		}
 	}
 
-	void TextElementExposure::set_jitter_offset(glm::vec2 jitter_offset)
+	void RasterTextElementExposure::set_jitter_offset(glm::vec2 jitter_offset)
 	{
 		if (glyph_group.dirty & internal::DirtyGlyphGroup::JITTER_OFFSET)
 			glyph_group.element.base.jitter_offset = jitter_offset;
@@ -539,50 +539,50 @@ namespace oly::rendering
 		}
 	}
 
-	Paragraph::Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format)
+	RasterParagraph::RasterParagraph(std::vector<RasterTextElement>&& elements, const ParagraphFormat& format)
 		: format(format), bkg()
 	{
 		init(std::move(elements));
 	}
 
-	Paragraph::Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+	RasterParagraph::RasterParagraph(Unbatched, std::vector<RasterTextElement>&& elements, const ParagraphFormat& format)
 		: format(format), bkg(UNBATCHED)
 	{
 		init(std::move(elements));
 	}
 
-	Paragraph::Paragraph(SpriteBatch& batch, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+	RasterParagraph::RasterParagraph(SpriteBatch& batch, std::vector<RasterTextElement>&& elements, const ParagraphFormat& format)
 		: format(format), bkg(batch)
 	{
 		init(std::move(elements));
 	}
 
-	Paragraph::Paragraph(const Paragraph& other)
+	RasterParagraph::RasterParagraph(const RasterParagraph& other)
 		: bkg(other.bkg), format(other.format), dirty_layout(other.dirty_layout), glyph_groups(other.glyph_groups),
 		page_data(other.page_data), page_layout(other.page_layout), transformer(other.transformer), draw_bkg(other.draw_bkg)
 	{
 		bkg.transformer.attach_parent(&transformer);
-		
-		for (internal::GlyphGroup& glyph_group : glyph_groups)
+
+		for (internal::RasterGlyphGroup& glyph_group : glyph_groups)
 			glyph_group.paragraph = this;
 	}
 
-	Paragraph::Paragraph(Paragraph&& other) noexcept
+	RasterParagraph::RasterParagraph(RasterParagraph&& other) noexcept
 		: bkg(std::move(other.bkg)), format(std::move(other.format)), dirty_layout(other.dirty_layout), glyph_groups(std::move(other.glyph_groups)),
 		page_data(std::move(other.page_data)), page_layout(std::move(other.page_layout)), transformer(std::move(other.transformer)), draw_bkg(other.draw_bkg)
 	{
-		for (internal::GlyphGroup& glyph_group : glyph_groups)
+		for (internal::RasterGlyphGroup& glyph_group : glyph_groups)
 			glyph_group.paragraph = this;
 	}
 
-	Paragraph& Paragraph::operator=(const Paragraph& other)
+	RasterParagraph& RasterParagraph::operator=(const RasterParagraph& other)
 	{
 		if (this != &other)
 			*this = dupl(other);
 		return *this;
 	}
 
-	Paragraph& Paragraph::operator=(Paragraph&& other) noexcept
+	RasterParagraph& RasterParagraph::operator=(RasterParagraph&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -595,60 +595,60 @@ namespace oly::rendering
 			transformer = std::move(other.transformer);
 			draw_bkg = other.draw_bkg;
 
-			for (internal::GlyphGroup& glyph_group : glyph_groups)
+			for (internal::RasterGlyphGroup& glyph_group : glyph_groups)
 				glyph_group.paragraph = this;
 		}
 		return *this;
 	}
 
-	void Paragraph::init(std::vector<TextElement>&& elements)
+	void RasterParagraph::init(std::vector<RasterTextElement>&& elements)
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
 		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
 		bkg.set_modulation({ 0.0f, 0.0f, 0.0f, 1.0f });
 
-		for (TextElement& element : elements)
+		for (RasterTextElement& element : elements)
 			add_element(std::move(element));
 	}
 
-	void Paragraph::set_batch(Unbatched)
+	void RasterParagraph::set_batch(Unbatched)
 	{
 		bkg.set_batch(UNBATCHED);
 		for (auto& glyph_group : glyph_groups)
 			glyph_group.set_batch(UNBATCHED);
 	}
 
-	void Paragraph::set_batch(SpriteBatch& batch)
+	void RasterParagraph::set_batch(SpriteBatch& batch)
 	{
 		bkg.set_batch(batch);
 		for (auto& glyph_group : glyph_groups)
 			glyph_group.set_batch(batch);
 	}
 
-	glm::vec4 Paragraph::get_bkg_color() const
+	glm::vec4 RasterParagraph::get_bkg_color() const
 	{
 		return bkg.get_modulation();
 	}
 
-	void Paragraph::set_bkg_color(glm::vec4 color)
+	void RasterParagraph::set_bkg_color(glm::vec4 color)
 	{
 		bkg.set_modulation(color);
 	}
 
-	size_t Paragraph::get_element_count() const
+	size_t RasterParagraph::get_element_count() const
 	{
 		return glyph_groups.size();
 	}
-	
-	void Paragraph::add_element(TextElement&& element)
+
+	void RasterParagraph::add_element(RasterTextElement&& element)
 	{
 		glyph_groups.emplace_back(std::move(element));
 		glyph_groups.back().paragraph = this;
 		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 	}
-	
-	void Paragraph::insert_element(size_t i, TextElement&& element)
+
+	void RasterParagraph::insert_element(size_t i, RasterTextElement&& element)
 	{
 		if (i > glyph_groups.size())
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
@@ -657,23 +657,23 @@ namespace oly::rendering
 		glyph_groups[i].paragraph = this;
 		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 	}
-	
-	void Paragraph::erase_element(size_t i)
+
+	void RasterParagraph::erase_element(size_t i)
 	{
 		glyph_groups.erase(glyph_groups.begin() + i);
 		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 	}
 
-	void Paragraph::draw() const
+	void RasterParagraph::draw() const
 	{
 		clean_dirty_layout();
 		if (draw_bkg)
 			bkg.draw();
-		for (const internal::GlyphGroup& glyph_group : glyph_groups)
+		for (const internal::RasterGlyphGroup& glyph_group : glyph_groups)
 			glyph_group.draw();
 	}
 
-	void Paragraph::clean_dirty_layout() const
+	void RasterParagraph::clean_dirty_layout() const
 	{
 		if (dirty_layout & internal::DirtyParagraph::REBUILD_LAYOUT)
 		{
@@ -700,22 +700,22 @@ namespace oly::rendering
 
 			if (dirty_layout & internal::DirtyParagraph::HORIZONTAL_ALIGN)
 				flags = (AlignmentFlags)(flags | AlignmentFlags::HORIZONTAL);
-			
+
 			if (dirty_layout & internal::DirtyParagraph::VERTICAL_ALIGN)
 				flags = (AlignmentFlags)(flags | AlignmentFlags::VERTICAL);
-			
+
 			if (dirty_layout & internal::DirtyParagraph::PADDING)
 			{
 				flags = (AlignmentFlags)(flags | AlignmentFlags::PADDING);
 				resize_bkg = true;
 			}
-			
+
 			if (dirty_layout & internal::DirtyParagraph::PIVOT)
 			{
 				flags = (AlignmentFlags)(flags | AlignmentFlags::PIVOT);
 				bkg.transformer.ref_modifier<PivotTransformModifier2D>().pivot = format.pivot;
 			}
-			
+
 			if (dirty_layout & internal::DirtyParagraph::MIN_SIZE)
 			{
 				flags = (AlignmentFlags)(flags | AlignmentFlags::VERTICAL | AlignmentFlags::HORIZONTAL);
@@ -738,7 +738,7 @@ namespace oly::rendering
 		dirty_layout = internal::DirtyParagraph(0);
 	}
 
-	void Paragraph::build_layout() const
+	void RasterParagraph::build_layout() const
 	{
 		dirty_layout = internal::DirtyParagraph(0);
 
@@ -756,7 +756,7 @@ namespace oly::rendering
 		compute_alignment_cache(AlignmentFlags(~0));
 	}
 
-	void Paragraph::write_glyphs() const
+	void RasterParagraph::write_glyphs() const
 	{
 		internal::TypesetData typeset = {};
 		bool writing = true;
@@ -765,7 +765,7 @@ namespace oly::rendering
 		{
 			if (writing)
 			{
-				if (glyph_groups[i].write_glyph_section(typeset, peek_next(i)) == internal::GlyphGroup::WriteResult::BREAK)
+				if (glyph_groups[i].write_glyph_section(typeset, peek_next(i)) == internal::RasterGlyphGroup::WriteResult::BREAK)
 				{
 					written_glyph_groups = i + 1;
 					writing = false;
@@ -776,7 +776,7 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::compute_alignment_cache(AlignmentFlags flags) const
+	void RasterParagraph::compute_alignment_cache(AlignmentFlags flags) const
 	{
 		if (flags & AlignmentFlags::RESIZE_LINES)
 			alignment_cache.lines.resize(page_data.lines.size());
@@ -861,28 +861,28 @@ namespace oly::rendering
 			alignment_cache.padding_offset = format.padding * glm::vec2{ 1.0f, -1.0f };
 	}
 
-	internal::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
+	internal::RasterGlyphGroup::PeekData RasterParagraph::peek_next(size_t i) const
 	{
 		if (i + 1 >= glyph_groups.size())
 			return {};
 
-		const internal::GlyphGroup& current_glyph = glyph_groups[i];
-		const internal::GlyphGroup& next_glyph = glyph_groups[i + 1];
+		const internal::RasterGlyphGroup& current_glyph = glyph_groups[i];
+		const internal::RasterGlyphGroup& next_glyph = glyph_groups[i + 1];
 
-		if (current_glyph.element.font->font_face() == next_glyph.element.font->font_face())
+		if (current_glyph.element.font == next_glyph.element.font)
 			return next_glyph.peek();
 		else
 			return {};
 	}
 
-	void Paragraph::recompute_content_size_x() const
+	void RasterParagraph::recompute_content_size_x() const
 	{
 		page_layout.content_size.x = 0.0f;
 		for (size_t i = 0; i < page_data.lines.size(); ++i)
 			page_layout.content_size.x = glm::max(page_layout.content_size.x, page_data.lines[i].width);
 	}
 
-	void Paragraph::recompute_content_size_y() const
+	void RasterParagraph::recompute_content_size_y() const
 	{
 		page_layout.content_size.y = 0.0f;
 		for (size_t i = 0; i < page_data.lines.size(); ++i)
@@ -894,12 +894,12 @@ namespace oly::rendering
 		}
 	}
 
-	void Paragraph::recompute_fitted_size_x() const
+	void RasterParagraph::recompute_fitted_size_x() const
 	{
 		page_layout.fitted_size.x = glm::max(page_layout.content_size.x, format.min_size.x);
 	}
 
-	void Paragraph::recompute_fitted_size_y() const
+	void RasterParagraph::recompute_fitted_size_y() const
 	{
 		page_layout.fitted_size.y = glm::max(page_layout.content_size.y, format.min_size.y);
 	}
