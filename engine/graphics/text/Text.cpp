@@ -60,4 +60,23 @@ namespace oly::rendering
 		};
 		ref.set_tex_coords(atlas.uvs(glyph));
 	}
+
+	void TextGlyph::set_glyph(const RasterFont& font, const RasterFontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)
+	{
+		ref.set_texture(glyph.texture(), {1.0f, 1.0f});
+		const math::Rect2D box{
+			.x1 = glyph.box().x1 * scale.x,
+			.x2 = glyph.box().x2 * scale.x,
+			.y1 = glyph.box().y1 * scale.y,
+			.y2 = glyph.box().y2 * scale.y
+		};
+		set_local() = {
+			.position = pos + glm::vec2{
+				0.5f * box.width() + font.get_scale().x * glyph.left_bearing,
+				-box.center_y() - font.get_ascent()
+			},
+			.scale = box.size()
+		};
+		ref.set_tex_coords(glyph.uvs());
+	}
 }

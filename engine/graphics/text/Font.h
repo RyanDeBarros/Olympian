@@ -1,7 +1,5 @@
 #pragma once
 
-#include <unordered_map>
-
 #include "external/STB.h"
 
 #include "core/types/SmartReference.h"
@@ -9,6 +7,7 @@
 #include "core/util/UTF.h"
 
 #include "graphics/backend/basic/Textures.h"
+#include "graphics/text/Kerning.h"
 
 namespace oly::rendering
 {
@@ -21,17 +20,6 @@ namespace oly::rendering
 		static constexpr const char8_t* ALPHABET_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
 		static constexpr const char8_t* ALPHABET_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	}
-
-	struct CodepointPairHash
-	{
-		size_t operator()(const std::pair<utf::Codepoint, utf::Codepoint>& p) const { return std::hash<int>{}(p.first) ^ (std::hash<int>{}(p.second) << 1); }
-	};
-
-	struct Kerning
-	{
-		typedef std::unordered_map<std::pair<utf::Codepoint, utf::Codepoint>, int, CodepointPairHash> Map; // maps pairs of glyphs to kerning spacing
-		Map map;
-	};
 
 	class FontFace
 	{
@@ -85,8 +73,9 @@ namespace oly::rendering
 		mutable std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
 		FontOptions options;
 		float scale = 1.0f;
-		int ascent = 0, descent = 0, linegap = 0;
-		float baseline = 0.0f, space_advance_width = 0.0f;
+		float _line_height = 0.0f;
+		int ascent = 0;
+		float space_advance_width = 0.0f;
 		graphics::ImageDimensions common_dim;
 		graphics::BindlessTextureRef common_texture;
 
@@ -104,8 +93,6 @@ namespace oly::rendering
 		float kerning_of(utf::Codepoint c1, utf::Codepoint c2) const;
 		float line_height() const;
 		float get_ascent() const;
-		float get_descent() const;
-		float get_linegap() const;
 		math::UVRect uvs(const FontGlyph& glyph) const;
 		float get_scale() const { return scale; }
 		float get_space_advance_width() const { return space_advance_width; }

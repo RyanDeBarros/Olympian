@@ -107,8 +107,9 @@ namespace oly
 			common_dim.cpp = 1;
 
 			scale = font->scale_for_pixel_height(options.font_size);
+			int descent, linegap;
 			font->get_vertical_metrics(ascent, descent, linegap);
-			baseline = ascent * scale;
+			_line_height = ascent - descent + linegap;
 
 			std::vector<utf::Codepoint> codepoints;
 			auto iter = common_buffer.begin();
@@ -216,22 +217,12 @@ namespace oly
 
 		float FontAtlas::line_height() const
 		{
-			return (ascent - descent + linegap) * scale;
+			return _line_height * scale;
 		}
 
 		float FontAtlas::get_ascent() const
 		{
 			return ascent * scale;
-		}
-
-		float FontAtlas::get_descent() const
-		{
-			return descent * scale;
-		}
-
-		float FontAtlas::get_linegap() const
-		{
-			return linegap * scale;
 		}
 
 		math::UVRect FontAtlas::uvs(const FontGlyph& glyph) const
