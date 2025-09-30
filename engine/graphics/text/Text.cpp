@@ -63,17 +63,17 @@ namespace oly::rendering
 
 	void TextGlyph::set_glyph(const RasterFont& font, const RasterFontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)
 	{
-		ref.set_texture(glyph.texture(), {1.0f, 1.0f});
+		ref.set_texture(glyph.texture(), { 1.0f, 1.0f });
 		const math::Rect2D box{
-			.x1 = glyph.box().x1 * scale.x,
-			.x2 = glyph.box().x2 * scale.x,
-			.y1 = glyph.box().y1 * scale.y,
-			.y2 = glyph.box().y2 * scale.y
+			.x1 = glyph.box().x1 * font.get_scale().x * scale.x,
+			.x2 = glyph.box().x2 * font.get_scale().x * scale.x,
+			.y1 = glyph.box().y1 * font.get_scale().y * scale.y,
+			.y2 = glyph.box().y2 * font.get_scale().y * scale.y
 		};
 		set_local() = {
 			.position = pos + glm::vec2{
-				0.5f * box.width() + font.get_scale().x * glyph.left_bearing,
-				-box.center_y() - font.get_ascent()
+				0.5f * box.width() + font.get_scale().x * glyph.left_bearing(),
+				-box.center_y() - font.line_height()
 			},
 			.scale = box.size()
 		};

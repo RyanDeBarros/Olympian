@@ -20,6 +20,7 @@
 
 #include "graphics/sprites/Sprite.h"
 #include "graphics/text/Paragraph.h"
+#include "graphics/text/RasterParagraph.h"
 #include "graphics/sprites/TileMap.h"
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/sprites/SpriteNonant.h"

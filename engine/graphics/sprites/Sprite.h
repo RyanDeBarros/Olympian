@@ -95,6 +95,5 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 	};
 
-	// TODO v5 shouldn't really use smart references for sprites, polygons, and ellipses.
 	typedef SmartReference<Sprite> SpriteRef;
 }

@@ -417,8 +417,7 @@ namespace oly::rendering
 
 	float internal::RasterGlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
 	{
-		const RasterFontGlyph& font_glyph = element.font->get_glyph(codepoint);
-		float adv = font_glyph.advance_width * element.font->get_scale().x;
+		float adv = element.font->get_glyph(codepoint).advance_width() * element.font->get_scale().x;
 		if (next_codepoint)
 			adv += element.font->kerning_of(codepoint, next_codepoint);
 		return adv * element.base.scale.x;

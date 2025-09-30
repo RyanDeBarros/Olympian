@@ -33,8 +33,45 @@ struct BKG
 	oly::rendering::PolygonRef bkg_rect;
 
 	BKG()
-		: bkg_rect(oly::reg::load_polygon(oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
 	{
+		bkg_rect = oly::reg::load_polygon(oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]);
+	}
+
+	void draw() const
+	{
+		bkg_rect->draw();
+	}
+};
+
+struct PixelArtText
+{
+	oly::rendering::RasterFontRef font;
+	oly::rendering::RasterParagraphRef paragraph;
+
+	PixelArtText()
+	{
+		auto alphabet_texture = oly::context::load_texture(OLY_RES_PREFIX"fonts/PixelAlphabet.png");
+		auto numbers_texture = oly::context::load_texture(OLY_RES_PREFIX"fonts/PixelNumbers.png");
+
+		font.init(oly::rendering::RasterFont({
+			{ oly::utf::Codepoint('A'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 0, .x2 = 4, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('B'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('C'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('1'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('2'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('3'), oly::rendering::RasterFontGlyph(numbers_texture, {.x1 = 18, .x2 = 22, .y1 = 0, .y2 = 6}, {0.0f, 7.0f}, oly::math::Padding::uniform(0.5f))},
+			}, 5.0f, 8.0f, glm::vec2(32.0f)));
+
+		paragraph.init(oly::rendering::RasterParagraph({
+			oly::rendering::RasterTextElement{ .font = font, .base = { .text = "AB C\n1 23" }}
+			}, oly::rendering::ParagraphFormat{}));
+		paragraph->draw_bkg = true;
+		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
+	}
+
+	void draw() const
+	{
+		paragraph->draw();
 	}
 };
 
@@ -45,6 +82,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	BKG bkg;
 	oly::gen::SpriteMatch sprite_match;
 	oly::gen::Jumble jumble;
+	PixelArtText pixel_art_text;
 
 	std::vector<oly::Sprite> flag_tesselation;
 	oly::Transformer2D flag_tesselation_parent;
@@ -85,7 +123,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.bkg_rect->draw();
+		bkg.draw();
 		batch->render();
 
 		sprite_match.draw();
@@ -98,6 +136,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
+		
+		pixel_art_text.draw();
 	}
 
 	void logic_update()

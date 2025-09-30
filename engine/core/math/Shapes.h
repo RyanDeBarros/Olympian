@@ -99,6 +99,21 @@ namespace oly::math
 	{
 		int x = 0, y = 0, z = 0, w = 1, h = 1, d = 1;
 	};
+
+	struct Padding
+	{
+		float left = 0.0f, right = 0.0f, bottom = 0.0f, top = 0.0f;
+
+		static Padding uniform(float padding)
+		{
+			return {
+				.left = padding,
+				.right = padding,
+				.bottom = padding,
+				.top = padding
+			};
+		}
+	};
 }
 
 template<>
