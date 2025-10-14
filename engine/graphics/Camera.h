@@ -9,13 +9,18 @@
 
 namespace oly::rendering
 {
+	class Camera2D;
+
+	namespace internal
+	{
+		extern void initialize(Camera2D&, bool boxed, bool stretch);
+	}
+
 	class Camera2D : public EventHandler<input::WindowResizeEventData>
 	{
-	public:
 		bool boxed = true;
 		bool stretch = true;
 
-	private:
 		float target_aspect_ratio = 1.0f;
 		math::Area2D viewport;
 
@@ -30,6 +35,8 @@ namespace oly::rendering
 		bool consume(const input::WindowResizeEventData& data) override;
 
 	private:
+		friend void internal::initialize(Camera2D&, bool boxed, bool stretch);
+		void initialize(bool boxed, bool stretch);
 		void set_projection();
 
 	public:
@@ -37,6 +44,9 @@ namespace oly::rendering
 
 		math::Area2D get_viewport() const { return viewport; }
 		void apply_viewport() const;
+
+		bool is_boxed() const { return boxed; }
+		bool is_stretch() const { return stretch; }
 	};
 
 	typedef SmartReference<Camera2D> Camera2DRef;

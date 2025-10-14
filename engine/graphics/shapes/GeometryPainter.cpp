@@ -27,7 +27,7 @@ namespace oly::rendering
 		if (auto sprite_batch = painter.sprite.get_batch())
 		{
 			const Camera2D& camera = *sprite_batch->camera;
-			if (!camera.stretch)
+			if (!camera.is_stretch())
 			{
 				painter.set_sprite_scale(camera.get_viewport().size() / glm::vec2(painter.dimensions));
 				painter.dirty = true;

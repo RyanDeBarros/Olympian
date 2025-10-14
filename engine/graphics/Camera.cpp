@@ -4,17 +4,14 @@
 
 namespace oly::rendering
 {
+	void internal::initialize(Camera2D& camera, bool boxed, bool stretch)
+	{
+		camera.initialize(boxed, stretch);
+	}
+
 	Camera2D::Camera2D()
 	{
-		auto& window = context::get_platform().window();
-		window.refresh_size();
-		glm::ivec2 size = window.get_size();
-		viewport.w = (float)size.x;
-		viewport.h = (float)size.y;
-		target_aspect_ratio = window.aspect_ratio();
-
-		set_projection();
-		attach(&window.handlers.window_resize);
+		attach(&context::get_platform().window().handlers.window_resize);
 	}
 
 	bool Camera2D::block(const input::WindowResizeEventData& data)
@@ -59,6 +56,20 @@ namespace oly::rendering
 			glClear(GL_COLOR_BUFFER_BIT); // TODO v6 clear depth buffer too?
 		apply_viewport();
 		return false;
+	}
+
+	void Camera2D::initialize(bool boxed, bool stretch)
+	{
+		this->boxed = boxed;
+		this->stretch = stretch;
+
+		auto& window = context::get_platform().window();
+		window.refresh_size();
+		glm::ivec2 size = window.get_size();
+		viewport.w = (float)size.x;
+		viewport.h = (float)size.y;
+		target_aspect_ratio = window.aspect_ratio();
+		set_projection();
 	}
 
 	void Camera2D::set_projection()

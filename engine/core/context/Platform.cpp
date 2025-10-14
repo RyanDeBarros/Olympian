@@ -82,15 +82,20 @@ namespace oly::context
 	{
 		rendering::Camera2DRef default_camera = REF_DEFAULT;
 
+		bool camera_boxed = true;
+		bool camera_stretch = true;
+
 		if (auto window = node["window"])
 		{
 			// TODO v5 use "camera" or "default_camera" instead of "viewport"
 			if (auto viewport = window["viewport"])
 			{
-				default_camera->boxed = viewport["boxed"].value_or<bool>(true);
-				default_camera->stretch = viewport["stretch"].value_or<bool>(true);
+				camera_boxed = viewport["boxed"].value_or<bool>(true);
+				camera_stretch = viewport["stretch"].value_or<bool>(true);
 			}
 		}
+		
+		rendering::internal::initialize(*default_camera, camera_boxed, camera_stretch);
 	}
 
 	void internal::terminate_platform()
@@ -124,7 +129,7 @@ namespace oly::context
 	glm::vec2 get_view_stretch()
 	{
 		rendering::Camera2DRef default_camera = REF_DEFAULT;
-		if (default_camera->stretch)
+		if (default_camera->is_stretch())
 		{
 			auto v = default_camera->get_viewport();
 			return glm::vec2(v.w, v.h) / glm::vec2(internal::initial_window_size);
