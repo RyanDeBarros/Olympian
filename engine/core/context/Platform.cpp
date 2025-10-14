@@ -4,6 +4,7 @@
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
 #include "core/algorithms/STLUtils.h"
+#include "graphics/Camera.h"
 
 #include "registries/Loader.h"
 
@@ -15,7 +16,6 @@ namespace oly::context
 
 		glm::ivec2 initial_window_size;
 
-		platform::WRViewport wr_viewport;
 		platform::WRDrawer wr_drawer;
 
 		std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
@@ -82,18 +82,18 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
+		wr_drawer.attach(&internal::platform->window().handlers.window_resize);
+		rendering::Camera2DRef default_camera = REF_DEFAULT;
+
 		if (auto window = node["window"])
 		{
+			// TODO v5 use "camera" or "default_camera" instead of "viewport"
 			if (auto viewport = window["viewport"])
 			{
-				wr_viewport.boxed = viewport["boxed"].value_or<bool>(true);
-				wr_viewport.stretch = viewport["stretch"].value_or<bool>(true);
+				default_camera->boxed = viewport["boxed"].value_or<bool>(true);
+				default_camera->stretch = viewport["stretch"].value_or<bool>(true);
 			}
 		}
-
-		platform::internal::invoke_initialize_viewport(internal::wr_viewport);
-		wr_viewport.attach(&internal::platform->window().handlers.window_resize);
-		wr_drawer.attach(&internal::platform->window().handlers.window_resize);
 	}
 
 	void internal::terminate_platform()
@@ -112,25 +112,9 @@ namespace oly::context
 		return *internal::platform;
 	}
 
-	void set_window_resize_mode(bool boxed, bool stretch)
-	{
-		internal::wr_viewport.boxed = boxed;
-		internal::wr_viewport.stretch = stretch;
-	}
-
-	const platform::WRViewport& get_wr_viewport()
-	{
-		return internal::wr_viewport;
-	}
-
 	platform::WRDrawer& get_wr_drawer()
 	{
 		return internal::wr_drawer;
-	}
-
-	void set_standard_viewport()
-	{
-		internal::wr_viewport.set_viewport();
 	}
 
 	glm::vec2 get_cursor_screen_pos()
@@ -147,9 +131,10 @@ namespace oly::context
 
 	glm::vec2 get_view_stretch()
 	{
-		if (internal::wr_viewport.stretch)
+		rendering::Camera2DRef default_camera = REF_DEFAULT;
+		if (default_camera->stretch)
 		{
-			auto v = internal::wr_viewport.get_viewport();
+			auto v = default_camera->get_viewport();
 			return glm::vec2(v.w, v.h) / glm::vec2(internal::initial_window_size);
 		}
 		else

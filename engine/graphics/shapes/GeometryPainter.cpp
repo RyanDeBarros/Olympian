@@ -7,6 +7,16 @@
 
 namespace oly::rendering
 {
+	PolygonBatch& internal::get_polygon_batch(GeometryPainter& painter)
+	{
+		return painter.get_polygon_batch();
+	}
+
+	EllipseBatch& internal::get_ellipse_batch(GeometryPainter& painter)
+	{
+		return painter.get_ellipse_batch();
+	}
+
 	GeometryPainter::WindowResizeHandler::WindowResizeHandler(GeometryPainter& painter)
 		: painter(painter)
 	{
@@ -14,11 +24,14 @@ namespace oly::rendering
 
 	bool GeometryPainter::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
 	{
-		auto& wr = context::get_wr_viewport();
-		if (!wr.stretch)
+		if (auto sprite_batch = painter.sprite.get_batch())
 		{
-			painter.set_sprite_scale(wr.get_size() / glm::vec2(painter.dimensions));
-			painter.dirty = true;
+			const Camera2D& camera = *sprite_batch->camera;
+			if (!camera.stretch)
+			{
+				painter.set_sprite_scale(camera.get_viewport().size() / glm::vec2(painter.dimensions));
+				painter.dirty = true;
+			}
 		}
 		return false;
 	}
@@ -122,10 +135,18 @@ namespace oly::rendering
 
 	void GeometryPainter::write_texture() const
 	{
-		context::ScopedFullFramebufferDrawing drawing(framebuffer, dimensions);
-		PaintSupport ps(*this);
-		paint_fn(ps);
-		ps.final_flush();
+		if (auto sprite_batch = sprite.get_batch())
+		{
+			dirty = false;
+			context::ScopedFullFramebufferDrawing drawing(*sprite_batch->camera, framebuffer, dimensions);
+			PaintSupport ps(*this);
+			paint_fn(ps);
+			ps.final_flush();
+		}
+		else
+		{
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot write texture to using null sprite batch" << LOG.nl;
+		}
 	}
 
 	void GeometryPainter::set_sprite_scale(glm::vec2 scale)
@@ -139,10 +160,7 @@ namespace oly::rendering
 	void GeometryPainter::draw() const
 	{
 		if (dirty)
-		{
-			dirty = false;
 			write_texture();
-		}
 		sprite.draw();
 	}
 
@@ -159,7 +177,7 @@ namespace oly::rendering
 		window_resize_handler.detach();
 		if (auto sprite_batch = sprite.get_batch())
 		{
-			sprite_batch->camera->attach_window_resize_handler(window_resize_handler);
+			window_resize_handler.attach(sprite_batch->camera.base());
 			polygon_batch->camera = sprite_batch->camera;
 			ellipse_batch->camera = sprite_batch->camera;
 		}
@@ -187,7 +205,10 @@ namespace oly::rendering
 	{
 		set_and_use_texture_handle();
 		setup_framebuffer();
-		set_sprite_scale(context::get_wr_viewport().get_size() / glm::vec2(dimensions));
+		glm::vec2 sprite_scale = glm::vec2(1.0f);
+		if (auto sprite_batch = sprite.get_batch())
+			sprite_scale = sprite_batch->camera->get_viewport().size() / glm::vec2(dimensions);
+		set_sprite_scale(sprite_scale);
 		sprite.set_texture(texture, dimensions);
 	}
 

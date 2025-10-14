@@ -90,6 +90,21 @@ namespace oly::math
 		bool operator==(const UVRect&) const = default;
 	};
 
+	struct Area2D
+	{
+		float x = 0.0f, y = 0.0f, w = 1.0f, h = 1.0f;
+
+		glm::vec2 center() const
+		{
+			return glm::vec2{ x + 0.5f * w, y + 0.5f * h };
+		}
+
+		glm::vec2 size() const
+		{
+			return { w, h };
+		}
+	};
+
 	struct IArea2D
 	{
 		int x = 0, y = 0, w = 1, h = 1;

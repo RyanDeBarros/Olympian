@@ -153,6 +153,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
+
+		// TODO v5 FIX: collision view moves faster under camera
+		bkg.bkg_rect->get_batch()->camera->transformer.set_local().position.x += oly::TIME.delta() * 10.0f;
 	}
 
 	void text_jitter_callback()

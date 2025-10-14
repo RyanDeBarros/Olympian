@@ -12,6 +12,14 @@
 
 namespace oly::rendering
 {
+	class GeometryPainter;
+
+	namespace internal
+	{
+		extern rendering::PolygonBatch& get_polygon_batch(GeometryPainter&);
+		extern rendering::EllipseBatch& get_ellipse_batch(GeometryPainter&);
+	}
+
 	// TODO v6 combine ellipse and polygon shaders.
 	// TODO v6 write texture in separate thread
 	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.
@@ -85,17 +93,18 @@ namespace oly::rendering
 		auto get_sprite_batch() const { return sprite.get_batch(); }
 		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); sync_sprite_batch(); }
 		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); sync_sprite_batch(); }
-
-	private:
 		void sync_sprite_batch();
 
 	public:
+		friend PolygonBatch& internal::get_polygon_batch(GeometryPainter&);
+		friend EllipseBatch& internal::get_ellipse_batch(GeometryPainter&);
 		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
-		PolygonBatch& get_polygon_batch() { return polygon_batch; }
 		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
-		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
 
 	private:
+		PolygonBatch& get_polygon_batch() { return polygon_batch; }
+		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
+		
 		void setup_texture();
 		void copy_texture(const graphics::BindlessTexture& other);
 		void sync_texture();
