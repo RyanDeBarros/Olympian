@@ -47,6 +47,12 @@ namespace oly::rendering
 
 		bool is_boxed() const { return boxed; }
 		bool is_stretch() const { return stretch; }
+
+		glm::vec2 screen_to_world_coordinates(glm::vec2 screen_pos) const;
+		glm::vec2 world_to_screen_coordinates(glm::vec2 world_pos) const;
+		glm::vec2 view_to_world_coordinates(glm::vec2 view_pos) const;
+		glm::vec2 world_to_view_coordinates(glm::vec2 world_pos) const;
+		glm::vec2 get_cursor_world_position() const;
 	};
 
 	typedef SmartReference<Camera2D> Camera2DRef;

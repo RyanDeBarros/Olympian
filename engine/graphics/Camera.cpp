@@ -17,8 +17,6 @@ namespace oly::rendering
 
 	bool Camera2D::block(const input::WindowResizeEventData& data)
 	{
-		context::get_platform().window().refresh_size();
-
 		if (boxed)
 		{
 			float aspect_ratio = float(data.w) / data.h;
@@ -64,12 +62,10 @@ namespace oly::rendering
 		this->boxed = boxed;
 		this->stretch = stretch;
 
-		auto& window = context::get_platform().window();
-		window.refresh_size();
-		glm::ivec2 size = window.get_size();
+		glm::ivec2 size = context::get_platform().window().get_size();
 		viewport.w = (float)size.x;
 		viewport.h = (float)size.y;
-		target_aspect_ratio = window.aspect_ratio();
+		target_aspect_ratio = viewport.w / viewport.h;
 		set_projection();
 	}
 
@@ -88,5 +84,38 @@ namespace oly::rendering
 	void Camera2D::apply_viewport() const
 	{
 		glViewport((int)viewport.x, (int)viewport.y, (int)viewport.w, (int)viewport.h);
+	}
+	
+	glm::vec2 Camera2D::screen_to_world_coordinates(glm::vec2 screen_pos) const
+	{
+		glm::vec2 ndc = {
+			((screen_pos.x - viewport.x) / viewport.w) * 2.0f - 1.0f,
+			((screen_pos.y - viewport.y) / viewport.h) * 2.0f - 1.0f
+		};
+		return glm::vec2(glm::inverse(projection_matrix()) * glm::vec3{ ndc.x, -ndc.y, 1.0f });
+	}
+	
+	glm::vec2 Camera2D::world_to_screen_coordinates(glm::vec2 world_pos) const
+	{
+		glm::vec2 ndc = projection_matrix() * glm::vec3(world_pos, 1.0f);
+		return {
+			(ndc.x + 1.0f) * 0.5f * viewport.w + viewport.x,
+			(-ndc.y + 1.0f) * 0.5f * viewport.h + viewport.y,
+		};
+	}
+	
+	glm::vec2 Camera2D::view_to_world_coordinates(glm::vec2 view_pos) const
+	{
+		return screen_to_world_coordinates(context::get_platform().window().view_to_screen_coordinates(view_pos));
+	}
+	
+	glm::vec2 Camera2D::world_to_view_coordinates(glm::vec2 world_pos) const
+	{
+		return context::get_platform().window().screen_to_view_coordinates(world_to_screen_coordinates(world_pos));
+	}
+	
+	glm::vec2 Camera2D::get_cursor_world_position() const
+	{
+		return screen_to_world_coordinates(context::get_platform().window().get_cursor_screen_position());
 	}
 }

@@ -39,6 +39,8 @@ namespace oly
 	inline platform::Window& context_window() { return context::get_platform().window(); }
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
+	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
+
 	// TODO v5 Modular particle system, perlin noise generation.
 	// TODO v6 lighting engine, ui widgets, thread safety + multi-threading.
 	// TODO v6 network communication - online/local multiplayer.

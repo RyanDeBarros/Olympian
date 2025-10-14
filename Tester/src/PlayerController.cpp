@@ -15,9 +15,7 @@ bool PlayerController::click(oly::input::Signal signal)
 	if (signal.phase == oly::input::Phase::STARTED)
 	{
 		dragging = true;
-		double x, y;
-		glfwGetCursorPos(oly::context_window(), &x, &y);
-		ref_cursor_pos = { (float)x, (float)y };
+		ref_cursor_pos = oly::default_camera().get_cursor_world_position();
 		if (test_text)
 			ref_text_pos = test_text->get_local().position;
 		drag(ref_cursor_pos);
@@ -34,23 +32,18 @@ bool PlayerController::click(oly::input::Signal signal)
 bool PlayerController::drag(oly::input::Signal signal)
 {
 	if (dragging)
-		return drag(signal.get<glm::vec2>());
+		return drag(oly::default_camera().screen_to_world_coordinates(signal.get<glm::vec2>()));
 	return false;
 }
 
-bool PlayerController::drag(glm::vec2 cursor_pos)
+bool PlayerController::drag(glm::vec2 view_pos)
 {
 	if (test_text)
 	{
-		test_text->set_local().position = ref_text_pos + screen_to_world_coords(cursor_pos) - screen_to_world_coords(ref_cursor_pos);
+		test_text->set_local().position = ref_text_pos + view_pos - ref_cursor_pos;
 		return true;
 	}
 	return false;
-}
-
-glm::vec2 PlayerController::screen_to_world_coords(glm::vec2 coords)
-{
-	return { coords.x - 0.5f * oly::context_window().get_width(), 0.5f * oly::context_window().get_height() - coords.y};
 }
 
 bool PlayerController::zoom_camera(oly::input::Signal signal)

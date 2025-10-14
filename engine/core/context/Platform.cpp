@@ -13,9 +13,6 @@ namespace oly::context
 	namespace internal
 	{
 		std::unique_ptr<platform::Platform> platform;
-
-		glm::ivec2 initial_window_size;
-
 		std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
 		input::SignalTable signal_table;
 		input::SignalMappingTable signal_mapping_table;
@@ -74,7 +71,6 @@ namespace oly::context
 		platform_setup.num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
-		internal::initial_window_size = platform_setup.window_size();
 		internal::platform = platform::internal::create_platform(platform_setup);
 	}
 
@@ -109,35 +105,6 @@ namespace oly::context
 	platform::Platform& get_platform()
 	{
 		return *internal::platform;
-	}
-
-	glm::vec2 get_cursor_screen_pos()
-	{
-		double x, y;
-		glfwGetCursorPos(internal::platform->window(), &x, &y);
-		return { (float)x - 0.5f * internal::platform->window().get_width(), 0.5f * internal::platform->window().get_height() - (float)y };
-	}
-
-	glm::vec2 get_initial_window_size()
-	{
-		return internal::initial_window_size;
-	}
-
-	glm::vec2 get_view_stretch()
-	{
-		rendering::Camera2DRef default_camera = REF_DEFAULT;
-		if (default_camera->is_stretch())
-		{
-			auto v = default_camera->get_viewport();
-			return glm::vec2(v.w, v.h) / glm::vec2(internal::initial_window_size);
-		}
-		else
-			return { 1.0f, 1.0f };
-	}
-
-	glm::vec2 get_cursor_view_pos()
-	{
-		return get_cursor_screen_pos() / get_view_stretch();
 	}
 
 	input::internal::InputBindingContext& input_binding_context()

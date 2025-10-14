@@ -14,11 +14,6 @@ namespace oly::context
 	}
 
 	extern platform::Platform& get_platform();
-	
-	extern glm::vec2 get_cursor_screen_pos();
-	extern glm::vec2 get_initial_window_size();
-	extern glm::vec2 get_view_stretch();
-	extern glm::vec2 get_cursor_view_pos();
 
 	extern input::internal::InputBindingContext& input_binding_context();
 	extern input::SignalTable& signal_table();
