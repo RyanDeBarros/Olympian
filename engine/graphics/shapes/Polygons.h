@@ -1,16 +1,15 @@
 #pragma once
 
-#include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/SmartReference.h"
 #include "core/types/Issuer.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
 #include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 namespace oly::rendering
 {
@@ -38,13 +37,13 @@ namespace oly::rendering
 			graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
 		public:
+			Camera2DRef camera = REF_DEFAULT;
+
 			PolygonBatch();
 			PolygonBatch(const PolygonBatch&) = delete;
 			PolygonBatch(PolygonBatch&&) = delete;
 
 			void render() const;
-
-			glm::mat3 projection = 1.0f;
 
 		private:
 			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count);

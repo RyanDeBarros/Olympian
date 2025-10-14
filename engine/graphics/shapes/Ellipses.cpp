@@ -22,7 +22,7 @@ namespace oly::rendering
 
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::ellipse_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_block.buf.get_buffer<DIMENSION>());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo_block.buf.get_buffer<COLOR>());

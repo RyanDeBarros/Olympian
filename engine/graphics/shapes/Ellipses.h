@@ -1,14 +1,13 @@
 #pragma once
 
-#include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/SmartReference.h"
 #include "core/types/Issuer.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 namespace oly::rendering
 {
@@ -47,13 +46,13 @@ namespace oly::rendering
 			GLuint projection_location;
 
 		public:
+			Camera2DRef camera = REF_DEFAULT;
+
 			EllipseBatch();
 			EllipseBatch(const EllipseBatch&) = delete;
 			EllipseBatch(EllipseBatch&&) = delete;
 
 			void render() const;
-
-			glm::mat3 projection = 1.0f;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;

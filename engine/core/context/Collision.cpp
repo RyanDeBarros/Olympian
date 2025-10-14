@@ -36,6 +36,8 @@ namespace oly::context
 				}
 			}
 		}
+
+		col2d::internal::load_luts();
 	}
 
 	void internal::terminate_collision()

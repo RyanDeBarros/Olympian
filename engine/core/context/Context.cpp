@@ -107,15 +107,13 @@ namespace oly::context
 		init_time(toml_context);
 		graphics::internal::load_resources();
 
-		internal::init_sprites(toml_context);
-
 		autoload_signals(toml_context);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 
-		oly::internal::check_errors();
+		internal::init_sprites(toml_context);
 
-		col2d::internal::load_luts();
+		oly::internal::check_errors();
 	}
 
 	static void terminate()

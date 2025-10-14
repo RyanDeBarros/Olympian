@@ -29,13 +29,11 @@ namespace oly::rendering
 
 		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
 		{
-			GeometryPainter* painter = nullptr;
+			GeometryPainter& painter;
 
-			WindowResizeHandler(GeometryPainter* painter);
+			WindowResizeHandler(GeometryPainter& painter);
 
 			bool consume(const input::WindowResizeEventData& data) override;
-
-			void set_projection();
 		} window_resize_handler;
 		friend struct WindowResizeHandler;
 
@@ -85,9 +83,13 @@ namespace oly::rendering
 		void regen_to_current_resolution();
 
 		auto get_sprite_batch() const { return sprite.get_batch(); }
-		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); }
-		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); }
+		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); sync_sprite_batch(); }
+		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); sync_sprite_batch(); }
 
+	private:
+		void sync_sprite_batch();
+
+	public:
 		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
 		PolygonBatch& get_polygon_batch() { return polygon_batch; }
 		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }

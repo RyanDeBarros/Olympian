@@ -4,6 +4,7 @@
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
@@ -116,7 +117,7 @@ namespace oly::rendering
 			} ubo;
 
 		public:
-			glm::mat3 projection = 1.0f;
+			Camera2DRef camera = REF_DEFAULT;
 			glm::vec4 global_modulation = glm::vec4(1.0f);
 
 			SpriteBatch(UBOCapacity = {});

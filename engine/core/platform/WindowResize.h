@@ -32,7 +32,7 @@ namespace oly::platform
 		void initialize_viewport();
 
 	public:
-		bool consume(const input::WindowResizeEventData& data) override;
+		bool block(const input::WindowResizeEventData& data) override;
 		void set_viewport() const;
 		decltype(viewport) get_viewport() const { return viewport; }
 		float get_width() const { return viewport.w; }

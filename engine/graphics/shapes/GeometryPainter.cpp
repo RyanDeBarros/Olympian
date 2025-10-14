@@ -7,11 +7,9 @@
 
 namespace oly::rendering
 {
-	GeometryPainter::WindowResizeHandler::WindowResizeHandler(GeometryPainter* painter)
+	GeometryPainter::WindowResizeHandler::WindowResizeHandler(GeometryPainter& painter)
 		: painter(painter)
 	{
-		attach(&context::get_wr_drawer());
-		set_projection();
 	}
 
 	bool GeometryPainter::WindowResizeHandler::consume(const input::WindowResizeEventData& data)
@@ -19,20 +17,10 @@ namespace oly::rendering
 		auto& wr = context::get_wr_viewport();
 		if (!wr.stretch)
 		{
-			painter->set_sprite_scale(wr.get_size() / glm::vec2(painter->dimensions));
-			painter->dirty = true;
-			set_projection();
+			painter.set_sprite_scale(wr.get_size() / glm::vec2(painter.dimensions));
+			painter.dirty = true;
 		}
 		return false;
-	}
-
-	void GeometryPainter::WindowResizeHandler::set_projection()
-	{
-		auto viewport = context::get_wr_viewport().get_viewport();
-		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
-		glm::mat3 projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
-		painter->polygon_batch->projection = projection;
-		painter->ellipse_batch->projection = projection;
 	}
 
 	void GeometryPainter::PaintSupport::pre_polygon_draw()
@@ -59,36 +47,41 @@ namespace oly::rendering
 	}
 
 	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn)
-		: sprite(), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
+		: sprite(), texture(GL_TEXTURE_2D), window_resize_handler(*this), paint_fn(paint_fn)
 	{
+		sync_sprite_batch();
 		dimensions = context::get_platform().window().get_size();
 		setup_texture();
 	}
 
 	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, Unbatched)
-		: sprite(UNBATCHED), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
+		: sprite(UNBATCHED), texture(GL_TEXTURE_2D), window_resize_handler(*this), paint_fn(paint_fn)
 	{
+		sync_sprite_batch();
 		dimensions = context::get_platform().window().get_size();
 		setup_texture();
 	}
 
 	GeometryPainter::GeometryPainter(const rendering::GeometryPainter::PaintFunction& paint_fn, rendering::SpriteBatch& batch)
-		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(this), paint_fn(paint_fn)
+		: sprite(batch), texture(GL_TEXTURE_2D), window_resize_handler(*this), paint_fn(paint_fn)
 	{
+		sync_sprite_batch();
 		dimensions = context::get_platform().window().get_size();
 		setup_texture();
 	}
 
 	GeometryPainter::GeometryPainter(const GeometryPainter& other)
-		: window_resize_handler(this), sprite(other.sprite), dimensions(other.dimensions), dirty(other.dirty), texture(GL_TEXTURE_2D), paint_fn(other.paint_fn)
+		: window_resize_handler(*this), sprite(other.sprite), dimensions(other.dimensions), dirty(other.dirty), texture(GL_TEXTURE_2D), paint_fn(other.paint_fn)
 	{
+		sync_sprite_batch();
 		copy_texture(*other.texture);
 	}
 
 	GeometryPainter::GeometryPainter(GeometryPainter&& other) noexcept
-		: window_resize_handler(this), sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
+		: window_resize_handler(*this), sprite(std::move(other.sprite)), framebuffer(std::move(other.framebuffer)), texture(std::move(other.texture)),
 		dimensions(other.dimensions), dirty(other.dirty), paint_fn(std::move(other.paint_fn))
 	{
+		sync_sprite_batch();
 	}
 
 	GeometryPainter::~GeometryPainter()
@@ -107,6 +100,7 @@ namespace oly::rendering
 
 			*texture = graphics::BindlessTexture(GL_TEXTURE_2D);
 			copy_texture(*other.texture);
+			sync_sprite_batch();
 		}
 		return *this;
 	}
@@ -121,6 +115,7 @@ namespace oly::rendering
 			dimensions = other.dimensions;
 			dirty = other.dirty;
 			paint_fn = std::move(other.paint_fn);
+			sync_sprite_batch();
 		}
 		return *this;
 	}
@@ -157,6 +152,22 @@ namespace oly::rendering
 		dimensions = context::get_platform().window().get_size();
 		setup_texture();
 		dirty = true;
+	}
+
+	void GeometryPainter::sync_sprite_batch()
+	{
+		window_resize_handler.detach();
+		if (auto sprite_batch = sprite.get_batch())
+		{
+			sprite_batch->camera->attach_window_resize_handler(window_resize_handler);
+			polygon_batch->camera = sprite_batch->camera;
+			ellipse_batch->camera = sprite_batch->camera;
+		}
+		else
+		{
+			polygon_batch->camera = nullptr;
+			ellipse_batch->camera = nullptr;
+		}
 	}
 
 	void GeometryPainter::setup_texture()

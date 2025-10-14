@@ -274,4 +274,14 @@ namespace oly
 	{
 		return impl << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
 	}
+
+	Logger::Impl operator<<(Logger::Impl impl, glm::mat2 m)
+	{
+		return impl << "(" << m[0] << ", " << m[1] << ")";
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, glm::mat3 m)
+	{
+		return impl << "(" << m[0] << ", " << m[1] << ", " << m[2] << ")";
+	}
 }
