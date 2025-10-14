@@ -58,7 +58,7 @@ namespace oly::platform
 
 	bool internal::RootWindowResizeHandler::consume(const input::WindowResizeEventData& data)
 	{
-		return !context::frame(); // TODO v5 FIX: looks weird if not doing logic update
+		return !context::render_frame();
 	}
 
 	Window::Window(int width, int height, const char* title, const WindowHint& hint, GLFWmonitor* monitor, GLFWwindow* share)

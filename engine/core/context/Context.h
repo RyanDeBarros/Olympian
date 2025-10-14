@@ -23,6 +23,7 @@ namespace oly::context
 	extern std::string resource_file(const std::string& file);
 
 	extern bool frame();
+	extern bool render_frame();
 	extern BigSize this_frame();
 
 	extern toml::parse_result load_toml(const char* file);

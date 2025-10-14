@@ -187,8 +187,7 @@ namespace oly::context
 
 	bool frame()
 	{
-		internal::render_frame();
-		if (!internal::frame_platform())
+		if (!render_frame())
 			return false;
 
 		// Time / frame counter
@@ -206,6 +205,12 @@ namespace oly::context
 		physics::internal::RigidBodyManager::instance().on_tick();
 
 		return true;
+	}
+
+	bool render_frame()
+	{
+		internal::render_frame();
+		return internal::frame_platform();
 	}
 
 	BigSize this_frame()

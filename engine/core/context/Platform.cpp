@@ -87,7 +87,6 @@ namespace oly::context
 
 		if (auto window = node["window"])
 		{
-			// TODO v5 use "camera" or "default_camera" instead of "viewport"
 			if (auto viewport = window["viewport"])
 			{
 				camera_boxed = viewport["boxed"].value_or<bool>(true);
