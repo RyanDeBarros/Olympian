@@ -13,7 +13,7 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		extern void initialize(Camera2D&, bool boxed, bool stretch);
+		extern void initialize_default_camera(bool boxed, bool stretch);
 	}
 
 	class Camera2D : public EventHandler<input::WindowResizeEventData>
@@ -29,14 +29,14 @@ namespace oly::rendering
 	public:
 		Transformer2D transformer;
 
-		Camera2D();
+		Camera2D(bool boxed = true, bool stretch = true);
 
 		bool block(const input::WindowResizeEventData& data) override;
 		bool consume(const input::WindowResizeEventData& data) override;
 
 	private:
-		friend void internal::initialize(Camera2D&, bool boxed, bool stretch);
-		void initialize(bool boxed, bool stretch);
+		friend void internal::initialize_default_camera(bool boxed, bool stretch);
+		void reinitialize(bool boxed, bool stretch);
 		void set_projection();
 
 	public:

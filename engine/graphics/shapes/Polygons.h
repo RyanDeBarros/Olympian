@@ -44,6 +44,7 @@ namespace oly::rendering
 			PolygonBatch(PolygonBatch&&) = delete;
 
 			void render() const;
+			void render(const glm::mat3& projection) const;
 
 		private:
 			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count);

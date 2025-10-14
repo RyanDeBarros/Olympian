@@ -116,6 +116,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 		}
 
+		oly::rendering::Camera2DRef(oly::REF_DEFAULT)->transformer.set_modifier() = std::make_unique<oly::ShearTransformModifier2D>();
+
 		glEnable(GL_BLEND);
 
 		// TODO v6 anti-aliasing settings
@@ -154,8 +156,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
 
-		// TODO v5 FIX: collision view moves faster under camera
-		bkg.bkg_rect->get_batch()->camera->transformer.set_local().position.x += oly::TIME.delta() * 10.0f;
+		//oly::rendering::Camera2DRef(oly::REF_DEFAULT)->transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
+		//oly::rendering::Camera2DRef(oly::REF_DEFAULT)->transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
+		//oly::rendering::Camera2DRef(oly::REF_DEFAULT)->transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
+		// TODO v5 get cursor screen position and world position.
+		oly::rendering::Camera2DRef(oly::REF_DEFAULT)->transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 	}
 
 	void text_jitter_callback()

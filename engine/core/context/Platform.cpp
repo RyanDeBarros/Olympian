@@ -80,8 +80,6 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
-		rendering::Camera2DRef default_camera = REF_DEFAULT;
-
 		bool camera_boxed = true;
 		bool camera_stretch = true;
 
@@ -94,7 +92,7 @@ namespace oly::context
 			}
 		}
 		
-		rendering::internal::initialize(*default_camera, camera_boxed, camera_stretch);
+		rendering::internal::initialize_default_camera(camera_boxed, camera_stretch);
 	}
 
 	void internal::terminate_platform()

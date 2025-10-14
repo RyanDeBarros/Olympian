@@ -4,14 +4,15 @@
 
 namespace oly::rendering
 {
-	void internal::initialize(Camera2D& camera, bool boxed, bool stretch)
+	void internal::initialize_default_camera(bool boxed, bool stretch)
 	{
-		camera.initialize(boxed, stretch);
+		Camera2DRef(REF_DEFAULT)->reinitialize(boxed, stretch);
 	}
 
-	Camera2D::Camera2D()
+	Camera2D::Camera2D(bool boxed, bool stretch)
 	{
 		attach(&context::get_platform().window().handlers.window_resize);
+		reinitialize(boxed, stretch);
 	}
 
 	bool Camera2D::block(const input::WindowResizeEventData& data)
@@ -58,7 +59,7 @@ namespace oly::rendering
 		return false;
 	}
 
-	void Camera2D::initialize(bool boxed, bool stretch)
+	void Camera2D::reinitialize(bool boxed, bool stretch)
 	{
 		this->boxed = boxed;
 		this->stretch = stretch;

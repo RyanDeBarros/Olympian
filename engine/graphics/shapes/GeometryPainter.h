@@ -33,6 +33,7 @@ namespace oly::rendering
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRef texture;
 		glm::ivec2 dimensions;
+		glm::mat3 projection = 1.0f;
 		mutable bool dirty = false;
 
 		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
@@ -82,8 +83,11 @@ namespace oly::rendering
 		GeometryPainter& operator=(GeometryPainter&&) noexcept;
 
 	private:
+		void render_polygons() const;
+		void render_ellipses() const;
 		void write_texture() const;
 		void set_sprite_scale(glm::vec2 scale);
+		void set_dimensions(glm::ivec2 dimensions);
 
 	public:
 		void draw() const;

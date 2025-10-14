@@ -21,6 +21,12 @@ namespace oly::rendering
 
 	void internal::PolygonBatch::render() const
 	{
+		if (camera)
+			render(camera->projection_matrix());
+	}
+
+	void internal::PolygonBatch::render(const glm::mat3& projection) const
+	{
 		if (ebo.empty())
 			return;
 
@@ -28,7 +34,7 @@ namespace oly::rendering
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::polygon_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
+		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
 		ebo.render_elements(GL_TRIANGLES);

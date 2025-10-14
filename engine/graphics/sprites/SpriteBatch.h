@@ -126,6 +126,7 @@ namespace oly::rendering
 			~SpriteBatch();
 
 			void render() const;
+			void render(const glm::mat3& projection) const;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;
