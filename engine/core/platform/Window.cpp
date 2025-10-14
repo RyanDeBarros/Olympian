@@ -2,6 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/base/Assert.h"
+#include "core/context/Context.h"
 
 namespace oly::platform
 {
@@ -42,6 +43,24 @@ namespace oly::platform
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
+	bool internal::RootWindowResizeHandler::block(const input::WindowResizeEventData& data)
+	{
+		float now = (float)glfwGetTime();
+		float elapsed = now - last_update;
+		if (elapsed < resizing_frame_length)
+			return true;
+		else
+		{
+			last_update = now;
+			return false;
+		}
+	}
+
+	bool internal::RootWindowResizeHandler::consume(const input::WindowResizeEventData& data)
+	{
+		return !context::frame(); // TODO v5 FIX: looks weird if not doing logic update
+	}
+
 	Window::Window(int width, int height, const char* title, const WindowHint& hint, GLFWmonitor* monitor, GLFWwindow* share)
 		: size(width, height)
 	{
@@ -59,6 +78,7 @@ namespace oly::platform
 			throw Error(ErrorCode::GLEW_INIT);
 		}
 		hint.context_hint();
+
 		input::init_handlers(w);
 		glfwSetWindowUserPointer(w, this);
 		glViewport(0, 0, width, height);
@@ -136,5 +156,4 @@ namespace oly::platform
 	{
 		glfwSwapBuffers(w);
 	}
-
 }

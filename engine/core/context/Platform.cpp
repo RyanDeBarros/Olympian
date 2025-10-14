@@ -16,8 +16,6 @@ namespace oly::context
 
 		glm::ivec2 initial_window_size;
 
-		platform::WRDrawer wr_drawer;
-
 		std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
 		input::SignalTable signal_table;
 		input::SignalMappingTable signal_mapping_table;
@@ -82,7 +80,6 @@ namespace oly::context
 
 	void internal::init_viewport(const TOMLNode& node)
 	{
-		wr_drawer.attach(&internal::platform->window().handlers.window_resize);
 		rendering::Camera2DRef default_camera = REF_DEFAULT;
 
 		if (auto window = node["window"])
@@ -110,11 +107,6 @@ namespace oly::context
 	platform::Platform& get_platform()
 	{
 		return *internal::platform;
-	}
-
-	platform::WRDrawer& get_wr_drawer()
-	{
-		return internal::wr_drawer;
 	}
 
 	glm::vec2 get_cursor_screen_pos()

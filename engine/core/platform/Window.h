@@ -46,6 +46,22 @@ namespace oly::platform
 		void context_hint() const;
 	};
 
+	namespace internal
+	{
+		struct RootWindowResizeHandler : public EventHandler<input::WindowResizeEventData>
+		{
+			float resizing_frame_length = 1.0f / 60.0f;
+
+		private:
+			float last_update = 0.0f;
+
+		public:
+			bool block(const input::WindowResizeEventData& data) override;
+			bool consume(const input::WindowResizeEventData& data) override;
+		};
+
+	}
+
 	class Window
 	{
 		GLFWwindow* w;
@@ -91,7 +107,7 @@ namespace oly::platform
 			EventHandler<input::WindowMaximizeEventData> window_maximize;
 			EventHandler<input::WindowPosEventData> window_pos;
 			EventHandler<input::WindowRefreshEventData> window_refresh;
-			EventHandler<input::WindowResizeEventData> window_resize;
+			internal::RootWindowResizeHandler window_resize;
 		} handlers;
 	};
 }

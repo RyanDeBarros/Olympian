@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/platform/Platform.h"
-#include "core/platform/WindowResize.h"
 #include "core/platform/BindingContext.h"
 
 namespace oly::context
@@ -15,7 +14,6 @@ namespace oly::context
 	}
 
 	extern platform::Platform& get_platform();
-	extern platform::WRDrawer& get_wr_drawer();
 	
 	extern glm::vec2 get_cursor_screen_pos();
 	extern glm::vec2 get_initial_window_size();

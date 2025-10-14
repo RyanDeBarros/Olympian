@@ -14,7 +14,7 @@ namespace oly::rendering
 		target_aspect_ratio = window.aspect_ratio();
 
 		set_projection();
-		attach(&context::get_wr_drawer());
+		attach(&window.handlers.window_resize);
 	}
 
 	bool Camera2D::block(const input::WindowResizeEventData& data)
