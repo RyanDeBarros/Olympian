@@ -57,7 +57,7 @@ namespace oly::rendering
 			if (!overrides.font)
 			{
 				std::string value = get_tag_value(tag, eq_pos);
-				// TODO v5 load font from value
+				// TODO v5 load font from value - value should have the following syntax: "type:params", where to_lower(trim(type)) is "style" or "file" - if file, determine whether typeface or raster.
 				overrides.font = true;
 			}
 		}

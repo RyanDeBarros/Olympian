@@ -80,9 +80,6 @@ namespace oly::rendering
 			void clear_cache() const;
 
 		private:
-			bool can_fit_on_line(const TypesetData& typeset, float dx) const;
-			bool can_fit_vertically(const TypesetData& typeset, float dy) const;
-
 			void build_adj_offset(TypesetData& typeset, PeekData next_peek) const;
 			void build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			void build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;

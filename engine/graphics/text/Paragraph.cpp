@@ -174,7 +174,7 @@ namespace oly::rendering
 			else if (internal::support(element, codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
-				if (!can_fit_on_line(typeset, dx))
+				if (!paragraph->format.can_fit_on_line(typeset, dx))
 					build_newline(typeset);
 				build_glyph(typeset, dx);
 			}
@@ -218,7 +218,7 @@ namespace oly::rendering
 			else if (internal::support(element, codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
-				if (!can_fit_on_line(typeset, dx))
+				if (!paragraph->format.can_fit_on_line(typeset, dx))
 				{
 					if (!write_newline(typeset, line))
 						return WriteResult::BREAK;
@@ -239,18 +239,6 @@ namespace oly::rendering
 	{
 		glyphs.clear();
 		cached_info.clear();
-	}
-
-	bool internal::GlyphGroup::can_fit_on_line(const TypesetData& typeset, float dx) const
-	{
-		// TODO v5 put method on format
-		return paragraph->format.text_wrap <= 0.0f || typeset.x + dx <= paragraph->format.text_wrap;
-	}
-
-	bool internal::GlyphGroup::can_fit_vertically(const TypesetData& typeset, float dy) const
-	{
-		// TODO v5 put method on format
-		return paragraph->format.max_height <= 0.0f || -typeset.y + dy <= paragraph->format.max_height;
 	}
 
 	void internal::GlyphGroup::build_adj_offset(TypesetData& typeset, PeekData next_peek) const
@@ -276,7 +264,7 @@ namespace oly::rendering
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
-		if (can_fit_on_line(typeset, element.adj_offset + dx))
+		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))
 		{
 			typeset.x += element.adj_offset;
 			paragraph->page_data.current_line().space_width += element.adj_offset;
@@ -348,7 +336,7 @@ namespace oly::rendering
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
-		if (can_fit_on_line(typeset, element.adj_offset + dx))
+		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))
 		{
 			typeset.x += element.adj_offset * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 			++typeset.character;
@@ -373,7 +361,7 @@ namespace oly::rendering
 	bool internal::GlyphGroup::write_newline(TypesetData& typeset, LineAlignment& line) const
 	{
 		const float dy = paragraph->alignment_cache.lines[typeset.line].height;
-		if (!can_fit_vertically(typeset, dy))
+		if (!paragraph->format.can_fit_vertically(typeset, dy))
 			return false;
 
 		++typeset.line;
@@ -750,7 +738,7 @@ namespace oly::rendering
 		page_data = {};
 		page_data.lines.push_back({});
 
-		internal::TypesetData typeset = {};
+		TypesetData typeset = {};
 		for (size_t i = 0; i < glyph_groups.size(); ++i)
 			glyph_groups[i].build_page_section(typeset, peek_next(i));
 		page_data.current_line().width = typeset.x;
@@ -762,7 +750,7 @@ namespace oly::rendering
 
 	void Paragraph::write_glyphs() const
 	{
-		internal::TypesetData typeset = {};
+		TypesetData typeset = {};
 		bool writing = true;
 		written_glyph_groups = glyph_groups.size();
 		for (size_t i = 0; i < glyph_groups.size(); ++i)

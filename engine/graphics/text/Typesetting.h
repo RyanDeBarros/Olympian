@@ -31,13 +31,6 @@ namespace oly::rendering::internal
 		Line& current_line() { return lines.back(); }
 	};
 
-	struct TypesetData
-	{
-		float x = 0.0f, y = 0.0f;
-		GLuint character = 0;
-		size_t line = 0;
-	};
-
 	struct AlignmentCache
 	{
 		struct Line

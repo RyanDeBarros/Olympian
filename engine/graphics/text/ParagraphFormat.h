@@ -43,6 +43,13 @@ namespace oly::rendering
 		inline DirtyGlyphGroup& operator&=(DirtyGlyphGroup& a, DirtyGlyphGroup b) { a = a & b; return a; }
 	}
 
+	struct TypesetData
+	{
+		float x = 0.0f, y = 0.0f;
+		glm::uint character = 0;
+		size_t line = 0;
+	};
+
 	struct ParagraphFormat
 	{
 		float line_spacing = 1.0f;
@@ -71,5 +78,8 @@ namespace oly::rendering
 			JUSTIFY,
 			FULL_JUSTIFY
 		} vertical_alignment = VerticalAlignment::TOP;
+
+		bool can_fit_on_line(TypesetData t, float dx) const;
+		bool can_fit_vertically(TypesetData t, float dy) const;
 	};
 }
