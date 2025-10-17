@@ -6,18 +6,6 @@
 
 namespace oly::algo
 {
-    static std::vector<utf::String> tags_vector(const std::stack<utf::String>& tag_stack)
-    {
-        std::vector<utf::String> tags(tag_stack.size());
-        std::stack<utf::String> temp = tag_stack;
-        for (int i = tag_stack.size() - 1; i >= 0; --i)
-        {
-            tags[i] = temp.top();
-            temp.pop();
-        }
-        return tags;
-    }
-
 	UTFTaggedTextParser::UTFTaggedTextParser(const utf::String& input)
 	{
         std::stack<utf::String> tag_stack;
@@ -39,7 +27,7 @@ namespace oly::algo
                 if (!buffer.empty())
                 {
                     // Flush buffer
-                    groups.push_back({ buffer, tags_vector(tag_stack) });
+                    groups.push_back({ buffer, tag_stack });
                     buffer.clear();
                 }
 
@@ -59,7 +47,7 @@ namespace oly::algo
                 {
                     if (closing)
                     {
-                        if (!tag_stack.empty() && tag_stack.top() == tag)
+                        if (!tag_stack.empty() && tag_stack.top().begins_with(tag))
                             tag_stack.pop();
                         else
                         {
@@ -79,6 +67,6 @@ namespace oly::algo
 
         // Flush remaining text
         if (!buffer.empty())
-            groups.push_back({ buffer, tags_vector(tag_stack) });
+            groups.push_back({ buffer, tag_stack });
 	}
 }

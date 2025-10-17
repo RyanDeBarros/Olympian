@@ -3,6 +3,7 @@
 #include "core/util/UTF.h"
 
 #include <vector>
+#include <stack>
 
 namespace oly::algo
 {
@@ -11,7 +12,7 @@ namespace oly::algo
 		struct Group
 		{
 			utf::String str;
-			std::vector<utf::String> tags;
+			std::stack<utf::String> tags;
 		};
 
 		std::vector<Group> groups;

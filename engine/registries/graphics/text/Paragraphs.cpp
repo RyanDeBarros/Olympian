@@ -80,6 +80,47 @@ namespace oly::reg
 		return format;
 	}
 
+	static std::optional<params::Paragraph::TextElement> parse_text_element(const TOMLNode& element, size_t i)
+	{
+		params::Paragraph::TextElement element_params;
+		if (auto font_atlas = element["font_atlas"].value<std::string>())
+			element_params.font_atlas = *font_atlas;
+		else
+		{
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+			return std::nullopt;
+		}
+
+		if (auto atlas_index = element["atlas_index"].value<int64_t>())
+			element_params.atlas_index = (unsigned int)*atlas_index;
+
+		if (auto text = element["text"].value<std::string>())
+			element_params.text = *text;
+		else
+		{
+			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+			return std::nullopt;
+		}
+
+		glm::vec4 v;
+		if (parse_vec(element["text_color"].as_array(), v))
+			element_params.text_color = v;
+
+		if (auto adj_offset = element["adj_offset"].value<double>())
+			element_params.adj_offset = *adj_offset;
+
+		parse_vec(element["scale"].as_array(), element_params.scale);
+
+		if (auto line_y_pivot = element["line_y_pivot"].value<double>())
+			element_params.line_y_pivot = *line_y_pivot;
+
+		parse_vec(element["jitter_offset"].as_array(), element_params.jitter_offset);
+
+		element_params.expand = element["expand"].value_or<bool>(false); // TODO v5 add to archetype generation
+
+		return element_params;
+	}
+
 	rendering::Paragraph load_paragraph(const TOMLNode& node)
 	{
 		if (LOG.enable.debug)
@@ -96,45 +137,17 @@ namespace oly::reg
 			{
 				if (auto element = TOMLNode(*element_array->get(i)))
 				{
-					params::Paragraph::TextElement element_params;
-					if (auto font_atlas = element["font_atlas"].value<std::string>())
-						element_params.font_atlas = *font_atlas;
-					else
-					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
-						continue;
-					}
-
-					if (auto atlas_index = element["atlas_index"].value<int64_t>())
-						element_params.atlas_index = (unsigned int)*atlas_index;
-
-					if (auto text = element["text"].value<std::string>())
-						element_params.text = *text;
-					else
-					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
-						continue;
-					}
-
-					{
-						glm::vec4 v;
-						if (parse_vec(element["text_color"].as_array(), v))
-							element_params.text_color = v;
-					}
-
-					if (auto adj_offset = element["adj_offset"].value<double>())
-						element_params.adj_offset = *adj_offset;
-
-					parse_vec(element["scale"].as_array(), element_params.scale);
-
-					if (auto line_y_pivot = element["line_y_pivot"].value<double>())
-						element_params.line_y_pivot = *line_y_pivot;
-
-					parse_vec(element["jitter_offset"].as_array(), element_params.jitter_offset);
-
-					params.elements.emplace_back(std::move(element_params));
+					std::optional<params::Paragraph::TextElement> element_params = parse_text_element(element, i);
+					if (element_params.has_value())
+						params.elements.emplace_back(std::move(*element_params));
 				}
 			}
+		}
+		else if (auto element = node["element"])
+		{
+			std::optional<params::Paragraph::TextElement> element_params = parse_text_element(element, 0);
+			if (element_params.has_value())
+				params.elements = { std::move(*element_params) };
 		}
 
 		params.format = create_format(node["format"]);
@@ -156,23 +169,51 @@ namespace oly::reg
 		return load_paragraph(std::move(params));
 	}
 
+	static void add_element(std::vector<rendering::TextElement>& elements, const params::Paragraph::TextElement& params)
+	{
+		rendering::TextElement element{
+			.font = context::load_font_atlas(params.font_atlas, params.atlas_index), // TODO v5 support for raster font
+			.text = params.text,
+			.adj_offset = params.adj_offset,
+			.scale = params.scale,
+			.line_y_pivot = params.line_y_pivot,
+			.jitter_offset = params.jitter_offset
+		};
+		
+		if (params.text_color)
+			element.text_color = *params.text_color;
+
+		if (params.expand)
+			rendering::TextElement::expand(element, elements);
+		else
+			elements.push_back(std::move(element));
+	}
+
+	static void add_element(std::vector<rendering::TextElement>& elements, params::Paragraph::TextElement&& params)
+	{
+		rendering::TextElement element{
+			.font = context::load_font_atlas(params.font_atlas, params.atlas_index), // TODO v5 support for raster font
+			.text = std::move(params.text),
+			.adj_offset = params.adj_offset,
+			.scale = params.scale,
+			.line_y_pivot = params.line_y_pivot,
+			.jitter_offset = params.jitter_offset
+		};
+
+		if (params.text_color)
+			element.text_color = *params.text_color;
+
+		if (params.expand)
+			rendering::TextElement::expand(element, elements);
+		else
+			elements.push_back(std::move(element));
+	}
+
 	rendering::Paragraph load_paragraph(const params::Paragraph& params)
 	{
 		std::vector<rendering::TextElement> elements;
 		for (const params::Paragraph::TextElement& pelement : params.elements)
-		{
-			rendering::TextElement element{
-				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), // TODO v5 support for raster font
-				.text = pelement.text,
-				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot,
-				.jitter_offset = pelement.jitter_offset
-			};
-			if (pelement.text_color)
-				element.text_color = *pelement.text_color;
-			elements.emplace_back(std::move(element));
-		}
+			add_element(elements, pelement);
 
 		rendering::Paragraph paragraph(std::move(elements), params.format);
 
@@ -190,19 +231,7 @@ namespace oly::reg
 	{
 		std::vector<rendering::TextElement> elements;
 		for (params::Paragraph::TextElement& pelement : params.elements)
-		{
-			rendering::TextElement element{
-				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), // TODO v5 support for raster font
-				.text = std::move(pelement.text),
-				.adj_offset = pelement.adj_offset,
-				.scale = pelement.scale,
-				.line_y_pivot = pelement.line_y_pivot,
-				.jitter_offset = pelement.jitter_offset
-			};
-			if (pelement.text_color)
-				element.text_color = *pelement.text_color;
-			elements.emplace_back(std::move(element));
-		}
+			add_element(elements, std::move(pelement));
 
 		rendering::Paragraph paragraph(std::move(elements), params.format);
 

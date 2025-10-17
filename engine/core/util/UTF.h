@@ -82,6 +82,8 @@ namespace oly::utf
 		void clear() { *this = ""; }
 		std::u8string& encoding() { return str; }
 		const std::u8string& encoding() const { return str; }
+		std::string string() const;
+		bool begins_with(const utf::String& other) const;
 
 		void push_back(Codepoint codepoint);
 

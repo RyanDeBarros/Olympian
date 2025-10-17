@@ -37,6 +37,7 @@ namespace oly::rendering
 		float line_height() const;
 
 		static std::vector<TextElement> expand(const TextElement& element);
+		static void expand(const TextElement& element, std::vector<TextElement>& to);
 	};
 
 	class TextGlyph;

@@ -62,9 +62,7 @@ struct PixelArtText
 			{ oly::utf::Codepoint('3'), oly::rendering::RasterFontGlyph(numbers_texture, {.x1 = 18, .x2 = 22, .y1 = 0, .y2 = 6}, oly::math::TopSidePadding::uniform(0.5f))},
 		}, 5.0f, 8.0f, glm::vec2(32.0f)));
 
-		paragraph.init(oly::rendering::Paragraph({
-			oly::rendering::TextElement{ .font = font, .text = "AB C\n1 23" }
-			}, oly::rendering::ParagraphFormat{}));
+		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font, .text = "AB C\n1 <color=RED>2<scale=(2.5,1)>3</scale></color>" })));
 		paragraph->draw_bkg = true;
 		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
 	}

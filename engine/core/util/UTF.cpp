@@ -381,6 +381,42 @@ namespace oly::utf
 		return Codepoint(int(codepoint));
 	}
 
+
+	std::string String::string() const
+	{
+		std::string s;
+		s.reserve(size());
+		for (auto it = begin(); it; ++it)
+			s.push_back(it.codepoint());
+		return s;
+	}
+
+	bool String::begins_with(const utf::String& other) const
+	{
+		auto it1 = begin();
+		auto it2 = other.begin();
+		while (true)
+		{
+			if (it1)
+			{
+				if (it2)
+				{
+					if (it1.codepoint() == it2.codepoint())
+					{
+						++it1;
+						++it2;
+					}
+					else
+						return false;
+				}
+				else
+					return true;
+			}
+			else
+				return !it2;
+		}
+	}
+
 	void String::push_back(Codepoint cdpnt)
 	{
 		int codepoint = cdpnt;

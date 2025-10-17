@@ -7,6 +7,7 @@
 
 #include "core/base/Errors.h"
 
+// TODO v5 use oly::algo namespace - also in GoldenSectionSearch
 namespace oly
 {
 	template<typename T>
@@ -63,4 +64,15 @@ namespace oly
 	}
 
 	extern std::vector<std::string_view> split(std::string_view sv, char delimiter);
+
+	extern std::string& ltrim(std::string& str);
+	inline std::string& ltrim(std::string&& str) { return ltrim(str); }
+	extern std::string& rtrim(std::string& str);
+	inline std::string& rtrim(std::string&& str) { return rtrim(str); }
+	extern std::string& trim(std::string& str);
+	inline std::string& trim(std::string&& str) { return trim(str); }
+	extern std::string& to_lower(std::string& str);
+	inline std::string& to_lower(std::string&& str) { return to_lower(str); }
+	extern std::string& to_upper(std::string& str);
+	inline std::string& to_upper(std::string&& str) { return to_upper(str); }
 }

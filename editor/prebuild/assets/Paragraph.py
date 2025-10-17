@@ -73,9 +73,8 @@ def params_constructor(paragraph, name) -> str:
 				case 'full_justify':
 					c += f"\t\t\t{name}.format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;\n"
 
-	elements = paragraph.get('element', [])
-	for element in elements:
-		c += "\t\t\t{\n"
+	def write_text_element(element):
+		c = "\t\t\t{\n"
 		c += "\t\t\t\treg::params::Paragraph::TextElement element;\n"
 		if 'font_atlas' in element:
 			c += f"\t\t\t\telement.font_atlas = \"{element['font_atlas']}\";\n"
@@ -90,8 +89,19 @@ def params_constructor(paragraph, name) -> str:
 		if 'line_y_pivot' in element:
 			c += f"\t\t\t\telement.line_y_pivot = (float){element['line_y_pivot']};\n"
 		c += write_vec2(element, 'element.jitter_offset', 'jitter_offset', 4)
+		if 'expand' in element:
+			c += f"\t\t\t\telement.expand = {bool_str(element['expand'])};\n"
 		c += "\t\t\t\tparams.elements.emplace_back(std::move(element));\n"
 		c += "\t\t\t}\n"
+		return c
+
+	if 'element' in paragraph:
+		element = paragraph['element']
+		if isinstance(element, list):
+			for e in element:
+				c += write_text_element(e)
+		else:
+			c += write_text_element(element)
 
 	c += write_vec4(paragraph, f'{name}.text_color', 'text_color', 3)
 

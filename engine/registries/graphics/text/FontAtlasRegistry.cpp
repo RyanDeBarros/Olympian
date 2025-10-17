@@ -14,6 +14,13 @@ namespace oly::reg
 
 	rendering::FontAtlasRef FontAtlasRegistry::load_font_atlas(const std::string& file, unsigned int index)
 	{
+		// TODO v5 add empty filename checks to all asset loaders
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		FontAtlasKey key{ .file = file, .index = index };
 		auto it = font_atlases.find(key);
 		if (it != font_atlases.end())

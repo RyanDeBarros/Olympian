@@ -2,6 +2,8 @@
 
 #include "graphics/text/TextGlyph.h"
 #include "core/algorithms/TaggedTextParser.h"
+#include "core/algorithms/STLUtils.h"
+#include "core/algorithms/Regex.h"
 
 namespace oly::rendering
 {
@@ -12,24 +14,154 @@ namespace oly::rendering
 
 	std::vector<TextElement> TextElement::expand(const TextElement& element)
 	{
-		algo::UTFTaggedTextParser parse(element.text);
 		std::vector<TextElement> expanded;
-		expanded.reserve(parse.groups.size());
+		expand(element, expanded);
+		return expanded;
+	}
+
+	struct AttributeOverrides
+	{
+		bool font = false;
+		bool text_color = false;
+		bool adj_offset = false;
+		bool scale = false;
+		bool line_y_pivot = false;
+		bool jitter_offset = false;
+
+		bool all() const
+		{
+			return font && text_color && adj_offset && scale && line_y_pivot && jitter_offset;
+		}
+	};
+
+	static std::string get_tag_field(const std::string& tag, size_t eq_pos)
+	{
+		return to_lower(trim(tag.substr(0, eq_pos)));
+	}
+
+	static std::string get_tag_value(const std::string& tag, size_t eq_pos)
+	{
+		return trim(tag.substr(eq_pos + 1));
+	}
+
+	static void apply_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
+	{
+		size_t eq_pos = tag.find('=');
+		if (eq_pos == std::string::npos)
+			return;
+
+		std::string field = get_tag_field(tag, eq_pos);
+
+		if (field == "font")
+		{
+			if (!overrides.font)
+			{
+				std::string value = get_tag_value(tag, eq_pos);
+				// TODO v5 load font from value
+				overrides.font = true;
+			}
+		}
+		else if (field == "color")
+		{
+			if (!overrides.text_color)
+			{
+				std::string value = get_tag_value(tag, eq_pos);
+				if (algo::re::parse_vec4(value, e.text_color))
+					overrides.text_color = true;
+				else
+				{
+					to_lower(value);
+					if (value == "red")
+					{
+						e.text_color = { 1.0f, 0.0f, 0.0f, 1.0f };
+						overrides.text_color = true;
+					}
+					else if (value == "green")
+					{
+						e.text_color = { 0.0f, 1.0f, 0.0f, 1.0f };
+						overrides.text_color = true;
+					}
+					else if (value == "blue")
+					{
+						e.text_color = { 0.0f, 0.0f, 1.0f, 1.0f };
+						overrides.text_color = true;
+					}
+					// TODO v5 others - use config map or something
+				}
+			}
+		}
+		else if (field == "adj_offset")
+		{
+			if (!overrides.adj_offset)
+			{
+				if (algo::re::parse_float(get_tag_value(tag, eq_pos), e.adj_offset))
+					overrides.adj_offset = true;
+			}
+		}
+		else if (field == "scale")
+		{
+			if (!overrides.scale)
+			{
+				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.scale))
+					overrides.scale = true;
+			}
+		}
+		else if (field == "line_y_pivot")
+		{
+			if (!overrides.line_y_pivot)
+			{
+				float line_y_pivot;
+				if (algo::re::parse_float(get_tag_value(tag, eq_pos), line_y_pivot))
+				{
+					overrides.line_y_pivot = true;
+					e.line_y_pivot = line_y_pivot;
+				}
+			}
+		}
+		else if (field == "jitter_offset")
+		{
+			if (!overrides.jitter_offset)
+			{
+				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.jitter_offset))
+					overrides.jitter_offset = true;
+			}
+		}
+	}
+
+	void TextElement::expand(const TextElement& element, std::vector<TextElement>& to)
+	{
+		algo::UTFTaggedTextParser parse(element.text);
+		to.reserve(to.size() + parse.groups.size());
 		for (algo::UTFTaggedTextParser::Group& group : parse.groups)
 		{
 			TextElement e{ .text = std::move(group.str) };
 
-			// TODO v5 use group.tags to override element.* properties. Also, if multiple tags of the same type exist (for example, two text colors), use topmost tag.
-			e.font = element.font;
-			e.text_color = element.text_color;
-			e.adj_offset = element.adj_offset;
-			e.scale = element.scale;
-			e.line_y_pivot = element.line_y_pivot;
-			e.jitter_offset = element.jitter_offset;
+			AttributeOverrides overrides;
 
-			expanded.push_back(std::move(e));
+			while (!group.tags.empty())
+			{
+				utf::String tag = group.tags.top();
+				group.tags.pop();
+				apply_tag(tag.string(), e, overrides);
+				if (overrides.all())
+					break;
+			}
+
+			if (!overrides.font)
+				e.font = element.font;
+			if (!overrides.text_color)
+				e.text_color = element.text_color;
+			if (!overrides.adj_offset)
+				e.adj_offset = element.adj_offset;
+			if (!overrides.scale)
+				e.scale = element.scale;
+			if (!overrides.line_y_pivot)
+				e.line_y_pivot = element.line_y_pivot;
+			if (!overrides.jitter_offset)
+				e.jitter_offset = element.jitter_offset;
+
+			to.push_back(std::move(e));
 		}
-		return expanded;
 	}
 
 	bool internal::font_equals(const TextElement& element, const FontAtlasRef& font)
