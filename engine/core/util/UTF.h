@@ -79,6 +79,7 @@ namespace oly::utf
 		Iterator end() const { return Iterator(*this, str.size()); }
 		size_t size() const { return str.size(); }
 		bool empty() const { return str.empty(); }
+		void clear() { *this = ""; }
 		std::u8string& encoding() { return str; }
 		const std::u8string& encoding() const { return str; }
 

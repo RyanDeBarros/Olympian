@@ -1,9 +1,37 @@
 #include "TextElement.h"
 
-#include "TextGlyph.h"
+#include "graphics/text/TextGlyph.h"
+#include "core/algorithms/TaggedTextParser.h"
 
 namespace oly::rendering
 {
+	float TextElement::line_height() const
+	{
+		return std::visit([](const auto& font) { return font->line_height(); }, font) * scale.y;
+	}
+
+	std::vector<TextElement> TextElement::expand(const TextElement& element)
+	{
+		algo::UTFTaggedTextParser parse(element.text);
+		std::vector<TextElement> expanded;
+		expanded.reserve(parse.groups.size());
+		for (algo::UTFTaggedTextParser::Group& group : parse.groups)
+		{
+			TextElement e{ .text = std::move(group.str) };
+
+			// TODO v5 use group.tags to override element.* properties. Also, if multiple tags of the same type exist (for example, two text colors), use topmost tag.
+			e.font = element.font;
+			e.text_color = element.text_color;
+			e.adj_offset = element.adj_offset;
+			e.scale = element.scale;
+			e.line_y_pivot = element.line_y_pivot;
+			e.jitter_offset = element.jitter_offset;
+
+			expanded.push_back(std::move(e));
+		}
+		return expanded;
+	}
+
 	bool internal::font_equals(const TextElement& element, const FontAtlasRef& font)
 	{
 		return element.font.index() == TextElementFontIndex::ATLAS && std::get<TextElementFontIndex::ATLAS>(element.font) == font;
@@ -73,10 +101,5 @@ namespace oly::rendering
 			adv += std::visit([c, next_codepoint](const auto& font) { return font->kerning_of(c, next_codepoint); }, element.font);
 
 		return adv * element.scale.x;
-	}
-
-	float TextElement::line_height() const
-	{
-		return std::visit([](const auto& font) { return font->line_height(); }, font) * scale.y;
 	}
 }

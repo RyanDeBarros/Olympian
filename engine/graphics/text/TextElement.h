@@ -10,7 +10,6 @@ namespace oly::rendering
 {
 	// TODO v5 something more efficient than variant?
 	// TODO v5 Add FontStyle: a new struct that holds a FontFamily, and style index into the family. FontFamily is a mapping of styles to font refs (styles being regular, bold, italic, etc.). This can then easily be used for the separators (defined below).
-	// TODO v5 Utility that converts utf::String/std::string + FontAtlasRef to a std::vector<TextElement> -> could be a static method on TextElement. Do this using separators, similar to Unity's TMP tags. Could use |settings| as separators (|| for single pipe). For example, "AB|color=(1.0,0.0,0.0,1.0),bold=true|CD".
 	using TextElementFont = std::variant<FontAtlasRef, RasterFontRef>;
 
 	namespace internal
@@ -25,19 +24,6 @@ namespace oly::rendering
 		};
 	}
 
-	class TextGlyph;
-	struct TextElement;
-
-	namespace internal
-	{
-		extern bool font_equals(const TextElement& element, const FontAtlasRef& font);
-		extern bool font_equals(const TextElement& element, const RasterFontRef& font);
-		extern bool has_same_font_face(const TextElement& a, const TextElement& b);
-		extern bool support(const TextElement& element, utf::Codepoint c);
-		extern void set_glyph(TextGlyph& glyph, const TextElement& element, utf::Codepoint c, glm::vec2 pos);
-		extern float advance_width(const TextElement& element, utf::Codepoint c, utf::Codepoint next_codepoint);
-	}
-
 	struct TextElement
 	{
 		TextElementFont font;
@@ -50,7 +36,18 @@ namespace oly::rendering
 
 		float line_height() const;
 
-	private:
-		friend bool internal::has_same_font_face(const TextElement&, const TextElement&);
+		static std::vector<TextElement> expand(const TextElement& element);
 	};
+
+	class TextGlyph;
+
+	namespace internal
+	{
+		extern bool font_equals(const TextElement& element, const FontAtlasRef& font);
+		extern bool font_equals(const TextElement& element, const RasterFontRef& font);
+		extern bool has_same_font_face(const TextElement& a, const TextElement& b);
+		extern bool support(const TextElement& element, utf::Codepoint c);
+		extern void set_glyph(TextGlyph& glyph, const TextElement& element, utf::Codepoint c, glm::vec2 pos);
+		extern float advance_width(const TextElement& element, utf::Codepoint c, utf::Codepoint next_codepoint);
+	}
 }
