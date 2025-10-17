@@ -49,19 +49,8 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
+		: font(oly::context::load_raster_font(OLY_RES_PREFIX"fonts/PixelFont.oly"))
 	{
-		auto alphabet_texture = oly::context::load_texture(OLY_RES_PREFIX"fonts/PixelAlphabet.png");
-		auto numbers_texture = oly::context::load_texture(OLY_RES_PREFIX"fonts/PixelNumbers.png");
-
-		font.init(oly::rendering::RasterFont({
-			{ oly::utf::Codepoint('A'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 0, .x2 = 4, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('B'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('C'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('1'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('2'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('3'), oly::rendering::RasterFontGlyph(numbers_texture, {.x1 = 18, .x2 = 22, .y1 = 0, .y2 = 6}, oly::math::TopSidePadding::uniform(0.5f))},
-		}, 5.0f, 8.0f, glm::vec2(32.0f)));
-
 		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font, .text = "AB C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
 		paragraph->draw_bkg = true;
 		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });

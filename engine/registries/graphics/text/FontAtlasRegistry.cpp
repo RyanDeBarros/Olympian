@@ -39,7 +39,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font_atlas [" << (src ? *src : "") << "] at index #" << index << "." << LOG.nl;
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font atlas [" << (src ? *src : "") << "] at index #" << index << "..." << LOG.nl;
 		}
 
 		auto _font_size_double = node["font_size"].value<double>();
@@ -92,7 +92,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Font atlas [" << (src ? *src : "") << "] at index #" << index << " parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "...Font atlas [" << (src ? *src : "") << "] at index #" << index << " parsed." << LOG.nl;
 		}
 
 		return font_atlas;

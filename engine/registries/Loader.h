@@ -3,6 +3,7 @@
 #include "external/GL.h"
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
+#include "core/math/Shapes.h"
 
 namespace oly::reg
 {
@@ -75,4 +76,10 @@ namespace oly::reg
 	}
 
 	extern Transformer2D load_transformer_2d(const params::Transformer2D& params);
+
+	extern bool parse_shape(const TOMLNode& node, math::IRect2D& rect);
+
+	extern math::TopSidePadding parse_padding(const TOMLNode& node);
+
+	extern bool parse_enum(const TOMLNode& node, math::PositioningMode& mode);
 }

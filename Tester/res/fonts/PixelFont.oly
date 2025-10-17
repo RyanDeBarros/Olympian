@@ -1,0 +1,72 @@
+#meta type="raster_font"
+
+space_advance_width = 5.0
+line_height = 8.0
+font_scale = [32.0, 32.0]
+texture_files = ["RES://fonts/PixelAlphabet.png", "RES://fonts/PixelNumbers.png"]
+
+[[glyphs]]
+codepoint = "A"
+texture_file = 0
+[glyphs.location]
+x1 = 0
+x2 = 4
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5
+
+[[glyphs]]
+codepoint = "B"
+texture_file = 0
+[glyphs.location]
+x1 = 6
+x2 = 10
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5
+
+[[glyphs]]
+codepoint = "C"
+texture_file = 0
+[glyphs.location]
+x1 = 12
+x2 = 16
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5
+
+[[glyphs]]
+codepoint = "1"
+texture_file = 1
+[glyphs.location]
+x1 = 6
+x2 = 10
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5
+
+[[glyphs]]
+codepoint = "2"
+texture_file = 1
+[glyphs.location]
+x1 = 12
+x2 = 16
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5
+
+[[glyphs]]
+codepoint = "3"
+texture_file = 1
+[glyphs.location]
+x1 = 18
+x2 = 22
+y1 = 0
+y2 = 6
+[glyphs.padding]
+uniform = 0.5

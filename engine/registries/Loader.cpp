@@ -207,4 +207,64 @@ namespace oly::reg
 			transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
 		return transformer;
 	}
+
+	bool parse_shape(const TOMLNode& node, math::IRect2D& rect)
+	{
+		if (auto x1 = node["x1"].value<int64_t>())
+			rect.x1 = *x1;
+		else
+			return false;
+
+		if (auto x2 = node["x2"].value<int64_t>())
+			rect.x2 = *x2;
+		else
+			return false;
+
+		if (auto y1 = node["y1"].value<int64_t>())
+			rect.y1 = *y1;
+		else
+			return false;
+
+		if (auto y2 = node["y2"].value<int64_t>())
+			rect.y2 = *y2;
+		else
+			return false;
+
+		return true;
+	}
+
+	math::TopSidePadding parse_padding(const TOMLNode& node)
+	{
+		math::TopSidePadding padding;
+
+		if (auto uniform = node["uniform"].value<double>())
+			padding = math::TopSidePadding::uniform(*uniform);
+
+		if (auto left = node["left"].value<double>())
+			padding.left = *left;
+
+		if (auto right = node["right"].value<double>())
+			padding.right = *right;
+
+		if (auto top = node["top"].value<double>())
+			padding.top = *top;
+
+		return padding;
+	}
+
+	bool parse_enum(const TOMLNode& node, math::PositioningMode& mode)
+	{
+		auto _s = node.value<std::string>();
+		if (!_s)
+			return false;
+		const std::string& s = *_s;
+		
+		if (s == "absolute")
+			mode = math::PositioningMode::ABSOLUTE;
+		else if (s == "relative")
+			mode = math::PositioningMode::RELATIVE;
+		else
+			return false;
+		return true;
+	}
 }
