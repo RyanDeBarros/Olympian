@@ -10,16 +10,16 @@ namespace oly::reg
 	extern toml::v3::parse_result load_toml(const char* file);
 	inline toml::v3::parse_result load_toml(const std::string& file) { return load_toml(file.c_str()); }
 
-	extern bool parse_int(const TOMLNode& node, const std::string& name, int& v);
-	extern bool parse_int(const CTOMLNode& node, const std::string& name, int& v);
-	extern bool parse_int(const toml::table& node, const std::string& name, int& v);
-	extern bool parse_float(const TOMLNode& node, const std::string& name, float& v);
-	extern bool parse_float(const CTOMLNode& node, const std::string& name, float& v);
-	extern bool parse_float(const toml::table& node, const std::string& name, float& v);
+	extern bool parse_bool(TOMLNode node, bool& v);
+	extern bool parse_int(TOMLNode node, int& v);
+	extern bool parse_uint(TOMLNode node, GLuint& v);
+	extern bool parse_float(TOMLNode node, float& v);
+	extern bool parse_double(TOMLNode node, double& v);
 
 	template<size_t N>
-	inline bool parse_vec(const toml::v3::array* arr, glm::vec<N, float>& v)
+	inline bool parse_vec(TOMLNode node, glm::vec<N, float>& v)
 	{
+		auto arr = node.as_array();
 		if (arr && arr->size() == N)
 		{
 			glm::vec<N, float> u;
@@ -39,8 +39,9 @@ namespace oly::reg
 	}
 
 	template<size_t N>
-	inline bool parse_ivec(const toml::v3::array* arr, glm::vec<N, int>& v)
+	inline bool parse_ivec(TOMLNode node, glm::vec<N, int>& v)
 	{
+		auto arr = node.as_array();
 		if (arr && arr->size() == N)
 		{
 			glm::vec<N, int> u;
@@ -57,14 +58,11 @@ namespace oly::reg
 		return false;
 	}
 
-	extern Transform2D load_transform_2d(const TOMLNode& node);
-	extern Transform2D load_transform_2d(const CTOMLNode& node);
-	inline Transform2D load_transform_2d(const toml::table& node, const char* name) { return load_transform_2d((const TOMLNode&)node[name]); }
-	inline Transform2D load_transform_2d(const TOMLNode& node, const char* name) { return load_transform_2d(node[name]); }
+	extern Transform2D load_transform_2d(TOMLNode node);
 
-	extern bool parse_mag_filter(const TOMLNode& node, const std::string& name, GLenum& mag_filter);
-	extern bool parse_min_filter(const TOMLNode& node, const std::string& name, GLenum& min_filter);
-	extern bool parse_wrap(const TOMLNode& node, const std::string& name, GLenum& wrap);
+	extern bool parse_mag_filter(TOMLNode node, GLenum& mag_filter);
+	extern bool parse_min_filter(TOMLNode node, GLenum& min_filter);
+	extern bool parse_wrap(TOMLNode node, GLenum& wrap);
 
 	namespace params
 	{
@@ -77,9 +75,9 @@ namespace oly::reg
 
 	extern Transformer2D load_transformer_2d(const params::Transformer2D& params);
 
-	extern bool parse_shape(const TOMLNode& node, math::IRect2D& rect);
+	extern bool parse_shape(TOMLNode node, math::IRect2D& rect);
 
-	extern math::TopSidePadding parse_padding(const TOMLNode& node);
+	extern math::TopSidePadding parse_padding(TOMLNode node);
 
-	extern bool parse_enum(const TOMLNode& node, math::PositioningMode& mode);
+	extern bool parse_enum(TOMLNode node, math::PositioningMode& mode);
 }

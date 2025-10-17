@@ -39,8 +39,8 @@ def params_constructor(sprite, name) -> str:
 			c = "\t\t\t\tgraphics::AnimFrameFormat frame_format;\n"
 			if 'starting_frame' in frame_format:
 				c += f"\t\t\t\tframe_format.starting_frame = (GLuint){frame_format['starting_frame']};\n"
-			if 'num frames' in frame_format:
-				c += f"\t\t\t\tframe_format.num_frames = (GLuint){frame_format['num frames']};\n"
+			if 'num_frames' in frame_format:
+				c += f"\t\t\t\tframe_format.num_frames = (GLuint){frame_format['num_frames']};\n"
 			if 'starting_time' in frame_format:
 				c += f"\t\t\t\tframe_format.starting_time = (float){frame_format['starting_time']};\n"
 			if 'delay_seconds' in frame_format:

@@ -42,23 +42,22 @@ namespace oly::reg
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font atlas [" << (src ? *src : "") << "] at index #" << index << "..." << LOG.nl;
 		}
 
-		auto _font_size_double = node["font_size"].value<double>();
-		auto _font_size_int = node["font_size"].value<int64_t>();
-		if (!_font_size_double && !_font_size_int)
+		rendering::FontOptions options;
+
+		if (!parse_float(node["font_size"], options.font_size))
 		{
 			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"font_size\" field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		rendering::FontOptions options;
-
-		options.font_size = _font_size_double ? (float)_font_size_double.value() : (float)_font_size_int.value();
-		parse_min_filter(node, "min_filter", options.min_filter);
-		parse_mag_filter(node, "mag_filter", options.mag_filter);
-		options.auto_generate_mipmaps = node["generate_mipmaps"].value<bool>().value_or(false);
+		parse_min_filter(node["min_filter"], options.min_filter);
+		parse_mag_filter(node["mag_filter"], options.mag_filter);
+		parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (node["use_common_buffer_preset"].value_or<bool>(true))
+		bool use_common_buffer_preset = true;
+		parse_bool(node["use_common_buffer_preset"], use_common_buffer_preset);
+		if (use_common_buffer_preset)
 		{
 			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
 			{

@@ -13,28 +13,28 @@ namespace oly::reg
 		}
 
 		params::Ellipse params;
-		params.local = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node["transform"]);
 
 		glm::vec4 v4;
-		if (parse_vec(node["border inner color"].as_array(), v4))
+		if (parse_vec(node["border inner color"], v4))
 			params.color.border_inner = v4;
-		if (parse_vec(node["border outer color"].as_array(), v4))
+		if (parse_vec(node["border outer color"], v4))
 			params.color.border_outer = v4;
-		if (parse_vec(node["fill inner color"].as_array(), v4))
+		if (parse_vec(node["fill inner color"], v4))
 			params.color.fill_inner = v4;
-		if (parse_vec(node["fill outer color"].as_array(), v4))
+		if (parse_vec(node["fill outer color"], v4))
 			params.color.fill_outer = v4;
 
 		float v1;
-		if (parse_float(node, "border", v1))
+		if (parse_float(node["border"], v1))
 			params.dimension.border = v1;
-		if (parse_float(node, "border exp", v1))
+		if (parse_float(node["border exp"], v1))
 			params.dimension.border_exp = v1;
-		if (parse_float(node, "fill exp", v1))
+		if (parse_float(node["fill exp"], v1))
 			params.dimension.fill_exp = v1;
-		if (parse_float(node, "rx", v1))
+		if (parse_float(node["rx"], v1))
 			params.dimension.rx = v1;
-		if (parse_float(node, "ry", v1))
+		if (parse_float(node["ry"], v1))
 			params.dimension.ry = v1;
 
 		if (LOG.enable.debug)

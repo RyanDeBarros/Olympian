@@ -15,7 +15,7 @@ namespace oly::reg
 
 		params::TileMap params;
 
-		params.local = reg::load_transform_2d(node, "transform");
+		params.local = reg::load_transform_2d(node["transform"]);
 
 		auto toml_layers = node["layer"].as_array();
 		if (toml_layers)
@@ -39,23 +39,21 @@ namespace oly::reg
 					if (tiles)
 					{
 						size_t tile_idx = 0;
-						for (const auto& toml_tile : *tiles)
+						for (auto& toml_tile : *tiles)
 						{
-							if (auto _tile = toml_tile.as_array())
-							{
-								glm::ivec2 tile{};
-								if (parse_ivec(_tile, tile))
-									lparams.tiles.push_back(tile);
-								else
-									OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
-																 << ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
-							}
+							glm::ivec2 tile{};
+							if (parse_ivec((TOMLNode)toml_tile, tile))
+								lparams.tiles.push_back(tile);
+							else
+								OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
+																<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
 							++tile_idx;
 						}
 					}
 
-					if (auto z = node["z"].value<int64_t>())
-						lparams.z = (int)z.value();
+					int z = 0;
+					if (parse_int(node["z"], z))
+						lparams.z = z;
 
 					params.layers.push_back(std::move(lparams));
 				}

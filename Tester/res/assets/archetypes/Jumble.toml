@@ -19,7 +19,7 @@ draw = [
 name = "sprite3"
 "texture"    = "RES://textures/serotonin.gif"
 transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
-frame_format = { "num frames" = 59, "delay_seconds" = -0.05 }
+frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [[archetype.sprite]]
 name = "sprite4"

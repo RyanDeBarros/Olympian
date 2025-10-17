@@ -59,14 +59,15 @@ namespace oly::reg
 
 					rendering::TileSet::Assignment assignment;
 
-					if (auto config = _config.value<int64_t>())
+					int config = 0;
+					if (parse_int(_config, config))
 					{
-						if (*config >= 0 && *config < (int64_t)rendering::TileSet::Configuration::_COUNT)
-							assignment.config = (rendering::TileSet::Configuration)*config;
+						if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_COUNT)
+							assignment.config = (rendering::TileSet::Configuration)config;
 						else
 						{
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-														 << ", unrecognized configuration #" << *config << "." << LOG.nl;
+														 << ", unrecognized configuration #" << config << "." << LOG.nl;
 							return;
 						}
 					}
@@ -79,7 +80,7 @@ namespace oly::reg
 
 					assignment.desc.name = _texture.value();
 					glm::vec4 uvs{};
-					if (reg::parse_vec(node["uvs"].as_array(), uvs))
+					if (reg::parse_vec(node["uvs"], uvs))
 					{
 						assignment.desc.uvs.x1 = uvs[0];
 						assignment.desc.uvs.x2 = uvs[1];

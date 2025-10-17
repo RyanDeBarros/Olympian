@@ -20,21 +20,21 @@ namespace oly::reg
 		glm::vec2 v2;
 		float v1;
 
-		if (parse_vec(node["pivot"].as_array(), v2))
+		if (parse_vec(node["pivot"], v2))
 			format.pivot = v2;
-		if (parse_float(node, "line_spacing", v1))
+		if (parse_float(node["line_spacing"], v1))
 			format.line_spacing = v1;
-		if (parse_float(node, "linebreak_spacing", v1))
+		if (parse_float(node["linebreak_spacing"], v1))
 			format.linebreak_spacing = v1;
-		if (parse_vec(node["min_size"].as_array(), v2))
+		if (parse_vec(node["min_size"], v2))
 			format.min_size = v2;
-		if (parse_vec(node["padding"].as_array(), v2))
+		if (parse_vec(node["padding"], v2))
 			format.padding = v2;
-		if (parse_float(node, "text_wrap", v1))
+		if (parse_float(node["text_wrap"], v1))
 			format.text_wrap = v1;
-		if (parse_float(node, "max_height", v1))
+		if (parse_float(node["max_height"], v1))
 			format.max_height = v1;
-		if (parse_float(node, "tab_spaces", v1))
+		if (parse_float(node["tab_spaces"], v1))
 			format.tab_spaces = v1;
 
 		if (auto halign = node["horizontal_align"].value<std::string>())
@@ -91,8 +91,7 @@ namespace oly::reg
 			return std::nullopt;
 		}
 
-		if (auto atlas_index = element["atlas_index"].value<int64_t>())
-			element_params.atlas_index = (unsigned int)*atlas_index;
+		parse_uint(element["atlas_index"], element_params.atlas_index);
 
 		if (auto text = element["text"].value<std::string>())
 			element_params.text = *text;
@@ -103,20 +102,14 @@ namespace oly::reg
 		}
 
 		glm::vec4 v;
-		if (parse_vec(element["text_color"].as_array(), v))
+		if (parse_vec(element["text_color"], v))
 			element_params.text_color = v;
 
-		if (auto adj_offset = element["adj_offset"].value<double>())
-			element_params.adj_offset = *adj_offset;
-
-		parse_vec(element["scale"].as_array(), element_params.scale);
-
-		if (auto line_y_pivot = element["line_y_pivot"].value<double>())
-			element_params.line_y_pivot = *line_y_pivot;
-
-		parse_vec(element["jitter_offset"].as_array(), element_params.jitter_offset);
-
-		element_params.expand = element["expand"].value_or<bool>(false); // TODO v5 add to archetype generation
+		parse_float(element["adj_offset"], element_params.adj_offset);
+		parse_vec(element["scale"], element_params.scale);
+		parse_float(element["line_y_pivot"], element_params.line_y_pivot);
+		parse_vec(element["jitter_offset"], element_params.jitter_offset);
+		parse_bool(element["expand"], element_params.expand);
 
 		return element_params;
 	}
@@ -151,13 +144,11 @@ namespace oly::reg
 		}
 
 		params.format = create_format(node["format"]);
-
-		if (auto draw_bkg = node["draw_bkg"].value<bool>())
-			params.draw_bkg = draw_bkg.value();
-		params.local = load_transform_2d(node, "transform");
+		parse_bool(node["draw_bkg"], params.draw_bkg);
+		params.local = load_transform_2d(node["transform"]);
 
 		glm::vec4 v;
-		if (parse_vec(node["bkg_color"].as_array(), v))
+		if (parse_vec(node["bkg_color"], v))
 			params.bkg_color = v;
 
 		if (LOG.enable.debug)
@@ -218,9 +209,7 @@ namespace oly::reg
 		rendering::Paragraph paragraph(std::move(elements), params.format);
 
 		paragraph.set_local() = params.local;
-
-		if (params.draw_bkg)
-			paragraph.draw_bkg = *params.draw_bkg;
+		paragraph.draw_bkg = params.draw_bkg;
 		if (params.bkg_color)
 			paragraph.set_bkg_color(*params.bkg_color);
 
@@ -236,9 +225,7 @@ namespace oly::reg
 		rendering::Paragraph paragraph(std::move(elements), params.format);
 
 		paragraph.set_local() = params.local;
-
-		if (params.draw_bkg)
-			paragraph.draw_bkg = *params.draw_bkg;
+		paragraph.draw_bkg = params.draw_bkg;
 		if (params.bkg_color)
 			paragraph.set_bkg_color(*params.bkg_color);
 

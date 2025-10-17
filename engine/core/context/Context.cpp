@@ -32,12 +32,13 @@ namespace oly::context
 	{
 		if (auto toml_logger = node["logger"])
 		{
-			LOG.target.console = toml_logger["console"].value<bool>().value_or(true);
-			auto logfile = toml_logger["logfile"].value<std::string>();
-			if (logfile)
+			reg::parse_bool(toml_logger["console"], LOG.target.console);
+			if (auto logfile = toml_logger["logfile"].value<std::string>())
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile(logfile.value().c_str(), toml_logger["append"].value<bool>().value_or(true));
+				bool append = true;
+				reg::parse_bool(toml_logger["append"], append);
+				LOG.set_logfile(logfile->c_str(), append);
 				LOG.flush();
 			}
 			else
@@ -45,11 +46,11 @@ namespace oly::context
 			
 			if (auto logger_enable = toml_logger["enable"])
 			{
-				LOG.enable.debug = logger_enable["debug"].value_or<bool>(false);
-				LOG.enable.info = logger_enable["info"].value_or<bool>(true);
-				LOG.enable.warning = logger_enable["warning"].value_or<bool>(true);
-				LOG.enable.error = logger_enable["error"].value_or<bool>(true);
-				LOG.enable.fatal = logger_enable["fatal"].value_or<bool>(true);
+				reg::parse_bool(logger_enable["debug"], LOG.enable.debug);
+				reg::parse_bool(logger_enable["info"], LOG.enable.info);
+				reg::parse_bool(logger_enable["warning"], LOG.enable.warning);
+				reg::parse_bool(logger_enable["error"], LOG.enable.error);
+				reg::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
 			}
 		}
 		else
@@ -63,10 +64,8 @@ namespace oly::context
 	{
 		if (auto framerate = node["framerate"])
 		{
-			if (auto frame_length_clip = framerate["frame_length_clip"].value<double>())
-				TIME.frame_length_clip = *frame_length_clip;
-			if (auto time_scale = framerate["time_scale"].value<double>())
-				TIME.time_scale = *time_scale;
+			reg::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
+			reg::parse_double(framerate["time_scale"], TIME.time_scale);
 		}
 		TIME.init();
 	}

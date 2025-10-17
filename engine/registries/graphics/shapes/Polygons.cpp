@@ -15,16 +15,16 @@ namespace oly::reg
 
 		params::Polygon params;
 
-		params.local = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node["transform"]);
 
 		auto toml_points = node["points"].as_array();
 		if (toml_points)
 		{
 			size_t pt_idx = 0;
-			for (const auto& toml_point : *toml_points)
+			for (auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (parse_vec(toml_point.as_array(), pt))
+				if (parse_vec((TOMLNode)toml_point, pt))
 					params.points.push_back(pt);
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
@@ -36,10 +36,10 @@ namespace oly::reg
 		if (toml_colors)
 		{
 			size_t color_idx = 0;
-			for (const auto& toml_color : *toml_colors)
+			for (auto& toml_color : *toml_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec(toml_color.as_array(), col))
+				if (parse_vec((TOMLNode)toml_color, col))
 					params.colors.push_back(col);
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
@@ -88,7 +88,7 @@ namespace oly::reg
 
 		params::PolyComposite params;
 
-		params.local = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node["transform"]);
 
 		auto toml_method = node["method"].value<std::string>();
 		if (toml_method)
@@ -102,10 +102,10 @@ namespace oly::reg
 				if (toml_points)
 				{
 					size_t pt_idx = 0;
-					for (const auto& toml_point : *toml_points)
+					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec(toml_point.as_array(), pt))
+						if (parse_vec((TOMLNode)toml_point, pt))
 							method.points.push_back(pt);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -117,10 +117,10 @@ namespace oly::reg
 				if (toml_fill_colors)
 				{
 					size_t color_idx = 0;
-					for (const auto& toml_color : *toml_fill_colors)
+					for (auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec(toml_color.as_array(), col))
+						if (parse_vec((TOMLNode)toml_color, col))
 							method.colors.push_back(col);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
@@ -138,10 +138,10 @@ namespace oly::reg
 				if (toml_points)
 				{
 					size_t pt_idx = 0;
-					for (const auto& toml_point : *toml_points)
+					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec(toml_point.as_array(), pt))
+						if (parse_vec((TOMLNode)toml_point, pt))
 							method.ngon_base.points.push_back(pt);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -153,10 +153,10 @@ namespace oly::reg
 				if (toml_fill_colors)
 				{
 					size_t color_idx = 0;
-					for (const auto& toml_color : *toml_fill_colors)
+					for (auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec(toml_color.as_array(), col))
+						if (parse_vec((TOMLNode)toml_color, col))
 							method.ngon_base.fill_colors.push_back(col);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
@@ -168,10 +168,10 @@ namespace oly::reg
 				if (toml_border_colors)
 				{
 					size_t color_idx = 0;
-					for (const auto& toml_color : *toml_border_colors)
+					for (auto& toml_color : *toml_border_colors)
 					{
 						glm::vec4 col;
-						if (parse_vec(toml_color.as_array(), col))
+						if (parse_vec((TOMLNode)toml_color, col))
 							method.ngon_base.border_colors.push_back(col);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
@@ -179,23 +179,25 @@ namespace oly::reg
 					}
 				}
 
-				method.ngon_base.border_width = (float)node["border_width"].value<double>().value_or(0.0);
+				parse_float(node["border_width"], method.ngon_base.border_width);
 
-				auto border_pivot = node["border_pivot"];
-				if (auto str_border_pivot = border_pivot.value<std::string>())
+				if (auto border_pivot = node["border_pivot"])
 				{
-					const std::string& str = str_border_pivot.value();
-					if (str == "outer")
-						method.ngon_base.border_pivot = cmath::BorderPivot::OUTER;
-					else if (str == "middle")
-						method.ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
-					else if (str == "inner")
-						method.ngon_base.border_pivot = cmath::BorderPivot::INNER;
+					if (auto str_border_pivot = border_pivot.value<std::string>())
+					{
+						const std::string& str = str_border_pivot.value();
+						if (str == "outer")
+							method.ngon_base.border_pivot = cmath::BorderPivot::OUTER;
+						else if (str == "middle")
+							method.ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
+						else if (str == "inner")
+							method.ngon_base.border_pivot = cmath::BorderPivot::INNER;
+						else
+							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+					}
 					else
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+						parse_float(border_pivot, method.ngon_base.border_pivot.v);
 				}
-				else if (auto flt_border_pivot = border_pivot.value<double>())
-					method.ngon_base.border_pivot = (float)flt_border_pivot.value();
 
 				params.method = std::move(method);
 			}
@@ -207,10 +209,10 @@ namespace oly::reg
 				if (toml_points)
 				{
 					size_t pt_idx = 0;
-					for (const auto& toml_point : *toml_points)
+					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (parse_vec(toml_point.as_array(), pt))
+						if (parse_vec((TOMLNode)toml_point, pt))
 							method.points.push_back(pt);
 						else
 							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -312,16 +314,16 @@ namespace oly::reg
 
 		params::NGon params;
 
-		params.local = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node["transform"]);
 
 		auto toml_points = node["points"].as_array();
 		if (toml_points)
 		{
 			size_t pt_idx = 0;
-			for (const auto& toml_point : *toml_points)
+			for (auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (parse_vec(toml_point.as_array(), pt))
+				if (parse_vec((TOMLNode)toml_point, pt))
 					params.ngon_base.points.push_back(pt);
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
@@ -333,10 +335,10 @@ namespace oly::reg
 		if (toml_fill_colors)
 		{
 			size_t color_idx = 0;
-			for (const auto& toml_color : *toml_fill_colors)
+			for (auto& toml_color : *toml_fill_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec(toml_color.as_array(), col))
+				if (parse_vec((TOMLNode)toml_color, col))
 					params.ngon_base.fill_colors.push_back(col);
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
@@ -348,10 +350,10 @@ namespace oly::reg
 		if (toml_border_colors)
 		{
 			size_t color_idx = 0;
-			for (const auto& toml_color : *toml_border_colors)
+			for (auto& toml_color : *toml_border_colors)
 			{
 				glm::vec4 col;
-				if (parse_vec(toml_color.as_array(), col))
+				if (parse_vec((TOMLNode)toml_color, col))
 					params.ngon_base.border_colors.push_back(col);
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
@@ -359,8 +361,8 @@ namespace oly::reg
 			}
 		}
 
-		params.bordered = node["bordered"].value<bool>().value_or(false);
-		params.ngon_base.border_width = (float)node["border_width"].value<double>().value_or(0.0);
+		parse_bool(node["bordered"], params.bordered);
+		parse_float(node["border_width"], params.ngon_base.border_width);
 
 		auto border_pivot = node["border_pivot"];
 		if (auto str_border_pivot = border_pivot.value<std::string>())
@@ -375,8 +377,8 @@ namespace oly::reg
 			else
 				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 		}
-		else if (auto flt_border_pivot = border_pivot.value<double>())
-			params.ngon_base.border_pivot = (float)flt_border_pivot.value();
+		else
+			parse_float(border_pivot, params.ngon_base.border_pivot.v);
 
 		if (LOG.enable.debug)
 		{

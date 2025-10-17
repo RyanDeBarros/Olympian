@@ -1,5 +1,6 @@
 #include "SpriteAtlases.h"
 
+#include "registries/Loader.h"
 #include "registries/graphics/sprites/Sprites.h"
 
 namespace oly::reg
@@ -16,27 +17,33 @@ namespace oly::reg
 
 		params.sprite_params = sprite_params(node["sprite"]);
 
-		auto _rows = node["rows"].value<int64_t>();
-		auto _cols = node["cols"].value<int64_t>();
-		auto _delay_seconds = node["delay_seconds"].value<double>();
-
-		if (_rows && _cols && _delay_seconds)
+		int rows, cols;
+		float delay_seconds;
+		if (parse_int(node["rows"], rows) && parse_int(node["cols"], cols) && parse_float(node["delay_seconds"], delay_seconds))
 		{
-			params.frame = params::SpriteAtlas::Frame{
-				.rows = (GLuint)_rows.value(),
-				.cols = (GLuint)_cols.value(),
-				.delay_seconds = (float)_delay_seconds.value(),
-				.row_major = node["row_major"].value<bool>().value_or(true),
-				.row_up = node["row_up"].value<bool>().value_or(true)
+			params::SpriteAtlas::Frame frame{
+				.rows = (GLuint)rows,
+				.cols = (GLuint)cols,
+				.delay_seconds = delay_seconds,
 			};
+			parse_bool(node["row_major"], frame.row_major);
+			parse_bool(node["row_up"], frame.row_up);
+			params.frame = frame;
 		}
-		else if (auto _static_frame = node["static_frame"].value<int64_t>())
+		else
 		{
-			params.frame = params::SpriteAtlas::StaticFrame{ .frame = (GLuint)_static_frame.value() };
+			int static_frame;
+			if (parse_int(node["static_frame"], static_frame))
+				params.frame = params::SpriteAtlas::StaticFrame{ .frame = (GLuint)static_frame };
 		}
 
-		params.starting_frame = convert_optional<GLuint>(node["starting_frame"].value<int64_t>());
-		params.starting_time = convert_optional<float>(node["starting_time"].value<double>());
+		int starting_frame;
+		if (parse_int(node["starting_frame"], starting_frame))
+			params.starting_frame = starting_frame;
+
+		float starting_time;
+		if (parse_float(node["starting_time"], starting_time))
+			params.starting_time = starting_time;
 
 		if (LOG.enable.debug)
 		{

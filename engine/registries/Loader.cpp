@@ -20,95 +20,88 @@ namespace oly::reg
 		}
 	}
 
-	bool parse_int(const TOMLNode& node, const std::string& name, int& v)
+	bool parse_bool(TOMLNode node, bool& v)
 	{
-		if (auto i = node[name].value<int64_t>())
+		if (auto i = node.value<bool>())
 		{
-			v = (int)i.value();
+			v = *i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (bool)*i;
 			return true;
 		}
 		return false;
 	}
 
-	bool parse_int(const CTOMLNode& node, const std::string& name, int& v)
+	bool parse_int(TOMLNode node, int& v)
 	{
-		if (auto i = node[name].value<int64_t>())
+		if (auto i = node.value<int64_t>())
 		{
-			v = (int)i.value();
+			v = (int)*i;
 			return true;
 		}
 		return false;
 	}
 
-	bool parse_int(const toml::table& node, const std::string& name, int& v)
+	bool parse_uint(TOMLNode node, GLuint& v)
 	{
-		if (auto i = node[name].value<int64_t>())
+		if (auto i = node.value<int64_t>())
 		{
-			v = (int)i.value();
+			v = (GLuint)*i;
 			return true;
 		}
 		return false;
 	}
 
-	bool parse_float(const TOMLNode& node, const std::string& name, float& v)
+	bool parse_float(TOMLNode node, float& v)
 	{
-		if (auto i = node[name].value<double>())
+		if (auto i = node.value<double>())
 		{
-			v = (float)i.value();
+			v = (float)*i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (float)*i;
 			return true;
 		}
 		return false;
 	}
 
-	bool parse_float(const CTOMLNode& node, const std::string& name, float& v)
+	bool parse_double(TOMLNode node, double& v)
 	{
-		if (auto i = node[name].value<double>())
+		if (auto i = node.value<double>())
 		{
-			v = (float)i.value();
+			v = *i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (double)*i;
 			return true;
 		}
 		return false;
 	}
 
-	bool parse_float(const toml::table& node, const std::string& name, float& v)
-	{
-		if (auto i = node[name].value<double>())
-		{
-			v = (float)i.value();
-			return true;
-		}
-		return false;
-	}
-
-	Transform2D load_transform_2d(const TOMLNode& node)
+	Transform2D load_transform_2d(TOMLNode node)
 	{
 		Transform2D transform;
 		if (!node)
 			return transform;
-		parse_vec(node["position"].as_array(), transform.position);
+		parse_vec(node["position"], transform.position);
 		if (auto rotation = node["rotation"].value<double>())
 			transform.rotation = (float)rotation.value();
-		parse_vec(node["scale"].as_array(), transform.scale);
+		parse_vec(node["scale"], transform.scale);
 		return transform;
 	}
 
-	Transform2D load_transform_2d(const CTOMLNode& node)
+	bool parse_mag_filter(TOMLNode node, GLenum& mag_filter)
 	{
-		Transform2D transform;
-		if (!node)
-			return transform;
-		parse_vec(node["position"].as_array(), transform.position);
-		if (auto rotation = node["rotation"].value<double>())
-			transform.rotation = (float)rotation.value();
-		parse_vec(node["scale"].as_array(), transform.scale);
-		return transform;
-	}
-
-	bool parse_mag_filter(const TOMLNode& node, const std::string& name, GLenum& mag_filter)
-	{
-		if (auto v = node[name].value<int64_t>())
+		if (auto v = node.value<int64_t>())
 		{
-			GLenum val = (GLenum)v.value();
+			GLenum val = (GLenum)*v;
 			if (is_in(val, GL_NEAREST, GL_LINEAR))
 			{
 				mag_filter = val;
@@ -118,10 +111,10 @@ namespace oly::reg
 				return false;
 		}
 
-		auto _v = node[name].value<std::string>();
+		auto _v = node.value<std::string>();
 		if (!_v)
 			return false;
-		const std::string& v = _v.value();
+		const std::string& v = *_v;
 		if (v == "nearest")
 			mag_filter = GL_NEAREST;
 		else if (v == "linear")
@@ -131,11 +124,11 @@ namespace oly::reg
 		return true;
 	}
 
-	bool parse_min_filter(const TOMLNode& node, const std::string& name, GLenum& min_filter)
+	bool parse_min_filter(TOMLNode node, GLenum& min_filter)
 	{
-		if (auto v = node[name].value<int64_t>())
+		if (auto v = node.value<int64_t>())
 		{
-			GLenum val = (GLenum)v.value();
+			GLenum val = (GLenum)*v;
 			if (is_in(val, GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR))
 			{
 				min_filter = val;
@@ -145,10 +138,10 @@ namespace oly::reg
 				return false;
 		}
 
-		auto _v = node[name].value<std::string>();
+		auto _v = node.value<std::string>();
 		if (!_v)
 			return false;
-		const std::string& v = _v.value();
+		const std::string& v = *_v;
 		if (v == "nearest")
 			min_filter = GL_NEAREST;
 		else if (v == "linear")
@@ -166,11 +159,11 @@ namespace oly::reg
 		return true;
 	}
 
-	bool parse_wrap(const TOMLNode& node, const std::string& name, GLenum& wrap)
+	bool parse_wrap(TOMLNode node, GLenum& wrap)
 	{
-		if (auto v = node[name].value<int64_t>())
+		if (auto v = node.value<int64_t>())
 		{
-			GLenum val = (GLenum)v.value();
+			GLenum val = (GLenum)*v;
 			if (is_in(val, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER, GL_MIRRORED_REPEAT, GL_REPEAT, GL_MIRROR_CLAMP_TO_EDGE))
 			{
 				wrap = val;
@@ -180,10 +173,10 @@ namespace oly::reg
 				return false;
 		}
 
-		auto _v = node[name].value<std::string>();
+		auto _v = node.value<std::string>();
 		if (!_v)
 			return false;
-		const std::string& v = _v.value();
+		const std::string& v = *_v;
 		if (v == "clamp to edge")
 			wrap = GL_CLAMP_TO_EDGE;
 		else if (v == "clamp to border")
@@ -208,7 +201,7 @@ namespace oly::reg
 		return transformer;
 	}
 
-	bool parse_shape(const TOMLNode& node, math::IRect2D& rect)
+	bool parse_shape(TOMLNode node, math::IRect2D& rect)
 	{
 		if (auto x1 = node["x1"].value<int64_t>())
 			rect.x1 = *x1;
@@ -233,7 +226,7 @@ namespace oly::reg
 		return true;
 	}
 
-	math::TopSidePadding parse_padding(const TOMLNode& node)
+	math::TopSidePadding parse_padding(TOMLNode node)
 	{
 		math::TopSidePadding padding;
 
@@ -252,11 +245,23 @@ namespace oly::reg
 		return padding;
 	}
 
-	bool parse_enum(const TOMLNode& node, math::PositioningMode& mode)
+	bool parse_enum(TOMLNode node, math::PositioningMode& mode)
 	{
 		auto _s = node.value<std::string>();
 		if (!_s)
+		{
+			int v = 0;
+			if (parse_int(node, v))
+			{
+				math::PositioningMode m = (math::PositioningMode)v;
+				if (is_in(m, math::PositioningMode::ABSOLUTE, math::PositioningMode::RELATIVE))
+				{
+					mode = m;
+					return true;
+				}
+			}
 			return false;
+		}
 		const std::string& s = *_s;
 		
 		if (s == "absolute")

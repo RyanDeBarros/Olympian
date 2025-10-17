@@ -25,7 +25,7 @@ namespace oly::reg
 
 			std::vector<TextElement> elements;
 			Transform2D local;
-			std::optional<bool> draw_bkg;
+			bool draw_bkg;
 			std::optional<glm::vec4> bkg_color;
 
 			rendering::ParagraphFormat format;

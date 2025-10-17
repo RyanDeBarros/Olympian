@@ -23,52 +23,61 @@ namespace oly::context
 		platform::PlatformSetup platform_setup;
 
 		auto toml_window = node["window"];
-		if (!toml_window.as_table())
+		if (!toml_window)
 		{
 			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
-		auto width = toml_window["width"].value<int64_t>();
-		auto height = toml_window["height"].value<int64_t>();
-		auto title = toml_window["title"].value<std::string>();
-		if (!width || !height || !title)
+
+		if (!reg::parse_int(toml_window["width"], platform_setup.window_width))
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"width\", \"height\", and/or \"title\" fields." << LOG.nl;
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
+			throw Error(ErrorCode::PLATFORM_INIT);
+		}
+		
+		if (!reg::parse_int(toml_window["height"], platform_setup.window_height))
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 
-		platform_setup.window_width = (int)width.value();
-		platform_setup.window_height = (int)height.value();
-		platform_setup.window_title = title.value();
+		if (auto title = toml_window["title"].value<std::string>())
+			platform_setup.window_title = *title;
+		else
+		{
+			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"title\" fields." << LOG.nl;
+			throw Error(ErrorCode::PLATFORM_INIT);
+		}
 
 		if (auto toml_window_hint = toml_window["window_hint"])
 		{
-			reg::parse_vec(toml_window_hint["clear_color"].as_array(), platform_setup.window_hint.context.clear_color);
-			platform_setup.window_hint.context.swap_interval = (int)toml_window_hint["swap_interval"].value<int64_t>().value_or(1);
-			platform_setup.window_hint.window.resizable = toml_window_hint["resizable"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.visible = toml_window_hint["visible"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.decorated = toml_window_hint["decorated"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.focused = toml_window_hint["focused"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.auto_iconify = toml_window_hint["auto_iconify"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.floating = toml_window_hint["floating"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.maximized = toml_window_hint["maximized"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.center_cursor = toml_window_hint["center_cursor"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.transparent_framebuffer = toml_window_hint["transparent_framebuffer"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.focus_on_show = toml_window_hint["focus_on_show"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.scale_to_monitor = toml_window_hint["scale_to_monitor"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.scale_framebuffer = toml_window_hint["scale_framebuffer"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.mouse_passthrough = toml_window_hint["mouse_passthrough"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.position_x = (unsigned int)toml_window_hint["position_x"].value<int64_t>().value_or(GLFW_ANY_POSITION);
-			platform_setup.window_hint.window.position_y = (unsigned int)toml_window_hint["position_y"].value<int64_t>().value_or(GLFW_ANY_POSITION);
-			platform_setup.window_hint.window.refresh_rate = (int)toml_window_hint["refresh_rate"].value<int64_t>().value_or(GLFW_DONT_CARE);
-			platform_setup.window_hint.window.stereo = toml_window_hint["stereo"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.srgb_capable = toml_window_hint["srgb_capable"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.double_buffer = toml_window_hint["double_buffer"].value<bool>().value_or(true);
-			platform_setup.window_hint.window.opengl_forward_compat = toml_window_hint["opengl_forward_compat"].value<bool>().value_or(false);
-			platform_setup.window_hint.window.context_debug = toml_window_hint["context_debug"].value<bool>().value_or(false);
+			reg::parse_vec(toml_window_hint["clear_color"], platform_setup.window_hint.context.clear_color);
+			reg::parse_int(toml_window_hint["swap_interval"], platform_setup.window_hint.context.swap_interval);
+			reg::parse_bool(toml_window_hint["resizable"], platform_setup.window_hint.window.resizable);
+			reg::parse_bool(toml_window_hint["visible"], platform_setup.window_hint.window.visible);
+			reg::parse_bool(toml_window_hint["decorated"], platform_setup.window_hint.window.decorated);
+			reg::parse_bool(toml_window_hint["focused"], platform_setup.window_hint.window.focused);
+			reg::parse_bool(toml_window_hint["auto_iconify"], platform_setup.window_hint.window.auto_iconify);
+			reg::parse_bool(toml_window_hint["floating"], platform_setup.window_hint.window.floating);
+			reg::parse_bool(toml_window_hint["maximized"], platform_setup.window_hint.window.maximized);
+			reg::parse_bool(toml_window_hint["center_cursor"], platform_setup.window_hint.window.center_cursor);
+			reg::parse_bool(toml_window_hint["transparent_framebuffer"], platform_setup.window_hint.window.transparent_framebuffer);
+			reg::parse_bool(toml_window_hint["focus_on_show"], platform_setup.window_hint.window.focus_on_show);
+			reg::parse_bool(toml_window_hint["scale_to_monitor"], platform_setup.window_hint.window.scale_to_monitor);
+			reg::parse_bool(toml_window_hint["scale_framebuffer"], platform_setup.window_hint.window.scale_framebuffer);
+			reg::parse_bool(toml_window_hint["mouse_passthrough"], platform_setup.window_hint.window.mouse_passthrough);
+			reg::parse_uint(toml_window_hint["position_x"], platform_setup.window_hint.window.position_x);
+			reg::parse_uint(toml_window_hint["position_y"], platform_setup.window_hint.window.position_y);
+			reg::parse_int(toml_window_hint["refresh_rate"], platform_setup.window_hint.window.refresh_rate);
+			reg::parse_bool(toml_window_hint["stereo"], platform_setup.window_hint.window.stereo);
+			reg::parse_bool(toml_window_hint["srgb_capable"], platform_setup.window_hint.window.srgb_capable);
+			reg::parse_bool(toml_window_hint["double_buffer"], platform_setup.window_hint.window.double_buffer);
+			reg::parse_bool(toml_window_hint["opengl_forward_compat"], platform_setup.window_hint.window.opengl_forward_compat);
+			reg::parse_bool(toml_window_hint["context_debug"], platform_setup.window_hint.window.context_debug);
 		}
 
-		platform_setup.num_gamepads = glm::clamp((int)node["gamepads"].value<int64_t>().value_or(0), 0, GLFW_JOYSTICK_LAST);
+		reg::parse_uint(node["gamepads"], platform_setup.num_gamepads);
+		platform_setup.num_gamepads = glm::clamp((int)platform_setup.num_gamepads, 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
@@ -83,8 +92,8 @@ namespace oly::context
 		{
 			if (auto viewport = window["viewport"])
 			{
-				camera_boxed = viewport["boxed"].value_or<bool>(true);
-				camera_stretch = viewport["stretch"].value_or<bool>(true);
+				reg::parse_bool(viewport["boxed"], camera_boxed);
+				reg::parse_bool(viewport["stretch"], camera_stretch);
 			}
 		}
 		

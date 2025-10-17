@@ -41,25 +41,21 @@ namespace oly::reg
 		TOMLNode toml = (TOMLNode)table;
 
 		float space_advance_width;
-		if (auto v = toml["space_advance_width"].value<double>())
-			space_advance_width = *v;
-		else
+		if (!parse_float(toml["space_advance_width"], space_advance_width))
 		{
 			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"space_advance_width\" field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		float line_height;
-		if (auto v = toml["line_height"].value<double>())
-			line_height = *v;
-		else
+		if (!parse_float(toml["line_height"], line_height))
 		{
 			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"line_height\" field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		glm::vec2 font_scale = glm::vec2(1.0f);
-		if (auto a = toml["font_scale"].as_array())
+		if (auto a = toml["font_scale"])
 		{
 			if (!parse_vec(a, font_scale))
 				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"font_scale\" field." << LOG.nl;
@@ -96,7 +92,8 @@ namespace oly::reg
 				}
 
 				std::string texture_file;
-				size_t tidx = g["texture_file"].value_or<int64_t>(0);
+				unsigned int tidx = 0;
+				parse_uint(g["texture_file"], tidx);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -106,7 +103,8 @@ namespace oly::reg
 					return;
 				}
 
-				unsigned int texture_index = g["texture_index"].value_or<int64_t>(0);
+				unsigned int texture_index = 0;
+				parse_uint(g["texture_index"], texture_index);
 
 				math::IRect2D location;
 				if (!parse_shape(g["location"], location))
@@ -121,7 +119,7 @@ namespace oly::reg
 				parse_enum(g["origin_offset_mode"], origin_offset_mode);
 
 				glm::vec2 origin_offset = {};
-				parse_vec(g["origin_offset"].as_array(), origin_offset);
+				parse_vec(g["origin_offset"], origin_offset);
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 			});

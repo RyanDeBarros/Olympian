@@ -16,11 +16,11 @@ namespace oly::reg
 
 		params::Sprite params;
 
-		params.local = load_transform_2d(node, "transform");
+		params.local = load_transform_2d(node["transform"]);
 		params.texture = node["texture"].value<std::string>();
-		params.texture_index = (unsigned int)node["texture_index"].value<int64_t>().value_or(0);
+		parse_uint(node["texture_index"], params.texture_index);
 
-		if (auto toml_modulation = node["modulation"].as_array())
+		if (auto toml_modulation = node["modulation"])
 		{
 			glm::vec4 modulation;
 			if (parse_vec(toml_modulation, modulation))
@@ -29,7 +29,7 @@ namespace oly::reg
 				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
 		}
 
-		if (auto toml_tex_coords = node["tex_coords"].as_array())
+		if (auto toml_tex_coords = node["tex_coords"])
 		{
 			glm::vec4 uvs;
 			if (parse_vec(toml_tex_coords, uvs))
@@ -45,21 +45,29 @@ namespace oly::reg
 			{
 				std::string mode_str = *mode;
 				if (mode_str == "single")
-					params.frame_format = params::Sprite::SingleFrameFormat{ .frame = (GLuint)toml_frame_format["frame"].value<int64_t>().value_or(0) };
+				{
+					params::Sprite::SingleFrameFormat format;
+					parse_uint(toml_frame_format["frame"], format.frame);
+					params.frame_format = format;
+				}
 				else if (mode_str == "auto")
-					params.frame_format = params::Sprite::AutoFrameFormat{ .speed = (float)toml_frame_format["speed"].value<double>().value_or(1.0),
-						.starting_frame = (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0) };
+				{
+					params::Sprite::AutoFrameFormat format;
+					parse_float(toml_frame_format["speed"], format.speed);
+					parse_uint(toml_frame_format["starting_frame"], format.starting_frame);
+					params.frame_format = format;
+				}
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{
-				params.frame_format = graphics::AnimFrameFormat{
-					.starting_frame = (GLuint)toml_frame_format["starting_frame"].value<int64_t>().value_or(0),
-					.num_frames = (GLuint)toml_frame_format["num frames"].value<int64_t>().value_or(0),
-					.starting_time = (float)toml_frame_format["starting_time"].value<double>().value_or(0.0),
-					.delay_seconds = (float)toml_frame_format["delay_seconds"].value<double>().value_or(0.0)
-				};
+				graphics::AnimFrameFormat format;
+				parse_uint(toml_frame_format["starting_frame"], format.starting_frame);
+				parse_uint(toml_frame_format["num_frames"], format.num_frames);
+				parse_float(toml_frame_format["starting_time"], format.starting_time);
+				parse_float(toml_frame_format["delay_seconds"], format.delay_seconds);
+				params.frame_format = format;
 			}
 		}
 
@@ -72,20 +80,20 @@ namespace oly::reg
 				if (type == "shear")
 				{
 					ShearTransformModifier2D modifier;
-					parse_vec(node["shearing"].as_array(), modifier.shearing);
+					parse_vec(node["shearing"], modifier.shearing);
 					params.modifier = modifier;
 				}
 				else if (type == "pivot")
 				{
 					PivotTransformModifier2D modifier;
-					parse_vec(node["pivot"].as_array(), modifier.pivot);
-					parse_vec(node["size"].as_array(), modifier.size);
+					parse_vec(node["pivot"], modifier.pivot);
+					parse_vec(node["size"], modifier.size);
 					params.modifier = modifier;
 				}
 				else if (type == "pivot-shear")
 				{
 					OffsetTransformModifier2D modifier;
-					parse_vec(node["offset"].as_array(), modifier.offset);
+					parse_vec(node["offset"], modifier.offset);
 					params.modifier = modifier;
 				}
 				else
