@@ -6,6 +6,12 @@
 
 namespace oly::math
 {
+	enum class PositioningMode
+	{
+		ABSOLUTE,
+		RELATIVE
+	};
+
 	struct Triangle2D
 	{
 		glm::vec2 root;
@@ -57,6 +63,9 @@ namespace oly::math
 		void include(glm::vec2 pt) { x1 = glm::min(x1, pt.x); x2 = glm::max(x2, pt.x); y1 = glm::min(y1, pt.y); y2 = glm::max(y2, pt.y); }
 
 		bool operator==(const Rect2D&) const = default;
+
+		Rect2D get_scaled(float sx, float sy) const { return { .x1 = x1 * sx, .x2 = x2 * sx, .y1 = y1 * sy, .y2 = y2 * sy }; }
+		Rect2D get_scaled(glm::vec2 sc) const { return get_scaled(sc.x, sc.y); }
 	};
 
 	struct IRect2D
@@ -73,6 +82,7 @@ namespace oly::math
 		glm::ivec2 size() const { return { x2 - x1, y2 - y1 }; }
 
 		bool operator==(const IRect2D&) const = default;
+		explicit operator Rect2D() const { return Rect2D{ .x1 = (float)x1, .x2 = (float)x2, .y1 = (float)y1, .y2 = (float)y2 }; }
 	};
 
 	struct UVRect
@@ -125,6 +135,20 @@ namespace oly::math
 				.left = padding,
 				.right = padding,
 				.bottom = padding,
+				.top = padding
+			};
+		}
+	};
+
+	struct TopSidePadding
+	{
+		float left = 0.0f, right = 0.0f, top = 0.0f;
+
+		static TopSidePadding uniform(float padding)
+		{
+			return {
+				.left = padding,
+				.right = padding,
 				.top = padding
 			};
 		}

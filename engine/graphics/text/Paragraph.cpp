@@ -141,13 +141,13 @@ namespace oly::rendering
 	
 	internal::GlyphGroup::PeekData internal::GlyphGroup::peek() const
 	{
-		auto iter = element.base.text.begin();
+		auto iter = element.text.begin();
 		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
 	}
 
 	void internal::GlyphGroup::build_page_section(TypesetData& typeset, PeekData next_peek) const
 	{
-		auto iter = element.base.text.begin();
+		auto iter = element.text.begin();
 		if (!iter)
 			return;
 
@@ -171,7 +171,7 @@ namespace oly::rendering
 				if (iter.codepoint()) // next codepoint in group
 					paragraph->page_data.current_line().max_height = element.line_height();
 			}
-			else if (element.font->cache(codepoint))
+			else if (internal::support(element, codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
 				if (!can_fit_on_line(typeset, dx))
@@ -190,11 +190,11 @@ namespace oly::rendering
 		dirty = internal::DirtyGlyphGroup(0);
 		clear_cache();
 
-		auto iter = element.base.text.begin();
+		auto iter = element.text.begin();
 		if (!iter)
 			return WriteResult::CONTINUE;
 
-		LineAlignment line{ .y_offset = element.base.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height()) };
+		LineAlignment line{ .y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height()) };
 
 		if (!write_adj_offset(typeset, next_peek, line))
 			return WriteResult::BREAK;
@@ -215,7 +215,7 @@ namespace oly::rendering
 				if (!write_newline(typeset, line))
 					return WriteResult::BREAK;
 			}
-			else if (element.font->cache(codepoint))
+			else if (internal::support(element, codepoint))
 			{
 				float dx = advance_width(codepoint, next_codepoint);
 				if (!can_fit_on_line(typeset, dx))
@@ -243,20 +243,22 @@ namespace oly::rendering
 
 	bool internal::GlyphGroup::can_fit_on_line(const TypesetData& typeset, float dx) const
 	{
+		// TODO v5 put method on format
 		return paragraph->format.text_wrap <= 0.0f || typeset.x + dx <= paragraph->format.text_wrap;
 	}
 
 	bool internal::GlyphGroup::can_fit_vertically(const TypesetData& typeset, float dy) const
 	{
+		// TODO v5 put method on format
 		return paragraph->format.max_height <= 0.0f || -typeset.y + dy <= paragraph->format.max_height;
 	}
 
 	void internal::GlyphGroup::build_adj_offset(TypesetData& typeset, PeekData next_peek) const
 	{
-		if (element.base.adj_offset <= 0.0f || typeset.x == 0.0f)
+		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return;
 
-		auto iter = element.base.text.begin();
+		auto iter = element.text.begin();
 		const utf::Codepoint codepoint = iter.advance();
 		if (utf::is_n_or_r(codepoint))
 			return;
@@ -267,17 +269,17 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (element.font->cache(codepoint))
+		else if (internal::support(element, codepoint))
 			dx = advance_width(codepoint, next_codepoint);
 		else
 		{
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
-		if (can_fit_on_line(typeset, element.base.adj_offset + dx))
+		if (can_fit_on_line(typeset, element.adj_offset + dx))
 		{
-			typeset.x += element.base.adj_offset;
-			paragraph->page_data.current_line().space_width += element.base.adj_offset;
+			typeset.x += element.adj_offset;
+			paragraph->page_data.current_line().space_width += element.adj_offset;
 			++paragraph->page_data.current_line().characters;
 		}
 		else
@@ -325,10 +327,10 @@ namespace oly::rendering
 
 	bool internal::GlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const
 	{
-		if (element.base.adj_offset <= 0.0f || typeset.x == 0.0f)
+		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
 			return true;
 
-		auto iter = element.base.text.begin();
+		auto iter = element.text.begin();
 		const utf::Codepoint codepoint = iter.advance();
 		if (utf::is_n_or_r(codepoint))
 			return true;
@@ -339,16 +341,16 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (element.font->cache(codepoint))
+		else if (internal::support(element, codepoint))
 			dx = advance_width(codepoint, next_codepoint);
 		else
 		{
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
-		if (can_fit_on_line(typeset, element.base.adj_offset + dx))
+		if (can_fit_on_line(typeset, element.adj_offset + dx))
 		{
-			typeset.x += element.base.adj_offset * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
+			typeset.x += element.adj_offset * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 			++typeset.character;
 			return true;
 		}
@@ -380,7 +382,7 @@ namespace oly::rendering
 		typeset.character = 0;
 
 		if (typeset.line < paragraph->alignment_cache.lines.size())
-			line.y_offset = element.base.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height());
+			line.y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height());
 
 		return true;
 	}
@@ -390,7 +392,7 @@ namespace oly::rendering
 		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
 		TextGlyph glyph;
 		glyph.transformer.attach_parent(&paragraph->transformer);
-		glyph.set_glyph(*element.font, element.font->get_glyph(c), get_glyph_position(glyphs.size()), element.base.scale);
+		internal::set_glyph(glyph, element, c, get_glyph_position(glyphs.size()));
 		glyphs.push_back(std::move(glyph));
 		typeset.x += dx;
 		++typeset.character;
@@ -399,36 +401,29 @@ namespace oly::rendering
 	glm::vec2 internal::GlyphGroup::get_glyph_position(size_t i) const
 	{
 		const CachedGlyphInfo& cache = cached_info[i];
-		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.base.jitter_offset;
-	}
-
-	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
-	{
-		float adv = element.font->get_space_advance_width();
-		if (next_codepoint)
-			adv += element.font->kerning_of(next_codepoint, utf::Codepoint(' '));
-		return adv * element.base.scale.x;
-	}
-
-	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
-	{
-		return space_width(next_codepoint) * paragraph->format.tab_spaces * element.base.scale.x;
+		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.jitter_offset;
 	}
 
 	float internal::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
 	{
-		const FontGlyph& font_glyph = element.font->get_glyph(codepoint);
-		float adv = font_glyph.advance_width * element.font->get_scale();
-		if (next_codepoint)
-			adv += element.font->kerning_of(codepoint, next_codepoint, font_glyph.index, element.font->get_glyph_index(next_codepoint));
-		return adv * element.base.scale.x;
+		return internal::advance_width(element, codepoint, next_codepoint);
+	}
+
+	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
+	{
+		return internal::advance_width(element, utf::Codepoint(' '), next_codepoint);
+	}
+
+	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
+	{
+		return space_width(utf::Codepoint(' ')) * (paragraph->format.tab_spaces - 1.0f) + space_width(next_codepoint);
 	}
 
 	void internal::GlyphGroup::recolor() const
 	{
 		dirty &= ~DirtyGlyphGroup::RECOLOR;
 		for (TextGlyph& glyph : glyphs)
-			glyph.set_text_color(element.base.text_color);
+			glyph.set_text_color(element.text_color);
 	}
 
 	void internal::GlyphGroup::realign_lines() const
@@ -443,7 +438,7 @@ namespace oly::rendering
 			CachedGlyphInfo& info = cached_info[i];
 
 			if (info.typeset.line != last_line)
-				new_line_y_offset = element.base.line_y_pivot * (paragraph->page_data.lines[info.typeset.line].max_height - element.line_height());
+				new_line_y_offset = element.line_y_pivot * (paragraph->page_data.lines[info.typeset.line].max_height - element.line_height());
 
 			if (info.line_y_offset != new_line_y_offset)
 			{
@@ -459,7 +454,7 @@ namespace oly::rendering
 	{
 		dirty &= ~DirtyGlyphGroup::JITTER_OFFSET;
 		for (TextGlyph& glyph : glyphs)
-			glyph.set_local().position += element.base.jitter_offset - last_jitter_offset;
+			glyph.set_local().position += element.jitter_offset - last_jitter_offset;
 	}
 
 	void internal::GlyphGroup::reposition_glyphs() const
@@ -475,7 +470,16 @@ namespace oly::rendering
 
 	void TextElementExposure::set_font(const FontAtlasRef& font)
 	{
-		if (glyph_group.element.font != font)
+		if (!internal::font_equals(glyph_group.element, font))
+		{
+			glyph_group.element.font = font;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+
+	void TextElementExposure::set_font(const RasterFontRef& font)
+	{
+		if (!internal::font_equals(glyph_group.element, font))
 		{
 			glyph_group.element.font = font;
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
@@ -484,45 +488,45 @@ namespace oly::rendering
 	
 	void TextElementExposure::set_text(utf::String&& text)
 	{
-		if (glyph_group.element.base.text != text)
+		if (glyph_group.element.text != text)
 		{
-			glyph_group.element.base.text = std::move(text);
+			glyph_group.element.text = std::move(text);
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
 	
 	void TextElementExposure::set_text_color(glm::vec4 color)
 	{
-		if (glyph_group.element.base.text_color != color)
+		if (glyph_group.element.text_color != color)
 		{
-			glyph_group.element.base.text_color = color;
+			glyph_group.element.text_color = color;
 			glyph_group.dirty |= internal::DirtyGlyphGroup::RECOLOR;
 		}
 	}
 	
 	void TextElementExposure::set_adj_offset(float adj_offset)
 	{
-		if (glyph_group.element.base.adj_offset != adj_offset)
+		if (glyph_group.element.adj_offset != adj_offset)
 		{
-			glyph_group.element.base.adj_offset = adj_offset;
+			glyph_group.element.adj_offset = adj_offset;
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
 	
 	void TextElementExposure::set_scale(glm::vec2 scale)
 	{
-		if (glyph_group.element.base.scale != scale)
+		if (glyph_group.element.scale != scale)
 		{
-			glyph_group.element.base.scale = scale;
+			glyph_group.element.scale = scale;
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 		}
 	}
 	
 	void TextElementExposure::set_line_y_pivot(float line_y_pivot)
 	{
-		if (glyph_group.element.base.line_y_pivot != line_y_pivot)
+		if (glyph_group.element.line_y_pivot != line_y_pivot)
 		{
-			glyph_group.element.base.line_y_pivot = line_y_pivot;
+			glyph_group.element.line_y_pivot = line_y_pivot;
 			glyph_group.dirty |= internal::DirtyGlyphGroup::LINE_ALIGNMENT;
 		}
 	}
@@ -530,12 +534,12 @@ namespace oly::rendering
 	void TextElementExposure::set_jitter_offset(glm::vec2 jitter_offset)
 	{
 		if (glyph_group.dirty & internal::DirtyGlyphGroup::JITTER_OFFSET)
-			glyph_group.element.base.jitter_offset = jitter_offset;
-		else if (glyph_group.element.base.jitter_offset != jitter_offset)
+			glyph_group.element.jitter_offset = jitter_offset;
+		else if (glyph_group.element.jitter_offset != jitter_offset)
 		{
 			glyph_group.dirty |= internal::DirtyGlyphGroup::JITTER_OFFSET;
-			glyph_group.last_jitter_offset = glyph_group.element.base.jitter_offset;
-			glyph_group.element.base.jitter_offset = jitter_offset;
+			glyph_group.last_jitter_offset = glyph_group.element.jitter_offset;
+			glyph_group.element.jitter_offset = jitter_offset;
 		}
 	}
 
@@ -869,7 +873,7 @@ namespace oly::rendering
 		const internal::GlyphGroup& current_glyph = glyph_groups[i];
 		const internal::GlyphGroup& next_glyph = glyph_groups[i + 1];
 
-		if (current_glyph.element.font->font_face() == next_glyph.element.font->font_face())
+		if (internal::has_same_font_face(current_glyph.element, next_glyph.element))
 			return next_glyph.peek();
 		else
 			return {};

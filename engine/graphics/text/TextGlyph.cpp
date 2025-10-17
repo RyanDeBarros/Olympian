@@ -1,4 +1,4 @@
-#include "Text.h"
+#include "TextGlyph.h"
 
 #include "core/context/rendering/Sprites.h"
 
@@ -44,39 +44,23 @@ namespace oly::rendering
 
 	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)
 	{
-		ref.set_texture(glyph.texture, { 1.0f, 1.0f } );
-		const math::Rect2D box{
-			.x1 = glyph.box.x1 * scale.x,
-			.x2 = glyph.box.x2 * scale.x,
-			.y1 = glyph.box.y1 * scale.y,
-			.y2 = glyph.box.y2 * scale.y
-		};
-		set_local() = {
-			.position = pos + glm::vec2{
-				0.5f * box.width() + atlas.get_scale() * glyph.left_bearing,
-				-box.center_y() - atlas.get_ascent()
-			},
-			.scale = box.size()
-		};
-		ref.set_tex_coords(atlas.uvs(glyph));
+		set_glyph(glyph.texture(), (math::Rect2D)glyph.box(), pos, scale, atlas.get_scale() * glyph.left_bearing(), atlas.get_ascent(), atlas.uvs(glyph));
 	}
 
 	void TextGlyph::set_glyph(const RasterFont& font, const RasterFontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)
 	{
-		ref.set_texture(glyph.texture(), { 1.0f, 1.0f });
-		const math::Rect2D box{
-			.x1 = glyph.box().x1 * font.get_scale().x * scale.x,
-			.x2 = glyph.box().x2 * font.get_scale().x * scale.x,
-			.y1 = glyph.box().y1 * font.get_scale().y * scale.y,
-			.y2 = glyph.box().y2 * font.get_scale().y * scale.y
-		};
+		set_glyph(glyph.texture(), glyph.box().get_scaled(font.get_scale()), pos, scale, font.get_scale().x * glyph.left_bearing(), font.line_height(), glyph.uvs());
+	}
+
+	void TextGlyph::set_glyph(const graphics::BindlessTextureRef& texture, math::Rect2D unscaled_box, glm::vec2 pos, glm::vec2 scale,
+		float left_bearing, float ascent, math::UVRect uvs)
+	{
+		ref.set_texture(texture, { 1.0f, 1.0f });
+		math::Rect2D box = unscaled_box.get_scaled(scale);
 		set_local() = {
-			.position = pos + glm::vec2{
-				0.5f * box.width() + font.get_scale().x * glyph.left_bearing(),
-				-box.center_y() - font.line_height()
-			},
+			.position = pos + glm::vec2{ 0.5f * box.width() + left_bearing, -box.center_y() - ascent },
 			.scale = box.size()
 		};
-		ref.set_tex_coords(glyph.uvs());
+		ref.set_tex_coords(uvs);
 	}
 }

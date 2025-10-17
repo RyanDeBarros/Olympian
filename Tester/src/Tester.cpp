@@ -46,7 +46,7 @@ struct BKG
 struct PixelArtText
 {
 	oly::rendering::RasterFontRef font;
-	oly::rendering::RasterParagraphRef paragraph;
+	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
 	{
@@ -54,16 +54,16 @@ struct PixelArtText
 		auto numbers_texture = oly::context::load_texture(OLY_RES_PREFIX"fonts/PixelNumbers.png");
 
 		font.init(oly::rendering::RasterFont({
-			{ oly::utf::Codepoint('A'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 0, .x2 = 4, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('B'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('C'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('1'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('2'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, { 0.0f, 7.0f }, oly::math::Padding::uniform(0.5f) ) },
-			{ oly::utf::Codepoint('3'), oly::rendering::RasterFontGlyph(numbers_texture, {.x1 = 18, .x2 = 22, .y1 = 0, .y2 = 6}, {0.0f, 7.0f}, oly::math::Padding::uniform(0.5f))},
-			}, 5.0f, 8.0f, glm::vec2(32.0f)));
+			{ oly::utf::Codepoint('A'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 0, .x2 = 4, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('B'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('C'), oly::rendering::RasterFontGlyph(alphabet_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('1'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 6, .x2 = 10, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('2'), oly::rendering::RasterFontGlyph(numbers_texture, { .x1 = 12, .x2 = 16, .y1 = 0, .y2 = 6 }, oly::math::TopSidePadding::uniform(0.5f) ) },
+			{ oly::utf::Codepoint('3'), oly::rendering::RasterFontGlyph(numbers_texture, {.x1 = 18, .x2 = 22, .y1 = 0, .y2 = 6}, oly::math::TopSidePadding::uniform(0.5f))},
+		}, 5.0f, 8.0f, glm::vec2(32.0f)));
 
-		paragraph.init(oly::rendering::RasterParagraph({
-			oly::rendering::RasterTextElement{ .font = font, .base = { .text = "AB C\n1 23" }}
+		paragraph.init(oly::rendering::Paragraph({
+			oly::rendering::TextElement{ .font = font, .text = "AB C\n1 23" }
 			}, oly::rendering::ParagraphFormat{}));
 		paragraph->draw_bkg = true;
 		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
@@ -159,7 +159,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
 		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
-		oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
+		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 	}
 
 	void text_jitter_callback()

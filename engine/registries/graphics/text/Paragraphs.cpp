@@ -162,17 +162,15 @@ namespace oly::reg
 		for (const params::Paragraph::TextElement& pelement : params.elements)
 		{
 			rendering::TextElement element{
-				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
-				.base = {
-					.text = pelement.text,
-					.adj_offset = pelement.adj_offset,
-					.scale = pelement.scale,
-					.line_y_pivot = pelement.line_y_pivot,
-					.jitter_offset = pelement.jitter_offset
-				}
+				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), // TODO v5 support for raster font
+				.text = pelement.text,
+				.adj_offset = pelement.adj_offset,
+				.scale = pelement.scale,
+				.line_y_pivot = pelement.line_y_pivot,
+				.jitter_offset = pelement.jitter_offset
 			};
 			if (pelement.text_color)
-				element.base.text_color = *pelement.text_color;
+				element.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
 		}
 
@@ -194,17 +192,15 @@ namespace oly::reg
 		for (params::Paragraph::TextElement& pelement : params.elements)
 		{
 			rendering::TextElement element{
-				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index),
-				.base = {
-					.text = std::move(pelement.text),
-					.adj_offset = pelement.adj_offset,
-					.scale = pelement.scale,
-					.line_y_pivot = pelement.line_y_pivot,
-					.jitter_offset = pelement.jitter_offset
-				}
+				.font = context::load_font_atlas(pelement.font_atlas, pelement.atlas_index), // TODO v5 support for raster font
+				.text = std::move(pelement.text),
+				.adj_offset = pelement.adj_offset,
+				.scale = pelement.scale,
+				.line_y_pivot = pelement.line_y_pivot,
+				.jitter_offset = pelement.jitter_offset
 			};
 			if (pelement.text_color)
-				element.base.text_color = *pelement.text_color;
+				element.text_color = *pelement.text_color;
 			elements.emplace_back(std::move(element));
 		}
 

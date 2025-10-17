@@ -6,7 +6,7 @@
 namespace oly::rendering
 {
 	// TODO v5 registry for RasterFont
-
+	
 	class RasterFontGlyph
 	{
 		graphics::BindlessTextureRef _texture;
@@ -15,7 +15,8 @@ namespace oly::rendering
 		float _advance_width = 0.0f, _left_bearing = 0.0f;
 
 	public:
-		RasterFontGlyph(const graphics::BindlessTextureRef& texture, math::IRect2D location, glm::vec2 origin_offset, math::Padding padding = {});
+		RasterFontGlyph(const graphics::BindlessTextureRef& texture, math::IRect2D location,
+			math::TopSidePadding padding = {}, math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE, glm::vec2 origin_offset = {});
 
 		graphics::BindlessTextureRef texture() const
 		{
@@ -91,7 +92,7 @@ namespace oly::rendering
 			font_scale = scale;
 		}
 		
-		float get_space_advance_width() const
+		float get_scaled_space_advance_width() const
 		{
 			return _space_advance_width * font_scale.x;
 		}

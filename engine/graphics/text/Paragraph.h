@@ -1,7 +1,7 @@
 #pragma once
 
-#include "graphics/text/Text.h"
-#include "graphics/text/Font.h"
+#include "graphics/text/TextGlyph.h"
+#include "graphics/text/TextElement.h"
 #include "graphics/text/Typesetting.h"
 #include "graphics/sprites/Sprite.h"
 
@@ -32,14 +32,6 @@ namespace oly::rendering
 		void set_padding(glm::vec2 padding);
 		void set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment);
 		void set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment);
-	};
-
-	struct TextElement
-	{
-		FontAtlasRef font;
-		TextElementBase base;
-
-		float line_height() const { return font->line_height() * base.scale.y; }
 	};
 
 	class TextElementExposure;
@@ -111,12 +103,10 @@ namespace oly::rendering
 			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
 			glm::vec2 get_glyph_position(size_t i) const;
 
-		public:
+			float advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
 			float space_width(utf::Codepoint next_codepoint) const;
 			float tab_width(utf::Codepoint next_codepoint) const;
-			float advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
 
-		private:
 			void recolor() const;
 			void realign_lines() const;
 			void reposition_jitter() const;
@@ -138,6 +128,7 @@ namespace oly::rendering
 
 	public:
 		void set_font(const FontAtlasRef& font);
+		void set_font(const RasterFontRef& font);
 		void set_text(utf::String&& text);
 		void set_text_color(glm::vec4 color);
 		void set_adj_offset(float adj_offset);

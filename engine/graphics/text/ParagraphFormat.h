@@ -3,7 +3,6 @@
 #include "external/GLM.h"
 
 #include "core/base/Parameters.h"
-#include "core/util/UTF.h"
 
 namespace oly::rendering
 {
@@ -72,15 +71,5 @@ namespace oly::rendering
 			JUSTIFY,
 			FULL_JUSTIFY
 		} vertical_alignment = VerticalAlignment::TOP;
-	};
-
-	struct TextElementBase
-	{
-		utf::String text = "";
-		glm::vec4 text_color = glm::vec4(1.0f);
-		float adj_offset = 0.0f;
-		glm::vec2 scale = glm::vec2(1.0f);
-		BoundedFloat<0.0f, 1.0f> line_y_pivot = 0.0f;
-		glm::vec2 jitter_offset = {};
 	};
 }

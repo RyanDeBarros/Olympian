@@ -28,6 +28,12 @@ namespace oly::rendering
 
 		void set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale);
 		void set_glyph(const RasterFont& font, const RasterFontGlyph& glyph, glm::vec2 pos, glm::vec2 scale);
+
+	private:
+		void set_glyph(const graphics::BindlessTextureRef& texture, math::Rect2D unscaled_box, glm::vec2 pos, glm::vec2 scale,
+			float left_bearing, float ascent, math::UVRect uvs);
+
+	public:
 		void set_text_color(glm::vec4 color) const { ref.set_modulation(color); }
 		glm::vec4 get_text_color() const { return ref.get_modulation(); }
 

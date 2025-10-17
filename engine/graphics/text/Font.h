@@ -37,7 +37,6 @@ namespace oly::rendering
 		int find_glyph_index(utf::Codepoint codepoint) const;
 		void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
 		void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
-		int get_kerning(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
 	};
 
@@ -46,16 +45,24 @@ namespace oly::rendering
 	// TODO v5 manual generation of mipmaps
 
 	class FontAtlas;
-	struct FontGlyph
+	class FontGlyph
 	{
 		int index = 0;
-		math::IRect2D box;
-		int advance_width = 0, left_bearing = 0;
-		graphics::BindlessTextureRef texture;
+		math::IRect2D _box;
+		int _advance_width = 0, _left_bearing = 0;
+		graphics::BindlessTextureRef _texture;
 		size_t buffer_pos = -1;
 
+	public:
 		FontGlyph(const FontAtlas& font, int index, float scale, size_t buffer_pos);
 
+		math::IRect2D box() const { return _box; }
+		int advance_width() const { return _advance_width; }
+		int left_bearing() const { return _left_bearing; }
+		graphics::BindlessTextureRef texture() const { return _texture; }
+
+	private:
+		friend class FontAtlas;
 		void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
 		void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
 	};
@@ -90,13 +97,12 @@ namespace oly::rendering
 		const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
 		int get_glyph_index(utf::Codepoint codepoint) const;
 		bool supports(utf::Codepoint codepoint) const;
-		float kerning_of(utf::Codepoint c1, utf::Codepoint c2, int g1, int g2) const;
 		float kerning_of(utf::Codepoint c1, utf::Codepoint c2) const;
 		float line_height() const;
 		float get_ascent() const;
 		math::UVRect uvs(const FontGlyph& glyph) const;
 		float get_scale() const { return scale; }
-		float get_space_advance_width() const { return space_advance_width; }
+		float get_scaled_space_advance_width() const { return space_advance_width; }
 	};
 
 	typedef SmartReference<FontAtlas> FontAtlasRef;
