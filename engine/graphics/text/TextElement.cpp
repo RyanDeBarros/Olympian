@@ -36,12 +36,12 @@ namespace oly::rendering
 
 	static std::string get_tag_field(const std::string& tag, size_t eq_pos)
 	{
-		return to_lower(trim(tag.substr(0, eq_pos)));
+		return algo::to_lower(algo::trim(tag.substr(0, eq_pos)));
 	}
 
 	static std::string get_tag_value(const std::string& tag, size_t eq_pos)
 	{
-		return trim(tag.substr(eq_pos + 1));
+		return algo::trim(tag.substr(eq_pos + 1));
 	}
 
 	static void apply_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
@@ -70,7 +70,7 @@ namespace oly::rendering
 					overrides.text_color = true;
 				else
 				{
-					to_lower(value);
+					algo::to_lower(value);
 					if (value == "red")
 					{
 						e.text_color = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -86,7 +86,21 @@ namespace oly::rendering
 						e.text_color = { 0.0f, 0.0f, 1.0f, 1.0f };
 						overrides.text_color = true;
 					}
-					// TODO v5 others - use config map or something
+					else if (value == "cyan")
+					{
+						e.text_color = { 0.0f, 1.0f, 1.0f, 1.0f };
+						overrides.text_color = true;
+					}
+					else if (value == "magenta")
+					{
+						e.text_color = { 1.0f, 0.0f, 1.0f, 1.0f };
+						overrides.text_color = true;
+					}
+					else if (value == "yellow")
+					{
+						e.text_color = { 1.0f, 1.0f, 0.0f, 1.0f };
+						overrides.text_color = true;
+					}
 				}
 			}
 		}

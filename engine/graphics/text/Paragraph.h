@@ -7,8 +7,6 @@
 
 #include "core/base/TransformerExposure.h"
 
-// TODO v5 RasterTextGlyph and RasterParagraph that does paragraph layout for text that doesn't use font files - pixel art fonts, etc.
-
 namespace oly::rendering
 {
 	class Paragraph;

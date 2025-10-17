@@ -721,7 +721,7 @@ namespace oly
 				}
 			}
 
-			clear_stack(unoccupied);
+			algo::clear_stack(unoccupied);
 			marked_for_deletion.clear();
 			for (SmartReferenceLink* reference_head : reference_heads)
 			{

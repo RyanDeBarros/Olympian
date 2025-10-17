@@ -1,6 +1,6 @@
 #include "STLUtils.h"
 
-namespace oly
+namespace oly::algo
 {
 	std::vector<std::string_view> split(std::string_view sv, char delimiter)
 	{

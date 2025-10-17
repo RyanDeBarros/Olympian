@@ -7,8 +7,7 @@
 
 #include "core/base/Errors.h"
 
-// TODO v5 use oly::algo namespace - also in GoldenSectionSearch
-namespace oly
+namespace oly::algo
 {
 	template<typename T>
 	inline void clear_stack(std::stack<T>& stack)

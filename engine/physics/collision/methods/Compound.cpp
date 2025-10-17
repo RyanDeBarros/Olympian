@@ -102,7 +102,7 @@ namespace oly::col2d
 		}
 
 		// golden-search refinement
-		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
+		algo::EarlyExitGoldenSearchResult search_result = algo::early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
 			(float)(minimizing_axis - 1) * perf.get_two_pi_over_divisions(), (float)(minimizing_axis + 1) * perf.get_two_pi_over_divisions(), perf.refinement_error_threshold, 0.0f);
 
 		if (search_result.early_exited)
