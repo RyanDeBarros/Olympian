@@ -1,13 +1,7 @@
 #pragma once
 
 #include "core/types/SmartReference.h"
-
-namespace oly::rendering
-{
-	class FontFace;
-	class FontAtlas;
-	class RasterFont;
-}
+#include "graphics/text/TextElement.h"
 
 namespace oly::reg
 {
@@ -27,7 +21,8 @@ namespace oly::context
 	extern reg::FontAtlasRegistry& font_atlas_registry();
 	extern reg::RasterFontRegistry& raster_font_registry();
 
-	extern SmartReference<rendering::FontFace> load_font_face(const std::string& file);
-	extern SmartReference<rendering::FontAtlas> load_font_atlas(const std::string& file, unsigned int index = 0);
-	extern SmartReference<rendering::RasterFont> load_raster_font(const std::string& file);
+	extern rendering::FontFaceRef load_font_face(const std::string& file);
+	extern rendering::FontAtlasRef load_font_atlas(const std::string& file, unsigned int index = 0);
+	extern rendering::RasterFontRef load_raster_font(const std::string& file);
+	extern rendering::TextElementFont load_font(const std::string& file, unsigned index = 0);
 }

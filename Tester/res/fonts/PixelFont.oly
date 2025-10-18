@@ -1,5 +1,6 @@
 #meta type="raster_font"
 
+storage = "keep"
 space_advance_width = 5.0
 line_height = 8.0
 font_scale = [32.0, 32.0]

@@ -33,7 +33,7 @@ namespace oly::algo
 
 		return str;
 	}
-	
+
 	std::string& rtrim(std::string& str)
 	{
 		if (str.empty())

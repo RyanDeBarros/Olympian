@@ -3,6 +3,7 @@
 #include "registries/graphics/text/FontFaceRegistry.h"
 #include "registries/graphics/text/FontAtlasRegistry.h"
 #include "registries/graphics/text/RasterFontRegistry.h"
+#include "registries/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -48,5 +49,17 @@ namespace oly::context
 	rendering::RasterFontRef load_raster_font(const std::string& file)
 	{
 		return internal::raster_font_registry.load_raster_font(file);
+	}
+
+	rendering::TextElementFont load_font(const std::string& file, unsigned index)
+	{
+		if (file.ends_with(".oly"))
+		{
+			// TODO v5 when font style is implemented, do check here for meta type
+			//if (reg::MetaSplitter::meta(file).has_type("raster_font"))
+			return load_raster_font(file);
+		}
+		else
+			return load_font_atlas(file, index);
 	}
 }

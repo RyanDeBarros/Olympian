@@ -5,8 +5,6 @@
 
 namespace oly::rendering
 {
-	// TODO v5 registry for RasterFont
-	
 	class RasterFontGlyph
 	{
 		graphics::BindlessTextureRef _texture;

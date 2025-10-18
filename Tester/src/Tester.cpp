@@ -51,7 +51,8 @@ struct PixelArtText
 	PixelArtText()
 		: font(oly::context::load_raster_font(OLY_RES_PREFIX"fonts/PixelFont.oly"))
 	{
-		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font, .text = "AB C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
+		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font,
+			.text = "<font=file:RES://fonts/Roboto-Regular.ttf;0>A</font>B C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
 		paragraph->draw_bkg = true;
 		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
 	}
