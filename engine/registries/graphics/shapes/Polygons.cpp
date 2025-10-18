@@ -5,7 +5,7 @@
 
 namespace oly::reg
 {
-	rendering::Polygon load_polygon(const TOMLNode& node)
+	rendering::Polygon load_polygon(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -78,7 +78,7 @@ namespace oly::reg
 		return polygon;
 	}
 
-	rendering::PolyComposite load_poly_composite(const TOMLNode& node)
+	rendering::PolyComposite load_poly_composite(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -304,7 +304,7 @@ namespace oly::reg
 		return composite;
 	}
 
-	rendering::NGon load_ngon(const TOMLNode& node)
+	rendering::NGon load_ngon(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{

@@ -52,13 +52,13 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::Polygon load_polygon(const TOMLNode& node);
+	extern rendering::Polygon load_polygon(TOMLNode node);
 	extern rendering::Polygon load_polygon(const params::Polygon& params);
 	extern rendering::Polygon load_polygon(params::Polygon&& params);
-	extern rendering::PolyComposite load_poly_composite(const TOMLNode& node);
+	extern rendering::PolyComposite load_poly_composite(TOMLNode node);
 	extern rendering::PolyComposite load_poly_composite(const params::PolyComposite& params);
 	extern rendering::PolyComposite load_poly_composite(params::PolyComposite&& params);
-	extern rendering::NGon load_ngon(const TOMLNode& node);
+	extern rendering::NGon load_ngon(TOMLNode node);
 	extern rendering::NGon load_ngon(const params::NGon& params);
 	extern rendering::NGon load_ngon(params::NGon&& params);
 }

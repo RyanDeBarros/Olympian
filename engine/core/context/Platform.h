@@ -7,8 +7,8 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void init_platform(const TOMLNode&);
-		extern void init_viewport(const TOMLNode&);
+		extern void init_platform(TOMLNode);
+		extern void init_viewport(TOMLNode);
 		extern void terminate_platform();
 		extern bool frame_platform();
 	}

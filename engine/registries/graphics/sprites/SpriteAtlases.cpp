@@ -5,7 +5,7 @@
 
 namespace oly::reg
 {
-	rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node)
+	rendering::SpriteAtlas load_sprite_atlas(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -21,14 +21,13 @@ namespace oly::reg
 		float delay_seconds;
 		if (parse_int(node["rows"], rows) && parse_int(node["cols"], cols) && parse_float(node["delay_seconds"], delay_seconds))
 		{
-			params::SpriteAtlas::Frame frame{
+			params.frame = params::SpriteAtlas::Frame{
 				.rows = (GLuint)rows,
 				.cols = (GLuint)cols,
 				.delay_seconds = delay_seconds,
+				.row_major = parse_bool_or(node["row_major"], true),
+				.row_up = parse_bool_or(node["row_up"], true)
 			};
-			parse_bool(node["row_major"], frame.row_major);
-			parse_bool(node["row_up"], frame.row_up);
-			params.frame = frame;
 		}
 		else
 		{
@@ -37,13 +36,8 @@ namespace oly::reg
 				params.frame = params::SpriteAtlas::StaticFrame{ .frame = (GLuint)static_frame };
 		}
 
-		int starting_frame;
-		if (parse_int(node["starting_frame"], starting_frame))
-			params.starting_frame = starting_frame;
-
-		float starting_time;
-		if (parse_float(node["starting_time"], starting_time))
-			params.starting_time = starting_time;
+		params.starting_frame = parse_int_or(node["starting_frame"], 0);
+		params.starting_time = parse_float_or(node["starting_time"], 0.0f);
 
 		if (LOG.enable.debug)
 		{
@@ -67,10 +61,8 @@ namespace oly::reg
 					atlas.select_static_frame(frame.frame);
 				}, params.frame.value());
 		}
-		if (params.starting_frame)
-			atlas.anim_format.starting_frame = params.starting_frame.value();
-		if (params.starting_time)
-			atlas.anim_format.starting_time = params.starting_time.value();
+		atlas.anim_format.starting_frame = params.starting_frame;
+		atlas.anim_format.starting_time = params.starting_time;
 
 		return atlas;
 	}

@@ -5,7 +5,7 @@
 
 namespace oly::reg
 {
-	rendering::TileMap load_tilemap(const TOMLNode& node)
+	rendering::TileMap load_tilemap(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{

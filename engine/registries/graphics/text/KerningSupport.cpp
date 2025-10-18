@@ -6,7 +6,7 @@
 
 namespace oly::reg
 {
-	rendering::Kerning parse_kerning(const TOMLNode& node)
+	rendering::Kerning parse_kerning(TOMLNode node)
 	{
 		auto kerning_arr = node["kerning"].as_array();
 		if (!kerning_arr)

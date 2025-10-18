@@ -32,7 +32,7 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::Paragraph load_paragraph(const TOMLNode& node);
+	extern rendering::Paragraph load_paragraph(TOMLNode node);
 	extern rendering::Paragraph load_paragraph(const params::Paragraph& params);
 	extern rendering::Paragraph load_paragraph(params::Paragraph&& params);
 }

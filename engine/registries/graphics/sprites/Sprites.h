@@ -39,7 +39,7 @@ namespace oly::reg
 		};
 	}
 
-	extern params::Sprite sprite_params(const TOMLNode& node);
-	extern rendering::Sprite load_sprite(const TOMLNode& node);
+	extern params::Sprite sprite_params(TOMLNode node);
+	extern rendering::Sprite load_sprite(TOMLNode node);
 	extern rendering::Sprite load_sprite(const params::Sprite& params);
 }

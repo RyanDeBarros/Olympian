@@ -6,5 +6,5 @@
 
 namespace oly::reg
 {
-	extern rendering::Kerning parse_kerning(const TOMLNode& node);
+	extern rendering::Kerning parse_kerning(TOMLNode node);
 }

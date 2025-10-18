@@ -11,17 +11,11 @@ namespace oly::reg
 		struct Ellipse
 		{
 			Transform2D local;
-			struct
-			{
-				std::optional<glm::vec4> border_inner, border_outer, fill_inner, fill_outer;
-			} color;
-			struct
-			{
-				std::optional<float> rx, ry, border, border_exp, fill_exp;
-			} dimension;
+			rendering::EllipseColorGradient color;
+			rendering::EllipseDimension dimension;
 		};
 	}
 
-	extern rendering::Ellipse load_ellipse(const TOMLNode& node);
+	extern rendering::Ellipse load_ellipse(TOMLNode node);
 	extern rendering::Ellipse load_ellipse(const params::Ellipse& params);
 }

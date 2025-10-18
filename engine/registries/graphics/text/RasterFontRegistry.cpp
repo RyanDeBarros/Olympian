@@ -92,8 +92,7 @@ namespace oly::reg
 				}
 
 				std::string texture_file;
-				unsigned int tidx = 0;
-				parse_uint(g["texture_file"], tidx);
+				unsigned int tidx = parse_uint_or(g["texture_file"], 0);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -103,8 +102,7 @@ namespace oly::reg
 					return;
 				}
 
-				unsigned int texture_index = 0;
-				parse_uint(g["texture_index"], texture_index);
+				unsigned int texture_index = parse_uint_or(g["texture_index"], 0);
 
 				math::IRect2D location;
 				if (!parse_shape(g["location"], location))

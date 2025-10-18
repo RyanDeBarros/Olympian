@@ -7,7 +7,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void init_sprites(const TOMLNode&);
+		extern void init_sprites(TOMLNode);
 		extern void terminate_sprites();
 
 		extern bool sprite_batch_is_rendering();

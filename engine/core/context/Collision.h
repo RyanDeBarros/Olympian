@@ -12,7 +12,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void init_collision(const TOMLNode&);
+		extern void init_collision(TOMLNode);
 		extern void terminate_collision();
 		extern void frame_collision();
 	}

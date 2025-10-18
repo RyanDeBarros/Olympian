@@ -55,9 +55,7 @@ namespace oly::reg
 		parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		bool use_common_buffer_preset = true;
-		parse_bool(node["use_common_buffer_preset"], use_common_buffer_preset);
-		if (use_common_buffer_preset)
+		if (parse_bool_or(node["use_common_buffer_preset"], true))
 		{
 			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
 			{
@@ -78,11 +76,8 @@ namespace oly::reg
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
 			}
 		}
-		else
-		{
-			if (auto _common_buffer = node["common_buffer"].value<std::string>())
-				common_buffer = _common_buffer.value();
-		}
+		else if (auto _common_buffer = node["common_buffer"].value<std::string>())
+			common_buffer = _common_buffer.value();
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")

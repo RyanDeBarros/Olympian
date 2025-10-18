@@ -10,7 +10,7 @@ namespace oly::context
 		bool sprite_batch_rendering = false;
 	}
 
-	void internal::init_sprites(const TOMLNode& node)
+	void internal::init_sprites(TOMLNode node)
 	{
 		internal::sprite_batch = std::make_unique<rendering::SpriteBatch>();
 	}

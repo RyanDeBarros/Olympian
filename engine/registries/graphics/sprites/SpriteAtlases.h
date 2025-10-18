@@ -25,11 +25,11 @@ namespace oly::reg
 			};
 			std::optional<std::variant<Frame, StaticFrame>> frame;
 
-			std::optional<GLuint> starting_frame;
-			std::optional<float> starting_time;
+			GLuint starting_frame;
+			float starting_time;
 		};
 	}
 
-	extern rendering::SpriteAtlas load_sprite_atlas(const TOMLNode& node);
+	extern rendering::SpriteAtlas load_sprite_atlas(TOMLNode node);
 	extern rendering::SpriteAtlas load_sprite_atlas(const params::SpriteAtlas& params);
 }

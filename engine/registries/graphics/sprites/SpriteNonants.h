@@ -22,6 +22,6 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::SpriteNonant load_sprite_nonant(const TOMLNode& node);
+	extern rendering::SpriteNonant load_sprite_nonant(TOMLNode node);
 	extern rendering::SpriteNonant load_sprite_nonant(const params::SpriteNonant& params);
 }

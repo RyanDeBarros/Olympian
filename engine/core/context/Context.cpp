@@ -28,7 +28,7 @@ namespace oly::context
 		size_t this_frame = 0;
 	}
 
-	static void init_logger(const TOMLNode& node)
+	static void init_logger(TOMLNode node)
 	{
 		if (auto toml_logger = node["logger"])
 		{
@@ -36,9 +36,7 @@ namespace oly::context
 			if (auto logfile = toml_logger["logfile"].value<std::string>())
 			{
 				LOG.target.logfile = true;
-				bool append = true;
-				reg::parse_bool(toml_logger["append"], append);
-				LOG.set_logfile(logfile->c_str(), append);
+				LOG.set_logfile(logfile->c_str(), reg::parse_bool_or(toml_logger["append"], true));
 				LOG.flush();
 			}
 			else
@@ -60,7 +58,7 @@ namespace oly::context
 		}
 	}
 
-	static void init_time(const TOMLNode& node)
+	static void init_time(TOMLNode node)
 	{
 		if (auto framerate = node["framerate"])
 		{
@@ -70,7 +68,7 @@ namespace oly::context
 		TIME.init();
 	}
 
-	static void autoload_signals(const TOMLNode& node)
+	static void autoload_signals(TOMLNode node)
 	{
 		auto register_files = node["signals"].as_array();
 		if (register_files)

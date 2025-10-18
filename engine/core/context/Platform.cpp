@@ -18,7 +18,7 @@ namespace oly::context
 		input::SignalMappingTable signal_mapping_table;
 	}
 
-	void internal::init_platform(const TOMLNode& node)
+	void internal::init_platform(TOMLNode node)
 	{
 		platform::PlatformSetup platform_setup;
 
@@ -76,14 +76,13 @@ namespace oly::context
 			reg::parse_bool(toml_window_hint["context_debug"], platform_setup.window_hint.window.context_debug);
 		}
 
-		reg::parse_uint(node["gamepads"], platform_setup.num_gamepads);
-		platform_setup.num_gamepads = glm::clamp((int)platform_setup.num_gamepads, 0, GLFW_JOYSTICK_LAST);
+		platform_setup.num_gamepads = glm::clamp(reg::parse_int_or(node["gamepads"], 0), 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
 	}
 
-	void internal::init_viewport(const TOMLNode& node)
+	void internal::init_viewport(TOMLNode node)
 	{
 		bool camera_boxed = true;
 		bool camera_stretch = true;

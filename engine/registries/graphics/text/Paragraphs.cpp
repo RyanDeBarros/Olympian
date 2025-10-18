@@ -7,7 +7,7 @@
 
 namespace oly::reg
 {
-	static rendering::ParagraphFormat create_format(const TOMLNode& node)
+	static rendering::ParagraphFormat create_format(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -17,25 +17,14 @@ namespace oly::reg
 
 		rendering::ParagraphFormat format;
 
-		glm::vec2 v2;
-		float v1;
-
-		if (parse_vec(node["pivot"], v2))
-			format.pivot = v2;
-		if (parse_float(node["line_spacing"], v1))
-			format.line_spacing = v1;
-		if (parse_float(node["linebreak_spacing"], v1))
-			format.linebreak_spacing = v1;
-		if (parse_vec(node["min_size"], v2))
-			format.min_size = v2;
-		if (parse_vec(node["padding"], v2))
-			format.padding = v2;
-		if (parse_float(node["text_wrap"], v1))
-			format.text_wrap = v1;
-		if (parse_float(node["max_height"], v1))
-			format.max_height = v1;
-		if (parse_float(node["tab_spaces"], v1))
-			format.tab_spaces = v1;
+		parse_vec(node["pivot"], format.pivot);
+		parse_float(node["line_spacing"], format.line_spacing);
+		parse_float(node["linebreak_spacing"], format.linebreak_spacing);
+		parse_vec(node["min_size"], format.min_size);
+		parse_vec(node["padding"], format.padding);
+		parse_float(node["text_wrap"], format.text_wrap);
+		parse_float(node["max_height"], format.max_height);
+		parse_float(node["tab_spaces"], format.tab_spaces);
 
 		if (auto halign = node["horizontal_align"].value<std::string>())
 		{
@@ -80,7 +69,7 @@ namespace oly::reg
 		return format;
 	}
 
-	static std::optional<params::Paragraph::TextElement> parse_text_element(const TOMLNode& element, size_t i)
+	static std::optional<params::Paragraph::TextElement> parse_text_element(TOMLNode element, size_t i)
 	{
 		params::Paragraph::TextElement element_params;
 		if (auto font_atlas = element["font_atlas"].value<std::string>())
@@ -114,7 +103,7 @@ namespace oly::reg
 		return element_params;
 	}
 
-	rendering::Paragraph load_paragraph(const TOMLNode& node)
+	rendering::Paragraph load_paragraph(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{

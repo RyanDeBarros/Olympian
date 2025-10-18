@@ -6,7 +6,7 @@
 
 namespace oly::reg
 {
-	params::Sprite sprite_params(const TOMLNode& node)
+	params::Sprite sprite_params(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
@@ -40,35 +40,26 @@ namespace oly::reg
 
 		if (auto toml_frame_format = node["frame_format"])
 		{
-			auto mode = toml_frame_format["mode"].value<std::string>();
-			if (mode)
+			if (auto mode = toml_frame_format["mode"].value<std::string>())
 			{
 				std::string mode_str = *mode;
 				if (mode_str == "single")
-				{
-					params::Sprite::SingleFrameFormat format;
-					parse_uint(toml_frame_format["frame"], format.frame);
-					params.frame_format = format;
-				}
+					params.frame_format = params::Sprite::SingleFrameFormat{ .frame = parse_uint_or(toml_frame_format["frame"], 0) };
 				else if (mode_str == "auto")
-				{
-					params::Sprite::AutoFrameFormat format;
-					parse_float(toml_frame_format["speed"], format.speed);
-					parse_uint(toml_frame_format["starting_frame"], format.starting_frame);
-					params.frame_format = format;
-				}
+					params.frame_format = params::Sprite::AutoFrameFormat{
+						.speed = parse_float_or(toml_frame_format["speed"], 1.0f),
+						.starting_frame = parse_uint_or(toml_frame_format["starting_frame"], 0)
+					};
 				else
 					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
-			{
-				graphics::AnimFrameFormat format;
-				parse_uint(toml_frame_format["starting_frame"], format.starting_frame);
-				parse_uint(toml_frame_format["num_frames"], format.num_frames);
-				parse_float(toml_frame_format["starting_time"], format.starting_time);
-				parse_float(toml_frame_format["delay_seconds"], format.delay_seconds);
-				params.frame_format = format;
-			}
+				params.frame_format = graphics::AnimFrameFormat{
+					.starting_frame = parse_uint_or(toml_frame_format["starting_frame"], 0),
+					.num_frames = parse_uint_or(toml_frame_format["num_frames"], 0),
+					.starting_time = parse_float_or(toml_frame_format["starting_time"], 0.0f),
+					.delay_seconds = parse_float_or(toml_frame_format["delay_seconds"], 0.0f)
+				};
 		}
 
 		if (auto toml_transformer_modifier = node["transform_modifier"])
@@ -110,9 +101,8 @@ namespace oly::reg
 		return params;
 	}
 
-	rendering::Sprite load_sprite(const TOMLNode& node)
+	rendering::Sprite load_sprite(TOMLNode node)
 	{
-
 		return load_sprite(sprite_params(node));
 	}
 

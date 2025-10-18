@@ -21,6 +21,6 @@ namespace oly::reg
 		};
 	}
 
-	extern rendering::TileMap load_tilemap(const TOMLNode& node);
+	extern rendering::TileMap load_tilemap(TOMLNode node);
 	extern rendering::TileMap load_tilemap(const params::TileMap& params);
 }

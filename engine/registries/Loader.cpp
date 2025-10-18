@@ -45,11 +45,11 @@ namespace oly::reg
 		return false;
 	}
 
-	bool parse_uint(TOMLNode node, GLuint& v)
+	bool parse_uint(TOMLNode node, unsigned int& v)
 	{
 		if (auto i = node.value<int64_t>())
 		{
-			v = (GLuint)*i;
+			v = (unsigned int)*i;
 			return true;
 		}
 		return false;

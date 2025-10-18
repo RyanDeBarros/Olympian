@@ -18,6 +18,7 @@ namespace oly::rendering
 		glm::vec2 regular_mod_dimensions{};
 		math::UVRect regular_mod_uvs;
 
+		// TODO v5 use math::Padding
 		struct
 		{
 			float x_left = 0.0f, x_right = 0.0f, y_bottom = 0.0f, y_top = 0.0f;

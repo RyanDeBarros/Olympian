@@ -4,7 +4,7 @@
 
 namespace oly::reg
 {
-	rendering::SpriteNonant load_sprite_nonant(const TOMLNode& node)
+	rendering::SpriteNonant load_sprite_nonant(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
