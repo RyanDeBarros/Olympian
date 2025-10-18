@@ -111,7 +111,7 @@ namespace oly::reg
 					return;
 				}
 
-				math::TopSidePadding padding = parse_padding(g["padding"]);
+				math::TopSidePadding padding = parse_topside_padding(g["padding"]);
 
 				math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE;
 				parse_enum(g["origin_offset_mode"], origin_offset_mode);

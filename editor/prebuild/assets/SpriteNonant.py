@@ -7,14 +7,18 @@ def params_constructor(sprite_nonant, name) -> str:
 	if 'nsize' in sprite_nonant:
 		c += f"\t\t\t{name}.nsize = {{ (float){sprite_nonant['nsize'][0]}, (float){sprite_nonant['nsize'][1]} }};\n"
 
-	if 'left_offset' in sprite_nonant:
-		c += f"\t\t\t{name}.offsets.x_left = (float){sprite_nonant['left_offset']};\n"
-	if 'right_offset' in sprite_nonant:
-		c += f"\t\t\t{name}.offsets.x_right = (float){sprite_nonant['right_offset']};\n"
-	if 'bottom_offset' in sprite_nonant:
-		c += f"\t\t\t{name}.offsets.y_bottom = (float){sprite_nonant['bottom_offset']};\n"
-	if 'top_offset' in sprite_nonant:
-		c += f"\t\t\t{name}.offsets.y_top = (float){sprite_nonant['top_offset']};\n"
+	if 'offsets' in sprite_nonant:
+		offsets = sprite_nonant['offsets']
+		if 'uniform' in offsets:
+			c += f"\t\t\t{name}.offsets = oly::math::Padding::uniform((float){offsets['uniform']});\n"
+		if 'left' in offsets:
+			c += f"\t\t\t{name}.offsets.left = (float){offsets['left']};\n"
+		if 'right' in offsets:
+			c += f"\t\t\t{name}.offsets.right = (float){offsets['right']};\n"
+		if 'bottom' in offsets:
+			c += f"\t\t\t{name}.offsets.bottom = (float){offsets['bottom']};\n"
+		if 'top' in offsets:
+			c += f"\t\t\t{name}.offsets.top = (float){offsets['top']};\n"
 	return c
 
 

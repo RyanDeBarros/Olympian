@@ -82,7 +82,8 @@ namespace oly::reg
 
 	extern bool parse_shape(TOMLNode node, math::IRect2D& rect);
 
-	extern math::TopSidePadding parse_padding(TOMLNode node);
+	extern math::TopSidePadding parse_topside_padding(TOMLNode node);
+	extern math::Padding parse_padding(TOMLNode node);
 
 	extern bool parse_enum(TOMLNode node, math::PositioningMode& mode);
 }

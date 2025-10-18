@@ -226,21 +226,31 @@ namespace oly::reg
 		return true;
 	}
 
-	math::TopSidePadding parse_padding(TOMLNode node)
+	math::TopSidePadding parse_topside_padding(TOMLNode node)
 	{
 		math::TopSidePadding padding;
 
 		if (auto uniform = node["uniform"].value<double>())
 			padding = math::TopSidePadding::uniform(*uniform);
 
-		if (auto left = node["left"].value<double>())
-			padding.left = *left;
+		parse_float(node["left"], padding.left);
+		parse_float(node["right"], padding.right);
+		parse_float(node["top"], padding.top);
 
-		if (auto right = node["right"].value<double>())
-			padding.right = *right;
+		return padding;
+	}
 
-		if (auto top = node["top"].value<double>())
-			padding.top = *top;
+	math::Padding parse_padding(TOMLNode node)
+	{
+		math::Padding padding;
+
+		if (auto uniform = node["uniform"].value<double>())
+			padding = math::Padding::uniform(*uniform);
+
+		parse_float(node["left"], padding.left);
+		parse_float(node["right"], padding.right);
+		parse_float(node["top"], padding.top);
+		parse_float(node["bottom"], padding.bottom);
 
 		return padding;
 	}

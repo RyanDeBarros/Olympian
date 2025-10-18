@@ -12,12 +12,7 @@ namespace oly::reg
 		struct SpriteNonant
 		{
 			Sprite sprite_params;
-
-			struct
-			{
-				float x_left = 0.0f, x_right = 0.0f, y_bottom = 0.0f, y_top = 0.0f;
-			} offsets;
-
+			math::Padding offsets;
 			glm::vec2 nsize{};
 		};
 	}

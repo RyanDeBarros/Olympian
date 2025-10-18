@@ -17,12 +17,7 @@ namespace oly::rendering
 		glm::vec4 regular_modulation = glm::vec4(1.0f);
 		glm::vec2 regular_mod_dimensions{};
 		math::UVRect regular_mod_uvs;
-
-		// TODO v5 use math::Padding
-		struct
-		{
-			float x_left = 0.0f, x_right = 0.0f, y_bottom = 0.0f, y_top = 0.0f;
-		} offsets;
+		math::Padding offsets;
 		
 		struct
 		{
@@ -76,17 +71,8 @@ namespace oly::rendering
 		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
 		math::UVRect get_mod_tex_coords() const;
 
-		void set_x_left_offset(float xoff);
-		void set_x_right_offset(float xoff);
-		void set_y_bottom_offset(float yoff);
-		void set_y_top_offset(float yoff);
-		void set_offsets(float x_left, float x_right, float y_bottom, float y_top);
-
-		float get_x_left_offset() const { return offsets.x_left; }
-		float get_x_right_offset() const { return offsets.x_right; }
-		float get_y_bottom_offset() const { return offsets.y_bottom; }
-		float get_y_top_offset() const { return offsets.y_top; }
-		void get_offsets(float* x_left, float* x_right, float* y_bottom, float* y_top) const;
+		math::Padding& set_offsets();
+		math::Padding get_offsets() const { return offsets; }
 
 		float width() const { return nsize.x; }
 		float height() const { return nsize.y; }
@@ -95,8 +81,8 @@ namespace oly::rendering
 		void set_height(float h);
 		void set_size(glm::vec2 size);
 
-		void setup_nonant(glm::vec2 nsize, float x_left, float x_right, float y_bottom, float y_top);
-		void setup_nonant(const Sprite& copy, glm::vec2 nsize, float x_left, float x_right, float y_bottom, float y_top);
+		void setup_nonant(glm::vec2 nsize, math::Padding offsets);
+		void setup_nonant(const Sprite& copy, glm::vec2 nsize, math::Padding offsets);
 
 		glm::vec2 get_dimensions() const { return regular_dimensions; }
 
