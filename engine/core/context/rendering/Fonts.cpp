@@ -51,7 +51,7 @@ namespace oly::context
 		return internal::raster_font_registry.load_raster_font(file);
 	}
 
-	rendering::TextElementFont load_font(const std::string& file, unsigned index)
+	rendering::Font load_font(const std::string& file, unsigned index)
 	{
 		if (file.ends_with(".oly"))
 		{

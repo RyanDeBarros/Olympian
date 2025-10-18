@@ -3,30 +3,43 @@
 #include "core/base/Parameters.h"
 #include "core/util/UTF.h"
 
-#include "graphics/text/Font.h"
-#include "graphics/text/RasterFont.h"
+#include "graphics/text/FontFamily.h"
 
 namespace oly::rendering
 {
-	// TODO v5 something more efficient than variant?
-	// TODO v5 Add FontStyle: a new struct that holds a FontFamily, and style index into the family. FontFamily is a mapping of styles to font refs (styles being regular, bold, italic, etc.). This can then easily be used for the separators (defined below).
-	using TextElementFont = std::variant<FontAtlasRef, RasterFontRef>;
-
-	namespace internal
+	class TextGlyph;
+	
+	struct Font
 	{
-		namespace TextElementFontIndex
-		{
-			enum
-			{
-				ATLAS = 0,
-				RASTER = 1
-			};
-		};
-	}
+		// TODO v5 something more efficient than variant? same for FontFamily::FontRef
+		using Variant = std::variant<FontAtlasRef, RasterFontRef, FontSelection>;
+
+		Variant f;
+
+		Font() = default;
+		Font(const FontAtlasRef& font) : f(font) {}
+		Font(const RasterFontRef& font) : f(font) {}
+		Font(const FontSelection& font) : f(font) {}
+		Font& operator=(const FontAtlasRef& font) { f = font; return *this; }
+		Font& operator=(const RasterFontRef& font) { f = font; return *this; }
+		Font& operator=(const FontSelection& font) { f = font; return *this; }
+
+		float line_height() const;
+
+		bool operator==(const FontAtlasRef& font) const;
+		bool operator==(const RasterFontRef& font) const;
+		bool operator==(const FontSelection& font) const;
+		bool operator==(const Font& other) const;
+
+		bool adj_compat(const Font& other) const;
+		bool support(utf::Codepoint c) const;
+		void set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos, glm::vec2 scale) const;
+		float advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const;
+	};
 
 	struct TextElement
 	{
-		TextElementFont font;
+		Font font;
 		utf::String text = "";
 		glm::vec4 text_color = glm::vec4(1.0f);
 		float adj_offset = 0.0f;
@@ -38,17 +51,8 @@ namespace oly::rendering
 
 		static std::vector<TextElement> expand(const TextElement& element);
 		static void expand(const TextElement& element, std::vector<TextElement>& to);
+
+		void set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos) const { font.set_glyph(glyph, c, pos, scale); }
+		float advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const { return font.advance_width(c, next_codepoint) * scale.x; }
 	};
-
-	class TextGlyph;
-
-	namespace internal
-	{
-		extern bool font_equals(const TextElement& element, const FontAtlasRef& font);
-		extern bool font_equals(const TextElement& element, const RasterFontRef& font);
-		extern bool has_same_font_face(const TextElement& a, const TextElement& b);
-		extern bool support(const TextElement& element, utf::Codepoint c);
-		extern void set_glyph(TextGlyph& glyph, const TextElement& element, utf::Codepoint c, glm::vec2 pos);
-		extern float advance_width(const TextElement& element, utf::Codepoint c, utf::Codepoint next_codepoint);
-	}
 }

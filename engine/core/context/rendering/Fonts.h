@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/types/SmartReference.h"
 #include "graphics/text/TextElement.h"
 
 namespace oly::reg
@@ -24,5 +23,5 @@ namespace oly::context
 	extern rendering::FontFaceRef load_font_face(const std::string& file);
 	extern rendering::FontAtlasRef load_font_atlas(const std::string& file, unsigned int index = 0);
 	extern rendering::RasterFontRef load_raster_font(const std::string& file);
-	extern rendering::TextElementFont load_font(const std::string& file, unsigned index = 0);
+	extern rendering::Font load_font(const std::string& file, unsigned index = 0);
 }

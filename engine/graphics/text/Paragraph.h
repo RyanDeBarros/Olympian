@@ -98,7 +98,6 @@ namespace oly::rendering
 			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
 			glm::vec2 get_glyph_position(size_t i) const;
 
-			float advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const;
 			float space_width(utf::Codepoint next_codepoint) const;
 			float tab_width(utf::Codepoint next_codepoint) const;
 

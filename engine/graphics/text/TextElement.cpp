@@ -8,9 +8,115 @@
 
 namespace oly::rendering
 {
+	template<typename F>
+	auto visit_font(const Font::Variant& font, F&& func)
+	{
+		return std::visit([&func](const auto& font) {
+			if constexpr (visiting_class_is<decltype(font), FontSelection>)
+				return std::visit(std::forward<F>(func), font.get());
+			else
+				return func(font);
+			}, font);
+	}
+
+	template<typename F>
+	auto visit_fonts(const Font::Variant& f1, const Font::Variant& f2, F&& func)
+	{
+		return visit_font(f1, [&f2, &func](const auto& f1) { return visit_font(f2, [&f1, &func](const auto& f2) { return func(f1, f2); }); });
+	}
+
+	float Font::line_height() const
+	{
+		return visit_font(f, [](const auto& font) { return font->line_height(); });
+	}
+
+	static bool same_font(const auto& f1, const auto& f2)
+	{
+		if constexpr (std::is_same_v<std::decay_t<decltype(f1)>, std::decay_t<decltype(f2)>>)
+			return f1 == f2;
+		else
+			return false;
+	}
+
+	bool Font::operator==(const FontAtlasRef& font) const
+	{
+		return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
+	}
+
+	bool Font::operator==(const RasterFontRef& font) const
+	{
+		return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
+	}
+
+	bool Font::operator==(const FontSelection& font) const
+	{
+		return visit_font(f, [&font](const auto& f) { return std::visit([&f](const auto& font) { return same_font(f, font); }, font.get()); });
+	}
+
+	bool Font::operator==(const Font& other) const
+	{
+		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) { return same_font(f1, f2); });
+	}
+
+	bool Font::adj_compat(const Font& other) const
+	{
+		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) {
+			if constexpr (visiting_class_is<decltype(f1), FontAtlasRef>)
+			{
+				if constexpr (visiting_class_is<decltype(f2), FontAtlasRef>)
+					return f1->font_face() == f2->font_face();
+				else
+					return false;
+			}
+			else if constexpr (visiting_class_is<decltype(f1), RasterFontRef>)
+			{
+				if constexpr (visiting_class_is<decltype(f2), RasterFontRef>)
+					return f1 == f2;
+				else
+					return false;
+			}
+			else
+				return false;
+			});
+	}
+
+	bool Font::support(utf::Codepoint c) const
+	{
+		return visit_font(f, [c](const auto& f) {
+			if constexpr (visiting_class_is<decltype(f), FontAtlasRef>)
+				return f->cache(c);
+			else
+				return f->supports(c);
+			});
+	}
+
+	void Font::set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos, glm::vec2 scale) const
+	{
+		visit_font(f, [&glyph, c, pos, scale](const auto& f) { glyph.set_glyph(*f, f->get_glyph(c), pos, scale); });
+	}
+
+	float Font::advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const
+	{
+		float adv = 0.0f;
+		if (c != utf::Codepoint(' '))
+			adv = visit_font(f, [c](const auto& font) {
+				if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
+					return font->get_glyph(c).advance_width() * font->get_scale();
+				else
+					return font->get_glyph(c).advance_width() * font->get_scale().x;
+				});
+		else
+			adv = visit_font(f, [](const auto& f) { return f->get_scaled_space_advance_width(); });
+
+		if (next_codepoint)
+			adv += visit_font(f, [c, next_codepoint](const auto& f) { return f->kerning_of(c, next_codepoint); });
+
+		return adv;
+	}
+
 	float TextElement::line_height() const
 	{
-		return std::visit([](const auto& font) { return font->line_height(); }, font) * scale.y;
+		return font.line_height() * scale.y;
 	}
 
 	std::vector<TextElement> TextElement::expand(const TextElement& element)
@@ -216,76 +322,5 @@ namespace oly::rendering
 
 			to.push_back(std::move(e));
 		}
-	}
-
-	bool internal::font_equals(const TextElement& element, const FontAtlasRef& font)
-	{
-		return element.font.index() == TextElementFontIndex::ATLAS && std::get<TextElementFontIndex::ATLAS>(element.font) == font;
-	}
-	
-	bool internal::font_equals(const TextElement& element, const RasterFontRef& font)
-	{
-		return element.font.index() == TextElementFontIndex::RASTER && std::get<TextElementFontIndex::RASTER>(element.font) == font;
-	}
-
-	bool internal::has_same_font_face(const TextElement& a, const TextElement& b)
-	{
-		if (a.font.index() != b.font.index())
-			return false;
-
-		switch (a.font.index())
-		{
-		case internal::TextElementFontIndex::ATLAS:
-			return std::get<internal::TextElementFontIndex::ATLAS>(a.font)->font_face() == std::get<internal::TextElementFontIndex::ATLAS>(b.font)->font_face();
-		case internal::TextElementFontIndex::RASTER:
-			return std::get<internal::TextElementFontIndex::RASTER>(a.font) == std::get<internal::TextElementFontIndex::RASTER>(b.font);
-		default:
-			throw Error(ErrorCode::NOT_IMPLEMENTED);
-		}
-	}
-
-	bool internal::support(const TextElement& element, utf::Codepoint c)
-	{
-		return std::visit([c](const auto& font) {
-			if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
-				return font->cache(c);
-			else if constexpr (visiting_class_is<decltype(font), RasterFontRef>)
-				return font->supports(c);
-			else
-				static_assert(deferred_false<decltype(font)>);
-			}, element.font);
-	}
-
-	void internal::set_glyph(TextGlyph& glyph, const TextElement& element, utf::Codepoint c, glm::vec2 pos)
-	{
-		std::visit([&glyph, scale = element.scale, c, pos](const auto& font) {
-			if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
-				glyph.set_glyph(*font, font->get_glyph(c), pos, scale);
-			else if constexpr (visiting_class_is<decltype(font), RasterFontRef>)
-				glyph.set_glyph(*font, font->get_glyph(c), pos, scale);
-			else
-				static_assert(deferred_false<decltype(font)>);
-			}, element.font);
-	}
-
-	float internal::advance_width(const TextElement& element, utf::Codepoint c, utf::Codepoint next_codepoint)
-	{
-		float adv = 0.0f;
-		if (c != utf::Codepoint(' '))
-			adv = std::visit([c](const auto& font) {
-				if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
-					return font->get_glyph(c).advance_width() * font->get_scale();
-				else if constexpr (visiting_class_is<decltype(font), RasterFontRef>)
-					return font->get_glyph(c).advance_width() * font->get_scale().x;
-				else
-					static_assert(deferred_false<decltype(font)>);
-				}, element.font);
-		else
-			adv = std::visit([](const auto& font) { return font->get_scaled_space_advance_width(); }, element.font);
-
-		if (next_codepoint)
-			adv += std::visit([c, next_codepoint](const auto& font) { return font->kerning_of(c, next_codepoint); }, element.font);
-
-		return adv * element.scale.x;
 	}
 }

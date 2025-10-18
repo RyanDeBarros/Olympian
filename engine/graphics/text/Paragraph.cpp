@@ -171,9 +171,9 @@ namespace oly::rendering
 				if (iter.codepoint()) // next codepoint in group
 					paragraph->page_data.current_line().max_height = element.line_height();
 			}
-			else if (internal::support(element, codepoint))
+			else if (element.font.support(codepoint))
 			{
-				float dx = advance_width(codepoint, next_codepoint);
+				float dx = element.advance_width(codepoint, next_codepoint);
 				if (!paragraph->format.can_fit_on_line(typeset, dx))
 					build_newline(typeset);
 				build_glyph(typeset, dx);
@@ -215,9 +215,9 @@ namespace oly::rendering
 				if (!write_newline(typeset, line))
 					return WriteResult::BREAK;
 			}
-			else if (internal::support(element, codepoint))
+			else if (element.font.support(codepoint))
 			{
-				float dx = advance_width(codepoint, next_codepoint);
+				float dx = element.advance_width(codepoint, next_codepoint);
 				if (!paragraph->format.can_fit_on_line(typeset, dx))
 				{
 					if (!write_newline(typeset, line))
@@ -257,8 +257,8 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (internal::support(element, codepoint))
-			dx = advance_width(codepoint, next_codepoint);
+		else if (element.font.support(codepoint))
+			dx = element.advance_width(codepoint, next_codepoint);
 		else
 		{
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
@@ -329,8 +329,8 @@ namespace oly::rendering
 			dx = space_width(next_codepoint);
 		else if (codepoint == '\t')
 			dx = tab_width(next_codepoint);
-		else if (internal::support(element, codepoint))
-			dx = advance_width(codepoint, next_codepoint);
+		else if (element.font.support(codepoint))
+			dx = element.advance_width(codepoint, next_codepoint);
 		else
 		{
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
@@ -380,7 +380,7 @@ namespace oly::rendering
 		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
 		TextGlyph glyph;
 		glyph.transformer.attach_parent(&paragraph->transformer);
-		internal::set_glyph(glyph, element, c, get_glyph_position(glyphs.size()));
+		element.set_glyph(glyph, c, get_glyph_position(glyphs.size()));
 		glyphs.push_back(std::move(glyph));
 		typeset.x += dx;
 		++typeset.character;
@@ -392,14 +392,9 @@ namespace oly::rendering
 		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.jitter_offset;
 	}
 
-	float internal::GlyphGroup::advance_width(utf::Codepoint codepoint, utf::Codepoint next_codepoint) const
-	{
-		return internal::advance_width(element, codepoint, next_codepoint);
-	}
-
 	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
 	{
-		return internal::advance_width(element, utf::Codepoint(' '), next_codepoint);
+		return element.advance_width(utf::Codepoint(' '), next_codepoint);
 	}
 
 	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
@@ -458,7 +453,7 @@ namespace oly::rendering
 
 	void TextElementExposure::set_font(const FontAtlasRef& font)
 	{
-		if (!internal::font_equals(glyph_group.element, font))
+		if (glyph_group.element.font != font)
 		{
 			glyph_group.element.font = font;
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
@@ -467,7 +462,7 @@ namespace oly::rendering
 
 	void TextElementExposure::set_font(const RasterFontRef& font)
 	{
-		if (!internal::font_equals(glyph_group.element, font))
+		if (glyph_group.element.font != font)
 		{
 			glyph_group.element.font = font;
 			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
@@ -861,7 +856,7 @@ namespace oly::rendering
 		const internal::GlyphGroup& current_glyph = glyph_groups[i];
 		const internal::GlyphGroup& next_glyph = glyph_groups[i + 1];
 
-		if (internal::has_same_font_face(current_glyph.element, next_glyph.element))
+		if (current_glyph.element.font.adj_compat(next_glyph.element.font))
 			return next_glyph.peek();
 		else
 			return {};
