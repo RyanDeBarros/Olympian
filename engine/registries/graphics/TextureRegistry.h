@@ -75,20 +75,20 @@ namespace oly::reg
 
 		glm::vec2 get_dimensions(const ResourcePath& file, unsigned int texture_index = 0) const;
 		graphics::ImageDimensions get_image_dimensions(const ResourcePath& file, unsigned int texture_index = 0) const;
-		std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index = 0) const;
+		SmartReference<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index = 0) const;
 		graphics::ImageRef get_image_pixel_buffer(const ResourcePath& file, unsigned int texture_index = 0);
 		graphics::AnimRef get_anim_pixel_buffer(const ResourcePath& file, unsigned int texture_index = 0);
 
 		glm::vec2 get_dimensions(const graphics::BindlessTextureRef& texture) const;
 		graphics::ImageDimensions get_image_dimensions(const graphics::BindlessTextureRef& texture) const;
-		std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture) const;
+		SmartReference<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture) const;
 		graphics::ImageRef get_image_pixel_buffer(const graphics::BindlessTextureRef& texture);
 		graphics::AnimRef get_anim_pixel_buffer(const graphics::BindlessTextureRef& texture);
 
 	private:
 		glm::vec2 get_dimensions(const TextureKey& key) const;
 		graphics::ImageDimensions get_image_dimensions(const TextureKey& key) const;
-		std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const TextureKey& key) const;
+		SmartReference<graphics::AnimDimensions> get_anim_dimensions(const TextureKey& key) const;
 		graphics::ImageRef get_image_pixel_buffer(const TextureKey& key);
 		graphics::AnimRef get_anim_pixel_buffer(const TextureKey& key);
 

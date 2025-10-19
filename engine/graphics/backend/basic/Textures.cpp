@@ -239,7 +239,6 @@ namespace oly::graphics
 	}
 
 	Anim::Anim(const ResourcePath& file, SpritesheetOptions options)
-		: _dim(std::make_shared<AnimDimensions>())
 	{
 		if (file.extension_matches(".gif"))
 		{
@@ -255,7 +254,6 @@ namespace oly::graphics
 	}
 
 	Anim::Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options)
-		: _dim(std::make_shared<AnimDimensions>())
 	{
 		parse_sprite_sheet(context::nsvg_context().rasterize(svg_abstract, scale), options);
 	}
@@ -364,7 +362,7 @@ namespace oly::graphics
 	Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
 	{
 		Texture texture(GL_TEXTURE_2D_ARRAY);
-		const auto& dim = anim.dim().lock();
+		const auto& dim = anim.dim();
 		tex::storage_3d(texture, { .w = dim->w, .h = dim->h, .d = (int)dim->frames(), .cpp = dim->cpp }, generate_mipmaps ? tex::mipmap_levels(dim->w, dim->h) : 1);
 		for (GLuint i = 0; i < dim->frames(); ++i)
 			tex::subimage_3d(texture, anim.buf() + i * dim->w * dim->h * dim->cpp, { .z = (int)i, .w = dim->w, .h = dim->h, .d = 1 }, dim->cpp);
@@ -381,7 +379,7 @@ namespace oly::graphics
 
 	AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed, GLuint starting_frame)
 	{
-		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file).lock(), speed, starting_frame);
+		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
 
 	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
@@ -391,7 +389,7 @@ namespace oly::graphics
 
 	AnimFrameFormat setup_anim_frame_format_single(const ResourcePath& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file).lock(), frame);
+		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
 	NSVGAbstract::NSVGAbstract(const ResourcePath& file, const char* units, float dpi)

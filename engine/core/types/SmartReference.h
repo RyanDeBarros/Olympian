@@ -75,7 +75,7 @@ namespace oly
 			SmartReferenceLink* next = nullptr;
 		};
 
-		// TODO v6 multi-threading and thead safety
+		// TODO v6 multi-threading and thead safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
 		class SmartReferencePool : public IPool
 		{

@@ -25,8 +25,8 @@ namespace oly::reg
 			};
 			std::optional<std::variant<Frame, StaticFrame>> frame;
 
-			GLuint starting_frame;
-			float starting_time;
+			GLuint starting_frame = 0;
+			float starting_time = 0.0f;
 		};
 	}
 

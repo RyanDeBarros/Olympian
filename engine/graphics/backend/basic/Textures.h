@@ -210,7 +210,7 @@ namespace oly::graphics
 	class Anim
 	{
 		unsigned char* _buf = nullptr;
-		std::shared_ptr<AnimDimensions> _dim; // TODO v5 use SmartReference<AnimDimensions>?
+		SmartReference<AnimDimensions> _dim = REF_INIT;
 
 	public:
 		Anim(const ResourcePath& filepath, SpritesheetOptions options = {});
@@ -227,7 +227,7 @@ namespace oly::graphics
 
 		const unsigned char* buf() const { return _buf; }
 		unsigned char* buf() { return _buf; }
-		std::weak_ptr<AnimDimensions> dim() const { return _dim; }
+		SmartReference<AnimDimensions> dim() const { return _dim; }
 		glm::vec2 dimensions() const { return _dim->dimensions(); }
 
 		void delete_buffer();
@@ -237,11 +237,11 @@ namespace oly::graphics
 
 	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
 
-	inline Texture load_texture_2d_array(const ResourcePath& file, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+	inline Texture load_texture_2d_array(const ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
 		Anim anim(file, options);
 		auto texture = load_texture_2d_array(anim, generate_mipmaps);
-		dim = std::move(*anim.dim().lock());
+		dim = anim.dim();
 		return texture;
 	}
 	
@@ -250,7 +250,7 @@ namespace oly::graphics
 		return BindlessTexture(load_texture_2d_array(anim, generate_mipmaps));
 	}
 	
-	inline BindlessTexture load_bindless_texture_2d_array(const ResourcePath& file, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+	inline BindlessTexture load_bindless_texture_2d_array(const ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(file, dim, options, generate_mipmaps));
 	}
@@ -307,7 +307,7 @@ namespace oly::graphics
 	struct VectorImageRef
 	{
 		ImageRef image;
-		float scale;
+		float scale = 1.0f;
 	};
 
 	enum class SVGMipmapGenerationMode

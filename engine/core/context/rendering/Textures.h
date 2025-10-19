@@ -31,6 +31,6 @@ namespace oly::context
 	extern glm::vec2 get_texture_dimensions(const graphics::BindlessTextureRef& texture);
 	extern graphics::ImageDimensions get_image_dimensions(const ResourcePath& file, unsigned int texture_index = 0);
 	extern graphics::ImageDimensions get_image_dimensions(const graphics::BindlessTextureRef& texture);
-	extern std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index = 0);
-	extern std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture);
+	extern SmartReference<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index = 0);
+	extern SmartReference<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture);
 }

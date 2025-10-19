@@ -356,7 +356,7 @@ namespace oly::reg
 		return get_image_dimensions({ .file = file, .index = texture_index });
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const ResourcePath& file, unsigned int texture_index) const
+	SmartReference<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const ResourcePath& file, unsigned int texture_index) const
 	{
 		return get_anim_dimensions({ .file = file, .index = texture_index });
 	}
@@ -387,7 +387,7 @@ namespace oly::reg
 		return get_image_dimensions(it->second);
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const graphics::BindlessTextureRef& texture) const
+	SmartReference<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const graphics::BindlessTextureRef& texture) const
 	{
 		auto it = textures.find_backward_iterator(texture);
 		if (it == textures.backward_end())
@@ -451,7 +451,7 @@ namespace oly::reg
 		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const TextureKey& key) const
+	SmartReference<graphics::AnimDimensions> TextureRegistry::get_anim_dimensions(const TextureKey& key) const
 	{
 		auto it = anims.find(key);
 		if (it != anims.end())

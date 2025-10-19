@@ -63,12 +63,12 @@ namespace oly::context
 		return internal::texture_registry.get_image_dimensions(texture);
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index)
+	SmartReference<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index)
 	{
 		return internal::texture_registry.get_anim_dimensions(file, texture_index);
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture)
+	SmartReference<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture)
 	{
 		return internal::texture_registry.get_anim_dimensions(texture);
 	}
