@@ -20,7 +20,7 @@ namespace oly::reg
 		auto node = toml["tileset"];
 		if (!node.as_table())
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load tileset \"" << file << "\" - missing \"tileset\" table." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load tileset " << file << " - missing \"tileset\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 

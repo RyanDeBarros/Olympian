@@ -31,7 +31,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -61,7 +61,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -76,7 +76,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -86,7 +86,7 @@ namespace oly::io
 		std::vector<unsigned char> content(size);
 		if (!file.read(reinterpret_cast<char*>(content.data()), size))
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Failed to read \"" << filepath << "\"" << LOG.nl;
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Failed to read " << filepath << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -115,15 +115,5 @@ namespace oly::io
 	std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
 	{
 		return read_template_content(read_file(file), tmpl);
-	}
-
-	std::string file_extension(const char* filepath)
-	{
-		return std::filesystem::path(filepath).extension().string();
-	}
-
-	std::string directory_of(const char* filepath)
-	{
-		return std::filesystem::path(filepath).parent_path().string() + "/";
 	}
 }

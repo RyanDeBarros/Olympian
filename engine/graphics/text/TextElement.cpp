@@ -171,40 +171,35 @@ namespace oly::rendering
 					return;
 				}
 
-				std::string type = algo::to_lower(algo::rtrim(value.substr(0, co_pos)));
-				std::string param = algo::ltrim(value.substr(co_pos + 1));
-
-				if (type == "file")
+				unsigned texture_index = 0;
+				co_pos = value.rfind(':');
+				if (co_pos != std::string::npos)
 				{
-					unsigned texture_index = 0;
-					co_pos = param.rfind(';');
-					if (co_pos != std::string::npos)
+					std::string index = value.substr(co_pos + 1);
+					try
 					{
-						std::string index = param.substr(co_pos + 1);
-						try
-						{
-							texture_index = std::stoul(index);
-						}
-						catch (...)
+						texture_index = std::stoul(index);
+					}
+					catch (...)
+					{
+						if (auto s = rendering::FontStyle::from_string(std::move(index)))
+							texture_index = *s;
+						else
 						{
 							OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
 							return;
 						}
-						param.erase(param.begin() + co_pos, param.end());
 					}
-
-					if (param.ends_with('\"'))
-						param.pop_back();
-					if (param.starts_with('\"'))
-						param.erase(param.begin());
-
-					e.font = context::load_font(param, texture_index);
-					overrides.font = true;
+					value.erase(value.begin() + co_pos, value.end());
 				}
-				else if (type == "style")
-				{
-					// TODO v5
-				}
+
+				if (value.ends_with('\"'))
+					value.pop_back();
+				if (value.starts_with('\"'))
+					value.erase(value.begin());
+
+				e.font = context::load_font(value, texture_index);
+				overrides.font = true;
 			}
 		}
 		else if (field == "color")

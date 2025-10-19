@@ -2,6 +2,15 @@
 
 namespace oly::reg
 {
+    std::optional<std::string> MetaMap::get_type() const
+    {
+        auto it = map.find("type");
+        if (it != map.end())
+            return it->second;
+        else
+            return std::nullopt;
+    }
+
     bool MetaMap::has_type(const std::string& type) const
     {
         auto it = map.find("type");

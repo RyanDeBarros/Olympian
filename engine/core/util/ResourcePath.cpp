@@ -1,7 +1,7 @@
 #include "ResourcePath.h"
 
 #include "core/base/Errors.h"
-#include "core/util/Logger.h"
+#include "core/util/LoggerOperators.h"
 
 namespace oly
 {
@@ -15,7 +15,7 @@ namespace oly
 		}
 	}
 
-	void ResourcePath::set(std::filesystem::path&& path)
+	void ResourcePath::set(std::filesystem::path&& path, const ResourcePath& relative_to)
 	{
 		if (path.is_absolute())
 			absolute = std::move(path);
@@ -25,7 +25,12 @@ namespace oly
 			if (s.starts_with("~/"))
 				absolute = context::internal::resource_root / s.substr(2);
 			else
-				absolute = context::internal::resource_root / s;
+			{
+				if (relative_to.empty())
+					absolute = context::internal::resource_root / s;
+				else
+					absolute = (std::filesystem::is_directory(relative_to.absolute) ? relative_to.absolute : relative_to.absolute.parent_path()) / s;
+			}
 		}
 	}
 
@@ -36,9 +41,17 @@ namespace oly
 
 	ResourcePath ResourcePath::get_import_path() const
 	{
-		ResourcePath p = *this;
-		p.absolute += ".oly";
-		return p;
+		if (is_import_path())
+		{
+			OLY_LOG_WARNING(true) << "Path " << *this << " is already an import path." << LOG.nl;
+			return *this;
+		}
+		else
+		{
+			ResourcePath p = *this;
+			p.absolute += ".oly";
+			return p;
+		}
 	}
 
 	bool ResourcePath::is_import_path() const

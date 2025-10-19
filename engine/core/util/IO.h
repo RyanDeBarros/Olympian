@@ -22,10 +22,4 @@ namespace oly::io
 	inline std::string read_template_file(const std::string& file, const std::unordered_map<std::string, std::string>& tmpl)
 		{ return read_template_file(file.c_str(), tmpl); }
 	extern std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl);
-
-	extern std::string file_extension(const char* file);
-	inline std::string file_extension(const std::string& file) { return file_extension(file.c_str()); }
-
-	extern std::string directory_of(const char* file);
-	inline std::string directory_of(const std::string& file) { return directory_of(file.c_str()); }
 }

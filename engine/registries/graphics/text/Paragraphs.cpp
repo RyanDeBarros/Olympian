@@ -72,15 +72,15 @@ namespace oly::reg
 	static std::optional<params::Paragraph::TextElement> parse_text_element(TOMLNode element, size_t i)
 	{
 		params::Paragraph::TextElement element_params;
-		if (auto font_atlas = element["font_atlas"].value<std::string>())
-			element_params.font_atlas = *font_atlas;
+		if (auto font = element["font"].value<std::string>())
+			element_params.font = *font;
 		else
 		{
 			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
 			return std::nullopt;
 		}
 
-		parse_uint(element["atlas_index"], element_params.atlas_index);
+		parse_uint(element["font_index"], element_params.font_index);
 
 		if (auto text = element["text"].value<std::string>())
 			element_params.text = *text;
@@ -152,7 +152,7 @@ namespace oly::reg
 	static void add_element(std::vector<rendering::TextElement>& elements, const params::Paragraph::TextElement& params)
 	{
 		rendering::TextElement element{
-			.font = context::load_font_atlas(params.font_atlas, params.atlas_index), // TODO v5 support for raster font
+			.font = context::load_font(params.font, params.font_index),
 			.text = params.text,
 			.adj_offset = params.adj_offset,
 			.scale = params.scale,
@@ -172,7 +172,7 @@ namespace oly::reg
 	static void add_element(std::vector<rendering::TextElement>& elements, params::Paragraph::TextElement&& params)
 	{
 		rendering::TextElement element{
-			.font = context::load_font_atlas(params.font_atlas, params.atlas_index), // TODO v5 support for raster font
+			.font = context::load_font(params.font, params.font_index),
 			.text = std::move(params.text),
 			.adj_offset = params.adj_offset,
 			.scale = params.scale,

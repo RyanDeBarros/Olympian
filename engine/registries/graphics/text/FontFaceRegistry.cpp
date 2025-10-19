@@ -21,7 +21,7 @@ namespace oly::reg
 		auto node = toml["font_face"];
 		if (!node.as_table())
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load font face \"" << file << "\" - missing \"font_face\" table." << LOG.nl;
+			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 

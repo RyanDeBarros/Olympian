@@ -104,21 +104,21 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"horizontal_align"  = "center"
 	"vertical_align"    = "full_justify"
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"
 	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
 	"scale"        = [ 2.0, 0.5 ]
 	"line_y_pivot" = 0.5
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "b"
 	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
 	"adj_offset"   = 50
@@ -128,6 +128,6 @@ name = "smol_text"
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
+	"font"	       = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"
 	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

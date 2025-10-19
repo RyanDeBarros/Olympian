@@ -12,6 +12,6 @@ namespace oly
 
 	Logger::Impl operator<<(Logger::Impl impl, const ResourcePath& file)
 	{
-		return impl << file.get_absolute().c_str();
+		return impl.stream(file.get_absolute());
 	}
 }

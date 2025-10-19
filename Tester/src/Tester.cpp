@@ -4,7 +4,7 @@
 
 #include <registries/graphics/sprites/Sprites.h>
 #include <registries/graphics/shapes/Polygons.h>
-#include <registries/graphics/TextureRegistry.h>
+#include <registries/graphics/text/Paragraphs.h>
 
 #include "assets/archetypes/SpriteMatch.h"
 #include "assets/archetypes/Jumble.h"
@@ -45,16 +45,11 @@ struct BKG
 
 struct PixelArtText
 {
-	oly::rendering::RasterFontRef font;
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: font(oly::context::load_raster_font("~/fonts/PixelFont.oly"))
+		: paragraph(oly::reg::load_paragraph(oly::reg::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
 	{
-		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font,
-			.text = "<font=file:~/fonts/Roboto-Regular.ttf;0>A</font>B C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
-		paragraph->draw_bkg = true;
-		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
 	}
 
 	void draw() const
@@ -309,6 +304,7 @@ int main()
 
 	// TODO v6 begin play on initial actors here
 
+	oly::LOG.flush();
 	while (oly::context::frame())
 	{
 		player->update_view(0, player_cv);

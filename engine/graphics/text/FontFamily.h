@@ -4,13 +4,14 @@
 #include "graphics/text/RasterFont.h"
 
 #include <variant>
+#include <optional>
 
 namespace oly::rendering
 {
 	struct FontStyle
 	{
 	private:
-		enum class Defaults : int
+		enum class Defaults : unsigned int
 		{
 			REGULAR,
 			BOLD,
@@ -20,33 +21,36 @@ namespace oly::rendering
 		};
 
 	public:
-		int v = 0;
+		unsigned int v = 0;
 
 		constexpr FontStyle() = default;
-		constexpr FontStyle(int v) : v(v) {}
+		constexpr FontStyle(unsigned int v) : v(v) {}
 
 		bool operator==(const FontStyle& other) const { return v == other.v; }
+		operator unsigned int() const { return v; }
 
 	private:
-		constexpr FontStyle(Defaults v) : v((int)v) {}
+		constexpr FontStyle(Defaults v) : v((unsigned int)v) {}
 
 	public:
 		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::REGULAR); }
 		static constexpr FontStyle BOLD() { return FontStyle(Defaults::BOLD); }
 		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::ITALIC); }
 		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::BOLD_ITALIC); }
+
+		static std::optional<FontStyle> from_string(const std::string& str);
+		static std::optional<FontStyle> from_string(std::string&& str);
 	};
 }
 
 template<>
 struct std::hash<oly::rendering::FontStyle>
 {
-	size_t operator()(const oly::rendering::FontStyle& fs) const { return std::hash<int>{}(fs.v); }
+	size_t operator()(const oly::rendering::FontStyle& fs) const { return std::hash<unsigned int>{}(fs.v); }
 };
 
 namespace oly::rendering
 {
-	// TODO v5 FontFamily registry - can also load FontSelection from it
 	struct FontFamily
 	{
 		using FontRef = std::variant<FontAtlasRef, RasterFontRef>;

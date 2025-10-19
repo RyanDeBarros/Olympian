@@ -19,20 +19,20 @@ namespace oly
 	public:
 		ResourcePath() = default;
 
-		ResourcePath(const std::string& path) { set(path); }
-		ResourcePath(std::string&& path) { set(std::move(path)); }
-		ResourcePath(const char* path) { set(path); }
-		ResourcePath(const std::filesystem::path& path) { set(dupl(path)); }
-		ResourcePath(std::filesystem::path&& path) { set(std::move(path)); }
+		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
+		ResourcePath(std::string&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
+		ResourcePath(const char* path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
+		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(dupl(path), relative_to); }
+		ResourcePath(std::filesystem::path&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 
-		ResourcePath& operator=(const std::string& path) { set(path); return *this; }
-		ResourcePath& operator=(std::string&& path) { set(std::move(path)); return *this; }
-		ResourcePath& operator=(const char* path) { set(path); return *this; }
-		ResourcePath& operator=(const std::filesystem::path& path) { set(dupl(path)); return *this; }
-		ResourcePath& operator=(std::filesystem::path&& path) { set(std::move(path)); return *this; }
+		ResourcePath& operator=(const std::string& path) { set(path, {}); return *this; }
+		ResourcePath& operator=(std::string&& path) { set(std::move(path), {}); return *this; }
+		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }
+		ResourcePath& operator=(const std::filesystem::path& path) { set(dupl(path), {}); return *this; }
+		ResourcePath& operator=(std::filesystem::path&& path) { set(std::move(path), {}); return *this; }
 
 	private:
-		void set(std::filesystem::path&& path);
+		void set(std::filesystem::path&& path, const ResourcePath& relative_to);
 
 	public:
 		std::filesystem::path get_absolute() const;

@@ -76,10 +76,10 @@ def params_constructor(paragraph, name) -> str:
 	def write_text_element(element):
 		c = "\t\t\t{\n"
 		c += "\t\t\t\treg::params::Paragraph::TextElement element;\n"
-		if 'font_atlas' in element:
-			c += f"\t\t\t\telement.font_atlas = \"{element['font_atlas']}\";\n"
-		if 'atlas_index' in element:
-			c += f"\t\t\t\telement.atlas_index = (unsigned int){element['atlas_index']};\n"
+		if 'font' in element:
+			c += f"\t\t\t\telement.font = \"{element['font']}\";\n"
+		if 'font_index' in element:
+			c += f"\t\t\t\telement.font_index = (unsigned int){element['font_index']};\n"
 		if 'text' in element:
 			c += f"\t\t\t\telement.text = \"{escape_text(element['text'])}\";\n"
 		c += write_vec4(element, 'element.text_color', 'text_color', 4)

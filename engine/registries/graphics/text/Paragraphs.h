@@ -12,8 +12,8 @@ namespace oly::reg
 		{
 			struct TextElement
 			{
-				std::string font_atlas;
-				unsigned int atlas_index = 0;
+				std::string font;
+				unsigned int font_index = 0;
 				utf::String text;
 				std::optional<glm::vec4> text_color;
 				float adj_offset = 0.0f;
