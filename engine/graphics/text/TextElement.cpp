@@ -25,6 +25,26 @@ namespace oly::rendering
 		return visit_font(f1, [&f2, &func](const auto& f1) { return visit_font(f2, [&f1, &func](const auto& f2) { return func(f1, f2); }); });
 	}
 
+	bool Font::try_apply_style(FontStyle style)
+	{
+		return std::visit([style](auto& f) {
+			if constexpr (visiting_class_is<decltype(f), FontSelection>)
+				return f.try_apply_style(style);
+			else
+				return false;
+			}, f);
+	}
+
+	bool Font::try_unapply_style(FontStyle style)
+	{
+		return std::visit([style](auto& f) {
+			if constexpr (visiting_class_is<decltype(f), FontSelection>)
+				return f.try_unapply_style(style);
+			else
+				return false;
+			}, f);
+	}
+
 	float Font::line_height() const
 	{
 		return visit_font(f, [](const auto& font) { return font->line_height(); });
@@ -151,11 +171,50 @@ namespace oly::rendering
 		return algo::trim(tag.substr(eq_pos + 1));
 	}
 
+	static void apply_style_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
+	{
+		if (overrides.font)
+			return;
+
+		// TODO v5 test these
+
+		if (tag == "b" || tag == "bold")
+		{
+			if (e.font.try_apply_style(FontStyle::BOLD()))
+				overrides.font = true;
+		}
+		else if (tag == "!b" || tag == "!bold")
+		{
+			if (e.font.try_unapply_style(FontStyle::BOLD()))
+				overrides.font = true;
+		}
+		else if (tag == "i" || tag == "italic")
+		{
+			if (e.font.try_apply_style(FontStyle::ITALIC()))
+				overrides.font = true;
+		}
+		else if (tag == "!i" || tag == "!italic")
+		{
+			if (e.font.try_unapply_style(FontStyle::ITALIC()))
+				overrides.font = true;
+		}
+		else if (tag == "regular")
+		{
+			if (e.font.try_apply_style(FontStyle::REGULAR()))
+				overrides.font = true;
+		}
+		else
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
+	}
+
 	static void apply_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
 	{
 		size_t eq_pos = tag.find('=');
 		if (eq_pos == std::string::npos)
-			return; // TODO v5 if no '=', check for other tags like <b>/<i> once style is implemented
+		{
+			apply_style_tag(tag, e, overrides);
+			return;
+		}
 
 		std::string field = get_tag_field(tag, eq_pos);
 

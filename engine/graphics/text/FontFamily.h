@@ -26,8 +26,8 @@ namespace oly::rendering
 		constexpr FontStyle() = default;
 		constexpr FontStyle(unsigned int v) : v(v) {}
 
-		bool operator==(const FontStyle& other) const { return v == other.v; }
-		operator unsigned int() const { return v; }
+		constexpr bool operator==(const FontStyle& other) const { return v == other.v; }
+		constexpr operator unsigned int() const { return v; }
 
 	private:
 		constexpr FontStyle(Defaults v) : v((unsigned int)v) {}
@@ -71,5 +71,8 @@ namespace oly::rendering
 		FontFamily::FontRef get() const;
 		void set_font(const FontFamily::FontRef& font);
 		bool style_exists() const;
+
+		bool try_apply_style(FontStyle s);
+		bool try_unapply_style(FontStyle s);
 	};
 }

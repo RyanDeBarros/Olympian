@@ -52,4 +52,62 @@ namespace oly::rendering
 	{
 		return family->supports(style);
 	}
+	
+	bool FontSelection::try_apply_style(FontStyle s)
+	{
+		switch (s)
+		{
+		case FontStyle::BOLD():
+			if (style == FontStyle::ITALIC() && family->supports(FontStyle::BOLD_ITALIC()))
+			{
+				style = FontStyle::BOLD_ITALIC();
+				return true;
+			}
+			break;
+		case FontStyle::ITALIC():
+			if (style == FontStyle::BOLD() && family->supports(FontStyle::BOLD_ITALIC()))
+			{
+				style = FontStyle::BOLD_ITALIC();
+				return true;
+			}
+			break;
+		}
+
+		if (family->supports(s))
+		{
+			style = s;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	bool FontSelection::try_unapply_style(FontStyle s)
+	{
+		switch (s)
+		{
+		case FontStyle::BOLD():
+			if (style == FontStyle::BOLD_ITALIC() && family->supports(FontStyle::ITALIC()))
+			{
+				style = FontStyle::ITALIC();
+				return true;
+			}
+			break;
+		case FontStyle::ITALIC():
+			if (style == FontStyle::BOLD_ITALIC() && family->supports(FontStyle::BOLD()))
+			{
+				style = FontStyle::BOLD();
+				return true;
+			}
+			break;
+		}
+
+		if (style == s)
+		{
+			style = FontStyle::REGULAR();
+			return true;
+		}
+		else
+			return false;
+	}
 }
