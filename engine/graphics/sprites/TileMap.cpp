@@ -97,7 +97,7 @@ namespace oly::rendering
 		TileSet::Transformation transformation;
 		TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
-		sprite.set_texture(tile_desc.name);
+		sprite.set_texture(tile_desc.file);
 		sprite.set_tex_coords(tile_desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
 		if (transformation & TileSet::Transformation::REFLECT_X)
@@ -117,7 +117,7 @@ namespace oly::rendering
 		else
 			sprite.set_local().rotation = 0.0f;
 		
-		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.name);
+		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.file);
 	}
 
 	void TileMap::draw() const

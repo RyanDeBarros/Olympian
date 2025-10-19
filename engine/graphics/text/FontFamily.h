@@ -46,6 +46,7 @@ struct std::hash<oly::rendering::FontStyle>
 
 namespace oly::rendering
 {
+	// TODO v5 FontFamily registry - can also load FontSelection from it
 	struct FontFamily
 	{
 		using FontRef = std::variant<FontAtlasRef, RasterFontRef>;
@@ -58,7 +59,6 @@ namespace oly::rendering
 
 	typedef SmartReference<FontFamily> FontFamilyRef;
 
-	// TODO v5 FontSelection registry
 	struct FontSelection
 	{
 		FontFamilyRef family;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "external/TOML.h"
+#include "core/util/ResourcePath.h"
 
 #include <unordered_map>
 
@@ -15,6 +16,6 @@ namespace oly::reg
 
 	struct MetaSplitter
 	{
-		static MetaMap meta(const std::string& filepath);
+		static MetaMap meta(const ResourcePath& file);
 	};
 }

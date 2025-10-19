@@ -28,7 +28,7 @@ namespace oly::rendering
 		Kerning kerning;
 
 	public:
-		FontFace(const char* font_file, Kerning&& kerning);
+		FontFace(const ResourcePath& font_file, Kerning&& kerning);
 
 		float scale_for_pixel_height(float font_size) const;
 		void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;

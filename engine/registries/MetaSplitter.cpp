@@ -10,21 +10,20 @@ namespace oly::reg
 
     static const std::string meta_prefix = "#meta";
 
-	MetaMap MetaSplitter::meta(const std::string& filepath)
+	MetaMap MetaSplitter::meta(const ResourcePath& filepath)
 	{
-        std::ifstream file(filepath);
-        MetaMap meta;
-
+        std::ifstream file = filepath.get_ifstream();
         if (!file.is_open())
-            return meta;
+            return {};
 
         std::string first_line;
         if (!std::getline(file, first_line))
-            return meta;
+            return {};
 
         if (!first_line.starts_with(meta_prefix.c_str()))
-            return meta;
+            return {};
 
+        MetaMap meta;
         std::istringstream iss(first_line.substr(meta_prefix.size()));
         std::string token;
         while (iss >> token)

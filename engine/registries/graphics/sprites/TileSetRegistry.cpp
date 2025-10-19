@@ -1,7 +1,6 @@
 #include "TileSetRegistry.h"
 
-#include "core/context/Context.h"
-#include "core/util/Logger.h"
+#include "core/util/LoggerOperators.h"
 #include "registries/Loader.h"
 
 namespace oly::reg
@@ -11,13 +10,13 @@ namespace oly::reg
 		tilesets.clear();
 	}
 
-	rendering::TileSetRef TileSetRegistry::load_tileset(const std::string& file)
+	rendering::TileSetRef TileSetRegistry::load_tileset(const ResourcePath& file)
 	{
 		auto it = tilesets.find(file);
 		if (it != tilesets.end())
 			return it->second;
 
-		auto toml = load_toml(context::resource_file(file));
+		auto toml = load_toml(file);
 		auto node = toml["tileset"];
 		if (!node.as_table())
 		{
@@ -78,7 +77,7 @@ namespace oly::reg
 						return;
 					}
 
-					assignment.desc.name = _texture.value();
+					assignment.desc.file = _texture.value();
 					glm::vec4 uvs{};
 					if (reg::parse_vec(node["uvs"], uvs))
 					{
@@ -137,7 +136,7 @@ namespace oly::reg
 		return tileset;
 	}
 
-	void TileSetRegistry::free_tileset(const std::string& file)
+	void TileSetRegistry::free_tileset(const ResourcePath& file)
 	{
 		tilesets.erase(file);
 	}

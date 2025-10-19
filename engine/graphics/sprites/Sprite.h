@@ -26,13 +26,13 @@ namespace oly::rendering
 
 		void draw() const;
 
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
 		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-		void set_mod_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
+		void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
 		void set_mod_tex_coords(math::UVRect uvs) const { ref.set_mod_tex_coords(uvs); }
@@ -71,13 +71,13 @@ namespace oly::rendering
 
 		void draw() const;
 
-		void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
+		void set_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
 		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
 		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
 		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-		void set_mod_texture(const std::string& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
+		void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
 		void set_mod_tex_coords(math::UVRect uvs) const { ref.set_mod_tex_coords(uvs); }

@@ -11,6 +11,7 @@
 #include "core/types/SmartReference.h"
 #include "core/types/DeferredFalse.h"
 #include "core/math/Shapes.h"
+#include "core/util/ResourcePath.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
@@ -142,7 +143,7 @@ namespace oly::graphics
 		ImageDimensions _dim;
 
 	public:
-		Image(const char* filepath);
+		Image(const ResourcePath& file);
 		Image(unsigned char* buf, ImageDimensions dim);
 		Image(const Image&) = delete;
 		Image(Image&&) noexcept;
@@ -159,29 +160,24 @@ namespace oly::graphics
 	typedef SmartReference<Image> ImageRef;
 
 	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
-	inline Texture load_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
+	
+	inline Texture load_texture_2d(const ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
 	{
-		Image image(filename);
+		Image image(file);
 		dim = image.dim();
 		return load_texture_2d(image, generate_mipmaps);
 	}
-	inline Texture load_texture_2d(const std::string& filename, ImageDimensions& dim, bool generate_mipmaps = false)
-	{
-		return load_texture_2d(filename.c_str(), dim, generate_mipmaps);
-	}
+
 	inline BindlessTexture load_bindless_texture_2d(const Image& image, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d(image, generate_mipmaps));
 	}
-	inline BindlessTexture load_bindless_texture_2d(const char* filename, ImageDimensions& dim, bool generate_mipmaps = false)
-	{
-		return BindlessTexture(load_texture_2d(filename, dim, generate_mipmaps));
-	}
-	inline BindlessTexture load_bindless_texture_2d(const std::string& filename, ImageDimensions& dim, bool generate_mipmaps = false)
-	{
-		return load_bindless_texture_2d(filename.c_str(), dim, generate_mipmaps);
-	}
 
+	inline BindlessTexture load_bindless_texture_2d(const ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
+	{
+		return BindlessTexture(load_texture_2d(file, dim, generate_mipmaps));
+	}
+	
 	inline float anim_delay_epsilon = 1.0f;
 	struct AnimDimensions
 	{
@@ -214,10 +210,10 @@ namespace oly::graphics
 	class Anim
 	{
 		unsigned char* _buf = nullptr;
-		std::shared_ptr<AnimDimensions> _dim;
+		std::shared_ptr<AnimDimensions> _dim; // TODO v5 use SmartReference<AnimDimensions>?
 
 	public:
-		Anim(const char* filepath, SpritesheetOptions options = {});
+		Anim(const ResourcePath& filepath, SpritesheetOptions options = {});
 		Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options = {});
 
 	private:
@@ -240,28 +236,23 @@ namespace oly::graphics
 	typedef SmartReference<Anim> AnimRef;
 
 	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
-	inline Texture load_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+
+	inline Texture load_texture_2d_array(const ResourcePath& file, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
-		Anim anim(filename, options);
+		Anim anim(file, options);
 		auto texture = load_texture_2d_array(anim, generate_mipmaps);
 		dim = std::move(*anim.dim().lock());
 		return texture;
 	}
-	inline Texture load_texture_2d_array(const std::string& filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
-	{
-		return load_texture_2d_array(filename.c_str(), dim, options, generate_mipmaps);
-	}
+	
 	inline BindlessTexture load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(anim, generate_mipmaps));
 	}
-	inline BindlessTexture load_bindless_texture_2d_array(const char* filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+	
+	inline BindlessTexture load_bindless_texture_2d_array(const ResourcePath& file, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
-		return BindlessTexture(load_texture_2d_array(filename, dim, options, generate_mipmaps));
-	}
-	inline BindlessTexture load_bindless_texture_2d_array(const std::string& filename, AnimDimensions& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
-	{
-		return load_bindless_texture_2d_array(filename.c_str(), dim, options, generate_mipmaps);
+		return BindlessTexture(load_texture_2d_array(file, dim, options, generate_mipmaps));
 	}
 
 	struct AnimFrameFormat
@@ -275,9 +266,9 @@ namespace oly::graphics
 	};
 
 	extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format(const std::string& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
+	extern AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
 	extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
-	extern AnimFrameFormat setup_anim_frame_format_single(const std::string& texture_file, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_single(const ResourcePath& texture_file, GLuint frame);
 
 	class NSVGAbstract
 	{
@@ -285,8 +276,7 @@ namespace oly::graphics
 		mutable NSVGimage* i = nullptr;
 
 	public:
-		NSVGAbstract(const char* filepath, const char* units = "px", float dpi = 96.0f);
-		NSVGAbstract(const std::string& filepath, const char* units = "px", float dpi = 96.0f);
+		NSVGAbstract(const ResourcePath& file, const char* units = "px", float dpi = 96.0f);
 		NSVGAbstract(const NSVGAbstract&) = delete;
 		NSVGAbstract(NSVGAbstract&&) noexcept;
 		~NSVGAbstract();
@@ -328,6 +318,7 @@ namespace oly::graphics
 	};
 
 	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr);
+	
 	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr)
 	{
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));

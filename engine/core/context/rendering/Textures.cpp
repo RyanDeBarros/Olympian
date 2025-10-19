@@ -1,6 +1,5 @@
 #include "Textures.h"
 
-#include "core/context/Context.h"
 #include "core/context/rendering/Sprites.h"
 #include "registries/graphics/TextureRegistry.h"
 #include "registries/graphics/sprites/Sprites.h"
@@ -34,19 +33,19 @@ namespace oly::context
 		rendering::internal::SpriteBatchRegistry::instance().update_texture_handle(texture);
 	}
 
-	graphics::BindlessTextureRef load_texture(const std::string& file, unsigned int texture_index)
+	graphics::BindlessTextureRef load_texture(const ResourcePath& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.load_texture(resource_file(file), texture_index);
+		return internal::texture_registry.load_texture(file, texture_index);
 	}
 
-	graphics::BindlessTextureRef load_svg_texture(const std::string& file, unsigned int texture_index)
+	graphics::BindlessTextureRef load_svg_texture(const ResourcePath& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.load_svg_texture(resource_file(file), texture_index);
+		return internal::texture_registry.load_svg_texture(file, texture_index);
 	}
 
-	glm::vec2 get_texture_dimensions(const std::string& file, unsigned int texture_index)
+	glm::vec2 get_texture_dimensions(const ResourcePath& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.get_dimensions(resource_file(file), texture_index);
+		return internal::texture_registry.get_dimensions(file, texture_index);
 	}
 
 	glm::vec2 get_texture_dimensions(const graphics::BindlessTextureRef& texture)
@@ -54,9 +53,9 @@ namespace oly::context
 		return internal::texture_registry.get_dimensions(texture);
 	}
 
-	graphics::ImageDimensions get_image_dimensions(const std::string& file, unsigned int texture_index)
+	graphics::ImageDimensions get_image_dimensions(const ResourcePath& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.get_image_dimensions(resource_file(file), texture_index);
+		return internal::texture_registry.get_image_dimensions(file, texture_index);
 	}
 
 	graphics::ImageDimensions get_image_dimensions(const graphics::BindlessTextureRef& texture)
@@ -64,9 +63,9 @@ namespace oly::context
 		return internal::texture_registry.get_image_dimensions(texture);
 	}
 
-	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const std::string& file, unsigned int texture_index)
+	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index)
 	{
-		return internal::texture_registry.get_anim_dimensions(resource_file(file), texture_index);
+		return internal::texture_registry.get_anim_dimensions(file, texture_index);
 	}
 
 	std::weak_ptr<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture)

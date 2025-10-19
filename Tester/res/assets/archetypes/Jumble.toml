@@ -17,34 +17,34 @@ draw = [
 
 [[archetype.sprite]]
 name = "sprite3"
-"texture"    = "RES://textures/serotonin.gif"
+"texture"    = "~/textures/serotonin.gif"
 transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
 frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [[archetype.sprite]]
 name = "sprite4"
-"texture"       = "RES://textures/tux.png"
+"texture"       = "~/textures/tux.png"
 "texture_index" = 1
 transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
 [[archetype.sprite]]
 name = "sprite5"
-"texture" = "RES://textures/tux.png"
+"texture" = "~/textures/tux.png"
 transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
 [[archetype.sprite]]
 name = "sprite1"
-"texture" = "RES://textures/einstein.png"
+"texture" = "~/textures/einstein.png"
 
 [[archetype.sprite]]
 name = "godot_icon"
-"texture" = "RES://textures/godot.svg"
+"texture" = "~/textures/godot.svg"
 "texture_index" = 1
 transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [[archetype.sprite]]
 name = "knight"
-"texture"    = "RES://textures/knight.png"
+"texture"    = "~/textures/knight.png"
 transform    = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
@@ -54,7 +54,7 @@ name            = "atlased_knight"
 "cols"          = 3
 "delay_seconds" = 0.1
 	[archetype.sprite_atlas.sprite]
-	"texture" = "RES://textures/knight.png"
+	"texture" = "~/textures/knight.png"
 	"texture_index" = 1
 	transform = { "position" = [300, -200], "scale" = [20, 20] }
 
@@ -64,7 +64,7 @@ name            = "nonant_panel"
 [archetype.sprite_nonant.offsets]
 uniform = 6
 [archetype.sprite_nonant.sprite]
-"texture" = "RES://textures/panel.png"
+"texture" = "~/textures/panel.png"
 transform = { "scale" = [ 10.0, 10.0 ] }
 
 [[archetype.tilemap]]
@@ -73,7 +73,7 @@ transform = { "scale" = [ 100, 100 ] }
 
 	[[archetype.tilemap.layer]]
 	"z" = 0
-	"tileset" = "RES://assets/grass tileset.toml"
+	"tileset" = "~/assets/grass tileset.toml"
 	"tiles" = [
 		[ -1, -1 ],
 		[  0, -1 ],
@@ -104,21 +104,21 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"horizontal_align"  = "center"
 	"vertical_align"    = "full_justify"
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"
 	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
 	"scale"        = [ 2.0, 0.5 ]
 	"line_y_pivot" = 0.5
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "b"
 	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
 	"adj_offset"   = 50
@@ -128,6 +128,6 @@ name = "smol_text"
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
 	[[archetype.paragraph.element]]
-	"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
+	"font_atlas"   = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"
 	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

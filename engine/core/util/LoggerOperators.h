@@ -2,9 +2,13 @@
 
 #include "core/util/Logger.h"
 
-#include "core/util/UTF.h"
-
 namespace oly
 {
+	namespace utf
+	{
+		class String;
+	}
+
 	extern Logger::Impl operator<<(Logger::Impl, const utf::String& str);
+	extern Logger::Impl operator<<(Logger::Impl, const class ResourcePath& file);
 }

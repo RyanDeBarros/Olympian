@@ -75,7 +75,7 @@ namespace oly::context
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signals((internal::resource_root + file.value()).c_str());
+					reg::load_signals(*file);
 		}
 	}
 
@@ -89,6 +89,7 @@ namespace oly::context
 		stbi_set_flip_vertically_on_load(true);
 
 		internal::this_frame = 0;
+		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
 		auto toml = reg::load_toml(project_file);
 		TOMLNode toml_context = toml["context"];
@@ -170,16 +171,6 @@ namespace oly::context
 	Context& Context::operator=(Context&&) noexcept
 	{
 		return *this;
-	}
-
-	std::string resource_file(const std::string& file)
-	{
-		return internal::resource_root + file.substr(strlen(OLY_RES_PREFIX));
-	}
-
-	toml::parse_result load_toml(const char* file)
-	{
-		return reg::load_toml(resource_file(file));
 	}
 
 	bool frame()

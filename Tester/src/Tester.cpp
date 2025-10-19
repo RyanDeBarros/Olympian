@@ -34,7 +34,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::reg::load_polygon(oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]);
+		bkg_rect = oly::reg::load_polygon(oly::reg::load_toml("~/assets/BKG.toml")["polygon"]);
 	}
 
 	void draw() const
@@ -49,10 +49,10 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: font(oly::context::load_raster_font(OLY_RES_PREFIX"fonts/PixelFont.oly"))
+		: font(oly::context::load_raster_font("~/fonts/PixelFont.oly"))
 	{
 		paragraph.init(oly::rendering::Paragraph(oly::rendering::TextElement::expand({ .font = font,
-			.text = "<font=file:RES://fonts/Roboto-Regular.ttf;0>A</font>B C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
+			.text = "<font=file:~/fonts/Roboto-Regular.ttf;0>A</font>B C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>" })));
 		paragraph->draw_bkg = true;
 		paragraph->set_bkg_color({ 0.9f, 0.9f, 0.9f, 0.5f });
 	}
@@ -95,7 +95,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::reg::load_sprite(oly::context::load_toml(OLY_RES_PREFIX"assets/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::reg::load_sprite(oly::reg::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);
@@ -290,7 +290,7 @@ int main()
 
 	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
-	auto flag_texture = oly::context::load_texture(OLY_RES_PREFIX"textures/flag.png");
+	auto flag_texture = oly::context::load_texture("~/textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);

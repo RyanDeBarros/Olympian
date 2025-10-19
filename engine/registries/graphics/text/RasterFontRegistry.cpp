@@ -2,7 +2,7 @@
 
 #include "core/context/Context.h"
 #include "core/context/rendering/Textures.h"
-#include "core/util/Logger.h"
+#include "core/util/LoggerOperators.h"
 #include "registries/Loader.h"
 #include "registries/MetaSplitter.h"
 #include "registries/graphics/text/KerningSupport.h"
@@ -15,7 +15,7 @@ namespace oly::reg
 		raster_fonts.clear();
 	}
 
-	rendering::RasterFontRef RasterFontRegistry::load_raster_font(const std::string& file)
+	rendering::RasterFontRef RasterFontRegistry::load_raster_font(const ResourcePath& file)
 	{
 		if (file.empty())
 		{
@@ -29,15 +29,14 @@ namespace oly::reg
 
 		OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing raster font [" << file << "]..." << LOG.nl;
 
-		const std::string resource_file = context::resource_file(file);
-		auto meta = MetaSplitter::meta(resource_file); // TODO v5 use MetaSplitter throughout registries
+		auto meta = MetaSplitter::meta(file); // TODO v5 use MetaSplitter throughout registries
 		if (!meta.has_type("raster_font"))
 		{
 			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Meta fields do not contain raster font type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		auto table = load_toml(resource_file);
+		auto table = load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
 
 		float space_advance_width;
@@ -132,7 +131,7 @@ namespace oly::reg
 		return raster_font;
 	}
 
-	void RasterFontRegistry::free_raster_font(const std::string& file)
+	void RasterFontRegistry::free_raster_font(const ResourcePath& file)
 	{
 		raster_fonts.erase(file);
 	}

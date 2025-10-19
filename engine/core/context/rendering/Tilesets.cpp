@@ -19,7 +19,7 @@ namespace oly::context
 		return internal::tileset_registry;
 	}
 
-	rendering::TileSetRef load_tileset(const std::string& file)
+	rendering::TileSetRef load_tileset(const ResourcePath& file)
 	{
 		return internal::tileset_registry.load_tileset(file);
 	}

@@ -8,7 +8,7 @@ namespace oly::reg
 	{
 		struct FontAtlasKey
 		{
-			std::string file;
+			ResourcePath file;
 			unsigned int index;
 
 			bool operator==(const FontAtlasKey&) const = default;
@@ -16,7 +16,7 @@ namespace oly::reg
 
 		struct FontAtlasHash
 		{
-			size_t operator()(const FontAtlasKey& k) const { return std::hash<std::string>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
+			size_t operator()(const FontAtlasKey& k) const { return std::hash<ResourcePath>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
 		};
 
 		std::unordered_map<FontAtlasKey, rendering::FontAtlasRef, FontAtlasHash> font_atlases;
@@ -24,7 +24,7 @@ namespace oly::reg
 	public:
 		void clear();
 
-		rendering::FontAtlasRef load_font_atlas(const std::string& name, unsigned int index = 0);
-		void free_font_atlas(const std::string& name, unsigned int index = 0);
+		rendering::FontAtlasRef load_font_atlas(const ResourcePath& file, unsigned int index = 0);
+		void free_font_atlas(const ResourcePath& file, unsigned int index = 0);
 	};
 }

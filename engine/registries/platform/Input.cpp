@@ -284,9 +284,9 @@ namespace oly::reg
 		}
 	}
 
-	void load_signals(const char* signal_registry_filepath)
+	void load_signals(const ResourcePath& file)
 	{
-		auto toml = load_toml(signal_registry_filepath);
+		auto toml = load_toml(file);
 
 		auto signals = toml["signal"].as_array();
 		if (signals)

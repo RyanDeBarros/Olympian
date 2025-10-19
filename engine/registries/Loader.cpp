@@ -2,16 +2,16 @@
 
 #include "external/GL.h"
 #include "core/base/Errors.h"
-#include "core/util/Logger.h"
+#include "core/util/LoggerOperators.h"
 
 namespace oly::reg
 {
-	toml::v3::parse_result load_toml(const char* file)
+	toml::v3::parse_result load_toml(const ResourcePath& file)
 	{
 		try
 		{
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Loading TOML file \"" << file << "\"" << LOG.nl;
-			return toml::parse_file(file);
+			return toml::parse_file(file.get_absolute().c_str());
 		}
 		catch (const toml::parse_error& err)
 		{

@@ -12,7 +12,7 @@ namespace oly::reg
 		font_atlases.clear();
 	}
 
-	rendering::FontAtlasRef FontAtlasRegistry::load_font_atlas(const std::string& file, unsigned int index)
+	rendering::FontAtlasRef FontAtlasRegistry::load_font_atlas(const ResourcePath& file, unsigned int index)
 	{
 		// TODO v5 add empty filename checks to all asset loaders
 		if (file.empty())
@@ -26,7 +26,7 @@ namespace oly::reg
 		if (it != font_atlases.end())
 			return it->second;
 
-		auto toml = load_toml(context::resource_file(file + ".oly"));
+		auto toml = load_toml(file.get_import_path());
 		auto font_atlas_list = toml["font_atlas"].as_array();
 		if (!font_atlas_list || font_atlas_list->empty())
 		{
@@ -92,7 +92,7 @@ namespace oly::reg
 		return font_atlas;
 	}
 
-	void FontAtlasRegistry::free_font_atlas(const std::string& file, unsigned int index)
+	void FontAtlasRegistry::free_font_atlas(const ResourcePath& file, unsigned int index)
 	{
 		font_atlases.erase({ file, index });
 	}

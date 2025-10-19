@@ -107,7 +107,7 @@ namespace oly::rendering
 		dirty.mod_grid = true;
 	}
 
-	void SpriteNonant::set_texture(const std::string& texture_file, unsigned int texture_index)
+	void SpriteNonant::set_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -160,7 +160,7 @@ namespace oly::rendering
 				sprite(x, y).set_frame_format(anim);
 	}
 
-	void SpriteNonant::set_mod_texture(const std::string& texture_file, unsigned int texture_index)
+	void SpriteNonant::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)

@@ -20,7 +20,7 @@ class ProjectContext:
 		self.project_file = project_file.resolve()
 		self.project_folder = self.project_file.parent
 		self.res_folder = self.project_folder / "res"
-		self.res_friendly_prefix = "RES://"
+		self.res_friendly_prefix = "~/"
 
 		self.trash_folder = self.project_folder / ".trash"
 		self.trash_folder.mkdir(exist_ok=True)

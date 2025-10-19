@@ -4,11 +4,11 @@
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
 #include "core/math/Shapes.h"
+#include "core/util/ResourcePath.h"
 
 namespace oly::reg
 {
-	extern toml::v3::parse_result load_toml(const char* file);
-	inline toml::v3::parse_result load_toml(const std::string& file) { return load_toml(file.c_str()); }
+	extern toml::v3::parse_result load_toml(const ResourcePath& file);
 
 	extern bool parse_bool(TOMLNode node, bool& v);
 	inline bool parse_bool_or(TOMLNode node, bool def) { parse_bool(node, def); return def; }

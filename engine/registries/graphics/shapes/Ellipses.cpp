@@ -15,14 +15,14 @@ namespace oly::reg
 		params::Ellipse params;
 		params.local = load_transform_2d(node["transform"]);
 
-		parse_vec(node["border inner color"], params.color.border_inner);
-		parse_vec(node["border outer color"], params.color.border_outer);
-		parse_vec(node["fill inner color"], params.color.fill_inner);
-		parse_vec(node["fill outer color"], params.color.fill_outer);
+		parse_vec(node["border_inner_color"], params.color.border_inner);
+		parse_vec(node["border_outer_color"], params.color.border_outer);
+		parse_vec(node["fill_inner_color"], params.color.fill_inner);
+		parse_vec(node["fill_outer_color"], params.color.fill_outer);
 
 		parse_float(node["border"], params.dimension.border);
-		parse_float(node["border exp"], params.dimension.border_exp);
-		parse_float(node["fill exp"], params.dimension.fill_exp);
+		parse_float(node["border_exp"], params.dimension.border_exp);
+		parse_float(node["fill_exp"], params.dimension.fill_exp);
 		parse_float(node["rx"], params.dimension.rx);
 		parse_float(node["ry"], params.dimension.ry);
 

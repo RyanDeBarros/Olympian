@@ -204,14 +204,14 @@ namespace oly::rendering
 			void set_batch(Unbatched);
 			void set_batch(rendering::SpriteBatch& batch);
 
-			void set_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
+			void set_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const;
 			void set_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 			void set_tex_coords(math::UVRect uvs) const;
 			void set_modulation(glm::vec4 modulation) const;
 			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 			void set_text_glyph(bool is_text_glyph) const;
-			void set_mod_texture(const std::string& texture_file, unsigned int texture_index = 0) const;
+			void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
 			void set_mod_tex_coords(math::UVRect uvs) const;

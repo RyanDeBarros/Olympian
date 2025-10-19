@@ -1,7 +1,6 @@
 #include "FontFaceRegistry.h"
 
-#include "core/context/Context.h"
-#include "core/util/Logger.h"
+#include "core/util/LoggerOperators.h"
 #include "registries/Loader.h"
 #include "registries/graphics/text/KerningSupport.h"
 
@@ -12,13 +11,13 @@ namespace oly::reg
 		font_faces.clear();
 	}
 
-	rendering::FontFaceRef FontFaceRegistry::load_font_face(const std::string& file)
+	rendering::FontFaceRef FontFaceRegistry::load_font_face(const ResourcePath& file)
 	{
 		auto it = font_faces.find(file);
 		if (it != font_faces.end())
 			return it->second;
 
-		auto toml = load_toml(context::resource_file(file + ".oly"));
+		auto toml = load_toml(file.get_import_path());
 		auto node = toml["font_face"];
 		if (!node.as_table())
 		{
@@ -32,7 +31,7 @@ namespace oly::reg
 			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing font face [" << (src ? *src : "") << "]..." << LOG.nl;
 		}
 
-		rendering::FontFaceRef font_face(context::resource_file(file).c_str(), reg::parse_kerning(node));
+		rendering::FontFaceRef font_face(file, reg::parse_kerning(node));
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			font_faces.emplace(file, font_face);
 
@@ -45,7 +44,7 @@ namespace oly::reg
 		return font_face;
 	}
 
-	void FontFaceRegistry::free_font_face(const std::string& file)
+	void FontFaceRegistry::free_font_face(const ResourcePath& file)
 	{
 		font_faces.erase(file);
 	}

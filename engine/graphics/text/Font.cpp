@@ -9,7 +9,7 @@ namespace oly
 {
 	namespace rendering
 	{
-		FontFace::FontFace(const char* font_file, Kerning&& kerning)
+		FontFace::FontFace(const ResourcePath& font_file, Kerning&& kerning)
 			: info{}, data(io::read_file_uc(font_file)), kerning(std::move(kerning))
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
