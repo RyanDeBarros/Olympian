@@ -2,6 +2,7 @@
 
 #include "graphics/text/Font.h"
 #include "graphics/text/RasterFont.h"
+#include "core/types/Variant.h"
 
 #include <variant>
 #include <optional>

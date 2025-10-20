@@ -241,4 +241,6 @@ namespace oly
 	
 	inline glm::mat3 augment(const glm::mat2& l, glm::vec2 t) { return { glm::vec3(l[0], 0.0f), glm::vec3(l[1], 0.0f), glm::vec3(t, 1.0f) }; }
 	inline glm::mat3 augment(const glm::mat3x2& tr) { return { glm::vec3(tr[0], 0.0f), glm::vec3(tr[1], 0.0f), glm::vec3(tr[2], 1.0f) }; }
+
+	// TODO v5 Rather than combining shear + pivot, use transform modifier composition with template size. Then implement a QuadDeform modifier that can morpjh the parallelogram to any quad shape by creating a more complex global 3x3 matrix. Following this, create utility to subdivide sprites into set of distinct sprites for use in destruction.
 }
