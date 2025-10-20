@@ -40,7 +40,14 @@ namespace oly::rendering
 
 	FontFamily::FontRef FontSelection::get() const
 	{
-		return family->get(style);
+		if (style_exists())
+			return family->get(style);
+		else if (family->supports(style & FontStyle::BOLD()))
+			return family->get(style & FontStyle::BOLD());
+		else if (family->supports(FontStyle::REGULAR()))
+			return family->get(FontStyle::REGULAR());
+		else
+			return FontAtlasRef(nullptr);
 	}
 
 	void FontSelection::set_font(const FontFamily::FontRef& font)
@@ -51,63 +58,5 @@ namespace oly::rendering
 	bool FontSelection::style_exists() const
 	{
 		return family->supports(style);
-	}
-	
-	bool FontSelection::try_apply_style(FontStyle s)
-	{
-		switch (s)
-		{
-		case FontStyle::BOLD():
-			if (style == FontStyle::ITALIC() && family->supports(FontStyle::BOLD_ITALIC()))
-			{
-				style = FontStyle::BOLD_ITALIC();
-				return true;
-			}
-			break;
-		case FontStyle::ITALIC():
-			if (style == FontStyle::BOLD() && family->supports(FontStyle::BOLD_ITALIC()))
-			{
-				style = FontStyle::BOLD_ITALIC();
-				return true;
-			}
-			break;
-		}
-
-		if (family->supports(s))
-		{
-			style = s;
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool FontSelection::try_unapply_style(FontStyle s)
-	{
-		switch (s)
-		{
-		case FontStyle::BOLD():
-			if (style == FontStyle::BOLD_ITALIC() && family->supports(FontStyle::ITALIC()))
-			{
-				style = FontStyle::ITALIC();
-				return true;
-			}
-			break;
-		case FontStyle::ITALIC():
-			if (style == FontStyle::BOLD_ITALIC() && family->supports(FontStyle::BOLD()))
-			{
-				style = FontStyle::BOLD();
-				return true;
-			}
-			break;
-		}
-
-		if (style == s)
-		{
-			style = FontStyle::REGULAR();
-			return true;
-		}
-		else
-			return false;
 	}
 }

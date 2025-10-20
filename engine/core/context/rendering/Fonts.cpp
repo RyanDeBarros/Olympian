@@ -83,7 +83,7 @@ namespace oly::context
 			if (meta.has_type("raster_font"))
 				return load_raster_font(file);
 			else if (meta.has_type("font_family"))
-				return load_font_selection(file, index);
+				return load_font_selection(file, rendering::FontStyle(index));
 			else
 			{
 				std::optional<std::string> type = meta.get_type();

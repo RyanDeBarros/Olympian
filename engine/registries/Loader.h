@@ -86,4 +86,7 @@ namespace oly::reg
 	extern math::Padding parse_padding(TOMLNode node);
 
 	extern bool parse_enum(TOMLNode node, math::PositioningMode& mode);
+
+	extern bool parse_color(const std::string& text, glm::vec4& color);
+	extern bool parse_color(std::string&& text, glm::vec4& color);
 }

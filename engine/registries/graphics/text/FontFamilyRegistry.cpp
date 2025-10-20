@@ -42,7 +42,7 @@ namespace oly::reg
 			a->for_each([&file, &styles = font_family->styles](auto&& _node) {
 				TOMLNode node = (TOMLNode)_node;
 
-				rendering::FontStyle style;
+				rendering::FontStyle style = rendering::FontStyle::REGULAR();
 				if (!parse_uint(node["style"], reinterpret_cast<unsigned int&>(style)))
 				{
 					auto _style_str = node["style"].value<std::string>();

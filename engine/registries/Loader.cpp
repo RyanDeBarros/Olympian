@@ -3,6 +3,7 @@
 #include "external/GL.h"
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
+#include "core/algorithms/STLUtils.h"
 
 namespace oly::reg
 {
@@ -281,5 +282,47 @@ namespace oly::reg
 		else
 			return false;
 		return true;
+	}
+
+	bool parse_color(const std::string& text, glm::vec4& color)
+	{
+		return parse_color(dupl(text), color);
+	}
+
+	bool parse_color(std::string&& text, glm::vec4& color)
+	{
+		algo::to_lower(text);
+		if (text == "red")
+		{
+			color = { 1.0f, 0.0f, 0.0f, 1.0f };
+			return true;
+		}
+		else if (text == "green")
+		{
+			color = { 0.0f, 1.0f, 0.0f, 1.0f };
+			return true;
+		}
+		else if (text == "blue")
+		{
+			color = { 0.0f, 0.0f, 1.0f, 1.0f };
+			return true;
+		}
+		else if (text == "cyan")
+		{
+			color = { 0.0f, 1.0f, 1.0f, 1.0f };
+			return true;
+		}
+		else if (text == "magenta")
+		{
+			color = { 1.0f, 0.0f, 1.0f, 1.0f };
+			return true;
+		}
+		else if (text == "yellow")
+		{
+			color = { 1.0f, 1.0f, 0.0f, 1.0f };
+			return true;
+		}
+		else
+			return false;
 	}
 }

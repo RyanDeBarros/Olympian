@@ -1,10 +1,14 @@
 #include "TextElement.h"
 
 #include "graphics/text/TextGlyph.h"
+
 #include "core/algorithms/TaggedTextParser.h"
 #include "core/algorithms/STLUtils.h"
 #include "core/algorithms/Regex.h"
+
 #include "core/context/rendering/Fonts.h"
+
+#include "registries/Loader.h"
 
 namespace oly::rendering
 {
@@ -25,23 +29,27 @@ namespace oly::rendering
 		return visit_font(f1, [&f2, &func](const auto& f1) { return visit_font(f2, [&f1, &func](const auto& f2) { return func(f1, f2); }); });
 	}
 
-	bool Font::try_apply_style(FontStyle style)
+	void Font::apply_style(FontStyle style)
 	{
-		return std::visit([style](auto& f) {
+		std::visit([style](auto& f) {
 			if constexpr (visiting_class_is<decltype(f), FontSelection>)
-				return f.try_apply_style(style);
-			else
-				return false;
+				f.style |= style;
 			}, f);
 	}
 
-	bool Font::try_unapply_style(FontStyle style)
+	void Font::unapply_style(FontStyle style)
 	{
-		return std::visit([style](auto& f) {
+		std::visit([style](auto& f) {
 			if constexpr (visiting_class_is<decltype(f), FontSelection>)
-				return f.try_unapply_style(style);
-			else
-				return false;
+				f.style &= ~style;
+			}, f);
+	}
+
+	void Font::reset_style()
+	{
+		std::visit([](auto& f) {
+			if constexpr (visiting_class_is<decltype(f), FontSelection>)
+				f.style = FontStyle::REGULAR();
 			}, f);
 	}
 
@@ -173,46 +181,31 @@ namespace oly::rendering
 
 	static void apply_style_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
 	{
-		if (overrides.font)
-			return;
-
-		// TODO v5 test these
-
 		if (tag == "b" || tag == "bold")
-		{
-			if (e.font.try_apply_style(FontStyle::BOLD()))
-				overrides.font = true;
-		}
+			e.font.apply_style(FontStyle::BOLD());
 		else if (tag == "!b" || tag == "!bold")
-		{
-			if (e.font.try_unapply_style(FontStyle::BOLD()))
-				overrides.font = true;
-		}
+			e.font.unapply_style(FontStyle::BOLD());
 		else if (tag == "i" || tag == "italic")
-		{
-			if (e.font.try_apply_style(FontStyle::ITALIC()))
-				overrides.font = true;
-		}
+			e.font.apply_style(FontStyle::ITALIC());
 		else if (tag == "!i" || tag == "!italic")
-		{
-			if (e.font.try_unapply_style(FontStyle::ITALIC()))
-				overrides.font = true;
-		}
+			e.font.unapply_style(FontStyle::ITALIC());
 		else if (tag == "regular")
-		{
-			if (e.font.try_apply_style(FontStyle::REGULAR()))
-				overrides.font = true;
-		}
+			e.font.reset_style();
 		else
+		{
 			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
+			return;
+		}
+		overrides.font = true;
 	}
 
-	static void apply_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
+	static void apply_tag(std::string&& tag, TextElement& e, AttributeOverrides& overrides, std::vector<std::string>& style_tags)
 	{
 		size_t eq_pos = tag.find('=');
 		if (eq_pos == std::string::npos)
 		{
-			apply_style_tag(tag, e, overrides);
+			if (!overrides.font)
+				style_tags.push_back(std::move(tag));
 			return;
 		}
 
@@ -268,40 +261,8 @@ namespace oly::rendering
 				std::string value = get_tag_value(tag, eq_pos);
 				if (algo::re::parse_vec4(value, e.text_color))
 					overrides.text_color = true;
-				else
-				{
-					algo::to_lower(value);
-					if (value == "red")
-					{
-						e.text_color = { 1.0f, 0.0f, 0.0f, 1.0f };
-						overrides.text_color = true;
-					}
-					else if (value == "green")
-					{
-						e.text_color = { 0.0f, 1.0f, 0.0f, 1.0f };
-						overrides.text_color = true;
-					}
-					else if (value == "blue")
-					{
-						e.text_color = { 0.0f, 0.0f, 1.0f, 1.0f };
-						overrides.text_color = true;
-					}
-					else if (value == "cyan")
-					{
-						e.text_color = { 0.0f, 1.0f, 1.0f, 1.0f };
-						overrides.text_color = true;
-					}
-					else if (value == "magenta")
-					{
-						e.text_color = { 1.0f, 0.0f, 1.0f, 1.0f };
-						overrides.text_color = true;
-					}
-					else if (value == "yellow")
-					{
-						e.text_color = { 1.0f, 1.0f, 0.0f, 1.0f };
-						overrides.text_color = true;
-					}
-				}
+				else if (reg::parse_color(value, e.text_color))
+					overrides.text_color = true;
 			}
 		}
 		else if (field == "adj_offset")
@@ -352,14 +313,17 @@ namespace oly::rendering
 
 			AttributeOverrides overrides;
 
+			std::vector<std::string> style_tags;
 			while (!group.tags.empty())
 			{
 				utf::String tag = group.tags.top();
 				group.tags.pop();
-				apply_tag(tag.string(), e, overrides);
+				apply_tag(tag.string(), e, overrides, style_tags);
 				if (overrides.all())
 					break;
 			}
+			for (auto tag = style_tags.rbegin(); tag != style_tags.rend(); ++tag)
+				apply_style_tag(*tag, e, overrides);
 
 			if (!overrides.font)
 				e.font = element.font;

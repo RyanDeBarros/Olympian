@@ -168,7 +168,7 @@ namespace oly::rendering
 				if (iter && utf::is_rn(codepoint, next_codepoint))
 					++iter;
 				build_newline(typeset);
-				if (iter.codepoint()) // next codepoint in group
+				if (iter || next_peek.first_codepoint) // next codepoint in group
 					paragraph->page_data.current_line().max_height = element.line_height();
 			}
 			else if (element.font.support(codepoint))
@@ -273,7 +273,7 @@ namespace oly::rendering
 		else
 		{
 			build_newline(typeset);
-			if (iter.codepoint()) // next codepoint in group
+			if (iter || next_peek.first_codepoint) // next codepoint in group
 				paragraph->page_data.current_line().max_height = element.line_height();
 		}
 	}

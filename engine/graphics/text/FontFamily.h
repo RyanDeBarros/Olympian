@@ -11,32 +11,32 @@ namespace oly::rendering
 	struct FontStyle
 	{
 	private:
-		enum class Defaults : unsigned int
+		enum Defaults : unsigned int
 		{
-			REGULAR,
-			BOLD,
-			ITALIC,
-			BOLD_ITALIC
-			// TODO v5 other styles?
+			D_REGULAR = 0,
+			D_BOLD = 0b1,
+			D_ITALIC = 0b10,
+			D_MAX = 0b11
 		};
 
-	public:
 		unsigned int v = 0;
 
-		constexpr FontStyle() = default;
-		constexpr FontStyle(unsigned int v) : v(v) {}
+	public:
+		constexpr FontStyle(unsigned int v) : v(v & Defaults::D_MAX) {}
 
-		constexpr bool operator==(const FontStyle& other) const { return v == other.v; }
+		constexpr bool operator==(FontStyle other) const { return v == other.v; }
 		constexpr operator unsigned int() const { return v; }
 
-	private:
-		constexpr FontStyle(Defaults v) : v((unsigned int)v) {}
+		constexpr FontStyle operator~() const { return FontStyle(~v & Defaults::D_MAX); }
+		constexpr FontStyle operator|(FontStyle other) const { return FontStyle(v | other.v); }
+		constexpr FontStyle operator&(FontStyle other) const { return FontStyle(v & other.v); }
+		constexpr FontStyle& operator|=(FontStyle other) { return *this = (*this | other); }
+		constexpr FontStyle& operator&=(FontStyle other) { return *this = (*this & other); }
 
-	public:
-		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::REGULAR); }
-		static constexpr FontStyle BOLD() { return FontStyle(Defaults::BOLD); }
-		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::ITALIC); }
-		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::BOLD_ITALIC); }
+		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::D_REGULAR); }
+		static constexpr FontStyle BOLD() { return FontStyle(Defaults::D_BOLD); }
+		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::D_ITALIC); }
+		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::D_BOLD | Defaults::D_ITALIC); }
 
 		static std::optional<FontStyle> from_string(const std::string& str);
 		static std::optional<FontStyle> from_string(std::string&& str);
@@ -46,7 +46,7 @@ namespace oly::rendering
 template<>
 struct std::hash<oly::rendering::FontStyle>
 {
-	size_t operator()(const oly::rendering::FontStyle& fs) const { return std::hash<unsigned int>{}(fs.v); }
+	size_t operator()(const oly::rendering::FontStyle& fs) const { return std::hash<unsigned int>{}(fs); }
 };
 
 namespace oly::rendering
@@ -71,8 +71,5 @@ namespace oly::rendering
 		FontFamily::FontRef get() const;
 		void set_font(const FontFamily::FontRef& font);
 		bool style_exists() const;
-
-		bool try_apply_style(FontStyle s);
-		bool try_unapply_style(FontStyle s);
 	};
 }

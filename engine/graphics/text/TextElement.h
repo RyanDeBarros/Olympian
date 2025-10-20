@@ -24,8 +24,9 @@ namespace oly::rendering
 		Font& operator=(const RasterFontRef& font) { f = font; return *this; }
 		Font& operator=(const FontSelection& font) { f = font; return *this; }
 
-		bool try_apply_style(FontStyle style);
-		bool try_unapply_style(FontStyle style);
+		void apply_style(FontStyle style);
+		void unapply_style(FontStyle style);
+		void reset_style();
 
 		float line_height() const;
 
