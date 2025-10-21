@@ -4,7 +4,6 @@
 #include "graphics/text/RasterFont.h"
 #include "core/types/Variant.h"
 
-#include <variant>
 #include <optional>
 
 namespace oly::rendering

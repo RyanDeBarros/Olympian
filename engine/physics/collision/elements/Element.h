@@ -11,6 +11,7 @@
 #include "core/containers/CopyPtr.h"
 #include "core/containers/BlackBox.h"
 #include "core/base/Parameters.h"
+#include "core/types/Variant.h"
 
 namespace oly::col2d
 {
@@ -24,6 +25,7 @@ namespace oly::col2d
 
 	namespace internal
 	{
+		// TODO v5 could use Variant's type enum?
 		enum class ElementID
 		{
 			NONE,
@@ -142,7 +144,7 @@ namespace oly::col2d
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
 
-		using ElementVariant = std::variant<
+		using ElementVariant = Variant<
 			const Circle*,
 			const AABB*,
 			const OBB*,

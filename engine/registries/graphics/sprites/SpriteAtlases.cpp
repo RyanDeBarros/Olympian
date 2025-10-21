@@ -55,8 +55,8 @@ namespace oly::reg
 		if (params.frame)
 		{
 			params.frame->visit(
-				[&atlas](const auto& frame) { atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up); },
-				[&atlas](const auto& frame) { atlas.select_static_frame(frame.frame); }
+				[&atlas](const params::SpriteAtlas::Frame& frame) { atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up); },
+				[&atlas](const params::SpriteAtlas::StaticFrame& frame) { atlas.select_static_frame(frame.frame); }
 			);
 		}
 		atlas.anim_format.starting_frame = params.starting_frame;

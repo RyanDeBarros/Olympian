@@ -4,7 +4,7 @@
 
 namespace oly::col2d::internal
 {
-	using ColliderObjectConstVariant = std::variant<
+	using ColliderObjectConstVariant = Variant<
 		const TPrimitive*,
 		const TCompound*,
 		const TBVH<AABB>*,
@@ -18,7 +18,7 @@ namespace oly::col2d::internal
 		const TBVH<KDOP8>*
 	>;
 
-	using ColliderObjectVariant = std::variant<
+	using ColliderObjectVariant = Variant<
 		TPrimitive*,
 		TCompound*,
 		TBVH<AABB>*,

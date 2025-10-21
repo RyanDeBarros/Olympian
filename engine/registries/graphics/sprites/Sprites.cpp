@@ -138,8 +138,8 @@ namespace oly::reg
 		}
 
 		if (params.modifier)
-			sprite.transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D>
-				{ return std::make_unique<std::decay_t<decltype(m)>>(m); }, *params.modifier);
+			sprite.transformer.set_modifier() = params.modifier->visit([](const auto& m) -> std::unique_ptr<TransformModifier2D>
+				{ return std::make_unique<std::decay_t<decltype(m)>>(m); });
 
 		return sprite;
 	}

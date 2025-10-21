@@ -198,7 +198,7 @@ namespace oly::reg
 		Transformer2D transformer;
 		transformer.set_local() = params.local;
 		if (params.modifier)
-			transformer.set_modifier() = std::visit([](auto&& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); }, params.modifier.value());
+			transformer.set_modifier() = params.modifier->visit([](const auto& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); });
 		return transformer;
 	}
 

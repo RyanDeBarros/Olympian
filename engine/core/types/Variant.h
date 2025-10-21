@@ -49,11 +49,14 @@ namespace oly
 
 #define _OLY_ENUM_DEF(N) _##N
 #define _OLY_TYPE_ENUM(N)\
-	enum Type\
+	public:\
+	enum class Type\
 	{\
 		None,\
 		_OLY_REPEAT_COMMA(_OLY_ENUM_DEF, N)\
-	} type;
+	};\
+	private:\
+		Type type;
 
 #define _OLY_STORAGE_DEF(N) T##N t##N;
 #define _OLY_STORAGE(N) union Storage\
@@ -249,6 +252,9 @@ namespace oly
 		}\
 	}
 
+#define _OLY_GET_TYPE(N)\
+	Type get_type() const { return type; }
+
 #define _OLY_TYPENAME_T(N) typename T##N
 #define _OLY_TYPE_PARAMETER(N) T##N
 #define _OLY_VARIANT(N)\
@@ -266,6 +272,7 @@ namespace oly
 		_OLY_HOLDS(N);\
 		_OLY_GET(N);\
 		_OLY_VISIT(N);\
+		_OLY_GET_TYPE(N);\
 	};
 
 	// ###########################################################################
@@ -341,6 +348,7 @@ namespace oly
 #undef _OLY_TYPENAME_F
 #undef _OLY_VISIT_ARG
 #undef _OLY_VISIT
+#undef _OLY_GET_TYPE
 #undef _OLY_TYPENAME_T
 #undef _OLY_TYPE_PARAMETER
 #undef _OLY_VARIANT

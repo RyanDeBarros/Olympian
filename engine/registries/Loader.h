@@ -5,6 +5,7 @@
 #include "core/base/Transforms.h"
 #include "core/math/Shapes.h"
 #include "core/util/ResourcePath.h"
+#include "core/types/Variant.h"
 
 namespace oly::reg
 {
@@ -74,7 +75,7 @@ namespace oly::reg
 		struct Transformer2D
 		{
 			Transform2D local;
-			std::optional<std::variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
+			std::optional<Variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
 		};
 	}
 

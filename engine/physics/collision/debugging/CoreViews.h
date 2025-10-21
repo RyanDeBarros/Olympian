@@ -18,14 +18,12 @@ namespace oly::debug
 
 	inline void update_view(CollisionView& view, const col2d::Circle& c, glm::vec4 color, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ELLIPSE)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::EllipseReference>())
 		{
-			rendering::EllipseReference& ellipse = std::get<CollisionObject::Type::ELLIPSE>(*obj);
-			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
-			auto& dim = ellipse.set_dimension();
+			obj->set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
+			auto& dim = obj->set_dimension();
 			dim.ry = dim.rx = c.radius;
-			ellipse.set_color().fill_outer = color;
+			obj->set_color().fill_outer = color;
 			view.view_changed();
 		}
 		else
@@ -41,12 +39,10 @@ namespace oly::debug
 
 	inline void update_view_no_color(CollisionView& view, const col2d::Circle& c, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ELLIPSE)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::EllipseReference>())
 		{
-			rendering::EllipseReference& ellipse = std::get<CollisionObject::Type::ELLIPSE>(*obj);
-			ellipse.set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
-			auto& dim = ellipse.set_dimension();
+			obj->set_transform() = augment(col2d::internal::CircleGlobalAccess::get_global(c), col2d::internal::CircleGlobalAccess::get_global_offset(c)) * translation_matrix(c.center);
+			auto& dim = obj->set_dimension();
 			dim.ry = dim.rx = c.radius;
 			view.view_changed();
 		}
@@ -83,20 +79,17 @@ namespace oly::debug
 				return;
 			}
 
-			CollisionObject& obj = view.get_view(view_index);
-
-			if (obj->index() == CollisionObject::Type::POLYGON)
+			if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticPolygon>())
 			{
-				rendering::StaticPolygon& polygon = std::get<CollisionObject::Type::POLYGON>(*obj);
-				polygon.set_colors() = {color};
-				polygon.set_points().clear();
-				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
+				obj->set_colors() = { color };
+				obj->set_points().clear();
+				obj->set_points().insert(obj->get_points().end(), points.begin(), points.end());
 				view.view_changed();
 			}
 			else
 			{
 				rendering::StaticPolygon polygon = view.get_layer().create_polygon();
-				polygon.set_colors() = {color};
+				polygon.set_colors() = { color };
 				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.set_view(std::move(polygon));
 			}
@@ -111,18 +104,16 @@ namespace oly::debug
 				return;
 			}
 
-			CollisionObject& obj = view.get_view(view_index);
-			if (obj->index() == CollisionObject::Type::POLYGON)
+			if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticPolygon>())
 			{
-				rendering::StaticPolygon& polygon = std::get<CollisionObject::Type::POLYGON>(*obj);
-				polygon.set_points().clear();
-				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
+				obj->set_points().clear();
+				obj->set_points().insert(obj->get_points().end(), points.begin(), points.end());
 				view.view_changed();
 			}
 			else
 			{
 				rendering::StaticPolygon polygon = view.get_layer().create_polygon();
-				polygon.set_colors() = {glm::vec4{0.0f, 0.0f, 1.0f, 0.8f}};
+				polygon.set_colors() = { glm::vec4{ 0.0f, 0.0f, 1.0f, 0.8f } };
 				polygon.set_points().insert(polygon.get_points().end(), points.begin(), points.end());
 				view.set_view(std::move(polygon));
 			}
@@ -194,17 +185,17 @@ namespace oly::debug
 
 	inline CollisionView collision_view(CollisionLayer& layer, const col2d::Element& c, glm::vec4 color)
 	{
-		return std::visit([&layer, color](const auto& e) { return collision_view(layer, *e, color); }, c.variant());
+		return c.variant().visit([&layer, color](const auto& e) { return collision_view(layer, *e, color); });
 	}
 
 	inline void update_view(CollisionView& view, const col2d::Element& c, glm::vec4 color, size_t view_index = 0)
 	{
-		std::visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); }, c.variant());
+		c.variant().visit([&view, color, view_index](const auto& e) { update_view(view, *e, color, view_index); });
 	}
 
 	inline void update_view_no_color(CollisionView& view, const col2d::Element& c, size_t view_index = 0)
 	{
-		std::visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); }, c.variant());
+		c.variant().visit([&view, view_index](const auto& e) { update_view_no_color(view, *e, view_index); });
 	}
 
 	inline CollisionView collision_view(CollisionLayer& layer, const col2d::Primitive& c, glm::vec4 color)

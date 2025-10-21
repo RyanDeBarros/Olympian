@@ -25,7 +25,8 @@ namespace oly::col2d
 
 		static glm::vec2 compute_centroid_sum(const Element& element)
 		{
-			return std::visit([](const auto& element) -> glm::vec2 {
+			// TODO v5 overload for visit that passes specific lambdas for specific types.
+			return element.variant().visit([](const auto& element) -> glm::vec2 {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 					return element->center;
 				else
@@ -35,24 +36,24 @@ namespace oly::col2d
 						centroid += p;
 					return centroid;
 				}
-				}, element.variant());
+				});
 		}
 
 		static size_t compute_centroid_point_count(const Element& element)
 		{
-			return std::visit([](const auto& element) -> size_t {
+			return element.variant().visit([](const auto& element) -> size_t {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 					return 1;
 				else if constexpr (visiting_class_is<decltype(*element), AABB, OBB>)
 					return 4;
 				else
 					return element->points().size();
-				}, element.variant());
+				});
 		}
 
 		static glm::mat2 compute_covariance(const Element& element, glm::vec2 centroid)
 		{
-			return std::visit([centroid](const auto& element) -> glm::mat2 {
+			return element.variant().visit([centroid](const auto& element) -> glm::mat2 {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 				{
 					glm::vec2 p = element->center - centroid;
@@ -71,12 +72,12 @@ namespace oly::col2d
 					}
 					return covariance;
 				}
-				}, element.variant());
+				});
 		}
 
 		static AABB compute_obb_bounds(const Element& element, const UnitVector2D& major_axis, const UnitVector2D& minor_axis)
 		{
-			return std::visit([&major_axis, &minor_axis](const auto& element) -> AABB {
+			return element.variant().visit([&major_axis, &minor_axis](const auto& element) -> AABB {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 					return { .x1 = (-major_axis).dot(element->deepest_manifold(-major_axis).pt()), .x2 = major_axis.dot(element->deepest_manifold(major_axis).pt()),
 							 .y1 = (-minor_axis).dot(element->deepest_manifold(-minor_axis).pt()), .y2 = minor_axis.dot(element->deepest_manifold(minor_axis).pt()) };
@@ -95,7 +96,7 @@ namespace oly::col2d
 					}
 					return bounds;
 				}
-				}, element.variant());
+				});
 		}
 
 		OBB Wrap<OBB>::operator()(const Element* elements, size_t count) const
@@ -155,7 +156,7 @@ namespace oly::col2d
 
 		static void add_point_cloud(const Element& element, std::vector<glm::vec2>& point_cloud)
 		{
-			std::visit([&point_cloud](const auto& e) -> void {
+			element.variant().visit([&point_cloud](const auto& e) -> void {
 				if constexpr (visiting_class_is<decltype(*e), Circle>)
 				{
 					size_t start = point_cloud.size();
@@ -174,7 +175,7 @@ namespace oly::col2d
 					const auto& points = e->points();
 					point_cloud.insert(point_cloud.end(), points.begin(), points.end());
 				}
-				}, element.variant());
+				});
 		}
 
 		ConvexHull Wrap<ConvexHull>::operator()(const Element* elements, size_t count) const
@@ -187,14 +188,14 @@ namespace oly::col2d
 
 		glm::vec2 midpoint(const Element& element)
 		{
-			return std::visit([](const auto& element) -> glm::vec2 {
+			return element.variant().visit([](const auto& element) -> glm::vec2 {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 					return internal::CircleGlobalAccess::global_center(*element);
 				else if constexpr (visiting_class_is<decltype(*element), OBB>)
 					return element->center;
 				else
 					return element->center();
-				}, element.variant());
+				});
 		}
 	}
 }

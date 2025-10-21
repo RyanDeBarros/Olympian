@@ -16,7 +16,7 @@ namespace oly::rendering
 	auto visit_font(const Font::Variant& font, F&& func)
 	{
 		return font.visit(
-			[&func](const auto& font) { return font.get().visit(std::forward<F>(func)); },
+			[&func](const FontSelection& font) { return font.get().visit(std::forward<F>(func)); },
 			func,
 			func
 		);

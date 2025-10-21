@@ -16,14 +16,12 @@ namespace oly::debug
 
 	inline void update_view(CollisionView& view, const col2d::ContactResult::Contact& contact, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ARROW)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticArrowExtension>())
 		{
-			rendering::StaticArrowExtension& impulse = std::get<CollisionObject::Type::ARROW>(*obj);
-			impulse.set_color(color);
-			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = contact.position;
-			impulse.set_end() = contact.position + contact.impulse;
+			obj->set_color(color);
+			obj->adjust_standard_head_for_width(arrow_width);
+			obj->set_start() = contact.position;
+			obj->set_end() = contact.position + contact.impulse;
 			view.view_changed();
 		}
 		else
@@ -39,13 +37,11 @@ namespace oly::debug
 
 	inline void update_view_no_color(CollisionView& view, const col2d::ContactResult::Contact& contact, float arrow_width = 6.0f, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ARROW)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticArrowExtension>())
 		{
-			rendering::StaticArrowExtension& impulse = std::get<CollisionObject::Type::ARROW>(*obj);
-			impulse.adjust_standard_head_for_width(arrow_width);
-			impulse.set_start() = contact.position;
-			impulse.set_end() = contact.position + contact.impulse;
+			obj->adjust_standard_head_for_width(arrow_width);
+			obj->set_start() = contact.position;
+			obj->set_end() = contact.position + contact.impulse;
 			view.view_changed();
 		}
 		else
@@ -73,14 +69,12 @@ namespace oly::debug
 
 	inline void update_view(CollisionView& view, col2d::Ray ray, glm::vec4 color, float arrow_width = 6.0f, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ARROW)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticArrowExtension>())
 		{
-			rendering::StaticArrowExtension& arrow = std::get<CollisionObject::Type::ARROW>(*obj);
-			arrow.set_color(color);
-			arrow.adjust_standard_head_for_width(arrow_width);
-			arrow.set_start() = ray.origin;
-			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+			obj->set_color(color);
+			obj->adjust_standard_head_for_width(arrow_width);
+			obj->set_start() = ray.origin;
+			obj->set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
 			view.view_changed();
 		}
 		else
@@ -96,13 +90,11 @@ namespace oly::debug
 
 	inline void update_view_no_color(CollisionView& view, col2d::Ray ray, float arrow_width = 6.0f, size_t view_index = 0)
 	{
-		CollisionObject& obj = view.get_view(view_index);
-		if (obj->index() == CollisionObject::Type::ARROW)
+		if (auto obj = view.get_view(view_index)->safe_get<rendering::StaticArrowExtension>())
 		{
-			rendering::StaticArrowExtension& arrow = std::get<CollisionObject::Type::ARROW>(*obj);
-			arrow.adjust_standard_head_for_width(arrow_width);
-			arrow.set_start() = ray.origin;
-			arrow.set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+			obj->adjust_standard_head_for_width(arrow_width);
+			obj->set_start() = ray.origin;
+			obj->set_end() = ray.clip == 0.0f ? (ray.origin + INFINITE_RAY_LENGTH * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
 			view.view_changed();
 		}
 		else

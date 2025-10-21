@@ -17,13 +17,7 @@ namespace oly::debug
 
 	struct CollisionObject
 	{
-		enum Type
-		{
-			ELLIPSE,
-			POLYGON,
-			ARROW
-		};
-		using Variant = std::variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
+		using Variant = Variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		CollisionLayer& layer;
 		std::unique_ptr<Variant> v;
@@ -33,10 +27,6 @@ namespace oly::debug
 		CollisionObject& operator=(const CollisionObject&);
 		CollisionObject& operator=(CollisionObject&&) noexcept;
 
-	private:
-		void init(Type);
-
-	public:
 		Variant& operator*() { return *v; }
 		const Variant& operator*() const { return *v; }
 		Variant* operator->() { return v.get(); }
@@ -50,13 +40,7 @@ namespace oly::debug
 
 	struct CollisionObjectView
 	{
-		enum Type
-		{
-			EMPTY,
-			SINGLE,
-			GROUP
-		};
-		using Variant = std::variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
+		using Variant = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
 
 		Variant view;
 

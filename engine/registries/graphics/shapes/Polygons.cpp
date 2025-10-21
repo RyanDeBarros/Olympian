@@ -242,10 +242,10 @@ namespace oly::reg
 		if (params.method)
 		{
 			composite.set_composite() = params.method->visit(
-				[](const auto& m) { return cmath::Polygon2DComposite{ cmath::create_ngon(m.colors, m.points) }; },
-				[](const auto& m) { return cmath::create_bordered_ngon(m.ngon_base.fill_colors, m.ngon_base.border_colors,
+				[](const params::PolyComposite::NGonMethod& m) { return cmath::Polygon2DComposite{ cmath::create_ngon(m.colors, m.points) }; },
+				[](const params::PolyComposite::BorderedNGonMethod& m) { return cmath::create_bordered_ngon(m.ngon_base.fill_colors, m.ngon_base.border_colors,
 					m.ngon_base.border_width, m.ngon_base.border_pivot, m.ngon_base.points); },
-				[](const auto& m) { return cmath::Decompose{}(m.points); }
+				[](const params::PolyComposite::ConvexDecompositionMethod& m) { return cmath::Decompose{}(m.points); }
 			);
 		}
 
@@ -261,10 +261,10 @@ namespace oly::reg
 		if (params.method)
 		{
 			composite.set_composite() = params.method->visit(
-				[](const auto& m) { return cmath::Polygon2DComposite{ cmath::create_ngon(std::move(m.colors), std::move(m.points)) }; },
-				[](const auto& m) { return cmath::create_bordered_ngon(std::move(m.ngon_base.fill_colors), std::move(m.ngon_base.border_colors),
+				[](params::PolyComposite::NGonMethod& m) { return cmath::Polygon2DComposite{ cmath::create_ngon(std::move(m.colors), std::move(m.points)) }; },
+				[](params::PolyComposite::BorderedNGonMethod& m) { return cmath::create_bordered_ngon(std::move(m.ngon_base.fill_colors), std::move(m.ngon_base.border_colors),
 					m.ngon_base.border_width, m.ngon_base.border_pivot, std::move(m.ngon_base.points)); },
-				[](const auto& m) { return cmath::Decompose{}(m.points); }
+				[](params::PolyComposite::ConvexDecompositionMethod& m) { return cmath::Decompose{}(m.points); }
 			);
 		}
 
