@@ -3,6 +3,7 @@
 #include "external/TOML.h"
 
 #include "graphics/shapes/Polygons.h"
+#include "core/types/Variant.h"
 
 namespace oly::reg
 {
@@ -35,13 +36,7 @@ namespace oly::reg
 				std::vector<glm::vec2> points;
 			};
 
-			enum MethodIndex
-			{
-				NGON,
-				BORDERED_NGON,
-				CONVEX_DECOMPOSITION
-			};
-			std::optional<std::variant<NGonMethod, BorderedNGonMethod, ConvexDecompositionMethod>> method;
+			std::optional<Variant<NGonMethod, BorderedNGonMethod, ConvexDecompositionMethod>> method;
 		};
 
 		struct NGon

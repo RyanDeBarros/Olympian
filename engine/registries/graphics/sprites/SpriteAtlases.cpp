@@ -54,12 +54,10 @@ namespace oly::reg
 
 		if (params.frame)
 		{
-			std::visit([&atlas](auto&& frame) {
-				if constexpr (visiting_class_is<decltype(frame), params::SpriteAtlas::Frame>)
-					atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up);
-				else if constexpr (visiting_class_is<decltype(frame), params::SpriteAtlas::StaticFrame>)
-					atlas.select_static_frame(frame.frame);
-				}, params.frame.value());
+			params.frame->visit(
+				[&atlas](const auto& frame) { atlas.setup_uniform(frame.rows, frame.cols, frame.delay_seconds, frame.row_major, frame.row_up); },
+				[&atlas](const auto& frame) { atlas.select_static_frame(frame.frame); }
+			);
 		}
 		atlas.anim_format.starting_frame = params.starting_frame;
 		atlas.anim_format.starting_time = params.starting_time;

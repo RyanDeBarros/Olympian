@@ -1,9 +1,8 @@
 #pragma once
 
-#include <variant>
-
 #include "graphics/backend/basic/Textures.h"
 #include "core/containers/Bijection.h"
+#include "core/types/Variant.h"
 
 namespace oly::reg
 {
@@ -31,7 +30,7 @@ namespace oly::reg
 		Bijection<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
 
 	public:
-		typedef std::variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
+		typedef Variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
 
 		enum class ImageStorageOverride
 		{

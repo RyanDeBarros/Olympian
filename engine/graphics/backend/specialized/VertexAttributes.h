@@ -1,9 +1,7 @@
 #pragma once
 
-#include <variant>
-
 #include "external/GL.h"
-#include "core/types/DeferredFalse.h"
+#include "core/types/Variant.h"
 
 namespace oly::graphics
 {
@@ -91,5 +89,5 @@ namespace oly::graphics
 		}
 	};
 
-	typedef std::variant<VertexAttribute<float>, VertexAttribute<int>, VertexAttribute<double>> VertexAttributeVariant;
+	typedef Variant<VertexAttribute<float>, VertexAttribute<int>, VertexAttribute<double>> VertexAttributeVariant;
 }

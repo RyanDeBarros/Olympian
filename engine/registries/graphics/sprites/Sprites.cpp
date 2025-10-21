@@ -126,15 +126,14 @@ namespace oly::reg
 		if (params.frame_format)
 		{
 			const auto& frame_format = *params.frame_format;
-			if (frame_format.index() == params::Sprite::FrameFormatIndex::CUSTOM)
-				sprite.set_frame_format(std::get<params::Sprite::FrameFormatIndex::CUSTOM>(frame_format));
+			if (auto frame_format = params.frame_format->safe_get<graphics::AnimFrameFormat>())
+				sprite.set_frame_format(*frame_format);
 			else if (params.texture)
 			{
-				if (frame_format.index() == params::Sprite::FrameFormatIndex::SINGLE)
-					sprite.set_frame_format(graphics::setup_anim_frame_format_single(*params.texture, std::get<params::Sprite::FrameFormatIndex::SINGLE>(frame_format).frame));
-				else if (frame_format.index() == params::Sprite::FrameFormatIndex::AUTO)
-					sprite.set_frame_format(graphics::setup_anim_frame_format(*params.texture, std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).speed,
-						std::get<params::Sprite::FrameFormatIndex::AUTO>(frame_format).starting_frame));
+				if (auto frame_format = params.frame_format->safe_get<params::Sprite::SingleFrameFormat>())
+					sprite.set_frame_format(graphics::setup_anim_frame_format_single(*params.texture, frame_format->frame));
+				else if (auto frame_format = params.frame_format->safe_get<params::Sprite::AutoFrameFormat>())
+					sprite.set_frame_format(graphics::setup_anim_frame_format(*params.texture, frame_format->speed, frame_format->starting_frame));
 			}
 		}
 

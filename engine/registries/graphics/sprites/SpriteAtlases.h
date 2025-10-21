@@ -4,6 +4,7 @@
 
 #include "graphics/sprites/SpriteAtlas.h"
 #include "registries/graphics/sprites/Sprites.h"
+#include "core/types/Variant.h"
 
 namespace oly::reg
 {
@@ -23,7 +24,7 @@ namespace oly::reg
 			{
 				GLuint frame;
 			};
-			std::optional<std::variant<Frame, StaticFrame>> frame;
+			std::optional<Variant<Frame, StaticFrame>> frame;
 
 			GLuint starting_frame = 0;
 			float starting_time = 0.0f;
