@@ -54,7 +54,7 @@ namespace oly::rendering
 {
 	struct FontFamily
 	{
-		using FontRef = std::variant<FontAtlasRef, RasterFontRef>;
+		using FontRef = Variant<FontAtlasRef, RasterFontRef>;
 
 		std::unordered_map<FontStyle, FontRef> styles;
 

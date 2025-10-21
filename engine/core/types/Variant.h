@@ -37,6 +37,8 @@ namespace oly
 #define _OLY_STORAGE(N) union Storage\
 	{\
 		_OLY_REPEAT(_OLY_STORAGE_DEF, N)\
+		Storage() {}\
+		~Storage() {}\
 	} storage;
 
 #define _OLY_DEL_CASE(N) case Type::_##N: storage.t##N.~T##N(); break;
@@ -184,6 +186,7 @@ namespace oly
 	}
 
 #define _OLY_INVOKE_CASE(N) case Type::_##N: return std::invoke(std::forward<F##N>(f##N), storage.t##N);
+#define _OLY_VISIT_SINGLE_CASE(N) case Type::_##N: return std::invoke(std::forward<F>(f), storage.t##N);
 #define _OLY_TYPENAME_F(N) typename F##N
 #define _OLY_VISIT_ARG(N) F##N&& f##N
 #define _OLY_VISIT(N)\
@@ -202,6 +205,24 @@ namespace oly
 		switch (type)\
 		{\
 			_OLY_REPEAT(_OLY_INVOKE_CASE, N);\
+		default: throw Error(ErrorCode::BAD_VARIANT);\
+		}\
+	}\
+	template<typename F>\
+	decltype(auto) visit(F&& f) const\
+	{\
+		switch (type)\
+		{\
+			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
+		default: throw Error(ErrorCode::BAD_VARIANT);\
+		}\
+	}\
+	template<typename F>\
+	decltype(auto) visit(F&& f)\
+	{\
+		switch (type)\
+		{\
+			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
 		default: throw Error(ErrorCode::BAD_VARIANT);\
 		}\
 	}

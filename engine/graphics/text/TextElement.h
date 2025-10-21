@@ -11,8 +11,7 @@ namespace oly::rendering
 	
 	struct Font
 	{
-		// TODO v5 something more efficient than variant? same for FontFamily::FontRef
-		using Variant = std::variant<FontAtlasRef, RasterFontRef, FontSelection>;
+		using Variant = Variant<FontSelection, FontAtlasRef, RasterFontRef>;
 
 		Variant f;
 

@@ -15,12 +15,11 @@ namespace oly::rendering
 	template<typename F>
 	auto visit_font(const Font::Variant& font, F&& func)
 	{
-		return std::visit([&func](const auto& font) {
-			if constexpr (visiting_class_is<decltype(font), FontSelection>)
-				return std::visit(std::forward<F>(func), font.get());
-			else
-				return func(font);
-			}, font);
+		return font.visit(
+			[&func](const auto& font) { return font.get().visit(std::forward<F>(func)); },
+			func,
+			func
+		);
 	}
 
 	template<typename F>
@@ -31,26 +30,20 @@ namespace oly::rendering
 
 	void Font::apply_style(FontStyle style)
 	{
-		std::visit([style](auto& f) {
-			if constexpr (visiting_class_is<decltype(f), FontSelection>)
-				f.style |= style;
-			}, f);
+		if (auto font = f.safe_get<FontSelection>())
+			font->style |= style;
 	}
 
 	void Font::unapply_style(FontStyle style)
 	{
-		std::visit([style](auto& f) {
-			if constexpr (visiting_class_is<decltype(f), FontSelection>)
-				f.style &= ~style;
-			}, f);
+		if (auto font = f.safe_get<FontSelection>())
+			font->style &= ~style;
 	}
 
 	void Font::reset_style()
 	{
-		std::visit([](auto& f) {
-			if constexpr (visiting_class_is<decltype(f), FontSelection>)
-				f.style = FontStyle::REGULAR();
-			}, f);
+		if (auto font = f.safe_get<FontSelection>())
+			font->style = FontStyle::REGULAR();
 	}
 
 	float Font::line_height() const
@@ -78,7 +71,7 @@ namespace oly::rendering
 
 	bool Font::operator==(const FontSelection& font) const
 	{
-		return visit_font(f, [&font](const auto& f) { return std::visit([&f](const auto& font) { return same_font(f, font); }, font.get()); });
+		return visit_font(f, [&font](const auto& f) { return font.get().visit([&f](const auto& font) { return same_font(f, font); }); });
 	}
 
 	bool Font::operator==(const Font& other) const
