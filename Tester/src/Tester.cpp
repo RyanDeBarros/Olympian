@@ -6,8 +6,8 @@
 #include <registries/graphics/shapes/Polygons.h>
 #include <registries/graphics/text/Paragraphs.h>
 
-#include "assets/archetypes/SpriteMatch.h"
-#include "assets/archetypes/Jumble.h"
+#include "SpriteMatch.h"
+#include "Jumble.h"
 
 #include "PlayerController.h"
 
@@ -63,8 +63,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::rendering::PolygonBatch batch;
 
 	BKG bkg;
-	oly::gen::SpriteMatch sprite_match;
-	oly::gen::Jumble jumble;
+	SpriteMatch sprite_match;
+	Jumble jumble;
 	PixelArtText pixel_art_text;
 
 	std::vector<oly::Sprite> flag_tesselation;

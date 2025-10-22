@@ -15,40 +15,34 @@ draw = [
 	"smol_text"
 ]
 
-[[archetype.sprite]]
-name = "sprite3"
+[sprite3]
 "texture"    = "~/textures/serotonin.gif"
 transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
 frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
-[[archetype.sprite]]
-name = "sprite4"
+[sprite4]
 "texture"       = "~/textures/tux.png"
 "texture_index" = 1
 transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
-[[archetype.sprite]]
-name = "sprite5"
+[sprite5]
 "texture" = "~/textures/tux.png"
 transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
-[[archetype.sprite]]
-name = "sprite1"
+[sprite1]
 "texture" = "~/textures/einstein.png"
 
-[[archetype.sprite]]
-name = "godot_icon"
+[godot_icon]
 "texture" = "~/textures/godot.svg"
 "texture_index" = 1
 transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
-[[archetype.sprite]]
-name = "knight"
+[knight]
 "texture"    = "~/textures/knight.png"
 transform    = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
-[[archetype.sprite_atlas]]
+[atlased_knight]
 name            = "atlased_knight"
 "rows"          = 2
 "cols"          = 3
@@ -58,20 +52,17 @@ name            = "atlased_knight"
 	"texture_index" = 1
 	transform = { "position" = [300, -200], "scale" = [20, 20] }
 
-[[archetype.sprite_nonant]]
-name            = "nonant_panel"
-"nsize"         = [ 128, 0 ]
-[archetype.sprite_nonant.offsets]
-uniform = 6
-[archetype.sprite_nonant.sprite]
+[nonant_panel]
+"nsize" = [ 128, 0 ]
+offsets = { uniform = 6 }
+[nonant_panel.sprite]
 "texture" = "~/textures/panel.png"
 transform = { "scale" = [ 10.0, 10.0 ] }
 
-[[archetype.tilemap]]
-name = "grass_tilemap"
+[grass_tilemap]
 transform = { "scale" = [ 100, 100 ] }
 
-	[[archetype.tilemap.layer]]
+	[grass_tilemap.layer]
 	"z" = 0
 	"tileset" = "~/assets/grass tileset.toml"
 	"tiles" = [
@@ -90,12 +81,11 @@ transform = { "scale" = [ 100, 100 ] }
 		[  3,  3 ],
 	]
 	
-[[archetype.paragraph]]
-name           = "test_text"
+[test_text]
 "draw_bkg"     = true
 transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 "bkg_color"    = [ 0.5, 0.4, 0.2, 0.8 ]
-	[archetype.paragraph.format]
+	[test_text.format]
 	"pivot"             = [ 0.0, 1.0 ]
 	"line_spacing"      = 1.5
 	"linebreak_spacing" = 2.0
@@ -103,28 +93,27 @@ transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"padding"           = [ 50, 50 ]
 	"horizontal_align"  = "center"
 	"vertical_align"    = "full_justify"
-	[[archetype.paragraph.element]]
+	[[test_text.element]]
 	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"
 	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
-	[[archetype.paragraph.element]]
+	[[test_text.element]]
 	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
 	"scale"        = [ 2.0, 0.5 ]
 	"line_y_pivot" = 0.5
-	[[archetype.paragraph.element]]
+	[[test_text.element]]
 	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "b"
 	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
-	[[archetype.paragraph.element]]
+	[[test_text.element]]
 	"font"         = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
 	"adj_offset"   = 50
 
-[[archetype.paragraph]]
-name = "smol_text"
+[smol_text]
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
 	[[archetype.paragraph.element]]

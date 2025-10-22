@@ -16,19 +16,6 @@ set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
 set(PROJECT_RES_DIR "${PROJECT_DIR}/res")
 set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen/code")
 
-# Run automatic tools
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${ENGINE_DIR}/editor/prebuild/PreBuild.py"
-    WORKING_DIRECTORY "${PROJECT_DIR}"
-	RESULT_VARIABLE PREBUILD_RESULT
-)
-
-if (NOT PREBUILD_RESULT EQUAL 0)
-	message(FATAL_ERROR "PreBuild.py failed with code ${PREBUILD_RESULT}")
-endif()
-
 # Include directories
 include_directories(
 	"${PROJECT_SRC_DIR}"
