@@ -6,6 +6,7 @@
 #include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
 #include "registries/Loader.h"
+#include "registries/MetaSplitter.h"
 
 #include "core/containers/Bijection.h"
 
@@ -101,23 +102,33 @@ namespace oly::context
 		return texture;
 	}
 
-	static void load_texture_node(const ResourcePath& file, toml::parse_result& toml, TOMLNode& texture_node, size_t texture_index)
+	static TOMLNode load_texture_node(const ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
 	{
-		toml = reg::load_toml(file.get_import_path());
-		auto texture_array = toml["texture"].as_array();
-		if (texture_array && !texture_array->empty())
-		{
-			if (LOG.enable.debug)
-			{
-				auto src = toml["source"].value<std::string>();
-				OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing texture [" << (src ? *src : "") << "]." << LOG.nl;
-			}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing texture [" << file << "]..." << LOG.nl;
 
-			texture_index = glm::clamp(texture_index, size_t(0), texture_array->size() - size_t(1));
-			texture_node = TOMLNode(*texture_array->get(texture_index));
+		ResourcePath import_file = file.get_import_path();
+		if (!reg::MetaSplitter::meta(import_file).has_type("texture"))
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain texture type." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
 		}
-		else
-			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
+
+		toml = reg::load_toml(import_file);
+		auto texture_array = toml["texture"].as_array();
+		if (!texture_array)
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"texture\" array field." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
+		if (texture_index >= texture_array->size())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Texture index (" << texture_index
+				<< ") out of range for texture array size (" << texture_array->size() << ")." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
+		return TOMLNode(*texture_array->get(texture_index));
 	}
 
 	static bool should_store(TOMLNode texture_node, const char* storage_key, tex::ImageStorageOverride storage_override)
@@ -167,8 +178,7 @@ namespace oly::context
 			return it->second;
 
 		toml::parse_result toml;
-		TOMLNode texture_node;
-		load_texture_node(file, toml, texture_node, texture_index);
+		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 
 		bool store_buffer = should_store(texture_node, "storage", params.storage);
 
@@ -202,11 +212,7 @@ namespace oly::context
 			}
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -229,8 +235,7 @@ namespace oly::context
 			return it->second;
 
 		toml::parse_result toml;
-		TOMLNode texture_node;
-		load_texture_node(file, toml, texture_node, texture_index);
+		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 
 		bool store_abstract = should_store((TOMLNode)toml, "abstract_storage", params.abstract_storage);
 		bool store_image = should_store(texture_node, "image_storage", params.image_storage);
@@ -289,11 +294,7 @@ namespace oly::context
 			}
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -318,8 +319,7 @@ namespace oly::context
 		}
 
 		toml::parse_result toml;
-		TOMLNode texture_node;
-		load_texture_node(file, toml, texture_node, texture_index);
+		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 
 		graphics::BindlessTextureRef texture;
 
@@ -349,11 +349,7 @@ namespace oly::context
 			}
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		return texture;
 	}
@@ -370,8 +366,7 @@ namespace oly::context
 			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
-		TOMLNode texture_node;
-		load_texture_node(file, toml, texture_node, texture_index);
+		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 		float scale = reg::parse_float_or(texture_node["svg_scale"], 1.0f);
 
 		graphics::BindlessTextureRef texture;
@@ -399,11 +394,7 @@ namespace oly::context
 				params.abstract->init(graphics::NSVGAbstract(std::move(abstract)));
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		return texture;
 	}

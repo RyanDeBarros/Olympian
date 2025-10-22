@@ -7,6 +7,7 @@
 #include "graphics/Camera.h"
 
 #include "registries/Loader.h"
+#include "registries/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -423,6 +424,12 @@ namespace oly::context
 		if (file.empty())
 		{
 			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
+		if (!reg::MetaSplitter::meta(file).has_type("signal"))
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain signal type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 

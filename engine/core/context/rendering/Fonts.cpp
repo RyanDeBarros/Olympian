@@ -104,7 +104,7 @@ namespace oly::context
 					kerning.map.emplace(std::make_pair(c1, c2), dist);
 				else
 					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx
-					<< " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
+						<< " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
 			}
 			else
 				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse kerning #" << k_idx << " - not a TOML table." << LOG.nl;
@@ -125,9 +125,18 @@ namespace oly::context
 		if (it != internal::font_faces.end())
 			return it->second;
 
-		auto toml = reg::load_toml(file.get_import_path());
-		auto node = toml["font_face"];
-		if (!node.as_table())
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font face [" << file << "]..." << LOG.nl;
+
+		ResourcePath import_file = file.get_import_path();
+		if (!reg::MetaSplitter::meta(import_file).has_type("font"))
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain font type." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
+		auto table = reg::load_toml(import_file);
+		auto node = table["font_face"];
+		if (!node)
 		{
 			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
@@ -143,11 +152,7 @@ namespace oly::context
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::font_faces.emplace(file, font_face);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font face [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font face [" << file << "] parsed." << LOG.nl;
 
 		return font_face;
 	}
@@ -165,21 +170,32 @@ namespace oly::context
 		if (it != internal::font_atlases.end())
 			return it->second;
 
-		auto toml = reg::load_toml(file.get_import_path());
-		auto font_atlas_list = toml["font_atlas"].as_array();
-		if (!font_atlas_list || font_atlas_list->empty())
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font atlas [" << file << "]..." << LOG.nl;
+
+		ResourcePath import_file = file.get_import_path();
+		if (!reg::MetaSplitter::meta(import_file).has_type("font"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing or empty \"font_atlas\" array field." << LOG.nl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain font type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
-		index = glm::clamp(index, (unsigned int)0, (unsigned int)font_atlas_list->size() - 1);
-		auto node = TOMLNode(*font_atlas_list->get(index));
 
-		if (LOG.enable.debug)
+		auto table = reg::load_toml(import_file);
+		TOMLNode toml = (TOMLNode)table;
+
+		auto font_atlas_list = toml["font_atlas"].as_array();
+		if (!font_atlas_list)
 		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font atlas [" << (src ? *src : "") << "] at index #" << index << "..." << LOG.nl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"font_atlas\" array field." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
 		}
+
+		if (index >= font_atlas_list->size())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Font atlas index (" << index
+				<< ") out of range for \"font_atlas\" array field of size (" << font_atlas_list->size() << ")." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+		auto node = TOMLNode(*font_atlas_list->get(index));
 
 		rendering::FontOptions options;
 
@@ -222,11 +238,7 @@ namespace oly::context
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::font_atlases.emplace(key, font_atlas);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font atlas [" << (src ? *src : "") << "] at index #" << index << " parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font atlas [" << file << "] at index #" << index << " parsed." << LOG.nl;
 
 		return font_atlas;
 	}
@@ -245,7 +257,7 @@ namespace oly::context
 
 		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing raster font [" << file << "]..." << LOG.nl;
 
-		auto meta = reg::MetaSplitter::meta(file); // TODO v5 use MetaSplitter throughout registries
+		auto meta = reg::MetaSplitter::meta(file);
 		if (!meta.has_type("raster_font"))
 		{
 			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain raster font type." << LOG.nl;

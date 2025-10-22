@@ -3,6 +3,7 @@
 #include "graphics/sprites/TileSet.h"
 #include "core/util/LoggerOperators.h"
 #include "registries/Loader.h"
+#include "registries/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -28,21 +29,18 @@ namespace oly::context
 		if (it != internal::tilesets.end())
 			return it->second;
 
-		auto toml = reg::load_toml(file);
-		auto node = toml["tileset"];
-		if (!node.as_table())
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing tileset [" << file << "]..." << LOG.nl;
+
+		if (!reg::MetaSplitter::meta(file).has_type("tileset"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot load tileset " << file << " - missing \"tileset\" table." << LOG.nl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain tileset type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing tileset [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		auto table = reg::load_toml(file);
+		TOMLNode toml = (TOMLNode)table;
 
-		auto toml_assignments = node["assignment"].as_array();
+		auto toml_assignments = toml["assignment"].as_array();
 
 		std::vector<rendering::TileSet::Assignment> assignments;
 		if (toml_assignments)
@@ -136,14 +134,10 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (node["storage"].value<std::string>().value_or("discard") == "keep")
+		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::tilesets.emplace(file, tileset);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Tileset [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Tileset [" << file << "] parsed." << LOG.nl;
 
 		return tileset;
 	}
