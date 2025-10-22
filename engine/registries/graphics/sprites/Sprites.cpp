@@ -114,7 +114,7 @@ namespace oly::reg
 		if (params.texture)
 		{
 			graphics::BindlessTextureRef btex = context::load_texture(*params.texture, params.texture_index);
-			sprite.set_texture(btex, context::get_texture_dimensions(*params.texture, params.texture_index));
+			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
 		if (params.modulation)

@@ -12,8 +12,6 @@
 #include "physics/collision/Tolerance.h"
 #include "physics/collision/methods/CollisionInfo.h"
 
-#include "core/containers/CopyPtr.h"
-
 #include <array>
 #include <string>
 #include <vector>
@@ -155,22 +153,6 @@ namespace oly::col2d
 					float v = uniform_axis(i).dot(point);
 					kdop.set_minimum(i, std::min(kdop.get_minimum(i), v));
 					kdop.set_maximum(i, std::max(kdop.get_maximum(i), v));
-				}
-			}
-			return kdop;
-		}
-
-		static CopyPtr<KDOP<K>> wrap_copy_ptr(const math::Polygon2D& polygon)
-		{
-			CopyPtr<KDOP<K>> kdop = make_copy_ptr<KDOP<K>>();
-			kdop->fill_invalid();
-			for (glm::vec2 point : polygon)
-			{
-				for (size_t i = 0; i < K; ++i)
-				{
-					float v = uniform_axis(i).dot(point);
-					kdop->set_minimum(i, std::min(kdop.get_minimum(i), v));
-					kdop->set_maximum(i, std::max(kdop.get_maximum(i), v));
 				}
 			}
 			return kdop;

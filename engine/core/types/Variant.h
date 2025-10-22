@@ -52,7 +52,7 @@ namespace oly
 	public:\
 	enum class Type\
 	{\
-		None,\
+		NONE,\
 		_OLY_REPEAT_COMMA(_OLY_ENUM_DEF, N)\
 	};\
 	private:\
@@ -75,7 +75,7 @@ namespace oly
 			_OLY_REPEAT(_OLY_DEL_CASE, N);\
 		default: break;\
 		}\
-		type = Type::None;\
+		type = Type::NONE;\
 	}
 
 #define _OLY_COPY_CASE(N) case Type::_##N: new (&storage.t##N) T##N(other.storage.t##N); break;
@@ -100,7 +100,7 @@ namespace oly
 			_OLY_REPEAT(_OLY_MOVE_CASE, N);\
 		default: break;\
 		}\
-		other.type = Type::None;\
+		other.type = Type::NONE;\
 	}
 
 #define _OLY_PTR_CASE(N) case Type::_##N: return &storage.t##N;
@@ -159,7 +159,7 @@ namespace oly
 	}
 
 #define _OLY_CTOR(N)\
-	Variant() : type(Type::None) {}\
+	Variant() : type(Type::NONE) {}\
 	_OLY_REPEAT(_OLY_VALUE_CTOR, N)\
 	Variant(const Variant & other) { copy_from(other); }\
 	Variant(Variant && other) noexcept { move_from(std::move(other)); }\
@@ -252,8 +252,15 @@ namespace oly
 		}\
 	}
 
+#define _OLY_TYPE_OF_CASE(N) if constexpr (std::is_same_v<T, T##N>) return Type::_##N;
 #define _OLY_GET_TYPE(N)\
-	Type get_type() const { return type; }
+	Type get_type() const { return type; }\
+	template<typename T>\
+	static constexpr Type type_of()\
+	{\
+		_OLY_REPEAT(_OLY_TYPE_OF_CASE, N);\
+		static_assert(deferred_false<T>);\
+	}
 
 #define _OLY_TYPENAME_T(N) typename T##N
 #define _OLY_TYPE_PARAMETER(N) T##N
@@ -348,6 +355,7 @@ namespace oly
 #undef _OLY_TYPENAME_F
 #undef _OLY_VISIT_ARG
 #undef _OLY_VISIT
+#undef _OLY_TYPE_OF_CASE
 #undef _OLY_GET_TYPE
 #undef _OLY_TYPENAME_T
 #undef _OLY_TYPE_PARAMETER

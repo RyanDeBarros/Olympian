@@ -8,7 +8,6 @@
 #include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
 
-#include "core/containers/CopyPtr.h"
 #include "core/containers/BlackBox.h"
 #include "core/base/Parameters.h"
 #include "core/types/Variant.h"
@@ -25,7 +24,6 @@ namespace oly::col2d
 
 	namespace internal
 	{
-		// TODO v5 could use Variant's type enum?
 		enum class ElementID
 		{
 			NONE,

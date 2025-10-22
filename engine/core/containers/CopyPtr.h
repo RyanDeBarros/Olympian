@@ -154,20 +154,4 @@ namespace oly
 
 	template<typename T, typename... Args>
 	inline CopyPtr<T> make_copy_ptr(Args&&... args) { return CopyPtr<T>(new T(std::forward<Args>(args)...)); }
-
-	namespace internal
-	{
-		template<typename Class>
-		struct is_copy_ptr : std::false_type
-		{
-		};
-
-		template<typename Class>
-		struct is_copy_ptr<CopyPtr<Class>> : std::true_type
-		{
-		};
-	}
-
-	template<typename Class>
-	constexpr bool is_copy_ptr = internal::is_copy_ptr<std::decay_t<Class>>::value;
 }
