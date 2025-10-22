@@ -9,10 +9,6 @@
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
 
-#include "registries/graphics/TextureRegistry.h"
-#include "Textures.h"
-#include "Textures.h"
-
 namespace oly::graphics
 {
 	Texture::Texture()

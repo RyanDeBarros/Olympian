@@ -2,7 +2,6 @@
 
 #include "core/context/rendering/Textures.h"
 #include "registries/Loader.h"
-#include "registries/graphics/TextureRegistry.h"
 
 namespace oly::reg
 {

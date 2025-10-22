@@ -8,11 +8,6 @@ namespace oly::rendering
 	class TileSet;
 }
 
-namespace oly::reg
-{
-	class TileSetRegistry;
-}
-
 namespace oly::context
 {
 	namespace internal
@@ -20,6 +15,6 @@ namespace oly::context
 		extern void terminate_tilesets();
 	}
 
-	extern reg::TileSetRegistry& tileset_registry();
 	extern SmartReference<rendering::TileSet> load_tileset(const ResourcePath& file);
+	extern void free_tileset(const ResourcePath& file);
 }
