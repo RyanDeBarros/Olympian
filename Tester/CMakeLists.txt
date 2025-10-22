@@ -9,7 +9,7 @@ endif()
 
 # Variables
 
-# TODO v6 this won't be the case for ENGINE_DIR when building project separately.
+# TODO v7 this won't be the case for ENGINE_DIR when building project separately.
 set(ENGINE_DIR "${CMAKE_SOURCE_DIR}")
 set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
@@ -46,7 +46,7 @@ file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h")
 add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
 
 # Project context macros
-# TODO v6 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
+# TODO v7 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
 target_compile_definitions(Olympian PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"

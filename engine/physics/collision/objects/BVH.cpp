@@ -25,7 +25,6 @@ namespace oly::col2d
 
 		static glm::vec2 compute_centroid_sum(const Element& element)
 		{
-			// TODO v5 overload for visit that passes specific lambdas for specific types.
 			return element.variant().visit([](const auto& element) -> glm::vec2 {
 				if constexpr (visiting_class_is<decltype(*element), Circle>)
 					return element->center;

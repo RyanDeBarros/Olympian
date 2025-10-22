@@ -181,7 +181,7 @@ namespace oly::debug
 
 	void CollisionView::draw(rendering::GeometryPainter::PaintSupport& ps) const
 	{
-		// TODO v5 specialized shader for collision view, especially since it's rendered on a separate framebuffer.
+		// TODO v6 specialized shader for collision view, especially since it's rendered on a separate framebuffer.
 		if (valid())
 		{
 			obj->view.visit(

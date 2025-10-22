@@ -7,5 +7,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add subdirectories
 add_subdirectory(engine)
-# TODO v6 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this
+# TODO v7 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this
 add_subdirectory(Tester)
