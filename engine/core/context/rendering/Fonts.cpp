@@ -68,46 +68,42 @@ namespace oly::context
 		rendering::Kerning kerning;
 
 		size_t _k_idx = 0;
-		kerning_arr->for_each([&kerning, &_k_idx](auto&& node) {
+		kerning_arr->for_each([&kerning, &_k_idx](auto&& _node) {
 			const size_t k_idx = _k_idx++;
-			if constexpr (toml::is_table<decltype(node)>)
+			TOMLNode node = (TOMLNode)_node;
+			auto pair = node["pair"].as_array();
+			if (!pair)
 			{
-				auto pair = node["pair"].as_array();
-				if (!pair)
-				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
-					return;
-				}
-				if (pair->size() != 2)
-				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
-					return;
-				}
-				int dist = 0;
-				if (!reg::parse_int(node["dist"], dist))
-				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
-					return;
-				}
-
-				auto tc0 = pair->get_as<std::string>(0);
-				auto tc1 = pair->get_as<std::string>(1);
-				if (!tc0 || !tc1)
-				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
-					return;
-				}
-
-				utf::Codepoint c1 = parse_codepoint(tc0->get());
-				utf::Codepoint c2 = parse_codepoint(tc1->get());
-				if (c1 && c2)
-					kerning.map.emplace(std::make_pair(c1, c2), dist);
-				else
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx
-						<< " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
+				return;
 			}
+			if (pair->size() != 2)
+			{
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
+				return;
+			}
+			int dist = 0;
+			if (!reg::parse_int(node["dist"], dist))
+			{
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
+				return;
+			}
+
+			auto tc0 = pair->get_as<std::string>(0);
+			auto tc1 = pair->get_as<std::string>(1);
+			if (!tc0 || !tc1)
+			{
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
+				return;
+			}
+
+			utf::Codepoint c1 = parse_codepoint(tc0->get());
+			utf::Codepoint c2 = parse_codepoint(tc1->get());
+			if (c1 && c2)
+				kerning.map.emplace(std::make_pair(c1, c2), dist);
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse kerning #" << k_idx << " - not a TOML table." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx
+					<< " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
 			});
 
 		return kerning;
@@ -140,12 +136,6 @@ namespace oly::context
 		{
 			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
-		}
-
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font face [" << (src ? *src : "") << "]..." << LOG.nl;
 		}
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
@@ -306,7 +296,6 @@ namespace oly::context
 		if (auto glyph_array = toml["glyphs"].as_array())
 		{
 			glyph_array->for_each([&glyphs, &texture_files](auto&& _g) {
-				// TODO v5 use this design in visitor patterns throughout registries
 				TOMLNode g = (TOMLNode)_g;
 
 				utf::Codepoint codepoint = utf::Codepoint(0);
@@ -414,7 +403,7 @@ namespace oly::context
 					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"file\" field from font family style" << LOG.nl;
 					return;
 				}
-				ResourcePath font_file(*_font_file, file); // TODO v5 pass relative_to path when loading other files from asset loaders
+				ResourcePath font_file(*_font_file, file);
 				rendering::FontFamily::FontRef font;
 				if (font_file.is_import_path())
 				{

@@ -46,90 +46,87 @@ namespace oly::context
 		if (toml_assignments)
 		{
 			size_t _a_idx = 0;
-			toml_assignments->for_each([&assignments, &_a_idx](auto&& node) {
+			toml_assignments->for_each([&assignments, &_a_idx, &file](auto&& _node) {
 				const size_t a_idx = _a_idx++;
-				if constexpr (toml::is_table<decltype(node)>)
+				TOMLNode node = (TOMLNode)_node;
+
+				auto _texture = node["texture"].value<std::string>();
+				if (!_texture)
 				{
-					auto _texture = node["texture"].value<std::string>();
-					if (!_texture)
-					{
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
-							<< " - missing \"texture\" field." << LOG.nl;
-						return;
-					}
+					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						<< " - missing \"texture\" field." << LOG.nl;
+					return;
+				}
 
-					auto _config = node["config"];
-					if (!_config)
-					{
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
-							<< " - missing \"config\" field." << LOG.nl;
-						return;
-					}
+				auto _config = node["config"];
+				if (!_config)
+				{
+					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						<< " - missing \"config\" field." << LOG.nl;
+					return;
+				}
 
-					rendering::TileSet::Assignment assignment;
+				rendering::TileSet::Assignment assignment;
 
-					int config = 0;
-					if (reg::parse_int(_config, config))
-					{
-						if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_COUNT)
-							assignment.config = (rendering::TileSet::Configuration)config;
-						else
-						{
-							OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-								<< ", unrecognized configuration #" << config << "." << LOG.nl;
-							return;
-						}
-					}
+				int config = 0;
+				if (reg::parse_int(_config, config))
+				{
+					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_COUNT)
+						assignment.config = (rendering::TileSet::Configuration)config;
 					else
 					{
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
-							<< " - \"config\" field is missing or not an int." << LOG.nl;
+						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+							<< ", unrecognized configuration #" << config << "." << LOG.nl;
 						return;
 					}
-
-					assignment.desc.file = _texture.value();
-					glm::vec4 uvs{};
-					if (reg::parse_vec(node["uvs"], uvs))
-					{
-						assignment.desc.uvs.x1 = uvs[0];
-						assignment.desc.uvs.x2 = uvs[1];
-						assignment.desc.uvs.y1 = uvs[2];
-						assignment.desc.uvs.y2 = uvs[3];
-					}
-
-					if (auto transformations = node["trfm"].as_array())
-					{
-						size_t tr_idx = 0;
-						for (const auto& trfm : *transformations)
-						{
-							if (auto transformation = trfm.value<std::string>())
-							{
-								const std::string tr = transformation.value();
-								if (tr == "RX")
-									assignment.transformation &= rendering::TileSet::Transformation::REFLECT_X;
-								else if (tr == "RY")
-									assignment.transformation &= rendering::TileSet::Transformation::REFLECT_Y;
-								else if (tr == "R90")
-									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_90;
-								else if (tr == "R180")
-									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_180;
-								else if (tr == "R270")
-									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
-								else
-									OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-									<< " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
-							}
-							else
-								OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
-								<< ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
-							++tr_idx;
-						}
-					}
-
-					assignments.push_back(assignment);
 				}
 				else
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
+				{
+					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						<< " - \"config\" field is missing or not an int." << LOG.nl;
+					return;
+				}
+
+				assignment.desc.file = ResourcePath(*_texture, file);
+				glm::vec4 uvs{};
+				if (reg::parse_vec(node["uvs"], uvs))
+				{
+					assignment.desc.uvs.x1 = uvs[0];
+					assignment.desc.uvs.x2 = uvs[1];
+					assignment.desc.uvs.y1 = uvs[2];
+					assignment.desc.uvs.y2 = uvs[3];
+				}
+
+				if (auto transformations = node["trfm"].as_array())
+				{
+					size_t tr_idx = 0;
+					for (const auto& trfm : *transformations)
+					{
+						if (auto transformation = trfm.value<std::string>())
+						{
+							const std::string tr = transformation.value();
+							if (tr == "RX")
+								assignment.transformation &= rendering::TileSet::Transformation::REFLECT_X;
+							else if (tr == "RY")
+								assignment.transformation &= rendering::TileSet::Transformation::REFLECT_Y;
+							else if (tr == "R90")
+								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_90;
+							else if (tr == "R180")
+								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_180;
+							else if (tr == "R270")
+								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
+							else
+								OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+								<< " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
+						}
+						else
+							OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+							<< ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
+						++tr_idx;
+					}
+				}
+
+				assignments.push_back(assignment);
 				});
 		}
 

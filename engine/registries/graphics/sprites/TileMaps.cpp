@@ -21,44 +21,41 @@ namespace oly::reg
 		if (toml_layers)
 		{
 			size_t _layer_idx = 0;
-			toml_layers->for_each([&params, &_layer_idx](auto&& node) {
+			toml_layers->for_each([&params, &_layer_idx](auto&& _node) {
 				const size_t layer_idx = _layer_idx++;
-				if constexpr (toml::is_table<decltype(node)>)
+				TOMLNode node = (TOMLNode)_node;
+
+				auto tileset = node["tileset"].value<std::string>();
+				if (!tileset)
 				{
-					auto tileset = node["tileset"].value<std::string>();
-					if (!tileset)
-					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
-						return;
-					}
-
-					params::TileMap::Layer lparams;
-					lparams.tileset = tileset.value();
-
-					auto tiles = node["tiles"].as_array();
-					if (tiles)
-					{
-						size_t tile_idx = 0;
-						for (auto& toml_tile : *tiles)
-						{
-							glm::ivec2 tile{};
-							if (parse_ivec((TOMLNode)toml_tile, tile))
-								lparams.tiles.push_back(tile);
-							else
-								OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
-																<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
-							++tile_idx;
-						}
-					}
-
-					int z = 0;
-					if (parse_int(node["z"], z))
-						lparams.z = z;
-
-					params.layers.push_back(std::move(lparams));
+					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+					return;
 				}
-				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - not a TOML table." << LOG.nl;
+
+				params::TileMap::Layer lparams;
+				lparams.tileset = tileset.value();
+
+				auto tiles = node["tiles"].as_array();
+				if (tiles)
+				{
+					size_t tile_idx = 0;
+					for (auto& toml_tile : *tiles)
+					{
+						glm::ivec2 tile{};
+						if (parse_ivec((TOMLNode)toml_tile, tile))
+							lparams.tiles.push_back(tile);
+						else
+							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
+															<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
+						++tile_idx;
+					}
+				}
+
+				int z = 0;
+				if (parse_int(node["z"], z))
+					lparams.z = z;
+
+				params.layers.push_back(std::move(lparams));
 				});
 		}
 
