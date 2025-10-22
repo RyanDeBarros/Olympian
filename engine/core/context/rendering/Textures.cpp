@@ -110,14 +110,14 @@ namespace oly::context
 			if (LOG.enable.debug)
 			{
 				auto src = toml["source"].value<std::string>();
-				OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing texture [" << (src ? *src : "") << "]." << LOG.nl;
+				OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing texture [" << (src ? *src : "") << "]." << LOG.nl;
 			}
 
 			texture_index = glm::clamp(texture_index, size_t(0), texture_array->size() - size_t(1));
 			texture_node = TOMLNode(*texture_array->get(texture_index));
 		}
 		else
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
+			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Missing or empty \"texture\" array field." << LOG.nl;
 	}
 
 	static bool should_store(TOMLNode texture_node, const char* storage_key, tex::ImageStorageOverride storage_override)
@@ -145,6 +145,12 @@ namespace oly::context
 
 	graphics::BindlessTextureRef load_texture(const ResourcePath& file, unsigned int texture_index, tex::LoadParams params)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		if (file.extension_matches(".svg"))
 		{
 			tex::SVGLoadParams svg_params{
@@ -199,7 +205,7 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		internal::textures.set(key, texture);
@@ -208,8 +214,14 @@ namespace oly::context
 
 	graphics::BindlessTextureRef load_svg_texture(const ResourcePath& file, unsigned int texture_index, tex::SVGLoadParams params)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		if (!file.extension_matches(".svg"))
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		internal::TextureKey key{ file, texture_index };
 		auto it = internal::textures.find_forward_iterator(key);
@@ -280,7 +292,7 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		internal::textures.set(key, texture);
@@ -289,6 +301,12 @@ namespace oly::context
 
 	graphics::BindlessTextureRef load_temp_texture(const ResourcePath& file, unsigned int texture_index, tex::TempLoadParams params)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		if (file.extension_matches(".svg"))
 		{
 			tex::TempSVGLoadParams svg_params{
@@ -334,7 +352,7 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return texture;
@@ -342,8 +360,14 @@ namespace oly::context
 
 	graphics::BindlessTextureRef load_temp_svg_texture(const ResourcePath& file, unsigned int texture_index, tex::TempSVGLoadParams params)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		if (!file.extension_matches(".svg"))
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
 		TOMLNode texture_node;
@@ -378,7 +402,7 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = toml["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Texture [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return texture;

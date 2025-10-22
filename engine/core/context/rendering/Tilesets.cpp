@@ -18,6 +18,12 @@ namespace oly::context
 
 	rendering::TileSetRef load_tileset(const ResourcePath& file)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		auto it = internal::tilesets.find(file);
 		if (it != internal::tilesets.end())
 			return it->second;
@@ -26,14 +32,14 @@ namespace oly::context
 		auto node = toml["tileset"];
 		if (!node.as_table())
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load tileset " << file << " - missing \"tileset\" table." << LOG.nl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot load tileset " << file << " - missing \"tileset\" table." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing tileset [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing tileset [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		auto toml_assignments = node["assignment"].as_array();
@@ -49,7 +55,7 @@ namespace oly::context
 					auto _texture = node["texture"].value<std::string>();
 					if (!_texture)
 					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
 							<< " - missing \"texture\" field." << LOG.nl;
 						return;
 					}
@@ -57,7 +63,7 @@ namespace oly::context
 					auto _config = node["config"];
 					if (!_config)
 					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
 							<< " - missing \"config\" field." << LOG.nl;
 						return;
 					}
@@ -71,14 +77,14 @@ namespace oly::context
 							assignment.config = (rendering::TileSet::Configuration)config;
 						else
 						{
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+							OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
 								<< ", unrecognized configuration #" << config << "." << LOG.nl;
 							return;
 						}
 					}
 					else
 					{
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
+						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx
 							<< " - \"config\" field is missing or not an int." << LOG.nl;
 						return;
 					}
@@ -112,11 +118,11 @@ namespace oly::context
 								else if (tr == "R270")
 									assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
 								else
-									OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+									OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
 									<< " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
 							}
 							else
-								OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
+								OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In tileset assignment #" << a_idx
 								<< ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
 							++tr_idx;
 						}
@@ -125,7 +131,7 @@ namespace oly::context
 					assignments.push_back(assignment);
 				}
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
+					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse tileset assignment #" << a_idx << " - not a TOML table." << LOG.nl;
 				});
 		}
 
@@ -136,7 +142,7 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Tileset [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Tileset [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return tileset;

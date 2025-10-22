@@ -158,7 +158,7 @@ namespace oly::context
 			else if (swizz == "ZYX")
 				modifier.swizzle = input::ModifierBase::Swizzle::ZYX;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
 		}
 
 		if (!reg::parse_float(mnode["multiplier"], modifier.multiplier.x))
@@ -195,7 +195,7 @@ namespace oly::context
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis0DModifier::Conversion::TO_3D;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -218,7 +218,7 @@ namespace oly::context
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis1DModifier::Conversion::TO_3D;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -251,7 +251,7 @@ namespace oly::context
 			else if (conv == "TO_3D_1")
 				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_1;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -339,19 +339,19 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing input signal [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
 			return;
 		}
 		auto toml_binding = node["binding"].value<std::string>();
 		if (!toml_binding)
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"binding\" field." << LOG.endl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"binding\" field." << LOG.endl;
 			return;
 		}
 
@@ -372,14 +372,14 @@ namespace oly::context
 			load_scroll_binding(node, toml_id.value());
 		else
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
 			return;
 		}
 
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Input signal [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 	}
 
@@ -388,13 +388,13 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
 			return;
 		}
 
@@ -406,7 +406,7 @@ namespace oly::context
 				if (auto signal = toml_signals->get_as<std::string>(i))
 					signals.push_back(signal->get());
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
+					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
 			}
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
@@ -414,12 +414,18 @@ namespace oly::context
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Input signal mapping [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal mapping [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 	}
 
 	void load_signals(const ResourcePath& file)
 	{
+		if (file.empty())
+		{
+			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LOAD_ASSET);
+		}
+
 		auto toml = reg::load_toml(file);
 
 		auto signals = toml["signal"].as_array();
