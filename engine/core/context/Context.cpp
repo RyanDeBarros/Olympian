@@ -16,8 +16,6 @@
 #include "core/util/Time.h"
 #include "core/util/Timers.h"
 
-#include "registries/platform/Input.h"
-
 #include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::context
@@ -75,7 +73,7 @@ namespace oly::context
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signals(*file);
+					load_signals(*file);
 		}
 	}
 
