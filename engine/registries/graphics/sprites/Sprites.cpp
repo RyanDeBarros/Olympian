@@ -14,41 +14,7 @@ namespace oly::reg
 		}
 
 		rendering::Sprite sprite;
-
-		if (auto transform = node["transform"])
-		{
-			sprite.set_local() = load_transform_2d(transform);
-
-			if (auto toml_transformer_modifier = transform["modifier"])
-			{
-				auto toml_type = toml_transformer_modifier["type"].value<std::string>();
-				if (toml_type)
-				{
-					std::string type = *toml_type;
-					if (type == "shear")
-					{
-						auto modifier = std::make_unique<ShearTransformModifier2D>();
-						parse_vec(node["shearing"], modifier->shearing);
-						sprite.transformer.set_modifier() = std::move(modifier);
-					}
-					else if (type == "pivot")
-					{
-						auto modifier = std::make_unique<PivotTransformModifier2D>();
-						parse_vec(node["pivot"], modifier->pivot);
-						parse_vec(node["size"], modifier->size);
-						sprite.transformer.set_modifier() = std::move(modifier);
-					}
-					else if (type == "pivot-shear")
-					{
-						auto modifier = std::make_unique<OffsetTransformModifier2D>();
-						parse_vec(node["offset"], modifier->offset);
-						sprite.transformer.set_modifier() = std::move(modifier);
-					}
-					else
-						OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
-				}
-			}
-		}
+		sprite.transformer = load_transformer_2d(node["transformer"]);
 
 		auto texture = node["texture"].value<std::string>();
 		if (texture)

@@ -86,18 +86,6 @@ namespace oly::reg
 		return false;
 	}
 
-	Transform2D load_transform_2d(TOMLNode node)
-	{
-		Transform2D transform;
-		if (!node)
-			return transform;
-		parse_vec(node["position"], transform.position);
-		if (auto rotation = node["rotation"].value<double>())
-			transform.rotation = (float)rotation.value();
-		parse_vec(node["scale"], transform.scale);
-		return transform;
-	}
-
 	bool parse_mag_filter(TOMLNode node, GLenum& mag_filter)
 	{
 		if (auto v = node.value<int64_t>())
@@ -193,12 +181,53 @@ namespace oly::reg
 		return true;
 	}
 
-	Transformer2D load_transformer_2d(const params::Transformer2D& params)
+	Transform2D load_transform_2d(TOMLNode node)
+	{
+		Transform2D transform;
+		if (!node)
+			return transform;
+		parse_vec(node["position"], transform.position);
+		if (auto rotation = node["rotation"].value<double>())
+			transform.rotation = (float)rotation.value();
+		parse_vec(node["scale"], transform.scale);
+		return transform;
+	}
+
+	std::unique_ptr<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
+	{
+		if (auto toml_type = node["type"].value<std::string>())
+		{
+			const std::string& type = *toml_type;
+			if (type == "shear")
+			{
+				auto modifier = std::make_unique<ShearTransformModifier2D>();
+				parse_vec(node["shearing"], modifier->shearing);
+				return modifier;
+			}
+			else if (type == "pivot")
+			{
+				auto modifier = std::make_unique<PivotTransformModifier2D>();
+				parse_vec(node["pivot"], modifier->pivot);
+				parse_vec(node["size"], modifier->size);
+				return modifier;
+			}
+			else if (type == "offset")
+			{
+				auto modifier = std::make_unique<OffsetTransformModifier2D>();
+				parse_vec(node["offset"], modifier->offset);
+				return modifier;
+			}
+			else
+				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
+		}
+		return std::make_unique<TransformModifier2D>();
+	}
+
+	Transformer2D load_transformer_2d(TOMLNode node)
 	{
 		Transformer2D transformer;
-		transformer.set_local() = params.local;
-		if (params.modifier)
-			transformer.set_modifier() = params.modifier->visit([](const auto& m) -> std::unique_ptr<TransformModifier2D> { return std::make_unique<std::decay_t<decltype(m)>>(m); });
+		transformer.set_local() = load_transform_2d(node);
+		transformer.set_modifier() = load_transform_modifier_2d(node["modifier"]);
 		return transformer;
 	}
 

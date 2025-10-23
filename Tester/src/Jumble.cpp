@@ -11,11 +11,7 @@ Jumble::Jumble()
 {
 	auto toml = oly::reg::load_toml("~/assets/archetypes/Jumble.toml");
 
-    {
-		oly::reg::params::Transformer2D params;
-
-		transformer = oly::reg::load_transformer_2d(params);
-	}
+	transformer = oly::reg::load_transformer_2d(toml["archetype"]["transformer"]);
 
 	sprite3.init(oly::reg::load_sprite(toml["sprite3"]));
 	sprite4.init(oly::reg::load_sprite(toml["sprite4"]));

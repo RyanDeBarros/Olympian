@@ -64,22 +64,13 @@ namespace oly::reg
 		return false;
 	}
 
-	extern Transform2D load_transform_2d(TOMLNode node);
-
 	extern bool parse_mag_filter(TOMLNode node, GLenum& mag_filter);
 	extern bool parse_min_filter(TOMLNode node, GLenum& min_filter);
 	extern bool parse_wrap(TOMLNode node, GLenum& wrap);
 
-	namespace params
-	{
-		struct Transformer2D
-		{
-			Transform2D local;
-			std::optional<Variant<ShearTransformModifier2D, PivotTransformModifier2D, OffsetTransformModifier2D>> modifier;
-		};
-	}
-
-	extern Transformer2D load_transformer_2d(const params::Transformer2D& params);
+	extern Transform2D load_transform_2d(TOMLNode node);
+	extern std::unique_ptr<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
+	extern Transformer2D load_transformer_2d(TOMLNode node);
 
 	extern bool parse_shape(TOMLNode node, math::IRect2D& rect);
 

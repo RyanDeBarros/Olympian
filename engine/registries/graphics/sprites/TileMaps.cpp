@@ -14,8 +14,11 @@ namespace oly::reg
 		}
 
 		rendering::TileMap tilemap;
-
-		tilemap.set_local() = reg::load_transform_2d(node["transform"]);
+		if (auto transformer = node["transformer"])
+		{
+			tilemap.set_local() = reg::load_transform_2d(transformer);
+			tilemap.set_transformer().set_modifier() = reg::load_transform_modifier_2d(transformer["modifier"]);
+		}
 
 		auto toml_layers = node["layer"].as_array();
 		if (toml_layers)

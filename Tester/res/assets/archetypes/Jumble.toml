@@ -16,51 +16,50 @@ draw = [
 ]
 
 [sprite3]
-"texture"    = "~/textures/serotonin.gif"
-transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
+texture = "~/textures/serotonin.gif"
+transformer = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
 frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [sprite4]
-"texture"       = "~/textures/tux.png"
-"texture_index" = 1
-transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
+texture = "~/textures/tux.png"
+texture_index = 1
+transformer = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
 [sprite5]
-"texture" = "~/textures/tux.png"
-transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
+texture = "~/textures/tux.png"
+transformer = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
 [sprite1]
-"texture" = "~/textures/einstein.png"
+texture = "~/textures/einstein.png"
 
 [godot_icon]
-"texture" = "~/textures/godot.svg"
-"texture_index" = 1
-transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+texture = "~/textures/godot.svg"
+texture_index = 1
+transformer = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [knight]
-"texture"    = "~/textures/knight.png"
-transform    = { "position" = [100, -300], "scale" = [20, 20] }
+texture = "~/textures/knight.png"
+transformer = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
 [atlased_knight]
-name            = "atlased_knight"
-"rows"          = 2
-"cols"          = 3
-"delay_seconds" = 0.1
+rows = 2
+cols = 3
+delay_seconds = 0.1
 	[archetype.sprite_atlas.sprite]
-	"texture" = "~/textures/knight.png"
-	"texture_index" = 1
-	transform = { "position" = [300, -200], "scale" = [20, 20] }
+	texture = "~/textures/knight.png"
+	texture_index = 1
+	transformer = { "position" = [300, -200], "scale" = [20, 20] }
 
 [nonant_panel]
-"nsize" = [ 128, 0 ]
+nsize = [ 128, 0 ]
 offsets = { uniform = 6 }
 [nonant_panel.sprite]
-"texture" = "~/textures/panel.png"
-transform = { "scale" = [ 10.0, 10.0 ] }
+texture = "~/textures/panel.png"
+transformer = { "scale" = [ 10.0, 10.0 ] }
 
 [grass_tilemap]
-transform = { "scale" = [ 100, 100 ] }
+transformer = { "scale" = [ 100, 100 ] }
 
 	[grass_tilemap.layer]
 	"z" = 0
@@ -82,9 +81,9 @@ transform = { "scale" = [ 100, 100 ] }
 	]
 	
 [test_text]
-"draw_bkg"     = true
-transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
-"bkg_color"    = [ 0.5, 0.4, 0.2, 0.8 ]
+"draw_bkg" = true
+transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
+"bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
 	[test_text.format]
 	"pivot"             = [ 0.0, 1.0 ]
 	"line_spacing"      = 1.5

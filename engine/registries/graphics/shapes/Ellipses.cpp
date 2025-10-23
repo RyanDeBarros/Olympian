@@ -13,7 +13,7 @@ namespace oly::reg
 		}
 
 		rendering::Ellipse ellipse;
-		ellipse.set_local() = load_transform_2d(node["transform"]);
+		ellipse.transformer = load_transformer_2d(node["transformer"]);
 
 		auto& color = ellipse.ellipse.set_color();
 		parse_vec(node["border_inner_color"], color.border_inner);

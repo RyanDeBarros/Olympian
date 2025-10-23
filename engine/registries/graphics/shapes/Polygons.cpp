@@ -15,7 +15,7 @@ namespace oly::reg
 
 		rendering::Polygon polygon;
 
-		polygon.set_local() = load_transform_2d(node["transform"]);
+		polygon.transformer = load_transformer_2d(node["transformer"]);
 
 		std::vector<glm::vec2> points;
 		auto toml_points = node["points"].as_array();
@@ -70,7 +70,7 @@ namespace oly::reg
 
 		rendering::PolyComposite polygon;
 
-		polygon.set_local() = load_transform_2d(node["transform"]);
+		polygon.transformer = load_transformer_2d(node["transformer"]);
 
 		auto toml_method = node["method"].value<std::string>();
 		if (toml_method)
@@ -226,7 +226,7 @@ namespace oly::reg
 
 		rendering::NGon polygon;
 
-		polygon.set_local() = load_transform_2d(node["transform"]);
+		polygon.transformer = load_transformer_2d(node["transformer"]);
 
 		cmath::NGonBase ngon_base;
 
