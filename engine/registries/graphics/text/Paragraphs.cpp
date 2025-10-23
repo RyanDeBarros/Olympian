@@ -7,14 +7,8 @@
 
 namespace oly::reg
 {
-	static rendering::ParagraphFormat create_format(TOMLNode node)
+	static rendering::ParagraphFormat load_format(TOMLNode node)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph format [" << (src ? *src : "") << "]." << LOG.nl;
-		}
-
 		rendering::ParagraphFormat format;
 
 		parse_vec(node["pivot"], format.pivot);
@@ -60,47 +54,40 @@ namespace oly::reg
 				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Paragraph format [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
-
 		return format;
 	}
 
-	static std::optional<params::Paragraph::TextElement> parse_text_element(TOMLNode element, size_t i)
+	static void add_text_element(TOMLNode element, size_t i, std::vector<rendering::TextElement>& elements)
 	{
-		params::Paragraph::TextElement element_params;
+		rendering::TextElement e;
 		if (auto font = element["font"].value<std::string>())
-			element_params.font = *font;
+			e.font = context::load_font(*font, parse_uint_or(element["font_index"], 0));
 		else
 		{
 			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
-			return std::nullopt;
+			return;
 		}
 
-		parse_uint(element["font_index"], element_params.font_index);
-
 		if (auto text = element["text"].value<std::string>())
-			element_params.text = *text;
+			e.text = std::move(*text);
 		else
 		{
 			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
-			return std::nullopt;
+			return;
 		}
 
-		glm::vec4 v;
-		if (parse_vec(element["text_color"], v))
-			element_params.text_color = v;
+		parse_vec(element["text_color"], e.text_color);
+		parse_float(element["adj_offset"], e.adj_offset);
+		parse_vec(element["scale"], e.scale);
+		float line_y_pivot;
+		if (parse_float(element["line_y_pivot"], line_y_pivot))
+			e.line_y_pivot = line_y_pivot;
+		parse_vec(element["jitter_offset"], e.jitter_offset);
 
-		parse_float(element["adj_offset"], element_params.adj_offset);
-		parse_vec(element["scale"], element_params.scale);
-		parse_float(element["line_y_pivot"], element_params.line_y_pivot);
-		parse_vec(element["jitter_offset"], element_params.jitter_offset);
-		parse_bool(element["expand"], element_params.expand);
-
-		return element_params;
+		if (parse_bool_or(element["expand"], false))
+			rendering::TextElement::expand(e, elements);
+		else
+			elements.push_back(std::move(e));
 	}
 
 	rendering::Paragraph load_paragraph(TOMLNode node)
@@ -108,115 +95,32 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]..." << LOG.nl;
 		}
 
-		params::Paragraph params;
-
+		std::vector<rendering::TextElement> elements;
 		if (auto element_array = node["element"].as_array())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
-			{
 				if (auto element = TOMLNode(*element_array->get(i)))
-				{
-					std::optional<params::Paragraph::TextElement> element_params = parse_text_element(element, i);
-					if (element_params.has_value())
-						params.elements.emplace_back(std::move(*element_params));
-				}
-			}
+					add_text_element(element, i, elements);
 		}
 		else if (auto element = node["element"])
-		{
-			std::optional<params::Paragraph::TextElement> element_params = parse_text_element(element, 0);
-			if (element_params.has_value())
-				params.elements = { std::move(*element_params) };
-		}
+			add_text_element(element, 0, elements);
 
-		params.format = create_format(node["format"]);
-		parse_bool(node["draw_bkg"], params.draw_bkg);
-		params.local = load_transform_2d(node["transform"]);
+		rendering::Paragraph paragraph(std::move(elements), load_format(node["format"]));
+		paragraph.set_local() = load_transform_2d(node["transform"]);
+		parse_bool(node["draw_bkg"], paragraph.draw_bkg);
 
-		glm::vec4 v;
-		if (parse_vec(node["bkg_color"], v))
-			params.bkg_color = v;
+		glm::vec4 bkg_color;
+		if (parse_vec(node["bkg_color"], bkg_color))
+			paragraph.set_bkg_color(bkg_color);
 
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "...Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
-
-		return load_paragraph(std::move(params));
-	}
-
-	static void add_element(std::vector<rendering::TextElement>& elements, const params::Paragraph::TextElement& params)
-	{
-		rendering::TextElement element{
-			.font = context::load_font(params.font, params.font_index),
-			.text = params.text,
-			.adj_offset = params.adj_offset,
-			.scale = params.scale,
-			.line_y_pivot = params.line_y_pivot,
-			.jitter_offset = params.jitter_offset
-		};
-		
-		if (params.text_color)
-			element.text_color = *params.text_color;
-
-		if (params.expand)
-			rendering::TextElement::expand(element, elements);
-		else
-			elements.push_back(std::move(element));
-	}
-
-	static void add_element(std::vector<rendering::TextElement>& elements, params::Paragraph::TextElement&& params)
-	{
-		rendering::TextElement element{
-			.font = context::load_font(params.font, params.font_index),
-			.text = std::move(params.text),
-			.adj_offset = params.adj_offset,
-			.scale = params.scale,
-			.line_y_pivot = params.line_y_pivot,
-			.jitter_offset = params.jitter_offset
-		};
-
-		if (params.text_color)
-			element.text_color = *params.text_color;
-
-		if (params.expand)
-			rendering::TextElement::expand(element, elements);
-		else
-			elements.push_back(std::move(element));
-	}
-
-	rendering::Paragraph load_paragraph(const params::Paragraph& params)
-	{
-		std::vector<rendering::TextElement> elements;
-		for (const params::Paragraph::TextElement& pelement : params.elements)
-			add_element(elements, pelement);
-
-		rendering::Paragraph paragraph(std::move(elements), params.format);
-
-		paragraph.set_local() = params.local;
-		paragraph.draw_bkg = params.draw_bkg;
-		if (params.bkg_color)
-			paragraph.set_bkg_color(*params.bkg_color);
-
-		return paragraph;
-	}
-
-	rendering::Paragraph load_paragraph(params::Paragraph&& params)
-	{
-		std::vector<rendering::TextElement> elements;
-		for (params::Paragraph::TextElement& pelement : params.elements)
-			add_element(elements, std::move(pelement));
-
-		rendering::Paragraph paragraph(std::move(elements), params.format);
-
-		paragraph.set_local() = params.local;
-		paragraph.draw_bkg = params.draw_bkg;
-		if (params.bkg_color)
-			paragraph.set_bkg_color(*params.bkg_color);
 
 		return paragraph;
 	}

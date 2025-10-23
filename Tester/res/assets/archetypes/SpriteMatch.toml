@@ -12,5 +12,4 @@ transform = { "position" = [450, -200] }
 
 [sprite2]
 "texture" = "~/textures/tux.png"
-transform = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
-transform_modifier = { "type" = "shear" }
+transform = { "position" = [-100, -100], "scale" = [0.2, 0.2], modifier = { "type" = "shear" } }
