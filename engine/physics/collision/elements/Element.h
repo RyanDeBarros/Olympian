@@ -116,7 +116,7 @@ namespace oly::col2d
 	class Element
 	{
 		internal::ElementID id = internal::ElementID::NONE;
-		BlackBox<true> obj;
+		BlackBox obj;
 
 	public:
 		Element() = default;
@@ -130,7 +130,7 @@ namespace oly::col2d
 				*obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
 			else
 			{
-				obj = BlackBox<true>(std::forward<Shape>(shape));
+				obj = BlackBox(std::forward<Shape>(shape));
 				id = internal::ElementIDTrait<std::decay_t<Shape>>::ID;
 			}
 			return *this;

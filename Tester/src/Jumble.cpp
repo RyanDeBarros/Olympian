@@ -7,6 +7,11 @@
 #include <assets/graphics/sprites/TileMaps.h>
 #include <assets/graphics/sprites/SpriteNonants.h>
 
+
+#include <core/context/Vault.h>
+
+static auto NONANT_PANEL_VAULT_KEY = OLY_NEXT_VAULT_KEY;
+
 Jumble::Jumble()
 {
 	auto toml = oly::assets::load_toml("~/assets/archetypes/Jumble.toml");
@@ -24,6 +29,9 @@ Jumble::Jumble()
 	atlased_knight.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
 	grass_tilemap.init(oly::assets::load_tilemap(toml["grass_tilemap"]));
 	nonant_panel.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
+
+	oly::context::vault_set(NONANT_PANEL_VAULT_KEY, *nonant_panel);
+	nonant_panel = oly::context::vault_get<oly::rendering::SpriteNonant>(NONANT_PANEL_VAULT_KEY);
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);

@@ -4,6 +4,7 @@
 
 #include "core/context/Platform.h"
 #include "core/context/Collision.h"
+#include "core/context/Vault.h"
 
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Textures.h"
@@ -114,6 +115,8 @@ namespace oly::context
 
 	static void terminate()
 	{
+		internal::terminate_vault();
+
 		internal::terminate_collision();
 
 		physics::internal::RigidBodyManager::instance().clear();

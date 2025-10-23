@@ -23,13 +23,11 @@ namespace oly
 		}
 	}
 
-	template<bool CanCopy = false>
-	class BlackBox;
+	class NonCopyableBlackBox;
 
-	template<>
-	class BlackBox<true>
+	class BlackBox
 	{
-		friend class BlackBox<false>;
+		friend class NonCopyableBlackBox;
 
 		void* ptr = nullptr;
 		void(*deleter)(void*) = nullptr;
@@ -37,14 +35,6 @@ namespace oly
 
 	public:
 		BlackBox() = default;
-
-		template<typename T, typename... Args>
-		explicit BlackBox(Args&&... args) noexcept
-		{
-			ptr = static_cast<void*>(new T(std::forward<Args>(args)...));
-			deleter = internal::deleter<T>();
-			copier = internal::copier<T>();
-		}
 
 		template<typename T>
 		explicit BlackBox(T* raw)
@@ -68,7 +58,7 @@ namespace oly
 				deleter(ptr);
 		}
 
-		BlackBox(const BlackBox<true>& other)
+		BlackBox(const BlackBox& other)
 		{
 			if (other.ptr && other.copier)
 			{
@@ -78,7 +68,7 @@ namespace oly
 			}
 		}
 
-		BlackBox<true>& operator=(const BlackBox<true>& other)
+		BlackBox& operator=(const BlackBox& other)
 		{
 			if (this != &other)
 			{
@@ -100,7 +90,7 @@ namespace oly
 			return *this;
 		}
 
-		BlackBox(BlackBox<true>&& other) noexcept
+		BlackBox(BlackBox&& other) noexcept
 			: ptr(other.ptr), deleter(other.deleter), copier(other.copier)
 		{
 			other.ptr = nullptr;
@@ -108,7 +98,7 @@ namespace oly
 			other.copier = nullptr;
 		}
 
-		BlackBox<true>& operator=(BlackBox<true>&& other) noexcept
+		BlackBox& operator=(BlackBox&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -124,7 +114,7 @@ namespace oly
 			return *this;
 		}
 
-		explicit operator BlackBox<false>() const;
+		explicit operator NonCopyableBlackBox() const;
 
 		const void* raw() const { return ptr; }
 		void* raw() { return ptr; }
@@ -135,53 +125,51 @@ namespace oly
 		T* cast() { return static_cast<T*>(ptr); }
 	};
 
-	template<>
-	class BlackBox<false>
+	template<typename T, typename... Args>
+	inline BlackBox make_black_box(Args&&... args) noexcept
+	{
+		return BlackBox(new T(std::forward<Args>(args)...));
+	}
+
+	class NonCopyableBlackBox
 	{
 		void* ptr = nullptr;
 		void(*deleter)(void*) = nullptr;
 
 	public:
-		BlackBox() = default;
-
-		template<typename T, typename... Args>
-		explicit BlackBox(Args&&... args) noexcept
-		{
-			ptr = static_cast<void*>(new T(std::forward<Args>(args)...));
-			deleter = internal::deleter<T>();
-		}
+		NonCopyableBlackBox() = default;
 
 		template<typename T>
-		explicit BlackBox(T* raw)
+		explicit NonCopyableBlackBox(T* raw)
 		{
 			ptr = static_cast<void*>(raw);
 			deleter = internal::deleter<T>();
 		}
 
 		template<typename T>
-		explicit BlackBox(T&& obj) noexcept
+		explicit NonCopyableBlackBox(T&& obj) noexcept
 		{
 			ptr = static_cast<void*>(new std::decay_t<T>(std::forward<T>(obj)));
 			deleter = internal::deleter<std::decay_t<T>>();
 		}
 
-		~BlackBox()
+		~NonCopyableBlackBox()
 		{
 			if (ptr && deleter)
 				deleter(ptr);
 		}
 
-		BlackBox(const BlackBox<false>&) = delete;
-		BlackBox<false>& operator=(const BlackBox<false>&) = delete;
+		NonCopyableBlackBox(const NonCopyableBlackBox&) = delete;
+		NonCopyableBlackBox& operator=(const NonCopyableBlackBox&) = delete;
 
-		BlackBox(BlackBox<false>&& other) noexcept
+		NonCopyableBlackBox(NonCopyableBlackBox&& other) noexcept
 			: ptr(other.ptr), deleter(other.deleter)
 		{
 			other.ptr = nullptr;
 			other.deleter = nullptr;
 		}
 
-		BlackBox<false>& operator=(BlackBox<false>&& other) noexcept
+		NonCopyableBlackBox& operator=(NonCopyableBlackBox&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -195,7 +183,7 @@ namespace oly
 			return *this;
 		}
 
-		explicit BlackBox(const BlackBox<true>& bb)
+		explicit NonCopyableBlackBox(const BlackBox& bb)
 		{
 			if (bb.ptr && bb.copier)
 			{
@@ -204,7 +192,7 @@ namespace oly
 			}
 		}
 
-		explicit BlackBox(BlackBox<true>&& bb)
+		explicit NonCopyableBlackBox(BlackBox&& bb)
 			: ptr(bb.ptr), deleter(bb.deleter)
 		{
 			bb.ptr = nullptr;
@@ -212,7 +200,7 @@ namespace oly
 			bb.copier = nullptr;
 		}
 
-		BlackBox<false>& operator=(const BlackBox<true>& bb)
+		NonCopyableBlackBox& operator=(const BlackBox& bb)
 		{
 			if (ptr && deleter)
 				deleter(ptr);
@@ -229,7 +217,7 @@ namespace oly
 			return *this;
 		}
 
-		BlackBox<false>& operator=(BlackBox<true>&& bb) noexcept
+		NonCopyableBlackBox& operator=(BlackBox&& bb) noexcept
 		{
 			if (ptr && deleter)
 				deleter(ptr);
@@ -250,8 +238,14 @@ namespace oly
 		T* cast() { return static_cast<T*>(ptr); }
 	};
 
-	inline BlackBox<true>::operator BlackBox<false>() const
+	template<typename T, typename... Args>
+	inline NonCopyableBlackBox make_non_copyable_black_box(Args&&... args) noexcept
 	{
-		return BlackBox<false>(*this);
+		return NonCopyableBlackBox(new T(std::forward<Args>(args)...));
+	}
+
+	inline BlackBox::operator NonCopyableBlackBox() const
+	{
+		return NonCopyableBlackBox(*this);
 	}
 }
