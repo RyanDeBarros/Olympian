@@ -196,8 +196,6 @@ namespace oly
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(FundamentalTransformModifier2D);
 	};
 
-	// TODO v5 modifier that has an 'internal' modifier and 'public' modifier - exposure can choose to only expose the public one.
-
 	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
 	{
 		return translation_matrix(size * (glm::vec2(0.5f) - pivot));

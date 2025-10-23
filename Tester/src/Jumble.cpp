@@ -23,7 +23,9 @@ Jumble::Jumble()
 	smol_text.init(oly::assets::load_paragraph(toml["smol_text"]));
 	atlased_knight.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
 	grass_tilemap.init(oly::assets::load_tilemap(toml["grass_tilemap"]));
-	nonant_panel.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
+
+	static auto NONANT_PANEL_VAULT_KEY = OLY_NEXT_VAULT_KEY;
+	nonant_panel = oly::context::vault_prototype(NONANT_PANEL_VAULT_KEY, std::bind(oly::assets::load_sprite_nonant, toml["nonant_panel"]));
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);

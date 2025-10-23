@@ -3,8 +3,6 @@
 #include "core/context/rendering/Fonts.h"
 #include "assets/Loader.h"
 
-// TODO v5 devise a better design for asset loading. Right now, essentially the same parsing is done three times: 1. convert TOML to params. 2. convert params to actual object. 3. in editor archetype prebuild, convert TOML to params.
-
 namespace oly::assets
 {
 	static rendering::ParagraphFormat load_format(TOMLNode node)

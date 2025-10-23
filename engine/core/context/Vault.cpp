@@ -42,4 +42,9 @@ namespace oly::context
 	{
 		internal::map.erase(key);
 	}
+
+	bool vault_key_exists(internal::VaultKey key)
+	{
+		return internal::map.count(key);
+	}
 }

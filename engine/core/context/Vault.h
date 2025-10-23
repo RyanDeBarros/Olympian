@@ -28,19 +28,36 @@ namespace oly::context
 		extern const BlackBox& vault_get(VaultKey key);
 	}
 
-	template<typename Object>
+	template<typename Object> requires (std::is_copy_constructible_v<Object>)
 	inline void vault_set(internal::VaultKey key, Object object)
 	{
 		internal::vault_set(key, BlackBox(std::move(object)));
 	}
 
-	template<typename Object>
+	template<typename Object> requires (std::is_copy_constructible_v<Object>)
 	inline Object vault_get(internal::VaultKey key)
 	{
 		return Object(*internal::vault_get(key).cast<Object>());
 	}
 
 	extern void vault_free(internal::VaultKey key);
+	extern bool vault_key_exists(internal::VaultKey key);
+
+	template<typename Func>
+	inline auto vault_prototype(internal::VaultKey key, Func&& generate_first)
+	{
+		using Object = std::decay_t<decltype(std::invoke(std::forward<Func>(generate_first)))>;
+		static_assert(std::is_copy_constructible_v<Object>);
+
+		if (vault_key_exists(key))
+			return vault_get<Object>(key);
+		else
+		{
+			Object object = std::invoke(std::forward<Func>(generate_first));
+			vault_set<Object>(key, object);
+			return object;
+		}
+	}
 }
 
 #define OLY_NEXT_VAULT_KEY (::oly::context::internal::get_next_vault_key())

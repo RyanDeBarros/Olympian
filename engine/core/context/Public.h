@@ -3,6 +3,7 @@
 #include "core/context/Context.h"
 #include "core/context/Platform.h"
 #include "core/context/Collision.h"
+#include "core/context/Vault.h"
 
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Textures.h"
