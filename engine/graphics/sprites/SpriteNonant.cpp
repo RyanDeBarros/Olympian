@@ -36,7 +36,7 @@ namespace oly::rendering
 				PivotTransformModifier2D modifier;
 				modifier.pivot.x = -0.5f * x + 1.0f;
 				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>(std::move(modifier));
+				sprite(x, y).transformer.set_modifier() = Polymorphic<PivotTransformModifier2D>(std::move(modifier));
 			}
 	}
 

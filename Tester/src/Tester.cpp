@@ -84,7 +84,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	{
 		bkg.bkg_rect->set_batch(batch);
 
-		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
+		flag_tesselation_parent.set_modifier() = oly::Polymorphic<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
@@ -99,7 +99,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 		}
 
-		oly::default_camera().transformer.set_modifier() = std::make_unique<oly::ShearTransformModifier2D>();
+		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
 		glEnable(GL_BLEND);
 
@@ -224,7 +224,7 @@ int main()
 	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
 	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
 	obstacle0->collider().set_local().position = -capsule.center;
-	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
+	obstacle0->set_transformer().set_modifier() = oly::Polymorphic<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0->properties().net_torque += 300.0f;
 	obstacle0->properties().set_moi_multiplier(4000.0f);

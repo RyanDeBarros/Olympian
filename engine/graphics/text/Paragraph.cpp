@@ -591,7 +591,7 @@ namespace oly::rendering
 	void Paragraph::init(std::vector<TextElement>&& elements)
 	{
 		bkg.transformer.attach_parent(&transformer);
-		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
+		bkg.transformer.set_modifier() = Polymorphic<PivotTransformModifier2D>();
 		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
 		bkg.set_modulation({ 0.0f, 0.0f, 0.0f, 1.0f });
 

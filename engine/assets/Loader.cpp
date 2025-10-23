@@ -193,34 +193,34 @@ namespace oly::assets
 		return transform;
 	}
 
-	std::unique_ptr<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
+	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
 		if (auto toml_type = node["type"].value<std::string>())
 		{
 			const std::string& type = *toml_type;
 			if (type == "shear")
 			{
-				auto modifier = std::make_unique<ShearTransformModifier2D>();
+				Polymorphic<ShearTransformModifier2D> modifier;
 				parse_vec(node["shearing"], modifier->shearing);
 				return modifier;
 			}
 			else if (type == "pivot")
 			{
-				auto modifier = std::make_unique<PivotTransformModifier2D>();
+				Polymorphic<PivotTransformModifier2D> modifier;
 				parse_vec(node["pivot"], modifier->pivot);
 				parse_vec(node["size"], modifier->size);
 				return modifier;
 			}
 			else if (type == "offset")
 			{
-				auto modifier = std::make_unique<OffsetTransformModifier2D>();
+				Polymorphic<OffsetTransformModifier2D> modifier;
 				parse_vec(node["offset"], modifier->offset);
 				return modifier;
 			}
 			else
 				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 		}
-		return std::make_unique<TransformModifier2D>();
+		return Polymorphic<TransformModifier2D>();
 	}
 
 	Transformer2D load_transformer_2d(TOMLNode node)

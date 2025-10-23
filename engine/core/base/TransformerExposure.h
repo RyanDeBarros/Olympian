@@ -109,11 +109,11 @@ namespace oly
 
 		void clear_children() requires (exposure::NONZERO(Params.chain & exposure::chain::CLEAR_CHILDREN)) { transformer.get_handle().clear_children(); }
 
-		template<std::derived_from<TransformModifier2D> T>
+		template<PolymorphicBaseOf<TransformModifier2D> T>
 		const T& get_modifier() const { return transformer.get_modifier<T>(); }
 
-		std::unique_ptr<TransformModifier2D>& set_modifier() requires (exposure::NONZERO(Params.modifier & exposure::modifier::SET_MODIFIER)) { return transformer.set_modifier(); }
-		template<std::derived_from<TransformModifier2D> T>
+		Polymorphic<TransformModifier2D>& set_modifier() requires (exposure::NONZERO(Params.modifier & exposure::modifier::SET_MODIFIER)) { return transformer.set_modifier(); }
+		template<PolymorphicBaseOf<TransformModifier2D> T>
 		T& ref_modifier() requires (exposure::NONZERO(Params.modifier & exposure::modifier::REF_MODIFIER)) { return transformer.ref_modifier<T>(); }
 	};
 }
