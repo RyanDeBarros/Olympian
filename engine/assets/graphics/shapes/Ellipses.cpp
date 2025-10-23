@@ -1,15 +1,15 @@
 #include "Ellipses.h"
 
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	rendering::Ellipse load_ellipse(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing ellipse [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ellipse [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		rendering::Ellipse ellipse;
@@ -31,7 +31,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Ellipse [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Ellipse [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return ellipse;

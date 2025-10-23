@@ -4,7 +4,7 @@
 
 #include "graphics/sprites/TileMap.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	extern rendering::TileMap load_tilemap(TOMLNode node);
 }

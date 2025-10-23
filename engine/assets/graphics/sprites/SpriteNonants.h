@@ -4,7 +4,7 @@
 
 #include "graphics/sprites/SpriteNonant.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	extern rendering::SpriteNonant load_sprite_nonant(TOMLNode node);
 }

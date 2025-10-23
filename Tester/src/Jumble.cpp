@@ -1,29 +1,29 @@
 #include "Jumble.h"
 
-#include <registries/Loader.h>
-#include <registries/graphics/sprites/Sprites.h>
-#include <registries/graphics/text/Paragraphs.h>
-#include <registries/graphics/sprites/SpriteAtlases.h>
-#include <registries/graphics/sprites/TileMaps.h>
-#include <registries/graphics/sprites/SpriteNonants.h>
+#include <assets/Loader.h>
+#include <assets/graphics/sprites/Sprites.h>
+#include <assets/graphics/text/Paragraphs.h>
+#include <assets/graphics/sprites/SpriteAtlases.h>
+#include <assets/graphics/sprites/TileMaps.h>
+#include <assets/graphics/sprites/SpriteNonants.h>
 
 Jumble::Jumble()
 {
-	auto toml = oly::reg::load_toml("~/assets/archetypes/Jumble.toml");
+	auto toml = oly::assets::load_toml("~/assets/archetypes/Jumble.toml");
 
-	transformer = oly::reg::load_transformer_2d(toml["archetype"]["transformer"]);
+	transformer = oly::assets::load_transformer_2d(toml["archetype"]["transformer"]);
 
-	sprite3.init(oly::reg::load_sprite(toml["sprite3"]));
-	sprite4.init(oly::reg::load_sprite(toml["sprite4"]));
-	sprite5.init(oly::reg::load_sprite(toml["sprite5"]));
-	sprite1.init(oly::reg::load_sprite(toml["sprite1"]));
-	godot_icon.init(oly::reg::load_sprite(toml["godot_icon"]));
-	knight.init(oly::reg::load_sprite(toml["knight"]));
-	test_text.init(oly::reg::load_paragraph(toml["test_text"]));
-	smol_text.init(oly::reg::load_paragraph(toml["smol_text"]));
-	atlased_knight.init(oly::reg::load_sprite_atlas(toml["atlased_knight"]));
-	grass_tilemap.init(oly::reg::load_tilemap(toml["grass_tilemap"]));
-	nonant_panel.init(oly::reg::load_sprite_nonant(toml["nonant_panel"]));
+	sprite3.init(oly::assets::load_sprite(toml["sprite3"]));
+	sprite4.init(oly::assets::load_sprite(toml["sprite4"]));
+	sprite5.init(oly::assets::load_sprite(toml["sprite5"]));
+	sprite1.init(oly::assets::load_sprite(toml["sprite1"]));
+	godot_icon.init(oly::assets::load_sprite(toml["godot_icon"]));
+	knight.init(oly::assets::load_sprite(toml["knight"]));
+	test_text.init(oly::assets::load_paragraph(toml["test_text"]));
+	smol_text.init(oly::assets::load_paragraph(toml["smol_text"]));
+	atlased_knight.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
+	grass_tilemap.init(oly::assets::load_tilemap(toml["grass_tilemap"]));
+	nonant_panel.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);

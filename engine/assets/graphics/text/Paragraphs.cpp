@@ -1,11 +1,11 @@
 #include "Paragraphs.h"
 
 #include "core/context/rendering/Fonts.h"
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
 // TODO v5 devise a better design for asset loading. Right now, essentially the same parsing is done three times: 1. convert TOML to params. 2. convert params to actual object. 3. in editor archetype prebuild, convert TOML to params.
 
-namespace oly::reg
+namespace oly::assets
 {
 	static rendering::ParagraphFormat load_format(TOMLNode node)
 	{
@@ -34,7 +34,7 @@ namespace oly::reg
 			else if (align == "full_justify")
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		if (auto valign = node["vertical_align"].value<std::string>())
@@ -51,7 +51,7 @@ namespace oly::reg
 			else if (align == "full_justify")
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		return format;
@@ -64,7 +64,7 @@ namespace oly::reg
 			e.font = context::load_font(*font, parse_uint_or(element["font_index"], 0));
 		else
 		{
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+			OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
@@ -72,7 +72,7 @@ namespace oly::reg
 			e.text = std::move(*text);
 		else
 		{
-			OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+			OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
@@ -95,7 +95,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]..." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]..." << LOG.nl;
 		}
 
 		std::vector<rendering::TextElement> elements;
@@ -123,7 +123,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "...Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return paragraph;

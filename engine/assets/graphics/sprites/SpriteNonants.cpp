@@ -1,16 +1,16 @@
 #include "SpriteNonants.h"
 
-#include "registries/Loader.h"
-#include "registries/graphics/sprites/Sprites.h"
+#include "assets/Loader.h"
+#include "assets/graphics/sprites/Sprites.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	rendering::SpriteNonant load_sprite_nonant(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing sprite nonant [" << (src ? *src : "") << "]..." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite nonant [" << (src ? *src : "") << "]..." << LOG.nl;
 		}
 
 		rendering::SpriteNonant nonant;
@@ -27,7 +27,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "...Sprite nonant [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite nonant [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return nonant;

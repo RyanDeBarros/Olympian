@@ -1,6 +1,6 @@
 #pragma once
 
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 #include "graphics/sprites/Sprite.h"
 
 namespace oly::context

@@ -1,23 +1,23 @@
 #include "TileMaps.h"
 
 #include "core/context/rendering/Tilesets.h"
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	rendering::TileMap load_tilemap(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing tilemap [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing tilemap [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		rendering::TileMap tilemap;
 		if (auto transformer = node["transformer"])
 		{
-			tilemap.set_local() = reg::load_transform_2d(transformer);
-			tilemap.set_transformer().set_modifier() = reg::load_transform_modifier_2d(transformer["modifier"]);
+			tilemap.set_local() = assets::load_transform_2d(transformer);
+			tilemap.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
 		}
 
 		auto toml_layers = node["layer"].as_array();
@@ -31,7 +31,7 @@ namespace oly::reg
 				auto tileset = node["tileset"].value<std::string>();
 				if (!tileset)
 				{
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
 					return;
 				}
 
@@ -48,7 +48,7 @@ namespace oly::reg
 						if (parse_ivec((TOMLNode)toml_tile, tile))
 							layer.paint_tile(tile);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
 															<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
 						++tile_idx;
 					}
@@ -65,7 +65,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Tilemap [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Tilemap [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return tilemap;

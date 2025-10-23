@@ -1,16 +1,16 @@
 #include "Polygons.h"
 
 #include "core/cmath/Triangulation.h"
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	rendering::Polygon load_polygon(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing polygon [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing polygon [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		rendering::Polygon polygon;
@@ -28,7 +28,7 @@ namespace oly::reg
 				if (parse_vec((TOMLNode)toml_point, pt))
 					points.push_back(pt);
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -45,7 +45,7 @@ namespace oly::reg
 				if (parse_vec((TOMLNode)toml_color, col))
 					colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -54,7 +54,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Polygon [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Polygon [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return polygon;
@@ -65,7 +65,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing poly composite [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing poly composite [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		rendering::PolyComposite polygon;
@@ -89,7 +89,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -105,7 +105,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_color, col))
 							colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -126,7 +126,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_point, pt))
 							ngon_base.points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -141,7 +141,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_color, col))
 							ngon_base.fill_colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -156,7 +156,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_color, col))
 							ngon_base.border_colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -175,7 +175,7 @@ namespace oly::reg
 						else if (str == "inner")
 							ngon_base.border_pivot = cmath::BorderPivot::INNER;
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 					}
 					else
 						parse_float(border_pivot, ngon_base.border_pivot.v);
@@ -198,7 +198,7 @@ namespace oly::reg
 						if (parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -210,7 +210,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Poly composite [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Poly composite [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return polygon;
@@ -221,7 +221,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing ngon [" << (src ? *src : "") << "]." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ngon [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
 		rendering::NGon polygon;
@@ -240,7 +240,7 @@ namespace oly::reg
 				if (parse_vec((TOMLNode)toml_point, pt))
 					ngon_base.points.push_back(pt);
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -255,7 +255,7 @@ namespace oly::reg
 				if (parse_vec((TOMLNode)toml_color, col))
 					ngon_base.fill_colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -270,7 +270,7 @@ namespace oly::reg
 				if (parse_vec((TOMLNode)toml_color, col))
 					ngon_base.border_colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
+					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -291,7 +291,7 @@ namespace oly::reg
 			else if (str == "inner")
 				ngon_base.border_pivot = cmath::BorderPivot::INNER;
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 		}
 		else
 			parse_float(border_pivot, ngon_base.border_pivot.v);
@@ -301,7 +301,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Ngon [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Ngon [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return polygon;

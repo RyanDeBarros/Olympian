@@ -5,18 +5,18 @@
 #include "core/util/LoggerOperators.h"
 #include "core/algorithms/STLUtils.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	toml::v3::parse_result load_toml(const ResourcePath& file)
 	{
 		try
 		{
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Loading TOML file " << file << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Loading TOML file " << file << LOG.nl;
 			return toml::parse_file(file.get_absolute().c_str());
 		}
 		catch (const toml::parse_error& err)
 		{
-			OLY_LOG_ERROR(true, "REG") << LOG.source_info.full_source() << "Cannot load TOML file " << file << LOG.nl;
+			OLY_LOG_ERROR(true, "ASSETS") << LOG.source_info.full_source() << "Cannot load TOML file " << file << LOG.nl;
 			throw Error(ErrorCode::TOML_PARSE, err.description().data());
 		}
 	}
@@ -218,7 +218,7 @@ namespace oly::reg
 				return modifier;
 			}
 			else
-				OLY_LOG_WARNING(true, "REG") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
+				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 		}
 		return std::make_unique<TransformModifier2D>();
 	}

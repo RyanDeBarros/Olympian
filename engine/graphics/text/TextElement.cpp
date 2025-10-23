@@ -8,7 +8,7 @@
 
 #include "core/context/rendering/Fonts.h"
 
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {
@@ -254,7 +254,7 @@ namespace oly::rendering
 				std::string value = get_tag_value(tag, eq_pos);
 				if (algo::re::parse_vec4(value, e.text_color))
 					overrides.text_color = true;
-				else if (reg::parse_color(value, e.text_color))
+				else if (assets::parse_color(value, e.text_color))
 					overrides.text_color = true;
 			}
 		}

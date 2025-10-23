@@ -1,16 +1,16 @@
 #include "SpriteAtlases.h"
 
-#include "registries/Loader.h"
-#include "registries/graphics/sprites/Sprites.h"
+#include "assets/Loader.h"
+#include "assets/graphics/sprites/Sprites.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	rendering::SpriteAtlas load_sprite_atlas(TOMLNode node)
 	{
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "Parsing sprite atlas [" << (src ? *src: "") << "]..." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite atlas [" << (src ? *src: "") << "]..." << LOG.nl;
 		}
 
 		rendering::SpriteAtlas sprite_atlas;
@@ -34,7 +34,7 @@ namespace oly::reg
 		if (LOG.enable.debug)
 		{
 			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "REG") << LOG.source_info.full_source() << "...Sprite atlas [" << (src ? *src : "") << "] parsed." << LOG.nl;
+			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite atlas [" << (src ? *src : "") << "] parsed." << LOG.nl;
 		}
 
 		return sprite_atlas;

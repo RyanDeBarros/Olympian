@@ -1,6 +1,6 @@
 #include "MetaSplitter.h"
 
-namespace oly::reg
+namespace oly::assets
 {
     std::optional<std::string> MetaMap::get_type() const
     {

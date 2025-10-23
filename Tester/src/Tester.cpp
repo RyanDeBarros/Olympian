@@ -2,9 +2,9 @@
 
 #include "ProjectContext.h"
 
-#include <registries/graphics/sprites/Sprites.h>
-#include <registries/graphics/shapes/Polygons.h>
-#include <registries/graphics/text/Paragraphs.h>
+#include <assets/graphics/sprites/Sprites.h>
+#include <assets/graphics/shapes/Polygons.h>
+#include <assets/graphics/text/Paragraphs.h>
 
 #include "SpriteMatch.h"
 #include "Jumble.h"
@@ -34,7 +34,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::reg::load_polygon(oly::reg::load_toml("~/assets/BKG.toml")["polygon"]);
+		bkg_rect = oly::assets::load_polygon(oly::assets::load_toml("~/assets/BKG.toml")["polygon"]);
 	}
 
 	void draw() const
@@ -48,7 +48,7 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: paragraph(oly::reg::load_paragraph(oly::reg::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
+		: paragraph(oly::assets::load_paragraph(oly::assets::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
 	{
 	}
 
@@ -90,7 +90,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::reg::load_sprite(oly::reg::load_toml("~/assets/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::assets::load_sprite(oly::assets::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);

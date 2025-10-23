@@ -4,7 +4,7 @@
 
 #include "graphics/text/Paragraph.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	extern rendering::Paragraph load_paragraph(TOMLNode node);
 }

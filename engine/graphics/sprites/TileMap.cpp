@@ -2,7 +2,7 @@
 
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
-#include "registries/Loader.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {

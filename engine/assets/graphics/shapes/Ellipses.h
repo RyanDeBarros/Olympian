@@ -4,7 +4,7 @@
 
 #include "graphics/shapes/Ellipses.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	extern rendering::Ellipse load_ellipse(TOMLNode node);
 }

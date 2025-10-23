@@ -30,11 +30,11 @@ namespace oly::context
 	{
 		if (auto toml_logger = node["logger"])
 		{
-			reg::parse_bool(toml_logger["console"], LOG.target.console);
+			assets::parse_bool(toml_logger["console"], LOG.target.console);
 			if (auto logfile = toml_logger["logfile"].value<std::string>())
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile(logfile->c_str(), reg::parse_bool_or(toml_logger["append"], true));
+				LOG.set_logfile(logfile->c_str(), assets::parse_bool_or(toml_logger["append"], true));
 				LOG.flush();
 			}
 			else
@@ -42,11 +42,11 @@ namespace oly::context
 			
 			if (auto logger_enable = toml_logger["enable"])
 			{
-				reg::parse_bool(logger_enable["debug"], LOG.enable.debug);
-				reg::parse_bool(logger_enable["info"], LOG.enable.info);
-				reg::parse_bool(logger_enable["warning"], LOG.enable.warning);
-				reg::parse_bool(logger_enable["error"], LOG.enable.error);
-				reg::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
+				assets::parse_bool(logger_enable["debug"], LOG.enable.debug);
+				assets::parse_bool(logger_enable["info"], LOG.enable.info);
+				assets::parse_bool(logger_enable["warning"], LOG.enable.warning);
+				assets::parse_bool(logger_enable["error"], LOG.enable.error);
+				assets::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
 			}
 		}
 		else
@@ -60,8 +60,8 @@ namespace oly::context
 	{
 		if (auto framerate = node["framerate"])
 		{
-			reg::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
-			reg::parse_double(framerate["time_scale"], TIME.time_scale);
+			assets::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
+			assets::parse_double(framerate["time_scale"], TIME.time_scale);
 		}
 		TIME.init();
 	}
@@ -89,7 +89,7 @@ namespace oly::context
 		internal::this_frame = 0;
 		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
-		auto toml = reg::load_toml(project_file);
+		auto toml = assets::load_toml(project_file);
 		TOMLNode toml_context = toml["context"];
 		if (!toml_context)
 		{

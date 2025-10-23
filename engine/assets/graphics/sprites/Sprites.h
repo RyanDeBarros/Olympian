@@ -4,7 +4,7 @@
 
 #include "graphics/sprites/Sprite.h"
 
-namespace oly::reg
+namespace oly::assets
 {
 	extern rendering::Sprite load_sprite(TOMLNode node);
 }

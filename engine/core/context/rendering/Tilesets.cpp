@@ -2,8 +2,8 @@
 
 #include "graphics/sprites/TileSet.h"
 #include "core/util/LoggerOperators.h"
-#include "registries/Loader.h"
-#include "registries/MetaSplitter.h"
+#include "assets/Loader.h"
+#include "assets/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -31,13 +31,13 @@ namespace oly::context
 
 		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing tileset [" << file << "]..." << LOG.nl;
 
-		if (!reg::MetaSplitter::meta(file).has_type("tileset"))
+		if (!assets::MetaSplitter::meta(file).has_type("tileset"))
 		{
 			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain tileset type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		auto table = reg::load_toml(file);
+		auto table = assets::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
 
 		auto toml_assignments = toml["assignment"].as_array();
@@ -69,7 +69,7 @@ namespace oly::context
 				rendering::TileSet::Assignment assignment;
 
 				int config = 0;
-				if (reg::parse_int(_config, config))
+				if (assets::parse_int(_config, config))
 				{
 					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_COUNT)
 						assignment.config = (rendering::TileSet::Configuration)config;
@@ -89,7 +89,7 @@ namespace oly::context
 
 				assignment.desc.file = ResourcePath(*_texture, file);
 				glm::vec4 uvs{};
-				if (reg::parse_vec(node["uvs"], uvs))
+				if (assets::parse_vec(node["uvs"], uvs))
 				{
 					assignment.desc.uvs.x1 = uvs[0];
 					assignment.desc.uvs.x2 = uvs[1];
