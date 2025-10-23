@@ -112,7 +112,7 @@ namespace oly::assets
 		if (auto transformer = node["transformer"])
 		{
 			paragraph.set_local() = load_transform_2d(transformer);
-			//paragraph.set_transformer().set_modifier() = load_transform_modifier_2d(transformer["modifier"]);  // TODO v5 once paragraph supports setting modifier
+			paragraph.set_transformer().set_modifier() = load_transform_modifier_2d(transformer["modifier"]);
 		}
 
 		parse_bool(node["draw_bkg"], paragraph.draw_bkg);

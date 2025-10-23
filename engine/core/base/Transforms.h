@@ -182,6 +182,22 @@ namespace oly
 		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
 	};
 
+	struct FundamentalTransformModifier2D : public TransformModifier2D
+	{
+		Polymorphic<TransformModifier2D> fundamental;
+		Polymorphic<TransformModifier2D> extension;
+
+		virtual void operator()(glm::mat3& global) const override
+		{
+			(*fundamental)(global);
+			(*extension)(global);
+		}
+
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(FundamentalTransformModifier2D);
+	};
+
+	// TODO v5 modifier that has an 'internal' modifier and 'public' modifier - exposure can choose to only expose the public one.
+
 	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
 	{
 		return translation_matrix(size * (glm::vec2(0.5f) - pivot));
@@ -282,8 +298,6 @@ namespace oly
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(CompoundTransformModifier2D<4>);
 	};
-
-	// TODO v5 modifier that has an 'internal' modifier and 'public' modifier - exposure can choose to only expose the public one.
 
 	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
 	extern glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point);

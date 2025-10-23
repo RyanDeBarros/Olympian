@@ -223,8 +223,6 @@ int main()
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
 	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
-	obstacle0->collider().set_local().position = -capsule.center;
-	obstacle0->set_transformer().set_modifier() = oly::Polymorphic<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0->properties().net_torque += 300.0f;
 	obstacle0->properties().set_moi_multiplier(4000.0f);

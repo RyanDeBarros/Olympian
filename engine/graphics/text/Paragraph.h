@@ -166,7 +166,7 @@ namespace oly::rendering
 		Transformer2DExposure<TExposureParams{
 			.local = exposure::local::FULL,
 			.chain = exposure::chain::ATTACH_ONLY,
-			.modifier = exposure::modifier::REF_MODIFIER  // TODO v5 allow setting modifier while maintaining initial kpivot modifier using composite modifier.
+			.modifier = exposure::modifier::FULL
 		}> set_transformer() { return transformer; }
 
 	private:
