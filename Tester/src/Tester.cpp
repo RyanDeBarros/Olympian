@@ -171,7 +171,7 @@ int main()
 	KeyHandler key_handler;
 	key_handler.attach(&oly::context_window().handlers.key);
 
-	pc.test_text = pipeline.jumble.test_text;
+	pc.test_text = pipeline.jumble.test_text.ref;
 
 	oly::col2d::ConvexHull hull_pts;
 	const int _npts = 5;

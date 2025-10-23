@@ -2,20 +2,20 @@
 
 #include <Olympian.h>
 
-struct Jumble
+struct Jumble : public oly::rendering::IDrawable
 {
 	oly::Transformer2D transformer;
-	oly::rendering::SpriteRef sprite3;
-	oly::rendering::SpriteRef sprite4;
-	oly::rendering::SpriteRef sprite5;
-	oly::rendering::SpriteRef sprite1;
-	oly::rendering::SpriteRef godot_icon;
-	oly::rendering::SpriteRef knight;
-	oly::rendering::ParagraphRef test_text;
-	oly::rendering::ParagraphRef smol_text;
-	oly::rendering::SpriteAtlasRef atlased_knight;
-	oly::rendering::TileMapRef grass_tilemap;
-	oly::rendering::SpriteNonantRef nonant_panel;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite3;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite4;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite5;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite1;
+	oly::rendering::Drawable<oly::rendering::Sprite> godot_icon;
+	oly::rendering::Drawable<oly::rendering::Sprite> knight;
+	oly::rendering::Drawable<oly::rendering::Paragraph> test_text;
+	oly::rendering::Drawable<oly::rendering::Paragraph> smol_text;
+	oly::rendering::Drawable<oly::rendering::SpriteAtlas> atlased_knight;
+	oly::rendering::Drawable<oly::rendering::TileMap> grass_tilemap;
+	oly::rendering::Drawable<oly::rendering::SpriteNonant> nonant_panel;
 
 	Jumble();
 	Jumble(const Jumble&) = default;
@@ -25,8 +25,6 @@ struct Jumble
 
 	const oly::Transform2D& get_local() const { return transformer.get_local(); }
 	oly::Transform2D& set_local() { return transformer.set_local(); }
-
-	void draw() const;
 
 	void on_tick() const;
 };

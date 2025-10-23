@@ -2,11 +2,11 @@
 
 #include <Olympian.h>
 
-struct SpriteMatch
+struct SpriteMatch : public oly::rendering::IDrawable
 {
 	oly::Transformer2D transformer;
-	oly::rendering::SpriteRef sprite0;
-	oly::rendering::SpriteRef sprite2;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite0;
+	oly::rendering::Drawable<oly::rendering::Sprite> sprite2;
 
 	SpriteMatch();
 	SpriteMatch(const SpriteMatch&) = default;
@@ -16,8 +16,6 @@ struct SpriteMatch
 
 	const oly::Transform2D& get_local() const { return transformer.get_local(); }
 	oly::Transform2D& set_local() { return transformer.set_local(); }
-
-	void draw() const;
 
 	void on_tick() const;
 };

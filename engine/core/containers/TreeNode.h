@@ -8,6 +8,7 @@ namespace oly
 	template<typename NodeType>
 	class TreeNode
 	{
+		// TODO v5 index_in_parent
 		NodeType* _parent = nullptr;
 		std::vector<NodeType*> _children;
 

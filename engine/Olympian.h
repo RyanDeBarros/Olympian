@@ -24,6 +24,8 @@
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/sprites/SpriteNonant.h"
 
+#include "graphics/Drawable.h"
+
 #include "physics/collision/debugging/CommonViews.h"
 
 #include "physics/dynamics/Constants.h"
