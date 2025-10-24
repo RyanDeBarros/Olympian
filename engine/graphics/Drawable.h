@@ -26,8 +26,8 @@ namespace oly::rendering
 		virtual void draw_tree() const
 		{
 			on_draw();
-			for (const IDrawable* d : *this)
-				d->draw_tree();
+			for (const IDrawable& d : *this)
+				d.draw_tree();
 		}
 	};
 
@@ -41,7 +41,7 @@ namespace oly::rendering
 
 	private:
 		void gen_layer_map() const;
-		void append_layers(const IDrawable* drawable) const;
+		void append_layers(const IDrawable& drawable) const;
 	};
 
 	template<typename T>

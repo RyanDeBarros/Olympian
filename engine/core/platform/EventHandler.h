@@ -16,11 +16,11 @@ namespace oly
 		{
 			if (block(data))
 				return false;
-			for (auto child : *this)
-			{
-				if (child->handle(data))
+
+			for (EventHandler<EventData>& child : *this)
+				if (child.handle(data))
 					return true;
-			}
+
 			return consume(data);
 		}
 	};

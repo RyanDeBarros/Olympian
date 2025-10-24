@@ -13,13 +13,13 @@ namespace oly::rendering
 	void CanvasLayerStack::gen_layer_map() const
 	{
 		layers.clear();
-		append_layers(this);
+		append_layers(*this);
 	}
 
-	void CanvasLayerStack::append_layers(const IDrawable* drawable) const
+	void CanvasLayerStack::append_layers(const IDrawable& drawable) const
 	{
-		layers[drawable->z_order].push_back(drawable);
-		for (const IDrawable* d : *drawable)
+		layers[drawable.z_order].push_back(&drawable);
+		for (const IDrawable& d : drawable)
 			append_layers(d);
 	}
 }

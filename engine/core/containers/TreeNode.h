@@ -3,99 +3,152 @@
 #include <vector>
 #include <concepts>
 
+#include "core/base/Errors.h"
+
 namespace oly
 {
 	template<typename NodeType>
 	class TreeNode
 	{
-		// TODO v5 index_in_parent
-		NodeType* _parent = nullptr;
-		size_t _index_in_parent = -1;
-		std::vector<NodeType*> _children;
+		TreeNode* _parent = nullptr;
+		// TODO v5 use doubly linked list for transforms as well or no?
+		TreeNode* _left_sibling = nullptr;
+		TreeNode* _right_sibling = nullptr;
+		TreeNode* _children_root = nullptr;
 
 	public:
 		TreeNode() = default;
 
-		TreeNode(const TreeNode<NodeType>&) = delete;
+		TreeNode(const TreeNode&) = delete;
 
-		TreeNode(TreeNode<NodeType>&& other) noexcept
-			: _parent(other._parent), _index_in_parent(other._index_in_parent), _children(std::move(other._children))
+		TreeNode(TreeNode&& other) noexcept
+			: _parent(other._parent), _left_sibling(other._left_sibling), _right_sibling(other._right_sibling), _children_root(other._children_root)
 		{
 			other._parent = nullptr;
-			if (_parent)
-				_parent->_children[_index_in_parent] = static_cast<NodeType*>(this);
-			for (TreeNode<NodeType>* child : _children)
-				child->_parent = static_cast<NodeType*>(this);
+			other._left_sibling = nullptr;
+			other._right_sibling = nullptr;
+
+			if (_left_sibling)
+				_left_sibling->_right_sibling = this;
+			if (_right_sibling)
+				_right_sibling->_left_sibling = this;
+
+			set_parent_of_children(this);
 		}
 
 		virtual ~TreeNode()
 		{
 			detach();
-			for (TreeNode* child : _children)
-				child->_parent = nullptr;
+			set_parent_of_children(nullptr);
 		}
 
-		TreeNode<NodeType>& operator=(TreeNode<NodeType>&& other) noexcept
+		TreeNode& operator=(const TreeNode&) = delete;
+
+		TreeNode& operator=(TreeNode&& other) noexcept
 		{
 			if (this != &other)
 			{
-				if (_parent == other._parent)
-					other.detach();
-				else
-				{
-					detach();
-					_parent = other._parent;
-					_index_in_parent = other._index_in_parent;
-					other._parent = nullptr;
-					if (_parent)
-						_parent->_children[_index_in_parent] = static_cast<NodeType*>(this);
-				}
+				detach();
+				set_parent_of_children(nullptr);
 
-				for (TreeNode<NodeType>* child : _children)
-					child->_parent = nullptr;
-				_children = std::move(other._children);
-				for (TreeNode<NodeType>* child : _children)
-					child->_parent = static_cast<NodeType*>(this);
+				_parent = other._parent;
+				_left_sibling = other._left_sibling;
+				_right_sibling = other._right_sibling;
+				_children_root = other._children_root;
+
+				other._parent = nullptr;
+				other._left_sibling = nullptr;
+				other._right_sibling = nullptr;
+
+				if (_left_sibling)
+					_left_sibling->_right_sibling = this;
+				if (_right_sibling)
+					_right_sibling->_left_sibling = this;
+
+				set_parent_of_children(this);
 			}
 			return *this;
 		}
 
-		void attach(NodeType* parent)
+	private:
+		void set_parent_of_children(TreeNode* parent)
 		{
-			if (_parent != parent)
+			if (_children_root)
 			{
-				detach();
-				_parent = parent;
-				if (_parent)
+				_children_root->_parent = parent;
+				TreeNode* sibling = _children_root->_right_sibling;
+				while (sibling != _children_root)
 				{
-					_index_in_parent = _parent->_children.size();
-					_parent->_children.push_back(static_cast<NodeType*>(this));
+					sibling->_parent = parent;
+					sibling = sibling->_right_sibling;
 				}
 			}
+		}
+
+	public:
+		void attach(NodeType* parent)
+		{
+			if (_parent == parent)
+				return;
+
+			detach();
+			_parent = parent;
+			if (!_parent)
+				return;
+
+			if (_parent->_children_root)
+			{
+				TreeNode* last = _parent->_children_root->_left_sibling;
+				if (!last)
+					last = _parent->_children_root;
+
+				last->_right_sibling = this;
+				_left_sibling = last;
+				_parent->_children_root->_left_sibling = this;
+				_right_sibling = _parent->_children_root;
+			}
+			else
+				_parent->_children_root = this;
 		}
 
 		void detach()
 		{
-			if (_parent)
+			if (!_parent)
+				return;
+
+			if (_parent->_children_root == this)
+				_parent->_children_root = _right_sibling;
+
+			if (_left_sibling)
 			{
-				if (_index_in_parent + 1 < _parent->_children.size())
+				if (_left_sibling == _right_sibling)
 				{
-					NodeType* swap_with = _parent->_children.back();
-					swap_with->_index_in_parent = _index_in_parent;
-					_parent->_children[_index_in_parent] = swap_with;
+					_left_sibling->_right_sibling = nullptr;
+					_right_sibling->_left_sibling = nullptr;
 				}
-				_parent->_children.pop_back();
-				_parent = nullptr;
+				else
+				{
+					_left_sibling->_right_sibling = _right_sibling;
+					_right_sibling->_left_sibling = _left_sibling;
+				}
+
+				_left_sibling = nullptr;
+				_right_sibling = nullptr;
 			}
+
+			_parent = nullptr;
 		}
+
+		// TODO v5 methods to move order of or swap child nodes
 
 		class Iterator
 		{
-			const TreeNode<NodeType>* node;
-			size_t pos;
+			const TreeNode* node;
+			TreeNode* child;
 
 			friend class TreeNode;
-			Iterator(const TreeNode* node, size_t pos) : node(node), pos(pos) {}
+			friend class ConstIterator;
+			Iterator(const TreeNode* node, TreeNode* child) : node(node), child(child) {}
 
 		public:
 			Iterator(const Iterator&) = default;
@@ -103,17 +156,110 @@ namespace oly
 			Iterator& operator=(const Iterator&) = default;
 			Iterator& operator=(Iterator&&) = default;
 
-			const NodeType* operator*() const { return static_cast<NodeType*>(node->_children[pos]); }
-			NodeType* operator*() { return static_cast<NodeType*>(node->_children[pos]); }
-			const NodeType* operator->() const { return static_cast<NodeType*>(node->_children[pos]); }
-			NodeType* operator->() { return static_cast<NodeType*>(node->_children[pos]); }
-			Iterator& operator++() { ++pos; return *this; }
-			Iterator operator++(int) { Iterator it(*this); ++pos; return it; }
+			const NodeType& operator*() const
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return *static_cast<const NodeType*>(child);
+			}
+
+			NodeType& operator*()
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return *static_cast<NodeType*>(child);
+			}
+			
+			const NodeType* operator->() const
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return static_cast<const NodeType*>(child);
+			}
+			
+			NodeType* operator->()
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return static_cast<NodeType*>(child);
+			}
+
+			Iterator& operator++()
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+
+				TreeNode* next = child->_right_sibling;
+				if (next != node->_children_root)
+					child = next;
+				else
+					child = nullptr;
+
+				return *this;
+			}
+
+			Iterator operator++(int) { Iterator it(*this); ++*this; return it; }
+
 			bool operator==(const Iterator&) const = default;
 			bool operator!=(const Iterator&) const = default;
 		};
 
-		Iterator begin() const { return Iterator(this, 0); }
-		Iterator end() const { return Iterator(this, _children.size()); }
+		class ConstIterator
+		{
+			const TreeNode* node;
+			const TreeNode* child;
+
+			friend class TreeNode;
+			ConstIterator(const TreeNode* node, const TreeNode* child) : node(node), child(child) {}
+
+		public:
+			ConstIterator(const Iterator& it) : node(it.node), child(it.child) {}
+			ConstIterator(Iterator&& it) noexcept : node(it.node), child(it.child) {}
+
+			ConstIterator(const ConstIterator&) = default;
+			ConstIterator(ConstIterator&&) = default;
+			ConstIterator& operator=(const ConstIterator&) = default;
+			ConstIterator& operator=(ConstIterator&&) = default;
+
+			const NodeType& operator*() const
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return *static_cast<const NodeType*>(child);
+			}
+
+			const NodeType* operator->() const
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+				return static_cast<const NodeType*>(child);
+			}
+
+			ConstIterator& operator++()
+			{
+				if (!child)
+					throw Error(ErrorCode::INVALID_ITERATOR);
+
+				const TreeNode* next = child->_right_sibling;
+				if (next != node->_children_root)
+					child = next;
+				else
+					child = nullptr;
+
+				return *this;
+			}
+
+			ConstIterator operator++(int) { ConstIterator it(*this); ++*this; return it; }
+
+			bool operator==(const ConstIterator&) const = default;
+			bool operator!=(const ConstIterator&) const = default;
+		};
+
+		Iterator begin() { return Iterator(this, _children_root); }
+		Iterator end() { return Iterator(this, nullptr); }
+		ConstIterator cbegin() const { return ConstIterator(this, _children_root); }
+		ConstIterator cend() const { return ConstIterator(this, nullptr); }
+		ConstIterator begin() const { return ConstIterator(this, _children_root); }
+		ConstIterator end() const { return ConstIterator(this, nullptr); }
 	};
 }
