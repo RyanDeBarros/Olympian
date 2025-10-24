@@ -9,7 +9,7 @@ namespace oly::assets
 	{
 		if (LOG.enable.debug)
 		{
-			auto src = node["source"].value<std::string>();
+			auto src = node["source"].value<std::string>(); // TODO v5 pass source to load_* function, not from node.
 			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing tilemap [" << (src ? *src : "") << "]." << LOG.nl;
 		}
 
@@ -20,8 +20,7 @@ namespace oly::assets
 			tilemap.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
 		}
 
-		auto toml_layers = node["layer"].as_array();
-		if (toml_layers)
+		if (auto toml_layers = node["layer"].as_array())
 		{
 			size_t _layer_idx = 0;
 			toml_layers->for_each([&tilemap, &_layer_idx](auto&& _node) {

@@ -26,5 +26,5 @@ struct Jumble : public oly::rendering::IDrawable
 	const oly::Transform2D& get_local() const { return transformer.get_local(); }
 	oly::Transform2D& set_local() { return transformer.set_local(); }
 
-	void on_tick() const;
+	void on_tick();
 };

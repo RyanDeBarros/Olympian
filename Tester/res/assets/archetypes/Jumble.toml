@@ -61,7 +61,7 @@ transformer = { "scale" = [ 10.0, 10.0 ] }
 [grass_tilemap]
 transformer = { "scale" = [ 100, 100 ] }
 
-	[grass_tilemap.layer]
+	[[grass_tilemap.layer]]
 	"z" = 0
 	"tileset" = "~/assets/grass tileset.toml"
 	"tiles" = [

@@ -10,6 +10,7 @@ namespace oly
 	{
 		// TODO v5 index_in_parent
 		NodeType* _parent = nullptr;
+		size_t _index_in_parent = -1;
 		std::vector<NodeType*> _children;
 
 	public:
@@ -18,14 +19,11 @@ namespace oly
 		TreeNode(const TreeNode<NodeType>&) = delete;
 
 		TreeNode(TreeNode<NodeType>&& other) noexcept
-			: _parent(other._parent), _children(std::move(other._children))
+			: _parent(other._parent), _index_in_parent(other._index_in_parent), _children(std::move(other._children))
 		{
 			other._parent = nullptr;
 			if (_parent)
-			{
-				auto it = std::find(_parent->_children.begin(), _parent->_children.end(), other);
-				*it = static_cast<NodeType*>(this);
-			}
+				_parent->_children[_index_in_parent] = static_cast<NodeType*>(this);
 			for (TreeNode<NodeType>* child : _children)
 				child->_parent = static_cast<NodeType*>(this);
 		}
@@ -44,8 +42,15 @@ namespace oly
 				if (_parent == other._parent)
 					other.detach();
 				else
-					attach(static_cast<NodeType*>(other._parent));
-				other._parent = nullptr;
+				{
+					detach();
+					_parent = other._parent;
+					_index_in_parent = other._index_in_parent;
+					other._parent = nullptr;
+					if (_parent)
+						_parent->_children[_index_in_parent] = static_cast<NodeType*>(this);
+				}
+
 				for (TreeNode<NodeType>* child : _children)
 					child->_parent = nullptr;
 				_children = std::move(other._children);
@@ -57,22 +62,31 @@ namespace oly
 
 		void attach(NodeType* parent)
 		{
-			if (_parent == parent)
-				return;
-			detach();
-			_parent = parent;
-			if (_parent)
-				_parent->_children.push_back(static_cast<NodeType*>(this));
+			if (_parent != parent)
+			{
+				detach();
+				_parent = parent;
+				if (_parent)
+				{
+					_index_in_parent = _parent->_children.size();
+					_parent->_children.push_back(static_cast<NodeType*>(this));
+				}
+			}
 		}
 
 		void detach()
 		{
-			if (!_parent)
-				return;
-			auto it = std::find(_parent->_children.begin(), _parent->_children.end(), static_cast<NodeType*>(this));
-			// assume 'it' is valid
-			_parent->_children.erase(it);
-			_parent = nullptr;
+			if (_parent)
+			{
+				if (_index_in_parent + 1 < _parent->_children.size())
+				{
+					NodeType* swap_with = _parent->_children.back();
+					swap_with->_index_in_parent = _index_in_parent;
+					_parent->_children[_index_in_parent] = swap_with;
+				}
+				_parent->_children.pop_back();
+				_parent = nullptr;
+			}
 		}
 
 		class Iterator

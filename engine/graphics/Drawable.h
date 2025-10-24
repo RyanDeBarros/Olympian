@@ -3,21 +3,26 @@
 #include "core/types/SmartReference.h"
 #include "core/containers/TreeNode.h"
 
+#include <map>
+
 namespace oly::rendering
 {
-	struct IDrawable : public TreeNode<IDrawable>
+	class IDrawable : public TreeNode<IDrawable>
 	{
+		typedef std::map<float, std::vector<const IDrawable*>> LayerMap;
+
+	public:
+		float z_order = 0.0f;
+
 		virtual ~IDrawable() = default;
 
 		virtual void on_draw() const {}
 
-		void draw() const
-		{
-			// TODO v5 Add z_index for customized draw ordering.
-			on_draw();
-			for (auto it = begin(); it != end(); ++it)
-				it->on_draw();
-		}
+		void draw() const;
+
+	private:
+		LayerMap gen_layer_map() const;
+		void append_layers(LayerMap& layers) const;
 	};
 
 	template<typename T>

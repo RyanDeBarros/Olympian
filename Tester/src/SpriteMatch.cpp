@@ -19,6 +19,6 @@ SpriteMatch::SpriteMatch()
 	sprite2.attach(this);
 }
 
-void SpriteMatch::on_tick() const
+void SpriteMatch::on_tick()
 {
 }
