@@ -6,5 +6,5 @@
 
 namespace oly::assets
 {
-	extern rendering::SpriteNonant load_sprite_nonant(TOMLNode node);
+	extern rendering::SpriteNonant load_sprite_nonant(TOMLNode node, const char* source = nullptr);
 }

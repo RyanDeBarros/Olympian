@@ -5,13 +5,9 @@
 
 namespace oly::assets
 {
-	rendering::Sprite load_sprite(TOMLNode node)
+	rendering::Sprite load_sprite(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite [" << (src ? *src : "") << "]..." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Sprite sprite;
 		sprite.transformer = load_transformer_2d(node["transformer"]);
@@ -75,11 +71,7 @@ namespace oly::assets
 			};
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return sprite;
 	}

@@ -4,13 +4,9 @@
 
 namespace oly::assets
 {
-	rendering::Ellipse load_ellipse(TOMLNode node)
+	rendering::Ellipse load_ellipse(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ellipse [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ellipse [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Ellipse ellipse;
 		ellipse.transformer = load_transformer_2d(node["transformer"]);
@@ -28,11 +24,7 @@ namespace oly::assets
 		parse_float(node["rx"], dimension.rx);
 		parse_float(node["ry"], dimension.ry);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Ellipse [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Ellipse [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return ellipse;
 	}

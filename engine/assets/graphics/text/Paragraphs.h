@@ -6,5 +6,5 @@
 
 namespace oly::assets
 {
-	extern rendering::Paragraph load_paragraph(TOMLNode node);
+	extern rendering::Paragraph load_paragraph(TOMLNode node, const char* source = nullptr);
 }

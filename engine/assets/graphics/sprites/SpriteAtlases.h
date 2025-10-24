@@ -6,5 +6,5 @@
 
 namespace oly::assets
 {
-	extern rendering::SpriteAtlas load_sprite_atlas(TOMLNode node);
+	extern rendering::SpriteAtlas load_sprite_atlas(TOMLNode node, const char* source = nullptr);
 }

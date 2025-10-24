@@ -5,13 +5,9 @@
 
 namespace oly::assets
 {
-	rendering::TileMap load_tilemap(TOMLNode node)
+	rendering::TileMap load_tilemap(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>(); // TODO v5 pass source to load_* function, not from node.
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing tilemap [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing tilemap [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::TileMap tilemap;
 		if (auto transformer = node["transformer"])
@@ -61,11 +57,7 @@ namespace oly::assets
 				});
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Tilemap [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Tilemap [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return tilemap;
 	}

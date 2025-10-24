@@ -335,13 +335,9 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	void load_signal(TOMLNode node)
+	void load_signal(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal [" << (source ? source : "") << "]..." << LOG.nl;
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
@@ -377,20 +373,12 @@ namespace oly::context
 			return;
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Input signal [" << (source ? source : "") << "] parsed." << LOG.nl;
 	}
 
-	void load_signal_mapping(TOMLNode node)
+	void load_signal_mapping(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (source ? source : "") << "]..." << LOG.nl;
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
@@ -412,11 +400,7 @@ namespace oly::context
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal mapping [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Input signal mapping [" << (source ? source : "") << "] parsed." << LOG.nl;
 	}
 
 	void load_signals(const ResourcePath& file)
@@ -435,12 +419,16 @@ namespace oly::context
 
 		auto toml = assets::load_toml(file);
 
+		std::string source;
+		if (LOG.enable.debug)
+			source = file.get_absolute().generic_string();
+
 		auto signals = toml["signal"].as_array();
 		if (signals)
-			signals->for_each([](auto&& node) { load_signal((TOMLNode)node); });
+			signals->for_each([source = source.c_str()](auto&& node) { load_signal((TOMLNode)node, source); });
 
 		auto mappings = toml["mapping"].as_array();
 		if (mappings)
-			mappings->for_each([](auto&& node) { load_signal_mapping((TOMLNode)node); });
+			mappings->for_each([source = source.c_str()](auto&& node) { load_signal_mapping((TOMLNode)node, source); });
 	}
 }

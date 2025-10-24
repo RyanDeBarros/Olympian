@@ -88,13 +88,9 @@ namespace oly::assets
 			elements.push_back(std::move(e));
 	}
 
-	rendering::Paragraph load_paragraph(TOMLNode node)
+	rendering::Paragraph load_paragraph(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing paragraph [" << (src ? *src : "") << "]..." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing paragraph [" << (source ? source : "") << "]..." << LOG.nl;
 
 		std::vector<rendering::TextElement> elements;
 		if (auto element_array = node["element"].as_array())
@@ -118,11 +114,7 @@ namespace oly::assets
 		if (parse_vec(node["bkg_color"], bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Paragraph [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return paragraph;
 	}

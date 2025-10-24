@@ -23,7 +23,7 @@ namespace oly::context
 	extern void assign_signal_mapping(const std::string& mapping_name, std::vector<std::string>&& signal_names);
 	extern void unassign_signal_mapping(const std::string& mapping_name);
 
-	extern void load_signal(TOMLNode node);
-	extern void load_signal_mapping(TOMLNode node);
+	extern void load_signal(TOMLNode node, const char* source = nullptr);
+	extern void load_signal_mapping(TOMLNode node, const char* source = nullptr);
 	extern void load_signals(const ResourcePath& file);
 }

@@ -5,13 +5,9 @@
 
 namespace oly::assets
 {
-	rendering::Polygon load_polygon(TOMLNode node)
+	rendering::Polygon load_polygon(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing polygon [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing polygon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Polygon polygon;
 
@@ -51,22 +47,14 @@ namespace oly::assets
 		}
 		polygon.set_colors() = std::move(colors);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Polygon [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Polygon [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}
 
-	rendering::PolyComposite load_poly_composite(TOMLNode node)
+	rendering::PolyComposite load_poly_composite(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing poly composite [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing poly composite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::PolyComposite polygon;
 
@@ -207,22 +195,14 @@ namespace oly::assets
 			}
 		}
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Poly composite [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Poly composite [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}
 
-	rendering::NGon load_ngon(TOMLNode node)
+	rendering::NGon load_ngon(TOMLNode node, const char* source)
 	{
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ngon [" << (src ? *src : "") << "]." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ngon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::NGon polygon;
 
@@ -298,11 +278,7 @@ namespace oly::assets
 
 		polygon.set_base() = std::move(ngon_base);
 
-		if (LOG.enable.debug)
-		{
-			auto src = node["source"].value<std::string>();
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Ngon [" << (src ? *src : "") << "] parsed." << LOG.nl;
-		}
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Ngon [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}

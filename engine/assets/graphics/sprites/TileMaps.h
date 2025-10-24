@@ -6,5 +6,5 @@
 
 namespace oly::assets
 {
-	extern rendering::TileMap load_tilemap(TOMLNode node);
+	extern rendering::TileMap load_tilemap(TOMLNode node, const char* source = nullptr);
 }

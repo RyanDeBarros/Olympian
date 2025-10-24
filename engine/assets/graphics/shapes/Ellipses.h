@@ -6,5 +6,5 @@
 
 namespace oly::assets
 {
-	extern rendering::Ellipse load_ellipse(TOMLNode node);
+	extern rendering::Ellipse load_ellipse(TOMLNode node, const char* source = nullptr);
 }
