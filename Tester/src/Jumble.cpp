@@ -24,7 +24,7 @@ Jumble::Jumble()
 	atlased_knight.ref.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;
-	grass_tilemap.ref = oly::context::vault_prototype(VK1, std::bind(oly::assets::load_tilemap, toml["grass_tilemap"]));
+	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::assets::load_tilemap(node); });
 
 	nonant_panel.ref.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
 

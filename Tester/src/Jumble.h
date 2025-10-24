@@ -2,7 +2,7 @@
 
 #include <Olympian.h>
 
-struct Jumble : public oly::rendering::IDrawable
+struct Jumble : public oly::rendering::CanvasLayerStack
 {
 	oly::Transformer2D transformer;
 	oly::rendering::Drawable<oly::rendering::Sprite> sprite3;

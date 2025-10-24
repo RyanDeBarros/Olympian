@@ -2,25 +2,24 @@
 
 namespace oly::rendering
 {
-	void IDrawable::draw() const
+	void CanvasLayerStack::draw_tree() const
 	{
-		LayerMap layers = gen_layer_map(); // TODO v5 cache layers
+		gen_layer_map(); // TODO v5 don't regenerate on every draw call
 		for (const auto& [z, v] : layers)
 			for (const IDrawable* d : v)
 				d->on_draw();
 	}
 
-	IDrawable::LayerMap IDrawable::gen_layer_map() const
+	void CanvasLayerStack::gen_layer_map() const
 	{
-		LayerMap layers;
-		append_layers(layers);
-		return layers;
+		layers.clear();
+		append_layers(this);
 	}
 
-	void IDrawable::append_layers(LayerMap& layers) const
+	void CanvasLayerStack::append_layers(const IDrawable* drawable) const
 	{
-		layers[z_order].push_back(this);
-		for (const IDrawable* d : *this)
-			d->append_layers(layers);
+		layers[drawable->z_order].push_back(drawable);
+		for (const IDrawable* d : *drawable)
+			append_layers(d);
 	}
 }
