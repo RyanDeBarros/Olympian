@@ -15,6 +15,7 @@ namespace oly
 		TreeNode* _left_sibling = nullptr;
 		TreeNode* _right_sibling = nullptr;
 		TreeNode* _children_root = nullptr;
+		size_t _children_size = 0;
 
 	public:
 		TreeNode() = default;
@@ -22,11 +23,13 @@ namespace oly
 		TreeNode(const TreeNode&) = delete;
 
 		TreeNode(TreeNode&& other) noexcept
-			: _parent(other._parent), _left_sibling(other._left_sibling), _right_sibling(other._right_sibling), _children_root(other._children_root)
+			: _parent(other._parent), _left_sibling(other._left_sibling), _right_sibling(other._right_sibling), _children_root(other._children_root), _children_size(other._children_size)
 		{
 			other._parent = nullptr;
 			other._left_sibling = nullptr;
 			other._right_sibling = nullptr;
+			other._children_root = nullptr;
+			other._children_size = 0;
 
 			if (_left_sibling)
 				_left_sibling->_right_sibling = this;
@@ -39,7 +42,7 @@ namespace oly
 		virtual ~TreeNode()
 		{
 			detach();
-			set_parent_of_children(nullptr);
+			clear_children();
 		}
 
 		TreeNode& operator=(const TreeNode&) = delete;
@@ -55,10 +58,13 @@ namespace oly
 				_left_sibling = other._left_sibling;
 				_right_sibling = other._right_sibling;
 				_children_root = other._children_root;
+				_children_size = other._children_size;
 
 				other._parent = nullptr;
 				other._left_sibling = nullptr;
 				other._right_sibling = nullptr;
+				other._children_root = nullptr;
+				other._children_size = 0;
 
 				if (_left_sibling)
 					_left_sibling->_right_sibling = this;
@@ -109,6 +115,67 @@ namespace oly
 			}
 			else
 				_parent->_children_root = this;
+
+			++_parent->_children_size;
+		}
+
+		void attach_right(NodeType& left_sibling)
+		{
+			if (this == &left_sibling)
+				throw Error(ErrorCode::CIRCULAR_REFERENCE);
+
+			if (_parent == left_sibling._parent)
+			{
+				swap_with_sibling(*left_sibling._right_sibling);
+				return;
+			}
+
+			detach();
+			_parent = left_sibling._parent;
+			if (!_parent)
+				return;
+
+			TreeNode* right_sibling = left_sibling._right_sibling;
+			if (!right_sibling)
+				right_sibling = &left_sibling;
+
+			left_sibling._right_sibling = this;
+			_left_sibling = &left_sibling;
+			right_sibling->_left_sibling = this;
+			_right_sibling = right_sibling;
+
+			++_parent->_children_size;
+		}
+
+		void attach_left(NodeType& right_sibling)
+		{
+			if (this == &right_sibling)
+				throw Error(ErrorCode::CIRCULAR_REFERENCE);
+
+			if (_parent == right_sibling._parent)
+			{
+				swap_with_sibling(*right_sibling._left_sibling);
+				return;
+			}
+
+			detach();
+			_parent = right_sibling._parent;
+			if (!_parent)
+				return;
+
+			TreeNode* left_sibling = right_sibling._left_sibling;
+			if (!left_sibling)
+				left_sibling = &right_sibling;
+
+			right_sibling._left_sibling = this;
+			_right_sibling = &right_sibling;
+			left_sibling->_right_sibling = this;
+			_left_sibling = left_sibling;
+
+			if (_parent->_children_root == &right_sibling)
+				_parent->_children_root = this;
+
+			++_parent->_children_size;
 		}
 
 		void detach()
@@ -136,10 +203,156 @@ namespace oly
 				_right_sibling = nullptr;
 			}
 
+			--_parent->_children_size;
+
 			_parent = nullptr;
 		}
 
-		// TODO v5 methods to move order of or swap child nodes
+		void clear_children()
+		{
+			if (!_children_root)
+				return;
+
+			TreeNode* sibling = _children_root->_right_sibling;
+
+			_children_root->_parent = nullptr;
+			_children_root->_left_sibling = nullptr;
+			_children_root->_right_sibling = nullptr;
+
+			while (sibling != _children_root)
+			{
+				TreeNode* old = sibling;
+				sibling = sibling->_right_sibling;
+
+				old->_parent = nullptr;
+				old->_left_sibling = nullptr;
+				old->_right_sibling = nullptr;
+			}
+			_children_root = nullptr;
+			_children_size = 0;
+		}
+
+		size_t children_size() const
+		{
+			return _children_size;
+		}
+
+		void swap_with_sibling(TreeNode& sibling)
+		{
+			if (this == &sibling || !_parent || _parent != sibling._parent)
+				return;
+
+			if (_parent->_children_root == this)
+				_parent->_children_root = &sibling;
+			else if (_parent->_children_root == &sibling)
+				_parent->_children_root = this;
+
+			if (&sibling == _left_sibling)
+			{
+				if (&sibling != _right_sibling)
+				{
+					// We are not the only children of parent
+					sibling._right_sibling = _right_sibling;
+					_left_sibling = sibling._left_sibling;
+					sibling._left_sibling = this;
+					_right_sibling = &sibling;
+				}
+			}
+			else if (&sibling == _right_sibling)
+			{
+				sibling._left_sibling = _left_sibling;
+				_right_sibling = sibling._right_sibling;
+				sibling._right_sibling = this;
+				_left_sibling = &sibling;
+			}
+			else
+			{
+				TreeNode* my_left = _left_sibling;
+				TreeNode* my_right = _right_sibling;
+				TreeNode* their_left = sibling._left_sibling;
+				TreeNode* their_right = sibling._right_sibling;
+
+				_left_sibling = their_left;
+				_right_sibling = their_right;
+				sibling._left_sibling = my_left;
+				sibling._right_sibling = my_right;
+			}
+		}
+
+		const NodeType* get_parent() const
+		{
+			return static_cast<const NodeType*>(_parent);
+		}
+
+		NodeType* get_parent()
+		{
+			return static_cast<const NodeType*>(_parent);
+		}
+
+		const NodeType* get_left_sibling() const
+		{
+			return static_cast<const NodeType*>(_left_sibling);
+		}
+
+		NodeType* get_left_sibling()
+		{
+			return static_cast<const NodeType*>(_left_sibling);
+		}
+
+		const NodeType* get_right_sibling() const
+		{
+			return static_cast<const NodeType*>(_right_sibling);
+		}
+
+		NodeType* get_right_sibling()
+		{
+			return static_cast<const NodeType*>(_right_sibling);
+		}
+
+		size_t get_position_in_parent() const
+		{
+			if (!_parent)
+				throw Error(ErrorCode::NULL_POINTER);
+
+			size_t index = 0;
+			TreeNode* distance = this;
+			while (distance != _parent->_children_root)
+			{
+				++index;
+				distance = distance->_left_sibling;
+			}
+			return index;
+		}
+
+		void set_position_in_parent(size_t index)
+		{
+			if (!_parent)
+				throw Error(ErrorCode::NULL_POINTER);
+
+			if (index >= _parent->_children_size)
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+
+			size_t current_index = get_position_in_parent();
+			if (current_index == index)
+				return;
+
+			if (current_index < index)
+			{
+				while (current_index < index)
+				{
+					++current_index;
+					swap_with_sibling(_right_sibling);
+				}
+			}
+			else
+			{
+				while (current_index > index)
+				{
+					++index;
+					swap_with_sibling(_left_sibling);
+				}
+			}
+		}
 
 		class Iterator
 		{
