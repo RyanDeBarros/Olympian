@@ -91,6 +91,15 @@ namespace oly
 			}
 		}
 
+	protected:
+		virtual void on_attach(NodeType* old_parent, NodeType* new_parent) {}
+
+	private:
+		void on_attach_call(TreeNode* old_parent)
+		{
+			on_attach(static_cast<NodeType*>(old_parent), static_cast<NodeType*>(_parent));
+		}
+
 	public:
 		void attach(NodeType* parent)
 		{
@@ -98,6 +107,7 @@ namespace oly
 				return;
 
 			detach();
+			TreeNode* old_parent = _parent;
 			_parent = parent;
 			if (!_parent)
 				return;
@@ -117,6 +127,7 @@ namespace oly
 				_parent->_children_root = this;
 
 			++_parent->_children_size;
+			on_attach_call(old_parent);
 		}
 
 		void attach_right(NodeType& left_sibling)
@@ -131,6 +142,7 @@ namespace oly
 			}
 
 			detach();
+			TreeNode* old_parent = _parent;
 			_parent = left_sibling._parent;
 			if (!_parent)
 				return;
@@ -145,6 +157,7 @@ namespace oly
 			_right_sibling = right_sibling;
 
 			++_parent->_children_size;
+			on_attach_call(old_parent);
 		}
 
 		void attach_left(NodeType& right_sibling)
@@ -159,6 +172,7 @@ namespace oly
 			}
 
 			detach();
+			TreeNode* old_parent = _parent;
 			_parent = right_sibling._parent;
 			if (!_parent)
 				return;
@@ -176,6 +190,7 @@ namespace oly
 				_parent->_children_root = this;
 
 			++_parent->_children_size;
+			on_attach_call(old_parent);
 		}
 
 		void detach()
@@ -205,7 +220,9 @@ namespace oly
 
 			--_parent->_children_size;
 
+			TreeNode* old_parent = _parent;
 			_parent = nullptr;
+			on_attach_call(old_parent);
 		}
 
 		void clear_children()
@@ -216,15 +233,17 @@ namespace oly
 			TreeNode* sibling = _children_root->_right_sibling;
 
 			_children_root->_parent = nullptr;
+			_children_root->on_attach_call(this);
 			_children_root->_left_sibling = nullptr;
 			_children_root->_right_sibling = nullptr;
 
-			while (sibling != _children_root)
+			while (sibling && sibling != _children_root)
 			{
 				TreeNode* old = sibling;
 				sibling = sibling->_right_sibling;
 
 				old->_parent = nullptr;
+				old->on_attach_call(this);
 				old->_left_sibling = nullptr;
 				old->_right_sibling = nullptr;
 			}
@@ -286,7 +305,7 @@ namespace oly
 
 		NodeType* get_parent()
 		{
-			return static_cast<const NodeType*>(_parent);
+			return static_cast<NodeType*>(_parent);
 		}
 
 		const NodeType* get_left_sibling() const
@@ -296,7 +315,7 @@ namespace oly
 
 		NodeType* get_left_sibling()
 		{
-			return static_cast<const NodeType*>(_left_sibling);
+			return static_cast<NodeType*>(_left_sibling);
 		}
 
 		const NodeType* get_right_sibling() const
@@ -306,7 +325,7 @@ namespace oly
 
 		NodeType* get_right_sibling()
 		{
-			return static_cast<const NodeType*>(_right_sibling);
+			return static_cast<NodeType*>(_right_sibling);
 		}
 
 		size_t get_position_in_parent() const

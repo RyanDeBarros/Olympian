@@ -31,33 +31,48 @@ namespace oly::rendering
 
 	class ZLayeredDrawable : public IDrawable
 	{
-		// For z-layer to come into effect, the drawable must be part of a CanvasLayerStack tree.
+		// For z-layer to come into effect, the z-layered drawable must be a descendant of a CanvasLayerStack.
 		float z_layer = 0.0f;
 
 	public:
 		float get_z_layer() const { return z_layer; }
-		void set_z_layer(float z) { z_layer = z; } // TODO v5 flag canvases - also in copy/move semantics
+		void set_z_layer(float z) { z_layer = z; flag_parent_canvas(get_parent()); }
+
+	protected:
+		virtual void on_attach(IDrawable* old_parent, IDrawable* new_parent) override { flag_parent_canvas(old_parent); flag_parent_canvas(new_parent); }
+
+	private:
+		void flag_parent_canvas(IDrawable* parent);
 	};
 
 	template<bool ZLayer>
 	using DrawableBase = std::conditional_t<ZLayer, ZLayeredDrawable, IDrawable>;
 
-	class CanvasLayerStack : public IDrawable
+	namespace internal
 	{
-		typedef std::map<float, std::vector<const ZLayeredDrawable*>> LayerMap; // TODO v5 proper memory management with connecting/disconnecting ZLayeredDrawables
-		mutable LayerMap layers;
-		mutable bool dirty = true;
+		class CanvasLayerStackBase
+		{
+			typedef std::map<float, std::vector<const ZLayeredDrawable*>> LayerMap;
+			mutable LayerMap layers;
+			mutable bool dirty = true;
 
+		protected:
+			void draw_tree(const IDrawable& stack) const;
+
+		private:
+			void draw_subtree(const IDrawable& drawable) const;
+			void append_layers(const IDrawable& drawable) const;
+
+		public:
+			void mark_dirty() { dirty = true; }
+		};
+	}
+
+	template<bool ZLayer = true>
+	class CanvasLayerStack : public DrawableBase<ZLayer>, public internal::CanvasLayerStackBase
+	{
 	protected:
-		void draw_tree() const override;
-
-	public:
-		void re_calculate_z_layers() const { dirty = true; }
-
-	private:
-		void draw_subtree(const IDrawable& drawable) const;
-		void gen_layer_map() const;
-		void append_layers(const IDrawable& drawable) const;
+		void draw_tree() const override { internal::CanvasLayerStackBase::draw_tree(*this); }
 	};
 
 	template<typename T, bool ZLayer = false>
