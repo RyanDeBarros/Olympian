@@ -5,6 +5,7 @@
 
 #include <map>
 
+// TODO v6 currently it's necessary to attach actors' transforms and drawables, even though the structure is likely nearly identical. Maybe associate Drawables with Transforms through some kind of ECS system?
 namespace oly::rendering
 {
 	// DOC for all these classes
