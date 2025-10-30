@@ -111,7 +111,7 @@ namespace oly::physics
 			post_state.linear_velocity *= glm::exp(-submaterial->drag * TIME.delta());
 	}
 
-	// TODO v6 test simultaneous collision with multiple objects with complex_teleportation = true/false.
+	// TODO v7 test simultaneous collision with multiple objects with complex_teleportation = true/false.
 	void LinearPhysicsComponent::compute_collision_mtv_idxs() const
 	{
 		primary_collision_mtv_idx = 0;

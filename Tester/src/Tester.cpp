@@ -103,7 +103,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		glEnable(GL_BLEND);
 
-		// TODO v6 anti-aliasing settings
+		// TODO v7 anti-aliasing settings
 	}
 
 	void render_frame() const override
@@ -139,7 +139,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
 
-		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
+		// TODO v6 atlased_knight is not drawing
+		// TODO v6 camera invariant works except for paragraphs
+		jumble.smol_text->set_camera_invariant(true);
+
+		oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
 		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
@@ -300,7 +304,7 @@ int main()
 	);
 	pipeline.jumble.nonant_panel->set_mod_texture(modtex, { 2, 2 });
 
-	// TODO v6 begin play on initial actors here
+	// TODO v7 begin play on initial actors here
 
 	oly::LOG.flush();
 	while (oly::context::frame())

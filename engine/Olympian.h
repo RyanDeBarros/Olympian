@@ -44,7 +44,7 @@ namespace oly
 
 	// TODO v6 Modular particle system, perlin noise generation.
 	// TODO v6 Lighting engine
-	// TODO v6 UI widgets
-	// TODO v7 thread safety + multi-threading.
-	// TODO v7 network communication - online/local multiplayer.
+	// TODO v7 UI widgets
+	// TODO v8 thread safety + multi-threading.
+	// TODO v9 network communication - online/local multiplayer.
 }

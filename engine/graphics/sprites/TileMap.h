@@ -4,6 +4,7 @@
 #include "graphics/sprites/TileSet.h"
 #include "core/base/TransformerExposure.h"
 
+// TODO v6 add camera_invariant to all assets that use it in loaders.
 namespace oly::rendering
 {
 	struct TileMapLayer : public PublicIssuerHandle<internal::SpriteBatch>
@@ -31,6 +32,8 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
+		void set_camera_invariant(bool is_camera_invariant) const;
+
 		void draw() const;
 
 		auto get_batch() const { return lock(); }
@@ -50,6 +53,7 @@ namespace oly::rendering
 		std::vector<TileMapLayer> layers;
 			
 		Transformer2D transformer;
+		bool camera_invariant = false;
 
 	public:
 		const TileMapLayer& layer(size_t i) const { return layers[i]; }
@@ -62,6 +66,9 @@ namespace oly::rendering
 			set_transformer() { return transformer; }
 
 		void draw() const;
+
+		void set_camera_invariant(bool is_camera_invariant);
+		bool is_camera_invariant() const;
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);

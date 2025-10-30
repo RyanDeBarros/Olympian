@@ -43,7 +43,7 @@ namespace oly::rendering
 
 			struct
 			{
-				GLuint projection, modulation, time;
+				GLuint projection, invariant_projection, modulation, time;
 			} shader_locations;
 
 			struct TexData
@@ -56,11 +56,14 @@ namespace oly::rendering
 
 			struct QuadInfo
 			{
+				static const GLushort GLYPH_FLAG = 1;
+				static const GLushort CAM_INV_FLAG = 2;
+
 				GLushort tex_slot = 0;
 				GLushort tex_coord_slot = 0;
 				GLushort color_slot = 0;
 				GLushort frame_slot = 0;
-				GLushort is_text_glyph = 0;
+				GLushort flags = 0;
 				GLushort mod_tex_slot = 0;
 				GLushort mod_tex_coord_slot = 0;
 			};
@@ -126,7 +129,7 @@ namespace oly::rendering
 			~SpriteBatch();
 
 			void render() const;
-			void render(const glm::mat3& projection) const;
+			void render(const glm::mat3& projection, const glm::mat3& invariant_projection) const;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;
@@ -163,6 +166,7 @@ namespace oly::rendering
 			void set_modulation(GLuint vb_pos, glm::vec4 modulation);
 			void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
 			void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
+			void set_camera_invariant(GLuint vb_pos, bool is_camera_invariant);
 			void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 			void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
 
@@ -171,6 +175,7 @@ namespace oly::rendering
 			glm::vec4 get_modulation(GLuint vb_pos) const;
 			graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 			bool is_text_glyph(GLuint vb_pos) const;
+			bool is_camera_invariant(GLuint vb_pos) const;
 			graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 			math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
 
@@ -211,6 +216,7 @@ namespace oly::rendering
 			void set_modulation(glm::vec4 modulation) const;
 			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 			void set_text_glyph(bool is_text_glyph) const;
+			void set_camera_invariant(bool is_camera_invariant) const;
 			void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
@@ -223,6 +229,7 @@ namespace oly::rendering
 			glm::vec4 get_modulation() const;
 			graphics::AnimFrameFormat get_frame_format() const;
 			bool is_text_glyph() const;
+			bool is_camera_invariant() const;
 			graphics::BindlessTextureRef get_mod_texture() const;
 			graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
 			math::UVRect get_mod_tex_coords() const;

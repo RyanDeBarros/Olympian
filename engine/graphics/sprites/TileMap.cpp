@@ -26,6 +26,12 @@ namespace oly::rendering
 			sprite.draw();
 	}
 
+	void TileMapLayer::set_camera_invariant(bool is_camera_invariant) const
+	{
+		for (const auto& [_, sprite] : sprite_map)
+			sprite.set_camera_invariant(is_camera_invariant);
+	}
+
 	void TileMapLayer::set_batch(Unbatched)
 	{
 		reset();
@@ -121,19 +127,33 @@ namespace oly::rendering
 
 	void TileMap::draw() const
 	{
-		for (size_t i = 0; i < layers.size(); ++i)
-			layers[i].draw();
+		for (const TileMapLayer& layer : layers)
+			layer.draw();
+	}
+
+	void TileMap::set_camera_invariant(bool is_camera_invariant)
+	{
+		camera_invariant = is_camera_invariant;
+		for (const TileMapLayer& layer : layers)
+			layer.set_camera_invariant(is_camera_invariant);
+	}
+
+	bool TileMap::is_camera_invariant() const
+	{
+		return camera_invariant;
 	}
 
 	void TileMap::register_layer(TileMapLayer&& layer)
 	{
 		layer.transformer.attach_parent(&transformer);
+		layer.set_camera_invariant(camera_invariant);
 		layers.push_back(std::move(layer));
 	}
 		
 	void TileMap::register_layer(size_t z, TileMapLayer&& layer)
 	{
 		layer.transformer.attach_parent(&transformer);
+		layer.set_camera_invariant(camera_invariant);
 		layers.insert(layers.begin() + z, std::move(layer));
 	}
 }

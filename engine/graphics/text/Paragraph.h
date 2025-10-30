@@ -95,7 +95,7 @@ namespace oly::rendering
 			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			bool write_newline(TypesetData& typeset, LineAlignment& line) const;
-			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
+			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const;
 			glm::vec2 get_glyph_position(size_t i) const;
 
 			float space_width(utf::Codepoint next_codepoint) const;
@@ -107,6 +107,7 @@ namespace oly::rendering
 
 		public:
 			void reposition_glyphs() const;
+			void set_camera_invariant(bool is_camera_invariant) const;
 		};
 	}
 
@@ -181,6 +182,9 @@ namespace oly::rendering
 		ParagraphFormatExposure set_format() { return ParagraphFormatExposure(*this); }
 		glm::vec4 get_bkg_color() const;
 		void set_bkg_color(glm::vec4 color);
+
+		void set_camera_invariant(bool is_camera_invariant);
+		bool is_camera_invariant() const;
 
 		const TextElement& get_element(size_t i = 0) const { return glyph_groups[i].element; }
 		TextElementExposure set_element(size_t i = 0) { return TextElementExposure(*this, glyph_groups[i]); }

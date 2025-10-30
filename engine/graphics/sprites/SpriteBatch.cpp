@@ -30,6 +30,7 @@ namespace oly::rendering
 		SpriteBatchRegistry::instance().batches.insert(this);
 
 		shader_locations.projection = glGetUniformLocation(shader, "uProjection");
+		shader_locations.invariant_projection = glGetUniformLocation(shader, "uInvariantProjection");
 		shader_locations.modulation = glGetUniformLocation(shader, "uGlobalModulation");
 		shader_locations.time = glGetUniformLocation(shader, "uTime");
 
@@ -46,10 +47,10 @@ namespace oly::rendering
 	void internal::SpriteBatch::render() const
 	{
 		if (camera)
-			render(camera->projection_matrix());
+			render(camera->projection_matrix(), camera->invariant_projection_matrix());
 	}
 
-	void internal::SpriteBatch::render(const glm::mat3& projection) const
+	void internal::SpriteBatch::render(const glm::mat3& projection, const glm::mat3& invariant_projection) const
 	{
 		if (ebo.empty())
 			return;
@@ -59,6 +60,7 @@ namespace oly::rendering
 		glBindVertexArray(vao);
 		glUseProgram(shader);
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(invariant_projection));
 		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
 		glUniform1f(shader_locations.time, TIME.now<>());
 
@@ -154,7 +156,19 @@ namespace oly::rendering
 	void internal::SpriteBatch::set_text_glyph(GLuint vb_pos, bool is_text_glyph)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
-		set_quad_info(vb_pos).is_text_glyph = is_text_glyph;
+		if (is_text_glyph)
+			set_quad_info(vb_pos).flags |= QuadInfo::GLYPH_FLAG;
+		else
+			set_quad_info(vb_pos).flags &= ~QuadInfo::GLYPH_FLAG;
+	}
+
+	void internal::SpriteBatch::set_camera_invariant(GLuint vb_pos, bool is_camera_invariant)
+	{
+		SpriteBatch::assert_valid_id(vb_pos);
+		if (is_camera_invariant)
+			set_quad_info(vb_pos).flags |= QuadInfo::CAM_INV_FLAG;
+		else
+			set_quad_info(vb_pos).flags &= ~QuadInfo::CAM_INV_FLAG;
 	}
 
 	void internal::SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
@@ -211,7 +225,13 @@ namespace oly::rendering
 	bool internal::SpriteBatch::is_text_glyph(GLuint vb_pos) const
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
-		return get_quad_info(vb_pos).is_text_glyph;
+		return get_quad_info(vb_pos).flags & QuadInfo::GLYPH_FLAG;
+	}
+
+	bool internal::SpriteBatch::is_camera_invariant(GLuint vb_pos) const
+	{
+		SpriteBatch::assert_valid_id(vb_pos);
+		return get_quad_info(vb_pos).flags & QuadInfo::CAM_INV_FLAG;
 	}
 
 	graphics::BindlessTextureRef internal::SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const
@@ -505,6 +525,14 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
+	void internal::SpriteReference::set_camera_invariant(bool is_camera_invariant) const
+	{
+		if (auto batch = lock()) [[likely]]
+			batch->set_camera_invariant(id, is_camera_invariant);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
 	void internal::SpriteReference::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index) const
 	{
 		if (auto batch = lock()) [[likely]]
@@ -598,6 +626,14 @@ namespace oly::rendering
 	{
 		if (auto batch = lock()) [[likely]]
 			return batch->is_text_glyph(id);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
+	bool internal::SpriteReference::is_camera_invariant() const
+	{
+		if (auto batch = lock()) [[likely]]
+			return batch->is_camera_invariant(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}

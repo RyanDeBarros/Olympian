@@ -223,7 +223,7 @@ namespace oly::rendering
 					if (!write_newline(typeset, line))
 						return WriteResult::BREAK;
 				}
-				write_glyph(typeset, codepoint, dx, line);
+				write_glyph(typeset, codepoint, dx, line, paragraph->is_camera_invariant());
 			}
 			else
 			{
@@ -375,11 +375,12 @@ namespace oly::rendering
 		return true;
 	}
 
-	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const
+	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const
 	{
 		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
 		TextGlyph glyph;
 		glyph.transformer.attach_parent(&paragraph->transformer);
+		glyph.set_camera_invariant(is_camera_invariant);
 		element.set_glyph(glyph, c, get_glyph_position(glyphs.size()));
 		glyphs.push_back(std::move(glyph));
 		typeset.x += dx;
@@ -444,6 +445,12 @@ namespace oly::rendering
 	{
 		for (size_t i = 0; i < glyphs.size(); ++i)
 			glyphs[i].set_local().position = get_glyph_position(i);
+	}
+
+	void internal::GlyphGroup::set_camera_invariant(bool is_camera_invariant) const
+	{
+		for (TextGlyph& glyph : glyphs)
+			glyph.set_camera_invariant(is_camera_invariant);
 	}
 
 	TextElementExposure::TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group)
@@ -621,6 +628,18 @@ namespace oly::rendering
 	void Paragraph::set_bkg_color(glm::vec4 color)
 	{
 		bkg.set_modulation(color);
+	}
+
+	void Paragraph::set_camera_invariant(bool is_camera_invariant)
+	{
+		bkg.set_camera_invariant(is_camera_invariant);
+		for (auto& glyph_group : glyph_groups)
+			glyph_group.set_camera_invariant(is_camera_invariant);
+	}
+
+	bool Paragraph::is_camera_invariant() const
+	{
+		return bkg.is_camera_invariant();
 	}
 
 	size_t Paragraph::get_element_count() const

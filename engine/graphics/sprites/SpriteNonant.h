@@ -57,6 +57,7 @@ namespace oly::rendering
 		void set_tex_coords(math::UVRect rect);
 		void set_modulation(glm::vec4 modulation);
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+		void set_camera_invariant(bool is_camera_invariant) const;
 		void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0);
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 		void set_mod_texture(const graphics::BindlessTextureRef& texture);
@@ -67,6 +68,7 @@ namespace oly::rendering
 		math::UVRect get_tex_coords() const;
 		glm::vec4 get_modulation() const;
 		graphics::AnimFrameFormat get_frame_format() const;
+		bool is_camera_invariant() const;
 		graphics::BindlessTextureRef get_mod_texture() const;
 		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
 		math::UVRect get_mod_tex_coords() const;

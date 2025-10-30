@@ -41,6 +41,7 @@ namespace oly::rendering
 
 	public:
 		glm::mat3 projection_matrix() const;
+		glm::mat3 invariant_projection_matrix() const;
 
 		math::Area2D get_viewport() const { return viewport; }
 		void apply_viewport() const;

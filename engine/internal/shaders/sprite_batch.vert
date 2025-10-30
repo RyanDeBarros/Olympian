@@ -2,6 +2,7 @@
 #extension GL_NV_gpu_shader5 : enable
 
 uniform mat3 uProjection;
+uniform mat3 uInvariantProjection;
 uniform vec4 uGlobalModulation;
 uniform float uTime;
 
@@ -14,13 +15,16 @@ layout(std430, binding = 0) readonly buffer TextureData {
 	TexData uTexData[];
 };
 
+const uint16_t GLYPH_FLAG = uint16_t(1);
+const uint16_t CAM_INV_FLAG = uint16_t(2);
+
 struct QuadInfo
 {
 	uint16_t texSlot;
 	uint16_t texCoordSlot;
 	uint16_t colorSlot;
 	uint16_t frameSlot;
-	uint16_t isTextGlyph;
+	uint16_t flags;
 	uint16_t modTexSlot;
 	uint16_t modTexCoordSlot;
 };
@@ -82,12 +86,13 @@ flat out uint16_t tModTexSlot;
 void main() {
 	QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
 	if (quad.texSlot > uint16_t(0)) {
-		gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
+		mat3 projection = ((quad.flags & CAM_INV_FLAG) > uint16_t(0)) ? uInvariantProjection : uProjection;
+		gl_Position.xy = (projection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
 		tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
 		tTexSlot = quad.texSlot;
 		tModulation = uGlobalModulation * uModulation[quad.colorSlot];
 		tFramePlusOne = quad.frameSlot > uint16_t(0) ? uint16_t(1) + calc_frame(uAnims[quad.frameSlot]) : uint16_t(0);
-		tIsTextGlyph = quad.isTextGlyph;
+		tIsTextGlyph = quad.flags & GLYPH_FLAG;
 		tModTexCoord = calc_tex_coords(uTexCoords[quad.modTexCoordSlot]);
 		tModTexSlot = quad.modTexSlot;
 	} else {

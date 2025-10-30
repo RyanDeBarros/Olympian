@@ -52,7 +52,7 @@ namespace oly::rendering
 	bool Camera2D::consume(const input::WindowResizeEventData&)
 	{
 		if (boxed)
-			glClear(GL_COLOR_BUFFER_BIT); // TODO v7 clear depth buffer too?
+			glClear(GL_COLOR_BUFFER_BIT); // TODO v8 clear depth buffer too?
 		apply_viewport();
 		return false;
 	}
@@ -79,6 +79,12 @@ namespace oly::rendering
 	{
 		// TODO v6 for ui widgets that are in camera-space, only return projection - define two different projection uniforms in shader - one for world space and one for camera space.
 		return projection * glm::inverse(transformer.global());
+	}
+
+	// TODO v5 add uInvariantProjection to ellipse and polygon shaders.
+	glm::mat3 Camera2D::invariant_projection_matrix() const
+	{
+		return projection;
 	}
 
 	void Camera2D::apply_viewport() const

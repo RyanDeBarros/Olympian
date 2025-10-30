@@ -160,6 +160,13 @@ namespace oly::rendering
 				sprite(x, y).set_frame_format(anim);
 	}
 
+	void SpriteNonant::set_camera_invariant(bool is_camera_invariant) const
+	{
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_camera_invariant(is_camera_invariant);
+	}
+
 	void SpriteNonant::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
@@ -215,6 +222,11 @@ namespace oly::rendering
 	graphics::AnimFrameFormat SpriteNonant::get_frame_format() const
 	{
 		return sprite(0, 0).get_frame_format();
+	}
+
+	bool SpriteNonant::is_camera_invariant() const
+	{
+		return sprite(0, 0).is_camera_invariant();
 	}
 
 	graphics::BindlessTextureRef SpriteNonant::get_mod_texture() const
