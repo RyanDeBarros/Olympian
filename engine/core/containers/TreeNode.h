@@ -11,7 +11,6 @@ namespace oly
 	class TreeNode
 	{
 		TreeNode* _parent = nullptr;
-		// TODO v5 use doubly linked list for transforms as well or no?
 		TreeNode* _left_sibling = nullptr;
 		TreeNode* _right_sibling = nullptr;
 		TreeNode* _children_root = nullptr;
@@ -256,6 +255,50 @@ namespace oly
 			return _children_size;
 		}
 
+		bool sibling_comes_before(const TreeNode& sibling) const
+		{
+			if (this == &sibling || _parent == nullptr || _parent != sibling._parent)
+				return false;
+
+			if (this == _parent->_children_root)
+				return true;
+			else if (&sibling == _parent->_children_root)
+				return false;
+			else
+			{
+				const TreeNode* checker = _left_sibling;
+				while (checker != _parent->_children_root)
+				{
+					if (checker == &sibling)
+						return false;
+					checker = checker->_left_sibling;
+				}
+				return true;
+			}
+		}
+
+		bool sibling_comes_after(const TreeNode& sibling) const
+		{
+			if (this == &sibling || _parent == nullptr || _parent != sibling._parent)
+				return false;
+
+			if (this == _parent->_children_root)
+				return false;
+			else if (&sibling == _parent->_children_root)
+				return true;
+			else
+			{
+				const TreeNode* checker = _left_sibling;
+				while (checker != _parent->_children_root)
+				{
+					if (checker == &sibling)
+						return true;
+					checker = checker->_left_sibling;
+				}
+				return false;
+			}
+		}
+
 		void swap_with_sibling(TreeNode& sibling)
 		{
 			if (this == &sibling || !_parent || _parent != sibling._parent)
@@ -328,6 +371,7 @@ namespace oly
 			return static_cast<NodeType*>(_right_sibling);
 		}
 
+		// This method can be slow. It's recommended to manipulate the order of nodes by using attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
 		size_t get_position_in_parent() const
 		{
 			if (!_parent)
@@ -343,6 +387,7 @@ namespace oly
 			return index;
 		}
 
+		// This method can be slow. It's recommended to manipulate the order of nodes by using attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
 		void set_position_in_parent(size_t index)
 		{
 			if (!_parent)
