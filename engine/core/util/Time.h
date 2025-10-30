@@ -37,5 +37,36 @@ namespace oly
 			void sync();
 		};
 	}
+	
 	inline internal::TimeImpl TIME;
+
+	namespace internal
+	{
+		class RealTimeImpl
+		{
+			double _now = 0.0;
+			double _inv_now = 0.0;
+			double _delta = 0.0;
+			double _inv_delta = 0.0;
+
+		public:
+			template<numeric T = float>
+			T now() const { return (T)_now; }
+			template<numeric T = float>
+			T inverse_now() const { return (T)_inv_now; }
+			template<numeric T = float>
+			T delta() const { return (T)_delta; }
+			template<numeric T = float>
+			T inverse_delta() const { return (T)_inv_delta; }
+
+		private:
+			void process();
+
+		public:
+			void init();
+			void sync();
+		};
+	}
+
+	inline internal::RealTimeImpl REAL_TIME;
 }

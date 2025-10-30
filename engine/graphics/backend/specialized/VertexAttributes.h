@@ -1,9 +1,7 @@
 #pragma once
 
-#include <variant>
-
 #include "external/GL.h"
-#include "core/types/DeferredFalse.h"
+#include "core/types/Variant.h"
 
 namespace oly::graphics
 {
@@ -16,8 +14,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<float>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLenum type = GL_FLOAT;
 		GLint cols = 1;
 		GLboolean normalized = GL_FALSE;
@@ -43,8 +41,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<int>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLenum type = GL_UNSIGNED_INT;
 		GLint cols = 1;
 		GLsizei stride = 0;
@@ -69,8 +67,8 @@ namespace oly::graphics
 	template<>
 	struct VertexAttribute<double>
 	{
-		GLuint index;
-		GLint size;
+		GLuint index = 0;
+		GLint size = 0;
 		GLint cols = 1;
 		GLsizei stride = 0;
 		GLsizei offset = 0;
@@ -91,5 +89,5 @@ namespace oly::graphics
 		}
 	};
 
-	typedef std::variant<VertexAttribute<float>, VertexAttribute<int>, VertexAttribute<double>> VertexAttributeVariant;
+	typedef Variant<VertexAttribute<float>, VertexAttribute<int>, VertexAttribute<double>> VertexAttributeVariant;
 }

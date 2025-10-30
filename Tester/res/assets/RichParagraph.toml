@@ -1,0 +1,7 @@
+[paragraph]
+draw_bkg = true
+bkg_color = [0.9, 0.9, 0.9, 0.5]
+[paragraph.element]
+font = "~/fonts/PixelFont.oly"
+text = "<font=~/fonts/RobotoFontFamily.oly:BoldItalic>A<!b><!i>A<i><b>A</b></i></!i></!b></font>B C\n1 <color=Cyan>2<scale=(2.5,1)>3</scale></color>"
+expand = true

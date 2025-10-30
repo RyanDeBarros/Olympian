@@ -171,8 +171,10 @@ namespace oly::col2d
 
 	static bool circle_penetration_depth(const Circle& c1, const Circle& c2, UnitVector2D& minimizing_axis, float& depth)
 	{
-		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([&c1, &c2](float angle) { UnitVector2D axis(angle); return circle_penetration_depth(c1, c2, axis); },
-			-glm::pi<float>(), glm::pi<float>(), glm::radians(1.0f), 0.0f);
+		algo::EarlyExitGoldenSearchResult search_result = algo::early_exit_minimizing_golden_search(
+			[&c1, &c2](float angle) { UnitVector2D axis(angle); return circle_penetration_depth(c1, c2, axis); },
+			-glm::pi<float>(), glm::pi<float>(), glm::radians(1.0f), 0.0f
+		);
 
 		if (search_result.early_exited)
 			return false;
@@ -804,7 +806,8 @@ namespace oly::col2d
 			const glm::mat2 inv_rot = glm::inverse(rot);
 			const glm::vec2 local_c1_center = inv_rot * center;
 			const glm::vec2 local_c2_center = inv_rot * c2.center;
-			const AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
+			const AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width,
+				.y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
 			const glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
 			const float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;
@@ -862,7 +865,8 @@ namespace oly::col2d
 			glm::mat2 inv_rot = glm::inverse(rot);
 			glm::vec2 local_c1_center = inv_rot * center;
 			glm::vec2 local_c2_center = inv_rot * c2.center;
-			AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width, .y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
+			AABB b2{ .x1 = local_c2_center.x - 0.5f * c2.width, .x2 = local_c2_center.x + 0.5f * c2.width,
+				.y1 = local_c2_center.y - 0.5f * c2.height, .y2 = local_c2_center.y + 0.5f * c2.height };
 			glm::vec2 closest_point = { glm::clamp(local_c1_center.x, b2.x1, b2.x2), glm::clamp(local_c1_center.y, b2.y1, b2.y2) };
 			float dist_sqrd = math::mag_sqrd(local_c1_center - closest_point);
 			info.overlap = dist_sqrd <= c1.radius * c1.radius;

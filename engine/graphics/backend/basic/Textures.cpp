@@ -9,10 +9,6 @@
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
 
-#include "registries/graphics/TextureRegistry.h"
-#include "Textures.h"
-#include "Textures.h"
-
 namespace oly::graphics
 {
 	Texture::Texture()
@@ -159,9 +155,10 @@ namespace oly::graphics
 		glTextureStorage3D(texture, levels, internal_format(dim.cpp), dim.w, dim.h, dim.d);
 	}
 
-	Image::Image(const char* filepath)
+	Image::Image(const ResourcePath& file)
 	{
-		_buf = stbi_load(filepath, &_dim.w, &_dim.h, &_dim.cpp, 0);
+		std::string f = file.get_absolute().string();
+		_buf = stbi_load(f.c_str(), &_dim.w, &_dim.h, &_dim.cpp, 0);
 		if (!_buf)
 			throw Error(ErrorCode::LOAD_IMAGE);
 	}
@@ -237,12 +234,11 @@ namespace oly::graphics
 		return uniform() ? delays[0] : delays[frame];
 	}
 
-	Anim::Anim(const char* filepath, SpritesheetOptions options)
-		: _dim(std::make_shared<AnimDimensions>())
+	Anim::Anim(const ResourcePath& file, SpritesheetOptions options)
 	{
-		if (io::file_extension(filepath) == ".gif")
+		if (file.extension_matches(".gif"))
 		{
-			auto full_content = io::read_file_uc(filepath);
+			auto full_content = io::read_file_uc(file);
 			int* delays;
 			int frames;
 			_buf = stbi_load_gif_from_memory(full_content.data(), (int)full_content.size(), &delays, &_dim->w, &_dim->h, &frames, &_dim->cpp, 0);
@@ -250,11 +246,10 @@ namespace oly::graphics
 			stbi_image_free(delays);
 		}
 		else
-			parse_sprite_sheet(Image(filepath), options);
+			parse_sprite_sheet(Image(file), options);
 	}
 
 	Anim::Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options)
-		: _dim(std::make_shared<AnimDimensions>())
 	{
 		parse_sprite_sheet(context::nsvg_context().rasterize(svg_abstract, scale), options);
 	}
@@ -363,7 +358,7 @@ namespace oly::graphics
 	Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps)
 	{
 		Texture texture(GL_TEXTURE_2D_ARRAY);
-		const auto& dim = anim.dim().lock();
+		const auto& dim = anim.dim();
 		tex::storage_3d(texture, { .w = dim->w, .h = dim->h, .d = (int)dim->frames(), .cpp = dim->cpp }, generate_mipmaps ? tex::mipmap_levels(dim->w, dim->h) : 1);
 		for (GLuint i = 0; i < dim->frames(); ++i)
 			tex::subimage_3d(texture, anim.buf() + i * dim->w * dim->h * dim->cpp, { .z = (int)i, .w = dim->w, .h = dim->h, .d = 1 }, dim->cpp);
@@ -378,9 +373,9 @@ namespace oly::graphics
 		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 	}
 
-	AnimFrameFormat setup_anim_frame_format(const std::string& texture_file, float speed, GLuint starting_frame)
+	AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed, GLuint starting_frame)
 	{
-		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file).lock(), speed, starting_frame);
+		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
 
 	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
@@ -388,21 +383,17 @@ namespace oly::graphics
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_single(const std::string& texture_file, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const ResourcePath& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file).lock(), frame);
+		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
-	NSVGAbstract::NSVGAbstract(const char* filepath, const char* units, float dpi)
-		: i(nsvgParseFromFile(filepath, units, dpi))
+	NSVGAbstract::NSVGAbstract(const ResourcePath& file, const char* units, float dpi)
 	{
-		if (!i) throw Error(ErrorCode::NSVG_PARSING);
-	}
-
-	NSVGAbstract::NSVGAbstract(const std::string& filepath, const char* units, float dpi)
-		: i(nsvgParseFromFile(filepath.c_str(), units, dpi))
-	{
-		if (!i) throw Error(ErrorCode::NSVG_PARSING);
+		std::string f = file.get_absolute().string();
+		i = nsvgParseFromFile(f.c_str(), units, dpi);
+		if (!i)
+			throw Error(ErrorCode::NSVG_PARSING);
 	}
 
 	NSVGAbstract::NSVGAbstract(NSVGAbstract&& other) noexcept

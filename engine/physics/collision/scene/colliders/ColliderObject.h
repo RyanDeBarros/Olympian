@@ -101,7 +101,7 @@ namespace oly::col2d::internal
 
 	class ColliderObject
 	{
-		BlackBox<true> _obj;
+		BlackBox _obj;
 		CObjID _id;
 
 	public:

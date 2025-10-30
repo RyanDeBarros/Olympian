@@ -1,66 +1,67 @@
-[tileset]
+#meta type="tileset"
+
 "storage" = "discard"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 0
-"texture" = "RES://textures/grass tileset/S.png"
+"texture" = "~/textures/grass tileset/S.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 46
-"texture" = "RES://textures/grass tileset/M.png"
+"texture" = "~/textures/grass tileset/M.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 16
-"texture" = "RES://textures/grass tileset/BL.png"
+"texture" = "~/textures/grass tileset/BL.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 17
-"texture" = "RES://textures/grass tileset/BR.png"
+"texture" = "~/textures/grass tileset/BR.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 18
-"texture" = "RES://textures/grass tileset/TR.png"
+"texture" = "~/textures/grass tileset/TR.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 19
-"texture" = "RES://textures/grass tileset/TL.png"
+"texture" = "~/textures/grass tileset/TL.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 28
-"texture" = "RES://textures/grass tileset/LE.png"
+"texture" = "~/textures/grass tileset/LE.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 29
-"texture" = "RES://textures/grass tileset/BE.png"
+"texture" = "~/textures/grass tileset/BE.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 30
-"texture" = "RES://textures/grass tileset/RE.png"
+"texture" = "~/textures/grass tileset/RE.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 31
-"texture" = "RES://textures/grass tileset/TE.png"
+"texture" = "~/textures/grass tileset/TE.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 1
-"texture" = "RES://textures/grass tileset/LT.png"
+"texture" = "~/textures/grass tileset/LT.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 2
-"texture" = "RES://textures/grass tileset/BT.png"
+"texture" = "~/textures/grass tileset/BT.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 3
-"texture" = "RES://textures/grass tileset/RT.png"
+"texture" = "~/textures/grass tileset/RT.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 4
-"texture" = "RES://textures/grass tileset/TT.png"
+"texture" = "~/textures/grass tileset/TT.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 9
-"texture" = "RES://textures/grass tileset/I1.png"
+"texture" = "~/textures/grass tileset/I1.png"
 
-[[tileset.assignment]]
+[[assignment]]
 "config"  = 10
-"texture" = "RES://textures/grass tileset/I2.png"
+"texture" = "~/textures/grass tileset/I2.png"

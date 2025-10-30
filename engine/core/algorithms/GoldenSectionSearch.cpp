@@ -1,6 +1,6 @@
 #include "GoldenSectionSearch.h"
 
-namespace oly
+namespace oly::algo
 {
 	static float split_left(float a, float b)
 	{

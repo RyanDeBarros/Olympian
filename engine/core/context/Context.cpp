@@ -1,12 +1,14 @@
 #include "Context.h"
 
+#include "external/STB.h"
+
 #include "core/context/Platform.h"
 #include "core/context/Collision.h"
+#include "core/context/Vault.h"
 
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Text.h"
 #include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Tilesets.h"
 
@@ -14,8 +16,6 @@
 
 #include "core/util/Time.h"
 #include "core/util/Timers.h"
-
-#include "registries/platform/Input.h"
 
 #include "physics/dynamics/bodies/RigidBody.h"
 
@@ -27,16 +27,15 @@ namespace oly::context
 		size_t this_frame = 0;
 	}
 
-	static void init_logger(const TOMLNode& node)
+	static void init_logger(TOMLNode node)
 	{
 		if (auto toml_logger = node["logger"])
 		{
-			LOG.target.console = toml_logger["console"].value<bool>().value_or(true);
-			auto logfile = toml_logger["logfile"].value<std::string>();
-			if (logfile)
+			assets::parse_bool(toml_logger["console"], LOG.target.console);
+			if (auto logfile = toml_logger["logfile"].value<std::string>())
 			{
 				LOG.target.logfile = true;
-				LOG.set_logfile(logfile.value().c_str(), toml_logger["append"].value<bool>().value_or(true));
+				LOG.set_logfile(logfile->c_str(), assets::parse_bool_or(toml_logger["append"], true));
 				LOG.flush();
 			}
 			else
@@ -44,11 +43,11 @@ namespace oly::context
 			
 			if (auto logger_enable = toml_logger["enable"])
 			{
-				LOG.enable.debug = logger_enable["debug"].value_or<bool>(false);
-				LOG.enable.info = logger_enable["info"].value_or<bool>(true);
-				LOG.enable.warning = logger_enable["warning"].value_or<bool>(true);
-				LOG.enable.error = logger_enable["error"].value_or<bool>(true);
-				LOG.enable.fatal = logger_enable["fatal"].value_or<bool>(true);
+				assets::parse_bool(logger_enable["debug"], LOG.enable.debug);
+				assets::parse_bool(logger_enable["info"], LOG.enable.info);
+				assets::parse_bool(logger_enable["warning"], LOG.enable.warning);
+				assets::parse_bool(logger_enable["error"], LOG.enable.error);
+				assets::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
 			}
 		}
 		else
@@ -58,26 +57,24 @@ namespace oly::context
 		}
 	}
 
-	static void init_time(const TOMLNode& node)
+	static void init_time(TOMLNode node)
 	{
 		if (auto framerate = node["framerate"])
 		{
-			if (auto frame_length_clip = framerate["frame_length_clip"].value<double>())
-				TIME.frame_length_clip = *frame_length_clip;
-			if (auto time_scale = framerate["time_scale"].value<double>())
-				TIME.time_scale = *time_scale;
+			assets::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
+			assets::parse_double(framerate["time_scale"], TIME.time_scale);
 		}
 		TIME.init();
 	}
 
-	static void autoload_signals(const TOMLNode& node)
+	static void autoload_signals(TOMLNode node)
 	{
 		auto register_files = node["signals"].as_array();
 		if (register_files)
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
-					reg::load_signals((internal::resource_root + file.value()).c_str());
+					load_signals(*file);
 		}
 	}
 
@@ -91,8 +88,9 @@ namespace oly::context
 		stbi_set_flip_vertically_on_load(true);
 
 		internal::this_frame = 0;
+		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
-		auto toml = reg::load_toml(project_file);
+		auto toml = assets::load_toml(project_file);
 		TOMLNode toml_context = toml["context"];
 		if (!toml_context)
 		{
@@ -106,19 +104,19 @@ namespace oly::context
 		init_time(toml_context);
 		graphics::internal::load_resources();
 
-		internal::init_sprites(toml_context);
-
 		autoload_signals(toml_context);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 
-		oly::internal::check_errors();
+		internal::init_sprites(toml_context);
 
-		col2d::internal::load_luts();
+		oly::internal::check_errors();
 	}
 
 	static void terminate()
 	{
+		internal::terminate_vault();
+
 		internal::terminate_collision();
 
 		physics::internal::RigidBodyManager::instance().clear();
@@ -176,20 +174,9 @@ namespace oly::context
 		return *this;
 	}
 
-	std::string resource_file(const std::string& file)
-	{
-		return internal::resource_root + file.substr(strlen(OLY_RES_PREFIX));
-	}
-
-	toml::parse_result load_toml(const char* file)
-	{
-		return reg::load_toml(resource_file(file));
-	}
-
 	bool frame()
 	{
-		internal::render_frame();
-		if (!internal::frame_platform())
+		if (!render_frame())
 			return false;
 
 		// Time / frame counter
@@ -207,6 +194,12 @@ namespace oly::context
 		physics::internal::RigidBodyManager::instance().on_tick();
 
 		return true;
+	}
+
+	bool render_frame()
+	{
+		internal::render_frame();
+		return internal::frame_platform();
 	}
 
 	BigSize this_frame()

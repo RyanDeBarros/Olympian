@@ -5,7 +5,8 @@
 
 namespace oly::context
 {
-	ScopedViewportChange::ScopedViewportChange(glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos)
+	ScopedViewportChange::ScopedViewportChange(rendering::Camera2D& camera, glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos)
+		: camera(camera)
 	{
 		original_clear_color = context::clear_color();
 		original_blend_enabled = context::blend_enabled();
@@ -19,7 +20,7 @@ namespace oly::context
 
 	ScopedViewportChange::~ScopedViewportChange()
 	{
-		context::set_standard_viewport();
+		camera.apply_viewport();
 		glClearColor(original_clear_color[0], original_clear_color[1], original_clear_color[2], original_clear_color[3]);
 		if (original_blend_enabled)
 			glEnable(GL_BLEND);
@@ -27,9 +28,9 @@ namespace oly::context
 			glDisable(GL_BLEND);
 	}
 
-	ScopedFullFramebufferDrawing::ScopedFullFramebufferDrawing(const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size,
+	ScopedFullFramebufferDrawing::ScopedFullFramebufferDrawing(rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size,
 		glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_pos)
-		: viewport_change(clear_color, blend_enabled, viewport_size, viewport_pos)
+		: viewport_change(camera, clear_color, blend_enabled, viewport_size, viewport_pos)
 	{
 		framebuffer.bind(graphics::Framebuffer::Target::DRAW);
 		glClear(GL_COLOR_BUFFER_BIT);

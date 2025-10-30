@@ -2,12 +2,12 @@
 
 #include "ProjectContext.h"
 
-#include <registries/graphics/sprites/Sprites.h>
-#include <registries/graphics/shapes/Polygons.h>
-#include <registries/graphics/TextureRegistry.h>
+#include <assets/graphics/sprites/Sprites.h>
+#include <assets/graphics/shapes/Polygons.h>
+#include <assets/graphics/text/Paragraphs.h>
 
-#include "assets/archetypes/SpriteMatch.h"
-#include "assets/archetypes/Jumble.h"
+#include "SpriteMatch.h"
+#include "Jumble.h"
 
 #include "PlayerController.h"
 
@@ -32,9 +32,29 @@ struct BKG
 {
 	oly::rendering::PolygonRef bkg_rect;
 
-	BKG(oly::rendering::PolygonBatch& batch)
-		: bkg_rect(oly::reg::load_polygon(&batch, oly::context::load_toml(OLY_RES_PREFIX"assets/BKG.toml")["polygon"]))
+	BKG()
 	{
+		bkg_rect = oly::assets::load_polygon(oly::assets::load_toml("~/assets/BKG.toml")["polygon"]);
+	}
+
+	void draw() const
+	{
+		bkg_rect->draw();
+	}
+};
+
+struct PixelArtText
+{
+	oly::rendering::ParagraphRef paragraph;
+
+	PixelArtText()
+		: paragraph(oly::assets::load_paragraph(oly::assets::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
+	{
+	}
+
+	void draw() const
+	{
+		paragraph->draw();
 	}
 };
 
@@ -43,8 +63,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::rendering::PolygonBatch batch;
 
 	BKG bkg;
-	oly::gen::SpriteMatch sprite_match;
-	oly::gen::Jumble jumble;
+	SpriteMatch sprite_match;
+	Jumble jumble;
+	PixelArtText pixel_art_text;
 
 	std::vector<oly::Sprite> flag_tesselation;
 	oly::Transformer2D flag_tesselation_parent;
@@ -56,16 +77,20 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::debug::CollisionLayer impulse_layer;
 	oly::debug::CollisionLayer raycast_result_layer;
 
+	oly::CallbackTimer text_jitter_timer;
+
 	TesterRenderPipeline()
-		: bkg(batch)
+		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
 	{
-		flag_tesselation_parent.set_modifier() = std::make_unique<oly::PivotTransformModifier2D>();
+		bkg.bkg_rect->set_batch(batch);
+
+		flag_tesselation_parent.set_modifier() = oly::Polymorphic<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::reg::load_sprite(oly::context::load_toml(OLY_RES_PREFIX"assets/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::assets::load_sprite(oly::assets::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);
@@ -74,6 +99,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 		}
 
+		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
+
 		glEnable(GL_BLEND);
 
 		// TODO v6 anti-aliasing settings
@@ -81,8 +108,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	void render_frame() const override
 	{
-		bkg.bkg_rect->draw();
-		batch.render();
+		bkg.draw();
+		batch->render();
 
 		sprite_match.draw();
 		for (const auto& sprite : flag_tesselation)
@@ -94,6 +121,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		impulse_layer.draw();
 		ray_layer.draw();
 		raycast_result_layer.draw();
+		
+		pixel_art_text.draw();
 	}
 
 	void logic_update()
@@ -109,6 +138,16 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
+
+		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
+		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
+		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
+		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
+	}
+
+	void text_jitter_callback()
+	{
+		jumble.test_text->set_element(2).set_jitter_offset({ oly::Random<float>::range(-5.0f, 5.0f), oly::Random<float>::range(-5.0f, 5.0f) });
 	}
 };
 
@@ -132,7 +171,7 @@ int main()
 	KeyHandler key_handler;
 	key_handler.attach(&oly::context_window().handlers.key);
 
-	pc.test_text = pipeline.jumble.test_text;
+	pc.test_text = pipeline.jumble.test_text.ref;
 
 	oly::col2d::ConvexHull hull_pts;
 	const int _npts = 5;
@@ -184,8 +223,6 @@ int main()
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
 	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
-	obstacle0->collider().set_local().position = -capsule.center;
-	obstacle0->set_transformer().set_modifier() = std::make_unique<oly::OffsetTransformModifier2D>(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
 	obstacle0->properties().net_torque += 300.0f;
 	obstacle0->properties().set_moi_multiplier(4000.0f);
@@ -246,7 +283,7 @@ int main()
 
 	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
-	auto flag_texture = oly::context::load_texture(OLY_RES_PREFIX"textures/flag.png");
+	auto flag_texture = oly::context::load_texture("~/textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
@@ -265,6 +302,7 @@ int main()
 
 	// TODO v6 begin play on initial actors here
 
+	oly::LOG.flush();
 	while (oly::context::frame())
 	{
 		player->update_view(0, player_cv);

@@ -1,0 +1,34 @@
+#include "SpriteAtlases.h"
+
+#include "assets/Loader.h"
+#include "assets/graphics/sprites/Sprites.h"
+
+namespace oly::assets
+{
+	rendering::SpriteAtlas load_sprite_atlas(TOMLNode node, const char* source)
+	{
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite atlas [" << (source ? source : "") << "]..." << LOG.nl;
+
+		rendering::SpriteAtlas sprite_atlas;
+		if (auto sprite = node["sprite"])
+			sprite_atlas = load_sprite(sprite, source);
+
+		GLuint rows, cols;
+		float delay_seconds;
+		if (parse_uint(node["rows"], rows) && parse_uint(node["cols"], cols) && parse_float(node["delay_seconds"], delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, parse_bool_or(node["row_major"], true), parse_bool_or(node["row_up"], true));
+		else
+		{
+			GLuint static_frame;
+			if (parse_uint(node["static_frame"], static_frame))
+				sprite_atlas.select_static_frame(static_frame);
+		}
+
+		sprite_atlas.anim_format.starting_frame = parse_int_or(node["starting_frame"], 0);
+		sprite_atlas.anim_format.starting_time = parse_float_or(node["starting_time"], 0.0f);
+
+		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
+
+		return sprite_atlas;
+	}
+}

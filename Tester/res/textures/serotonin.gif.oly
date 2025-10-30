@@ -5,6 +5,6 @@ storage = "discard"
 "min_filter" = "nearest"
 "mag_filter" = "nearest"
 "generate_mipmaps" = false
-"wrap s" = 33071
-"wrap t" = 33071
+"wrap_s" = 33071
+"wrap_t" = 33071
 

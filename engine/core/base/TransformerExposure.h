@@ -21,6 +21,8 @@ namespace oly
 
 	namespace exposure
 	{
+		constexpr bool NONZERO(auto param) { return (bool)param != 0; }
+
 		namespace local
 		{
 			enum Params
@@ -30,7 +32,7 @@ namespace oly
 				FULL = SET_LOCAL
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
 			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
 		}
 
@@ -46,7 +48,7 @@ namespace oly
 				FULL = ATTACH_PARENT | ATTACH_CHILD | CLEAR_CHILDREN
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
 			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
 		}
 
@@ -57,10 +59,11 @@ namespace oly
 				NONE = 0,
 				REF_MODIFIER = 1,
 				SET_MODIFIER = 2,
+				SET_FUNDAMENTAL_EXTENSION = 4,
 				FULL = REF_MODIFIER | SET_MODIFIER
 			};
 
-			constexpr bool operator&(Params a, Params b) { return ((int)a & (int)b) != 0; }
+			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
 			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
 		}
 	}
@@ -87,31 +90,67 @@ namespace oly
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 
-		Transform2D& set_local() requires (Params.local & exposure::local::SET_LOCAL) { return transformer.set_local(); }
+		Transform2D& set_local()
+			requires (exposure::NONZERO(Params.local & exposure::local::SET_LOCAL))
+		{
+			return transformer.set_local();
+		}
 
-		void attach_parent(Transformer2D* parent) requires (Params.chain & exposure::chain::ATTACH_PARENT) { transformer.attach_parent(parent); }
+		void attach_parent(Transformer2D* parent)
+			requires (exposure::NONZERO(Params.chain & exposure::chain::ATTACH_PARENT))
+		{
+			transformer.attach_parent(parent);
+		}
+		
 		template<TExposureParams OtherParams>
 		void attach_parent(Transformer2DExposure<OtherParams>& parent)
-			requires ((Params.chain & exposure::chain::ATTACH_PARENT) && (OtherParams.chain & exposure::chain::ATTACH_CHILD))
+			requires (exposure::NONZERO(Params.chain & exposure::chain::ATTACH_PARENT) && exposure::NONZERO(OtherParams.chain & exposure::chain::ATTACH_CHILD))
 		{
 			transformer.attach_parent(&parent.transformer);
 		}
 
-		void attach_child(Transformer2D* child) requires (Params.chain & exposure::chain::ATTACH_CHILD) { transformer.attach_child(child); }
+		void attach_child(Transformer2D* child) requires
+			(exposure::NONZERO(Params.chain & exposure::chain::ATTACH_CHILD))
+		{
+			transformer.attach_child(child);
+		}
+
 		template<TExposureParams OtherParams>
 		void attach_child(Transformer2DExposure<OtherParams>& child)
-			requires ((Params.chain & exposure::chain::ATTACH_CHILD) && (OtherParams.chain & exposure::chain::ATTACH_PARENT))
+			requires (exposure::NONZERO(Params.chain & exposure::chain::ATTACH_CHILD) && exposure::NONZERO(OtherParams.chain & exposure::chain::ATTACH_PARENT))
 		{
 			transformer.get_handle().attach_child(&child.transformer);
 		}
 
-		void clear_children() requires (Params.chain & exposure::chain::CLEAR_CHILDREN) { transformer.get_handle().clear_children(); }
+		void clear_children()
+			requires (exposure::NONZERO(Params.chain & exposure::chain::CLEAR_CHILDREN))
+		{
+			transformer.get_handle().clear_children();
+		}
 
-		template<std::derived_from<TransformModifier2D> T>
-		const T& get_modifier() const { return transformer.get_modifier<T>(); }
+		template<PolymorphicBaseOf<TransformModifier2D> T>
+		const T& get_modifier() const
+		{
+			return transformer.get_modifier<T>();
+		}
 
-		std::unique_ptr<TransformModifier2D>& set_modifier() requires (Params.modifier & exposure::modifier::SET_MODIFIER) { return transformer.set_modifier(); }
-		template<std::derived_from<TransformModifier2D> T>
-		T& ref_modifier() requires (Params.modifier & exposure::modifier::REF_MODIFIER) { return transformer.ref_modifier<T>(); }
+		Polymorphic<TransformModifier2D>& set_modifier()
+			requires (exposure::NONZERO(Params.modifier & exposure::modifier::SET_MODIFIER))
+		{
+			return transformer.set_modifier();
+		}
+
+		template<PolymorphicBaseOf<TransformModifier2D> T>
+		T& ref_modifier()
+			requires (exposure::NONZERO(Params.modifier & exposure::modifier::REF_MODIFIER))
+		{
+			return transformer.ref_modifier<T>();
+		}
+		
+		Polymorphic<TransformModifier2D>& set_fundamental_modifier_extension()
+			requires (exposure::NONZERO(Params.modifier & exposure::modifier::SET_FUNDAMENTAL_EXTENSION))
+		{
+			return transformer.ref_modifier<FundamentalTransformModifier2D>().extension;
+		}
 	};
 }

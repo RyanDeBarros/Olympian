@@ -46,8 +46,30 @@ namespace oly::platform
 		void context_hint() const;
 	};
 
+	class Window;
+
+	namespace internal
+	{
+		struct RootWindowResizeHandler : public EventHandler<input::WindowResizeEventData>
+		{
+			Window& window;
+			float resizing_frame_length = 1.0f / 60.0f;
+
+			RootWindowResizeHandler(Window& window);
+
+		private:
+			float last_update = 0.0f;
+
+		public:
+			bool block(const input::WindowResizeEventData& data) override;
+			bool consume(const input::WindowResizeEventData& data) override;
+		};
+
+	}
+
 	class Window
 	{
+		friend struct internal::RootWindowResizeHandler;
 		GLFWwindow* w;
 		glm::ivec2 size;
 
@@ -66,14 +88,13 @@ namespace oly::platform
 		void set_width(int width);
 		void set_height(int height);
 		float aspect_ratio() const;
-		void refresh_size();
 
 		void make_context_current() const;
 		bool should_close() const;
 		void should_close(bool close) const;
 		void swap_buffers() const;
 
-		struct
+		struct Handlers
 		{
 			EventHandler<input::CharEventData> character;
 			EventHandler<input::CharModsEventData> char_mods;
@@ -91,7 +112,14 @@ namespace oly::platform
 			EventHandler<input::WindowMaximizeEventData> window_maximize;
 			EventHandler<input::WindowPosEventData> window_pos;
 			EventHandler<input::WindowRefreshEventData> window_refresh;
-			EventHandler<input::WindowResizeEventData> window_resize;
+			internal::RootWindowResizeHandler window_resize;
+
+			Handlers(Window& window) : window_resize(window) {}
 		} handlers;
+
+		glm::vec2 get_cursor_screen_position() const;
+		glm::vec2 screen_to_view_coordinates(glm::vec2 screen_pos) const;
+		glm::vec2 get_cursor_view_position() const;
+		glm::vec2 view_to_screen_coordinates(glm::vec2 view_pos) const;
 	};
 }

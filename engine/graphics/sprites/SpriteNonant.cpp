@@ -12,19 +12,22 @@ namespace oly::rendering
 	SpriteNonant::SpriteNonant()
 		: sprites(9, Sprite())
 	{
-		for (unsigned char x = 0; x < 3; ++x)
-			for (unsigned char y = 0; y < 3; ++y)
-			{
-				sprite(x, y).transformer.attach_parent(&transformer);
-				PivotTransformModifier2D modifier;
-				modifier.pivot.x = -0.5f * x + 1.0f;
-				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>(std::move(modifier));
-			}
+		init();
 	}
 
-	SpriteNonant::SpriteNonant(SpriteBatch* batch)
+	SpriteNonant::SpriteNonant(Unbatched)
+		: sprites(9, Sprite(UNBATCHED))
+	{
+		init();
+	}
+
+	SpriteNonant::SpriteNonant(SpriteBatch& batch)
 		: sprites(9, Sprite(batch))
+	{
+		init();
+	}
+
+	void SpriteNonant::init()
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -33,11 +36,18 @@ namespace oly::rendering
 				PivotTransformModifier2D modifier;
 				modifier.pivot.x = -0.5f * x + 1.0f;
 				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>(std::move(modifier));
+				sprite(x, y).transformer.set_modifier() = Polymorphic<PivotTransformModifier2D>(std::move(modifier));
 			}
 	}
 
-	void SpriteNonant::set_batch(SpriteBatch* batch)
+	void SpriteNonant::set_batch(Unbatched)
+	{
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_batch(UNBATCHED);
+	}
+
+	void SpriteNonant::set_batch(SpriteBatch& batch)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -97,7 +107,7 @@ namespace oly::rendering
 		dirty.mod_grid = true;
 	}
 
-	void SpriteNonant::set_texture(const std::string& texture_file, unsigned int texture_index)
+	void SpriteNonant::set_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -150,7 +160,7 @@ namespace oly::rendering
 				sprite(x, y).set_frame_format(anim);
 	}
 
-	void SpriteNonant::set_mod_texture(const std::string& texture_file, unsigned int texture_index)
+	void SpriteNonant::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -223,56 +233,13 @@ namespace oly::rendering
 		return regular_mod_uvs;
 	}
 
-	void SpriteNonant::set_x_left_offset(float xoff)
+	math::Padding& SpriteNonant::set_offsets()
 	{
-		offsets.x_left = xoff;
 		dirty.grid = true;
 		dirty.mod_grid = true;
+		return offsets;
 	}
 	
-	void SpriteNonant::set_x_right_offset(float xoff)
-	{
-		offsets.x_right = xoff;
-		dirty.grid = true;
-		dirty.mod_grid = true;
-	}
-	
-	void SpriteNonant::set_y_bottom_offset(float yoff)
-	{
-		offsets.y_bottom = yoff;
-		dirty.grid = true;
-		dirty.mod_grid = true;
-	}
-	
-	void SpriteNonant::set_y_top_offset(float yoff)
-	{
-		offsets.y_top = yoff;
-		dirty.grid = true;
-		dirty.mod_grid = true;
-	}
-	
-	void SpriteNonant::set_offsets(float x_left, float x_right, float y_bottom, float y_top)
-	{
-		offsets.x_left = x_left;
-		offsets.x_right = x_right;
-		offsets.y_bottom = y_bottom;
-		offsets.y_top = y_top;
-		dirty.grid = true;
-		dirty.mod_grid = true;
-	}
-	
-	void SpriteNonant::get_offsets(float* x_left, float* x_right, float* y_bottom, float* y_top) const
-	{
-		if (x_left)
-			*x_left = offsets.x_left;
-		if (x_right)
-			*x_right = offsets.x_right;
-		if (y_bottom)
-			*y_bottom = offsets.y_bottom;
-		if (y_top)
-			*y_top = offsets.y_top;
-	}
-
 	void SpriteNonant::set_width(float w)
 	{
 		clamp_nsize({ w, nsize.y });
@@ -288,25 +255,22 @@ namespace oly::rendering
 		clamp_nsize(size);
 	}
 
-	void SpriteNonant::setup_nonant(glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
+	void SpriteNonant::setup_nonant(glm::vec2 size, math::Padding offs)
 	{
-		offsets.x_left = x_left;
-		offsets.x_right = x_right;
-		offsets.y_bottom = y_bottom;
-		offsets.y_top = y_top;
+		offsets = offs;
 		clamp_nsize(size);
 	}
 
-	void SpriteNonant::setup_nonant(const Sprite& copy, glm::vec2 size, float x_left, float x_right, float y_bottom, float y_top)
+	void SpriteNonant::setup_nonant(const Sprite& copy, glm::vec2 size, math::Padding offs)
 	{
 		copy_sprite_attributes(copy);
-		setup_nonant(size, x_left, x_right, y_bottom, y_top);
+		setup_nonant(size, offs);
 	}
 
 	void SpriteNonant::clamp_nsize(glm::vec2 size)
 	{
-		nsize.x = std::max(size.x, offsets.x_left + offsets.x_right);
-		nsize.y = std::max(size.y, offsets.y_bottom + offsets.y_top);
+		nsize.x = std::max(size.x, offsets.left + offsets.right);
+		nsize.y = std::max(size.y, offsets.bottom + offsets.top);
 		dirty.grid = true;
 		dirty.mod_grid = true;
 	}
@@ -317,8 +281,8 @@ namespace oly::rendering
 		// [1][0] [1][1] [1][2]
 		// [0][0] [0][1] [0][2]
 
-		float xuvs[4]{ 0.0f, offsets.x_left / regular_dimensions.x, 1.0f - offsets.x_right / regular_dimensions.x, 1.0f };
-		float yuvs[4]{ 0.0f, offsets.y_bottom / regular_dimensions.y, 1.0f - offsets.y_top / regular_dimensions.y, 1.0f };
+		float xuvs[4]{ 0.0f, offsets.left / regular_dimensions.x, 1.0f - offsets.right / regular_dimensions.x, 1.0f };
+		float yuvs[4]{ 0.0f, offsets.bottom / regular_dimensions.y, 1.0f - offsets.top / regular_dimensions.y, 1.0f };
 
 		for (size_t n = 0; n < 4; ++n)
 		{
@@ -326,8 +290,8 @@ namespace oly::rendering
 			yuvs[n] = regular_uvs.interp_y(yuvs[n]);
 		}
 
-		float widths[3]{ offsets.x_left, nsize.x - offsets.x_left - offsets.x_right, offsets.x_right };
-		float heights[3]{ offsets.y_bottom, nsize.y - offsets.y_bottom - offsets.y_top, offsets.y_top };
+		float widths[3]{ offsets.left, nsize.x - offsets.left - offsets.right, offsets.right };
+		float heights[3]{ offsets.bottom, nsize.y - offsets.bottom - offsets.top, offsets.top };
 
 		float xpos[3]{ -0.5f * widths[1], 0.0f, 0.5f * widths[1] };
 		float ypos[3]{ -0.5f * heights[1], 0.0f, 0.5f * heights[1] };
@@ -357,8 +321,8 @@ namespace oly::rendering
 		// [1][0] [1][1] [1][2]
 		// [0][0] [0][1] [0][2]
 
-		float xuvs[4]{ 0.0f, offsets.x_left / nsize.x, 1.0f - offsets.x_right / nsize.x, 1.0f };
-		float yuvs[4]{ 0.0f, offsets.y_bottom / nsize.y, 1.0f - offsets.y_top / nsize.y, 1.0f };
+		float xuvs[4]{ 0.0f, offsets.left / nsize.x, 1.0f - offsets.right / nsize.x, 1.0f };
+		float yuvs[4]{ 0.0f, offsets.bottom / nsize.y, 1.0f - offsets.top / nsize.y, 1.0f };
 
 		for (size_t n = 0; n < 4; ++n)
 		{

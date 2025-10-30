@@ -261,13 +261,13 @@ namespace oly
 		unparent();
 	}
 
-	Transformer2D::Transformer2D(Transform2D local, std::unique_ptr<TransformModifier2D>&& modifier)
+	Transformer2D::Transformer2D(Transform2D local, Polymorphic<TransformModifier2D>&& modifier)
 		: local(local), handle(this), modifier(std::move(modifier))
 	{
 	}
 
 	Transformer2D::Transformer2D(const Transformer2D& other)
-		: local(other.local), handle(this, other.handle), modifier(other.modifier->clone()), _global(other._global)
+		: local(other.local), handle(this, other.handle), modifier(other.modifier), _global(other._global)
 	{
 		post_set();
 	}
@@ -288,7 +288,7 @@ namespace oly
 		{
 			handle = other.handle;
 			local = other.local;
-			modifier = other.modifier->clone();
+			modifier = other.modifier;
 			_global = other._global;
 			_dirty_internal = other._dirty_internal;
 			_dirty_external = other._dirty_external;

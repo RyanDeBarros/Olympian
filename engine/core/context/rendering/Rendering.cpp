@@ -1,7 +1,6 @@
 #include "Rendering.h"
 
 #include "core/context/rendering/Sprites.h"
-#include "core/context/rendering/Text.h"
 
 namespace oly::context
 {

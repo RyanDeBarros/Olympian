@@ -2,6 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/base/Assert.h"
+#include "core/context/Context.h"
 
 namespace oly::platform
 {
@@ -42,8 +43,32 @@ namespace oly::platform
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
+	internal::RootWindowResizeHandler::RootWindowResizeHandler(Window& window)
+		: window(window)
+	{
+	}
+
+	bool internal::RootWindowResizeHandler::block(const input::WindowResizeEventData& data)
+	{
+		window.size = { data.w, data.h };
+		float now = (float)glfwGetTime();
+		float elapsed = now - last_update;
+		if (elapsed < resizing_frame_length)
+			return true;
+		else
+		{
+			last_update = now;
+			return false;
+		}
+	}
+
+	bool internal::RootWindowResizeHandler::consume(const input::WindowResizeEventData& data)
+	{
+		return !context::render_frame();
+	}
+
 	Window::Window(int width, int height, const char* title, const WindowHint& hint, GLFWmonitor* monitor, GLFWwindow* share)
-		: size(width, height)
+		: size(width, height), handlers(*this)
 	{
 		hint.window_hint();
 		w = glfwCreateWindow(width, height, title, monitor, share);
@@ -59,13 +84,14 @@ namespace oly::platform
 			throw Error(ErrorCode::GLEW_INIT);
 		}
 		hint.context_hint();
+
 		input::init_handlers(w);
 		glfwSetWindowUserPointer(w, this);
 		glViewport(0, 0, width, height);
 	}
 
 	Window::Window(Window&& other) noexcept
-		: w(other.w), size(other.size)
+		: w(other.w), size(other.size), handlers(*this)
 	{
 		glfwSetWindowUserPointer(w, this);
 		other.w = nullptr;
@@ -112,11 +138,6 @@ namespace oly::platform
 		return float(size.x) / size.y;
 	}
 
-	void Window::refresh_size()
-	{
-		glfwGetWindowSize(w, &size.x, &size.y);
-	}
-
 	void Window::make_context_current() const
 	{
 		glfwMakeContextCurrent(w);
@@ -137,4 +158,25 @@ namespace oly::platform
 		glfwSwapBuffers(w);
 	}
 
+	glm::vec2 Window::get_cursor_screen_position() const
+	{
+		double x, y;
+		glfwGetCursorPos(w, &x, &y);
+		return { (float)x, (float)y };
+	}
+
+	glm::vec2 Window::screen_to_view_coordinates(glm::vec2 screen_pos) const
+	{
+		return { screen_pos.x - 0.5f * size.x, 0.5f * size.y - screen_pos.y };
+	}
+
+	glm::vec2 Window::get_cursor_view_position() const
+	{
+		return screen_to_view_coordinates(get_cursor_screen_position());
+	}
+
+	glm::vec2 Window::view_to_screen_coordinates(glm::vec2 view_pos) const
+	{
+		return { view_pos.x + 0.5f * size.x, 0.5f * size.y - view_pos.y };
+	}
 }

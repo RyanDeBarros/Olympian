@@ -4,6 +4,7 @@
 
 #include "core/base/Colors.h"
 #include "core/base/SimpleMath.h"
+#include "core/base/Random.h"
 
 #include "core/util/Logger.h"
 #include "core/util/Time.h"
@@ -23,6 +24,8 @@
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/sprites/SpriteNonant.h"
 
+#include "graphics/Drawable.h"
+
 #include "physics/collision/debugging/CommonViews.h"
 
 #include "physics/dynamics/Constants.h"
@@ -37,7 +40,11 @@ namespace oly
 	inline platform::Window& context_window() { return context::get_platform().window(); }
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
-	// TODO v5 Modular particle system, perlin noise generation.
-	// TODO v6 lighting engine, ui widgets, thread safety + multi-threading.
-	// TODO v6 network communication - online/local multiplayer.
+	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
+
+	// TODO v6 Modular particle system, perlin noise generation.
+	// TODO v6 Lighting engine
+	// TODO v6 UI widgets
+	// TODO v7 thread safety + multi-threading.
+	// TODO v7 network communication - online/local multiplayer.
 }

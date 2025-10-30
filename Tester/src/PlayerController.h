@@ -15,8 +15,7 @@ struct PlayerController : public oly::InputController
 	bool jump(oly::input::Signal signal);
 	bool click(oly::input::Signal signal);
 	bool drag(oly::input::Signal signal);
-	bool drag(glm::vec2 cursor_pos);
-	glm::vec2 screen_to_world_coords(glm::vec2 coords);
+	bool drag(glm::vec2 view_pos);
 	bool zoom_camera(oly::input::Signal signal);
 	bool move(oly::input::Signal signal);
 };

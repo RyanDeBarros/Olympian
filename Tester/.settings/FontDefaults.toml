@@ -1,11 +1,11 @@
 #meta type="font_defaults"
 
 [font_face]
-storage = "discard"
+storage = "keep"
 
 [font_atlas]
 storage = "discard"
-font_size = 32
+font_size = 32.0
 min_filter = 9728
 mag_filter = 9728
 generate_mipmaps = false

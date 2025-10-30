@@ -3,5 +3,5 @@
 "min_filter" = 9728
 "mag_filter" = 9728
 "generate_mipmaps" = "off"
-"wrap s" = 33071
-"wrap t" = 33071
+"wrap_s" = 33071
+"wrap_t" = 33071

@@ -56,7 +56,7 @@ namespace oly::col2d
 		}
 		else
 		{
-			// TODO v5 ? pre-emptive check if active will overlap static if travelling on some separation interval.
+			// TODO v6 ? pre-emptive check if active will overlap static if travelling on some separation interval.
 			// If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0,
 			// else return additional separation needed for active to overtake/pass static.
 			return 0.0f;
@@ -102,7 +102,7 @@ namespace oly::col2d
 		}
 
 		// golden-search refinement
-		EarlyExitGoldenSearchResult search_result = early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
+		algo::EarlyExitGoldenSearchResult search_result = algo::early_exit_minimizing_golden_search([separation](float angle) { return separation(UnitVector2D(angle)); },
 			(float)(minimizing_axis - 1) * perf.get_two_pi_over_divisions(), (float)(minimizing_axis + 1) * perf.get_two_pi_over_divisions(), perf.refinement_error_threshold, 0.0f);
 
 		if (search_result.early_exited)

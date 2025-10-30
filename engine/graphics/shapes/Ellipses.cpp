@@ -7,13 +7,19 @@
 
 namespace oly::rendering
 {
-	EllipseBatch::EllipseBatch()
+	internal::EllipseBatch::EllipseBatch()
 		: ebo(vao)
 	{
 		projection_location = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uProjection");
 	}
 
-	void EllipseBatch::render() const
+	void internal::EllipseBatch::render() const
+	{
+		if (camera)
+			render(camera->projection_matrix());
+	}
+
+	void internal::EllipseBatch::render(const glm::mat3& projection) const
 	{
 		if (ebo.empty())
 			return;
@@ -32,22 +38,38 @@ namespace oly::rendering
 		ssbo_block.post_draw_all();
 	}
 
-	EllipseBatch::EllipseID EllipseBatch::generate_id()
+	void internal::EllipseBatch::assert_valid_id(GLuint id)
 	{
-		return pos_generator.generate();
+		if (id == NULL_ID) [[unlikely]]
+			throw Error(ErrorCode::INVALID_ID);
+	}
+
+	GLuint internal::EllipseBatch::generate_id()
+	{
+		GLuint id = id_generator.gen();
+		if (id == NULL_ID)
+			throw Error(ErrorCode::STORAGE_OVERFLOW);
+		else
+			return id;
+	}
+
+	void internal::EllipseBatch::erase_id(GLuint id)
+	{
+		if (id != NULL_ID) [[likely]]
+			id_generator.yield(id);
 	}
 
 	struct Attributes
 	{
-		EllipseBatch::EllipseDimension dimension = {};
-		EllipseBatch::ColorGradient color = {};
+		EllipseDimension dimension = {};
+		EllipseColorGradient color = {};
 		glm::mat3 transform = 1.0f;
 	};
 
 	struct AttributesRef
 	{
-		EllipseBatch::EllipseDimension dimension = {};
-		const EllipseBatch::ColorGradient& color = {};
+		EllipseDimension dimension = {};
+		const EllipseColorGradient& color = {};
 		const glm::mat3& transform = 1.0f;
 	};
 
@@ -83,45 +105,46 @@ namespace oly::rendering
 		ref.set_transform() = attr.transform;
 	}
 
-	EllipseReference::EllipseReference(EllipseBatch* batch)
-		: batch(batch)
+	EllipseReference::EllipseReference(Unbatched)
 	{
-		if (this->batch)
-		{
-			pos = this->batch->generate_id();
-			set_attributes(*this, Attributes{});
-		}
+	}
+
+	EllipseReference::EllipseReference(EllipseBatch& batch)
+		: Super(batch->weak_from_this())
+	{
+		id = batch->generate_id();
+		set_attributes(*this, Attributes{});
 	}
 
 	EllipseReference::EllipseReference(const EllipseReference& other)
-		: batch(other.batch)
+		: Super(other)
 	{
-		if (batch)
+		if (other.id != internal::EllipseBatch::NULL_ID)
 		{
-			pos = batch->generate_id();
-			set_attributes(*this, get_attributes_ref(other));
+			if (auto batch = lock())
+			{
+				id = batch->generate_id();
+				set_attributes(*this, get_attributes_ref(other));
+			}
 		}
 	}
 
 	EllipseReference::EllipseReference(EllipseReference&& other) noexcept
-		: batch(other.batch), pos(std::move(other.pos))
+		: Super(std::move(other)), id(other.id)
 	{
+		other.id = internal::EllipseBatch::NULL_ID;
+	}
+
+	EllipseReference::~EllipseReference()
+	{
+		if (auto batch = lock())
+			batch->erase_id(id);
 	}
 
 	EllipseReference& EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
-		{
-			if (batch != other.batch)
-			{
-				pos.yield();
-				batch = other.batch;
-				if (batch)
-					pos = batch->generate_id();
-			}
-			if (batch)
-				set_attributes(*this, get_attributes_ref(other));
-		}
+			*this = dupl(other);
 		return *this;
 	}
 
@@ -129,104 +152,125 @@ namespace oly::rendering
 	{
 		if (this != &other)
 		{
-			if (batch != other.batch)
-			{
-				batch = other.batch;
-				pos = std::move(other.pos);
-			}
-			else if (batch)
-				set_attributes(*this, get_attributes_ref(other));
+			if (auto batch = lock())
+				batch->erase_id(id);
+			Super::operator=(std::move(other));
+			id = other.id;
+			other.id = internal::EllipseBatch::NULL_ID;
 		}
 		return *this;
 	}
 
-	void EllipseReference::set_batch(EllipseBatch* batch)
+	void EllipseReference::set_batch(Unbatched)
 	{
-		if (this->batch == batch)
-			return;
+		if (auto batch = lock())
+			batch->erase_id(id);
+		id = internal::EllipseBatch::NULL_ID;
+		reset();
+	}
 
-		if (this->batch)
+	void EllipseReference::set_batch(EllipseBatch& new_batch)
+	{
+		if (auto batch = lock())
 		{
-			if (batch)
-			{
-				Attributes attr = get_attributes(*this);
-				pos.yield();
-				this->batch = batch;
-				pos = this->batch->generate_id();
-				set_attributes(*this, attr);
-			}
-			else
-			{
-				pos.yield();
-				this->batch = batch;
-			}
+			if (batch.get() == new_batch.address())
+				return;
+
+			const Attributes attr = id != internal::EllipseBatch::NULL_ID ? get_attributes(*this) : Attributes{};
+			batch->erase_id(id);
+			reset(*new_batch);
+			batch = lock();
+			id = batch->generate_id();
+			set_attributes(*this, attr);
 		}
 		else
 		{
-			this->batch = batch;
-			pos = this->batch->generate_id();
+			reset(*new_batch);
+			batch = lock();
+			id = batch->generate_id();
 			set_attributes(*this, Attributes{});
 		}
 	}
 
-	EllipseBatch::EllipseDimension EllipseReference::get_dimension() const
+	EllipseDimension EllipseReference::get_dimension() const
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::DIMENSION>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<internal::EllipseBatch::DIMENSION>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	EllipseBatch::EllipseDimension& EllipseReference::set_dimension()
+	EllipseDimension& EllipseReference::set_dimension()
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::DIMENSION>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<internal::EllipseBatch::DIMENSION>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	const EllipseBatch::ColorGradient& EllipseReference::get_color() const
+	const EllipseColorGradient& EllipseReference::get_color() const
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::COLOR>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<internal::EllipseBatch::COLOR>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	EllipseBatch::ColorGradient& EllipseReference::set_color()
+	EllipseColorGradient& EllipseReference::set_color()
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::COLOR>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<internal::EllipseBatch::COLOR>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	const glm::mat3& EllipseReference::get_transform() const
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.get<EllipseBatch::TRANSFORM>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.get<internal::EllipseBatch::TRANSFORM>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	glm::mat3& EllipseReference::set_transform()
 	{
-		if (batch) [[likely]]
-			return batch->ssbo_block.set<EllipseBatch::TRANSFORM>(pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			return batch->ssbo_block.set<internal::EllipseBatch::TRANSFORM>(id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	void EllipseReference::draw() const
 	{
-		if (batch) [[likely]]
-			graphics::quad_indices(batch->ebo.draw_primitive().data(), pos.get());
+		if (auto batch = lock()) [[likely]]
+		{
+			internal::EllipseBatch::assert_valid_id(id);
+			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
+		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
-		: ellipse(&batch)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = r;
 		ellipse.set_dimension().ry = r;
@@ -234,7 +278,7 @@ namespace oly::rendering
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
-		: ellipse(&batch)
+		: ellipse(batch)
 	{
 		ellipse.set_dimension().rx = rx;
 		ellipse.set_dimension().ry = ry;

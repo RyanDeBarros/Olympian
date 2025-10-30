@@ -1,0 +1,11 @@
+#meta type="font_family"
+
+storage = "keep"
+
+[[styles]]
+style = "Regular"
+file = "Roboto-Regular.ttf"
+
+[[styles]]
+style = "BoldItalic"
+file = "Roboto-BoldItalic.ttf"

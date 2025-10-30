@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "core/util/LoggerOperators.h"
 #include "core/base/Errors.h"
 
 namespace oly::io
@@ -13,8 +14,27 @@ namespace oly::io
 	{
 		std::ifstream file(filepath);
 		if (!file)
-			throw Error(ErrorCode::FILE_IO, "Could not open \"" + std::filesystem::absolute(std::filesystem::path(filepath)).string() + "\" for reading");
-		
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
+
+		std::vector<std::string> lines;
+		std::string line;
+		while (std::getline(file, line))
+			lines.push_back(std::move(line));
+		return lines;
+	}
+
+	std::vector<std::string> read_file_lines(const ResourcePath& filepath)
+	{
+		std::ifstream file = filepath.get_ifstream();
+		if (!file)
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
+
 		std::vector<std::string> lines;
 		std::string line;
 		while (std::getline(file, line))
@@ -24,33 +44,57 @@ namespace oly::io
 
 	std::string read_file(const char* filepath)
 	{
-		std::ifstream file(filepath, std::ios_base::in);
+		std::ifstream file(filepath);
 		if (!file)
-			throw Error(ErrorCode::FILE_IO, "Could not open \"" + std::filesystem::absolute(std::filesystem::path(filepath)).string() + "\" for reading");
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
 		
 		std::ostringstream oss;
 		oss << file.rdbuf();
 		return oss.str();
 	}
 
-	std::vector<unsigned char> read_file_uc(const char* filepath)
+	std::string read_file(const ResourcePath& filepath)
 	{
-		FILE* file = nullptr;
-		if (fopen_s(&file, filepath, "r") != 0 || !file)
-			throw Error(ErrorCode::FILE_IO, "Could not open \"" + std::filesystem::absolute(std::filesystem::path(filepath)).string() + "\" for reading");
+		std::ifstream file = filepath.get_ifstream();
+		if (!file)
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
+
+		std::ostringstream oss;
+		oss << file.rdbuf();
+		return oss.str();
+	}
+
+	std::vector<unsigned char> read_file_uc(const ResourcePath& filepath)
+	{
 		
-		std::vector<unsigned char> content;
-		fseek(file, 0, SEEK_END);
-		content.resize(ftell(file));
-		fseek(file, 0, SEEK_SET);
-		fread(content.data(), content.size(), 1, file);
-		fclose(file);
+		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
+		if (!file)
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
+
+		std::streamsize size = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		std::vector<unsigned char> content(size);
+		if (!file.read(reinterpret_cast<char*>(content.data()), size))
+		{
+			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Failed to read " << filepath << LOG.nl;
+			throw Error(ErrorCode::FILE_IO);
+		}
+
 		return content;
 	}
 
-	std::string read_template_file(const char* filepath, const std::unordered_map<std::string, std::string>& tmpl)
+	static std::string read_template_content(std::string&& content, const std::unordered_map<std::string, std::string>& tmpl)
 	{
-		std::string content = read_file(filepath);
 		for (const auto& [placeholder, value] : tmpl)
 		{
 			size_t pos = 0;
@@ -63,13 +107,13 @@ namespace oly::io
 		return content;
 	}
 
-	std::string file_extension(const char* filepath)
+	std::string read_template_file(const char* file, const std::unordered_map<std::string, std::string>& tmpl)
 	{
-		return std::filesystem::path(filepath).extension().string();
+		return read_template_content(read_file(file), tmpl);
 	}
 
-	std::string directory_of(const char* filepath)
+	std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
 	{
-		return std::filesystem::path(filepath).parent_path().string() + "/";
+		return read_template_content(read_file(file), tmpl);
 	}
 }

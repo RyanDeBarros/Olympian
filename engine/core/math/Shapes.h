@@ -6,6 +6,12 @@
 
 namespace oly::math
 {
+	enum class PositioningMode
+	{
+		ABSOLUTE,
+		RELATIVE
+	};
+
 	struct Triangle2D
 	{
 		glm::vec2 root;
@@ -31,6 +37,8 @@ namespace oly::math
 	{
 		float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
 
+		float center_x() const { return 0.5f * (x1 + x2); }
+		float center_y() const { return 0.5f * (y1 + y2); }
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
 		float width() const { return x2 - x1; }
 		float height() const { return y2 - y1; }
@@ -55,12 +63,17 @@ namespace oly::math
 		void include(glm::vec2 pt) { x1 = glm::min(x1, pt.x); x2 = glm::max(x2, pt.x); y1 = glm::min(y1, pt.y); y2 = glm::max(y2, pt.y); }
 
 		bool operator==(const Rect2D&) const = default;
+
+		Rect2D get_scaled(float sx, float sy) const { return { .x1 = x1 * sx, .x2 = x2 * sx, .y1 = y1 * sy, .y2 = y2 * sy }; }
+		Rect2D get_scaled(glm::vec2 sc) const { return get_scaled(sc.x, sc.y); }
 	};
 
 	struct IRect2D
 	{
 		int x1, x2, y1, y2;
 
+		float center_x() const { return 0.5f * (x1 + x2); }
+		float center_y() const { return 0.5f * (y1 + y2); }
 		glm::vec2 center() const { return 0.5f * glm::vec2{ x1 + x2, y1 + y2 }; }
 		bool contains(glm::ivec2 test) const { return test.x >= x1 && test.x <= x2 && test.y >= y1 && test.y <= y2; }
 		glm::ivec2 clamp(glm::ivec2 pt) const { return { glm::clamp(pt.x, x1, x2), glm::clamp(pt.y, y1, y2) }; }
@@ -69,6 +82,7 @@ namespace oly::math
 		glm::ivec2 size() const { return { x2 - x1, y2 - y1 }; }
 
 		bool operator==(const IRect2D&) const = default;
+		explicit operator Rect2D() const { return Rect2D{ .x1 = (float)x1, .x2 = (float)x2, .y1 = (float)y1, .y2 = (float)y2 }; }
 	};
 
 	struct UVRect
@@ -86,6 +100,21 @@ namespace oly::math
 		bool operator==(const UVRect&) const = default;
 	};
 
+	struct Area2D
+	{
+		float x = 0.0f, y = 0.0f, w = 1.0f, h = 1.0f;
+
+		glm::vec2 center() const
+		{
+			return glm::vec2{ x + 0.5f * w, y + 0.5f * h };
+		}
+
+		glm::vec2 size() const
+		{
+			return { w, h };
+		}
+	};
+
 	struct IArea2D
 	{
 		int x = 0, y = 0, w = 1, h = 1;
@@ -94,6 +123,35 @@ namespace oly::math
 	struct IArea3D
 	{
 		int x = 0, y = 0, z = 0, w = 1, h = 1, d = 1;
+	};
+
+	struct Padding
+	{
+		float left = 0.0f, right = 0.0f, bottom = 0.0f, top = 0.0f;
+
+		static Padding uniform(float padding)
+		{
+			return {
+				.left = padding,
+				.right = padding,
+				.bottom = padding,
+				.top = padding
+			};
+		}
+	};
+
+	struct TopSidePadding
+	{
+		float left = 0.0f, right = 0.0f, top = 0.0f;
+
+		static TopSidePadding uniform(float padding)
+		{
+			return {
+				.left = padding,
+				.right = padding,
+				.top = padding
+			};
+		}
 	};
 }
 

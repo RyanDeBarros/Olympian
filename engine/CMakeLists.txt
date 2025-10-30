@@ -11,7 +11,7 @@ endif()
 set(LIBRARIES_DIR "D:/Libraries")
 
 # Add Quartic static library
-add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp" "core/types/Issuer.h")
+add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
 target_include_directories(Quartic PUBLIC "${LIBRARIES_DIR}/Quartic/include")
 
 # Find OpenGL
@@ -20,11 +20,11 @@ find_package(OpenGL REQUIRED)
 # Add engine sources
 file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
-# TODO v6 licensing may require engine to be dynamically linked?
+# TODO v7 licensing may require engine to be dynamically linked?
 # Create the engine as a static library
-add_library(OlympianEngine STATIC ${ENGINE_FILES} "core/types/Issuer.h")
+add_library(OlympianEngine STATIC ${ENGINE_FILES})
 
-# TODO v6 use FetchContent, or vendor subdirectory, or something similar, rather than using LIBRARIES_DIR.
+# TODO v7 use FetchContent, or vendor subdirectory, or something similar, rather than using LIBRARIES_DIR.
 
 # Include directories
 target_include_directories(OlympianEngine PUBLIC
@@ -62,4 +62,4 @@ target_link_libraries(OlympianEngine PUBLIC
 	Quartic
 )
 
-# TODO v6 install OlympianEngine so as to use find_package(Olympian) in project cmake
+# TODO v7 install OlympianEngine so as to use find_package(Olympian) in project cmake

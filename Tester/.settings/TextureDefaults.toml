@@ -12,6 +12,7 @@ wrap_t = 33071
 image_storage = "discard"
 abstract_storage = "discard"
 generate_mipmaps = "off"
+svg_scale = 1.0
 min_filter = 9728
 mag_filter = 9728
 wrap_s = 33071

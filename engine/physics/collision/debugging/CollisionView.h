@@ -17,13 +17,7 @@ namespace oly::debug
 
 	struct CollisionObject
 	{
-		enum Type
-		{
-			ELLIPSE,
-			POLYGON,
-			ARROW
-		};
-		using Variant = std::variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
+		using Variant = Variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		CollisionLayer& layer;
 		std::unique_ptr<Variant> v;
@@ -33,10 +27,6 @@ namespace oly::debug
 		CollisionObject& operator=(const CollisionObject&);
 		CollisionObject& operator=(CollisionObject&&) noexcept;
 
-	private:
-		void init(Type);
-
-	public:
 		Variant& operator*() { return *v; }
 		const Variant& operator*() const { return *v; }
 		Variant* operator->() { return v.get(); }
@@ -50,13 +40,7 @@ namespace oly::debug
 
 	struct CollisionObjectView
 	{
-		enum Type
-		{
-			EMPTY,
-			SINGLE,
-			GROUP
-		};
-		using Variant = std::variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
+		using Variant = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
 
 		Variant view;
 
@@ -119,15 +103,17 @@ namespace oly::debug
 
 	public:
 		CollisionLayer();
-		CollisionLayer(rendering::SpriteBatch* batch);
+		CollisionLayer(rendering::Unbatched);
+		CollisionLayer(rendering::SpriteBatch& batch);
 		CollisionLayer(const CollisionLayer&);
 		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
 		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
 
-		rendering::SpriteBatch* get_batch() const { return painter.get_sprite_batch(); }
-		void set_batch(rendering::SpriteBatch* batch) { painter.set_sprite_batch(batch); }
+		auto get_batch() const { return painter.get_sprite_batch(); }
+		void set_batch(rendering::Unbatched) { painter.set_sprite_batch(rendering::UNBATCHED); }
+		void set_batch(rendering::SpriteBatch& batch) { painter.set_sprite_batch(batch); }
 
 	private:
 		rendering::GeometryPainter::PaintFunction paint_fn() const;

@@ -4,7 +4,7 @@
 
 #include <functional>
 
-namespace oly
+namespace oly::algo
 {
 	struct GoldenSearchResult
 	{

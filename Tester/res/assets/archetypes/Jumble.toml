@@ -12,69 +12,58 @@ draw = [
 	"grass_tilemap",
 	"test_text",
 	"nonant_panel",
+	"smol_text"
 ]
 
-[[archetype.sprite]]
-name = "sprite3"
-"texture"    = "RES://textures/serotonin.gif"
-transform    = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
-frame_format = { "num frames" = 59, "delay_seconds" = -0.05 }
+[sprite3]
+texture = "~/textures/serotonin.gif"
+transformer = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
+frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
-[[archetype.sprite]]
-name = "sprite4"
-"texture"       = "RES://textures/tux.png"
-"texture_index" = 1
-transform       = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
+[sprite4]
+texture = "~/textures/tux.png"
+texture_index = 1
+transformer = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
-[[archetype.sprite]]
-name = "sprite5"
-"texture" = "RES://textures/tux.png"
-transform = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
+[sprite5]
+texture = "~/textures/tux.png"
+transformer = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
-[[archetype.sprite]]
-name = "sprite1"
-"texture" = "RES://textures/einstein.png"
+[sprite1]
+texture = "~/textures/einstein.png"
 
-[[archetype.sprite]]
-name = "godot_icon"
-"texture" = "RES://textures/godot.svg"
-"texture_index" = 1
-transform = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+[godot_icon]
+texture = "~/textures/godot.svg"
+texture_index = 1
+transformer = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
-[[archetype.sprite]]
-name = "knight"
-"texture"    = "RES://textures/knight.png"
-transform    = { "position" = [100, -300], "scale" = [20, 20] }
+[knight]
+texture = "~/textures/knight.png"
+transformer = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
-[[archetype.sprite_atlas]]
-name            = "atlased_knight"
-"rows"          = 2
-"cols"          = 3
-"delay_seconds" = 0.1
+[atlased_knight]
+rows = 2
+cols = 3
+delay_seconds = 0.1
 	[archetype.sprite_atlas.sprite]
-	"texture" = "RES://textures/knight.png"
-	"texture_index" = 1
-	transform = { "position" = [300, -200], "scale" = [20, 20] }
+	texture = "~/textures/knight.png"
+	texture_index = 1
+	transformer = { "position" = [300, -200], "scale" = [20, 20] }
 
-[[archetype.sprite_nonant]]
-name            = "nonant_panel"
-"left_offset"   = 6
-"right_offset"  = 6
-"bottom_offset" = 6
-"top_offset"    = 6
-"nsize"         = [ 128, 0 ]
-[archetype.sprite_nonant.sprite]
-"texture" = "RES://textures/panel.png"
-transform = { "scale" = [ 10.0, 10.0 ] }
+[nonant_panel]
+nsize = [ 128, 0 ]
+offsets = { uniform = 6 }
+[nonant_panel.sprite]
+texture = "~/textures/panel.png"
+transformer = { "scale" = [ 10.0, 10.0 ] }
 
-[[archetype.tilemap]]
-name = "grass_tilemap"
-transform = { "scale" = [ 100, 100 ] }
+[grass_tilemap]
+transformer = { "scale" = [ 100, 100 ] }
 
-	[[archetype.tilemap.layer]]
+	[[grass_tilemap.layer]]
 	"z" = 0
-	"tileset" = "RES://assets/grass tileset.toml"
+	"tileset" = "~/assets/grass tileset.toml"
 	"tiles" = [
 		[ -1, -1 ],
 		[  0, -1 ],
@@ -91,20 +80,42 @@ transform = { "scale" = [ 100, 100 ] }
 		[  3,  3 ],
 	]
 	
-[[archetype.paragraph]]
-name           = "test_text"
-"font_atlas"   = "RES://fonts/Roboto-Regular.ttf"
-"text"         = "rgb x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
-"draw_bkg"     = true
-transform      = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
-"bkg_color"    = [ 0.5, 0.4, 0.2, 0.8 ]
-"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
-"glyph_colors" = { "0" = [ 1.0, 0.0, 0.0, 1.0 ], "1" = [ 0.0, 1.0, 0.0, 1.0 ], "2" = [ 0.0, 0.0, 1.0, 1.0 ] }
-	[archetype.paragraph.format]
-	"pivot"             = [ 0.0, 1.0 ]
+[test_text]
+"draw_bkg" = true
+transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
+"bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
+	[test_text.format]
+	"pivot"             = [ 0, 1 ]
 	"line_spacing"      = 1.5
 	"linebreak_spacing" = 2.0
-	"min_size"          = [ 800, 800 ]
+	"min_size"          = [ 800, 1200 ]
 	"padding"           = [ 50, 50 ]
 	"horizontal_align"  = "center"
-	"vertical_align"    = "middle"
+	"vertical_align"    = "full_justify"
+	[[test_text.element]]
+	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"text"         = "rgb"
+	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
+	[[test_text.element]]
+	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"text"         = "g"
+	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
+	"scale"        = [ 2.0, 0.5 ]
+	"line_y_pivot" = 0.5
+	[[test_text.element]]
+	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"text"         = "b"
+	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
+	[[test_text.element]]
+	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
+	"adj_offset"   = 50
+
+[smol_text]
+draw_bkg = true
+bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
+	[[archetype.paragraph.element]]
+	"font"	       = "~/fonts/Roboto-Regular.ttf"
+	"text"         = "abcdef"
+	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

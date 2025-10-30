@@ -13,5 +13,4 @@
 namespace oly
 {
 	typedef toml::node_view<toml::node> TOMLNode;
-	typedef toml::node_view<const toml::node> CTOMLNode;
 }

@@ -6,27 +6,36 @@
 
 namespace oly::rendering
 {
-	struct TileMapLayer
+	struct TileMapLayer : public PublicIssuerHandle<internal::SpriteBatch>
 	{
+	private:
+		using Super = PublicIssuerHandle<internal::SpriteBatch>;
+
+	public:
 		TileSetRef tileset;
 		
 	private:
-		SpriteBatch& batch;
 		std::unordered_map<glm::ivec2, Sprite> sprite_map;
 		
 	public:
 		Transformer2D transformer;
 
-		TileMapLayer(SpriteBatch* batch = nullptr);
-		TileMapLayer(const TileMapLayer&);
-		TileMapLayer(TileMapLayer&&) noexcept;
-		TileMapLayer& operator=(const TileMapLayer&);
-		TileMapLayer& operator=(TileMapLayer&&) noexcept;
+		TileMapLayer();
+		TileMapLayer(Unbatched);
+		TileMapLayer(SpriteBatch& batch);
+		TileMapLayer(const TileMapLayer&) = default;
+		TileMapLayer(TileMapLayer&&) noexcept = default;
+		TileMapLayer& operator=(const TileMapLayer&) = default;
+		TileMapLayer& operator=(TileMapLayer&&) noexcept = default;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		void draw() const;
+
+		auto get_batch() const { return lock(); }
+		void set_batch(Unbatched);
+		void set_batch(SpriteBatch& batch);
 
 		void paint_tile(glm::ivec2 tile);
 		void unpaint_tile(glm::ivec2 tile);

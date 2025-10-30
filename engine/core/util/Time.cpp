@@ -25,4 +25,23 @@ namespace oly::internal
 		_raw_now = n;
 		process();
 	}
+
+	void RealTimeImpl::process()
+	{
+		_inv_now = 1.0 / _now;
+		_inv_delta = 1.0 / _delta;
+	}
+	void RealTimeImpl::init()
+	{
+		_delta = 1.0 / 60.0;
+		_now = glfwGetTime();
+	}
+
+	void RealTimeImpl::sync()
+	{
+		double n = glfwGetTime();
+		_delta = n - _now;
+		_now = n;
+		process();
+	}
 }

@@ -47,7 +47,7 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			glBindBuffer(GL_ARRAY_BUFFER, buffer<n>());
-			std::visit([](auto&& attribute) { attribute.setup(); }, attributes[n]);
+			attributes[n].visit([](auto&& attribute) { attribute.setup(); });
 		}
 
 		template<size_t n>

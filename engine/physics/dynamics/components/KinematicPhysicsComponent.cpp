@@ -241,7 +241,7 @@ namespace oly::physics
 			post_state.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
 	}
 
-	// TODO v5 test simultaneous collision with multiple objects with complex_teleportation = true/false.
+	// TODO v6 test simultaneous collision with multiple objects with complex_teleportation = true/false.
 	void KinematicPhysicsComponent::compute_collision_mtv_idxs() const
 	{
 		primary_collision_mtv_idx = 0;
@@ -345,7 +345,7 @@ namespace oly::physics
 			{
 				if (glm::abs(post_state.angular_velocity) <= angular_snapping.speed_threshold)
 				{
-					const float snap_to = find_closest(angular_snapping.snaps, post_state.rotation,
+					const float snap_to = algo::find_closest(angular_snapping.snaps, post_state.rotation,
 						[](decltype(angular_snapping.snaps)::key_type a, decltype(angular_snapping.snaps)::key_type b) { return unsigned_fmod(b - a, glm::two_pi<float>()); });
 
 					float snap_by = snap_to - post_state.rotation;

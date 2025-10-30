@@ -14,7 +14,7 @@ namespace oly::graphics
 	{
 		struct UsageHolder
 		{
-			StoredObjectType obj;
+			StoredObjectType obj = {};
 			GLuint usage = 0;
 		};
 

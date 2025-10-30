@@ -1,57 +1,616 @@
 #include "Paragraph.h"
 
 #include "core/base/Errors.h"
-#include "core/context/rendering/Text.h"
+#include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
 #include "graphics/resources/Textures.h"
 
 namespace oly::rendering
 {
-	Paragraph::Paragraph(const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
-		: format(format), font(font), bkg()
+	ParagraphFormatExposure::ParagraphFormatExposure(Paragraph& paragraph)
+		: paragraph(paragraph)
 	{
-		init(std::move(text));
+	}
+	
+	void ParagraphFormatExposure::set_line_spacing(float line_spacing)
+	{
+		if (paragraph.format.line_spacing != line_spacing)
+		{
+			paragraph.format.line_spacing = line_spacing;
+			if (paragraph.format.max_height > 0.0f)
+				paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+			else
+				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_tab_spaces(float tab_spaces)
+	{
+		if (paragraph.format.tab_spaces != tab_spaces)
+		{
+			paragraph.format.tab_spaces = tab_spaces;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_linebreak_spacing(float linebreak_spacing)
+	{
+		if (paragraph.format.linebreak_spacing != linebreak_spacing)
+		{
+			paragraph.format.linebreak_spacing = linebreak_spacing;
+			if (paragraph.format.max_height > 0.0f)
+				paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+			else
+				paragraph.dirty_layout |= internal::DirtyParagraph::LINE_SPACING;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_pivot(glm::vec2 pivot)
+	{
+		if (paragraph.format.pivot != pivot)
+		{
+			paragraph.format.pivot = pivot;
+			paragraph.dirty_layout |= internal::DirtyParagraph::PIVOT;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_min_size(glm::vec2 min_size)
+	{
+		if (paragraph.format.min_size != min_size)
+		{
+			paragraph.format.min_size = min_size;
+			paragraph.dirty_layout |= internal::DirtyParagraph::MIN_SIZE;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_text_wrap(float text_wrap)
+	{
+		if (paragraph.format.text_wrap != text_wrap)
+		{
+			paragraph.format.text_wrap = text_wrap;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_max_height(float max_height)
+	{
+		if (paragraph.format.max_height != max_height)
+		{
+			paragraph.format.max_height = max_height;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
 	}
 
-	Paragraph::Paragraph(SpriteBatch* batch, const FontAtlasRef& font, const ParagraphFormat& format, utf::String&& text)
-		: format(format), font(font), bkg(batch)
+	void ParagraphFormatExposure::set_padding(glm::vec2 padding)
 	{
-		init(std::move(text));
+		if (paragraph.format.padding != padding)
+		{
+			paragraph.format.padding = padding;
+			paragraph.dirty_layout |= internal::DirtyParagraph::PADDING;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_horizontal_alignment(ParagraphFormat::HorizontalAlignment alignment)
+	{
+		if (paragraph.format.horizontal_alignment != alignment)
+		{
+			paragraph.format.horizontal_alignment = alignment;
+			paragraph.dirty_layout |= internal::DirtyParagraph::HORIZONTAL_ALIGN;
+		}
+	}
+	
+	void ParagraphFormatExposure::set_vertical_alignment(ParagraphFormat::VerticalAlignment alignment)
+	{
+		if (paragraph.format.vertical_alignment != alignment)
+		{
+			paragraph.format.vertical_alignment = alignment;
+			paragraph.dirty_layout |= internal::DirtyParagraph::VERTICAL_ALIGN;
+		}
 	}
 
-	void Paragraph::init(utf::String&& text)
+	internal::GlyphGroup::GlyphGroup(TextElement&& element)
+		: element(std::move(element))
 	{
-		bkg.transformer.attach_parent(&transformer);
-		bkg.transformer.set_modifier() = std::make_unique<PivotTransformModifier2D>();
-		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
-
-		set_bkg_color({ 0.0f, 0.0f, 0.0f, 1.0f });
-		if (!text.empty())
-			set_text(std::move(text));
 	}
 
-	void Paragraph::set_batch(SpriteBatch* batch)
+	void internal::GlyphGroup::set_batch(Unbatched)
 	{
-		bkg.set_batch(batch);
+		for (auto& glyph : glyphs)
+			glyph.set_batch(UNBATCHED);
+	}
+
+	void internal::GlyphGroup::set_batch(rendering::SpriteBatch& batch)
+	{
 		for (auto& glyph : glyphs)
 			glyph.set_batch(batch);
 	}
 
-	void Paragraph::recolor_text_with_default()
+	void internal::GlyphGroup::draw() const
 	{
-		for (auto& glyph : glyphs)
-			glyph.set_text_color(default_text_color);
+		if (dirty & DirtyGlyphGroup::LINE_ALIGNMENT)
+			realign_lines();
+		if (dirty & DirtyGlyphGroup::JITTER_OFFSET)
+			reposition_jitter();
+		if (dirty & DirtyGlyphGroup::RECOLOR)
+			recolor();
+
+		for (const TextGlyph& glyph : glyphs)
+			glyph.draw();
+	}
+	
+	internal::GlyphGroup::PeekData internal::GlyphGroup::peek() const
+	{
+		auto iter = element.text.begin();
+		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
 	}
 
-	glm::vec4 Paragraph::get_glyph_color(size_t pos) const
+	void internal::GlyphGroup::build_page_section(TypesetData& typeset, PeekData next_peek) const
 	{
-		return glyphs[pos].get_text_color();
+		auto iter = element.text.begin();
+		if (!iter)
+			return;
+
+		paragraph->page_data.current_line().max_height = glm::max(paragraph->page_data.current_line().max_height, element.line_height());
+		build_adj_offset(typeset, next_peek);
+
+		while (iter)
+		{
+			utf::Codepoint codepoint = iter.advance();
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+
+			if (codepoint == ' ')
+				build_space(typeset, next_codepoint);
+			else if (codepoint == '\t')
+				build_tab(typeset, next_codepoint);
+			else if (utf::is_n_or_r(codepoint))
+			{
+				if (iter && utf::is_rn(codepoint, next_codepoint))
+					++iter;
+				build_newline(typeset);
+				if (iter || next_peek.first_codepoint) // next codepoint in group
+					paragraph->page_data.current_line().max_height = element.line_height();
+			}
+			else if (element.font.support(codepoint))
+			{
+				float dx = element.advance_width(codepoint, next_codepoint);
+				if (!paragraph->format.can_fit_on_line(typeset, dx))
+					build_newline(typeset);
+				build_glyph(typeset, dx);
+			}
+			else
+			{
+				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+			}
+		}
 	}
 
-	void Paragraph::set_glyph_color(size_t pos, glm::vec4 color)
+	internal::GlyphGroup::WriteResult internal::GlyphGroup::write_glyph_section(TypesetData& typeset, PeekData next_peek) const
 	{
-		glyphs[pos].set_text_color(color);
+		dirty = internal::DirtyGlyphGroup(0);
+		clear_cache();
+
+		auto iter = element.text.begin();
+		if (!iter)
+			return WriteResult::CONTINUE;
+
+		LineAlignment line{ .y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height()) };
+
+		if (!write_adj_offset(typeset, next_peek, line))
+			return WriteResult::BREAK;
+
+		while (iter)
+		{
+			utf::Codepoint codepoint = iter.advance();
+			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+
+			if (codepoint == ' ')
+				write_space(typeset, next_codepoint);
+			else if (codepoint == '\t')
+				write_tab(typeset, next_codepoint);
+			else if (utf::is_n_or_r(codepoint))
+			{
+				if (iter && utf::is_rn(codepoint, next_codepoint))
+					++iter;
+				if (!write_newline(typeset, line))
+					return WriteResult::BREAK;
+			}
+			else if (element.font.support(codepoint))
+			{
+				float dx = element.advance_width(codepoint, next_codepoint);
+				if (!paragraph->format.can_fit_on_line(typeset, dx))
+				{
+					if (!write_newline(typeset, line))
+						return WriteResult::BREAK;
+				}
+				write_glyph(typeset, codepoint, dx, line);
+			}
+			else
+			{
+				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+			}
+		}
+
+		recolor();
+		return WriteResult::CONTINUE;
+	}
+
+	void internal::GlyphGroup::clear_cache() const
+	{
+		glyphs.clear();
+		cached_info.clear();
+	}
+
+	void internal::GlyphGroup::build_adj_offset(TypesetData& typeset, PeekData next_peek) const
+	{
+		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
+			return;
+
+		auto iter = element.text.begin();
+		const utf::Codepoint codepoint = iter.advance();
+		if (utf::is_n_or_r(codepoint))
+			return;
+
+		const utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+		float dx = 0.0f;
+		if (codepoint == ' ')
+			dx = space_width(next_codepoint);
+		else if (codepoint == '\t')
+			dx = tab_width(next_codepoint);
+		else if (element.font.support(codepoint))
+			dx = element.advance_width(codepoint, next_codepoint);
+		else
+		{
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+		}
+
+		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))
+		{
+			typeset.x += element.adj_offset;
+			paragraph->page_data.current_line().space_width += element.adj_offset;
+			++paragraph->page_data.current_line().characters;
+		}
+		else
+		{
+			build_newline(typeset);
+			if (iter || next_peek.first_codepoint) // next codepoint in group
+				paragraph->page_data.current_line().max_height = element.line_height();
+		}
+	}
+
+	void internal::GlyphGroup::build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	{
+		const float dx = space_width(next_codepoint);
+		typeset.x += dx;
+		paragraph->page_data.current_line().space_width += dx;
+		++paragraph->page_data.current_line().characters;
+	}
+
+	void internal::GlyphGroup::build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	{
+		const float dx = tab_width(next_codepoint);
+		typeset.x += dx;
+		paragraph->page_data.current_line().space_width += dx;
+		++paragraph->page_data.current_line().characters;
+	}
+
+	void internal::GlyphGroup::build_newline(TypesetData& typeset) const
+	{
+		if (typeset.x == 0.0f)
+			++paragraph->page_data.linebreaks;
+
+		paragraph->page_data.current_line().width = typeset.x;
+		++typeset.line;
+		typeset.y -= paragraph->page_data.current_line().spaced_height(paragraph->format);
+		typeset.x = 0.0f;
+		paragraph->page_data.lines.emplace_back();
+	}
+
+	void internal::GlyphGroup::build_glyph(TypesetData& typeset, float dx) const
+	{
+		typeset.x += dx;
+		paragraph->page_data.current_line().final_advance_width = dx;
+		++paragraph->page_data.current_line().characters;
+	}
+
+	bool internal::GlyphGroup::write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const
+	{
+		if (element.adj_offset <= 0.0f || typeset.x == 0.0f)
+			return true;
+
+		auto iter = element.text.begin();
+		const utf::Codepoint codepoint = iter.advance();
+		if (utf::is_n_or_r(codepoint))
+			return true;
+
+		const utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+		float dx = 0.0f;
+		if (codepoint == ' ')
+			dx = space_width(next_codepoint);
+		else if (codepoint == '\t')
+			dx = tab_width(next_codepoint);
+		else if (element.font.support(codepoint))
+			dx = element.advance_width(codepoint, next_codepoint);
+		else
+		{
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+		}
+
+		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))
+		{
+			typeset.x += element.adj_offset * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
+			++typeset.character;
+			return true;
+		}
+		else
+			return write_newline(typeset, line);
+	}
+
+	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	{
+		typeset.x += space_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
+		++typeset.character;
+	}
+
+	void internal::GlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	{
+		typeset.x += tab_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
+		++typeset.character;
+	}
+
+	bool internal::GlyphGroup::write_newline(TypesetData& typeset, LineAlignment& line) const
+	{
+		const float dy = paragraph->alignment_cache.lines[typeset.line].height;
+		if (!paragraph->format.can_fit_vertically(typeset, dy))
+			return false;
+
+		++typeset.line;
+		typeset.y -= dy;
+		typeset.x = 0.0f;
+		typeset.character = 0;
+
+		if (typeset.line < paragraph->alignment_cache.lines.size())
+			line.y_offset = element.line_y_pivot * (paragraph->page_data.lines[typeset.line].max_height - element.line_height());
+
+		return true;
+	}
+
+	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const
+	{
+		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
+		TextGlyph glyph;
+		glyph.transformer.attach_parent(&paragraph->transformer);
+		element.set_glyph(glyph, c, get_glyph_position(glyphs.size()));
+		glyphs.push_back(std::move(glyph));
+		typeset.x += dx;
+		++typeset.character;
+	}
+
+	glm::vec2 internal::GlyphGroup::get_glyph_position(size_t i) const
+	{
+		const CachedGlyphInfo& cache = cached_info[i];
+		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.jitter_offset;
+	}
+
+	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
+	{
+		return element.advance_width(utf::Codepoint(' '), next_codepoint);
+	}
+
+	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
+	{
+		return space_width(utf::Codepoint(' ')) * (paragraph->format.tab_spaces - 1.0f) + space_width(next_codepoint);
+	}
+
+	void internal::GlyphGroup::recolor() const
+	{
+		dirty &= ~DirtyGlyphGroup::RECOLOR;
+		for (TextGlyph& glyph : glyphs)
+			glyph.set_text_color(element.text_color);
+	}
+
+	void internal::GlyphGroup::realign_lines() const
+	{
+		dirty &= ~DirtyGlyphGroup::LINE_ALIGNMENT;
+
+		float new_line_y_offset = 0.0f;
+		size_t last_line = -1;
+
+		for (size_t i = 0; i < glyphs.size(); ++i)
+		{
+			CachedGlyphInfo& info = cached_info[i];
+
+			if (info.typeset.line != last_line)
+				new_line_y_offset = element.line_y_pivot * (paragraph->page_data.lines[info.typeset.line].max_height - element.line_height());
+
+			if (info.line_y_offset != new_line_y_offset)
+			{
+				TextGlyph& glyph = glyphs[i];
+				glyph.set_local().position.y -= info.line_y_offset;
+				info.line_y_offset = new_line_y_offset;
+				glyph.set_local().position.y += info.line_y_offset;
+			}
+		}
+	}
+
+	void internal::GlyphGroup::reposition_jitter() const
+	{
+		dirty &= ~DirtyGlyphGroup::JITTER_OFFSET;
+		for (TextGlyph& glyph : glyphs)
+			glyph.set_local().position += element.jitter_offset - last_jitter_offset;
+	}
+
+	void internal::GlyphGroup::reposition_glyphs() const
+	{
+		for (size_t i = 0; i < glyphs.size(); ++i)
+			glyphs[i].set_local().position = get_glyph_position(i);
+	}
+
+	TextElementExposure::TextElementExposure(Paragraph& paragraph, internal::GlyphGroup& glyph_group)
+		: paragraph(paragraph), glyph_group(glyph_group)
+	{
+	}
+
+	void TextElementExposure::set_font(const FontAtlasRef& font)
+	{
+		if (glyph_group.element.font != font)
+		{
+			glyph_group.element.font = font;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+
+	void TextElementExposure::set_font(const RasterFontRef& font)
+	{
+		if (glyph_group.element.font != font)
+		{
+			glyph_group.element.font = font;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void TextElementExposure::set_text(utf::String&& text)
+	{
+		if (glyph_group.element.text != text)
+		{
+			glyph_group.element.text = std::move(text);
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void TextElementExposure::set_text_color(glm::vec4 color)
+	{
+		if (glyph_group.element.text_color != color)
+		{
+			glyph_group.element.text_color = color;
+			glyph_group.dirty |= internal::DirtyGlyphGroup::RECOLOR;
+		}
+	}
+	
+	void TextElementExposure::set_adj_offset(float adj_offset)
+	{
+		if (glyph_group.element.adj_offset != adj_offset)
+		{
+			glyph_group.element.adj_offset = adj_offset;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void TextElementExposure::set_scale(glm::vec2 scale)
+	{
+		if (glyph_group.element.scale != scale)
+		{
+			glyph_group.element.scale = scale;
+			paragraph.dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+		}
+	}
+	
+	void TextElementExposure::set_line_y_pivot(float line_y_pivot)
+	{
+		if (glyph_group.element.line_y_pivot != line_y_pivot)
+		{
+			glyph_group.element.line_y_pivot = line_y_pivot;
+			glyph_group.dirty |= internal::DirtyGlyphGroup::LINE_ALIGNMENT;
+		}
+	}
+
+	void TextElementExposure::set_jitter_offset(glm::vec2 jitter_offset)
+	{
+		if (glyph_group.dirty & internal::DirtyGlyphGroup::JITTER_OFFSET)
+			glyph_group.element.jitter_offset = jitter_offset;
+		else if (glyph_group.element.jitter_offset != jitter_offset)
+		{
+			glyph_group.dirty |= internal::DirtyGlyphGroup::JITTER_OFFSET;
+			glyph_group.last_jitter_offset = glyph_group.element.jitter_offset;
+			glyph_group.element.jitter_offset = jitter_offset;
+		}
+	}
+
+	Paragraph::Paragraph(std::vector<TextElement>&& elements, const ParagraphFormat& format)
+		: format(format), bkg()
+	{
+		init(std::move(elements));
+	}
+
+	Paragraph::Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+		: format(format), bkg(UNBATCHED)
+	{
+		init(std::move(elements));
+	}
+
+	Paragraph::Paragraph(SpriteBatch& batch, std::vector<TextElement>&& elements, const ParagraphFormat& format)
+		: format(format), bkg(batch)
+	{
+		init(std::move(elements));
+	}
+
+	Paragraph::Paragraph(const Paragraph& other)
+		: bkg(other.bkg), format(other.format), dirty_layout(other.dirty_layout), glyph_groups(other.glyph_groups),
+		page_data(other.page_data), page_layout(other.page_layout), transformer(other.transformer), draw_bkg(other.draw_bkg)
+	{
+		bkg.transformer.attach_parent(&transformer);
+		
+		for (internal::GlyphGroup& glyph_group : glyph_groups)
+			glyph_group.paragraph = this;
+	}
+
+	Paragraph::Paragraph(Paragraph&& other) noexcept
+		: bkg(std::move(other.bkg)), format(std::move(other.format)), dirty_layout(other.dirty_layout), glyph_groups(std::move(other.glyph_groups)),
+		page_data(std::move(other.page_data)), page_layout(std::move(other.page_layout)), transformer(std::move(other.transformer)), draw_bkg(other.draw_bkg)
+	{
+		for (internal::GlyphGroup& glyph_group : glyph_groups)
+			glyph_group.paragraph = this;
+	}
+
+	Paragraph& Paragraph::operator=(const Paragraph& other)
+	{
+		if (this != &other)
+			*this = dupl(other);
+		return *this;
+	}
+
+	Paragraph& Paragraph::operator=(Paragraph&& other) noexcept
+	{
+		if (this != &other)
+		{
+			bkg = std::move(other.bkg);
+			format = std::move(other.format);
+			dirty_layout = other.dirty_layout;
+			glyph_groups = std::move(other.glyph_groups);
+			page_data = std::move(other.page_data);
+			page_layout = std::move(other.page_layout);
+			transformer = std::move(other.transformer);
+			draw_bkg = other.draw_bkg;
+
+			for (internal::GlyphGroup& glyph_group : glyph_groups)
+				glyph_group.paragraph = this;
+		}
+		return *this;
+	}
+
+	void Paragraph::init(std::vector<TextElement>&& elements)
+	{
+		bkg.transformer.attach_parent(&transformer);
+		bkg.transformer.set_modifier() = Polymorphic<PivotTransformModifier2D>();
+		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
+		bkg.set_modulation({ 0.0f, 0.0f, 0.0f, 1.0f });
+
+		for (TextElement& element : elements)
+			add_element(std::move(element));
+	}
+
+	void Paragraph::set_batch(Unbatched)
+	{
+		bkg.set_batch(UNBATCHED);
+		for (auto& glyph_group : glyph_groups)
+			glyph_group.set_batch(UNBATCHED);
+	}
+
+	void Paragraph::set_batch(SpriteBatch& batch)
+	{
+		bkg.set_batch(batch);
+		for (auto& glyph_group : glyph_groups)
+			glyph_group.set_batch(batch);
 	}
 
 	glm::vec4 Paragraph::get_bkg_color() const
@@ -64,264 +623,271 @@ namespace oly::rendering
 		bkg.set_modulation(color);
 	}
 
-	bool Paragraph::is_visible(size_t pos) const
+	size_t Paragraph::get_element_count() const
 	{
-		return visible[pos];
+		return glyph_groups.size();
 	}
-
-	void Paragraph::set_visible(size_t pos, bool visible)
+	
+	void Paragraph::add_element(TextElement&& element)
 	{
-		this->visible[pos] = visible;
+		glyph_groups.emplace_back(std::move(element));
+		glyph_groups.back().paragraph = this;
+		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+	}
+	
+	void Paragraph::insert_element(size_t i, TextElement&& element)
+	{
+		if (i > glyph_groups.size())
+			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+
+		glyph_groups.emplace(glyph_groups.begin() + i, std::move(element));
+		glyph_groups[i].paragraph = this;
+		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
+	}
+	
+	void Paragraph::erase_element(size_t i)
+	{
+		glyph_groups.erase(glyph_groups.begin() + i);
+		dirty_layout |= internal::DirtyParagraph::REBUILD_LAYOUT;
 	}
 
 	void Paragraph::draw() const
 	{
+		clean_dirty_layout();
 		if (draw_bkg)
 			bkg.draw();
-		for (size_t i = 0; i < glyphs_drawn; ++i)
-			if (visible[i])
-				glyphs[i].draw();
+		for (const internal::GlyphGroup& glyph_group : glyph_groups)
+			glyph_group.draw();
 	}
 
-	void Paragraph::build_layout()
+	void Paragraph::clean_dirty_layout() const
 	{
-		build_page();
-		write_glyphs();
-		auto& bkg_modifier = bkg.transformer.ref_modifier<PivotTransformModifier2D>();
-		bkg_modifier.size = size() + 2.0f * format.padding;
-		bkg_modifier.pivot = format.pivot;
-		bkg.set_local().scale = bkg_modifier.size;
-	}
-
-	void Paragraph::build_page()
-	{
-		pagedata = {};
-		pagedata.lines.push_back({});
-		typeset_text(&Paragraph::build_space, &Paragraph::build_tab, &Paragraph::build_newline, &Paragraph::build_glyph);
-		pagedata.height = content_height();
-		if (pagedata.width < format.min_size.x)
-			pagedata.width = format.min_size.x;
-		if (pagedata.height < format.min_size.y)
-			pagedata.height = format.min_size.y;
-	}
-
-	void Paragraph::write_glyphs()
-	{
-		glyphs_drawn = 0;
-		typeset_text(&Paragraph::write_space, &Paragraph::write_tab, &Paragraph::write_newline, &Paragraph::write_glyph);
-	}
-
-	void Paragraph::typeset_text(void(Paragraph::* space)(utf::Codepoint), void(Paragraph::* tab)(utf::Codepoint),
-		bool(Paragraph::* newline)(), void(Paragraph::* glyph)(utf::Codepoint, float dx))
-	{
-		typeset = {};
-		auto iter = text.begin();
-		while (iter)
+		if (dirty_layout & internal::DirtyParagraph::REBUILD_LAYOUT)
 		{
-			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : utf::Codepoint(0);
+			build_layout();
+			write_glyphs();
 
-			if (codepoint == ' ')
-				(this->*space)(next_codepoint);
-			else if (codepoint == '\t')
-				(this->*tab)(next_codepoint);
-			else if (utf::is_n_or_r(codepoint))
-			{
-				if (iter && utf::is_rn(codepoint, iter.codepoint()))
-					++iter;
-				if (!(this->*newline)())
-					break;
-			}
-			else if (font->cache(codepoint))
-			{
-				const FontGlyph& font_glyph = font->get_glyph(codepoint);
-				float dx = advance_width(font_glyph, codepoint, next_codepoint);
-				if (format.text_wrap > 0.0f && typeset.x + dx > format.text_wrap)
-				{
-					if ((this->*newline)())
-						break;
-				}
-				(this->*glyph)(codepoint, dx);
-			}
+			auto& bkg_modifier = bkg.transformer.ref_modifier<PivotTransformModifier2D>();
+			bkg_modifier.size = page_layout.fitted_size + 2.0f * format.padding;
+			bkg_modifier.pivot = format.pivot;
+			bkg.set_local().scale = bkg_modifier.size;
 		}
-	}
-
-	void Paragraph::build_space(utf::Codepoint next_codepoint)
-	{
-		float dx = space_width(next_codepoint);
-		typeset.x += dx;
-		pagedata.lines.back().width += dx;
-		pagedata.lines.back().spaces += dx;
-		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
-	}
-
-	void Paragraph::build_tab(utf::Codepoint next_codepoint)
-	{
-		float dx = tab_width(next_codepoint);
-		typeset.x += dx;
-		pagedata.lines.back().width += dx;
-		pagedata.lines.back().spaces += dx;
-		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
-	}
-
-	bool Paragraph::build_newline()
-	{
-		float dy;
-		if (typeset.x == 0.0f)
-			dy = line_height() * format.linebreak_spacing;
 		else
-			dy = line_height();
-		if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
-			return false;
-		++typeset.line;
-		typeset.y -= dy;
-		if (typeset.x == 0.0f)
-			pagedata.blank_lines += line_height();
-		typeset.x = 0.0f;
-		pagedata.lines.push_back({});
-		return true;
-	}
-
-	void Paragraph::build_glyph(utf::Codepoint c, float dx)
-	{
-		typeset.x += dx;
-		pagedata.lines.back().width += dx;
-		pagedata.lines.back().final_advance = dx;
-		pagedata.width = std::max(pagedata.width, typeset.x);
-	}
-
-	void Paragraph::write_space(utf::Codepoint next_codepoint)
-	{
-		typeset.x += space_width(next_codepoint) * space_width_mult();
-	}
-
-	void Paragraph::write_tab(utf::Codepoint next_codepoint)
-	{
-		typeset.x += tab_width(next_codepoint) * space_width_mult();
-	}
-
-	bool Paragraph::write_newline()
-	{
-		float dy;
-		if (typeset.x == 0.0f)
-			dy = line_height() * linebreak_mult();
-		else
-			dy = line_height();
-		if (format.max_height > 0.0f && typeset.y - dy < -format.max_height)
-			return false;
-		++typeset.line;
-		typeset.y -= dy;
-		typeset.x = 0.0f;
-		return true;
-	}
-
-	void Paragraph::write_glyph(utf::Codepoint c, float dx)
-	{
-		typeset.x += dx;
-		write_glyph(font->get_glyph(c));
-	}
-
-	void Paragraph::create_glyph()
-	{
-		TextGlyph glyph;
-		glyph.transformer.attach_parent(&transformer);
-		glyph.set_text_color(default_text_color);
-		glyphs.emplace_back(std::move(glyph));
-		visible.push_back(true);
-	}
-
-	void Paragraph::write_glyph(const FontGlyph& font_glyph)
-	{
-		float line_start_x = 0.0f;
-		if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::RIGHT)
-			line_start_x = pagedata.width - pagedata.lines[typeset.line].width;
-		else if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::CENTER)
-			line_start_x = 0.5f * (pagedata.width - pagedata.lines[typeset.line].width);
-
-		float line_start_y = 0.0f;
-		if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::BOTTOM)
-			line_start_y = pagedata.height - content_height();
-		else if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::MIDDLE)
-			line_start_y = 0.5f * (pagedata.height - content_height());
-
-		float typeset_mult_x = 1.0f;
-		if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY)
 		{
-			PageData::Line ln = pagedata.lines[typeset.line];
-			if (ln.width - ln.final_advance > 0.0f)
-				typeset_mult_x = (pagedata.width - ln.final_advance) / (ln.width - ln.final_advance);
-		}
+			AlignmentFlags flags = AlignmentFlags(0);
+			const bool reposition_glyphs = dirty_layout != 0;
+			bool resize_bkg = false;
+
+			if (dirty_layout & internal::DirtyParagraph::LINE_SPACING)
+			{
+				flags = (AlignmentFlags)(flags | AlignmentFlags::VERTICAL);
+				recompute_content_size_y(), recompute_fitted_size_y();
+				resize_bkg = true;
+			}
+
+			if (dirty_layout & internal::DirtyParagraph::HORIZONTAL_ALIGN)
+				flags = (AlignmentFlags)(flags | AlignmentFlags::HORIZONTAL);
 			
-		float typeset_mult_y = 1.0f;
-		if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::FULL_JUSTIFY)
-		{
-			if (content_height() - font->line_height() > 0.0f)
-				typeset_mult_y = (pagedata.height - font->line_height()) / (content_height() - font->line_height());
+			if (dirty_layout & internal::DirtyParagraph::VERTICAL_ALIGN)
+				flags = (AlignmentFlags)(flags | AlignmentFlags::VERTICAL);
+			
+			if (dirty_layout & internal::DirtyParagraph::PADDING)
+			{
+				flags = (AlignmentFlags)(flags | AlignmentFlags::PADDING);
+				resize_bkg = true;
+			}
+			
+			if (dirty_layout & internal::DirtyParagraph::PIVOT)
+			{
+				flags = (AlignmentFlags)(flags | AlignmentFlags::PIVOT);
+				bkg.transformer.ref_modifier<PivotTransformModifier2D>().pivot = format.pivot;
+			}
+			
+			if (dirty_layout & internal::DirtyParagraph::MIN_SIZE)
+			{
+				flags = (AlignmentFlags)(flags | AlignmentFlags::VERTICAL | AlignmentFlags::HORIZONTAL);
+				recompute_fitted_size_x(), recompute_fitted_size_y();
+				resize_bkg = true;
+			}
+
+			compute_alignment_cache(flags);
+			if (reposition_glyphs)
+				for (size_t i = 0; i < written_glyph_groups; ++i)
+					glyph_groups[i].reposition_glyphs();
+			if (resize_bkg)
+			{
+				const glm::vec2 bkg_size = page_layout.fitted_size + 2.0f * format.padding;
+				bkg.transformer.ref_modifier<PivotTransformModifier2D>().size = bkg_size;
+				bkg.set_local().scale = bkg_size;
+			}
 		}
 
-		glm::vec2 glyph_pos = {
-			line_start_x + typeset.x * typeset_mult_x - format.pivot.x * pagedata.width + format.padding.x,
-			-line_start_y + typeset.y * typeset_mult_y - font->get_ascent() + (1.0f - format.pivot.y) * pagedata.height - format.padding.y
-		};
-
-		if (glyphs_drawn >= glyphs.size())
-			create_glyph();
-		glyphs[glyphs_drawn++].set_glyph(*font, font_glyph, glyph_pos);
+		dirty_layout = internal::DirtyParagraph(0);
 	}
 
-	float Paragraph::line_height() const
+	void Paragraph::build_layout() const
 	{
-		return font->line_height() * format.line_spacing;
+		dirty_layout = internal::DirtyParagraph(0);
+
+		page_layout = {};
+		page_data = {};
+		page_data.lines.push_back({});
+
+		TypesetData typeset = {};
+		for (size_t i = 0; i < glyph_groups.size(); ++i)
+			glyph_groups[i].build_page_section(typeset, peek_next(i));
+		page_data.current_line().width = typeset.x;
+
+		recompute_content_size_x(), recompute_content_size_y();
+		recompute_fitted_size_x(), recompute_fitted_size_y();
+		compute_alignment_cache(AlignmentFlags(~0));
 	}
 
-	float Paragraph::space_width_mult() const
+	void Paragraph::write_glyphs() const
 	{
-		if (format.horizontal_alignment == ParagraphFormat::HorizontalAlignment::JUSTIFY)
+		TypesetData typeset = {};
+		bool writing = true;
+		written_glyph_groups = glyph_groups.size();
+		for (size_t i = 0; i < glyph_groups.size(); ++i)
 		{
-			PageData::Line ln = pagedata.lines[typeset.line];
-			if (ln.spaces > 0.0f)
-				return 1.0f + (pagedata.width - ln.width) / ln.spaces;
+			if (writing)
+			{
+				if (glyph_groups[i].write_glyph_section(typeset, peek_next(i)) == internal::GlyphGroup::WriteResult::BREAK)
+				{
+					written_glyph_groups = i + 1;
+					writing = false;
+				}
+			}
+			else
+				glyph_groups[i].clear_cache();
 		}
-		return 1.0f;
 	}
 
-	float Paragraph::content_height() const
+	void Paragraph::compute_alignment_cache(AlignmentFlags flags) const
 	{
-		return (pagedata.lines.size() - 1) * line_height() + pagedata.blank_lines * (format.linebreak_spacing - 1.0f) + font->line_height();
-	}
+		if (flags & AlignmentFlags::RESIZE_LINES)
+			alignment_cache.lines.resize(page_data.lines.size());
 
-	float Paragraph::linebreak_mult() const
-	{
-		if (format.vertical_alignment == ParagraphFormat::VerticalAlignment::JUSTIFY)
+		if (flags & AlignmentFlags::VERTICAL)
 		{
-			if (pagedata.blank_lines > 0)
-				return 1.0f + (pagedata.height - content_height() + line_height()) / pagedata.blank_lines;
+			for (size_t i = 0; i + 1 < alignment_cache.lines.size(); ++i)
+				alignment_cache.lines[i].height = page_data.lines[i].spaced_height(format);
+			if (!alignment_cache.lines.empty())
+				alignment_cache.lines.back().height = page_data.lines.back().max_height;
+
+			alignment_cache.valign_offset = 0.0f;
+			switch (format.vertical_alignment)
+			{
+			case ParagraphFormat::VerticalAlignment::BOTTOM:
+				alignment_cache.valign_offset = -(page_layout.fitted_size.y - page_layout.content_size.y);
+				break;
+			case ParagraphFormat::VerticalAlignment::MIDDLE:
+				alignment_cache.valign_offset = -0.5f * (page_layout.fitted_size.y - page_layout.content_size.y);
+				break;
+			case ParagraphFormat::VerticalAlignment::JUSTIFY:
+				if (page_data.linebreaks > 0)
+				{
+					const float extra_linebreak = (page_layout.fitted_size.y - page_layout.content_size.y) / page_data.linebreaks;
+					for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+						if (page_data.lines[i].width == 0.0f)
+							alignment_cache.lines[i].height += extra_linebreak;
+				}
+				break;
+			case ParagraphFormat::VerticalAlignment::FULL_JUSTIFY:
+				if (!page_data.lines.empty() && page_layout.content_size.y - page_data.lines.back().max_height > 0.0f)
+				{
+					const float line_mult = (page_layout.fitted_size.y - page_data.lines.back().max_height) / (page_layout.content_size.y - page_data.lines.back().max_height);
+					for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+						alignment_cache.lines[i].height *= line_mult;
+				}
+				break;
+			}
 		}
-		return format.linebreak_spacing;
+
+		if (flags & AlignmentFlags::HORIZONTAL)
+		{
+			for (auto& line : alignment_cache.lines)
+			{
+				line.start = 0.0f;
+				line.space_width_mult = 1.0f;
+				line.character_shift = 0.0f;
+			}
+
+			switch (format.horizontal_alignment)
+			{
+			case ParagraphFormat::HorizontalAlignment::RIGHT:
+				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+					alignment_cache.lines[i].start = page_layout.fitted_size.x - page_data.lines[i].width;
+				break;
+			case ParagraphFormat::HorizontalAlignment::CENTER:
+				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+					alignment_cache.lines[i].start = 0.5f * (page_layout.fitted_size.x - page_data.lines[i].width);
+				break;
+			case ParagraphFormat::HorizontalAlignment::JUSTIFY:
+				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+				{
+					const internal::PageBuildData::Line line = page_data.lines[i];
+					if (line.space_width > 0.0f)
+						alignment_cache.lines[i].space_width_mult = 1.0f + (page_layout.fitted_size.x - line.width) / line.space_width;
+				}
+				break;
+			case ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY:
+				for (size_t i = 0; i < alignment_cache.lines.size(); ++i)
+				{
+					const internal::PageBuildData::Line line = page_data.lines[i];
+					alignment_cache.lines[i].character_shift = line.characters > 1 ? (page_layout.fitted_size.x - line.width) / (line.characters - 1) : 0.0f;
+				}
+				break;
+			}
+		}
+
+		if (flags & AlignmentFlags::PIVOT)
+			alignment_cache.pivot_offset = page_layout.fitted_size * (glm::vec2{ 0.0f, 1.0f } - format.pivot);
+
+		if (flags & AlignmentFlags::PADDING)
+			alignment_cache.padding_offset = format.padding * glm::vec2{ 1.0f, -1.0f };
 	}
 
-	float Paragraph::space_width(utf::Codepoint next_codepoint)
+	internal::GlyphGroup::PeekData Paragraph::peek_next(size_t i) const
 	{
-		float adv = font->get_space_width();
-		if (next_codepoint)
-			adv += font->kerning_of(next_codepoint, utf::Codepoint(' '));
-		return adv;
+		if (i + 1 >= glyph_groups.size())
+			return {};
+
+		const internal::GlyphGroup& current_glyph = glyph_groups[i];
+		const internal::GlyphGroup& next_glyph = glyph_groups[i + 1];
+
+		if (current_glyph.element.font.adj_compat(next_glyph.element.font))
+			return next_glyph.peek();
+		else
+			return {};
 	}
 
-	float Paragraph::tab_width(utf::Codepoint next_codepoint)
+	void Paragraph::recompute_content_size_x() const
 	{
-		float first = space_width(next_codepoint);
-		float rest = space_width(next_codepoint) * (format.tab_spaces - 1.0f);
-		return first + rest;
+		page_layout.content_size.x = 0.0f;
+		for (size_t i = 0; i < page_data.lines.size(); ++i)
+			page_layout.content_size.x = glm::max(page_layout.content_size.x, page_data.lines[i].width);
 	}
-		
-	float Paragraph::advance_width(const FontGlyph& font_glyph, utf::Codepoint codepoint, utf::Codepoint next_codepoint)
+
+	void Paragraph::recompute_content_size_y() const
 	{
-		float adv = font_glyph.advance_width * font->get_scale();
-		if (next_codepoint)
-			adv += font->kerning_of(codepoint, next_codepoint, font_glyph.index, font->get_glyph_index(next_codepoint));
-		return adv;
+		page_layout.content_size.y = 0.0f;
+		for (size_t i = 0; i < page_data.lines.size(); ++i)
+		{
+			if (i + 1 < page_data.lines.size())
+				page_layout.content_size.y += page_data.lines[i].spaced_height(format);
+			else
+				page_layout.content_size.y += page_data.lines[i].max_height;
+		}
+	}
+
+	void Paragraph::recompute_fitted_size_x() const
+	{
+		page_layout.fitted_size.x = glm::max(page_layout.content_size.x, format.min_size.x);
+	}
+
+	void Paragraph::recompute_fitted_size_y() const
+	{
+		page_layout.fitted_size.y = glm::max(page_layout.content_size.y, format.min_size.y);
 	}
 }

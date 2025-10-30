@@ -1,97 +1,101 @@
 #pragma once
 
-#include "core/base/Transforms.h"
 #include "core/base/Constants.h"
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/SmartReference.h"
+#include "core/types/Issuer.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
+#include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 namespace oly::rendering
 {
 	namespace internal
 	{
 		class PolygonReference;
+
+		class PolygonBatch : public oly::internal::Issuer<PolygonBatch>
+		{
+			friend class internal::PolygonReference;
+
+			GLuint projection_location;
+
+			graphics::VertexArray vao;
+			graphics::PersistentEBO<1> ebo;
+
+			enum
+			{
+				POSITION,
+				COLOR,
+				INDEX
+			};
+			graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint> vbo_block;
+
+			graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
+
+		public:
+			Camera2DRef camera = REF_DEFAULT;
+
+			PolygonBatch();
+			PolygonBatch(const PolygonBatch&) = delete;
+			PolygonBatch(PolygonBatch&&) = delete;
+
+			void render() const;
+			void render(const glm::mat3& projection) const;
+
+		private:
+			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count);
+			void set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count);
+			void set_polygon_transform(GLuint id, const glm::mat3& transform);
+			const glm::mat3& get_polygon_transform(GLuint id);
+
+			GLuint generate_id(GLuint vertices);
+			void terminate_id(GLuint id);
+			bool resize_range(GLuint& id, GLuint vertices);
+			Range<GLuint> get_vertex_range(GLuint id) const;
+			bool is_valid_id(GLuint id) const;
+
+			StrictFreeSpaceTracker<GLuint> vertex_free_space;
+			std::unordered_map<GLuint, Range<GLuint>> polygon_indexer;
+			SoftIDGenerator<GLuint> id_generator;
+			static const GLuint NULL_ID = GLuint(-1);
+			void assert_valid_id(GLuint id) const;
+		};
 	}
 
-	class PolygonBatch
-	{
-		friend class internal::PolygonReference;
-
-		GLuint projection_location;
-
-		graphics::VertexArray vao;
-		graphics::PersistentEBO<1> ebo;
-
-		enum
-		{
-			POSITION,
-			COLOR,
-			INDEX
-		};
-		graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint> vbo_block;
-
-		graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
-
-	public:
-		typedef GLuint Index;
-		// ID refers to the index of a polygon in transform SSBO. It also indexes a set of ranges in the VBO block.
-		typedef StrictIDGenerator<Index>::ID PolygonID;
-
-		PolygonBatch();
-		PolygonBatch(const PolygonBatch&) = delete;
-		PolygonBatch(PolygonBatch&&) = delete;
-
-		void render() const;
-			
-		glm::mat3 projection = 1.0f;
-
-	private:
-		void set_primitive_points(Range<Index> vertex_range, const glm::vec2* points, Index count);
-		void set_primitive_colors(Range<Index> vertex_range, const glm::vec4* colors, Index count);
-		void set_polygon_transform(const PolygonID& id, const glm::mat3& transform);
-		const glm::mat3& get_polygon_transform(const PolygonID& id);
-
-		PolygonID generate_id(Index vertices);
-		void terminate_id(const PolygonID& id);
-		bool resize_range(PolygonID& id, Index vertices);
-		Range<Index> get_vertex_range(const PolygonID& id) const;
-		bool is_valid_id(const PolygonID& id) const;
-
-		StrictFreeSpaceTracker<Index> vertex_free_space;
-		std::unordered_map<Index, Range<Index>> polygon_indexer;
-		StrictIDGenerator<Index> id_generator;
-	};
+	using PolygonBatch = PublicIssuer<internal::PolygonBatch>;
 
 	namespace internal
 	{
-		class PolygonReference
+		class PolygonReference : public PublicIssuerHandle<PolygonBatch>
 		{
-			friend class PolygonBatch;
-			PolygonBatch* batch = nullptr;
-			mutable PolygonBatch::PolygonID id;
+			using Super = PublicIssuerHandle<PolygonBatch>;
+			// ID refers to the index of a polygon in transform SSBO. It also indexes the set of ranges in the VBO block.
+			mutable GLuint id = PolygonBatch::NULL_ID;
 			
 		public:
-			PolygonReference(PolygonBatch* batch = nullptr);
+			PolygonReference(Unbatched = UNBATCHED);
+			PolygonReference(rendering::PolygonBatch& batch);
 			PolygonReference(const PolygonReference&);
 			PolygonReference(PolygonReference&&) noexcept;
 			~PolygonReference();
 			PolygonReference& operator=(const PolygonReference&);
 			PolygonReference& operator=(PolygonReference&&) noexcept;
 
-			PolygonBatch* get_batch() const { return batch; }
-			void set_batch(PolygonBatch* batch);
+			auto get_batch() const { return lock(); }
+			void set_batch(Unbatched);
+			void set_batch(rendering::PolygonBatch& batch);
 
-			bool resize_range(PolygonBatch::Index vertices) const;
-			Range<PolygonBatch::Index> get_vertex_range() const;
+			bool resize_range(GLuint vertices) const;
+			Range<GLuint> get_vertex_range() const;
 
-			void set_primitive_points(Range<PolygonBatch::Index> vertex_range, const glm::vec2* points, PolygonBatch::Index count) const;
-			void set_primitive_colors(Range<PolygonBatch::Index> vertex_range, const glm::vec4* colors, PolygonBatch::Index count) const;
-			void set_primitive_points(const glm::vec2* points, PolygonBatch::Index count) const;
-			void set_primitive_colors(const glm::vec4* colors, PolygonBatch::Index count) const;
+			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count) const;
+			void set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count) const;
+			void set_primitive_points(const glm::vec2* points, GLuint count) const;
+			void set_primitive_colors(const glm::vec4* colors, GLuint count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
 
 			GLuint& draw_index() const;
@@ -104,16 +108,20 @@ namespace oly::rendering
 			mutable bool colors = true;
 
 		public:
-			PolygonSubmitter(PolygonBatch* batch = nullptr);
+			PolygonSubmitter(Unbatched = UNBATCHED);
+			PolygonSubmitter(rendering::PolygonBatch& batch);
 			PolygonSubmitter(const PolygonSubmitter&);
 			PolygonSubmitter(PolygonSubmitter&&) noexcept = default;
 			PolygonSubmitter& operator=(const PolygonSubmitter&);
 			PolygonSubmitter& operator=(PolygonSubmitter&&) noexcept = default;
 			virtual ~PolygonSubmitter() = default;
 
+			auto get_batch() const { return ref.get_batch(); }
+			void set_batch(Unbatched) { ref.set_batch(UNBATCHED); flag_all(); }
+			void set_batch(rendering::PolygonBatch& batch) { ref.set_batch(batch); flag_all(); }
+
 		protected:
 			const internal::PolygonReference& get_ref() const { return ref; }
-			void set_batch(PolygonBatch* batch) { ref.set_batch(batch); }
 
 			void flag_points() { points = true; }
 			void flag_colors() { colors = true; }
@@ -122,7 +130,7 @@ namespace oly::rendering
 			void submit_dirty() const;
 
 			virtual void triangulate() const = 0;
-			virtual PolygonBatch::Index num_vertices() const = 0;
+			virtual GLuint num_vertices() const = 0;
 			virtual void impl_set_polygon() const = 0;
 			virtual void impl_set_polygon_points() const = 0;
 			virtual void impl_set_polygon_colors() const = 0;
@@ -130,16 +138,13 @@ namespace oly::rendering
 	}
 
 	// ASSET
-	class StaticPolygon : protected internal::PolygonSubmitter
+	class StaticPolygon : public internal::PolygonSubmitter
 	{
 		mutable math::Triangulation triangulation;
 		cmath::Polygon2D polygon;
 
 	public:
 		using internal::PolygonSubmitter::PolygonSubmitter;
-
-		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
-		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); }
 
 		const cmath::Polygon2D& get_polygon() const { return polygon; }
 		const std::vector<glm::vec2>& get_points() const { return polygon.points; }
@@ -153,22 +158,19 @@ namespace oly::rendering
 
 	private:
 		void triangulate() const override;
-		PolygonBatch::Index num_vertices() const override;
+		GLuint num_vertices() const override;
 		void impl_set_polygon() const override;
 		void impl_set_polygon_points() const override;
 		void impl_set_polygon_colors() const override;
 	};
 
-	class Polygonal : protected internal::PolygonSubmitter
+	class Polygonal : public internal::PolygonSubmitter
 	{
 	public:
 		Transformer2D transformer;
 
 		using internal::PolygonSubmitter::PolygonSubmitter;
 		virtual ~Polygonal() = default;
-
-		PolygonBatch* get_batch() const { return get_ref().get_batch(); }
-		void set_batch(PolygonBatch* batch) { internal::PolygonSubmitter::set_batch(batch); flag_all(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

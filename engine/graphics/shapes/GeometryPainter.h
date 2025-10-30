@@ -12,8 +12,16 @@
 
 namespace oly::rendering
 {
+	class GeometryPainter;
+
+	namespace internal
+	{
+		extern rendering::PolygonBatch& get_polygon_batch(GeometryPainter&);
+		extern rendering::EllipseBatch& get_ellipse_batch(GeometryPainter&);
+	}
+
 	// TODO v6 combine ellipse and polygon shaders.
-	// TODO v6 write texture in separate thread
+	// TODO v7 write texture in separate thread
 	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.
 	class GeometryPainter
 	{
@@ -25,17 +33,16 @@ namespace oly::rendering
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRef texture;
 		glm::ivec2 dimensions;
+		glm::mat3 projection = 1.0f;
 		mutable bool dirty = false;
 
 		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
 		{
-			GeometryPainter* painter = nullptr;
+			GeometryPainter& painter;
 
-			WindowResizeHandler(GeometryPainter* painter);
+			WindowResizeHandler(GeometryPainter& painter);
 
 			bool consume(const input::WindowResizeEventData& data) override;
-
-			void set_projection();
 		} window_resize_handler;
 		friend struct WindowResizeHandler;
 
@@ -67,7 +74,8 @@ namespace oly::rendering
 		PaintFunction paint_fn = [](PaintSupport) {};
 
 		GeometryPainter(const PaintFunction& paint_fn);
-		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch* batch);
+		GeometryPainter(const PaintFunction& paint_fn, Unbatched);
+		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch& batch);
 		GeometryPainter(const GeometryPainter&);
 		GeometryPainter(GeometryPainter&&) noexcept;
 		~GeometryPainter();
@@ -75,23 +83,32 @@ namespace oly::rendering
 		GeometryPainter& operator=(GeometryPainter&&) noexcept;
 
 	private:
+		void render_polygons() const;
+		void render_ellipses() const;
 		void write_texture() const;
 		void set_sprite_scale(glm::vec2 scale);
+		void set_dimensions(glm::ivec2 dimensions);
 
 	public:
 		void draw() const;
 		void flag_dirty() const { dirty = true; }
 		void regen_to_current_resolution();
 
-		SpriteBatch* get_sprite_batch() const { return sprite.get_batch(); }
-		void set_sprite_batch(SpriteBatch* batch) { sprite.set_batch(batch); }
+		auto get_sprite_batch() const { return sprite.get_batch(); }
+		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); sync_sprite_batch(); }
+		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); sync_sprite_batch(); }
+		void sync_sprite_batch();
 
+	public:
+		friend PolygonBatch& internal::get_polygon_batch(GeometryPainter&);
+		friend EllipseBatch& internal::get_ellipse_batch(GeometryPainter&);
 		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
-		PolygonBatch& get_polygon_batch() { return polygon_batch; }
 		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
-		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
 
 	private:
+		PolygonBatch& get_polygon_batch() { return polygon_batch; }
+		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
+		
 		void setup_texture();
 		void copy_texture(const graphics::BindlessTexture& other);
 		void sync_texture();

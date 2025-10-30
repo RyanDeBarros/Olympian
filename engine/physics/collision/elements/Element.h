@@ -8,9 +8,9 @@
 #include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
 
-#include "core/containers/CopyPtr.h"
 #include "core/containers/BlackBox.h"
 #include "core/base/Parameters.h"
+#include "core/types/Variant.h"
 
 namespace oly::col2d
 {
@@ -116,7 +116,7 @@ namespace oly::col2d
 	class Element
 	{
 		internal::ElementID id = internal::ElementID::NONE;
-		BlackBox<true> obj;
+		BlackBox obj;
 
 	public:
 		Element() = default;
@@ -130,7 +130,7 @@ namespace oly::col2d
 				*obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
 			else
 			{
-				obj = BlackBox<true>(std::forward<Shape>(shape));
+				obj = BlackBox(std::forward<Shape>(shape));
 				id = internal::ElementIDTrait<std::decay_t<Shape>>::ID;
 			}
 			return *this;
@@ -142,7 +142,7 @@ namespace oly::col2d
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
 
-		using ElementVariant = std::variant<
+		using ElementVariant = Variant<
 			const Circle*,
 			const AABB*,
 			const OBB*,

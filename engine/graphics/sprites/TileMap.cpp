@@ -2,46 +2,22 @@
 
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
-#include "registries/Loader.h"
-#include "registries/graphics/TextureRegistry.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {
-	TileMapLayer::TileMapLayer(SpriteBatch* batch)
-		: batch(batch ? *batch : context::sprite_batch())
+	TileMapLayer::TileMapLayer()
+		: Super(context::sprite_batch()->weak_from_this())
 	{
 	}
 
-	TileMapLayer::TileMapLayer(const TileMapLayer& other)
-		: batch(other.batch), tileset(other.tileset), sprite_map(other.sprite_map), transformer(other.transformer)
+	TileMapLayer::TileMapLayer(Unbatched)
 	{
 	}
 
-	TileMapLayer::TileMapLayer(TileMapLayer&& other) noexcept
-		: batch(other.batch), tileset(std::move(other.tileset)), sprite_map(std::move(other.sprite_map)), transformer(std::move(other.transformer))
+	TileMapLayer::TileMapLayer(SpriteBatch& batch)
+		: Super(batch->weak_from_this())
 	{
-	}
-
-	TileMapLayer& TileMapLayer::operator=(const TileMapLayer& other)
-	{
-		if (this != &other)
-		{
-			tileset = other.tileset;
-			sprite_map = other.sprite_map;
-			transformer = other.transformer;
-		}
-		return *this;
-	}
-
-	TileMapLayer& TileMapLayer::operator=(TileMapLayer&& other) noexcept
-	{
-		if (this != &other)
-		{
-			tileset = std::move(other.tileset);
-			sprite_map = std::move(other.sprite_map);
-			transformer = std::move(other.transformer);
-		}
-		return *this;
 	}
 
 	void TileMapLayer::draw() const
@@ -50,14 +26,31 @@ namespace oly::rendering
 			sprite.draw();
 	}
 
+	void TileMapLayer::set_batch(Unbatched)
+	{
+		reset();
+		for (auto& [_, sprite] : sprite_map)
+			sprite.set_batch(UNBATCHED);
+	}
+
+	void TileMapLayer::set_batch(SpriteBatch& batch)
+	{
+		reset(*batch);
+		for (auto& [_, sprite] : sprite_map)
+			sprite.set_batch(batch);
+	}
+
 	void TileMapLayer::paint_tile(glm::ivec2 tile)
 	{
 		if (!sprite_map.count(tile))
 		{
-			auto& sprite = sprite_map.emplace(tile, &batch).first->second;
-			sprite.transformer.attach_parent(&transformer);
-			update_configuration(tile);
-			update_neighbour_configurations(tile);
+			if (auto batch = lock())
+			{
+				auto& sprite = sprite_map.emplace(tile, *batch).first->second;
+				sprite.transformer.attach_parent(&transformer);
+				update_configuration(tile);
+				update_neighbour_configurations(tile);
+			}
 		}
 	}
 
@@ -103,7 +96,7 @@ namespace oly::rendering
 		TileSet::Transformation transformation;
 		TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
-		sprite.set_texture(tile_desc.name);
+		sprite.set_texture(tile_desc.file);
 		sprite.set_tex_coords(tile_desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
 		if (transformation & TileSet::Transformation::REFLECT_X)
@@ -123,7 +116,7 @@ namespace oly::rendering
 		else
 			sprite.set_local().rotation = 0.0f;
 		
-		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.name);
+		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.file);
 	}
 
 	void TileMap::draw() const

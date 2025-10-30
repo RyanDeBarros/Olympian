@@ -139,5 +139,5 @@ namespace oly::graphics
 		return internal::framebuffer_block_impl(ids, std::make_index_sequence<N>{});
 	}
 
-	// TODO v6 Renderbuffer
+	// TODO v7 Renderbuffer
 }

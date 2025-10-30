@@ -10,7 +10,7 @@ namespace oly::context
 		std::array<std::string, 32> collision_mask_names, collision_layer_names;
 	}
 
-	void internal::init_collision(const TOMLNode& node)
+	void internal::init_collision(TOMLNode node)
 	{
 		if (auto collision_node = node["collision"])
 		{
@@ -36,6 +36,8 @@ namespace oly::context
 				}
 			}
 		}
+
+		col2d::internal::load_luts();
 	}
 
 	void internal::terminate_collision()

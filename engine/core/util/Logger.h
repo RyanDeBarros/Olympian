@@ -149,6 +149,8 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec2);
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec3);
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec4);
+	extern Logger::Impl operator<<(Logger::Impl, glm::mat2);
+	extern Logger::Impl operator<<(Logger::Impl, glm::mat3);
 }
 
 #define OLY_LOG(...) oly::internal::LogAccess{}.untagged(__VA_ARGS__)

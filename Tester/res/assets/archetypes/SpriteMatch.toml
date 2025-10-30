@@ -6,13 +6,10 @@ draw = [
 	"sprite2"
 ]
 
-[[archetype.sprite]]
-name = "sprite0"
-transform = { "position" = [450, -200] }
-"texture" = "RES://textures/einstein.png"
+[sprite0]
+transformer = { "position" = [450, -200] }
+texture = "~/textures/einstein.png"
 
-[[archetype.sprite]]
-name = "sprite2"
-"texture" = "RES://textures/tux.png"
-transform = { "position" = [-100, -100], "scale" = [0.2, 0.2] }
-transform_modifier = { "type" = "shear" }
+[sprite2]
+texture = "~/textures/tux.png"
+transformer = { "position" = [-100, -100], "scale" = [0.2, 0.2], modifier = { "type" = "shear" } }

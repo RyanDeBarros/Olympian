@@ -1,17 +1,13 @@
 #pragma once
 
-#include "registries/Loader.h"
-
-namespace oly::rendering
-{
-	class SpriteBatch;
-}
+#include "assets/Loader.h"
+#include "graphics/sprites/Sprite.h"
 
 namespace oly::context
 {
 	namespace internal
 	{
-		extern void init_sprites(const TOMLNode&);
+		extern void init_sprites(TOMLNode);
 		extern void terminate_sprites();
 
 		extern bool sprite_batch_is_rendering();

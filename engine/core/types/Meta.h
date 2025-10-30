@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <variant>
 #include <optional>
 
 namespace oly
@@ -102,7 +101,7 @@ namespace oly
 	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 
 	template<typename From, typename To>
-	concept PolymorphicBaseOf = std::is_polymorphic_v<To> && std::is_base_of_v<To, From>;
+	concept PolymorphicBaseOf = std::is_polymorphic_v<To> && std::is_base_of_v<To, From> && !std::is_same_v<From, To>;
 
 	template<typename T, typename... Class>
 	constexpr bool visiting_class_is = std::disjunction_v<std::is_same<std::decay_t<T>, Class>...>;
