@@ -24,6 +24,9 @@ namespace oly::rendering
 		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
 
+		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }
+		bool is_camera_invariant() const { return body.is_camera_invariant(); }
+
 		void draw() const;
 
 		glm::vec2 get_start() const { return start; }
@@ -79,6 +82,9 @@ namespace oly::rendering
 		auto get_batch() const { return body.get_batch(); }
 		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
+
+		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }
+		bool is_camera_invariant() const { return body.is_camera_invariant(); }
 
 		void draw() const;
 

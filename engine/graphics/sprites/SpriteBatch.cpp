@@ -46,21 +46,15 @@ namespace oly::rendering
 
 	void internal::SpriteBatch::render() const
 	{
-		if (camera)
-			render(camera->projection_matrix(), camera->invariant_projection_matrix());
-	}
-
-	void internal::SpriteBatch::render(const glm::mat3& projection, const glm::mat3& invariant_projection) const
-	{
-		if (ebo.empty())
+		if (ebo.empty() || !camera)
 			return;
 
 		quad_ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);
 		glUseProgram(shader);
-		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(invariant_projection));
+		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
+		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 		glUniform4f(shader_locations.modulation, global_modulation[0], global_modulation[1], global_modulation[2], global_modulation[3]);
 		glUniform1f(shader_locations.time, TIME.now<>());
 
@@ -272,6 +266,7 @@ namespace oly::rendering
 		glm::vec4 modulation = glm::vec4(1.0f);
 		graphics::AnimFrameFormat frame_format = {};
 		bool is_text_glyph = false;
+		bool camera_invariant = false;
 		graphics::BindlessTextureRef mod_texture = nullptr;
 		glm::vec2 mod_texture_dimensions = {};
 		math::UVRect mod_tex_coords = {};
@@ -286,6 +281,7 @@ namespace oly::rendering
 		glm::vec4 modulation;
 		graphics::AnimFrameFormat frame_format;
 		bool is_text_glyph;
+		bool camera_invariant;
 		graphics::BindlessTextureRef mod_texture;
 		glm::vec2 mod_texture_dimensions;
 		math::UVRect mod_tex_coords;
@@ -301,6 +297,7 @@ namespace oly::rendering
 			.modulation = ref.get_modulation(),
 			.frame_format = ref.get_frame_format(),
 			.is_text_glyph = ref.is_text_glyph(),
+			.camera_invariant = ref.is_camera_invariant(),
 			.mod_texture = ref.get_mod_texture(mod_texture_dimensions),
 			.mod_tex_coords = ref.get_mod_tex_coords(),
 			.transform = ref.get_transform()
@@ -319,6 +316,7 @@ namespace oly::rendering
 			.modulation = ref.get_modulation(),
 			.frame_format = ref.get_frame_format(),
 			.is_text_glyph = ref.is_text_glyph(),
+			.camera_invariant = ref.is_camera_invariant(),
 			.mod_texture = ref.get_mod_texture(mod_texture_dimensions),
 			.mod_tex_coords = ref.get_mod_tex_coords(),
 			.transform = ref.get_transform()
@@ -335,6 +333,7 @@ namespace oly::rendering
 		ref.set_modulation(attr.modulation);
 		ref.set_frame_format(attr.frame_format);
 		ref.set_text_glyph(attr.is_text_glyph);
+		ref.set_camera_invariant(attr.camera_invariant);
 		ref.set_mod_texture(attr.mod_texture, attr.mod_texture_dimensions);
 		ref.set_mod_tex_coords(attr.mod_tex_coords);
 		ref.set_transform(attr.transform);
@@ -347,6 +346,7 @@ namespace oly::rendering
 		ref.set_modulation(attr.modulation);
 		ref.set_frame_format(attr.frame_format);
 		ref.set_text_glyph(attr.is_text_glyph);
+		ref.set_camera_invariant(attr.camera_invariant);
 		ref.set_mod_texture(attr.mod_texture, attr.mod_texture_dimensions);
 		ref.set_mod_tex_coords(attr.mod_tex_coords);
 		ref.set_transform(attr.transform);

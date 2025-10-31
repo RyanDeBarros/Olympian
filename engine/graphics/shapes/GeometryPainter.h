@@ -33,7 +33,6 @@ namespace oly::rendering
 		graphics::Framebuffer framebuffer;
 		graphics::BindlessTextureRef texture;
 		glm::ivec2 dimensions;
-		glm::mat3 projection = 1.0f;
 		mutable bool dirty = false;
 
 		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>

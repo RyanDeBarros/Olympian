@@ -21,7 +21,10 @@ namespace oly::rendering
 		{
 			friend class internal::PolygonReference;
 
-			GLuint projection_location;
+			struct
+			{
+				GLuint projection, invariant_projection;
+			} shader_locations;
 
 			graphics::VertexArray vao;
 			graphics::PersistentEBO<1> ebo;
@@ -30,9 +33,10 @@ namespace oly::rendering
 			{
 				POSITION,
 				COLOR,
-				INDEX
+				INDEX,
+				CAMERA_INVARIANT
 			};
-			graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint> vbo_block;
+			graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint, GLubyte> vbo_block;
 
 			graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
 
@@ -44,13 +48,14 @@ namespace oly::rendering
 			PolygonBatch(PolygonBatch&&) = delete;
 
 			void render() const;
-			void render(const glm::mat3& projection) const;
 
 		private:
 			void set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count);
 			void set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count);
 			void set_polygon_transform(GLuint id, const glm::mat3& transform);
-			const glm::mat3& get_polygon_transform(GLuint id);
+			void set_polygon_camera_invariant(GLuint id, bool camera_invariant);
+			const glm::mat3& get_polygon_transform(GLuint id) const;
+			bool is_polygon_camera_invariant(GLuint id) const;
 
 			GLuint generate_id(GLuint vertices);
 			void terminate_id(GLuint id);
@@ -98,6 +103,9 @@ namespace oly::rendering
 			void set_primitive_colors(const glm::vec4* colors, GLuint count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
 
+			void set_camera_invariant(bool camera_invariant) const;
+			bool is_camera_invariant() const;
+
 			GLuint& draw_index() const;
 		};
 
@@ -119,6 +127,9 @@ namespace oly::rendering
 			auto get_batch() const { return ref.get_batch(); }
 			void set_batch(Unbatched) { ref.set_batch(UNBATCHED); flag_all(); }
 			void set_batch(rendering::PolygonBatch& batch) { ref.set_batch(batch); flag_all(); }
+
+			void set_camera_invariant(bool camera_invariant) const { ref.set_camera_invariant(camera_invariant); }
+			bool is_camera_invariant() const { return ref.is_camera_invariant(); }
 
 		protected:
 			const internal::PolygonReference& get_ref() const { return ref; }

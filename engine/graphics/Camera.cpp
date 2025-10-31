@@ -77,11 +77,9 @@ namespace oly::rendering
 
 	glm::mat3 Camera2D::projection_matrix() const
 	{
-		// TODO v6 for ui widgets that are in camera-space, only return projection - define two different projection uniforms in shader - one for world space and one for camera space.
 		return projection * glm::inverse(transformer.global());
 	}
 
-	// TODO v5 add uInvariantProjection to ellipse and polygon shaders.
 	glm::mat3 Camera2D::invariant_projection_matrix() const
 	{
 		return projection;

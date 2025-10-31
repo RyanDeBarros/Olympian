@@ -137,12 +137,12 @@ namespace oly::rendering
 
 	void GeometryPainter::render_polygons() const
 	{
-		polygon_batch->render(projection);
+		polygon_batch->render();
 	}
 	
 	void GeometryPainter::render_ellipses() const
 	{
-		ellipse_batch->render(projection);
+		ellipse_batch->render();
 	}
 
 	void GeometryPainter::write_texture() const
@@ -172,7 +172,6 @@ namespace oly::rendering
 	void GeometryPainter::set_dimensions(glm::ivec2 dimensions)
 	{
 		this->dimensions = dimensions;
-		projection = glm::ortho(-0.5f * dimensions[0], 0.5f * dimensions[0], -0.5f * dimensions[1], 0.5f * dimensions[1]);
 	}
 
 	void GeometryPainter::draw() const
@@ -192,12 +191,15 @@ namespace oly::rendering
 
 	void GeometryPainter::sync_sprite_batch()
 	{
-		polygon_batch->camera = nullptr;
-		ellipse_batch->camera = nullptr;
-
 		window_resize_handler.detach();
 		if (auto sprite_batch = sprite.get_batch())
+		{
 			window_resize_handler.attach(sprite_batch->camera.base());
+			polygon_batch->camera = sprite_batch->camera;
+			ellipse_batch->camera = sprite_batch->camera;
+		}
+
+		sprite.set_camera_invariant(true);
 	}
 
 	void GeometryPainter::setup_texture()

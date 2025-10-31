@@ -15,6 +15,7 @@ namespace oly::rendering
 	{
 		float rx = 0.0f, ry = 0.0f, border = 0.0f;
 		float fill_exp = 0.0f, border_exp = 0.0f;
+		GLuint camera_invariant = 0;
 	};
 
 	struct EllipseColorGradient {
@@ -43,7 +44,10 @@ namespace oly::rendering
 			};
 			graphics::LazyPersistentGPUBufferBlock<EllipseDimension, EllipseColorGradient, glm::mat3> ssbo_block;
 
-			GLuint projection_location;
+			struct
+			{
+				GLuint projection, invariant_projection;
+			} shader_locations;
 
 		public:
 			Camera2DRef camera = REF_DEFAULT;
@@ -53,7 +57,6 @@ namespace oly::rendering
 			EllipseBatch(EllipseBatch&&) = delete;
 
 			void render() const;
-			void render(const glm::mat3& projection) const;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;

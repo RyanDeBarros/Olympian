@@ -11,30 +11,27 @@ namespace oly::rendering
 	internal::PolygonBatch::PolygonBatch()
 		: ebo(vao), vbo_block(vao), vertex_free_space({ 0, nmax<GLuint>() })
 	{
-		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
+		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
+		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uInvariantProjection");
 
-		vbo_block.attributes[POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
-		vbo_block.attributes[COLOR] = graphics::VertexAttribute<float>{ 1, 4 };
-		vbo_block.attributes[INDEX] = graphics::VertexAttribute<int>{ 2, 1 };
+		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 0, .size = 2 };
+		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 1, .size = 4 };
+		vbo_block.attributes[INDEX] = graphics::VertexAttribute<graphics::VertexAttributeType::INT>{ .index = 2, .size = 1 };
+		vbo_block.attributes[CAMERA_INVARIANT] = graphics::VertexAttribute<graphics::VertexAttributeType::INT>{ .index = 3, .size = 1, .type = GL_UNSIGNED_BYTE };
 		vbo_block.setup();
 	}
 
 	void internal::PolygonBatch::render() const
 	{
-		if (camera)
-			render(camera->projection_matrix());
-	}
-
-	void internal::PolygonBatch::render(const glm::mat3& projection) const
-	{
-		if (ebo.empty())
+		if (ebo.empty() || !camera)
 			return;
 
 		vbo_block.pre_draw_all();
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::polygon_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
+		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
 		ebo.render_elements(GL_TRIANGLES);
@@ -70,10 +67,22 @@ namespace oly::rendering
 		transform_ssbo.set(id) = transform;
 	}
 
-	const glm::mat3& internal::PolygonBatch::get_polygon_transform(GLuint id)
+	void internal::PolygonBatch::set_polygon_camera_invariant(GLuint id, bool camera_invariant)
+	{
+		const auto range = get_vertex_range(id);
+		for (GLuint v = 0; v < range.length; ++v)
+			vbo_block.set<CAMERA_INVARIANT>(range.initial + v) = camera_invariant;
+	}
+
+	const glm::mat3& internal::PolygonBatch::get_polygon_transform(GLuint id) const
 	{
 		assert_valid_id(id);
 		return transform_ssbo.get(id);
+	}
+
+	bool internal::PolygonBatch::is_polygon_camera_invariant(GLuint id) const
+	{
+		return vbo_block.get<CAMERA_INVARIANT>(get_vertex_range(id).initial);
 	}
 
 	GLuint internal::PolygonBatch::generate_id(GLuint vertices)
@@ -151,8 +160,10 @@ namespace oly::rendering
 			{
 				const GLuint num_vertices = batch->get_vertex_range(other.id).length;
 				const glm::mat3 transform = batch->get_polygon_transform(other.id);
+				bool camera_invariant = batch->is_polygon_camera_invariant(other.id);
 				id = batch->generate_id(num_vertices);
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
 			}
 		}
 	}
@@ -208,11 +219,13 @@ namespace oly::rendering
 			{
 				const GLuint num_vertices = batch->get_vertex_range(id).length;
 				const glm::mat3 transform = batch->get_polygon_transform(id);
+				const bool camera_invariant = batch->is_polygon_camera_invariant(id);
 				batch->terminate_id(id);
 				reset(*new_batch);
 				batch = lock();
 				id = batch->generate_id(num_vertices);
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
 			}
 			else
 				reset(*new_batch);
@@ -226,9 +239,13 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 		{
 			const glm::mat3 transform = batch->is_valid_id(id) ? batch->get_polygon_transform(id) : 1.0f;
+			const bool camera_invariant = batch->is_valid_id(id) ? batch->is_polygon_camera_invariant(id) : false;
 			const bool resized = batch->resize_range(id, vertices);
 			if (resized)
+			{
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
+			}
 			return resized;
 		}
 		else
@@ -279,6 +296,22 @@ namespace oly::rendering
 	{
 		if (auto batch = lock()) [[likely]]
 			batch->set_polygon_transform(id, transform);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
+	void internal::PolygonReference::set_camera_invariant(bool camera_invariant) const
+	{
+		if (auto batch = lock()) [[likely]]
+			batch->set_polygon_camera_invariant(id, camera_invariant);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
+	bool internal::PolygonReference::is_camera_invariant() const
+	{
+		if (auto batch = lock()) [[likely]]
+			return batch->is_polygon_camera_invariant(id);
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}

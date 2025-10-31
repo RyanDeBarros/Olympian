@@ -1,10 +1,13 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 
 layout(location = 0) in vec2 iPosition;
 layout(location = 1) in vec4 iColor;
 layout(location = 2) in uint iIndex;
+layout(location = 3) in uint8_t iCameraInvariant;
 
 uniform mat3 uProjection;
+uniform mat3 uInvariantProjection;
 
 struct Mat3
 {
@@ -20,6 +23,7 @@ layout(std430, binding = 0) readonly buffer PolygonTransforms {
 out vec4 tColor;
 
 void main() {
-	gl_Position.xy = (uProjection * matrix(uTransforms[iIndex]) * vec3(iPosition, 1.0)).xy;
+	mat3 projection = iCameraInvariant == uint8_t(0) ? uProjection : uInvariantProjection;
+	gl_Position.xy = (projection * matrix(uTransforms[iIndex]) * vec3(iPosition, 1.0)).xy;
 	tColor = iColor;
 }

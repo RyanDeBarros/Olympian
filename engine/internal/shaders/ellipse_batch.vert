@@ -1,6 +1,8 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 
 uniform mat3 uProjection;
+uniform mat3 uInvariantProjection;
 
 struct Dimension {
 	float rx;
@@ -8,6 +10,7 @@ struct Dimension {
 	float b;
 	float fill_exp;
 	float border_exp;
+	uint16_t camera_invariant;
 };
 vec2 position(Dimension dim, int corner) {
 	switch (corner) {
@@ -53,6 +56,7 @@ flat out Dimension tDimension;
 void main() {
 	tDimension = uDimensions[gl_VertexID / 4];
 	tLocalPos = position(tDimension, gl_VertexID % 4);
-	gl_Position.xy = (uProjection * matrix(uTransforms[gl_VertexID / 4]) * vec3(tLocalPos, 1.0)).xy;
+	mat3 projection = tDimension.camera_invariant == uint16_t(0) ? uProjection : uInvariantProjection;
+	gl_Position.xy = (projection * matrix(uTransforms[gl_VertexID / 4]) * vec3(tLocalPos, 1.0)).xy;
 	tColor = uColors[gl_VertexID / 4];
 }
