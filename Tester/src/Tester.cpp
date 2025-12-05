@@ -74,8 +74,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::debug::CollisionLayer player_layer;
 	oly::debug::CollisionLayer obstacle_layer;
 	oly::debug::CollisionLayer ray_layer;
-	oly::debug::CollisionLayer impulse_layer;
-	oly::debug::CollisionLayer raycast_result_layer;
 
 	oly::CallbackTimer text_jitter_timer;
 
@@ -118,10 +116,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		obstacle_layer.draw();
 		player_layer.draw();
-		impulse_layer.draw();
 		// TODO v6 raycast result and ray are not moving with camera
 		ray_layer.draw();
-		raycast_result_layer.draw();
 		
 		pixel_art_text.draw();
 	}
@@ -139,8 +135,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
-
-		jumble.smol_text->set_camera_invariant(true);
 
 		oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
 		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
@@ -221,16 +215,15 @@ int main()
 
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
-	//oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
-	oly::col2d::Capsule capsule{ .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
+	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
 	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
-	//obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
-	obstacle0->set_local().position.x = 400.0f;
-	// TODO v6 center of mass is not working?
-	//obstacle0->properties().center_of_mass = capsule.center;
+	obstacle0->collider().set_local().position = -capsule.center;
+	obstacle0->set_transformer().set_modifier() = new oly::OffsetTransformModifier2D(capsule.center);
+	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
+	obstacle0->properties().center_of_mass = capsule.center;
 	obstacle0->properties().net_torque += 300.0f;
 	obstacle0->properties().set_moi_multiplier(4000.0f);
 

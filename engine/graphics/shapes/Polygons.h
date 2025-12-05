@@ -33,12 +33,17 @@ namespace oly::rendering
 			{
 				POSITION,
 				COLOR,
-				INDEX,
-				CAMERA_INVARIANT
+				INDEX
 			};
-			graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint, GLubyte> vbo_block;
+			graphics::PersistentVertexBufferBlock<glm::vec2, glm::vec4, GLuint> vbo_block;
 
-			graphics::LazyPersistentGPUBuffer<glm::mat3> transform_ssbo;
+			struct MatInfo
+			{
+				glm::mat3 transform;
+				GLubyte camera_invariant;
+			};
+
+			graphics::LazyPersistentGPUBuffer<MatInfo> transform_ssbo;
 
 		public:
 			Camera2DRef camera = REF_DEFAULT;
@@ -115,6 +120,13 @@ namespace oly::rendering
 			mutable bool points = true;
 			mutable bool colors = true;
 
+			enum CameraInvariantFlag
+			{
+				VALUE = 1,
+				DIRTY = 2
+			};
+			mutable CameraInvariantFlag camera_invariant = CameraInvariantFlag(0b10);
+
 		public:
 			PolygonSubmitter(Unbatched = UNBATCHED);
 			PolygonSubmitter(rendering::PolygonBatch& batch);
@@ -128,8 +140,8 @@ namespace oly::rendering
 			void set_batch(Unbatched) { ref.set_batch(UNBATCHED); flag_all(); }
 			void set_batch(rendering::PolygonBatch& batch) { ref.set_batch(batch); flag_all(); }
 
-			void set_camera_invariant(bool camera_invariant) const { ref.set_camera_invariant(camera_invariant); }
-			bool is_camera_invariant() const { return ref.is_camera_invariant(); }
+			void set_camera_invariant(bool camera_invariant) const;
+			bool is_camera_invariant() const;
 
 		protected:
 			const internal::PolygonReference& get_ref() const { return ref; }

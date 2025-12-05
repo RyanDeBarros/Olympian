@@ -46,5 +46,6 @@ namespace oly
 	// TODO v6 Lighting engine
 	// TODO v7 UI widgets
 	// TODO v8 thread safety + multi-threading.
+	// TODO v9 separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
 	// TODO v9 network communication - online/local multiplayer.
 }

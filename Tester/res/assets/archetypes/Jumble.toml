@@ -115,6 +115,7 @@ transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 [smol_text]
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
+camera_invariant = true
 	[[smol_text.element]]
 	"font"	       = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"

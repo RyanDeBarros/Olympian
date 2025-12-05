@@ -17,7 +17,6 @@ namespace oly::rendering
 		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 0, .size = 2 };
 		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 1, .size = 4 };
 		vbo_block.attributes[INDEX] = graphics::VertexAttribute<graphics::VertexAttributeType::INT>{ .index = 2, .size = 1 };
-		vbo_block.attributes[CAMERA_INVARIANT] = graphics::VertexAttribute<graphics::VertexAttributeType::INT>{ .index = 3, .size = 1, .type = GL_UNSIGNED_BYTE };
 		vbo_block.setup();
 	}
 
@@ -64,25 +63,25 @@ namespace oly::rendering
 	void internal::PolygonBatch::set_polygon_transform(GLuint id, const glm::mat3& transform)
 	{
 		assert_valid_id(id);
-		transform_ssbo.set(id) = transform;
+		transform_ssbo.set(id).transform = transform;
 	}
 
 	void internal::PolygonBatch::set_polygon_camera_invariant(GLuint id, bool camera_invariant)
 	{
-		const auto range = get_vertex_range(id);
-		for (GLuint v = 0; v < range.length; ++v)
-			vbo_block.set<CAMERA_INVARIANT>(range.initial + v) = camera_invariant;
+		assert_valid_id(id);
+		transform_ssbo.set(id).camera_invariant = camera_invariant;
 	}
 
 	const glm::mat3& internal::PolygonBatch::get_polygon_transform(GLuint id) const
 	{
 		assert_valid_id(id);
-		return transform_ssbo.get(id);
+		return transform_ssbo.get(id).transform;
 	}
 
 	bool internal::PolygonBatch::is_polygon_camera_invariant(GLuint id) const
 	{
-		return vbo_block.get<CAMERA_INVARIANT>(get_vertex_range(id).initial);
+		assert_valid_id(id);
+		return transform_ssbo.get(id).camera_invariant;
 	}
 
 	GLuint internal::PolygonBatch::generate_id(GLuint vertices)
@@ -352,6 +351,21 @@ namespace oly::rendering
 		return *this;
 	}
 
+	void internal::PolygonSubmitter::set_camera_invariant(bool invariant) const
+	{
+		if (invariant)
+			camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::VALUE);
+		else
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::VALUE);
+
+		camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::DIRTY);
+	}
+
+	bool internal::PolygonSubmitter::is_camera_invariant() const
+	{
+		return camera_invariant & CameraInvariantFlag::VALUE;
+	}
+
 	void internal::PolygonSubmitter::submit_dirty() const
 	{
 		if (points)
@@ -384,6 +398,12 @@ namespace oly::rendering
 		{
 			colors = false;
 			impl_set_polygon_colors();
+		}
+
+		if (camera_invariant & CameraInvariantFlag::DIRTY)
+		{
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::DIRTY);
+			ref.set_camera_invariant(camera_invariant & CameraInvariantFlag::VALUE);
 		}
 	}
 

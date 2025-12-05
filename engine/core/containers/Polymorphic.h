@@ -159,22 +159,22 @@ namespace oly
 
 #define OLY_POLYMORPHIC_CLONE_DEFINITION(Base)\
 	public:\
-	virtual Base* clone_new() const&\
-	{\
-		return new Base(*this);\
-	}\
-	virtual Base* clone_new() &&\
-	{\
-		return new Base(std::move(*this)); \
-	}
+		virtual Base* clone_new() const&\
+		{\
+			return new Base(*this);\
+		}\
+		virtual Base* clone_new() &&\
+		{\
+			return new Base(std::move(*this)); \
+		}
 
 #define OLY_POLYMORPHIC_CLONE_OVERRIDE(Derived)\
 	public:\
-	virtual Derived* clone_new() const& override\
-	{\
-		return new Derived(*this);\
-	}\
-	virtual Derived* clone_new() && override\
-	{\
-		return new Derived(std::move(*this));\
-	}
+		virtual Derived* clone_new() const& override\
+		{\
+			return new Derived(*this);\
+		}\
+		virtual Derived* clone_new() && override\
+		{\
+			return new Derived(std::move(*this));\
+		}
