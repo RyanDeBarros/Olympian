@@ -109,7 +109,6 @@ namespace oly::rendering
 	StaticArrowExtension::StaticArrowExtension(PolygonBatch& batch)
 		: body(batch), head(batch)
 	{
-		body.set_camera_invariant(false);
 		body.set_points().resize(4);
 		body.set_points()[0] = { 0.0f, -0.5f };
 		body.set_points()[1] = { 1.0f, -0.5f };

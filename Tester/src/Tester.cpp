@@ -116,7 +116,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		obstacle_layer.draw();
 		player_layer.draw();
-		// TODO v6 raycast result and ray are not moving with camera
 		ray_layer.draw();
 		
 		pixel_art_text.draw();
