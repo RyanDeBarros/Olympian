@@ -22,6 +22,7 @@ namespace oly::rendering
 
 	// TODO v6 GeometryPainter should create textures for the individual objects (CollisionViews) rather than one sprite for whole screen framebuffer. Then, transforming the views should result in transforming that individual sprite, not triggering a repaint.
 
+	// TODO v6 update GeometryPainter mkdocs after modifying
 	// TODO v6 combine ellipse and polygon shaders.
 	// TODO v8 write texture in separate thread
 	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.

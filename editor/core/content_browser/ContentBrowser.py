@@ -22,6 +22,12 @@ from .FavoritesDialog import FavoritesDialog
 from .FileIOMachine import FileIOMachine
 
 
+# TODO v6 use QFileSystemWatcher or watchdog to check for external modifications. Upon opening/focusing on the editor, display dialog like "External changes detected. Undo stack may no longer match the file system. Do you want to clear history or continue with limited undo?" (latter choice would require smart invalidation of undo stack). Could also add new actions to the undo queue based on external modifications. Maybe also option to undo external changes, if possible - depends on whether watchdog/QFileSystemWatcher can notify editor of each individual modification (of course, if modifying then opening editor, I'll need to clear the serialized undo stack first).
+# TODO v6 make sure that tabs have local undo stacks for local asset operations. Saving the file will add an action to the browser's undo history. Panel focus is important here - undoing/redoing in editor tab is different from undoing/redoing in browser panel.
+
+# TODO v8 Git integration
+
+
 class ContentBrowserFolderView(QListView):
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -456,7 +462,7 @@ class ContentBrowser(QWidget):
 		self.win: Optional[MainWindow] = None
 
 		self.folder_view = self.ui.CBFolderView
-		self.undo_stack = QUndoStack()
+		self.undo_stack = QUndoStack()  # TODO v6 serialize undo stack
 		self.file_machine: Optional[FileIOMachine] = None
 
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
