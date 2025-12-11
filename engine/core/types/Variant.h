@@ -277,6 +277,7 @@ namespace oly
 	public:\
 		_OLY_CTOR(N);\
 		_OLY_HOLDS(N);\
+		bool empty() const { return type == Type::NONE; }\
 		_OLY_GET(N);\
 		_OLY_VISIT(N);\
 		_OLY_GET_TYPE(N);\

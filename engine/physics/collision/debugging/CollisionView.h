@@ -37,25 +37,17 @@ namespace oly::debug
 
 	struct EmptyCollision {};
 	using CollisionObjectGroup = std::vector<CollisionObject>;
-
-	struct CollisionObjectView
-	{
-		using Variant = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
-
-		Variant view;
-
-		CollisionObjectView(Variant&& view) : view(std::move(view)) {}
-	};
+	using CollisionObjectView = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
 
 	class CollisionView
 	{
 		friend class CollisionLayer;
 
 		CollisionLayer* layer;
-		std::unique_ptr<CollisionObjectView> obj;
+		CollisionObjectView obj;
 
-		void invalidate_layer() { layer = nullptr; obj.reset(); }
-		bool valid() const { return obj && layer; }
+		void invalidate_layer() { layer = nullptr; obj = EmptyCollision{}; }
+		bool valid() const { return !obj.empty() && layer; }
 
 	public:
 		CollisionView(CollisionLayer& layer);

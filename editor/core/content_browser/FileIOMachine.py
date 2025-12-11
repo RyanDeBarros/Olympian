@@ -11,6 +11,9 @@ from PySide6.QtGui import QUndoCommand
 from editor.core.path_items import get_path_item
 
 
+# TODO v6 extract into separate independent module. Each action can have its own local file.
+
+
 class FileIOMachine:
 	from editor.core.ProjectContext import ProjectContext
 	def __init__(self, project_context: ProjectContext):

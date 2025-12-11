@@ -135,7 +135,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		jumble.on_tick();
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
 
-		oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
+		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
 		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
