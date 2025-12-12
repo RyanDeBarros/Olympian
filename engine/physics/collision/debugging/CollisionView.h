@@ -8,6 +8,7 @@
 #include "graphics/shapes/GeometryPainter.h"
 #include "graphics/shapes/Arrow.h"
 
+// TODO v6 remove event includes
 #include "core/platform/WindowEvents.h"
 #include "core/platform/EventHandler.h"
 
@@ -20,7 +21,7 @@ namespace oly::debug
 		using Variant = Variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		CollisionLayer& layer;
-		std::unique_ptr<Variant> v;
+		std::unique_ptr<Variant> v; // TODO v6 use optional instead of unique_ptr
 		CollisionObject(CollisionLayer& layer, Variant&& v);
 		CollisionObject(const CollisionObject&);
 		CollisionObject(CollisionObject&&) noexcept;
@@ -32,7 +33,8 @@ namespace oly::debug
 		Variant* operator->() { return v.get(); }
 		const Variant* operator->() const { return v.get(); }
 
-		void draw(rendering::GeometryPainter::PaintSupport&) const;
+		void paint(rendering::GeometryPainter::PaintContext& paint_context) const;
+		math::Rect2D bounds() const;
 	};
 
 	struct EmptyCollision {};
@@ -45,6 +47,8 @@ namespace oly::debug
 
 		CollisionLayer* layer;
 		CollisionObjectView obj;
+		mutable rendering::StaticSprite sprite;
+		mutable bool dirty = false;
 
 		void invalidate_layer() { layer = nullptr; obj = EmptyCollision{}; }
 		bool valid() const { return !obj.empty() && layer; }
@@ -65,7 +69,8 @@ namespace oly::debug
 		CollisionLayer& get_layer();
 
 	private:
-		void draw(rendering::GeometryPainter::PaintSupport&) const;
+		void draw_sprite() const;
+		void repaint() const;
 
 	public:
 		void clear_view();
@@ -91,25 +96,17 @@ namespace oly::debug
 		friend class CollisionView;
 
 		rendering::GeometryPainter painter;
+		rendering::SpriteBatch sprite_batch;
 		std::unordered_set<CollisionView*> collision_views;
 
 	public:
-		CollisionLayer();
-		CollisionLayer(rendering::Unbatched);
-		CollisionLayer(rendering::SpriteBatch& batch);
-		CollisionLayer(const CollisionLayer&);
-		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
 		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;
 
-		auto get_batch() const { return painter.get_sprite_batch(); }
-		void set_batch(rendering::Unbatched) { painter.set_sprite_batch(rendering::UNBATCHED); }
-		void set_batch(rendering::SpriteBatch& batch) { painter.set_sprite_batch(batch); }
+		const rendering::SpriteBatch& get_sprite_batch() const { return sprite_batch; }
 
 	private:
-		rendering::GeometryPainter::PaintFunction paint_fn() const;
-		
 		void assign(CollisionView* view);
 		void unassign(CollisionView* view);
 

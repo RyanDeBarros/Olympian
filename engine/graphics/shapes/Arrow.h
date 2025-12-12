@@ -116,5 +116,10 @@ namespace oly::rendering
 				head_height = 3.0f * w;
 			}
 		}
+
+		std::vector<glm::vec2> get_all_points() const;
+
+	private:
+		void clean() const;
 	};
 }

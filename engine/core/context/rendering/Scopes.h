@@ -7,12 +7,12 @@ namespace oly::context
 {
 	class ScopedViewportChange
 	{
-		rendering::Camera2D& camera;
+		const rendering::Camera2D& camera;
 		glm::vec4 original_clear_color;
 		bool original_blend_enabled;
 
 	public:
-		ScopedViewportChange(rendering::Camera2D& camera, glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos = {});
+		ScopedViewportChange(const rendering::Camera2D& camera, glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos = {});
 		ScopedViewportChange(const ScopedViewportChange&) = delete;
 		ScopedViewportChange(ScopedViewportChange&&) = delete;
 		~ScopedViewportChange();
@@ -23,8 +23,10 @@ namespace oly::context
 		ScopedViewportChange viewport_change;
 
 	public:
-		ScopedFullFramebufferDrawing(rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size, glm::vec4 clear_color = glm::vec4(0.0f),
-			bool blend_enabled = false, glm::ivec2 viewport_pos = {});
+		ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size, glm::vec4 clear_color = glm::vec4(0.0f),
+			bool blend_enabled = false);
+		ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, math::IRect2D viewport, glm::vec4 clear_color = glm::vec4(0.0f),
+			bool blend_enabled = false);
 		ScopedFullFramebufferDrawing(const ScopedFullFramebufferDrawing&) = delete;
 		ScopedFullFramebufferDrawing(ScopedFullFramebufferDrawing&&) = delete;
 		~ScopedFullFramebufferDrawing();

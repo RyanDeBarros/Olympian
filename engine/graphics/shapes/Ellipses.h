@@ -16,6 +16,10 @@ namespace oly::rendering
 		float rx = 0.0f, ry = 0.0f, border = 0.0f;
 		float fill_exp = 0.0f, border_exp = 0.0f;
 		GLuint camera_invariant = 0;
+
+		// TODO v6 border is completely inward - implement border pivot in shader, and make sure to update the bounds() implementation here
+
+		math::Rect2D bounds() const { return { .x1 = -rx, .x2 = rx, .y1 = -ry, .y2 = ry }; }
 	};
 
 	struct EllipseColorGradient {
@@ -53,6 +57,7 @@ namespace oly::rendering
 			Camera2DRef camera = REF_DEFAULT;
 
 			EllipseBatch();
+			// TODO v6 copy/move semantics for internal::SpriteBatch/EllipseBatch/PolygonBatch, then use those semantics in classes that have batch members.
 			EllipseBatch(const EllipseBatch&) = delete;
 			EllipseBatch(EllipseBatch&&) = delete;
 

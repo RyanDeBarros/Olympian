@@ -55,12 +55,39 @@ namespace oly::debug
 		return *this;
 	}
 
-	void CollisionObject::draw(rendering::GeometryPainter::PaintSupport& ps) const
+	void CollisionObject::paint(rendering::GeometryPainter::PaintContext& paint_context) const
 	{
+		// TODO v6 make sure v is drawn 'raw' (without transform), since raw bounds are used for texture generation.
 		v->visit(
-			[&ps](const rendering::EllipseReference& v) { ps.pre_ellipse_draw(); v.draw(); },
-			[&ps](const rendering::StaticPolygon& v) { ps.pre_polygon_draw(); v.draw(); },
-			[&ps](const rendering::StaticArrowExtension& v) { ps.pre_polygon_draw(); v.draw(); }
+			[&paint_context](const rendering::EllipseReference& v) {
+				paint_context.pre_ellipse_draw();
+				v.draw();
+			},
+			[&paint_context](const rendering::StaticPolygon& v) {
+				paint_context.pre_polygon_draw();
+				v.draw();
+			},
+			[&paint_context](const rendering::StaticArrowExtension& v) {
+				paint_context.pre_polygon_draw();
+				v.draw();
+			}
+		);
+	}
+
+	math::Rect2D CollisionObject::bounds() const
+	{
+		return v->visit(
+			[](const rendering::EllipseReference& v) {
+				return v.get_dimension().bounds();
+			},
+			[](const rendering::StaticPolygon& v) {
+				const auto& points = v.get_points();
+				return col2d::AABB::wrap(points.data(), points.size()).rect();
+			},
+			[](const rendering::StaticArrowExtension& v) {
+				const auto points = v.get_all_points();
+				return col2d::AABB::wrap(points.data(), points.size()).rect();
+			}
 		);
 	}
 
@@ -179,16 +206,57 @@ namespace oly::debug
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void CollisionView::draw(rendering::GeometryPainter::PaintSupport& ps) const
+	void CollisionView::draw_sprite() const
 	{
-		// TODO v6 specialized shader for collision view, especially since it's rendered on a separate framebuffer.
-		if (valid())
+		if (!valid())
+			return;
+
+		if (dirty)
+			repaint();
+
+		sprite.draw();
+	}
+
+	void CollisionView::repaint() const
+	{
+		if (auto sprite_batch = sprite.get_batch())
 		{
-			obj.visit(
-				[](const EmptyCollision) {},
-				[&ps](const CollisionObject& view) { view.draw(ps); },
-				[&ps](const CollisionObjectGroup& views) { for (const auto& view : views) view.draw(ps); }
+			dirty = false;
+			math::Rect2D bounds = obj.visit(
+				[](const EmptyCollision) { return math::Rect2D{}; },
+				[](const CollisionObject& view) { return view.bounds(); },
+				[](const CollisionObjectGroup& view) {
+					math::Rect2D bounds = view.at(0).bounds();
+					for (size_t i = 1; i < view.size(); ++i)
+						bounds.include_rect(view.at(i).bounds());
+					return bounds;
+				}
+			);
+
+			if (bounds.width() > 0 && bounds.height() > 0)
+			{
+				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds));
+				internal::check_opengl_error(); // TODO v6 remove
+
+				obj.visit(
+					[](const EmptyCollision) {},
+					[&paint_context](const CollisionObject& view) { view.paint(paint_context); },
+					[&paint_context](const CollisionObjectGroup& views) { for (const auto& view : views) view.paint(paint_context); }
 				);
+
+				paint_context.flush();
+				paint_context.set_texture(sprite);
+
+				internal::check_opengl_error(); // TODO v6 remove
+			}
+			else
+				sprite.set_texture(REF_NULL);
+		}
+		else
+		{
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot write texture to using null sprite batch" << LOG.nl;
+
+			// TODO v6 convenience macro for OLY_LOG_*(true, "...") << LOG.source_info.full_source()
 		}
 	}
 
@@ -364,7 +432,7 @@ namespace oly::debug
 	void CollisionView::view_changed() const
 	{
 		if (valid())
-			layer->painter.flag_dirty();
+			dirty = true;
 	}
 
 	void CollisionView::update_color(glm::vec4 color)
@@ -395,36 +463,6 @@ namespace oly::debug
 			view_changed();
 	}
 
-	CollisionLayer::CollisionLayer()
-		: painter(paint_fn())
-	{
-		painter.paint_fn = paint_fn();
-	}
-
-	CollisionLayer::CollisionLayer(rendering::Unbatched)
-		: painter(paint_fn(), rendering::UNBATCHED)
-	{
-		painter.paint_fn = paint_fn();
-	}
-
-	CollisionLayer::CollisionLayer(rendering::SpriteBatch& batch)
-		: painter(paint_fn(), batch)
-	{
-		painter.paint_fn = paint_fn();
-	}
-
-	CollisionLayer::CollisionLayer(const CollisionLayer& other)
-		: painter(other.painter)
-	{
-		painter.paint_fn = paint_fn();
-	}
-
-	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
-		: painter(std::move(other.painter)), collision_views(std::move(other.collision_views))
-	{
-		painter.paint_fn = paint_fn();
-	}
-
 	CollisionLayer::~CollisionLayer()
 	{
 		for (CollisionView* view : collision_views)
@@ -439,7 +477,6 @@ namespace oly::debug
 				view->invalidate_layer();
 			collision_views.clear();
 			painter = other.painter;
-			painter.paint_fn = paint_fn();
 		}
 		return *this;
 	}
@@ -452,34 +489,27 @@ namespace oly::debug
 				view->invalidate_layer();
 			collision_views.clear();
 			painter = std::move(other.painter);
-			painter.paint_fn = paint_fn();
 		}
 		return *this;
-	}
-
-	rendering::GeometryPainter::PaintFunction CollisionLayer::paint_fn() const
-	{
-		return [this](rendering::GeometryPainter::PaintSupport& ps) {
-			for (const auto& collision_view : collision_views)
-				collision_view->draw(ps);
-			};
 	}
 
 	void CollisionLayer::assign(CollisionView* view)
 	{
 		if (collision_views.insert(view).second)
-			painter.flag_dirty();
+			view->sprite.set_batch(sprite_batch);
 	}
 
 	void CollisionLayer::unassign(CollisionView* view)
 	{
 		if (collision_views.erase(view))
-			painter.flag_dirty();
+			view->sprite.set_batch(rendering::UNBATCHED);
 	}
 
 	void CollisionLayer::draw() const
 	{
-		painter.draw();
+		// TODO v6 preserve some kind of draw order?
+		for (CollisionView* view : collision_views)
+			view->draw_sprite();
 	}
 
 	CollisionObject CollisionLayer::default_collision_object()
@@ -489,16 +519,16 @@ namespace oly::debug
 
 	rendering::EllipseReference CollisionLayer::create_ellipse()
 	{
-		return rendering::EllipseReference(rendering::internal::get_ellipse_batch(painter));
+		return rendering::EllipseReference(painter.get_ellipse_batch());
 	}
 
 	rendering::StaticPolygon CollisionLayer::create_polygon()
 	{
-		return rendering::StaticPolygon(rendering::internal::get_polygon_batch(painter));
+		return rendering::StaticPolygon(painter.get_polygon_batch());
 	}
 	
 	rendering::StaticArrowExtension CollisionLayer::create_arrow()
 	{
-		return rendering::StaticArrowExtension(rendering::internal::get_polygon_batch(painter));
+		return rendering::StaticArrowExtension(painter.get_polygon_batch());
 	}
 }

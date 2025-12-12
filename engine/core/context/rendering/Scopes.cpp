@@ -3,9 +3,11 @@
 #include "core/context/rendering/Rendering.h"
 #include "core/context/Platform.h"
 
+#include "core/base/Assert.h"
+
 namespace oly::context
 {
-	ScopedViewportChange::ScopedViewportChange(rendering::Camera2D& camera, glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos)
+	ScopedViewportChange::ScopedViewportChange(const rendering::Camera2D& camera, glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_size, glm::ivec2 viewport_pos)
 		: camera(camera)
 	{
 		original_clear_color = context::clear_color();
@@ -28,10 +30,20 @@ namespace oly::context
 			glDisable(GL_BLEND);
 	}
 
-	ScopedFullFramebufferDrawing::ScopedFullFramebufferDrawing(rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size,
-		glm::vec4 clear_color, bool blend_enabled, glm::ivec2 viewport_pos)
-		: viewport_change(camera, clear_color, blend_enabled, viewport_size, viewport_pos)
+	ScopedFullFramebufferDrawing::ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size,
+		glm::vec4 clear_color, bool blend_enabled)
+		: viewport_change(camera, clear_color, blend_enabled, viewport_size)
 	{
+		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+		framebuffer.bind(graphics::Framebuffer::Target::DRAW);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
+	ScopedFullFramebufferDrawing::ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, math::IRect2D viewport,
+		glm::vec4 clear_color, bool blend_enabled)
+		: viewport_change(camera, clear_color, blend_enabled, viewport.size(), { viewport.x1, viewport.x2 })
+	{
+		OLY_ASSERT(framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
 		framebuffer.bind(graphics::Framebuffer::Target::DRAW);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}

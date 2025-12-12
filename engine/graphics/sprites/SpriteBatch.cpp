@@ -480,7 +480,7 @@ namespace oly::rendering
 	{
 		SpriteBatch::assert_valid_id(id);
 		if (auto batch = lock()) [[likely]]
-			batch->set_texture(id, texture, context::get_texture_dimensions(texture));
+			batch->set_texture(id, texture, texture ? context::get_texture_dimensions(texture) : glm::vec2{});
 		else
 			throw Error(ErrorCode::NULL_POINTER);
 	}

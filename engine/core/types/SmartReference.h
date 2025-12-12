@@ -248,10 +248,12 @@ namespace oly
 
 		struct RefInit {};
 		struct RefDefault {};
+		struct RefNull {};
 	}
 
 	constexpr internal::RefInit REF_INIT;
 	constexpr internal::RefDefault REF_DEFAULT;
+	constexpr internal::RefNull REF_NULL;
 
 	template<typename Object>
 	struct SmartReference : private internal::SmartReferenceLink
@@ -290,6 +292,7 @@ namespace oly
 				return !std::is_same_v<T, nullptr_t>
 					&& !std::is_same_v<T, internal::RefInit>
 					&& !std::is_same_v<T, internal::RefDefault>
+					&& !std::is_same_v<T, internal::RefNull>
 					&& !std::is_same_v<T, Object>
 					&& !std::is_same_v<T, SmartReference<Object>>
 					&& !shares_smart_pool_base<T, Object>
@@ -315,6 +318,8 @@ namespace oly
 		SmartReference() {}
 
 		SmartReference(nullptr_t) {}
+
+		SmartReference(internal::RefNull) {}
 
 		SmartReference(internal::RefInit) requires (std::is_default_constructible_v<Object>)
 		{
