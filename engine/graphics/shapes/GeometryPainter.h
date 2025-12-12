@@ -5,13 +5,7 @@
 #include "graphics/shapes/Polygons.h"
 #include "graphics/backend/basic/Framebuffers.h"
 
-// TODO v6 remove event includes
-#include "core/platform/WindowEvents.h"
-#include "core/platform/EventHandler.h"
-
 #include "core/context/rendering/Scopes.h"
-
-#include <functional>
 
 namespace oly::rendering
 {

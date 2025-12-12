@@ -92,38 +92,38 @@ namespace oly::debug
 	}
 
 	CollisionView::CollisionView(CollisionLayer& layer)
-		: layer(&layer), obj(EmptyCollision{})
+		: layer(&layer), obj(EmptyCollision{}), sprite(rendering::UNBATCHED)
 	{
 		layer.assign(this);
 	}
 
 	CollisionView::CollisionView(CollisionLayer& layer, rendering::EllipseReference&& obj)
-		: layer(&layer), obj(CollisionObject(layer, std::move(obj)))
+		: layer(&layer), obj(CollisionObject(layer, std::move(obj))), sprite(rendering::UNBATCHED)
 	{
 		layer.assign(this);
 	}
 
 	CollisionView::CollisionView(CollisionLayer& layer, rendering::StaticPolygon&& obj)
-		: layer(&layer), obj(CollisionObject(layer, std::move(obj)))
+		: layer(&layer), obj(CollisionObject(layer, std::move(obj))), sprite(rendering::UNBATCHED)
 	{
 		layer.assign(this);
 	}
 
 	CollisionView::CollisionView(CollisionLayer& layer, rendering::StaticArrowExtension&& obj)
-		: layer(&layer), obj(CollisionObject(layer, std::move(obj)))
+		: layer(&layer), obj(CollisionObject(layer, std::move(obj))), sprite(rendering::UNBATCHED)
 	{
 		layer.assign(this);
 	}
 
 	CollisionView::CollisionView(const CollisionView& other)
-		: layer(other.layer), obj(other.obj)
+		: layer(other.layer), obj(other.obj), sprite(other.sprite), dirty(other.dirty)
 	{
 		if (valid())
 			layer->assign(this);
 	}
 
 	CollisionView::CollisionView(CollisionView&& other) noexcept
-		: layer(other.layer), obj(std::move(other.obj))
+		: layer(other.layer), obj(std::move(other.obj)), sprite(std::move(other.sprite)), dirty(other.dirty)
 	{
 		if (valid())
 		{
@@ -222,6 +222,7 @@ namespace oly::debug
 		if (auto sprite_batch = sprite.get_batch())
 		{
 			dirty = false;
+
 			math::Rect2D bounds = obj.visit(
 				[](const EmptyCollision) { return math::Rect2D{}; },
 				[](const CollisionObject& view) { return view.bounds(); },
@@ -236,7 +237,6 @@ namespace oly::debug
 			if (bounds.width() > 0 && bounds.height() > 0)
 			{
 				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds));
-				internal::check_opengl_error(); // TODO v6 remove
 
 				obj.visit(
 					[](const EmptyCollision) {},
@@ -246,8 +246,6 @@ namespace oly::debug
 
 				paint_context.flush();
 				paint_context.set_texture(sprite);
-
-				internal::check_opengl_error(); // TODO v6 remove
 			}
 			else
 				sprite.set_texture(REF_NULL);
@@ -379,6 +377,7 @@ namespace oly::debug
 		}
 	}
 
+	// TODO v6 merge() should take an alternative overload where only CollisionObjectView is passed, so no other initialization needs to be done in compound collision_view()s
 	void CollisionView::merge(CollisionView&& other)
 	{
 		if (!valid() || !other.valid())
@@ -463,6 +462,21 @@ namespace oly::debug
 			view_changed();
 	}
 
+	CollisionLayer::CollisionLayer(const CollisionLayer& other)
+		: painter(other.painter)
+	{
+	}
+	
+	CollisionLayer::CollisionLayer(CollisionLayer&& other) noexcept
+		: painter(std::move(other.painter)), collision_views(std::move(other.collision_views))
+	{
+		for (CollisionView* view : collision_views)
+		{
+			view->layer = this;
+			view->sprite.set_batch(sprite_batch);
+		}
+	}
+
 	CollisionLayer::~CollisionLayer()
 	{
 		for (CollisionView* view : collision_views)
@@ -476,6 +490,7 @@ namespace oly::debug
 			for (CollisionView* view : collision_views)
 				view->invalidate_layer();
 			collision_views.clear();
+
 			painter = other.painter;
 		}
 		return *this;
@@ -488,7 +503,15 @@ namespace oly::debug
 			for (CollisionView* view : collision_views)
 				view->invalidate_layer();
 			collision_views.clear();
+
 			painter = std::move(other.painter);
+			collision_views = std::move(other.collision_views);
+
+			for (CollisionView* view : collision_views)
+			{
+				view->layer = this;
+				view->sprite.set_batch(sprite_batch);
+			}
 		}
 		return *this;
 	}
@@ -510,6 +533,7 @@ namespace oly::debug
 		// TODO v6 preserve some kind of draw order?
 		for (CollisionView* view : collision_views)
 			view->draw_sprite();
+		sprite_batch->render();
 	}
 
 	CollisionObject CollisionLayer::default_collision_object()

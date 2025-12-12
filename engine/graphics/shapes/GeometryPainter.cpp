@@ -30,8 +30,6 @@ namespace oly::rendering
 	GeometryPainter::PaintContext::PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp)
 		: painter(painter), dimensions(bounds.size()), texture(GL_TEXTURE_2D)
 	{
-		oly::internal::check_opengl_error(); // TODO v6 remove
-
 		painter.context_locked = true;
 		painter.polygon_batch->camera = camera;
 		painter.ellipse_batch->camera = camera;

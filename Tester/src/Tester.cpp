@@ -60,7 +60,7 @@ struct PixelArtText
 
 struct TesterRenderPipeline : public oly::IRenderPipeline
 {
-	oly::rendering::PolygonBatch batch;
+	oly::rendering::PolygonBatch polygon_batch;
 
 	BKG bkg;
 	SpriteMatch sprite_match;
@@ -80,7 +80,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
 	{
-		bkg.bkg_rect->set_batch(batch);
+		bkg.bkg_rect->set_batch(polygon_batch);
 
 		flag_tesselation_parent.set_modifier() = oly::Polymorphic<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
@@ -107,7 +107,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	void render_frame() const override
 	{
 		bkg.draw();
-		batch->render();
+		polygon_batch->render();
 
 		sprite_match.draw();
 		for (const auto& sprite : flag_tesselation)
@@ -305,6 +305,8 @@ int main()
 	oly::LOG.flush();
 	while (oly::context::frame())
 	{
+		semi_solid_cv.view_changed();
+
 		player->update_view(0, player_cv);
 		obstacle0->update_view(0, cv_obstacle0);
 		obstacle1->update_view(0, cv_obstacle1);

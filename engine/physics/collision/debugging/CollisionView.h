@@ -8,10 +8,6 @@
 #include "graphics/shapes/GeometryPainter.h"
 #include "graphics/shapes/Arrow.h"
 
-// TODO v6 remove event includes
-#include "core/platform/WindowEvents.h"
-#include "core/platform/EventHandler.h"
-
 namespace oly::debug
 {
 	class CollisionLayer;
@@ -100,6 +96,9 @@ namespace oly::debug
 		std::unordered_set<CollisionView*> collision_views;
 
 	public:
+		CollisionLayer() = default;
+		CollisionLayer(const CollisionLayer&);
+		CollisionLayer(CollisionLayer&&) noexcept;
 		~CollisionLayer();
 		CollisionLayer& operator=(const CollisionLayer&);
 		CollisionLayer& operator=(CollisionLayer&&) noexcept;

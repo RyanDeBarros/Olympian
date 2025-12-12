@@ -360,6 +360,10 @@ namespace oly::rendering
 			id = batch->gen_sprite_id();
 			set_attributes(*this, Attributes{});
 		}
+		else
+		{
+			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
+		}
 	}
 
 	internal::SpriteReference::SpriteReference(Unbatched)

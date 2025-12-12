@@ -541,6 +541,7 @@ namespace oly
 				throw Error(ErrorCode::NULL_POINTER);
 		}
 
+		// TODO v7 define macros that enables pointer data member for base() so it can be easily queried during debugging. Here and in other classes that abstract away references, like PublicIssuer.
 		const PoolBase* base() const
 		{
 			if (valid())
