@@ -283,9 +283,30 @@ namespace oly::debug
 
 			if (bounds.width() > 0 && bounds.height() > 0)
 			{
-				// TODO v6 AABBs can be huge for texture sizes, especially if they're simple rectangles. Implement quality level for collision view (1 maps to full sized texture, 0 maps to 1x1 texture), and scale the sprite appropriately.
-				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds), rotation);
-				sprite.set_transform(Transform2D{ .position = bounds.center(), .rotation = rotation, .scale = glm::vec2(1.0f) }.matrix());
+				glm::vec2 scale = glm::vec2(1.0f);
+				if (paint_options.quality < 1.0f)
+				{
+					if (bounds.width() > paint_options.preferred_min_size.x)
+					{
+						float w = std::lerp(paint_options.preferred_min_size.x, bounds.width(), paint_options.quality.get());
+						scale.x = bounds.width() / w;
+						float offset = 0.5f * (bounds.width() - w);
+						bounds.x1 += offset;
+						bounds.x2 -= offset;
+					}
+
+					if (bounds.height() > paint_options.preferred_min_size.y)
+					{
+						float h = std::lerp(paint_options.preferred_min_size.y, bounds.height(), paint_options.quality.get());
+						scale.y = bounds.height() / h;
+						float offset = 0.5f * (bounds.height() - h);
+						bounds.y1 += offset;
+						bounds.y2 -= offset;
+					}
+				}
+
+				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds), rotation, scale);
+				sprite.set_transform(Transform2D{ .position = bounds.center(), .rotation = rotation, .scale = scale }.matrix());
 
 				obj.visit(
 					[](const EmptyCollision) {},

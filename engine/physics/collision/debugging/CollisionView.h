@@ -55,7 +55,17 @@ namespace oly::debug
 		// TODO v6 option to pass PaintOptions to collision_view()/update_collision() functions - use better system, since there's so many of them?
 		struct PaintOptions
 		{
-			bool bounds_use_rotation = false; // if true, will use OBB of object to paint texture -> can be slower but can use smaller texture
+			/**
+			 * If true, will use OBB of object to paint texture->can be slower but can use smaller texture
+			 */
+			bool bounds_use_rotation = false;
+
+			/**
+			 * Factor by which to reduce the size of texture to the preferred minimum size.
+			 * At 0, the texture's size is set to the preferred minimum, while at 1, the texture's size is the full bounds of the object.
+			 */
+			BoundedUnitInterval quality = 1.0f;
+			glm::vec2 preferred_min_size = glm::vec2(50.0f);
 		} paint_options = {};
 
 		CollisionView(CollisionLayer& layer);

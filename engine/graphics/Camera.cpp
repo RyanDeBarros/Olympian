@@ -84,7 +84,7 @@ namespace oly::rendering
 		return projection;
 	}
 
-	void Camera2D::project_to_rect(math::Rect2D rect, float rotation)
+	void Camera2D::project_to_rect(math::Rect2D rect)
 	{
 		viewport.x = rect.x1;
 		viewport.y = rect.y1;
@@ -93,7 +93,6 @@ namespace oly::rendering
 
 		set_projection();
 		transformer.set_local().position = rect.center();
-		transformer.set_local().rotation = rotation;
 	}
 
 	void Camera2D::apply_viewport() const

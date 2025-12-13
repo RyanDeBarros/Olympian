@@ -43,7 +43,7 @@ namespace oly::rendering
 		glm::mat3 projection_matrix() const;
 		glm::mat3 invariant_projection_matrix() const;
 
-		void project_to_rect(math::Rect2D rect, float rotation = 0.0f);
+		void project_to_rect(math::Rect2D rect);
 
 		math::Area2D get_viewport() const { return viewport; }
 		void apply_viewport() const;
