@@ -2,6 +2,7 @@
 
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
+#include "core/base/Transforms.h"
 
 namespace oly::math
 {
@@ -27,5 +28,19 @@ namespace oly::math
 		pt = anchor + T.x * dir;
 
 		return true;
+	}
+
+	std::array<glm::vec2, 4> RotatedRect2D::points() const
+	{
+		std::array<glm::vec2, 4> points{
+			glm::vec2{ -0.5f * size.x, -0.5f * size.y },
+			glm::vec2{  0.5f * size.x, -0.5f * size.y },
+			glm::vec2{  0.5f * size.x,  0.5f * size.y },
+			glm::vec2{ -0.5f * size.x,  0.5f * size.y }
+		};
+		glm::mat2 rot = rotation_matrix_2x2(rotation);
+		for (glm::vec2& point : points)
+			point = center + rot * point;
+		return points;
 	}
 }

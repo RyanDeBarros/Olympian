@@ -100,6 +100,7 @@ namespace oly::rendering
 		void draw() const;
 
 		math::Rect2D bounds() const;
+		math::RotatedRect2D rotated_bounds() const;
 	};
 
 	struct Ellipse

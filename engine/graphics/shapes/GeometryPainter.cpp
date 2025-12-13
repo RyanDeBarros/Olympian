@@ -28,13 +28,13 @@ namespace oly::rendering
 	}
 
 	// TODO v6 remove sanity check with clear color
-	GeometryPainter::PaintContext::PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp)
+	GeometryPainter::PaintContext::PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, float rotation, int texture_cpp)
 		: painter(painter), scope(*camera, { 1.0f, 0.0f, 0.0f, 0.2f }, false, bounds.size()), dimensions(bounds.size()), texture(GL_TEXTURE_2D)
 	{
 		painter.context_locked = true;
 
 		Camera2DRef new_camera = REF_INIT;
-		new_camera->project_to_rect((math::Rect2D)bounds);
+		new_camera->project_to_rect((math::Rect2D)bounds, rotation);
 		painter.polygon_batch->camera = new_camera;
 		painter.ellipse_batch->camera = new_camera;
 		
@@ -89,7 +89,7 @@ namespace oly::rendering
 		sprite.set_texture(texture, dimensions);
 	}
 
-	GeometryPainter::PaintContext GeometryPainter::paint_context(const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp)
+	GeometryPainter::PaintContext GeometryPainter::paint_context(const Camera2DRef& camera, math::IRect2D bounds, float rotation, int texture_cpp)
 	{
 		if (context_locked)
 			throw Error(ErrorCode::LOCKED_RESOURCE);
@@ -97,6 +97,6 @@ namespace oly::rendering
 		if (bounds.width() <= 0 || bounds.height() <= 0)
 			throw Error(ErrorCode::INVALID_SIZE);
 
-		return PaintContext(*this, camera, bounds, texture_cpp);
+		return PaintContext(*this, camera, bounds, rotation, texture_cpp);
 	}
 }

@@ -45,7 +45,7 @@ namespace oly::rendering
 			} batch = Batch::NONE;
 
 			friend class GeometryPainter;
-			PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp);
+			PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, float rotation, int texture_cpp);
 			PaintContext(const PaintContext&) = delete;
 			PaintContext(PaintContext&&) = delete;
 		
@@ -63,7 +63,7 @@ namespace oly::rendering
 			void set_texture(Sprite& sprite) const;
 		};
 
-		PaintContext paint_context(const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp = 4);
+		PaintContext paint_context(const Camera2DRef& camera, math::IRect2D bounds, float rotation = 0.0f, int texture_cpp = 4);
 
 	private:
 		mutable bool context_locked = false;

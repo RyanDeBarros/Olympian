@@ -108,6 +108,8 @@ namespace oly::rendering
 			void set_primitive_colors(const glm::vec4* colors, GLuint count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
 
+			// TODO v6 get_polygon_transform() ?
+
 			void set_camera_invariant(bool camera_invariant) const;
 			bool is_camera_invariant() const;
 
@@ -120,6 +122,7 @@ namespace oly::rendering
 			mutable bool points = true;
 			mutable bool colors = true;
 
+			// TODO v6 should camera invariant be delayed or just set directly?
 			enum CameraInvariantFlag
 			{
 				VALUE = 1,

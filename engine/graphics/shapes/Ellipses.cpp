@@ -5,6 +5,8 @@
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
 
+#include "physics/collision/elements/OBB.h"
+
 namespace oly::rendering
 {
 	internal::EllipseBatch::EllipseBatch()
@@ -283,6 +285,18 @@ namespace oly::rendering
 			b.y2 = max(b.y2, pts[i].y);
 		}
 		return b;
+	}
+
+	math::RotatedRect2D EllipseReference::rotated_bounds() const
+	{
+		const EllipseDimension d = get_dimension();
+		std::array<glm::vec2, 4> pts = math::Rect2D{ .x1 = -d.rx, .x2 = d.rx, .y1 = -d.ry, .y2 = d.ry }.uvs();
+
+		const glm::mat3& mat = get_transform();
+		for (size_t i = 0; i < 4; ++i)
+			pts[i] = transform_point(mat, pts[i]);
+
+		return col2d::OBB::fast_wrap(pts.data(), 4).rect();
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)

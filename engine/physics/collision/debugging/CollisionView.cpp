@@ -90,6 +90,23 @@ namespace oly::debug
 		);
 	}
 
+	math::RotatedRect2D CollisionObject::rotated_bounds() const
+	{
+		return v->visit(
+			[](const rendering::EllipseReference& v) {
+				return v.rotated_bounds();
+			},
+			[](const rendering::StaticPolygon& v) {
+				const auto& points = v.get_points();
+				return col2d::OBB::fast_wrap(points.data(), points.size()).rect();
+			},
+			[](const rendering::StaticArrowExtension& v) {
+				const auto points = v.get_all_points();
+				return col2d::OBB::fast_wrap(points.data(), points.size()).rect();
+			}
+		);
+	}
+
 	CollisionView::CollisionView(CollisionLayer& layer)
 		: layer(&layer), obj(EmptyCollision{}), sprite(rendering::UNBATCHED)
 	{
@@ -223,22 +240,52 @@ namespace oly::debug
 		{
 			dirty = false;
 
-			math::Rect2D bounds = obj.visit(
-				[](const EmptyCollision) { return math::Rect2D{}; },
-				[](const CollisionObject& view) { return view.bounds(); },
-				[](const CollisionObjectGroup& view) {
-					math::Rect2D bounds = view.at(0).bounds();
-					for (size_t i = 1; i < view.size(); ++i)
-						bounds.include_rect(view.at(i).bounds());
-					return bounds;
-				}
-			);
+			math::Rect2D bounds;
+			float rotation = 0.0f;
+
+			if (paint_options.bounds_use_rotation)
+			{
+				math::RotatedRect2D obb = obj.visit(
+					[](const EmptyCollision) { return math::RotatedRect2D{}; },
+					[use_rotation = paint_options.bounds_use_rotation](const CollisionObject& view) { return view.rotated_bounds(); },
+					[use_rotation = paint_options.bounds_use_rotation](const CollisionObjectGroup& view) {
+						std::vector<glm::vec2> points;
+						for (size_t i = 0; i < view.size(); ++i)
+						{
+							auto pts = view.at(i).rotated_bounds().points();
+							points.insert(points.end(), pts.begin(), pts.end());
+						}
+						return col2d::OBB::fast_wrap(points.data(), points.size()).rect();
+					}
+				);
+
+				bounds = {
+					.x1 = obb.center.x - 0.5f * obb.size.x,
+					.x2 = obb.center.x + 0.5f * obb.size.x,
+					.y1 = obb.center.y - 0.5f * obb.size.y,
+					.y2 = obb.center.y + 0.5f * obb.size.y
+				};
+				rotation = obb.rotation;
+			}
+			else
+			{
+				bounds = obj.visit(
+					[](const EmptyCollision) { return math::Rect2D{}; },
+					[](const CollisionObject& view) { return view.bounds(); },
+					[](const CollisionObjectGroup& view) {
+						math::Rect2D bounds = view.at(0).bounds();
+						for (size_t i = 1; i < view.size(); ++i)
+							bounds.include_rect(view.at(i).bounds());
+						return bounds;
+					}
+				);
+			}
 
 			if (bounds.width() > 0 && bounds.height() > 0)
 			{
-				// TODO v6 AABBs can be huge for texture sizes, especially if they're simple rectangles. Implement quality level for collision view (1 maps to full sized texture, 0 maps to 1x1 texture), and scale the sprite appropriately. Also, could use OBBs for smaller texture sizes - although they may be less efficient to compute, so make this an optional parameter. Set the sprite rotation accordingly.
-				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds));
-				sprite.set_transform(Transform2D{ .position = bounds.center(), .scale = glm::vec2(1.0f) }.matrix());
+				// TODO v6 AABBs can be huge for texture sizes, especially if they're simple rectangles. Implement quality level for collision view (1 maps to full sized texture, 0 maps to 1x1 texture), and scale the sprite appropriately.
+				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds), rotation);
+				sprite.set_transform(Transform2D{ .position = bounds.center(), .rotation = rotation, .scale = glm::vec2(1.0f) }.matrix());
 
 				obj.visit(
 					[](const EmptyCollision) {},

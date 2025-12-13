@@ -78,6 +78,15 @@ namespace oly::math
 		Rect2D get_scaled(glm::vec2 sc) const { return get_scaled(sc.x, sc.y); }
 	};
 
+	struct RotatedRect2D
+	{
+		glm::vec2 center = {};
+		glm::vec2 size = {};
+		float rotation = 0.0f;
+
+		std::array<glm::vec2, 4> points() const;
+	};
+
 	struct IRect2D
 	{
 		int x1, x2, y1, y2;

@@ -3,6 +3,8 @@
 #include "core/base/UnitVector.h"
 #include "core/base/SimpleMath.h"
 #include "core/math/Geometry.h"
+#include "core/math/Shapes.h"
+
 #include "physics/collision/elements/AABB.h"
 #include "physics/collision/Tolerance.h"
 #include "physics/collision/methods/CollisionInfo.h"
@@ -55,5 +57,7 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const;
 		float projection_max(const UnitVector2D& axis) const;
 		ContactManifold deepest_manifold(const UnitVector2D& axis) const;
+
+		math::RotatedRect2D rect() const { return { .center = center, .size = { width, height }, .rotation = rotation }; }
 	};
 }

@@ -31,6 +31,7 @@ namespace oly::debug
 
 		void paint(rendering::GeometryPainter::PaintContext& paint_context) const;
 		math::Rect2D bounds() const;
+		math::RotatedRect2D rotated_bounds() const;
 	};
 
 	struct EmptyCollision {};
@@ -50,6 +51,13 @@ namespace oly::debug
 		bool valid() const { return !obj.empty() && layer; }
 
 	public:
+		// TODO v6 mkdocs for all collision debugging, especially CollisionView/CollisionLayer and PaintOptions
+		// TODO v6 option to pass PaintOptions to collision_view()/update_collision() functions - use better system, since there's so many of them?
+		struct PaintOptions
+		{
+			bool bounds_use_rotation = false; // if true, will use OBB of object to paint texture -> can be slower but can use smaller texture
+		} paint_options = {};
+
 		CollisionView(CollisionLayer& layer);
 		CollisionView(CollisionLayer& layer, rendering::EllipseReference&& obj);
 		CollisionView(CollisionLayer& layer, rendering::StaticPolygon&& obj);
