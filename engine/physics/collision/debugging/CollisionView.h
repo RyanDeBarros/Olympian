@@ -17,7 +17,7 @@ namespace oly::debug
 		using Variant = Variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		CollisionLayer& layer;
-		std::unique_ptr<Variant> v; // TODO v6 use optional instead of unique_ptr
+		std::unique_ptr<Variant> v;
 		CollisionObject(CollisionLayer& layer, Variant&& v);
 		CollisionObject(const CollisionObject&);
 		CollisionObject(CollisionObject&&) noexcept;

@@ -57,7 +57,6 @@ namespace oly::debug
 
 	void CollisionObject::paint(rendering::GeometryPainter::PaintContext& paint_context) const
 	{
-		// TODO v6 make sure v is drawn 'raw' (without transform), since raw bounds are used for texture generation.
 		v->visit(
 			[&paint_context](const rendering::EllipseReference& v) {
 				paint_context.pre_ellipse_draw();
@@ -217,6 +216,7 @@ namespace oly::debug
 		sprite.draw();
 	}
 
+	// TODO v8 repaint in separate thread?
 	void CollisionView::repaint() const
 	{
 		if (auto sprite_batch = sprite.get_batch())
@@ -532,7 +532,6 @@ namespace oly::debug
 
 	void CollisionLayer::draw() const
 	{
-		// TODO v6 preserve some kind of draw order?
 		for (CollisionView* view : collision_views)
 			view->draw_sprite();
 		sprite_batch->render();

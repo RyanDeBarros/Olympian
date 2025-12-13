@@ -279,8 +279,8 @@ namespace oly::rendering
 		{
 			b.x1 = min(b.x1, pts[i].x);
 			b.x2 = max(b.x2, pts[i].x);
-			b.y1 = min(b.x1, pts[i].y);
-			b.y2 = max(b.x2, pts[i].y);
+			b.y1 = min(b.y1, pts[i].y);
+			b.y2 = max(b.y2, pts[i].y);
 		}
 		return b;
 	}
