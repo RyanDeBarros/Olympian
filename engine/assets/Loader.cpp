@@ -5,6 +5,8 @@
 #include "core/util/LoggerOperators.h"
 #include "core/algorithms/STLUtils.h"
 
+// TODO v6 implement serialization system for easier asset parsing. Instead of separate files, add static methods to assets (for now, just implement `static Class unload(TOMLNode)`/`static Class unload(const ResourceFile&)`)
+
 namespace oly::assets
 {
 	toml::v3::parse_result load_toml(const ResourcePath& file)

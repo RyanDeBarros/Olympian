@@ -36,7 +36,7 @@ namespace oly::rendering
 		class PaintContext
 		{
 			GeometryPainter& painter;
-			std::unique_ptr<context::ScopedFullFramebufferDrawing> scope;
+			context::ScopedViewportChange scope;
 			graphics::BindlessTextureRef texture;
 			glm::ivec2 dimensions;
 

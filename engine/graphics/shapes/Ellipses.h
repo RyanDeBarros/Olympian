@@ -17,9 +17,7 @@ namespace oly::rendering
 		float fill_exp = 0.0f, border_exp = 0.0f;
 		GLuint camera_invariant = 0;
 
-		// TODO v6 border is completely inward - implement border pivot in shader, and make sure to update the bounds() implementation here
-
-		math::Rect2D bounds() const { return { .x1 = -rx, .x2 = rx, .y1 = -ry, .y2 = ry }; }
+		// TODO v6 border is completely inward - implement border pivot in shader, and make sure to update the bounds() implementation in EllipseReference
 	};
 
 	struct EllipseColorGradient {
@@ -100,6 +98,8 @@ namespace oly::rendering
 		glm::mat3& set_transform();
 
 		void draw() const;
+
+		math::Rect2D bounds() const;
 	};
 
 	struct Ellipse

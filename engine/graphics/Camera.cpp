@@ -71,8 +71,7 @@ namespace oly::rendering
 
 	void Camera2D::set_projection()
 	{
-		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
-		projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
+		projection = glm::ortho(-0.5f * viewport.w, 0.5f * viewport.w, -0.5f * viewport.h, 0.5f * viewport.h);
 	}
 
 	glm::mat3 Camera2D::projection_matrix() const
@@ -83,6 +82,17 @@ namespace oly::rendering
 	glm::mat3 Camera2D::invariant_projection_matrix() const
 	{
 		return projection;
+	}
+
+	void Camera2D::project_to_rect(math::Rect2D rect)
+	{
+		viewport.x = rect.x1;
+		viewport.y = rect.y1;
+		viewport.w = rect.width();
+		viewport.h = rect.height();
+
+		set_projection();
+		transformer.set_local().position = rect.center();
 	}
 
 	void Camera2D::apply_viewport() const

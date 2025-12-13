@@ -265,6 +265,26 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
+	math::Rect2D EllipseReference::bounds() const
+	{
+		const EllipseDimension d = get_dimension();
+		std::array<glm::vec2, 4> pts = math::Rect2D{ .x1 = -d.rx, .x2 = d.rx, .y1 = -d.ry, .y2 = d.ry }.uvs();
+
+		const glm::mat3& mat = get_transform();
+		for (size_t i = 0; i < 4; ++i)
+			pts[i] = transform_point(mat, pts[i]);
+
+		math::Rect2D b{ .x1 = nmax<float>(), .x2 = -nmax<float>(), .y1 = nmax<float>(), .y2 = -nmax<float>() };
+		for (size_t i = 0; i < 4; ++i)
+		{
+			b.x1 = min(b.x1, pts[i].x);
+			b.x2 = max(b.x2, pts[i].x);
+			b.y1 = min(b.x1, pts[i].y);
+			b.y2 = max(b.x2, pts[i].y);
+		}
+		return b;
+	}
+
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
 		: ellipse(batch)
 	{

@@ -142,6 +142,7 @@ namespace oly::col2d
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
 
+		// TODO v6 ConstElementVariant and ElementVariant versions
 		using ElementVariant = Variant<
 			const Circle*,
 			const AABB*,

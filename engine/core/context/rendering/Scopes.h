@@ -17,18 +17,4 @@ namespace oly::context
 		ScopedViewportChange(ScopedViewportChange&&) = delete;
 		~ScopedViewportChange();
 	};
-
-	class ScopedFullFramebufferDrawing
-	{
-		ScopedViewportChange viewport_change;
-
-	public:
-		ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, glm::ivec2 viewport_size, glm::vec4 clear_color = glm::vec4(0.0f),
-			bool blend_enabled = false);
-		ScopedFullFramebufferDrawing(const rendering::Camera2D& camera, const graphics::Framebuffer& framebuffer, math::IRect2D viewport, glm::vec4 clear_color = glm::vec4(0.0f),
-			bool blend_enabled = false);
-		ScopedFullFramebufferDrawing(const ScopedFullFramebufferDrawing&) = delete;
-		ScopedFullFramebufferDrawing(ScopedFullFramebufferDrawing&&) = delete;
-		~ScopedFullFramebufferDrawing();
-	};
 }

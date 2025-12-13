@@ -180,6 +180,7 @@ namespace oly
 		T& ref_modifier() { post_set(); return dynamic_cast<T&>(*modifier); }
 
 		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
+		void attach_child(Transformer2D& child) const { handle.attach_child(child); }
 	};
 
 	struct FundamentalTransformModifier2D : public TransformModifier2D

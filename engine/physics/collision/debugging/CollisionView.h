@@ -44,7 +44,7 @@ namespace oly::debug
 		CollisionLayer* layer;
 		CollisionObjectView obj;
 		mutable rendering::StaticSprite sprite;
-		mutable bool dirty = false;
+		mutable bool dirty = true;
 
 		void invalidate_layer() { layer = nullptr; obj = EmptyCollision{}; }
 		bool valid() const { return !obj.empty() && layer; }

@@ -78,7 +78,7 @@ namespace oly::debug
 	{
 		return v->visit(
 			[](const rendering::EllipseReference& v) {
-				return v.get_dimension().bounds();
+				return v.bounds();
 			},
 			[](const rendering::StaticPolygon& v) {
 				const auto& points = v.get_points();
@@ -236,7 +236,9 @@ namespace oly::debug
 
 			if (bounds.width() > 0 && bounds.height() > 0)
 			{
+				// TODO v6 AABBs can be huge for texture sizes, especially if they're simple rectangles. Implement quality level for collision view (1 maps to full sized texture, 0 maps to 1x1 texture), and scale the sprite appropriately. Also, could use OBBs for smaller texture sizes - although they may be less efficient to compute, so make this an optional parameter. Set the sprite rotation accordingly.
 				auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds));
+				sprite.set_transform(Transform2D{ .position = bounds.center(), .scale = glm::vec2(1.0f) }.matrix());
 
 				obj.visit(
 					[](const EmptyCollision) {},

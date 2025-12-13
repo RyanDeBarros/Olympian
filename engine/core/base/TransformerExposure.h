@@ -109,7 +109,7 @@ namespace oly
 			transformer.attach_parent(&parent.transformer);
 		}
 
-		void attach_child(Transformer2D* child) requires
+		void attach_child(Transformer2D& child) requires
 			(exposure::NONZERO(Params.chain & exposure::chain::ATTACH_CHILD))
 		{
 			transformer.attach_child(child);

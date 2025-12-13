@@ -27,12 +27,16 @@ namespace oly::rendering
 		return *this;
 	}
 
+	// TODO v6 remove sanity check with clear color
 	GeometryPainter::PaintContext::PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, int texture_cpp)
-		: painter(painter), dimensions(bounds.size()), texture(GL_TEXTURE_2D)
+		: painter(painter), scope(*camera, { 1.0f, 0.0f, 0.0f, 0.2f }, false, bounds.size()), dimensions(bounds.size()), texture(GL_TEXTURE_2D)
 	{
 		painter.context_locked = true;
-		painter.polygon_batch->camera = camera;
-		painter.ellipse_batch->camera = camera;
+
+		Camera2DRef new_camera = REF_INIT;
+		new_camera->project_to_rect((math::Rect2D)bounds);
+		painter.polygon_batch->camera = new_camera;
+		painter.ellipse_batch->camera = new_camera;
 		
 		graphics::tex::storage_2d(*texture, { .w = dimensions.x, .h = dimensions.y, .cpp = texture_cpp });
 		texture->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -42,14 +46,13 @@ namespace oly::rendering
 		painter.framebuffer.bind(graphics::Framebuffer::Target::DRAW);
 		painter.framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
 		OLY_ASSERT(painter.framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
-		painter.framebuffer.unbind(graphics::Framebuffer::Target::DRAW);
-
-		scope = std::make_unique<context::ScopedFullFramebufferDrawing>(*camera, painter.framebuffer, bounds);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	GeometryPainter::PaintContext::~PaintContext()
 	{
 		painter.framebuffer.detach_texture(graphics::Framebuffer::ColorAttachment::color(0));
+		painter.framebuffer.unbind(graphics::Framebuffer::Target::DRAW);
 		painter.context_locked = false;
 	}
 
