@@ -117,13 +117,7 @@ namespace oly::rendering
 	void internal::SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
-		auto& tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot,
-			QuadInfoStore::SizedTexture{ texture, dimensions }, TexData{ texture ? texture->get_handle() : 0, dimensions }))
-		{
-			quad_ssbo_block.flag<INFO>(vb_pos);
-			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);
-		}
+		update_texture_slot(vb_pos, quad_ssbo_block.buf.at<INFO>(vb_pos).tex_slot, texture, dimensions);
 	}
 
 	void internal::SpriteBatch::set_tex_coords(GLuint vb_pos, math::UVRect uvs)
@@ -168,13 +162,7 @@ namespace oly::rendering
 	void internal::SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
 	{
 		SpriteBatch::assert_valid_id(vb_pos);
-		auto& mod_tex_slot = quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_slot;
-		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, mod_tex_slot, QuadInfoStore::SizedTexture{ texture, texture ? dimensions : glm::vec2(0.0f) },
-			TexData{texture ? texture->get_handle() : 0, texture ? dimensions : glm::vec2(0.0f) }))
-		{
-			quad_ssbo_block.flag<INFO>(vb_pos);
-			quad_info_store.dimensionless_texture_slot_map[texture].insert(mod_tex_slot);
-		}
+		update_texture_slot(vb_pos, quad_ssbo_block.buf.at<INFO>(vb_pos).mod_tex_slot, texture, dimensions);
 	}
 
 	void internal::SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs)
@@ -244,6 +232,26 @@ namespace oly::rendering
 		SpriteBatch::assert_valid_id(vb_pos);
 		GLuint slot = get_quad_info(vb_pos).mod_tex_coord_slot;
 		return slot != 0 ? quad_info_store.tex_coords.get_object(slot) : math::UVRect{};
+	}
+
+	void internal::SpriteBatch::update_texture_slot(GLuint vb_pos, GLushort& tex_slot, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+	{
+		GLushort old_tex_slot = tex_slot;
+		std::optional<QuadInfoStore::SizedTexture> old_texture;
+		if (quad_info_store.textures.set_object<TexData>(tex_data_ssbo, tex_slot, QuadInfoStore::SizedTexture{ texture, texture ? dimensions : glm::vec2(0.0f) },
+			TexData{ texture ? texture->get_handle() : 0, dimensions }, old_texture))
+		{
+			if (old_texture)
+			{
+				auto it = quad_info_store.dimensionless_texture_slot_map.find(old_texture->texture);
+				it->second.erase(old_tex_slot);
+				if (it->second.empty())
+					quad_info_store.dimensionless_texture_slot_map.erase(it);
+			}
+
+			quad_ssbo_block.flag<INFO>(vb_pos);
+			quad_info_store.dimensionless_texture_slot_map[texture].insert(tex_slot);
+		}
 	}
 
 	void internal::SpriteBatch::update_texture_handle(const graphics::BindlessTextureRef& texture)

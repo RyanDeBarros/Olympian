@@ -178,6 +178,8 @@ namespace oly::rendering
 			graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 			math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
 
+			void update_texture_slot(GLuint vb_pos, GLushort& tex_slot, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+		
 		public:
 			void update_texture_handle(const graphics::BindlessTextureRef& texture);
 		};

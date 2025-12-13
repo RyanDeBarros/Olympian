@@ -305,8 +305,6 @@ int main()
 	oly::LOG.flush();
 	while (oly::context::frame())
 	{
-		semi_solid_cv.view_changed();
-
 		player->update_view(0, player_cv);
 		obstacle0->update_view(0, cv_obstacle0);
 		obstacle1->update_view(0, cv_obstacle1);
