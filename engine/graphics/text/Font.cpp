@@ -14,7 +14,7 @@ namespace oly
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
 			{
-				OLY_LOG_ERROR(true, "RENDERING") << LOG.source_info.full_source() << "Cannot initialize font" << LOG.endl;
+				_OLY_ENGINE_LOG_ERROR("RENDERING") << "Cannot initialize font" << LOG.endl;
 				throw Error(ErrorCode::LOAD_FONT);
 			}
 		}

@@ -7,7 +7,7 @@ namespace oly::assets
 {
 	rendering::Polygon load_polygon(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing polygon [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing polygon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Polygon polygon;
 
@@ -24,7 +24,7 @@ namespace oly::assets
 				if (parse_vec((TOMLNode)toml_point, pt))
 					points.push_back(pt);
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -41,20 +41,20 @@ namespace oly::assets
 				if (parse_vec((TOMLNode)toml_color, col))
 					colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
 		polygon.set_colors() = std::move(colors);
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Polygon [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Polygon [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}
 
 	rendering::PolyComposite load_poly_composite(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing poly composite [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing poly composite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::PolyComposite polygon;
 
@@ -77,7 +77,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -93,7 +93,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_color, col))
 							colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -114,7 +114,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_point, pt))
 							ngon_base.points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -129,7 +129,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_color, col))
 							ngon_base.fill_colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -144,7 +144,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_color, col))
 							ngon_base.border_colors.push_back(col);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -163,7 +163,7 @@ namespace oly::assets
 						else if (str == "inner")
 							ngon_base.border_pivot = cmath::BorderPivot::INNER;
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 					}
 					else
 						parse_float(border_pivot, ngon_base.border_pivot.v);
@@ -186,7 +186,7 @@ namespace oly::assets
 						if (parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -195,14 +195,14 @@ namespace oly::assets
 			}
 		}
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Poly composite [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Poly composite [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}
 
 	rendering::NGon load_ngon(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing ngon [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ngon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::NGon polygon;
 
@@ -220,7 +220,7 @@ namespace oly::assets
 				if (parse_vec((TOMLNode)toml_point, pt))
 					ngon_base.points.push_back(pt);
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -235,7 +235,7 @@ namespace oly::assets
 				if (parse_vec((TOMLNode)toml_color, col))
 					ngon_base.fill_colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -250,7 +250,7 @@ namespace oly::assets
 				if (parse_vec((TOMLNode)toml_color, col))
 					ngon_base.border_colors.push_back(col);
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -271,14 +271,14 @@ namespace oly::assets
 			else if (str == "inner")
 				ngon_base.border_pivot = cmath::BorderPivot::INNER;
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 		}
 		else
 			parse_float(border_pivot, ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Ngon [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Ngon [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return polygon;
 	}

@@ -370,7 +370,7 @@ namespace oly::rendering
 		}
 		else
 		{
-			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
 		}
 	}
 

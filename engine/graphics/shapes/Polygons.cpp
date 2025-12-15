@@ -307,6 +307,14 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
+	const glm::mat3& internal::PolygonReference::get_polygon_transform() const
+	{
+		if (auto batch = lock()) [[likely]]
+			return batch->get_polygon_transform(id);
+		else
+			throw Error(ErrorCode::NULL_POINTER);
+	}
+
 	bool internal::PolygonReference::is_camera_invariant() const
 	{
 		if (auto batch = lock()) [[likely]]
@@ -379,7 +387,7 @@ namespace oly::rendering
 			catch (Error e)
 			{
 				if (e.code == ErrorCode::TRIANGULATION)
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Error occurred during polygon triangulation." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
 				else
 					throw e;
 			}

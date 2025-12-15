@@ -7,7 +7,7 @@ namespace oly::assets
 {
 	rendering::TileMap load_tilemap(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing tilemap [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing tilemap [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::TileMap tilemap;
 		if (auto transformer = node["transformer"])
@@ -26,7 +26,7 @@ namespace oly::assets
 				auto tileset = node["tileset"].value<std::string>();
 				if (!tileset)
 				{
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
 					return;
 				}
 
@@ -43,7 +43,7 @@ namespace oly::assets
 						if (parse_ivec((TOMLNode)toml_tile, tile))
 							layer.paint_tile(tile);
 						else
-							OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "In tilemap layer #" << layer_idx
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx
 															<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
 						++tile_idx;
 					}
@@ -57,7 +57,7 @@ namespace oly::assets
 				});
 		}
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Tilemap [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Tilemap [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return tilemap;
 	}

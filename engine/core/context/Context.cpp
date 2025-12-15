@@ -82,7 +82,7 @@ namespace oly::context
 	{
 		if (glfwInit() != GLFW_TRUE)
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "glfwInit() failed." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << LOG.nl;
 			throw Error(ErrorCode::GLFW_INIT);
 		}
 		stbi_set_flip_vertically_on_load(true);
@@ -94,7 +94,7 @@ namespace oly::context
 		TOMLNode toml_context = toml["context"];
 		if (!toml_context)
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Project file missing \"context\" table." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing \"context\" table." << LOG.nl;
 			throw Error(ErrorCode::CONTEXT_INIT);
 		}
 

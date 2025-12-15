@@ -7,7 +7,7 @@ namespace oly::assets
 {
 	rendering::SpriteAtlas load_sprite_atlas(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite atlas [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite atlas [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::SpriteAtlas sprite_atlas;
 		if (auto sprite = node["sprite"])
@@ -27,7 +27,7 @@ namespace oly::assets
 		sprite_atlas.anim_format.starting_frame = parse_int_or(node["starting_frame"], 0);
 		sprite_atlas.anim_format.starting_time = parse_float_or(node["starting_time"], 0.0f);
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return sprite_atlas;
 	}

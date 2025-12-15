@@ -102,12 +102,12 @@ namespace oly::context
 
 	static TOMLNode load_texture_node(const ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
 	{
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing texture [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
 		if (!assets::MetaSplitter::meta(import_file).has_type("texture"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain texture type." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
@@ -115,13 +115,13 @@ namespace oly::context
 		auto texture_array = toml["texture"].as_array();
 		if (!texture_array)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"texture\" array field." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"texture\" array field." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		if (texture_index >= texture_array->size())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Texture index (" << texture_index
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture index (" << texture_index
 				<< ") out of range for texture array size (" << texture_array->size() << ")." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
@@ -156,7 +156,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
@@ -210,7 +210,7 @@ namespace oly::context
 			}
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -220,12 +220,12 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		if (!file.extension_matches(".svg"))
-			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		internal::TextureKey key{ file, texture_index };
 		auto it = internal::textures.find_forward_iterator(key);
@@ -292,7 +292,7 @@ namespace oly::context
 			}
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -302,7 +302,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
@@ -347,7 +347,7 @@ namespace oly::context
 			}
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		return texture;
 	}
@@ -356,12 +356,12 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		if (!file.extension_matches(".svg"))
-			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
@@ -392,7 +392,7 @@ namespace oly::context
 				params.abstract->init(graphics::NSVGAbstract(std::move(abstract)));
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
 
 		return texture;
 	}

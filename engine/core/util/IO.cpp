@@ -15,7 +15,7 @@ namespace oly::io
 		std::ifstream file(filepath);
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -31,7 +31,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -47,7 +47,7 @@ namespace oly::io
 		std::ifstream file(filepath);
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 		
@@ -61,7 +61,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -76,7 +76,7 @@ namespace oly::io
 		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
 		if (!file)
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Could not open " << filepath << " for reading" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 
@@ -86,7 +86,7 @@ namespace oly::io
 		std::vector<unsigned char> content(size);
 		if (!file.read(reinterpret_cast<char*>(content.data()), size))
 		{
-			OLY_LOG_ERROR(true) << LOG.source_info.full_source() << "Failed to read " << filepath << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("IO") << "Failed to read " << filepath << LOG.nl;
 			throw Error(ErrorCode::FILE_IO);
 		}
 

@@ -7,7 +7,7 @@ namespace oly::assets
 {
 	rendering::SpriteNonant load_sprite_nonant(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite nonant [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite nonant [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::SpriteNonant nonant;
 
@@ -20,7 +20,7 @@ namespace oly::assets
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite nonant [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite nonant [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return nonant;
 	}

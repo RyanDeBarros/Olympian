@@ -322,9 +322,7 @@ namespace oly::debug
 		}
 		else
 		{
-			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot write texture to using null sprite batch" << LOG.nl;
-
-			// TODO v6 convenience macro for OLY_LOG_*(true, "...") << LOG.source_info.full_source()
+			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot write texture to using null sprite batch" << LOG.nl;
 		}
 	}
 

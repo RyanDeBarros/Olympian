@@ -7,7 +7,7 @@ namespace oly::assets
 {
 	rendering::Sprite load_sprite(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing sprite [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Sprite sprite;
 		sprite.transformer = load_transformer_2d(node["transformer"]);
@@ -25,7 +25,7 @@ namespace oly::assets
 			if (parse_vec(toml_modulation, modulation))
 				sprite.set_modulation(modulation);
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot parse \"modulation\" field." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse \"modulation\" field." << LOG.nl;
 		}
 
 		if (auto toml_tex_coords = node["tex_coords"])
@@ -34,7 +34,7 @@ namespace oly::assets
 			if (parse_vec(toml_tex_coords, uvs))
 				sprite.set_tex_coords({ .x1 = uvs[0], .x2 = uvs[1], .y1 = uvs[2], .y2 = uvs[3] });
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Cannot parse \"tex_coords\" field." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse \"tex_coords\" field." << LOG.nl;
 		}
 
 		if (auto toml_frame_format = node["frame_format"])
@@ -47,7 +47,7 @@ namespace oly::assets
 					if (texture)
 						sprite.set_frame_format(graphics::setup_anim_frame_format_single(*texture, parse_uint_or(toml_frame_format["frame"], 0)));
 					else
-						OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "No texture was set for single frame format." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for single frame format." << LOG.nl;
 				}
 				else if (mode_str == "auto")
 				{
@@ -55,10 +55,10 @@ namespace oly::assets
 						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, parse_float_or(toml_frame_format["speed"], 1.0f),
 							parse_uint_or(toml_frame_format["starting_frame"], 0)));
 					else
-						OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "No texture was set for auto frame format." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for auto frame format." << LOG.nl;
 				}
 				else
-					OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{
@@ -71,7 +71,7 @@ namespace oly::assets
 			};
 		}
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Sprite [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return sprite;
 	}

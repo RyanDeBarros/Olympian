@@ -159,3 +159,8 @@ namespace oly
 #define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess{}.warning(__VA_ARGS__)
 #define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess{}.error(__VA_ARGS__)
 #define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess{}.fatal(__VA_ARGS__)
+
+#define _OLY_ENGINE_LOG_DEBUG(category) OLY_LOG_DEBUG(true, category) << oly::LOG.source_info.full_source()
+#define _OLY_ENGINE_LOG_WARNING(category) OLY_LOG_WARNING(true, category) << oly::LOG.source_info.full_source()
+#define _OLY_ENGINE_LOG_ERROR(category) OLY_LOG_ERROR(true, category) << oly::LOG.source_info.full_source()
+#define _OLY_ENGINE_LOG_FATAL(category) OLY_LOG_FATAL(true, category) << oly::LOG.source_info.full_source()

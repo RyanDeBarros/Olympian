@@ -186,7 +186,7 @@ namespace oly::rendering
 			e.font.reset_style();
 		else
 		{
-			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
 			return;
 		}
 		overrides.font = true;
@@ -212,7 +212,7 @@ namespace oly::rendering
 				size_t co_pos = value.find(':');
 				if (co_pos == std::string::npos)
 				{
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot parse font tag - missing ':'." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font tag - missing ':'." << LOG.nl;
 					return;
 				}
 
@@ -231,7 +231,7 @@ namespace oly::rendering
 							texture_index = *s;
 						else
 						{
-							OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
 							return;
 						}
 					}

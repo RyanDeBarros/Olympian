@@ -13,12 +13,12 @@ namespace oly::assets
 	{
 		try
 		{
-			OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Loading TOML file " << file << LOG.nl;
+			_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Loading TOML file " << file << LOG.nl;
 			return toml::parse_file(file.get_absolute().c_str());
 		}
 		catch (const toml::parse_error& err)
 		{
-			OLY_LOG_ERROR(true, "ASSETS") << LOG.source_info.full_source() << "Cannot load TOML file " << file << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("ASSETS") << "Cannot load TOML file " << file << LOG.nl;
 			throw Error(ErrorCode::TOML_PARSE, err.description().data());
 		}
 	}
@@ -220,7 +220,7 @@ namespace oly::assets
 				return modifier;
 			}
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 		}
 		return Polymorphic<TransformModifier2D>();
 	}

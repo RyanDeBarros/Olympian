@@ -180,7 +180,7 @@ namespace oly::rendering
 			}
 			else
 			{
-				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 			}
 		}
 	}
@@ -227,7 +227,7 @@ namespace oly::rendering
 			}
 			else
 			{
-				OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 			}
 		}
 
@@ -261,7 +261,7 @@ namespace oly::rendering
 			dx = element.advance_width(codepoint, next_codepoint);
 		else
 		{
-			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
 		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))
@@ -333,7 +333,7 @@ namespace oly::rendering
 			dx = element.advance_width(codepoint, next_codepoint);
 		else
 		{
-			OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint (" << codepoint << ")." << LOG.nl;
 		}
 
 		if (paragraph->format.can_fit_on_line(typeset, element.adj_offset + dx))

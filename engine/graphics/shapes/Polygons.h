@@ -107,10 +107,9 @@ namespace oly::rendering
 			void set_primitive_points(const glm::vec2* points, GLuint count) const;
 			void set_primitive_colors(const glm::vec4* colors, GLuint count) const;
 			void set_polygon_transform(const glm::mat3& transform) const;
-
-			// TODO v6 get_polygon_transform() ?
-
 			void set_camera_invariant(bool camera_invariant) const;
+
+			const glm::mat3& get_polygon_transform() const;
 			bool is_camera_invariant() const;
 
 			GLuint& draw_index() const;

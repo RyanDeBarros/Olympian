@@ -32,7 +32,7 @@ namespace oly::assets
 			else if (align == "full_justify")
 				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		if (auto valign = node["vertical_align"].value<std::string>())
@@ -49,7 +49,7 @@ namespace oly::assets
 			else if (align == "full_justify")
 				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
 			else
-				OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
 		}
 
 		return format;
@@ -62,7 +62,7 @@ namespace oly::assets
 			e.font = context::load_font(*font, parse_uint_or(element["font_index"], 0));
 		else
 		{
-			OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
@@ -70,7 +70,7 @@ namespace oly::assets
 			e.text = std::move(*text);
 		else
 		{
-			OLY_LOG_WARNING(true, "ASSETS") << LOG.source_info.full_source() << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
@@ -90,7 +90,7 @@ namespace oly::assets
 
 	rendering::Paragraph load_paragraph(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "Parsing paragraph [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing paragraph [" << (source ? source : "") << "]..." << LOG.nl;
 
 		std::vector<rendering::TextElement> elements;
 		if (auto element_array = node["element"].as_array())
@@ -114,7 +114,7 @@ namespace oly::assets
 		if (parse_vec(node["bkg_color"], bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
-		OLY_LOG_DEBUG(true, "ASSETS") << LOG.source_info.full_source() << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;
 
 		return paragraph;
 	}

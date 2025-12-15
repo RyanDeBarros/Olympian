@@ -26,19 +26,19 @@ namespace oly::context
 		auto toml_window = node["window"];
 		if (!toml_window)
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 
 		if (!assets::parse_int(toml_window["width"], platform_setup.window_width))
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 		
 		if (!assets::parse_int(toml_window["height"], platform_setup.window_height))
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 
@@ -46,7 +46,7 @@ namespace oly::context
 			platform_setup.window_title = *title;
 		else
 		{
-			OLY_LOG_FATAL(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot initialize platform: missing or invalid \"title\" fields." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"title\" fields." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 
@@ -159,7 +159,7 @@ namespace oly::context
 			else if (swizz == "ZYX")
 				modifier.swizzle = input::ModifierBase::Swizzle::ZYX;
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
 		}
 
 		if (!assets::parse_float(mnode["multiplier"], modifier.multiplier.x))
@@ -196,7 +196,7 @@ namespace oly::context
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis0DModifier::Conversion::TO_3D;
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -219,7 +219,7 @@ namespace oly::context
 			else if (conv == "TO_3D")
 				modifier.conversion = input::Axis1DModifier::Conversion::TO_3D;
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -252,7 +252,7 @@ namespace oly::context
 			else if (conv == "TO_3D_1")
 				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_1;
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -337,18 +337,18 @@ namespace oly::context
 
 	void load_signal(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing input signal [" << (source ? source : "") << "]..." << LOG.nl;
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"id\" field." << LOG.endl;
 			return;
 		}
 		auto toml_binding = node["binding"].value<std::string>();
 		if (!toml_binding)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"binding\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"binding\" field." << LOG.endl;
 			return;
 		}
 
@@ -369,21 +369,21 @@ namespace oly::context
 			load_scroll_binding(node, toml_id.value());
 		else
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
 			return;
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Input signal [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Input signal [" << (source ? source : "") << "] parsed." << LOG.nl;
 	}
 
 	void load_signal_mapping(TOMLNode node, const char* source)
 	{
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing input signal mapping [" << (source ? source : "") << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing input signal mapping [" << (source ? source : "") << "]..." << LOG.nl;
 
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"id\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"id\" field." << LOG.endl;
 			return;
 		}
 
@@ -395,25 +395,25 @@ namespace oly::context
 				if (auto signal = toml_signals->get_as<std::string>(i))
 					signals.push_back(signal->get());
 				else
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
 			}
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Input signal mapping [" << (source ? source : "") << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Input signal mapping [" << (source ? source : "") << "] parsed." << LOG.nl;
 	}
 
 	void load_signals(const ResourcePath& file)
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
 		if (!assets::MetaSplitter::meta(file).has_type("signal"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain signal type." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
