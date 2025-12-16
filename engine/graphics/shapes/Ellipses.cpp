@@ -267,14 +267,70 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	math::Rect2D EllipseReference::bounds() const
+	void EllipseReference::set_color(glm::vec4 color)
 	{
-		const EllipseDimension d = get_dimension();
+		set_color().set_uniform(color);
+	}
+
+	StaticEllipse::StaticEllipse(EllipseBatch& batch, float r, glm::vec4 color)
+		: ref(batch)
+	{
+		ref.set_dimension().rx = r;
+		ref.set_dimension().ry = r;
+		ref.set_color(color);
+	}
+	
+	StaticEllipse::StaticEllipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
+		: ref(batch)
+	{
+		ref.set_dimension().rx = rx;
+		ref.set_dimension().ry = ry;
+		ref.set_color(color);
+	}
+
+	void StaticEllipse::set_batch(EllipseBatch& batch)
+	{
+		ref.set_batch(batch);
+		ref.set_dimension() = dimension;
+		ref.set_color() = color;
+		ref.set_transform() = transform;
+	}
+
+	void StaticEllipse::set_dimension(EllipseDimension dimension)
+	{
+		this->dimension = dimension;
+		if (ref.get_batch())
+			ref.set_dimension() = dimension;
+	}
+
+	void StaticEllipse::set_color(const EllipseColorGradient& color)
+	{
+		this->color = color;
+		if (ref.get_batch())
+			ref.set_color() = color;
+	}
+
+	void StaticEllipse::set_color(glm::vec4 color)
+	{
+		this->color.set_uniform(color);
+		if (ref.get_batch())
+			ref.set_color(color);
+	}
+
+	void StaticEllipse::set_transform(const glm::mat3& transform)
+	{
+		this->transform = transform;
+		if (ref.get_batch())
+			ref.set_transform() = transform;
+	}
+
+	math::Rect2D StaticEllipse::bounds() const
+	{
+		const EllipseDimension d = ref.get_dimension();
 		std::array<glm::vec2, 4> pts = math::Rect2D{ .x1 = -d.rx, .x2 = d.rx, .y1 = -d.ry, .y2 = d.ry }.uvs();
 
-		const glm::mat3& mat = get_transform();
 		for (size_t i = 0; i < 4; ++i)
-			pts[i] = transform_point(mat, pts[i]);
+			pts[i] = transform_point(transform, pts[i]);
 
 		math::Rect2D b{ .x1 = nmax<float>(), .x2 = -nmax<float>(), .y1 = nmax<float>(), .y2 = -nmax<float>() };
 		for (size_t i = 0; i < 4; ++i)
@@ -287,14 +343,13 @@ namespace oly::rendering
 		return b;
 	}
 
-	math::RotatedRect2D EllipseReference::rotated_bounds() const
+	math::RotatedRect2D StaticEllipse::rotated_bounds() const
 	{
-		const EllipseDimension d = get_dimension();
+		const EllipseDimension d = ref.get_dimension();
 		std::array<glm::vec2, 4> pts = math::Rect2D{ .x1 = -d.rx, .x2 = d.rx, .y1 = -d.ry, .y2 = d.ry }.uvs();
 
-		const glm::mat3& mat = get_transform();
 		for (size_t i = 0; i < 4; ++i)
-			pts[i] = transform_point(mat, pts[i]);
+			pts[i] = transform_point(transform, pts[i]);
 
 		return col2d::OBB::fast_wrap(pts.data(), 4).rect();
 	}
@@ -304,7 +359,7 @@ namespace oly::rendering
 	{
 		ellipse.set_dimension().rx = r;
 		ellipse.set_dimension().ry = r;
-		set_color(color);
+		ellipse.set_color(color);
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
@@ -312,7 +367,7 @@ namespace oly::rendering
 	{
 		ellipse.set_dimension().rx = rx;
 		ellipse.set_dimension().ry = ry;
-		set_color(color);
+		ellipse.set_color(color);
 	}
 
 	void Ellipse::draw() const
@@ -320,13 +375,5 @@ namespace oly::rendering
 		if (transformer.flush())
 			const_cast<EllipseReference&>(ellipse).set_transform() = transformer.global();
 		ellipse.draw();
-	}
-
-	void Ellipse::set_color(glm::vec4 color)
-	{
-		ellipse.set_color().fill_inner = color;
-		ellipse.set_color().fill_outer = color;
-		ellipse.set_color().border_inner = color;
-		ellipse.set_color().border_outer = color;
 	}
 }

@@ -14,29 +14,51 @@ namespace oly::debug
 
 	struct CollisionObject
 	{
-		using Variant = Variant<rendering::EllipseReference, rendering::StaticPolygon, rendering::StaticArrowExtension>;
+		using Variant = Variant<rendering::StaticEllipse, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
-		CollisionLayer& layer;
-		std::unique_ptr<Variant> v;
-		CollisionObject(CollisionLayer& layer, Variant&& v);
-		CollisionObject(const CollisionObject&);
-		CollisionObject(CollisionObject&&) noexcept;
-		CollisionObject& operator=(const CollisionObject&);
-		CollisionObject& operator=(CollisionObject&&) noexcept;
+		Variant v;
 
-		Variant& operator*() { return *v; }
-		const Variant& operator*() const { return *v; }
-		Variant* operator->() { return v.get(); }
-		const Variant* operator->() const { return v.get(); }
+		CollisionObject(Variant&& v);
+		CollisionObject(Variant&& v, CollisionLayer& layer);
+		
+		Variant& operator*() { return v; }
+		const Variant& operator*() const { return v; }
+		Variant* operator->() { return &v; }
+		const Variant* operator->() const { return &v; }
 
-		void paint(rendering::GeometryPainter::PaintContext& paint_context) const;
+		void draw() const;
 		math::Rect2D bounds() const;
 		math::RotatedRect2D rotated_bounds() const;
+
+		void align_layer_batch(CollisionLayer& layer);
 	};
 
 	struct EmptyCollision {};
 	using CollisionObjectGroup = std::vector<CollisionObject>;
-	using CollisionObjectView = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
+	
+	// TODO v6 put in internal and rename
+	struct CollisionObjectView
+	{
+		// TODO v6 just use std::vector<CollisionObject> or keep variant? Also, probably rename CollisionObjectView to CollisionObjectList or something
+		using Variant = Variant<EmptyCollision, CollisionObject, CollisionObjectGroup>;
+
+		Variant v;
+
+		CollisionObjectView(Variant&& v) : v(std::move(v)) {}
+		CollisionObjectView(EmptyCollision v) : v(std::move(v)) {}
+		CollisionObjectView(rendering::StaticEllipse&& v) : v(CollisionObject(std::move(v))) {}
+		CollisionObjectView(rendering::StaticPolygon&& v) : v(CollisionObject(std::move(v))) {}
+		CollisionObjectView(rendering::StaticArrowExtension&& v) : v(CollisionObject(std::move(v))) {}
+		CollisionObjectView(CollisionObjectGroup&& v) : v(std::move(v)) {}
+
+		Variant& operator*() { return v; }
+		const Variant& operator*() const { return v; }
+		Variant* operator->() { return &v; }
+		const Variant* operator->() const { return &v; }
+
+		void align_layer_batch(CollisionLayer& layer);
+		void merge(CollisionObjectView&& other);
+	};
 
 	class CollisionView
 	{
@@ -47,8 +69,8 @@ namespace oly::debug
 		mutable rendering::StaticSprite sprite;
 		mutable bool dirty = true;
 
-		void invalidate_layer() { layer = nullptr; obj = EmptyCollision{}; }
-		bool valid() const { return !obj.empty() && layer; }
+		void invalidate_layer() { layer = nullptr; *obj = EmptyCollision{}; }
+		bool valid() const { return !obj->empty() && layer; }
 
 	public:
 		// TODO v6 mkdocs for all collision debugging, especially CollisionView/CollisionLayer and PaintOptions
@@ -69,18 +91,19 @@ namespace oly::debug
 		} paint_options = {};
 
 		CollisionView(CollisionLayer& layer);
-		CollisionView(CollisionLayer& layer, rendering::EllipseReference&& obj);
+		CollisionView(CollisionLayer& layer, rendering::StaticEllipse&& obj);
 		CollisionView(CollisionLayer& layer, rendering::StaticPolygon&& obj);
 		CollisionView(CollisionLayer& layer, rendering::StaticArrowExtension&& obj);
+		CollisionView(CollisionLayer& layer, CollisionObjectView&& obj);
 		CollisionView(const CollisionView&);
 		CollisionView(CollisionView&&) noexcept;
 		~CollisionView();
 		CollisionView& operator=(const CollisionView&);
 		CollisionView& operator=(CollisionView&&) noexcept;
 
-		void init_on_layer(CollisionLayer& layer);
 		const CollisionLayer& get_layer() const;
 		CollisionLayer& get_layer();
+		void set_layer(CollisionLayer& layer);
 
 	private:
 		void draw_sprite() const;
@@ -89,19 +112,19 @@ namespace oly::debug
 	public:
 		void clear_view();
 		void set_view(CollisionObjectView&& obj);
-		void set_view(rendering::EllipseReference&& obj);
+		void set_view(rendering::StaticEllipse&& obj);
 		void set_view(rendering::StaticPolygon&& obj);
 		void set_view(rendering::StaticArrowExtension&& obj);
 		size_t view_size() const;
 		void resize_view(size_t size);
 		void set_view(size_t i, CollisionObject&& obj);
-		void merge(CollisionView&& other);
 
 		const CollisionObject& get_view(size_t i = 0) const;
 		CollisionObject& get_view(size_t i = 0);
 		void view_changed() const;
 
 		void update_color(glm::vec4 color);
+		void update_color(glm::vec4 color, size_t view_index);
 	};
 
 	class CollisionLayer
@@ -129,8 +152,9 @@ namespace oly::debug
 
 	public:
 		void draw() const;
+
 		CollisionObject default_collision_object();
-		rendering::EllipseReference create_ellipse();
+		rendering::StaticEllipse create_ellipse();
 		rendering::StaticPolygon create_polygon();
 		rendering::StaticArrowExtension create_arrow();
 	};

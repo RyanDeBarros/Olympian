@@ -16,9 +16,8 @@ namespace oly::col2d::internal
 	
 	using FlushFn = math::Rect2D(*)(const void*);
 	using IsDirtyFn = bool(*)(const void*);
-	using CollisionViewFn = debug::CollisionView(*)(debug::CollisionLayer& layer, const void*, glm::vec4);
-	using UpdateViewFn = void(*)(debug::CollisionView&, const void*, glm::vec4, size_t);
-	using UpdateViewNoColorFn = void(*)(debug::CollisionView&, const void*, size_t);
+	using CollisionViewFn = debug::CollisionObjectView(*)(const void*, glm::vec4);
+	using UpdateViewFn = void(*)(debug::CollisionView&, const void*, size_t);
 
 	using TransformerFn = const Transformer2D& (*)(const void*);
 	using ConstLayerFn = Layer (*)(const void*);
@@ -41,7 +40,6 @@ namespace oly::col2d::internal
 		IsDirtyFn is_dirty_[(size_t)CObjID::_COUNT];
 		CollisionViewFn collision_view_[(size_t)CObjID::_COUNT];
 		UpdateViewFn update_view_[(size_t)CObjID::_COUNT];
-		UpdateViewNoColorFn update_view_no_color_[(size_t)CObjID::_COUNT];
 
 		TransformerFn transformer_[(size_t)CObjID::_COUNT];
 		ConstLayerFn layer_const_[(size_t)CObjID::_COUNT];
@@ -166,26 +164,18 @@ namespace oly::col2d::internal
 
 		void load_collision_view()
 		{
-#define OLY_LUT_COLLISION_VIEW(Class) collision_view_[cobj_id_of<Class>] = [](debug::CollisionLayer& layer, const void* ptr, glm::vec4 color)\
-				{ return debug::collision_view(layer, *static_cast<const Class*>(ptr), color); };
+#define OLY_LUT_COLLISION_VIEW(Class) collision_view_[cobj_id_of<Class>] = [](const void* ptr, glm::vec4 color)\
+				{ return debug::collision_view(*static_cast<const Class*>(ptr), color); };
 			OLY_LUT_LIST(OLY_LUT_COLLISION_VIEW);
 #undef OLY_LUT_COLLISION_VIEW
 		}
 
 		void load_update_view()
 		{
-#define OLY_LUT_UPDATE_VIEW(Class) update_view_[cobj_id_of<Class>] = [](debug::CollisionView& view, const void* ptr, glm::vec4 color, size_t view_index)\
-				{ debug::update_view(view, *static_cast<const Class*>(ptr), color, view_index); };
+#define OLY_LUT_UPDATE_VIEW(Class) update_view_[cobj_id_of<Class>] = [](debug::CollisionView& view, const void* ptr, size_t view_index)\
+				{ debug::update_view(view, *static_cast<const Class*>(ptr), view_index); };
 			OLY_LUT_LIST(OLY_LUT_UPDATE_VIEW)
 #undef OLY_LUT_UPDATE_VIEW
-		}
-
-		void load_update_view_no_color()
-		{
-#define OLY_LUT_UPDATE_VIEW_NO_COLOR(Class) update_view_no_color_[cobj_id_of<Class>] = [](debug::CollisionView& view, const void* ptr, size_t view_index)\
-				{ debug::update_view_no_color(view, *static_cast<const Class*>(ptr), view_index); };
-			OLY_LUT_LIST(OLY_LUT_UPDATE_VIEW_NO_COLOR)
-#undef OLY_LUT_UPDATE_VIEW_NO_COLOR
 		}
 
 		void load_transformer()
@@ -238,7 +228,6 @@ namespace oly::col2d::internal
 		lut.load_is_dirty();
 		lut.load_collision_view();
 		lut.load_update_view();
-		lut.load_update_view_no_color();
 
 		lut.load_transformer();
 		lut.load_layer();
@@ -299,17 +288,12 @@ namespace oly::col2d::internal
 
 	debug::CollisionView lut_collision_view(debug::CollisionLayer& layer, const ColliderObject& c, glm::vec4 color)
 	{
-		return (lut.collision_view_[c.id()])(layer, c.raw_obj(), color);
-	}
-	
-	void lut_update_view(debug::CollisionView& view, const ColliderObject& c, glm::vec4 color, size_t view_index)
-	{
-		(lut.update_view_[c.id()])(view, c.raw_obj(), color, view_index);
+		return debug::CollisionView(layer, (lut.collision_view_[c.id()])(c.raw_obj(), color));
 	}
 
-	void lut_update_view_no_color(debug::CollisionView& view, const ColliderObject& c, size_t view_index)
+	void lut_update_view(debug::CollisionView& view, const ColliderObject& c, size_t view_index)
 	{
-		(lut.update_view_no_color_[c.id()])(view, c.raw_obj(), view_index);
+		(lut.update_view_[c.id()])(view, c.raw_obj(), view_index);
 	}
 
 	const Transformer2D& lut_transformer(const ColliderObject& c)

@@ -57,27 +57,10 @@ namespace oly::rendering
 		painter.context_locked = false;
 	}
 
-	void GeometryPainter::PaintContext::pre_polygon_draw()
+	void GeometryPainter::PaintContext::render()
 	{
-		if (batch == Batch::ELLIPSE)
-			painter.ellipse_batch->render();
-		batch = Batch::POLYGON;
-	}
-
-	void GeometryPainter::PaintContext::pre_ellipse_draw()
-	{
-		if (batch == Batch::POLYGON)
-			painter.polygon_batch->render();
-		batch = Batch::ELLIPSE;
-	}
-
-	void GeometryPainter::PaintContext::flush()
-	{
-		if (batch == Batch::ELLIPSE)
-			painter.ellipse_batch->render();
-		else if (batch == Batch::POLYGON)
-			painter.polygon_batch->render();
-		batch = Batch::NONE;
+		painter.ellipse_batch->render();
+		painter.polygon_batch->render();
 	}
 
 	void GeometryPainter::PaintContext::set_texture(StaticSprite& sprite) const

@@ -133,11 +133,6 @@ namespace oly::physics
 		return colliders[i].collision_view(layer, color);
 	}
 
-	void RigidBody::update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const
-	{
-		colliders[i].update_view(view, color);
-	}
-
 	void RigidBody::update_view(size_t i, debug::CollisionView& view) const
 	{
 		colliders[i].update_view(view);

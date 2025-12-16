@@ -81,8 +81,7 @@ namespace oly::col2d
 		OverlapResult rect_cast_hits(const RectCast& cast) const { return internal::lut_rect_cast_hits(obj, cast); }
 
 		debug::CollisionView collision_view(debug::CollisionLayer& layer, glm::vec4 color) const { return internal::lut_collision_view(layer, obj, color); }
-		void update_view(debug::CollisionView& view, glm::vec4 color, size_t view_index = 0) const { internal::lut_update_view(view, obj, color, view_index); }
-		void update_view(debug::CollisionView& view, size_t view_index = 0) const { internal::lut_update_view_no_color(view, obj, view_index); }
+		void update_view(debug::CollisionView& view, size_t view_index = 0) const { internal::lut_update_view(view, obj, view_index); }
 
 	private:
 		internal::ColliderObjectConstVariant get_object_variant() const { return internal::lut_variant(obj); }

@@ -225,7 +225,7 @@ namespace oly
 		}\
 	}\
 	template<_OLY_REPEAT_COMMA(_OLY_TYPENAME_F, N)>\
-		decltype(auto) visit(_OLY_REPEAT_COMMA(_OLY_VISIT_ARG, N))\
+	decltype(auto) visit(_OLY_REPEAT_COMMA(_OLY_VISIT_ARG, N))\
 	{\
 		switch (type)\
 		{\

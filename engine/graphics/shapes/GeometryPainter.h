@@ -10,7 +10,6 @@
 namespace oly::rendering
 {
 	// TODO v6 update GeometryPainter mkdocs
-	// TODO v6 combine ellipse and polygon shaders?
 
 	class GeometryPainter
 	{
@@ -24,7 +23,7 @@ namespace oly::rendering
 		GeometryPainter(GeometryPainter&&) noexcept;
 		GeometryPainter& operator=(const GeometryPainter&);
 		GeometryPainter& operator=(GeometryPainter&&) noexcept;
-
+		
 		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
 		PolygonBatch& get_polygon_batch() { return polygon_batch; }
 		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
@@ -37,13 +36,6 @@ namespace oly::rendering
 			graphics::BindlessTextureRef texture;
 			glm::ivec2 dimensions;
 
-			enum class Batch
-			{
-				NONE,
-				POLYGON,
-				ELLIPSE
-			} batch = Batch::NONE;
-
 			friend class GeometryPainter;
 			PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, float rotation, glm::vec2 scale, int texture_cpp);
 			PaintContext(const PaintContext&) = delete;
@@ -52,9 +44,7 @@ namespace oly::rendering
 		public:
 			~PaintContext();
 
-			void pre_polygon_draw();
-			void pre_ellipse_draw();
-			void flush();
+			void render();
 
 			glm::vec2 get_texture_dimensions() const { return dimensions; }
 			graphics::BindlessTextureRef get_texture() const { return texture; }
