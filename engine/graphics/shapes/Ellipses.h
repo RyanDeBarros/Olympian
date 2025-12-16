@@ -82,7 +82,6 @@ namespace oly::rendering
 
 	using EllipseBatch = PublicIssuer<internal::EllipseBatch>;
 
-	// TODO v6 put in internal namespace
 	namespace internal
 	{
 		class EllipseReference : public PublicIssuerHandle<EllipseBatch>

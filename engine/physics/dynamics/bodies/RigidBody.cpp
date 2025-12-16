@@ -128,14 +128,14 @@ namespace oly::physics
 			throw Error(ErrorCode::DOES_NOT_EXIST);
 	}
 
-	debug::CollisionView RigidBody::collision_view(debug::CollisionLayer& layer, size_t i, glm::vec4 color) const
+	debug::DebugOverlay RigidBody::create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color) const
 	{
-		return colliders[i].collision_view(layer, color);
+		return colliders[i].create_debug_overlay(layer, color);
 	}
 
-	void RigidBody::update_view(size_t i, debug::CollisionView& view) const
+	void RigidBody::modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const
 	{
-		colliders[i].update_view(view);
+		colliders[i].modify_debug_overlay(overlay);
 	}
 
 	void RigidBody::bind_all() const

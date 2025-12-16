@@ -26,7 +26,7 @@
 
 #include "graphics/Drawable.h"
 
-#include "physics/collision/debugging/CommonViews.h"
+#include "physics/collision/debugging/CommonShapes.h"
 
 #include "physics/dynamics/Constants.h"
 #include "physics/dynamics/bodies/StaticBody.h"

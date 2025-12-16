@@ -1,7 +1,7 @@
 #include "LUT.h"
 
 #include "physics/collision/scene/luts/LUTVariant.h"
-#include "physics/collision/debugging/CoreViews.h"
+#include "physics/collision/debugging/CoreShapes.h"
 
 namespace oly::col2d::internal
 {
@@ -16,8 +16,8 @@ namespace oly::col2d::internal
 	
 	using FlushFn = math::Rect2D(*)(const void*);
 	using IsDirtyFn = bool(*)(const void*);
-	using CollisionViewFn = debug::CollisionObjectView(*)(const void*, glm::vec4);
-	using UpdateViewFn = void(*)(debug::CollisionView&, const void*, size_t);
+	using DebugOverlayFn = debug::DebugShapeGroup(*)(const void*, glm::vec4);
+	using UpdateViewFn = void(*)(debug::DebugOverlay&, const void*, size_t);
 
 	using TransformerFn = const Transformer2D& (*)(const void*);
 	using ConstLayerFn = Layer (*)(const void*);
@@ -38,8 +38,8 @@ namespace oly::col2d::internal
 
 		FlushFn flush_[(size_t)CObjID::_COUNT];
 		IsDirtyFn is_dirty_[(size_t)CObjID::_COUNT];
-		CollisionViewFn collision_view_[(size_t)CObjID::_COUNT];
-		UpdateViewFn update_view_[(size_t)CObjID::_COUNT];
+		DebugOverlayFn create_debug_overlay_[(size_t)CObjID::_COUNT];
+		UpdateViewFn modify_debug_overlay_[(size_t)CObjID::_COUNT];
 
 		TransformerFn transformer_[(size_t)CObjID::_COUNT];
 		ConstLayerFn layer_const_[(size_t)CObjID::_COUNT];
@@ -164,16 +164,16 @@ namespace oly::col2d::internal
 
 		void load_collision_view()
 		{
-#define OLY_LUT_COLLISION_VIEW(Class) collision_view_[cobj_id_of<Class>] = [](const void* ptr, glm::vec4 color)\
-				{ return debug::collision_view(*static_cast<const Class*>(ptr), color); };
+#define OLY_LUT_COLLISION_VIEW(Class) create_debug_overlay_[cobj_id_of<Class>] = [](const void* ptr, glm::vec4 color)\
+				{ return debug::create_shape_group(*static_cast<const Class*>(ptr), color); };
 			OLY_LUT_LIST(OLY_LUT_COLLISION_VIEW);
 #undef OLY_LUT_COLLISION_VIEW
 		}
 
 		void load_update_view()
 		{
-#define OLY_LUT_UPDATE_VIEW(Class) update_view_[cobj_id_of<Class>] = [](debug::CollisionView& view, const void* ptr, size_t view_index)\
-				{ debug::update_view(view, *static_cast<const Class*>(ptr), view_index); };
+#define OLY_LUT_UPDATE_VIEW(Class) modify_debug_overlay_[cobj_id_of<Class>] = [](debug::DebugOverlay& overlay, const void* ptr, size_t shape_index)\
+				{ debug::modify_shape_group(overlay, *static_cast<const Class*>(ptr), shape_index); };
 			OLY_LUT_LIST(OLY_LUT_UPDATE_VIEW)
 #undef OLY_LUT_UPDATE_VIEW
 		}
@@ -286,14 +286,14 @@ namespace oly::col2d::internal
 		return (lut.is_dirty_[c.id()])(c.raw_obj());
 	}
 
-	debug::CollisionView lut_collision_view(debug::CollisionLayer& layer, const ColliderObject& c, glm::vec4 color)
+	debug::DebugOverlay lut_create_debug_overlay(debug::DebugOverlayLayer& layer, const ColliderObject& c, glm::vec4 color)
 	{
-		return debug::CollisionView(layer, (lut.collision_view_[c.id()])(c.raw_obj(), color));
+		return debug::DebugOverlay(layer, (lut.create_debug_overlay_[c.id()])(c.raw_obj(), color));
 	}
 
-	void lut_update_view(debug::CollisionView& view, const ColliderObject& c, size_t view_index)
+	void lut_modify_debug_overlay(debug::DebugOverlay& view, const ColliderObject& c, size_t view_index)
 	{
-		(lut.update_view_[c.id()])(view, c.raw_obj(), view_index);
+		(lut.modify_debug_overlay_[c.id()])(view, c.raw_obj(), view_index);
 	}
 
 	const Transformer2D& lut_transformer(const ColliderObject& c)

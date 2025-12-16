@@ -48,8 +48,8 @@ namespace oly::physics
 		size_t num_colliders() const { return colliders.size(); }
 		size_t collider_index(const col2d::Collider& col) const;
 
-		debug::CollisionView collision_view(debug::CollisionLayer& layer, size_t i, glm::vec4 color) const;
-		void update_view(size_t i, debug::CollisionView& view) const;
+		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color) const;
+		void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
 
 	private:
 		friend class internal::RigidBodyManager;

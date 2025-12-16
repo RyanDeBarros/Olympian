@@ -71,9 +71,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::Transformer2D flag_tesselation_parent;
 	oly::PivotTransformModifier2D* flag_tesselation_modifier;
 
-	oly::debug::CollisionLayer player_layer;
-	oly::debug::CollisionLayer obstacle_layer;
-	oly::debug::CollisionLayer ray_layer;
+	oly::debug::DebugOverlayLayer player_layer;
+	oly::debug::DebugOverlayLayer obstacle_layer;
+	oly::debug::DebugOverlayLayer ray_layer;
 
 	oly::CallbackTimer text_jitter_timer;
 
@@ -269,24 +269,24 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
-	auto player_cv = player->collision_view(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
+	auto player_cv = player->create_debug_overlay(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
 	player_cv.paint_options.bounds_use_rotation = true;
-	auto block_cv = block.collision_view(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
-	auto ray_cv = oly::debug::CollisionView(pipeline.ray_layer, oly::debug::collision_view(ray, oly::colors::WHITE * oly::colors::alpha(0.8f)));
+	auto block_cv = block.create_debug_overlay(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
+	oly::debug::DebugOverlay ray_cv(pipeline.ray_layer, oly::debug::create_shape_group(ray, oly::colors::WHITE * oly::colors::alpha(0.8f)));
 	ray_cv.paint_options.bounds_use_rotation = true;
-	auto circle_cast_cv = oly::debug::CollisionView(pipeline.ray_layer, oly::debug::collision_view(circle_cast, oly::colors::WHITE * oly::colors::alpha(0.8f), oly::colors::GREEN * oly::colors::alpha(0.8f)));
+	oly::debug::DebugOverlay circle_cast_cv(pipeline.ray_layer, oly::debug::create_shape_group(circle_cast, oly::colors::WHITE * oly::colors::alpha(0.8f), oly::colors::GREEN * oly::colors::alpha(0.8f)));
 	circle_cast_cv.paint_options.bounds_use_rotation = true;
 	circle_cast_cv.paint_options.quality = 0.5f;
 
-	auto cv_obstacle0 = obstacle0->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle1 = obstacle1->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle2 = obstacle2->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle3 = obstacle3->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle4 = obstacle4->collision_view(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle0 = obstacle0->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle1 = obstacle1->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle2 = obstacle2->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle3 = obstacle3->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle4 = obstacle4->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 
-	auto ground_cv = ground->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	auto ground_cv = ground->create_debug_overlay(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
-	auto semi_solid_cv = semi_solid->collision_view(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
+	auto semi_solid_cv = semi_solid->create_debug_overlay(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
 	auto flag_texture = oly::context::load_texture("~/textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
@@ -310,12 +310,12 @@ int main()
 	oly::LOG.flush();
 	while (oly::context::frame())
 	{
-		player->update_view(0, player_cv);
-		obstacle0->update_view(0, cv_obstacle0);
-		obstacle1->update_view(0, cv_obstacle1);
-		obstacle2->update_view(0, cv_obstacle2);
-		obstacle3->update_view(0, cv_obstacle3);
-		obstacle4->update_view(0, cv_obstacle4);
+		player->modify_debug_overlay(0, player_cv);
+		obstacle0->modify_debug_overlay(0, cv_obstacle0);
+		obstacle1->modify_debug_overlay(0, cv_obstacle1);
+		obstacle2->modify_debug_overlay(0, cv_obstacle2);
+		obstacle3->modify_debug_overlay(0, cv_obstacle3);
+		obstacle4->modify_debug_overlay(0, cv_obstacle4);
 		pipeline.logic_update();
 	}
 }
