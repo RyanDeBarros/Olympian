@@ -4,8 +4,8 @@
 #include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
+#include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
-#include "assets/Loader.h"
 
 namespace oly::rendering
 {
@@ -915,7 +915,7 @@ namespace oly::rendering
 	{
 		TextElement e;
 		if (auto font = element["font"].value<std::string>())
-			e.font = context::load_font(*font, assets::parse_uint_or(element["font_index"], 0));
+			e.font = context::load_font(*font, io::parse_uint_or(element["font_index"], 0));
 		else
 		{
 			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
@@ -930,15 +930,15 @@ namespace oly::rendering
 			return;
 		}
 
-		assets::parse_vec(element["text_color"], e.text_color);
-		assets::parse_float(element["adj_offset"], e.adj_offset);
-		assets::parse_vec(element["scale"], e.scale);
+		io::parse_vec(element["text_color"], e.text_color);
+		io::parse_float(element["adj_offset"], e.adj_offset);
+		io::parse_vec(element["scale"], e.scale);
 		float line_y_pivot;
-		if (assets::parse_float(element["line_y_pivot"], line_y_pivot))
+		if (io::parse_float(element["line_y_pivot"], line_y_pivot))
 			e.line_y_pivot = line_y_pivot;
-		assets::parse_vec(element["jitter_offset"], e.jitter_offset);
+		io::parse_vec(element["jitter_offset"], e.jitter_offset);
 
-		if (assets::parse_bool_or(element["expand"], false))
+		if (io::parse_bool_or(element["expand"], false))
 			TextElement::expand(e, elements);
 		else
 			elements.push_back(std::move(e));
@@ -962,12 +962,12 @@ namespace oly::rendering
 		if (auto transformer = node["transformer"])
 		{
 			paragraph.set_local() = Transform2D::load(transformer);
-			paragraph.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
+			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
 		}
 
-		assets::parse_bool(node["draw_bkg"], paragraph.draw_bkg);
+		io::parse_bool(node["draw_bkg"], paragraph.draw_bkg);
 		glm::vec4 bkg_color;
-		if (assets::parse_vec(node["bkg_color"], bkg_color))
+		if (io::parse_vec(node["bkg_color"], bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;

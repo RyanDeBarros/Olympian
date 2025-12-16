@@ -1,7 +1,6 @@
 #include "Transforms.h"
 
-// TODO v6 after finishing with new deserialization system, move Loader.h/MetaSplitter.h to core/util, and change assets namespace to io namespace
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly
 {
@@ -11,9 +10,9 @@ namespace oly
 			return {};
 
 		Transform2D transform;
-		assets::parse_vec(node["position"], transform.position);
-		assets::parse_float(node["rotation"], transform.rotation);
-		assets::parse_vec(node["scale"], transform.scale);
+		io::parse_vec(node["position"], transform.position);
+		io::parse_float(node["rotation"], transform.rotation);
+		io::parse_vec(node["scale"], transform.scale);
 		return transform;
 	}
 
@@ -381,7 +380,7 @@ namespace oly
 
 		Transformer2D transformer;
 		transformer.set_local() = Transform2D::load(node);
-		transformer.set_modifier() = assets::load_transform_modifier_2d(node["modifier"]);
+		transformer.set_modifier() = io::load_transform_modifier_2d(node["modifier"]);
 		return transformer;
 	}
 

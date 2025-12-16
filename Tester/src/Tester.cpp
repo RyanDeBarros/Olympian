@@ -30,7 +30,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::rendering::Polygon::load(oly::assets::load_toml("~/assets/BKG.toml")["polygon"]);
+		bkg_rect = oly::rendering::Polygon::load(oly::io::load_toml("~/assets/BKG.toml")["polygon"]);
 	}
 
 	void draw() const
@@ -44,7 +44,7 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: paragraph(oly::rendering::Paragraph::load(oly::assets::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
+		: paragraph(oly::rendering::Paragraph::load(oly::io::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
 	{
 	}
 
@@ -84,7 +84,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::rendering::Sprite::load(oly::assets::load_toml("~/assets/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::rendering::Sprite::load(oly::io::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);

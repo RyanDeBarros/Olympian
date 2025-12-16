@@ -4,7 +4,7 @@
 
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 #include "physics/collision/elements/OBB.h"
 
@@ -389,17 +389,17 @@ namespace oly::rendering
 		ellipse.set_transformer() = Transformer2D::load(node["transformer"]);
 
 		auto& color = ellipse.set_color();
-		assets::parse_vec(node["border_inner_color"], color.border_inner);
-		assets::parse_vec(node["border_outer_color"], color.border_outer);
-		assets::parse_vec(node["fill_inner_color"], color.fill_inner);
-		assets::parse_vec(node["fill_outer_color"], color.fill_outer);
+		io::parse_vec(node["border_inner_color"], color.border_inner);
+		io::parse_vec(node["border_outer_color"], color.border_outer);
+		io::parse_vec(node["fill_inner_color"], color.fill_inner);
+		io::parse_vec(node["fill_outer_color"], color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		assets::parse_float(node["border"], dimension.border);
-		assets::parse_float(node["border_exp"], dimension.border_exp);
-		assets::parse_float(node["fill_exp"], dimension.fill_exp);
-		assets::parse_float(node["rx"], dimension.rx);
-		assets::parse_float(node["ry"], dimension.ry);
+		io::parse_float(node["border"], dimension.border);
+		io::parse_float(node["border_exp"], dimension.border_exp);
+		io::parse_float(node["fill_exp"], dimension.fill_exp);
+		io::parse_float(node["rx"], dimension.rx);
+		io::parse_float(node["ry"], dimension.ry);
 
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Ellipse [" << (source ? source : "") << "] parsed." << LOG.nl;
 

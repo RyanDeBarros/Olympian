@@ -1,7 +1,7 @@
 #include "SpriteNonant.h"
 
 #include "core/context/rendering/Textures.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -358,7 +358,7 @@ namespace oly::rendering
 		SpriteNonant nonant;
 
 		glm::vec2 nsize{};
-		assets::parse_vec(node["nsize"], nsize);
+		io::parse_vec(node["nsize"], nsize);
 		math::Padding offsets = math::Padding::load(node["offsets"]);
 
 		if (auto sprite = node["sprite"])

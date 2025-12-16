@@ -6,7 +6,7 @@
 #include "core/math/Shapes.h"
 #include "core/util/ResourcePath.h"
 
-namespace oly::assets
+namespace oly::io
 {
 	extern toml::v3::parse_result load_toml(const ResourcePath& file);
 

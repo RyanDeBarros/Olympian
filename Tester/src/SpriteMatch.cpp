@@ -1,10 +1,8 @@
 #include "SpriteMatch.h"
 
-#include <assets/Loader.h>
-
 SpriteMatch::SpriteMatch()
 {
-	auto toml = oly::assets::load_toml("~/assets/archetypes/SpriteMatch.toml");
+	auto toml = oly::io::load_toml("~/assets/archetypes/SpriteMatch.toml");
 
 	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 

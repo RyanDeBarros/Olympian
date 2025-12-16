@@ -1,7 +1,7 @@
 #include "ParagraphFormat.h"
 
 #include "core/util/Logger.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -19,14 +19,14 @@ namespace oly::rendering
 	{
 		ParagraphFormat format;
 
-		assets::parse_vec(node["pivot"], format.pivot);
-		assets::parse_float(node["line_spacing"], format.line_spacing);
-		assets::parse_float(node["linebreak_spacing"], format.linebreak_spacing);
-		assets::parse_vec(node["min_size"], format.min_size);
-		assets::parse_vec(node["padding"], format.padding);
-		assets::parse_float(node["text_wrap"], format.text_wrap);
-		assets::parse_float(node["max_height"], format.max_height);
-		assets::parse_float(node["tab_spaces"], format.tab_spaces);
+		io::parse_vec(node["pivot"], format.pivot);
+		io::parse_float(node["line_spacing"], format.line_spacing);
+		io::parse_float(node["linebreak_spacing"], format.linebreak_spacing);
+		io::parse_vec(node["min_size"], format.min_size);
+		io::parse_vec(node["padding"], format.padding);
+		io::parse_float(node["text_wrap"], format.text_wrap);
+		io::parse_float(node["max_height"], format.max_height);
+		io::parse_float(node["tab_spaces"], format.tab_spaces);
 
 		if (auto halign = node["horizontal_align"].value<std::string>())
 		{

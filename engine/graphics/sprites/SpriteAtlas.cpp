@@ -1,7 +1,7 @@
 #include "SpriteAtlas.h"
 
 #include "core/util/Time.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -107,17 +107,17 @@ namespace oly::rendering
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (assets::parse_uint(node["rows"], rows) && assets::parse_uint(node["cols"], cols) && assets::parse_float(node["delay_seconds"], delay_seconds))
-			sprite_atlas.setup_uniform(rows, cols, delay_seconds, assets::parse_bool_or(node["row_major"], true), assets::parse_bool_or(node["row_up"], true));
+		if (io::parse_uint(node["rows"], rows) && io::parse_uint(node["cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, io::parse_bool_or(node["row_major"], true), io::parse_bool_or(node["row_up"], true));
 		else
 		{
 			GLuint static_frame;
-			if (assets::parse_uint(node["static_frame"], static_frame))
+			if (io::parse_uint(node["static_frame"], static_frame))
 				sprite_atlas.select_static_frame(static_frame);
 		}
 
-		sprite_atlas.anim_format.starting_frame = assets::parse_int_or(node["starting_frame"], 0);
-		sprite_atlas.anim_format.starting_time = assets::parse_float_or(node["starting_time"], 0.0f);
+		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
+		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
 
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
 

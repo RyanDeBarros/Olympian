@@ -6,7 +6,7 @@
 #include "core/math/Triangulation.h"
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -520,7 +520,7 @@ namespace oly::rendering
 			for (auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (assets::parse_vec((TOMLNode)toml_point, pt))
+				if (io::parse_vec((TOMLNode)toml_point, pt))
 					points.push_back(pt);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
@@ -537,7 +537,7 @@ namespace oly::rendering
 			for (auto& toml_color : *toml_colors)
 			{
 				glm::vec4 col;
-				if (assets::parse_vec((TOMLNode)toml_color, col))
+				if (io::parse_vec((TOMLNode)toml_color, col))
 					colors.push_back(col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
@@ -668,7 +668,7 @@ namespace oly::rendering
 					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (assets::parse_vec((TOMLNode)toml_point, pt))
+						if (io::parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -684,7 +684,7 @@ namespace oly::rendering
 					for (auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (assets::parse_vec((TOMLNode)toml_color, col))
+						if (io::parse_vec((TOMLNode)toml_color, col))
 							colors.push_back(col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
@@ -705,7 +705,7 @@ namespace oly::rendering
 					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (assets::parse_vec((TOMLNode)toml_point, pt))
+						if (io::parse_vec((TOMLNode)toml_point, pt))
 							ngon_base.points.push_back(pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -720,7 +720,7 @@ namespace oly::rendering
 					for (auto& toml_color : *toml_fill_colors)
 					{
 						glm::vec4 col;
-						if (assets::parse_vec((TOMLNode)toml_color, col))
+						if (io::parse_vec((TOMLNode)toml_color, col))
 							ngon_base.fill_colors.push_back(col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
@@ -735,7 +735,7 @@ namespace oly::rendering
 					for (auto& toml_color : *toml_border_colors)
 					{
 						glm::vec4 col;
-						if (assets::parse_vec((TOMLNode)toml_color, col))
+						if (io::parse_vec((TOMLNode)toml_color, col))
 							ngon_base.border_colors.push_back(col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
@@ -743,7 +743,7 @@ namespace oly::rendering
 					}
 				}
 
-				assets::parse_float(node["border_width"], ngon_base.border_width);
+				io::parse_float(node["border_width"], ngon_base.border_width);
 
 				if (auto border_pivot = node["border_pivot"])
 				{
@@ -760,7 +760,7 @@ namespace oly::rendering
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 					}
 					else
-						assets::parse_float(border_pivot, ngon_base.border_pivot.v);
+						io::parse_float(border_pivot, ngon_base.border_pivot.v);
 				}
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -777,7 +777,7 @@ namespace oly::rendering
 					for (auto& toml_point : *toml_points)
 					{
 						glm::vec2 pt;
-						if (assets::parse_vec((TOMLNode)toml_point, pt))
+						if (io::parse_vec((TOMLNode)toml_point, pt))
 							points.push_back(pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
@@ -859,7 +859,7 @@ namespace oly::rendering
 			for (auto& toml_point : *toml_points)
 			{
 				glm::vec2 pt;
-				if (assets::parse_vec((TOMLNode)toml_point, pt))
+				if (io::parse_vec((TOMLNode)toml_point, pt))
 					ngon_base.points.push_back(pt);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
@@ -874,7 +874,7 @@ namespace oly::rendering
 			for (auto& toml_color : *toml_fill_colors)
 			{
 				glm::vec4 col;
-				if (assets::parse_vec((TOMLNode)toml_color, col))
+				if (io::parse_vec((TOMLNode)toml_color, col))
 					ngon_base.fill_colors.push_back(col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
@@ -889,7 +889,7 @@ namespace oly::rendering
 			for (auto& toml_color : *toml_border_colors)
 			{
 				glm::vec4 col;
-				if (assets::parse_vec((TOMLNode)toml_color, col))
+				if (io::parse_vec((TOMLNode)toml_color, col))
 					ngon_base.border_colors.push_back(col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
@@ -898,9 +898,9 @@ namespace oly::rendering
 		}
 
 		bool bordered;
-		if (assets::parse_bool(node["bordered"], bordered))
+		if (io::parse_bool(node["bordered"], bordered))
 			polygon.set_bordered(bordered);
-		assets::parse_float(node["border_width"], ngon_base.border_width);
+		io::parse_float(node["border_width"], ngon_base.border_width);
 
 		auto border_pivot = node["border_pivot"];
 		if (auto str_border_pivot = border_pivot.value<std::string>())
@@ -916,7 +916,7 @@ namespace oly::rendering
 				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
 		}
 		else
-			assets::parse_float(border_pivot, ngon_base.border_pivot.v);
+			io::parse_float(border_pivot, ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 

@@ -4,9 +4,8 @@
 #include "core/containers/Bijection.h"
 #include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
-
-#include "assets/Loader.h"
-#include "assets/MetaSplitter.h"
+#include "core/util/Loader.h"
+#include "core/util/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -58,15 +57,15 @@ namespace oly::context
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
 		GLenum min_filter, mag_filter, wrap_s, wrap_t;
-		if (!assets::parse_min_filter(node["min_filter"], min_filter))
+		if (!io::parse_min_filter(node["min_filter"], min_filter))
 			min_filter = GL_NEAREST;
 		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, min_filter);
-		if (!assets::parse_mag_filter(node["mag_filter"], mag_filter))
+		if (!io::parse_mag_filter(node["mag_filter"], mag_filter))
 			mag_filter = GL_NEAREST;
 		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, mag_filter);
-		if (assets::parse_wrap(node["wrap_s"], wrap_s))
+		if (io::parse_wrap(node["wrap_s"], wrap_s))
 			texture.texture().set_parameter(GL_TEXTURE_WRAP_S, wrap_s);
-		if (assets::parse_wrap(node["wrap_t"], wrap_t))
+		if (io::parse_wrap(node["wrap_t"], wrap_t))
 			texture.texture().set_parameter(GL_TEXTURE_WRAP_T, wrap_t);
 
 		if (set_and_use)
@@ -75,14 +74,14 @@ namespace oly::context
 
 	static graphics::BindlessTextureRef load_image(const graphics::Image& image, TOMLNode node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, assets::parse_bool_or(node["generate_mipmaps"], false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, io::parse_bool_or(node["generate_mipmaps"], false));
 		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
 	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, TOMLNode node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, assets::parse_bool_or(node["generate_mipmaps"], false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, io::parse_bool_or(node["generate_mipmaps"], false));
 		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
@@ -105,13 +104,13 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
-		if (!assets::MetaSplitter::meta(import_file).has_type("texture"))
+		if (!io::MetaSplitter::meta(import_file).has_type("texture"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		toml = assets::load_toml(import_file);
+		toml = io::load_toml(import_file);
 		auto texture_array = toml["texture"].as_array();
 		if (!texture_array)
 		{
@@ -142,13 +141,13 @@ namespace oly::context
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)
 	{
 		graphics::SpritesheetOptions options;
-		assets::parse_uint(texture_node["rows"], options.rows);
-		assets::parse_uint(texture_node["cols"], options.cols);
-		assets::parse_uint(texture_node["cell_width_override"], options.cell_width_override);
-		assets::parse_uint(texture_node["cell_height_override"], options.cell_height_override);
-		assets::parse_int(texture_node["delay_cs"], options.delay_cs);
-		assets::parse_bool(texture_node["row_major"], options.row_major);
-		assets::parse_bool(texture_node["row_up"], options.row_up);
+		io::parse_uint(texture_node["rows"], options.rows);
+		io::parse_uint(texture_node["cols"], options.cols);
+		io::parse_uint(texture_node["cell_width_override"], options.cell_width_override);
+		io::parse_uint(texture_node["cell_height_override"], options.cell_height_override);
+		io::parse_int(texture_node["delay_cs"], options.delay_cs);
+		io::parse_bool(texture_node["row_major"], options.row_major);
+		io::parse_bool(texture_node["row_up"], options.row_up);
 		return options;
 	}
 
@@ -192,7 +191,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (assets::parse_bool_or(texture_node["anim"], false))
+			if (io::parse_bool_or(texture_node["anim"], false))
 			{
 				graphics::Anim anim(file, parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -237,11 +236,11 @@ namespace oly::context
 
 		bool store_abstract = should_store((TOMLNode)toml, "abstract_storage", params.abstract_storage);
 		bool store_image = should_store(texture_node, "image_storage", params.image_storage);
-		float scale = assets::parse_float_or(texture_node["svg_scale"], 1.0f);
+		float scale = io::parse_float_or(texture_node["svg_scale"], 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (assets::parse_bool_or(texture_node["anim"], false))
+		if (io::parse_bool_or(texture_node["anim"], false))
 		{
 			auto ait = internal::nsvg_abstracts.find(file);
 			if (ait != internal::nsvg_abstracts.end())
@@ -331,7 +330,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (assets::parse_bool_or(texture_node["anim"], false))
+			if (io::parse_bool_or(texture_node["anim"], false))
 			{
 				graphics::Anim anim(f.c_str(), parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -365,11 +364,11 @@ namespace oly::context
 
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
-		float scale = assets::parse_float_or(texture_node["svg_scale"], 1.0f);
+		float scale = io::parse_float_or(texture_node["svg_scale"], 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (assets::parse_bool_or(texture_node["anim"], false))
+		if (io::parse_bool_or(texture_node["anim"], false))
 		{
 			graphics::NSVGAbstract abstract(file);
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));

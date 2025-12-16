@@ -1,10 +1,8 @@
 #include "Jumble.h"
 
-#include <assets/Loader.h>
-
 Jumble::Jumble()
 {
-	auto toml = oly::assets::load_toml("~/assets/archetypes/Jumble.toml");
+	auto toml = oly::io::load_toml("~/assets/archetypes/Jumble.toml");
 
 	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 

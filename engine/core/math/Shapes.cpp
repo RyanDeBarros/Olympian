@@ -3,7 +3,7 @@
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
 #include "core/base/Transforms.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::math
 {
@@ -51,10 +51,10 @@ namespace oly::math
 			return {};
 
 		IRect2D rect;
-		assets::parse_int(node["x1"], rect.x1);
-		assets::parse_int(node["x2"], rect.x2);
-		assets::parse_int(node["y1"], rect.y1);
-		assets::parse_int(node["y2"], rect.y2);
+		io::parse_int(node["x1"], rect.x1);
+		io::parse_int(node["x2"], rect.x2);
+		io::parse_int(node["y1"], rect.y1);
+		io::parse_int(node["y2"], rect.y2);
 		return rect;
 	}
 
@@ -68,10 +68,10 @@ namespace oly::math
 		if (auto uniform = node["uniform"].value<double>())
 			padding = Padding::uniform(*uniform);
 
-		assets::parse_float(node["left"], padding.left);
-		assets::parse_float(node["right"], padding.right);
-		assets::parse_float(node["top"], padding.top);
-		assets::parse_float(node["bottom"], padding.bottom);
+		io::parse_float(node["left"], padding.left);
+		io::parse_float(node["right"], padding.right);
+		io::parse_float(node["top"], padding.top);
+		io::parse_float(node["bottom"], padding.bottom);
 
 		return padding;
 	}
@@ -86,9 +86,9 @@ namespace oly::math
 		if (auto uniform = node["uniform"].value<double>())
 			padding = TopSidePadding::uniform(*uniform);
 
-		assets::parse_float(node["left"], padding.left);
-		assets::parse_float(node["right"], padding.right);
-		assets::parse_float(node["top"], padding.top);
+		io::parse_float(node["left"], padding.left);
+		io::parse_float(node["right"], padding.right);
+		io::parse_float(node["top"], padding.top);
 
 		return padding;
 	}

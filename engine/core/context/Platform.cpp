@@ -3,11 +3,10 @@
 #include "core/context/Context.h"
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
+#include "core/util/Loader.h"
+#include "core/util/MetaSplitter.h"
 #include "core/algorithms/STLUtils.h"
 #include "graphics/Camera.h"
-
-#include "assets/Loader.h"
-#include "assets/MetaSplitter.h"
 
 namespace oly::context
 {
@@ -30,13 +29,13 @@ namespace oly::context
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 
-		if (!assets::parse_int(toml_window["width"], platform_setup.window_width))
+		if (!io::parse_int(toml_window["width"], platform_setup.window_width))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
 		}
 		
-		if (!assets::parse_int(toml_window["height"], platform_setup.window_height))
+		if (!io::parse_int(toml_window["height"], platform_setup.window_height))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
 			throw Error(ErrorCode::PLATFORM_INIT);
@@ -52,32 +51,32 @@ namespace oly::context
 
 		if (auto toml_window_hint = toml_window["window_hint"])
 		{
-			assets::parse_vec(toml_window_hint["clear_color"], platform_setup.window_hint.context.clear_color);
-			assets::parse_int(toml_window_hint["swap_interval"], platform_setup.window_hint.context.swap_interval);
-			assets::parse_bool(toml_window_hint["resizable"], platform_setup.window_hint.window.resizable);
-			assets::parse_bool(toml_window_hint["visible"], platform_setup.window_hint.window.visible);
-			assets::parse_bool(toml_window_hint["decorated"], platform_setup.window_hint.window.decorated);
-			assets::parse_bool(toml_window_hint["focused"], platform_setup.window_hint.window.focused);
-			assets::parse_bool(toml_window_hint["auto_iconify"], platform_setup.window_hint.window.auto_iconify);
-			assets::parse_bool(toml_window_hint["floating"], platform_setup.window_hint.window.floating);
-			assets::parse_bool(toml_window_hint["maximized"], platform_setup.window_hint.window.maximized);
-			assets::parse_bool(toml_window_hint["center_cursor"], platform_setup.window_hint.window.center_cursor);
-			assets::parse_bool(toml_window_hint["transparent_framebuffer"], platform_setup.window_hint.window.transparent_framebuffer);
-			assets::parse_bool(toml_window_hint["focus_on_show"], platform_setup.window_hint.window.focus_on_show);
-			assets::parse_bool(toml_window_hint["scale_to_monitor"], platform_setup.window_hint.window.scale_to_monitor);
-			assets::parse_bool(toml_window_hint["scale_framebuffer"], platform_setup.window_hint.window.scale_framebuffer);
-			assets::parse_bool(toml_window_hint["mouse_passthrough"], platform_setup.window_hint.window.mouse_passthrough);
-			assets::parse_uint(toml_window_hint["position_x"], platform_setup.window_hint.window.position_x);
-			assets::parse_uint(toml_window_hint["position_y"], platform_setup.window_hint.window.position_y);
-			assets::parse_int(toml_window_hint["refresh_rate"], platform_setup.window_hint.window.refresh_rate);
-			assets::parse_bool(toml_window_hint["stereo"], platform_setup.window_hint.window.stereo);
-			assets::parse_bool(toml_window_hint["srgb_capable"], platform_setup.window_hint.window.srgb_capable);
-			assets::parse_bool(toml_window_hint["double_buffer"], platform_setup.window_hint.window.double_buffer);
-			assets::parse_bool(toml_window_hint["opengl_forward_compat"], platform_setup.window_hint.window.opengl_forward_compat);
-			assets::parse_bool(toml_window_hint["context_debug"], platform_setup.window_hint.window.context_debug);
+			io::parse_vec(toml_window_hint["clear_color"], platform_setup.window_hint.context.clear_color);
+			io::parse_int(toml_window_hint["swap_interval"], platform_setup.window_hint.context.swap_interval);
+			io::parse_bool(toml_window_hint["resizable"], platform_setup.window_hint.window.resizable);
+			io::parse_bool(toml_window_hint["visible"], platform_setup.window_hint.window.visible);
+			io::parse_bool(toml_window_hint["decorated"], platform_setup.window_hint.window.decorated);
+			io::parse_bool(toml_window_hint["focused"], platform_setup.window_hint.window.focused);
+			io::parse_bool(toml_window_hint["auto_iconify"], platform_setup.window_hint.window.auto_iconify);
+			io::parse_bool(toml_window_hint["floating"], platform_setup.window_hint.window.floating);
+			io::parse_bool(toml_window_hint["maximized"], platform_setup.window_hint.window.maximized);
+			io::parse_bool(toml_window_hint["center_cursor"], platform_setup.window_hint.window.center_cursor);
+			io::parse_bool(toml_window_hint["transparent_framebuffer"], platform_setup.window_hint.window.transparent_framebuffer);
+			io::parse_bool(toml_window_hint["focus_on_show"], platform_setup.window_hint.window.focus_on_show);
+			io::parse_bool(toml_window_hint["scale_to_monitor"], platform_setup.window_hint.window.scale_to_monitor);
+			io::parse_bool(toml_window_hint["scale_framebuffer"], platform_setup.window_hint.window.scale_framebuffer);
+			io::parse_bool(toml_window_hint["mouse_passthrough"], platform_setup.window_hint.window.mouse_passthrough);
+			io::parse_uint(toml_window_hint["position_x"], platform_setup.window_hint.window.position_x);
+			io::parse_uint(toml_window_hint["position_y"], platform_setup.window_hint.window.position_y);
+			io::parse_int(toml_window_hint["refresh_rate"], platform_setup.window_hint.window.refresh_rate);
+			io::parse_bool(toml_window_hint["stereo"], platform_setup.window_hint.window.stereo);
+			io::parse_bool(toml_window_hint["srgb_capable"], platform_setup.window_hint.window.srgb_capable);
+			io::parse_bool(toml_window_hint["double_buffer"], platform_setup.window_hint.window.double_buffer);
+			io::parse_bool(toml_window_hint["opengl_forward_compat"], platform_setup.window_hint.window.opengl_forward_compat);
+			io::parse_bool(toml_window_hint["context_debug"], platform_setup.window_hint.window.context_debug);
 		}
 
-		platform_setup.num_gamepads = glm::clamp(assets::parse_int_or(node["gamepads"], 0), 0, GLFW_JOYSTICK_LAST);
+		platform_setup.num_gamepads = glm::clamp(io::parse_int_or(node["gamepads"], 0), 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
@@ -92,8 +91,8 @@ namespace oly::context
 		{
 			if (auto viewport = window["viewport"])
 			{
-				assets::parse_bool(viewport["boxed"], camera_boxed);
-				assets::parse_bool(viewport["stretch"], camera_stretch);
+				io::parse_bool(viewport["boxed"], camera_boxed);
+				io::parse_bool(viewport["stretch"], camera_stretch);
 			}
 		}
 		
@@ -162,9 +161,9 @@ namespace oly::context
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
 		}
 
-		if (!assets::parse_float(mnode["multiplier"], modifier.multiplier.x))
-			if (!assets::parse_vec(mnode["multiplier"], reinterpret_cast<glm::vec2&>(modifier.multiplier)))
-				assets::parse_vec(mnode["multiplier"], modifier.multiplier);
+		if (!io::parse_float(mnode["multiplier"], modifier.multiplier.x))
+			if (!io::parse_vec(mnode["multiplier"], reinterpret_cast<glm::vec2&>(modifier.multiplier)))
+				io::parse_vec(mnode["multiplier"], modifier.multiplier);
 
 		if (auto invert = mnode["invert"].as_array())
 		{
@@ -263,10 +262,10 @@ namespace oly::context
 	static void load_key_binding(TOMLNode node, const std::string& id)
 	{
 		input::KeyBinding b;
-		if (!assets::parse_int(node["key"], b.key))
+		if (!io::parse_int(node["key"], b.key))
 			return;
-		assets::parse_int(node["req_mods"], b.required_key_mods);
-		assets::parse_int(node["ban_mods"], b.forbidden_key_mods);
+		io::parse_int(node["req_mods"], b.required_key_mods);
+		io::parse_int(node["ban_mods"], b.forbidden_key_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -275,10 +274,10 @@ namespace oly::context
 	static void load_mouse_button_binding(TOMLNode node, const std::string& id)
 	{
 		input::MouseButtonBinding b;
-		if (!assets::parse_int(node["button"], b.button))
+		if (!io::parse_int(node["button"], b.button))
 			return;
-		assets::parse_int(node["req_mods"], b.required_button_mods);
-		assets::parse_int(node["ban_mods"], b.forbidden_button_mods);
+		io::parse_int(node["req_mods"], b.required_button_mods);
+		io::parse_int(node["ban_mods"], b.forbidden_button_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -287,7 +286,7 @@ namespace oly::context
 	static void load_gamepad_button_binding(TOMLNode node, const std::string& id)
 	{
 		int button;
-		if (!assets::parse_int(node["button"], button))
+		if (!io::parse_int(node["button"], button))
 			return;
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)button };
 		b.modifier = load_modifier_0d(node);
@@ -298,10 +297,10 @@ namespace oly::context
 	static void load_gamepad_axis_1d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis1d;
-		if (!assets::parse_int(node["axis1d"], axis1d))
+		if (!io::parse_int(node["axis1d"], axis1d))
 			return;
 		input::GamepadAxis1DBinding b{ .axis = (input::GamepadAxis1D)axis1d };
-		assets::parse_float(node["deadzone"], b.deadzone);
+		io::parse_float(node["deadzone"], b.deadzone);
 		b.modifier = load_modifier_1d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -310,10 +309,10 @@ namespace oly::context
 	static void load_gamepad_axis_2d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis2d;
-		if (!assets::parse_int(node["axis2d"], axis2d))
+		if (!io::parse_int(node["axis2d"], axis2d))
 			return;
 		input::GamepadAxis2DBinding b{ .axis = (input::GamepadAxis2D)axis2d };
-		assets::parse_float(node["deadzone"], b.deadzone);
+		io::parse_float(node["deadzone"], b.deadzone);
 		b.modifier = load_modifier_2d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -411,13 +410,13 @@ namespace oly::context
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		if (!assets::MetaSplitter::meta(file).has_type("signal"))
+		if (!io::MetaSplitter::meta(file).has_type("signal"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type." << LOG.nl;
 			throw Error(ErrorCode::LOAD_ASSET);
 		}
 
-		auto toml = assets::load_toml(file);
+		auto toml = io::load_toml(file);
 
 		std::string source;
 		if (LOG.enable.debug)

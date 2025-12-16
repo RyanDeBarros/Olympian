@@ -3,7 +3,7 @@
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Tilesets.h"
-#include "assets/Loader.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -167,7 +167,7 @@ namespace oly::rendering
 		if (auto transformer = node["transformer"])
 		{
 			tilemap.set_local() = Transform2D::load(transformer);
-			tilemap.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
+			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
 		}
 
 		if (auto toml_layers = node["layer"].as_array())
@@ -194,7 +194,7 @@ namespace oly::rendering
 					for (auto& toml_tile : *tiles)
 					{
 						glm::ivec2 tile{};
-						if (assets::parse_ivec((TOMLNode)toml_tile, tile))
+						if (io::parse_ivec((TOMLNode)toml_tile, tile))
 							layer.paint_tile(tile);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx
@@ -204,7 +204,7 @@ namespace oly::rendering
 				}
 
 				int z = 0;
-				if (assets::parse_int(node["z"], z))
+				if (io::parse_int(node["z"], z))
 					tilemap.register_layer(z, std::move(layer));
 				else
 					tilemap.register_layer(std::move(layer));

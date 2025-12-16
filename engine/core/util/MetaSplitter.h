@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-namespace oly::assets
+namespace oly::io
 {
 	struct MetaMap
 	{
