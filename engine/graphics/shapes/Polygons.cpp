@@ -544,6 +544,8 @@ namespace oly::rendering
 		}
 		polygon.set_colors() = std::move(colors);
 
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
 		return polygon;
 	}
 
@@ -789,6 +791,8 @@ namespace oly::rendering
 			}
 		}
 
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
 		return polygon;
 	}
 
@@ -920,6 +924,8 @@ namespace oly::rendering
 			io::parse_float(border_pivot, ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
+
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
 
 		return polygon;
 	}

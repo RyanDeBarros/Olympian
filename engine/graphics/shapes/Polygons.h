@@ -122,7 +122,6 @@ namespace oly::rendering
 			mutable bool points = true;
 			mutable bool colors = true;
 
-			// TODO v6 should camera invariant be delayed or just set directly?
 			enum CameraInvariantFlag
 			{
 				VALUE = 1,

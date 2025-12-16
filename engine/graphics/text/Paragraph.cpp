@@ -968,6 +968,8 @@ namespace oly::rendering
 		if (io::parse_vec(node["bkg_color"], bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
+		paragraph.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
 		return paragraph;
 	}
 

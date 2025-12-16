@@ -208,6 +208,8 @@ namespace oly::rendering
 				});
 		}
 
+		tilemap.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
 		return tilemap;
 	}
 

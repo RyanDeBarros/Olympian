@@ -4,7 +4,6 @@
 #include "graphics/sprites/TileSet.h"
 #include "core/base/TransformerExposure.h"
 
-// TODO v6 add camera_invariant to all assets that use it in loaders.
 namespace oly::rendering
 {
 	struct TileMapLayer : public PublicIssuerHandle<internal::SpriteBatch>

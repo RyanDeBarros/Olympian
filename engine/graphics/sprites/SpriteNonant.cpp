@@ -364,6 +364,8 @@ namespace oly::rendering
 		else
 			nonant.setup_nonant(nsize, offsets);
 
+		nonant.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
 		return nonant;
 	}
 

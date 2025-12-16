@@ -398,6 +398,7 @@ namespace oly::rendering
 		io::parse_float(node["fill_exp"], dimension.fill_exp);
 		io::parse_float(node["rx"], dimension.rx);
 		io::parse_float(node["ry"], dimension.ry);
+		dimension.camera_invariant = io::parse_bool_or(node["camera_invariant"], false);
 
 		return ellipse;
 	}
