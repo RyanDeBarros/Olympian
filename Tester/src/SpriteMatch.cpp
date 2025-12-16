@@ -1,7 +1,6 @@
 #include "SpriteMatch.h"
 
 #include <assets/Loader.h>
-#include <assets/graphics/sprites/Sprites.h>
 
 SpriteMatch::SpriteMatch()
 {
@@ -9,8 +8,8 @@ SpriteMatch::SpriteMatch()
 
 	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
-	sprite0.ref.init(oly::assets::load_sprite(toml["sprite0"]));
-	sprite2.ref.init(oly::assets::load_sprite(toml["sprite2"]));
+	sprite0.ref.init(oly::rendering::Sprite::load(toml["sprite0"]));
+	sprite2.ref.init(oly::rendering::Sprite::load(toml["sprite2"]));
 
 	sprite0->transformer.attach_parent(&transformer);
 	sprite2->transformer.attach_parent(&transformer);

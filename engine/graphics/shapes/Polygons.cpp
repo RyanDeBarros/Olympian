@@ -503,6 +503,9 @@ namespace oly::rendering
 
 	Polygon Polygon::load(TOMLNode node, const char* source)
 	{
+		if (!node)
+			return {};
+
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing polygon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		Polygon polygon;
@@ -642,6 +645,9 @@ namespace oly::rendering
 
 	PolyComposite PolyComposite::load(TOMLNode node, const char* source)
 	{
+		if (!node)
+			return {};
+
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing poly composite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		PolyComposite polygon;
@@ -835,6 +841,9 @@ namespace oly::rendering
 
 	NGon NGon::load(TOMLNode node, const char* source)
 	{
+		if (!node)
+			return {};
+
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ngon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		NGon polygon;

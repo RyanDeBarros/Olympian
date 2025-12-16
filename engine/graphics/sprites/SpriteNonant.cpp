@@ -1,6 +1,7 @@
 #include "SpriteNonant.h"
 
 #include "core/context/rendering/Textures.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {
@@ -345,5 +346,28 @@ namespace oly::rendering
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
 				sprite(x, y).set_mod_tex_coords({ .x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1] });
+	}
+
+	SpriteNonant SpriteNonant::load(TOMLNode node, const char* source)
+	{
+		if (!node)
+			return {};
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite nonant [" << (source ? source : "") << "]..." << LOG.nl;
+
+		SpriteNonant nonant;
+
+		glm::vec2 nsize{};
+		assets::parse_vec(node["nsize"], nsize);
+		math::Padding offsets = math::Padding::load(node["offsets"]);
+
+		if (auto sprite = node["sprite"])
+			nonant.setup_nonant(Sprite::load(sprite, source), nsize, offsets);
+		else
+			nonant.setup_nonant(nsize, offsets);
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite nonant [" << (source ? source : "") << "] parsed." << LOG.nl;
+
+		return nonant;
 	}
 }

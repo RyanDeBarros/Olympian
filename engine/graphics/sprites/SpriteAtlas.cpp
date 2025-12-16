@@ -1,6 +1,7 @@
 #include "SpriteAtlas.h"
 
 #include "core/util/Time.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {
@@ -93,5 +94,33 @@ namespace oly::rendering
 			current_frame = frame;
 			sprite.set_tex_coords(atlas[frame]);
 		}
+	}
+
+	SpriteAtlas SpriteAtlas::load(TOMLNode node, const char* source)
+	{
+		if (!node)
+			return {};
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite atlas [" << (source ? source : "") << "]..." << LOG.nl;
+
+		SpriteAtlas sprite_atlas(Sprite::load(node["sprite"], source));
+
+		GLuint rows, cols;
+		float delay_seconds;
+		if (assets::parse_uint(node["rows"], rows) && assets::parse_uint(node["cols"], cols) && assets::parse_float(node["delay_seconds"], delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, assets::parse_bool_or(node["row_major"], true), assets::parse_bool_or(node["row_up"], true));
+		else
+		{
+			GLuint static_frame;
+			if (assets::parse_uint(node["static_frame"], static_frame))
+				sprite_atlas.select_static_frame(static_frame);
+		}
+
+		sprite_atlas.anim_format.starting_frame = assets::parse_int_or(node["starting_frame"], 0);
+		sprite_atlas.anim_format.starting_time = assets::parse_float_or(node["starting_time"], 0.0f);
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
+
+		return sprite_atlas;
 	}
 }

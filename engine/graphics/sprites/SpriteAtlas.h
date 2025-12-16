@@ -25,6 +25,9 @@ namespace oly::rendering
 	private:
 		void select(GLuint frame) const;
 		mutable GLuint current_frame = -1;
+
+	public:
+		static SpriteAtlas load(TOMLNode node, const char* source = nullptr);
 	};
 
 	typedef SmartReference<SpriteAtlas> SpriteAtlasRef;

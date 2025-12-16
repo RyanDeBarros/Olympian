@@ -2,8 +2,6 @@
 
 #include "ProjectContext.h"
 
-#include <assets/graphics/sprites/Sprites.h>
-
 #include "SpriteMatch.h"
 #include "Jumble.h"
 
@@ -86,7 +84,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::assets::load_sprite(oly::assets::load_toml("~/assets/flag instance.toml")["sprite"]);
+		oly::Sprite flag_instance = oly::rendering::Sprite::load(oly::assets::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);

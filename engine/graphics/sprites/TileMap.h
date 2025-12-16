@@ -72,6 +72,8 @@ namespace oly::rendering
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);
+
+		static TileMap load(TOMLNode node, const char* source = nullptr);
 	};
 
 	typedef SmartReference<TileMap> TileMapRef;

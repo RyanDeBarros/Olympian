@@ -1,10 +1,6 @@
 #include "Jumble.h"
 
 #include <assets/Loader.h>
-#include <assets/graphics/sprites/Sprites.h>
-#include <assets/graphics/sprites/SpriteAtlases.h>
-#include <assets/graphics/sprites/TileMaps.h>
-#include <assets/graphics/sprites/SpriteNonants.h>
 
 Jumble::Jumble()
 {
@@ -12,21 +8,21 @@ Jumble::Jumble()
 
 	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
-	sprite3.ref.init(oly::assets::load_sprite(toml["sprite3"]));
-	sprite4.ref.init(oly::assets::load_sprite(toml["sprite4"]));
-	sprite5.ref.init(oly::assets::load_sprite(toml["sprite5"]));
-	sprite1.ref.init(oly::assets::load_sprite(toml["sprite1"]));
-	godot_icon.ref.init(oly::assets::load_sprite(toml["godot_icon"]));
-	knight.ref.init(oly::assets::load_sprite(toml["knight"]));
+	sprite3.ref.init(oly::rendering::Sprite::load(toml["sprite3"]));
+	sprite4.ref.init(oly::rendering::Sprite::load(toml["sprite4"]));
+	sprite5.ref.init(oly::rendering::Sprite::load(toml["sprite5"]));
+	sprite1.ref.init(oly::rendering::Sprite::load(toml["sprite1"]));
+	godot_icon.ref.init(oly::rendering::Sprite::load(toml["godot_icon"]));
+	knight.ref.init(oly::rendering::Sprite::load(toml["knight"]));
 	// TODO v6 version of init that loads from TOML directly (test_text.ref.load(toml["test_text"]);) using Class::load()
 	test_text.ref.init(oly::rendering::Paragraph::load(toml["test_text"]));
 	smol_text.ref.init(oly::rendering::Paragraph::load(toml["smol_text"]));
-	atlased_knight.ref.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
+	atlased_knight.ref.init(oly::rendering::SpriteAtlas::load(toml["atlased_knight"]));
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;
-	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::assets::load_tilemap(node); });
+	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); });
 
-	nonant_panel.ref.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
+	nonant_panel.ref.init(oly::rendering::SpriteNonant::load(toml["nonant_panel"]));
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);

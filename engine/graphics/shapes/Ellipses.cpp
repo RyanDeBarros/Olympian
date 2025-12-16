@@ -380,6 +380,9 @@ namespace oly::rendering
 
 	Ellipse Ellipse::load(TOMLNode node, const char* source)
 	{
+		if (!node)
+			return {};
+
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ellipse [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Ellipse ellipse;

@@ -1,6 +1,6 @@
 #include "Transforms.h"
 
-// TODO v6 after finishing with new deserialization system, move Loader.h/MetaSplitter.h to core/util
+// TODO v6 after finishing with new deserialization system, move Loader.h/MetaSplitter.h to core/util, and change assets namespace to io namespace
 #include "assets/Loader.h"
 
 namespace oly
@@ -376,6 +376,9 @@ namespace oly
 
 	Transformer2D Transformer2D::load(TOMLNode node)
 	{
+		if (!node)
+			return {};
+
 		Transformer2D transformer;
 		transformer.set_local() = Transform2D::load(node);
 		transformer.set_modifier() = assets::load_transform_modifier_2d(node["modifier"]);
