@@ -19,7 +19,7 @@ from editor.core.EditorPreferences import PREFERENCES
 from editor.core.common import Alerts
 from editor.core.path_items import *
 from .FavoritesDialog import FavoritesDialog
-from .FileIOMachine import FileIOMachine
+from editor.core.content_browser.file_system import FileSystemMachine
 
 
 # TODO v6 use QFileSystemWatcher or watchdog to check for external modifications. Upon opening/focusing on the editor, display dialog like "External changes detected. Undo stack may no longer match the file system. Do you want to clear history or continue with limited undo?" (latter choice would require smart invalidation of undo stack). Could also add new actions to the undo queue based on external modifications. Maybe also option to undo external changes, if possible - depends on whether watchdog/QFileSystemWatcher can notify editor of each individual modification (of course, if modifying then opening editor, I'll need to clear the serialized undo stack first).
@@ -32,7 +32,7 @@ class ContentBrowserFolderView(QListView):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.content_browser: Optional[ContentBrowser] = None
-		self.file_machine: Optional[FileIOMachine] = None
+		self.file_machine: Optional[FileSystemMachine] = None
 		self.clipboard_paths: list[Path] = []
 
 		self.setViewMode(QListView.ViewMode.IconMode)
@@ -463,7 +463,7 @@ class ContentBrowser(QWidget):
 
 		self.folder_view = self.ui.CBFolderView
 		self.undo_stack = QUndoStack()  # TODO v6 serialize undo stack
-		self.file_machine: Optional[FileIOMachine] = None
+		self.file_machine: Optional[FileSystemMachine] = None
 
 		self.ui.browseFolder.clicked.connect(self.browse_folder)
 		self.ui.openInExplorer.clicked.connect(self.open_in_explorer)
@@ -513,7 +513,7 @@ class ContentBrowser(QWidget):
 		self.browse_file_dialog = FileDialog(self.current_folder)
 		self.open_folder(self.current_folder, add_to_history=False)
 
-		self.file_machine = FileIOMachine(self.win.project_context)
+		self.file_machine = FileSystemMachine(self.win.project_context)
 		self.folder_view.init(self)
 
 	def show_undo_stack(self):
