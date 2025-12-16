@@ -7,8 +7,8 @@ from typing import Generator
 
 import toml
 
-CACHE_FILE = Path('../.dev/qtconv.toml')
-SEARCH_FOLDER = Path('../ui')
+CACHE_FILE = Path('.dev/qtconv.toml')
+SEARCH_FOLDER = Path('ui')
 
 
 @contextmanager
@@ -45,3 +45,4 @@ def run():
 
 if __name__ == "__main__":
 	run()
+	print(SEARCH_FOLDER.absolute())
