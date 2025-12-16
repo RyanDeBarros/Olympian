@@ -71,7 +71,7 @@ namespace oly::rendering
 		const glm::mat3& transform = 1.0f;
 	};
 
-	static Attributes get_attributes(const EllipseReference& ref)
+	static Attributes get_attributes(const internal::EllipseReference& ref)
 	{
 		return {
 			.dimension = ref.get_dimension(),
@@ -80,7 +80,7 @@ namespace oly::rendering
 		};
 	}
 
-	static AttributesRef get_attributes_ref(const EllipseReference& ref)
+	static AttributesRef get_attributes_ref(const internal::EllipseReference& ref)
 	{
 		return {
 			.dimension = ref.get_dimension(),
@@ -89,32 +89,32 @@ namespace oly::rendering
 		};
 	}
 
-	static void set_attributes(EllipseReference& ref, const Attributes& attr)
+	static void set_attributes(internal::EllipseReference& ref, const Attributes& attr)
 	{
 		ref.set_dimension() = attr.dimension;
 		ref.set_color() = attr.color;
 		ref.set_transform() = attr.transform;
 	}
 
-	static void set_attributes(EllipseReference& ref, const AttributesRef& attr)
+	static void set_attributes(internal::EllipseReference& ref, const AttributesRef& attr)
 	{
 		ref.set_dimension() = attr.dimension;
 		ref.set_color() = attr.color;
 		ref.set_transform() = attr.transform;
 	}
 
-	EllipseReference::EllipseReference(Unbatched)
+	internal::EllipseReference::EllipseReference(Unbatched)
 	{
 	}
 
-	EllipseReference::EllipseReference(EllipseBatch& batch)
+	internal::EllipseReference::EllipseReference(rendering::EllipseBatch& batch)
 		: Super(batch->weak_from_this())
 	{
 		id = batch->generate_id();
 		set_attributes(*this, Attributes{});
 	}
 
-	EllipseReference::EllipseReference(const EllipseReference& other)
+	internal::EllipseReference::EllipseReference(const EllipseReference& other)
 		: Super(other)
 	{
 		if (other.id != internal::EllipseBatch::NULL_ID)
@@ -127,26 +127,26 @@ namespace oly::rendering
 		}
 	}
 
-	EllipseReference::EllipseReference(EllipseReference&& other) noexcept
+	internal::EllipseReference::EllipseReference(EllipseReference&& other) noexcept
 		: Super(std::move(other)), id(other.id)
 	{
 		other.id = internal::EllipseBatch::NULL_ID;
 	}
 
-	EllipseReference::~EllipseReference()
+	internal::EllipseReference::~EllipseReference()
 	{
 		if (auto batch = lock())
 			batch->erase_id(id);
 	}
 
-	EllipseReference& EllipseReference::operator=(const EllipseReference& other)
+	internal::EllipseReference& internal::EllipseReference::operator=(const EllipseReference& other)
 	{
 		if (this != &other)
 			*this = dupl(other);
 		return *this;
 	}
 
-	EllipseReference& EllipseReference::operator=(EllipseReference&& other) noexcept
+	internal::EllipseReference& internal::EllipseReference::operator=(EllipseReference&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -159,7 +159,7 @@ namespace oly::rendering
 		return *this;
 	}
 
-	void EllipseReference::set_batch(Unbatched)
+	void internal::EllipseReference::set_batch(Unbatched)
 	{
 		if (auto batch = lock())
 			batch->erase_id(id);
@@ -167,7 +167,7 @@ namespace oly::rendering
 		reset();
 	}
 
-	void EllipseReference::set_batch(EllipseBatch& new_batch)
+	void internal::EllipseReference::set_batch(rendering::EllipseBatch& new_batch)
 	{
 		if (auto batch = lock())
 		{
@@ -190,7 +190,7 @@ namespace oly::rendering
 		}
 	}
 
-	EllipseDimension EllipseReference::get_dimension() const
+	EllipseDimension internal::EllipseReference::get_dimension() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -201,7 +201,7 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	EllipseDimension& EllipseReference::set_dimension()
+	EllipseDimension& internal::EllipseReference::set_dimension() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -212,7 +212,7 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	const EllipseColorGradient& EllipseReference::get_color() const
+	const EllipseColorGradient& internal::EllipseReference::get_color() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -223,7 +223,7 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	EllipseColorGradient& EllipseReference::set_color()
+	EllipseColorGradient& internal::EllipseReference::set_color() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -234,7 +234,12 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	const glm::mat3& EllipseReference::get_transform() const
+	void internal::EllipseReference::set_color(glm::vec4 color) const
+	{
+		set_color().set_uniform(color);
+	}
+
+	const glm::mat3& internal::EllipseReference::get_transform() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -245,7 +250,7 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	glm::mat3& EllipseReference::set_transform()
+	glm::mat3& internal::EllipseReference::set_transform() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -256,7 +261,7 @@ namespace oly::rendering
 			throw Error(ErrorCode::NULL_POINTER);
 	}
 
-	void EllipseReference::draw() const
+	void internal::EllipseReference::draw() const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -265,11 +270,6 @@ namespace oly::rendering
 		}
 		else
 			throw Error(ErrorCode::NULL_POINTER);
-	}
-
-	void EllipseReference::set_color(glm::vec4 color)
-	{
-		set_color().set_uniform(color);
 	}
 
 	StaticEllipse::StaticEllipse(EllipseBatch& batch, float r, glm::vec4 color)
@@ -355,25 +355,25 @@ namespace oly::rendering
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float r, glm::vec4 color)
-		: ellipse(batch)
+		: ref(batch)
 	{
-		ellipse.set_dimension().rx = r;
-		ellipse.set_dimension().ry = r;
-		ellipse.set_color(color);
+		ref.set_dimension().rx = r;
+		ref.set_dimension().ry = r;
+		ref.set_color(color);
 	}
 
 	Ellipse::Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color)
-		: ellipse(batch)
+		: ref(batch)
 	{
-		ellipse.set_dimension().rx = rx;
-		ellipse.set_dimension().ry = ry;
-		ellipse.set_color(color);
+		ref.set_dimension().rx = rx;
+		ref.set_dimension().ry = ry;
+		ref.set_color(color);
 	}
 
 	void Ellipse::draw() const
 	{
 		if (transformer.flush())
-			const_cast<EllipseReference&>(ellipse).set_transform() = transformer.global();
-		ellipse.draw();
+			ref.set_transform() = transformer.global();
+		ref.draw();
 	}
 }
