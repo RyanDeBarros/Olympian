@@ -1,5 +1,6 @@
 #pragma once
 
+#include "external/TOML.h"
 #include "core/base/Errors.h"
 #include "core/algorithms/STLUtils.h"
 
@@ -615,6 +616,11 @@ namespace oly
 
 			pool_idx = pool().init_slot(Object(std::forward<Args>(args)...));
 			increment();
+		}
+		
+		void init_toml(TOMLNode node)
+		{
+			init(Object::load(node));
 		}
 
 		void clone()

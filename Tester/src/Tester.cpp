@@ -105,16 +105,16 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		bkg.draw();
 		polygon_batch->render();
 
-		//sprite_match.draw();
-		//for (const auto& sprite : flag_tesselation)
-			//sprite.draw();
-		//jumble.draw();
+		sprite_match.draw();
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		jumble.draw();
 
 		obstacle_layer.draw();
 		player_layer.draw();
 		ray_layer.draw();
 		
-		//pixel_art_text.draw();
+		pixel_art_text.draw();
 	}
 
 	void logic_update()

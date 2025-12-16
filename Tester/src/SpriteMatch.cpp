@@ -6,8 +6,8 @@ SpriteMatch::SpriteMatch()
 
 	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
-	sprite0.ref.init(oly::rendering::Sprite::load(toml["sprite0"]));
-	sprite2.ref.init(oly::rendering::Sprite::load(toml["sprite2"]));
+	sprite0.ref.init_toml(toml["sprite0"]);
+	sprite2.ref.init_toml(toml["sprite2"]);
 
 	sprite0->transformer.attach_parent(&transformer);
 	sprite2->transformer.attach_parent(&transformer);
