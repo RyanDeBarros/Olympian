@@ -21,6 +21,18 @@ namespace oly::col2d
 
 		float projection_max(UnitVector2D axis) const;
 		float projection_min(UnitVector2D axis) const;
+
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return *elements[i].variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return *elements[i].variant().get<Shape*>();
+		}
 	};
 
 	namespace internal { struct LUT; };
@@ -62,6 +74,18 @@ namespace oly::col2d
 
 		float projection_max(UnitVector2D axis) const;
 		float projection_min(UnitVector2D axis) const;
+
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return get_compound().element_as<Shape>(i);
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return set_compound().element_as<Shape>(i);
+		}
 	};
 
 	namespace internal

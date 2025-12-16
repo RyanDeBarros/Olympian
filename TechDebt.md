@@ -4,3 +4,4 @@
 * Move non-template inline methods to CPP files
 * Create MKdocs for all public classes/functions
 * Create asset loaders for all assets
+* Create editor tabs for all assets

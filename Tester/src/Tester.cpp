@@ -197,7 +197,6 @@ int main()
 	player->properties().net_linear_acceleration += oly::physics::GRAVITY;
 	player->properties().set_mass(15.0f);
 
-	// TODO v6 simpler API, that changes player_collider.set_primitive().element.variant().get<oly::col2d::AABB*>()->x1 to player_collider.element_as<oly::col2d::AABB>().x1
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
 	player->collider().layer() |= oly::context::get_collision_layer("player");

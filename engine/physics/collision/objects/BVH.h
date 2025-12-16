@@ -251,6 +251,18 @@ namespace oly::col2d
 		const std::vector<Element>& get_elements() const { return elements; }
 		std::vector<Element>& set_elements() { dirty = true; return elements; }
 
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return *get_elements()[i].variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return *set_elements()[i].variant().get<Shape*>();
+		}
+
 		Heuristic get_heuristic() const { return heuristic; }
 		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
 
@@ -543,6 +555,18 @@ namespace oly::col2d
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
+		
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return *get_elements()[i].variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return *set_elements()[i].variant().get<Shape*>();
+		}
 
 		const std::vector<Element>& get_baked() const { return bvh().get_elements(); }
 
