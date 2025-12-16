@@ -81,32 +81,32 @@ namespace oly::debug
 		shapes.insert(shapes.end(), std::make_move_iterator(other.shapes.begin()), std::make_move_iterator(other.shapes.end()));
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer)
-		: layer(&layer), sprite(rendering::UNBATCHED)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, PaintOptions paint_options)
+		: layer(&layer), sprite(rendering::UNBATCHED), paint_options(paint_options)
 	{
 		layer.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticEllipse&& shape)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticEllipse&& shape, PaintOptions paint_options)
+		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
 	{
 		layer.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticPolygon&& shape)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticPolygon&& shape, PaintOptions paint_options)
+		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
 	{
 		layer.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticArrowExtension&& shape)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticArrowExtension&& shape, PaintOptions paint_options)
+		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
 	{
 		layer.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, DebugShapeGroup&& group)
-		: layer(&layer), debug_group(std::move(group)), sprite(rendering::UNBATCHED)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, DebugShapeGroup&& group, PaintOptions paint_options)
+		: layer(&layer), debug_group(std::move(group)), sprite(rendering::UNBATCHED), paint_options(paint_options)
 	{
 		debug_group.align_layer_batch(layer);
 		layer.assign(this);
@@ -327,10 +327,15 @@ namespace oly::debug
 		shapes_modified();
 	}
 
-	void DebugOverlay::set_shape(size_t i, DebugShape&& shape)
+	const DebugShape& DebugOverlay::operator[](size_t i) const
 	{
-		debug_group.shapes[i] = std::move(shape);
+		return debug_group.shapes[i];
+	}
+
+	DebugShape& DebugOverlay::operator[](size_t i)
+	{
 		shapes_modified();
+		return debug_group.shapes[i];
 	}
 
 	void DebugOverlay::shapes_modified() const
@@ -384,7 +389,7 @@ namespace oly::debug
 
 	void DebugOverlay::update_color(glm::vec4 color, size_t shape_index)
 	{
-		if (update_view_color(get_shape(shape_index), color))
+		if (update_view_color(debug_group.shapes[shape_index], color))
 			shapes_modified();
 	}
 

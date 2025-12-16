@@ -286,9 +286,9 @@ namespace oly::col2d::internal
 		return (lut.is_dirty_[c.id()])(c.raw_obj());
 	}
 
-	debug::DebugOverlay lut_create_debug_overlay(debug::DebugOverlayLayer& layer, const ColliderObject& c, glm::vec4 color)
+	debug::DebugOverlay lut_create_debug_overlay(debug::DebugOverlayLayer& layer, const ColliderObject& c, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options)
 	{
-		return debug::DebugOverlay(layer, (lut.create_debug_overlay_[c.id()])(c.raw_obj(), color));
+		return debug::DebugOverlay(layer, (lut.create_debug_overlay_[c.id()])(c.raw_obj(), color), paint_options);
 	}
 
 	void lut_modify_debug_overlay(debug::DebugOverlay& view, const ColliderObject& c, size_t view_index)

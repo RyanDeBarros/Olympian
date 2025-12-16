@@ -269,14 +269,18 @@ int main()
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
-	auto player_cv = player->create_debug_overlay(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f));
-	player_cv.paint_options.bounds_use_rotation = true;
+	auto player_cv = player->create_debug_overlay(pipeline.player_layer, 0, oly::colors::YELLOW * oly::colors::alpha(0.8f), { .bounds_use_rotation = true });
 	auto block_cv = block.create_debug_overlay(pipeline.obstacle_layer, oly::colors::BLUE * oly::colors::alpha(0.8f));
-	oly::debug::DebugOverlay ray_cv(pipeline.ray_layer, oly::debug::create_shape_group(ray, oly::colors::WHITE * oly::colors::alpha(0.8f)));
-	ray_cv.paint_options.bounds_use_rotation = true;
-	oly::debug::DebugOverlay circle_cast_cv(pipeline.ray_layer, oly::debug::create_shape_group(circle_cast, oly::colors::WHITE * oly::colors::alpha(0.8f), oly::colors::GREEN * oly::colors::alpha(0.8f)));
-	circle_cast_cv.paint_options.bounds_use_rotation = true;
-	circle_cast_cv.paint_options.quality = 0.5f;
+	oly::debug::DebugOverlay ray_cv(
+		pipeline.ray_layer,
+		oly::debug::create_shape_group(ray, oly::colors::WHITE * oly::colors::alpha(0.8f)),
+		{ .bounds_use_rotation = true }
+	);
+	oly::debug::DebugOverlay circle_cast_cv(
+		pipeline.ray_layer,
+		oly::debug::create_shape_group(circle_cast, oly::colors::WHITE * oly::colors::alpha(0.8f), oly::colors::GREEN * oly::colors::alpha(0.8f)),
+		{ .bounds_use_rotation = true, .quality = 0.5f }
+	);
 
 	auto cv_obstacle0 = obstacle0->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
 	auto cv_obstacle1 = obstacle1->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);

@@ -19,7 +19,7 @@ namespace oly::debug
 
 	inline void modify_shape_group(DebugOverlay& overlay, const col2d::Circle& c, size_t shape_index = 0)
 	{
-		if (auto obj = overlay.get_shape(shape_index)->safe_get<rendering::StaticEllipse>())
+		if (auto obj = overlay[shape_index]->safe_get<rendering::StaticEllipse>())
 		{
 			obj->set_transform(c.compute_transform());
 			auto dim = obj->get_dimension();
@@ -61,7 +61,7 @@ namespace oly::debug
 				return;
 			}
 
-			if (auto obj = overlay.get_shape(shape_index)->safe_get<rendering::StaticPolygon>())
+			if (auto obj = overlay[shape_index]->safe_get<rendering::StaticPolygon>())
 			{
 				obj->set_points().clear();
 				obj->set_points().insert(obj->get_points().end(), points.begin(), points.end());

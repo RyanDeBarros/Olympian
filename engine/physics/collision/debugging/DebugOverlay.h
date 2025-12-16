@@ -60,7 +60,6 @@ namespace oly::debug
 
 	public:
 		// TODO v6 mkdocs for all collision debugging, especially DebugOverlay/DebugOverlayLayer and PaintOptions
-		// TODO v6 option to pass PaintOptions to collision_view()/update_collision() functions - use better system, since there's so many of them? Also, rename function to reflect the new class names
 		struct PaintOptions
 		{
 			/**
@@ -78,11 +77,11 @@ namespace oly::debug
 			glm::vec2 compress(math::Rect2D& bounds) const;
 		} paint_options = {};
 
-		DebugOverlay(DebugOverlayLayer& layer);
-		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticEllipse&& shape);
-		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticPolygon&& shape);
-		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticArrowExtension&& shape);
-		DebugOverlay(DebugOverlayLayer& layer, DebugShapeGroup&& group);
+		DebugOverlay(DebugOverlayLayer& layer, PaintOptions paint_options = {});
+		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticEllipse&& shape, PaintOptions paint_options = {});
+		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticPolygon&& shape, PaintOptions paint_options = {});
+		DebugOverlay(DebugOverlayLayer& layer, rendering::StaticArrowExtension&& shape, PaintOptions paint_options = {});
+		DebugOverlay(DebugOverlayLayer& layer, DebugShapeGroup&& group, PaintOptions paint_options = {});
 		DebugOverlay(const DebugOverlay&);
 		DebugOverlay(DebugOverlay&&) noexcept;
 		~DebugOverlay();
@@ -106,10 +105,8 @@ namespace oly::debug
 		size_t shape_count() const { return debug_group.shapes.size(); }
 		void resize_shape_group(size_t size);
 
-		// TODO v6 use operator[]
-		void set_shape(size_t i, DebugShape&& shape);
-		const DebugShape& get_shape(size_t i = 0) const { return debug_group.shapes[i]; }
-		DebugShape& get_shape(size_t i = 0) { return debug_group.shapes[i]; }
+		const DebugShape& operator[](size_t i) const;
+		DebugShape& operator[](size_t i);
 
 		void shapes_modified() const;
 

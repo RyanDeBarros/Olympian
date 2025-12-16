@@ -48,7 +48,7 @@ namespace oly::physics
 		size_t num_colliders() const { return colliders.size(); }
 		size_t collider_index(const col2d::Collider& col) const;
 
-		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color) const;
+		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const;
 		void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
 
 	private:

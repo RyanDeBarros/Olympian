@@ -80,8 +80,10 @@ namespace oly::col2d
 		OverlapResult circle_cast_hits(const CircleCast& cast) const { return internal::lut_circle_cast_hits(obj, cast); }
 		OverlapResult rect_cast_hits(const RectCast& cast) const { return internal::lut_rect_cast_hits(obj, cast); }
 
-		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, glm::vec4 color) const { return internal::lut_create_debug_overlay(layer, obj, color); }
-		void modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index = 0) const { internal::lut_modify_debug_overlay(overlay, obj, shape_index); }
+		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const
+			{ return internal::lut_create_debug_overlay(layer, obj, color, paint_options); }
+		void modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index = 0) const
+			{ internal::lut_modify_debug_overlay(overlay, obj, shape_index); }
 
 	private:
 		internal::ColliderObjectConstVariant get_object_variant() const { return internal::lut_variant(obj); }

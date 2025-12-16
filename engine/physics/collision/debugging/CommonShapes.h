@@ -16,7 +16,7 @@ namespace oly::debug
 
 	inline void modify_shape_group(DebugOverlay& overlay, const col2d::ContactResult::Contact& contact, float arrow_width = 6.0f, size_t shape_index = 0)
 	{
-		if (auto obj = overlay.get_shape(shape_index)->safe_get<rendering::StaticArrowExtension>())
+		if (auto obj = overlay[shape_index]->safe_get<rendering::StaticArrowExtension>())
 		{
 			obj->adjust_standard_head_for_width(arrow_width);
 			obj->set_start() = contact.position;
@@ -48,7 +48,7 @@ namespace oly::debug
 
 	inline void modify_shape_group(DebugOverlay& overlay, col2d::Ray ray, float arrow_width = 6.0f, size_t shape_index = 0)
 	{
-		if (auto obj = overlay.get_shape(shape_index)->safe_get<rendering::StaticArrowExtension>())
+		if (auto obj = overlay[shape_index]->safe_get<rendering::StaticArrowExtension>())
 		{
 			obj->adjust_standard_head_for_width(arrow_width);
 			obj->set_start() = ray.origin;
