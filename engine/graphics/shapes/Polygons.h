@@ -232,6 +232,9 @@ namespace oly::rendering
 		void impl_set_polygon_colors() const override;
 		void triangulate() const override;
 		void draw_triangulation(GLuint initial_vertex) const override;
+
+	public:
+		static Polygon load(TOMLNode node, const char* source = nullptr);
 	};
 
 	class PolyComposite : public Polygonal
@@ -263,6 +266,9 @@ namespace oly::rendering
 		void impl_set_polygon_colors() const override;
 		void triangulate() const override;
 		void draw_triangulation(GLuint initial_vertex) const override;
+
+	public:
+		static PolyComposite load(TOMLNode node, const char* source = nullptr);
 	};
 
 	class NGon : public Polygonal
@@ -300,6 +306,9 @@ namespace oly::rendering
 		void impl_set_polygon_colors() const override;
 		void triangulate() const override;
 		void draw_triangulation(GLuint initial_vertex) const override;
+
+	public:
+		static NGon load(TOMLNode node, const char* source = nullptr);
 	};
 }
 

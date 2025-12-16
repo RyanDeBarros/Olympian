@@ -1,7 +1,22 @@
 #include "Transforms.h"
 
+// TODO v6 after finishing with new deserialization system, move Loader.h/MetaSplitter.h to core/util
+#include "assets/Loader.h"
+
 namespace oly
 {
+	Transform2D Transform2D::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		Transform2D transform;
+		assets::parse_vec(node["position"], transform.position);
+		assets::parse_float(node["rotation"], transform.rotation);
+		assets::parse_vec(node["scale"], transform.scale);
+		return transform;
+	}
+
 	void internal::Transformer2DRegistry::Handle::init(Transformer2D* transformer)
 	{
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
@@ -357,6 +372,14 @@ namespace oly
 		bool was_dirty = _dirty_external;
 		_dirty_external = false;
 		return was_dirty;
+	}
+
+	Transformer2D Transformer2D::load(TOMLNode node)
+	{
+		Transformer2D transformer;
+		transformer.set_local() = Transform2D::load(node);
+		transformer.set_modifier() = assets::load_transform_modifier_2d(node["modifier"]);
+		return transformer;
 	}
 
 	void PivotTransformModifier2D::operator()(glm::mat3& global) const

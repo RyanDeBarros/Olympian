@@ -177,6 +177,8 @@ namespace oly::rendering
 		Transformer2D& set_transformer() { return transformer; }
 
 		void draw() const;
+
+		static Ellipse load(TOMLNode node, const char* source = nullptr);
 	};
 
 	typedef SmartReference<Ellipse> EllipseRef;

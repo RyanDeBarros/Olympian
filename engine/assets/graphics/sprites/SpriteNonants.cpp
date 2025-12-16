@@ -13,7 +13,7 @@ namespace oly::assets
 
 		glm::vec2 nsize{};
 		parse_vec(node["nsize"], nsize);
-		math::Padding offsets = parse_padding(node["offsets"]);
+		math::Padding offsets = math::Padding::load(node["offsets"]);
 
 		if (auto sprite = node["sprite"])
 			nonant.setup_nonant(load_sprite(sprite, source), nsize, offsets);

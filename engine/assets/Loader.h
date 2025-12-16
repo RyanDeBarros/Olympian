@@ -67,14 +67,7 @@ namespace oly::assets
 	extern bool parse_min_filter(TOMLNode node, GLenum& min_filter);
 	extern bool parse_wrap(TOMLNode node, GLenum& wrap);
 
-	extern Transform2D load_transform_2d(TOMLNode node);
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
-	extern Transformer2D load_transformer_2d(TOMLNode node);
-
-	extern bool parse_shape(TOMLNode node, math::IRect2D& rect);
-
-	extern math::TopSidePadding parse_topside_padding(TOMLNode node);
-	extern math::Padding parse_padding(TOMLNode node);
 
 	extern bool parse_enum(TOMLNode node, math::PositioningMode& mode);
 

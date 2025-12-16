@@ -5,7 +5,7 @@
 #include "core/util/LoggerOperators.h"
 #include "core/algorithms/STLUtils.h"
 
-// TODO v6 implement serialization system for easier asset parsing. Instead of separate files, add static methods to assets (for now, just implement `static Class unload(TOMLNode)`/`static Class unload(const ResourceFile&)`)
+// TODO v6 implement serialization system for easier asset parsing. Instead of separate files, add static methods to assets (for now, just implement `static Classload(TOMLNode)`/`static Class load(const ResourceFile&)`)
 
 namespace oly::assets
 {
@@ -183,18 +183,6 @@ namespace oly::assets
 		return true;
 	}
 
-	Transform2D load_transform_2d(TOMLNode node)
-	{
-		Transform2D transform;
-		if (!node)
-			return transform;
-		parse_vec(node["position"], transform.position);
-		if (auto rotation = node["rotation"].value<double>())
-			transform.rotation = (float)rotation.value();
-		parse_vec(node["scale"], transform.scale);
-		return transform;
-	}
-
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
 		if (auto toml_type = node["type"].value<std::string>())
@@ -223,68 +211,6 @@ namespace oly::assets
 				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 		}
 		return Polymorphic<TransformModifier2D>();
-	}
-
-	Transformer2D load_transformer_2d(TOMLNode node)
-	{
-		Transformer2D transformer;
-		transformer.set_local() = load_transform_2d(node);
-		transformer.set_modifier() = load_transform_modifier_2d(node["modifier"]);
-		return transformer;
-	}
-
-	bool parse_shape(TOMLNode node, math::IRect2D& rect)
-	{
-		if (auto x1 = node["x1"].value<int64_t>())
-			rect.x1 = *x1;
-		else
-			return false;
-
-		if (auto x2 = node["x2"].value<int64_t>())
-			rect.x2 = *x2;
-		else
-			return false;
-
-		if (auto y1 = node["y1"].value<int64_t>())
-			rect.y1 = *y1;
-		else
-			return false;
-
-		if (auto y2 = node["y2"].value<int64_t>())
-			rect.y2 = *y2;
-		else
-			return false;
-
-		return true;
-	}
-
-	math::TopSidePadding parse_topside_padding(TOMLNode node)
-	{
-		math::TopSidePadding padding;
-
-		if (auto uniform = node["uniform"].value<double>())
-			padding = math::TopSidePadding::uniform(*uniform);
-
-		parse_float(node["left"], padding.left);
-		parse_float(node["right"], padding.right);
-		parse_float(node["top"], padding.top);
-
-		return padding;
-	}
-
-	math::Padding parse_padding(TOMLNode node)
-	{
-		math::Padding padding;
-
-		if (auto uniform = node["uniform"].value<double>())
-			padding = math::Padding::uniform(*uniform);
-
-		parse_float(node["left"], padding.left);
-		parse_float(node["right"], padding.right);
-		parse_float(node["top"], padding.top);
-		parse_float(node["bottom"], padding.bottom);
-
-		return padding;
 	}
 
 	bool parse_enum(TOMLNode node, math::PositioningMode& mode)

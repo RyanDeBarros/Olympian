@@ -7,7 +7,7 @@ SpriteMatch::SpriteMatch()
 {
 	auto toml = oly::assets::load_toml("~/assets/archetypes/SpriteMatch.toml");
 
-	transformer = oly::assets::load_transformer_2d(toml["archetype"]["transformer"]);
+	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
 	sprite0.ref.init(oly::assets::load_sprite(toml["sprite0"]));
 	sprite2.ref.init(oly::assets::load_sprite(toml["sprite2"]));

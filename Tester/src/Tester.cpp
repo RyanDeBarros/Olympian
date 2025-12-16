@@ -3,8 +3,6 @@
 #include "ProjectContext.h"
 
 #include <assets/graphics/sprites/Sprites.h>
-#include <assets/graphics/shapes/Polygons.h>
-#include <assets/graphics/text/Paragraphs.h>
 
 #include "SpriteMatch.h"
 #include "Jumble.h"
@@ -34,7 +32,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::assets::load_polygon(oly::assets::load_toml("~/assets/BKG.toml")["polygon"]);
+		bkg_rect = oly::rendering::Polygon::load(oly::assets::load_toml("~/assets/BKG.toml")["polygon"]);
 	}
 
 	void draw() const
@@ -48,7 +46,7 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: paragraph(oly::assets::load_paragraph(oly::assets::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
+		: paragraph(oly::rendering::Paragraph::load(oly::assets::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
 	{
 	}
 

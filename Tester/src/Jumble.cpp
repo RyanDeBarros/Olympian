@@ -2,7 +2,6 @@
 
 #include <assets/Loader.h>
 #include <assets/graphics/sprites/Sprites.h>
-#include <assets/graphics/text/Paragraphs.h>
 #include <assets/graphics/sprites/SpriteAtlases.h>
 #include <assets/graphics/sprites/TileMaps.h>
 #include <assets/graphics/sprites/SpriteNonants.h>
@@ -11,7 +10,7 @@ Jumble::Jumble()
 {
 	auto toml = oly::assets::load_toml("~/assets/archetypes/Jumble.toml");
 
-	transformer = oly::assets::load_transformer_2d(toml["archetype"]["transformer"]);
+	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
 	sprite3.ref.init(oly::assets::load_sprite(toml["sprite3"]));
 	sprite4.ref.init(oly::assets::load_sprite(toml["sprite4"]));
@@ -19,8 +18,9 @@ Jumble::Jumble()
 	sprite1.ref.init(oly::assets::load_sprite(toml["sprite1"]));
 	godot_icon.ref.init(oly::assets::load_sprite(toml["godot_icon"]));
 	knight.ref.init(oly::assets::load_sprite(toml["knight"]));
-	test_text.ref.init(oly::assets::load_paragraph(toml["test_text"]));
-	smol_text.ref.init(oly::assets::load_paragraph(toml["smol_text"]));
+	// TODO v6 version of init that loads from TOML directly (test_text.ref.load(toml["test_text"]);) using Class::load()
+	test_text.ref.init(oly::rendering::Paragraph::load(toml["test_text"]));
+	smol_text.ref.init(oly::rendering::Paragraph::load(toml["smol_text"]));
 	atlased_knight.ref.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;

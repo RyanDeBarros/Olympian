@@ -5,6 +5,7 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
 #include "graphics/resources/Textures.h"
+#include "assets/Loader.h"
 
 namespace oly::rendering
 {
@@ -908,5 +909,69 @@ namespace oly::rendering
 	void Paragraph::recompute_fitted_size_y() const
 	{
 		page_layout.fitted_size.y = glm::max(page_layout.content_size.y, format.min_size.y);
+	}
+
+	static void add_text_element(TOMLNode element, size_t i, std::vector<TextElement>& elements)
+	{
+		TextElement e;
+		if (auto font = element["font"].value<std::string>())
+			e.font = context::load_font(*font, assets::parse_uint_or(element["font_index"], 0));
+		else
+		{
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+			return;
+		}
+
+		if (auto text = element["text"].value<std::string>())
+			e.text = std::move(*text);
+		else
+		{
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+			return;
+		}
+
+		assets::parse_vec(element["text_color"], e.text_color);
+		assets::parse_float(element["adj_offset"], e.adj_offset);
+		assets::parse_vec(element["scale"], e.scale);
+		float line_y_pivot;
+		if (assets::parse_float(element["line_y_pivot"], line_y_pivot))
+			e.line_y_pivot = line_y_pivot;
+		assets::parse_vec(element["jitter_offset"], e.jitter_offset);
+
+		if (assets::parse_bool_or(element["expand"], false))
+			TextElement::expand(e, elements);
+		else
+			elements.push_back(std::move(e));
+	}
+
+	Paragraph Paragraph::load(TOMLNode node, const char* source)
+	{
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing paragraph [" << (source ? source : "") << "]..." << LOG.nl;
+
+		std::vector<TextElement> elements;
+		if (auto element_array = node["element"].as_array())
+		{
+			for (size_t i = 0; i < element_array->size(); ++i)
+				if (auto element = TOMLNode(*element_array->get(i)))
+					add_text_element(element, i, elements);
+		}
+		else if (auto element = node["element"])
+			add_text_element(element, 0, elements);
+
+		Paragraph paragraph(std::move(elements), ParagraphFormat::load(node["format"]));
+		if (auto transformer = node["transformer"])
+		{
+			paragraph.set_local() = Transform2D::load(transformer);
+			paragraph.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
+		}
+
+		assets::parse_bool(node["draw_bkg"], paragraph.draw_bkg);
+		glm::vec4 bkg_color;
+		if (assets::parse_vec(node["bkg_color"], bkg_color))
+			paragraph.set_bkg_color(bkg_color);
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;
+
+		return paragraph;
 	}
 }

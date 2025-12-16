@@ -4,6 +4,7 @@
 
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
+#include "assets/Loader.h"
 
 #include "physics/collision/elements/OBB.h"
 
@@ -375,5 +376,30 @@ namespace oly::rendering
 		if (transformer.flush())
 			ref.set_transform() = transformer.global();
 		ref.draw();
+	}
+
+	Ellipse Ellipse::load(TOMLNode node, const char* source)
+	{
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ellipse [" << (source ? source : "") << "]..." << LOG.nl;
+
+		rendering::Ellipse ellipse;
+		ellipse.set_transformer() = Transformer2D::load(node["transformer"]);
+
+		auto& color = ellipse.set_color();
+		assets::parse_vec(node["border_inner_color"], color.border_inner);
+		assets::parse_vec(node["border_outer_color"], color.border_outer);
+		assets::parse_vec(node["fill_inner_color"], color.fill_inner);
+		assets::parse_vec(node["fill_outer_color"], color.fill_outer);
+
+		auto& dimension = ellipse.set_dimension();
+		assets::parse_float(node["border"], dimension.border);
+		assets::parse_float(node["border_exp"], dimension.border_exp);
+		assets::parse_float(node["fill_exp"], dimension.fill_exp);
+		assets::parse_float(node["rx"], dimension.rx);
+		assets::parse_float(node["ry"], dimension.ry);
+
+		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Ellipse [" << (source ? source : "") << "] parsed." << LOG.nl;
+
+		return ellipse;
 	}
 }

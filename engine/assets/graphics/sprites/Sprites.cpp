@@ -10,7 +10,7 @@ namespace oly::assets
 		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Sprite sprite;
-		sprite.transformer = load_transformer_2d(node["transformer"]);
+		sprite.transformer = Transformer2D::load(node["transformer"]);
 
 		auto texture = node["texture"].value<std::string>();
 		if (texture)

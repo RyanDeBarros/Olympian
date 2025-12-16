@@ -1,6 +1,7 @@
 #pragma once
 
 #include "external/GLM.h"
+#include "external/TOML.h"
 
 #include "core/base/Parameters.h"
 
@@ -81,5 +82,7 @@ namespace oly::rendering
 
 		bool can_fit_on_line(TypesetData t, float dx) const;
 		bool can_fit_vertically(TypesetData t, float dy) const;
+
+		static ParagraphFormat load(TOMLNode node);
 	};
 }

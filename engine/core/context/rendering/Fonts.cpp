@@ -320,14 +320,14 @@ namespace oly::context
 
 				unsigned int texture_index = assets::parse_uint_or(g["texture_index"], 0);
 
-				math::IRect2D location;
-				if (!assets::parse_shape(g["location"], location))
+				math::IRect2D location = math::IRect2D::load(g["location"]);
+				if (location.x2 <= location.x1 || location.y2 <= location.y1)
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"location\" field, skipping glyph..." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid \"location\" field, skipping glyph..." << LOG.nl;
 					return;
 				}
 
-				math::TopSidePadding padding = assets::parse_topside_padding(g["padding"]);
+				math::TopSidePadding padding = math::TopSidePadding::load(g["padding"]);
 
 				math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE;
 				assets::parse_enum(g["origin_offset_mode"], origin_offset_mode);

@@ -1,5 +1,8 @@
 #include "ParagraphFormat.h"
 
+#include "core/util/Logger.h"
+#include "assets/Loader.h"
+
 namespace oly::rendering
 {
 	bool ParagraphFormat::can_fit_on_line(TypesetData t, float dx) const
@@ -10,5 +13,55 @@ namespace oly::rendering
 	bool ParagraphFormat::can_fit_vertically(TypesetData t, float dy) const
 	{
 		return max_height <= 0.0f || -t.y + dy <= max_height;
+	}
+
+	ParagraphFormat ParagraphFormat::load(TOMLNode node)
+	{
+		ParagraphFormat format;
+
+		assets::parse_vec(node["pivot"], format.pivot);
+		assets::parse_float(node["line_spacing"], format.line_spacing);
+		assets::parse_float(node["linebreak_spacing"], format.linebreak_spacing);
+		assets::parse_vec(node["min_size"], format.min_size);
+		assets::parse_vec(node["padding"], format.padding);
+		assets::parse_float(node["text_wrap"], format.text_wrap);
+		assets::parse_float(node["max_height"], format.max_height);
+		assets::parse_float(node["tab_spaces"], format.tab_spaces);
+
+		if (auto halign = node["horizontal_align"].value<std::string>())
+		{
+			const std::string& align = halign.value();
+			if (align == "left")
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::LEFT;
+			else if (align == "center")
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::CENTER;
+			else if (align == "right")
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::RIGHT;
+			else if (align == "justify")
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::JUSTIFY;
+			else if (align == "full_justify")
+				format.horizontal_alignment = rendering::ParagraphFormat::HorizontalAlignment::FULL_JUSTIFY;
+			else
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized horizontal_alignment \"" << align << "\"." << LOG.nl;
+		}
+
+		if (auto valign = node["vertical_align"].value<std::string>())
+		{
+			const std::string& align = valign.value();
+			if (align == "top")
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::TOP;
+			else if (align == "middle")
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::MIDDLE;
+			else if (align == "bottom")
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::BOTTOM;
+			else if (align == "justify")
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::JUSTIFY;
+			else if (align == "full_justify")
+				format.vertical_alignment = rendering::ParagraphFormat::VerticalAlignment::FULL_JUSTIFY;
+			else
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized vertical_alignment \"" << align << "\"." << LOG.nl;
+		}
+
+		return format;
 	}
 }

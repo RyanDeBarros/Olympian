@@ -12,7 +12,7 @@ namespace oly::assets
 		rendering::TileMap tilemap;
 		if (auto transformer = node["transformer"])
 		{
-			tilemap.set_local() = assets::load_transform_2d(transformer);
+			tilemap.set_local() = Transform2D::load(transformer);
 			tilemap.set_transformer().set_modifier() = assets::load_transform_modifier_2d(transformer["modifier"]);
 		}
 

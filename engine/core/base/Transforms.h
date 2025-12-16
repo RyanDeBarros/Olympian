@@ -1,7 +1,6 @@
 #pragma once
 
-#include <unordered_set>
-
+#include "external/TOML.h"
 #include "external/GLM.h"
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
@@ -58,6 +57,8 @@ namespace oly
 		{
 			return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
 		}
+
+		static Transform2D load(TOMLNode node);
 	};
 
 	struct TransformModifier2D
@@ -181,6 +182,8 @@ namespace oly
 
 		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
 		void attach_child(Transformer2D& child) const { handle.attach_child(child); }
+
+		static Transformer2D load(TOMLNode node);
 	};
 
 	struct FundamentalTransformModifier2D : public TransformModifier2D
