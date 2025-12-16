@@ -59,7 +59,6 @@ namespace oly::debug
 		void invalidate_layer() { layer = nullptr; debug_group.shapes.clear(); }
 
 	public:
-		// TODO v6 mkdocs for all collision debugging, especially DebugOverlay/DebugOverlayLayer and PaintOptions
 		struct PaintOptions
 		{
 			/**

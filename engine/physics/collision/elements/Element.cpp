@@ -207,7 +207,14 @@ namespace oly::col2d
 #undef OLY_ELEMENT_TRANSFORMED
 	}
 
-	Element::ElementVariant Element::variant() const
+	Element::ConstElementVariant Element::variant() const
+	{
+#define OLY_ELEMENT_CONST_VARIANT(p) return p;
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_CONST_VARIANT);
+#undef OLY_ELEMENT_CONST_VARIANT
+	}
+
+	Element::ElementVariant Element::variant()
 	{
 #define OLY_ELEMENT_VARIANT(p) return p;
 		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_VARIANT);

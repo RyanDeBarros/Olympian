@@ -142,8 +142,7 @@ namespace oly::col2d
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
 
-		// TODO v6 ConstElementVariant and ElementVariant versions
-		using ElementVariant = Variant<
+		using ConstElementVariant = Variant<
 			const Circle*,
 			const AABB*,
 			const OBB*,
@@ -157,7 +156,22 @@ namespace oly::col2d
 			const KDOP8*
 		>;
 
-		ElementVariant variant() const;
+		using ElementVariant = Variant<
+			Circle*,
+			AABB*,
+			OBB*,
+			ConvexHull*,
+			KDOP2*,
+			KDOP3*,
+			KDOP4*,
+			KDOP5*,
+			KDOP6*,
+			KDOP7*,
+			KDOP8*
+		>;
+
+		ConstElementVariant variant() const;
+		ElementVariant variant();
 		AABB aabb_wrap() const;
 
 		OverlapResult point_hits(glm::vec2 test) const;

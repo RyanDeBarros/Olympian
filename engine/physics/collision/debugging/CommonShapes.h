@@ -87,9 +87,7 @@ namespace oly::debug
 			overlay.clear_shape_group();
 	}
 
-	// TODO v6 default color for arrow_color
-
-	inline DebugShapeGroup create_shape_group(const col2d::RectCast& cast, glm::vec4 arrow_color, glm::vec4 bkg_color = STANDARD_BLUE)
+	inline DebugShapeGroup create_shape_group(const col2d::RectCast& cast, glm::vec4 arrow_color = STANDARD_GREEN, glm::vec4 bkg_color = STANDARD_BLUE)
 	{
 		DebugShapeGroup overlay = create_shape_group(cast.finite_obb(INFINITE_RAY_LENGTH), bkg_color);
 		overlay.merge(create_shape_group(cast.ray, arrow_color));
@@ -103,7 +101,7 @@ namespace oly::debug
 		modify_shape_group(overlay, cast.ray, arrow_width, shape_index + 1);
 	}
 
-	inline DebugShapeGroup create_shape_group(const col2d::CircleCast& cast, glm::vec4 arrow_color, glm::vec4 bkg_color = STANDARD_BLUE)
+	inline DebugShapeGroup create_shape_group(const col2d::CircleCast& cast, glm::vec4 arrow_color = STANDARD_GREEN, glm::vec4 bkg_color = STANDARD_BLUE)
 	{
 		DebugShapeGroup overlay = create_shape_group(cast.finite_capsule(INFINITE_RAY_LENGTH).compound(), bkg_color);
 		overlay.merge(create_shape_group(cast.ray, arrow_color));

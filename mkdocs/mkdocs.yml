@@ -16,9 +16,6 @@ nav:
   - Home: index.md
   - Engine:
     - Overview: engine/Overview.md
-    - Rendering:
-      - Geometry Painter: engine/rendering/GeometryPainter.md
-      - Paint Support: engine/rendering/PaintSupport.md
     - Physics:
       - Dynamics:
         - Rigid Body: engine/physics/dynamics/RigidBody.md

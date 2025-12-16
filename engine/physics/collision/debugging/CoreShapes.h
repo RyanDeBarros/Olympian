@@ -4,7 +4,8 @@
 
 namespace oly::debug
 {
-	constexpr glm::vec4 STANDARD_BLUE = glm::vec4{ 0.0f, 0.0f, 1.0f, 0.8f };
+	constexpr glm::vec4 STANDARD_BLUE = { 0.0f, 0.0f, 1.0f, 0.8f };
+	constexpr glm::vec4 STANDARD_GREEN = { 0.0f, 1.0f, 0.0f, 0.8f };
 
 	inline DebugShapeGroup create_shape_group(const col2d::Circle& c, glm::vec4 color = STANDARD_BLUE)
 	{

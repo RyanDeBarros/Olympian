@@ -9,8 +9,6 @@
 
 namespace oly::rendering
 {
-	// TODO v6 update GeometryPainter mkdocs
-
 	class GeometryPainter
 	{
 		PolygonBatch polygon_batch;
