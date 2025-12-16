@@ -2,6 +2,7 @@
 
 #include "graphics/sprites/SpriteBatch.h"
 #include "core/base/Transforms.h"
+#include "core/util/DebugTrace.h"
 
 namespace oly::rendering
 {
@@ -98,7 +99,8 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		static Sprite load(TOMLNode node, const char* source = nullptr);
+		static Sprite load(TOMLNode node);
+		static Sprite load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Sprite> SpriteRef;

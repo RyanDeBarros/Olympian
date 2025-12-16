@@ -27,7 +27,8 @@ namespace oly::rendering
 		mutable GLuint current_frame = -1;
 
 	public:
-		static SpriteAtlas load(TOMLNode node, const char* source = nullptr);
+		static SpriteAtlas load(TOMLNode node);
+		static SpriteAtlas load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<SpriteAtlas> SpriteAtlasRef;

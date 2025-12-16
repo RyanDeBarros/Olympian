@@ -944,10 +944,8 @@ namespace oly::rendering
 			elements.push_back(std::move(e));
 	}
 
-	Paragraph Paragraph::load(TOMLNode node, const char* source)
+	Paragraph Paragraph::load(TOMLNode node)
 	{
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing paragraph [" << (source ? source : "") << "]..." << LOG.nl;
-
 		std::vector<TextElement> elements;
 		if (auto element_array = node["element"].as_array())
 		{
@@ -970,8 +968,12 @@ namespace oly::rendering
 		if (io::parse_vec(node["bkg_color"], bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Paragraph [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return paragraph;
+	}
+
+	Paragraph Paragraph::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::Paragraph::load()");
+		return load(node);
 	}
 }

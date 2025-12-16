@@ -501,12 +501,10 @@ namespace oly::rendering
 		}
 	}
 
-	Polygon Polygon::load(TOMLNode node, const char* source)
+	Polygon Polygon::load(TOMLNode node)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing polygon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		Polygon polygon;
 
@@ -546,9 +544,13 @@ namespace oly::rendering
 		}
 		polygon.set_colors() = std::move(colors);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Polygon [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return polygon;
+	}
+
+	Polygon Polygon::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::Polygon::load()");
+		return load(node);
 	}
 
 	GLuint PolyComposite::num_vertices() const
@@ -643,12 +645,10 @@ namespace oly::rendering
 		}
 	}
 
-	PolyComposite PolyComposite::load(TOMLNode node, const char* source)
+	PolyComposite PolyComposite::load(TOMLNode node)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing poly composite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		PolyComposite polygon;
 
@@ -789,11 +789,14 @@ namespace oly::rendering
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Poly composite [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return polygon;
 	}
 
+	PolyComposite PolyComposite::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::PolyComposite::load()");
+		return load(node);
+	}
 
 	GLuint NGon::num_vertices() const
 	{
@@ -839,12 +842,10 @@ namespace oly::rendering
 		}
 	}
 
-	NGon NGon::load(TOMLNode node, const char* source)
+	NGon NGon::load(TOMLNode node)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ngon [" << (source ? source : "") << "]..." << LOG.nl;
 
 		NGon polygon;
 
@@ -920,8 +921,12 @@ namespace oly::rendering
 
 		polygon.set_base() = std::move(ngon_base);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Ngon [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return polygon;
+	}
+
+	NGon NGon::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::NGon::load()");
+		return load(node);
 	}
 }

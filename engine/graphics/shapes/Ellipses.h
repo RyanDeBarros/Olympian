@@ -3,6 +3,7 @@
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/Issuer.h"
+#include "core/util/DebugTrace.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -178,7 +179,8 @@ namespace oly::rendering
 
 		void draw() const;
 
-		static Ellipse load(TOMLNode node, const char* source = nullptr);
+		static Ellipse load(TOMLNode node);
+		static Ellipse load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Ellipse> EllipseRef;

@@ -96,14 +96,12 @@ namespace oly::rendering
 		}
 	}
 
-	SpriteAtlas SpriteAtlas::load(TOMLNode node, const char* source)
+	static SpriteAtlas load_sprite_atlas(TOMLNode node, const DebugTrace* trace)
 	{
 		if (!node)
 			return {};
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite atlas [" << (source ? source : "") << "]..." << LOG.nl;
-
-		SpriteAtlas sprite_atlas(Sprite::load(node["sprite"], source));
+		SpriteAtlas sprite_atlas(trace ? Sprite::load(node["sprite"], *trace) : Sprite::load(node["sprite"]));
 
 		GLuint rows, cols;
 		float delay_seconds;
@@ -119,8 +117,17 @@ namespace oly::rendering
 		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
 		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite atlas [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return sprite_atlas;
+	}
+
+	SpriteAtlas SpriteAtlas::load(TOMLNode node)
+	{
+		return load_sprite_atlas(node, nullptr);
+	}
+
+	SpriteAtlas SpriteAtlas::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::SpriteAtlas::load()");
+		return load_sprite_atlas(node, &trace);
 	}
 }

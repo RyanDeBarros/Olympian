@@ -378,12 +378,10 @@ namespace oly::rendering
 		ref.draw();
 	}
 
-	Ellipse Ellipse::load(TOMLNode node, const char* source)
+	Ellipse Ellipse::load(TOMLNode node)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing ellipse [" << (source ? source : "") << "]..." << LOG.nl;
 
 		rendering::Ellipse ellipse;
 		ellipse.set_transformer() = Transformer2D::load(node["transformer"]);
@@ -401,8 +399,12 @@ namespace oly::rendering
 		io::parse_float(node["rx"], dimension.rx);
 		io::parse_float(node["ry"], dimension.ry);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Ellipse [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return ellipse;
+	}
+
+	Ellipse Ellipse::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::Ellipse::load()");
+		return load(node);
 	}
 }

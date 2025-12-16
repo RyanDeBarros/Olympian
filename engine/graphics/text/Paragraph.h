@@ -223,7 +223,8 @@ namespace oly::rendering
 		void recompute_fitted_size_y() const;
 
 	public:
-		static Paragraph load(TOMLNode node, const char* source = nullptr);
+		static Paragraph load(TOMLNode node);
+		static Paragraph load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;

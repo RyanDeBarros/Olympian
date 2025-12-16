@@ -95,7 +95,8 @@ namespace oly::rendering
 		void sync_mod_grid() const;
 
 	public:
-		static SpriteNonant load(TOMLNode node, const char* source = nullptr);
+		static SpriteNonant load(TOMLNode node);
+		static SpriteNonant load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<SpriteNonant> SpriteNonantRef;

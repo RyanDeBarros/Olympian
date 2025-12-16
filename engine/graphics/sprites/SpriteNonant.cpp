@@ -348,12 +348,10 @@ namespace oly::rendering
 				sprite(x, y).set_mod_tex_coords({ .x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1] });
 	}
 
-	SpriteNonant SpriteNonant::load(TOMLNode node, const char* source)
+	static SpriteNonant load_sprite_nonant(TOMLNode node, const DebugTrace* trace)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite nonant [" << (source ? source : "") << "]..." << LOG.nl;
 
 		SpriteNonant nonant;
 
@@ -362,12 +360,21 @@ namespace oly::rendering
 		math::Padding offsets = math::Padding::load(node["offsets"]);
 
 		if (auto sprite = node["sprite"])
-			nonant.setup_nonant(Sprite::load(sprite, source), nsize, offsets);
+			nonant.setup_nonant(trace ? Sprite::load(sprite, *trace) : Sprite::load(sprite), nsize, offsets);
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite nonant [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return nonant;
+	}
+
+	SpriteNonant SpriteNonant::load(TOMLNode node)
+	{
+		return load_sprite_nonant(node, nullptr);
+	}
+
+	SpriteNonant SpriteNonant::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::SpriteNonant::load()");
+		return load_sprite_nonant(node, &trace);
 	}
 }

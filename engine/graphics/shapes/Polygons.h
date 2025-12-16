@@ -5,6 +5,7 @@
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/Issuer.h"
+#include "core/util/DebugTrace.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
@@ -234,7 +235,8 @@ namespace oly::rendering
 		void draw_triangulation(GLuint initial_vertex) const override;
 
 	public:
-		static Polygon load(TOMLNode node, const char* source = nullptr);
+		static Polygon load(TOMLNode node);
+		static Polygon load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	class PolyComposite : public Polygonal
@@ -268,7 +270,8 @@ namespace oly::rendering
 		void draw_triangulation(GLuint initial_vertex) const override;
 
 	public:
-		static PolyComposite load(TOMLNode node, const char* source = nullptr);
+		static PolyComposite load(TOMLNode node);
+		static PolyComposite load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	class NGon : public Polygonal
@@ -308,7 +311,8 @@ namespace oly::rendering
 		void draw_triangulation(GLuint initial_vertex) const override;
 
 	public:
-		static NGon load(TOMLNode node, const char* source = nullptr);
+		static NGon load(TOMLNode node);
+		static NGon load(TOMLNode node, const DebugTrace& trace);
 	};
 }
 

@@ -22,12 +22,10 @@ namespace oly::rendering
 			context::internal::set_sprite_batch_rendering(true);
 	}
 
-	Sprite Sprite::load(TOMLNode node, const char* source)
+	Sprite Sprite::load(TOMLNode node)
 	{
 		if (!node)
 			return {};
-
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing sprite [" << (source ? source : "") << "]..." << LOG.nl;
 
 		Sprite sprite;
 		sprite.transformer = Transformer2D::load(node["transformer"]);
@@ -91,8 +89,12 @@ namespace oly::rendering
 			};
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Sprite [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return sprite;
+	}
+
+	Sprite Sprite::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::Sprite::load()");
+		return load(node);
 	}
 }

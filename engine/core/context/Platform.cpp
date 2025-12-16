@@ -334,10 +334,8 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	void load_signal(TOMLNode node, const char* source)
+	void load_signal(TOMLNode node)
 	{
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing input signal [" << (source ? source : "") << "]..." << LOG.nl;
-
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
@@ -371,14 +369,16 @@ namespace oly::context
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
 			return;
 		}
-
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Input signal [" << (source ? source : "") << "] parsed." << LOG.nl;
 	}
 
-	void load_signal_mapping(TOMLNode node, const char* source)
+	void load_signal(TOMLNode node, const DebugTrace& trace)
 	{
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing input signal mapping [" << (source ? source : "") << "]..." << LOG.nl;
+		auto scope = trace.scope("CONTEXT", "oly::context::load_signal()");
+		load_signal(node);
+	}
 
+	void load_signal_mapping(TOMLNode node)
+	{
 		auto toml_id = node["id"].value<std::string>();
 		if (!toml_id)
 		{
@@ -398,8 +398,12 @@ namespace oly::context
 			}
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
+	}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Input signal mapping [" << (source ? source : "") << "] parsed." << LOG.nl;
+	void load_signal_mapping(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("CONTEXT", "oly::context::load_signal_mapping()");
+		load_signal_mapping(node);
 	}
 
 	void load_signals(const ResourcePath& file)

@@ -158,11 +158,8 @@ namespace oly::rendering
 		layers.insert(layers.begin() + z, std::move(layer));
 	}
 
-	TileMap TileMap::load(TOMLNode node, const char* source)
+	TileMap TileMap::load(TOMLNode node)
 	{
-		// TODO v6 rather than load() taking an optional source argument, make two loads() - one with source and one without - rename source to debug_source and just wrap load() without source with debug logs.
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "Parsing tilemap [" << (source ? source : "") << "]..." << LOG.nl;
-
 		TileMap tilemap;
 		if (auto transformer = node["transformer"])
 		{
@@ -211,8 +208,12 @@ namespace oly::rendering
 				});
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("ASSETS") << "...Tilemap [" << (source ? source : "") << "] parsed." << LOG.nl;
-
 		return tilemap;
+	}
+
+	TileMap TileMap::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::TileMap::load()");
+		return load(node);
 	}
 }
