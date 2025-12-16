@@ -25,7 +25,7 @@ namespace oly::physics
 	public:
 		mutable std::vector<glm::vec2> applied_impulses;
 
-		// TODO v6 Here and in KinematicPhysicsComponent in addition to impulses, add net translation vector - which acts similarily to impulses on this frame, but is reversed on next frame so that velocity is not maintained after translating.
+		// TODO v7 Here and in KinematicPhysicsComponent in addition to impulses, add net translation vector - which acts similarily to impulses on this frame, but is reversed on next frame so that velocity is not maintained after translating.
 
 		glm::vec2 net_acceleration = {}; // does not include applied accelerations
 		glm::vec2 net_force = {}; // does not include applied forces

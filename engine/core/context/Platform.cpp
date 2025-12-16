@@ -422,16 +422,28 @@ namespace oly::context
 
 		auto toml = io::load_toml(file);
 
-		std::string source;
 		if (LOG.enable.debug)
-			source = file.get_absolute().generic_string();
+		{
+			std::string source = file.get_absolute().generic_string();
+			DebugTrace trace(source.c_str());
 
-		auto signals = toml["signal"].as_array();
-		if (signals)
-			signals->for_each([source = source.c_str()](auto&& node) { load_signal((TOMLNode)node, source); });
+			auto signals = toml["signal"].as_array();
+			if (signals)
+				signals->for_each([&trace](auto&& node) { load_signal((TOMLNode)node, trace); });
 
-		auto mappings = toml["mapping"].as_array();
-		if (mappings)
-			mappings->for_each([source = source.c_str()](auto&& node) { load_signal_mapping((TOMLNode)node, source); });
+			auto mappings = toml["mapping"].as_array();
+			if (mappings)
+				mappings->for_each([&trace](auto&& node) { load_signal_mapping((TOMLNode)node, trace); });
+		}
+		else
+		{
+			auto signals = toml["signal"].as_array();
+			if (signals)
+				signals->for_each([](auto&& node) { load_signal((TOMLNode)node); });
+
+			auto mappings = toml["mapping"].as_array();
+			if (mappings)
+				mappings->for_each([](auto&& node) { load_signal_mapping((TOMLNode)node); });
+		}
 	}
 }

@@ -293,8 +293,6 @@ class InputSignalTab(EditorTab):
 		else:
 			self.ui.keySelectDisplay.setText("Unrecognized key code")
 
-	# TODO v6 instead of autoloading signals, load signals from file manually like how textures are loaded. That way, no need for central registry in editor, and I can get remove these v8 TODOs, since the names are local to the file. Instead, when a signal file is loaded, its names will override existing names in the registry. Then, in the project file there could be a list of input signal files to autoload.
-	# TODO v8 check input signal registry
 	def signal_exists(self, signal):
 		for i in range(self.ui.selectSignal.count()):
 			if i != self.ui.selectSignal.currentIndex():
@@ -463,7 +461,6 @@ class InputSignalTab(EditorTab):
 		self.ui.invertY.setChecked(signal.conversion.invert[1])
 		self.ui.invertZ.setChecked(signal.conversion.invert[2])
 
-	# TODO v8 check input signal registry
 	def mapping_exists(self, mapping):
 		for i in range(self.ui.selectMapping.count()):
 			if i != self.ui.selectMapping.currentIndex():
