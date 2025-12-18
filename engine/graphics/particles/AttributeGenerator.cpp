@@ -5,9 +5,10 @@
 
 namespace oly::particles
 {
-	void AttributeGeneratorChain::validate() const
+	void AttributeGeneratorChain::validate(ConstFloatSpan attribute) const
 	{
 		OLY_ASSERT(sampler->output_dimension() == domain->input_dimension());
+		OLY_ASSERT(domain->output_dimension() == attribute.size());
 	}
 
 	void AttributeGeneratorChain::generate(ConstFloatSpan state_input, FloatSpan output) const

@@ -11,7 +11,7 @@ namespace oly::particles
 		Polymorphic<samplers::ISampler> sampler;
 		Polymorphic<domains::IDomain> domain;
 
-		void validate() const;
+		void validate(ConstFloatSpan attribute) const;
 
 		void generate(ConstFloatSpan state_input, FloatSpan output) const;
 
@@ -24,9 +24,9 @@ namespace oly::particles
 		AttributeGeneratorChain chain;
 		ConstFloatSpan state;
 
-		void validate() const
+		void validate(ConstFloatSpan attribute) const
 		{
-			chain.validate();
+			chain.validate(attribute);
 		}
 
 		void generate(FloatSpan attribute) const
@@ -39,10 +39,10 @@ namespace oly::particles
 	{
 		std::vector<AttributeGenerator> generators;
 
-		void validate() const
+		void validate(ConstFloatSpan attribute) const
 		{
 			for (const AttributeGenerator& generator : generators)
-				generator.validate();
+				generator.validate(attribute);
 		}
 
 		void generate(const std::vector<FloatSpan>& attributes) const;
