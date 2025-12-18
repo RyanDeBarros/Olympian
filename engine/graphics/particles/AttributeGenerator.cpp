@@ -1,6 +1,7 @@
 #include "AttributeGenerator.h"
 
 #include "core/base/Assert.h"
+#include "core/types/Zipper.h"
 
 namespace oly::particles
 {
@@ -46,9 +47,7 @@ namespace oly::particles
 
 	void AttributeGroupGenerator::generate(const std::vector<FloatSpan>& attributes) const
 	{
-		// TODO v6 utility iterator that works like python's zip() + assert same length.
-		OLY_ASSERT(attributes.size() == generators.size());
-		for (size_t i = 0; i < generators.size(); ++i)
-			generators[i].generate(attributes[i]);
+		for (const auto& [generator, attribute] : ConstZipper(generators, attributes))
+			generator.generate(attribute);
 	}
 }

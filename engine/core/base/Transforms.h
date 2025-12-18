@@ -5,7 +5,7 @@
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
-#include "core/containers/Polymorphic.h"
+#include "core/types/Polymorphic.h"
 
 namespace oly
 {

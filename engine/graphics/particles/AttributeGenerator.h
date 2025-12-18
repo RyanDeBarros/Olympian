@@ -2,8 +2,7 @@
 
 #include "graphics/particles/samplers/Sampler.h"
 #include "graphics/particles/domains/Domain.h"
-// TODO v6 Polymorphic.h should live in core/types, not core/containers.
-#include "core/containers/Polymorphic.h"
+#include "core/types/Polymorphic.h"
 
 namespace oly::particles
 {
