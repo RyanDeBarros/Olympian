@@ -1,4 +1,4 @@
-#include "Shaders.h"
+#include "Shader.h"
 
 #include <sstream>
 
@@ -72,37 +72,34 @@ namespace oly::graphics
 		}
 	}
 
-	static GLuint create_shader(const ShaderBufferSource& buffer_source)
+	static GLuint create_shader(const std::vector<ShaderBufferSource>& buffer_sources)
 	{
 		GLuint shader = glCreateProgram();
-		GLuint vert = create_compiled_subshader(buffer_source.vertex_buffer, GL_VERTEX_SHADER);
-		GLuint frag = create_compiled_subshader(buffer_source.fragment_buffer, GL_FRAGMENT_SHADER);
-		GLuint geom = buffer_source.geometry_buffer ? create_compiled_subshader(*buffer_source.geometry_buffer, GL_GEOMETRY_SHADER) : 0;
 
-		glAttachShader(shader, vert);
-		glAttachShader(shader, frag);
-		if (geom)
-			glAttachShader(shader, geom);
+		std::vector<GLint> subshaders;
+		subshaders.reserve(buffer_sources.size());
+		for (const ShaderBufferSource& buffer_source : buffer_sources)
+			subshaders.push_back(create_compiled_subshader(buffer_source.buffer, (GLenum)buffer_source.type));
+
+		for (GLuint subshader : subshaders)
+			glAttachShader(shader, subshader);
 
 		glLinkProgram(shader);
 
-		glDeleteShader(vert);
-		glDeleteShader(frag);
-		if (geom)
-			glDeleteShader(geom);
+		for (GLuint subshader : subshaders)
+			glDeleteShader(subshader);
 
 		validate_shader(shader);
 		return shader;
 	}
 
-	static GLuint create_shader(const ShaderPathSource& path_source)
+	static GLuint create_shader(const std::vector<ShaderPathSource>& path_sources)
 	{
-		ShaderBufferSource buffer_source;
-		buffer_source.vertex_buffer = io::read_file(path_source.vertex_path);
-		buffer_source.fragment_buffer = io::read_file(path_source.fragment_path);
-		if (path_source.geometry_path)
-			buffer_source.geometry_buffer = io::read_file(*path_source.geometry_path);
-		return create_shader(buffer_source);
+		std::vector<ShaderBufferSource> buffer_sources;
+		buffer_sources.reserve(path_sources.size());
+		for (const ShaderPathSource& path_source : path_sources)
+			buffer_sources.push_back({ .buffer = io::read_file(path_source.path), .type = path_source.type });
+		return create_shader(buffer_sources);
 	}
 
 	Shader::Shader()
@@ -110,13 +107,13 @@ namespace oly::graphics
 	{
 	}
 
-	Shader::Shader(const ShaderBufferSource& buffer_source)
-		: id(create_shader(buffer_source))
+	Shader::Shader(const std::vector<ShaderBufferSource>& buffer_sources)
+		: id(create_shader(buffer_sources))
 	{
 	}
 
-	Shader::Shader(const ShaderPathSource& path_source)
-		: id(create_shader(path_source))
+	Shader::Shader(const std::vector<ShaderPathSource>& path_sources)
+		: id(create_shader(path_sources))
 	{
 	}
 
@@ -140,5 +137,24 @@ namespace oly::graphics
 			other.id = 0;
 		}
 		return *this;
+	}
+
+	void dispatch_compute_workers(GLuint x_workers, GLuint y_workers, GLuint z_workers)
+	{
+		glDispatchCompute(x_workers, y_workers, z_workers);
+	}
+
+	void dispatch_compute_workers(GLuint x_size, GLuint y_size, GLuint z_size, GLuint x_threads, GLuint y_threads, GLuint z_threads)
+	{
+		glDispatchCompute(
+			x_threads > 0 ? (GLuint)ceilf((float)x_size / x_threads) : 1,
+			y_threads > 0 ? (GLuint)ceilf((float)y_size / y_threads) : 1,
+			z_threads > 0 ? (GLuint)ceilf((float)z_size / z_threads) : 1
+		);
+	}
+
+	void memory_barrier(MemoryBarrierBit barriers)
+	{
+		glMemoryBarrier((GLbitfield)barriers);
 	}
 }
