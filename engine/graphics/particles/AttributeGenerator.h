@@ -7,7 +7,7 @@
 
 namespace oly::particles
 {
-	struct AttributeGenerator
+	struct AttributeGeneratorChain
 	{
 		Polymorphic<samplers::ISampler> sampler;
 		Polymorphic<domains::IDomain> domain;
@@ -18,5 +18,34 @@ namespace oly::particles
 
 	private:
 		void generate(ConstFloatSpan state_input, ConstFloatSpan random_input, FloatSpan output) const;
+	};
+
+	struct AttributeGenerator
+	{
+		AttributeGeneratorChain chain;
+		ConstFloatSpan state;
+
+		void validate() const
+		{
+			chain.validate();
+		}
+
+		void generate(FloatSpan attribute) const
+		{
+			chain.generate(state, attribute);
+		}
+	};
+
+	struct AttributeGroupGenerator
+	{
+		std::vector<AttributeGenerator> generators;
+
+		void validate() const
+		{
+			for (const AttributeGenerator& generator : generators)
+				generator.validate();
+		}
+
+		void generate(const std::vector<FloatSpan>& attributes) const;
 	};
 }

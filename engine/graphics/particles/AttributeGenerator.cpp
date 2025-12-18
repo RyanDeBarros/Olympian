@@ -4,12 +4,12 @@
 
 namespace oly::particles
 {
-	void AttributeGenerator::validate() const
+	void AttributeGeneratorChain::validate() const
 	{
 		OLY_ASSERT(sampler->output_dimension() == domain->input_dimension());
 	}
 
-	void AttributeGenerator::generate(ConstFloatSpan state_input, FloatSpan output) const
+	void AttributeGeneratorChain::generate(ConstFloatSpan state_input, FloatSpan output) const
 	{
 		// TODO v8 faster rng than rand() / RAND_MAX or <random>
 		if (sampler->random_input_dimension() == 0)
@@ -28,7 +28,7 @@ namespace oly::particles
 		}
 	}
 
-	void AttributeGenerator::generate(ConstFloatSpan state_input, ConstFloatSpan random_input, FloatSpan output) const
+	void AttributeGeneratorChain::generate(ConstFloatSpan state_input, ConstFloatSpan random_input, FloatSpan output) const
 	{
 		if (domain->input_dimension() == 1)
 		{
@@ -42,5 +42,13 @@ namespace oly::particles
 			sampler->sample(state_input, random_input, FloatSpan(domain_input));
 			domain->evaluate(ConstFloatSpan(domain_input), output);
 		}
+	}
+
+	void AttributeGroupGenerator::generate(const std::vector<FloatSpan>& attributes) const
+	{
+		// TODO v6 utility iterator that works like python's zip() + assert same length.
+		OLY_ASSERT(attributes.size() == generators.size());
+		for (size_t i = 0; i < generators.size(); ++i)
+			generators[i].generate(attributes[i]);
 	}
 }
