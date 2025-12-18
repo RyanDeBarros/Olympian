@@ -6,12 +6,6 @@
 
 namespace oly
 {
-	template<typename T>
-	using ContainerIterator = decltype(std::begin(std::declval<T&>()));
-
-	template<typename T>
-	using ConstContainerIterator = decltype(std::begin(std::declval<const T&>()));
-
 	template<typename... Containers>
 	class Zipper
 	{
@@ -24,10 +18,13 @@ namespace oly
 
 		class Iterator
 		{
+			template<typename T>
+			using ContainerIterator = decltype(std::begin(std::declval<T&>()));
+
 			std::tuple<ContainerIterator<Containers>...> iterators;
 
 		public:
-			Iterator(ContainerIterator<Containers>... iterators) : iterators(std::tie(iterators...)) {}
+			Iterator(ContainerIterator<Containers>... iterators) : iterators(iterators...) {}
 
 		private:
 			template<size_t... Indexes>
@@ -65,59 +62,6 @@ namespace oly
 		}
 	};
 
-	template<typename... Containers>
-	class ConstZipper
-	{
-		static_assert(sizeof...(Containers) > 0);
-
-		std::tuple<const Containers&...> containers;
-
-	public:
-		ConstZipper(const Containers&... containers) : containers(containers...) {}
-
-		class ConstIterator
-		{
-			std::tuple<ConstContainerIterator<Containers>...> iterators;
-
-		public:
-			ConstIterator(ConstContainerIterator<Containers>... iterators) : iterators(std::tie(iterators...)) {}
-
-		private:
-			template<size_t... Indexes>
-			bool neq_impl(const ConstIterator& other, std::index_sequence<Indexes...>) const
-			{
-				return (... && (std::get<Indexes>(iterators) != std::get<Indexes>(other.iterators)));
-			}
-
-		public:
-			bool operator!=(const ConstIterator& other) const
-			{
-				return neq_impl(other, std::index_sequence_for<Containers...>{});
-			}
-
-			ConstIterator& operator++()
-			{
-				std::apply([](auto&... iterators) { ((++iterators), ...); }, iterators);
-				return *this;
-			}
-
-			auto operator*() const
-			{
-				return std::apply([](const auto&... iterators) { return std::tie(*iterators...); }, iterators);
-			}
-		};
-
-		ConstIterator begin() const
-		{
-			return std::apply([](const auto&... containers) { return ConstIterator(std::cbegin(containers)...); }, containers);
-		}
-
-		ConstIterator end() const
-		{
-			return std::apply([](const auto&... containers) { return ConstIterator(std::cend(containers)...); }, containers);
-		}
-	};
-
 	template<bool Strict = true, typename... Containers>
 	inline auto zip(Containers&&... containers)
 	{
@@ -128,9 +72,6 @@ namespace oly
 				throw Error(ErrorCode::CONDITION_FAILED);
 		}
 
-		if constexpr ((std::is_const_v<std::remove_reference_t<Containers>> && ...))
-			return ConstZipper(std::forward<Containers>(containers)...);
-		else
-			return Zipper(std::forward<Containers>(containers)...);
+		return Zipper(std::forward<Containers>(containers)...);
 	}
 }
