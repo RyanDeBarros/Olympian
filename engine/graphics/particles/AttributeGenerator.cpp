@@ -1,7 +1,7 @@
 #include "AttributeGenerator.h"
 
 #include "core/base/Assert.h"
-#include "core/types/Zipper.h"
+#include "core/types/Zip.h"
 
 namespace oly::particles
 {
@@ -47,7 +47,7 @@ namespace oly::particles
 
 	void AttributeGroupGenerator::generate(const std::vector<FloatSpan>& attributes) const
 	{
-		for (const auto& [generator, attribute] : ConstZipper(generators, attributes))
+		for (const auto& [generator, attribute] : zip(generators, attributes))
 			generator.generate(attribute);
 	}
 }
