@@ -23,7 +23,7 @@ namespace oly::rendering
 		GLuint max_particles = 2000;
 		float lifetime = 3.0f; // TODO v6 use generator
 	private:
-		float _pad0[2];
+		float _pad0[2] = { 0.0f, 0.0f };
 	public:
 
 		glm::vec2 position = {}; // TODO v6 use generator
@@ -31,7 +31,7 @@ namespace oly::rendering
 
 		float rotation = 0.0f; // TODO v6 use generator
 	private:
-		float _pad1[1];
+		float _pad1[1] = { 0.0f };
 	public:
 		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
 
@@ -42,7 +42,8 @@ namespace oly::rendering
 	{
 		graphics::VertexArray vao;
 
-		struct DrawElementsIndirectCommand {
+		struct DrawArraysIndirectCommand
+		{
 			GLuint count;
 			GLuint primCount;
 			GLuint first;
@@ -62,16 +63,15 @@ namespace oly::rendering
 
 				void swap() const;
 				const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& in() const;
+				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& in();
 				const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& out() const;
+				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& out();
 			} particles;
 
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> emitter;
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> draw_command;
 
 			BufferList(const ParticleEmitterParams& params);
-
-			GLuint primitive_count() const;
-			void reset_draw_command() const;
 		} buffers;
 
 		struct
@@ -101,8 +101,10 @@ namespace oly::rendering
 			} renderer;
 		} shader_locations;
 
-		mutable float time_elapsed = 0.0f;
+		float time_elapsed = 0.0f;
 		mutable float last_render_time = 0.0f;
+
+		ParticleEmitterParams emitter_params;
 
 	public:
 		Camera2DRef camera = REF_DEFAULT;
@@ -112,12 +114,63 @@ namespace oly::rendering
 		ParticleEmitter(const ParticleEmitter&) = delete;
 		ParticleEmitter(ParticleEmitter&&) = delete;
 
-		void on_tick() const;
+		void on_tick();
 		void render() const;
 		
 	private:
 		void spawn_particles(GLuint to_spawn) const;
 		void update_particles(GLuint in_primitive_count, float delta_time) const;
 		void draw_particles() const;
+
+	public:
+		float get_time_elapsed() const { return time_elapsed; }
+
+		struct ParamsView
+		{
+		private:
+			ParticleEmitter& emitter;
+
+			friend class ParticleEmitter;
+			ParamsView(ParticleEmitter& emitter) : emitter(emitter) {}
+
+		public:
+			GLuint get_max_particles() const { return emitter.emitter_params.max_particles; }
+			float get_lifetime() const { return emitter.emitter_params.lifetime; }
+			glm::vec2 get_position() const { return emitter.emitter_params.position; }
+			glm::vec2 get_velocity() const { return emitter.emitter_params.velocity; }
+			float get_rotation() const { return emitter.emitter_params.rotation; }
+			glm::vec2 get_size() const { return emitter.emitter_params.size; }
+			glm::vec4 get_color() const { return emitter.emitter_params.color; }
+
+			void set_max_particles(GLuint max_particles);
+			void set_lifetime(float lifetime);
+			void set_position(glm::vec2 position);
+			void set_velocity(glm::vec2 velocity);
+			void set_rotation(float rotation);
+			void set_size(glm::vec2 size);
+			void set_color(glm::vec4 color);
+		};
+
+		ParamsView params() { return ParamsView(*this); }
+
+		struct ConstParamsView
+		{
+		private:
+			const ParticleEmitter& emitter;
+
+			friend class ParticleEmitter;
+			ConstParamsView(const ParticleEmitter& emitter) : emitter(emitter) {}
+
+		public:
+			GLuint get_max_particles() const { return emitter.emitter_params.max_particles; }
+			float get_lifetime() const { return emitter.emitter_params.lifetime; }
+			glm::vec2 get_position() const { return emitter.emitter_params.position; }
+			glm::vec2 get_velocity() const { return emitter.emitter_params.velocity; }
+			float get_rotation() const { return emitter.emitter_params.rotation; }
+			glm::vec2 get_size() const { return emitter.emitter_params.size; }
+			glm::vec4 get_color() const { return emitter.emitter_params.color; }
+		};
+
+		ConstParamsView params() const { return ConstParamsView(*this); }
 	};
 }

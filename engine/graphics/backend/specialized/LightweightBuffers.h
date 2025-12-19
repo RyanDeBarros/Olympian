@@ -159,6 +159,33 @@ namespace oly::graphics
 			glGetNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
 			return obj;
 		}
+
+		void force_resize_empty(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT)
+		{
+			if (size_in_bytes <= 0)
+				throw Error(ErrorCode::INVALID_SIZE);
+
+			size = size_in_bytes;
+			GLBuffer new_buf;
+			glNamedBufferStorage(new_buf, size, nullptr, flags);
+			buf = std::move(new_buf);
+		}
+
+		void force_resize(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT)
+		{
+			if (size_in_bytes <= 0)
+				throw Error(ErrorCode::INVALID_SIZE);
+
+			if (size_in_bytes != size)
+			{
+				GLsizeiptr old_size = size;
+				size = size_in_bytes;
+				GLBuffer new_buf;
+				glNamedBufferStorage(new_buf, size, nullptr, flags);
+				glCopyNamedBufferSubData(buf, new_buf, 0, 0, std::min(size, old_size));
+				buf = std::move(new_buf);
+			}
+		}
 	};
 
 	constexpr GLsizeiptr SHADER_STORAGE_MAX_BUFFER_SIZE = 134'217'728; // 128 MiB

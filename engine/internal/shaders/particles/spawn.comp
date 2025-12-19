@@ -56,7 +56,7 @@ layout(std430, binding = 1) readonly buffer Emitter {
 	EmitterParams emitter;
 };
 
-struct DrawElementsIndirectCommand {
+struct DrawArraysIndirectCommand  {
 	uint count;
 	uint primCount;
 	uint first;
@@ -64,7 +64,7 @@ struct DrawElementsIndirectCommand {
 };
 
 layout(std430, binding = 2) buffer DrawCommand {
-	DrawElementsIndirectCommand cmd;
+	DrawArraysIndirectCommand  cmd;
 };
 
 vec3 random3(uint id, uint seed) {

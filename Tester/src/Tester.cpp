@@ -142,6 +142,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
+		particle_emitter.params().set_velocity((glm::vec2)oly::UnitVector2D(particle_emitter.get_time_elapsed()) * 100.0f);
 		particle_emitter.on_tick();
 	}
 

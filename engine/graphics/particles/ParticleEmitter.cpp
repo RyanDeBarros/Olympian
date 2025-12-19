@@ -21,26 +21,27 @@ namespace oly::rendering
 		return state ? a : b;
 	}
 
+	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::in()
+	{
+		return state ? a : b;
+	}
+
 	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::out() const
 	{
 		return state ? b : a;
 	}
 
+	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::out()
+	{
+		return state ? b : a;
+	}
+
 	ParticleEmitter::BufferList::BufferList(const ParticleEmitterParams& params)
-		: particles(params.max_particles), emitter(sizeof(ParticleEmitterParams)), draw_command(sizeof(DrawElementsIndirectCommand))
+		: particles(params.max_particles), emitter(sizeof(ParticleEmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand ))
 	{
 		emitter.send(0, params);
-		reset_draw_command();
-	}
 
-	GLuint ParticleEmitter::BufferList::primitive_count() const
-	{
-		return draw_command.receive(0, &DrawElementsIndirectCommand::primCount);
-	}
-
-	void ParticleEmitter::BufferList::reset_draw_command() const
-	{
-		draw_command.send(0, DrawElementsIndirectCommand{
+		draw_command.send(0, DrawArraysIndirectCommand {
 			.count = 4,
 			.primCount = 0,
 			.first = 0,
@@ -49,7 +50,7 @@ namespace oly::rendering
 	}
 
 	ParticleEmitter::ParticleEmitter(const ParticleEmitterParams& params)
-		: buffers(params)
+		: buffers(params), emitter_params(params)
 	{
 		shaders = {
 			.compute_spawn = graphics::internal_shaders::particle_compute_spawn,
@@ -73,13 +74,8 @@ namespace oly::rendering
 	}
 
 	// TODO v6 on_tick() for engine classes (ParticleEmitter, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager.
-	void ParticleEmitter::on_tick() const
+	void ParticleEmitter::on_tick()
 	{
-		// TODO v6 remove
-		ParticleEmitterParams params;
-		params.velocity = (glm::vec2)UnitVector2D(time_elapsed) * 100.0f;
-		buffers.emitter.send(0, params);
-
 		spawn_particles(1); // TODO v6 compute to-spawn debt
 
 		time_elapsed += TIME.delta(); // TODO v6 eventually, when on_tick() and draw()/render() are on different threads (although may not be possible here because of compute shader -> could accumulate to-spawn debt on-tick but then dispatch_compute() for spawn compute shader in render()), make sure to distinguish between delta time for tick thread and for draw thread.
@@ -87,10 +83,10 @@ namespace oly::rendering
 	
 	void ParticleEmitter::render() const
 	{
-		GLuint in_primitive_count = buffers.primitive_count();
+		GLuint in_primitive_count = buffers.draw_command.receive(0, &DrawArraysIndirectCommand::primCount);
 		if (in_primitive_count > 0)
 		{
-			buffers.reset_draw_command();
+			buffers.draw_command.send(0, &DrawArraysIndirectCommand::primCount, GLuint(0));
 			update_particles(in_primitive_count, time_elapsed - last_render_time);
 			draw_particles();
 			buffers.particles.swap();
@@ -137,5 +133,72 @@ namespace oly::rendering
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffers.draw_command.buffer());
 		glDrawArraysIndirect(GL_TRIANGLE_STRIP, (void*)0);
 		// TODO v6 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.
+	}
+
+	void ParticleEmitter::ParamsView::set_max_particles(GLuint max_particles)
+	{
+		if (max_particles == emitter.emitter_params.max_particles)
+			return;
+
+		emitter.emitter_params.max_particles = max_particles;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::max_particles, max_particles);
+		
+		// TODO v6 optimize by only resizing if new_max_particles is > old_max_particles, in which case resize to (2 * new_max_particles - old_particles). Also resize if new_max_particles is < 0.5 * old_max_particles.
+		emitter.buffers.particles.in().force_resize(max_particles * sizeof(Particle));
+		emitter.buffers.particles.out().force_resize(max_particles * sizeof(Particle));
+	}
+	
+	void ParticleEmitter::ParamsView::set_lifetime(float lifetime)
+	{
+		if (lifetime == emitter.emitter_params.lifetime)
+			return;
+
+		emitter.emitter_params.lifetime = lifetime;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::lifetime, lifetime);
+	}
+	
+	void ParticleEmitter::ParamsView::set_position(glm::vec2 position)
+	{
+		if (position == emitter.emitter_params.position)
+			return;
+
+		emitter.emitter_params.position = position;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::position, position);
+	}
+	
+	void ParticleEmitter::ParamsView::set_velocity(glm::vec2 velocity)
+	{
+		if (velocity == emitter.emitter_params.velocity)
+			return;
+
+		emitter.emitter_params.velocity = velocity;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::velocity, velocity);
+	}
+	
+	void ParticleEmitter::ParamsView::set_rotation(float rotation)
+	{
+		if (rotation == emitter.emitter_params.rotation)
+			return;
+
+		emitter.emitter_params.rotation = rotation;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::rotation, rotation);
+	}
+	
+	void ParticleEmitter::ParamsView::set_size(glm::vec2 size)
+	{
+		if (size == emitter.emitter_params.size)
+			return;
+
+		emitter.emitter_params.size = size;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::size, size);
+	}
+	
+	void ParticleEmitter::ParamsView::set_color(glm::vec4 color)
+	{
+		if (color == emitter.emitter_params.color)
+			return;
+
+		emitter.emitter_params.color = color;
+		emitter.buffers.emitter.send(0, &ParticleEmitterParams::color, color);
 	}
 }
