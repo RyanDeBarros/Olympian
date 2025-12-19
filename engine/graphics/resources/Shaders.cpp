@@ -84,22 +84,22 @@ namespace oly::graphics::internal_shaders
 		});
 		ellipse_batch = *_ellipse_batch;
 
-		// TODO v6 uncomment once shaders are written. Later, use template files similar to sprite batch in order to dynamically use different particle structures, emitter attributes, etc.
-		//_particle_renderer = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-		//	{ .path = shaders_dir + "particles/particle.vert", .type = ShaderType::VERTEX },
-		//	{ .path = shaders_dir + "particles/particle.frag", .type = ShaderType::FRAGMENT }
-		//});
-		//particle_renderer = *_particle_renderer;
+		// TODO v6 Use template files similar to sprite batch in order to dynamically use different particle structures, emitter attributes, etc.
+		_particle_renderer = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+			{ .path = shaders_dir + "particles/particle.vert", .type = ShaderType::VERTEX },
+			{ .path = shaders_dir + "particles/particle.frag", .type = ShaderType::FRAGMENT }
+		});
+		particle_renderer = *_particle_renderer;
 
-		//_particle_compute_spawn = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-		//	{ .path = shaders_dir + "particles/spawn.comp", .type = ShaderType::COMPUTE }
-		//});
-		//particle_compute_spawn = *_particle_compute_spawn;
+		_particle_compute_spawn = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+			{ .path = shaders_dir + "particles/spawn.comp", .type = ShaderType::COMPUTE }
+		});
+		particle_compute_spawn = *_particle_compute_spawn;
 
-		//_particle_compute_update = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-		//	{.path = shaders_dir + "particles/update.comp", .type = ShaderType::COMPUTE }
-		//});
-		//particle_compute_update = *_particle_compute_update;
+		_particle_compute_update = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+			{.path = shaders_dir + "particles/update.comp", .type = ShaderType::COMPUTE }
+		});
+		particle_compute_update = *_particle_compute_update;
 	}
 
 	void unload()

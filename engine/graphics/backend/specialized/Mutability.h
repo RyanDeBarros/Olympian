@@ -7,6 +7,4 @@ namespace oly::graphics
 		IMMUTABLE,
 		MUTABLE
 	};
-
-	struct Empty { Empty() = delete; };
 }

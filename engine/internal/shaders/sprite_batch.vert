@@ -47,7 +47,7 @@ layout(std430, binding = 3) readonly buffer TextureCoords {
 	vec4 uTexCoords[];
 };
 
-layout(std140, binding = 1) uniform Modulations {
+layout(std140, binding = 0) uniform Modulations {
 	vec4 uModulation[/*$MODULATIONS*/];
 };
 
@@ -58,7 +58,7 @@ struct AnimFrameFormat
 	float starting_time;
 	float delay_seconds;
 };
-layout(std140, binding = 2) uniform Anims {
+layout(std140, binding = 1) uniform Anims {
 	AnimFrameFormat uAnims[/*$ANIMS*/];
 };
 

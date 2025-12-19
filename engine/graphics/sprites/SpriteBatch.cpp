@@ -62,8 +62,8 @@ namespace oly::rendering
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_ssbo_block.buf.get_buffer<INFO>());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_ssbo_block.buf.get_buffer<TRANSFORM>());
 		tex_coords_ssbo.bind_base(3);
-		ubo.modulation.bind_base(1);
-		ubo.anim.bind_base(2);
+		ubo.modulation.bind_base(0);
+		ubo.anim.bind_base(1);
 		ebo.render_elements(GL_TRIANGLES);
 
 		quad_ssbo_block.post_draw_all();

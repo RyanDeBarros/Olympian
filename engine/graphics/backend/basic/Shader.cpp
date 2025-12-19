@@ -139,22 +139,12 @@ namespace oly::graphics
 		return *this;
 	}
 
-	void dispatch_compute_workers(GLuint x_workers, GLuint y_workers, GLuint z_workers)
-	{
-		glDispatchCompute(x_workers, y_workers, z_workers);
-	}
-
-	void dispatch_compute_workers(GLuint x_size, GLuint y_size, GLuint z_size, GLuint x_threads, GLuint y_threads, GLuint z_threads)
+	void dispatch_compute(GLuint x_size, GLuint y_size, GLuint z_size, GLuint x_threads, GLuint y_threads, GLuint z_threads)
 	{
 		glDispatchCompute(
 			x_threads > 0 ? (GLuint)ceilf((float)x_size / x_threads) : 1,
 			y_threads > 0 ? (GLuint)ceilf((float)y_size / y_threads) : 1,
 			z_threads > 0 ? (GLuint)ceilf((float)z_size / z_threads) : 1
 		);
-	}
-
-	void memory_barrier(MemoryBarrierBit barriers)
-	{
-		glMemoryBarrier((GLbitfield)barriers);
 	}
 }

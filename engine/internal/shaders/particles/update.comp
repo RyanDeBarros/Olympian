@@ -1,1 +1,50 @@
 #version 450 core
+
+// TODO v6 use template for max threads -> update the use of dispatch_compute()
+layout(local_size_x = 64) in;
+
+uniform float uDeltaTime;
+uniform uint uInPrimCount;
+
+struct Particle {
+	float timeElapsed;
+	float lifetime;
+	vec2 position;
+	vec2 velocity;
+	float rotation;
+	vec2 size;
+	vec4 color;
+};
+
+layout(std430, binding = 0) readonly buffer ParticlesIn {
+    Particle particlesIn[];
+};
+
+layout(std430, binding = 1) buffer ParticlesOut {
+    Particle particlesOut[];
+};
+
+struct DrawElementsIndirectCommand {
+	uint count;
+	uint primCount;
+	uint first;
+	uint baseVertex;
+};
+
+layout(std430, binding = 2) buffer DrawCommand {
+	DrawElementsIndirectCommand cmd;
+};
+
+void main() {
+	uint id = gl_GlobalInvocationID.x;
+	if (id >= uInPrimCount) return;
+
+	Particle p = particlesIn[id];
+	p.timeElapsed += uDeltaTime;
+	if (p.timeElapsed < p.lifetime) {
+		p.position += p.velocity * uDeltaTime;
+
+		uint dst = atomicAdd(cmd.primCount, 1);
+		particlesOut[dst] = p;
+	}
+}

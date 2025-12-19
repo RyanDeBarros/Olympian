@@ -1,5 +1,7 @@
 ﻿#include <Olympian.h>
 
+#include <graphics/particles/ParticleEmitter.h>
+
 #include "ProjectContext.h"
 
 #include "SpriteMatch.h"
@@ -73,8 +75,10 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	oly::CallbackTimer text_jitter_timer;
 
+	oly::rendering::ParticleEmitter particle_emitter;
+
 	TesterRenderPipeline()
-		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); })
+		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_emitter({})
 	{
 		bkg.bkg_rect->set_batch(polygon_batch);
 
@@ -105,16 +109,18 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		bkg.draw();
 		polygon_batch->render();
 
-		sprite_match.draw();
-		for (const auto& sprite : flag_tesselation)
-			sprite.draw();
-		jumble.draw();
+		//sprite_match.draw();
+		//for (const auto& sprite : flag_tesselation)
+		//	sprite.draw();
+		//jumble.draw();
 
-		obstacle_layer.draw();
-		player_layer.draw();
-		ray_layer.draw();
+		//obstacle_layer.draw();
+		//player_layer.draw();
+		//ray_layer.draw();
 		
-		pixel_art_text.draw();
+		//pixel_art_text.draw();
+
+		particle_emitter.render();
 	}
 
 	void logic_update()
@@ -135,6 +141,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
+
+		particle_emitter.on_tick();
 	}
 
 	void text_jitter_callback()

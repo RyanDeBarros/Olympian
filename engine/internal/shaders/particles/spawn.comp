@@ -1,1 +1,99 @@
 #version 450 core
+
+// TODO v6 use template for max threads -> update the use of dispatch_compute()
+layout(local_size_x = 64) in;
+
+uniform float uTime;
+uniform uint uSpawnCount;
+
+// TODO v6 use template for particle struct for synchronicity across shaders and modularity.
+struct Particle {
+	float timeElapsed;
+	float lifetime;
+	vec2 position;
+	vec2 velocity;
+	float rotation;
+	vec2 size;
+	vec4 color;
+};
+
+layout(std430, binding = 0) buffer ParticlesIn {
+    Particle particlesIn[];
+};
+
+struct Domain {
+	uint type;
+	float params[8];
+};
+
+struct Sampler {
+	uint type;
+	float params[8];
+};
+
+struct Generator {
+	Domain domain;
+	Sampler sampler;
+};
+
+// TODO v6 use template for emitter struct for synchronicity across shaders and modularity.
+struct Emitter {
+	uint maxParticles;
+	float lifetime; // TODO v6 use generator
+	vec2 position; // TODO v6 use generator
+	vec2 velocity; // TODO v6 use generator
+	float rotation; // TODO v6 use generator
+	vec2 size; // TODO v6 use generator
+	vec4 color; // TODO v6 use generator
+};
+
+layout(std140, binding = 0) uniform EmitterUniform {
+	Emitter emitter;
+};
+
+struct DrawElementsIndirectCommand {
+	uint count;
+	uint primCount;
+	uint first;
+	uint baseVertex;
+};
+
+layout(std430, binding = 1) buffer DrawCommand {
+	DrawElementsIndirectCommand cmd;
+};
+
+vec3 random3(uint id, uint seed) {
+    float x = fract(sin(float(id * 73856093u + seed * 19349663u)) * 43758.5453);
+    float y = fract(sin(float(id * 19349663u + seed * 73856093u)) * 43758.5453);
+    float z = fract(sin(float(id * 83492791u + seed * 15614557u)) * 43758.5453);
+    return vec3(x, y, z);
+}
+
+void main() {
+	uint id = gl_GlobalInvocationID.x;
+	if (id >= uSpawnCount) return;
+
+	uint index = atomicAdd(cmd.primCount, 1);
+	if (index >= emitter.maxParticles) {
+		atomicMin(cmd.primCount, emitter.maxParticles); // TODO v6 this discards new particles that exceed maximum. Could also despawn oldest particles?
+		return;
+	}
+
+	uint seed = uint(uTime * 1000.0);
+	vec3 rng = random3(id, seed);
+
+	Particle p;
+	p.timeElapsed = 0;
+	p.lifetime = emitter.lifetime;
+	p.position = emitter.position;
+	p.velocity = emitter.velocity;
+	p.rotation = emitter.rotation;
+	p.size = emitter.size;
+	p.color = emitter.color;
+
+	// TODO v6 remove
+	p.size = vec2(10.0, 10.0);
+	p.color = vec4(1.0, 0.0, 0.0, 1.0);
+
+	particlesIn[index] = p;
+}
