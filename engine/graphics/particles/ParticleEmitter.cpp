@@ -29,11 +29,8 @@ namespace oly::rendering
 	ParticleEmitter::BufferList::BufferList(const ParticleEmitterParams& params)
 		: particles(params.max_particles), emitter(sizeof(ParticleEmitterParams)), draw_command(sizeof(DrawElementsIndirectCommand))
 	{
-		oly::internal::check_opengl_error();
 		emitter.send(0, params);
-		oly::internal::check_opengl_error();
 		reset_draw_command();
-		oly::internal::check_opengl_error();
 	}
 
 	GLuint ParticleEmitter::BufferList::primitive_count() const
@@ -78,7 +75,14 @@ namespace oly::rendering
 	// TODO v6 on_tick() for engine classes (ParticleEmitter, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager.
 	void ParticleEmitter::on_tick() const
 	{
+		// TODO v6 remove
+		ParticleEmitterParams params;
+		params.velocity = (glm::vec2)UnitVector2D(time_elapsed) * 100.0f;
+		buffers.emitter.send(0, params);
+
 		spawn_particles(1); // TODO v6 compute to-spawn debt
+
+		time_elapsed += TIME.delta(); // TODO v6 eventually, when on_tick() and draw()/render() are on different threads (although may not be possible here because of compute shader -> could accumulate to-spawn debt on-tick but then dispatch_compute() for spawn compute shader in render()), make sure to distinguish between delta time for tick thread and for draw thread.
 	}
 	
 	void ParticleEmitter::render() const
@@ -87,10 +91,12 @@ namespace oly::rendering
 		if (in_primitive_count > 0)
 		{
 			buffers.reset_draw_command();
-			update_particles(in_primitive_count);
+			update_particles(in_primitive_count, time_elapsed - last_render_time);
 			draw_particles();
 			buffers.particles.swap();
 		}
+
+		last_render_time = time_elapsed;
 	}
 
 	void ParticleEmitter::spawn_particles(GLuint to_spawn) const
@@ -99,19 +105,19 @@ namespace oly::rendering
 			return;
 
 		glUseProgram(shaders.compute_spawn);
-		glUniform1f(shader_locations.compute_spawn.time, TIME.now());
+		glUniform1f(shader_locations.compute_spawn.time, time_elapsed);
 		glUniform1ui(shader_locations.compute_spawn.spawn_count, to_spawn);
 		buffers.particles.in().bind_base(0);
-		buffers.emitter.bind_base(0);
-		buffers.draw_command.bind_base(1);
+		buffers.emitter.bind_base(1);
+		buffers.draw_command.bind_base(2);
 		graphics::dispatch_compute(to_spawn, 1, 1, 64, 1, 1); // TODO v6 the x_threads must match layout(local_size_x = ...) in; -> make sure to update this when changing to template.
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	void ParticleEmitter::update_particles(GLuint in_primitive_count) const
+	void ParticleEmitter::update_particles(GLuint in_primitive_count, float delta_time) const
 	{
 		glUseProgram(shaders.compute_update);
-		glUniform1f(shader_locations.compute_update.delta_time, TIME.delta());
+		glUniform1f(shader_locations.compute_update.delta_time, delta_time);
 		glUniform1ui(shader_locations.compute_update.in_prim_count, in_primitive_count);
 		buffers.particles.in().bind_base(0);
 		buffers.particles.out().bind_base(1);

@@ -37,18 +37,23 @@ struct Generator {
 };
 
 // TODO v6 use template for emitter struct for synchronicity across shaders and modularity.
-struct Emitter {
+struct EmitterParams {
 	uint maxParticles;
 	float lifetime; // TODO v6 use generator
+	float _pad0[2];
+
 	vec2 position; // TODO v6 use generator
 	vec2 velocity; // TODO v6 use generator
+
 	float rotation; // TODO v6 use generator
+	float _pad1[1];
 	vec2 size; // TODO v6 use generator
+	
 	vec4 color; // TODO v6 use generator
 };
 
-layout(std140, binding = 0) uniform EmitterUniform {
-	Emitter emitter;
+layout(std430, binding = 1) readonly buffer Emitter {
+	EmitterParams emitter;
 };
 
 struct DrawElementsIndirectCommand {
@@ -58,7 +63,7 @@ struct DrawElementsIndirectCommand {
 	uint baseVertex;
 };
 
-layout(std430, binding = 1) buffer DrawCommand {
+layout(std430, binding = 2) buffer DrawCommand {
 	DrawElementsIndirectCommand cmd;
 };
 
@@ -90,10 +95,6 @@ void main() {
 	p.rotation = emitter.rotation;
 	p.size = emitter.size;
 	p.color = emitter.color;
-
-	// TODO v6 remove
-	p.size = vec2(10.0, 10.0);
-	p.color = vec4(1.0, 0.0, 0.0, 1.0);
 
 	particlesIn[index] = p;
 }

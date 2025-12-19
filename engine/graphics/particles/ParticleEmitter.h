@@ -18,13 +18,23 @@ namespace oly::rendering
 	};
 
 	// TODO v6 allow for editing of these parameters, instead of only passing in constructor? For max particles, will need to make some buffers mutable since they'd be resized.
-	struct ParticleEmitterParams {
+	struct alignas(16) ParticleEmitterParams
+	{
 		GLuint max_particles = 2000;
 		float lifetime = 3.0f; // TODO v6 use generator
+	private:
+		float _pad0[2];
+	public:
+
 		glm::vec2 position = {}; // TODO v6 use generator
 		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
+
 		float rotation = 0.0f; // TODO v6 use generator
+	private:
+		float _pad1[1];
+	public:
 		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
+
 		glm::vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f }; // TODO v6 use generator
 	};
 
@@ -55,7 +65,7 @@ namespace oly::rendering
 				const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& out() const;
 			} particles;
 
-			graphics::LightweightUBO<graphics::Mutability::IMMUTABLE> emitter;
+			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> emitter;
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> draw_command;
 
 			BufferList(const ParticleEmitterParams& params);
@@ -91,6 +101,9 @@ namespace oly::rendering
 			} renderer;
 		} shader_locations;
 
+		mutable float time_elapsed = 0.0f;
+		mutable float last_render_time = 0.0f;
+
 	public:
 		Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;
@@ -104,7 +117,7 @@ namespace oly::rendering
 		
 	private:
 		void spawn_particles(GLuint to_spawn) const;
-		void update_particles(GLuint in_primitive_count) const;
+		void update_particles(GLuint in_primitive_count, float delta_time) const;
 		void draw_particles() const;
 	};
 }
