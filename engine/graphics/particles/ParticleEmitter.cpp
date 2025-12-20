@@ -49,14 +49,17 @@ namespace oly::rendering
 			});
 	}
 
-	ParticleEmitter::ParticleEmitter(const ParticleEmitterParams& params)
-		: buffers(params), emitter_params(params)
+	ParticleEmitter::ParticleEmitter(const ParticleEmitterParams& params, GLushort compute_threads)
+		: buffers(params), compute_threads(compute_threads), emitter_params(params)
 	{
 		shaders = {
-			.compute_spawn = graphics::internal_shaders::particle_compute_spawn,
-			.compute_update = graphics::internal_shaders::particle_compute_update,
+			.compute_spawn_ref = graphics::internal_shaders::particle_compute_spawn(compute_threads),
+			.compute_update_ref = graphics::internal_shaders::particle_compute_update(compute_threads),
 			.renderer = graphics::internal_shaders::particle_renderer
 		};
+
+		shaders.compute_spawn = *shaders.compute_spawn_ref;
+		shaders.compute_update = *shaders.compute_update_ref;
 
 		shader_locations.compute_spawn = {
 			.time = glGetUniformLocation(shaders.compute_spawn, "uTime"),
@@ -106,7 +109,7 @@ namespace oly::rendering
 		buffers.particles.in().bind_base(0);
 		buffers.emitter.bind_base(1);
 		buffers.draw_command.bind_base(2);
-		graphics::dispatch_compute(to_spawn, 1, 1, 64, 1, 1); // TODO v6 the x_threads must match layout(local_size_x = ...) in; -> make sure to update this when changing to template.
+		graphics::dispatch_compute(to_spawn, 1, 1, compute_threads, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
@@ -118,7 +121,7 @@ namespace oly::rendering
 		buffers.particles.in().bind_base(0);
 		buffers.particles.out().bind_base(1);
 		buffers.draw_command.bind_base(2);
-		graphics::dispatch_compute(in_primitive_count, 1, 1, 64, 1, 1); // TODO v6 the x_threads must match layout(local_size_x = ...) in; -> make sure to update this when changing to template.
+		graphics::dispatch_compute(in_primitive_count, 1, 1, compute_threads, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 

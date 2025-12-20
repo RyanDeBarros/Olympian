@@ -2,6 +2,7 @@
 
 #include "graphics/backend/specialized/LightweightBuffers.h"
 #include "graphics/backend/basic/VertexArrays.h"
+#include "graphics/backend/basic/Shader.h"
 #include "core/base/Transforms.h"
 #include "graphics/Camera.h"
 
@@ -76,8 +77,12 @@ namespace oly::rendering
 
 		struct
 		{
+			SmartReference<graphics::Shader> compute_spawn_ref;
 			GLuint compute_spawn;
+
+			SmartReference<graphics::Shader> compute_update_ref;
 			GLuint compute_update;
+
 			GLuint renderer;
 		} shaders;
 
@@ -101,6 +106,8 @@ namespace oly::rendering
 			} renderer;
 		} shader_locations;
 
+		GLushort compute_threads;
+
 		float time_elapsed = 0.0f;
 		mutable float last_render_time = 0.0f;
 
@@ -110,7 +117,7 @@ namespace oly::rendering
 		Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;
 
-		ParticleEmitter(const ParticleEmitterParams& params);
+		ParticleEmitter(const ParticleEmitterParams& params, GLushort compute_threads = 64);
 		ParticleEmitter(const ParticleEmitter&) = delete;
 		ParticleEmitter(ParticleEmitter&&) = delete;
 

@@ -1,7 +1,6 @@
 #version 450 core
 
-// TODO v6 use template for max threads -> update the use of dispatch_compute()
-layout(local_size_x = 64) in;
+layout(local_size_x = /*$X_THREADS*/) in;
 
 uniform float uDeltaTime;
 uniform uint uInPrimCount;

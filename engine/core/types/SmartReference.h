@@ -87,12 +87,7 @@ namespace oly
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
 			std::vector<SmartReferenceLink*> reference_heads;
-
-		public:
-			using OnDeleteCallback = void(*)(Object&);
-
-		private:
-			std::vector<OnDeleteCallback> on_delete_callbacks;
+			std::vector<std::pair<void(*)(Object&, void*), void*>> on_delete_callbacks;
 
 			SmartReferencePool() { PoolBatch::instance().insert(this); }
 			SmartReferencePool(const SmartReferencePool<Object>&) = delete;
@@ -118,7 +113,7 @@ namespace oly
 						reference_heads[idx] = next;
 					}
 					objects[idx] = nullptr;
-					on_delete_callbacks[idx] = nullptr;
+					on_delete_callbacks[idx] = { nullptr, nullptr };
 				}
 
 				marked_for_deletion.clear();
@@ -157,7 +152,7 @@ namespace oly
 				if (unoccupied.empty())
 				{
 					objects.push_back(std::move(obj_ptr));
-					on_delete_callbacks.push_back(nullptr);
+					on_delete_callbacks.push_back({ nullptr, nullptr });
 					reference_heads.push_back(nullptr);
 					return objects.size() - 1;
 				}
@@ -165,7 +160,7 @@ namespace oly
 				{
 					size_t next_slot = unoccupied.top();
 					objects[next_slot] = std::move(obj_ptr);
-					on_delete_callbacks[next_slot] = nullptr;
+					on_delete_callbacks[next_slot] = { nullptr, nullptr };
 					unoccupied.pop();
 					return next_slot;
 				}
@@ -238,9 +233,9 @@ namespace oly
 
 				if (!reference_heads[idx])
 				{
-					if (on_delete_callbacks[idx])
-						(*on_delete_callbacks[idx])(*object);
-					on_delete_callbacks[idx] = nullptr;
+					if (on_delete_callbacks[idx].first)
+						(*on_delete_callbacks[idx].first)(*object, on_delete_callbacks[idx].second);
+					on_delete_callbacks[idx] = { nullptr, nullptr };
 
 					marked_for_deletion.erase(idx);
 					object.reset();
@@ -719,10 +714,10 @@ namespace oly
 				throw Error(ErrorCode::NULL_POINTER);
 		}
 
-		void set_on_delete(void(*callback)(Object&))
+		void set_on_delete(void(*callback)(Object&, void*), void* usr = nullptr)
 		{
 			if (valid())
-				pool().on_delete_callbacks[pool_idx] = callback;
+				pool().on_delete_callbacks[pool_idx] = { callback, usr };
 			else
 				throw Error(ErrorCode::NULL_POINTER);
 		}
@@ -810,8 +805,8 @@ namespace oly
 			}
 
 			for (size_t i = 0; i < on_delete_callbacks.size(); ++i)
-				if (on_delete_callbacks[i])
-					(*on_delete_callbacks[i])(*objects[i]);
+				if (on_delete_callbacks[i].first)
+					(*on_delete_callbacks[i].first)(*objects[i], on_delete_callbacks[i].second);
 			on_delete_callbacks.clear();
 
 			algo::clear_stack(unoccupied);

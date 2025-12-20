@@ -11,8 +11,8 @@ namespace oly::graphics::internal_shaders
 	extern GLuint ellipse_batch;
 
 	extern GLuint particle_renderer;
-	extern GLuint particle_compute_spawn;
-	extern GLuint particle_compute_update;
+	extern SmartReference<Shader> particle_compute_spawn(GLushort x_threads);
+	extern SmartReference<Shader> particle_compute_update(GLushort x_threads);
 
 	extern void load();
 	extern void unload();
