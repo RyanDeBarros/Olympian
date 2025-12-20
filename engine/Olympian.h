@@ -43,7 +43,6 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v6 Modular particle system, perlin noise generation.
 	// TODO v7 Lighting engine
 	// TODO v7 UI widgets
 	// TODO v8 thread safety + multi-threading.

@@ -122,8 +122,6 @@ namespace oly::context
 
 		physics::internal::RigidBodyManager::instance().clear();
 
-		oly::internal::PoolBatch::instance().clear();
-
 		internal::terminate_textures();
 		internal::terminate_tilesets();
 		internal::terminate_fonts();
@@ -133,6 +131,8 @@ namespace oly::context
 		internal::terminate_platform();
 
 		graphics::internal::unload_resources();
+
+		oly::internal::PoolBatch::instance().clear();
 
 		glfwTerminate();
 

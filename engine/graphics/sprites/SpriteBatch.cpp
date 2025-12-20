@@ -24,10 +24,12 @@ namespace oly::rendering
 	}
 
 	internal::SpriteBatch::SpriteBatch(UBOCapacity capacity)
-		: ebo(vao), shader(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims())), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)),
+		: ebo(vao), shader_ref(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims())), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)),
 		tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect)), ubo(capacity)
 	{
 		SpriteBatchRegistry::instance().batches.insert(this);
+
+		shader = *shader_ref;
 
 		shader_locations.projection = glGetUniformLocation(shader, "uProjection");
 		shader_locations.invariant_projection = glGetUniformLocation(shader, "uInvariantProjection");

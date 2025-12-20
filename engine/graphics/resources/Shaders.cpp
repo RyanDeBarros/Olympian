@@ -1,6 +1,5 @@
 #include "Shaders.h"
 
-#include "graphics/backend/basic/Shader.h"
 #include "core/util/IO.h"
 
 namespace oly::graphics::internal_shaders
@@ -27,17 +26,26 @@ namespace oly::graphics::internal_shaders
 		}
 	};
 
-	static std::unordered_map<SpriteBatchTemplate, std::unique_ptr<Shader>, SpriteBatchTemplateHash> _sprite_batch_map;
+	static std::unordered_map<SpriteBatchTemplate, WeakReference<Shader>, SpriteBatchTemplateHash> _sprite_batch_map;
+	static std::unordered_map<Shader*, SpriteBatchTemplate> _sprite_batch_lut;
 
-	GLuint sprite_batch(GLushort modulations, GLushort anims)
+	static void on_sprite_batch_shader_delete(Shader& shader)
+	{
+		auto it = _sprite_batch_lut.find(&shader);
+		_sprite_batch_map.erase(it->second);
+		_sprite_batch_lut.erase(it);
+	}
+
+	SmartReference<Shader> sprite_batch(GLushort modulations, GLushort anims)
 	{
 		SpriteBatchTemplate tmpl{ .modulations = modulations, .anims = anims };
 		auto it = _sprite_batch_map.find(tmpl);
 		if (it != _sprite_batch_map.end())
-			return *it->second;
+			return it->second.lock();
 		else
 		{
-			auto _sprite_batch = std::make_unique<Shader>(std::vector<ShaderBufferSource>{
+			SmartReference<Shader> shader;
+			shader.init(std::vector<ShaderBufferSource>{
 				{
 					.buffer = io::read_template_file(shaders_dir + "sprite_batch.vert", {
 						{ "/*$MODULATIONS*/", std::to_string(tmpl.modulations) },
@@ -51,8 +59,9 @@ namespace oly::graphics::internal_shaders
 				},
 			});
 
-			GLuint shader = *_sprite_batch;
-			_sprite_batch_map.emplace(tmpl, std::move(_sprite_batch));
+			shader.set_on_delete(&on_sprite_batch_shader_delete);
+			_sprite_batch_map.emplace(tmpl, shader.weak());
+			_sprite_batch_lut.emplace(shader.base(), tmpl);
 			return shader;
 		}
 	}
@@ -105,6 +114,7 @@ namespace oly::graphics::internal_shaders
 	void unload()
 	{
 		_sprite_batch_map.clear();
+		_sprite_batch_lut.clear();
 
 		_polygon_batch.reset();
 		polygon_batch = 0;

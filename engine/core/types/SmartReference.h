@@ -28,6 +28,9 @@ namespace oly
 	template<typename>
 	struct SmartReference;
 
+	template<typename>
+	struct WeakReference;
+
 	namespace internal
 	{
 		struct IPool
@@ -85,6 +88,12 @@ namespace oly
 			std::unordered_set<size_t> marked_for_deletion;
 			std::vector<SmartReferenceLink*> reference_heads;
 
+		public:
+			using OnDeleteCallback = void(*)(Object&);
+
+		private:
+			std::vector<OnDeleteCallback> on_delete_callbacks;
+
 			SmartReferencePool() { PoolBatch::instance().insert(this); }
 			SmartReferencePool(const SmartReferencePool<Object>&) = delete;
 			SmartReferencePool(SmartReferencePool<Object>&&) = delete;
@@ -108,6 +117,8 @@ namespace oly
 						reference_heads[idx]->next = nullptr;
 						reference_heads[idx] = next;
 					}
+					objects[idx] = nullptr;
+					on_delete_callbacks[idx] = nullptr;
 				}
 
 				marked_for_deletion.clear();
@@ -119,6 +130,9 @@ namespace oly
 
 			template<typename>
 			friend struct SmartReference;
+
+			template<typename>
+			friend struct WeakReference;
 
 			size_t init_slot()
 			{
@@ -143,6 +157,7 @@ namespace oly
 				if (unoccupied.empty())
 				{
 					objects.push_back(std::move(obj_ptr));
+					on_delete_callbacks.push_back(nullptr);
 					reference_heads.push_back(nullptr);
 					return objects.size() - 1;
 				}
@@ -150,6 +165,7 @@ namespace oly
 				{
 					size_t next_slot = unoccupied.top();
 					objects[next_slot] = std::move(obj_ptr);
+					on_delete_callbacks[next_slot] = nullptr;
 					unoccupied.pop();
 					return next_slot;
 				}
@@ -194,6 +210,7 @@ namespace oly
 
 			void decrement_references(size_t idx, SmartReferenceLink* link)
 			{
+				std::unique_ptr<Object>& object = objects[idx];
 				SmartReferenceLink* prev = link->prev;
 				SmartReferenceLink* next = link->next;
 
@@ -221,7 +238,12 @@ namespace oly
 
 				if (!reference_heads[idx])
 				{
+					if (on_delete_callbacks[idx])
+						(*on_delete_callbacks[idx])(*object);
+					on_delete_callbacks[idx] = nullptr;
+
 					marked_for_deletion.erase(idx);
+					object.reset();
 					unoccupied.push(idx);
 				}
 			}
@@ -257,12 +279,34 @@ namespace oly
 	constexpr internal::RefNull REF_NULL;
 
 	template<typename Object>
+	struct WeakReference
+	{
+		using PoolBase = SmartPoolBaseType<Object>;
+
+	private:
+		size_t pool_idx = size_t(-1);
+		Object* object = nullptr;
+
+	public:
+		WeakReference(const SmartReference<Object>& smart_ref);
+
+		SmartReference<Object> lock() const;
+
+	private:
+		static internal::SmartReferencePool<PoolBase>& pool()
+		{
+			return internal::SmartReferencePool<PoolBase>::instance();
+		}
+	};
+
+	template<typename Object>
 	struct SmartReference : private internal::SmartReferenceLink
 	{
 		using PoolBase = SmartPoolBaseType<Object>;
 
 	private:
 		friend class internal::SmartReferencePool<PoolBase>;
+		friend struct WeakReference<Object>;
 
 		static inline bool default_valid = false;
 
@@ -505,6 +549,12 @@ namespace oly
 			return *this;
 		}
 
+		SmartReference<Object>& operator=(std::nullptr_t)
+		{
+			invalidate();
+			return *this;
+		}
+
 		~SmartReference()
 		{
 			invalidate();
@@ -668,17 +718,24 @@ namespace oly
 			else
 				throw Error(ErrorCode::NULL_POINTER);
 		}
-		
-		SmartReference<Object>& operator=(std::nullptr_t)
+
+		void set_on_delete(void(*callback)(Object&))
 		{
-			invalidate();
-			return *this;
+			if (valid())
+				pool().on_delete_callbacks[pool_idx] = callback;
+			else
+				throw Error(ErrorCode::NULL_POINTER);
 		}
 
 		void invalidate()
 		{
 			if (valid())
 				decrement();
+		}
+
+		WeakReference<Object> weak() const
+		{
+			return WeakReference(*this);
 		}
 
 		size_t hash() const
@@ -717,6 +774,25 @@ namespace oly
 		}
 	};
 
+	template<typename Object>
+	WeakReference<Object>::WeakReference(const SmartReference<Object>& smart_ref)
+		: pool_idx(smart_ref.pool_idx)
+	{
+		object = pool().objects[pool_idx].get();
+	}
+
+	template<typename Object>
+	SmartReference<Object> WeakReference<Object>::lock() const
+	{
+		if (internal::SmartReferenceLink* head = pool().reference_heads[pool_idx])
+		{
+			if (pool().objects[pool_idx].get() == object)
+				return *static_cast<SmartReference<Object>*>(head);
+		}
+
+		throw Error(ErrorCode::BAD_REFERENCE);
+	}
+
 	namespace internal
 	{
 		template<typename Object>
@@ -732,6 +808,11 @@ namespace oly
 					SmartReference<Object>::default_ref().invalidate();
 				}
 			}
+
+			for (size_t i = 0; i < on_delete_callbacks.size(); ++i)
+				if (on_delete_callbacks[i])
+					(*on_delete_callbacks[i])(*objects[i]);
+			on_delete_callbacks.clear();
 
 			algo::clear_stack(unoccupied);
 			marked_for_deletion.clear();

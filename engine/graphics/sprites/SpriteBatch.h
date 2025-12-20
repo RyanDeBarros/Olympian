@@ -5,6 +5,7 @@
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/Tags.h"
 #include "graphics/Camera.h"
+#include "graphics/backend/basic/Shader.h"
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
@@ -39,6 +40,7 @@ namespace oly::rendering
 
 			graphics::VertexArray vao;
 			graphics::PersistentEBO<6> ebo;
+			SmartReference<graphics::Shader> shader_ref;
 			GLuint shader;
 
 			struct
