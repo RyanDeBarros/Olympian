@@ -37,8 +37,7 @@ namespace oly
 				return it->second.lock();
 			else
 			{
-				SmartReference<Object> obj;
-				obj.init(ctor());
+				SmartReference<Object> obj(ctor());
 				obj.set_on_delete(&on_ref_delete, this);
 				map.emplace(ctor, obj.weak());
 				lut.emplace(obj.base(), ctor);

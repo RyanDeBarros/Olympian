@@ -10,10 +10,10 @@ struct Particle {
 	float timeElapsed;
 	float lifetime;
 	vec2 position;
-	vec2 velocity;
 	float rotation;
 	vec2 size;
 	vec4 color;
+	vec2 velocity;
 };
 
 layout(std430, binding = 0) buffer ParticlesIn {
@@ -42,13 +42,15 @@ struct EmitterParams {
 	float _pad0[2];
 
 	vec2 position; // TODO v6 use generator
-	vec2 velocity; // TODO v6 use generator
-
 	float rotation; // TODO v6 use generator
 	float _pad1[1];
+
 	vec2 size; // TODO v6 use generator
+	float _pad2[2];
 	
 	vec4 color; // TODO v6 use generator
+
+	vec2 velocity; // TODO v6 use generator
 };
 
 layout(std430, binding = 1) readonly buffer Emitter {
@@ -90,10 +92,10 @@ void main() {
 	p.timeElapsed = 0;
 	p.lifetime = emitter.lifetime;
 	p.position = emitter.position;
-	p.velocity = emitter.velocity;
 	p.rotation = emitter.rotation;
 	p.size = emitter.size;
 	p.color = emitter.color;
+	p.velocity = emitter.velocity;
 
 	particlesIn[index] = p;
 }

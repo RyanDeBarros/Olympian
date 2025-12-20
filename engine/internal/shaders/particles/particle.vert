@@ -6,10 +6,10 @@ struct Particle {
 	float timeElapsed;
 	float lifetime;
 	vec2 position;
-	vec2 velocity;
 	float rotation;
 	vec2 size;
 	vec4 color;
+	vec2 velocity;
 };
 
 layout(std430, binding = 0) readonly buffer ParticlesOut {

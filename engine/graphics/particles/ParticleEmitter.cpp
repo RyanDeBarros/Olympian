@@ -6,42 +6,45 @@
 
 namespace oly::rendering
 {
-	ParticleEmitter::BufferList::ParticleDoubleBuffer::ParticleDoubleBuffer(GLuint max_particles)
+	void ParticleEmitter::on_tick(ParticleSystem& system) const
+	{
+		system.spawn_particles(params, 1); // TODO v6 compute to-spawn debt
+	}
+
+	ParticleSystem::BufferList::ParticleDoubleBuffer::ParticleDoubleBuffer(GLuint max_particles)
 		: a(max_particles * sizeof(Particle), 0), b(max_particles * sizeof(Particle), 0)
 	{
 	}
 
-	void ParticleEmitter::BufferList::ParticleDoubleBuffer::swap() const
+	void ParticleSystem::BufferList::ParticleDoubleBuffer::swap() const
 	{
 		state = !state;
 	}
 
-	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::in() const
+	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::in() const
 	{
 		return state ? a : b;
 	}
 
-	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::in()
+	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::in()
 	{
 		return state ? a : b;
 	}
 
-	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::out() const
+	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::out() const
 	{
 		return state ? b : a;
 	}
 
-	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleEmitter::BufferList::ParticleDoubleBuffer::out()
+	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::out()
 	{
 		return state ? b : a;
 	}
 
-	ParticleEmitter::BufferList::BufferList(const ParticleEmitterParams& params)
-		: particles(params.max_particles), emitter(sizeof(ParticleEmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand ))
+	ParticleSystem::BufferList::BufferList(GLuint particle_capacity)
+		: particles(particle_capacity), emitter(sizeof(EmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand))
 	{
-		emitter.send(0, params);
-
-		draw_command.send(0, DrawArraysIndirectCommand {
+		draw_command.send(0, DrawArraysIndirectCommand{
 			.count = 4,
 			.primCount = 0,
 			.first = 0,
@@ -49,8 +52,31 @@ namespace oly::rendering
 			});
 	}
 
-	ParticleEmitter::ParticleEmitter(const ParticleEmitterParams& params, GLushort compute_threads)
-		: buffers(params), compute_threads(compute_threads), emitter_params(params)
+	ParticleSystem::ParticleSystem(const EmitterParams& ctor, GLuint particle_capacity, GLushort compute_threads)
+		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+	{
+		init();
+		add_emitter(ctor);
+	}
+
+	ParticleSystem::ParticleSystem(const std::vector<EmitterParams>& ctors, GLuint particle_capacity, GLushort compute_threads)
+		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+	{
+		init();
+
+		for (const EmitterParams& ctor : ctors)
+			add_emitter(ctor);
+	}
+
+	ParticleSystem::ParticleSystem(size_t emitter_count, GLuint particle_capacity, GLushort compute_threads)
+		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+	{
+		init();
+		for (size_t _ = 0; _ < emitter_count; ++_)
+			add_emitter();
+	}
+
+	void ParticleSystem::init()
 	{
 		shaders = {
 			.compute_spawn_ref = graphics::internal_shaders::particle_compute_spawn(compute_threads),
@@ -76,15 +102,16 @@ namespace oly::rendering
 		};
 	}
 
-	// TODO v6 on_tick() for engine classes (ParticleEmitter, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager.
-	void ParticleEmitter::on_tick()
+	// TODO v6 on_tick() for engine classes (ParticleSystem, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager. But be careful, since like here on_tick() of data members may be called manually. Define boolean for whether a class should auto-call its on_tick() (at least for those with no-args on_tick()).
+	void ParticleSystem::on_tick()
 	{
-		spawn_particles(1); // TODO v6 compute to-spawn debt
+		for (ParticleEmitter& emitter : emitters)
+			emitter.on_tick(*this);
 
 		time_elapsed += TIME.delta(); // TODO v6 eventually, when on_tick() and draw()/render() are on different threads (although may not be possible here because of compute shader -> could accumulate to-spawn debt on-tick but then dispatch_compute() for spawn compute shader in render()), make sure to distinguish between delta time for tick thread and for draw thread.
 	}
-	
-	void ParticleEmitter::render() const
+
+	void ParticleSystem::render() const
 	{
 		GLuint in_primitive_count = buffers.draw_command.receive(0, &DrawArraysIndirectCommand::primCount);
 		if (in_primitive_count > 0)
@@ -98,11 +125,12 @@ namespace oly::rendering
 		last_render_time = time_elapsed;
 	}
 
-	void ParticleEmitter::spawn_particles(GLuint to_spawn) const
+	void ParticleSystem::spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const
 	{
 		if (to_spawn == 0)
 			return;
 
+		buffers.emitter.send(0, emitter);
 		glUseProgram(shaders.compute_spawn);
 		glUniform1f(shader_locations.compute_spawn.time, time_elapsed);
 		glUniform1ui(shader_locations.compute_spawn.spawn_count, to_spawn);
@@ -113,7 +141,7 @@ namespace oly::rendering
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	void ParticleEmitter::update_particles(GLuint in_primitive_count, float delta_time) const
+	void ParticleSystem::update_particles(GLuint in_primitive_count, float delta_time) const
 	{
 		glUseProgram(shaders.compute_update);
 		glUniform1f(shader_locations.compute_update.delta_time, delta_time);
@@ -125,7 +153,7 @@ namespace oly::rendering
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	void ParticleEmitter::draw_particles() const
+	void ParticleSystem::draw_particles() const
 	{
 		glBindVertexArray(vao);
 		glUseProgram(shaders.renderer);
@@ -138,70 +166,10 @@ namespace oly::rendering
 		// TODO v6 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.
 	}
 
-	void ParticleEmitter::ParamsView::set_max_particles(GLuint max_particles)
+	void ParticleSystem::set_particle_capacity(GLuint capacity)
 	{
-		if (max_particles == emitter.emitter_params.max_particles)
-			return;
-
-		emitter.emitter_params.max_particles = max_particles;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::max_particles, max_particles);
-		
-		// TODO v6 optimize by only resizing if new_max_particles is > old_max_particles, in which case resize to (2 * new_max_particles - old_particles). Also resize if new_max_particles is < 0.5 * old_max_particles.
-		emitter.buffers.particles.in().force_resize(max_particles * sizeof(Particle));
-		emitter.buffers.particles.out().force_resize(max_particles * sizeof(Particle));
-	}
-	
-	void ParticleEmitter::ParamsView::set_lifetime(float lifetime)
-	{
-		if (lifetime == emitter.emitter_params.lifetime)
-			return;
-
-		emitter.emitter_params.lifetime = lifetime;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::lifetime, lifetime);
-	}
-	
-	void ParticleEmitter::ParamsView::set_position(glm::vec2 position)
-	{
-		if (position == emitter.emitter_params.position)
-			return;
-
-		emitter.emitter_params.position = position;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::position, position);
-	}
-	
-	void ParticleEmitter::ParamsView::set_velocity(glm::vec2 velocity)
-	{
-		if (velocity == emitter.emitter_params.velocity)
-			return;
-
-		emitter.emitter_params.velocity = velocity;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::velocity, velocity);
-	}
-	
-	void ParticleEmitter::ParamsView::set_rotation(float rotation)
-	{
-		if (rotation == emitter.emitter_params.rotation)
-			return;
-
-		emitter.emitter_params.rotation = rotation;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::rotation, rotation);
-	}
-	
-	void ParticleEmitter::ParamsView::set_size(glm::vec2 size)
-	{
-		if (size == emitter.emitter_params.size)
-			return;
-
-		emitter.emitter_params.size = size;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::size, size);
-	}
-	
-	void ParticleEmitter::ParamsView::set_color(glm::vec4 color)
-	{
-		if (color == emitter.emitter_params.color)
-			return;
-
-		emitter.emitter_params.color = color;
-		emitter.buffers.emitter.send(0, &ParticleEmitterParams::color, color);
+		buffers.particles.in().force_resize(capacity * sizeof(Particle));
+		buffers.particles.out().force_resize(capacity * sizeof(Particle));
+		particle_capacity = capacity;
 	}
 }

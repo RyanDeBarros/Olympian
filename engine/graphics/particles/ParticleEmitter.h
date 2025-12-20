@@ -8,39 +8,58 @@
 
 namespace oly::rendering
 {
-	struct Particle {
+	struct Particle
+	{
 		float timeElapsed;
 		float lifetime;
 		glm::vec2 position;
-		glm::vec2 velocity;
 		float rotation;
 		glm::vec2 size;
 		glm::vec4 color;
+		glm::vec2 velocity;
 	};
 
 	// TODO v6 allow for editing of these parameters, instead of only passing in constructor? For max particles, will need to make some buffers mutable since they'd be resized.
-	struct alignas(16) ParticleEmitterParams
+	struct alignas(16) EmitterParams
 	{
 		GLuint max_particles = 2000;
 		float lifetime = 3.0f; // TODO v6 use generator
+
 	private:
 		float _pad0[2] = { 0.0f, 0.0f };
+
 	public:
-
 		glm::vec2 position = {}; // TODO v6 use generator
-		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
-
 		float rotation = 0.0f; // TODO v6 use generator
+
 	private:
 		float _pad1[1] = { 0.0f };
+
 	public:
 		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
+		
+	private:
+		float _pad2[2] = { 0.0f, 0.0f };
 
+	public:
 		glm::vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f }; // TODO v6 use generator
+
+		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
 	};
 
-	class ParticleEmitter
+	class ParticleSystem;
+
+	struct ParticleEmitter
 	{
+		EmitterParams params;
+
+		void on_tick(ParticleSystem& system) const;
+	};
+
+	class ParticleSystem
+	{
+		friend class ParticleEmitter;
+
 		graphics::VertexArray vao;
 
 		struct DrawArraysIndirectCommand
@@ -58,7 +77,7 @@ namespace oly::rendering
 				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> a;
 				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> b;
 				mutable bool state = true;
-				
+
 			public:
 				ParticleDoubleBuffer(GLuint max_particles);
 
@@ -72,15 +91,15 @@ namespace oly::rendering
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> emitter;
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> draw_command;
 
-			BufferList(const ParticleEmitterParams& params);
+			BufferList(GLuint particle_capacity);
 		} buffers;
 
 		struct
 		{
-			SmartReference<graphics::Shader> compute_spawn_ref;
+			SmartReference<graphics::Shader> compute_spawn_ref = REF_NULL;
 			GLuint compute_spawn;
 
-			SmartReference<graphics::Shader> compute_update_ref;
+			SmartReference<graphics::Shader> compute_update_ref = REF_NULL;
 			GLuint compute_update;
 
 			GLuint renderer;
@@ -106,78 +125,44 @@ namespace oly::rendering
 			} renderer;
 		} shader_locations;
 
+		std::vector<ParticleEmitter> emitters;
+		GLuint particle_capacity;
 		GLushort compute_threads;
 
 		float time_elapsed = 0.0f;
 		mutable float last_render_time = 0.0f;
 
-		ParticleEmitterParams emitter_params;
-
 	public:
 		Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;
 
-		ParticleEmitter(const ParticleEmitterParams& params, GLushort compute_threads = 64);
-		ParticleEmitter(const ParticleEmitter&) = delete;
-		ParticleEmitter(ParticleEmitter&&) = delete;
+		ParticleSystem(const EmitterParams& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+		ParticleSystem(const std::vector<EmitterParams>& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+		ParticleSystem(const ParticleSystem&) = delete;
+		ParticleSystem(ParticleSystem&&) = delete;
 
+	private:
+		void init();
+
+	public:
 		void on_tick();
 		void render() const;
-		
+
 	private:
-		void spawn_particles(GLuint to_spawn) const;
+		void spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const;
 		void update_particles(GLuint in_primitive_count, float delta_time) const;
 		void draw_particles() const;
 
 	public:
 		float get_time_elapsed() const { return time_elapsed; }
 
-		struct ParamsView
-		{
-		private:
-			ParticleEmitter& emitter;
+		const ParticleEmitter& emitter(size_t i = 0) const { return emitters[i]; }
+		ParticleEmitter& emitter(size_t i = 0) { return emitters[i]; }
+		void add_emitter(const EmitterParams& params = {}) { emitters.emplace_back(params); }
+		void remove_emitter(size_t i) { emitters.erase(emitters.begin() + i); }
 
-			friend class ParticleEmitter;
-			ParamsView(ParticleEmitter& emitter) : emitter(emitter) {}
-
-		public:
-			GLuint get_max_particles() const { return emitter.emitter_params.max_particles; }
-			float get_lifetime() const { return emitter.emitter_params.lifetime; }
-			glm::vec2 get_position() const { return emitter.emitter_params.position; }
-			glm::vec2 get_velocity() const { return emitter.emitter_params.velocity; }
-			float get_rotation() const { return emitter.emitter_params.rotation; }
-			glm::vec2 get_size() const { return emitter.emitter_params.size; }
-			glm::vec4 get_color() const { return emitter.emitter_params.color; }
-
-			void set_max_particles(GLuint max_particles);
-			void set_lifetime(float lifetime);
-			void set_position(glm::vec2 position);
-			void set_velocity(glm::vec2 velocity);
-			void set_rotation(float rotation);
-			void set_size(glm::vec2 size);
-			void set_color(glm::vec4 color);
-		};
-
-		ParamsView params() { return ParamsView(*this); }
-
-		struct ConstParamsView
-		{
-		private:
-			const ParticleEmitter& emitter;
-
-			friend class ParticleEmitter;
-			ConstParamsView(const ParticleEmitter& emitter) : emitter(emitter) {}
-
-		public:
-			GLuint get_max_particles() const { return emitter.emitter_params.max_particles; }
-			float get_lifetime() const { return emitter.emitter_params.lifetime; }
-			glm::vec2 get_position() const { return emitter.emitter_params.position; }
-			glm::vec2 get_velocity() const { return emitter.emitter_params.velocity; }
-			float get_rotation() const { return emitter.emitter_params.rotation; }
-			glm::vec2 get_size() const { return emitter.emitter_params.size; }
-			glm::vec4 get_color() const { return emitter.emitter_params.color; }
-		};
-
-		ConstParamsView params() const { return ConstParamsView(*this); }
+		GLuint get_particle_capacity() const { return particle_capacity; }
+		void set_particle_capacity(GLuint capacity);
 	};
 }

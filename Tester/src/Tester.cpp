@@ -75,10 +75,10 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	oly::CallbackTimer text_jitter_timer;
 
-	oly::rendering::ParticleEmitter particle_emitter;
+	oly::rendering::ParticleSystem particle_system;
 
 	TesterRenderPipeline()
-		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_emitter({})
+		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_system(2)
 	{
 		bkg.bkg_rect->set_batch(polygon_batch);
 
@@ -98,6 +98,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		}
 
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
+
+		particle_system.emitter(1).params.color = { 0.0f, 0.0f, 1.0f, 1.0f };
 
 		glEnable(GL_BLEND);
 
@@ -120,7 +122,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		
 		//pixel_art_text.draw();
 
-		particle_emitter.render();
+		particle_system.render();
 	}
 
 	void logic_update()
@@ -142,8 +144,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
-		particle_emitter.params().set_velocity((glm::vec2)oly::UnitVector2D(particle_emitter.get_time_elapsed()) * 100.0f);
-		particle_emitter.on_tick();
+		particle_system.emitter(0).params.velocity = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
+		particle_system.on_tick();
 	}
 
 	void text_jitter_callback()
