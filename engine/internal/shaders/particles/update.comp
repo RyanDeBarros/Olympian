@@ -8,9 +8,8 @@ uniform uint uInPrimCount;
 struct Particle {
 	float timeElapsed;
 	float lifetime;
-	vec2 position;
-	float rotation;
-	vec2 size;
+	uint attached;
+	mat3 localTransform;
 	vec4 color;
 	vec2 velocity;
 };
@@ -41,7 +40,8 @@ void main() {
 	Particle p = particlesIn[id];
 	p.timeElapsed += uDeltaTime;
 	if (p.timeElapsed < p.lifetime) {
-		p.position += p.velocity * uDeltaTime;
+		vec2 position = p.localTransform[2].xy;
+		p.localTransform[2].xy = position + p.velocity * uDeltaTime;
 
 		uint dst = atomicAdd(cmd.primCount, 1);
 		particlesOut[dst] = p;

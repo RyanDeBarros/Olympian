@@ -6,9 +6,18 @@
 
 namespace oly::rendering
 {
-	void ParticleEmitter::on_tick(ParticleSystem& system) const
+	void ParticleEmitter::on_tick(float delta_time) const
 	{
-		system.spawn_particles(params, 1); // TODO v6 compute to-spawn debt
+		//_spawn_debt += 20.0f * delta_time; // TODO v6 use distribution for spawn rate + emitter loop/period parameters (loop should be enum of LOOP, UNBOUNDED, ONE_SHOT).
+		// TODO v6 works better without delta_time? But if emitter will use distribution, it needs to use delta time. So somehow spawn_debt() is not accounting for delta time or something.
+		_spawn_debt += 0.2f;
+	}
+
+	GLuint ParticleEmitter::spawn_debt() const
+	{
+		GLuint to_spawn = (GLuint)_spawn_debt;
+		_spawn_debt -= to_spawn;
+		return to_spawn;
 	}
 
 	ParticleSystem::BufferList::ParticleDoubleBuffer::ParticleDoubleBuffer(GLuint max_particles)
@@ -89,7 +98,8 @@ namespace oly::rendering
 
 		shader_locations.compute_spawn = {
 			.time = glGetUniformLocation(shaders.compute_spawn, "uTime"),
-			.spawn_count = glGetUniformLocation(shaders.compute_spawn, "uSpawnCount")
+			.spawn_count = glGetUniformLocation(shaders.compute_spawn, "uSpawnCount"),
+			.transform = glGetUniformLocation(shaders.compute_spawn, "uTransform")
 		};
 
 		shader_locations.compute_update = {
@@ -98,21 +108,26 @@ namespace oly::rendering
 		};
 
 		shader_locations.renderer = {
-			.transform = glGetUniformLocation(shaders.renderer, "uTransform"),
+			.projection = glGetUniformLocation(shaders.renderer, "uProjection"),
+			.transform = glGetUniformLocation(shaders.renderer, "uTransform")
 		};
 	}
 
-	// TODO v6 on_tick() for engine classes (ParticleSystem, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager. But be careful, since like here on_tick() of data members may be called manually. Define boolean for whether a class should auto-call its on_tick() (at least for those with no-args on_tick()).
+	// TODO v6 on_tick() for engine classes (ParticleSystem, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager. But be careful, since like here on_tick() of data members may be called manually. Define boolean for whether a class should auto-call its on_tick().
 	void ParticleSystem::on_tick()
 	{
 		for (ParticleEmitter& emitter : emitters)
-			emitter.on_tick(*this);
+			emitter.on_tick(time_elapsed - last_tick_time);
+		last_tick_time = time_elapsed;
 
-		time_elapsed += TIME.delta(); // TODO v6 eventually, when on_tick() and draw()/render() are on different threads (although may not be possible here because of compute shader -> could accumulate to-spawn debt on-tick but then dispatch_compute() for spawn compute shader in render()), make sure to distinguish between delta time for tick thread and for draw thread.
+		time_elapsed += TIME.delta();
 	}
 
 	void ParticleSystem::render() const
 	{
+		for (const ParticleEmitter& emitter : emitters)
+			spawn_particles(emitter.params, emitter.spawn_debt());
+
 		GLuint in_primitive_count = buffers.draw_command.receive(0, &DrawArraysIndirectCommand::primCount);
 		if (in_primitive_count > 0)
 		{
@@ -125,6 +140,7 @@ namespace oly::rendering
 		last_render_time = time_elapsed;
 	}
 
+	// TODO v6 this mixes draw order. Add support to force particle draw order to match emitter order?
 	void ParticleSystem::spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const
 	{
 		if (to_spawn == 0)
@@ -134,6 +150,7 @@ namespace oly::rendering
 		glUseProgram(shaders.compute_spawn);
 		glUniform1f(shader_locations.compute_spawn.time, time_elapsed);
 		glUniform1ui(shader_locations.compute_spawn.spawn_count, to_spawn);
+		glUniformMatrix3fv(shader_locations.compute_spawn.transform, 1, GL_FALSE, glm::value_ptr(transformer.global()));
 		buffers.particles.in().bind_base(0);
 		buffers.emitter.bind_base(1);
 		buffers.draw_command.bind_base(2);
@@ -157,9 +174,8 @@ namespace oly::rendering
 	{
 		glBindVertexArray(vao);
 		glUseProgram(shaders.renderer);
-		// TODO v6 camera invariance
-		// TODO v6 free/solid particles: if emitter is moving, do particles follow (relative motion), or do they continue on their trajectory (independent of emitter motion). Implemented by caching the initial emitter transform in particle data.
-		glUniformMatrix3fv(shader_locations.renderer.transform, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix() * transformer.global()));
+		glUniformMatrix3fv(shader_locations.renderer.projection, 1, GL_FALSE, glm::value_ptr(camera_invariant ? camera->invariant_projection_matrix() : camera->projection_matrix()));
+		glUniformMatrix3fv(shader_locations.renderer.transform, 1, GL_FALSE, glm::value_ptr(transformer.global()));
 		buffers.particles.out().bind_base(0);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffers.draw_command.buffer());
 		glDrawArraysIndirect(GL_TRIANGLE_STRIP, (void*)0);

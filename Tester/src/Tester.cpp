@@ -99,6 +99,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
+		particle_system.emitter(1).params.attached = true;
 		particle_system.emitter(1).params.color = { 0.0f, 0.0f, 1.0f, 1.0f };
 
 		glEnable(GL_BLEND);
@@ -145,6 +146,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
 		particle_system.emitter(0).params.velocity = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
+		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
 		particle_system.on_tick();
 	}
 

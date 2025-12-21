@@ -4,14 +4,14 @@ layout(local_size_x = /*$X_THREADS*/) in;
 
 uniform float uTime;
 uniform uint uSpawnCount;
+uniform mat3 uTransform;
 
 // TODO v6 use template for particle struct for synchronicity across shaders and modularity.
 struct Particle {
 	float timeElapsed;
 	float lifetime;
-	vec2 position;
-	float rotation;
-	vec2 size;
+	uint attached;
+	mat3 localTransform;
 	vec4 color;
 	vec2 velocity;
 };
@@ -39,7 +39,8 @@ struct Generator {
 struct EmitterParams {
 	uint maxParticles;
 	float lifetime; // TODO v6 use generator
-	float _pad0[2];
+	uint attached;
+	float _pad0[1];
 
 	vec2 position; // TODO v6 use generator
 	float rotation; // TODO v6 use generator
@@ -91,9 +92,22 @@ void main() {
 	Particle p;
 	p.timeElapsed = 0;
 	p.lifetime = emitter.lifetime;
-	p.position = emitter.position;
-	p.rotation = emitter.rotation;
-	p.size = emitter.size;
+	p.attached = emitter.attached;
+	
+	vec2 position = emitter.position;
+	float rotation = emitter.rotation;
+	float cos_r = cos(rotation);
+	float sin_r = sin(rotation);
+	vec2 size = emitter.size;
+	p.localTransform = mat3(
+		vec3(size.x * cos_r, size.x * sin_r, 0.0),
+		vec3(-size.y * sin_r, size.y * cos_r, 0.0),
+		vec3(position, 1.0)
+	);
+
+	if (p.attached == uint(0))
+		p.localTransform = uTransform * p.localTransform;
+
 	p.color = emitter.color;
 	p.velocity = emitter.velocity;
 

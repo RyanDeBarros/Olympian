@@ -12,9 +12,8 @@ namespace oly::rendering
 	{
 		float timeElapsed;
 		float lifetime;
-		glm::vec2 position;
-		float rotation;
-		glm::vec2 size;
+		GLuint attached;
+		glm::mat3 localTransform;
 		glm::vec4 color;
 		glm::vec2 velocity;
 	};
@@ -24,9 +23,10 @@ namespace oly::rendering
 	{
 		GLuint max_particles = 2000;
 		float lifetime = 3.0f; // TODO v6 use generator
+		GLuint attached = false;
 
 	private:
-		float _pad0[2] = { 0.0f, 0.0f };
+		float _pad0[1] = { 0.0f };
 
 	public:
 		glm::vec2 position = {}; // TODO v6 use generator
@@ -53,7 +53,16 @@ namespace oly::rendering
 	{
 		EmitterParams params;
 
-		void on_tick(ParticleSystem& system) const;
+	private:
+		mutable float _spawn_debt = 0.0f;
+
+	public:
+		ParticleEmitter(const EmitterParams& params = {}) : params(params) {}
+
+	private:
+		friend class ParticleSystem;
+		void on_tick(float delta_time) const;
+		GLuint spawn_debt() const;
 	};
 
 	class ParticleSystem
@@ -111,6 +120,7 @@ namespace oly::rendering
 			{
 				GLint time;
 				GLint spawn_count;
+				GLint transform;
 			} compute_spawn;
 
 			struct
@@ -121,6 +131,7 @@ namespace oly::rendering
 
 			struct
 			{
+				GLint projection;
 				GLint transform;
 			} renderer;
 		} shader_locations;
@@ -130,10 +141,13 @@ namespace oly::rendering
 		GLushort compute_threads;
 
 		float time_elapsed = 0.0f;
+		mutable float last_tick_time = 0.0f;
 		mutable float last_render_time = 0.0f;
 
 	public:
 		Camera2DRef camera = REF_DEFAULT;
+		bool camera_invariant = false;
+
 		Transformer2D transformer;
 
 		ParticleSystem(const EmitterParams& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);

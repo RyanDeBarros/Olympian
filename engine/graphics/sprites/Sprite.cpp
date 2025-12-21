@@ -9,8 +9,6 @@ namespace oly::rendering
 	void StaticSprite::draw() const
 	{
 		ref.draw_quad();
-		if (ref.is_in_context()) [[likely]]
-			context::internal::set_sprite_batch_rendering(true);
 	}
 
 	void Sprite::draw() const
@@ -18,8 +16,6 @@ namespace oly::rendering
 		if (transformer.flush())
 			ref.set_transform(transformer.global());
 		ref.draw_quad();
-		if (ref.is_in_context()) [[likely]]
-			context::internal::set_sprite_batch_rendering(true);
 	}
 
 	Sprite Sprite::load(TOMLNode node)

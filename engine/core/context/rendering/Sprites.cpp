@@ -20,16 +20,6 @@ namespace oly::context
 		internal::sprite_batch.reset();
 	}
 
-	bool sprite_batch_is_rendering()
-	{
-		return internal::sprite_batch_rendering;
-	}
-
-	void internal::set_sprite_batch_rendering(bool ongoing)
-	{
-		internal::sprite_batch_rendering = ongoing;
-	}
-
 	rendering::SpriteBatch& sprite_batch()
 	{
 		return *internal::sprite_batch;
@@ -38,6 +28,5 @@ namespace oly::context
 	void render_sprites()
 	{
 		(*internal::sprite_batch)->render();
-		internal::set_sprite_batch_rendering(false);
 	}
 }
