@@ -6,7 +6,6 @@ uniform float uTime;
 uniform uint uSpawnCount;
 uniform mat3 uTransform;
 
-// TODO v6 use template for particle struct for synchronicity across shaders and modularity.
 struct Particle {
 	float timeElapsed;
 	float lifetime;
@@ -35,7 +34,6 @@ struct Generator {
 	Sampler sampler;
 };
 
-// TODO v6 use template for emitter struct for synchronicity across shaders and modularity.
 struct EmitterParams {
 	uint maxParticles;
 	float lifetime; // TODO v6 use generator
@@ -58,7 +56,7 @@ layout(std430, binding = 1) readonly buffer Emitter {
 	EmitterParams emitter;
 };
 
-struct DrawArraysIndirectCommand  {
+struct DrawArraysIndirectCommand {
 	uint count;
 	uint primCount;
 	uint first;
@@ -66,7 +64,7 @@ struct DrawArraysIndirectCommand  {
 };
 
 layout(std430, binding = 2) buffer DrawCommand {
-	DrawArraysIndirectCommand  cmd;
+	DrawArraysIndirectCommand cmd;
 };
 
 vec3 random3(uint id, uint seed) {
@@ -107,7 +105,7 @@ void main() {
 
 	if (p.attached == uint(0))
 		p.localTransform = uTransform * p.localTransform;
-
+		
 	p.color = emitter.color;
 	p.velocity = emitter.velocity;
 

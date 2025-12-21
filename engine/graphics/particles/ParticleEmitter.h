@@ -8,17 +8,6 @@
 
 namespace oly::rendering
 {
-	struct Particle
-	{
-		float timeElapsed;
-		float lifetime;
-		GLuint attached;
-		glm::mat3 localTransform;
-		glm::vec4 color;
-		glm::vec2 velocity;
-	};
-
-	// TODO v6 allow for editing of these parameters, instead of only passing in constructor? For max particles, will need to make some buffers mutable since they'd be resized.
 	struct alignas(16) EmitterParams
 	{
 		GLuint max_particles = 2000;
@@ -99,6 +88,7 @@ namespace oly::rendering
 
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> emitter;
 			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> draw_command;
+			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> ps_data;
 
 			BufferList(GLuint particle_capacity);
 		} buffers;
@@ -133,6 +123,7 @@ namespace oly::rendering
 			{
 				GLint projection;
 				GLint transform;
+				GLint reverse_draw_order;
 			} renderer;
 		} shader_locations;
 
@@ -147,6 +138,11 @@ namespace oly::rendering
 	public:
 		Camera2DRef camera = REF_DEFAULT;
 		bool camera_invariant = false;
+		enum class AgeSort
+		{
+			YOUNG_ON_OLD,
+			OLD_ON_YOUNG
+		} age_sort = AgeSort::YOUNG_ON_OLD;
 
 		Transformer2D transformer;
 

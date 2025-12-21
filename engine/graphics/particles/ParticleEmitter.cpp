@@ -6,11 +6,24 @@
 
 namespace oly::rendering
 {
+	struct Particle
+	{
+		float timeElapsed;
+		float lifetime;
+		GLuint attached;
+		glm::mat3 localTransform;
+		glm::vec4 color;
+		glm::vec2 velocity;
+	};
+
+	struct ParticleSystemData
+	{
+		GLuint max_time_elapsed_bits;
+	};
+
 	void ParticleEmitter::on_tick(float delta_time) const
 	{
-		//_spawn_debt += 20.0f * delta_time; // TODO v6 use distribution for spawn rate + emitter loop/period parameters (loop should be enum of LOOP, UNBOUNDED, ONE_SHOT).
-		// TODO v6 works better without delta_time? But if emitter will use distribution, it needs to use delta time. So somehow spawn_debt() is not accounting for delta time or something.
-		_spawn_debt += 0.2f;
+		_spawn_debt += 20.0f * delta_time; // TODO v6 use distribution for spawn rate + emitter loop/period parameters (loop should be enum of LOOP, UNBOUNDED, ONE_SHOT).
 	}
 
 	GLuint ParticleEmitter::spawn_debt() const
@@ -51,13 +64,17 @@ namespace oly::rendering
 	}
 
 	ParticleSystem::BufferList::BufferList(GLuint particle_capacity)
-		: particles(particle_capacity), emitter(sizeof(EmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand))
+		: particles(particle_capacity), emitter(sizeof(EmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand)), ps_data(sizeof(ParticleSystemData))
 	{
 		draw_command.send(0, DrawArraysIndirectCommand{
 			.count = 4,
 			.primCount = 0,
 			.first = 0,
 			.baseVertex = 0,
+			});
+
+		ps_data.send(0, ParticleSystemData{
+			.max_time_elapsed_bits = 0
 			});
 	}
 
@@ -109,7 +126,8 @@ namespace oly::rendering
 
 		shader_locations.renderer = {
 			.projection = glGetUniformLocation(shaders.renderer, "uProjection"),
-			.transform = glGetUniformLocation(shaders.renderer, "uTransform")
+			.transform = glGetUniformLocation(shaders.renderer, "uTransform"),
+			.reverse_draw_order = glGetUniformLocation(shaders.renderer, "uReverseDrawOrder")
 		};
 	}
 
@@ -125,6 +143,7 @@ namespace oly::rendering
 
 	void ParticleSystem::render() const
 	{
+		// TODO v6 batch spawn compute shader calls by sending list of EmitterParams instead of one at a time?
 		for (const ParticleEmitter& emitter : emitters)
 			spawn_particles(emitter.params, emitter.spawn_debt());
 
@@ -133,14 +152,20 @@ namespace oly::rendering
 		{
 			buffers.draw_command.send(0, &DrawArraysIndirectCommand::primCount, GLuint(0));
 			update_particles(in_primitive_count, time_elapsed - last_render_time);
+			// TODO v6 use scope for depth test instead, so it can revert to previous value instead of disabling at end.
+			glEnable(GL_DEPTH_TEST);
+			//glDepthFunc(GL_LEQUAL);
+			//glDepthMask(GL_FALSE);
 			draw_particles();
+			glDisable(GL_DEPTH_TEST);
+			glClear(GL_DEPTH_BUFFER_BIT); // TODO v6 so then don't clear in camera?
 			buffers.particles.swap();
 		}
 
 		last_render_time = time_elapsed;
 	}
 
-	// TODO v6 this mixes draw order. Add support to force particle draw order to match emitter order?
+	// TODO v6 this mixes draw order. Add support to force particle draw order to match emitter order? This would involve using array of particlesIn buffers (1-1 with emitter array) in spawn.comp and then writing to single particlesOut in update.comp
 	void ParticleSystem::spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const
 	{
 		if (to_spawn == 0)
@@ -160,12 +185,14 @@ namespace oly::rendering
 
 	void ParticleSystem::update_particles(GLuint in_primitive_count, float delta_time) const
 	{
+		buffers.ps_data.send(0, &ParticleSystemData::max_time_elapsed_bits, GLuint(0));
 		glUseProgram(shaders.compute_update);
 		glUniform1f(shader_locations.compute_update.delta_time, delta_time);
 		glUniform1ui(shader_locations.compute_update.in_prim_count, in_primitive_count);
 		buffers.particles.in().bind_base(0);
 		buffers.particles.out().bind_base(1);
 		buffers.draw_command.bind_base(2);
+		buffers.ps_data.bind_base(3);
 		graphics::dispatch_compute(in_primitive_count, 1, 1, compute_threads, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
@@ -176,7 +203,10 @@ namespace oly::rendering
 		glUseProgram(shaders.renderer);
 		glUniformMatrix3fv(shader_locations.renderer.projection, 1, GL_FALSE, glm::value_ptr(camera_invariant ? camera->invariant_projection_matrix() : camera->projection_matrix()));
 		glUniformMatrix3fv(shader_locations.renderer.transform, 1, GL_FALSE, glm::value_ptr(transformer.global()));
+		glUniform1ui(shader_locations.renderer.reverse_draw_order, (GLuint)age_sort);
 		buffers.particles.out().bind_base(0);
+		buffers.draw_command.bind_base(1);
+		buffers.ps_data.bind_base(2);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffers.draw_command.buffer());
 		glDrawArraysIndirect(GL_TRIANGLE_STRIP, (void*)0);
 		// TODO v6 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.

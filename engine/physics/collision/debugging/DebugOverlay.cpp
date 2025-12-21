@@ -223,6 +223,7 @@ namespace oly::debug
 	}
 
 	// TODO v8 repaint in separate thread?
+	// TODO v6 Paint white texture and use color as modulation instead of triggering repaint
 	void DebugOverlay::repaint() const
 	{
 		auto sprite_batch = sprite.get_batch();
