@@ -1,7 +1,5 @@
 ﻿#include <Olympian.h>
 
-#include <graphics/particles/ParticleEmitter.h>
-
 #include "ProjectContext.h"
 
 #include "SpriteMatch.h"
@@ -75,7 +73,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 	oly::CallbackTimer text_jitter_timer;
 
-	oly::particles::ParticleSystem particle_system;
+	oly::rendering::ParticleSystem particle_system;
 
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_system(2)
@@ -99,7 +97,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
-		particle_system.age_sort = oly::particles::ParticleSystem::AgeSort::YOUNG_ON_OLD;
+		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YOUNG_ON_OLD;
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color = { 0.0f, 0.0f, 1.0f, 1.0f };
 

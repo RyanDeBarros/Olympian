@@ -25,6 +25,10 @@
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/sprites/SpriteNonant.h"
 
+#include "graphics/particles/ParticleSystem.h"
+#include "graphics/particles/Samplers.h"
+#include "graphics/particles/Domains.h"
+
 #include "graphics/Drawable.h"
 
 #include "physics/collision/debugging/CommonShapes.h"
