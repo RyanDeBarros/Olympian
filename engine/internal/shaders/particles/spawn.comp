@@ -19,37 +19,69 @@ layout(std430, binding = 0) buffer ParticlesIn {
     Particle particlesIn[];
 };
 
-struct Domain {
+struct Sampler {
 	uint type;
+	float _pad[3];
 	float params[8];
 };
 
-struct Sampler {
+struct Domain {
 	uint type;
+	float _pad[3];
 	float params[8];
 };
 
 struct Generator {
-	Domain domain;
 	Sampler sampler;
+	Domain domain;
 };
+
+const uint SAMPLER_UNIFORM = 0;
+
+float sample_(Sampler sampler, float rng) {
+	switch (sampler.type) {
+	case SAMPLER_UNIFORM:
+		return rng;
+	}
+}
+
+const uint DOMAIN_CONSTANT = 0;
+const uint DOMAIN_LINE = 1;
+const uint DOMAIN_BILINE = 2;
+
+float domain_(Domain domain, float sampled) {
+	switch (domain.type) {
+	case DOMAIN_CONSTANT:
+		return domain.params[0];
+	case DOMAIN_LINE:
+		return mix(domain.params[0], domain.params[1], sampled);
+	case DOMAIN_BILINE:
+		if (sampled < 0.5)
+			return mix(domain.params[0], domain.params[1], 2.0 * sampled);
+		else
+			return mix(domain.params[1], domain.params[2], 2.0 * sampled - 1.0);
+	}
+}
+
+float generate(Generator g, float rng) {
+	return domain_(g.domain, sample_(g.sampler, rng));
+}
 
 struct EmitterParams {
 	uint maxParticles;
-	float lifetime; // TODO v6 use generator
 	uint attached;
-	float _pad0[1];
+	float _pad0[2];
+
+	Generator lifetime;
 
 	vec2 position; // TODO v6 use generator
 	float rotation; // TODO v6 use generator
 	float _pad1[1];
 
 	vec2 size; // TODO v6 use generator
-	float _pad2[2];
+	vec2 velocity; // TODO v6 use generator
 	
 	vec4 color; // TODO v6 use generator
-
-	vec2 velocity; // TODO v6 use generator
 };
 
 layout(std430, binding = 1) readonly buffer Emitter {
@@ -80,7 +112,7 @@ void main() {
 
 	uint index = atomicAdd(cmd.primCount, 1);
 	if (index >= emitter.maxParticles) {
-		atomicMin(cmd.primCount, emitter.maxParticles); // TODO v6 this discards new particles that exceed maximum. Could also despawn oldest particles?
+		atomicMin(cmd.primCount, emitter.maxParticles); // TODO v6 this discards new particles that exceed maximum. Could also despawn oldest particles? Could do that by sorting particles by lifetime and replacing the oldest index here, instead of early returning.
 		return;
 	}
 
@@ -89,7 +121,7 @@ void main() {
 
 	Particle p;
 	p.timeElapsed = 0;
-	p.lifetime = emitter.lifetime;
+	p.lifetime = generate(emitter.lifetime, rng.x);
 	p.attached = emitter.attached;
 	
 	vec2 position = emitter.position;

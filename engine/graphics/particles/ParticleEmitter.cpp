@@ -152,20 +152,16 @@ namespace oly::rendering
 		{
 			buffers.draw_command.send(0, &DrawArraysIndirectCommand::primCount, GLuint(0));
 			update_particles(in_primitive_count, time_elapsed - last_render_time);
-			// TODO v6 use scope for depth test instead, so it can revert to previous value instead of disabling at end.
 			glEnable(GL_DEPTH_TEST);
-			//glDepthFunc(GL_LEQUAL);
-			//glDepthMask(GL_FALSE);
+			glClear(GL_DEPTH_BUFFER_BIT);
 			draw_particles();
 			glDisable(GL_DEPTH_TEST);
-			glClear(GL_DEPTH_BUFFER_BIT); // TODO v6 so then don't clear in camera?
 			buffers.particles.swap();
 		}
 
 		last_render_time = time_elapsed;
 	}
 
-	// TODO v6 this mixes draw order. Add support to force particle draw order to match emitter order? This would involve using array of particlesIn buffers (1-1 with emitter array) in spawn.comp and then writing to single particlesOut in update.comp
 	void ParticleSystem::spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const
 	{
 		if (to_spawn == 0)

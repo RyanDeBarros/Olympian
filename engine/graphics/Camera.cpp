@@ -52,7 +52,10 @@ namespace oly::rendering
 	bool Camera2D::consume(const input::WindowResizeEventData&)
 	{
 		if (boxed)
-			glClear(GL_COLOR_BUFFER_BIT); // TODO v8 clear depth buffer too?
+		{
+			glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 		apply_viewport();
 		return false;
 	}
