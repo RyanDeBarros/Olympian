@@ -6,78 +6,214 @@
 #include "core/base/Transforms.h"
 #include "graphics/Camera.h"
 
-namespace oly::rendering
+// TODO v6 separate into different files
+namespace oly::particles
 {
 	// TODO v6 don't expose Sampler/Domain/Generator raw types - use polymorphism which will then convert to raw data. Same for EmitterParams and put EmitterParams in .cpp file?
 
-	struct alignas(16) Sampler
+	namespace internal
 	{
-		enum Type : GLuint
+		struct alignas(16) Sampler
 		{
-			UNIFORM = 0
-		} type = Type::UNIFORM;
+			enum Type : GLuint
+			{
+				UNIFORM = 0
+			} type = Type::UNIFORM;
 
-	private:
-		float _pad[3] = { 0.0f };
+		private:
+			float _pad[3] = { 0.0f };
 
-	public:
-		float params[8] = { 0.0f };
-	};
-	
-	struct alignas(16) Domain
-	{
-		enum Type : GLuint
+		public:
+			float params[8] = { 0.0f };
+		};
+
+		struct alignas(16) Domain
 		{
-			CONSTANT = 0,
-			LINE = 1,
-			BILINE = 2
-		} type = Type::CONSTANT;
+			enum Type : GLuint
+			{
+				CONSTANT = 0,
+				LINE = 1,
+				BILINE = 2
+			} type = Type::CONSTANT;
 
-	private:
-		float _pad[3] = { 0.0f };
+		private:
+			float _pad[3] = { 0.0f };
 
-	public:
-		float params[8] = { 3.0 }; // TODO v6 don't default initialize to this. Instead, EmitterParams.lifetime should use polymorphic class for default value.
+		public:
+			float params[8] = { 0.0 };
+		};
+
+		struct alignas(16) Generator
+		{
+			Sampler sampler = {};
+			Domain domain = {};
+		};
+
+		struct alignas(16) EmitterParams
+		{
+			GLuint max_particles = 2000;
+			GLuint attached = false;
+
+		private:
+			float _pad0[2] = { 0.0f };
+
+		public:
+			Generator lifetime = {};
+
+			glm::vec2 position = {}; // TODO v6 use generator
+			float rotation = 0.0f; // TODO v6 use generator
+
+		private:
+			float _pad1[1] = { 0.0f };
+
+		public:
+			glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
+			glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
+
+			glm::vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f }; // TODO v6 use generator
+		};
+	}
+
+	struct ISampler
+	{
+		virtual internal::Sampler raw() const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler);
 	};
 
-	struct alignas(16) Generator
+	struct UniformSampler : public ISampler
 	{
-		Sampler sampler = {};
-		Domain domain = {};
+		internal::Sampler raw() const override
+		{
+			internal::Sampler sampler;
+			sampler.type = internal::Sampler::UNIFORM;
+			return sampler;
+		}
+
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(UniformSampler);
 	};
 
-	struct alignas(16) EmitterParams
+	struct IDomain
 	{
-		GLuint max_particles = 2000;
-		GLuint attached = false;
+		virtual internal::Domain raw() const = 0;
 
-	private:
-		float _pad0[2] = { 0.0f };
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain);
+	};
 
-	public:
-		Generator lifetime = {};
+	struct ConstantDomain : public IDomain
+	{
+		float c;
 
-		glm::vec2 position = {}; // TODO v6 use generator
-		float rotation = 0.0f; // TODO v6 use generator
-		float _pad1[1] = { 0.0f };
+		ConstantDomain(float c = 0.0f) : c(c) {}
 
-		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
-		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
-		
-		glm::vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f }; // TODO v6 use generator
+		internal::Domain raw() const override
+		{
+			internal::Domain domain;
+			domain.type = internal::Domain::CONSTANT;
+			domain.params[0] = c;
+			return domain;
+		}
+
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain);
+	};
+
+	struct LineDomain : public IDomain
+	{
+		float a;
+		float b;
+
+		LineDomain(float a = 0.0f, float b = 0.0f) : a(a), b(b) {}
+
+		internal::Domain raw() const override
+		{
+			internal::Domain domain;
+			domain.type = internal::Domain::LINE;
+			domain.params[0] = a;
+			domain.params[1] = b;
+			return domain;
+		}
+
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(LineDomain);
+	};
+
+	struct BiLineDomain : public IDomain
+	{
+		float a;
+		float b;
+		float c;
+
+		BiLineDomain(float a = 0.0f, float b = 0.0f, float c = 0.0f) : a(a), b(b), c(c) {}
+
+		internal::Domain raw() const override
+		{
+			internal::Domain domain;
+			domain.type = internal::Domain::BILINE;
+			domain.params[0] = a;
+			domain.params[1] = b;
+			domain.params[2] = c;
+			return domain;
+		}
+
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(BiLineDomain);
+	};
+
+	struct AttributeGenerator
+	{
+		Polymorphic<ISampler> sampler;
+		Polymorphic<IDomain> domain;
+
+		explicit operator internal::Generator() const
+		{
+			return { .sampler = sampler->raw(), .domain = domain->raw() };
+		}
 	};
 
 	class ParticleSystem;
 
 	struct ParticleEmitter
 	{
-		EmitterParams params;
+		GLuint max_particles;
+		GLuint attached;
+
+		AttributeGenerator lifetime;
+
+		glm::vec2 position; // TODO v6 use generator
+		float rotation; // TODO v6 use generator
+
+		glm::vec2 size; // TODO v6 use generator
+		glm::vec2 velocity; // TODO v6 use generator
+
+		glm::vec4 color; // TODO v6 use generator
 
 	private:
 		mutable float _spawn_debt = 0.0f;
 
 	public:
-		ParticleEmitter(const EmitterParams& params = {}) : params(params) {}
+		ParticleEmitter()
+			: max_particles(2000),
+			attached(false),
+			lifetime({ .sampler = make_polymorphic<UniformSampler>(), .domain = make_polymorphic<ConstantDomain>(3.0f) }),
+			position({}),
+			rotation(0.0f),
+			size({ 10.0f, 10.0f }),
+			velocity({ 10.0f, 0.0f }),
+			color({ 1.0f, 0.0f, 0.0f, 1.0f })
+		{
+		}
+
+		explicit operator internal::EmitterParams() const
+		{
+			internal::EmitterParams params;
+			params.max_particles = max_particles;
+			params.attached = attached;
+			params.lifetime = (internal::Generator)lifetime;
+			params.position = position;
+			params.rotation = rotation;
+			params.size = size;
+			params.velocity = velocity;
+			params.color = color;
+			return params;
+		}
 
 	private:
 		friend class ParticleSystem;
@@ -167,7 +303,7 @@ namespace oly::rendering
 		mutable float last_render_time = 0.0f;
 
 	public:
-		Camera2DRef camera = REF_DEFAULT;
+		rendering::Camera2DRef camera = REF_DEFAULT;
 		bool camera_invariant = false;
 		enum class AgeSort
 		{
@@ -177,8 +313,8 @@ namespace oly::rendering
 
 		Transformer2D transformer;
 
-		ParticleSystem(const EmitterParams& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
-		ParticleSystem(const std::vector<EmitterParams>& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+		ParticleSystem(ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+		ParticleSystem(std::vector<ParticleEmitter>&& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(const ParticleSystem&) = delete;
 		ParticleSystem(ParticleSystem&&) = delete;
@@ -191,7 +327,7 @@ namespace oly::rendering
 		void render() const;
 
 	private:
-		void spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const;
+		void spawn_particles(const ParticleEmitter& emitter) const;
 		void update_particles(GLuint in_primitive_count, float delta_time) const;
 		void draw_particles() const;
 
@@ -200,7 +336,7 @@ namespace oly::rendering
 
 		const ParticleEmitter& emitter(size_t i = 0) const { return emitters[i]; }
 		ParticleEmitter& emitter(size_t i = 0) { return emitters[i]; }
-		void add_emitter(const EmitterParams& params = {}) { emitters.emplace_back(params); }
+		void add_emitter(ParticleEmitter&& emitter = {}) { emitters.push_back(std::move(emitter)); }
 		void remove_emitter(size_t i) { emitters.erase(emitters.begin() + i); }
 
 		GLuint get_particle_capacity() const { return particle_capacity; }

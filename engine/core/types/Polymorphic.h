@@ -155,6 +155,12 @@ namespace oly
 			return _raw;
 		}
 	};
+
+	template<typename T, typename... Args>
+	inline Polymorphic<T> make_polymorphic(Args... args)
+	{
+		return Polymorphic(new T(std::forward<Args>(args)...));
+	}
 }
 
 #define OLY_POLYMORPHIC_CLONE_DEFINITION(Base)\
@@ -167,6 +173,11 @@ namespace oly
 		{\
 			return new Base(std::move(*this)); \
 		}
+
+#define OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(Base)\
+	public:\
+		virtual Base* clone_new() const& = 0; \
+		virtual Base* clone_new() && = 0;
 
 #define OLY_POLYMORPHIC_CLONE_OVERRIDE(Derived)\
 	public:\

@@ -4,7 +4,7 @@
 #include "graphics/backend/basic/Shader.h"
 #include "core/util/Time.h"
 
-namespace oly::rendering
+namespace oly::particles
 {
 	struct Particle
 	{
@@ -64,7 +64,7 @@ namespace oly::rendering
 	}
 
 	ParticleSystem::BufferList::BufferList(GLuint particle_capacity)
-		: particles(particle_capacity), emitter(sizeof(EmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand)), ps_data(sizeof(ParticleSystemData))
+		: particles(particle_capacity), emitter(sizeof(internal::EmitterParams)), draw_command(sizeof(DrawArraysIndirectCommand)), ps_data(sizeof(ParticleSystemData))
 	{
 		draw_command.send(0, DrawArraysIndirectCommand{
 			.count = 4,
@@ -78,20 +78,17 @@ namespace oly::rendering
 			});
 	}
 
-	ParticleSystem::ParticleSystem(const EmitterParams& ctor, GLuint particle_capacity, GLushort compute_threads)
+	ParticleSystem::ParticleSystem(ParticleEmitter&& emitter, GLuint particle_capacity, GLushort compute_threads)
 		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
 	{
 		init();
-		add_emitter(ctor);
+		add_emitter(std::move(emitter));
 	}
 
-	ParticleSystem::ParticleSystem(const std::vector<EmitterParams>& ctors, GLuint particle_capacity, GLushort compute_threads)
-		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+	ParticleSystem::ParticleSystem(std::vector<ParticleEmitter>&& emitters, GLuint particle_capacity, GLushort compute_threads)
+		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads), emitters(std::move(emitters))
 	{
 		init();
-
-		for (const EmitterParams& ctor : ctors)
-			add_emitter(ctor);
 	}
 
 	ParticleSystem::ParticleSystem(size_t emitter_count, GLuint particle_capacity, GLushort compute_threads)
@@ -145,7 +142,7 @@ namespace oly::rendering
 	{
 		// TODO v6 batch spawn compute shader calls by sending list of EmitterParams instead of one at a time?
 		for (const ParticleEmitter& emitter : emitters)
-			spawn_particles(emitter.params, emitter.spawn_debt());
+			spawn_particles(emitter);
 
 		GLuint in_primitive_count = buffers.draw_command.receive(0, &DrawArraysIndirectCommand::primCount);
 		if (in_primitive_count > 0)
@@ -162,12 +159,13 @@ namespace oly::rendering
 		last_render_time = time_elapsed;
 	}
 
-	void ParticleSystem::spawn_particles(const EmitterParams& emitter, GLuint to_spawn) const
+	void ParticleSystem::spawn_particles(const ParticleEmitter& emitter) const
 	{
+		GLuint to_spawn = emitter.spawn_debt();
 		if (to_spawn == 0)
 			return;
 
-		buffers.emitter.send(0, emitter);
+		buffers.emitter.send(0, (internal::EmitterParams)emitter);
 		glUseProgram(shaders.compute_spawn);
 		glUniform1f(shader_locations.compute_spawn.time, time_elapsed);
 		glUniform1ui(shader_locations.compute_spawn.spawn_count, to_spawn);
