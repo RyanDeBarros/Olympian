@@ -99,7 +99,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YOUNG_ON_OLD;
 		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color = { 0.0f, 0.0f, 1.0f, 1.0f };
+		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = {0.0f, 0.0f, 1.0f, 1.0f};
 
 		glEnable(GL_BLEND);
 
@@ -144,8 +144,12 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
-		particle_system.emitter(0).velocity = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
-		particle_system.emitter(0).color = { 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f) + 1), 0.0f, 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f + 1.0f) + 1), 1.0f };
+		*particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>() = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
+		if (auto* d = particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>())
+		{
+			d->c.r = 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f) + 1.0f);
+			d->c.b = 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f + 1.0f) + 1.0f);
+		}
 		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
 		particle_system.on_tick();
 	}

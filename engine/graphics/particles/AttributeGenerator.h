@@ -9,6 +9,15 @@ namespace oly::particles
 		struct Sampler1D;
 		struct Domain1D;
 		struct Generator1D;
+		struct Sampler2D;
+		struct Domain2D;
+		struct Generator2D;
+		struct Sampler3D;
+		struct Domain3D;
+		struct Generator3D;
+		struct Sampler4D;
+		struct Domain4D;
+		struct Generator4D;
 	}
 
 	struct ISampler1D
@@ -31,5 +40,71 @@ namespace oly::particles
 		Polymorphic<IDomain1D> domain;
 
 		void apply(internal::Generator1D& generator) const;
+	};
+
+	struct ISampler2D
+	{
+		virtual void apply(internal::Sampler2D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler2D);
+	};
+
+	struct IDomain2D
+	{
+		virtual void apply(internal::Domain2D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain2D);
+	};
+
+	struct AttributeGenerator2D
+	{
+		Polymorphic<ISampler2D> sampler;
+		Polymorphic<IDomain2D> domain;
+
+		void apply(internal::Generator2D& generator) const;
+	};
+
+	struct ISampler3D
+	{
+		virtual void apply(internal::Sampler3D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler3D);
+	};
+
+	struct IDomain3D
+	{
+		virtual void apply(internal::Domain3D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain3D);
+	};
+
+	struct AttributeGenerator3D
+	{
+		Polymorphic<ISampler3D> sampler;
+		Polymorphic<IDomain3D> domain;
+
+		void apply(internal::Generator3D& generator) const;
+	};
+
+	struct ISampler4D
+	{
+		virtual void apply(internal::Sampler4D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler4D);
+	};
+
+	struct IDomain4D
+	{
+		virtual void apply(internal::Domain4D&) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain4D);
+	};
+
+	struct AttributeGenerator4D
+	{
+		Polymorphic<ISampler4D> sampler;
+		Polymorphic<IDomain4D> domain;
+
+		void apply(internal::Generator4D& generator) const;
 	};
 }

@@ -10,11 +10,11 @@ namespace oly::particles
 		: max_particles(2000),
 		attached(false),
 		lifetime({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(3.0f) }),
-		position({}),
+		position({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{}) }),
 		rotation({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(0.0f) }),
-		size({ 10.0f, 10.0f }),
-		velocity({ 10.0f, 0.0f }),
-		color({ 1.0f, 0.0f, 0.0f, 1.0f })
+		size({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 10.0f }) }),
+		velocity({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 0.0f }) }),
+		color({ .sampler = make_polymorphic<UniformSampler4D>(), .domain = make_polymorphic<ConstantDomain4D>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }) })
 	{
 	}
 
@@ -23,11 +23,11 @@ namespace oly::particles
 		params.max_particles = max_particles;
 		params.attached = attached;
 		lifetime.apply(params.lifetime);
-		params.position = position;
+		position.apply(params.position);
 		rotation.apply(params.rotation);
-		params.size = size;
-		params.velocity = velocity;
-		params.color = color;
+		size.apply(params.size);
+		velocity.apply(params.velocity);
+		color.apply(params.color);
 	}
 
 	void ParticleEmitter::on_tick(float delta_time) const

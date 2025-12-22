@@ -25,4 +25,19 @@ namespace oly::particles
 			break;
 		}
 	}
+
+	void UniformSampler2D::apply(internal::Sampler2D& sampler) const
+	{
+		sampler.type = internal::Sampler2D::UNIFORM;
+	}
+
+	void UniformSampler3D::apply(internal::Sampler3D& sampler) const
+	{
+		sampler.type = internal::Sampler3D::UNIFORM;
+	}
+
+	void UniformSampler4D::apply(internal::Sampler4D& sampler) const
+	{
+		sampler.type = internal::Sampler4D::UNIFORM;
+	}
 }

@@ -40,7 +40,7 @@ namespace oly::particles::internal
 			BILINE = 2
 		} type = Type::CONSTANT;
 
-		float params[4] = { 0.0 };
+		float params[3] = { 0.0 };
 	};
 
 	struct alignas(16) Generator1D
@@ -49,28 +49,98 @@ namespace oly::particles::internal
 		Domain1D domain = {};
 	};
 
+	struct alignas(16) Sampler2D
+	{
+		enum Type : GLuint
+		{
+			UNIFORM = 0
+		} type = Type::UNIFORM;
+
+		float params[2] = { 0.0f };
+	};
+
+	struct alignas(16) Domain2D
+	{
+		enum Type : GLuint
+		{
+			CONSTANT = 0
+		} type = Type::CONSTANT;
+
+		float params[6] = { 0.0 };
+	};
+
+	struct alignas(16) Generator2D
+	{
+		Sampler2D sampler = {};
+		Domain2D domain = {};
+	};
+
+	struct alignas(16) Sampler3D
+	{
+		enum Type : GLuint
+		{
+			UNIFORM = 0
+		} type = Type::UNIFORM;
+
+		float params[3] = { 0.0f };
+	};
+
+	struct alignas(16) Domain3D
+	{
+		enum Type : GLuint
+		{
+			CONSTANT = 0
+		} type = Type::CONSTANT;
+
+		float params[9] = { 0.0 };
+	};
+
+	struct alignas(16) Generator3D
+	{
+		Sampler3D sampler = {};
+		Domain3D domain = {};
+	};
+
+	struct alignas(16) Sampler4D
+	{
+		enum Type : GLuint
+		{
+			UNIFORM = 0
+		} type = Type::UNIFORM;
+
+		float params[4] = { 0.0f };
+	};
+
+	struct alignas(16) Domain4D
+	{
+		enum Type : GLuint
+		{
+			CONSTANT = 0
+		} type = Type::CONSTANT;
+
+		float params[12] = { 0.0 };
+	};
+
+	struct alignas(16) Generator4D
+	{
+		Sampler4D sampler = {};
+		Domain4D domain = {};
+	};
+
 	struct alignas(16) EmitterParams
 	{
 		GLuint max_particles = 2000;
 		GLuint attached = false;
 
 	private:
-		float _pad0[2] = { 0.0f };
+		float _pad[2] = { 0.0f };
 
 	public:
 		Generator1D lifetime = {};
-
-		glm::vec2 position = {}; // TODO v6 use generator
-
-	private:
-		float _pad1[2] = { 0.0f };
-
-	public:
+		Generator2D position = {};
 		Generator1D rotation = {};
-
-		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
-		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
-
-		glm::vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f }; // TODO v6 use generator
+		Generator2D size = {};
+		Generator2D velocity = {};
+		Generator4D color = {};
 	};
 }

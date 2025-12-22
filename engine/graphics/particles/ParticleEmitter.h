@@ -18,14 +18,11 @@ namespace oly::particles
 		GLuint attached;
 
 		AttributeGenerator1D lifetime;
-
-		glm::vec2 position; // TODO v6 use generator
+		AttributeGenerator2D position;
 		AttributeGenerator1D rotation;
-
-		glm::vec2 size; // TODO v6 use generator
-		glm::vec2 velocity; // TODO v6 use generator
-
-		glm::vec4 color; // TODO v6 use generator
+		AttributeGenerator2D size;
+		AttributeGenerator2D velocity;
+		AttributeGenerator4D color;
 
 	private:
 		mutable float _spawn_debt = 0.0f;
