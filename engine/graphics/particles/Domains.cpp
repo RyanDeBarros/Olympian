@@ -4,22 +4,22 @@
 
 namespace oly::particles
 {
-	void ConstantDomain::apply(internal::Domain& domain) const
+	void ConstantDomain1D::apply(internal::Domain1D& domain) const
 	{
-		domain.type = internal::Domain::CONSTANT;
+		domain.type = internal::Domain1D::CONSTANT;
 		domain.params[0] = c;
 	}
 
-	void LineDomain::apply(internal::Domain& domain) const
+	void LineDomain1D::apply(internal::Domain1D& domain) const
 	{
-		domain.type = internal::Domain::LINE;
+		domain.type = internal::Domain1D::LINE;
 		domain.params[0] = a;
 		domain.params[1] = b;
 	}
 
-	void BiLineDomain::apply(internal::Domain& domain) const
+	void BiLineDomain1D::apply(internal::Domain1D& domain) const
 	{
-		domain.type = internal::Domain::BILINE;
+		domain.type = internal::Domain1D::BILINE;
 		domain.params[0] = a;
 		domain.params[1] = b;
 		domain.params[2] = c;

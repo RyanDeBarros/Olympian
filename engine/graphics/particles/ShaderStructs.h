@@ -20,21 +20,18 @@ namespace oly::particles::internal
 		GLuint max_time_elapsed_bits;
 	};
 
-	struct alignas(16) Sampler
+	struct alignas(16) Sampler1D
 	{
 		enum Type : GLuint
 		{
-			UNIFORM = 0
+			UNIFORM = 0,
+			TILTED = 1
 		} type = Type::UNIFORM;
 
-	private:
-		float _pad[3] = { 0.0f };
-
-	public:
-		float params[8] = { 0.0f };
+		float params[1] = { 0.0f };
 	};
 
-	struct alignas(16) Domain
+	struct alignas(16) Domain1D
 	{
 		enum Type : GLuint
 		{
@@ -43,17 +40,13 @@ namespace oly::particles::internal
 			BILINE = 2
 		} type = Type::CONSTANT;
 
-	private:
-		float _pad[3] = { 0.0f };
-
-	public:
-		float params[8] = { 0.0 };
+		float params[4] = { 0.0 };
 	};
 
-	struct alignas(16) Generator
+	struct alignas(16) Generator1D
 	{
-		Sampler sampler = {};
-		Domain domain = {};
+		Sampler1D sampler = {};
+		Domain1D domain = {};
 	};
 
 	struct alignas(16) EmitterParams
@@ -65,15 +58,16 @@ namespace oly::particles::internal
 		float _pad0[2] = { 0.0f };
 
 	public:
-		Generator lifetime = {};
+		Generator1D lifetime = {};
 
 		glm::vec2 position = {}; // TODO v6 use generator
-		float rotation = 0.0f; // TODO v6 use generator
 
 	private:
-		float _pad1[1] = { 0.0f };
+		float _pad1[2] = { 0.0f };
 
 	public:
+		Generator1D rotation = {};
+
 		glm::vec2 size = { 10.0f, 10.0f }; // TODO v6 use generator
 		glm::vec2 velocity = { 10.0f, 0.0f }; // TODO v6 use generator
 

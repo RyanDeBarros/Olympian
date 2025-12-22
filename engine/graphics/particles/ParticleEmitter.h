@@ -17,10 +17,10 @@ namespace oly::particles
 		GLuint max_particles;
 		GLuint attached;
 
-		AttributeGenerator lifetime;
+		AttributeGenerator1D lifetime;
 
 		glm::vec2 position; // TODO v6 use generator
-		float rotation; // TODO v6 use generator
+		AttributeGenerator1D rotation;
 
 		glm::vec2 size; // TODO v6 use generator
 		glm::vec2 velocity; // TODO v6 use generator

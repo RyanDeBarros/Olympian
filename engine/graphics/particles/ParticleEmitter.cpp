@@ -9,9 +9,9 @@ namespace oly::particles
 	ParticleEmitter::ParticleEmitter()
 		: max_particles(2000),
 		attached(false),
-		lifetime({ .sampler = make_polymorphic<UniformSampler>(), .domain = make_polymorphic<ConstantDomain>(3.0f) }),
+		lifetime({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(3.0f) }),
 		position({}),
-		rotation(0.0f),
+		rotation({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(0.0f) }),
 		size({ 10.0f, 10.0f }),
 		velocity({ 10.0f, 0.0f }),
 		color({ 1.0f, 0.0f, 0.0f, 1.0f })
@@ -24,7 +24,7 @@ namespace oly::particles
 		params.attached = attached;
 		lifetime.apply(params.lifetime);
 		params.position = position;
-		params.rotation = rotation;
+		rotation.apply(params.rotation);
 		params.size = size;
 		params.velocity = velocity;
 		params.color = color;

@@ -19,29 +19,37 @@ layout(std430, binding = 0) buffer ParticlesIn {
     Particle particlesIn[];
 };
 
-struct Sampler {
+struct Sampler1D {
 	uint type;
-	float _pad[3];
-	float params[8];
+	float params[1];
+	float _pad[2];
 };
 
-struct Domain {
+struct Domain1D {
 	uint type;
+	float params[4];
 	float _pad[3];
-	float params[8];
 };
 
-struct Generator {
-	Sampler sampler;
-	Domain domain;
+struct Generator1D {
+	Sampler1D sampler;
+	Domain1D domain;
 };
 
 const uint SAMPLER_UNIFORM = 0;
+const uint SAMPLER_TILTED = 1;
 
-float sample_(Sampler sampler, float rng) {
+float sample_(Sampler1D sampler, float rng) {
 	switch (sampler.type) {
 	case SAMPLER_UNIFORM:
 		return rng;
+	case SAMPLER_TILTED: // TODO v6 mkdocs for all these math formulas
+		if (sampler.params[0] > 0)
+			return (sampler.params[0] + 1) * rng / (sampler.params[0] + rng);
+		else if (sampler.params[0] < 0)
+			return -sampler.params[0] * rng / (-sampler.params[0] + 1 - rng);
+		else
+			return rng;
 	}
 }
 
@@ -49,7 +57,7 @@ const uint DOMAIN_CONSTANT = 0;
 const uint DOMAIN_LINE = 1;
 const uint DOMAIN_BILINE = 2;
 
-float domain_(Domain domain, float sampled) {
+float domain_(Domain1D domain, float sampled) {
 	switch (domain.type) {
 	case DOMAIN_CONSTANT:
 		return domain.params[0];
@@ -63,7 +71,7 @@ float domain_(Domain domain, float sampled) {
 	}
 }
 
-float generate(Generator g, float rng) {
+float generate(Generator1D g, float rng) {
 	return domain_(g.domain, sample_(g.sampler, rng));
 }
 
@@ -72,11 +80,12 @@ struct EmitterParams {
 	uint attached;
 	float _pad0[2];
 
-	Generator lifetime;
+	Generator1D lifetime;
 
 	vec2 position; // TODO v6 use generator
-	float rotation; // TODO v6 use generator
-	float _pad1[1];
+	float _pad1[2];
+
+	Generator1D rotation;
 
 	vec2 size; // TODO v6 use generator
 	vec2 velocity; // TODO v6 use generator
@@ -125,7 +134,7 @@ void main() {
 	p.attached = emitter.attached;
 	
 	vec2 position = emitter.position;
-	float rotation = emitter.rotation;
+	float rotation = generate(emitter.rotation, rng.x);
 	float cos_r = cos(rotation);
 	float sin_r = sin(rotation);
 	vec2 size = emitter.size;
