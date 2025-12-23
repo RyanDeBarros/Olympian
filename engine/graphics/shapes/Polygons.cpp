@@ -34,7 +34,7 @@ namespace oly::rendering
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
 		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
+		transform_ssbo.buf.bind_ssbo_base(0);
 		ebo.render_elements(GL_TRIANGLES);
 		vbo_block.post_draw_all();
 		transform_ssbo.post_draw();

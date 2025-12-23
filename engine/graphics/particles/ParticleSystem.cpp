@@ -7,6 +7,13 @@
 
 namespace oly::rendering
 {
+	void internal::ParticleSystemManager::on_tick()
+	{
+		for (ParticleSystem* system : systems)
+			if (system->auto_tick) [[likely]]
+				system->on_tick();
+	}
+
 	ParticleSystem::BufferList::ParticleDoubleBuffer::ParticleDoubleBuffer(GLuint max_particles)
 		: a(max_particles * sizeof(particles::internal::Particle), 0), b(max_particles * sizeof(particles::internal::Particle), 0)
 	{
@@ -56,22 +63,30 @@ namespace oly::rendering
 	ParticleSystem::ParticleSystem(particles::ParticleEmitter&& emitter, GLuint particle_capacity, GLushort compute_threads)
 		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
 	{
+		internal::ParticleSystemManager::instance().systems.insert(this);
+		emitters.push_back(std::move(emitter));
 		init();
-		add_emitter(std::move(emitter));
 	}
 
 	ParticleSystem::ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity, GLushort compute_threads)
 		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads), emitters(std::move(emitters))
 	{
+		internal::ParticleSystemManager::instance().systems.insert(this);
 		init();
 	}
 
 	ParticleSystem::ParticleSystem(size_t emitter_count, GLuint particle_capacity, GLushort compute_threads)
 		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
 	{
+		internal::ParticleSystemManager::instance().systems.insert(this);
 		init();
 		for (size_t _ = 0; _ < emitter_count; ++_)
-			add_emitter();
+			emitters.push_back({});
+	}
+
+	ParticleSystem::~ParticleSystem()
+	{
+		internal::ParticleSystemManager::instance().systems.erase(this);
 	}
 
 	void ParticleSystem::init()
@@ -103,7 +118,6 @@ namespace oly::rendering
 		};
 	}
 
-	// TODO v6 on_tick() for engine classes (ParticleSystem, SpriteAtlas, etc.) should be called internally in frame(). Use a registry system for this, similar to RigidBodyManager. But be careful, since like here on_tick() of data members may be called manually. Define boolean for whether a class should auto-call its on_tick().
 	void ParticleSystem::on_tick()
 	{
 		for (particles::ParticleEmitter& emitter : emitters)
@@ -115,7 +129,6 @@ namespace oly::rendering
 
 	void ParticleSystem::render() const
 	{
-		// TODO v6 batch spawn compute shader calls by sending list of EmitterParams instead of one at a time?
 		for (const particles::ParticleEmitter& emitter : emitters)
 			spawn_particles(emitter);
 
@@ -181,6 +194,16 @@ namespace oly::rendering
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffers.draw_command.buffer());
 		glDrawArraysIndirect(GL_TRIANGLE_STRIP, (void*)0);
 		// TODO v6 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.
+	}
+
+	void ParticleSystem::add_emitter(particles::ParticleEmitter&& emitter)
+	{
+		emitters.push_back(std::move(emitter));
+	}
+
+	void ParticleSystem::remove_emitter(size_t i)
+	{
+		emitters.erase(emitters.begin() + i);
 	}
 
 	void ParticleSystem::set_particle_capacity(GLuint capacity)

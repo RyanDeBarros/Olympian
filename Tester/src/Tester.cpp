@@ -136,7 +136,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta();
 		flag_tesselation_parent.flush();
 
-		jumble.on_tick();
+		if (fmod(oly::TIME.now(), 1.0f) < 0.5f)
+			jumble.grass_tilemap.set_z_layer(1);
+		else
+			jumble.grass_tilemap.set_z_layer(-1);
+
 		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
 
 		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
@@ -151,7 +155,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 			d->c.b = 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f + 1.0f) + 1.0f);
 		}
 		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
-		particle_system.on_tick();
 	}
 
 	void text_jitter_callback()

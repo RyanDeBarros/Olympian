@@ -45,13 +45,3 @@ Jumble::Jumble()
 	nonant_panel.attach(this);
 	smol_text.attach(this);
 }
-
-void Jumble::on_tick()
-{
-	atlased_knight.ref->on_tick();
-
-	if (fmod(oly::TIME.now(), 1.0f) < 0.5f)
-		grass_tilemap.set_z_layer(1);
-	else
-		grass_tilemap.set_z_layer(-1);
-}

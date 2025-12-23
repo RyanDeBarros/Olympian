@@ -147,6 +147,9 @@ namespace oly::graphics
 			_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
 			throw Error(ErrorCode::OUT_OF_TIME);
 		}
+
+		void bind_ssbo_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf); }
+		void bind_ubo_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf); }
 	};
 
 	template<typename... Structs>
@@ -361,6 +364,13 @@ namespace oly::graphics
 				) : 0
 				), ...);
 		}
+
+	public:
+		template<size_t n>
+		void bind_ssbo_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf[n]); }
+		
+		template<size_t n>
+		void bind_ubo_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf[n]); }
 	};
 
 	template<typename Struct, internal::PersistentOptions options = internal::PersistentOptions{} >

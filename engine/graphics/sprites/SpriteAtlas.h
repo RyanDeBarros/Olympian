@@ -2,18 +2,57 @@
 
 #include "graphics/sprites/Sprite.h"
 
+#include <unordered_set>
+
 namespace oly::rendering
 {
+	struct SpriteAtlas;
+
+	namespace internal
+	{
+		class SpriteAtlasManager
+		{
+			friend struct SpriteAtlas;
+			std::unordered_set<SpriteAtlas*> atlases;
+
+			SpriteAtlasManager() = default;
+			SpriteAtlasManager(const SpriteAtlasManager&) = delete;
+			SpriteAtlasManager(SpriteAtlasManager&&) noexcept = delete;
+
+		public:
+			static SpriteAtlasManager& instance()
+			{
+				static SpriteAtlasManager manager;
+				return manager;
+			}
+
+			void clear()
+			{
+				atlases.clear();
+			}
+
+			void on_tick();
+		};
+	}
+
 	struct SpriteAtlas
 	{
 		Sprite sprite;
 		std::vector<math::UVRect> atlas;
 		graphics::AnimFrameFormat anim_format;
+		bool auto_tick = true;
+		
+	private:
+		mutable GLuint current_frame = -1;
 
-		SpriteAtlas() = default;
+	public:
+		SpriteAtlas();
 		SpriteAtlas(Unbatched);
 		SpriteAtlas(SpriteBatch& batch);
 		SpriteAtlas(Sprite&& sprite);
+		SpriteAtlas(const SpriteAtlas&);
+		SpriteAtlas(SpriteAtlas&&) noexcept;
+		~SpriteAtlas();
 
 		void draw() const;
 		void on_tick() const;
@@ -24,7 +63,6 @@ namespace oly::rendering
 
 	private:
 		void select(GLuint frame) const;
-		mutable GLuint current_frame = -1;
 
 	public:
 		static SpriteAtlas load(TOMLNode node);

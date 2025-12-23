@@ -220,7 +220,7 @@ void main() {
 
 	uint index = atomicAdd(cmd.primCount, 1);
 	if (index >= emitter.maxParticles) {
-		atomicMin(cmd.primCount, emitter.maxParticles); // TODO v6 this discards new particles that exceed maximum. Could also despawn oldest particles? Could do that by sorting particles by lifetime and replacing the oldest index here, instead of early returning.
+		atomicMin(cmd.primCount, emitter.maxParticles);
 		return;
 	}
 

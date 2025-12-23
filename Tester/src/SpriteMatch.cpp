@@ -15,7 +15,3 @@ SpriteMatch::SpriteMatch()
 	sprite0.attach(this);
 	sprite2.attach(this);
 }
-
-void SpriteMatch::on_tick()
-{
-}

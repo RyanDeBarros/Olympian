@@ -61,8 +61,8 @@ namespace oly::rendering
 		glUniform1f(shader_locations.time, TIME.now<>());
 
 		tex_data_ssbo.bind_base(0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, quad_ssbo_block.buf.get_buffer<INFO>());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, quad_ssbo_block.buf.get_buffer<TRANSFORM>());
+		quad_ssbo_block.buf.bind_ssbo_base<INFO>(1);
+		quad_ssbo_block.buf.bind_ssbo_base<TRANSFORM>(2);
 		tex_coords_ssbo.bind_base(3);
 		ubo.modulation.bind_base(0);
 		ubo.anim.bind_base(1);

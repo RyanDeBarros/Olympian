@@ -18,6 +18,8 @@
 #include "core/util/Timers.h"
 #include "core/util/Loader.h"
 
+#include "graphics/sprites/SpriteAtlas.h"
+#include "graphics/particles/ParticleSystem.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::context
@@ -121,6 +123,8 @@ namespace oly::context
 		internal::terminate_collision();
 
 		physics::internal::RigidBodyManager::instance().clear();
+		rendering::internal::SpriteAtlasManager::instance().clear();
+		rendering::internal::ParticleSystemManager::instance().clear();
 
 		internal::terminate_textures();
 		internal::terminate_tilesets();
@@ -192,7 +196,11 @@ namespace oly::context
 
 		// Update physics
 		internal::frame_collision();
+
+		// Automatic on-tick
 		physics::internal::RigidBodyManager::instance().on_tick();
+		rendering::internal::SpriteAtlasManager::instance().on_tick();
+		rendering::internal::ParticleSystemManager::instance().on_tick();
 
 		return true;
 	}

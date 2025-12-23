@@ -7,8 +7,39 @@
 #include "core/base/Transforms.h"
 #include "graphics/Camera.h"
 
+#include <unordered_set>
+
 namespace oly::rendering
 {
+	class ParticleSystem;
+
+	namespace internal
+	{
+		class ParticleSystemManager
+		{
+			friend class ParticleSystem;
+			std::unordered_set<ParticleSystem*> systems;
+
+			ParticleSystemManager() = default;
+			ParticleSystemManager(const ParticleSystemManager&) = delete;
+			ParticleSystemManager(ParticleSystemManager&&) noexcept = delete;
+
+		public:
+			static ParticleSystemManager& instance()
+			{
+				static ParticleSystemManager manager;
+				return manager;
+			}
+
+			void clear()
+			{
+				systems.clear();
+			}
+
+			void on_tick();
+		};
+	}
+
 	class ParticleSystem
 	{
 		graphics::VertexArray vao;
@@ -49,12 +80,12 @@ namespace oly::rendering
 		struct
 		{
 			SmartReference<graphics::Shader> compute_spawn_ref = REF_NULL;
-			GLuint compute_spawn;
+			GLuint compute_spawn = 0;
 
 			SmartReference<graphics::Shader> compute_update_ref = REF_NULL;
-			GLuint compute_update;
+			GLuint compute_update = 0;
 
-			GLuint renderer;
+			GLuint renderer = 0;
 		} shaders;
 
 		struct
@@ -91,6 +122,7 @@ namespace oly::rendering
 	public:
 		rendering::Camera2DRef camera = REF_DEFAULT;
 		bool camera_invariant = false;
+		bool auto_tick = true;
 		enum class AgeSort
 		{
 			YOUNG_ON_OLD,
@@ -104,6 +136,7 @@ namespace oly::rendering
 		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(const ParticleSystem&) = delete;
 		ParticleSystem(ParticleSystem&&) = delete;
+		~ParticleSystem();
 
 	private:
 		void init();
@@ -123,8 +156,8 @@ namespace oly::rendering
 		// TODO v6 since emitter params can be updated dynamically, use time/state to update samplers/domains on CPU using polymorphic module system.
 		const particles::ParticleEmitter& emitter(size_t i = 0) const { return emitters[i]; }
 		particles::ParticleEmitter& emitter(size_t i = 0) { return emitters[i]; }
-		void add_emitter(particles::ParticleEmitter&& emitter = {}) { emitters.push_back(std::move(emitter)); }
-		void remove_emitter(size_t i) { emitters.erase(emitters.begin() + i); }
+		void add_emitter(particles::ParticleEmitter&& emitter = {});
+		void remove_emitter(size_t i);
 
 		GLuint get_particle_capacity() const { return particle_capacity; }
 		void set_particle_capacity(GLuint capacity);

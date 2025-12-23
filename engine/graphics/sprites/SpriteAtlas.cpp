@@ -5,19 +5,51 @@
 
 namespace oly::rendering
 {
+	void internal::SpriteAtlasManager::on_tick()
+	{
+		for (SpriteAtlas* atlas : atlases)
+			if (atlas->auto_tick) [[likely]]
+				atlas->on_tick();
+	}
+
+	SpriteAtlas::SpriteAtlas()
+	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
+	}
+
 	SpriteAtlas::SpriteAtlas(Unbatched)
 		: sprite(UNBATCHED)
 	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(SpriteBatch& batch)
 		: sprite(batch)
 	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(Sprite&& sprite)
 		: sprite(std::move(sprite))
 	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
+	}
+
+	SpriteAtlas::SpriteAtlas(const SpriteAtlas& other)
+		: sprite(other.sprite), atlas(other.atlas), anim_format(other.anim_format), current_frame(other.current_frame)
+	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
+	}
+
+	SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
+		: sprite(std::move(other.sprite)), atlas(std::move(other.atlas)), anim_format(std::move(other.anim_format)), current_frame(other.current_frame)
+	{
+		internal::SpriteAtlasManager::instance().atlases.insert(this);
+	}
+
+	SpriteAtlas::~SpriteAtlas()
+	{
+		internal::SpriteAtlasManager::instance().atlases.erase(this);
 	}
 
 	void SpriteAtlas::draw() const
@@ -116,6 +148,8 @@ namespace oly::rendering
 
 		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
 		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
+
+		sprite_atlas.auto_tick = io::parse_bool_or(node["auto_tick"], true);
 
 		return sprite_atlas;
 	}
