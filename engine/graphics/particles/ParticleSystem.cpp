@@ -84,6 +84,23 @@ namespace oly::rendering
 			emitters.push_back({});
 	}
 
+	ParticleSystem::ParticleSystem(const ParticleSystem& other)
+		: buffers(other.particle_capacity), shaders(other.shaders), shader_locations(other.shader_locations), emitters(other.emitters), particle_capacity(other.particle_capacity),
+		compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time), last_render_time(other.last_render_time),
+		camera(other.camera), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick), age_sort(other.age_sort), transformer(other.transformer)
+	{
+		internal::ParticleSystemManager::instance().systems.insert(this);
+	}
+
+	ParticleSystem::ParticleSystem(ParticleSystem&& other) noexcept
+		: buffers(std::move(other.buffers)), shaders(std::move(other.shaders)), shader_locations(other.shader_locations), emitters(std::move(other.emitters)),
+		particle_capacity(other.particle_capacity), compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time),
+		last_render_time(other.last_render_time), camera(std::move(other.camera)), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick),
+		age_sort(other.age_sort), transformer(std::move(other.transformer))
+	{
+		internal::ParticleSystemManager::instance().systems.insert(this);
+	}
+
 	ParticleSystem::~ParticleSystem()
 	{
 		internal::ParticleSystemManager::instance().systems.erase(this);
