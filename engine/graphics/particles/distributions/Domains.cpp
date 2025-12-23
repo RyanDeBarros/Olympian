@@ -1,6 +1,6 @@
 #include "Domains.h"
 
-#include "ShaderStructs.h"
+#include "graphics/particles/ShaderStructs.h"
 
 namespace oly::particles
 {
