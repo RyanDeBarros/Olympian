@@ -3,6 +3,7 @@
 #include "graphics/particles/Samplers.h"
 #include "graphics/particles/Domains.h"
 #include "graphics/particles/ShaderStructs.h"
+#include "graphics/particles/Spawners.h"
 
 namespace oly::particles
 {
@@ -14,7 +15,8 @@ namespace oly::particles
 		rotation({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(0.0f) }),
 		size({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 10.0f }) }),
 		velocity({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 0.0f }) }),
-		color({ .sampler = make_polymorphic<UniformSampler4D>(), .domain = make_polymorphic<ConstantDomain4D>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }) })
+		color({ .sampler = make_polymorphic<UniformSampler4D>(), .domain = make_polymorphic<ConstantDomain4D>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }) }),
+		spawner(make_polymorphic<ConstantParticleSpawner>(10.0f))
 	{
 	}
 
@@ -32,7 +34,9 @@ namespace oly::particles
 
 	void ParticleEmitter::on_tick(float delta_time) const
 	{
-		_spawn_debt += 20.0f * delta_time; // TODO v6 use distribution for spawn rate + emitter loop/period parameters (loop should be enum of LOOP, UNBOUNDED, ONE_SHOT).
+		float t = loop == Loop::LOOP && spawn_period > 1e-5f ? fmod(_time_elapsed, spawn_period) : _time_elapsed;
+		_spawn_debt += spawner->spawn_debt(t, delta_time, spawn_period);
+		_time_elapsed += delta_time;
 	}
 
 	GLuint ParticleEmitter::spawn_debt() const

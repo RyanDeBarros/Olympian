@@ -4,6 +4,13 @@
 
 namespace oly::particles
 {
+	struct IParticleSpawner
+	{
+		virtual float spawn_debt(float time, float delta_time, float period) const = 0;
+
+		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IParticleSpawner);
+	};
+
 	namespace internal
 	{
 		struct Sampler1D;

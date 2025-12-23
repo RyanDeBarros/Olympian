@@ -155,7 +155,6 @@ namespace oly::rendering
 	public:
 		float get_time_elapsed() const { return time_elapsed; }
 
-		// TODO v6 since emitter params can be updated dynamically, use time/state to update samplers/domains on CPU using polymorphic module system.
 		const particles::ParticleEmitter& emitter(size_t i = 0) const { return emitters[i]; }
 		particles::ParticleEmitter& emitter(size_t i = 0) { return emitters[i]; }
 		void add_emitter(particles::ParticleEmitter&& emitter = {});

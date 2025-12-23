@@ -98,6 +98,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
 		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YOUNG_ON_OLD;
+		particle_system.emitter(0).spawn_period = 0.3f;
+		particle_system.emitter(0).spawner = oly::make_polymorphic<oly::particles::BurstParticleSpawner>();
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = {0.0f, 0.0f, 1.0f, 1.0f};
 

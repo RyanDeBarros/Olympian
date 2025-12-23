@@ -17,6 +17,7 @@ namespace oly::particles
 		GLuint max_particles;
 		GLuint attached;
 
+		// TODO v6 since emitter params can be updated dynamically, use time/state to update samplers/domains on CPU using polymorphic module system.
 		AttributeGenerator1D lifetime;
 		AttributeGenerator2D position;
 		AttributeGenerator1D rotation;
@@ -24,8 +25,18 @@ namespace oly::particles
 		AttributeGenerator2D velocity;
 		AttributeGenerator4D color;
 
+		Polymorphic<IParticleSpawner> spawner;
+		float spawn_period = 1.0f;
+		enum class Loop
+		{
+			UNBOUNDED,
+			LOOP,
+			ONE_SHOT  // TODO v6 implement one_shot + playing/pausing
+		} loop = Loop::LOOP;
+
 	private:
 		mutable float _spawn_debt = 0.0f;
+		mutable float _time_elapsed = 0.0f;
 
 	public:
 		ParticleEmitter();
