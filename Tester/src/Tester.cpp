@@ -74,9 +74,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	oly::rendering::ParticleSystem particle_system;
-	// TODO v6 2D, 3D, and 4D attribute views to simplify things
-	std::unique_ptr<oly::particles::SineAttributeView> pa_color_r;
-	std::unique_ptr<oly::particles::SineAttributeView> pa_color_b;
+	std::unique_ptr<oly::particles::SineAttributeView1D> pav_color_r;
+	std::unique_ptr<oly::particles::SineAttributeView1D> pav_color_b;
+	std::unique_ptr<oly::particles::GenericAttributeView2D> pav_velocity;
 
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_system(2)
@@ -108,16 +108,20 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		// TODO v6 allow for storing attribute views in particle system?
 		auto* d = particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>();
-		pa_color_r = std::make_unique<oly::particles::SineAttributeView>(particle_system.emitter(0), d->c.r);
-		pa_color_r->a = 0.5f;
-		pa_color_r->b = 2.0f;
-		pa_color_r->k = glm::half_pi<float>();
-		pa_color_r->c = 0.5f;
-		pa_color_b = std::make_unique<oly::particles::SineAttributeView>(particle_system.emitter(0), d->c.b);
-		pa_color_b->a = 0.5f;
-		pa_color_b->b = 2.0f;
-		pa_color_b->k = glm::half_pi<float>() - 1.0f;
-		pa_color_b->c = 0.5f;
+		pav_color_r = std::make_unique<oly::particles::SineAttributeView1D>(particle_system.emitter(0), d->c.r);
+		pav_color_r->a = 0.5f;
+		pav_color_r->b = 2.0f;
+		pav_color_r->k = glm::half_pi<float>();
+		pav_color_r->c = 0.5f;
+		pav_color_b = std::make_unique<oly::particles::SineAttributeView1D>(particle_system.emitter(0), d->c.b);
+		pav_color_b->a = 0.5f;
+		pav_color_b->b = 2.0f;
+		pav_color_b->k = glm::half_pi<float>() - 1.0f;
+		pav_color_b->c = 0.5f;
+
+		// TODO v6 attribute view for this sort of radial operation. Also implement attribute view that is a composition of different attribute views.
+		pav_velocity = std::make_unique<oly::particles::GenericAttributeView2D>(particle_system.emitter(0), particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c);
+		pav_velocity->fn = [](oly::particles::ParticleEmitter& emitter, glm::vec2& attribute) { attribute = (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()) * 100.0f; };
 
 		glEnable(GL_BLEND);
 
@@ -166,8 +170,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
-		// TODO v6 attribute view for these operations - also implement attribute view that holds a generic std::function
-		*particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>() = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
 		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
 	}
 
