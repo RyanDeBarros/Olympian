@@ -17,7 +17,6 @@ namespace oly::particles
 		GLuint max_particles;
 		GLuint attached;
 
-		// TODO v6 since emitter params can be updated dynamically, use time/state to update samplers/domains on CPU using polymorphic module system.
 		AttributeGenerator1D lifetime;
 		AttributeGenerator2D position;
 		AttributeGenerator1D rotation;
@@ -45,6 +44,8 @@ namespace oly::particles
 
 		void on_tick(float delta_time) const;
 		GLuint spawn_debt() const;
+
+		float time_elapsed() const { return _time_elapsed; }
 	};
 
 }

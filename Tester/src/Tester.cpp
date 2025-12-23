@@ -74,6 +74,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	oly::rendering::ParticleSystem particle_system;
+	// TODO v6 2D, 3D, and 4D attribute views to simplify things
+	std::unique_ptr<oly::particles::SineAttributeView> pa_color_r;
+	std::unique_ptr<oly::particles::SineAttributeView> pa_color_b;
 
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_system(2)
@@ -101,7 +104,20 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(0).spawn_period = 0.3f;
 		particle_system.emitter(0).spawner = oly::make_polymorphic<oly::particles::BurstParticleSpawner>();
 		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = {0.0f, 0.0f, 1.0f, 1.0f};
+		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+		// TODO v6 allow for storing attribute views in particle system?
+		auto* d = particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>();
+		pa_color_r = std::make_unique<oly::particles::SineAttributeView>(particle_system.emitter(0), d->c.r);
+		pa_color_r->a = 0.5f;
+		pa_color_r->b = 2.0f;
+		pa_color_r->k = glm::half_pi<float>();
+		pa_color_r->c = 0.5f;
+		pa_color_b = std::make_unique<oly::particles::SineAttributeView>(particle_system.emitter(0), d->c.b);
+		pa_color_b->a = 0.5f;
+		pa_color_b->b = 2.0f;
+		pa_color_b->k = glm::half_pi<float>() - 1.0f;
+		pa_color_b->c = 0.5f;
 
 		glEnable(GL_BLEND);
 
@@ -150,12 +166,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
 		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
 
+		// TODO v6 attribute view for these operations - also implement attribute view that holds a generic std::function
 		*particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>() = (glm::vec2)oly::UnitVector2D(particle_system.get_time_elapsed()) * 100.0f;
-		if (auto* d = particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>())
-		{
-			d->c.r = 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f) + 1.0f);
-			d->c.b = 0.5f * (glm::cos(particle_system.get_time_elapsed() * 2.0f + 1.0f) + 1.0f);
-		}
 		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
 	}
 
