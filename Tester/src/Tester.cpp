@@ -121,9 +121,14 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		pav_color_b.c = 0.5f;
 		particle_attributes.views_1d.emplace_back(particle_system.emitter(0), d->c.b, oly::as_polymorphic<oly::particles::IAttributeOperation1D>(std::move(pav_color_b)));
 
-		// TODO v6 attribute view for this sort of radial operation. Also implement attribute view that is a composition of different attribute views.
-		oly::particles::GenericAttributeOperation2D pav_velocity;
-		pav_velocity.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2 attribute) { return (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()) * 100.0f; };
+		// TODO v6 attribute view for this sort of radial operation.
+		oly::particles::GenericAttributeOperation2D pav_velocity_1;
+		pav_velocity_1.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2 attribute) { return (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()); };
+		oly::particles::GenericAttributeOperation2D pav_velocity_2;
+		pav_velocity_2.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2 attribute) { return attribute * 100.0f; };
+		oly::particles::SequentialAttributeOperation2D<2> pav_velocity;
+		pav_velocity.ops[0] = oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity_1));
+		pav_velocity.ops[1] = oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity_2));
 		particle_attributes.views_2d.emplace_back(particle_system.emitter(0), particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c, oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity)));
 
 		glEnable(GL_BLEND);
