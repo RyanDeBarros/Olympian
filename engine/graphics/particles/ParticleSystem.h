@@ -115,20 +115,23 @@ namespace oly::rendering
 		GLuint particle_capacity;
 		GLushort compute_threads;
 
+	public:
+		bool camera_invariant = false;
+		bool auto_tick = true;
+
+	private:
 		float time_elapsed = 0.0f;
 		mutable float last_tick_time = 0.0f;
 		mutable float last_render_time = 0.0f;
 
 	public:
-		rendering::Camera2DRef camera = REF_DEFAULT;
-		bool camera_invariant = false;
-		bool auto_tick = true;
 		enum class AgeSort
 		{
 			YOUNG_ON_OLD,
 			OLD_ON_YOUNG
 		} age_sort = AgeSort::YOUNG_ON_OLD;
 
+		rendering::Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;
 
 		ParticleSystem(particles::ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);

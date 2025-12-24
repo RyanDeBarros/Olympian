@@ -29,7 +29,7 @@
 #include "graphics/particles/distributions/Samplers.h"
 #include "graphics/particles/distributions/Domains.h"
 #include "graphics/particles/distributions/Spawners.h"
-#include "graphics/particles/distributions/AttributeViews.h"
+#include "graphics/particles/distributions/AttributeOperations.h"
 
 #include "graphics/Drawable.h"
 

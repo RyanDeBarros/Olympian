@@ -6,23 +6,23 @@
 
 namespace oly::particles
 {
-	struct IAttributeView1D;
-	struct IAttributeView2D;
-	struct IAttributeView3D;
-	struct IAttributeView4D;
+	struct AttributeView1D;
+	struct AttributeView2D;
+	struct AttributeView3D;
+	struct AttributeView4D;
 
 	namespace internal
 	{
 		class AttributeViewManager
 		{
-			friend struct IAttributeView1D;
-			friend struct IAttributeView2D;
-			friend struct IAttributeView3D;
-			friend struct IAttributeView4D;
-			std::unordered_set<IAttributeView1D*> views_1d;
-			std::unordered_set<IAttributeView2D*> views_2d;
-			std::unordered_set<IAttributeView3D*> views_3d;
-			std::unordered_set<IAttributeView4D*> views_4d;
+			friend struct AttributeView1D;
+			friend struct AttributeView2D;
+			friend struct AttributeView3D;
+			friend struct AttributeView4D;
+			std::unordered_set<AttributeView1D*> views_1d;
+			std::unordered_set<AttributeView2D*> views_2d;
+			std::unordered_set<AttributeView3D*> views_3d;
+			std::unordered_set<AttributeView4D*> views_4d;
 
 			AttributeViewManager() = default;
 			AttributeViewManager(const AttributeViewManager&) = delete;
@@ -47,63 +47,95 @@ namespace oly::particles
 		};
 	}
 
-	struct IAttributeView1D
+	struct IAttributeOperation1D
 	{
-		ParticleEmitter& emitter;
+		virtual float op(const ParticleEmitter& emitter, float attribute) const { return attribute; }
+
+		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation1D);
+	};
+
+	struct AttributeView1D
+	{
+		const ParticleEmitter& emitter;
 		float& attribute;
+		Polymorphic<IAttributeOperation1D> op;
 
-		IAttributeView1D(ParticleEmitter& emitter, float& attribute);
-		IAttributeView1D(const IAttributeView1D&);
-		IAttributeView1D(IAttributeView1D&&) noexcept;
-		~IAttributeView1D();
+		AttributeView1D(const ParticleEmitter& emitter, float& attribute, Polymorphic<IAttributeOperation1D>&& op);
+		AttributeView1D(const AttributeView1D&);
+		AttributeView1D(AttributeView1D&&) noexcept;
+		~AttributeView1D();
 
-		virtual void on_tick() = 0;
-
-		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IAttributeView1D);
+		void on_tick() const { attribute = op->op(emitter, attribute); }
 	};
 
-	struct IAttributeView2D
+	struct IAttributeOperation2D
 	{
-		ParticleEmitter& emitter;
+		virtual glm::vec2 op(const ParticleEmitter& emitter, glm::vec2 attribute) const { return attribute; }
+
+		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation2D);
+	};
+
+	struct AttributeView2D
+	{
+		const ParticleEmitter& emitter;
 		glm::vec2& attribute;
+		Polymorphic<IAttributeOperation2D> op;
 
-		IAttributeView2D(ParticleEmitter& emitter, glm::vec2& attribute);
-		IAttributeView2D(const IAttributeView2D&);
-		IAttributeView2D(IAttributeView2D&&) noexcept;
-		~IAttributeView2D();
+		AttributeView2D(const ParticleEmitter& emitter, glm::vec2& attribute, Polymorphic<IAttributeOperation2D>&& op);
+		AttributeView2D(const AttributeView2D&);
+		AttributeView2D(AttributeView2D&&) noexcept;
+		~AttributeView2D();
 
-		virtual void on_tick() = 0;
-
-		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IAttributeView2D);
+		void on_tick() const { attribute = op->op(emitter, attribute); }
 	};
 
-	struct IAttributeView3D
+	struct IAttributeOperation3D
 	{
-		ParticleEmitter& emitter;
+		virtual glm::vec3 op(const ParticleEmitter& emitter, glm::vec3 attribute) const { return attribute; }
+
+		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation3D);
+	};
+
+	struct AttributeView3D
+	{
+		const ParticleEmitter& emitter;
 		glm::vec3& attribute;
+		Polymorphic<IAttributeOperation3D> op;
 
-		IAttributeView3D(ParticleEmitter& emitter, glm::vec3& attribute);
-		IAttributeView3D(const IAttributeView3D&);
-		IAttributeView3D(IAttributeView3D&&) noexcept;
-		~IAttributeView3D();
+		AttributeView3D(const ParticleEmitter& emitter, glm::vec3& attribute, Polymorphic<IAttributeOperation3D>&& op);
+		AttributeView3D(const AttributeView3D&);
+		AttributeView3D(AttributeView3D&&) noexcept;
+		~AttributeView3D();
 
-		virtual void on_tick() = 0;
-
-		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IAttributeView3D);
+		void on_tick() const { attribute = op->op(emitter, attribute); }
 	};
 
-	struct IAttributeView4D
+	struct IAttributeOperation4D
 	{
-		ParticleEmitter& emitter;
+		virtual glm::vec4 op(const ParticleEmitter& emitter, glm::vec4 attribute) const { return attribute; }
+
+		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation4D);
+	};
+
+	struct AttributeView4D
+	{
+		const ParticleEmitter& emitter;
 		glm::vec4& attribute;
+		Polymorphic<IAttributeOperation4D> op;
 
-		IAttributeView4D(ParticleEmitter& emitter, glm::vec4& attribute);
-		IAttributeView4D(const IAttributeView4D&);
-		IAttributeView4D(IAttributeView4D&&) noexcept;
-		~IAttributeView4D();
+		AttributeView4D(const ParticleEmitter& emitter, glm::vec4& attribute, Polymorphic<IAttributeOperation4D>&& op);
+		AttributeView4D(const AttributeView4D&);
+		AttributeView4D(AttributeView4D&&) noexcept;
+		~AttributeView4D();
 
-		virtual void on_tick() = 0;
-
-		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IAttributeView4D);
+		void on_tick() const { attribute = op->op(emitter, attribute); }
+	};
+	
+	struct AttributeViewList
+	{
+		std::vector<AttributeView1D> views_1d;
+		std::vector<AttributeView2D> views_2d;
+		std::vector<AttributeView3D> views_3d;
+		std::vector<AttributeView4D> views_4d;
 	};
 }

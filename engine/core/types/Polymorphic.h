@@ -169,9 +169,15 @@ namespace oly
 	};
 
 	template<typename T, typename... Args>
-	inline Polymorphic<T> make_polymorphic(Args... args)
+	inline Polymorphic<T> make_polymorphic(Args&&... args)
 	{
 		return Polymorphic(new T(std::forward<Args>(args)...));
+	}
+
+	template<typename T, typename U = T> requires (PolymorphicBaseOf<U, T>)
+	inline Polymorphic<T> as_polymorphic(U&& obj)
+	{
+		return Polymorphic<U>(std::forward<U>(obj));
 	}
 }
 
