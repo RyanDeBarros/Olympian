@@ -74,6 +74,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	oly::rendering::ParticleSystem particle_system;
+	// TODO v6 allow for storing attribute views in particle system?
 	oly::particles::AttributeViewList particle_attributes;
 
 	TesterRenderPipeline()
@@ -104,7 +105,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = { 0.0f, 0.0f, 1.0f, 1.0f };
 
-		// TODO v6 allow for storing attribute views in particle system?
 		auto* d = particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>();
 		
 		oly::particles::SineAttributeOperation1D pav_color_r;
@@ -112,24 +112,24 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		pav_color_r.b = 2.0f;
 		pav_color_r.k = glm::half_pi<float>();
 		pav_color_r.c = 0.5f;
-		particle_attributes.views_1d.emplace_back(particle_system.emitter(0), d->c.r, oly::as_polymorphic<oly::particles::IAttributeOperation1D>(std::move(pav_color_r)));
+		particle_attributes.add(oly::particles::AttributeView<float>(particle_system.emitter(0), d->c.r, oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_r))));
 
 		oly::particles::SineAttributeOperation1D pav_color_b;
 		pav_color_b.a = 0.5f;
 		pav_color_b.b = 2.0f;
 		pav_color_b.k = glm::half_pi<float>() - 1.0f;
 		pav_color_b.c = 0.5f;
-		particle_attributes.views_1d.emplace_back(particle_system.emitter(0), d->c.b, oly::as_polymorphic<oly::particles::IAttributeOperation1D>(std::move(pav_color_b)));
+		particle_attributes.add(oly::particles::AttributeView<float>(particle_system.emitter(0), d->c.b, oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_b))));
 
 		// TODO v6 attribute view for this sort of radial operation.
-		oly::particles::GenericAttributeOperation2D pav_velocity_1;
-		pav_velocity_1.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2 attribute) { return (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()); };
-		oly::particles::GenericAttributeOperation2D pav_velocity_2;
-		pav_velocity_2.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2 attribute) { return attribute * 100.0f; };
-		oly::particles::SequentialAttributeOperation2D<2> pav_velocity;
-		pav_velocity.ops[0] = oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity_1));
-		pav_velocity.ops[1] = oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity_2));
-		particle_attributes.views_2d.emplace_back(particle_system.emitter(0), particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c, oly::as_polymorphic<oly::particles::IAttributeOperation2D>(std::move(pav_velocity)));
+		oly::particles::GenericAttributeOperation<glm::vec2> pav_velocity_1;
+		pav_velocity_1.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2& attribute) { attribute = (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()); };
+		oly::particles::GenericAttributeOperation<glm::vec2> pav_velocity_2;
+		pav_velocity_2.fn = [](const oly::particles::ParticleEmitter& emitter, glm::vec2& attribute) { attribute *= 100.0f; };
+		oly::particles::SequentialAttributeOperation<glm::vec2, 2> pav_velocity;
+		pav_velocity.ops[0] = oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity_1));
+		pav_velocity.ops[1] = oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity_2));
+		particle_attributes.add(oly::particles::AttributeView<glm::vec2>(particle_system.emitter(0), particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c, oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity))));
 
 		glEnable(GL_BLEND);
 
