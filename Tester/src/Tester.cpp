@@ -74,8 +74,6 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	oly::CallbackTimer text_jitter_timer;
 
 	oly::rendering::ParticleSystem particle_system;
-	// TODO v6 allow for storing attribute views in particle system?
-	oly::particles::AttributeViewList particle_attributes;
 
 	TesterRenderPipeline()
 		: text_jitter_timer(0.05f, [this](GLuint) { text_jitter_callback(); }), particle_system(2)
@@ -112,14 +110,23 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		pav_color_r.b = 2.0f;
 		pav_color_r.k = glm::half_pi<float>();
 		pav_color_r.c = 0.5f;
-		particle_attributes.add(oly::particles::AttributeView<float>(particle_system.emitter(0), d->c.r, oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_r))));
+		// TODO v6 hide attributes data member. provide public add_attribute/remove_attribute that takes emitter index. Or instead - attributes shouldn't use float or glm::vec2, etc., but use Attribute<float>/Attribute<glm::vec2> etc. that allows for attaching a single operation directly.
+		particle_system.attributes.add(oly::particles::AttributeView<float>(
+			particle_system.emitter(0),
+			[](oly::particles::ParticleEmitter& emitter) -> float& { return emitter.color.domain.as<oly::particles::ConstantDomain4D>()->c.r; },
+			oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_r))
+		));
 
 		oly::particles::SineAttributeOperation1D pav_color_b;
 		pav_color_b.a = 0.5f;
 		pav_color_b.b = 2.0f;
 		pav_color_b.k = glm::half_pi<float>() - 1.0f;
 		pav_color_b.c = 0.5f;
-		particle_attributes.add(oly::particles::AttributeView<float>(particle_system.emitter(0), d->c.b, oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_b))));
+		particle_system.attributes.add(oly::particles::AttributeView<float>(
+			particle_system.emitter(0),
+			[](oly::particles::ParticleEmitter& emitter) -> float& { return emitter.color.domain.as<oly::particles::ConstantDomain4D>()->c.b; },
+			oly::as_polymorphic<oly::particles::IAttributeOperation<float>>(std::move(pav_color_b))
+		));
 
 		// TODO v6 attribute view for this sort of radial operation.
 		oly::particles::GenericAttributeOperation<glm::vec2> pav_velocity_1;
@@ -129,7 +136,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		oly::particles::SequentialAttributeOperation<glm::vec2, 2> pav_velocity;
 		pav_velocity.ops[0] = oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity_1));
 		pav_velocity.ops[1] = oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity_2));
-		particle_attributes.add(oly::particles::AttributeView<glm::vec2>(particle_system.emitter(0), particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c, oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity))));
+		particle_system.attributes.add(oly::particles::AttributeView<glm::vec2>(
+			particle_system.emitter(0),
+			[](oly::particles::ParticleEmitter& emitter) -> glm::vec2& { return emitter.velocity.domain.as<oly::particles::ConstantDomain2D>()->c; },
+			oly::as_polymorphic<oly::particles::IAttributeOperation<glm::vec2>>(std::move(pav_velocity))
+		));
 
 		glEnable(GL_BLEND);
 

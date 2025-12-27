@@ -87,7 +87,8 @@ namespace oly::rendering
 	ParticleSystem::ParticleSystem(const ParticleSystem& other)
 		: buffers(other.particle_capacity), shaders(other.shaders), shader_locations(other.shader_locations), emitters(other.emitters), particle_capacity(other.particle_capacity),
 		compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time), last_render_time(other.last_render_time),
-		camera(other.camera), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick), age_sort(other.age_sort), transformer(other.transformer)
+		camera(other.camera), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick), age_sort(other.age_sort), transformer(other.transformer),
+		attributes(particles::AttributeViewList::copy(other.attributes, other.emitters, emitters))
 	{
 		internal::ParticleSystemManager::instance().systems.insert(this);
 	}
@@ -96,7 +97,7 @@ namespace oly::rendering
 		: buffers(std::move(other.buffers)), shaders(std::move(other.shaders)), shader_locations(other.shader_locations), emitters(std::move(other.emitters)),
 		particle_capacity(other.particle_capacity), compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time),
 		last_render_time(other.last_render_time), camera(std::move(other.camera)), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick),
-		age_sort(other.age_sort), transformer(std::move(other.transformer))
+		age_sort(other.age_sort), transformer(std::move(other.transformer)), attributes(std::move(other.attributes))
 	{
 		internal::ParticleSystemManager::instance().systems.insert(this);
 	}
@@ -220,6 +221,7 @@ namespace oly::rendering
 
 	void ParticleSystem::remove_emitter(size_t i)
 	{
+		attributes.unbind_emitter(emitters[i]);
 		emitters.erase(emitters.begin() + i);
 	}
 

@@ -95,18 +95,6 @@ namespace oly
 			return *this;
 		}
 
-		Polymorphic& operator=(const T& obj)
-		{
-			*_raw = obj;
-			return *this;
-		}
-
-		Polymorphic& operator=(T&& obj)
-		{
-			*_raw = std::move(obj);
-			return *this;
-		}
-
 		template<PolymorphicBaseOf<T> U>
 		Polymorphic<T>& operator=(const Polymorphic<U>& other)
 		{

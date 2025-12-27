@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/particles/ParticleEmitter.h"
+#include "graphics/particles/AttributeView.h"
 #include "graphics/backend/specialized/LightweightBuffers.h"
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/basic/Shader.h"
@@ -133,6 +134,8 @@ namespace oly::rendering
 
 		rendering::Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;
+
+		particles::AttributeViewList attributes;
 
 		ParticleSystem(particles::ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);

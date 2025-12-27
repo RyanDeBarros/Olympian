@@ -6,6 +6,7 @@ namespace oly::particles
 {
 	struct IParticleSpawner
 	{
+		virtual ~IParticleSpawner() = default;
 		virtual float spawn_debt(float time, float delta_time, float period) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IParticleSpawner);
@@ -29,6 +30,7 @@ namespace oly::particles
 
 	struct ISampler1D
 	{
+		virtual ~ISampler1D() = default;
 		virtual void apply(internal::Sampler1D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler1D);
@@ -36,6 +38,7 @@ namespace oly::particles
 
 	struct IDomain1D
 	{
+		virtual ~IDomain1D() = default;
 		virtual void apply(internal::Domain1D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain1D);
@@ -51,6 +54,7 @@ namespace oly::particles
 
 	struct ISampler2D
 	{
+		virtual ~ISampler2D() = default;
 		virtual void apply(internal::Sampler2D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler2D);
@@ -58,6 +62,7 @@ namespace oly::particles
 
 	struct IDomain2D
 	{
+		virtual ~IDomain2D() = default;
 		virtual void apply(internal::Domain2D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain2D);
@@ -73,6 +78,7 @@ namespace oly::particles
 
 	struct ISampler3D
 	{
+		virtual ~ISampler3D() = default;
 		virtual void apply(internal::Sampler3D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler3D);
@@ -80,6 +86,7 @@ namespace oly::particles
 
 	struct IDomain3D
 	{
+		virtual ~IDomain3D() = default;
 		virtual void apply(internal::Domain3D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain3D);
@@ -95,6 +102,7 @@ namespace oly::particles
 
 	struct ISampler4D
 	{
+		virtual ~ISampler4D() = default;
 		virtual void apply(internal::Sampler4D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler4D);
@@ -102,6 +110,7 @@ namespace oly::particles
 
 	struct IDomain4D
 	{
+		virtual ~IDomain4D() = default;
 		virtual void apply(internal::Domain4D&) const = 0;
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain4D);

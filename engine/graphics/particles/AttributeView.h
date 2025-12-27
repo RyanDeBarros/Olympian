@@ -8,16 +8,20 @@ namespace oly::particles
 {
 	namespace internal
 	{
+		// TODO v6 use better name than AttributeView?
 		struct IAttributeView
 		{
-			IAttributeView();
+			ParticleEmitter& emitter;
+
+			IAttributeView(ParticleEmitter& emitter);
 			IAttributeView(const IAttributeView&);
 			IAttributeView(IAttributeView&&) noexcept;
-			~IAttributeView();
+			virtual ~IAttributeView();
 
-			virtual void on_tick() const {}
+			virtual void on_tick() const = 0;
+			virtual Polymorphic<IAttributeView> rebind(ParticleEmitter& emitter) const = 0;
 
-			OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeView);
+			OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IAttributeView);
 		};
 
 		class AttributeViewManager
@@ -48,25 +52,33 @@ namespace oly::particles
 	template<typename T>
 	struct IAttributeOperation
 	{
+		virtual ~IAttributeOperation() = default;
 		virtual void op(const ParticleEmitter& emitter, T& attribute) const {}
 
 		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation<T>);
 	};
 
 	template<typename T>
-	struct AttributeView : public internal::IAttributeView
+	struct AttributeView final : public internal::IAttributeView
 	{
-		const ParticleEmitter& emitter;
-		T& attribute;
+		using Attribute = T& (*)(ParticleEmitter&);
+
+		Attribute attribute;
 		Polymorphic<IAttributeOperation<T>> op;
 
 		using internal::IAttributeView::IAttributeView;
-		AttributeView(const ParticleEmitter& emitter, T& attribute, Polymorphic<IAttributeOperation<T>>&& op)
-			: internal::IAttributeView(), emitter(emitter), attribute(attribute), op(std::move(op))
+		AttributeView(ParticleEmitter& emitter, Attribute attribute, Polymorphic<IAttributeOperation<T>>&& op)
+			: internal::IAttributeView(emitter), attribute(attribute), op(std::move(op))
 		{
 		}
 
-		void on_tick() const override { op->op(emitter, attribute); }
+		void on_tick() const override { op->op(emitter, attribute(emitter)); }
+		
+		Polymorphic<IAttributeView> rebind(ParticleEmitter& emitter) const override
+		{
+			return make_polymorphic<AttributeView<T>>(emitter, attribute, dupl(op));
+		}
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(AttributeView<T>);
 	};
 
@@ -79,5 +91,8 @@ namespace oly::particles
 		{
 			views.push_back(as_polymorphic<internal::IAttributeView>(std::move(view)));
 		}
+
+		void unbind_emitter(const ParticleEmitter& emitter);
+		static AttributeViewList copy(const AttributeViewList& list, const std::vector<ParticleEmitter>& from, std::vector<ParticleEmitter>& to);
 	};
 }

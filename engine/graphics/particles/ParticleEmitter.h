@@ -47,5 +47,4 @@ namespace oly::particles
 
 		float time_elapsed() const { return _time_elapsed; }
 	};
-
 }
