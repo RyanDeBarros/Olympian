@@ -1,6 +1,9 @@
 #pragma once
 
-#include "graphics/particles/AttributeView.h"
+#include "graphics/particles/Attribute.h"
+#include "external/GLM.h"
+
+#include <functional>
 
 namespace oly::particles
 {
@@ -22,7 +25,22 @@ namespace oly::particles
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(Class);
 	};
 
-	// TODO v6 more combinatorial operations for things like swizzling, separating vec2 -> individual floats, etc.
+	template<typename T, typename U>
+	struct SelectorAttributeOperation : public IAttributeOperation<T>
+	{
+		Polymorphic<IAttributeOperation<U>> inner_op;
+
+		using Selector = U& (*)(T&);
+		Selector selector = nullptr;
+
+		void op(const ParticleEmitter& emitter, T& attribute) const override
+		{
+			inner_op->op(emitter, selector(attribute));
+		}
+
+		using Self = SelectorAttributeOperation<T, U>; // TODO v6 replace polymorphic macros to not require arguments.
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(Self);
+	};
 
 	template<typename T>
 	struct GenericAttributeOperation : public IAttributeOperation<T>

@@ -32,10 +32,18 @@ namespace oly::particles
 		color.apply(params.color);
 	}
 
-	void ParticleEmitter::on_tick(float delta_time) const
+	void ParticleEmitter::on_tick(float delta_time)
 	{
 		float t = loop == Loop::LOOP && spawn_period > 1e-5f ? fmod(_time_elapsed, spawn_period) : _time_elapsed;
 		_spawn_debt += spawner->spawn_debt(t, delta_time, spawn_period);
+
+		lifetime.on_tick(*this);
+		position.on_tick(*this);
+		rotation.on_tick(*this);
+		size.on_tick(*this);
+		velocity.on_tick(*this);
+		color.on_tick(*this);
+
 		_time_elapsed += delta_time;
 	}
 

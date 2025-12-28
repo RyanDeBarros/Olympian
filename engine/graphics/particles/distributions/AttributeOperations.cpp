@@ -1,5 +1,7 @@
 #include "AttributeOperations.h"
 
+#include "graphics/particles/ParticleEmitter.h"
+
 namespace oly::particles
 {
 	void SineAttributeOperation1D::op(const ParticleEmitter& emitter, float& attribute) const

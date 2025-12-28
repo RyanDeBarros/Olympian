@@ -20,7 +20,6 @@
 
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/particles/ParticleSystem.h"
-#include "graphics/particles/AttributeView.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::context
@@ -126,7 +125,6 @@ namespace oly::context
 		physics::internal::RigidBodyManager::instance().clear();
 		rendering::internal::SpriteAtlasManager::instance().clear();
 		rendering::internal::ParticleSystemManager::instance().clear();
-		particles::internal::AttributeViewManager::instance().clear();
 
 		internal::terminate_textures();
 		internal::terminate_tilesets();
@@ -203,7 +201,6 @@ namespace oly::context
 		physics::internal::RigidBodyManager::instance().on_tick();
 		rendering::internal::SpriteAtlasManager::instance().on_tick();
 		rendering::internal::ParticleSystemManager::instance().on_tick();
-		particles::internal::AttributeViewManager::instance().on_tick();
 
 		return true;
 	}

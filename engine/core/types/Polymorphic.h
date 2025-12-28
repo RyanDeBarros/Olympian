@@ -36,16 +36,6 @@ namespace oly
 		{
 		}
 
-		Polymorphic(const T& obj)
-			: _raw(new T(obj))
-		{
-		}
-
-		Polymorphic(T&& obj)
-			: _raw(new T(std::move(obj)))
-		{
-		}
-
 		template<PolymorphicBaseOf<T> U>
 		Polymorphic(const Polymorphic<U>& other)
 		{
@@ -162,10 +152,16 @@ namespace oly
 		return Polymorphic(new T(std::forward<Args>(args)...));
 	}
 
-	template<typename T, typename U = T> requires (PolymorphicBaseOf<U, T>)
+	template<typename U>
+	inline Polymorphic<std::remove_cvref_t<U>> as_polymorphic(U&& obj)
+	{
+		return Polymorphic<std::remove_cvref_t<U>>(new std::remove_cvref_t<U>(std::forward<U>(obj)));
+	}
+
+	template<typename T, typename U> requires (PolymorphicBaseOf<std::remove_cvref_t<U>, T>)
 	inline Polymorphic<T> as_polymorphic(U&& obj)
 	{
-		return Polymorphic<U>(std::forward<U>(obj));
+		return Polymorphic<U>(new std::remove_cvref_t<U>(std::forward<U>(obj)));
 	}
 }
 

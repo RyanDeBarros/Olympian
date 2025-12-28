@@ -15,10 +15,10 @@ namespace oly::particles
 		switch (direction)
 		{
 		case Direction::RIGHT:
-			sampler.params[0] = glm::abs(tilt);
+			sampler.params[0] = glm::abs(tilt.value);
 			break;
 		case Direction::LEFT:
-			sampler.params[0] = -glm::abs(tilt);
+			sampler.params[0] = -glm::abs(tilt.value);
 			break;
 		case Direction::NONE:
 			sampler.params[0] = 0.0f;

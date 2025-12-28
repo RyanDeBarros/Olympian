@@ -42,7 +42,7 @@ namespace oly::particles
 
 		void apply(internal::EmitterParams&) const;
 
-		void on_tick(float delta_time) const;
+		void on_tick(float delta_time);
 		GLuint spawn_debt() const;
 
 		float time_elapsed() const { return _time_elapsed; }
