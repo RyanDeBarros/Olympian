@@ -12,6 +12,14 @@ namespace oly::particles
 	{
 		std::array<Polymorphic<IAttributeOperation<T>>, N> ops;
 
+		SequentialAttributeOperation() = default;
+
+		template<typename... Ops> requires (sizeof...(Ops) == N)
+		explicit SequentialAttributeOperation(Ops&&... operations)
+			: ops{ std::forward<Ops>(operations)... }
+		{
+		}
+
 		void op(const ParticleEmitter& emitter, T& attribute) const override
 		{
 			for (size_t i = 0; i < N; ++i)
@@ -29,6 +37,10 @@ namespace oly::particles
 		using Selector = U& (*)(T&);
 		Selector selector = nullptr;
 
+		SelectorAttributeOperation() = default;
+		SelectorAttributeOperation(const Polymorphic<IAttributeOperation<U>>& inner_op, Selector selector) : inner_op(inner_op), selector(selector) {}
+		SelectorAttributeOperation(Polymorphic<IAttributeOperation<U>>&& inner_op, Selector selector) : inner_op(std::move(inner_op)), selector(selector) {}
+
 		void op(const ParticleEmitter& emitter, T& attribute) const override
 		{
 			inner_op->op(emitter, selector(attribute));
@@ -40,7 +52,12 @@ namespace oly::particles
 	template<typename T>
 	struct GenericAttributeOperation : public IAttributeOperation<T>
 	{
-		std::function<void(const ParticleEmitter&, T&)> fn;
+		using Function = std::function<void(const ParticleEmitter&, T&)>;
+		Function fn;
+
+		GenericAttributeOperation() = default;
+		GenericAttributeOperation(const Function& fn) : fn(fn) {}
+		GenericAttributeOperation(Function&& fn) : fn(std::move(fn)) {}
 
 		void op(const ParticleEmitter& emitter, T& attribute) const override
 		{
@@ -57,6 +74,9 @@ namespace oly::particles
 		float b = 1.0f;
 		float k = 0.0f;
 		float c = 0.0f;
+
+		SineAttributeOperation1D() = default;
+		SineAttributeOperation1D(float a, float b, float k, float c) : a(a), b(b), k(k), c(c) {}
 
 		void op(const ParticleEmitter& emitter, float& attribute) const override;
 
