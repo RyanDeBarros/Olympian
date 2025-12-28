@@ -18,11 +18,7 @@ namespace oly::particles
 				ops[i]->op(emitter, attribute);
 		}
 
-	private:
-		using Class = SequentialAttributeOperation<T, N>;
-
-	public:
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(Class);
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(SequentialAttributeOperation<T, N>);
 	};
 
 	template<typename T, typename U>
@@ -38,8 +34,7 @@ namespace oly::particles
 			inner_op->op(emitter, selector(attribute));
 		}
 
-		using Self = SelectorAttributeOperation<T, U>; // TODO v6 replace polymorphic macros to not require arguments.
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(Self);
+		OLY_POLYMORPHIC_CLONE_OVERRIDE(SelectorAttributeOperation<T, U>);
 	};
 
 	template<typename T>

@@ -2,6 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/types/Meta.h"
+#include "core/types/Macros.h"
 
 namespace oly
 {
@@ -165,29 +166,29 @@ namespace oly
 	}
 }
 
-#define OLY_POLYMORPHIC_CLONE_DEFINITION(Base)\
+#define OLY_POLYMORPHIC_CLONE_DEFINITION(...)\
 	public:\
-		virtual Base* clone_new() const&\
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() const&\
 		{\
-			return new Base(*this);\
+			return new OLY_FLATTEN(__VA_ARGS__)(*this);\
 		}\
-		virtual Base* clone_new() &&\
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() &&\
 		{\
-			return new Base(std::move(*this)); \
+			return new OLY_FLATTEN(__VA_ARGS__)(std::move(*this)); \
 		}
 
-#define OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(Base)\
+#define OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(...)\
 	public:\
-		virtual Base* clone_new() const& = 0; \
-		virtual Base* clone_new() && = 0;
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() const& = 0; \
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() && = 0;
 
-#define OLY_POLYMORPHIC_CLONE_OVERRIDE(Derived)\
+#define OLY_POLYMORPHIC_CLONE_OVERRIDE(...)\
 	public:\
-		virtual Derived* clone_new() const& override\
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() const& override\
 		{\
-			return new Derived(*this);\
+			return new OLY_FLATTEN(__VA_ARGS__)(*this);\
 		}\
-		virtual Derived* clone_new() && override\
+		virtual OLY_FLATTEN(__VA_ARGS__)* clone_new() && override\
 		{\
-			return new Derived(std::move(*this));\
+			return new OLY_FLATTEN(__VA_ARGS__)(std::move(*this));\
 		}

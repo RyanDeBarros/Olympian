@@ -1,0 +1,6 @@
+#pragma once
+
+#define OLY_REMOVE_PARENS_IMPL(...) __VA_ARGS__
+#define OLY_REMOVE_PARENS(X) OLY_REMOVE_PARENS_IMPL X
+#define OLY_CONCAT(...) __VA_ARGS__
+#define OLY_FLATTEN(...) OLY_REMOVE_PARENS((OLY_CONCAT(__VA_ARGS__)))
