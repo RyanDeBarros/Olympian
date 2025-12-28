@@ -103,24 +103,18 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f };
 
-		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::make_polymorphic<oly::particles::SequentialAttributeOperation<glm::vec4, 2>>(
-			oly::make_polymorphic<oly::particles::SelectorAttributeOperation<glm::vec4, float>>(
-				oly::make_polymorphic<oly::particles::SineAttributeOperation1D>(0.5f, 2.0f, glm::half_pi<float>(), 0.5f),
+		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::make_polymorphic<oly::particles::operations::Sequence<glm::vec4, 2>>(
+			oly::make_polymorphic<oly::particles::operations::Selector<glm::vec4, float>>(
+				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>(), 0.5f),
 				[](glm::vec4& c) -> float& { return c.r; }
 			),
-			oly::make_polymorphic<oly::particles::SelectorAttributeOperation<glm::vec4, float>>(
-				oly::make_polymorphic<oly::particles::SineAttributeOperation1D>(0.5f, 2.0f, glm::half_pi<float>() - 1.0f, 0.5f),
+			oly::make_polymorphic<oly::particles::operations::Selector<glm::vec4, float>>(
+				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>() - 1.0f, 0.5f),
 				[](glm::vec4& c) -> float& { return c.b; }
 			)
 		);
 
-		// TODO v6 Define specific attribute operations for these lambdas
-		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c.op = oly::make_polymorphic<oly::particles::SequentialAttributeOperation<glm::vec2, 2>>(
-			oly::make_polymorphic<oly::particles::GenericAttributeOperation<glm::vec2>>(
-				[](const oly::particles::ParticleEmitter& emitter, glm::vec2& attribute) { attribute = (glm::vec2)oly::UnitVector2D(emitter.time_elapsed()); }),
-			oly::make_polymorphic<oly::particles::GenericAttributeOperation<glm::vec2>>(
-				[](const oly::particles::ParticleEmitter& emitter, glm::vec2& attribute) { attribute *= 100.0f; })
-		);
+		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c.op = oly::make_polymorphic<oly::particles::operations::Polarization2D>(100.0f, 0.0f);
 
 		glEnable(GL_BLEND);
 
