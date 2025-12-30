@@ -26,8 +26,8 @@ include_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h")
-file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h")
+file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h" "${PROJECT_SRC_DIR}/*.inl")
+file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h" "${PROJECT_GEN_DIR}/*.inl")
 
 # Define executable
 add_executable (Olympian ${GEN_FILES} ${SRC_FILES})

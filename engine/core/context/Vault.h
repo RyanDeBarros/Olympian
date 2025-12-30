@@ -60,4 +60,4 @@ namespace oly::context
 	}
 }
 
-#define OLY_NEXT_VAULT_KEY (::oly::context::internal::get_next_vault_key())
+#define OLY_NEXT_VAULT_KEY ::oly::context::internal::get_next_vault_key()

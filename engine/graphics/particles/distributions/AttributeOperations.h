@@ -4,7 +4,7 @@
 
 namespace oly::particles::operations
 {
-	struct SineWave1D : public IAttributeOperation<float>
+	struct SineWave1D : public IAttributeOperation
 	{
 		// attribute = a * sin(b * t - k) + c
 		float a = 1.0f;
@@ -15,12 +15,12 @@ namespace oly::particles::operations
 		SineWave1D() = default;
 		SineWave1D(float a, float b, float k, float c) : a(a), b(b), k(k), c(c) {}
 
-		void op(const ParticleEmitter& emitter, float& attribute) const override;
+		void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(SineWave1D);
 	};
 
-	struct Polarization2D : public IAttributeOperation<glm::vec2>
+	struct Polarization2D : public IAttributeOperation
 	{
 		float amplitude = 1.0f;
 		float time_offset = 0.0f;
@@ -28,7 +28,7 @@ namespace oly::particles::operations
 		Polarization2D() = default;
 		Polarization2D(float amplitude, float time_offset) : amplitude(amplitude), time_offset(time_offset) {}
 
-		void op(const ParticleEmitter& emitter, glm::vec2& attribute) const override;
+		void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(Polarization2D);
 	};

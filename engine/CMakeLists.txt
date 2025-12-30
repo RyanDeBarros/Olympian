@@ -18,7 +18,7 @@ target_include_directories(Quartic PUBLIC "${LIBRARIES_DIR}/Quartic/include")
 find_package(OpenGL REQUIRED)
 
 # Add engine sources
-file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/*.inl")
 
 # TODO v9 licensing may require engine to be dynamically linked?
 # Create the engine as a static library

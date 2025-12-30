@@ -5,29 +5,272 @@
 
 #include <unordered_set>
 #include <functional>
+#include <array>
 
 namespace oly::particles
 {
 	struct ParticleEmitter;
 
-	template<typename T>
+	template<bool Const>
+	class TAttributeSpan
+	{
+		using PointerType = std::conditional_t<Const, const float*, float*>;
+		template<typename T>
+		using ArgumentType = std::conditional_t<Const, T, T&>;
+
+		// TODO v6 use float* base = nullptr; with std::array<uint8_t, 4> offsets instead.
+		std::array<PointerType, 4> refs = { nullptr, nullptr, nullptr, nullptr };
+		uint8_t size = 0;
+
+	public:
+		// TODO v6 use dynamic enum to easily load TOML?
+		enum class Selector
+		{
+			X,
+			R = X,
+			Y,
+			G = Y,
+			Z,
+			B = Z,
+			W,
+			A = W,
+			XY,
+			RG = XY,
+			XZ,
+			RB = XZ,
+			XW,
+			RA = XW,
+			YZ,
+			GB = YZ,
+			YW,
+			GA = YW,
+			ZW,
+			BA = ZW,
+			XYZ,
+			RGB = XYZ,
+			XYW,
+			RGA = XYW,
+			XZW,
+			RBA = XZW,
+			YZW,
+			GBA = YZW
+		};
+
+		TAttributeSpan() {}
+		explicit TAttributeSpan(ArgumentType<float> v) : refs({ &v, nullptr, nullptr, nullptr }), size(1) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec2> v) : refs({ &v.x, &v.y, nullptr, nullptr }), size(2) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec3> v) : refs({ &v.x, &v.y, &v.z, nullptr }), size(3) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec4> v) : refs({ &v.x, &v.y, &v.z, &v.w }), size(4) {}
+
+		template<bool OtherConst>
+		TAttributeSpan(TAttributeSpan<OtherConst> span) requires (Const || !OtherConst) : refs(span.refs), size(span.size) {}
+
+		template<bool OtherConst = Const>
+		TAttributeSpan<OtherConst> select(Selector sel) requires (!Const || OtherConst)
+		{
+			TAttributeSpan span;
+			switch (sel)
+			{
+			case Selector::X:
+				span.refs[0] = refs[0];
+				span.size = 1;
+				break;
+			case Selector::Y:
+				span.refs[0] = refs[1];
+				span.size = 1;
+				break;
+			case Selector::Z:
+				span.refs[0] = refs[2];
+				span.size = 1;
+				break;
+			case Selector::W:
+				span.refs[0] = refs[3];
+				span.size = 1;
+				break;
+			case Selector::XY:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[1];
+				span.size = 2;
+				break;
+			case Selector::XZ:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[2];
+				span.size = 2;
+				break;
+			case Selector::XW:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[3];
+				span.size = 2;
+				break;
+			case Selector::YZ:
+				span.refs[0] = refs[1];
+				span.refs[1] = refs[2];
+				span.size = 2;
+				break;
+			case Selector::YW:
+				span.refs[0] = refs[1];
+				span.refs[1] = refs[3];
+				span.size = 2;
+				break;
+			case Selector::ZW:
+				span.refs[0] = refs[2];
+				span.refs[1] = refs[3];
+				span.size = 2;
+				break;
+			case Selector::XYZ:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[1];
+				span.refs[2] = refs[2];
+				span.size = 3;
+				break;
+			case Selector::XYW:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[1];
+				span.refs[2] = refs[3];
+				span.size = 3;
+				break;
+			case Selector::XZW:
+				span.refs[0] = refs[0];
+				span.refs[1] = refs[2];
+				span.refs[2] = refs[3];
+				span.size = 3;
+				break;
+			case Selector::YZW:
+				span.refs[0] = refs[1];
+				span.refs[1] = refs[2];
+				span.refs[2] = refs[3];
+				span.size = 3;
+				break;
+			default:
+				throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);
+			}
+			return span;
+		}
+
+		float& operator[](size_t i) requires (!Const)
+		{
+			if (i < size) [[likely]]
+				return *refs[i];
+			else
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		}
+
+		float operator[](size_t i) const
+		{
+			if (i < size) [[likely]]
+				return *refs[i];
+			else
+				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+		}
+
+		uint8_t length() const
+		{
+			return size;
+		}
+
+		TAttributeSpan& operator=(float v) requires (!Const)
+		{
+			if (size == 1)
+			{
+				*refs[0] = v;
+				return *this;
+			}
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		TAttributeSpan& operator=(glm::vec2 v) requires (!Const)
+		{
+			if (size == 2)
+			{
+				*refs[0] = v.x;
+				*refs[1] = v.y;
+				return *this;
+			}
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		TAttributeSpan& operator=(glm::vec3 v) requires (!Const)
+		{
+			if (size == 3)
+			{
+				*refs[0] = v.x;
+				*refs[1] = v.y;
+				*refs[2] = v.z;
+				return *this;
+			}
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		TAttributeSpan& operator=(glm::vec4 v) requires (!Const)
+		{
+			if (size == 4)
+			{
+				*refs[0] = v.x;
+				*refs[1] = v.y;
+				*refs[2] = v.z;
+				*refs[3] = v.w;
+				return *this;
+			}
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		float flt() const
+		{
+			if (size == 1)
+				return *refs[0];
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		glm::vec2 vec2() const
+		{
+			if (size == 2)
+				return { *refs[0], *refs[1] };
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		glm::vec3 vec3() const
+		{
+			if (size == 3)
+				return { *refs[0], *refs[1], *refs[2] };
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+
+		glm::vec4 vec4() const
+		{
+			if (size == 4)
+				return { *refs[0], *refs[1], *refs[2], *refs[3] };
+			else
+				throw Error(ErrorCode::INVALID_SIZE);
+		}
+	};
+
+	using AttributeSpan = TAttributeSpan<false>;
+	using ConstAttributeSpan = TAttributeSpan<true>;
+
 	struct IAttributeOperation
 	{
 		virtual ~IAttributeOperation() = default;
-		virtual void op(const ParticleEmitter& emitter, T& attribute) const {}
+		virtual void op(const ParticleEmitter& emitter, AttributeSpan attribute) const {}
 
-		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation<T>);
+		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation);
 
-		static Polymorphic<IAttributeOperation> load(TOMLNode node);
+		//static Polymorphic<IAttributeOperation> load(TOMLNode node);
 	};
 
 	template<typename T>
 	struct Attribute
 	{
 		T value;
-		Polymorphic<IAttributeOperation<T>> op;
+		Polymorphic<IAttributeOperation> op;
 
-		void on_tick(const ParticleEmitter& emitter) { op->op(emitter, value); }
+		void on_tick(const ParticleEmitter& emitter) { op->op(emitter, AttributeSpan(value)); }
 
 		auto operator[](size_t i) const
 		{
@@ -59,83 +302,86 @@ namespace oly::particles
 		T* operator->() { return &value; }
 	};
 
-	struct Enum
-	{
-		unsigned int value;
-
-		virtual ~Enum() = default;
-		virtual const std::unordered_map<std::string, unsigned int>& names() const = 0;
-
-		void load_string(const std::string& name)
-		{
-			auto it = names().find(name);
-			if (it != names().end())
-				value = it->second;
-		}
-
-		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(Enum);
-	};
-
 	namespace operations
 	{
-		template<typename T, size_t N>
-		struct Sequence : public IAttributeOperation<T>
+		template<size_t N>
+		struct Sequence : public IAttributeOperation
 		{
-			std::array<Polymorphic<IAttributeOperation<T>>, N> ops;
+			std::array<Polymorphic<IAttributeOperation>, N> ops;
 
 			Sequence() = default;
 
 			template<typename... Ops> requires (sizeof...(Ops) == N)
-				explicit Sequence(Ops&&... operations)
+			explicit Sequence(Ops&&... operations)
 				: ops{ std::forward<Ops>(operations)... }
 			{
 			}
 
-			void op(const ParticleEmitter& emitter, T& attribute) const override
+			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
 				for (size_t i = 0; i < N; ++i)
 					ops[i]->op(emitter, attribute);
 			}
 
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<T, N>);
+			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<N>);
 		};
 
-		template<typename T, typename U>
-		struct Selector : public IAttributeOperation<T>
+		template<>
+		struct Sequence<0> : public IAttributeOperation
 		{
-			Polymorphic<IAttributeOperation<U>> inner_op;
+			std::vector<Polymorphic<IAttributeOperation>> ops;
 
-			using Selection = U & (*)(T&);
-			Selection selection = nullptr;
+			Sequence() = default;
 
-			Selector() = default;
-			Selector(const Polymorphic<IAttributeOperation<U>>& inner_op, Selection selection) : inner_op(inner_op), selection(selection) {}
-			Selector(Polymorphic<IAttributeOperation<U>>&& inner_op, Selection selection) : inner_op(std::move(inner_op)), selection(selection) {}
-
-			void op(const ParticleEmitter& emitter, T& attribute) const override
+			template<typename... Ops>
+			explicit Sequence(Ops&&... operations)
+				: ops{ std::forward<Ops>(operations)... }
 			{
-				inner_op->op(emitter, selection(attribute));
 			}
 
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(Selector<T, U>);
+			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
+			{
+				for (const auto& op : ops)
+					op->op(emitter, attribute);
+			}
+
+			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<0>);
 		};
 
-		template<typename T>
-		struct GenericFunction : public IAttributeOperation<T>
+		struct Selector : public IAttributeOperation
 		{
-			using Function = std::function<void(const ParticleEmitter&, T&)>;
+			Polymorphic<IAttributeOperation> inner_op;
+
+			using SelectorFn = AttributeSpan (*)(AttributeSpan);
+			SelectorFn selector = nullptr;
+
+			Selector() = default;
+			Selector(const Polymorphic<IAttributeOperation>& inner_op, SelectorFn selector) : inner_op(inner_op), selector(selector) {}
+			Selector(Polymorphic<IAttributeOperation>&& inner_op, SelectorFn selector) : inner_op(std::move(inner_op)), selector(selector) {}
+
+			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
+			{
+				inner_op->op(emitter, selector(attribute));
+			}
+
+			OLY_POLYMORPHIC_CLONE_OVERRIDE(Selector);
+		};
+
+		struct GenericFunction : public IAttributeOperation
+		{
+			using Function = std::function<void(const ParticleEmitter&, AttributeSpan)>;
 			Function fn;
 
 			GenericFunction() = default;
 			GenericFunction(const Function& fn) : fn(fn) {}
 			GenericFunction(Function&& fn) : fn(std::move(fn)) {}
 
-			void op(const ParticleEmitter& emitter, T& attribute) const override
+			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
 				fn(emitter, attribute);
 			}
 
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(GenericFunction<T>);
+			OLY_POLYMORPHIC_CLONE_OVERRIDE(GenericFunction);
 		};
 	}
 }

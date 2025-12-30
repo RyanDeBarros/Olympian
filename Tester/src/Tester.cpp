@@ -103,14 +103,14 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f };
 
-		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::make_polymorphic<oly::particles::operations::Sequence<glm::vec4, 2>>(
-			oly::make_polymorphic<oly::particles::operations::Selector<glm::vec4, float>>(
+		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::make_polymorphic<oly::particles::operations::Sequence<2>>(
+			oly::make_polymorphic<oly::particles::operations::Selector>(
 				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>(), 0.5f),
-				[](glm::vec4& c) -> float& { return c.r; }
+				[](oly::particles::AttributeSpan c) { return c.select(oly::particles::AttributeSpan::Selector::R); }
 			),
-			oly::make_polymorphic<oly::particles::operations::Selector<glm::vec4, float>>(
+			oly::make_polymorphic<oly::particles::operations::Selector>(
 				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>() - 1.0f, 0.5f),
-				[](glm::vec4& c) -> float& { return c.b; }
+				[](oly::particles::AttributeSpan c) { return c.select(oly::particles::AttributeSpan::Selector::B); }
 			)
 		);
 
