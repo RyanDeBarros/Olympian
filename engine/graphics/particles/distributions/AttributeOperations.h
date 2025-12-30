@@ -17,6 +17,8 @@ namespace oly::particles::operations
 
 		void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override;
 
+		static Polymorphic<SineWave1D> load(TOMLNode node);
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(SineWave1D);
 	};
 
@@ -29,6 +31,8 @@ namespace oly::particles::operations
 		Polarization2D(float amplitude, float time_offset) : amplitude(amplitude), time_offset(time_offset) {}
 
 		void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override;
+
+		static Polymorphic<Polarization2D> load(TOMLNode node);
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(Polarization2D);
 	};

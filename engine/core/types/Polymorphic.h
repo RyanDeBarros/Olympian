@@ -27,37 +27,43 @@ namespace oly
 				throw Error(ErrorCode::NULL_POINTER);
 		}
 
+		Polymorphic(std::nullptr_t) {}
+
 		Polymorphic(const Polymorphic& other)
-			: _raw(other._raw->clone_new())
+			: _raw(other._raw ? other._raw->clone_new() : nullptr)
 		{
 		}
 
 		Polymorphic(Polymorphic&& other) noexcept
-			: _raw(std::move(*other._raw).clone_new())
+			: _raw(other._raw)
 		{
+			other._raw = nullptr;
 		}
 
 		template<PolymorphicBaseOf<T> U>
 		Polymorphic(const Polymorphic<U>& other)
 		{
-			U* temp = other._raw->clone_new();
-			_raw = dynamic_cast<T*>(temp);
-			if (!_raw)
+			if (other._raw)
 			{
-				delete temp;
-				throw Error(ErrorCode::BAD_CAST);
+				U* temp = other._raw->clone_new();
+				_raw = dynamic_cast<T*>(temp);
+				if (!_raw)
+				{
+					delete temp;
+					throw Error(ErrorCode::BAD_CAST);
+				}
 			}
 		}
 
 		template<PolymorphicBaseOf<T> U>
 		Polymorphic(Polymorphic<U>&& other)
 		{
-			U* temp = std::move(*other._raw).clone_new();
-			_raw = dynamic_cast<T*>(temp);
-			if (!_raw)
+			if (other._raw)
 			{
-				delete temp;
-				throw Error(ErrorCode::BAD_CAST);
+				_raw = dynamic_cast<T*>(other._raw);
+				if (!_raw)
+					throw Error(ErrorCode::BAD_CAST);
+				other._raw = nullptr;
 			}
 		}
 
@@ -71,7 +77,8 @@ namespace oly
 			if (this != &other)
 			{
 				delete _raw;
-				_raw = other._raw->clone_new();
+				if (other._raw)
+					_raw = other._raw->clone_new();
 			}
 			return *this;
 		}
@@ -81,7 +88,8 @@ namespace oly
 			if (this != &other)
 			{
 				delete _raw;
-				_raw = std::move(*other._raw).clone_new();
+				_raw = other._raw;
+				other._raw = nullptr;
 			}
 			return *this;
 		}
@@ -90,12 +98,15 @@ namespace oly
 		Polymorphic<T>& operator=(const Polymorphic<U>& other)
 		{
 			delete _raw;
-			U* temp = other._raw->clone_new();
-			_raw = dynamic_cast<T*>(temp);
-			if (!_raw)
+			if (other._raw)
 			{
-				delete temp;
-				throw Error(ErrorCode::BAD_CAST);
+				U* temp = other._raw->clone_new();
+				_raw = dynamic_cast<T*>(temp);
+				if (!_raw)
+				{
+					delete temp;
+					throw Error(ErrorCode::BAD_CAST);
+				}
 			}
 			return *this;
 		}
@@ -104,12 +115,12 @@ namespace oly
 		Polymorphic<T>& operator=(Polymorphic<U>&& other)
 		{
 			delete _raw;
-			U* temp = std::move(*other._raw).clone_new();
-			_raw = dynamic_cast<T*>(temp);
-			if (!_raw)
+			if (other._raw)
 			{
-				delete temp;
-				throw Error(ErrorCode::BAD_CAST);
+				_raw = dynamic_cast<T*>(other._raw);
+				if (!_raw)
+					throw Error(ErrorCode::BAD_CAST);
+				other._raw = nullptr;
 			}
 			return *this;
 		}
@@ -130,6 +141,11 @@ namespace oly
 		}
 
 		const T* operator->() const
+		{
+			return _raw;
+		}
+
+		operator bool() const
 		{
 			return _raw;
 		}

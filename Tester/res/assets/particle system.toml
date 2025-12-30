@@ -1,0 +1,26 @@
+#meta type="particle_system"
+
+[op0-color]
+op = "Sequence"
+	[[op0-color.ops]]
+	op = "Selector"
+	selector = "R"
+		[op0-color.ops.inner_op]
+		op = "SineWave1D"
+		a = 0.5
+		b = 2.0
+		k = 1.57
+		c = 0.5
+	[[op0-color.ops]]
+	op = "Selector"
+	selector = "B"
+		[op0-color.ops.inner_op]
+		op = "SineWave1D"
+		a = 0.5
+		b = 2.0
+		k = 0.57
+		c = 0.5
+
+[op0-velocity]
+op = "Polarization2D"
+amplitude = 100.0

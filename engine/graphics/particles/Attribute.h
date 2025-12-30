@@ -2,6 +2,7 @@
 
 #include "core/types/Polymorphic.h"
 #include "core/util/Loader.h"
+#include "core/util/Enum.h"
 
 #include <unordered_set>
 #include <functional>
@@ -10,6 +11,39 @@
 namespace oly::particles
 {
 	struct ParticleEmitter;
+
+#define _SubSelectorEntryMap(T)\
+			T(NONE, 0)\
+			T(X, 1)\
+			T(R, 1)\
+			T(Y, 2)\
+			T(G, 2)\
+			T(Z, 3)\
+			T(B, 3)\
+			T(W, 4)\
+			T(A, 4)\
+			T(XY, 5)\
+			T(RG, 5)\
+			T(XZ, 6)\
+			T(RB, 6)\
+			T(XW, 7)\
+			T(RA, 7)\
+			T(YZ, 8)\
+			T(GB, 8)\
+			T(YW, 9)\
+			T(GA, 9)\
+			T(ZW, 10)\
+			T(BA, 10)\
+			T(XYZ, 11)\
+			T(RGB, 11)\
+			T(XYW, 12)\
+			T(RGA, 12)\
+			T(XZW, 13)\
+			T(RBA, 13)\
+			T(YZW, 14)\
+			T(GBA, 14)
+	OLY_ENUM(SubSelector, _SubSelectorEntryMap);
+#undef _SubSelectorEntryMap
 
 	template<bool Const>
 	class TAttributeSpan
@@ -23,39 +57,6 @@ namespace oly::particles
 		uint8_t size = 0;
 
 	public:
-		// TODO v6 use dynamic enum to easily load TOML?
-		enum class Selector
-		{
-			X,
-			R = X,
-			Y,
-			G = Y,
-			Z,
-			B = Z,
-			W,
-			A = W,
-			XY,
-			RG = XY,
-			XZ,
-			RB = XZ,
-			XW,
-			RA = XW,
-			YZ,
-			GB = YZ,
-			YW,
-			GA = YW,
-			ZW,
-			BA = ZW,
-			XYZ,
-			RGB = XYZ,
-			XYW,
-			RGA = XYW,
-			XZW,
-			RBA = XZW,
-			YZW,
-			GBA = YZW
-		};
-
 		TAttributeSpan() {}
 		explicit TAttributeSpan(ArgumentType<float> v) : refs({ &v, nullptr, nullptr, nullptr }), size(1) {}
 		explicit TAttributeSpan(ArgumentType<glm::vec2> v) : refs({ &v.x, &v.y, nullptr, nullptr }), size(2) {}
@@ -66,76 +67,81 @@ namespace oly::particles
 		TAttributeSpan(TAttributeSpan<OtherConst> span) requires (Const || !OtherConst) : refs(span.refs), size(span.size) {}
 
 		template<bool OtherConst = Const>
-		TAttributeSpan<OtherConst> select(Selector sel) requires (!Const || OtherConst)
+		TAttributeSpan<OtherConst> select(SubSelector sel) requires (!Const || OtherConst)
 		{
 			TAttributeSpan span;
 			switch (sel)
 			{
-			case Selector::X:
+			case SubSelector::NONE:
+				for (size_t i = 0; i < size; ++i)
+					span.refs[i] = refs[i];
+				span.size = size;
+				break;
+			case SubSelector::X:
 				span.refs[0] = refs[0];
 				span.size = 1;
 				break;
-			case Selector::Y:
+			case SubSelector::Y:
 				span.refs[0] = refs[1];
 				span.size = 1;
 				break;
-			case Selector::Z:
+			case SubSelector::Z:
 				span.refs[0] = refs[2];
 				span.size = 1;
 				break;
-			case Selector::W:
+			case SubSelector::W:
 				span.refs[0] = refs[3];
 				span.size = 1;
 				break;
-			case Selector::XY:
+			case SubSelector::XY:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[1];
 				span.size = 2;
 				break;
-			case Selector::XZ:
+			case SubSelector::XZ:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[2];
 				span.size = 2;
 				break;
-			case Selector::XW:
+			case SubSelector::XW:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[3];
 				span.size = 2;
 				break;
-			case Selector::YZ:
+			case SubSelector::YZ:
 				span.refs[0] = refs[1];
 				span.refs[1] = refs[2];
 				span.size = 2;
 				break;
-			case Selector::YW:
+			case SubSelector::YW:
 				span.refs[0] = refs[1];
 				span.refs[1] = refs[3];
 				span.size = 2;
 				break;
-			case Selector::ZW:
+			case SubSelector::ZW:
 				span.refs[0] = refs[2];
 				span.refs[1] = refs[3];
 				span.size = 2;
 				break;
-			case Selector::XYZ:
+			case SubSelector::XYZ:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[1];
 				span.refs[2] = refs[2];
 				span.size = 3;
 				break;
-			case Selector::XYW:
+			case SubSelector::XYW:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[1];
 				span.refs[2] = refs[3];
 				span.size = 3;
 				break;
-			case Selector::XZW:
+			case SubSelector::XZW:
 				span.refs[0] = refs[0];
 				span.refs[1] = refs[2];
 				span.refs[2] = refs[3];
 				span.size = 3;
 				break;
-			case Selector::YZW:
+			case SubSelector::YZW:
 				span.refs[0] = refs[1];
 				span.refs[1] = refs[2];
 				span.refs[2] = refs[3];
@@ -261,7 +267,7 @@ namespace oly::particles
 
 		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation);
 
-		//static Polymorphic<IAttributeOperation> load(TOMLNode node);
+		static Polymorphic<IAttributeOperation> load(TOMLNode node);
 	};
 
 	template<typename T>
@@ -270,7 +276,7 @@ namespace oly::particles
 		T value;
 		Polymorphic<IAttributeOperation> op;
 
-		void on_tick(const ParticleEmitter& emitter) { op->op(emitter, AttributeSpan(value)); }
+		void on_tick(const ParticleEmitter& emitter) { if (op) op->op(emitter, AttributeSpan(value)); }
 
 		auto operator[](size_t i) const
 		{
@@ -317,6 +323,11 @@ namespace oly::particles
 			{
 			}
 
+			explicit Sequence(std::array<Polymorphic<IAttributeOperation>, N>&& operations)
+				: ops(std::move(operations))
+			{
+			}
+
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
 				for (size_t i = 0; i < N; ++i)
@@ -339,11 +350,19 @@ namespace oly::particles
 			{
 			}
 
+			explicit Sequence(std::vector<Polymorphic<IAttributeOperation>>&& operations)
+				: ops(std::move(operations))
+			{
+			}
+
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
 				for (const auto& op : ops)
 					op->op(emitter, attribute);
 			}
+
+			static Polymorphic<Sequence<0>> load(TOMLNode node);
+			static Polymorphic<IAttributeOperation> load_fixed(TOMLNode node);
 
 			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<0>);
 		};
@@ -352,17 +371,19 @@ namespace oly::particles
 		{
 			Polymorphic<IAttributeOperation> inner_op;
 
-			using SelectorFn = AttributeSpan (*)(AttributeSpan);
-			SelectorFn selector = nullptr;
+			SubSelector selector = SubSelector::NONE;
 
 			Selector() = default;
-			Selector(const Polymorphic<IAttributeOperation>& inner_op, SelectorFn selector) : inner_op(inner_op), selector(selector) {}
-			Selector(Polymorphic<IAttributeOperation>&& inner_op, SelectorFn selector) : inner_op(std::move(inner_op)), selector(selector) {}
+			Selector(const Polymorphic<IAttributeOperation>& inner_op, SubSelector selector) : inner_op(inner_op), selector(selector) {}
+			Selector(Polymorphic<IAttributeOperation>&& inner_op, SubSelector selector) : inner_op(std::move(inner_op)), selector(selector) {}
 
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
-				inner_op->op(emitter, selector(attribute));
+				//if (inner_op)
+					inner_op->op(emitter, attribute.select(selector));
 			}
+
+			static Polymorphic<Selector> load(TOMLNode node);
 
 			OLY_POLYMORPHIC_CLONE_OVERRIDE(Selector);
 		};

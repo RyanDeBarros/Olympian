@@ -36,7 +36,7 @@
 		{\
 			if (auto s = node.value<std::string>()) { try { return std::move(*s); } catch (...) {} }\
 			else { unsigned int v = 0; if (io::parse_uint(node, v)) { try { return v; } catch (...) {} } }\
-			return EnumName();\
+			throw Error(ErrorCode::LOAD_ASSET);\
 		}\
 		static EnumName load(TOMLNode node, EnumName def)\
 		{\

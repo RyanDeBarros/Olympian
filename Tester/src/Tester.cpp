@@ -102,19 +102,8 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(0).spawner = oly::make_polymorphic<oly::particles::BurstParticleSpawner>();
 		particle_system.emitter(1).attached = true;
 		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f };
-
-		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::make_polymorphic<oly::particles::operations::Sequence<2>>(
-			oly::make_polymorphic<oly::particles::operations::Selector>(
-				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>(), 0.5f),
-				[](oly::particles::AttributeSpan c) { return c.select(oly::particles::AttributeSpan::Selector::R); }
-			),
-			oly::make_polymorphic<oly::particles::operations::Selector>(
-				oly::make_polymorphic<oly::particles::operations::SineWave1D>(0.5f, 2.0f, glm::half_pi<float>() - 1.0f, 0.5f),
-				[](oly::particles::AttributeSpan c) { return c.select(oly::particles::AttributeSpan::Selector::B); }
-			)
-		);
-
-		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c.op = oly::make_polymorphic<oly::particles::operations::Polarization2D>(100.0f, 0.0f);
+		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::particles::IAttributeOperation::load(oly::io::load_toml("assets/particle system.toml")["op0-color"]);
+		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c.op = oly::particles::IAttributeOperation::load(oly::io::load_toml("assets/particle system.toml")["op0-velocity"]);
 
 		glEnable(GL_BLEND);
 
