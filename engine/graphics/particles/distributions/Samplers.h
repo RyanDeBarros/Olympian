@@ -2,6 +2,7 @@
 
 #include "graphics/particles/AttributeGenerator.h"
 #include "graphics/particles/Attribute.h"
+#include "graphics/particles/distributions/Enums.h"
 
 namespace oly::particles
 {
@@ -16,17 +17,10 @@ namespace oly::particles
 
 	struct TiltedSampler1D : public ISampler1D
 	{
-		enum class Direction
-		{
-			RIGHT,
-			LEFT,
-			NONE
-		};
-		
-		Attribute<Direction> direction;
+		Attribute<DirectionEnum> direction;
 		Attribute<float> tilt;
 
-		TiltedSampler1D(Direction direction = Direction::LEFT, float tilt = 1.0f) : direction(direction), tilt(tilt) {}
+		TiltedSampler1D(DirectionEnum direction = DirectionEnum::LEFT, float tilt = 1.0f) : direction(direction), tilt(tilt) {}
 
 		void apply(internal::Sampler1D& sampler) const override;
 

@@ -329,8 +329,7 @@ namespace oly::context
 
 				math::TopSidePadding padding = math::TopSidePadding::load(g["padding"]);
 
-				math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE;
-				io::parse_enum(g["origin_offset_mode"], origin_offset_mode);
+				math::PositioningMode origin_offset_mode = math::PositioningMode::load(g["origin_offset_mode"], math::PositioningMode::RELATIVE);
 
 				glm::vec2 origin_offset = {};
 				io::parse_vec(g["origin_offset"], origin_offset);

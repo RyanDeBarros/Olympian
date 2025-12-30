@@ -12,15 +12,15 @@ namespace oly::particles
 	void TiltedSampler1D::apply(internal::Sampler1D& sampler) const
 	{
 		sampler.type = internal::Sampler1D::TILTED;
-		switch (direction)
+		switch (*direction)
 		{
-		case Direction::RIGHT:
+		case DirectionEnum::RIGHT:
 			sampler.params[0] = glm::abs(tilt.value);
 			break;
-		case Direction::LEFT:
+		case DirectionEnum::LEFT:
 			sampler.params[0] = -glm::abs(tilt.value);
 			break;
-		case Direction::NONE:
+		case DirectionEnum::NONE:
 			sampler.params[0] = 0.0f;
 			break;
 		}

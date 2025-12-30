@@ -20,7 +20,7 @@ namespace oly::algo
 		return result;
 	}
 	
-	std::string& ltrim(std::string& str)
+	std::string ltrim(std::string&& str)
 	{
 		if (str.empty())
 			return str;
@@ -31,10 +31,10 @@ namespace oly::algo
 
 		str.erase(0, start);
 
-		return str;
+		return std::move(str);
 	}
 
-	std::string& rtrim(std::string& str)
+	std::string rtrim(std::string&& str)
 	{
 		if (str.empty())
 			return str;
@@ -45,10 +45,10 @@ namespace oly::algo
 
 		str.erase(end);
 
-		return str;
+		return std::move(str);
 	}
 	
-	std::string& trim(std::string& str)
+	std::string trim(std::string&& str)
 	{
 		if (str.empty())
 			return str;
@@ -64,10 +64,10 @@ namespace oly::algo
 		str.erase(end);
 		str.erase(0, start);
 
-		return str;
+		return std::move(str);
 	}
 
-	std::string& to_lower(std::string& str)
+	std::string to_lower(std::string&& str)
 	{
 		if (str.empty())
 			return str;
@@ -75,10 +75,10 @@ namespace oly::algo
 		for (char& c : str)
 			c = (char)(std::tolower(c));
 
-		return str;
+		return std::move(str);
 	}
 
-	std::string& to_upper(std::string& str)
+	std::string to_upper(std::string&& str)
 	{
 		if (str.empty())
 			return str;
@@ -86,6 +86,6 @@ namespace oly::algo
 		for (char& c : str)
 			c = (char)(std::toupper(c));
 
-		return str;
+		return std::move(str);
 	}
 }

@@ -3,7 +3,6 @@
 #include "external/GL.h"
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
-#include "core/math/Shapes.h"
 #include "core/util/ResourcePath.h"
 
 namespace oly::io
@@ -68,8 +67,6 @@ namespace oly::io
 	extern bool parse_wrap(TOMLNode node, GLenum& wrap);
 
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
-
-	extern bool parse_enum(TOMLNode node, math::PositioningMode& mode);
 
 	extern bool parse_color(const std::string& text, glm::vec4& color);
 	extern bool parse_color(std::string&& text, glm::vec4& color);

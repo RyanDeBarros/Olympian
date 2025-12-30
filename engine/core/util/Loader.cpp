@@ -211,34 +211,6 @@ namespace oly::io
 		return Polymorphic<TransformModifier2D>();
 	}
 
-	bool parse_enum(TOMLNode node, math::PositioningMode& mode)
-	{
-		auto _s = node.value<std::string>();
-		if (!_s)
-		{
-			int v = 0;
-			if (parse_int(node, v))
-			{
-				math::PositioningMode m = (math::PositioningMode)v;
-				if (is_in(m, math::PositioningMode::ABSOLUTE, math::PositioningMode::RELATIVE))
-				{
-					mode = m;
-					return true;
-				}
-			}
-			return false;
-		}
-		const std::string& s = *_s;
-		
-		if (s == "absolute")
-			mode = math::PositioningMode::ABSOLUTE;
-		else if (s == "relative")
-			mode = math::PositioningMode::RELATIVE;
-		else
-			return false;
-		return true;
-	}
-
 	bool parse_color(const std::string& text, glm::vec4& color)
 	{
 		return parse_color(dupl(text), color);

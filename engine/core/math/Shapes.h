@@ -1,17 +1,15 @@
 #pragma once
 
 #include "external/GLM.h"
-#include "external/TOML.h"
+#include "core/util/Enum.h"
 
 #include <array>
 
 namespace oly::math
 {
-	enum class PositioningMode
-	{
-		ABSOLUTE,
-		RELATIVE
-	};
+#define _PositioningModeEntryMap(X) X(ABSOLUTE, 0) X(RELATIVE, 1)
+	OLY_ENUM(PositioningMode, _PositioningModeEntryMap);
+#undef _PositioningModeEntryMap
 
 	struct Triangle2D
 	{
