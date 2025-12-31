@@ -19,7 +19,9 @@ namespace oly::particles
 		else if (op == "polarization2d")
 			return operations::Polarization2D::load(node);
 
-		_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << op << "\"" << LOG.nl;
+		if (!op.empty())
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << op << "\"" << LOG.nl;
+
 		return nullptr;
 	}
 

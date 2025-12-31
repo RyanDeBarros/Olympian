@@ -101,9 +101,9 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.emitter(0).spawn_period = 0.3f;
 		particle_system.emitter(0).spawner = oly::make_polymorphic<oly::particles::BurstParticleSpawner>();
 		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c = glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f };
-		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c.op = oly::particles::IAttributeOperation::load(oly::io::load_toml("assets/particle system.toml")["op0-color"]);
-		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c.op = oly::particles::IAttributeOperation::load(oly::io::load_toml("assets/particle system.toml")["op0-velocity"]);
+		oly::particles::Attribute<glm::vec4>::overload(particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->c, oly::io::load_toml("assets/particle system.toml")["color1"]);
+		oly::particles::Attribute<glm::vec4>::overload(particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->c, oly::io::load_toml("assets/particle system.toml")["color0"]);
+		oly::particles::Attribute<glm::vec2>::overload(particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->c, oly::io::load_toml("assets/particle system.toml")["velocity0"]);
 
 		glEnable(GL_BLEND);
 

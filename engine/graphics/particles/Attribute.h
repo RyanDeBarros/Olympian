@@ -12,6 +12,9 @@ namespace oly::particles
 {
 	struct ParticleEmitter;
 
+	template<typename T>
+	concept ParticleAttribute = std::same_as<T, float> || std::same_as<T, glm::vec2> || std::same_as<T, glm::vec3> || std::same_as < T, glm::vec4>;
+
 #define _SubSelectorEntryMap(T)\
 			T(NONE, 0)\
 			T(X, 1)\
@@ -49,7 +52,7 @@ namespace oly::particles
 	class TAttributeSpan
 	{
 		using PointerType = std::conditional_t<Const, const float*, float*>;
-		template<typename T>
+		template<ParticleAttribute T>
 		using ArgumentType = std::conditional_t<Const, T, T&>;
 
 		PointerType base = nullptr;
@@ -278,7 +281,7 @@ namespace oly::particles
 		static Polymorphic<IAttributeOperation> load(TOMLNode node);
 	};
 
-	template<typename T>
+	template<ParticleAttribute T>
 	struct Attribute
 	{
 		T value;
@@ -314,6 +317,25 @@ namespace oly::particles
 		T& operator*() { return value; }
 		const T* operator->() const { return &value; }
 		T* operator->() { return &value; }
+
+		static void overload(Attribute<T>& attribute, TOMLNode node)
+		{
+			constexpr size_t N = sizeof(T) / sizeof(float);
+			if constexpr (N > 1)
+				io::parse_vec<N>(node["value"], attribute.value);
+			else
+				io::parse_float(node["value"], attribute.value);
+
+			if (auto op = IAttributeOperation::load(node))
+				attribute.op = std::move(op);
+		}
+
+		static Attribute<T> load(TOMLNode node)
+		{
+			Attribute<T> attribute;
+			overload(attribute, node);
+			return attribute;
+		}
 	};
 
 	namespace operations
