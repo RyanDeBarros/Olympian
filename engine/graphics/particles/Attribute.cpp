@@ -2,16 +2,12 @@
 
 #include "graphics/particles/distributions/AttributeOperations.h"
 #include "core/algorithms/STLUtils.h"
+#include "core/util/Logger.h"
 
 namespace oly::particles
 {
-	// TODO v6 debug logs
-
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (!node)
-			return nullptr;
-
 		std::string op = algo::to_lower(node["op"].value_or<std::string>(""));
 
 		if (op == "sequence")
@@ -23,6 +19,7 @@ namespace oly::particles
 		else if (op == "polarization2d")
 			return operations::Polarization2D::load(node);
 
+		_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << op << "\"" << LOG.nl;
 		return nullptr;
 	}
 
@@ -35,11 +32,16 @@ namespace oly::particles
 				std::vector<Polymorphic<IAttributeOperation>> ops;
 
 				for (size_t i = 0; i < arr->size(); ++i)
+				{
 					if (auto subnode = arr->get(i))
 						ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+					else
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
+				}
 
 				return make_polymorphic<operations::Sequence<0>>(std::move(ops));
 			}
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
 			return nullptr;
 		}
 
@@ -82,6 +84,7 @@ namespace oly::particles
 				else
 					return make_polymorphic<operations::Sequence<0>>(std::move(ops));
 			}
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
 			return nullptr;
 		}
 
@@ -91,8 +94,9 @@ namespace oly::particles
 			{
 				return make_polymorphic<operations::Selector>(IAttributeOperation::load(node["inner_op"]), SubSelector::load(node["selector"]));
 			}
-			catch (Error)
+			catch (Error e)
 			{
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Selector: " << (int)e.code << LOG.nl;
 				return nullptr;
 			}
 		}

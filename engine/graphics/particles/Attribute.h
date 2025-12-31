@@ -52,19 +52,19 @@ namespace oly::particles
 		template<typename T>
 		using ArgumentType = std::conditional_t<Const, T, T&>;
 
-		// TODO v6 use float* base = nullptr; with std::array<uint8_t, 4> offsets instead.
-		std::array<PointerType, 4> refs = { nullptr, nullptr, nullptr, nullptr };
+		PointerType base = nullptr;
+		std::array<int8_t, 3> offsets = { 0, 0, 0 };
 		uint8_t size = 0;
 
 	public:
 		TAttributeSpan() {}
-		explicit TAttributeSpan(ArgumentType<float> v) : refs({ &v, nullptr, nullptr, nullptr }), size(1) {}
-		explicit TAttributeSpan(ArgumentType<glm::vec2> v) : refs({ &v.x, &v.y, nullptr, nullptr }), size(2) {}
-		explicit TAttributeSpan(ArgumentType<glm::vec3> v) : refs({ &v.x, &v.y, &v.z, nullptr }), size(3) {}
-		explicit TAttributeSpan(ArgumentType<glm::vec4> v) : refs({ &v.x, &v.y, &v.z, &v.w }), size(4) {}
+		explicit TAttributeSpan(ArgumentType<float> v) : base(&v), offsets({ 0, 0, 0 }), size(1) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec2> v) : base(glm::value_ptr(v)), offsets({ 1, 0, 0 }), size(2) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec3> v) : base(glm::value_ptr(v)), offsets({ 1, 2, 0 }), size(3) {}
+		explicit TAttributeSpan(ArgumentType<glm::vec4> v) : base(glm::value_ptr(v)), offsets({ 1, 2, 3 }), size(4) {}
 
 		template<bool OtherConst>
-		TAttributeSpan(TAttributeSpan<OtherConst> span) requires (Const || !OtherConst) : refs(span.refs), size(span.size) {}
+		TAttributeSpan(TAttributeSpan<OtherConst> span) requires (Const || !OtherConst) : base(span.base), offsets(span.offsets), size(span.size) {}
 
 		template<bool OtherConst = Const>
 		TAttributeSpan<OtherConst> select(SubSelector sel) requires (!Const || OtherConst)
@@ -73,78 +73,79 @@ namespace oly::particles
 			switch (sel)
 			{
 			case SubSelector::NONE:
+				span.base = base;
 				for (size_t i = 0; i < size; ++i)
-					span.refs[i] = refs[i];
+					span.offsets[i] = offsets[i];
 				span.size = size;
 				break;
 			case SubSelector::X:
-				span.refs[0] = refs[0];
+				span.base = base;
 				span.size = 1;
 				break;
 			case SubSelector::Y:
-				span.refs[0] = refs[1];
+				span.base = base + offsets[0];
 				span.size = 1;
 				break;
 			case SubSelector::Z:
-				span.refs[0] = refs[2];
+				span.base = base + offsets[1];
 				span.size = 1;
 				break;
 			case SubSelector::W:
-				span.refs[0] = refs[3];
+				span.base = base + offsets[2];
 				span.size = 1;
 				break;
 			case SubSelector::XY:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[1];
+				span.base = base;
+				span.offsets[0] = offsets[0];
 				span.size = 2;
 				break;
 			case SubSelector::XZ:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[2];
+				span.base = base;
+				span.offsets[0] = offsets[1];
 				span.size = 2;
 				break;
 			case SubSelector::XW:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[3];
+				span.base = base;
+				span.offsets[0] = offsets[2];
 				span.size = 2;
 				break;
 			case SubSelector::YZ:
-				span.refs[0] = refs[1];
-				span.refs[1] = refs[2];
+				span.base = base + offsets[0];
+				span.offsets[0] = offsets[1] - offsets[0];
 				span.size = 2;
 				break;
 			case SubSelector::YW:
-				span.refs[0] = refs[1];
-				span.refs[1] = refs[3];
+				span.base = base + offsets[0];
+				span.offsets[0] = offsets[2] - offsets[0];
 				span.size = 2;
 				break;
 			case SubSelector::ZW:
-				span.refs[0] = refs[2];
-				span.refs[1] = refs[3];
+				span.base = base + offsets[1];
+				span.offsets[0] = offsets[2] - offsets[1];
 				span.size = 2;
 				break;
 			case SubSelector::XYZ:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[1];
-				span.refs[2] = refs[2];
+				span.base = base;
+				span.offsets[0] = offsets[0];
+				span.offsets[1] = offsets[1];
 				span.size = 3;
 				break;
 			case SubSelector::XYW:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[1];
-				span.refs[2] = refs[3];
+				span.base = base;
+				span.offsets[0] = offsets[0];
+				span.offsets[1] = offsets[2];
 				span.size = 3;
 				break;
 			case SubSelector::XZW:
-				span.refs[0] = refs[0];
-				span.refs[1] = refs[2];
-				span.refs[2] = refs[3];
+				span.base = base;
+				span.offsets[0] = offsets[1];
+				span.offsets[1] = offsets[2];
 				span.size = 3;
 				break;
 			case SubSelector::YZW:
-				span.refs[0] = refs[1];
-				span.refs[1] = refs[2];
-				span.refs[2] = refs[3];
+				span.base = base + offsets[0];
+				span.offsets[0] = offsets[1] - offsets[0];
+				span.offsets[1] = offsets[2] - offsets[0];
 				span.size = 3;
 				break;
 			default:
@@ -153,10 +154,17 @@ namespace oly::particles
 			return span;
 		}
 
+	private:
+		PointerType ref(size_t i) const
+		{
+			return base + (i > 0 ? offsets[i - 1] : 0);
+		}
+
+	public:
 		float& operator[](size_t i) requires (!Const)
 		{
 			if (i < size) [[likely]]
-				return *refs[i];
+				return *ref(i);
 			else
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 		}
@@ -164,7 +172,7 @@ namespace oly::particles
 		float operator[](size_t i) const
 		{
 			if (i < size) [[likely]]
-				return *refs[i];
+				return *ref(i);
 			else
 				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 		}
@@ -178,7 +186,7 @@ namespace oly::particles
 		{
 			if (size == 1)
 			{
-				*refs[0] = v;
+				*ref(0) = v;
 				return *this;
 			}
 			else
@@ -189,8 +197,8 @@ namespace oly::particles
 		{
 			if (size == 2)
 			{
-				*refs[0] = v.x;
-				*refs[1] = v.y;
+				*ref(0) = v.x;
+				*ref(1) = v.y;
 				return *this;
 			}
 			else
@@ -201,9 +209,9 @@ namespace oly::particles
 		{
 			if (size == 3)
 			{
-				*refs[0] = v.x;
-				*refs[1] = v.y;
-				*refs[2] = v.z;
+				*ref(0) = v.x;
+				*ref(1) = v.y;
+				*ref(2) = v.z;
 				return *this;
 			}
 			else
@@ -214,10 +222,10 @@ namespace oly::particles
 		{
 			if (size == 4)
 			{
-				*refs[0] = v.x;
-				*refs[1] = v.y;
-				*refs[2] = v.z;
-				*refs[3] = v.w;
+				*ref(0) = v.x;
+				*ref(1) = v.y;
+				*ref(2) = v.z;
+				*ref(3) = v.w;
 				return *this;
 			}
 			else
@@ -227,7 +235,7 @@ namespace oly::particles
 		float flt() const
 		{
 			if (size == 1)
-				return *refs[0];
+				return *ref(0);
 			else
 				throw Error(ErrorCode::INVALID_SIZE);
 		}
@@ -235,7 +243,7 @@ namespace oly::particles
 		glm::vec2 vec2() const
 		{
 			if (size == 2)
-				return { *refs[0], *refs[1] };
+				return { *ref(0), *ref(1) };
 			else
 				throw Error(ErrorCode::INVALID_SIZE);
 		}
@@ -243,7 +251,7 @@ namespace oly::particles
 		glm::vec3 vec3() const
 		{
 			if (size == 3)
-				return { *refs[0], *refs[1], *refs[2] };
+				return { *ref(0), *ref(1), *ref(2) };
 			else
 				throw Error(ErrorCode::INVALID_SIZE);
 		}
@@ -251,7 +259,7 @@ namespace oly::particles
 		glm::vec4 vec4() const
 		{
 			if (size == 4)
-				return { *refs[0], *refs[1], *refs[2], *refs[3] };
+				return { *ref(0), *ref(1), *ref(2), *ref(3) };
 			else
 				throw Error(ErrorCode::INVALID_SIZE);
 		}
@@ -379,7 +387,7 @@ namespace oly::particles
 
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
-				//if (inner_op)
+				if (inner_op)
 					inner_op->op(emitter, attribute.select(selector));
 			}
 
