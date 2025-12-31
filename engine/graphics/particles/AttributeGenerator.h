@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/types/Polymorphic.h"
+#include "external/TOML.h"
 
 namespace oly::particles
 {
@@ -10,6 +11,7 @@ namespace oly::particles
 	{
 		virtual ~IParticleSpawner() = default;
 		virtual float spawn_debt(float time, float delta_time, float period) const = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IParticleSpawner);
 	};
@@ -35,6 +37,7 @@ namespace oly::particles
 		virtual ~ISampler1D() = default;
 		virtual void apply(internal::Sampler1D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler1D);
 	};
@@ -44,6 +47,7 @@ namespace oly::particles
 		virtual ~IDomain1D() = default;
 		virtual void apply(internal::Domain1D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain1D);
 	};
@@ -60,6 +64,12 @@ namespace oly::particles
 			sampler->on_tick(emitter);
 			domain->on_tick(emitter);
 		}
+
+		void overload(TOMLNode node)
+		{
+			sampler->overload(node["sampler"]);
+			domain->overload(node["domain"]);
+		}
 	};
 
 	struct ISampler2D
@@ -67,6 +77,7 @@ namespace oly::particles
 		virtual ~ISampler2D() = default;
 		virtual void apply(internal::Sampler2D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler2D);
 	};
@@ -76,6 +87,7 @@ namespace oly::particles
 		virtual ~IDomain2D() = default;
 		virtual void apply(internal::Domain2D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain2D);
 	};
@@ -92,6 +104,12 @@ namespace oly::particles
 			sampler->on_tick(emitter);
 			domain->on_tick(emitter);
 		}
+
+		void overload(TOMLNode node)
+		{
+			sampler->overload(node["sampler"]);
+			domain->overload(node["domain"]);
+		}
 	};
 
 	struct ISampler3D
@@ -99,6 +117,7 @@ namespace oly::particles
 		virtual ~ISampler3D() = default;
 		virtual void apply(internal::Sampler3D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler3D);
 	};
@@ -108,6 +127,7 @@ namespace oly::particles
 		virtual ~IDomain3D() = default;
 		virtual void apply(internal::Domain3D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain3D);
 	};
@@ -124,6 +144,12 @@ namespace oly::particles
 			sampler->on_tick(emitter);
 			domain->on_tick(emitter);
 		}
+
+		void overload(TOMLNode node)
+		{
+			sampler->overload(node["sampler"]);
+			domain->overload(node["domain"]);
+		}
 	};
 
 	struct ISampler4D
@@ -131,6 +157,7 @@ namespace oly::particles
 		virtual ~ISampler4D() = default;
 		virtual void apply(internal::Sampler4D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler4D);
 	};
@@ -140,6 +167,7 @@ namespace oly::particles
 		virtual ~IDomain4D() = default;
 		virtual void apply(internal::Domain4D&) const = 0;
 		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain4D);
 	};
@@ -155,6 +183,12 @@ namespace oly::particles
 		{
 			sampler->on_tick(emitter);
 			domain->on_tick(emitter);
+		}
+
+		void overload(TOMLNode node)
+		{
+			sampler->overload(node["sampler"]);
+			domain->overload(node["domain"]);
 		}
 	};
 }

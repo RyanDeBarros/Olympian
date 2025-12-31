@@ -1,29 +1,34 @@
 #meta type="particle_system"
 
-[color0]
-op = "Sequence"
-	[[color0.ops]]
-	op = "Selector"
-	selector = "R"
-		[color0.ops.inner_op]
-		op = "SineWave1D"
-		a = 0.5
-		b = 2.0
-		k = 1.57
-		c = 0.5
-	[[color0.ops]]
-	op = "Selector"
-	selector = "B"
-		[color0.ops.inner_op]
-		op = "SineWave1D"
-		a = 0.5
-		b = 2.0
-		k = 0.57
-		c = 0.5
+[emitter0]
+	[emitter0.color]
+		[emitter0.color.c]
+		op = "Sequence"
+			[[emitter0.color.c.ops]]
+			op = "Selector"
+			selector = "R"
+				[emitter0.color.c.ops.inner_op]
+				op = "SineWave1D"
+				a = 0.5
+				b = 2.0
+				k = 1.57
+				c = 0.5
+			[[emitter0.color.c.ops]]
+			op = "Selector"
+			selector = "B"
+				[emitter0.color.c.ops.inner_op]
+				op = "SineWave1D"
+				a = 0.5
+				b = 2.0
+				k = 0.57
+				c = 0.5
 
-[velocity0]
-op = "Polarization2D"
-amplitude = 100.0
+	[emitter0.velocity]
+		[emitter0.velocity.c]
+		op = "Polarization2D"
+		amplitude = 100.0
 
-[color1]
-value = [0.0, 0.0, 1.0, 1.0]
+[emitter1]
+	[emitter1.color]
+		[emitter1.color.c]
+		value = [0.0, 0.0, 1.0, 1.0]

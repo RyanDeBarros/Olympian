@@ -318,22 +318,22 @@ namespace oly::particles
 		const T* operator->() const { return &value; }
 		T* operator->() { return &value; }
 
-		static void overload(Attribute<T>& attribute, TOMLNode node)
+		void overload(TOMLNode node)
 		{
 			constexpr size_t N = sizeof(T) / sizeof(float);
 			if constexpr (N > 1)
-				io::parse_vec<N>(node["value"], attribute.value);
+				io::parse_vec<N>(node["value"], value);
 			else
-				io::parse_float(node["value"], attribute.value);
+				io::parse_float(node["value"], value);
 
-			if (auto op = IAttributeOperation::load(node))
-				attribute.op = std::move(op);
+			if (auto operation = IAttributeOperation::load(node))
+				op = std::move(operation);
 		}
 
 		static Attribute<T> load(TOMLNode node)
 		{
 			Attribute<T> attribute;
-			overload(attribute, node);
+			attribute.overload(node);
 			return attribute;
 		}
 	};

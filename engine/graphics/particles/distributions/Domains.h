@@ -20,6 +20,11 @@ namespace oly::particles
 			c.on_tick(emitter);
 		}
 
+		void overload(TOMLNode node)
+		{
+			c.overload(node["c"]);
+		}
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain1D);
 	};
 
@@ -36,6 +41,12 @@ namespace oly::particles
 		{
 			a.on_tick(emitter);
 			b.on_tick(emitter);
+		}
+
+		void overload(TOMLNode node)
+		{
+			a.overload(node["a"]);
+			b.overload(node["b"]);
 		}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(LineDomain1D);
@@ -58,6 +69,13 @@ namespace oly::particles
 			c.on_tick(emitter);
 		}
 
+		void overload(TOMLNode node)
+		{
+			a.overload(node["a"]);
+			b.overload(node["b"]);
+			c.overload(node["c"]);
+		}
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(BiLineDomain1D);
 	};
 
@@ -72,6 +90,11 @@ namespace oly::particles
 		void on_tick(const ParticleEmitter& emitter)
 		{
 			c.on_tick(emitter);
+		}
+
+		void overload(TOMLNode node)
+		{
+			c.overload(node["c"]);
 		}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain2D);
@@ -90,6 +113,11 @@ namespace oly::particles
 			c.on_tick(emitter);
 		}
 
+		void overload(TOMLNode node)
+		{
+			c.overload(node["c"]);
+		}
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain3D);
 	};
 
@@ -104,6 +132,11 @@ namespace oly::particles
 		void on_tick(const ParticleEmitter& emitter)
 		{
 			c.on_tick(emitter);
+		}
+
+		void overload(TOMLNode node)
+		{
+			c.overload(node["c"]);
 		}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain4D);

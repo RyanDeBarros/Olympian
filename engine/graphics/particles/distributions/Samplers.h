@@ -27,6 +27,11 @@ namespace oly::particles
 			tilt.on_tick(emitter);
 		}
 
+		void overload(TOMLNode node) override
+		{
+			tilt.overload(node["tilt"]);
+		}
+
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(TiltedSampler1D);
 	};
 
