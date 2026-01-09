@@ -161,6 +161,12 @@ namespace oly
 		{
 			return dynamic_cast<const U*>(_raw);
 		}
+
+		template<typename U>
+		bool castable() const
+		{
+			return dynamic_cast<const U*>(_raw);
+		}
 	};
 
 	template<typename T, typename... Args>

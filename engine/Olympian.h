@@ -42,16 +42,16 @@
 
 namespace oly
 {
-	using rendering::Sprite;
-	
 	inline platform::Window& context_window() { return context::get_platform().window(); }
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
+	// TODO v6 Singleton CRTP
+	// TODO v6 Manager pattern (use CRTP?) as used with RigidBody, ParticleSystem, etc.?
+	// TODO v6 use string_view throughout
 	// TODO v7 Lighting engine
 	// TODO v7 UI widgets
 	// TODO v8 thread safety + multi-threading.
-	// TODO v9 separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
 	// TODO v9 network communication - online/local multiplayer.
 }

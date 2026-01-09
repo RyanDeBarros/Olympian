@@ -361,7 +361,8 @@ namespace oly::particles
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
 				for (size_t i = 0; i < N; ++i)
-					ops[i]->op(emitter, attribute);
+					if (ops[i])
+						ops[i]->op(emitter, attribute);
 			}
 
 			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<N>);

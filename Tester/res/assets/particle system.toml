@@ -1,34 +1,40 @@
 #meta type="particle_system"
 
 [emitter0]
+	[emitter0.spawner]
+	class = "BurstParticleSpawner"
+
 	[emitter0.color]
-		[emitter0.color.c]
-		op = "Sequence"
-			[[emitter0.color.c.ops]]
-			op = "Selector"
-			selector = "R"
-				[emitter0.color.c.ops.inner_op]
-				op = "SineWave1D"
-				a = 0.5
-				b = 2.0
-				k = 1.57
-				c = 0.5
-			[[emitter0.color.c.ops]]
-			op = "Selector"
-			selector = "B"
-				[emitter0.color.c.ops.inner_op]
-				op = "SineWave1D"
-				a = 0.5
-				b = 2.0
-				k = 0.57
-				c = 0.5
+		[emitter0.color.domain]
+			[emitter0.color.domain.c]
+			op = "Sequence"
+				[[emitter0.color.domain.c.ops]]
+				op = "Selector"
+				selector = "R"
+					[emitter0.color.domain.c.ops.inner_op]
+					op = "SineWave1D"
+					a = 0.5
+					b = 2.0
+					k = 1.57
+					c = 0.5
+				[[emitter0.color.domain.c.ops]]
+				op = "Selector"
+				selector = "B"
+					[emitter0.color.domain.c.ops.inner_op]
+					op = "SineWave1D"
+					a = 0.5
+					b = 2.0
+					k = 0.57
+					c = 0.5
 
 	[emitter0.velocity]
-		[emitter0.velocity.c]
-		op = "Polarization2D"
-		amplitude = 100.0
+		[emitter0.velocity.domain]
+			[emitter0.velocity.domain.c]
+			op = "Polarization2D"
+			amplitude = 100.0
 
 [emitter1]
 	[emitter1.color]
-		[emitter1.color.c]
-		value = [0.0, 0.0, 1.0, 1.0]
+		[emitter1.color.domain]
+			[emitter1.color.domain.c]
+			value = [0.0, 0.0, 1.0, 1.0]

@@ -63,7 +63,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 	Jumble jumble;
 	PixelArtText pixel_art_text;
 
-	std::vector<oly::Sprite> flag_tesselation;
+	std::vector<oly::rendering::Sprite> flag_tesselation;
 	oly::Transformer2D flag_tesselation_parent;
 	oly::PivotTransformModifier2D* flag_tesselation_modifier;
 
@@ -86,7 +86,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		oly::Sprite flag_instance = oly::rendering::Sprite::load(oly::io::load_toml("~/assets/flag instance.toml")["sprite"]);
+		auto flag_instance = oly::rendering::Sprite::load(oly::io::load_toml("~/assets/flag instance.toml")["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);
@@ -99,11 +99,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 
 		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YOUNG_ON_OLD;
 		particle_system.emitter(0).spawn_period = 0.3f;
-		particle_system.emitter(0).spawner = oly::make_polymorphic<oly::particles::BurstParticleSpawner>();
-		particle_system.emitter(0).color.domain.as<oly::particles::ConstantDomain4D>()->overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["color"]);
-		particle_system.emitter(0).velocity.domain.as<oly::particles::ConstantDomain2D>()->overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["velocity"]);
+		oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, oly::io::load_toml("assets/particle system.toml")["emitter0"]["spawner"]);
+		particle_system.emitter(0).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["color"]);
+		particle_system.emitter(0).velocity.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["velocity"]);
 		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color.domain.as<oly::particles::ConstantDomain4D>()->overload(oly::io::load_toml("assets/particle system.toml")["emitter1"]["color"]);
+		particle_system.emitter(1).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter1"]["color"]);
 
 		glEnable(GL_BLEND);
 

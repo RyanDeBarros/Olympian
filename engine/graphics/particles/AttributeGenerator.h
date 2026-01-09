@@ -14,6 +14,9 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IParticleSpawner);
+
+		static void overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node);
+		static Polymorphic<IParticleSpawner> load(TOMLNode node);
 	};
 
 	namespace internal
@@ -67,6 +70,7 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
+			// TODO v6 load Polymorphic<ISampler1D>/Polymorphic<IDomain1D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
 		}
@@ -107,6 +111,7 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
+			// TODO v6 load Polymorphic<ISampler2D>/Polymorphic<IDomain2D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
 		}
@@ -147,6 +152,7 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
+			// TODO v6 load Polymorphic<ISampler3D>/Polymorphic<IDomain3D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
 		}
@@ -187,6 +193,7 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
+			// TODO v6 load Polymorphic<ISampler4D>/Polymorphic<IDomain4D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
 		}
