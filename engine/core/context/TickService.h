@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/types/Singleton.h"
+#include "core/types/AutoRegistry.h"
 
 #include <unordered_set>
 #include <array>
@@ -59,7 +59,7 @@ namespace oly
 	public:
 		bool auto_tick = true;
 
-		explicit ITickService(TickPhase tick_phase, TerminatePhase terminate_phase = TerminatePhase::None);
+		explicit ITickService(TickPhase tick_phase = TickPhase::Logic, TerminatePhase terminate_phase = TerminatePhase::None);
 		ITickService(const ITickService&);
 		ITickService(ITickService&&) noexcept;
 		~ITickService();
@@ -82,6 +82,10 @@ namespace oly
 
 		explicit GenericTickService(TerminatePhase terminate_phase, std::function<void()>&& terminate)
 			: ITickService(TickPhase::None, terminate_phase), terminate(std::move(terminate)) {}
+
+		explicit GenericTickService(std::function<void()>&& tick, std::function<void()>&& terminate)
+			: ITickService(), tick(std::move(tick)), terminate(std::move(terminate)) {
+		}
 
 		void on_tick() override { tick(); }
 		void on_terminate() override { terminate(); }

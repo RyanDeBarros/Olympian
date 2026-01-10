@@ -3,7 +3,6 @@
 #include "external/TOML.h"
 #include "core/base/Errors.h"
 #include "core/algorithms/STLUtils.h"
-#include "core/types/Singleton.h"
 #include "core/context/TickService.h"
 
 #include <stack>
@@ -35,25 +34,20 @@ namespace oly
 
 	namespace internal
 	{
-		struct IPool
+		struct IPool : public AutoRegistrable<IPool>
 		{
-			virtual ~IPool() = default;
+			virtual ~IPool() {}
 			virtual void clean() = 0;
 			virtual void clear() = 0;
 		};
 
-		class PoolBatch final : public Singleton<PoolBatch>, public ITickService
+		class PoolBatch final : public AutoRegistry<IPool>, public ITickService
 		{
-			friend class Singleton<PoolBatch>;
-
-			std::unordered_set<IPool*> pools;
+			friend class AutoRegistry<IPool>;
 
 			PoolBatch() : ITickService(TickPhase::PreFrame, TerminatePhase::ReferencePool) {}
 
 		public:
-			void insert(IPool* pool) { pools.insert(pool); }
-			void remove(IPool* pool) { pools.erase(pool); }
-
 			void on_tick() override
 			{
 				clean();
@@ -61,20 +55,15 @@ namespace oly
 
 			void on_terminate() override
 			{
+				for (IPool* pool : tracked())
+					pool->clear();
 				clear();
 			}
 
 			void clean()
 			{
-				for (IPool* pool : pools)
+				for (IPool* pool : tracked())
 					pool->clean();
-			}
-
-			void clear()
-			{
-				for (IPool* pool : pools)
-					pool->clear();
-				pools.clear();
 			}
 		};
 
@@ -88,15 +77,15 @@ namespace oly
 		template<typename Object>
 		class SmartReferencePool final : public IPool, public Singleton<SmartReferencePool<Object>>
 		{
+			friend class Singleton<SmartReferencePool<Object>>;
+
 			std::vector<std::unique_ptr<Object>> objects;
 			std::stack<size_t> unoccupied;
 			std::unordered_set<size_t> marked_for_deletion;
 			std::vector<SmartReferenceLink*> reference_heads;
 			std::vector<std::pair<void(*)(Object&, void*), void*>> on_delete_callbacks;
 
-			friend class Singleton<SmartReferencePool<Object>>;
-			SmartReferencePool() { PoolBatch::instance().insert(this); }
-			~SmartReferencePool() { PoolBatch::instance().remove(this); clean(); }
+			~SmartReferencePool() { clear(); }
 
 		public:
 			void clean() override
@@ -117,10 +106,9 @@ namespace oly
 				marked_for_deletion.clear();
 			}
 
-		private:
-			friend class PoolBatch;
 			void clear() override;
 
+		private:
 			template<typename>
 			friend struct SmartReference;
 

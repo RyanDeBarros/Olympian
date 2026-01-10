@@ -17,10 +17,11 @@ namespace oly
 	public:
 		~Singleton() = default;
 
-		static T& instance()
+		template<typename U = T>
+		static U& instance()
 		{
 			static T inst;
-			return inst;
+			return static_cast<U&>(inst);
 		}
 	};
 }

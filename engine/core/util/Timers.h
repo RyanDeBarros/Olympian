@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/util/Time.h"
-#include "core/types/Singleton.h"
 #include "core/context/TickService.h"
 
 #include <vector>
@@ -10,21 +9,14 @@
 
 namespace oly
 {
-	namespace internal
-	{
-		class TimerRegistry;
-	}
-
 	enum class TimeMode : char
 	{
 		PROCESSED,
 		REAL
 	};
 
-	class StateTimer
+	class StateTimer : public ITickService
 	{
-		friend class internal::TimerRegistry;
-
 		std::vector<float> cumulative_intervals;
 		float total_length = 0.0f;
 		mutable float elapsed = 0.0f;
@@ -37,7 +29,6 @@ namespace oly
 		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
 		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
 		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		~StateTimer();
 		
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }
@@ -48,6 +39,8 @@ namespace oly
 		void poll() const;
 
 	public:
+		void on_tick() override { poll(); }
+
 		struct State
 		{
 			GLuint index;
@@ -57,10 +50,8 @@ namespace oly
 		State state() const;
 	};
 
-	class CallbackTimer
+	class CallbackTimer : public ITickService
 	{
-		friend class internal::TimerRegistry;
-
 	public:
 		using Callback = std::function<void(GLuint)>;
 
@@ -80,7 +71,6 @@ namespace oly
 		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
 		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
 		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		~CallbackTimer();
 
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }
@@ -89,28 +79,8 @@ namespace oly
 
 	private:
 		void poll() const;
+
+	public:
+		void on_tick() override { poll(); }
 	};
-
-	namespace internal
-	{
-		class TimerRegistry final : public Singleton<TimerRegistry>, public ITickService
-		{
-			friend class Singleton<TimerRegistry>;
-
-			friend class StateTimer;
-			std::unordered_set<const StateTimer*> state_timers;
-			friend class CallbackTimer;
-			std::unordered_set<const CallbackTimer*> callback_timers;
-
-			TimerRegistry() : ITickService(TickPhase::TimerPoll) {}
-
-		public:
-			void on_tick() override
-			{
-				poll_all();
-			}
-
-			void poll_all() const;
-		};
-	}
 }

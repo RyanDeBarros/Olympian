@@ -127,7 +127,7 @@ namespace oly::context
 		GenericTickService resources(TerminatePhase::Resources, &graphics::internal::unload_resources);
 		GenericTickService finalization(TerminatePhase::Finalization, []() { glfwTerminate(); LOG.flush(); });
 
-		internal::TickServiceRegistry::instance().terminate();
+		internal::TickServiceRegistry::instance().terminate(); // TODO v6 tick service should just use destructor instead of terminate?
 	}
 
 	static size_t active_contexts = 0;

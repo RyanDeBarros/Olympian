@@ -9,7 +9,7 @@ namespace oly::rendering
 {
 	void internal::SpriteBatchRegistry::update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
-		for (SpriteBatch* batch : batches)
+		for (SpriteBatch* batch : tracked())
 			batch->update_texture_handle(texture);
 	}
 
@@ -27,8 +27,6 @@ namespace oly::rendering
 		: ebo(vao), shader_ref(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims())), tex_data_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData)),
 		tex_coords_ssbo(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect)), ubo(capacity)
 	{
-		SpriteBatchRegistry::instance().batches.insert(this);
-
 		shader = *shader_ref;
 
 		shader_locations.projection = glGetUniformLocation(shader, "uProjection");
@@ -43,7 +41,6 @@ namespace oly::rendering
 
 	internal::SpriteBatch::~SpriteBatch()
 	{
-		SpriteBatchRegistry::instance().batches.erase(this);
 	}
 
 	void internal::SpriteBatch::render() const

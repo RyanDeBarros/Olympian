@@ -3,22 +3,23 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/components/DynamicsComponent.h"
+#include "core/types/AutoRegistry.h"
 
 namespace oly::physics
 {
 	namespace internal { class RigidBodyManager; }
 
-	class RigidBody : public col2d::CollisionController
+	class RigidBody : public col2d::CollisionController, public AutoRegistrable<RigidBody>
 	{
 	protected:
 		std::vector<col2d::Collider> colliders;
 		Transformer2D transformer;
 
 	public:
-		RigidBody();
+		RigidBody() = default;
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
-		virtual ~RigidBody();
+		virtual ~RigidBody() = default;
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
@@ -73,12 +74,9 @@ namespace oly::physics
 
 	namespace internal
 	{
-		class RigidBodyManager final : public Singleton<RigidBodyManager>, public ITickService
+		class RigidBodyManager final : public oly::internal::AutoRegistry<RigidBody>, public ITickService
 		{
-			friend class Singleton<RigidBodyManager>;
-
-			friend class RigidBody;
-			std::unordered_set<RigidBody*> rigid_bodies;
+			friend class oly::internal::AutoRegistry<RigidBody>;
 
 			RigidBodyManager() : ITickService(TickPhase::Physics, TerminatePhase::Logic) {}
 			~RigidBodyManager() { clear(); }
@@ -89,11 +87,6 @@ namespace oly::physics
 			void on_terminate() override
 			{
 				clear();
-			}
-
-			void clear()
-			{
-				rigid_bodies.clear();
 			}
 		};
 	}

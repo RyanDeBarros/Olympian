@@ -35,29 +35,21 @@ namespace oly
 	}
 
 	StateTimer::StateTimer(float interval, bool one_shot, bool playing, TimeMode mode)
-		: cumulative_intervals({ interval }), one_shot(one_shot), playing(playing), mode(mode)
+		: ITickService(TickPhase::TimerPoll), cumulative_intervals({interval}), one_shot(one_shot), playing(playing), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().state_timers.insert(this);
 	}
 
 	StateTimer::StateTimer(const std::vector<float>& intervals, bool one_shot, bool playing, TimeMode mode)
-		: cumulative_intervals(intervals), one_shot(one_shot), playing(playing), mode(mode)
+		: ITickService(TickPhase::TimerPoll), cumulative_intervals(intervals), one_shot(one_shot), playing(playing), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().state_timers.insert(this);
 	}
 
 	StateTimer::StateTimer(std::vector<float>&& intervals, bool one_shot, bool playing, TimeMode mode)
-		: cumulative_intervals(std::move(intervals)), one_shot(one_shot), playing(playing), mode(mode)
+		: ITickService(TickPhase::TimerPoll), cumulative_intervals(std::move(intervals)), one_shot(one_shot), playing(playing), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().state_timers.insert(this);
-	}
-
-	StateTimer::~StateTimer()
-	{
-		internal::TimerRegistry::instance().state_timers.erase(this);
 	}
 
 	void StateTimer::poll() const
@@ -105,29 +97,21 @@ namespace oly
 	}
 
 	CallbackTimer::CallbackTimer(float interval, const Callback& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)
-		: callback(callback), cumulative_intervals({ interval }), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
+		: ITickService(TickPhase::TimerPoll), callback(callback), cumulative_intervals({ interval }), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().callback_timers.insert(this);
 	}
 
 	CallbackTimer::CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)
-		: callback(callback), cumulative_intervals(intervals), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
+		: ITickService(TickPhase::TimerPoll), callback(callback), cumulative_intervals(intervals), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().callback_timers.insert(this);
 	}
 
 	CallbackTimer::CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)
-		: callback(std::move(callback)), cumulative_intervals(std::move(intervals)), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
+		: ITickService(TickPhase::TimerPoll), callback(std::move(callback)), cumulative_intervals(std::move(intervals)), one_shot(one_shot), playing(playing), continuous(continuous), mode(mode)
 	{
 		init_intervals(cumulative_intervals, total_length);
-		internal::TimerRegistry::instance().callback_timers.insert(this);
-	}
-
-	CallbackTimer::~CallbackTimer()
-	{
-		internal::TimerRegistry::instance().callback_timers.erase(this);
 	}
 
 	void CallbackTimer::poll() const
@@ -203,13 +187,5 @@ namespace oly
 				}
 			}
 		}
-	}
-
-	void internal::TimerRegistry::poll_all() const
-	{
-		for (const StateTimer* timer : state_timers)
-			timer->poll();
-		for (const CallbackTimer* timer : callback_timers)
-			timer->poll();
 	}
 }

@@ -6,35 +6,7 @@
 
 namespace oly::rendering
 {
-	struct SpriteAtlas;
-
-	namespace internal
-	{
-		class SpriteAtlasManager final : public Singleton<SpriteAtlasManager>, public ITickService
-		{
-			friend class Singleton<SpriteAtlasManager>;
-
-			friend struct SpriteAtlas;
-			std::unordered_set<SpriteAtlas*> atlases;
-
-			SpriteAtlasManager() : ITickService(TickPhase::Logic, TerminatePhase::Logic) {}
-
-		public:
-			void clear()
-			{
-				atlases.clear();
-			}
-
-			void on_tick() override;
-
-			void on_terminate() override
-			{
-				clear();
-			}
-		};
-	}
-
-	struct SpriteAtlas
+	struct SpriteAtlas : public ITickService
 	{
 		Sprite sprite;
 		std::vector<math::UVRect> atlas;
@@ -54,7 +26,7 @@ namespace oly::rendering
 		~SpriteAtlas();
 
 		void draw() const;
-		void on_tick() const;
+		void on_tick() override;
 
 		void select_static_frame(GLuint frame);
 		void uvs_changed() const;

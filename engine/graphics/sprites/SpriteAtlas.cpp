@@ -5,51 +5,37 @@
 
 namespace oly::rendering
 {
-	void internal::SpriteAtlasManager::on_tick()
-	{
-		for (SpriteAtlas* atlas : atlases)
-			if (atlas->auto_tick) [[likely]]
-				atlas->on_tick();
-	}
-
 	SpriteAtlas::SpriteAtlas()
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(Unbatched)
 		: sprite(UNBATCHED)
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(SpriteBatch& batch)
 		: sprite(batch)
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(Sprite&& sprite)
 		: sprite(std::move(sprite))
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(const SpriteAtlas& other)
 		: sprite(other.sprite), atlas(other.atlas), anim_format(other.anim_format), current_frame(other.current_frame)
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
 		: sprite(std::move(other.sprite)), atlas(std::move(other.atlas)), anim_format(std::move(other.anim_format)), current_frame(other.current_frame)
 	{
-		internal::SpriteAtlasManager::instance().atlases.insert(this);
 	}
 
 	SpriteAtlas::~SpriteAtlas()
 	{
-		internal::SpriteAtlasManager::instance().atlases.erase(this);
 	}
 
 	void SpriteAtlas::draw() const
@@ -57,7 +43,7 @@ namespace oly::rendering
 		sprite.draw();
 	}
 
-	void SpriteAtlas::on_tick() const
+	void SpriteAtlas::on_tick()
 	{
 		if (anim_format.delay_seconds != 0.0f)
 			select(anim_format.starting_frame + (int)floor((TIME.now<>() - anim_format.starting_time) / anim_format.delay_seconds));
