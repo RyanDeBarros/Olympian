@@ -8,6 +8,7 @@
 #include "external/GL.h"
 #include "external/GLM.h"
 #include "core/types/Meta.h"
+#include "core/types/Singleton.h"
 
 namespace oly
 {
@@ -16,18 +17,14 @@ namespace oly
 		struct LogAccess;
 	}
 
-	class Logger
+	class Logger final : public Singleton<Logger>
 	{
-		Logger() = default;
-		Logger(const Logger&) = delete;
-		Logger(Logger&&) = delete;
+		friend class Singleton<Logger>;
 
 		std::stringstream stream;
 		std::ofstream file;
 
 	public:
-		static Logger& instance() { static Logger logger; return logger; }
-
 		void set_logfile(const char* filepath, bool append);
 		void flush();
 

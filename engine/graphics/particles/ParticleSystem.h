@@ -15,22 +15,14 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		class ParticleSystemManager
+		class ParticleSystemManager final : public Singleton<ParticleSystemManager>
 		{
+			friend class Singleton<ParticleSystemManager>;
+
 			friend class ParticleSystem;
 			std::unordered_set<ParticleSystem*> systems;
 
-			ParticleSystemManager() = default;
-			ParticleSystemManager(const ParticleSystemManager&) = delete;
-			ParticleSystemManager(ParticleSystemManager&&) noexcept = delete;
-
 		public:
-			static ParticleSystemManager& instance()
-			{
-				static ParticleSystemManager manager;
-				return manager;
-			}
-
 			void clear()
 			{
 				systems.clear();

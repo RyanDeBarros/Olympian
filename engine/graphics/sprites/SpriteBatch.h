@@ -17,19 +17,15 @@ namespace oly::rendering
 	{
 		class SpriteBatch;
 
-		class SpriteBatchRegistry
+		class SpriteBatchRegistry final : public Singleton<SpriteBatchRegistry>
 		{
+			friend class Singleton<SpriteBatchRegistry>;
+
 			friend class SpriteBatch;
 			std::unordered_set<SpriteBatch*> batches;
 
-			SpriteBatchRegistry() = default;
-			SpriteBatchRegistry(const SpriteBatchRegistry&) = delete;
-			SpriteBatchRegistry(SpriteBatchRegistry&&) = delete;
-
 		public:
 			void update_texture_handle(const graphics::BindlessTextureRef& texture);
-
-			static SpriteBatchRegistry& instance() { static SpriteBatchRegistry reg; return reg; }
 		};
 
 		class SpriteReference;

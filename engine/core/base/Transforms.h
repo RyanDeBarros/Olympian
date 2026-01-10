@@ -6,6 +6,7 @@
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/Polymorphic.h"
+#include "core/types/Singleton.h"
 
 namespace oly
 {
@@ -72,20 +73,18 @@ namespace oly
 
 	namespace internal
 	{
-		class Transformer2DRegistry
+		class Transformer2DRegistry final : public Singleton<Transformer2DRegistry>
 		{
 			typedef glm::uint Index;
 
 			oly::SoftIDGenerator<Index> id_generator;
 			static const Index NULL_INDEX = Index(-1);
 
+			friend class Singleton<Transformer2DRegistry>;
 			Transformer2DRegistry()
 				: id_generator(0, nmax<Index>() - 1)
 			{
 			}
-
-			Transformer2DRegistry(const Transformer2DRegistry&) = delete;
-			Transformer2DRegistry(Transformer2DRegistry&&) = delete;
 
 			std::vector<Transformer2D*> transformers;
 			std::vector<Index> parent;
@@ -93,8 +92,6 @@ namespace oly
 			std::vector<std::vector<Index>> children;
 
 		public:
-			static Transformer2DRegistry& instance() { static Transformer2DRegistry reg; return reg; }
-
 			class Handle
 			{
 				friend class Transformer2D;

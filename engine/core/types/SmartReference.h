@@ -3,6 +3,7 @@
 #include "external/TOML.h"
 #include "core/base/Errors.h"
 #include "core/algorithms/STLUtils.h"
+#include "core/types/Singleton.h"
 
 #include <stack>
 #include <unordered_set>
@@ -40,22 +41,13 @@ namespace oly
 			virtual void clear() = 0;
 		};
 
-		class PoolBatch
+		class PoolBatch final : public Singleton<PoolBatch>
 		{
+			friend class Singleton<PoolBatch>;
+
 			std::unordered_set<IPool*> pools;
 
-			PoolBatch() = default;
-			PoolBatch(const PoolBatch&) = delete;
-			PoolBatch(PoolBatch&&) = delete;
-			~PoolBatch() = default;
-
 		public:
-			static PoolBatch& instance()
-			{
-				static PoolBatch batch;
-				return batch;
-			}
-
 			void insert(IPool* pool) { pools.insert(pool); }
 			void remove(IPool* pool) { pools.erase(pool); }
 
@@ -81,7 +73,7 @@ namespace oly
 
 		// TODO v8 multi-threading and thead safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
-		class SmartReferencePool : public IPool
+		class SmartReferencePool final : public IPool, public Singleton<SmartReferencePool<Object>>
 		{
 			std::vector<std::unique_ptr<Object>> objects;
 			std::stack<size_t> unoccupied;
@@ -89,19 +81,12 @@ namespace oly
 			std::vector<SmartReferenceLink*> reference_heads;
 			std::vector<std::pair<void(*)(Object&, void*), void*>> on_delete_callbacks;
 
+			friend class Singleton<SmartReferencePool<Object>>;
 			SmartReferencePool() { PoolBatch::instance().insert(this); }
-			SmartReferencePool(const SmartReferencePool<Object>&) = delete;
-			SmartReferencePool(SmartReferencePool<Object>&&) = delete;
 			~SmartReferencePool() { PoolBatch::instance().remove(this); clean(); }
 
 		public:
-			static SmartReferencePool& instance()
-			{
-				static SmartReferencePool pool;
-				return pool;
-			}
-
-			virtual void clean() override
+			void clean() override
 			{
 				for (size_t idx : marked_for_deletion)
 				{

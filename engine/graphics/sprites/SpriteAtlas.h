@@ -10,22 +10,14 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		class SpriteAtlasManager
+		class SpriteAtlasManager final : public Singleton<SpriteAtlasManager>
 		{
+			friend class Singleton<SpriteAtlasManager>;
+
 			friend struct SpriteAtlas;
 			std::unordered_set<SpriteAtlas*> atlases;
 
-			SpriteAtlasManager() = default;
-			SpriteAtlasManager(const SpriteAtlasManager&) = delete;
-			SpriteAtlasManager(SpriteAtlasManager&&) noexcept = delete;
-
 		public:
-			static SpriteAtlasManager& instance()
-			{
-				static SpriteAtlasManager manager;
-				return manager;
-			}
-
 			void clear()
 			{
 				atlases.clear();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/util/Time.h"
+#include "core/types/Singleton.h"
 
 #include <vector>
 #include <unordered_set>
@@ -91,25 +92,16 @@ namespace oly
 
 	namespace internal
 	{
-		class TimerRegistry
+		class TimerRegistry final : public Singleton<TimerRegistry>
 		{
+			friend class Singleton<TimerRegistry>;
+
 			friend class StateTimer;
 			std::unordered_set<const StateTimer*> state_timers;
 			friend class CallbackTimer;
 			std::unordered_set<const CallbackTimer*> callback_timers;
 
-			TimerRegistry() = default;
-			TimerRegistry(const TimerRegistry&) = delete;
-			TimerRegistry(TimerRegistry&&) = delete;
-			~TimerRegistry() = default;
-
 		public:
-			static TimerRegistry& instance()
-			{
-				static TimerRegistry registry;
-				return registry;
-			}
-
 			void poll_all() const;
 		};
 	}

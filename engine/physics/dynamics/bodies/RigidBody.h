@@ -73,23 +73,16 @@ namespace oly::physics
 
 	namespace internal
 	{
-		class RigidBodyManager
+		class RigidBodyManager final : public Singleton<RigidBodyManager>
 		{
+			friend class Singleton<RigidBodyManager>;
+
 			friend class RigidBody;
 			std::unordered_set<RigidBody*> rigid_bodies;
 
-			RigidBodyManager() = default;
-			RigidBodyManager(const RigidBodyManager&) = delete;
-			RigidBodyManager(RigidBodyManager&&) = delete;
 			~RigidBodyManager() { clear(); }
 
 		public:
-			static RigidBodyManager& instance()
-			{
-				static RigidBodyManager manager;
-				return manager;
-			}
-
 			void on_tick() const;
 
 			void clear()
