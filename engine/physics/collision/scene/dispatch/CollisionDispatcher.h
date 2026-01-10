@@ -207,8 +207,10 @@ namespace oly::col2d
 			void erase_all(const Collider& c);
 		};
 
-		class CollisionDispatcher
+		class CollisionDispatcher : public Singleton<CollisionDispatcher>, public ITickService
 		{
+			friend class Singleton<CollisionDispatcher>;
+
 #define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
 			{\
 				const CollisionController* controller = nullptr;\
@@ -282,11 +284,9 @@ namespace oly::col2d
 			mutable CollisionPhaseTracker phase_tracker;
 			mutable CollisionCache collision_cache;
 
-		public:
-			CollisionDispatcher() = default;
-			CollisionDispatcher(const CollisionDispatcher&) = delete;
-			CollisionDispatcher(CollisionDispatcher&&) = delete;
+			CollisionDispatcher() : ITickService(TickPhase::Collision, TerminatePhase::Logic) {}
 
+		public:
 			size_t add_tree(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4);
 			const CollisionTree& get_tree(size_t i = 0) const { return trees[i]; }
 			void remove_tree(size_t i) { trees.erase(trees.begin() + i); }

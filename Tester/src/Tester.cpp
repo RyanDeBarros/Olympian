@@ -110,7 +110,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		// TODO v7 anti-aliasing settings
 	}
 
-	void render_frame() const override
+	void render() const override
 	{
 		bkg.draw();
 		polygon_batch->render();
@@ -129,6 +129,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		particle_system.render();
 	}
 
+	// TODO v6 use TickService/Timer for logic update
 	void logic_update()
 	{
 		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::TIME.delta());
@@ -322,17 +323,16 @@ int main()
 	);
 	pipeline.jumble.nonant_panel->set_mod_texture(modtex, { 2, 2 });
 
-	// TODO v7 begin play on initial actors here
+	oly::GenericTickService logic(oly::TickPhase::Logic, [&]() {
+			player->modify_debug_overlay(0, player_cv);
+			obstacle0->modify_debug_overlay(0, cv_obstacle0);
+			obstacle1->modify_debug_overlay(0, cv_obstacle1);
+			obstacle2->modify_debug_overlay(0, cv_obstacle2);
+			obstacle3->modify_debug_overlay(0, cv_obstacle3);
+			obstacle4->modify_debug_overlay(0, cv_obstacle4);
+			pipeline.logic_update(); // TODO v6 pipeline should just use tick service
+		});
 
+	oly::run();
 	oly::LOG.flush();
-	while (oly::context::frame())
-	{
-		player->modify_debug_overlay(0, player_cv);
-		obstacle0->modify_debug_overlay(0, cv_obstacle0);
-		obstacle1->modify_debug_overlay(0, cv_obstacle1);
-		obstacle2->modify_debug_overlay(0, cv_obstacle2);
-		obstacle3->modify_debug_overlay(0, cv_obstacle3);
-		obstacle4->modify_debug_overlay(0, cv_obstacle4);
-		pipeline.logic_update();
-	}
 }

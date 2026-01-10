@@ -2,6 +2,7 @@
 
 #include "core/context/Context.h"
 #include "core/base/Errors.h"
+#include "core/base/Assert.h"
 #include "core/util/Logger.h"
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
@@ -107,6 +108,8 @@ namespace oly::context
 
 	bool internal::frame_platform()
 	{
+		oly::internal::check_errors();
+		LOG.flush();
 		return internal::platform->frame();
 	}
 

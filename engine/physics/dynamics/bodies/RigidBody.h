@@ -73,17 +73,23 @@ namespace oly::physics
 
 	namespace internal
 	{
-		class RigidBodyManager final : public Singleton<RigidBodyManager>
+		class RigidBodyManager final : public Singleton<RigidBodyManager>, public ITickService
 		{
 			friend class Singleton<RigidBodyManager>;
 
 			friend class RigidBody;
 			std::unordered_set<RigidBody*> rigid_bodies;
 
+			RigidBodyManager() : ITickService(TickPhase::Physics, TerminatePhase::Logic) {}
 			~RigidBodyManager() { clear(); }
 
 		public:
 			void on_tick() const;
+
+			void on_terminate() override
+			{
+				clear();
+			}
 
 			void clear()
 			{

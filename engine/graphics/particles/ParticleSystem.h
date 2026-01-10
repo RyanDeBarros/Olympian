@@ -13,26 +13,7 @@ namespace oly::rendering
 {
 	class ParticleSystem;
 
-	namespace internal
-	{
-		class ParticleSystemManager final : public Singleton<ParticleSystemManager>
-		{
-			friend class Singleton<ParticleSystemManager>;
-
-			friend class ParticleSystem;
-			std::unordered_set<ParticleSystem*> systems;
-
-		public:
-			void clear()
-			{
-				systems.clear();
-			}
-
-			void on_tick();
-		};
-	}
-
-	class ParticleSystem
+	class ParticleSystem : public ITickService
 	{
 		graphics::VertexArray vao;
 
@@ -129,9 +110,7 @@ namespace oly::rendering
 		ParticleSystem(particles::ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
-		ParticleSystem(const ParticleSystem&);
-		ParticleSystem(ParticleSystem&&) noexcept;
-		~ParticleSystem();
+		// TODO v6 implement operator=
 		ParticleSystem& operator=(const ParticleSystem&) = delete;
 		ParticleSystem& operator=(ParticleSystem&&) = delete;
 

@@ -2,6 +2,7 @@
 
 #include "core/util/Time.h"
 #include "core/types/Singleton.h"
+#include "core/context/TickService.h"
 
 #include <vector>
 #include <unordered_set>
@@ -92,7 +93,7 @@ namespace oly
 
 	namespace internal
 	{
-		class TimerRegistry final : public Singleton<TimerRegistry>
+		class TimerRegistry final : public Singleton<TimerRegistry>, public ITickService
 		{
 			friend class Singleton<TimerRegistry>;
 
@@ -101,7 +102,14 @@ namespace oly
 			friend class CallbackTimer;
 			std::unordered_set<const CallbackTimer*> callback_timers;
 
+			TimerRegistry() : ITickService(TickPhase::TimerPoll) {}
+
 		public:
+			void on_tick() override
+			{
+				poll_all();
+			}
+
 			void poll_all() const;
 		};
 	}

@@ -10,12 +10,14 @@ namespace oly::rendering
 
 	namespace internal
 	{
-		class SpriteAtlasManager final : public Singleton<SpriteAtlasManager>
+		class SpriteAtlasManager final : public Singleton<SpriteAtlasManager>, public ITickService
 		{
 			friend class Singleton<SpriteAtlasManager>;
 
 			friend struct SpriteAtlas;
 			std::unordered_set<SpriteAtlas*> atlases;
+
+			SpriteAtlasManager() : ITickService(TickPhase::Logic, TerminatePhase::Logic) {}
 
 		public:
 			void clear()
@@ -23,7 +25,12 @@ namespace oly::rendering
 				atlases.clear();
 			}
 
-			void on_tick();
+			void on_tick() override;
+
+			void on_terminate() override
+			{
+				clear();
+			}
 		};
 	}
 

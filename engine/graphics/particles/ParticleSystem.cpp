@@ -7,13 +7,6 @@
 
 namespace oly::rendering
 {
-	void internal::ParticleSystemManager::on_tick()
-	{
-		for (ParticleSystem* system : systems)
-			if (system->auto_tick) [[likely]]
-				system->on_tick();
-	}
-
 	ParticleSystem::BufferList::ParticleDoubleBuffer::ParticleDoubleBuffer(GLuint max_particles)
 		: a(max_particles * sizeof(particles::internal::Particle), 0), b(max_particles * sizeof(particles::internal::Particle), 0)
 	{
@@ -61,49 +54,24 @@ namespace oly::rendering
 	}
 
 	ParticleSystem::ParticleSystem(particles::ParticleEmitter&& emitter, GLuint particle_capacity, GLushort compute_threads)
-		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+		: ITickService(TickPhase::Logic, TerminatePhase::Logic), buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
 	{
-		internal::ParticleSystemManager::instance().systems.insert(this);
 		emitters.push_back(std::move(emitter));
 		init();
 	}
 
 	ParticleSystem::ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity, GLushort compute_threads)
-		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads), emitters(std::move(emitters))
+		: ITickService(TickPhase::Logic, TerminatePhase::Logic), buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads), emitters(std::move(emitters))
 	{
-		internal::ParticleSystemManager::instance().systems.insert(this);
 		init();
 	}
 
 	ParticleSystem::ParticleSystem(size_t emitter_count, GLuint particle_capacity, GLushort compute_threads)
-		: buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
+		: ITickService(TickPhase::Logic, TerminatePhase::Logic), buffers(particle_capacity), particle_capacity(particle_capacity), compute_threads(compute_threads)
 	{
-		internal::ParticleSystemManager::instance().systems.insert(this);
 		init();
 		for (size_t _ = 0; _ < emitter_count; ++_)
 			emitters.push_back({});
-	}
-
-	ParticleSystem::ParticleSystem(const ParticleSystem& other)
-		: buffers(other.particle_capacity), shaders(other.shaders), shader_locations(other.shader_locations), emitters(other.emitters), particle_capacity(other.particle_capacity),
-		compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time), last_render_time(other.last_render_time),
-		camera(other.camera), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick), age_sort(other.age_sort), transformer(other.transformer)
-	{
-		internal::ParticleSystemManager::instance().systems.insert(this);
-	}
-
-	ParticleSystem::ParticleSystem(ParticleSystem&& other) noexcept
-		: buffers(std::move(other.buffers)), shaders(std::move(other.shaders)), shader_locations(other.shader_locations), emitters(std::move(other.emitters)),
-		particle_capacity(other.particle_capacity), compute_threads(other.compute_threads), time_elapsed(other.time_elapsed), last_tick_time(other.last_tick_time),
-		last_render_time(other.last_render_time), camera(std::move(other.camera)), camera_invariant(other.camera_invariant), auto_tick(other.auto_tick),
-		age_sort(other.age_sort), transformer(std::move(other.transformer))
-	{
-		internal::ParticleSystemManager::instance().systems.insert(this);
-	}
-
-	ParticleSystem::~ParticleSystem()
-	{
-		internal::ParticleSystemManager::instance().systems.erase(this);
 	}
 
 	void ParticleSystem::init()

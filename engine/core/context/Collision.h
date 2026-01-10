@@ -13,10 +13,8 @@ namespace oly::context
 	namespace internal
 	{
 		extern void init_collision(TOMLNode);
-		extern void terminate_collision();
-		extern void frame_collision();
 	}
-
+	
 	extern col2d::internal::CollisionDispatcher& collision_dispatcher();
 
     extern col2d::Mask get_collision_mask(const std::string& name);

@@ -15,7 +15,10 @@ namespace oly::context
 		Context& operator=(Context&&) noexcept;
 	};
 
-	extern bool frame();
-	extern bool render_frame();
-	extern BigSize this_frame();
+	namespace internal
+	{
+		extern bool render_frame();
+	}
+
+	extern void run();
 }

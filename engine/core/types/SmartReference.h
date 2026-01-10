@@ -4,6 +4,7 @@
 #include "core/base/Errors.h"
 #include "core/algorithms/STLUtils.h"
 #include "core/types/Singleton.h"
+#include "core/context/TickService.h"
 
 #include <stack>
 #include <unordered_set>
@@ -41,15 +42,27 @@ namespace oly
 			virtual void clear() = 0;
 		};
 
-		class PoolBatch final : public Singleton<PoolBatch>
+		class PoolBatch final : public Singleton<PoolBatch>, public ITickService
 		{
 			friend class Singleton<PoolBatch>;
 
 			std::unordered_set<IPool*> pools;
 
+			PoolBatch() : ITickService(TickPhase::PreFrame, TerminatePhase::ReferencePool) {}
+
 		public:
 			void insert(IPool* pool) { pools.insert(pool); }
 			void remove(IPool* pool) { pools.erase(pool); }
+
+			void on_tick() override
+			{
+				clean();
+			}
+
+			void on_terminate() override
+			{
+				clear();
+			}
 
 			void clean()
 			{

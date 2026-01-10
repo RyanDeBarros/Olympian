@@ -64,7 +64,7 @@ namespace oly::platform
 
 	bool internal::RootWindowResizeHandler::consume(const input::WindowResizeEventData& data)
 	{
-		return !context::render_frame();
+		return !context::internal::render_frame();
 	}
 
 	Window::Window(int width, int height, const char* title, const WindowHint& hint, GLFWmonitor* monitor, GLFWwindow* share)

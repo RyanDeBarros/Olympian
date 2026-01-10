@@ -7,7 +7,7 @@ namespace oly
 	struct IRenderPipeline
 	{
 		virtual ~IRenderPipeline() = default;
-		virtual void render_frame() const {}
+		virtual void render() const {}
 	};
 }
 
@@ -17,7 +17,7 @@ namespace oly::context
 	
 	namespace internal
 	{
-		extern void render_frame();
+		extern void render_pipeline();
 	}
 
 	extern bool blend_enabled();

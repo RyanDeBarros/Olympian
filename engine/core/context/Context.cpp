@@ -2,6 +2,7 @@
 
 #include "external/STB.h"
 
+#include "core/context/TickService.h"
 #include "core/context/Platform.h"
 #include "core/context/Collision.h"
 #include "core/context/Vault.h"
@@ -27,7 +28,6 @@ namespace oly::context
 	namespace internal
 	{
 		std::string resource_root;
-		size_t this_frame = 0;
 	}
 
 	static void init_logger(TOMLNode node)
@@ -90,7 +90,6 @@ namespace oly::context
 		}
 		stbi_set_flip_vertically_on_load(true);
 
-		internal::this_frame = 0;
 		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
 		auto toml = io::load_toml(project_file);
@@ -118,29 +117,17 @@ namespace oly::context
 
 	static void terminate()
 	{
-		internal::terminate_vault();
+		// TODO v6 better use of tick service instead of just creating generic tick services here.
+		GenericTickService vault(TerminatePhase::Vault, &internal::terminate_vault);
+		GenericTickService textures(TerminatePhase::Graphics, &internal::terminate_textures);
+		GenericTickService tilesets(TerminatePhase::Graphics, &internal::terminate_tilesets);
+		GenericTickService fonts(TerminatePhase::Graphics, &internal::terminate_fonts);
+		GenericTickService sprites(TerminatePhase::Graphics, &internal::terminate_sprites);
+		GenericTickService platform(TerminatePhase::Platform, &internal::terminate_platform);
+		GenericTickService resources(TerminatePhase::Resources, &graphics::internal::unload_resources);
+		GenericTickService finalization(TerminatePhase::Finalization, []() { glfwTerminate(); LOG.flush(); });
 
-		internal::terminate_collision();
-
-		physics::internal::RigidBodyManager::instance().clear();
-		rendering::internal::SpriteAtlasManager::instance().clear();
-		rendering::internal::ParticleSystemManager::instance().clear();
-
-		internal::terminate_textures();
-		internal::terminate_tilesets();
-		internal::terminate_fonts();
-
-		internal::terminate_sprites();
-
-		internal::terminate_platform();
-
-		graphics::internal::unload_resources();
-
-		oly::internal::PoolBatch::instance().clear();
-
-		glfwTerminate();
-
-		LOG.flush();
+		internal::TickServiceRegistry::instance().terminate();
 	}
 
 	static size_t active_contexts = 0;
@@ -179,40 +166,21 @@ namespace oly::context
 		return *this;
 	}
 
-	bool frame()
+	namespace internal
 	{
-		if (!render_frame())
-			return false;
-
-		// Time / frame counter
-		TIME.sync();
-		++internal::this_frame;
-
-		// Clean references
-		oly::internal::PoolBatch::instance().clean();
-
-		// Poll timers
-		oly::internal::TimerRegistry::instance().poll_all();
-
-		// Update physics
-		internal::frame_collision();
-
-		// Automatic on-tick
-		physics::internal::RigidBodyManager::instance().on_tick();
-		rendering::internal::SpriteAtlasManager::instance().on_tick();
-		rendering::internal::ParticleSystemManager::instance().on_tick();
-
-		return true;
+		bool render_frame()
+		{
+			TIME.sync();
+			internal::render_pipeline();
+			return internal::frame_platform();
+		}
 	}
 
-	bool render_frame()
+	void run()
 	{
-		internal::render_frame();
-		return internal::frame_platform();
-	}
-
-	BigSize this_frame()
-	{
-		return internal::this_frame;
+		// TODO v7 begin play on initial actors here
+		LOG.flush();
+		while (internal::render_frame())
+			internal::TickServiceRegistry::instance().tick();
 	}
 }
