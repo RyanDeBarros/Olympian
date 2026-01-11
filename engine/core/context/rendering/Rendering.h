@@ -6,7 +6,6 @@ namespace oly
 {
 	struct IRenderPipeline
 	{
-		virtual ~IRenderPipeline() = default;
 		virtual void render() const {}
 	};
 }

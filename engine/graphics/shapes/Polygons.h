@@ -195,7 +195,6 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		using internal::PolygonSubmitter::PolygonSubmitter;
-		virtual ~Polygonal() = default;
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }

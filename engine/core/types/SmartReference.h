@@ -36,7 +36,6 @@ namespace oly
 	{
 		struct IPool : public AutoRegistrable<IPool>
 		{
-			virtual ~IPool() {}
 			virtual void clean() = 0;
 			virtual void clear() = 0;
 		};

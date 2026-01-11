@@ -49,7 +49,6 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v6 remove virtual destructor for classes that won't be deleted through pointer.
 	// TODO v6 use string_view throughout
 	// TODO v7 Lighting engine
 	// TODO v7 UI widgets

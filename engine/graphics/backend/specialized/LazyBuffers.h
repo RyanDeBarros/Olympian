@@ -86,8 +86,6 @@ namespace oly::graphics
 	public:
 		CPUSideBuffer(size_t size = 0, const StructType& default_value = StructType()) : cpudata(size, default_value) {}
 		
-		virtual ~CPUSideBuffer() = default;
-
 		const VectorAlias& vector() const { return cpudata; }
 		VectorAlias& vector() { return cpudata; }
 		GLuint buffer() const { return buf; }
