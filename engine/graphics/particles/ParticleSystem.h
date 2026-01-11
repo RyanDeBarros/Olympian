@@ -110,9 +110,6 @@ namespace oly::rendering
 		ParticleSystem(particles::ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
 		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
-		// TODO v6 implement operator=
-		ParticleSystem& operator=(const ParticleSystem&) = delete;
-		ParticleSystem& operator=(ParticleSystem&&) = delete;
 
 	private:
 		void init();

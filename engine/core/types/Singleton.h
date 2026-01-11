@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 namespace oly
 {
 	template<typename T>
@@ -17,11 +19,11 @@ namespace oly
 	public:
 		~Singleton() = default;
 
-		template<typename U = T>
-		static U& instance()
+		static T& instance()
 		{
+			static_assert(std::is_final_v<T>, "Singleton type must be final");
 			static T inst;
-			return static_cast<U&>(inst);
+			return inst;
 		}
 	};
 }

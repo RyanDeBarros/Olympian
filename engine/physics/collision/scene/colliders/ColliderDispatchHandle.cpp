@@ -66,7 +66,7 @@ namespace oly::col2d::internal
 
 	void ColliderDispatchHandle::copy_handlers(const ColliderDispatchHandle& other)
 	{
-		auto& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		copy_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 		copy_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 		copy_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
@@ -93,7 +93,7 @@ namespace oly::col2d::internal
 
 	void ColliderDispatchHandle::move_handlers(ColliderDispatchHandle&& other)
 	{
-		auto& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		move_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 		move_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 		move_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
@@ -118,7 +118,7 @@ namespace oly::col2d::internal
 
 	void ColliderDispatchHandle::remove_handlers()
 	{
-		auto& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		remove_dispatch_handle(collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
 		remove_dispatch_handle(collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
 		remove_dispatch_handle(collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);

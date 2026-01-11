@@ -3,11 +3,6 @@
 #include "external/TOML.h"
 #include "physics/collision/elements/Element.h"
 
-namespace oly::col2d::internal
-{
-	class CollisionDispatcher;
-}
-
 namespace oly::context
 {
 	namespace internal
@@ -15,8 +10,6 @@ namespace oly::context
 		extern void init_collision(TOMLNode);
 	}
 	
-	extern col2d::internal::CollisionDispatcher& collision_dispatcher();
-
     extern col2d::Mask get_collision_mask(const std::string& name);
     extern void set_collision_mask_index(int index, const std::string& name);
 

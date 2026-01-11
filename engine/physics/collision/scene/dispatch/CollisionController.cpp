@@ -7,9 +7,9 @@ namespace oly::col2d
 {
 	CollisionController::CollisionController()
 	{
-		context::collision_dispatcher().overlap_controller_lut[this];
-		context::collision_dispatcher().collision_controller_lut[this];
-		context::collision_dispatcher().contact_controller_lut[this];
+		CollisionDispatcher::instance().overlap_controller_lut[this];
+		CollisionDispatcher::instance().collision_controller_lut[this];
+		CollisionDispatcher::instance().contact_controller_lut[this];
 	}
 	
 	template<typename LUT, typename Map>
@@ -32,22 +32,21 @@ namespace oly::col2d
 
 	CollisionController::~CollisionController()
 	{
-		auto& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		remove_controller(*this, dispatcher.overlap_controller_lut, dispatcher.overlap_handler_map);
 		remove_controller(*this, dispatcher.collision_controller_lut, dispatcher.collision_handler_map);
 		remove_controller(*this, dispatcher.contact_controller_lut, dispatcher.contact_handler_map);
 	}
 
 #define BIND_HANDLER(Type, type)\
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
-		dispatcher.type##_handler_map[&collider].insert(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));
+		CollisionDispatcher::instance().type##_handler_map[&collider].insert(std::make_unique<CollisionDispatcher::Type##HandlerRef>(*this, handler));
 
 #define UNBIND_HANDLER(Type, type)\
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();\
+		auto& dispatcher = CollisionDispatcher::instance();\
 		auto it = dispatcher.type##_handler_map.find(&collider);\
 		if (it != dispatcher.type##_handler_map.end())\
 		{\
-			auto inner_it = it->second.find(std::make_unique<internal::CollisionDispatcher::Type##HandlerRef>(*this, handler));\
+			auto inner_it = it->second.find(std::make_unique<CollisionDispatcher::Type##HandlerRef>(*this, handler));\
 			if (inner_it != it->second.end())\
 			{\
 				it->second.erase(inner_it);\
@@ -139,37 +138,37 @@ namespace oly::col2d
 
 	void CollisionController::emit(const Collider& from, OverlapHandler only_handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, *this, &Collider::overlaps, dispatcher.phase_tracker);
 	}
 
 	void CollisionController::emit(const Collider& from, OverlapConstHandler only_handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::overlaps, dispatcher.phase_tracker);
 	}
 
 	void CollisionController::emit(const Collider& from, CollisionHandler only_handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, *this, &Collider::collides, dispatcher.phase_tracker);
 	}
 
 	void CollisionController::emit(const Collider& from, CollisionConstHandler only_handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::collides, dispatcher.phase_tracker);
 	}
 
 	void CollisionController::emit(const Collider& from, ContactHandler only_handler)
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, *this, &Collider::contacts, dispatcher.phase_tracker);
 	}
 
 	void CollisionController::emit(const Collider& from, ContactConstHandler only_handler) const
 	{
-		internal::CollisionDispatcher& dispatcher = context::collision_dispatcher();
+		auto& dispatcher = CollisionDispatcher::instance();
 		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::contacts, dispatcher.phase_tracker);
 	}
 

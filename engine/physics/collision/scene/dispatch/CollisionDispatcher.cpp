@@ -158,13 +158,13 @@ namespace oly::col2d
 		delete data;
 	}
 
-	size_t internal::CollisionDispatcher::add_tree(const math::Rect2D bounds, const glm::uvec2 degree, const size_t cell_capacity)
+	size_t CollisionDispatcher::add_tree(const math::Rect2D bounds, const glm::uvec2 degree, const size_t cell_capacity)
 	{
 		trees.emplace_back(bounds, degree, cell_capacity);
 		return trees.size() - 1;
 	}
 
-	void internal::CollisionDispatcher::clear()
+	void CollisionDispatcher::clear()
 	{
 		trees.clear();
 		
@@ -196,29 +196,29 @@ namespace oly::col2d
 		}
 	}
 
-	void internal::CollisionDispatcher::unregister_overlap_handlers(const Collider& collider)
+	void CollisionDispatcher::unregister_overlap_handlers(const Collider& collider)
 	{
 		unregister_handlers_impl(collider, overlap_handler_map, overlap_controller_lut);
 	}
 
-	void internal::CollisionDispatcher::unregister_collision_handlers(const Collider& collider)
+	void CollisionDispatcher::unregister_collision_handlers(const Collider& collider)
 	{
 		unregister_handlers_impl(collider, collision_handler_map, collision_controller_lut);
 	}
 
-	void internal::CollisionDispatcher::unregister_contact_handlers(const Collider& collider)
+	void CollisionDispatcher::unregister_contact_handlers(const Collider& collider)
 	{
 		unregister_handlers_impl(collider, contact_handler_map, contact_controller_lut);
 	}
 
-	void internal::CollisionDispatcher::unregister_handlers(const Collider& collider)
+	void CollisionDispatcher::unregister_handlers(const Collider& collider)
 	{
 		unregister_overlap_handlers(collider);
 		unregister_collision_handlers(collider);
 		unregister_contact_handlers(collider);
 	}
 
-	void internal::CollisionDispatcher::poll()
+	void CollisionDispatcher::on_tick()
 	{
 		collision_cache.clear();
 		phase_tracker.flush();
@@ -236,7 +236,7 @@ namespace oly::col2d
 		}
 	}
 
-	void internal::CollisionDispatcher::emit(const Collider& from)
+	void CollisionDispatcher::emit(const Collider& from)
 	{
 		for (const CollisionTree& tree : trees)
 		{

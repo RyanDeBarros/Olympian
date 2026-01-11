@@ -12,7 +12,7 @@ namespace oly
 	namespace internal
 	{
 		template<typename T>
-		class AutoRegistry : public Singleton<AutoRegistry<T>>
+		class AutoRegistry final : public Singleton<AutoRegistry<T>>
 		{
 			friend class Singleton<AutoRegistry<T>>;
 
@@ -20,11 +20,7 @@ namespace oly
 			std::unordered_set<T*> _tracked;
 
 		public:
-			void clear()
-			{
-				_tracked.clear();
-			}
-
+			void clear() { _tracked.clear(); }
 			const std::unordered_set<T*>& tracked() const { return _tracked; }
 		};
 	}

@@ -9,11 +9,6 @@ namespace oly::context
 		std::array<std::string, 32> collision_mask_names, collision_layer_names;
 	}
 	
-	col2d::internal::CollisionDispatcher& collision_dispatcher()
-	{
-		return col2d::internal::CollisionDispatcher::instance();
-	}
-
 	void internal::init_collision(TOMLNode node)
 	{
 		if (auto collision_node = node["collision"])
@@ -42,6 +37,7 @@ namespace oly::context
 		}
 
 		col2d::internal::load_luts();
+		col2d::CollisionDispatcher::instance();
 	}
 
 	col2d::Mask get_collision_mask(const std::string& name)

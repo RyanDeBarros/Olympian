@@ -15,17 +15,11 @@ namespace oly::rendering
 {
 	namespace internal
 	{
-		class SpriteBatch;
-
-		class SpriteBatchRegistry final : public oly::internal::AutoRegistry<SpriteBatch>
-		{
-		public:
-			void update_texture_handle(const graphics::BindlessTextureRef& texture);
-		};
+		extern void update_texture_handle(const graphics::BindlessTextureRef& texture);
 
 		class SpriteReference;
 
-		class SpriteBatch : public oly::internal::Issuer<SpriteBatch>
+		class SpriteBatch : public AutoRegistrable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
 		{
 			friend class SpriteReference;
 

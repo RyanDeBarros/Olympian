@@ -7,7 +7,10 @@
 
 namespace oly::physics
 {
-	namespace internal { class RigidBodyManager; }
+	namespace internal
+	{
+		struct RigidBodyOnTick;
+	}
 
 	class RigidBody : public col2d::CollisionController, public AutoRegistrable<RigidBody>
 	{
@@ -16,7 +19,7 @@ namespace oly::physics
 		Transformer2D transformer;
 
 	public:
-		RigidBody() = default;
+		RigidBody();
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
 		virtual ~RigidBody() = default;
@@ -53,7 +56,7 @@ namespace oly::physics
 		void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
 
 	private:
-		friend class internal::RigidBodyManager;
+		friend class internal::RigidBodyOnTick;
 		virtual void physics_pre_tick() = 0;
 		virtual void physics_post_tick() = 0;
 
@@ -71,23 +74,4 @@ namespace oly::physics
 		static const RigidBody* rigid_body(const col2d::Collider& collider);
 		static const DynamicsComponent& dynamics_of(const RigidBody& other) { return other.get_dynamics(); }
 	};
-
-	namespace internal
-	{
-		class RigidBodyManager final : public oly::internal::AutoRegistry<RigidBody>, public ITickService
-		{
-			friend class oly::internal::AutoRegistry<RigidBody>;
-
-			RigidBodyManager() : ITickService(TickPhase::Physics, TerminatePhase::Logic) {}
-			~RigidBodyManager() { clear(); }
-
-		public:
-			void on_tick() const;
-
-			void on_terminate() override
-			{
-				clear();
-			}
-		};
-	}
 }

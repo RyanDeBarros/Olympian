@@ -2,6 +2,36 @@
 
 namespace oly::physics
 {
+	namespace internal
+	{
+		struct RigidBodyOnTick
+		{
+			void operator()() const
+			{
+				auto& rigid_bodies = oly::internal::AutoRegistry<RigidBody>::instance().tracked();
+				for (RigidBody* rigid_body : rigid_bodies)
+					rigid_body->physics_pre_tick();
+				for (RigidBody* rigid_body : rigid_bodies)
+					rigid_body->physics_post_tick();
+			}
+		};
+
+		struct RigidBodyOnTerminate
+		{
+			void operator()() const
+			{
+				oly::internal::AutoRegistry<RigidBody>::instance().clear();
+			}
+		};
+
+		using RigidBodyTickService = SingletonTickService<TickPhase::Physics, RigidBodyOnTick, TerminatePhase::Logic, RigidBodyOnTerminate>;
+	}
+
+	RigidBody::RigidBody()
+	{
+		internal::RigidBodyTickService::instance(); // only need to call once in non-copy/move ctor.
+	}
+
 	RigidBody::RigidBody(const RigidBody& other)
 		: colliders(other.colliders), transformer(other.transformer)
 	{
@@ -140,13 +170,5 @@ namespace oly::physics
 	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
 	{
 		return collider.rigid_body;
-	}
-
-	void internal::RigidBodyManager::on_tick() const
-	{
-		for (RigidBody* rigid_body : tracked())
-			rigid_body->physics_pre_tick();
-		for (RigidBody* rigid_body : tracked())
-			rigid_body->physics_post_tick();
 	}
 }

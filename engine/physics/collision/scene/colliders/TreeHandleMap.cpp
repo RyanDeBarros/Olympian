@@ -90,7 +90,7 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::attach(size_t context_tree_index)
 	{
-		attach(context::collision_dispatcher().get_tree(context_tree_index));
+		attach(CollisionDispatcher::instance().get_tree(context_tree_index));
 	}
 
 	void TreeHandleMap::detach(const CollisionTree& tree)
@@ -106,12 +106,12 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::detach(size_t context_tree_index)
 	{
-		detach(context::collision_dispatcher().get_tree(context_tree_index));
+		detach(CollisionDispatcher::instance().get_tree(context_tree_index));
 	}
 
 	bool TreeHandleMap::is_attached(size_t context_tree_index) const
 	{
-		return is_attached(context::collision_dispatcher().get_tree(context_tree_index));
+		return is_attached(CollisionDispatcher::instance().get_tree(context_tree_index));
 	}
 
 	void TreeHandleMap::clear()

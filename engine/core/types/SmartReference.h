@@ -41,9 +41,9 @@ namespace oly
 			virtual void clear() = 0;
 		};
 
-		class PoolBatch final : public AutoRegistry<IPool>, public ITickService
+		class PoolBatch final : public Singleton<PoolBatch>, public ITickService
 		{
-			friend class AutoRegistry<IPool>;
+			friend class Singleton<PoolBatch>;
 
 			PoolBatch() : ITickService(TickPhase::PreFrame, TerminatePhase::ReferencePool) {}
 
@@ -55,14 +55,16 @@ namespace oly
 
 			void on_terminate() override
 			{
-				for (IPool* pool : tracked())
+				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
+				for (IPool* pool : pools.tracked())
 					pool->clear();
-				clear();
+				pools.clear();
 			}
 
 			void clean()
 			{
-				for (IPool* pool : tracked())
+				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
+				for (IPool* pool : pools.tracked())
 					pool->clean();
 			}
 		};
@@ -75,7 +77,7 @@ namespace oly
 
 		// TODO v8 multi-threading and thead safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
-		class SmartReferencePool final : public IPool, public Singleton<SmartReferencePool<Object>>
+		class SmartReferencePool final : public Singleton<SmartReferencePool<Object>>, public IPool
 		{
 			friend class Singleton<SmartReferencePool<Object>>;
 

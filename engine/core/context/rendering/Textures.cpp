@@ -51,7 +51,7 @@ namespace oly::context
 
 	void sync_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
-		rendering::internal::SpriteBatchRegistry::instance<rendering::internal::SpriteBatchRegistry>().update_texture_handle(texture);
+		rendering::internal::update_texture_handle(texture);
 	}
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)

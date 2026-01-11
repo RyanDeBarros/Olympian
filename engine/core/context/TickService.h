@@ -90,4 +90,16 @@ namespace oly
 		void on_tick() override { tick(); }
 		void on_terminate() override { terminate(); }
 	};
+
+	template<TickPhase OnTickPhase, typename OnTick, TerminatePhase OnTerminatePhase, typename OnTerminate>
+	class SingletonTickService final : public Singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>, public ITickService
+	{
+		friend class Singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>;
+
+		SingletonTickService() : ITickService(OnTickPhase, OnTerminatePhase) {}
+
+	public:
+		void on_tick() override { OnTick{}(); }
+		void on_terminate() override { OnTerminate{}(); }
+	};
 }

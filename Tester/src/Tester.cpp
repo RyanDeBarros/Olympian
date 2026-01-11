@@ -54,7 +54,7 @@ struct PixelArtText
 	}
 };
 
-struct TesterRenderPipeline : public oly::IRenderPipeline
+struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickService
 {
 	oly::rendering::PolygonBatch polygon_batch;
 
@@ -115,22 +115,21 @@ struct TesterRenderPipeline : public oly::IRenderPipeline
 		bkg.draw();
 		polygon_batch->render();
 
-		//sprite_match.draw();
-		//for (const auto& sprite : flag_tesselation)
-		//	sprite.draw();
-		//jumble.draw();
+		sprite_match.draw();
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		jumble.draw();
 
-		//obstacle_layer.draw();
-		//player_layer.draw();
-		//ray_layer.draw();
+		obstacle_layer.draw();
+		player_layer.draw();
+		ray_layer.draw();
 		
-		//pixel_art_text.draw();
+		pixel_art_text.draw();
 
 		particle_system.render();
 	}
 
-	// TODO v6 use TickService/Timer for logic update
-	void logic_update()
+	void on_tick() override
 	{
 		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::TIME.delta());
 
@@ -166,7 +165,7 @@ int main()
 {
 	oly::ProjectContext context;
 
-	oly::context::collision_dispatcher().add_tree(oly::math::Rect2D{ .x1 = -10'000, .x2 = 10'000, .y1 = -10'000, .y2 = 10'000 });
+	oly::col2d::CollisionDispatcher::instance().add_tree(oly::math::Rect2D{ .x1 = -10'000, .x2 = 10'000, .y1 = -10'000, .y2 = 10'000 });
 
 	TesterRenderPipeline pipeline;
 	oly::context::set_render_pipeline(&pipeline);
@@ -330,7 +329,6 @@ int main()
 			obstacle2->modify_debug_overlay(0, cv_obstacle2);
 			obstacle3->modify_debug_overlay(0, cv_obstacle3);
 			obstacle4->modify_debug_overlay(0, cv_obstacle4);
-			pipeline.logic_update(); // TODO v6 pipeline should just use tick service
 		});
 
 	oly::run();

@@ -5,11 +5,12 @@
 #include "core/context/rendering/Textures.h"
 #include "core/util/Time.h"
 
-namespace oly::rendering
+namespace oly::rendering::internal
 {
-	void internal::SpriteBatchRegistry::update_texture_handle(const graphics::BindlessTextureRef& texture)
+	void update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
-		for (SpriteBatch* batch : tracked())
+		auto& batches = oly::internal::AutoRegistry<SpriteBatch>::instance();
+		for (SpriteBatch* batch : batches.tracked())
 			batch->update_texture_handle(texture);
 	}
 
