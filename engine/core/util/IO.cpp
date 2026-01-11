@@ -10,22 +10,6 @@
 
 namespace oly::io
 {
-	std::vector<std::string> read_file_lines(const char* filepath)
-	{
-		std::ifstream file(filepath);
-		if (!file)
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
-		}
-
-		std::vector<std::string> lines;
-		std::string line;
-		while (std::getline(file, line))
-			lines.push_back(std::move(line));
-		return lines;
-	}
-
 	std::vector<std::string> read_file_lines(const ResourcePath& filepath)
 	{
 		std::ifstream file = filepath.get_ifstream();
@@ -40,20 +24,6 @@ namespace oly::io
 		while (std::getline(file, line))
 			lines.push_back(std::move(line));
 		return lines;
-	}
-
-	std::string read_file(const char* filepath)
-	{
-		std::ifstream file(filepath);
-		if (!file)
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open \"" << filepath << "\" for reading" << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
-		}
-		
-		std::ostringstream oss;
-		oss << file.rdbuf();
-		return oss.str();
 	}
 
 	std::string read_file(const ResourcePath& filepath)
@@ -93,8 +63,9 @@ namespace oly::io
 		return content;
 	}
 
-	static std::string read_template_content(std::string&& content, const std::unordered_map<std::string, std::string>& tmpl)
+	std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
 	{
+		std::string content = read_file(file);
 		for (const auto& [placeholder, value] : tmpl)
 		{
 			size_t pos = 0;
@@ -105,15 +76,5 @@ namespace oly::io
 			}
 		}
 		return content;
-	}
-
-	std::string read_template_file(const char* file, const std::unordered_map<std::string, std::string>& tmpl)
-	{
-		return read_template_content(read_file(file), tmpl);
-	}
-
-	std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
-	{
-		return read_template_content(read_file(file), tmpl);
 	}
 }

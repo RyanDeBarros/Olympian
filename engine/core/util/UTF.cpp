@@ -238,7 +238,7 @@ namespace oly::utf
 		return utf32;
 	}
 
-	std::u8string convert(const std::string& str)
+	std::u8string convert(const std::string_view str)
 	{
 		return std::u8string(str.begin(), str.end());
 	}

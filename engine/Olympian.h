@@ -49,7 +49,7 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v6 use string_view throughout
+	// TODO v6 Use custom string wrapper than can take const std::string&, std::string&, std::string&&, etc., to avoid having to define a million overloads.
 	// TODO v7 Lighting engine
 	// TODO v7 UI widgets
 	// TODO v8 thread safety + multi-threading.

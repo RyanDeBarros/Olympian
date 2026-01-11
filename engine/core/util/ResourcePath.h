@@ -19,12 +19,14 @@ namespace oly
 	public:
 		ResourcePath() = default;
 
+		ResourcePath(const std::string_view path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(std::string&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 		ResourcePath(const char* path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(dupl(path), relative_to); }
 		ResourcePath(std::filesystem::path&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 
+		ResourcePath& operator=(const std::string_view path) { set(path, {}); return *this; }
 		ResourcePath& operator=(const std::string& path) { set(path, {}); return *this; }
 		ResourcePath& operator=(std::string&& path) { set(std::move(path), {}); return *this; }
 		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }

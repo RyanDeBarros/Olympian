@@ -25,10 +25,10 @@ namespace oly
 	class DebugTrace
 	{
 		friend class internal::DebugTraceScope;
-		const char* source;
+		const std::string_view source;
 
 	public:
-		DebugTrace(const char* source = nullptr) : source(source ? source : "") {}
+		DebugTrace(const std::string_view source = "") : source(source) {}
 
 		internal::DebugTraceScope scope(std::string&& name_space, std::string&& action) const { return internal::DebugTraceScope(*this, std::move(name_space), std::move(action)); }
 	};

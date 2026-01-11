@@ -8,7 +8,7 @@ namespace oly::utf
 	extern std::u16string decode_utf16(const std::u8string& utf8);
 	extern std::u8string encode(const std::u32string& utf32, bool ignore_invalid_chars = false);
 	extern std::u32string decode_utf32(const std::u8string& utf8);
-	extern std::u8string convert(const std::string& str);
+	extern std::u8string convert(const std::string_view str);
 	extern std::string convert(const std::u8string& utf8);
 
 	class Codepoint
@@ -40,6 +40,7 @@ namespace oly::utf
 		String(const std::u16string& str) : str(encode(str)) {}
 		String(const std::u32string& str) : str(encode(str)) {}
 		String(const char8_t* str) : str(str) {}
+		String(const std::string_view str) : str(convert(str)) {}
 		String(const char* str) : str(convert(str)) {}
 		String(const char16_t* str) : str(encode(std::u16string(str))) {}
 		String(const char32_t* str) : str(encode(std::u32string(str))) {}

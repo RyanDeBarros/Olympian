@@ -9,14 +9,14 @@ namespace oly::algo::re
 		return std::regex_search(input, match, pattern);
 	}
 
-	bool first_match(const std::string& input, const char* pattern, std::smatch& match)
+	bool first_match(const std::string& input, const std::string_view pattern, std::smatch& match)
 	{
-		return first_match(input, std::regex(pattern), match);
+		return first_match(input, std::regex(pattern.data()), match);
 	}
 
-	std::vector<std::smatch> all_matches(const std::string& input, const char* pattern)
+	std::vector<std::smatch> all_matches(const std::string& input, const std::string_view pattern)
 	{
-		return all_matches(input, std::regex(pattern));
+		return all_matches(input, std::regex(pattern.data()));
 	}
 
 	std::vector<std::smatch> all_matches(const std::string& input, const std::regex& pattern)
@@ -24,7 +24,7 @@ namespace oly::algo::re
 		std::vector<std::smatch> matches;
 		auto begin = std::sregex_iterator(input.begin(), input.end(), pattern);
 		auto end = std::sregex_iterator();
-		for (std::sregex_iterator it = begin; it != end; ++it)
+		for (std::regex_iterator it = begin; it != end; ++it)
 			matches.push_back(*it);
 		return matches;
 	}

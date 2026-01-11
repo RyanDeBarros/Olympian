@@ -67,7 +67,6 @@ namespace oly
 		ErrorCode code;
 
 		Error(ErrorCode code) : std::runtime_error("Olympian Error (" + std::to_string((int)code) + ")"), code(code) {}
-		Error(ErrorCode code, const char* message) : std::runtime_error("Olympian Error (" + std::to_string((int)code) + "): " + message), code(code) {}
-		Error(ErrorCode code, const std::string& message) : std::runtime_error("Olympian Error (" + std::to_string((int)code) + "): " + message), code(code) {}
+		Error(ErrorCode code, const std::string_view message) : std::runtime_error("Olympian Error (" + std::to_string((int)code) + "): " + std::string(message)), code(code) {}
 	};
 }

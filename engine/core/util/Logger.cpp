@@ -250,7 +250,7 @@ namespace oly
 		return impl.stream(s);
 	}
 
-	Logger::Impl operator<<(Logger::Impl impl, std::string_view s)
+	Logger::Impl operator<<(Logger::Impl impl, const std::string_view s)
 	{
 		return impl.stream(s);
 	}

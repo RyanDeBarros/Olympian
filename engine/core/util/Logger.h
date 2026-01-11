@@ -138,7 +138,7 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, const void*);
 	extern Logger::Impl operator<<(Logger::Impl, const char*);
 	extern Logger::Impl operator<<(Logger::Impl, const std::string&);
-	extern Logger::Impl operator<<(Logger::Impl, std::string_view);
+	extern Logger::Impl operator<<(Logger::Impl, const std::string_view);
 	extern Logger::Impl operator<<(Logger::Impl, bool);
 	
 	template<numeric T>

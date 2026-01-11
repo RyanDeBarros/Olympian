@@ -7,8 +7,8 @@
 namespace oly::algo::re
 {
 	bool first_match(const std::string& input, const std::regex& pattern, std::smatch& match);
-	bool first_match(const std::string& input, const char* pattern, std::smatch& match);
-	std::vector<std::smatch> all_matches(const std::string& input, const char* pattern);
+	bool first_match(const std::string& input, const std::string_view pattern, std::smatch& match);
+	std::vector<std::smatch> all_matches(const std::string& input, const std::string_view pattern);
 	std::vector<std::smatch> all_matches(const std::string& input, const std::regex& pattern);
 
 	bool parse_float(const std::string& input, float& v);
