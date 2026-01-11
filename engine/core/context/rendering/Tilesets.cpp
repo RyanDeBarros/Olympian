@@ -12,13 +12,18 @@ namespace oly::context
 		std::unordered_map<ResourcePath, rendering::TileSetRef> tilesets;
 	}
 
-	void internal::terminate_tilesets()
+	struct TerminateTilesets
 	{
-		internal::tilesets.clear();
-	}
+		void operator()() const
+		{
+			internal::tilesets.clear();
+		}
+	};
 
 	rendering::TileSetRef load_tileset(const ResourcePath& file)
 	{
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TerminateTilesets>::instance();
+
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;

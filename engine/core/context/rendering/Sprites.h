@@ -7,7 +7,6 @@ namespace oly::context
 	namespace internal
 	{
 		extern void init_sprites(TOMLNode);
-		extern void terminate_sprites();
 	}
 
 	extern rendering::SpriteBatch& sprite_batch();

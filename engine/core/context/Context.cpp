@@ -81,6 +81,15 @@ namespace oly::context
 		}
 	}
 
+	struct TerminationFinalization
+	{
+		void operator()() const
+		{
+			glfwTerminate();
+			LOG.flush();
+		}
+	};
+
 	static void init(const char* project_file, const std::string& resource_root)
 	{
 		if (glfwInit() != GLFW_TRUE)
@@ -101,6 +110,7 @@ namespace oly::context
 		}
 
 		init_logger(toml_context);
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();
 
 		internal::init_platform(toml_context);
 		init_time(toml_context);
@@ -109,61 +119,30 @@ namespace oly::context
 		autoload_signals(toml_context);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
+		internal::init_vault(toml_context);
 
+		internal::init_textures(toml_context);
 		internal::init_sprites(toml_context);
+		internal::init_fonts(toml_context);
 
 		oly::internal::check_errors();
 	}
 
-	static void terminate()
-	{
-		// TODO v6 better use of tick service instead of just creating generic tick services here.
-		GenericTickService vault(TerminatePhase::Vault, &internal::terminate_vault);
-		GenericTickService textures(TerminatePhase::Graphics, &internal::terminate_textures);
-		GenericTickService tilesets(TerminatePhase::Graphics, &internal::terminate_tilesets);
-		GenericTickService fonts(TerminatePhase::Graphics, &internal::terminate_fonts);
-		GenericTickService sprites(TerminatePhase::Graphics, &internal::terminate_sprites);
-		GenericTickService platform(TerminatePhase::Platform, &internal::terminate_platform);
-		GenericTickService resources(TerminatePhase::Resources, &graphics::internal::unload_resources);
-		GenericTickService finalization(TerminatePhase::Finalization, []() { glfwTerminate(); LOG.flush(); });
-
-		internal::TickServiceRegistry::instance().terminate();
-	}
-
-	static size_t active_contexts = 0;
+	static bool active_context = false;
 
 	Context::Context(const char* project_file, const char* resource_root)
 	{
-		if (active_contexts == 0)
-			init(project_file, resource_root);
-		++active_contexts;
-	}
+		if (active_context)
+			throw Error(ErrorCode::CONTEXT_INIT, "Context was already initialized");
 
-	Context::Context(const Context&)
-	{
-		++active_contexts;
-	}
-
-	Context::Context(Context&&) noexcept
-	{
-		++active_contexts;
+		active_context = true;
+		init(project_file, resource_root);
 	}
 
 	Context::~Context()
 	{
-		--active_contexts;
-		if (active_contexts == 0)
-			terminate();
-	}
-
-	Context& Context::operator=(const Context& other)
-	{
-		return *this;
-	}
-
-	Context& Context::operator=(Context&&) noexcept
-	{
-		return *this;
+		internal::TickServiceRegistry::instance().terminate();
+		active_context = false;
 	}
 
 	namespace internal
@@ -172,7 +151,7 @@ namespace oly::context
 		{
 			TIME.sync();
 			internal::render_pipeline();
-			return internal::frame_platform();
+			return internal::platform_frame();
 		}
 	}
 

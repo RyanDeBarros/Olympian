@@ -1,6 +1,7 @@
 #include "Vault.h"
 
 #include "core/base/Errors.h"
+#include "core/context/TickService.h"
 
 #include <unordered_map>
 
@@ -18,9 +19,17 @@ namespace oly::context
 	{
 		std::unordered_map<VaultKey, BlackBox> map;
 
-		void terminate_vault()
+		struct VaultOnTerminate
 		{
-			map.clear();
+			void operator()() const
+			{
+				map.clear();
+			}
+		};
+
+		void init_vault(TOMLNode)
+		{
+			SingletonTickService<TickPhase::None, void, TerminatePhase::Vault, VaultOnTerminate>::instance();
 		}
 
 		void vault_set(VaultKey key, BlackBox&& value)

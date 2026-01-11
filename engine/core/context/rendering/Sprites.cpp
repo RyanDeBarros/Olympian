@@ -10,14 +10,18 @@ namespace oly::context
 		bool sprite_batch_rendering = false;
 	}
 
+	struct SpriteBatchOnTerminate
+	{
+		void operator()() const
+		{
+			internal::sprite_batch.reset();
+		}
+	};
+
 	void internal::init_sprites(TOMLNode node)
 	{
 		internal::sprite_batch = std::make_unique<rendering::SpriteBatch>();
-	}
-
-	void internal::terminate_sprites()
-	{
-		internal::sprite_batch.reset();
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, SpriteBatchOnTerminate>::instance();
 	}
 
 	rendering::SpriteBatch& sprite_batch()

@@ -6,17 +6,21 @@
 
 namespace oly::graphics::internal
 {
+	struct UnloadResources
+	{
+		void operator()() const
+		{
+			samplers::internal::unload();
+			internal_shaders::unload();
+			textures::internal::unload();
+		}
+	};
+
 	void load_resources()
 	{
 		samplers::internal::load();
 		internal_shaders::load();
 		textures::internal::load();
-	}
-
-	void unload_resources()
-	{
-		samplers::internal::unload();
-		internal_shaders::unload();
-		textures::internal::unload();
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Resources, UnloadResources>::instance();
 	}
 }

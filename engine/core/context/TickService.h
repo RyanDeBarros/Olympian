@@ -99,7 +99,7 @@ namespace oly
 		SingletonTickService() : ITickService(OnTickPhase, OnTerminatePhase) {}
 
 	public:
-		void on_tick() override { OnTick{}(); }
-		void on_terminate() override { OnTerminate{}(); }
+		void on_tick() override { if constexpr (!std::is_void_v<OnTick>) OnTick{}(); }
+		void on_terminate() override { if constexpr (!std::is_void_v<OnTerminate>) OnTerminate{}(); }
 	};
 }

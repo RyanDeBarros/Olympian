@@ -11,8 +11,7 @@ namespace oly::context
 	{
 		extern void init_platform(TOMLNode);
 		extern void init_viewport(TOMLNode);
-		extern void terminate_platform();
-		extern bool frame_platform();
+		extern bool platform_frame();
 	}
 
 	extern platform::Platform& get_platform();

@@ -7,7 +7,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void terminate_textures();
+		extern void init_textures(TOMLNode);
 	}
 
 	extern graphics::NSVGContext& nsvg_context();

@@ -35,13 +35,21 @@ namespace oly::context
 		Bijection<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
 	}
 
-	void internal::terminate_textures()
+	struct TexturesOnTerminate
 	{
-		internal::images.clear();
-		internal::anims.clear();
-		internal::vector_images.clear();
-		internal::textures.clear();
-		internal::nsvg_abstracts.clear();
+		void operator()()
+		{
+			internal::images.clear();
+			internal::anims.clear();
+			internal::vector_images.clear();
+			internal::textures.clear();
+			internal::nsvg_abstracts.clear();
+		}
+	};
+
+	void internal::init_textures(TOMLNode)
+	{
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TexturesOnTerminate>::instance();
 	}
 
 	graphics::NSVGContext& nsvg_context()

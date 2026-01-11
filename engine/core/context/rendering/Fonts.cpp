@@ -33,12 +33,20 @@ namespace oly::context
 		std::unordered_map<ResourcePath, rendering::FontFamilyRef> font_families;
 	}
 
-	void internal::terminate_fonts()
+	struct FontsOnTerminate
 	{
-		internal::font_faces.clear();
-		internal::font_atlases.clear();
-		internal::raster_fonts.clear();
-		internal::font_families.clear();
+		void operator()() const
+		{
+			internal::font_faces.clear();
+			internal::font_atlases.clear();
+			internal::raster_fonts.clear();
+			internal::font_families.clear();
+		}
+	};
+
+	void internal::init_fonts(TOMLNode)
+	{
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}
 
 	static utf::Codepoint parse_codepoint(const std::string& s)

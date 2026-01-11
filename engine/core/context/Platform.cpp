@@ -19,6 +19,15 @@ namespace oly::context
 		input::SignalMappingTable signal_mapping_table;
 	}
 
+	struct PlatformOnTerminate
+	{
+		void operator()() const
+		{
+			internal::platform.reset();
+			internal::input_binding_context.reset();
+		}
+	};
+
 	void internal::init_platform(TOMLNode node)
 	{
 		platform::PlatformSetup platform_setup;
@@ -81,6 +90,8 @@ namespace oly::context
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
+
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Platform, PlatformOnTerminate>::instance();
 	}
 
 	void internal::init_viewport(TOMLNode node)
@@ -100,13 +111,7 @@ namespace oly::context
 		rendering::internal::initialize_default_camera(camera_boxed, camera_stretch);
 	}
 
-	void internal::terminate_platform()
-	{
-		internal::platform.reset();
-		internal::input_binding_context.reset();
-	}
-
-	bool internal::frame_platform()
+	bool internal::platform_frame()
 	{
 		oly::internal::check_errors();
 		LOG.flush();
