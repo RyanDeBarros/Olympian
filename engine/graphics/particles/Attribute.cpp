@@ -1,14 +1,14 @@
 #include "Attribute.h"
 
 #include "graphics/particles/distributions/AttributeOperations.h"
-#include "core/algorithms/STLUtils.h"
 #include "core/util/Logger.h"
 
 namespace oly::particles
 {
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		std::string op = algo::to_lower(node["op"].value_or<std::string>(""));
+		StringParam op = node["op"].value_or<std::string>("");
+		op.to_lower();
 
 		if (op == "sequence")
 			return operations::Sequence<0>::load_fixed(node);
@@ -25,6 +25,7 @@ namespace oly::particles
 		return nullptr;
 	}
 
+	// TODO v6 rename operations namespace to ops
 	namespace operations
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)

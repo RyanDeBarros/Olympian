@@ -11,7 +11,7 @@ namespace oly
 	{
 		reopen_file(filepath, append);
 
-		const char* log_start = "--- LOG started at ";
+		const char* log_start = "--- LOG started at "; // TODO v6 do LOG ended at message
 		const char* log_end = " ---";
 		auto setw = std::setw(sizeof(log_start) - 1 + 32 + sizeof(log_end) - 1);
 		stream << std::setfill('-') << setw << "" << '\n' << log_start;
@@ -251,6 +251,11 @@ namespace oly
 	}
 
 	Logger::Impl operator<<(Logger::Impl impl, const std::string_view s)
+	{
+		return impl.stream(s);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, const StringParam& s)
 	{
 		return impl.stream(s);
 	}

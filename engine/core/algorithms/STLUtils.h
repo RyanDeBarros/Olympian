@@ -62,22 +62,4 @@ namespace oly::algo
 	{
 		return const_cast<T&>(find_closest_with_mod(const_cast<const std::set<T>&>(set), to, mod));
 	}
-
-	extern std::vector<std::string_view> split(std::string_view sv, char delimiter);
-
-	extern std::string ltrim(std::string&& str);
-	inline std::string ltrim(const std::string& str) { return ltrim(dupl(str)); }
-	inline void ltrim(std::string& str) { str = ltrim(std::move(str)); }
-	extern std::string rtrim(std::string&& str);
-	inline std::string rtrim(const std::string& str) { return rtrim(dupl(str)); }
-	inline void rtrim(std::string& str) { str = rtrim(std::move(str)); }
-	extern std::string trim(std::string&& str);
-	inline std::string trim(const std::string& str) { return trim(dupl(str)); }
-	inline void trim(std::string& str) { str = trim(std::move(str)); }
-	extern std::string to_lower(std::string&& str);
-	inline std::string to_lower(const std::string& str) { return to_lower(dupl(str)); }
-	inline void to_lower(std::string& str) { str = to_lower(std::move(str)); }
-	extern std::string to_upper(std::string&& str);
-	inline std::string to_upper(const std::string& str) { return to_upper(dupl(str)); }
-	inline void to_upper(std::string& str) { str = to_upper(std::move(str)); }
 }

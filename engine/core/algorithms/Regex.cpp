@@ -1,59 +1,79 @@
 #include "Regex.h"
 
-#include "core/algorithms/STLUtils.h"
+#include <sstream>
 
 namespace oly::algo::re
 {
-	bool first_match(const std::string& input, const std::regex& pattern, std::smatch& match)
+	bool first_match(const StringParam& input, const std::regex& pattern, StringParam::ConstMatch& match)
 	{
-		return std::regex_search(input, match, pattern);
+		return std::regex_search(input.begin(), input.end(), match, pattern);
 	}
 
-	bool first_match(const std::string& input, const std::string_view pattern, std::smatch& match)
+	bool first_match(StringParam& input, const std::regex& pattern, StringParam::Match& match)
+	{
+		return std::regex_search(input.begin(), input.end(), match, pattern);
+	}
+
+	bool first_match(const StringParam& input, const std::string_view pattern, StringParam::ConstMatch& match)
 	{
 		return first_match(input, std::regex(pattern.data()), match);
 	}
 
-	std::vector<std::smatch> all_matches(const std::string& input, const std::string_view pattern)
+	bool first_match(StringParam& input, const std::string_view pattern, StringParam::Match& match)
+	{
+		return first_match(input, std::regex(pattern.data()), match);
+	}
+
+	std::vector<StringParam::ConstMatch> all_matches(const StringParam& input, const std::string_view pattern)
 	{
 		return all_matches(input, std::regex(pattern.data()));
 	}
 
-	std::vector<std::smatch> all_matches(const std::string& input, const std::regex& pattern)
+	std::vector<StringParam::Match> all_matches(StringParam& input, const std::string_view pattern)
 	{
-		std::vector<std::smatch> matches;
-		auto begin = std::sregex_iterator(input.begin(), input.end(), pattern);
-		auto end = std::sregex_iterator();
+		return all_matches(input, std::regex(pattern.data()));
+	}
+
+	std::vector<StringParam::ConstMatch> all_matches(const StringParam& input, const std::regex& pattern)
+	{
+		std::vector<StringParam::ConstMatch> matches;
+		auto begin = std::regex_iterator(input.begin(), input.end(), pattern);
+		auto end = std::regex_iterator<StringParam::ConstIterator>();
 		for (std::regex_iterator it = begin; it != end; ++it)
 			matches.push_back(*it);
 		return matches;
 	}
 
-	static const char* vec_prefix = R"(^\s*\(?)";
-	static const char* vec_postfix = R"(\)?\s*$)";
-	static const char* number = R"((\s*-?\s*\d+\.?\d*\s*))";
+	std::vector<StringParam::Match> all_matches(StringParam& input, const std::regex& pattern)
+	{
+		std::vector<StringParam::Match> matches;
+		auto begin = std::regex_iterator(input.begin(), input.end(), pattern);
+		auto end = std::regex_iterator<StringParam::Iterator>();
+		for (std::regex_iterator it = begin; it != end; ++it)
+			matches.push_back(*it);
+		return matches;
+	}
 
 	static std::regex vec_pattern(size_t n)
 	{
-		std::string p;
-		p.append(vec_prefix);
+		std::stringstream p;
+		p << R"(^\s*\(?)";
 		for (size_t i = 0; i < n; ++i)
 		{
 			if (i > 0)
-				p.append(",");
-			p.append(number);
+				p << ",";
+			p << R"((\s*-?\s*\d+\.?\d*\s*))";
 		}
-		p.append(",?");
-		p.append(vec_postfix);
-		return std::regex(p.c_str());
+		p << ",?" << R"(\)?\s*$)";
+		return std::regex(p.str());
 	}
 
 	template<glm::length_t N, typename T>
-	bool parse_vec(const std::string& input, glm::vec<N, T>& v)
+	bool parse_vec(const StringParam& input, glm::vec<N, T>& v)
 	{
 		static std::regex pattern = vec_pattern(N);
 
-		std::smatch match;
+		StringParam::ConstMatch match;
 		if (!first_match(input, pattern, match))
 			return false;
 
@@ -63,19 +83,20 @@ namespace oly::algo::re
 		glm::vec<N, T> u = v;
 		for (size_t i = 0; i < N; ++i)
 		{
-			std::string num = trim(match[i + 1].str());
+			StringParam num = match[i + 1].str();
+			num.trim();
 
 			bool negative = false;
 			if (num.starts_with('-'))
 			{
 				negative = true;
-				num.erase(num.begin(), num.begin() + 1);
-				ltrim(num);
+				num.clip(1);
+				num.ltrim();
 			}
 
 			try
 			{
-				u[i] = std::stof(num);
+				u[i] = StringParam(num).to_float();
 			}
 			catch (...)
 			{
@@ -90,7 +111,7 @@ namespace oly::algo::re
 		return true;
 	}
 
-	bool parse_float(const std::string& input, float& v)
+	bool parse_float(const StringParam& input, float& v)
 	{
 		glm::vec1 u;
 		if (parse_vec(input, u))
@@ -102,17 +123,17 @@ namespace oly::algo::re
 			return false;
 	}
 
-	bool parse_vec2(const std::string& input, glm::vec2& v)
+	bool parse_vec2(const StringParam& input, glm::vec2& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec3(const std::string& input, glm::vec3& v)
+	bool parse_vec3(const StringParam& input, glm::vec3& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec4(const std::string& input, glm::vec4& v)
+	bool parse_vec4(const StringParam& input, glm::vec4& v)
 	{
 		return parse_vec(input, v);
 	}

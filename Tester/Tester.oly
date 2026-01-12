@@ -14,7 +14,7 @@ title = "Olympian Engine"
 
 [context.logger]
 logfile = "D:\\Projects\\Visual Studio\\Olympian\\Tester\\Tester.log"
-append = false
+append = true
 console = true
 
 [context.framerate]

@@ -4,6 +4,7 @@
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
 #include "core/util/ResourcePath.h"
+#include "core/util/StringParam.h"
 
 namespace oly::io
 {
@@ -68,6 +69,5 @@ namespace oly::io
 
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
 
-	extern bool parse_color(const std::string& text, glm::vec4& color);
-	extern bool parse_color(std::string&& text, glm::vec4& color);
+	extern bool parse_color(const StringParam& text, glm::vec4& color);
 }

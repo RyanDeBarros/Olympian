@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "core/types/Meta.h"
+#include "core/util/StringParam.h"
 
 namespace oly
 {
@@ -23,6 +24,7 @@ namespace oly
 		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(std::string&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 		ResourcePath(const char* path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
+		ResourcePath(const StringParam& path, const ResourcePath& relative_to = {}) { set(std::filesystem::path(path.begin(), path.end()), relative_to); }
 		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(dupl(path), relative_to); }
 		ResourcePath(std::filesystem::path&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 

@@ -9,6 +9,7 @@
 #include "external/GLM.h"
 #include "core/types/Meta.h"
 #include "core/types/Singleton.h"
+#include "core/util/StringParam.h"
 
 namespace oly
 {
@@ -139,6 +140,7 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, const char*);
 	extern Logger::Impl operator<<(Logger::Impl, const std::string&);
 	extern Logger::Impl operator<<(Logger::Impl, const std::string_view);
+	extern Logger::Impl operator<<(Logger::Impl, const StringParam&);
 	extern Logger::Impl operator<<(Logger::Impl, bool);
 	
 	template<numeric T>

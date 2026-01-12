@@ -161,14 +161,14 @@ namespace oly::rendering
 		}
 	};
 
-	static std::string get_tag_field(const std::string& tag, size_t eq_pos)
+	static StringParam get_tag_field(const StringParam& tag, size_t eq_pos)
 	{
-		return algo::to_lower(algo::trim(tag.substr(0, eq_pos)));
+		return tag.substr(0, eq_pos).trim().to_lower();
 	}
 
-	static std::string get_tag_value(const std::string& tag, size_t eq_pos)
+	static StringParam get_tag_value(const StringParam& tag, size_t eq_pos)
 	{
-		return algo::trim(tag.substr(eq_pos + 1));
+		return tag.substr(eq_pos + 1).trim();
 	}
 
 	static void apply_style_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
@@ -191,56 +191,52 @@ namespace oly::rendering
 		overrides.font = true;
 	}
 
-	static void apply_tag(std::string&& tag, TextElement& e, AttributeOverrides& overrides, std::vector<std::string>& style_tags)
+	static void apply_tag(const StringParam& tag, TextElement& e, AttributeOverrides& overrides, std::vector<std::string>& style_tags)
 	{
 		size_t eq_pos = tag.find('=');
 		if (eq_pos == std::string::npos)
 		{
 			if (!overrides.font)
-				style_tags.push_back(std::move(tag));
+				style_tags.push_back(tag.move());
 			return;
 		}
 
-		std::string field = get_tag_field(tag, eq_pos);
+		StringParam field = get_tag_field(tag, eq_pos);
 
 		if (field == "font")
 		{
 			if (!overrides.font)
 			{
-				std::string value = get_tag_value(tag, eq_pos);
-				size_t co_pos = value.find(':');
-				if (co_pos == std::string::npos)
+				StringParam value = get_tag_value(tag, eq_pos);
+				const size_t co_pos = value.rfind(':');
+				if (co_pos == StringParam::NPOS)
 				{
 					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font tag - missing ':'." << LOG.nl;
 					return;
 				}
 
 				unsigned texture_index = 0;
-				co_pos = value.rfind(':');
-				if (co_pos != std::string::npos)
+				StringParam index = value.substr(co_pos + 1);
+				try
 				{
-					std::string index = value.substr(co_pos + 1);
-					try
-					{
-						texture_index = std::stoul(index);
-					}
-					catch (...)
-					{
-						if (auto s = rendering::FontStyle::from_string(std::move(index)))
-							texture_index = *s;
-						else
-						{
-							_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
-							return;
-						}
-					}
-					value.erase(value.begin() + co_pos, value.end());
+					texture_index = index.to_uint();
 				}
+				catch (...)
+				{
+					if (auto s = rendering::FontStyle::from_string(std::move(index)))
+						texture_index = *s;
+					else
+					{
+						_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
+						return;
+					}
+				}
+				value.erase_after(co_pos);
 
 				if (value.ends_with('\"'))
 					value.pop_back();
 				if (value.starts_with('\"'))
-					value.erase(value.begin());
+					value.pop_front();
 
 				e.font = context::load_font(value, texture_index);
 				overrides.font = true;
@@ -250,7 +246,7 @@ namespace oly::rendering
 		{
 			if (!overrides.text_color)
 			{
-				std::string value = get_tag_value(tag, eq_pos);
+				StringParam value = get_tag_value(tag, eq_pos);
 				if (algo::re::parse_vec4(value, e.text_color))
 					overrides.text_color = true;
 				else if (io::parse_color(value, e.text_color))

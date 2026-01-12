@@ -38,8 +38,7 @@ namespace oly::rendering
 		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::D_ITALIC); }
 		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::D_BOLD | Defaults::D_ITALIC); }
 
-		static std::optional<FontStyle> from_string(const std::string& str);
-		static std::optional<FontStyle> from_string(std::string&& str);
+		static std::optional<FontStyle> from_string(const StringParam& str);
 	};
 }
 

@@ -211,14 +211,9 @@ namespace oly::io
 		return Polymorphic<TransformModifier2D>();
 	}
 
-	bool parse_color(const std::string& text, glm::vec4& color)
+	bool parse_color(const StringParam& text, glm::vec4& color)
 	{
-		return parse_color(dupl(text), color);
-	}
-
-	bool parse_color(std::string&& text, glm::vec4& color)
-	{
-		algo::to_lower(text);
+		text.to_lower();
 		if (text == "red")
 		{
 			color = { 1.0f, 0.0f, 0.0f, 1.0f };
