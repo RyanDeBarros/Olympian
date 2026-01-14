@@ -35,10 +35,10 @@ namespace oly::graphics
 		}
 	}
 
-	static GLuint create_compiled_subshader(const std::string& source, GLenum type)
+	static GLuint create_compiled_subshader(const std::string_view source, GLenum type)
 	{
 		GLuint subshader = glCreateShader(type);
-		const GLchar* src = source.c_str();
+		const GLchar* src = source.data();
 		GLint src_length = (GLint)source.size();
 		glShaderSource(subshader, 1, &src, &src_length);
 		glCompileShader(subshader);

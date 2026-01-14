@@ -11,7 +11,7 @@ namespace oly::io
             return std::nullopt;
     }
 
-    bool MetaMap::has_type(const std::string& type) const
+    bool MetaMap::has_type(const std::string_view type) const
     {
         auto it = map.find("type");
         return it != map.end() && it->second == type;

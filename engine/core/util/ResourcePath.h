@@ -10,7 +10,7 @@ namespace oly
 {
 	namespace context::internal
 	{
-		extern void set_resource_root(const std::string& root);
+		extern void set_resource_root(const std::string_view root);
 	}
 
 	class ResourcePath
@@ -32,6 +32,7 @@ namespace oly
 		ResourcePath& operator=(const std::string& path) { set(path, {}); return *this; }
 		ResourcePath& operator=(std::string&& path) { set(std::move(path), {}); return *this; }
 		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }
+		ResourcePath& operator=(const StringParam& path) { set(std::filesystem::path(path.begin(), path.end()), {}); return *this; }
 		ResourcePath& operator=(const std::filesystem::path& path) { set(dupl(path), {}); return *this; }
 		ResourcePath& operator=(std::filesystem::path&& path) { set(std::move(path), {}); return *this; }
 

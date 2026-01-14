@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "core/util/StringParam.h"
 
 namespace oly
 {
@@ -15,7 +15,7 @@ namespace oly
 			std::string action;
 
 		public:
-			DebugTraceScope(const DebugTrace& trace, std::string&& name_space, std::string&& action);
+			DebugTraceScope(const DebugTrace& trace, const StringParam& name_space, const StringParam& action);
 			DebugTraceScope(const DebugTraceScope&) = delete;
 			DebugTraceScope(DebugTraceScope&&) = delete;
 			~DebugTraceScope();
@@ -30,6 +30,6 @@ namespace oly
 	public:
 		DebugTrace(const std::string_view source = "") : source(source) {}
 
-		internal::DebugTraceScope scope(std::string&& name_space, std::string&& action) const { return internal::DebugTraceScope(*this, std::move(name_space), std::move(action)); }
+		internal::DebugTraceScope scope(const StringParam& name_space, const StringParam& action) const { return internal::DebugTraceScope(*this, name_space, action); }
 	};
 }

@@ -50,13 +50,18 @@ namespace oly
 		);
 	}
 
-	std::string StringParam::move() const
+	std::string StringParam::transfer() const
 	{
 		return storage.visit(
 			[](const std::span<char> string) { return std::string(string.data(), string.size()); },
 			[](const std::span<const char> string) { return std::string(string.data(), string.size()); },
 			[](std::string& string) { return std::move(string); }
 		);
+	}
+
+	StringParam StringParam::immutable() const
+	{
+		return view();
 	}
 
 	size_t StringParam::hash() const
@@ -310,22 +315,22 @@ namespace oly
 		return *this;
 	}
 
-	int StringParam::to_int() const
+	int StringParam::to_int(const int base) const
 	{
 		std::span<const char> span = view();
 		int v;
-		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v);
+		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
 		if (ec == std::errc())
 			return v;
 		else
 			throw Error(ErrorCode::CANNOT_PARSE, std::to_string((int)ec));
 	}
 
-	unsigned int StringParam::to_uint() const
+	unsigned int StringParam::to_uint(const int base) const
 	{
 		std::span<const char> span = view();
 		unsigned int v;
-		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v);
+		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
 		if (ec == std::errc())
 			return v;
 		else

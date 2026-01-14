@@ -12,7 +12,7 @@ namespace oly::io
 		std::unordered_map<std::string, std::string> map;
 
 		std::optional<std::string> get_type() const;
-		bool has_type(const std::string& type) const;
+		bool has_type(const std::string_view type) const;
 	};
 
 	struct MetaSplitter

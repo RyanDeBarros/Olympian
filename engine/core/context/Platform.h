@@ -20,8 +20,8 @@ namespace oly::context
 	extern input::SignalTable& signal_table();
 	extern input::SignalMappingTable& signal_mapping_table();
 
-	extern void assign_signal_mapping(const std::string& mapping_name, std::vector<std::string>&& signal_names);
-	extern void unassign_signal_mapping(const std::string& mapping_name);
+	extern void assign_signal_mapping(const StringParam& mapping_name, std::vector<std::string>&& signal_names);
+	extern void unassign_signal_mapping(const StringParam& mapping_name);
 
 	extern void load_signal(TOMLNode node);
 	extern void load_signal(TOMLNode node, const DebugTrace& trace);

@@ -40,9 +40,9 @@ namespace oly::context
 		col2d::CollisionDispatcher::instance();
 	}
 
-	col2d::Mask get_collision_mask(const std::string& name)
+	col2d::Mask get_collision_mask(const StringParam& name)
 	{
-		if (name == "")
+		if (name.empty())
 			return 0;
 		auto it = std::find(internal::collision_mask_names.begin(), internal::collision_mask_names.end(), name);
 		if (it != internal::collision_mask_names.end())
@@ -51,24 +51,24 @@ namespace oly::context
 			return 0;
 	}
 
-	void set_collision_mask_index(int index, const std::string& name)
+	void set_collision_mask_index(int index, const StringParam& name)
 	{
 		if (index >= 0 && index < 32)
 		{
-			if (name != "")
+			if (!name.empty())
 				for (int i = 0; i < internal::collision_mask_names.size(); ++i)
 					if (i != index && internal::collision_mask_names[i] == name)
 						throw Error(ErrorCode::DUPLICATE_KEY);
 
-			internal::collision_mask_names[index] = name;
+			internal::collision_mask_names[index] = name.transfer();
 		}
 		else
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
 	}
 
-	col2d::Layer get_collision_layer(const std::string& name)
+	col2d::Layer get_collision_layer(const StringParam& name)
 	{
-		if (name == "")
+		if (name.empty())
 			return 0;
 		auto it = std::find(internal::collision_layer_names.begin(), internal::collision_layer_names.end(), name);
 		if (it != internal::collision_layer_names.end())
@@ -77,16 +77,16 @@ namespace oly::context
 			return 0;
 	}
 
-	void set_collision_layer_index(int index, const std::string& name)
+	void set_collision_layer_index(int index, const StringParam& name)
 	{
 		if (index >= 0 && index < 32)
 		{
-			if (name != "")
+			if (!name.empty())
 				for (int i = 0; i < internal::collision_layer_names.size(); ++i)
 					if (i != index && internal::collision_layer_names[i] == name)
 						throw Error(ErrorCode::DUPLICATE_KEY);
 
-			internal::collision_layer_names[index] = name;
+			internal::collision_layer_names[index] = name.transfer();
 		}
 		else
 			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);

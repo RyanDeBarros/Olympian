@@ -56,7 +56,9 @@ namespace oly
 		std::span<const char> view() const;
 		std::span<char> mutview() const;
 		std::string copy() const;
-		std::string move() const;
+		std::string transfer() const;
+
+		StringParam immutable() const;
 
 		size_t size() const noexcept { return view().size(); }
 		bool empty() const noexcept { return view().empty(); }
@@ -129,8 +131,8 @@ namespace oly
 		StringParam to_lower() const;
 		StringParam to_upper() const;
 
-		int to_int() const;
-		unsigned int to_uint() const;
+		int to_int(const int base = 10) const;
+		unsigned int to_uint(const int base = 10) const;
 		float to_float() const;
 	};
 

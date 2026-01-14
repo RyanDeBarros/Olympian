@@ -171,7 +171,7 @@ namespace oly::rendering
 		return tag.substr(eq_pos + 1).trim();
 	}
 
-	static void apply_style_tag(const std::string& tag, TextElement& e, AttributeOverrides& overrides)
+	static void apply_style_tag(const std::string_view tag, TextElement& e, AttributeOverrides& overrides)
 	{
 		if (tag == "b" || tag == "bold")
 			e.font.apply_style(FontStyle::BOLD());
@@ -197,7 +197,7 @@ namespace oly::rendering
 		if (eq_pos == std::string::npos)
 		{
 			if (!overrides.font)
-				style_tags.push_back(tag.move());
+				style_tags.push_back(tag.transfer());
 			return;
 		}
 

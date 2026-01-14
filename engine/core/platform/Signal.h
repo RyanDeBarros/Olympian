@@ -3,6 +3,7 @@
 #include "external/GLM.h"
 #include "core/base/Errors.h"
 #include "core/types/DeferredFalse.h"
+#include "core/util/StringParam.h"
 
 namespace oly::input
 {
@@ -11,19 +12,19 @@ namespace oly::input
 	class SignalTable
 	{
 		SignalID next = 1;
-		std::unordered_map<std::string, SignalID> table;
+		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
 
 	public:
-		SignalID get(const std::string& name)
+		SignalID get(const StringParam& name)
 		{
 			auto it = table.find(name);
 			if (it != table.end())
 				return it->second;
-			return table.emplace(name, next++).first->second;
+			return table.emplace(name.transfer(), next++).first->second;
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>> SignalMappingTable;
+	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalMappingTable;
 
 	enum class Phase
 	{

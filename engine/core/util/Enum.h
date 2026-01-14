@@ -5,8 +5,8 @@
 #include "core/util/Loader.h"
 
 #define OLY_ENUM_EXPAND_ENUM_ENTRY(name, value) name = value,
-#define OLY_ENUM_EXPAND_MAP_ENTRY(name, value) { oly::StringParam(std::string(#name)).to_lower().move(), value },
-#define OLY_ENUM_EXPAND_MAP_LUT_ENTRY(name, value) { value, oly::StringParam(std::string(#name)).to_lower().move() },
+#define OLY_ENUM_EXPAND_MAP_ENTRY(name, value) { oly::StringParam(std::string(#name)).to_lower().transfer(), value },
+#define OLY_ENUM_EXPAND_MAP_LUT_ENTRY(name, value) { value, oly::StringParam(std::string(#name)).to_lower().transfer() },
 #define OLY_ENUM(EnumName, EntryMap)\
 	struct EnumName final\
 	{\

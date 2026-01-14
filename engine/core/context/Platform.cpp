@@ -138,14 +138,14 @@ namespace oly::context
 		return internal::signal_mapping_table;
 	}
 
-	void assign_signal_mapping(const std::string& mapping_name, std::vector<std::string>&& signal_names)
+	void assign_signal_mapping(const StringParam& mapping_name, std::vector<std::string>&& signal_names)
 	{
-		internal::signal_mapping_table[mapping_name] = std::move(signal_names);
+		internal::signal_mapping_table[mapping_name.transfer()] = std::move(signal_names);
 	}
 
-	void unassign_signal_mapping(const std::string& mapping_name)
+	void unassign_signal_mapping(const StringParam& mapping_name)
 	{
-		internal::signal_mapping_table.erase(mapping_name);
+		internal::signal_mapping_table.erase(mapping_name.transfer());
 	}
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)

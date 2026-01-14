@@ -9,7 +9,7 @@ namespace oly
 	{
 		std::filesystem::path resource_root;
 
-		void set_resource_root(const std::string& root)
+		void set_resource_root(const std::string_view root)
 		{
 			resource_root = root;
 		}
