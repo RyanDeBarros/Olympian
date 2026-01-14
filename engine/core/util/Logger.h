@@ -25,15 +25,18 @@ namespace oly
 		std::stringstream stream;
 		std::ofstream file;
 
-	public:
-		void set_logfile(const char* filepath, bool append);
-		void flush();
-
 		struct
 		{
 			bool console = true;
 			bool logfile = true;
 		} target;
+
+		friend struct internal::LogAccess;
+		void start_log(const char* filepath, bool append, bool use_console);
+		void end_log();
+
+	public:
+		void flush();
 
 	private:
 		void reopen_file(const char* filepath, bool append);
@@ -66,7 +69,6 @@ namespace oly
 		void start(const char* level, _opengl);
 		void start(const char* level, _glfw);
 
-		friend struct internal::LogAccess;
 		Impl untagged(bool timestamp = false);
 		Impl debug(bool timestamp = false, const char* prefix = nullptr);
 		Impl debug(_opengl);
@@ -114,22 +116,24 @@ namespace oly
 	{
 		struct LogAccess
 		{
-			Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
-			Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }
-			Logger::Impl debug(Logger::_opengl g) { return LOG.debug(g); }
-			Logger::Impl debug(Logger::_glfw g) { return LOG.debug(g); }
-			Logger::Impl info(bool timestamp = false, const char* prefix = nullptr) { return LOG.info(timestamp, prefix); }
-			Logger::Impl info(Logger::_opengl g) { return LOG.info(g); }
-			Logger::Impl info(Logger::_glfw g) { return LOG.info(g); }
-			Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr) { return LOG.warning(timestamp, prefix); }
-			Logger::Impl warning(Logger::_opengl g) { return LOG.warning(g); }
-			Logger::Impl warning(Logger::_glfw g) { return LOG.warning(g); }
-			Logger::Impl error(bool timestamp = false, const char* prefix = nullptr) { return LOG.error(timestamp, prefix); }
-			Logger::Impl error(Logger::_opengl g) { return LOG.error(g); }
-			Logger::Impl error(Logger::_glfw g) { return LOG.error(g); }
-			Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr) { return LOG.fatal(timestamp, prefix); }
-			Logger::Impl fatal(Logger::_opengl g) { return LOG.fatal(g); }
-			Logger::Impl fatal(Logger::_glfw g) { return LOG.fatal(g); }
+			static void start_log(const char* filepath, bool append, bool use_console) { LOG.start_log(filepath, append, use_console); }
+			static void end_log() { LOG.end_log(); }
+			static Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
+			static Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }
+			static Logger::Impl debug(Logger::_opengl g) { return LOG.debug(g); }
+			static Logger::Impl debug(Logger::_glfw g) { return LOG.debug(g); }
+			static Logger::Impl info(bool timestamp = false, const char* prefix = nullptr) { return LOG.info(timestamp, prefix); }
+			static Logger::Impl info(Logger::_opengl g) { return LOG.info(g); }
+			static Logger::Impl info(Logger::_glfw g) { return LOG.info(g); }
+			static Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr) { return LOG.warning(timestamp, prefix); }
+			static Logger::Impl warning(Logger::_opengl g) { return LOG.warning(g); }
+			static Logger::Impl warning(Logger::_glfw g) { return LOG.warning(g); }
+			static Logger::Impl error(bool timestamp = false, const char* prefix = nullptr) { return LOG.error(timestamp, prefix); }
+			static Logger::Impl error(Logger::_opengl g) { return LOG.error(g); }
+			static Logger::Impl error(Logger::_glfw g) { return LOG.error(g); }
+			static Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr) { return LOG.fatal(timestamp, prefix); }
+			static Logger::Impl fatal(Logger::_opengl g) { return LOG.fatal(g); }
+			static Logger::Impl fatal(Logger::_glfw g) { return LOG.fatal(g); }
 		};
 	}
 
@@ -152,12 +156,12 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, glm::mat3);
 }
 
-#define OLY_LOG(...) oly::internal::LogAccess{}.untagged(__VA_ARGS__)
-#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::internal::LogAccess{}.debug(__VA_ARGS__)
-#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::internal::LogAccess{}.info(__VA_ARGS__)
-#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess{}.warning(__VA_ARGS__)
-#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess{}.error(__VA_ARGS__)
-#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess{}.fatal(__VA_ARGS__)
+#define OLY_LOG(...) oly::internal::LogAccess::untagged(__VA_ARGS__)
+#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::internal::LogAccess::debug(__VA_ARGS__)
+#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::internal::LogAccess::info(__VA_ARGS__)
+#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess::warning(__VA_ARGS__)
+#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess::error(__VA_ARGS__)
+#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess::fatal(__VA_ARGS__)
 
 #define _OLY_ENGINE_LOG_DEBUG(category) OLY_LOG_DEBUG(true, category) << oly::LOG.source_info.full_source()
 #define _OLY_ENGINE_LOG_WARNING(category) OLY_LOG_WARNING(true, category) << oly::LOG.source_info.full_source()

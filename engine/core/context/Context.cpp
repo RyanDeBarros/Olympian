@@ -32,17 +32,15 @@ namespace oly::context
 
 	static void init_logger(TOMLNode node)
 	{
+		std::string logfile = "";
+		bool append = false;
+		bool console = true;
 		if (auto toml_logger = node["logger"])
 		{
-			io::parse_bool(toml_logger["console"], LOG.target.console);
-			if (auto logfile = toml_logger["logfile"].value<std::string>())
-			{
-				LOG.target.logfile = true;
-				LOG.set_logfile(logfile->c_str(), io::parse_bool_or(toml_logger["append"], true));
-				LOG.flush();
-			}
-			else
-				LOG.target.logfile = false;
+			if (auto file = toml_logger["logfile"].value<std::string>())
+				logfile = *file;
+			append = io::parse_bool_or(toml_logger["append"], true);
+			io::parse_bool(toml_logger["console"], console);
 			
 			if (auto logger_enable = toml_logger["enable"])
 			{
@@ -53,11 +51,8 @@ namespace oly::context
 				io::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
 			}
 		}
-		else
-		{
-			LOG.target.logfile = false;
-			LOG.target.console = true;
-		}
+
+		oly::internal::LogAccess::start_log(logfile.c_str(), append, true);
 	}
 
 	static void init_time(TOMLNode node)
@@ -86,7 +81,7 @@ namespace oly::context
 		void operator()() const
 		{
 			glfwTerminate();
-			LOG.flush();
+			oly::internal::LogAccess::end_log();
 		}
 	};
 

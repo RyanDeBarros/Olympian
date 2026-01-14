@@ -7,17 +7,33 @@
 
 namespace oly
 {
-	void Logger::set_logfile(const char* filepath, bool append)
+	void Logger::start_log(const char* filepath, bool append, bool use_console)
 	{
-		reopen_file(filepath, append);
+		target.logfile = filepath && strlen(filepath) > 0;
+		target.console = use_console;
+		if (target.logfile)
+			reopen_file(filepath, append);
 
-		const char* log_start = "--- LOG started at "; // TODO v6 do LOG ended at message
-		const char* log_end = " ---";
-		auto setw = std::setw(sizeof(log_start) - 1 + 32 + sizeof(log_end) - 1);
-		stream << std::setfill('-') << setw << "" << '\n' << log_start;
+		const char* prefix = "<<< LOG started at ";
+		const char* postfix = " >>>";
+		auto setw = std::setw(sizeof(prefix) - 1 + 32 + sizeof(postfix) - 1);
+		stream << std::setfill('-') << setw << "" << '\n' << prefix;
 		pass_timestamp();
-		stream << log_end << '\n' << std::setfill('-') << setw << "" << '\n';
-		file.flush();
+		stream << postfix << '\n' << std::setfill('-') << setw << "" << '\n';
+		flush();
+	}
+
+	void Logger::end_log()
+	{
+		flush();
+
+		const char* prefix = "<<< LOG ended at ";
+		const char* postfix = " >>>";
+		auto setw = std::setw(sizeof(prefix) - 1 + 32 + sizeof(postfix) - 1);
+		stream << std::setfill('-') << setw << "" << '\n' << prefix;
+		pass_timestamp();
+		stream << postfix << '\n' << std::setfill('-') << setw << "" << '\n';
+		flush();
 	}
 
 	void Logger::flush()
