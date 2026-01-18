@@ -91,7 +91,7 @@ namespace oly
 			for (const Pair& pair : map)
 				if (pair.key == key)
 					return pair.value;
-			throw Error(ErrorCode::INVALID_ITERATOR);
+			throw Error(ErrorCode::InvalidIterator);
 		}
 
 		V& get(const K& key)
@@ -99,7 +99,7 @@ namespace oly
 			for (const Pair& pair : map)
 				if (pair.key == key)
 					return pair.value;
-			throw Error(ErrorCode::INVALID_ITERATOR);
+			throw Error(ErrorCode::InvalidIterator);
 		}
 
 		Iterator erase(const K& key)

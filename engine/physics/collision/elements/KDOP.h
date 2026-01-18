@@ -26,7 +26,7 @@ namespace oly::col2d
 		inline math::Polygon2D initial_kdop_polygon(const UnitVector2D& axis0, float min0, float max0, const UnitVector2D& axis1, float min1, float max1)
 		{
 			if (axis0.near_parallel(axis1, LINEAR_TOLERANCE))
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "First 2 kDOP axes are parallel");
+				throw Error(ErrorCode::BadCollisionShape, "First 2 kDOP axes are parallel");
 
 			static const auto intersection = [](const UnitVector2D& axis0, float m0, const UnitVector2D& axis1, float m1) -> glm::vec2 {
 				glm::mat2 A = { { axis0.x(), axis1.x() }, { axis0.y(), axis1.y() } };

@@ -93,7 +93,7 @@ namespace oly
 			}
 		}
 
-		throw Error(ErrorCode::UNREACHABLE_CODE);
+		throw Error(ErrorCode::UnreachableCode);
 	}
 
 	CallbackTimer::CallbackTimer(float interval, const Callback& callback, bool one_shot, bool playing, bool continuous, TimeMode mode)

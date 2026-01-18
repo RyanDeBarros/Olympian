@@ -36,19 +36,19 @@ namespace oly::context
 		if (!toml_window)
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
-			throw Error(ErrorCode::PLATFORM_INIT);
+			throw Error(ErrorCode::PlatformInit);
 		}
 
 		if (!io::parse_int(toml_window["width"], platform_setup.window_width))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
-			throw Error(ErrorCode::PLATFORM_INIT);
+			throw Error(ErrorCode::PlatformInit);
 		}
 		
 		if (!io::parse_int(toml_window["height"], platform_setup.window_height))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
-			throw Error(ErrorCode::PLATFORM_INIT);
+			throw Error(ErrorCode::PlatformInit);
 		}
 
 		if (auto title = toml_window["title"].value<std::string>())
@@ -56,7 +56,7 @@ namespace oly::context
 		else
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"title\" fields." << LOG.nl;
-			throw Error(ErrorCode::PLATFORM_INIT);
+			throw Error(ErrorCode::PlatformInit);
 		}
 
 		if (auto toml_window_hint = toml_window["window_hint"])
@@ -419,13 +419,13 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!io::MetaSplitter::meta(file).has_type("signal"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto toml = io::load_toml(file);

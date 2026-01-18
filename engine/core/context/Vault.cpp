@@ -43,7 +43,7 @@ namespace oly::context
 			if (it != map.end())
 				return it->second;
 			else
-				throw Error(ErrorCode::INVALID_ID);
+				throw Error(ErrorCode::InvalidID);
 		}
 	}
 

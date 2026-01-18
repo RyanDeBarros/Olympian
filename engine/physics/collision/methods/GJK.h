@@ -85,7 +85,7 @@ namespace oly::col2d::gjk
 		}
 
 		_OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << LOG.nl;
-		throw Error(ErrorCode::GJK_OVERFLOW);
+		throw Error(ErrorCode::GjkOverflow);
 	}
 
 	template<typename Shape1, typename Shape2>
@@ -113,7 +113,7 @@ namespace oly::col2d::gjk
 		if (!intersecting)
 		{
 			_OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << LOG.nl;
-			throw Error(ErrorCode::GJK_OVERFLOW);
+			throw Error(ErrorCode::GjkOverflow);
 		}
 
 		// EPA
@@ -157,7 +157,7 @@ namespace oly::col2d::gjk
 		}
 
 		_OLY_ENGINE_LOG_WARNING("COL2D") << "EPA overflow" << LOG.nl;
-		throw Error(ErrorCode::EPA_OVERFLOW);
+		throw Error(ErrorCode::EpaOverflow);
 	}
 
 	template<typename Shape1, typename Shape2>

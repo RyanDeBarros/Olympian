@@ -40,14 +40,14 @@ namespace oly::rendering
 	void internal::EllipseBatch::assert_valid_id(GLuint id)
 	{
 		if (id == NULL_ID) [[unlikely]]
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	GLuint internal::EllipseBatch::generate_id()
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID)
-			throw Error(ErrorCode::STORAGE_OVERFLOW);
+			throw Error(ErrorCode::StorageOverflow);
 		else
 			return id;
 	}
@@ -199,7 +199,7 @@ namespace oly::rendering
 			return batch->ssbo_block.get<internal::EllipseBatch::DIMENSION>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	EllipseDimension& internal::EllipseReference::set_dimension() const
@@ -210,7 +210,7 @@ namespace oly::rendering
 			return batch->ssbo_block.set<internal::EllipseBatch::DIMENSION>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	const EllipseColorGradient& internal::EllipseReference::get_color() const
@@ -221,7 +221,7 @@ namespace oly::rendering
 			return batch->ssbo_block.get<internal::EllipseBatch::COLOR>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	EllipseColorGradient& internal::EllipseReference::set_color() const
@@ -232,7 +232,7 @@ namespace oly::rendering
 			return batch->ssbo_block.set<internal::EllipseBatch::COLOR>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::EllipseReference::set_color(glm::vec4 color) const
@@ -248,7 +248,7 @@ namespace oly::rendering
 			return batch->ssbo_block.get<internal::EllipseBatch::TRANSFORM>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	glm::mat3& internal::EllipseReference::set_transform() const
@@ -259,7 +259,7 @@ namespace oly::rendering
 			return batch->ssbo_block.set<internal::EllipseBatch::TRANSFORM>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::EllipseReference::draw() const
@@ -270,7 +270,7 @@ namespace oly::rendering
 			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	StaticEllipse::StaticEllipse(EllipseBatch& batch, float r, glm::vec4 color)

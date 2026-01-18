@@ -183,7 +183,7 @@ namespace oly
 		if (holds<T>())\
 			return *reinterpret_cast<const T*>(ptr());\
 		else\
-			throw Error(ErrorCode::BAD_VARIANT);\
+			throw Error(ErrorCode::BadVariant);\
 	}\
 	template<typename T>\
 	T& get()\
@@ -191,7 +191,7 @@ namespace oly
 		if (holds<T>())\
 			return *reinterpret_cast<T*>(ptr());\
 		else\
-			throw Error(ErrorCode::BAD_VARIANT);\
+			throw Error(ErrorCode::BadVariant);\
 	}\
 	template<typename T>\
 	const T* safe_get() const\
@@ -221,7 +221,7 @@ namespace oly
 		switch (type)\
 		{\
 			_OLY_REPEAT(_OLY_INVOKE_CASE, N);\
-		default: throw Error(ErrorCode::BAD_VARIANT);\
+		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}\
 	template<_OLY_REPEAT_COMMA(_OLY_TYPENAME_F, N)>\
@@ -230,7 +230,7 @@ namespace oly
 		switch (type)\
 		{\
 			_OLY_REPEAT(_OLY_INVOKE_CASE, N);\
-		default: throw Error(ErrorCode::BAD_VARIANT);\
+		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}\
 	template<typename F>\
@@ -239,7 +239,7 @@ namespace oly
 		switch (type)\
 		{\
 			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
-		default: throw Error(ErrorCode::BAD_VARIANT);\
+		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}\
 	template<typename F>\
@@ -248,7 +248,7 @@ namespace oly
 		switch (type)\
 		{\
 			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
-		default: throw Error(ErrorCode::BAD_VARIANT);\
+		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}
 

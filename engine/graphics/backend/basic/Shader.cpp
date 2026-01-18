@@ -23,14 +23,14 @@ namespace oly::graphics
 				glDeleteShader(subshader);
 				subshader = 0;
 				_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Subshader compilation failed - " << message << LOG.nl;
-				throw Error(ErrorCode::SUBSHADER_COMPILATION);
+				throw Error(ErrorCode::SubshaderCompilation);
 			}
 			else
 			{
 				glDeleteShader(subshader);
 				subshader = 0;
 				_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Subshader compilation failed - no info log provided" << LOG.nl;
-				throw Error(ErrorCode::SUBSHADER_COMPILATION);
+				throw Error(ErrorCode::SubshaderCompilation);
 			}
 		}
 	}
@@ -61,13 +61,13 @@ namespace oly::graphics
 				glGetProgramInfoLog(shader, length, &length, message.data());
 				glDeleteProgram(shader);
 				_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Shader linkage failed - " << message << LOG.nl;
-				throw Error(ErrorCode::SHADER_LINKAGE);
+				throw Error(ErrorCode::ShaderLinkage);
 			}
 			else
 			{
 				glDeleteProgram(shader);
 				_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Shader linkage failed - no info log provided" << LOG.nl;
-				throw Error(ErrorCode::SHADER_LINKAGE);
+				throw Error(ErrorCode::ShaderLinkage);
 			}
 		}
 	}

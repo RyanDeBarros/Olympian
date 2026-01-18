@@ -72,14 +72,14 @@ namespace oly::rendering::internal
 	void internal::SpriteBatch::assert_valid_id(GLuint id)
 	{
 		if (id == NULL_ID) [[unlikely]]
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	GLuint internal::SpriteBatch::gen_sprite_id()
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID)
-			throw Error(ErrorCode::STORAGE_OVERFLOW);
+			throw Error(ErrorCode::StorageOverflow);
 
 		quad_ssbo_block.set<INFO>(id) = {};
 		quad_ssbo_block.set<TRANSFORM>(id) = 1.0f;
@@ -485,7 +485,7 @@ namespace oly::rendering::internal
 			batch->set_texture(id, texture, dimensions);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture) const
@@ -494,7 +494,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_texture(id, texture, texture ? context::get_texture_dimensions(texture) : glm::vec2{});
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
@@ -502,7 +502,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_texture(id, texture, dimensions);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_tex_coords(math::UVRect rect) const
@@ -510,7 +510,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_tex_coords(id, rect);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_modulation(glm::vec4 modulation) const
@@ -518,7 +518,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_modulation(id, modulation);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_frame_format(const graphics::AnimFrameFormat& anim) const
@@ -526,7 +526,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_frame_format(id, anim);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_text_glyph(bool is_text_glyph) const
@@ -534,7 +534,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_text_glyph(id, is_text_glyph);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_camera_invariant(bool is_camera_invariant) const
@@ -542,7 +542,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_camera_invariant(id, is_camera_invariant);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index) const
@@ -554,7 +554,7 @@ namespace oly::rendering::internal
 			batch->set_mod_texture(id, texture, context::get_texture_dimensions(texture_file, texture_index));
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture) const
@@ -563,7 +563,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_mod_texture(id, texture, context::get_texture_dimensions(texture));
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
@@ -571,7 +571,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_mod_texture(id, texture, dimensions);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_mod_tex_coords(math::UVRect rect) const
@@ -579,7 +579,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->set_mod_tex_coords(id, rect);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::set_transform(const glm::mat3& transform) const
@@ -588,7 +588,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			batch->quad_ssbo_block.set<SpriteBatch::TRANSFORM>(id) = transform;
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture() const
@@ -599,7 +599,7 @@ namespace oly::rendering::internal
 			return batch->get_texture(id, _);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_texture(glm::vec2& dimensions) const
@@ -607,7 +607,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_texture(id, dimensions);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	math::UVRect internal::SpriteReference::get_tex_coords() const
@@ -615,7 +615,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_tex_coords(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	glm::vec4 internal::SpriteReference::get_modulation() const
@@ -623,7 +623,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_modulation(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	graphics::AnimFrameFormat internal::SpriteReference::get_frame_format() const
@@ -631,7 +631,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_frame_format(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	bool internal::SpriteReference::is_text_glyph() const
@@ -639,7 +639,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->is_text_glyph(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	bool internal::SpriteReference::is_camera_invariant() const
@@ -647,7 +647,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->is_camera_invariant(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture() const
@@ -658,7 +658,7 @@ namespace oly::rendering::internal
 			return batch->get_mod_texture(id, _);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	graphics::BindlessTextureRef internal::SpriteReference::get_mod_texture(glm::vec2& dimensions) const
@@ -666,7 +666,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_mod_texture(id, dimensions);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	math::UVRect internal::SpriteReference::get_mod_tex_coords() const
@@ -674,7 +674,7 @@ namespace oly::rendering::internal
 		if (auto batch = lock()) [[likely]]
 			return batch->get_mod_tex_coords(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	glm::mat3 internal::SpriteReference::get_transform() const
@@ -685,7 +685,7 @@ namespace oly::rendering::internal
 			return batch->quad_ssbo_block.get<SpriteBatch::TRANSFORM>(id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::SpriteReference::draw_quad() const
@@ -696,6 +696,6 @@ namespace oly::rendering::internal
 			graphics::quad_indices(batch->ebo.draw_primitive().data(), id);
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 }

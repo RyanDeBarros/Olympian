@@ -153,14 +153,14 @@ namespace oly
 		const T& operator[](size_t i) const
 		{
 			if (i >= _size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return _arr[i];
 		}
 
 		T& operator[](size_t i)
 		{
 			if (i >= _size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return _arr[i];
 		}
 
@@ -190,7 +190,7 @@ namespace oly
 			size_t idx() const
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return i;
 			}
 
@@ -206,14 +206,14 @@ namespace oly
 			Iterator& operator++()
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				++i;
 				return *this;
 			}
 			Iterator operator++(int)
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				Iterator copy = *this;
 				++i;
 				return copy;
@@ -231,7 +231,7 @@ namespace oly
 			size_t idx() const
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return i;
 			}
 
@@ -245,14 +245,14 @@ namespace oly
 			ConstIterator& operator++()
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				++i;
 				return *this;
 			}
 			ConstIterator operator++(int)
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				ConstIterator copy = *this;
 				++i;
 				return copy;
@@ -270,7 +270,7 @@ namespace oly
 			size_t idx() const
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return vec.size() - 1 - i;
 			}
 
@@ -286,14 +286,14 @@ namespace oly
 			ReverseIterator& operator++()
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				++i;
 				return *this;
 			}
 			ReverseIterator operator++(int)
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				ReverseIterator copy = *this;
 				++i;
 				return copy;
@@ -311,7 +311,7 @@ namespace oly
 			size_t idx() const
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return vec.size() - 1 - i;
 			}
 
@@ -325,14 +325,14 @@ namespace oly
 			ConstReverseIterator& operator++()
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR); 
+					throw Error(ErrorCode::InvalidIterator); 
 				++i;
 				return *this;
 			}
 			ConstReverseIterator operator++(int)
 			{
 				if (i >= vec._size)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				ConstReverseIterator copy = *this;
 				++i;
 				return copy;

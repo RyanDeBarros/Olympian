@@ -76,10 +76,10 @@ namespace oly::rendering
 	GeometryPainter::PaintContext GeometryPainter::paint_context(const Camera2DRef& camera, math::IRect2D bounds, float rotation, glm::vec2 scale, int texture_cpp)
 	{
 		if (context_locked)
-			throw Error(ErrorCode::LOCKED_RESOURCE);
+			throw Error(ErrorCode::LockedResource);
 
 		if (bounds.width() <= 0 || bounds.height() <= 0)
-			throw Error(ErrorCode::INVALID_SIZE);
+			throw Error(ErrorCode::InvalidSize);
 
 		return PaintContext(*this, camera, bounds, rotation, scale, texture_cpp);
 	}

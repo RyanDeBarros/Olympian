@@ -21,7 +21,7 @@ namespace oly::algo
 	const T& find_closest(const std::set<T>& set, const U& to, DistanceFunc dist)
 	{
 		if (set.empty())
-			throw Error(ErrorCode::EMPTY_DATA_STRUCTURE);
+			throw Error(ErrorCode::EmptyDataStructure);
 		else if (set.size() == 1)
 			return *set.begin();
 

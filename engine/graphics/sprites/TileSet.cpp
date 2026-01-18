@@ -59,7 +59,7 @@ namespace oly::rendering
 		if (it != assignment.end())
 			return it->second;
 		if (!valid_6())
-			throw Error(ErrorCode::INCOMPLETE_TILESET);
+			throw Error(ErrorCode::IncompleteTileset);
 		switch (config)
 		{
 			case Configuration::END_2:
@@ -561,7 +561,7 @@ namespace oly::rendering
 					return assignment.find(Configuration::MIDDLE_PRIME)->second;
 			}
 		}
-		throw Error(ErrorCode::INCOMPLETE_TILESET);
+		throw Error(ErrorCode::IncompleteTileset);
 	}
 
 	TileSet::Configuration TileSet::get_configuration(PaintedTile tile)

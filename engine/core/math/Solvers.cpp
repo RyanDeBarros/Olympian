@@ -12,7 +12,7 @@ namespace oly::math::solver
 	{
 		float discriminant = (M[0][0] - M[1][1]) * (M[0][0] - M[1][1]) + 4.0f * M[1][0] * M[0][1];
 		if (discriminant < 0.0f)
-			throw Error(ErrorCode::SOLVER_NO_SOLUTION);
+			throw Error(ErrorCode::SolverNoSolution);
 
 		float delta = glm::sqrt(discriminant);
 		float v[2];
@@ -59,9 +59,9 @@ namespace oly::math::solver
 			if (A == 0)
 			{
 				if (glm::cos(C) + D == 0)
-					throw Error(ErrorCode::SOLVER_INFINITE_SOLUTIONS);
+					throw Error(ErrorCode::SolverInfiniteSolutions);
 				else
-					throw Error(ErrorCode::SOLVER_NO_SOLUTION);
+					throw Error(ErrorCode::SolverNoSolution);
 			}
 			else
 				return -(glm::cos(C) + D) / A;
@@ -106,9 +106,9 @@ namespace oly::math::solver
 			if (near_zero(B))
 			{
 				if (near_zero(C))
-					throw Error(ErrorCode::SOLVER_INFINITE_SOLUTIONS);
+					throw Error(ErrorCode::SolverInfiniteSolutions);
 				else
-					throw Error(ErrorCode::SOLVER_NO_SOLUTION);
+					throw Error(ErrorCode::SolverNoSolution);
 			}
 			else
 			{
@@ -124,7 +124,7 @@ namespace oly::math::solver
 			return 1;
 		}
 		else if (discriminant < 0.0f)
-			throw Error(ErrorCode::SOLVER_NO_SOLUTION);
+			throw Error(ErrorCode::SolverNoSolution);
 		else
 		{
 			discriminant = glm::sqrt(discriminant);

@@ -24,7 +24,7 @@ namespace oly
 			: _raw(raw)
 		{
 			if (!_raw)
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		Polymorphic(std::nullptr_t) {}
@@ -50,7 +50,7 @@ namespace oly
 				if (!_raw)
 				{
 					delete temp;
-					throw Error(ErrorCode::BAD_CAST);
+					throw Error(ErrorCode::BadCast);
 				}
 			}
 		}
@@ -62,7 +62,7 @@ namespace oly
 			{
 				_raw = dynamic_cast<T*>(other._raw);
 				if (!_raw)
-					throw Error(ErrorCode::BAD_CAST);
+					throw Error(ErrorCode::BadCast);
 				other._raw = nullptr;
 			}
 		}
@@ -105,7 +105,7 @@ namespace oly
 				if (!_raw)
 				{
 					delete temp;
-					throw Error(ErrorCode::BAD_CAST);
+					throw Error(ErrorCode::BadCast);
 				}
 			}
 			return *this;
@@ -119,7 +119,7 @@ namespace oly
 			{
 				_raw = dynamic_cast<T*>(other._raw);
 				if (!_raw)
-					throw Error(ErrorCode::BAD_CAST);
+					throw Error(ErrorCode::BadCast);
 				other._raw = nullptr;
 			}
 			return *this;

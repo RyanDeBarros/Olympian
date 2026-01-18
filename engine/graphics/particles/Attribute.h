@@ -152,7 +152,7 @@ namespace oly::particles
 				span.size = 3;
 				break;
 			default:
-				throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);
+				throw Error(ErrorCode::UnsupportedSwitchCase);
 			}
 			return span;
 		}
@@ -169,7 +169,7 @@ namespace oly::particles
 			if (i < size) [[likely]]
 				return *ref(i);
 			else
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 		}
 
 		float operator[](size_t i) const
@@ -177,7 +177,7 @@ namespace oly::particles
 			if (i < size) [[likely]]
 				return *ref(i);
 			else
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 		}
 
 		uint8_t length() const
@@ -193,7 +193,7 @@ namespace oly::particles
 				return *this;
 			}
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		TAttributeSpan& operator=(glm::vec2 v) requires (!Const)
@@ -205,7 +205,7 @@ namespace oly::particles
 				return *this;
 			}
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		TAttributeSpan& operator=(glm::vec3 v) requires (!Const)
@@ -218,7 +218,7 @@ namespace oly::particles
 				return *this;
 			}
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		TAttributeSpan& operator=(glm::vec4 v) requires (!Const)
@@ -232,7 +232,7 @@ namespace oly::particles
 				return *this;
 			}
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		float flt() const
@@ -240,7 +240,7 @@ namespace oly::particles
 			if (size == 1)
 				return *ref(0);
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		glm::vec2 vec2() const
@@ -248,7 +248,7 @@ namespace oly::particles
 			if (size == 2)
 				return { *ref(0), *ref(1) };
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		glm::vec3 vec3() const
@@ -256,7 +256,7 @@ namespace oly::particles
 			if (size == 3)
 				return { *ref(0), *ref(1), *ref(2) };
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 
 		glm::vec4 vec4() const
@@ -264,7 +264,7 @@ namespace oly::particles
 			if (size == 4)
 				return { *ref(0), *ref(1), *ref(2), *ref(3) };
 			else
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 		}
 	};
 

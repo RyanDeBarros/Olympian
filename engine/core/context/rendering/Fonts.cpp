@@ -122,7 +122,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::font_faces.find(file);
@@ -135,7 +135,7 @@ namespace oly::context
 		if (!io::MetaSplitter::meta(import_file).has_type("font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(import_file);
@@ -143,7 +143,7 @@ namespace oly::context
 		if (!node)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
@@ -160,7 +160,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		internal::FontAtlasKey key{ .file = file, .index = index };
@@ -174,7 +174,7 @@ namespace oly::context
 		if (!io::MetaSplitter::meta(import_file).has_type("font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(import_file);
@@ -184,14 +184,14 @@ namespace oly::context
 		if (!font_atlas_list)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_atlas\" array field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (index >= font_atlas_list->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
 				<< ") out of range for \"font_atlas\" array field of size (" << font_atlas_list->size() << ")." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
@@ -200,7 +200,7 @@ namespace oly::context
 		if (!io::parse_float(node["font_size"], options.font_size))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_size\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		io::parse_min_filter(node["min_filter"], options.min_filter);
@@ -246,7 +246,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::raster_fonts.find(file);
@@ -259,7 +259,7 @@ namespace oly::context
 		if (!meta.has_type("raster_font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(file);
@@ -269,14 +269,14 @@ namespace oly::context
 		if (!io::parse_float(toml["space_advance_width"], space_advance_width))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"space_advance_width\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		float line_height;
 		if (!io::parse_float(toml["line_height"], line_height))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"line_height\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		glm::vec2 font_scale = glm::vec2(1.0f);
@@ -360,7 +360,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::font_families.find(file);
@@ -372,7 +372,7 @@ namespace oly::context
 		if (!io::MetaSplitter::meta(file).has_type("font_family"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(file);
@@ -480,7 +480,7 @@ namespace oly::context
 			{
 				std::optional<std::string> type = meta.get_type();
 				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
-				throw Error(ErrorCode::LOAD_ASSET);
+				throw Error(ErrorCode::LoadAsset);
 			}
 		}
 		else

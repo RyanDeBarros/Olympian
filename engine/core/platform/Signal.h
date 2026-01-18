@@ -80,7 +80,7 @@ namespace oly::input
 		bool get<bool>() const
 		{
 			if (type != Type::BOOL)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return bool_value;
 		}
 
@@ -88,7 +88,7 @@ namespace oly::input
 		float get<float>() const
 		{
 			if (type != Type::AXIS1D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_1d_value;
 		}
 
@@ -96,7 +96,7 @@ namespace oly::input
 		glm::vec2 get<glm::vec2>() const
 		{
 			if (type != Type::AXIS2D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_2d_value;
 		}
 
@@ -104,7 +104,7 @@ namespace oly::input
 		glm::vec3 get<glm::vec3>() const
 		{
 			if (type != Type::AXIS3D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_3d_value;
 		}
 
@@ -112,7 +112,7 @@ namespace oly::input
 		int controller_id() const
 		{
 			if (source < Source::JOYSTICK_BASE)
-				throw Error(ErrorCode::INVALID_CONTROLLER_ID);
+				throw Error(ErrorCode::InvalidControllerID);
 			return source;
 		}
 	};

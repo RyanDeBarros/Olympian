@@ -36,7 +36,7 @@ namespace oly
 	{
 		return storage.visit(
 			[](const std::span<char> string) -> std::span<char> { return string; },
-			[](const std::span<const char> string) -> std::span<char> { throw Error(ErrorCode::BAD_MUTABILITY); },
+			[](const std::span<const char> string) -> std::span<char> { throw Error(ErrorCode::BadMutability); },
 			[](std::string& string) -> std::span<char> { return std::span<char>(string); }
 		);
 	}
@@ -323,7 +323,7 @@ namespace oly
 		if (ec == std::errc())
 			return v;
 		else
-			throw Error(ErrorCode::CANNOT_PARSE, std::to_string((int)ec));
+			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
 	}
 
 	unsigned int StringParam::to_uint(const int base) const
@@ -334,7 +334,7 @@ namespace oly
 		if (ec == std::errc())
 			return v;
 		else
-			throw Error(ErrorCode::CANNOT_PARSE, std::to_string((int)ec));
+			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
 	}
 
 	float StringParam::to_float() const
@@ -345,6 +345,6 @@ namespace oly
 		if (ec == std::errc())
 			return v;
 		else
-			throw Error(ErrorCode::CANNOT_PARSE, std::to_string((int)ec));
+			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
 	}
 }

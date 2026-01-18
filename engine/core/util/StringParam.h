@@ -100,7 +100,7 @@ namespace oly
 		void pop_front() const
 		{
 			if (empty())
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 
 			erase_before(1);
 		}
@@ -108,7 +108,7 @@ namespace oly
 		void pop_back() const
 		{
 			if (empty())
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 
 			erase_after(size() - 1);
 		}

@@ -109,7 +109,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::unparent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];
@@ -128,7 +128,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::clear_children() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		std::vector<Index>& children = registry.children[id];
@@ -143,7 +143,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_parent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		Index parent = registry.parent[id];
@@ -153,7 +153,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::set_parent(Index new_parent) const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];
@@ -185,7 +185,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::children_post_set_internal() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		for (Index child : registry.children[id])
@@ -195,7 +195,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::children_post_set_external() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		for (Index child : registry.children[id])
@@ -205,7 +205,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_top_level_parent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		Transformer2D* top = get_parent();
 		if (!top)
@@ -233,7 +233,7 @@ namespace oly
 	internal::Transformer2DRegistry::Index internal::Transformer2DRegistry::Handle::children_count() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		return (Index)internal::Transformer2DRegistry::instance().children[id].size();
 	}
@@ -241,7 +241,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_child(Index index) const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		return registry.transformers[registry.children[id][index]];
@@ -250,7 +250,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::break_from_chain() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];

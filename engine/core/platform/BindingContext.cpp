@@ -87,7 +87,7 @@ namespace oly::input
 		case Conversion::TO_3D:
 			return Signal(phase, modify(glm::vec3(float(value))), source);
 		}
-		throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);
+		throw Error(ErrorCode::UnsupportedSwitchCase);
 	}
 
 	Signal Axis1DModifier::signal(Phase phase, float value, Signal::Source source) const
@@ -103,7 +103,7 @@ namespace oly::input
 		case Conversion::TO_3D:
 			return Signal(phase, modify(glm::vec3(value)), source);
 		}
-		throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);
+		throw Error(ErrorCode::UnsupportedSwitchCase);
 	}
 
 	Signal Axis2DModifier::signal(Phase phase, glm::vec2 value, Signal::Source source) const
@@ -129,7 +129,7 @@ namespace oly::input
 		case Conversion::TO_3D_1:
 			return Signal(phase, modify(glm::vec3(value, 1.0f)), source);
 		}
-		throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);
+		throw Error(ErrorCode::UnsupportedSwitchCase);
 	}
 
 	namespace internal

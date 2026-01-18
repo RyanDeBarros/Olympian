@@ -90,7 +90,7 @@ namespace oly::context
 		if (glfwInit() != GLFW_TRUE)
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << LOG.nl;
-			throw Error(ErrorCode::GLFW_INIT);
+			throw Error(ErrorCode::GlfwInit);
 		}
 		stbi_set_flip_vertically_on_load(true);
 
@@ -101,7 +101,7 @@ namespace oly::context
 		if (!toml_context)
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing \"context\" table." << LOG.nl;
-			throw Error(ErrorCode::CONTEXT_INIT);
+			throw Error(ErrorCode::ContextInit);
 		}
 
 		init_logger(toml_context);
@@ -128,7 +128,7 @@ namespace oly::context
 	Context::Context(const char* project_file, const char* resource_root)
 	{
 		if (active_context)
-			throw Error(ErrorCode::CONTEXT_INIT, "Context was already initialized");
+			throw Error(ErrorCode::ContextInit, "Context was already initialized");
 
 		active_context = true;
 		init(project_file, resource_root);

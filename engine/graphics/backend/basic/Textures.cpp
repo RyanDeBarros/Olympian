@@ -160,7 +160,7 @@ namespace oly::graphics
 		std::string f = file.get_absolute().string();
 		_buf = stbi_load(f.c_str(), &_dim.w, &_dim.h, &_dim.cpp, 0);
 		if (!_buf)
-			throw Error(ErrorCode::LOAD_IMAGE);
+			throw Error(ErrorCode::LoadImage);
 	}
 
 	Image::Image(unsigned char* buf, ImageDimensions dim)
@@ -230,7 +230,7 @@ namespace oly::graphics
 	int AnimDimensions::delay(unsigned int frame) const
 	{
 		if (frame >= frames())
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+			throw Error(ErrorCode::IndexOutOfRange);
 		return uniform() ? delays[0] : delays[frame];
 	}
 
@@ -393,7 +393,7 @@ namespace oly::graphics
 		std::string f = file.get_absolute().string();
 		i = nsvgParseFromFile(f.c_str(), units, dpi);
 		if (!i)
-			throw Error(ErrorCode::NSVG_PARSING);
+			throw Error(ErrorCode::NsvgParsing);
 	}
 
 	NSVGAbstract::NSVGAbstract(NSVGAbstract&& other) noexcept

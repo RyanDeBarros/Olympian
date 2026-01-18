@@ -115,7 +115,7 @@ namespace oly::context
 		if (!io::MetaSplitter::meta(import_file).has_type("texture"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		toml = io::load_toml(import_file);
@@ -123,14 +123,14 @@ namespace oly::context
 		if (!texture_array)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"texture\" array field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (texture_index >= texture_array->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture index (" << texture_index
 				<< ") out of range for texture array size (" << texture_array->size() << ")." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		return TOMLNode(*texture_array->get(texture_index));
@@ -164,7 +164,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (file.extension_matches(".svg"))
@@ -228,7 +228,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!file.extension_matches(".svg"))
@@ -310,7 +310,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (file.extension_matches(".svg"))
@@ -364,7 +364,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!file.extension_matches(".svg"))
@@ -424,7 +424,7 @@ namespace oly::context
 				return it->second.image->dim().dimensions();
 		}
 
-		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	static graphics::ImageDimensions get_image_dimensions(const internal::TextureKey& key)
@@ -441,7 +441,7 @@ namespace oly::context
 				return it->second.image->dim();
 		}
 
-		throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+		throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	static SmartReference<graphics::AnimDimensions> get_anim_dimensions(const internal::TextureKey& key)
@@ -450,7 +450,7 @@ namespace oly::context
 		if (it != internal::anims.end())
 			return it->second->dim();
 		else
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	static graphics::ImageRef get_image_pixel_buffer(const internal::TextureKey& key)
@@ -459,7 +459,7 @@ namespace oly::context
 		if (it != internal::vector_images.end())
 			return it->second.image;
 		else
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	static graphics::AnimRef get_anim_pixel_buffer(const internal::TextureKey& key)
@@ -468,7 +468,7 @@ namespace oly::context
 		if (it != internal::anims.end())
 			return it->second;
 		else
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	glm::vec2 get_texture_dimensions(const ResourcePath& file, unsigned int texture_index)
@@ -500,7 +500,7 @@ namespace oly::context
 	{
 		auto it = internal::textures.find_backward_iterator(texture);
 		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 		return get_texture_dimensions(it->second);
 	}
 
@@ -508,7 +508,7 @@ namespace oly::context
 	{
 		auto it = internal::textures.find_backward_iterator(texture);
 		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 		return get_image_dimensions(it->second);
 	}
 
@@ -516,7 +516,7 @@ namespace oly::context
 	{
 		auto it = internal::textures.find_backward_iterator(texture);
 		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 		return get_anim_dimensions(it->second);
 	}
 
@@ -524,7 +524,7 @@ namespace oly::context
 	{
 		auto it = internal::textures.find_backward_iterator(texture);
 		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 		return get_image_pixel_buffer(it->second);
 	}
 
@@ -532,7 +532,7 @@ namespace oly::context
 	{
 		auto it = internal::textures.find_backward_iterator(texture);
 		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UNREGISTERED_TEXTURE);
+			throw Error(ErrorCode::UnregisteredTexture);
 		return get_anim_pixel_buffer(it->second);
 	}
 
@@ -541,7 +541,7 @@ namespace oly::context
 		auto it = internal::nsvg_abstracts.find(file);
 		if (it != internal::nsvg_abstracts.end())
 			return it->second;
-		throw Error(ErrorCode::UNREGISTERED_NSVG_ABSTRACT);
+		throw Error(ErrorCode::UnregisteredNsvgAbstract);
 	}
 
 	void free_texture(const ResourcePath& file, unsigned int texture_index)

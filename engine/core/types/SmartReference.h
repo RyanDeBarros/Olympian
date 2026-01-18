@@ -547,7 +547,7 @@ namespace oly
 			if (valid())
 				return *static_cast<const Object*>(pool().objects[pool_idx].get());
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 		
 		Object& operator*()
@@ -555,7 +555,7 @@ namespace oly
 			if (valid())
 				return *static_cast<Object*>(pool().objects[pool_idx].get());
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 		
 		const Object* operator->() const
@@ -563,7 +563,7 @@ namespace oly
 			if (valid())
 				return static_cast<const Object*>(pool().objects[pool_idx].get());
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 		
 		Object* operator->()
@@ -571,7 +571,7 @@ namespace oly
 			if (valid())
 				return static_cast<Object*>(pool().objects[pool_idx].get());
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		// TODO v7 define macros that enables pointer data member for base() so it can be easily queried during debugging. Here and in other classes that abstract away references, like PublicIssuer.
@@ -682,7 +682,7 @@ namespace oly
 			if (valid())
 				pool().mark_for_deletion(pool_idx);
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 		
 		bool is_marked_for_deletion() const
@@ -690,7 +690,7 @@ namespace oly
 			if (valid())
 				return pool().is_marked_for_deletion(pool_idx);
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 		
 		void unmark_for_deletion() const
@@ -698,7 +698,7 @@ namespace oly
 			if (valid())
 				pool().unmark_for_deletion(pool_idx);
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		void set_on_delete(void(*callback)(Object&, void*), void* usr = nullptr)
@@ -706,7 +706,7 @@ namespace oly
 			if (valid())
 				pool().on_delete_callbacks[pool_idx] = { callback, usr };
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		void invalidate()
@@ -772,7 +772,7 @@ namespace oly
 				return *static_cast<SmartReference<Object>*>(head);
 		}
 
-		throw Error(ErrorCode::BAD_REFERENCE);
+		throw Error(ErrorCode::BadReference);
 	}
 
 	namespace internal

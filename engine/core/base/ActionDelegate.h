@@ -177,7 +177,7 @@ namespace oly
 			if (delegator)
 				return *delegator;
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		Delegator& get_delegator()
@@ -185,7 +185,7 @@ namespace oly
 			if (delegator)
 				return *delegator;
 			else
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 		}
 
 		virtual void call(Args... action) = 0;

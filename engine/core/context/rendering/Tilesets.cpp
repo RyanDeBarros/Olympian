@@ -27,7 +27,7 @@ namespace oly::context
 		if (file.empty())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::tilesets.find(file);
@@ -39,7 +39,7 @@ namespace oly::context
 		if (!io::MetaSplitter::meta(file).has_type("tileset"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(file);

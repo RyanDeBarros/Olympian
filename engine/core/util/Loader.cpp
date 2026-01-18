@@ -17,7 +17,7 @@ namespace oly::io
 		catch (const toml::parse_error& err)
 		{
 			_OLY_ENGINE_LOG_ERROR("ASSETS") << "Cannot load TOML file " << file << LOG.nl;
-			throw Error(ErrorCode::TOML_PARSE, err.description().data());
+			throw Error(ErrorCode::TomlParse, err.description().data());
 		}
 	}
 

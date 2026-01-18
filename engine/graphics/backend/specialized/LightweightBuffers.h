@@ -23,7 +23,7 @@ namespace oly::graphics
 			: max_size(max_size_in_bytes)
 		{
 			if (max_size < 0)
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 			set_size(size_in_bytes);
 			glNamedBufferData(buf, size, nullptr, usage);
 		}
@@ -38,14 +38,14 @@ namespace oly::graphics
 		void set_size(GLsizeiptr sz) const
 		{
 			if (sz < 0 || sz > max_size)
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 			size = sz;
 		}
 
 		void assert_in_range(GLintptr pos) const
 		{
 			if (pos < 0 || pos > size - 1)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 		}
 
 	public:
@@ -112,7 +112,7 @@ namespace oly::graphics
 			: size(size_in_bytes)
 		{
 			if (size <= 0)
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 			glNamedBufferStorage(buf, size, nullptr, flags);
 		}
 
@@ -124,7 +124,7 @@ namespace oly::graphics
 		void assert_in_range(GLintptr pos) const
 		{
 			if (pos < 0 || pos > size - 1)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 		}
 
 	public:
@@ -163,7 +163,7 @@ namespace oly::graphics
 		void force_resize_empty(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT)
 		{
 			if (size_in_bytes <= 0)
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 
 			size = size_in_bytes;
 			GLBuffer new_buf;
@@ -174,7 +174,7 @@ namespace oly::graphics
 		void force_resize(GLsizeiptr size_in_bytes, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT)
 		{
 			if (size_in_bytes <= 0)
-				throw Error(ErrorCode::INVALID_SIZE);
+				throw Error(ErrorCode::InvalidSize);
 
 			if (size_in_bytes != size)
 			{

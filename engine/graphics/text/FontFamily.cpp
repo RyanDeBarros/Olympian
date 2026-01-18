@@ -30,7 +30,7 @@ namespace oly::rendering
 		if (it != styles.end())
 			return it->second;
 		else
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	FontFamily::FontRef FontSelection::get() const

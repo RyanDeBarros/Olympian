@@ -16,7 +16,7 @@ namespace oly::io
 		if (!file)
 		{
 			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
+			throw Error(ErrorCode::FileIO);
 		}
 
 		std::vector<std::string> lines;
@@ -32,7 +32,7 @@ namespace oly::io
 		if (!file)
 		{
 			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
+			throw Error(ErrorCode::FileIO);
 		}
 
 		std::ostringstream oss;
@@ -47,7 +47,7 @@ namespace oly::io
 		if (!file)
 		{
 			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
+			throw Error(ErrorCode::FileIO);
 		}
 
 		std::streamsize size = file.tellg();
@@ -57,7 +57,7 @@ namespace oly::io
 		if (!file.read(reinterpret_cast<char*>(content.data()), size))
 		{
 			_OLY_ENGINE_LOG_ERROR("IO") << "Failed to read " << filepath << LOG.nl;
-			throw Error(ErrorCode::FILE_IO);
+			throw Error(ErrorCode::FileIO);
 		}
 
 		return content;

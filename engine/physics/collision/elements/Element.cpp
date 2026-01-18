@@ -26,7 +26,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8);\
 		default:\
-			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
+			throw Error(ErrorCode::UnsupportedSwitchCase);\
 	}
 
 	float Element::projection_max(UnitVector2D axis) const
@@ -278,7 +278,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8);\
 		default:\
-			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
+			throw Error(ErrorCode::UnsupportedSwitchCase);\
 	}
 
 	OverlapResult Element::overlaps(const Element& c) const

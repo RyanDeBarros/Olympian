@@ -614,7 +614,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -631,7 +631,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -648,7 +648,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -947,7 +947,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -964,7 +964,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -981,7 +981,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -998,7 +998,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -1015,7 +1015,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1032,7 +1032,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1049,7 +1049,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -1066,7 +1066,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1083,7 +1083,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}

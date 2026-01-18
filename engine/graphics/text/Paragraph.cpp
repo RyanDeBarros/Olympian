@@ -658,7 +658,7 @@ namespace oly::rendering
 	void Paragraph::insert_element(size_t i, TextElement&& element)
 	{
 		if (i > glyph_groups.size())
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+			throw Error(ErrorCode::IndexOutOfRange);
 
 		glyph_groups.emplace(glyph_groups.begin() + i, std::move(element));
 		glyph_groups[i].paragraph = this;

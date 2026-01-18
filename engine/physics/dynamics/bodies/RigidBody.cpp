@@ -142,7 +142,7 @@ namespace oly::physics
 		if (it != colliders.end())
 			return it - colliders.begin();
 		else
-			throw Error(ErrorCode::DOES_NOT_EXIST);
+			throw Error(ErrorCode::DoesNotExist);
 	}
 
 	debug::DebugOverlay RigidBody::create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options) const

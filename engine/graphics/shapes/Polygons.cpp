@@ -90,7 +90,7 @@ namespace oly::rendering
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID) [[unlikely]]
-			throw Error(ErrorCode::STORAGE_OVERFLOW);
+			throw Error(ErrorCode::StorageOverflow);
 
 		Range<GLuint> vertex_range;
 		OLY_ASSERT(vertex_free_space.next_free(vertices, vertex_range));
@@ -140,7 +140,7 @@ namespace oly::rendering
 	void internal::PolygonBatch::assert_valid_id(GLuint id) const
 	{
 		if (!is_valid_id(id))
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	internal::PolygonReference::PolygonReference(Unbatched)
@@ -250,7 +250,7 @@ namespace oly::rendering
 			return resized;
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	Range<GLuint> internal::PolygonReference::get_vertex_range() const
@@ -258,7 +258,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			return batch->get_vertex_range(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count) const
@@ -266,7 +266,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(vertex_range, points, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count) const
@@ -274,7 +274,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(vertex_range, colors, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_points(const glm::vec2* points, GLuint count) const
@@ -282,7 +282,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(batch->get_vertex_range(id), points, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_colors(const glm::vec4* colors, GLuint count) const
@@ -290,7 +290,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(batch->get_vertex_range(id), colors, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_polygon_transform(const glm::mat3& transform) const
@@ -298,7 +298,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_polygon_transform(id, transform);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_camera_invariant(bool camera_invariant) const
@@ -306,7 +306,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_polygon_camera_invariant(id, camera_invariant);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	const glm::mat3& internal::PolygonReference::get_polygon_transform() const
@@ -314,7 +314,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			return batch->get_polygon_transform(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	bool internal::PolygonReference::is_camera_invariant() const
@@ -322,7 +322,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			return batch->is_polygon_camera_invariant(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	GLuint& internal::PolygonReference::draw_index() const
@@ -333,7 +333,7 @@ namespace oly::rendering
 			return batch->ebo.draw_primitive()[0];
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	internal::PolygonSubmitter::PolygonSubmitter(Unbatched)
@@ -388,7 +388,7 @@ namespace oly::rendering
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::TRIANGULATION)
+				if (e.code == ErrorCode::Triangulation)
 					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
 				else
 					throw e;

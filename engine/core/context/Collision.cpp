@@ -58,12 +58,12 @@ namespace oly::context
 			if (!name.empty())
 				for (int i = 0; i < internal::collision_mask_names.size(); ++i)
 					if (i != index && internal::collision_mask_names[i] == name)
-						throw Error(ErrorCode::DUPLICATE_KEY);
+						throw Error(ErrorCode::DuplicateKey);
 
 			internal::collision_mask_names[index] = name.transfer();
 		}
 		else
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+			throw Error(ErrorCode::IndexOutOfRange);
 	}
 
 	col2d::Layer get_collision_layer(const StringParam& name)
@@ -84,11 +84,11 @@ namespace oly::context
 			if (!name.empty())
 				for (int i = 0; i < internal::collision_layer_names.size(); ++i)
 					if (i != index && internal::collision_layer_names[i] == name)
-						throw Error(ErrorCode::DUPLICATE_KEY);
+						throw Error(ErrorCode::DuplicateKey);
 
 			internal::collision_layer_names[index] = name.transfer();
 		}
 		else
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+			throw Error(ErrorCode::IndexOutOfRange);
 	}
 }
