@@ -21,7 +21,7 @@ class LoggerSettingsManager:
 		self.logger_settings = {}
 		self.logger_form = SettingsForm([
 			SettingsParameter('logfile', self.ui.logfile),
-			SettingsParameter('append', self.ui.appendLogfile),  # TODO v6 make sure is true by default
+			SettingsParameter('append', self.ui.appendLogfile),
 			SettingsParameter('console', self.ui.logToConsole)
 		])
 
