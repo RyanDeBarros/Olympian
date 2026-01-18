@@ -39,7 +39,7 @@ namespace oly::rendering
 				glm::vec2 dimensions = {};
 			};
 
-			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_data_ssbo;
+			graphics::LightweightSSBO<graphics::Mutability::Mutable> tex_data_ssbo;
 
 			struct QuadInfo
 			{
@@ -65,7 +65,7 @@ namespace oly::rendering
 			const QuadInfo& get_quad_info(GLuint vb_pos) const;
 			QuadInfo& set_quad_info(GLuint vb_pos);
 
-			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_coords_ssbo;
+			graphics::LightweightSSBO<graphics::Mutability::Mutable> tex_coords_ssbo;
 
 			struct AnimHash
 			{
@@ -97,7 +97,7 @@ namespace oly::rendering
 		private:
 			struct UBO
 			{
-				graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
+				graphics::LightweightUBO<graphics::Mutability::Mutable> modulation, anim;
 
 				UBO(UBOCapacity capacity)
 					: modulation(capacity.modulations() * sizeof(glm::vec4), sizeof(glm::vec4)),

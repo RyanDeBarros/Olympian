@@ -267,8 +267,8 @@ namespace oly::graphics
 
 	extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
 	extern AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
-	extern AnimFrameFormat setup_anim_frame_format_single(const ResourcePath& texture_file, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_Single(const ResourcePath& texture_file, GLuint frame);
 
 	class NSVGAbstract
 	{
@@ -312,14 +312,14 @@ namespace oly::graphics
 
 	enum class SVGMipmapGenerationMode
 	{
-		AUTO,
-		OFF,
-		MANUAL
+		Auto,
+		Off,
+		Manual
 	};
 
-	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr);
+	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr);
 	
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::OFF, const NSVGAbstract* abstract = nullptr)
+	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr)
 	{
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}

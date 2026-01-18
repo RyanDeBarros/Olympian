@@ -34,7 +34,7 @@ namespace oly::particles
 
 	void ParticleEmitter::on_tick(float delta_time)
 	{
-		float t = loop == Loop::LOOP && spawn_period > 1e-5f ? fmod(_time_elapsed, spawn_period) : _time_elapsed;
+		float t = loop == Loop::Loop && spawn_period > 1e-5f ? fmod(_time_elapsed, spawn_period) : _time_elapsed;
 		_spawn_debt += spawner->spawn_debt(t, delta_time, spawn_period);
 
 		lifetime.on_tick(*this);

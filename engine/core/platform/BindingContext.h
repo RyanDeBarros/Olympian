@@ -27,14 +27,14 @@ namespace oly
 			glm::vec3 multiplier = glm::vec3(1.0f);
 			enum class Swizzle
 			{
-				NONE,
+				None,
 				YX,
 				XZY,
 				YXZ,
 				YZX,
 				ZXY,
 				ZYX
-			} swizzle = Swizzle::NONE;
+			} swizzle = Swizzle::None;
 
 			bool modify(bool value) const;
 			float modify(float value) const;
@@ -48,11 +48,11 @@ namespace oly
 		{
 			enum class Conversion
 			{
-				NONE,
-				TO_1D,
-				TO_2D,
-				TO_3D
-			} conversion = Conversion::NONE;
+				None,
+				To1D,
+				To2D,
+				To3D
+			} conversion = Conversion::None;
 
 			Signal signal(Phase phase, bool value, Signal::Source source) const;
 
@@ -63,11 +63,11 @@ namespace oly
 		{
 			enum class Conversion
 			{
-				NONE,
-				TO_0D,
-				TO_2D,
-				TO_3D
-			} conversion = Conversion::NONE;
+				None,
+				To0D,
+				To2D,
+				To3D
+			} conversion = Conversion::None;
 
 			Signal signal(Phase phase, float value, Signal::Source source) const;
 
@@ -78,16 +78,16 @@ namespace oly
 		{
 			enum class Conversion
 			{
-				NONE,
-				TO_0D_X,
-				TO_0D_Y,
-				TO_0D_XY,
-				TO_1D_X,
-				TO_1D_Y,
-				TO_1D_XY,
-				TO_3D_0,
-				TO_3D_1
-			} conversion = Conversion::NONE;
+				None,
+				To0D_X,
+				To0D_Y,
+				To0D_XY,
+				To1D_X,
+				To1D_Y,
+				To1D_XY,
+				To3D_0,
+				To3D_1
+			} conversion = Conversion::None;
 
 			Signal signal(Phase phase, glm::vec2 value, Signal::Source source) const;
 
@@ -110,7 +110,7 @@ namespace oly
 				if ((mods & forbidden_key_mods) != 0)
 					return std::nullopt;
 
-				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::KEYBOARD);
+				return modifier.signal(phase, phase != input::Phase::Completed, input::Signal::Signal::Keyboard);
 			}
 
 			bool operator==(const KeyBinding&) const = default;
@@ -132,7 +132,7 @@ namespace oly
 				if ((mods & forbidden_button_mods) != 0)
 					return std::nullopt;
 
-				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Signal::MOUSE);
+				return modifier.signal(phase, phase != input::Phase::Completed, input::Signal::Signal::Mouse);
 			}
 
 			bool operator==(const MouseButtonBinding&) const = default;
@@ -148,7 +148,7 @@ namespace oly
 				if (button != this->button)
 					return std::nullopt;
 
-				return modifier.signal(phase, phase != input::Phase::COMPLETED, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
+				return modifier.signal(phase, phase != input::Phase::Completed, input::Signal::Source(input::Signal::Source::JoystickBase + controller));
 			}
 
 			bool operator==(const GamepadButtonBinding&) const = default;
@@ -165,7 +165,7 @@ namespace oly
 				if (axis != this->axis || glm::abs(value) < glm::abs(deadzone))
 					return std::nullopt;
 
-				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
+				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JoystickBase + controller));
 			}
 
 			bool operator==(const GamepadAxis1DBinding&) const = default;
@@ -182,7 +182,7 @@ namespace oly
 				if (axis != this->axis || glm::dot(value, value) < deadzone * deadzone)
 					return std::nullopt;
 
-				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JOYSTICK_BASE + controller));
+				return modifier.signal(phase, value, input::Signal::Source(input::Signal::Source::JoystickBase + controller));
 			}
 
 			bool operator==(const GamepadAxis2DBinding&) const = default;
@@ -194,7 +194,7 @@ namespace oly
 
 			Signal signal(Phase phase, glm::vec2 pos) const
 			{
-				return modifier.signal(phase, pos, input::Signal::Signal::MOUSE);
+				return modifier.signal(phase, pos, input::Signal::Signal::Mouse);
 			}
 
 			bool operator==(const CursorPosBinding&) const = default;
@@ -206,7 +206,7 @@ namespace oly
 
 			Signal signal(Phase phase, glm::vec2 scroll) const
 			{
-				return modifier.signal(phase, scroll, input::Signal::Signal::MOUSE);
+				return modifier.signal(phase, scroll, input::Signal::Signal::Mouse);
 			}
 
 			bool operator==(const ScrollBinding&) const = default;

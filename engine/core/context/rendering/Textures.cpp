@@ -99,10 +99,10 @@ namespace oly::context
 		graphics::BindlessTextureRef texture;
 		std::string generate_mipmaps = node["generate_mipmaps"].value<std::string>().value_or("off");
 		graphics::SVGMipmapGenerationMode mipmaps_mode
-			= generate_mipmaps == "auto" ? graphics::SVGMipmapGenerationMode::AUTO
-			: generate_mipmaps == "manual" ? graphics::SVGMipmapGenerationMode::MANUAL
-			: graphics::SVGMipmapGenerationMode::OFF;
-		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::MANUAL ? &abstract : nullptr));
+			= generate_mipmaps == "auto" ? graphics::SVGMipmapGenerationMode::Auto
+			: generate_mipmaps == "manual" ? graphics::SVGMipmapGenerationMode::Manual
+			: graphics::SVGMipmapGenerationMode::Off;
+		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, node, set_and_use);
 		return texture;
 	}
@@ -138,9 +138,9 @@ namespace oly::context
 
 	static bool should_store(TOMLNode texture_node, const char* storage_key, tex::ImageStorageOverride storage_override)
 	{
-		if (storage_override == tex::ImageStorageOverride::DISCARD)
+		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;
-		else if (storage_override == tex::ImageStorageOverride::KEEP)
+		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
 			return texture_node[storage_key].value<std::string>().value_or("discard") == "keep";
@@ -170,7 +170,7 @@ namespace oly::context
 		if (file.extension_matches(".svg"))
 		{
 			tex::SVGLoadParams svg_params{
-				.abstract_storage = tex::ImageStorageOverride::DEFAULT,
+				.abstract_storage = tex::ImageStorageOverride::Default,
 				.image_storage = params.storage,
 				.set_and_use = params.set_and_use
 			};

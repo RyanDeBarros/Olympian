@@ -16,9 +16,9 @@ namespace oly::rendering
 		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
 		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uInvariantProjection");
 
-		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 0, .size = 2 };
-		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::FLOAT>{ .index = 1, .size = 4 };
-		vbo_block.attributes[INDEX] = graphics::VertexAttribute<graphics::VertexAttributeType::INT>{ .index = 2, .size = 1 };
+		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 0, .size = 2 };
+		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 1, .size = 4 };
+		vbo_block.attributes[INDEX] = graphics::VertexAttribute<graphics::VertexAttributeType::Int>{ .index = 2, .size = 1 };
 		vbo_block.setup();
 	}
 
@@ -364,16 +364,16 @@ namespace oly::rendering
 	void internal::PolygonSubmitter::set_camera_invariant(bool invariant) const
 	{
 		if (invariant)
-			camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::VALUE);
+			camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::Value);
 		else
-			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::VALUE);
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::Value);
 
-		camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::DIRTY);
+		camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::Dirty);
 	}
 
 	bool internal::PolygonSubmitter::is_camera_invariant() const
 	{
-		return camera_invariant & CameraInvariantFlag::VALUE;
+		return camera_invariant & CameraInvariantFlag::Value;
 	}
 
 	void internal::PolygonSubmitter::submit_dirty() const
@@ -410,10 +410,10 @@ namespace oly::rendering
 			impl_set_polygon_colors();
 		}
 
-		if (camera_invariant & CameraInvariantFlag::DIRTY)
+		if (camera_invariant & CameraInvariantFlag::Dirty)
 		{
-			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::DIRTY);
-			ref.set_camera_invariant(camera_invariant & CameraInvariantFlag::VALUE);
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::Dirty);
+			ref.set_camera_invariant(camera_invariant & CameraInvariantFlag::Value);
 		}
 	}
 
@@ -755,7 +755,7 @@ namespace oly::rendering
 						if (str == "outer")
 							ngon_base.border_pivot = cmath::BorderPivot::OUTER;
 						else if (str == "middle")
-							ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
+							ngon_base.border_pivot = cmath::BorderPivot::Middle;
 						else if (str == "inner")
 							ngon_base.border_pivot = cmath::BorderPivot::INNER;
 						else
@@ -914,7 +914,7 @@ namespace oly::rendering
 			if (str == "outer")
 				ngon_base.border_pivot = cmath::BorderPivot::OUTER;
 			else if (str == "middle")
-				ngon_base.border_pivot = cmath::BorderPivot::MIDDLE;
+				ngon_base.border_pivot = cmath::BorderPivot::Middle;
 			else if (str == "inner")
 				ngon_base.border_pivot = cmath::BorderPivot::INNER;
 			else

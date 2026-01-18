@@ -58,14 +58,14 @@ namespace oly::col2d
 
 	RaycastResult raycast(const Compound& c, Ray ray)
 	{
-		RaycastResult info{ .hit = RaycastResult::Hit::NO_HIT };
+		RaycastResult info{ .hit = RaycastResult::Hit::NoHit };
 		float closest_dist_sqrd = nmax<float>();
 		for (const auto& element : c.elements)
 		{
 			RaycastResult res = raycast(element, ray);
-			if (res.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
+			if (res.hit == RaycastResult::Hit::EmbeddedOrigin)
 				return res;
-			else if (res.hit == RaycastResult::Hit::TRUE_HIT)
+			else if (res.hit == RaycastResult::Hit::TrueHit)
 			{
 				float dist_sqrd = math::mag_sqrd(res.contact - ray.origin);
 				if (dist_sqrd < closest_dist_sqrd)

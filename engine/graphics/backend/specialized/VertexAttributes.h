@@ -7,9 +7,9 @@ namespace oly::graphics
 {
 	enum class VertexAttributeType
 	{
-		INT,
-		FLOAT,
-		DOUBLE
+		Float,
+		Int,
+		Double
 	};
 
 	template<VertexAttributeType T>
@@ -19,7 +19,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	struct VertexAttribute<VertexAttributeType::FLOAT>
+	struct VertexAttribute<VertexAttributeType::Float>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -46,7 +46,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	struct VertexAttribute<VertexAttributeType::INT>
+	struct VertexAttribute<VertexAttributeType::Int>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -72,7 +72,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	struct VertexAttribute<VertexAttributeType::DOUBLE>
+	struct VertexAttribute<VertexAttributeType::Double>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -96,5 +96,5 @@ namespace oly::graphics
 		}
 	};
 
-	typedef Variant<VertexAttribute<VertexAttributeType::FLOAT>, VertexAttribute<VertexAttributeType::INT>, VertexAttribute<VertexAttributeType::DOUBLE>> VertexAttributeVariant;
+	typedef Variant<VertexAttribute<VertexAttributeType::Float>, VertexAttribute<VertexAttributeType::Int>, VertexAttribute<VertexAttributeType::Double>> VertexAttributeVariant;
 }

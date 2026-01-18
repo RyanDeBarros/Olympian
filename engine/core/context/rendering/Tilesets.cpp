@@ -76,7 +76,7 @@ namespace oly::context
 				int config = 0;
 				if (io::parse_int(_config, config))
 				{
-					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_COUNT)
+					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_c)
 						assignment.config = (rendering::TileSet::Configuration)config;
 					else
 					{
@@ -111,15 +111,15 @@ namespace oly::context
 						{
 							const std::string tr = transformation.value();
 							if (tr == "RX")
-								assignment.transformation &= rendering::TileSet::Transformation::REFLECT_X;
+								assignment.transformation &= rendering::TileSet::Transformation::ReflectX;
 							else if (tr == "RY")
-								assignment.transformation &= rendering::TileSet::Transformation::REFLECT_Y;
+								assignment.transformation &= rendering::TileSet::Transformation::ReflectY;
 							else if (tr == "R90")
-								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_90;
+								assignment.transformation &= rendering::TileSet::Transformation::Rotate90;
 							else if (tr == "R180")
-								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_180;
+								assignment.transformation &= rendering::TileSet::Transformation::Rotate180;
 							else if (tr == "R270")
-								assignment.transformation &= rendering::TileSet::Transformation::ROTATE_270;
+								assignment.transformation &= rendering::TileSet::Transformation::Rotate270;
 							else
 								_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
 								<< " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;

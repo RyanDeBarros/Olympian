@@ -73,8 +73,8 @@ namespace oly::rendering
 
 			enum class WriteResult
 			{
-				CONTINUE,
-				BREAK
+				Continue,
+				Break
 			};
 			WriteResult write_glyph_section(TypesetData& typeset, PeekData next_peek) const;
 			void clear_cache() const;
@@ -141,7 +141,7 @@ namespace oly::rendering
 		mutable Sprite bkg;
 		ParagraphFormat format;
 
-		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::REBUILD_LAYOUT;
+		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::RebuildLayout;
 
 		std::vector<internal::GlyphGroup> glyph_groups;
 
@@ -165,9 +165,9 @@ namespace oly::rendering
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
 		Transformer2DExposure<TExposureParams{
-			.local = exposure::local::FULL,
-			.chain = exposure::chain::ATTACH_ONLY,
-			.modifier = exposure::modifier::FULL
+			.local = exposure::local::Full,
+			.chain = exposure::chain::AttachOnly,
+			.modifier = exposure::modifier::Full
 		}> set_transformer() { return transformer; }
 
 	private:
@@ -208,11 +208,11 @@ namespace oly::rendering
 
 		enum AlignmentFlags
 		{
-			RESIZE_LINES = 1 << 0,
-			VERTICAL = 1 << 1,
-			HORIZONTAL = 1 << 2,
-			PIVOT = 1 << 3,
-			PADDING = 1 << 4
+			ResizeLines = 1 << 0,
+			Vertical = 1 << 1,
+			Horizontal = 1 << 2,
+			Pivot = 1 << 3,
+			Padding = 1 << 4
 		};
 		void compute_alignment_cache(AlignmentFlags flags) const;
 

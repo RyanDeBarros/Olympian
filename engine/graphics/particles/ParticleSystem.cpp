@@ -17,22 +17,22 @@ namespace oly::rendering
 		state = !state;
 	}
 
-	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::in() const
+	const graphics::LightweightSSBO<graphics::Mutability::Immutable>& ParticleSystem::BufferList::ParticleDoubleBuffer::in() const
 	{
 		return state ? a : b;
 	}
 
-	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::in()
+	graphics::LightweightSSBO<graphics::Mutability::Immutable>& ParticleSystem::BufferList::ParticleDoubleBuffer::in()
 	{
 		return state ? a : b;
 	}
 
-	const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::out() const
+	const graphics::LightweightSSBO<graphics::Mutability::Immutable>& ParticleSystem::BufferList::ParticleDoubleBuffer::out() const
 	{
 		return state ? b : a;
 	}
 
-	graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& ParticleSystem::BufferList::ParticleDoubleBuffer::out()
+	graphics::LightweightSSBO<graphics::Mutability::Immutable>& ParticleSystem::BufferList::ParticleDoubleBuffer::out()
 	{
 		return state ? b : a;
 	}

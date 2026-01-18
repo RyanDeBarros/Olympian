@@ -8,10 +8,10 @@ namespace oly::col2d
 {
 	enum Phase : unsigned char
 	{
-		EXPIRED   = 0b1,
-		STARTED   = 0b10,
-		ONGOING   = 0b100,
-		COMPLETED = 0b1000
+		Expired   = 0b1,
+		Started   = 0b10,
+		Ongoing   = 0b100,
+		Completed = 0b1000
 	};
 
 	constexpr Phase operator&(Phase a, Phase b) { return (Phase)((unsigned char)a & (unsigned char)b); }

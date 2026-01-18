@@ -13,30 +13,30 @@ namespace oly::rendering
 	private:
 		enum Defaults : unsigned int
 		{
-			D_REGULAR = 0,
-			D_BOLD = 0b1,
-			D_ITALIC = 0b10,
-			D_MAX = 0b11
+			DRegular = 0,
+			DBold = 0b1,
+			DItalic = 0b10,
+			DMax = 0b11
 		};
 
 		unsigned int v = 0;
 
 	public:
-		constexpr FontStyle(unsigned int v) : v(v & Defaults::D_MAX) {}
+		constexpr FontStyle(unsigned int v) : v(v & Defaults::DMax) {}
 
 		constexpr bool operator==(FontStyle other) const { return v == other.v; }
 		constexpr operator unsigned int() const { return v; }
 
-		constexpr FontStyle operator~() const { return FontStyle(~v & Defaults::D_MAX); }
+		constexpr FontStyle operator~() const { return FontStyle(~v & Defaults::DMax); }
 		constexpr FontStyle operator|(FontStyle other) const { return FontStyle(v | other.v); }
 		constexpr FontStyle operator&(FontStyle other) const { return FontStyle(v & other.v); }
 		constexpr FontStyle& operator|=(FontStyle other) { return *this = (*this | other); }
 		constexpr FontStyle& operator&=(FontStyle other) { return *this = (*this & other); }
 
-		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::D_REGULAR); }
-		static constexpr FontStyle BOLD() { return FontStyle(Defaults::D_BOLD); }
-		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::D_ITALIC); }
-		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::D_BOLD | Defaults::D_ITALIC); }
+		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::DRegular); }
+		static constexpr FontStyle BOLD() { return FontStyle(Defaults::DBold); }
+		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::DItalic); }
+		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::DBold | Defaults::DItalic); }
 
 		static std::optional<FontStyle> from_string(const StringParam& str);
 	};

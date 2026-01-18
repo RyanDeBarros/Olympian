@@ -72,9 +72,9 @@ namespace oly
 
 		enum ParallelState
 		{
-			SAME_DIRECTION,
-			OPPOSITE_DIRECTION,
-			NON_PARALLEL
+			SameDirection,
+			OppositeDirection,
+			NotParallel
 		};
 
 		bool near_parallel(UnitVector2D other, double tolerance = Tolerance<float>) const;

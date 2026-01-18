@@ -97,7 +97,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
-		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YOUNG_ON_OLD;
+		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;
 		particle_system.emitter(0).spawn_period = 0.3f;
 		oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, oly::io::load_toml("assets/particle system.toml")["emitter0"]["spawner"]);
 		particle_system.emitter(0).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["color"]);
@@ -115,16 +115,16 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 		bkg.draw();
 		polygon_batch->render();
 
-		sprite_match.draw();
-		for (const auto& sprite : flag_tesselation)
-			sprite.draw();
-		jumble.draw();
+		//sprite_match.draw();
+		//for (const auto& sprite : flag_tesselation)
+		//	sprite.draw();
+		//jumble.draw();
 
-		obstacle_layer.draw();
-		player_layer.draw();
-		ray_layer.draw();
-		
-		pixel_art_text.draw();
+		//obstacle_layer.draw();
+		//player_layer.draw();
+		//ray_layer.draw();
+		//
+		//pixel_art_text.draw();
 
 		particle_system.render();
 	}

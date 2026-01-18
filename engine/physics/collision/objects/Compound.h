@@ -58,7 +58,7 @@ namespace oly::col2d
 		bool is_dirty() const { return dirty || transformer.dirty(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
 
 		const Compound& get_compound() const { return compound; }
 		Compound& set_compound() { dirty = true; return compound; }

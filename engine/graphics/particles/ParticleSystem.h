@@ -29,23 +29,23 @@ namespace oly::rendering
 		{
 			class ParticleDoubleBuffer
 			{
-				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> a;
-				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> b;
+				graphics::LightweightSSBO<graphics::Mutability::Immutable> a;
+				graphics::LightweightSSBO<graphics::Mutability::Immutable> b;
 				mutable bool state = true;
 
 			public:
 				ParticleDoubleBuffer(GLuint max_particles);
 
 				void swap() const;
-				const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& in() const;
-				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& in();
-				const graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& out() const;
-				graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE>& out();
+				const graphics::LightweightSSBO<graphics::Mutability::Immutable>& in() const;
+				graphics::LightweightSSBO<graphics::Mutability::Immutable>& in();
+				const graphics::LightweightSSBO<graphics::Mutability::Immutable>& out() const;
+				graphics::LightweightSSBO<graphics::Mutability::Immutable>& out();
 			} particles;
 
-			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> emitter;
-			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> draw_command;
-			graphics::LightweightSSBO<graphics::Mutability::IMMUTABLE> ps_data;
+			graphics::LightweightSSBO<graphics::Mutability::Immutable> emitter;
+			graphics::LightweightSSBO<graphics::Mutability::Immutable> draw_command;
+			graphics::LightweightSSBO<graphics::Mutability::Immutable> ps_data;
 
 			BufferList(GLuint particle_capacity);
 		} buffers;
@@ -100,9 +100,9 @@ namespace oly::rendering
 	public:
 		enum class AgeSort
 		{
-			YOUNG_ON_OLD,
-			OLD_ON_YOUNG
-		} age_sort = AgeSort::YOUNG_ON_OLD;
+			YoungOnOld,
+			OldOnYoung
+		} age_sort = AgeSort::YoungOnOld;
 
 		rendering::Camera2DRef camera = REF_DEFAULT;
 		Transformer2D transformer;

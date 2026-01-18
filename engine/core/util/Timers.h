@@ -11,8 +11,8 @@ namespace oly
 {
 	enum class TimeMode : char
 	{
-		PROCESSED,
-		REAL
+		Processed,
+		Real
 	};
 
 	class StateTimer : public ITickService
@@ -22,13 +22,13 @@ namespace oly
 		mutable float elapsed = 0.0f;
 		bool one_shot = false;
 		mutable bool playing = true;
-		TimeMode mode = TimeMode::PROCESSED;
+		TimeMode mode = TimeMode::Processed;
 		mutable GLuint _state = 0;
 
 	public:
-		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
+		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
+		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
+		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
 		
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }
@@ -64,13 +64,13 @@ namespace oly
 		bool one_shot = false;
 		mutable bool playing = true;
 		bool continuous;
-		TimeMode mode = TimeMode::PROCESSED;
+		TimeMode mode = TimeMode::Processed;
 		mutable GLuint _state = 0;
 
 	public:
-		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
+		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
+		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
+		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
 
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }

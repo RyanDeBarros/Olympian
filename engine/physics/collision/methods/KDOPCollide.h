@@ -48,15 +48,15 @@ namespace oly::col2d
 	template<size_t K>
 	inline RaycastResult raycast(const KDOP<K>& c, Ray ray)
 	{
-		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
 		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
 		float max_entry = -nmax<float>();
 		for (size_t i = 0; i < K; ++i)
 		{
 			if (!internal::raycast_update_on_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i), info, max_entry))
-				return { .hit = RaycastResult::Hit::NO_HIT };
+				return { .hit = RaycastResult::Hit::NoHit };
 		}
-		if (info.hit == RaycastResult::Hit::TRUE_HIT)
+		if (info.hit == RaycastResult::Hit::TrueHit)
 		{
 			glm::vec2 local_clip = max_entry * (glm::vec2)local_ray.direction;
 			info.contact = ray.origin + internal::KDOPGlobalAccess<K>::global_direction(c, local_clip);

@@ -197,11 +197,11 @@ namespace oly::context
 		{
 			std::string conv = conversion.value();
 			if (conv == "TO_1D")
-				modifier.conversion = input::Axis0DModifier::Conversion::TO_1D;
+				modifier.conversion = input::Axis0DModifier::Conversion::To1D;
 			else if (conv == "TO_2D")
-				modifier.conversion = input::Axis0DModifier::Conversion::TO_2D;
+				modifier.conversion = input::Axis0DModifier::Conversion::To2D;
 			else if (conv == "TO_3D")
-				modifier.conversion = input::Axis0DModifier::Conversion::TO_3D;
+				modifier.conversion = input::Axis0DModifier::Conversion::To3D;
 			else
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
@@ -220,11 +220,11 @@ namespace oly::context
 		{
 			std::string conv = conversion.value();
 			if (conv == "TO_0D")
-				modifier.conversion = input::Axis1DModifier::Conversion::TO_0D;
+				modifier.conversion = input::Axis1DModifier::Conversion::To0D;
 			else if (conv == "TO_2D")
-				modifier.conversion = input::Axis1DModifier::Conversion::TO_2D;
+				modifier.conversion = input::Axis1DModifier::Conversion::To2D;
 			else if (conv == "TO_3D")
-				modifier.conversion = input::Axis1DModifier::Conversion::TO_3D;
+				modifier.conversion = input::Axis1DModifier::Conversion::To3D;
 			else
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}
@@ -243,21 +243,21 @@ namespace oly::context
 		{
 			std::string conv = conversion.value();
 			if (conv == "TO_0D_X")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_0D_X;
+				modifier.conversion = input::Axis2DModifier::Conversion::To0D_X;
 			else if (conv == "TO_0D_Y")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_0D_Y;
+				modifier.conversion = input::Axis2DModifier::Conversion::To0D_Y;
 			else if (conv == "TO_0D_XY")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_0D_XY;
+				modifier.conversion = input::Axis2DModifier::Conversion::To0D_XY;
 			else if (conv == "TO_1D_X")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_1D_X;
+				modifier.conversion = input::Axis2DModifier::Conversion::To1D_X;
 			else if (conv == "TO_1D_Y")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_1D_Y;
+				modifier.conversion = input::Axis2DModifier::Conversion::To1D_Y;
 			else if (conv == "TO_1D_XY")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_1D_XY;
+				modifier.conversion = input::Axis2DModifier::Conversion::To1D_XY;
 			else if (conv == "TO_3D_0")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_0;
+				modifier.conversion = input::Axis2DModifier::Conversion::To3D_0;
 			else if (conv == "TO_3D_1")
-				modifier.conversion = input::Axis2DModifier::Conversion::TO_3D_1;
+				modifier.conversion = input::Axis2DModifier::Conversion::To3D_1;
 			else
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
 		}

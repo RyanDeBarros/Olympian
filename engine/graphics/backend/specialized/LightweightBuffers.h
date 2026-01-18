@@ -12,7 +12,7 @@ namespace oly::graphics
 	class LightweightBuffer;
 
 	template<>
-	class LightweightBuffer<Mutability::MUTABLE>
+	class LightweightBuffer<Mutability::Mutable>
 	{
 		GLBuffer buf;
 		mutable GLsizeiptr size = 0;
@@ -102,7 +102,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	class LightweightBuffer<Mutability::IMMUTABLE>
+	class LightweightBuffer<Mutability::Immutable>
 	{
 		GLBuffer buf;
 		mutable GLsizeiptr size = 0;

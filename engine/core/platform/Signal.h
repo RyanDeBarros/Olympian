@@ -28,9 +28,9 @@ namespace oly::input
 
 	enum class Phase
 	{
-		STARTED,
-		COMPLETED,
-		ONGOING
+		Started,
+		Completed,
+		Ongoing
 	};
 
 	struct Signal
@@ -39,17 +39,17 @@ namespace oly::input
 
 		enum class Type
 		{
-			BOOL,
-			AXIS1D,
-			AXIS2D,
-			AXIS3D
+			Boolean,
+			Axis1D,
+			Axis2D,
+			Axis3D
 		};
 
 		enum Source
 		{
-			KEYBOARD = -2,
-			MOUSE = -1,
-			JOYSTICK_BASE = 0,
+			Keyboard = -2,
+			Mouse = -1,
+			JoystickBase = 0,
 		};
 
 	private:
@@ -65,10 +65,10 @@ namespace oly::input
 		};
 
 	public:
-		Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::BOOL), bool_value(v), source(source) {}
-		Signal(Phase phase, float v, Source source) : phase(phase), type(Type::AXIS1D), axis_1d_value(v), source(source) {}
-		Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::AXIS2D), axis_2d_value(v), source(source) {}
-		Signal(Phase phase, glm::vec3 v, Source source) : phase(phase), type(Type::AXIS3D), axis_3d_value(v), source(source) {}
+		Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::Boolean), bool_value(v), source(source) {}
+		Signal(Phase phase, float v, Source source) : phase(phase), type(Type::Axis1D), axis_1d_value(v), source(source) {}
+		Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::Axis2D), axis_2d_value(v), source(source) {}
+		Signal(Phase phase, glm::vec3 v, Source source) : phase(phase), type(Type::Axis3D), axis_3d_value(v), source(source) {}
 
 		template<typename T>
 		T get() const
@@ -79,7 +79,7 @@ namespace oly::input
 		template<>
 		bool get<bool>() const
 		{
-			if (type != Type::BOOL)
+			if (type != Type::Boolean)
 				throw Error(ErrorCode::IncompatibleSignalType);
 			return bool_value;
 		}
@@ -87,7 +87,7 @@ namespace oly::input
 		template<>
 		float get<float>() const
 		{
-			if (type != Type::AXIS1D)
+			if (type != Type::Axis1D)
 				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_1d_value;
 		}
@@ -95,7 +95,7 @@ namespace oly::input
 		template<>
 		glm::vec2 get<glm::vec2>() const
 		{
-			if (type != Type::AXIS2D)
+			if (type != Type::Axis2D)
 				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_2d_value;
 		}
@@ -103,15 +103,15 @@ namespace oly::input
 		template<>
 		glm::vec3 get<glm::vec3>() const
 		{
-			if (type != Type::AXIS3D)
+			if (type != Type::Axis3D)
 				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_3d_value;
 		}
 
-		bool from_controller() const { return source >= Source::JOYSTICK_BASE; }
+		bool from_controller() const { return source >= Source::JoystickBase; }
 		int controller_id() const
 		{
-			if (source < Source::JOYSTICK_BASE)
+			if (source < Source::JoystickBase)
 				throw Error(ErrorCode::InvalidControllerID);
 			return source;
 		}

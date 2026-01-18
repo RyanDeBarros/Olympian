@@ -52,14 +52,14 @@ namespace oly::graphics
 				return std::nullopt;
 		}
 
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj)
+		bool set_object(LightweightBuffer<Mutability::Mutable>& buffer, SlotType& slot, const StoredObjectType& stored_obj)
 		{
 			std::optional<StoredObjectType> prev_obj;
 			return set_object<StoredObjectType>(buffer, slot, stored_obj, stored_obj, prev_obj);
 		}
 
 		template<typename BufferObjectType>
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj, std::optional<StoredObjectType>& prev_obj)
+		bool set_object(LightweightBuffer<Mutability::Mutable>& buffer, SlotType& slot, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj, std::optional<StoredObjectType>& prev_obj)
 		{
 			if (stored_obj == StoredObjectType{}) // remove object from sprite
 			{

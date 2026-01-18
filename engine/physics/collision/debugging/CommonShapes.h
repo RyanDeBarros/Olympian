@@ -67,7 +67,7 @@ namespace oly::debug
 
 	inline DebugShapeGroup create_shape_group(const col2d::RaycastResult& result, glm::vec4 color = STANDARD_BLUE, float impulse_length = 50.0f, float arrow_width = 6.0f)
 	{
-		if (result.hit == col2d::RaycastResult::Hit::TRUE_HIT)
+		if (result.hit == col2d::RaycastResult::Hit::TrueHit)
 		{
 			col2d::Ray ray{ .origin = result.contact, .direction = result.normal, .clip = impulse_length };
 			return create_shape_group(ray, color, arrow_width);
@@ -78,7 +78,7 @@ namespace oly::debug
 
 	inline void modify_shape_group(DebugOverlay& overlay, const col2d::RaycastResult& result, float impulse_length = 50.0f, float arrow_width = 6.0f, size_t shape_index = 0)
 	{
-		if (result.hit == col2d::RaycastResult::Hit::TRUE_HIT)
+		if (result.hit == col2d::RaycastResult::Hit::TrueHit)
 		{
 			col2d::Ray ray{ .origin = result.contact, .direction = result.normal, .clip = impulse_length };
 			modify_shape_group(overlay, ray, arrow_width, shape_index);

@@ -5,15 +5,15 @@ namespace oly::col2d
 	Logger::Impl operator<<(Logger::Impl log, Phase phase)
 	{
 #pragma warning(suppress : 26813)
-		return log << (phase == Phase::STARTED ? "started" : phase == Phase::ONGOING ? "ongoing" : phase == Phase::COMPLETED ? "completed" : "expired");
+		return log << (phase == Phase::Started ? "started" : phase == Phase::Ongoing ? "ongoing" : phase == Phase::Completed ? "completed" : "expired");
 	}
 
 	static Phase next_phase(bool overlap, Phase prior)
 	{
 		if (overlap)
-			return prior & (Phase::COMPLETED | Phase::EXPIRED) ? Phase::STARTED : Phase::ONGOING;
+			return prior & (Phase::Completed | Phase::Expired) ? Phase::Started : Phase::Ongoing;
 		else
-			return prior & (Phase::STARTED | Phase::ONGOING) ? Phase::COMPLETED : Phase::EXPIRED;
+			return prior & (Phase::Started | Phase::Ongoing) ? Phase::Completed : Phase::Expired;
 	}
 
 	OverlapEventData::OverlapEventData(OverlapResult result, const Collider& active_collider, const Collider& passive_collider, Phase prior)
@@ -35,7 +35,7 @@ namespace oly::col2d
 
 	Phase internal::CollisionPhaseTracker::prior_phase(const Collider& c1, const Collider& c2)
 	{
-		return map.get_or(c1, c2, Phase::EXPIRED);
+		return map.get_or(c1, c2, Phase::Expired);
 	}
 	
 	void internal::CollisionPhaseTracker::lazy_update_phase(const Collider& c1, const Collider& c2, Phase phase)
@@ -141,7 +141,7 @@ namespace oly::col2d
 
 		EventData& data1 = *data;
 		phase_tracker.lazy_update_phase(c1, c2, data1.phase);
-		if (data1.phase != Phase::EXPIRED)
+		if (data1.phase != Phase::Expired)
 		{
 			if (it_1 != handlers.end())
 				for (const auto& handler : it_1->second)

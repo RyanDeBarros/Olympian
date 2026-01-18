@@ -28,7 +28,7 @@ namespace oly
 
 	static float delta_time(TimeMode mode)
 	{
-		if (mode == TimeMode::PROCESSED) [[likely]]
+		if (mode == TimeMode::Processed) [[likely]]
 			return TIME.delta();
 		else
 			return REAL_TIME.delta();

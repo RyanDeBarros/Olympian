@@ -28,10 +28,10 @@ namespace oly::particles
 		float spawn_period = 1.0f;
 		enum class Loop
 		{
-			UNBOUNDED,
-			LOOP,
-			ONE_SHOT  // TODO v6 implement one_shot + playing/pausing
-		} loop = Loop::LOOP;
+			Unbounded,
+			Loop,
+			OneShot  // TODO v6 implement one_shot + playing/pausing
+		} loop = Loop::Loop;
 
 	private:
 		mutable float _spawn_debt = 0.0f;

@@ -24,9 +24,9 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			UNIFORM = 0,
-			TILTED = 1
-		} type = Type::UNIFORM;
+			Uniform = 0,
+			Tilted = 1
+		} type = Type::Uniform;
 
 		float params[1] = { 0.0f };
 	};
@@ -35,10 +35,10 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			CONSTANT = 0,
-			LINE = 1,
-			BILINE = 2
-		} type = Type::CONSTANT;
+			Constant = 0,
+			Line = 1,
+			BiLine = 2
+		} type = Type::Constant;
 
 		float params[3] = { 0.0 };
 	};
@@ -53,8 +53,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			UNIFORM = 0
-		} type = Type::UNIFORM;
+			Uniform = 0
+		} type = Type::Uniform;
 
 		float params[2] = { 0.0f };
 	};
@@ -63,8 +63,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			CONSTANT = 0
-		} type = Type::CONSTANT;
+			Constant = 0
+		} type = Type::Constant;
 
 		float params[6] = { 0.0 };
 	};
@@ -79,8 +79,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			UNIFORM = 0
-		} type = Type::UNIFORM;
+			Uniform = 0
+		} type = Type::Uniform;
 
 		float params[3] = { 0.0f };
 	};
@@ -89,8 +89,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			CONSTANT = 0
-		} type = Type::CONSTANT;
+			Constant = 0
+		} type = Type::Constant;
 
 		float params[9] = { 0.0 };
 	};
@@ -105,8 +105,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			UNIFORM = 0
-		} type = Type::UNIFORM;
+			Uniform = 0
+		} type = Type::Uniform;
 
 		float params[4] = { 0.0f };
 	};
@@ -115,8 +115,8 @@ namespace oly::particles::internal
 	{
 		enum Type : GLuint
 		{
-			CONSTANT = 0
-		} type = Type::CONSTANT;
+			Constant = 0
+		} type = Type::Constant;
 
 		float params[12] = { 0.0 };
 	};

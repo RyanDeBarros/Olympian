@@ -47,7 +47,7 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::ATTACH_ONLY, .modifier = exposure::modifier::FULL }>
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::AttachOnly, .modifier = exposure::modifier::Full }>
 			set_transformer() { return transformer; }
 
 		void copy_sprite_attributes(const Sprite& sprite);

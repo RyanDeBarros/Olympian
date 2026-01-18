@@ -78,13 +78,13 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::NONE:
+		case Conversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::TO_1D:
+		case Conversion::To1D:
 			return Signal(phase, modify(float(value)), source);
-		case Conversion::TO_2D:
+		case Conversion::To2D:
 			return Signal(phase, modify(glm::vec2(float(value))), source);
-		case Conversion::TO_3D:
+		case Conversion::To3D:
 			return Signal(phase, modify(glm::vec3(float(value))), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -94,13 +94,13 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::NONE:
+		case Conversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::TO_0D:
+		case Conversion::To0D:
 			return Signal(phase, modify(value != 0.0f), source);
-		case Conversion::TO_2D:
+		case Conversion::To2D:
 			return Signal(phase, modify(glm::vec2(value)), source);
-		case Conversion::TO_3D:
+		case Conversion::To3D:
 			return Signal(phase, modify(glm::vec3(value)), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -110,23 +110,23 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::NONE:
+		case Conversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::TO_0D_X:
+		case Conversion::To0D_X:
 			return Signal(phase, modify(value.x != 0.0f), source);
-		case Conversion::TO_0D_Y:
+		case Conversion::To0D_Y:
 			return Signal(phase, modify(value.y != 0.0f), source);
-		case Conversion::TO_0D_XY:
+		case Conversion::To0D_XY:
 			return Signal(phase, modify(value.x != 0.0f || value.y != 0.0f), source);
-		case Conversion::TO_1D_X:
+		case Conversion::To1D_X:
 			return Signal(phase, modify(value.x), source);
-		case Conversion::TO_1D_Y:
+		case Conversion::To1D_Y:
 			return Signal(phase, modify(value.y), source);
-		case Conversion::TO_1D_XY:
+		case Conversion::To1D_XY:
 			return Signal(phase, modify(glm::length(value)), source);
-		case Conversion::TO_3D_0:
+		case Conversion::To3D_0:
 			return Signal(phase, modify(glm::vec3(value, 0.0f)), source);
-		case Conversion::TO_3D_1:
+		case Conversion::To3D_1:
 			return Signal(phase, modify(glm::vec3(value, 1.0f)), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -167,7 +167,7 @@ namespace oly::input
 				cpos_poll.moving = false;
 				double x, y;
 				glfwGetCursorPos(context::get_platform().window(), &x, &y);
-				input::Signal signal(input::Phase::COMPLETED, { (float)x, (float)y }, input::Signal::Source::MOUSE);
+				input::Signal signal(input::Phase::Completed, { (float)x, (float)y }, input::Signal::Source::Mouse);
 				for (const auto& binding : cpos_bindings)
 					if (dispatch(binding.first, signal))
 						break;
@@ -179,7 +179,7 @@ namespace oly::input
 			if (scroll_poll.moving && (TIME.now<double>() > scroll_poll.callback_time))
 			{
 				scroll_poll.moving = false;
-				input::Signal signal(input::Phase::COMPLETED, glm::vec2{}, input::Signal::Source::MOUSE);
+				input::Signal signal(input::Phase::Completed, glm::vec2{}, input::Signal::Source::Mouse);
 				for (const auto& binding : scroll_bindings)
 					if (dispatch(binding.first, signal))
 						break;
@@ -197,14 +197,14 @@ namespace oly::input
 			if (prev_action == GLFW_PRESS)
 			{
 				if (state == GLFW_PRESS)
-					phase = input::Phase::ONGOING;
+					phase = input::Phase::Ongoing;
 				else
-					phase = input::Phase::COMPLETED;
+					phase = input::Phase::Completed;
 			}
 			else
 			{
 				if (state == GLFW_PRESS)
-					phase = input::Phase::STARTED;
+					phase = input::Phase::Started;
 				else
 					return;
 			}
@@ -231,10 +231,10 @@ namespace oly::input
 			if (prev_axis != state)
 			{
 				if (apoll.moving)
-					phase = input::Phase::ONGOING;
+					phase = input::Phase::Ongoing;
 				else
 				{
-					phase = input::Phase::STARTED;
+					phase = input::Phase::Started;
 					apoll.moving = true;
 				}
 			}
@@ -242,7 +242,7 @@ namespace oly::input
 			{
 				if (apoll.moving)
 				{
-					phase = input::Phase::COMPLETED;
+					phase = input::Phase::Completed;
 					apoll.moving = false;
 				}
 				else
@@ -271,10 +271,10 @@ namespace oly::input
 			if (prev_axis != state)
 			{
 				if (apoll.moving)
-					phase = input::Phase::ONGOING;
+					phase = input::Phase::Ongoing;
 				else
 				{
-					phase = input::Phase::STARTED;
+					phase = input::Phase::Started;
 					apoll.moving = true;
 				}
 			}
@@ -282,7 +282,7 @@ namespace oly::input
 			{
 				if (apoll.moving)
 				{
-					phase = input::Phase::COMPLETED;
+					phase = input::Phase::Completed;
 					apoll.moving = false;
 				}
 				else
@@ -305,13 +305,13 @@ namespace oly::input
 			switch (action)
 			{
 			case GLFW_PRESS:
-				phase = input::Phase::STARTED;
+				phase = input::Phase::Started;
 				return true;
 			case GLFW_RELEASE:
-				phase = input::Phase::COMPLETED;
+				phase = input::Phase::Completed;
 				return true;
 			case GLFW_REPEAT:
-				phase = input::Phase::ONGOING;
+				phase = input::Phase::Ongoing;
 				return true;
 			default:
 				return false;
@@ -369,9 +369,9 @@ namespace oly::input
 		{
 			input::Phase phase;
 			if (cpos_poll.moving)
-				phase = input::Phase::ONGOING;
+				phase = input::Phase::Ongoing;
 			else
-				phase = input::Phase::STARTED;
+				phase = input::Phase::Started;
 			cpos_poll.moving = true;
 			cpos_poll.callback_time = TIME.now<double>();
 
@@ -391,9 +391,9 @@ namespace oly::input
 		{
 			input::Phase phase;
 			if (scroll_poll.moving)
-				phase = input::Phase::ONGOING;
+				phase = input::Phase::Ongoing;
 			else
-				phase = input::Phase::STARTED;
+				phase = input::Phase::Started;
 			scroll_poll.moving = true;
 			scroll_poll.callback_time = TIME.now<double>();
 

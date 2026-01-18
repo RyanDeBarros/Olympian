@@ -11,8 +11,8 @@ namespace oly::graphics
 {
 	enum class BufferSendType
 	{
-		SUBDATA,
-		MAP
+		SubData,
+		Map
 	};
 
 	template<typename Iterator, std::unsigned_integral IndexType>
@@ -21,7 +21,7 @@ namespace oly::graphics
 		const std::byte* data = (const std::byte*)cpudata;
 		switch (send_type)
 		{
-		case BufferSendType::SUBDATA:
+		case BufferSendType::SubData:
 		{
 			GLintptr offset = 0;
 			GLsizeiptr size = 0;
@@ -41,7 +41,7 @@ namespace oly::graphics
 			glNamedBufferSubData(buf, offset, size, data + offset);
 			break;
 		}
-		case BufferSendType::MAP:
+		case BufferSendType::Map:
 		{
 			std::byte* gpu_buf = (std::byte*)glMapNamedBuffer(buf, GL_WRITE_ONLY);
 			GLintptr offset = 0;
@@ -76,7 +76,7 @@ namespace oly::graphics
 	class CPUSideBuffer
 	{
 	public:
-		using VectorAlias = std::conditional_t<M == Mutability::IMMUTABLE, FixedVector<StructType>, std::vector<StructType>>;
+		using VectorAlias = std::conditional_t<M == Mutability::Immutable, FixedVector<StructType>, std::vector<StructType>>;
 		using StructAlias = StructType;
 
 	protected:

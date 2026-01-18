@@ -10,19 +10,19 @@ namespace oly::col2d
 	struct ContactManifold
 	{
 		glm::vec2 p1 = {}, p2 = {};
-		bool single = true;
-		glm::vec2 pt() const { return single ? p1 : 0.5f * (p1 + p2); }
+		bool Single = true;
+		glm::vec2 pt() const { return Single ? p1 : 0.5f * (p1 + p2); }
 
 		static void clamp(UnitVector2D axis, const ContactManifold c1, const ContactManifold c2, glm::vec2& p1, glm::vec2& p2)
 		{
 			UnitVector2D tangent = axis.get_quarter_turn();
 
 			float v11 = tangent.dot(c1.p1);
-			float v12 = c1.single ? v11 : tangent.dot(c1.p2);
+			float v12 = c1.Single ? v11 : tangent.dot(c1.p2);
 			if (v11 > v12)
 				std::swap(v11, v12);
 			float v21 = tangent.dot(c2.p1);
-			float v22 = c2.single ? v21 : tangent.dot(c2.p2);
+			float v22 = c2.Single ? v21 : tangent.dot(c2.p2);
 			if (v21 > v22)
 				std::swap(v21, v22);
 
@@ -126,9 +126,9 @@ namespace oly::col2d
 	{
 		enum class Hit
 		{
-			NO_HIT,
-			EMBEDDED_ORIGIN,
-			TRUE_HIT
+			NoHit,
+			EmbeddedOrigin,
+			TrueHit
 		} hit;
 		glm::vec2 contact;
 		UnitVector2D normal;

@@ -130,7 +130,7 @@ namespace oly::col2d
 				const Collider* other = it.next();
 				EventData data((from.*method)(*other), from, *other, phase_tracker.prior_phase(from, *other));
 				phase_tracker.lazy_update_phase(from, *other, data.phase);
-				if (data.phase != Phase::EXPIRED)
+				if (data.phase != Phase::Expired)
 					(only_controller.*only_handler)(data);
 			}
 		}

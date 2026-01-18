@@ -44,16 +44,16 @@ namespace oly::rendering
 		texture->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		texture->set_and_use_handle();
 
-		painter.framebuffer.bind(graphics::Framebuffer::Target::DRAW);
+		painter.framebuffer.bind(graphics::Framebuffer::Target::Draw);
 		painter.framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(painter.framebuffer.status() == graphics::Framebuffer::Status::COMPLETE);
+		OLY_ASSERT(painter.framebuffer.status() == graphics::Framebuffer::Status::Complete);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	GeometryPainter::PaintContext::~PaintContext()
 	{
 		painter.framebuffer.detach_texture(graphics::Framebuffer::ColorAttachment::color(0));
-		painter.framebuffer.unbind(graphics::Framebuffer::Target::DRAW);
+		painter.framebuffer.unbind(graphics::Framebuffer::Target::Draw);
 		painter.context_locked = false;
 	}
 

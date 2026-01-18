@@ -28,11 +28,11 @@ namespace oly::graphics::internal_shaders
 		{
 			ShaderBufferSource vertex = {
 				.buffer = io::read_template_file(shaders_dir + "sprite_batch.vert", { { "/*$MODULATIONS*/", std::to_string(modulations) }, { "/*$ANIMS*/", std::to_string(anims) } }),
-				.type = ShaderType::VERTEX
+				.type = ShaderType::Vertex
 			};
 			ShaderBufferSource fragment = {
 				.buffer = io::read_file(shaders_dir + "sprite_batch.frag"),
-				.type = ShaderType::FRAGMENT
+				.type = ShaderType::Fragment
 			};
 			return Shader({ std::move(vertex), std::move(fragment) });
 		}
@@ -75,7 +75,7 @@ namespace oly::graphics::internal_shaders
 		{
 			return Shader({ {
 				.buffer = io::read_template_file(shaders_dir + "particles/spawn.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
-				.type = ShaderType::COMPUTE
+				.type = ShaderType::Compute
 			} });
 		}
 
@@ -104,7 +104,7 @@ namespace oly::graphics::internal_shaders
 		{
 			return Shader({ {
 				.buffer = io::read_template_file(shaders_dir + "particles/update.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
-				.type = ShaderType::COMPUTE
+				.type = ShaderType::Compute
 			} });
 		}
 
@@ -126,20 +126,20 @@ namespace oly::graphics::internal_shaders
 	void load()
 	{
 		_polygon_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "polygon_batch.vert", .type = ShaderType::VERTEX },
-			{ .path = shaders_dir + "polygon_batch.frag", .type = ShaderType::FRAGMENT }
+			{ .path = shaders_dir + "polygon_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir + "polygon_batch.frag", .type = ShaderType::Fragment }
 		});
 		polygon_batch = *_polygon_batch;
 
 		_ellipse_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "ellipse_batch.vert", .type = ShaderType::VERTEX },
-			{ .path = shaders_dir + "ellipse_batch.frag", .type = ShaderType::FRAGMENT }
+			{ .path = shaders_dir + "ellipse_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir + "ellipse_batch.frag", .type = ShaderType::Fragment }
 		});
 		ellipse_batch = *_ellipse_batch;
 
 		_particle_renderer = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "particles/particle.vert", .type = ShaderType::VERTEX },
-			{ .path = shaders_dir + "particles/particle.frag", .type = ShaderType::FRAGMENT }
+			{ .path = shaders_dir + "particles/particle.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir + "particles/particle.frag", .type = ShaderType::Fragment }
 		});
 		particle_renderer = *_particle_renderer;
 	}

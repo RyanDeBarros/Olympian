@@ -124,8 +124,8 @@ namespace oly::rendering
 
 			enum CameraInvariantFlag
 			{
-				VALUE = 1,
-				DIRTY = 2
+				Value = 1,
+				Dirty = 2
 			};
 			mutable CameraInvariantFlag camera_invariant = CameraInvariantFlag(0b10);
 

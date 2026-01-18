@@ -2,7 +2,7 @@
 
 bool PlayerController::jump(oly::input::Signal signal)
 {
-	if (signal.phase == oly::input::Phase::STARTED)
+	if (signal.phase == oly::input::Phase::Started)
 	{
 		OLY_LOG(true) << "Jump!" << oly::LOG.endl;
 		return true;
@@ -12,7 +12,7 @@ bool PlayerController::jump(oly::input::Signal signal)
 
 bool PlayerController::click(oly::input::Signal signal)
 {
-	if (signal.phase == oly::input::Phase::STARTED)
+	if (signal.phase == oly::input::Phase::Started)
 	{
 		dragging = true;
 		ref_cursor_pos = oly::default_camera().get_cursor_world_position();
@@ -21,7 +21,7 @@ bool PlayerController::click(oly::input::Signal signal)
 		drag(ref_cursor_pos);
 		return true;
 	}
-	else if (signal.phase == oly::input::Phase::COMPLETED)
+	else if (signal.phase == oly::input::Phase::Completed)
 	{
 		dragging = false;
 		return true;
@@ -50,14 +50,14 @@ bool PlayerController::zoom_camera(oly::input::Signal signal)
 {
 	switch (signal.phase)
 	{
-	case oly::input::Phase::STARTED:
-		OLY_LOG_INFO() << "STARTED:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+	case oly::input::Phase::Started:
+		OLY_LOG_INFO() << "Started:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
-	case oly::input::Phase::ONGOING:
-		OLY_LOG_INFO() << "ONGOING:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+	case oly::input::Phase::Ongoing:
+		OLY_LOG_INFO() << "Ongoing:   " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
-	case oly::input::Phase::COMPLETED:
-		OLY_LOG_INFO() << "COMPLETED: " << signal.get<glm::vec2>() << oly::LOG.endl;
+	case oly::input::Phase::Completed:
+		OLY_LOG_INFO() << "Completed: " << signal.get<glm::vec2>() << oly::LOG.endl;
 		return true;
 	}
 	return false;
@@ -65,7 +65,7 @@ bool PlayerController::zoom_camera(oly::input::Signal signal)
 
 bool PlayerController::move(oly::input::Signal signal)
 {
-	if (signal.phase == oly::input::Phase::STARTED)
+	if (signal.phase == oly::input::Phase::Started)
 	{
 		rigid_body->properties().net_linear_impulse += rigid_body->properties().mass() * 50.0f * signal.get<glm::vec2>();
 		return true;

@@ -74,10 +74,10 @@ namespace oly::graphics
 		}
 
 		template<size_t i>
-		void swap(GLBuffer& single)
+		void swap(GLBuffer& Single)
 		{
 			static_assert(i < N);
-			internal::swap_gl_buffer(single, ids[i]);
+			internal::swap_gl_buffer(Single, ids[i]);
 		}
 	};
 

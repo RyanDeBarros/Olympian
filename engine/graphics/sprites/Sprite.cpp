@@ -56,12 +56,12 @@ namespace oly::rendering
 			if (auto mode = toml_frame_format["mode"].value<std::string>())
 			{
 				std::string mode_str = *mode;
-				if (mode_str == "single")
+				if (mode_str == "Single")
 				{
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
 					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for single frame format." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for Single frame format." << LOG.nl;
 				}
 				else if (mode_str == "auto")
 				{

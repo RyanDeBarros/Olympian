@@ -211,7 +211,7 @@ namespace oly
 	}
 
 #define _OLY_INVOKE_CASE(N) case Type::_##N: return std::invoke(std::forward<F##N>(f##N), storage.t##N);
-#define _OLY_VISIT_SINGLE_CASE(N) case Type::_##N: return std::invoke(std::forward<F>(f), storage.t##N);
+#define _OLY_VISIT_Single_CASE(N) case Type::_##N: return std::invoke(std::forward<F>(f), storage.t##N);
 #define _OLY_TYPENAME_F(N) typename F##N
 #define _OLY_VISIT_ARG(N) F##N&& f##N
 #define _OLY_VISIT(N)\
@@ -238,7 +238,7 @@ namespace oly
 	{\
 		switch (type)\
 		{\
-			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
+			_OLY_REPEAT(_OLY_VISIT_Single_CASE, N);\
 		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}\
@@ -247,7 +247,7 @@ namespace oly
 	{\
 		switch (type)\
 		{\
-			_OLY_REPEAT(_OLY_VISIT_SINGLE_CASE, N);\
+			_OLY_REPEAT(_OLY_VISIT_Single_CASE, N);\
 		default: throw Error(ErrorCode::BadVariant);\
 		}\
 	}

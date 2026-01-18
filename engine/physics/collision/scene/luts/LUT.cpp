@@ -27,25 +27,25 @@ namespace oly::col2d::internal
 		
 	struct LUT
 	{
-		PointHitsFn point_hits_[(size_t)CObjID::_COUNT];
-		RayHitsFn ray_hits_[(size_t)CObjID::_COUNT];
-		RaycastFn raycast_[(size_t)CObjID::_COUNT];
-		OverlapsFn overlaps_[(size_t)CObjID::_COUNT][(size_t)CObjID::_COUNT];
-		CollidesFn collides_[(size_t)CObjID::_COUNT][(size_t)CObjID::_COUNT];
-		ContactsFn contacts_[(size_t)CObjID::_COUNT][(size_t)CObjID::_COUNT];
-		CircleCastHitsFn circle_cast_hits_[(size_t)CObjID::_COUNT];
-		RectCastHitsFn rect_cast_hits_[(size_t)CObjID::_COUNT];
+		PointHitsFn point_hits_[(size_t)CObjID::_c];
+		RayHitsFn ray_hits_[(size_t)CObjID::_c];
+		RaycastFn raycast_[(size_t)CObjID::_c];
+		OverlapsFn overlaps_[(size_t)CObjID::_c][(size_t)CObjID::_c];
+		CollidesFn collides_[(size_t)CObjID::_c][(size_t)CObjID::_c];
+		ContactsFn contacts_[(size_t)CObjID::_c][(size_t)CObjID::_c];
+		CircleCastHitsFn circle_cast_hits_[(size_t)CObjID::_c];
+		RectCastHitsFn rect_cast_hits_[(size_t)CObjID::_c];
 
-		FlushFn flush_[(size_t)CObjID::_COUNT];
-		IsDirtyFn is_dirty_[(size_t)CObjID::_COUNT];
-		DebugOverlayFn create_debug_overlay_[(size_t)CObjID::_COUNT];
-		UpdateViewFn modify_debug_overlay_[(size_t)CObjID::_COUNT];
+		FlushFn flush_[(size_t)CObjID::_c];
+		IsDirtyFn is_dirty_[(size_t)CObjID::_c];
+		DebugOverlayFn create_debug_overlay_[(size_t)CObjID::_c];
+		UpdateViewFn modify_debug_overlay_[(size_t)CObjID::_c];
 
-		TransformerFn transformer_[(size_t)CObjID::_COUNT];
-		ConstLayerFn layer_const_[(size_t)CObjID::_COUNT];
-		LayerFn layer_[(size_t)CObjID::_COUNT];
-		ConstMaskFn mask_const_[(size_t)CObjID::_COUNT];
-		MaskFn mask_[(size_t)CObjID::_COUNT];
+		TransformerFn transformer_[(size_t)CObjID::_c];
+		ConstLayerFn layer_const_[(size_t)CObjID::_c];
+		LayerFn layer_[(size_t)CObjID::_c];
+		ConstMaskFn mask_const_[(size_t)CObjID::_c];
+		MaskFn mask_[(size_t)CObjID::_c];
 
 #define OLY_LUT_LIST_TBVH(Macro)\
 			Macro(TBVH<AABB>)\

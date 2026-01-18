@@ -106,19 +106,19 @@ namespace oly::rendering
 		sprite.set_texture(tile_desc.file);
 		sprite.set_tex_coords(tile_desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
-		if (transformation & TileSet::Transformation::REFLECT_X)
+		if (transformation & TileSet::Transformation::ReflectX)
 			sprite.set_local().scale.x = -glm::abs(sprite.set_local().scale.x);
 		else
 			sprite.set_local().scale.x = glm::abs(sprite.set_local().scale.x);
-		if (transformation & TileSet::Transformation::REFLECT_Y)
+		if (transformation & TileSet::Transformation::ReflectY)
 			sprite.set_local().scale.y = -glm::abs(sprite.set_local().scale.y);
 		else
 			sprite.set_local().scale.y = glm::abs(sprite.set_local().scale.y);
-		if (transformation & TileSet::Transformation::ROTATE_90)
+		if (transformation & TileSet::Transformation::Rotate90)
 			sprite.set_local().rotation = glm::radians(90.0f);
-		else if (transformation & TileSet::Transformation::ROTATE_180)
+		else if (transformation & TileSet::Transformation::Rotate180)
 			sprite.set_local().rotation = glm::radians(180.0f);
-		else if (transformation & TileSet::Transformation::ROTATE_270)
+		else if (transformation & TileSet::Transformation::Rotate270)
 			sprite.set_local().rotation = glm::radians(270.0f);
 		else
 			sprite.set_local().rotation = 0.0f;
