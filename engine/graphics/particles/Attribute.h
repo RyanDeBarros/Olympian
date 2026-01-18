@@ -338,7 +338,7 @@ namespace oly::particles
 		}
 	};
 
-	namespace operations
+	namespace ops
 	{
 		template<size_t N>
 		struct Sequence : public IAttributeOperation

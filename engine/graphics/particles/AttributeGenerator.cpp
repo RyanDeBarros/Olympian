@@ -1,7 +1,7 @@
 #include "AttributeGenerator.h"
 
 #include "graphics/particles/ShaderStructs.h"
-#include "graphics/particles/distributions/Spawners.h"
+#include "graphics/particles/implementations/Spawners.h"
 #include "core/util/StringParam.h"
 
 namespace oly::particles

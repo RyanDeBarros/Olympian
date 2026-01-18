@@ -3,7 +3,7 @@
 #include "graphics/particles/ParticleEmitter.h"
 #include "core/base/UnitVector.h"
 
-namespace oly::particles::operations
+namespace oly::particles::ops
 {
 	void SineWave1D::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
 	{

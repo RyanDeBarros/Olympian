@@ -8,7 +8,6 @@
 
 namespace oly
 {
-	// TODO v6 use PascalCase for 'state' enums
 	enum class TickPhase : char
 	{
 		PreFrame,

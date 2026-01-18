@@ -1,9 +1,9 @@
 #include "ParticleEmitter.h"
 
 #include "graphics/particles/ShaderStructs.h"
-#include "graphics/particles/distributions/Samplers.h"
-#include "graphics/particles/distributions/Domains.h"
-#include "graphics/particles/distributions/Spawners.h"
+#include "graphics/particles/implementations/Samplers.h"
+#include "graphics/particles/implementations/Domains.h"
+#include "graphics/particles/implementations/Spawners.h"
 
 namespace oly::particles
 {

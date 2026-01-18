@@ -2,7 +2,7 @@
 
 #include "graphics/particles/Attribute.h"
 
-namespace oly::particles::operations
+namespace oly::particles::ops
 {
 	struct SineWave1D : public IAttributeOperation
 	{

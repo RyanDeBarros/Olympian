@@ -1,6 +1,6 @@
 #include "Attribute.h"
 
-#include "graphics/particles/distributions/AttributeOperations.h"
+#include "graphics/particles/implementations/AttributeOperations.h"
 #include "core/util/Logger.h"
 
 namespace oly::particles
@@ -11,13 +11,13 @@ namespace oly::particles
 		op.to_lower();
 
 		if (op == "sequence")
-			return operations::Sequence<0>::load_fixed(node);
+			return ops::Sequence<0>::load_fixed(node);
 		else if (op == "selector")
-			return operations::Selector::load(node);
+			return ops::Selector::load(node);
 		else if (op == "sinewave1d")
-			return operations::SineWave1D::load(node);
+			return ops::SineWave1D::load(node);
 		else if (op == "polarization2d")
-			return operations::Polarization2D::load(node);
+			return ops::Polarization2D::load(node);
 
 		if (!op.empty())
 			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << op << "\"" << LOG.nl;
@@ -25,8 +25,7 @@ namespace oly::particles
 		return nullptr;
 	}
 
-	// TODO v6 rename operations namespace to ops
-	namespace operations
+	namespace ops
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
@@ -42,7 +41,7 @@ namespace oly::particles
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
 				}
 
-				return make_polymorphic<operations::Sequence<0>>(std::move(ops));
+				return make_polymorphic<Sequence<0>>(std::move(ops));
 			}
 			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
 			return nullptr;
@@ -55,7 +54,7 @@ namespace oly::particles
 			for (size_t i = 0; i < N; ++i)
 				arr[i] = std::move(ops[i]);
 
-			return make_polymorphic<operations::Sequence<N>>(std::move(arr));
+			return make_polymorphic<Sequence<N>>(std::move(arr));
 		}
 
 		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
@@ -85,7 +84,7 @@ namespace oly::particles
 				else if (ops.size() == 8)
 					return load_sequence<8>(std::move(ops));
 				else
-					return make_polymorphic<operations::Sequence<0>>(std::move(ops));
+					return make_polymorphic<Sequence<0>>(std::move(ops));
 			}
 			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
 			return nullptr;
@@ -95,7 +94,7 @@ namespace oly::particles
 		{
 			try
 			{
-				return make_polymorphic<operations::Selector>(IAttributeOperation::load(node["inner_op"]), SubSelector::load(node["selector"]));
+				return make_polymorphic<Selector>(IAttributeOperation::load(node["inner_op"]), SubSelector::load(node["selector"]));
 			}
 			catch (Error e)
 			{
