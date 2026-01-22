@@ -3,8 +3,56 @@
 #include "external/GL.h"
 #include "core/types/Meta.h"
 
+#include <chrono>
+
 namespace oly
 {
+	namespace time
+	{
+		enum Month
+		{
+			January,
+			February,
+			March,
+			April,
+			May,
+			June,
+			July,
+			August,
+			September,
+			October,
+			November,
+			December
+		};
+
+		enum Day
+		{
+			Sunday,
+			Monday,
+			Tuesday,
+			Wednesday,
+			Thursday,
+			Friday,
+			Saturday
+		};
+
+		extern tm time_struct();
+		extern std::ostream& pass_timestamp(std::ostream& os);
+		extern std::string timestamp();
+		extern int years_since_1900();
+		extern Month current_month();
+		extern Day current_day();
+		extern int current_hour();
+		extern int epoch_hours();
+		extern unsigned int mod_epoch_hours();
+		extern int epoch_minutes();
+		extern unsigned int mod_epoch_minutes();
+		extern int epoch_seconds();
+		extern unsigned int mod_epoch_seconds();
+		extern int epoch_milliseconds();
+		extern unsigned int mod_epoch_milliseconds();
+	}
+
 	namespace internal
 	{
 		class TimeImpl

@@ -18,6 +18,15 @@ namespace oly
 		struct LogAccess;
 	}
 
+	// TODO v6 update Editor
+	struct LoggerOptions
+	{
+		bool use_console = true;
+		bool use_logfile = true;
+		std::optional<size_t> max_prior_log_files = 20;
+		std::optional<size_t> max_prior_log_bytes = std::nullopt;
+	};
+
 	class Logger final : public Singleton<Logger>
 	{
 		friend class Singleton<Logger>;
@@ -32,14 +41,13 @@ namespace oly
 		} target;
 
 		friend struct internal::LogAccess;
-		void start_log(const char* filepath, bool append, bool use_console);
+		void start_log(const LoggerOptions& options);
 		void end_log();
 
 	public:
 		void flush();
 
 	private:
-		void reopen_file(const char* filepath, bool append);
 		void pass_timestamp();
 
 	public:
@@ -116,7 +124,7 @@ namespace oly
 	{
 		struct LogAccess
 		{
-			static void start_log(const char* filepath, bool append, bool use_console) { LOG.start_log(filepath, append, use_console); }
+			static void start_log(const LoggerOptions& options) { LOG.start_log(options); }
 			static void end_log() { LOG.end_log(); }
 			static Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
 			static Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }

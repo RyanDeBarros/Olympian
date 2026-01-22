@@ -10,7 +10,7 @@ namespace oly::particles
 	{
 		StringParam type = node["class"].value_or<std::string>("");
 		type.to_lower();
-		static auto initialize = []<typename T>(Polymorphic<IParticleSpawner>&spawner) { if (!spawner.castable<T>()) spawner = make_polymorphic<T>(); };
+		static auto initialize = []<typename T>(Polymorphic<IParticleSpawner>& spawner) { if (!spawner.castable<T>()) spawner = make_polymorphic<T>(); };
 
 		// TODO v6 use enum instead of string name for class types for all particle system loading
 		if (type == "constantparticlespawner")

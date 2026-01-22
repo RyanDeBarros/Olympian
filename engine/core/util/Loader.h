@@ -11,15 +11,23 @@ namespace oly::io
 	extern toml::v3::parse_result load_toml(const ResourcePath& file);
 
 	extern bool parse_bool(TOMLNode node, bool& v);
+	extern void parse_bool(TOMLNode node, std::optional<bool>& v);
 	inline bool parse_bool_or(TOMLNode node, bool def) { parse_bool(node, def); return def; }
 	extern bool parse_int(TOMLNode node, int& v);
+	extern void parse_int(TOMLNode node, std::optional<int>& v);
 	inline int parse_int_or(TOMLNode node, int def) { parse_int(node, def); return def; }
 	extern bool parse_uint(TOMLNode node, unsigned int& v);
+	extern void parse_uint(TOMLNode node, std::optional<unsigned int>& v);
 	inline unsigned int parse_uint_or(TOMLNode node, unsigned int def) { parse_uint(node, def); return def; }
 	extern bool parse_float(TOMLNode node, float& v);
+	extern void parse_float(TOMLNode node, std::optional<float>& v);
 	inline float parse_float_or(TOMLNode node, float def) { parse_float(node, def); return def; }
 	extern bool parse_double(TOMLNode node, double& v);
+	extern void parse_double(TOMLNode node, std::optional<double>& v);
 	inline double parse_double_or(TOMLNode node, double def) { parse_double(node, def); return def; }
+	extern bool parse_size_t(TOMLNode node, size_t& v);
+	extern void parse_size_t(TOMLNode node, std::optional<size_t>& v);
+	inline size_t parse_size_t_or(TOMLNode node, size_t def) { parse_size_t(node, def); return def; }
 
 	template<size_t N>
 	inline bool parse_vec(TOMLNode node, glm::vec<N, float>& v)

@@ -32,15 +32,14 @@ namespace oly::context
 
 	static void init_logger(TOMLNode node)
 	{
-		std::string logfile = "";
-		bool append = false;
-		bool console = true;
+		LoggerOptions options;
+
 		if (auto toml_logger = node["logger"])
 		{
-			if (auto file = toml_logger["logfile"].value<std::string>())
-				logfile = *file;
-			append = io::parse_bool_or(toml_logger["append"], true);
-			io::parse_bool(toml_logger["console"], console);
+			io::parse_bool(toml_logger["use_logfile"], options.use_logfile);
+			io::parse_bool(toml_logger["use_console"], options.use_console);
+			io::parse_size_t(toml_logger["max_prior_log_files"], options.max_prior_log_files);
+			io::parse_size_t(toml_logger["max_prior_log_bytes"], options.max_prior_log_bytes);
 			
 			if (auto logger_enable = toml_logger["enable"])
 			{
@@ -52,7 +51,7 @@ namespace oly::context
 			}
 		}
 
-		oly::internal::LogAccess::start_log(logfile.c_str(), append, true);
+		oly::internal::LogAccess::start_log(options);
 	}
 
 	static void init_time(TOMLNode node)

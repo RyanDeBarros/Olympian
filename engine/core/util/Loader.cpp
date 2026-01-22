@@ -36,6 +36,16 @@ namespace oly::io
 		return false;
 	}
 
+	void parse_bool(TOMLNode node, std::optional<bool>& v)
+	{
+		if (auto i = node.value<bool>())
+			v = *i;
+		else if (auto i = node.value<int64_t>())
+			v = (bool)*i;
+		else
+			v = std::nullopt;
+	}
+
 	bool parse_int(TOMLNode node, int& v)
 	{
 		if (auto i = node.value<int64_t>())
@@ -46,6 +56,14 @@ namespace oly::io
 		return false;
 	}
 
+	void parse_int(TOMLNode node, std::optional<int>& v)
+	{
+		if (auto i = node.value<int64_t>())
+			v = (int)*i;
+		else
+			v = std::nullopt;
+	}
+
 	bool parse_uint(TOMLNode node, unsigned int& v)
 	{
 		if (auto i = node.value<int64_t>())
@@ -54,6 +72,14 @@ namespace oly::io
 			return true;
 		}
 		return false;
+	}
+
+	void parse_uint(TOMLNode node, std::optional<unsigned int>& v)
+	{
+		if (auto i = node.value<int64_t>())
+			v = (unsigned int)*i;
+		else
+			v = std::nullopt;
 	}
 
 	bool parse_float(TOMLNode node, float& v)
@@ -71,6 +97,16 @@ namespace oly::io
 		return false;
 	}
 
+	void parse_float(TOMLNode node, std::optional<float>& v)
+	{
+		if (auto i = node.value<double>())
+			v = (float)*i;
+		else if (auto i = node.value<int64_t>())
+			v = (float)*i;
+		else
+			v = std::nullopt;
+	}
+
 	bool parse_double(TOMLNode node, double& v)
 	{
 		if (auto i = node.value<double>())
@@ -84,6 +120,34 @@ namespace oly::io
 			return true;
 		}
 		return false;
+	}
+
+	void parse_double(TOMLNode node, std::optional<double>& v)
+	{
+		if (auto i = node.value<double>())
+			v = *i;
+		else if (auto i = node.value<int64_t>())
+			v = (double)*i;
+		else
+			v = std::nullopt;
+	}
+
+	bool parse_size_t(TOMLNode node, size_t& v)
+	{
+		if (auto i = node.value<int64_t>())
+		{
+			v = (size_t)*i;
+			return true;
+		}
+		return false;
+	}
+
+	void parse_size_t(TOMLNode node, std::optional<size_t>& v)
+	{
+		if (auto i = node.value<int64_t>())
+			v = (size_t)*i;
+		else
+			v = std::nullopt;
 	}
 
 	bool parse_mag_filter(TOMLNode node, GLenum& mag_filter)

@@ -43,6 +43,7 @@ namespace oly
 		std::filesystem::path get_absolute() const;
 		bool has_extension() const { return absolute.has_extension(); }
 		std::string extension() const { return absolute.extension().generic_string(); }
+		void create_parents() const { std::filesystem::create_directories(absolute.parent_path()); }
 
 		template<typename... Extensions>
 		bool extension_matches(const Extensions&... extensions) const
