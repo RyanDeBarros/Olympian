@@ -2,7 +2,7 @@
 
 [emitter0]
 	[emitter0.spawner]
-	class = "BurstParticleSpawner"
+	class = 1
 
 	[emitter0.color]
 		[emitter0.color.domain]

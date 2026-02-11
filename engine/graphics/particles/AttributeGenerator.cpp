@@ -6,17 +6,32 @@
 
 namespace oly::particles
 {
+	namespace internal
+	{
+		enum ParticleSpawnerTypeHash
+		{
+			ConstantParticleSpawner = 1,
+			BurstParticleSpawner = 2
+		};
+
+#define _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH(M)\
+		M(ConstantParticleSpawner)\
+		M(BurstParticleSpawner)
+	}
+
 	void IParticleSpawner::overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node)
 	{
-		StringParam type = node["class"].value_or<std::string>("");
-		type.to_lower();
-		static auto initialize = []<typename T>(Polymorphic<IParticleSpawner>& spawner) { if (!spawner.castable<T>()) spawner = make_polymorphic<T>(); };
+#define _OLY_ENUM_CASE(Name)\
+		case internal::ParticleSpawnerTypeHash::Name:\
+			if (!spawner.castable<Name>()) spawner = make_polymorphic<Name>();\
+			break;
 
-		// TODO v6 use enum instead of string name for class types for all particle system loading
-		if (type == "constantparticlespawner")
-			initialize.template operator()<ConstantParticleSpawner>(spawner);
-		else if (type == "burstparticlespawner")
-			initialize.template operator()<BurstParticleSpawner>(spawner);
+		switch (node["class"].value_or<int64_t>(0))
+		{
+			_OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH(_OLY_ENUM_CASE)
+		}
+
+#undef _OLY_ENUM_CASE
 
 		if (spawner)
 			spawner->overload(node);
@@ -53,3 +68,5 @@ namespace oly::particles
 		domain->apply(generator.domain);
 	}
 }
+
+#undef _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH

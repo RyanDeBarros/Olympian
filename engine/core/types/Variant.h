@@ -2,6 +2,7 @@
 
 #include "core/types/DeferredFalse.h"
 #include "core/base/Errors.h"
+#include "core/util/Macros.h"
 
 namespace oly
 {
@@ -10,42 +11,6 @@ namespace oly
 	{
 		static_assert(deferred_false<Variant<Types...>>);
 	};
-
-#define _OLY_REPEAT_1(M) M(1)
-#define _OLY_REPEAT_2(M) _OLY_REPEAT_1(M) M(2)
-#define _OLY_REPEAT_3(M) _OLY_REPEAT_2(M) M(3)
-#define _OLY_REPEAT_4(M) _OLY_REPEAT_3(M) M(4)
-#define _OLY_REPEAT_5(M) _OLY_REPEAT_4(M) M(5)
-#define _OLY_REPEAT_6(M) _OLY_REPEAT_5(M) M(6)
-#define _OLY_REPEAT_7(M) _OLY_REPEAT_6(M) M(7)
-#define _OLY_REPEAT_8(M) _OLY_REPEAT_7(M) M(8)
-#define _OLY_REPEAT_9(M) _OLY_REPEAT_8(M) M(9)
-#define _OLY_REPEAT_10(M) _OLY_REPEAT_9(M) M(10)
-#define _OLY_REPEAT_11(M) _OLY_REPEAT_10(M) M(11)
-#define _OLY_REPEAT_12(M) _OLY_REPEAT_11(M) M(12)
-#define _OLY_REPEAT_13(M) _OLY_REPEAT_12(M) M(13)
-#define _OLY_REPEAT_14(M) _OLY_REPEAT_13(M) M(14)
-#define _OLY_REPEAT_15(M) _OLY_REPEAT_14(M) M(15)
-#define _OLY_REPEAT_16(M) _OLY_REPEAT_15(M) M(16)
-#define _OLY_REPEAT(M, N) _OLY_REPEAT_##N(M)
-
-#define _OLY_REPEAT_COMMA_1(M) M(1)
-#define _OLY_REPEAT_COMMA_2(M) _OLY_REPEAT_COMMA_1(M), M(2)
-#define _OLY_REPEAT_COMMA_3(M) _OLY_REPEAT_COMMA_2(M), M(3)
-#define _OLY_REPEAT_COMMA_4(M) _OLY_REPEAT_COMMA_3(M), M(4)
-#define _OLY_REPEAT_COMMA_5(M) _OLY_REPEAT_COMMA_4(M), M(5)
-#define _OLY_REPEAT_COMMA_6(M) _OLY_REPEAT_COMMA_5(M), M(6)
-#define _OLY_REPEAT_COMMA_7(M) _OLY_REPEAT_COMMA_6(M), M(7)
-#define _OLY_REPEAT_COMMA_8(M) _OLY_REPEAT_COMMA_7(M), M(8)
-#define _OLY_REPEAT_COMMA_9(M) _OLY_REPEAT_COMMA_8(M), M(9)
-#define _OLY_REPEAT_COMMA_10(M) _OLY_REPEAT_COMMA_9(M), M(10)
-#define _OLY_REPEAT_COMMA_11(M) _OLY_REPEAT_COMMA_10(M), M(11)
-#define _OLY_REPEAT_COMMA_12(M) _OLY_REPEAT_COMMA_11(M), M(12)
-#define _OLY_REPEAT_COMMA_13(M) _OLY_REPEAT_COMMA_12(M), M(13)
-#define _OLY_REPEAT_COMMA_14(M) _OLY_REPEAT_COMMA_13(M), M(14)
-#define _OLY_REPEAT_COMMA_15(M) _OLY_REPEAT_COMMA_14(M), M(15)
-#define _OLY_REPEAT_COMMA_16(M) _OLY_REPEAT_COMMA_15(M), M(16)
-#define _OLY_REPEAT_COMMA(M, N) _OLY_REPEAT_COMMA_##N(M)
 
 #define _OLY_ENUM_DEF(N) _##N
 #define _OLY_TYPE_ENUM(N)\
@@ -301,40 +266,6 @@ namespace oly
 	_OLY_VARIANT(16);
 	// ###########################################################################
 
-#undef _OLY_REPEAT_1
-#undef _OLY_REPEAT_2
-#undef _OLY_REPEAT_3
-#undef _OLY_REPEAT_4
-#undef _OLY_REPEAT_5
-#undef _OLY_REPEAT_6
-#undef _OLY_REPEAT_7
-#undef _OLY_REPEAT_8
-#undef _OLY_REPEAT_9
-#undef _OLY_REPEAT_10
-#undef _OLY_REPEAT_11
-#undef _OLY_REPEAT_12
-#undef _OLY_REPEAT_13
-#undef _OLY_REPEAT_14
-#undef _OLY_REPEAT_15
-#undef _OLY_REPEAT_16
-#undef _OLY_REPEAT
-#undef _OLY_REPEAT_COMMA_1
-#undef _OLY_REPEAT_COMMA_2
-#undef _OLY_REPEAT_COMMA_3
-#undef _OLY_REPEAT_COMMA_4
-#undef _OLY_REPEAT_COMMA_5
-#undef _OLY_REPEAT_COMMA_6
-#undef _OLY_REPEAT_COMMA_7
-#undef _OLY_REPEAT_COMMA_8
-#undef _OLY_REPEAT_COMMA_9
-#undef _OLY_REPEAT_COMMA_10
-#undef _OLY_REPEAT_COMMA_11
-#undef _OLY_REPEAT_COMMA_12
-#undef _OLY_REPEAT_COMMA_13
-#undef _OLY_REPEAT_COMMA_14
-#undef _OLY_REPEAT_COMMA_15
-#undef _OLY_REPEAT_COMMA_16
-#undef _OLY_REPEAT_COMMA
 #undef _OLY_ENUM_DEF
 #undef _OLY_TYPE_ENUM
 #undef _OLY_STORAGE_DEF
