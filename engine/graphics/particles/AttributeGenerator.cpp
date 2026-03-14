@@ -33,16 +33,20 @@ namespace oly::particles
 		}
 
 #undef _OLY_ENUM_CASE
+#undef _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH
 
 		if (spawner)
 			spawner->overload(node);
 	}
 
-	Polymorphic<IParticleSpawner> IParticleSpawner::load(TOMLNode node)
+	void ISampler1D::overload(Polymorphic<ISampler1D>& sampler, TOMLNode node)
 	{
-		Polymorphic<IParticleSpawner> spawner = nullptr;
-		overload(spawner, node);
-		return spawner;
+		// TODO v6
+	}
+
+	void IDomain1D::overload(Polymorphic<IDomain1D>& domain, TOMLNode node)
+	{
+		// TODO v6
 	}
 
 	void AttributeGenerator1D::apply(internal::Generator1D& generator) const
@@ -51,16 +55,46 @@ namespace oly::particles
 		domain->apply(generator.domain);
 	}
 
+	void ISampler2D::overload(Polymorphic<ISampler2D>& sampler, TOMLNode node)
+	{
+		// TODO v6
+	}
+
+	void IDomain2D::overload(Polymorphic<IDomain2D>& domain, TOMLNode node)
+	{
+		// TODO v6
+	}
+
 	void AttributeGenerator2D::apply(internal::Generator2D& generator) const
 	{
 		sampler->apply(generator.sampler);
 		domain->apply(generator.domain);
 	}
 
+	void ISampler3D::overload(Polymorphic<ISampler3D>& sampler, TOMLNode node)
+	{
+		// TODO v6
+	}
+
+	void IDomain3D::overload(Polymorphic<IDomain3D>& domain, TOMLNode node)
+	{
+		// TODO v6
+	}
+
 	void AttributeGenerator3D::apply(internal::Generator3D& generator) const
 	{
 		sampler->apply(generator.sampler);
 		domain->apply(generator.domain);
+	}
+
+	void ISampler4D::overload(Polymorphic<ISampler4D>& sampler, TOMLNode node)
+	{
+		// TODO v6
+	}
+
+	void IDomain4D::overload(Polymorphic<IDomain4D>& domain, TOMLNode node)
+	{
+		// TODO v6
 	}
 
 	void AttributeGenerator4D::apply(internal::Generator4D& generator) const
@@ -70,4 +104,3 @@ namespace oly::particles
 	}
 }
 
-#undef _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH

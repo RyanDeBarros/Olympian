@@ -16,7 +16,13 @@ namespace oly::particles
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IParticleSpawner);
 
 		static void overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node);
-		static Polymorphic<IParticleSpawner> load(TOMLNode node);
+
+		static Polymorphic<IParticleSpawner> load(TOMLNode node)
+		{
+			Polymorphic<IParticleSpawner> spawner = nullptr;
+			overload(spawner, node);
+			return spawner;
+		}
 	};
 
 	namespace internal
@@ -43,6 +49,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler1D);
+
+		static void overload(Polymorphic<ISampler1D>& sampler, TOMLNode node);
+		
+		static Polymorphic<ISampler1D> load(TOMLNode node)
+		{
+			Polymorphic<ISampler1D> sampler = nullptr;
+			overload(sampler, node);
+			return sampler;
+		}
 	};
 
 	struct IDomain1D
@@ -53,6 +68,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain1D);
+
+		static void overload(Polymorphic<IDomain1D>& domain, TOMLNode node);
+
+		static Polymorphic<IDomain1D> load(TOMLNode node)
+		{
+			Polymorphic<IDomain1D> domain = nullptr;
+			overload(domain, node);
+			return domain;
+		}
 	};
 
 	struct AttributeGenerator1D
@@ -70,9 +94,20 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
-			// TODO v6 load Polymorphic<ISampler1D>/Polymorphic<IDomain1D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
+		}
+
+		static void overload(AttributeGenerator1D& generator, TOMLNode node)
+		{
+			generator.overload(node);
+		}
+
+		static AttributeGenerator1D load(TOMLNode node)
+		{
+			AttributeGenerator1D generator{ .sampler = nullptr, .domain = nullptr };
+			overload(generator, node);
+			return generator;
 		}
 	};
 
@@ -84,6 +119,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler2D);
+
+		static void overload(Polymorphic<ISampler2D>& sampler, TOMLNode node);
+
+		static Polymorphic<ISampler2D> load(TOMLNode node)
+		{
+			Polymorphic<ISampler2D> sampler = nullptr;
+			overload(sampler, node);
+			return sampler;
+		}
 	};
 
 	struct IDomain2D
@@ -94,6 +138,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain2D);
+
+		static void overload(Polymorphic<IDomain2D>& domain, TOMLNode node);
+
+		static Polymorphic<IDomain2D> load(TOMLNode node)
+		{
+			Polymorphic<IDomain2D> domain = nullptr;
+			overload(domain, node);
+			return domain;
+		}
 	};
 
 	struct AttributeGenerator2D
@@ -111,9 +164,20 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
-			// TODO v6 load Polymorphic<ISampler2D>/Polymorphic<IDomain2D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
+		}
+
+		static void overload(AttributeGenerator2D& generator, TOMLNode node)
+		{
+			generator.overload(node);
+		}
+
+		static AttributeGenerator2D load(TOMLNode node)
+		{
+			AttributeGenerator2D generator{ .sampler = nullptr, .domain = nullptr };
+			overload(generator, node);
+			return generator;
 		}
 	};
 
@@ -125,6 +189,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler3D);
+
+		static void overload(Polymorphic<ISampler3D>& sampler, TOMLNode node);
+
+		static Polymorphic<ISampler3D> load(TOMLNode node)
+		{
+			Polymorphic<ISampler3D> sampler = nullptr;
+			overload(sampler, node);
+			return sampler;
+		}
 	};
 
 	struct IDomain3D
@@ -135,6 +208,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain3D);
+
+		static void overload(Polymorphic<IDomain3D>& domain, TOMLNode node);
+
+		static Polymorphic<IDomain3D> load(TOMLNode node)
+		{
+			Polymorphic<IDomain3D> domain = nullptr;
+			overload(domain, node);
+			return domain;
+		}
 	};
 
 	struct AttributeGenerator3D
@@ -152,9 +234,20 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
-			// TODO v6 load Polymorphic<ISampler3D>/Polymorphic<IDomain3D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
+		}
+
+		static void overload(AttributeGenerator3D& generator, TOMLNode node)
+		{
+			generator.overload(node);
+		}
+
+		static AttributeGenerator3D load(TOMLNode node)
+		{
+			AttributeGenerator3D generator{ .sampler = nullptr, .domain = nullptr };
+			overload(generator, node);
+			return generator;
 		}
 	};
 
@@ -166,6 +259,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(ISampler4D);
+
+		static void overload(Polymorphic<ISampler4D>& sampler, TOMLNode node);
+
+		static Polymorphic<ISampler4D> load(TOMLNode node)
+		{
+			Polymorphic<ISampler4D> sampler = nullptr;
+			overload(sampler, node);
+			return sampler;
+		}
 	};
 
 	struct IDomain4D
@@ -176,6 +278,15 @@ namespace oly::particles
 		virtual void overload(TOMLNode node) {}
 
 		OLY_POLYMORPHIC_CLONE_ABSTACT_DECLARATION(IDomain4D);
+
+		static void overload(Polymorphic<IDomain4D>& domain, TOMLNode node);
+
+		static Polymorphic<IDomain4D> load(TOMLNode node)
+		{
+			Polymorphic<IDomain4D> domain = nullptr;
+			overload(domain, node);
+			return domain;
+		}
 	};
 
 	struct AttributeGenerator4D
@@ -193,9 +304,20 @@ namespace oly::particles
 
 		void overload(TOMLNode node)
 		{
-			// TODO v6 load Polymorphic<ISampler4D>/Polymorphic<IDomain4D>
 			sampler->overload(node["sampler"]);
 			domain->overload(node["domain"]);
+		}
+
+		static void overload(AttributeGenerator4D& generator, TOMLNode node)
+		{
+			generator.overload(node);
+		}
+
+		static AttributeGenerator4D load(TOMLNode node)
+		{
+			AttributeGenerator4D generator{ .sampler = nullptr, .domain = nullptr };
+			overload(generator, node);
+			return generator;
 		}
 	};
 }

@@ -7,10 +7,10 @@ namespace oly::particles::internal
 {
 	struct Particle
 	{
-		float timeElapsed;
+		float time_elapsed;
 		float lifetime;
 		GLuint attached;
-		glm::mat3 localTransform;
+		glm::mat3 local_transform;
 		glm::vec4 color;
 		glm::vec2 velocity;
 	};

@@ -15,7 +15,9 @@ namespace oly
 		friend class Polymorphic;
 
 	public:
-		Polymorphic()
+		Polymorphic() requires std::is_abstract_v<T> = delete;
+
+		Polymorphic() requires (!std::is_abstract_v<T>)
 			: _raw(new T())
 		{
 		}
