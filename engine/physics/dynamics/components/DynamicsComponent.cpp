@@ -6,13 +6,13 @@ namespace oly::physics
 		float angular_velocity_A, float angular_velocity_B, PositiveFloat speed_threshold)
 	{
 		if (!near_zero(tangent.dot(relative_contact_velocity), speed_threshold))
-			return FrictionType::KINETIC;
+			return FrictionType::Kinetic;
 		else if (!near_zero(tangent.dot(relative_linear_velocity), speed_threshold))
-			return FrictionType::ROLLING;
+			return FrictionType::Rolling;
 		else if (glm::sign(angular_velocity_A) != glm::sign(angular_velocity_B))
-			return FrictionType::ROLLING;
+			return FrictionType::Rolling;
 		else
-			return FrictionType::STATIC;
+			return FrictionType::Static;
 	}
 
 	void DynamicsComponent::add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& dynamics) const

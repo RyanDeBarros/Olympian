@@ -38,11 +38,11 @@ namespace oly::cmath
 		constexpr BorderPivot(float v = 0.5f) : v(v) {}
 
 		static const BorderPivot OUTER;
-		static const BorderPivot MIDDLE;
+		static const BorderPivot Middle;
 		static const BorderPivot INNER;
 	};
 	inline const BorderPivot BorderPivot::OUTER = { 0.0f };
-	inline const BorderPivot BorderPivot::MIDDLE = { 0.5f };
+	inline const BorderPivot BorderPivot::Middle = { 0.5f };
 	inline const BorderPivot BorderPivot::INNER = { 1.0f };
 
 	struct BorderPointPair
@@ -101,7 +101,7 @@ namespace oly::cmath
 		std::vector<glm::vec4> fill_colors;
 		std::vector<glm::vec4> border_colors;
 		float border_width = 0.0f;
-		BorderPivot border_pivot = BorderPivot::MIDDLE;
+		BorderPivot border_pivot = BorderPivot::Middle;
 
 		Polygon2DComposite composite() const;
 		Polygon2DComposite bordered_composite() const;

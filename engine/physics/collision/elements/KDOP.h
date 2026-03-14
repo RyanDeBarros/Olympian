@@ -26,7 +26,7 @@ namespace oly::col2d
 		inline math::Polygon2D initial_kdop_polygon(const UnitVector2D& axis0, float min0, float max0, const UnitVector2D& axis1, float min1, float max1)
 		{
 			if (axis0.near_parallel(axis1, LINEAR_TOLERANCE))
-				throw Error(ErrorCode::BAD_COLLISION_SHAPE, "First 2 kDOP axes are parallel");
+				throw Error(ErrorCode::BadCollisionShape, "First 2 kDOP axes are parallel");
 
 			static const auto intersection = [](const UnitVector2D& axis0, float m0, const UnitVector2D& axis1, float m1) -> glm::vec2 {
 				glm::mat2 A = { { axis0.x(), axis1.x() }, { axis0.y(), axis1.y() } };
@@ -248,16 +248,16 @@ namespace oly::col2d
 			ContactManifold local_manifold = local_deepest_manifold(get_local_axis(axis));
 			ContactManifold global_manifold;
 			global_manifold.p1 = global * local_manifold.p1 + global_offset;
-			if (!local_manifold.single)
+			if (!local_manifold.Single)
 			{
-				global_manifold.single = false;
+				global_manifold.Single = false;
 				global_manifold.p2 = global * local_manifold.p2 + global_offset;
 			}
 			return global_manifold;
 		}
 		
 	private:
-		glm::vec2 corner_intersection(int i1, int i2) const
+		glm::vec2 Cornerintersection(int i1, int i2) const
 		{
 			glm::vec2 p1 = (i1 < K ? get_clipped_maximum(i1) : get_clipped_minimum(i1 - K)) * (glm::vec2)uniform_axis(i1 % K);
 			glm::vec2 p2 = (i2 < K ? get_clipped_maximum(i2) : get_clipped_minimum(i2 - K)) * (glm::vec2)uniform_axis(i2 % K);
@@ -270,17 +270,17 @@ namespace oly::col2d
 			if (near_multiple(i, 1.0f))
 			{
 				ContactManifold manifold;
-				manifold.single = false;
+				manifold.Single = false;
 				int j = unsigned_mod(roundi(i), 2 * K);
-				manifold.p1 = corner_intersection(j, unsigned_mod(j + 1, 2 * K));
-				manifold.p2 = corner_intersection(unsigned_mod(j - 1, 2 * K), j);
+				manifold.p1 = Cornerintersection(j, unsigned_mod(j + 1, 2 * K));
+				manifold.p2 = Cornerintersection(unsigned_mod(j - 1, 2 * K), j);
 				return manifold;
 			}
 			else
 			{
 				int i1 = unsigned_mod((int)floorf(i), 2 * K);
 				int i2 = unsigned_mod((int)ceilf(i), 2 * K);
-				return { .p1 = corner_intersection(i1, i2) };
+				return { .p1 = Cornerintersection(i1, i2) };
 			}
 		}
 	};

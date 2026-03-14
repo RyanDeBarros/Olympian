@@ -160,7 +160,7 @@ namespace oly::graphics
 		std::string f = file.get_absolute().string();
 		_buf = stbi_load(f.c_str(), &_dim.w, &_dim.h, &_dim.cpp, 0);
 		if (!_buf)
-			throw Error(ErrorCode::LOAD_IMAGE);
+			throw Error(ErrorCode::LoadImage);
 	}
 
 	Image::Image(unsigned char* buf, ImageDimensions dim)
@@ -211,16 +211,16 @@ namespace oly::graphics
 		if (num_frames == 0)
 			return;
 		delays.resize(num_frames);
-		bool single = true;
+		bool Single = true;
 		int delay = new_delays[0];
 		delays[0] = delay;
 		for (unsigned int i = 1; i < num_frames; ++i)
 		{
 			delays[i] = new_delays[i];
 			if (std::abs(delays[i] - delay) > anim_delay_epsilon)
-				single = false;
+				Single = false;
 		}
-		if (single)
+		if (Single)
 		{
 			delays.resize(1);
 			_frames = num_frames;
@@ -230,7 +230,7 @@ namespace oly::graphics
 	int AnimDimensions::delay(unsigned int frame) const
 	{
 		if (frame >= frames())
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+			throw Error(ErrorCode::IndexOutOfRange);
 		return uniform() ? delays[0] : delays[frame];
 	}
 
@@ -378,14 +378,14 @@ namespace oly::graphics
 		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
 
-	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame)
 	{
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_single(const ResourcePath& texture_file, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_Single(const ResourcePath& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file), frame);
+		return setup_anim_frame_format_Single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
 	NSVGAbstract::NSVGAbstract(const ResourcePath& file, const char* units, float dpi)
@@ -393,7 +393,7 @@ namespace oly::graphics
 		std::string f = file.get_absolute().string();
 		i = nsvgParseFromFile(f.c_str(), units, dpi);
 		if (!i)
-			throw Error(ErrorCode::NSVG_PARSING);
+			throw Error(ErrorCode::NsvgParsing);
 	}
 
 	NSVGAbstract::NSVGAbstract(NSVGAbstract&& other) noexcept
@@ -482,19 +482,19 @@ namespace oly::graphics
 
 	Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
 	{
-		if (generate_mipmaps == SVGMipmapGenerationMode::MANUAL && !abstract)
-			generate_mipmaps = SVGMipmapGenerationMode::AUTO;
+		if (generate_mipmaps == SVGMipmapGenerationMode::Manual && !abstract)
+			generate_mipmaps = SVGMipmapGenerationMode::Auto;
 
 		Texture texture(GL_TEXTURE_2D);
 		switch (generate_mipmaps)
 		{
-		case oly::graphics::SVGMipmapGenerationMode::AUTO:
+		case oly::graphics::SVGMipmapGenerationMode::Auto:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), true);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::OFF:
+		case oly::graphics::SVGMipmapGenerationMode::Off:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), false);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::MANUAL:
+		case oly::graphics::SVGMipmapGenerationMode::Manual:
 		{
 			const ImageDimensions dim = image.image->dim();
 			const GLsizei levels = tex::mipmap_levels(dim.w, dim.h);

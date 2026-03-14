@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "core/base/Errors.h"
+#include "core/types/Meta.h"
 
 namespace oly::algo
 {
@@ -20,7 +21,7 @@ namespace oly::algo
 	const T& find_closest(const std::set<T>& set, const U& to, DistanceFunc dist)
 	{
 		if (set.empty())
-			throw Error(ErrorCode::EMPTY_DATA_STRUCTURE);
+			throw Error(ErrorCode::EmptyDataStructure);
 		else if (set.size() == 1)
 			return *set.begin();
 
@@ -61,17 +62,4 @@ namespace oly::algo
 	{
 		return const_cast<T&>(find_closest_with_mod(const_cast<const std::set<T>&>(set), to, mod));
 	}
-
-	extern std::vector<std::string_view> split(std::string_view sv, char delimiter);
-
-	extern std::string& ltrim(std::string& str);
-	inline std::string& ltrim(std::string&& str) { return ltrim(str); }
-	extern std::string& rtrim(std::string& str);
-	inline std::string& rtrim(std::string&& str) { return rtrim(str); }
-	extern std::string& trim(std::string& str);
-	inline std::string& trim(std::string&& str) { return trim(str); }
-	extern std::string& to_lower(std::string& str);
-	inline std::string& to_lower(std::string&& str) { return to_lower(str); }
-	extern std::string& to_upper(std::string& str);
-	inline std::string& to_upper(std::string&& str) { return to_upper(str); }
 }

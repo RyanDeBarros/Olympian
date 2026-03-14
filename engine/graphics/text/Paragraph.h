@@ -73,8 +73,8 @@ namespace oly::rendering
 
 			enum class WriteResult
 			{
-				CONTINUE,
-				BREAK
+				Continue,
+				Break
 			};
 			WriteResult write_glyph_section(TypesetData& typeset, PeekData next_peek) const;
 			void clear_cache() const;
@@ -95,7 +95,7 @@ namespace oly::rendering
 			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
 			bool write_newline(TypesetData& typeset, LineAlignment& line) const;
-			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line) const;
+			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const;
 			glm::vec2 get_glyph_position(size_t i) const;
 
 			float space_width(utf::Codepoint next_codepoint) const;
@@ -107,6 +107,7 @@ namespace oly::rendering
 
 		public:
 			void reposition_glyphs() const;
+			void set_camera_invariant(bool is_camera_invariant) const;
 		};
 	}
 
@@ -140,7 +141,7 @@ namespace oly::rendering
 		mutable Sprite bkg;
 		ParagraphFormat format;
 
-		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::REBUILD_LAYOUT;
+		mutable internal::DirtyParagraph dirty_layout = internal::DirtyParagraph::RebuildLayout;
 
 		std::vector<internal::GlyphGroup> glyph_groups;
 
@@ -164,9 +165,9 @@ namespace oly::rendering
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
 		Transformer2DExposure<TExposureParams{
-			.local = exposure::local::FULL,
-			.chain = exposure::chain::ATTACH_ONLY,
-			.modifier = exposure::modifier::FULL
+			.local = exposure::local::Full,
+			.chain = exposure::chain::AttachOnly,
+			.modifier = exposure::modifier::Full
 		}> set_transformer() { return transformer; }
 
 	private:
@@ -181,6 +182,9 @@ namespace oly::rendering
 		ParagraphFormatExposure set_format() { return ParagraphFormatExposure(*this); }
 		glm::vec4 get_bkg_color() const;
 		void set_bkg_color(glm::vec4 color);
+
+		void set_camera_invariant(bool is_camera_invariant);
+		bool is_camera_invariant() const;
 
 		const TextElement& get_element(size_t i = 0) const { return glyph_groups[i].element; }
 		TextElementExposure set_element(size_t i = 0) { return TextElementExposure(*this, glyph_groups[i]); }
@@ -204,11 +208,11 @@ namespace oly::rendering
 
 		enum AlignmentFlags
 		{
-			RESIZE_LINES = 1 << 0,
-			VERTICAL = 1 << 1,
-			HORIZONTAL = 1 << 2,
-			PIVOT = 1 << 3,
-			PADDING = 1 << 4
+			ResizeLines = 1 << 0,
+			Vertical = 1 << 1,
+			Horizontal = 1 << 2,
+			Pivot = 1 << 3,
+			Padding = 1 << 4
 		};
 		void compute_alignment_cache(AlignmentFlags flags) const;
 
@@ -217,6 +221,10 @@ namespace oly::rendering
 		void recompute_content_size_y() const;
 		void recompute_fitted_size_x() const;
 		void recompute_fitted_size_y() const;
+
+	public:
+		static Paragraph load(TOMLNode node);
+		static Paragraph load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Paragraph> ParagraphRef;

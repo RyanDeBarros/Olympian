@@ -4,39 +4,37 @@
 
 #include "core/context/rendering/Rendering.h"
 #include "core/math/Triangulation.h"
+#include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
 	internal::PolygonBatch::PolygonBatch()
 		: ebo(vao), vbo_block(vao), vertex_free_space({ 0, nmax<GLuint>() })
 	{
-		projection_location = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
+		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
+		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uInvariantProjection");
 
-		vbo_block.attributes[POSITION] = graphics::VertexAttribute<float>{ 0, 2 };
-		vbo_block.attributes[COLOR] = graphics::VertexAttribute<float>{ 1, 4 };
-		vbo_block.attributes[INDEX] = graphics::VertexAttribute<int>{ 2, 1 };
+		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 0, .size = 2 };
+		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 1, .size = 4 };
+		vbo_block.attributes[INDEX] = graphics::VertexAttribute<graphics::VertexAttributeType::Int>{ .index = 2, .size = 1 };
 		vbo_block.setup();
 	}
 
 	void internal::PolygonBatch::render() const
 	{
-		if (camera)
-			render(camera->projection_matrix());
-	}
-
-	void internal::PolygonBatch::render(const glm::mat3& projection) const
-	{
-		if (ebo.empty())
+		if (ebo.empty() || !camera)
 			return;
 
 		vbo_block.pre_draw_all();
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);
 		glUseProgram(graphics::internal_shaders::polygon_batch);
-		glUniformMatrix3fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
+		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transform_ssbo.buf.get_buffer());
+		transform_ssbo.buf.bind_ssbo_base(0);
 		ebo.render_elements(GL_TRIANGLES);
 		vbo_block.post_draw_all();
 		transform_ssbo.post_draw();
@@ -67,20 +65,32 @@ namespace oly::rendering
 	void internal::PolygonBatch::set_polygon_transform(GLuint id, const glm::mat3& transform)
 	{
 		assert_valid_id(id);
-		transform_ssbo.set(id) = transform;
+		transform_ssbo.set(id).transform = transform;
 	}
 
-	const glm::mat3& internal::PolygonBatch::get_polygon_transform(GLuint id)
+	void internal::PolygonBatch::set_polygon_camera_invariant(GLuint id, bool camera_invariant)
 	{
 		assert_valid_id(id);
-		return transform_ssbo.get(id);
+		transform_ssbo.set(id).camera_invariant = camera_invariant;
+	}
+
+	const glm::mat3& internal::PolygonBatch::get_polygon_transform(GLuint id) const
+	{
+		assert_valid_id(id);
+		return transform_ssbo.get(id).transform;
+	}
+
+	bool internal::PolygonBatch::is_polygon_camera_invariant(GLuint id) const
+	{
+		assert_valid_id(id);
+		return transform_ssbo.get(id).camera_invariant;
 	}
 
 	GLuint internal::PolygonBatch::generate_id(GLuint vertices)
 	{
 		GLuint id = id_generator.gen();
 		if (id == NULL_ID) [[unlikely]]
-			throw Error(ErrorCode::STORAGE_OVERFLOW);
+			throw Error(ErrorCode::StorageOverflow);
 
 		Range<GLuint> vertex_range;
 		OLY_ASSERT(vertex_free_space.next_free(vertices, vertex_range));
@@ -130,7 +140,7 @@ namespace oly::rendering
 	void internal::PolygonBatch::assert_valid_id(GLuint id) const
 	{
 		if (!is_valid_id(id))
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	internal::PolygonReference::PolygonReference(Unbatched)
@@ -151,8 +161,10 @@ namespace oly::rendering
 			{
 				const GLuint num_vertices = batch->get_vertex_range(other.id).length;
 				const glm::mat3 transform = batch->get_polygon_transform(other.id);
+				bool camera_invariant = batch->is_polygon_camera_invariant(other.id);
 				id = batch->generate_id(num_vertices);
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
 			}
 		}
 	}
@@ -208,11 +220,13 @@ namespace oly::rendering
 			{
 				const GLuint num_vertices = batch->get_vertex_range(id).length;
 				const glm::mat3 transform = batch->get_polygon_transform(id);
+				const bool camera_invariant = batch->is_polygon_camera_invariant(id);
 				batch->terminate_id(id);
 				reset(*new_batch);
 				batch = lock();
 				id = batch->generate_id(num_vertices);
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
 			}
 			else
 				reset(*new_batch);
@@ -226,13 +240,17 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 		{
 			const glm::mat3 transform = batch->is_valid_id(id) ? batch->get_polygon_transform(id) : 1.0f;
+			const bool camera_invariant = batch->is_valid_id(id) ? batch->is_polygon_camera_invariant(id) : false;
 			const bool resized = batch->resize_range(id, vertices);
 			if (resized)
+			{
 				batch->set_polygon_transform(id, transform);
+				batch->set_polygon_camera_invariant(id, camera_invariant);
+			}
 			return resized;
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	Range<GLuint> internal::PolygonReference::get_vertex_range() const
@@ -240,7 +258,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			return batch->get_vertex_range(id);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count) const
@@ -248,7 +266,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(vertex_range, points, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count) const
@@ -256,7 +274,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(vertex_range, colors, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_points(const glm::vec2* points, GLuint count) const
@@ -264,7 +282,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_points(batch->get_vertex_range(id), points, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_primitive_colors(const glm::vec4* colors, GLuint count) const
@@ -272,7 +290,7 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_primitive_colors(batch->get_vertex_range(id), colors, count);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	void internal::PolygonReference::set_polygon_transform(const glm::mat3& transform) const
@@ -280,7 +298,31 @@ namespace oly::rendering
 		if (auto batch = lock()) [[likely]]
 			batch->set_polygon_transform(id, transform);
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
+	}
+
+	void internal::PolygonReference::set_camera_invariant(bool camera_invariant) const
+	{
+		if (auto batch = lock()) [[likely]]
+			batch->set_polygon_camera_invariant(id, camera_invariant);
+		else
+			throw Error(ErrorCode::NullPointer);
+	}
+
+	const glm::mat3& internal::PolygonReference::get_polygon_transform() const
+	{
+		if (auto batch = lock()) [[likely]]
+			return batch->get_polygon_transform(id);
+		else
+			throw Error(ErrorCode::NullPointer);
+	}
+
+	bool internal::PolygonReference::is_camera_invariant() const
+	{
+		if (auto batch = lock()) [[likely]]
+			return batch->is_polygon_camera_invariant(id);
+		else
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	GLuint& internal::PolygonReference::draw_index() const
@@ -291,7 +333,7 @@ namespace oly::rendering
 			return batch->ebo.draw_primitive()[0];
 		}
 		else
-			throw Error(ErrorCode::NULL_POINTER);
+			throw Error(ErrorCode::NullPointer);
 	}
 
 	internal::PolygonSubmitter::PolygonSubmitter(Unbatched)
@@ -319,6 +361,21 @@ namespace oly::rendering
 		return *this;
 	}
 
+	void internal::PolygonSubmitter::set_camera_invariant(bool invariant) const
+	{
+		if (invariant)
+			camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::Value);
+		else
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::Value);
+
+		camera_invariant = CameraInvariantFlag(camera_invariant | CameraInvariantFlag::Dirty);
+	}
+
+	bool internal::PolygonSubmitter::is_camera_invariant() const
+	{
+		return camera_invariant & CameraInvariantFlag::Value;
+	}
+
 	void internal::PolygonSubmitter::submit_dirty() const
 	{
 		if (points)
@@ -331,8 +388,8 @@ namespace oly::rendering
 			}
 			catch (Error e)
 			{
-				if (e.code == ErrorCode::TRIANGULATION)
-					OLY_LOG_WARNING(true, "RENDERING") << LOG.source_info.full_source() << "Error occurred during polygon triangulation." << LOG.nl;
+				if (e.code == ErrorCode::Triangulation)
+					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
 				else
 					throw e;
 			}
@@ -351,6 +408,12 @@ namespace oly::rendering
 		{
 			colors = false;
 			impl_set_polygon_colors();
+		}
+
+		if (camera_invariant & CameraInvariantFlag::Dirty)
+		{
+			camera_invariant = CameraInvariantFlag(camera_invariant & ~CameraInvariantFlag::Dirty);
+			ref.set_camera_invariant(camera_invariant & CameraInvariantFlag::Value);
 		}
 	}
 
@@ -436,6 +499,60 @@ namespace oly::rendering
 			get_ref().draw_index() = cache[i][1] + initial_vertex;
 			get_ref().draw_index() = cache[i][2] + initial_vertex;
 		}
+	}
+
+	Polygon Polygon::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		Polygon polygon;
+
+		polygon.transformer = Transformer2D::load(node["transformer"]);
+
+		std::vector<glm::vec2> points;
+		auto toml_points = node["points"].as_array();
+		if (toml_points)
+		{
+			size_t pt_idx = 0;
+			for (auto& toml_point : *toml_points)
+			{
+				glm::vec2 pt;
+				if (io::parse_vec((TOMLNode)toml_point, pt))
+					points.push_back(pt);
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
+				++pt_idx;
+			}
+		}
+		polygon.set_points() = std::move(points);
+
+		std::vector<glm::vec4> colors;
+		auto toml_colors = node["colors"].as_array();
+		if (toml_colors)
+		{
+			size_t color_idx = 0;
+			for (auto& toml_color : *toml_colors)
+			{
+				glm::vec4 col;
+				if (io::parse_vec((TOMLNode)toml_color, col))
+					colors.push_back(col);
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
+				++color_idx;
+			}
+		}
+		polygon.set_colors() = std::move(colors);
+
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
+		return polygon;
+	}
+
+	Polygon Polygon::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::Polygon::load()");
+		return load(node);
 	}
 
 	GLuint PolyComposite::num_vertices() const
@@ -530,6 +647,161 @@ namespace oly::rendering
 		}
 	}
 
+	PolyComposite PolyComposite::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		PolyComposite polygon;
+
+		polygon.transformer = Transformer2D::load(node["transformer"]);
+
+		auto toml_method = node["method"].value<std::string>();
+		if (toml_method)
+		{
+			const std::string& method = toml_method.value();
+			if (method == "ngon")
+			{
+				std::vector<glm::vec2> points;
+				auto toml_points = node["points"].as_array();
+				if (toml_points)
+				{
+					size_t pt_idx = 0;
+					for (auto& toml_point : *toml_points)
+					{
+						glm::vec2 pt;
+						if (io::parse_vec((TOMLNode)toml_point, pt))
+							points.push_back(pt);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						++pt_idx;
+					}
+				}
+
+				std::vector<glm::vec4> colors;
+				auto toml_fill_colors = node["colors"].as_array();
+				if (toml_fill_colors)
+				{
+					size_t color_idx = 0;
+					for (auto& toml_color : *toml_fill_colors)
+					{
+						glm::vec4 col;
+						if (io::parse_vec((TOMLNode)toml_color, col))
+							colors.push_back(col);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
+						++color_idx;
+					}
+				}
+
+				polygon.set_composite() = cmath::Polygon2DComposite{ cmath::create_ngon(std::move(colors), std::move(points)) };
+			}
+			else if (method == "bordered_ngon")
+			{
+				cmath::NGonBase ngon_base;
+
+				auto toml_points = node["points"].as_array();
+				if (toml_points)
+				{
+					size_t pt_idx = 0;
+					for (auto& toml_point : *toml_points)
+					{
+						glm::vec2 pt;
+						if (io::parse_vec((TOMLNode)toml_point, pt))
+							ngon_base.points.push_back(pt);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						++pt_idx;
+					}
+				}
+
+				auto toml_fill_colors = node["fill_colors"].as_array();
+				if (toml_fill_colors)
+				{
+					size_t color_idx = 0;
+					for (auto& toml_color : *toml_fill_colors)
+					{
+						glm::vec4 col;
+						if (io::parse_vec((TOMLNode)toml_color, col))
+							ngon_base.fill_colors.push_back(col);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
+						++color_idx;
+					}
+				}
+
+				auto toml_border_colors = node["border_colors"].as_array();
+				if (toml_border_colors)
+				{
+					size_t color_idx = 0;
+					for (auto& toml_color : *toml_border_colors)
+					{
+						glm::vec4 col;
+						if (io::parse_vec((TOMLNode)toml_color, col))
+							ngon_base.border_colors.push_back(col);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
+						++color_idx;
+					}
+				}
+
+				io::parse_float(node["border_width"], ngon_base.border_width);
+
+				if (auto border_pivot = node["border_pivot"])
+				{
+					if (auto str_border_pivot = border_pivot.value<std::string>())
+					{
+						const std::string& str = str_border_pivot.value();
+						if (str == "outer")
+							ngon_base.border_pivot = cmath::BorderPivot::OUTER;
+						else if (str == "middle")
+							ngon_base.border_pivot = cmath::BorderPivot::Middle;
+						else if (str == "inner")
+							ngon_base.border_pivot = cmath::BorderPivot::INNER;
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+					}
+					else
+						io::parse_float(border_pivot, ngon_base.border_pivot.v);
+				}
+
+				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
+					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
+			}
+			else if (method == "convex_decomposition")
+			{
+				std::vector<glm::vec2> points;
+
+				auto toml_points = node["points"].as_array();
+				if (toml_points)
+				{
+					size_t pt_idx = 0;
+					for (auto& toml_point : *toml_points)
+					{
+						glm::vec2 pt;
+						if (io::parse_vec((TOMLNode)toml_point, pt))
+							points.push_back(pt);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						++pt_idx;
+					}
+				}
+
+				polygon.set_composite() = cmath::Decompose{}(std::move(points));
+			}
+		}
+
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
+		return polygon;
+	}
+
+	PolyComposite PolyComposite::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::PolyComposite::load()");
+		return load(node);
+	}
+
 	GLuint NGon::num_vertices() const
 	{
 		GLuint vertices = 0;
@@ -572,5 +844,95 @@ namespace oly::rendering
 			}
 			offset += (GLuint)tp.polygon.points.size();
 		}
+	}
+
+	NGon NGon::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		NGon polygon;
+
+		polygon.transformer = Transformer2D::load(node["transformer"]);
+
+		cmath::NGonBase ngon_base;
+
+		auto toml_points = node["points"].as_array();
+		if (toml_points)
+		{
+			size_t pt_idx = 0;
+			for (auto& toml_point : *toml_points)
+			{
+				glm::vec2 pt;
+				if (io::parse_vec((TOMLNode)toml_point, pt))
+					ngon_base.points.push_back(pt);
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
+				++pt_idx;
+			}
+		}
+
+		auto toml_fill_colors = node["fill_colors"].as_array();
+		if (toml_fill_colors)
+		{
+			size_t color_idx = 0;
+			for (auto& toml_color : *toml_fill_colors)
+			{
+				glm::vec4 col;
+				if (io::parse_vec((TOMLNode)toml_color, col))
+					ngon_base.fill_colors.push_back(col);
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
+				++color_idx;
+			}
+		}
+
+		auto toml_border_colors = node["border_colors"].as_array();
+		if (toml_border_colors)
+		{
+			size_t color_idx = 0;
+			for (auto& toml_color : *toml_border_colors)
+			{
+				glm::vec4 col;
+				if (io::parse_vec((TOMLNode)toml_color, col))
+					ngon_base.border_colors.push_back(col);
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
+				++color_idx;
+			}
+		}
+
+		bool bordered;
+		if (io::parse_bool(node["bordered"], bordered))
+			polygon.set_bordered(bordered);
+		io::parse_float(node["border_width"], ngon_base.border_width);
+
+		auto border_pivot = node["border_pivot"];
+		if (auto str_border_pivot = border_pivot.value<std::string>())
+		{
+			const std::string& str = str_border_pivot.value();
+			if (str == "outer")
+				ngon_base.border_pivot = cmath::BorderPivot::OUTER;
+			else if (str == "middle")
+				ngon_base.border_pivot = cmath::BorderPivot::Middle;
+			else if (str == "inner")
+				ngon_base.border_pivot = cmath::BorderPivot::INNER;
+			else
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+		}
+		else
+			io::parse_float(border_pivot, ngon_base.border_pivot.v);
+
+		polygon.set_base() = std::move(ngon_base);
+
+		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
+		return polygon;
+	}
+
+	NGon NGon::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::NGon::load()");
+		return load(node);
 	}
 }

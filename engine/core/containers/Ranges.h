@@ -93,20 +93,20 @@ namespace oly
 
 		enum class Mode
 		{
-			CLOSED,
-			OPEN,
-			RIGHT_OPEN,
-			LEFT_OPEN
+			Closed,
+			Open,
+			RightOpen,
+			LeftOpen
 		};
 		
-		template<Mode mode = Mode::CLOSED>
+		template<Mode mode = Mode::Closed>
 		bool contains(T pt) const
 		{
-			if constexpr (mode == Mode::CLOSED)
+			if constexpr (mode == Mode::Closed)
 				return left <= pt && pt <= right;
-			else if constexpr (mode == Mode::OPEN)
+			else if constexpr (mode == Mode::Open)
 				return left < pt && pt < right;
-			else if constexpr (mode == Mode::RIGHT_OPEN)
+			else if constexpr (mode == Mode::RightOpen)
 				return left <= pt && pt < right;
 			else
 				return left < pt && pt <= right;

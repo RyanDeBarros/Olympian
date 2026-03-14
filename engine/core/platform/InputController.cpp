@@ -80,39 +80,51 @@ namespace oly
 		}
 	}
 
-	void InputController::bind(const std::string& signal, Handler handler)
+	void InputController::bind(const StringParam& signal, Handler handler)
 	{
 		bind(context::signal_table().get(signal), handler);
 	}
 
-	void InputController::bind(const std::string& signal, ConstHandler handler) const
+	void InputController::bind(const StringParam& signal, ConstHandler handler) const
 	{
 		bind(context::signal_table().get(signal), handler);
 	}
 
-	void InputController::unbind(const std::string& signal) const
+	void InputController::unbind(const StringParam& signal) const
 	{
 		unbind(context::signal_table().get(signal));
 	}
 
-	void InputController::bind_mapping(const std::string& mapping, Handler handler)
+	void InputController::bind_mapping(const StringParam& mapping, Handler handler)
 	{
-		const std::vector<std::string>& signals = context::signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			bind(signal, handler);
+		auto it = context::signal_mapping_table().find(mapping);
+		if (it != context::signal_mapping_table().end())
+		{
+			const std::vector<std::string>& signals = it->second;
+			for (const std::string& signal : signals)
+				bind(signal, handler);
+		}
 	}
 
-	void InputController::bind_mapping(const std::string& mapping, ConstHandler handler) const
+	void InputController::bind_mapping(const StringParam& mapping, ConstHandler handler) const
 	{
-		const std::vector<std::string>& signals = context::signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			bind(signal, handler);
+		auto it = context::signal_mapping_table().find(mapping);
+		if (it != context::signal_mapping_table().end())
+		{
+			const std::vector<std::string>& signals = it->second;
+			for (const std::string& signal : signals)
+				bind(signal, handler);
+		}
 	}
 
-	void InputController::unbind_mapping(const std::string& mapping) const
+	void InputController::unbind_mapping(const StringParam& mapping) const
 	{
-		const std::vector<std::string>& signals = context::signal_mapping_table()[mapping];
-		for (const std::string& signal : signals)
-			unbind(signal);
+		auto it = context::signal_mapping_table().find(mapping);
+		if (it != context::signal_mapping_table().end())
+		{
+			const std::vector<std::string>& signals = it->second;
+			for (const std::string& signal : signals)
+				unbind(signal);
+		}
 	}
 }

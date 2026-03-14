@@ -30,12 +30,12 @@ namespace oly::graphics
 
 		enum class Target
 		{
-			REG  = GL_FRAMEBUFFER,
-			DRAW = GL_DRAW_FRAMEBUFFER,
-			READ = GL_READ_FRAMEBUFFER
+			RW  = GL_FRAMEBUFFER,
+			Draw = GL_DRAW_FRAMEBUFFER,
+			Read = GL_READ_FRAMEBUFFER
 		};
-		void bind(Target target = Framebuffer::Target::REG) const { glBindFramebuffer((GLenum)target, id); }
-		static void unbind(Target target = Framebuffer::Target::REG) { glBindFramebuffer((GLenum)target, 0); }
+		void bind(Target target = Framebuffer::Target::RW) const { glBindFramebuffer((GLenum)target, id); }
+		static void unbind(Target target = Framebuffer::Target::RW) { glBindFramebuffer((GLenum)target, 0); }
 
 		class NonColorAttachment
 		{
@@ -73,17 +73,17 @@ namespace oly::graphics
 
 		enum class Status
 		{
-			COMPLETE = GL_FRAMEBUFFER_COMPLETE,
-			UNDEFINED = GL_FRAMEBUFFER_UNDEFINED,
-			INCOMPLETE_ATTACHMENT = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-			INCOMPLETE_MISSING_ATTACHMENT = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
-			INCOMPLETE_DRAW_BUFFER = GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER,
-			INCOMPLETE_READ_BUFFER = GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER,
-			UNSUPPORTED = GL_FRAMEBUFFER_UNSUPPORTED,
-			INCOMPLETE_MULTISAMPLE = GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
-			INCOMPLETE_LAYER_TARGETS = GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS
+			Complete = GL_FRAMEBUFFER_COMPLETE,
+			Undefined = GL_FRAMEBUFFER_UNDEFINED,
+			IncompleteAttachment = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
+			IncompleteMissingAttachment = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
+			IncompleteDrawBuffer = GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER,
+			IncompleteReadBuffer = GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER,
+			Unsupported = GL_FRAMEBUFFER_UNSUPPORTED,
+			IncompleteMultisample = GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
+			IncompleteLayerTargets = GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS
 		};
-		Status status(Target target = Target::REG) const;
+		Status status(Target target = Target::RW) const;
 
 		void draw_buffer(ColorAttachment a) const;
 		void draw_buffers(const ColorAttachment* as, GLsizei count) const;
@@ -93,14 +93,14 @@ namespace oly::graphics
 
 		enum class BlitMask
 		{
-			COLOR = GL_COLOR_BUFFER_BIT,
-			DEPTH = GL_DEPTH_BUFFER_BIT,
-			STENCIL = GL_STENCIL_BUFFER_BIT
+			Color = GL_COLOR_BUFFER_BIT,
+			Depth = GL_DEPTH_BUFFER_BIT,
+			Stencil = GL_STENCIL_BUFFER_BIT
 		};
 		enum class BlitFilter
 		{
-			NEAREST = GL_NEAREST,
-			LINEAR = GL_LINEAR
+			Nearest = GL_NEAREST,
+			Linear = GL_LINEAR
 		};
 		static void blit(const Framebuffer& read, const Framebuffer& draw, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter);
 		static void blit_to_default(const Framebuffer& read, math::IRect2D src, math::IRect2D dst, BlitMask mask, BlitFilter filter);
@@ -139,5 +139,5 @@ namespace oly::graphics
 		return internal::framebuffer_block_impl(ids, std::make_index_sequence<N>{});
 	}
 
-	// TODO v7 Renderbuffer
+	// TODO v8 Renderbuffer
 }

@@ -20,6 +20,18 @@ namespace oly::col2d
 		float projection_min(UnitVector2D axis) const { return element.projection_min(axis); }
 		fpair projection_interval(UnitVector2D axis) const { return element.projection_interval(axis); }
 		ContactManifold deepest_manifold(UnitVector2D axis) const { return element.deepest_manifold(axis); }
+
+		template<internal::ElementShape Shape>
+		const Shape& element_as() const
+		{
+			return *element.variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as()
+		{
+			return *element.variant().get<Shape*>();
+		}
 	};
 
 	inline OverlapResult point_hits(const Primitive& c, glm::vec2 test) { return point_hits(c.element, test); }
@@ -58,7 +70,7 @@ namespace oly::col2d
 		bool is_dirty() const { return dirty || transformer.dirty(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
 
 		const Primitive& get_primitive() const { return primitive; }
 		Primitive& set_primitive() { dirty = true; return primitive; }
@@ -73,6 +85,18 @@ namespace oly::col2d
 		float projection_min(UnitVector2D axis) const { return get_baked().projection_min(axis); }
 		fpair projection_interval(UnitVector2D axis) const { return get_baked().projection_interval(axis); }
 		ContactManifold deepest_manifold(UnitVector2D axis) const { return get_baked().deepest_manifold(axis); }
+
+		template<internal::ElementShape Shape>
+		const Shape& element_as() const
+		{
+			return get_primitive().element_as<Shape>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as()
+		{
+			return set_primitive().element_as<Shape>();
+		}
 	};
 
 	inline OverlapResult point_hits(const TPrimitive& c, glm::vec2 test) { return point_hits(c.get_baked(), test); }

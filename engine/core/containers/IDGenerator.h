@@ -25,7 +25,7 @@ namespace oly
 			if (yielded.empty())
 			{
 				if (next > max)
-					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+					throw Error(ErrorCode::IndexOutOfRange);
 				return next++;
 			}
 			T id = yielded.top();
@@ -75,7 +75,7 @@ namespace oly
 						if (generator->yielded.empty())
 						{
 							if (generator->next > generator->max)
-								throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+								throw Error(ErrorCode::IndexOutOfRange);
 							id = generator->next++;
 						}
 						else
@@ -148,7 +148,7 @@ namespace oly
 					if (Super::is_valid())
 						return id;
 					else
-						throw Error(ErrorCode::INVALID_ID);
+						throw Error(ErrorCode::InvalidID);
 				}
 				
 				void yield()

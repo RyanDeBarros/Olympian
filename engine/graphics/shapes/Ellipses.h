@@ -3,6 +3,7 @@
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/Issuer.h"
+#include "core/util/DebugTrace.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -15,6 +16,7 @@ namespace oly::rendering
 	{
 		float rx = 0.0f, ry = 0.0f, border = 0.0f;
 		float fill_exp = 0.0f, border_exp = 0.0f;
+		GLuint camera_invariant = 0;
 	};
 
 	struct EllipseColorGradient {
@@ -22,12 +24,25 @@ namespace oly::rendering
 		glm::vec4 fill_outer = glm::vec4(1.0f);
 		glm::vec4 border_inner = glm::vec4(1.0f);
 		glm::vec4 border_outer = glm::vec4(1.0f);
-	};
 
-	class EllipseReference;
+		bool is_uniform() const
+		{
+			return fill_inner == fill_outer && fill_inner == border_inner && fill_inner == border_outer;
+		}
+
+		void set_uniform(glm::vec4 color)
+		{
+			fill_inner = color;
+			fill_outer = color;
+			border_inner = color;
+			border_outer = color;
+		}
+	};
 
 	namespace internal
 	{
+		class EllipseReference;
+
 		class EllipseBatch : public oly::internal::Issuer<EllipseBatch>
 		{
 			friend class EllipseReference;
@@ -43,7 +58,10 @@ namespace oly::rendering
 			};
 			graphics::LazyPersistentGPUBufferBlock<EllipseDimension, EllipseColorGradient, glm::mat3> ssbo_block;
 
-			GLuint projection_location;
+			struct
+			{
+				GLuint projection, invariant_projection;
+			} shader_locations;
 
 		public:
 			Camera2DRef camera = REF_DEFAULT;
@@ -53,7 +71,6 @@ namespace oly::rendering
 			EllipseBatch(EllipseBatch&&) = delete;
 
 			void render() const;
-			void render(const glm::mat3& projection) const;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;
@@ -66,41 +83,81 @@ namespace oly::rendering
 
 	using EllipseBatch = PublicIssuer<internal::EllipseBatch>;
 
-	class EllipseReference : public PublicIssuerHandle<internal::EllipseBatch>
+	namespace internal
 	{
-		using Super = PublicIssuerHandle<internal::EllipseBatch>;
-		GLuint id = internal::EllipseBatch::NULL_ID;
+		class EllipseReference : public PublicIssuerHandle<EllipseBatch>
+		{
+			using Super = PublicIssuerHandle<EllipseBatch>;
+			GLuint id = EllipseBatch::NULL_ID;
 
+		public:
+			EllipseReference(Unbatched = UNBATCHED);
+			EllipseReference(rendering::EllipseBatch& batch);
+			EllipseReference(const EllipseReference&);
+			EllipseReference(EllipseReference&&) noexcept;
+			EllipseReference& operator=(const EllipseReference&);
+			EllipseReference& operator=(EllipseReference&&) noexcept;
+			~EllipseReference();
+
+			auto get_batch() const { return lock(); }
+			void set_batch(Unbatched);
+			void set_batch(rendering::EllipseBatch& batch);
+
+			EllipseDimension get_dimension() const;
+			EllipseDimension& set_dimension() const;
+			const EllipseColorGradient& get_color() const;
+			EllipseColorGradient& set_color() const;
+			void set_color(glm::vec4 color) const;
+			const glm::mat3& get_transform() const;
+			glm::mat3& set_transform() const;
+
+			void draw() const;
+		};
+	}
+
+	class StaticEllipse
+	{
+		internal::EllipseReference ref;
+		EllipseDimension dimension;
+		EllipseColorGradient color;
+		glm::mat3 transform = 1.0f;
+		
 	public:
-		EllipseReference(Unbatched = UNBATCHED);
-		EllipseReference(EllipseBatch& batch);
-		EllipseReference(const EllipseReference&);
-		EllipseReference(EllipseReference&&) noexcept;
-		EllipseReference& operator=(const EllipseReference&);
-		EllipseReference& operator=(EllipseReference&&) noexcept;
-		~EllipseReference();
+		StaticEllipse(Unbatched = UNBATCHED) : ref(UNBATCHED) {}
+		StaticEllipse(EllipseBatch& batch) : ref(batch) {}
+		StaticEllipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
+		StaticEllipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
+		StaticEllipse(const StaticEllipse&) = default;
+		StaticEllipse(StaticEllipse&&) noexcept = default;
+		StaticEllipse& operator=(const StaticEllipse&) = default;
+		StaticEllipse& operator=(StaticEllipse&&) noexcept = default;
 
-		auto get_batch() const { return lock(); }
-		void set_batch(Unbatched);
+		void draw() const { ref.draw(); }
+
+		auto get_batch() const { return ref.get_batch(); }
+		void set_batch(Unbatched) { ref.set_batch(Unbatched{}); }
 		void set_batch(EllipseBatch& batch);
 
-		EllipseDimension get_dimension() const;
-		EllipseDimension& set_dimension();
-		const EllipseColorGradient& get_color() const;
-		EllipseColorGradient& set_color();
-		const glm::mat3& get_transform() const;
-		glm::mat3& set_transform();
+		EllipseDimension get_dimension() const { return dimension; }
+		void set_dimension(EllipseDimension dimension);
+		const EllipseColorGradient& get_color() const { return color; }
+		void set_color(const EllipseColorGradient& color);
+		void set_color(glm::vec4 color);
+		const glm::mat3& get_transform() const { return transform; }
+		void set_transform(const glm::mat3& local);
 
-		void draw() const;
+		math::Rect2D bounds() const;
+		math::RotatedRect2D rotated_bounds() const;
 	};
 
-	struct Ellipse
+	class Ellipse
 	{
-		EllipseReference ellipse;
+		internal::EllipseReference ref;
 		Transformer2D transformer;
 
-		Ellipse(Unbatched = UNBATCHED) : ellipse(UNBATCHED) {}
-		Ellipse(EllipseBatch& batch) : ellipse(batch) {}
+	public:
+		Ellipse(Unbatched = UNBATCHED) : ref(UNBATCHED) {}
+		Ellipse(EllipseBatch& batch) : ref(batch) {}
 		Ellipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(const Ellipse&) = default;
@@ -108,12 +165,22 @@ namespace oly::rendering
 		Ellipse& operator=(const Ellipse&) = default;
 		Ellipse& operator=(Ellipse&&) noexcept = default;
 
+		EllipseDimension get_dimension() const { return ref.get_dimension(); }
+		EllipseDimension& set_dimension() { return ref.set_dimension(); }
+		const EllipseColorGradient& get_color() const { return ref.get_color(); }
+		EllipseColorGradient& set_color() { return ref.set_color(); }
+		void set_color(glm::vec4 color) { ref.set_color(color); }
+
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
+		const Transformer2D& get_transformer() const { return transformer; }
+		Transformer2D& set_transformer() { return transformer; }
+
 		void draw() const;
 
-		void set_color(glm::vec4 color);
+		static Ellipse load(TOMLNode node);
+		static Ellipse load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Ellipse> EllipseRef;

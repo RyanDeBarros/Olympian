@@ -46,7 +46,7 @@ frame_format = { "mode" = "auto" }
 rows = 2
 cols = 3
 delay_seconds = 0.1
-	[archetype.sprite_atlas.sprite]
+	[atlased_night.sprite]
 	texture = "~/textures/knight.png"
 	texture_index = 1
 	transformer = { "position" = [300, -200], "scale" = [20, 20] }
@@ -115,7 +115,8 @@ transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 [smol_text]
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
-	[[archetype.paragraph.element]]
+camera_invariant = true
+	[[smol_text.element]]
 	"font"	       = "~/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"
 	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

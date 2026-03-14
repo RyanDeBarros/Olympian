@@ -38,8 +38,6 @@ namespace oly::rendering
 		if (transformer.flush())
 			ref.set_transform(transformer.global());
 		ref.draw_quad();
-		if (ref.is_in_context()) [[likely]]
-			context::internal::set_sprite_batch_rendering(true);
 	}
 
 	void TextGlyph::set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale)

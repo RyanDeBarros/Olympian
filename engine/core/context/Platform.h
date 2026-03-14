@@ -3,6 +3,7 @@
 #include "core/platform/Platform.h"
 #include "core/platform/BindingContext.h"
 #include "core/util/ResourcePath.h"
+#include "core/util/DebugTrace.h"
 
 namespace oly::context
 {
@@ -10,8 +11,7 @@ namespace oly::context
 	{
 		extern void init_platform(TOMLNode);
 		extern void init_viewport(TOMLNode);
-		extern void terminate_platform();
-		extern bool frame_platform();
+		extern bool platform_frame();
 	}
 
 	extern platform::Platform& get_platform();
@@ -20,10 +20,12 @@ namespace oly::context
 	extern input::SignalTable& signal_table();
 	extern input::SignalMappingTable& signal_mapping_table();
 
-	extern void assign_signal_mapping(const std::string& mapping_name, std::vector<std::string>&& signal_names);
-	extern void unassign_signal_mapping(const std::string& mapping_name);
+	extern void assign_signal_mapping(const StringParam& mapping_name, std::vector<std::string>&& signal_names);
+	extern void unassign_signal_mapping(const StringParam& mapping_name);
 
-	extern void load_signal(TOMLNode node, const char* source = nullptr);
-	extern void load_signal_mapping(TOMLNode node, const char* source = nullptr);
+	extern void load_signal(TOMLNode node);
+	extern void load_signal(TOMLNode node, const DebugTrace& trace);
+	extern void load_signal_mapping(TOMLNode node);
+	extern void load_signal_mapping(TOMLNode node, const DebugTrace& trace);
 	extern void load_signals(const ResourcePath& file);
 }

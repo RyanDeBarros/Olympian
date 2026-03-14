@@ -25,8 +25,6 @@ namespace oly::platform
 	bool Platform::frame()
 	{
 		_window.swap_buffers();
-		oly::internal::check_errors();
-		LOG.flush();
 		glfwPollEvents();
 		context::input_binding_context().poll();
 		glClear(per_frame_clear_mask);

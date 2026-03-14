@@ -3,12 +3,16 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/components/DynamicsComponent.h"
+#include "core/types/AutoRegistry.h"
 
 namespace oly::physics
 {
-	namespace internal { class RigidBodyManager; }
+	namespace internal
+	{
+		struct RigidBodyOnTick;
+	}
 
-	class RigidBody : public col2d::CollisionController
+	class RigidBody : public col2d::CollisionController, public AutoRegistrable<RigidBody>
 	{
 	protected:
 		std::vector<col2d::Collider> colliders;
@@ -18,12 +22,12 @@ namespace oly::physics
 		RigidBody();
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
-		virtual ~RigidBody();
+		virtual ~RigidBody() = default;
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
@@ -48,12 +52,11 @@ namespace oly::physics
 		size_t num_colliders() const { return colliders.size(); }
 		size_t collider_index(const col2d::Collider& col) const;
 
-		debug::CollisionView collision_view(debug::CollisionLayer& layer, size_t i, glm::vec4 color) const;
-		void update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const;
-		void update_view(size_t i, debug::CollisionView& view) const;
+		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const;
+		void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
 
 	private:
-		friend class internal::RigidBodyManager;
+		friend class internal::RigidBodyOnTick;
 		virtual void physics_pre_tick() = 0;
 		virtual void physics_post_tick() = 0;
 
@@ -71,32 +74,4 @@ namespace oly::physics
 		static const RigidBody* rigid_body(const col2d::Collider& collider);
 		static const DynamicsComponent& dynamics_of(const RigidBody& other) { return other.get_dynamics(); }
 	};
-
-	namespace internal
-	{
-		class RigidBodyManager
-		{
-			friend class RigidBody;
-			std::unordered_set<RigidBody*> rigid_bodies;
-
-			RigidBodyManager() = default;
-			RigidBodyManager(const RigidBodyManager&) = delete;
-			RigidBodyManager(RigidBodyManager&&) = delete;
-			~RigidBodyManager() { clear(); }
-
-		public:
-			static RigidBodyManager& instance()
-			{
-				static RigidBodyManager manager;
-				return manager;
-			}
-
-			void on_tick() const;
-
-			void clear()
-			{
-				rigid_bodies.clear();
-			}
-		};
-	}
 }

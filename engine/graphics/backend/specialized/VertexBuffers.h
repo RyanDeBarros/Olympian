@@ -51,7 +51,7 @@ namespace oly::graphics
 		}
 
 		template<size_t n>
-		void setup_single()
+		void setup_Single()
 		{
 			static_assert(n < N);
 			glBindVertexArray(vao);
@@ -77,7 +77,7 @@ namespace oly::graphics
 		void post_draw_all() const { buf.post_draw_all(); }
 		
 		template<size_t n>
-		void grow() { buf.grow<n>(); setup_single<n>(); }
+		void grow() { buf.grow<n>(); setup_Single<n>(); }
 		
 		void grow_all() const { buf.grow_all(); setup(); }
 		
@@ -90,7 +90,7 @@ namespace oly::graphics
 			bool grown = false;
 			StructAlias<n>& el = buf.set<n>(i, &grown);
 			if (grown)
-				setup_single<n>();
+				setup_Single<n>();
 			return el;
 		}
 
@@ -103,7 +103,7 @@ namespace oly::graphics
 			bool grown = false;
 			StructAlias<n>* arr = buf.set<n>(offset, length, &grown);
 			if (grown)
-				setup_single<n>();
+				setup_Single<n>();
 			return arr;
 		}
 	};

@@ -78,7 +78,7 @@ namespace oly::utf
 		else if (!ignore_invalid_chars)
 		{
 			quad[0] = quad[1] = quad[2] = quad[3] = 0;
-			throw Error(ErrorCode::UTF, "Invalid Unicode codepoint");
+			throw Error(ErrorCode::Utf, "Invalid Unicode codepoint");
 		}
 		quad[0] = quad[1] = quad[2] = quad[3] = 0;
 	}
@@ -99,14 +99,14 @@ namespace oly::utf
 				if (i + 1 >= utf16.size())
 				{
 					if (!ignore_invalid_chars)
-						throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-16 sequence");
+						throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-16 sequence");
 					continue;
 				}
 				char32_t low_surrogate = CH<32>(utf16[i + 1]);
 
 				if (low_surrogate < SURR_LOW_OFFSET || low_surrogate > SURR_LOW_MAX) {
 					if (!ignore_invalid_chars)
-						throw Error(ErrorCode::UTF, "Invalid UTF-16: unpaired high surrogate");
+						throw Error(ErrorCode::Utf, "Invalid UTF-16: unpaired high surrogate");
 					continue;
 				}
 				++i;
@@ -115,7 +115,7 @@ namespace oly::utf
 			else if (codepoint >= SURR_LOW_OFFSET && codepoint <= SURR_LOW_MAX)
 			{
 				if (!ignore_invalid_chars)
-					throw Error(ErrorCode::UTF, "Invalid UTF-16: unpaired low surrogate");
+					throw Error(ErrorCode::Utf, "Invalid UTF-16: unpaired low surrogate");
 				continue;
 			}
 
@@ -141,14 +141,14 @@ namespace oly::utf
 			}
 			else if ((byte & B2_CAP) == B2_ERASURE) {
 				// 2-byte
-				if (i + 1 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 1 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B2_MASK) << 6;
 				character |= UC(utf8[i + 1]) & CONT_MASK;
 				i += 2;
 			}
 			else if ((byte & B3_CAP) == B3_ERASURE) {
 				// 3-byte
-				if (i + 2 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 2 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B3_MASK) << 12;
 				character |= (UC(utf8[i + 1]) & CONT_MASK) << 6;
 				character |= UC(utf8[i + 2]) & CONT_MASK;
@@ -156,7 +156,7 @@ namespace oly::utf
 			}
 			else if ((byte & B4_CAP) == B4_ERASURE) {
 				// 4-byte (surrogate pair)
-				if (i + 3 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 3 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B4_MASK) << 18;
 				character |= (UC(utf8[i + 1]) & CONT_MASK) << 12;
 				character |= (UC(utf8[i + 2]) & CONT_MASK) << 6;
@@ -170,7 +170,7 @@ namespace oly::utf
 				continue;
 			}
 			else
-				throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 
 			utf16.push_back(CH<16>(character));
 		}
@@ -205,7 +205,7 @@ namespace oly::utf
 			else if ((byte & B2_CAP) == B2_ERASURE)
 			{
 				// 2-byte
-				if (i + 1 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 1 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B2_MASK) << 6;
 				character |= UC(utf8[i + 1]) & 0x3F;
 				i += 2;
@@ -213,7 +213,7 @@ namespace oly::utf
 			else if ((byte & B3_CAP) == B3_ERASURE)
 			{
 				// 3-byte
-				if (i + 2 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 2 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B3_MASK) << 12;
 				character |= (UC(utf8[i + 1]) & CONT_MASK) << 6;
 				character |= UC(utf8[i + 2]) & CONT_MASK;
@@ -222,7 +222,7 @@ namespace oly::utf
 			else if ((byte & B4_CAP) == B4_ERASURE)
 			{
 				// 4-byte
-				if (i + 3 >= utf8.size()) throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				if (i + 3 >= utf8.size()) throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 				character |= (byte & B4_MASK) << 18;
 				character |= (UC(utf8[i + 1]) & CONT_MASK) << 12;
 				character |= (UC(utf8[i + 2]) & CONT_MASK) << 6;
@@ -230,7 +230,7 @@ namespace oly::utf
 				i += 4;
 			}
 			else
-				throw Error(ErrorCode::UTF, "Invalid UTF-8 sequence");
+				throw Error(ErrorCode::Utf, "Invalid UTF-8 sequence");
 
 			utf32.push_back(character);
 		}
@@ -238,7 +238,7 @@ namespace oly::utf
 		return utf32;
 	}
 
-	std::u8string convert(const std::string& str)
+	std::u8string convert(const std::string_view str)
 	{
 		return std::u8string(str.begin(), str.end());
 	}
@@ -250,7 +250,7 @@ namespace oly::utf
 
 	Codepoint String::Iterator::codepoint() const
 	{
-		if (i >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "End of string");
+		if (i >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "End of string");
 		unsigned char first = UC(string.str[i]);
 		char32_t codepoint = 0;
 
@@ -260,20 +260,20 @@ namespace oly::utf
 		}
 		else if (first < B2_CAP)
 		{
-			if (i + 1 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 1 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B2_MASK) << 6;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK);
 		}
 		else if (first < B3_CAP)
 		{
-			if (i + 2 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 2 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B3_MASK) << 12;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK) << 6;
 			codepoint |= (UC(string.str[i + 2]) & CONT_MASK);
 		}
 		else if (first < B4_CAP)
 		{
-			if (i + 3 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 3 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B4_MASK) << 18;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK) << 12;
 			codepoint |= (UC(string.str[i + 2]) & CONT_MASK) << 6;
@@ -299,12 +299,12 @@ namespace oly::utf
 	String::Iterator& String::Iterator::operator--()
 	{
 		if (i == 0)
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Start of string");
+			throw Error(ErrorCode::IndexOutOfRange, "Start of string");
 		--i;
 		while ((UC(string.str[i]) & CONT_CAPTURE) == CONT_HEAD)
 		{
 			if (i == 0)
-				throw Error(ErrorCode::UTF, "UTF-8 invalid starting byte");
+				throw Error(ErrorCode::Utf, "UTF-8 invalid starting byte");
 			--i;
 		}
 		return *this;
@@ -314,12 +314,12 @@ namespace oly::utf
 	{
 		Iterator it(string, i);
 		if (i == 0)
-			throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Start of string");
+			throw Error(ErrorCode::IndexOutOfRange, "Start of string");
 		--i;
 		while ((UC(string.str[i]) & CONT_CAPTURE) == CONT_HEAD)
 		{
 			if (i == 0)
-				throw Error(ErrorCode::UTF, "UTF-8 invalid starting byte");
+				throw Error(ErrorCode::Utf, "UTF-8 invalid starting byte");
 			--i;
 		}
 		return it;
@@ -337,12 +337,12 @@ namespace oly::utf
 		else if (first < B4_CAP)
 			return 4;
 		else
-			throw Error(ErrorCode::UTF, "Invalid UTF-8");
+			throw Error(ErrorCode::Utf, "Invalid UTF-8");
 	}
 
 	Codepoint String::Iterator::advance()
 	{
-		if (i >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "End of string");
+		if (i >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "End of string");
 		unsigned char first = UC(string.str[i]);
 		char32_t codepoint = 0;
 
@@ -353,14 +353,14 @@ namespace oly::utf
 		}
 		else if (first < B2_CAP)
 		{
-			if (i + 1 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 1 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B2_MASK) << 6;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK);
 			i += 2;
 		}
 		else if (first < B3_CAP)
 		{
-			if (i + 2 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 2 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B3_MASK) << 12;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK) << 6;
 			codepoint |= (UC(string.str[i + 2]) & CONT_MASK);
@@ -368,7 +368,7 @@ namespace oly::utf
 		}
 		else if (first < B4_CAP)
 		{
-			if (i + 3 >= string.str.size()) throw Error(ErrorCode::INDEX_OUT_OF_RANGE, "Invalid UTF-8");
+			if (i + 3 >= string.str.size()) throw Error(ErrorCode::IndexOutOfRange, "Invalid UTF-8");
 			codepoint |= (first & B4_MASK) << 18;
 			codepoint |= (UC(string.str[i + 1]) & CONT_MASK) << 12;
 			codepoint |= (UC(string.str[i + 2]) & CONT_MASK) << 6;
@@ -376,7 +376,7 @@ namespace oly::utf
 			i += 4;
 		}
 		else
-			throw Error(ErrorCode::UTF, "Invalid UTF-8");
+			throw Error(ErrorCode::Utf, "Invalid UTF-8");
 
 		return Codepoint(int(codepoint));
 	}
@@ -448,7 +448,7 @@ namespace oly::utf
 			str.append(quad, 4);
 		}
 		else
-			throw Error(ErrorCode::UTF, "Codepoint is out of valid UTF-8 range");
+			throw Error(ErrorCode::Utf, "Codepoint is out of valid UTF-8 range");
 	}
 
 	String String::operator+(const String& rhs) const
@@ -484,7 +484,7 @@ namespace oly::utf
 		if (&begin_.string == &end_.string)
 			str = begin_.string.str.substr(begin_.i, end_.i - begin_.i);
 		else
-			throw Error(ErrorCode::UTF, "UTF::String iterators are not compatible.");
+			throw Error(ErrorCode::Utf, "UTF::String iterators are not compatible.");
 	}
 		
 	String String::substr(size_t begin_, size_t end_) const

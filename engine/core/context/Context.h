@@ -8,14 +8,15 @@ namespace oly::context
 	{
 	public:
 		Context(const char* project_file, const char* resource_root);
-		Context(const Context&);
-		Context(Context&&) noexcept;
+		Context(const Context&) = delete;
+		Context(Context&&) noexcept = delete;
 		~Context();
-		Context& operator=(const Context&);
-		Context& operator=(Context&&) noexcept;
 	};
 
-	extern bool frame();
-	extern bool render_frame();
-	extern BigSize this_frame();
+	namespace internal
+	{
+		extern bool render_frame();
+	}
+
+	extern void run();
 }

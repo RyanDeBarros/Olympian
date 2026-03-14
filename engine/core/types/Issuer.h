@@ -79,7 +79,7 @@ namespace oly
 						if (issuer)
 							return static_cast<const Derived&>(*issuer);
 						else
-							throw Error(ErrorCode::NULL_POINTER);
+							throw Error(ErrorCode::NullPointer);
 					}
 
 					Derived& operator*()
@@ -87,7 +87,7 @@ namespace oly
 						if (issuer)
 							return static_cast<Derived&>(*issuer);
 						else
-							throw Error(ErrorCode::NULL_POINTER);
+							throw Error(ErrorCode::NullPointer);
 					}
 
 					const Derived* operator->() const

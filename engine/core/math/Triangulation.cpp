@@ -384,7 +384,7 @@ namespace oly::math
 		} while (indexer != data.head_polygon.lock());
 
 		if (!data.head_ear.lock())
-			throw Error(ErrorCode::TRIANGULATION);
+			throw Error(ErrorCode::Triangulation);
 
 		// remove ears and form faces
 		if (ear_cycle == 0)

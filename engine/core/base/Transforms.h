@@ -1,12 +1,12 @@
 #pragma once
 
-#include <unordered_set>
-
+#include "external/TOML.h"
 #include "external/GLM.h"
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
-#include "core/containers/Polymorphic.h"
+#include "core/types/Polymorphic.h"
+#include "core/types/Singleton.h"
 
 namespace oly
 {
@@ -58,6 +58,8 @@ namespace oly
 		{
 			return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
 		}
+
+		static Transform2D load(TOMLNode node);
 	};
 
 	struct TransformModifier2D
@@ -71,20 +73,18 @@ namespace oly
 
 	namespace internal
 	{
-		class Transformer2DRegistry
+		class Transformer2DRegistry final : public Singleton<Transformer2DRegistry>
 		{
 			typedef glm::uint Index;
 
 			oly::SoftIDGenerator<Index> id_generator;
 			static const Index NULL_INDEX = Index(-1);
 
+			friend class Singleton<Transformer2DRegistry>;
 			Transformer2DRegistry()
 				: id_generator(0, nmax<Index>() - 1)
 			{
 			}
-
-			Transformer2DRegistry(const Transformer2DRegistry&) = delete;
-			Transformer2DRegistry(Transformer2DRegistry&&) = delete;
 
 			std::vector<Transformer2D*> transformers;
 			std::vector<Index> parent;
@@ -92,8 +92,6 @@ namespace oly
 			std::vector<std::vector<Index>> children;
 
 		public:
-			static Transformer2DRegistry& instance() { static Transformer2DRegistry reg; return reg; }
-
 			class Handle
 			{
 				friend class Transformer2D;
@@ -173,6 +171,8 @@ namespace oly
 		const Transform2D& get_local() const { return local; }
 		Transform2D& set_local() { post_set(); return local; }
 
+		UnitVector2D forward() const;
+
 		Polymorphic<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
 		template<PolymorphicBaseOf<TransformModifier2D> T>
 		const T& get_modifier() const { return dynamic_cast<const T&>(*modifier); }
@@ -180,6 +180,9 @@ namespace oly
 		T& ref_modifier() { post_set(); return dynamic_cast<T&>(*modifier); }
 
 		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
+		void attach_child(Transformer2D& child) const { handle.attach_child(child); }
+
+		static Transformer2D load(TOMLNode node);
 	};
 
 	struct FundamentalTransformModifier2D : public TransformModifier2D

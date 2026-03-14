@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/util/Time.h"
+#include "core/context/TickService.h"
 
 #include <vector>
 #include <unordered_set>
@@ -8,34 +9,26 @@
 
 namespace oly
 {
-	namespace internal
-	{
-		class TimerRegistry;
-	}
-
 	enum class TimeMode : char
 	{
-		PROCESSED,
-		REAL
+		Processed,
+		Real
 	};
 
-	class StateTimer
+	class StateTimer : public ITickService
 	{
-		friend class internal::TimerRegistry;
-
 		std::vector<float> cumulative_intervals;
 		float total_length = 0.0f;
 		mutable float elapsed = 0.0f;
 		bool one_shot = false;
 		mutable bool playing = true;
-		TimeMode mode = TimeMode::PROCESSED;
+		TimeMode mode = TimeMode::Processed;
 		mutable GLuint _state = 0;
 
 	public:
-		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::PROCESSED);
-		~StateTimer();
+		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
+		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
+		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
 		
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }
@@ -46,6 +39,8 @@ namespace oly
 		void poll() const;
 
 	public:
+		void on_tick() override { poll(); }
+
 		struct State
 		{
 			GLuint index;
@@ -55,10 +50,8 @@ namespace oly
 		State state() const;
 	};
 
-	class CallbackTimer
+	class CallbackTimer : public ITickService
 	{
-		friend class internal::TimerRegistry;
-
 	public:
 		using Callback = std::function<void(GLuint)>;
 
@@ -71,14 +64,13 @@ namespace oly
 		bool one_shot = false;
 		mutable bool playing = true;
 		bool continuous;
-		TimeMode mode = TimeMode::PROCESSED;
+		TimeMode mode = TimeMode::Processed;
 		mutable GLuint _state = 0;
 
 	public:
-		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::PROCESSED);
-		~CallbackTimer();
+		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
+		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
+		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
 
 		float elapsed_time() const { return elapsed; }
 		void pause() { playing = false; }
@@ -87,30 +79,8 @@ namespace oly
 
 	private:
 		void poll() const;
+
+	public:
+		void on_tick() override { poll(); }
 	};
-
-	namespace internal
-	{
-		class TimerRegistry
-		{
-			friend class StateTimer;
-			std::unordered_set<const StateTimer*> state_timers;
-			friend class CallbackTimer;
-			std::unordered_set<const CallbackTimer*> callback_timers;
-
-			TimerRegistry() = default;
-			TimerRegistry(const TimerRegistry&) = delete;
-			TimerRegistry(TimerRegistry&&) = delete;
-			~TimerRegistry() = default;
-
-		public:
-			static TimerRegistry& instance()
-			{
-				static TimerRegistry registry;
-				return registry;
-			}
-
-			void poll_all() const;
-		};
-	}
 }

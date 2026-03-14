@@ -5,6 +5,7 @@
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/Tags.h"
 #include "graphics/Camera.h"
+#include "graphics/backend/basic/Shader.h"
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
@@ -14,36 +15,22 @@ namespace oly::rendering
 {
 	namespace internal
 	{
-		class SpriteBatch;
-
-		class SpriteBatchRegistry
-		{
-			friend class SpriteBatch;
-			std::unordered_set<SpriteBatch*> batches;
-
-			SpriteBatchRegistry() = default;
-			SpriteBatchRegistry(const SpriteBatchRegistry&) = delete;
-			SpriteBatchRegistry(SpriteBatchRegistry&&) = delete;
-
-		public:
-			void update_texture_handle(const graphics::BindlessTextureRef& texture);
-
-			static SpriteBatchRegistry& instance() { static SpriteBatchRegistry reg; return reg; }
-		};
+		extern void update_texture_handle(const graphics::BindlessTextureRef& texture);
 
 		class SpriteReference;
 
-		class SpriteBatch : public oly::internal::Issuer<SpriteBatch>
+		class SpriteBatch : public AutoRegistrable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
 		{
 			friend class SpriteReference;
 
 			graphics::VertexArray vao;
 			graphics::PersistentEBO<6> ebo;
+			SmartReference<graphics::Shader> shader_ref;
 			GLuint shader;
 
 			struct
 			{
-				GLuint projection, modulation, time;
+				GLuint projection, invariant_projection, modulation, time;
 			} shader_locations;
 
 			struct TexData
@@ -52,15 +39,18 @@ namespace oly::rendering
 				glm::vec2 dimensions = {};
 			};
 
-			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_data_ssbo;
+			graphics::LightweightSSBO<graphics::Mutability::Mutable> tex_data_ssbo;
 
 			struct QuadInfo
 			{
+				static const GLushort GLYPH_FLAG = 1;
+				static const GLushort CAM_INV_FLAG = 2;
+
 				GLushort tex_slot = 0;
 				GLushort tex_coord_slot = 0;
 				GLushort color_slot = 0;
 				GLushort frame_slot = 0;
-				GLushort is_text_glyph = 0;
+				GLushort flags = 0;
 				GLushort mod_tex_slot = 0;
 				GLushort mod_tex_coord_slot = 0;
 			};
@@ -75,7 +65,7 @@ namespace oly::rendering
 			const QuadInfo& get_quad_info(GLuint vb_pos) const;
 			QuadInfo& set_quad_info(GLuint vb_pos);
 
-			graphics::LightweightSSBO<graphics::Mutability::MUTABLE> tex_coords_ssbo;
+			graphics::LightweightSSBO<graphics::Mutability::Mutable> tex_coords_ssbo;
 
 			struct AnimHash
 			{
@@ -107,7 +97,7 @@ namespace oly::rendering
 		private:
 			struct UBO
 			{
-				graphics::LightweightUBO<graphics::Mutability::MUTABLE> modulation, anim;
+				graphics::LightweightUBO<graphics::Mutability::Mutable> modulation, anim;
 
 				UBO(UBOCapacity capacity)
 					: modulation(capacity.modulations() * sizeof(glm::vec4), sizeof(glm::vec4)),
@@ -126,7 +116,6 @@ namespace oly::rendering
 			~SpriteBatch();
 
 			void render() const;
-			void render(const glm::mat3& projection) const;
 
 		private:
 			SoftIDGenerator<GLuint> id_generator;
@@ -163,6 +152,7 @@ namespace oly::rendering
 			void set_modulation(GLuint vb_pos, glm::vec4 modulation);
 			void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
 			void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
+			void set_camera_invariant(GLuint vb_pos, bool is_camera_invariant);
 			void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
 			void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
 
@@ -171,9 +161,12 @@ namespace oly::rendering
 			glm::vec4 get_modulation(GLuint vb_pos) const;
 			graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
 			bool is_text_glyph(GLuint vb_pos) const;
+			bool is_camera_invariant(GLuint vb_pos) const;
 			graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
 			math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
 
+			void update_texture_slot(GLuint vb_pos, GLushort& tex_slot, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+		
 		public:
 			void update_texture_handle(const graphics::BindlessTextureRef& texture);
 		};
@@ -211,6 +204,7 @@ namespace oly::rendering
 			void set_modulation(glm::vec4 modulation) const;
 			void set_frame_format(const graphics::AnimFrameFormat& anim) const;
 			void set_text_glyph(bool is_text_glyph) const;
+			void set_camera_invariant(bool is_camera_invariant) const;
 			void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
 			void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
@@ -223,6 +217,7 @@ namespace oly::rendering
 			glm::vec4 get_modulation() const;
 			graphics::AnimFrameFormat get_frame_format() const;
 			bool is_text_glyph() const;
+			bool is_camera_invariant() const;
 			graphics::BindlessTextureRef get_mod_texture() const;
 			graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
 			math::UVRect get_mod_tex_coords() const;

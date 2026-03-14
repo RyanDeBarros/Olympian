@@ -1,0 +1,59 @@
+#version 450 core
+
+layout(local_size_x = /*$X_THREADS*/) in;
+
+uniform float uDeltaTime;
+uniform uint uInPrimCount;
+
+struct Particle {
+	float timeElapsed;
+	float lifetime;
+	uint attached;
+	mat3 localTransform;
+	vec4 color;
+	vec2 velocity;
+};
+
+layout(std430, binding = 0) readonly buffer ParticlesIn {
+    Particle particlesIn[];
+};
+
+layout(std430, binding = 1) buffer ParticlesOut {
+    Particle particlesOut[];
+};
+
+struct DrawArraysIndirectCommand {
+	uint count;
+	uint primCount;
+	uint first;
+	uint baseVertex;
+};
+
+layout(std430, binding = 2) buffer DrawCommand {
+	DrawArraysIndirectCommand cmd;
+};
+
+struct ParticleSystemData {
+	uint maxTimeElapsedBits;
+};
+
+layout(std430, binding = 3) buffer PSData {
+	ParticleSystemData particleSystemData;
+};
+
+void main() {
+	uint id = gl_GlobalInvocationID.x;
+	if (id >= uInPrimCount) return;
+
+	Particle p = particlesIn[id];
+	p.timeElapsed += uDeltaTime;
+	if (p.timeElapsed < p.lifetime) {
+		atomicMax(particleSystemData.maxTimeElapsedBits, floatBitsToUint(p.timeElapsed));
+		
+		vec2 position = p.localTransform[2].xy;
+		p.localTransform[2].xy = position + p.velocity * uDeltaTime;
+
+		uint dst = atomicAdd(cmd.primCount, 1);
+		particlesOut[dst] = p;
+	}
+}

@@ -24,6 +24,9 @@ namespace oly::rendering
 		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
 		void set_batch(SpriteBatch& batch);
 
+		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }
+		bool is_camera_invariant() const { return ref.is_camera_invariant(); }
+
 		void draw() const;
 
 		void set_glyph(const FontAtlas& atlas, const FontGlyph& glyph, glm::vec2 pos, glm::vec2 scale);

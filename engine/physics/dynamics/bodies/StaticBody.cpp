@@ -39,7 +39,7 @@ namespace oly::physics
 
 	void StaticBody::handle_overlaps(const col2d::OverlapEventData& data) const
 	{
-		if (data.phase & (col2d::Phase::STARTED | col2d::Phase::ONGOING))
+		if (data.phase & (col2d::Phase::Started | col2d::Phase::Ongoing))
 			if (const RigidBody* other = rigid_body(data.passive_collider))
 				if (other != this)
 					dynamics.add_collision({}, {}, dynamics_of(*other));

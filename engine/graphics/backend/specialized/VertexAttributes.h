@@ -5,14 +5,21 @@
 
 namespace oly::graphics
 {
-	template<typename T>
+	enum class VertexAttributeType
+	{
+		Float,
+		Int,
+		Double
+	};
+
+	template<VertexAttributeType T>
 	struct VertexAttribute
 	{
 		static_assert(deferred_false<T>);
 	};
 
 	template<>
-	struct VertexAttribute<float>
+	struct VertexAttribute<VertexAttributeType::Float>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -39,7 +46,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	struct VertexAttribute<int>
+	struct VertexAttribute<VertexAttributeType::Int>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -65,7 +72,7 @@ namespace oly::graphics
 	};
 
 	template<>
-	struct VertexAttribute<double>
+	struct VertexAttribute<VertexAttributeType::Double>
 	{
 		GLuint index = 0;
 		GLint size = 0;
@@ -89,5 +96,5 @@ namespace oly::graphics
 		}
 	};
 
-	typedef Variant<VertexAttribute<float>, VertexAttribute<int>, VertexAttribute<double>> VertexAttributeVariant;
+	typedef Variant<VertexAttribute<VertexAttributeType::Float>, VertexAttribute<VertexAttributeType::Int>, VertexAttribute<VertexAttributeType::Double>> VertexAttributeVariant;
 }

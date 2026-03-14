@@ -31,6 +31,8 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
+		void set_camera_invariant(bool is_camera_invariant) const;
+
 		void draw() const;
 
 		auto get_batch() const { return lock(); }
@@ -50,6 +52,7 @@ namespace oly::rendering
 		std::vector<TileMapLayer> layers;
 			
 		Transformer2D transformer;
+		bool camera_invariant = false;
 
 	public:
 		const TileMapLayer& layer(size_t i) const { return layers[i]; }
@@ -58,13 +61,19 @@ namespace oly::rendering
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::ATTACH_ONLY, .modifier = exposure::modifier::FULL }>
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::AttachOnly, .modifier = exposure::modifier::Full }>
 			set_transformer() { return transformer; }
 
 		void draw() const;
 
+		void set_camera_invariant(bool is_camera_invariant);
+		bool is_camera_invariant() const;
+
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);
+
+		static TileMap load(TOMLNode node);
+		static TileMap load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<TileMap> TileMapRef;

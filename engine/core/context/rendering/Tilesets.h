@@ -10,11 +10,6 @@ namespace oly::rendering
 
 namespace oly::context
 {
-	namespace internal
-	{
-		extern void terminate_tilesets();
-	}
-
 	extern SmartReference<rendering::TileSet> load_tileset(const ResourcePath& file);
 	extern void free_tileset(const ResourcePath& file);
 }

@@ -55,7 +55,7 @@ namespace oly::col2d
 		Transform2D& set_local() { return internal::lut_transformer(obj).set_local(); }
 
 		Transformer2DConstExposure get_transformer() const { return internal::lut_transformer(obj); }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }>
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }>
 			set_transformer() { return internal::lut_transformer(obj); }
 
 		Layer layer() const { return internal::lut_layer(obj); }
@@ -80,9 +80,10 @@ namespace oly::col2d
 		OverlapResult circle_cast_hits(const CircleCast& cast) const { return internal::lut_circle_cast_hits(obj, cast); }
 		OverlapResult rect_cast_hits(const RectCast& cast) const { return internal::lut_rect_cast_hits(obj, cast); }
 
-		debug::CollisionView collision_view(debug::CollisionLayer& layer, glm::vec4 color) const { return internal::lut_collision_view(layer, obj, color); }
-		void update_view(debug::CollisionView& view, glm::vec4 color, size_t view_index = 0) const { internal::lut_update_view(view, obj, color, view_index); }
-		void update_view(debug::CollisionView& view, size_t view_index = 0) const { internal::lut_update_view_no_color(view, obj, view_index); }
+		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const
+			{ return internal::lut_create_debug_overlay(layer, obj, color, paint_options); }
+		void modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index = 0) const
+			{ internal::lut_modify_debug_overlay(overlay, obj, shape_index); }
 
 	private:
 		internal::ColliderObjectConstVariant get_object_variant() const { return internal::lut_variant(obj); }

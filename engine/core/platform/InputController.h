@@ -28,22 +28,22 @@ namespace oly
 		void bind(input::SignalID signal, ConstHandler handler) const;
 		void unbind(input::SignalID signal) const;
 
-		void bind(const std::string& signal, Handler handler);
-		void bind(const std::string& signal, ConstHandler handler) const;
-		void unbind(const std::string& signal) const;
+		void bind(const StringParam& signal, Handler handler);
+		void bind(const StringParam& signal, ConstHandler handler) const;
+		void unbind(const StringParam& signal) const;
 
 		template<std::derived_from<InputController> Controller>
-		void bind(const std::string& signal, bool(Controller::* handler)(input::Signal)) { bind(signal, static_cast<Handler>(handler)); }
+		void bind(const StringParam& signal, bool(Controller::* handler)(input::Signal)) { bind(signal, static_cast<Handler>(handler)); }
 		template<std::derived_from<InputController> Controller>
-		void bind(const std::string& signal, bool(Controller::* handler)(input::Signal) const) const { bind(signal, static_cast<ConstHandler>(handler)); }
+		void bind(const StringParam& signal, bool(Controller::* handler)(input::Signal) const) const { bind(signal, static_cast<ConstHandler>(handler)); }
 
-		void bind_mapping(const std::string& mapping, Handler handler);
-		void bind_mapping(const std::string& mapping, ConstHandler handler) const;
-		void unbind_mapping(const std::string& mapping) const;
+		void bind_mapping(const StringParam& mapping, Handler handler);
+		void bind_mapping(const StringParam& mapping, ConstHandler handler) const;
+		void unbind_mapping(const StringParam& mapping) const;
 
 		template<std::derived_from<InputController> Controller>
-		void bind_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal)) { bind_mapping(mapping, static_cast<Handler>(handler)); }
+		void bind_mapping(const StringParam& mapping, bool(Controller::* handler)(input::Signal)) { bind_mapping(mapping, static_cast<Handler>(handler)); }
 		template<std::derived_from<InputController> Controller>
-		void bind_mapping(const std::string& mapping, bool(Controller::* handler)(input::Signal) const) const { bind_mapping(mapping, static_cast<ConstHandler>(handler)); }
+		void bind_mapping(const StringParam& mapping, bool(Controller::* handler)(input::Signal) const) const { bind_mapping(mapping, static_cast<ConstHandler>(handler)); }
 	};
 }

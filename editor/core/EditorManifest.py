@@ -95,7 +95,7 @@ class EditorManifest:
 		(src_folder / "ProjectContext.h").write_text(self.project_context_h)
 		(src_folder / "ProjectContext.cpp").write_text(self.project_context_cpp)
 
-		# TODO v7 create project CMakeLists.txt, LICENSE
+		# TODO v9 create project CMakeLists.txt, LICENSE
 
 		if len(self.project_id_stack()) == 0:
 			if 'project next id' not in self.toml:

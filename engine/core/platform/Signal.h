@@ -3,6 +3,7 @@
 #include "external/GLM.h"
 #include "core/base/Errors.h"
 #include "core/types/DeferredFalse.h"
+#include "core/util/StringParam.h"
 
 namespace oly::input
 {
@@ -11,25 +12,25 @@ namespace oly::input
 	class SignalTable
 	{
 		SignalID next = 1;
-		std::unordered_map<std::string, SignalID> table;
+		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
 
 	public:
-		SignalID get(const std::string& name)
+		SignalID get(const StringParam& name)
 		{
 			auto it = table.find(name);
 			if (it != table.end())
 				return it->second;
-			return table.emplace(name, next++).first->second;
+			return table.emplace(name.transfer(), next++).first->second;
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>> SignalMappingTable;
+	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalMappingTable;
 
 	enum class Phase
 	{
-		STARTED,
-		COMPLETED,
-		ONGOING
+		Started,
+		Completed,
+		Ongoing
 	};
 
 	struct Signal
@@ -38,17 +39,17 @@ namespace oly::input
 
 		enum class Type
 		{
-			BOOL,
-			AXIS1D,
-			AXIS2D,
-			AXIS3D
+			Boolean,
+			Axis1D,
+			Axis2D,
+			Axis3D
 		};
 
 		enum Source
 		{
-			KEYBOARD = -2,
-			MOUSE = -1,
-			JOYSTICK_BASE = 0,
+			Keyboard = -2,
+			Mouse = -1,
+			JoystickBase = 0,
 		};
 
 	private:
@@ -64,10 +65,10 @@ namespace oly::input
 		};
 
 	public:
-		Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::BOOL), bool_value(v), source(source) {}
-		Signal(Phase phase, float v, Source source) : phase(phase), type(Type::AXIS1D), axis_1d_value(v), source(source) {}
-		Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::AXIS2D), axis_2d_value(v), source(source) {}
-		Signal(Phase phase, glm::vec3 v, Source source) : phase(phase), type(Type::AXIS3D), axis_3d_value(v), source(source) {}
+		Signal(Phase phase, bool v, Source source) : phase(phase), type(Type::Boolean), bool_value(v), source(source) {}
+		Signal(Phase phase, float v, Source source) : phase(phase), type(Type::Axis1D), axis_1d_value(v), source(source) {}
+		Signal(Phase phase, glm::vec2 v, Source source) : phase(phase), type(Type::Axis2D), axis_2d_value(v), source(source) {}
+		Signal(Phase phase, glm::vec3 v, Source source) : phase(phase), type(Type::Axis3D), axis_3d_value(v), source(source) {}
 
 		template<typename T>
 		T get() const
@@ -78,40 +79,40 @@ namespace oly::input
 		template<>
 		bool get<bool>() const
 		{
-			if (type != Type::BOOL)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+			if (type != Type::Boolean)
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return bool_value;
 		}
 
 		template<>
 		float get<float>() const
 		{
-			if (type != Type::AXIS1D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+			if (type != Type::Axis1D)
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_1d_value;
 		}
 
 		template<>
 		glm::vec2 get<glm::vec2>() const
 		{
-			if (type != Type::AXIS2D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+			if (type != Type::Axis2D)
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_2d_value;
 		}
 
 		template<>
 		glm::vec3 get<glm::vec3>() const
 		{
-			if (type != Type::AXIS3D)
-				throw Error(ErrorCode::INCOMPATIBLE_SIGNAL_TYPE);
+			if (type != Type::Axis3D)
+				throw Error(ErrorCode::IncompatibleSignalType);
 			return axis_3d_value;
 		}
 
-		bool from_controller() const { return source >= Source::JOYSTICK_BASE; }
+		bool from_controller() const { return source >= Source::JoystickBase; }
 		int controller_id() const
 		{
-			if (source < Source::JOYSTICK_BASE)
-				throw Error(ErrorCode::INVALID_CONTROLLER_ID);
+			if (source < Source::JoystickBase)
+				throw Error(ErrorCode::InvalidControllerID);
 			return source;
 		}
 	};

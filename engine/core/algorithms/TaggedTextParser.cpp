@@ -50,7 +50,7 @@ namespace oly::algo
                         if (!tag_stack.empty() && tag_stack.top().begins_with(tag))
                             tag_stack.pop();
                         else
-                            OLY_LOG_WARNING(true, "ALGO") << LOG.source_info.full_source() << "Unmatched closing tag </" << tag << ">" << LOG.nl;
+                            _OLY_ENGINE_LOG_WARNING("ALGO") << "Unmatched closing tag </" << tag << ">" << LOG.nl;
                     }
                     else
                         tag_stack.push(tag);
@@ -68,6 +68,6 @@ namespace oly::algo
             groups.push_back({ buffer, tag_stack });
         
         if (!tag_stack.empty())
-            OLY_LOG_WARNING(true, "ALGO") << LOG.source_info.full_source() << "Not all tags were closed by the end of input string" << LOG.nl;
+            _OLY_ENGINE_LOG_WARNING("ALGO") << "Not all tags were closed by the end of input string" << LOG.nl;
 	}
 }

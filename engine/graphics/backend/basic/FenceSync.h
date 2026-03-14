@@ -33,7 +33,7 @@ namespace oly::graphics
 			else if (result == GL_TIMEOUT_EXPIRED)
 				return false;
 			else
-				throw Error(ErrorCode::WAIT_FAILED);
+				throw Error(ErrorCode::WaitFailed);
 		}
 
 		bool signaled() const

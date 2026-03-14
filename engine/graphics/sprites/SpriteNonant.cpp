@@ -1,6 +1,7 @@
 #include "SpriteNonant.h"
 
 #include "core/context/rendering/Textures.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -33,10 +34,10 @@ namespace oly::rendering
 			for (unsigned char y = 0; y < 3; ++y)
 			{
 				sprite(x, y).transformer.attach_parent(&transformer);
-				PivotTransformModifier2D modifier;
-				modifier.pivot.x = -0.5f * x + 1.0f;
-				modifier.pivot.y = -0.5f * y + 1.0f;
-				sprite(x, y).transformer.set_modifier() = Polymorphic<PivotTransformModifier2D>(std::move(modifier));
+				Polymorphic<PivotTransformModifier2D> modifier;
+				modifier->pivot.x = -0.5f * x + 1.0f;
+				modifier->pivot.y = -0.5f * y + 1.0f;
+				sprite(x, y).transformer.set_modifier() = std::move(modifier);
 			}
 	}
 
@@ -160,6 +161,13 @@ namespace oly::rendering
 				sprite(x, y).set_frame_format(anim);
 	}
 
+	void SpriteNonant::set_camera_invariant(bool is_camera_invariant) const
+	{
+		for (unsigned char x = 0; x < 3; ++x)
+			for (unsigned char y = 0; y < 3; ++y)
+				sprite(x, y).set_camera_invariant(is_camera_invariant);
+	}
+
 	void SpriteNonant::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
@@ -215,6 +223,11 @@ namespace oly::rendering
 	graphics::AnimFrameFormat SpriteNonant::get_frame_format() const
 	{
 		return sprite(0, 0).get_frame_format();
+	}
+
+	bool SpriteNonant::is_camera_invariant() const
+	{
+		return sprite(0, 0).is_camera_invariant();
 	}
 
 	graphics::BindlessTextureRef SpriteNonant::get_mod_texture() const
@@ -333,5 +346,37 @@ namespace oly::rendering
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
 				sprite(x, y).set_mod_tex_coords({ .x1 = xuvs[x], .x2 = xuvs[x + 1], .y1 = yuvs[y], .y2 = yuvs[y + 1] });
+	}
+
+	static SpriteNonant load_sprite_nonant(TOMLNode node, const DebugTrace* trace)
+	{
+		if (!node)
+			return {};
+
+		SpriteNonant nonant;
+
+		glm::vec2 nsize{};
+		io::parse_vec(node["nsize"], nsize);
+		math::Padding offsets = math::Padding::load(node["offsets"]);
+
+		if (auto sprite = node["sprite"])
+			nonant.setup_nonant(trace ? Sprite::load(sprite, *trace) : Sprite::load(sprite), nsize, offsets);
+		else
+			nonant.setup_nonant(nsize, offsets);
+
+		nonant.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
+		return nonant;
+	}
+
+	SpriteNonant SpriteNonant::load(TOMLNode node)
+	{
+		return load_sprite_nonant(node, nullptr);
+	}
+
+	SpriteNonant SpriteNonant::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::SpriteNonant::load()");
+		return load_sprite_nonant(node, &trace);
 	}
 }

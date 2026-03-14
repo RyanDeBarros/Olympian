@@ -1,0 +1,22 @@
+#pragma once
+
+#include "external/TOML.h"
+#include "core/util/ResourcePath.h"
+
+#include <unordered_map>
+
+namespace oly::io
+{
+	struct MetaMap
+	{
+		std::unordered_map<std::string, std::string> map;
+
+		std::optional<std::string> get_type() const;
+		bool has_type(const std::string_view type) const;
+	};
+
+	struct MetaSplitter
+	{
+		static MetaMap meta(const ResourcePath& file);
+	};
+}

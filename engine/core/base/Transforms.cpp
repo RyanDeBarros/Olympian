@@ -1,7 +1,21 @@
 #include "Transforms.h"
 
+#include "core/util/Loader.h"
+
 namespace oly
 {
+	Transform2D Transform2D::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		Transform2D transform;
+		io::parse_vec(node["position"], transform.position);
+		io::parse_float(node["rotation"], transform.rotation);
+		io::parse_vec(node["scale"], transform.scale);
+		return transform;
+	}
+
 	void internal::Transformer2DRegistry::Handle::init(Transformer2D* transformer)
 	{
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
@@ -95,7 +109,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::unparent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];
@@ -114,7 +128,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::clear_children() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		std::vector<Index>& children = registry.children[id];
@@ -129,7 +143,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_parent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		Index parent = registry.parent[id];
@@ -139,7 +153,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::set_parent(Index new_parent) const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];
@@ -171,7 +185,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::children_post_set_internal() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		for (Index child : registry.children[id])
@@ -181,7 +195,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::children_post_set_external() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		for (Index child : registry.children[id])
@@ -191,7 +205,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_top_level_parent() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		Transformer2D* top = get_parent();
 		if (!top)
@@ -219,7 +233,7 @@ namespace oly
 	internal::Transformer2DRegistry::Index internal::Transformer2DRegistry::Handle::children_count() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		return (Index)internal::Transformer2DRegistry::instance().children[id].size();
 	}
@@ -227,7 +241,7 @@ namespace oly
 	Transformer2D* internal::Transformer2DRegistry::Handle::get_child(Index index) const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		return registry.transformers[registry.children[id][index]];
@@ -236,7 +250,7 @@ namespace oly
 	void internal::Transformer2DRegistry::Handle::break_from_chain() const
 	{
 		if (id == NULL_INDEX)
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 
 		internal::Transformer2DRegistry& registry = internal::Transformer2DRegistry::instance();
 		const Index parent = registry.parent[id];
@@ -357,6 +371,22 @@ namespace oly
 		bool was_dirty = _dirty_external;
 		_dirty_external = false;
 		return was_dirty;
+	}
+
+	UnitVector2D Transformer2D::forward() const
+	{
+		return UnitVector2D(transform_direction(global(), UnitVector2D::Right));
+	}
+
+	Transformer2D Transformer2D::load(TOMLNode node)
+	{
+		if (!node)
+			return {};
+
+		Transformer2D transformer;
+		transformer.set_local() = Transform2D::load(node);
+		transformer.set_modifier() = io::load_transform_modifier_2d(node["modifier"]);
+		return transformer;
 	}
 
 	void PivotTransformModifier2D::operator()(glm::mat3& global) const

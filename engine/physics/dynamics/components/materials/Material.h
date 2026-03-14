@@ -7,17 +7,17 @@ namespace oly::physics
 {
 	enum class FrictionType
 	{
-		STATIC,
-		KINETIC,
-		ROLLING
+		Static,
+		Kinetic,
+		Rolling
 	};
 
 	enum class FactorBlendOp
 	{
-		MINIMUM,
-		GEOMETRIC_MEAN,
-		ARITHMETIC_MEAN,
-		ACTIVE
+		Minimum,
+		GeometricMean,
+		ArithmeticMean,
+		Active
 	};
 
 	struct Restitution
@@ -27,7 +27,7 @@ namespace oly::physics
 		BoundedUnitInterval _sqrt;
 
 	public:
-		FactorBlendOp mode = FactorBlendOp::MINIMUM;
+		FactorBlendOp mode = FactorBlendOp::Minimum;
 
 		Restitution(BoundedUnitInterval v = 0.3f) : _value(v), _sqrt(glm::sqrt(_value)) {}
 
@@ -55,9 +55,9 @@ namespace oly::physics
 		PositiveFloat _sqrt_rolling_friction = glm::sqrt(_rolling_friction);
 
 	public:
-		FactorBlendOp static_mode = FactorBlendOp::GEOMETRIC_MEAN;
-		FactorBlendOp kinetic_mode = FactorBlendOp::GEOMETRIC_MEAN;
-		FactorBlendOp rolling_mode = FactorBlendOp::GEOMETRIC_MEAN;
+		FactorBlendOp static_mode = FactorBlendOp::GeometricMean;
+		FactorBlendOp kinetic_mode = FactorBlendOp::GeometricMean;
+		FactorBlendOp rolling_mode = FactorBlendOp::GeometricMean;
 
 		float static_coeff() const { return _static_friction; }
 		float static_sqrt() const { return _sqrt_static_friction; }
@@ -74,7 +74,7 @@ namespace oly::physics
 		float friction_with(Friction other, FrictionType type) const;
 	};
 
-	// TODO v7 density
+	// TODO v8 density
 	struct Material
 	{
 		Restitution restitution;
@@ -82,5 +82,5 @@ namespace oly::physics
 	};
 
 	typedef SmartReference<Material> MaterialRef;
-	// TODO v6 MaterialRegistry for Material assets. + SubMaterial assets. + every other ___Ref asset.
+	// TODO v9 Material assets. + SubMaterial assets. + every other ___Ref asset.
 }

@@ -7,7 +7,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void terminate_textures();
+		extern void init_textures(TOMLNode);
 	}
 
 	extern graphics::NSVGContext& nsvg_context();
@@ -20,21 +20,21 @@ namespace oly::context
 
 		enum class ImageStorageOverride
 		{
-			DEFAULT,
-			KEEP,
-			DISCARD
+			Default,
+			Keep,
+			Discard
 		};
 
 		struct LoadParams
 		{
-			ImageStorageOverride storage = ImageStorageOverride::DEFAULT;
+			ImageStorageOverride storage = ImageStorageOverride::Default;
 			bool set_and_use = true;
 		};
 
 		struct SVGLoadParams
 		{
-			ImageStorageOverride abstract_storage = ImageStorageOverride::DEFAULT;
-			ImageStorageOverride image_storage = ImageStorageOverride::DEFAULT;
+			ImageStorageOverride abstract_storage = ImageStorageOverride::Default;
+			ImageStorageOverride image_storage = ImageStorageOverride::Default;
 			bool set_and_use = true;
 		};
 

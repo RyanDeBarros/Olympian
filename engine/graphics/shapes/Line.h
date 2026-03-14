@@ -20,6 +20,9 @@ namespace oly::rendering
 		void set_batch(Unbatched) { poly.set_batch(UNBATCHED); }
 		void set_batch(PolygonBatch& batch) { poly.set_batch(batch); }
 
+		void set_camera_invariant(bool camera_invariant) const { poly.set_camera_invariant(camera_invariant); }
+		bool is_camera_invariant() const { return poly.is_camera_invariant(); }
+
 		void draw() const;
 
 		glm::vec2 get_start() const { return start; }

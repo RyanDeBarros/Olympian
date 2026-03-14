@@ -2,8 +2,7 @@
 
 #include "physics/collision/methods/CollisionInfo.h"
 #include "physics/collision/methods/SpecialCasting.h"
-#include "physics/collision/debugging/CollisionView.h"
-#include "core/math/Shapes.h"
+#include "physics/collision/debugging/DebugOverlay.h"
 
 namespace oly::col2d::internal
 {
@@ -22,9 +21,8 @@ namespace oly::col2d::internal
 
 	extern math::Rect2D lut_flush(const ColliderObject&);
 	extern bool lut_is_dirty(const ColliderObject&);
-	extern debug::CollisionView lut_collision_view(debug::CollisionLayer& layer, const ColliderObject&, glm::vec4);
-	extern void lut_update_view(debug::CollisionView&, const ColliderObject&, glm::vec4, size_t);
-	extern void lut_update_view_no_color(debug::CollisionView&, const ColliderObject&, size_t);
+	extern debug::DebugOverlay lut_create_debug_overlay(debug::DebugOverlayLayer&, const ColliderObject&, glm::vec4, debug::DebugOverlay::PaintOptions = {});
+	extern void lut_modify_debug_overlay(debug::DebugOverlay&, const ColliderObject&, size_t);
 
 	extern const Transformer2D& lut_transformer(const ColliderObject&);
 	extern Transformer2D& lut_transformer(ColliderObject&);

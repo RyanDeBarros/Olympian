@@ -51,36 +51,36 @@ namespace oly::graphics
 		const Struct& operator[](GLuint i) const
 		{
 			if (!accessible)
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (i >= size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<const Struct*>(data)[i];
 		}
 
 		Struct& operator[](GLuint i)
 		{
 			if (!accessible)
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (i >= size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<Struct*>(data)[i];
 		}
 
 		const Struct* arr(GLuint offset, GLuint length) const
 		{
 			if (!accessible)
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (offset + length > size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<const Struct*>(data) + offset;
 		}
 
 		Struct* arr(GLuint offset, GLuint length)
 		{
 			if (!accessible)
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (offset + length > size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<Struct*>(data) + offset;
 		}
 
@@ -93,7 +93,7 @@ namespace oly::graphics
 		void grow(GLuint new_size)
 		{
 			if (!accessible)
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (new_size <= size)
 				return;
 
@@ -113,7 +113,7 @@ namespace oly::graphics
 			if (offset + length > size)
 			{
 				if (offset >= size)
-					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+					throw Error(ErrorCode::IndexOutOfRange);
 				else
 					length = size - 1 - offset;
 			}
@@ -140,13 +140,16 @@ namespace oly::graphics
 					accessible = true;
 					return;
 				}
-				// TODO v6 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
-				OLY_LOG_DEBUG(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync - attempt (" << i << ")" << LOG.nl;
+				// TODO v8 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
+				_OLY_ENGINE_LOG_DEBUG("GRAPHICS") << "Timeout in persistent buffer sync - attempt (" << i << ")" << LOG.nl;
 			}
 			accessible = false;
-			OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
-			throw Error(ErrorCode::OUT_OF_TIME);
+			_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
+			throw Error(ErrorCode::OutOfTime);
 		}
+
+		void bind_ssbo_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf); }
+		void bind_ubo_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf); }
 	};
 
 	template<typename... Structs>
@@ -198,9 +201,9 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			if (!accessible[n])
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (i >= size[n])
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<const StructAlias<n>*>(data[n])[i];
 		}
 
@@ -209,9 +212,9 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			if (!accessible[n])
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (i >= size[n])
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<StructAlias<n>*>(data[n])[i];
 		}
 
@@ -220,9 +223,9 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			if (!accessible[n])
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (offset + length > size[n])
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<const StructAlias<n>*>(data[n]) + offset;
 		}
 
@@ -231,9 +234,9 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			if (!accessible[n])
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (offset + length > size[n])
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 			return reinterpret_cast<StructAlias<n>*>(data[n]) + offset;
 		}
 
@@ -263,7 +266,7 @@ namespace oly::graphics
 		{
 			static_assert(n < N);
 			if (!accessible[n])
-				throw Error(ErrorCode::INACCESSIBLE);
+				throw Error(ErrorCode::Inaccessible);
 			if (new_size <= size[n])
 				return;
 
@@ -285,7 +288,7 @@ namespace oly::graphics
 			if (offset + length > size[n])
 			{
 				if (offset >= size[n])
-					throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+					throw Error(ErrorCode::IndexOutOfRange);
 				else
 					length = size[n] - 1 - offset;
 			}
@@ -329,12 +332,12 @@ namespace oly::graphics
 					accessible[n] = true;
 					return;
 				}
-				// TODO v6 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
-				OLY_LOG_DEBUG(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync - attempt (" << i << ")" << LOG.nl;
+				// TODO v8 alt-tabbing and otherwise switching window focus causes timeout -> avoid syncing when window is not in focus?
+				_OLY_ENGINE_LOG_DEBUG("GRAPHICS") << "Timeout in persistent buffer sync - attempt (" << i << ")" << LOG.nl;
 			}
 			accessible[n] = false;
-			OLY_LOG_ERROR(true, "GRAPHICS") << LOG.source_info.full_source() << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
-			throw Error(ErrorCode::OUT_OF_TIME);
+			_OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
+			throw Error(ErrorCode::OutOfTime);
 		}
 
 		void post_draw_all() const
@@ -361,6 +364,13 @@ namespace oly::graphics
 				) : 0
 				), ...);
 		}
+
+	public:
+		template<size_t n>
+		void bind_ssbo_base(GLuint index) const { glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, buf[n]); }
+		
+		template<size_t n>
+		void bind_ubo_base(GLuint index) const { glBindBufferBase(GL_UNIFORM_BUFFER, index, buf[n]); }
 	};
 
 	template<typename Struct, internal::PersistentOptions options = internal::PersistentOptions{} >
@@ -386,7 +396,7 @@ namespace oly::graphics
 				}
 				catch (Error e)
 				{
-					if (e.code == ErrorCode::INDEX_OUT_OF_RANGE)
+					if (e.code == ErrorCode::IndexOutOfRange)
 						; // silently ignore
 					else
 						throw e;
@@ -459,7 +469,7 @@ namespace oly::graphics
 				}
 				catch (Error e)
 				{
-					if (e.code == ErrorCode::INDEX_OUT_OF_RANGE)
+					if (e.code == ErrorCode::IndexOutOfRange)
 						; // silently ignore
 					else
 						throw e;

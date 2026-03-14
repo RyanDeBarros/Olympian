@@ -4,14 +4,9 @@
 
 namespace oly::rendering
 {
-	std::optional<FontStyle> FontStyle::from_string(const std::string& str)
+	std::optional<FontStyle> FontStyle::from_string(const StringParam& str)
 	{
-		return from_string(dupl(str));
-	}
-
-	std::optional<FontStyle> FontStyle::from_string(std::string&& str)
-	{
-		algo::to_lower(str);
+		str.to_lower();
 		if (str == "regular")
 			return rendering::FontStyle::REGULAR();
 		else if (str == "bold")
@@ -35,7 +30,7 @@ namespace oly::rendering
 		if (it != styles.end())
 			return it->second;
 		else
-			throw Error(ErrorCode::INVALID_ID);
+			throw Error(ErrorCode::InvalidID);
 	}
 
 	FontFamily::FontRef FontSelection::get() const

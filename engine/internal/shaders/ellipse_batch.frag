@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_NV_gpu_shader5 : enable
 
 layout(location = 0) out vec4 oColor;
 
@@ -8,6 +9,7 @@ struct Dimension {
 	float b;
 	float fill_exp;
 	float border_exp;
+	uint16_t camera_invariant;
 };
 struct ColorGradient {
 	vec4 fill_inner;

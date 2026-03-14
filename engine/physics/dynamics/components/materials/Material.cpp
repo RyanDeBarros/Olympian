@@ -2,65 +2,37 @@
 
 namespace oly::physics
 {
-	float Restitution::restitution_with(Restitution other) const
+	static float factor_blend(FactorBlendOp op, float a, float b, float sqrt_a, float sqrt_b)
 	{
-		switch (mode)
+		switch (op)
 		{
-		case FactorBlendOp::MINIMUM:
-			return std::min(_value, other._value);
-		case FactorBlendOp::ARITHMETIC_MEAN:
-			return 0.5f * (_value + other._value);
-		case FactorBlendOp::GEOMETRIC_MEAN:
-			return _sqrt * other._sqrt;
-		case FactorBlendOp::ACTIVE:
-			return _value;
+		case FactorBlendOp::Minimum:
+			return std::min(a, b);
+		case FactorBlendOp::ArithmeticMean:
+			return 0.5f * (a + b);
+		case FactorBlendOp::GeometricMean:
+			return sqrt_a * sqrt_b;
+		case FactorBlendOp::Active:
+			return a;
 		}
 		return 0.0f;
+	}
+
+	float Restitution::restitution_with(Restitution other) const
+	{
+		return factor_blend(mode, _value, other._value, _sqrt, other._sqrt);
 	}
 
 	float Friction::friction_with(Friction other, FrictionType type) const
 	{
 		switch (type)
 		{
-		case FrictionType::STATIC:
-			switch (static_mode)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_static_friction, other._static_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_static_friction + other._static_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_static_friction * other._sqrt_static_friction;
-			case FactorBlendOp::ACTIVE:
-				return _static_friction;
-			}
-			break;
-		case FrictionType::KINETIC:
-			switch (kinetic_mode)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_kinetic_friction, other._kinetic_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_kinetic_friction + other._kinetic_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_kinetic_friction * other._sqrt_kinetic_friction;
-			case FactorBlendOp::ACTIVE:
-				return _kinetic_friction;
-			}
-			break;
-		case FrictionType::ROLLING:
-			switch (rolling_mode)
-			{
-			case FactorBlendOp::MINIMUM:
-				return std::min(_rolling_friction, other._rolling_friction);
-			case FactorBlendOp::ARITHMETIC_MEAN:
-				return 0.5f * (_rolling_friction + other._rolling_friction);
-			case FactorBlendOp::GEOMETRIC_MEAN:
-				return _sqrt_rolling_friction * other._sqrt_rolling_friction;
-			case FactorBlendOp::ACTIVE:
-				return _rolling_friction;
-			}
-			break;
+		case FrictionType::Static:
+			return factor_blend(static_mode, _static_friction, other._static_friction, _sqrt_static_friction, other._sqrt_static_friction);
+		case FrictionType::Kinetic:
+			return factor_blend(kinetic_mode, _kinetic_friction, other._kinetic_friction, _sqrt_kinetic_friction, other._sqrt_kinetic_friction);
+		case FrictionType::Rolling:
+			return factor_blend(rolling_mode, _rolling_friction, other._rolling_friction, _sqrt_rolling_friction, other._sqrt_rolling_friction);
 		}
 		return 0.0f;
 	}

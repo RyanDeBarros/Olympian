@@ -52,19 +52,20 @@ namespace oly::graphics
 				return std::nullopt;
 		}
 
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj)
+		bool set_object(LightweightBuffer<Mutability::Mutable>& buffer, SlotType& slot, const StoredObjectType& stored_obj)
 		{
-			return set_object<StoredObjectType>(buffer, slot, stored_obj, stored_obj);
+			std::optional<StoredObjectType> prev_obj;
+			return set_object<StoredObjectType>(buffer, slot, stored_obj, stored_obj, prev_obj);
 		}
 
 		template<typename BufferObjectType>
-		bool set_object(LightweightBuffer<Mutability::MUTABLE>& buffer, SlotType& slot, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj)
+		bool set_object(LightweightBuffer<Mutability::Mutable>& buffer, SlotType& slot, const StoredObjectType& stored_obj, const BufferObjectType& buffer_obj, std::optional<StoredObjectType>& prev_obj)
 		{
 			if (stored_obj == StoredObjectType{}) // remove object from sprite
 			{
 				if (slot != 0)
 				{
-					_decrement_usage(slot);
+					prev_obj = _decrement_usage(slot);
 					slot = 0;
 					return true; // slot has changed
 				}
@@ -75,9 +76,10 @@ namespace oly::graphics
 				auto it = usages.find(slot);
 				if (stored_obj == it->second.obj) // same object that exists -> do nothing
 					return false; // slot did not change
+
 				--it->second.usage;
 				if (it->second.usage == 0)
-					erase_slot(it);
+					prev_obj = erase_slot(it);
 			}
 			auto newit = slot_lookup.find(stored_obj);
 			if (newit != slot_lookup.end()) // object already exists -> increment its usage

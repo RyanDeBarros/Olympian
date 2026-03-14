@@ -1,32 +1,25 @@
 #include "Jumble.h"
 
-#include <assets/Loader.h>
-#include <assets/graphics/sprites/Sprites.h>
-#include <assets/graphics/text/Paragraphs.h>
-#include <assets/graphics/sprites/SpriteAtlases.h>
-#include <assets/graphics/sprites/TileMaps.h>
-#include <assets/graphics/sprites/SpriteNonants.h>
-
 Jumble::Jumble()
 {
-	auto toml = oly::assets::load_toml("~/assets/archetypes/Jumble.toml");
+	auto toml = oly::io::load_toml("~/assets/archetypes/Jumble.toml");
 
-	transformer = oly::assets::load_transformer_2d(toml["archetype"]["transformer"]);
+	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
 
-	sprite3.ref.init(oly::assets::load_sprite(toml["sprite3"]));
-	sprite4.ref.init(oly::assets::load_sprite(toml["sprite4"]));
-	sprite5.ref.init(oly::assets::load_sprite(toml["sprite5"]));
-	sprite1.ref.init(oly::assets::load_sprite(toml["sprite1"]));
-	godot_icon.ref.init(oly::assets::load_sprite(toml["godot_icon"]));
-	knight.ref.init(oly::assets::load_sprite(toml["knight"]));
-	test_text.ref.init(oly::assets::load_paragraph(toml["test_text"]));
-	smol_text.ref.init(oly::assets::load_paragraph(toml["smol_text"]));
-	atlased_knight.ref.init(oly::assets::load_sprite_atlas(toml["atlased_knight"]));
+	sprite3.ref.init_toml(toml["sprite3"]);
+	sprite4.ref.init_toml(toml["sprite4"]);
+	sprite5.ref.init_toml(toml["sprite5"]);
+	sprite1.ref.init_toml(toml["sprite1"]);
+	godot_icon.ref.init_toml(toml["godot_icon"]);
+	knight.ref.init_toml(toml["knight"]);
+	test_text.ref.init_toml(toml["test_text"]);
+	smol_text.ref.init_toml(toml["smol_text"]);
+	atlased_knight.ref.init_toml(toml["atlased_knight"]);
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;
-	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::assets::load_tilemap(node); });
+	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); });
 
-	nonant_panel.ref.init(oly::assets::load_sprite_nonant(toml["nonant_panel"]));
+	nonant_panel.ref.init_toml(toml["nonant_panel"]);
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);
@@ -51,14 +44,4 @@ Jumble::Jumble()
 	test_text.attach(this);
 	nonant_panel.attach(this);
 	smol_text.attach(this);
-}
-
-void Jumble::on_tick()
-{
-	atlased_knight.ref->on_tick();
-
-	if (fmod(oly::TIME.now(), 1.0f) < 0.5f)
-		grass_tilemap.set_z_layer(1);
-	else
-		grass_tilemap.set_z_layer(-1);
 }

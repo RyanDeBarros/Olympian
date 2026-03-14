@@ -2,15 +2,39 @@
 
 namespace oly::physics
 {
+	namespace internal
+	{
+		struct RigidBodyOnTick
+		{
+			void operator()() const
+			{
+				auto& rigid_bodies = oly::internal::AutoRegistry<RigidBody>::instance().tracked();
+				for (RigidBody* rigid_body : rigid_bodies)
+					rigid_body->physics_pre_tick();
+				for (RigidBody* rigid_body : rigid_bodies)
+					rigid_body->physics_post_tick();
+			}
+		};
+
+		struct RigidBodyOnTerminate
+		{
+			void operator()() const
+			{
+				oly::internal::AutoRegistry<RigidBody>::instance().clear();
+			}
+		};
+
+		using RigidBodyTickService = SingletonTickService<TickPhase::Physics, RigidBodyOnTick, TerminatePhase::Logic, RigidBodyOnTerminate>;
+	}
+
 	RigidBody::RigidBody()
 	{
-		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
+		internal::RigidBodyTickService::instance(); // only need to call once in non-copy/move ctor.
 	}
 
 	RigidBody::RigidBody(const RigidBody& other)
 		: colliders(other.colliders), transformer(other.transformer)
 	{
-		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			it->rigid_body = this;
@@ -21,19 +45,12 @@ namespace oly::physics
 	RigidBody::RigidBody(RigidBody&& other) noexcept
 		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer))
 	{
-		internal::RigidBodyManager::instance().rigid_bodies.insert(this);
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			it->rigid_body = this;
 			it->set_transformer().attach_parent(&transformer);
 			other.unbind(*it);
 		}
-	}
-	
-	RigidBody::~RigidBody()
-	{
-		internal::RigidBodyManager::instance().rigid_bodies.erase(this);
-		colliders.clear();
 	}
 	
 	RigidBody& RigidBody::operator=(const RigidBody& other)
@@ -125,22 +142,17 @@ namespace oly::physics
 		if (it != colliders.end())
 			return it - colliders.begin();
 		else
-			throw Error(ErrorCode::DOES_NOT_EXIST);
+			throw Error(ErrorCode::DoesNotExist);
 	}
 
-	debug::CollisionView RigidBody::collision_view(debug::CollisionLayer& layer, size_t i, glm::vec4 color) const
+	debug::DebugOverlay RigidBody::create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options) const
 	{
-		return colliders[i].collision_view(layer, color);
+		return colliders[i].create_debug_overlay(layer, color, paint_options);
 	}
 
-	void RigidBody::update_view(size_t i, debug::CollisionView& view, glm::vec4 color) const
+	void RigidBody::modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const
 	{
-		colliders[i].update_view(view, color);
-	}
-
-	void RigidBody::update_view(size_t i, debug::CollisionView& view) const
-	{
-		colliders[i].update_view(view);
+		colliders[i].modify_debug_overlay(overlay);
 	}
 
 	void RigidBody::bind_all() const
@@ -158,13 +170,5 @@ namespace oly::physics
 	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
 	{
 		return collider.rigid_body;
-	}
-
-	void internal::RigidBodyManager::on_tick() const
-	{
-		for (RigidBody* rigid_body : rigid_bodies)
-			rigid_body->physics_pre_tick();
-		for (RigidBody* rigid_body : rigid_bodies)
-			rigid_body->physics_post_tick();
 	}
 }

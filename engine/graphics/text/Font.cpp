@@ -14,8 +14,8 @@ namespace oly
 		{
 			if (!stbtt_InitFont(&info, data.data(), 0))
 			{
-				OLY_LOG_ERROR(true, "RENDERING") << LOG.source_info.full_source() << "Cannot initialize font" << LOG.endl;
-				throw Error(ErrorCode::LOAD_FONT);
+				_OLY_ENGINE_LOG_ERROR("RENDERING") << "Cannot initialize font" << LOG.endl;
+				throw Error(ErrorCode::LoadFont);
 			}
 		}
 
@@ -184,7 +184,7 @@ namespace oly
 			if (it != glyphs.end())
 				return it->second;
 			else
-				throw Error(ErrorCode::UNCACHED_GLYPH);
+				throw Error(ErrorCode::UncachedGlyph);
 		}
 
 		int FontAtlas::get_glyph_index(utf::Codepoint codepoint) const

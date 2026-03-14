@@ -64,7 +64,7 @@ namespace oly::platform
 
 	bool internal::RootWindowResizeHandler::consume(const input::WindowResizeEventData& data)
 	{
-		return !context::render_frame();
+		return !context::internal::render_frame();
 	}
 
 	Window::Window(int width, int height, const char* title, const WindowHint& hint, GLFWmonitor* monitor, GLFWwindow* share)
@@ -74,14 +74,14 @@ namespace oly::platform
 		w = glfwCreateWindow(width, height, title, monitor, share);
 		if (!w)
 		{
-			OLY_LOG_FATAL(true, "PLATFORM") << LOG.source_info.full_source() << "glfwCreateWindow() failed." << LOG.nl;
-			throw Error(ErrorCode::WINDOW_CREATION);
+			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glfwCreateWindow() failed." << LOG.nl;
+			throw Error(ErrorCode::WindowCreation);
 		}
 		make_context_current();
 		if (glewInit() != GLEW_OK)
 		{
-			OLY_LOG_FATAL(true, "PLATFORM") << LOG.source_info.full_source() << "glewInit() failed." << LOG.nl;
-			throw Error(ErrorCode::GLEW_INIT);
+			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glewInit() failed." << LOG.nl;
+			throw Error(ErrorCode::GlewInit);
 		}
 		hint.context_hint();
 

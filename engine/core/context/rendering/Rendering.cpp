@@ -6,18 +6,18 @@ namespace oly::context
 {
 	namespace internal
 	{
-		const IRenderPipeline* render_pipeline = nullptr;
+		const IRenderPipeline* pipeline = nullptr;
 	}
 
 	void set_render_pipeline(const IRenderPipeline* pipeline)
 	{
-		internal::render_pipeline = pipeline;
+		internal::pipeline = pipeline;
 	}
 
-	void internal::render_frame()
+	void internal::render_pipeline()
 	{
-		if (internal::render_pipeline)
-			internal::render_pipeline->render_frame();
+		if (internal::pipeline)
+			internal::pipeline->render();
 		render_sprites();
 	}
 

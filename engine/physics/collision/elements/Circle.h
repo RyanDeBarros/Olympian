@@ -56,6 +56,8 @@ namespace oly::col2d
 		}
 
 		ContactManifold deepest_manifold(const UnitVector2D& axis) const;
+
+		glm::mat3 compute_transform() const { return augment(global, global_offset) * translation_matrix(center); }
 	};
 
 	struct OBB;

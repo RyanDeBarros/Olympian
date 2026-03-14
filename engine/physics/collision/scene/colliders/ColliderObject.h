@@ -21,7 +21,7 @@ namespace oly::col2d::internal
 		TBVH_KDOP6,
 		TBVH_KDOP7,
 		TBVH_KDOP8,
-		_COUNT
+		_c
 	};
 
 	template<typename T>

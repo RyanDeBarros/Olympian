@@ -1,7 +1,7 @@
 #include "Fonts.h"
 
-#include "assets/MetaSplitter.h"
-#include "assets/Loader.h"
+#include "core/util/MetaSplitter.h"
+#include "core/util/Loader.h"
 
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
@@ -33,30 +33,38 @@ namespace oly::context
 		std::unordered_map<ResourcePath, rendering::FontFamilyRef> font_families;
 	}
 
-	void internal::terminate_fonts()
+	struct FontsOnTerminate
 	{
-		internal::font_faces.clear();
-		internal::font_atlases.clear();
-		internal::raster_fonts.clear();
-		internal::font_families.clear();
+		void operator()() const
+		{
+			internal::font_faces.clear();
+			internal::font_atlases.clear();
+			internal::raster_fonts.clear();
+			internal::font_families.clear();
+		}
+	};
+
+	void internal::init_fonts(TOMLNode)
+	{
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}
 
-	static utf::Codepoint parse_codepoint(const std::string& s)
+	static utf::Codepoint parse_codepoint(const StringParam& s)
 	{
 		if (s.size() >= 3)
 		{
-			std::string prefix = s.substr(0, 2);
+			StringParam prefix = s.substr(0, 2);
 			if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
-				return utf::Codepoint(std::stoi(s.substr(2), nullptr, 16));
-			else if (s.substr(0, 3) == "&#x" && s.ends_with(";"))
-				return utf::Codepoint(std::stoi(s.substr(3, s.size() - 3 - 1), nullptr, 16));
+				return utf::Codepoint(s.substr(2).to_int(16));
+			else if (s.substr(0, 3) == "&#x" && s.ends_with(';'))
+				return utf::Codepoint(s.substr(3, s.size() - 3 - 1).to_int(16));
 			else
 				return utf::Codepoint(0);
 		}
 		else if (s.empty() || s.size() == 2)
 			return utf::Codepoint(0);
 		else
-			return utf::Codepoint(s[0]);
+			return utf::Codepoint(s.front());
 	}
 
 	static rendering::Kerning parse_kerning(TOMLNode node)
@@ -74,18 +82,18 @@ namespace oly::context
 			auto pair = node["pair"].as_array();
 			if (!pair)
 			{
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing \"pair\" array field." << LOG.nl;
 				return;
 			}
 			if (pair->size() != 2)
 			{
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array." << LOG.nl;
 				return;
 			}
 			int dist = 0;
-			if (!assets::parse_int(node["dist"], dist))
+			if (!io::parse_int(node["dist"], dist))
 			{
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing \"dist\" int field." << LOG.nl;
 				return;
 			}
 
@@ -93,7 +101,7 @@ namespace oly::context
 			auto tc1 = pair->get_as<std::string>(1);
 			if (!tc0 || !tc1)
 			{
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings." << LOG.nl;
 				return;
 			}
 
@@ -102,7 +110,7 @@ namespace oly::context
 			if (c1 && c2)
 				kerning.map.emplace(std::make_pair(c1, c2), dist);
 			else
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "In kerning #" << k_idx
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx
 					<< " - cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\")." << LOG.nl;
 			});
 
@@ -113,36 +121,36 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::font_faces.find(file);
 		if (it != internal::font_faces.end())
 			return it->second;
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font face [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
-		if (!assets::MetaSplitter::meta(import_file).has_type("font"))
+		if (!io::MetaSplitter::meta(import_file).has_type("font"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = assets::load_toml(import_file);
+		auto table = io::load_toml(import_file);
 		auto node = table["font_face"];
 		if (!node)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot load font face " << file << " - missing \"font_face\" table." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::font_faces.emplace(file, font_face);
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font face [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed." << LOG.nl;
 
 		return font_face;
 	}
@@ -151,8 +159,8 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		internal::FontAtlasKey key{ .file = file, .index = index };
@@ -160,47 +168,47 @@ namespace oly::context
 		if (it != internal::font_atlases.end())
 			return it->second;
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font atlas [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font atlas [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
-		if (!assets::MetaSplitter::meta(import_file).has_type("font"))
+		if (!io::MetaSplitter::meta(import_file).has_type("font"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = assets::load_toml(import_file);
+		auto table = io::load_toml(import_file);
 		TOMLNode toml = (TOMLNode)table;
 
 		auto font_atlas_list = toml["font_atlas"].as_array();
 		if (!font_atlas_list)
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"font_atlas\" array field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_atlas\" array field." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (index >= font_atlas_list->size())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Font atlas index (" << index
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
 				<< ") out of range for \"font_atlas\" array field of size (" << font_atlas_list->size() << ")." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			throw Error(ErrorCode::LoadAsset);
 		}
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
 		rendering::FontOptions options;
 
-		if (!assets::parse_float(node["font_size"], options.font_size))
+		if (!io::parse_float(node["font_size"], options.font_size))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"font_size\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_size\" field." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
-		assets::parse_min_filter(node["min_filter"], options.min_filter);
-		assets::parse_mag_filter(node["mag_filter"], options.mag_filter);
-		assets::parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
+		io::parse_min_filter(node["min_filter"], options.min_filter);
+		io::parse_mag_filter(node["mag_filter"], options.mag_filter);
+		io::parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (assets::parse_bool_or(node["use_common_buffer_preset"], true))
+		if (io::parse_bool_or(node["use_common_buffer_preset"], true))
 		{
 			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
 			{
@@ -218,7 +226,7 @@ namespace oly::context
 				else if (common_buffer_preset == "alphabet_uppercase")
 					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
 				else
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
 			}
 		}
 		else if (auto _common_buffer = node["common_buffer"].value<std::string>())
@@ -228,7 +236,7 @@ namespace oly::context
 		if (node["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::font_atlases.emplace(key, font_atlas);
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font atlas [" << file << "] at index #" << index << " parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed." << LOG.nl;
 
 		return font_atlas;
 	}
@@ -237,45 +245,45 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::raster_fonts.find(file);
 		if (it != internal::raster_fonts.end())
 			return it->second;
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing raster font [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing raster font [" << file << "]..." << LOG.nl;
 
-		auto meta = assets::MetaSplitter::meta(file);
+		auto meta = io::MetaSplitter::meta(file);
 		if (!meta.has_type("raster_font"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain raster font type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = assets::load_toml(file);
+		auto table = io::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
 
 		float space_advance_width;
-		if (!assets::parse_float(toml["space_advance_width"], space_advance_width))
+		if (!io::parse_float(toml["space_advance_width"], space_advance_width))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"space_advance_width\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"space_advance_width\" field." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		float line_height;
-		if (!assets::parse_float(toml["line_height"], line_height))
+		if (!io::parse_float(toml["line_height"], line_height))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Missing \"line_height\" field." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"line_height\" field." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		glm::vec2 font_scale = glm::vec2(1.0f);
 		if (auto a = toml["font_scale"])
 		{
-			if (!assets::parse_vec(a, font_scale))
-				OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"font_scale\" field." << LOG.nl;
+			if (!io::parse_vec(a, font_scale))
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"font_scale\" field." << LOG.nl;
 		}
 
 		std::vector<std::string> texture_files;
@@ -288,7 +296,7 @@ namespace oly::context
 				if (texture_file)
 					texture_files.push_back(texture_file->get());
 				else
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Invalid entry in \"texture_files\" array." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in \"texture_files\" array." << LOG.nl;
 			}
 		}
 
@@ -303,37 +311,36 @@ namespace oly::context
 					codepoint = parse_codepoint(v.value());
 				if (codepoint == utf::Codepoint(0))
 				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"codepoint\" field in glyphs array, skipping glyph..." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"codepoint\" field in glyphs array, skipping glyph..." << LOG.nl;
 					return;
 				}
 
 				std::string texture_file;
-				unsigned int tidx = assets::parse_uint_or(g["texture_file"], 0);
+				unsigned int tidx = io::parse_uint_or(g["texture_file"], 0);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
 				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Texture file indexer (" << tidx
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Texture file indexer (" << tidx
 						<< ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.nl;
 					return;
 				}
 
-				unsigned int texture_index = assets::parse_uint_or(g["texture_index"], 0);
+				unsigned int texture_index = io::parse_uint_or(g["texture_index"], 0);
 
-				math::IRect2D location;
-				if (!assets::parse_shape(g["location"], location))
+				math::IRect2D location = math::IRect2D::load(g["location"]);
+				if (location.x2 <= location.x1 || location.y2 <= location.y1)
 				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"location\" field, skipping glyph..." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid \"location\" field, skipping glyph..." << LOG.nl;
 					return;
 				}
 
-				math::TopSidePadding padding = assets::parse_topside_padding(g["padding"]);
+				math::TopSidePadding padding = math::TopSidePadding::load(g["padding"]);
 
-				math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE;
-				assets::parse_enum(g["origin_offset_mode"], origin_offset_mode);
+				math::PositioningMode origin_offset_mode = math::PositioningMode::load(g["origin_offset_mode"], math::PositioningMode::RELATIVE);
 
 				glm::vec2 origin_offset = {};
-				assets::parse_vec(g["origin_offset"], origin_offset);
+				io::parse_vec(g["origin_offset"], origin_offset);
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 				});
@@ -343,7 +350,7 @@ namespace oly::context
 		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::raster_fonts.emplace(file, raster_font);
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Raster font [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed." << LOG.nl;
 
 		return raster_font;
 	}
@@ -352,23 +359,23 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Filename is empty." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto it = internal::font_families.find(file);
 		if (it != internal::font_families.end())
 			return it->second;
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "Parsing font family [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font family [" << file << "]..." << LOG.nl;
 
-		if (!assets::MetaSplitter::meta(file).has_type("font_family"))
+		if (!io::MetaSplitter::meta(file).has_type("font_family"))
 		{
-			OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << "Meta fields do not contain font family type." << LOG.nl;
-			throw Error(ErrorCode::LOAD_ASSET);
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type." << LOG.nl;
+			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = assets::load_toml(file);
+		auto table = io::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
 
 		rendering::FontFamilyRef font_family = REF_INIT;
@@ -378,12 +385,12 @@ namespace oly::context
 				TOMLNode node = (TOMLNode)_node;
 
 				rendering::FontStyle style = rendering::FontStyle::REGULAR();
-				if (!assets::parse_uint(node["style"], reinterpret_cast<unsigned int&>(style)))
+				if (!io::parse_uint(node["style"], reinterpret_cast<unsigned int&>(style)))
 				{
 					auto _style_str = node["style"].value<std::string>();
 					if (!_style_str)
 					{
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"style\" field from font family style" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"style\" field from font family style" << LOG.nl;
 						return;
 					}
 
@@ -392,7 +399,7 @@ namespace oly::context
 						style = *s;
 					else
 					{
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "\"style\" field \"" << style_str << "\" not recognized from font family style" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "\"style\" field \"" << style_str << "\" not recognized from font family style" << LOG.nl;
 						return;
 					}
 				}
@@ -400,25 +407,25 @@ namespace oly::context
 				auto _font_file = node["file"].value<std::string>();
 				if (!_font_file)
 				{
-					OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Cannot parse \"file\" field from font family style" << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"file\" field from font family style" << LOG.nl;
 					return;
 				}
 				ResourcePath font_file(*_font_file, file);
 				rendering::FontFamily::FontRef font;
 				if (font_file.is_import_path())
 				{
-					auto meta = assets::MetaSplitter::meta(font_file);
+					auto meta = io::MetaSplitter::meta(font_file);
 					if (meta.has_type("raster_font"))
 						font = context::load_raster_font(font_file);
 					else
 					{
 						std::optional<std::string> type = meta.get_type();
-						OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << font_file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
 						return;
 					}
 				}
 				else
-					font = context::load_font_atlas(font_file, assets::parse_uint_or(node["atlas_index"], 0));
+					font = context::load_font_atlas(font_file, io::parse_uint_or(node["atlas_index"], 0));
 
 				styles.emplace(style, std::move(font));
 				});
@@ -427,7 +434,7 @@ namespace oly::context
 		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
 			internal::font_families.emplace(file, font_family);
 
-		OLY_LOG_DEBUG(true, "CONTEXT") << LOG.source_info.full_source() << "...Font family [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed." << LOG.nl;
 
 		return font_family;
 	}
@@ -456,7 +463,7 @@ namespace oly::context
 	{
 		rendering::FontSelection font{ .family = load_font_family(font_family), .style = style };
 		if (!font.style_exists())
-			OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source() << "Font style (" << (unsigned int)style << ") not supported by family " << font_family << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Font style (" << (unsigned int)style << ") not supported by family " << font_family << LOG.nl;
 		return font;
 	}
 
@@ -464,7 +471,7 @@ namespace oly::context
 	{
 		if (file.is_import_path())
 		{
-			auto meta = assets::MetaSplitter::meta(file);
+			auto meta = io::MetaSplitter::meta(file);
 			if (meta.has_type("raster_font"))
 				return load_raster_font(file);
 			else if (meta.has_type("font_family"))
@@ -472,8 +479,8 @@ namespace oly::context
 			else
 			{
 				std::optional<std::string> type = meta.get_type();
-				OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source() << file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
-				throw Error(ErrorCode::LOAD_ASSET);
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
+				throw Error(ErrorCode::LoadAsset);
 			}
 		}
 		else

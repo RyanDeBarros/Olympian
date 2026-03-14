@@ -1,4 +1,5 @@
 site_name: Olympian Engine Docs
+
 theme:
   name: material
   features:
@@ -11,19 +12,22 @@ theme:
 markdown_extensions:
   - admonition
   - pymdownx.details
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js
 
 nav:
   - Home: index.md
   - Engine:
     - Overview: engine/Overview.md
-    - Rendering:
-      - Geometry Painter: engine/rendering/GeometryPainter.md
-      - Paint Support: engine/rendering/PaintSupport.md
     - Physics:
       - Dynamics:
         - Rigid Body: engine/physics/dynamics/RigidBody.md
-        - Static Body: engine/physics/dynamics/StaticBody.md
-        - Linear Body: engine/physics/dynamics/LinearBody.md
-        - Kinematic Body: engine/physics/dynamics/KinematicBody.md
+    - Rendering:
+      - Particles:
+        - Samplers: engine/rendering/particles/Samplers.md
   - Editor:
     - Overview: editor/Overview.md

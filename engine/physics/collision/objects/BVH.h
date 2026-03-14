@@ -120,15 +120,15 @@ namespace oly::col2d
 			{
 				float(*bx)(const Element& e) = nullptr;
 				if constexpr (MinX)
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::LEFT); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Left); };
 				else
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::RIGHT); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Right); };
 				
 				float(*by)(const Element& e) = nullptr;
 				if constexpr (MinY)
-					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::DOWN); };
+					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Down); };
 				else
-					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::UP); };
+					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::Up); };
 
 				if constexpr (XY)
 				{
@@ -157,16 +157,16 @@ namespace oly::col2d
 	enum class Heuristic
 	{
 		NONE,
-		MIDPOINT_XY,
-		MIDPOINT_YX,
-		MIN_X_MIN_Y,
-		MIN_X_MAX_Y,
-		MAX_X_MIN_Y,
-		MAX_X_MAX_Y,
-		MIN_Y_MIN_X,
-		MIN_Y_MAX_X,
-		MAX_Y_MIN_X,
-		MAX_Y_MAX_X,
+		MidpointXY,
+		MidpointYX,
+		MinXMinY,
+		MinXMaxY,
+		MaxXMinY,
+		MaxXMaxY,
+		MinYMinX,
+		MinYMaxX,
+		MaxYMinX,
+		MaxYMaxX,
 	};
 
 	template<typename Shape>
@@ -236,7 +236,7 @@ namespace oly::col2d
 		mutable Node _root;
 		mutable std::vector<Element> elements;
 		mutable bool dirty = true;
-		Heuristic heuristic = Heuristic::MIDPOINT_XY;
+		Heuristic heuristic = Heuristic::MidpointXY;
 
 	public:
 		Mask mask = 0;
@@ -250,6 +250,18 @@ namespace oly::col2d
 
 		const std::vector<Element>& get_elements() const { return elements; }
 		std::vector<Element>& set_elements() { dirty = true; return elements; }
+
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return *get_elements()[i].variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return *set_elements()[i].variant().get<Shape*>();
+		}
 
 		Heuristic get_heuristic() const { return heuristic; }
 		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
@@ -265,25 +277,25 @@ namespace oly::col2d
 			{
 				dirty = false;
 				
-				if (heuristic == Heuristic::MIDPOINT_XY)
+				if (heuristic == Heuristic::MidpointXY)
 					std::sort(elements.begin(), elements.end(), internal::MidpointXY{});
-				else if (heuristic == Heuristic::MIDPOINT_YX)
+				else if (heuristic == Heuristic::MidpointYX)
 					std::sort(elements.begin(), elements.end(), internal::MidpointYX{});
-				else if (heuristic == Heuristic::MIN_X_MIN_Y)
+				else if (heuristic == Heuristic::MinXMinY)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, true>{});
-				else if (heuristic == Heuristic::MIN_X_MAX_Y)
+				else if (heuristic == Heuristic::MinXMaxY)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, false>{});
-				else if (heuristic == Heuristic::MAX_X_MIN_Y)
+				else if (heuristic == Heuristic::MaxXMinY)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, true>{});
-				else if (heuristic == Heuristic::MAX_X_MAX_Y)
+				else if (heuristic == Heuristic::MaxXMaxY)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, false>{});
-				else if (heuristic == Heuristic::MIN_Y_MIN_X)
+				else if (heuristic == Heuristic::MinYMinX)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, true>{});
-				else if (heuristic == Heuristic::MIN_Y_MAX_X)
+				else if (heuristic == Heuristic::MinYMaxX)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, true>{});
-				else if (heuristic == Heuristic::MAX_Y_MIN_X)
+				else if (heuristic == Heuristic::MaxYMinX)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
-				else if (heuristic == Heuristic::MAX_Y_MAX_X)
+				else if (heuristic == Heuristic::MaxYMaxX)
 					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
 
 				_root = Node(elements.data(), 0, elements.size());
@@ -432,26 +444,26 @@ namespace oly::col2d
 			if (node.is_leaf())
 				return col2d::raycast(elements[node.start_index], ray);
 			else if (!col2d::ray_hits(node.shape.value(), ray))
-				return { .hit = RaycastResult::Hit::NO_HIT };
+				return { .hit = RaycastResult::Hit::NoHit };
 			else
 			{
 				RaycastResult left_result = raycast(*node.left, elements, ray);
-				if (left_result.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
+				if (left_result.hit == RaycastResult::Hit::EmbeddedOrigin)
 					return left_result;
 				RaycastResult right_result = raycast(*node.right, elements, ray);
-				if (right_result.hit == RaycastResult::Hit::EMBEDDED_ORIGIN)
+				if (right_result.hit == RaycastResult::Hit::EmbeddedOrigin)
 					return right_result;
 				
-				if (left_result.hit == RaycastResult::Hit::NO_HIT)
+				if (left_result.hit == RaycastResult::Hit::NoHit)
 				{
-					if (right_result.hit == RaycastResult::Hit::NO_HIT)
-						return { .hit = RaycastResult::Hit::NO_HIT };
+					if (right_result.hit == RaycastResult::Hit::NoHit)
+						return { .hit = RaycastResult::Hit::NoHit };
 					else
 						return right_result;
 				}
 				else
 				{
-					if (right_result.hit == RaycastResult::Hit::NO_HIT)
+					if (right_result.hit == RaycastResult::Hit::NoHit)
 						return left_result;
 					else
 						return math::mag_sqrd(left_result.contact - ray.origin) < math::mag_sqrd(right_result.contact - ray.origin) ? left_result : right_result;
@@ -539,10 +551,22 @@ namespace oly::col2d
 		bool is_dirty() const { return local_dirty || transformer.dirty(); }
 
 		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::FULL, .chain = exposure::chain::FULL, .modifier = exposure::modifier::FULL }> set_transformer() { return transformer; }
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
+		
+		template<internal::ElementShape Shape>
+		const Shape& element_as(size_t i) const
+		{
+			return *get_elements()[i].variant().get<const Shape*>();
+		}
+
+		template<internal::ElementShape Shape>
+		Shape& element_as(size_t i)
+		{
+			return *set_elements()[i].variant().get<Shape*>();
+		}
 
 		const std::vector<Element>& get_baked() const { return bvh().get_elements(); }
 

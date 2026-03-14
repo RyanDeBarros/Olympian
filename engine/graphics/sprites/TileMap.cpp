@@ -2,7 +2,8 @@
 
 #include "core/context/rendering/Textures.h"
 #include "core/context/rendering/Sprites.h"
-#include "assets/Loader.h"
+#include "core/context/rendering/Tilesets.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
@@ -24,6 +25,12 @@ namespace oly::rendering
 	{
 		for (const auto& [_, sprite] : sprite_map)
 			sprite.draw();
+	}
+
+	void TileMapLayer::set_camera_invariant(bool is_camera_invariant) const
+	{
+		for (const auto& [_, sprite] : sprite_map)
+			sprite.set_camera_invariant(is_camera_invariant);
 	}
 
 	void TileMapLayer::set_batch(Unbatched)
@@ -99,19 +106,19 @@ namespace oly::rendering
 		sprite.set_texture(tile_desc.file);
 		sprite.set_tex_coords(tile_desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
-		if (transformation & TileSet::Transformation::REFLECT_X)
+		if (transformation & TileSet::Transformation::ReflectX)
 			sprite.set_local().scale.x = -glm::abs(sprite.set_local().scale.x);
 		else
 			sprite.set_local().scale.x = glm::abs(sprite.set_local().scale.x);
-		if (transformation & TileSet::Transformation::REFLECT_Y)
+		if (transformation & TileSet::Transformation::ReflectY)
 			sprite.set_local().scale.y = -glm::abs(sprite.set_local().scale.y);
 		else
 			sprite.set_local().scale.y = glm::abs(sprite.set_local().scale.y);
-		if (transformation & TileSet::Transformation::ROTATE_90)
+		if (transformation & TileSet::Transformation::Rotate90)
 			sprite.set_local().rotation = glm::radians(90.0f);
-		else if (transformation & TileSet::Transformation::ROTATE_180)
+		else if (transformation & TileSet::Transformation::Rotate180)
 			sprite.set_local().rotation = glm::radians(180.0f);
-		else if (transformation & TileSet::Transformation::ROTATE_270)
+		else if (transformation & TileSet::Transformation::Rotate270)
 			sprite.set_local().rotation = glm::radians(270.0f);
 		else
 			sprite.set_local().rotation = 0.0f;
@@ -121,19 +128,94 @@ namespace oly::rendering
 
 	void TileMap::draw() const
 	{
-		for (size_t i = 0; i < layers.size(); ++i)
-			layers[i].draw();
+		for (const TileMapLayer& layer : layers)
+			layer.draw();
+	}
+
+	void TileMap::set_camera_invariant(bool is_camera_invariant)
+	{
+		camera_invariant = is_camera_invariant;
+		for (const TileMapLayer& layer : layers)
+			layer.set_camera_invariant(is_camera_invariant);
+	}
+
+	bool TileMap::is_camera_invariant() const
+	{
+		return camera_invariant;
 	}
 
 	void TileMap::register_layer(TileMapLayer&& layer)
 	{
 		layer.transformer.attach_parent(&transformer);
+		layer.set_camera_invariant(camera_invariant);
 		layers.push_back(std::move(layer));
 	}
 		
 	void TileMap::register_layer(size_t z, TileMapLayer&& layer)
 	{
 		layer.transformer.attach_parent(&transformer);
+		layer.set_camera_invariant(camera_invariant);
 		layers.insert(layers.begin() + z, std::move(layer));
+	}
+
+	TileMap TileMap::load(TOMLNode node)
+	{
+		TileMap tilemap;
+		if (auto transformer = node["transformer"])
+		{
+			tilemap.set_local() = Transform2D::load(transformer);
+			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
+		}
+
+		if (auto toml_layers = node["layer"].as_array())
+		{
+			size_t _layer_idx = 0;
+			toml_layers->for_each([&tilemap, &_layer_idx](auto&& _node) {
+				const size_t layer_idx = _layer_idx++;
+				TOMLNode node = (TOMLNode)_node;
+
+				auto tileset = node["tileset"].value<std::string>();
+				if (!tileset)
+				{
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+					return;
+				}
+
+				TileMapLayer layer;
+				layer.tileset = context::load_tileset(*tileset);
+
+				auto tiles = node["tiles"].as_array();
+				if (tiles)
+				{
+					size_t tile_idx = 0;
+					for (auto& toml_tile : *tiles)
+					{
+						glm::ivec2 tile{};
+						if (io::parse_ivec((TOMLNode)toml_tile, tile))
+							layer.paint_tile(tile);
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx
+							<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
+						++tile_idx;
+					}
+				}
+
+				int z = 0;
+				if (io::parse_int(node["z"], z))
+					tilemap.register_layer(z, std::move(layer));
+				else
+					tilemap.register_layer(std::move(layer));
+				});
+		}
+
+		tilemap.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+
+		return tilemap;
+	}
+
+	TileMap TileMap::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::TileMap::load()");
+		return load(node);
 	}
 }

@@ -61,7 +61,7 @@ namespace oly::rendering
 			if (it != glyphs.end())
 				return it->second;
 			else
-				throw Error(ErrorCode::UNCACHED_GLYPH);
+				throw Error(ErrorCode::UncachedGlyph);
 		}
 		
 		bool supports(utf::Codepoint codepoint) const

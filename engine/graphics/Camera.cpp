@@ -52,7 +52,10 @@ namespace oly::rendering
 	bool Camera2D::consume(const input::WindowResizeEventData&)
 	{
 		if (boxed)
-			glClear(GL_COLOR_BUFFER_BIT); // TODO v7 clear depth buffer too?
+		{
+			glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 		apply_viewport();
 		return false;
 	}
@@ -71,14 +74,28 @@ namespace oly::rendering
 
 	void Camera2D::set_projection()
 	{
-		glm::vec4 bounds = 0.5f * glm::vec4{ -viewport.w, viewport.w, -viewport.h, viewport.h };
-		projection = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3]);
+		projection = glm::ortho(-0.5f * viewport.w, 0.5f * viewport.w, -0.5f * viewport.h, 0.5f * viewport.h);
 	}
 
 	glm::mat3 Camera2D::projection_matrix() const
 	{
-		// TODO v6 for ui widgets that are in camera-space, only return projection - define two different projection uniforms in shader - one for world space and one for camera space.
 		return projection * glm::inverse(transformer.global());
+	}
+
+	glm::mat3 Camera2D::invariant_projection_matrix() const
+	{
+		return projection;
+	}
+
+	void Camera2D::project_to_rect(math::Rect2D rect)
+	{
+		viewport.x = rect.x1;
+		viewport.y = rect.y1;
+		viewport.w = rect.width();
+		viewport.h = rect.height();
+
+		set_projection();
+		transformer.set_local().position = rect.center();
 	}
 
 	void Camera2D::apply_viewport() const

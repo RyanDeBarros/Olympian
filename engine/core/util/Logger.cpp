@@ -1,59 +1,71 @@
 #include "Logger.h"
 
 #include "core/util/Time.h"
+#include "core/util/IO.h"
 
 #include <iostream>
-#include <chrono>
 
 namespace oly
 {
-	void Logger::set_logfile(const char* filepath, bool append)
+	void Logger::start_log(const LoggerOptions& options)
 	{
-		reopen_file(filepath, append);
+		target.logfile = options.use_logfile;
+		target.console = options.use_console;
 
-		const char* log_start = "--- LOG started at ";
-		const char* log_end = " ---";
-		auto setw = std::setw(sizeof(log_start) - 1 + 32 + sizeof(log_end) - 1);
-		stream << std::setfill('-') << setw << "" << '\n' << log_start;
+		// TODO v7 use options max files/bytes to remove old logs here
+
+		if (target.logfile)
+		{
+			std::stringstream ss;
+			tm time = time::time_struct();
+			ss << "../logs/Tester_" << std::put_time(&time, "%Y-%m-%d %H-%M-%S") << ".log";
+			ResourcePath logfile(ss.str());
+			logfile.create_parents();
+			file.open(logfile.get_absolute());
+		}
+
+		const char* prefix = "<<< LOG started at ";
+		const char* postfix = " >>>";
+		auto setw = std::setw(sizeof(prefix) - 1 + 32 + sizeof(postfix) - 1);
+		stream << std::setfill('-') << setw << "" << '\n' << prefix;
 		pass_timestamp();
-		stream << log_end << '\n' << std::setfill('-') << setw << "" << '\n';
-		file.flush();
+		stream << postfix << '\n' << std::setfill('-') << setw << "" << '\n';
+		flush();
+	}
+
+	void Logger::end_log()
+	{
+		flush();
+
+		const char* prefix = "<<<< LOG ended at ";
+		const char* postfix = " >>>>";
+		auto setw = std::setw(sizeof(prefix) - 1 + 32 + sizeof(postfix) - 1);
+		stream << std::setfill('-') << setw << "" << '\n' << prefix;
+		pass_timestamp();
+		stream << postfix << '\n' << std::setfill('-') << setw << "" << '\n';
+		flush();
 	}
 
 	void Logger::flush()
 	{
+		const std::string buf = stream.str();
 		if (target.console)
 		{
-			std::cout << stream.str();
+			std::cout << buf;
 			std::cout.flush();
 		}
 		if (target.logfile)
 		{
-			file << stream.str();
+			file << buf;
 			file.flush();
 		}
 		stream.str(std::string());
 		stream.clear();
 	}
 
-	void Logger::reopen_file(const char* filepath, bool append)
-	{
-		file.close();
-		if (append)
-			file.open(filepath, std::ios_base::app);
-		else
-			file.open(filepath);
-	}
-
 	void Logger::pass_timestamp()
 	{
-		auto now = std::chrono::system_clock::now();
-		auto time = std::chrono::system_clock::to_time_t(now);
-#pragma warning(suppress : 4996)
-		auto current_time = std::localtime(&time);
-		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-		stream << std::put_time(current_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
+		time::pass_timestamp(stream) << '.' << std::setfill('0') << std::setw(3) << time::mod_epoch_milliseconds();
 	}
 
 	void Logger::start(const char* level, bool timestamp, const char* prefix)
@@ -250,7 +262,12 @@ namespace oly
 		return impl.stream(s);
 	}
 
-	Logger::Impl operator<<(Logger::Impl impl, std::string_view s)
+	Logger::Impl operator<<(Logger::Impl impl, const std::string_view s)
+	{
+		return impl.stream(s);
+	}
+
+	Logger::Impl operator<<(Logger::Impl impl, const StringParam& s)
 	{
 		return impl.stream(s);
 	}

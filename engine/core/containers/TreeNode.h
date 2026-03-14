@@ -132,7 +132,7 @@ namespace oly
 		void attach_right(NodeType& left_sibling)
 		{
 			if (this == &left_sibling)
-				throw Error(ErrorCode::CIRCULAR_REFERENCE);
+				throw Error(ErrorCode::CircularReference);
 
 			if (_parent == left_sibling._parent)
 			{
@@ -162,7 +162,7 @@ namespace oly
 		void attach_left(NodeType& right_sibling)
 		{
 			if (this == &right_sibling)
-				throw Error(ErrorCode::CIRCULAR_REFERENCE);
+				throw Error(ErrorCode::CircularReference);
 
 			if (_parent == right_sibling._parent)
 			{
@@ -375,7 +375,7 @@ namespace oly
 		size_t get_position_in_parent() const
 		{
 			if (!_parent)
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 
 			size_t index = 0;
 			TreeNode* distance = this;
@@ -391,10 +391,10 @@ namespace oly
 		void set_position_in_parent(size_t index)
 		{
 			if (!_parent)
-				throw Error(ErrorCode::NULL_POINTER);
+				throw Error(ErrorCode::NullPointer);
 
 			if (index >= _parent->_children_size)
-				throw Error(ErrorCode::INDEX_OUT_OF_RANGE);
+				throw Error(ErrorCode::IndexOutOfRange);
 
 			size_t current_index = get_position_in_parent();
 			if (current_index == index)
@@ -436,35 +436,35 @@ namespace oly
 			const NodeType& operator*() const
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return *static_cast<const NodeType*>(child);
 			}
 
 			NodeType& operator*()
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return *static_cast<NodeType*>(child);
 			}
 			
 			const NodeType* operator->() const
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return static_cast<const NodeType*>(child);
 			}
 			
 			NodeType* operator->()
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return static_cast<NodeType*>(child);
 			}
 
 			Iterator& operator++()
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 
 				TreeNode* next = child->_right_sibling;
 				if (next != node->_children_root)
@@ -501,21 +501,21 @@ namespace oly
 			const NodeType& operator*() const
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return *static_cast<const NodeType*>(child);
 			}
 
 			const NodeType* operator->() const
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 				return static_cast<const NodeType*>(child);
 			}
 
 			ConstIterator& operator++()
 			{
 				if (!child)
-					throw Error(ErrorCode::INVALID_ITERATOR);
+					throw Error(ErrorCode::InvalidIterator);
 
 				const TreeNode* next = child->_right_sibling;
 				if (next != node->_children_root)

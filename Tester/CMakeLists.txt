@@ -9,7 +9,7 @@ endif()
 
 # Variables
 
-# TODO v7 this won't be the case for ENGINE_DIR when building project separately.
+# TODO v10 this won't be the case for ENGINE_DIR when building project separately.
 set(ENGINE_DIR "${CMAKE_SOURCE_DIR}")
 set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
@@ -26,14 +26,14 @@ include_directories(
 find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
-file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h")
-file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h")
+file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h" "${PROJECT_SRC_DIR}/*.inl")
+file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h" "${PROJECT_GEN_DIR}/*.inl")
 
 # Define executable
 add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
 
 # Project context macros
-# TODO v7 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
+# TODO v10 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
 target_compile_definitions(Olympian PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"

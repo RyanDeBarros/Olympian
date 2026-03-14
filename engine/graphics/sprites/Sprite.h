@@ -2,6 +2,7 @@
 
 #include "graphics/sprites/SpriteBatch.h"
 #include "core/base/Transforms.h"
+#include "core/util/DebugTrace.h"
 
 namespace oly::rendering
 {
@@ -32,6 +33,7 @@ namespace oly::rendering
 		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
+		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }
 		void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
@@ -43,6 +45,7 @@ namespace oly::rendering
 		math::UVRect get_tex_coords() const { return ref.get_tex_coords(); }
 		glm::vec4 get_modulation() const { return ref.get_modulation(); }
 		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
+		bool is_camera_invariant() const { return ref.is_camera_invariant(); }
 		graphics::BindlessTextureRef get_mod_texture() const { return ref.get_mod_texture(); }
 		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const { return ref.get_mod_texture(dimensions); }
 		math::UVRect get_mod_tex_coords() const { return ref.get_mod_tex_coords(); }
@@ -77,6 +80,7 @@ namespace oly::rendering
 		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
 		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
 		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
+		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }
 		void set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
 		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
@@ -87,12 +91,16 @@ namespace oly::rendering
 		math::UVRect get_tex_coords() const { return ref.get_tex_coords(); }
 		glm::vec4 get_modulation() const { return ref.get_modulation(); }
 		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
+		bool is_camera_invariant() const { return ref.is_camera_invariant(); }
 		graphics::BindlessTextureRef get_mod_texture() const { return ref.get_mod_texture(); }
 		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const { return ref.get_mod_texture(dimensions); }
 		math::UVRect get_mod_tex_coords() const { return ref.get_mod_tex_coords(); }
 
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
+
+		static Sprite load(TOMLNode node);
+		static Sprite load(TOMLNode node, const DebugTrace& trace);
 	};
 
 	typedef SmartReference<Sprite> SpriteRef;

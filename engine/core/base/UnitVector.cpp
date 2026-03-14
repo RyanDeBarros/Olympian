@@ -102,12 +102,12 @@ namespace oly
 			if (near_zero(other._direction.x, tolerance))
 			{
 				if (glm::sign(_direction.y) == glm::sign(other._direction.y))
-					return ParallelState::SAME_DIRECTION;
+					return ParallelState::SameDirection;
 				else
-					return ParallelState::OPPOSITE_DIRECTION;
+					return ParallelState::OppositeDirection;
 			}
 			else
-				return ParallelState::NON_PARALLEL;
+				return ParallelState::NotParallel;
 		}
 		else
 		{
@@ -116,20 +116,20 @@ namespace oly
 				if (glm::sign(_direction.x) == glm::sign(other._direction.x))
 				{
 					if (glm::sign(_direction.y) == glm::sign(other._direction.y))
-						return ParallelState::SAME_DIRECTION;
+						return ParallelState::SameDirection;
 					else
-						return ParallelState::NON_PARALLEL;
+						return ParallelState::NotParallel;
 				}
 				else
 				{
 					if (glm::sign(_direction.y) == glm::sign(other._direction.y))
-						return ParallelState::NON_PARALLEL;
+						return ParallelState::NotParallel;
 					else
-						return ParallelState::OPPOSITE_DIRECTION;
+						return ParallelState::OppositeDirection;
 				}
 			}
 			else
-				return ParallelState::NON_PARALLEL;
+				return ParallelState::NotParallel;
 		}
 	}
 }

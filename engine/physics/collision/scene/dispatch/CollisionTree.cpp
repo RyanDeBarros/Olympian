@@ -454,7 +454,7 @@ namespace oly::col2d
 	void CollisionTree::BFSColliderIterator::assert_valid() const
 	{
 		if (!tree)
-			throw Error(ErrorCode::INVALID_ITERATOR);
+			throw Error(ErrorCode::InvalidIterator);
 	}
 
 	void CollisionTree::BFSColliderIterator::invalidate() const
@@ -562,7 +562,7 @@ namespace oly::col2d
 	void CollisionTree::PairIterator::assert_valid() const
 	{
 		if (!tree)
-			throw Error(ErrorCode::INVALID_ITERATOR);
+			throw Error(ErrorCode::InvalidIterator);
 	}
 
 	void CollisionTree::PairIterator::invalidate() const

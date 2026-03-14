@@ -5,115 +5,55 @@
 #include "graphics/shapes/Polygons.h"
 #include "graphics/backend/basic/Framebuffers.h"
 
-#include "core/platform/WindowEvents.h"
-#include "core/platform/EventHandler.h"
-
-#include <functional>
+#include "core/context/rendering/Scopes.h"
 
 namespace oly::rendering
 {
-	class GeometryPainter;
-
-	namespace internal
-	{
-		extern rendering::PolygonBatch& get_polygon_batch(GeometryPainter&);
-		extern rendering::EllipseBatch& get_ellipse_batch(GeometryPainter&);
-	}
-
-	// TODO v6 combine ellipse and polygon shaders.
-	// TODO v7 write texture in separate thread
-	// The GeometryPainter class supports drawing polygons and ellipses to a texture by writing to an internal framebuffer. Use its polygon/ellipse batches to paint renderables.
 	class GeometryPainter
 	{
-		static const int TEXTURE_CPP = 4;
-
 		PolygonBatch polygon_batch;
 		EllipseBatch ellipse_batch;
-		StaticSprite sprite;
 		graphics::Framebuffer framebuffer;
-		graphics::BindlessTextureRef texture;
-		glm::ivec2 dimensions;
-		glm::mat3 projection = 1.0f;
-		mutable bool dirty = false;
-
-		struct WindowResizeHandler : public EventHandler<input::WindowResizeEventData>
-		{
-			GeometryPainter& painter;
-
-			WindowResizeHandler(GeometryPainter& painter);
-
-			bool consume(const input::WindowResizeEventData& data) override;
-		} window_resize_handler;
-		friend struct WindowResizeHandler;
 
 	public:
-		class PaintSupport
-		{
-			const GeometryPainter& painter;
-
-			enum class Batch
-			{
-				NONE,
-				POLYGON,
-				ELLIPSE
-			} batch = Batch::NONE;
-
-			friend class GeometryPainter;
-			PaintSupport(const GeometryPainter& painter) : painter(painter) {}
-
-		public:
-			void pre_polygon_draw();
-			void pre_ellipse_draw();
-
-		private:
-			void final_flush();
-		};
-
-		using PaintFunction = std::function<void(PaintSupport&)>;
-
-		PaintFunction paint_fn = [](PaintSupport) {};
-
-		GeometryPainter(const PaintFunction& paint_fn);
-		GeometryPainter(const PaintFunction& paint_fn, Unbatched);
-		GeometryPainter(const PaintFunction& paint_fn, SpriteBatch& batch);
+		GeometryPainter() = default;
 		GeometryPainter(const GeometryPainter&);
 		GeometryPainter(GeometryPainter&&) noexcept;
-		~GeometryPainter();
 		GeometryPainter& operator=(const GeometryPainter&);
 		GeometryPainter& operator=(GeometryPainter&&) noexcept;
-
-	private:
-		void render_polygons() const;
-		void render_ellipses() const;
-		void write_texture() const;
-		void set_sprite_scale(glm::vec2 scale);
-		void set_dimensions(glm::ivec2 dimensions);
-
-	public:
-		void draw() const;
-		void flag_dirty() const { dirty = true; }
-		void regen_to_current_resolution();
-
-		auto get_sprite_batch() const { return sprite.get_batch(); }
-		void set_sprite_batch(Unbatched) { sprite.set_batch(UNBATCHED); sync_sprite_batch(); }
-		void set_sprite_batch(SpriteBatch& batch) { sprite.set_batch(batch); sync_sprite_batch(); }
-		void sync_sprite_batch();
-
-	public:
-		friend PolygonBatch& internal::get_polygon_batch(GeometryPainter&);
-		friend EllipseBatch& internal::get_ellipse_batch(GeometryPainter&);
-		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
-		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
-
-	private:
-		PolygonBatch& get_polygon_batch() { return polygon_batch; }
-		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
 		
-		void setup_texture();
-		void copy_texture(const graphics::BindlessTexture& other);
-		void sync_texture();
-		void tex_image();
-		void set_and_use_texture_handle();
-		void setup_framebuffer();
+		const PolygonBatch& get_polygon_batch() const { return polygon_batch; }
+		PolygonBatch& get_polygon_batch() { return polygon_batch; }
+		const EllipseBatch& get_ellipse_batch() const { return ellipse_batch; }
+		EllipseBatch& get_ellipse_batch() { return ellipse_batch; }
+
+		class PaintContext
+		{
+			GeometryPainter& painter;
+			context::ScopedViewportChange scope;
+			graphics::BindlessTextureRef texture;
+			glm::ivec2 dimensions;
+
+			friend class GeometryPainter;
+			PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, float rotation, glm::vec2 scale, int texture_cpp);
+			PaintContext(const PaintContext&) = delete;
+			PaintContext(PaintContext&&) = delete;
+		
+		public:
+			~PaintContext();
+
+			void render();
+
+			glm::vec2 get_texture_dimensions() const { return dimensions; }
+			graphics::BindlessTextureRef get_texture() const { return texture; }
+
+			void set_texture(StaticSprite& sprite) const;
+			void set_texture(Sprite& sprite) const;
+		};
+
+		PaintContext paint_context(const Camera2DRef& camera, math::IRect2D bounds, float rotation = 0.0f, glm::vec2 scale = glm::vec2(1.0f), int texture_cpp = 4);
+
+	private:
+		mutable bool context_locked = false;
 	};
 }

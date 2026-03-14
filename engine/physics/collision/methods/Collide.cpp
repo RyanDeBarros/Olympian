@@ -72,7 +72,7 @@ namespace oly::col2d
 					if (above_zero(t) && t > max_entry)
 					{
 						max_entry = t;
-						info.hit = RaycastResult::Hit::TRUE_HIT;
+						info.hit = RaycastResult::Hit::TrueHit;
 						info.normal = -axis;
 					}
 				}
@@ -82,7 +82,7 @@ namespace oly::col2d
 					if (above_zero(t) && t > max_entry)
 					{
 						max_entry = t;
-						info.hit = RaycastResult::Hit::TRUE_HIT;
+						info.hit = RaycastResult::Hit::TrueHit;
 						info.normal = axis;
 					}
 				}
@@ -149,13 +149,13 @@ namespace oly::col2d
 	RaycastResult raycast(const Circle& c, Ray ray)
 	{
 		if (point_hits(c, ray.origin))
-			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+			return { .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
 
 		float t1, t2;
 		if (!ray_contact_circle(c, ray, t1, t2))
-			return { .hit = RaycastResult::Hit::NO_HIT };
+			return { .hit = RaycastResult::Hit::NoHit };
 
-		RaycastResult info{ .hit = RaycastResult::Hit::TRUE_HIT };
+		RaycastResult info{ .hit = RaycastResult::Hit::TrueHit };
 		info.contact = std::max(t1, 0.0f) * (glm::vec2)ray.direction + ray.origin;
 		glm::vec2 local_contact = internal::CircleGlobalAccess::local_point(c, info.contact);
 		info.normal = internal::CircleGlobalAccess::global_normal(c, local_contact - c.center);
@@ -290,7 +290,7 @@ namespace oly::col2d
 			if (q.x < 0.0f)
 				return false;
 
-			// single intersection point
+			// Single intersection point
 			t2 = t1 = q.x;
 
 			// semi-infinite ray
@@ -342,18 +342,18 @@ namespace oly::col2d
 
 	OverlapResult ray_hits(const AABB& c, Ray ray)
 	{
-		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::UP);
+		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::Right) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::Up);
 	}
 
 	RaycastResult raycast(const AABB& c, Ray ray)
 	{
-		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
 		float max_entry = -nmax<float>();
-		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT, info, max_entry))
-			return { .hit = RaycastResult::Hit::NO_HIT };
-		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::UP, info, max_entry))
-			return { .hit = RaycastResult::Hit::NO_HIT };
-		if (info.hit == RaycastResult::Hit::TRUE_HIT)
+		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::Right, info, max_entry))
+			return { .hit = RaycastResult::Hit::NoHit };
+		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::Up, info, max_entry))
+			return { .hit = RaycastResult::Hit::NoHit };
+		if (info.hit == RaycastResult::Hit::TrueHit)
 			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
 		return info;
 	}
@@ -383,18 +383,18 @@ namespace oly::col2d
 				info.penetration_depth = overlapX;
 				const float sgn = -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2));
 				if (sgn > 0.0f)
-					info.unit_impulse = UnitVector2D::RIGHT;
+					info.unit_impulse = UnitVector2D::Right;
 				else
-					info.unit_impulse = UnitVector2D::LEFT;
+					info.unit_impulse = UnitVector2D::Left;
 			}
 			else
 			{
 				info.penetration_depth = overlapY;
 				const float sgn = -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2));
 				if (sgn > 0.0f)
-					info.unit_impulse = UnitVector2D::UP;
+					info.unit_impulse = UnitVector2D::Up;
 				else
-					info.unit_impulse = UnitVector2D::DOWN;
+					info.unit_impulse = UnitVector2D::Down;
 			}
 		}
 
@@ -514,15 +514,15 @@ namespace oly::col2d
 
 	RaycastResult raycast(const OBB& c, Ray ray)
 	{
-		RaycastResult info{ .hit = RaycastResult::Hit::EMBEDDED_ORIGIN, .contact = ray.origin };
+		RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
 		float max_entry = -nmax<float>();
 		auto proj = c.get_major_axis_projection_interval();
 		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_major_axis(), info, max_entry))
-			return { .hit = RaycastResult::Hit::NO_HIT };
+			return { .hit = RaycastResult::Hit::NoHit };
 		proj = c.get_minor_axis_projection_interval();
 		if (!internal::raycast_update_on_slab(proj.first, proj.second, ray, c.get_minor_axis(), info, max_entry))
-			return { .hit = RaycastResult::Hit::NO_HIT };
-		if (info.hit == RaycastResult::Hit::TRUE_HIT)
+			return { .hit = RaycastResult::Hit::NoHit };
+		if (info.hit == RaycastResult::Hit::TrueHit)
 			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
 		return info;
 	}
@@ -574,7 +574,7 @@ namespace oly::col2d
 	{
 		// origin is already in polygon
 		if (point_hits(c, ray.origin))
-			return { .hit = RaycastResult::Hit::EMBEDDED_ORIGIN };
+			return { .hit = RaycastResult::Hit::EmbeddedOrigin };
 
 		float closest_edge_distance = nmax<float>();;
 		size_t closest_idx = -1;
@@ -595,13 +595,13 @@ namespace oly::col2d
 		if (closest_idx != size_t(-1))
 		{
 			return {
-				.hit = RaycastResult::Hit::TRUE_HIT,
+				.hit = RaycastResult::Hit::TrueHit,
 				.contact = ray.origin + closest_edge_distance * (glm::vec2)ray.direction,
 				.normal = -c.edge_normal(closest_idx)
 			};
 		}
 		else
-			return { .hit = RaycastResult::Hit::NO_HIT };
+			return { .hit = RaycastResult::Hit::NoHit };
 	}
 
 	OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2)
@@ -614,7 +614,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -631,7 +631,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -648,7 +648,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -697,12 +697,12 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::Left : UnitVector2D::Right;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::Down : UnitVector2D::Up;
 					}
 				}
 				else // circle center is outside AABB
@@ -827,12 +827,12 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::Left : UnitVector2D::Right;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::Down : UnitVector2D::Up;
 					}
 				}
 				else // circle center is outside OBB
@@ -947,7 +947,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -964,7 +964,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -981,7 +981,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -998,7 +998,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -1015,7 +1015,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1032,7 +1032,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1049,7 +1049,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow)
 					throw e;
 			}
 		}
@@ -1066,7 +1066,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}
@@ -1083,7 +1083,7 @@ namespace oly::col2d
 			}
 			catch (Error e)
 			{
-				if (e.code != ErrorCode::GJK_OVERFLOW && e.code != ErrorCode::EPA_OVERFLOW)
+				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
 					throw e;
 			}
 		}

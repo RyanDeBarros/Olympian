@@ -1,6 +1,7 @@
 #pragma once
 
 #include "external/GLM.h"
+#include "external/TOML.h"
 
 #include "core/base/Parameters.h"
 
@@ -10,13 +11,13 @@ namespace oly::rendering
 	{
 		enum DirtyParagraph
 		{
-			REBUILD_LAYOUT = 1 << 0,
-			HORIZONTAL_ALIGN = 1 << 1,
-			VERTICAL_ALIGN = 1 << 2,
-			PADDING = 1 << 3,
-			PIVOT = 1 << 4,
-			LINE_SPACING = 1 << 5,
-			MIN_SIZE = 1 << 6
+			RebuildLayout = 1 << 0,
+			HorizontalAlign = 1 << 1,
+			VerticalAlign = 1 << 2,
+			Padding = 1 << 3,
+			Pivot = 1 << 4,
+			LineSpacing = 1 << 5,
+			MinSize = 1 << 6
 		};
 
 		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
@@ -29,9 +30,9 @@ namespace oly::rendering
 
 		enum DirtyGlyphGroup
 		{
-			RECOLOR = 1 << 0,
-			LINE_ALIGNMENT = 1 << 1,
-			JITTER_OFFSET = 1 << 2
+			Recolor = 1 << 0,
+			LineAlignment = 1 << 1,
+			JitterOffset = 1 << 2
 		};
 
 		inline DirtyGlyphGroup operator~(DirtyGlyphGroup a) { return DirtyGlyphGroup(~(int)a); }
@@ -63,23 +64,25 @@ namespace oly::rendering
 
 		enum class HorizontalAlignment
 		{
-			LEFT,
-			CENTER,
-			RIGHT,
-			JUSTIFY,
-			FULL_JUSTIFY
-		} horizontal_alignment = HorizontalAlignment::LEFT;
+			Left,
+			Center,
+			Right,
+			Justify,
+			FullJustify
+		} horizontal_alignment = HorizontalAlignment::Left;
 
 		enum class VerticalAlignment
 		{
-			TOP,
-			MIDDLE,
-			BOTTOM,
-			JUSTIFY,
-			FULL_JUSTIFY
-		} vertical_alignment = VerticalAlignment::TOP;
+			Top,
+			Middle,
+			Bottom,
+			Justify,
+			FullJustify
+		} vertical_alignment = VerticalAlignment::Top;
 
 		bool can_fit_on_line(TypesetData t, float dx) const;
 		bool can_fit_vertically(TypesetData t, float dy) const;
+
+		static ParagraphFormat load(TOMLNode node);
 	};
 }

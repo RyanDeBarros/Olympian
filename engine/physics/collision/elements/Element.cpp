@@ -26,7 +26,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8);\
 		default:\
-			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
+			throw Error(ErrorCode::UnsupportedSwitchCase);\
 	}
 
 	float Element::projection_max(UnitVector2D axis) const
@@ -207,7 +207,14 @@ namespace oly::col2d
 #undef OLY_ELEMENT_TRANSFORMED
 	}
 
-	Element::ElementVariant Element::variant() const
+	Element::ConstElementVariant Element::variant() const
+	{
+#define OLY_ELEMENT_CONST_VARIANT(p) return p;
+		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_CONST_VARIANT);
+#undef OLY_ELEMENT_CONST_VARIANT
+	}
+
+	Element::ElementVariant Element::variant()
 	{
 #define OLY_ELEMENT_VARIANT(p) return p;
 		OLY_ELEMENT_IMPL_FULL_SWITCH(OLY_ELEMENT_VARIANT);
@@ -221,8 +228,8 @@ namespace oly::col2d
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
 		{\
-			fpair ix = p->projection_interval(UnitVector2D::RIGHT);\
-			fpair iy = p->projection_interval(UnitVector2D::UP);\
+			fpair ix = p->projection_interval(UnitVector2D::Right);\
+			fpair iy = p->projection_interval(UnitVector2D::Up);\
 			return AABB{ .x1 = ix.first, .x2 = ix.second, .y1 = iy.first, .y2 = iy.second };\
 		}
 
@@ -271,7 +278,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8);\
 		default:\
-			throw Error(ErrorCode::UNSUPPORTED_SWITCH_CASE);\
+			throw Error(ErrorCode::UnsupportedSwitchCase);\
 	}
 
 	OverlapResult Element::overlaps(const Element& c) const

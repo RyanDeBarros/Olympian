@@ -1,9 +1,14 @@
 #include "SpriteAtlas.h"
 
 #include "core/util/Time.h"
+#include "core/util/Loader.h"
 
 namespace oly::rendering
 {
+	SpriteAtlas::SpriteAtlas()
+	{
+	}
+
 	SpriteAtlas::SpriteAtlas(Unbatched)
 		: sprite(UNBATCHED)
 	{
@@ -19,12 +24,26 @@ namespace oly::rendering
 	{
 	}
 
+	SpriteAtlas::SpriteAtlas(const SpriteAtlas& other)
+		: sprite(other.sprite), atlas(other.atlas), anim_format(other.anim_format), current_frame(other.current_frame)
+	{
+	}
+
+	SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
+		: sprite(std::move(other.sprite)), atlas(std::move(other.atlas)), anim_format(std::move(other.anim_format)), current_frame(other.current_frame)
+	{
+	}
+
+	SpriteAtlas::~SpriteAtlas()
+	{
+	}
+
 	void SpriteAtlas::draw() const
 	{
 		sprite.draw();
 	}
 
-	void SpriteAtlas::on_tick() const
+	void SpriteAtlas::on_tick()
 	{
 		if (anim_format.delay_seconds != 0.0f)
 			select(anim_format.starting_frame + (int)floor((TIME.now<>() - anim_format.starting_time) / anim_format.delay_seconds));
@@ -93,5 +112,42 @@ namespace oly::rendering
 			current_frame = frame;
 			sprite.set_tex_coords(atlas[frame]);
 		}
+	}
+
+	static SpriteAtlas load_sprite_atlas(TOMLNode node, const DebugTrace* trace)
+	{
+		if (!node)
+			return {};
+
+		SpriteAtlas sprite_atlas(trace ? Sprite::load(node["sprite"], *trace) : Sprite::load(node["sprite"]));
+
+		GLuint rows, cols;
+		float delay_seconds;
+		if (io::parse_uint(node["rows"], rows) && io::parse_uint(node["cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, io::parse_bool_or(node["row_major"], true), io::parse_bool_or(node["row_up"], true));
+		else
+		{
+			GLuint static_frame;
+			if (io::parse_uint(node["static_frame"], static_frame))
+				sprite_atlas.select_static_frame(static_frame);
+		}
+
+		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
+		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
+
+		sprite_atlas.auto_tick = io::parse_bool_or(node["auto_tick"], true);
+
+		return sprite_atlas;
+	}
+
+	SpriteAtlas SpriteAtlas::load(TOMLNode node)
+	{
+		return load_sprite_atlas(node, nullptr);
+	}
+
+	SpriteAtlas SpriteAtlas::load(TOMLNode node, const DebugTrace& trace)
+	{
+		auto scope = trace.scope("ASSETS", "oly::rendering::SpriteAtlas::load()");
+		return load_sprite_atlas(node, &trace);
 	}
 }
