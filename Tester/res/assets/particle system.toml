@@ -2,7 +2,7 @@
 
 [emitter0]
 	[emitter0.spawner]
-	class = 1
+	klass = "ConstantParticleSpawner"
 
 	[emitter0.color]
 		[emitter0.color.domain]

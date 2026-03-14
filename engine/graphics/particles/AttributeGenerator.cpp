@@ -2,38 +2,21 @@
 
 #include "graphics/particles/ShaderStructs.h"
 #include "graphics/particles/implementations/Spawners.h"
+#include "graphics/particles/implementations/Samplers.h"
+#include "graphics/particles/implementations/Domains.h"
 #include "core/util/StringParam.h"
 
 namespace oly::particles
 {
-	// TODO v7 use this enum pattern preferably over string enums in loaders
-	namespace internal
-	{
-		enum ParticleSpawnerTypeHash
-		{
-			ConstantParticleSpawner = 1,
-			BurstParticleSpawner = 2
-		};
-
-#define _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH(M)\
-		M(ConstantParticleSpawner)\
-		M(BurstParticleSpawner)
-	}
-
 	void IParticleSpawner::overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node)
 	{
-#define _OLY_ENUM_CASE(Name)\
-		case internal::ParticleSpawnerTypeHash::Name:\
-			if (!spawner.castable<Name>()) spawner = make_polymorphic<Name>();\
-			break;
+		std::string klass = node["klass"].value_or<>("");
 
-		switch (node["class"].value_or<int64_t>(0))
-		{
-			_OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH(_OLY_ENUM_CASE)
-		}
-
-#undef _OLY_ENUM_CASE
-#undef _OLY_EXPAND_PARTICLE_SPAWNER_TYPE_HASH
+		// TODO v7 use polyklass macros more often
+		_OLY_POLYKLASS_CASES_BEGIN(spawner)
+			_OLY_POLYKLASS_IF_CASE(ConstantParticleSpawner)
+			_OLY_POLYKLASS_ELSE_IF_CASE(BurstParticleSpawner)
+			_OLY_POLYKLASS_CASES_END;
 
 		if (spawner)
 			spawner->overload(node);
@@ -41,12 +24,29 @@ namespace oly::particles
 
 	void ISampler1D::overload(Polymorphic<ISampler1D>& sampler, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(sampler)
+			_OLY_POLYKLASS_IF_CASE(UniformSampler1D)
+			_OLY_POLYKLASS_ELSE_IF_CASE(TiltedSampler1D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (sampler)
+			sampler->overload(node);
 	}
 
 	void IDomain1D::overload(Polymorphic<IDomain1D>& domain, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(domain)
+			_OLY_POLYKLASS_IF_CASE(ConstantDomain1D)
+			_OLY_POLYKLASS_ELSE_IF_CASE(LineDomain1D)
+			_OLY_POLYKLASS_ELSE_IF_CASE(BiLineDomain1D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (domain)
+			domain->overload(node);
 	}
 
 	void AttributeGenerator1D::apply(internal::Generator1D& generator) const
@@ -57,12 +57,26 @@ namespace oly::particles
 
 	void ISampler2D::overload(Polymorphic<ISampler2D>& sampler, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(sampler)
+			_OLY_POLYKLASS_IF_CASE(UniformSampler2D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (sampler)
+			sampler->overload(node);
 	}
 
 	void IDomain2D::overload(Polymorphic<IDomain2D>& domain, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(domain)
+			_OLY_POLYKLASS_IF_CASE(ConstantDomain2D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (domain)
+			domain->overload(node);
 	}
 
 	void AttributeGenerator2D::apply(internal::Generator2D& generator) const
@@ -73,12 +87,26 @@ namespace oly::particles
 
 	void ISampler3D::overload(Polymorphic<ISampler3D>& sampler, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(sampler)
+			_OLY_POLYKLASS_IF_CASE(UniformSampler3D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (sampler)
+			sampler->overload(node);
 	}
 
 	void IDomain3D::overload(Polymorphic<IDomain3D>& domain, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(domain)
+			_OLY_POLYKLASS_IF_CASE(ConstantDomain3D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (domain)
+			domain->overload(node);
 	}
 
 	void AttributeGenerator3D::apply(internal::Generator3D& generator) const
@@ -89,12 +117,26 @@ namespace oly::particles
 
 	void ISampler4D::overload(Polymorphic<ISampler4D>& sampler, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(sampler)
+			_OLY_POLYKLASS_IF_CASE(UniformSampler4D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (sampler)
+			sampler->overload(node);
 	}
 
 	void IDomain4D::overload(Polymorphic<IDomain4D>& domain, TOMLNode node)
 	{
-		// TODO v6
+		std::string klass = node["klass"].value_or<>("");
+
+		_OLY_POLYKLASS_CASES_BEGIN(domain)
+			_OLY_POLYKLASS_IF_CASE(ConstantDomain4D)
+			_OLY_POLYKLASS_CASES_END;
+
+		if (domain)
+			domain->overload(node);
 	}
 
 	void AttributeGenerator4D::apply(internal::Generator4D& generator) const
