@@ -342,16 +342,16 @@ namespace oly::col2d
 
 	OverlapResult ray_hits(const AABB& c, Ray ray)
 	{
-		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::UP);
+		return internal::ray_hits_slab(c.x1, c.x2, ray, UnitVector2D::Right) && internal::ray_hits_slab(c.y1, c.y2, ray, UnitVector2D::Up);
 	}
 
 	RaycastResult raycast(const AABB& c, Ray ray)
 	{
 		RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
 		float max_entry = -nmax<float>();
-		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::RIGHT, info, max_entry))
+		if (!internal::raycast_update_on_slab(c.x1, c.x2, ray, UnitVector2D::Right, info, max_entry))
 			return { .hit = RaycastResult::Hit::NoHit };
-		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::UP, info, max_entry))
+		if (!internal::raycast_update_on_slab(c.y1, c.y2, ray, UnitVector2D::Up, info, max_entry))
 			return { .hit = RaycastResult::Hit::NoHit };
 		if (info.hit == RaycastResult::Hit::TrueHit)
 			info.contact = ray.origin + max_entry * (glm::vec2)ray.direction;
@@ -383,18 +383,18 @@ namespace oly::col2d
 				info.penetration_depth = overlapX;
 				const float sgn = -(glm::abs(dx1) < glm::abs(dx2) ? glm::sign(dx1) : glm::sign(dx2));
 				if (sgn > 0.0f)
-					info.unit_impulse = UnitVector2D::RIGHT;
+					info.unit_impulse = UnitVector2D::Right;
 				else
-					info.unit_impulse = UnitVector2D::LEFT;
+					info.unit_impulse = UnitVector2D::Left;
 			}
 			else
 			{
 				info.penetration_depth = overlapY;
 				const float sgn = -(glm::abs(dy1) < glm::abs(dy2) ? glm::sign(dy1) : glm::sign(dy2));
 				if (sgn > 0.0f)
-					info.unit_impulse = UnitVector2D::UP;
+					info.unit_impulse = UnitVector2D::Up;
 				else
-					info.unit_impulse = UnitVector2D::DOWN;
+					info.unit_impulse = UnitVector2D::Down;
 			}
 		}
 
@@ -697,12 +697,12 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::Left : UnitVector2D::Right;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::Down : UnitVector2D::Up;
 					}
 				}
 				else // circle center is outside AABB
@@ -827,12 +827,12 @@ namespace oly::col2d
 					if (dx < dy)
 					{
 						info.penetration_depth = dx + c1.radius;
-						info.unit_impulse = dx1 < dx2 ? UnitVector2D::LEFT : UnitVector2D::RIGHT;
+						info.unit_impulse = dx1 < dx2 ? UnitVector2D::Left : UnitVector2D::Right;
 					}
 					else
 					{
 						info.penetration_depth = dy + c1.radius;
-						info.unit_impulse = dy1 < dy2 ? UnitVector2D::DOWN : UnitVector2D::UP;
+						info.unit_impulse = dy1 < dy2 ? UnitVector2D::Down : UnitVector2D::Up;
 					}
 				}
 				else // circle center is outside OBB

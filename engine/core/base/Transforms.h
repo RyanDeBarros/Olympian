@@ -171,7 +171,7 @@ namespace oly
 		const Transform2D& get_local() const { return local; }
 		Transform2D& set_local() { post_set(); return local; }
 
-		// TODO v6 forward() vector
+		UnitVector2D forward() const;
 
 		Polymorphic<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
 		template<PolymorphicBaseOf<TransformModifier2D> T>

@@ -120,15 +120,15 @@ namespace oly::col2d
 			{
 				float(*bx)(const Element& e) = nullptr;
 				if constexpr (MinX)
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::LEFT); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Left); };
 				else
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::RIGHT); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Right); };
 				
 				float(*by)(const Element& e) = nullptr;
 				if constexpr (MinY)
-					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::DOWN); };
+					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Down); };
 				else
-					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::UP); };
+					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::Up); };
 
 				if constexpr (XY)
 				{

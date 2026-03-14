@@ -37,10 +37,10 @@ namespace oly
 		UnitVector2D(_down) : _direction({ 0.0f, -1.0f }) {}
 
 	public:
-		static const UnitVector2D RIGHT;
-		static const UnitVector2D UP;
-		static const UnitVector2D LEFT;
-		static const UnitVector2D DOWN;
+		static const UnitVector2D Right;
+		static const UnitVector2D Up;
+		static const UnitVector2D Left;
+		static const UnitVector2D Down;
 
 		operator glm::vec2 () const { return _direction; }
 		UnitVector2D& operator=(glm::vec2 direction) { _direction = glm::normalize(direction); return *this; }
@@ -83,10 +83,10 @@ namespace oly
 		size_t hash() const { return std::hash<glm::vec2>{}(_direction); }
 	};
 
-	inline const UnitVector2D UnitVector2D::RIGHT = UnitVector2D(_right{});
-	inline const UnitVector2D UnitVector2D::UP = UnitVector2D(_up{});
-	inline const UnitVector2D UnitVector2D::LEFT = UnitVector2D(_left{});
-	inline const UnitVector2D UnitVector2D::DOWN = UnitVector2D(_down{});
+	inline const UnitVector2D UnitVector2D::Right = UnitVector2D(_right{});
+	inline const UnitVector2D UnitVector2D::Up = UnitVector2D(_up{});
+	inline const UnitVector2D UnitVector2D::Left = UnitVector2D(_left{});
+	inline const UnitVector2D UnitVector2D::Down = UnitVector2D(_down{});
 
 	template<>
 	struct Distance<UnitVector2D>

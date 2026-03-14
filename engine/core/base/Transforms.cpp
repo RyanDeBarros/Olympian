@@ -373,6 +373,11 @@ namespace oly
 		return was_dirty;
 	}
 
+	UnitVector2D Transformer2D::forward() const
+	{
+		return UnitVector2D(transform_direction(global(), UnitVector2D::Right));
+	}
+
 	Transformer2D Transformer2D::load(TOMLNode node)
 	{
 		if (!node)

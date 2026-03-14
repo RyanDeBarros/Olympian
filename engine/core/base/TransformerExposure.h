@@ -15,6 +15,8 @@ namespace oly
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
 
+		UnitVector2D forward() const { return transformer.forward(); }
+
 		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return transformer.get_modifier<T>(); }
 	};
@@ -89,6 +91,8 @@ namespace oly
 
 		glm::mat3 global() const { return transformer.global(); }
 		const Transform2D& get_local() const { return transformer.get_local(); }
+
+		UnitVector2D forward() const { return transformer.forward(); }
 
 		Transform2D& set_local()
 			requires (exposure::NONZERO(Params.local & exposure::local::SetLocal))

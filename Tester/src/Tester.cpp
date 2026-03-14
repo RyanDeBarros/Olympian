@@ -278,7 +278,7 @@ int main()
 	semi_solid->add_collider(oly::col2d::AABB{ .x1 = -100.0f, .x2 = 300.0f, .y1 = 300.0f, .y2 = 400.0f });
 	semi_solid->collider().layer() |= oly::context::get_collision_layer("obstacle");
 	semi_solid->collider().mask() |= oly::context::get_collision_mask("player");
-	semi_solid->collider().one_way_blocking = oly::UnitVector2D::UP;
+	semi_solid->collider().one_way_blocking = oly::UnitVector2D::Up;
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 
