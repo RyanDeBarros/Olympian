@@ -6,7 +6,7 @@
 
 namespace oly::particles
 {
-	// TODO v6 use this enum pattern preferably over string enums in loaders
+	// TODO v7 use this enum pattern preferably over string enums in loaders
 	namespace internal
 	{
 		enum ParticleSpawnerTypeHash

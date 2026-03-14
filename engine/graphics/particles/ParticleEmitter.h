@@ -30,7 +30,7 @@ namespace oly::particles
 		{
 			Unbounded,
 			Loop,
-			OneShot  // TODO v6 implement one_shot + playing/pausing
+			OneShot  // TODO v7 implement one_shot + playing/pausing
 		} loop = Loop::Loop;
 
 	private:

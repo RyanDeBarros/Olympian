@@ -178,7 +178,7 @@ namespace oly::rendering
 		buffers.ps_data.bind_base(2);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffers.draw_command.buffer());
 		glDrawArraysIndirect(GL_TRIANGLE_STRIP, (void*)0);
-		// TODO v6 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.
+		// TODO v7 use SDF textures for shapes (ellipses, polygons, etc.). Could also add SDF functionality to sprites.
 	}
 
 	void ParticleSystem::add_emitter(particles::ParticleEmitter&& emitter)

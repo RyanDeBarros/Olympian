@@ -18,9 +18,8 @@ namespace oly
 		struct LogAccess;
 	}
 
-	// TODO v6 string formatting and buffer elements for logger
+	// TODO v7 string formatting and buffer elements for logger
 
-	// TODO v6 update Editor
 	struct LoggerOptions
 	{
 		bool use_console = true;

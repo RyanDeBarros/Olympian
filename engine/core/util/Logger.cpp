@@ -12,7 +12,7 @@ namespace oly
 		target.logfile = options.use_logfile;
 		target.console = options.use_console;
 
-		// TODO v6 use options max files/bytes to remove old logs here
+		// TODO v7 use options max files/bytes to remove old logs here
 
 		if (target.logfile)
 		{

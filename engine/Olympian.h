@@ -50,7 +50,7 @@ namespace oly
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
 	/*
-	TODO v6 redesign editor again - remove current editor folder, and do the following:
+	TODO v7 redesign editor again - remove current editor folder, and do the following:
 
 	Editor should essentially be embedded in a text editor. Create REPL program that can use files
 	for large input/output (for example, open asset file in this buffer file). Any file operations
@@ -65,9 +65,9 @@ namespace oly
 	files in order to generate and parse asset files.
 	*/
 
-	// TODO v6 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
-	// TODO v7 Lighting engine
-	// TODO v7 UI widgets
-	// TODO v8 thread safety + multi-threading.
-	// TODO v9 network communication - online/local multiplayer.
+	// TODO v7 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
+	// TODO v8 Lighting engine
+	// TODO v8 UI widgets
+	// TODO v9 thread safety + multi-threading.
+	// TODO v10 network communication - online/local multiplayer.
 }
