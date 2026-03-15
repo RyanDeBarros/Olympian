@@ -11,7 +11,7 @@ RESET = "\033[0m"
 try:
 	import PyInstaller
 except ImportError:
-	print(f"{RED}ERROR: PyInstaller is not installed. Please intall it with:\n\npip install pyinstaller\n{RESET}")
+	print(f"{RED}ERROR: PyInstaller is not installed. Please install it with:\n\npip install pyinstaller\n{RESET}")
 	exit(1)
 
 SCRIPT = Path(__file__).parent / "OlyEditor.py"
