@@ -3,7 +3,7 @@ import os.path
 import toml
 
 
-def meta(path):
+def meta(path) -> dict:
 	"""Peek the first line to extract meta fields."""
 	with open(path, 'r') as f:
 		first_line = f.readline()
@@ -18,7 +18,7 @@ def meta(path):
 	return m
 
 
-def load(path):
+def load(path) -> dict:
 	"""Load TOML data, skipping the meta line if present."""
 	with open(path, 'r') as f:
 		first_line = f.readline()
@@ -27,7 +27,7 @@ def load(path):
 		return toml.load(f)
 
 
-def dump(path, d, m=None):
+def dump(path, d, m=None) -> None:
 	"""Dump TOML data with optional meta line at the top, merging with existing meta."""
 	if os.path.exists(path):
 		existing_meta = meta(path)
