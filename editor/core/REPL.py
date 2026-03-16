@@ -1,5 +1,4 @@
 import os
-import shlex
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable, override
@@ -12,6 +11,9 @@ from prompt_toolkit.shortcuts import CompleteStyle
 
 from editor.tools import eprint
 
+GROUP_OPEN = '['
+GROUP_CLOSE = ']'
+
 
 class ProgramState:
 	def __init__(self, project_dir: Path):
@@ -22,19 +24,51 @@ class ProgramState:
 
 	def load_args(self, argline: str):
 		self.argline = argline
-		self.args = shlex.split(argline)
+		self.args = []
+
+		current = ''
+		in_group = False
+
+		for char in argline:
+			if char == GROUP_OPEN:
+				if in_group:
+					current += char
+				else:
+					in_group = True
+			elif char == GROUP_CLOSE:
+				if in_group:
+					in_group = False
+					self.args.append(current)
+					current = ''
+				else:
+					current += char
+			elif char.isspace() and not in_group:
+				if current:
+					self.args.append(current)
+					current = ''
+			else:
+				current += char
+
+		if current:
+			self.args.append(current)
 
 	def project_name(self) -> str:
 		return self.project_dir.name
 
 	def cwd_prompt(self) -> str:
 		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
-		return f"oly {self.project_name()}/{cwd if cwd != '.' else ''} > "
+		return f"oly [{self.project_name()}/{cwd if cwd != '.' else ''}] > "
 
 
-# TODO v7 handle quoting paths with spaces
+# TODO v7 document that paths are wrapped with []
 def get_path_completions(document: Document) -> Iterable[Completion]:
-	cword = document.get_word_before_cursor(WORD=True)
+	text_before_cursor = document.text_before_cursor
+
+	opening_index = text_before_cursor.rfind(GROUP_OPEN)
+	if opening_index == -1:
+		return
+
+	cword = text_before_cursor[opening_index + 1:]
 
 	dir_part = os.path.dirname(cword) if os.path.dirname(cword) else '.'
 	prefix = os.path.basename(cword)
@@ -42,16 +76,18 @@ def get_path_completions(document: Document) -> Iterable[Completion]:
 	try:
 		for special in ['.', '..']:
 			if special.startswith(prefix):
-				yield Completion(special + '/', start_position=-len(prefix))
+				yield Completion(f'{special}/', start_position=-len(prefix))
 
 		for f in os.listdir(dir_part):
 			if f.startswith(prefix):
 				full_path = os.path.join(dir_part, f)
 				if os.path.isdir(full_path):
-					f += '/'
-				yield Completion(f, start_position=-len(prefix))
+					completion = f'{f}/'
+				else:
+					completion = f'{f}{GROUP_CLOSE}'
+				yield Completion(completion, start_position=-len(prefix))
 	except FileNotFoundError:
-		pass  # skip
+		pass
 
 
 class REPLCommand(ABC):
