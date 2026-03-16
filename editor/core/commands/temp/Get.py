@@ -13,7 +13,7 @@ class TempGetCommand(REPLCommand):
 	def execute(self, program: ProgramState):
 		if len(program.args) == 1:
 			try:
-				print(Storage.get_temp(program.args[0]))  # TODO v7 expand recursive macros
+				print(Storage.get_temp(program.args[0]))  # TODO v7 expand recursive macros in second line
 			except KeyError:
 				eprint("Key does not exist")
 		else:

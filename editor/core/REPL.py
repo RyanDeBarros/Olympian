@@ -9,10 +9,8 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
+from editor.core import Resolver
 from editor.tools import eprint
-
-GROUP_OPEN = '['
-GROUP_CLOSE = ']'
 
 
 class ProgramState:
@@ -20,37 +18,16 @@ class ProgramState:
 		self.exit = False
 		self.project_dir = project_dir.resolve()
 		self.argline = ""
-		self.args = []
+		self.expanded_argline = ""
+		self.args: list[str] = []
 
-	def load_args(self, argline: str):
+	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline
-		self.args = []
-
-		current = ''
-		in_group = False
-
-		for char in argline:
-			if char == GROUP_OPEN:
-				if in_group:
-					current += char
-				else:
-					in_group = True
-			elif char == GROUP_CLOSE:
-				if in_group:
-					in_group = False
-					self.args.append(current)
-					current = ''
-				else:
-					current += char
-			elif char.isspace() and not in_group:
-				if current:
-					self.args.append(current)
-					current = ''
-			else:
-				current += char
-
-		if current:
-			self.args.append(current)
+		if expand_macros:
+			self.expanded_argline = Resolver.expand_macros(self.argline)
+		else:
+			self.expanded_argline = self.argline
+		self.args = Resolver.split_groups(self.expanded_argline)
 
 	def project_name(self) -> str:
 		return self.project_dir.name
@@ -64,7 +41,7 @@ class ProgramState:
 def get_path_completions(document: Document) -> Iterable[Completion]:
 	text_before_cursor = document.text_before_cursor
 
-	opening_index = text_before_cursor.rfind(GROUP_OPEN)
+	opening_index = text_before_cursor.rfind(Resolver.GROUP_OPEN)
 	if opening_index == -1:
 		return
 
@@ -84,7 +61,7 @@ def get_path_completions(document: Document) -> Iterable[Completion]:
 				if os.path.isdir(full_path):
 					completion = f'{f}/'
 				else:
-					completion = f'{f}{GROUP_CLOSE}'
+					completion = f'{f}{Resolver.GROUP_CLOSE}'
 				yield Completion(completion, start_position=-len(prefix))
 	except FileNotFoundError:
 		pass
@@ -97,6 +74,9 @@ class REPLCommand(ABC):
 	@abstractmethod
 	def execute(self, program: ProgramState):
 		raise NotImplementedError()
+
+	def expand_macros(self):
+		return True
 
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
 		yield from get_path_completions(document)
@@ -228,18 +208,20 @@ def run() -> None:
 		if len(elements) == 0:
 			continue
 
-		cmd = elements[0]
+		cmd_name = elements[0]
 
-		if cmd in machine.state().commands:
+		if cmd_name in machine.state().commands:
+			cmd = machine.state().commands[cmd_name]
+
 			try:
-				program.load_args(command[len(cmd):].strip())
+				program.load_args(command[len(cmd_name):].strip(), expand_macros=cmd.expand_macros())
 			except ValueError:
 				eprint("Invalid syntax")  # TODO v7 more descriptive error depending on [/]/macro invalidity
 				continue
 
-			machine.state().commands[cmd].execute(program)
+			cmd.execute(program)
 
 			if program.exit:
 				break
 		else:
-			eprint(f"Unrecognized command: {cmd}")
+			eprint(f"Unrecognized command: {cmd_name}")
