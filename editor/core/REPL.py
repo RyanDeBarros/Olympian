@@ -19,12 +19,9 @@ class ProgramState:
 	def project_name(self) -> str:
 		return self.project_dir.name
 
-	def relative_cwd(self) -> str:
+	def cwd_prompt(self) -> str:
 		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
-		if cwd == '.':
-			return '/'
-		else:
-			return f"/{cwd}"
+		return f"oly {self.project_name()}/{cwd if cwd != '.' else ''} > "
 
 
 def get_path_completions(document: Document) -> Iterable[Completion]:
@@ -160,7 +157,7 @@ def run() -> None:
 	program = ProgramState(Path(os.getcwd()).resolve())
 
 	while True:
-		command = session.prompt(f"oly {program.relative_cwd()} > ")
+		command = session.prompt(program.cwd_prompt())
 
 		elements = command.split()
 		if len(elements) == 0:
