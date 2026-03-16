@@ -107,6 +107,7 @@ class REPLState:
 		self.commands: dict[str, REPLCommand] = {}
 
 	def add_command(self, command: REPLCommand):
+		assert command.name not in self.commands
 		self.commands[command.name] = command
 
 	def command_strings(self):
@@ -233,7 +234,7 @@ def run() -> None:
 			try:
 				program.load_args(command[len(cmd):].strip())
 			except ValueError:
-				eprint("Invalid arguments received. Did you forget a quote?")
+				eprint("Invalid syntax")  # TODO v7 more descriptive error depending on [/]/macro invalidity
 				continue
 
 			machine.state().commands[cmd].execute(program)
