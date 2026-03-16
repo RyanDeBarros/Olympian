@@ -5,9 +5,9 @@ from editor.tools import eprint
 from . import Storage
 
 
-class TempDelCommand(REPLCommand):
+class VarDelCommand(REPLCommand):
 	def __init__(self):
-		super().__init__("temp.del")
+		super().__init__("var.del")
 
 	@override
 	def execute(self, program: ProgramState):
@@ -18,4 +18,4 @@ class TempDelCommand(REPLCommand):
 
 
 def register(machine: REPLStateMachine):
-	machine.default.add_command(TempDelCommand())
+	machine.default.add_command(VarDelCommand())

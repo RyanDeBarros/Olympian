@@ -5,7 +5,7 @@ MACRO_END = '^'
 
 
 def _get_temp(key: str):
-	from .commands.temp import Storage
+	from .commands.var import Storage
 	return Storage.get_temp(key)
 
 
