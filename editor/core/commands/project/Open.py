@@ -1,9 +1,9 @@
 import os
-import sys
 from pathlib import Path
 from typing import override
 
 from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.tools import eprint
 
 
 class ProjectOpenCommand(REPLCommand):
@@ -18,9 +18,9 @@ class ProjectOpenCommand(REPLCommand):
 				os.chdir(cwd)
 				program.project_dir = Path(cwd).resolve()
 			else:
-				print(f"{cwd.as_posix()} is not a valid directory", file=sys.stderr)
+				eprint(f"{cwd.as_posix()} is not a valid directory")
 		else:
-			print(f"Expected 1 argument", file=sys.stderr)
+			eprint(f"Expected 1 argument")
 
 
 def register(machine: REPLStateMachine):

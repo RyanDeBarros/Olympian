@@ -1,5 +1,5 @@
 import os
-import sys
+import shlex
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable, override
@@ -9,6 +9,8 @@ from prompt_toolkit.completion import Completer, CompleteEvent, Completion
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
+
+from editor.tools import eprint
 
 
 class ProgramState:
@@ -20,7 +22,7 @@ class ProgramState:
 
 	def load_args(self, argline: str):
 		self.argline = argline
-		self.args = argline.split()  # TODO v7 handle quoted args
+		self.args = shlex.split(argline)
 
 	def project_name(self) -> str:
 		return self.project_dir.name
@@ -173,10 +175,15 @@ def run() -> None:
 		cmd = elements[0]
 
 		if cmd in machine.state().commands:
-			program.load_args(command[len(cmd):].strip())
+			try:
+				program.load_args(command[len(cmd):].strip())
+			except ValueError:
+				eprint("Invalid arguments received. Did you forget a quote?")
+				continue
+
 			machine.state().commands[cmd].execute(program)
 
 			if program.exit:
 				break
 		else:
-			print(f"Unrecognized command: {cmd}", file=sys.stderr)
+			eprint(f"Unrecognized command: {cmd}")

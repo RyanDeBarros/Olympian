@@ -1,10 +1,10 @@
 import os
 import shutil
 import subprocess
-import sys
 from typing import override
 
 from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.tools import eprint
 
 
 class ShellCommand(REPLCommand):
@@ -14,7 +14,7 @@ class ShellCommand(REPLCommand):
 	@override
 	def execute(self, program: ProgramState):
 		if not program.argline:
-			print("Expected at least 1 argument", file=sys.stderr)
+			eprint("Expected at least 1 argument")
 			return
 
 		bash = shutil.which("bash")
@@ -26,7 +26,7 @@ class ShellCommand(REPLCommand):
 				subprocess.run(program.argline, shell=True)
 
 		except Exception as e:
-			print(f"Shell error: {e}", file=sys.stderr)
+			eprint(f"Shell error: {e}")
 
 
 def register(machine: REPLStateMachine):
