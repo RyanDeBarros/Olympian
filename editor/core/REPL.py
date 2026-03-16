@@ -1,6 +1,9 @@
+import glob
+import importlib
 import os
 import sys
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Iterable, override
 
 from prompt_toolkit import PromptSession
@@ -11,8 +14,19 @@ from prompt_toolkit.shortcuts import CompleteStyle
 
 
 class ProgramState:
-	def __init__(self):
+	def __init__(self, project_dir: Path):
 		self.exit = False
+		self.project_dir = project_dir.resolve()
+
+	def project_name(self) -> str:
+		return self.project_dir.name
+
+	def relative_cwd(self) -> str:
+		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
+		if cwd == '.':
+			return '/'
+		else:
+			return f"/{cwd}"
 
 
 class REPLCommand(ABC):
@@ -21,7 +35,7 @@ class REPLCommand(ABC):
 
 	@abstractmethod
 	def execute(self, program: ProgramState, args: list[str]):
-		pass
+		raise NotImplementedError()
 
 
 class REPLState:
@@ -47,7 +61,7 @@ class REPLState:
 		else:
 			# TODO v7 use REPLCommand context for completion
 			cword = document.get_word_before_cursor(WORD=True)
-			for f in os.listdir("."):
+			for f in os.listdir("."):  # TODO continue into subfolder after '.../'
 				if f.startswith(cword):
 					yield Completion(f, start_position=-len(cword))
 
@@ -81,16 +95,15 @@ def run() -> None:
 	machine = REPLStateMachine()
 
 	from editor.core import commands
-	commands.register_commands(machine)
+	commands.register(machine)
 
 	completer = REPLCompleter(machine)
 	session = PromptSession(completer=completer, complete_while_typing=False, complete_style=CompleteStyle.COLUMN, key_bindings=kb)
 
-	program = ProgramState()
+	program = ProgramState(Path(os.getcwd()).resolve())
 
 	while True:
-		rel_dir = "\"Project Name\""  # TODO v7 use cwd relative to project folder. project folder is either the starting cwd or a cmdline arg passed to OlyEditor
-		command = session.prompt(f"oly {rel_dir} > ")
+		command = session.prompt(f"oly {program.relative_cwd()} > ")
 
 		elements = command.split()
 		if len(elements) == 0:
