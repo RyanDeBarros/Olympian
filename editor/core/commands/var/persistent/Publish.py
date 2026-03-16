@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from .. import Storage
 
 
@@ -17,11 +16,11 @@ class VarPersistentPublishCommand(REPLCommand):
 			try:
 				value = Storage.get_temp(key)
 			except KeyError:
-				eprint("Key does not exist")
+				self.print_arg_error("Key does not exist")
 			else:
 				Storage.set_persistent(key, value)
 		else:
-			eprint("Expected 1 argument")  # TODO v7 in error messages, be more descriptive about the expected syntax.
+			self.print_arg_error(f"Expected 1 argument")
 
 	@override
 	def help(self):

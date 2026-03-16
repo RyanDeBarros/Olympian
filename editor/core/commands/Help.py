@@ -4,7 +4,6 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 
 
 class HelpCommand(REPLCommand):
@@ -19,9 +18,9 @@ class HelpCommand(REPLCommand):
 			if self.program.args[0] in self.program.machine.all_commands:
 				self.program.machine.all_commands[self.program.args[0]].help()
 			else:
-				eprint("Argument is not a valid command")
+				self.print_arg_error("Argument is not a valid command")
 		else:
-			eprint("Expected 0-1 arguments")
+			self.print_arg_error("Expected 0-1 arguments")
 
 	@override
 	def help(self):

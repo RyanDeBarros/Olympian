@@ -2,7 +2,6 @@ from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
 from editor.core.commands.var import Storage
-from editor.tools import eprint
 
 
 class VarPersistentLoadCommand(REPLCommand):
@@ -17,7 +16,7 @@ class VarPersistentLoadCommand(REPLCommand):
 		elif len(self.program.args) == 1:
 			self.load(self.program.args[0])
 		else:
-			eprint("Expected 0-1 arguments")
+			self.print_arg_error("Expected 0-1 arguments")
 
 	@staticmethod
 	def load(key: str):

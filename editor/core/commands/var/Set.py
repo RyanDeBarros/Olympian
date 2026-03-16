@@ -2,7 +2,6 @@ from typing import override
 
 from editor.core import Resolver
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from . import Storage
 
 
@@ -18,9 +17,9 @@ class VarSetCommand(REPLCommand):
 			if Resolver.is_valid_macro_key(key):
 				Storage.set_temp(key, value)
 			else:
-				eprint(f"Key must only contain alphanumeric characters, '-', or '_'")
+				self.print_arg_error(f"Key must only contain alphanumeric characters, '-', or '_'")
 		else:
-			eprint("Expected 2 arguments")
+			self.print_arg_error("Expected 2 arguments")
 
 	@override
 	def help(self):

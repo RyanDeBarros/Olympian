@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from . import Storage
 
 
@@ -16,7 +15,7 @@ class VarListCommand(REPLCommand):
 		elif len(self.program.args) == 1:
 			self.print_list(self.program.args[0])
 		else:
-			eprint("Expected 0-1 arguments")
+			self.print_arg_error("Expected 0-1 arguments")
 
 	@staticmethod
 	def print_list(prefix: str):

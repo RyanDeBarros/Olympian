@@ -2,7 +2,6 @@ from typing import override
 
 from editor.core import Resolver
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from . import Storage
 
 
@@ -20,9 +19,9 @@ class VarGetCommand(REPLCommand):
 				if expanded != value:
 					print("Expanded:", value)
 			except KeyError:
-				eprint("Key does not exist")
+				self.print_arg_error("Key does not exist")
 		else:
-			eprint("Expected 1 argument")
+			self.print_arg_error("Expected 1 argument")
 
 	@override
 	def help(self):

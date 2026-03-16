@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from .. import Storage
 
 
@@ -14,7 +13,7 @@ class VarPersistentClearCommand(REPLCommand):
 		if len(self.program.args) == 0:
 			Storage.clear_persistent()
 		else:
-			eprint("Expected 0 arguments")
+			self.print_arg_error("Expected 0 arguments")
 
 	@override
 	def help(self):

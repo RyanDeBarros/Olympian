@@ -63,6 +63,9 @@ class REPLCommand(ABC):
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
 		yield from get_path_completions(document)
 
+	def print_arg_error(self, msg: str):
+		eprint(f"{msg}. Run `help {self.name}` for more details")
+
 
 class REPLState:
 	def __init__(self):

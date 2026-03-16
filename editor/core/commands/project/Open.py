@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 
 
 class ProjectOpenCommand(REPLCommand):
@@ -18,9 +17,9 @@ class ProjectOpenCommand(REPLCommand):
 				os.chdir(cwd)
 				self.program.project_dir = Path(cwd).resolve()
 			else:
-				eprint(f"{cwd.as_posix()} is not a valid directory")
+				self.print_arg_error(f"{cwd.as_posix()} is not a valid directory")
 		else:
-			eprint(f"Expected 1 argument")
+			self.print_arg_error(f"Expected 1 argument")
 
 	@override
 	def help(self):

@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core.REPL import REPLCommand, ProgramState
-from editor.tools import eprint
 from . import Storage
 
 
@@ -14,7 +13,7 @@ class VarDelCommand(REPLCommand):
 		if len(self.program.args) == 1:
 			Storage.del_temp(self.program.args[0])
 		else:
-			eprint("Expected 1 argument")
+			self.print_arg_error("Expected 1 argument")
 
 	@override
 	def help(self):
