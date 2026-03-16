@@ -28,4 +28,4 @@ class ProjectOpenCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(ProjectOpenCommand(program))
+	program.machine.default().add_command(ProjectOpenCommand(program))

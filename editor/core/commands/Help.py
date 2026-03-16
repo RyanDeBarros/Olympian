@@ -16,7 +16,6 @@ class HelpCommand(REPLCommand):
 		if len(self.program.args) == 0:
 			self.help()
 		elif len(self.program.args) == 1:
-			# TODO v7 custom autocomplete for argument
 			if self.program.args[0] in self.program.machine.all_commands:
 				self.program.machine.all_commands[self.program.args[0]].help()
 			else:
@@ -33,4 +32,4 @@ class HelpCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(HelpCommand(program))
+	program.machine.default().add_command(HelpCommand(program))

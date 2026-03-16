@@ -22,4 +22,4 @@ class VarPersistentUnpublishCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarPersistentUnpublishCommand(program))
+	program.machine.default().add_command(VarPersistentUnpublishCommand(program))

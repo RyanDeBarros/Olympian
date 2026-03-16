@@ -22,4 +22,4 @@ class VarClearCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarClearCommand(program))
+	program.machine.default().add_command(VarClearCommand(program))

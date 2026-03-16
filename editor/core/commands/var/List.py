@@ -30,4 +30,4 @@ class VarListCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarListCommand(program))
+	program.machine.default().add_command(VarListCommand(program))

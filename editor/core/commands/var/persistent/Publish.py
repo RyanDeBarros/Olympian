@@ -29,7 +29,7 @@ class VarPersistentPublishCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarPersistentPublishCommand(program))
+	program.machine.default().add_command(VarPersistentPublishCommand(program))
 
 
 # TODO v7 buffers:

@@ -30,4 +30,4 @@ class VarPersistentLoadCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarPersistentLoadCommand(program))
+	program.machine.default().add_command(VarPersistentLoadCommand(program))

@@ -30,4 +30,4 @@ class VarPersistentListCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default.add_command(VarPersistentListCommand(program))
+	program.machine.default().add_command(VarPersistentListCommand(program))

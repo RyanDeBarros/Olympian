@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
 from typing import Iterable, override
 
@@ -13,7 +14,7 @@ from editor.core import Resolver
 from editor.tools import eprint
 
 
-# TODO v7 document that paths are wrapped with [], and document macro usage $^
+# DOC document that paths are wrapped with [], and document macro usage $^
 def get_path_completions(document: Document) -> Iterable[Completion]:
 	text_before_cursor = document.text_before_cursor
 
@@ -119,17 +120,26 @@ class REPLState:
 
 
 class REPLStateMachine:
+	class State(Enum):
+		DEFAULT = 0
+
 	def __init__(self):
-		self.default = REPLState()
+		self.states = {
+			REPLStateMachine.State.DEFAULT: REPLState()
+		}
 		self.all_commands: dict[str, REPLCommand] = {}
 		self.all_command_strings: list[str] = []
 
 	def state(self) -> REPLState:
-		return self.default
+		return self.default()
+
+	def default(self):
+		return self.states[REPLStateMachine.State.DEFAULT]
 
 	def cache_commands(self):
-		self.default.cache_commands()  # TODO v7 with multiple states, cache all states
-		self.all_commands = self.default.commands
+		for state in self.states.values():
+			state.cache_commands()
+			self.all_commands.update(state.commands)
 		self.all_command_strings = sorted(self.all_commands.keys())
 
 	def get_all_command_completions(self, document: Document) -> Iterable[Completion]:
@@ -142,7 +152,7 @@ class REPLCompleter(Completer):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from self.machine.default.get_completions(document, complete_event)  # TODO v7 possible option later on to switch states
+		yield from self.machine.state().get_completions(document, complete_event)
 
 
 kb = KeyBindings()
