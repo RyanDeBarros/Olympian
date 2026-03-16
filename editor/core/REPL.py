@@ -1,5 +1,3 @@
-import glob
-import importlib
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -9,7 +7,7 @@ from typing import Iterable, override
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, CompleteEvent, Completion
 from prompt_toolkit.document import Document
-from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
 
@@ -29,6 +27,27 @@ class ProgramState:
 			return f"/{cwd}"
 
 
+def get_path_completions(document: Document) -> Iterable[Completion]:
+	cword = document.get_word_before_cursor(WORD=True)
+
+	dir_part = os.path.dirname(cword) if os.path.dirname(cword) else '.'
+	prefix = os.path.basename(cword)
+
+	try:
+		for special in ['.', '..']:
+			if special.startswith(prefix):
+				yield Completion(special + '/', start_position=-len(prefix))
+
+		for f in os.listdir(dir_part):
+			if f.startswith(prefix):
+				full_path = os.path.join(dir_part, f)
+				if os.path.isdir(full_path):
+					f += '/'
+				yield Completion(f, start_position=-len(prefix))
+	except FileNotFoundError:
+		pass  # skip
+
+
 class REPLCommand(ABC):
 	def __init__(self, name: str):
 		self.name = name
@@ -36,6 +55,9 @@ class REPLCommand(ABC):
 	@abstractmethod
 	def execute(self, program: ProgramState, args: list[str]):
 		raise NotImplementedError()
+
+	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+		yield from get_path_completions(document)
 
 
 class REPLState:
@@ -50,20 +72,44 @@ class REPLState:
 
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
 		words = document.text_before_cursor.split()
-
-		# TODO v7 use current state to determine commands list instead of this if-else branching
 		if len(words) <= 1 and not document.text_before_cursor.endswith(" "):
-			cword = document.get_word_before_cursor(WORD=False)
-			commands = self.command_strings()
-			for cmd in commands:
-				if cmd.startswith(cword):
-					yield Completion(cmd, start_position=-len(cword))
+			yield from self.get_command_completions(document)
 		else:
-			# TODO v7 use REPLCommand context for completion
-			cword = document.get_word_before_cursor(WORD=True)
-			for f in os.listdir("."):  # TODO continue into subfolder after '.../'
-				if f.startswith(cword):
-					yield Completion(f, start_position=-len(cword))
+			cmd = words[0]
+			if cmd in self.commands:
+				yield from self.commands[cmd].get_completions(document, complete_event)
+			else:
+				yield from get_path_completions(document)
+
+	def get_command_completions(self, document: Document) -> Iterable[Completion]:
+		cword = document.get_word_before_cursor(WORD=True)
+
+		typed_parts = cword.split(".")
+		current_part = typed_parts[-1]
+		complete_parts = typed_parts[:-1]
+
+		seen: set[str] = set()
+
+		for cmd in self.command_strings():
+			parts = cmd.split(".")
+
+			if len(typed_parts) > len(parts):
+				continue
+
+			if parts[:len(complete_parts)] != complete_parts:
+				continue
+
+			next_part = parts[len(complete_parts)]
+			if not next_part.startswith(current_part):
+				continue
+
+			suggestion = next_part
+			if len(parts) > len(complete_parts) + 1:
+				suggestion += "."
+
+			if suggestion not in seen:
+				seen.add(suggestion)
+				yield Completion(suggestion, start_position=-len(current_part))
 
 
 class REPLStateMachine:
@@ -87,8 +133,19 @@ kb = KeyBindings()
 
 
 @kb.add("c-w")
-def _(event):
-	event.app.current_buffer.cancel_completion()
+def _(event: KeyPressEvent):
+	buf = event.app.current_buffer
+	buf.cancel_completion()
+
+
+@kb.add("enter")
+def _(event: KeyPressEvent):
+	buf = event.app.current_buffer
+	if buf.complete_state and buf.complete_state.current_completion:
+		buf.apply_completion(buf.complete_state.current_completion)
+		buf.complete_state = None
+	else:
+		event.app.current_buffer.validate_and_handle()
 
 
 def run() -> None:
