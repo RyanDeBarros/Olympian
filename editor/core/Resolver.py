@@ -11,7 +11,7 @@ def _get_temp(key: str):
 
 def is_valid_macro_key(key: str) -> bool:
 	for c in key:
-		if not c.isalpha() and c != '-' and c != '_':
+		if not c.isalpha() and c != '-' and c != '_' and c != '*':
 			return False
 	else:
 		return True
