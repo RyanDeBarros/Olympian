@@ -37,7 +37,7 @@ class ProgramState:
 		return f"oly [{self.project_name()}/{cwd if cwd != '.' else ''}] > "
 
 
-# TODO v7 document that paths are wrapped with []
+# TODO v7 document that paths are wrapped with [], and document macro usage $^
 def get_path_completions(document: Document) -> Iterable[Completion]:
 	text_before_cursor = document.text_before_cursor
 

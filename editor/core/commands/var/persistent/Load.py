@@ -1,29 +1,29 @@
 from typing import override
 
 from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.core.commands.var import Storage
 from editor.tools import eprint
-from . import Storage
 
 
-class VarListCommand(REPLCommand):
+class VarPersistentLoadCommand(REPLCommand):
 	def __init__(self):
-		super().__init__("var.list")
+		super().__init__("var.persistent.load")
 
 	@override
 	def execute(self, program: ProgramState):
 		if len(program.args) == 0:
-			self.print_list("")
+			for key in Storage.persistent_keys():
+				self.load(key)
 		elif len(program.args) == 1:
-			self.print_list(program.args[0])
+			self.load(program.args[0])
 		else:
 			eprint("Expected 0-1 arguments")
 
 	@staticmethod
-	def print_list(prefix: str):
-		keys = filter(lambda key: prefix in key, Storage.temp_keys())
-		for key in sorted(keys):
-			print(key, '=', Storage.get_temp(key))
+	def load(key: str):
+		value = Storage.get_persistent(key)
+		Storage.set_temp(key, value)
 
 
 def register(machine: REPLStateMachine):
-	machine.default.add_command(VarListCommand())
+	machine.default.add_command(VarPersistentLoadCommand())

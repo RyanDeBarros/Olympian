@@ -3,18 +3,18 @@ from typing import override
 from editor.core import Resolver
 from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
 from editor.tools import eprint
-from . import Storage
+from .. import Storage
 
 
-class VarGetCommand(REPLCommand):
+class VarPersistentViewCommand(REPLCommand):
 	def __init__(self):
-		super().__init__("var.get")
+		super().__init__("var.persistent.view")
 
 	@override
 	def execute(self, program: ProgramState):
 		if len(program.args) == 1:
 			try:
-				value = Storage.get_temp(program.args[0])
+				value = Storage.get_persistent(program.args[0])
 				print(value)
 				expanded = Resolver.expand_macros(value)
 				if expanded != value:
@@ -26,4 +26,4 @@ class VarGetCommand(REPLCommand):
 
 
 def register(machine: REPLStateMachine):
-	machine.default.add_command(VarGetCommand())
+	machine.default.add_command(VarPersistentViewCommand())

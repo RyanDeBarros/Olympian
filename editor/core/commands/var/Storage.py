@@ -25,9 +25,21 @@ def del_temp(key: str):
 		del TEMP[key]
 
 
+def clear_temp():
+	global TEMP
+	TEMP.clear()
+
+
 def temp_keys() -> list[str]:
 	global TEMP
 	return list(TEMP.keys())
+
+
+def _dump_persistent():
+	if not PERSISTENT_PATH.exists():
+		PERSISTENT_PATH.parent.mkdir(parents=True, exist_ok=True)
+		PERSISTENT_PATH.touch()
+	PERSISTENT_PATH.write_text(json.dumps(PERSISTENT))
 
 
 def get_persistent(key: str) -> str:
@@ -38,13 +50,20 @@ def get_persistent(key: str) -> str:
 def set_persistent(key: str, value: str):
 	global PERSISTENT
 	PERSISTENT[key] = value
-	PERSISTENT_PATH.write_text(json.dumps(PERSISTENT))
+	_dump_persistent()
 
 
 def del_persistent(key: str):
 	global PERSISTENT
 	if key in PERSISTENT:
 		del PERSISTENT[key]
+		_dump_persistent()
+
+
+def clear_persistent():
+	global PERSISTENT
+	PERSISTENT.clear()
+	_dump_persistent()
 
 
 def persistent_keys() -> list[str]:

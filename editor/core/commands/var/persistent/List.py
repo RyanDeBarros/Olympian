@@ -2,12 +2,12 @@ from typing import override
 
 from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
 from editor.tools import eprint
-from . import Storage
+from .. import Storage
 
 
-class VarListCommand(REPLCommand):
+class VarPersistentListCommand(REPLCommand):
 	def __init__(self):
-		super().__init__("var.list")
+		super().__init__("var.persistent.list")
 
 	@override
 	def execute(self, program: ProgramState):
@@ -20,10 +20,10 @@ class VarListCommand(REPLCommand):
 
 	@staticmethod
 	def print_list(prefix: str):
-		keys = filter(lambda key: prefix in key, Storage.temp_keys())
+		keys = filter(lambda key: prefix in key, Storage.persistent_keys())
 		for key in sorted(keys):
-			print(key, '=', Storage.get_temp(key))
+			print(key, '=', Storage.get_persistent(key))
 
 
 def register(machine: REPLStateMachine):
-	machine.default.add_command(VarListCommand())
+	machine.default.add_command(VarPersistentListCommand())
