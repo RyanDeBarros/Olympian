@@ -17,9 +17,8 @@ class HelpCommand(REPLCommand):
 			self.help()
 		elif len(self.program.args) == 1:
 			# TODO v7 custom autocomplete for argument
-			# TODO v7 support any command, not just command in current state
-			if self.program.args[0] in self.program.machine.state().commands:
-				self.program.machine.state().commands[self.program.args[0]].help()
+			if self.program.args[0] in self.program.machine.all_commands:
+				self.program.machine.all_commands[self.program.args[0]].help()
 			else:
 				eprint("Argument is not a valid command")
 		else:
@@ -27,11 +26,10 @@ class HelpCommand(REPLCommand):
 
 	@override
 	def help(self):
-		pass  # DOC
+		print('help not implemented')  # DOC
 
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		# TODO v7 support any commands, not just in current state
-		yield from self.program.machine.state().get_command_completions(document)
+		yield from self.program.machine.get_all_command_completions(document)
 
 
 def register(program: ProgramState):

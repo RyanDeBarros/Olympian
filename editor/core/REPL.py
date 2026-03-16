@@ -66,18 +66,19 @@ class REPLCommand(ABC):
 class REPLState:
 	def __init__(self):
 		self.commands: dict[str, REPLCommand] = {}
+		self.command_strings: list[str] = []
+
+	def cache_commands(self):
+		self.command_strings = sorted(self.commands.keys())
 
 	def add_command(self, command: REPLCommand):
 		assert command.name not in self.commands
 		self.commands[command.name] = command
 
-	def command_strings(self):
-		return sorted(self.commands.keys())
-
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
 		words = document.text_before_cursor.split()
 		if len(words) <= 1 and not document.text_before_cursor.endswith(" "):
-			yield from self.get_command_completions(document)
+			yield from self.get_command_completions(document, self.command_strings)
 		else:
 			cmd = words[0]
 			if cmd in self.commands:
@@ -85,7 +86,8 @@ class REPLState:
 			else:
 				yield from get_path_completions(document)
 
-	def get_command_completions(self, document: Document) -> Iterable[Completion]:
+	@staticmethod
+	def get_command_completions(document: Document, command_strings: list[str]) -> Iterable[Completion]:
 		cword = document.get_word_before_cursor(WORD=True)
 
 		typed_parts = cword.split(".")
@@ -94,7 +96,7 @@ class REPLState:
 
 		seen: set[str] = set()
 
-		for cmd in self.command_strings():
+		for cmd in command_strings:
 			parts = cmd.split(".")
 
 			if len(typed_parts) > len(parts):
@@ -119,9 +121,19 @@ class REPLState:
 class REPLStateMachine:
 	def __init__(self):
 		self.default = REPLState()
+		self.all_commands: dict[str, REPLCommand] = {}
+		self.all_command_strings: list[str] = []
 
-	def state(self):
+	def state(self) -> REPLState:
 		return self.default
+
+	def cache_commands(self):
+		self.default.cache_commands()  # TODO v7 with multiple states, cache all states
+		self.all_commands = self.default.commands
+		self.all_command_strings = sorted(self.all_commands.keys())
+
+	def get_all_command_completions(self, document: Document) -> Iterable[Completion]:
+		yield from REPLState.get_command_completions(document, self.all_command_strings)
 
 
 class REPLCompleter(Completer):
@@ -196,9 +208,12 @@ class ProgramState:
 def run() -> None:
 	program = ProgramState(Path(os.getcwd()).resolve())
 
+	# Load commands
 	from . import commands
 	commands.register(program)
+	program.machine.cache_commands()
 
+	# Setup prompter
 	completer = REPLCompleter(program.machine)
 	session = PromptSession(completer=completer, complete_while_typing=False, complete_style=CompleteStyle.COLUMN, key_bindings=kb)
 
