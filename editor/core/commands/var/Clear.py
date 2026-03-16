@@ -1,21 +1,25 @@
 from typing import override
 
-from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.core.REPL import REPLCommand, ProgramState
 from editor.tools import eprint
 from . import Storage
 
 
 class VarClearCommand(REPLCommand):
-	def __init__(self):
-		super().__init__("var.clear")
+	def __init__(self, program: ProgramState):
+		super().__init__(program, "var.clear")
 
 	@override
-	def execute(self, program: ProgramState):
-		if len(program.args) == 0:
+	def execute(self):
+		if len(self.program.args) == 0:
 			Storage.clear_temp()
 		else:
 			eprint("Expected 0 arguments")
 
+	@override
+	def help(self):
+		print("help not implemented")  # DOC
 
-def register(machine: REPLStateMachine):
-	machine.default.add_command(VarClearCommand())
+
+def register(program: ProgramState):
+	program.machine.default.add_command(VarClearCommand(program))

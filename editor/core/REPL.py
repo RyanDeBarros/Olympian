@@ -13,30 +13,6 @@ from editor.core import Resolver
 from editor.tools import eprint
 
 
-class ProgramState:
-	def __init__(self, project_dir: Path):
-		self.exit = False
-		self.project_dir = project_dir.resolve()
-		self.argline = ""
-		self.expanded_argline = ""
-		self.args: list[str] = []
-
-	def load_args(self, argline: str, expand_macros: bool):
-		self.argline = argline
-		if expand_macros:
-			self.expanded_argline = Resolver.expand_macros(self.argline)
-		else:
-			self.expanded_argline = self.argline
-		self.args = Resolver.split_groups(self.expanded_argline)
-
-	def project_name(self) -> str:
-		return self.project_dir.name
-
-	def cwd_prompt(self) -> str:
-		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
-		return f"oly [{self.project_name()}/{cwd if cwd != '.' else ''}] > "
-
-
 # TODO v7 document that paths are wrapped with [], and document macro usage $^
 def get_path_completions(document: Document) -> Iterable[Completion]:
 	text_before_cursor = document.text_before_cursor
@@ -68,11 +44,16 @@ def get_path_completions(document: Document) -> Iterable[Completion]:
 
 
 class REPLCommand(ABC):
-	def __init__(self, name: str):
+	def __init__(self, program: "ProgramState", name: str):
+		self.program = program
 		self.name = name
 
 	@abstractmethod
-	def execute(self, program: ProgramState):
+	def execute(self):
+		raise NotImplementedError()
+
+	@abstractmethod
+	def help(self):
 		raise NotImplementedError()
 
 	def expand_macros(self):
@@ -187,16 +168,39 @@ def _(event: KeyPressEvent):
 	buf.delete_before_cursor(count=length)
 
 
+class ProgramState:
+	def __init__(self, project_dir: Path):
+		self.machine = REPLStateMachine()
+		self.exit = False
+		self.project_dir = project_dir.resolve()
+		self.argline = ""
+		self.expanded_argline = ""
+		self.args: list[str] = []
+
+	def load_args(self, argline: str, expand_macros: bool):
+		self.argline = argline
+		if expand_macros:
+			self.expanded_argline = Resolver.expand_macros(self.argline)
+		else:
+			self.expanded_argline = self.argline
+		self.args = Resolver.split_groups(self.expanded_argline)
+
+	def project_name(self) -> str:
+		return self.project_dir.name
+
+	def cwd_prompt(self) -> str:
+		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
+		return f"oly [{self.project_name()}/{cwd if cwd != '.' else ''}] > "
+
+
 def run() -> None:
-	machine = REPLStateMachine()
+	program = ProgramState(Path(os.getcwd()).resolve())
 
 	from . import commands
-	commands.register(machine)
+	commands.register(program)
 
-	completer = REPLCompleter(machine)
+	completer = REPLCompleter(program.machine)
 	session = PromptSession(completer=completer, complete_while_typing=False, complete_style=CompleteStyle.COLUMN, key_bindings=kb)
-
-	program = ProgramState(Path(os.getcwd()).resolve())
 
 	while True:
 		try:
@@ -210,8 +214,8 @@ def run() -> None:
 
 		cmd_name = elements[0]
 
-		if cmd_name in machine.state().commands:
-			cmd = machine.state().commands[cmd_name]
+		if cmd_name in program.machine.state().commands:
+			cmd = program.machine.state().commands[cmd_name]
 
 			try:
 				program.load_args(command[len(cmd_name):].strip(), expand_macros=cmd.expand_macros())
@@ -219,7 +223,7 @@ def run() -> None:
 				eprint("Invalid syntax")  # TODO v7 more descriptive error depending on [/]/macro invalidity
 				continue
 
-			cmd.execute(program)
+			cmd.execute()
 
 			if program.exit:
 				break

@@ -1,20 +1,20 @@
 from typing import override
 
 from editor.core import Resolver
-from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.core.REPL import REPLCommand, ProgramState
 from editor.tools import eprint
 from . import Storage
 
 
 class VarSetCommand(REPLCommand):
-	def __init__(self):
-		super().__init__("var.set")
+	def __init__(self, program: ProgramState):
+		super().__init__(program, "var.set")
 
 	@override
-	def execute(self, program: ProgramState):
-		if len(program.args) == 2:
-			key = program.args[0]
-			value = program.args[1]
+	def execute(self):
+		if len(self.program.args) == 2:
+			key = self.program.args[0]
+			value = self.program.args[1]
 			if Resolver.is_valid_macro_key(key):
 				Storage.set_temp(key, value)
 			else:
@@ -22,9 +22,14 @@ class VarSetCommand(REPLCommand):
 		else:
 			eprint("Expected 2 arguments")
 
+	@override
+	def help(self):
+		print("help not implemented")  # DOC
+
+	@override
 	def expand_macros(self):
 		return False
 
 
-def register(machine: REPLStateMachine):
-	machine.default.add_command(VarSetCommand())
+def register(program: ProgramState):
+	program.machine.default.add_command(VarSetCommand(program))

@@ -1,16 +1,20 @@
 from typing import override
 
-from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.core.REPL import REPLCommand, ProgramState
 
 
 class ExitCommand(REPLCommand):
-	def __init__(self):
-		super().__init__("exit")
+	def __init__(self, program: ProgramState):
+		super().__init__(program, "exit")
 
 	@override
-	def execute(self, program: ProgramState):
-		program.exit = True
+	def execute(self):
+		self.program.exit = True
+
+	@override
+	def help(self):
+		print("help not implemented")  # DOC
 
 
-def register(machine: REPLStateMachine):
-	machine.default.add_command(ExitCommand())
+def register(program: ProgramState):
+	program.machine.default.add_command(ExitCommand(program))

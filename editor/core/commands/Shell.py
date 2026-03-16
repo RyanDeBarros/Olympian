@@ -3,17 +3,17 @@ import shutil
 import subprocess
 from typing import override
 
-from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.core.REPL import REPLCommand, ProgramState
 from editor.tools import eprint
 
 
 class ShellCommand(REPLCommand):
-	def __init__(self):
-		super().__init__("shell")
+	def __init__(self, program: ProgramState):
+		super().__init__(program, "shell")
 
 	@override
-	def execute(self, program: ProgramState):
-		if not program.argline:
+	def execute(self):
+		if not self.program.argline:
 			eprint("Expected at least 1 argument")
 			return
 
@@ -21,13 +21,17 @@ class ShellCommand(REPLCommand):
 
 		try:
 			if os.name == "nt" and bash:
-				subprocess.run([bash, "-c", program.argline])
+				subprocess.run([bash, "-c", self.program.argline])
 			else:
-				subprocess.run(program.argline, shell=True)
+				subprocess.run(self.program.argline, shell=True)
 
 		except Exception as e:
 			eprint(f"Shell error: {e}")
 
+	@override
+	def help(self):
+		print("help not implemented")  # DOC
 
-def register(machine: REPLStateMachine):
-	machine.default.add_command(ShellCommand())
+
+def register(program: ProgramState):
+	program.machine.default.add_command(ShellCommand(program))
