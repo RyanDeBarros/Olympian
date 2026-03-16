@@ -1,6 +1,5 @@
 import os
 import shlex
-import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable, override
@@ -11,7 +10,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
-from tools import eprint
+from editor.tools import eprint
 
 
 class ProgramState:

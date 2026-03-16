@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from typing import override
 
-from core.REPL import REPLCommand, REPLStateMachine, ProgramState
-from tools import eprint
+from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from editor.tools import eprint
 
 
 class ProjectOpenCommand(REPLCommand):
