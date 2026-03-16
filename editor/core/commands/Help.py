@@ -1,6 +1,6 @@
 from typing import override
 
-from editor.core.REPL import REPLCommand, REPLStateMachine, ProgramState
+from core.REPL import REPLCommand, REPLStateMachine, ProgramState
 
 
 class HelpCommand(REPLCommand):

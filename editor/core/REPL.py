@@ -1,5 +1,6 @@
 import os
 import shlex
+import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable, override
@@ -10,7 +11,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
-from editor.tools import eprint
+from tools import eprint
 
 
 class ProgramState:
@@ -154,10 +155,26 @@ def _(event: KeyPressEvent):
 		event.app.current_buffer.validate_and_handle()
 
 
+@kb.add("c-h")
+def _(event: KeyPressEvent):
+	buf = event.app.current_buffer
+	length = 1
+
+	if event.key_sequence[0].data == '\x08':  # ctrl+backspace
+		cword = buf.document.get_word_before_cursor(WORD=True)
+		if cword:
+			length = len(cword)
+		else:
+			text = buf.document.text_before_cursor
+			length = len(text) - len(text.rstrip())
+
+	buf.delete_before_cursor(count=length)
+
+
 def run() -> None:
 	machine = REPLStateMachine()
 
-	from editor.core import commands
+	from . import commands
 	commands.register(machine)
 
 	completer = REPLCompleter(machine)
@@ -166,7 +183,10 @@ def run() -> None:
 	program = ProgramState(Path(os.getcwd()).resolve())
 
 	while True:
-		command: str = session.prompt(program.cwd_prompt())
+		try:
+			command: str = session.prompt(program.cwd_prompt())
+		except (KeyboardInterrupt, EOFError):
+			break
 
 		elements = command.split()
 		if len(elements) == 0:

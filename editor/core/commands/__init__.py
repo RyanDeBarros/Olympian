@@ -1,7 +1,7 @@
 import os
 import importlib
 
-from editor.core.REPL import REPLStateMachine
+from core.REPL import REPLStateMachine
 
 
 def register(machine: REPLStateMachine):

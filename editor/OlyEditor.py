@@ -1,11 +1,10 @@
 import os.path
 import sys
-from pathlib import Path
+
+sys.path.append(os.path.dirname(__file__))
 
 from core import REPL
-from editor.tools import eprint
-
-sys.path.append(Path(__file__).parent.parent.as_posix())
+from tools import eprint
 
 if __name__ == "__main__":
 	if getattr(sys, "frozen", False):
