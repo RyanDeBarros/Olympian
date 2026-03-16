@@ -15,6 +15,12 @@ class ProgramState:
 	def __init__(self, project_dir: Path):
 		self.exit = False
 		self.project_dir = project_dir.resolve()
+		self.argline = ""
+		self.args = []
+
+	def load_args(self, argline: str):
+		self.argline = argline
+		self.args = argline.split()  # TODO v7 handle quoted args
 
 	def project_name(self) -> str:
 		return self.project_dir.name
@@ -24,6 +30,7 @@ class ProgramState:
 		return f"oly {self.project_name()}/{cwd if cwd != '.' else ''} > "
 
 
+# TODO v7 handle quoting paths with spaces
 def get_path_completions(document: Document) -> Iterable[Completion]:
 	cword = document.get_word_before_cursor(WORD=True)
 
@@ -50,7 +57,7 @@ class REPLCommand(ABC):
 		self.name = name
 
 	@abstractmethod
-	def execute(self, program: ProgramState, args: list[str]):
+	def execute(self, program: ProgramState):
 		raise NotImplementedError()
 
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
@@ -157,7 +164,7 @@ def run() -> None:
 	program = ProgramState(Path(os.getcwd()).resolve())
 
 	while True:
-		command = session.prompt(program.cwd_prompt())
+		command: str = session.prompt(program.cwd_prompt())
 
 		elements = command.split()
 		if len(elements) == 0:
@@ -166,7 +173,8 @@ def run() -> None:
 		cmd = elements[0]
 
 		if cmd in machine.state().commands:
-			machine.state().commands[cmd].execute(program, elements[1:])
+			program.load_args(command[len(cmd):].strip())
+			machine.state().commands[cmd].execute(program)
 
 			if program.exit:
 				break

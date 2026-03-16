@@ -8,7 +8,7 @@ class ExitCommand(REPLCommand):
 		super().__init__("exit")
 
 	@override
-	def execute(self, program: ProgramState, args: list[str]):
+	def execute(self, program: ProgramState):
 		program.exit = True
 
 

@@ -11,9 +11,9 @@ class ProjectOpenCommand(REPLCommand):
 		super().__init__("project.open")
 
 	@override
-	def execute(self, program: ProgramState, args: list[str]):
-		if len(args) == 1:
-			cwd = Path(args[0])
+	def execute(self, program: ProgramState):
+		if len(program.args) == 1:
+			cwd = Path(program.args[0])
 			if cwd.is_dir():
 				os.chdir(cwd)
 				program.project_dir = Path(cwd).resolve()

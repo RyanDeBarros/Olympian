@@ -12,20 +12,18 @@ class ShellCommand(REPLCommand):
 		super().__init__("shell")
 
 	@override
-	def execute(self, program: ProgramState, args: list[str]):
-		if not args:
-			print("No command specified", file=sys.stderr)
+	def execute(self, program: ProgramState):
+		if not program.argline:
+			print("Expected at least 1 argument", file=sys.stderr)
 			return
-
-		command = " ".join(args)
 
 		bash = shutil.which("bash")
 
 		try:
 			if os.name == "nt" and bash:
-				subprocess.run([bash, "-c", command])
+				subprocess.run([bash, "-c", program.argline])
 			else:
-				subprocess.run(command, shell=True)
+				subprocess.run(program.argline, shell=True)
 
 		except Exception as e:
 			print(f"Shell error: {e}", file=sys.stderr)

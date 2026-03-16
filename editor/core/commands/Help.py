@@ -8,7 +8,7 @@ class HelpCommand(REPLCommand):
 		super().__init__("help")
 
 	@override
-	def execute(self, program: ProgramState, args: list[str]):
+	def execute(self, program: ProgramState):
 		pass  # TODO v7
 
 
