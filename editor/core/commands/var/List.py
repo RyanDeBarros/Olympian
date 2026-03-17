@@ -24,7 +24,7 @@ class VarListCommand(REPLCommand):
 	def print_list(prefix: str):
 		keys = filter(lambda key: prefix in key, Storage.temp_keys())
 		for key in sorted(keys):
-			print(key, '=', Storage.get_temp(key))
+			print(f"${key} = {Storage.get_temp(key)}")
 
 	@override
 	def help(self):

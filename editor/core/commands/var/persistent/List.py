@@ -24,7 +24,7 @@ class VarPersistentListCommand(REPLCommand):
 	def print_list(prefix: str):
 		keys = filter(lambda key: prefix in key, Storage.persistent_keys())
 		for key in sorted(keys):
-			print(key, '=', Storage.get_persistent(key))
+			print(f"${key} = {Storage.get_persistent(key)}")
 
 	@override
 	def help(self):
