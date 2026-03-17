@@ -1,3 +1,5 @@
+from editor.core.REPLError import REPLError
+
 GROUP_OPEN = '['
 GROUP_CLOSE = ']'
 MACRO_PREFIX = '$'
@@ -38,7 +40,7 @@ def expand_macros(argline: str, seen=None) -> str:
 				key += argline[j]
 				j += 1
 			if key in seen:
-				raise ValueError(f"Cyclic macro detected: {key}")
+				raise REPLError(f"Cyclic macro detected: {key}")
 			value = _get_temp(key)
 			inner_seen = seen.copy()
 			inner_seen.add(key)
@@ -60,7 +62,7 @@ def expand_macros(argline: str, seen=None) -> str:
 				i += 1
 				continue
 			if key in seen:
-				raise ValueError(f"Cyclic macro detected: {key}")
+				raise REPLError(f"Cyclic macro detected: {key}")
 			value = _get_temp(key)
 			inner_seen = seen.copy()
 			inner_seen.add(key)

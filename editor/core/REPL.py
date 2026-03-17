@@ -11,6 +11,7 @@ from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
 from editor.core import Resolver
+from editor.core.REPLError import REPLError
 from editor.tools import eprint
 
 
@@ -247,8 +248,8 @@ def run() -> None:
 
 			try:
 				program.load_args(command[len(cmd_name):].strip(), expand_macros=cmd.expand_macros())
-			except ValueError:
-				eprint("Invalid syntax")  # TODO v7 more descriptive error depending on [/]/macro invalidity
+			except REPLError as e:
+				e.print()
 				continue
 
 			cmd.execute()
