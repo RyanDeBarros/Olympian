@@ -8,8 +8,8 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
-from editor.core import REPLError, REPLStateMachine, ProgramState
 from editor.tools import eprint
+from . import REPLError, REPLStateMachine, ProgramState
 
 
 class REPLCompleter(Completer):

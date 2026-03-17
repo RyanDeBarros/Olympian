@@ -4,8 +4,8 @@ from typing import Iterable
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
-from editor.core import PathCompleter
 from editor.tools import eprint
+from . import PathCompleter
 
 
 class REPLCommand(ABC):

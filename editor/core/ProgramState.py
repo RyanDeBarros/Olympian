@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from editor.core import Resolver
+from . import Resolver
 
 
 class ProgramState:

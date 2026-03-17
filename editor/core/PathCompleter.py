@@ -4,7 +4,7 @@ from typing import Iterable
 from prompt_toolkit.completion import Completion
 from prompt_toolkit.document import Document
 
-from editor.core import Resolver
+from . import Resolver
 
 
 # DOC document that paths are wrapped with [], and document macro usage $^

@@ -1,4 +1,4 @@
-from editor.core import REPLError
+from . import REPLError
 
 GROUP_OPEN = '['
 GROUP_CLOSE = ']'

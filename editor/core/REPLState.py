@@ -3,7 +3,7 @@ from typing import Iterable
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
-from editor.core import REPLCommand, PathCompleter
+from . import REPLCommand, PathCompleter
 
 
 class REPLState:
