@@ -1,4 +1,4 @@
-from editor.core.REPLError import REPLError
+from editor.core import REPLError
 
 GROUP_OPEN = '['
 GROUP_CLOSE = ']'
@@ -8,7 +8,10 @@ MACRO_END = '^'
 
 def _get_temp(key: str):
 	from .commands.var import Storage
-	return Storage.get_temp(key)
+	try:
+		return Storage.get_temp(key)
+	except KeyError:
+		raise REPLError(f"Temp var {key} does not exist")
 
 
 def is_valid_macro_key(key: str) -> bool:

@@ -10,10 +10,11 @@ class VarPersistentUnpublishCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 1:
-			Storage.del_persistent(self.program.args[0])
+		if len(self.program.args) == 0:
+			self.print_arg_error("Expected at least 1 argument")
 		else:
-			self.print_arg_error("Expected 1 argument")
+			for arg in self.program.args:
+				Storage.del_persistent(arg)
 
 	@override
 	def help(self):

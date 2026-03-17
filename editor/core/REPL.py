@@ -10,8 +10,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.shortcuts import CompleteStyle
 
-from editor.core import Resolver
-from editor.core.REPLError import REPLError
+from editor.core import Resolver, REPLError
 from editor.tools import eprint
 
 

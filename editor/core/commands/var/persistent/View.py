@@ -1,6 +1,6 @@
 from typing import override
 
-from editor.core import Resolver
+from editor.core import Resolver, REPLError
 from editor.core.REPL import REPLCommand, ProgramState
 from .. import Storage
 
@@ -11,17 +11,22 @@ class VarPersistentViewCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 1:
-			try:
-				value = Storage.get_persistent(self.program.args[0])
-				print(value)
-				expanded = Resolver.expand_macros(value)
-				if expanded != value:
-					print("Expanded:", value)
-			except KeyError:
-				self.print_arg_error("Key does not exist")
+		if len(self.program.args) == 0:
+			self.print_arg_error("Expected at least 1 argument")
 		else:
-			self.print_arg_error("Expected 1 argument")
+			for arg in self.program.args:
+				try:
+					value = Storage.get_persistent(arg)
+				except KeyError:
+					self.print_arg_error(f"${arg} is not an existing persistent var")
+				else:
+					print(f"${arg} = {value}")
+					try:
+						expanded = Resolver.expand_macros(arg)
+						if expanded != value:
+							print(f"(expanded) ${arg} = {expanded}")
+					except REPLError as e:
+						print(f"Failed to expand ${arg}")
 
 	@override
 	def help(self):

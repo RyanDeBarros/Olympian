@@ -13,15 +13,17 @@ class VarPersistentLoadCommand(REPLCommand):
 		if len(self.program.args) == 0:
 			for key in Storage.persistent_keys():
 				self.load(key)
-		elif len(self.program.args) == 1:
-			self.load(self.program.args[0])
 		else:
-			self.print_arg_error("Expected 0-1 arguments")
+			for arg in self.program.args:
+				self.load(arg)
 
-	@staticmethod
-	def load(key: str):
-		value = Storage.get_persistent(key)
-		Storage.set_temp(key, value)
+	def load(self, key: str):
+		try:
+			value = Storage.get_persistent(key)
+		except KeyError:
+			self.print_arg_error(f"${key} is not a persistent var")
+		else:
+			Storage.set_temp(key, value)
 
 	@override
 	def help(self):

@@ -4,23 +4,24 @@ from editor.core.REPL import REPLCommand, ProgramState
 from .. import Storage
 
 
+# TODO v7 here and in other var commands, add autocomplete for variable key names that exist
+# TODO v7 here and in other var commands, accept '*'-prefixed args for: all vars replace in persistent (override existing), or replace all vars if they don't already exist in persistent.
 class VarPersistentPublishCommand(REPLCommand):
 	def __init__(self, program: ProgramState):
 		super().__init__(program, "var.persistent.publish")
 
 	@override
 	def execute(self):
-		# TODO v7 here and in other var commands, accept multiple arguments to execute simultaneously. e.g. here publish multiple variables, and add autocomplete for them. accept '*'-prefixed args for: all vars replace in persistent (override existing), or replace all vars if they don't already exist in persistent.
-		if len(self.program.args) == 1:
-			key = self.program.args[0]
-			try:
-				value = Storage.get_temp(key)
-			except KeyError:
-				self.print_arg_error("Key does not exist")
-			else:
-				Storage.set_persistent(key, value)
+		if len(self.program.args) == 0:
+			self.print_arg_error("Expected at least 1 argument")
 		else:
-			self.print_arg_error(f"Expected 1 argument")
+			for arg in self.program.args:
+				try:
+					value = Storage.get_temp(arg)
+				except KeyError:
+					self.print_arg_error(f"Key does not exist: {arg}")
+				else:
+					Storage.set_persistent(arg, value)
 
 	@override
 	def help(self):
