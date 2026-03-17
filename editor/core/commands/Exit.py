@@ -1,6 +1,6 @@
 from typing import override
 
-from editor.core.REPL import REPLCommand, ProgramState
+from editor.core import REPLCommand, ProgramState
 
 
 class ExitCommand(REPLCommand):

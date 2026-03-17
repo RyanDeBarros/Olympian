@@ -3,7 +3,7 @@ from typing import override, Iterable
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
-from editor.core.REPL import REPLCommand, ProgramState
+from editor.core import REPLCommand, ProgramState
 
 
 class HelpCommand(REPLCommand):

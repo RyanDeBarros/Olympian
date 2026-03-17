@@ -1,7 +1,7 @@
 from typing import override
 
-from editor.core.REPL import REPLCommand, ProgramState
-from editor.core.commands.var import Storage
+from editor.core import REPLCommand, ProgramState
+from .. import Storage
 
 
 class VarPersistentLoadCommand(REPLCommand):

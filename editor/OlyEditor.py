@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from editor.core import REPL
+from editor.core import REPLRun
 from editor.tools import eprint
 
 if __name__ == "__main__":
@@ -20,4 +20,4 @@ if __name__ == "__main__":
 		else:
 			eprint(f"{project_dir} is not a valid directory")
 
-	REPL.run()
+	REPLRun.run()

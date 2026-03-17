@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from typing import override
 
-from editor.core.REPL import REPLCommand, ProgramState
+from editor.core import REPLCommand, ProgramState
 
 
 class ShellCommand(REPLCommand):

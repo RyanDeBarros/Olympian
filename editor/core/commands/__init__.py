@@ -1,7 +1,7 @@
 import os
 import importlib
 
-from editor.core.REPL import ProgramState
+from editor.core import ProgramState
 
 
 def register(program: ProgramState):

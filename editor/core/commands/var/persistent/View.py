@@ -1,7 +1,6 @@
 from typing import override
 
-from editor.core import Resolver, REPLError
-from editor.core.REPL import REPLCommand, ProgramState
+from editor.core import Resolver, REPLError, REPLCommand, ProgramState
 from .. import Storage
 
 
