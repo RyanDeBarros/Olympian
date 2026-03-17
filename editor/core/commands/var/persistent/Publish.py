@@ -1,10 +1,12 @@
-from typing import override
+from typing import override, Iterable
+
+from prompt_toolkit.completion import CompleteEvent, Completion
+from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState
-from .. import Storage
+from .. import Storage, VarCompleter
 
 
-# TODO v7 here and in other var commands, add autocomplete for variable key names that exist
 # TODO v7 here and in other var commands, accept '*'-prefixed args for: all vars replace in persistent (override existing), or replace all vars if they don't already exist in persistent.
 class VarPersistentPublishCommand(REPLCommand):
 	def __init__(self, program: ProgramState):
@@ -26,6 +28,10 @@ class VarPersistentPublishCommand(REPLCommand):
 	@override
 	def help(self):
 		print("help not implemented")  # DOC
+
+	@override
+	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+		yield from VarCompleter.get_temp_completions(document)
 
 
 def register(program: ProgramState):

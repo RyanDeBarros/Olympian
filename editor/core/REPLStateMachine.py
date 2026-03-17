@@ -4,7 +4,7 @@ from typing import Iterable
 from prompt_toolkit.completion import Completion
 from prompt_toolkit.document import Document
 
-from . import REPLState, REPLCommand
+from . import REPLState, REPLCommand, KeyCompleter
 
 
 class REPLStateMachine:
@@ -31,4 +31,4 @@ class REPLStateMachine:
 		self.all_command_strings = sorted(self.all_commands.keys())
 
 	def get_all_command_completions(self, document: Document) -> Iterable[Completion]:
-		yield from REPLState.get_command_completions(document, self.all_command_strings)
+		yield from KeyCompleter.get_keys_completions(document, self.all_command_strings)

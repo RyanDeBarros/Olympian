@@ -66,6 +66,7 @@ def run() -> None:
 
 	# Setup prompter
 	completer = REPLCompleter(program.machine)
+	# TODO v7 when you type, it doesn't reduce the menu - the menu just disappears
 	session = PromptSession(completer=completer, complete_while_typing=False, complete_style=CompleteStyle.COLUMN, key_bindings=kb)
 
 	while True:

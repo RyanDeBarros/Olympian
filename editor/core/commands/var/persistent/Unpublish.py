@@ -1,7 +1,10 @@
-from typing import override
+from typing import override, Iterable
+
+from prompt_toolkit.completion import CompleteEvent, Completion
+from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState
-from .. import Storage
+from .. import Storage, VarCompleter
 
 
 class VarPersistentUnpublishCommand(REPLCommand):
@@ -19,6 +22,10 @@ class VarPersistentUnpublishCommand(REPLCommand):
 	@override
 	def help(self):
 		print("help not implemented")  # DOC
+
+	@override
+	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+		yield from VarCompleter.get_persistent_completions(document)
 
 
 def register(program: ProgramState):
