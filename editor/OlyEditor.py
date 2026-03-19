@@ -21,3 +21,16 @@ if __name__ == "__main__":
 			eprint(f"{project_dir} is not a valid directory")
 
 	REPLRun.run()
+
+
+# TODO v7 buffers:
+#    * data: for asset I/O
+#    * editor settings
+#    * macro (temp) var I/O
+#    * large output dump: add options to certain commands like list to print in that buffer instead of cmdline
+#    * error: instead of in cmdline, print asset syntax/format errors in buffer. Just print in cmdline that the error buffer should be checked
+#    Multiple data/error buffers so multiple assets can be open at the same time?
+#    buffers.<cmd> <buffer-name>: custom autocomplete for buffer names in argument
+#    buffers.open: open with default app (likely IDE/VSCode). To make this work consistently, use custom file extension for buffers (.olybuf?)
+#    buffers.reveal: open buffer in file explorer. The path should be in AppData, under some subfolder that corresponds to a manifest mapping of the project, to allow for multiple buffers for different projects.
+#    buffers.path: print path of buffer file

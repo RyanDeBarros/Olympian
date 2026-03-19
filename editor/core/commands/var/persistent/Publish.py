@@ -3,19 +3,29 @@ from typing import override, Iterable
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
-from editor.core import REPLCommand, ProgramState
-from .. import Storage, VarCompleter
+from editor.core import REPLCommand, ProgramState, KeyCompleter
+from .. import Storage
 
 
-# TODO v7 here and in other var commands, accept '*'-prefixed args for: all vars replace in persistent (override existing), or replace all vars if they don't already exist in persistent.
 class VarPersistentPublishCommand(REPLCommand):
 	def __init__(self, program: ProgramState):
 		super().__init__(program, "var.persistent.publish")
+		self.star_override = '*o'
+		self.star_checked = '*c'
 
 	@override
 	def execute(self):
 		if len(self.program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
+		elif self.program.args == [self.star_override]:
+			for key in Storage.temp_keys():
+				value = Storage.get_temp(key)
+				Storage.set_persistent(key, value)
+		elif self.program.args == [self.star_checked]:
+			for key in Storage.temp_keys():
+				if key not in Storage.persistent_keys():
+					value = Storage.get_temp(key)
+					Storage.set_persistent(key, value)
 		else:
 			for arg in self.program.args:
 				try:
@@ -31,21 +41,8 @@ class VarPersistentPublishCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from VarCompleter.get_temp_completions(document)
+		yield from KeyCompleter.get_keys_completions(document, Storage.temp_keys() + [self.star_override, self.star_checked])
 
 
 def register(program: ProgramState):
 	program.machine.default().add_command(VarPersistentPublishCommand(program))
-
-
-# TODO v7 buffers:
-#    * data: for asset I/O
-#    * editor settings
-#    * macro (temp) var I/O
-#    * large output dump: add options to certain commands like list to print in that buffer instead of cmdline
-#    * error: instead of in cmdline, print asset syntax/format errors in buffer. Just print in cmdline that the error buffer should be checked
-#    Multiple data/error buffers so multiple assets can be open at the same time?
-#    buffers.<cmd> <buffer-name>: custom autocomplete for buffer names in argument
-#    buffers.open: open with default app (likely IDE/VSCode). To make this work consistently, use custom file extension for buffers (.olybuf?)
-#    buffers.reveal: open buffer in file explorer. The path should be in AppData, under some subfolder that corresponds to a manifest mapping of the project, to allow for multiple buffers for different projects.
-#    buffers.path: print path of buffer file

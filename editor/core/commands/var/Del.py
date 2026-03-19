@@ -3,8 +3,8 @@ from typing import override, Iterable
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
-from editor.core import REPLCommand, ProgramState
-from . import Storage, VarCompleter
+from editor.core import REPLCommand, ProgramState, KeyCompleter
+from . import Storage
 
 
 class VarDelCommand(REPLCommand):
@@ -25,7 +25,7 @@ class VarDelCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from VarCompleter.get_temp_completions(document)
+		yield from KeyCompleter.get_keys_completions(document, Storage.temp_keys())
 
 
 def register(program: ProgramState):
