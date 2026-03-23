@@ -66,6 +66,7 @@ namespace oly
 	*/
 
 	// TODO v7 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
+	// TODO v7 various utilities, including FuzzySearch
 	// TODO v8 Lighting engine
 	// TODO v8 UI widgets
 	// TODO v9 thread safety + multi-threading.
