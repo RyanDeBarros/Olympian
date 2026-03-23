@@ -4,7 +4,6 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState, KeyCompleter
-from . import Storage
 
 
 class VarListCommand(REPLCommand):
@@ -20,11 +19,10 @@ class VarListCommand(REPLCommand):
 		else:
 			self.print_arg_error("Expected 0-1 arguments")
 
-	@staticmethod
-	def print_list(prefix: str):
-		keys = filter(lambda key: prefix in key, Storage.temp_keys())
+	def print_list(self, prefix: str):
+		keys = filter(lambda key: prefix in key, self.program.macros.temporary.keys())
 		for key in sorted(keys):
-			print(f"${key} = {Storage.get_temp(key)}")
+			print(f"${key} = {self.program.macros.temporary.get(key)}")
 
 	@override
 	def help(self):
@@ -32,7 +30,7 @@ class VarListCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.temp_keys())
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
 
 
 def register(program: ProgramState):

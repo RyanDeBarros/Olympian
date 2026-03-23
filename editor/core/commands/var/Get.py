@@ -4,7 +4,6 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import Resolver, REPLError, REPLCommand, ProgramState, KeyCompleter
-from . import Storage
 
 
 class VarGetCommand(REPLCommand):
@@ -18,7 +17,7 @@ class VarGetCommand(REPLCommand):
 		else:
 			for arg in self.program.args:
 				try:
-					value = Storage.get_temp(arg)
+					value = self.program.macros.temporary.get(arg)
 				except KeyError:
 					self.print_arg_error(f"${arg} is not an existing temp var")
 				else:
@@ -28,7 +27,7 @@ class VarGetCommand(REPLCommand):
 						if expanded != value:
 							print(f"(expanded) ${arg} = {expanded}")
 					except REPLError as e:
-						print(f"Failed to expand ${arg}")
+						print(f"Failed to expand ${arg}: {e.description}")
 
 	@override
 	def help(self):
@@ -36,7 +35,7 @@ class VarGetCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.temp_keys())
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
 
 
 def register(program: ProgramState):

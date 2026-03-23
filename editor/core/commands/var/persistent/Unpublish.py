@@ -4,7 +4,7 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState, KeyCompleter
-from .. import Storage
+from editor.core.context import EditorContext
 
 
 class VarPersistentUnpublishCommand(REPLCommand):
@@ -13,11 +13,13 @@ class VarPersistentUnpublishCommand(REPLCommand):
 
 	@override
 	def execute(self):
+		EditorContext.assert_initialized(self.program.project_dir)
+
 		if len(self.program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
 			for arg in self.program.args:
-				Storage.del_persistent(arg)
+				self.program.macros.persistent.remove(arg)
 
 	@override
 	def help(self):
@@ -25,7 +27,7 @@ class VarPersistentUnpublishCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.persistent_keys())
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.persistent.keys())
 
 
 def register(program: ProgramState):

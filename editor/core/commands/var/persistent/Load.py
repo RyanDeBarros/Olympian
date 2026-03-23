@@ -4,7 +4,7 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState, KeyCompleter
-from .. import Storage
+from editor.core.context import EditorContext
 
 
 class VarPersistentLoadCommand(REPLCommand):
@@ -15,29 +15,31 @@ class VarPersistentLoadCommand(REPLCommand):
 
 	@override
 	def execute(self):
+		EditorContext.assert_initialized(self.program.project_dir)
+		
 		if len(self.program.args) == 0:
-			for key in Storage.persistent_keys():
+			for key in self.program.macros.persistent.keys():
 				self.load(key)
 		elif self.program.args == [self.star_override]:
-			for key in Storage.persistent_keys():
-				value = Storage.get_persistent(key)
-				Storage.set_temp(key, value)
+			for key in self.program.macros.persistent.keys():
+				value = self.program.macros.persistent.get(key)
+				self.program.macros.temporary.set(key, value)
 		elif self.program.args == [self.star_checked]:
-			for key in Storage.persistent_keys():
-				if key not in Storage.temp_keys():
-					value = Storage.get_persistent(key)
-					Storage.set_temp(key, value)
+			for key in self.program.macros.persistent.keys():
+				if key not in self.program.macros.temporary.keys():
+					value = self.program.macros.persistent.get(key)
+					self.program.macros.temporary.set(key, value)
 		else:
 			for arg in self.program.args:
 				self.load(arg)
 
 	def load(self, key: str):
 		try:
-			value = Storage.get_persistent(key)
+			value = self.program.macros.persistent.get(key)
 		except KeyError:
 			self.print_arg_error(f"${key} is not a persistent var")
 		else:
-			Storage.set_temp(key, value)
+			self.program.macros.temporary.set(key, value)
 
 	@override
 	def help(self):
@@ -45,7 +47,7 @@ class VarPersistentLoadCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.persistent_keys() + [self.star_override, self.star_checked])
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.persistent.keys() + [self.star_override, self.star_checked])
 
 
 def register(program: ProgramState):

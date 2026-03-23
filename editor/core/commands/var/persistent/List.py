@@ -4,7 +4,7 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState, KeyCompleter
-from .. import Storage
+from editor.core.context import EditorContext
 
 
 class VarPersistentListCommand(REPLCommand):
@@ -13,6 +13,8 @@ class VarPersistentListCommand(REPLCommand):
 
 	@override
 	def execute(self):
+		EditorContext.assert_initialized(self.program.project_dir)
+
 		if len(self.program.args) == 0:
 			self.print_list("")
 		elif len(self.program.args) == 1:
@@ -20,11 +22,10 @@ class VarPersistentListCommand(REPLCommand):
 		else:
 			self.print_arg_error("Expected 0-1 arguments")
 
-	@staticmethod
-	def print_list(prefix: str):
-		keys = filter(lambda key: prefix in key, Storage.persistent_keys())
+	def print_list(self, prefix: str):
+		keys = filter(lambda key: prefix in key, self.program.macros.persistent.keys())
 		for key in sorted(keys):
-			print(f"${key} = {Storage.get_persistent(key)}")
+			print(f"${key} = {self.program.macros.persistent.get(key)}")
 
 	@override
 	def help(self):
@@ -32,7 +33,7 @@ class VarPersistentListCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.persistent_keys())
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.persistent.keys())
 
 
 def register(program: ProgramState):

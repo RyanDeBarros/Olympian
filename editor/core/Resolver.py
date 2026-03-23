@@ -7,9 +7,9 @@ MACRO_END = '^'
 
 
 def _get_temp(key: str):
-	from .commands.var import Storage
+	from .commands.var import MacroStorage
 	try:
-		return Storage.get_temp(key)
+		return self.program.macros.temporary.get(key)
 	except KeyError:
 		raise REPLError(f"Temp var {key} does not exist")
 

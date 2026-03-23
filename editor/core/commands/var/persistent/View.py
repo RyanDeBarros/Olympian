@@ -4,7 +4,7 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import Resolver, REPLError, REPLCommand, ProgramState, KeyCompleter
-from .. import Storage
+from editor.core.context import EditorContext
 
 
 class VarPersistentViewCommand(REPLCommand):
@@ -13,12 +13,14 @@ class VarPersistentViewCommand(REPLCommand):
 
 	@override
 	def execute(self):
+		EditorContext.assert_initialized(self.program.project_dir)
+
 		if len(self.program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
 			for arg in self.program.args:
 				try:
-					value = Storage.get_persistent(arg)
+					value = self.program.macros.persistent.get(arg)
 				except KeyError:
 					self.print_arg_error(f"${arg} is not an existing persistent var")
 				else:
@@ -28,7 +30,7 @@ class VarPersistentViewCommand(REPLCommand):
 						if expanded != value:
 							print(f"(expanded) ${arg} = {expanded}")
 					except REPLError as e:
-						print(f"Failed to expand ${arg}")
+						print(f"Failed to expand ${arg}: {e.description}")
 
 	@override
 	def help(self):
@@ -36,7 +38,7 @@ class VarPersistentViewCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, Storage.temp_keys())
+		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
 
 
 def register(program: ProgramState):

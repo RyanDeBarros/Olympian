@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
-from . import Storage
 
 
 class VarClearCommand(REPLCommand):
@@ -11,7 +10,7 @@ class VarClearCommand(REPLCommand):
 	@override
 	def execute(self):
 		if len(self.program.args) == 0:
-			Storage.clear_temp()
+			self.program.macros.temporary.clear()
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

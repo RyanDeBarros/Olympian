@@ -2,17 +2,24 @@ import os
 from pathlib import Path
 
 from . import Resolver
+from .commands.var.MacroStorage import MacroStorage
 
 
 class ProgramState:
 	def __init__(self, project_dir: Path):
+		# project
+		self.project_dir = project_dir.resolve()
+
+		# repl
 		from . import REPLStateMachine
 		self.machine = REPLStateMachine()
 		self.exit = False
-		self.project_dir = project_dir.resolve()
 		self.argline = ""
 		self.expanded_argline = ""
 		self.args: list[str] = []
+
+		# storage
+		self.macros = MacroStorage(self.project_dir)
 
 	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline

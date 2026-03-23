@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState, Resolver
-from . import Storage
 
 
 class VarSetCommand(REPLCommand):
@@ -15,7 +14,7 @@ class VarSetCommand(REPLCommand):
 				key = self.program.args[2 * i]
 				value = self.program.args[2 * i + 1]
 				if Resolver.is_valid_macro_key(key):
-					Storage.set_temp(key, value)
+					self.program.macros.temporary.set(key, value)
 				else:
 					self.print_arg_error(f"${key} must only contain alphanumeric characters, '-', or '_'")
 		else:
