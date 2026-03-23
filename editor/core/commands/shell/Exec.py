@@ -6,13 +6,13 @@ from typing import override
 from editor.core import REPLCommand, ProgramState
 
 
-class ShellCommand(REPLCommand):
+class ShellExecCommand(REPLCommand):
 	def __init__(self, program: ProgramState):
-		super().__init__(program, "shell")
+		super().__init__(program, "shell.exec")
 
 	@override
 	def execute(self):
-		if not self.program.argline:
+		if len(self.program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 			return
 
@@ -20,9 +20,9 @@ class ShellCommand(REPLCommand):
 
 		try:
 			if os.name == "nt" and bash:
-				subprocess.run([bash, "-c", self.program.argline])
+				subprocess.run([bash, "-c", ' '.join(self.program.args)])
 			else:
-				subprocess.run(self.program.argline, shell=True)
+				subprocess.run(' '.join(self.program.args), shell=True)
 
 		except Exception as e:
 			self.print_arg_error(f"Shell error: {e}")
@@ -33,4 +33,4 @@ class ShellCommand(REPLCommand):
 
 
 def register(program: ProgramState):
-	program.machine.default().add_command(ShellCommand(program))
+	program.machine.default().add_command(ShellExecCommand(program))
