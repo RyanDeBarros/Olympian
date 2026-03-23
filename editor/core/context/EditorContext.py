@@ -5,13 +5,12 @@ from editor.tools import eprint
 
 
 class EditorContext:
-	@staticmethod
-	def context_root_name():
-		return '.editor'
+	CONTEXT_ROOT_NAME: str = '.editor'
+	BUFFER_FILE_EXTENSION: str = 'olybuf'
 
 	@staticmethod
 	def context_root(program: ProgramState) -> Path:
-		return program.project_dir / EditorContext.context_root_name()
+		return program.project_dir / EditorContext.CONTEXT_ROOT_NAME
 
 	@staticmethod
 	def is_initialized(program: ProgramState) -> bool:
@@ -32,7 +31,7 @@ class EditorContext:
 			eprint(".editor exists, but is not initialized")
 			return
 
-		if any(path == EditorContext.context_root_name() for path in context_root.parents):
+		if any(path == EditorContext.CONTEXT_ROOT_NAME for path in context_root.parents):
 			eprint("Cannot initialize editor - an editor already exists in a parent directory")
 			return
 
@@ -45,4 +44,4 @@ class EditorContext:
 	@staticmethod
 	def data_buffer_path(program: ProgramState, asset_path: Path) -> Path:
 		rel_path = asset_path if not asset_path.is_absolute() else asset_path.relative_to(program.project_dir)
-		return EditorContext.data_root(program) / rel_path
+		return EditorContext.data_root(program) / f"{rel_path}.{EditorContext.BUFFER_FILE_EXTENSION}"
