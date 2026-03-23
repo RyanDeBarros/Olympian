@@ -13,7 +13,7 @@ class EditorMacrosRevealCommand(REPLCommand):
 		EditorContext.assert_initialized(self.program.project_dir)
 
 		if len(self.program.args) == 0:
-			pass  # TODO v7
+			EditorContext.reveal_in_explorer(self.program.macros.persistent_path())
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

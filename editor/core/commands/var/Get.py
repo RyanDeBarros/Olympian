@@ -23,7 +23,7 @@ class VarGetCommand(REPLCommand):
 				else:
 					print(f"${arg} = {value}")
 					try:
-						expanded = Resolver.expand_macros(arg)
+						expanded = Resolver.expand_macros(self.program, arg)
 						if expanded != value:
 							print(f"(expanded) ${arg} = {expanded}")
 					except REPLError as e:

@@ -24,7 +24,7 @@ class ProgramState:
 	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline
 		if expand_macros:
-			self.expanded_argline = Resolver.expand_macros(self.argline)
+			self.expanded_argline = Resolver.expand_macros(self, self.argline)
 		else:
 			self.expanded_argline = self.argline
 		self.args = Resolver.split_groups(self.expanded_argline)
