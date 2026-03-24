@@ -1,1 +1,1 @@
-from EditorSettings import EditorSettings
+from .EditorSettings import EditorSettings

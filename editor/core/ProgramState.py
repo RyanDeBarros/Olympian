@@ -4,6 +4,7 @@ from pathlib import Path
 from . import Resolver
 from .commands.editor.settings import EditorSettings
 from .commands.var.MacroStorage import MacroStorage
+from .context import PathUtils
 
 
 class ProgramState:
@@ -35,5 +36,6 @@ class ProgramState:
 		return self.project_dir.name
 
 	def cwd_prompt(self) -> str:
-		cwd = Path(os.getcwd()).relative_to(self.project_dir).as_posix()
-		return f"oly [{self.project_name()}/{cwd if cwd != '.' else ''}] > "
+		cwd = Path(os.getcwd()).relative_to(self.project_dir)
+		path = self.project_name() / (cwd if cwd != '.' else '')
+		return f"oly [{PathUtils.printed_path(path)}] > "

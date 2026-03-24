@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.context import PathUtils
 
 
 class CDCommand(REPLCommand):
@@ -17,7 +18,7 @@ class CDCommand(REPLCommand):
 				if cwd.absolute().resolve().is_relative_to(self.program.project_dir):
 					os.chdir(cwd)
 			else:
-				self.print_arg_error(f"{cwd.as_posix()} is not a valid directory")
+				self.print_arg_error(f"{PathUtils.printed_path(cwd)} is not a valid directory")
 		else:
 			self.print_arg_error(f"Expected 1 argument")
 
