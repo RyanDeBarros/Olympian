@@ -4,7 +4,7 @@ import importlib
 from editor.core import ProgramState
 
 
-def register(program: ProgramState):
+def register():
 	package_dir = os.path.dirname(__file__)
 
 	for root, dirs, files in os.walk(package_dir):
@@ -16,4 +16,4 @@ def register(program: ProgramState):
 			module_parts = relative_path.replace(os.path.sep, '.').rsplit(".py", 1)[0]
 			module = importlib.import_module(f"{__package__}.{module_parts}")
 			if hasattr(module, "register"):
-				module.register(program)
+				module.register(ProgramState.instance())

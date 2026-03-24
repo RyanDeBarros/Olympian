@@ -8,6 +8,8 @@ from .context import PathUtils
 
 
 class ProgramState:
+	_instance = None
+
 	def __init__(self, project_dir: Path):
 		# project
 		self.project_dir = project_dir.resolve()
@@ -23,6 +25,14 @@ class ProgramState:
 		# storage
 		self.macros = MacroStorage(self.project_dir)
 		self.settings = EditorSettings(self.project_dir)
+
+	@classmethod
+	def instance(cls, project_dir=None):
+		if cls._instance is None:
+			if project_dir is None:
+				raise ValueError("First call must provide project_dir")
+			cls._instance = cls(project_dir)
+		return cls._instance
 
 	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline

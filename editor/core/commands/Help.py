@@ -7,16 +7,17 @@ from editor.core import REPLCommand, ProgramState
 
 
 class HelpCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "help")
+	def __init__(self):
+		super().__init__("help")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.help()
-		elif len(self.program.args) == 1:
-			if self.program.args[0] in self.program.machine.all_commands:
-				self.program.machine.all_commands[self.program.args[0]].help()
+		elif len(program.args) == 1:
+			if program.args[0] in program.machine.all_commands:
+				program.machine.all_commands[program.args[0]].help()
 			else:
 				self.print_arg_error("Argument is not a valid command")
 		else:
@@ -27,8 +28,8 @@ class HelpCommand(REPLCommand):
 		print('help not implemented')  # DOC
 
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from self.program.machine.get_all_command_completions(document)
+		yield from ProgramState.instance().machine.get_all_command_completions(document)
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(HelpCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(HelpCommand())

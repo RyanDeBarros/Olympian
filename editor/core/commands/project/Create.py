@@ -4,8 +4,8 @@ from editor.core import REPLCommand, ProgramState
 
 
 class ProjectCreateCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "project.create")
+	def __init__(self):
+		super().__init__("project.create")
 
 	@override
 	def execute(self):
@@ -16,5 +16,5 @@ class ProjectCreateCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(ProjectCreateCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(ProjectCreateCommand())

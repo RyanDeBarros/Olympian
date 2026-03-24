@@ -4,17 +4,18 @@ from editor.core import REPLCommand, ProgramState, Resolver
 
 
 class VarSetCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.set")
+	def __init__(self):
+		super().__init__("var.set")
 
 	@override
 	def execute(self):
-		if len(self.program.args) > 0 and len(self.program.args) & 1 == 0:
-			for i in range(len(self.program.args) // 2):
-				key = self.program.args[2 * i]
-				value = self.program.args[2 * i + 1]
+		program = ProgramState.instance()
+		if len(program.args) > 0 and len(program.args) & 1 == 0:
+			for i in range(len(program.args) // 2):
+				key = program.args[2 * i]
+				value = program.args[2 * i + 1]
 				if Resolver.is_valid_macro_key(key):
-					self.program.macros.temporary.set(key, value)
+					program.macros.temporary.set(key, value)
 				else:
 					self.print_arg_error(f"${key} must only contain alphanumeric characters, '-', or '_'")
 		else:
@@ -29,5 +30,5 @@ class VarSetCommand(REPLCommand):
 		return False
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarSetCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarSetCommand())

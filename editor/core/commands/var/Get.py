@@ -7,23 +7,24 @@ from editor.core import Resolver, REPLError, REPLCommand, ProgramState, KeyCompl
 
 
 class VarGetCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.get")
+	def __init__(self):
+		super().__init__("var.get")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			for arg in self.program.args:
+			for arg in program.args:
 				try:
-					value = self.program.macros.temporary.get(arg)
+					value = program.macros.temporary.get(arg)
 				except KeyError:
 					self.print_arg_error(f"${arg} is not an existing temp var")
 				else:
 					print(f"${arg} = {value}")
 					try:
-						expanded = Resolver.expand_macros(self.program, arg)
+						expanded = Resolver.expand_macros(program, arg)
 						if expanded != value:
 							print(f"(expanded) ${arg} = {expanded}")
 					except REPLError as e:
@@ -35,8 +36,8 @@ class VarGetCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
+		yield from KeyCompleter.get_keys_completions(document, ProgramState.instance().macros.temporary.keys())
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarGetCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarGetCommand())

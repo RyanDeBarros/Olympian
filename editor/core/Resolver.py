@@ -6,9 +6,9 @@ MACRO_PREFIX = '$'
 MACRO_END = '^'
 
 
-def _get_temp(program: ProgramState, key: str):
+def _get_temp(key: str):
 	try:
-		return program.macros.temporary.get(key)
+		return ProgramState.instance().macros.temporary.get(key)
 	except KeyError:
 		raise REPLError(f"Temp var {key} does not exist")
 
@@ -21,7 +21,7 @@ def is_valid_macro_key(key: str) -> bool:
 		return True
 
 
-def expand_macros(program: ProgramState, argline: str, seen=None) -> str:
+def expand_macros(argline: str, seen=None) -> str:
 	if seen is None:
 		seen = set()
 
@@ -43,10 +43,10 @@ def expand_macros(program: ProgramState, argline: str, seen=None) -> str:
 				j += 1
 			if key in seen:
 				raise REPLError(f"Cyclic macro detected: {key}")
-			value = _get_temp(program, key)
+			value = _get_temp(key)
 			inner_seen = seen.copy()
 			inner_seen.add(key)
-			expanded = expand_macros(program, value, inner_seen)
+			expanded = expand_macros(value, inner_seen)
 			result += expanded
 			i = j + 1
 		else:
@@ -65,10 +65,10 @@ def expand_macros(program: ProgramState, argline: str, seen=None) -> str:
 				continue
 			if key in seen:
 				raise REPLError(f"Cyclic macro detected: {key}")
-			value = _get_temp(program, key)
+			value = _get_temp(key)
 			inner_seen = seen.copy()
 			inner_seen.add(key)
-			expanded = expand_macros(program, value, seen)
+			expanded = expand_macros(value, seen)
 			result += expanded
 			i = j
 

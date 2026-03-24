@@ -4,17 +4,17 @@ from editor.core import REPLCommand, ProgramState
 
 
 class ExitCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "exit")
+	def __init__(self):
+		super().__init__("exit")
 
 	@override
 	def execute(self):
-		self.program.exit = True
+		ProgramState.instance().exit = True
 
 	@override
 	def help(self):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(ExitCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(ExitCommand())

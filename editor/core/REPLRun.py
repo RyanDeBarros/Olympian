@@ -57,7 +57,7 @@ def _(event: KeyPressEvent):
 
 
 def run() -> None:
-	program = ProgramState(Path(os.getcwd()).resolve())
+	program = ProgramState.instance(Path(os.getcwd()).resolve())
 
 	# Load commands
 	from . import commands

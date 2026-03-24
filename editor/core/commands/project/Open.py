@@ -7,16 +7,17 @@ from editor.core.context import PathUtils
 
 
 class ProjectOpenCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "project.open")
+	def __init__(self):
+		super().__init__("project.open")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 1:
-			cwd = Path(self.program.args[0])
+		program = ProgramState.instance()
+		if len(program.args) == 1:
+			cwd = Path(program.args[0])
 			if cwd.is_dir():
 				os.chdir(cwd)
-				self.program.project_dir = Path(cwd).resolve()
+				program.project_dir = Path(cwd).resolve()
 			else:
 				self.print_arg_error(f"{PathUtils.printed_path(cwd)} is not a valid directory")
 		else:
@@ -27,5 +28,5 @@ class ProjectOpenCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(ProjectOpenCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(ProjectOpenCommand())

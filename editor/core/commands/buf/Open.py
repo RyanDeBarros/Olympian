@@ -5,17 +5,18 @@ from editor.core.context import EditorContext
 
 
 class BufOpenCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "buf.open")
+	def __init__(self):
+		super().__init__("buf.open")
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized(self.program.project_dir)
+		program = ProgramState.instance()
+		EditorContext.assert_initialized(program.project_dir)
 
-		if len(self.program.args) == 0:
+		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			for arg in self.program.args:
+			for arg in program.args:
 				self.open(arg)
 
 	@override
@@ -26,5 +27,5 @@ class BufOpenCommand(REPLCommand):
 		pass  # TODO v7
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(BufOpenCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(BufOpenCommand())

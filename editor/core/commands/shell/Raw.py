@@ -7,12 +7,13 @@ from editor.core import REPLCommand, ProgramState
 
 
 class ShellRawCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "shell.raw")
+	def __init__(self):
+		super().__init__("shell.raw")
 
 	@override
 	def execute(self):
-		if not self.program.argline:
+		program = ProgramState.instance()
+		if not program.argline:
 			self.print_arg_error("Expected at least 1 argument")
 			return
 
@@ -20,9 +21,9 @@ class ShellRawCommand(REPLCommand):
 
 		try:
 			if os.name == "nt" and bash:
-				subprocess.run([bash, "-c", self.program.argline])
+				subprocess.run([bash, "-c", program.argline])
 			else:
-				subprocess.run(self.program.argline, shell=True)
+				subprocess.run(program.argline, shell=True)
 
 		except Exception as e:
 			self.print_arg_error(f"Shell error: {e}")
@@ -32,5 +33,5 @@ class ShellRawCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(ShellRawCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(ShellRawCommand())

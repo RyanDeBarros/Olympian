@@ -5,15 +5,16 @@ from editor.core.context import EditorContext
 
 
 class VarPersistentClearCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.persistent.clear")
+	def __init__(self):
+		super().__init__("var.persistent.clear")
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized(self.program.project_dir)
+		EditorContext.assert_initialized()
 
-		if len(self.program.args) == 0:
-			self.program.macros.persistent.clear()
+		program = ProgramState.instance()
+		if len(program.args) == 0:
+			program.macros.persistent.clear()
 		else:
 			self.print_arg_error("Expected 0 arguments")
 
@@ -22,5 +23,5 @@ class VarPersistentClearCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarPersistentClearCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarPersistentClearCommand())

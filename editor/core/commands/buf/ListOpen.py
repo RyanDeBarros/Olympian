@@ -5,14 +5,15 @@ from editor.core.context import EditorContext
 
 
 class BufListOpenCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "buf.list-open")
+	def __init__(self):
+		super().__init__("buf.list-open")
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized(self.program.project_dir)
+		program = ProgramState.instance()
+		EditorContext.assert_initialized(program.project_dir)
 
-		if len(self.program.args) == 0:
+		if len(program.args) == 0:
 			pass  # TODO v7
 		else:
 			self.print_arg_error("Expected 0 arguments")
@@ -22,5 +23,5 @@ class BufListOpenCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(BufListOpenCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(BufListOpenCommand())

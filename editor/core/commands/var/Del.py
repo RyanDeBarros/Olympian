@@ -7,16 +7,17 @@ from editor.core import REPLCommand, ProgramState, KeyCompleter
 
 
 class VarDelCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.del")
+	def __init__(self):
+		super().__init__("var.del")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			for arg in self.program.args:
-				self.program.macros.temporary.remove(arg)
+			for arg in program.args:
+				program.macros.temporary.remove(arg)
 
 	@override
 	def help(self):
@@ -24,8 +25,8 @@ class VarDelCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
+		yield from KeyCompleter.get_keys_completions(document, ProgramState.instance().macros.temporary.keys())
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarDelCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarDelCommand())

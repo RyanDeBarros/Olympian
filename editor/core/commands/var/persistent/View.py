@@ -8,25 +8,26 @@ from editor.core.context import EditorContext
 
 
 class VarPersistentViewCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.persistent.view")
+	def __init__(self):
+		super().__init__("var.persistent.view")
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized(self.program.project_dir)
+		EditorContext.assert_initialized()  # TODO v7 call command.do_execute() which asserts before execute() - unless subclass explicitly says do not assert initialized
 
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			for arg in self.program.args:
+			for arg in program.args:
 				try:
-					value = self.program.macros.persistent.get(arg)
+					value = program.macros.persistent.get(arg)
 				except KeyError:
 					self.print_arg_error(f"${arg} is not an existing persistent var")
 				else:
 					print(f"${arg} = {value}")
 					try:
-						expanded = Resolver.expand_macros(self.program, arg)
+						expanded = Resolver.expand_macros(program, arg)
 						if expanded != value:
 							print(f"(expanded) ${arg} = {expanded}")
 					except REPLError as e:
@@ -38,8 +39,8 @@ class VarPersistentViewCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
+		yield from KeyCompleter.get_keys_completions(document, ProgramState.instance().macros.temporary.keys())
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarPersistentViewCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarPersistentViewCommand())

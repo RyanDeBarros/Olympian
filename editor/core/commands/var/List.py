@@ -7,22 +7,25 @@ from editor.core import REPLCommand, ProgramState, KeyCompleter
 
 
 class VarListCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.list")
+	def __init__(self):
+		super().__init__("var.list")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.print_list("")
-		elif len(self.program.args) == 1:
-			self.print_list(self.program.args[0])
+		elif len(program.args) == 1:
+			self.print_list(program.args[0])
 		else:
 			self.print_arg_error("Expected 0-1 arguments")
 
-	def print_list(self, prefix: str):
-		keys = filter(lambda key: prefix in key, self.program.macros.temporary.keys())
+	@staticmethod
+	def print_list(prefix: str):
+		temporary = ProgramState.instance().macros.temporary
+		keys = filter(lambda key: prefix in key, temporary.keys())
 		for key in sorted(keys):
-			print(f"${key} = {self.program.macros.temporary.get(key)}")
+			print(f"${key} = {temporary.get(key)}")
 
 	@override
 	def help(self):
@@ -30,8 +33,8 @@ class VarListCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, self.program.macros.temporary.keys())
+		yield from KeyCompleter.get_keys_completions(document, ProgramState.instance().macros.temporary.keys())
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarListCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarListCommand())

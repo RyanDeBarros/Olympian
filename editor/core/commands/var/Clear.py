@@ -4,13 +4,14 @@ from editor.core import REPLCommand, ProgramState
 
 
 class VarClearCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.clear")
+	def __init__(self):
+		super().__init__("var.clear")
 
 	@override
 	def execute(self):
-		if len(self.program.args) == 0:
-			self.program.macros.temporary.clear()
+		program = ProgramState.instance()
+		if len(program.args) == 0:
+			program.macros.temporary.clear()
 		else:
 			self.print_arg_error("Expected 0 arguments")
 
@@ -19,5 +20,5 @@ class VarClearCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarClearCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarClearCommand())

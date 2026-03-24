@@ -12,24 +12,24 @@ class EditorContext:
 	BUFFER_FILE_EXTENSION: str = 'olybuf'
 
 	@staticmethod
-	def context_root(project_dir: Path) -> Path:
-		return project_dir / EditorContext.CONTEXT_ROOT_NAME
+	def context_root() -> Path:
+		return ProgramState.instance().project_dir / EditorContext.CONTEXT_ROOT_NAME
 
 	@staticmethod
-	def is_initialized(project_dir: Path) -> bool:
-		return EditorContext.context_root(project_dir).exists() and EditorContext.context_root(project_dir).is_dir()
+	def is_initialized() -> bool:
+		return EditorContext.context_root().is_dir()
 
 	@staticmethod
-	def assert_initialized(project_dir: Path) -> None:
-		if not EditorContext.is_initialized(project_dir):
+	def assert_initialized() -> None:
+		if not EditorContext.is_initialized():
 			raise REPLError("Editor is not initialized")
 
 	@staticmethod
-	def initialize(program: ProgramState) -> None:
-		if EditorContext.is_initialized(program.project_dir):
+	def initialize() -> None:
+		if EditorContext.is_initialized():
 			return
 
-		context_root = EditorContext.context_root(program.project_dir)
+		context_root = EditorContext.context_root()
 
 		if context_root.exists():
 			eprint(".editor exists, but is not initialized")
@@ -40,17 +40,18 @@ class EditorContext:
 			return
 
 		context_root.mkdir(exist_ok=False)
+		program = ProgramState.instance()
 		program.macros.persistent_path().touch(exist_ok=False)
 		program.settings.persistent_path().touch(exist_ok=False)
 
 	@staticmethod
-	def data_root(project_dir: Path) -> Path:
-		return EditorContext.context_root(project_dir) / 'data'
+	def data_root() -> Path:
+		return EditorContext.context_root() / 'data'
 
 	@staticmethod
-	def data_buffer_path(project_dir: Path, asset_path: Path) -> Path:
-		rel_path = asset_path if not asset_path.is_absolute() else asset_path.relative_to(project_dir)
-		return EditorContext.data_root(project_dir) / f"{rel_path}.{EditorContext.BUFFER_FILE_EXTENSION}"
+	def data_buffer_path(asset_path: Path) -> Path:
+		rel_path = asset_path if not asset_path.is_absolute() else asset_path.relative_to(ProgramState.instance().project_dir)
+		return EditorContext.data_root() / f"{rel_path}.{EditorContext.BUFFER_FILE_EXTENSION}"
 
 	@staticmethod
 	def reveal_in_explorer(path: Path) -> None:

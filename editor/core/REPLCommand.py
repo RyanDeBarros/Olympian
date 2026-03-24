@@ -9,9 +9,7 @@ from . import PathCompleter
 
 
 class REPLCommand(ABC):
-	from . import ProgramState
-	def __init__(self, program: ProgramState, name: str):
-		self.program = program
+	def __init__(self, name: str):
 		self.name = name
 
 	@abstractmethod

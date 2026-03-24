@@ -8,18 +8,19 @@ from editor.core.context import EditorContext
 
 
 class VarPersistentUnpublishCommand(REPLCommand):
-	def __init__(self, program: ProgramState):
-		super().__init__(program, "var.persistent.unpublish")
+	def __init__(self):
+		super().__init__("var.persistent.unpublish")
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized(self.program.project_dir)
+		EditorContext.assert_initialized()
 
-		if len(self.program.args) == 0:
+		program = ProgramState.instance()
+		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			for arg in self.program.args:
-				self.program.macros.persistent.remove(arg)
+			for arg in program.args:
+				program.macros.persistent.remove(arg)
 
 	@override
 	def help(self):
@@ -27,8 +28,8 @@ class VarPersistentUnpublishCommand(REPLCommand):
 
 	@override
 	def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-		yield from KeyCompleter.get_keys_completions(document, self.program.macros.persistent.keys())
+		yield from KeyCompleter.get_keys_completions(document, ProgramState.instance().macros.persistent.keys())
 
 
-def register(program: ProgramState):
-	program.machine.default().add_command(VarPersistentUnpublishCommand(program))
+def register():
+	ProgramState.instance().machine.default().add_command(VarPersistentUnpublishCommand())
