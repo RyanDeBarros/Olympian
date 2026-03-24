@@ -23,7 +23,7 @@ class BufPathCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 	def path(self, arg: str):
-		pass  # TODO v7
+		pass  # TODO v7 print path + status (open/closed)
 
 
 def register(program: ProgramState):

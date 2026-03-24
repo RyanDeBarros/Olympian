@@ -11,7 +11,7 @@ class EditorInitCommand(REPLCommand):
 	@override
 	def execute(self):
 		if len(self.program.args) == 0:
-			if EditorContext.is_initialized(self.program):
+			if EditorContext.is_initialized(self.program.project_dir):
 				print("Editor is already initialized")
 			else:
 				EditorContext.initialize(self.program)

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from . import Resolver
+from .commands.editor.settings import EditorSettings
 from .commands.var.MacroStorage import MacroStorage
 
 
@@ -20,6 +21,7 @@ class ProgramState:
 
 		# storage
 		self.macros = MacroStorage(self.project_dir)
+		self.settings = EditorSettings(self.project_dir)
 
 	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline

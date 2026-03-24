@@ -21,15 +21,3 @@ if __name__ == "__main__":
 			eprint(f"{project_dir} is not a valid directory")
 
 	REPLRun.run()
-
-
-# TODO v7 buffers:
-#    *.open: open with default app (likely IDE/VSCode)
-#    *.reveal: open in file explorer
-#    *.path: print path of buffer file (and status - open/close)
-#    - editor.settings.open
-#    - editor.settings.reveal
-#    - editor.settings.path
-#    - editor.macros.open
-#    - editor.macros.reveal
-#    - editor.macros.path

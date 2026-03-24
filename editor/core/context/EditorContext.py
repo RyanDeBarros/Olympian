@@ -3,7 +3,7 @@ import platform
 import subprocess
 from pathlib import Path
 
-from editor.core import REPLError
+from editor.core import REPLError, ProgramState
 from editor.tools import eprint
 
 
@@ -25,11 +25,11 @@ class EditorContext:
 			raise REPLError("Editor is not initialized")
 
 	@staticmethod
-	def initialize(project_dir: Path) -> None:
-		if EditorContext.is_initialized(project_dir):
+	def initialize(program: ProgramState) -> None:
+		if EditorContext.is_initialized(program.project_dir):
 			return
 
-		context_root = EditorContext.context_root(project_dir)
+		context_root = EditorContext.context_root(program.project_dir)
 
 		if context_root.exists():
 			eprint(".editor exists, but is not initialized")
@@ -40,6 +40,8 @@ class EditorContext:
 			return
 
 		context_root.mkdir(exist_ok=False)
+		program.macros.persistent_path().touch(exist_ok=False)
+		program.settings.persistent_path().touch(exist_ok=False)
 
 	@staticmethod
 	def data_root(project_dir: Path) -> Path:

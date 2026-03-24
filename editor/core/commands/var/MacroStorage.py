@@ -39,7 +39,8 @@ class MacroStorage:
 		self.project_dir = project_dir
 		self.temporary = MacroDict(None)
 		self.persistent = MacroDict(self.dump_persistent)
-		self.load_persistent()
+		if self.persistent_path().is_file():
+			self.load_persistent()
 
 	def persistent_path(self) -> Path:
 		return EditorContext.context_root(self.project_dir) / f'macros.{EditorContext.BUFFER_FILE_EXTENSION}'
@@ -48,13 +49,8 @@ class MacroStorage:
 		self.persistent_path().write_text('\n'.join(f"{k} = {Resolver.GROUP_OPEN}{v}{Resolver.GROUP_CLOSE}" for k, v in d.items()))
 
 	def load_persistent(self) -> None:
-		path = self.persistent_path()
-		if not path.exists() or not path.is_file():
-			return
-
 		pattern = re.compile(rf"^(?P<key>.*?) = {re.escape(Resolver.GROUP_OPEN)}(?P<val>.*){re.escape(Resolver.GROUP_CLOSE)}$")
-
-		with path.open('r') as f:
+		with self.persistent_path().open('r') as f:
 			for line in f:
 				match = pattern.match(line)
 				if match:
