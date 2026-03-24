@@ -12,8 +12,6 @@ class BufPathCommand(REPLCommand):
 	@override
 	def execute(self):
 		program = ProgramState.instance()
-		EditorContext.assert_initialized(program.project_dir)
-
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
@@ -30,7 +28,7 @@ class BufPathCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		buffer_path = EditorContext.data_buffer_path(program.project_dir, asset)
+		buffer_path = EditorContext.data_buffer_path(asset)
 		print(PathUtils.printed_path(buffer_path), f"({'open' if buffer_path.exists() else 'closed'})")
 
 def register():

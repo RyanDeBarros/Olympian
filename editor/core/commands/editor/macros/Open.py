@@ -11,10 +11,8 @@ class EditorMacrosOpenCommand(REPLCommand):
 	@override
 	def execute(self):
 		program = ProgramState.instance()
-		EditorContext.assert_initialized(program.project_dir)
-
 		if len(program.args) == 0:
-			EditorContext.open_with_default_app(program.macros.persistent_path())
+			EditorContext.open_with_default_app(program.macros.persistent_path)
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

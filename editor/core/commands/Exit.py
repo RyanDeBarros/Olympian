@@ -8,6 +8,10 @@ class ExitCommand(REPLCommand):
 		super().__init__("exit")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		ProgramState.instance().exit = True
 

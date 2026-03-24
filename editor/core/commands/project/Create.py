@@ -8,6 +8,10 @@ class ProjectCreateCommand(REPLCommand):
 		super().__init__("project.create")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		pass  # TODO v7 create project files. also init editor
 

@@ -8,6 +8,10 @@ class VarSetCommand(REPLCommand):
 		super().__init__("var.set")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) > 0 and len(program.args) & 1 == 0:

@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
-from editor.core.context import EditorContext
 
 
 class VarPersistentClearCommand(REPLCommand):
@@ -10,8 +9,6 @@ class VarPersistentClearCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized()
-
 		program = ProgramState.instance()
 		if len(program.args) == 0:
 			program.macros.persistent.clear()

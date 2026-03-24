@@ -6,11 +6,20 @@ from prompt_toolkit.document import Document
 
 from editor.tools import eprint
 from . import PathCompleter
+from .context import EditorContext
 
 
 class REPLCommand(ABC):
 	def __init__(self, name: str):
 		self.name = name
+
+	def do_execute(self):
+		if self.requires_initialized_editor():
+			EditorContext.assert_initialized()
+		self.execute()
+
+	def requires_initialized_editor(self):
+		return True
 
 	@abstractmethod
 	def execute(self):

@@ -4,7 +4,6 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import Resolver, REPLError, REPLCommand, ProgramState, KeyCompleter
-from editor.core.context import EditorContext
 
 
 class VarPersistentViewCommand(REPLCommand):
@@ -13,8 +12,6 @@ class VarPersistentViewCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized()  # TODO v7 call command.do_execute() which asserts before execute() - unless subclass explicitly says do not assert initialized
-
 		program = ProgramState.instance()
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")

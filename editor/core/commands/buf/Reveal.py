@@ -1,7 +1,6 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
-from editor.core.context import EditorContext
 
 
 class BufRevealCommand(REPLCommand):
@@ -11,8 +10,6 @@ class BufRevealCommand(REPLCommand):
 	@override
 	def execute(self):
 		program = ProgramState.instance()
-		EditorContext.assert_initialized(program.project_dir)
-
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:

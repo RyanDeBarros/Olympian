@@ -11,6 +11,10 @@ class VarListCommand(REPLCommand):
 		super().__init__("var.list")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:

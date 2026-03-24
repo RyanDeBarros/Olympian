@@ -10,11 +10,9 @@ class EditorMacrosRevealCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized()
-
 		program = ProgramState.instance()
 		if len(program.args) == 0:
-			EditorContext.reveal_in_explorer(program.macros.persistent_path())
+			EditorContext.reveal_in_explorer(program.macros.persistent_path)
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

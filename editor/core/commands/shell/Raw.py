@@ -11,6 +11,10 @@ class ShellRawCommand(REPLCommand):
 		super().__init__("shell.raw")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		program = ProgramState.instance()
 		if not program.argline:

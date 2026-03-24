@@ -1,11 +1,9 @@
 from pathlib import Path
 
-from editor.core.context import EditorContext
-
 
 class EditorSettings:
-	def __init__(self, project_dir: Path):
-		self.project_dir = project_dir
+	def __init__(self, persistent_path: Path):
+		self.persistent_path = persistent_path
 
-	def persistent_path(self) -> Path:
-		return EditorContext.context_root(self.project_dir) / f'settings.{EditorContext.BUFFER_FILE_EXTENSION}'
+	def load(self):
+		pass  # TODO v7

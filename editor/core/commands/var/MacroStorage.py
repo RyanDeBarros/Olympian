@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 from editor.core import Resolver
-from editor.core.context import EditorContext
 
 
 class MacroDict:
@@ -35,22 +34,17 @@ class MacroDict:
 
 
 class MacroStorage:
-	def __init__(self, project_dir: Path):
-		self.project_dir = project_dir
+	def __init__(self, persistent_path: Path):
+		self.persistent_path = persistent_path
 		self.temporary = MacroDict(None)
 		self.persistent = MacroDict(self.dump_persistent)
-		if self.persistent_path().is_file():
-			self.load_persistent()
-
-	def persistent_path(self) -> Path:
-		return EditorContext.context_root(self.project_dir) / f'macros.{EditorContext.BUFFER_FILE_EXTENSION}'
 
 	def dump_persistent(self, d: dict[str, str]) -> None:
-		self.persistent_path().write_text('\n'.join(f"{k} = {Resolver.GROUP_OPEN}{v}{Resolver.GROUP_CLOSE}" for k, v in d.items()))
+		self.persistent_path.write_text('\n'.join(f"{k} = {Resolver.GROUP_OPEN}{v}{Resolver.GROUP_CLOSE}" for k, v in d.items()))
 
 	def load_persistent(self) -> None:
 		pattern = re.compile(rf"^(?P<key>.*?) = {re.escape(Resolver.GROUP_OPEN)}(?P<val>.*){re.escape(Resolver.GROUP_CLOSE)}$")
-		with self.persistent_path().open('r') as f:
+		with self.persistent_path.open('r') as f:
 			for line in f:
 				match = pattern.match(line)
 				if match:

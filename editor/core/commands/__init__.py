@@ -1,7 +1,5 @@
-import os
 import importlib
-
-from editor.core import ProgramState
+import os
 
 
 def register():
@@ -16,4 +14,4 @@ def register():
 			module_parts = relative_path.replace(os.path.sep, '.').rsplit(".py", 1)[0]
 			module = importlib.import_module(f"{__package__}.{module_parts}")
 			if hasattr(module, "register"):
-				module.register(ProgramState.instance())
+				module.register()

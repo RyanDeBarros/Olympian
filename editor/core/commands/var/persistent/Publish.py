@@ -4,7 +4,6 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from editor.core import REPLCommand, ProgramState, KeyCompleter
-from editor.core.context import EditorContext
 
 
 class VarPersistentPublishCommand(REPLCommand):
@@ -15,8 +14,6 @@ class VarPersistentPublishCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		EditorContext.assert_initialized()
-
 		program = ProgramState.instance()
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")

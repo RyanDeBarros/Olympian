@@ -1,4 +1,4 @@
-from . import REPLError, ProgramState
+from . import REPLError
 
 GROUP_OPEN = '['
 GROUP_CLOSE = ']'
@@ -8,6 +8,7 @@ MACRO_END = '^'
 
 def _get_temp(key: str):
 	try:
+		from . import ProgramState
 		return ProgramState.instance().macros.temporary.get(key)
 	except KeyError:
 		raise REPLError(f"Temp var {key} does not exist")

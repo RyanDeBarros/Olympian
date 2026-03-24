@@ -3,7 +3,8 @@ import platform
 import subprocess
 from pathlib import Path
 
-from editor.core import REPLError, ProgramState
+from editor.core import REPLError
+from editor.core.ProgramState import ProgramState
 from editor.tools import eprint
 
 
@@ -12,8 +13,10 @@ class EditorContext:
 	BUFFER_FILE_EXTENSION: str = 'olybuf'
 
 	@staticmethod
-	def context_root() -> Path:
-		return ProgramState.instance().project_dir / EditorContext.CONTEXT_ROOT_NAME
+	def context_root(project_dir: Path | None = None) -> Path:
+		if project_dir is None:
+			project_dir = ProgramState.instance().project_dir
+		return project_dir / EditorContext.CONTEXT_ROOT_NAME
 
 	@staticmethod
 	def is_initialized() -> bool:
@@ -41,8 +44,16 @@ class EditorContext:
 
 		context_root.mkdir(exist_ok=False)
 		program = ProgramState.instance()
-		program.macros.persistent_path().touch(exist_ok=False)
-		program.settings.persistent_path().touch(exist_ok=False)
+		program.macros.persistent_path.touch(exist_ok=False)
+		program.settings.persistent_path.touch(exist_ok=False)
+
+	@staticmethod
+	def macros_path(project_dir: Path | None = None) -> Path:
+		return EditorContext.context_root(project_dir) / f'macros.{EditorContext.BUFFER_FILE_EXTENSION}'
+
+	@staticmethod
+	def settings_path(project_dir: Path | None = None) -> Path:
+		return EditorContext.context_root(project_dir) / f'settings.{EditorContext.BUFFER_FILE_EXTENSION}'
 
 	@staticmethod
 	def data_root() -> Path:

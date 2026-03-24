@@ -58,10 +58,11 @@ def _(event: KeyPressEvent):
 
 def run() -> None:
 	program = ProgramState.instance(Path(os.getcwd()).resolve())
+	program.late_init()
 
 	# Load commands
 	from . import commands
-	commands.register(program)
+	commands.register()
 	program.machine.cache_commands()
 
 	# Setup prompter
@@ -89,7 +90,7 @@ def run() -> None:
 				e.print()
 				continue
 
-			cmd.execute()
+			cmd.do_execute()
 
 			if program.exit:
 				break

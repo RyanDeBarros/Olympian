@@ -11,6 +11,10 @@ class HelpCommand(REPLCommand):
 		super().__init__("help")
 
 	@override
+	def requires_initialized_editor(self):
+		return False
+
+	@override
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:
