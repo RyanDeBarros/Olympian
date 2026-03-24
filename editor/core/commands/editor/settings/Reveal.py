@@ -1,6 +1,7 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.context import EditorContext
 
 
 class EditorSettingsRevealCommand(REPLCommand):
@@ -11,7 +12,7 @@ class EditorSettingsRevealCommand(REPLCommand):
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:
-			pass  # TODO v7
+			EditorContext.reveal_in_explorer(program.settings.persistent_path)
 		else:
 			self.print_arg_error("Expected 0 arguments")
 
