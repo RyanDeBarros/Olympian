@@ -20,8 +20,9 @@ class ProjectOpenCommand(REPLCommand):
 		if len(program.args) == 1:
 			cwd = Path(program.args[0])
 			if cwd.is_dir():
+				project_dir = Path(cwd).resolve()
 				os.chdir(cwd)
-				program.project_dir = Path(cwd).resolve()
+				program.set_project_dir(project_dir)
 			else:
 				self.print_arg_error(f"{PathUtils.printed_path(cwd)} is not a valid directory")
 		else:

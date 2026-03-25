@@ -57,3 +57,8 @@ class ProgramState:
 		cwd = Path(os.getcwd()).relative_to(self.project_dir)
 		path = self.project_name() / (cwd if cwd != '.' else '')
 		return f"oly [{PathUtils.printed_path(path)}] > "
+
+	def set_project_dir(self, project_dir: Path):
+		from .Watchdog import Watchdog
+		self.project_dir = project_dir
+		Watchdog.instance().update_project_root()
