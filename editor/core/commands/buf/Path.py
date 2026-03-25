@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.buffers import BufferPath
 from editor.core.context import EditorContext, PathUtils
 
 
@@ -28,8 +29,8 @@ class BufPathCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		buffer_path = EditorContext.data_buffer_path(asset)
-		print(PathUtils.printed_path(buffer_path), f"({'open' if buffer_path.exists() else 'closed'})")
+		bp = BufferPath.from_asset(asset)
+		print(PathUtils.printed_path(bp.buffer_path), f"({'open' if bp.buffer_path.exists() else 'closed'})")
 
 def register():
 	ProgramState.instance().machine.default().add_command(BufPathCommand())

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.buffers import BufferPath
 from editor.core.context import PathUtils, EditorContext
 
 
@@ -28,9 +29,10 @@ class BufRevealCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		buffer_path = EditorContext.data_buffer_path(asset)
-		if buffer_path.exists():
-			EditorContext.reveal_in_explorer(buffer_path)
+		bp = BufferPath.from_asset(asset)
+		# TODO v7 actually create buffer file if it doesn't exist
+		if bp.buffer_path.exists():
+			EditorContext.reveal_in_explorer(bp.buffer_path)
 		else:
 			print(f"{PathUtils.printed_path(asset)} is closed")
 

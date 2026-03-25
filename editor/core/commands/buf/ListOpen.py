@@ -1,6 +1,7 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.context import EditorContext
 
 
 class BufListOpenCommand(REPLCommand):
@@ -11,7 +12,10 @@ class BufListOpenCommand(REPLCommand):
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:
-			pass  # TODO v7
+			for bp in EditorContext.data_buffers():
+				print(bp.asset_path)
+			else:
+				print("No buffers are currently open")
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

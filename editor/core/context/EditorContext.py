@@ -2,10 +2,14 @@ import os
 import platform
 import subprocess
 from pathlib import Path
+from typing import Iterator, TYPE_CHECKING
 
 from editor.core import REPLError
 from editor.core.ProgramState import ProgramState
 from editor.tools import eprint
+
+if TYPE_CHECKING:
+	from editor.core.buffers import BufferPath
 
 
 class EditorContext:
@@ -60,9 +64,10 @@ class EditorContext:
 		return EditorContext.context_root() / 'data'
 
 	@staticmethod
-	def data_buffer_path(asset_path: Path) -> Path:
-		rel_path = asset_path if not asset_path.is_absolute() else asset_path.relative_to(ProgramState.instance().project_dir)
-		return EditorContext.data_root() / f"{rel_path}.{EditorContext.BUFFER_FILE_EXTENSION}"
+	def data_buffers() -> Iterator["BufferPath"]:
+		from editor.core.buffers import BufferPath
+		for path in EditorContext.data_root().rglob(f"*.{EditorContext.BUFFER_FILE_EXTENSION}"):
+			yield BufferPath.from_buffer(path)
 
 	@staticmethod
 	def reveal_in_explorer(path: Path) -> None:
