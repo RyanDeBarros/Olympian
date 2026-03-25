@@ -1,6 +1,9 @@
+from pathlib import Path
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.buffers import BufferChooser
+from editor.core.context import PathUtils
 
 
 class BufEditCommand(REPLCommand):
@@ -21,7 +24,17 @@ class BufEditCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 	def edit(self, arg: str):
-		pass  # TODO v7 actually create buffer file if it doesn't exist
+		asset = Path(arg).resolve()
+		if not asset.exists():
+			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
+			return
+
+		buffer = BufferChooser.instance().buffer(asset)
+		if buffer is not None:
+			ProgramState.instance().buffers.append(buffer)
+			buffer.open()
+		else:
+			self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
 
 
 def register():

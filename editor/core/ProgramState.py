@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from . import Resolver
+from .buffers import AbstractBuffer
 from .context import PathUtils
 
 
@@ -26,6 +27,9 @@ class ProgramState:
 		self.macros = MacroStorage(EditorContext.macros_path(self.project_dir))
 		from .commands.editor.settings import EditorSettings
 		self.settings = EditorSettings(EditorContext.settings_path(self.project_dir))
+
+		# buffers
+		self.buffers: list[AbstractBuffer] = []
 
 	def late_init(self):
 		if self.macros.persistent_path.is_file():

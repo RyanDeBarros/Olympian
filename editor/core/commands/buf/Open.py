@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
-from editor.core.buffers import BufferPath
+from editor.core.buffers import BufferChooser
 from editor.core.context import PathUtils, EditorContext
 
 
@@ -29,12 +29,13 @@ class BufOpenCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		bp = BufferPath.from_asset(asset)
-		# TODO v7 actually create buffer file if it doesn't exist
-		if bp.buffer_path.exists():
-			EditorContext.open_with_default_app(bp.buffer_path)
+		buffer = BufferChooser.instance().buffer(asset)
+		if buffer is not None:
+			ProgramState.instance().buffers.append(buffer)
+			buffer.open()
+			EditorContext.open_with_default_app(buffer.buf.buffer_path)
 		else:
-			print(f"{PathUtils.printed_path(asset)} is closed")
+			self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
 
 
 def register():
