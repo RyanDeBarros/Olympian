@@ -10,6 +10,7 @@ from prompt_toolkit.shortcuts import CompleteStyle
 
 from editor.tools import eprint
 from . import REPLError, REPLStateMachine, ProgramState
+from .Watchdog import Watchdog
 
 
 class REPLCompleter(Completer):
@@ -59,6 +60,7 @@ def _(event: KeyPressEvent):
 def run() -> None:
 	program = ProgramState.instance(Path(os.getcwd()).resolve())
 	program.late_init()
+	Watchdog.instance().start()
 
 	# Load commands
 	from . import commands
