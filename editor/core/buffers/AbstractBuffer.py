@@ -53,9 +53,12 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 	def on_open(self) -> None:
 		pass
 
-	def close(self) -> None:
+	def close(self) -> bool:
 		if self.buf.buffer_path.exists() and self.on_close():
 			self.buf.buffer_path.unlink()
+			return True
+		else:
+			return False
 
 	def on_close(self) -> bool:
 		return True

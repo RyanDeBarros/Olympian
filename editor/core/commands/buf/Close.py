@@ -1,6 +1,7 @@
 from typing import override
 
 from editor.core import REPLCommand, ProgramState
+from editor.core.context import PathUtils
 
 
 class BufCloseCommand(REPLCommand):
@@ -21,7 +22,15 @@ class BufCloseCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 	def close(self, arg: str):
-		pass  # TODO v7.1
+		asset = self.resolve_asset_path(arg)
+		if asset is None:
+			return
+
+		buffer = ProgramState.instance().get_buffer(asset)
+		if buffer is None:
+			print(f"{PathUtils.printed_path(asset)} is not open")
+		elif buffer.close():
+			ProgramState.instance().buffers.remove(buffer)
 
 
 def register():

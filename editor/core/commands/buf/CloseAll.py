@@ -11,7 +11,11 @@ class BufCloseAllCommand(REPLCommand):
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:
-			pass  # TODO v7.1
+			keep = []
+			for buffer in ProgramState.instance().buffers:
+				if not buffer.close():
+					keep.append(buffer)
+			ProgramState.instance().buffers = keep
 		else:
 			self.print_arg_error("Expected 0 arguments")
 

@@ -24,9 +24,8 @@ class BufRevealCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 	def reveal(self, arg: str):
-		asset = Path(arg).resolve()
-		if not asset.exists():
-			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
+		asset = self.resolve_asset_path(arg)
+		if asset is None:
 			return
 
 		buffer = ProgramState.instance().get_buffer(asset)

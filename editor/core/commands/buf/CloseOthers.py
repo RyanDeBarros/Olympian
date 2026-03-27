@@ -13,7 +13,12 @@ class BufCloseOthersCommand(REPLCommand):
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			pass  # TODO v7.1
+			safe = [self.resolve_asset_path(arg) for arg in program.args]
+			keep = []
+			for buffer in ProgramState.instance().buffers:
+				if buffer.buf.asset_path in safe or not buffer.close():
+					keep.append(buffer)
+			ProgramState.instance().buffers = keep
 
 	@override
 	def help(self):
