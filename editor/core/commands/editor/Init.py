@@ -4,7 +4,7 @@ from editor.core import REPLCommand, ProgramState
 from editor.core.context import EditorContext
 
 
-# TODO v7 remove editor.init once project.create is finished, since editor context might require project oly file at project dir root.
+# TODO v7.3 remove editor.init once project.create is finished, since editor context might require project oly file at project dir root.
 class EditorInitCommand(REPLCommand):
 	def __init__(self):
 		super().__init__("editor.init")

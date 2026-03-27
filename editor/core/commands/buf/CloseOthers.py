@@ -13,7 +13,7 @@ class BufCloseOthersCommand(REPLCommand):
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
-			pass  # TODO v7
+			pass  # TODO v7.1
 
 	@override
 	def help(self):

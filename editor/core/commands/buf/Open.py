@@ -29,13 +29,17 @@ class BufOpenCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		buffer = BufferChooser.instance().buffer(asset)
+		buffer = ProgramState.instance().get_buffer(asset)
 		if buffer is not None:
-			ProgramState.instance().buffers.append(buffer)
-			buffer.open()
 			EditorContext.open_with_default_app(buffer.buf.buffer_path)
 		else:
-			self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
+			buffer = BufferChooser.instance().buffer(asset)
+			if buffer is not None:
+				ProgramState.instance().buffers.append(buffer)
+				buffer.open()
+				EditorContext.open_with_default_app(buffer.buf.buffer_path)
+			else:
+				self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
 
 
 def register():

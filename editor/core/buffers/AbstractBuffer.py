@@ -11,7 +11,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 	def __init__(self, buf: BufferPath):
 		super().__init__()
 		self.buf = buf
-		# TODO v7 make sure to close all buffers on editor exit - but cache list of opened buffers. Then open them all on editor start
+		# TODO v7.2 make sure to close all buffers on editor exit - but cache list of opened buffers. Then open them all on editor start
 
 	def __init_subclass__(cls, **kwargs):
 		super().__init_subclass__(**kwargs)
@@ -43,7 +43,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			if self.__class__.matches_asset(dest):
 				self.buf.on_asset_moved(dest)
 			else:
-				eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7 handle different asset type - also, self.close() here might not work with the asset file moved
+				eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7.2 handle different asset type - also, self.close() here might not work with the asset file moved
 
 	def open(self) -> None:
 		if not self.buf.buffer_path.exists():

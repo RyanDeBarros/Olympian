@@ -46,6 +46,9 @@ class ProgramState:
 			cls._instance = cls(project_dir)
 		return cls._instance
 
+	def get_buffer(self, asset: Path) -> AbstractBuffer | None:
+		return next((buffer for buffer in self.buffers if buffer.buf.asset_path == asset), None)
+
 	def load_args(self, argline: str, expand_macros: bool):
 		self.argline = argline
 		if expand_macros:

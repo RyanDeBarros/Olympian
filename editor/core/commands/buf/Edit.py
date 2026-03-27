@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import override
 
+from shapely.constructive import buffer
+
 from editor.core import REPLCommand, ProgramState
 from editor.core.buffers import BufferChooser
 from editor.core.context import PathUtils
@@ -29,12 +31,15 @@ class BufEditCommand(REPLCommand):
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return
 
-		buffer = BufferChooser.instance().buffer(asset)
-		if buffer is not None:
-			ProgramState.instance().buffers.append(buffer)
-			buffer.open()
+		if any(buffer.buf.asset_path == asset for buffer in ProgramState.instance().buffers):
+			print(f"{PathUtils.printed_path(asset)} is already open")
 		else:
-			self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
+			buffer = BufferChooser.instance().buffer(asset)
+			if buffer is not None:
+				ProgramState.instance().buffers.append(buffer)
+				buffer.open()
+			else:
+				self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
 
 
 def register():

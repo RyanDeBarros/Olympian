@@ -8,7 +8,7 @@ from . import Resolver
 
 
 # DOC document that paths are wrapped with [], and document macro usage $^
-def get_path_completions(document: Document) -> Iterable[Completion]:  # TODO v7 option to exclude '.oly' import files, with the exception of the project file
+def get_path_completions(document: Document) -> Iterable[Completion]:  # TODO v7.1 option to exclude '.oly' import files, with the exception of the project file
 	text_before_cursor = document.text_before_cursor
 
 	opening_index = text_before_cursor.rfind(Resolver.GROUP_OPEN)

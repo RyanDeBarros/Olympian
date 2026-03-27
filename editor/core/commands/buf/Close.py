@@ -21,7 +21,7 @@ class BufCloseCommand(REPLCommand):
 		print("help not implemented")  # DOC
 
 	def close(self, arg: str):
-		pass  # TODO v7
+		pass  # TODO v7.1
 
 
 def register():

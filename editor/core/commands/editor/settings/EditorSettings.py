@@ -6,4 +6,4 @@ class EditorSettings:
 		self.persistent_path = persistent_path
 
 	def load(self):
-		pass  # TODO v7
+		pass  # TODO v7.2

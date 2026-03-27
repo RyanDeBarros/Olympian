@@ -13,7 +13,7 @@ class ProjectCreateCommand(REPLCommand):
 
 	@override
 	def execute(self):
-		pass  # TODO v7 create project files. also init editor
+		pass  # TODO v7.3 create project files. also init editor
 
 	@override
 	def help(self):

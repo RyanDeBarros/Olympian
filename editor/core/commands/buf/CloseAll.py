@@ -11,7 +11,7 @@ class BufCloseAllCommand(REPLCommand):
 	def execute(self):
 		program = ProgramState.instance()
 		if len(program.args) == 0:
-			pass  # TODO v7
+			pass  # TODO v7.1
 		else:
 			self.print_arg_error("Expected 0 arguments")
 
