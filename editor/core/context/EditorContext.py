@@ -93,7 +93,7 @@ class EditorContext:
 			raise REPLError(f"Path {str(path)} does not exist")
 
 		if platform.system() == "Windows":
-			os.startfile(str(path))
+			subprocess.run(['explorer.exe', str(path)], creationflags=0x00000008 | 0x08000000)
 		elif platform.system() == "Darwin":
 			subprocess.run(["open", str(path)])
 		else:

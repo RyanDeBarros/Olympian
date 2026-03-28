@@ -54,7 +54,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 	def open(self) -> None:
 		if not self.buf.buffer_path.exists():
-			self.buf.buffer_path.parent.mkdir(parents=True)
+			self.buf.buffer_path.parent.mkdir(parents=True, exist_ok=True)
 			self.buf.buffer_path.touch()
 			self.on_open()
 
