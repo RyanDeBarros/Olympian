@@ -4,64 +4,64 @@
 
 [[assignment]]
 "config"  = 0
-"texture" = "~/textures/grass tileset/S.png"
+"texture" = "@/textures/grass tileset/S.png"
 
 [[assignment]]
 "config"  = 46
-"texture" = "~/textures/grass tileset/M.png"
+"texture" = "@/textures/grass tileset/M.png"
 
 [[assignment]]
 "config"  = 16
-"texture" = "~/textures/grass tileset/BL.png"
+"texture" = "@/textures/grass tileset/BL.png"
 
 [[assignment]]
 "config"  = 17
-"texture" = "~/textures/grass tileset/BR.png"
+"texture" = "@/textures/grass tileset/BR.png"
 
 [[assignment]]
 "config"  = 18
-"texture" = "~/textures/grass tileset/TR.png"
+"texture" = "@/textures/grass tileset/TR.png"
 
 [[assignment]]
 "config"  = 19
-"texture" = "~/textures/grass tileset/TL.png"
+"texture" = "@/textures/grass tileset/TL.png"
 
 [[assignment]]
 "config"  = 28
-"texture" = "~/textures/grass tileset/LE.png"
+"texture" = "@/textures/grass tileset/LE.png"
 
 [[assignment]]
 "config"  = 29
-"texture" = "~/textures/grass tileset/BE.png"
+"texture" = "@/textures/grass tileset/BE.png"
 
 [[assignment]]
 "config"  = 30
-"texture" = "~/textures/grass tileset/RE.png"
+"texture" = "@/textures/grass tileset/RE.png"
 
 [[assignment]]
 "config"  = 31
-"texture" = "~/textures/grass tileset/TE.png"
+"texture" = "@/textures/grass tileset/TE.png"
 
 [[assignment]]
 "config"  = 1
-"texture" = "~/textures/grass tileset/LT.png"
+"texture" = "@/textures/grass tileset/LT.png"
 
 [[assignment]]
 "config"  = 2
-"texture" = "~/textures/grass tileset/BT.png"
+"texture" = "@/textures/grass tileset/BT.png"
 
 [[assignment]]
 "config"  = 3
-"texture" = "~/textures/grass tileset/RT.png"
+"texture" = "@/textures/grass tileset/RT.png"
 
 [[assignment]]
 "config"  = 4
-"texture" = "~/textures/grass tileset/TT.png"
+"texture" = "@/textures/grass tileset/TT.png"
 
 [[assignment]]
 "config"  = 9
-"texture" = "~/textures/grass tileset/I1.png"
+"texture" = "@/textures/grass tileset/I1.png"
 
 [[assignment]]
 "config"  = 10
-"texture" = "~/textures/grass tileset/I2.png"
+"texture" = "@/textures/grass tileset/I2.png"

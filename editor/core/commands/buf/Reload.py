@@ -8,9 +8,9 @@ from editor.core.buffers import BufferChooser
 from editor.core.context import PathUtils
 
 
-class BufEditCommand(REPLCommand):
+class BufReloadCommand(REPLCommand):
 	def __init__(self):
-		super().__init__("buf.edit")
+		super().__init__("buf.reload")
 
 	@override
 	def execute(self):
@@ -32,16 +32,11 @@ class BufEditCommand(REPLCommand):
 			return
 
 		buffer = ProgramState.instance().get_buffer(asset)
-		if buffer is not None:
-			print(f"{PathUtils.printed_path(asset)} is already open")
+		if buffer is None:
+			print(f"{PathUtils.printed_path(asset)} is not opened")
 		else:
-			buffer = BufferChooser.instance().buffer(asset)
-			if buffer is not None:
-				ProgramState.instance().buffers.append(buffer)
-				buffer.open()
-			else:
-				self.print_arg_error(f"{PathUtils.printed_path(asset)} asset type is not supported")
+			buffer.open()
 
 
 def register():
-	ProgramState.instance().machine.default().add_command(BufEditCommand())
+	ProgramState.instance().machine.default().add_command(BufReloadCommand())

@@ -16,29 +16,29 @@ draw = [
 ]
 
 [sprite3]
-texture = "~/textures/serotonin.gif"
+texture = "@/textures/serotonin.gif"
 transformer = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
 frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [sprite4]
-texture = "~/textures/tux.png"
+texture = "@/textures/tux.png"
 texture_index = 1
 transformer = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
 
 [sprite5]
-texture = "~/textures/tux.png"
+texture = "@/textures/tux.png"
 transformer = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
 
 [sprite1]
-texture = "~/textures/einstein.png"
+texture = "@/textures/einstein.png"
 
 [godot_icon]
-texture = "~/textures/godot.svg"
+texture = "@/textures/godot.svg"
 texture_index = 1
 transformer = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
 
 [knight]
-texture = "~/textures/knight.png"
+texture = "@/textures/knight.png"
 transformer = { "position" = [100, -300], "scale" = [20, 20] }
 frame_format = { "mode" = "auto" }
 
@@ -47,7 +47,7 @@ rows = 2
 cols = 3
 delay_seconds = 0.1
 	[atlased_night.sprite]
-	texture = "~/textures/knight.png"
+	texture = "@/textures/knight.png"
 	texture_index = 1
 	transformer = { "position" = [300, -200], "scale" = [20, 20] }
 
@@ -55,7 +55,7 @@ delay_seconds = 0.1
 nsize = [ 128, 0 ]
 offsets = { uniform = 6 }
 [nonant_panel.sprite]
-texture = "~/textures/panel.png"
+texture = "@/textures/panel.png"
 transformer = { "scale" = [ 10.0, 10.0 ] }
 
 [grass_tilemap]
@@ -63,7 +63,7 @@ transformer = { "scale" = [ 100, 100 ] }
 
 	[[grass_tilemap.layer]]
 	"z" = 0
-	"tileset" = "~/assets/grass tileset.toml"
+	"tileset" = "@/assets/grass tileset.toml"
 	"tiles" = [
 		[ -1, -1 ],
 		[  0, -1 ],
@@ -93,21 +93,21 @@ transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"horizontal_align"  = "center"
 	"vertical_align"    = "full_justify"
 	[[test_text.element]]
-	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"
 	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
 	[[test_text.element]]
-	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
 	"scale"        = [ 2.0, 0.5 ]
 	"line_y_pivot" = 0.5
 	[[test_text.element]]
-	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "b"
 	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
 	[[test_text.element]]
-	"font"         = "~/fonts/Roboto-Regular.ttf"
+	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
 	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
 	"adj_offset"   = 50
@@ -117,6 +117,6 @@ draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
 camera_invariant = true
 	[[smol_text.element]]
-	"font"	       = "~/fonts/Roboto-Regular.ttf"
+	"font"	       = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"
 	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]

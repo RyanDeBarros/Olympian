@@ -22,7 +22,7 @@ namespace oly
 		else
 		{
 			std::string s = std::move(path.generic_string());
-			if (s.starts_with("~/"))
+			if (s.starts_with("@/"))
 				absolute = context::internal::resource_root / s.substr(2);
 			else
 			{

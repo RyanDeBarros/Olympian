@@ -69,3 +69,6 @@ class ProgramState:
 		from .Watchdog import Watchdog
 		self.project_dir = project_dir
 		Watchdog.instance().update_project_root()
+
+	def resource_dir(self) -> Path:
+		return self.project_dir / 'res'

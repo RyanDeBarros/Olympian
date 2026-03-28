@@ -16,6 +16,7 @@ class BufOpenCommand(REPLCommand):
 		if len(program.args) == 0:
 			self.print_arg_error("Expected at least 1 argument")
 		else:
+			# TODO v7 allow * globbing and passing folders
 			for arg in program.args:
 				self.open(arg)
 
