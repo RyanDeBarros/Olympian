@@ -11,10 +11,11 @@ def meta(path) -> dict:
 	if first_line.startswith('#meta'):
 		fields = first_line[len('#meta'):].strip().split()
 		for field in fields:
-			field = field.split('=', 1)
-			if len(field) == 2:
-				k, v = field
+			if '=' in field:
+				k, v = field.split('=', 1)
 				m[k] = v.strip('"')
+			else:
+				m[field] = True
 	return m
 
 

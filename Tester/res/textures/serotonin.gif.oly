@@ -1,4 +1,4 @@
-#meta type=texture
+#meta import type=texture
 
 [[texture]]
 storage = "discard"

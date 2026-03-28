@@ -50,6 +50,8 @@ namespace oly::io
                 }
                 meta.map[key] = value;
             }
+            else
+                meta.map[token] = "1";
         }
         return meta;
 	}

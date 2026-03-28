@@ -67,6 +67,10 @@ def run() -> None:
 	commands.register()
 	program.machine.cache_commands()
 
+	# Load buffer tabs
+	from .buffers import tabs
+	tabs.register()
+
 	# Setup prompter
 	completer = REPLCompleter(program.machine)
 	session = PromptSession(completer=completer, complete_while_typing=True, complete_style=CompleteStyle.COLUMN, key_bindings=kb)
