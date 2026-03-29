@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -17,8 +18,10 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.buf = buf
 		self.d = {}
 		self.indent = 0
+
 		self.root_section = BufferSection("", None)
 		self.subsections: list[BufferSection] = []
+		self.current_section = None
 
 	# TODO v7.2 make sure to close all buffers on editor exit - but cache list of opened buffers. Then open them all on editor start
 
@@ -81,6 +84,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			f.write('\n')
 
 	def write_enum(self, f, data: dict, field: EnumField):
+		self.current_section.fields.append(field.virtual_key.value)
 		value = field.get_value(data)
 		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
@@ -90,6 +94,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.indent -= 1
 
 	def write_ranged_number(self, f, data: dict, field: RangedNumberField):
+		self.current_section.fields.append(field.virtual_key.value)
 		value = field.get_value(data)
 		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
@@ -102,6 +107,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.indent -= 1
 
 	def write_discrete_number(self, f, data: dict, field: DiscreteNumberField):
+		self.current_section.fields.append(field.virtual_key.value)
 		value = field.get_value(data)
 		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
@@ -112,6 +118,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.indent -= 1
 
 	def write_bool(self, f, data: dict, field: BoolField):
+		self.current_section.fields.append(field.virtual_key.value)
 		value = field.get_value(data)
 		self.write(f, f"{field.virtual_key.value}: {'true' if value else 'false'}")
 		self.indent += 1
@@ -120,6 +127,15 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			self.write(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
+
+	@contextmanager
+	def write_subsection(self, f, name: str):
+		parent = self.current_section
+		section = BufferSection(name, parent)
+		self.current_section = section
+		self.write(f, self.current_section.title())
+		yield section
+		self.current_section = parent
 
 	def on_open(self) -> None:
 		pass

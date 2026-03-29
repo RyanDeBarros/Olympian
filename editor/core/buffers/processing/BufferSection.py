@@ -10,4 +10,4 @@ class BufferSection:
 		self.fields: list[str] = []
 
 	def title(self) -> str:
-		return ';' * self.level + f" {self.name}"
+		return f"\n{';' * self.level} {self.name}"

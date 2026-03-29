@@ -168,6 +168,7 @@ class TextureImportBuffer(AbstractBuffer):
 	def on_open(self) -> None:
 		self.root_section = BufferSection("", None)
 		self.subsections.clear()
+		self.current_section = self.root_section
 		with self.buf.buffer_path.open('w') as f:
 			# Header
 			self.write(f, "---")
@@ -178,43 +179,35 @@ class TextureImportBuffer(AbstractBuffer):
 			for command in self.commands:
 				self.write(f, f"{command.exclam}: {command.info}")
 			self.indent -= 1
-			self.write(f, "---\n")
+			self.write(f, "---")
 
 			if self.is_svg():
-				# TODO v7.1 automatically enter/write sections simultaneously using global state similar to indent
-				section = BufferSection("SVG", self.root_section)
-				section.fields.append(VirtualKeys.ABSTRACT_STORAGE.value)
-				self.subsections.append(section)
+				with self.write_subsection(f, "SVG"):
+					self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
 
-				self.write(f, section.title())
-				self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
-				self.write(f)
+			with self.write_subsection(f, "Slots"):
+				slots = self.d[RealKeys.TEXTURE.value]
+				for i in range(len(slots)):
+					with self.write_subsection(f, f"Slot {i}"):
+						self.indent += 1
+						slot = slots[i]
 
-			self.write(f, "; Slots\n")
+						if self.is_svg():
+							self.write_enum(f, slot, Fields.IMAGE_STORAGE)
+							self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
+							self.write_ranged_number(f, slot, Fields.SVG_SCALE)
+						else:
+							self.write_enum(f, slot, Fields.STORAGE)
+							self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
 
-			slots = self.d[RealKeys.TEXTURE.value]
-			for i in range(len(slots)):
-				self.write(f, f";; Slot {i}")
-				self.indent += 1
-				slot = slots[i]
+						self.write_enum(f, slot, Fields.MIN_FILTER)
+						self.write_enum(f, slot, Fields.MAG_FILTER)
+						self.write_enum(f, slot, Fields.WRAP_S)
+						self.write_enum(f, slot, Fields.WRAP_T)
 
-				if self.is_svg():
-					self.write_enum(f, slot, Fields.IMAGE_STORAGE)
-					self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
-					self.write_ranged_number(f, slot, Fields.SVG_SCALE)
-				else:
-					self.write_enum(f, slot, Fields.STORAGE)
-					self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
+						# TODO v7.1 anim + spritesheet
 
-				self.write_enum(f, slot, Fields.MIN_FILTER)
-				self.write_enum(f, slot, Fields.MAG_FILTER)
-				self.write_enum(f, slot, Fields.WRAP_S)
-				self.write_enum(f, slot, Fields.WRAP_T)
-
-				# TODO v7.1 anim + spritesheet
-
-				self.indent -= 1
-				self.write(f)
+						self.indent -= 1
 
 			self.write(f)
 
