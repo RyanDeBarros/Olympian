@@ -5,6 +5,9 @@ from .. import AbstractBuffer, BufferPath, BufferChooser
 from ..processing import AssetType
 
 
+# TODO v9 write Visual Studio Code plugin for text highlighting
+
+
 class RealKeys(Enum):
 	TEXTURE = "texture"
 	ABSTRACT_STORAGE = "abstract_storage"
@@ -145,25 +148,29 @@ class TextureImportBuffer(AbstractBuffer):
 	def on_open(self) -> None:
 		with self.buf.buffer_path.open('w') as f:
 			# Header
-			self.write(f, f"-- Texture @/{self.buf.resource_path_string()}\n")
+			self.write(f, "---")
+			self.write(f, f"Texture: @/{self.buf.resource_path_string()}")
+			# TODO v7.1 write format version
+			# TODO v7.1 write !command documentation
+			self.write(f, "---\n")
 
 			if self.is_svg():
-				self.write(f, "# SVG")
+				self.write(f, "; SVG")
 				self.write_enum(f, self.d, RealKeys.ABSTRACT_STORAGE, VirtualKeys.ABSTRACT_STORAGE, RealImageStorage, VirtualImageStorage)
 				self.write(f)
 
-			self.write(f, "# Slots\n")
+			self.write(f, "; Slots\n")
 
 			slots = self.d[RealKeys.TEXTURE.value]
 			for i in range(len(slots)):
-				self.write(f, f"## Slot {i}")
+				self.write(f, f";; Slot {i}")
 				self.indent += 1
 				slot = slots[i]
 
 				if self.is_svg():
 					self.write_enum(f, slot, RealKeys.IMAGE_STORAGE, VirtualKeys.IMAGE_STORAGE, RealImageStorage, VirtualImageStorage)
 					self.write_enum(f, slot, RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, RealVectorGenerateMipmaps, VirtualVectorGenerateMipmaps)
-					self.write_float(f, slot, RealKeys.SVG_SCALE, VirtualKeys.SVG_SCALE, 1.0, "(0.0 - 1048576.0)")
+					self.write_ranged_number(f, slot, RealKeys.SVG_SCALE, VirtualKeys.SVG_SCALE, 0.0, 1048576.0, False, True, 1.0)
 				else:
 					self.write_enum(f, slot, RealKeys.STORAGE, VirtualKeys.STORAGE, RealImageStorage, VirtualImageStorage)
 					self.write_bool(f, slot, RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, False)
@@ -181,7 +188,7 @@ class TextureImportBuffer(AbstractBuffer):
 			self.write(f)
 
 	def on_modified(self, path: Path, was_dir: bool) -> None:
-		pass  # TODO v7.1 validate and transfer formatted changes
+		pass  # TODO v7.1 validate and transfer formatted changes. Allow fuzzy matching, or entering !default (or other !commands), as well as # commands
 
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"

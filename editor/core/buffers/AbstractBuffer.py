@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Type, Callable
+from typing import Optional, Type
 
 import toml
 
@@ -69,24 +69,57 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			self.on_open()
 
 	def write(self, f, line: str = ""):
-		f.write(f"{self.indent * '\t'}{line}\n")
+		if len(line) > 0:
+			f.write(f"{self.indent * '\t'}{line}\n")
+		else:
+			f.write('\n')
 
 	def write_enum(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey,
-				   real_enum: Type[EnumUtils.TRealEnum], virtual_enum: Type[EnumUtils.TVirtualEnum]):
-		value = EnumUtils.get_enum(data, real_key, real_enum, virtual_enum)
-		self.write(f, f"{virtual_key.value} = <{value.value}> ( {', '.join(e.value for e in virtual_enum)} )")  # TODO v7.1 highlight default value from enum
+				   real_enum: Type[EnumUtils.TRealEnum], virtual_enum: Type[EnumUtils.TVirtualEnum], description: str = ""):
+		value = EnumUtils.get_enum(data, real_key, real_enum, virtual_enum).value
+		self.write(f, f"{virtual_key.value}: {value}")
+		self.indent += 1
+		default = EnumUtils.get_default(virtual_enum)
+		options = (e.value if e != default else f"{e.value}*" for e in virtual_enum)
+		self.write(f, f"options: {', '.join(options)}\n")
+		if len(description) > 0:
+			self.write(f, f"description: {description}")  # TODO v7.1 make description hidden by default until !info?
+		self.indent -= 1
 
-	def write_int(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, default: int, value_range: str):
+	def write_ranged_number(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey,
+							min_number, max_number, include_min: bool, include_max: bool, default, description: str = ""):
 		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value} = <{value}> ( {value_range} )")
+		self.write(f, f"{virtual_key.value}: {value}")
+		self.indent += 1
+		options = f"{'[' if include_min else '('}{min_number}, {max_number}{']' if include_max else ')'}"
+		self.write(f, f"range: {options}")
+		if default is not None:
+			self.write(f, f"default: {default}")
+		if len(description) > 0:
+			self.write(f, f"description: {description}")
+		self.write(f)
+		self.indent -= 1
 
-	def write_float(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, default: float, value_range: str):
+	def write_discrete_number(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, options: list, default, description: str = ""):
 		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value} = <{value}> ( {value_range} )")
+		self.write(f, f"{virtual_key.value}: {value}")
+		self.indent += 1
+		options = [str(option) if option != default else f"{option}*" for option in options]
+		if len(description) > 0:
+			self.write(f, f"description: {description}")
+		self.write(f, f"options: {options}")
+		self.write(f)
+		self.indent -= 1
 
-	def write_bool(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, default: bool):
+	def write_bool(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, default: bool, description: str = ""):
 		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value} = <{"true" if value else "false"}> ( true, false )")  # TODO v7.1 highlight default bool
+		self.write(f, f"{virtual_key.value}: {'true' if value else 'false'}")
+		self.indent += 1
+		self.write(f, f"options: {'true' if default != True else 'true*'}, {'false' if default != False else 'false*'}")
+		if len(description) > 0:
+			self.write(f, f"description: {description}")
+		self.write(f)
+		self.indent -= 1
 
 	def on_open(self) -> None:
 		pass
@@ -107,7 +140,6 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			eprint(*values)
 		else:
 			print(*values)
-
 
 
 class BufferChooser:
