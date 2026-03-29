@@ -53,7 +53,7 @@ class RangedNumberField:
 		self.include_max = include_max
 		self.default = default
 		self.description = description
-		self.options = f"{'[' if include_min else '('}{min_number}, {max_number}{']' if include_max else ')'}"
+		self.range = f"{'[' if include_min else '('}{min_number}, {max_number}{']' if include_max else ')'}"
 
 	def get_value(self, data: Mapping[str, Any]) -> TNumber:
 		# noinspection PyTypeChecker

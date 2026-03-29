@@ -6,18 +6,15 @@ from typing import Optional
 
 import toml
 
-from editor.core import FileSystemWatcher, IntReference
+from editor.core import FileSystemWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
 from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField
-from .processing.BufferSection import BufferSection
+from .processing.BufferSection import BufferSection, BufferParseStructure
 from ..context import PathUtils
 
 
 class AbstractBuffer(FileSystemWatcher, ABC):
-	META_BLOCK_DELIMITER = "---"
-	COMMENT_PREFIX = '#'
-
 	def __init__(self, buf: BufferPath):
 		super().__init__()
 		self.buf = buf
@@ -109,48 +106,54 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		else:
 			f.write('\n')
 
+	def write_field(self, f: StringIO, key):
+		self.write(f, self.current_section.repr_field(key))
+
+	def write_field_metadata(self, f: StringIO, metadata: str):
+		self.write(f, self.current_section.repr_metadata(metadata))
+
 	def write_enum(self, f: StringIO, data: dict, field: EnumField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
-		self.write(f, self.current_section.repr_field(key))
+		self.write_field(f, key)
 		self.indent += 1
-		self.write(f, self.current_section.repr_metadata(f"options: {field.options}"))
+		self.write_field_metadata(f, f"options: {field.options}")
 		if len(field.description) > 0:
-			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))  # TODO v7.1 make description hidden by default until !info?
+			self.write_field_metadata(f, f"description: {field.description}")  # TODO v7.1 make description hidden by default until !info?
 		self.indent -= 1
 
 	def write_ranged_number(self, f: StringIO, data: dict, field: RangedNumberField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
-		self.write(f, self.current_section.repr_field(key))
+		self.write_field(f, key)
 		self.indent += 1
-		self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} range: {field.options}")
+		self.write_field_metadata(f, f"range: {field.range}")
 		if field.default is not None:
-			self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} default: {field.default}")
+			self.write_field_metadata(f, f"default: {field.default}")
 		if len(field.description) > 0:
-			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
+			self.write_field_metadata(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 
 	def write_discrete_number(self, f: StringIO, data: dict, field: DiscreteNumberField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
-		self.write(f, self.current_section.repr_field(key))
+		self.write_field(f, key)
 		self.indent += 1
-		self.write(f, self.current_section.repr_metadata(f"options: {field.options}"))
+		self.write_field_metadata(f, f"options: {field.options}")
 		if len(field.description) > 0:
-			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
+			self.write_field_metadata(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 
 	def write_bool(self, f: StringIO, data: dict, field: BoolField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
-		self.write(f, self.current_section.repr_field(key))
+		self.write_field(f, key)
 		self.indent += 1
-		self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} options: {field.options}")
+		self.write_field_metadata(f, f"options: {field.options}")
 		if len(field.description) > 0:
-			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
+			self.write_field_metadata(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 
@@ -168,20 +171,8 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.root_section = BufferSection("", None)
 		self.current_section = self.root_section
 
-		old_lines = self.buf.buffer_path.read_text().splitlines()
-		lines: list[str] = []
-		in_meta_block = False
-		for line in old_lines:
-			line.strip()
-			if line == self.META_BLOCK_DELIMITER:
-				in_meta_block = not in_meta_block
-			elif not in_meta_block:
-				line = BufferSection.strip_comments(line)
-				if len(line) > 0:
-					lines.append(line)
-
-		line_idx = IntReference(0)
-		self.current_section.load_section(self.subsections, lines, line_idx)
+		parse_structure = BufferParseStructure(self.buf.buffer_path.read_text().splitlines())
+		self.current_section.load_section(self.subsections, parse_structure)
 
 
 	def on_open(self) -> None:
@@ -196,13 +187,6 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 	def on_close(self) -> bool:
 		return True
-
-	def log(self, *values, err=False) -> None:
-		# TODO v7.2 use log file or new terminal instance for output
-		if err:
-			eprint(*values)
-		else:
-			print(*values)
 
 
 class BufferChooser:

@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import override
 
-from shapely.constructive import buffer
-
 from editor.core import REPLCommand, ProgramState
 from editor.core.buffers import BufferChooser
 from editor.core.context import PathUtils
