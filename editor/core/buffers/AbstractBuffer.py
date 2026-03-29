@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from io import StringIO
 from pathlib import Path
 from typing import Optional
 
 import toml
 
-from editor.core import FileSystemWatcher
+from editor.core import FileSystemWatcher, IntReference
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
 from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField
@@ -13,9 +14,14 @@ from .processing.BufferSection import BufferSection
 
 
 class AbstractBuffer(FileSystemWatcher, ABC):
+	META_BLOCK_DELIMITER = "---"
+	COMMENT_PREFIX = '#'
+
 	def __init__(self, buf: BufferPath):
 		super().__init__()
 		self.buf = buf
+		self.internally_modified = False
+
 		self.d = {}
 		self.indent = 0
 
@@ -50,9 +56,19 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 	def on_modified(self, path: Path, was_dir: bool) -> None:
 		if path == self.buf.asset_path:
-			self.on_asset_modified()
+			self.on_open()
+		elif path == self.buf.buffer_path:
+			if self.internally_modified:
+				print('internal')
+				self.internally_modified = False
+			else:
+				# TODO v7 open instead of edit causes an additional 'external' modification somehow
+				# TODO v7 saving a file in VSCode causes two 'external' modifications instead of one
+				print('external')
+				self.load_root_section()
+				self.on_buffer_modified()
 
-	def on_asset_modified(self) -> None:
+	def on_buffer_modified(self) -> None:
 		pass
 
 	def on_deleted(self, path: Path, was_dir: bool) -> None:
@@ -65,7 +81,8 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 	def on_moved(self, src: Path, dest: Path, was_dir: bool) -> None:
 		if src == self.buf.asset_path:
 			if self.__class__.matches_asset(BufferPath.from_asset(dest)):
-				self.buf.on_asset_moved(dest)
+				pass  # TODO v7
+				# self.buf.on_asset_moved(dest)
 			else:
 				eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7.2 handle different asset type - also, self.close() here might not work with the asset file moved
 
@@ -75,6 +92,9 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			self.buf.buffer_path.touch()
 			self.d = toml.loads(self.buf.import_path().read_text())
 			self.indent = 0
+			self.root_section = BufferSection("", None)
+			self.subsections.clear()
+			self.current_section = self.root_section
 			self.on_open()
 
 	def write(self, f, line: str = ""):
@@ -83,48 +103,48 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		else:
 			f.write('\n')
 
-	def write_enum(self, f, data: dict, field: EnumField):
-		self.current_section.fields.append(field.virtual_key.value)
-		value = field.get_value(data)
-		self.write(f, f"{field.virtual_key.value}: {value}")
+	def write_enum(self, f: StringIO, data: dict, field: EnumField):
+		key = field.virtual_key.value
+		self.current_section.fields[key] = field.get_value(data)
+		self.write(f, self.current_section.repr_field(key))
 		self.indent += 1
-		self.write(f, f"options: {field.options}\n")
+		self.write(f, self.current_section.repr_metadata(f"options: {field.options}"))
 		if len(field.description) > 0:
-			self.write(f, f"description: {field.description}")  # TODO v7.1 make description hidden by default until !info?
+			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))  # TODO v7.1 make description hidden by default until !info?
 		self.indent -= 1
 
-	def write_ranged_number(self, f, data: dict, field: RangedNumberField):
-		self.current_section.fields.append(field.virtual_key.value)
-		value = field.get_value(data)
-		self.write(f, f"{field.virtual_key.value}: {value}")
+	def write_ranged_number(self, f: StringIO, data: dict, field: RangedNumberField):
+		key = field.virtual_key.value
+		self.current_section.fields[key] = field.get_value(data)
+		self.write(f, self.current_section.repr_field(key))
 		self.indent += 1
-		self.write(f, f"range: {field.options}")
+		self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} range: {field.options}")
 		if field.default is not None:
-			self.write(f, f"default: {field.default}")
+			self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} default: {field.default}")
 		if len(field.description) > 0:
-			self.write(f, f"description: {field.description}")
+			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
 		self.write(f)
 		self.indent -= 1
 
-	def write_discrete_number(self, f, data: dict, field: DiscreteNumberField):
-		self.current_section.fields.append(field.virtual_key.value)
-		value = field.get_value(data)
-		self.write(f, f"{field.virtual_key.value}: {value}")
+	def write_discrete_number(self, f: StringIO, data: dict, field: DiscreteNumberField):
+		key = field.virtual_key.value
+		self.current_section.fields[key] = field.get_value(data)
+		self.write(f, self.current_section.repr_field(key))
 		self.indent += 1
-		self.write(f, f"options: {field.options}")
+		self.write(f, self.current_section.repr_metadata(f"options: {field.options}"))
 		if len(field.description) > 0:
-			self.write(f, f"description: {field.description}")
+			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
 		self.write(f)
 		self.indent -= 1
 
-	def write_bool(self, f, data: dict, field: BoolField):
-		self.current_section.fields.append(field.virtual_key.value)
-		value = field.get_value(data)
-		self.write(f, f"{field.virtual_key.value}: {'true' if value else 'false'}")
+	def write_bool(self, f: StringIO, data: dict, field: BoolField):
+		key = field.virtual_key.value
+		self.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
+		self.write(f, self.current_section.repr_field(key))
 		self.indent += 1
-		self.write(f, f"options: {field.options}")
+		self.write(f, f"{BufferSection.FIELD_METADATA_PREFIX} options: {field.options}")
 		if len(field.description) > 0:
-			self.write(f, f"description: {field.description}")
+			self.write(f, self.current_section.repr_metadata(f"description: {field.description}"))
 		self.write(f)
 		self.indent -= 1
 
@@ -136,6 +156,27 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.write(f, self.current_section.title())
 		yield section
 		self.current_section = parent
+
+	def load_root_section(self):
+		self.subsections.clear()
+		self.root_section = BufferSection("", None)
+		self.current_section = self.root_section
+
+		old_lines = self.buf.buffer_path.read_text().splitlines()
+		lines: list[str] = []
+		in_meta_block = False
+		for line in old_lines:
+			line.strip()
+			if line == self.META_BLOCK_DELIMITER:
+				in_meta_block = not in_meta_block
+			elif not in_meta_block:
+				line = BufferSection.strip_comments(line)
+				if len(line) > 0:
+					lines.append(line)
+
+		line_idx = IntReference(0)
+		self.current_section.load_section(self.subsections, lines, line_idx)
+
 
 	def on_open(self) -> None:
 		pass

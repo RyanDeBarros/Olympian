@@ -22,7 +22,7 @@ class REPLState:
 		words = document.text_before_cursor.split()
 		if len(words) <= 1 and not document.text_before_cursor.endswith(" "):
 			yield from KeyCompleter.get_keys_completions(document, self.command_strings)
-		else:
+		elif len(words) > 0:
 			cmd = words[0]
 			if cmd in self.commands:
 				yield from self.commands[cmd].get_completions(document, complete_event)

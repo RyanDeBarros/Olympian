@@ -1,10 +1,9 @@
 from enum import Enum
-from pathlib import Path
+from io import StringIO
+from typing import override
 
 from .. import AbstractBuffer, BufferPath, BufferChooser
-from ..processing import AssetType, ExclamCommand, BoolField, RangedNumberField
-from ..processing.BufferSection import BufferSection
-from ..processing.EnumUtils import EnumField
+from ..processing import AssetType, ExclamCommand, BoolField, RangedNumberField, EnumField, BufferSectionContext
 
 
 # TODO v9 write Visual Studio Code plugin for text highlighting
@@ -153,6 +152,7 @@ class Fields:
 
 
 class TextureImportBuffer(AbstractBuffer):
+	@override
 	@classmethod
 	def matches_asset(cls, buf: BufferPath) -> bool:
 		return cls.simple_matches_asset(buf, AssetType.TEXTURE, [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg"])  # TODO v7.2 use editor preferences
@@ -165,65 +165,66 @@ class TextureImportBuffer(AbstractBuffer):
 			ExclamCommand(cmd="default", fn=self.fn_default, info="Replace with default value")
 		]
 
+	@override
 	def on_open(self) -> None:
-		self.root_section = BufferSection("", None)
-		self.subsections.clear()
-		self.current_section = self.root_section
-		with self.buf.buffer_path.open('w') as f:
-			# Header
-			self.write(f, "---")
-			self.write(f, f"Texture: @/{self.buf.resource_path_string()}")
-			self.write(f, f"Format version: {self.format_version()}")
-			self.write(f, f"\n!commands:")
-			self.indent += 1
-			for command in self.commands:
-				self.write(f, f"{command.exclam}: {command.info}")
-			self.indent -= 1
-			self.write(f, "---")
+		f = StringIO()
+		# Header
+		# TODO v7.1 extract to AbstractBuffer
+		self.write(f, self.META_BLOCK_DELIMITER)
+		self.write(f, f"Texture: @/{self.buf.resource_path_string()}")
+		self.write(f, f"Format version: {self.format_version()}")
+		self.write(f, f"\n!commands:")
+		self.indent += 1
+		for command in self.commands:
+			self.write(f, f"{command.exclam}: {command.info}")
+		self.indent -= 1
+		self.write(f, self.META_BLOCK_DELIMITER)
 
-			if self.is_svg():
-				with self.write_subsection(f, "SVG"):
-					self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
+		if self.is_svg():
+			with self.write_subsection(f, "SVG"):
+				self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
 
-			with self.write_subsection(f, "Slots"):
-				slots = self.d[RealKeys.TEXTURE.value]
-				for i in range(len(slots)):
-					with self.write_subsection(f, f"Slot {i}"):
-						self.indent += 1
-						slot = slots[i]
+		with self.write_subsection(f, "Slots"):
+			slots = self.d[RealKeys.TEXTURE.value]
+			for i in range(len(slots)):
+				with self.write_subsection(f, f"Slot {i}"):
+					self.indent += 1
+					slot = slots[i]
 
-						if self.is_svg():
-							self.write_enum(f, slot, Fields.IMAGE_STORAGE)
-							self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
-							self.write_ranged_number(f, slot, Fields.SVG_SCALE)
-						else:
-							self.write_enum(f, slot, Fields.STORAGE)
-							self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
+					if self.is_svg():
+						self.write_enum(f, slot, Fields.IMAGE_STORAGE)
+						self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
+						self.write_ranged_number(f, slot, Fields.SVG_SCALE)
+					else:
+						self.write_enum(f, slot, Fields.STORAGE)
+						self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
 
-						self.write_enum(f, slot, Fields.MIN_FILTER)
-						self.write_enum(f, slot, Fields.MAG_FILTER)
-						self.write_enum(f, slot, Fields.WRAP_S)
-						self.write_enum(f, slot, Fields.WRAP_T)
+					self.write_enum(f, slot, Fields.MIN_FILTER)
+					self.write_enum(f, slot, Fields.MAG_FILTER)
+					self.write_enum(f, slot, Fields.WRAP_S)
+					self.write_enum(f, slot, Fields.WRAP_T)
 
-						# TODO v7.1 anim + spritesheet
+					# TODO v7.1 anim + spritesheet
 
-						self.indent -= 1
+					self.indent -= 1
 
-			self.write(f)
+		self.internally_modified = True
+		self.buf.buffer_path.write_text(f.getvalue())
 
-	def on_modified(self, path: Path, was_dir: bool) -> None:
+	@override
+	def on_buffer_modified(self) -> None:
 		pass  # TODO v7.1 validate and transfer formatted changes. Allow fuzzy matching, or entering !default (or other !commands), as well as # commands
 
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
 
-	def fn_new_slot(self) -> None:
+	def fn_new_slot(self, ctx: BufferSectionContext) -> None:
 		pass  # TODO v7.1
 
-	def fn_delete_slot(self) -> None:
+	def fn_delete_slot(self, ctx: BufferSectionContext) -> None:
 		pass  # TODO v7.1
 
-	def fn_default(self) -> None:
+	def fn_default(self, ctx: BufferSectionContext) -> None:
 		pass  # TODO v7.1
 
 

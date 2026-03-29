@@ -57,6 +57,9 @@ def _(event: KeyPressEvent):
 	buf.delete_before_cursor(count=length)
 
 
+# TODO v7.1 allow Ctrl+C to cancel current line instead of ending program
+
+
 def run() -> None:
 	program = ProgramState.instance(Path(os.getcwd()).resolve())
 	program.late_init()
