@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from .processing import Metadata, AssetType
 from editor.tools import TOMLAdapter
+from .processing import Metadata, AssetType
 from .. import REPLError
 from ..context import PathUtils
 
@@ -27,6 +27,12 @@ class BufferPath:
 			return self.asset_path.with_name(self.asset_path.name + Metadata.IMPORT_EXTENSION)
 		else:
 			return None
+
+	def metadata(self) -> dict:
+		if self.is_imported():
+			return TOMLAdapter.meta(self.import_path())
+		else:
+			return TOMLAdapter.meta(self.asset_path)
 
 	@staticmethod
 	def remove_import(asset_path: Path) -> Path:

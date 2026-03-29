@@ -2,7 +2,9 @@ from enum import Enum
 from pathlib import Path
 
 from .. import AbstractBuffer, BufferPath, BufferChooser
-from ..processing import AssetType
+from ..processing import AssetType, ExclamCommand, BoolField, RangedNumberField
+from ..processing.BufferSection import BufferSection
+from ..processing.EnumUtils import EnumField
 
 
 # TODO v9 write Visual Studio Code plugin for text highlighting
@@ -29,7 +31,6 @@ class RealKeys(Enum):
 	ROW_UP = "row_up"
 
 
-# TODO v7.2 add format version to meta fields
 class VirtualKeys(Enum):
 	ABSTRACT_STORAGE = "Abstract Storage"
 	IMAGE_STORAGE = "Image Storage"
@@ -137,6 +138,20 @@ class VirtualWrap(Enum):
 		return VirtualWrap.CLAMP_TO_EDGE
 
 
+# TODO v7.1 actual descriptions
+class Fields:
+	ABSTRACT_STORAGE = EnumField(RealKeys.ABSTRACT_STORAGE, VirtualKeys.ABSTRACT_STORAGE, RealImageStorage, VirtualImageStorage, "")
+	IMAGE_STORAGE = EnumField(RealKeys.IMAGE_STORAGE, VirtualKeys.IMAGE_STORAGE, RealImageStorage, VirtualImageStorage, "")
+	STORAGE = EnumField(RealKeys.STORAGE, VirtualKeys.STORAGE, RealImageStorage, VirtualImageStorage, "")
+	RASTER_GENERATE_MIPMAPS = BoolField(RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, False, "")
+	VECTOR_GENERATE_MIPMAPS = EnumField(RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, RealVectorGenerateMipmaps, VirtualVectorGenerateMipmaps, "")
+	SVG_SCALE = RangedNumberField(RealKeys.SVG_SCALE, VirtualKeys.SVG_SCALE, 0.0, 1048576.0, False, True, 1.0, "")
+	MIN_FILTER = EnumField(RealKeys.MIN_FILTER, VirtualKeys.MIN_FILTER, RealMinFilter, VirtualMinFilter, "")
+	MAG_FILTER = EnumField(RealKeys.MAG_FILTER, VirtualKeys.MAG_FILTER, RealMagFilter, VirtualMagFilter, "")
+	WRAP_S = EnumField(RealKeys.WRAP_S, VirtualKeys.WRAP_S, RealWrap, VirtualWrap, "")
+	WRAP_T = EnumField(RealKeys.WRAP_T, VirtualKeys.WRAP_T, RealWrap, VirtualWrap, "")
+
+
 class TextureImportBuffer(AbstractBuffer):
 	@classmethod
 	def matches_asset(cls, buf: BufferPath) -> bool:
@@ -144,19 +159,35 @@ class TextureImportBuffer(AbstractBuffer):
 
 	def __init__(self, buf: BufferPath):
 		super().__init__(buf)
+		self.commands: list[ExclamCommand] = [
+			ExclamCommand(cmd="new-slot", fn=self.fn_new_slot, info="Create new slot"),  # TODO v7.1 actual documentation about how to use the commands
+			ExclamCommand(cmd="delete-slot", fn=self.fn_delete_slot, info="Delete slot"),
+			ExclamCommand(cmd="default", fn=self.fn_default, info="Replace with default value")
+		]
 
 	def on_open(self) -> None:
+		self.root_section = BufferSection("", None)
+		self.subsections.clear()
 		with self.buf.buffer_path.open('w') as f:
 			# Header
 			self.write(f, "---")
 			self.write(f, f"Texture: @/{self.buf.resource_path_string()}")
-			# TODO v7.1 write format version
-			# TODO v7.1 write !command documentation
+			self.write(f, f"Format version: {self.format_version()}")
+			self.write(f, f"\n!commands:")
+			self.indent += 1
+			for command in self.commands:
+				self.write(f, f"{command.exclam}: {command.info}")
+			self.indent -= 1
 			self.write(f, "---\n")
 
 			if self.is_svg():
-				self.write(f, "; SVG")
-				self.write_enum(f, self.d, RealKeys.ABSTRACT_STORAGE, VirtualKeys.ABSTRACT_STORAGE, RealImageStorage, VirtualImageStorage)
+				# TODO v7.1 automatically enter/write sections simultaneously using global state similar to indent
+				section = BufferSection("SVG", self.root_section)
+				section.fields.append(VirtualKeys.ABSTRACT_STORAGE.value)
+				self.subsections.append(section)
+
+				self.write(f, section.title())
+				self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
 				self.write(f)
 
 			self.write(f, "; Slots\n")
@@ -168,17 +199,17 @@ class TextureImportBuffer(AbstractBuffer):
 				slot = slots[i]
 
 				if self.is_svg():
-					self.write_enum(f, slot, RealKeys.IMAGE_STORAGE, VirtualKeys.IMAGE_STORAGE, RealImageStorage, VirtualImageStorage)
-					self.write_enum(f, slot, RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, RealVectorGenerateMipmaps, VirtualVectorGenerateMipmaps)
-					self.write_ranged_number(f, slot, RealKeys.SVG_SCALE, VirtualKeys.SVG_SCALE, 0.0, 1048576.0, False, True, 1.0)
+					self.write_enum(f, slot, Fields.IMAGE_STORAGE)
+					self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
+					self.write_ranged_number(f, slot, Fields.SVG_SCALE)
 				else:
-					self.write_enum(f, slot, RealKeys.STORAGE, VirtualKeys.STORAGE, RealImageStorage, VirtualImageStorage)
-					self.write_bool(f, slot, RealKeys.GENERATE_MIPMAPS, VirtualKeys.GENERATE_MIPMAPS, False)
+					self.write_enum(f, slot, Fields.STORAGE)
+					self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
 
-				self.write_enum(f, slot, RealKeys.MIN_FILTER, VirtualKeys.MIN_FILTER, RealMinFilter, VirtualMinFilter)
-				self.write_enum(f, slot, RealKeys.MAG_FILTER, VirtualKeys.MAG_FILTER, RealMagFilter, VirtualMagFilter)
-				self.write_enum(f, slot, RealKeys.WRAP_S, VirtualKeys.WRAP_S, RealWrap, VirtualWrap)
-				self.write_enum(f, slot, RealKeys.WRAP_T, VirtualKeys.WRAP_T, RealWrap, VirtualWrap)
+				self.write_enum(f, slot, Fields.MIN_FILTER)
+				self.write_enum(f, slot, Fields.MAG_FILTER)
+				self.write_enum(f, slot, Fields.WRAP_S)
+				self.write_enum(f, slot, Fields.WRAP_T)
 
 				# TODO v7.1 anim + spritesheet
 
@@ -192,6 +223,15 @@ class TextureImportBuffer(AbstractBuffer):
 
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
+
+	def fn_new_slot(self) -> None:
+		pass  # TODO v7.1
+
+	def fn_delete_slot(self) -> None:
+		pass  # TODO v7.1
+
+	def fn_default(self) -> None:
+		pass  # TODO v7.1
 
 
 def register():

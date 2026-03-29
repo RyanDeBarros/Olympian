@@ -1,4 +1,4 @@
-#meta import type="font_family"
+#meta version=1.0 import type="font_family"
 
 storage = "keep"
 

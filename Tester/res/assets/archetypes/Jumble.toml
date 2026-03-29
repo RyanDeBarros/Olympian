@@ -1,4 +1,4 @@
-#meta type=archetype
+#meta version=1.0 type=archetype
 
 [archetype]
 draw = [

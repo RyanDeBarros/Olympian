@@ -1,4 +1,4 @@
-#meta type=texture
+#meta version=1.0 type=texture
 
 [[texture]]
 storage = "discard"

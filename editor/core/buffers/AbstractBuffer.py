@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Type
+from typing import Optional
 
 import toml
 
 from editor.core import FileSystemWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
-from .processing import Metadata, AssetType, EnumUtils
+from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField
+from .processing.BufferSection import BufferSection
 
 
 class AbstractBuffer(FileSystemWatcher, ABC):
@@ -16,6 +17,8 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.buf = buf
 		self.d = {}
 		self.indent = 0
+		self.root_section = BufferSection("", None)
+		self.subsections: list[BufferSection] = []
 
 	# TODO v7.2 make sure to close all buffers on editor exit - but cache list of opened buffers. Then open them all on editor start
 
@@ -38,6 +41,9 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 				return asset.asset_path.suffix in file_extensions
 		else:
 			return asset.asset_type() == asset_type
+
+	def format_version(self) -> float:
+		return Metadata.version(self.buf.metadata())
 
 	def on_modified(self, path: Path, was_dir: bool) -> None:
 		if path == self.buf.asset_path:
@@ -74,50 +80,44 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		else:
 			f.write('\n')
 
-	def write_enum(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey,
-				   real_enum: Type[EnumUtils.TRealEnum], virtual_enum: Type[EnumUtils.TVirtualEnum], description: str = ""):
-		value = EnumUtils.get_enum(data, real_key, real_enum, virtual_enum).value
-		self.write(f, f"{virtual_key.value}: {value}")
+	def write_enum(self, f, data: dict, field: EnumField):
+		value = field.get_value(data)
+		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
-		default = EnumUtils.get_default(virtual_enum)
-		options = (e.value if e != default else f"{e.value}*" for e in virtual_enum)
-		self.write(f, f"options: {', '.join(options)}\n")
-		if len(description) > 0:
-			self.write(f, f"description: {description}")  # TODO v7.1 make description hidden by default until !info?
+		self.write(f, f"options: {field.options}\n")
+		if len(field.description) > 0:
+			self.write(f, f"description: {field.description}")  # TODO v7.1 make description hidden by default until !info?
 		self.indent -= 1
 
-	def write_ranged_number(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey,
-							min_number, max_number, include_min: bool, include_max: bool, default, description: str = ""):
-		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value}: {value}")
+	def write_ranged_number(self, f, data: dict, field: RangedNumberField):
+		value = field.get_value(data)
+		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
-		options = f"{'[' if include_min else '('}{min_number}, {max_number}{']' if include_max else ')'}"
-		self.write(f, f"range: {options}")
-		if default is not None:
-			self.write(f, f"default: {default}")
-		if len(description) > 0:
-			self.write(f, f"description: {description}")
+		self.write(f, f"range: {field.options}")
+		if field.default is not None:
+			self.write(f, f"default: {field.default}")
+		if len(field.description) > 0:
+			self.write(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 
-	def write_discrete_number(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, options: list, default, description: str = ""):
-		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value}: {value}")
+	def write_discrete_number(self, f, data: dict, field: DiscreteNumberField):
+		value = field.get_value(data)
+		self.write(f, f"{field.virtual_key.value}: {value}")
 		self.indent += 1
-		options = [str(option) if option != default else f"{option}*" for option in options]
-		if len(description) > 0:
-			self.write(f, f"description: {description}")
-		self.write(f, f"options: {options}")
+		self.write(f, f"options: {field.options}")
+		if len(field.description) > 0:
+			self.write(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 
-	def write_bool(self, f, data: dict, real_key: EnumUtils.TRealKey, virtual_key: EnumUtils.TVirtualKey, default: bool, description: str = ""):
-		value = data.get(real_key.value, default)
-		self.write(f, f"{virtual_key.value}: {'true' if value else 'false'}")
+	def write_bool(self, f, data: dict, field: BoolField):
+		value = field.get_value(data)
+		self.write(f, f"{field.virtual_key.value}: {'true' if value else 'false'}")
 		self.indent += 1
-		self.write(f, f"options: {'true' if default != True else 'true*'}, {'false' if default != False else 'false*'}")
-		if len(description) > 0:
-			self.write(f, f"description: {description}")
+		self.write(f, f"options: {field.options}")
+		if len(field.description) > 0:
+			self.write(f, f"description: {field.description}")
 		self.write(f)
 		self.indent -= 1
 

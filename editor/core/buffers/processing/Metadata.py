@@ -13,3 +13,7 @@ def is_import(m: dict) -> bool:
 
 def asset_type(m: dict) -> AssetType:
 	return AssetType(m['type'])
+
+
+def version(m: dict) -> float:
+	return m['version']

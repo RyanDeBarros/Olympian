@@ -1,4 +1,4 @@
-#meta type="raster_font"
+#meta version=1.0 type="raster_font"
 
 storage = "keep"
 space_advance_width = 5.0

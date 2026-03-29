@@ -1,4 +1,4 @@
-#meta type=signal
+#meta version=1.0 type=signal
 
 [[signal]]
 "id"      = "jump"
