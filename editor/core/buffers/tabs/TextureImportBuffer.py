@@ -208,8 +208,9 @@ class TextureImportBuffer(AbstractBuffer):
 
 					self.indent -= 1
 
-		self.internally_modified = True
-		self.buf.buffer_path.write_text(f.getvalue())
+		with self.buf.buffer_path.open('w') as w:
+			self.internally_modified = True
+			w.write(f.getvalue())
 
 	@override
 	def on_buffer_modified(self) -> None:

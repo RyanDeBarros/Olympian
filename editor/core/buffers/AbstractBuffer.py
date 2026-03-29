@@ -11,6 +11,7 @@ from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
 from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField
 from .processing.BufferSection import BufferSection
+from ..context import PathUtils
 
 
 class AbstractBuffer(FileSystemWatcher, ABC):
@@ -21,6 +22,8 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		super().__init__()
 		self.buf = buf
 		self.internally_modified = False
+		self.last_asset_hash = None
+		self.last_buffer_hash = None
 
 		self.d = {}
 		self.indent = 0
@@ -56,17 +59,20 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 	def on_modified(self, path: Path, was_dir: bool) -> None:
 		if path == self.buf.asset_path:
-			self.on_open()
+			asset_hash = PathUtils.file_hash(self.buf.asset_path)
+			if asset_hash != self.last_asset_hash:
+				self.last_asset_hash = asset_hash
+				self.on_open()
 		elif path == self.buf.buffer_path:
 			if self.internally_modified:
-				print('internal')
 				self.internally_modified = False
+				self.last_buffer_hash = PathUtils.file_hash(self.buf.buffer_path)
 			else:
-				# TODO v7 open instead of edit causes an additional 'external' modification somehow
-				# TODO v7 saving a file in VSCode causes two 'external' modifications instead of one
-				print('external')
-				self.load_root_section()
-				self.on_buffer_modified()
+				buffer_hash = PathUtils.file_hash(self.buf.buffer_path)
+				if buffer_hash != self.last_buffer_hash:
+					self.last_buffer_hash = buffer_hash
+					self.load_root_section()
+					self.on_buffer_modified()
 
 	def on_buffer_modified(self) -> None:
 		pass
