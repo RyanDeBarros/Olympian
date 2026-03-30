@@ -47,6 +47,8 @@ class ProgramState:
 		return cls._instance
 
 	def get_buffer(self, asset: Path) -> AbstractBuffer | None:
+		from editor.core.buffers import BufferPath
+		asset = BufferPath.remove_import(asset)
 		return next((buffer for buffer in self.buffers if buffer.buf.asset_path == asset), None)
 
 	def load_args(self, argline: str, expand_macros: bool):

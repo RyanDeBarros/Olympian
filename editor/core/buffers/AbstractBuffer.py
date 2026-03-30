@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from io import StringIO
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Iterator
 
 import toml
 
@@ -26,6 +26,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.fio = StringIO()
 		self.indent = -1
 		self.commands: list[ExclamCommand] = []
+		self.subsection_newline = True
 
 		self.root_section = BufferSection("", None)
 		self.subsections: list[BufferSection] = []
@@ -113,70 +114,76 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			w.write(self.fio.getvalue())
 
 	def write(self, line: str = ""):
+		self.subsection_newline = True
 		if len(line) > 0:
 			self.fio.write(f"{self.indent * '\t'}{line}\n")
 		else:
 			self.fio.write('\n')
 
-	def write_meta_block(self, header: str) -> None:
-		self.write(BufferParseStructure.META_BLOCK_DELIMITER)
-		self.write(header)
-		self.write(f"Format version: {self.format_version()}")
-		self.write(f"\n!commands:")
+	@contextmanager
+	def subindent(self) -> Iterator[None]:
 		self.indent += 1
-		for command in self.commands:
-			self.write(f"{command.exclam}: {command.info}")
+		yield None
 		self.indent -= 1
-		self.write(BufferParseStructure.META_BLOCK_DELIMITER)
+
+	@contextmanager
+	def write_subsection(self, name: str) -> Iterator[BufferSection]:
+		parent = self.current_section
+		section = BufferSection(name, parent)
+		self.current_section = section
+		with self.subindent():
+			if self.subsection_newline:
+				self.write()
+			self.write()
+			self.write(self.current_section.title())
+			self.subsection_newline = False
+			yield section
+		self.current_section = parent
+
+	def write_meta_block(self, header: str) -> None:
+		with self.subindent():
+			self.write(BufferParseStructure.META_BLOCK_DELIMITER)
+			self.write(header)
+			self.write(f"Format version: {self.format_version()}")
+			self.write(f"\n!commands:")
+			with self.subindent():
+				for command in self.commands:
+					self.write(f"{command.exclam}: {command.info}")
+			self.write(BufferParseStructure.META_BLOCK_DELIMITER)
 
 	def write_field(self, key):
+		self.write()
 		self.write(self.current_section.repr_field(key))
 
 	def write_field_metadata(self, metadata: dict[str, str]):
-		self.indent += 1
-		for name, data in metadata.items():
-			if len(data) > 0:
-				self.write(self.current_section.repr_metadata(f"{name}: {data}"))
-		self.indent -= 1
+		with self.subindent():
+			for name, data in metadata.items():
+				if data is not None and (not isinstance(data, str) or len(data) > 0):
+					self.write(self.current_section.repr_metadata(f"{name}: {data}"))
 
 	def write_enum(self, data: dict, field: EnumField):
 		key = field.virtual_key.value
-		self.current_section.fields[key] = field.get_value(data)
+		self.current_section.fields[key] = field.get_value(data).value
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})  # TODO v7.1 make description hidden by default until !info?
-		self.write()
 
 	def write_ranged_number(self, data: dict, field: RangedNumberField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
 		self.write_field(key)
 		self.write_field_metadata({"range": field.range, "default": field.default, "description": field.description})
-		self.write()
 
 	def write_discrete_number(self, data: dict, field: DiscreteNumberField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})
-		self.write()
 
 	def write_bool(self, data: dict, field: BoolField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})
-		self.write()
-
-	@contextmanager
-	def write_subsection(self, f, name: str):
-		parent = self.current_section
-		section = BufferSection(name, parent)
-		self.current_section = section
-		self.indent += 1
-		self.write(self.current_section.title())
-		yield section
-		self.indent -= 1
-		self.current_section = parent
 
 	def load_root_section(self):
 		self.subsections.clear()

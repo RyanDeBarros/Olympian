@@ -109,7 +109,7 @@ class BufferSection:
 		self.fields: dict[str, str] = {}
 
 	def title(self) -> str:
-		return f"\n{BufferParseStructure.TITLE_PREFIX * self.level} {self.name}"
+		return f"{BufferParseStructure.TITLE_PREFIX * self.level} {self.name}"
 
 	def repr_field(self, field: str) -> str:
 		return f"{field}{BufferParseStructure.FIELD_SEPARATOR} {self.fields[field]}"

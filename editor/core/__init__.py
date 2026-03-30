@@ -1,4 +1,3 @@
-from .Utils import *
 from .Watchdog import FileSystemWatcher
 from .REPLError import REPLError
 from .REPLCommand import REPLCommand
