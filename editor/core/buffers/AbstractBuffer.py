@@ -9,7 +9,7 @@ import toml
 from editor.core import FileSystemWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
-from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField
+from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField, ExclamCommand
 from .processing.BufferSection import BufferSection, BufferParseStructure
 from ..context import PathUtils
 
@@ -23,7 +23,9 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.last_buffer_hash = None
 
 		self.d = {}
-		self.indent = 0
+		self.fio = StringIO()
+		self.indent = -1
+		self.commands: list[ExclamCommand] = []
 
 		self.root_section = BufferSection("", None)
 		self.subsections: list[BufferSection] = []
@@ -59,7 +61,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			asset_hash = PathUtils.file_hash(self.buf.asset_path)
 			if asset_hash != self.last_asset_hash:
 				self.last_asset_hash = asset_hash
-				self.on_open()
+				self.do_open()
 		elif path == self.buf.buffer_path:
 			if self.internally_modified:
 				self.internally_modified = False
@@ -85,7 +87,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		if src == self.buf.asset_path:
 			if self.__class__.matches_asset(BufferPath.from_asset(dest)):
 				pass  # TODO v7
-				# self.buf.on_asset_moved(dest)
+			# self.buf.on_asset_moved(dest)
 			else:
 				eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7.2 handle different asset type - also, self.close() here might not work with the asset file moved
 
@@ -93,77 +95,87 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		if not self.buf.buffer_path.exists():
 			self.buf.buffer_path.parent.mkdir(parents=True, exist_ok=True)
 			self.buf.buffer_path.touch()
-			self.d = toml.loads(self.buf.import_path().read_text())
-			self.indent = 0
-			self.root_section = BufferSection("", None)
-			self.subsections.clear()
-			self.current_section = self.root_section
-			self.on_open()
+			self.do_open()
 
-	def write(self, f, line: str = ""):
+	def do_open(self) -> None:
+		self.d = toml.loads(self.buf.import_path().read_text())
+		self.fio = StringIO()
+		self.indent = -1
+		self.root_section = BufferSection("", None)
+		self.subsections.clear()
+		self.current_section = self.root_section
+		self.write_buffer()
+		self.flush_write()
+
+	def flush_write(self):
+		with self.buf.buffer_path.open('w') as w:
+			self.internally_modified = True
+			w.write(self.fio.getvalue())
+
+	def write(self, line: str = ""):
 		if len(line) > 0:
-			f.write(f"{self.indent * '\t'}{line}\n")
+			self.fio.write(f"{self.indent * '\t'}{line}\n")
 		else:
-			f.write('\n')
+			self.fio.write('\n')
 
-	def write_field(self, f: StringIO, key):
-		self.write(f, self.current_section.repr_field(key))
-
-	def write_field_metadata(self, f: StringIO, metadata: str):
-		self.write(f, self.current_section.repr_metadata(metadata))
-
-	def write_enum(self, f: StringIO, data: dict, field: EnumField):
-		key = field.virtual_key.value
-		self.current_section.fields[key] = field.get_value(data)
-		self.write_field(f, key)
+	def write_meta_block(self, header: str) -> None:
+		self.write(BufferParseStructure.META_BLOCK_DELIMITER)
+		self.write(header)
+		self.write(f"Format version: {self.format_version()}")
+		self.write(f"\n!commands:")
 		self.indent += 1
-		self.write_field_metadata(f, f"options: {field.options}")
-		if len(field.description) > 0:
-			self.write_field_metadata(f, f"description: {field.description}")  # TODO v7.1 make description hidden by default until !info?
+		for command in self.commands:
+			self.write(f"{command.exclam}: {command.info}")
+		self.indent -= 1
+		self.write(BufferParseStructure.META_BLOCK_DELIMITER)
+
+	def write_field(self, key):
+		self.write(self.current_section.repr_field(key))
+
+	def write_field_metadata(self, metadata: dict[str, str]):
+		self.indent += 1
+		for name, data in metadata.items():
+			if len(data) > 0:
+				self.write(self.current_section.repr_metadata(f"{name}: {data}"))
 		self.indent -= 1
 
-	def write_ranged_number(self, f: StringIO, data: dict, field: RangedNumberField):
+	def write_enum(self, data: dict, field: EnumField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
-		self.write_field(f, key)
-		self.indent += 1
-		self.write_field_metadata(f, f"range: {field.range}")
-		if field.default is not None:
-			self.write_field_metadata(f, f"default: {field.default}")
-		if len(field.description) > 0:
-			self.write_field_metadata(f, f"description: {field.description}")
-		self.write(f)
-		self.indent -= 1
+		self.write_field(key)
+		self.write_field_metadata({"options": field.options, "description": field.description})  # TODO v7.1 make description hidden by default until !info?
+		self.write()
 
-	def write_discrete_number(self, f: StringIO, data: dict, field: DiscreteNumberField):
+	def write_ranged_number(self, data: dict, field: RangedNumberField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = field.get_value(data)
-		self.write_field(f, key)
-		self.indent += 1
-		self.write_field_metadata(f, f"options: {field.options}")
-		if len(field.description) > 0:
-			self.write_field_metadata(f, f"description: {field.description}")
-		self.write(f)
-		self.indent -= 1
+		self.write_field(key)
+		self.write_field_metadata({"range": field.range, "default": field.default, "description": field.description})
+		self.write()
 
-	def write_bool(self, f: StringIO, data: dict, field: BoolField):
+	def write_discrete_number(self, data: dict, field: DiscreteNumberField):
+		key = field.virtual_key.value
+		self.current_section.fields[key] = field.get_value(data)
+		self.write_field(key)
+		self.write_field_metadata({"options": field.options, "description": field.description})
+		self.write()
+
+	def write_bool(self, data: dict, field: BoolField):
 		key = field.virtual_key.value
 		self.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
-		self.write_field(f, key)
-		self.indent += 1
-		self.write_field_metadata(f, f"options: {field.options}")
-		if len(field.description) > 0:
-			self.write_field_metadata(f, f"description: {field.description}")
-		self.write(f)
-		self.indent -= 1
+		self.write_field(key)
+		self.write_field_metadata({"options": field.options, "description": field.description})
+		self.write()
 
 	@contextmanager
 	def write_subsection(self, f, name: str):
 		parent = self.current_section
 		section = BufferSection(name, parent)
 		self.current_section = section
-		self.write(f, self.current_section.title())
+		self.indent += 1
+		self.write(self.current_section.title())
 		yield section
+		self.indent -= 1
 		self.current_section = parent
 
 	def load_root_section(self):
@@ -174,8 +186,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		parse_structure = BufferParseStructure(self.buf.buffer_path.read_text().splitlines())
 		self.current_section.load_section(self.subsections, parse_structure)
 
-
-	def on_open(self) -> None:
+	def write_buffer(self) -> None:
 		pass
 
 	def close(self) -> bool:

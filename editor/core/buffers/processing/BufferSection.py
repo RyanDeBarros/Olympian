@@ -81,7 +81,7 @@ class BufferParseStructure:
 	def current_line(self) -> "BufferParseStructure.Line":
 		return self.lines[self.line_idx]
 
-	def skip_to_next_section(self):
+	def skip_to_next_section(self) -> None:
 		while self.can_parse() and not self.current_line().is_section_title():
 			self.next_line()
 
@@ -156,6 +156,9 @@ class BufferSection:
 
 
 class BufferSectionContext:
-	def __init__(self, section: BufferSection, *, field: str | None = None):
+	def __init__(self, parse_structure: BufferParseStructure, row: int, col: int, section: BufferSection, *, field: str | None = None):
+		self.parse_structure = parse_structure
+		self.row = row
+		self.col = col
 		self.section = section
 		self.field = field

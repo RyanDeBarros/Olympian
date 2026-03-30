@@ -1,9 +1,8 @@
 from enum import Enum
-from io import StringIO
 from typing import override
 
 from .. import AbstractBuffer, BufferPath, BufferChooser
-from ..processing import AssetType, ExclamCommand, BoolField, RangedNumberField, EnumField, BufferSectionContext
+from ..processing import AssetType, ExclamCommand, ExclamArgs, BoolField, RangedNumberField, EnumField, BufferSectionContext
 
 
 # TODO v9 write Visual Studio Code plugin for text highlighting
@@ -166,51 +165,40 @@ class TextureImportBuffer(AbstractBuffer):
 		]
 
 	@override
-	def on_open(self) -> None:
-		f = StringIO()
-		# Header
-		# TODO v7.1 extract to AbstractBuffer
-		self.write(f, self.META_BLOCK_DELIMITER)
-		self.write(f, f"Texture: @/{self.buf.resource_path_string()}")
-		self.write(f, f"Format version: {self.format_version()}")
-		self.write(f, f"\n!commands:")
-		self.indent += 1
-		for command in self.commands:
-			self.write(f, f"{command.exclam}: {command.info}")
-		self.indent -= 1
-		self.write(f, self.META_BLOCK_DELIMITER)
-
+	def write_buffer(self) -> None:
+		self.write_meta_block(f"Texture: @/{self.buf.resource_path_string()}")
 		if self.is_svg():
-			with self.write_subsection(f, "SVG"):
-				self.write_enum(f, self.d, Fields.ABSTRACT_STORAGE)
+			self.write_svg_subsection()
+		self.write_texture_slots_subsection()
 
-		with self.write_subsection(f, "Slots"):
+	def write_svg_subsection(self) -> None:
+		with self.write_subsection("SVG"):
+			self.write_enum(self.d, Fields.ABSTRACT_STORAGE)
+
+	def write_texture_slots_subsection(self) -> None:
+		with self.write_subsection("Slots"):
 			slots = self.d[RealKeys.TEXTURE.value]
 			for i in range(len(slots)):
-				with self.write_subsection(f, f"Slot {i}"):
-					self.indent += 1
-					slot = slots[i]
+				self.write_texture_slot_subsection(slots, i)
 
-					if self.is_svg():
-						self.write_enum(f, slot, Fields.IMAGE_STORAGE)
-						self.write_enum(f, slot, Fields.VECTOR_GENERATE_MIPMAPS)
-						self.write_ranged_number(f, slot, Fields.SVG_SCALE)
-					else:
-						self.write_enum(f, slot, Fields.STORAGE)
-						self.write_bool(f, slot, Fields.RASTER_GENERATE_MIPMAPS)
+	def write_texture_slot_subsection(self, slots: dict, i: int) -> None:
+		with self.write_subsection(f"Slot {i}"):
+			slot = slots[i]
 
-					self.write_enum(f, slot, Fields.MIN_FILTER)
-					self.write_enum(f, slot, Fields.MAG_FILTER)
-					self.write_enum(f, slot, Fields.WRAP_S)
-					self.write_enum(f, slot, Fields.WRAP_T)
+			if self.is_svg():
+				self.write_enum(slot, Fields.IMAGE_STORAGE)
+				self.write_enum(slot, Fields.VECTOR_GENERATE_MIPMAPS)
+				self.write_ranged_number(slot, Fields.SVG_SCALE)
+			else:
+				self.write_enum(slot, Fields.STORAGE)
+				self.write_bool(slot, Fields.RASTER_GENERATE_MIPMAPS)
 
-					# TODO v7.1 anim + spritesheet
+			self.write_enum(slot, Fields.MIN_FILTER)
+			self.write_enum(slot, Fields.MAG_FILTER)
+			self.write_enum(slot, Fields.WRAP_S)
+			self.write_enum(slot, Fields.WRAP_T)
 
-					self.indent -= 1
-
-		with self.buf.buffer_path.open('w') as w:
-			self.internally_modified = True
-			w.write(f.getvalue())
+			# TODO v7.1 anim + spritesheet
 
 	@override
 	def on_buffer_modified(self) -> None:
@@ -219,13 +207,14 @@ class TextureImportBuffer(AbstractBuffer):
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
 
-	def fn_new_slot(self, ctx: BufferSectionContext) -> None:
+	def fn_new_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
+		count = args.kv_args.get('count', 1)
 		pass  # TODO v7.1
 
-	def fn_delete_slot(self, ctx: BufferSectionContext) -> None:
+	def fn_delete_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
 		pass  # TODO v7.1
 
-	def fn_default(self, ctx: BufferSectionContext) -> None:
+	def fn_default(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
 		pass  # TODO v7.1
 
 

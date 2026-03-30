@@ -4,9 +4,21 @@ if TYPE_CHECKING:
 	from .BufferSection import BufferSectionContext
 
 
-# TODO v7.1 allow for passing arguments to fn, such as `!new-slot(count=3)`
+class ExclamArgs:
+	def __init__(self, argline: str):
+		self.kv_args: dict[str, str] = {}
+		self.id_args: set[str] = set()
+		for arg in argline.split(','):
+			arg = arg.strip()
+			if '=' in arg:
+				k, v = arg.split('=', maxsplit=1)
+				self.kv_args[k] = v
+			else:
+				self.id_args.add(arg)
+
+
 class ExclamCommand:
-	def __init__(self, cmd: str, fn: Callable[["BufferSectionContext"], None], info: str):
+	def __init__(self, cmd: str, fn: Callable[["BufferSectionContext", ExclamArgs], None], info: str):
 		self.cmd = cmd
 		self.fn = fn
 		self.info = info
