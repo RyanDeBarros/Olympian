@@ -46,4 +46,3 @@ class REPLCommand(ABC):
 		else:
 			self.print_arg_error(f"{PathUtils.printed_path(asset)} does not exist")
 			return None
-

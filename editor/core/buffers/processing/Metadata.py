@@ -8,7 +8,7 @@ class AssetType(Enum):
 
 
 def is_import(m: dict) -> bool:
-	return m['import']
+	return m.get('import', False)
 
 
 def asset_type(m: dict) -> AssetType:

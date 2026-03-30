@@ -5,6 +5,7 @@ import tempfile
 import atexit
 
 
+# TODO v7 editor setting to redirect Logger output to a logfile in .editor/log instead
 class Logger:
 	CWD: Path
 	LOG_FILE: Path | None = None
