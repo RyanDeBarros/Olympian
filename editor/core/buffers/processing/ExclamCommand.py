@@ -20,8 +20,7 @@ class ExclamArgs:
 
 
 class ExclamCommand:
-	def __init__(self, cmd: str, fn: Callable[["ExclamContext", ExclamArgs], list[ExclamEdit]], info: str, args: str | None = None):
+	def __init__(self, cmd: str, fn: Callable[["ExclamContext", ExclamArgs], list[ExclamEdit]], info: str):
 		self.cmd = cmd
 		self.fn = fn
 		self.info = info
-		self.exclam = f"!{cmd}" if args is None else f"!{cmd}({args})"

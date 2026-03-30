@@ -202,7 +202,7 @@ class TextureImportBuffer(AbstractBuffer):
 
 	@override
 	def on_buffer_modified(self) -> None:
-		pass  # TODO v7.1 validate and transfer formatted changes. Make sure to walk self.current_section, *not* read from buffer
+		pass  # TODO v7.1 validate and transfer formatted changes. Make sure to walk self.tree.current_section, *not* read from buffer
 
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"

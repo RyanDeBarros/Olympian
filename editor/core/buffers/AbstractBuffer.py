@@ -122,7 +122,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 			self.stream.write(f"\n!commands:")
 			with self.stream.subindent():
 				for command in self.commands:
-					self.stream.write(f"{command.exclam}: {command.info}")
+					self.stream.write(command.info)
 			self.stream.write(BufferParseStructure.META_BLOCK_DELIMITER)
 
 	def write_field(self, key):
