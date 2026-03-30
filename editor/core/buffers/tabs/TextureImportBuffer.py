@@ -2,7 +2,7 @@ from enum import Enum
 from typing import override
 
 from .. import AbstractBuffer, BufferPath, BufferChooser
-from ..processing import AssetType, ExclamCommand, ExclamArgs, BoolField, RangedNumberField, EnumField, BufferSectionContext, ExclamEdit
+from ..processing import AssetType, ExclamCommand, ExclamArgs, BoolField, RangedNumberField, EnumField, ExclamContext, ExclamEdit
 
 
 # TODO v9 write Visual Studio Code plugin for text highlighting
@@ -207,15 +207,14 @@ class TextureImportBuffer(AbstractBuffer):
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
 
-	def fn_new_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
-		print(ctx.line_idx, ctx.col)
+	def fn_new_slot(self, ctx: ExclamContext, args: ExclamArgs) -> list[ExclamEdit]:
 		count = args.kv_args.get('count', 1)
 		return []  # TODO v7.1
 
-	def fn_delete_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
+	def fn_delete_slot(self, ctx: ExclamContext, args: ExclamArgs) -> list[ExclamEdit]:
 		return []  # TODO v7.1
 
-	def fn_default(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
+	def fn_default(self, ctx: ExclamContext, args: ExclamArgs) -> list[ExclamEdit]:
 		return []  # TODO v7.1
 
 

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from io import StringIO
 from pathlib import Path
 from typing import Optional, Iterator
 
@@ -9,8 +8,7 @@ import toml
 from editor.core import FileSystemWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
-from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField, ExclamCommand, DeferredExclam, ExclamEdit
-from .processing.BufferSection import BufferSection, BufferParseStructure
+from .processing import *
 from ..context import PathUtils
 
 
@@ -23,14 +21,10 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.last_buffer_hash = None
 
 		self.d = {}
-		self.fio = StringIO()
-		self.indent = -1
+		self.stream = BufferStream()
 		self.commands: list[ExclamCommand] = []
-		self.subsection_newline = True
 
-		self.root_section = BufferSection("", None)
-		self.subsections: list[BufferSection] = []
-		self.current_section = None
+		self.tree = BufferTree()
 
 	# TODO v7.2 make sure to close all buffers on editor exit - but cache list of opened buffers. Then open them all on editor start
 
@@ -100,114 +94,80 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 	def do_open(self) -> None:
 		self.d = toml.loads(self.buf.import_path().read_text())
-		self.fio = StringIO()
-		self.indent = -1
-		self.root_section = BufferSection("", None)
-		self.subsections.clear()
-		self.current_section = self.root_section
+		self.stream.reset()
+		self.tree.reset()
 		self.write_buffer()
 		self.flush_write()
 
 	def flush_write(self):
 		with self.buf.buffer_path.open('w') as w:
 			self.internally_modified = True
-			w.write(self.fio.getvalue())
-
-	def write(self, line: str = ""):
-		self.subsection_newline = True
-		if len(line) > 0:
-			self.fio.write(f"{self.indent * '\t'}{line}\n")
-		else:
-			self.fio.write('\n')
-
-	@contextmanager
-	def subindent(self) -> Iterator[None]:
-		self.indent += 1
-		yield None
-		self.indent -= 1
+			w.write(self.stream.string())
 
 	@contextmanager
 	def write_subsection(self, name: str) -> Iterator[BufferSection]:
-		parent = self.current_section
+		parent = self.tree.current_section
 		section = BufferSection(name, parent)
-		self.current_section = section
-		with self.subindent():
-			if self.subsection_newline:
-				self.write()
-			self.write()
-			self.write(self.current_section.title())
-			self.subsection_newline = False
+		self.tree.current_section = section
+		with self.stream.subindent():
+			self.stream.write_subsection(self.tree.current_section.title())
 			yield section
-		self.current_section = parent
+		self.tree.current_section = parent
 
 	def write_meta_block(self, header: str) -> None:
-		with self.subindent():
-			self.write(BufferParseStructure.META_BLOCK_DELIMITER)
-			self.write(header)
-			self.write(f"Format version: {self.format_version()}")
-			self.write(f"\n!commands:")
-			with self.subindent():
+		with self.stream.subindent():
+			self.stream.write(BufferParseStructure.META_BLOCK_DELIMITER)
+			self.stream.write(header)
+			self.stream.write(f"Format version: {self.format_version()}")
+			self.stream.write(f"\n!commands:")
+			with self.stream.subindent():
 				for command in self.commands:
-					self.write(f"{command.exclam}: {command.info}")
-			self.write(BufferParseStructure.META_BLOCK_DELIMITER)
+					self.stream.write(f"{command.exclam}: {command.info}")
+			self.stream.write(BufferParseStructure.META_BLOCK_DELIMITER)
 
 	def write_field(self, key):
-		self.write()
-		self.write(self.current_section.repr_field(key))
+		self.stream.write()
+		self.stream.write(self.tree.current_section.repr_field(key))
 
 	def write_field_metadata(self, metadata: dict[str, str]):
-		with self.subindent():
+		with self.stream.subindent():
 			for name, data in metadata.items():
 				if data is not None and (not isinstance(data, str) or len(data) > 0):
-					self.write(self.current_section.repr_metadata(f"{name}: {data}"))
+					self.stream.write(self.tree.current_section.repr_metadata(f"{name}: {data}"))
 
 	def write_enum(self, data: dict, field: EnumField):
 		key = field.virtual_key.value
-		self.current_section.fields[key] = field.get_value(data).value
+		self.tree.current_section.fields[key] = field.get_value(data).value
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})  # TODO v7.1 make description hidden by default until !info?
 
 	def write_ranged_number(self, data: dict, field: RangedNumberField):
 		key = field.virtual_key.value
-		self.current_section.fields[key] = field.get_value(data)
+		self.tree.current_section.fields[key] = field.get_value(data)
 		self.write_field(key)
 		self.write_field_metadata({"range": field.range, "default": field.default, "description": field.description})
 
 	def write_discrete_number(self, data: dict, field: DiscreteNumberField):
 		key = field.virtual_key.value
-		self.current_section.fields[key] = field.get_value(data)
+		self.tree.current_section.fields[key] = field.get_value(data)
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})
 
 	def write_bool(self, data: dict, field: BoolField):
 		key = field.virtual_key.value
-		self.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
+		self.tree.current_section.fields[key] = 'true' if field.get_value(data) else 'false'
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})
 
 	def rebuild_root_section(self) -> list[DeferredExclam]:
-		self.subsections.clear()
-		self.root_section = BufferSection("", None)
-		parse_structure = BufferParseStructure(self.buf.buffer_path.read_text().splitlines())
-
-		deferred_exclams: list[DeferredExclam] = []
-		self.root_section.load_section(self.subsections, parse_structure, deferred_exclams)
-		self.current_section = self.root_section
-
-		kept_deferred_exclams: list[DeferredExclam] = []
-		for deferred_exclam in deferred_exclams:
-			if deferred_exclam.valid(self.commands):
-				kept_deferred_exclams.append(deferred_exclam)
-
-		return kept_deferred_exclams
+		return self.tree.rebuild(self.commands, self.buf.buffer_path.read_text().split('\n'))
 
 	def load_root_section(self):
 		deferred_exclams = self.rebuild_root_section()
 
-
 		if len(deferred_exclams) > 0:
-			self.fio = StringIO()
-			self.fio.write(self.buf.buffer_path.read_text())
+			self.stream.reset()
+			self.stream.raw_write(self.buf.buffer_path.read_text())
 
 			exclam_edits: list[ExclamEdit] = []
 			for deferred_exclam in deferred_exclams:
@@ -218,13 +178,12 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 
 			while len(exclam_edits) > 0:
 				current_edit = exclam_edits.pop(0)
-				current_edit.invoke(self.fio, exclam_edits)
+				current_edit.invoke(self.stream.fio, exclam_edits)
 			self.flush_write()
 
 			deferred_exclams = self.rebuild_root_section()
 			if len(deferred_exclams) > 0:
 				pass  # TODO v7.1 warn/error new commands appeared somehow
-
 
 	def write_buffer(self) -> None:
 		pass
