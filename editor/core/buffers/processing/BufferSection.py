@@ -10,7 +10,8 @@ class BufferParseStructure:
 	EXCLAM_PREFIX = '!'
 
 	class Line:
-		def __init__(self, line: str, row: int, cumulative_flat_idx: int):
+		def __init__(self, line: str, idx: int, row: int, cumulative_flat_idx: int):
+			self.idx = idx
 			self.row = row
 			self.cumulative_flat_idx = cumulative_flat_idx
 
@@ -61,6 +62,7 @@ class BufferParseStructure:
 		self.old_lines = lines
 		self.lines: list[BufferParseStructure.Line] = []
 		row = 0
+		idx = 0
 		in_meta_block = False
 		cumulative_flat_idx = 0
 		for line in self.old_lines:
@@ -69,11 +71,12 @@ class BufferParseStructure:
 			if line == self.META_BLOCK_DELIMITER:
 				in_meta_block = not in_meta_block
 			elif not in_meta_block:
-				line = BufferParseStructure.Line(line, row, cumulative_flat_idx)
+				line = BufferParseStructure.Line(line, idx, row, cumulative_flat_idx)
 				if len(line.line) > 0:
 					self.lines.append(line)
+					idx += 1
 
-			cumulative_flat_idx += line_length
+			cumulative_flat_idx += line_length + 1  # \n
 			row += 1
 
 		self.line_idx = 0
@@ -138,7 +141,7 @@ class BufferSection:
 
 		def add_deferred_command():
 			state.in_exclam = False
-			ctx = BufferSectionContext(parse_structure, parse_structure.line_idx, state.col, self)
+			ctx = BufferSectionContext(parse_structure, line.idx, state.col - len(state.exclam), self)
 			deferred_exclams.append(DeferredExclam(ctx, state.exclam))
 			state.exclam = ""
 
@@ -220,5 +223,6 @@ class BufferSectionContext:
 	def line(self) -> BufferParseStructure.Line:
 		return self.parse_structure.lines[self.line_idx]
 
-	def flat_end_index(self) -> int:
+	def flat_index(self) -> int:
+		print(self.line().cumulative_flat_idx)
 		return self.line().cumulative_flat_idx + self.line().col(self.col)

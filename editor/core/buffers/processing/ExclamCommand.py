@@ -77,5 +77,5 @@ class DeferredExclam:
 			return []
 
 	def removal(self) -> ExclamEdit:
-		end_idx = self.ctx.flat_end_index()
-		return ExclamEdit(end_idx - self.cmd_length, end_idx, "")
+		start_idx = self.ctx.flat_index()
+		return ExclamEdit(start_idx, start_idx + self.cmd_length, "")

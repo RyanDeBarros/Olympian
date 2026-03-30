@@ -208,6 +208,7 @@ class TextureImportBuffer(AbstractBuffer):
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
 
 	def fn_new_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
+		print(ctx.line_idx, ctx.col)
 		count = args.kv_args.get('count', 1)
 		return []  # TODO v7.1
 
