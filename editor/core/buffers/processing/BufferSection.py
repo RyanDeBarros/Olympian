@@ -1,4 +1,4 @@
-from . import Logger
+from . import Logger, DeferredExclam
 
 
 class BufferParseStructure:
@@ -7,10 +7,12 @@ class BufferParseStructure:
 	TITLE_PREFIX = ';'
 	FIELD_SEPARATOR = ':'
 	FIELD_METADATA_PREFIX = '-'
+	EXCLAM_PREFIX = '!'
 
 	class Line:
-		def __init__(self, line: str, row: int):
+		def __init__(self, line: str, row: int, cumulative_flat_idx: int):
 			self.row = row
+			self.cumulative_flat_idx = cumulative_flat_idx
 
 			result = ""
 			in_quote = False
@@ -25,7 +27,7 @@ class BufferParseStructure:
 						in_quote = False
 				elif c == '"':
 					in_quote = True
-				elif c == '#':
+				elif c == BufferParseStructure.COMMENT_PREFIX:
 					break
 				result += c
 
@@ -33,7 +35,7 @@ class BufferParseStructure:
 			self.col_offset = len(result) - len(self.line)
 			self.line = self.line.rstrip()
 
-		def char_col(self, col: int) -> int:
+		def col(self, col: int) -> int:
 			return col + self.col_offset
 
 		def is_section_title(self) -> bool:
@@ -58,17 +60,21 @@ class BufferParseStructure:
 	def __init__(self, lines: list[str]):
 		self.old_lines = lines
 		self.lines: list[BufferParseStructure.Line] = []
-		row = -1
+		row = 0
 		in_meta_block = False
+		cumulative_flat_idx = 0
 		for line in self.old_lines:
-			row += 1
+			line_length = len(line)
 			line.strip()
 			if line == self.META_BLOCK_DELIMITER:
 				in_meta_block = not in_meta_block
 			elif not in_meta_block:
-				line = BufferParseStructure.Line(line, row)
+				line = BufferParseStructure.Line(line, row, cumulative_flat_idx)
 				if len(line.line) > 0:
 					self.lines.append(line)
+
+			cumulative_flat_idx += line_length
+			row += 1
 
 		self.line_idx = 0
 
@@ -118,7 +124,55 @@ class BufferSection:
 	def repr_metadata(metadata: str) -> str:
 		return f"{BufferParseStructure.FIELD_METADATA_PREFIX} {metadata}"
 
-	def load_section(self, sections_list: list["BufferSection"], parse_structure: BufferParseStructure) -> None:
+	def add_deferred_commands(self, parse_structure: BufferParseStructure, deferred_exclams: list[DeferredExclam], line: BufferParseStructure.Line) -> None:
+		class State:
+			def __init__(self):
+				self.exclam = ""
+				self.in_exclam = False
+				self.has_args = False
+				self.in_quote = False
+				self.escaping = False
+				self.col = -1
+
+		state = State()
+
+		def add_deferred_command():
+			state.in_exclam = False
+			ctx = BufferSectionContext(parse_structure, parse_structure.line_idx, state.col, self)
+			deferred_exclams.append(DeferredExclam(ctx, state.exclam))
+			state.exclam = ""
+
+		for c in line.line:
+			state.col += 1
+			if state.in_quote:
+				if state.escaping:
+					state.escaping = False
+				elif c == '\\':
+					state.escaping = True
+				elif c == '"':
+					state.in_quote = False
+			elif c == '"':
+				state.in_quote = True
+			elif state.in_exclam > 0:
+				if state.has_args:
+					state.exclam += c
+					if c == ')':
+						add_deferred_command()
+				elif c == ' ':
+					add_deferred_command()
+				elif c == '(':
+					state.exclam += c
+					state.has_args = True
+				else:
+					state.exclam += c
+			elif c == BufferParseStructure.EXCLAM_PREFIX:
+				state.in_exclam = True
+
+		if state.in_exclam:
+			add_deferred_command()
+
+
+	def load_section(self, sections_list: list["BufferSection"], parse_structure: BufferParseStructure, deferred_exclams: list[DeferredExclam]) -> None:
 		while parse_structure.can_parse():
 			try:
 				line = parse_structure.current_line()
@@ -130,7 +184,7 @@ class BufferSection:
 						parent = self.parent
 					elif level > self.level:  # child
 						if level > self.level + 1:
-							raise ValidationError("Missing intermediate child section", line.row, line.char_col(0))
+							raise ValidationError("Missing intermediate child section", line.row, line.col(0))
 						parent = self
 					else:  # parent/grandparent
 						degree = self.level - level
@@ -140,7 +194,7 @@ class BufferSection:
 
 					section = BufferSection(line.line[level:].strip(), parent)
 					sections_list.append(section)
-					section.load_section(sections_list, parse_structure)
+					section.load_section(sections_list, parse_structure, deferred_exclams)
 
 					continue
 
@@ -148,7 +202,8 @@ class BufferSection:
 					field, value = line.split_field_assignment()
 					self.fields[field] = value
 				else:
-					pass  # TODO v7.1 check for multi-line arguments OR !commands
+					# TODO v7.1 check for multi-line arguments
+					self.add_deferred_commands(parse_structure, deferred_exclams, line)
 
 			except ValidationError as e:
 				e.log()
@@ -156,9 +211,14 @@ class BufferSection:
 
 
 class BufferSectionContext:
-	def __init__(self, parse_structure: BufferParseStructure, row: int, col: int, section: BufferSection, *, field: str | None = None):
+	def __init__(self, parse_structure: BufferParseStructure, line_idx: int, col: int, section: BufferSection):
 		self.parse_structure = parse_structure
-		self.row = row
+		self.line_idx = line_idx
 		self.col = col
 		self.section = section
-		self.field = field
+
+	def line(self) -> BufferParseStructure.Line:
+		return self.parse_structure.lines[self.line_idx]
+
+	def flat_end_index(self) -> int:
+		return self.line().cumulative_flat_idx + self.line().col(self.col)

@@ -2,7 +2,7 @@ from enum import Enum
 from typing import override
 
 from .. import AbstractBuffer, BufferPath, BufferChooser
-from ..processing import AssetType, ExclamCommand, ExclamArgs, BoolField, RangedNumberField, EnumField, BufferSectionContext
+from ..processing import AssetType, ExclamCommand, ExclamArgs, BoolField, RangedNumberField, EnumField, BufferSectionContext, ExclamEdit
 
 
 # TODO v9 write Visual Studio Code plugin for text highlighting
@@ -136,7 +136,7 @@ class VirtualWrap(Enum):
 		return VirtualWrap.CLAMP_TO_EDGE
 
 
-# TODO v7.1 actual descriptions
+# TODO v7 actual descriptions
 class Fields:
 	ABSTRACT_STORAGE = EnumField(RealKeys.ABSTRACT_STORAGE, VirtualKeys.ABSTRACT_STORAGE, RealImageStorage, VirtualImageStorage, "")
 	IMAGE_STORAGE = EnumField(RealKeys.IMAGE_STORAGE, VirtualKeys.IMAGE_STORAGE, RealImageStorage, VirtualImageStorage, "")
@@ -159,9 +159,9 @@ class TextureImportBuffer(AbstractBuffer):
 	def __init__(self, buf: BufferPath):
 		super().__init__(buf)
 		self.commands: list[ExclamCommand] = [
-			ExclamCommand(cmd="new-slot", fn=self.fn_new_slot, info="Create new slot"),  # TODO v7.1 actual documentation about how to use the commands
-			ExclamCommand(cmd="delete-slot", fn=self.fn_delete_slot, info="Delete slot"),
-			ExclamCommand(cmd="default", fn=self.fn_default, info="Replace with default value")
+			ExclamCommand(cmd="new-slot", fn=self.fn_new_slot, info="!new-slot([count=_]): Create new slot"),  # TODO v7.1 actual documentation about how to use the commands
+			ExclamCommand(cmd="delete-slot", fn=self.fn_delete_slot, info="!delete-slot: Delete slot"),
+			ExclamCommand(cmd="default", fn=self.fn_default, info="!default: Replace with default value")
 		]
 
 	@override
@@ -202,20 +202,20 @@ class TextureImportBuffer(AbstractBuffer):
 
 	@override
 	def on_buffer_modified(self) -> None:
-		pass  # TODO v7.1 validate and transfer formatted changes. Allow fuzzy matching, or entering !default (or other !commands), as well as # commands
+		pass  # TODO v7.1 validate and transfer formatted changes. Make sure to walk self.current_section, *not* read from buffer
 
 	def is_svg(self) -> bool:
 		return RealKeys.ABSTRACT_STORAGE.value in self.d or self.buf.asset_path.suffix == ".svg"
 
-	def fn_new_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
+	def fn_new_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
 		count = args.kv_args.get('count', 1)
-		pass  # TODO v7.1
+		return []  # TODO v7.1
 
-	def fn_delete_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
-		pass  # TODO v7.1
+	def fn_delete_slot(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
+		return []  # TODO v7.1
 
-	def fn_default(self, ctx: BufferSectionContext, args: ExclamArgs) -> None:
-		pass  # TODO v7.1
+	def fn_default(self, ctx: BufferSectionContext, args: ExclamArgs) -> list[ExclamEdit]:
+		return []  # TODO v7.1
 
 
 def register():

@@ -9,7 +9,7 @@ import toml
 from editor.core import FileSystemWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
-from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField, ExclamCommand
+from .processing import Metadata, AssetType, EnumField, RangedNumberField, DiscreteNumberField, BoolField, ExclamCommand, DeferredExclam, ExclamEdit
 from .processing.BufferSection import BufferSection, BufferParseStructure
 from ..context import PathUtils
 
@@ -185,13 +185,46 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.write_field(key)
 		self.write_field_metadata({"options": field.options, "description": field.description})
 
-	def load_root_section(self):
+	def rebuild_root_section(self) -> list[DeferredExclam]:
 		self.subsections.clear()
 		self.root_section = BufferSection("", None)
+		parse_structure = BufferParseStructure(self.buf.buffer_path.read_text().splitlines())
+
+		deferred_exclams: list[DeferredExclam] = []
+		self.root_section.load_section(self.subsections, parse_structure, deferred_exclams)
 		self.current_section = self.root_section
 
-		parse_structure = BufferParseStructure(self.buf.buffer_path.read_text().splitlines())
-		self.current_section.load_section(self.subsections, parse_structure)
+		kept_deferred_exclams: list[DeferredExclam] = []
+		for deferred_exclam in deferred_exclams:
+			if deferred_exclam.valid(self.commands):
+				kept_deferred_exclams.append(deferred_exclam)
+
+		return kept_deferred_exclams
+
+	def load_root_section(self):
+		deferred_exclams = self.rebuild_root_section()
+
+
+		if len(deferred_exclams) > 0:
+			self.fio = StringIO()
+			self.fio.write(self.buf.buffer_path.read_text())
+
+			exclam_edits: list[ExclamEdit] = []
+			for deferred_exclam in deferred_exclams:
+				exclam_edits.append(deferred_exclam.removal())
+
+			for deferred_exclam in deferred_exclams:
+				exclam_edits += deferred_exclam.invoke(self.commands)
+
+			while len(exclam_edits) > 0:
+				current_edit = exclam_edits.pop(0)
+				current_edit.invoke(self.fio, exclam_edits)
+			self.flush_write()
+
+			deferred_exclams = self.rebuild_root_section()
+			if len(deferred_exclams) > 0:
+				pass  # TODO v7.1 warn/error new commands appeared somehow
+
 
 	def write_buffer(self) -> None:
 		pass
