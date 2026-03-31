@@ -1,4 +1,4 @@
-from .Watchdog import FileSystemWatcher
+from .Watchdog import EditableFileWatcher
 from .REPLError import REPLError
 from .REPLCommand import REPLCommand
 from .REPLState import REPLState

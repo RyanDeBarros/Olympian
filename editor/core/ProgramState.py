@@ -23,7 +23,7 @@ class ProgramState:
 
 		# storage
 		from editor.core.context import EditorContext
-		from .commands.var.MacroStorage import MacroStorage
+		from .commands.var.MacroStorage import MacroStorage  # TODO v7.1 have MacroStorage inherit from FileSystemWatcher and move internally_modified + hashes + handler path checks to FileSystemWatcher (use list of files/hashes)
 		self.macros = MacroStorage(EditorContext.macros_path(self.project_dir))
 		from .commands.editor.settings import EditorSettings
 		self.settings = EditorSettings(EditorContext.settings_path(self.project_dir))

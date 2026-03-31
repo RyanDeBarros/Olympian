@@ -5,6 +5,7 @@ import tempfile
 import atexit
 
 
+# TODO v7 move Logger to core and replace all print()/eprint() calls with Logger.info(), Logger.error(), Logger.warn(), Logger.inline.info(), Logger.inline.error()
 # TODO v7 editor setting to redirect Logger output to a logfile in .editor/log instead
 class Logger:
 	CWD: Path

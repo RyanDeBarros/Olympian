@@ -1,6 +1,7 @@
+import hashlib
 from weakref import WeakSet
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 from watchdog.events import FileSystemEventHandler, FileCreatedEvent, DirCreatedEvent, DirMovedEvent, FileMovedEvent, DirModifiedEvent, FileModifiedEvent, \
 	FileDeletedEvent, DirDeletedEvent
@@ -91,3 +92,45 @@ class Watchdog:
 class FileSystemWatcher(FileSystemWatcherBase):
 	def __init__(self):
 		Watchdog.instance().handler.watchers.add(self)
+
+
+class EditableFileWatcher(FileSystemWatcher):
+	def __init__(self, filepath: Path):
+		super().__init__()
+		self.filepath = filepath
+		self.internally_modified = False
+		self.hash = ""
+		self.created: Callable[[], None] | None = None
+		self.deleted: Callable[[], None] | None = None
+		self.modified: Callable[[], None] | None = None
+		self.moved: Callable[[Path], None] | None = None
+
+	def on_created(self, path: Path, was_dir: bool) -> None:
+		if self.created is not None and path == self.filepath:
+			#  TODO v7 use internally_modified/hash
+			self.created()
+
+	def on_deleted(self, path: Path, was_dir: bool) -> None:
+		if self.deleted is not None and path == self.filepath:
+			#  TODO v7 use internally_modified/hash
+			self.deleted()
+
+	def on_modified(self, path: Path, was_dir: bool) -> None:
+		if self.modified is not None and path == self.filepath:
+			h = hashlib.md5(path.read_bytes()).hexdigest()
+			if self.internally_modified:
+				self.hash = h
+				self.internally_modified = False
+			elif self.hash != h:
+				self.hash = h
+				self.modified()
+
+	def on_moved(self, src: Path, dest: Path, was_dir: bool) -> None:
+		if self.moved is not None and src == self.filepath:
+			self.filepath = dest
+			self.moved(src)
+
+	def write(self, text: str) -> None:
+		with self.filepath.open('w') as w:  # TODO v7 permission denied occasionally while buffer is opened
+			self.internally_modified = True
+			w.write(text)

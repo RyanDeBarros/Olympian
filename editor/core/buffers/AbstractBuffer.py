@@ -5,20 +5,23 @@ from typing import Optional, Iterator
 
 import toml
 
-from editor.core import FileSystemWatcher
+from editor.core import EditableFileWatcher
 from editor.tools import eprint, TOMLAdapter
 from . import BufferPath
 from .processing import *
-from ..context import PathUtils
 
 
-class AbstractBuffer(FileSystemWatcher, ABC):
+class AbstractBuffer(ABC):
 	def __init__(self, buf: BufferPath):
-		super().__init__()
 		self.buf = buf
-		self.internally_modified = False
-		self.last_asset_hash = None
-		self.last_buffer_hash = None
+
+		self.asset_watcher = EditableFileWatcher(self.buf.asset_path)
+		self.asset_watcher.deleted = self.on_asset_deleted
+		self.asset_watcher.modified = self.on_asset_path_modified
+		self.asset_watcher.moved = self.on_asset_path_moved
+
+		self.buffer_watcher = EditableFileWatcher(self.buf.buffer_path)
+		self.buffer_watcher.modified = self.on_buffer_path_modified
 
 		self.d = {}
 		self.stream = BufferStream()
@@ -51,46 +54,34 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 	def format_version(self) -> float:
 		return Metadata.version(self.buf.metadata())
 
-	def on_modified(self, path: Path, was_dir: bool) -> None:
-		if path == self.buf.asset_path:
-			asset_hash = PathUtils.file_hash(self.buf.asset_path)
-			if asset_hash != self.last_asset_hash:
-				self.last_asset_hash = asset_hash
-				self.do_open()
-		elif path == self.buf.buffer_path:
-			if self.internally_modified:
-				self.internally_modified = False
-				self.last_buffer_hash = PathUtils.file_hash(self.buf.buffer_path)
-			else:
-				buffer_hash = PathUtils.file_hash(self.buf.buffer_path)
-				if buffer_hash != self.last_buffer_hash:
-					self.last_buffer_hash = buffer_hash
-					self.load_root_section()
-					self.on_buffer_modified()
+	def on_asset_path_modified(self):
+		self.do_open()
+
+	def on_buffer_path_modified(self):
+		self.load_root_section()
+		self.on_buffer_modified()
 
 	def on_buffer_modified(self) -> None:
 		pass
 
-	def on_deleted(self, path: Path, was_dir: bool) -> None:
-		if path == self.buf.asset_path:
-			self.on_asset_deleted()
-
 	def on_asset_deleted(self) -> None:
 		pass
 
-	def on_moved(self, src: Path, dest: Path, was_dir: bool) -> None:
-		if src == self.buf.asset_path:
-			if self.__class__.matches_asset(BufferPath.from_asset(dest)):
-				pass  # TODO v7
-			# self.buf.on_asset_moved(dest)
-			else:
-				eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7.2 handle different asset type - also, self.close() here might not work with the asset file moved
+	def on_asset_path_moved(self, src: Path) -> None:
+		if self.__class__.matches_asset(BufferPath.from_asset(self.asset_watcher.filepath)):
+			pass  # TODO v7
+		# self.buf.on_asset_moved(dest)
+		else:
+			eprint(f"{self.__class__.__name__}: Not Implemented")  # TODO v7.2 handle different asset type - also, self.close() here might not work with the asset file moved
 
 	def open(self) -> None:
 		if not self.buf.buffer_path.exists():
 			self.buf.buffer_path.parent.mkdir(parents=True, exist_ok=True)
 			self.buf.buffer_path.touch()
 			self.do_open()
+
+	def reopen(self) -> None:
+		self.do_open()
 
 	def do_open(self) -> None:
 		self.d = toml.loads(self.buf.import_path().read_text())
@@ -100,9 +91,7 @@ class AbstractBuffer(FileSystemWatcher, ABC):
 		self.flush_write()
 
 	def flush_write(self):
-		with self.buf.buffer_path.open('w') as w:
-			self.internally_modified = True
-			w.write(self.stream.string())
+		self.buffer_watcher.write(self.stream.string())
 
 	@contextmanager
 	def write_subsection(self, name: str) -> Iterator[BufferSection]:
