@@ -3,8 +3,8 @@
 [[texture]]
 storage = "discard"
 generate_mipmaps = false
-min_filter = "nearest"
-mag_filter = "nearest"
+min_filter = 0
+mag_filter = 0
 wrap_s = 33071
 wrap_t = 33071
 anim = true
@@ -19,8 +19,8 @@ row_up = true
 [[texture]]
 storage = "discard"
 generate_mipmaps = false
-min_filter = "nearest"
-mag_filter = "nearest"
+min_filter = 0
+mag_filter = 0
 wrap_s = 33071
 wrap_t = 33071
 

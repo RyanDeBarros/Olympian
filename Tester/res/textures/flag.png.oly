@@ -2,7 +2,7 @@
 
 [[texture]]
 storage = "discard"
-"min_filter" = "nearest"
-"mag_filter" = "nearest"
+min_filter = 0
+mag_filter = 0
 "generate_mipmaps" = false
 

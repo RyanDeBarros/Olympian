@@ -7,6 +7,9 @@
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
 
+#include ".gen/enums/texture/MinFilter.inl"
+#include ".gen/enums/texture/MagFilter.inl"
+
 namespace oly::context
 {
 	namespace internal
@@ -64,13 +67,11 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
-		GLenum min_filter, mag_filter, wrap_s, wrap_t;
-		if (!io::parse_min_filter(node["min_filter"], min_filter))
-			min_filter = GL_NEAREST;
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, min_filter);
-		if (!io::parse_mag_filter(node["mag_filter"], mag_filter))
-			mag_filter = GL_NEAREST;
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, mag_filter);
+		GLenum wrap_s, wrap_t;
+		
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"])));
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["mag_filter"])));
+
 		if (io::parse_wrap(node["wrap_s"], wrap_s))
 			texture.texture().set_parameter(GL_TEXTURE_WRAP_S, wrap_s);
 		if (io::parse_wrap(node["wrap_t"], wrap_t))

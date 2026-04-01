@@ -7,6 +7,9 @@
 #include "core/util/LoggerOperators.h"
 #include "core/context/rendering/Textures.h"
 
+#include ".gen/enums/texture/MagFilter.inl"
+#include ".gen/enums/texture/MinFilter.inl"
+
 namespace oly::context
 {
 	namespace internal
@@ -203,8 +206,9 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		io::parse_min_filter(node["min_filter"], options.min_filter);
-		io::parse_mag_filter(node["mag_filter"], options.mag_filter);
+
+		options.min_filter = _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"]));
+		options.mag_filter = _gen::texture::MagFilter::val(io::parse_uint(node["mag_filter"]));
 		io::parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;

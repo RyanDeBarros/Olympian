@@ -150,68 +150,6 @@ namespace oly::io
 			v = std::nullopt;
 	}
 
-	bool parse_mag_filter(TOMLNode node, GLenum& mag_filter)
-	{
-		if (auto v = node.value<int64_t>())
-		{
-			GLenum val = (GLenum)*v;
-			if (is_in(val, GL_NEAREST, GL_LINEAR))
-			{
-				mag_filter = val;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		auto _v = node.value<std::string>();
-		if (!_v)
-			return false;
-		const std::string& v = *_v;
-		if (v == "nearest")
-			mag_filter = GL_NEAREST;
-		else if (v == "linear")
-			mag_filter = GL_LINEAR;
-		else
-			return false;
-		return true;
-	}
-
-	bool parse_min_filter(TOMLNode node, GLenum& min_filter)
-	{
-		if (auto v = node.value<int64_t>())
-		{
-			GLenum val = (GLenum)*v;
-			if (is_in(val, GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR))
-			{
-				min_filter = val;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		auto _v = node.value<std::string>();
-		if (!_v)
-			return false;
-		const std::string& v = *_v;
-		if (v == "nearest")
-			min_filter = GL_NEAREST;
-		else if (v == "linear")
-			min_filter = GL_LINEAR;
-		else if (v == "nearest mipmap nearest")
-			min_filter = GL_NEAREST_MIPMAP_NEAREST;
-		else if (v == "nearest mipmap linear")
-			min_filter = GL_NEAREST_MIPMAP_LINEAR;
-		else if (v == "linear mipmap nearest")
-			min_filter = GL_LINEAR_MIPMAP_NEAREST;
-		else if (v == "linear mipmap linear")
-			min_filter = GL_LINEAR_MIPMAP_LINEAR;
-		else
-			return false;
-		return true;
-	}
-
 	bool parse_wrap(TOMLNode node, GLenum& wrap)
 	{
 		if (auto v = node.value<int64_t>())

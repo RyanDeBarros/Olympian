@@ -3,8 +3,8 @@
 [[font_atlas]]
 storage = "discard"
 font_size = 96.0
-min_filter = 9729
-mag_filter = 9729
+min_filter = 1
+mag_filter = 1
 generate_mipmaps = false
 common_buffer_preset = "common"
 common_buffer = ""

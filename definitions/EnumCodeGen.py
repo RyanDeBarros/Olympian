@@ -5,12 +5,11 @@ from pathlib import Path
 ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")
 ENUMS_DIR = (DEFINITIONS_DIR / "enums")
-HEADER_ROOT_DIR = (ENGINE_DIR / "gen")
-CPP_ROOT_DIR = (ENGINE_DIR / ".gen")
+GEN_ROOT_DIR = (ENGINE_DIR / ".gen")
 COL_COUNT = 3
 
 
-# TODO v7 cache enum file timestamps
+# TODO v7 cache enum file timestamps. remove old files
 
 class EnumRow:
 	def __init__(self):
@@ -19,52 +18,68 @@ class EnumRow:
 		self.comment: str = ""
 
 
-def build(enum_file: Path, rows: list[EnumRow]) -> None:
+def build(enum_file: Path, rows: list[EnumRow], default_gl_enum: int) -> None:
 	rel_path = enum_file.relative_to(DEFINITIONS_DIR)
-	header_path = HEADER_ROOT_DIR / rel_path.with_suffix(".h")
-	cpp_path = CPP_ROOT_DIR / rel_path.with_suffix(".cpp")
-	cpp_path.parent.mkdir(parents=True, exist_ok=True)
-	cpp_path.touch(exist_ok=True)
+	inl_path = GEN_ROOT_DIR / rel_path.with_suffix(".inl")
+	inl_path.parent.mkdir(parents=True, exist_ok=True)
+	inl_path.touch(exist_ok=True)
 
-	namespace = f"oly::internal::gen"
+	namespace = f"oly::_gen"
 	subnamespace = "::".join(rel_path.parts[1:-1])
 	if len(subnamespace) > 0:
 		namespace += f"::{subnamespace}"
 
-	fn_name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', rel_path.stem).lower()
-
 	enum_def = ""
 	for i, row in enumerate(rows):
-		enum_def += f"\t\t{row.gl_enum}"
+		enum_def += f"\t\t\t{row.gl_enum}"
 		if i + 1 < len(rows):
 			enum_def += ","
 		if len(row.comment) > 0:
 			if i + 1 == len(rows):
 				enum_def += " "
-			enum_def += f" // {row.comment}"
+			enum_def += f"  // {row.comment}"
 		if i + 1 < len(rows):
 			enum_def += '\n'
 
-	codegen = f"""#include \"{header_path.relative_to(ENGINE_DIR).as_posix()}\"
+	codegen = f"""#include \"external/GL.h\"
 
 #include <array>
+#include <optional>
 
 namespace {namespace}
 {{
-	constexpr unsigned int LIMIT = {len(rows)};
-	const std::array<GLenum, LIMIT> DEFS = {{
-{enum_def}
-	}};
-
-	GLenum {fn_name}(unsigned int index)
+	class {enum_file.stem}
 	{{
-		return DEFS.at(index);
-	}}
+		static inline const std::array<GLenum, {len(rows)}> DEFINITIONS = {{
+{enum_def}
+		}};
+		
+		{enum_file.stem}() = delete;
+		~{enum_file.stem}() = delete;
+
+	public:
+		static GLenum val(unsigned int index)
+		{{
+			return DEFINITIONS.at(index);
+		}}
+
+		static GLenum val()
+		{{
+			return {default_gl_enum};
+		}}
+
+		static GLenum val(std::optional<unsigned int> index)
+		{{
+			if (index)
+				return DEFINITIONS.at(*index);
+			else
+				return {default_gl_enum};
+		}}
+	}};
 }}
 """
 
-	cpp_path.write_text(codegen)
-	print(f"Wrote to {cpp_path.resolve().as_posix()}")
+	inl_path.write_text(codegen)
 
 
 def gen(enum_file: Path) -> list[str]:
@@ -141,7 +156,7 @@ def gen(enum_file: Path) -> list[str]:
 	for i, comment in comments.items():
 		rows[lut[i]].comment = comment
 
-	build(enum_file, rows)
+	build(enum_file, rows, rows[lut[1]].gl_enum)  # 1-indexed
 	return errors
 
 
