@@ -1,7 +1,7 @@
 #meta version=1.0 import type=font
 
 [[font_atlas]]
-storage = "discard"
+storage = 0
 "font_size" = 96
 mag_filter = 1
 min_filter = 5
@@ -9,7 +9,7 @@ generate_mipmaps = 1
 "common_buffer_preset" = "common"
 
 [font_face]
-storage = "keep"
+storage = 1
 [[font_face.kerning]]
 pair = [ "e", "U+78",]
 dist = 150

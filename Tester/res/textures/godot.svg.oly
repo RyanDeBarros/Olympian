@@ -1,8 +1,8 @@
 #meta version=1.0 import type="texture"
 
-abstract_storage = "keep"
+abstract_storage = 1
 [[texture]]
-image_storage = "discard"
+image_storage = 0
 generate_mipmaps = "off"
 min_filter = 1
 mag_filter = 1
@@ -11,7 +11,7 @@ wrap_t = 0
 svg_scale = 1.0
 
 [[texture]]
-image_storage = "discard"
+image_storage = 0
 generate_mipmaps = "off"
 min_filter = 1
 mag_filter = 1
