@@ -11,6 +11,7 @@
 #include ".gen/enums/texture/MinFilter.inl"
 #include ".gen/enums/texture/MagFilter.inl"
 #include ".gen/enums/texture/Wrap.inl"
+#include ".gen/enums/texture/SVGMipmapGenerationMode.inl"
 #include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
@@ -96,11 +97,7 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, TOMLNode node, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		std::string generate_mipmaps = node["generate_mipmaps"].value<std::string>().value_or("off");
-		graphics::SVGMipmapGenerationMode mipmaps_mode
-			= generate_mipmaps == "auto" ? graphics::SVGMipmapGenerationMode::Auto
-			: generate_mipmaps == "manual" ? graphics::SVGMipmapGenerationMode::Manual
-			: graphics::SVGMipmapGenerationMode::Off;
+		graphics::SVGMipmapGenerationMode mipmaps_mode = _gen::texture::SVGMipmapGenerationMode::val(io::parse_uint(node["generate_mipmaps"]), graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, node, set_and_use);
 		return texture;

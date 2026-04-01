@@ -1,0 +1,5 @@
+; "unsigned int" -> "oly::graphics::SVGMipmapGenerationMode"
+
+[Off]		1	0x1		# SVGMipmapGenerationMode::Off
+[Auto]		0	0x0		# SVGMipmapGenerationMode::Auto
+[Manual]	2	0x2		# SVGMipmapGenerationMode::Manual

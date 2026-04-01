@@ -7,14 +7,14 @@ min_filter = 0
 mag_filter = 0
 wrap_s = 0
 wrap_t = 0
-anim = true
+anim = 1
 rows = 2
 cols = 3
 cell_width_override = 0
 cell_height_override = 0
 delay_cs = 10
-row_major = true
-row_up = true
+row_major = 1
+row_up = 1
 
 [[texture]]
 storage = 0

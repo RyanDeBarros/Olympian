@@ -3,6 +3,8 @@ import re
 import sys
 from pathlib import Path
 
+# TODO v7 replace all ".value<std::string>("/".value_or<std::string>(" instances with codegen enums
+
 ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")
 ENUMS_DIR = DEFINITIONS_DIR / "enums"
@@ -10,20 +12,24 @@ GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 CACHE_FILE = GEN_ROOT_DIR / "cache.json"
 COL_COUNT = 3
 
+
 def load_cache() -> dict:
 	cache = CACHE_FILE.read_text() if CACHE_FILE else ""
 	return json.loads(cache) if len(cache) > 0 else {}
+
 
 def save_cache(cache: dict) -> None:
 	CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
 	CACHE_FILE.touch(exist_ok=True)
 	CACHE_FILE.write_text(json.dumps(cache))
 
+
 def prune_cache(files_seen: set[str]):
 	for inl_file in GEN_ROOT_DIR.rglob("*.inl"):
 		cache_entry = inl_file.relative_to(GEN_ROOT_DIR).with_suffix("").as_posix()
 		if cache_entry not in files_seen:
 			inl_file.unlink()
+
 
 class EnumRow:
 	def __init__(self):

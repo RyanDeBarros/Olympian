@@ -3,7 +3,7 @@
 abstract_storage = 1
 [[texture]]
 image_storage = 0
-generate_mipmaps = "off"
+generate_mipmaps = 1
 min_filter = 1
 mag_filter = 1
 wrap_s = 0
@@ -12,7 +12,7 @@ svg_scale = 1.0
 
 [[texture]]
 image_storage = 0
-generate_mipmaps = "off"
+generate_mipmaps = 1
 min_filter = 1
 mag_filter = 1
 wrap_s = 0

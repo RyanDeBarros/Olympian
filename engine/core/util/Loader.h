@@ -10,7 +10,7 @@ namespace oly::io
 {
 	extern toml::v3::parse_result load_toml(const ResourcePath& file);
 
-	// TODO v7 make these templated
+	// TODO v7 make these templated?
 
 	extern bool parse_bool(TOMLNode node, bool& v);
 	extern void parse_bool(TOMLNode node, std::optional<bool>& v);
