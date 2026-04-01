@@ -9,6 +9,7 @@
 
 #include ".gen/enums/texture/MinFilter.inl"
 #include ".gen/enums/texture/MagFilter.inl"
+#include ".gen/enums/texture/Wrap.inl"
 
 namespace oly::context
 {
@@ -67,15 +68,10 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
-		GLenum wrap_s, wrap_t;
-		
 		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"])));
 		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["mag_filter"])));
-
-		if (io::parse_wrap(node["wrap_s"], wrap_s))
-			texture.texture().set_parameter(GL_TEXTURE_WRAP_S, wrap_s);
-		if (io::parse_wrap(node["wrap_t"], wrap_t))
-			texture.texture().set_parameter(GL_TEXTURE_WRAP_T, wrap_t);
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::texture::Wrap::val(io::parse_uint(node["wrap_s"])));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::texture::Wrap::val(io::parse_uint(node["wrap_t"])));
 
 		if (set_and_use)
 			texture.set_and_use_handle();
