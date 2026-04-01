@@ -8,7 +8,21 @@ if (POLICY CMP0141)
 endif()
 
 # Variables
-set(LIBRARIES_DIR "D:/Libraries")
+set(LIBRARIES_DIR "D:/Libraries")  # TODO v10 more generic library linking
+set(DEFINITIONS_DIR "${CMAKE_SOURCE_DIR}/definitions")
+
+# Run automatic tools
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} "${DEFINITIONS_DIR}/EnumCodeGen.py"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	RESULT_VARIABLE PREBUILD_RESULT
+)
+
+if (NOT PREBUILD_RESULT EQUAL 0)
+	message(FATAL_ERROR "${DEFINITIONS_DIR}/EnumCodeGen.py failed with code ${PREBUILD_RESULT}")
+endif()
 
 # Add Quartic static library
 add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
