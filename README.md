@@ -7,6 +7,8 @@ To build the editor, simply run `editor/Build.py`. This will build an executable
 
 To access the web documentation, run `mkdocs/Serve.py`.
 
+The `definitions/` folder is an internal folder containing source code for CodeGen operations. CodeGen operations are executed when configuring the engine's CMake project, which auto-generates critical code used by the engine. Additionally, this CodeGen source code is used by the editor to generate its asset interfaces. Thus, the data in `definitions/` provides a strict API between the engine and the editor to interact with assets in a compatible way.
+
 ## Licensing
 
 All third-party licenses can be found in the `licenses/` folder.
