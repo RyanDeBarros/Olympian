@@ -3,6 +3,7 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/containers/Bijection.h"
 #include "core/types/Meta.h"
+#include "core/types/Enums.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
@@ -10,6 +11,7 @@
 #include ".gen/enums/texture/MinFilter.inl"
 #include ".gen/enums/texture/MagFilter.inl"
 #include ".gen/enums/texture/Wrap.inl"
+#include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
 {
@@ -69,7 +71,7 @@ namespace oly::context
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
 		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"])));
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["mag_filter"])));
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::texture::MagFilter::val(io::parse_uint(node["mag_filter"])));
 		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::texture::Wrap::val(io::parse_uint(node["wrap_s"])));
 		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::texture::Wrap::val(io::parse_uint(node["wrap_t"])));
 
@@ -140,7 +142,7 @@ namespace oly::context
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return texture_node[storage_key].value<std::string>().value_or("discard") == "keep";
+			return _gen::StorageMode::val(io::parse_uint(texture_node[storage_key]), StorageMode::Discard) == StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)

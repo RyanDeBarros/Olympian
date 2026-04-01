@@ -5,7 +5,7 @@ storage = "discard"
 "font_size" = 96
 mag_filter = 1
 min_filter = 5
-"generate_mipmaps" = true
+generate_mipmaps = 1
 "common_buffer_preset" = "common"
 
 [font_face]

@@ -28,11 +28,11 @@ def prune_cache(files_seen: set[str]):
 class EnumRow:
 	def __init__(self):
 		self.name: str = ""
-		self.gl_enum: int = -1
+		self.enum: int = -1
 		self.comment: str = ""
 
 
-def build(enum_file: Path, rows: list[EnumRow], default_gl_enum: int) -> None:
+def build(enum_file: Path, rows: list[EnumRow], index_type: str, enum_type: str, default_enum: int) -> None:
 	rel_path = enum_file.relative_to(DEFINITIONS_DIR)
 	inl_path = GEN_ROOT_DIR / rel_path.with_suffix(".inl")
 	inl_path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +45,7 @@ def build(enum_file: Path, rows: list[EnumRow], default_gl_enum: int) -> None:
 
 	enum_def = ""
 	for i, row in enumerate(rows):
-		enum_def += f"\t\t\t{row.gl_enum}"
+		enum_def += f"\t\t\tstatic_cast<{enum_type}>({row.enum})"
 		if i + 1 < len(rows):
 			enum_def += ","
 		if len(row.comment) > 0:
@@ -64,7 +64,7 @@ namespace {namespace}
 {{
 	class {enum_file.stem}
 	{{
-		static inline const std::array<GLenum, {len(rows)}> DEFINITIONS = {{
+		static inline const std::array<{enum_type}, {len(rows)}> DEFINITIONS = {{
 {enum_def}
 		}};
 		
@@ -72,22 +72,22 @@ namespace {namespace}
 		~{enum_file.stem}() = delete;
 
 	public:
-		static GLenum val(unsigned int index)
+		static {enum_type} val({index_type} index)
 		{{
 			return DEFINITIONS.at(index);
 		}}
 
-		static GLenum val()
+		static {enum_type} val()
 		{{
-			return {default_gl_enum};
+			return static_cast<{enum_type}>({default_enum});
 		}}
 
-		static GLenum val(std::optional<unsigned int> index)
+		static {enum_type} val(std::optional<{index_type}> index, {enum_type} def = static_cast<{enum_type}>({default_enum}))
 		{{
 			if (index)
 				return DEFINITIONS.at(*index);
 			else
-				return {default_gl_enum};
+				return def;
 		}}
 	}};
 }}
@@ -98,15 +98,30 @@ namespace {namespace}
 
 def gen(enum_file: Path) -> list[str]:
 	lines = enum_file.read_text().splitlines()
+	index_type: str = ""
+	enum_type: str = ""
 	names: dict[str, int] = {}
 	indexes: dict[int, int] = {}
-	gl_enums: dict[int, int] = {}
+	enums: dict[int, int] = {}
 	comments: dict[int, str] = {}
 
 	errors = []
 
 	for i, line in enumerate(lines):
-		i += 1  # offset for line number
+		if not line or line.isspace():
+			continue
+
+		line = line.strip()
+		if line.startswith(";"):
+			m = re.match(r"\"(?P<index_type>.*?)\"\s*->\s*\"(?P<enum_type>.*?)\"", line[1:].strip())
+			if m:
+				index_type = m.group("index_type")
+				enum_type = m.group("enum_type")
+			else:
+				errors.append(f"Line {i + 1}: malformed ;-metadata line")
+
+			continue
+
 		line, comment = line.split('#', maxsplit=1)
 		line = line.strip()
 		if not line:
@@ -114,18 +129,18 @@ def gen(enum_file: Path) -> list[str]:
 
 		name_match = re.match(r'\[(.*?)]', line)
 		if not name_match:
-			errors.append(f"Line {i}: missing or malformed name in []")
+			errors.append(f"Line {i + 1}: missing or malformed name in []")
 			continue
 
 		name = name_match.group(1).strip()
 		if name not in names:
 			names[name] = i
 		else:
-			errors.append(f"Line {i}: {name} is duplicate name (first appeared at line {names[name]})")
+			errors.append(f"Line {i + 1}: {name} is duplicate name (first appeared at line {names[name]})")
 
 		rest = line[name_match.end():].strip().split()
 		if 1 + len(rest) != COL_COUNT:
-			errors.append(f"Line {i}: {1 + len(rest)} columns (expected {COL_COUNT})")
+			errors.append(f"Line {i + 1}: {1 + len(rest)} columns (expected {COL_COUNT})")
 			continue
 
 		try:
@@ -133,44 +148,47 @@ def gen(enum_file: Path) -> list[str]:
 			if index not in indexes:
 				indexes[index] = i
 			else:
-				errors.append(f"Line {i}: {index} is duplicate index (first appeared at line {indexes[index]})")
+				errors.append(f"Line {i + 1}: {index} is duplicate index (first appeared at line {indexes[index]})")
 		except ValueError:
-			errors.append(f"Line {i}: {rest[0]} is not an integer")
+			errors.append(f"Line {i + 1}: {rest[0]} is not an integer")
 
 		try:
-			gl_enum = int(rest[1], 0)
-			if gl_enum not in gl_enums:
-				gl_enums[gl_enum] = i
+			enum = int(rest[1], 0)
+			if enum not in enums:
+				enums[enum] = i
 			else:
-				errors.append(f"Line {i}: {gl_enum} is duplicate GL enum (first appeared at line {gl_enums[gl_enum]})")
+				errors.append(f"Line {i + 1}: {enum} is duplicate enum (first appeared at line {enums[enum]})")
 		except ValueError:
-			errors.append(f"Line {i}: {rest[1]} is not an integer")
+			errors.append(f"Line {i + 1}: {rest[1]} is not an integer")
 
 		comments[i] = comment.strip()
 
-	row_len = len(lines)
+	row_len = len(indexes)
 	if row_len == 0:
 		errors.append(f"No rows!")
 
 	if any(index not in indexes for index in range(row_len)):
 		errors.append(f"Index set is not a range({row_len})")
 
+	if len(index_type) == 0 or len(enum_type) == 0:
+		errors.append(f"Missing or malformed ;-metadata line")
+
 	if len(errors) > 0:
 		return errors
 
 	rows = [EnumRow() for _ in range(row_len)]
-	lut = {v: k for k, v in indexes.items()}
+	lut = {line: index for index, line in indexes.items()}
 
 	for name, i in names.items():
 		rows[lut[i]].name = name
 
-	for gl_enum, i in gl_enums.items():
-		rows[lut[i]].gl_enum = gl_enum
+	for enum, i in enums.items():
+		rows[lut[i]].enum = enum
 
 	for i, comment in comments.items():
 		rows[lut[i]].comment = comment
 
-	build(enum_file, rows, rows[lut[1]].gl_enum)  # 1-indexed
+	build(enum_file, rows, index_type, enum_type, rows[next(iter(indexes))].enum)
 	return errors
 
 

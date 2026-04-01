@@ -1,9 +1,13 @@
 #include "Tilesets.h"
 
 #include "graphics/sprites/TileSet.h"
+
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
+#include "core/types/Enums.h"
+
+#include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
 {
@@ -136,7 +140,7 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
+		if (_gen::StorageMode::val(io::parse_uint(toml["storage"]), StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed." << LOG.nl;

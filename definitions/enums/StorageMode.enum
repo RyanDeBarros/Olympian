@@ -1,0 +1,4 @@
+; "unsigned int" -> "oly::StorageMode"
+
+[Discard]	0	0x0		# StorageMode::Discard
+[Keep]		1	0x1		# StorageMode::Keep

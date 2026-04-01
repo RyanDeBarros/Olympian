@@ -1,3 +1,5 @@
+; "unsigned int" -> "GLenum"
+
 [Clamp To Edge]			0	0x812F	# GL_CLAMP_TO_EDGE
 [Clamp To Border]		1	0x812D	# GL_CLAMP_TO_BORDER
 [Mirrored Repeat]		2	0x8370	# GL_MIRRORED_REPEAT

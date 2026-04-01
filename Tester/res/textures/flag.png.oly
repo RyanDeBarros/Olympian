@@ -4,5 +4,5 @@
 storage = "discard"
 min_filter = 0
 mag_filter = 0
-"generate_mipmaps" = false
+generate_mipmaps = 0
 

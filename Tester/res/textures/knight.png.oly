@@ -2,7 +2,7 @@
 
 [[texture]]
 storage = "discard"
-generate_mipmaps = false
+generate_mipmaps = 0
 min_filter = 0
 mag_filter = 0
 wrap_s = 0
@@ -18,7 +18,7 @@ row_up = true
 
 [[texture]]
 storage = "discard"
-generate_mipmaps = false
+generate_mipmaps = 0
 min_filter = 0
 mag_filter = 0
 wrap_s = 0

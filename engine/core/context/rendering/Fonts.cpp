@@ -6,9 +6,11 @@
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
 #include "core/context/rendering/Textures.h"
+#include "core/types/Enums.h"
 
 #include ".gen/enums/texture/MagFilter.inl"
 #include ".gen/enums/texture/MinFilter.inl"
+#include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
 {
@@ -150,7 +152,7 @@ namespace oly::context
 		}
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
-		if (node["storage"].value<std::string>().value_or("discard") == "keep")
+		if (_gen::StorageMode::val(io::parse_uint(node["storage"]), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed." << LOG.nl;
@@ -237,7 +239,7 @@ namespace oly::context
 			common_buffer = _common_buffer.value();
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (node["storage"].value<std::string>().value_or("discard") == "keep")
+		if (_gen::StorageMode::val(io::parse_uint(node["storage"]), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed." << LOG.nl;
@@ -351,7 +353,7 @@ namespace oly::context
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
+		if (_gen::StorageMode::val(io::parse_uint(toml["storage"]), StorageMode::Discard) == StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed." << LOG.nl;
@@ -435,7 +437,7 @@ namespace oly::context
 				});
 		}
 
-		if (toml["storage"].value<std::string>().value_or("discard") == "keep")
+		if (_gen::StorageMode::val(io::parse_uint(toml["storage"]), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed." << LOG.nl;
