@@ -3,6 +3,9 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
 #include "core/util/Loader.h"
+#include "graphics/sprites/Definitions.h"
+
+#include ".gen/enums/rendering/FrameFormat.inl"
 
 namespace oly::rendering
 {
@@ -53,26 +56,31 @@ namespace oly::rendering
 
 		if (auto toml_frame_format = node["frame_format"])
 		{
-			if (auto mode = toml_frame_format["mode"].value<std::string>())
+			if (auto mode = io::parse_uint(toml_frame_format["mode"]))
 			{
-				std::string mode_str = *mode;
-				if (mode_str == "Single")
+				try
 				{
-					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
-					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for Single frame format." << LOG.nl;
+					switch (_gen::rendering::FrameFormat::val(*mode))
+					{
+					case FrameFormat::Single:
+						if (texture)
+							sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
+					case FrameFormat::Auto:
+						if (texture)
+							sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_float_or(toml_frame_format["speed"], 1.0f),
+								io::parse_uint_or(toml_frame_format["starting_frame"], 0)));
+						else
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
+					default:
+						throw std::out_of_range("");
+					}
 				}
-				else if (mode_str == "auto")
+				catch (const std::out_of_range&)
 				{
-					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_float_or(toml_frame_format["speed"], 1.0f),
-							io::parse_uint_or(toml_frame_format["starting_frame"], 0)));
-					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for auto frame format." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized frame format mode (" << *mode << ")" << LOG.nl;
 				}
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{

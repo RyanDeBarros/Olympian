@@ -5,7 +5,7 @@
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
-#include "core/types/Enums.h"
+#include "core/types/Definitions.h"
 
 #include ".gen/enums/StorageMode.inl"
 

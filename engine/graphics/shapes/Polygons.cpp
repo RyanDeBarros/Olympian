@@ -7,7 +7,7 @@
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
 #include "core/util/Loader.h"
-#include "graphics/shapes/PolygonEnums.h"
+#include "graphics/shapes/Definitions.h"
 
 #include ".gen/enums/CBorderPivot.inl"
 #include ".gen/enums/rendering/shapes/PolyCompositeMethod.inl"

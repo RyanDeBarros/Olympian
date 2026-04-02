@@ -1,0 +1,4 @@
+; "unsigned int" -> "oly::rendering::FrameFormat"
+
+[Single]	0	0x0		# FrameFormat::Single
+[Auto]		1	0x1		# FrameFormat::Auto

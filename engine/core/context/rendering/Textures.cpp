@@ -3,10 +3,10 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/containers/Bijection.h"
 #include "core/types/Meta.h"
-#include "core/types/Enums.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
+#include "core/types/Definitions.h"
 
 #include ".gen/enums/rendering/texture/MinFilter.inl"
 #include ".gen/enums/rendering/texture/MagFilter.inl"
