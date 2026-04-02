@@ -7,21 +7,21 @@
 	[emitter0.color]
 		[emitter0.color.domain]
 			[emitter0.color.domain.c]
-			op = "Sequence"
+			op = 0
 				[[emitter0.color.domain.c.ops]]
-				op = "Selector"
+				op = 1
 				selector = "R"
 					[emitter0.color.domain.c.ops.inner_op]
-					op = "SineWave1D"
+					op = 2
 					a = 0.5
 					b = 2.0
 					k = 1.57
 					c = 0.5
 				[[emitter0.color.domain.c.ops]]
-				op = "Selector"
+				op = 1
 				selector = "B"
 					[emitter0.color.domain.c.ops.inner_op]
-					op = "SineWave1D"
+					op = 2
 					a = 0.5
 					b = 2.0
 					k = 0.57
@@ -30,7 +30,7 @@
 	[emitter0.velocity]
 		[emitter0.velocity.domain]
 			[emitter0.velocity.domain.c]
-			op = "Polarization2D"
+			op = 3
 			amplitude = 100.0
 
 [emitter1]

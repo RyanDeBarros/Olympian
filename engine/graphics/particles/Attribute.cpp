@@ -1,26 +1,31 @@
 #include "Attribute.h"
 
 #include "graphics/particles/implementations/AttributeOperations.h"
+#include "graphics/particles/implementations/AttributeOperationEnum.h"
 #include "core/util/Logger.h"
+
+#include ".gen/enums/particles/AttributeOperation.inl"
 
 namespace oly::particles
 {
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		StringParam op = node["op"].value_or<std::string>("");
-		op.to_lower();
-
-		if (op == "sequence")
-			return ops::Sequence<0>::load_fixed(node);
-		else if (op == "selector")
-			return ops::Selector::load(node);
-		else if (op == "sinewave1d")
-			return ops::SineWave1D::load(node);
-		else if (op == "polarization2d")
-			return ops::Polarization2D::load(node);
-
-		if (!op.empty())
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << op << "\"" << LOG.nl;
+		if (auto op = io::parse_uint(node["op"]))
+		{
+			switch (_gen::particles::AttributeOperation::val(*op))
+			{
+			case AttributeOperationEnum::Sequence:
+				return ops::Sequence<0>::load_fixed(node);
+			case AttributeOperationEnum::Selector:
+				return ops::Selector::load(node);
+			case AttributeOperationEnum::SineWave1D:
+				return ops::SineWave1D::load(node);
+			case AttributeOperationEnum::Polarization2D:
+				return ops::Polarization2D::load(node);
+			default:
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << *op << "\"" << LOG.nl;
+			}
+		}
 
 		return nullptr;
 	}

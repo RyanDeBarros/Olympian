@@ -14,7 +14,7 @@ COL_COUNT = 3
 
 
 def load_cache() -> dict:
-	cache = CACHE_FILE.read_text() if CACHE_FILE else ""
+	cache = CACHE_FILE.read_text() if CACHE_FILE.exists() else ""
 	return json.loads(cache) if len(cache) > 0 else {}
 
 
@@ -61,9 +61,7 @@ def build(enum_file: Path, rows: list[EnumRow], index_type: str, enum_type: str,
 		if i + 1 < len(rows):
 			enum_def += '\n'
 
-	codegen = f"""#include \"external/GL.h\"
-
-#include <array>
+	codegen = f"""#include <array>
 #include <optional>
 
 namespace {namespace}
