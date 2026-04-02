@@ -3,9 +3,9 @@
 storage = 1
 
 [[styles]]
-style = "Regular"
+style = 0
 file = "Roboto-Regular.ttf"
 
 [[styles]]
-style = "BoldItalic"
+style = 3
 file = "Roboto-BoldItalic.ttf"

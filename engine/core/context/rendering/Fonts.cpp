@@ -8,6 +8,7 @@
 #include "core/context/rendering/Textures.h"
 #include "core/types/Enums.h"
 
+#include ".gen/enums/rendering/text/FontStyle.inl"
 #include ".gen/enums/rendering/texture/MagFilter.inl"
 #include ".gen/enums/rendering/texture/MinFilter.inl"
 #include ".gen/enums/StorageMode.inl"
@@ -390,23 +391,17 @@ namespace oly::context
 			a->for_each([&file, &styles = font_family->styles](auto&& _node) {
 				TOMLNode node = (TOMLNode)_node;
 
-				rendering::FontStyle style = rendering::FontStyle::REGULAR();
-				if (!io::parse_uint(node["style"], reinterpret_cast<unsigned int&>(style)))
-				{
-					auto _style_str = node["style"].value<std::string>();
-					if (!_style_str)
-					{
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"style\" field from font family style" << LOG.nl;
-						return;
-					}
+				rendering::FontStyle style = rendering::FontStyle::Regular;
 
-					std::string style_str = *_style_str;
-					if (auto s = rendering::FontStyle::from_string(style_str))
-						style = *s;
-					else
+				if (auto s = io::parse_uint(node["style"]))
+				{
+					try
 					{
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "\"style\" field \"" << style_str << "\" not recognized from font family style" << LOG.nl;
-						return;
+						style = _gen::rendering::text::FontStyle::val(*s);
+					}
+					catch (const std::out_of_range&)
+					{
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized font family \"style\" field (" << *s << ")" << LOG.nl;
 					}
 				}
 
@@ -481,7 +476,7 @@ namespace oly::context
 			if (meta.has_type("raster_font"))
 				return load_raster_font(file);
 			else if (meta.has_type("font_family"))
-				return load_font_selection(file, rendering::FontStyle(index));
+				return load_font_selection(file, _gen::rendering::text::FontStyle::val(index));
 			else
 			{
 				std::optional<std::string> type = meta.get_type();

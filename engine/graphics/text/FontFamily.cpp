@@ -4,21 +4,6 @@
 
 namespace oly::rendering
 {
-	std::optional<FontStyle> FontStyle::from_string(const StringParam& str)
-	{
-		str.to_lower();
-		if (str == "regular")
-			return rendering::FontStyle::REGULAR();
-		else if (str == "bold")
-			return rendering::FontStyle::BOLD();
-		else if (str == "italic")
-			return rendering::FontStyle::ITALIC();
-		else if (str == "bolditalic" || str == "bold italic" || str == "bold_italic")
-			return rendering::FontStyle::BOLD_ITALIC();
-		else
-			return std::nullopt;
-	}
-
 	bool FontFamily::supports(FontStyle key) const
 	{
 		return styles.count(key);
@@ -37,10 +22,10 @@ namespace oly::rendering
 	{
 		if (style_exists())
 			return family->get(style);
-		else if (family->supports(style & FontStyle::BOLD()))
-			return family->get(style & FontStyle::BOLD());
-		else if (family->supports(FontStyle::REGULAR()))
-			return family->get(FontStyle::REGULAR());
+		else if (family->supports(style & FontStyle::Bold))
+			return family->get(style & FontStyle::Bold);
+		else if (family->supports(FontStyle::Regular))
+			return family->get(FontStyle::Regular);
 		else
 			return FontAtlasRef(nullptr);
 	}
