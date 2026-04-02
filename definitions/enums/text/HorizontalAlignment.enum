@@ -1,0 +1,7 @@
+; "unsigned int" -> "oly::rendering::ParagraphFormat::HorizontalAlignment"
+
+[Left]			0	0x0		# HorizontalAlignment::Left
+[Center]		1	0x1		# HorizontalAlignment::Center
+[Right]			2	0x2		# HorizontalAlignment::Right
+[Justify]		3	0x3		# HorizontalAlignment::Justify
+[Full Justify]	4	0x4		# HorizontalAlignment::FullJustify

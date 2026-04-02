@@ -2,5 +2,5 @@
 
 [Sequence]			0	0x0		# AttributeOperationEnum::Sequence
 [Selector]			1	0x1		# AttributeOperationEnum::Selector
-[SineWave1D]		2	0x2		# AttributeOperationEnum::SineWave1D
-[Polarization2D]	3	0x3		# AttributeOperationEnum::Polarization2D
+[Sine Wave 1D]		2	0x2		# AttributeOperationEnum::SineWave1D
+[Polarization 2D]	3	0x3		# AttributeOperationEnum::Polarization2D

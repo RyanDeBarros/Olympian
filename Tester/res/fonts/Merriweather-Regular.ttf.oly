@@ -2,11 +2,11 @@
 
 [[font_atlas]]
 storage = 0
-"font_size" = 96
+font_size = 96
 mag_filter = 1
 min_filter = 1
 generate_mipmaps = 0
-"common_buffer_preset" = "common"
+common_buffer_preset = "common"
 
 [font_face]
 storage = 0

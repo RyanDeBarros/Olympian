@@ -1,0 +1,7 @@
+; "unsigned int" -> "oly::rendering::ParagraphFormat::VerticalAlignment"
+
+[Top]			0	0x0		# VerticalAlignment::Top
+[Middle]		1	0x1		# VerticalAlignment::Middle
+[Bottom]		2	0x2		# VerticalAlignment::Bottom
+[Justify]		3	0x3		# VerticalAlignment::Justify
+[Full Justify]	4	0x4		# VerticalAlignment::FullJustify

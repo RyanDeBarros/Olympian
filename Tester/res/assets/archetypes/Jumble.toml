@@ -90,8 +90,8 @@ transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"linebreak_spacing" = 2.0
 	"min_size"          = [ 800, 1200 ]
 	"padding"           = [ 50, 50 ]
-	"horizontal_align"  = "center"
-	"vertical_align"    = "full_justify"
+	"horizontal_align"  = 1
+	"vertical_align"    = 4
 	[[test_text.element]]
 	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"
