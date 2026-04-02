@@ -67,12 +67,14 @@ namespace oly::rendering
 							sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
+						break;
 					case FrameFormat::Auto:
 						if (texture)
 							sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_float_or(toml_frame_format["speed"], 1.0f),
 								io::parse_uint_or(toml_frame_format["starting_frame"], 0)));
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
+						break;
 					default:
 						throw std::out_of_range("");
 					}

@@ -4,6 +4,9 @@
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
 #include "core/algorithms/STLUtils.h"
+#include "core/base/Definitions.h"
+
+#include ".gen/enums/TransformModifier.inl"
 
 namespace oly::io
 {
@@ -185,30 +188,41 @@ namespace oly::io
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto toml_type = node["type"].value<std::string>())
+		if (auto type = io::parse_uint(node["type"]))
 		{
-			const std::string& type = *toml_type;
-			if (type == "shear")
+			try
 			{
-				Polymorphic<ShearTransformModifier2D> modifier;
-				parse_vec(node["shearing"], modifier->shearing);
-				return modifier;
+				switch (_gen::TransformModifier::val(*type))
+				{
+				case TransformModifierType::None:
+					break;
+				case TransformModifierType::Shear:
+				{
+					Polymorphic<ShearTransformModifier2D> modifier;
+					parse_vec(node["shearing"], modifier->shearing);
+					return modifier;
+				}
+				case TransformModifierType::Pivot:
+				{
+					Polymorphic<PivotTransformModifier2D> modifier;
+					parse_vec(node["pivot"], modifier->pivot);
+					parse_vec(node["size"], modifier->size);
+					return modifier;
+				}
+				case TransformModifierType::Offset:
+				{
+					Polymorphic<OffsetTransformModifier2D> modifier;
+					parse_vec(node["offset"], modifier->offset);
+					return modifier;
+				}
+				default:
+					throw std::out_of_range("");
+				}
 			}
-			else if (type == "pivot")
+			catch (const std::out_of_range&)
 			{
-				Polymorphic<PivotTransformModifier2D> modifier;
-				parse_vec(node["pivot"], modifier->pivot);
-				parse_vec(node["size"], modifier->size);
-				return modifier;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type (" << *type << ")" << LOG.nl;
 			}
-			else if (type == "offset")
-			{
-				Polymorphic<OffsetTransformModifier2D> modifier;
-				parse_vec(node["offset"], modifier->offset);
-				return modifier;
-			}
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type \"" << type << "\"." << LOG.nl;
 		}
 		return Polymorphic<TransformModifier2D>();
 	}

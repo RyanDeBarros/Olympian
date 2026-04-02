@@ -12,4 +12,4 @@ texture = "@/textures/einstein.png"
 
 [sprite2]
 texture = "@/textures/tux.png"
-transformer = { "position" = [-100, -100], "scale" = [0.2, 0.2], modifier = { "type" = "shear" } }
+transformer = { "position" = [-100, -100], "scale" = [0.2, 0.2], modifier = { "type" = 1 } }

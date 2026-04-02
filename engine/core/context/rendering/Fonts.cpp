@@ -6,7 +6,7 @@
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
 #include "core/context/rendering/Textures.h"
-#include "core/types/Definitions.h"
+#include "core/base/Definitions.h"
 
 #include ".gen/enums/rendering/text/FontStyle.inl"
 #include ".gen/enums/rendering/texture/MagFilter.inl"

@@ -699,6 +699,7 @@ namespace oly::rendering
 				}
 
 				polygon.set_composite() = cmath::Polygon2DComposite{ cmath::create_ngon(std::move(colors), std::move(points)) };
+				break;
 			}
 			case PolyCompositeMethod::BorderedNgon:
 			{
@@ -771,6 +772,7 @@ namespace oly::rendering
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
 					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
+				break;
 			}
 			case PolyCompositeMethod::ConvexDecomposition:
 			{
@@ -792,6 +794,7 @@ namespace oly::rendering
 				}
 
 				polygon.set_composite() = cmath::Decompose{}(std::move(points));
+				break;
 			}
 			}
 		}
