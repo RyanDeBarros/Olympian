@@ -7,6 +7,10 @@
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
 #include "core/util/Loader.h"
+#include "graphics/shapes/PolygonEnums.h"
+
+#include ".gen/enums/CBorderPivot.inl"
+#include ".gen/enums/rendering/shapes/PolyCompositeMethod.inl"
 
 namespace oly::rendering
 {
@@ -656,11 +660,11 @@ namespace oly::rendering
 
 		polygon.transformer = Transformer2D::load(node["transformer"]);
 
-		auto toml_method = node["method"].value<std::string>();
-		if (toml_method)
+		if (auto method = io::parse_uint(node["method"]))
 		{
-			const std::string& method = toml_method.value();
-			if (method == "ngon")
+			switch (_gen::rendering::shapes::PolyCompositeMethod::val(*method))
+			{
+			case PolyCompositeMethod::Ngon:
 			{
 				std::vector<glm::vec2> points;
 				auto toml_points = node["points"].as_array();
@@ -696,7 +700,7 @@ namespace oly::rendering
 
 				polygon.set_composite() = cmath::Polygon2DComposite{ cmath::create_ngon(std::move(colors), std::move(points)) };
 			}
-			else if (method == "bordered_ngon")
+			case PolyCompositeMethod::BorderedNgon:
 			{
 				cmath::NGonBase ngon_base;
 
@@ -749,17 +753,17 @@ namespace oly::rendering
 
 				if (auto border_pivot = node["border_pivot"])
 				{
-					if (auto str_border_pivot = border_pivot.value<std::string>())
+					if (auto bp = io::parse_uint(border_pivot))
 					{
-						const std::string& str = str_border_pivot.value();
-						if (str == "outer")
-							ngon_base.border_pivot = cmath::BorderPivot::OUTER;
-						else if (str == "middle")
-							ngon_base.border_pivot = cmath::BorderPivot::Middle;
-						else if (str == "inner")
-							ngon_base.border_pivot = cmath::BorderPivot::INNER;
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+						// TODO v7 use try-catch for all _gen::*::val() calls
+						try
+						{
+							ngon_base.border_pivot = _gen::CBorderPivot::val(*bp);
+						}
+						catch (const std::out_of_range&)
+						{
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value (" << *bp << ")" << LOG.nl;
+						}
 					}
 					else
 						io::parse_float(border_pivot, ngon_base.border_pivot.v);
@@ -768,7 +772,7 @@ namespace oly::rendering
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
 					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
 			}
-			else if (method == "convex_decomposition")
+			case PolyCompositeMethod::ConvexDecomposition:
 			{
 				std::vector<glm::vec2> points;
 
@@ -788,6 +792,7 @@ namespace oly::rendering
 				}
 
 				polygon.set_composite() = cmath::Decompose{}(std::move(points));
+			}
 			}
 		}
 
@@ -907,21 +912,22 @@ namespace oly::rendering
 			polygon.set_bordered(bordered);
 		io::parse_float(node["border_width"], ngon_base.border_width);
 
-		auto border_pivot = node["border_pivot"];
-		if (auto str_border_pivot = border_pivot.value<std::string>())
+		if (auto border_pivot = node["border_pivot"])
 		{
-			const std::string& str = str_border_pivot.value();
-			if (str == "outer")
-				ngon_base.border_pivot = cmath::BorderPivot::OUTER;
-			else if (str == "middle")
-				ngon_base.border_pivot = cmath::BorderPivot::Middle;
-			else if (str == "inner")
-				ngon_base.border_pivot = cmath::BorderPivot::INNER;
+			if (auto bp = io::parse_uint(border_pivot))
+			{
+				try
+				{
+					ngon_base.border_pivot = _gen::CBorderPivot::val(*bp);
+				}
+				catch (const std::out_of_range&)
+				{
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value (" << *bp << ")" << LOG.nl;
+				}
+			}
 			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
+				io::parse_float(border_pivot, ngon_base.border_pivot.v);
 		}
-		else
-			io::parse_float(border_pivot, ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 

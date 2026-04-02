@@ -1,0 +1,5 @@
+; "unsigned int" -> "oly::cmath::BorderPivot"
+
+[Outer]		0	0x0		# BorderPivot::Outer
+[Middle]	1	0x1		# BorderPivot::Middle
+[Inner]		2	0x2		# BorderPivot::Inner

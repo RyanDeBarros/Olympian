@@ -8,10 +8,10 @@
 #include "core/util/Loader.h"
 #include "core/util/MetaSplitter.h"
 
-#include ".gen/enums/texture/MinFilter.inl"
-#include ".gen/enums/texture/MagFilter.inl"
-#include ".gen/enums/texture/Wrap.inl"
-#include ".gen/enums/texture/SVGMipmapGenerationMode.inl"
+#include ".gen/enums/rendering/texture/MinFilter.inl"
+#include ".gen/enums/rendering/texture/MagFilter.inl"
+#include ".gen/enums/rendering/texture/Wrap.inl"
+#include ".gen/enums/rendering/texture/SVGMipmapGenerationMode.inl"
 #include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
@@ -71,10 +71,10 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"])));
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::texture::MagFilter::val(io::parse_uint(node["mag_filter"])));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::texture::Wrap::val(io::parse_uint(node["wrap_s"])));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::texture::Wrap::val(io::parse_uint(node["wrap_t"])));
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::rendering::texture::MinFilter::val(io::parse_uint(node["min_filter"])));
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::rendering::texture::MagFilter::val(io::parse_uint(node["mag_filter"])));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::rendering::texture::Wrap::val(io::parse_uint(node["wrap_s"])));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::rendering::texture::Wrap::val(io::parse_uint(node["wrap_t"])));
 
 		if (set_and_use)
 			texture.set_and_use_handle();
@@ -97,7 +97,7 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, TOMLNode node, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		graphics::SVGMipmapGenerationMode mipmaps_mode = _gen::texture::SVGMipmapGenerationMode::val(io::parse_uint(node["generate_mipmaps"]), graphics::SVGMipmapGenerationMode::Off);
+		graphics::SVGMipmapGenerationMode mipmaps_mode = _gen::rendering::texture::SVGMipmapGenerationMode::val(io::parse_uint(node["generate_mipmaps"]), graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, node, set_and_use);
 		return texture;

@@ -37,13 +37,13 @@ namespace oly::cmath
 
 		constexpr BorderPivot(float v = 0.5f) : v(v) {}
 
-		static const BorderPivot OUTER;
+		static const BorderPivot Outer;
 		static const BorderPivot Middle;
-		static const BorderPivot INNER;
+		static const BorderPivot Inner;
 	};
-	inline const BorderPivot BorderPivot::OUTER = { 0.0f };
+	inline const BorderPivot BorderPivot::Outer = { 0.0f };
 	inline const BorderPivot BorderPivot::Middle = { 0.5f };
-	inline const BorderPivot BorderPivot::INNER = { 1.0f };
+	inline const BorderPivot BorderPivot::Inner = { 1.0f };
 
 	struct BorderPointPair
 	{

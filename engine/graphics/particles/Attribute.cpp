@@ -4,7 +4,7 @@
 #include "graphics/particles/implementations/AttributeOperationEnum.h"
 #include "core/util/Logger.h"
 
-#include ".gen/enums/particles/AttributeOperation.inl"
+#include ".gen/enums/rendering/particles/AttributeOperation.inl"
 
 namespace oly::particles
 {
@@ -12,7 +12,7 @@ namespace oly::particles
 	{
 		if (auto op = io::parse_uint(node["op"]))
 		{
-			switch (_gen::particles::AttributeOperation::val(*op))
+			switch (_gen::rendering::particles::AttributeOperation::val(*op))
 			{
 			case AttributeOperationEnum::Sequence:
 				return ops::Sequence<0>::load_fixed(node);

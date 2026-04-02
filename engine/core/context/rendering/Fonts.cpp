@@ -8,8 +8,8 @@
 #include "core/context/rendering/Textures.h"
 #include "core/types/Enums.h"
 
-#include ".gen/enums/texture/MagFilter.inl"
-#include ".gen/enums/texture/MinFilter.inl"
+#include ".gen/enums/rendering/texture/MagFilter.inl"
+#include ".gen/enums/rendering/texture/MinFilter.inl"
 #include ".gen/enums/StorageMode.inl"
 
 namespace oly::context
@@ -209,8 +209,8 @@ namespace oly::context
 		}
 
 
-		options.min_filter = _gen::texture::MinFilter::val(io::parse_uint(node["min_filter"]));
-		options.mag_filter = _gen::texture::MagFilter::val(io::parse_uint(node["mag_filter"]));
+		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse_uint(node["min_filter"]));
+		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse_uint(node["mag_filter"]));
 		io::parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;

@@ -3,8 +3,8 @@
 #include "core/util/Logger.h"
 #include "core/util/Loader.h"
 
-#include ".gen/enums/text/HorizontalAlignment.inl"
-#include ".gen/enums/text/VerticalAlignment.inl"
+#include ".gen/enums/rendering/text/HorizontalAlignment.inl"
+#include ".gen/enums/rendering/text/VerticalAlignment.inl"
 
 namespace oly::rendering
 {
@@ -35,7 +35,7 @@ namespace oly::rendering
 		{
 			try
 			{
-				format.horizontal_alignment = _gen::text::HorizontalAlignment::val(*halign);
+				format.horizontal_alignment = _gen::rendering::text::HorizontalAlignment::val(*halign);
 			}
 			catch (const std::out_of_range&)
 			{
@@ -47,7 +47,7 @@ namespace oly::rendering
 		{
 			try
 			{
-				format.vertical_alignment = _gen::text::VerticalAlignment::val(*valign);
+				format.vertical_alignment = _gen::rendering::text::VerticalAlignment::val(*valign);
 			}
 			catch (const std::out_of_range&)
 			{
