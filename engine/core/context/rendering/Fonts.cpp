@@ -217,6 +217,7 @@ namespace oly::context
 		utf::String common_buffer = rendering::glyphs::COMMON;
 		if (io::parse_bool_or(node["use_common_buffer_preset"], true))
 		{
+			// TODO v7 codegen enum
 			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
 			{
 				const std::string& common_buffer_preset = _common_buffer_preset.value();

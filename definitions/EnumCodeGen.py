@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 # TODO v7 replace all ".value<std::string>("/".value_or<std::string>(" instances with codegen enums
+# TODO v7 after pruning remove empty folders
 
 ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")

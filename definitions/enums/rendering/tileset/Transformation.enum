@@ -1,0 +1,8 @@
+; "unsigned int" -> "oly::rendering::TileSet::Transformation"
+
+[None]			0	0b00000		# Transformation::None
+[Reflect (X)]	1	0b00001		# Transformation::ReflectX
+[Reflect (Y)]	2	0b00010		# Transformation::ReflectY
+[Rotate (90)]	3	0b00100		# Transformation::Rotate90
+[Rotate (180)]	4	0b01000		# Transformation::Rotate180
+[Rotate (-90)]	5	0b10000		# Transformation::Rotate270

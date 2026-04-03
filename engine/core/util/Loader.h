@@ -84,8 +84,6 @@ namespace oly::io
 		return false;
 	}
 
-	extern bool parse_wrap(TOMLNode node, GLenum& wrap);
-
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
 
 	extern bool parse_color(const StringParam& text, glm::vec4& color);

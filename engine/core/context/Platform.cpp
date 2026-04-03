@@ -150,6 +150,7 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)
 	{
+		// TODO v7 codegen enum
 		if (auto swizzle = mnode["swizzle"].value<std::string>())
 		{
 			std::string swizz = swizzle.value();
@@ -193,6 +194,7 @@ namespace oly::context
 		input::Axis0DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
+		// TODO v7 codegen enum
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
 			std::string conv = conversion.value();
@@ -216,6 +218,7 @@ namespace oly::context
 		input::Axis1DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
+		// TODO v7 codegen enum
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
 			std::string conv = conversion.value();
@@ -239,6 +242,7 @@ namespace oly::context
 		input::Axis2DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
+		// TODO v7 codegen enum
 		if (auto conversion = mnode["conversion"].value<std::string>())
 		{
 			std::string conv = conversion.value();
@@ -357,6 +361,7 @@ namespace oly::context
 			return;
 		}
 
+		// TODO v7 codegen enum
 		const std::string& binding = toml_binding.value();
 		if (binding == "key")
 			load_key_binding(node, toml_id.value());

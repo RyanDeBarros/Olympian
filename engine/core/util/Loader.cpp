@@ -153,39 +153,6 @@ namespace oly::io
 			v = std::nullopt;
 	}
 
-	bool parse_wrap(TOMLNode node, GLenum& wrap)
-	{
-		if (auto v = node.value<int64_t>())
-		{
-			GLenum val = (GLenum)*v;
-			if (is_in(val, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER, GL_MIRRORED_REPEAT, GL_REPEAT, GL_MIRROR_CLAMP_TO_EDGE))
-			{
-				wrap = val;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		auto _v = node.value<std::string>();
-		if (!_v)
-			return false;
-		const std::string& v = *_v;
-		if (v == "clamp to edge")
-			wrap = GL_CLAMP_TO_EDGE;
-		else if (v == "clamp to border")
-			wrap = GL_CLAMP_TO_BORDER;
-		else if (v == "mirrored repeat")
-			wrap = GL_MIRRORED_REPEAT;
-		else if (v == "repeat")
-			wrap = GL_REPEAT;
-		else if (v == "mirror clamp to edge")
-			wrap = GL_MIRROR_CLAMP_TO_EDGE;
-		else
-			return false;
-		return true;
-	}
-
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
 		if (auto type = io::parse_uint(node["type"]))

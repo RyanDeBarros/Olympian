@@ -8,6 +8,7 @@
 #include "core/base/Definitions.h"
 
 #include ".gen/enums/StorageMode.inl"
+#include ".gen/enums/rendering/tileset/Transformation.inl"
 
 namespace oly::context
 {
@@ -24,6 +25,7 @@ namespace oly::context
 		}
 	};
 
+	// TODO v7 put internal loading logic in a TileSet::load/overload
 	rendering::TileSetRef load_tileset(const ResourcePath& file)
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TerminateTilesets>::instance();
@@ -109,24 +111,20 @@ namespace oly::context
 				if (auto transformations = node["trfm"].as_array())
 				{
 					size_t tr_idx = 0;
-					for (const auto& trfm : *transformations)
+					for (auto& trfm : *transformations)
 					{
-						if (auto transformation = trfm.value<std::string>())
+						if (auto transformation = io::parse_uint(TOMLNode(trfm)))
 						{
-							const std::string tr = transformation.value();
-							if (tr == "RX")
-								assignment.transformation &= rendering::TileSet::Transformation::ReflectX;
-							else if (tr == "RY")
-								assignment.transformation &= rendering::TileSet::Transformation::ReflectY;
-							else if (tr == "R90")
-								assignment.transformation &= rendering::TileSet::Transformation::Rotate90;
-							else if (tr == "R180")
-								assignment.transformation &= rendering::TileSet::Transformation::Rotate180;
-							else if (tr == "R270")
-								assignment.transformation &= rendering::TileSet::Transformation::Rotate270;
-							else
+							// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
+							try
+							{
+								assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
+							}
+							catch (const std::out_of_range&)
+							{
 								_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-								<< " transformation #" << tr_idx << ", unrecognized tile transformation \"" << tr << "\"." << LOG.nl;
+									<< " transformation #" << tr_idx << ", unrecognized tile transformation (" << *transformation << ")" << LOG.nl;
+							}
 						}
 						else
 							_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
