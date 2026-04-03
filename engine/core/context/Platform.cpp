@@ -8,11 +8,13 @@
 #include "core/util/MetaSplitter.h"
 #include "core/algorithms/STLUtils.h"
 #include "graphics/Camera.h"
+#include "core/platform/Definitions.h"
 
 #include ".gen/enums/platform/Axis0DConversion.inl"
 #include ".gen/enums/platform/Axis1DConversion.inl"
 #include ".gen/enums/platform/Axis2DConversion.inl"
 #include ".gen/enums/platform/Swizzle.inl"
+#include ".gen/enums/platform/SignalBindingType.inl"
 
 namespace oly::context
 {
@@ -329,39 +331,51 @@ namespace oly::context
 
 	void load_signal(TOMLNode node)
 	{
-		auto toml_id = node["id"].value<std::string>();
-		if (!toml_id)
+		auto id = node["id"].value<std::string>();
+		if (!id)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"id\" field." << LOG.endl;
 			return;
 		}
-		auto toml_binding = node["binding"].value<std::string>();
-		if (!toml_binding)
+		auto binding = io::parse_uint(node["binding"]);
+		if (!binding)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"binding\" field." << LOG.endl;
 			return;
 		}
 
-		// TODO v7 codegen enum
-		const std::string& binding = toml_binding.value();
-		if (binding == "key")
-			load_key_binding(node, toml_id.value());
-		else if (binding == "mouse button")
-			load_mouse_button_binding(node, toml_id.value());
-		else if (binding == "gamepad button")
-			load_gamepad_button_binding(node, toml_id.value());
-		else if (binding == "gamepad axis 1d")
-			load_gamepad_axis_1d_binding(node, toml_id.value());
-		else if (binding == "gamepad axis 2d")
-			load_gamepad_axis_2d_binding(node, toml_id.value());
-		else if (binding == "cursor pos")
-			load_cursor_pos_binding(node, toml_id.value());
-		else if (binding == "scroll")
-			load_scroll_binding(node, toml_id.value());
-		else
+		try
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value \"" << binding << "\"." << LOG.nl;
-			return;
+			switch (_gen::platform::SignalBindingType::val(*binding))
+			{
+			case input::SignalBindingType::Key:
+				load_key_binding(node, *id);
+				break;
+			case input::SignalBindingType::MouseButton:
+				load_mouse_button_binding(node, *id);
+				break;
+			case input::SignalBindingType::GamepadButton:
+				load_gamepad_button_binding(node, *id);
+				break;
+			case input::SignalBindingType::GamepadAxis1D:
+				load_gamepad_axis_1d_binding(node, *id);
+				break;
+			case input::SignalBindingType::GamepadAxis2D:
+				load_gamepad_axis_2d_binding(node, *id);
+				break;
+			case input::SignalBindingType::CursorPos:
+				load_cursor_pos_binding(node, *id);
+				break;
+			case input::SignalBindingType::Scroll:
+				load_scroll_binding(node, *id);
+				break;
+			default:
+				throw std::out_of_range("");
+			}
+		}
+		catch (const std::out_of_range&)
+		{
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value (" << *binding << ")" << LOG.nl;
 		}
 	}
 

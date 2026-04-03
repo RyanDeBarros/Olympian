@@ -3,7 +3,7 @@
 mapping = []
 [[signal]]
 id = "drag"
-binding = "cursor pos"
+binding = 5
 
 [signal.modifier]
 multiplier = [ 1.0, 1.0, 1.0,]
