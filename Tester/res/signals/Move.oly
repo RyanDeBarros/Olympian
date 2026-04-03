@@ -12,7 +12,7 @@ ban_mods = 0
 key = 263
 
 [signal.modifier]
-conversion = "TO_2D"
+conversion = 2
 multiplier = [ -1.0, 0.0, 1.0,]
 invert = [ false, false, false,]
 [[signal]]
@@ -23,7 +23,7 @@ ban_mods = 0
 key = 262
 
 [signal.modifier]
-conversion = "TO_2D"
+conversion = 2
 multiplier = [ 1.0, 0.0, 1.0,]
 invert = [ false, false, false,]
 [[signal]]
@@ -34,7 +34,7 @@ ban_mods = 0
 key = 265
 
 [signal.modifier]
-conversion = "TO_2D"
+conversion = 2
 multiplier = [ 0.0, 1.0, 1.0,]
 invert = [ false, false, false,]
 [[signal]]
@@ -45,6 +45,6 @@ ban_mods = 0
 key = 264
 
 [signal.modifier]
-conversion = "TO_2D"
+conversion = 2
 multiplier = [ 0.0, -1.0, 1.0,]
 invert = [ false, false, false,]

@@ -3,7 +3,7 @@ import re
 import sys
 from pathlib import Path
 
-# TODO v7 replace all ".value<std::string>("/".value_or<std::string>(" instances with codegen enums
+# TODO v7 replace all keys with enums using a key file -> strings become unsigned int keys being the catenation of four chars
 # TODO v7 after pruning remove empty folders
 
 ENGINE_DIR = Path("engine")

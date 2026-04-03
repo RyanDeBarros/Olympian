@@ -1,0 +1,9 @@
+; "unsigned int" -> "oly::input::ModifierBase::Swizzle"
+
+[None]	0	0x0		# Swizzle::None
+[YX]	1	0x1		# Swizzle::YX
+[XZY]	2	0x2		# Swizzle::XZY
+[YXZ]	3	0x3		# Swizzle::YXZ
+[YZX]	4	0x4		# Swizzle::YZX
+[ZXY]	5	0x5		# Swizzle::ZXY
+[ZYX]	6	0x6		# Swizzle::ZYX

@@ -9,6 +9,11 @@
 #include "core/algorithms/STLUtils.h"
 #include "graphics/Camera.h"
 
+#include ".gen/enums/platform/Axis0DConversion.inl"
+#include ".gen/enums/platform/Axis1DConversion.inl"
+#include ".gen/enums/platform/Axis2DConversion.inl"
+#include ".gen/enums/platform/Swizzle.inl"
+
 namespace oly::context
 {
 	namespace internal
@@ -150,24 +155,16 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)
 	{
-		// TODO v7 codegen enum
-		if (auto swizzle = mnode["swizzle"].value<std::string>())
+		if (auto swizzle = io::parse_uint(mnode["swizzle"]))
 		{
-			std::string swizz = swizzle.value();
-			if (swizz == "YX")
-				modifier.swizzle = input::ModifierBase::Swizzle::YX;
-			else if (swizz == "XZY")
-				modifier.swizzle = input::ModifierBase::Swizzle::XZY;
-			else if (swizz == "YXZ")
-				modifier.swizzle = input::ModifierBase::Swizzle::YXZ;
-			else if (swizz == "YZX")
-				modifier.swizzle = input::ModifierBase::Swizzle::YZX;
-			else if (swizz == "ZXY")
-				modifier.swizzle = input::ModifierBase::Swizzle::ZXY;
-			else if (swizz == "ZYX")
-				modifier.swizzle = input::ModifierBase::Swizzle::ZYX;
-			else
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized swizzle value \"" << swizz << "\"." << LOG.nl;
+			try
+			{
+				modifier.swizzle = _gen::platform::Swizzle::val(*swizzle);
+			}
+			catch (const std::out_of_range&)
+			{
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized swizzle value (" << *swizzle << ")" << LOG.nl;
+			}
 		}
 
 		if (!io::parse_float(mnode["multiplier"], modifier.multiplier.x))
@@ -194,18 +191,16 @@ namespace oly::context
 		input::Axis0DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
-		// TODO v7 codegen enum
-		if (auto conversion = mnode["conversion"].value<std::string>())
+		if (auto conversion = io::parse_uint(mnode["conversion"]))
 		{
-			std::string conv = conversion.value();
-			if (conv == "TO_1D")
-				modifier.conversion = input::Axis0DModifier::Conversion::To1D;
-			else if (conv == "TO_2D")
-				modifier.conversion = input::Axis0DModifier::Conversion::To2D;
-			else if (conv == "TO_3D")
-				modifier.conversion = input::Axis0DModifier::Conversion::To3D;
-			else
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+			try
+			{
+				modifier.conversion = _gen::platform::Axis0DConversion::val(*conversion);
+			}
+			catch (const std::out_of_range&)
+			{
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
+			}
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -218,18 +213,16 @@ namespace oly::context
 		input::Axis1DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
-		// TODO v7 codegen enum
-		if (auto conversion = mnode["conversion"].value<std::string>())
+		if (auto conversion = io::parse_uint(mnode["conversion"]))
 		{
-			std::string conv = conversion.value();
-			if (conv == "TO_0D")
-				modifier.conversion = input::Axis1DModifier::Conversion::To0D;
-			else if (conv == "TO_2D")
-				modifier.conversion = input::Axis1DModifier::Conversion::To2D;
-			else if (conv == "TO_3D")
-				modifier.conversion = input::Axis1DModifier::Conversion::To3D;
-			else
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+			try
+			{
+				modifier.conversion = _gen::platform::Axis1DConversion::val(*conversion);
+			}
+			catch (const std::out_of_range&)
+			{
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
+			}
 		}
 
 		load_modifier_base(modifier, mnode);
@@ -242,28 +235,16 @@ namespace oly::context
 		input::Axis2DModifier modifier;
 		TOMLNode mnode = node["modifier"];
 
-		// TODO v7 codegen enum
-		if (auto conversion = mnode["conversion"].value<std::string>())
+		if (auto conversion = io::parse_uint(mnode["conversion"]))
 		{
-			std::string conv = conversion.value();
-			if (conv == "TO_0D_X")
-				modifier.conversion = input::Axis2DModifier::Conversion::To0D_X;
-			else if (conv == "TO_0D_Y")
-				modifier.conversion = input::Axis2DModifier::Conversion::To0D_Y;
-			else if (conv == "TO_0D_XY")
-				modifier.conversion = input::Axis2DModifier::Conversion::To0D_XY;
-			else if (conv == "TO_1D_X")
-				modifier.conversion = input::Axis2DModifier::Conversion::To1D_X;
-			else if (conv == "TO_1D_Y")
-				modifier.conversion = input::Axis2DModifier::Conversion::To1D_Y;
-			else if (conv == "TO_1D_XY")
-				modifier.conversion = input::Axis2DModifier::Conversion::To1D_XY;
-			else if (conv == "TO_3D_0")
-				modifier.conversion = input::Axis2DModifier::Conversion::To3D_0;
-			else if (conv == "TO_3D_1")
-				modifier.conversion = input::Axis2DModifier::Conversion::To3D_1;
-			else
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value \"" << conv << "\"." << LOG.nl;
+			try
+			{
+				modifier.conversion = _gen::platform::Axis2DConversion::val(*conversion);
+			}
+			catch (const std::out_of_range&)
+			{
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
+			}
 		}
 
 		load_modifier_base(modifier, mnode);
