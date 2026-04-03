@@ -9,9 +9,12 @@
 #include "core/base/Definitions.h"
 
 #include ".gen/enums/rendering/text/FontStyle.inl"
+#include ".gen/enums/rendering/text/CommonBufferPreset.inl"
 #include ".gen/enums/rendering/texture/MagFilter.inl"
 #include ".gen/enums/rendering/texture/MinFilter.inl"
 #include ".gen/enums/StorageMode.inl"
+
+// TODO v7 put actual loading logic in load/overload methods
 
 namespace oly::context
 {
@@ -217,24 +220,37 @@ namespace oly::context
 		utf::String common_buffer = rendering::glyphs::COMMON;
 		if (io::parse_bool_or(node["use_common_buffer_preset"], true))
 		{
-			// TODO v7 codegen enum
-			if (auto _common_buffer_preset = node["common_buffer_preset"].value<std::string>())
+			if (auto common_buffer_preset = io::parse_uint(node["common_buffer_preset"]))
 			{
-				const std::string& common_buffer_preset = _common_buffer_preset.value();
-				if (common_buffer_preset == "common")
-					; // already initialized to common
-				else if (common_buffer_preset == "alpha_numeric")
-					common_buffer = rendering::glyphs::ALPHA_NUMERIC;
-				else if (common_buffer_preset == "numeric")
-					common_buffer = rendering::glyphs::NUMERIC;
-				else if (common_buffer_preset == "alphabet")
-					common_buffer = rendering::glyphs::ALPHABET;
-				else if (common_buffer_preset == "alphabet_lowercase")
-					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-				else if (common_buffer_preset == "alphabet_uppercase")
-					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
-				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized common buffer preset value \"" << common_buffer_preset << "\"." << LOG.nl;
+				try
+				{
+					switch (_gen::rendering::text::CommonBufferPreset::val(*common_buffer_preset))
+					{
+					case rendering::glyphs::CommonBufferPreset::Common:
+						break; // already initialized to common
+					case rendering::glyphs::CommonBufferPreset::AlphaNumeric:
+						common_buffer = rendering::glyphs::ALPHA_NUMERIC;
+						break;
+					case rendering::glyphs::CommonBufferPreset::Numeric:
+						common_buffer = rendering::glyphs::NUMERIC;
+						break;
+					case rendering::glyphs::CommonBufferPreset::Alphabet:
+						common_buffer = rendering::glyphs::ALPHABET;
+						break;
+					case rendering::glyphs::CommonBufferPreset::AlphabetLowercase:
+						common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
+						break;
+					case rendering::glyphs::CommonBufferPreset::AlphabetUppercase:
+						common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
+						break;
+					default:
+						throw std::out_of_range("");
+					}
+				}
+				catch (const std::out_of_range&)
+				{
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized common buffer preset value (" << *common_buffer_preset << ")" << LOG.nl;
+				}
 			}
 		}
 		else if (auto _common_buffer = node["common_buffer"].value<std::string>())

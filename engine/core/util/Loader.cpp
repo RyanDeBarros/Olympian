@@ -8,6 +8,8 @@
 
 #include ".gen/enums/TransformModifier.inl"
 
+// TODO v7 use CTOMLNode throughout
+
 namespace oly::io
 {
 	toml::v3::parse_result load_toml(const ResourcePath& file)

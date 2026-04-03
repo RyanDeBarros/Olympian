@@ -1,0 +1,8 @@
+; "unsigned int" -> "oly::rendering::glyphs::CommonBufferPreset"
+
+[Common]				0	0x0		# CommonBufferPreset::Common
+[Alpha-Numeric]			1	0x1		# CommonBufferPreset::AlphaNumeric
+[Numeric]				2	0x2		# CommonBufferPreset::Numeric
+[Alphabet]				3	0x3		# CommonBufferPreset::Alphabet
+[Alphabet (Uppercase)]	4	0x4		# CommonBufferPreset::AlphabetUppercase
+[Alphabet (Lowercase)]	5	0x5		# CommonBufferPreset::AlphabetLowercase
