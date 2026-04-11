@@ -1,6 +1,6 @@
-UC    UseConsole
-DBG   Debug
-INFO  Info
-WARN  Warning
-ERR   Error
-FTL   Fatal
+UseCons   UseConsole
+Debug     Debug
+Info      Info
+Warning   Warning
+Error     Error
+Fatal     Fatal

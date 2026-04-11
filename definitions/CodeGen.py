@@ -1,7 +1,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Callable, Protocol, Any
+from typing import Protocol, Any
 
 DEFINITIONS_DIR = Path("definitions")
 GEN_ROOT_DIR = Path("engine") / ".gen"

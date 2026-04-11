@@ -1,7 +1,7 @@
-GPDS  Gamepads
-SIGS  Signals
-COL   Collision
-FRMR  FrameRate
-LOG   Logger
-WIN   Window
-WINH  WindowHint
+Gmpds     Gamepads
+Signals   Signals
+Colsn     Collision
+FRate     FrameRate
+Logger    Logger
+Window    Window
+WinHint   WindowHint

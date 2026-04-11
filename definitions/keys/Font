@@ -1,6 +1,6 @@
-fFF   FontFace
-fFA   FontAtlas
-fFS   FontSize
-fCBP  CommonBufferPreset
-fCB   CommonBuffer
-fCBU  UseCommonBufferPreset
+Face      FontFace
+Atlas     FontAtlas
+FontSize  FontSize
+ComBP     CommonBufferPreset
+ComB      CommonBuffer
+UseComBP  UseCommonBufferPreset
