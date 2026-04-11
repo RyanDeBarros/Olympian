@@ -1,22 +1,22 @@
 #meta version=1.0 import type="texture"
 
-[[texture]]
+[[Texture]]
 Storage = 0
 Mipmaps = 0
 MinFilt = 0
 MagFilt = 0
 WrapS = 0
 WrapT = 0
-anim = 1
-rows = 2
-cols = 3
-cell_width_override = 0
-cell_height_override = 0
-delay_cs = 10
-row_major = 1
-row_up = 1
+Animated = 1
+Rows = 2
+Columns = 3
+CWOver = 0
+CHOver = 0
+DelayCS = 10
+RowMajor = 1
+RowUp = 1
 
-[[texture]]
+[[Texture]]
 Storage = 0
 Mipmaps = 0
 MinFilt = 0

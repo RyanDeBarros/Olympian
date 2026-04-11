@@ -1,6 +1,6 @@
 #meta version=1.0 import type=texture
 
-[[texture]]
+[[Texture]]
 Storage = 0
 MinFilt = 0
 MagFilt = 0

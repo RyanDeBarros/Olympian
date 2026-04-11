@@ -118,17 +118,17 @@ namespace oly::context
 		}
 
 		toml = io::load_toml(import_file);
-		auto texture_array = toml["texture"].as_array();
+		auto texture_array = io::parse_key((TOMLNode)toml, _gen::keys::Texture::TextureArray).as_array();
 		if (!texture_array)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"texture\" array field." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Texture::TextureArray) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (texture_index >= texture_array->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture index (" << texture_index
-				<< ") out of range for texture array size (" << texture_array->size() << ")." << LOG.nl;
+				<< ") out of range for texture array size (" << texture_array->size() << ")" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -149,13 +149,13 @@ namespace oly::context
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)
 	{
 		graphics::SpritesheetOptions options;
-		io::parse_uint(texture_node["rows"], options.rows);
-		io::parse_uint(texture_node["cols"], options.cols);
-		io::parse_uint(texture_node["cell_width_override"], options.cell_width_override);
-		io::parse_uint(texture_node["cell_height_override"], options.cell_height_override);
-		io::parse_int(texture_node["delay_cs"], options.delay_cs);
-		io::parse_bool(texture_node["row_major"], options.row_major);
-		io::parse_bool(texture_node["row_up"], options.row_up);
+		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::Rows), options.rows);
+		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::Columns), options.cols);
+		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::CellWidthOverride), options.cell_width_override);
+		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::CellHeightOverride), options.cell_height_override);
+		io::parse_int(io::parse_key(texture_node, _gen::keys::Texture::DelayCS), options.delay_cs);
+		io::parse_bool(io::parse_key(texture_node, _gen::keys::Texture::RowMajor), options.row_major);
+		io::parse_bool(io::parse_key(texture_node, _gen::keys::Texture::RowUp), options.row_up);
 		return options;
 	}
 
@@ -163,7 +163,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -199,7 +199,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (io::parse_bool_or(texture_node["anim"], false))
+			if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 			{
 				graphics::Anim anim(file, parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -217,7 +217,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -227,7 +227,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -244,11 +244,11 @@ namespace oly::context
 
 		bool store_abstract = should_store((TOMLNode)toml, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
 		bool store_image = should_store(texture_node, _gen::keys::Texture::ImageStorage, params.image_storage);
-		float scale = io::parse_float_or(texture_node["svg_scale"], 1.0f);
+		float scale = io::parse_float_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_bool_or(texture_node["anim"], false))
+		if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 		{
 			auto ait = internal::nsvg_abstracts.find(file);
 			if (ait != internal::nsvg_abstracts.end())
@@ -299,7 +299,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -309,7 +309,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -338,7 +338,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (io::parse_bool_or(texture_node["anim"], false))
+			if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 			{
 				graphics::Anim anim(f.c_str(), parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -354,7 +354,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
 
 		return texture;
 	}
@@ -363,7 +363,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -372,11 +372,11 @@ namespace oly::context
 
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
-		float scale = io::parse_float_or(texture_node["svg_scale"], 1.0f);
+		float scale = io::parse_float_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_bool_or(texture_node["anim"], false))
+		if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 		{
 			graphics::NSVGAbstract abstract(file);
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
@@ -399,7 +399,7 @@ namespace oly::context
 				params.abstract->init(graphics::NSVGAbstract(std::move(abstract)));
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
 
 		return texture;
 	}

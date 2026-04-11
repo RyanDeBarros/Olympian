@@ -1,21 +1,21 @@
 #meta version=1.0 import type="texture"
 
 AbsStore = 1
-[[texture]]
+[[Texture]]
 ImgStore = 0
 Mipmaps = 1
 MinFilt = 1
 MagFilt = 1
 WrapS = 0
 WrapT = 0
-svg_scale = 1.0
+VecScale = 1.0
 
-[[texture]]
+[[Texture]]
 ImgStore = 0
 Mipmaps = 1
 MinFilt = 1
 MagFilt = 1
 WrapS = 0
 WrapT = 0
-svg_scale = 3.0
+VecScale = 3.0
 

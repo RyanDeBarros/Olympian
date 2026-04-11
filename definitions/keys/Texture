@@ -1,4 +1,5 @@
 Storage   Storage
+Texture   TextureArray
 MinFilt   MinFilter
 MagFilt   MagFilter
 WrapS     WrapS
@@ -9,3 +10,12 @@ SVG       SVG
 ImgStore  ImageStorage
 AbsStore  AbstractStorage
 VecScale  VectorScale
+
+Animated  Animated
+Rows      Rows
+Columns   Columns
+CWOver    CellWidthOverride
+CHOver    CellHeightOverride
+DelayCS   DelayCS
+RowMajor  RowMajor
+RowUp     RowUp
