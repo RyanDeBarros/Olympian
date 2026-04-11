@@ -12,14 +12,14 @@ frame_length_clip = 0.2
 time_scale = 1.0
 
 [context.Logger]
-use_console = true
+UseCons = true
 
-[context.Logger.enable]
-debug = false
-info = true
-warning = true
-error = true
-fatal = true
+[context.Logger.Enable]
+Debug = false
+Info = true
+Warning = true
+Error = true
+Fatal = true
 
 [context.window]
 width = 1440

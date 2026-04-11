@@ -23,6 +23,10 @@
 #include "graphics/particles/ParticleSystem.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
+#include ".gen/keys/General.inl"
+#include ".gen/keys/Context.inl"
+#include ".gen/keys/Logger.inl"
+
 namespace oly::context
 {
 	namespace internal
@@ -34,20 +38,20 @@ namespace oly::context
 	{
 		LoggerOptions options;
 
-		if (auto toml_logger = node["logger"])
+		if (auto toml_logger = io::parse_key(node, _gen::keys::Context::Logger))
 		{
-			io::parse_bool(toml_logger["use_logfile"], options.use_logfile);
-			io::parse_bool(toml_logger["use_console"], options.use_console);
-			io::parse_size_t(toml_logger["max_prior_log_files"], options.max_prior_log_files);
-			io::parse_size_t(toml_logger["max_prior_log_bytes"], options.max_prior_log_bytes);
+			io::parse_bool(io::parse_key(toml_logger, _gen::keys::Logger::UseLogfile), options.use_logfile);
+			io::parse_bool(io::parse_key(toml_logger, _gen::keys::Logger::UseConsole), options.use_console);
+			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogFiles), options.max_prior_log_files);
+			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogBytes), options.max_prior_log_bytes);
 			
-			if (auto logger_enable = toml_logger["enable"])
+			if (auto logger_enable = io::parse_key(toml_logger, _gen::keys::General::Enable))
 			{
-				io::parse_bool(logger_enable["debug"], LOG.enable.debug);
-				io::parse_bool(logger_enable["info"], LOG.enable.info);
-				io::parse_bool(logger_enable["warning"], LOG.enable.warning);
-				io::parse_bool(logger_enable["error"], LOG.enable.error);
-				io::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
+				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Debug), LOG.enable.debug);
+				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Info), LOG.enable.info);
+				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Warning), LOG.enable.warning);
+				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Error), LOG.enable.error);
+				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Fatal), LOG.enable.fatal);
 			}
 		}
 
