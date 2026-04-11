@@ -7,9 +7,9 @@ gamepads = 1
 Masks = [ "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
 Layers = [ "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
 
-[context.framerate]
-frame_length_clip = 0.2
-time_scale = 1.0
+[context.FrmRate]
+FLenClip = 0.2
+TmScale = 1.0
 
 [context.Logger]
 UseCons = true

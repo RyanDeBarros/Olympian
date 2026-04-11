@@ -26,6 +26,7 @@
 #include ".gen/keys/General.inl"
 #include ".gen/keys/Context.inl"
 #include ".gen/keys/Logger.inl"
+#include ".gen/keys/FrameRate.inl"
 
 namespace oly::context
 {
@@ -60,17 +61,17 @@ namespace oly::context
 
 	static void init_time(TOMLNode node)
 	{
-		if (auto framerate = node["framerate"])
+		if (auto framerate = io::parse_key(node, _gen::keys::Context::FrameRate))
 		{
-			io::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
-			io::parse_double(framerate["time_scale"], TIME.time_scale);
+			io::parse_double(io::parse_key(framerate, _gen::keys::FrameRate::FrameLengthClip), TIME.frame_length_clip);
+			io::parse_double(io::parse_key(framerate, _gen::keys::FrameRate::TimeScale), TIME.time_scale);
 		}
 		TIME.init();
 	}
 
 	static void autoload_signals(TOMLNode node)
 	{
-		auto register_files = node["signals"].as_array();
+		auto register_files = io::parse_key(node, _gen::keys::Context::Signals).as_array();
 		if (register_files)
 		{
 			for (const auto& node : *register_files)
