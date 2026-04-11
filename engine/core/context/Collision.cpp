@@ -2,7 +2,8 @@
 
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 
-#include ".gen/AssetKeys.inl"
+#include ".gen/keys/Context.inl"
+#include ".gen/keys/Collision.inl"
 
 namespace oly::context
 {

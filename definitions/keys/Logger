@@ -1,0 +1,6 @@
+UC    UseConsole
+DBG   Debug
+INFO  Info
+WARN  Warning
+ERR   Error
+FTL   Fatal

@@ -1,0 +1,10 @@
+CTX   Context
+EN    Enable
+WDTH  Width
+HGHT  Height
+STRG  Storage
+MINF  MinFilter
+MAGF  MagFilter
+WRPS  WrapS
+WRPT  WrapT
+MPMP  GenerateMipmaps

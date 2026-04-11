@@ -7,7 +7,10 @@ ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")
 ENUMS_DIR = DEFINITIONS_DIR / "enums"
 GEN_ROOT_DIR = ENGINE_DIR / ".gen"
-CACHE_FILE = GEN_ROOT_DIR / "cache.json"
+GEN_ENUMS_DIR = GEN_ROOT_DIR / "enums"
+CACHE_DIR = GEN_ROOT_DIR / ".cache"
+CACHE_FILE = CACHE_DIR / "enums.json"
+
 COL_COUNT = 3
 
 
@@ -23,12 +26,12 @@ def save_cache(cache: dict) -> None:
 
 
 def prune_cache(files_seen: set[str]):
-	for inl_file in GEN_ROOT_DIR.rglob("*.inl"):
-		cache_entry = inl_file.relative_to(GEN_ROOT_DIR).with_suffix("").as_posix()
+	for inl_file in GEN_ENUMS_DIR.rglob("*.inl"):
+		cache_entry = inl_file.relative_to(GEN_ENUMS_DIR).with_suffix("").as_posix()
 		if cache_entry not in files_seen:
 			inl_file.unlink()
 
-	for path in sorted(GEN_ROOT_DIR.rglob("*"), reverse=True):
+	for path in sorted(GEN_ENUMS_DIR.rglob("*"), reverse=True):
 		if path.is_dir():
 			try:
 				path.rmdir()  # only works if empty
@@ -208,7 +211,7 @@ if __name__ == "__main__":
 	files_seen: set[str] = set()
 
 	for enum_file in ENUMS_DIR.rglob("*.enum"):
-		cache_entry = enum_file.relative_to(DEFINITIONS_DIR).with_suffix("").as_posix()
+		cache_entry = enum_file.relative_to(ENUMS_DIR).with_suffix("").as_posix()
 		files_seen.add(cache_entry)
 
 		mtime = enum_file.stat().st_mtime
