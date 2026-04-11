@@ -7,6 +7,7 @@ Focused   Focused
 AutoIcon  AutoIconify
 Floating  Floating
 Maxed     Maximized
+CCursor   CenterCursor
 TrFrmbuf  TransparentFramebuffer
 FocusOnS  FocusOnShow
 ScaleToM  ScaleToMonitor
@@ -16,7 +17,7 @@ Stereo    Stereo
 SRGBCap   SrgbCapable
 DBuffer   DoubleBuffer
 FWCompat  OpenglForwardCompat
-CTXDebug  OpenglContextDebug
+CTXDebug  ContextDebug
 PosX      PositionX
 PosY      PositionY
 RefreshR  RefreshRate

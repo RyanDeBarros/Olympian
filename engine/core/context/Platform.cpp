@@ -10,6 +10,10 @@
 #include "graphics/Camera.h"
 #include "core/platform/Definitions.h"
 
+#include ".gen/keys/Context.inl"
+#include ".gen/keys/Window.inl"
+#include ".gen/keys/WindowHint.inl"
+
 #include ".gen/enums/platform/Axis0DConversion.inl"
 #include ".gen/enums/platform/Axis1DConversion.inl"
 #include ".gen/enums/platform/Axis2DConversion.inl"
@@ -66,31 +70,31 @@ namespace oly::context
 			throw Error(ErrorCode::PlatformInit);
 		}
 
-		if (auto toml_window_hint = toml_window["window_hint"])
+		if (auto toml_window_hint = io::parse_key(toml_window, _gen::keys::Context::WindowHint))
 		{
-			io::parse_vec(toml_window_hint["clear_color"], platform_setup.window_hint.context.clear_color);
-			io::parse_int(toml_window_hint["swap_interval"], platform_setup.window_hint.context.swap_interval);
-			io::parse_bool(toml_window_hint["resizable"], platform_setup.window_hint.window.resizable);
-			io::parse_bool(toml_window_hint["visible"], platform_setup.window_hint.window.visible);
-			io::parse_bool(toml_window_hint["decorated"], platform_setup.window_hint.window.decorated);
-			io::parse_bool(toml_window_hint["focused"], platform_setup.window_hint.window.focused);
-			io::parse_bool(toml_window_hint["auto_iconify"], platform_setup.window_hint.window.auto_iconify);
-			io::parse_bool(toml_window_hint["floating"], platform_setup.window_hint.window.floating);
-			io::parse_bool(toml_window_hint["maximized"], platform_setup.window_hint.window.maximized);
-			io::parse_bool(toml_window_hint["center_cursor"], platform_setup.window_hint.window.center_cursor);
-			io::parse_bool(toml_window_hint["transparent_framebuffer"], platform_setup.window_hint.window.transparent_framebuffer);
-			io::parse_bool(toml_window_hint["focus_on_show"], platform_setup.window_hint.window.focus_on_show);
-			io::parse_bool(toml_window_hint["scale_to_monitor"], platform_setup.window_hint.window.scale_to_monitor);
-			io::parse_bool(toml_window_hint["scale_framebuffer"], platform_setup.window_hint.window.scale_framebuffer);
-			io::parse_bool(toml_window_hint["mouse_passthrough"], platform_setup.window_hint.window.mouse_passthrough);
-			io::parse_uint(toml_window_hint["position_x"], platform_setup.window_hint.window.position_x);
-			io::parse_uint(toml_window_hint["position_y"], platform_setup.window_hint.window.position_y);
-			io::parse_int(toml_window_hint["refresh_rate"], platform_setup.window_hint.window.refresh_rate);
-			io::parse_bool(toml_window_hint["stereo"], platform_setup.window_hint.window.stereo);
-			io::parse_bool(toml_window_hint["srgb_capable"], platform_setup.window_hint.window.srgb_capable);
-			io::parse_bool(toml_window_hint["double_buffer"], platform_setup.window_hint.window.double_buffer);
-			io::parse_bool(toml_window_hint["opengl_forward_compat"], platform_setup.window_hint.window.opengl_forward_compat);
-			io::parse_bool(toml_window_hint["context_debug"], platform_setup.window_hint.window.context_debug);
+			io::parse_vec(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ClearColor), platform_setup.window_hint.context.clear_color);
+			io::parse_int(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SwapInterval), platform_setup.window_hint.context.swap_interval);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Resizable), platform_setup.window_hint.window.resizable);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Visible), platform_setup.window_hint.window.visible);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Decorated), platform_setup.window_hint.window.decorated);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Focused), platform_setup.window_hint.window.focused);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::AutoIconify), platform_setup.window_hint.window.auto_iconify);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Floating), platform_setup.window_hint.window.floating);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Maximized), platform_setup.window_hint.window.maximized);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::CenterCursor), platform_setup.window_hint.window.center_cursor);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::TransparentFramebuffer), platform_setup.window_hint.window.transparent_framebuffer);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::FocusOnShow), platform_setup.window_hint.window.focus_on_show);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleToMonitor), platform_setup.window_hint.window.scale_to_monitor);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleFramebuffer), platform_setup.window_hint.window.scale_framebuffer);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::MousePassthrough), platform_setup.window_hint.window.mouse_passthrough);
+			io::parse_uint(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionX), platform_setup.window_hint.window.position_x);
+			io::parse_uint(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionY), platform_setup.window_hint.window.position_y);
+			io::parse_int(io::parse_key(toml_window_hint, _gen::keys::WindowHint::RefreshRate), platform_setup.window_hint.window.refresh_rate);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Stereo), platform_setup.window_hint.window.stereo);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SrgbCapable), platform_setup.window_hint.window.srgb_capable);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::DoubleBuffer), platform_setup.window_hint.window.double_buffer);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::OpenglForwardCompat), platform_setup.window_hint.window.opengl_forward_compat);
+			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ContextDebug), platform_setup.window_hint.window.context_debug);
 		}
 
 		platform_setup.num_gamepads = glm::clamp(io::parse_int_or(node["gamepads"], 0), 0, GLFW_JOYSTICK_LAST);
