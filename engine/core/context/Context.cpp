@@ -101,10 +101,10 @@ namespace oly::context
 		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
 		auto toml = io::load_toml(project_file);
-		TOMLNode toml_context = toml["context"];
+		TOMLNode toml_context = io::parse_key((TOMLNode)toml, _gen::keys::General::Context);
 		if (!toml_context)
 		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing \"context\" table." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing " << io::key_string(_gen::keys::General::Context) << " table" << LOG.nl;
 			throw Error(ErrorCode::ContextInit);
 		}
 

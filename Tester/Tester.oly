@@ -1,38 +1,38 @@
 #meta version=1.0 type="project"
 
-[context]
+[Context]
 gamepads = 1
 Signals = [ "signals/Camera.oly", "signals/Click.oly", "signals/Drag.oly", "signals/Jump.oly", "signals/Move.oly",]
 "tileset registries" = [ "assets/grass_tileset.toml",]  # TODO v7 remove tileset registries?
 
-[context.Colsn]
+[Context.Colsn]
 Masks = [ "player", "obstacle", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
 Layers = [ "player", "obstacle", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
 
-[context.FrmRate]
+[Context.FrmRate]
 FLenClip = 0.2
 TmScale = 1.0
 
-[context.Logger]
+[Context.Logger]
 UseCons = true
 
-[context.Logger.Enable]
+[Context.Logger.Enable]
 Debug = false
 Info = true
 Warning = true
 Error = true
 Fatal = true
 
-[context.window]
+[Context.window]
 width = 1440
 height = 1080
 title = "Olympian Engine"
 
-[context.window.viewport]
+[Context.window.viewport]
 boxed = true
 stretch = true
 
-[context.window.WinHint]
+[Context.window.WinHint]
 Resize = true
 Visible = true
 ClrColor = [ 0.0, 0.0, 0.0, 1.0,]
