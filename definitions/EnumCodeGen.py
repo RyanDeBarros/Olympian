@@ -81,7 +81,7 @@ namespace {namespace}
 	inl_path.write_text(codegen)
 
 
-def gen(enum_file: Path) -> list[str]:
+def gen(enum_file: Path, *args, **kwargs) -> list[str]:
 	lines = enum_file.read_text().splitlines()
 	index_type: str = ""
 	enum_type: str = ""

@@ -1,10 +1,15 @@
 import json
 import sys
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Protocol, Any
 
 DEFINITIONS_DIR = Path("definitions")
 GEN_ROOT_DIR = Path("engine") / ".gen"
+
+
+class GenFunc(Protocol):
+	def __call__(self, file: Path, *args: Any, **kwargs: Any) -> list[str]:
+		...
 
 
 class CodeGen:
@@ -18,11 +23,11 @@ class CodeGen:
 		self.new_cache = {}
 		self.files_seen: set[str] = set()
 
-	def process(self, gen: Callable[[Path], list[str]], rglob: str | None):
+	def process(self, gen: GenFunc, rglob: str | None, /, *args, **kwargs):
 		fail = False
 		path_generator = self.def_dir.iterdir() if rglob is None else self.def_dir.rglob(rglob)
 		for file in path_generator:
-			if not self._process(file, gen):
+			if not self._process(file, gen, *args, **kwargs):
 				fail = True
 
 		self.finalize()
@@ -30,7 +35,7 @@ class CodeGen:
 		if fail:
 			sys.exit(1)
 
-	def _process(self, file: Path, gen: Callable[[Path], list[str]]) -> bool:
+	def _process(self, file: Path, gen: GenFunc, /, *args, **kwargs) -> bool:
 		cache_entry = file.relative_to(self.def_dir).with_suffix("").as_posix()
 		self.files_seen.add(cache_entry)
 
@@ -40,7 +45,7 @@ class CodeGen:
 			self.new_cache[cache_entry] = mtime
 			return True
 
-		errors = gen(file)
+		errors = gen(file, *args, **kwargs)
 		if errors:
 			for error in errors:
 				print(f"Code generation failed for {file.relative_to(self.def_dir).as_posix()}: {error}")

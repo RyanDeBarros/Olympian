@@ -6,6 +6,11 @@
 #include "core/util/ResourcePath.h"
 #include "core/util/StringParam.h"
 
+#include <array>
+#include <cstdint>
+#include <string>
+#include <algorithm>
+
 namespace oly::io
 {
 	extern toml::v3::parse_result load_toml(const ResourcePath& file);
@@ -87,8 +92,14 @@ namespace oly::io
 	template<typename Enum>
 	constexpr auto parse_key(TOMLNode node, Enum key)
 	{
-		// TODO v8 TOML uses string keys even if numeric -> transition away from TOML
-		return node[std::to_string(static_cast<std::underlying_type_t<Enum>>(key))];
+		const auto value = static_cast<std::underlying_type_t<Enum>>(key);
+		constexpr size_t KeySize = OLYMPIAN_ENGINE_ASSET_KEY_SIZE;
+		std::array<char, KeySize> bytes;
+
+		for (size_t i = 0; i < KeySize; ++i)
+			bytes[KeySize - 1 - i] = char((value >> (i * KeySize)) & 0xFF);
+
+		return node[std::string(bytes.begin(), std::find(bytes.begin(), bytes.end(), '\0'))];
 	}
 
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);

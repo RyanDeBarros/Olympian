@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 from . import CodeGen
@@ -8,10 +9,11 @@ KEYS_DIR = DEFINITIONS_DIR / "keys"
 GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 GEN_KEYS_DIR = GEN_ROOT_DIR / "keys"
 
-MAX_CHARS = 4
 
+def gen(keys_file: Path, *args, **kwargs) -> list[str]:
+	max_chars: int = kwargs["max_chars"]
+	underlying_type: str = kwargs["underlying_type"]
 
-def gen(keys_file: Path) -> list[str]:
 	good_lines: dict[str, str] = {}
 	bad_lines: dict[int, str] = {}
 
@@ -32,11 +34,11 @@ def gen(keys_file: Path) -> list[str]:
 			if not code or not name:
 				continue
 
-			if len(code) > MAX_CHARS:
-				bad_lines[i] = f"more than {MAX_CHARS} chars"
+			if len(code) > max_chars:
+				bad_lines[i] = f"more than {max_chars} chars"
 				continue
 
-			padded_code = code.rjust(MAX_CHARS, '\0')
+			padded_code = code.ljust(max_chars, '\0')
 			if padded_code in good_lines:
 				bad_lines[i] = f"code {code} already registered"
 			else:
@@ -54,7 +56,7 @@ def gen(keys_file: Path) -> list[str]:
 
 	codegen = f"""namespace oly::_gen::keys
 {{
-	enum class {keys_file.stem} : unsigned int
+	enum class {keys_file.stem} : {underlying_type}
 	{{
 {enum_def}
 	}};
@@ -69,5 +71,9 @@ def gen(keys_file: Path) -> list[str]:
 
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--key-size", type=int, choices=[4, 8])
+	args = parser.parse_args()
+
 	codegen = CodeGen("keys")
-	codegen.process(gen, None)
+	codegen.process(gen, None, max_chars=args.key_size, underlying_type="unsigned int" if args.key_size == 4 else "unsigned long long")

@@ -10,26 +10,31 @@ endif()
 # Variables
 set(LIBRARIES_DIR "D:/Libraries")  # TODO v10 more generic library linking
 set(DEFINITIONS_DIR "${CMAKE_SOURCE_DIR}/definitions")
+set(ASSET_KEY_SIZE 8)
 
 # Run automatic tools
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-set(CODEGEN_SCRIPTS
-    EnumCodeGen
-    KeysCodeGen
-)
+function(prebuild script)
+    set(options)
+    set(one_value_args)
+    set(multi_value_args ARGS)
 
-foreach(script IN LISTS CODEGEN_SCRIPTS)
+    cmake_parse_arguments(PB "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} -m "definitions.${script}"
+        COMMAND ${Python3_EXECUTABLE} -m definitions.${script} ${PB_ARGS}
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-        RESULT_VARIABLE PREBUILD_RESULT
+        RESULT_VARIABLE result
     )
 
-    if (NOT PREBUILD_RESULT EQUAL 0)
-        message(FATAL_ERROR "${DEFINITIONS_DIR}/${script} failed with code ${PREBUILD_RESULT}")
+    if (NOT result EQUAL 0)
+        message(FATAL_ERROR "definitions/${script} failed with code ${result}")
     endif()
-endforeach()
+endfunction()
+
+prebuild("EnumCodeGen")
+prebuild("KeysCodeGen" ARGS "--key-size=${ASSET_KEY_SIZE}")
 
 # Add Quartic static library
 add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")
@@ -68,6 +73,7 @@ target_link_directories(OlympianEngine PUBLIC
 target_compile_definitions(OlympianEngine PUBLIC
 	GLEW_STATIC
     OLYMPIAN_ENGINE_ABS_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\"
+    OLYMPIAN_ENGINE_ASSET_KEY_SIZE=${ASSET_KEY_SIZE}
 )
 
 # Engine compile options (MSVC specific)
