@@ -87,7 +87,8 @@ namespace oly::io
 	template<typename Enum>
 	constexpr auto parse_key(TOMLNode node, Enum key)
 	{
-		return node[static_cast<std::underlying_type_t<Enum>>(key)];
+		// TODO v8 TOML uses string keys even if numeric -> transition away from TOML
+		return node[std::to_string(static_cast<std::underlying_type_t<Enum>>(key))];
 	}
 
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);

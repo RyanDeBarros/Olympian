@@ -10,6 +10,9 @@ GEN_INL_PATH = GEN_ROOT_DIR / "AssetKeys.inl"
 MAX_CHARS = 4
 
 
+# TODO v7 use keys folder similar to enums folder so new keys can be added without recompiling unrelated files
+
+
 if __name__ == "__main__":
 	enums: dict[str, dict[str, str]] = {}
 	bad_lines: dict[int, str] = {}

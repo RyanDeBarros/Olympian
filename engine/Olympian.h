@@ -49,22 +49,8 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	/*
-	TODO v7 redesign editor again - remove current editor folder, and do the following:
-
-	Editor should essentially be embedded in a text editor. Create REPL program that can use files
-	for large input/output (for example, open asset file in this buffer file). Any file operations
-	can be managed by the user instead of a content browser. The only thing the editor can take care
-	of is generating import files or assets, and handling deletion/moving/copying of files with import
-	files.
-
-	Eventually, can create standardized format for asset serialization/deserialization and prebuilder:
-	Define format files that associate attributes with values (including data types, defaults,
-	subtypes, etc.) for classes. In loader methods, call generated header files. The prebuilder should
-	be an engine-level prebuilder, not project-level prebuilder. The editor can also use these format
-	files in order to generate and parse asset files.
-	*/
-
+	// TODO v7 remove REPL -> go back to GUI, using gen tools for definitions
+	// TODO v7 use versioning for all assets and definitions. create meta tools + conversion files to convert between versions
 	// TODO v7 texture import metadata should have some additional size scale that affects any sprites using the texture
 	// TODO v7 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
 	// TODO v7 Random class for random properties, similar to Unity

@@ -2,6 +2,8 @@
 
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 
+#include ".gen/AssetKeys.inl"
+
 namespace oly::context
 {
 	namespace internal
@@ -11,27 +13,27 @@ namespace oly::context
 	
 	void internal::init_collision(TOMLNode node)
 	{
-		if (auto collision_node = node["collision"])
+		if (auto collision_node = io::parse_key(node, _gen::keys::Context::Collision))
 		{
-			if (auto masks = collision_node["masks"].as_array())
+			if (auto masks = io::parse_key(collision_node, _gen::keys::Collision::Masks).as_array())
 			{
 				for (int i = 0; i < std::min((int)masks->size(), 32); ++i)
 				{
 					if (auto name = masks->get_as<std::string>(i))
 						set_collision_mask_index(i, **name);
 					else
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision mask name is not a string for index (" << i << ")." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision mask name is not a string for index (" << i << ")" << LOG.nl;
 				}
 			}
 
-			if (auto layers = collision_node["layers"].as_array())
+			if (auto layers = io::parse_key(collision_node, _gen::keys::Collision::Layers).as_array())
 			{
 				for (int i = 0; i < std::min((int)layers->size(), 32); ++i)
 				{
 					if (auto name = layers->get_as<std::string>(i))
 						set_collision_layer_index(i, **name);
 					else
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision layer name is not a string for index (" << i << ")." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision layer name is not a string for index (" << i << ")" << LOG.nl;
 				}
 			}
 		}
