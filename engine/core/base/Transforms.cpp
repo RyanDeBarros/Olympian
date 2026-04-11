@@ -2,6 +2,8 @@
 
 #include "core/util/Loader.h"
 
+#include ".gen/keys/Transform.inl"
+
 namespace oly
 {
 	Transform2D Transform2D::load(TOMLNode node)
@@ -10,9 +12,9 @@ namespace oly
 			return {};
 
 		Transform2D transform;
-		io::parse_vec(node["position"], transform.position);
-		io::parse_float(node["rotation"], transform.rotation);
-		io::parse_vec(node["scale"], transform.scale);
+		io::parse_vec(io::parse_key(node, _gen::keys::Transform::Position), transform.position);
+		io::parse_float(io::parse_key(node, _gen::keys::Transform::Rotation), transform.rotation);
+		io::parse_vec(io::parse_key(node, _gen::keys::Transform::Scale), transform.scale);
 		return transform;
 	}
 
@@ -385,7 +387,7 @@ namespace oly
 
 		Transformer2D transformer;
 		transformer.set_local() = Transform2D::load(node);
-		transformer.set_modifier() = io::load_transform_modifier_2d(node["modifier"]);
+		transformer.set_modifier() = io::load_transform_modifier_2d(io::parse_key(node, _gen::keys::Transform::Modifier));
 		return transformer;
 	}
 

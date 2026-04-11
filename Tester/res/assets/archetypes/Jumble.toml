@@ -17,17 +17,17 @@ draw = [
 
 [sprite3]
 texture = "@/textures/serotonin.gif"
-transformer = { "position" = [ 400, 400 ], "scale" = [ 0.5, 0.5 ] }
+transformer = { Position = [ 400, 400 ], Scale = [ 0.5, 0.5 ] }
 frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [sprite4]
 texture = "@/textures/tux.png"
 texture_index = 1
-transformer = { "position" = [-500, 300], "scale" = [0.1, 0.1] }
+transformer = { Position = [-500, 300], Scale = [0.1, 0.1] }
 
 [sprite5]
 texture = "@/textures/tux.png"
-transformer = { "position" = [-400, 300], "scale" = [0.1, 0.1] }
+transformer = { Position = [-400, 300], Scale = [0.1, 0.1] }
 
 [sprite1]
 texture = "@/textures/einstein.png"
@@ -35,11 +35,11 @@ texture = "@/textures/einstein.png"
 [godot_icon]
 texture = "@/textures/godot.svg"
 texture_index = 1
-transformer = { "position" = [-300, -200], "rotation" = 0.3, "scale" = [1.0, 1.0] }
+transformer = { Position = [-300, -200], "Rotation" = 0.3, Scale = [1.0, 1.0] }
 
 [knight]
 texture = "@/textures/knight.png"
-transformer = { "position" = [100, -300], "scale" = [20, 20] }
+transformer = { Position = [100, -300], Scale = [20, 20] }
 frame_format = { "mode" = 1 }
 
 [atlased_knight]
@@ -49,17 +49,17 @@ delay_seconds = 0.1
 	[atlased_night.sprite]
 	texture = "@/textures/knight.png"
 	texture_index = 1
-	transformer = { "position" = [300, -200], "scale" = [20, 20] }
+	transformer = { Position = [300, -200], Scale = [20, 20] }
 
 [nonant_panel]
 nsize = [ 128, 0 ]
 offsets = { uniform = 6 }
 [nonant_panel.sprite]
 texture = "@/textures/panel.png"
-transformer = { "scale" = [ 10.0, 10.0 ] }
+transformer = { Scale = [ 10.0, 10.0 ] }
 
 [grass_tilemap]
-transformer = { "scale" = [ 100, 100 ] }
+transformer = { Scale = [ 100, 100 ] }
 
 	[[grass_tilemap.layer]]
 	"z" = 0
@@ -82,7 +82,7 @@ transformer = { "scale" = [ 100, 100 ] }
 	
 [test_text]
 "draw_bkg" = true
-transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
+transformer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 "bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
 	[test_text.format]
 	"pivot"             = [ 0, 1 ]
@@ -100,7 +100,7 @@ transformer = { "position" = [ -400, 400 ], "scale" = [ 0.8, 0.8 ] }
 	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "g"
 	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
-	"scale"        = [ 2.0, 0.5 ]
+	Scale        = [ 2.0, 0.5 ]
 	"line_y_pivot" = 0.5
 	[[test_text.element]]
 	"font"         = "@/fonts/Roboto-Regular.ttf"
