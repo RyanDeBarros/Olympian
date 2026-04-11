@@ -15,13 +15,13 @@ set(DEFINITIONS_DIR "${CMAKE_SOURCE_DIR}/definitions")
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 set(CODEGEN_SCRIPTS
-    EnumCodeGen.py
-    KeysCodeGen.py
+    EnumCodeGen
+    KeysCodeGen
 )
 
 foreach(script IN LISTS CODEGEN_SCRIPTS)
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} "${DEFINITIONS_DIR}/${script}"
+        COMMAND ${Python3_EXECUTABLE} -m "definitions.${script}"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         RESULT_VARIABLE PREBUILD_RESULT
     )
