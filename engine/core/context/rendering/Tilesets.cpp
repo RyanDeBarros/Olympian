@@ -7,6 +7,8 @@
 #include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
 
+#include ".gen/keys/TileSet.inl"
+
 #include ".gen/enums/StorageMode.inl"
 #include ".gen/enums/rendering/tileset/Transformation.inl"
 
@@ -138,7 +140,7 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (_gen::StorageMode::val(io::parse_uint(toml["storage"]), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(toml, _gen::keys::TileSet::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed." << LOG.nl;

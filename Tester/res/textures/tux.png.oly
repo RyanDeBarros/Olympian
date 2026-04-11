@@ -1,13 +1,13 @@
 #meta version=1.0 import type=texture
 
 [[texture]]
-storage = 0
+Storage = 0
 MinFilt = 0
 MagFilt = 0
 Mipmaps = 0
 
 [[texture]]
-storage = 0
+Storage = 0
 MinFilt = 0
 MagFilt = 0
 Mipmaps = 1

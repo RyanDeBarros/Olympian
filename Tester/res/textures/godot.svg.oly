@@ -1,8 +1,8 @@
 #meta version=1.0 import type="texture"
 
-abstract_storage = 1
+AbsStore = 1
 [[texture]]
-image_storage = 0
+ImgStore = 0
 Mipmaps = 1
 MinFilt = 1
 MagFilt = 1
@@ -11,7 +11,7 @@ WrapT = 0
 svg_scale = 1.0
 
 [[texture]]
-image_storage = 0
+ImgStore = 0
 Mipmaps = 1
 MinFilt = 1
 MagFilt = 1

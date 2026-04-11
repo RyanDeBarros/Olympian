@@ -1,7 +1,7 @@
 #meta version=1.0 import type="texture"
 
 [[texture]]
-storage = 0
+Storage = 0
 Mipmaps = 0
 MinFilt = 0
 MagFilt = 0
@@ -17,7 +17,7 @@ row_major = 1
 row_up = 1
 
 [[texture]]
-storage = 0
+Storage = 0
 Mipmaps = 0
 MinFilt = 0
 MagFilt = 0

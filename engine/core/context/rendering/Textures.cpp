@@ -135,14 +135,15 @@ namespace oly::context
 		return TOMLNode(*texture_array->get(texture_index));
 	}
 
-	static bool should_store(TOMLNode texture_node, const char* storage_key, tex::ImageStorageOverride storage_override)
+	template<typename Enum>
+	static bool should_store(TOMLNode texture_node, Enum storage_key, tex::ImageStorageOverride storage_override)
 	{
 		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return _gen::StorageMode::val(io::parse_uint(texture_node[storage_key]), StorageMode::Discard) == StorageMode::Keep;
+			return _gen::StorageMode::val(io::parse_uint(io::parse_key(texture_node, storage_key)), StorageMode::Discard) == StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)
@@ -184,7 +185,7 @@ namespace oly::context
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 
-		bool store_buffer = should_store(texture_node, "storage", params.storage);
+		bool store_buffer = should_store(texture_node, _gen::keys::Texture::Storage, params.storage);
 
 		graphics::BindlessTextureRef texture;
 
@@ -241,8 +242,8 @@ namespace oly::context
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
 
-		bool store_abstract = should_store((TOMLNode)toml, "abstract_storage", params.abstract_storage);
-		bool store_image = should_store(texture_node, "image_storage", params.image_storage);
+		bool store_abstract = should_store((TOMLNode)toml, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
+		bool store_image = should_store(texture_node, _gen::keys::Texture::ImageStorage, params.image_storage);
 		float scale = io::parse_float_or(texture_node["svg_scale"], 1.0f);
 
 		graphics::BindlessTextureRef texture;

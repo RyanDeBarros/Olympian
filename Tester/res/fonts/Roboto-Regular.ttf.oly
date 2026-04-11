@@ -1,15 +1,15 @@
 #meta version=1.0 import type=font
 
 [[font_atlas]]
-storage = 0
+Storage = 0
 font_size = 96
 MagFilt = 1
 MinFilt = 5
 Mipmaps = 1
-common_buffer_preset = 0
+ComBP = 0
 
 [font_face]
-storage = 1
+Storage = 1
 [[font_face.kerning]]
 pair = [ "e", "U+78",]
 dist = 150

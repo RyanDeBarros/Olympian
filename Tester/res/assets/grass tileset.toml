@@ -1,6 +1,6 @@
 #meta version=1.0 type="tileset"
 
-"storage" = "discard"
+Storage = "discard"
 
 [[assignment]]
 "config"  = 0

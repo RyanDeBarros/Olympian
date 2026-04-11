@@ -1,14 +1,14 @@
 #meta type="font_defaults"
 
 [font_face]
-storage = 1
+Storage = 1
 
 [font_atlas]
-storage = "discard"
+Storage = 0
 font_size = 32.0
-MinFilter = 0
-MagFilter = 0
+MinFilt = 0
+MagFilt = 0
 Mipmaps = false
-common_buffer_preset = 0
-common_buffer = ""
-use_common_buffer_preset = true
+ComBP = 0
+ComB = ""
+UseComBP = true

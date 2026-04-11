@@ -1,6 +1,6 @@
 #meta version=1.0 import type="font_family"
 
-storage = 1
+Storage = 1
 
 [[styles]]
 style = 0
