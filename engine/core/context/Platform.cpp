@@ -43,30 +43,30 @@ namespace oly::context
 	{
 		platform::PlatformSetup platform_setup;
 
-		auto toml_window = node["window"];
+		auto toml_window = io::parse_key(node, _gen::keys::Context::Window);
 		if (!toml_window)
 		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing \"window\" table." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing " << io::key_string(_gen::keys::Context::Window) << " table" << LOG.nl;
 			throw Error(ErrorCode::PlatformInit);
 		}
 
-		if (!io::parse_int(toml_window["width"], platform_setup.window_width))
+		if (!io::parse_int(io::parse_key(toml_window, _gen::keys::Window::Width), platform_setup.window_width))
 		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"width\" field." << LOG.nl;
-			throw Error(ErrorCode::PlatformInit);
-		}
-		
-		if (!io::parse_int(toml_window["height"], platform_setup.window_height))
-		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"height\" field." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid " << io::key_string(_gen::keys::Window::Width) << " field" << LOG.nl;
 			throw Error(ErrorCode::PlatformInit);
 		}
 
-		if (auto title = toml_window["title"].value<std::string>())
+		if (!io::parse_int(io::parse_key(toml_window, _gen::keys::Window::Height), platform_setup.window_height))
+		{
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid " << io::key_string(_gen::keys::Window::Height) << " field" << LOG.nl;
+			throw Error(ErrorCode::PlatformInit);
+		}
+
+		if (auto title = io::parse_key(toml_window, _gen::keys::Window::Title).value<std::string>())
 			platform_setup.window_title = *title;
 		else
 		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid \"title\" fields." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid " << io::key_string(_gen::keys::Window::Title) << " field" << LOG.nl;
 			throw Error(ErrorCode::PlatformInit);
 		}
 
@@ -97,7 +97,7 @@ namespace oly::context
 			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ContextDebug), platform_setup.window_hint.window.context_debug);
 		}
 
-		platform_setup.num_gamepads = glm::clamp(io::parse_int_or(node["gamepads"], 0), 0, GLFW_JOYSTICK_LAST);
+		platform_setup.num_gamepads = glm::clamp(io::parse_int_or(io::parse_key(node, _gen::keys::Context::Gamepads), 0), 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
@@ -110,12 +110,12 @@ namespace oly::context
 		bool camera_boxed = true;
 		bool camera_stretch = true;
 
-		if (auto window = node["window"])
+		if (auto window = io::parse_key(node, _gen::keys::Context::Window))
 		{
-			if (auto viewport = window["viewport"])
+			if (auto viewport = io::parse_key(window, _gen::keys::Window::Viewport))
 			{
-				io::parse_bool(viewport["boxed"], camera_boxed);
-				io::parse_bool(viewport["stretch"], camera_stretch);
+				io::parse_bool(io::parse_key(viewport, _gen::keys::Window::Boxed), camera_boxed);
+				io::parse_bool(io::parse_key(viewport, _gen::keys::Window::Stretch), camera_stretch);
 			}
 		}
 		

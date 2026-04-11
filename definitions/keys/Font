@@ -1,3 +1,9 @@
+Storage   Storage
+MinFilt   MinFilter
+MagFilt   MagFilter
+WrapS     WrapS
+WrapT     WrapT
+Mipmaps   GenerateMipmaps
 Face      FontFace
 Atlas     FontAtlas
 FontSize  FontSize

@@ -1,7 +1,7 @@
 #meta type="project"
 
 [Context]
-gamepads = 1
+Gmpds = 1
 
 [Context.Colsn]
 Masks = [ "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
@@ -21,16 +21,16 @@ Warning = true
 Error = true
 Fatal = true
 
-[Context.window]
-width = 1440
-height = 1080
-title = "Olympian Engine"
+[Context.Window]
+Width = 1440
+Height = 1080
+Title = "Untitled Olympian Project"
 
-[Context.window.viewport]
-boxed = true
-stretch = true
+[Context.Window.Viewport]
+Boxed = true
+Stretch = true
 
-[Context.window.WinHint]
+[Context.Window.WinHint]
 Resize = true
 Visible = true
 ClrColor = [ 0.0, 0.0, 0.0, 1.0,]

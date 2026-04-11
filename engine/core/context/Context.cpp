@@ -46,7 +46,7 @@ namespace oly::context
 			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogFiles), options.max_prior_log_files);
 			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogBytes), options.max_prior_log_bytes);
 			
-			if (auto logger_enable = io::parse_key(toml_logger, _gen::keys::General::Enable))
+			if (auto logger_enable = io::parse_key(toml_logger, _gen::keys::Logger::Enable))
 			{
 				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Debug), LOG.enable.debug);
 				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Info), LOG.enable.info);

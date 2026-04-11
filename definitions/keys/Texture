@@ -1,3 +1,9 @@
+Storage   Storage
+MinFilt   MinFilter
+MagFilt   MagFilter
+WrapS     WrapS
+WrapT     WrapT
+Mipmaps   GenerateMipmaps
 Raster    Raster
 SVG       SVG
 ImgStore  ImageStorage
