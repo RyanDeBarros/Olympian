@@ -5,7 +5,7 @@
 
 namespace oly::rendering
 {
-	class SpriteNonant
+	class NineSlice
 	{
 		mutable FixedVector<Sprite> sprites;
 
@@ -29,9 +29,9 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 	public:
-		SpriteNonant();
-		SpriteNonant(Unbatched);
-		SpriteNonant(SpriteBatch& batch);
+		NineSlice();
+		NineSlice(Unbatched);
+		NineSlice(SpriteBatch& batch);
 
 	private:
 		void init();
@@ -95,9 +95,9 @@ namespace oly::rendering
 		void sync_mod_grid() const;
 
 	public:
-		static SpriteNonant load(TOMLNode node);
-		static SpriteNonant load(TOMLNode node, const DebugTrace& trace);
+		static NineSlice load(TOMLNode node);
+		static NineSlice load(TOMLNode node, const DebugTrace& trace);
 	};
 
-	typedef SmartReference<SpriteNonant> SpriteNonantRef;
+	typedef SmartReference<NineSlice> NineSliceRef;
 }

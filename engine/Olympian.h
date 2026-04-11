@@ -23,7 +23,7 @@
 #include "graphics/text/Paragraph.h"
 #include "graphics/sprites/TileMap.h"
 #include "graphics/sprites/SpriteAtlas.h"
-#include "graphics/sprites/SpriteNonant.h"
+#include "graphics/sprites/NineSlice.h"
 
 #include "graphics/particles/ParticleSystem.h"
 #include "graphics/particles/implementations/Samplers.h"
@@ -65,8 +65,13 @@ namespace oly
 	files in order to generate and parse asset files.
 	*/
 
+	// TODO v7 texture import metadata should have some additional size scale that affects any sprites using the texture
 	// TODO v7 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
+	// TODO v7 Random class for random properties, similar to Unity
 	// TODO v7 various utilities, including FuzzySearch
+	// TODO v8 AI: Navigation, Blackboard Trees, etc.
+	// TODO v8 Dialog/decision trees
+	// TODO v8 Gameplay utilities such as TypewriterEffect, etc.
 	// TODO v8 Lighting engine
 	// TODO v8 UI widgets
 	// TODO v9 thread safety + multi-threading.

@@ -15,7 +15,7 @@ struct Jumble : public oly::rendering::CanvasLayerStack<>
 	oly::rendering::Drawable<oly::rendering::Paragraph> smol_text;
 	oly::rendering::Drawable<oly::rendering::SpriteAtlas> atlased_knight;
 	oly::rendering::Drawable<oly::rendering::TileMap, true> grass_tilemap;
-	oly::rendering::Drawable<oly::rendering::SpriteNonant> nonant_panel;
+	oly::rendering::Drawable<oly::rendering::NineSlice> nonant_panel;
 
 	Jumble();
 	Jumble(const Jumble&) = default;
