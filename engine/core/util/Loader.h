@@ -84,6 +84,12 @@ namespace oly::io
 		return false;
 	}
 
+	template<typename Enum>
+	constexpr auto parse_key(TOMLNode node, Enum key)
+	{
+		return node[static_cast<std::underlying_type_t<Enum>>(key)];
+	}
+
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
 
 	extern bool parse_color(const StringParam& text, glm::vec4& color);

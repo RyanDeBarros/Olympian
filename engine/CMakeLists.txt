@@ -14,15 +14,22 @@ set(DEFINITIONS_DIR "${CMAKE_SOURCE_DIR}/definitions")
 # Run automatic tools
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-execute_process(
-    COMMAND ${Python3_EXECUTABLE} "${DEFINITIONS_DIR}/EnumCodeGen.py"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-	RESULT_VARIABLE PREBUILD_RESULT
+set(CODEGEN_SCRIPTS
+    EnumCodeGen.py
+    KeysCodeGen.py
 )
 
-if (NOT PREBUILD_RESULT EQUAL 0)
-	message(FATAL_ERROR "${DEFINITIONS_DIR}/EnumCodeGen.py failed with code ${PREBUILD_RESULT}")
-endif()
+foreach(script IN LISTS CODEGEN_SCRIPTS)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} "${DEFINITIONS_DIR}/${script}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        RESULT_VARIABLE PREBUILD_RESULT
+    )
+
+    if (NOT PREBUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "${DEFINITIONS_DIR}/${script} failed with code ${PREBUILD_RESULT}")
+    endif()
+endforeach()
 
 # Add Quartic static library
 add_library(Quartic STATIC "${LIBRARIES_DIR}/Quartic/src/quartic.cpp")

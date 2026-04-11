@@ -3,8 +3,6 @@ import re
 import sys
 from pathlib import Path
 
-# TODO v7 replace all keys with enums using a key file -> strings become unsigned int keys being the catenation of four chars
-
 ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")
 ENUMS_DIR = DEFINITIONS_DIR / "enums"
@@ -222,7 +220,7 @@ if __name__ == "__main__":
 		errors = gen(enum_file)
 		if errors:
 			for error in errors:
-				print(f"Enum generation failed for {enum_file.relative_to(ENUMS_DIR).as_posix()}: {error}")
+				print(f"Enum code generation failed for {enum_file.relative_to(ENUMS_DIR).as_posix()}: {error}")
 			fail = True
 		else:
 			new_cache[cache_entry] = mtime
