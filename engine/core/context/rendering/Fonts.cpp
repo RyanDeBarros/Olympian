@@ -8,6 +8,8 @@
 #include "core/context/rendering/Textures.h"
 #include "core/base/Definitions.h"
 
+#include ".gen/keys/Font.inl"
+
 #include ".gen/enums/rendering/text/FontStyle.inl"
 #include ".gen/enums/rendering/text/CommonBufferPreset.inl"
 #include ".gen/enums/rendering/texture/MagFilter.inl"
@@ -213,9 +215,9 @@ namespace oly::context
 		}
 
 
-		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse_uint(node["min_filter"]));
-		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse_uint(node["mag_filter"]));
-		io::parse_bool(node["generate_mipmaps"], options.auto_generate_mipmaps);
+		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::MinFilter)));
+		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::MagFilter)));
+		io::parse_bool(io::parse_key(node, _gen::keys::Font::GenerateMipmaps), options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
 		if (io::parse_bool_or(node["use_common_buffer_preset"], true))

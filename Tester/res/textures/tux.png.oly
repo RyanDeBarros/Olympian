@@ -2,13 +2,13 @@
 
 [[texture]]
 storage = 0
-min_filter = 0
-mag_filter = 0
-generate_mipmaps = 0
+MinFilt = 0
+MagFilt = 0
+Mipmaps = 0
 
 [[texture]]
 storage = 0
-min_filter = 0
-mag_filter = 0
-generate_mipmaps = 1
+MinFilt = 0
+MagFilt = 0
+Mipmaps = 1
 

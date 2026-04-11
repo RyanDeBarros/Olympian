@@ -2,9 +2,9 @@
 
 [[texture]]
 storage = 0
-generate_mipmaps = 0
-min_filter = 0
-mag_filter = 1
-wrap_s = 0
-wrap_t = 0
+Mipmaps = 0
+MinFilt = 0
+MagFilt = 1
+WrapS = 0
+WrapT = 0
 
