@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 
 # TODO v7 replace all keys with enums using a key file -> strings become unsigned int keys being the catenation of four chars
-# TODO v7 after pruning remove empty folders
 
 ENGINE_DIR = Path("engine")
 DEFINITIONS_DIR = Path("definitions")
@@ -30,6 +29,13 @@ def prune_cache(files_seen: set[str]):
 		cache_entry = inl_file.relative_to(GEN_ROOT_DIR).with_suffix("").as_posix()
 		if cache_entry not in files_seen:
 			inl_file.unlink()
+
+	for path in sorted(GEN_ROOT_DIR.rglob("*"), reverse=True):
+		if path.is_dir():
+			try:
+				path.rmdir()  # only works if empty
+			except OSError:
+				pass
 
 
 class EnumRow:
