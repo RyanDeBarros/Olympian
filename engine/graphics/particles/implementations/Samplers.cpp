@@ -2,6 +2,8 @@
 
 #include "graphics/particles/ShaderStructs.h"
 
+#include ".gen/keys/ParticleSystem.inl"
+
 namespace oly::particles
 {
 	void UniformSampler1D::apply(internal::Sampler1D& sampler) const
@@ -13,6 +15,11 @@ namespace oly::particles
 	{
 		sampler.type = internal::Sampler1D::Tilted;
 		sampler.params[0] = tilt.value;
+	}
+
+	void TiltedSampler1D::overload(TOMLNode node)
+	{
+		tilt.overload(io::parse_key(node, _gen::keys::ParticleSystem::Tilt));
 	}
 
 	void UniformSampler2D::apply(internal::Sampler2D& sampler) const

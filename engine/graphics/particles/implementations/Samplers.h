@@ -9,7 +9,7 @@ namespace oly::particles
 	{
 		void apply(internal::Sampler1D& sampler) const override;
 		
-		void on_tick(const ParticleEmitter& emitter) {}
+		void on_tick(const ParticleEmitter& emitter) override {}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(UniformSampler1D);
 	};
@@ -22,15 +22,12 @@ namespace oly::particles
 
 		void apply(internal::Sampler1D& sampler) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			tilt.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node) override
-		{
-			tilt.overload(node["tilt"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(TiltedSampler1D);
 	};
@@ -39,7 +36,7 @@ namespace oly::particles
 	{
 		void apply(internal::Sampler2D& sampler) const override;
 
-		void on_tick(const ParticleEmitter& emitter) {}
+		void on_tick(const ParticleEmitter& emitter) override {}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(UniformSampler2D);
 	};
@@ -48,7 +45,7 @@ namespace oly::particles
 	{
 		void apply(internal::Sampler3D& sampler) const override;
 
-		void on_tick(const ParticleEmitter& emitter) {}
+		void on_tick(const ParticleEmitter& emitter) override {}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(UniformSampler3D);
 	};
@@ -57,7 +54,7 @@ namespace oly::particles
 	{
 		void apply(internal::Sampler4D& sampler) const override;
 
-		void on_tick(const ParticleEmitter& emitter) {}
+		void on_tick(const ParticleEmitter& emitter) override {}
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(UniformSampler4D);
 	};

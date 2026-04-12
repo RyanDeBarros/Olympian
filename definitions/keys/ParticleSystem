@@ -1,0 +1,20 @@
+Value     Value
+Op        Operation
+Ops       OperationArray
+InnerOp   InnerOperation
+Selector  Selector
+Klass     Klass
+Sampler   Sampler
+Domain    Domain
+
+A         A
+B         B
+C         C
+D         D
+K         K
+
+Amp       Amplitude
+TmOff     TimeOffset
+Rate      Rate
+Tilt      Tilt
+Duration  Duration

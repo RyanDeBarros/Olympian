@@ -92,11 +92,7 @@ namespace oly::particles
 			domain->on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			sampler->overload(node["sampler"]);
-			domain->overload(node["domain"]);
-		}
+		void overload(TOMLNode node);
 
 		static void overload(AttributeGenerator1D& generator, TOMLNode node)
 		{
@@ -162,11 +158,7 @@ namespace oly::particles
 			domain->on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			sampler->overload(node["sampler"]);
-			domain->overload(node["domain"]);
-		}
+		void overload(TOMLNode node);
 
 		static void overload(AttributeGenerator2D& generator, TOMLNode node)
 		{
@@ -232,11 +224,7 @@ namespace oly::particles
 			domain->on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			sampler->overload(node["sampler"]);
-			domain->overload(node["domain"]);
-		}
+		void overload(TOMLNode node);
 
 		static void overload(AttributeGenerator3D& generator, TOMLNode node)
 		{
@@ -302,11 +290,7 @@ namespace oly::particles
 			domain->on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			sampler->overload(node["sampler"]);
-			domain->overload(node["domain"]);
-		}
+		void overload(TOMLNode node);
 
 		static void overload(AttributeGenerator4D& generator, TOMLNode node)
 		{

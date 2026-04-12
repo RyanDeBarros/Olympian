@@ -4,6 +4,8 @@
 #include "graphics/particles/implementations/AttributeOperationEnum.h"
 #include "core/util/Logger.h"
 
+#include ".gen/keys/ParticleSystem.inl"
+
 #include ".gen/enums/rendering/particles/AttributeOperation.inl"
 
 namespace oly::particles
@@ -12,13 +14,13 @@ namespace oly::particles
 	{
 		TOMLNode parse_attribute_value_key(TOMLNode node)
 		{
-			return node["value"];
+			return io::parse_key(node, _gen::keys::ParticleSystem::Value);
 		}
 	}
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = io::parse_uint(node["op"]))
+		if (auto op = io::parse_uint(io::parse_key(node, _gen::keys::ParticleSystem::Operation)))
 		{
 			switch (_gen::rendering::particles::AttributeOperation::val(*op))
 			{
@@ -31,7 +33,8 @@ namespace oly::particles
 			case AttributeOperationEnum::Polarization2D:
 				return ops::Polarization2D::load(node);
 			default:
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized 'op' field \"" << *op << "\"" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized "
+					<< io::key_string(_gen::keys::ParticleSystem::Operation) << " field \"" << *op << "\"" << LOG.nl;
 			}
 		}
 
@@ -42,7 +45,7 @@ namespace oly::particles
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
-			if (auto arr = node["ops"].as_array())
+			if (auto arr = io::parse_key(node, _gen::keys::ParticleSystem::OperationArray).as_array())
 			{
 				std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -56,7 +59,8 @@ namespace oly::particles
 
 				return make_polymorphic<Sequence<0>>(std::move(ops));
 			}
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing "
+				<< io::key_string(_gen::keys::ParticleSystem::OperationArray) << " field" << LOG.nl;
 			return nullptr;
 		}
 
@@ -72,7 +76,7 @@ namespace oly::particles
 
 		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
 		{
-			if (auto arr = node["ops"].as_array())
+			if (auto arr = io::parse_key(node, _gen::keys::ParticleSystem::OperationArray).as_array())
 			{
 				std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -99,7 +103,8 @@ namespace oly::particles
 				else
 					return make_polymorphic<Sequence<0>>(std::move(ops));
 			}
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing 'ops' field." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing "
+				<< io::key_string(_gen::keys::ParticleSystem::OperationArray) << " field" << LOG.nl;
 			return nullptr;
 		}
 
@@ -107,7 +112,8 @@ namespace oly::particles
 		{
 			try
 			{
-				return make_polymorphic<Selector>(IAttributeOperation::load(node["inner_op"]), SubSelector::load(node["selector"]));
+				return make_polymorphic<Selector>(IAttributeOperation::load(io::parse_key(node, _gen::keys::ParticleSystem::InnerOperation)),
+					SubSelector::load(io::parse_key(node, _gen::keys::ParticleSystem::Selector)));
 			}
 			catch (Error e)
 			{

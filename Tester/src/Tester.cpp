@@ -99,11 +99,11 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;
 		particle_system.emitter(0).spawn_period = 0.3f;
-		oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, oly::io::load_toml("assets/particle system.toml")["emitter0"]["spawner"]);
-		particle_system.emitter(0).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["color"]);
-		particle_system.emitter(0).velocity.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["velocity"]);
+		oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, oly::io::load_toml("assets/particle system.toml")["emitter0"]["Spawner"]);
+		particle_system.emitter(0).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["Color"]);
+		particle_system.emitter(0).velocity.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["Velocity"]);
 		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter1"]["color"]);
+		particle_system.emitter(1).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter1"]["Color"]);
 
 		glEnable(GL_BLEND);
 
