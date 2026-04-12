@@ -34,7 +34,7 @@ namespace oly::context
 
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -46,14 +46,14 @@ namespace oly::context
 
 		if (!io::MetaSplitter::meta(file).has_type("tileset"))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
 
-		auto toml_assignments = toml["assignment"].as_array();
+		auto toml_assignments = io::parse_key(toml, _gen::keys::TileSet::AssignmentArray).as_array();
 
 		std::vector<rendering::TileSet::Assignment> assignments;
 		if (toml_assignments)
@@ -63,19 +63,19 @@ namespace oly::context
 				const size_t a_idx = _a_idx++;
 				TOMLNode node = (TOMLNode)_node;
 
-				auto _texture = node["texture"].value<std::string>();
+				auto _texture = io::parse_key(node, _gen::keys::TileSet::Texture).value<std::string>();
 				if (!_texture)
 				{
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - missing \"texture\" field." << LOG.nl;
+						<< " - missing " << io::key_string(_gen::keys::TileSet::Texture) << " field" << LOG.nl;
 					return;
 				}
 
-				auto _config = node["config"];
+				auto _config = io::parse_key(node, _gen::keys::TileSet::Configuration);
 				if (!_config)
 				{
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - missing \"config\" field." << LOG.nl;
+						<< " - missing " << io::key_string(_gen::keys::TileSet::Configuration) << " field" << LOG.nl;
 					return;
 				}
 
@@ -89,20 +89,20 @@ namespace oly::context
 					else
 					{
 						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-							<< ", unrecognized configuration #" << config << "." << LOG.nl;
+							<< ", unrecognized configuration #" << config << LOG.nl;
 						return;
 					}
 				}
 				else
 				{
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - \"config\" field is missing or not an int." << LOG.nl;
+						<< " - " << io::key_string(_gen::keys::TileSet::Configuration) << " field is missing or not an int" << LOG.nl;
 					return;
 				}
 
 				assignment.desc.file = ResourcePath(*_texture, file);
 				glm::vec4 uvs{};
-				if (io::parse_vec(node["uvs"], uvs))
+				if (io::parse_vec(io::parse_key(node, _gen::keys::TileSet::UVvec4), uvs))
 				{
 					assignment.desc.uvs.x1 = uvs[0];
 					assignment.desc.uvs.x2 = uvs[1];
@@ -110,7 +110,7 @@ namespace oly::context
 					assignment.desc.uvs.y2 = uvs[3];
 				}
 
-				if (auto transformations = node["trfm"].as_array())
+				if (auto transformations = io::parse_key(node, _gen::keys::TileSet::TransformationArray).as_array())
 				{
 					size_t tr_idx = 0;
 					for (auto& trfm : *transformations)
@@ -129,8 +129,7 @@ namespace oly::context
 							}
 						}
 						else
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-							<< ", tile transformation #" << tr_idx << " is not a string." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx << ", tile transformation #" << tr_idx << " is not a string" << LOG.nl;
 						++tr_idx;
 					}
 				}
@@ -143,7 +142,7 @@ namespace oly::context
 		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(toml, _gen::keys::TileSet::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;
 
 		return tileset;
 	}

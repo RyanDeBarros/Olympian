@@ -1,67 +1,67 @@
 #meta version=1.0 type="tileset"
 
-Storage = "discard"
+Storage = 0
 
-[[assignment]]
-"config"  = 0
-"texture" = "@/textures/grass tileset/S.png"
+[[Assign]]
+Config = 0
+Texture = "@/textures/grass tileset/S.png"
 
-[[assignment]]
-"config"  = 46
-"texture" = "@/textures/grass tileset/M.png"
+[[Assign]]
+Config = 46
+Texture = "@/textures/grass tileset/M.png"
 
-[[assignment]]
-"config"  = 16
-"texture" = "@/textures/grass tileset/BL.png"
+[[Assign]]
+Config = 16
+Texture = "@/textures/grass tileset/BL.png"
 
-[[assignment]]
-"config"  = 17
-"texture" = "@/textures/grass tileset/BR.png"
+[[Assign]]
+Config = 17
+Texture = "@/textures/grass tileset/BR.png"
 
-[[assignment]]
-"config"  = 18
-"texture" = "@/textures/grass tileset/TR.png"
+[[Assign]]
+Config = 18
+Texture = "@/textures/grass tileset/TR.png"
 
-[[assignment]]
-"config"  = 19
-"texture" = "@/textures/grass tileset/TL.png"
+[[Assign]]
+Config = 19
+Texture = "@/textures/grass tileset/TL.png"
 
-[[assignment]]
-"config"  = 28
-"texture" = "@/textures/grass tileset/LE.png"
+[[Assign]]
+Config = 28
+Texture = "@/textures/grass tileset/LE.png"
 
-[[assignment]]
-"config"  = 29
-"texture" = "@/textures/grass tileset/BE.png"
+[[Assign]]
+Config = 29
+Texture = "@/textures/grass tileset/BE.png"
 
-[[assignment]]
-"config"  = 30
-"texture" = "@/textures/grass tileset/RE.png"
+[[Assign]]
+Config = 30
+Texture = "@/textures/grass tileset/RE.png"
 
-[[assignment]]
-"config"  = 31
-"texture" = "@/textures/grass tileset/TE.png"
+[[Assign]]
+Config = 31
+Texture = "@/textures/grass tileset/TE.png"
 
-[[assignment]]
-"config"  = 1
-"texture" = "@/textures/grass tileset/LT.png"
+[[Assign]]
+Config = 1
+Texture = "@/textures/grass tileset/LT.png"
 
-[[assignment]]
-"config"  = 2
-"texture" = "@/textures/grass tileset/BT.png"
+[[Assign]]
+Config = 2
+Texture = "@/textures/grass tileset/BT.png"
 
-[[assignment]]
-"config"  = 3
-"texture" = "@/textures/grass tileset/RT.png"
+[[Assign]]
+Config = 3
+Texture = "@/textures/grass tileset/RT.png"
 
-[[assignment]]
-"config"  = 4
-"texture" = "@/textures/grass tileset/TT.png"
+[[Assign]]
+Config = 4
+Texture = "@/textures/grass tileset/TT.png"
 
-[[assignment]]
-"config"  = 9
-"texture" = "@/textures/grass tileset/I1.png"
+[[Assign]]
+Config = 9
+Texture = "@/textures/grass tileset/I1.png"
 
-[[assignment]]
-"config"  = 10
-"texture" = "@/textures/grass tileset/I2.png"
+[[Assign]]
+Config = 10
+Texture = "@/textures/grass tileset/I2.png"
