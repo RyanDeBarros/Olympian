@@ -8,6 +8,8 @@
 
 #include "physics/collision/elements/OBB.h"
 
+#include ".gen/keys/Ellipse.inl"
+
 namespace oly::rendering
 {
 	internal::EllipseBatch::EllipseBatch()
@@ -384,21 +386,21 @@ namespace oly::rendering
 			return {};
 
 		rendering::Ellipse ellipse;
-		ellipse.set_transformer() = Transformer2D::load(node["transformer"]);
+		ellipse.set_transformer() = Transformer2D::load(io::parse_key(node, _gen::keys::Ellipse::Transformer));
 
 		auto& color = ellipse.set_color();
-		io::parse_vec(node["border_inner_color"], color.border_inner);
-		io::parse_vec(node["border_outer_color"], color.border_outer);
-		io::parse_vec(node["fill_inner_color"], color.fill_inner);
-		io::parse_vec(node["fill_outer_color"], color.fill_outer);
+		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::BorderInnerColor), color.border_inner);
+		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::BorderOuterColor), color.border_outer);
+		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::FillInnerColor), color.fill_inner);
+		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::FillOuterColor), color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		io::parse_float(node["border"], dimension.border);
-		io::parse_float(node["border_exp"], dimension.border_exp);
-		io::parse_float(node["fill_exp"], dimension.fill_exp);
-		io::parse_float(node["rx"], dimension.rx);
-		io::parse_float(node["ry"], dimension.ry);
-		dimension.camera_invariant = io::parse_bool_or(node["camera_invariant"], false);
+		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::Border), dimension.border);
+		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::BorderExponent), dimension.border_exp);
+		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::FillExponent), dimension.fill_exp);
+		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::RadiusX), dimension.rx);
+		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::RadiusY), dimension.ry);
+		dimension.camera_invariant = io::parse_bool_or(io::parse_key(node, _gen::keys::Ellipse::CameraInvariant), false);
 
 		return ellipse;
 	}
