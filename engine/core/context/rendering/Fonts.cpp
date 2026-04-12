@@ -80,7 +80,7 @@ namespace oly::context
 
 	static rendering::Kerning parse_kerning(TOMLNode node)
 	{
-		auto kerning_arr = node["kerning"].as_array();
+		auto kerning_arr = io::parse_key(node, _gen::keys::Font::Kerning).as_array();
 		if (!kerning_arr)
 			return {};
 
@@ -90,21 +90,21 @@ namespace oly::context
 		kerning_arr->for_each([&kerning, &_k_idx](auto&& _node) {
 			const size_t k_idx = _k_idx++;
 			TOMLNode node = (TOMLNode)_node;
-			auto pair = node["pair"].as_array();
+			auto pair = io::parse_key(node, _gen::keys::Font::CodepointPair).as_array();
 			if (!pair)
 			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing \"pair\" array field" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing " << io::key_string(_gen::keys::Font::CodepointPair) << " field" << LOG.nl;
 				return;
 			}
 			if (pair->size() != 2)
 			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - " << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array" << LOG.nl;
 				return;
 			}
 			int dist = 0;
-			if (!io::parse_int(node["dist"], dist))
+			if (!io::parse_int(io::parse_key(node, _gen::keys::Font::CodepointDistance), dist))
 			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing \"dist\" int field" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing " << io::key_string(_gen::keys::Font::CodepointDistance) << " int field" << LOG.nl;
 				return;
 			}
 
@@ -112,7 +112,7 @@ namespace oly::context
 			auto tc1 = pair->get_as<std::string>(1);
 			if (!tc0 || !tc1)
 			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - \"pair\" field is not a 2-element array of strings" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - " << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array of strings" << LOG.nl;
 				return;
 			}
 
@@ -150,10 +150,10 @@ namespace oly::context
 		}
 
 		auto table = io::load_toml(import_file);
-		auto node = table["font_face"];
+		auto node = io::parse_key((TOMLNode)table, _gen::keys::Font::FontFace);
 		if (!node)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot load font face " << file << " - missing \"font_face\" table" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot load font face " << file << " - missing " << io::key_string(_gen::keys::Font::FontFace) << " table" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -191,26 +191,27 @@ namespace oly::context
 		auto table = io::load_toml(import_file);
 		TOMLNode toml = (TOMLNode)table;
 
-		auto font_atlas_list = toml["font_atlas"].as_array();
+		// TODO v7 abstract the error/warning handling for parsing keys. Associate certain keys with certain data types as well to automatically call the correct outer io parse function
+		auto font_atlas_list = io::parse_key(toml, _gen::keys::Font::FontAtlasArray).as_array();
 		if (!font_atlas_list)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_atlas\" array field" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::FontAtlasArray) << " array field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (index >= font_atlas_list->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
-				<< ") out of range for \"font_atlas\" array field of size (" << font_atlas_list->size() << ")" << LOG.nl;
+				<< ") out of range for " << io::key_string(_gen::keys::Font::FontAtlasArray) << " array field of size (" << font_atlas_list->size() << ")" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 		auto node = TOMLNode(*font_atlas_list->get(index));
 
 		rendering::FontOptions options;
 
-		if (!io::parse_float(node["font_size"], options.font_size))
+		if (!io::parse_float(io::parse_key(node, _gen::keys::Font::FontSize), options.font_size))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"font_size\" field" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::FontSize) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -292,28 +293,28 @@ namespace oly::context
 		TOMLNode toml = (TOMLNode)table;
 
 		float space_advance_width;
-		if (!io::parse_float(toml["space_advance_width"], space_advance_width))
+		if (!io::parse_float(io::parse_key(toml, _gen::keys::Font::SpaceAdvanceWidth), space_advance_width))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"space_advance_width\" field" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::SpaceAdvanceWidth) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		float line_height;
-		if (!io::parse_float(toml["line_height"], line_height))
+		if (!io::parse_float(io::parse_key(toml, _gen::keys::Font::LineHeight), line_height))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"line_height\" field" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::LineHeight) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		glm::vec2 font_scale = glm::vec2(1.0f);
-		if (auto a = toml["font_scale"])
+		if (auto a = io::parse_key(toml, _gen::keys::Font::FontScale))
 		{
 			if (!io::parse_vec(a, font_scale))
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"font_scale\" field" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::FontScale) << " field" << LOG.nl;
 		}
 
 		std::vector<std::string> texture_files;
-		if (auto a = toml["texture_files"].as_array())
+		if (auto a = io::parse_key(toml, _gen::keys::Font::TextureFileArray).as_array())
 		{
 			texture_files.reserve(a->size());
 			for (size_t i = 0; i < a->size(); ++i)
@@ -322,27 +323,27 @@ namespace oly::context
 				if (texture_file)
 					texture_files.push_back(texture_file->get());
 				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in \"texture_files\" array" << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in " << io::key_string(_gen::keys::Font::TextureFileArray) << " array" << LOG.nl;
 			}
 		}
 
 		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
-		if (auto glyph_array = toml["glyphs"].as_array())
+		if (auto glyph_array = io::parse_key(toml, _gen::keys::Font::GlyphArray).as_array())
 		{
 			glyph_array->for_each([&glyphs, &texture_files](auto&& _g) {
 				TOMLNode g = (TOMLNode)_g;
 
 				utf::Codepoint codepoint = utf::Codepoint(0);
-				if (auto v = g["codepoint"].value<std::string>())
+				if (auto v = io::parse_key(g, _gen::keys::Font::Codepoint).value<std::string>())
 					codepoint = parse_codepoint(v.value());
 				if (codepoint == utf::Codepoint(0))
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"codepoint\" field in glyphs array, skipping glyph..." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::Codepoint) << " field in glyphs array, skipping glyph..." << LOG.nl;
 					return;
 				}
 
 				std::string texture_file;
-				unsigned int tidx = io::parse_uint_or(g["texture_file"], 0);
+				unsigned int tidx = io::parse_uint_or(io::parse_key(g, _gen::keys::Font::TextureFile), 0);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -352,21 +353,21 @@ namespace oly::context
 					return;
 				}
 
-				unsigned int texture_index = io::parse_uint_or(g["texture_index"], 0);
+				unsigned int texture_index = io::parse_uint_or(io::parse_key(g, _gen::keys::Font::TextureIndex), 0);
 
-				math::IRect2D location = math::IRect2D::load(g["location"]);
+				math::IRect2D location = math::IRect2D::load(io::parse_key(g, _gen::keys::Font::Location));
 				if (location.x2 <= location.x1 || location.y2 <= location.y1)
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid \"location\" field, skipping glyph..." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid " << io::key_string(_gen::keys::Font::Location) << " field, skipping glyph..." << LOG.nl;
 					return;
 				}
 
-				math::TopSidePadding padding = math::TopSidePadding::load(g["padding"]);
+				math::TopSidePadding padding = math::TopSidePadding::load(io::parse_key(g, _gen::keys::Font::Padding));
 
-				math::PositioningMode origin_offset_mode = math::PositioningMode::load(g["origin_offset_mode"], math::PositioningMode::RELATIVE);
+				math::PositioningMode origin_offset_mode = math::PositioningMode::load(io::parse_key(g, _gen::keys::Font::OriginOffsetMode), math::PositioningMode::RELATIVE);
 
 				glm::vec2 origin_offset = {};
-				io::parse_vec(g["origin_offset"], origin_offset);
+				io::parse_vec(io::parse_key(g, _gen::keys::Font::OriginOffset), origin_offset);
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 				});
@@ -405,14 +406,14 @@ namespace oly::context
 		TOMLNode toml = (TOMLNode)table;
 
 		rendering::FontFamilyRef font_family = REF_INIT;
-		if (auto a = toml["styles"].as_array())
+		if (auto a = io::parse_key(toml, _gen::keys::Font::StyleArray).as_array())
 		{
 			a->for_each([&file, &styles = font_family->styles](auto&& _node) {
 				TOMLNode node = (TOMLNode)_node;
 
 				rendering::FontStyle style = rendering::FontStyle::Regular;
 
-				if (auto s = io::parse_uint(node["style"]))
+				if (auto s = io::parse_uint(io::parse_key(node, _gen::keys::Font::Style)))
 				{
 					try
 					{
@@ -420,14 +421,14 @@ namespace oly::context
 					}
 					catch (const std::out_of_range&)
 					{
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized font family \"style\" field (" << *s << ")" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized font family " << io::key_string(_gen::keys::Font::Style) << " field (" << *s << ")" << LOG.nl;
 					}
 				}
 
-				auto _font_file = node["file"].value<std::string>();
+				auto _font_file = io::parse_key(node, _gen::keys::Font::File).value<std::string>();
 				if (!_font_file)
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse \"file\" field from font family style" << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::File) << " field from font family style" << LOG.nl;
 					return;
 				}
 				ResourcePath font_file(*_font_file, file);
@@ -445,7 +446,7 @@ namespace oly::context
 					}
 				}
 				else
-					font = context::load_font_atlas(font_file, io::parse_uint_or(node["atlas_index"], 0));
+					font = context::load_font_atlas(font_file, io::parse_uint_or(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0));
 
 				styles.emplace(style, std::move(font));
 				});

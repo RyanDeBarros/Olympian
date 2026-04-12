@@ -22,7 +22,7 @@ frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
 
 [sprite4]
 texture = "@/textures/tux.png"
-texture_index = 1
+TxIndex = 1
 transformer = { Position = [-500, 300], Scale = [0.1, 0.1] }
 
 [sprite5]
@@ -34,7 +34,7 @@ texture = "@/textures/einstein.png"
 
 [godot_icon]
 texture = "@/textures/godot.svg"
-texture_index = 1
+TxIndex = 1
 transformer = { Position = [-300, -200], "Rotation" = 0.3, Scale = [1.0, 1.0] }
 
 [knight]
@@ -48,12 +48,12 @@ Columns = 3
 delay_seconds = 0.1
 	[atlased_night.sprite]
 	texture = "@/textures/knight.png"
-	texture_index = 1
+	TxIndex = 1
 	transformer = { Position = [300, -200], Scale = [20, 20] }
 
 [nonant_panel]
 nsize = [ 128, 0 ]
-offsets = { uniform = 6 }
+offsets = { Uniform = 6 }
 [nonant_panel.sprite]
 texture = "@/textures/panel.png"
 transformer = { Scale = [ 10.0, 10.0 ] }
@@ -89,7 +89,7 @@ transformer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 	"line_spacing"      = 1.5
 	"linebreak_spacing" = 2.0
 	"min_size"          = [ 800, 1200 ]
-	"padding"           = [ 50, 50 ]
+	"Padding"           = [ 50, 50 ]
 	"horizontal_align"  = 1
 	"vertical_align"    = 4
 	[[test_text.element]]

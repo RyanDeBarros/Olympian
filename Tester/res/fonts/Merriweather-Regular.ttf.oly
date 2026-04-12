@@ -1,12 +1,12 @@
 #meta version=1.0 import type=font
 
-[[font_atlas]]
+[[Atlas]]
 Storage = 0
-font_size = 96
+FontSize = 96
 MagFilt = 1
 MinFilt = 1
 Mipmaps = 0
 ComBP = 0
 
-[font_face]
+[Face]
 Storage = 0

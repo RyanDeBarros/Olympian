@@ -10,6 +10,10 @@ GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 GEN_KEYS_DIR = GEN_ROOT_DIR / "keys"
 
 
+# TODO v7 codegen for meta fields, specifically asset types
+# TODO v7 third column in keys codegen for GUI-friendly names
+
+
 def gen(keys_file: Path, *args, **kwargs) -> list[str]:
 	max_chars: int = kwargs["max_chars"]
 	underlying_type: str = kwargs["underlying_type"]

@@ -5,6 +5,9 @@
 #include "core/base/Transforms.h"
 #include "core/util/Loader.h"
 
+#include ".gen/keys/Rect2D.inl"
+#include ".gen/keys/Padding.inl"
+
 namespace oly::math
 {
 	float Triangle2D::signed_area() const
@@ -51,10 +54,10 @@ namespace oly::math
 			return {};
 
 		IRect2D rect;
-		io::parse_int(node["x1"], rect.x1);
-		io::parse_int(node["x2"], rect.x2);
-		io::parse_int(node["y1"], rect.y1);
-		io::parse_int(node["y2"], rect.y2);
+		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::X1), rect.x1);
+		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::X2), rect.x2);
+		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::Y1), rect.y1);
+		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::Y2), rect.y2);
 		return rect;
 	}
 
@@ -65,13 +68,13 @@ namespace oly::math
 
 		Padding padding;
 
-		if (auto uniform = node["uniform"].value<double>())
+		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
 			padding = Padding::uniform(*uniform);
 
-		io::parse_float(node["left"], padding.left);
-		io::parse_float(node["right"], padding.right);
-		io::parse_float(node["top"], padding.top);
-		io::parse_float(node["bottom"], padding.bottom);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Bottom), padding.bottom);
 
 		return padding;
 	}

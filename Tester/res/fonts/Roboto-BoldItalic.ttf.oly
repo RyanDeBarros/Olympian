@@ -1,8 +1,8 @@
 #meta version=1.0 import type="font"
 
-[[font_atlas]]
+[[Atlas]]
 Storage = 0
-font_size = 96.0
+FontSize = 96.0
 MinFilt = 1
 MagFilt = 1
 Mipmaps = 0
@@ -10,6 +10,6 @@ ComBP = 0
 ComB = ""
 UseComBP = true
 
-[font_face]
+[Face]
 Storage = 0
-kerning = []
+Kerning = []

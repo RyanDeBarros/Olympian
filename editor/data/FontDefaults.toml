@@ -1,11 +1,11 @@
 #meta type="font_defaults"
 
-[font_face]
+[Face]
 Storage = 1
 
-[font_atlas]
+[Atlas]
 Storage = 0
-font_size = 32.0
+FontSize = 32.0
 MinFilt = 0
 MagFilt = 0
 Mipmaps = false
