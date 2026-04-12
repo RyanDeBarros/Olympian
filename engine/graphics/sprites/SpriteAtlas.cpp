@@ -123,7 +123,7 @@ namespace oly::rendering
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (io::parse_uint(node["rows"], rows) && io::parse_uint(node["cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
+		if (io::parse_uint(node["Rows"], rows) && io::parse_uint(node["Cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
 			sprite_atlas.setup_uniform(rows, cols, delay_seconds, io::parse_bool_or(node["row_major"], true), io::parse_bool_or(node["row_up"], true));
 		else
 		{

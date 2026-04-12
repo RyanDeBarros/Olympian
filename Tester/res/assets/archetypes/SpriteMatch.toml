@@ -7,9 +7,9 @@ draw = [
 ]
 
 [sprite0]
-transformer = { Position = [450, -200] }
-texture = "@/textures/einstein.png"
+Trfmer = { Position = [450, -200] }
+Texture = "@/textures/einstein.png"
 
 [sprite2]
-texture = "@/textures/tux.png"
-transformer = { Position = [-100, -100], Scale = [0.2, 0.2], Modifier = { "type" = 1 } }
+Texture = "@/textures/tux.png"
+Trfmer = { Position = [-100, -100], Scale = [0.2, 0.2], Modifier = { "type" = 1 } }

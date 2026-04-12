@@ -16,50 +16,50 @@ draw = [
 ]
 
 [sprite3]
-texture = "@/textures/serotonin.gif"
-transformer = { Position = [ 400, 400 ], Scale = [ 0.5, 0.5 ] }
-frame_format = { "num_frames" = 59, "delay_seconds" = -0.05 }
+Texture = "@/textures/serotonin.gif"
+Trfmer = { Position = [ 400, 400 ], Scale = [ 0.5, 0.5 ] }
+FrmForm = { FrmCount = 59, DelayS = -0.05 }
 
 [sprite4]
-texture = "@/textures/tux.png"
+Texture = "@/textures/tux.png"
 TxIndex = 1
-transformer = { Position = [-500, 300], Scale = [0.1, 0.1] }
+Trfmer = { Position = [-500, 300], Scale = [0.1, 0.1] }
 
 [sprite5]
-texture = "@/textures/tux.png"
-transformer = { Position = [-400, 300], Scale = [0.1, 0.1] }
+Texture = "@/textures/tux.png"
+Trfmer = { Position = [-400, 300], Scale = [0.1, 0.1] }
 
 [sprite1]
-texture = "@/textures/einstein.png"
+Texture = "@/textures/einstein.png"
 
 [godot_icon]
-texture = "@/textures/godot.svg"
+Texture = "@/textures/godot.svg"
 TxIndex = 1
-transformer = { Position = [-300, -200], "Rotation" = 0.3, Scale = [1.0, 1.0] }
+Trfmer = { Position = [-300, -200], "Rotation" = 0.3, Scale = [1.0, 1.0] }
 
 [knight]
-texture = "@/textures/knight.png"
-transformer = { Position = [100, -300], Scale = [20, 20] }
-frame_format = { "mode" = 1 }
+Texture = "@/textures/knight.png"
+Trfmer = { Position = [100, -300], Scale = [20, 20] }
+FrmForm = { Mode = 1 }
 
 [atlased_knight]
 Rows = 2
 Columns = 3
 delay_seconds = 0.1
 	[atlased_night.sprite]
-	texture = "@/textures/knight.png"
+	Texture = "@/textures/knight.png"
 	TxIndex = 1
-	transformer = { Position = [300, -200], Scale = [20, 20] }
+	Trfmer = { Position = [300, -200], Scale = [20, 20] }
 
 [nonant_panel]
 nsize = [ 128, 0 ]
 offsets = { Uniform = 6 }
 [nonant_panel.sprite]
-texture = "@/textures/panel.png"
-transformer = { Scale = [ 10.0, 10.0 ] }
+Texture = "@/textures/panel.png"
+Trfmer = { Scale = [ 10.0, 10.0 ] }
 
 [grass_tilemap]
-transformer = { Scale = [ 100, 100 ] }
+Trfmer = { Scale = [ 100, 100 ] }
 
 	[[grass_tilemap.layer]]
 	"z" = 0
@@ -82,7 +82,7 @@ transformer = { Scale = [ 100, 100 ] }
 	
 [test_text]
 "draw_bkg" = true
-transformer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
+Trfmer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 "bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
 	[test_text.format]
 	"pivot"             = [ 0, 1 ]
@@ -115,7 +115,7 @@ transformer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 [smol_text]
 draw_bkg = true
 bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
-camera_invariant = true
+CamInv = true
 	[[smol_text.element]]
 	"font"	       = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "abcdef"
