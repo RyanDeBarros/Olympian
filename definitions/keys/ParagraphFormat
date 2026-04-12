@@ -1,0 +1,10 @@
+Pivot     Pivot
+LineSp    LineSpacing
+LineBrk   LinebreakSpacing
+MinSize   MinSize
+Padding   Padding
+TextWrap  TextWrap
+MaxH      MaxHeight
+TabSp     TabSpaces
+HAlign    HorizontalAlignment
+VAlign    VerticalAlignment

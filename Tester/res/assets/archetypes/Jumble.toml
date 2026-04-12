@@ -85,13 +85,13 @@ Trfmer = { Scale = [ 100, 100 ] }
 Trfmer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 "bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
 	[test_text.format]
-	"pivot"             = [ 0, 1 ]
-	"line_spacing"      = 1.5
-	"linebreak_spacing" = 2.0
-	"min_size"          = [ 800, 1200 ]
-	"Padding"           = [ 50, 50 ]
-	"horizontal_align"  = 1
-	"vertical_align"    = 4
+	Pivot = [ 0, 1 ]
+	LineSp = 1.5
+	LineBrk = 2.0
+	MinSize = [ 800, 1200 ]
+	Padding = [ 50, 50 ]
+	HAlign = 1
+	VAlign = 4
 	[[test_text.element]]
 	"font"         = "@/fonts/Roboto-Regular.ttf"
 	"text"         = "rgb"

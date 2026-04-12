@@ -3,6 +3,8 @@
 #include "core/util/Logger.h"
 #include "core/util/Loader.h"
 
+#include ".gen/keys/ParagraphFormat.inl"
+
 #include ".gen/enums/rendering/text/HorizontalAlignment.inl"
 #include ".gen/enums/rendering/text/VerticalAlignment.inl"
 
@@ -22,16 +24,16 @@ namespace oly::rendering
 	{
 		ParagraphFormat format;
 
-		io::parse_vec(node["pivot"], format.pivot);
-		io::parse_float(node["line_spacing"], format.line_spacing);
-		io::parse_float(node["linebreak_spacing"], format.linebreak_spacing);
-		io::parse_vec(node["min_size"], format.min_size);
-		io::parse_vec(node["padding"], format.padding);
-		io::parse_float(node["text_wrap"], format.text_wrap);
-		io::parse_float(node["max_height"], format.max_height);
-		io::parse_float(node["tab_spaces"], format.tab_spaces);
+		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::Pivot), format.pivot);
+		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::LineSpacing), format.line_spacing);
+		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::LinebreakSpacing), format.linebreak_spacing);
+		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::MinSize), format.min_size);
+		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::Padding), format.padding);
+		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::TextWrap), format.text_wrap);
+		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::MaxHeight), format.max_height);
+		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::TabSpaces), format.tab_spaces);
 
-		if (auto halign = io::parse_uint(node["horizontal_align"]))
+		if (auto halign = io::parse_uint(io::parse_key(node, _gen::keys::ParagraphFormat::HorizontalAlignment)))
 		{
 			try
 			{
@@ -39,11 +41,11 @@ namespace oly::rendering
 			}
 			catch (const std::out_of_range&)
 			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized \"horizontal_alignment\" (" << *halign << ")" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized " << io::key_string(_gen::keys::ParagraphFormat::HorizontalAlignment) << " (" << *halign << ")" << LOG.nl;
 			}
 		}
 
-		if (auto valign = io::parse_uint(node["vertical_align"]))
+		if (auto valign = io::parse_uint(io::parse_key(node, _gen::keys::ParagraphFormat::VerticalAlignment)))
 		{
 			try
 			{
@@ -51,7 +53,7 @@ namespace oly::rendering
 			}
 			catch (const std::out_of_range&)
 			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized \"vertical_alignment\" (" << *valign << ")" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized " << io::key_string(_gen::keys::ParagraphFormat::VerticalAlignment) << " (" << *valign << ")" << LOG.nl;
 			}
 		}
 
