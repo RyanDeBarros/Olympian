@@ -4,7 +4,7 @@ namespace oly::rendering
 {
 	enum class FrameFormat
 	{
-		Single,
-		Auto
+		Single = 0x0,
+		Auto = 0x1
 	};
 }

@@ -4,8 +4,8 @@ namespace oly::rendering
 {
 	enum class PolyCompositeMethod
 	{
-		Ngon,
-		BorderedNgon,
-		ConvexDecomposition
+		Ngon = 0x0,
+		BorderedNgon = 0x1,
+		ConvexDecomposition = 0x2
 	};
 }
