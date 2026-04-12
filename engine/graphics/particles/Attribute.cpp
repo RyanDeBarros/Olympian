@@ -115,7 +115,7 @@ namespace oly::particles
 				return make_polymorphic<Selector>(IAttributeOperation::load(io::parse_key(node, _gen::keys::ParticleSystem::InnerOperation)),
 					SubSelector::load(io::parse_key(node, _gen::keys::ParticleSystem::Selector)));
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Selector: " << (int)e.code << LOG.nl;
 				return nullptr;

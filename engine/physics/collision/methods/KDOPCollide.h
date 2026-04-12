@@ -74,10 +74,10 @@ namespace oly::col2d
 			{
 				return gjk::overlaps(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return sat::overlaps(c1, c2);
@@ -92,10 +92,10 @@ namespace oly::col2d
 			{
 				return gjk::collides(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return sat::collides(c1, c2);
@@ -110,10 +110,10 @@ namespace oly::col2d
 			{
 				return gjk::contacts(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return sat::contacts(c1, c2);
@@ -135,10 +135,10 @@ namespace oly::col2d
 			{
 				return gjk::overlaps(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_overlaps_polygon(c2, c1.points());
@@ -153,10 +153,10 @@ namespace oly::col2d
 			{
 				return gjk::overlaps(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_overlaps_polygon(c1, c2.points());
@@ -171,10 +171,10 @@ namespace oly::col2d
 			{
 				return gjk::collides(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_collides_polygon(c2, c1.points()).invert();
@@ -189,10 +189,10 @@ namespace oly::col2d
 			{
 				return gjk::collides(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_collides_polygon(c1, c2.points());
@@ -207,10 +207,10 @@ namespace oly::col2d
 			{
 				return gjk::contacts(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
@@ -225,10 +225,10 @@ namespace oly::col2d
 			{
 				return gjk::contacts(c1, c2);
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw e;
+					throw;
 			}
 		}
 		return internal::circle_contacts_polygon(c1, c2, c2.points());
@@ -249,10 +249,10 @@ namespace oly::col2d
 			{\
 				return gjk::overlaps(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::overlaps(c1, c2);\
@@ -266,10 +266,10 @@ namespace oly::col2d
 			{\
 				return gjk::overlaps(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::overlaps(c1, c2);\
@@ -283,10 +283,10 @@ namespace oly::col2d
 			{\
 				return gjk::collides(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::collides(c1, c2);\
@@ -300,10 +300,10 @@ namespace oly::col2d
 			{\
 				return gjk::collides(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::collides(c1, c2);\
@@ -317,10 +317,10 @@ namespace oly::col2d
 			{\
 				return gjk::contacts(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::contacts(c1, c2);\
@@ -334,10 +334,10 @@ namespace oly::col2d
 			{\
 				return gjk::contacts(c1, c2);\
 			}\
-			catch (Error e)\
+			catch (const Error& e)\
 			{\
 				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)\
-					throw e;\
+					throw;\
 			}\
 		}\
 		return sat::contacts(c1, c2);\

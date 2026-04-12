@@ -166,6 +166,34 @@ namespace oly::io
 		return parse_ivec<4>(node);
 	}
 
+	template<>
+	std::optional<std::string> parse<std::string>(TOMLNode node)
+	{
+		return node.value<std::string>();
+	}
+
+	template<>
+	std::optional<TOMLArray> parse<TOMLArray>(TOMLNode node)
+	{
+		if (auto o = node.as_array())
+			return o;
+		else
+			return std::nullopt;
+	}
+
+	namespace internal
+	{
+		void log_context_warning(const StringParam& msg)
+		{
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << msg << LOG.nl;
+		}
+
+		void log_context_error(const StringParam& msg)
+		{
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << msg << LOG.endl;
+		}
+	}
+
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
 		if (auto mnode = io::parse_key(node, _gen::keys::Transform::Modifier))

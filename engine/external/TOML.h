@@ -13,4 +13,5 @@
 namespace oly
 {
 	typedef toml::node_view<toml::node> TOMLNode;
+	typedef toml::array* TOMLArray;
 }

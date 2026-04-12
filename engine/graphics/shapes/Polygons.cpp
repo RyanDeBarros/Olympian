@@ -392,12 +392,12 @@ namespace oly::rendering
 			{
 				triangulate();
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code == ErrorCode::Triangulation)
 					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
 				else
-					throw e;
+					throw;
 			}
 
 			ref.resize_range(num_vertices());
@@ -523,10 +523,8 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
 					points.push_back(*pt);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2" << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -539,10 +537,8 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse color #" + std::to_string(color_idx)))
 					colors.push_back(*col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -673,10 +669,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
 							points.push_back(*pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -688,10 +682,8 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse color #" + std::to_string(color_idx)))
 							colors.push_back(*col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -709,10 +701,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
 							ngon_base.points.push_back(*pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -723,10 +713,8 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse fill color #" + std::to_string(color_idx)))
 							ngon_base.fill_colors.push_back(*col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -737,10 +725,8 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse border color #" + std::to_string(color_idx)))
 							ngon_base.border_colors.push_back(*col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
 					}
 				}
@@ -779,10 +765,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
 							points.push_back(*pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
 					}
 				}
@@ -865,10 +849,8 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
 					ngon_base.points.push_back(*pt);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2" << LOG.nl;
 				++pt_idx;
 			}
 		}
@@ -879,10 +861,8 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse fill color #" + std::to_string(color_idx)))
 					ngon_base.fill_colors.push_back(*col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
 			}
 		}
@@ -893,10 +873,8 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse border color #" + std::to_string(color_idx)))
 					ngon_base.border_colors.push_back(*col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
 			}
 		}

@@ -339,43 +339,33 @@ namespace oly::context
 
 	void load_signal(TOMLNode node)
 	{
-		auto id = io::parse_key(node, _gen::keys::Signal::ID).value<std::string>();
-		if (!id)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::ID) << " field" << LOG.endl;
-			return;
-		}
-		auto binding = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Signal::Binding));
-		if (!binding)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::Binding) << " field" << LOG.endl;
-			return;
-		}
+		const auto id = io::parse_required<std::string>(node, _gen::keys::Signal::ID);
+		const auto binding = io::parse_required<unsigned int>(node, _gen::keys::Signal::Binding);
 
 		try
 		{
-			switch (_gen::platform::SignalBindingType::val(*binding))
+			switch (_gen::platform::SignalBindingType::val(binding))
 			{
 			case input::SignalBindingType::Key:
-				load_key_binding(node, *id);
+				load_key_binding(node, id);
 				break;
 			case input::SignalBindingType::MouseButton:
-				load_mouse_button_binding(node, *id);
+				load_mouse_button_binding(node, id);
 				break;
 			case input::SignalBindingType::GamepadButton:
-				load_gamepad_button_binding(node, *id);
+				load_gamepad_button_binding(node, id);
 				break;
 			case input::SignalBindingType::GamepadAxis1D:
-				load_gamepad_axis_1d_binding(node, *id);
+				load_gamepad_axis_1d_binding(node, id);
 				break;
 			case input::SignalBindingType::GamepadAxis2D:
-				load_gamepad_axis_2d_binding(node, *id);
+				load_gamepad_axis_2d_binding(node, id);
 				break;
 			case input::SignalBindingType::CursorPos:
-				load_cursor_pos_binding(node, *id);
+				load_cursor_pos_binding(node, id);
 				break;
 			case input::SignalBindingType::Scroll:
-				load_scroll_binding(node, *id);
+				load_scroll_binding(node, id);
 				break;
 			default:
 				throw std::out_of_range("");
@@ -383,7 +373,7 @@ namespace oly::context
 		}
 		catch (const std::out_of_range&)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value (" << *binding << ")" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value (" << binding << ")" << LOG.nl;
 		}
 	}
 
@@ -395,13 +385,7 @@ namespace oly::context
 
 	void load_signal_mapping(TOMLNode node)
 	{
-		auto toml_id = io::parse_key(node, _gen::keys::Signal::ID).value<std::string>();
-		if (!toml_id)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::ID) << " field" << LOG.endl;
-			return;
-		}
-
+		const auto id = io::parse_required<std::string>(node, _gen::keys::Signal::ID);
 		if (auto toml_signals = io::parse_key(node, _gen::keys::Signal::MappedSignalList).as_array())
 		{
 			std::vector<std::string> signals;
@@ -412,7 +396,7 @@ namespace oly::context
 				else
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string" << LOG.nl;
 			}
-			context::assign_signal_mapping(toml_id.value(), std::move(signals));
+			context::assign_signal_mapping(id, std::move(signals));
 		}
 	}
 
@@ -428,13 +412,13 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!io::MetaSplitter::meta(file).has_type("signal"))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 

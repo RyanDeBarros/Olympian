@@ -915,34 +915,38 @@ namespace oly::rendering
 
 	static void add_text_element(TOMLNode element, size_t i, std::vector<TextElement>& elements)
 	{
-		TextElement e;
-		if (auto font = io::parse_key(element, _gen::keys::Paragraph::Font).value<std::string>())
-			e.font = context::load_font(*font, io::parse_or(io::parse_key(element, _gen::keys::Paragraph::FontIndex), 0u));
-		else
+		try
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Font) << " field in text element (" << i << ")." << LOG.nl;
-			return;
-		}
+			TextElement e;
+			const auto font = io::parse_required<std::string>(element, _gen::keys::Paragraph::Font, "in text element #" + std::to_string(i));
+			const auto font_index = io::parse_optional<unsigned int>(element, _gen::keys::Paragraph::FontIndex, 0u, "in text element #" + std::to_string(i));
+			e.font = context::load_font(font, font_index);
 
-		if (auto text = io::parse_key(element, _gen::keys::Paragraph::Text).value<std::string>())
-			e.text = std::move(*text);
-		else
+			if (auto text = io::parse_key(element, _gen::keys::Paragraph::Text).value<std::string>())
+				e.text = std::move(*text);
+			else
+			{
+				_OLY_ENGINE_LOG_ERROR("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Text) << " field in text element (" << i << ")." << LOG.endl;
+				return;
+			}
+
+			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
+			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
+			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
+			if (auto line_y_pivot = io::parse<float>(io::parse_key(element, _gen::keys::Paragraph::LineYPivot)))
+				e.line_y_pivot = *line_y_pivot;
+			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
+
+			if (io::parse_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
+				TextElement::expand(e, elements);
+			else
+				elements.push_back(std::move(e));
+		}
+		catch (const Error& e)
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Text) << " field in text element (" << i << ")." << LOG.nl;
-			return;
+			if (e.code != ErrorCode::LoadAsset)
+				throw;
 		}
-
-		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
-		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
-		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
-		if (auto line_y_pivot = io::parse<float>(io::parse_key(element, _gen::keys::Paragraph::LineYPivot)))
-			e.line_y_pivot = *line_y_pivot;
-		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
-
-		if (io::parse_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
-			TextElement::expand(e, elements);
-		else
-			elements.push_back(std::move(e));
 	}
 
 	Paragraph Paragraph::load(TOMLNode node)

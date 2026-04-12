@@ -173,37 +173,39 @@ namespace oly::rendering
 		{
 			size_t _layer_idx = 0;
 			toml_layers->for_each([&tilemap, &_layer_idx](auto&& _node) {
-				const size_t layer_idx = _layer_idx++;
-				TOMLNode node = (TOMLNode)_node;
-
-				auto tileset = io::parse_key(node, _gen::keys::TileMap::TileSet).value<std::string>();
-				if (!tileset)
+				try
 				{
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse tilemap layer #" << layer_idx << " - missing " << io::key_string(_gen::keys::TileMap::TileSet) << " field" << LOG.nl;
-					return;
-				}
+					const size_t layer_idx = _layer_idx++;
+					TOMLNode node = (TOMLNode)_node;
 
-				TileMapLayer layer;
-				layer.tileset = context::load_tileset(*tileset);
+					auto tileset = io::parse_required<std::string>(node, _gen::keys::TileMap::TileSet, "in tilemap layer #" + std::to_string(layer_idx));
 
-				auto tiles = io::parse_key(node, _gen::keys::TileMap::TileArray).as_array();
-				if (tiles)
-				{
-					size_t tile_idx = 0;
-					for (auto& toml_tile : *tiles)
+					TileMapLayer layer;
+					layer.tileset = context::load_tileset(tileset);
+
+					auto tiles = io::parse_key(node, _gen::keys::TileMap::TileArray).as_array();
+					if (tiles)
 					{
-						if (auto tile = io::parse<glm::ivec2>((TOMLNode)toml_tile))
-							layer.paint_tile(*tile);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx << ", cannot convert tile #" << tile_idx << " to vec2" << LOG.nl;
-						++tile_idx;
+						size_t tile_idx = 0;
+						for (auto& toml_tile : *tiles)
+						{
+							if (auto tile = io::parse_or_warn<glm::ivec2>((TOMLNode)toml_tile,
+									"cannot parse tile #" + std::to_string(tile_idx) + " in tilemap layer #" + std::to_string(layer_idx)))
+								layer.paint_tile(*tile);
+							++tile_idx;
+						}
 					}
-				}
 
-				if (auto z = io::parse<int>(io::parse_key(node, _gen::keys::TileMap::Z)))
-					tilemap.register_layer(*z, std::move(layer));
-				else
-					tilemap.register_layer(std::move(layer));
+					if (auto z = io::parse<int>(io::parse_key(node, _gen::keys::TileMap::Z)))
+						tilemap.register_layer(*z, std::move(layer));
+					else
+						tilemap.register_layer(std::move(layer));
+				}
+				catch (const Error& e)
+				{
+					if (e.code != ErrorCode::LoadAsset)
+						throw;
+				}
 				});
 		}
 

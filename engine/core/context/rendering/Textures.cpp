@@ -118,12 +118,7 @@ namespace oly::context
 		}
 
 		toml = io::load_toml(import_file);
-		auto texture_array = io::parse_key((TOMLNode)toml, _gen::keys::Texture::TextureArray).as_array();
-		if (!texture_array)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Texture::TextureArray) << " field" << LOG.nl;
-			throw Error(ErrorCode::LoadAsset);
-		}
+		const auto texture_array = io::parse_required<TOMLArray>((TOMLNode)toml, _gen::keys::Texture::TextureArray);
 
 		if (texture_index >= texture_array->size())
 		{

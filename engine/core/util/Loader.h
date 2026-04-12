@@ -37,6 +37,32 @@ namespace oly::io
 		return o ? *o : def;
 	}
 
+	namespace internal
+	{
+		extern void log_context_warning(const StringParam& msg);
+		extern void log_context_error(const StringParam& msg);
+	}
+
+	template<typename T>
+	std::optional<T> parse_or_warn(TOMLNode node, const StringParam& warning)
+	{
+		auto o = parse<T>(node);
+		if (!o)
+			internal::log_context_warning(warning);
+		return o;
+	}
+
+	template<typename T>
+	T parse_or_throw(TOMLNode node, const StringParam& error)
+	{
+		auto o = parse<T>(node);
+		if (o)
+			return *o;
+
+		internal::log_context_error(error);
+		throw Error(ErrorCode::LoadAsset);
+	}
+
 	template<typename Enum>
 	constexpr std::string key_string(Enum key)
 	{
@@ -56,7 +82,65 @@ namespace oly::io
 		return node[key_string(key)];
 	}
 
+	template<typename T, typename Enum>
+	std::optional<T> parse_if_exists(TOMLNode node, Enum key)
+	{
+		if (auto value = io::parse_key(node, key))
+			return io::parse_or_warn<T>(value, "cannot parse " + io::key_string(key) + " field");
+		else
+			return std::nullopt;
+	}
+
+	template<typename T, typename Enum>
+	bool parse_if_exists(TOMLNode node, Enum key, T& obj)
+	{
+		if (auto o = parse_if_exists<T, Enum>(node, key))
+		{
+			obj = *o;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<typename T, typename Enum>
+	T parse_required(TOMLNode node, Enum key, const StringParam& error_suffix = "")
+	{
+		// TODO v7 DeferredStringParam that computes string catenation only when it's required to be used (holds a Variant<StringParam, std::vector<StringParam>>) overload << for clarity in appending strings -> or variadic constructor arguments?
+		std::stringstream ss;
+		ss << "cannot parse " << io::key_string(key) << " field" << (error_suffix.empty() ? "" : " ") << error_suffix;
+		return io::parse_or_throw<T>(io::parse_key(node, key), ss.str());
+	}
+
+	template<typename T, typename Enum>
+	T parse_optional(TOMLNode node, Enum key, T def, const StringParam& warning_suffix = "")
+	{
+		if (auto value = io::parse_key(node, key))
+		{
+			std::stringstream ss;
+			ss << "cannot parse " << io::key_string(key) << " field" << (warning_suffix.empty() ? "" : " ") << warning_suffix;
+			if (auto obj = io::parse_or_warn<T>(value, ss.str()))
+				return *obj;
+		}
+
+		return def;
+	}
+
+	template<typename Enum>
+	TOMLNode parse_required_node(TOMLNode node, Enum key, const StringParam& error_suffix = "")
+	{
+		if (auto o = io::parse_key(node, key))
+			return o;
+
+		std::stringstream ss;
+		ss << "missing " << io::key_string(key) << " table" << (error_suffix.empty() ? "" : " ") << error_suffix;
+		internal::log_context_error(ss.str());
+		throw Error(ErrorCode::LoadAsset);
+	}
+
+	// TODO v7 move to Transform
 	extern Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node);
 
+	// TODO v7 move to different file
 	extern bool parse_color(const StringParam& text, glm::vec4& color);
 }

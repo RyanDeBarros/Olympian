@@ -60,79 +60,63 @@ namespace oly::context
 		{
 			size_t _a_idx = 0;
 			toml_assignments->for_each([&assignments, &_a_idx, &file](auto&& _node) {
-				const size_t a_idx = _a_idx++;
-				TOMLNode node = (TOMLNode)_node;
-
-				auto _texture = io::parse_key(node, _gen::keys::TileSet::Texture).value<std::string>();
-				if (!_texture)
+				try
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - missing " << io::key_string(_gen::keys::TileSet::Texture) << " field" << LOG.nl;
-					return;
-				}
+					const size_t a_idx = _a_idx++;
+					TOMLNode node = (TOMLNode)_node;
 
-				auto _config = io::parse_key(node, _gen::keys::TileSet::Configuration);
-				if (!_config)
-				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - missing " << io::key_string(_gen::keys::TileSet::Configuration) << " field" << LOG.nl;
-					return;
-				}
+					const auto texture = io::parse_required<std::string>(node, _gen::keys::TileSet::Texture, "in tileset assignment #" + std::to_string(a_idx));
+					const auto config = io::parse_required<int>(node, _gen::keys::TileSet::Configuration, "in tileset assignment #" + std::to_string(a_idx));
 
-				rendering::TileSet::Assignment assignment;
+					rendering::TileSet::Assignment assignment;
 
-				if (auto config = io::parse<int>(_config))
-				{
 					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_c)
-						assignment.config = (rendering::TileSet::Configuration)*config;
+						assignment.config = (rendering::TileSet::Configuration)config;
 					else
 					{
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-							<< ", unrecognized configuration #" << *config << LOG.nl;
-						return;
+						_OLY_ENGINE_LOG_ERROR("CONTEXT") << "unrecognized configuration (" << config << ") in tileset assignment #" << a_idx << LOG.nl;
+						throw Error(ErrorCode::LoadAsset);
 					}
-				}
-				else
-				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse tileset assignment #" << a_idx
-						<< " - " << io::key_string(_gen::keys::TileSet::Configuration) << " field is missing or not an int" << LOG.nl;
-					return;
-				}
 
-				assignment.desc.file = ResourcePath(*_texture, file);
-				if (auto uvs = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::TileSet::UVvec4)))
-				{
-					assignment.desc.uvs.x1 = (*uvs)[0];
-					assignment.desc.uvs.x2 = (*uvs)[1];
-					assignment.desc.uvs.y1 = (*uvs)[2];
-					assignment.desc.uvs.y2 = (*uvs)[3];
-				}
-
-				if (auto transformations = io::parse_key(node, _gen::keys::TileSet::TransformationArray).as_array())
-				{
-					size_t tr_idx = 0;
-					for (auto& trfm : *transformations)
+					assignment.desc.file = ResourcePath(texture, file);
+					if (auto uvs = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::TileSet::UVvec4)))
 					{
-						if (auto transformation = io::parse<unsigned int>(TOMLNode(trfm)))
-						{
-							// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
-							try
-							{
-								assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
-							}
-							catch (const std::out_of_range&)
-							{
-								_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-									<< " transformation #" << tr_idx << ", unrecognized tile transformation (" << *transformation << ")" << LOG.nl;
-							}
-						}
-						else
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx << ", tile transformation #" << tr_idx << " is not a string" << LOG.nl;
-						++tr_idx;
+						assignment.desc.uvs.x1 = (*uvs)[0];
+						assignment.desc.uvs.x2 = (*uvs)[1];
+						assignment.desc.uvs.y1 = (*uvs)[2];
+						assignment.desc.uvs.y2 = (*uvs)[3];
 					}
-				}
 
-				assignments.push_back(assignment);
+					if (auto transformations = io::parse_key(node, _gen::keys::TileSet::TransformationArray).as_array())
+					{
+						size_t tr_idx = 0;
+						for (auto& trfm : *transformations)
+						{
+							if (auto transformation = io::parse_or_warn<unsigned int>(TOMLNode(trfm),
+								"cannot parse transformation #" + std::to_string(tr_idx) + " in tileset assignment #" + std::to_string(a_idx)))
+							{
+								// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
+								try
+								{
+									assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
+								}
+								catch (const std::out_of_range&)
+								{
+									_OLY_ENGINE_LOG_WARNING("CONTEXT") << "unrecognized tile transformation(" << *transformation << ") in transformation #"
+										<< tr_idx << " from tileset assignment #" << a_idx << LOG.nl;
+								}
+							}
+							++tr_idx;
+						}
+					}
+
+					assignments.push_back(assignment);
+				}
+				catch (const Error& e)
+				{
+					if (e.code != ErrorCode::LoadAsset)
+						throw;
+				}
 				});
 		}
 

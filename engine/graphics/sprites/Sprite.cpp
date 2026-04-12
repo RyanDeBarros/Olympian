@@ -38,21 +38,11 @@ namespace oly::rendering
 			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
-		if (auto toml_modulation = io::parse_key(node, _gen::keys::Sprite::Modulation))
-		{
-			if (auto modulation = io::parse<glm::vec4>(toml_modulation))
-				sprite.set_modulation(*modulation);
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse " << io::key_string(_gen::keys::Sprite::Modulation) << " field" << LOG.nl;
-		}
+		if (auto modulation = io::parse_if_exists<glm::vec4>(node, _gen::keys::Sprite::Modulation))
+			sprite.set_modulation(*modulation);
 
-		if (auto toml_tex_coords = io::parse_key(node, _gen::keys::Sprite::TextureCoordinates))
-		{
-			if (auto uvs = io::parse<glm::vec4>(toml_tex_coords))
-				sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse " << io::key_string(_gen::keys::Sprite::TextureCoordinates) << " field" << LOG.nl;
-		}
+		if (auto uvs = io::parse_if_exists<glm::vec4>(node, _gen::keys::Sprite::TextureCoordinates))
+			sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
 
 		if (auto toml_frame_format = io::parse_key(node, _gen::keys::Sprite::FrameFormat))
 		{
