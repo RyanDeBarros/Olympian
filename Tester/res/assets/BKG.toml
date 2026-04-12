@@ -8,5 +8,5 @@
 "colors" = [
 	[ 0.2, 0.5, 0.8, 1.0 ]
 ]
-Trfmer = { Scale = [ 1440, 1080 ] }
-CamInv = true
+transformer = { Scale = [ 1440, 1080 ] }
+camera_invariant = true

@@ -81,10 +81,10 @@ Trfmer = { Scale = [ 100, 100 ] }
 	]
 	
 [test_text]
-"draw_bkg" = true
+DrawBkg = true
 Trfmer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
-"bkg_color" = [ 0.5, 0.4, 0.2, 0.8 ]
-	[test_text.format]
+BkgColor = [ 0.5, 0.4, 0.2, 0.8 ]
+	[test_text.Format]
 	Pivot = [ 0, 1 ]
 	LineSp = 1.5
 	LineBrk = 2.0
@@ -92,31 +92,31 @@ Trfmer = { Position = [ -400, 400 ], Scale = [ 0.8, 0.8 ] }
 	Padding = [ 50, 50 ]
 	HAlign = 1
 	VAlign = 4
-	[[test_text.element]]
-	"font"         = "@/fonts/Roboto-Regular.ttf"
-	"text"         = "rgb"
-	"text_color"   = [ 1.0, 0.0, 0.0, 1.0 ]
-	[[test_text.element]]
-	"font"         = "@/fonts/Roboto-Regular.ttf"
-	"text"         = "g"
-	"text_color"   = [ 0.0, 1.0, 0.0, 1.0 ]
-	Scale        = [ 2.0, 0.5 ]
-	"line_y_pivot" = 0.5
-	[[test_text.element]]
-	"font"         = "@/fonts/Roboto-Regular.ttf"
-	"text"         = "b"
-	"text_color"   = [ 0.0, 0.0, 1.0, 1.0 ]
-	[[test_text.element]]
-	"font"         = "@/fonts/Roboto-Regular.ttf"
-	"text"         = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
-	"text_color"   = [ 0.0, 0.0, 0.0, 1.0 ]
-	"adj_offset"   = 50
+	[[test_text.Element]]
+	Font = "@/fonts/Roboto-Regular.ttf"
+	Text = "rgb"
+	TextColor = [ 1.0, 0.0, 0.0, 1.0 ]
+	[[test_text.Element]]
+	Font = "@/fonts/Roboto-Regular.ttf"
+	Text = "g"
+	TextColor = [ 0.0, 1.0, 0.0, 1.0 ]
+	Scale = [ 2.0, 0.5 ]
+	LineYPiv = 0.5
+	[[test_text.Element]]
+	Font = "@/fonts/Roboto-Regular.ttf"
+	Text = "b"
+	TextColor = [ 0.0, 0.0, 1.0, 1.0 ]
+	[[test_text.Element]]
+	Font = "@/fonts/Roboto-Regular.ttf"
+	Text = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
+	TextColor = [ 0.0, 0.0, 0.0, 1.0 ]
+	AdjOff = 50
 
 [smol_text]
-draw_bkg = true
-bkg_color = [ 0.3, 0.3, 0.3, 1.0 ]
+DrawBkg = true
+BkgColor = [ 0.3, 0.3, 0.3, 1.0 ]
 CamInv = true
-	[[smol_text.element]]
-	"font"	       = "@/fonts/Roboto-Regular.ttf"
-	"text"         = "abcdef"
-	"text_color"   = [ 0.8, 0.8, 0.9, 1.0 ]
+	[[smol_text.Element]]
+	Font = "@/fonts/Roboto-Regular.ttf"
+	Text = "abcdef"
+	TextColor = [ 0.8, 0.8, 0.9, 1.0 ]

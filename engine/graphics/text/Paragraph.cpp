@@ -7,6 +7,8 @@
 #include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
 
+#include ".gen/keys/Paragraph.inl"
+
 namespace oly::rendering
 {
 	ParagraphFormatExposure::ParagraphFormatExposure(Paragraph& paragraph)
@@ -914,31 +916,31 @@ namespace oly::rendering
 	static void add_text_element(TOMLNode element, size_t i, std::vector<TextElement>& elements)
 	{
 		TextElement e;
-		if (auto font = element["font"].value<std::string>())
-			e.font = context::load_font(*font, io::parse_uint_or(element["font_index"], 0));
+		if (auto font = io::parse_key(element, _gen::keys::Paragraph::Font).value<std::string>())
+			e.font = context::load_font(*font, io::parse_uint_or(io::parse_key(element, _gen::keys::Paragraph::FontIndex), 0));
 		else
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Font) << " field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
-		if (auto text = element["text"].value<std::string>())
+		if (auto text = io::parse_key(element, _gen::keys::Paragraph::Text).value<std::string>())
 			e.text = std::move(*text);
 		else
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Text) << " field in text element (" << i << ")." << LOG.nl;
 			return;
 		}
 
-		io::parse_vec(element["text_color"], e.text_color);
-		io::parse_float(element["adj_offset"], e.adj_offset);
-		io::parse_vec(element["scale"], e.scale);
+		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
+		io::parse_float(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
+		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
 		float line_y_pivot;
-		if (io::parse_float(element["line_y_pivot"], line_y_pivot))
+		if (io::parse_float(io::parse_key(element, _gen::keys::Paragraph::LineYPivot), line_y_pivot))
 			e.line_y_pivot = line_y_pivot;
-		io::parse_vec(element["jitter_offset"], e.jitter_offset);
+		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
 
-		if (io::parse_bool_or(element["expand"], false))
+		if (io::parse_bool_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
 			TextElement::expand(e, elements);
 		else
 			elements.push_back(std::move(e));
@@ -947,28 +949,28 @@ namespace oly::rendering
 	Paragraph Paragraph::load(TOMLNode node)
 	{
 		std::vector<TextElement> elements;
-		if (auto element_array = node["element"].as_array())
+		if (auto element_array = io::parse_key(node, _gen::keys::Paragraph::Element).as_array())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
 				if (auto element = TOMLNode(*element_array->get(i)))
 					add_text_element(element, i, elements);
 		}
-		else if (auto element = node["element"])
+		else if (auto element = io::parse_key(node, _gen::keys::Paragraph::Element))
 			add_text_element(element, 0, elements);
 
-		Paragraph paragraph(std::move(elements), ParagraphFormat::load(node["format"]));
-		if (auto transformer = node["transformer"])
+		Paragraph paragraph(std::move(elements), ParagraphFormat::load(io::parse_key(node, _gen::keys::Paragraph::Format)));
+		if (auto transformer = io::parse_key(node, _gen::keys::Paragraph::Transformer))
 		{
 			paragraph.set_local() = Transform2D::load(transformer);
-			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
+			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(io::parse_key(transformer, _gen::keys::Paragraph::Modifier));
 		}
 
-		io::parse_bool(node["draw_bkg"], paragraph.draw_bkg);
+		io::parse_bool(io::parse_key(node, _gen::keys::Paragraph::DrawBackground), paragraph.draw_bkg);
 		glm::vec4 bkg_color;
-		if (io::parse_vec(node["bkg_color"], bkg_color))
+		if (io::parse_vec(io::parse_key(node, _gen::keys::Paragraph::BackgroundColor), bkg_color))
 			paragraph.set_bkg_color(bkg_color);
 
-		paragraph.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		paragraph.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::Paragraph::CameraInvariant), false));
 
 		return paragraph;
 	}
