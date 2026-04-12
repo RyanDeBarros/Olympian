@@ -1,6 +1,0 @@
-; "unsigned int" -> "oly::input::Axis1DModifier::Conversion"
-
-[None]		0	0x0		# Conversion::None
-[To 0D]		1	0x1		# Conversion::To0D
-[To 2D]		2	0x2		# Conversion::To2D
-[To 3D]		3	0x3		# Conversion::To3D

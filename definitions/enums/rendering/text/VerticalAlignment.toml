@@ -1,0 +1,33 @@
+index_type = "unsigned int"
+enum_type = "oly::rendering::ParagraphFormat::VerticalAlignment"
+default = 0
+
+[[enum]]
+label = "Top"
+index = 0
+enum = 0x0
+comment = "VerticalAlignment::Top"
+
+[[enum]]
+label = "Middle"
+index = 1
+enum = 0x1
+comment = "VerticalAlignment::Middle"
+
+[[enum]]
+label = "Bottom"
+index = 2
+enum = 0x2
+comment = "VerticalAlignment::Bottom"
+
+[[enum]]
+label = "Justify"
+index = 3
+enum = 0x3
+comment = "VerticalAlignment::Justify"
+
+[[enum]]
+label = "Full Justify"
+index = 4
+enum = 0x4
+comment = "VerticalAlignment::FullJustify"

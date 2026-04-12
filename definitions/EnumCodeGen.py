@@ -1,5 +1,7 @@
-import re
 from pathlib import Path
+
+import toml
+from toml import TomlDecodeError
 
 from . import CodeGen
 
@@ -9,17 +11,17 @@ ENUMS_DIR = DEFINITIONS_DIR / "enums"
 GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 GEN_ENUMS_DIR = GEN_ROOT_DIR / "enums"
 
-COL_COUNT = 3
+
+class EnumEntry:
+	def __init__(self, entry: dict):
+		self.label = str(entry['label'])
+		self.index = int(entry['index'])
+		self.enum = int(entry['enum'])
+		self.comment = str(entry.get('comment', ''))
+		self.tooltip = str(entry.get('tooltip', ''))
 
 
-class EnumRow:
-	def __init__(self):
-		self.name: str = ""
-		self.enum: int = -1
-		self.comment: str = ""
-
-
-def build(enum_file: Path, rows: list[EnumRow], index_type: str, enum_type: str, default_enum: int) -> None:
+def build(enum_file: Path, rows: list[EnumEntry], index_type: str, enum_type: str, default_enum: int) -> None:
 	rel_path = enum_file.relative_to(DEFINITIONS_DIR)
 	inl_path = GEN_ROOT_DIR / rel_path.with_suffix(".inl")
 	inl_path.parent.mkdir(parents=True, exist_ok=True)
@@ -82,106 +84,61 @@ namespace {namespace}
 
 
 def gen(enum_file: Path, *args, **kwargs) -> list[str]:
-	lines = enum_file.read_text().splitlines()
-	index_type: str = ""
-	enum_type: str = ""
-	names: dict[str, int] = {}
+	try:
+		d = toml.loads(enum_file.read_text())
+	except TomlDecodeError as e:
+		return [str(e)]
+
+	try:
+		index_type = str(d['index_type'])
+		enum_type = str(d['enum_type'])
+		default = int(d['default'])
+	except (KeyError, ValueError) as e:
+		return [repr(e)]
+
+	bad_lines: dict[int, str] = {}
+	entries: list[EnumEntry] = []
 	indexes: dict[int, int] = {}
 	enums: dict[int, int] = {}
-	comments: dict[int, str] = {}
+	try:
+		for i, entry in enumerate(d['enum']):
+			try:
+				e = EnumEntry(entry)
+				if e.index in indexes:
+					bad_lines[i] = f"duplicate index {e.index} first appeared in enum #{indexes[e.index]}"
+				elif e.enum in enums:
+					bad_lines[i] = f"duplicate enum value {e.enum} first appeared in enum #{indexes[e.enum]}"
+				else:
+					indexes[e.index] = i
+					enums[e.enum] = i
+					entries.append(e)
+			except (KeyError, ValueError) as e:
+				bad_lines[i] = repr(e)
+	except (KeyError, ValueError) as e:
+		return [repr(e)]
+
+	if len(bad_lines) > 0:
+		return [f"Key #{i + 1}: {error}" for i, error in bad_lines.items()]
 
 	errors = []
 
-	for i, line in enumerate(lines):
-		if not line or line.isspace():
-			continue
-
-		line = line.strip()
-		if line.startswith(";"):
-			m = re.match(r"\"(?P<index_type>.*?)\"\s*->\s*\"(?P<enum_type>.*?)\"", line[1:].strip())
-			if m:
-				index_type = m.group("index_type")
-				enum_type = m.group("enum_type")
-			else:
-				errors.append(f"Line {i + 1}: malformed ;-metadata line")
-
-			continue
-
-		line, comment = line.split('#', maxsplit=1)
-		line = line.strip()
-		if not line:
-			continue
-
-		name_match = re.match(r'\[(.*?)]', line)
-		if not name_match:
-			errors.append(f"Line {i + 1}: missing or malformed name in []")
-			continue
-
-		name = name_match.group(1).strip()
-		if name not in names:
-			names[name] = i
-		else:
-			errors.append(f"Line {i + 1}: {name} is duplicate name (first appeared at line {names[name]})")
-			continue
-
-		rest = line[name_match.end():].strip().split()
-		if 1 + len(rest) != COL_COUNT:
-			errors.append(f"Line {i + 1}: {1 + len(rest)} columns (expected {COL_COUNT})")
-			continue
-
-		try:
-			index = int(rest[0])
-			if index not in indexes:
-				indexes[index] = i
-			else:
-				errors.append(f"Line {i + 1}: {index} is duplicate index (first appeared at line {indexes[index]})")
-				continue
-		except ValueError:
-			errors.append(f"Line {i + 1}: {rest[0]} is not an integer")
-			continue
-
-		try:
-			enum = int(rest[1], 0)
-			if enum not in enums:
-				enums[enum] = i
-			else:
-				errors.append(f"Line {i + 1}: {enum} is duplicate enum (first appeared at line {enums[enum]})")
-				continue
-		except ValueError:
-			errors.append(f"Line {i + 1}: {rest[1]} is not an integer")
-			continue
-
-		comments[i] = comment.strip()
-
-	row_len = len(indexes)
+	row_len = len(entries)
 	if row_len == 0:
-		errors.append(f"No rows!")
+		errors.append(f"No enums!")
 
 	if any(index not in indexes for index in range(row_len)):
 		errors.append(f"Index set is not a range({row_len})")
 
-	if len(index_type) == 0 or len(enum_type) == 0:
-		errors.append(f"Missing or malformed ;-metadata line")
+	if default not in indexes:
+		errors.append(f"Default index {default} is not registered")
 
 	if len(errors) > 0:
 		return errors
 
-	rows = [EnumRow() for _ in range(row_len)]
-	lut = {line: index for index, line in indexes.items()}
-
-	for name, i in names.items():
-		rows[lut[i]].name = name
-
-	for enum, i in enums.items():
-		rows[lut[i]].enum = enum
-
-	for i, comment in comments.items():
-		rows[lut[i]].comment = comment
-
-	build(enum_file, rows, index_type, enum_type, rows[next(iter(indexes))].enum)
+	build(enum_file, entries, index_type, enum_type, next(entry.enum for entry in entries if entry.index == default))
 	return errors
 
 
 if __name__ == "__main__":
 	codegen = CodeGen("enums")
-	codegen.process(gen, "*.enum")
+	codegen.process(gen, "*.toml")

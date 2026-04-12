@@ -1,8 +1,0 @@
-; "unsigned int" -> "GLenum"
-
-[Nearest]					0	0x2600	# GL_NEAREST
-[Linear]					1	0x2601	# GL_LINEAR
-[Nearest (Nearest Mipmap)]	2	0x2700	# GL_NEAREST_MIPMAP_NEAREST
-[Linear (Nearest Mipmap)]	3	0x2701	# GL_LINEAR_MIPMAP_NEAREST
-[Nearest (Linear Mipmap)]	4	0x2702	# GL_NEAREST_MIPMAP_LINEAR
-[Linear (Linear Mipmap)]	5	0x2703	# GL_LINEAR_MIPMAP_LINEAR

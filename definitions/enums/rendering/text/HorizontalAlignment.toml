@@ -1,0 +1,33 @@
+index_type = "unsigned int"
+enum_type = "oly::rendering::ParagraphFormat::HorizontalAlignment"
+default = 0
+
+[[enum]]
+label = "Left"
+index = 0
+enum = 0x0
+comment = "HorizontalAlignment::Left"
+
+[[enum]]
+label = "Center"
+index = 1
+enum = 0x1
+comment = "HorizontalAlignment::Center"
+
+[[enum]]
+label = "Right"
+index = 2
+enum = 0x2
+comment = "HorizontalAlignment::Right"
+
+[[enum]]
+label = "Justify"
+index = 3
+enum = 0x3
+comment = "HorizontalAlignment::Justify"
+
+[[enum]]
+label = "Full Justify"
+index = 4
+enum = 0x4
+comment = "HorizontalAlignment::FullJustify"

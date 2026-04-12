@@ -1,0 +1,27 @@
+index_type = "unsigned int"
+enum_type = "oly::TransformModifierType"
+default = 0
+
+[[enum]]
+label = "None"
+index = 0
+enum = 0x0
+comment = "TransformModifierType::None"
+
+[[enum]]
+label = "Shear"
+index = 1
+enum = 0x1
+comment = "TransformModifierType::Shear"
+
+[[enum]]
+label = "Pivot"
+index = 2
+enum = 0x2
+comment = "TransformModifierType::Pivot"
+
+[[enum]]
+label = "Offset"
+index = 3
+enum = 0x3
+comment = "TransformModifierType::Offset"

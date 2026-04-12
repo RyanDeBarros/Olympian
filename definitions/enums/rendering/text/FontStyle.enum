@@ -1,6 +1,0 @@
-; "unsigned int" -> "oly::rendering::FontStyle::Mode"
-
-[Regular]		0	0b00	# FontStyle::Mode::Regular
-[Bold]			1	0b01	# FontStyle::Mode::Bold
-[Italic]		2	0b10	# FontStyle::Mode::Italic
-[Bold Italic]	3	0b11	# FontStyle::Mode::BoldItalic

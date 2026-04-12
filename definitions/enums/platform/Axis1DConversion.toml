@@ -1,0 +1,27 @@
+index_type = "unsigned int"
+enum_type = "oly::input::Axis1DModifier::Conversion"
+default = 0
+
+[[enum]]
+label = "None"
+index = 0
+enum = 0x0
+comment = "Conversion::None"
+
+[[enum]]
+label = "To 0D"
+index = 1
+enum = 0x1
+comment = "Conversion::To0D"
+
+[[enum]]
+label = "To 2D"
+index = 2
+enum = 0x2
+comment = "Conversion::To2D"
+
+[[enum]]
+label = "To 3D"
+index = 3
+enum = 0x3
+comment = "Conversion::To3D"

@@ -1,0 +1,39 @@
+index_type = "unsigned int"
+enum_type = "oly::rendering::glyphs::CommonBufferPreset"
+default = 0
+
+[[enum]]
+label = "Common"
+index = 0
+enum = 0x0
+comment = "CommonBufferPreset::Common"
+
+[[enum]]
+label = "Alpha-Numeric"
+index = 1
+enum = 0x1
+comment = "CommonBufferPreset::AlphaNumeric"
+
+[[enum]]
+label = "Numeric"
+index = 2
+enum = 0x2
+comment = "CommonBufferPreset::Numeric"
+
+[[enum]]
+label = "Alphabet"
+index = 3
+enum = 0x3
+comment = "CommonBufferPreset::Alphabet"
+
+[[enum]]
+label = "Alphabet (Uppercase)"
+index = 4
+enum = 0x4
+comment = "CommonBufferPreset::AlphabetUppercase"
+
+[[enum]]
+label = "Alphabet (Lowercase)"
+index = 5
+enum = 0x5
+comment = "CommonBufferPreset::AlphabetLowercase"

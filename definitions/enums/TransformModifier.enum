@@ -1,6 +1,0 @@
-; "unsigned int" -> "oly::TransformModifierType"
-
-[None]		0	0x0		# TransformModifierType::None
-[Shear]		1	0x1		# TransformModifierType::Shear
-[Pivot]		2	0x2		# TransformModifierType::Pivot
-[Offset]	3	0x3		# TransformModifierType::Offset

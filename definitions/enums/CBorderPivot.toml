@@ -1,0 +1,21 @@
+index_type = "unsigned int"
+enum_type = "oly::cmath::BorderPivot"
+default = 0
+
+[[enum]]
+label = "Outer"
+index = 0
+enum = 0x0
+comment = "BorderPivot::Outer"
+
+[[enum]]
+label = "Middle"
+index = 1
+enum = 0x1
+comment = "BorderPivot::Middle"
+
+[[enum]]
+label = "Inner"
+index = 2
+enum = 0x2
+comment = "BorderPivot::Inner"

@@ -1,4 +1,0 @@
-; "unsigned int" -> "GLenum"
-
-[Nearest]	0	0x2600	# GL_NEAREST
-[Linear]	1	0x2601	# GL_LINEAR

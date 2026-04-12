@@ -1,0 +1,27 @@
+index_type = "unsigned int"
+enum_type = "oly::rendering::FontStyle::Mode"
+default = 0
+
+[[enum]]
+label = "Regular"
+index = 0
+enum = 0b00
+comment = "FontStyle::Mode::Regular"
+
+[[enum]]
+label = "Bold"
+index = 1
+enum = 0b01
+comment = "FontStyle::Mode::Bold"
+
+[[enum]]
+label = "Italic"
+index = 2
+enum = 0b10
+comment = "FontStyle::Mode::Italic"
+
+[[enum]]
+label = "Bold Italic"
+index = 3
+enum = 0b11
+comment = "FontStyle::Mode::BoldItalic"

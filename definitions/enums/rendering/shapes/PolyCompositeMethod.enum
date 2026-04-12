@@ -1,5 +1,0 @@
-; "unsigned int" -> "oly::rendering::PolyCompositeMethod"
-
-[N-Gon]					0	0x0		# PolyCompositeMethod::Ngon
-[Bordered N-Gon]		1	0x1		# PolyCompositeMethod::BorderedNgon
-[Convex Decomposition]	2	0x2		# PolyCompositeMethod::ConvexDecomposition

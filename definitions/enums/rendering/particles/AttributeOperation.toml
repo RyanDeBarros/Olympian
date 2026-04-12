@@ -1,0 +1,27 @@
+index_type = "unsigned int"
+enum_type = "oly::particles::AttributeOperationEnum"
+default = 0
+
+[[enum]]
+label = "Sequence"
+index = 0
+enum = 0x0
+comment = "AttributeOperationEnum::Sequence"
+
+[[enum]]
+label = "Selector"
+index = 1
+enum = 0x1
+comment = "AttributeOperationEnum::Selector"
+
+[[enum]]
+label = "Sine Wave 1D"
+index = 2
+enum = 0x2
+comment = "AttributeOperationEnum::SineWave1D"
+
+[[enum]]
+label = "Polarization 2D"
+index = 3
+enum = 0x3
+comment = "AttributeOperationEnum::Polarization2D"

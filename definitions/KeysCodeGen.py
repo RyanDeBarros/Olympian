@@ -12,8 +12,6 @@ KEYS_DIR = DEFINITIONS_DIR / "keys"
 GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 GEN_KEYS_DIR = GEN_ROOT_DIR / "keys"
 
-COL_COUNT = 3
-
 
 # TODO v7 codegen for meta fields, specifically asset types
 
@@ -22,21 +20,22 @@ def gen(keys_file: Path, *args, **kwargs) -> list[str]:
 	max_chars: int = kwargs["max_chars"]
 	underlying_type: str = kwargs["underlying_type"]
 
-	bad_lines: dict[int, str] = {}
 	try:
 		d = toml.loads(keys_file.read_text())
 	except TomlDecodeError as e:
 		return [str(e)]
+
+	bad_lines: dict[int, str] = {}
 	keys: dict[str, str] = {}
 
 	for i, key in enumerate(d['key']):
 		try:
-			label = key['label']
-			code = key['code']
-			enum = key['enum']
-			tooltip = key.get('tooltip', '')
-		except KeyError as e:
-			bad_lines[i] = str(e)
+			label = str(key['label'])
+			code = str(key['code'])
+			enum = str(key['enum'])
+			tooltip = str(key.get('tooltip', ''))
+		except (KeyError, ValueError) as e:
+			bad_lines[i] = repr(e)
 			continue
 
 		if len(code) > max_chars:
@@ -50,7 +49,7 @@ def gen(keys_file: Path, *args, **kwargs) -> list[str]:
 			keys[padded_code] = enum
 
 	if len(bad_lines) > 0:
-		return [f"Line {i + 1}: {error}" for i, error in bad_lines.items()]
+		return [f"Key #{i + 1}: {error}" for i, error in bad_lines.items()]
 
 	enum_def = ""
 	for i, (code, name) in enumerate(keys.items()):

@@ -1,9 +1,0 @@
-; "unsigned int" -> "oly::input::SignalBindingType"
-
-[Key]				0	0x0		# SignalBindingType::Key
-[Mouse Button]		1	0x1		# SignalBindingType::MouseButton
-[Gamepad Button]	2	0x2		# SignalBindingType::GamepadButton
-[Gamepad Axis 1D]	3	0x3		# SignalBindingType::GamepadAxis1D
-[Gamepad Axis 2D]	4	0x4		# SignalBindingType::GamepadAxis2D
-[Cursor Position]	5	0x5		# SignalBindingType::CurosrPos
-[Scroll]			6	0x6		# SignalBindingType::Scroll
