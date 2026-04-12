@@ -1,11 +1,11 @@
 [polygon]
-"points" = [
+Points = [
 	[ -1, -1 ],
 	[  1, -1 ],
 	[  1,  1 ],
 	[ -1,  1 ]
 ]
-"colors" = [
+Colors = [
 	[ 0.2, 0.5, 0.8, 1.0 ]
 ]
 Trfmer = { Scale = [ 1440, 1080 ] }

@@ -95,21 +95,21 @@ BkgColor = [ 0.5, 0.4, 0.2, 0.8 ]
 	[[test_text.Element]]
 	Font = "@/fonts/Roboto-Regular.ttf"
 	Text = "rgb"
-	TextColor = [ 1.0, 0.0, 0.0, 1.0 ]
+	TextClr = [ 1.0, 0.0, 0.0, 1.0 ]
 	[[test_text.Element]]
 	Font = "@/fonts/Roboto-Regular.ttf"
 	Text = "g"
-	TextColor = [ 0.0, 1.0, 0.0, 1.0 ]
+	TextClr = [ 0.0, 1.0, 0.0, 1.0 ]
 	Scale = [ 2.0, 0.5 ]
 	LineYPiv = 0.5
 	[[test_text.Element]]
 	Font = "@/fonts/Roboto-Regular.ttf"
 	Text = "b"
-	TextColor = [ 0.0, 0.0, 1.0, 1.0 ]
+	TextClr = [ 0.0, 0.0, 1.0, 1.0 ]
 	[[test_text.Element]]
 	Font = "@/fonts/Roboto-Regular.ttf"
 	Text = "x\txx  x.\nabcd !!!\r\n\n123478s\nHex"
-	TextColor = [ 0.0, 0.0, 0.0, 1.0 ]
+	TextClr = [ 0.0, 0.0, 0.0, 1.0 ]
 	AdjOff = 50
 
 [smol_text]
@@ -119,4 +119,4 @@ CamInv = true
 	[[smol_text.Element]]
 	Font = "@/fonts/Roboto-Regular.ttf"
 	Text = "abcdef"
-	TextColor = [ 0.8, 0.8, 0.9, 1.0 ]
+	TextClr = [ 0.8, 0.8, 0.9, 1.0 ]
