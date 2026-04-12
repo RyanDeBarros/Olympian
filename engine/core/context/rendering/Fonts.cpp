@@ -343,7 +343,7 @@ namespace oly::context
 				}
 
 				std::string texture_file;
-				unsigned int tidx = io::parse_or<unsigned int>(io::parse_key(g, _gen::keys::Font::TextureFile), 0);
+				unsigned int tidx = io::parse_or(io::parse_key(g, _gen::keys::Font::TextureFile), 0u);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -353,7 +353,7 @@ namespace oly::context
 					return;
 				}
 
-				unsigned int texture_index = io::parse_or<unsigned int>(io::parse_key(g, _gen::keys::Font::TextureIndex), 0);
+				unsigned int texture_index = io::parse_or(io::parse_key(g, _gen::keys::Font::TextureIndex), 0u);
 
 				math::IRect2D location = math::IRect2D::load(io::parse_key(g, _gen::keys::Font::Location));
 				if (location.x2 <= location.x1 || location.y2 <= location.y1)
@@ -446,7 +446,7 @@ namespace oly::context
 					}
 				}
 				else
-					font = context::load_font_atlas(font_file, io::parse_or<unsigned int>(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0));
+					font = context::load_font_atlas(font_file, io::parse_or(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0u));
 
 				styles.emplace(style, std::move(font));
 				});

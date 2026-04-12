@@ -34,7 +34,7 @@ namespace oly::rendering
 		auto texture = io::parse_key(node, _gen::keys::Sprite::Texture).value<std::string>();
 		if (texture)
 		{
-			graphics::BindlessTextureRef btex = context::load_texture(*texture, io::parse_or<unsigned int>(io::parse_key(node, _gen::keys::Sprite::TextureIndex), 0));
+			graphics::BindlessTextureRef btex = context::load_texture(*texture, io::parse_or(io::parse_key(node, _gen::keys::Sprite::TextureIndex), 0u));
 			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
@@ -64,14 +64,14 @@ namespace oly::rendering
 					{
 					case FrameFormat::Single:
 						if (texture)
-							sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_or<unsigned int>(io::parse_key(toml_frame_format, _gen::keys::Sprite::Frame), 0)));
+							sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Frame), 0u)));
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
 						break;
 					case FrameFormat::Auto:
 						if (texture)
 							sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Speed), 1.0f),
-								io::parse_or<unsigned int>(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0)));
+								io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u)));
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
 						break;
@@ -87,9 +87,8 @@ namespace oly::rendering
 			else
 			{
 				sprite.set_frame_format({
-					// TODO v7 replace parse_or<unsigned int> with parse + literal with u suffix
-					.starting_frame = io::parse_or<unsigned int>(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0),
-					.num_frames = io::parse_or<unsigned int>(io::parse_key(toml_frame_format, _gen::keys::Sprite::NumFrames), 0),
+					.starting_frame = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u),
+					.num_frames = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::NumFrames), 0u),
 					.starting_time = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingTime), 0.0f),
 					.delay_seconds = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::DelaySeconds), 0.0f)
 					});
