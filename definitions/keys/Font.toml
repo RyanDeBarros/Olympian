@@ -1,0 +1,154 @@
+[[key]]
+label = "Storage"
+code = "Storage"
+enum = "Storage"
+
+[[key]]
+label = "Minimization Filter"
+code = "MinFilt"
+enum = "MinFilter"
+
+[[key]]
+label = "Magnification Filter"
+code = "MagFilt"
+enum = "MagFilter"
+
+[[key]]
+label = "Wrap (S)"
+code = "WrapS"
+enum = "WrapS"
+
+[[key]]
+label = "Wrap (T)"
+code = "WrapT"
+enum = "WrapT"
+
+[[key]]
+label = "Generate Mipmaps"
+code = "Mipmaps"
+enum = "GenerateMipmaps"
+
+[[key]]
+label = "Font Face"
+code = "Face"
+enum = "FontFace"
+
+[[key]]
+label = "Font Atlases"
+code = "Atlas"
+enum = "FontAtlasArray"
+
+[[key]]
+label = "Font Size"
+code = "FontSize"
+enum = "FontSize"
+
+[[key]]
+label = "Common Buffer Preset"
+code = "ComBP"
+enum = "CommonBufferPreset"
+
+[[key]]
+label = "Common Buffer"
+code = "ComB"
+enum = "CommonBuffer"
+
+[[key]]
+label = "Use Common Buffer Preset"
+code = "UseComBP"
+enum = "UseCommonBufferPreset"
+
+[[key]]
+label = "Atlas Index"
+code = "AtlasIdx"
+enum = "AtlasIndex"
+
+[[key]]
+label = "Texture Index"
+code = "TxIndex"
+enum = "TextureIndex"
+
+[[key]]
+label = "Kerning"
+code = "Kerning"
+enum = "Kerning"
+
+[[key]]
+label = "Codepoint Pair"
+code = "Pair"
+enum = "CodepointPair"
+
+[[key]]
+label = "Codepoint Distance"
+code = "Dist"
+enum = "CodepointDistance"
+
+[[key]]
+label = "Space Advance Width"
+code = "SAdvW"
+enum = "SpaceAdvanceWidth"
+
+[[key]]
+label = "Line Height"
+code = "LineH"
+enum = "LineHeight"
+
+[[key]]
+label = "Font Scale"
+code = "Scale"
+enum = "FontScale"
+
+[[key]]
+label = "Texture File"
+code = "TxFile"
+enum = "TextureFile"
+
+[[key]]
+label = "Texture Files"
+code = "TxFiles"
+enum = "TextureFileArray"
+
+[[key]]
+label = "Glyphs"
+code = "Glyphs"
+enum = "GlyphArray"
+
+[[key]]
+label = "Codepoint"
+code = "Codept"
+enum = "Codepoint"
+
+[[key]]
+label = "Location"
+code = "Location"
+enum = "Location"
+
+[[key]]
+label = "Padding"
+code = "Padding"
+enum = "Padding"
+
+[[key]]
+label = "Origin Offset Mode"
+code = "OrigOffM"
+enum = "OriginOffsetMode"
+
+[[key]]
+label = "Origin Offset"
+code = "OrigOff"
+enum = "OriginOffset"
+
+[[key]]
+label = "Styles"
+code = "Styles"
+enum = "StyleArray"
+
+[[key]]
+label = "Style"
+code = "Style"
+enum = "Style"
+
+[[key]]
+label = "Texture File"
+code = "File"
+enum = "File"

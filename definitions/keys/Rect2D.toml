@@ -1,0 +1,19 @@
+[[key]]
+label = "X1"
+code = "X1"
+enum = "X1"
+
+[[key]]
+label = "X2"
+code = "X2"
+enum = "X2"
+
+[[key]]
+label = "Y1"
+code = "Y1"
+enum = "Y1"
+
+[[key]]
+label = "Y2"
+code = "Y2"
+enum = "Y2"

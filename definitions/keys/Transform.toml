@@ -1,0 +1,44 @@
+[[key]]
+label = "Position"
+code = "Position"
+enum = "Position"
+
+[[key]]
+label = "Rotation"
+code = "Rotation"
+enum = "Rotation"
+
+[[key]]
+label = "Scale"
+code = "Scale"
+enum = "Scale"
+
+[[key]]
+label = "Modifier"
+code = "Modifier"
+enum = "Modifier"
+
+[[key]]
+label = "Type"
+code = "Type"
+enum = "ModifierType"
+
+[[key]]
+label = "Shearing"
+code = "Shearing"
+enum = "Shearing"
+
+[[key]]
+label = "Pivot"
+code = "Pivot"
+enum = "Pivot"
+
+[[key]]
+label = "Size"
+code = "Size"
+enum = "Size"
+
+[[key]]
+label = "Offset"
+code = "Offset"
+enum = "Offset"

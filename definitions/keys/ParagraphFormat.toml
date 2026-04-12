@@ -1,0 +1,49 @@
+[[key]]
+label = "Pivot"
+code = "Pivot"
+enum = "Pivot"
+
+[[key]]
+label = "Line Spacing"
+code = "LineSp"
+enum = "LineSpacing"
+
+[[key]]
+label = "Linebreak Spacing"
+code = "LineBrk"
+enum = "LinebreakSpacing"
+
+[[key]]
+label = "Min Size"
+code = "MinSize"
+enum = "MinSize"
+
+[[key]]
+label = "Padding"
+code = "Padding"
+enum = "Padding"
+
+[[key]]
+label = "Text Wrap"
+code = "TextWrap"
+enum = "TextWrap"
+
+[[key]]
+label = "Max Height"
+code = "MaxH"
+enum = "MaxHeight"
+
+[[key]]
+label = "Tab Spaces"
+code = "TabSp"
+enum = "TabSpaces"
+
+[[key]]
+label = "Horizontal Alignment"
+code = "HAlign"
+enum = "HorizontalAlignment"
+
+[[key]]
+label = "Vertical Alignment"
+code = "VAlign"
+enum = "VerticalAlignment"

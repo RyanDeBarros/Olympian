@@ -1,0 +1,9 @@
+[[key]]
+label = "Masks"
+code = "Masks"
+enum = "Masks"
+
+[[key]]
+label = "Layers"
+code = "Layers"
+enum = "Layers"

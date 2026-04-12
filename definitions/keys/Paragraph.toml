@@ -1,0 +1,74 @@
+[[key]]
+label = "Font"
+code = "Font"
+enum = "Font"
+
+[[key]]
+label = "Font Index"
+code = "FontIdx"
+enum = "FontIndex"
+
+[[key]]
+label = "Text"
+code = "Text"
+enum = "Text"
+
+[[key]]
+label = "Text Color"
+code = "TextClr"
+enum = "TextColor"
+
+[[key]]
+label = "Adjacent Offset"
+code = "AdjOff"
+enum = "AdjacentOffset"
+
+[[key]]
+label = "Scale"
+code = "Scale"
+enum = "Scale"
+
+[[key]]
+label = "Line Y Pivot"
+code = "LineYPiv"
+enum = "LineYPivot"
+
+[[key]]
+label = "Jitter Offset"
+code = "JitOff"
+enum = "JitterOffset"
+
+[[key]]
+label = "Expand"
+code = "Expand"
+enum = "Expand"
+
+[[key]]
+label = "Element"
+code = "Element"
+enum = "Element"
+
+[[key]]
+label = "Transformer"
+code = "Trfmer"
+enum = "Transformer"
+
+[[key]]
+label = "Format"
+code = "Format"
+enum = "Format"
+
+[[key]]
+label = "Draw Background"
+code = "DrawBkg"
+enum = "DrawBackground"
+
+[[key]]
+label = "Background Color"
+code = "BkgColor"
+enum = "BackgroundColor"
+
+[[key]]
+label = "Camera Invariant"
+code = "CamInv"
+enum = "CameraInvariant"

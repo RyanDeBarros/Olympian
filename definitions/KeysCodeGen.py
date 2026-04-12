@@ -1,6 +1,9 @@
 import argparse
 from pathlib import Path
 
+import toml
+from toml import TomlDecodeError
+
 from . import CodeGen
 
 ENGINE_DIR = Path("engine")
@@ -9,53 +12,51 @@ KEYS_DIR = DEFINITIONS_DIR / "keys"
 GEN_ROOT_DIR = ENGINE_DIR / ".gen"
 GEN_KEYS_DIR = GEN_ROOT_DIR / "keys"
 
+COL_COUNT = 3
+
 
 # TODO v7 codegen for meta fields, specifically asset types
-# TODO v7 third column in keys codegen for GUI-friendly names
 
 
 def gen(keys_file: Path, *args, **kwargs) -> list[str]:
 	max_chars: int = kwargs["max_chars"]
 	underlying_type: str = kwargs["underlying_type"]
 
-	good_lines: dict[str, str] = {}
 	bad_lines: dict[int, str] = {}
+	try:
+		d = toml.loads(keys_file.read_text())
+	except TomlDecodeError as e:
+		return [str(e)]
+	keys: dict[str, str] = {}
 
-	with open(keys_file, 'r') as f:
-		for i, line in enumerate(f):
-			line = line.strip()
-			if not line:
-				continue
+	for i, key in enumerate(d['key']):
+		try:
+			label = key['label']
+			code = key['code']
+			enum = key['enum']
+			tooltip = key.get('tooltip', '')
+		except KeyError as e:
+			bad_lines[i] = str(e)
+			continue
 
-			try:
-				code, name = line.split(maxsplit=1)
-			except ValueError:
-				bad_lines[i] = "invalid error"
-				continue
+		if len(code) > max_chars:
+			bad_lines[i] = f"more than {max_chars} chars"
+			continue
 
-			code = code.strip()
-			name = name.strip()
-			if not code or not name:
-				continue
-
-			if len(code) > max_chars:
-				bad_lines[i] = f"more than {max_chars} chars"
-				continue
-
-			padded_code = code.ljust(max_chars, '\0')
-			if padded_code in good_lines:
-				bad_lines[i] = f"code {code} already registered"
-			else:
-				good_lines[padded_code] = name
+		padded_code = code.ljust(max_chars, '\0')
+		if padded_code in keys:
+			bad_lines[i] = f"code {code} already registered"
+		else:
+			keys[padded_code] = enum
 
 	if len(bad_lines) > 0:
 		return [f"Line {i + 1}: {error}" for i, error in bad_lines.items()]
 
 	enum_def = ""
-	for i, (code, name) in enumerate(good_lines.items()):
+	for i, (code, name) in enumerate(keys.items()):
 		value = int.from_bytes(code.encode())
 		enum_def += f"\t\t{name} = {value}"
-		if i + 1 < len(good_lines):
+		if i + 1 < len(keys):
 			enum_def += ",\n"
 
 	codegen = f"""namespace oly::_gen::keys
@@ -80,4 +81,4 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	codegen = CodeGen("keys")
-	codegen.process(gen, None, max_chars=args.key_size, underlying_type="unsigned int" if args.key_size == 4 else "unsigned long long")
+	codegen.process(gen, "*.toml", max_chars=args.key_size, underlying_type="unsigned int" if args.key_size == 4 else "unsigned long long")

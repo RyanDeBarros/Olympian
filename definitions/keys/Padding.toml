@@ -1,0 +1,24 @@
+[[key]]
+label = "Left"
+code = "Left"
+enum = "Left"
+
+[[key]]
+label = "Right"
+code = "Right"
+enum = "Right"
+
+[[key]]
+label = "Top"
+code = "Top"
+enum = "Top"
+
+[[key]]
+label = "Bottom"
+code = "Bottom"
+enum = "Bottom"
+
+[[key]]
+label = "Uniform"
+code = "Uniform"
+enum = "Uniform"

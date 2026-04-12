@@ -1,0 +1,19 @@
+[[key]]
+label = "Sprite"
+code = "Sprite"
+enum = "Sprite"
+
+[[key]]
+label = "N-Size"
+code = "NSize"
+enum = "NSize"
+
+[[key]]
+label = "Offsets"
+code = "Offsets"
+enum = "Offsets"
+
+[[key]]
+label = "Camera Invariant"
+code = "CamInv"
+enum = "CameraInvariant"

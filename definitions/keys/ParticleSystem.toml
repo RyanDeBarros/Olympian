@@ -1,0 +1,89 @@
+[[key]]
+label = "Value"
+code = "Value"
+enum = "Value"
+
+[[key]]
+label = "Operation"
+code = "Op"
+enum = "Operation"
+
+[[key]]
+label = "Operations"
+code = "Ops"
+enum = "OperationArray"
+
+[[key]]
+label = "Inner Operation"
+code = "InnerOp"
+enum = "InnerOperation"
+
+[[key]]
+label = "Selector"
+code = "Selector"
+enum = "Selector"
+
+[[key]]
+label = "Klass"
+code = "Klass"
+enum = "Klass"
+
+[[key]]
+label = "Sampler"
+code = "Sampler"
+enum = "Sampler"
+
+[[key]]
+label = "Domain"
+code = "Domain"
+enum = "Domain"
+
+[[key]]
+label = "A"
+code = "A"
+enum = "A"
+
+[[key]]
+label = "B"
+code = "B"
+enum = "B"
+
+[[key]]
+label = "C"
+code = "C"
+enum = "C"
+
+[[key]]
+label = "D"
+code = "D"
+enum = "D"
+
+[[key]]
+label = "K"
+code = "K"
+enum = "K"
+
+[[key]]
+label = "Amplitude"
+code = "Amp"
+enum = "Amplitude"
+
+[[key]]
+label = "Time Offset"
+code = "TmOff"
+enum = "TimeOffset"
+
+[[key]]
+label = "Rate"
+code = "Rate"
+enum = "Rate"
+
+[[key]]
+label = "Tilt"
+code = "Tilt"
+enum = "Tilt"
+
+[[key]]
+label = "Duration"
+code = "Duration"
+enum = "Duration"

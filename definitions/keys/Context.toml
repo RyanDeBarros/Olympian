@@ -1,0 +1,34 @@
+[[key]]
+label = "Gamepads"
+code = "Gmpds"
+enum = "Gamepads"
+
+[[key]]
+label = "Signals"
+code = "Signals"
+enum = "Signals"
+
+[[key]]
+label = "Collision"
+code = "Colsn"
+enum = "Collision"
+
+[[key]]
+label = "Frame Rate"
+code = "FrmRate"
+enum = "FrameRate"
+
+[[key]]
+label = "Logger"
+code = "Logger"
+enum = "Logger"
+
+[[key]]
+label = "Window"
+code = "Window"
+enum = "Window"
+
+[[key]]
+label = "Window Hint"
+code = "WinHint"
+enum = "WindowHint"

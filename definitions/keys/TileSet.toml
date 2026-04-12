@@ -1,0 +1,29 @@
+[[key]]
+label = "Storage"
+code = "Storage"
+enum = "Storage"
+
+[[key]]
+label = "Assignments"
+code = "Assign"
+enum = "AssignmentArray"
+
+[[key]]
+label = "Configuration"
+code = "Config"
+enum = "Configuration"
+
+[[key]]
+label = "Texture"
+code = "Texture"
+enum = "Texture"
+
+[[key]]
+label = "UVs"
+code = "UVs"
+enum = "UVvec4"
+
+[[key]]
+label = "Transformations"
+code = "Trfm"
+enum = "TransformationArray"

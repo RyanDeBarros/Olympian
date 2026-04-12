@@ -1,0 +1,69 @@
+[[key]]
+label = "Transformer"
+code = "Trfmer"
+enum = "Transformer"
+
+[[key]]
+label = "Texture"
+code = "Texture"
+enum = "Texture"
+
+[[key]]
+label = "Texture Index"
+code = "TxIndex"
+enum = "TextureIndex"
+
+[[key]]
+label = "Modulation"
+code = "Modul"
+enum = "Modulation"
+
+[[key]]
+label = "Texture Coordinates"
+code = "TxCoords"
+enum = "TextureCoordinates"
+
+[[key]]
+label = "Frame Format"
+code = "FrmForm"
+enum = "FrameFormat"
+
+[[key]]
+label = "Mode"
+code = "Mode"
+enum = "Mode"
+
+[[key]]
+label = "Camera Invariant"
+code = "CamInv"
+enum = "CameraInvariant"
+
+[[key]]
+label = "Frame"
+code = "Frame"
+enum = "Frame"
+
+[[key]]
+label = "Speed"
+code = "Speed"
+enum = "Speed"
+
+[[key]]
+label = "Starting Frame"
+code = "FrmStart"
+enum = "StartingFrame"
+
+[[key]]
+label = "Number of Frames"
+code = "FrmCount"
+enum = "NumFrames"
+
+[[key]]
+label = "Starting Time"
+code = "TmStart"
+enum = "StartingTime"
+
+[[key]]
+label = "Delay (s)"
+code = "DelayS"
+enum = "DelaySeconds"

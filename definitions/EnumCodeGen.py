@@ -122,6 +122,7 @@ def gen(enum_file: Path, *args, **kwargs) -> list[str]:
 			names[name] = i
 		else:
 			errors.append(f"Line {i + 1}: {name} is duplicate name (first appeared at line {names[name]})")
+			continue
 
 		rest = line[name_match.end():].strip().split()
 		if 1 + len(rest) != COL_COUNT:
@@ -134,8 +135,10 @@ def gen(enum_file: Path, *args, **kwargs) -> list[str]:
 				indexes[index] = i
 			else:
 				errors.append(f"Line {i + 1}: {index} is duplicate index (first appeared at line {indexes[index]})")
+				continue
 		except ValueError:
 			errors.append(f"Line {i + 1}: {rest[0]} is not an integer")
+			continue
 
 		try:
 			enum = int(rest[1], 0)
@@ -143,8 +146,10 @@ def gen(enum_file: Path, *args, **kwargs) -> list[str]:
 				enums[enum] = i
 			else:
 				errors.append(f"Line {i + 1}: {enum} is duplicate enum (first appeared at line {enums[enum]})")
+				continue
 		except ValueError:
 			errors.append(f"Line {i + 1}: {rest[1]} is not an integer")
+			continue
 
 		comments[i] = comment.strip()
 
