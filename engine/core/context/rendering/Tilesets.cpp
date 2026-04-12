@@ -65,8 +65,8 @@ namespace oly::context
 					const size_t a_idx = _a_idx++;
 					TOMLNode node = (TOMLNode)_node;
 
-					const auto texture = io::parse_required<std::string>(node, _gen::keys::TileSet::Texture, "in tileset assignment #" + std::to_string(a_idx));
-					const auto config = io::parse_required<int>(node, _gen::keys::TileSet::Configuration, "in tileset assignment #" + std::to_string(a_idx));
+					const auto texture = io::parse_required<std::string>(node, _gen::keys::TileSet::Texture, { "in tileset assignment #", a_idx });
+					const auto config = io::parse_required<int>(node, _gen::keys::TileSet::Configuration, {"in tileset assignment #", a_idx });
 
 					rendering::TileSet::Assignment assignment;
 
@@ -92,8 +92,7 @@ namespace oly::context
 						size_t tr_idx = 0;
 						for (auto& trfm : *transformations)
 						{
-							if (auto transformation = io::parse_or_warn<unsigned int>(TOMLNode(trfm),
-								"cannot parse transformation #" + std::to_string(tr_idx) + " in tileset assignment #" + std::to_string(a_idx)))
+							if (auto transformation = io::parse_or_warn<unsigned int>(TOMLNode(trfm), { "cannot parse transformation #", tr_idx, " in tileset assignment #", a_idx }))
 							{
 								// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
 								try

@@ -918,8 +918,8 @@ namespace oly::rendering
 		try
 		{
 			TextElement e;
-			const auto font = io::parse_required<std::string>(element, _gen::keys::Paragraph::Font, "in text element #" + std::to_string(i));
-			const auto font_index = io::parse_optional<unsigned int>(element, _gen::keys::Paragraph::FontIndex, 0u, "in text element #" + std::to_string(i));
+			const auto font = io::parse_required<std::string>(element, _gen::keys::Paragraph::Font, { "in text element #", i });
+			const auto font_index = io::parse_optional<unsigned int>(element, _gen::keys::Paragraph::FontIndex, 0u, { "in text element #", i });
 			e.font = context::load_font(font, font_index);
 
 			if (auto text = io::parse_key(element, _gen::keys::Paragraph::Text).value<std::string>())

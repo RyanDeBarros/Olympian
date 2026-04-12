@@ -183,14 +183,14 @@ namespace oly::io
 
 	namespace internal
 	{
-		void log_context_warning(const StringParam& msg)
+		void log_context_warning(const DeferredStringParam& msg)
 		{
-			_OLY_ENGINE_LOG_WARNING("CONTEXT") << msg << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << msg.str() << LOG.nl;
 		}
 
-		void log_context_error(const StringParam& msg)
+		void log_context_error(const DeferredStringParam& msg)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << msg << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << msg.str() << LOG.endl;
 		}
 	}
 

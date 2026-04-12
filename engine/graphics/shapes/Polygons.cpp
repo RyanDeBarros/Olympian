@@ -523,7 +523,7 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
+				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
 					points.push_back(*pt);
 				++pt_idx;
 			}
@@ -537,7 +537,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse color #" + std::to_string(color_idx)))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse color #", color_idx }))
 					colors.push_back(*col);
 				++color_idx;
 			}
@@ -669,7 +669,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
 							points.push_back(*pt);
 						++pt_idx;
 					}
@@ -682,7 +682,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse color #" + std::to_string(color_idx)))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse color #", color_idx }))
 							colors.push_back(*col);
 						++color_idx;
 					}
@@ -701,7 +701,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
 							ngon_base.points.push_back(*pt);
 						++pt_idx;
 					}
@@ -713,7 +713,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse fill color #" + std::to_string(color_idx)))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }))
 							ngon_base.fill_colors.push_back(*col);
 						++color_idx;
 					}
@@ -725,7 +725,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse border color #" + std::to_string(color_idx)))
+						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse border color #", color_idx }))
 							ngon_base.border_colors.push_back(*col);
 						++color_idx;
 					}
@@ -765,7 +765,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
+						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
 							points.push_back(*pt);
 						++pt_idx;
 					}
@@ -849,7 +849,7 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, "cannot parse point #" + std::to_string(pt_idx)))
+				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
 					ngon_base.points.push_back(*pt);
 				++pt_idx;
 			}
@@ -861,7 +861,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse fill color #" + std::to_string(color_idx)))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }))
 					ngon_base.fill_colors.push_back(*col);
 				++color_idx;
 			}
@@ -873,7 +873,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, "cannot parse border color #" + std::to_string(color_idx)))
+				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse border color #", color_idx }))
 					ngon_base.border_colors.push_back(*col);
 				++color_idx;
 			}

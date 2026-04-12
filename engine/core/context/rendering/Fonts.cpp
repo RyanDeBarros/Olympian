@@ -92,13 +92,13 @@ namespace oly::context
 			{
 				const size_t k_idx = _k_idx++;
 				TOMLNode node = (TOMLNode)_node;
-				const auto pair = io::parse_required<TOMLArray>(node, _gen::keys::Font::CodepointPair, "in kerning #" + std::to_string(k_idx));
+				const auto pair = io::parse_required<TOMLArray>(node, _gen::keys::Font::CodepointPair, { "in kerning #", k_idx });
 				if (pair->size() != 2)
 				{
 					_OLY_ENGINE_LOG_ERROR("CONTEXT") << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array in kerning #" << k_idx << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
-				const auto dist = io::parse_required<int>(node, _gen::keys::Font::CodepointDistance, "in kerning #" + std::to_string(k_idx));
+				const auto dist = io::parse_required<int>(node, _gen::keys::Font::CodepointDistance, { "in kerning #", k_idx });
 
 				auto tc0 = pair->get_as<std::string>(0);
 				auto tc1 = pair->get_as<std::string>(1);
@@ -391,9 +391,7 @@ namespace oly::context
 						}
 					}
 
-					std::string _font_file = io::parse_or_throw<std::string>(io::parse_key(node, _gen::keys::Font::File),
-						"cannot parse " + io::key_string(_gen::keys::Font::File) + " field from font family style");
-					ResourcePath font_file(_font_file, file);
+					ResourcePath font_file(io::parse_required<std::string>(node, _gen::keys::Font::File, { "from font family style" }), file);
 					rendering::FontFamily::FontRef font;
 					if (font_file.is_import_path())
 					{

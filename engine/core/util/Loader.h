@@ -4,7 +4,7 @@
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
 #include "core/util/ResourcePath.h"
-#include "core/util/StringParam.h"
+#include "core/util/DeferredStringParam.h"
 
 #include <array>
 #include <cstdint>
@@ -39,12 +39,12 @@ namespace oly::io
 
 	namespace internal
 	{
-		extern void log_context_warning(const StringParam& msg);
-		extern void log_context_error(const StringParam& msg);
+		extern void log_context_warning(const DeferredStringParam& msg);
+		extern void log_context_error(const DeferredStringParam& msg);
 	}
 
 	template<typename T>
-	std::optional<T> parse_or_warn(TOMLNode node, const StringParam& warning)
+	std::optional<T> parse_or_warn(TOMLNode node, const DeferredStringParam& warning)
 	{
 		auto o = parse<T>(node);
 		if (!o)
@@ -53,7 +53,7 @@ namespace oly::io
 	}
 
 	template<typename T>
-	T parse_or_throw(TOMLNode node, const StringParam& error)
+	T parse_or_throw(TOMLNode node, const DeferredStringParam& error)
 	{
 		auto o = parse<T>(node);
 		if (o)
@@ -86,7 +86,7 @@ namespace oly::io
 	std::optional<T> parse_if_exists(TOMLNode node, Enum key)
 	{
 		if (auto value = io::parse_key(node, key))
-			return io::parse_or_warn<T>(value, "cannot parse " + io::key_string(key) + " field");
+			return io::parse_or_warn<T>(value, { "cannot parse ", io::key_string(key), " field" });
 		else
 			return std::nullopt;
 	}
@@ -104,22 +104,19 @@ namespace oly::io
 	}
 
 	template<typename T, typename Enum>
-	T parse_required(TOMLNode node, Enum key, const StringParam& error_suffix = "")
+	T parse_required(TOMLNode node, Enum key, const DeferredStringParam& error_suffix = StringParam(""))
 	{
-		// TODO v7 DeferredStringParam that computes string catenation only when it's required to be used (holds a Variant<StringParam, std::vector<StringParam>>) overload << for clarity in appending strings -> or variadic constructor arguments?
-		std::stringstream ss;
-		ss << "cannot parse " << io::key_string(key) << " field" << (error_suffix.empty() ? "" : " ") << error_suffix;
-		return io::parse_or_throw<T>(io::parse_key(node, key), ss.str());
+		DeferredStringParam error{ "cannot parse ", io::key_string(key), " field", (error_suffix.empty() ? "" : " ") };
+		return io::parse_or_throw<T>(io::parse_key(node, key), error << error_suffix);
 	}
 
 	template<typename T, typename Enum>
-	T parse_optional(TOMLNode node, Enum key, T def, const StringParam& warning_suffix = "")
+	T parse_optional(TOMLNode node, Enum key, T def, const DeferredStringParam& warning_suffix = StringParam(""))
 	{
 		if (auto value = io::parse_key(node, key))
 		{
-			std::stringstream ss;
-			ss << "cannot parse " << io::key_string(key) << " field" << (warning_suffix.empty() ? "" : " ") << warning_suffix;
-			if (auto obj = io::parse_or_warn<T>(value, ss.str()))
+			DeferredStringParam warning{ "cannot parse ", io::key_string(key), " field", (warning_suffix.empty() ? "" : " ") };
+			if (auto obj = io::parse_or_warn<T>(value, warning << warning_suffix))
 				return *obj;
 		}
 
@@ -127,14 +124,13 @@ namespace oly::io
 	}
 
 	template<typename Enum>
-	TOMLNode parse_required_node(TOMLNode node, Enum key, const StringParam& error_suffix = "")
+	TOMLNode parse_required_node(TOMLNode node, Enum key, const DeferredStringParam& error_suffix = StringParam(""))
 	{
 		if (auto o = io::parse_key(node, key))
 			return o;
 
-		std::stringstream ss;
-		ss << "missing " << io::key_string(key) << " table" << (error_suffix.empty() ? "" : " ") << error_suffix;
-		internal::log_context_error(ss.str());
+		DeferredStringParam error{ "missing ", io::key_string(key), " table", (error_suffix.empty() ? "" : " ") };
+		internal::log_context_error(error << error_suffix);
 		throw Error(ErrorCode::LoadAsset);
 	}
 
