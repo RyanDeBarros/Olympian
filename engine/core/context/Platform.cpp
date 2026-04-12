@@ -13,6 +13,7 @@
 #include ".gen/keys/Context.inl"
 #include ".gen/keys/Window.inl"
 #include ".gen/keys/WindowHint.inl"
+#include ".gen/keys/Signal.inl"
 
 #include ".gen/enums/platform/Axis0DConversion.inl"
 #include ".gen/enums/platform/Axis1DConversion.inl"
@@ -161,7 +162,7 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)
 	{
-		if (auto swizzle = io::parse_uint(mnode["swizzle"]))
+		if (auto swizzle = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Swizzle)))
 		{
 			try
 			{
@@ -173,11 +174,11 @@ namespace oly::context
 			}
 		}
 
-		if (!io::parse_float(mnode["multiplier"], modifier.multiplier.x))
-			if (!io::parse_vec(mnode["multiplier"], reinterpret_cast<glm::vec2&>(modifier.multiplier)))
-				io::parse_vec(mnode["multiplier"], modifier.multiplier);
+		if (!io::parse_float(io::parse_key(mnode, _gen::keys::Signal::Multiplier), modifier.multiplier.x))
+			if (!io::parse_vec(io::parse_key(mnode, _gen::keys::Signal::Multiplier), reinterpret_cast<glm::vec2&>(modifier.multiplier)))
+				io::parse_vec(io::parse_key(mnode, _gen::keys::Signal::Multiplier), modifier.multiplier);
 
-		if (auto invert = mnode["invert"].as_array())
+		if (auto invert = io::parse_key(mnode, _gen::keys::Signal::Invert).as_array())
 		{
 			for (size_t i = 0; i < 3; ++i)
 			{
@@ -195,9 +196,9 @@ namespace oly::context
 	static input::Axis0DModifier load_modifier_0d(TOMLNode node)
 	{
 		input::Axis0DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(mnode["conversion"]))
+		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -217,9 +218,9 @@ namespace oly::context
 	static input::Axis1DModifier load_modifier_1d(TOMLNode node)
 	{
 		input::Axis1DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(mnode["conversion"]))
+		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -239,9 +240,9 @@ namespace oly::context
 	static input::Axis2DModifier load_modifier_2d(TOMLNode node)
 	{
 		input::Axis2DModifier modifier;
-		TOMLNode mnode = node["modifier"];
+		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(mnode["conversion"]))
+		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -261,10 +262,10 @@ namespace oly::context
 	static void load_key_binding(TOMLNode node, const std::string& id)
 	{
 		input::KeyBinding b;
-		if (!io::parse_int(node["key"], b.key))
+		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Key), b.key))
 			return;
-		io::parse_int(node["req_mods"], b.required_key_mods);
-		io::parse_int(node["ban_mods"], b.forbidden_key_mods);
+		io::parse_int(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_key_mods);
+		io::parse_int(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_key_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -273,10 +274,10 @@ namespace oly::context
 	static void load_mouse_button_binding(TOMLNode node, const std::string& id)
 	{
 		input::MouseButtonBinding b;
-		if (!io::parse_int(node["button"], b.button))
+		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Button), b.button))
 			return;
-		io::parse_int(node["req_mods"], b.required_button_mods);
-		io::parse_int(node["ban_mods"], b.forbidden_button_mods);
+		io::parse_int(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_button_mods);
+		io::parse_int(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_button_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -285,7 +286,7 @@ namespace oly::context
 	static void load_gamepad_button_binding(TOMLNode node, const std::string& id)
 	{
 		int button;
-		if (!io::parse_int(node["button"], button))
+		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Button), button))
 			return;
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)button };
 		b.modifier = load_modifier_0d(node);
@@ -296,10 +297,10 @@ namespace oly::context
 	static void load_gamepad_axis_1d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis1d;
-		if (!io::parse_int(node["axis1d"], axis1d))
+		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Axis1D), axis1d))
 			return;
 		input::GamepadAxis1DBinding b{ .axis = (input::GamepadAxis1D)axis1d };
-		io::parse_float(node["deadzone"], b.deadzone);
+		io::parse_float(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
 		b.modifier = load_modifier_1d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -308,10 +309,10 @@ namespace oly::context
 	static void load_gamepad_axis_2d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis2d;
-		if (!io::parse_int(node["axis2d"], axis2d))
+		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Axis2D), axis2d))
 			return;
 		input::GamepadAxis2DBinding b{ .axis = (input::GamepadAxis2D)axis2d };
-		io::parse_float(node["deadzone"], b.deadzone);
+		io::parse_float(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
 		b.modifier = load_modifier_2d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -335,16 +336,16 @@ namespace oly::context
 
 	void load_signal(TOMLNode node)
 	{
-		auto id = node["id"].value<std::string>();
+		auto id = io::parse_key(node, _gen::keys::Signal::ID).value<std::string>();
 		if (!id)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"id\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::ID) << " field" << LOG.endl;
 			return;
 		}
-		auto binding = io::parse_uint(node["binding"]);
+		auto binding = io::parse_uint(io::parse_key(node, _gen::keys::Signal::Binding));
 		if (!binding)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"binding\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::Binding) << " field" << LOG.endl;
 			return;
 		}
 
@@ -391,14 +392,14 @@ namespace oly::context
 
 	void load_signal_mapping(TOMLNode node)
 	{
-		auto toml_id = node["id"].value<std::string>();
+		auto toml_id = io::parse_key(node, _gen::keys::Signal::ID).value<std::string>();
 		if (!toml_id)
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing \"id\" field." << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::ID) << " field" << LOG.endl;
 			return;
 		}
 
-		if (auto toml_signals = node["signals"].as_array())
+		if (auto toml_signals = io::parse_key(node, _gen::keys::Signal::MappedSignalList).as_array())
 		{
 			std::vector<std::string> signals;
 			for (size_t i = 0; i < toml_signals->size(); ++i)
@@ -406,7 +407,7 @@ namespace oly::context
 				if (auto signal = toml_signals->get_as<std::string>(i))
 					signals.push_back(signal->get());
 				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string" << LOG.nl;
 			}
 			context::assign_signal_mapping(toml_id.value(), std::move(signals));
 		}
@@ -434,28 +435,29 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto toml = io::load_toml(file);
+		auto table = io::load_toml(file);
+		TOMLNode toml = (TOMLNode)table;
 
 		if (LOG.enable.debug)
 		{
 			std::string source = file.get_absolute().generic_string();
 			DebugTrace trace(source.c_str());
 
-			auto signals = toml["signal"].as_array();
+			auto signals = io::parse_key(toml, _gen::keys::Signal::SignalArray).as_array();
 			if (signals)
 				signals->for_each([&trace](auto&& node) { load_signal((TOMLNode)node, trace); });
 
-			auto mappings = toml["mapping"].as_array();
+			auto mappings = io::parse_key(toml, _gen::keys::Signal::MappingArray).as_array();
 			if (mappings)
 				mappings->for_each([&trace](auto&& node) { load_signal_mapping((TOMLNode)node, trace); });
 		}
 		else
 		{
-			auto signals = toml["signal"].as_array();
+			auto signals = io::parse_key(toml, _gen::keys::Signal::SignalArray).as_array();
 			if (signals)
 				signals->for_each([](auto&& node) { load_signal((TOMLNode)node); });
 
-			auto mappings = toml["mapping"].as_array();
+			auto mappings = io::parse_key(toml, _gen::keys::Signal::MappingArray).as_array();
 			if (mappings)
 				mappings->for_each([](auto&& node) { load_signal_mapping((TOMLNode)node); });
 		}

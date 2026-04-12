@@ -1,11 +1,11 @@
 #meta version=1.0 type=signal
 
-[[signal]]
-"id"       = "pan camera"
-"binding"  = 4
-"axis2d"   = 1 # RIGHT_XY
-"deadzone" = 0.018
+[[Signal]]
+ID       = "pan camera"
+Binding  = 4
+Axis2D   = 1 # RIGHT_XY
+Deadzone = 0.018
 
-[[signal]]
-"id"      = "zoom camera"
-"binding" = 6
+[[Signal]]
+ID      = "zoom camera"
+Binding = 6

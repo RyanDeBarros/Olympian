@@ -1,6 +1,6 @@
 #meta version=1.0 type=signal
 
-[[signal]]
-"id"      = "click"
-"binding" = 1
-"button"  = 0 # LMB
+[[Signal]]
+ID      = "click"
+Binding = 1
+Button  = 0 # LMB
