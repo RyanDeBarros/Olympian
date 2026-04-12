@@ -10,7 +10,6 @@ Expand    Expand
 Element   Element
 Trfmer    Transformer
 Format    Format
-Modifier  Modifier
 DrawBkg   DrawBackground
 BkgColor  BackgroundColor
 CamInv    CameraInvariant

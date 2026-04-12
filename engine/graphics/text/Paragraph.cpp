@@ -962,7 +962,7 @@ namespace oly::rendering
 		if (auto transformer = io::parse_key(node, _gen::keys::Paragraph::Transformer))
 		{
 			paragraph.set_local() = Transform2D::load(transformer);
-			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(io::parse_key(transformer, _gen::keys::Paragraph::Modifier));
+			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer);
 		}
 
 		io::parse_bool(io::parse_key(node, _gen::keys::Paragraph::DrawBackground), paragraph.draw_bkg);

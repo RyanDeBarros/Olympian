@@ -159,40 +159,43 @@ namespace oly::io
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto type = io::parse_uint(io::parse_key(node, _gen::keys::Transform::ModifierType)))
+		if (auto mnode = io::parse_key(node, _gen::keys::Transform::Modifier))
 		{
-			try
+			if (auto type = io::parse_uint(io::parse_key(mnode, _gen::keys::Transform::ModifierType)))
 			{
-				switch (_gen::TransformModifier::val(*type))
+				try
 				{
-				case TransformModifierType::None:
-					break;
-				case TransformModifierType::Shear:
+					switch (_gen::TransformModifier::val(*type))
+					{
+					case TransformModifierType::None:
+						break;
+					case TransformModifierType::Shear:
+					{
+						Polymorphic<ShearTransformModifier2D> modifier;
+						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
+						return modifier;
+					}
+					case TransformModifierType::Pivot:
+					{
+						Polymorphic<PivotTransformModifier2D> modifier;
+						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
+						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
+						return modifier;
+					}
+					case TransformModifierType::Offset:
+					{
+						Polymorphic<OffsetTransformModifier2D> modifier;
+						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
+						return modifier;
+					}
+					default:
+						throw std::out_of_range("");
+					}
+				}
+				catch (const std::out_of_range&)
 				{
-					Polymorphic<ShearTransformModifier2D> modifier;
-					parse_vec(io::parse_key(node, _gen::keys::Transform::Shearing), modifier->shearing);
-					return modifier;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type (" << *type << ")" << LOG.nl;
 				}
-				case TransformModifierType::Pivot:
-				{
-					Polymorphic<PivotTransformModifier2D> modifier;
-					parse_vec(io::parse_key(node, _gen::keys::Transform::Pivot), modifier->pivot);
-					parse_vec(io::parse_key(node, _gen::keys::Transform::Size), modifier->size);
-					return modifier;
-				}
-				case TransformModifierType::Offset:
-				{
-					Polymorphic<OffsetTransformModifier2D> modifier;
-					parse_vec(io::parse_key(node, _gen::keys::Transform::Offset), modifier->offset);
-					return modifier;
-				}
-				default:
-					throw std::out_of_range("");
-				}
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type (" << *type << ")" << LOG.nl;
 			}
 		}
 		return Polymorphic<TransformModifier2D>();

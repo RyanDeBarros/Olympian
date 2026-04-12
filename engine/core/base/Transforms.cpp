@@ -387,7 +387,7 @@ namespace oly
 
 		Transformer2D transformer;
 		transformer.set_local() = Transform2D::load(node);
-		transformer.set_modifier() = io::load_transform_modifier_2d(io::parse_key(node, _gen::keys::Transform::Modifier));
+		transformer.set_modifier() = io::load_transform_modifier_2d(node);
 		return transformer;
 	}
 

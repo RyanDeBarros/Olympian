@@ -5,6 +5,8 @@
 #include "core/context/rendering/Tilesets.h"
 #include "core/util/Loader.h"
 
+#include ".gen/keys/TileMap.inl"
+
 namespace oly::rendering
 {
 	TileMapLayer::TileMapLayer()
@@ -161,30 +163,30 @@ namespace oly::rendering
 	TileMap TileMap::load(TOMLNode node)
 	{
 		TileMap tilemap;
-		if (auto transformer = node["transformer"])
+		if (auto transformer = io::parse_key(node, _gen::keys::TileMap::Transformer))
 		{
 			tilemap.set_local() = Transform2D::load(transformer);
-			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
+			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer);
 		}
 
-		if (auto toml_layers = node["layer"].as_array())
+		if (auto toml_layers = io::parse_key(node, _gen::keys::TileMap::LayerArray).as_array())
 		{
 			size_t _layer_idx = 0;
 			toml_layers->for_each([&tilemap, &_layer_idx](auto&& _node) {
 				const size_t layer_idx = _layer_idx++;
 				TOMLNode node = (TOMLNode)_node;
 
-				auto tileset = node["tileset"].value<std::string>();
+				auto tileset = io::parse_key(node, _gen::keys::TileMap::TileSet).value<std::string>();
 				if (!tileset)
 				{
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse tilemap layer #" << layer_idx << " - missing \"tileset\" string field." << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse tilemap layer #" << layer_idx << " - missing " << io::key_string(_gen::keys::TileMap::TileSet) << " field" << LOG.nl;
 					return;
 				}
 
 				TileMapLayer layer;
 				layer.tileset = context::load_tileset(*tileset);
 
-				auto tiles = node["tiles"].as_array();
+				auto tiles = io::parse_key(node, _gen::keys::TileMap::TileArray).as_array();
 				if (tiles)
 				{
 					size_t tile_idx = 0;
@@ -194,21 +196,20 @@ namespace oly::rendering
 						if (io::parse_ivec((TOMLNode)toml_tile, tile))
 							layer.paint_tile(tile);
 						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx
-							<< ", cannot convert tile #" << tile_idx << " to vec2." << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx << ", cannot convert tile #" << tile_idx << " to vec2" << LOG.nl;
 						++tile_idx;
 					}
 				}
 
 				int z = 0;
-				if (io::parse_int(node["z"], z))
+				if (io::parse_int(io::parse_key(node, _gen::keys::TileMap::Z), z))
 					tilemap.register_layer(z, std::move(layer));
 				else
 					tilemap.register_layer(std::move(layer));
 				});
 		}
 
-		tilemap.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		tilemap.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::TileMap::CameraInvariant), false));
 
 		return tilemap;
 	}
