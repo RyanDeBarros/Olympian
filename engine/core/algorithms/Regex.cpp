@@ -111,7 +111,8 @@ namespace oly::algo::re
 		return true;
 	}
 
-	bool parse_float(const StringParam& input, float& v)
+	template<>
+	bool try_parse<float>(const StringParam& input, float& v)
 	{
 		glm::vec1 u;
 		if (parse_vec(input, u))
@@ -123,17 +124,20 @@ namespace oly::algo::re
 			return false;
 	}
 
-	bool parse_vec2(const StringParam& input, glm::vec2& v)
+	template<>
+	bool try_parse<glm::vec2>(const StringParam& input, glm::vec2& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec3(const StringParam& input, glm::vec3& v)
+	template<>
+	bool try_parse<glm::vec3>(const StringParam& input, glm::vec3& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec4(const StringParam& input, glm::vec4& v)
+	template<>
+	bool try_parse<glm::vec4>(const StringParam& input, glm::vec4& v)
 	{
 		return parse_vec(input, v);
 	}

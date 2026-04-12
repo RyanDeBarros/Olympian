@@ -16,9 +16,6 @@ namespace oly::algo::re
 	std::vector<StringParam::ConstMatch> all_matches(const StringParam& input, const std::regex& pattern);
 	std::vector<StringParam::Match> all_matches(StringParam& input, const std::regex& pattern);
 
-	// TODO v7 use template
-	bool parse_float(const StringParam& input, float& v);
-	bool parse_vec2(const StringParam& input, glm::vec2& v);
-	bool parse_vec3(const StringParam& input, glm::vec3& v);
-	bool parse_vec4(const StringParam& input, glm::vec4& v);
+	template<typename T>
+	bool try_parse(const StringParam& input, T& v);
 }

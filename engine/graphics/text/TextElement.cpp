@@ -254,7 +254,7 @@ namespace oly::rendering
 			if (!overrides.text_color)
 			{
 				StringParam value = get_tag_value(tag, eq_pos);
-				if (algo::re::parse_vec4(value, e.text_color))
+				if (algo::re::try_parse(value, e.text_color))
 					overrides.text_color = true;
 				else if (io::parse_color(value, e.text_color))
 					overrides.text_color = true;
@@ -264,7 +264,7 @@ namespace oly::rendering
 		{
 			if (!overrides.adj_offset)
 			{
-				if (algo::re::parse_float(get_tag_value(tag, eq_pos), e.adj_offset))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.adj_offset))
 					overrides.adj_offset = true;
 			}
 		}
@@ -272,7 +272,7 @@ namespace oly::rendering
 		{
 			if (!overrides.scale)
 			{
-				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.scale))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.scale))
 					overrides.scale = true;
 			}
 		}
@@ -281,7 +281,7 @@ namespace oly::rendering
 			if (!overrides.line_y_pivot)
 			{
 				float line_y_pivot;
-				if (algo::re::parse_float(get_tag_value(tag, eq_pos), line_y_pivot))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), line_y_pivot))
 				{
 					overrides.line_y_pivot = true;
 					e.line_y_pivot = line_y_pivot;
@@ -292,7 +292,7 @@ namespace oly::rendering
 		{
 			if (!overrides.jitter_offset)
 			{
-				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.jitter_offset))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.jitter_offset))
 					overrides.jitter_offset = true;
 			}
 		}
