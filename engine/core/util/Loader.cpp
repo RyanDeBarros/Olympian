@@ -6,6 +6,8 @@
 #include "core/algorithms/STLUtils.h"
 #include "core/base/Definitions.h"
 
+#include ".gen/keys/Transform.inl"
+
 #include ".gen/enums/TransformModifier.inl"
 
 // TODO v7 use CTOMLNode throughout
@@ -157,7 +159,7 @@ namespace oly::io
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto type = io::parse_uint(node["type"]))
+		if (auto type = io::parse_uint(io::parse_key(node, _gen::keys::Transform::ModifierType)))
 		{
 			try
 			{
@@ -168,20 +170,20 @@ namespace oly::io
 				case TransformModifierType::Shear:
 				{
 					Polymorphic<ShearTransformModifier2D> modifier;
-					parse_vec(node["shearing"], modifier->shearing);
+					parse_vec(io::parse_key(node, _gen::keys::Transform::Shearing), modifier->shearing);
 					return modifier;
 				}
 				case TransformModifierType::Pivot:
 				{
 					Polymorphic<PivotTransformModifier2D> modifier;
-					parse_vec(node["pivot"], modifier->pivot);
-					parse_vec(node["size"], modifier->size);
+					parse_vec(io::parse_key(node, _gen::keys::Transform::Pivot), modifier->pivot);
+					parse_vec(io::parse_key(node, _gen::keys::Transform::Size), modifier->size);
 					return modifier;
 				}
 				case TransformModifierType::Offset:
 				{
 					Polymorphic<OffsetTransformModifier2D> modifier;
-					parse_vec(node["offset"], modifier->offset);
+					parse_vec(io::parse_key(node, _gen::keys::Transform::Offset), modifier->offset);
 					return modifier;
 				}
 				default:

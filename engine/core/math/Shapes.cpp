@@ -86,12 +86,12 @@ namespace oly::math
 
 		TopSidePadding padding;
 
-		if (auto uniform = node["uniform"].value<double>())
+		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
 			padding = TopSidePadding::uniform(*uniform);
 
-		io::parse_float(node["left"], padding.left);
-		io::parse_float(node["right"], padding.right);
-		io::parse_float(node["top"], padding.top);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
+		io::parse_float(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
 
 		return padding;
 	}

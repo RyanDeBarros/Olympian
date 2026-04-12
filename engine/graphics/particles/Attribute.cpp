@@ -8,6 +8,14 @@
 
 namespace oly::particles
 {
+	namespace internal
+	{
+		TOMLNode parse_attribute_value_key(TOMLNode node)
+		{
+			return node["value"];
+		}
+	}
+
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
 		if (auto op = io::parse_uint(node["op"]))

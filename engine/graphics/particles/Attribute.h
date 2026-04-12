@@ -281,6 +281,11 @@ namespace oly::particles
 		static Polymorphic<IAttributeOperation> load(TOMLNode node);
 	};
 
+	namespace internal
+	{
+		extern TOMLNode parse_attribute_value_key(TOMLNode node);
+	}
+
 	template<ParticleAttribute T>
 	struct Attribute
 	{
@@ -318,13 +323,17 @@ namespace oly::particles
 		const T* operator->() const { return &value; }
 		T* operator->() { return &value; }
 
+	private:
+		static TOMLNode parse_value_key(TOMLNode node);
+
+	public:
 		void overload(TOMLNode node)
 		{
 			constexpr size_t N = sizeof(T) / sizeof(float);
 			if constexpr (N > 1)
-				io::parse_vec<N>(node["value"], value);
+				io::parse_vec<N>(internal::parse_attribute_value_key(node), value);
 			else
-				io::parse_float(node["value"], value);
+				io::parse_float(internal::parse_attribute_value_key(node), value);
 
 			if (auto operation = IAttributeOperation::load(node))
 				op = std::move(operation);

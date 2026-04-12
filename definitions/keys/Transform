@@ -2,3 +2,9 @@ Position  Position
 Rotation  Rotation
 Scale     Scale
 Modifier  Modifier
+Type      ModifierType
+
+Shearing  Shearing
+Pivot     Pivot
+Size      Size
+Offset    Offset
