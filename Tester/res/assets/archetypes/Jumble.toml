@@ -52,8 +52,8 @@ DelayS = 0.1
 	Trfmer = { Position = [300, -200], Scale = [20, 20] }
 
 [nonant_panel]
-nsize = [ 128, 0 ]
-offsets = { Uniform = 6 }
+NSize = [ 128, 0 ]
+Offsets = { Uniform = 6 }
 [nonant_panel.Sprite]
 Texture = "@/textures/panel.png"
 Trfmer = { Scale = [ 10.0, 10.0 ] }

@@ -3,6 +3,8 @@
 #include "core/context/rendering/Textures.h"
 #include "core/util/Loader.h"
 
+#include ".gen/keys/NineSlice.inl"
+
 namespace oly::rendering
 {
 	Sprite& NineSlice::sprite(unsigned char x, unsigned char y) const
@@ -356,15 +358,15 @@ namespace oly::rendering
 		NineSlice nonant;
 
 		glm::vec2 nsize{};
-		io::parse_vec(node["nsize"], nsize);
-		math::Padding offsets = math::Padding::load(node["offsets"]);
+		io::parse_vec(io::parse_key(node, _gen::keys::NineSlice::NSize), nsize);
+		math::Padding offsets = math::Padding::load(io::parse_key(node, _gen::keys::NineSlice::Offsets));
 
-		if (auto sprite = node["sprite"])
+		if (auto sprite = io::parse_key(node, _gen::keys::NineSlice::Sprite))
 			nonant.setup_nonant(trace ? Sprite::load(sprite, *trace) : Sprite::load(sprite), nsize, offsets);
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		nonant.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		nonant.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::NineSlice::CameraInvariant), false));
 
 		return nonant;
 	}
