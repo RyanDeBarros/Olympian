@@ -51,13 +51,13 @@ namespace oly::context
 			throw Error(ErrorCode::PlatformInit);
 		}
 
-		if (!io::parse_int(io::parse_key(toml_window, _gen::keys::Window::Width), platform_setup.window_width))
+		if (!io::try_parse(io::parse_key(toml_window, _gen::keys::Window::Width), platform_setup.window_width))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid " << io::key_string(_gen::keys::Window::Width) << " field" << LOG.nl;
 			throw Error(ErrorCode::PlatformInit);
 		}
 
-		if (!io::parse_int(io::parse_key(toml_window, _gen::keys::Window::Height), platform_setup.window_height))
+		if (!io::try_parse(io::parse_key(toml_window, _gen::keys::Window::Height), platform_setup.window_height))
 		{
 			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Cannot initialize platform: missing or invalid " << io::key_string(_gen::keys::Window::Height) << " field" << LOG.nl;
 			throw Error(ErrorCode::PlatformInit);
@@ -73,32 +73,32 @@ namespace oly::context
 
 		if (auto toml_window_hint = io::parse_key(toml_window, _gen::keys::Context::WindowHint))
 		{
-			io::parse_vec(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ClearColor), platform_setup.window_hint.context.clear_color);
-			io::parse_int(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SwapInterval), platform_setup.window_hint.context.swap_interval);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Resizable), platform_setup.window_hint.window.resizable);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Visible), platform_setup.window_hint.window.visible);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Decorated), platform_setup.window_hint.window.decorated);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Focused), platform_setup.window_hint.window.focused);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::AutoIconify), platform_setup.window_hint.window.auto_iconify);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Floating), platform_setup.window_hint.window.floating);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Maximized), platform_setup.window_hint.window.maximized);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::CenterCursor), platform_setup.window_hint.window.center_cursor);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::TransparentFramebuffer), platform_setup.window_hint.window.transparent_framebuffer);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::FocusOnShow), platform_setup.window_hint.window.focus_on_show);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleToMonitor), platform_setup.window_hint.window.scale_to_monitor);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleFramebuffer), platform_setup.window_hint.window.scale_framebuffer);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::MousePassthrough), platform_setup.window_hint.window.mouse_passthrough);
-			io::parse_uint(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionX), platform_setup.window_hint.window.position_x);
-			io::parse_uint(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionY), platform_setup.window_hint.window.position_y);
-			io::parse_int(io::parse_key(toml_window_hint, _gen::keys::WindowHint::RefreshRate), platform_setup.window_hint.window.refresh_rate);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Stereo), platform_setup.window_hint.window.stereo);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SrgbCapable), platform_setup.window_hint.window.srgb_capable);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::DoubleBuffer), platform_setup.window_hint.window.double_buffer);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::OpenglForwardCompat), platform_setup.window_hint.window.opengl_forward_compat);
-			io::parse_bool(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ContextDebug), platform_setup.window_hint.window.context_debug);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ClearColor), platform_setup.window_hint.context.clear_color);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SwapInterval), platform_setup.window_hint.context.swap_interval);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Resizable), platform_setup.window_hint.window.resizable);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Visible), platform_setup.window_hint.window.visible);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Decorated), platform_setup.window_hint.window.decorated);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Focused), platform_setup.window_hint.window.focused);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::AutoIconify), platform_setup.window_hint.window.auto_iconify);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Floating), platform_setup.window_hint.window.floating);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Maximized), platform_setup.window_hint.window.maximized);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::CenterCursor), platform_setup.window_hint.window.center_cursor);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::TransparentFramebuffer), platform_setup.window_hint.window.transparent_framebuffer);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::FocusOnShow), platform_setup.window_hint.window.focus_on_show);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleToMonitor), platform_setup.window_hint.window.scale_to_monitor);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ScaleFramebuffer), platform_setup.window_hint.window.scale_framebuffer);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::MousePassthrough), platform_setup.window_hint.window.mouse_passthrough);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionX), platform_setup.window_hint.window.position_x);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::PositionY), platform_setup.window_hint.window.position_y);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::RefreshRate), platform_setup.window_hint.window.refresh_rate);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::Stereo), platform_setup.window_hint.window.stereo);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::SrgbCapable), platform_setup.window_hint.window.srgb_capable);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::DoubleBuffer), platform_setup.window_hint.window.double_buffer);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::OpenglForwardCompat), platform_setup.window_hint.window.opengl_forward_compat);
+			io::try_parse(io::parse_key(toml_window_hint, _gen::keys::WindowHint::ContextDebug), platform_setup.window_hint.window.context_debug);
 		}
 
-		platform_setup.num_gamepads = glm::clamp(io::parse_int_or(io::parse_key(node, _gen::keys::Context::Gamepads), 0), 0, GLFW_JOYSTICK_LAST);
+		platform_setup.num_gamepads = glm::clamp(io::parse_or(io::parse_key(node, _gen::keys::Context::Gamepads), 0), 0, GLFW_JOYSTICK_LAST);
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);
@@ -115,8 +115,8 @@ namespace oly::context
 		{
 			if (auto viewport = io::parse_key(window, _gen::keys::Window::Viewport))
 			{
-				io::parse_bool(io::parse_key(viewport, _gen::keys::Window::Boxed), camera_boxed);
-				io::parse_bool(io::parse_key(viewport, _gen::keys::Window::Stretch), camera_stretch);
+				io::try_parse(io::parse_key(viewport, _gen::keys::Window::Boxed), camera_boxed);
+				io::try_parse(io::parse_key(viewport, _gen::keys::Window::Stretch), camera_stretch);
 			}
 		}
 		
@@ -162,7 +162,7 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)
 	{
-		if (auto swizzle = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Swizzle)))
+		if (auto swizzle = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Swizzle)))
 		{
 			try
 			{
@@ -174,9 +174,12 @@ namespace oly::context
 			}
 		}
 
-		if (!io::parse_float(io::parse_key(mnode, _gen::keys::Signal::Multiplier), modifier.multiplier.x))
-			if (!io::parse_vec(io::parse_key(mnode, _gen::keys::Signal::Multiplier), reinterpret_cast<glm::vec2&>(modifier.multiplier)))
-				io::parse_vec(io::parse_key(mnode, _gen::keys::Signal::Multiplier), modifier.multiplier);
+		if (auto multiplier = io::parse_key(mnode, _gen::keys::Signal::Multiplier))
+		{
+			if (!io::try_parse(multiplier, modifier.multiplier.x))
+				if (!io::try_parse(multiplier, reinterpret_cast<glm::vec2&>(modifier.multiplier)))
+					io::try_parse(multiplier, modifier.multiplier);
+		}
 
 		if (auto invert = io::parse_key(mnode, _gen::keys::Signal::Invert).as_array())
 		{
@@ -198,7 +201,7 @@ namespace oly::context
 		input::Axis0DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
+		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -220,7 +223,7 @@ namespace oly::context
 		input::Axis1DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
+		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -242,7 +245,7 @@ namespace oly::context
 		input::Axis2DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
 
-		if (auto conversion = io::parse_uint(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
+		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
 		{
 			try
 			{
@@ -262,10 +265,10 @@ namespace oly::context
 	static void load_key_binding(TOMLNode node, const std::string& id)
 	{
 		input::KeyBinding b;
-		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Key), b.key))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Signal::Key), b.key))
 			return;
-		io::parse_int(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_key_mods);
-		io::parse_int(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_key_mods);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_key_mods);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_key_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -274,10 +277,10 @@ namespace oly::context
 	static void load_mouse_button_binding(TOMLNode node, const std::string& id)
 	{
 		input::MouseButtonBinding b;
-		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Button), b.button))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Signal::Button), b.button))
 			return;
-		io::parse_int(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_button_mods);
-		io::parse_int(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_button_mods);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::RequiredMods), b.required_button_mods);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::ForbiddenMods), b.forbidden_button_mods);
 		b.modifier = load_modifier_0d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -286,7 +289,7 @@ namespace oly::context
 	static void load_gamepad_button_binding(TOMLNode node, const std::string& id)
 	{
 		int button;
-		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Button), button))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Signal::Button), button))
 			return;
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)button };
 		b.modifier = load_modifier_0d(node);
@@ -297,10 +300,10 @@ namespace oly::context
 	static void load_gamepad_axis_1d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis1d;
-		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Axis1D), axis1d))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Signal::Axis1D), axis1d))
 			return;
 		input::GamepadAxis1DBinding b{ .axis = (input::GamepadAxis1D)axis1d };
-		io::parse_float(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
 		b.modifier = load_modifier_1d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -309,10 +312,10 @@ namespace oly::context
 	static void load_gamepad_axis_2d_binding(TOMLNode node, const std::string& id)
 	{
 		int axis2d;
-		if (!io::parse_int(io::parse_key(node, _gen::keys::Signal::Axis2D), axis2d))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Signal::Axis2D), axis2d))
 			return;
 		input::GamepadAxis2DBinding b{ .axis = (input::GamepadAxis2D)axis2d };
-		io::parse_float(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
+		io::try_parse(io::parse_key(node, _gen::keys::Signal::Deadzone), b.deadzone);
 		b.modifier = load_modifier_2d(node);
 
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
@@ -342,7 +345,7 @@ namespace oly::context
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::ID) << " field" << LOG.endl;
 			return;
 		}
-		auto binding = io::parse_uint(io::parse_key(node, _gen::keys::Signal::Binding));
+		auto binding = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Signal::Binding));
 		if (!binding)
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Signal::Binding) << " field" << LOG.endl;

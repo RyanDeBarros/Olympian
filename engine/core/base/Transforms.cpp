@@ -12,9 +12,9 @@ namespace oly
 			return {};
 
 		Transform2D transform;
-		io::parse_vec(io::parse_key(node, _gen::keys::Transform::Position), transform.position);
-		io::parse_float(io::parse_key(node, _gen::keys::Transform::Rotation), transform.rotation);
-		io::parse_vec(io::parse_key(node, _gen::keys::Transform::Scale), transform.scale);
+		io::try_parse(io::parse_key(node, _gen::keys::Transform::Position), transform.position);
+		io::try_parse(io::parse_key(node, _gen::keys::Transform::Rotation), transform.rotation);
+		io::try_parse(io::parse_key(node, _gen::keys::Transform::Scale), transform.scale);
 		return transform;
 	}
 

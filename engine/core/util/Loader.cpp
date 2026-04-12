@@ -28,140 +28,149 @@ namespace oly::io
 		}
 	}
 
-	bool parse_bool(TOMLNode node, bool& v)
+	template<>
+	std::optional<bool> parse<bool>(TOMLNode node)
 	{
 		if (auto i = node.value<bool>())
-		{
-			v = *i;
-			return true;
-		}
+			return *i;
 		else if (auto i = node.value<int64_t>())
-		{
-			v = (bool)*i;
-			return true;
-		}
-		return false;
-	}
-
-	void parse_bool(TOMLNode node, std::optional<bool>& v)
-	{
-		if (auto i = node.value<bool>())
-			v = *i;
-		else if (auto i = node.value<int64_t>())
-			v = (bool)*i;
+			return (bool)*i;
 		else
-			v = std::nullopt;
+			return std::nullopt;
 	}
 
-	bool parse_int(TOMLNode node, int& v)
+	template<>
+	std::optional<int> parse<int>(TOMLNode node)
 	{
 		if (auto i = node.value<int64_t>())
-		{
-			v = (int)*i;
-			return true;
-		}
-		return false;
-	}
-
-	void parse_int(TOMLNode node, std::optional<int>& v)
-	{
-		if (auto i = node.value<int64_t>())
-			v = (int)*i;
+			return (int)*i;
 		else
-			v = std::nullopt;
+			return std::nullopt;
 	}
 
-	bool parse_uint(TOMLNode node, unsigned int& v)
+	template<>
+	std::optional<unsigned int> parse<unsigned int>(TOMLNode node)
 	{
 		if (auto i = node.value<int64_t>())
-		{
-			v = (unsigned int)*i;
-			return true;
-		}
-		return false;
-	}
-
-	void parse_uint(TOMLNode node, std::optional<unsigned int>& v)
-	{
-		if (auto i = node.value<int64_t>())
-			v = (unsigned int)*i;
+			return (unsigned int)*i;
 		else
-			v = std::nullopt;
+			return std::nullopt;
 	}
 
-	bool parse_float(TOMLNode node, float& v)
+	template<>
+	std::optional<float> parse<float>(TOMLNode node)
 	{
 		if (auto i = node.value<double>())
-		{
-			v = (float)*i;
-			return true;
-		}
+			return (float)*i;
 		else if (auto i = node.value<int64_t>())
-		{
-			v = (float)*i;
-			return true;
-		}
-		return false;
-	}
-
-	void parse_float(TOMLNode node, std::optional<float>& v)
-	{
-		if (auto i = node.value<double>())
-			v = (float)*i;
-		else if (auto i = node.value<int64_t>())
-			v = (float)*i;
+			return (float)*i;
 		else
-			v = std::nullopt;
+			return std::nullopt;
 	}
 
-	bool parse_double(TOMLNode node, double& v)
+	template<>
+	std::optional<double> parse<double>(TOMLNode node)
 	{
 		if (auto i = node.value<double>())
-		{
-			v = *i;
-			return true;
-		}
+			return *i;
 		else if (auto i = node.value<int64_t>())
-		{
-			v = (double)*i;
-			return true;
-		}
-		return false;
-	}
-
-	void parse_double(TOMLNode node, std::optional<double>& v)
-	{
-		if (auto i = node.value<double>())
-			v = *i;
-		else if (auto i = node.value<int64_t>())
-			v = (double)*i;
+			return (double)*i;
 		else
-			v = std::nullopt;
+			return std::nullopt;
 	}
 
-	bool parse_size_t(TOMLNode node, size_t& v)
+	template<>
+	std::optional<size_t> parse<size_t>(TOMLNode node)
 	{
 		if (auto i = node.value<int64_t>())
-		{
-			v = (size_t)*i;
-			return true;
-		}
-		return false;
+			return (size_t)*i;
+		else
+			return std::nullopt;
 	}
 
-	void parse_size_t(TOMLNode node, std::optional<size_t>& v)
+	template<size_t N>
+	std::optional<glm::vec<N, float>> parse_vec(TOMLNode node)
 	{
-		if (auto i = node.value<int64_t>())
-			v = (size_t)*i;
+		auto arr = node.as_array();
+		if (arr && arr->size() == N)
+		{
+			glm::vec<N, float> u;
+			for (int i = 0; i < N; ++i)
+			{
+				if (auto d = arr->get_as<double>(i))
+					u[i] = (float)d->get();
+				else if (auto n = arr->get_as<int64_t>(i))
+					u[i] = (float)n->get();
+				else
+					return std::nullopt;
+			}
+			return u;
+		}
 		else
-			v = std::nullopt;
+			return std::nullopt;
+	}
+
+	template<>
+	std::optional<glm::vec2> parse<glm::vec2>(TOMLNode node)
+	{
+		return parse_vec<2>(node);
+	}
+
+	template<>
+	std::optional<glm::vec3> parse<glm::vec3>(TOMLNode node)
+	{
+		return parse_vec<3>(node);
+	}
+
+	template<>
+	std::optional<glm::vec4> parse<glm::vec4>(TOMLNode node)
+	{
+		return parse_vec<4>(node);
+	}
+
+	template<size_t N>
+	std::optional<glm::vec<N, int>> parse_ivec(TOMLNode node)
+	{
+		auto arr = node.as_array();
+		if (arr && arr->size() == N)
+		{
+			glm::vec<N, int> u;
+			for (int i = 0; i < N; ++i)
+			{
+				if (auto n = arr->get_as<int64_t>(i))
+					u[i] = (int)n->get();
+				else
+					return std::nullopt;
+			}
+			return u;
+		}
+		else
+			return std::nullopt;
+	}
+
+	template<>
+	std::optional<glm::ivec2> parse<glm::ivec2>(TOMLNode node)
+	{
+		return parse_ivec<2>(node);
+	}
+
+	template<>
+	std::optional<glm::ivec3> parse<glm::ivec3>(TOMLNode node)
+	{
+		return parse_ivec<3>(node);
+	}
+
+	template<>
+	std::optional<glm::ivec4> parse<glm::ivec4>(TOMLNode node)
+	{
+		return parse_ivec<4>(node);
 	}
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
 		if (auto mnode = io::parse_key(node, _gen::keys::Transform::Modifier))
 		{
-			if (auto type = io::parse_uint(io::parse_key(mnode, _gen::keys::Transform::ModifierType)))
+			if (auto type = parse<unsigned int>(io::parse_key(mnode, _gen::keys::Transform::ModifierType)))
 			{
 				try
 				{
@@ -172,20 +181,20 @@ namespace oly::io
 					case TransformModifierType::Shear:
 					{
 						Polymorphic<ShearTransformModifier2D> modifier;
-						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
+						try_parse(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
 						return modifier;
 					}
 					case TransformModifierType::Pivot:
 					{
 						Polymorphic<PivotTransformModifier2D> modifier;
-						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
-						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
+						try_parse(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
+						try_parse(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
 						return modifier;
 					}
 					case TransformModifierType::Offset:
 					{
 						Polymorphic<OffsetTransformModifier2D> modifier;
-						parse_vec(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
+						try_parse(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
 						return modifier;
 					}
 					default:

@@ -192,24 +192,22 @@ namespace oly::rendering
 					size_t tile_idx = 0;
 					for (auto& toml_tile : *tiles)
 					{
-						glm::ivec2 tile{};
-						if (io::parse_ivec((TOMLNode)toml_tile, tile))
-							layer.paint_tile(tile);
+						if (auto tile = io::parse<glm::ivec2>((TOMLNode)toml_tile))
+							layer.paint_tile(*tile);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "In tilemap layer #" << layer_idx << ", cannot convert tile #" << tile_idx << " to vec2" << LOG.nl;
 						++tile_idx;
 					}
 				}
 
-				int z = 0;
-				if (io::parse_int(io::parse_key(node, _gen::keys::TileMap::Z), z))
-					tilemap.register_layer(z, std::move(layer));
+				if (auto z = io::parse<int>(io::parse_key(node, _gen::keys::TileMap::Z)))
+					tilemap.register_layer(*z, std::move(layer));
 				else
 					tilemap.register_layer(std::move(layer));
 				});
 		}
 
-		tilemap.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::TileMap::CameraInvariant), false));
+		tilemap.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::TileMap::CameraInvariant), false));
 
 		return tilemap;
 	}

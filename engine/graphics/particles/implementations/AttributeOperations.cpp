@@ -14,10 +14,10 @@ namespace oly::particles::ops
 
 	Polymorphic<SineWave1D> SineWave1D::load(TOMLNode node)
 	{
-		float a = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::A), 1.0f);
-		float b = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::B), 1.0f);
-		float k = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::K), 0.0f);
-		float c = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::C), 0.0f);
+		float a = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::A), 1.0f);
+		float b = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::B), 1.0f);
+		float k = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::K), 0.0f);
+		float c = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::C), 0.0f);
 		return make_polymorphic<SineWave1D>(a, b, k, c);
 	}
 
@@ -28,8 +28,8 @@ namespace oly::particles::ops
 
 	Polymorphic<Polarization2D> Polarization2D::load(TOMLNode node)
 	{
-		float amplitude = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::Amplitude), 1.0f);
-		float time_offset = io::parse_float_or(io::parse_key(node, _gen::keys::ParticleSystem::TimeOffset), 0.0f);
+		float amplitude = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::Amplitude), 1.0f);
+		float time_offset = io::parse_or(io::parse_key(node, _gen::keys::ParticleSystem::TimeOffset), 0.0f);
 		return make_polymorphic<Polarization2D>(amplitude, time_offset);
 	}
 }

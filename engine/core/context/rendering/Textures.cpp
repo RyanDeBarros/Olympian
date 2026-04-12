@@ -73,10 +73,10 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::rendering::texture::MinFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Texture::MinFilter))));
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::rendering::texture::MagFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Texture::MagFilter))));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::rendering::texture::Wrap::val(io::parse_uint(io::parse_key(node, _gen::keys::Texture::WrapS))));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::rendering::texture::Wrap::val(io::parse_uint(io::parse_key(node, _gen::keys::Texture::WrapT))));
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::rendering::texture::MinFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::MinFilter))));
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::rendering::texture::MagFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::MagFilter))));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::rendering::texture::Wrap::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::WrapS))));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::rendering::texture::Wrap::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::WrapT))));
 
 		if (set_and_use)
 			texture.set_and_use_handle();
@@ -84,14 +84,14 @@ namespace oly::context
 
 	static graphics::BindlessTextureRef load_image(const graphics::Image& image, TOMLNode node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, io::parse_bool_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, io::parse_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
 		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
 	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, TOMLNode node, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, io::parse_bool_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, io::parse_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
 		setup_texture(texture, node, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
@@ -99,7 +99,7 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, TOMLNode node, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		const auto g = io::parse_uint(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps));
+		const auto g = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps));
 		graphics::SVGMipmapGenerationMode mipmaps_mode = _gen::rendering::texture::SVGMipmapGenerationMode::val(g, graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, node, set_and_use);
@@ -143,19 +143,19 @@ namespace oly::context
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return _gen::StorageMode::val(io::parse_uint(io::parse_key(texture_node, storage_key)), StorageMode::Discard) == StorageMode::Keep;
+			return _gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(texture_node, storage_key)), StorageMode::Discard) == StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)
 	{
 		graphics::SpritesheetOptions options;
-		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::Rows), options.rows);
-		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::Columns), options.cols);
-		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::CellWidthOverride), options.cell_width_override);
-		io::parse_uint(io::parse_key(texture_node, _gen::keys::Texture::CellHeightOverride), options.cell_height_override);
-		io::parse_int(io::parse_key(texture_node, _gen::keys::Texture::DelayCS), options.delay_cs);
-		io::parse_bool(io::parse_key(texture_node, _gen::keys::Texture::RowMajor), options.row_major);
-		io::parse_bool(io::parse_key(texture_node, _gen::keys::Texture::RowUp), options.row_up);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::Rows), options.rows);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::Columns), options.cols);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::CellWidthOverride), options.cell_width_override);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::CellHeightOverride), options.cell_height_override);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::DelayCS), options.delay_cs);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::RowMajor), options.row_major);
+		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::RowUp), options.row_up);
 		return options;
 	}
 
@@ -199,7 +199,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+			if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 			{
 				graphics::Anim anim(file, parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -244,11 +244,11 @@ namespace oly::context
 
 		bool store_abstract = should_store((TOMLNode)toml, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
 		bool store_image = should_store(texture_node, _gen::keys::Texture::ImageStorage, params.image_storage);
-		float scale = io::parse_float_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
+		float scale = io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+		if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 		{
 			auto ait = internal::nsvg_abstracts.find(file);
 			if (ait != internal::nsvg_abstracts.end())
@@ -338,7 +338,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+			if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 			{
 				graphics::Anim anim(f.c_str(), parse_spritesheet_options(texture_node));
 				texture = load_anim(anim, texture_node, params.set_and_use);
@@ -372,11 +372,11 @@ namespace oly::context
 
 		toml::parse_result toml;
 		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
-		float scale = io::parse_float_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
+		float scale = io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_bool_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+		if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
 		{
 			graphics::NSVGAbstract abstract(file);
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));

@@ -41,18 +41,18 @@ namespace oly::context
 
 		if (auto toml_logger = io::parse_key(node, _gen::keys::Context::Logger))
 		{
-			io::parse_bool(io::parse_key(toml_logger, _gen::keys::Logger::UseLogfile), options.use_logfile);
-			io::parse_bool(io::parse_key(toml_logger, _gen::keys::Logger::UseConsole), options.use_console);
-			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogFiles), options.max_prior_log_files);
-			io::parse_size_t(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogBytes), options.max_prior_log_bytes);
+			io::try_parse(io::parse_key(toml_logger, _gen::keys::Logger::UseLogfile), options.use_logfile);
+			io::try_parse(io::parse_key(toml_logger, _gen::keys::Logger::UseConsole), options.use_console);
+			options.max_prior_log_files = io::parse<size_t>(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogFiles));
+			options.max_prior_log_bytes = io::parse<size_t>(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogBytes));
 			
 			if (auto logger_enable = io::parse_key(toml_logger, _gen::keys::Logger::Enable))
 			{
-				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Debug), LOG.enable.debug);
-				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Info), LOG.enable.info);
-				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Warning), LOG.enable.warning);
-				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Error), LOG.enable.error);
-				io::parse_bool(io::parse_key(logger_enable, _gen::keys::Logger::Fatal), LOG.enable.fatal);
+				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Debug), LOG.enable.debug);
+				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Info), LOG.enable.info);
+				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Warning), LOG.enable.warning);
+				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Error), LOG.enable.error);
+				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Fatal), LOG.enable.fatal);
 			}
 		}
 
@@ -63,8 +63,8 @@ namespace oly::context
 	{
 		if (auto framerate = io::parse_key(node, _gen::keys::Context::FrameRate))
 		{
-			io::parse_double(io::parse_key(framerate, _gen::keys::FrameRate::FrameLengthClip), TIME.frame_length_clip);
-			io::parse_double(io::parse_key(framerate, _gen::keys::FrameRate::TimeScale), TIME.time_scale);
+			io::try_parse(io::parse_key(framerate, _gen::keys::FrameRate::FrameLengthClip), TIME.frame_length_clip);
+			io::try_parse(io::parse_key(framerate, _gen::keys::FrameRate::TimeScale), TIME.time_scale);
 		}
 		TIME.init();
 	}

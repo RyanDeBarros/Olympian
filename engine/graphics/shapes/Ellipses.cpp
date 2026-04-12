@@ -389,18 +389,18 @@ namespace oly::rendering
 		ellipse.set_transformer() = Transformer2D::load(io::parse_key(node, _gen::keys::Ellipse::Transformer));
 
 		auto& color = ellipse.set_color();
-		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::BorderInnerColor), color.border_inner);
-		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::BorderOuterColor), color.border_outer);
-		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::FillInnerColor), color.fill_inner);
-		io::parse_vec(io::parse_key(node, _gen::keys::Ellipse::FillOuterColor), color.fill_outer);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderInnerColor), color.border_inner);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderOuterColor), color.border_outer);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillInnerColor), color.fill_inner);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillOuterColor), color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::Border), dimension.border);
-		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::BorderExponent), dimension.border_exp);
-		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::FillExponent), dimension.fill_exp);
-		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::RadiusX), dimension.rx);
-		io::parse_float(io::parse_key(node, _gen::keys::Ellipse::RadiusY), dimension.ry);
-		dimension.camera_invariant = io::parse_bool_or(io::parse_key(node, _gen::keys::Ellipse::CameraInvariant), false);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::Border), dimension.border);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderExponent), dimension.border_exp);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillExponent), dimension.fill_exp);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::RadiusX), dimension.rx);
+		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::RadiusY), dimension.ry);
+		dimension.camera_invariant = io::parse_or(io::parse_key(node, _gen::keys::Ellipse::CameraInvariant), false);
 
 		return ellipse;
 	}

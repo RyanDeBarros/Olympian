@@ -54,10 +54,10 @@ namespace oly::math
 			return {};
 
 		IRect2D rect;
-		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::X1), rect.x1);
-		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::X2), rect.x2);
-		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::Y1), rect.y1);
-		io::parse_int(io::parse_key(node, _gen::keys::Rect2D::Y2), rect.y2);
+		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::X1), rect.x1);
+		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::X2), rect.x2);
+		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::Y1), rect.y1);
+		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::Y2), rect.y2);
 		return rect;
 	}
 
@@ -71,10 +71,10 @@ namespace oly::math
 		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
 			padding = Padding::uniform(*uniform);
 
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Bottom), padding.bottom);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Bottom), padding.bottom);
 
 		return padding;
 	}
@@ -89,9 +89,9 @@ namespace oly::math
 		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
 			padding = TopSidePadding::uniform(*uniform);
 
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
-		io::parse_float(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
+		io::try_parse(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
 
 		return padding;
 	}

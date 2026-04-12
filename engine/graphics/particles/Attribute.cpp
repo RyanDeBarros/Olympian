@@ -20,7 +20,7 @@ namespace oly::particles
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = io::parse_uint(io::parse_key(node, _gen::keys::ParticleSystem::Operation)))
+		if (auto op = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParticleSystem::Operation)))
 		{
 			switch (_gen::rendering::particles::AttributeOperation::val(*op))
 			{

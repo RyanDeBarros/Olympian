@@ -102,7 +102,7 @@ namespace oly::context
 				return;
 			}
 			int dist = 0;
-			if (!io::parse_int(io::parse_key(node, _gen::keys::Font::CodepointDistance), dist))
+			if (!io::try_parse<int>(io::parse_key(node, _gen::keys::Font::CodepointDistance), dist))
 			{
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In kerning #" << k_idx << " - missing " << io::key_string(_gen::keys::Font::CodepointDistance) << " int field" << LOG.nl;
 				return;
@@ -158,7 +158,7 @@ namespace oly::context
 		}
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
-		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -209,21 +209,21 @@ namespace oly::context
 
 		rendering::FontOptions options;
 
-		if (!io::parse_float(io::parse_key(node, _gen::keys::Font::FontSize), options.font_size))
+		if (!io::try_parse(io::parse_key(node, _gen::keys::Font::FontSize), options.font_size))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::FontSize) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 
-		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::MinFilter)));
-		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::MagFilter)));
-		io::parse_bool(io::parse_key(node, _gen::keys::Font::GenerateMipmaps), options.auto_generate_mipmaps);
+		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::MinFilter)));
+		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::MagFilter)));
+		io::try_parse(io::parse_key(node, _gen::keys::Font::GenerateMipmaps), options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (io::parse_bool_or(io::parse_key(node, _gen::keys::Font::UseCommonBufferPreset), true))
+		if (io::parse_or(io::parse_key(node, _gen::keys::Font::UseCommonBufferPreset), true))
 		{
-			if (auto common_buffer_preset = io::parse_uint(io::parse_key(node, _gen::keys::Font::CommonBufferPreset)))
+			if (auto common_buffer_preset = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::CommonBufferPreset)))
 			{
 				try
 				{
@@ -260,7 +260,7 @@ namespace oly::context
 			common_buffer = _common_buffer.value();
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
@@ -293,14 +293,14 @@ namespace oly::context
 		TOMLNode toml = (TOMLNode)table;
 
 		float space_advance_width;
-		if (!io::parse_float(io::parse_key(toml, _gen::keys::Font::SpaceAdvanceWidth), space_advance_width))
+		if (!io::try_parse(io::parse_key(toml, _gen::keys::Font::SpaceAdvanceWidth), space_advance_width))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::SpaceAdvanceWidth) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		float line_height;
-		if (!io::parse_float(io::parse_key(toml, _gen::keys::Font::LineHeight), line_height))
+		if (!io::try_parse(io::parse_key(toml, _gen::keys::Font::LineHeight), line_height))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Missing " << io::key_string(_gen::keys::Font::LineHeight) << " field" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -309,7 +309,7 @@ namespace oly::context
 		glm::vec2 font_scale = glm::vec2(1.0f);
 		if (auto a = io::parse_key(toml, _gen::keys::Font::FontScale))
 		{
-			if (!io::parse_vec(a, font_scale))
+			if (!io::try_parse(a, font_scale))
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::FontScale) << " field" << LOG.nl;
 		}
 
@@ -343,7 +343,7 @@ namespace oly::context
 				}
 
 				std::string texture_file;
-				unsigned int tidx = io::parse_uint_or(io::parse_key(g, _gen::keys::Font::TextureFile), 0);
+				unsigned int tidx = io::parse_or<unsigned int>(io::parse_key(g, _gen::keys::Font::TextureFile), 0);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -353,7 +353,7 @@ namespace oly::context
 					return;
 				}
 
-				unsigned int texture_index = io::parse_uint_or(io::parse_key(g, _gen::keys::Font::TextureIndex), 0);
+				unsigned int texture_index = io::parse_or<unsigned int>(io::parse_key(g, _gen::keys::Font::TextureIndex), 0);
 
 				math::IRect2D location = math::IRect2D::load(io::parse_key(g, _gen::keys::Font::Location));
 				if (location.x2 <= location.x1 || location.y2 <= location.y1)
@@ -367,14 +367,14 @@ namespace oly::context
 				math::PositioningMode origin_offset_mode = math::PositioningMode::load(io::parse_key(g, _gen::keys::Font::OriginOffsetMode), math::PositioningMode::RELATIVE);
 
 				glm::vec2 origin_offset = {};
-				io::parse_vec(io::parse_key(g, _gen::keys::Font::OriginOffset), origin_offset);
+				io::try_parse(io::parse_key(g, _gen::keys::Font::OriginOffset), origin_offset);
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 				});
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -413,7 +413,7 @@ namespace oly::context
 
 				rendering::FontStyle style = rendering::FontStyle::Regular;
 
-				if (auto s = io::parse_uint(io::parse_key(node, _gen::keys::Font::Style)))
+				if (auto s = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Style)))
 				{
 					try
 					{
@@ -446,13 +446,13 @@ namespace oly::context
 					}
 				}
 				else
-					font = context::load_font_atlas(font_file, io::parse_uint_or(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0));
+					font = context::load_font_atlas(font_file, io::parse_or<unsigned int>(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0));
 
 				styles.emplace(style, std::move(font));
 				});
 		}
 
-		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;

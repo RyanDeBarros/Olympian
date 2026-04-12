@@ -917,7 +917,7 @@ namespace oly::rendering
 	{
 		TextElement e;
 		if (auto font = io::parse_key(element, _gen::keys::Paragraph::Font).value<std::string>())
-			e.font = context::load_font(*font, io::parse_uint_or(io::parse_key(element, _gen::keys::Paragraph::FontIndex), 0));
+			e.font = context::load_font(*font, io::parse_or(io::parse_key(element, _gen::keys::Paragraph::FontIndex), 0u));
 		else
 		{
 			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Font) << " field in text element (" << i << ")." << LOG.nl;
@@ -932,15 +932,14 @@ namespace oly::rendering
 			return;
 		}
 
-		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
-		io::parse_float(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
-		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
-		float line_y_pivot;
-		if (io::parse_float(io::parse_key(element, _gen::keys::Paragraph::LineYPivot), line_y_pivot))
-			e.line_y_pivot = line_y_pivot;
-		io::parse_vec(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
+		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
+		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
+		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
+		if (auto line_y_pivot = io::parse<float>(io::parse_key(element, _gen::keys::Paragraph::LineYPivot)))
+			e.line_y_pivot = *line_y_pivot;
+		io::try_parse(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
 
-		if (io::parse_bool_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
+		if (io::parse_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
 			TextElement::expand(e, elements);
 		else
 			elements.push_back(std::move(e));
@@ -965,12 +964,11 @@ namespace oly::rendering
 			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer);
 		}
 
-		io::parse_bool(io::parse_key(node, _gen::keys::Paragraph::DrawBackground), paragraph.draw_bkg);
-		glm::vec4 bkg_color;
-		if (io::parse_vec(io::parse_key(node, _gen::keys::Paragraph::BackgroundColor), bkg_color))
-			paragraph.set_bkg_color(bkg_color);
+		io::try_parse(io::parse_key(node, _gen::keys::Paragraph::DrawBackground), paragraph.draw_bkg);
+		if (auto bkg_color = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::Paragraph::BackgroundColor)))
+			paragraph.set_bkg_color(*bkg_color);
 
-		paragraph.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::Paragraph::CameraInvariant), false));
+		paragraph.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Paragraph::CameraInvariant), false));
 
 		return paragraph;
 	}

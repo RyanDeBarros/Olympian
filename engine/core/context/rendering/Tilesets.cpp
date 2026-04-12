@@ -81,15 +81,14 @@ namespace oly::context
 
 				rendering::TileSet::Assignment assignment;
 
-				int config = 0;
-				if (io::parse_int(_config, config))
+				if (auto config = io::parse<int>(_config))
 				{
 					if (config >= 0 && config < (int64_t)rendering::TileSet::Configuration::_c)
-						assignment.config = (rendering::TileSet::Configuration)config;
+						assignment.config = (rendering::TileSet::Configuration)*config;
 					else
 					{
 						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "In tileset assignment #" << a_idx
-							<< ", unrecognized configuration #" << config << LOG.nl;
+							<< ", unrecognized configuration #" << *config << LOG.nl;
 						return;
 					}
 				}
@@ -101,13 +100,12 @@ namespace oly::context
 				}
 
 				assignment.desc.file = ResourcePath(*_texture, file);
-				glm::vec4 uvs{};
-				if (io::parse_vec(io::parse_key(node, _gen::keys::TileSet::UVvec4), uvs))
+				if (auto uvs = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::TileSet::UVvec4)))
 				{
-					assignment.desc.uvs.x1 = uvs[0];
-					assignment.desc.uvs.x2 = uvs[1];
-					assignment.desc.uvs.y1 = uvs[2];
-					assignment.desc.uvs.y2 = uvs[3];
+					assignment.desc.uvs.x1 = (*uvs)[0];
+					assignment.desc.uvs.x2 = (*uvs)[1];
+					assignment.desc.uvs.y1 = (*uvs)[2];
+					assignment.desc.uvs.y2 = (*uvs)[3];
 				}
 
 				if (auto transformations = io::parse_key(node, _gen::keys::TileSet::TransformationArray).as_array())
@@ -115,7 +113,7 @@ namespace oly::context
 					size_t tr_idx = 0;
 					for (auto& trfm : *transformations)
 					{
-						if (auto transformation = io::parse_uint(TOMLNode(trfm)))
+						if (auto transformation = io::parse<unsigned int>(TOMLNode(trfm)))
 						{
 							// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
 							try
@@ -139,7 +137,7 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (_gen::StorageMode::val(io::parse_uint(io::parse_key(toml, _gen::keys::TileSet::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::TileSet::Storage)), StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

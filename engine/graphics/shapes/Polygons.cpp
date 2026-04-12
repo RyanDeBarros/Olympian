@@ -523,9 +523,8 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				glm::vec2 pt;
-				if (io::parse_vec((TOMLNode)toml_point, pt))
-					points.push_back(pt);
+				if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+					points.push_back(*pt);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2" << LOG.nl;
 				++pt_idx;
@@ -540,9 +539,8 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					colors.push_back(col);
+				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+					colors.push_back(*col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
@@ -550,7 +548,7 @@ namespace oly::rendering
 		}
 		polygon.set_colors() = std::move(colors);
 
-		polygon.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
 
 		return polygon;
 	}
@@ -662,7 +660,7 @@ namespace oly::rendering
 
 		polygon.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Polygon::Transformer));
 
-		if (auto method = io::parse_uint(io::parse_key(node, _gen::keys::Polygon::Method)))
+		if (auto method = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Polygon::Method)))
 		{
 			switch (_gen::rendering::shapes::PolyCompositeMethod::val(*method))
 			{
@@ -675,9 +673,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							points.push_back(pt);
+						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+							points.push_back(*pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
@@ -691,9 +688,8 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							colors.push_back(col);
+						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+							colors.push_back(*col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
@@ -713,9 +709,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							ngon_base.points.push_back(pt);
+						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+							ngon_base.points.push_back(*pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
@@ -728,9 +723,8 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							ngon_base.fill_colors.push_back(col);
+						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+							ngon_base.fill_colors.push_back(*col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
@@ -743,20 +737,19 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							ngon_base.border_colors.push_back(col);
+						if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+							ngon_base.border_colors.push_back(*col);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4" << LOG.nl;
 						++color_idx;
 					}
 				}
 
-				io::parse_float(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
+				io::try_parse(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
 
 				if (auto border_pivot = io::parse_key(node, _gen::keys::Polygon::BorderPivot))
 				{
-					if (auto bp = io::parse_uint(border_pivot))
+					if (auto bp = io::parse<unsigned int>(border_pivot))
 					{
 						// TODO v7 use try-catch for all _gen::*::val() calls
 						try
@@ -769,7 +762,7 @@ namespace oly::rendering
 						}
 					}
 					else
-						io::parse_float(border_pivot, ngon_base.border_pivot.v);
+						io::try_parse(border_pivot, ngon_base.border_pivot.v);
 				}
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -786,9 +779,8 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							points.push_back(pt);
+						if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+							points.push_back(*pt);
 						else
 							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2" << LOG.nl;
 						++pt_idx;
@@ -801,7 +793,7 @@ namespace oly::rendering
 			}
 		}
 
-		polygon.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
 
 		return polygon;
 	}
@@ -873,9 +865,8 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				glm::vec2 pt;
-				if (io::parse_vec((TOMLNode)toml_point, pt))
-					ngon_base.points.push_back(pt);
+				if (auto pt = io::parse<glm::vec2>((TOMLNode)toml_point))
+					ngon_base.points.push_back(*pt);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2" << LOG.nl;
 				++pt_idx;
@@ -888,9 +879,8 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					ngon_base.fill_colors.push_back(col);
+				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+					ngon_base.fill_colors.push_back(*col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
@@ -903,23 +893,21 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					ngon_base.border_colors.push_back(col);
+				if (auto col = io::parse<glm::vec4>((TOMLNode)toml_color))
+					ngon_base.border_colors.push_back(*col);
 				else
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4" << LOG.nl;
 				++color_idx;
 			}
 		}
 
-		bool bordered;
-		if (io::parse_bool(io::parse_key(node, _gen::keys::Polygon::Bordered), bordered))
-			polygon.set_bordered(bordered);
-		io::parse_float(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
+		if (auto bordered = io::parse<bool>(io::parse_key(node, _gen::keys::Polygon::Bordered)))
+			polygon.set_bordered(*bordered);
+		io::try_parse(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
 
 		if (auto border_pivot = io::parse_key(node, _gen::keys::Polygon::BorderPivot))
 		{
-			if (auto bp = io::parse_uint(border_pivot))
+			if (auto bp = io::parse<unsigned int>(border_pivot))
 			{
 				try
 				{
@@ -931,12 +919,12 @@ namespace oly::rendering
 				}
 			}
 			else
-				io::parse_float(border_pivot, ngon_base.border_pivot.v);
+				io::try_parse(border_pivot, ngon_base.border_pivot.v);
 		}
 
 		polygon.set_base() = std::move(ngon_base);
 
-		polygon.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
 
 		return polygon;
 	}

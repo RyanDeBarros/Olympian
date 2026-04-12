@@ -358,7 +358,7 @@ namespace oly::rendering
 		NineSlice nonant;
 
 		glm::vec2 nsize{};
-		io::parse_vec(io::parse_key(node, _gen::keys::NineSlice::NSize), nsize);
+		io::try_parse(io::parse_key(node, _gen::keys::NineSlice::NSize), nsize);
 		math::Padding offsets = math::Padding::load(io::parse_key(node, _gen::keys::NineSlice::Offsets));
 
 		if (auto sprite = io::parse_key(node, _gen::keys::NineSlice::Sprite))
@@ -366,7 +366,7 @@ namespace oly::rendering
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		nonant.set_camera_invariant(io::parse_bool_or(io::parse_key(node, _gen::keys::NineSlice::CameraInvariant), false));
+		nonant.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::NineSlice::CameraInvariant), false));
 
 		return nonant;
 	}

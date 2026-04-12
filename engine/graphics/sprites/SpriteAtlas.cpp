@@ -125,23 +125,19 @@ namespace oly::rendering
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::Rows), rows)
-				&& io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::Columns), cols)
-				&& io::parse_float(io::parse_key(node, _gen::keys::SpriteAtlas::DelaySeconds), delay_seconds))
+		if (io::try_parse(io::parse_key(node, _gen::keys::SpriteAtlas::Rows), rows)
+				&& io::try_parse(io::parse_key(node, _gen::keys::SpriteAtlas::Columns), cols)
+				&& io::try_parse(io::parse_key(node, _gen::keys::SpriteAtlas::DelaySeconds), delay_seconds))
 			sprite_atlas.setup_uniform(rows, cols, delay_seconds,
-				io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowMajor), true),
-				io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowUp), true));
-		else
-		{
-			GLuint static_frame;
-			if (io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::StaticFrame), static_frame))
-				sprite_atlas.select_static_frame(static_frame);
-		}
+				io::parse_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowMajor), true),
+				io::parse_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowUp), true));
+		else if (auto static_frame = io::parse<unsigned int>(io::parse_key(node, _gen::keys::SpriteAtlas::StaticFrame)))
+			sprite_atlas.select_static_frame(*static_frame);
 
-		sprite_atlas.anim_format.starting_frame = io::parse_int_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingFrame), 0);
-		sprite_atlas.anim_format.starting_time = io::parse_float_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingTime), 0.0f);
+		sprite_atlas.anim_format.starting_frame = io::parse_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingFrame), 0);
+		sprite_atlas.anim_format.starting_time = io::parse_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingTime), 0.0f);
 
-		sprite_atlas.auto_tick = io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::AutoTick), true);
+		sprite_atlas.auto_tick = io::parse_or(io::parse_key(node, _gen::keys::SpriteAtlas::AutoTick), true);
 
 		return sprite_atlas;
 	}

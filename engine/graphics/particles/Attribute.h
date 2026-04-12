@@ -329,12 +329,7 @@ namespace oly::particles
 	public:
 		void overload(TOMLNode node)
 		{
-			constexpr size_t N = sizeof(T) / sizeof(float);
-			if constexpr (N > 1)
-				io::parse_vec<N>(internal::parse_attribute_value_key(node), value);
-			else
-				io::parse_float(internal::parse_attribute_value_key(node), value);
-
+			io::try_parse(internal::parse_attribute_value_key(node), value);
 			if (auto operation = IAttributeOperation::load(node))
 				op = std::move(operation);
 		}

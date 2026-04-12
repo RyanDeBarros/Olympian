@@ -27,13 +27,13 @@
 		static EnumName load(TOMLNode node)\
 		{\
 			if (auto s = node.value<std::string>()) { try { return oly::StringParam(std::move(*s)); } catch (...) {} }\
-			else { unsigned int v = 0; if (io::parse_uint(node, v)) { try { return v; } catch (...) {} } }\
+			else { unsigned int v = 0; if (io::try_parse<unsigned int>(node, v)) { try { return v; } catch (...) {} } }\
 			throw Error(ErrorCode::LoadEnum);\
 		}\
 		static EnumName load(TOMLNode node, EnumName def)\
 		{\
 			if (auto s = node.value<std::string>()) { try { return oly::StringParam(std::move(*s)); } catch (...) {} }\
-			else { unsigned int v = 0; if (io::parse_uint(node, v)) { try { return v; } catch (...) {} } }\
+			else { unsigned int v = 0; if (io::try_parse<unsigned int>(node, v)) { try { return v; } catch (...) {} } }\
 			return def;\
 		}\
 	}; \

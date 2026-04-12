@@ -24,16 +24,16 @@ namespace oly::rendering
 	{
 		ParagraphFormat format;
 
-		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::Pivot), format.pivot);
-		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::LineSpacing), format.line_spacing);
-		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::LinebreakSpacing), format.linebreak_spacing);
-		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::MinSize), format.min_size);
-		io::parse_vec(io::parse_key(node, _gen::keys::ParagraphFormat::Padding), format.padding);
-		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::TextWrap), format.text_wrap);
-		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::MaxHeight), format.max_height);
-		io::parse_float(io::parse_key(node, _gen::keys::ParagraphFormat::TabSpaces), format.tab_spaces);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::Pivot), format.pivot);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::LineSpacing), format.line_spacing);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::LinebreakSpacing), format.linebreak_spacing);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::MinSize), format.min_size);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::Padding), format.padding);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::TextWrap), format.text_wrap);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::MaxHeight), format.max_height);
+		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::TabSpaces), format.tab_spaces);
 
-		if (auto halign = io::parse_uint(io::parse_key(node, _gen::keys::ParagraphFormat::HorizontalAlignment)))
+		if (auto halign = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParagraphFormat::HorizontalAlignment)))
 		{
 			try
 			{
@@ -45,7 +45,7 @@ namespace oly::rendering
 			}
 		}
 
-		if (auto valign = io::parse_uint(io::parse_key(node, _gen::keys::ParagraphFormat::VerticalAlignment)))
+		if (auto valign = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParagraphFormat::VerticalAlignment)))
 		{
 			try
 			{
