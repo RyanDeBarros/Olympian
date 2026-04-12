@@ -1,0 +1,10 @@
+Sprite    Sprite
+Rows      Rows
+Cols      Columns
+DelayS    DelaySeconds
+RowMajor  RowMajor
+RowUp     RowUp
+StatFrm   StaticFrame
+FrmStart  StartingFrame
+TmStart   StartingTime
+AutoTick  AutoTick

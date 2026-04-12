@@ -44,9 +44,9 @@ FrmForm = { Mode = 1 }
 
 [atlased_knight]
 Rows = 2
-Columns = 3
-delay_seconds = 0.1
-	[atlased_night.sprite]
+Cols = 3
+DelayS = 0.1
+	[atlased_night.Sprite]
 	Texture = "@/textures/knight.png"
 	TxIndex = 1
 	Trfmer = { Position = [300, -200], Scale = [20, 20] }
@@ -54,7 +54,7 @@ delay_seconds = 0.1
 [nonant_panel]
 nsize = [ 128, 0 ]
 offsets = { Uniform = 6 }
-[nonant_panel.sprite]
+[nonant_panel.Sprite]
 Texture = "@/textures/panel.png"
 Trfmer = { Scale = [ 10.0, 10.0 ] }
 

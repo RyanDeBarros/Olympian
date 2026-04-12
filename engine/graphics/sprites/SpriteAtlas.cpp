@@ -3,6 +3,8 @@
 #include "core/util/Time.h"
 #include "core/util/Loader.h"
 
+#include ".gen/keys/SpriteAtlas.inl"
+
 namespace oly::rendering
 {
 	SpriteAtlas::SpriteAtlas()
@@ -119,23 +121,27 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		SpriteAtlas sprite_atlas(trace ? Sprite::load(node["sprite"], *trace) : Sprite::load(node["sprite"]));
+		SpriteAtlas sprite_atlas(trace ? Sprite::load(io::parse_key(node, _gen::keys::SpriteAtlas::Sprite), *trace) : Sprite::load(io::parse_key(node, _gen::keys::SpriteAtlas::Sprite)));
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (io::parse_uint(node["Rows"], rows) && io::parse_uint(node["Cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
-			sprite_atlas.setup_uniform(rows, cols, delay_seconds, io::parse_bool_or(node["row_major"], true), io::parse_bool_or(node["row_up"], true));
+		if (io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::Rows), rows)
+				&& io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::Columns), cols)
+				&& io::parse_float(io::parse_key(node, _gen::keys::SpriteAtlas::DelaySeconds), delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds,
+				io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowMajor), true),
+				io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::RowUp), true));
 		else
 		{
 			GLuint static_frame;
-			if (io::parse_uint(node["static_frame"], static_frame))
+			if (io::parse_uint(io::parse_key(node, _gen::keys::SpriteAtlas::StaticFrame), static_frame))
 				sprite_atlas.select_static_frame(static_frame);
 		}
 
-		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
-		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
+		sprite_atlas.anim_format.starting_frame = io::parse_int_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingFrame), 0);
+		sprite_atlas.anim_format.starting_time = io::parse_float_or(io::parse_key(node, _gen::keys::SpriteAtlas::StartingTime), 0.0f);
 
-		sprite_atlas.auto_tick = io::parse_bool_or(node["auto_tick"], true);
+		sprite_atlas.auto_tick = io::parse_bool_or(io::parse_key(node, _gen::keys::SpriteAtlas::AutoTick), true);
 
 		return sprite_atlas;
 	}
