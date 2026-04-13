@@ -162,59 +162,17 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, TOMLNode mnode)
 	{
-		if (auto swizzle = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Swizzle)))
-		{
-			try
-			{
-				modifier.swizzle = _gen::platform::Swizzle::val(*swizzle);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized swizzle value (" << *swizzle << ")" << LOG.nl;
-			}
-		}
-
-		if (auto multiplier = io::parse_key(mnode, _gen::keys::Signal::Multiplier))
-		{
-			if (!io::try_parse(multiplier, modifier.multiplier.x))
-				if (!io::try_parse(multiplier, reinterpret_cast<glm::vec2&>(modifier.multiplier)))
-					io::try_parse(multiplier, modifier.multiplier);
-		}
-
-		if (auto invert = io::parse_key(mnode, _gen::keys::Signal::Invert).as_array())
-		{
-			for (size_t i = 0; i < 3; ++i)
-			{
-				if (invert->size() >= i + 1)
-				{
-					if (auto inv = invert->get_as<bool>(i))
-						modifier.invert[i] = inv->get();
-					else if (auto inv = invert->get_as<int64_t>(i))
-						modifier.invert[i] = (bool)inv->get();
-				}
-			}
-		}
+		io::try_parse_enum<_gen::platform::Swizzle>(mnode, _gen::keys::Signal::Swizzle, modifier.swizzle);
+		io::try_parse_if_exists(mnode, _gen::keys::Signal::Multiplier, io::PartialView(modifier.multiplier));
+		io::try_parse_if_exists(mnode, _gen::keys::Signal::Invert, io::PartialView(modifier.invert));
 	}
 
 	static input::Axis0DModifier load_modifier_0d(TOMLNode node)
 	{
 		input::Axis0DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
-
-		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
-		{
-			try
-			{
-				modifier.conversion = _gen::platform::Axis0DConversion::val(*conversion);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
-			}
-		}
-
+		io::try_parse_enum<_gen::platform::Axis0DConversion>(mnode, _gen::keys::Signal::Conversion, modifier.conversion);
 		load_modifier_base(modifier, mnode);
-
 		return modifier;
 	}
 
@@ -222,21 +180,8 @@ namespace oly::context
 	{
 		input::Axis1DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
-
-		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
-		{
-			try
-			{
-				modifier.conversion = _gen::platform::Axis1DConversion::val(*conversion);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
-			}
-		}
-
+		io::try_parse_enum<_gen::platform::Axis1DConversion>(mnode, _gen::keys::Signal::Conversion, modifier.conversion);
 		load_modifier_base(modifier, mnode);
-
 		return modifier;
 	}
 
@@ -244,21 +189,8 @@ namespace oly::context
 	{
 		input::Axis2DModifier modifier;
 		TOMLNode mnode = io::parse_key(node, _gen::keys::Signal::Modifier);
-
-		if (auto conversion = io::parse<unsigned int>(io::parse_key(mnode, _gen::keys::Signal::Conversion)))
-		{
-			try
-			{
-				modifier.conversion = _gen::platform::Axis2DConversion::val(*conversion);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized conversion value (" << *conversion << ")" << LOG.nl;
-			}
-		}
-
+		io::try_parse_enum<_gen::platform::Axis2DConversion>(mnode, _gen::keys::Signal::Conversion, modifier.conversion);
 		load_modifier_base(modifier, mnode);
-
 		return modifier;
 	}
 
@@ -340,40 +272,29 @@ namespace oly::context
 	void load_signal(TOMLNode node)
 	{
 		const auto id = io::parse_required<std::string>(node, _gen::keys::Signal::ID);
-		const auto binding = io::parse_required<unsigned int>(node, _gen::keys::Signal::Binding);
-
-		try
+		switch (io::parse_required_enum<_gen::platform::SignalBindingType>(node, _gen::keys::Signal::Binding))
 		{
-			switch (_gen::platform::SignalBindingType::val(binding))
-			{
-			case input::SignalBindingType::Key:
-				load_key_binding(node, id);
-				break;
-			case input::SignalBindingType::MouseButton:
-				load_mouse_button_binding(node, id);
-				break;
-			case input::SignalBindingType::GamepadButton:
-				load_gamepad_button_binding(node, id);
-				break;
-			case input::SignalBindingType::GamepadAxis1D:
-				load_gamepad_axis_1d_binding(node, id);
-				break;
-			case input::SignalBindingType::GamepadAxis2D:
-				load_gamepad_axis_2d_binding(node, id);
-				break;
-			case input::SignalBindingType::CursorPos:
-				load_cursor_pos_binding(node, id);
-				break;
-			case input::SignalBindingType::Scroll:
-				load_scroll_binding(node, id);
-				break;
-			default:
-				throw std::out_of_range("");
-			}
-		}
-		catch (const std::out_of_range&)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Unrecognized binding value (" << binding << ")" << LOG.nl;
+		case input::SignalBindingType::Key:
+			load_key_binding(node, id);
+			break;
+		case input::SignalBindingType::MouseButton:
+			load_mouse_button_binding(node, id);
+			break;
+		case input::SignalBindingType::GamepadButton:
+			load_gamepad_button_binding(node, id);
+			break;
+		case input::SignalBindingType::GamepadAxis1D:
+			load_gamepad_axis_1d_binding(node, id);
+			break;
+		case input::SignalBindingType::GamepadAxis2D:
+			load_gamepad_axis_2d_binding(node, id);
+			break;
+		case input::SignalBindingType::CursorPos:
+			load_cursor_pos_binding(node, id);
+			break;
+		case input::SignalBindingType::Scroll:
+			load_scroll_binding(node, id);
+			break;
 		}
 	}
 

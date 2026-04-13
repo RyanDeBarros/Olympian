@@ -59,6 +59,9 @@ namespace {namespace}
 		~{enum_file.stem}() = delete;
 
 	public:
+		using IndexType = {index_type};
+		using EnumType = {enum_type};
+	
 		static {enum_type} val({index_type} index)
 		{{
 			return DEFINITIONS.at(index);

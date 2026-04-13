@@ -20,9 +20,9 @@ namespace oly::particles
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParticleSystem::Operation)))
+		if (auto op = io::parse_enum<_gen::rendering::particles::AttributeOperation>(node, _gen::keys::ParticleSystem::Operation))
 		{
-			switch (_gen::rendering::particles::AttributeOperation::val(*op))
+			switch (*op)
 			{
 			case AttributeOperationEnum::Sequence:
 				return ops::Sequence<0>::load_fixed(node);
@@ -32,9 +32,6 @@ namespace oly::particles
 				return ops::SineWave1D::load(node);
 			case AttributeOperationEnum::Polarization2D:
 				return ops::Polarization2D::load(node);
-			default:
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::IAttributeOperation: missing or unrecognized "
-					<< io::key_string(_gen::keys::ParticleSystem::Operation) << " field \"" << *op << "\"" << LOG.nl;
 			}
 		}
 

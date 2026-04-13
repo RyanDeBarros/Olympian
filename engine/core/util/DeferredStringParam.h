@@ -37,6 +37,9 @@ namespace oly
 
 		DeferredStringParam& operator<<(const StringParam& string)
 		{
+			if (string.empty())
+				return *this;
+
 			convert_to_list();
 			get_list().push_back(string);
 			return *this;
@@ -44,6 +47,9 @@ namespace oly
 
 		DeferredStringParam& operator<<(StringParam&& string)
 		{
+			if (string.empty())
+				return *this;
+
 			convert_to_list();
 			get_list().push_back(std::move(string));
 			return *this;
@@ -51,6 +57,9 @@ namespace oly
 
 		DeferredStringParam& operator<<(const DeferredStringParam& param)
 		{
+			if (param.empty())
+				return *this;
+
 			convert_to_list();
 			param.data.visit(
 				[this](const StringParam& s) { get_list().push_back(s); },
@@ -61,6 +70,9 @@ namespace oly
 
 		DeferredStringParam& operator<<(DeferredStringParam&& param)
 		{
+			if (param.empty())
+				return *this;
+
 			convert_to_list();
 			param.data.visit(
 				[this](StringParam& s) { get_list().push_back(std::move(s)); },

@@ -29,156 +29,232 @@ namespace oly::io
 	}
 
 	template<>
-	std::optional<bool> parse<bool>(TOMLNode node)
+	bool try_parse<bool>(TOMLNode node, bool& v)
 	{
 		if (auto i = node.value<bool>())
-			return *i;
-		else if (auto i = node.value<int64_t>())
-			return (bool)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<>
-	std::optional<int> parse<int>(TOMLNode node)
-	{
-		if (auto i = node.value<int64_t>())
-			return (int)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<>
-	std::optional<unsigned int> parse<unsigned int>(TOMLNode node)
-	{
-		if (auto i = node.value<int64_t>())
-			return (unsigned int)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<>
-	std::optional<float> parse<float>(TOMLNode node)
-	{
-		if (auto i = node.value<double>())
-			return (float)*i;
-		else if (auto i = node.value<int64_t>())
-			return (float)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<>
-	std::optional<double> parse<double>(TOMLNode node)
-	{
-		if (auto i = node.value<double>())
-			return *i;
-		else if (auto i = node.value<int64_t>())
-			return (double)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<>
-	std::optional<size_t> parse<size_t>(TOMLNode node)
-	{
-		if (auto i = node.value<int64_t>())
-			return (size_t)*i;
-		else
-			return std::nullopt;
-	}
-
-	template<size_t N>
-	std::optional<glm::vec<N, float>> parse_vec(TOMLNode node)
-	{
-		auto arr = node.as_array();
-		if (arr && arr->size() == N)
 		{
-			glm::vec<N, float> u;
-			for (int i = 0; i < N; ++i)
-			{
-				if (auto d = arr->get_as<double>(i))
-					u[i] = (float)d->get();
-				else if (auto n = arr->get_as<int64_t>(i))
-					u[i] = (float)n->get();
-				else
-					return std::nullopt;
-			}
-			return u;
+			v = *i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (bool)*i;
+			return true;
 		}
 		else
-			return std::nullopt;
+			return false;
 	}
 
 	template<>
-	std::optional<glm::vec2> parse<glm::vec2>(TOMLNode node)
+	bool try_parse<int>(TOMLNode node, int& v)
 	{
-		return parse_vec<2>(node);
-	}
-
-	template<>
-	std::optional<glm::vec3> parse<glm::vec3>(TOMLNode node)
-	{
-		return parse_vec<3>(node);
-	}
-
-	template<>
-	std::optional<glm::vec4> parse<glm::vec4>(TOMLNode node)
-	{
-		return parse_vec<4>(node);
-	}
-
-	template<size_t N>
-	std::optional<glm::vec<N, int>> parse_ivec(TOMLNode node)
-	{
-		auto arr = node.as_array();
-		if (arr && arr->size() == N)
+		if (auto i = node.value<int64_t>())
 		{
-			glm::vec<N, int> u;
-			for (int i = 0; i < N; ++i)
-			{
-				if (auto n = arr->get_as<int64_t>(i))
-					u[i] = (int)n->get();
-				else
-					return std::nullopt;
-			}
-			return u;
+			v = (int)*i;
+			return true;
 		}
 		else
-			return std::nullopt;
+			return false;
 	}
 
 	template<>
-	std::optional<glm::ivec2> parse<glm::ivec2>(TOMLNode node)
+	bool try_parse<unsigned int>(TOMLNode node, unsigned int& v)
 	{
-		return parse_ivec<2>(node);
+		if (auto i = node.value<int64_t>())
+		{
+			v = (unsigned int)*i;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template<>
-	std::optional<glm::ivec3> parse<glm::ivec3>(TOMLNode node)
+	bool try_parse<float>(TOMLNode node, float& v)
 	{
-		return parse_ivec<3>(node);
+		if (auto i = node.value<double>())
+		{
+			v = (float)*i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (float)*i;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template<>
-	std::optional<glm::ivec4> parse<glm::ivec4>(TOMLNode node)
+	bool try_parse<double>(TOMLNode node, double& v)
 	{
-		return parse_ivec<4>(node);
+		if (auto i = node.value<double>())
+		{
+			v = *i;
+			return true;
+		}
+		else if (auto i = node.value<int64_t>())
+		{
+			v = (double)*i;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template<>
-	std::optional<std::string> parse<std::string>(TOMLNode node)
+	bool try_parse<size_t>(TOMLNode node, size_t& v)
 	{
-		return node.value<std::string>();
+		if (auto i = node.value<int64_t>())
+		{
+			v = (size_t)*i;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<size_t N, typename T, bool StrictSize>
+	bool try_parse_vec(TOMLNode node, glm::vec<N, T>& v)
+	{
+		auto arr = node.as_array();
+		if (arr && (StrictSize ? arr->size() == N : arr->size() <= N))
+		{
+			glm::vec<N, T> u = v;
+			for (int i = 0; i < arr->size(); ++i)
+				if (!try_parse((TOMLNode)*arr->get(i), u[i]))
+					return false;
+			v = u;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<size_t N, typename T, bool StrictSize>
+	bool try_parse_array(TOMLNode node, std::array<T, N>& v)
+	{
+		auto arr = node.as_array();
+		if (arr && (StrictSize ? arr->size() == N : arr->size() <= N))
+		{
+			std::array<T, N> u = v;
+			for (int i = 0; i < arr->size(); ++i)
+				if (!try_parse((TOMLNode)*arr->get(i), u[i]))
+					return false;
+			v = u;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template<>
-	std::optional<TOMLArray> parse<TOMLArray>(TOMLNode node)
+	bool try_parse<glm::vec2>(TOMLNode node, glm::vec2& v)
+	{
+		return try_parse_vec<2, float, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::vec3>(TOMLNode node, glm::vec3& v)
+	{
+		return try_parse_vec<3, float, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::vec4>(TOMLNode node, glm::vec4& v)
+	{
+		return try_parse_vec<4, float, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::vec2>(TOMLNode node, PartialView<glm::vec2> v)
+	{
+		return try_parse_vec<2, float, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<glm::vec3>(TOMLNode node, PartialView<glm::vec3> v)
+	{
+		return try_parse_vec<3, float, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<glm::vec4>(TOMLNode node, PartialView<glm::vec4> v)
+	{
+		return try_parse_vec<4, float, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<glm::ivec2>(TOMLNode node, glm::ivec2& v)
+	{
+		return try_parse_vec<2, int, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::ivec3>(TOMLNode node, glm::ivec3& v)
+	{
+		return try_parse_vec<3, int, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::ivec4>(TOMLNode node, glm::ivec4& v)
+	{
+		return try_parse_vec<4, int, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<glm::ivec2>(TOMLNode node, PartialView<glm::ivec2> v)
+	{
+		return try_parse_vec<2, int, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<glm::ivec3>(TOMLNode node, PartialView<glm::ivec3> v)
+	{
+		return try_parse_vec<3, int, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<glm::ivec4>(TOMLNode node, PartialView<glm::ivec4> v)
+	{
+		return try_parse_vec<4, int, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<std::array<bool, 3>>(TOMLNode node, std::array<bool, 3>& v)
+	{
+		return try_parse_array<3, bool, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<std::array<bool, 3>>(TOMLNode node, PartialView<std::array<bool, 3>> v)
+	{
+		return try_parse_array<3, bool, false>(node, v.val);
+	}
+
+	template<>
+	bool try_parse<std::string>(TOMLNode node, std::string& v)
+	{
+		if (auto s = node.value<std::string>())
+		{
+			v = *s;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<>
+	bool try_parse<TOMLArray>(TOMLNode node, TOMLArray& v)
 	{
 		if (auto o = node.as_array())
-			return o;
+		{
+			v = o;
+			return true;
+		}
 		else
-			return std::nullopt;
+			return false;
 	}
 
 	namespace internal
