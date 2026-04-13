@@ -1,7 +1,7 @@
 #include "NineSlice.h"
 
 #include "core/context/rendering/Textures.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/NineSlice.inl"
 

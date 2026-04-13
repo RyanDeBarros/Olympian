@@ -2,7 +2,7 @@
 
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 #include "graphics/sprites/Definitions.h"
 
 #include ".gen/keys/Sprite.inl"

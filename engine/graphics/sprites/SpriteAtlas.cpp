@@ -1,7 +1,7 @@
 #include "SpriteAtlas.h"
 
 #include "core/util/Time.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/SpriteAtlas.inl"
 

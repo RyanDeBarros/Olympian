@@ -1,6 +1,6 @@
 #include "Spawners.h"
 
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/ParticleSystem.inl"
 

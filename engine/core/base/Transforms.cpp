@@ -1,6 +1,7 @@
 #include "Transforms.h"
 
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/Transform.inl"
 

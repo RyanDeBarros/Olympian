@@ -1,7 +1,7 @@
 #include "ParagraphFormat.h"
 
 #include "core/util/Logger.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/ParagraphFormat.inl"
 

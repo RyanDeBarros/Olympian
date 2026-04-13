@@ -6,7 +6,7 @@
 #include "core/math/Triangulation.h"
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 #include "graphics/shapes/Definitions.h"
 
 #include ".gen/keys/Polygon.inl"

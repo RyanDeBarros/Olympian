@@ -5,6 +5,7 @@
 #include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 #include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
 
@@ -75,8 +76,8 @@ namespace oly::context
 	{
 		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, io::parse_required_enum<_gen::rendering::texture::MinFilter>(node, _gen::keys::Texture::MinFilter));
 		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, io::parse_required_enum<_gen::rendering::texture::MagFilter>(node, _gen::keys::Texture::MagFilter));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, io::parse_required_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapS));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, io::parse_required_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapT));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, io::parse_optional_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapS, _gen::rendering::texture::Wrap::val()));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, io::parse_optional_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapT, _gen::rendering::texture::Wrap::val()));
 
 		if (set_and_use)
 			texture.set_and_use_handle();

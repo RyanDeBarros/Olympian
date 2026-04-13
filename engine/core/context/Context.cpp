@@ -18,6 +18,7 @@
 #include "core/util/Time.h"
 #include "core/util/Timers.h"
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/particles/ParticleSystem.h"

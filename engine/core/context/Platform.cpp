@@ -5,6 +5,7 @@
 #include "core/base/Assert.h"
 #include "core/util/Logger.h"
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 #include "core/util/MetaSplitter.h"
 #include "core/algorithms/STLUtils.h"
 #include "graphics/Camera.h"

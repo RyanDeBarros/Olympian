@@ -8,6 +8,7 @@
 
 #include "core/context/rendering/Fonts.h"
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 namespace oly::rendering
 {

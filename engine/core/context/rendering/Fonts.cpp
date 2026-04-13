@@ -2,6 +2,7 @@
 
 #include "core/util/MetaSplitter.h"
 #include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"

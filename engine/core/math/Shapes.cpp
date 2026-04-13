@@ -3,7 +3,7 @@
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
 #include "core/base/Transforms.h"
-#include "core/util/Loader.h"
+#include "core/util/Parse.h"
 
 #include ".gen/keys/Rect2D.inl"
 #include ".gen/keys/Padding.inl"
