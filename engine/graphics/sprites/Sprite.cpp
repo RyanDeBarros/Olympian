@@ -46,32 +46,23 @@ namespace oly::rendering
 
 		if (auto toml_frame_format = io::parse_key(node, _gen::keys::Sprite::FrameFormat))
 		{
-			if (auto mode = io::parse<unsigned int>(io::parse_key(toml_frame_format, _gen::keys::Sprite::Mode)))
+			if (auto mode = io::parse_enum<_gen::rendering::FrameFormat>(toml_frame_format, _gen::keys::Sprite::Mode))
 			{
-				try
+				switch (*mode)
 				{
-					switch (_gen::rendering::FrameFormat::val(*mode))
-					{
-					case FrameFormat::Single:
-						if (texture)
-							sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Frame), 0u)));
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
-						break;
-					case FrameFormat::Auto:
-						if (texture)
-							sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Speed), 1.0f),
-								io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u)));
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
-						break;
-					default:
-						throw std::out_of_range("");
-					}
-				}
-				catch (const std::out_of_range&)
-				{
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized frame format mode (" << *mode << ")" << LOG.nl;
+				case FrameFormat::Single:
+					if (texture)
+						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Frame), 0u)));
+					else
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
+					break;
+				case FrameFormat::Auto:
+					if (texture)
+						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Speed), 1.0f),
+							io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u)));
+					else
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
+					break;
 				}
 			}
 			else

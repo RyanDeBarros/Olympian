@@ -24,38 +24,16 @@ namespace oly::rendering
 	{
 		ParagraphFormat format;
 
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::Pivot), format.pivot);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::LineSpacing), format.line_spacing);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::LinebreakSpacing), format.linebreak_spacing);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::MinSize), format.min_size);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::Padding), format.padding);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::TextWrap), format.text_wrap);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::MaxHeight), format.max_height);
-		io::try_parse(io::parse_key(node, _gen::keys::ParagraphFormat::TabSpaces), format.tab_spaces);
-
-		if (auto halign = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParagraphFormat::HorizontalAlignment)))
-		{
-			try
-			{
-				format.horizontal_alignment = _gen::rendering::text::HorizontalAlignment::val(*halign);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized " << io::key_string(_gen::keys::ParagraphFormat::HorizontalAlignment) << " (" << *halign << ")" << LOG.nl;
-			}
-		}
-
-		if (auto valign = io::parse<unsigned int>(io::parse_key(node, _gen::keys::ParagraphFormat::VerticalAlignment)))
-		{
-			try
-			{
-				format.vertical_alignment = _gen::rendering::text::VerticalAlignment::val(*valign);
-			}
-			catch (const std::out_of_range&)
-			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized " << io::key_string(_gen::keys::ParagraphFormat::VerticalAlignment) << " (" << *valign << ")" << LOG.nl;
-			}
-		}
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::Pivot, format.pivot);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::LineSpacing, format.line_spacing);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::LinebreakSpacing, format.linebreak_spacing);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::MinSize, format.min_size);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::Padding, format.padding);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::TextWrap, format.text_wrap);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::MaxHeight, format.max_height);
+		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::TabSpaces, format.tab_spaces);
+		io::try_parse_enum<_gen::rendering::text::HorizontalAlignment>(node, _gen::keys::ParagraphFormat::HorizontalAlignment, format.horizontal_alignment);
+		io::try_parse_enum<_gen::rendering::text::VerticalAlignment>(node, _gen::keys::ParagraphFormat::VerticalAlignment, format.vertical_alignment);
 
 		return format;
 	}

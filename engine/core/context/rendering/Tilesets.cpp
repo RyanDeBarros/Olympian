@@ -120,7 +120,7 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::TileSet::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::TileSet::Storage, StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

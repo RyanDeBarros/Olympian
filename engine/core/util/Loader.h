@@ -26,6 +26,8 @@ namespace oly::io
 		T* operator->() { return &val; }
 	};
 
+	// TODO v7 put parse functions in templated class instead of templated functions -> move to Parse.h/Parse.cpp
+
 	template<typename T>
 	bool try_parse(TOMLNode node, T& obj);
 
@@ -150,6 +152,13 @@ namespace oly::io
 	}
 
 	template<typename T, typename Enum>
+	T parse_if_exists_or(TOMLNode node, Enum key, T def, const DeferredStringParam& warning_suffix = {})
+	{
+		try_parse_if_exists(node, key, def, warning_suffix);
+		return def;
+	}
+
+	template<typename T, typename Enum>
 	T parse_required(TOMLNode node, Enum key, const DeferredStringParam& error_suffix = {})
 	{
 		DeferredStringParam error{ "cannot parse ", io::key_string(key), " field", error_suffix.empty() ? "" : " " };
@@ -193,7 +202,7 @@ namespace oly::io
 			catch (const std::out_of_range&)
 			{
 				DeferredStringParam warning{ "unrecognized ", io::key_string(key), " enum (", *value, ")", warning_suffix.empty() ? "" : " " };
-				internal::log_context_warning(warning << warning_suffix);
+				internal::log_context_warning(warning << warning_suffix); // TODO v7 should be error -> return false, otherwise use default below instead of returning false
 			}
 		}
 
@@ -213,7 +222,7 @@ namespace oly::io
 	template<typename Translator, typename Enum>
 	typename Translator::EnumType parse_required_enum(TOMLNode node, Enum key, const DeferredStringParam& error_suffix = {})
 	{
-		auto value = parse_required<typename Translator::IndexType>(parse_key(node, key));
+		auto value = parse_required<typename Translator::IndexType>(node, key, error_suffix);
 		try
 		{
 			return Translator::val(value);
@@ -221,9 +230,16 @@ namespace oly::io
 		catch (const std::out_of_range&)
 		{
 			DeferredStringParam error{ "unrecognized ", io::key_string(key), " enum (", value, ")", error_suffix.empty() ? "" : " " };
-			internal::log_context_error(warning << error_suffix);
+			internal::log_context_error(error << error_suffix);
 			throw Error(ErrorCode::LoadAsset);
 		}
+	}
+
+	template<typename Translator, typename Enum>
+	typename Translator::EnumType parse_optional_enum(TOMLNode node, Enum key, typename Translator::EnumType def, const DeferredStringParam& warning_suffix = {})
+	{
+		try_parse_enum<Translator, Enum>(node, key, def, warning_suffix);
+		return def;
 	}
 
 	// TODO v7 move to Transform

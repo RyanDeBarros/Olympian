@@ -73,10 +73,10 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
 	{
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, _gen::rendering::texture::MinFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::MinFilter))));
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, _gen::rendering::texture::MagFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::MagFilter))));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, _gen::rendering::texture::Wrap::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::WrapS))));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, _gen::rendering::texture::Wrap::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::WrapT))));
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, io::parse_required_enum<_gen::rendering::texture::MinFilter>(node, _gen::keys::Texture::MinFilter));
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, io::parse_required_enum<_gen::rendering::texture::MagFilter>(node, _gen::keys::Texture::MagFilter));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, io::parse_required_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapS));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, io::parse_required_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapT));
 
 		if (set_and_use)
 			texture.set_and_use_handle();
@@ -99,8 +99,8 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, TOMLNode node, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		const auto g = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps));
-		graphics::SVGMipmapGenerationMode mipmaps_mode = _gen::rendering::texture::SVGMipmapGenerationMode::val(g, graphics::SVGMipmapGenerationMode::Off);
+		graphics::SVGMipmapGenerationMode mipmaps_mode = io::parse_optional_enum<_gen::rendering::texture::SVGMipmapGenerationMode>(
+			node, _gen::keys::Texture::GenerateMipmaps, graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, node, set_and_use);
 		return texture;
@@ -138,7 +138,7 @@ namespace oly::context
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return _gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(texture_node, storage_key)), StorageMode::Discard) == StorageMode::Keep;
+			return io::parse_optional_enum<_gen::StorageMode>(texture_node, storage_key, StorageMode::Discard) == StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)

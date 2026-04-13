@@ -656,9 +656,9 @@ namespace oly::rendering
 
 		polygon.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Polygon::Transformer));
 
-		if (auto method = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Polygon::Method)))
+		if (auto method = io::parse_enum<_gen::rendering::shapes::PolyCompositeMethod>(node, _gen::keys::Polygon::Method))
 		{
-			switch (_gen::rendering::shapes::PolyCompositeMethod::val(*method))
+			switch (*method)
 			{
 			case PolyCompositeMethod::Ngon:
 			{
@@ -737,7 +737,6 @@ namespace oly::rendering
 				{
 					if (auto bp = io::parse<unsigned int>(border_pivot))
 					{
-						// TODO v7 use try-catch for all _gen::*::val() calls
 						try
 						{
 							ngon_base.border_pivot = _gen::CBorderPivot::val(*bp);

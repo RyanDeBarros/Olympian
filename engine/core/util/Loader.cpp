@@ -274,40 +274,31 @@ namespace oly::io
 	{
 		if (auto mnode = io::parse_key(node, _gen::keys::Transform::Modifier))
 		{
-			if (auto type = parse<unsigned int>(io::parse_key(mnode, _gen::keys::Transform::ModifierType)))
+			if (auto type = io::parse_enum<_gen::TransformModifier>(mnode, _gen::keys::Transform::ModifierType))
 			{
-				try
+				switch (*type)
 				{
-					switch (_gen::TransformModifier::val(*type))
-					{
-					case TransformModifierType::None:
-						break;
-					case TransformModifierType::Shear:
-					{
-						Polymorphic<ShearTransformModifier2D> modifier;
-						try_parse(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
-						return modifier;
-					}
-					case TransformModifierType::Pivot:
-					{
-						Polymorphic<PivotTransformModifier2D> modifier;
-						try_parse(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
-						try_parse(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
-						return modifier;
-					}
-					case TransformModifierType::Offset:
-					{
-						Polymorphic<OffsetTransformModifier2D> modifier;
-						try_parse(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
-						return modifier;
-					}
-					default:
-						throw std::out_of_range("");
-					}
+				case TransformModifierType::None:
+					break;
+				case TransformModifierType::Shear:
+				{
+					Polymorphic<ShearTransformModifier2D> modifier;
+					try_parse(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
+					return modifier;
 				}
-				catch (const std::out_of_range&)
+				case TransformModifierType::Pivot:
 				{
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized transform modifier type (" << *type << ")" << LOG.nl;
+					Polymorphic<PivotTransformModifier2D> modifier;
+					try_parse(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
+					try_parse(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
+					return modifier;
+				}
+				case TransformModifierType::Offset:
+				{
+					Polymorphic<OffsetTransformModifier2D> modifier;
+					try_parse(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
+					return modifier;
+				}
 				}
 			}
 		}

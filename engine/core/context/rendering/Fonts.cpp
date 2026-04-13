@@ -151,7 +151,8 @@ namespace oly::context
 		auto node = io::parse_required_node((TOMLNode)table, _gen::keys::Font::FontFace);
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
-		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+
+		if (io::parse_optional_enum<_gen::StorageMode>(node, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -198,43 +199,34 @@ namespace oly::context
 		rendering::FontOptions options;
 
 		options.font_size = io::parse_required<float>(node, _gen::keys::Font::FontSize);
-		options.min_filter = _gen::rendering::texture::MinFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::MinFilter)));
-		options.mag_filter = _gen::rendering::texture::MagFilter::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::MagFilter)));
-		io::try_parse(io::parse_key(node, _gen::keys::Font::GenerateMipmaps), options.auto_generate_mipmaps);
+		options.min_filter = io::parse_required_enum<_gen::rendering::texture::MinFilter>(node, _gen::keys::Font::MinFilter);
+		options.mag_filter = io::parse_required_enum<_gen::rendering::texture::MagFilter>(node, _gen::keys::Font::MagFilter);
+		io::try_parse_if_exists(node, _gen::keys::Font::GenerateMipmaps, options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (io::parse_or(io::parse_key(node, _gen::keys::Font::UseCommonBufferPreset), true))
+		if (io::parse_if_exists_or(node, _gen::keys::Font::UseCommonBufferPreset, true))
 		{
-			if (auto common_buffer_preset = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::CommonBufferPreset)))
+			if (auto common_buffer_preset = io::parse_enum<_gen::rendering::text::CommonBufferPreset>(node, _gen::keys::Font::CommonBufferPreset))
 			{
-				try
+				switch (*common_buffer_preset)
 				{
-					switch (_gen::rendering::text::CommonBufferPreset::val(*common_buffer_preset))
-					{
-					case rendering::glyphs::CommonBufferPreset::Common:
-						break; // already initialized to common
-					case rendering::glyphs::CommonBufferPreset::AlphaNumeric:
-						common_buffer = rendering::glyphs::ALPHA_NUMERIC;
-						break;
-					case rendering::glyphs::CommonBufferPreset::Numeric:
-						common_buffer = rendering::glyphs::NUMERIC;
-						break;
-					case rendering::glyphs::CommonBufferPreset::Alphabet:
-						common_buffer = rendering::glyphs::ALPHABET;
-						break;
-					case rendering::glyphs::CommonBufferPreset::AlphabetLowercase:
-						common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-						break;
-					case rendering::glyphs::CommonBufferPreset::AlphabetUppercase:
-						common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
-						break;
-					default:
-						throw std::out_of_range("");
-					}
-				}
-				catch (const std::out_of_range&)
-				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized common buffer preset value (" << *common_buffer_preset << ")" << LOG.nl;
+				case rendering::glyphs::CommonBufferPreset::Common:
+					break; // already initialized to common
+				case rendering::glyphs::CommonBufferPreset::AlphaNumeric:
+					common_buffer = rendering::glyphs::ALPHA_NUMERIC;
+					break;
+				case rendering::glyphs::CommonBufferPreset::Numeric:
+					common_buffer = rendering::glyphs::NUMERIC;
+					break;
+				case rendering::glyphs::CommonBufferPreset::Alphabet:
+					common_buffer = rendering::glyphs::ALPHABET;
+					break;
+				case rendering::glyphs::CommonBufferPreset::AlphabetLowercase:
+					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
+					break;
+				case rendering::glyphs::CommonBufferPreset::AlphabetUppercase:
+					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
+					break;
 				}
 			}
 		}
@@ -242,7 +234,7 @@ namespace oly::context
 			common_buffer = _common_buffer.value();
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (io::parse_optional_enum<_gen::StorageMode>(node, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
@@ -338,7 +330,7 @@ namespace oly::context
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -377,19 +369,7 @@ namespace oly::context
 				{
 					TOMLNode node = (TOMLNode)_node;
 
-					rendering::FontStyle style = rendering::FontStyle::Regular;
-
-					if (auto s = io::parse<unsigned int>(io::parse_key(node, _gen::keys::Font::Style)))
-					{
-						try
-						{
-							style = _gen::rendering::text::FontStyle::val(*s);
-						}
-						catch (const std::out_of_range&)
-						{
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Unrecognized font family " << io::key_string(_gen::keys::Font::Style) << " field (" << *s << ")" << LOG.nl;
-						}
-					}
+					rendering::FontStyle style = io::parse_optional_enum<_gen::rendering::text::FontStyle>(node, _gen::keys::Font::Style, rendering::FontStyle::Regular);
 
 					ResourcePath font_file(io::parse_required<std::string>(node, _gen::keys::Font::File, { "from font family style" }), file);
 					rendering::FontFamily::FontRef font;
@@ -418,7 +398,7 @@ namespace oly::context
 				});
 		}
 
-		if (_gen::StorageMode::val(io::parse<unsigned int>(io::parse_key(toml, _gen::keys::Font::Storage)), StorageMode::Discard) == StorageMode::Keep)
+		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;
