@@ -3,6 +3,7 @@
 #include "external/TOML.h"
 #include "external/GL.h"
 #include "core/util/DeferredStringParam.h"
+#include "core/util/LogLevel.h"
 
 #include <array>
 #include <cstdint>
@@ -62,14 +63,15 @@ namespace oly::io
 		template<typename T>
 		bool try_parse(TOMLNode node, PartialView<T> obj);
 
-		extern void log_context_warning(const DeferredStringParam& msg, std::source_location location);
-		extern void log_context_error(const DeferredStringParam& msg, std::source_location location);
+		extern void log_context_at_level(LogLevel level, const DeferredStringParam& msg, std::source_location location);
 	}
 
 	class Parser
 	{
 		TOMLNode node;
 		DeferredStringParam log_suffix;
+		ErrorCode error_code;
+		bool fatal;
 
 		template<typename Key>
 		DeferredStringList get_message(Key key) const
@@ -83,13 +85,13 @@ namespace oly::io
 		template<typename Key>
 		void log_warning(Key key, std::source_location location) const
 		{
-			internal::log_context_warning(get_message(key), location);
+			internal::log_context_at_level(LogLevel::Warning, get_message(key), location);
 		}
 
 		template<typename Key>
 		void log_error(Key key, std::source_location location) const
 		{
-			internal::log_context_error(get_message(key), location);
+			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key), location);
 		}
 
 		template<typename Key, typename Index>
@@ -104,13 +106,13 @@ namespace oly::io
 		template<typename Key, typename Index>
 		void log_warning(Key key, Index e, std::source_location location) const
 		{
-			internal::log_context_warning(get_message(key, e), location);
+			internal::log_context_at_level(LogLevel::Warning, get_message(key, e), location);
 		}
 
 		template<typename Key, typename Index>
 		void log_error(Key key, Index e, std::source_location location) const
 		{
-			internal::log_context_error(get_message(key, e), location);
+			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key, e), location);
 		}
 
 		template<typename Key, typename Predefined, typename Translator>
@@ -432,7 +434,7 @@ namespace oly::io
 				}
 				else
 					parser.log_error(key, location);
-				throw Error(ErrorCode::LoadAsset);
+				throw Error(parser.error_code);
 			}
 		};
 
@@ -460,7 +462,7 @@ namespace oly::io
 				}
 
 				parser.log_error(key, location);
-				throw Error(ErrorCode::LoadAsset);
+				throw Error(parser.error_code);
 			}
 		};
 
@@ -491,7 +493,7 @@ namespace oly::io
 				}
 
 				parser.log_error(key, location);
-				throw Error(ErrorCode::LoadAsset);
+				throw Error(parser.error_code);
 			}
 		};
 
@@ -514,12 +516,18 @@ namespace oly::io
 		};
 
 	public:
-		explicit Parser(TOMLNode node, const DeferredStringParam& log_suffix = {}) : node(node), log_suffix(log_suffix) {}
-		Parser(TOMLNode node, DeferredStringParam&& log_suffix) : node(node), log_suffix(std::move(log_suffix)) {}
+		explicit Parser(TOMLNode node, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+			: node(node), log_suffix(log_suffix), error_code(error_code), fatal(fatal) {}
+
+		Parser(TOMLNode node, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+			: node(node), log_suffix(std::move(log_suffix)), error_code(error_code), fatal(fatal) {}
 
 		// TODO v7 once CTOMLNode is added, use const toml::parse_result& instead
-		explicit Parser(toml::parse_result& toml, const DeferredStringParam& log_suffix = {}) : node((TOMLNode)toml), log_suffix(log_suffix) {}
-		Parser(toml::parse_result& toml, DeferredStringParam&& log_suffix) : node((TOMLNode)toml), log_suffix(std::move(log_suffix)) {}
+		explicit Parser(toml::parse_result& toml, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+			: node((TOMLNode)toml), log_suffix(log_suffix), error_code(error_code), fatal(fatal) {}
+
+		Parser(toml::parse_result& toml, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+			: node((TOMLNode)toml), log_suffix(std::move(log_suffix)), error_code(error_code), fatal(fatal) {}
 
 		template<typename T = void, typename Key>
 		Defaulted<Key, T, void> defaulted(Key key) const { return Defaulted<Key, T, void>(*this, key); }

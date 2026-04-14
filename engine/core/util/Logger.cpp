@@ -1,5 +1,6 @@
 #include "Logger.h"
 
+#include "core/base/SimpleMath.h"
 #include "core/util/Time.h"
 #include "core/util/IO.h"
 
@@ -206,6 +207,88 @@ namespace oly
 		if (enable.fatal)
 			start("FATAL", g);
 		return Impl(enable.fatal);
+	}
+
+	bool Logger::Enables::at_level(LogLevel level) const
+	{
+		switch (level)
+		{
+		case LogLevel::Untagged:
+			return true;
+		case LogLevel::Debug:
+			return debug;
+		case LogLevel::Info:
+			return info;
+		case LogLevel::Warning:
+			return warning;
+		case LogLevel::Error:
+			return error;
+		case LogLevel::Fatal:
+			return fatal;
+		default:
+			throw Error(ErrorCode::UnsupportedSwitchCase);
+		}
+	}
+
+	Logger::Impl Logger::at_level(LogLevel level, bool timestamp, const char* prefix)
+	{
+		switch (level)
+		{
+		case LogLevel::Untagged:
+			if (!empty_str(prefix))
+				throw Error(ErrorCode::UnsupportedSwitchCase);
+			return untagged(timestamp);
+		case LogLevel::Debug:
+			return debug(timestamp, prefix);
+		case LogLevel::Info:
+			return info(timestamp, prefix);
+		case LogLevel::Warning:
+			return warning(timestamp, prefix);
+		case LogLevel::Error:
+			return error(timestamp, prefix);
+		case LogLevel::Fatal:
+			return fatal(timestamp, prefix);
+		default:
+			throw Error(ErrorCode::UnsupportedSwitchCase);
+		}
+	}
+
+	Logger::Impl Logger::at_level(LogLevel level, Logger::_opengl g)
+	{
+		switch (level)
+		{
+		case LogLevel::Debug:
+			return debug(g);
+		case LogLevel::Info:
+			return info(g);
+		case LogLevel::Warning:
+			return warning(g);
+		case LogLevel::Error:
+			return error(g);
+		case LogLevel::Fatal:
+			return fatal(g);
+		default:
+			throw Error(ErrorCode::UnsupportedSwitchCase);
+		}
+	}
+
+	Logger::Impl Logger::at_level(LogLevel level, Logger::_glfw g)
+	{
+		switch (level)
+		{
+		case LogLevel::Debug:
+			return debug(g);
+		case LogLevel::Info:
+			return info(g);
+		case LogLevel::Warning:
+			return warning(g);
+		case LogLevel::Error:
+			return error(g);
+		case LogLevel::Fatal:
+			return fatal(g);
+		default:
+			throw Error(ErrorCode::UnsupportedSwitchCase);
+		}
 	}
 
 	std::string Logger::SourceInfo::file_name(std::source_location location) const

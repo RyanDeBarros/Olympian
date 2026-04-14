@@ -234,13 +234,8 @@ namespace oly::io::internal
 			return false;
 	}
 
-	void log_context_warning(const DeferredStringParam& msg, std::source_location location)
+	void log_context_at_level(LogLevel level, const DeferredStringParam& msg, std::source_location location)
 	{
-		OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source(location) << msg.str() << LOG.nl;
-	}
-
-	void log_context_error(const DeferredStringParam& msg, std::source_location location)
-	{
-		OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source(location) << msg.str() << LOG.endl;
+		OLY_LOG_AT_LEVEL(level, true, "CONTEXT") << LOG.source_info.full_source(location) << msg.str() << LOG.nl;
 	}
 }

@@ -43,60 +43,51 @@ namespace oly::context
 
 	void internal::init_platform(TOMLNode node)
 	{
-		try
+		io::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
+
+		platform::PlatformSetup platform_setup;
+
+		auto toml_window = top_parser.required<TOMLNode>(_gen::keys::Context::Window)();
+		io::Parser window_parser(toml_window);
+
+		window_parser.required(_gen::keys::Window::Width)(platform_setup.window_width);
+		window_parser.required(_gen::keys::Window::Height)(platform_setup.window_height);
+		window_parser.required(_gen::keys::Window::Title)(platform_setup.window_title);
+
+		if (auto toml_window_hint = window_parser.required<TOMLNode>(_gen::keys::Context::WindowHint)())
 		{
-			io::Parser top_parser(node, { "(platform init)" }); // TODO v7 use fatal logging
-
-			platform::PlatformSetup platform_setup;
-
-			auto toml_window = top_parser.required<TOMLNode>(_gen::keys::Context::Window)();
-			io::Parser window_parser(toml_window);
-
-			window_parser.required(_gen::keys::Window::Width)(platform_setup.window_width);
-			window_parser.required(_gen::keys::Window::Height)(platform_setup.window_height);
-			window_parser.required(_gen::keys::Window::Title)(platform_setup.window_title);
-
-			if (auto toml_window_hint = window_parser.required<TOMLNode>(_gen::keys::Context::WindowHint)())
-			{
-				io::Parser parser(toml_window_hint, { "(platform init)" });
-				parser.optional(_gen::keys::WindowHint::ClearColor)(platform_setup.window_hint.context.clear_color);
-				parser.optional(_gen::keys::WindowHint::SwapInterval)(platform_setup.window_hint.context.swap_interval);
-				parser.optional(_gen::keys::WindowHint::Resizable)(platform_setup.window_hint.window.resizable);
-				parser.optional(_gen::keys::WindowHint::Visible)(platform_setup.window_hint.window.visible);
-				parser.optional(_gen::keys::WindowHint::Decorated)(platform_setup.window_hint.window.decorated);
-				parser.optional(_gen::keys::WindowHint::Focused)(platform_setup.window_hint.window.focused);
-				parser.optional(_gen::keys::WindowHint::AutoIconify)(platform_setup.window_hint.window.auto_iconify);
-				parser.optional(_gen::keys::WindowHint::Floating)(platform_setup.window_hint.window.floating);
-				parser.optional(_gen::keys::WindowHint::Maximized)(platform_setup.window_hint.window.maximized);
-				parser.optional(_gen::keys::WindowHint::CenterCursor)(platform_setup.window_hint.window.center_cursor);
-				parser.optional(_gen::keys::WindowHint::TransparentFramebuffer)(platform_setup.window_hint.window.transparent_framebuffer);
-				parser.optional(_gen::keys::WindowHint::FocusOnShow)(platform_setup.window_hint.window.focus_on_show);
-				parser.optional(_gen::keys::WindowHint::ScaleToMonitor)(platform_setup.window_hint.window.scale_to_monitor);
-				parser.optional(_gen::keys::WindowHint::ScaleFramebuffer)(platform_setup.window_hint.window.scale_framebuffer);
-				parser.optional(_gen::keys::WindowHint::MousePassthrough)(platform_setup.window_hint.window.mouse_passthrough);
-				parser.optional(_gen::keys::WindowHint::PositionX)(platform_setup.window_hint.window.position_x);
-				parser.optional(_gen::keys::WindowHint::PositionY)(platform_setup.window_hint.window.position_y);
-				parser.optional(_gen::keys::WindowHint::RefreshRate)(platform_setup.window_hint.window.refresh_rate);
-				parser.optional(_gen::keys::WindowHint::Stereo)(platform_setup.window_hint.window.stereo);
-				parser.optional(_gen::keys::WindowHint::SrgbCapable)(platform_setup.window_hint.window.srgb_capable);
-				parser.optional(_gen::keys::WindowHint::DoubleBuffer)(platform_setup.window_hint.window.double_buffer);
-				parser.optional(_gen::keys::WindowHint::OpenglForwardCompat)(platform_setup.window_hint.window.opengl_forward_compat);
-				parser.optional(_gen::keys::WindowHint::ContextDebug)(platform_setup.window_hint.window.context_debug);
-			}
-
-			platform_setup.num_gamepads = glm::clamp(top_parser.defaulted(_gen::keys::Context::Gamepads)(0u), 0u, (unsigned int)GLFW_JOYSTICK_LAST);
-			internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
-
-			internal::platform = platform::internal::create_platform(platform_setup);
-
-			SingletonTickService<TickPhase::None, void, TerminatePhase::Platform, PlatformOnTerminate>::instance();
+			io::Parser parser(toml_window_hint, { "(platform init)" });
+			parser.optional(_gen::keys::WindowHint::ClearColor)(platform_setup.window_hint.context.clear_color);
+			parser.optional(_gen::keys::WindowHint::SwapInterval)(platform_setup.window_hint.context.swap_interval);
+			parser.optional(_gen::keys::WindowHint::Resizable)(platform_setup.window_hint.window.resizable);
+			parser.optional(_gen::keys::WindowHint::Visible)(platform_setup.window_hint.window.visible);
+			parser.optional(_gen::keys::WindowHint::Decorated)(platform_setup.window_hint.window.decorated);
+			parser.optional(_gen::keys::WindowHint::Focused)(platform_setup.window_hint.window.focused);
+			parser.optional(_gen::keys::WindowHint::AutoIconify)(platform_setup.window_hint.window.auto_iconify);
+			parser.optional(_gen::keys::WindowHint::Floating)(platform_setup.window_hint.window.floating);
+			parser.optional(_gen::keys::WindowHint::Maximized)(platform_setup.window_hint.window.maximized);
+			parser.optional(_gen::keys::WindowHint::CenterCursor)(platform_setup.window_hint.window.center_cursor);
+			parser.optional(_gen::keys::WindowHint::TransparentFramebuffer)(platform_setup.window_hint.window.transparent_framebuffer);
+			parser.optional(_gen::keys::WindowHint::FocusOnShow)(platform_setup.window_hint.window.focus_on_show);
+			parser.optional(_gen::keys::WindowHint::ScaleToMonitor)(platform_setup.window_hint.window.scale_to_monitor);
+			parser.optional(_gen::keys::WindowHint::ScaleFramebuffer)(platform_setup.window_hint.window.scale_framebuffer);
+			parser.optional(_gen::keys::WindowHint::MousePassthrough)(platform_setup.window_hint.window.mouse_passthrough);
+			parser.optional(_gen::keys::WindowHint::PositionX)(platform_setup.window_hint.window.position_x);
+			parser.optional(_gen::keys::WindowHint::PositionY)(platform_setup.window_hint.window.position_y);
+			parser.optional(_gen::keys::WindowHint::RefreshRate)(platform_setup.window_hint.window.refresh_rate);
+			parser.optional(_gen::keys::WindowHint::Stereo)(platform_setup.window_hint.window.stereo);
+			parser.optional(_gen::keys::WindowHint::SrgbCapable)(platform_setup.window_hint.window.srgb_capable);
+			parser.optional(_gen::keys::WindowHint::DoubleBuffer)(platform_setup.window_hint.window.double_buffer);
+			parser.optional(_gen::keys::WindowHint::OpenglForwardCompat)(platform_setup.window_hint.window.opengl_forward_compat);
+			parser.optional(_gen::keys::WindowHint::ContextDebug)(platform_setup.window_hint.window.context_debug);
 		}
-		catch (Error& e)
-		{
-			if (e.code == ErrorCode::LoadAsset)
-				e.code = ErrorCode::PlatformInit;
-			throw;
-		}
+
+		platform_setup.num_gamepads = glm::clamp(top_parser.defaulted(_gen::keys::Context::Gamepads)(0u), 0u, (unsigned int)GLFW_JOYSTICK_LAST);
+		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
+
+		internal::platform = platform::internal::create_platform(platform_setup);
+
+		SingletonTickService<TickPhase::None, void, TerminatePhase::Platform, PlatformOnTerminate>::instance();
 	}
 
 	void internal::init_viewport(TOMLNode node)

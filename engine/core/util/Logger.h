@@ -10,6 +10,7 @@
 #include "core/types/Meta.h"
 #include "core/types/Singleton.h"
 #include "core/util/StringParam.h"
+#include "core/util/LogLevel.h"
 
 namespace oly
 {
@@ -79,30 +80,41 @@ namespace oly
 		void start(const char* level, _glfw);
 
 		Impl untagged(bool timestamp = false);
+		
 		Impl debug(bool timestamp = false, const char* prefix = nullptr);
 		Impl debug(_opengl);
 		Impl debug(_glfw);
+		
 		Impl info(bool timestamp = false, const char* prefix = nullptr);
 		Impl info(_opengl);
 		Impl info(_glfw);
+		
 		Impl warning(bool timestamp = false, const char* prefix = nullptr);
 		Impl warning(_opengl);
 		Impl warning(_glfw);
+		
 		Impl error(bool timestamp = false, const char* prefix = nullptr);
 		Impl error(_opengl);
 		Impl error(_glfw);
+		
 		Impl fatal(bool timestamp = false, const char* prefix = nullptr);
 		Impl fatal(_opengl);
 		Impl fatal(_glfw);
 
+		Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr);
+		Impl at_level(LogLevel level, _opengl);
+		Impl at_level(LogLevel level, _glfw);
+
 	public:
-		struct
+		struct Enables
 		{
 			bool debug = false;
 			bool info = true;
 			bool warning = true;
 			bool error = true;
 			bool fatal = true;
+
+			bool at_level(LogLevel level) const;
 		} enable;
 
 		struct _nl {} nl;
@@ -127,22 +139,32 @@ namespace oly
 		{
 			static void start_log(const LoggerOptions& options) { LOG.start_log(options); }
 			static void end_log() { LOG.end_log(); }
+			
 			static Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
+			
 			static Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }
 			static Logger::Impl debug(Logger::_opengl g) { return LOG.debug(g); }
 			static Logger::Impl debug(Logger::_glfw g) { return LOG.debug(g); }
+			
 			static Logger::Impl info(bool timestamp = false, const char* prefix = nullptr) { return LOG.info(timestamp, prefix); }
 			static Logger::Impl info(Logger::_opengl g) { return LOG.info(g); }
 			static Logger::Impl info(Logger::_glfw g) { return LOG.info(g); }
+			
 			static Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr) { return LOG.warning(timestamp, prefix); }
 			static Logger::Impl warning(Logger::_opengl g) { return LOG.warning(g); }
 			static Logger::Impl warning(Logger::_glfw g) { return LOG.warning(g); }
+			
 			static Logger::Impl error(bool timestamp = false, const char* prefix = nullptr) { return LOG.error(timestamp, prefix); }
 			static Logger::Impl error(Logger::_opengl g) { return LOG.error(g); }
 			static Logger::Impl error(Logger::_glfw g) { return LOG.error(g); }
+			
 			static Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr) { return LOG.fatal(timestamp, prefix); }
 			static Logger::Impl fatal(Logger::_opengl g) { return LOG.fatal(g); }
 			static Logger::Impl fatal(Logger::_glfw g) { return LOG.fatal(g); }
+
+			static Logger::Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr) { return LOG.at_level(level, timestamp, prefix); }
+			static Logger::Impl at_level(LogLevel level, Logger::_opengl g) { return LOG.at_level(level, g); }
+			static Logger::Impl at_level(LogLevel level, Logger::_glfw g) { return LOG.at_level(level, g); }
 		};
 	}
 
@@ -171,8 +193,10 @@ namespace oly
 #define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess::warning(__VA_ARGS__)
 #define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess::error(__VA_ARGS__)
 #define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess::fatal(__VA_ARGS__)
+#define OLY_LOG_AT_LEVEL(level, ...) if (!(oly::LOG.enable.at_level(level))) ; else oly::internal::LogAccess::at_level(level, __VA_ARGS__)
 
 #define _OLY_ENGINE_LOG_DEBUG(category) OLY_LOG_DEBUG(true, category) << oly::LOG.source_info.full_source()
 #define _OLY_ENGINE_LOG_WARNING(category) OLY_LOG_WARNING(true, category) << oly::LOG.source_info.full_source()
 #define _OLY_ENGINE_LOG_ERROR(category) OLY_LOG_ERROR(true, category) << oly::LOG.source_info.full_source()
 #define _OLY_ENGINE_LOG_FATAL(category) OLY_LOG_FATAL(true, category) << oly::LOG.source_info.full_source()
+#define _OLY_ENGINE_LOG_AT_LEVEL(category) OLY_LOG_AT_LEVEL(level, true, category) << oly::LOG.source_info.full_source()

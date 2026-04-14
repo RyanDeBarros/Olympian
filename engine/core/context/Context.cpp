@@ -105,19 +105,8 @@ namespace oly::context
 		internal::resource_root = resource_root;
 		
 		auto toml = io::load_toml(project_file);
-		io::Parser project_parser(toml, { "(project file)" }); // TODO v7 use fatal logging, and use ContextInit here instead of relying on try-catch
-		TOMLNode toml_context;
-
-		try
-		{
-			toml_context = project_parser.required<TOMLNode>(_gen::keys::General::Context)();
-		}
-		catch (Error& e)
-		{
-			if (e.code == ErrorCode::LoadAsset)
-				e.code = ErrorCode::ContextInit;
-			throw;
-		}
+		io::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
+		TOMLNode toml_context = project_parser.required<TOMLNode>(_gen::keys::General::Context)();
 
 		io::Parser context_parser(toml_context);
 
