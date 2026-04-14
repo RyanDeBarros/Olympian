@@ -266,20 +266,7 @@ namespace oly::context
 		const auto space_advance_width = parser.required<float>(_gen::keys::Font::SpaceAdvanceWidth)();
 		const auto line_height = parser.required<float>(_gen::keys::Font::LineHeight)();
 		const auto font_scale = parser.defaulted(_gen::keys::Font::FontScale)(glm::vec2(1.0f));
-
-		// TODO v7 Parser method for loading vector<T>
-		std::vector<std::string> texture_files;
-		if (auto a = parser.optional<TOMLArray>(_gen::keys::Font::TextureFileArray)())
-		{
-			texture_files.reserve(a->size());
-			for (size_t i = 0; i < a->size(); ++i)
-			{
-				if (auto texture_file = a->get_as<std::string>(i))
-					texture_files.push_back(texture_file->get());
-				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in " << assets::key_string(_gen::keys::Font::TextureFileArray) << " array" << LOG.nl;
-			}
-		}
+		const auto texture_files = parser.defaulted<std::vector<std::string>>(_gen::keys::Font::TextureFileArray)();
 
 		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
 		if (auto glyph_array = parser.optional<TOMLArray>(_gen::keys::Font::GlyphArray)())

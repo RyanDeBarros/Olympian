@@ -199,6 +199,43 @@ namespace oly::assets
 			}
 		};
 
+		template<typename Key, typename T>
+		struct Defaulted<Key, std::vector<T>, void>
+		{
+			const Parser& parser;
+			Key key;
+
+		public:
+			Defaulted(const Parser& parser, Key key) : parser(parser), key(key) {}
+
+			std::vector<T> operator()(std::source_location location = std::source_location::current()) const
+			{
+				if (auto value = parser.field(key))
+				{
+					TOMLArray arr;
+					if (internal::try_parse<TOMLArray>(value, arr))
+					{
+						std::vector<T> obj;
+						obj.reserve(arr->size());
+						for (size_t i = 0; i < arr->size(); ++i)
+						{
+							T el;
+							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+								obj.push_back(el);
+							else
+								parser.log_warning(key, location); // TODO v7 once logging is simplified, log this new kind of warning
+							//_OLY_ENGINE_LOG_WARNING("CONTEXT") << "invalid entry in " << key_string(key) << " array - skipping element" << LOG.nl;
+						}
+
+						return obj;
+					}
+
+					parser.log_warning(key, location);
+				}
+				return {};
+			}
+		};
+
 		template<typename Key>
 		class Defaulted<Key, void, void>
 		{
@@ -387,6 +424,34 @@ namespace oly::assets
 				}
 				else
 					return false;
+			}
+
+			template<typename T>
+			bool operator()(std::vector<T>& obj, std::source_location location = std::source_location::current()) const
+			{
+				if (auto value = parser.field(key))
+				{
+					TOMLArray arr;
+					if (internal::try_parse<TOMLArray>(value, arr))
+					{
+						obj.clear();
+						obj.reserve(arr->size());
+						for (size_t i = 0; i < arr->size(); ++i)
+						{
+							T el;
+							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+								obj.push_back(el);
+							else
+								parser.log_warning(key, location); // TODO v7 once logging is simplified, log this new kind of warning
+								//_OLY_ENGINE_LOG_WARNING("CONTEXT") << "invalid entry in " << key_string(key) << " array - skipping element" << LOG.nl;
+						}
+
+						return true;
+					}
+
+					parser.log_warning(key, location);
+				}
+				return false;
 			}
 
 			bool operator()(TOMLNode& obj) const
