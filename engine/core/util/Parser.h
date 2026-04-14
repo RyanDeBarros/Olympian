@@ -69,6 +69,7 @@ namespace oly::assets
 		{
 			constexpr const char* CANNOT_PARSE = "cannot parse";
 			constexpr const char* INVALID_ARRAY_ELEMENT = "skipping invalid array element in";
+			constexpr const char* INVALID_ARRAY_SIZE = "invalid size of array";
 			constexpr const char* FAILED_RESTRICTION = "failed restriction for";
 		}
 	}
@@ -220,7 +221,7 @@ namespace oly::assets
 						{
 							T el;
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
-								obj.push_back(el);
+								obj.push_back(std::move(el));
 							else
 								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
@@ -418,7 +419,7 @@ namespace oly::assets
 						{
 							T el;
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
-								obj.push_back(el);
+								obj.push_back(std::move(el));
 							else
 								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
@@ -524,6 +525,27 @@ namespace oly::assets
 
 				throw Error(ErrorCode::UnreachableCode);
 			}
+
+			struct Restriction
+			{
+				bool no_falsy = false;
+			};
+
+			Predefined operator()(Restriction restriction, std::source_location location = std::source_location::current()) const requires (!std::is_same_v<Predefined, TOMLNode>)
+			{
+				Predefined obj;
+				if (internal::try_parse<Predefined>(this->field(), obj))
+				{
+					if (restriction.no_falsy && !obj)
+						this->report(location, internal::fail_causes::CANNOT_PARSE, DeferredStringList{ "-> falsy not allowed" });
+					else
+						return obj;
+				}
+
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
+			}
 		};
 
 		template<typename Key>
@@ -560,6 +582,78 @@ namespace oly::assets
 						this->report(location, internal::fail_causes::FAILED_RESTRICTION,
 							DeferredStringList{ "-> out of range [", std::to_string(restriction.min_size), ", ", std::to_string(restriction.max_size), "]"});
 					}
+				}
+
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
+			}
+		};
+
+		template<typename Key, typename T, size_t N>
+		struct Required<Key, std::array<T, N>, void> : public Accessor<Key, true>
+		{
+			static_assert(N > 1);
+
+			using Accessor<Key, true>::Accessor;
+
+			std::array<T, N> operator()(std::source_location location = std::source_location::current()) const
+			{
+				TOMLArray arr;
+				if (internal::try_parse<TOMLArray>(this->field(), arr))
+				{
+					if (arr->size() != N)
+						this->report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
+							DeferredStringList{ "expected (", std::to_string(N), ") but parsed (", arr->size(), ")" });
+
+					std::array<T, N> obj;
+					for (size_t i = 0; i < N; ++i)
+					{
+						T el;
+						if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+							obj.at(i) = std::move(el);
+						else
+							this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+					}
+
+					return obj;
+				}
+
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
+			}
+
+			struct Restriction
+			{
+				bool no_falsy = false;
+			};
+
+			std::array<T, N> operator()(Restriction restriction, std::source_location location = std::source_location::current()) const
+			{
+				TOMLArray arr;
+				if (internal::try_parse<TOMLArray>(this->field(), arr))
+				{
+					if (arr->size() != N)
+						this->report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
+							DeferredStringList{ "expected (", std::to_string(N), ") but parsed (", std::to_string(arr->size()), ")" });
+
+					std::array<T, N> obj;
+					for (size_t i = 0; i < N; ++i)
+					{
+						T el;
+						if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+						{
+							if (restriction.no_falsy && !el)
+								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT, DeferredStringList{ "-> falsy element (", std::to_string(i), ") not allowed"});
+							else
+								obj.at(i) = std::move(el);
+						}
+						else
+							this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+					}
+
+					return obj;
 				}
 
 				this->report(location);

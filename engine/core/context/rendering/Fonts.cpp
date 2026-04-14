@@ -62,24 +62,6 @@ namespace oly::context
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}
 
-	static utf::Codepoint parse_codepoint(const StringParam& s)
-	{
-		if (s.size() >= 3)
-		{
-			StringParam prefix = s.substr(0, 2);
-			if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
-				return utf::Codepoint(s.substr(2).to_int(16));
-			else if (s.substr(0, 3) == "&#x" && s.ends_with(';'))
-				return utf::Codepoint(s.substr(3, s.size() - 3 - 1).to_int(16));
-			else
-				return utf::Codepoint(0);
-		}
-		else if (s.empty() || s.size() == 2)
-			return utf::Codepoint(0);
-		else
-			return utf::Codepoint(s.front());
-	}
-
 	static rendering::Kerning parse_kerning(TOMLNode node)
 	{
 		auto kerning_arr = assets::Parser(node).optional<TOMLArray>(_gen::keys::Font::Kerning)();
@@ -94,24 +76,9 @@ namespace oly::context
 			{
 				const size_t k_idx = _k_idx++;
 				assets::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
-				const auto pair = parser.required<TOMLArray>(_gen::keys::Font::CodepointPair)({ .min_size = 2, .max_size = 2 });
+				const auto pair = parser.required<std::array<utf::Codepoint, 2>>(_gen::keys::Font::CodepointPair)({ .no_falsy = false });
 				const auto dist = parser.required<int>(_gen::keys::Font::CodepointDistance)();
-
-				auto tc0 = pair->get_as<std::string>(0);
-				auto tc1 = pair->get_as<std::string>(1);
-				if (!tc0 || !tc1)
-				{
-					// TODO v7 somehow auto-log/throw this in parser?
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << assets::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array of strings in kerning #" << k_idx << LOG.endl;
-					throw Error(ErrorCode::LoadAsset);
-				}
-
-				utf::Codepoint c1 = parse_codepoint(tc0->get());
-				utf::Codepoint c2 = parse_codepoint(tc1->get());
-				if (c1 && c2)
-					kerning.map.emplace(std::make_pair(c1, c2), dist);
-				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "cannot parse pair codepoints: (\"" << tc0 << "\", \"" << tc1 << "\") in kerning #" << k_idx << LOG.nl;
+				kerning.map.emplace(std::make_pair(pair.at(0), pair.at(1)), dist);
 			}
 			catch (const Error& e)
 			{
@@ -274,17 +241,10 @@ namespace oly::context
 			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
 				assets::Parser parser((TOMLNode)g);
 
-				utf::Codepoint codepoint = utf::Codepoint(0);
-				if (auto v = parser.optional<std::string>(_gen::keys::Font::Codepoint)())
-					codepoint = parse_codepoint(*v);
-				if (codepoint == utf::Codepoint(0))
-				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "codepoint field is zero, skipping glyph..." << LOG.endl;
-					throw Error(ErrorCode::LoadAsset);
-				}
+				utf::Codepoint codepoint = parser.required<utf::Codepoint>(_gen::keys::Font::Codepoint)({ .no_falsy = true });
 
 				std::string texture_file;
-				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u);
+				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u); // TODO v7 restriction for out-of-range
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else

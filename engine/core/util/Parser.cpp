@@ -2,6 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
+#include "core/util/UTF.h"
 
 namespace oly::assets::internal
 {
@@ -232,6 +233,32 @@ namespace oly::assets::internal
 		}
 		else
 			return false;
+	}
+
+	template<>
+	bool try_parse<utf::Codepoint>(TOMLNode node, utf::Codepoint& v)
+	{
+		std::string str;
+		if (!try_parse(node, str))
+			return false;
+
+		StringParam s(std::move(str));
+		if (s.size() >= 3)
+		{
+			StringParam prefix = s.substr(0, 2);
+			if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
+				v = utf::Codepoint(s.substr(2).to_int(16));
+			else if (s.substr(0, 3) == "&#x" && s.ends_with(';'))
+				v = utf::Codepoint(s.substr(3, s.size() - 3 - 1).to_int(16));
+			else
+				v = utf::Codepoint(0);
+		}
+		else if (s.empty() || s.size() == 2)
+			v = utf::Codepoint(0);
+		else
+			v = utf::Codepoint(s.front());
+
+		return true;
 	}
 
 	void log_context_at_level(LogLevel level, const DeferredStringParam& msg, std::source_location location)
