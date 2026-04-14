@@ -72,12 +72,12 @@ namespace oly::io
 		DeferredStringParam log_suffix;
 
 		template<typename Key>
-		DeferredStringParam get_message(Key key) const
+		DeferredStringList get_message(Key key) const
 		{
 			if constexpr (std::is_same_v<Key, NoKey>)
-				return DeferredStringParam{ "cannot parse field", log_suffix.empty() ? "" : " " } << log_suffix;
+				return DeferredStringList{ "cannot parse field", log_suffix.empty() ? "" : " " } << log_suffix;
 			else
-				return DeferredStringParam{ "cannot parse ", key_string(key), " field", log_suffix.empty() ? "" : " " } << log_suffix;
+				return DeferredStringList{ "cannot parse ", key_string(key), " field", log_suffix.empty() ? "" : " " } << log_suffix;
 		}
 
 		template<typename Key>
@@ -93,12 +93,12 @@ namespace oly::io
 		}
 
 		template<typename Key, typename Index>
-		DeferredStringParam get_message(Key key, Index e) const
+		DeferredStringList get_message(Key key, Index e) const
 		{
 			if constexpr (std::is_same_v<Key, NoKey>)
-				return DeferredStringParam{ "unrecognized enum (", e, ")", log_suffix.empty() ? "" : " " } << log_suffix;
+				return DeferredStringList{ "unrecognized enum (", std::to_string(e), ")", log_suffix.empty() ? "" : " " } << log_suffix;
 			else
-				return DeferredStringParam{ "unrecognized ", key_string(key), " enum (", e, ")", log_suffix.empty() ? "" : " " } << log_suffix;
+				return DeferredStringList{ "unrecognized ", key_string(key), " enum (", std::to_string(e), ")", log_suffix.empty() ? "" : " " } << log_suffix;
 		}
 
 		template<typename Key, typename Index>

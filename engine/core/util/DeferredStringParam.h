@@ -6,20 +6,51 @@
 
 namespace oly
 {
+	using DeferredStringList = std::vector<std::string>;
+
 	class DeferredStringParam
 	{
 		using V = Variant<StringParam, std::vector<StringParam>>;
 		mutable V data;
 
 	public:
-		DeferredStringParam() : data(StringParam("")) {}
+		DeferredStringParam() : data(std::string()) {}
 		DeferredStringParam(const StringParam& string) : data(string) {}
 		DeferredStringParam(StringParam&& string) : data(std::move(string)) {}
 		DeferredStringParam(const std::vector<StringParam>& strings) : data(strings) {}
 		DeferredStringParam(std::vector<StringParam>&& strings) : data(std::move(strings)) {}
 		DeferredStringParam(std::initializer_list<StringParam> list) : data(std::vector<StringParam>(list)) {}
+
 		template<typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
 		DeferredStringParam(Args&&... args) : data(std::vector<StringParam>{ StringParam(std::forward<Args>(args))... }) {}
+
+		DeferredStringParam(const DeferredStringList& strings)
+		{
+			if (strings.size() == 1)
+				data = strings[0];
+			else if (strings.size() > 1)
+			{
+				data = std::vector<StringParam>();
+				for (const std::string& string : strings)
+					get_list().push_back(string);
+			}
+			else
+				data = std::string();
+		}
+
+		DeferredStringParam(DeferredStringList&& strings)
+		{
+			if (strings.size() == 1)
+				data = std::move(strings[0]);
+			else if (strings.size() > 1)
+			{
+				data = std::vector<StringParam>();
+				for (const std::string& string : strings)
+					get_list().push_back(std::move(string));
+			}
+			else
+				data = std::string();
+		}
 
 		StringParam str() const
 		{
@@ -54,6 +85,11 @@ namespace oly
 			get_list().push_back(std::move(string));
 			return *this;
 		}
+
+		friend DeferredStringList& operator<<(DeferredStringList&, const DeferredStringParam&);
+		friend DeferredStringList& operator<<(DeferredStringList&, DeferredStringParam&&);
+		friend DeferredStringList operator<<(DeferredStringList&&, const DeferredStringParam&);
+		friend DeferredStringList operator<<(DeferredStringList&&, DeferredStringParam&&);
 
 		DeferredStringParam& operator<<(const DeferredStringParam& param)
 		{
@@ -113,4 +149,52 @@ namespace oly
 			return data.get<std::vector<StringParam>>();
 		}
 	};
+
+	inline DeferredStringList& operator<<(DeferredStringList& list, const DeferredStringParam& param)
+	{
+		if (const StringParam* string = param.data.safe_get<StringParam>())
+			list.push_back(string->copy());
+		else
+		{
+			for (const StringParam& string : param.get_list())
+				list.push_back(string.copy());
+		}
+		return list;
+	}
+
+	inline DeferredStringList& operator<<(DeferredStringList& list, DeferredStringParam&& param)
+	{
+		if (StringParam* string = param.data.safe_get<StringParam>())
+			list.push_back(string->transfer());
+		else
+		{
+			for (StringParam& string : param.get_list())
+				list.push_back(string.transfer());
+		}
+		return list;
+	}
+
+	inline DeferredStringList operator<<(DeferredStringList&& list, const DeferredStringParam& param)
+	{
+		if (const StringParam* string = param.data.safe_get<StringParam>())
+			list.push_back(string->copy());
+		else
+		{
+			for (const StringParam& string : param.get_list())
+				list.push_back(string.copy());
+		}
+		return std::move(list);
+	}
+
+	inline DeferredStringList operator<<(DeferredStringList&& list, DeferredStringParam&& param)
+	{
+		if (StringParam* string = param.data.safe_get<StringParam>())
+			list.push_back(string->transfer());
+		else
+		{
+			for (StringParam& string : param.get_list())
+				list.push_back(string.transfer());
+		}
+		return std::move(list);
+	}
 }

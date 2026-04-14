@@ -1,0 +1,15 @@
+index_type = "unsigned int"
+enum_type = "oly::math::PositioningMode"
+default = 0
+
+[[enum]]
+label = "Relative"
+index = 0
+enum = 0x0
+comment = "PositioningMode::Relative"
+
+[[enum]]
+label = "Absolute"
+index = 1
+enum = 0x1
+comment = "PositioningMode::Absolute"

@@ -10,7 +10,7 @@
 			Op = 0
 				[[emitter0.Color.Domain.C.Ops]]
 				Op = 1
-				Selector = "R"
+				Selector = 1
 					[emitter0.Color.Domain.C.Ops.InnerOp]
 					Op = 2
 					A = 0.5
@@ -19,7 +19,7 @@
 					C = 0.5
 				[[emitter0.Color.Domain.C.Ops]]
 				Op = 1
-				Selector = "B"
+				Selector = 3
 					[emitter0.Color.Domain.C.Ops.InnerOp]
 					Op = 2
 					A = 0.5

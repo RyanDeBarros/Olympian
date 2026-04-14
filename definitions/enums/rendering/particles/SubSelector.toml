@@ -1,0 +1,93 @@
+index_type = "unsigned int"
+enum_type = "oly::particles::SubSelector"
+default = 0
+
+[[enum]]
+label = "None"
+index = 0
+enum = 0
+comment = "SubSelector::None"
+
+[[enum]]
+label = "X / R"
+index = 1
+enum = 1
+comment = "SubSelector::X / SubSelector::R"
+
+[[enum]]
+label = "Y / G"
+index = 2
+enum = 2
+comment = "SubSelector::Y / SubSelector::G"
+
+[[enum]]
+label = "Z / B"
+index = 3
+enum = 3
+comment = "SubSelector::Z / SubSelector::B"
+
+[[enum]]
+label = "W / A"
+index = 4
+enum = 4
+comment = "SubSelector::W / SubSelector::A"
+
+[[enum]]
+label = "XY / RG"
+index = 5
+enum = 5
+comment = "SubSelector::XY / SubSelector::RG"
+
+[[enum]]
+label = "XZ / RB"
+index = 6
+enum = 6
+comment = "SubSelector::XZ / SubSelector::RB"
+
+[[enum]]
+label = "XW / RA"
+index = 7
+enum = 7
+comment = "SubSelector::XW / SubSelector::RA"
+
+[[enum]]
+label = "YZ / GB"
+index = 8
+enum = 8
+comment = "SubSelector::YZ / SubSelector::GB"
+
+[[enum]]
+label = "YW / GA"
+index = 9
+enum = 9
+comment = "SubSelector::YW / SubSelector::GA"
+
+[[enum]]
+label = "ZW / BA"
+index = 10
+enum = 10
+comment = "SubSelector::ZW / SubSelector::BA"
+
+[[enum]]
+label = "XYZ / RGB"
+index = 11
+enum = 11
+comment = "SubSelector::XYZ / SubSelector::RGB"
+
+[[enum]]
+label = "XYW / RGA"
+index = 12
+enum = 12
+comment = "SubSelector::XYW / SubSelector::RGA"
+
+[[enum]]
+label = "XZW / RBA"
+index = 13
+enum = 13
+comment = "SubSelector::XZW / SubSelector::RBA"
+
+[[enum]]
+label = "YZW / GBA"
+index = 14
+enum = 14
+comment = "SubSelector::YZW / SubSelector::GBA"

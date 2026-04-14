@@ -16,6 +16,7 @@
 #include ".gen/enums/rendering/texture/MagFilter.inl"
 #include ".gen/enums/rendering/texture/MinFilter.inl"
 #include ".gen/enums/StorageMode.inl"
+#include ".gen/enums/PositioningMode.inl"
 
 // TODO v7 put actual loading logic in load/overload methods
 
@@ -323,7 +324,7 @@ namespace oly::context
 				}
 
 				math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
-				math::PositioningMode origin_offset_mode = math::PositioningMode::load(parser.field(_gen::keys::Font::OriginOffsetMode), math::PositioningMode::RELATIVE);
+				math::PositioningMode origin_offset_mode = parser.translate<_gen::PositioningMode>().defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
 				glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));

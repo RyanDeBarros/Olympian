@@ -1,6 +1,7 @@
 #include "Collision.h"
 
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/Context.inl"
 #include ".gen/keys/Collision.inl"

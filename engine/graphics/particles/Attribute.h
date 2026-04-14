@@ -3,7 +3,6 @@
 #include "external/GLM.h"
 #include "core/types/Polymorphic.h"
 #include "core/util/Parser.h"
-#include "core/util/Enum.h"
 
 #include <unordered_set>
 #include <functional>
@@ -16,38 +15,38 @@ namespace oly::particles
 	template<typename T>
 	concept ParticleAttribute = std::same_as<T, float> || std::same_as<T, glm::vec2> || std::same_as<T, glm::vec3> || std::same_as < T, glm::vec4>;
 
-#define _SubSelectorEntryMap(T)\
-			T(NONE, 0)\
-			T(X, 1)\
-			T(R, 1)\
-			T(Y, 2)\
-			T(G, 2)\
-			T(Z, 3)\
-			T(B, 3)\
-			T(W, 4)\
-			T(A, 4)\
-			T(XY, 5)\
-			T(RG, 5)\
-			T(XZ, 6)\
-			T(RB, 6)\
-			T(XW, 7)\
-			T(RA, 7)\
-			T(YZ, 8)\
-			T(GB, 8)\
-			T(YW, 9)\
-			T(GA, 9)\
-			T(ZW, 10)\
-			T(BA, 10)\
-			T(XYZ, 11)\
-			T(RGB, 11)\
-			T(XYW, 12)\
-			T(RGA, 12)\
-			T(XZW, 13)\
-			T(RBA, 13)\
-			T(YZW, 14)\
-			T(GBA, 14)
-	OLY_ENUM(SubSelector, _SubSelectorEntryMap);
-#undef _SubSelectorEntryMap
+	enum class SubSelector
+	{
+		None = 0,
+		X = 1,
+		R = 1,
+		Y = 2,
+		G = 2,
+		Z = 3,
+		B = 3,
+		W = 4,
+		A = 4,
+		XY = 5,
+		RG = 5,
+		XZ = 6,
+		RB = 6,
+		XW = 7,
+		RA = 7,
+		YZ = 8,
+		GB = 8,
+		YW = 9,
+		GA = 9,
+		ZW = 10,
+		BA = 10,
+		XYZ = 11,
+		RGB = 11,
+		XYW = 12,
+		RGA = 12,
+		XZW = 13,
+		RBA = 13,
+		YZW = 14,
+		GBA = 14
+	};
 
 	template<bool Const>
 	class TAttributeSpan
@@ -76,10 +75,9 @@ namespace oly::particles
 			TAttributeSpan span;
 			switch (sel)
 			{
-			case SubSelector::NONE:
+			case SubSelector::None:
 				span.base = base;
-				for (size_t i = 0; i < size; ++i)
-					span.offsets[i] = offsets[i];
+				span.offsets = offsets;
 				span.size = size;
 				break;
 			case SubSelector::X:
@@ -407,7 +405,7 @@ namespace oly::particles
 		{
 			Polymorphic<IAttributeOperation> inner_op;
 
-			SubSelector selector = SubSelector::NONE;
+			SubSelector selector = SubSelector::None;
 
 			Selector() = default;
 			Selector(const Polymorphic<IAttributeOperation>& inner_op, SubSelector selector) : inner_op(inner_op), selector(selector) {}

@@ -7,6 +7,7 @@
 #include ".gen/keys/ParticleSystem.inl"
 
 #include ".gen/enums/rendering/particles/AttributeOperation.inl"
+#include ".gen/enums/rendering/particles/SubSelector.inl"
 
 namespace oly::particles
 {
@@ -111,7 +112,7 @@ namespace oly::particles
 			{
 				io::Parser parser(node);
 				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(_gen::keys::ParticleSystem::InnerOperation)),
-					SubSelector::load(parser.field(_gen::keys::ParticleSystem::Selector)));
+					parser.translate<_gen::rendering::particles::SubSelector>().defaulted(_gen::keys::ParticleSystem::Selector)());
 			}
 			catch (const Error& e)
 			{
