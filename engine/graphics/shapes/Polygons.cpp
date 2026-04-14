@@ -512,7 +512,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		Polygon polygon;
 
@@ -524,7 +524,7 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
+				if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
 					points.push_back(*pt);
 				++pt_idx;
 			}
@@ -537,7 +537,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 					colors.push_back(*col);
 				++color_idx;
 			}
@@ -652,7 +652,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		PolyComposite polygon;
 
@@ -670,7 +670,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
 							points.push_back(*pt);
 						++pt_idx;
 					}
@@ -682,7 +682,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_colors)
 					{
-						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 							colors.push_back(*col);
 						++color_idx;
 					}
@@ -700,7 +700,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
 							ngon_base.points.push_back(*pt);
 						++pt_idx;
 					}
@@ -711,7 +711,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 							ngon_base.fill_colors.push_back(*col);
 						++color_idx;
 					}
@@ -722,7 +722,7 @@ namespace oly::rendering
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 							ngon_base.border_colors.push_back(*col);
 						++color_idx;
 					}
@@ -733,8 +733,8 @@ namespace oly::rendering
 				// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
 				if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
 				{
-					io::Parser parser(*border_pivot);
-					if (auto bp = parser.optional<unsigned int>(io::NO_KEY)())
+					assets::Parser parser(*border_pivot);
+					if (auto bp = parser.optional<unsigned int>(assets::NO_KEY)())
 					{
 						try
 						{
@@ -746,7 +746,7 @@ namespace oly::rendering
 						}
 					}
 					else
-						parser.optional(io::NO_KEY)(ngon_base.border_pivot.v);
+						parser.optional(assets::NO_KEY)(ngon_base.border_pivot.v);
 				}
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -762,7 +762,7 @@ namespace oly::rendering
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
 							points.push_back(*pt);
 						++pt_idx;
 					}
@@ -834,7 +834,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		NGon polygon;
 
@@ -847,7 +847,7 @@ namespace oly::rendering
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
+				if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
 					ngon_base.points.push_back(*pt);
 				++pt_idx;
 			}
@@ -858,7 +858,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 					ngon_base.fill_colors.push_back(*col);
 				++color_idx;
 			}
@@ -869,7 +869,7 @@ namespace oly::rendering
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
 					ngon_base.border_colors.push_back(*col);
 				++color_idx;
 			}
@@ -882,8 +882,8 @@ namespace oly::rendering
 		// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
 		if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
 		{
-			io::Parser parser(*border_pivot);
-			if (auto bp = parser.optional<unsigned int>(io::NO_KEY)())
+			assets::Parser parser(*border_pivot);
+			if (auto bp = parser.optional<unsigned int>(assets::NO_KEY)())
 			{
 				try
 				{
@@ -895,7 +895,7 @@ namespace oly::rendering
 				}
 			}
 			else
-				parser.optional(io::NO_KEY)(ngon_base.border_pivot.v);
+				parser.optional(assets::NO_KEY)(ngon_base.border_pivot.v);
 		}
 
 		polygon.set_base() = std::move(ngon_base);

@@ -121,7 +121,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		SpriteAtlas sprite_atlas(trace ? Sprite::load(parser.field(_gen::keys::SpriteAtlas::Sprite), *trace) : Sprite::load(parser.field(_gen::keys::SpriteAtlas::Sprite)));
 

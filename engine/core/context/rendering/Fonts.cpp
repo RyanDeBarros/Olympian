@@ -82,7 +82,7 @@ namespace oly::context
 
 	static rendering::Kerning parse_kerning(TOMLNode node)
 	{
-		auto kerning_arr = io::Parser(node).optional<TOMLArray>(_gen::keys::Font::Kerning)();
+		auto kerning_arr = assets::Parser(node).optional<TOMLArray>(_gen::keys::Font::Kerning)();
 		if (!kerning_arr)
 			return {};
 
@@ -93,11 +93,12 @@ namespace oly::context
 			try
 			{
 				const size_t k_idx = _k_idx++;
-				io::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
+				assets::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
 				const auto pair = parser.required<TOMLArray>(_gen::keys::Font::CodepointPair)();
+				// TODO v7 add min/max size parameters to required<TOMLArray>() to auto-log/throw
 				if (pair->size() != 2)
 				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array in kerning #" << k_idx << LOG.endl;
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << assets::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array in kerning #" << k_idx << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
 				const auto dist = parser.required<int>(_gen::keys::Font::CodepointDistance)();
@@ -106,7 +107,8 @@ namespace oly::context
 				auto tc1 = pair->get_as<std::string>(1);
 				if (!tc0 || !tc1)
 				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array of strings in kerning #" << k_idx << LOG.endl;
+					// TODO v7 somehow auto-log/throw this in parser?
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << assets::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array of strings in kerning #" << k_idx << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
 
@@ -150,7 +152,7 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(import_file);
-		io::Parser parser(toml);
+		assets::Parser parser(toml);
 
 		auto node = parser.required<TOMLNode>(_gen::keys::Font::FontFace)();
 
@@ -189,16 +191,18 @@ namespace oly::context
 		auto toml = io::load_toml(import_file);
 
 		// TODO v7 associate certain keys with certain data types to automatically call the correct outer io parse function
-		const auto font_atlas_list = io::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)();
+
+		// TODO v7 add min/max size parameters to required<TOMLArray>() to auto-log/throw
+		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)();
 		if (index >= font_atlas_list->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
-				<< ") out of range for " << io::key_string(_gen::keys::Font::FontAtlasArray) << " array field of size (" << font_atlas_list->size() << ")" << LOG.nl;
+				<< ") out of range for " << assets::key_string(_gen::keys::Font::FontAtlasArray) << " array field of size (" << font_atlas_list->size() << ")" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto node = (TOMLNode)*font_atlas_list->get(index);
-		io::Parser parser(node); // TODO v7 maybe Parser should go in different namespace like oly::assets
+		assets::Parser parser(node);
 
 		rendering::FontOptions options;
 
@@ -241,6 +245,7 @@ namespace oly::context
 		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
+		// TODO v7 add Trace log level for stuff like this, that is lower than Debug
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
 
 		return font_atlas;
@@ -250,7 +255,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.endl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -263,18 +268,19 @@ namespace oly::context
 		auto meta = io::MetaSplitter::meta(file);
 		if (!meta.has_type("raster_font"))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << LOG.endl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		auto table = io::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
-		io::Parser parser(toml);
+		assets::Parser parser(toml);
 
 		const auto space_advance_width = parser.required<float>(_gen::keys::Font::SpaceAdvanceWidth)();
 		const auto line_height = parser.required<float>(_gen::keys::Font::LineHeight)();
 		const auto font_scale = parser.defaulted(_gen::keys::Font::FontScale)(glm::vec2(1.0f));
 
+		// TODO v7 Parser method for loading vector<T>
 		std::vector<std::string> texture_files;
 		if (auto a = parser.optional<TOMLArray>(_gen::keys::Font::TextureFileArray)())
 		{
@@ -284,7 +290,7 @@ namespace oly::context
 				if (auto texture_file = a->get_as<std::string>(i))
 					texture_files.push_back(texture_file->get());
 				else
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in " << io::key_string(_gen::keys::Font::TextureFileArray) << " array" << LOG.nl;
+					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Invalid entry in " << assets::key_string(_gen::keys::Font::TextureFileArray) << " array" << LOG.nl;
 			}
 		}
 
@@ -292,15 +298,16 @@ namespace oly::context
 		if (auto glyph_array = parser.optional<TOMLArray>(_gen::keys::Font::GlyphArray)())
 		{
 			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
-				io::Parser parser((TOMLNode)g);
+				assets::Parser parser((TOMLNode)g);
 
 				utf::Codepoint codepoint = utf::Codepoint(0);
 				if (auto v = parser.optional<std::string>(_gen::keys::Font::Codepoint)())
 					codepoint = parse_codepoint(*v);
 				if (codepoint == utf::Codepoint(0))
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::Codepoint) << " field in glyphs array, skipping glyph..." << LOG.nl;
-					return;
+					// TODO v7 let optional(key, conditional) check return so as to auto-log/throw
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot parse " << assets::key_string(_gen::keys::Font::Codepoint) << " field in glyphs array, skipping glyph..." << LOG.endl;
+					throw Error(ErrorCode::LoadAsset);
 				}
 
 				std::string texture_file;
@@ -309,9 +316,8 @@ namespace oly::context
 					texture_file = texture_files[tidx];
 				else
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Texture file indexer (" << tidx
-						<< ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.nl;
-					return;
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture file indexer (" << tidx << ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.endl;
+					throw Error(ErrorCode::LoadAsset);
 				}
 
 				unsigned int texture_index = parser.defaulted(_gen::keys::Font::TextureIndex)(0u);
@@ -319,8 +325,9 @@ namespace oly::context
 				math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location));
 				if (location.x2 <= location.x1 || location.y2 <= location.y1)
 				{
-					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid " << io::key_string(_gen::keys::Font::Location) << " field, skipping glyph..." << LOG.nl;
-					return;
+					// TODO v7 let optional(key, conditional) check return so as to auto-log/throw
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot parse valid " << assets::key_string(_gen::keys::Font::Location) << " field, skipping glyph..." << LOG.endl;
+					throw Error(ErrorCode::LoadAsset);
 				}
 
 				math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
@@ -361,7 +368,7 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(file);
-		io::Parser parser(toml);
+		assets::Parser parser(toml);
 
 
 		rendering::FontFamilyRef font_family = REF_INIT;
@@ -370,7 +377,7 @@ namespace oly::context
 			a->for_each([&file, &styles = font_family->styles](auto&& node) {
 				try
 				{
-					io::Parser parser((TOMLNode)node);
+					assets::Parser parser((TOMLNode)node);
 
 					rendering::FontStyle style = parser.translate<_gen::rendering::text::FontStyle>().defaulted(_gen::keys::Font::Style)(rendering::FontStyle::Regular);
 

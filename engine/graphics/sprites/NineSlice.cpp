@@ -355,7 +355,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		NineSlice nonant;
 

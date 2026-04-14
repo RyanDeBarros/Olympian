@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <source_location>
 
-namespace oly::io
+namespace oly::assets
 {
 	namespace internal
 	{
@@ -305,7 +305,7 @@ namespace oly::io
 				{
 					TOMLArray obj;
 					if (internal::try_parse<TOMLArray>(value, obj))
-						return std::move(obj);
+						return obj;
 
 					parser.log_warning(key, location);
 				}
@@ -458,7 +458,7 @@ namespace oly::io
 				{
 					Predefined obj;
 					if (internal::try_parse<Predefined>(parser.field(key), obj))
-						return std::move(obj);
+						return obj;
 				}
 
 				parser.log_error(key, location);

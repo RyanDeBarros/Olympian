@@ -163,7 +163,7 @@ namespace oly::rendering
 
 	TileMap TileMap::load(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		TileMap tilemap;
 		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::TileMap::Transformer)())
@@ -179,7 +179,7 @@ namespace oly::rendering
 				try
 				{
 					const size_t layer_idx = _layer_idx++;
-					io::Parser parser((TOMLNode)node, { "in tilemap layer #", layer_idx });
+					assets::Parser parser((TOMLNode)node, { "in tilemap layer #", layer_idx });
 
 					auto tileset = parser.required<std::string>(_gen::keys::TileMap::TileSet)();
 
@@ -191,7 +191,7 @@ namespace oly::rendering
 						size_t tile_idx = 0;
 						for (auto& toml_tile : *tiles)
 						{
-							if (auto tile = io::Parser((TOMLNode)toml_tile, { "in tile #", tile_idx, " from tilemap layer #", layer_idx }).optional<glm::ivec2>(io::NO_KEY)())
+							if (auto tile = assets::Parser((TOMLNode)toml_tile, { "in tile #", tile_idx, " from tilemap layer #", layer_idx }).optional<glm::ivec2>(assets::NO_KEY)())
 								layer.paint_tile(*tile);
 							++tile_idx;
 						}

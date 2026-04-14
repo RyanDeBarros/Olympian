@@ -919,7 +919,7 @@ namespace oly::rendering
 		try
 		{
 			TextElement e;
-			io::Parser parser(element, { "in text element #", i });
+			assets::Parser parser(element, { "in text element #", i });
 			const auto font = parser.required<std::string>(_gen::keys::Paragraph::Font)();
 			const auto font_index = parser.defaulted(_gen::keys::Paragraph::FontIndex)(0u);
 			e.font = context::load_font(font, font_index);
@@ -946,7 +946,7 @@ namespace oly::rendering
 
 	Paragraph Paragraph::load(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		std::vector<TextElement> elements;
 		// TODO v7 this will log a warning even if else-if branch passes - use different parser method for this multi-datatype case

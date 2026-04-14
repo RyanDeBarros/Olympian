@@ -12,7 +12,7 @@ namespace oly
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		Transform2D transform;
 		parser.optional(_gen::keys::Transform::Position)(transform.position);

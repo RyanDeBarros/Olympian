@@ -14,7 +14,7 @@ namespace oly::particles::ops
 
 	Polymorphic<SineWave1D> SineWave1D::load(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 		float a = parser.defaulted(_gen::keys::ParticleSystem::A)(1.0f);
 		float b = parser.defaulted(_gen::keys::ParticleSystem::B)(1.0f);
 		float k = parser.defaulted(_gen::keys::ParticleSystem::K)(0.0f);
@@ -29,7 +29,7 @@ namespace oly::particles::ops
 
 	Polymorphic<Polarization2D> Polarization2D::load(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 		float amplitude = parser.defaulted(_gen::keys::ParticleSystem::Amplitude)(1.0f);
 		float time_offset = parser.defaulted(_gen::keys::ParticleSystem::TimeOffset)(0.0f);
 		return make_polymorphic<Polarization2D>(amplitude, time_offset);

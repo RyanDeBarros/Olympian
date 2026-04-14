@@ -28,7 +28,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		Sprite sprite;
 		sprite.transformer = Transformer2D::load(parser.field(_gen::keys::Sprite::Transformer));
@@ -48,7 +48,7 @@ namespace oly::rendering
 
 		if (auto toml_frame_format = parser.optional<TOMLNode>(_gen::keys::Sprite::FrameFormat)())
 		{
-			io::Parser parser(*toml_frame_format);
+			assets::Parser parser(*toml_frame_format);
 			if (auto mode = parser.translate<_gen::rendering::FrameFormat>().optional(_gen::keys::Sprite::Mode)())
 			{
 				switch (*mode)

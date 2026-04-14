@@ -53,7 +53,7 @@ namespace oly::math
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		IRect2D rect;
 		parser.optional(_gen::keys::Rect2D::X1)(rect.x1);
@@ -68,7 +68,7 @@ namespace oly::math
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		Padding padding;
 
@@ -88,7 +88,7 @@ namespace oly::math
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		TopSidePadding padding;
 

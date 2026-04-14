@@ -43,12 +43,12 @@ namespace oly::context
 
 	void internal::init_platform(TOMLNode node)
 	{
-		io::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
+		assets::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
 
 		platform::PlatformSetup platform_setup;
 
 		auto toml_window = top_parser.required<TOMLNode>(_gen::keys::Context::Window)();
-		io::Parser window_parser(toml_window);
+		assets::Parser window_parser(toml_window);
 
 		window_parser.required(_gen::keys::Window::Width)(platform_setup.window_width);
 		window_parser.required(_gen::keys::Window::Height)(platform_setup.window_height);
@@ -56,7 +56,7 @@ namespace oly::context
 
 		if (auto toml_window_hint = window_parser.required<TOMLNode>(_gen::keys::Context::WindowHint)())
 		{
-			io::Parser parser(toml_window_hint, { "(platform init)" });
+			assets::Parser parser(toml_window_hint, { "(platform init)" });
 			parser.optional(_gen::keys::WindowHint::ClearColor)(platform_setup.window_hint.context.clear_color);
 			parser.optional(_gen::keys::WindowHint::SwapInterval)(platform_setup.window_hint.context.swap_interval);
 			parser.optional(_gen::keys::WindowHint::Resizable)(platform_setup.window_hint.window.resizable);
@@ -95,11 +95,11 @@ namespace oly::context
 		bool camera_boxed = true;
 		bool camera_stretch = true;
 
-		if (auto window = io::Parser(node).optional<TOMLNode>(_gen::keys::Context::Window)())
+		if (auto window = assets::Parser(node).optional<TOMLNode>(_gen::keys::Context::Window)())
 		{
-			if (auto viewport = io::Parser(*window).optional<TOMLNode>(_gen::keys::Window::Viewport)())
+			if (auto viewport = assets::Parser(*window).optional<TOMLNode>(_gen::keys::Window::Viewport)())
 			{
-				io::Parser parser(*viewport);
+				assets::Parser parser(*viewport);
 				parser.optional(_gen::keys::Window::Boxed)(camera_boxed);
 				parser.optional(_gen::keys::Window::Stretch)(camera_stretch);
 			}
@@ -145,50 +145,50 @@ namespace oly::context
 		internal::signal_mapping_table.erase(mapping_name.transfer());
 	}
 
-	static void load_modifier_base(input::ModifierBase& modifier, const io::Parser& parser)
+	static void load_modifier_base(input::ModifierBase& modifier, const assets::Parser& parser)
 	{
 		parser.translate<_gen::platform::Swizzle>().optional(_gen::keys::Signal::Swizzle)(modifier.swizzle);
-		parser.optional(_gen::keys::Signal::Multiplier)(io::PartialView(modifier.multiplier));
-		parser.optional(_gen::keys::Signal::Invert)(io::PartialView(modifier.invert));
+		parser.optional(_gen::keys::Signal::Multiplier)(assets::PartialView(modifier.multiplier));
+		parser.optional(_gen::keys::Signal::Invert)(assets::PartialView(modifier.invert));
 	}
 
-	static input::Axis0DModifier load_modifier_0d(const io::Parser& parser)
+	static input::Axis0DModifier load_modifier_0d(const assets::Parser& parser)
 	{
 		input::Axis0DModifier modifier;
 		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
 		{
-			io::Parser parser(*mnode);
+			assets::Parser parser(*mnode);
 			parser.translate<_gen::platform::Axis0DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, parser);
 		}
 		return modifier;
 	}
 
-	static input::Axis1DModifier load_modifier_1d(const io::Parser& parser)
+	static input::Axis1DModifier load_modifier_1d(const assets::Parser& parser)
 	{
 		input::Axis1DModifier modifier;
 		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
 		{
-			io::Parser parser(*mnode);
+			assets::Parser parser(*mnode);
 			parser.translate<_gen::platform::Axis1DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, parser);
 		}
 		return modifier;
 	}
 
-	static input::Axis2DModifier load_modifier_2d(const io::Parser& parser)
+	static input::Axis2DModifier load_modifier_2d(const assets::Parser& parser)
 	{
 		input::Axis2DModifier modifier;
 		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
 		{
-			io::Parser parser(*mnode);
+			assets::Parser parser(*mnode);
 			parser.translate<_gen::platform::Axis2DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, parser);
 		}
 		return modifier;
 	}
 
-	static void load_key_binding(const io::Parser& parser, const std::string& id)
+	static void load_key_binding(const assets::Parser& parser, const std::string& id)
 	{
 		input::KeyBinding b;
 		if (!parser.optional(_gen::keys::Signal::Key)(b.key))
@@ -200,7 +200,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_mouse_button_binding(const io::Parser& parser, const std::string& id)
+	static void load_mouse_button_binding(const assets::Parser& parser, const std::string& id)
 	{
 		input::MouseButtonBinding b;
 		if (!parser.optional(_gen::keys::Signal::Button)(b.button))
@@ -212,7 +212,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_gamepad_button_binding(const io::Parser& parser, const std::string& id)
+	static void load_gamepad_button_binding(const assets::Parser& parser, const std::string& id)
 	{
 		int button;
 		if (!parser.optional(_gen::keys::Signal::Button)(button))
@@ -223,7 +223,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_1d_binding(const io::Parser& parser, const std::string& id)
+	static void load_gamepad_axis_1d_binding(const assets::Parser& parser, const std::string& id)
 	{
 		int axis1d;
 		if (!parser.optional(_gen::keys::Signal::Axis1D)(axis1d))
@@ -235,7 +235,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_gamepad_axis_2d_binding(const io::Parser& parser, const std::string& id)
+	static void load_gamepad_axis_2d_binding(const assets::Parser& parser, const std::string& id)
 	{
 		int axis2d;
 		if (!parser.optional(_gen::keys::Signal::Axis2D)(axis2d))
@@ -247,7 +247,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_cursor_pos_binding(const io::Parser& parser, const std::string& id)
+	static void load_cursor_pos_binding(const assets::Parser& parser, const std::string& id)
 	{
 		input::CursorPosBinding b{};
 		b.modifier = load_modifier_2d(parser);
@@ -255,7 +255,7 @@ namespace oly::context
 		context::input_binding_context().register_signal_binding(context::signal_table().get(id), b);
 	}
 
-	static void load_scroll_binding(const io::Parser& parser, const std::string& id)
+	static void load_scroll_binding(const assets::Parser& parser, const std::string& id)
 	{
 		input::ScrollBinding b{};
 		b.modifier = load_modifier_2d(parser);
@@ -265,7 +265,7 @@ namespace oly::context
 
 	void load_signal(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(_gen::keys::Signal::ID)();
 		switch (parser.translate<_gen::platform::SignalBindingType>().required(_gen::keys::Signal::Binding)())
 		{
@@ -301,7 +301,7 @@ namespace oly::context
 
 	void load_signal_mapping(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(_gen::keys::Signal::ID)();
 		auto toml_signals = parser.required<TOMLArray>(_gen::keys::Signal::MappedSignalList)();
 		std::vector<std::string> signals;
@@ -338,7 +338,7 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(file);
-		io::Parser parser(toml);
+		assets::Parser parser(toml);
 
 		if (LOG.enable.debug)
 		{

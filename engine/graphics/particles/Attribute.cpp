@@ -21,7 +21,7 @@ namespace oly::particles
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = io::Parser(node).translate<_gen::rendering::particles::AttributeOperation>().optional(_gen::keys::ParticleSystem::Operation)())
+		if (auto op = assets::Parser(node).translate<_gen::rendering::particles::AttributeOperation>().optional(_gen::keys::ParticleSystem::Operation)())
 		{
 			switch (*op)
 			{
@@ -43,23 +43,19 @@ namespace oly::particles
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
-			if (auto arr = io::Parser(node).optional<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)())
+			auto arr = assets::Parser(node).required<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)();
+
+			std::vector<Polymorphic<IAttributeOperation>> ops;
+
+			for (size_t i = 0; i < arr->size(); ++i)
 			{
-				std::vector<Polymorphic<IAttributeOperation>> ops;
-
-				for (size_t i = 0; i < arr->size(); ++i)
-				{
-					if (auto subnode = arr->get(i))
-						ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
-					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
-				}
-
-				return make_polymorphic<Sequence<0>>(std::move(ops));
+				if (auto subnode = arr->get(i))
+					ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+				else
+					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
 			}
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing "
-				<< io::key_string(_gen::keys::ParticleSystem::OperationArray) << " field" << LOG.nl;
-			return nullptr;
+
+			return make_polymorphic<Sequence<0>>(std::move(ops));
 		}
 
 		template<size_t N>
@@ -74,43 +70,39 @@ namespace oly::particles
 
 		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
 		{
-			if (auto arr = io::Parser(node).optional<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)())
-			{
-				std::vector<Polymorphic<IAttributeOperation>> ops;
+			auto arr = assets::Parser(node).required<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)();
 
-				for (size_t i = 0; i < arr->size(); ++i)
-					if (auto subnode = arr->get(i))
-						ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+			std::vector<Polymorphic<IAttributeOperation>> ops;
 
-				if (ops.size() == 1)
-					return load_sequence<1>(std::move(ops));
-				else if (ops.size() == 2)
-					return load_sequence<2>(std::move(ops));
-				else if (ops.size() == 3)
-					return load_sequence<3>(std::move(ops));
-				else if (ops.size() == 4)
-					return load_sequence<4>(std::move(ops));
-				else if (ops.size() == 5)
-					return load_sequence<5>(std::move(ops));
-				else if (ops.size() == 6)
-					return load_sequence<6>(std::move(ops));
-				else if (ops.size() == 7)
-					return load_sequence<7>(std::move(ops));
-				else if (ops.size() == 8)
-					return load_sequence<8>(std::move(ops));
-				else
-					return make_polymorphic<Sequence<0>>(std::move(ops));
-			}
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Sequence: missing "
-				<< io::key_string(_gen::keys::ParticleSystem::OperationArray) << " field" << LOG.nl;
-			return nullptr;
+			for (size_t i = 0; i < arr->size(); ++i)
+				if (auto subnode = arr->get(i))
+					ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+
+			if (ops.size() == 1)
+				return load_sequence<1>(std::move(ops));
+			else if (ops.size() == 2)
+				return load_sequence<2>(std::move(ops));
+			else if (ops.size() == 3)
+				return load_sequence<3>(std::move(ops));
+			else if (ops.size() == 4)
+				return load_sequence<4>(std::move(ops));
+			else if (ops.size() == 5)
+				return load_sequence<5>(std::move(ops));
+			else if (ops.size() == 6)
+				return load_sequence<6>(std::move(ops));
+			else if (ops.size() == 7)
+				return load_sequence<7>(std::move(ops));
+			else if (ops.size() == 8)
+				return load_sequence<8>(std::move(ops));
+			else
+				return make_polymorphic<Sequence<0>>(std::move(ops));
 		}
 
 		Polymorphic<Selector> Selector::load(TOMLNode node)
 		{
 			try
 			{
-				io::Parser parser(node);
+				assets::Parser parser(node);
 				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(_gen::keys::ParticleSystem::InnerOperation)),
 					parser.translate<_gen::rendering::particles::SubSelector>().defaulted(_gen::keys::ParticleSystem::Selector)());
 			}

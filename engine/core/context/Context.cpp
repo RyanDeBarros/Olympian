@@ -36,13 +36,13 @@ namespace oly::context
 		std::string resource_root;
 	}
 
-	static void init_logger(const io::Parser& parser)
+	static void init_logger(const assets::Parser& parser)
 	{
 		LoggerOptions options;
 
 		if (auto toml_logger = parser.optional<TOMLNode>(_gen::keys::Context::Logger)())
 		{
-			io::Parser parser(*toml_logger);
+			assets::Parser parser(*toml_logger);
 			parser.optional(_gen::keys::Logger::UseLogfile)(options.use_logfile);
 			parser.optional(_gen::keys::Logger::UseConsole)(options.use_console);
 			parser.optional(_gen::keys::Logger::MaxPriorLogFiles)(options.max_prior_log_files);
@@ -50,7 +50,7 @@ namespace oly::context
 			
 			if (auto logger_enable = parser.optional<TOMLNode>(_gen::keys::Logger::Enable)()) // TODO v7 subparser() to get optional/required parser of subnode
 			{
-				io::Parser parser(*logger_enable);
+				assets::Parser parser(*logger_enable);
 				parser.optional(_gen::keys::Logger::Debug)(LOG.enable.debug);
 				parser.optional(_gen::keys::Logger::Info)(LOG.enable.info);
 				parser.optional(_gen::keys::Logger::Warning)(LOG.enable.warning);
@@ -62,18 +62,18 @@ namespace oly::context
 		oly::internal::LogAccess::start_log(options);
 	}
 
-	static void init_time(const io::Parser& parser)
+	static void init_time(const assets::Parser& parser)
 	{
 		if (auto framerate = parser.optional<TOMLNode>(_gen::keys::Context::FrameRate)())
 		{
-			io::Parser parser(*framerate);
+			assets::Parser parser(*framerate);
 			parser.optional(_gen::keys::FrameRate::FrameLengthClip)(TIME.frame_length_clip);
 			parser.optional(_gen::keys::FrameRate::TimeScale)(TIME.time_scale);
 		}
 		TIME.init();
 	}
 
-	static void autoload_signals(const io::Parser& parser)
+	static void autoload_signals(const assets::Parser& parser)
 	{
 		if (auto register_files = parser.optional<TOMLArray>(_gen::keys::Context::Signals)())
 		{
@@ -105,10 +105,10 @@ namespace oly::context
 		internal::resource_root = resource_root;
 		
 		auto toml = io::load_toml(project_file);
-		io::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
+		assets::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
 		TOMLNode toml_context = project_parser.required<TOMLNode>(_gen::keys::General::Context)();
 
-		io::Parser context_parser(toml_context);
+		assets::Parser context_parser(toml_context);
 
 		init_logger(context_parser);
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();

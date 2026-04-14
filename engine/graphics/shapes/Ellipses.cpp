@@ -385,7 +385,7 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		rendering::Ellipse ellipse;
 		ellipse.set_transformer() = Transformer2D::load(parser.field(_gen::keys::Ellipse::Transformer));

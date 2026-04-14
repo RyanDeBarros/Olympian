@@ -29,9 +29,9 @@ namespace oly::io
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto mnode = io::Parser(node).optional<TOMLNode>(_gen::keys::Transform::Modifier)())
+		if (auto mnode = assets::Parser(node).optional<TOMLNode>(_gen::keys::Transform::Modifier)())
 		{
-			io::Parser parser(*mnode);
+			assets::Parser parser(*mnode);
 
 			if (auto type = parser.translate<_gen::TransformModifier>().optional(_gen::keys::Transform::ModifierType)())
 			{

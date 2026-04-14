@@ -22,7 +22,7 @@ namespace oly::rendering
 
 	ParagraphFormat ParagraphFormat::load(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 
 		ParagraphFormat format;
 

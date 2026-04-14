@@ -3,7 +3,7 @@
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
 
-namespace oly::io::internal
+namespace oly::assets::internal
 {
 	template<>
 	bool try_parse<bool>(TOMLNode node, bool& v)

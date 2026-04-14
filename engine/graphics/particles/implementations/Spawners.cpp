@@ -13,7 +13,7 @@ namespace oly::particles
 
 	void ConstantParticleSpawner::overload(TOMLNode node)
 	{
-		io::Parser(node).optional(_gen::keys::ParticleSystem::Rate)(rate);
+		assets::Parser(node).optional(_gen::keys::ParticleSystem::Rate)(rate);
 	}
 
 	float BurstParticleSpawner::spawn_debt(float time, float delta_time, float period) const
@@ -27,7 +27,7 @@ namespace oly::particles
 
 	void BurstParticleSpawner::overload(TOMLNode node)
 	{
-		io::Parser parser(node);
+		assets::Parser parser(node);
 		parser.optional(_gen::keys::ParticleSystem::Rate)(rate);
 		parser.optional(_gen::keys::ParticleSystem::Duration)(duration);
 		parser.optional(_gen::keys::ParticleSystem::TimeOffset)(time_offset);

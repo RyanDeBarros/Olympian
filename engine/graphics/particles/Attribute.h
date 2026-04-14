@@ -328,7 +328,7 @@ namespace oly::particles
 	public:
 		void overload(TOMLNode node)
 		{
-			io::Parser(node).optional(internal::parse_attribute_value_key())(value);
+			assets::Parser(node).optional(internal::parse_attribute_value_key())(value);
 			if (auto operation = IAttributeOperation::load(node))
 				op = std::move(operation);
 		}

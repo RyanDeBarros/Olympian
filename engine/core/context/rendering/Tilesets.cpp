@@ -52,7 +52,7 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(file);
-		io::Parser parser(toml);
+		assets::Parser parser(toml);
 
 		std::vector<rendering::TileSet::Assignment> assignments;
 		if (auto toml_assignments = parser.optional<TOMLArray>(_gen::keys::TileSet::AssignmentArray)())
@@ -62,7 +62,7 @@ namespace oly::context
 				try
 				{
 					const size_t a_idx = _a_idx++;
-					io::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
+					assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
 
 					const auto texture = parser.required<std::string>(_gen::keys::TileSet::Texture)();
 					const auto config = parser.required<int>(_gen::keys::TileSet::Configuration)();
@@ -91,10 +91,10 @@ namespace oly::context
 						size_t tr_idx = 0;
 						for (auto& trfm : *transformations)
 						{
-							io::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
+							assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
 
 							// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
-							if (auto transformation = tr_parser.translate<_gen::rendering::tileset::Transformation>().optional(io::NO_KEY)())
+							if (auto transformation = tr_parser.translate<_gen::rendering::tileset::Transformation>().optional(assets::NO_KEY)())
 								assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
 
 							++tr_idx;
