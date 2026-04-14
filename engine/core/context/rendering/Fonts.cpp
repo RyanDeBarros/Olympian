@@ -94,13 +94,7 @@ namespace oly::context
 			{
 				const size_t k_idx = _k_idx++;
 				assets::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
-				const auto pair = parser.required<TOMLArray>(_gen::keys::Font::CodepointPair)();
-				// TODO v7 add min/max size parameters to required<TOMLArray>() to auto-log/throw
-				if (pair->size() != 2)
-				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << assets::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array in kerning #" << k_idx << LOG.endl;
-					throw Error(ErrorCode::LoadAsset);
-				}
+				const auto pair = parser.required<TOMLArray>(_gen::keys::Font::CodepointPair)({ .min_size = 2, .max_size = 2 });
 				const auto dist = parser.required<int>(_gen::keys::Font::CodepointDistance)();
 
 				auto tc0 = pair->get_as<std::string>(0);
@@ -192,14 +186,7 @@ namespace oly::context
 
 		// TODO v7 associate certain keys with certain data types to automatically call the correct outer io parse function
 
-		// TODO v7 add min/max size parameters to required<TOMLArray>() to auto-log/throw
-		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)();
-		if (index >= font_atlas_list->size())
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
-				<< ") out of range for " << assets::key_string(_gen::keys::Font::FontAtlasArray) << " array field of size (" << font_atlas_list->size() << ")" << LOG.nl;
-			throw Error(ErrorCode::LoadAsset);
-		}
+		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)({ .min_size = index + 1 });
 
 		auto node = (TOMLNode)*font_atlas_list->get(index);
 		assets::Parser parser(node);
@@ -305,8 +292,7 @@ namespace oly::context
 					codepoint = parse_codepoint(*v);
 				if (codepoint == utf::Codepoint(0))
 				{
-					// TODO v7 let optional(key, conditional) check return so as to auto-log/throw
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot parse " << assets::key_string(_gen::keys::Font::Codepoint) << " field in glyphs array, skipping glyph..." << LOG.endl;
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "codepoint field is zero, skipping glyph..." << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
 
@@ -316,20 +302,13 @@ namespace oly::context
 					texture_file = texture_files[tidx];
 				else
 				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture file indexer (" << tidx << ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.endl;
+					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "texture file indexer (" << tidx << ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
 
 				unsigned int texture_index = parser.defaulted(_gen::keys::Font::TextureIndex)(0u);
 
-				math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location));
-				if (location.x2 <= location.x1 || location.y2 <= location.y1)
-				{
-					// TODO v7 let optional(key, conditional) check return so as to auto-log/throw
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Cannot parse valid " << assets::key_string(_gen::keys::Font::Location) << " field, skipping glyph..." << LOG.endl;
-					throw Error(ErrorCode::LoadAsset);
-				}
-
+				math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location), true);
 				math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
 				math::PositioningMode origin_offset_mode = parser.translate<_gen::PositioningMode>().defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
 				glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();

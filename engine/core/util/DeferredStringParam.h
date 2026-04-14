@@ -45,7 +45,7 @@ namespace oly
 			else if (strings.size() > 1)
 			{
 				data = std::vector<StringParam>();
-				for (const std::string& string : strings)
+				for (std::string& string : strings)
 					get_list().push_back(std::move(string));
 			}
 			else

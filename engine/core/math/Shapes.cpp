@@ -4,6 +4,7 @@
 #include "core/types/Approximate.h"
 #include "core/base/Transforms.h"
 #include "core/util/Parser.h"
+#include "core/util/Logger.h"
 
 #include ".gen/keys/Rect2D.inl"
 #include ".gen/keys/Padding.inl"
@@ -48,7 +49,7 @@ namespace oly::math
 		return points;
 	}
 
-	IRect2D IRect2D::load(TOMLNode node)
+	IRect2D IRect2D::load(TOMLNode node, bool validate)
 	{
 		if (!node)
 			return {};
@@ -60,6 +61,16 @@ namespace oly::math
 		parser.optional(_gen::keys::Rect2D::X2)(rect.x2);
 		parser.optional(_gen::keys::Rect2D::Y1)(rect.y1);
 		parser.optional(_gen::keys::Rect2D::Y2)(rect.y2);
+
+		if (validate)
+		{
+			if (rect.x2 <= rect.x1 || rect.y2 <= rect.y1)
+			{
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << "cannot parse IRect2D (x1=" << rect.x1 << ";x2=" << rect.x2 << ";y1=" << rect.y1 << ";y2=" << rect.y2 << ") - invalid bounds" << LOG.endl;
+				throw Error(ErrorCode::LoadAsset);
+			}
+		}
+
 		return rect;
 	}
 

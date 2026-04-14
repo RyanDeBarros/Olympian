@@ -73,6 +73,9 @@ namespace oly::assets
 		ErrorCode error_code;
 		bool fatal;
 
+		// TODO v7 refactor common parsing logic
+		// TODO v7 simplify logging
+
 		template<typename Key>
 		DeferredStringList get_message(Key key) const
 		{
@@ -83,15 +86,36 @@ namespace oly::assets
 		}
 
 		template<typename Key>
+		DeferredStringList get_message(Key key, DeferredStringList&& restriction_msg) const
+		{
+			if constexpr (std::is_same_v<Key, NoKey>)
+				return DeferredStringList{ "cannot parse field " } << std::move(restriction_msg) << DeferredStringList{ log_suffix.empty() ? "" : " " } << log_suffix;
+			else
+				return DeferredStringList{ "cannot parse ", key_string(key), " field " } << std::move(restriction_msg) << DeferredStringList{ log_suffix.empty() ? "" : " " } << log_suffix;
+		}
+
+		template<typename Key>
 		void log_warning(Key key, std::source_location location) const
 		{
 			internal::log_context_at_level(LogLevel::Warning, get_message(key), location);
 		}
 
 		template<typename Key>
+		void log_warning(Key key, DeferredStringList&& restriction_msg, std::source_location location) const
+		{
+			internal::log_context_at_level(LogLevel::Warning, get_message(key, std::move(restriction_msg)), location);
+		}
+
+		template<typename Key>
 		void log_error(Key key, std::source_location location) const
 		{
 			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key), location);
+		}
+
+		template<typename Key>
+		void log_error(Key key, DeferredStringList&& restriction_msg, std::source_location location) const
+		{
+			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key, std::move(restriction_msg)), location);
 		}
 
 		template<typename Key, typename Index>
@@ -281,7 +305,7 @@ namespace oly::assets
 					{
 						Predefined obj;
 						if (internal::try_parse<Predefined>(value, obj))
-							return std::move(obj);
+							return obj;
 					}
 
 					parser.log_warning(key, location);
@@ -459,6 +483,49 @@ namespace oly::assets
 					Predefined obj;
 					if (internal::try_parse<Predefined>(parser.field(key), obj))
 						return obj;
+				}
+
+				parser.log_error(key, location);
+				throw Error(parser.error_code);
+			}
+		};
+
+		template<typename Key>
+		struct Required<Key, TOMLArray, void>
+		{
+			const Parser& parser;
+			Key key;
+
+		public:
+			Required(const Parser& parser, Key key) : parser(parser), key(key) {}
+
+			TOMLArray operator()(std::source_location location = std::source_location::current()) const
+			{
+				TOMLArray obj;
+				if (internal::try_parse<TOMLArray>(parser.field(key), obj))
+					return obj;
+
+				parser.log_error(key, location);
+				throw Error(parser.error_code);
+			}
+
+			struct Restriction
+			{
+				size_t min_size = 0;
+				size_t max_size = nmax<size_t>();
+			};
+
+			TOMLArray operator()(Restriction restriction, std::source_location location = std::source_location::current()) const
+			{
+				TOMLArray obj;
+				if (internal::try_parse<TOMLArray>(parser.field(key), obj))
+				{
+					if (obj->size() >= restriction.min_size && obj->size() <= restriction.max_size)
+						return obj;
+					else
+					{
+						parser.log_error(key, DeferredStringList{ "-> out of range [", std::to_string(restriction.min_size), ", ", std::to_string(restriction.max_size), "]"}, location);
+					}
 				}
 
 				parser.log_error(key, location);
