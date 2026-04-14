@@ -145,7 +145,7 @@ namespace oly::io
 						parser.log_warning(key, location);
 				}
 
-				return def;
+				return std::move(def);
 			}
 		};
 
@@ -169,7 +169,7 @@ namespace oly::io
 						parser.log_warning(key, location);
 				}
 
-				return def;
+				return std::move(def);
 			}
 		};
 
@@ -194,7 +194,7 @@ namespace oly::io
 						parser.log_warning(key, location);
 				}
 
-				return def;
+				return std::move(def);
 			}
 		};
 
@@ -219,7 +219,7 @@ namespace oly::io
 					{
 						try
 						{
-							obj = Translator::val(index);
+							obj = std::move(Translator::val(index));
 							return true;
 						}
 						catch (const std::out_of_range&)
@@ -243,7 +243,7 @@ namespace oly::io
 					{
 						try
 						{
-							return Translator::val(index);
+							return std::move(Translator::val(index));
 						}
 						catch (const std::out_of_range&)
 						{
@@ -279,7 +279,7 @@ namespace oly::io
 					{
 						Predefined obj;
 						if (internal::try_parse<Predefined>(value, obj))
-							return obj;
+							return std::move(obj);
 					}
 
 					parser.log_warning(key, location);
@@ -303,7 +303,7 @@ namespace oly::io
 				{
 					TOMLArray obj;
 					if (internal::try_parse<TOMLArray>(value, obj))
-						return obj;
+						return std::move(obj);
 
 					parser.log_warning(key, location);
 				}
@@ -327,8 +327,8 @@ namespace oly::io
 				{
 					if constexpr (std::is_same_v<T, TOMLNode>)
 					{
-						obj = value;
-						return true;;
+						obj = std::move(value);
+						return true;
 					}
 					else
 					{
@@ -352,14 +352,12 @@ namespace oly::io
 					T o;
 					if (internal::try_parse<T>(value, o))
 					{
-						obj = o; // TODO v7 throughout parser, use std::move()
+						obj = std::move(o);
 						return true;
 					}
-					else
-					{
-						parser.log_warning(key, location);
-						return false;
-					}
+
+					parser.log_warning(key, location);
+					return false;
 				}
 				else
 					return false;
@@ -369,7 +367,7 @@ namespace oly::io
 			{
 				if (auto value = parser.field(key))
 				{
-					obj = value;
+					obj = std::move(value);
 					return true;
 				}
 				else
@@ -381,7 +379,7 @@ namespace oly::io
 				obj = std::nullopt;
 				if (auto value = parser.field(key))
 				{
-					obj = value;
+					obj = std::move(value);
 					return true;
 				}
 				else
@@ -425,7 +423,7 @@ namespace oly::io
 				{
 					try
 					{
-						return Translator::val(index);
+						return std::move(Translator::val(index));
 					}
 					catch (const std::out_of_range&)
 					{
@@ -452,13 +450,13 @@ namespace oly::io
 				if constexpr (std::is_same_v<Predefined, TOMLNode>)
 				{
 					if (auto value = parser.field(key))
-						return value;
+						return std::move(value);
 				}
 				else
 				{
 					Predefined obj;
 					if (internal::try_parse<Predefined>(parser.field(key), obj))
-						return obj;
+						return std::move(obj);
 				}
 
 				parser.log_error(key, location);
@@ -482,7 +480,7 @@ namespace oly::io
 				{
 					if (auto value = parser.field(key))
 					{
-						obj = value;
+						obj = std::move(value);
 						return;
 					}
 				}
