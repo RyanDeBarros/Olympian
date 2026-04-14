@@ -40,22 +40,20 @@ namespace oly::context
 	{
 		LoggerOptions options;
 
-		if (auto toml_logger = parser.optional<TOMLNode>(_gen::keys::Context::Logger)())
+		if (auto logger_parser = parser.optional(_gen::keys::Context::Logger).subparser())
 		{
-			assets::Parser parser(*toml_logger);
-			parser.optional(_gen::keys::Logger::UseLogfile)(options.use_logfile);
-			parser.optional(_gen::keys::Logger::UseConsole)(options.use_console);
-			parser.optional(_gen::keys::Logger::MaxPriorLogFiles)(options.max_prior_log_files);
-			parser.optional(_gen::keys::Logger::MaxPriorLogBytes)(options.max_prior_log_bytes);
+			logger_parser->optional(_gen::keys::Logger::UseLogfile)(options.use_logfile);
+			logger_parser->optional(_gen::keys::Logger::UseConsole)(options.use_console);
+			logger_parser->optional(_gen::keys::Logger::MaxPriorLogFiles)(options.max_prior_log_files);
+			logger_parser->optional(_gen::keys::Logger::MaxPriorLogBytes)(options.max_prior_log_bytes);
 			
-			if (auto logger_enable = parser.optional<TOMLNode>(_gen::keys::Logger::Enable)()) // TODO v7 subparser() to get optional/required parser of subnode
+			if (auto enables_parser = logger_parser->optional(_gen::keys::Logger::Enable).subparser())
 			{
-				assets::Parser parser(*logger_enable);
-				parser.optional(_gen::keys::Logger::Debug)(LOG.enable.debug);
-				parser.optional(_gen::keys::Logger::Info)(LOG.enable.info);
-				parser.optional(_gen::keys::Logger::Warning)(LOG.enable.warning);
-				parser.optional(_gen::keys::Logger::Error)(LOG.enable.error);
-				parser.optional(_gen::keys::Logger::Fatal)(LOG.enable.fatal);
+				enables_parser->optional(_gen::keys::Logger::Debug)(LOG.enable.debug);
+				enables_parser->optional(_gen::keys::Logger::Info)(LOG.enable.info);
+				enables_parser->optional(_gen::keys::Logger::Warning)(LOG.enable.warning);
+				enables_parser->optional(_gen::keys::Logger::Error)(LOG.enable.error);
+				enables_parser->optional(_gen::keys::Logger::Fatal)(LOG.enable.fatal);
 			}
 		}
 
@@ -64,11 +62,10 @@ namespace oly::context
 
 	static void init_time(const assets::Parser& parser)
 	{
-		if (auto framerate = parser.optional<TOMLNode>(_gen::keys::Context::FrameRate)())
+		if (auto framerate_parser = parser.optional(_gen::keys::Context::FrameRate).subparser())
 		{
-			assets::Parser parser(*framerate);
-			parser.optional(_gen::keys::FrameRate::FrameLengthClip)(TIME.frame_length_clip);
-			parser.optional(_gen::keys::FrameRate::TimeScale)(TIME.time_scale);
+			framerate_parser->optional(_gen::keys::FrameRate::FrameLengthClip)(TIME.frame_length_clip);
+			framerate_parser->optional(_gen::keys::FrameRate::TimeScale)(TIME.time_scale);
 		}
 		TIME.init();
 	}

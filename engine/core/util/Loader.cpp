@@ -27,13 +27,12 @@ namespace oly::io
 		}
 	}
 
+	// TODO v7 move to TransformModifier2D::load()
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto mnode = assets::Parser(node).optional<TOMLNode>(_gen::keys::Transform::Modifier)())
+		if (auto parser = assets::Parser(node).optional(_gen::keys::Transform::Modifier).subparser())
 		{
-			assets::Parser parser(*mnode);
-
-			if (auto type = parser.translate<_gen::TransformModifier>().optional(_gen::keys::Transform::ModifierType)())
+			if (auto type = parser->translate<_gen::TransformModifier>().optional(_gen::keys::Transform::ModifierType)())
 			{
 				switch (*type)
 				{
@@ -42,20 +41,20 @@ namespace oly::io
 				case TransformModifierType::Shear:
 				{
 					Polymorphic<ShearTransformModifier2D> modifier;
-					parser.optional(_gen::keys::Transform::Shearing)(modifier->shearing);
+					parser->optional(_gen::keys::Transform::Shearing)(modifier->shearing);
 					return modifier;
 				}
 				case TransformModifierType::Pivot:
 				{
 					Polymorphic<PivotTransformModifier2D> modifier;
-					parser.optional(_gen::keys::Transform::Pivot)(modifier->pivot);
-					parser.optional(_gen::keys::Transform::Size)(modifier->size);
+					parser->optional(_gen::keys::Transform::Pivot)(modifier->pivot);
+					parser->optional(_gen::keys::Transform::Size)(modifier->size);
 					return modifier;
 				}
 				case TransformModifierType::Offset:
 				{
 					Polymorphic<OffsetTransformModifier2D> modifier;
-					parser.optional(_gen::keys::Transform::Offset)(modifier->offset);
+					parser->optional(_gen::keys::Transform::Offset)(modifier->offset);
 					return modifier;
 				}
 				}

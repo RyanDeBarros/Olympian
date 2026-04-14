@@ -731,10 +731,9 @@ namespace oly::rendering
 				parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
 				// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
-				if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
+				if (auto bp_parser = parser.optional(_gen::keys::Polygon::BorderPivot).subparser())
 				{
-					assets::Parser parser(*border_pivot);
-					if (auto bp = parser.optional<unsigned int>(assets::NO_KEY)())
+					if (auto bp = bp_parser->optional<unsigned int>(assets::NO_KEY)())
 					{
 						try
 						{
@@ -746,7 +745,7 @@ namespace oly::rendering
 						}
 					}
 					else
-						parser.optional(assets::NO_KEY)(ngon_base.border_pivot.v);
+						bp_parser->optional(assets::NO_KEY)(ngon_base.border_pivot.v);
 				}
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -880,10 +879,9 @@ namespace oly::rendering
 		parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
 		// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
-		if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
+		if (auto bp_parser = parser.optional(_gen::keys::Polygon::BorderPivot).subparser())
 		{
-			assets::Parser parser(*border_pivot);
-			if (auto bp = parser.optional<unsigned int>(assets::NO_KEY)())
+			if (auto bp = bp_parser->optional<unsigned int>(assets::NO_KEY)())
 			{
 				try
 				{
@@ -895,7 +893,7 @@ namespace oly::rendering
 				}
 			}
 			else
-				parser.optional(assets::NO_KEY)(ngon_base.border_pivot.v);
+				bp_parser->optional(assets::NO_KEY)(ngon_base.border_pivot.v);
 		}
 
 		polygon.set_base() = std::move(ngon_base);

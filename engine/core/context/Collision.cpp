@@ -15,11 +15,9 @@ namespace oly::context
 	
 	void internal::init_collision(TOMLNode node)
 	{
-		if (auto collision_node = assets::Parser(node).optional<TOMLNode>(_gen::keys::Context::Collision)())
+		if (auto parser = assets::Parser(node).optional(_gen::keys::Context::Collision).subparser())
 		{
-			assets::Parser parser(*collision_node);
-
-			if (auto masks = parser.optional<TOMLArray>(_gen::keys::Collision::Masks)())
+			if (auto masks = parser->optional<TOMLArray>(_gen::keys::Collision::Masks)())
 			{
 				for (int i = 0; i < std::min((int)masks->size(), 32); ++i)
 				{
@@ -30,7 +28,7 @@ namespace oly::context
 				}
 			}
 
-			if (auto layers = parser.optional<TOMLArray>(_gen::keys::Collision::Layers)())
+			if (auto layers = parser->optional<TOMLArray>(_gen::keys::Collision::Layers)())
 			{
 				for (int i = 0; i < std::min((int)layers->size(), 32); ++i)
 				{

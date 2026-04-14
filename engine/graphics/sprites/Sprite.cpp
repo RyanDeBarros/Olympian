@@ -46,23 +46,22 @@ namespace oly::rendering
 		if (auto uvs = parser.optional<glm::vec4>(_gen::keys::Sprite::TextureCoordinates)())
 			sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
 
-		if (auto toml_frame_format = parser.optional<TOMLNode>(_gen::keys::Sprite::FrameFormat)())
+		if (auto ff_parser = parser.optional(_gen::keys::Sprite::FrameFormat).subparser())
 		{
-			assets::Parser parser(*toml_frame_format);
-			if (auto mode = parser.translate<_gen::rendering::FrameFormat>().optional(_gen::keys::Sprite::Mode)())
+			if (auto mode = ff_parser->translate<_gen::rendering::FrameFormat>().optional(_gen::keys::Sprite::Mode)())
 			{
 				switch (*mode)
 				{
 				case FrameFormat::Single:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, parser.defaulted(_gen::keys::Sprite::Frame)(0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, ff_parser->defaulted(_gen::keys::Sprite::Frame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
 					break;
 				case FrameFormat::Auto:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, parser.defaulted(_gen::keys::Sprite::Speed)(1.f),
-							parser.defaulted(_gen::keys::Sprite::StartingFrame)(0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, ff_parser->defaulted(_gen::keys::Sprite::Speed)(1.f),
+							ff_parser->defaulted(_gen::keys::Sprite::StartingFrame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
 					break;
@@ -71,10 +70,10 @@ namespace oly::rendering
 			else
 			{
 				sprite.set_frame_format({
-					.starting_frame = parser.defaulted(_gen::keys::Sprite::StartingFrame)(0u),
-					.num_frames = parser.defaulted(_gen::keys::Sprite::NumFrames)(0u),
-					.starting_time = parser.defaulted(_gen::keys::Sprite::StartingTime)(0.f),
-					.delay_seconds = parser.defaulted(_gen::keys::Sprite::DelaySeconds)(0.f)
+					.starting_frame = ff_parser->defaulted(_gen::keys::Sprite::StartingFrame)(0u),
+					.num_frames = ff_parser->defaulted(_gen::keys::Sprite::NumFrames)(0u),
+					.starting_time = ff_parser->defaulted(_gen::keys::Sprite::StartingTime)(0.f),
+					.delay_seconds = ff_parser->defaulted(_gen::keys::Sprite::DelaySeconds)(0.f)
 					});
 			};
 		}

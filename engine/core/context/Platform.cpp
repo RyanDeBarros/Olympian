@@ -95,13 +95,12 @@ namespace oly::context
 		bool camera_boxed = true;
 		bool camera_stretch = true;
 
-		if (auto window = assets::Parser(node).optional<TOMLNode>(_gen::keys::Context::Window)())
+		if (auto window_parser = assets::Parser(node).optional(_gen::keys::Context::Window).subparser())
 		{
-			if (auto viewport = assets::Parser(*window).optional<TOMLNode>(_gen::keys::Window::Viewport)())
+			if (auto viewport_parser = window_parser->optional(_gen::keys::Window::Viewport).subparser())
 			{
-				assets::Parser parser(*viewport);
-				parser.optional(_gen::keys::Window::Boxed)(camera_boxed);
-				parser.optional(_gen::keys::Window::Stretch)(camera_stretch);
+				viewport_parser->optional(_gen::keys::Window::Boxed)(camera_boxed);
+				viewport_parser->optional(_gen::keys::Window::Stretch)(camera_stretch);
 			}
 		}
 		
@@ -155,11 +154,10 @@ namespace oly::context
 	static input::Axis0DModifier load_modifier_0d(const assets::Parser& parser)
 	{
 		input::Axis0DModifier modifier;
-		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
+		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			assets::Parser parser(*mnode);
-			parser.translate<_gen::platform::Axis0DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
-			load_modifier_base(modifier, parser);
+			mod_parser->translate<_gen::platform::Axis0DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
 	}
@@ -167,11 +165,10 @@ namespace oly::context
 	static input::Axis1DModifier load_modifier_1d(const assets::Parser& parser)
 	{
 		input::Axis1DModifier modifier;
-		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
+		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			assets::Parser parser(*mnode);
-			parser.translate<_gen::platform::Axis1DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
-			load_modifier_base(modifier, parser);
+			mod_parser->translate<_gen::platform::Axis1DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
 	}
@@ -179,11 +176,10 @@ namespace oly::context
 	static input::Axis2DModifier load_modifier_2d(const assets::Parser& parser)
 	{
 		input::Axis2DModifier modifier;
-		if (auto mnode = parser.optional<TOMLNode>(_gen::keys::Signal::Modifier)())
+		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			assets::Parser parser(*mnode);
-			parser.translate<_gen::platform::Axis2DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
-			load_modifier_base(modifier, parser);
+			mod_parser->translate<_gen::platform::Axis2DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
 	}

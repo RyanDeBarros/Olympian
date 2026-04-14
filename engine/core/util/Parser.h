@@ -272,7 +272,7 @@ namespace oly::assets
 					{
 						try
 						{
-							obj = std::move(Translator::val(index));
+							obj = Translator::val(index);
 							return true;
 						}
 						catch (const std::out_of_range&)
@@ -296,7 +296,7 @@ namespace oly::assets
 					{
 						try
 						{
-							return std::move(Translator::val(index));
+							return Translator::val(index);
 						}
 						catch (const std::out_of_range&)
 						{
@@ -468,6 +468,8 @@ namespace oly::assets
 				else
 					return false;
 			}
+
+			std::optional<Parser> subparser() const;
 		};
 
 		template<typename Key, typename Predefined, typename Translator>
@@ -485,7 +487,7 @@ namespace oly::assets
 				{
 					try
 					{
-						return std::move(Translator::val(index));
+						return Translator::val(index);
 					}
 					catch (const std::out_of_range&)
 					{
@@ -647,4 +649,13 @@ namespace oly::assets
 				return node[internal::translate_key(key)];
 		}
 	};
+
+	template<typename Key>
+	std::optional<Parser> Parser::Optional<Key, void, void>::subparser() const
+	{
+		if (auto value = this->field())
+			return Parser(value, this->parser.log_suffix, this->parser.error_code, this->parser.fatal);
+		else
+			return std::nullopt;
+	}
 }
