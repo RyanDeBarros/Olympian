@@ -64,6 +64,13 @@ namespace oly::assets
 		bool try_parse(TOMLNode node, PartialView<T> obj);
 
 		extern void log_context_at_level(LogLevel level, const DeferredStringParam& msg, std::source_location location);
+
+		namespace fail_causes
+		{
+			constexpr const char* CANNOT_PARSE = "cannot parse";
+			constexpr const char* INVALID_ARRAY_ELEMENT = "skipping invalid array element in";
+			constexpr const char* FAILED_RESTRICTION = "failed restriction for";
+		}
 	}
 
 	class Parser
@@ -74,69 +81,41 @@ namespace oly::assets
 		bool fatal;
 
 		// TODO v7 refactor common parsing logic
-		// TODO v7 simplify logging
 
 		template<typename Key>
-		DeferredStringList get_message(Key key) const
+		DeferredStringList build_message(Key key, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
 		{
+			DeferredStringList list{ cause.transfer(), " " };
+			
 			if constexpr (std::is_same_v<Key, NoKey>)
-				return DeferredStringList{ "cannot parse field", log_suffix.empty() ? "" : " " } << log_suffix;
+				list << "field";
 			else
-				return DeferredStringList{ "cannot parse ", key_string(key), " field", log_suffix.empty() ? "" : " " } << log_suffix;
+				list << key_string(key) << " field";
+			
+			if (!elaboration.empty())
+				list << " " << std::move(elaboration);
+
+			if (!log_suffix.empty())
+				list << " " << log_suffix;
+
+			return list;
 		}
 
 		template<typename Key>
-		DeferredStringList get_message(Key key, DeferredStringList&& restriction_msg) const
+		void log_at_level(LogLevel level, std::source_location location, Key key,
+			const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
 		{
-			if constexpr (std::is_same_v<Key, NoKey>)
-				return DeferredStringList{ "cannot parse field " } << std::move(restriction_msg) << DeferredStringList{ log_suffix.empty() ? "" : " " } << log_suffix;
-			else
-				return DeferredStringList{ "cannot parse ", key_string(key), " field " } << std::move(restriction_msg) << DeferredStringList{ log_suffix.empty() ? "" : " " } << log_suffix;
-		}
-
-		template<typename Key>
-		void log_warning(Key key, std::source_location location) const
-		{
-			internal::log_context_at_level(LogLevel::Warning, get_message(key), location);
-		}
-
-		template<typename Key>
-		void log_warning(Key key, DeferredStringList&& restriction_msg, std::source_location location) const
-		{
-			internal::log_context_at_level(LogLevel::Warning, get_message(key, std::move(restriction_msg)), location);
-		}
-
-		template<typename Key>
-		void log_error(Key key, std::source_location location) const
-		{
-			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key), location);
-		}
-
-		template<typename Key>
-		void log_error(Key key, DeferredStringList&& restriction_msg, std::source_location location) const
-		{
-			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key, std::move(restriction_msg)), location);
+			if ((int)level >= (int)LogLevel::Error && fatal)
+				level = LogLevel::Fatal;
+			internal::log_context_at_level(level, build_message(key, cause.transfer(), std::move(elaboration)), location);
 		}
 
 		template<typename Key, typename Index>
-		DeferredStringList get_message(Key key, Index e) const
+		void log_at_level(LogLevel level, std::source_location location, Key key, Index e)
 		{
-			if constexpr (std::is_same_v<Key, NoKey>)
-				return DeferredStringList{ "unrecognized enum (", std::to_string(e), ")", log_suffix.empty() ? "" : " " } << log_suffix;
-			else
-				return DeferredStringList{ "unrecognized ", key_string(key), " enum (", std::to_string(e), ")", log_suffix.empty() ? "" : " " } << log_suffix;
-		}
-
-		template<typename Key, typename Index>
-		void log_warning(Key key, Index e, std::source_location location) const
-		{
-			internal::log_context_at_level(LogLevel::Warning, get_message(key, e), location);
-		}
-
-		template<typename Key, typename Index>
-		void log_error(Key key, Index e, std::source_location location) const
-		{
-			internal::log_context_at_level(fatal ? LogLevel::Fatal : LogLevel::Error, get_message(key, e), location);
+			if ((int)level >= (int)LogLevel::Error && fatal)
+				level = LogLevel::Fatal;
+			internal::log_context_at_level(level, build_message(key, DeferredStringList{ "unrecognized enum (", std::to_string(e), ") in"}.str()), location);
 		}
 
 		template<typename Key, typename Predefined, typename Translator>
@@ -164,11 +143,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_warning(key, index, location);
+							parser.log_at_level(LogLevel::Warning, location, key, index);
 						}
 					}
 					else
-						parser.log_warning(key, location);
+						parser.log_at_level(LogLevel::Warning, location, key);
 				}
 
 				return std::move(def);
@@ -192,7 +171,7 @@ namespace oly::assets
 				if (auto value = parser.field(key))
 				{
 					if (!internal::try_parse<Predefined>(value, def))
-						parser.log_warning(key, location);
+						parser.log_at_level(LogLevel::Warning, location, key);
 				}
 
 				return std::move(def);
@@ -223,14 +202,13 @@ namespace oly::assets
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
 								obj.push_back(el);
 							else
-								parser.log_warning(key, location); // TODO v7 once logging is simplified, log this new kind of warning
-							//_OLY_ENGINE_LOG_WARNING("CONTEXT") << "invalid entry in " << key_string(key) << " array - skipping element" << LOG.nl;
+								parser.log_at_level(LogLevel::Warning, location, key, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
 
 						return obj;
 					}
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 				}
 				return {};
 			}
@@ -254,7 +232,7 @@ namespace oly::assets
 				if (auto value = parser.field(key))
 				{
 					if (!internal::try_parse<T>(value, def))
-						parser.log_warning(key, location);
+						parser.log_at_level(LogLevel::Warning, location, key);
 				}
 
 				return std::move(def);
@@ -287,11 +265,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_warning(key, index, location);
+							parser.log_at_level(LogLevel::Warning, location, key, index);
 						}
 					}
 					else
-						parser.log_warning(key, location);
+						parser.log_at_level(LogLevel::Warning, location, key);
 				}
 
 				return false;
@@ -310,11 +288,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_warning(key, index, location);
+							parser.log_at_level(LogLevel::Warning, location, key, index);
 						}
 					}
 					else
-						parser.log_warning(key, location);
+						parser.log_at_level(LogLevel::Warning, location, key);
 				}
 
 				return std::nullopt;
@@ -345,7 +323,7 @@ namespace oly::assets
 							return obj;
 					}
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 				}
 				return std::nullopt;
 			}
@@ -368,7 +346,7 @@ namespace oly::assets
 					if (internal::try_parse<TOMLArray>(value, obj))
 						return obj;
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 				}
 				return nullptr;
 			}
@@ -399,7 +377,7 @@ namespace oly::assets
 							return true;
 					}
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 					return false;
 				}
 				else
@@ -419,7 +397,7 @@ namespace oly::assets
 						return true;
 					}
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 					return false;
 				}
 				else
@@ -442,14 +420,13 @@ namespace oly::assets
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
 								obj.push_back(el);
 							else
-								parser.log_warning(key, location); // TODO v7 once logging is simplified, log this new kind of warning
-								//_OLY_ENGINE_LOG_WARNING("CONTEXT") << "invalid entry in " << key_string(key) << " array - skipping element" << LOG.nl;
+								parser.log_at_level(LogLevel::Warning, location, key, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
 
 						return true;
 					}
 
-					parser.log_warning(key, location);
+					parser.log_at_level(LogLevel::Warning, location, key);
 				}
 				return false;
 			}
@@ -484,11 +461,9 @@ namespace oly::assets
 				{
 					if (internal::try_parse<T>(value, obj))
 						return true;
-					else
-					{
-						parser.log_warning(key, location);
-						return false;
-					}
+
+					parser.log_at_level(LogLevel::Warning, location, key);
+					return false;
 				}
 				else
 					return false;
@@ -518,11 +493,11 @@ namespace oly::assets
 					}
 					catch (const std::out_of_range&)
 					{
-						parser.log_error(key, index, location);
+						parser.log_at_level(LogLevel::Error, location, key, index);
 					}
 				}
 				else
-					parser.log_error(key, location);
+					parser.log_at_level(LogLevel::Error, location, key);
 				throw Error(parser.error_code);
 			}
 		};
@@ -550,7 +525,7 @@ namespace oly::assets
 						return obj;
 				}
 
-				parser.log_error(key, location);
+				parser.log_at_level(LogLevel::Error, location, key);
 				throw Error(parser.error_code);
 			}
 		};
@@ -570,7 +545,7 @@ namespace oly::assets
 				if (internal::try_parse<TOMLArray>(parser.field(key), obj))
 					return obj;
 
-				parser.log_error(key, location);
+				parser.log_at_level(LogLevel::Error, location, key);
 				throw Error(parser.error_code);
 			}
 
@@ -589,11 +564,12 @@ namespace oly::assets
 						return obj;
 					else
 					{
-						parser.log_error(key, DeferredStringList{ "-> out of range [", std::to_string(restriction.min_size), ", ", std::to_string(restriction.max_size), "]"}, location);
+						parser.log_at_level(LogLevel::Error, location, key, internal::fail_causes::FAILED_RESTRICTION,
+							DeferredStringList{ "-> out of range [", std::to_string(restriction.min_size), ", ", std::to_string(restriction.max_size), "]"});
 					}
 				}
 
-				parser.log_error(key, location);
+				parser.log_at_level(LogLevel::Error, location, key);
 				throw Error(parser.error_code);
 			}
 		};
@@ -624,7 +600,7 @@ namespace oly::assets
 						return;
 				}
 
-				parser.log_error(key, location);
+				parser.log_at_level(LogLevel::Error, location, key);
 				throw Error(parser.error_code);
 			}
 		};

@@ -6,6 +6,7 @@
 
 namespace oly
 {
+	// TODO v7 wrap vector instead of simple typedef, to not clash the operator<<s
 	using DeferredStringList = std::vector<std::string>;
 
 	class DeferredStringParam
@@ -174,6 +175,18 @@ namespace oly
 		return list;
 	}
 
+	inline DeferredStringList& operator<<(DeferredStringList& list, const std::string& str)
+	{
+		list.push_back(str);
+		return list;
+	}
+
+	inline DeferredStringList& operator<<(DeferredStringList& list, std::string&& str)
+	{
+		list.push_back(std::move(str));
+		return list;
+	}
+
 	inline DeferredStringList operator<<(DeferredStringList&& list, const DeferredStringParam& param)
 	{
 		if (const StringParam* string = param.data.safe_get<StringParam>())
@@ -195,6 +208,18 @@ namespace oly
 			for (StringParam& string : param.get_list())
 				list.push_back(string.transfer());
 		}
+		return std::move(list);
+	}
+
+	inline DeferredStringList operator<<(DeferredStringList&& list, const std::string& str)
+	{
+		list.push_back(str);
+		return std::move(list);
+	}
+
+	inline DeferredStringList operator<<(DeferredStringList&& list, std::string&& str)
+	{
+		list.push_back(std::move(str));
 		return std::move(list);
 	}
 }
