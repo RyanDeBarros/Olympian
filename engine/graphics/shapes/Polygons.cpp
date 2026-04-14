@@ -6,7 +6,7 @@
 #include "core/math/Triangulation.h"
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "graphics/shapes/Definitions.h"
 
 #include ".gen/keys/Polygon.inl"
@@ -512,18 +512,19 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		Polygon polygon;
 
-		polygon.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
 
 		std::vector<glm::vec2> points;
-		auto toml_points = io::parse_key(node, _gen::keys::Polygon::PointsArray).as_array();
-		if (toml_points)
+		if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
+				if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
 					points.push_back(*pt);
 				++pt_idx;
 			}
@@ -531,20 +532,19 @@ namespace oly::rendering
 		polygon.set_points() = std::move(points);
 
 		std::vector<glm::vec4> colors;
-		auto toml_colors = io::parse_key(node, _gen::keys::Polygon::ColorsArray).as_array();
-		if (toml_colors)
+		if (auto toml_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::ColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse color #", color_idx }))
+				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 					colors.push_back(*col);
 				++color_idx;
 			}
 		}
 		polygon.set_colors() = std::move(colors);
 
-		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -652,37 +652,37 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		PolyComposite polygon;
 
-		polygon.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
 
-		if (auto method = io::parse_enum<_gen::rendering::shapes::PolyCompositeMethod>(node, _gen::keys::Polygon::Method))
+		if (auto method = parser.translate<_gen::rendering::shapes::PolyCompositeMethod>().optional(_gen::keys::Polygon::Method)())
 		{
 			switch (*method)
 			{
 			case PolyCompositeMethod::Ngon:
 			{
 				std::vector<glm::vec2> points;
-				auto toml_points = io::parse_key(node, _gen::keys::Polygon::PointsArray).as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
+						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
 							points.push_back(*pt);
 						++pt_idx;
 					}
 				}
 
 				std::vector<glm::vec4> colors;
-				auto toml_fill_colors = io::parse_key(node, _gen::keys::Polygon::ColorsArray).as_array();
-				if (toml_fill_colors)
+				if (auto toml_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::ColorsArray)())
 				{
 					size_t color_idx = 0;
-					for (auto& toml_color : *toml_fill_colors)
+					for (auto& toml_color : *toml_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse color #", color_idx }))
+						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 							colors.push_back(*col);
 						++color_idx;
 					}
@@ -695,47 +695,46 @@ namespace oly::rendering
 			{
 				cmath::NGonBase ngon_base;
 
-				auto toml_points = io::parse_key(node, _gen::keys::Polygon::PointsArray).as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
+						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
 							ngon_base.points.push_back(*pt);
 						++pt_idx;
 					}
 				}
 
-				auto toml_fill_colors = io::parse_key(node, _gen::keys::Polygon::FillColorsArray).as_array();
-				if (toml_fill_colors)
+				if (auto toml_fill_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::FillColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }))
+						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 							ngon_base.fill_colors.push_back(*col);
 						++color_idx;
 					}
 				}
 
-				auto toml_border_colors = io::parse_key(node, _gen::keys::Polygon::BorderColorsArray).as_array();
-				if (toml_border_colors)
+				if (auto toml_border_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::BorderColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse border color #", color_idx }))
+						if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 							ngon_base.border_colors.push_back(*col);
 						++color_idx;
 					}
 				}
 
-				io::try_parse(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
+				parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-				if (auto border_pivot = io::parse_key(node, _gen::keys::Polygon::BorderPivot))
+				// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
+				if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
 				{
-					if (auto bp = io::parse<unsigned int>(border_pivot))
+					io::Parser parser(*border_pivot);
+					if (auto bp = parser.optional<unsigned int>(io::NO_KEY)())
 					{
 						try
 						{
@@ -747,7 +746,7 @@ namespace oly::rendering
 						}
 					}
 					else
-						io::try_parse(border_pivot, ngon_base.border_pivot.v);
+						parser.optional(io::NO_KEY)(ngon_base.border_pivot.v);
 				}
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -758,13 +757,12 @@ namespace oly::rendering
 			{
 				std::vector<glm::vec2> points;
 
-				auto toml_points = io::parse_key(node, _gen::keys::Polygon::PointsArray).as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
+						if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
 							points.push_back(*pt);
 						++pt_idx;
 					}
@@ -776,7 +774,7 @@ namespace oly::rendering
 			}
 		}
 
-		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -836,55 +834,56 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		NGon polygon;
 
-		polygon.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
 
 		cmath::NGonBase ngon_base;
 
-		auto toml_points = io::parse_key(node, _gen::keys::Polygon::PointsArray).as_array();
-		if (toml_points)
+		if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				if (auto pt = io::parse_or_warn<glm::vec2>((TOMLNode)toml_point, { "cannot parse point #", pt_idx }))
+				if (auto pt = io::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(io::NO_KEY)())
 					ngon_base.points.push_back(*pt);
 				++pt_idx;
 			}
 		}
 
-		auto toml_fill_colors = io::parse_key(node, _gen::keys::Polygon::FillColorsArray).as_array();
-		if (toml_fill_colors)
+		if (auto toml_fill_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::FillColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }))
+				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 					ngon_base.fill_colors.push_back(*col);
 				++color_idx;
 			}
 		}
 
-		auto toml_border_colors = io::parse_key(node, _gen::keys::Polygon::BorderColorsArray).as_array();
-		if (toml_border_colors)
+		if (auto toml_border_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::BorderColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				if (auto col = io::parse_or_warn<glm::vec4>((TOMLNode)toml_color, { "cannot parse border color #", color_idx }))
+				if (auto col = io::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(io::NO_KEY)())
 					ngon_base.border_colors.push_back(*col);
 				++color_idx;
 			}
 		}
 
-		if (auto bordered = io::parse<bool>(io::parse_key(node, _gen::keys::Polygon::Bordered)))
+		if (auto bordered = parser.optional<bool>(_gen::keys::Polygon::Bordered)())
 			polygon.set_bordered(*bordered);
-		io::try_parse(io::parse_key(node, _gen::keys::Polygon::BorderWidth), ngon_base.border_width);
+		parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-		if (auto border_pivot = io::parse_key(node, _gen::keys::Polygon::BorderPivot))
+		// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
+		if (auto border_pivot = parser.optional<TOMLNode>(_gen::keys::Polygon::BorderPivot)())
 		{
-			if (auto bp = io::parse<unsigned int>(border_pivot))
+			io::Parser parser(*border_pivot);
+			if (auto bp = parser.optional<unsigned int>(io::NO_KEY)())
 			{
 				try
 				{
@@ -896,12 +895,12 @@ namespace oly::rendering
 				}
 			}
 			else
-				io::try_parse(border_pivot, ngon_base.border_pivot.v);
+				parser.optional(io::NO_KEY)(ngon_base.border_pivot.v);
 		}
 
 		polygon.set_base() = std::move(ngon_base);
 
-		polygon.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Polygon::CameraInvariant), false));
+		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
 
 		return polygon;
 	}

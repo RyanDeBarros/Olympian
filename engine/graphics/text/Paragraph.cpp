@@ -4,7 +4,7 @@
 #include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
 
@@ -919,26 +919,20 @@ namespace oly::rendering
 		try
 		{
 			TextElement e;
-			const auto font = io::parse_required<std::string>(element, _gen::keys::Paragraph::Font, { "in text element #", i });
-			const auto font_index = io::parse_optional<unsigned int>(element, _gen::keys::Paragraph::FontIndex, 0u, { "in text element #", i });
+			io::Parser parser(element, { "in text element #", i });
+			const auto font = parser.required<std::string>(_gen::keys::Paragraph::Font)();
+			const auto font_index = parser.defaulted(_gen::keys::Paragraph::FontIndex)(0u);
 			e.font = context::load_font(font, font_index);
+			e.text = parser.required<std::string>(_gen::keys::Paragraph::Text)();
 
-			if (auto text = io::parse_key(element, _gen::keys::Paragraph::Text).value<std::string>())
-				e.text = std::move(*text);
-			else
-			{
-				_OLY_ENGINE_LOG_ERROR("ASSETS") << "Missing or invalid " << io::key_string(_gen::keys::Paragraph::Text) << " field in text element (" << i << ")." << LOG.endl;
-				return;
-			}
-
-			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::TextColor), e.text_color);
-			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::AdjacentOffset), e.adj_offset);
-			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::Scale), e.scale);
-			if (auto line_y_pivot = io::parse<float>(io::parse_key(element, _gen::keys::Paragraph::LineYPivot)))
+			parser.optional(_gen::keys::Paragraph::TextColor)(e.text_color);
+			parser.optional(_gen::keys::Paragraph::AdjacentOffset)(e.adj_offset);
+			parser.optional(_gen::keys::Paragraph::Scale)(e.scale);
+			if (auto line_y_pivot = parser.optional<float>(_gen::keys::Paragraph::LineYPivot)())
 				e.line_y_pivot = *line_y_pivot;
-			io::try_parse(io::parse_key(element, _gen::keys::Paragraph::JitterOffset), e.jitter_offset);
+			parser.optional(_gen::keys::Paragraph::JitterOffset)(e.jitter_offset);
 
-			if (io::parse_or(io::parse_key(element, _gen::keys::Paragraph::Expand), false))
+			if (parser.defaulted(_gen::keys::Paragraph::Expand)(false))
 				TextElement::expand(e, elements);
 			else
 				elements.push_back(std::move(e));
@@ -952,28 +946,31 @@ namespace oly::rendering
 
 	Paragraph Paragraph::load(TOMLNode node)
 	{
+		io::Parser parser(node);
+
 		std::vector<TextElement> elements;
-		if (auto element_array = io::parse_key(node, _gen::keys::Paragraph::Element).as_array())
+		// TODO v7 this will log a warning even if else-if branch passes - use different parser method for this multi-datatype case
+		if (auto element_array = parser.optional<TOMLArray>(_gen::keys::Paragraph::Element)())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
 				if (auto element = TOMLNode(*element_array->get(i)))
 					add_text_element(element, i, elements);
 		}
-		else if (auto element = io::parse_key(node, _gen::keys::Paragraph::Element))
-			add_text_element(element, 0, elements);
+		else if (auto element = parser.optional<TOMLNode>(_gen::keys::Paragraph::Element)())
+			add_text_element(*element, 0, elements);
 
-		Paragraph paragraph(std::move(elements), ParagraphFormat::load(io::parse_key(node, _gen::keys::Paragraph::Format)));
-		if (auto transformer = io::parse_key(node, _gen::keys::Paragraph::Transformer))
+		Paragraph paragraph(std::move(elements), ParagraphFormat::load(parser.field(_gen::keys::Paragraph::Format)));
+		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::Paragraph::Transformer)())
 		{
-			paragraph.set_local() = Transform2D::load(transformer);
-			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer);
+			paragraph.set_local() = Transform2D::load(*transformer);
+			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(*transformer);
 		}
 
-		io::try_parse(io::parse_key(node, _gen::keys::Paragraph::DrawBackground), paragraph.draw_bkg);
-		if (auto bkg_color = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::Paragraph::BackgroundColor)))
+		parser.optional(_gen::keys::Paragraph::DrawBackground)(paragraph.draw_bkg);
+		if (auto bkg_color = parser.optional<glm::vec4>(_gen::keys::Paragraph::BackgroundColor)())
 			paragraph.set_bkg_color(*bkg_color);
 
-		paragraph.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Paragraph::CameraInvariant), false));
+		paragraph.set_camera_invariant(parser.defaulted(_gen::keys::Paragraph::CameraInvariant)(false));
 
 		return paragraph;
 	}

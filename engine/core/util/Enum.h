@@ -2,7 +2,7 @@
 
 #include "core/base/Errors.h"
 #include "core/util/StringParam.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #define OLY_ENUM_EXPAND_ENUM_ENTRY(name, value) name = value,
 #define OLY_ENUM_EXPAND_MAP_ENTRY(name, value) { oly::StringParam(std::string(#name)).to_lower().transfer(), value },
@@ -27,13 +27,13 @@
 		static EnumName load(TOMLNode node)\
 		{\
 			if (auto s = node.value<std::string>()) { try { return oly::StringParam(std::move(*s)); } catch (...) {} }\
-			else { unsigned int v = 0; if (io::try_parse<unsigned int>(node, v)) { try { return v; } catch (...) {} } }\
+			else { unsigned int v = 0; if (io::Parser(node).optional(io::NO_KEY)(v)) { try { return v; } catch (...) {} } }\
 			throw Error(ErrorCode::LoadEnum);\
 		}\
 		static EnumName load(TOMLNode node, EnumName def)\
 		{\
 			if (auto s = node.value<std::string>()) { try { return oly::StringParam(std::move(*s)); } catch (...) {} }\
-			else { unsigned int v = 0; if (io::try_parse<unsigned int>(node, v)) { try { return v; } catch (...) {} } }\
+			else { unsigned int v = 0; if (io::Parser(node).optional(io::NO_KEY)(v)) { try { return v; } catch (...) {} } }\
 			return def;\
 		}\
 	}; \

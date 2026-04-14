@@ -19,7 +19,7 @@ namespace oly::particles
 
 	void TiltedSampler1D::overload(TOMLNode node)
 	{
-		tilt.overload(io::parse_key(node, _gen::keys::ParticleSystem::Tilt));
+		tilt.overload(io::Parser(node).field(_gen::keys::ParticleSystem::Tilt));
 	}
 
 	void UniformSampler2D::apply(internal::Sampler2D& sampler) const

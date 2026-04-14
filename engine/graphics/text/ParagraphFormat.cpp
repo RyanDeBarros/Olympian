@@ -1,7 +1,7 @@
 #include "ParagraphFormat.h"
 
 #include "core/util/Logger.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/ParagraphFormat.inl"
 
@@ -22,18 +22,20 @@ namespace oly::rendering
 
 	ParagraphFormat ParagraphFormat::load(TOMLNode node)
 	{
+		io::Parser parser(node);
+
 		ParagraphFormat format;
 
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::Pivot, format.pivot);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::LineSpacing, format.line_spacing);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::LinebreakSpacing, format.linebreak_spacing);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::MinSize, format.min_size);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::Padding, format.padding);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::TextWrap, format.text_wrap);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::MaxHeight, format.max_height);
-		io::try_parse_if_exists(node, _gen::keys::ParagraphFormat::TabSpaces, format.tab_spaces);
-		io::try_parse_enum<_gen::rendering::text::HorizontalAlignment>(node, _gen::keys::ParagraphFormat::HorizontalAlignment, format.horizontal_alignment);
-		io::try_parse_enum<_gen::rendering::text::VerticalAlignment>(node, _gen::keys::ParagraphFormat::VerticalAlignment, format.vertical_alignment);
+		parser.optional(_gen::keys::ParagraphFormat::Pivot)(format.pivot);
+		parser.optional(_gen::keys::ParagraphFormat::LineSpacing)(format.line_spacing);
+		parser.optional(_gen::keys::ParagraphFormat::LinebreakSpacing)(format.linebreak_spacing);
+		parser.optional(_gen::keys::ParagraphFormat::MinSize)(format.min_size);
+		parser.optional(_gen::keys::ParagraphFormat::Padding)(format.padding);
+		parser.optional(_gen::keys::ParagraphFormat::TextWrap)(format.text_wrap);
+		parser.optional(_gen::keys::ParagraphFormat::MaxHeight)(format.max_height);
+		parser.optional(_gen::keys::ParagraphFormat::TabSpaces)(format.tab_spaces);
+		parser.translate<_gen::rendering::text::HorizontalAlignment>().optional(_gen::keys::ParagraphFormat::HorizontalAlignment)(format.horizontal_alignment);
+		parser.translate<_gen::rendering::text::VerticalAlignment>().optional(_gen::keys::ParagraphFormat::VerticalAlignment)(format.vertical_alignment);
 
 		return format;
 	}

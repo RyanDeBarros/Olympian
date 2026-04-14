@@ -4,7 +4,7 @@
 
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include "physics/collision/elements/OBB.h"
 
@@ -385,22 +385,24 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		rendering::Ellipse ellipse;
-		ellipse.set_transformer() = Transformer2D::load(io::parse_key(node, _gen::keys::Ellipse::Transformer));
+		ellipse.set_transformer() = Transformer2D::load(parser.field(_gen::keys::Ellipse::Transformer));
 
 		auto& color = ellipse.set_color();
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderInnerColor), color.border_inner);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderOuterColor), color.border_outer);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillInnerColor), color.fill_inner);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillOuterColor), color.fill_outer);
+		parser.optional(_gen::keys::Ellipse::BorderInnerColor)(color.border_inner);
+		parser.optional(_gen::keys::Ellipse::BorderOuterColor)(color.border_outer);
+		parser.optional(_gen::keys::Ellipse::FillInnerColor)(color.fill_inner);
+		parser.optional(_gen::keys::Ellipse::FillOuterColor)(color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::Border), dimension.border);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::BorderExponent), dimension.border_exp);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::FillExponent), dimension.fill_exp);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::RadiusX), dimension.rx);
-		io::try_parse(io::parse_key(node, _gen::keys::Ellipse::RadiusY), dimension.ry);
-		dimension.camera_invariant = io::parse_or(io::parse_key(node, _gen::keys::Ellipse::CameraInvariant), false);
+		parser.optional(_gen::keys::Ellipse::Border)(dimension.border);
+		parser.optional(_gen::keys::Ellipse::BorderExponent)(dimension.border_exp);
+		parser.optional(_gen::keys::Ellipse::FillExponent)(dimension.fill_exp);
+		parser.optional(_gen::keys::Ellipse::RadiusX)(dimension.rx);
+		parser.optional(_gen::keys::Ellipse::RadiusY)(dimension.ry);
+		dimension.camera_invariant = parser.defaulted(_gen::keys::Ellipse::CameraInvariant)(false);
 
 		return ellipse;
 	}

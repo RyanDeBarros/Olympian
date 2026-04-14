@@ -1,9 +1,9 @@
-#include "Parse.h"
+#include "Parser.h"
 
 #include "core/base/Errors.h"
 #include "core/util/Logger.h"
 
-namespace oly::io
+namespace oly::io::internal
 {
 	template<>
 	bool try_parse<bool>(TOMLNode node, bool& v)
@@ -234,16 +234,13 @@ namespace oly::io
 			return false;
 	}
 
-	namespace internal
+	void log_context_warning(const DeferredStringParam& msg, std::source_location location)
 	{
-		void log_context_warning(const DeferredStringParam& msg)
-		{
-			_OLY_ENGINE_LOG_WARNING("CONTEXT") << msg.str() << LOG.nl;
-		}
+		OLY_LOG_WARNING(true, "CONTEXT") << LOG.source_info.full_source(location) << msg.str() << LOG.nl;
+	}
 
-		void log_context_error(const DeferredStringParam& msg)
-		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << msg.str() << LOG.endl;
-		}
+	void log_context_error(const DeferredStringParam& msg, std::source_location location)
+	{
+		OLY_LOG_ERROR(true, "CONTEXT") << LOG.source_info.full_source(location) << msg.str() << LOG.endl;
 	}
 }

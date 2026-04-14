@@ -1,6 +1,6 @@
 #include "Spawners.h"
 
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/ParticleSystem.inl"
 
@@ -13,7 +13,7 @@ namespace oly::particles
 
 	void ConstantParticleSpawner::overload(TOMLNode node)
 	{
-		io::try_parse(io::parse_key(node, _gen::keys::ParticleSystem::Rate), rate);
+		io::Parser(node).optional(_gen::keys::ParticleSystem::Rate)(rate);
 	}
 
 	float BurstParticleSpawner::spawn_debt(float time, float delta_time, float period) const
@@ -27,8 +27,9 @@ namespace oly::particles
 
 	void BurstParticleSpawner::overload(TOMLNode node)
 	{
-		io::try_parse(io::parse_key(node, _gen::keys::ParticleSystem::Rate), rate);
-		io::try_parse(io::parse_key(node, _gen::keys::ParticleSystem::Duration), duration);
-		io::try_parse(io::parse_key(node, _gen::keys::ParticleSystem::TimeOffset), time_offset);
+		io::Parser parser(node);
+		parser.optional(_gen::keys::ParticleSystem::Rate)(rate);
+		parser.optional(_gen::keys::ParticleSystem::Duration)(duration);
+		parser.optional(_gen::keys::ParticleSystem::TimeOffset)(time_offset);
 	}
 }

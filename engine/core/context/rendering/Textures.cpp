@@ -5,7 +5,7 @@
 #include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
 
@@ -72,42 +72,41 @@ namespace oly::context
 		rendering::internal::update_texture_handle(texture);
 	}
 
-	static void setup_texture(graphics::BindlessTexture& texture, TOMLNode node, bool set_and_use)
+	static void setup_texture(graphics::BindlessTexture& texture, const io::Parser& parser, bool set_and_use)
 	{
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, io::parse_required_enum<_gen::rendering::texture::MinFilter>(node, _gen::keys::Texture::MinFilter));
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, io::parse_required_enum<_gen::rendering::texture::MagFilter>(node, _gen::keys::Texture::MagFilter));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, io::parse_optional_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapS, _gen::rendering::texture::Wrap::val()));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, io::parse_optional_enum<_gen::rendering::texture::Wrap>(node, _gen::keys::Texture::WrapT, _gen::rendering::texture::Wrap::val()));
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, parser.translate<_gen::rendering::texture::MinFilter>().required(_gen::keys::Texture::MinFilter)());
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, parser.translate<_gen::rendering::texture::MagFilter>().required(_gen::keys::Texture::MagFilter)());
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, parser.translate<_gen::rendering::texture::Wrap>().defaulted(_gen::keys::Texture::WrapS)());
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, parser.translate<_gen::rendering::texture::Wrap>().defaulted(_gen::keys::Texture::WrapT)());
 
 		if (set_and_use)
 			texture.set_and_use_handle();
 	}
 
-	static graphics::BindlessTextureRef load_image(const graphics::Image& image, TOMLNode node, bool set_and_use)
+	static graphics::BindlessTextureRef load_image(const graphics::Image& image, const io::Parser& parser, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, io::parse_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
-		setup_texture(texture, node, set_and_use);
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, parser.defaulted(_gen::keys::Texture::GenerateMipmaps)(false));
+		setup_texture(texture, parser, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
-	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, TOMLNode node, bool set_and_use)
+	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, const io::Parser& parser, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, io::parse_or(io::parse_key(node, _gen::keys::Texture::GenerateMipmaps), false));
-		setup_texture(texture, node, set_and_use);
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, parser.defaulted(_gen::keys::Texture::GenerateMipmaps)(false));
+		setup_texture(texture, parser, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
-	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, TOMLNode node, bool set_and_use)
+	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, const io::Parser& parser, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		graphics::SVGMipmapGenerationMode mipmaps_mode = io::parse_optional_enum<_gen::rendering::texture::SVGMipmapGenerationMode>(
-			node, _gen::keys::Texture::GenerateMipmaps, graphics::SVGMipmapGenerationMode::Off);
+		graphics::SVGMipmapGenerationMode mipmaps_mode = parser.translate<_gen::rendering::texture::SVGMipmapGenerationMode>().defaulted(_gen::keys::Texture::GenerateMipmaps)(graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
-		setup_texture(*texture, node, set_and_use);
+		setup_texture(*texture, parser, set_and_use);
 		return texture;
 	}
 
-	static TOMLNode load_texture_node(const ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
+	static io::Parser load_texture_node(const ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
 	{
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
 
@@ -119,7 +118,7 @@ namespace oly::context
 		}
 
 		toml = io::load_toml(import_file);
-		const auto texture_array = io::parse_required<TOMLArray>((TOMLNode)toml, _gen::keys::Texture::TextureArray);
+		const auto texture_array = io::Parser(toml).required<TOMLArray>(_gen::keys::Texture::TextureArray)();
 
 		if (texture_index >= texture_array->size())
 		{
@@ -128,30 +127,30 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		return TOMLNode(*texture_array->get(texture_index));
+		return io::Parser((TOMLNode)*texture_array->get(texture_index));
 	}
 
 	template<typename Enum>
-	static bool should_store(TOMLNode texture_node, Enum storage_key, tex::ImageStorageOverride storage_override)
+	static bool should_store(const io::Parser& parser, Enum storage_key, tex::ImageStorageOverride storage_override)
 	{
 		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return io::parse_optional_enum<_gen::StorageMode>(texture_node, storage_key, StorageMode::Discard) == StorageMode::Keep;
+			return parser.translate<_gen::StorageMode>().defaulted(storage_key)(StorageMode::Discard) == StorageMode::Keep;
 	}
 
-	static graphics::SpritesheetOptions parse_spritesheet_options(TOMLNode texture_node)
+	static graphics::SpritesheetOptions parse_spritesheet_options(const io::Parser& parser)
 	{
 		graphics::SpritesheetOptions options;
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::Rows), options.rows);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::Columns), options.cols);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::CellWidthOverride), options.cell_width_override);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::CellHeightOverride), options.cell_height_override);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::DelayCS), options.delay_cs);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::RowMajor), options.row_major);
-		io::try_parse(io::parse_key(texture_node, _gen::keys::Texture::RowUp), options.row_up);
+		parser.optional(_gen::keys::Texture::Rows)(options.rows);
+		parser.optional(_gen::keys::Texture::Columns)(options.cols);
+		parser.optional(_gen::keys::Texture::CellWidthOverride)(options.cell_width_override);
+		parser.optional(_gen::keys::Texture::CellHeightOverride)(options.cell_height_override);
+		parser.optional(_gen::keys::Texture::DelayCS)(options.delay_cs);
+		parser.optional(_gen::keys::Texture::RowMajor)(options.row_major);
+		parser.optional(_gen::keys::Texture::RowUp)(options.row_up);
 		return options;
 	}
 
@@ -179,26 +178,26 @@ namespace oly::context
 			return it->second;
 
 		toml::parse_result toml;
-		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
+		io::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_buffer = should_store(texture_node, _gen::keys::Texture::Storage, params.storage);
+		bool store_buffer = should_store(parser, _gen::keys::Texture::Storage, params.storage);
 
 		graphics::BindlessTextureRef texture;
 
 		if (file.extension_matches(".gif"))
 		{
 			graphics::Anim anim(file);
-			texture = load_anim(anim, texture_node, params.set_and_use);
+			texture = load_anim(anim, parser, params.set_and_use);
 			if (!store_buffer)
 				anim.delete_buffer();
 			internal::anims[key] = graphics::AnimRef(std::move(anim));
 		}
 		else
 		{
-			if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+			if (parser.defaulted(_gen::keys::Texture::Animated)(false))
 			{
-				graphics::Anim anim(file, parse_spritesheet_options(texture_node));
-				texture = load_anim(anim, texture_node, params.set_and_use);
+				graphics::Anim anim(file, parse_spritesheet_options(parser));
+				texture = load_anim(anim, parser, params.set_and_use);
 				if (!store_buffer)
 					anim.delete_buffer();
 				internal::anims[key] = graphics::AnimRef(std::move(anim));
@@ -206,7 +205,7 @@ namespace oly::context
 			else
 			{
 				graphics::Image image(file);
-				texture = load_image(image, texture_node, params.set_and_use);
+				texture = load_image(image, parser, params.set_and_use);
 				if (!store_buffer)
 					image.delete_buffer();
 				internal::images[key] = graphics::ImageRef(std::move(image));
@@ -236,21 +235,21 @@ namespace oly::context
 			return it->second;
 
 		toml::parse_result toml;
-		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
+		io::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_abstract = should_store((TOMLNode)toml, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
-		bool store_image = should_store(texture_node, _gen::keys::Texture::ImageStorage, params.image_storage);
-		float scale = io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
+		bool store_abstract = should_store(parser, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
+		bool store_image = should_store(parser, _gen::keys::Texture::ImageStorage, params.image_storage);
+		float scale = parser.defaulted(_gen::keys::Texture::VectorScale)(1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+		if (parser.defaulted(_gen::keys::Texture::Animated)(false))
 		{
 			auto ait = internal::nsvg_abstracts.find(file);
 			if (ait != internal::nsvg_abstracts.end())
 			{
-				graphics::Anim anim(ait->second, scale, parse_spritesheet_options(texture_node));
-				texture = load_anim(anim, texture_node, params.set_and_use);
+				graphics::Anim anim(ait->second, scale, parse_spritesheet_options(parser));
+				texture = load_anim(anim, parser, params.set_and_use);
 				if (!store_image)
 					anim.delete_buffer();
 				internal::anims[key] = graphics::AnimRef(std::move(anim));
@@ -258,8 +257,8 @@ namespace oly::context
 			else
 			{
 				graphics::NSVGAbstract abstract(file);
-				graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
-				texture = load_anim(anim, texture_node, params.set_and_use);
+				graphics::Anim anim(abstract, scale, parse_spritesheet_options(parser));
+				texture = load_anim(anim, parser, params.set_and_use);
 				if (!store_image)
 					anim.delete_buffer();
 				internal::anims[key] = graphics::AnimRef(std::move(anim));
@@ -275,7 +274,7 @@ namespace oly::context
 				graphics::VectorImageRef image;
 				image.scale = scale;
 				image.image = context::nsvg_context().rasterize_res(ait->second, scale);
-				texture = load_svg(ait->second, image, texture_node, params.set_and_use);
+				texture = load_svg(ait->second, image, parser, params.set_and_use);
 				if (!store_image)
 					image.image->delete_buffer();
 				internal::vector_images[key] = image;
@@ -286,7 +285,7 @@ namespace oly::context
 				graphics::VectorImageRef image;
 				image.scale = scale;
 				image.image = context::nsvg_context().rasterize_res(abstract, scale);
-				texture = load_svg(abstract, image, texture_node, params.set_and_use);
+				texture = load_svg(abstract, image, parser, params.set_and_use);
 				if (!store_image)
 					image.image->delete_buffer();
 				internal::vector_images[key] = image;
@@ -320,7 +319,7 @@ namespace oly::context
 		}
 
 		toml::parse_result toml;
-		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
+		io::Parser parser = load_texture_node(file, toml, texture_index);
 
 		graphics::BindlessTextureRef texture;
 
@@ -328,23 +327,23 @@ namespace oly::context
 		if (file.extension_matches(".gif"))
 		{
 			graphics::Anim anim(f.c_str());
-			texture = load_anim(anim, texture_node, params.set_and_use);
+			texture = load_anim(anim, parser, params.set_and_use);
 			if (params.cpubuffer)
 				*params.cpubuffer = graphics::AnimRef(std::move(anim));
 		}
 		else
 		{
-			if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+			if (parser.defaulted(_gen::keys::Texture::Animated)(false))
 			{
-				graphics::Anim anim(f.c_str(), parse_spritesheet_options(texture_node));
-				texture = load_anim(anim, texture_node, params.set_and_use);
+				graphics::Anim anim(f.c_str(), parse_spritesheet_options(parser));
+				texture = load_anim(anim, parser, params.set_and_use);
 				if (params.cpubuffer)
 					*params.cpubuffer = tex::CPUBuffer(graphics::AnimRef(std::move(anim)));
 			}
 			else
 			{
 				graphics::Image image(f.c_str());
-				texture = load_image(image, texture_node, params.set_and_use);
+				texture = load_image(image, parser, params.set_and_use);
 				if (params.cpubuffer)
 					*params.cpubuffer = tex::CPUBuffer(graphics::ImageRef(std::move(image)));
 			}
@@ -367,16 +366,16 @@ namespace oly::context
 			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		toml::parse_result toml;
-		TOMLNode texture_node = load_texture_node(file, toml, texture_index);
-		float scale = io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::VectorScale), 1.0f);
+		io::Parser parser = load_texture_node(file, toml, texture_index);
+		float scale = parser.defaulted(_gen::keys::Texture::VectorScale)(1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (io::parse_or(io::parse_key(texture_node, _gen::keys::Texture::Animated), false))
+		if (parser.defaulted(_gen::keys::Texture::Animated)(false))
 		{
 			graphics::NSVGAbstract abstract(file);
-			graphics::Anim anim(abstract, scale, parse_spritesheet_options(texture_node));
-			texture = load_anim(anim, texture_node, params.set_and_use);
+			graphics::Anim anim(abstract, scale, parse_spritesheet_options(parser));
+			texture = load_anim(anim, parser, params.set_and_use);
 			if (params.cpubuffer)
 				*params.cpubuffer = tex::CPUBuffer(graphics::AnimRef(std::move(anim)));
 			if (params.abstract)
@@ -388,7 +387,7 @@ namespace oly::context
 			graphics::VectorImageRef image;
 			image.scale = scale;
 			image.image = context::nsvg_context().rasterize_res(abstract, scale);
-			texture = load_svg(abstract, image, texture_node, params.set_and_use);
+			texture = load_svg(abstract, image, parser, params.set_and_use);
 			if (params.cpubuffer)
 				*params.cpubuffer = tex::CPUBuffer(image);
 			if (params.abstract)

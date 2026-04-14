@@ -17,6 +17,7 @@ namespace oly
 		mutable VariantType storage;
 
 	public:
+		// TODO v7 explicit constructors for owning/non-owning
 		StringParam() : storage(std::span<char>()) {}
 		StringParam(char* string) : storage(std::span<char>(string, strlen(string))) {}
 		StringParam(const char* string) : storage(std::span<const char>(string, strlen(string))) {}

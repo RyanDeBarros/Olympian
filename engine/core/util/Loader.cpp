@@ -3,7 +3,7 @@
 #include "core/algorithms/STLUtils.h"
 #include "core/base/Definitions.h"
 #include "core/util/LoggerOperators.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/Transform.inl"
 
@@ -29,9 +29,11 @@ namespace oly::io
 
 	Polymorphic<TransformModifier2D> load_transform_modifier_2d(TOMLNode node)
 	{
-		if (auto mnode = io::parse_key(node, _gen::keys::Transform::Modifier))
+		if (auto mnode = io::Parser(node).optional<TOMLNode>(_gen::keys::Transform::Modifier)())
 		{
-			if (auto type = io::parse_enum<_gen::TransformModifier>(mnode, _gen::keys::Transform::ModifierType))
+			io::Parser parser(*mnode);
+
+			if (auto type = parser.translate<_gen::TransformModifier>().optional(_gen::keys::Transform::ModifierType)())
 			{
 				switch (*type)
 				{
@@ -40,20 +42,20 @@ namespace oly::io
 				case TransformModifierType::Shear:
 				{
 					Polymorphic<ShearTransformModifier2D> modifier;
-					try_parse(io::parse_key(mnode, _gen::keys::Transform::Shearing), modifier->shearing);
+					parser.optional(_gen::keys::Transform::Shearing)(modifier->shearing);
 					return modifier;
 				}
 				case TransformModifierType::Pivot:
 				{
 					Polymorphic<PivotTransformModifier2D> modifier;
-					try_parse(io::parse_key(mnode, _gen::keys::Transform::Pivot), modifier->pivot);
-					try_parse(io::parse_key(mnode, _gen::keys::Transform::Size), modifier->size);
+					parser.optional(_gen::keys::Transform::Pivot)(modifier->pivot);
+					parser.optional(_gen::keys::Transform::Size)(modifier->size);
 					return modifier;
 				}
 				case TransformModifierType::Offset:
 				{
 					Polymorphic<OffsetTransformModifier2D> modifier;
-					try_parse(io::parse_key(mnode, _gen::keys::Transform::Offset), modifier->offset);
+					parser.optional(_gen::keys::Transform::Offset)(modifier->offset);
 					return modifier;
 				}
 				}

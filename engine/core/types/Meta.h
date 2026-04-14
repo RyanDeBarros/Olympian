@@ -108,4 +108,13 @@ namespace oly
 
 	template<typename T, typename... Candidates>
 	constexpr bool same_as_any = visiting_class_is<T, Candidates...>;
+
+	template <typename T, bool = std::is_enum_v<T>>
+	struct underlying_or_self { using type = T; };
+
+	template <typename T>
+	struct underlying_or_self<T, true> { using type = std::underlying_type_t<T>; };
+
+	template <typename T>
+	using underlying_or_self_t = typename underlying_or_self<T>::type;
 }

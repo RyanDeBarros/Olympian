@@ -12,15 +12,15 @@ namespace oly::particles
 {
 	namespace internal
 	{
-		TOMLNode parse_attribute_value_key(TOMLNode node)
+		size_t parse_attribute_value_key()
 		{
-			return io::parse_key(node, _gen::keys::ParticleSystem::Value);
+			return static_cast<size_t>(_gen::keys::ParticleSystem::Value);
 		}
 	}
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = io::parse_enum<_gen::rendering::particles::AttributeOperation>(node, _gen::keys::ParticleSystem::Operation))
+		if (auto op = io::Parser(node).translate<_gen::rendering::particles::AttributeOperation>().optional(_gen::keys::ParticleSystem::Operation)())
 		{
 			switch (*op)
 			{
@@ -42,7 +42,7 @@ namespace oly::particles
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
-			if (auto arr = io::parse_key(node, _gen::keys::ParticleSystem::OperationArray).as_array())
+			if (auto arr = io::Parser(node).optional<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)())
 			{
 				std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -73,7 +73,7 @@ namespace oly::particles
 
 		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
 		{
-			if (auto arr = io::parse_key(node, _gen::keys::ParticleSystem::OperationArray).as_array())
+			if (auto arr = io::Parser(node).optional<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)())
 			{
 				std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -109,8 +109,9 @@ namespace oly::particles
 		{
 			try
 			{
-				return make_polymorphic<Selector>(IAttributeOperation::load(io::parse_key(node, _gen::keys::ParticleSystem::InnerOperation)),
-					SubSelector::load(io::parse_key(node, _gen::keys::ParticleSystem::Selector)));
+				io::Parser parser(node);
+				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(_gen::keys::ParticleSystem::InnerOperation)),
+					SubSelector::load(parser.field(_gen::keys::ParticleSystem::Selector)));
 			}
 			catch (const Error& e)
 			{

@@ -4,7 +4,7 @@
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Tilesets.h"
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/TileMap.inl"
 
@@ -163,40 +163,41 @@ namespace oly::rendering
 
 	TileMap TileMap::load(TOMLNode node)
 	{
+		io::Parser parser(node);
+
 		TileMap tilemap;
-		if (auto transformer = io::parse_key(node, _gen::keys::TileMap::Transformer))
+		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::TileMap::Transformer)())
 		{
-			tilemap.set_local() = Transform2D::load(transformer);
-			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer);
+			tilemap.set_local() = Transform2D::load(*transformer);
+			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(*transformer);
 		}
 
-		if (auto toml_layers = io::parse_key(node, _gen::keys::TileMap::LayerArray).as_array())
+		if (auto toml_layers = parser.optional<TOMLArray>(_gen::keys::TileMap::LayerArray)())
 		{
 			size_t _layer_idx = 0;
-			toml_layers->for_each([&tilemap, &_layer_idx](auto&& _node) {
+			toml_layers->for_each([&tilemap, &_layer_idx](auto&& node) {
 				try
 				{
 					const size_t layer_idx = _layer_idx++;
-					TOMLNode node = (TOMLNode)_node;
+					io::Parser parser((TOMLNode)node, { "in tilemap layer #", layer_idx });
 
-					auto tileset = io::parse_required<std::string>(node, _gen::keys::TileMap::TileSet, { "in tilemap layer #", layer_idx });
+					auto tileset = parser.required<std::string>(_gen::keys::TileMap::TileSet)();
 
 					TileMapLayer layer;
 					layer.tileset = context::load_tileset(tileset);
 
-					auto tiles = io::parse_key(node, _gen::keys::TileMap::TileArray).as_array();
-					if (tiles)
+					if (auto tiles = parser.optional<TOMLArray>(_gen::keys::TileMap::TileArray)())
 					{
 						size_t tile_idx = 0;
 						for (auto& toml_tile : *tiles)
 						{
-							if (auto tile = io::parse_or_warn<glm::ivec2>((TOMLNode)toml_tile, { "cannot parse tile #", tile_idx, " in tilemap layer #", layer_idx }))
+							if (auto tile = io::Parser((TOMLNode)toml_tile, { "in tile #", tile_idx, " from tilemap layer #", layer_idx }).optional<glm::ivec2>(io::NO_KEY)())
 								layer.paint_tile(*tile);
 							++tile_idx;
 						}
 					}
 
-					if (auto z = io::parse<int>(io::parse_key(node, _gen::keys::TileMap::Z)))
+					if (auto z = parser.optional<int>(_gen::keys::TileMap::Z)())
 						tilemap.register_layer(*z, std::move(layer));
 					else
 						tilemap.register_layer(std::move(layer));
@@ -209,7 +210,7 @@ namespace oly::rendering
 				});
 		}
 
-		tilemap.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::TileMap::CameraInvariant), false));
+		tilemap.set_camera_invariant(parser.defaulted(_gen::keys::TileMap::CameraInvariant)(false));
 
 		return tilemap;
 	}

@@ -1,7 +1,7 @@
 #include "NineSlice.h"
 
 #include "core/context/rendering/Textures.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/NineSlice.inl"
 
@@ -355,18 +355,20 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		NineSlice nonant;
 
 		glm::vec2 nsize{};
-		io::try_parse(io::parse_key(node, _gen::keys::NineSlice::NSize), nsize);
-		math::Padding offsets = math::Padding::load(io::parse_key(node, _gen::keys::NineSlice::Offsets));
+		parser.optional(_gen::keys::NineSlice::NSize)(nsize);
+		math::Padding offsets = math::Padding::load(parser.field(_gen::keys::NineSlice::Offsets));
 
-		if (auto sprite = io::parse_key(node, _gen::keys::NineSlice::Sprite))
-			nonant.setup_nonant(trace ? Sprite::load(sprite, *trace) : Sprite::load(sprite), nsize, offsets);
+		if (auto sprite = parser.optional<TOMLNode>(_gen::keys::NineSlice::Sprite)())
+			nonant.setup_nonant(trace ? Sprite::load(*sprite, *trace) : Sprite::load(*sprite), nsize, offsets);
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		nonant.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::NineSlice::CameraInvariant), false));
+		nonant.set_camera_invariant(parser.defaulted(_gen::keys::NineSlice::CameraInvariant)(false));
 
 		return nonant;
 	}

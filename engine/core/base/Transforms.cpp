@@ -1,7 +1,7 @@
 #include "Transforms.h"
 
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/Transform.inl"
 
@@ -12,10 +12,12 @@ namespace oly
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		Transform2D transform;
-		io::try_parse(io::parse_key(node, _gen::keys::Transform::Position), transform.position);
-		io::try_parse(io::parse_key(node, _gen::keys::Transform::Rotation), transform.rotation);
-		io::try_parse(io::parse_key(node, _gen::keys::Transform::Scale), transform.scale);
+		parser.optional(_gen::keys::Transform::Position)(transform.position);
+		parser.optional(_gen::keys::Transform::Rotation)(transform.rotation);
+		parser.optional(_gen::keys::Transform::Scale)(transform.scale);
 		return transform;
 	}
 

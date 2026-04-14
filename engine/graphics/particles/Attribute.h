@@ -2,7 +2,7 @@
 
 #include "external/GLM.h"
 #include "core/types/Polymorphic.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "core/util/Enum.h"
 
 #include <unordered_set>
@@ -284,7 +284,7 @@ namespace oly::particles
 
 	namespace internal
 	{
-		extern TOMLNode parse_attribute_value_key(TOMLNode node);
+		extern size_t parse_attribute_value_key();
 	}
 
 	template<ParticleAttribute T>
@@ -330,7 +330,7 @@ namespace oly::particles
 	public:
 		void overload(TOMLNode node)
 		{
-			io::try_parse(internal::parse_attribute_value_key(node), value);
+			io::Parser(node).optional(internal::parse_attribute_value_key())(value);
 			if (auto operation = IAttributeOperation::load(node))
 				op = std::move(operation);
 		}

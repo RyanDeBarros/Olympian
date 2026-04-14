@@ -18,7 +18,7 @@
 #include "core/util/Time.h"
 #include "core/util/Timers.h"
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/particles/ParticleSystem.h"
@@ -36,44 +36,46 @@ namespace oly::context
 		std::string resource_root;
 	}
 
-	static void init_logger(TOMLNode node)
+	static void init_logger(const io::Parser& parser)
 	{
 		LoggerOptions options;
 
-		if (auto toml_logger = io::parse_key(node, _gen::keys::Context::Logger))
+		if (auto toml_logger = parser.optional<TOMLNode>(_gen::keys::Context::Logger)())
 		{
-			io::try_parse(io::parse_key(toml_logger, _gen::keys::Logger::UseLogfile), options.use_logfile);
-			io::try_parse(io::parse_key(toml_logger, _gen::keys::Logger::UseConsole), options.use_console);
-			options.max_prior_log_files = io::parse<size_t>(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogFiles));
-			options.max_prior_log_bytes = io::parse<size_t>(io::parse_key(toml_logger, _gen::keys::Logger::MaxPriorLogBytes));
+			io::Parser parser(*toml_logger);
+			parser.optional(_gen::keys::Logger::UseLogfile)(options.use_logfile);
+			parser.optional(_gen::keys::Logger::UseConsole)(options.use_console);
+			parser.optional(_gen::keys::Logger::MaxPriorLogFiles)(options.max_prior_log_files);
+			parser.optional(_gen::keys::Logger::MaxPriorLogBytes)(options.max_prior_log_bytes);
 			
-			if (auto logger_enable = io::parse_key(toml_logger, _gen::keys::Logger::Enable))
+			if (auto logger_enable = parser.optional<TOMLNode>(_gen::keys::Logger::Enable)()) // TODO v7 subparser() to get optional/required parser of subnode
 			{
-				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Debug), LOG.enable.debug);
-				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Info), LOG.enable.info);
-				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Warning), LOG.enable.warning);
-				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Error), LOG.enable.error);
-				io::try_parse(io::parse_key(logger_enable, _gen::keys::Logger::Fatal), LOG.enable.fatal);
+				io::Parser parser(*logger_enable);
+				parser.optional(_gen::keys::Logger::Debug)(LOG.enable.debug);
+				parser.optional(_gen::keys::Logger::Info)(LOG.enable.info);
+				parser.optional(_gen::keys::Logger::Warning)(LOG.enable.warning);
+				parser.optional(_gen::keys::Logger::Error)(LOG.enable.error);
+				parser.optional(_gen::keys::Logger::Fatal)(LOG.enable.fatal);
 			}
 		}
 
 		oly::internal::LogAccess::start_log(options);
 	}
 
-	static void init_time(TOMLNode node)
+	static void init_time(const io::Parser& parser)
 	{
-		if (auto framerate = io::parse_key(node, _gen::keys::Context::FrameRate))
+		if (auto framerate = parser.optional<TOMLNode>(_gen::keys::Context::FrameRate)())
 		{
-			io::try_parse(io::parse_key(framerate, _gen::keys::FrameRate::FrameLengthClip), TIME.frame_length_clip);
-			io::try_parse(io::parse_key(framerate, _gen::keys::FrameRate::TimeScale), TIME.time_scale);
+			io::Parser parser(*framerate);
+			parser.optional(_gen::keys::FrameRate::FrameLengthClip)(TIME.frame_length_clip);
+			parser.optional(_gen::keys::FrameRate::TimeScale)(TIME.time_scale);
 		}
 		TIME.init();
 	}
 
-	static void autoload_signals(TOMLNode node)
+	static void autoload_signals(const io::Parser& parser)
 	{
-		auto register_files = io::parse_key(node, _gen::keys::Context::Signals).as_array();
-		if (register_files)
+		if (auto register_files = parser.optional<TOMLArray>(_gen::keys::Context::Signals)())
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
@@ -101,22 +103,32 @@ namespace oly::context
 
 		internal::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
+		
 		auto toml = io::load_toml(project_file);
-		TOMLNode toml_context = io::parse_key((TOMLNode)toml, _gen::keys::General::Context);
-		if (!toml_context)
+		io::Parser project_parser(toml, { "(project file)" }); // TODO v7 use fatal logging, and use ContextInit here instead of relying on try-catch
+		TOMLNode toml_context;
+
+		try
 		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing " << io::key_string(_gen::keys::General::Context) << " table" << LOG.nl;
-			throw Error(ErrorCode::ContextInit);
+			toml_context = project_parser.required<TOMLNode>(_gen::keys::General::Context)();
+		}
+		catch (Error& e)
+		{
+			if (e.code == ErrorCode::LoadAsset)
+				e.code = ErrorCode::ContextInit;
+			throw;
 		}
 
-		init_logger(toml_context);
+		io::Parser context_parser(toml_context);
+
+		init_logger(context_parser);
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();
 
 		internal::init_platform(toml_context);
-		init_time(toml_context);
+		init_time(context_parser);
 		graphics::internal::load_resources();
 
-		autoload_signals(toml_context);
+		autoload_signals(context_parser);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 		internal::init_vault(toml_context);

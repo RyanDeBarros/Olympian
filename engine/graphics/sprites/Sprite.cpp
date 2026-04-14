@@ -2,7 +2,7 @@
 
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "graphics/sprites/Definitions.h"
 
 #include ".gen/keys/Sprite.inl"
@@ -28,38 +28,41 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		Sprite sprite;
-		sprite.transformer = Transformer2D::load(io::parse_key(node, _gen::keys::Sprite::Transformer));
+		io::Parser parser(node);
 
-		auto texture = io::parse_key(node, _gen::keys::Sprite::Texture).value<std::string>();
+		Sprite sprite;
+		sprite.transformer = Transformer2D::load(parser.field(_gen::keys::Sprite::Transformer));
+
+		auto texture = parser.optional<std::string>(_gen::keys::Sprite::Texture)();
 		if (texture)
 		{
-			graphics::BindlessTextureRef btex = context::load_texture(*texture, io::parse_or(io::parse_key(node, _gen::keys::Sprite::TextureIndex), 0u));
+			graphics::BindlessTextureRef btex = context::load_texture(*texture, parser.defaulted(_gen::keys::Sprite::TextureIndex)(0u));
 			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
-		if (auto modulation = io::parse_if_exists<glm::vec4>(node, _gen::keys::Sprite::Modulation))
+		if (auto modulation = parser.optional<glm::vec4>(_gen::keys::Sprite::Modulation)())
 			sprite.set_modulation(*modulation);
 
-		if (auto uvs = io::parse_if_exists<glm::vec4>(node, _gen::keys::Sprite::TextureCoordinates))
+		if (auto uvs = parser.optional<glm::vec4>(_gen::keys::Sprite::TextureCoordinates)())
 			sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
 
-		if (auto toml_frame_format = io::parse_key(node, _gen::keys::Sprite::FrameFormat))
+		if (auto toml_frame_format = parser.optional<TOMLNode>(_gen::keys::Sprite::FrameFormat)())
 		{
-			if (auto mode = io::parse_enum<_gen::rendering::FrameFormat>(toml_frame_format, _gen::keys::Sprite::Mode))
+			io::Parser parser(*toml_frame_format);
+			if (auto mode = parser.translate<_gen::rendering::FrameFormat>().optional(_gen::keys::Sprite::Mode)())
 			{
 				switch (*mode)
 				{
 				case FrameFormat::Single:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Frame), 0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, parser.defaulted(_gen::keys::Sprite::Frame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
 					break;
 				case FrameFormat::Auto:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::Speed), 1.0f),
-							io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, parser.defaulted(_gen::keys::Sprite::Speed)(1.f),
+							parser.defaulted(_gen::keys::Sprite::StartingFrame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
 					break;
@@ -68,15 +71,15 @@ namespace oly::rendering
 			else
 			{
 				sprite.set_frame_format({
-					.starting_frame = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingFrame), 0u),
-					.num_frames = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::NumFrames), 0u),
-					.starting_time = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::StartingTime), 0.0f),
-					.delay_seconds = io::parse_or(io::parse_key(toml_frame_format, _gen::keys::Sprite::DelaySeconds), 0.0f)
+					.starting_frame = parser.defaulted(_gen::keys::Sprite::StartingFrame)(0u),
+					.num_frames = parser.defaulted(_gen::keys::Sprite::NumFrames)(0u),
+					.starting_time = parser.defaulted(_gen::keys::Sprite::StartingTime)(0.f),
+					.delay_seconds = parser.defaulted(_gen::keys::Sprite::DelaySeconds)(0.f)
 					});
 			};
 		}
 
-		sprite.set_camera_invariant(io::parse_or(io::parse_key(node, _gen::keys::Sprite::CameraInvariant), false));
+		sprite.set_camera_invariant(parser.defaulted(_gen::keys::Sprite::CameraInvariant)(false));
 
 		return sprite;
 	}

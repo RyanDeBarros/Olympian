@@ -3,7 +3,7 @@
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
 #include "core/base/Transforms.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include ".gen/keys/Rect2D.inl"
 #include ".gen/keys/Padding.inl"
@@ -53,11 +53,13 @@ namespace oly::math
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		IRect2D rect;
-		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::X1), rect.x1);
-		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::X2), rect.x2);
-		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::Y1), rect.y1);
-		io::try_parse(io::parse_key(node, _gen::keys::Rect2D::Y2), rect.y2);
+		parser.optional(_gen::keys::Rect2D::X1)(rect.x1);
+		parser.optional(_gen::keys::Rect2D::X2)(rect.x2);
+		parser.optional(_gen::keys::Rect2D::Y1)(rect.y1);
+		parser.optional(_gen::keys::Rect2D::Y2)(rect.y2);
 		return rect;
 	}
 
@@ -66,15 +68,17 @@ namespace oly::math
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		Padding padding;
 
-		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
+		if (auto uniform = parser.optional<double>(_gen::keys::Padding::Uniform)())
 			padding = Padding::uniform(*uniform);
 
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Bottom), padding.bottom);
+		parser.optional(_gen::keys::Padding::Left)(padding.left);
+		parser.optional(_gen::keys::Padding::Right)(padding.right);
+		parser.optional(_gen::keys::Padding::Top)(padding.top);
+		parser.optional(_gen::keys::Padding::Bottom)(padding.bottom);
 
 		return padding;
 	}
@@ -84,14 +88,16 @@ namespace oly::math
 		if (!node)
 			return {};
 
+		io::Parser parser(node);
+
 		TopSidePadding padding;
 
-		if (auto uniform = io::parse_key(node, _gen::keys::Padding::Uniform).value<double>())
+		if (auto uniform = parser.optional<double>(_gen::keys::Padding::Uniform)())
 			padding = TopSidePadding::uniform(*uniform);
 
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Left), padding.left);
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Right), padding.right);
-		io::try_parse(io::parse_key(node, _gen::keys::Padding::Top), padding.top);
+		parser.optional(_gen::keys::Padding::Left)(padding.left);
+		parser.optional(_gen::keys::Padding::Right)(padding.right);
+		parser.optional(_gen::keys::Padding::Top)(padding.top);
 
 		return padding;
 	}

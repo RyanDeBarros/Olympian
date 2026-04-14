@@ -4,7 +4,7 @@
 
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 #include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
 
@@ -51,23 +51,21 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = io::load_toml(file);
-		TOMLNode toml = (TOMLNode)table;
-
-		auto toml_assignments = io::parse_key(toml, _gen::keys::TileSet::AssignmentArray).as_array();
+		auto toml = io::load_toml(file);
+		io::Parser parser(toml);
 
 		std::vector<rendering::TileSet::Assignment> assignments;
-		if (toml_assignments)
+		if (auto toml_assignments = parser.optional<TOMLArray>(_gen::keys::TileSet::AssignmentArray)())
 		{
 			size_t _a_idx = 0;
-			toml_assignments->for_each([&assignments, &_a_idx, &file](auto&& _node) {
+			toml_assignments->for_each([&assignments, &_a_idx, &file](auto&& node) {
 				try
 				{
 					const size_t a_idx = _a_idx++;
-					TOMLNode node = (TOMLNode)_node;
+					io::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
 
-					const auto texture = io::parse_required<std::string>(node, _gen::keys::TileSet::Texture, { "in tileset assignment #", a_idx });
-					const auto config = io::parse_required<int>(node, _gen::keys::TileSet::Configuration, {"in tileset assignment #", a_idx });
+					const auto texture = parser.required<std::string>(_gen::keys::TileSet::Texture)();
+					const auto config = parser.required<int>(_gen::keys::TileSet::Configuration)();
 
 					rendering::TileSet::Assignment assignment;
 
@@ -80,7 +78,7 @@ namespace oly::context
 					}
 
 					assignment.desc.file = ResourcePath(texture, file);
-					if (auto uvs = io::parse<glm::vec4>(io::parse_key(node, _gen::keys::TileSet::UVvec4)))
+					if (auto uvs = parser.optional<glm::vec4>(_gen::keys::TileSet::UVvec4)())
 					{
 						assignment.desc.uvs.x1 = (*uvs)[0];
 						assignment.desc.uvs.x2 = (*uvs)[1];
@@ -88,24 +86,17 @@ namespace oly::context
 						assignment.desc.uvs.y2 = (*uvs)[3];
 					}
 
-					if (auto transformations = io::parse_key(node, _gen::keys::TileSet::TransformationArray).as_array())
+					if (auto transformations = parser.optional<TOMLArray>(_gen::keys::TileSet::TransformationArray)())
 					{
 						size_t tr_idx = 0;
 						for (auto& trfm : *transformations)
 						{
-							if (auto transformation = io::parse_or_warn<unsigned int>(TOMLNode(trfm), { "cannot parse transformation #", tr_idx, " in tileset assignment #", a_idx }))
-							{
-								// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
-								try
-								{
-									assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
-								}
-								catch (const std::out_of_range&)
-								{
-									_OLY_ENGINE_LOG_WARNING("CONTEXT") << "unrecognized tile transformation(" << *transformation << ") in transformation #"
-										<< tr_idx << " from tileset assignment #" << a_idx << LOG.nl;
-								}
-							}
+							io::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
+
+							// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
+							if (auto transformation = tr_parser.translate<_gen::rendering::tileset::Transformation>().optional(io::NO_KEY)())
+								assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
+
 							++tr_idx;
 						}
 					}
@@ -121,7 +112,7 @@ namespace oly::context
 		}
 
 		rendering::TileSetRef tileset(assignments);
-		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::TileSet::Storage, StorageMode::Discard) == StorageMode::Keep)
+		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::TileSet::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

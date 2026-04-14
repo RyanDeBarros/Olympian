@@ -2,7 +2,7 @@
 
 #include "core/util/MetaSplitter.h"
 #include "core/util/Loader.h"
-#include "core/util/Parse.h"
+#include "core/util/Parser.h"
 
 #include "core/base/Errors.h"
 #include "core/util/LoggerOperators.h"
@@ -81,25 +81,25 @@ namespace oly::context
 
 	static rendering::Kerning parse_kerning(TOMLNode node)
 	{
-		auto kerning_arr = io::parse_key(node, _gen::keys::Font::Kerning).as_array();
+		auto kerning_arr = io::Parser(node).optional<TOMLArray>(_gen::keys::Font::Kerning)();
 		if (!kerning_arr)
 			return {};
 
 		rendering::Kerning kerning;
 
 		size_t _k_idx = 0;
-		kerning_arr->for_each([&kerning, &_k_idx](auto&& _node) {
+		kerning_arr->for_each([&kerning, &_k_idx](auto&& node) {
 			try
 			{
 				const size_t k_idx = _k_idx++;
-				TOMLNode node = (TOMLNode)_node;
-				const auto pair = io::parse_required<TOMLArray>(node, _gen::keys::Font::CodepointPair, { "in kerning #", k_idx });
+				io::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
+				const auto pair = parser.required<TOMLArray>(_gen::keys::Font::CodepointPair)();
 				if (pair->size() != 2)
 				{
 					_OLY_ENGINE_LOG_ERROR("CONTEXT") << io::key_string(_gen::keys::Font::CodepointPair) << " field is not a 2-element array in kerning #" << k_idx << LOG.endl;
 					throw Error(ErrorCode::LoadAsset);
 				}
-				const auto dist = io::parse_required<int>(node, _gen::keys::Font::CodepointDistance, { "in kerning #", k_idx });
+				const auto dist = parser.required<int>(_gen::keys::Font::CodepointDistance)();
 
 				auto tc0 = pair->get_as<std::string>(0);
 				auto tc1 = pair->get_as<std::string>(1);
@@ -148,12 +148,14 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = io::load_toml(import_file);
-		auto node = io::parse_required_node((TOMLNode)table, _gen::keys::Font::FontFace);
+		auto toml = io::load_toml(import_file);
+		io::Parser parser(toml);
+
+		auto node = parser.required<TOMLNode>(_gen::keys::Font::FontFace)();
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 
-		if (io::parse_optional_enum<_gen::StorageMode>(node, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
+		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -183,11 +185,10 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = io::load_toml(import_file);
-		TOMLNode toml = (TOMLNode)table;
+		auto toml = io::load_toml(import_file);
 
 		// TODO v7 associate certain keys with certain data types to automatically call the correct outer io parse function
-		const auto font_atlas_list = io::parse_required<TOMLArray>(toml, _gen::keys::Font::FontAtlasArray);
+		const auto font_atlas_list = io::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)();
 		if (index >= font_atlas_list->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Font atlas index (" << index
@@ -196,18 +197,19 @@ namespace oly::context
 		}
 
 		auto node = (TOMLNode)*font_atlas_list->get(index);
+		io::Parser parser(node); // TODO v7 maybe Parser should go in different namespace like oly::assets
 
 		rendering::FontOptions options;
 
-		options.font_size = io::parse_required<float>(node, _gen::keys::Font::FontSize);
-		options.min_filter = io::parse_required_enum<_gen::rendering::texture::MinFilter>(node, _gen::keys::Font::MinFilter);
-		options.mag_filter = io::parse_required_enum<_gen::rendering::texture::MagFilter>(node, _gen::keys::Font::MagFilter);
-		io::try_parse_if_exists(node, _gen::keys::Font::GenerateMipmaps, options.auto_generate_mipmaps);
+		parser.required(_gen::keys::Font::FontSize)(options.font_size);
+		options.min_filter = parser.translate<_gen::rendering::texture::MinFilter>().required(_gen::keys::Font::MinFilter)();
+		options.mag_filter = parser.translate<_gen::rendering::texture::MagFilter>().required(_gen::keys::Font::MagFilter)();
+		parser.optional(_gen::keys::Font::GenerateMipmaps)(options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (io::parse_if_exists_or(node, _gen::keys::Font::UseCommonBufferPreset, true))
+		if (parser.defaulted(_gen::keys::Font::UseCommonBufferPreset)(true))
 		{
-			if (auto common_buffer_preset = io::parse_enum<_gen::rendering::text::CommonBufferPreset>(node, _gen::keys::Font::CommonBufferPreset))
+			if (auto common_buffer_preset = parser.translate<_gen::rendering::text::CommonBufferPreset>().optional(_gen::keys::Font::CommonBufferPreset)())
 			{
 				switch (*common_buffer_preset)
 				{
@@ -231,11 +233,11 @@ namespace oly::context
 				}
 			}
 		}
-		else if (auto _common_buffer = io::parse_key(node, _gen::keys::Font::CommonBuffer).value<std::string>())
-			common_buffer = _common_buffer.value();
+		else if (auto _common_buffer = parser.optional<std::string>(_gen::keys::Font::CommonBuffer)())
+			common_buffer = *_common_buffer;
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (io::parse_optional_enum<_gen::StorageMode>(node, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
+		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
@@ -266,13 +268,14 @@ namespace oly::context
 
 		auto table = io::load_toml(file);
 		TOMLNode toml = (TOMLNode)table;
+		io::Parser parser(toml);
 
-		const auto space_advance_width = io::parse_required<float>(toml, _gen::keys::Font::SpaceAdvanceWidth);
-		const auto line_height = io::parse_required<float>(toml, _gen::keys::Font::LineHeight);
-		const auto font_scale = io::parse_optional(toml, _gen::keys::Font::FontScale, glm::vec2(1.0f));
+		const auto space_advance_width = parser.required<float>(_gen::keys::Font::SpaceAdvanceWidth)();
+		const auto line_height = parser.required<float>(_gen::keys::Font::LineHeight)();
+		const auto font_scale = parser.defaulted(_gen::keys::Font::FontScale)(glm::vec2(1.0f));
 
 		std::vector<std::string> texture_files;
-		if (auto a = io::parse_key(toml, _gen::keys::Font::TextureFileArray).as_array())
+		if (auto a = parser.optional<TOMLArray>(_gen::keys::Font::TextureFileArray)())
 		{
 			texture_files.reserve(a->size());
 			for (size_t i = 0; i < a->size(); ++i)
@@ -285,14 +288,14 @@ namespace oly::context
 		}
 
 		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
-		if (auto glyph_array = io::parse_key(toml, _gen::keys::Font::GlyphArray).as_array())
+		if (auto glyph_array = parser.optional<TOMLArray>(_gen::keys::Font::GlyphArray)())
 		{
-			glyph_array->for_each([&glyphs, &texture_files](auto&& _g) {
-				TOMLNode g = (TOMLNode)_g;
+			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
+				io::Parser parser((TOMLNode)g);
 
 				utf::Codepoint codepoint = utf::Codepoint(0);
-				if (auto v = io::parse_key(g, _gen::keys::Font::Codepoint).value<std::string>())
-					codepoint = parse_codepoint(v.value());
+				if (auto v = parser.optional<std::string>(_gen::keys::Font::Codepoint)())
+					codepoint = parse_codepoint(*v);
 				if (codepoint == utf::Codepoint(0))
 				{
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse " << io::key_string(_gen::keys::Font::Codepoint) << " field in glyphs array, skipping glyph..." << LOG.nl;
@@ -300,7 +303,7 @@ namespace oly::context
 				}
 
 				std::string texture_file;
-				unsigned int tidx = io::parse_or(io::parse_key(g, _gen::keys::Font::TextureFile), 0u);
+				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u);
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
@@ -310,28 +313,25 @@ namespace oly::context
 					return;
 				}
 
-				unsigned int texture_index = io::parse_or(io::parse_key(g, _gen::keys::Font::TextureIndex), 0u);
+				unsigned int texture_index = parser.defaulted(_gen::keys::Font::TextureIndex)(0u);
 
-				math::IRect2D location = math::IRect2D::load(io::parse_key(g, _gen::keys::Font::Location));
+				math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location));
 				if (location.x2 <= location.x1 || location.y2 <= location.y1)
 				{
 					_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Cannot parse valid " << io::key_string(_gen::keys::Font::Location) << " field, skipping glyph..." << LOG.nl;
 					return;
 				}
 
-				math::TopSidePadding padding = math::TopSidePadding::load(io::parse_key(g, _gen::keys::Font::Padding));
-
-				math::PositioningMode origin_offset_mode = math::PositioningMode::load(io::parse_key(g, _gen::keys::Font::OriginOffsetMode), math::PositioningMode::RELATIVE);
-
-				glm::vec2 origin_offset = {};
-				io::try_parse(io::parse_key(g, _gen::keys::Font::OriginOffset), origin_offset);
+				math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
+				math::PositioningMode origin_offset_mode = math::PositioningMode::load(parser.field(_gen::keys::Font::OriginOffsetMode), math::PositioningMode::RELATIVE);
+				glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();
 
 				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 				});
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
+		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -359,20 +359,21 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		auto table = io::load_toml(file);
-		TOMLNode toml = (TOMLNode)table;
+		auto toml = io::load_toml(file);
+		io::Parser parser(toml);
+
 
 		rendering::FontFamilyRef font_family = REF_INIT;
-		if (auto a = io::parse_key(toml, _gen::keys::Font::StyleArray).as_array())
+		if (auto a = parser.optional<TOMLArray>(_gen::keys::Font::StyleArray)())
 		{
-			a->for_each([&file, &styles = font_family->styles](auto&& _node) {
+			a->for_each([&file, &styles = font_family->styles](auto&& node) {
 				try
 				{
-					TOMLNode node = (TOMLNode)_node;
+					io::Parser parser((TOMLNode)node);
 
-					rendering::FontStyle style = io::parse_optional_enum<_gen::rendering::text::FontStyle>(node, _gen::keys::Font::Style, rendering::FontStyle::Regular);
+					rendering::FontStyle style = parser.translate<_gen::rendering::text::FontStyle>().defaulted(_gen::keys::Font::Style)(rendering::FontStyle::Regular);
 
-					ResourcePath font_file(io::parse_required<std::string>(node, _gen::keys::Font::File, { "from font family style" }), file);
+					ResourcePath font_file(parser.required<std::string>(_gen::keys::Font::File)(), file);
 					rendering::FontFamily::FontRef font;
 					if (font_file.is_import_path())
 					{
@@ -387,7 +388,7 @@ namespace oly::context
 						}
 					}
 					else
-						font = context::load_font_atlas(font_file, io::parse_or(io::parse_key(node, _gen::keys::Font::AtlasIndex), 0u));
+						font = context::load_font_atlas(font_file, parser.defaulted(_gen::keys::Font::AtlasIndex)(0u));
 
 					styles.emplace(style, std::move(font));
 				}
@@ -399,7 +400,7 @@ namespace oly::context
 				});
 		}
 
-		if (io::parse_optional_enum<_gen::StorageMode>(toml, _gen::keys::Font::Storage, StorageMode::Discard) == StorageMode::Keep)
+		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;
