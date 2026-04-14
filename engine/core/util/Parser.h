@@ -111,28 +111,56 @@ namespace oly::assets
 		}
 
 		template<typename Key, typename Index>
-		void log_at_level(LogLevel level, std::source_location location, Key key, Index e)
+		void log_at_level(LogLevel level, std::source_location location, Key key, Index e) const
 		{
 			if ((int)level >= (int)LogLevel::Error && fatal)
 				level = LogLevel::Fatal;
 			internal::log_context_at_level(level, build_message(key, DeferredStringList{ "unrecognized enum (", std::to_string(e), ") in"}.str()), location);
 		}
 
-		template<typename Key, typename Predefined, typename Translator>
-		class Defaulted;
-
-		template<typename Key, typename Translator>
-		class Defaulted<Key, void, Translator>
+		template<typename Key, bool Throws>
+		struct Accessor
 		{
+		protected:
 			const Parser& parser;
 			Key key;
 
 		public:
-			Defaulted(const Parser& parser, Key key) : parser(parser), key(key) {}
+			Accessor(const Parser& parser, Key key) : parser(parser), key(key) {}
+
+		protected:
+			void report(std::source_location location, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
+			{
+				parser.log_at_level(Throws ? LogLevel::Error : LogLevel::Warning, location, key, cause.transfer(), std::move(elaboration));
+				if constexpr (Throws)
+					throw Error(parser.error_code);
+			}
+
+			template<typename Index>
+			void report(std::source_location location, Index e)
+			{
+				parser.log_at_level(Throws ? LogLevel::Error : LogLevel::Warning, location, key, e);
+				if constexpr (Throws)
+					throw Error(parser.error_code);
+			}
+
+			TOMLNode field() const
+			{
+				return parser.field(key);
+			}
+		};
+
+		template<typename Key, typename Predefined, typename Translator>
+		struct Defaulted;
+
+		template<typename Key, typename Translator>
+		struct Defaulted<Key, void, Translator> : public Accessor<Key, false>
+		{
+			using Accessor<Key, false>::Accessor;
 
 			typename Translator::EnumType operator()(typename Translator::EnumType def = Translator::val(), std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					typename Translator::IndexType index;
 					if (internal::try_parse<typename Translator::IndexType>(value, index))
@@ -143,11 +171,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_at_level(LogLevel::Warning, location, key, index);
+							this->report(location, index);
 						}
 					}
 					else
-						parser.log_at_level(LogLevel::Warning, location, key);
+						this->report(location);
 				}
 
 				return std::move(def);
@@ -155,23 +183,19 @@ namespace oly::assets
 		};
 
 		template<typename Key, typename Predefined>
-		class Defaulted<Key, Predefined, void>
+		struct Defaulted<Key, Predefined, void> : public Accessor<Key, false>
 		{
+			using Accessor<Key, false>::Accessor;
+
 			static_assert(!std::is_same_v<Predefined, TOMLNode>);
 			static_assert(!std::is_same_v<Predefined, TOMLArray>);
 
-			const Parser& parser;
-			Key key;
-
-		public:
-			Defaulted(const Parser& parser, Key key) : parser(parser), key(key) {}
-
 			Predefined operator()(Predefined def = Predefined(), std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					if (!internal::try_parse<Predefined>(value, def))
-						parser.log_at_level(LogLevel::Warning, location, key);
+						this->report(location);
 				}
 
 				return std::move(def);
@@ -179,17 +203,13 @@ namespace oly::assets
 		};
 
 		template<typename Key, typename T>
-		struct Defaulted<Key, std::vector<T>, void>
+		struct Defaulted<Key, std::vector<T>, void> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Defaulted(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			std::vector<T> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					TOMLArray arr;
 					if (internal::try_parse<TOMLArray>(value, arr))
@@ -202,26 +222,22 @@ namespace oly::assets
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
 								obj.push_back(el);
 							else
-								parser.log_at_level(LogLevel::Warning, location, key, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
 
 						return obj;
 					}
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 				}
 				return {};
 			}
 		};
 
 		template<typename Key>
-		class Defaulted<Key, void, void>
+		struct Defaulted<Key, void, void> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Defaulted(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			template<typename T>
 			T operator()(T def, std::source_location location = std::source_location::current()) const
@@ -229,10 +245,10 @@ namespace oly::assets
 				static_assert(!std::is_same_v<T, TOMLNode>);
 				static_assert(!std::is_same_v<T, TOMLArray>);
 
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					if (!internal::try_parse<T>(value, def))
-						parser.log_at_level(LogLevel::Warning, location, key);
+						this->report(location);
 				}
 
 				return std::move(def);
@@ -243,17 +259,13 @@ namespace oly::assets
 		struct Optional;
 
 		template<typename Key, typename Translator>
-		struct Optional<Key, void, Translator>
+		struct Optional<Key, void, Translator> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Optional(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			bool operator()(typename Translator::EnumType& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					typename Translator::IndexType index;
 					if (internal::try_parse<typename Translator::IndexType>(value, index))
@@ -265,11 +277,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_at_level(LogLevel::Warning, location, key, index);
+							this->report(location, index);
 						}
 					}
 					else
-						parser.log_at_level(LogLevel::Warning, location, key);
+						this->report(location);
 				}
 
 				return false;
@@ -277,7 +289,7 @@ namespace oly::assets
 
 			std::optional<typename Translator::EnumType> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					typename Translator::IndexType index;
 					if (internal::try_parse<typename Translator::IndexType>(value, index))
@@ -288,11 +300,11 @@ namespace oly::assets
 						}
 						catch (const std::out_of_range&)
 						{
-							parser.log_at_level(LogLevel::Warning, location, key, index);
+							this->report(location, index);
 						}
 					}
 					else
-						parser.log_at_level(LogLevel::Warning, location, key);
+						this->report(location);
 				}
 
 				return std::nullopt;
@@ -300,17 +312,13 @@ namespace oly::assets
 		};
 
 		template<typename Key, typename Predefined>
-		struct Optional<Key, Predefined, void>
+		struct Optional<Key, Predefined, void> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Optional(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			std::optional<Predefined> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					if constexpr (std::is_same_v<Predefined, TOMLNode>)
 					{
@@ -323,48 +331,40 @@ namespace oly::assets
 							return obj;
 					}
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 				}
 				return std::nullopt;
 			}
 		};
 
 		template<typename Key>
-		struct Optional<Key, TOMLArray, void>
+		struct Optional<Key, TOMLArray, void> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Optional(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			TOMLArray operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					TOMLArray obj;
 					if (internal::try_parse<TOMLArray>(value, obj))
 						return obj;
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 				}
 				return nullptr;
 			}
 		};
 
 		template<typename Key>
-		struct Optional<Key, void, void>
+		struct Optional<Key, void, void> : public Accessor<Key, false>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Optional(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, false>::Accessor;
 
 			template<typename T>
 			bool operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					if constexpr (std::is_same_v<T, TOMLNode>)
 					{
@@ -377,7 +377,7 @@ namespace oly::assets
 							return true;
 					}
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 					return false;
 				}
 				else
@@ -388,7 +388,7 @@ namespace oly::assets
 			bool operator()(std::optional<T>& obj, std::source_location location = std::source_location::current()) const
 			{
 				obj = std::nullopt;
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					T o;
 					if (internal::try_parse<T>(value, o))
@@ -397,7 +397,7 @@ namespace oly::assets
 						return true;
 					}
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 					return false;
 				}
 				else
@@ -407,7 +407,7 @@ namespace oly::assets
 			template<typename T>
 			bool operator()(std::vector<T>& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					TOMLArray arr;
 					if (internal::try_parse<TOMLArray>(value, arr))
@@ -420,20 +420,20 @@ namespace oly::assets
 							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
 								obj.push_back(el);
 							else
-								parser.log_at_level(LogLevel::Warning, location, key, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
 
 						return true;
 					}
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 				}
 				return false;
 			}
 
 			bool operator()(TOMLNode& obj) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					obj = std::move(value);
 					return true;
@@ -445,7 +445,7 @@ namespace oly::assets
 			bool operator()(std::optional<TOMLNode>& obj) const
 			{
 				obj = std::nullopt;
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					obj = std::move(value);
 					return true;
@@ -457,12 +457,12 @@ namespace oly::assets
 			template<typename T>
 			bool operator()(PartialView<T> obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = parser.field(key))
+				if (auto value = this->field())
 				{
 					if (internal::try_parse<T>(value, obj))
 						return true;
 
-					parser.log_at_level(LogLevel::Warning, location, key);
+					this->report(location);
 					return false;
 				}
 				else
@@ -474,18 +474,14 @@ namespace oly::assets
 		struct Required;
 
 		template<typename Key, typename Translator>
-		struct Required<Key, void, Translator>
+		struct Required<Key, void, Translator> : public Accessor<Key, true>
 		{
-			const Parser& parser;
-			Key key;
+			using Accessor<Key, true>::Accessor;
 
-		public:
-			Required(const Parser& parser, Key key) : parser(parser), key(key) {}
-			
 			typename Translator::EnumType operator()(std::source_location location = std::source_location::current()) const
 			{
 				typename Translator::IndexType index;
-				if (internal::try_parse<typename Translator::IndexType>(parser.field(key), index))
+				if (internal::try_parse<typename Translator::IndexType>(this->field(), index))
 				{
 					try
 					{
@@ -493,60 +489,55 @@ namespace oly::assets
 					}
 					catch (const std::out_of_range&)
 					{
-						parser.log_at_level(LogLevel::Error, location, key, index);
+						this->report(location, index);
 					}
 				}
 				else
-					parser.log_at_level(LogLevel::Error, location, key);
-				throw Error(parser.error_code);
+					this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
 			}
 		};
 
 		template<typename Key, typename Predefined>
-		struct Required<Key, Predefined, void>
+		struct Required<Key, Predefined, void> : public Accessor<Key, true>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Required(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, true>::Accessor;
 
 			Predefined operator()(std::source_location location = std::source_location::current()) const
 			{
 				if constexpr (std::is_same_v<Predefined, TOMLNode>)
 				{
-					if (auto value = parser.field(key))
+					if (auto value = this->field())
 						return std::move(value);
 				}
 				else
 				{
 					Predefined obj;
-					if (internal::try_parse<Predefined>(parser.field(key), obj))
+					if (internal::try_parse<Predefined>(this->field(), obj))
 						return obj;
 				}
 
-				parser.log_at_level(LogLevel::Error, location, key);
-				throw Error(parser.error_code);
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
 			}
 		};
 
 		template<typename Key>
-		struct Required<Key, TOMLArray, void>
+		struct Required<Key, TOMLArray, void> : public Accessor<Key, true>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Required(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, true>::Accessor;
 
 			TOMLArray operator()(std::source_location location = std::source_location::current()) const
 			{
 				TOMLArray obj;
-				if (internal::try_parse<TOMLArray>(parser.field(key), obj))
+				if (internal::try_parse<TOMLArray>(this->field(), obj))
 					return obj;
 
-				parser.log_at_level(LogLevel::Error, location, key);
-				throw Error(parser.error_code);
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
 			}
 
 			struct Restriction
@@ -558,37 +549,34 @@ namespace oly::assets
 			TOMLArray operator()(Restriction restriction, std::source_location location = std::source_location::current()) const
 			{
 				TOMLArray obj;
-				if (internal::try_parse<TOMLArray>(parser.field(key), obj))
+				if (internal::try_parse<TOMLArray>(this->field(), obj))
 				{
 					if (obj->size() >= restriction.min_size && obj->size() <= restriction.max_size)
 						return obj;
 					else
 					{
-						parser.log_at_level(LogLevel::Error, location, key, internal::fail_causes::FAILED_RESTRICTION,
+						this->report(location, internal::fail_causes::FAILED_RESTRICTION,
 							DeferredStringList{ "-> out of range [", std::to_string(restriction.min_size), ", ", std::to_string(restriction.max_size), "]"});
 					}
 				}
 
-				parser.log_at_level(LogLevel::Error, location, key);
-				throw Error(parser.error_code);
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
 			}
 		};
 
 		template<typename Key>
-		struct Required<Key, void, void>
+		struct Required<Key, void, void> : public Accessor<Key, true>
 		{
-			const Parser& parser;
-			Key key;
-
-		public:
-			Required(const Parser& parser, Key key) : parser(parser), key(key) {}
+			using Accessor<Key, true>::Accessor;
 
 			template<typename T>
 			void operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
 				if constexpr (std::is_same_v<T, TOMLNode>)
 				{
-					if (auto value = parser.field(key))
+					if (auto value = this->field())
 					{
 						obj = std::move(value);
 						return;
@@ -596,12 +584,13 @@ namespace oly::assets
 				}
 				else
 				{
-					if (internal::try_parse<T>(parser.field(key), obj))
+					if (internal::try_parse<T>(this->field(), obj))
 						return;
 				}
 
-				parser.log_at_level(LogLevel::Error, location, key);
-				throw Error(parser.error_code);
+				this->report(location);
+
+				throw Error(ErrorCode::UnreachableCode);
 			}
 		};
 
