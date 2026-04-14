@@ -255,11 +255,11 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Translator>
+		template<typename Key, typename Predefined, typename Translator, bool TypeFallback>
 		struct Optional;
 
-		template<typename Key, typename Translator>
-		struct Optional<Key, void, Translator> : public Accessor<Key, false>
+		template<typename Key, typename Translator, bool TypeFallback>
+		struct Optional<Key, void, Translator, TypeFallback> : public Accessor<Key, false>
 		{
 			using Accessor<Key, false>::Accessor;
 
@@ -280,7 +280,7 @@ namespace oly::assets
 							this->report(location, index);
 						}
 					}
-					else
+					else if constexpr (!TypeFallback)
 						this->report(location);
 				}
 
@@ -303,7 +303,7 @@ namespace oly::assets
 							this->report(location, index);
 						}
 					}
-					else
+					else if constexpr (!TypeFallback)
 						this->report(location);
 				}
 
@@ -311,8 +311,8 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined>
-		struct Optional<Key, Predefined, void> : public Accessor<Key, false>
+		template<typename Key, typename Predefined, bool TypeFallback>
+		struct Optional<Key, Predefined, void, TypeFallback> : public Accessor<Key, false>
 		{
 			using Accessor<Key, false>::Accessor;
 
@@ -331,14 +331,15 @@ namespace oly::assets
 							return obj;
 					}
 
-					this->report(location);
+					if constexpr (!TypeFallback)
+						this->report(location);
 				}
 				return std::nullopt;
 			}
 		};
 
-		template<typename Key>
-		struct Optional<Key, TOMLArray, void> : public Accessor<Key, false>
+		template<typename Key, bool TypeFallback>
+		struct Optional<Key, TOMLArray, void, TypeFallback> : public Accessor<Key, false>
 		{
 			using Accessor<Key, false>::Accessor;
 
@@ -350,14 +351,15 @@ namespace oly::assets
 					if (internal::try_parse<TOMLArray>(value, obj))
 						return obj;
 
-					this->report(location);
+					if constexpr (!TypeFallback)
+						this->report(location);
 				}
 				return nullptr;
 			}
 		};
 
-		template<typename Key>
-		struct Optional<Key, void, void> : public Accessor<Key, false>
+		template<typename Key, bool TypeFallback>
+		struct Optional<Key, void, void, TypeFallback> : public Accessor<Key, false>
 		{
 			using Accessor<Key, false>::Accessor;
 
@@ -377,11 +379,10 @@ namespace oly::assets
 							return true;
 					}
 
-					this->report(location);
-					return false;
-				}
-				else
-					return false;
+					if constexpr (!TypeFallback)
+						this->report(location);
+				}	
+				return false;
 			}
 
 			template<typename T>
@@ -397,11 +398,10 @@ namespace oly::assets
 						return true;
 					}
 
-					this->report(location);
-					return false;
+					if constexpr (!TypeFallback)
+						this->report(location);
 				}
-				else
-					return false;
+				return false;
 			}
 
 			template<typename T>
@@ -426,7 +426,8 @@ namespace oly::assets
 						return true;
 					}
 
-					this->report(location);
+					if constexpr (!TypeFallback)
+						this->report(location);
 				}
 				return false;
 			}
@@ -462,11 +463,10 @@ namespace oly::assets
 					if (internal::try_parse<T>(value, obj))
 						return true;
 
-					this->report(location);
-					return false;
+					if (!TypeFallback)
+						this->report(location);
 				}
-				else
-					return false;
+				return false;
 			}
 
 			std::optional<Parser> subparser() const;
@@ -607,8 +607,8 @@ namespace oly::assets
 			template<typename Key>
 			Defaulted<Key, void, Translator> defaulted(Key key) const { return Defaulted<Key, void, Translator>(parser, key); }
 
-			template<typename Key>
-			Optional<Key, void, Translator> optional(Key key) const { return Optional<Key, void, Translator>(parser, key); }
+			template<bool TypeFallback = false, typename Key>
+			Optional<Key, void, Translator, TypeFallback> optional(Key key) const { return Optional<Key, void, Translator, TypeFallback>(parser, key); }
 
 			template<typename Key>
 			Required<Key, void, Translator> required(Key key) const { return Required<Key, void, Translator>(parser, key); }
@@ -631,8 +631,8 @@ namespace oly::assets
 		template<typename T = void, typename Key>
 		Defaulted<Key, T, void> defaulted(Key key) const { return Defaulted<Key, T, void>(*this, key); }
 
-		template<typename T = void, typename Key>
-		Optional<Key, T, void> optional(Key key) const { return Optional<Key, T, void>(*this, key); }
+		template<typename T = void, bool TypeFallback = false, typename Key>
+		Optional<Key, T, void, TypeFallback> optional(Key key) const { return Optional<Key, T, void, TypeFallback>(*this, key); }
 		
 		template<typename T = void, typename Key>
 		Required<Key, T, void> required(Key key) const { return Required<Key, T, void>(*this, key); }
@@ -650,8 +650,8 @@ namespace oly::assets
 		}
 	};
 
-	template<typename Key>
-	std::optional<Parser> Parser::Optional<Key, void, void>::subparser() const
+	template<typename Key, bool TypeFallback>
+	std::optional<Parser> Parser::Optional<Key, void, void, TypeFallback>::subparser() const
 	{
 		if (auto value = this->field())
 			return Parser(value, this->parser.log_suffix, this->parser.error_code, this->parser.fatal);

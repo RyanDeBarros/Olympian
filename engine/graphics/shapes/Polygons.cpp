@@ -730,23 +730,8 @@ namespace oly::rendering
 
 				parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-				// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
-				if (auto bp_parser = parser.optional(_gen::keys::Polygon::BorderPivot).subparser())
-				{
-					if (auto bp = bp_parser->optional<unsigned int>(assets::NO_KEY)())
-					{
-						try
-						{
-							ngon_base.border_pivot = _gen::CBorderPivot::val(*bp);
-						}
-						catch (const std::out_of_range&)
-						{
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value (" << *bp << ")" << LOG.nl;
-						}
-					}
-					else
-						bp_parser->optional(assets::NO_KEY)(ngon_base.border_pivot.v);
-				}
+				if (!parser.translate<_gen::CBorderPivot>().optional<true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
+					parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
 					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
@@ -878,23 +863,8 @@ namespace oly::rendering
 			polygon.set_bordered(*bordered);
 		parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-		// TODO v7 extract pattern into Parser (try translation first -> if index parse fails, DON'T log, just move to alternate parse). There should be no external ::val() calls
-		if (auto bp_parser = parser.optional(_gen::keys::Polygon::BorderPivot).subparser())
-		{
-			if (auto bp = bp_parser->optional<unsigned int>(assets::NO_KEY)())
-			{
-				try
-				{
-					ngon_base.border_pivot = _gen::CBorderPivot::val(*bp);
-				}
-				catch (const std::out_of_range&)
-				{
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value (" << *bp << ")" << LOG.nl;
-				}
-			}
-			else
-				bp_parser->optional(assets::NO_KEY)(ngon_base.border_pivot.v);
-		}
+		if (!parser.translate<_gen::CBorderPivot>().optional<true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
+			parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 

@@ -949,8 +949,7 @@ namespace oly::rendering
 		assets::Parser parser(node);
 
 		std::vector<TextElement> elements;
-		// TODO v7 this will log a warning even if else-if branch passes - use different parser method for this multi-datatype case
-		if (auto element_array = parser.optional<TOMLArray>(_gen::keys::Paragraph::Element)())
+		if (auto element_array = parser.optional<TOMLArray, true>(_gen::keys::Paragraph::Element)())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
 				if (auto element = TOMLNode(*element_array->get(i)))
