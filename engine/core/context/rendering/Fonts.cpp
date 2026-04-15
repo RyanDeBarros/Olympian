@@ -62,6 +62,12 @@ namespace oly::context
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}
 
+	static auto make_nonnull_codepoint_validator()
+	{
+		return assets::make_single_validator<utf::Codepoint>([](utf::Codepoint c) { return c != utf::Codepoint(0); },
+			[](utf::Codepoint c) { return DeferredStringList{ "-> null codepoint not allowed" }; });
+	}
+
 	static rendering::Kerning parse_kerning(TOMLNode node)
 	{
 		auto kerning_arr = assets::Parser(node).optional<TOMLArray>(_gen::keys::Font::Kerning)();
@@ -76,7 +82,7 @@ namespace oly::context
 			{
 				const size_t k_idx = _k_idx++;
 				assets::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
-				const auto pair = parser.required<std::array<utf::Codepoint, 2>>(_gen::keys::Font::CodepointPair)({ .no_falsy = false });
+				const auto pair = parser.required<std::array<utf::Codepoint, 2>>(_gen::keys::Font::CodepointPair, make_nonnull_codepoint_validator())();
 				const auto dist = parser.required<int>(_gen::keys::Font::CodepointDistance)();
 				kerning.map.emplace(std::make_pair(pair.at(0), pair.at(1)), dist);
 			}
@@ -153,7 +159,10 @@ namespace oly::context
 
 		// TODO v7 associate certain keys with certain data types to automatically call the correct outer io parse function
 
-		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray)({ .min_size = index + 1 });
+		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(_gen::keys::Font::FontAtlasArray, assets::make_single_validator<TOMLArray>(
+			[index](const TOMLArray arr) { return index < arr->size(); },
+			[index](const TOMLArray arr) { return DeferredStringList{ "-> array size (", std::to_string(arr->size()), ") is not larger than font index (", std::to_string(index), ")" }; }
+		))();
 
 		auto node = (TOMLNode)*font_atlas_list->get(index);
 		assets::Parser parser(node);
@@ -241,10 +250,10 @@ namespace oly::context
 			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
 				assets::Parser parser((TOMLNode)g);
 
-				utf::Codepoint codepoint = parser.required<utf::Codepoint>(_gen::keys::Font::Codepoint)({ .no_falsy = true });
+				utf::Codepoint codepoint = parser.required<utf::Codepoint>(_gen::keys::Font::Codepoint, make_nonnull_codepoint_validator())();
 
 				std::string texture_file;
-				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u); // TODO v7 restriction for out-of-range
+				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u); // TODO v7 policy for out-of-range
 				if (tidx < texture_files.size())
 					texture_file = texture_files[tidx];
 				else
