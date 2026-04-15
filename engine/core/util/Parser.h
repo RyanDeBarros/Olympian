@@ -128,8 +128,6 @@ namespace oly::assets
 		ErrorCode error_code;
 		bool fatal;
 
-		// TODO v7 refactor common parsing logic
-
 		template<typename Key>
 		DeferredStringList build_message(Key key, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
 		{
@@ -178,6 +176,7 @@ namespace oly::assets
 			Accessor(const Parser& parser, Key key, Validator&& validator) : parser(parser), key(key), validator(std::move(validator)) {}
 
 		protected:
+			template<bool Throw = Throws>
 			void report(std::source_location location, const StringParam& cause, DeferredStringList&& elaboration = {}) const
 			{
 				parser.log_at_level(Throws ? LogLevel::Error : LogLevel::Warning, location, key, cause.transfer(), std::move(elaboration));
@@ -185,7 +184,7 @@ namespace oly::assets
 					throw Error(parser.error_code);
 			}
 
-			template<typename Index>
+			template<typename Index, bool Throw = Throws>
 			void report(std::source_location location, Index e)
 			{
 				parser.log_at_level(Throws ? LogLevel::Error : LogLevel::Warning, location, key, e);
@@ -203,15 +202,18 @@ namespace oly::assets
 			{
 				if constexpr (Validates<Validator, T>)
 				{
-					if (!this->validator(obj))
-						this->report(location, internal::fail_causes::CANNOT_PARSE, this->validator.elaboration(obj));
+					if (!validator(obj))
+						report<true>(location, internal::fail_causes::CANNOT_PARSE, validator.elaboration(obj));
 				}
 			}
 
 			std::optional<TOMLNode> optional_node(std::source_location location) const
 			{
 				if (auto value = field())
+				{
+					validate(value, location);
 					return value;
+				}
 				else if constexpr (Throws)
 					report(location, internal::fail_causes::MISSING_FIELD);
 				return std::nullopt;
@@ -227,7 +229,8 @@ namespace oly::assets
 					{
 						validate(obj, location);
 						return obj;
-					} else if constexpr (!TypeFallback)
+					}
+					else if constexpr (!TypeFallback)
 						report(location, internal::fail_causes::CANNOT_PARSE);
 				}
 				else if constexpr (Throws)
@@ -246,7 +249,9 @@ namespace oly::assets
 					{
 						try
 						{
-							return Translator::val(index, def);
+							typename Translator::EnumType e = Translator::val(index, def);
+							validate(e, location);
+							return e;
 						}
 						catch (const std::out_of_range&)
 						{
@@ -271,7 +276,10 @@ namespace oly::assets
 				if (auto value = this->field())
 				{
 					if (internal::try_parse<U>(value, def))
+					{
+						validate(def, location);
 						return true;
+					}
 					else if constexpr (!TypeFallback)
 						this->report(location, internal::fail_causes::CANNOT_PARSE);
 				}
@@ -510,9 +518,7 @@ namespace oly::assets
 
 			Predefined operator()(std::source_location location = std::source_location::current()) const
 			{
-				Predefined obj = *this->parse_value<false, Predefined>(location);
-				this->validate(obj, location);
-				return obj;
+				return *this->parse_value<false, Predefined>(location);
 			}
 		};
 

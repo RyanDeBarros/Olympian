@@ -248,28 +248,33 @@ namespace oly::context
 		if (auto glyph_array = parser.optional<TOMLArray>(_gen::keys::Font::GlyphArray)())
 		{
 			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
-				assets::Parser parser((TOMLNode)g);
-
-				utf::Codepoint codepoint = parser.required<utf::Codepoint>(_gen::keys::Font::Codepoint, make_nonnull_codepoint_validator())();
-
-				std::string texture_file;
-				unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile)(0u); // TODO v7 policy for out-of-range
-				if (tidx < texture_files.size())
-					texture_file = texture_files[tidx];
-				else
+				try
 				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "texture file indexer (" << tidx << ") is out of range (" << texture_files.size() << "), skipping glyph..." << LOG.endl;
-					throw Error(ErrorCode::LoadAsset);
+					assets::Parser parser((TOMLNode)g);
+
+					utf::Codepoint codepoint = parser.required<utf::Codepoint>(_gen::keys::Font::Codepoint, make_nonnull_codepoint_validator())();
+
+					std::string texture_file;
+					unsigned int tidx = parser.defaulted(_gen::keys::Font::TextureFile, assets::make_single_validator<unsigned int>(
+						[sz = texture_files.size()](unsigned int v) { return v < sz; },
+						[sz = texture_files.size()](unsigned int v) { return DeferredStringList{ "-> (", std::to_string(v), ") out of range (", std::to_string(sz), "), skipping glyph..."}; }
+					))(0u);
+					texture_file = texture_files[tidx];
+
+					unsigned int texture_index = parser.defaulted(_gen::keys::Font::TextureIndex)(0u);
+
+					math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location), true);
+					math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
+					math::PositioningMode origin_offset_mode = parser.translate<_gen::PositioningMode>().defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
+					glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();
+
+					glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
 				}
-
-				unsigned int texture_index = parser.defaulted(_gen::keys::Font::TextureIndex)(0u);
-
-				math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location), true);
-				math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
-				math::PositioningMode origin_offset_mode = parser.translate<_gen::PositioningMode>().defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
-				glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();
-
-				glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
+				catch (const Error& e)
+				{
+					if (e.code != ErrorCode::LoadAsset)
+						throw;
+				}
 				});
 		}
 
