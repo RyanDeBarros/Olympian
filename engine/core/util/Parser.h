@@ -68,6 +68,7 @@ namespace oly::assets
 		namespace fail_causes
 		{
 			constexpr const char* CANNOT_PARSE = "cannot parse";
+			constexpr const char* MISSING_FIELD = "missing";
 			constexpr const char* INVALID_ARRAY_ELEMENT = "skipping invalid array element in";
 			constexpr const char* INVALID_ARRAY_SIZE = "invalid size of array";
 			constexpr const char* FAILED_RESTRICTION = "failed restriction for";
@@ -177,7 +178,7 @@ namespace oly::assets
 			Accessor(const Parser& parser, Key key, Validator&& validator) : parser(parser), key(key), validator(std::move(validator)) {}
 
 		protected:
-			void report(std::source_location location, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
+			void report(std::source_location location, const StringParam& cause, DeferredStringList&& elaboration = {}) const
 			{
 				parser.log_at_level(Throws ? LogLevel::Error : LogLevel::Warning, location, key, cause.transfer(), std::move(elaboration));
 				if constexpr (Throws)
@@ -197,6 +198,16 @@ namespace oly::assets
 				return parser.field(key);
 			}
 
+			template<bool LogMissing>
+			std::optional<TOMLNode> optional_node(std::source_location location) const
+			{
+				if (auto value = field())
+					return value;
+				else if constexpr (LogMissing)
+					report(location, internal::fail_causes::MISSING_FIELD);
+				return std::nullopt;
+			}
+
 			template<bool TypeFallback>
 			TOMLArray parse_array(std::source_location location) const
 			{
@@ -210,19 +221,72 @@ namespace oly::assets
 							if (validator(obj))
 								return obj;
 							else
-								this->report(location, internal::fail_causes::FAILED_RESTRICTION, validator.elaboration(obj));
+								report(location, internal::fail_causes::FAILED_RESTRICTION, validator.elaboration(obj));
 						}
 						else
 							return obj;
 					}
 
 					if constexpr (!TypeFallback)
-						this->report(location);
+						report(location, internal::fail_causes::CANNOT_PARSE);
 				}
 				else if constexpr (Throws)
-					this->report(location);
+					report(location, internal::fail_causes::MISSING_FIELD);
 
 				return nullptr;
+			}
+
+			template<bool TypeFallback, typename Translator>
+			std::optional<typename Translator::EnumType> parse_enum(std::source_location location, typename Translator::EnumType def = Translator::val()) const
+			{
+				if (auto value = field())
+				{
+					typename Translator::IndexType index;
+					if (internal::try_parse<typename Translator::IndexType>(value, index))
+					{
+						try
+						{
+							return Translator::val(index, def);
+						}
+						catch (const std::out_of_range&)
+						{
+							report(location, index);
+						}
+					}
+					else if constexpr (!TypeFallback)
+						report(location, internal::fail_causes::CANNOT_PARSE);
+				}
+				else if constexpr (Throws)
+					report(location, internal::fail_causes::MISSING_FIELD);
+
+				return std::nullopt;
+			}
+
+			template<bool TypeFallback, bool LogMissing, typename T, typename U = T>
+			bool parse_value(T& def, std::source_location location) const
+			{
+				static_assert(!std::is_same_v<T, TOMLNode>);
+				static_assert(!std::is_same_v<T, TOMLArray>);
+
+				if (auto value = this->field())
+				{
+					if (internal::try_parse<U>(value, def))
+						return true;
+
+					if constexpr (!TypeFallback)
+						this->report(location, internal::fail_causes::CANNOT_PARSE);
+				}
+				else if constexpr (LogMissing)
+					report(location, internal::fail_causes::MISSING_FIELD);
+
+				return false;
+			}
+
+			template<bool TypeFallback, bool LogMissing, typename T>
+			std::optional<T> parse_value(std::source_location location) const
+			{
+				T obj = T();
+				return parse_value<TypeFallback, LogMissing, T>(obj, location) ? std::make_optional<T>(std::move(obj)) : std::nullopt;
 			}
 		};
 
@@ -236,25 +300,10 @@ namespace oly::assets
 
 			typename Translator::EnumType operator()(typename Translator::EnumType def = Translator::val(), std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					typename Translator::IndexType index;
-					if (internal::try_parse<typename Translator::IndexType>(value, index))
-					{
-						try
-						{
-							return Translator::val(index, def);
-						}
-						catch (const std::out_of_range&)
-						{
-							this->report(location, index);
-						}
-					}
-					else
-						this->report(location);
-				}
-
-				return std::move(def);
+				if (auto opt = this->parse_enum<true, Translator>(location, def))
+					return *opt;
+				else
+					return def;
 			}
 		};
 
@@ -266,14 +315,9 @@ namespace oly::assets
 			static_assert(!std::is_same_v<Predefined, TOMLNode>);
 			static_assert(!std::is_same_v<Predefined, TOMLArray>);
 
-			Predefined operator()(Predefined def = Predefined(), std::source_location location = std::source_location::current()) const
+			Predefined operator()(Predefined&& def = Predefined(), std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					if (!internal::try_parse<Predefined>(value, def))
-						this->report(location);
-				}
-
+				this->parse_value<false, false>(def, location);
 				return std::move(def);
 			}
 		};
@@ -304,7 +348,7 @@ namespace oly::assets
 						return obj;
 					}
 
-					this->report(location);
+					this->report(location, internal::fail_causes::CANNOT_PARSE);
 				}
 				return {};
 			}
@@ -316,17 +360,9 @@ namespace oly::assets
 			using Accessor<Key, false, Validator>::Accessor;
 
 			template<typename T>
-			T operator()(T def, std::source_location location = std::source_location::current()) const
+			T operator()(T&& def = T(), std::source_location location = std::source_location::current()) const
 			{
-				static_assert(!std::is_same_v<T, TOMLNode>);
-				static_assert(!std::is_same_v<T, TOMLArray>);
-
-				if (auto value = this->field())
-				{
-					if (!internal::try_parse<T>(value, def))
-						this->report(location);
-				}
-
+				this->parse_value<false, false>(def, location);
 				return std::move(def);
 			}
 		};
@@ -341,49 +377,16 @@ namespace oly::assets
 
 			bool operator()(typename Translator::EnumType& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					typename Translator::IndexType index;
-					if (internal::try_parse<typename Translator::IndexType>(value, index))
-					{
-						try
-						{
-							obj = Translator::val(index);
-							return true;
-						}
-						catch (const std::out_of_range&)
-						{
-							this->report(location, index);
-						}
-					}
-					else if constexpr (!TypeFallback)
-						this->report(location);
-				}
-
-				return false;
+				return set_from_optional(obj, this->parse_enum<TypeFallback, Translator>(location));
 			}
 
 			std::optional<typename Translator::EnumType> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					typename Translator::IndexType index;
-					if (internal::try_parse<typename Translator::IndexType>(value, index))
-					{
-						try
-						{
-							return Translator::val(index);
-						}
-						catch (const std::out_of_range&)
-						{
-							this->report(location, index);
-						}
-					}
-					else if constexpr (!TypeFallback)
-						this->report(location);
-				}
-
-				return std::nullopt;
+				typename Translator::EnumType obj;
+				if (set_from_optional(obj, this->parse_enum<TypeFallback, Translator>(location)))
+					return obj;
+				else
+					return std::nullopt;
 			}
 		};
 
@@ -394,23 +397,18 @@ namespace oly::assets
 
 			std::optional<Predefined> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					if constexpr (std::is_same_v<Predefined, TOMLNode>)
-					{
-						return value;
-					}
-					else
-					{
-						Predefined obj;
-						if (internal::try_parse<Predefined>(value, obj))
-							return obj;
-					}
+				return this->parse_value<TypeFallback, false, Predefined>(location);
+			}
+		};
 
-					if constexpr (!TypeFallback)
-						this->report(location);
-				}
-				return std::nullopt;
+		template<typename Key, typename Validator, bool TypeFallback>
+		struct Optional<Key, TOMLNode, void, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		{
+			using Accessor<Key, false, Validator>::Accessor;
+
+			std::optional<TOMLNode> operator()(std::source_location location = std::source_location::current()) const
+			{
+				return this->optional_node<false>(location);
 			}
 		};
 
@@ -433,42 +431,19 @@ namespace oly::assets
 			template<typename T>
 			bool operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					if constexpr (std::is_same_v<T, TOMLNode>)
-					{
-						obj = std::move(value);
-						return true;
-					}
-					else
-					{
-						if (internal::try_parse<T>(value, obj))
-							return true;
-					}
-
-					if constexpr (!TypeFallback)
-						this->report(location);
-				}	
-				return false;
+				return this->parse_value<TypeFallback, false>(obj, location);
 			}
 
 			template<typename T>
 			bool operator()(std::optional<T>& obj, std::source_location location = std::source_location::current()) const
 			{
-				obj = std::nullopt;
-				if (auto value = this->field())
-				{
-					T o;
-					if (internal::try_parse<T>(value, o))
-					{
-						obj = std::move(o);
-						return true;
-					}
+				return (obj = this->parse_value<TypeFallback, false, T>(location)).has_value();
+			}
 
-					if constexpr (!TypeFallback)
-						this->report(location);
-				}
-				return false;
+			template<typename T>
+			bool operator()(PartialView<T> obj, std::source_location location = std::source_location::current()) const
+			{
+				return this->parse_value<TypeFallback, false, PartialView<T>, T>(obj, location);
 			}
 
 			template<typename T>
@@ -499,41 +474,14 @@ namespace oly::assets
 				return false;
 			}
 
-			bool operator()(TOMLNode& obj) const
+			bool operator()(TOMLNode& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					obj = std::move(value);
-					return true;
-				}
-				else
-					return false;
+				return set_from_optional(obj, this->optional_node<false>(location));
 			}
 
-			bool operator()(std::optional<TOMLNode>& obj) const
+			bool operator()(std::optional<TOMLNode>& obj, std::source_location location = std::source_location::current()) const
 			{
-				obj = std::nullopt;
-				if (auto value = this->field())
-				{
-					obj = std::move(value);
-					return true;
-				}
-				else
-					return false;
-			}
-
-			template<typename T>
-			bool operator()(PartialView<T> obj, std::source_location location = std::source_location::current()) const
-			{
-				if (auto value = this->field())
-				{
-					if (internal::try_parse<T>(value, obj))
-						return true;
-
-					if constexpr (!TypeFallback)
-						this->report(location);
-				}
-				return false;
+				return (obj = this->optional_node<false>(location)).has_value();
 			}
 
 			std::optional<Parser> subparser() const;
@@ -549,22 +497,7 @@ namespace oly::assets
 
 			typename Translator::EnumType operator()(std::source_location location = std::source_location::current()) const
 			{
-				typename Translator::IndexType index;
-				if (internal::try_parse<typename Translator::IndexType>(this->field(), index))
-				{
-					try
-					{
-						return Translator::val(index);
-					}
-					catch (const std::out_of_range&)
-					{
-						this->report(location, index);
-					}
-				}
-				else
-					this->report(location);
-
-				throw Error(ErrorCode::UnreachableCode);
+				return *this->parse_enum<false, Translator>(location);
 			}
 		};
 
@@ -575,15 +508,10 @@ namespace oly::assets
 
 			Predefined operator()(std::source_location location = std::source_location::current()) const
 			{
-				if constexpr (std::is_same_v<Predefined, TOMLNode>)
-				{
-					if (auto value = this->field())
-						return std::move(value);
-				}
-				else
+				if (auto value = this->field())
 				{
 					Predefined obj;
-					if (internal::try_parse<Predefined>(this->field(), obj))
+					if (internal::try_parse<Predefined>(value, obj))
 					{
 						if constexpr (Validates<Validator, Predefined>)
 						{
@@ -595,11 +523,24 @@ namespace oly::assets
 						else
 							return obj;
 					}
+					else
+						this->report(location, internal::fail_causes::CANNOT_PARSE);
 				}
-
-				this->report(location);
+				else
+					this->report(location, internal::fail_causes::MISSING_FIELD);
 
 				throw Error(ErrorCode::UnreachableCode);
+			}
+		};
+
+		template<typename Key, typename Validator>
+		struct Required<Key, TOMLNode, void, Validator> : public Accessor<Key, true, Validator>
+		{
+			using Accessor<Key, true, Validator>::Accessor;
+
+			TOMLNode operator()(std::source_location location = std::source_location::current()) const
+			{
+				return *this->optional_node<true>(location);
 			}
 		};
 
@@ -623,37 +564,42 @@ namespace oly::assets
 
 			std::array<T, N> operator()(std::source_location location = std::source_location::current()) const
 			{
-				TOMLArray arr;
-				if (internal::try_parse<TOMLArray>(this->field(), arr))
+				if (auto value = this->field())
 				{
-					if (arr->size() != N)
-						this->report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
-							DeferredStringList{ "expected (", std::to_string(N), ") but parsed (", std::to_string(arr->size()), ")" });
-
-					std::array<T, N> obj;
-					for (size_t i = 0; i < N; ++i)
+					TOMLArray arr;
+					if (internal::try_parse<TOMLArray>(this->field(), arr))
 					{
-						T el;
-						if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+						if (arr->size() != N)
+							this->report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
+								DeferredStringList{ "expected (", std::to_string(N), ") but parsed (", std::to_string(arr->size()), ")" });
+
+						std::array<T, N> obj;
+						for (size_t i = 0; i < N; ++i)
 						{
-							if constexpr (Validates<Validator, T>)
+							T el;
+							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
 							{
-								if (this->validator(el))
-									obj.at(i) = std::move(el);
+								if constexpr (Validates<Validator, T>)
+								{
+									if (this->validator(el))
+										obj.at(i) = std::move(el);
+									else
+										this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT, this->validator.elaboration(el));
+								}
 								else
-									this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT, this->validator.elaboration(el));
+									obj.at(i) = std::move(el);
 							}
 							else
-								obj.at(i) = std::move(el);
+								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
 						}
-						else
-							this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+
+						return obj;
 					}
-
-					return obj;
+					else
+						this->report(location, internal::fail_causes::CANNOT_PARSE);
 				}
-
-				this->report(location);
+				else
+					this->report(location, internal::fail_causes::MISSING_FIELD);
 
 				throw Error(ErrorCode::UnreachableCode);
 			}
@@ -667,23 +613,12 @@ namespace oly::assets
 			template<typename T>
 			void operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
-				if constexpr (std::is_same_v<T, TOMLNode>)
-				{
-					if (auto value = this->field())
-					{
-						obj = std::move(value);
-						return;
-					}
-				}
-				else
-				{
-					if (internal::try_parse<T>(this->field(), obj))
-						return;
-				}
+				this->parse_value<false, true>(obj, location);
+			}
 
-				this->report(location);
-
-				throw Error(ErrorCode::UnreachableCode);
+			void operator()(TOMLNode& obj, std::source_location location = std::source_location::current()) const
+			{
+				obj = *this->optional_node<true>(location);
 			}
 		};
 

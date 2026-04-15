@@ -97,6 +97,30 @@ namespace oly
 		return from ? std::make_optional<ToOptional>((ToOptional)*from) : std::nullopt;
 	}
 
+	template<typename T>
+	inline bool set_from_optional(T& obj, const std::optional<T>& opt)
+	{
+		if (opt)
+		{
+			obj = *opt;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<typename T>
+	inline bool set_from_optional(T& obj, std::optional<T>&& opt)
+	{
+		if (opt)
+		{
+			obj = std::move(*opt);
+			return true;
+		}
+		else
+			return false;
+	}
+
 	template<typename From, typename To>
 	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 
