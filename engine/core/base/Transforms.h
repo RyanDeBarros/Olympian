@@ -202,21 +202,6 @@ namespace oly
 		static Transformer2D load(TOMLNode node);
 	};
 
-	// TODO v7 remove?
-	struct FundamentalTransformModifier2D : public TransformModifier2D
-	{
-		Polymorphic<TransformModifier2D> fundamental;
-		Polymorphic<TransformModifier2D> extension;
-
-		virtual void operator()(glm::mat3& global) const override
-		{
-			(*fundamental)(global);
-			(*extension)(global);
-		}
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(FundamentalTransformModifier2D);
-	};
-
 	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
 	{
 		return translation_matrix(size * (glm::vec2(0.5f) - pivot));

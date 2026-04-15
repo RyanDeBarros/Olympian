@@ -61,7 +61,6 @@ namespace oly
 				None = 0,
 				RefModifier = 1,
 				SetModifier = 2,
-				SetFundamentalExtension = 4,
 				Full = RefModifier | SetModifier
 			};
 
@@ -149,12 +148,6 @@ namespace oly
 			requires (exposure::NONZERO(Params.modifier & exposure::modifier::RefModifier))
 		{
 			return transformer.ref_modifier<T>();
-		}
-		
-		Polymorphic<TransformModifier2D>& set_fundamental_modifier_extension()
-			requires (exposure::NONZERO(Params.modifier & exposure::modifier::SetFundamentalExtension))
-		{
-			return transformer.ref_modifier<FundamentalTransformModifier2D>().extension;
 		}
 	};
 }
