@@ -169,7 +169,7 @@ namespace oly::rendering
 		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::TileMap::Transformer)())
 		{
 			tilemap.set_local() = Transform2D::load(*transformer);
-			tilemap.set_transformer().set_modifier() = io::load_transform_modifier_2d(*transformer);
+			tilemap.set_transformer().set_modifier() = TransformModifier2D::load(*transformer);
 		}
 
 		if (auto toml_layers = parser.optional<TOMLArray>(_gen::keys::TileMap::LayerArray)())

@@ -59,7 +59,14 @@ namespace oly
 			return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
 		}
 
-		static Transform2D load(TOMLNode node);
+		void overload(TOMLNode node);
+
+		static Transform2D load(TOMLNode node)
+		{
+			Transform2D transform;
+			transform.overload(node);
+			return transform;
+		}
 	};
 
 	struct TransformModifier2D
@@ -67,6 +74,16 @@ namespace oly
 		virtual ~TransformModifier2D() = default;
 		virtual void operator()(glm::mat3& global) const {}
 		OLY_POLYMORPHIC_CLONE_DEFINITION(TransformModifier2D);
+
+		virtual void overload(TOMLNode node) {}
+		static void overload(Polymorphic<TransformModifier2D>& modifier, TOMLNode node);
+	
+		static Polymorphic<TransformModifier2D> load(TOMLNode node)
+		{
+			Polymorphic<TransformModifier2D> modifier = nullptr;
+			overload(modifier, node);
+			return modifier;
+		}
 	};
 
 	class Transformer2D;
@@ -185,6 +202,7 @@ namespace oly
 		static Transformer2D load(TOMLNode node);
 	};
 
+	// TODO v7 remove?
 	struct FundamentalTransformModifier2D : public TransformModifier2D
 	{
 		Polymorphic<TransformModifier2D> fundamental;
@@ -212,6 +230,7 @@ namespace oly
 		PivotTransformModifier2D(glm::vec2 pivot = glm::vec2(0.5f), glm::vec2 size = glm::vec2(0.0f)) : pivot(pivot), size(size) {}
 
 		virtual void operator()(glm::mat3& global) const override;
+		virtual void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(PivotTransformModifier2D);
 	};
@@ -228,6 +247,7 @@ namespace oly
 		ShearTransformModifier2D(glm::vec2 shearing = glm::vec2(0.0f)) : shearing(shearing) {}
 
 		virtual void operator()(glm::mat3& global) const override;
+		virtual void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ShearTransformModifier2D);
 	};
@@ -239,6 +259,7 @@ namespace oly
 		OffsetTransformModifier2D(glm::vec2 offset = glm::vec2(0.0f)) : offset(offset) {}
 
 		virtual void operator()(glm::mat3& global) const override;
+		virtual void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(OffsetTransformModifier2D);
 	};

@@ -19,9 +19,9 @@ code = "Modifier"
 enum = "Modifier"
 
 [[key]]
-label = "Type"
-code = "Type"
-enum = "ModifierType"
+label = "Modifier Type"
+code = "Klass"
+enum = "Klass"
 
 [[key]]
 label = "Shearing"
