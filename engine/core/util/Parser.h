@@ -198,12 +198,21 @@ namespace oly::assets
 				return parser.field(key);
 			}
 
-			template<bool LogMissing>
+			template<typename T>
+			void validate(const T& obj, std::source_location location) const
+			{
+				if constexpr (Validates<Validator, T>)
+				{
+					if (!this->validator(obj))
+						this->report(location, internal::fail_causes::CANNOT_PARSE, this->validator.elaboration(obj));
+				}
+			}
+
 			std::optional<TOMLNode> optional_node(std::source_location location) const
 			{
 				if (auto value = field())
 					return value;
-				else if constexpr (LogMissing)
+				else if constexpr (Throws)
 					report(location, internal::fail_causes::MISSING_FIELD);
 				return std::nullopt;
 			}
@@ -216,18 +225,9 @@ namespace oly::assets
 					TOMLArray obj;
 					if (internal::try_parse<TOMLArray>(value, obj))
 					{
-						if constexpr (Validates<Validator, TOMLArray>)
-						{
-							if (validator(obj))
-								return obj;
-							else
-								report(location, internal::fail_causes::FAILED_RESTRICTION, validator.elaboration(obj));
-						}
-						else
-							return obj;
-					}
-
-					if constexpr (!TypeFallback)
+						validate(obj, location);
+						return obj;
+					} else if constexpr (!TypeFallback)
 						report(location, internal::fail_causes::CANNOT_PARSE);
 				}
 				else if constexpr (Throws)
@@ -262,7 +262,7 @@ namespace oly::assets
 				return std::nullopt;
 			}
 
-			template<bool TypeFallback, bool LogMissing, typename T, typename U = T>
+			template<bool TypeFallback, typename T, typename U = T>
 			bool parse_value(T& def, std::source_location location) const
 			{
 				static_assert(!std::is_same_v<T, TOMLNode>);
@@ -272,21 +272,76 @@ namespace oly::assets
 				{
 					if (internal::try_parse<U>(value, def))
 						return true;
-
-					if constexpr (!TypeFallback)
+					else if constexpr (!TypeFallback)
 						this->report(location, internal::fail_causes::CANNOT_PARSE);
 				}
-				else if constexpr (LogMissing)
+				else if constexpr (Throws)
 					report(location, internal::fail_causes::MISSING_FIELD);
 
 				return false;
 			}
 
-			template<bool TypeFallback, bool LogMissing, typename T>
+			template<bool TypeFallback, typename T>
 			std::optional<T> parse_value(std::source_location location) const
 			{
 				T obj = T();
-				return parse_value<TypeFallback, LogMissing, T>(obj, location) ? std::make_optional<T>(std::move(obj)) : std::nullopt;
+				return parse_value<TypeFallback, T>(obj, location) ? std::make_optional<T>(std::move(obj)) : std::nullopt;
+			}
+
+			template<typename T, typename Array>
+			bool fill_array(TOMLArray arr, Array& array, std::source_location location) const
+			{
+				for (size_t i = 0; i < arr->size(); ++i)
+				{
+					T el;
+					if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
+					{
+						validate(el, location);
+						array[i] = std::move(el);
+					}
+					else
+					{
+						this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			template<bool TypeFallback, bool Dynamic, typename T, typename Array>
+			Array build_list(std::source_location location) const
+			{
+				if (auto arr = parse_array<TypeFallback>(location))
+				{
+					Array array{};
+
+					if constexpr (Dynamic)
+						array.resize(arr->size());
+					else
+					{
+						if (arr->size() != array.size())
+							report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
+								DeferredStringList{ "expected (", std::to_string(array.size()), ") but parsed (", std::to_string(arr->size()), ")" });
+					}
+
+					if (fill_array<T>(arr, array, location))
+						return std::move(array);
+				}
+
+				return {};
+			}
+
+			template<bool TypeFallback, typename T>
+			std::vector<T> build_vector(std::source_location location) const
+			{
+				return build_list<TypeFallback, true, T, std::vector<T>>(location);
+			}
+
+			template<bool TypeFallback, typename T, size_t N>
+			std::array<T, N> build_array(std::source_location location) const
+			{
+				return build_list<TypeFallback, false, T, std::array<T, N>>(location);
 			}
 		};
 
@@ -300,10 +355,7 @@ namespace oly::assets
 
 			typename Translator::EnumType operator()(typename Translator::EnumType def = Translator::val(), std::source_location location = std::source_location::current()) const
 			{
-				if (auto opt = this->parse_enum<true, Translator>(location, def))
-					return *opt;
-				else
-					return def;
+				return get_from_optional(this->parse_enum<true, Translator>(location, def), std::move(def));
 			}
 		};
 
@@ -312,12 +364,9 @@ namespace oly::assets
 		{
 			using Accessor<Key, false, Validator>::Accessor;
 
-			static_assert(!std::is_same_v<Predefined, TOMLNode>);
-			static_assert(!std::is_same_v<Predefined, TOMLArray>);
-
 			Predefined operator()(Predefined&& def = Predefined(), std::source_location location = std::source_location::current()) const
 			{
-				this->parse_value<false, false>(def, location);
+				this->parse_value<false>(def, location);
 				return std::move(def);
 			}
 		};
@@ -329,28 +378,7 @@ namespace oly::assets
 
 			std::vector<T> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					TOMLArray arr;
-					if (internal::try_parse<TOMLArray>(value, arr))
-					{
-						std::vector<T> obj;
-						obj.reserve(arr->size());
-						for (size_t i = 0; i < arr->size(); ++i)
-						{
-							T el;
-							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
-								obj.push_back(std::move(el));
-							else
-								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
-						}
-
-						return obj;
-					}
-
-					this->report(location, internal::fail_causes::CANNOT_PARSE);
-				}
-				return {};
+				return this->build_vector<false, T>(location);
 			}
 		};
 
@@ -362,7 +390,7 @@ namespace oly::assets
 			template<typename T>
 			T operator()(T&& def = T(), std::source_location location = std::source_location::current()) const
 			{
-				this->parse_value<false, false>(def, location);
+				this->parse_value<false>(def, location);
 				return std::move(def);
 			}
 		};
@@ -382,11 +410,7 @@ namespace oly::assets
 
 			std::optional<typename Translator::EnumType> operator()(std::source_location location = std::source_location::current()) const
 			{
-				typename Translator::EnumType obj;
-				if (set_from_optional(obj, this->parse_enum<TypeFallback, Translator>(location)))
-					return obj;
-				else
-					return std::nullopt;
+				return this->parse_enum<TypeFallback, Translator>(location);
 			}
 		};
 
@@ -397,7 +421,7 @@ namespace oly::assets
 
 			std::optional<Predefined> operator()(std::source_location location = std::source_location::current()) const
 			{
-				return this->parse_value<TypeFallback, false, Predefined>(location);
+				return this->parse_value<TypeFallback, Predefined>(location);
 			}
 		};
 
@@ -408,7 +432,7 @@ namespace oly::assets
 
 			std::optional<TOMLNode> operator()(std::source_location location = std::source_location::current()) const
 			{
-				return this->optional_node<false>(location);
+				return this->optional_node(location);
 			}
 		};
 
@@ -431,57 +455,35 @@ namespace oly::assets
 			template<typename T>
 			bool operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
-				return this->parse_value<TypeFallback, false>(obj, location);
+				return this->parse_value<TypeFallback>(obj, location);
 			}
 
 			template<typename T>
 			bool operator()(std::optional<T>& obj, std::source_location location = std::source_location::current()) const
 			{
-				return (obj = this->parse_value<TypeFallback, false, T>(location)).has_value();
+				return (obj = this->parse_value<TypeFallback, T>(location)).has_value();
 			}
 
 			template<typename T>
 			bool operator()(PartialView<T> obj, std::source_location location = std::source_location::current()) const
 			{
-				return this->parse_value<TypeFallback, false, PartialView<T>, T>(obj, location);
+				return this->parse_value<TypeFallback, PartialView<T>, T>(obj, location);
 			}
 
 			template<typename T>
 			bool operator()(std::vector<T>& obj, std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					TOMLArray arr;
-					if (internal::try_parse<TOMLArray>(value, arr))
-					{
-						obj.clear();
-						obj.reserve(arr->size());
-						for (size_t i = 0; i < arr->size(); ++i)
-						{
-							T el;
-							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
-								obj.push_back(std::move(el));
-							else
-								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
-						}
-
-						return true;
-					}
-
-					if constexpr (!TypeFallback)
-						this->report(location);
-				}
-				return false;
+				return !(obj = this->build_vector<TypeFallback, T>()).empty();
 			}
 
 			bool operator()(TOMLNode& obj, std::source_location location = std::source_location::current()) const
 			{
-				return set_from_optional(obj, this->optional_node<false>(location));
+				return set_from_optional(obj, this->optional_node(location));
 			}
 
 			bool operator()(std::optional<TOMLNode>& obj, std::source_location location = std::source_location::current()) const
 			{
-				return (obj = this->optional_node<false>(location)).has_value();
+				return (obj = this->optional_node(location)).has_value();
 			}
 
 			std::optional<Parser> subparser() const;
@@ -508,28 +510,9 @@ namespace oly::assets
 
 			Predefined operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					Predefined obj;
-					if (internal::try_parse<Predefined>(value, obj))
-					{
-						if constexpr (Validates<Validator, Predefined>)
-						{
-							if (this->validator(obj))
-								return obj;
-							else
-								this->report(location, internal::fail_causes::CANNOT_PARSE, this->validator.elaboration(obj));
-						}
-						else
-							return obj;
-					}
-					else
-						this->report(location, internal::fail_causes::CANNOT_PARSE);
-				}
-				else
-					this->report(location, internal::fail_causes::MISSING_FIELD);
-
-				throw Error(ErrorCode::UnreachableCode);
+				Predefined obj = *this->parse_value<false, Predefined>(location);
+				this->validate(obj, location);
+				return obj;
 			}
 		};
 
@@ -540,7 +523,7 @@ namespace oly::assets
 
 			TOMLNode operator()(std::source_location location = std::source_location::current()) const
 			{
-				return *this->optional_node<true>(location);
+				return *this->optional_node(location);
 			}
 		};
 
@@ -564,44 +547,7 @@ namespace oly::assets
 
 			std::array<T, N> operator()(std::source_location location = std::source_location::current()) const
 			{
-				if (auto value = this->field())
-				{
-					TOMLArray arr;
-					if (internal::try_parse<TOMLArray>(this->field(), arr))
-					{
-						if (arr->size() != N)
-							this->report(location, internal::fail_causes::INVALID_ARRAY_SIZE,
-								DeferredStringList{ "expected (", std::to_string(N), ") but parsed (", std::to_string(arr->size()), ")" });
-
-						std::array<T, N> obj;
-						for (size_t i = 0; i < N; ++i)
-						{
-							T el;
-							if (internal::try_parse<T>((TOMLNode)*arr->get(i), el))
-							{
-								if constexpr (Validates<Validator, T>)
-								{
-									if (this->validator(el))
-										obj.at(i) = std::move(el);
-									else
-										this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT, this->validator.elaboration(el));
-								}
-								else
-									obj.at(i) = std::move(el);
-							}
-							else
-								this->report(location, internal::fail_causes::INVALID_ARRAY_ELEMENT);
-						}
-
-						return obj;
-					}
-					else
-						this->report(location, internal::fail_causes::CANNOT_PARSE);
-				}
-				else
-					this->report(location, internal::fail_causes::MISSING_FIELD);
-
-				throw Error(ErrorCode::UnreachableCode);
+				return this->build_array<false, T, N>(location);
 			}
 		};
 
@@ -613,12 +559,12 @@ namespace oly::assets
 			template<typename T>
 			void operator()(T& obj, std::source_location location = std::source_location::current()) const
 			{
-				this->parse_value<false, true>(obj, location);
+				this->parse_value<false>(obj, location);
 			}
 
 			void operator()(TOMLNode& obj, std::source_location location = std::source_location::current()) const
 			{
-				obj = *this->optional_node<true>(location);
+				obj = *this->optional_node(location);
 			}
 		};
 

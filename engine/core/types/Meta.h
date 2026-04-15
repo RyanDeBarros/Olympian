@@ -121,6 +121,18 @@ namespace oly
 			return false;
 	}
 
+	template<typename T>
+	inline T get_from_optional(const std::optional<T>& opt, T&& def)
+	{
+		return opt ? *opt : std::move(def);
+	}
+
+	template<typename T>
+	inline T get_from_optional(std::optional<T>&& opt, T&& def)
+	{
+		return opt ? std::move(*opt) : std::move(def);
+	}
+
 	template<typename From, typename To>
 	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 
