@@ -24,41 +24,4 @@ namespace oly::io
 			throw Error(ErrorCode::TomlParse, err.description().data());
 		}
 	}
-
-	bool parse_color(const StringParam& text, glm::vec4& color)
-	{
-		text.to_lower();
-		if (text == "red")
-		{
-			color = { 1.0f, 0.0f, 0.0f, 1.0f };
-			return true;
-		}
-		else if (text == "green")
-		{
-			color = { 0.0f, 1.0f, 0.0f, 1.0f };
-			return true;
-		}
-		else if (text == "blue")
-		{
-			color = { 0.0f, 0.0f, 1.0f, 1.0f };
-			return true;
-		}
-		else if (text == "cyan")
-		{
-			color = { 0.0f, 1.0f, 1.0f, 1.0f };
-			return true;
-		}
-		else if (text == "magenta")
-		{
-			color = { 1.0f, 0.0f, 1.0f, 1.0f };
-			return true;
-		}
-		else if (text == "yellow")
-		{
-			color = { 1.0f, 1.0f, 0.0f, 1.0f };
-			return true;
-		}
-		else
-			return false;
-	}
 }

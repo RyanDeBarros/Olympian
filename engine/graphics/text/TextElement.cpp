@@ -257,7 +257,7 @@ namespace oly::rendering
 				StringParam value = get_tag_value(tag, eq_pos);
 				if (algo::re::try_parse(value, e.text_color))
 					overrides.text_color = true;
-				else if (io::parse_color(value, e.text_color))
+				else if (algo::re::try_parse<Color>(value, e.text_color))
 					overrides.text_color = true;
 			}
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/base/Parameters.h"
+#include "core/base/Color.h"
 #include "core/util/UTF.h"
 
 #include "graphics/text/FontFamily.h"
@@ -44,7 +45,7 @@ namespace oly::rendering
 	{
 		Font font;
 		utf::String text = "";
-		glm::vec4 text_color = glm::vec4(1.0f);
+		Color text_color = colors::WHITE;
 		float adj_offset = 0.0f;
 		glm::vec2 scale = glm::vec2(1.0f);
 		BoundedFloat<0.0f, 1.0f> line_y_pivot = 0.0f;

@@ -1,5 +1,7 @@
 #include "Regex.h"
 
+#include "core/base/Color.h"
+
 #include <sstream>
 
 namespace oly::algo::re
@@ -140,5 +142,67 @@ namespace oly::algo::re
 	bool try_parse<glm::vec4>(const StringParam& input, glm::vec4& v)
 	{
 		return parse_vec(input, v);
+	}
+
+	template<>
+	bool try_parse<Color>(const StringParam& text, Color& color)
+	{
+		text.to_lower();
+		if (text == "white")
+		{
+			color = colors::WHITE;
+			return true;
+		}
+		else if (text == "black")
+		{
+			color = colors::BLACK;
+			return true;
+		}
+		else if (text == "red")
+		{
+			color = colors::RED;
+			return true;
+		}
+		else if (text == "green")
+		{
+			color = colors::GREEN;
+			return true;
+		}
+		else if (text == "blue")
+		{
+			color = colors::BLUE;
+			return true;
+		}
+		else if (text == "cyan")
+		{
+			color = colors::CYAN;
+			return true;
+		}
+		else if (text == "magenta")
+		{
+			color = colors::MAGENTA;
+			return true;
+		}
+		else if (text == "yellow")
+		{
+			color = colors::YELLOW;
+			return true;
+		}
+		else if (text == "orange")
+		{
+			color = colors::ORANGE;
+			return true;
+		}
+		else
+		{
+			glm::vec4 c;
+			if (parse_vec(text, c))
+			{
+				color = c;
+				return true;
+			}
+			else
+				return false;
+		}
 	}
 }

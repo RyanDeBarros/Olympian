@@ -1,6 +1,7 @@
 #include "Parser.h"
 
 #include "core/base/Errors.h"
+#include "core/base/Color.h"
 #include "core/util/Logger.h"
 #include "core/util/UTF.h"
 
@@ -143,6 +144,19 @@ namespace oly::assets::internal
 	bool try_parse<glm::vec4>(TOMLNode node, glm::vec4& v)
 	{
 		return try_parse_vec<4, float, true>(node, v);
+	}
+
+	template<>
+	bool try_parse<Color>(TOMLNode node, Color& c)
+	{
+		glm::vec4 v = c;
+		if (try_parse(node, v))
+		{
+			c = v;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template<>
