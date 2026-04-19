@@ -602,11 +602,10 @@ namespace oly::assets
 		Parser(TOMLNode node, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node(node), log_suffix(std::move(log_suffix)), error_code(error_code), fatal(fatal) {}
 
-		// TODO v7 once CTOMLNode is added, use const toml::parse_result& instead
-		explicit Parser(toml::parse_result& toml, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+		explicit Parser(const toml::parse_result& toml, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node((TOMLNode)toml), log_suffix(log_suffix), error_code(error_code), fatal(fatal) {}
 
-		Parser(toml::parse_result& toml, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
+		Parser(const toml::parse_result& toml, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node((TOMLNode)toml), log_suffix(std::move(log_suffix)), error_code(error_code), fatal(fatal) {}
 
 		template<typename T = void, typename Validator = NullValidator, typename Key>
