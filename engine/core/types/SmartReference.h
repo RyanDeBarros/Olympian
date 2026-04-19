@@ -754,6 +754,12 @@ namespace oly
 		{
 			pool().replace_references(pool_idx, other.link(), link());
 		}
+
+	public:
+		static SmartReference<Object> load(TOMLNode node)
+		{
+			return Object::load(node);
+		}
 	};
 
 	template<typename Object>

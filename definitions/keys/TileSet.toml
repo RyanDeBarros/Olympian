@@ -1,9 +1,4 @@
 [[key]]
-label = "Storage"
-code = "Storage"
-enum = "Storage"
-
-[[key]]
 label = "Assignments"
 code = "Assign"
 enum = "AssignmentArray"
