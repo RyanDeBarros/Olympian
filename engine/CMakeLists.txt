@@ -11,41 +11,6 @@ endif()
 
 
 # ====================
-#      Variables
-# ====================
-
-set(ASSET_KEY_SIZE 8)
-
-
-# ====================
-# Run automatic tools
-# ====================
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-function(prebuild script)
-    set(options)
-    set(one_value_args)
-    set(multi_value_args ARGS)
-
-    cmake_parse_arguments(PB "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
-
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} -m definitions.${script} ${PB_ARGS}
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-        RESULT_VARIABLE result
-    )
-
-    if (NOT result EQUAL 0)
-        message(FATAL_ERROR "definitions/${script} failed with code ${result}")
-    endif()
-endfunction()
-
-prebuild("EnumCodeGen")
-prebuild("KeysCodeGen" ARGS "--key-size=${ASSET_KEY_SIZE}")
-
-
-# ====================
 #       OpenGL
 # ====================
 
@@ -197,4 +162,4 @@ add_subdirectory(graphics)
 add_subdirectory(physics)
 
 
-# TODO v10 install OlympianEngine so as to use find_package(Olympian) in project cmake
+# TODO v10 install OlympianEngine so as to use find_package(Olympian) in project cmake - or just link using FetchContent

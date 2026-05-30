@@ -1,1 +1,0 @@
-from .EditorSettings import EditorSettings

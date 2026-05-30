@@ -29,9 +29,6 @@ The engine uses the following libraries:
 
 The editor uses the following libraries:
 
-- **PySide6**
-- **Send2Trash**
-
 ### Documentation
 
 The documentation webpage uses the following libraries:
