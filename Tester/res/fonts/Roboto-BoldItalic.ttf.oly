@@ -3,8 +3,8 @@
 [[Atlas]]
 Storage = 0
 FontSize = 96.0
-MinFilt = 1
-MagFilt = 1
+MinFilt = 0x2601
+MagFilt = 0x2601
 Mipmaps = 0
 ComBP = 0
 ComB = ""

@@ -63,6 +63,16 @@ namespace oly::assets
 		template<typename T>
 		bool try_parse(TOMLNode node, PartialView<T> obj);
 
+		template<typename T> requires (std::is_enum_v<T>)
+		bool try_parse(TOMLNode node, T& obj)
+		{
+			int value = static_cast<int>(obj);
+			if (!try_parse(node, value))
+				return false;
+			obj = static_cast<T>(value);
+			return true;
+		}
+
 		extern void log_context_at_level(LogLevel level, const DeferredStringParam& msg, std::source_location location);
 
 		namespace fail_causes
@@ -574,27 +584,6 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Translator>
-		class TranslateBroker
-		{
-			const Parser& parser;
-
-		public:
-			TranslateBroker(const Parser& parser) : parser(parser) {}
-
-			template<typename Validator = NullValidator, typename Key>
-			Defaulted<Key, void, Translator, Validator> defaulted(Key key, Validator&& validator = {}) const
-				{ return Defaulted<Key, void, Translator, Validator>(parser, key, std::move(validator)); }
-
-			template<bool TypeFallback = false, typename Validator = NullValidator, typename Key>
-			Optional<Key, void, Translator, Validator, TypeFallback> optional(Key key, Validator&& validator = {}) const
-				{ return Optional<Key, void, Translator, Validator, TypeFallback>(parser, key, std::move(validator)); }
-
-			template<typename Validator = NullValidator, typename Key>
-			Required<Key, void, Translator, Validator> required(Key key, Validator&& validator = {}) const
-				{ return Required<Key, void, Translator, Validator>(parser, key, std::move(validator)); }
-		};
-
 	public:
 		explicit Parser(TOMLNode node, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node(node), log_suffix(log_suffix), error_code(error_code), fatal(fatal) {}
@@ -619,9 +608,6 @@ namespace oly::assets
 		template<typename T = void, typename Validator = NullValidator, typename Key>
 		Required<Key, T, void, Validator> required(Key key, Validator&& validator = {}) const
 			{ return Required<Key, T, void, Validator>(*this, key, std::move(validator)); }
-
-		template<typename Translator>
-		TranslateBroker<Translator> translate() const { return TranslateBroker<Translator>(*this); }
 
 		template<typename Key>
 		TOMLNode field(Key key) const

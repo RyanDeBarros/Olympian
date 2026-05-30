@@ -1,6 +1,6 @@
 #meta version=1.0 type=signal
 
 [[Signal]]
-ID      = "jump"
+ID = "jump"
 Binding = 0
-Key     = 32 # space
+Key = 32

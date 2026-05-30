@@ -2,7 +2,7 @@
 
 [[Texture]]
 Storage = 0
-MinFilt = 0
-MagFilt = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
 Mipmaps = 0
 

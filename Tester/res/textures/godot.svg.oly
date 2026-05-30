@@ -4,18 +4,18 @@ AbsStore = 1
 [[Texture]]
 ImgStore = 0
 Mipmaps = 1
-MinFilt = 1
-MagFilt = 1
-WrapS = 0
-WrapT = 0
+MinFilt = 0x2601
+MagFilt = 0x2601
+WrapS = 0x812F
+WrapT = 0x812F
 VecScale = 1.0
 
 [[Texture]]
 ImgStore = 0
 Mipmaps = 1
-MinFilt = 1
-MagFilt = 1
-WrapS = 0
-WrapT = 0
+MinFilt = 0x2601
+MagFilt = 0x2601
+WrapS = 0x812F
+WrapT = 0x812F
 VecScale = 3.0
 

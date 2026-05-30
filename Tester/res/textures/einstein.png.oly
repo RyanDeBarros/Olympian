@@ -3,8 +3,8 @@
 [[Texture]]
 Storage = 0
 Mipmaps = 0
-MinFilt = 0
-MagFilt = 1
-WrapS = 0
-WrapT = 0
+MinFilt = 0x2600
+MagFilt = 0x2601
+WrapS = 0x812F
+WrapT = 0x812F
 

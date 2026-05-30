@@ -11,13 +11,6 @@
 
 #include ".gen/keys/Font.inl"
 
-#include ".gen/enums/rendering/text/FontStyle.inl"
-#include ".gen/enums/rendering/text/CommonBufferPreset.inl"
-#include ".gen/enums/rendering/texture/MagFilter.inl"
-#include ".gen/enums/rendering/texture/MinFilter.inl"
-#include ".gen/enums/StorageMode.inl"
-#include ".gen/enums/PositioningMode.inl"
-
 // TODO v7 put actual loading logic in load/overload methods
 
 namespace oly::context
@@ -125,7 +118,7 @@ namespace oly::context
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 
-		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (parser.defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -170,14 +163,14 @@ namespace oly::context
 		rendering::FontOptions options;
 
 		parser.required(_gen::keys::Font::FontSize)(options.font_size);
-		options.min_filter = parser.translate<_gen::rendering::texture::MinFilter>().required(_gen::keys::Font::MinFilter)();
-		options.mag_filter = parser.translate<_gen::rendering::texture::MagFilter>().required(_gen::keys::Font::MagFilter)();
+		parser.required(_gen::keys::Font::MinFilter)(options.min_filter);
+		parser.required(_gen::keys::Font::MagFilter)(options.mag_filter);
 		parser.optional(_gen::keys::Font::GenerateMipmaps)(options.auto_generate_mipmaps);
 
 		utf::String common_buffer = rendering::glyphs::COMMON;
 		if (parser.defaulted(_gen::keys::Font::UseCommonBufferPreset)(true))
 		{
-			if (auto common_buffer_preset = parser.translate<_gen::rendering::text::CommonBufferPreset>().optional(_gen::keys::Font::CommonBufferPreset)())
+			if (auto common_buffer_preset = parser.optional<rendering::glyphs::CommonBufferPreset>(_gen::keys::Font::CommonBufferPreset)())
 			{
 				switch (*common_buffer_preset)
 				{
@@ -205,7 +198,7 @@ namespace oly::context
 			common_buffer = *_common_buffer;
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (parser.defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		// TODO v7 add Trace log level for stuff like this, that is lower than Debug
@@ -265,7 +258,7 @@ namespace oly::context
 
 					math::IRect2D location = math::IRect2D::load(parser.field(_gen::keys::Font::Location), true);
 					math::TopSidePadding padding = math::TopSidePadding::load(parser.field(_gen::keys::Font::Padding));
-					math::PositioningMode origin_offset_mode = parser.translate<_gen::PositioningMode>().defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
+					math::PositioningMode origin_offset_mode = parser.defaulted(_gen::keys::Font::OriginOffsetMode)(math::PositioningMode::Relative);
 					glm::vec2 origin_offset = parser.defaulted<glm::vec2>(_gen::keys::Font::OriginOffset)();
 
 					glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
@@ -279,7 +272,7 @@ namespace oly::context
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (parser.defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -319,7 +312,7 @@ namespace oly::context
 				{
 					assets::Parser parser((TOMLNode)node);
 
-					rendering::FontStyle style = parser.translate<_gen::rendering::text::FontStyle>().defaulted(_gen::keys::Font::Style)(rendering::FontStyle::Regular);
+					rendering::FontStyle style = parser.defaulted(_gen::keys::Font::Style)(rendering::FontStyle::Regular);
 
 					ResourcePath font_file(parser.required<std::string>(_gen::keys::Font::File)(), file);
 					rendering::FontFamily::FontRef font;
@@ -348,7 +341,7 @@ namespace oly::context
 				});
 		}
 
-		if (parser.translate<_gen::StorageMode>().defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (parser.defaulted(_gen::keys::Font::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;
@@ -392,7 +385,7 @@ namespace oly::context
 			if (meta.has_type("raster_font"))
 				return load_raster_font(file);
 			else if (meta.has_type("font_family"))
-				return load_font_selection(file, _gen::rendering::text::FontStyle::val(index));
+				return load_font_selection(file, static_cast<rendering::FontStyle::Mode>(index));
 			else
 			{
 				std::optional<std::string> type = meta.get_type();

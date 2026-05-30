@@ -7,8 +7,6 @@
 
 #include ".gen/keys/Sprite.inl"
 
-#include ".gen/enums/rendering/FrameFormat.inl"
-
 namespace oly::rendering
 {
 	void StaticSprite::draw() const
@@ -48,7 +46,7 @@ namespace oly::rendering
 
 		if (auto ff_parser = parser.optional(_gen::keys::Sprite::FrameFormat).subparser())
 		{
-			if (auto mode = ff_parser->translate<_gen::rendering::FrameFormat>().optional(_gen::keys::Sprite::Mode)())
+			if (auto mode = ff_parser->optional<FrameFormat>(_gen::keys::Sprite::Mode)())
 			{
 				switch (*mode)
 				{

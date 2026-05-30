@@ -176,7 +176,6 @@ int main()
 
 	PlayerController pc;
 	pc.bind("jump", &PlayerController::jump);
-	pc.bind("jump", &PlayerController::jump);
 	pc.bind("click", &PlayerController::click);
 	pc.bind("drag", &PlayerController::drag);
 	pc.bind("zoom camera", &PlayerController::zoom_camera);

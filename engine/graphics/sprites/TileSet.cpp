@@ -5,8 +5,6 @@
 
 #include ".gen/keys/TileSet.inl"
 
-#include ".gen/enums/rendering/tileset/Transformation.inl"
-
 namespace oly::rendering
 {
 	TileSet::TileSet(const std::vector<Assignment>& assignments)
@@ -800,8 +798,8 @@ namespace oly::rendering
 						assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
 
 						// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
-						if (auto transformation = tr_parser.translate<_gen::rendering::tileset::Transformation>().optional(assets::NO_KEY)())
-							assignment.transformation &= _gen::rendering::tileset::Transformation::val(*transformation);
+						if (auto transformation = tr_parser.optional<Transformation>(assets::NO_KEY)())
+							assignment.transformation &= *transformation;
 
 						++tr_idx;
 					}

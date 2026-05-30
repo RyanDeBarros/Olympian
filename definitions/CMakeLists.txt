@@ -18,5 +18,4 @@ function(prebuild script)
     endif()
 endfunction()
 
-prebuild("EnumCodeGen")
 prebuild("KeysCodeGen" ARGS "--key-size=${ASSET_KEY_SIZE}")

@@ -6,9 +6,6 @@
 
 #include ".gen/keys/ParticleSystem.inl"
 
-#include ".gen/enums/rendering/particles/AttributeOperation.inl"
-#include ".gen/enums/rendering/particles/SubSelector.inl"
-
 namespace oly::particles
 {
 	namespace internal
@@ -21,7 +18,7 @@ namespace oly::particles
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = assets::Parser(node).translate<_gen::rendering::particles::AttributeOperation>().optional(_gen::keys::ParticleSystem::Operation)())
+		if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(_gen::keys::ParticleSystem::Operation)())
 		{
 			switch (*op)
 			{
@@ -104,7 +101,7 @@ namespace oly::particles
 			{
 				assets::Parser parser(node);
 				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(_gen::keys::ParticleSystem::InnerOperation)),
-					parser.translate<_gen::rendering::particles::SubSelector>().defaulted(_gen::keys::ParticleSystem::Selector)());
+					parser.defaulted<particles::SubSelector>(_gen::keys::ParticleSystem::Selector)());
 			}
 			catch (const Error& e)
 			{

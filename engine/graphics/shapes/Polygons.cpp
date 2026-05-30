@@ -11,9 +11,6 @@
 
 #include ".gen/keys/Polygon.inl"
 
-#include ".gen/enums/CBorderPivot.inl"
-#include ".gen/enums/rendering/shapes/PolyCompositeMethod.inl"
-
 namespace oly::rendering
 {
 	internal::PolygonBatch::PolygonBatch()
@@ -658,7 +655,7 @@ namespace oly::rendering
 
 		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
 
-		if (auto method = parser.translate<_gen::rendering::shapes::PolyCompositeMethod>().optional(_gen::keys::Polygon::Method)())
+		if (auto method = parser.optional<PolyCompositeMethod>(_gen::keys::Polygon::Method)())
 		{
 			switch (*method)
 			{
@@ -730,7 +727,7 @@ namespace oly::rendering
 
 				parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-				if (!parser.translate<_gen::CBorderPivot>().optional<true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
+				if (!parser.optional<void, true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
 					parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
@@ -863,7 +860,7 @@ namespace oly::rendering
 			polygon.set_bordered(*bordered);
 		parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
 
-		if (!parser.translate<_gen::CBorderPivot>().optional<true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
+		if (!parser.optional<void, true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
 			parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);

@@ -16,12 +16,6 @@
 #include ".gen/keys/WindowHint.inl"
 #include ".gen/keys/Signal.inl"
 
-#include ".gen/enums/platform/Axis0DConversion.inl"
-#include ".gen/enums/platform/Axis1DConversion.inl"
-#include ".gen/enums/platform/Axis2DConversion.inl"
-#include ".gen/enums/platform/Swizzle.inl"
-#include ".gen/enums/platform/SignalBindingType.inl"
-
 namespace oly::context
 {
 	namespace internal
@@ -146,7 +140,7 @@ namespace oly::context
 
 	static void load_modifier_base(input::ModifierBase& modifier, const assets::Parser& parser)
 	{
-		parser.translate<_gen::platform::Swizzle>().optional(_gen::keys::Signal::Swizzle)(modifier.swizzle);
+		parser.optional(_gen::keys::Signal::Swizzle)(modifier.swizzle);
 		parser.optional(_gen::keys::Signal::Multiplier)(assets::PartialView(modifier.multiplier));
 		parser.optional(_gen::keys::Signal::Invert)(assets::PartialView(modifier.invert));
 	}
@@ -156,7 +150,7 @@ namespace oly::context
 		input::Axis0DModifier modifier;
 		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			mod_parser->translate<_gen::platform::Axis0DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			mod_parser->optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
@@ -167,7 +161,7 @@ namespace oly::context
 		input::Axis1DModifier modifier;
 		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			mod_parser->translate<_gen::platform::Axis1DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			mod_parser->optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
@@ -178,7 +172,7 @@ namespace oly::context
 		input::Axis2DModifier modifier;
 		if (auto mod_parser = parser.optional(_gen::keys::Signal::Modifier).subparser())
 		{
-			mod_parser->translate<_gen::platform::Axis2DConversion>().optional(_gen::keys::Signal::Conversion)(modifier.conversion);
+			mod_parser->optional(_gen::keys::Signal::Conversion)(modifier.conversion);
 			load_modifier_base(modifier, *mod_parser);
 		}
 		return modifier;
@@ -263,7 +257,7 @@ namespace oly::context
 	{
 		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(_gen::keys::Signal::ID)();
-		switch (parser.translate<_gen::platform::SignalBindingType>().required(_gen::keys::Signal::Binding)())
+		switch (parser.required<input::SignalBindingType>(_gen::keys::Signal::Binding)())
 		{
 		case input::SignalBindingType::Key:
 			load_key_binding(parser, id);

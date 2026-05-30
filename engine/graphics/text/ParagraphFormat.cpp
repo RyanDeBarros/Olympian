@@ -5,9 +5,6 @@
 
 #include ".gen/keys/ParagraphFormat.inl"
 
-#include ".gen/enums/rendering/text/HorizontalAlignment.inl"
-#include ".gen/enums/rendering/text/VerticalAlignment.inl"
-
 namespace oly::rendering
 {
 	bool ParagraphFormat::can_fit_on_line(TypesetData t, float dx) const
@@ -34,8 +31,8 @@ namespace oly::rendering
 		parser.optional(_gen::keys::ParagraphFormat::TextWrap)(format.text_wrap);
 		parser.optional(_gen::keys::ParagraphFormat::MaxHeight)(format.max_height);
 		parser.optional(_gen::keys::ParagraphFormat::TabSpaces)(format.tab_spaces);
-		parser.translate<_gen::rendering::text::HorizontalAlignment>().optional(_gen::keys::ParagraphFormat::HorizontalAlignment)(format.horizontal_alignment);
-		parser.translate<_gen::rendering::text::VerticalAlignment>().optional(_gen::keys::ParagraphFormat::VerticalAlignment)(format.vertical_alignment);
+		parser.optional(_gen::keys::ParagraphFormat::HorizontalAlignment)(format.horizontal_alignment);
+		parser.optional(_gen::keys::ParagraphFormat::VerticalAlignment)(format.vertical_alignment);
 
 		return format;
 	}

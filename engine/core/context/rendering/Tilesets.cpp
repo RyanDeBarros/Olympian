@@ -10,8 +10,6 @@
 
 #include ".gen/keys/General.inl"
 
-#include ".gen/enums/StorageMode.inl"
-
 namespace oly::context
 {
 	namespace internal
@@ -52,7 +50,7 @@ namespace oly::context
 		auto toml = io::load_toml(file);
 		auto tileset = rendering::TileSetRef::load((TOMLNode)toml);
 
-		if (assets::Parser(toml).translate<_gen::StorageMode>().defaulted(_gen::keys::General::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (assets::Parser(toml).defaulted(_gen::keys::General::Storage)(StorageMode::Discard) == StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

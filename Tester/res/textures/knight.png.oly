@@ -3,10 +3,10 @@
 [[Texture]]
 Storage = 0
 Mipmaps = 0
-MinFilt = 0
-MagFilt = 0
-WrapS = 0
-WrapT = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+WrapS = 0x812F
+WrapT = 0x812F
 Animated = 1
 Rows = 2
 Columns = 3
@@ -19,8 +19,8 @@ RowUp = 1
 [[Texture]]
 Storage = 0
 Mipmaps = 0
-MinFilt = 0
-MagFilt = 0
-WrapS = 0
-WrapT = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+WrapS = 0x812F
+WrapT = 0x812F
 
