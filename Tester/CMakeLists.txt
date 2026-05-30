@@ -7,37 +7,34 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-# Variables
+
+# ====================
+#      Variables
+# ====================
 
 # TODO v10 this won't be the case for ENGINE_DIR when building project separately.
-set(ENGINE_DIR "${CMAKE_SOURCE_DIR}")
-set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PROJECT_SRC_DIR "${PROJECT_DIR}/src")
-set(PROJECT_RES_DIR "${PROJECT_DIR}/res")
-set(PROJECT_GEN_DIR "${PROJECT_DIR}/.gen/code")
+set(ENGINE_DIR ${CMAKE_SOURCE_DIR})
+set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Include directories
-include_directories(
-	"${PROJECT_SRC_DIR}"
-	"${PROJECT_GEN_DIR}"
-)
 
-# Find OpenGL
-find_package(OpenGL REQUIRED)
+# ====================
+#    Build Project
+# ====================
 
-# Add source to this project's executable.
-file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h" "${PROJECT_SRC_DIR}/*.inl")
-file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h" "${PROJECT_GEN_DIR}/*.inl")
-
-# Define executable
-add_executable (OlympianTester ${GEN_FILES} ${SRC_FILES})
+add_executable (OlympianTester)
 
 # Project context macros
 # TODO v10 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
 target_compile_definitions(OlympianTester PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
-	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"
+	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_DIR}/res/"
+)
+
+target_include_directories(OlympianTester PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # Link engine
 target_link_libraries(OlympianTester PRIVATE OlympianEngine)
+
+add_subdirectory(src)

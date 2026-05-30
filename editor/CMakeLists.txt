@@ -138,5 +138,9 @@ target_link_libraries(OlympianEditor PRIVATE
     tomlplusplus::tomlplusplus
 )
 
+target_include_directories(OlympianEditor PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # Add subdirectories
 add_subdirectory(core)
