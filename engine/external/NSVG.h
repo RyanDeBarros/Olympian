@@ -1,4 +1,4 @@
 #pragma once
 
-#include <nanosvg/nanosvg.h>
-#include <nanosvg/nanosvgrast.h>
+#include <nanosvg.h>
+#include <nanosvgrast.h>

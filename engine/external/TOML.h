@@ -7,7 +7,7 @@
 #pragma warning(disable : 26800)
 #pragma warning(disable : 26813)
 #pragma warning(disable : 26827)
-#include <toml/toml.hpp>
+#include <toml++/toml.hpp>
 #pragma warning(pop)
 
 namespace oly

@@ -1,5 +1,5 @@
 #pragma once
 
-#include <stb/stb_image.h>
-#include <stb/stb_image_write.h>
-#include <stb/stb_truetype.h>
+#include <stb_image.h>
+#include <stb_image_write.h>
+#include <stb_truetype.h>
