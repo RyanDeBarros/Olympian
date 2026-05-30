@@ -11,5 +11,6 @@ set(ASSET_KEY_SIZE 8)
 
 add_subdirectory(engine)
 add_subdirectory(definitions)
+add_subdirectory(editor)
 # TODO v10 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this
 add_subdirectory(Tester)

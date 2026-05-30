@@ -30,14 +30,14 @@ file(GLOB_RECURSE SRC_FILES "${PROJECT_SRC_DIR}/*.cpp" "${PROJECT_SRC_DIR}/*.h" 
 file(GLOB_RECURSE GEN_FILES "${PROJECT_GEN_DIR}/*.cpp" "${PROJECT_GEN_DIR}/*.h" "${PROJECT_GEN_DIR}/*.inl")
 
 # Define executable
-add_executable (Olympian ${GEN_FILES} ${SRC_FILES})
+add_executable (OlympianTester ${GEN_FILES} ${SRC_FILES})
 
 # Project context macros
 # TODO v10 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
-target_compile_definitions(Olympian PUBLIC
+target_compile_definitions(OlympianTester PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_RES_DIR}/"
 )
 
 # Link engine
-target_link_libraries(Olympian PRIVATE OlympianEngine)
+target_link_libraries(OlympianTester PRIVATE OlympianEngine)

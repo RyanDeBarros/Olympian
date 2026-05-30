@@ -29,6 +29,10 @@ The engine uses the following libraries:
 
 The editor uses the following libraries:
 
+- **GLFW**
+- **ocornut/imgui**
+- **aiekick/ImGuiFileDialog**
+
 ### Documentation
 
 The documentation webpage uses the following libraries:
