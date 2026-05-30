@@ -49,7 +49,6 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v7 use FetchContent instead of absolute paths in CMake (like how it's done in Lexico).
 	// TODO v7 remove REPL -> go back to GUI, using gen tools for definitions. Use ImGui or QT (similar project layout to lexico) - with C++, can just include enum headers instead of using translations -> remove key/enum codegen.
 	// TODO v7 use macros in Desc files (SpriteDesc, MaterialDesc, etc.) that holds a list of (type, name, default) to then use generator macros to read/write TOML data to avoid duplication.
 	// TODO v7 use versioning for all assets and definitions. create meta tools + conversion files to convert between versions
@@ -58,7 +57,6 @@ namespace oly
 	// TODO v7 Random class for random properties, similar to Unity
 	// TODO v7 various utilities, including FuzzySearch
 	// TODO v7 more of a ImGui style functional programming system for things like text rendering (among other things). For example, with text styling, no need to encode tags when building text from code - define a StyleBuilder that can push/pop styles. When parsing from an asset, it's simple to use. No need for compound font styles possibly.
-	// TODO v7 CMakeLists shouldn't use globbing
 
 	// TODO v7 lifetime/archetype design:
 	// - no ECS

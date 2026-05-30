@@ -148,7 +148,7 @@ FetchContent_Declare(
 	GIT_TAG 45bf9bb8a28b3e214bc2a9c5a59f3db61c8b6b17
 )
 
-FetchContent_MakeAvailable(quartic)
+FetchContent_Populate(quartic)
 add_library(quartic STATIC ${quartic_SOURCE_DIR}/quartic.cpp)
 
 
@@ -156,12 +156,14 @@ add_library(quartic STATIC ${quartic_SOURCE_DIR}/quartic.cpp)
 #     Build Engine
 # ====================
 
-# Add engine sources
-file(GLOB_RECURSE ENGINE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/*.inl")
-
 # TODO v10 licensing may require engine to be dynamically linked?
 # Create the engine as a static library
-add_library(OlympianEngine STATIC ${ENGINE_FILES})
+add_library(OlympianEngine STATIC)
+
+# Engine compile options (MSVC specific)
+if (MSVC)
+	target_compile_options(OlympianEngine PUBLIC /Zc:__cplusplus)
+endif()
 
 # Engine compile definitions
 target_compile_definitions(OlympianEngine PUBLIC
@@ -170,24 +172,12 @@ target_compile_definitions(OlympianEngine PUBLIC
     OLYMPIAN_ENGINE_ASSET_KEY_SIZE=${ASSET_KEY_SIZE}
 )
 
-# Engine compile options (MSVC specific)
-if (MSVC)
-	target_compile_options(OlympianEngine PUBLIC /Zc:__cplusplus)
-endif()
-
-
 # Include directories
 target_include_directories(OlympianEngine PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
     ${stb_SOURCE_DIR}
 	${nanosvg_SOURCE_DIR}/src
     ${quartic_SOURCE_DIR}
-)
-
-# Link directories
-target_link_directories(OlympianEngine PUBLIC
-	${stb_SOURCE_DIR}
-	${nanosvg_SOURCE_DIR}/src
 )
 
 # Link engine dependencies
@@ -199,6 +189,12 @@ target_link_libraries(OlympianEngine PUBLIC
     tomlplusplus::tomlplusplus
     quartic
 )
+
+# Add subdirectories
+add_subdirectory(core)
+add_subdirectory(external)
+add_subdirectory(graphics)
+add_subdirectory(physics)
 
 
 # TODO v10 install OlympianEngine so as to use find_package(Olympian) in project cmake
