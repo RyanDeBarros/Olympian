@@ -144,3 +144,5 @@ target_include_directories(OlympianEditor PUBLIC
 
 # Add subdirectories
 add_subdirectory(core)
+add_subdirectory(documents)
+add_subdirectory(panels)

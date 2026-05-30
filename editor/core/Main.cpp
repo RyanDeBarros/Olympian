@@ -6,12 +6,16 @@
 
 #include <GLFW/glfw3.h>
 
-#include <iostream>
+#include "Editor.h"
+#include "Logger.h"
+
+#include <sstream>
 
 static void glfw_error_callback(int error, const char* description)
 {
-    // TODO v7 use editor log
-    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
+    std::stringstream ss;
+    ss << "GLFW code " << error << ": " << description;
+    Editor::Instance().GetLogger().LogError(ss.str().c_str());
 }
 
 int main()
@@ -44,7 +48,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // TODO v7 initialize editor
+    Editor::Instance().Init();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -54,7 +58,7 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // TODO v7 draw frame
+        Editor::Instance().Draw();
 
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);
