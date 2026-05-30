@@ -28,7 +28,6 @@ namespace oly::rendering
 		};
 
 	private:
-		// TODO v7 use flag combinations instead of straight enum
 		enum class Configuration : char
 		{
 			Single,
