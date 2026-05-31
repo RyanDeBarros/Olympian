@@ -4,7 +4,7 @@
 #include "graphics/particles/implementations/AttributeOperationEnum.h"
 #include "core/util/Logger.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::particles
 {

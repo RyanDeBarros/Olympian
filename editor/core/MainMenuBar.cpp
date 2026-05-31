@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <ImGuiFileDialog.h>
 
-#include "Editor.h"
+#include "core/Editor.h"
 
 static const char* OPEN_FILE = "OpenFileDlg";
 

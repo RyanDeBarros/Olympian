@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "detail/assets/ResourcePath.h"
+#include "assets/ResourcePath.h"
 
 namespace oly::io
 {

@@ -1,12 +1,10 @@
-target_sources(OlympianEngine PUBLIC
+target_sources(OlympianEngine PRIVATE
 	DebugTrace.cpp
 	IO.cpp
 	Loader.cpp
 	Logger.cpp
 	LoggerOperators.cpp
-	"../../../detail/assets/MetaSplitter.cpp"
 	Parser.cpp
-	"../../../detail/assets/ResourcePath.cpp"
 	StringParam.cpp
 	Time.cpp
 	Timers.cpp

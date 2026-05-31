@@ -1,4 +1,4 @@
-﻿target_sources(OlympianTester PUBLIC
+﻿target_sources(OlympianTester PRIVATE
 	Jumble.cpp
 	PlayerController.cpp
 	ProjectContext.cpp

@@ -2,8 +2,9 @@
 
 #include "core/platform/Platform.h"
 #include "core/platform/BindingContext.h"
-#include "detail/assets/ResourcePath.h"
 #include "core/util/DebugTrace.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::context
 {

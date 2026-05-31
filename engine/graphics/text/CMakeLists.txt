@@ -1,4 +1,4 @@
-target_sources(OlympianEngine PUBLIC
+target_sources(OlympianEngine PRIVATE
 	Font.cpp
 	FontFamily.cpp
 	Paragraph.cpp

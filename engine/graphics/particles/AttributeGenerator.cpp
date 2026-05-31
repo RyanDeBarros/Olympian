@@ -6,7 +6,7 @@
 #include "graphics/particles/implementations/Domains.h"
 #include "core/util/StringParam.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::particles
 {

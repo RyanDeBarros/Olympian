@@ -8,8 +8,8 @@
 #include "core/context/rendering/Textures.h"
 #include "core/base/Definitions.h"
 
-#include "detail/assets/MetaSplitter.h"
-#include "detail/definitions/Keys.h"
+#include "assets/MetaSplitter.h"
+#include "definitions/Keys.h"
 
 // TODO v7 put actual loading logic in load/overload methods
 

@@ -1,8 +1,8 @@
 #include "ShortcutManager.h"
 
-#include "Editor.h"
-#include "MainWindow.h"
-#include "MainMenuBar.h"
+#include "core/Editor.h"
+#include "core/MainWindow.h"
+#include "core/MainMenuBar.h"
 
 ShortcutManager& ShortcutManager::Instance()
 {

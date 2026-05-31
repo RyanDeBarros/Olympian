@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/types/SmartReference.h"
-#include "detail/assets/ResourcePath.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::rendering
 {

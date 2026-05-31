@@ -5,7 +5,7 @@
 #include "core/util/DeferredStringParam.h"
 #include "core/util/LogLevel.h"
 
-#include "detail/assets/TranslateKey.h"
+#include "assets/TranslateKey.h"
 
 #include <array>
 #include <cstdint>

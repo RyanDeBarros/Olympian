@@ -3,7 +3,7 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "core/util/Parser.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::context
 {

@@ -5,9 +5,9 @@
 
 #include <GLFW/glfw3.h>
 
-#include "Editor.h"
-#include "Logger.h"
-#include "ShortcutManager.h"
+#include "core/Editor.h"
+#include "core/Logger.h"
+#include "core/ShortcutManager.h"
 
 #include <sstream>
 

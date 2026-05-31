@@ -140,10 +140,7 @@ target_link_libraries(OlympianEditor PRIVATE
 
 target_link_libraries(OlympianEditor PUBLIC OlympianDetail)
 
-target_include_directories(OlympianEditor PUBLIC
-	${CMAKE_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(OlympianEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add subdirectories
 add_subdirectory(core)

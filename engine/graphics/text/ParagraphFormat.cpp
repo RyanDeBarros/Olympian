@@ -3,7 +3,7 @@
 #include "core/util/Logger.h"
 #include "core/util/Parser.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {

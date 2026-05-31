@@ -1,8 +1,8 @@
 #include "Editor.h"
 
-#include "Logger.h"
-#include "MainWindow.h"
-#include "ShortcutManager.h"
+#include "core/Logger.h"
+#include "core/MainWindow.h"
+#include "core/ShortcutManager.h"
 
 #include "documents/DocumentManager.h"
 

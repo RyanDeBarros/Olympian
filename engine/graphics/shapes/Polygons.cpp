@@ -9,7 +9,7 @@
 #include "core/util/Parser.h"
 #include "graphics/shapes/Definitions.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {

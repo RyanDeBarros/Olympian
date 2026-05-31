@@ -2,8 +2,9 @@
 
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
-#include "detail/assets/ResourcePath.h"
 #include "core/util/StringParam.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::io
 {

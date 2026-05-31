@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDocument.h"
+#include "documents/IDocument.h"
 
 class SpriteDocument : public IDocument
 {

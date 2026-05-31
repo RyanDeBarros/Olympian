@@ -1,7 +1,7 @@
 #include "LoggerOperators.h"
 
 #include "core/util/UTF.h"
-#include "detail/assets/ResourcePath.h"
+#include "assets/ResourcePath.h"
 
 namespace oly
 {

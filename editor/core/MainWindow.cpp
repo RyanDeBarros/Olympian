@@ -1,7 +1,13 @@
 #include "MainWindow.h"
 
-#include "Editor.h"
-#include "DockTree.h"
+#include "core/Editor.h"
+#include "core/DockTree.h"
+#include "core/MainMenuBar.h"
+
+#include "panels/PanelManager.h"
+#include "panels/IPanel.h"
+#include "panels/ContentBrowserPanel.h"
+#include "panels/AssetEditorPanel.h"
 
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
@@ -9,13 +15,6 @@
 // TODO v7 remove
 #include "documents/TextureDocument.h"
 #include "documents/SpriteDocument.h"
-
-#include "panels/PanelManager.h"
-#include "panels/IPanel.h"
-#include "panels/ContentBrowserPanel.h"
-#include "panels/AssetEditorPanel.h"
-
-#include "MainMenuBar.h"
 
 MainWindow::MainWindow()
     : _panel_manager(std::make_unique<PanelManager>()),

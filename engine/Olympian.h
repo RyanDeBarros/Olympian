@@ -49,7 +49,6 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v7 make all target sources PRIVATE
 	// TODO v7 use macros in Desc files (SpriteDesc, MaterialDesc, etc.) that holds a list of (type, name, default) to then use generator macros to read/write TOML data to avoid duplication.
 	// TODO v7 use versioning for all assets and definitions. create meta tools + conversion files to convert between versions
 	// TODO v7 texture import metadata should have some additional size scale that affects any sprites using the texture

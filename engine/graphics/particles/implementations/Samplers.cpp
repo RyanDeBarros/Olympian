@@ -2,7 +2,7 @@
 
 #include "graphics/particles/ShaderStructs.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::particles
 {

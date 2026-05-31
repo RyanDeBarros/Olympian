@@ -24,7 +24,7 @@
 #include "graphics/particles/ParticleSystem.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::context
 {

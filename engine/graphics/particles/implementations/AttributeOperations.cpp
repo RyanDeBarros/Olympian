@@ -3,7 +3,7 @@
 #include "graphics/particles/ParticleEmitter.h"
 #include "core/base/UnitVector.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::particles::ops
 {

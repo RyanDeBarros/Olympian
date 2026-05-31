@@ -8,8 +8,8 @@
 #include "core/util/Parser.h"
 #include "core/base/Definitions.h"
 
-#include "detail/assets/MetaSplitter.h"
-#include "detail/definitions/Keys.h"
+#include "assets/MetaSplitter.h"
+#include "definitions/Keys.h"
 
 namespace oly::context
 {

@@ -138,7 +138,6 @@ target_compile_definitions(OlympianEngine PUBLIC
 
 # Include directories
 target_include_directories(OlympianEngine PUBLIC
-	${CMAKE_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
     ${stb_SOURCE_DIR}
 	${nanosvg_SOURCE_DIR}/src

@@ -3,8 +3,9 @@
 #include <string>
 #include <memory>
 
-#include "Buffers.h"
-#include "detail/assets/ResourcePath.h"
+#include "graphics/backend/basic/Buffers.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::graphics
 {

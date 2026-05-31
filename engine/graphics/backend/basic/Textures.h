@@ -11,9 +11,10 @@
 #include "core/types/SmartReference.h"
 #include "core/types/DeferredFalse.h"
 #include "core/math/Shapes.h"
-#include "detail/assets/ResourcePath.h"
 
 #include "graphics/backend/basic/Sampler.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::graphics
 {

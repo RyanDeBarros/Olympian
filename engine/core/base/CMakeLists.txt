@@ -1,4 +1,4 @@
-target_sources(OlympianEngine PUBLIC
+target_sources(OlympianEngine PRIVATE
 	Assert.cpp
 	Transforms.cpp
 	UnitVector.cpp

@@ -30,11 +30,9 @@ target_compile_definitions(OlympianTester PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_DIR}/res/"
 )
 
-target_include_directories(OlympianTester PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(OlympianTester PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Link engine
-target_link_libraries(OlympianTester PRIVATE OlympianEngine)
+target_link_libraries(OlympianTester PUBLIC OlympianEngine)
 
 add_subdirectory(src)

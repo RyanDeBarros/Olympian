@@ -38,9 +38,7 @@ target_link_libraries(OlympianDetail PRIVATE
     tomlplusplus::tomlplusplus
 )
 
-target_include_directories(OlympianDetail PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(OlympianDetail PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add subdirectories
 add_subdirectory(assets)

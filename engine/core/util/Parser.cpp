@@ -6,7 +6,7 @@
 #include "core/util/UTF.h"
 #include "core/cmath/ColoredGeometry.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::assets
 {

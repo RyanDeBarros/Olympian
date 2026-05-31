@@ -5,7 +5,7 @@
 #include "core/util/Parser.h"
 #include "graphics/sprites/Definitions.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IPanel.h"
+#include "panels/IPanel.h"
 
 class ContentBrowserPanel : public IPanel
 {

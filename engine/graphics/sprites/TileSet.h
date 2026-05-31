@@ -2,7 +2,8 @@
 
 #include "core/types/SmartReference.h"
 #include "core/math/Shapes.h"
-#include "detail/assets/ResourcePath.h"
+
+#include "assets/ResourcePath.h"
 
 #include <unordered_set>
 

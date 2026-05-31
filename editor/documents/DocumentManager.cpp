@@ -1,6 +1,6 @@
 #include "DocumentManager.h"
 
-#include "IDocument.h"
+#include "documents/IDocument.h"
 
 #include "core/MainWindow.h"
 

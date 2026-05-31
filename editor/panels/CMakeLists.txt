@@ -1,4 +1,4 @@
-target_sources(OlympianEditor PUBLIC
+target_sources(OlympianEditor PRIVATE
 	AssetEditorPanel.cpp
 	ContentBrowserPanel.cpp
 	IPanel.cpp

@@ -1,4 +1,4 @@
-target_sources(OlympianEngine PUBLIC
+target_sources(OlympianEngine PRIVATE
 	Attribute.cpp
 	AttributeGenerator.cpp
 	ParticleEmitter.cpp

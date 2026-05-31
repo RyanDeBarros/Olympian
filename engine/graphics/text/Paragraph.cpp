@@ -8,7 +8,7 @@
 #include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
 
-#include "detail/definitions/Keys.h"
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
