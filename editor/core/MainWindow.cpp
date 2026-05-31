@@ -96,3 +96,8 @@ DocumentManager& MainWindow::GetDocumentManager()
 {
     return *_document_manager;
 }
+
+MainMenuBar& MainWindow::GetMainMenuBar()
+{
+    return *_main_menu_bar;
+}

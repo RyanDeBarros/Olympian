@@ -128,6 +128,7 @@ endif()
 # Engine compile definitions
 target_compile_definitions(OlympianEditor PUBLIC
 	GLEW_STATIC
+	IMGUI_DEFINE_MATH_OPERATORS
     OLYMPIAN_EDITOR_ASSET_KEY_SIZE=${ASSET_KEY_SIZE}
 )
 

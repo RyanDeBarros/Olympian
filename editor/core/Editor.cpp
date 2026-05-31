@@ -2,9 +2,14 @@
 
 #include "Logger.h"
 #include "MainWindow.h"
+#include "ShortcutManager.h"
+
+#include "documents/DocumentManager.h"
 
 Editor::Editor()
-	: _logger(std::make_unique<Logger>()), _main_window(std::make_unique<MainWindow>())
+	: _logger(std::make_unique<Logger>()),
+	_main_window(std::make_unique<MainWindow>()),
+	_shortcut_manager(std::make_unique<ShortcutManager>())
 {
 }
 
@@ -37,4 +42,14 @@ Logger& Editor::GetLogger()
 MainWindow& Editor::GetMainWindow()
 {
 	return *_main_window;
+}
+
+ShortcutManager& Editor::GetShortcutManager()
+{
+	return *_shortcut_manager;
+}
+
+void Editor::OpenFile(const std::filesystem::path& path)
+{
+	DocumentManager::Instance().OpenAsset(path);
 }

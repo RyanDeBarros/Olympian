@@ -7,4 +7,7 @@ public:
 
 private:
 	void DrawFileMenu();
+
+public:
+	void OpenFile();
 };

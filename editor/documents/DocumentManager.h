@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -14,8 +15,7 @@ public:
 
 	void Draw();
 
-	// TODO v7
-	//void OpenAsset(const std::filesystem::path& path);
+	void OpenAsset(const std::filesystem::path& path);
 
 	size_t DocumentCount() const;
 	const IDocument& GetDocument(size_t i) const;

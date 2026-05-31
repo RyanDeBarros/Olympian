@@ -29,4 +29,6 @@ public:
 
 	PanelManager& GetPanelManager();
 	DocumentManager& GetDocumentManager();
+	
+	MainMenuBar& GetMainMenuBar();
 };

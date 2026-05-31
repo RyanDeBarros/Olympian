@@ -3,7 +3,11 @@
 #include <imgui.h>
 #include <ImGuiFileDialog.h>
 
+#include "Editor.h"
+
 static const char* OPEN_FILE = "OpenFileDlg";
+
+static std::string open_file_parent = ".";
 
 void MainMenuBar::Draw()
 {
@@ -12,13 +16,16 @@ void MainMenuBar::Draw()
 		DrawFileMenu();
 		ImGui::EndMainMenuBar();
 	}
+	
+	ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
 
-	if (ImGuiFileDialog::Instance()->Display(OPEN_FILE))
+	if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
 		{
-			std::string path = ImGuiFileDialog::Instance()->GetFilePathName();
-			// TODO v7 open path -> send to MainWindow()::Instance(), not asset editor panel or document manager directly
+			std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+			open_file_parent = path.parent_path().string();
+			Editor::Instance().OpenFile(path);
 		}
 
 		ImGuiFileDialog::Instance()->Close();
@@ -30,16 +37,22 @@ void MainMenuBar::DrawFileMenu()
 	if (ImGui::BeginMenu("File"))
 	{
 		if (ImGui::MenuItem("Open"))
-		{
-			IGFD::FileDialogConfig config;
-			config.path = "."; // TODO v7 persist path
-			ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Open File", ".oly,.png,.jpg,.gif,.ttf,.otf,.*", config);
-			// TODO v7 set next window min size (without cache, dialog opens with 0x0 size)
-		}
+			OpenFile();
 	
 		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("Open File (Ctrl+O)"); // TODO v7 hook up shortcuts
+			ImGui::SetTooltip("Open File (Ctrl+O)");
 
 		ImGui::EndMenu();
 	}
+}
+
+void MainMenuBar::OpenFile()
+{
+	IGFD::FileDialogConfig config;
+	config.path = open_file_parent;
+	config.flags =
+		ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
+		ImGuiFileDialogFlags_Modal;
+
+	ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Open File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
 }

@@ -15,6 +15,11 @@ void DocumentManager::Draw()
 		doc->Draw();
 }
 
+void DocumentManager::OpenAsset(const std::filesystem::path& path)
+{
+	// TODO v7
+}
+
 size_t DocumentManager::DocumentCount() const
 {
 	return _documents.size();

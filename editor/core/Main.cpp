@@ -7,6 +7,7 @@
 
 #include "Editor.h"
 #include "Logger.h"
+#include "ShortcutManager.h"
 
 #include <sstream>
 
@@ -15,6 +16,11 @@ static void glfw_error_callback(int error, const char* description)
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
     Logger::Instance().LogError(ss.str().c_str());
+}
+
+static void glfw_drop_callback(GLFWwindow* window, int count, const char** paths)
+{
+    ShortcutManager::Instance().HandlePathDrop(count, paths);
 }
 
 int main()
@@ -33,6 +39,7 @@ int main()
     GLFWwindow* window = glfwCreateWindow((int)(1440 * main_scale), (int)(1080 * main_scale), "Olympian Editor", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
+    glfwSetDropCallback(window, glfw_drop_callback);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -57,6 +64,7 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        ShortcutManager::Instance().PollShortcuts();
         Editor::Instance().Draw();
 
         ImGui::Render();
