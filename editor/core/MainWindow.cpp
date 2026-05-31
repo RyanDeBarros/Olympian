@@ -6,13 +6,21 @@
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
+// TODO v7 remove
+#include "documents/TextureDocument.h"
+#include "documents/SpriteDocument.h"
+
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/AssetEditorPanel.h"
 
+#include "MainMenuBar.h"
+
 MainWindow::MainWindow()
-    : _panel_manager(std::make_unique<PanelManager>())
+    : _panel_manager(std::make_unique<PanelManager>()),
+    _document_manager(std::make_unique<DocumentManager>()),
+    _main_menu_bar(std::make_unique<MainMenuBar>())
 {
 }
 
@@ -43,6 +51,11 @@ void MainWindow::Init()
     tree.root.second = &content_browser;
 
     tree.SetupLayout(_dockspace_id, *_panel_manager);
+
+
+    // TODO v7 remove
+    _document_manager->Add<TextureDocument>();
+    _document_manager->Add<SpriteDocument>();
 }
 
 void MainWindow::Draw()
@@ -67,11 +80,7 @@ void MainWindow::Draw()
 	ImGui::Begin("Main Window", nullptr, window_flags);
     ImGui::PopStyleVar(2);
 
-    if (ImGui::BeginMainMenuBar())
-    {
-        // TODO v7 put in separate MainMenuBar class
-        ImGui::EndMainMenuBar();
-    }
+    _main_menu_bar->Draw();
 
     ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
     _panel_manager->Draw();
