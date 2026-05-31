@@ -15,7 +15,7 @@ static void glfw_error_callback(int error, const char* description)
 {
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
-    Editor::Instance().GetLogger().LogError(ss.str().c_str());
+    Logger::Instance().LogError(ss.str().c_str());
 }
 
 int main()

@@ -1,10 +1,15 @@
 #include "MainWindow.h"
 
+#include "Editor.h"
+#include "DockTree.h"
+
+#include "documents/DocumentManager.h"
+#include "documents/IDocument.h"
+
 #include "panels/PanelManager.h"
+#include "panels/IPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/AssetEditorPanel.h"
-
-#include <imgui_internal.h>
 
 MainWindow::MainWindow()
     : _panel_manager(std::make_unique<PanelManager>())
@@ -13,6 +18,11 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow() = default;
 
+MainWindow& MainWindow::Instance()
+{
+    return Editor::Instance().GetMainWindow();
+}
+
 void MainWindow::Init()
 {
     _panel_manager->Add<ContentBrowserPanel>().Open();
@@ -20,19 +30,19 @@ void MainWindow::Init()
 
     _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
-    ImGui::DockBuilderRemoveNode(_dockspace_id);
-    ImGui::DockBuilderAddNode(_dockspace_id, ImGuiDockNodeFlags_DockSpace);
-    ImGui::DockBuilderSetNodeSize(_dockspace_id, ImGui::GetMainViewport()->WorkSize);
+    DockTree tree;
 
-    ImGuiID dock_main = _dockspace_id;
+    DockNode content_browser;
+    content_browser.index = typeid(ContentBrowserPanel);
 
-    ImGuiID dock_top, dock_bottom;
-    dock_top = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Up, 0.5f, nullptr, &dock_bottom);
+    DockNode asset_editor;
+    asset_editor.index = typeid(AssetEditorPanel);
 
-    ImGui::DockBuilderDockWindow(_panel_manager->Get<ContentBrowserPanel>()->GetTitle(), dock_bottom);
-    ImGui::DockBuilderDockWindow(_panel_manager->Get<AssetEditorPanel>()->GetTitle(), dock_top);
+    tree.root.horizontal = false;
+    tree.root.first = &asset_editor;
+    tree.root.second = &content_browser;
 
-    ImGui::DockBuilderFinish(_dockspace_id);
+    tree.SetupLayout(_dockspace_id, *_panel_manager);
 }
 
 void MainWindow::Draw()
@@ -57,7 +67,23 @@ void MainWindow::Draw()
 	ImGui::Begin("Main Window", nullptr, window_flags);
     ImGui::PopStyleVar(2);
 
+    if (ImGui::BeginMainMenuBar())
+    {
+        // TODO v7 put in separate MainMenuBar class
+        ImGui::EndMainMenuBar();
+    }
+
     ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
     _panel_manager->Draw();
 	ImGui::End();
+}
+
+PanelManager& MainWindow::GetPanelManager()
+{
+    return *_panel_manager;
+}
+
+DocumentManager& MainWindow::GetDocumentManager()
+{
+    return *_document_manager;
 }

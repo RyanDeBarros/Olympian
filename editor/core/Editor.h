@@ -21,4 +21,5 @@ public:
 	void Draw();
 
 	Logger& GetLogger();
+	MainWindow& GetMainWindow();
 };

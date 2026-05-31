@@ -33,3 +33,8 @@ Logger& Editor::GetLogger()
 {
 	return *_logger;
 }
+
+MainWindow& Editor::GetMainWindow()
+{
+	return *_main_window;
+}
