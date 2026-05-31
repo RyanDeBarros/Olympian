@@ -6,8 +6,9 @@
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
-#include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
+
+#include "detail/assets/MetaSplitter.h"
 
 #include ".gen/keys/Texture.inl"
 
@@ -105,7 +106,7 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
-		if (!io::MetaSplitter::meta(import_file).has_type("texture"))
+		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("texture"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);

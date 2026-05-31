@@ -1,6 +1,9 @@
 #include "MetaSplitter.h"
 
-namespace oly::io
+#include <fstream>
+#include <sstream>
+
+namespace oly::detail
 {
     std::optional<std::string> MetaMap::get_type() const
     {
@@ -19,9 +22,9 @@ namespace oly::io
 
     static const std::string meta_prefix = "#meta";
 
-	MetaMap MetaSplitter::meta(const ResourcePath& filepath)
+	MetaMap MetaSplitter::meta(const std::filesystem::path& filepath)
 	{
-        std::ifstream file = filepath.get_ifstream();
+        std::ifstream file(filepath);
         if (!file.is_open())
             return {};
 

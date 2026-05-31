@@ -4,7 +4,7 @@ target_sources(OlympianEngine PUBLIC
 	Loader.cpp
 	Logger.cpp
 	LoggerOperators.cpp
-	MetaSplitter.cpp
+	"../../../detail/assets/MetaSplitter.cpp"
 	Parser.cpp
 	ResourcePath.cpp
 	StringParam.cpp

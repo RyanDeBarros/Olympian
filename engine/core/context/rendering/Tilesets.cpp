@@ -5,8 +5,9 @@
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
-#include "core/util/MetaSplitter.h"
 #include "core/base/Definitions.h"
+
+#include "detail/assets/MetaSplitter.h"
 
 #include ".gen/keys/General.inl"
 
@@ -41,7 +42,7 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing tileset [" << file << "]..." << LOG.nl;
 
-		if (!io::MetaSplitter::meta(file).has_type("tileset"))
+		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("tileset"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);

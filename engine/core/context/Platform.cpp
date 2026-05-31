@@ -6,10 +6,11 @@
 #include "core/util/Logger.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
-#include "core/util/MetaSplitter.h"
 #include "core/algorithms/STLUtils.h"
 #include "graphics/Camera.h"
 #include "core/platform/Definitions.h"
+
+#include "detail/assets/MetaSplitter.h"
 
 #include ".gen/keys/Context.inl"
 #include ".gen/keys/Window.inl"
@@ -321,7 +322,7 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		if (!io::MetaSplitter::meta(file).has_type("signal"))
+		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("signal"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);

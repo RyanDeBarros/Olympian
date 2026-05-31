@@ -9,12 +9,12 @@ function(prebuild script)
 
     execute_process(
         COMMAND ${Python3_EXECUTABLE} -m definitions.${script} ${PB_ARGS}
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/.."
         RESULT_VARIABLE result
     )
 
     if (NOT result EQUAL 0)
-        message(FATAL_ERROR "definitions/${script} failed with code ${result}")
+        message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/${script} failed with code ${result}")
     endif()
 endfunction()
 

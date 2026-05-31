@@ -1,6 +1,5 @@
 #include "Fonts.h"
 
-#include "core/util/MetaSplitter.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
 
@@ -8,6 +7,8 @@
 #include "core/util/LoggerOperators.h"
 #include "core/context/rendering/Textures.h"
 #include "core/base/Definitions.h"
+
+#include "detail/assets/MetaSplitter.h"
 
 #include ".gen/keys/Font.inl"
 
@@ -105,7 +106,7 @@ namespace oly::context
 
 		ResourcePath import_file = file.get_import_path();
 		// TODO v7 abstract away the error handling on meta.has_type()
-		if (!io::MetaSplitter::meta(import_file).has_type("font"))
+		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -142,7 +143,7 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font atlas [" << file << "]..." << LOG.nl;
 
 		ResourcePath import_file = file.get_import_path();
-		if (!io::MetaSplitter::meta(import_file).has_type("font"))
+		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -221,7 +222,7 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing raster font [" << file << "]..." << LOG.nl;
 
-		auto meta = io::MetaSplitter::meta(file);
+		auto meta = detail::MetaSplitter::meta(file.get_absolute());
 		if (!meta.has_type("raster_font"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << LOG.endl;
@@ -294,7 +295,7 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font family [" << file << "]..." << LOG.nl;
 
-		if (!io::MetaSplitter::meta(file).has_type("font_family"))
+		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("font_family"))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -318,7 +319,7 @@ namespace oly::context
 					rendering::FontFamily::FontRef font;
 					if (font_file.is_import_path())
 					{
-						auto meta = io::MetaSplitter::meta(font_file);
+						auto meta = detail::MetaSplitter::meta(font_file.get_absolute());
 						if (meta.has_type("raster_font"))
 							font = context::load_raster_font(font_file);
 						else
@@ -381,7 +382,7 @@ namespace oly::context
 	{
 		if (file.is_import_path())
 		{
-			auto meta = io::MetaSplitter::meta(file);
+			auto meta = detail::MetaSplitter::meta(file.get_absolute());
 			if (meta.has_type("raster_font"))
 				return load_raster_font(file);
 			else if (meta.has_type("font_family"))

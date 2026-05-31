@@ -1,12 +1,14 @@
 #pragma once
 
-#include "external/TOML.h"
-#include "core/util/ResourcePath.h"
-
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 
-namespace oly::io
+namespace oly::detail
 {
+	// TODO v7 use keys
 	struct MetaMap
 	{
 		std::unordered_map<std::string, std::string> map;
@@ -17,6 +19,6 @@ namespace oly::io
 
 	struct MetaSplitter
 	{
-		static MetaMap meta(const ResourcePath& file);
+		static MetaMap meta(const std::filesystem::path& file);
 	};
 }

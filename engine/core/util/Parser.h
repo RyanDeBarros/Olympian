@@ -5,6 +5,8 @@
 #include "core/util/DeferredStringParam.h"
 #include "core/util/LogLevel.h"
 
+#include "detail/assets/TranslateKey.h"
+
 #include <array>
 #include <cstdint>
 #include <string>
@@ -13,22 +15,6 @@
 
 namespace oly::assets
 {
-	namespace internal
-	{
-		template<typename Key>
-		constexpr std::string translate_key(Key key)
-		{
-			const auto value = static_cast<underlying_or_self_t<Key>>(key);
-			constexpr size_t KeySize = OLYMPIAN_ENGINE_ASSET_KEY_SIZE;
-			std::array<char, KeySize> bytes;
-
-			for (size_t i = 0; i < KeySize; ++i)
-				bytes[KeySize - 1 - i] = char((value >> (i * KeySize)) & 0xFF);
-
-			return std::string(bytes.begin(), std::find(bytes.begin(), bytes.end(), '\0'));
-		}
-	}
-
 	struct NoKey
 	{
 	};
@@ -41,7 +27,7 @@ namespace oly::assets
 		if constexpr (std::is_same_v<Key, NoKey>)
 			return "";
 		else
-			return internal::translate_key(key);
+			return detail::translate_key(key);
 	}
 
 	template<typename T>
@@ -615,7 +601,7 @@ namespace oly::assets
 			if constexpr (std::is_same_v<Key, NoKey>)
 				return node;
 			else
-				return node[internal::translate_key(key)];
+				return node[detail::translate_key(key)];
 		}
 	};
 
