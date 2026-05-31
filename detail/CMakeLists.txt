@@ -44,3 +44,4 @@ target_include_directories(OlympianDetail PUBLIC
 
 # Add subdirectories
 add_subdirectory(assets)
+add_subdirectory(definitions)

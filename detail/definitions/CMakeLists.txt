@@ -1,21 +1,11 @@
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-function(prebuild script)
-    set(options)
-    set(one_value_args)
-    set(multi_value_args ARGS)
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} KeysCodeGen.py
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE result
+)
 
-    cmake_parse_arguments(PB "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
-
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} -m definitions.${script} ${PB_ARGS}
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/.."
-        RESULT_VARIABLE result
-    )
-
-    if (NOT result EQUAL 0)
-        message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/${script} failed with code ${result}")
-    endif()
-endfunction()
-
-prebuild("KeysCodeGen" ARGS "--key-size=${ASSET_KEY_SIZE}")
+if (NOT result EQUAL 0)
+    message(FATAL_ERROR "KeysCodeGen.py failed with code ${result}")
+endif()

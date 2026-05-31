@@ -11,9 +11,9 @@ ComBP = 0
 [Face]
 Storage = 1
 [[Face.Kerning]]
-Pair = [ "e", "U+78",]
-Dist = 150
+CodePair = [ "e", "U+78",]
+CodeDist = 150
 
 [[Face.Kerning]]
-Pair = [ "H", "e",]
-Dist = -200
+CodePair = [ "H", "e",]
+CodeDist = -200

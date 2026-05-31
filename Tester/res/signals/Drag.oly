@@ -1,10 +1,10 @@
 #meta version=1.0 type=signal
 
 Mapping = []
-[[Signal]]
+[[SigArr]]
 ID = "drag"
 Binding = 5
 
-[Signal.Modifier]
+[SigArr.Modifier]
 Mult = [ 1.0, 1.0, 1.0,]
 Invert = [ false, false, false,]

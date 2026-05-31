@@ -12,7 +12,7 @@ namespace oly::detail
 		std::array<char, KeySize> bytes;
 
 		for (size_t i = 0; i < KeySize; ++i)
-			bytes[KeySize - 1 - i] = char((value >> (i * KeySize)) & 0xFF);
+			bytes[KeySize - 1 - i] = char((value >> (i * 8)) & 0xFF);
 
 		return std::string(bytes.begin(), std::find(bytes.begin(), bytes.end(), '\0'));
 	}

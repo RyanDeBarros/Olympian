@@ -3,7 +3,7 @@
 #include "core/util/Time.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/SpriteAtlas.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -123,18 +123,18 @@ namespace oly::rendering
 
 		assets::Parser parser(node);
 
-		SpriteAtlas sprite_atlas(trace ? Sprite::load(parser.field(_gen::keys::SpriteAtlas::Sprite), *trace) : Sprite::load(parser.field(_gen::keys::SpriteAtlas::Sprite)));
+		SpriteAtlas sprite_atlas(trace ? Sprite::load(parser.field(detail::Key::Sprite), *trace) : Sprite::load(parser.field(detail::Key::Sprite)));
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (parser.optional(_gen::keys::SpriteAtlas::Rows)(rows) && parser.optional(_gen::keys::SpriteAtlas::Columns)(cols) && parser.optional(_gen::keys::SpriteAtlas::DelaySeconds)(delay_seconds))
-			sprite_atlas.setup_uniform(rows, cols, delay_seconds, parser.defaulted(_gen::keys::SpriteAtlas::RowMajor)(true), parser.defaulted(_gen::keys::SpriteAtlas::RowUp)(true));
-		else if (auto static_frame = parser.optional<unsigned int>(_gen::keys::SpriteAtlas::StaticFrame)())
+		if (parser.optional(detail::Key::Rows)(rows) && parser.optional(detail::Key::Columns)(cols) && parser.optional(detail::Key::DelaySeconds)(delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, parser.defaulted(detail::Key::RowMajor)(true), parser.defaulted(detail::Key::RowUp)(true));
+		else if (auto static_frame = parser.optional<unsigned int>(detail::Key::StaticFrame)())
 			sprite_atlas.select_static_frame(*static_frame);
 
-		sprite_atlas.anim_format.starting_frame = parser.defaulted(_gen::keys::SpriteAtlas::StartingFrame)(0);
-		sprite_atlas.anim_format.starting_time = parser.defaulted(_gen::keys::SpriteAtlas::StartingTime)(0.f);
-		sprite_atlas.auto_tick = parser.defaulted(_gen::keys::SpriteAtlas::AutoTick)(true);
+		sprite_atlas.anim_format.starting_frame = parser.defaulted(detail::Key::StartingFrame)(0);
+		sprite_atlas.anim_format.starting_time = parser.defaulted(detail::Key::StartingTime)(0.f);
+		sprite_atlas.auto_tick = parser.defaulted(detail::Key::AutoTick)(true);
 
 		return sprite_atlas;
 	}

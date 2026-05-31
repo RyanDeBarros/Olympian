@@ -6,13 +6,13 @@
 #include "graphics/particles/implementations/Domains.h"
 #include "core/util/StringParam.h"
 
-#include ".gen/keys/ParticleSystem.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::particles
 {
 	void IParticleSpawner::overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		// TODO v7 use polyklass macros more often
 		_OLY_POLYKLASS_CASES_BEGIN(spawner)
@@ -26,7 +26,7 @@ namespace oly::particles
 
 	void ISampler1D::overload(Polymorphic<ISampler1D>& sampler, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(sampler)
 			_OLY_POLYKLASS_IF_CASE(UniformSampler1D)
@@ -39,7 +39,7 @@ namespace oly::particles
 
 	void IDomain1D::overload(Polymorphic<IDomain1D>& domain, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(domain)
 			_OLY_POLYKLASS_IF_CASE(ConstantDomain1D)
@@ -60,13 +60,13 @@ namespace oly::particles
 	void AttributeGenerator1D::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		sampler->overload(parser.field(_gen::keys::ParticleSystem::Sampler));
-		domain->overload(parser.field(_gen::keys::ParticleSystem::Domain));
+		sampler->overload(parser.field(detail::Key::Sampler));
+		domain->overload(parser.field(detail::Key::Domain));
 	}
 
 	void ISampler2D::overload(Polymorphic<ISampler2D>& sampler, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(sampler)
 			_OLY_POLYKLASS_IF_CASE(UniformSampler2D)
@@ -78,7 +78,7 @@ namespace oly::particles
 
 	void IDomain2D::overload(Polymorphic<IDomain2D>& domain, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(domain)
 			_OLY_POLYKLASS_IF_CASE(ConstantDomain2D)
@@ -97,13 +97,13 @@ namespace oly::particles
 	void AttributeGenerator2D::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		sampler->overload(parser.field(_gen::keys::ParticleSystem::Sampler));
-		domain->overload(parser.field(_gen::keys::ParticleSystem::Domain));
+		sampler->overload(parser.field(detail::Key::Sampler));
+		domain->overload(parser.field(detail::Key::Domain));
 	}
 
 	void ISampler3D::overload(Polymorphic<ISampler3D>& sampler, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(sampler)
 			_OLY_POLYKLASS_IF_CASE(UniformSampler3D)
@@ -115,7 +115,7 @@ namespace oly::particles
 
 	void IDomain3D::overload(Polymorphic<IDomain3D>& domain, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(domain)
 			_OLY_POLYKLASS_IF_CASE(ConstantDomain3D)
@@ -134,13 +134,13 @@ namespace oly::particles
 	void AttributeGenerator3D::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		sampler->overload(parser.field(_gen::keys::ParticleSystem::Sampler));
-		domain->overload(parser.field(_gen::keys::ParticleSystem::Domain));
+		sampler->overload(parser.field(detail::Key::Sampler));
+		domain->overload(parser.field(detail::Key::Domain));
 	}
 
 	void ISampler4D::overload(Polymorphic<ISampler4D>& sampler, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(sampler)
 			_OLY_POLYKLASS_IF_CASE(UniformSampler4D)
@@ -152,7 +152,7 @@ namespace oly::particles
 
 	void IDomain4D::overload(Polymorphic<IDomain4D>& domain, TOMLNode node)
 	{
-		std::string klass = assets::Parser(node).defaulted<std::string>(_gen::keys::ParticleSystem::Klass)();
+		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
 		_OLY_POLYKLASS_CASES_BEGIN(domain)
 			_OLY_POLYKLASS_IF_CASE(ConstantDomain4D)
@@ -171,8 +171,8 @@ namespace oly::particles
 	void AttributeGenerator4D::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		sampler->overload(parser.field(_gen::keys::ParticleSystem::Sampler));
-		domain->overload(parser.field(_gen::keys::ParticleSystem::Domain));
+		sampler->overload(parser.field(detail::Key::Sampler));
+		domain->overload(parser.field(detail::Key::Domain));
 	}
 }
 

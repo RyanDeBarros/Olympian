@@ -8,7 +8,7 @@
 #include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
 
-#include ".gen/keys/Paragraph.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -920,19 +920,19 @@ namespace oly::rendering
 		{
 			TextElement e;
 			assets::Parser parser(element, { "in text element #", i });
-			const auto font = parser.required<std::string>(_gen::keys::Paragraph::Font)();
-			const auto font_index = parser.defaulted(_gen::keys::Paragraph::FontIndex)(0u);
+			const auto font = parser.required<std::string>(detail::Key::Font)();
+			const auto font_index = parser.defaulted(detail::Key::FontIndex)(0u);
 			e.font = context::load_font(font, font_index);
-			e.text = parser.required<std::string>(_gen::keys::Paragraph::Text)();
+			e.text = parser.required<std::string>(detail::Key::Text)();
 
-			parser.optional(_gen::keys::Paragraph::TextColor)(e.text_color);
-			parser.optional(_gen::keys::Paragraph::AdjacentOffset)(e.adj_offset);
-			parser.optional(_gen::keys::Paragraph::Scale)(e.scale);
-			if (auto line_y_pivot = parser.optional<float>(_gen::keys::Paragraph::LineYPivot)())
+			parser.optional(detail::Key::TextColor)(e.text_color);
+			parser.optional(detail::Key::AdjacentOffset)(e.adj_offset);
+			parser.optional(detail::Key::Scale)(e.scale);
+			if (auto line_y_pivot = parser.optional<float>(detail::Key::LineYPivot)())
 				e.line_y_pivot = *line_y_pivot;
-			parser.optional(_gen::keys::Paragraph::JitterOffset)(e.jitter_offset);
+			parser.optional(detail::Key::JitterOffset)(e.jitter_offset);
 
-			if (parser.defaulted(_gen::keys::Paragraph::Expand)(false))
+			if (parser.defaulted(detail::Key::Expand)(false))
 				TextElement::expand(e, elements);
 			else
 				elements.push_back(std::move(e));
@@ -949,27 +949,27 @@ namespace oly::rendering
 		assets::Parser parser(node);
 
 		std::vector<TextElement> elements;
-		if (auto element_array = parser.optional<TOMLArray, true>(_gen::keys::Paragraph::Element)())
+		if (auto element_array = parser.optional<TOMLArray, true>(detail::Key::Element)())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
 				if (auto element = TOMLNode(*element_array->get(i)))
 					add_text_element(element, i, elements);
 		}
-		else if (auto element = parser.optional<TOMLNode>(_gen::keys::Paragraph::Element)())
+		else if (auto element = parser.optional<TOMLNode>(detail::Key::Element)())
 			add_text_element(*element, 0, elements);
 
-		Paragraph paragraph(std::move(elements), ParagraphFormat::load(parser.field(_gen::keys::Paragraph::Format)));
-		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::Paragraph::Transformer)())
+		Paragraph paragraph(std::move(elements), ParagraphFormat::load(parser.field(detail::Key::Format)));
+		if (auto transformer = parser.optional<TOMLNode>(detail::Key::Transformer)())
 		{
 			paragraph.set_local() = Transform2D::load(*transformer);
 			paragraph.set_transformer().set_modifier() = TransformModifier2D::load(*transformer);
 		}
 
-		parser.optional(_gen::keys::Paragraph::DrawBackground)(paragraph.draw_bkg);
-		if (auto bkg_color = parser.optional<glm::vec4>(_gen::keys::Paragraph::BackgroundColor)())
+		parser.optional(detail::Key::DrawBackground)(paragraph.draw_bkg);
+		if (auto bkg_color = parser.optional<glm::vec4>(detail::Key::BackgroundColor)())
 			paragraph.set_bkg_color(*bkg_color);
 
-		paragraph.set_camera_invariant(parser.defaulted(_gen::keys::Paragraph::CameraInvariant)(false));
+		paragraph.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return paragraph;
 	}

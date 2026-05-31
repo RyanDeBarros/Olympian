@@ -24,10 +24,7 @@
 #include "graphics/particles/ParticleSystem.h"
 #include "physics/dynamics/bodies/RigidBody.h"
 
-#include ".gen/keys/General.inl"
-#include ".gen/keys/Context.inl"
-#include ".gen/keys/Logger.inl"
-#include ".gen/keys/FrameRate.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::context
 {
@@ -40,20 +37,20 @@ namespace oly::context
 	{
 		LoggerOptions options;
 
-		if (auto logger_parser = parser.optional(_gen::keys::Context::Logger).subparser())
+		if (auto logger_parser = parser.optional(detail::Key::Logger).subparser())
 		{
-			logger_parser->optional(_gen::keys::Logger::UseLogfile)(options.use_logfile);
-			logger_parser->optional(_gen::keys::Logger::UseConsole)(options.use_console);
-			logger_parser->optional(_gen::keys::Logger::MaxPriorLogFiles)(options.max_prior_log_files);
-			logger_parser->optional(_gen::keys::Logger::MaxPriorLogBytes)(options.max_prior_log_bytes);
+			logger_parser->optional(detail::Key::UseLogfile)(options.use_logfile);
+			logger_parser->optional(detail::Key::UseConsole)(options.use_console);
+			logger_parser->optional(detail::Key::MaxPriorLogFiles)(options.max_prior_log_files);
+			logger_parser->optional(detail::Key::MaxPriorLogBytes)(options.max_prior_log_bytes);
 			
-			if (auto enables_parser = logger_parser->optional(_gen::keys::Logger::Enable).subparser())
+			if (auto enables_parser = logger_parser->optional(detail::Key::Enable).subparser())
 			{
-				enables_parser->optional(_gen::keys::Logger::Debug)(LOG.enable.debug);
-				enables_parser->optional(_gen::keys::Logger::Info)(LOG.enable.info);
-				enables_parser->optional(_gen::keys::Logger::Warning)(LOG.enable.warning);
-				enables_parser->optional(_gen::keys::Logger::Error)(LOG.enable.error);
-				enables_parser->optional(_gen::keys::Logger::Fatal)(LOG.enable.fatal);
+				enables_parser->optional(detail::Key::Debug)(LOG.enable.debug);
+				enables_parser->optional(detail::Key::Info)(LOG.enable.info);
+				enables_parser->optional(detail::Key::Warning)(LOG.enable.warning);
+				enables_parser->optional(detail::Key::Error)(LOG.enable.error);
+				enables_parser->optional(detail::Key::Fatal)(LOG.enable.fatal);
 			}
 		}
 
@@ -62,17 +59,17 @@ namespace oly::context
 
 	static void init_time(const assets::Parser& parser)
 	{
-		if (auto framerate_parser = parser.optional(_gen::keys::Context::FrameRate).subparser())
+		if (auto framerate_parser = parser.optional(detail::Key::FrameRate).subparser())
 		{
-			framerate_parser->optional(_gen::keys::FrameRate::FrameLengthClip)(TIME.frame_length_clip);
-			framerate_parser->optional(_gen::keys::FrameRate::TimeScale)(TIME.time_scale);
+			framerate_parser->optional(detail::Key::FrameLengthClip)(TIME.frame_length_clip);
+			framerate_parser->optional(detail::Key::TimeScale)(TIME.time_scale);
 		}
 		TIME.init();
 	}
 
 	static void autoload_signals(const assets::Parser& parser)
 	{
-		if (auto register_files = parser.optional<TOMLArray>(_gen::keys::Context::Signals)())
+		if (auto register_files = parser.optional<TOMLArray>(detail::Key::Signals)())
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
@@ -103,7 +100,7 @@ namespace oly::context
 		
 		auto toml = io::load_toml(project_file);
 		assets::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
-		TOMLNode toml_context = project_parser.required<TOMLNode>(_gen::keys::General::Context)();
+		TOMLNode toml_context = project_parser.required<TOMLNode>(detail::Key::Context)();
 
 		assets::Parser context_parser(toml_context);
 

@@ -9,8 +9,7 @@
 #include "core/base/Definitions.h"
 
 #include "detail/assets/MetaSplitter.h"
-
-#include ".gen/keys/Texture.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::context
 {
@@ -69,10 +68,10 @@ namespace oly::context
 
 	static void setup_texture(graphics::BindlessTexture& texture, const assets::Parser& parser, bool set_and_use)
 	{
-		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, parser.required<GLenum>(_gen::keys::Texture::MinFilter)());
-		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, parser.required<GLenum>(_gen::keys::Texture::MagFilter)());
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, parser.defaulted(_gen::keys::Texture::WrapS)(GL_CLAMP_TO_EDGE));
-		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, parser.defaulted(_gen::keys::Texture::WrapT)(GL_CLAMP_TO_EDGE));
+		texture.texture().set_parameter(GL_TEXTURE_MIN_FILTER, parser.required<GLenum>(detail::Key::MinFilter)());
+		texture.texture().set_parameter(GL_TEXTURE_MAG_FILTER, parser.required<GLenum>(detail::Key::MagFilter)());
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_S, parser.defaulted(detail::Key::WrapS)(GL_CLAMP_TO_EDGE));
+		texture.texture().set_parameter(GL_TEXTURE_WRAP_T, parser.defaulted(detail::Key::WrapT)(GL_CLAMP_TO_EDGE));
 
 		if (set_and_use)
 			texture.set_and_use_handle();
@@ -80,14 +79,14 @@ namespace oly::context
 
 	static graphics::BindlessTextureRef load_image(const graphics::Image& image, const assets::Parser& parser, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, parser.defaulted(_gen::keys::Texture::GenerateMipmaps)(false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d(image, parser.defaulted(detail::Key::GenerateMipmaps)(false));
 		setup_texture(texture, parser, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
 
 	static graphics::BindlessTextureRef load_anim(const graphics::Anim& anim, const assets::Parser& parser, bool set_and_use)
 	{
-		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, parser.defaulted(_gen::keys::Texture::GenerateMipmaps)(false));
+		graphics::BindlessTexture texture = graphics::load_bindless_texture_2d_array(anim, parser.defaulted(detail::Key::GenerateMipmaps)(false));
 		setup_texture(texture, parser, set_and_use);
 		return graphics::BindlessTextureRef(std::move(texture));
 	}
@@ -95,7 +94,7 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, const assets::Parser& parser, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		graphics::SVGMipmapGenerationMode mipmaps_mode = parser.defaulted(_gen::keys::Texture::GenerateMipmaps)(graphics::SVGMipmapGenerationMode::Off);
+		graphics::SVGMipmapGenerationMode mipmaps_mode = parser.defaulted(detail::Key::GenerateMipmaps)(graphics::SVGMipmapGenerationMode::Off);
 		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, parser, set_and_use);
 		return texture;
@@ -113,7 +112,7 @@ namespace oly::context
 		}
 
 		toml = io::load_toml(import_file);
-		const auto texture_array = assets::Parser(toml).required<TOMLArray>(_gen::keys::Texture::TextureArray)();
+		const auto texture_array = assets::Parser(toml).required<TOMLArray>(detail::Key::TextureArray)();
 
 		if (texture_index >= texture_array->size())
 		{
@@ -139,13 +138,13 @@ namespace oly::context
 	static graphics::SpritesheetOptions parse_spritesheet_options(const assets::Parser& parser)
 	{
 		graphics::SpritesheetOptions options;
-		parser.optional(_gen::keys::Texture::Rows)(options.rows);
-		parser.optional(_gen::keys::Texture::Columns)(options.cols);
-		parser.optional(_gen::keys::Texture::CellWidthOverride)(options.cell_width_override);
-		parser.optional(_gen::keys::Texture::CellHeightOverride)(options.cell_height_override);
-		parser.optional(_gen::keys::Texture::DelayCS)(options.delay_cs);
-		parser.optional(_gen::keys::Texture::RowMajor)(options.row_major);
-		parser.optional(_gen::keys::Texture::RowUp)(options.row_up);
+		parser.optional(detail::Key::Rows)(options.rows);
+		parser.optional(detail::Key::Columns)(options.cols);
+		parser.optional(detail::Key::CellWidthOverride)(options.cell_width_override);
+		parser.optional(detail::Key::CellHeightOverride)(options.cell_height_override);
+		parser.optional(detail::Key::DelayCS)(options.delay_cs);
+		parser.optional(detail::Key::RowMajor)(options.row_major);
+		parser.optional(detail::Key::RowUp)(options.row_up);
 		return options;
 	}
 
@@ -175,7 +174,7 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_buffer = should_store(parser, _gen::keys::Texture::Storage, params.storage);
+		bool store_buffer = should_store(parser, detail::Key::Storage, params.storage);
 
 		graphics::BindlessTextureRef texture;
 
@@ -189,7 +188,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (parser.defaulted(_gen::keys::Texture::Animated)(false))
+			if (parser.defaulted(detail::Key::Animated)(false))
 			{
 				graphics::Anim anim(file, parse_spritesheet_options(parser));
 				texture = load_anim(anim, parser, params.set_and_use);
@@ -232,13 +231,13 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_abstract = should_store(parser, _gen::keys::Texture::AbstractStorage, params.abstract_storage);
-		bool store_image = should_store(parser, _gen::keys::Texture::ImageStorage, params.image_storage);
-		float scale = parser.defaulted(_gen::keys::Texture::VectorScale)(1.0f);
+		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage);
+		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage);
+		float scale = parser.defaulted(detail::Key::VectorScale)(1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (parser.defaulted(_gen::keys::Texture::Animated)(false))
+		if (parser.defaulted(detail::Key::Animated)(false))
 		{
 			auto ait = internal::nsvg_abstracts.find(file);
 			if (ait != internal::nsvg_abstracts.end())
@@ -328,7 +327,7 @@ namespace oly::context
 		}
 		else
 		{
-			if (parser.defaulted(_gen::keys::Texture::Animated)(false))
+			if (parser.defaulted(detail::Key::Animated)(false))
 			{
 				graphics::Anim anim(f.c_str(), parse_spritesheet_options(parser));
 				texture = load_anim(anim, parser, params.set_and_use);
@@ -362,11 +361,11 @@ namespace oly::context
 
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
-		float scale = parser.defaulted(_gen::keys::Texture::VectorScale)(1.0f);
+		float scale = parser.defaulted(detail::Key::VectorScale)(1.0f);
 
 		graphics::BindlessTextureRef texture;
 
-		if (parser.defaulted(_gen::keys::Texture::Animated)(false))
+		if (parser.defaulted(detail::Key::Animated)(false))
 		{
 			graphics::NSVGAbstract abstract(file);
 			graphics::Anim anim(abstract, scale, parse_spritesheet_options(parser));

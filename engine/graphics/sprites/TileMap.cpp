@@ -6,7 +6,7 @@
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/TileMap.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -166,13 +166,13 @@ namespace oly::rendering
 		assets::Parser parser(node);
 
 		TileMap tilemap;
-		if (auto transformer = parser.optional<TOMLNode>(_gen::keys::TileMap::Transformer)())
+		if (auto transformer = parser.optional<TOMLNode>(detail::Key::Transformer)())
 		{
 			tilemap.set_local() = Transform2D::load(*transformer);
 			tilemap.set_transformer().set_modifier() = TransformModifier2D::load(*transformer);
 		}
 
-		if (auto toml_layers = parser.optional<TOMLArray>(_gen::keys::TileMap::LayerArray)())
+		if (auto toml_layers = parser.optional<TOMLArray>(detail::Key::LayerArray)())
 		{
 			size_t _layer_idx = 0;
 			toml_layers->for_each([&tilemap, &_layer_idx](auto&& node) {
@@ -181,12 +181,12 @@ namespace oly::rendering
 					const size_t layer_idx = _layer_idx++;
 					assets::Parser parser((TOMLNode)node, { "in tilemap layer #", layer_idx });
 
-					auto tileset = parser.required<std::string>(_gen::keys::TileMap::TileSet)();
+					auto tileset = parser.required<std::string>(detail::Key::TileSet)();
 
 					TileMapLayer layer;
 					layer.tileset = context::load_tileset(tileset);
 
-					if (auto tiles = parser.optional<TOMLArray>(_gen::keys::TileMap::TileArray)())
+					if (auto tiles = parser.optional<TOMLArray>(detail::Key::TileArray)())
 					{
 						size_t tile_idx = 0;
 						for (auto& toml_tile : *tiles)
@@ -197,7 +197,7 @@ namespace oly::rendering
 						}
 					}
 
-					if (auto z = parser.optional<int>(_gen::keys::TileMap::Z)())
+					if (auto z = parser.optional<int>(detail::Key::Z)())
 						tilemap.register_layer(*z, std::move(layer));
 					else
 						tilemap.register_layer(std::move(layer));
@@ -210,7 +210,7 @@ namespace oly::rendering
 				});
 		}
 
-		tilemap.set_camera_invariant(parser.defaulted(_gen::keys::TileMap::CameraInvariant)(false));
+		tilemap.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return tilemap;
 	}

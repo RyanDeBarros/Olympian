@@ -1,11 +1,6 @@
 #include "Loader.h"
 
-#include "core/algorithms/STLUtils.h"
-#include "core/base/Definitions.h"
 #include "core/util/LoggerOperators.h"
-#include "core/util/Parser.h"
-
-#include ".gen/keys/Transform.inl"
 
 // TODO v7 use CTOMLNode throughout
 

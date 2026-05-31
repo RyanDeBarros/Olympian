@@ -3,7 +3,7 @@
 #include "core/util/Parser.h"
 #include "core/util/Logger.h"
 
-#include ".gen/keys/TileSet.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -753,7 +753,7 @@ namespace oly::rendering
 	void TileSet::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		auto toml_assignments = parser.optional<TOMLArray>(_gen::keys::TileSet::AssignmentArray)();
+		auto toml_assignments = parser.optional<TOMLArray>(detail::Key::AssignmentArray)();
 		if (!toml_assignments)
 			return;
 
@@ -768,8 +768,8 @@ namespace oly::rendering
 				const size_t a_idx = _a_idx++;
 				assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
 
-				const auto texture = parser.required<std::string>(_gen::keys::TileSet::Texture)();
-				const auto config = parser.required<int>(_gen::keys::TileSet::Configuration)();
+				const auto texture = parser.required<std::string>(detail::Key::Texture)();
+				const auto config = parser.required<int>(detail::Key::Configuration)();
 
 				rendering::TileSet::Assignment assignment;
 
@@ -782,7 +782,7 @@ namespace oly::rendering
 				}
 
 				assignment.desc.file = ResourcePath(texture);
-				if (auto uvs = parser.optional<glm::vec4>(_gen::keys::TileSet::UVvec4)())
+				if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
 				{
 					assignment.desc.uvs.x1 = (*uvs)[0];
 					assignment.desc.uvs.x2 = (*uvs)[1];
@@ -790,7 +790,7 @@ namespace oly::rendering
 					assignment.desc.uvs.y2 = (*uvs)[3];
 				}
 
-				if (auto transformations = parser.optional<TOMLArray>(_gen::keys::TileSet::TransformationArray)())
+				if (auto transformations = parser.optional<TOMLArray>(detail::Key::TransformationArray)())
 				{
 					size_t tr_idx = 0;
 					for (auto& trfm : *transformations)

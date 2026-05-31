@@ -3,7 +3,7 @@
 #include "core/util/Logger.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/ParagraphFormat.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -23,16 +23,16 @@ namespace oly::rendering
 
 		ParagraphFormat format;
 
-		parser.optional(_gen::keys::ParagraphFormat::Pivot)(format.pivot);
-		parser.optional(_gen::keys::ParagraphFormat::LineSpacing)(format.line_spacing);
-		parser.optional(_gen::keys::ParagraphFormat::LinebreakSpacing)(format.linebreak_spacing);
-		parser.optional(_gen::keys::ParagraphFormat::MinSize)(format.min_size);
-		parser.optional(_gen::keys::ParagraphFormat::Padding)(format.padding);
-		parser.optional(_gen::keys::ParagraphFormat::TextWrap)(format.text_wrap);
-		parser.optional(_gen::keys::ParagraphFormat::MaxHeight)(format.max_height);
-		parser.optional(_gen::keys::ParagraphFormat::TabSpaces)(format.tab_spaces);
-		parser.optional(_gen::keys::ParagraphFormat::HorizontalAlignment)(format.horizontal_alignment);
-		parser.optional(_gen::keys::ParagraphFormat::VerticalAlignment)(format.vertical_alignment);
+		parser.optional(detail::Key::Pivot)(format.pivot);
+		parser.optional(detail::Key::LineSpacing)(format.line_spacing);
+		parser.optional(detail::Key::LinebreakSpacing)(format.linebreak_spacing);
+		parser.optional(detail::Key::MinSize)(format.min_size);
+		parser.optional(detail::Key::Padding)(format.padding);
+		parser.optional(detail::Key::TextWrap)(format.text_wrap);
+		parser.optional(detail::Key::MaxHeight)(format.max_height);
+		parser.optional(detail::Key::TabSpaces)(format.tab_spaces);
+		parser.optional(detail::Key::HorizontalAlignment)(format.horizontal_alignment);
+		parser.optional(detail::Key::VerticalAlignment)(format.vertical_alignment);
 
 		return format;
 	}

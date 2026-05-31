@@ -3,7 +3,7 @@
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/Transform.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly
 {
@@ -14,16 +14,16 @@ namespace oly
 
 		assets::Parser parser(node);
 
-		parser.optional(_gen::keys::Transform::Position)(position);
-		parser.optional(_gen::keys::Transform::Rotation)(rotation);
-		parser.optional(_gen::keys::Transform::Scale)(scale);
+		parser.optional(detail::Key::Position)(position);
+		parser.optional(detail::Key::Rotation)(rotation);
+		parser.optional(detail::Key::Scale)(scale);
 	}
 
 	void TransformModifier2D::overload(Polymorphic<TransformModifier2D>& modifier, TOMLNode node)
 	{
-		if (auto parser = assets::Parser(node).optional(_gen::keys::Transform::Modifier).subparser())
+		if (auto parser = assets::Parser(node).optional(detail::Key::Modifier).subparser())
 		{
-			std::string klass = parser->defaulted<std::string>(_gen::keys::Transform::Klass)();
+			std::string klass = parser->defaulted<std::string>(detail::Key::Klass)();
 
 			_OLY_POLYKLASS_CASES_BEGIN(modifier)
 				_OLY_POLYKLASS_IF_CASE(ShearTransformModifier2D)
@@ -419,8 +419,8 @@ namespace oly
 	void PivotTransformModifier2D::overload(TOMLNode node)
 	{
 		assets::Parser parser(node);
-		parser.optional(_gen::keys::Transform::Pivot)(pivot);
-		parser.optional(_gen::keys::Transform::Size)(size);
+		parser.optional(detail::Key::Pivot)(pivot);
+		parser.optional(detail::Key::Size)(size);
 	}
 
 	void ShearTransformModifier2D::operator()(glm::mat3& global) const
@@ -430,7 +430,7 @@ namespace oly
 
 	void ShearTransformModifier2D::overload(TOMLNode node)
 	{
-		assets::Parser(node).optional(_gen::keys::Transform::Shearing)(shearing);
+		assets::Parser(node).optional(detail::Key::Shearing)(shearing);
 	}
 
 	void OffsetTransformModifier2D::operator()(glm::mat3& global) const
@@ -440,7 +440,7 @@ namespace oly
 
 	void OffsetTransformModifier2D::overload(TOMLNode node)
 	{
-		assets::Parser(node).optional(_gen::keys::Transform::Offset)(offset);
+		assets::Parser(node).optional(detail::Key::Offset)(offset);
 	}
 
 	glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point)

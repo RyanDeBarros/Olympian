@@ -6,8 +6,7 @@
 #include "core/util/Parser.h"
 #include "core/util/Logger.h"
 
-#include ".gen/keys/Rect2D.inl"
-#include ".gen/keys/Padding.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::math
 {
@@ -57,10 +56,10 @@ namespace oly::math
 		assets::Parser parser(node);
 
 		IRect2D rect;
-		parser.optional(_gen::keys::Rect2D::X1)(rect.x1);
-		parser.optional(_gen::keys::Rect2D::X2)(rect.x2);
-		parser.optional(_gen::keys::Rect2D::Y1)(rect.y1);
-		parser.optional(_gen::keys::Rect2D::Y2)(rect.y2);
+		parser.optional(detail::Key::X1)(rect.x1);
+		parser.optional(detail::Key::X2)(rect.x2);
+		parser.optional(detail::Key::Y1)(rect.y1);
+		parser.optional(detail::Key::Y2)(rect.y2);
 
 		if (validate)
 		{
@@ -83,13 +82,13 @@ namespace oly::math
 
 		Padding padding;
 
-		if (auto uniform = parser.optional<double>(_gen::keys::Padding::Uniform)())
+		if (auto uniform = parser.optional<double>(detail::Key::Uniform)())
 			padding = Padding::uniform(*uniform);
 
-		parser.optional(_gen::keys::Padding::Left)(padding.left);
-		parser.optional(_gen::keys::Padding::Right)(padding.right);
-		parser.optional(_gen::keys::Padding::Top)(padding.top);
-		parser.optional(_gen::keys::Padding::Bottom)(padding.bottom);
+		parser.optional(detail::Key::Left)(padding.left);
+		parser.optional(detail::Key::Right)(padding.right);
+		parser.optional(detail::Key::Top)(padding.top);
+		parser.optional(detail::Key::Bottom)(padding.bottom);
 
 		return padding;
 	}
@@ -103,12 +102,12 @@ namespace oly::math
 
 		TopSidePadding padding;
 
-		if (auto uniform = parser.optional<double>(_gen::keys::Padding::Uniform)())
+		if (auto uniform = parser.optional<double>(detail::Key::Uniform)())
 			padding = TopSidePadding::uniform(*uniform);
 
-		parser.optional(_gen::keys::Padding::Left)(padding.left);
-		parser.optional(_gen::keys::Padding::Right)(padding.right);
-		parser.optional(_gen::keys::Padding::Top)(padding.top);
+		parser.optional(detail::Key::Left)(padding.left);
+		parser.optional(detail::Key::Right)(padding.right);
+		parser.optional(detail::Key::Top)(padding.top);
 
 		return padding;
 	}

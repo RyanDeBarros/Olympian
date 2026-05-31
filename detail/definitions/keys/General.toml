@@ -1,9 +1,0 @@
-[[key]]
-label = "Context"
-code = "Context"
-enum = "Context"
-
-[[key]]
-label = "Storage"
-code = "Storage"
-enum = "Storage"

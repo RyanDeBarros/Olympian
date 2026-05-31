@@ -2,7 +2,7 @@
 
 #include "graphics/particles/ShaderStructs.h"
 
-#include ".gen/keys/ParticleSystem.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::particles
 {
@@ -14,7 +14,7 @@ namespace oly::particles
 
 	void ConstantDomain1D::overload(TOMLNode node)
 	{
-		c.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::C));
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 
 	void LineDomain1D::apply(internal::Domain1D& domain) const
@@ -26,8 +26,8 @@ namespace oly::particles
 
 	void LineDomain1D::overload(TOMLNode node)
 	{
-		a.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::A));
-		b.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::B));
+		a.overload(assets::Parser(node).field(detail::Key::A));
+		b.overload(assets::Parser(node).field(detail::Key::B));
 	}
 
 	void BiLineDomain1D::apply(internal::Domain1D& domain) const
@@ -40,9 +40,9 @@ namespace oly::particles
 
 	void BiLineDomain1D::overload(TOMLNode node)
 	{
-		a.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::A));
-		b.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::B));
-		c.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::C));
+		a.overload(assets::Parser(node).field(detail::Key::A));
+		b.overload(assets::Parser(node).field(detail::Key::B));
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 
 	void ConstantDomain2D::apply(internal::Domain2D& domain) const
@@ -54,7 +54,7 @@ namespace oly::particles
 
 	void ConstantDomain2D::overload(TOMLNode node)
 	{
-		c.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::C));
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 
 	void ConstantDomain3D::apply(internal::Domain3D& domain) const
@@ -67,7 +67,7 @@ namespace oly::particles
 
 	void ConstantDomain3D::overload(TOMLNode node)
 	{
-		c.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::C));
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 
 	void ConstantDomain4D::apply(internal::Domain4D& domain) const
@@ -81,6 +81,6 @@ namespace oly::particles
 
 	void ConstantDomain4D::overload(TOMLNode node)
 	{
-		c.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::C));
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 }

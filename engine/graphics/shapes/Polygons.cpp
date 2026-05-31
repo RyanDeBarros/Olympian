@@ -9,7 +9,7 @@
 #include "core/util/Parser.h"
 #include "graphics/shapes/Definitions.h"
 
-#include ".gen/keys/Polygon.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -513,10 +513,10 @@ namespace oly::rendering
 
 		Polygon polygon;
 
-		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		std::vector<glm::vec2> points;
-		if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
+		if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
@@ -529,7 +529,7 @@ namespace oly::rendering
 		polygon.set_points() = std::move(points);
 
 		std::vector<glm::vec4> colors;
-		if (auto toml_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::ColorsArray)())
+		if (auto toml_colors = parser.optional<TOMLArray>(detail::Key::ColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
@@ -541,7 +541,7 @@ namespace oly::rendering
 		}
 		polygon.set_colors() = std::move(colors);
 
-		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -653,16 +653,16 @@ namespace oly::rendering
 
 		PolyComposite polygon;
 
-		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
-		if (auto method = parser.optional<PolyCompositeMethod>(_gen::keys::Polygon::Method)())
+		if (auto method = parser.optional<PolyCompositeMethod>(detail::Key::Method)())
 		{
 			switch (*method)
 			{
 			case PolyCompositeMethod::Ngon:
 			{
 				std::vector<glm::vec2> points;
-				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
@@ -674,7 +674,7 @@ namespace oly::rendering
 				}
 
 				std::vector<glm::vec4> colors;
-				if (auto toml_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::ColorsArray)())
+				if (auto toml_colors = parser.optional<TOMLArray>(detail::Key::ColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_colors)
@@ -692,7 +692,7 @@ namespace oly::rendering
 			{
 				cmath::NGonBase ngon_base;
 
-				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
@@ -703,7 +703,7 @@ namespace oly::rendering
 					}
 				}
 
-				if (auto toml_fill_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::FillColorsArray)())
+				if (auto toml_fill_colors = parser.optional<TOMLArray>(detail::Key::FillColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
@@ -714,7 +714,7 @@ namespace oly::rendering
 					}
 				}
 
-				if (auto toml_border_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::BorderColorsArray)())
+				if (auto toml_border_colors = parser.optional<TOMLArray>(detail::Key::BorderColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
@@ -725,10 +725,10 @@ namespace oly::rendering
 					}
 				}
 
-				parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
+				parser.optional(detail::Key::BorderWidth)(ngon_base.border_width);
 
-				if (!parser.optional<void, true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
-					parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
+				if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))
+					parser.optional(detail::Key::BorderPivot)(ngon_base.border_pivot.v);
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
 					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
@@ -738,7 +738,7 @@ namespace oly::rendering
 			{
 				std::vector<glm::vec2> points;
 
-				if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
@@ -755,7 +755,7 @@ namespace oly::rendering
 			}
 		}
 
-		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -819,11 +819,11 @@ namespace oly::rendering
 
 		NGon polygon;
 
-		polygon.transformer = Transformer2D::load(parser.field(_gen::keys::Polygon::Transformer));
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		cmath::NGonBase ngon_base;
 
-		if (auto toml_points = parser.optional<TOMLArray>(_gen::keys::Polygon::PointsArray)())
+		if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
@@ -834,7 +834,7 @@ namespace oly::rendering
 			}
 		}
 
-		if (auto toml_fill_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::FillColorsArray)())
+		if (auto toml_fill_colors = parser.optional<TOMLArray>(detail::Key::FillColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
@@ -845,7 +845,7 @@ namespace oly::rendering
 			}
 		}
 
-		if (auto toml_border_colors = parser.optional<TOMLArray>(_gen::keys::Polygon::BorderColorsArray)())
+		if (auto toml_border_colors = parser.optional<TOMLArray>(detail::Key::BorderColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
@@ -856,16 +856,16 @@ namespace oly::rendering
 			}
 		}
 
-		if (auto bordered = parser.optional<bool>(_gen::keys::Polygon::Bordered)())
+		if (auto bordered = parser.optional<bool>(detail::Key::Bordered)())
 			polygon.set_bordered(*bordered);
-		parser.optional(_gen::keys::Polygon::BorderWidth)(ngon_base.border_width);
+		parser.optional(detail::Key::BorderWidth)(ngon_base.border_width);
 
-		if (!parser.optional<void, true>(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot))
-			parser.optional(_gen::keys::Polygon::BorderPivot)(ngon_base.border_pivot.v);
+		if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))
+			parser.optional(detail::Key::BorderPivot)(ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 
-		polygon.set_camera_invariant(parser.defaulted(_gen::keys::Polygon::CameraInvariant)(false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}

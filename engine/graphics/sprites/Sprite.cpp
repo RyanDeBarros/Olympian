@@ -5,7 +5,7 @@
 #include "core/util/Parser.h"
 #include "graphics/sprites/Definitions.h"
 
-#include ".gen/keys/Sprite.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -29,37 +29,37 @@ namespace oly::rendering
 		assets::Parser parser(node);
 
 		Sprite sprite;
-		sprite.transformer = Transformer2D::load(parser.field(_gen::keys::Sprite::Transformer));
+		sprite.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
-		auto texture = parser.optional<std::string>(_gen::keys::Sprite::Texture)();
+		auto texture = parser.optional<std::string>(detail::Key::Texture)();
 		if (texture)
 		{
-			graphics::BindlessTextureRef btex = context::load_texture(*texture, parser.defaulted(_gen::keys::Sprite::TextureIndex)(0u));
+			graphics::BindlessTextureRef btex = context::load_texture(*texture, parser.defaulted(detail::Key::TextureIndex)(0u));
 			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
-		if (auto modulation = parser.optional<glm::vec4>(_gen::keys::Sprite::Modulation)())
+		if (auto modulation = parser.optional<glm::vec4>(detail::Key::Modulation)())
 			sprite.set_modulation(*modulation);
 
-		if (auto uvs = parser.optional<glm::vec4>(_gen::keys::Sprite::TextureCoordinates)())
+		if (auto uvs = parser.optional<glm::vec4>(detail::Key::TextureCoordinates)())
 			sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
 
-		if (auto ff_parser = parser.optional(_gen::keys::Sprite::FrameFormat).subparser())
+		if (auto ff_parser = parser.optional(detail::Key::FrameFormat).subparser())
 		{
-			if (auto mode = ff_parser->optional<FrameFormat>(_gen::keys::Sprite::Mode)())
+			if (auto mode = ff_parser->optional<FrameFormat>(detail::Key::Mode)())
 			{
 				switch (*mode)
 				{
 				case FrameFormat::Single:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, ff_parser->defaulted(_gen::keys::Sprite::Frame)(0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, ff_parser->defaulted(detail::Key::Frame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
 					break;
 				case FrameFormat::Auto:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, ff_parser->defaulted(_gen::keys::Sprite::Speed)(1.f),
-							ff_parser->defaulted(_gen::keys::Sprite::StartingFrame)(0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, ff_parser->defaulted(detail::Key::Speed)(1.f),
+							ff_parser->defaulted(detail::Key::StartingFrame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
 					break;
@@ -68,15 +68,15 @@ namespace oly::rendering
 			else
 			{
 				sprite.set_frame_format({
-					.starting_frame = ff_parser->defaulted(_gen::keys::Sprite::StartingFrame)(0u),
-					.num_frames = ff_parser->defaulted(_gen::keys::Sprite::NumFrames)(0u),
-					.starting_time = ff_parser->defaulted(_gen::keys::Sprite::StartingTime)(0.f),
-					.delay_seconds = ff_parser->defaulted(_gen::keys::Sprite::DelaySeconds)(0.f)
+					.starting_frame = ff_parser->defaulted(detail::Key::StartingFrame)(0u),
+					.num_frames = ff_parser->defaulted(detail::Key::NumFrames)(0u),
+					.starting_time = ff_parser->defaulted(detail::Key::StartingTime)(0.f),
+					.delay_seconds = ff_parser->defaulted(detail::Key::DelaySeconds)(0.f)
 					});
 			};
 		}
 
-		sprite.set_camera_invariant(parser.defaulted(_gen::keys::Sprite::CameraInvariant)(false));
+		sprite.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return sprite;
 	}

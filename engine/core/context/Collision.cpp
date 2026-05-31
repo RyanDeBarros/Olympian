@@ -3,8 +3,7 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/Context.inl"
-#include ".gen/keys/Collision.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::context
 {
@@ -15,9 +14,9 @@ namespace oly::context
 	
 	void internal::init_collision(TOMLNode node)
 	{
-		if (auto parser = assets::Parser(node).optional(_gen::keys::Context::Collision).subparser())
+		if (auto parser = assets::Parser(node).optional(detail::Key::Collision).subparser())
 		{
-			if (auto masks = parser->optional<TOMLArray>(_gen::keys::Collision::Masks)())
+			if (auto masks = parser->optional<TOMLArray>(detail::Key::Masks)())
 			{
 				for (int i = 0; i < std::min((int)masks->size(), 32); ++i)
 				{
@@ -28,7 +27,7 @@ namespace oly::context
 				}
 			}
 
-			if (auto layers = parser->optional<TOMLArray>(_gen::keys::Collision::Layers)())
+			if (auto layers = parser->optional<TOMLArray>(detail::Key::Layers)())
 			{
 				for (int i = 0; i < std::min((int)layers->size(), 32); ++i)
 				{

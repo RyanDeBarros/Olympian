@@ -1,6 +1,6 @@
 #meta version=1.0 type=signal
 
-[[Signal]]
+[[SigArr]]
 ID = "jump"
 Binding = 0
 Key = 32

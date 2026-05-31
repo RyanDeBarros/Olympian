@@ -3,7 +3,7 @@
 #include "core/context/rendering/Textures.h"
 #include "core/util/Parser.h"
 
-#include ".gen/keys/NineSlice.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -360,15 +360,15 @@ namespace oly::rendering
 		NineSlice nonant;
 
 		glm::vec2 nsize{};
-		parser.optional(_gen::keys::NineSlice::NSize)(nsize);
-		math::Padding offsets = math::Padding::load(parser.field(_gen::keys::NineSlice::Offsets));
+		parser.optional(detail::Key::NSize)(nsize);
+		math::Padding offsets = math::Padding::load(parser.field(detail::Key::Offsets));
 
-		if (auto sprite = parser.optional<TOMLNode>(_gen::keys::NineSlice::Sprite)())
+		if (auto sprite = parser.optional<TOMLNode>(detail::Key::Sprite)())
 			nonant.setup_nonant(trace ? Sprite::load(*sprite, *trace) : Sprite::load(*sprite), nsize, offsets);
 		else
 			nonant.setup_nonant(nsize, offsets);
 
-		nonant.set_camera_invariant(parser.defaulted(_gen::keys::NineSlice::CameraInvariant)(false));
+		nonant.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return nonant;
 	}

@@ -4,7 +4,7 @@
 #include "graphics/particles/implementations/AttributeOperationEnum.h"
 #include "core/util/Logger.h"
 
-#include ".gen/keys/ParticleSystem.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::particles
 {
@@ -12,13 +12,13 @@ namespace oly::particles
 	{
 		size_t parse_attribute_value_key()
 		{
-			return static_cast<size_t>(_gen::keys::ParticleSystem::Value);
+			return static_cast<size_t>(detail::Key::Value);
 		}
 	}
 
 	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
-		if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(_gen::keys::ParticleSystem::Operation)())
+		if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(detail::Key::Operation)())
 		{
 			switch (*op)
 			{
@@ -40,7 +40,7 @@ namespace oly::particles
 	{
 		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
-			auto arr = assets::Parser(node).required<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)();
+			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
 
 			std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -67,7 +67,7 @@ namespace oly::particles
 
 		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
 		{
-			auto arr = assets::Parser(node).required<TOMLArray>(_gen::keys::ParticleSystem::OperationArray)();
+			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
 
 			std::vector<Polymorphic<IAttributeOperation>> ops;
 
@@ -100,8 +100,8 @@ namespace oly::particles
 			try
 			{
 				assets::Parser parser(node);
-				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(_gen::keys::ParticleSystem::InnerOperation)),
-					parser.defaulted<particles::SubSelector>(_gen::keys::ParticleSystem::Selector)());
+				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(detail::Key::InnerOperation)),
+					parser.defaulted<particles::SubSelector>(detail::Key::Selector)());
 			}
 			catch (const Error& e)
 			{

@@ -8,7 +8,7 @@
 
 #include "physics/collision/elements/OBB.h"
 
-#include ".gen/keys/Ellipse.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -388,21 +388,21 @@ namespace oly::rendering
 		assets::Parser parser(node);
 
 		rendering::Ellipse ellipse;
-		ellipse.set_transformer() = Transformer2D::load(parser.field(_gen::keys::Ellipse::Transformer));
+		ellipse.set_transformer() = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		auto& color = ellipse.set_color();
-		parser.optional(_gen::keys::Ellipse::BorderInnerColor)(color.border_inner);
-		parser.optional(_gen::keys::Ellipse::BorderOuterColor)(color.border_outer);
-		parser.optional(_gen::keys::Ellipse::FillInnerColor)(color.fill_inner);
-		parser.optional(_gen::keys::Ellipse::FillOuterColor)(color.fill_outer);
+		parser.optional(detail::Key::BorderInnerColor)(color.border_inner);
+		parser.optional(detail::Key::BorderOuterColor)(color.border_outer);
+		parser.optional(detail::Key::FillInnerColor)(color.fill_inner);
+		parser.optional(detail::Key::FillOuterColor)(color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		parser.optional(_gen::keys::Ellipse::Border)(dimension.border);
-		parser.optional(_gen::keys::Ellipse::BorderExponent)(dimension.border_exp);
-		parser.optional(_gen::keys::Ellipse::FillExponent)(dimension.fill_exp);
-		parser.optional(_gen::keys::Ellipse::RadiusX)(dimension.rx);
-		parser.optional(_gen::keys::Ellipse::RadiusY)(dimension.ry);
-		dimension.camera_invariant = parser.defaulted(_gen::keys::Ellipse::CameraInvariant)(false);
+		parser.optional(detail::Key::Border)(dimension.border);
+		parser.optional(detail::Key::BorderExponent)(dimension.border_exp);
+		parser.optional(detail::Key::FillExponent)(dimension.fill_exp);
+		parser.optional(detail::Key::RadiusX)(dimension.rx);
+		parser.optional(detail::Key::RadiusY)(dimension.ry);
+		dimension.camera_invariant = parser.defaulted(detail::Key::CameraInvariant)(false);
 
 		return ellipse;
 	}

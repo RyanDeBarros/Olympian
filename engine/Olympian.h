@@ -68,11 +68,14 @@ namespace oly
 	// - Editor will auto-generate Archetype files that implement draw and tick in the correct ordering of its members.
 	// - Code-based behaviour scripts will extend a GameObject class that has virtual OnSpawn()/OnDespawn()/OnTick()/OnDraw()/etc. methods. The GameObject base class will auto-register those methods to the proper services.
 
+	// TODO v7 RigidBody should use TransformerRef, not Transformer, to allow for driving physics on any transformer outside of the game object hierarchy.
+
 	// TODO v8 AI: Navigation, Blackboard Trees, etc.
 	// TODO v8 Dialog/decision trees
 	// TODO v8 Gameplay utilities such as TypewriterEffect, etc.
 	// TODO v8 Lighting engine
 	// TODO v8 UI widgets
+	// TODO v8 Rigid Body skeletons (joints, bones/springs, etc.)
 	// TODO v9 thread safety + multi-threading.
 	// TODO v10 network communication - online/local multiplayer.
 }

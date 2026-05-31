@@ -1,9 +1,0 @@
-[[key]]
-label = "Frame Length Clip"
-code = "FLenClip"
-enum = "FrameLengthClip"
-
-[[key]]
-label = "Time Scale"
-code = "TmScale"
-enum = "TimeScale"

@@ -2,7 +2,7 @@
 
 #include "graphics/particles/ShaderStructs.h"
 
-#include ".gen/keys/ParticleSystem.inl"
+#include "detail/definitions/Keys.h"
 
 namespace oly::particles
 {
@@ -19,7 +19,7 @@ namespace oly::particles
 
 	void TiltedSampler1D::overload(TOMLNode node)
 	{
-		tilt.overload(assets::Parser(node).field(_gen::keys::ParticleSystem::Tilt));
+		tilt.overload(assets::Parser(node).field(detail::Key::Tilt));
 	}
 
 	void UniformSampler2D::apply(internal::Sampler2D& sampler) const

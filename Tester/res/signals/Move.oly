@@ -4,47 +4,47 @@
 ID = "move"
 Signals = ["move left", "move right", "move up", "move down"]
 
-[[Signal]]
+[[SigArr]]
 ID = "move left"
 Binding = 0
 ReqMods = 0
 BanMods = 0
 Key = 263
 
-[Signal.Modifier]
+[SigArr.Modifier]
 Conv = 2
 Mult = [ -1.0, 0.0, 1.0,]
 Invert = [ false, false, false,]
-[[Signal]]
+[[SigArr]]
 ID = "move right"
 Binding = 0
 ReqMods = 0
 BanMods = 0
 Key = 262
 
-[Signal.Modifier]
+[SigArr.Modifier]
 Conv = 2
 Mult = [ 1.0, 0.0, 1.0,]
 Invert = [ false, false, false,]
-[[Signal]]
+[[SigArr]]
 ID = "move up"
 Binding = 0
 ReqMods = 0
 BanMods = 0
 Key = 265
 
-[Signal.Modifier]
+[SigArr.Modifier]
 Conv = 2
 Mult = [ 0.0, 1.0, 1.0,]
 Invert = [ false, false, false,]
-[[Signal]]
+[[SigArr]]
 ID = "move down"
 Binding = 0
 ReqMods = 0
 BanMods = 0
 Key = 264
 
-[Signal.Modifier]
+[SigArr.Modifier]
 Conv = 2
 Mult = [ 0.0, -1.0, 1.0,]
 Invert = [ false, false, false,]
