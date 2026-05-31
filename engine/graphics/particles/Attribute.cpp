@@ -10,9 +10,9 @@ namespace oly::particles
 {
 	namespace internal
 	{
-		size_t parse_attribute_value_key()
+		assets::Parser::Optional<void, void, assets::NullValidator, false> parse_attribute_value(const assets::Parser& parser)
 		{
-			return static_cast<size_t>(detail::Key::Value);
+			return parser.optional(detail::Key::Value);
 		}
 	}
 

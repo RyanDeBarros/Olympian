@@ -282,7 +282,7 @@ namespace oly::particles
 
 	namespace internal
 	{
-		extern size_t parse_attribute_value_key();
+		assets::Parser::Optional<void, void, assets::NullValidator, false> parse_attribute_value(const assets::Parser& parser);
 	}
 
 	template<ParticleAttribute T>
@@ -322,13 +322,10 @@ namespace oly::particles
 		const T* operator->() const { return &value; }
 		T* operator->() { return &value; }
 
-	private:
-		static TOMLNode parse_value_key(TOMLNode node);
-
-	public:
 		void overload(TOMLNode node)
 		{
-			assets::Parser(node).optional(internal::parse_attribute_value_key())(value);
+			assets::Parser parser(node);
+			internal::parse_attribute_value(parser)(value);
 			if (auto operation = IAttributeOperation::load(node))
 				op = std::move(operation);
 		}

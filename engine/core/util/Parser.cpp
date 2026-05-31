@@ -6,6 +6,13 @@
 #include "core/util/UTF.h"
 #include "core/cmath/ColoredGeometry.h"
 
+#include "detail/definitions/Keys.h"
+
+namespace oly::assets
+{
+	detail::Key NO_KEY = detail::Key::_;
+}
+
 namespace oly::assets::internal
 {
 	template<>

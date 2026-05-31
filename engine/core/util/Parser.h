@@ -15,20 +15,7 @@
 
 namespace oly::assets
 {
-	struct NoKey
-	{
-	};
-
-	constexpr NoKey NO_KEY{};
-
-	template<typename Key>
-	constexpr std::string key_string(Key key)
-	{
-		if constexpr (std::is_same_v<Key, NoKey>)
-			return "";
-		else
-			return detail::translate_key(key);
-	}
+	extern detail::Key NO_KEY;
 
 	template<typename T>
 	struct PartialView
@@ -124,15 +111,14 @@ namespace oly::assets
 		ErrorCode error_code;
 		bool fatal;
 
-		template<typename Key>
-		DeferredStringList build_message(Key key, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
+		DeferredStringList build_message(detail::Key key, const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
 		{
 			DeferredStringList list{ cause.transfer(), " " };
 			
-			if constexpr (std::is_same_v<Key, NoKey>)
-				list << "field";
+			if (key != NO_KEY)
+				list << detail::translate_key(key) << " field";
 			else
-				list << key_string(key) << " field";
+				list << "field";
 			
 			if (!elaboration.empty())
 				list << " " << std::move(elaboration);
@@ -143,8 +129,7 @@ namespace oly::assets
 			return list;
 		}
 
-		template<typename Key>
-		void log_at_level(LogLevel level, std::source_location location, Key key,
+		void log_at_level(LogLevel level, std::source_location location, detail::Key key,
 			const StringParam& cause = internal::fail_causes::CANNOT_PARSE, DeferredStringList&& elaboration = {}) const
 		{
 			if ((int)level >= (int)LogLevel::Error && fatal)
@@ -152,24 +137,25 @@ namespace oly::assets
 			internal::log_context_at_level(level, build_message(key, cause.transfer(), std::move(elaboration)), location);
 		}
 
-		template<typename Key, typename Index>
-		void log_at_level(LogLevel level, std::source_location location, Key key, Index e) const
+		template<typename Index>
+		void log_at_level(LogLevel level, std::source_location location, detail::Key key, Index e) const
 		{
 			if ((int)level >= (int)LogLevel::Error && fatal)
 				level = LogLevel::Fatal;
 			internal::log_context_at_level(level, build_message(key, DeferredStringList{ "unrecognized enum (", std::to_string(e), ") in"}.str()), location);
 		}
 
-		template<typename Key, bool Throws, typename Validator>
+	public:
+		template<bool Throws, typename Validator>
 		struct Accessor
 		{
 		protected:
 			const Parser& parser;
-			Key key;
+			detail::Key key;
 			Validator validator;
 
 		public:
-			Accessor(const Parser& parser, Key key, Validator&& validator) : parser(parser), key(key), validator(std::move(validator)) {}
+			Accessor(const Parser& parser, detail::Key key, Validator&& validator) : parser(parser), key(key), validator(std::move(validator)) {}
 
 		protected:
 			template<bool Throw = Throws>
@@ -349,13 +335,13 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Translator, typename Validator>
+		template<typename Predefined, typename Translator, typename Validator>
 		struct Defaulted;
 
-		template<typename Key, typename Translator, typename Validator>
-		struct Defaulted<Key, void, Translator, Validator> : public Accessor<Key, false, Validator>
+		template<typename Translator, typename Validator>
+		struct Defaulted<void, Translator, Validator> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			typename Translator::EnumType operator()(typename Translator::EnumType def = Translator::val(), std::source_location location = std::source_location::current()) const
 			{
@@ -363,10 +349,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Validator>
-		struct Defaulted<Key, Predefined, void, Validator> : public Accessor<Key, false, Validator>
+		template<typename Predefined, typename Validator>
+		struct Defaulted<Predefined, void, Validator> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			Predefined operator()(Predefined&& def = Predefined(), std::source_location location = std::source_location::current()) const
 			{
@@ -375,10 +361,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename T, typename Validator>
-		struct Defaulted<Key, std::vector<T>, void, Validator> : public Accessor<Key, false, Validator>
+		template<typename T, typename Validator>
+		struct Defaulted<std::vector<T>, void, Validator> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			std::vector<T> operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -386,10 +372,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator>
-		struct Defaulted<Key, void, void, Validator> : public Accessor<Key, false, Validator>
+		template<typename Validator>
+		struct Defaulted<void, void, Validator> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			template<typename T>
 			T operator()(T&& def = T(), std::source_location location = std::source_location::current()) const
@@ -399,13 +385,13 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Translator, typename Validator, bool TypeFallback>
+		template<typename Predefined, typename Translator, typename Validator, bool TypeFallback>
 		struct Optional;
 
-		template<typename Key, typename Translator, typename Validator, bool TypeFallback>
-		struct Optional<Key, void, Translator, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		template<typename Translator, typename Validator, bool TypeFallback>
+		struct Optional<void, Translator, Validator, TypeFallback> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			bool operator()(typename Translator::EnumType& obj, std::source_location location = std::source_location::current()) const
 			{
@@ -418,10 +404,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Validator, bool TypeFallback>
-		struct Optional<Key, Predefined, void, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		template<typename Predefined, typename Validator, bool TypeFallback>
+		struct Optional<Predefined, void, Validator, TypeFallback> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			std::optional<Predefined> operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -429,10 +415,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator, bool TypeFallback>
-		struct Optional<Key, TOMLNode, void, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		template<typename Validator, bool TypeFallback>
+		struct Optional<TOMLNode, void, Validator, TypeFallback> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			std::optional<TOMLNode> operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -440,10 +426,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator, bool TypeFallback>
-		struct Optional<Key, TOMLArray, void, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		template<typename Validator, bool TypeFallback>
+		struct Optional<TOMLArray, void, Validator, TypeFallback> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			TOMLArray operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -451,10 +437,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator, bool TypeFallback>
-		struct Optional<Key, void, void, Validator, TypeFallback> : public Accessor<Key, false, Validator>
+		template<typename Validator, bool TypeFallback>
+		struct Optional<void, void, Validator, TypeFallback> : public Accessor<false, Validator>
 		{
-			using Accessor<Key, false, Validator>::Accessor;
+			using Accessor<false, Validator>::Accessor;
 
 			template<typename T>
 			bool operator()(T& obj, std::source_location location = std::source_location::current()) const
@@ -493,13 +479,13 @@ namespace oly::assets
 			std::optional<Parser> subparser() const;
 		};
 
-		template<typename Key, typename Predefined, typename Translator, typename Validator>
+		template<typename Predefined, typename Translator, typename Validator>
 		struct Required;
 
-		template<typename Key, typename Translator, typename Validator>
-		struct Required<Key, void, Translator, Validator> : public Accessor<Key, true, Validator>
+		template<typename Translator, typename Validator>
+		struct Required<void, Translator, Validator> : public Accessor<true, Validator>
 		{
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			typename Translator::EnumType operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -507,10 +493,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Predefined, typename Validator>
-		struct Required<Key, Predefined, void, Validator> : public Accessor<Key, true, Validator>
+		template<typename Predefined, typename Validator>
+		struct Required<Predefined, void, Validator> : public Accessor<true, Validator>
 		{
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			Predefined operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -518,10 +504,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator>
-		struct Required<Key, TOMLNode, void, Validator> : public Accessor<Key, true, Validator>
+		template<typename Validator>
+		struct Required<TOMLNode, void, Validator> : public Accessor<true, Validator>
 		{
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			TOMLNode operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -529,10 +515,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator>
-		struct Required<Key, TOMLArray, void, Validator> : public Accessor<Key, true, Validator>
+		template<typename Validator>
+		struct Required<TOMLArray, void, Validator> : public Accessor<true, Validator>
 		{
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			TOMLArray operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -540,12 +526,12 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename T, size_t N, typename Validator>
-		struct Required<Key, std::array<T, N>, void, Validator> : public Accessor<Key, true, Validator>
+		template<typename T, size_t N, typename Validator>
+		struct Required<std::array<T, N>, void, Validator> : public Accessor<true, Validator>
 		{
 			static_assert(N > 1);
 
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			std::array<T, N> operator()(std::source_location location = std::source_location::current()) const
 			{
@@ -553,10 +539,10 @@ namespace oly::assets
 			}
 		};
 
-		template<typename Key, typename Validator>
-		struct Required<Key, void, void, Validator> : public Accessor<Key, true, Validator>
+		template<typename Validator>
+		struct Required<void, void, Validator> : public Accessor<true, Validator>
 		{
-			using Accessor<Key, true, Validator>::Accessor;
+			using Accessor<true, Validator>::Accessor;
 
 			template<typename T>
 			void operator()(T& obj, std::source_location location = std::source_location::current()) const
@@ -570,7 +556,6 @@ namespace oly::assets
 			}
 		};
 
-	public:
 		explicit Parser(TOMLNode node, const DeferredStringParam& log_suffix = {}, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node(node), log_suffix(log_suffix), error_code(error_code), fatal(fatal) {}
 
@@ -583,30 +568,29 @@ namespace oly::assets
 		Parser(const toml::parse_result& toml, DeferredStringParam&& log_suffix, ErrorCode error_code = ErrorCode::LoadAsset, bool fatal = false)
 			: node((TOMLNode)toml), log_suffix(std::move(log_suffix)), error_code(error_code), fatal(fatal) {}
 
-		template<typename T = void, typename Validator = NullValidator, typename Key>
-		Defaulted<Key, T, void, Validator> defaulted(Key key, Validator&& validator = {}) const
-			{ return Defaulted<Key, T, void, Validator>(*this, key, std::move(validator)); }
+		template<typename T = void, typename Validator = NullValidator>
+		Defaulted<T, void, Validator> defaulted(detail::Key key, Validator&& validator = {}) const
+			{ return Defaulted<T, void, Validator>(*this, key, std::move(validator)); }
 
-		template<typename T = void, bool TypeFallback = false, typename Validator = NullValidator, typename Key>
-		Optional<Key, T, void, Validator, TypeFallback> optional(Key key, Validator&& validator = {}) const
-			{ return Optional<Key, T, void, Validator, TypeFallback>(*this, key, std::move(validator)); }
+		template<typename T = void, bool TypeFallback = false, typename Validator = NullValidator>
+		Optional<T, void, Validator, TypeFallback> optional(detail::Key key, Validator&& validator = {}) const
+			{ return Optional<T, void, Validator, TypeFallback>(*this, key, std::move(validator)); }
 		
-		template<typename T = void, typename Validator = NullValidator, typename Key>
-		Required<Key, T, void, Validator> required(Key key, Validator&& validator = {}) const
-			{ return Required<Key, T, void, Validator>(*this, key, std::move(validator)); }
+		template<typename T = void, typename Validator = NullValidator>
+		Required<T, void, Validator> required(detail::Key key, Validator&& validator = {}) const
+			{ return Required<T, void, Validator>(*this, key, std::move(validator)); }
 
-		template<typename Key>
-		TOMLNode field(Key key) const
+		TOMLNode field(detail::Key key) const
 		{
-			if constexpr (std::is_same_v<Key, NoKey>)
-				return node;
-			else
+			if (key != NO_KEY)
 				return node[detail::translate_key(key)];
+			else
+				return node;
 		}
 	};
 
-	template<typename Key, typename Validator, bool TypeFallback>
-	std::optional<Parser> Parser::Optional<Key, void, void, Validator, TypeFallback>::subparser() const
+	template<typename Validator, bool TypeFallback>
+	std::optional<Parser> Parser::Optional<void, void, Validator, TypeFallback>::subparser() const
 	{
 		if (auto value = this->field())
 			return Parser(value, this->parser.log_suffix, this->parser.error_code, this->parser.fatal);
