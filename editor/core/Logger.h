@@ -1,9 +1,12 @@
 #pragma once
 
-class Logger
+namespace oly::editor
 {
-public:
-	static Logger& Instance();
+	class Logger
+	{
+	public:
+		static Logger& Instance();
 
-	void LogError(const char* error);
-};
+		void LogError(const char* error);
+	};
+}

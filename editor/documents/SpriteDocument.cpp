@@ -1,12 +1,15 @@
 #include "SpriteDocument.h"
 
-std::string SpriteDocument::GetTitle() const
+namespace oly::editor
 {
-	// TODO v7 use path
-	return "Sprite";
-}
+	std::string SpriteDocument::GetTitle() const
+	{
+		// TODO v7 use path
+		return "Sprite";
+	}
 
-void SpriteDocument::Draw()
-{
-	// TODO v7
+	void SpriteDocument::Draw()
+	{
+		// TODO v7
+	}
 }

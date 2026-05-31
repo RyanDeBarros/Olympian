@@ -1,13 +1,16 @@
 #pragma once
 
-class MainMenuBar
+namespace oly::editor
 {
-public:
-	void Draw();
+	class MainMenuBar
+	{
+	public:
+		void Draw();
 
-private:
-	void DrawFileMenu();
+	private:
+		void DrawFileMenu();
 
-public:
-	void OpenFile();
-};
+	public:
+		void OpenFile();
+	};
+}

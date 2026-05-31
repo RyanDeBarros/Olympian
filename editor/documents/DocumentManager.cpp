@@ -4,57 +4,60 @@
 
 #include "core/MainWindow.h"
 
-DocumentManager& DocumentManager::Instance()
+namespace oly::editor
 {
-	return MainWindow::Instance().GetDocumentManager();
-}
-
-void DocumentManager::Draw()
-{
-	for (const auto& doc : _documents)
-		doc->Draw();
-}
-
-void DocumentManager::OpenAsset(const std::filesystem::path& path)
-{
-
-
-	// TODO v7
-}
-
-size_t DocumentManager::DocumentCount() const
-{
-	return _documents.size();
-}
-
-const IDocument& DocumentManager::GetDocument(size_t i) const
-{
-	return *_documents[i];
-}
-
-IDocument& DocumentManager::GetDocument(size_t i)
-{
-	return *_documents[i];
-}
-
-void DocumentManager::Add(std::unique_ptr<IDocument>&& doc)
-{
-	_documents.push_back(std::move(doc));
-}
-
-void DocumentManager::Remove(IDocument& document)
-{
-	for (auto it = _documents.begin(); it != _documents.end(); ++it)
+	DocumentManager& DocumentManager::Instance()
 	{
-		if (it->get() == &document)
+		return MainWindow::Instance().GetDocumentManager();
+	}
+
+	void DocumentManager::Draw()
+	{
+		for (const auto& doc : _documents)
+			doc->Draw();
+	}
+
+	void DocumentManager::OpenAsset(const std::filesystem::path& path)
+	{
+
+
+		// TODO v7
+	}
+
+	size_t DocumentManager::DocumentCount() const
+	{
+		return _documents.size();
+	}
+
+	const IDocument& DocumentManager::GetDocument(size_t i) const
+	{
+		return *_documents[i];
+	}
+
+	IDocument& DocumentManager::GetDocument(size_t i)
+	{
+		return *_documents[i];
+	}
+
+	void DocumentManager::Add(std::unique_ptr<IDocument>&& doc)
+	{
+		_documents.push_back(std::move(doc));
+	}
+
+	void DocumentManager::Remove(IDocument& document)
+	{
+		for (auto it = _documents.begin(); it != _documents.end(); ++it)
 		{
-			_documents.erase(it);
-			break;
+			if (it->get() == &document)
+			{
+				_documents.erase(it);
+				break;
+			}
 		}
 	}
-}
 
-void DocumentManager::Remove(size_t i)
-{
-	_documents.erase(_documents.begin() + i);
+	void DocumentManager::Remove(size_t i)
+	{
+		_documents.erase(_documents.begin() + i);
+	}
 }

@@ -4,38 +4,41 @@
 
 #include "assets/ResourcePath.h"
 
-ProjectInfo& ProjectInfo::Instance()
+namespace oly::editor
 {
-	return Editor::Instance().GetProjectInfo();
-}
+	ProjectInfo& ProjectInfo::Instance()
+	{
+		return Editor::Instance().GetProjectInfo();
+	}
 
-void ProjectInfo::Init(const std::filesystem::path& project_root)
-{
-	_project_root = project_root;
-	oly::detail::ResourcePath::set_resource_root(ResourceRoot());
-}
+	void ProjectInfo::Init(const std::filesystem::path& project_root)
+	{
+		_project_root = project_root;
+		oly::detail::ResourcePath::set_resource_root(ResourceRoot());
+	}
 
-std::filesystem::path ProjectInfo::ProjectRoot() const
-{
-	return _project_root;
-}
+	std::filesystem::path ProjectInfo::ProjectRoot() const
+	{
+		return _project_root;
+	}
 
-std::filesystem::path ProjectInfo::EditorRoot() const
-{
-	return ProjectRoot() / ".editor/";
-}
+	std::filesystem::path ProjectInfo::EditorRoot() const
+	{
+		return ProjectRoot() / ".editor/";
+	}
 
-std::filesystem::path ProjectInfo::ResourceRoot() const
-{
-	return ProjectRoot() / "res/";
-}
+	std::filesystem::path ProjectInfo::ResourceRoot() const
+	{
+		return ProjectRoot() / "res/";
+	}
 
-std::filesystem::path ProjectInfo::SourceRoot() const
-{
-	return ProjectRoot() / "src/";
-}
+	std::filesystem::path ProjectInfo::SourceRoot() const
+	{
+		return ProjectRoot() / "src/";
+	}
 
-std::filesystem::path ProjectInfo::GenSourceRoot() const
-{
-	return SourceRoot() / ".gen/";
+	std::filesystem::path ProjectInfo::GenSourceRoot() const
+	{
+		return SourceRoot() / ".gen/";
+	}
 }

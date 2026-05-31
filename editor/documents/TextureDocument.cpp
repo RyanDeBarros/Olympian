@@ -1,12 +1,15 @@
 #include "TextureDocument.h"
 
-std::string TextureDocument::GetTitle() const
+namespace oly::editor
 {
-	// TODO v7 use path
-	return "Texture";
-}
+	std::string TextureDocument::GetTitle() const
+	{
+		// TODO v7 use path
+		return "Texture";
+	}
 
-void TextureDocument::Draw()
-{
-	// TODO v7
+	void TextureDocument::Draw()
+	{
+		// TODO v7
+	}
 }

@@ -4,31 +4,34 @@
 
 #include <memory>
 
-class PanelManager;
-class DocumentManager;
-
-class MainMenuBar;
-
-class MainWindow
+namespace oly::editor
 {
-	ImGuiID _dockspace_id = 0;
+	class PanelManager;
+	class DocumentManager;
 
-	std::unique_ptr<PanelManager> _panel_manager;
-	std::unique_ptr<DocumentManager> _document_manager;
+	class MainMenuBar;
 
-	std::unique_ptr<MainMenuBar> _main_menu_bar;
+	class MainWindow
+	{
+		ImGuiID _dockspace_id = 0;
 
-public:
-	MainWindow();
-	~MainWindow();
+		std::unique_ptr<PanelManager> _panel_manager;
+		std::unique_ptr<DocumentManager> _document_manager;
 
-	static MainWindow& Instance();
+		std::unique_ptr<MainMenuBar> _main_menu_bar;
 
-	void Init();
-	void Draw();
+	public:
+		MainWindow();
+		~MainWindow();
 
-	PanelManager& GetPanelManager();
-	DocumentManager& GetDocumentManager();
-	
-	MainMenuBar& GetMainMenuBar();
-};
+		static MainWindow& Instance();
+
+		void Init();
+		void Draw();
+
+		PanelManager& GetPanelManager();
+		DocumentManager& GetDocumentManager();
+
+		MainMenuBar& GetMainMenuBar();
+	};
+}

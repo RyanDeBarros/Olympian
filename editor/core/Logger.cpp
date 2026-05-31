@@ -4,13 +4,16 @@
 
 #include <iostream>
 
-Logger& Logger::Instance()
+namespace oly::editor
 {
-    return Editor::Instance().GetLogger();
-}
+    Logger& Logger::Instance()
+    {
+        return Editor::Instance().GetLogger();
+    }
 
-void Logger::LogError(const char* error)
-{
-    // TODO v7 editor log
-    std::cerr << "[Error]" << error << std::endl;
+    void Logger::LogError(const char* error)
+    {
+        // TODO v7 editor log
+        std::cerr << "[Error]" << error << std::endl;
+    }
 }

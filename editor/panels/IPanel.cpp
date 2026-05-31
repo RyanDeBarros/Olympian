@@ -1,16 +1,19 @@
 #include "IPanel.h"
 
-void IPanel::Open()
+namespace oly::editor
 {
-	_open = true;
-}
+	void IPanel::Open()
+	{
+		_open = true;
+	}
 
-void IPanel::Close()
-{
-	_open = false;
-}
+	void IPanel::Close()
+	{
+		_open = false;
+	}
 
-bool IPanel::IsOpen() const
-{
-	return _open;
+	bool IPanel::IsOpen() const
+	{
+		return _open;
+	}
 }

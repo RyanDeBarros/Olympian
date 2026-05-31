@@ -2,9 +2,12 @@
 
 #include "panels/IPanel.h"
 
-class ContentBrowserPanel : public IPanel
+namespace oly::editor
 {
-public:
-	const char* GetTitle() const override;
-	void Draw() override;
-};
+	class ContentBrowserPanel : public IPanel
+	{
+	public:
+		const char* GetTitle() const override;
+		void Draw() override;
+	};
+}

@@ -7,58 +7,63 @@
 
 #include "documents/DocumentManager.h"
 
-Editor::Editor()
-	: _logger(std::make_unique<Logger>()),
-	_main_window(std::make_unique<MainWindow>()),
-	_shortcut_manager(std::make_unique<ShortcutManager>()),
-	_project_info(std::make_unique<ProjectInfo>())
+namespace oly::editor
 {
-}
-
-Editor& Editor::Instance()
-{
-	static Editor editor;
-	return editor;
-}
-
-void Editor::Init()
-{
-	// TODO v7 start editor with project select window.
-	_project_info->Init("D:/Projects/Visual Studio/Olympian/Tester/");
-}
-
-void Editor::Draw()
-{
-	if (!_ui_initialized)
+	Editor::Editor()
+		: _logger(std::make_unique<Logger>()),
+		_main_window(std::make_unique<MainWindow>()),
+		_shortcut_manager(std::make_unique<ShortcutManager>()),
+		_project_info(std::make_unique<ProjectInfo>())
 	{
-		_main_window->Init();
-		_ui_initialized = true;
 	}
 
-	_main_window->Draw();
-}
+	Editor& Editor::Instance()
+	{
+		static Editor editor;
+		return editor;
+	}
 
-Logger& Editor::GetLogger()
-{
-	return *_logger;
-}
+	void Editor::Init()
+	{
+		// TODO v7 start editor with project select window.
+		_project_info->Init("D:/Projects/Visual Studio/Olympian/Tester/");
+	}
 
-MainWindow& Editor::GetMainWindow()
-{
-	return *_main_window;
-}
+	void Editor::Tick()
+	{
+		_shortcut_manager->PollShortcuts();
 
-ShortcutManager& Editor::GetShortcutManager()
-{
-	return *_shortcut_manager;
-}
+		if (!_ui_initialized)
+		{
+			_main_window->Init();
+			_ui_initialized = true;
+		}
 
-ProjectInfo& Editor::GetProjectInfo()
-{
-	return *_project_info;
-}
+		_main_window->Draw();
+	}
 
-void Editor::OpenFile(const std::filesystem::path& path)
-{
-	DocumentManager::Instance().OpenAsset(path);
+	Logger& Editor::GetLogger()
+	{
+		return *_logger;
+	}
+
+	MainWindow& Editor::GetMainWindow()
+	{
+		return *_main_window;
+	}
+
+	ShortcutManager& Editor::GetShortcutManager()
+	{
+		return *_shortcut_manager;
+	}
+
+	ProjectInfo& Editor::GetProjectInfo()
+	{
+		return *_project_info;
+	}
+
+	void Editor::OpenFile(const std::filesystem::path& path)
+	{
+		DocumentManager::Instance().OpenAsset(path);
+	}
 }

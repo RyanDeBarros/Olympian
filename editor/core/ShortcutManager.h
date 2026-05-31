@@ -1,10 +1,13 @@
 #pragma once
 
-class ShortcutManager
+namespace oly::editor
 {
-public:
-	static ShortcutManager& Instance();
+	class ShortcutManager
+	{
+	public:
+		static ShortcutManager& Instance();
 
-	void PollShortcuts();
-	void HandlePathDrop(int count, const char** paths);
-};
+		void PollShortcuts();
+		void HandlePathDrop(int count, const char** paths);
+	};
+}

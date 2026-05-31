@@ -15,12 +15,12 @@ static void glfw_error_callback(int error, const char* description)
 {
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
-    Logger::Instance().LogError(ss.str().c_str());
+    oly::editor::Logger::Instance().LogError(ss.str().c_str());
 }
 
 static void glfw_drop_callback(GLFWwindow* window, int count, const char** paths)
 {
-    ShortcutManager::Instance().HandlePathDrop(count, paths);
+    oly::editor::ShortcutManager::Instance().HandlePathDrop(count, paths);
 }
 
 int main()
@@ -54,7 +54,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    Editor::Instance().Init();
+    oly::editor::Editor::Instance().Init();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -64,8 +64,7 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ShortcutManager::Instance().PollShortcuts();
-        Editor::Instance().Draw();
+        oly::editor::Editor::Instance().Tick();
 
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);

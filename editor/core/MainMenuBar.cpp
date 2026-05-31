@@ -5,54 +5,57 @@
 
 #include "core/Editor.h"
 
-static const char* OPEN_FILE = "OpenFileDlg";
-
-static std::string open_file_parent = ".";
-
-void MainMenuBar::Draw()
+namespace oly::editor
 {
-	if (ImGui::BeginMainMenuBar())
-	{
-		DrawFileMenu();
-		ImGui::EndMainMenuBar();
-	}
-	
-	ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
+	static const char* OPEN_FILE = "OpenFileDlg";
 
-	if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+	static std::string open_file_parent = ".";
+
+	void MainMenuBar::Draw()
 	{
-		if (ImGuiFileDialog::Instance()->IsOk())
+		if (ImGui::BeginMainMenuBar())
 		{
-			std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
-			open_file_parent = path.parent_path().string();
-			Editor::Instance().OpenFile(path);
+			DrawFileMenu();
+			ImGui::EndMainMenuBar();
 		}
 
-		ImGuiFileDialog::Instance()->Close();
-	}
-}
+		ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
 
-void MainMenuBar::DrawFileMenu()
-{
-	if (ImGui::BeginMenu("File"))
+		if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+		{
+			if (ImGuiFileDialog::Instance()->IsOk())
+			{
+				std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+				open_file_parent = path.parent_path().string();
+				Editor::Instance().OpenFile(path);
+			}
+
+			ImGuiFileDialog::Instance()->Close();
+		}
+	}
+
+	void MainMenuBar::DrawFileMenu()
 	{
-		if (ImGui::MenuItem("Open"))
-			OpenFile();
-	
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("Open File (Ctrl+O)");
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open"))
+				OpenFile();
 
-		ImGui::EndMenu();
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Open File (Ctrl+O)");
+
+			ImGui::EndMenu();
+		}
 	}
-}
 
-void MainMenuBar::OpenFile()
-{
-	IGFD::FileDialogConfig config;
-	config.path = open_file_parent;
-	config.flags =
-		ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
-		ImGuiFileDialogFlags_Modal;
+	void MainMenuBar::OpenFile()
+	{
+		IGFD::FileDialogConfig config;
+		config.path = open_file_parent;
+		config.flags =
+			ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
+			ImGuiFileDialogFlags_Modal;
 
-	ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Open File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
+		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Open File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
+	}
 }

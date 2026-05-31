@@ -2,8 +2,11 @@
 
 #include "documents/IDocument.h"
 
-class SpriteDocument : public IDocument
+namespace oly::editor
 {
-	std::string GetTitle() const override;
-	void Draw() override;
-};
+	class SpriteDocument : public IDocument
+	{
+		std::string GetTitle() const override;
+		void Draw() override;
+	};
+}

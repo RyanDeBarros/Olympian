@@ -2,8 +2,11 @@
 
 #include "documents/IDocument.h"
 
-class TextureDocument : public IDocument
+namespace oly::editor
 {
-	std::string GetTitle() const override;
-	void Draw() override;
-};
+	class TextureDocument : public IDocument
+	{
+		std::string GetTitle() const override;
+		void Draw() override;
+	};
+}

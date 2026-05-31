@@ -5,22 +5,25 @@
 
 #include <imgui.h>
 
-class PanelManager;
-
-struct DockNode
+namespace oly::editor
 {
-	std::optional<std::type_index> index;
-	DockNode* first = nullptr;
-	DockNode* second = nullptr;
-	bool horizontal = true;
-	float split_factor = 0.5f;
+	class PanelManager;
 
-	void SplitLayout(ImGuiID id, PanelManager& panel_manager) const;
-};
+	struct DockNode
+	{
+		std::optional<std::type_index> index;
+		DockNode* first = nullptr;
+		DockNode* second = nullptr;
+		bool horizontal = true;
+		float split_factor = 0.5f;
 
-struct DockTree
-{
-	DockNode root;
+		void SplitLayout(ImGuiID id, PanelManager& panel_manager) const;
+	};
 
-	void SetupLayout(ImGuiID dockspace_id, PanelManager& panel_manager) const;
-};
+	struct DockTree
+	{
+		DockNode root;
+
+		void SetupLayout(ImGuiID dockspace_id, PanelManager& panel_manager) const;
+	};
+}

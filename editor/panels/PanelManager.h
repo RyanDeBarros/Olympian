@@ -4,29 +4,32 @@
 #include <unordered_map>
 #include <typeindex>
 
-class IPanel;
-
-class PanelManager
+namespace oly::editor
 {
-	std::unordered_map<std::type_index, std::unique_ptr<IPanel>> _panels;
+	class IPanel;
 
-public:
-	void Draw();
-
-	template<typename T>
-	T& Add()
+	class PanelManager
 	{
-		IPanel& panel = Add(typeid(T), std::make_unique<T>());
-		return static_cast<T&>(panel);
-	}
+		std::unordered_map<std::type_index, std::unique_ptr<IPanel>> _panels;
 
-	IPanel& Add(std::type_index index, std::unique_ptr<IPanel>&& panel);
+	public:
+		void Draw();
 
-    template<typename T>
-    T* Get()
-    {
-        return static_cast<T*>(Get(typeid(T)));
-    }
+		template<typename T>
+		T& Add()
+		{
+			IPanel& panel = Add(typeid(T), std::make_unique<T>());
+			return static_cast<T&>(panel);
+		}
 
-    IPanel* Get(std::type_index index);
-};
+		IPanel& Add(std::type_index index, std::unique_ptr<IPanel>&& panel);
+
+		template<typename T>
+		T* Get()
+		{
+			return static_cast<T*>(Get(typeid(T)));
+		}
+
+		IPanel* Get(std::type_index index);
+	};
+}
