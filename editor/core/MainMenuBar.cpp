@@ -52,10 +52,8 @@ namespace oly::editor
 	{
 		IGFD::FileDialogConfig config;
 		config.path = open_file_parent;
-		config.flags =
-			ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
-			ImGuiFileDialogFlags_Modal;
+		config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
 
-		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Open File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
+		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
 	}
 }

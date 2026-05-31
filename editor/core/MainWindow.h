@@ -13,6 +13,7 @@ namespace oly::editor
 
 	class MainWindow
 	{
+		bool _ui_initialized = false;
 		ImGuiID _dockspace_id = 0;
 
 		std::unique_ptr<PanelManager> _panel_manager;
@@ -26,7 +27,11 @@ namespace oly::editor
 
 		static MainWindow& Instance();
 
+	private:
 		void Init();
+
+	public:
+		void Open();
 		void Draw();
 
 		PanelManager& GetPanelManager();

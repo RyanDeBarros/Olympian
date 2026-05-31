@@ -59,8 +59,19 @@ namespace oly::editor
         _document_manager->Add<SpriteDocument>();
     }
 
+    void MainWindow::Open()
+    {
+        Editor::Instance().SetOSWindowSize(1440, 1080);
+    }
+
     void MainWindow::Draw()
     {
+        if (!_ui_initialized)
+        {
+            Init();
+            _ui_initialized = true;
+        }
+
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);

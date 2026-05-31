@@ -1,9 +1,6 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <imgui_internal.h>
-
-#include <GLFW/glfw3.h>
 
 #include "core/Editor.h"
 #include "core/Logger.h"
@@ -35,26 +32,32 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    GLFWwindow* window = glfwCreateWindow((int)(1440 * main_scale), (int)(1080 * main_scale), "Olympian Editor", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1, 1, "Olympian Editor", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
     glfwSetDropCallback(window, glfw_drop_callback);
 
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    int monitor_x, monitor_y;
+    glfwGetMonitorPos(monitor, &monitor_x, &monitor_y);
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    glfwSetWindowPos(window, monitor_x + mode->width / 2, monitor_y + mode->height / 2);
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
+    float monitor_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(monitor);
     ImGui::StyleColorsDark();
-    ImGui::GetStyle().ScaleAllSizes(main_scale);
+    ImGui::GetStyle().ScaleAllSizes(monitor_scale);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.FontGlobalScale = main_scale;
+    io.FontGlobalScale = monitor_scale;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    oly::editor::Editor::Instance().Init();
+    oly::editor::Editor::Instance().Init(window);
 
     while (!glfwWindowShouldClose(window))
     {
