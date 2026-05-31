@@ -5,5 +5,6 @@ target_sources(OlympianEditor PRIVATE
 	Main.cpp
 	MainMenuBar.cpp
 	MainWindow.cpp
+	ProjectInfo.cpp
 	ShortcutManager.cpp
 )

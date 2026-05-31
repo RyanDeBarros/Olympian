@@ -4,9 +4,14 @@ namespace oly::detail
 {
 	std::filesystem::path ResourcePath::resource_root;
 
-	void ResourcePath::set_resource_root(const std::string_view root)
+	ResourcePath::ResourcePath()
 	{
-		resource_root = root;
+		absolute = resource_root;
+	}
+
+	void ResourcePath::set_resource_root(const std::filesystem::path& root)
+	{
+		resource_root = std::filesystem::absolute(root);
 	}
 
 	void ResourcePath::set(std::filesystem::path&& path, const ResourcePath& relative_to)

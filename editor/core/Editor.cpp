@@ -3,13 +3,15 @@
 #include "core/Logger.h"
 #include "core/MainWindow.h"
 #include "core/ShortcutManager.h"
+#include "core/ProjectInfo.h"
 
 #include "documents/DocumentManager.h"
 
 Editor::Editor()
 	: _logger(std::make_unique<Logger>()),
 	_main_window(std::make_unique<MainWindow>()),
-	_shortcut_manager(std::make_unique<ShortcutManager>())
+	_shortcut_manager(std::make_unique<ShortcutManager>()),
+	_project_info(std::make_unique<ProjectInfo>())
 {
 }
 
@@ -21,6 +23,8 @@ Editor& Editor::Instance()
 
 void Editor::Init()
 {
+	// TODO v7 start editor with project select window.
+	_project_info->Init("D:/Projects/Visual Studio/Olympian/Tester/");
 }
 
 void Editor::Draw()
@@ -47,6 +51,11 @@ MainWindow& Editor::GetMainWindow()
 ShortcutManager& Editor::GetShortcutManager()
 {
 	return *_shortcut_manager;
+}
+
+ProjectInfo& Editor::GetProjectInfo()
+{
+	return *_project_info;
 }
 
 void Editor::OpenFile(const std::filesystem::path& path)

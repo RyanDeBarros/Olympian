@@ -17,6 +17,8 @@ void DocumentManager::Draw()
 
 void DocumentManager::OpenAsset(const std::filesystem::path& path)
 {
+
+
 	// TODO v7
 }
 

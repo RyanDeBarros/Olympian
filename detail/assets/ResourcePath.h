@@ -18,7 +18,7 @@ namespace oly::detail
 		std::filesystem::path absolute;
 
 	public:
-		ResourcePath() = default;
+		ResourcePath();
 
 		ResourcePath(const std::string_view path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
@@ -34,7 +34,7 @@ namespace oly::detail
 		ResourcePath& operator=(const std::filesystem::path& path) { set(std::filesystem::path(path), {}); return *this; }
 		ResourcePath& operator=(std::filesystem::path&& path) { set(std::move(path), {}); return *this; }
 
-		static void set_resource_root(const std::string_view root);
+		static void set_resource_root(const std::filesystem::path& root);
 
 	private:
 		void set(std::filesystem::path&& path, const ResourcePath& relative_to);
