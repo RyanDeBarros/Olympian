@@ -781,7 +781,7 @@ namespace oly::rendering
 					throw Error(ErrorCode::LoadAsset);
 				}
 
-				assignment.desc.file = ResourcePath(texture);
+				assignment.desc.file = detail::ResourcePath(texture);
 				if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
 				{
 					assignment.desc.uvs.x1 = (*uvs)[0];

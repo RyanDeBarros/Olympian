@@ -475,7 +475,7 @@ namespace oly::rendering::internal
 		}
 	}
 
-	void internal::SpriteReference::set_texture(const ResourcePath& texture_file, unsigned int texture_index) const
+	void internal::SpriteReference::set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index) const
 	{
 		if (auto batch = lock()) [[likely]]
 		{
@@ -545,7 +545,7 @@ namespace oly::rendering::internal
 			throw Error(ErrorCode::NullPointer);
 	}
 
-	void internal::SpriteReference::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index) const
+	void internal::SpriteReference::set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index) const
 	{
 		if (auto batch = lock()) [[likely]]
 		{

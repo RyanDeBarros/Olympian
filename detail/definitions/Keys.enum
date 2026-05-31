@@ -1,5 +1,19 @@
 _ =
 
+Meta_Version = version
+Meta_Import = import
+Meta_Type = type
+Meta_Exists = exists
+
+Meta_Archetype = arch
+Meta_Font = font
+Meta_FontFamily = fontfam
+Meta_ParticleSystem = psystem
+Meta_RasterFont = rastfont
+Meta_Signal = signal
+Meta_Texture = texture
+Meta_Tileset = tileset
+
 A = A
 AbstractStorage = AbsStore
 AdjacentOffset = AdjOff

@@ -6,7 +6,7 @@
 
 namespace oly::io
 {
-	toml::v3::parse_result load_toml(const ResourcePath& file)
+	toml::v3::parse_result load_toml(const detail::ResourcePath& file)
 	{
 		try
 		{

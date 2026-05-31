@@ -1,30 +1,31 @@
 #include "MetaSplitter.h"
 
+#include "assets/ResourcePath.h"
+#include "assets/TranslateKey.h"
+#include "definitions/Keys.h"
+
 #include <fstream>
 #include <sstream>
 
 namespace oly::detail
 {
-    std::optional<std::string> MetaMap::get_type() const
-    {
-        auto it = map.find("type");
-        if (it != map.end())
-            return it->second;
-        else
-            return std::nullopt;
-    }
-
-    bool MetaMap::has_type(const std::string_view type) const
-    {
-        auto it = map.find("type");
-        return it != map.end() && it->second == type;
-    }
-
     static const std::string meta_prefix = "#meta";
 
-	MetaMap MetaSplitter::meta(const std::filesystem::path& filepath)
+    std::optional<Key> MetaMap::get_type() const
+    {
+        auto it = map.find(Key::Meta_Type);
+        return it != map.end() ? std::make_optional(encode_key(it->second)) : std::nullopt;
+    }
+
+    bool MetaMap::has_type(Key type) const
+    {
+        auto it = map.find(Key::Meta_Type);
+        return it != map.end() && encode_key(it->second) == type;
+    }
+
+	MetaMap MetaSplitter::decode_meta(const ResourcePath& filepath)
 	{
-        std::ifstream file(filepath);
+        std::ifstream file = filepath.get_ifstream();
         if (!file.is_open())
             return {};
 
@@ -51,11 +52,22 @@ namespace oly::detail
                     value.pop_back();
                     value.erase(value.begin());
                 }
-                meta.map[key] = value;
+                meta.map[encode_key(key)] = value;
             }
             else
-                meta.map[token] = "1";
+                meta.map[encode_key(token)] = decode_key(Key::Meta_Exists);
         }
         return meta;
 	}
+
+    std::string MetaSplitter::encode_meta(const MetaMap& meta)
+    {
+        std::ostringstream oss;
+        oss << meta_prefix << " ";
+
+        for (const auto& [key, value] : meta.map)
+            oss << decode_key(key) << "=\"" << value << "\" ";
+
+        return oss.str();
+    }
 }

@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "Buffers.h"
-#include "core/util/ResourcePath.h"
+#include "detail/assets/ResourcePath.h"
 
 namespace oly::graphics
 {
@@ -24,7 +24,7 @@ namespace oly::graphics
 
 	struct ShaderPathSource
 	{
-		ResourcePath path;
+		detail::ResourcePath path;
 		ShaderType type;
 	};
 

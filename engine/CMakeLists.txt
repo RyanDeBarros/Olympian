@@ -155,7 +155,7 @@ target_link_libraries(OlympianEngine PUBLIC
     quartic
 )
 
-target_link_libraries(OlympianEngine PRIVATE OlympianDetail)
+target_link_libraries(OlympianEngine PUBLIC OlympianDetail)
 
 # Add subdirectories
 add_subdirectory(core)

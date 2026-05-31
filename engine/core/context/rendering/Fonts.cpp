@@ -17,11 +17,11 @@ namespace oly::context
 {
 	namespace internal
 	{
-		std::unordered_map<ResourcePath, rendering::FontFaceRef> font_faces;
+		std::unordered_map<detail::ResourcePath, rendering::FontFaceRef> font_faces;
 
 		struct FontAtlasKey
 		{
-			ResourcePath file;
+			detail::ResourcePath file;
 			unsigned int index;
 
 			bool operator==(const FontAtlasKey&) const = default;
@@ -29,14 +29,14 @@ namespace oly::context
 
 		struct FontAtlasHash
 		{
-			size_t operator()(const FontAtlasKey& k) const { return std::hash<ResourcePath>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
+			size_t operator()(const FontAtlasKey& k) const { return std::hash<detail::ResourcePath>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
 		};
 
 		std::unordered_map<FontAtlasKey, rendering::FontAtlasRef, FontAtlasHash> font_atlases;
 
-		std::unordered_map<ResourcePath, rendering::RasterFontRef> raster_fonts;
+		std::unordered_map<detail::ResourcePath, rendering::RasterFontRef> raster_fonts;
 
-		std::unordered_map<ResourcePath, rendering::FontFamilyRef> font_families;
+		std::unordered_map<detail::ResourcePath, rendering::FontFamilyRef> font_families;
 	}
 
 	struct FontsOnTerminate
@@ -89,7 +89,7 @@ namespace oly::context
 		return kerning;
 	}
 
-	rendering::FontFaceRef load_font_face(const ResourcePath& file)
+	rendering::FontFaceRef load_font_face(const detail::ResourcePath& file)
 	{
 		if (file.empty())
 		{
@@ -103,9 +103,9 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
-		ResourcePath import_file = file.get_import_path();
+		detail::ResourcePath import_file = file.get_import_path();
 		// TODO v7 abstract away the error handling on meta.has_type()
-		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("font"))
+		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -126,7 +126,7 @@ namespace oly::context
 		return font_face;
 	}
 
-	rendering::FontAtlasRef load_font_atlas(const ResourcePath& file, unsigned int index)
+	rendering::FontAtlasRef load_font_atlas(const detail::ResourcePath& file, unsigned int index)
 	{
 		if (file.empty())
 		{
@@ -141,8 +141,8 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font atlas [" << file << "]..." << LOG.nl;
 
-		ResourcePath import_file = file.get_import_path();
-		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("font"))
+		detail::ResourcePath import_file = file.get_import_path();
+		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -207,7 +207,7 @@ namespace oly::context
 		return font_atlas;
 	}
 
-	rendering::RasterFontRef load_raster_font(const ResourcePath& file)
+	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
 		{
@@ -221,8 +221,8 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing raster font [" << file << "]..." << LOG.nl;
 
-		auto meta = detail::MetaSplitter::meta(file.get_absolute());
-		if (!meta.has_type("raster_font"))
+		auto meta = detail::MetaSplitter::decode_meta(file.get_absolute());
+		if (!meta.has_type(detail::Key::Meta_RasterFont))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << LOG.endl;
 			throw Error(ErrorCode::LoadAsset);
@@ -280,7 +280,7 @@ namespace oly::context
 		return raster_font;
 	}
 
-	rendering::FontFamilyRef load_font_family(const ResourcePath& file)
+	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())
 		{
@@ -294,7 +294,7 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font family [" << file << "]..." << LOG.nl;
 
-		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("font_family"))
+		if (!detail::MetaSplitter::decode_meta(file.get_absolute()).has_type(detail::Key::Meta_FontFamily))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -314,17 +314,17 @@ namespace oly::context
 
 					rendering::FontStyle style = parser.defaulted(detail::Key::Style)(rendering::FontStyle::Regular);
 
-					ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
+					detail::ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
 					rendering::FontFamily::FontRef font;
 					if (font_file.is_import_path())
 					{
-						auto meta = detail::MetaSplitter::meta(font_file.get_absolute());
-						if (meta.has_type("raster_font"))
+						auto meta = detail::MetaSplitter::decode_meta(font_file.get_absolute());
+						if (meta.has_type(detail::Key::Meta_RasterFont))
 							font = context::load_raster_font(font_file);
 						else
 						{
-							std::optional<std::string> type = meta.get_type();
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
+							std::optional<detail::Key> type = meta.get_type();
+							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::decode_key(*type) : "") << "\"" << LOG.nl;
 							return;
 						}
 					}
@@ -349,27 +349,27 @@ namespace oly::context
 		return font_family;
 	}
 
-	void free_font_face(const ResourcePath& file)
+	void free_font_face(const detail::ResourcePath& file)
 	{
 		internal::font_faces.erase(file);
 	}
 
-	void free_font_atlas(const ResourcePath& file, unsigned int index)
+	void free_font_atlas(const detail::ResourcePath& file, unsigned int index)
 	{
 		internal::font_atlases.erase({ file, index });
 	}
 
-	void free_raster_font(const ResourcePath& file)
+	void free_raster_font(const detail::ResourcePath& file)
 	{
 		internal::raster_fonts.erase(file);
 	}
 
-	void free_font_family(const ResourcePath& file)
+	void free_font_family(const detail::ResourcePath& file)
 	{
 		internal::font_families.erase(file);
 	}
 
-	rendering::FontSelection load_font_selection(const ResourcePath& font_family, rendering::FontStyle style)
+	rendering::FontSelection load_font_selection(const detail::ResourcePath& font_family, rendering::FontStyle style)
 	{
 		rendering::FontSelection font{ .family = load_font_family(font_family), .style = style };
 		if (!font.style_exists())
@@ -377,19 +377,19 @@ namespace oly::context
 		return font;
 	}
 
-	rendering::Font load_font(const ResourcePath& file, unsigned int index)
+	rendering::Font load_font(const detail::ResourcePath& file, unsigned int index)
 	{
 		if (file.is_import_path())
 		{
-			auto meta = detail::MetaSplitter::meta(file.get_absolute());
-			if (meta.has_type("raster_font"))
+			auto meta = detail::MetaSplitter::decode_meta(file.get_absolute());
+			if (meta.has_type(detail::Key::Meta_RasterFont))
 				return load_raster_font(file);
-			else if (meta.has_type("font_family"))
+			else if (meta.has_type(detail::Key::Meta_FontFamily))
 				return load_font_selection(file, static_cast<rendering::FontStyle::Mode>(index));
 			else
 			{
-				std::optional<std::string> type = meta.get_type();
-				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? *type : "") << "\"" << LOG.nl;
+				std::optional<detail::Key> type = meta.get_type();
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? detail::decode_key(*type) : "") << "\"" << LOG.nl;
 				throw Error(ErrorCode::LoadAsset);
 			}
 		}

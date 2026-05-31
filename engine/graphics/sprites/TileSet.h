@@ -2,7 +2,7 @@
 
 #include "core/types/SmartReference.h"
 #include "core/math/Shapes.h"
-#include "core/util/ResourcePath.h"
+#include "detail/assets/ResourcePath.h"
 
 #include <unordered_set>
 
@@ -89,7 +89,7 @@ namespace oly::rendering
 	public:
 		struct TileDesc
 		{
-			ResourcePath file;
+			detail::ResourcePath file;
 			math::UVRect uvs;
 
 			bool operator==(const TileDesc&) const = default;

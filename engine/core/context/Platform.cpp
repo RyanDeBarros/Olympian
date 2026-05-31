@@ -311,7 +311,7 @@ namespace oly::context
 
 	// TODO v7 revamp input signal system so that there's only one file, not multiple. Also, instead of a Tester.oly file, could do a whole .oly folder of files to keep things modular and simple for the editor - use meta fields and fixed filenames.
 
-	void load_signals(const ResourcePath& file)
+	void load_signals(const detail::ResourcePath& file)
 	{
 		if (file.empty())
 		{
@@ -319,7 +319,7 @@ namespace oly::context
 			throw Error(ErrorCode::LoadAsset);
 		}
 
-		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("signal"))
+		if (!detail::MetaSplitter::decode_meta(file).has_type(detail::Key::Meta_Signal))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);

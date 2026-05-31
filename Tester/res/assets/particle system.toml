@@ -1,4 +1,4 @@
-#meta version=1.0 type="particle_system"
+#meta version=1.0 type=psystem
 
 [emitter0]
 	[emitter0.Spawner]

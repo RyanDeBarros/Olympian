@@ -1,4 +1,4 @@
-#meta version=1.0 import type="font"
+#meta version=1.0 import type=font
 
 [[Atlas]]
 Storage = 0

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/types/SmartReference.h"
-#include "core/util/ResourcePath.h"
+#include "detail/assets/ResourcePath.h"
 
 namespace oly::rendering
 {
@@ -10,6 +10,6 @@ namespace oly::rendering
 
 namespace oly::context
 {
-	extern SmartReference<rendering::TileSet> load_tileset(const ResourcePath& file);
-	extern void free_tileset(const ResourcePath& file);
+	extern SmartReference<rendering::TileSet> load_tileset(const detail::ResourcePath& file);
+	extern void free_tileset(const detail::ResourcePath& file);
 }

@@ -19,7 +19,7 @@ namespace oly::context
 
 		struct TextureKey
 		{
-			ResourcePath file;
+			detail::ResourcePath file;
 			unsigned int index;
 
 			bool operator==(const TextureKey&) const = default;
@@ -27,14 +27,14 @@ namespace oly::context
 
 		struct TextureHash
 		{
-			size_t operator()(const TextureKey& k) const { return std::hash<ResourcePath>{}(k.file) ^ std::hash<unsigned int>{}(k.index); }
+			size_t operator()(const TextureKey& k) const { return k.file.hash() ^ std::hash<unsigned int>{}(k.index); }
 		};
 
 		std::unordered_map<TextureKey, graphics::ImageRef, TextureHash> images;
 		std::unordered_map<TextureKey, graphics::AnimRef, TextureHash> anims;
 		std::unordered_map<TextureKey, graphics::VectorImageRef, TextureHash> vector_images;
 
-		std::unordered_map<ResourcePath, graphics::NSVGAbstract> nsvg_abstracts;
+		std::unordered_map<detail::ResourcePath, graphics::NSVGAbstract> nsvg_abstracts;
 
 		Bijection<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
 	}
@@ -100,12 +100,12 @@ namespace oly::context
 		return texture;
 	}
 
-	static assets::Parser load_texture_node(const ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
+	static assets::Parser load_texture_node(const detail::ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
 	{
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
 
-		ResourcePath import_file = file.get_import_path();
-		if (!detail::MetaSplitter::meta(import_file.get_absolute()).has_type("texture"))
+		detail::ResourcePath import_file = file.get_import_path();
+		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Texture))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -148,7 +148,7 @@ namespace oly::context
 		return options;
 	}
 
-	graphics::BindlessTextureRef load_texture(const ResourcePath& file, unsigned int texture_index, tex::LoadParams params)
+	graphics::BindlessTextureRef load_texture(const detail::ResourcePath& file, unsigned int texture_index, tex::LoadParams params)
 	{
 		if (file.empty())
 		{
@@ -212,7 +212,7 @@ namespace oly::context
 		return texture;
 	}
 
-	graphics::BindlessTextureRef load_svg_texture(const ResourcePath& file, unsigned int texture_index, tex::SVGLoadParams params)
+	graphics::BindlessTextureRef load_svg_texture(const detail::ResourcePath& file, unsigned int texture_index, tex::SVGLoadParams params)
 	{
 		if (file.empty())
 		{
@@ -294,7 +294,7 @@ namespace oly::context
 		return texture;
 	}
 
-	graphics::BindlessTextureRef load_temp_texture(const ResourcePath& file, unsigned int texture_index, tex::TempLoadParams params)
+	graphics::BindlessTextureRef load_temp_texture(const detail::ResourcePath& file, unsigned int texture_index, tex::TempLoadParams params)
 	{
 		if (file.empty())
 		{
@@ -348,7 +348,7 @@ namespace oly::context
 		return texture;
 	}
 
-	graphics::BindlessTextureRef load_temp_svg_texture(const ResourcePath& file, unsigned int texture_index, tex::TempSVGLoadParams params)
+	graphics::BindlessTextureRef load_temp_svg_texture(const detail::ResourcePath& file, unsigned int texture_index, tex::TempSVGLoadParams params)
 	{
 		if (file.empty())
 		{
@@ -460,27 +460,27 @@ namespace oly::context
 			throw Error(ErrorCode::UnregisteredTexture);
 	}
 
-	glm::vec2 get_texture_dimensions(const ResourcePath& file, unsigned int texture_index)
+	glm::vec2 get_texture_dimensions(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		return get_texture_dimensions({ .file = file, .index = texture_index });
 	}
 
-	graphics::ImageDimensions get_image_dimensions(const ResourcePath& file, unsigned int texture_index)
+	graphics::ImageDimensions get_image_dimensions(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		return get_image_dimensions({ .file = file, .index = texture_index });
 	}
 
-	SmartReference<graphics::AnimDimensions> get_anim_dimensions(const ResourcePath& file, unsigned int texture_index)
+	SmartReference<graphics::AnimDimensions> get_anim_dimensions(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		return get_anim_dimensions({ .file = file, .index = texture_index });
 	}
 
-	graphics::ImageRef get_image_pixel_buffer(const ResourcePath& file, unsigned int texture_index)
+	graphics::ImageRef get_image_pixel_buffer(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		return get_image_pixel_buffer({ .file = file, .index = texture_index });
 	}
 
-	graphics::AnimRef get_anim_pixel_buffer(const ResourcePath& file, unsigned int texture_index)
+	graphics::AnimRef get_anim_pixel_buffer(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		return get_anim_pixel_buffer({ .file = file, .index = texture_index });
 	}
@@ -525,7 +525,7 @@ namespace oly::context
 		return get_anim_pixel_buffer(it->second);
 	}
 
-	const graphics::NSVGAbstract& get_nsvg_abstract(const ResourcePath& file)
+	const graphics::NSVGAbstract& get_nsvg_abstract(const detail::ResourcePath& file)
 	{
 		auto it = internal::nsvg_abstracts.find(file);
 		if (it != internal::nsvg_abstracts.end())
@@ -533,7 +533,7 @@ namespace oly::context
 		throw Error(ErrorCode::UnregisteredNsvgAbstract);
 	}
 
-	void free_texture(const ResourcePath& file, unsigned int texture_index)
+	void free_texture(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		internal::TextureKey key{ file, texture_index };
 
@@ -566,7 +566,7 @@ namespace oly::context
 		}
 	}
 
-	void free_svg_texture(const ResourcePath& file, unsigned int texture_index)
+	void free_svg_texture(const detail::ResourcePath& file, unsigned int texture_index)
 	{
 		internal::TextureKey key{ file, texture_index };
 
@@ -596,7 +596,7 @@ namespace oly::context
 		}
 	}
 
-	void free_nsvg_abstract(const ResourcePath& file)
+	void free_nsvg_abstract(const detail::ResourcePath& file)
 	{
 		auto it = internal::nsvg_abstracts.find(file);
 		if (it != internal::nsvg_abstracts.end())

@@ -1,4 +1,4 @@
-#meta version=1.0 import type="texture"
+#meta version=1.0 import type=texture
 
 AbsStore = 1
 [[Texture]]

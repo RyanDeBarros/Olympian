@@ -6,7 +6,7 @@ target_sources(OlympianEngine PUBLIC
 	LoggerOperators.cpp
 	"../../../detail/assets/MetaSplitter.cpp"
 	Parser.cpp
-	ResourcePath.cpp
+	"../../../detail/assets/ResourcePath.cpp"
 	StringParam.cpp
 	Time.cpp
 	Timers.cpp

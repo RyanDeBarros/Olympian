@@ -95,7 +95,7 @@ namespace oly::context
 		}
 		stbi_set_flip_vertically_on_load(true);
 
-		internal::set_resource_root(resource_root);
+		detail::ResourcePath::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
 		
 		auto toml = io::load_toml(project_file);

@@ -2,10 +2,10 @@
 
 #include "external/TOML.h"
 #include "core/base/Transforms.h"
-#include "core/util/ResourcePath.h"
+#include "detail/assets/ResourcePath.h"
 #include "core/util/StringParam.h"
 
 namespace oly::io
 {
-	extern toml::v3::parse_result load_toml(const ResourcePath& file);
+	extern toml::v3::parse_result load_toml(const detail::ResourcePath& file);
 }

@@ -14,7 +14,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		std::unordered_map<ResourcePath, rendering::TileSetRef> tilesets;
+		std::unordered_map<detail::ResourcePath, rendering::TileSetRef> tilesets;
 	}
 
 	struct TerminateTilesets
@@ -25,7 +25,7 @@ namespace oly::context
 		}
 	};
 
-	rendering::TileSetRef load_tileset(const ResourcePath& file)
+	rendering::TileSetRef load_tileset(const detail::ResourcePath& file)
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TerminateTilesets>::instance();
 
@@ -41,7 +41,7 @@ namespace oly::context
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing tileset [" << file << "]..." << LOG.nl;
 
-		if (!detail::MetaSplitter::meta(file.get_absolute()).has_type("tileset"))
+		if (!detail::MetaSplitter::decode_meta(file).has_type(detail::Key::Meta_Tileset))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type" << LOG.nl;
 			throw Error(ErrorCode::LoadAsset);
@@ -58,7 +58,7 @@ namespace oly::context
 		return tileset;
 	}
 
-	void free_tileset(const ResourcePath& file)
+	void free_tileset(const detail::ResourcePath& file)
 	{
 		internal::tilesets.erase(file);
 	}

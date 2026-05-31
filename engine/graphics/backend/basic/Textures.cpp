@@ -155,7 +155,7 @@ namespace oly::graphics
 		glTextureStorage3D(texture, levels, internal_format(dim.cpp), dim.w, dim.h, dim.d);
 	}
 
-	Image::Image(const ResourcePath& file)
+	Image::Image(const detail::ResourcePath& file)
 	{
 		std::string f = file.get_absolute().string();
 		_buf = stbi_load(f.c_str(), &_dim.w, &_dim.h, &_dim.cpp, 0);
@@ -234,7 +234,7 @@ namespace oly::graphics
 		return uniform() ? delays[0] : delays[frame];
 	}
 
-	Anim::Anim(const ResourcePath& file, SpritesheetOptions options)
+	Anim::Anim(const detail::ResourcePath& file, SpritesheetOptions options)
 	{
 		if (file.extension_matches(".gif"))
 		{
@@ -373,7 +373,7 @@ namespace oly::graphics
 		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 	}
 
-	AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed, GLuint starting_frame)
+	AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed, GLuint starting_frame)
 	{
 		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
@@ -383,12 +383,12 @@ namespace oly::graphics
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_Single(const ResourcePath& texture_file, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_Single(const detail::ResourcePath& texture_file, GLuint frame)
 	{
 		return setup_anim_frame_format_Single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
-	NSVGAbstract::NSVGAbstract(const ResourcePath& file, const char* units, float dpi)
+	NSVGAbstract::NSVGAbstract(const detail::ResourcePath& file, const char* units, float dpi)
 	{
 		std::string f = file.get_absolute().string();
 		i = nsvgParseFromFile(f.c_str(), units, dpi);

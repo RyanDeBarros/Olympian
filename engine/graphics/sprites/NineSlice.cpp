@@ -110,7 +110,7 @@ namespace oly::rendering
 		dirty.mod_grid = true;
 	}
 
-	void NineSlice::set_texture(const ResourcePath& texture_file, unsigned int texture_index)
+	void NineSlice::set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
@@ -170,7 +170,7 @@ namespace oly::rendering
 				sprite(x, y).set_camera_invariant(is_camera_invariant);
 	}
 
-	void NineSlice::set_mod_texture(const ResourcePath& texture_file, unsigned int texture_index)
+	void NineSlice::set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index)
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)

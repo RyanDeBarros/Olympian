@@ -20,7 +20,7 @@ namespace oly
 			std::stringstream ss;
 			tm time = time::time_struct();
 			ss << "../logs/Tester_" << std::put_time(&time, "%Y-%m-%d %H-%M-%S") << ".log";
-			ResourcePath logfile(ss.str());
+			detail::ResourcePath logfile(ss.str());
 			logfile.create_parents();
 			file.open(logfile.get_absolute());
 		}

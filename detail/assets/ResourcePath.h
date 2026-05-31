@@ -3,18 +3,18 @@
 #include <filesystem>
 #include <fstream>
 
-#include "core/types/Meta.h"
-#include "core/util/StringParam.h"
-
-namespace oly
+namespace oly::detail
 {
-	namespace context::internal
+	template <typename T, typename... Set>
+	constexpr bool is_in(const T& v, const Set&... set)
 	{
-		extern void set_resource_root(const std::string_view root);
+		return ((v == set) || ...);
 	}
 
 	class ResourcePath
 	{
+		static std::filesystem::path resource_root;
+
 		std::filesystem::path absolute;
 
 	public:
@@ -24,17 +24,17 @@ namespace oly
 		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
 		ResourcePath(std::string&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 		ResourcePath(const char* path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
-		ResourcePath(const StringParam& path, const ResourcePath& relative_to = {}) { set(std::filesystem::path(path.begin(), path.end()), relative_to); }
-		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(dupl(path), relative_to); }
+		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(std::filesystem::path(path), relative_to); }
 		ResourcePath(std::filesystem::path&& path, const ResourcePath& relative_to = {}) { set(std::move(path), relative_to); }
 
 		ResourcePath& operator=(const std::string_view path) { set(path, {}); return *this; }
 		ResourcePath& operator=(const std::string& path) { set(path, {}); return *this; }
 		ResourcePath& operator=(std::string&& path) { set(std::move(path), {}); return *this; }
 		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }
-		ResourcePath& operator=(const StringParam& path) { set(std::filesystem::path(path.begin(), path.end()), {}); return *this; }
-		ResourcePath& operator=(const std::filesystem::path& path) { set(dupl(path), {}); return *this; }
+		ResourcePath& operator=(const std::filesystem::path& path) { set(std::filesystem::path(path), {}); return *this; }
 		ResourcePath& operator=(std::filesystem::path&& path) { set(std::move(path), {}); return *this; }
+
+		static void set_resource_root(const std::string_view root);
 
 	private:
 		void set(std::filesystem::path&& path, const ResourcePath& relative_to);
@@ -65,7 +65,7 @@ namespace oly
 }
 
 template<>
-struct std::hash<oly::ResourcePath>
+struct std::hash<oly::detail::ResourcePath>
 {
-	size_t operator()(const oly::ResourcePath& f) const { return f.hash(); }
+	size_t operator()(const oly::detail::ResourcePath& f) const { return f.hash(); }
 };

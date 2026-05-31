@@ -246,7 +246,7 @@ namespace oly::rendering
 				if (value.starts_with('\"'))
 					value.pop_front();
 
-				e.font = context::load_font(value, texture_index);
+				e.font = context::load_font(value.transfer(), texture_index);
 				overrides.font = true;
 			}
 		}

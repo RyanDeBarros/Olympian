@@ -138,7 +138,7 @@ target_link_libraries(OlympianEditor PRIVATE
     tomlplusplus::tomlplusplus
 )
 
-target_link_libraries(OlympianEditor PRIVATE OlympianDetail)
+target_link_libraries(OlympianEditor PUBLIC OlympianDetail)
 
 target_include_directories(OlympianEditor PUBLIC
 	${CMAKE_SOURCE_DIR}

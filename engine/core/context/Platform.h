@@ -2,7 +2,7 @@
 
 #include "core/platform/Platform.h"
 #include "core/platform/BindingContext.h"
-#include "core/util/ResourcePath.h"
+#include "detail/assets/ResourcePath.h"
 #include "core/util/DebugTrace.h"
 
 namespace oly::context
@@ -27,5 +27,5 @@ namespace oly::context
 	extern void load_signal(TOMLNode node, const DebugTrace& trace);
 	extern void load_signal_mapping(TOMLNode node);
 	extern void load_signal_mapping(TOMLNode node, const DebugTrace& trace);
-	extern void load_signals(const ResourcePath& file);
+	extern void load_signals(const detail::ResourcePath& file);
 }

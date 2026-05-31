@@ -1,18 +1,12 @@
 #include "ResourcePath.h"
 
-#include "core/base/Errors.h"
-#include "core/util/LoggerOperators.h"
-
-namespace oly
+namespace oly::detail
 {
-	namespace context::internal
-	{
-		std::filesystem::path resource_root;
+	std::filesystem::path ResourcePath::resource_root;
 
-		void set_resource_root(const std::string_view root)
-		{
-			resource_root = root;
-		}
+	void ResourcePath::set_resource_root(const std::string_view root)
+	{
+		resource_root = root;
 	}
 
 	void ResourcePath::set(std::filesystem::path&& path, const ResourcePath& relative_to)
@@ -23,11 +17,11 @@ namespace oly
 		{
 			std::string s = std::move(path.generic_string());
 			if (s.starts_with("@/"))
-				absolute = context::internal::resource_root / s.substr(2);
+				absolute = resource_root / s.substr(2);
 			else
 			{
 				if (relative_to.empty())
-					absolute = context::internal::resource_root / s;
+					absolute = resource_root / s;
 				else
 					absolute = (std::filesystem::is_directory(relative_to.absolute) ? relative_to.absolute : relative_to.absolute.parent_path()) / s;
 			}
@@ -42,10 +36,7 @@ namespace oly
 	ResourcePath ResourcePath::get_import_path() const
 	{
 		if (is_import_path())
-		{
-			OLY_LOG_WARNING(true) << "Path " << *this << " is already an import path." << LOG.nl;
 			return *this;
-		}
 		else
 		{
 			ResourcePath p = *this;

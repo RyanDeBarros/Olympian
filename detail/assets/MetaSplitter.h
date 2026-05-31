@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -8,17 +7,21 @@
 
 namespace oly::detail
 {
+	class ResourcePath;
+	enum class Key : unsigned long long;
+
 	// TODO v7 use keys
 	struct MetaMap
 	{
-		std::unordered_map<std::string, std::string> map;
+		std::unordered_map<Key, std::string> map;
 
-		std::optional<std::string> get_type() const;
-		bool has_type(const std::string_view type) const;
+		std::optional<Key> get_type() const;
+		bool has_type(Key type) const;
 	};
 
 	struct MetaSplitter
 	{
-		static MetaMap meta(const std::filesystem::path& file);
+		static MetaMap decode_meta(const ResourcePath& file);
+		static std::string encode_meta(const MetaMap& meta);
 	};
 }
