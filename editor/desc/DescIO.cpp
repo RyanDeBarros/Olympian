@@ -1,18 +1,57 @@
 #include "DescIO.h"
 
+#include "definitions/Keys.h"
+
 #include <imgui.h>
 
 namespace oly::editor
 {
 	// TODO v7 on hover tooltip
+	// TODO v7 revert buttons
+
+	static void PrepareValue(const char* label, void* data)
+	{
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text(label);
+		ImGui::TableNextColumn();
+		ImGui::PushID(data);
+	}
+
+	static void FinishValue()
+	{
+		ImGui::PopID();
+	}
+
+	bool DescIO::BeginForm(void* id)
+	{
+		ImGui::PushID(id);
+		if (ImGui::BeginTable("", 2, ImGuiTableFlags_SizingFixedFit))
+		{
+			ImGui::TableSetupColumn("");
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+			return true;
+		}
+		else
+		{
+			ImGui::PopID();
+			return false;
+		}
+	}
+
+	void DescIO::EndForm()
+	{
+		ImGui::EndTable();
+		ImGui::PopID();
+	}
 
 	bool DescIO::Draw(const char* label, bool& data)
 	{
 		bool dirty = false;
-		ImGui::PushID(&data);
-		if (ImGui::Checkbox(label, &data))
+		PrepareValue(label, &data);
+		if (ImGui::Checkbox("", &data))
 			dirty = true;
-		ImGui::PopID();
+		FinishValue();
 		return dirty;
 	}
 
@@ -20,8 +59,8 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		const int og = data;
-		ImGui::PushID(&data);
-		if (ImGui::InputInt(label, &data))
+		PrepareValue(label, &data);
+		if (ImGui::InputInt("", &data))
 		{
 			if (max)
 				data = std::min(data, *max);
@@ -29,7 +68,47 @@ namespace oly::editor
 				data = std::max(data, *min);
 			dirty = data != og;
 		}
-		ImGui::PopID();
+		FinishValue();
+		return dirty;
+	}
+
+	bool DescIO::Draw(const char* label, float& data, std::optional<float> min, std::optional<float> max)
+	{
+		bool dirty = false;
+		const float og = data;
+		PrepareValue(label, &data);
+		if (ImGui::InputFloat("", &data))
+		{
+			if (max)
+				data = std::min(data, *max);
+			if (min)
+				data = std::max(data, *min);
+			dirty = data != og;
+		}
+		FinishValue();
+		return dirty;
+	}
+
+	bool DescIO::Draw(const char* label, GLenum& data, const GLenum* values, const char** names, size_t count)
+	{
+		bool dirty = false;
+
+		int index = 0;
+		for (size_t i = 0; i < count; ++i)
+		{
+			if (values[i] == data)
+			{
+				index = i;
+				break;
+			}
+		}
+
+		PrepareValue(label, &data);
+		if (ImGui::Combo("", &index, names, count))
+			dirty = true;
+		FinishValue();
+
+		data = values[index];
 		return dirty;
 	}
 
@@ -41,10 +120,10 @@ namespace oly::editor
 			"Keep"
 		};
 		int index = static_cast<int>(data);
-		ImGui::PushID(&data);
-		if (ImGui::Combo(label, &index, values, IM_ARRAYSIZE(values)))
+		PrepareValue(label, &data);
+		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
 			dirty = true;
-		ImGui::PopID();
+		FinishValue();
 		data = static_cast<detail::StorageMode>(index);
 		return dirty;
 	}
@@ -58,34 +137,31 @@ namespace oly::editor
 			"Manual"
 		};
 		int index = static_cast<int>(data);
-		ImGui::PushID(&data);
-		if (ImGui::Combo(label, &index, values, IM_ARRAYSIZE(values)))
+		PrepareValue(label, &data);
+		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
 			dirty = true;
-		ImGui::PopID();
+		FinishValue();
 		data = static_cast<detail::SVGMipmapGenerationMode>(index);
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, GLenum& data, const GLenum* values, const char** names, size_t count)
+	void DescIO::Load(TOMLNode node, bool& data, detail::Key key, bool def)
 	{
-		bool dirty = false;
-		
-		int index = 0;
-		for (size_t i = 0; i < count; ++i)
-		{
-			if (values[i] == data)
-			{
-				index = i;
-				break;
-			}
-		}
+		data = node[detail::decode_key(key)].value_or(def);
+	}
 
-		ImGui::PushID(&data);
-		if (ImGui::Combo(label, &index, names, count))
-			dirty = true;
-		ImGui::PopID();
+	void DescIO::Load(TOMLNode node, int& data, detail::Key key, int def)
+	{
+		data = node[detail::decode_key(key)].value_or<int64_t>(def);
+	}
 
-		data = values[index];
-		return dirty;
+	void DescIO::Load(TOMLNode node, float& data, detail::Key key, float def)
+	{
+		data = node[detail::decode_key(key)].value_or<double>(def);
+	}
+
+	void DescIO::Load(TOMLNode node, GLenum& data, detail::Key key, GLenum def)
+	{
+		data = node[detail::decode_key(key)].value_or<int64_t>(def);
 	}
 }

@@ -233,7 +233,7 @@ namespace oly::context
 
 		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage);
 		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage);
-		float scale = parser.defaulted(detail::Key::VectorScale)(1.0f);
+		float scale = parser.defaulted(detail::Key::VectorScale)(1.f);
 
 		graphics::BindlessTextureRef texture;
 

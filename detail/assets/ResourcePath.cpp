@@ -125,4 +125,17 @@ namespace oly::detail
 		else
 			return absolute.filename().generic_string();
 	}
+
+	std::string ResourcePath::load_toml(toml::table& table) const
+	{
+		try
+		{
+			table = toml::parse_file(absolute.c_str());
+			return "";
+		}
+		catch (const toml::parse_error& err)
+		{
+			return std::string(err.description());
+		}
+	}
 }

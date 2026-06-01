@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <toml++/toml.h>
+
 namespace oly::detail
 {
 	template <typename T, typename... Set>
@@ -64,6 +66,8 @@ namespace oly::detail
 		std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const { return std::ifstream(absolute, mode); }
 		std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const { return std::ofstream(absolute, mode); }
 		std::fstream get_fstream(std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const { return std::fstream(absolute, mode); }
+
+		std::string load_toml(toml::table& table) const;
 
 		bool empty() const { return absolute.empty(); }
 		size_t hash() const { return std::hash<std::filesystem::path>{}(absolute); }

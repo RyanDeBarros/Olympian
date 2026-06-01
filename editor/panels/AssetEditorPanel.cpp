@@ -63,6 +63,7 @@ namespace oly::editor
 					closed.push_back(i);
 			}
 
+			// TODO v7 prompt for unsaved changes
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
 				DocumentManager::Instance().Remove(*it);
 
