@@ -27,6 +27,8 @@ namespace oly::editor
 	{
 		if (_oly_path.exists())
 		{
+			_meta = detail::MetaSplitter::decode_meta(_oly_path);
+
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
@@ -37,12 +39,21 @@ namespace oly::editor
 			}
 		}
 		else
+		{
 			Load(TOMLNode(), _desc);
+
+			_meta = {};
+			_meta.map[detail::Key::Meta_Version] = "1.0";
+			_meta.map[detail::Key::Meta_Import] = "1";
+			_meta.map[detail::Key::Meta_Type] = detail::decode_key(detail::Key::Meta_Texture);
+		}
 	}
 
 	void TextureDocument::Dump()
 	{
-		// TODO v7 Dump(_desc)
+		toml::table table;
+		Dump(table, _desc);
+		_oly_path.dump_toml(table, _meta);
 		MarkClean();
 	}
 
@@ -263,5 +274,57 @@ namespace oly::editor
 		DescIO::Load(node, desc.delay_cs, detail::Key::DelayCS, 0);
 		DescIO::Load(node, desc.row_major, detail::Key::RowMajor, true);
 		DescIO::Load(node, desc.row_up, detail::Key::RowUp, true);
+	}
+
+	void TextureDocument::Dump(toml::table& table, TextureArrayDesc& desc)
+	{
+		for (TextureDesc& d : desc.array)
+			Dump(table, d);
+	}
+
+	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
+	{
+		std::visit([this, &table](auto& d) { Dump(table, d); }, desc.variant);
+	}
+
+	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
+	{
+		Dump(table, desc.base);
+
+		DescIO::Dump(table, detail::Key::GenerateMipmaps, desc.generate_mipmaps);
+		DescIO::Dump(table, detail::Key::Storage, desc.storage);
+	}
+
+	void TextureDocument::Dump(toml::table& table, VectorTextureDesc& desc)
+	{
+		Dump(table, desc.base);
+
+		DescIO::Dump(table, detail::Key::VectorScale, desc.scale);
+		DescIO::Dump(table, detail::Key::GenerateMipmaps, desc.generate_mipmaps);
+		DescIO::Dump(table, detail::Key::ImageStorage, desc.image_storage);
+		DescIO::Dump(table, detail::Key::AbstractStorage, desc.abstract_storage);
+	}
+
+	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
+	{
+		DescIO::Dump(table, detail::Key::MinFilter, desc.min_filter);
+		DescIO::Dump(table, detail::Key::MagFilter, desc.mag_filter);
+		DescIO::Dump(table, detail::Key::WrapS, desc.wrap_s);
+		DescIO::Dump(table, detail::Key::WrapT, desc.wrap_t);
+		DescIO::Dump(table, detail::Key::Animated, desc.anim);
+
+		if (desc.anim)
+			Dump(table, desc.spritesheet);
+	}
+
+	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
+	{
+		DescIO::Dump(table, detail::Key::Rows, desc.rows);
+		DescIO::Dump(table, detail::Key::Columns, desc.cols);
+		DescIO::Dump(table, detail::Key::CellWidthOverride, desc.cell_width_override);
+		DescIO::Dump(table, detail::Key::CellHeightOverride, desc.cell_height_override);
+		DescIO::Dump(table, detail::Key::DelayCS, desc.delay_cs);
+		DescIO::Dump(table, detail::Key::RowMajor, desc.row_major);
+		DescIO::Dump(table, detail::Key::RowUp, desc.row_up);
 	}
 }

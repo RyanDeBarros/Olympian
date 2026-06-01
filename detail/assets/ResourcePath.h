@@ -7,6 +7,8 @@
 
 namespace oly::detail
 {
+	class MetaMap;
+
 	template <typename T, typename... Set>
 	constexpr bool is_in(const T& v, const Set&... set)
 	{
@@ -68,6 +70,7 @@ namespace oly::detail
 		std::fstream get_fstream(std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const { return std::fstream(absolute, mode); }
 
 		std::string load_toml(toml::table& table) const;
+		void dump_toml(toml::table& table, const MetaMap& meta) const;
 
 		bool empty() const { return absolute.empty(); }
 		size_t hash() const { return std::hash<std::filesystem::path>{}(absolute); }

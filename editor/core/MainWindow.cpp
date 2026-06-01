@@ -48,6 +48,8 @@ namespace oly::editor
         tree.root.second = &content_browser;
 
         tree.SetupLayout(_dockspace_id, *_panel_manager);
+
+        _main_menu_bar->Init();
     }
 
     void MainWindow::Open()

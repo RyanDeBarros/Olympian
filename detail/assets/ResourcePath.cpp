@@ -1,5 +1,7 @@
 #include "ResourcePath.h"
 
+#include "assets/MetaSplitter.h"
+
 namespace oly::detail
 {
 	static const char* OLY_EXT = ".oly";
@@ -137,5 +139,13 @@ namespace oly::detail
 		{
 			return std::string(err.description());
 		}
+	}
+
+	void ResourcePath::dump_toml(toml::table& table, const MetaMap& meta) const
+	{
+		std::stringstream ss;
+		ss << MetaSplitter::encode_meta(meta);
+		ss << table;
+		get_ofstream() << ss.str();
 	}
 }

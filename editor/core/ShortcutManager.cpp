@@ -4,6 +4,8 @@
 #include "core/MainWindow.h"
 #include "core/MainMenuBar.h"
 
+#include "panels/AssetEditorPanel.h"
+
 namespace oly::editor
 {
     ShortcutManager& ShortcutManager::Instance()
@@ -14,7 +16,16 @@ namespace oly::editor
     void ShortcutManager::PollShortcuts()
     {
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
-            MainWindow::Instance().GetMainMenuBar().OpenFile();
+        {
+            if (Editor::Instance().GetAppState() == AppState::Main)
+                MainWindow::Instance().GetMainMenuBar().OpenFile();
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+            AssetEditorPanel::Instance().SaveFocusedTab();
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+            AssetEditorPanel::Instance().SaveAllTabs();
     }
 
     void ShortcutManager::HandlePathDrop(int count, const char** paths)

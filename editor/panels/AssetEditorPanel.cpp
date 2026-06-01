@@ -40,6 +40,7 @@ namespace oly::editor
 		{
 			std::vector<size_t> closed;
 
+			IDocument* selected = nullptr;
 			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			{
 				IDocument& doc = DocumentManager::Instance().GetDocument(i);
@@ -56,6 +57,7 @@ namespace oly::editor
 				if (ImGui::BeginTabItem((tabname + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
 				{
 					doc.Draw();
+					selected = &doc;
 					ImGui::EndTabItem();
 				}
 
@@ -67,7 +69,7 @@ namespace oly::editor
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
 				DocumentManager::Instance().Remove(*it);
 
-			_focused_tab = nullptr;
+			_focused_tab = selected;
 			ImGui::EndTabBar();
 		}
 
@@ -77,5 +79,22 @@ namespace oly::editor
 	void AssetEditorPanel::FocusTab(IDocument* doc)
 	{
 		_focused_tab = doc;
+	}
+
+	bool AssetEditorPanel::IsFocused(IDocument* doc) const
+	{
+		return _focused_tab == doc;
+	}
+
+	void AssetEditorPanel::SaveFocusedTab() const
+	{
+		if (_focused_tab)
+			_focused_tab->Dump();
+	}
+
+	void AssetEditorPanel::SaveAllTabs() const
+	{
+		for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
+			DocumentManager::Instance().GetDocument(i).Dump();
 	}
 }

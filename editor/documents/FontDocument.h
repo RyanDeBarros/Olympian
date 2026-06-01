@@ -11,6 +11,8 @@ namespace oly::editor
 
 		void Init() override;
 		void Draw() override;
+		void Load() override;
+		void Dump() override;
 
 		detail::ResourcePath GetSourcePath() const;
 	};

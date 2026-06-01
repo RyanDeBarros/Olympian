@@ -63,11 +63,12 @@ namespace oly::detail
     std::string MetaSplitter::encode_meta(const MetaMap& meta)
     {
         std::ostringstream oss;
-        oss << meta_prefix << " ";
+        oss << meta_prefix << ' ';
 
         for (const auto& [key, value] : meta.map)
             oss << decode_key(key) << "=\"" << value << "\" ";
 
+        oss << '\n';
         return oss.str();
     }
 }

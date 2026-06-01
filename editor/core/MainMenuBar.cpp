@@ -4,12 +4,18 @@
 #include <ImGuiFileDialog.h>
 
 #include "core/Editor.h"
+#include "core/ProjectInfo.h"
 
 namespace oly::editor
 {
 	static const char* OPEN_FILE = "OpenFileDlg";
 
 	static std::string open_file_parent = ".";
+
+	void MainMenuBar::Init()
+	{
+		open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
+	}
 
 	void MainMenuBar::Draw()
 	{

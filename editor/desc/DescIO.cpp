@@ -164,4 +164,24 @@ namespace oly::editor
 	{
 		data = node[detail::decode_key(key)].value_or<int64_t>(def);
 	}
+
+	void DescIO::Dump(toml::table& table, detail::Key key, bool data)
+	{
+		table.insert_or_assign(detail::decode_key(key), data);
+	}
+	
+	void DescIO::Dump(toml::table& table, detail::Key key, int data)
+	{
+		table.insert_or_assign(detail::decode_key(key), static_cast<int64_t>(data));
+	}
+	
+	void DescIO::Dump(toml::table& table, detail::Key key, float data)
+	{
+		table.insert_or_assign(detail::decode_key(key), data);
+	}
+	
+	void DescIO::Dump(toml::table& table, detail::Key key, GLenum data)
+	{
+		table.insert_or_assign(detail::decode_key(key), static_cast<int64_t>(data));
+	}
 }

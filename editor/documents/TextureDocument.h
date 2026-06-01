@@ -5,6 +5,8 @@
 #include "desc/TextureDesc.h"
 #include "TOML.h"
 
+#include "assets/MetaSplitter.h"
+
 namespace oly::editor
 {
 	class TextureDocument : public IDocument
@@ -12,14 +14,15 @@ namespace oly::editor
 		TextureArrayDesc _desc;
 		bool _gif = false;
 		bool _svg = false;
+		detail::MetaMap _meta;
 
 	public:
 		using IDocument::IDocument;
 
 		void Init() override;
 		void Draw() override;
-		void Load();
-		void Dump();
+		void Load() override;
+		void Dump() override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -38,6 +41,11 @@ namespace oly::editor
 		void Load(TOMLNode node, BaseTextureDesc& desc);
 		void Load(TOMLNode node, SpritesheetDesc& desc);
 
-		// TODO v7 Dump(*)
+		void Dump(toml::table& table, TextureArrayDesc& desc);
+		void Dump(toml::table& table, TextureDesc& desc);
+		void Dump(toml::table& table, RasterTextureDesc& desc);
+		void Dump(toml::table& table, VectorTextureDesc& desc);
+		void Dump(toml::table& table, BaseTextureDesc& desc);
+		void Dump(toml::table& table, SpritesheetDesc& desc);
 	};
 }

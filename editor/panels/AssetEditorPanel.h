@@ -17,5 +17,9 @@ namespace oly::editor
 		void Draw() override;
 
 		void FocusTab(IDocument* doc);
+		bool IsFocused(IDocument* doc) const;
+
+		void SaveFocusedTab() const;
+		void SaveAllTabs() const;
 	};
 }

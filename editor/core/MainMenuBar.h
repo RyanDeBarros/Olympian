@@ -5,6 +5,7 @@ namespace oly::editor
 	class MainMenuBar
 	{
 	public:
+		void Init();
 		void Draw();
 
 	private:
