@@ -9,3 +9,5 @@ execute_process(
 if (NOT result EQUAL 0)
     message(FATAL_ERROR "KeysCodeGen.py failed with code ${result}")
 endif()
+
+add_subdirectory(enums)

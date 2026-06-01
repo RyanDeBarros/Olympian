@@ -7,11 +7,4 @@ namespace oly::detail
 		Discard = 0,
 		Keep
 	};
-
-	enum class SVGMipmapGenerationMode
-	{
-		Auto = 0,
-		Off,
-		Manual
-	};
 }

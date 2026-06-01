@@ -8,8 +8,8 @@
 #include "core/context/rendering/Textures.h"
 
 #include "assets/MetaSplitter.h"
-#include "definitions/Enums.h"
 #include "definitions/Keys.h"
+#include "definitions/enums/StorageMode.h"
 
 // TODO v7 put actual loading logic in load/overload methods
 

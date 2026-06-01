@@ -1,12 +1,13 @@
 #include "DescIO.h"
 
 #include "definitions/Keys.h"
+#include "definitions/enums/Include.h"
 
 #include <imgui.h>
 
 namespace oly::editor
 {
-	static void PrepareValue(const char* label, void* data)
+	static void PrepareValue(const char* label, const void* data)
 	{
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -15,17 +16,13 @@ namespace oly::editor
 		ImGui::PushID(data);
 	}
 
-	template<typename T>
-	static bool DrawRevertButton(T& desc, const T& disk)
+	static bool DrawRevertButtonImpl(const void* data)
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		ImGui::PushID(&disk);
+		ImGui::PushID(data);
 		if (ImGui::ArrowButton("", ImGuiDir_Left))
-		{
-			desc = disk;
 			dirty = true;
-		}
 		ImGui::PopID();
 		return dirty;
 	}
@@ -33,8 +30,11 @@ namespace oly::editor
 	template<typename T>
 	static bool FinishValue(bool dirty, T& desc, const T* disk)
 	{
-		if (disk && desc != *disk)
-			dirty |= DrawRevertButton(desc, *disk);
+		if (disk && desc != *disk && DrawRevertButtonImpl(disk))
+		{
+			desc = *disk;
+			dirty = true;
+		}
 		ImGui::PopID();
 		return dirty;
 	}
@@ -111,6 +111,7 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
+	template<>
 	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
 	{
 		bool dirty = false;
@@ -126,6 +127,7 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
+	template<>
 	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
 	{
 		bool dirty = false;

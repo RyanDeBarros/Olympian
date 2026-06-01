@@ -9,7 +9,7 @@
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
 
-#include "definitions/Enums.h"
+#include "definitions/enums/SVGMipmapGenerationMode.h"
 
 namespace oly::graphics
 {

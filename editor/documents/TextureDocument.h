@@ -3,7 +3,6 @@
 #include "documents/IDocument.h"
 
 #include "desc/TextureDesc.h"
-#include "TOML.h"
 
 #include "assets/MetaSplitter.h"
 

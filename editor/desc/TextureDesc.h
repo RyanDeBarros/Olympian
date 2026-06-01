@@ -1,6 +1,8 @@
 #pragma once
 
 #include "desc/Fields.h"
+#include "definitions/enums/StorageMode.h"
+#include "definitions/enums/SVGMipmapGenerationMode.h"
 
 #include <variant>
 #include <vector>

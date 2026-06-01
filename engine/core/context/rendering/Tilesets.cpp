@@ -7,8 +7,8 @@
 #include "core/util/Parser.h"
 
 #include "assets/MetaSplitter.h"
-#include "definitions/Enums.h"
 #include "definitions/Keys.h"
+#include "definitions/enums/StorageMode.h"
 
 namespace oly::context
 {

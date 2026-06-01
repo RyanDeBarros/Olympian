@@ -1,8 +1,5 @@
 #include "TextureDocument.h"
 
-#include "desc/DescIO.h"
-
-#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 #include <imgui.h>
