@@ -17,11 +17,11 @@ namespace oly
 			friend class Singleton<AutoRegistry<T>>;
 
 			friend class AutoRegistrable<T>;
-			std::unordered_set<T*> _tracked;
+			std::unordered_set<T*> _linked;
 
 		public:
-			void clear() { _tracked.clear(); }
-			const std::unordered_set<T*>& tracked() const { return _tracked; }
+			void clear() { _linked.clear(); }
+			const std::unordered_set<T*>& linked() const { return _linked; }
 		};
 	}
 
@@ -31,22 +31,22 @@ namespace oly
 	public:
 		AutoRegistrable()
 		{
-			registry()._tracked.insert(static_cast<T*>(this));
+			registry()._linked.insert(static_cast<T*>(this));
 		}
 
 		AutoRegistrable(const AutoRegistrable&)
 		{
-			registry()._tracked.insert(static_cast<T*>(this));
+			registry()._linked.insert(static_cast<T*>(this));
 		}
 
 		AutoRegistrable(AutoRegistrable&&) noexcept
 		{
-			registry()._tracked.insert(static_cast<T*>(this));
+			registry()._linked.insert(static_cast<T*>(this));
 		}
 
 		~AutoRegistrable()
 		{
-			registry()._tracked.erase(static_cast<T*>(this));
+			registry()._linked.erase(static_cast<T*>(this));
 		}
 
 		static internal::AutoRegistry<T>& registry() { return internal::AutoRegistry<T>::instance(); }

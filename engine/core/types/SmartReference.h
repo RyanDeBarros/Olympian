@@ -55,7 +55,7 @@ namespace oly
 			void on_terminate() override
 			{
 				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
-				for (IPool* pool : pools.tracked())
+				for (IPool* pool : pools.linked())
 					pool->clear();
 				pools.clear();
 			}
@@ -63,7 +63,7 @@ namespace oly
 			void clean()
 			{
 				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
-				for (IPool* pool : pools.tracked())
+				for (IPool* pool : pools.linked())
 					pool->clean();
 			}
 		};

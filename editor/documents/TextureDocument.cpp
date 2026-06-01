@@ -20,7 +20,7 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		Draw(_desc, &_disk);
+		Draw(_scratch);
 	}
 
 	void TextureDocument::Load()
@@ -47,15 +47,16 @@ namespace oly::editor
 			_meta.map[detail::Key::Meta_Import] = "1";
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Texture);
 		}
-		_desc = _disk;
+
+		_scratch.Reset(_disk);
 	}
 
 	void TextureDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _desc);
+		Dump(table, _scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _desc;
+		_disk.Reset(_scratch);
 		MarkClean();
 	}
 
@@ -64,122 +65,49 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	// TODO v7 combine args into structs for int fields, bool fields, etc. for clarity - that goes for all the DescIO methods too.
-
-#define PROP_RASTER_TEXTURE(M) \
-		M(storage, detail::Key::Storage, detail::StorageMode::Discard, "Storage"); \
-		M(generate_mipmaps, detail::Key::GenerateMipmaps, false, "Generate Mipmaps");
-
-#define PROP_VECTOR_TEXTURE(M) \
-		M(scale, detail::Key::VectorScale, 1.f, "Vector Scale", 0.f, std::nullopt); \
-		M(image_storage, detail::Key::ImageStorage, detail::StorageMode::Discard, "Image Storage"); \
-		M(abstract_storage, detail::Key::AbstractStorage, detail::StorageMode::Discard, "Abstract Storage"); \
-		M(generate_mipmaps, detail::Key::GenerateMipmaps, detail::SVGMipmapGenerationMode::Off, "Generate Mipmaps");
-
-#define PROP_TEXTURE_PARAMS(M) \
-		M(min_filter, detail::Key::MinFilter, GL_NEAREST, "Min Filter", min_filter_values, min_filter_names, IM_ARRAYSIZE(min_filter_names)); \
-		M(mag_filter, detail::Key::MagFilter, GL_NEAREST, "Mag Filter", mag_filter_values, mag_filter_names, IM_ARRAYSIZE(mag_filter_names)); \
-		M(wrap_s, detail::Key::WrapS, GL_CLAMP_TO_EDGE, "Wrap (S)", wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names)); \
-		M(wrap_t, detail::Key::WrapT, GL_CLAMP_TO_EDGE, "Wrap (T)", wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
-
-#define PROP_SPRITESHEET(M) \
-		M(rows, detail::Key::Rows, 1, "Rows", 1, std::nullopt); \
-		M(cols, detail::Key::Columns, 1, "Columns", 1, std::nullopt); \
-		M(cell_width_override, detail::Key::CellWidthOverride, 0, "Cell Width Override", 0, std::nullopt); \
-		M(cell_height_override, detail::Key::CellHeightOverride, 0, "Cell Height Override", 0, std::nullopt); \
-		M(delay_cs, detail::Key::DelayCS, 0, "Delay (CS)", 0, std::nullopt); \
-		M(row_major, detail::Key::RowMajor, true, "Row Major"); \
-		M(row_up, detail::Key::RowUp, true, "Row Up");
-
-	void TextureDocument::Draw(TextureDesc& desc, const TextureDesc* disk)
+	void TextureDocument::Draw(TextureDesc& desc)
 	{
 		// TODO v7 combo box to select slot, buttons to create new, delete.
 		for (size_t i = 0; i < desc.array.size(); ++i)
-		{
-			Draw(desc.array[i], (disk && i < disk->array.size()) ? &disk->array[i] : nullptr);
-		}
+			Draw(desc.array[i]);
 	}
 	
-	void TextureDocument::Draw(TextureSlotDesc& desc, const TextureSlotDesc* disk)
+	void TextureDocument::Draw(TextureSlotDesc& desc)
 	{
 		if (DescIO::BeginForm(&desc))
 		{
-			std::visit([this, disk](auto& d) { Draw(d, disk ? std::get_if<std::decay_t<decltype(d)>>(&disk->variant) : nullptr); }, desc.variant);
+			std::visit([this](auto& d) { Draw(d); }, desc.variant);
 			DescIO::EndForm();
 		}
 	}
 	
-	void TextureDocument::Draw(RasterTextureDesc& desc, const RasterTextureDesc* disk)
+	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
-		Draw(desc.base, disk ? &disk->base : nullptr);
-		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_DRAW_PROP);
+		Draw(desc.base);
+		DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Draw(VectorTextureDesc& desc, const VectorTextureDesc* disk)
+	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
-		Draw(desc.base, disk ? &disk->base : nullptr);
-		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_DRAW_PROP);
+		Draw(desc.base);
+		DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Draw(BaseTextureDesc& desc, const BaseTextureDesc* disk)
+	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
-		static const GLenum min_filter_values[] = {
-			GL_NEAREST,
-			GL_LINEAR,
-			GL_NEAREST_MIPMAP_NEAREST,
-			GL_LINEAR_MIPMAP_NEAREST,
-			GL_NEAREST_MIPMAP_LINEAR,
-			GL_LINEAR_MIPMAP_LINEAR
-		};
-
-		static const char* min_filter_names[] = {
-			"Nearest",
-			"Linear",
-			"Nearest (Nearest Mipmap)",
-			"Linear (Nearest Mipmap)",
-			"Nearest (Linear Mipmap)",
-			"Linear (Linear Mipmap)"
-		};
-
-		static const GLenum mag_filter_values[] = {
-			GL_NEAREST,
-			GL_LINEAR,
-		};
-
-		static const char* mag_filter_names[] = {
-			"Nearest",
-			"Linear",
-		};
-
-		static const GLenum wrap_values[] = {
-			GL_CLAMP_TO_EDGE,
-			GL_CLAMP_TO_BORDER,
-			GL_MIRRORED_REPEAT,
-			GL_REPEAT,
-			GL_MIRROR_CLAMP_TO_EDGE
-		};
-
-		static const char* wrap_names[] = {
-			"Clamp To Edge",
-			"Clamp To Border",
-			"Repeat (Mirrored)",
-			"Repeat",
-			"Clamp To Edge (Mirrored)"
-		};
-
-		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_DRAW_PROP);
+		DRAW_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
 		ImGui::BeginDisabled(_gif);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Animated", anim);
+		DRAW_FIELD(anim);
 		ImGui::EndDisabled();
 
-		if (desc.anim)
-			Draw(desc.spritesheet, disk ? &disk->spritesheet : nullptr);
+		if (desc.anim.scratch)
+			Draw(desc.spritesheet);
 	}
 
-	void TextureDocument::Draw(SpritesheetDesc& desc, const SpritesheetDesc* disk)
+	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
-		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_DRAW_PROP);
+		DRAW_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
@@ -220,30 +148,30 @@ namespace oly::editor
 	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc)
 	{
 		Load(node, desc.base);
-		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_LOAD_PROP);
+		LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc)
 	{
 		Load(node, desc.base);
-		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_LOAD_PROP);
+		LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc)
 	{
-		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_LOAD_PROP);
+		LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
 		if (_gif)
-			desc.anim = true;
+			desc.anim.scratch = true;
 		else
-			OLY_EDITOR_DESC_IO_LOAD_PROP(anim, detail::Key::Animated, false);
+			LOAD_FIELD(anim);
 
 		Load(node, desc.spritesheet);
 	}
-	
+
 	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
 	{
-		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_LOAD_PROP);
+		LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
@@ -260,27 +188,25 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_DUMP_PROP);
+		DUMP_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, VectorTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_DUMP_PROP);
+		DUMP_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
 	{
-		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_DUMP_PROP);
-
-		OLY_EDITOR_DESC_IO_DUMP_PROP(anim, detail::Key::Animated);
-
-		if (desc.anim)
+		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		DUMP_FIELD(anim);
+		if (desc.anim.scratch)
 			Dump(table, desc.spritesheet);
 	}
 
 	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
 	{
-		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_DUMP_PROP);
+		DUMP_FIELDS(SPRITESHEET_GENERATOR);
 	}
 }

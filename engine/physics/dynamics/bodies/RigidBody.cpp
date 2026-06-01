@@ -9,7 +9,7 @@ namespace oly::physics
 			void operator()() const
 			{
 				// TODO v7 RigidBody should have a physics enabled bool member to be able to turn on/off collision.
-				auto& rigid_bodies = oly::internal::AutoRegistry<RigidBody>::instance().tracked();
+				auto& rigid_bodies = oly::internal::AutoRegistry<RigidBody>::instance().linked();
 				for (RigidBody* rigid_body : rigid_bodies)
 					rigid_body->physics_pre_tick();
 				for (RigidBody* rigid_body : rigid_bodies)

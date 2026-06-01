@@ -120,7 +120,7 @@ namespace oly::col2d
 
 	template<typename Result, typename EventData, typename Handler>
 	static void emit_from(const std::vector<CollisionTree>& trees, const Collider& from, Handler only_handler, CollisionController& only_controller,
-		Result(Collider::* method)(const Collider&) const, internal::CollisionPhaseTracker& phase_tracker)
+		Result(Collider::* method)(const Collider&) const, internal::CollisionPhaseLinker& phase_linker)
 	{
 		for (const CollisionTree& tree : trees)
 		{
@@ -128,8 +128,8 @@ namespace oly::col2d
 			while (!it.done())
 			{
 				const Collider* other = it.next();
-				EventData data((from.*method)(*other), from, *other, phase_tracker.prior_phase(from, *other));
-				phase_tracker.lazy_update_phase(from, *other, data.phase);
+				EventData data((from.*method)(*other), from, *other, phase_linker.prior_phase(from, *other));
+				phase_linker.lazy_update_phase(from, *other, data.phase);
 				if (data.phase != Phase::Expired)
 					(only_controller.*only_handler)(data);
 			}
@@ -139,37 +139,37 @@ namespace oly::col2d
 	void CollisionController::emit(const Collider& from, OverlapHandler only_handler)
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, *this, &Collider::overlaps, dispatcher.phase_tracker);
+		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, *this, &Collider::overlaps, dispatcher.phase_linker);
 	}
 
 	void CollisionController::emit(const Collider& from, OverlapConstHandler only_handler) const
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::overlaps, dispatcher.phase_tracker);
+		emit_from<OverlapResult, OverlapEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::overlaps, dispatcher.phase_linker);
 	}
 
 	void CollisionController::emit(const Collider& from, CollisionHandler only_handler)
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, *this, &Collider::collides, dispatcher.phase_tracker);
+		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, *this, &Collider::collides, dispatcher.phase_linker);
 	}
 
 	void CollisionController::emit(const Collider& from, CollisionConstHandler only_handler) const
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::collides, dispatcher.phase_tracker);
+		emit_from<CollisionResult, CollisionEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::collides, dispatcher.phase_linker);
 	}
 
 	void CollisionController::emit(const Collider& from, ContactHandler only_handler)
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, *this, &Collider::contacts, dispatcher.phase_tracker);
+		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, *this, &Collider::contacts, dispatcher.phase_linker);
 	}
 
 	void CollisionController::emit(const Collider& from, ContactConstHandler only_handler) const
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::contacts, dispatcher.phase_tracker);
+		emit_from<ContactResult, ContactEventData>(dispatcher.trees, from, only_handler, const_cast<CollisionController&>(*this), &Collider::contacts, dispatcher.phase_linker);
 	}
 
 }

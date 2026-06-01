@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/backend/specialized/UsageSlotTracker.h"
+#include "graphics/backend/specialized/UsageSlotLinker.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/Tags.h"
@@ -139,10 +139,10 @@ namespace oly::rendering
 					size_t operator()(const SizedTexture& t) const { return std::hash<graphics::BindlessTextureRef>{}(t.texture) ^ std::hash<glm::vec2>{}(t.dimensions); }
 				};
 
-				graphics::UsageSlotTracker<SizedTexture, GLushort, SizedTextureHash> textures;
-				graphics::UsageSlotTracker<math::UVRect, GLushort> tex_coords;
-				graphics::UsageSlotTracker<glm::vec4, GLushort> modulations;
-				graphics::UsageSlotTracker<graphics::AnimFrameFormat, GLushort, AnimHash> anims;
+				graphics::UsageSlotLinker<SizedTexture, GLushort, SizedTextureHash> textures;
+				graphics::UsageSlotLinker<math::UVRect, GLushort> tex_coords;
+				graphics::UsageSlotLinker<glm::vec4, GLushort> modulations;
+				graphics::UsageSlotLinker<graphics::AnimFrameFormat, GLushort, AnimHash> anims;
 
 				std::unordered_map<graphics::BindlessTextureRef, std::unordered_set<GLuint>> dimensionless_texture_slot_map;
 			} quad_info_store;

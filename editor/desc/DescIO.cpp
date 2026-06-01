@@ -102,24 +102,12 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, GLenum& data, const GLenum* disk, const GLenum* values, const char** names, size_t count)
+	bool DescIO::Draw(const char* label, int& data, const int* disk, const char** names, size_t count)
 	{
 		bool dirty = false;
-
-		int index = 0;
-		for (size_t i = 0; i < count; ++i)
-		{
-			if (values[i] == data)
-			{
-				index = i;
-				break;
-			}
-		}
-
 		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, names, count))
+		if (ImGui::Combo("", &data, names, count))
 			dirty = true;
-		data = values[index];
 		return FinishValue(dirty, data, disk);
 	}
 
@@ -152,45 +140,5 @@ namespace oly::editor
 			dirty = true;
 		data = static_cast<detail::SVGMipmapGenerationMode>(index);
 		return FinishValue(dirty, data, disk);
-	}
-
-	void DescIO::Load(TOMLNode node, bool& data, detail::Key key, bool def)
-	{
-		data = node[detail::encode_key(key)].value_or(def);
-	}
-
-	void DescIO::Load(TOMLNode node, int& data, detail::Key key, int def)
-	{
-		data = node[detail::encode_key(key)].value_or<int64_t>(def);
-	}
-
-	void DescIO::Load(TOMLNode node, float& data, detail::Key key, float def)
-	{
-		data = node[detail::encode_key(key)].value_or<double>(def);
-	}
-
-	void DescIO::Load(TOMLNode node, GLenum& data, detail::Key key, GLenum def)
-	{
-		data = node[detail::encode_key(key)].value_or<int64_t>(def);
-	}
-
-	void DescIO::Dump(toml::table& table, detail::Key key, bool data)
-	{
-		table.insert_or_assign(detail::encode_key(key), data);
-	}
-	
-	void DescIO::Dump(toml::table& table, detail::Key key, int data)
-	{
-		table.insert_or_assign(detail::encode_key(key), static_cast<int64_t>(data));
-	}
-	
-	void DescIO::Dump(toml::table& table, detail::Key key, float data)
-	{
-		table.insert_or_assign(detail::encode_key(key), data);
-	}
-	
-	void DescIO::Dump(toml::table& table, detail::Key key, GLenum data)
-	{
-		table.insert_or_assign(detail::encode_key(key), static_cast<int64_t>(data));
 	}
 }

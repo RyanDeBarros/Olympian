@@ -5,15 +5,15 @@
 
 namespace oly
 {
-	// This implementation of a free-space tracker is strict in the sense that reserved ranges must overlap exactly with free space, and released ranges must not overlap at all with free space.
+	// This implementation of a free-space linker is strict in the sense that reserved ranges must overlap exactly with free space, and released ranges must not overlap at all with free space.
 	template<std::integral T>
-	class StrictFreeSpaceTracker
+	class StrictFreeSpaceLinker
 	{
 		std::set<Range<T>, RangeComparator<T>> free_space;
 		Range<T> global;
 
 	public:
-		StrictFreeSpaceTracker(Range<T> free_space_range);
+		StrictFreeSpaceLinker(Range<T> free_space_range);
 
 		void reserve(Range<T> range);
 		void release(Range<T> range);
@@ -21,14 +21,14 @@ namespace oly
 	};
 
 	template<std::integral T>
-	inline StrictFreeSpaceTracker<T>::StrictFreeSpaceTracker(Range<T> free_space_range)
+	inline StrictFreeSpaceLinker<T>::StrictFreeSpaceLinker(Range<T> free_space_range)
 		: global(free_space_range)
 	{
 		free_space.insert(free_space_range);
 	}
 
 	template<std::integral T>
-	inline void StrictFreeSpaceTracker<T>::reserve(Range<T> range)
+	inline void StrictFreeSpaceLinker<T>::reserve(Range<T> range)
 	{
 		OLY_ASSERT(!free_space.empty());
 		if (range.length == 0)
@@ -72,7 +72,7 @@ namespace oly
 	}
 
 	template<std::integral T>
-	inline void StrictFreeSpaceTracker<T>::release(Range<T> range)
+	inline void StrictFreeSpaceLinker<T>::release(Range<T> range)
 	{
 		if (range.length == 0)
 			return;
@@ -146,7 +146,7 @@ namespace oly
 	}
 
 	template<std::integral T>
-	inline bool StrictFreeSpaceTracker<T>::next_free(T length, Range<T>& range)
+	inline bool StrictFreeSpaceLinker<T>::next_free(T length, Range<T>& range)
 	{
 		auto end = free_space.end();
 		for (auto iter = free_space.begin(); iter != end; ++iter)

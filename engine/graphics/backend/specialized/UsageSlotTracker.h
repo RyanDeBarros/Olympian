@@ -10,7 +10,7 @@
 namespace oly::graphics
 {
 	template<typename StoredObjectType, std::integral SlotType, typename StoredObjectTypeHash = std::hash<StoredObjectType>>
-	class UsageSlotTracker
+	class UsageSlotLinker
 	{
 		struct UsageHolder
 		{
@@ -42,7 +42,7 @@ namespace oly::graphics
 		}
 
 	public:
-		UsageSlotTracker() { pos_generator.gen(); /* waste 0th slot */ }
+		UsageSlotLinker() { pos_generator.gen(); /* waste 0th slot */ }
 
 		std::optional<StoredObjectType> decrement_usage(SlotType i)
 		{

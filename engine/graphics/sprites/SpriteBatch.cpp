@@ -10,7 +10,7 @@ namespace oly::rendering::internal
 	void update_texture_handle(const graphics::BindlessTextureRef& texture)
 	{
 		auto& batches = oly::internal::AutoRegistry<SpriteBatch>::instance();
-		for (SpriteBatch* batch : batches.tracked())
+		for (SpriteBatch* batch : batches.linked())
 			batch->update_texture_handle(texture);
 	}
 

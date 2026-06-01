@@ -11,8 +11,8 @@ namespace oly::editor
 {
 	class TextureDocument : public IDocument
 	{
+		TextureDesc _scratch;
 		TextureDesc _disk;
-		TextureDesc _desc;
 		bool _gif = false;
 		bool _svg = false;
 		detail::MetaMap _meta;
@@ -28,12 +28,12 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
-		void Draw(TextureDesc& desc, const TextureDesc* disk);
-		void Draw(TextureSlotDesc& desc, const TextureSlotDesc* disk);
-		void Draw(RasterTextureDesc& desc, const RasterTextureDesc* disk);
-		void Draw(VectorTextureDesc& desc, const VectorTextureDesc* disk);
-		void Draw(BaseTextureDesc& desc, const BaseTextureDesc* disk);
-		void Draw(SpritesheetDesc& desc, const SpritesheetDesc* disk);
+		void Draw(TextureDesc& desc);
+		void Draw(TextureSlotDesc& desc);
+		void Draw(RasterTextureDesc& desc);
+		void Draw(VectorTextureDesc& desc);
+		void Draw(BaseTextureDesc& desc);
+		void Draw(SpritesheetDesc& desc);
 
 		void Load(TOMLNode node, TextureDesc& desc);
 		void Load(TOMLNode node, TextureSlotDesc& desc);
