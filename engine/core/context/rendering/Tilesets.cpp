@@ -5,9 +5,9 @@
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
-#include "core/base/Definitions.h"
 
 #include "assets/MetaSplitter.h"
+#include "definitions/Enums.h"
 #include "definitions/Keys.h"
 
 namespace oly::context
@@ -50,7 +50,7 @@ namespace oly::context
 		auto toml = io::load_toml(file);
 		auto tileset = rendering::TileSetRef::load((TOMLNode)toml);
 
-		if (assets::Parser(toml).defaulted(detail::Key::Storage)(StorageMode::Discard) == StorageMode::Keep)
+		if (assets::Parser(toml).defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

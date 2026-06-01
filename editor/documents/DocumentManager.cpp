@@ -107,6 +107,7 @@ namespace oly::editor
 		else
 		{
 			AssetEditorPanel::Instance().FocusTab(doc.get());
+			doc->Init();
 			_documents.push_back(std::move(doc));
 		}
 	}

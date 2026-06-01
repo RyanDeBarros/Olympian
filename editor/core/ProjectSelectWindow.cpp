@@ -52,7 +52,9 @@ namespace oly::editor
         ImGui::BeginGroup();
         ImGui::Text("Open Existing Project");
 
-        if (ImGui::InputText("Project Folder", _project_folder.data(), _project_folder.size()))
+        ImGui::Text("Project Folder");
+        ImGui::SameLine();
+        if (ImGui::InputText("##ProjectFolder", _project_folder.data(), _project_folder.size()))
             CheckProjectFolder();
 
         ImGui::SameLine();

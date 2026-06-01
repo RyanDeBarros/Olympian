@@ -52,6 +52,7 @@ namespace oly::detail
 		}
 
 		ResourcePath get_import_path() const;
+		ResourcePath get_source_path() const;
 		bool is_import_path() const;
 		bool exists() const;
 		bool is_file() const;

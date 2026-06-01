@@ -34,6 +34,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw)
 
 
+# ====================
+#        GLEW
+# ====================
+
+FetchContent_Declare(
+    glew
+    GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
+    GIT_TAG        glew-cmake-2.2.0
+)
+
+FetchContent_MakeAvailable(glew)
+
+
 # -------------------------
 #          ImGui
 # -------------------------
@@ -102,6 +115,23 @@ target_link_libraries(imgui_backend PUBLIC
 
 
 # ====================
+#         GLM
+# ====================
+
+set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLM_BUILD_LIBRARY OFF CACHE BOOL "" FORCE)
+set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG	       1.0.1
+)
+
+FetchContent_MakeAvailable(glm)
+
+
+# ====================
 #        TOML++
 # ====================
 
@@ -135,6 +165,8 @@ target_link_libraries(OlympianEditor PRIVATE
     imgui
     imgui_backend
     imgui_file_dialog
+    glm::glm
+	libglew_static
     tomlplusplus::tomlplusplus
 )
 
@@ -144,5 +176,6 @@ target_include_directories(OlympianEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add subdirectories
 add_subdirectory(core)
+add_subdirectory(desc)
 add_subdirectory(documents)
 add_subdirectory(panels)

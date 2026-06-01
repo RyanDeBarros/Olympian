@@ -9,6 +9,8 @@
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
 
+#include "definitions/Enums.h"
+
 namespace oly::graphics
 {
 	Texture::Texture()
@@ -264,6 +266,7 @@ namespace oly::graphics
 			options.cols = (GLuint)idim.w;
 		else if (options.cols == 0)
 			options.cols = 1;
+
 		if (options.cell_width_override == 0)
 			options.cell_width_override = (int)(idim.w / options.cols);
 		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
@@ -273,6 +276,7 @@ namespace oly::graphics
 			options.rows = (GLuint)idim.h;
 		else if (options.rows == 0)
 			options.rows = 1;
+		
 		if (options.cell_height_override == 0)
 			options.cell_height_override = (int)(idim.h / options.rows);
 		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
@@ -288,11 +292,13 @@ namespace oly::graphics
 		GLuint minor_height = options.cell_height_override;
 		GLuint major_height = minor_height * options.rows;
 		GLuint minor_area = minor_stride * minor_height;
+
 		_buf = new unsigned char[major_stride * major_height];
 		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
 			for (GLuint r = 0; r < minor_height; ++r)
 				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
-			};
+		};
+
 		GLuint k = 0;
 		if (options.row_major)
 		{
@@ -480,21 +486,21 @@ namespace oly::graphics
 		delete[] temp;
 	}
 
-	Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
+	Texture load_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
 	{
-		if (generate_mipmaps == SVGMipmapGenerationMode::Manual && !abstract)
-			generate_mipmaps = SVGMipmapGenerationMode::Auto;
+		if (generate_mipmaps == detail::SVGMipmapGenerationMode::Manual && !abstract)
+			generate_mipmaps = detail::SVGMipmapGenerationMode::Auto;
 
 		Texture texture(GL_TEXTURE_2D);
 		switch (generate_mipmaps)
 		{
-		case oly::graphics::SVGMipmapGenerationMode::Auto:
+		case detail::SVGMipmapGenerationMode::Auto:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), true);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::Off:
+		case detail::SVGMipmapGenerationMode::Off:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), false);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::Manual:
+		case detail::SVGMipmapGenerationMode::Manual:
 		{
 			const ImageDimensions dim = image.image->dim();
 			const GLsizei levels = tex::mipmap_levels(dim.w, dim.h);

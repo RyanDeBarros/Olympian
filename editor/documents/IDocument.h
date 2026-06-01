@@ -18,9 +18,11 @@ namespace oly::editor
 		IDocument(detail::ResourcePath&& oly_path);
 		virtual ~IDocument() = default;
 
+		virtual void Init() = 0;
 		virtual void Draw() = 0;
 
 		const detail::ResourcePath& GetOlyPath() const;
+
 		void MarkDirty();
 		void MarkClean();
 		bool IsDirty() const;

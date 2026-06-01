@@ -161,7 +161,7 @@ namespace oly::graphics
 	typedef SmartReference<Image> ImageRef;
 
 	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
-	
+
 	inline Texture load_texture_2d(const detail::ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
 	{
 		Image image(file);
@@ -178,7 +178,7 @@ namespace oly::graphics
 	{
 		return BindlessTexture(load_texture_2d(file, dim, generate_mipmaps));
 	}
-	
+
 	inline float anim_delay_epsilon = 1.0f;
 	struct AnimDimensions
 	{
@@ -245,12 +245,12 @@ namespace oly::graphics
 		dim = anim.dim();
 		return texture;
 	}
-	
+
 	inline BindlessTexture load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(anim, generate_mipmaps));
 	}
-	
+
 	inline BindlessTexture load_bindless_texture_2d_array(const detail::ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(file, dim, options, generate_mipmaps));
@@ -310,17 +310,18 @@ namespace oly::graphics
 		ImageRef image;
 		float scale = 1.0f;
 	};
+}
 
-	enum class SVGMipmapGenerationMode
-	{
-		Auto,
-		Off,
-		Manual
-	};
+namespace oly::detail
+{
+	enum class SVGMipmapGenerationMode : int;
+}
 
-	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr);
+namespace oly::graphics
+{
+	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr);
 	
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr)
+	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr)
 	{
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}

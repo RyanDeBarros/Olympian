@@ -51,6 +51,18 @@ namespace oly::detail
 		}
 	}
 
+	ResourcePath ResourcePath::get_source_path() const
+	{
+		if (is_import_path())
+		{
+			ResourcePath p = *this;
+			p.absolute.replace_extension();
+			return p;
+		}
+		else
+			return *this;
+	}
+
 	bool ResourcePath::is_import_path() const
 	{
 		return extension_matches(OLY_EXT);
@@ -108,10 +120,9 @@ namespace oly::detail
 
 	std::string ResourcePath::tabname() const
 	{
-		std::string name = absolute.filename().generic_string();
 		if (is_import_path())
-			return name.substr(0, name.size() - strlen(OLY_EXT));
+			return absolute.filename().replace_extension().generic_string();
 		else
-			return name;
+			return absolute.filename().generic_string();
 	}
 }

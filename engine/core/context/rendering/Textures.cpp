@@ -6,9 +6,9 @@
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
-#include "core/base/Definitions.h"
 
 #include "assets/MetaSplitter.h"
+#include "definitions/Enums.h"
 #include "definitions/Keys.h"
 
 namespace oly::context
@@ -94,8 +94,8 @@ namespace oly::context
 	static graphics::BindlessTextureRef load_svg(const graphics::NSVGAbstract& abstract, const graphics::VectorImageRef& image, const assets::Parser& parser, bool set_and_use)
 	{
 		graphics::BindlessTextureRef texture;
-		graphics::SVGMipmapGenerationMode mipmaps_mode = parser.defaulted(detail::Key::GenerateMipmaps)(graphics::SVGMipmapGenerationMode::Off);
-		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == graphics::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
+		auto mipmaps_mode = parser.defaulted(detail::Key::GenerateMipmaps)(detail::SVGMipmapGenerationMode::Off);
+		texture = graphics::BindlessTextureRef(graphics::load_bindless_nsvg_texture_2d(image, mipmaps_mode, mipmaps_mode == detail::SVGMipmapGenerationMode::Manual ? &abstract : nullptr));
 		setup_texture(*texture, parser, set_and_use);
 		return texture;
 	}
@@ -132,7 +132,7 @@ namespace oly::context
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return parser.defaulted(storage_key)(StorageMode::Discard) == StorageMode::Keep;
+			return parser.defaulted(storage_key)(detail::StorageMode::Discard) == detail::StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(const assets::Parser& parser)

@@ -9,6 +9,9 @@ namespace oly::editor
 	public:
 		using IDocument::IDocument;
 
+		void Init() override;
 		void Draw() override;
+
+		detail::ResourcePath GetSourcePath() const;
 	};
 }
