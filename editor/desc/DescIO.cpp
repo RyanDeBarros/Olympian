@@ -7,7 +7,6 @@
 namespace oly::editor
 {
 	// TODO v7 on hover tooltip
-	// TODO v7 revert buttons
 
 	static void PrepareValue(const char* label, void* data)
 	{
@@ -18,9 +17,28 @@ namespace oly::editor
 		ImGui::PushID(data);
 	}
 
-	static void FinishValue()
+	template<typename T>
+	static bool DrawRevertButton(T& desc, const T& disk)
 	{
+		bool dirty = false;
+		ImGui::SameLine();
+		ImGui::PushID(&disk);
+		if (ImGui::ArrowButton("", ImGuiDir_Left))
+		{
+			desc = disk;
+			dirty = true;
+		}
 		ImGui::PopID();
+		return dirty;
+	}
+
+	template<typename T>
+	static bool FinishValue(bool dirty, T& desc, const T* disk)
+	{
+		if (disk && desc != *disk)
+			dirty |= DrawRevertButton(desc, *disk);
+		ImGui::PopID();
+		return dirty;
 	}
 
 	bool DescIO::BeginForm(void* id)
@@ -45,17 +63,16 @@ namespace oly::editor
 		ImGui::PopID();
 	}
 
-	bool DescIO::Draw(const char* label, bool& data)
+	bool DescIO::Draw(const char* label, bool& data, const bool* disk)
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
 		if (ImGui::Checkbox("", &data))
 			dirty = true;
-		FinishValue();
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, int& data, std::optional<int> min, std::optional<int> max)
+	bool DescIO::Draw(const char* label, int& data, const int* disk, std::optional<int> min, std::optional<int> max)
 	{
 		bool dirty = false;
 		const int og = data;
@@ -68,11 +85,10 @@ namespace oly::editor
 				data = std::max(data, *min);
 			dirty = data != og;
 		}
-		FinishValue();
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, float& data, std::optional<float> min, std::optional<float> max)
+	bool DescIO::Draw(const char* label, float& data, const float* disk, std::optional<float> min, std::optional<float> max)
 	{
 		bool dirty = false;
 		const float og = data;
@@ -85,11 +101,10 @@ namespace oly::editor
 				data = std::max(data, *min);
 			dirty = data != og;
 		}
-		FinishValue();
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, GLenum& data, const GLenum* values, const char** names, size_t count)
+	bool DescIO::Draw(const char* label, GLenum& data, const GLenum* disk, const GLenum* values, const char** names, size_t count)
 	{
 		bool dirty = false;
 
@@ -106,13 +121,11 @@ namespace oly::editor
 		PrepareValue(label, &data);
 		if (ImGui::Combo("", &index, names, count))
 			dirty = true;
-		FinishValue();
-
 		data = values[index];
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, detail::StorageMode& data)
+	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
 	{
 		bool dirty = false;
 		static const char* values[] = {
@@ -123,12 +136,11 @@ namespace oly::editor
 		PrepareValue(label, &data);
 		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
 			dirty = true;
-		FinishValue();
 		data = static_cast<detail::StorageMode>(index);
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data)
+	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
 	{
 		bool dirty = false;
 		static const char* values[] = {
@@ -140,9 +152,8 @@ namespace oly::editor
 		PrepareValue(label, &data);
 		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
 			dirty = true;
-		FinishValue();
 		data = static_cast<detail::SVGMipmapGenerationMode>(index);
-		return dirty;
+		return FinishValue(dirty, data, disk);
 	}
 
 	void DescIO::Load(TOMLNode node, bool& data, detail::Key key, bool def)

@@ -20,7 +20,7 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		Draw(_desc);
+		Draw(_desc, &_disk);
 	}
 
 	void TextureDocument::Load()
@@ -32,7 +32,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc);
+				Load(TOMLNode(table), _disk);
 			else
 			{
 				// TODO v7 log error - corrupted asset
@@ -40,13 +40,14 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc);
+			Load(TOMLNode(), _disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
 			_meta.map[detail::Key::Meta_Import] = "1";
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Texture);
 		}
+		_desc = _disk;
 	}
 
 	void TextureDocument::Dump()
@@ -54,6 +55,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc);
 		_oly_path.dump_toml(table, _meta);
+		_disk = _desc;
 		MarkClean();
 	}
 
@@ -62,51 +64,43 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	void TextureDocument::Draw(TextureDesc& desc)
+	void TextureDocument::Draw(TextureDesc& desc, const TextureDesc* disk)
 	{
 		// TODO v7 combo box to select slot, buttons to create new, delete.
-		for (TextureSlotDesc& d : desc.array)
-			Draw(d);
+		for (size_t i = 0; i < desc.array.size(); ++i)
+		{
+			Draw(desc.array[i], (disk && i < disk->array.size()) ? &disk->array[i] : nullptr);
+		}
 	}
 	
-	void TextureDocument::Draw(TextureSlotDesc& desc)
+	void TextureDocument::Draw(TextureSlotDesc& desc, const TextureSlotDesc* disk)
 	{
 		if (DescIO::BeginForm(&desc))
 		{
-			std::visit([this](auto& d) { Draw(d); }, desc.variant);
+			std::visit([this, disk](auto& d) { Draw(d, disk ? std::get_if<std::decay_t<decltype(d)>>(&disk->variant) : nullptr); }, desc.variant);
 			DescIO::EndForm();
 		}
 	}
 	
-	void TextureDocument::Draw(RasterTextureDesc& desc)
+	void TextureDocument::Draw(RasterTextureDesc& desc, const RasterTextureDesc* disk)
 	{
-		Draw(desc.base);
+		Draw(desc.base, disk ? &disk->base : nullptr);
 
-		if (DescIO::Draw("Storage", desc.storage))
-			MarkDirty();
-
-		if (DescIO::Draw("Generate Mipmaps", desc.generate_mipmaps))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Storage", storage);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Generate Mipmaps", generate_mipmaps);
 	}
 	
-	void TextureDocument::Draw(VectorTextureDesc& desc)
+	void TextureDocument::Draw(VectorTextureDesc& desc, const VectorTextureDesc* disk)
 	{
-		Draw(desc.base);
+		Draw(desc.base, disk ? &disk->base : nullptr);
 
-		if (DescIO::Draw("Vector Scale", desc.scale, 0.f, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Image Storage", desc.image_storage))
-			MarkDirty();
-
-		if (DescIO::Draw("Abstract Storage", desc.abstract_storage))
-			MarkDirty();
-
-		if (DescIO::Draw("Generate Mipmaps", desc.generate_mipmaps))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Vector Scale", scale, 0.f, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Image Storage", image_storage);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Abstract Storage", abstract_storage);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Generate Mipmaps", generate_mipmaps);
 	}
 	
-	void TextureDocument::Draw(BaseTextureDesc& desc)
+	void TextureDocument::Draw(BaseTextureDesc& desc, const BaseTextureDesc* disk)
 	{
 		static const GLenum min_filter_values[] = {
 			GL_NEAREST,
@@ -126,8 +120,7 @@ namespace oly::editor
 			"Linear (Linear Mipmap)"
 		};
 
-		if (DescIO::Draw("Min Filter", desc.min_filter, min_filter_values, min_filter_names, IM_ARRAYSIZE(min_filter_names)))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Min Filter", min_filter, min_filter_values, min_filter_names, IM_ARRAYSIZE(min_filter_names));
 
 		static const GLenum mag_filter_values[] = {
 			GL_NEAREST,
@@ -139,8 +132,7 @@ namespace oly::editor
 			"Linear",
 		};
 
-		if (DescIO::Draw("Mag Filter", desc.mag_filter, mag_filter_values, mag_filter_names, IM_ARRAYSIZE(mag_filter_names)))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Mag Filter", mag_filter, mag_filter_values, mag_filter_names, IM_ARRAYSIZE(mag_filter_names));
 
 		static const GLenum wrap_values[] = {
 			GL_CLAMP_TO_EDGE,
@@ -158,43 +150,26 @@ namespace oly::editor
 			"Clamp To Edge (Mirrored)"
 		};
 
-		if (DescIO::Draw("Wrap (S)", desc.wrap_s, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names)))
-			MarkDirty();
-
-		if (DescIO::Draw("Wrap (T)", desc.wrap_t, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names)))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Wrap (S)", wrap_s, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Wrap (T)", wrap_t, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
 
 		ImGui::BeginDisabled(_gif);
-		if (DescIO::Draw("Animated", desc.anim))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Animated", anim);
 		ImGui::EndDisabled();
 
 		if (desc.anim)
-			Draw(desc.spritesheet);
+			Draw(desc.spritesheet, disk ? &disk->spritesheet : nullptr);
 	}
 	
-	void TextureDocument::Draw(SpritesheetDesc& desc)
+	void TextureDocument::Draw(SpritesheetDesc& desc, const SpritesheetDesc* disk)
 	{
-		if (DescIO::Draw("Rows", desc.rows, 1, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Columns", desc.cols, 1, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Cell Width Override", desc.cell_width_override, 0, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Cell Height Override", desc.cell_height_override, 0, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Delay (CS)", desc.delay_cs, 0, std::nullopt))
-			MarkDirty();
-
-		if (DescIO::Draw("Row Major", desc.row_major))
-			MarkDirty();
-
-		if (DescIO::Draw("Row Up", desc.row_up))
-			MarkDirty();
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Rows", rows, 1, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Columns", cols, 1, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Cell Width Override", cell_width_override, 0, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Cell Height Override", cell_height_override, 0, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Delay (CS)", delay_cs, 0, std::nullopt);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Row Major", row_major);
+		OLY_EDITOR_DESC_IO_DRAW_FIELD("Row Up", row_up);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
