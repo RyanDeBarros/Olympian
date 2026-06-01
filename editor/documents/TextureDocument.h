@@ -6,7 +6,9 @@ namespace oly::editor
 {
 	class TextureDocument : public IDocument
 	{
-		std::string GetTitle() const override;
+	public:
+		using IDocument::IDocument;
+
 		void Draw() override;
 	};
 }

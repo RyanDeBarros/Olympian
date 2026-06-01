@@ -32,6 +32,8 @@ namespace oly::editor
 		size_t DocumentCount() const;
 		const IDocument& GetDocument(size_t i) const;
 		IDocument& GetDocument(size_t i);
+		size_t GetDocumentIndex(const detail::ResourcePath& oly_path) const;
+		bool DocumentExists(const detail::ResourcePath& oly_path) const;
 
 		template<typename T, typename... Args>
 		void Add(Args&&... args)
@@ -42,5 +44,6 @@ namespace oly::editor
 		void Add(std::unique_ptr<IDocument>&& doc);
 		void Remove(IDocument& document);
 		void Remove(size_t i);
+		void Remove(const detail::ResourcePath& oly_path);
 	};
 }

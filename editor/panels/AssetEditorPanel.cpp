@@ -2,11 +2,26 @@
 
 #include <imgui.h>
 
+#include "core/MainWindow.h"
+#include "panels/PanelManager.h"
+
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
 namespace oly::editor
 {
+	AssetEditorPanel& AssetEditorPanel::Instance()
+	{
+		auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>();
+		if (panel)
+			return *panel;
+		else
+		{
+			// TODO v7 error system for editor that prevents crashes. use new error codes
+			throw std::runtime_error("No instance of AssetEditorPanel");
+		}
+	}
+
 	const char* AssetEditorPanel::GetTitle() const
 	{
 		return "Asset Editor";
@@ -34,7 +49,11 @@ namespace oly::editor
 				if (doc.IsDirty())
 					tab_item_flags |= ImGuiTabItemFlags_UnsavedDocument;
 
-				if (ImGui::BeginTabItem(doc.GetTitle().c_str(), &open, tab_item_flags))
+				if (_focused_tab == &doc)
+					tab_item_flags |= ImGuiTabItemFlags_SetSelected;
+
+				std::string tabname = doc.GetOlyPath().tabname();
+				if (ImGui::BeginTabItem((tabname + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
 				{
 					doc.Draw();
 					ImGui::EndTabItem();
@@ -47,9 +66,15 @@ namespace oly::editor
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
 				DocumentManager::Instance().Remove(*it);
 
+			_focused_tab = nullptr;
 			ImGui::EndTabBar();
 		}
 
 		ImGui::End();
+	}
+
+	void AssetEditorPanel::FocusTab(IDocument* doc)
+	{
+		_focused_tab = doc;
 	}
 }

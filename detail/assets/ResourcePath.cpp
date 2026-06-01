@@ -2,6 +2,7 @@
 
 namespace oly::detail
 {
+	static const char* OLY_EXT = ".oly";
 	std::filesystem::path ResourcePath::resource_root;
 
 	ResourcePath::ResourcePath()
@@ -45,14 +46,14 @@ namespace oly::detail
 		else
 		{
 			ResourcePath p = *this;
-			p.absolute += ".oly";
+			p.absolute += OLY_EXT;
 			return p;
 		}
 	}
 
 	bool ResourcePath::is_import_path() const
 	{
-		return extension_matches(".oly");
+		return extension_matches(OLY_EXT);
 	}
 
 	bool ResourcePath::exists() const
@@ -103,5 +104,14 @@ namespace oly::detail
 	bool ResourcePath::is_relative_to(const ResourcePath& base) const
 	{
 		return path_is_relative_to(absolute, base.absolute);
+	}
+
+	std::string ResourcePath::tabname() const
+	{
+		std::string name = absolute.filename().generic_string();
+		if (is_import_path())
+			return name.substr(0, name.size() - strlen(OLY_EXT));
+		else
+			return name;
 	}
 }

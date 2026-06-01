@@ -3,6 +3,7 @@
 #include "documents/IDocument.h"
 
 #include "core/MainWindow.h"
+#include "panels/AssetEditorPanel.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
@@ -39,10 +40,10 @@ namespace oly::editor
 			switch (type)
 			{
 			case detail::Key::Meta_Font:
-				Add<FontDocument>();
+				Add<FontDocument>(std::move(oly_file));
 				break;
 			case detail::Key::Meta_Texture:
-				Add<TextureDocument>();
+				Add<TextureDocument>(std::move(oly_file));
 				break;
 			default:
 				return OpenAssetCode::BadMeta;
@@ -55,9 +56,9 @@ namespace oly::editor
 				ext[i] = tolower(ext[i]);
 
 			if (ext == ".ttf" || ext == ".otf")
-				Add<FontDocument>();
+				Add<FontDocument>(std::move(oly_file));
 			else if (ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".svg")
-				Add<TextureDocument>();
+				Add<TextureDocument>(std::move(oly_file));
 			else
 				return OpenAssetCode::UnsupportedExtension;
 		}
@@ -82,9 +83,32 @@ namespace oly::editor
 		return *_documents[i];
 	}
 
+	size_t DocumentManager::GetDocumentIndex(const detail::ResourcePath& oly_path) const
+	{
+		for (size_t i = 0; i < _documents.size(); ++i)
+		{
+			if (_documents[i]->GetOlyPath() == oly_path)
+				return i;
+		}
+
+		return _documents.size();
+	}
+
+	bool DocumentManager::DocumentExists(const detail::ResourcePath& oly_path) const
+	{
+		return GetDocumentIndex(oly_path) < _documents.size();
+	}
+
 	void DocumentManager::Add(std::unique_ptr<IDocument>&& doc)
 	{
-		_documents.push_back(std::move(doc));
+		size_t idx = GetDocumentIndex(doc->GetOlyPath());
+		if (idx < _documents.size())
+			AssetEditorPanel::Instance().FocusTab(_documents[idx].get());
+		else
+		{
+			AssetEditorPanel::Instance().FocusTab(doc.get());
+			_documents.push_back(std::move(doc));
+		}
 	}
 
 	void DocumentManager::Remove(IDocument& document)
@@ -102,5 +126,17 @@ namespace oly::editor
 	void DocumentManager::Remove(size_t i)
 	{
 		_documents.erase(_documents.begin() + i);
+	}
+
+	void DocumentManager::Remove(const detail::ResourcePath& oly_path)
+	{
+		for (auto it = _documents.begin(); it != _documents.end(); ++it)
+		{
+			if ((*it)->GetOlyPath() == oly_path)
+			{
+				_documents.erase(it);
+				break;
+			}
+		}
 	}
 }

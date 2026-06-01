@@ -12,10 +12,6 @@
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
-// TODO v7 remove
-#include "documents/TextureDocument.h"
-#include "documents/FontDocument.h"
-
 namespace oly::editor
 {
     MainWindow::MainWindow()
@@ -52,11 +48,6 @@ namespace oly::editor
         tree.root.second = &content_browser;
 
         tree.SetupLayout(_dockspace_id, *_panel_manager);
-
-
-        // TODO v7 remove
-        _document_manager->Add<TextureDocument>();
-        _document_manager->Add<FontDocument>();
     }
 
     void MainWindow::Open()
