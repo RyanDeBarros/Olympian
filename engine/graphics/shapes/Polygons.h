@@ -2,7 +2,7 @@
 
 #include "core/base/Constants.h"
 #include "core/cmath/ColoredGeometry.h"
-#include "core/containers/FreeSpaceLinker.h"
+#include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
 #include "core/types/Issuer.h"
 #include "core/util/DebugTrace.h"
@@ -69,7 +69,7 @@ namespace oly::rendering
 			Range<GLuint> get_vertex_range(GLuint id) const;
 			bool is_valid_id(GLuint id) const;
 
-			StrictFreeSpaceLinker<GLuint> vertex_free_space;
+			StrictFreeSpaceTracker<GLuint> vertex_free_space;
 			std::unordered_map<GLuint, Range<GLuint>> polygon_indexer;
 			SoftIDGenerator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);

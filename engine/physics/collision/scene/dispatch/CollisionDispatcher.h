@@ -104,7 +104,7 @@ namespace oly::col2d
 
 	namespace internal
 	{
-		class CollisionPhaseLinker
+		class CollisionPhaseTracker
 		{
 			SymmetricRefMap<Collider, Phase> map;
 			SymmetricRefMap<Collider, Phase>::MapType lazy_updates;
@@ -283,7 +283,7 @@ namespace oly::col2d
 #undef CONTROLLER_LUT
 
 		std::vector<CollisionTree> trees;
-		mutable internal::CollisionPhaseLinker phase_linker;
+		mutable internal::CollisionPhaseTracker phase_tracker;
 		mutable internal::CollisionCache collision_cache;
 
 		CollisionDispatcher() : ITickService(TickPhase::Collision, TerminatePhase::Logic) {}
