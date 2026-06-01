@@ -27,7 +27,6 @@ FetchContent_MakeAvailable(tomlplusplus)
 #     Build Detail
 # ====================
 
-# TODO v7 does TOML++ allow static?
 add_library(OlympianDetail STATIC)
 
 if (MSVC)

@@ -10,7 +10,6 @@ namespace oly::detail
 	class ResourcePath;
 	enum class Key : unsigned long long;
 
-	// TODO v7 use keys
 	struct MetaMap
 	{
 		std::unordered_map<Key, std::string> map;

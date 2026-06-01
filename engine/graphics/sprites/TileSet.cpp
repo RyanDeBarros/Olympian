@@ -797,7 +797,7 @@ namespace oly::rendering
 					{
 						assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
 
-						// TODO v7 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
+						// TODO v8 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
 						if (auto transformation = tr_parser.optional<Transformation>(assets::NO_KEY)())
 							assignment.transformation &= *transformation;
 

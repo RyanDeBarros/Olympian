@@ -12,7 +12,7 @@ endif()
 #      Variables
 # ====================
 
-# TODO v10 this won't be the case for ENGINE_DIR when building project separately.
+# TODO v8 this won't be the case for ENGINE_DIR when building project separately.
 set(ENGINE_DIR ${CMAKE_SOURCE_DIR})
 set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -24,7 +24,7 @@ set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 add_executable (OlympianTester)
 
 # Project context macros
-# TODO v10 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
+# TODO v8 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
 target_compile_definitions(OlympianTester PUBLIC
 	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/Tester.oly"
 	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_DIR}/res/"

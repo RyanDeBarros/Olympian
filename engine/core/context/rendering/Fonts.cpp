@@ -11,7 +11,7 @@
 #include "definitions/Keys.h"
 #include "definitions/enums/StorageMode.h"
 
-// TODO v7 put actual loading logic in load/overload methods
+// TODO v8 put actual loading logic in load/overload methods
 
 namespace oly::context
 {
@@ -104,7 +104,7 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
-		// TODO v7 abstract away the error handling on meta.has_type()
+		// TODO v8 abstract away the error handling on meta.has_type()
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
@@ -149,8 +149,6 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(import_file);
-
-		// TODO v7 associate certain keys with certain data types to automatically call the correct outer io parse function
 
 		const auto font_atlas_list = assets::Parser(toml).required<TOMLArray>(detail::Key::FontAtlasArray, assets::make_single_validator<TOMLArray>(
 			[index](const TOMLArray arr) { return index < arr->size(); },
@@ -201,7 +199,7 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
-		// TODO v7 add Trace log level for stuff like this, that is lower than Debug
+		// TODO v8 add Trace log level for stuff like this, that is lower than Debug
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
 
 		return font_atlas;

@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-# TODO v7 codegen for meta fields, specifically asset types
 
 MAX_CHARS = 8
 

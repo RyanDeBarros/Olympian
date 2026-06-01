@@ -6,8 +6,6 @@
 
 namespace oly::detail
 {
-	// TODO v7 switch signatures of decode/encode
-
 	std::string encode_key(Key key)
 	{
 		const auto value = static_cast<unsigned long long>(key);

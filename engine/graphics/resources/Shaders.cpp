@@ -12,8 +12,8 @@ namespace oly::graphics::internal_shaders
 	// TODO v9 embed shaders into built binary - or at least copy shaders to project folder under '.detail' subfolder or something
 	static std::string shaders_dir = OLYMPIAN_ENGINE_ABS_PATH + std::string("/internal/shaders/");
 
-	// TODO v10 GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
-	// TODO v11 separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
+	// TODO v12 GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
+	// TODO v12 separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
 
 	// --------------------------------------------------------------------------------------------------------------------------------
 

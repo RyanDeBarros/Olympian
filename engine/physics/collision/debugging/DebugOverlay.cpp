@@ -222,7 +222,7 @@ namespace oly::debug
 		return scale;
 	}
 
-	// TODO v9 repaint in separate thread?
+	// TODO v10 repaint in separate thread?
 	void DebugOverlay::repaint() const
 	{
 		auto sprite_batch = sprite.get_batch();
