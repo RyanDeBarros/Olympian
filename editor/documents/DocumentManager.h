@@ -1,12 +1,22 @@
 #pragma once
 
-#include <filesystem>
 #include <memory>
 #include <vector>
+
+#include "assets/ResourcePath.h"
 
 namespace oly::editor
 {
 	class IDocument;
+
+	enum class OpenAssetCode
+	{
+		Success = 0,
+		NotResource,
+		BadMeta,
+		UnsupportedExtension,
+		DoesNotExist
+	};
 
 	class DocumentManager
 	{
@@ -17,7 +27,7 @@ namespace oly::editor
 
 		void Draw();
 
-		void OpenAsset(const std::filesystem::path& path);
+		OpenAssetCode OpenAsset(const detail::ResourcePath& path);
 
 		size_t DocumentCount() const;
 		const IDocument& GetDocument(size_t i) const;

@@ -64,8 +64,6 @@ namespace oly::editor
             config.flags = ImGuiFileDialogFlags_Modal;
 
             ImGuiFileDialog::Instance()->OpenDialog(OPEN_FOLDER, "Select Folder", nullptr, config);
-
-            // TODO v7 dialog
         }
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);

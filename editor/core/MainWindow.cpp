@@ -14,7 +14,7 @@
 
 // TODO v7 remove
 #include "documents/TextureDocument.h"
-#include "documents/SpriteDocument.h"
+#include "documents/FontDocument.h"
 
 namespace oly::editor
 {
@@ -56,7 +56,7 @@ namespace oly::editor
 
         // TODO v7 remove
         _document_manager->Add<TextureDocument>();
-        _document_manager->Add<SpriteDocument>();
+        _document_manager->Add<FontDocument>();
     }
 
     void MainWindow::Open()
@@ -96,6 +96,7 @@ namespace oly::editor
 
         ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
         _panel_manager->Draw();
+        DrawNotifications();
         ImGui::End();
     }
 
@@ -112,5 +113,35 @@ namespace oly::editor
     MainMenuBar& MainWindow::GetMainMenuBar()
     {
         return *_main_menu_bar;
+    }
+
+    void MainWindow::PushNotification(Notification&& notif)
+    {
+        _notifications.push_back(std::move(notif));
+    }
+
+    void MainWindow::DrawNotifications()
+    {
+        for (size_t i = 0; i < _notifications.size(); ++i)
+        {
+            Notification& notif = _notifications[i];
+
+            float alpha = std::clamp(1.f - notif.age / notif.timer, 0.f, 1.f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+            ImGuiWindowFlags flags =
+                ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoInputs;
+
+            ImGui::Begin(("##notif" + std::to_string(i)).c_str(), nullptr, flags);
+            ImGui::TextUnformatted(notif.message.c_str());
+            ImGui::End();
+            ImGui::PopStyleVar();
+
+            notif.age += ImGui::GetIO().DeltaTime;
+        }
+        
+        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const Notification& notif) { return notif.age >= notif.timer; });
+        _notifications.erase(it, _notifications.end());
     }
 }

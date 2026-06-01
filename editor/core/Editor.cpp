@@ -105,6 +105,29 @@ namespace oly::editor
 
 	void Editor::OpenFile(const std::filesystem::path& path)
 	{
-		DocumentManager::Instance().OpenAsset(path);
+		OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
+		if (code == OpenAssetCode::Success)
+			return;
+
+		Notification notif;
+
+		notif.message = "cannot open " + path.generic_string() + ": ";
+		switch (code)
+		{
+		case OpenAssetCode::NotResource:
+			notif.message += "asset does not exist in resource folder";
+			break;
+		case OpenAssetCode::BadMeta:
+			notif.message += "asset has corrupted meta-data";
+			break;
+		case OpenAssetCode::UnsupportedExtension:
+			notif.message += "asset has unsupported file extension";
+			break;
+		case OpenAssetCode::DoesNotExist:
+			notif.message += "file does not exist";
+			break;
+		}
+
+		_main_window->PushNotification(std::move(notif));
 	}
 }

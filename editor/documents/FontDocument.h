@@ -4,7 +4,7 @@
 
 namespace oly::editor
 {
-	class SpriteDocument : public IDocument
+	class FontDocument : public IDocument
 	{
 		std::string GetTitle() const override;
 		void Draw() override;

@@ -1,6 +1,6 @@
 target_sources(OlympianEditor PRIVATE
 	DocumentManager.cpp
+	FontDocument.cpp
 	IDocument.cpp
-	SpriteDocument.cpp
 	TextureDocument.cpp
 )

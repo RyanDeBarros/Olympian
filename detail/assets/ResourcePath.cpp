@@ -54,4 +54,54 @@ namespace oly::detail
 	{
 		return extension_matches(".oly");
 	}
+
+	bool ResourcePath::exists() const
+	{
+		return std::filesystem::exists(absolute);
+	}
+
+	bool ResourcePath::is_file() const
+	{
+		return std::filesystem::is_regular_file(absolute);
+	}
+
+	bool ResourcePath::is_directory() const
+	{
+		return std::filesystem::is_directory(absolute);
+	}
+
+	static bool path_is_relative_to(const std::filesystem::path& path, const std::filesystem::path& base)
+	{
+		std::error_code ec;
+
+		auto p = std::filesystem::weakly_canonical(path, ec);
+		if (ec)
+			return false;
+
+		ec.clear();
+		auto b = std::filesystem::weakly_canonical(base, ec);
+		if (ec)
+			return false;
+
+		auto pit = p.begin();
+		auto bit = b.begin();
+
+		for (; bit != b.end(); ++bit, ++pit)
+		{
+			if (pit == p.end() || *pit != *bit)
+				return false;
+		}
+
+		return true;
+	}
+
+	bool ResourcePath::is_resource() const
+	{
+		return path_is_relative_to(absolute, resource_root);
+	}
+
+	bool ResourcePath::is_relative_to(const ResourcePath& base) const
+	{
+		return path_is_relative_to(absolute, base.absolute);
+	}
 }

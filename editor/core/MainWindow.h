@@ -3,6 +3,8 @@
 #include <imgui.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace oly::editor
 {
@@ -10,6 +12,13 @@ namespace oly::editor
 	class DocumentManager;
 
 	class MainMenuBar;
+
+	struct Notification
+	{
+		std::string message;
+		float timer = 3.f;
+		float age = 0.f;
+	};
 
 	class MainWindow
 	{
@@ -20,6 +29,8 @@ namespace oly::editor
 		std::unique_ptr<DocumentManager> _document_manager;
 
 		std::unique_ptr<MainMenuBar> _main_menu_bar;
+
+		std::vector<Notification> _notifications;
 
 	public:
 		MainWindow();
@@ -38,5 +49,10 @@ namespace oly::editor
 		DocumentManager& GetDocumentManager();
 
 		MainMenuBar& GetMainMenuBar();
+
+		void PushNotification(Notification&& notif);
+
+	private:
+		void DrawNotifications();
 	};
 }

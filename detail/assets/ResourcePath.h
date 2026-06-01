@@ -53,6 +53,11 @@ namespace oly::detail
 
 		ResourcePath get_import_path() const;
 		bool is_import_path() const;
+		bool exists() const;
+		bool is_file() const;
+		bool is_directory() const;
+		bool is_resource() const;
+		bool is_relative_to(const ResourcePath& base) const;
 
 		std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const { return std::ifstream(absolute, mode); }
 		std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const { return std::ofstream(absolute, mode); }
