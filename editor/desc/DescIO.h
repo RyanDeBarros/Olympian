@@ -52,4 +52,7 @@ namespace oly::editor
 
 #define OLY_EDITOR_DESC_IO_REVERT_PAIR(desc, disk, member) desc.member, disk ? &disk->member : nullptr
 #define OLY_EDITOR_DESC_IO_DRAW_FIELD(label, field, ...) if (DescIO::Draw(label, OLY_EDITOR_DESC_IO_REVERT_PAIR(desc, disk, field), __VA_ARGS__)) MarkDirty();
+#define OLY_EDITOR_DESC_IO_LOAD_PROP(field, key, def, label, ...) DescIO::Load(node, desc.field, key, def);
+#define OLY_EDITOR_DESC_IO_DUMP_PROP(field, key, def, label, ...) DescIO::Dump(table, key, desc.field);
+#define OLY_EDITOR_DESC_IO_DRAW_PROP(field, key, def, label, ...) OLY_EDITOR_DESC_IO_DRAW_FIELD(label, field, __VA_ARGS__);
 }

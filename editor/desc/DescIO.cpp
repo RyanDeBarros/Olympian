@@ -6,8 +6,6 @@
 
 namespace oly::editor
 {
-	// TODO v7 on hover tooltip
-
 	static void PrepareValue(const char* label, void* data)
 	{
 		ImGui::TableNextRow();

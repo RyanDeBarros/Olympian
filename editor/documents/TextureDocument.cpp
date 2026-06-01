@@ -64,6 +64,33 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
+	// TODO v7 combine args into structs for int fields, bool fields, etc. for clarity - that goes for all the DescIO methods too.
+
+#define PROP_RASTER_TEXTURE(M) \
+		M(storage, detail::Key::Storage, detail::StorageMode::Discard, "Storage"); \
+		M(generate_mipmaps, detail::Key::GenerateMipmaps, false, "Generate Mipmaps");
+
+#define PROP_VECTOR_TEXTURE(M) \
+		M(scale, detail::Key::VectorScale, 1.f, "Vector Scale", 0.f, std::nullopt); \
+		M(image_storage, detail::Key::ImageStorage, detail::StorageMode::Discard, "Image Storage"); \
+		M(abstract_storage, detail::Key::AbstractStorage, detail::StorageMode::Discard, "Abstract Storage"); \
+		M(generate_mipmaps, detail::Key::GenerateMipmaps, detail::SVGMipmapGenerationMode::Off, "Generate Mipmaps");
+
+#define PROP_TEXTURE_PARAMS(M) \
+		M(min_filter, detail::Key::MinFilter, GL_NEAREST, "Min Filter", min_filter_values, min_filter_names, IM_ARRAYSIZE(min_filter_names)); \
+		M(mag_filter, detail::Key::MagFilter, GL_NEAREST, "Mag Filter", mag_filter_values, mag_filter_names, IM_ARRAYSIZE(mag_filter_names)); \
+		M(wrap_s, detail::Key::WrapS, GL_CLAMP_TO_EDGE, "Wrap (S)", wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names)); \
+		M(wrap_t, detail::Key::WrapT, GL_CLAMP_TO_EDGE, "Wrap (T)", wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
+
+#define PROP_SPRITESHEET(M) \
+		M(rows, detail::Key::Rows, 1, "Rows", 1, std::nullopt); \
+		M(cols, detail::Key::Columns, 1, "Columns", 1, std::nullopt); \
+		M(cell_width_override, detail::Key::CellWidthOverride, 0, "Cell Width Override", 0, std::nullopt); \
+		M(cell_height_override, detail::Key::CellHeightOverride, 0, "Cell Height Override", 0, std::nullopt); \
+		M(delay_cs, detail::Key::DelayCS, 0, "Delay (CS)", 0, std::nullopt); \
+		M(row_major, detail::Key::RowMajor, true, "Row Major"); \
+		M(row_up, detail::Key::RowUp, true, "Row Up");
+
 	void TextureDocument::Draw(TextureDesc& desc, const TextureDesc* disk)
 	{
 		// TODO v7 combo box to select slot, buttons to create new, delete.
@@ -85,19 +112,13 @@ namespace oly::editor
 	void TextureDocument::Draw(RasterTextureDesc& desc, const RasterTextureDesc* disk)
 	{
 		Draw(desc.base, disk ? &disk->base : nullptr);
-
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Storage", storage);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Generate Mipmaps", generate_mipmaps);
+		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_DRAW_PROP);
 	}
 	
 	void TextureDocument::Draw(VectorTextureDesc& desc, const VectorTextureDesc* disk)
 	{
 		Draw(desc.base, disk ? &disk->base : nullptr);
-
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Vector Scale", scale, 0.f, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Image Storage", image_storage);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Abstract Storage", abstract_storage);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Generate Mipmaps", generate_mipmaps);
+		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_DRAW_PROP);
 	}
 	
 	void TextureDocument::Draw(BaseTextureDesc& desc, const BaseTextureDesc* disk)
@@ -120,8 +141,6 @@ namespace oly::editor
 			"Linear (Linear Mipmap)"
 		};
 
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Min Filter", min_filter, min_filter_values, min_filter_names, IM_ARRAYSIZE(min_filter_names));
-
 		static const GLenum mag_filter_values[] = {
 			GL_NEAREST,
 			GL_LINEAR,
@@ -131,8 +150,6 @@ namespace oly::editor
 			"Nearest",
 			"Linear",
 		};
-
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Mag Filter", mag_filter, mag_filter_values, mag_filter_names, IM_ARRAYSIZE(mag_filter_names));
 
 		static const GLenum wrap_values[] = {
 			GL_CLAMP_TO_EDGE,
@@ -150,8 +167,7 @@ namespace oly::editor
 			"Clamp To Edge (Mirrored)"
 		};
 
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Wrap (S)", wrap_s, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Wrap (T)", wrap_t, wrap_values, wrap_names, IM_ARRAYSIZE(wrap_names));
+		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_DRAW_PROP);
 
 		ImGui::BeginDisabled(_gif);
 		OLY_EDITOR_DESC_IO_DRAW_FIELD("Animated", anim);
@@ -160,16 +176,10 @@ namespace oly::editor
 		if (desc.anim)
 			Draw(desc.spritesheet, disk ? &disk->spritesheet : nullptr);
 	}
-	
+
 	void TextureDocument::Draw(SpritesheetDesc& desc, const SpritesheetDesc* disk)
 	{
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Rows", rows, 1, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Columns", cols, 1, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Cell Width Override", cell_width_override, 0, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Cell Height Override", cell_height_override, 0, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Delay (CS)", delay_cs, 0, std::nullopt);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Row Major", row_major);
-		OLY_EDITOR_DESC_IO_DRAW_FIELD("Row Up", row_up);
+		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_DRAW_PROP);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
@@ -210,45 +220,30 @@ namespace oly::editor
 	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc)
 	{
 		Load(node, desc.base);
-
-		DescIO::Load(node, desc.generate_mipmaps, detail::Key::GenerateMipmaps, false);
-		DescIO::Load(node, desc.storage, detail::Key::Storage, detail::StorageMode::Discard);
+		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_LOAD_PROP);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc)
 	{
 		Load(node, desc.base);
-
-		DescIO::Load(node, desc.scale, detail::Key::VectorScale, 1.f);
-		DescIO::Load(node, desc.generate_mipmaps, detail::Key::GenerateMipmaps, detail::SVGMipmapGenerationMode::Off);
-		DescIO::Load(node, desc.image_storage, detail::Key::ImageStorage, detail::StorageMode::Discard);
-		DescIO::Load(node, desc.abstract_storage, detail::Key::AbstractStorage, detail::StorageMode::Discard);
+		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_LOAD_PROP);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc)
 	{
-		DescIO::Load(node, desc.min_filter, detail::Key::MinFilter, GL_NEAREST);
-		DescIO::Load(node, desc.mag_filter, detail::Key::MagFilter, GL_NEAREST);
-		DescIO::Load(node, desc.wrap_s, detail::Key::WrapS, GL_CLAMP_TO_EDGE);
-		DescIO::Load(node, desc.wrap_t, detail::Key::WrapT, GL_CLAMP_TO_EDGE);
+		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_LOAD_PROP);
 
 		if (_gif)
 			desc.anim = true;
 		else
-			DescIO::Load(node, desc.anim, detail::Key::Animated, false);
+			OLY_EDITOR_DESC_IO_LOAD_PROP(anim, detail::Key::Animated, false);
 
 		Load(node, desc.spritesheet);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
 	{
-		DescIO::Load(node, desc.rows, detail::Key::Rows, 1);
-		DescIO::Load(node, desc.cols, detail::Key::Columns, 1);
-		DescIO::Load(node, desc.cell_width_override, detail::Key::CellWidthOverride, 0);
-		DescIO::Load(node, desc.cell_height_override, detail::Key::CellHeightOverride, 0);
-		DescIO::Load(node, desc.delay_cs, detail::Key::DelayCS, 0);
-		DescIO::Load(node, desc.row_major, detail::Key::RowMajor, true);
-		DescIO::Load(node, desc.row_up, detail::Key::RowUp, true);
+		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_LOAD_PROP);
 	}
 
 	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
@@ -265,28 +260,20 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-
-		DescIO::Dump(table, detail::Key::GenerateMipmaps, desc.generate_mipmaps);
-		DescIO::Dump(table, detail::Key::Storage, desc.storage);
+		PROP_RASTER_TEXTURE(OLY_EDITOR_DESC_IO_DUMP_PROP);
 	}
 
 	void TextureDocument::Dump(toml::table& table, VectorTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-
-		DescIO::Dump(table, detail::Key::VectorScale, desc.scale);
-		DescIO::Dump(table, detail::Key::GenerateMipmaps, desc.generate_mipmaps);
-		DescIO::Dump(table, detail::Key::ImageStorage, desc.image_storage);
-		DescIO::Dump(table, detail::Key::AbstractStorage, desc.abstract_storage);
+		PROP_VECTOR_TEXTURE(OLY_EDITOR_DESC_IO_DUMP_PROP);
 	}
 
 	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
 	{
-		DescIO::Dump(table, detail::Key::MinFilter, desc.min_filter);
-		DescIO::Dump(table, detail::Key::MagFilter, desc.mag_filter);
-		DescIO::Dump(table, detail::Key::WrapS, desc.wrap_s);
-		DescIO::Dump(table, detail::Key::WrapT, desc.wrap_t);
-		DescIO::Dump(table, detail::Key::Animated, desc.anim);
+		PROP_TEXTURE_PARAMS(OLY_EDITOR_DESC_IO_DUMP_PROP);
+
+		OLY_EDITOR_DESC_IO_DUMP_PROP(anim, detail::Key::Animated);
 
 		if (desc.anim)
 			Dump(table, desc.spritesheet);
@@ -294,12 +281,6 @@ namespace oly::editor
 
 	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
 	{
-		DescIO::Dump(table, detail::Key::Rows, desc.rows);
-		DescIO::Dump(table, detail::Key::Columns, desc.cols);
-		DescIO::Dump(table, detail::Key::CellWidthOverride, desc.cell_width_override);
-		DescIO::Dump(table, detail::Key::CellHeightOverride, desc.cell_height_override);
-		DescIO::Dump(table, detail::Key::DelayCS, desc.delay_cs);
-		DescIO::Dump(table, detail::Key::RowMajor, desc.row_major);
-		DescIO::Dump(table, detail::Key::RowUp, desc.row_up);
+		PROP_SPRITESHEET(OLY_EDITOR_DESC_IO_DUMP_PROP);
 	}
 }
