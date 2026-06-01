@@ -8,7 +8,7 @@ namespace oly::detail
 {
 	// TODO v7 switch signatures of decode/encode
 
-	std::string decode_key(Key key)
+	std::string encode_key(Key key)
 	{
 		const auto value = static_cast<unsigned long long>(key);
 		std::array<char, KeySize> bytes{};
@@ -19,7 +19,7 @@ namespace oly::detail
 		return std::string(bytes.begin(), std::find(bytes.begin(), bytes.end(), '\0'));
 	}
 
-	Key encode_key(const std::string& code)
+	Key decode_key(const std::string& code)
 	{
 		unsigned long long value = 0;
 

@@ -14,13 +14,13 @@ namespace oly::detail
     std::optional<Key> MetaMap::get_type() const
     {
         auto it = map.find(Key::Meta_Type);
-        return it != map.end() ? std::make_optional(encode_key(it->second)) : std::nullopt;
+        return it != map.end() ? std::make_optional(decode_key(it->second)) : std::nullopt;
     }
 
     bool MetaMap::has_type(Key type) const
     {
         auto it = map.find(Key::Meta_Type);
-        return it != map.end() && encode_key(it->second) == type;
+        return it != map.end() && decode_key(it->second) == type;
     }
 
 	MetaMap MetaSplitter::decode_meta(const ResourcePath& filepath)
@@ -52,10 +52,10 @@ namespace oly::detail
                     value.pop_back();
                     value.erase(value.begin());
                 }
-                meta.map[encode_key(key)] = value;
+                meta.map[decode_key(key)] = value;
             }
             else
-                meta.map[encode_key(token)] = decode_key(Key::Meta_Exists);
+                meta.map[decode_key(token)] = encode_key(Key::Meta_Exists);
         }
         return meta;
 	}
@@ -66,7 +66,7 @@ namespace oly::detail
         oss << meta_prefix << ' ';
 
         for (const auto& [key, value] : meta.map)
-            oss << decode_key(key) << "=\"" << value << "\" ";
+            oss << encode_key(key) << "=\"" << value << "\" ";
 
         oss << '\n';
         return oss.str();

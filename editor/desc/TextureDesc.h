@@ -47,13 +47,13 @@ namespace oly::editor
 		float scale;
 	};
 
-	struct TextureDesc
+	struct TextureSlotDesc
 	{
 		std::variant<RasterTextureDesc, VectorTextureDesc> variant;
 	};
 
-	struct TextureArrayDesc
+	struct TextureDesc
 	{
-		std::vector<TextureDesc> array;
+		std::vector<TextureSlotDesc> array;
 	};
 }

@@ -147,41 +147,41 @@ namespace oly::editor
 
 	void DescIO::Load(TOMLNode node, bool& data, detail::Key key, bool def)
 	{
-		data = node[detail::decode_key(key)].value_or(def);
+		data = node[detail::encode_key(key)].value_or(def);
 	}
 
 	void DescIO::Load(TOMLNode node, int& data, detail::Key key, int def)
 	{
-		data = node[detail::decode_key(key)].value_or<int64_t>(def);
+		data = node[detail::encode_key(key)].value_or<int64_t>(def);
 	}
 
 	void DescIO::Load(TOMLNode node, float& data, detail::Key key, float def)
 	{
-		data = node[detail::decode_key(key)].value_or<double>(def);
+		data = node[detail::encode_key(key)].value_or<double>(def);
 	}
 
 	void DescIO::Load(TOMLNode node, GLenum& data, detail::Key key, GLenum def)
 	{
-		data = node[detail::decode_key(key)].value_or<int64_t>(def);
+		data = node[detail::encode_key(key)].value_or<int64_t>(def);
 	}
 
 	void DescIO::Dump(toml::table& table, detail::Key key, bool data)
 	{
-		table.insert_or_assign(detail::decode_key(key), data);
+		table.insert_or_assign(detail::encode_key(key), data);
 	}
 	
 	void DescIO::Dump(toml::table& table, detail::Key key, int data)
 	{
-		table.insert_or_assign(detail::decode_key(key), static_cast<int64_t>(data));
+		table.insert_or_assign(detail::encode_key(key), static_cast<int64_t>(data));
 	}
 	
 	void DescIO::Dump(toml::table& table, detail::Key key, float data)
 	{
-		table.insert_or_assign(detail::decode_key(key), data);
+		table.insert_or_assign(detail::encode_key(key), data);
 	}
 	
 	void DescIO::Dump(toml::table& table, detail::Key key, GLenum data)
 	{
-		table.insert_or_assign(detail::decode_key(key), static_cast<int64_t>(data));
+		table.insert_or_assign(detail::encode_key(key), static_cast<int64_t>(data));
 	}
 }

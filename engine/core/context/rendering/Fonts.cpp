@@ -324,7 +324,7 @@ namespace oly::context
 						else
 						{
 							std::optional<detail::Key> type = meta.get_type();
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::decode_key(*type) : "") << "\"" << LOG.nl;
+							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
 							return;
 						}
 					}
@@ -389,7 +389,7 @@ namespace oly::context
 			else
 			{
 				std::optional<detail::Key> type = meta.get_type();
-				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? detail::decode_key(*type) : "") << "\"" << LOG.nl;
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
 				throw Error(ErrorCode::LoadAsset);
 			}
 		}

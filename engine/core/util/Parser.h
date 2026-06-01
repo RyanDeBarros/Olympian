@@ -116,7 +116,7 @@ namespace oly::assets
 			DeferredStringList list{ cause.transfer(), " " };
 			
 			if (key != NO_KEY)
-				list << detail::decode_key(key) << " field";
+				list << detail::encode_key(key) << " field";
 			else
 				list << "field";
 			
@@ -583,7 +583,7 @@ namespace oly::assets
 		TOMLNode field(detail::Key key) const
 		{
 			if (key != NO_KEY)
-				return node[detail::decode_key(key)];
+				return node[detail::encode_key(key)];
 			else
 				return node;
 		}

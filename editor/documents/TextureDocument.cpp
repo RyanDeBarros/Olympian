@@ -45,7 +45,7 @@ namespace oly::editor
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
 			_meta.map[detail::Key::Meta_Import] = "1";
-			_meta.map[detail::Key::Meta_Type] = detail::decode_key(detail::Key::Meta_Texture);
+			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Texture);
 		}
 	}
 
@@ -62,14 +62,14 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	void TextureDocument::Draw(TextureArrayDesc& desc)
+	void TextureDocument::Draw(TextureDesc& desc)
 	{
 		// TODO v7 combo box to select slot, buttons to create new, delete.
-		for (TextureDesc& d : desc.array)
+		for (TextureSlotDesc& d : desc.array)
 			Draw(d);
 	}
 	
-	void TextureDocument::Draw(TextureDesc& desc)
+	void TextureDocument::Draw(TextureSlotDesc& desc)
 	{
 		if (DescIO::BeginForm(&desc))
 		{
@@ -197,11 +197,11 @@ namespace oly::editor
 			MarkDirty();
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureArrayDesc& desc)
+	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
 	{
 		desc.array.clear();
 		
-		TOMLArray array = node[detail::decode_key(detail::Key::TextureArray)].as_array();
+		TOMLArray array = node[detail::encode_key(detail::Key::TextureArray)].as_array();
 		if (array && !array->empty())
 		{
 			desc.array.resize(array->size());
@@ -216,7 +216,7 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
+	void TextureDocument::Load(TOMLNode node, TextureSlotDesc& desc)
 	{
 		if (_svg)
 		{
@@ -276,13 +276,13 @@ namespace oly::editor
 		DescIO::Load(node, desc.row_up, detail::Key::RowUp, true);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureArrayDesc& desc)
+	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
 	{
-		for (TextureDesc& d : desc.array)
+		for (TextureSlotDesc& d : desc.array)
 			Dump(table, d);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
+	void TextureDocument::Dump(toml::table& table, TextureSlotDesc& desc)
 	{
 		std::visit([this, &table](auto& d) { Dump(table, d); }, desc.variant);
 	}
