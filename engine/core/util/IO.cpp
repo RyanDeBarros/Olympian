@@ -42,7 +42,6 @@ namespace oly::io
 
 	std::vector<unsigned char> read_file_uc(const detail::ResourcePath& filepath)
 	{
-		
 		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
 		if (!file)
 		{

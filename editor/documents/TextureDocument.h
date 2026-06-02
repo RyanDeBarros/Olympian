@@ -1,6 +1,7 @@
 #pragma once
 
 #include "documents/IDocument.h"
+#include "graphics/Texture.h"
 
 #include "desc/TextureDesc.h"
 
@@ -12,11 +13,12 @@ namespace oly::editor
 	{
 		TextureDescVariant _scratch;
 		TextureDescVariant _disk;
+		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		detail::MetaMap _meta;
 		int _active_slot = 0;
 		std::vector<std::string> _slot_names;
+		Texture _texture;
 
 	public:
 		using IDocument::IDocument;

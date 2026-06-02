@@ -52,7 +52,7 @@ namespace oly::rendering
 				{
 				case FrameFormat::Single:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, ff_parser->defaulted(detail::Key::Frame)(0u)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_single(*texture, ff_parser->defaulted(detail::Key::Frame)(0u)));
 					else
 						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
 					break;

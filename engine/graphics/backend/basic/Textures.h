@@ -268,8 +268,8 @@ namespace oly::graphics
 
 	extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
 	extern AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame);
-	extern AnimFrameFormat setup_anim_frame_format_Single(const detail::ResourcePath& texture_file, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame);
 
 	class NSVGAbstract
 	{

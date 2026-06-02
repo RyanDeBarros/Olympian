@@ -213,16 +213,16 @@ namespace oly::graphics
 		if (num_frames == 0)
 			return;
 		delays.resize(num_frames);
-		bool Single = true;
+		bool single = true;
 		int delay = new_delays[0];
 		delays[0] = delay;
 		for (unsigned int i = 1; i < num_frames; ++i)
 		{
 			delays[i] = new_delays[i];
 			if (std::abs(delays[i] - delay) > anim_delay_epsilon)
-				Single = false;
+				single = false;
 		}
-		if (Single)
+		if (single)
 		{
 			delays.resize(1);
 			_frames = num_frames;
@@ -384,14 +384,14 @@ namespace oly::graphics
 		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
 
-	AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
 	{
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_Single(const detail::ResourcePath& texture_file, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_Single(*context::get_anim_dimensions(texture_file), frame);
+		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
 	NSVGAbstract::NSVGAbstract(const detail::ResourcePath& file, const char* units, float dpi)
@@ -439,7 +439,7 @@ namespace oly::graphics
 	{
 		nsvgDeleteRasterizer(r);
 	}
-		
+	
 	NSVGContext& NSVGContext::operator=(NSVGContext&& other) noexcept
 	{
 		if (this != &other)
@@ -472,7 +472,7 @@ namespace oly::graphics
 		dim.w = std::max((int)(scale * abstract.width()), 1);
 		dim.h = std::max((int)(scale * abstract.height()), 1);
 		dim.cpp = 4;
-		int stride = dim.w * dim.cpp;
+		const int stride = dim.w * dim.cpp;
 		buf = new unsigned char[stride * dim.h];
 		nsvgRasterize(r, abstract.i, 0.0f, 0.0f, scale, buf, dim.w, dim.h, stride);
 

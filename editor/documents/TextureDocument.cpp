@@ -6,7 +6,6 @@
 #include "core/Logger.h"
 
 #include <imgui.h>
-#include <stb/stb_image.h>
 
 namespace oly::editor
 {
@@ -17,21 +16,17 @@ namespace oly::editor
 		Load();
 
 		if (_svg)
-		{
-			// TODO v7
-		}
+			_texture = { SVGTexture(GetSourcePath().string().c_str()) };
 		else if (_gif)
-		{
-			// TODO v7
-		}
+			_texture = { GIFTexture(GetSourcePath().string().c_str()) };
 		else
-		{
-			// TODO v7
-		}
+			_texture = { RasterTexture(GetSourcePath().string().c_str()) };
 	}
 
 	void TextureDocument::Draw()
 	{
+		_texture.Update(ImGui::GetIO().DeltaTime);
+
 		ImGui::PushID(this);
 		if (ImGui::BeginTable("", 2))
 		{
@@ -39,9 +34,9 @@ namespace oly::editor
 			Draw(_scratch);
 
 			ImGui::TableNextColumn();
-			// TODO v7
-			//ImGui::Image(_texture_id, ImVec2(static_cast<float>(_texture_width), static_cast<float>(_texture_height)));
-			ImGui::EndTabBar();
+			// TODO v7 enable scrolling over image to zoom
+			ImGui::Image(_texture.ID(), ImVec2(static_cast<float>(_texture.Width()), static_cast<float>(_texture.Height())));
+			ImGui::EndTable();
 		}
 		ImGui::PopID();
 	}
