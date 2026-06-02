@@ -4,14 +4,6 @@
 
 namespace oly::editor
 {
-	struct Field
-	{
-		virtual ~Field() = default;
-
-		virtual bool Draw() = 0;
-		virtual void Load(TOMLNode node) = 0;
-		virtual void Dump(toml::table& table) = 0;
-	};
 
 #define DRAW_FIELD(field) if (desc.field.Draw()) MarkDirty();
 #define DRAW_FIELDS(generator) generator(DRAW_FIELD);
@@ -19,34 +11,49 @@ namespace oly::editor
 #define LOAD_FIELDS(generator) generator(LOAD_FIELD)
 #define DUMP_FIELD(field) desc.field.Dump(table);
 #define DUMP_FIELDS(generator) generator(DUMP_FIELD)
+
 #define RESET_FIELD(field) field.Reset(source.field);
-#define RESET_FIELDS(generator) generator(RESET_FIELD)
+#define RESET_FIELDS(generator) Isolate(); generator(RESET_FIELD)
+#define ISOLATE_FIELD(field) field.Isolate();
+#define ISOLATE_FIELDS(generator) generator(ISOLATE_FIELD)
+
+#define DISK_FIELD (this->disk ? &this->disk->scratch : nullptr)
 
 	template<typename T>
-	struct PrimitiveField : public Field
+	struct PrimitiveField
 	{
 		T def;
 		T scratch;
-		T* disk = nullptr;
+		PrimitiveField<T>* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
 		PrimitiveField(T def, detail::Key key, const char* label) : def(def), scratch(def), key(key), label(label) {}
 
-		void Load(TOMLNode node) override
+		void Load(TOMLNode node)
 		{
 			scratch = static_cast<T>(node[detail::encode_key(key)].value_or(def));
 		}
 
-		void Dump(toml::table& table) override
+		void Dump(toml::table& table) const
 		{
 			table.insert_or_assign(detail::encode_key(key), scratch);
 		}
 
+		void Isolate()
+		{
+			if (disk)
+			{
+				auto d = disk;
+				disk = nullptr;
+				d->Isolate();
+			}
+		}
+
 		void Reset(PrimitiveField<T>& source)
 		{
-			disk = &source.scratch;
-			source.disk = &scratch;
+			disk = &source;
+			source.disk = this;
 			scratch = source.scratch;
 		}
 	};
@@ -55,9 +62,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		bool Draw() override
+		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, disk);
+			return DescIO::Draw(label, scratch, DISK_FIELD);
 		}
 	};
 
@@ -66,9 +73,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<int>::PrimitiveField;
 
-		bool Draw() override
+		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, disk, Min.Opt(), Max.Opt());
+			return DescIO::Draw(label, scratch, DISK_FIELD, Min.Opt(), Max.Opt());
 		}
 	};
 
@@ -77,9 +84,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<float>::PrimitiveField;
 
-		bool Draw() override
+		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, disk, Min.Opt(), Max.Opt());
+			return DescIO::Draw(label, scratch, DISK_FIELD, Min.Opt(), Max.Opt());
 		}
 	};
 
@@ -90,17 +97,17 @@ namespace oly::editor
 
 		using PrimitiveField<E>::PrimitiveField;
 
-		bool Draw() override
+		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->disk);
+			return DescIO::Draw(this->label, this->scratch, DISK_FIELD);
 		}
 	};
 
-	struct GLenumField : public Field
+	struct GLenumField
 	{
 		GLenum def;
 		int scratch;
-		int* disk = nullptr;
+		GLenumField* disk = nullptr;
 		detail::Key key;
 		const char* label;
 		const GLenum* values;
@@ -114,28 +121,35 @@ namespace oly::editor
 			SetScratch(def);
 		}
 
-		bool Draw() override
+		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, disk, names, count);
+			return DescIO::Draw(label, scratch, DISK_FIELD, names, count);
 		}
 
-		void Load(TOMLNode node) override
+		void Load(TOMLNode node)
 		{
-			if (disk)
-				*disk = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
-			else
-				scratch = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
+			scratch = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
 		}
 
-		void Dump(toml::table& table) override
+		void Dump(toml::table& table) const
 		{
 			table.insert_or_assign(detail::encode_key(key), Scratch());
 		}
 
+		void Isolate()
+		{
+			if (disk)
+			{
+				auto d = disk;
+				disk = nullptr;
+				d->Isolate();
+			}
+		}
+
 		void Reset(GLenumField& source)
 		{
-			disk = &source.scratch;
-			source.disk = &scratch;
+			disk = &source;
+			source.disk = this;
 			scratch = source.scratch;
 		}
 

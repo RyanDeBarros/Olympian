@@ -22,6 +22,11 @@ namespace oly::editor
 		RESET_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
+	void SpritesheetDesc::Isolate()
+	{
+		ISOLATE_FIELDS(SPRITESHEET_GENERATOR);
+	}
+
 	static const GLenum MIN_FILTER_VALUES[] = {
 		GL_NEAREST,
 		GL_LINEAR,
@@ -81,6 +86,11 @@ namespace oly::editor
 		RESET_FIELDS(BASE_TEXTURE_GENERATOR);
 	}
 
+	void BaseTextureDesc::Isolate()
+	{
+		ISOLATE_FIELDS(BASE_TEXTURE_GENERATOR);
+	}
+
 	RasterTextureDesc::RasterTextureDesc() :
 		base(),
 		generate_mipmaps(false, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
@@ -91,6 +101,11 @@ namespace oly::editor
 	void RasterTextureDesc::Reset(RasterTextureDesc& source)
 	{
 		RESET_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
+	}
+
+	void RasterTextureDesc::Isolate()
+	{
+		ISOLATE_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
 	}
 
 	VectorTextureDesc::VectorTextureDesc() :
@@ -107,8 +122,14 @@ namespace oly::editor
 		RESET_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
 	}
 
-	void TextureSlotDesc::Reset(TextureSlotDesc& source)
+	void VectorTextureDesc::Isolate()
 	{
+		ISOLATE_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
+	}
+
+	void TextureDescVariant::Reset(TextureDescVariant& source)
+	{
+		Isolate();
 		std::visit([this](auto& s) {
 			using T = std::decay_t<decltype(s)>;
 			variant = T();
@@ -116,11 +137,28 @@ namespace oly::editor
 		}, source.variant);
 	}
 
-	void TextureDesc::Reset(TextureDesc& source)
+	void TextureDescVariant::Isolate()
 	{
-		array.clear();
-		array.resize(source.array.size());
-		for (size_t i = 0; i < array.size(); ++i)
-			array[i].Reset(source.array[i]);
+		std::visit([](auto& desc) { desc.Isolate(); }, variant);
+	}
+
+	size_t TextureDescVariant::Count() const
+	{
+		return std::visit([](const auto& desc) { return desc.array.size(); }, variant);
+	}
+
+	bool TextureDescVariant::Empty() const
+	{
+		return Count() == 0;
+	}
+
+	void TextureDescVariant::PushBack()
+	{
+		std::visit([](auto& desc) { desc.PushBack(); }, variant);
+	}
+	
+	void TextureDescVariant::Remove(size_t i)
+	{
+		std::visit([i](auto& desc) { desc.Remove(i); }, variant);
 	}
 }

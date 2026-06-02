@@ -8,6 +8,7 @@ namespace oly::editor
 
 	class AssetEditorPanel : public IPanel
 	{
+		IDocument* _selected_tab = nullptr;
 		IDocument* _focused_tab = nullptr;
 
 	public:
@@ -17,9 +18,9 @@ namespace oly::editor
 		void Draw() override;
 
 		void FocusTab(IDocument* doc);
-		bool IsFocused(IDocument* doc) const;
+		bool IsSelected(IDocument* doc) const;
 
-		void SaveFocusedTab() const;
+		void SaveSelectedTab() const;
 		void SaveAllTabs() const;
 	};
 }

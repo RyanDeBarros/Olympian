@@ -22,6 +22,7 @@ namespace oly::editor
 		SpritesheetDesc();
 
 		void Reset(SpritesheetDesc& source);
+		void Isolate();
 	};
 
 #define SPRITESHEET_GENERATOR(M) \
@@ -45,6 +46,7 @@ namespace oly::editor
 		BaseTextureDesc();
 
 		void Reset(BaseTextureDesc& source);
+		void Isolate();
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
@@ -67,6 +69,7 @@ namespace oly::editor
 		RasterTextureDesc();
 
 		void Reset(RasterTextureDesc& source);
+		void Isolate();
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -88,6 +91,7 @@ namespace oly::editor
 		VectorTextureDesc();
 
 		void Reset(VectorTextureDesc& source);
+		void Isolate();
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -100,17 +104,88 @@ namespace oly::editor
 		M(base) \
 		VECTOR_TEXTURE_PARTIAL_GENERATOR(M)
 
-	struct TextureSlotDesc
-	{
-		std::variant<RasterTextureDesc, VectorTextureDesc> variant;
+	template<typename T>
+	concept TextureSlotDesc = std::is_same_v<T, RasterTextureDesc> || std::is_same_v<T, VectorTextureDesc>;
 
-		void Reset(TextureSlotDesc& source);
-	};
-
+	template<TextureSlotDesc SlotType>
 	struct TextureDesc
 	{
-		std::vector<TextureSlotDesc> array;
+		std::vector<std::unique_ptr<SlotType>> array;
 
-		void Reset(TextureDesc& source);
+		void Reset(TextureDesc& source)
+		{
+			Clear();
+			array.resize(source.array.size());
+			for (size_t i = 0; i < array.size(); ++i)
+			{
+				array[i] = std::make_unique<SlotType>();
+				array[i]->Reset(*source.array[i]);
+			}
+		}
+
+		void Isolate()
+		{
+			for (auto& desc : array)
+				desc->Isolate();
+		}
+
+		void PushBack()
+		{
+			array.push_back(std::make_unique<SlotType>());
+		}
+
+		void Remove(size_t i)
+		{
+			array[i]->Isolate();
+			array.erase(array.begin() + i);
+		}
+
+		void Clear()
+		{
+			Isolate();
+			array.clear();
+		}
+	};
+
+	struct TextureDescVariant
+	{
+		std::variant<TextureDesc<RasterTextureDesc>, TextureDesc<VectorTextureDesc>> variant;
+
+		void Reset(TextureDescVariant& source);
+		void Isolate();
+		size_t Count() const;
+		bool Empty() const;
+		void PushBack();
+		void Remove(size_t i);
+
+		template<TextureSlotDesc SlotType>
+		void Clear()
+		{
+			std::visit([](auto& desc) { desc.Clear(); }, variant);
+			variant = TextureDesc<SlotType>();
+		}
+
+		void Visit(auto&& visitor)
+		{
+			std::visit([&visitor](auto& desc) {
+				for (auto& d : desc.array)
+					visitor(*d);
+			}, variant);
+		}
+
+		void Visit(size_t i, auto&& visitor)
+		{
+			std::visit([&visitor, i](auto& desc) {
+				visitor(*desc.array[i]);
+			}, variant);
+		}
+
+		void VisitIndexed(auto&& visitor)
+		{
+			std::visit([&visitor](auto& desc) {
+				for (size_t i = 0; i < desc.array.size(); ++i)
+					visitor(i, *desc.array[i]);
+			}, variant);
+		}
 	};
 }

@@ -22,7 +22,7 @@ namespace oly::editor
         }
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-            AssetEditorPanel::Instance().SaveFocusedTab();
+            AssetEditorPanel::Instance().SaveSelectedTab();
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
             AssetEditorPanel::Instance().SaveAllTabs();

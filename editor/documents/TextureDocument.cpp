@@ -62,18 +62,46 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	void TextureDocument::Draw(TextureDesc& desc)
+	// TODO v7 make this a general utility for documents
+	static const char* ComboGetter(void* data, int idx)
 	{
-		// TODO v7 combo box to select slot, buttons to create new, delete.
-		for (size_t i = 0; i < desc.array.size(); ++i)
-			Draw(desc.array[i]);
+		auto& items = *static_cast<std::vector<std::string>*>(data);
+		if (idx < 0 || idx >= items.size())
+			return nullptr;
+		else
+			return items[idx].c_str();
 	}
-	
-	void TextureDocument::Draw(TextureSlotDesc& desc)
+
+	void TextureDocument::Draw(TextureDescVariant& desc)
 	{
 		if (DescIO::BeginForm(&desc))
 		{
-			std::visit([this](auto& d) { Draw(d); }, desc.variant);
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Select Slot");
+
+			ImGui::SameLine();
+			if (ImGui::Button("+"))
+			{
+				_active_slot = _slot_names.size();
+				_scratch.PushBack();
+				MarkDirty();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("-"))
+			{
+				_scratch.Remove(_active_slot);
+				if (_scratch.Empty())
+					_scratch.PushBack();
+				MarkDirty();
+			}
+
+			GenSlotNames();
+			ImGui::TableNextColumn();
+			ImGui::Combo("##SelectSlot", &_active_slot, ComboGetter, &_slot_names, _slot_names.size());
+
+			desc.Visit(_active_slot, [this](auto& d) { Draw(d); });
 			DescIO::EndForm();
 		}
 	}
@@ -107,38 +135,30 @@ namespace oly::editor
 		DRAW_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureDesc& desc)
+	void TextureDocument::Load(TOMLNode node, TextureDescVariant& desc)
 	{
-		desc.array.clear();
-		
+		const auto Clear = [this](TextureDescVariant& desc) {
+			if (_svg)
+				desc.Clear<VectorTextureDesc>();
+			else
+				desc.Clear<RasterTextureDesc>();
+		};
+
 		TOMLArray array = node[detail::encode_key(detail::Key::TextureArray)].as_array();
 		if (array && !array->empty())
 		{
-			desc.array.resize(array->size());
-			
+			Clear(desc);
 			for (size_t i = 0; i < array->size(); ++i)
-				Load(TOMLNode(*array->get(i)), desc.array[i]);
+				desc.PushBack();
+
+			desc.VisitIndexed([this, &array](size_t i, auto& d) { Load(TOMLNode(*array->get(i)), d); });
 		}
 		else
 		{
-			desc.array.resize(1);
-			Load(TOMLNode(), desc.array[0]);
-		}
-	}
-	
-	void TextureDocument::Load(TOMLNode node, TextureSlotDesc& desc)
-	{
-		if (_svg)
-		{
-			VectorTextureDesc d;
-			Load(node, d);
-			desc.variant = d;
-		}
-		else
-		{
-			RasterTextureDesc d;
-			Load(node, d);
-			desc.variant = d;
+			Clear(desc);
+			desc.PushBack();
+
+			desc.Visit(0, [this](auto& d) { Load(TOMLNode(), d); });
 		}
 	}
 	
@@ -171,15 +191,15 @@ namespace oly::editor
 		LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureDesc& desc)
+	void TextureDocument::Dump(toml::table& table, TextureDescVariant& desc)
 	{
-		for (TextureSlotDesc& d : desc.array)
+		toml::v3::array array;
+		desc.Visit([this, &array](auto& d) {
+			toml::table table;
 			Dump(table, d);
-	}
-
-	void TextureDocument::Dump(toml::table& table, TextureSlotDesc& desc)
-	{
-		std::visit([this, &table](auto& d) { Dump(table, d); }, desc.variant);
+			array.push_back(std::move(table));
+		});
+		table.insert_or_assign(detail::encode_key(detail::Key::TextureArray), std::move(array));
 	}
 
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
@@ -205,5 +225,17 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
 	{
 		DUMP_FIELDS(SPRITESHEET_GENERATOR);
+	}
+
+	void TextureDocument::GenSlotNames()
+	{
+		_slot_names.clear();
+		for (int i = 0; i < _scratch.Count(); ++i)
+			_slot_names.push_back("Slot " + std::to_string(i));
+
+		if (_scratch.Empty())
+			_active_slot = 0;
+		else if (_active_slot >= _scratch.Count())
+			_active_slot = _scratch.Count() - 1;
 	}
 }
