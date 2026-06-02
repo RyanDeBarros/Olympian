@@ -2,8 +2,8 @@
 
 #include "desc/OptionalPrimitive.h"
 
-#include "GL.h"
-#include "TOML.h"
+#include "external/GL.h"
+#include "external/TOML.h"
 
 #include "assets/TranslateKey.h"
 

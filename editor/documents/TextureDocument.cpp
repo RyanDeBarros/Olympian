@@ -6,21 +6,44 @@
 #include "core/Logger.h"
 
 #include <imgui.h>
+#include <stb/stb_image.h>
 
 namespace oly::editor
 {
-	// TODO v7 preview of image on right side of table
-
 	void TextureDocument::Init()
 	{
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
 		Load();
+
+		if (_svg)
+		{
+			// TODO v7
+		}
+		else if (_gif)
+		{
+			// TODO v7
+		}
+		else
+		{
+			// TODO v7
+		}
 	}
 
 	void TextureDocument::Draw()
 	{
-		Draw(_scratch);
+		ImGui::PushID(this);
+		if (ImGui::BeginTable("", 2))
+		{
+			ImGui::TableNextColumn();
+			Draw(_scratch);
+
+			ImGui::TableNextColumn();
+			// TODO v7
+			//ImGui::Image(_texture_id, ImVec2(static_cast<float>(_texture_width), static_cast<float>(_texture_height)));
+			ImGui::EndTabBar();
+		}
+		ImGui::PopID();
 	}
 
 	void TextureDocument::Load()

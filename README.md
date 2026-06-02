@@ -29,9 +29,14 @@ The engine uses the following libraries:
 
 The editor uses the following libraries:
 
+- **nigels-com/glew**
 - **GLFW**
 - **ocornut/imgui**
 - **aiekick/ImGuiFileDialog**
+- **g-truc/glm**
+- **nothings/stb**
+- **marzer/tomlplusplus**
+- **memononen/nanosvg**
 
 ### Documentation
 

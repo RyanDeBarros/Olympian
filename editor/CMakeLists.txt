@@ -132,6 +132,19 @@ FetchContent_MakeAvailable(glm)
 
 
 # ====================
+#         STB
+# ====================
+
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG        31c1ad37456438565541f4919958214b6e762fb4
+)
+
+FetchContent_MakeAvailable(stb)
+
+
+# ====================
 #        TOML++
 # ====================
 
@@ -142,6 +155,19 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(tomlplusplus)
+
+
+# ====================
+#       Nano SVG
+# ====================
+
+FetchContent_Declare(
+    nanosvg
+    GIT_REPOSITORY https://github.com/memononen/nanosvg.git
+    GIT_TAG        48120e91e64b2f409ed600cdfd6d790a49ba11ab
+)
+
+FetchContent_MakeAvailable(nanosvg)
 
 
 # ====================
@@ -172,10 +198,15 @@ target_link_libraries(OlympianEditor PRIVATE
 
 target_link_libraries(OlympianEditor PUBLIC OlympianDetail)
 
-target_include_directories(OlympianEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(OlympianEditor PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${stb_SOURCE_DIR}
+	${nanosvg_SOURCE_DIR}/src
+)
 
 # Add subdirectories
 add_subdirectory(core)
 add_subdirectory(desc)
 add_subdirectory(documents)
+add_subdirectory(external)
 add_subdirectory(panels)
