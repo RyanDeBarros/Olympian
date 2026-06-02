@@ -143,4 +143,13 @@ namespace oly::editor
 		data = static_cast<detail::SVGMipmapGenerationMode>(index);
 		return FinishValue(dirty, data, disk);
 	}
+
+	const char* DescIO::StringVectorComboGetter(void* data, int idx)
+	{
+		auto& items = *static_cast<std::vector<std::string>*>(data);
+		if (idx < 0 || idx >= items.size())
+			return nullptr;
+		else
+			return items[idx].c_str();
+	}
 }

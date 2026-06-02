@@ -62,16 +62,6 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	// TODO v7 make this a general utility for documents
-	static const char* ComboGetter(void* data, int idx)
-	{
-		auto& items = *static_cast<std::vector<std::string>*>(data);
-		if (idx < 0 || idx >= items.size())
-			return nullptr;
-		else
-			return items[idx].c_str();
-	}
-
 	void TextureDocument::Draw(TextureDescVariant& desc)
 	{
 		if (DescIO::BeginForm(&desc))
@@ -99,7 +89,7 @@ namespace oly::editor
 
 			GenSlotNames();
 			ImGui::TableNextColumn();
-			ImGui::Combo("##SelectSlot", &_active_slot, ComboGetter, &_slot_names, _slot_names.size());
+			ImGui::Combo("##SelectSlot", &_active_slot, &DescIO::StringVectorComboGetter, &_slot_names, _slot_names.size());
 
 			desc.Visit(_active_slot, [this](auto& d) { Draw(d); });
 			DescIO::EndForm();
