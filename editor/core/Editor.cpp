@@ -143,9 +143,7 @@ namespace oly::editor
 		if (code == OpenAssetCode::Success)
 			return;
 
-		Notification notif;
-
-		notif.message = "cannot open " + path.generic_string() + ": ";
+		Notification notif(LogLevel::Error, "cannot open " + path.generic_string() + ": ");
 		switch (code)
 		{
 		case OpenAssetCode::NotResource:

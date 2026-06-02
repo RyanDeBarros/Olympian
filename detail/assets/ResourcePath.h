@@ -44,6 +44,7 @@ namespace oly::detail
 		void set(std::filesystem::path&& path, const ResourcePath& relative_to);
 
 	public:
+		std::string string() const;
 		std::filesystem::path get_absolute() const;
 		bool has_extension() const { return absolute.has_extension(); }
 		std::string extension() const { return absolute.extension().generic_string(); }

@@ -13,11 +13,16 @@ namespace oly::editor
 
 	class MainMenuBar;
 
+	enum class LogLevel : int;
+
 	struct Notification
 	{
+		LogLevel level;
 		std::string message;
-		float timer = 3.f;
+		float timer;
 		float age = 0.f;
+
+		Notification(LogLevel level, std::string&& message, float timer = 3.f);
 	};
 
 	class MainWindow

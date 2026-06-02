@@ -3,6 +3,7 @@
 #include "core/Editor.h"
 #include "core/DockTree.h"
 #include "core/MainMenuBar.h"
+#include "core/Logger.h"
 
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
@@ -14,6 +15,11 @@
 
 namespace oly::editor
 {
+    Notification::Notification(LogLevel level, std::string&& message, float timer)
+        : level(level), message(std::move(message)), timer(timer)
+    {
+    }
+
     MainWindow::MainWindow()
         : _panel_manager(std::make_unique<PanelManager>()),
         _document_manager(std::make_unique<DocumentManager>()),
@@ -110,6 +116,7 @@ namespace oly::editor
 
     void MainWindow::PushNotification(Notification&& notif)
     {
+        Logger::Instance().Log(notif.level, notif.message.c_str());
         _notifications.push_back(std::move(notif));
     }
 
@@ -127,7 +134,9 @@ namespace oly::editor
                 ImGuiWindowFlags_NoInputs;
 
             ImGui::Begin(("##notif" + std::to_string(i)).c_str(), nullptr, flags);
+            ImGui::PushStyleColor(ImGuiCol_Text, LogLevelColor(notif.level));
             ImGui::TextUnformatted(notif.message.c_str());
+            ImGui::PopStyleColor();
             ImGui::End();
             ImGui::PopStyleVar();
 

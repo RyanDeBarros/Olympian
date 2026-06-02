@@ -36,6 +36,11 @@ namespace oly::detail
 		}
 	}
 
+	std::string ResourcePath::string() const
+	{
+		return absolute.generic_string();
+	}
+
 	std::filesystem::path ResourcePath::get_absolute() const
 	{
 		return absolute;

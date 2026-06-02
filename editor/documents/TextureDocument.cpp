@@ -2,6 +2,9 @@
 
 #include "definitions/Keys.h"
 
+#include "core/MainWindow.h"
+#include "core/Logger.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -32,7 +35,8 @@ namespace oly::editor
 				Load(TOMLNode(table), _disk);
 			else
 			{
-				// TODO v7 log error - corrupted asset
+				Notification notif(LogLevel::Error, "cannot load texture - corrupted asset: " + GetSourcePath().string());
+				MainWindow::Instance().PushNotification(std::move(notif));
 			}
 		}
 		else
