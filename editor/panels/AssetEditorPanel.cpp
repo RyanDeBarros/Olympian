@@ -41,9 +41,12 @@ namespace oly::editor
 			std::vector<size_t> closed;
 
 			_selected_tab = nullptr;
+			std::unordered_set<IDocument*> seen_documents;
+
 			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			{
 				IDocument& doc = DocumentManager::Instance().GetDocument(i);
+				seen_documents.insert(&doc);
 				bool open = true;
 
 				ImGuiTabItemFlags tab_item_flags = 0;
@@ -53,8 +56,7 @@ namespace oly::editor
 				if (_focused_tab == &doc)
 					tab_item_flags |= ImGuiTabItemFlags_SetSelected;
 
-				std::string tabname = doc.GetOlyPath().tabname();
-				if (ImGui::BeginTabItem((tabname + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
+				if (ImGui::BeginTabItem((doc.TabName() + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
 				{
 					doc.Draw();
 					_selected_tab = &doc;
@@ -62,10 +64,72 @@ namespace oly::editor
 				}
 
 				if (!open)
-					closed.push_back(i);
+				{
+					if (!doc.IsDirty())
+						closed.push_back(i);
+					else if (!_pending_close_set.contains(&doc))
+					{
+						_pending_close_set.insert(&doc);
+						_pending_close.push_back(&doc);
+						ImGui::OpenPopup("Unsaved Changes");
+					}
+				}
 			}
 
-			// TODO v7 prompt for unsaved changes
+			for (auto it = _pending_close.begin(); it != _pending_close.end();)
+			{
+				if (seen_documents.contains(*it))
+					++it;
+				else
+					it = _pending_close.erase(it);
+			}
+
+			for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
+			{
+				if (seen_documents.contains(*it))
+					++it;
+				else
+					it = _pending_close_set.erase(it);
+			}
+
+			if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				IDocument* doc = _pending_close.front();
+
+				ImGui::Text(("Asset " + doc->TabName()).c_str());
+				ImGui::Text(("Full path: " + doc->GetOlyPath().string()).c_str());
+
+				if (ImGui::Button("Save Changes"))
+				{
+					doc->Dump();
+					closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+					_pending_close.erase(_pending_close.begin());
+					_pending_close_set.erase(doc);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("Discard Changes"))
+				{
+					doc->Load();
+					closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+					_pending_close.erase(_pending_close.begin());
+					_pending_close_set.erase(doc);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel Close"))
+				{
+					_pending_close.erase(_pending_close.begin());
+					_pending_close_set.erase(doc);
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndPopup();
+			}
+
+			std::sort(closed.begin(), closed.end());
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
 				DocumentManager::Instance().Remove(*it);
 

@@ -12,6 +12,11 @@ namespace oly::editor
 		return _oly_path;
 	}
 
+	std::string IDocument::TabName() const
+	{
+		return _oly_path.tabname();
+	}
+
 	void IDocument::MarkDirty()
 	{
 		_dirty = true;

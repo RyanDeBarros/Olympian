@@ -94,6 +94,17 @@ namespace oly::editor
 		return _documents.size();
 	}
 
+	size_t DocumentManager::GetDocumentIndex(const IDocument* doc) const
+	{
+		for (size_t i = 0; i < _documents.size(); ++i)
+		{
+			if (_documents[i].get() == doc)
+				return i;
+		}
+
+		return _documents.size();
+	}
+
 	bool DocumentManager::DocumentExists(const detail::ResourcePath& oly_path) const
 	{
 		return GetDocumentIndex(oly_path) < _documents.size();

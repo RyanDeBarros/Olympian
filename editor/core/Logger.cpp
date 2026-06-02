@@ -6,8 +6,6 @@
 
 namespace oly::editor
 {
-    // TODO v7 log panel - color lines by log level
-
     ImU32 LogLevelColor(LogLevel level)
     {
         switch (level)

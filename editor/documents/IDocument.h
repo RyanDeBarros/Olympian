@@ -24,6 +24,7 @@ namespace oly::editor
 		virtual void Dump() = 0;
 
 		const detail::ResourcePath& GetOlyPath() const;
+		std::string TabName() const;
 
 		void MarkDirty();
 		void MarkClean();

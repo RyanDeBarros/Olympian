@@ -33,6 +33,7 @@ namespace oly::editor
 		const IDocument& GetDocument(size_t i) const;
 		IDocument& GetDocument(size_t i);
 		size_t GetDocumentIndex(const detail::ResourcePath& oly_path) const;
+		size_t GetDocumentIndex(const IDocument* doc) const;
 		bool DocumentExists(const detail::ResourcePath& oly_path) const;
 
 		template<typename T, typename... Args>
