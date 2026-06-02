@@ -76,58 +76,8 @@ namespace oly::editor
 				}
 			}
 
-			for (auto it = _pending_close.begin(); it != _pending_close.end();)
-			{
-				if (seen_documents.contains(*it))
-					++it;
-				else
-					it = _pending_close.erase(it);
-			}
-
-			for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
-			{
-				if (seen_documents.contains(*it))
-					++it;
-				else
-					it = _pending_close_set.erase(it);
-			}
-
-			if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-			{
-				IDocument* doc = _pending_close.front();
-
-				ImGui::Text(("Asset " + doc->TabName()).c_str());
-				ImGui::Text(("Full path: " + doc->GetOlyPath().string()).c_str());
-
-				if (ImGui::Button("Save Changes"))
-				{
-					doc->Dump();
-					closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-					_pending_close.erase(_pending_close.begin());
-					_pending_close_set.erase(doc);
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::SameLine();
-				if (ImGui::Button("Discard Changes"))
-				{
-					doc->Load();
-					closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-					_pending_close.erase(_pending_close.begin());
-					_pending_close_set.erase(doc);
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel Close"))
-				{
-					_pending_close.erase(_pending_close.begin());
-					_pending_close_set.erase(doc);
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::EndPopup();
-			}
+			RemoveOldPendingDocuments(seen_documents);
+			DrawUnsavedChangesModal(closed);
 
 			std::sort(closed.begin(), closed.end());
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
@@ -138,6 +88,65 @@ namespace oly::editor
 		}
 
 		ImGui::End();
+	}
+
+	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents)
+	{
+		for (auto it = _pending_close.begin(); it != _pending_close.end();)
+		{
+			if (seen_documents.contains(*it))
+				++it;
+			else
+				it = _pending_close.erase(it);
+		}
+
+		for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
+		{
+			if (seen_documents.contains(*it))
+				++it;
+			else
+				it = _pending_close_set.erase(it);
+		}
+	}
+
+	void AssetEditorPanel::DrawUnsavedChangesModal(std::vector<size_t>& closed)
+	{
+		if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			IDocument* doc = _pending_close.front();
+
+			ImGui::Text(("Asset " + doc->TabName()).c_str());
+			ImGui::Text(("Full path: " + doc->GetOlyPath().string()).c_str());
+
+			if (ImGui::Button("Save Changes"))
+			{
+				doc->Dump();
+				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				_pending_close.erase(_pending_close.begin());
+				_pending_close_set.erase(doc);
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Discard Changes"))
+			{
+				doc->Load();
+				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				_pending_close.erase(_pending_close.begin());
+				_pending_close_set.erase(doc);
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel Close"))
+			{
+				_pending_close.erase(_pending_close.begin());
+				_pending_close_set.erase(doc);
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void AssetEditorPanel::FocusTab(IDocument* doc)

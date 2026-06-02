@@ -21,6 +21,11 @@ namespace oly::editor
 		const char* GetTitle() const override;
 		void Draw() override;
 
+	private:
+		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
+		void DrawUnsavedChangesModal(std::vector<size_t>& closed);
+
+	public:
 		void FocusTab(IDocument* doc);
 		bool IsSelected(IDocument* doc) const;
 
