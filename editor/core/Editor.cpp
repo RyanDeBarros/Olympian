@@ -66,6 +66,40 @@ namespace oly::editor
 		glfwSetWindowPos(_os_window, nx, ny);
 	}
 
+	void Editor::SetOSWindowMaximized(bool maximized)
+	{
+		if (maximized)
+			glfwMaximizeWindow(_os_window);
+		else
+			glfwRestoreWindow(_os_window);
+	}
+
+	void Editor::SetOSWindowFullScreen(bool fullscreen)
+	{
+		if (fullscreen == _os_state.fullscreen)
+			return;
+
+		_os_state.fullscreen = fullscreen;
+		if (fullscreen)
+		{
+			glfwGetWindowPos(_os_window, &_os_state.x, &_os_state.y);
+			glfwGetWindowSize(_os_window, &_os_state.w, &_os_state.h);
+
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			glfwSetWindowMonitor(_os_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+		}
+		else
+		{
+			glfwSetWindowMonitor(_os_window, nullptr, _os_state.x, _os_state.y, _os_state.w, _os_state.h, 0);
+		}
+	}
+
+	bool Editor::IsOSWindowFullScreen() const
+	{
+		return _os_state.fullscreen;
+	}
+
 	AppState Editor::GetAppState() const
 	{
 		return _app_state;

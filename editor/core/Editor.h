@@ -19,10 +19,19 @@ namespace oly::editor
 		Main
 	};
 
+	struct WindowState
+	{
+		int x = 0, y = 0;
+		int w = 1, h = 1;
+		bool fullscreen = false;
+	};
+
 	class Editor
 	{
 		GLFWwindow* _os_window = nullptr;
 		AppState _app_state = AppState::ProjectSelect;
+
+		WindowState _os_state = {};
 
 		std::unique_ptr<ProjectSelectWindow> _project_select_window;
 
@@ -41,6 +50,9 @@ namespace oly::editor
 		void Tick();
 
 		void SetOSWindowSize(int width, int height);
+		void SetOSWindowMaximized(bool maximized);
+		void SetOSWindowFullScreen(bool fullscreen);
+		bool IsOSWindowFullScreen() const;
 
 		AppState GetAppState() const;
 		ProjectSelectWindow& GetProjectSelectWindow();

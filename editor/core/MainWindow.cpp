@@ -54,7 +54,7 @@ namespace oly::editor
 
     void MainWindow::Open()
     {
-        Editor::Instance().SetOSWindowSize(1440, 1080);
+        Editor::Instance().SetOSWindowMaximized(true);
     }
 
     void MainWindow::Draw()

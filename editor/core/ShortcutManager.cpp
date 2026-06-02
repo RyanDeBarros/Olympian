@@ -26,6 +26,9 @@ namespace oly::editor
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
             AssetEditorPanel::Instance().SaveAllTabs();
+
+        if (ImGui::Shortcut(ImGuiKey_F11, ImGuiInputFlags_RouteGlobal))
+            Editor::Instance().SetOSWindowFullScreen(!Editor::Instance().IsOSWindowFullScreen());
     }
 
     void ShortcutManager::HandlePathDrop(int count, const char** paths)
