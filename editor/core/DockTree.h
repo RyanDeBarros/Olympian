@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <typeindex>
 #include <vector>
 
@@ -9,20 +10,29 @@ namespace oly::editor
 {
 	class PanelManager;
 
-	struct DockNode
+	class DockNode
 	{
-		std::vector<std::type_index> indexes;
-		DockNode* first = nullptr;
-		DockNode* second = nullptr;
-		bool horizontal = true;
-		float split_factor = 0.5f;
+		std::vector<std::type_index> _indexes;
+		std::unique_ptr<DockNode> _first = nullptr;
+		std::unique_ptr<DockNode> _second = nullptr;
+		ImGuiDir _direction = ImGuiDir_None;
+		float _split_factor = 0.5f;
+
+		DockNode() = default;
+
+	public:
+		static std::unique_ptr<DockNode> MakeBranch(ImGuiDir direction, std::unique_ptr<DockNode>&& first, std::unique_ptr<DockNode>&& second, float split_factor = 0.5f);
+		static std::unique_ptr<DockNode> MakeLeaf(std::vector<std::type_index>&& indexes);
 
 		void SplitLayout(ImGuiID id, PanelManager& panel_manager) const;
 	};
 
-	struct DockTree
+	class DockTree
 	{
-		DockNode root;
+		std::unique_ptr<DockNode> _root;
+
+	public:
+		DockTree(std::unique_ptr<DockNode>&& root);
 
 		void SetupLayout(ImGuiID dockspace_id, PanelManager& panel_manager) const;
 	};

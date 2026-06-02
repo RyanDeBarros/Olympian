@@ -43,18 +43,17 @@ namespace oly::editor
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
-        DockTree tree;
-
-        DockNode content_browser;
-        content_browser.indexes.push_back(typeid(ContentBrowserPanel));
-        content_browser.indexes.push_back(typeid(LogPanel));
-
-        DockNode asset_editor;
-        asset_editor.indexes.push_back(typeid(AssetEditorPanel));
-
-        tree.root.horizontal = false;
-        tree.root.first = &asset_editor;
-        tree.root.second = &content_browser;
+        DockTree tree = DockNode::MakeBranch(
+            ImGuiDir_Down,
+            DockNode::MakeLeaf({
+                typeid(AssetEditorPanel)
+            }),
+            DockNode::MakeLeaf({
+                typeid(ContentBrowserPanel),
+                typeid(LogPanel)
+            }),
+            0.75f
+        );
 
         tree.SetupLayout(_dockspace_id, *_panel_manager);
 
