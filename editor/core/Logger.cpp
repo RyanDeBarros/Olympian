@@ -23,6 +23,23 @@ namespace oly::editor
         }
     }
 
+    const char* LogLevelPrefix(LogLevel level)
+    {
+        switch (level)
+        {
+        case LogLevel::Info:
+            return "[Info]";
+        case LogLevel::Success:
+            return "[Success]";
+        case LogLevel::Warning:
+            return "[Warning]";
+        case LogLevel::Error:
+            return "[Error]";
+        default:
+            return "";
+        }
+    }
+
     Logger& Logger::Instance()
     {
         return Editor::Instance().GetLogger();
@@ -30,53 +47,17 @@ namespace oly::editor
 
     void Logger::Log(LogLevel level, const char* msg)
     {
-        switch (level)
-        {
-        case LogLevel::Info:
-            LogInfo(msg);
-            break;
-        case LogLevel::Success:
-            LogSuccess(msg);
-            break;
-        case LogLevel::Warning:
-            LogWarning(msg);
-            break;
-        case LogLevel::Error:
-            LogError(msg);
-            break;
-        }
-    }
-
-    void Logger::LogInfo(const char* info)
-    {
-        std::string line = std::string("[Info] ") + info;
-        std::cerr << line << std::endl;
-        _lines.push_back(std::make_pair(LogLevel::Info, std::move(line)));
-    }
-
-    void Logger::LogSuccess(const char* success)
-    {
-        std::string line = std::string("[Success] ") + success;
-        std::cerr << line << std::endl;
-        _lines.push_back(std::make_pair(LogLevel::Success, std::move(line)));
-    }
-
-    void Logger::LogWarning(const char* warning)
-    {
-        std::string line = std::string("[Warning] ") + warning;
-        std::cerr << line << std::endl;
-        _lines.push_back(std::make_pair(LogLevel::Warning, std::move(line)));
-    }
-
-    void Logger::LogError(const char* error)
-    {
-        std::string line = std::string("[Error] ") + error;
-        std::cerr << line << std::endl;
-        _lines.push_back(std::make_pair(LogLevel::Error, std::move(line)));
+        std::cerr << LogLevelPrefix(level) << ' ' << msg << std::endl;
+        _lines.push_back({ level, msg });
     }
 
     void Logger::ClearLog()
     {
         _lines.clear();
+    }
+
+    const std::vector<LogEntry>& Logger::Lines() const
+    {
+        return _lines;
     }
 }

@@ -16,20 +16,24 @@ namespace oly::editor
 	};
 
 	extern ImU32 LogLevelColor(LogLevel level);
+	extern const char* LogLevelPrefix(LogLevel level);
+
+	struct LogEntry
+	{
+		LogLevel level;
+		std::string msg;
+	};
 
 	class Logger
 	{
-		std::vector<std::pair<LogLevel, std::string>> _lines;
+		std::vector<LogEntry> _lines;
 
 	public:
 		static Logger& Instance();
 
 		void Log(LogLevel level, const char* msg);
-		void LogInfo(const char* info);
-		void LogSuccess(const char* success);
-		void LogWarning(const char* warning);
-		void LogError(const char* error);
 		
 		void ClearLog();
+		const std::vector<LogEntry>& Lines() const;
 	};
 }

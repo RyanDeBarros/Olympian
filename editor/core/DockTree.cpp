@@ -9,8 +9,11 @@ namespace oly::editor
 {
     void DockNode::SplitLayout(ImGuiID id, PanelManager& panel_manager) const
     {
-        if (index)
-            ImGui::DockBuilderDockWindow(panel_manager.Get(*index)->GetTitle(), id);
+        if (!indexes.empty())
+        {
+            for (auto it = indexes.begin(); it != indexes.end(); ++it)
+                ImGui::DockBuilderDockWindow(panel_manager.Get(*it)->GetTitle(), id);
+        }
         else if (!first || !second)
             return;
         else if (horizontal)

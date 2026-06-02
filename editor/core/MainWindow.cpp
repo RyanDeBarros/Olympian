@@ -7,8 +7,9 @@
 
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
-#include "panels/ContentBrowserPanel.h"
 #include "panels/AssetEditorPanel.h"
+#include "panels/ContentBrowserPanel.h"
+#include "panels/LogPanel.h"
 
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
@@ -38,16 +39,18 @@ namespace oly::editor
     {
         _panel_manager->Add<ContentBrowserPanel>().Open();
         _panel_manager->Add<AssetEditorPanel>().Open();
+        _panel_manager->Add<LogPanel>().Open();
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
         DockTree tree;
 
         DockNode content_browser;
-        content_browser.index = typeid(ContentBrowserPanel);
+        content_browser.indexes.push_back(typeid(ContentBrowserPanel));
+        content_browser.indexes.push_back(typeid(LogPanel));
 
         DockNode asset_editor;
-        asset_editor.index = typeid(AssetEditorPanel);
+        asset_editor.indexes.push_back(typeid(AssetEditorPanel));
 
         tree.root.horizontal = false;
         tree.root.first = &asset_editor;

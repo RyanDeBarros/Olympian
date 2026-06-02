@@ -11,7 +11,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::Draw()
 	{
-		ImGui::Begin(GetTitle(), nullptr, ImGuiWindowFlags_MenuBar);
+		ImGui::Begin(GetTitle());
 		// TODO v7
 		ImGui::End();
 	}

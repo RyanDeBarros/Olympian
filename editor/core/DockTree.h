@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optional>
 #include <typeindex>
+#include <vector>
 
 #include <imgui.h>
 
@@ -11,7 +11,7 @@ namespace oly::editor
 
 	struct DockNode
 	{
-		std::optional<std::type_index> index;
+		std::vector<std::type_index> indexes;
 		DockNode* first = nullptr;
 		DockNode* second = nullptr;
 		bool horizontal = true;

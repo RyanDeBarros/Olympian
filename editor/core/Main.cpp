@@ -12,7 +12,7 @@ static void glfw_error_callback(int error, const char* description)
 {
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
-    oly::editor::Logger::Instance().LogError(ss.str().c_str());
+    oly::editor::Logger::Instance().Log(oly::editor::LogLevel::Error, ss.str().c_str());
 }
 
 static void glfw_drop_callback(GLFWwindow* window, int count, const char** paths)
