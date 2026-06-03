@@ -21,9 +21,15 @@ namespace oly::editor
 		void RefreshSubnodes();
 	};
 
+	struct TreeViewConfig
+	{
+		bool ignore_imports = true;
+	};
+
 	class TreeViewPanel : public IPanel
 	{
 		std::unique_ptr<TreeViewNode> _root;
+		TreeViewConfig _config;
 
 	public:
 		void Init() override;
@@ -31,6 +37,7 @@ namespace oly::editor
 		void Draw() override;
 
 	private:
+		void DrawHeader();
 		void DrawNode(TreeViewNode& node, int indent, int& local_file_index);
 		void DrawNodePrefix(TreeViewNode& node);
 		void DrawRowBg(TreeViewNode& node, int& local_file_index);

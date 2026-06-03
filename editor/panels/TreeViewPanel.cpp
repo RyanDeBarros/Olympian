@@ -3,6 +3,8 @@
 #include "core/Editor.h"
 #include "core/Logger.h"
 #include "core/ProjectInfo.h"
+#include "core/ResourceLoader.h"
+#include "graphics/Toolbar.h"
 
 #include <imgui.h>
 
@@ -113,7 +115,7 @@ namespace oly::editor
 	{
 		ImGui::Begin(GetTitle());
 
-		// TODO v8 header with options like filters for file extensions or only showing assets (no .oly import files - enabled by default)
+		DrawHeader();
 
 		_root->Validate();
 
@@ -138,13 +140,17 @@ namespace oly::editor
 		ImGui::End();
 	}
 
+	void TreeViewPanel::DrawHeader()
+	{
+		// TODO v8 header with options like filters for file extensions or only showing assets (no .oly import files - enabled by default)
+
+		Toolbar::DrawIcon(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports);
+		ImGui::Separator();
+	}
+
 	void TreeViewPanel::DrawNode(TreeViewNode& node, int indent, int& local_file_index)
 	{
-		for (int i = 0; i < indent; ++i)
-		{
-			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
-			ImGui::SameLine();
-		}
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + indent * ImGui::GetStyle().IndentSpacing);
 
 		DrawRowBg(node, local_file_index);
 		DrawNodePrefix(node);

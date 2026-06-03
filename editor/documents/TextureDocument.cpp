@@ -86,13 +86,15 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
+	// TODO v8 use ImGui::SeparatorText() to separate sections
+
 	void TextureDocument::DrawPreview()
 	{
 		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::Text("Preview");
 			ImGui::Separator();
-			if (ImGui::Button("Reset"))
+			if (ImGui::Button("Reset")) // TODO v8 use Toolbar::DrawIcon
 				_preview_nav = PreviewNav();
 			
 			if (GIFTexture* gif = _texture.GetGIF())
@@ -113,7 +115,7 @@ namespace oly::editor
 				ImGui::SetNextItemWidth(100.0f);
 				ImGui::InputFloat("##ScaleInput", &svg->preview_scale);
 				ImGui::SameLine();
-				if (ImGui::Button("Refresh Scale"))
+				if (ImGui::Button("Refresh Scale")) // TODO v8 use Toolbar::DrawIcon
 					_texture = { SVGTexture(GetSourcePath().string().c_str(), svg->preview_scale) };
 			}
 
@@ -146,7 +148,7 @@ namespace oly::editor
 			ImGui::Text("Select Slot");
 
 			ImGui::SameLine();
-			if (ImGui::Button("+"))
+			if (ImGui::Button("+")) // TODO v8 use Toolbar::DrawIcon
 			{
 				_active_slot = _slot_names.size();
 				_scratch.PushBack();
@@ -154,7 +156,7 @@ namespace oly::editor
 			}
 
 			ImGui::SameLine();
-			if (ImGui::Button("-"))
+			if (ImGui::Button("-")) // TODO v8 use Toolbar::DrawIcon
 			{
 				_scratch.Remove(_active_slot);
 				if (_scratch.Empty())

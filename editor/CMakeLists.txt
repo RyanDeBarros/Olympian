@@ -211,3 +211,9 @@ add_subdirectory(documents)
 add_subdirectory(external)
 add_subdirectory(graphics)
 add_subdirectory(panels)
+
+add_custom_command(TARGET OlympianEditor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    $<TARGET_FILE_DIR:OlympianEditor>/res
+)

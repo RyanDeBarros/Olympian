@@ -38,6 +38,10 @@ The editor uses the following libraries:
 - **marzer/tomlplusplus**
 - **memononen/nanosvg**
 
+The editor also uses the following assets:
+
+- [Google Icons](https://fonts.google.com/icons)
+
 ### Documentation
 
 The documentation webpage uses the following libraries:

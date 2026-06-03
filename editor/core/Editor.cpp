@@ -5,6 +5,7 @@
 #include "core/MainWindow.h"
 #include "core/ShortcutManager.h"
 #include "core/ProjectInfo.h"
+#include "core/ResourceLoader.h"
 
 #include "documents/DocumentManager.h"
 
@@ -30,6 +31,7 @@ namespace oly::editor
 	void Editor::Init(GLFWwindow* window)
 	{
 		_os_window = window;
+		ResourceLoader::LoadAll();
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
 	}

@@ -75,4 +75,5 @@ namespace oly
 	// TODO v11 UI widgets
 	// TODO v12 thread safety + multi-threading.
 	// TODO v13 network communication - online/local multiplayer.
+	// TODO v9 change license to the same as used in Lexico
 }
