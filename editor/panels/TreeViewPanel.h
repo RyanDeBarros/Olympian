@@ -1,0 +1,13 @@
+#pragma once
+
+#include "panels/IPanel.h"
+
+namespace oly::editor
+{
+	class TreeViewPanel : public IPanel
+	{
+	public:
+		const char* GetTitle() const override;
+		void Draw() override;
+	};
+}

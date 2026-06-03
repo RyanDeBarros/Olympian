@@ -4,4 +4,5 @@ target_sources(OlympianEditor PRIVATE
 	IPanel.cpp
 	LogPanel.cpp
 	PanelManager.cpp
+	TreeViewPanel.cpp
 )

@@ -10,6 +10,7 @@
 #include "panels/AssetEditorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/LogPanel.h"
+#include "panels/TreeViewPanel.h"
 
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
@@ -40,14 +41,22 @@ namespace oly::editor
         _panel_manager->Add<ContentBrowserPanel>().Open();
         _panel_manager->Add<AssetEditorPanel>().Open();
         _panel_manager->Add<LogPanel>().Open();
+        _panel_manager->Add<TreeViewPanel>().Open();
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
         DockTree tree = DockNode::MakeBranch(
             ImGuiDir_Down,
-            DockNode::MakeLeaf({
-                typeid(AssetEditorPanel)
-            }),
+            DockNode::MakeBranch(
+                ImGuiDir_Right,
+                DockNode::MakeLeaf({
+                    typeid(TreeViewPanel)
+                }),
+                DockNode::MakeLeaf({
+                    typeid(AssetEditorPanel)
+                }),
+                0.2f
+            ),
             DockNode::MakeLeaf({
                 typeid(ContentBrowserPanel),
                 typeid(LogPanel)
