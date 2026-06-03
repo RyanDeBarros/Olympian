@@ -83,11 +83,10 @@ namespace oly::editor
 
 	void TextureDocument::DrawPreview()
 	{
-		// TODO v7 fix "Preview" label not showing
 		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::Text("Preview");
-			ImGui::SameLine();
+			ImGui::Separator();
 			if (ImGui::Button("Reset"))
 				_preview_nav = PreviewNav();
 			
