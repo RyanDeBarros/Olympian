@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+#include "core/Errors.h"
+
 #include "external/STB.h"
 #include "external/NSVG.h"
 
@@ -40,8 +42,6 @@ namespace oly::editor
 		return _id;
 	}
 
-	// TODO v7 error handling - be mindful of memory leaks with early exits
-
 	static GLenum InternalFormat(int channels)
 	{
 		return channels == 1 ? GL_R8
@@ -62,6 +62,12 @@ namespace oly::editor
 	{
 		int channels;
 		unsigned char* data = stbi_load(filepath, &width, &height, &channels, 0);
+		if (!data || width <= 0 || height <= 0 || channels <= 0)
+		{
+			stbi_image_free(data);
+			BreakoutError::Throw(("Cannot load raster image from file: " + std::string(filepath)).c_str());
+		}
+
 		glBindTexture(GL_TEXTURE_2D, id.ID());
 		glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data);
 
@@ -90,7 +96,13 @@ namespace oly::editor
 	GIFTexture::GIFTexture(const char* filepath, GLenum min_filter, GLenum mag_filter)
 	{
 		std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+		if (!file.is_open() || file.fail())
+			BreakoutError::Throw(("Cannot open file for reading: " + std::string(filepath)).c_str());
+
 		std::streamsize size = file.tellg();
+		if (size <= 0)
+			BreakoutError::Throw(("File has bad size (bytes): " + std::string(filepath)).c_str());
+
 		file.seekg(0, std::ios::beg);
 
 		std::vector<unsigned char> pixels(size);
@@ -100,6 +112,12 @@ namespace oly::editor
 		int* delay_arr;
 		int frames;
 		unsigned char* data = stbi_load_gif_from_memory(pixels.data(), static_cast<int>(pixels.size()), &delay_arr, &width, &height, &frames, &channels, 0);
+		if (!data || !delay_arr || frames <= 0 || width <= 0 || height <= 0 || channels <= 0)
+		{
+			stbi_image_free(delay_arr);
+			stbi_image_free(data);
+			BreakoutError::Throw(("Cannot load gif from file: " + std::string(filepath)).c_str());
+		}
 
 		ids.resize(frames);
 		delays.resize(frames);
@@ -155,13 +173,28 @@ namespace oly::editor
 	SVGTexture::SVGTexture(const char* filepath, float scale, GLenum min_filter, GLenum mag_filter)
 	{
 		NSVGimage* image = nsvgParseFromFile(filepath, "px", 96.f);
+		if (!image)
+			BreakoutError::Throw(("Cannot parse svg from file: " + std::string(filepath)).c_str());
+
 		NSVGrasterizer* rasterizer = nsvgCreateRasterizer();
+		if (!rasterizer)
+		{
+			nsvgDelete(image);
+			BreakoutError::Throw("Failed to create svg rasterizer");
+		}
 
 		width = std::max(static_cast<int>(scale * image->width), 1);
 		height = std::max(static_cast<int>(scale * image->height), 1);
 		const int channels = 4;
 		const int stride = width * channels;
-		unsigned char* data = new unsigned char[stride * height];
+		unsigned char* data = new (std::nothrow) unsigned char[stride * height];
+		if (!data)
+		{
+			nsvgDeleteRasterizer(rasterizer);
+			nsvgDelete(image);
+			BreakoutError::Throw("Bad alloc");
+		}
+
 		nsvgRasterize(rasterizer, image, 0.0f, 0.0f, scale, data, width, height, stride);
 
 		glBindTexture(GL_TEXTURE_2D, id.ID());
@@ -172,7 +205,6 @@ namespace oly::editor
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		delete[] data;
-
 		nsvgDeleteRasterizer(rasterizer);
 		nsvgDelete(image);
 	}

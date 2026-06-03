@@ -3,6 +3,7 @@
 #include <imgui.h>
 
 #include "core/MainWindow.h"
+#include "core/Logger.h"
 #include "panels/PanelManager.h"
 
 #include "documents/DocumentManager.h"
@@ -17,8 +18,9 @@ namespace oly::editor
 			return *panel;
 		else
 		{
-			// TODO v7 error system for editor that prevents crashes. use new error codes
-			throw std::runtime_error("No instance of AssetEditorPanel");
+			std::string error = "No instance of AssetEditorPanel";
+			Logger::Instance().Log(LogLevel::Error, error.c_str());
+			throw std::runtime_error(std::move(error));
 		}
 	}
 

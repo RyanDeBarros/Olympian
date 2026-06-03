@@ -15,7 +15,7 @@ namespace oly::editor
     {
         Editor::Instance().SetOSWindowSize(920, 690);
 
-        // TODO v7 remove once recent projects group is implemented
+        // TODO v8 remove once recent projects group is implemented
         _project_folder = "D:/Projects/Visual Studio/Olympian/Tester/";
         CheckProjectFolder();
     }
