@@ -42,13 +42,15 @@ namespace oly::editor
 			case detail::Key::Meta_Font:
 				if (meta.get_version() == FontDocument::GetVersion())
 					Add<FontDocument>(std::move(oly_file));
+				else
+					return OpenAssetCode::UnsupportedAssetType;
 				break;
 			case detail::Key::Meta_Texture:
 				if (meta.get_version() == TextureDocument::GetVersion())
 					Add<TextureDocument>(std::move(oly_file));
+				else
+					return OpenAssetCode::UnsupportedAssetType;
 				break;
-			default:
-				return OpenAssetCode::UnsupportedAssetType;
 			}
 
 			return OpenAssetCode::UnsupportedAssetVersion;

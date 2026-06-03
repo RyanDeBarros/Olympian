@@ -7,13 +7,17 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <stack>
 #include <unordered_set>
 
 namespace oly::editor
 {
 	std::string TreeViewNode::DisplayName() const
 	{
-		return path.filename().generic_string();
+		if (path == ProjectInfo::Instance().ProjectRoot())
+			return path.parent_path().filename().generic_string() + " (" + path.generic_string() + ")";
+		else
+			return path.filename().generic_string();
 	}
 
 	void TreeViewNode::Validate()
@@ -108,7 +112,76 @@ namespace oly::editor
 	void TreeViewPanel::Draw()
 	{
 		ImGui::Begin(GetTitle());
-		// TODO v8
+
+		// TODO v8 header with options like filters for file extensions or only showing assets (no .oly import files - enabled by default)
+
+		_root->Validate();
+
+		std::stack<std::pair<TreeViewNode*, int>> process;
+		process.push(std::make_pair(_root.get(), 0));
+		int local_file_index = 0;
+
+		while (!process.empty())
+		{
+			auto [node, indent] = process.top();
+			process.pop();
+
+			float arrow_size = ImGui::GetFrameHeight();
+
+			for (int i = 0; i < indent; ++i)
+			{
+				ImGui::Dummy(ImVec2(arrow_size, arrow_size));
+				ImGui::SameLine();
+			}
+
+			ImVec2 start = ImGui::GetCursorScreenPos();
+			ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
+
+			if (node->IsBranching())
+			{
+				ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_Header, 0.6f), 6.0f);
+
+				ImGui::PushID(node);
+				if (node->dropdown_open)
+				{
+					if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down))
+						node->CloseBranch();
+				}
+				else
+				{
+					if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right))
+						node->OpenBranch();
+				}
+				ImGui::PopID();
+				ImGui::SameLine();
+
+				local_file_index = 0;
+			}
+			else
+			{
+				// TODO v8 file icon instead of dummy
+				ImGui::Dummy(ImVec2(arrow_size, arrow_size));
+				ImGui::SameLine();
+
+				if (local_file_index % 2 == 1)
+					ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.15f));
+
+				++local_file_index;
+			}
+
+			ImGui::PushID(node);
+			ImGui::Selectable(node->DisplayName().c_str());
+			ImGui::PopID();
+			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				node->Open();
+
+			if (node->IsBranching() && node->dropdown_open)
+			{
+				for (const auto& subnode : node->subnodes)
+					process.push(std::make_pair(subnode.get(), indent + 1));
+			}
+		}
+
 		ImGui::End();
 	}
 }
