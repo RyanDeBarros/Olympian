@@ -394,12 +394,12 @@ namespace oly::graphics
 				{
 					buf.pre_draw(range.initial, range.length);
 				}
-				catch (Error e)
+				catch (const Error& e)
 				{
 					if (e.code == ErrorCode::IndexOutOfRange)
 						; // silently ignore
 					else
-						throw e;
+						throw;
 				}
 			}
 			dirty.clear();
@@ -467,12 +467,12 @@ namespace oly::graphics
 				{
 					buf.pre_draw<n>(range.initial, range.length);
 				}
-				catch (Error e)
+				catch (const Error& e)
 				{
 					if (e.code == ErrorCode::IndexOutOfRange)
 						; // silently ignore
 					else
-						throw e;
+						throw;
 				}
 			}
 			dirty[n].clear();

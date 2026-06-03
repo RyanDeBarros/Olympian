@@ -1,5 +1,7 @@
 #include "Regex.h"
 
+#include "core/base/Color.h"
+
 #include <sstream>
 
 namespace oly::algo::re
@@ -111,7 +113,8 @@ namespace oly::algo::re
 		return true;
 	}
 
-	bool parse_float(const StringParam& input, float& v)
+	template<>
+	bool try_parse<float>(const StringParam& input, float& v)
 	{
 		glm::vec1 u;
 		if (parse_vec(input, u))
@@ -123,18 +126,83 @@ namespace oly::algo::re
 			return false;
 	}
 
-	bool parse_vec2(const StringParam& input, glm::vec2& v)
+	template<>
+	bool try_parse<glm::vec2>(const StringParam& input, glm::vec2& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec3(const StringParam& input, glm::vec3& v)
+	template<>
+	bool try_parse<glm::vec3>(const StringParam& input, glm::vec3& v)
 	{
 		return parse_vec(input, v);
 	}
 
-	bool parse_vec4(const StringParam& input, glm::vec4& v)
+	template<>
+	bool try_parse<glm::vec4>(const StringParam& input, glm::vec4& v)
 	{
 		return parse_vec(input, v);
+	}
+
+	template<>
+	bool try_parse<Color>(const StringParam& text, Color& color)
+	{
+		text.to_lower();
+		if (text == "white")
+		{
+			color = colors::WHITE;
+			return true;
+		}
+		else if (text == "black")
+		{
+			color = colors::BLACK;
+			return true;
+		}
+		else if (text == "red")
+		{
+			color = colors::RED;
+			return true;
+		}
+		else if (text == "green")
+		{
+			color = colors::GREEN;
+			return true;
+		}
+		else if (text == "blue")
+		{
+			color = colors::BLUE;
+			return true;
+		}
+		else if (text == "cyan")
+		{
+			color = colors::CYAN;
+			return true;
+		}
+		else if (text == "magenta")
+		{
+			color = colors::MAGENTA;
+			return true;
+		}
+		else if (text == "yellow")
+		{
+			color = colors::YELLOW;
+			return true;
+		}
+		else if (text == "orange")
+		{
+			color = colors::ORANGE;
+			return true;
+		}
+		else
+		{
+			glm::vec4 c;
+			if (parse_vec(text, c))
+			{
+				color = c;
+				return true;
+			}
+			else
+				return false;
+		}
 	}
 }

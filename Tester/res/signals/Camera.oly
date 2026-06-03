@@ -1,11 +1,11 @@
-#meta type=signal
+#meta version=1.0 type=signal
 
-[[signal]]
-"id"       = "pan camera"
-"binding"  = "gamepad axis 2d"
-"axis2d"   = 1 # RIGHT_XY
-"deadzone" = 0.018
+[[SigArr]]
+ID = "pan camera"
+Binding = 4
+Axis2D = 1
+Deadzone = 0.018
 
-[[signal]]
-"id"      = "zoom camera"
-"binding" = "scroll"
+[[SigArr]]
+ID = "zoom camera"
+Binding = 6

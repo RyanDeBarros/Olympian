@@ -10,35 +10,32 @@ namespace oly::rendering
 {
 	struct FontStyle
 	{
-	private:
-		enum Defaults : unsigned int
+		enum Mode : unsigned int
 		{
-			DRegular = 0,
-			DBold = 0b1,
-			DItalic = 0b10,
-			DMax = 0b11
+			Regular = 0,
+			Bold = 0b1,
+			Italic = 0b10,
+			BoldItalic = 0b11
 		};
 
+	private:
 		unsigned int v = 0;
 
 	public:
-		constexpr FontStyle(unsigned int v) : v(v & Defaults::DMax) {}
+		constexpr FontStyle(Mode v) : v(v & BoldItalic) {}
 
 		constexpr bool operator==(FontStyle other) const { return v == other.v; }
 		constexpr operator unsigned int() const { return v; }
 
-		constexpr FontStyle operator~() const { return FontStyle(~v & Defaults::DMax); }
-		constexpr FontStyle operator|(FontStyle other) const { return FontStyle(v | other.v); }
-		constexpr FontStyle operator&(FontStyle other) const { return FontStyle(v & other.v); }
+		constexpr FontStyle operator~() const { return Mode(~v & BoldItalic); }
+		constexpr FontStyle operator|(FontStyle other) const { return Mode(v | other.v); }
+		constexpr FontStyle operator|(Mode other) const { return Mode(v | other); }
+		constexpr FontStyle operator&(FontStyle other) const { return Mode(v & other.v); }
+		constexpr FontStyle operator&(Mode other) const { return Mode(v & other); }
 		constexpr FontStyle& operator|=(FontStyle other) { return *this = (*this | other); }
+		constexpr FontStyle& operator|=(Mode other) { return *this = (*this | other); }
 		constexpr FontStyle& operator&=(FontStyle other) { return *this = (*this & other); }
-
-		static constexpr FontStyle REGULAR() { return FontStyle(Defaults::DRegular); }
-		static constexpr FontStyle BOLD() { return FontStyle(Defaults::DBold); }
-		static constexpr FontStyle ITALIC() { return FontStyle(Defaults::DItalic); }
-		static constexpr FontStyle BOLD_ITALIC() { return FontStyle(Defaults::DBold | Defaults::DItalic); }
-
-		static std::optional<FontStyle> from_string(const StringParam& str);
+		constexpr FontStyle& operator&=(Mode other) { return *this = (*this & other); }
 	};
 }
 
@@ -65,7 +62,7 @@ namespace oly::rendering
 	struct FontSelection
 	{
 		FontFamilyRef family;
-		FontStyle style = FontStyle::REGULAR();
+		FontStyle style = FontStyle::Regular;
 
 		FontFamily::FontRef get() const;
 		void set_font(const FontFamily::FontRef& font);

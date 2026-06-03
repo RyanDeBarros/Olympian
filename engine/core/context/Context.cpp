@@ -18,10 +18,13 @@
 #include "core/util/Time.h"
 #include "core/util/Timers.h"
 #include "core/util/Loader.h"
+#include "core/util/Parser.h"
 
 #include "graphics/sprites/SpriteAtlas.h"
 #include "graphics/particles/ParticleSystem.h"
 #include "physics/dynamics/bodies/RigidBody.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::context
 {
@@ -30,44 +33,43 @@ namespace oly::context
 		std::string resource_root;
 	}
 
-	static void init_logger(TOMLNode node)
+	static void init_logger(const assets::Parser& parser)
 	{
 		LoggerOptions options;
 
-		if (auto toml_logger = node["logger"])
+		if (auto logger_parser = parser.optional(detail::Key::Logger).subparser())
 		{
-			io::parse_bool(toml_logger["use_logfile"], options.use_logfile);
-			io::parse_bool(toml_logger["use_console"], options.use_console);
-			io::parse_size_t(toml_logger["max_prior_log_files"], options.max_prior_log_files);
-			io::parse_size_t(toml_logger["max_prior_log_bytes"], options.max_prior_log_bytes);
+			logger_parser->optional(detail::Key::UseLogfile)(options.use_logfile);
+			logger_parser->optional(detail::Key::UseConsole)(options.use_console);
+			logger_parser->optional(detail::Key::MaxPriorLogFiles)(options.max_prior_log_files);
+			logger_parser->optional(detail::Key::MaxPriorLogBytes)(options.max_prior_log_bytes);
 			
-			if (auto logger_enable = toml_logger["enable"])
+			if (auto enables_parser = logger_parser->optional(detail::Key::Enable).subparser())
 			{
-				io::parse_bool(logger_enable["debug"], LOG.enable.debug);
-				io::parse_bool(logger_enable["info"], LOG.enable.info);
-				io::parse_bool(logger_enable["warning"], LOG.enable.warning);
-				io::parse_bool(logger_enable["error"], LOG.enable.error);
-				io::parse_bool(logger_enable["fatal"], LOG.enable.fatal);
+				enables_parser->optional(detail::Key::Debug)(LOG.enable.debug);
+				enables_parser->optional(detail::Key::Info)(LOG.enable.info);
+				enables_parser->optional(detail::Key::Warning)(LOG.enable.warning);
+				enables_parser->optional(detail::Key::Error)(LOG.enable.error);
+				enables_parser->optional(detail::Key::Fatal)(LOG.enable.fatal);
 			}
 		}
 
 		oly::internal::LogAccess::start_log(options);
 	}
 
-	static void init_time(TOMLNode node)
+	static void init_time(const assets::Parser& parser)
 	{
-		if (auto framerate = node["framerate"])
+		if (auto framerate_parser = parser.optional(detail::Key::FrameRate).subparser())
 		{
-			io::parse_double(framerate["frame_length_clip"], TIME.frame_length_clip);
-			io::parse_double(framerate["time_scale"], TIME.time_scale);
+			framerate_parser->optional(detail::Key::FrameLengthClip)(TIME.frame_length_clip);
+			framerate_parser->optional(detail::Key::TimeScale)(TIME.time_scale);
 		}
 		TIME.init();
 	}
 
-	static void autoload_signals(TOMLNode node)
+	static void autoload_signals(const assets::Parser& parser)
 	{
-		auto register_files = node["signals"].as_array();
-		if (register_files)
+		if (auto register_files = parser.optional<TOMLArray>(detail::Key::Signals)())
 		{
 			for (const auto& node : *register_files)
 				if (auto file = node.value<std::string>())
@@ -93,24 +95,23 @@ namespace oly::context
 		}
 		stbi_set_flip_vertically_on_load(true);
 
-		internal::set_resource_root(resource_root);
+		detail::ResourcePath::set_resource_root(resource_root);
 		internal::resource_root = resource_root;
+		
 		auto toml = io::load_toml(project_file);
-		TOMLNode toml_context = toml["context"];
-		if (!toml_context)
-		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "Project file missing \"context\" table." << LOG.nl;
-			throw Error(ErrorCode::ContextInit);
-		}
+		assets::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
+		TOMLNode toml_context = project_parser.required<TOMLNode>(detail::Key::Context)();
 
-		init_logger(toml_context);
+		assets::Parser context_parser(toml_context);
+
+		init_logger(context_parser);
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();
 
 		internal::init_platform(toml_context);
-		init_time(toml_context);
+		init_time(context_parser);
 		graphics::internal::load_resources();
 
-		autoload_signals(toml_context);
+		autoload_signals(context_parser);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 		internal::init_vault(toml_context);

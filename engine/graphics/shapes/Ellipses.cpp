@@ -4,9 +4,11 @@
 
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
-#include "core/util/Loader.h"
+#include "core/util/Parser.h"
 
 #include "physics/collision/elements/OBB.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -383,22 +385,24 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		rendering::Ellipse ellipse;
-		ellipse.set_transformer() = Transformer2D::load(node["transformer"]);
+		ellipse.set_transformer() = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		auto& color = ellipse.set_color();
-		io::parse_vec(node["border_inner_color"], color.border_inner);
-		io::parse_vec(node["border_outer_color"], color.border_outer);
-		io::parse_vec(node["fill_inner_color"], color.fill_inner);
-		io::parse_vec(node["fill_outer_color"], color.fill_outer);
+		parser.optional(detail::Key::BorderInnerColor)(color.border_inner);
+		parser.optional(detail::Key::BorderOuterColor)(color.border_outer);
+		parser.optional(detail::Key::FillInnerColor)(color.fill_inner);
+		parser.optional(detail::Key::FillOuterColor)(color.fill_outer);
 
 		auto& dimension = ellipse.set_dimension();
-		io::parse_float(node["border"], dimension.border);
-		io::parse_float(node["border_exp"], dimension.border_exp);
-		io::parse_float(node["fill_exp"], dimension.fill_exp);
-		io::parse_float(node["rx"], dimension.rx);
-		io::parse_float(node["ry"], dimension.ry);
-		dimension.camera_invariant = io::parse_bool_or(node["camera_invariant"], false);
+		parser.optional(detail::Key::Border)(dimension.border);
+		parser.optional(detail::Key::BorderExponent)(dimension.border_exp);
+		parser.optional(detail::Key::FillExponent)(dimension.fill_exp);
+		parser.optional(detail::Key::RadiusX)(dimension.rx);
+		parser.optional(detail::Key::RadiusY)(dimension.ry);
+		dimension.camera_invariant = parser.defaulted(detail::Key::CameraInvariant)(false);
 
 		return ellipse;
 	}

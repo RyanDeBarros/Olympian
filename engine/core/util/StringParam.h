@@ -6,6 +6,7 @@
 #include <regex>
 
 #include "core/types/Variant.h"
+#include "core/types/Meta.h"
 
 namespace oly
 {
@@ -28,6 +29,9 @@ namespace oly
 		
 		StringParam(const StringParam& other) : storage(copy_from(other)) {}
 		StringParam(StringParam&& other) noexcept : storage(move_from(std::move(other))) {}
+
+		template<numeric T>
+		StringParam(T n) : storage(std::to_string(n)) {}
 
 		StringParam& operator=(const StringParam& other)
 		{

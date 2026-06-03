@@ -3,6 +3,8 @@
 #include "graphics/particles/ParticleEmitter.h"
 #include "core/base/UnitVector.h"
 
+#include "definitions/Keys.h"
+
 namespace oly::particles::ops
 {
 	void SineWave1D::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
@@ -12,10 +14,11 @@ namespace oly::particles::ops
 
 	Polymorphic<SineWave1D> SineWave1D::load(TOMLNode node)
 	{
-		float a = io::parse_float_or(node["a"], 1.0f);
-		float b = io::parse_float_or(node["b"], 1.0f);
-		float k = io::parse_float_or(node["k"], 0.0f);
-		float c = io::parse_float_or(node["c"], 0.0f);
+		assets::Parser parser(node);
+		float a = parser.defaulted(detail::Key::A)(1.0f);
+		float b = parser.defaulted(detail::Key::B)(1.0f);
+		float k = parser.defaulted(detail::Key::K)(0.0f);
+		float c = parser.defaulted(detail::Key::C)(0.0f);
 		return make_polymorphic<SineWave1D>(a, b, k, c);
 	}
 
@@ -26,8 +29,9 @@ namespace oly::particles::ops
 
 	Polymorphic<Polarization2D> Polarization2D::load(TOMLNode node)
 	{
-		float amplitude = io::parse_float_or(node["amplitude"], 1.0f);
-		float time_offset = io::parse_float_or(node["time_offset"], 0.0f);
+		assets::Parser parser(node);
+		float amplitude = parser.defaulted(detail::Key::Amplitude)(1.0f);
+		float time_offset = parser.defaulted(detail::Key::TimeOffset)(0.0f);
 		return make_polymorphic<Polarization2D>(amplitude, time_offset);
 	}
 }

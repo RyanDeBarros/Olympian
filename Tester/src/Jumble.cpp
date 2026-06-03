@@ -2,24 +2,25 @@
 
 Jumble::Jumble()
 {
-	auto toml = oly::io::load_toml("~/assets/archetypes/Jumble.toml");
+	auto toml = oly::io::load_toml("@/assets/archetypes/Jumble.toml");
+	auto table = (oly::TOMLNode)toml;
 
-	transformer = oly::Transformer2D::load(toml["archetype"]["transformer"]);
+	transformer = oly::Transformer2D::load(table["archetype"]["transformer"]);
 
-	sprite3.ref.init_toml(toml["sprite3"]);
-	sprite4.ref.init_toml(toml["sprite4"]);
-	sprite5.ref.init_toml(toml["sprite5"]);
-	sprite1.ref.init_toml(toml["sprite1"]);
-	godot_icon.ref.init_toml(toml["godot_icon"]);
-	knight.ref.init_toml(toml["knight"]);
-	test_text.ref.init_toml(toml["test_text"]);
-	smol_text.ref.init_toml(toml["smol_text"]);
-	atlased_knight.ref.init_toml(toml["atlased_knight"]);
+	sprite3.ref.init_toml(table["sprite3"]);
+	sprite4.ref.init_toml(table["sprite4"]);
+	sprite5.ref.init_toml(table["sprite5"]);
+	sprite1.ref.init_toml(table["sprite1"]);
+	godot_icon.ref.init_toml(table["godot_icon"]);
+	knight.ref.init_toml(table["knight"]);
+	test_text.ref.init_toml(table["test_text"]);
+	smol_text.ref.init_toml(table["smol_text"]);
+	atlased_knight.ref.init_toml(table["atlased_knight"]);
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;
-	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = toml["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); });
+	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = table["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); });
 
-	nonant_panel.ref.init_toml(toml["nonant_panel"]);
+	nonant_panel.ref.init_toml(table["nonant_panel"]);
 
 	sprite3->transformer.attach_parent(&transformer);
 	sprite4->transformer.attach_parent(&transformer);

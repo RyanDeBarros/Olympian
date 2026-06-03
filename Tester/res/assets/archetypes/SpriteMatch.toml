@@ -1,4 +1,4 @@
-#meta type=archetype
+#meta version=1.0 type=arch
 
 [archetype]
 draw = [
@@ -7,9 +7,9 @@ draw = [
 ]
 
 [sprite0]
-transformer = { "position" = [450, -200] }
-texture = "~/textures/einstein.png"
+Trfmer = { Position = [450, -200] }
+Texture = "@/textures/einstein.png"
 
 [sprite2]
-texture = "~/textures/tux.png"
-transformer = { "position" = [-100, -100], "scale" = [0.2, 0.2], modifier = { "type" = "shear" } }
+Texture = "@/textures/tux.png"
+Trfmer = { Position = [-100, -100], Scale = [0.2, 0.2], Modifier = { Klass = "ShearTransformModifier2D" } }

@@ -1,26 +1,26 @@
-#meta type="texture"
+#meta version=1.0 import type=texture
 
-[[texture]]
-storage = "discard"
-generate_mipmaps = false
-min_filter = "nearest"
-mag_filter = "nearest"
-wrap_s = 33071
-wrap_t = 33071
-anim = true
-rows = 2
-cols = 3
-cell_width_override = 0
-cell_height_override = 0
-delay_cs = 10
-row_major = true
-row_up = true
+[[Texture]]
+Storage = 0
+Mipmaps = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+WrapS = 0x812F
+WrapT = 0x812F
+Animated = 1
+Rows = 2
+Cols = 3
+CWOver = 0
+CHOver = 0
+DelayCS = 10
+RowMajor = 1
+RowUp = 1
 
-[[texture]]
-storage = "discard"
-generate_mipmaps = false
-min_filter = "nearest"
-mag_filter = "nearest"
-wrap_s = 33071
-wrap_t = 33071
+[[Texture]]
+Storage = 0
+Mipmaps = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+WrapS = 0x812F
+WrapT = 0x812F
 

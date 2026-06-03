@@ -30,7 +30,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::rendering::Polygon::load(oly::io::load_toml("~/assets/BKG.toml")["polygon"]);
+		bkg_rect = oly::rendering::Polygon::load(((oly::TOMLNode)oly::io::load_toml("@/assets/BKG.toml"))["polygon"]);
 	}
 
 	void draw() const
@@ -44,7 +44,7 @@ struct PixelArtText
 	oly::rendering::ParagraphRef paragraph;
 
 	PixelArtText()
-		: paragraph(oly::rendering::Paragraph::load(oly::io::load_toml("~/assets/RichParagraph.toml")["paragraph"]))
+		: paragraph(oly::rendering::Paragraph::load(((oly::TOMLNode)oly::io::load_toml("@/assets/RichParagraph.toml"))["paragraph"]))
 	{
 	}
 
@@ -86,7 +86,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
 		const int flag_rows = 8, flag_cols = 8;
 		flag_tesselation.reserve(flag_rows * flag_cols);
-		auto flag_instance = oly::rendering::Sprite::load(oly::io::load_toml("~/assets/flag instance.toml")["sprite"]);
+		auto flag_instance = oly::rendering::Sprite::load(((oly::TOMLNode)oly::io::load_toml("@/assets/flag instance.toml"))["sprite"]);
 		for (int i = 0; i < flag_rows * flag_cols; ++i)
 		{
 			flag_tesselation.push_back(flag_instance);
@@ -97,13 +97,17 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
 
-		particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;
-		particle_system.emitter(0).spawn_period = 0.3f;
-		oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, oly::io::load_toml("assets/particle system.toml")["emitter0"]["spawner"]);
-		particle_system.emitter(0).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["color"]);
-		particle_system.emitter(0).velocity.overload(oly::io::load_toml("assets/particle system.toml")["emitter0"]["velocity"]);
-		particle_system.emitter(1).attached = true;
-		particle_system.emitter(1).color.overload(oly::io::load_toml("assets/particle system.toml")["emitter1"]["color"]);
+		{
+			particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;
+			particle_system.emitter(0).spawn_period = 0.3f;
+			auto ps = oly::io::load_toml("assets/particle system.toml");
+			auto table = (oly::TOMLNode)ps;
+			oly::particles::IParticleSpawner::overload(particle_system.emitter(0).spawner, table["emitter0"]["Spawner"]);
+			particle_system.emitter(0).color.overload(table["emitter0"]["Color"]);
+			particle_system.emitter(0).velocity.overload(table["emitter0"]["Velocity"]);
+			particle_system.emitter(1).attached = true;
+			particle_system.emitter(1).color.overload(table["emitter1"]["Color"]);
+		}
 
 		glEnable(GL_BLEND);
 
@@ -115,16 +119,16 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 		bkg.draw();
 		polygon_batch->render();
 
-		//sprite_match.draw();
-		//for (const auto& sprite : flag_tesselation)
-		//	sprite.draw();
-		//jumble.draw();
+		sprite_match.draw();
+		for (const auto& sprite : flag_tesselation)
+			sprite.draw();
+		jumble.draw();
 
-		//obstacle_layer.draw();
-		//player_layer.draw();
-		//ray_layer.draw();
-		//
-		//pixel_art_text.draw();
+		obstacle_layer.draw();
+		player_layer.draw();
+		ray_layer.draw();
+
+		pixel_art_text.draw();
 
 		particle_system.render();
 	}
@@ -171,7 +175,6 @@ int main()
 	oly::context::set_render_pipeline(&pipeline);
 
 	PlayerController pc;
-	pc.bind("jump", &PlayerController::jump);
 	pc.bind("jump", &PlayerController::jump);
 	pc.bind("click", &PlayerController::click);
 	pc.bind("drag", &PlayerController::drag);
@@ -305,7 +308,7 @@ int main()
 
 	auto semi_solid_cv = semi_solid->create_debug_overlay(pipeline.obstacle_layer, 0, glm::vec4{ 0.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 
-	auto flag_texture = oly::context::load_texture("~/textures/flag.png");
+	auto flag_texture = oly::context::load_texture("@/textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);

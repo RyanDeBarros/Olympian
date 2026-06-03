@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "core/util/ResourcePath.h"
+#include "assets/ResourcePath.h"
 
 namespace oly::io
 {
-	extern std::vector<std::string> read_file_lines(const ResourcePath& file);
-	extern std::string read_file(const ResourcePath& file);
-	extern std::vector<unsigned char> read_file_uc(const ResourcePath& file);
-	extern std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl);
+	extern std::vector<std::string> read_file_lines(const detail::ResourcePath& file);
+	extern std::string read_file(const detail::ResourcePath& file);
+	extern std::vector<unsigned char> read_file_uc(const detail::ResourcePath& file);
+	extern std::string read_template_file(const detail::ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl);
 }

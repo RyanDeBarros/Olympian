@@ -74,7 +74,7 @@ namespace oly
 			SmartReferenceLink* next = nullptr;
 		};
 
-		// TODO v9 multi-threading and thead safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
+		// TODO v10 multi-threading and thread safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
 		class SmartReferencePool final : public Singleton<SmartReferencePool<Object>>, public IPool
 		{
@@ -753,6 +753,12 @@ namespace oly
 		void replace(SmartReference<T>& other)
 		{
 			pool().replace_references(pool_idx, other.link(), link());
+		}
+
+	public:
+		static SmartReference<Object> load(TOMLNode node)
+		{
+			return Object::load(node);
 		}
 	};
 

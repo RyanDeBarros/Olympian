@@ -1,7 +1,7 @@
 #include "LoggerOperators.h"
 
 #include "core/util/UTF.h"
-#include "core/util/ResourcePath.h"
+#include "assets/ResourcePath.h"
 
 namespace oly
 {
@@ -10,7 +10,7 @@ namespace oly
 		return impl << std::string(str.encoding().begin(), str.encoding().end());
 	}
 
-	Logger::Impl operator<<(Logger::Impl impl, const ResourcePath& file)
+	Logger::Impl operator<<(Logger::Impl impl, const detail::ResourcePath& file)
 	{
 		return impl.stream(file.get_absolute());
 	}

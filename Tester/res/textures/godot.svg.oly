@@ -1,21 +1,21 @@
-#meta type="texture"
+#meta version=1.0 import type=texture
 
-abstract_storage = "keep"
-[[texture]]
-image_storage = "discard"
-generate_mipmaps = "off"
-min_filter = 9729
-mag_filter = 9729
-wrap_s = 33071
-wrap_t = 33071
-svg_scale = 1.0
+AbsStore = 1
+[[Texture]]
+ImgStore = 0
+Mipmaps = 1
+MinFilt = 0x2601
+MagFilt = 0x2601
+WrapS = 0x812F
+WrapT = 0x812F
+VecScale = 1.0
 
-[[texture]]
-image_storage = "discard"
-generate_mipmaps = "off"
-min_filter = 9729
-mag_filter = 9729
-wrap_s = 33071
-wrap_t = 33071
-svg_scale = 3.0
+[[Texture]]
+ImgStore = 0
+Mipmaps = 1
+MinFilt = 0x2601
+MagFilt = 0x2601
+WrapS = 0x812F
+WrapT = 0x812F
+VecScale = 3.0
 

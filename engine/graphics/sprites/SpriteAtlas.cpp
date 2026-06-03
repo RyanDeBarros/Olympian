@@ -1,7 +1,9 @@
 #include "SpriteAtlas.h"
 
 #include "core/util/Time.h"
-#include "core/util/Loader.h"
+#include "core/util/Parser.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -119,23 +121,20 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		SpriteAtlas sprite_atlas(trace ? Sprite::load(node["sprite"], *trace) : Sprite::load(node["sprite"]));
+		assets::Parser parser(node);
+
+		SpriteAtlas sprite_atlas(trace ? Sprite::load(parser.field(detail::Key::Sprite), *trace) : Sprite::load(parser.field(detail::Key::Sprite)));
 
 		GLuint rows, cols;
 		float delay_seconds;
-		if (io::parse_uint(node["rows"], rows) && io::parse_uint(node["cols"], cols) && io::parse_float(node["delay_seconds"], delay_seconds))
-			sprite_atlas.setup_uniform(rows, cols, delay_seconds, io::parse_bool_or(node["row_major"], true), io::parse_bool_or(node["row_up"], true));
-		else
-		{
-			GLuint static_frame;
-			if (io::parse_uint(node["static_frame"], static_frame))
-				sprite_atlas.select_static_frame(static_frame);
-		}
+		if (parser.optional(detail::Key::Rows)(rows) && parser.optional(detail::Key::Columns)(cols) && parser.optional(detail::Key::DelaySeconds)(delay_seconds))
+			sprite_atlas.setup_uniform(rows, cols, delay_seconds, parser.defaulted(detail::Key::RowMajor)(true), parser.defaulted(detail::Key::RowUp)(true));
+		else if (auto static_frame = parser.optional<unsigned int>(detail::Key::StaticFrame)())
+			sprite_atlas.select_static_frame(*static_frame);
 
-		sprite_atlas.anim_format.starting_frame = io::parse_int_or(node["starting_frame"], 0);
-		sprite_atlas.anim_format.starting_time = io::parse_float_or(node["starting_time"], 0.0f);
-
-		sprite_atlas.auto_tick = io::parse_bool_or(node["auto_tick"], true);
+		sprite_atlas.anim_format.starting_frame = parser.defaulted(detail::Key::StartingFrame)(0);
+		sprite_atlas.anim_format.starting_time = parser.defaulted(detail::Key::StartingTime)(0.f);
+		sprite_atlas.auto_tick = parser.defaulted(detail::Key::AutoTick)(true);
 
 		return sprite_atlas;
 	}

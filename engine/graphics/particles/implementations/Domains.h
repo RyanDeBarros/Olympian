@@ -15,15 +15,12 @@ namespace oly::particles
 
 		void apply(internal::Domain1D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			c.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			c.overload(node["c"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain1D);
 	};
@@ -37,17 +34,13 @@ namespace oly::particles
 
 		void apply(internal::Domain1D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			a.on_tick(emitter);
 			b.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			a.overload(node["a"]);
-			b.overload(node["b"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(LineDomain1D);
 	};
@@ -62,19 +55,14 @@ namespace oly::particles
 
 		void apply(internal::Domain1D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			a.on_tick(emitter);
 			b.on_tick(emitter);
 			c.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			a.overload(node["a"]);
-			b.overload(node["b"]);
-			c.overload(node["c"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(BiLineDomain1D);
 	};
@@ -87,15 +75,12 @@ namespace oly::particles
 
 		void apply(internal::Domain2D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			c.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			c.overload(node["c"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain2D);
 	};
@@ -108,15 +93,12 @@ namespace oly::particles
 
 		void apply(internal::Domain3D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			c.on_tick(emitter);
 		}
 
-		void overload(TOMLNode node)
-		{
-			c.overload(node["c"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain3D);
 	};
@@ -129,15 +111,12 @@ namespace oly::particles
 
 		void apply(internal::Domain4D& domain) const override;
 
-		void on_tick(const ParticleEmitter& emitter)
+		void on_tick(const ParticleEmitter& emitter) override
 		{
 			c.on_tick(emitter);
-		}
+		};
 
-		void overload(TOMLNode node)
-		{
-			c.overload(node["c"]);
-		}
+		void overload(TOMLNode node) override;
 
 		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain4D);
 	};

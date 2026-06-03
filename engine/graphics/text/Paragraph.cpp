@@ -4,8 +4,11 @@
 #include "core/context/rendering/Fonts.h"
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
+#include "core/util/Parser.h"
 #include "core/util/Loader.h"
 #include "graphics/resources/Textures.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -913,62 +916,60 @@ namespace oly::rendering
 
 	static void add_text_element(TOMLNode element, size_t i, std::vector<TextElement>& elements)
 	{
-		TextElement e;
-		if (auto font = element["font"].value<std::string>())
-			e.font = context::load_font(*font, io::parse_uint_or(element["font_index"], 0));
-		else
+		try
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"font_atlas\" string field in text element (" << i << ")." << LOG.nl;
-			return;
-		}
+			TextElement e;
+			assets::Parser parser(element, { "in text element #", i });
+			const auto font = parser.required<std::string>(detail::Key::Font)();
+			const auto font_index = parser.defaulted(detail::Key::FontIndex)(0u);
+			e.font = context::load_font(font, font_index);
+			e.text = parser.required<std::string>(detail::Key::Text)();
 
-		if (auto text = element["text"].value<std::string>())
-			e.text = std::move(*text);
-		else
+			parser.optional(detail::Key::TextColor)(e.text_color);
+			parser.optional(detail::Key::AdjacentOffset)(e.adj_offset);
+			parser.optional(detail::Key::Scale)(e.scale);
+			if (auto line_y_pivot = parser.optional<float>(detail::Key::LineYPivot)())
+				e.line_y_pivot = *line_y_pivot;
+			parser.optional(detail::Key::JitterOffset)(e.jitter_offset);
+
+			if (parser.defaulted(detail::Key::Expand)(false))
+				TextElement::expand(e, elements);
+			else
+				elements.push_back(std::move(e));
+		}
+		catch (const Error& e)
 		{
-			_OLY_ENGINE_LOG_WARNING("ASSETS") << "Missing or invalid \"text\" string field in text element (" << i << ")." << LOG.nl;
-			return;
+			if (e.code != ErrorCode::LoadAsset)
+				throw;
 		}
-
-		io::parse_vec(element["text_color"], e.text_color);
-		io::parse_float(element["adj_offset"], e.adj_offset);
-		io::parse_vec(element["scale"], e.scale);
-		float line_y_pivot;
-		if (io::parse_float(element["line_y_pivot"], line_y_pivot))
-			e.line_y_pivot = line_y_pivot;
-		io::parse_vec(element["jitter_offset"], e.jitter_offset);
-
-		if (io::parse_bool_or(element["expand"], false))
-			TextElement::expand(e, elements);
-		else
-			elements.push_back(std::move(e));
 	}
 
 	Paragraph Paragraph::load(TOMLNode node)
 	{
+		assets::Parser parser(node);
+
 		std::vector<TextElement> elements;
-		if (auto element_array = node["element"].as_array())
+		if (auto element_array = parser.optional<TOMLArray, true>(detail::Key::Element)())
 		{
 			for (size_t i = 0; i < element_array->size(); ++i)
 				if (auto element = TOMLNode(*element_array->get(i)))
 					add_text_element(element, i, elements);
 		}
-		else if (auto element = node["element"])
-			add_text_element(element, 0, elements);
+		else if (auto element = parser.optional<TOMLNode>(detail::Key::Element)())
+			add_text_element(*element, 0, elements);
 
-		Paragraph paragraph(std::move(elements), ParagraphFormat::load(node["format"]));
-		if (auto transformer = node["transformer"])
+		Paragraph paragraph(std::move(elements), ParagraphFormat::load(parser.field(detail::Key::Format)));
+		if (auto transformer = parser.optional<TOMLNode>(detail::Key::Transformer)())
 		{
-			paragraph.set_local() = Transform2D::load(transformer);
-			paragraph.set_transformer().set_modifier() = io::load_transform_modifier_2d(transformer["modifier"]);
+			paragraph.set_local() = Transform2D::load(*transformer);
+			paragraph.set_transformer().set_modifier() = TransformModifier2D::load(*transformer);
 		}
 
-		io::parse_bool(node["draw_bkg"], paragraph.draw_bkg);
-		glm::vec4 bkg_color;
-		if (io::parse_vec(node["bkg_color"], bkg_color))
-			paragraph.set_bkg_color(bkg_color);
+		parser.optional(detail::Key::DrawBackground)(paragraph.draw_bkg);
+		if (auto bkg_color = parser.optional<glm::vec4>(detail::Key::BackgroundColor)())
+			paragraph.set_bkg_color(*bkg_color);
 
-		paragraph.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		paragraph.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return paragraph;
 	}

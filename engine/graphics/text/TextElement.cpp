@@ -8,6 +8,7 @@
 
 #include "core/context/rendering/Fonts.h"
 #include "core/util/Loader.h"
+#include "core/util/Parser.h"
 
 namespace oly::rendering
 {
@@ -42,7 +43,7 @@ namespace oly::rendering
 	void Font::reset_style()
 	{
 		if (auto font = f.safe_get<FontSelection>())
-			font->style = FontStyle::REGULAR();
+			font->style = FontStyle::Regular;
 	}
 
 	float Font::line_height() const
@@ -174,13 +175,13 @@ namespace oly::rendering
 	static void apply_style_tag(const std::string_view tag, TextElement& e, AttributeOverrides& overrides)
 	{
 		if (tag == "b" || tag == "bold")
-			e.font.apply_style(FontStyle::BOLD());
+			e.font.apply_style(FontStyle::Bold);
 		else if (tag == "!b" || tag == "!bold")
-			e.font.unapply_style(FontStyle::BOLD());
+			e.font.unapply_style(FontStyle::Bold);
 		else if (tag == "i" || tag == "italic")
-			e.font.apply_style(FontStyle::ITALIC());
+			e.font.apply_style(FontStyle::Italic);
 		else if (tag == "!i" || tag == "!italic")
-			e.font.unapply_style(FontStyle::ITALIC());
+			e.font.unapply_style(FontStyle::Italic);
 		else if (tag == "regular")
 			e.font.reset_style();
 		else
@@ -223,11 +224,18 @@ namespace oly::rendering
 				}
 				catch (...)
 				{
-					if (auto s = rendering::FontStyle::from_string(std::move(index)))
-						texture_index = *s;
+					index.to_lower();
+					if (index == "regular")
+						texture_index = rendering::FontStyle::Regular;
+					else if (index == "italic")
+						texture_index = rendering::FontStyle::Italic;
+					else if (index == "bold")
+						texture_index = rendering::FontStyle::Bold;
+					else if (index == "bolditalic")
+						texture_index = rendering::FontStyle::BoldItalic;
 					else
 					{
-						_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed: (" << index << ")" << LOG.nl;
 						return;
 					}
 				}
@@ -238,7 +246,7 @@ namespace oly::rendering
 				if (value.starts_with('\"'))
 					value.pop_front();
 
-				e.font = context::load_font(value, texture_index);
+				e.font = context::load_font(value.transfer(), texture_index);
 				overrides.font = true;
 			}
 		}
@@ -247,9 +255,9 @@ namespace oly::rendering
 			if (!overrides.text_color)
 			{
 				StringParam value = get_tag_value(tag, eq_pos);
-				if (algo::re::parse_vec4(value, e.text_color))
+				if (algo::re::try_parse(value, e.text_color))
 					overrides.text_color = true;
-				else if (io::parse_color(value, e.text_color))
+				else if (algo::re::try_parse<Color>(value, e.text_color))
 					overrides.text_color = true;
 			}
 		}
@@ -257,7 +265,7 @@ namespace oly::rendering
 		{
 			if (!overrides.adj_offset)
 			{
-				if (algo::re::parse_float(get_tag_value(tag, eq_pos), e.adj_offset))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.adj_offset))
 					overrides.adj_offset = true;
 			}
 		}
@@ -265,7 +273,7 @@ namespace oly::rendering
 		{
 			if (!overrides.scale)
 			{
-				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.scale))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.scale))
 					overrides.scale = true;
 			}
 		}
@@ -274,7 +282,7 @@ namespace oly::rendering
 			if (!overrides.line_y_pivot)
 			{
 				float line_y_pivot;
-				if (algo::re::parse_float(get_tag_value(tag, eq_pos), line_y_pivot))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), line_y_pivot))
 				{
 					overrides.line_y_pivot = true;
 					e.line_y_pivot = line_y_pivot;
@@ -285,7 +293,7 @@ namespace oly::rendering
 		{
 			if (!overrides.jitter_offset)
 			{
-				if (algo::re::parse_vec2(get_tag_value(tag, eq_pos), e.jitter_offset))
+				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.jitter_offset))
 					overrides.jitter_offset = true;
 			}
 		}

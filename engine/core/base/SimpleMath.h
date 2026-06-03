@@ -6,6 +6,11 @@
 
 namespace oly
 {
+	constexpr bool empty_str(const char* s)
+	{
+		return s == nullptr || *s == '\0';
+	}
+
 	constexpr unsigned int unsigned_mod(int pos, int mod)
 	{
 		pos = pos % mod;

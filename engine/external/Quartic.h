@@ -1,3 +1,3 @@
 #pragma once
 
-#include <Quartic.h>
+#include <quartic.h>

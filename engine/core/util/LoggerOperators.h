@@ -9,6 +9,11 @@ namespace oly
 		class String;
 	}
 
+	namespace detail
+	{
+		class ResourcePath;
+	}
+
 	extern Logger::Impl operator<<(Logger::Impl, const utf::String& str);
-	extern Logger::Impl operator<<(Logger::Impl, const class ResourcePath& file);
+	extern Logger::Impl operator<<(Logger::Impl, const detail::ResourcePath& file);
 }

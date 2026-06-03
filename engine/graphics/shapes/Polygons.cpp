@@ -6,7 +6,10 @@
 #include "core/math/Triangulation.h"
 #include "core/cmath/Triangulation.h"
 #include "graphics/resources/Shaders.h"
-#include "core/util/Loader.h"
+#include "core/util/Parser.h"
+#include "graphics/shapes/Definitions.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -386,12 +389,12 @@ namespace oly::rendering
 			{
 				triangulate();
 			}
-			catch (Error e)
+			catch (const Error& e)
 			{
 				if (e.code == ErrorCode::Triangulation)
 					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
 				else
-					throw e;
+					throw;
 			}
 
 			ref.resize_range(num_vertices());
@@ -506,45 +509,39 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		Polygon polygon;
 
-		polygon.transformer = Transformer2D::load(node["transformer"]);
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		std::vector<glm::vec2> points;
-		auto toml_points = node["points"].as_array();
-		if (toml_points)
+		if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				glm::vec2 pt;
-				if (io::parse_vec((TOMLNode)toml_point, pt))
-					points.push_back(pt);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point #" << pt_idx << " to vec2." << LOG.nl;
+				if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+					points.push_back(*pt);
 				++pt_idx;
 			}
 		}
 		polygon.set_points() = std::move(points);
 
 		std::vector<glm::vec4> colors;
-		auto toml_colors = node["colors"].as_array();
-		if (toml_colors)
+		if (auto toml_colors = parser.optional<TOMLArray>(detail::Key::ColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					colors.push_back(col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert polygon point color #" << color_idx << " to vec4." << LOG.nl;
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+					colors.push_back(*col);
 				++color_idx;
 			}
 		}
 		polygon.set_colors() = std::move(colors);
 
-		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -652,146 +649,113 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		PolyComposite polygon;
 
-		polygon.transformer = Transformer2D::load(node["transformer"]);
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
-		auto toml_method = node["method"].value<std::string>();
-		if (toml_method)
+		if (auto method = parser.optional<PolyCompositeMethod>(detail::Key::Method)())
 		{
-			const std::string& method = toml_method.value();
-			if (method == "ngon")
+			switch (*method)
+			{
+			case PolyCompositeMethod::Ngon:
 			{
 				std::vector<glm::vec2> points;
-				auto toml_points = node["points"].as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							points.push_back(pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+							points.push_back(*pt);
 						++pt_idx;
 					}
 				}
 
 				std::vector<glm::vec4> colors;
-				auto toml_fill_colors = node["colors"].as_array();
-				if (toml_fill_colors)
+				if (auto toml_colors = parser.optional<TOMLArray>(detail::Key::ColorsArray)())
 				{
 					size_t color_idx = 0;
-					for (auto& toml_color : *toml_fill_colors)
+					for (auto& toml_color : *toml_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							colors.push_back(col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point color #" << color_idx << " to vec4." << LOG.nl;
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+							colors.push_back(*col);
 						++color_idx;
 					}
 				}
 
 				polygon.set_composite() = cmath::Polygon2DComposite{ cmath::create_ngon(std::move(colors), std::move(points)) };
+				break;
 			}
-			else if (method == "bordered_ngon")
+			case PolyCompositeMethod::BorderedNgon:
 			{
 				cmath::NGonBase ngon_base;
 
-				auto toml_points = node["points"].as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							ngon_base.points.push_back(pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+							ngon_base.points.push_back(*pt);
 						++pt_idx;
 					}
 				}
 
-				auto toml_fill_colors = node["fill_colors"].as_array();
-				if (toml_fill_colors)
+				if (auto toml_fill_colors = parser.optional<TOMLArray>(detail::Key::FillColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_fill_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							ngon_base.fill_colors.push_back(col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite fill color #" << color_idx << " to vec4." << LOG.nl;
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+							ngon_base.fill_colors.push_back(*col);
 						++color_idx;
 					}
 				}
 
-				auto toml_border_colors = node["border_colors"].as_array();
-				if (toml_border_colors)
+				if (auto toml_border_colors = parser.optional<TOMLArray>(detail::Key::BorderColorsArray)())
 				{
 					size_t color_idx = 0;
 					for (auto& toml_color : *toml_border_colors)
 					{
-						glm::vec4 col;
-						if (io::parse_vec((TOMLNode)toml_color, col))
-							ngon_base.border_colors.push_back(col);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite border color #" << color_idx << " to vec4." << LOG.nl;
+						if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+							ngon_base.border_colors.push_back(*col);
 						++color_idx;
 					}
 				}
 
-				io::parse_float(node["border_width"], ngon_base.border_width);
+				parser.optional(detail::Key::BorderWidth)(ngon_base.border_width);
 
-				if (auto border_pivot = node["border_pivot"])
-				{
-					if (auto str_border_pivot = border_pivot.value<std::string>())
-					{
-						const std::string& str = str_border_pivot.value();
-						if (str == "outer")
-							ngon_base.border_pivot = cmath::BorderPivot::OUTER;
-						else if (str == "middle")
-							ngon_base.border_pivot = cmath::BorderPivot::Middle;
-						else if (str == "inner")
-							ngon_base.border_pivot = cmath::BorderPivot::INNER;
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
-					}
-					else
-						io::parse_float(border_pivot, ngon_base.border_pivot.v);
-				}
+				if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))
+					parser.optional(detail::Key::BorderPivot)(ngon_base.border_pivot.v);
 
 				polygon.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
 					ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
+				break;
 			}
-			else if (method == "convex_decomposition")
+			case PolyCompositeMethod::ConvexDecomposition:
 			{
 				std::vector<glm::vec2> points;
 
-				auto toml_points = node["points"].as_array();
-				if (toml_points)
+				if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 				{
 					size_t pt_idx = 0;
 					for (auto& toml_point : *toml_points)
 					{
-						glm::vec2 pt;
-						if (io::parse_vec((TOMLNode)toml_point, pt))
-							points.push_back(pt);
-						else
-							_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert poly composite point #" << pt_idx << " to vec2." << LOG.nl;
+						if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+							points.push_back(*pt);
 						++pt_idx;
 					}
 				}
 
 				polygon.set_composite() = cmath::Decompose{}(std::move(points));
+				break;
+			}
 			}
 		}
 
-		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}
@@ -851,81 +815,57 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		NGon polygon;
 
-		polygon.transformer = Transformer2D::load(node["transformer"]);
+		polygon.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
 
 		cmath::NGonBase ngon_base;
 
-		auto toml_points = node["points"].as_array();
-		if (toml_points)
+		if (auto toml_points = parser.optional<TOMLArray>(detail::Key::PointsArray)())
 		{
 			size_t pt_idx = 0;
 			for (auto& toml_point : *toml_points)
 			{
-				glm::vec2 pt;
-				if (io::parse_vec((TOMLNode)toml_point, pt))
-					ngon_base.points.push_back(pt);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon point #" << pt_idx << " to vec2." << LOG.nl;
+				if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+					ngon_base.points.push_back(*pt);
 				++pt_idx;
 			}
 		}
 
-		auto toml_fill_colors = node["fill_colors"].as_array();
-		if (toml_fill_colors)
+		if (auto toml_fill_colors = parser.optional<TOMLArray>(detail::Key::FillColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_fill_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					ngon_base.fill_colors.push_back(col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon fill color #" << color_idx << " to vec4." << LOG.nl;
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+					ngon_base.fill_colors.push_back(*col);
 				++color_idx;
 			}
 		}
 
-		auto toml_border_colors = node["border_colors"].as_array();
-		if (toml_border_colors)
+		if (auto toml_border_colors = parser.optional<TOMLArray>(detail::Key::BorderColorsArray)())
 		{
 			size_t color_idx = 0;
 			for (auto& toml_color : *toml_border_colors)
 			{
-				glm::vec4 col;
-				if (io::parse_vec((TOMLNode)toml_color, col))
-					ngon_base.border_colors.push_back(col);
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot convert ngon border color #" << color_idx << " to vec4." << LOG.nl;
+				if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+					ngon_base.border_colors.push_back(*col);
 				++color_idx;
 			}
 		}
 
-		bool bordered;
-		if (io::parse_bool(node["bordered"], bordered))
-			polygon.set_bordered(bordered);
-		io::parse_float(node["border_width"], ngon_base.border_width);
+		if (auto bordered = parser.optional<bool>(detail::Key::Bordered)())
+			polygon.set_bordered(*bordered);
+		parser.optional(detail::Key::BorderWidth)(ngon_base.border_width);
 
-		auto border_pivot = node["border_pivot"];
-		if (auto str_border_pivot = border_pivot.value<std::string>())
-		{
-			const std::string& str = str_border_pivot.value();
-			if (str == "outer")
-				ngon_base.border_pivot = cmath::BorderPivot::OUTER;
-			else if (str == "middle")
-				ngon_base.border_pivot = cmath::BorderPivot::Middle;
-			else if (str == "inner")
-				ngon_base.border_pivot = cmath::BorderPivot::INNER;
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized border pivot named value \"" << str << "\"." << LOG.nl;
-		}
-		else
-			io::parse_float(border_pivot, ngon_base.border_pivot.v);
+		if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))
+			parser.optional(detail::Key::BorderPivot)(ngon_base.border_pivot.v);
 
 		polygon.set_base() = std::move(ngon_base);
 
-		polygon.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		polygon.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return polygon;
 	}

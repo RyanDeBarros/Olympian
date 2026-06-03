@@ -2,7 +2,10 @@
 
 #include "core/context/rendering/Sprites.h"
 #include "core/context/rendering/Textures.h"
-#include "core/util/Loader.h"
+#include "core/util/Parser.h"
+#include "graphics/sprites/Definitions.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::rendering
 {
@@ -23,69 +26,57 @@ namespace oly::rendering
 		if (!node)
 			return {};
 
-		Sprite sprite;
-		sprite.transformer = Transformer2D::load(node["transformer"]);
+		assets::Parser parser(node);
 
-		auto texture = node["texture"].value<std::string>();
+		Sprite sprite;
+		sprite.transformer = Transformer2D::load(parser.field(detail::Key::Transformer));
+
+		auto texture = parser.optional<std::string>(detail::Key::Texture)();
 		if (texture)
 		{
-			graphics::BindlessTextureRef btex = context::load_texture(*texture, io::parse_uint_or(node["texture_index"], 0));
+			graphics::BindlessTextureRef btex = context::load_texture(*texture, parser.defaulted(detail::Key::TextureIndex)(0u));
 			sprite.set_texture(btex, context::get_texture_dimensions(btex));
 		}
 
-		if (auto toml_modulation = node["modulation"])
-		{
-			glm::vec4 modulation;
-			if (io::parse_vec(toml_modulation, modulation))
-				sprite.set_modulation(modulation);
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse \"modulation\" field." << LOG.nl;
-		}
+		if (auto modulation = parser.optional<glm::vec4>(detail::Key::Modulation)())
+			sprite.set_modulation(*modulation);
 
-		if (auto toml_tex_coords = node["tex_coords"])
-		{
-			glm::vec4 uvs;
-			if (io::parse_vec(toml_tex_coords, uvs))
-				sprite.set_tex_coords({ .x1 = uvs[0], .x2 = uvs[1], .y1 = uvs[2], .y2 = uvs[3] });
-			else
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Cannot parse \"tex_coords\" field." << LOG.nl;
-		}
+		if (auto uvs = parser.optional<glm::vec4>(detail::Key::TextureCoordinates)())
+			sprite.set_tex_coords({ .x1 = (*uvs)[0], .x2 = (*uvs)[1], .y1 = (*uvs)[2], .y2 = (*uvs)[3] });
 
-		if (auto toml_frame_format = node["frame_format"])
+		if (auto ff_parser = parser.optional(detail::Key::FrameFormat).subparser())
 		{
-			if (auto mode = toml_frame_format["mode"].value<std::string>())
+			if (auto mode = ff_parser->optional<FrameFormat>(detail::Key::Mode)())
 			{
-				std::string mode_str = *mode;
-				if (mode_str == "Single")
+				switch (*mode)
 				{
+				case FrameFormat::Single:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format_Single(*texture, io::parse_uint_or(toml_frame_format["frame"], 0)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format_single(*texture, ff_parser->defaulted(detail::Key::Frame)(0u)));
 					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for Single frame format." << LOG.nl;
-				}
-				else if (mode_str == "auto")
-				{
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
+					break;
+				case FrameFormat::Auto:
 					if (texture)
-						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, io::parse_float_or(toml_frame_format["speed"], 1.0f),
-							io::parse_uint_or(toml_frame_format["starting_frame"], 0)));
+						sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, ff_parser->defaulted(detail::Key::Speed)(1.f),
+							ff_parser->defaulted(detail::Key::StartingFrame)(0u)));
 					else
-						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for auto frame format." << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
+					break;
 				}
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Unrecognized frame format mode \"" << mode_str << "\"." << LOG.nl;
 			}
 			else
 			{
 				sprite.set_frame_format({
-					.starting_frame = io::parse_uint_or(toml_frame_format["starting_frame"], 0),
-					.num_frames = io::parse_uint_or(toml_frame_format["num_frames"], 0),
-					.starting_time = io::parse_float_or(toml_frame_format["starting_time"], 0.0f),
-					.delay_seconds = io::parse_float_or(toml_frame_format["delay_seconds"], 0.0f)
+					.starting_frame = ff_parser->defaulted(detail::Key::StartingFrame)(0u),
+					.num_frames = ff_parser->defaulted(detail::Key::NumFrames)(0u),
+					.starting_time = ff_parser->defaulted(detail::Key::StartingTime)(0.f),
+					.delay_seconds = ff_parser->defaulted(detail::Key::DelaySeconds)(0.f)
 					});
 			};
 		}
 
-		sprite.set_camera_invariant(io::parse_bool_or(node["camera_invariant"], false));
+		sprite.set_camera_invariant(parser.defaulted(detail::Key::CameraInvariant)(false));
 
 		return sprite;
 	}

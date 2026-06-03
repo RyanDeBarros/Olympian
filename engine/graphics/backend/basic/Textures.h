@@ -11,9 +11,10 @@
 #include "core/types/SmartReference.h"
 #include "core/types/DeferredFalse.h"
 #include "core/math/Shapes.h"
-#include "core/util/ResourcePath.h"
 
 #include "graphics/backend/basic/Sampler.h"
+
+#include "assets/ResourcePath.h"
 
 namespace oly::graphics
 {
@@ -143,7 +144,7 @@ namespace oly::graphics
 		ImageDimensions _dim;
 
 	public:
-		Image(const ResourcePath& file);
+		Image(const detail::ResourcePath& file);
 		Image(unsigned char* buf, ImageDimensions dim);
 		Image(const Image&) = delete;
 		Image(Image&&) noexcept;
@@ -160,8 +161,8 @@ namespace oly::graphics
 	typedef SmartReference<Image> ImageRef;
 
 	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
-	
-	inline Texture load_texture_2d(const ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
+
+	inline Texture load_texture_2d(const detail::ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
 	{
 		Image image(file);
 		dim = image.dim();
@@ -173,11 +174,11 @@ namespace oly::graphics
 		return BindlessTexture(load_texture_2d(image, generate_mipmaps));
 	}
 
-	inline BindlessTexture load_bindless_texture_2d(const ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
+	inline BindlessTexture load_bindless_texture_2d(const detail::ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d(file, dim, generate_mipmaps));
 	}
-	
+
 	inline float anim_delay_epsilon = 1.0f;
 	struct AnimDimensions
 	{
@@ -213,7 +214,7 @@ namespace oly::graphics
 		SmartReference<AnimDimensions> _dim = REF_INIT;
 
 	public:
-		Anim(const ResourcePath& filepath, SpritesheetOptions options = {});
+		Anim(const detail::ResourcePath& filepath, SpritesheetOptions options = {});
 		Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options = {});
 
 	private:
@@ -237,20 +238,20 @@ namespace oly::graphics
 
 	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
 
-	inline Texture load_texture_2d_array(const ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+	inline Texture load_texture_2d_array(const detail::ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
 		Anim anim(file, options);
 		auto texture = load_texture_2d_array(anim, generate_mipmaps);
 		dim = anim.dim();
 		return texture;
 	}
-	
+
 	inline BindlessTexture load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(anim, generate_mipmaps));
 	}
-	
-	inline BindlessTexture load_bindless_texture_2d_array(const ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
+
+	inline BindlessTexture load_bindless_texture_2d_array(const detail::ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
 	{
 		return BindlessTexture(load_texture_2d_array(file, dim, options, generate_mipmaps));
 	}
@@ -266,9 +267,9 @@ namespace oly::graphics
 	};
 
 	extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame);
-	extern AnimFrameFormat setup_anim_frame_format_Single(const ResourcePath& texture_file, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
+	extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
+	extern AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame);
 
 	class NSVGAbstract
 	{
@@ -276,7 +277,7 @@ namespace oly::graphics
 		mutable NSVGimage* i = nullptr;
 
 	public:
-		NSVGAbstract(const ResourcePath& file, const char* units = "px", float dpi = 96.0f);
+		NSVGAbstract(const detail::ResourcePath& file, const char* units = "px", float dpi = 96.0f);
 		NSVGAbstract(const NSVGAbstract&) = delete;
 		NSVGAbstract(NSVGAbstract&&) noexcept;
 		~NSVGAbstract();
@@ -309,20 +310,21 @@ namespace oly::graphics
 		ImageRef image;
 		float scale = 1.0f;
 	};
+}
 
-	enum class SVGMipmapGenerationMode
-	{
-		Auto,
-		Off,
-		Manual
-	};
+namespace oly::detail
+{
+	enum class SVGMipmapGenerationMode : int;
+}
 
-	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr);
+namespace oly::graphics
+{
+	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr);
 	
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps = SVGMipmapGenerationMode::Off, const NSVGAbstract* abstract = nullptr)
+	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr)
 	{
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}
 
-	// TODO v8 texture streaming
+	// TODO v9 texture streaming
 }

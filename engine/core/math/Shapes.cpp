@@ -3,7 +3,10 @@
 #include "core/math/Geometry.h"
 #include "core/types/Approximate.h"
 #include "core/base/Transforms.h"
-#include "core/util/Loader.h"
+#include "core/util/Parser.h"
+#include "core/util/Logger.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::math
 {
@@ -45,16 +48,28 @@ namespace oly::math
 		return points;
 	}
 
-	IRect2D IRect2D::load(TOMLNode node)
+	IRect2D IRect2D::load(TOMLNode node, bool validate)
 	{
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		IRect2D rect;
-		io::parse_int(node["x1"], rect.x1);
-		io::parse_int(node["x2"], rect.x2);
-		io::parse_int(node["y1"], rect.y1);
-		io::parse_int(node["y2"], rect.y2);
+		parser.optional(detail::Key::X1)(rect.x1);
+		parser.optional(detail::Key::X2)(rect.x2);
+		parser.optional(detail::Key::Y1)(rect.y1);
+		parser.optional(detail::Key::Y2)(rect.y2);
+
+		if (validate)
+		{
+			if (rect.x2 <= rect.x1 || rect.y2 <= rect.y1)
+			{
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << "cannot parse IRect2D (x1=" << rect.x1 << ";x2=" << rect.x2 << ";y1=" << rect.y1 << ";y2=" << rect.y2 << ") - invalid bounds" << LOG.endl;
+				throw Error(ErrorCode::LoadAsset);
+			}
+		}
+
 		return rect;
 	}
 
@@ -63,15 +78,17 @@ namespace oly::math
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		Padding padding;
 
-		if (auto uniform = node["uniform"].value<double>())
+		if (auto uniform = parser.optional<double>(detail::Key::Uniform)())
 			padding = Padding::uniform(*uniform);
 
-		io::parse_float(node["left"], padding.left);
-		io::parse_float(node["right"], padding.right);
-		io::parse_float(node["top"], padding.top);
-		io::parse_float(node["bottom"], padding.bottom);
+		parser.optional(detail::Key::Left)(padding.left);
+		parser.optional(detail::Key::Right)(padding.right);
+		parser.optional(detail::Key::Top)(padding.top);
+		parser.optional(detail::Key::Bottom)(padding.bottom);
 
 		return padding;
 	}
@@ -81,14 +98,16 @@ namespace oly::math
 		if (!node)
 			return {};
 
+		assets::Parser parser(node);
+
 		TopSidePadding padding;
 
-		if (auto uniform = node["uniform"].value<double>())
+		if (auto uniform = parser.optional<double>(detail::Key::Uniform)())
 			padding = TopSidePadding::uniform(*uniform);
 
-		io::parse_float(node["left"], padding.left);
-		io::parse_float(node["right"], padding.right);
-		io::parse_float(node["top"], padding.top);
+		parser.optional(detail::Key::Left)(padding.left);
+		parser.optional(detail::Key::Right)(padding.right);
+		parser.optional(detail::Key::Top)(padding.top);
 
 		return padding;
 	}

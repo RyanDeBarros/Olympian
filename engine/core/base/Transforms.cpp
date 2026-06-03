@@ -1,19 +1,39 @@
 #include "Transforms.h"
 
 #include "core/util/Loader.h"
+#include "core/util/Parser.h"
+
+#include "definitions/Keys.h"
 
 namespace oly
 {
-	Transform2D Transform2D::load(TOMLNode node)
+	void Transform2D::overload(TOMLNode node)
 	{
 		if (!node)
-			return {};
+			return;
 
-		Transform2D transform;
-		io::parse_vec(node["position"], transform.position);
-		io::parse_float(node["rotation"], transform.rotation);
-		io::parse_vec(node["scale"], transform.scale);
-		return transform;
+		assets::Parser parser(node);
+
+		parser.optional(detail::Key::Position)(position);
+		parser.optional(detail::Key::Rotation)(rotation);
+		parser.optional(detail::Key::Scale)(scale);
+	}
+
+	void TransformModifier2D::overload(Polymorphic<TransformModifier2D>& modifier, TOMLNode node)
+	{
+		if (auto parser = assets::Parser(node).optional(detail::Key::Modifier).subparser())
+		{
+			std::string klass = parser->defaulted<std::string>(detail::Key::Klass)();
+
+			_OLY_POLYKLASS_CASES_BEGIN(modifier)
+				_OLY_POLYKLASS_IF_CASE(ShearTransformModifier2D)
+				_OLY_POLYKLASS_ELSE_IF_CASE(PivotTransformModifier2D)
+				_OLY_POLYKLASS_ELSE_IF_CASE(OffsetTransformModifier2D)
+				_OLY_POLYKLASS_CASES_END;
+
+			if (modifier)
+				modifier->overload(parser->field(assets::NO_KEY));
+		}
 	}
 
 	void internal::Transformer2DRegistry::Handle::init(Transformer2D* transformer)
@@ -355,13 +375,15 @@ namespace oly
 			{
 				parent->pre_get();
 				_global = local.matrix();
-				(*modifier)(_global);
+				if (modifier)
+					(*modifier)(_global);
 				_global = parent->_global * _global;
 			}
 			else
 			{
 				_global = local.matrix();
-				(*modifier)(_global);
+				if (modifier)
+					(*modifier)(_global);
 			}
 		}
 	}
@@ -385,7 +407,7 @@ namespace oly
 
 		Transformer2D transformer;
 		transformer.set_local() = Transform2D::load(node);
-		transformer.set_modifier() = io::load_transform_modifier_2d(node["modifier"]);
+		transformer.set_modifier() = TransformModifier2D::load(node);
 		return transformer;
 	}
 
@@ -394,14 +416,31 @@ namespace oly
 		global = pivot_matrix(pivot, size) * global;
 	}
 
+	void PivotTransformModifier2D::overload(TOMLNode node)
+	{
+		assets::Parser parser(node);
+		parser.optional(detail::Key::Pivot)(pivot);
+		parser.optional(detail::Key::Size)(size);
+	}
+
 	void ShearTransformModifier2D::operator()(glm::mat3& global) const
 	{
 		global = global * shearing_matrix(shearing);
 	}
 
+	void ShearTransformModifier2D::overload(TOMLNode node)
+	{
+		assets::Parser(node).optional(detail::Key::Shearing)(shearing);
+	}
+
 	void OffsetTransformModifier2D::operator()(glm::mat3& global) const
 	{
 		global = translation_matrix(offset) * global;
+	}
+
+	void OffsetTransformModifier2D::overload(TOMLNode node)
+	{
+		assets::Parser(node).optional(detail::Key::Offset)(offset);
 	}
 
 	glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point)

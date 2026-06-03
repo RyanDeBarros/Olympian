@@ -9,6 +9,8 @@
 #include "core/util/IO.h"
 #include "core/types/Approximate.h"
 
+#include "definitions/enums/SVGMipmapGenerationMode.h"
+
 namespace oly::graphics
 {
 	Texture::Texture()
@@ -155,7 +157,7 @@ namespace oly::graphics
 		glTextureStorage3D(texture, levels, internal_format(dim.cpp), dim.w, dim.h, dim.d);
 	}
 
-	Image::Image(const ResourcePath& file)
+	Image::Image(const detail::ResourcePath& file)
 	{
 		std::string f = file.get_absolute().string();
 		_buf = stbi_load(f.c_str(), &_dim.w, &_dim.h, &_dim.cpp, 0);
@@ -211,16 +213,16 @@ namespace oly::graphics
 		if (num_frames == 0)
 			return;
 		delays.resize(num_frames);
-		bool Single = true;
+		bool single = true;
 		int delay = new_delays[0];
 		delays[0] = delay;
 		for (unsigned int i = 1; i < num_frames; ++i)
 		{
 			delays[i] = new_delays[i];
 			if (std::abs(delays[i] - delay) > anim_delay_epsilon)
-				Single = false;
+				single = false;
 		}
-		if (Single)
+		if (single)
 		{
 			delays.resize(1);
 			_frames = num_frames;
@@ -234,7 +236,7 @@ namespace oly::graphics
 		return uniform() ? delays[0] : delays[frame];
 	}
 
-	Anim::Anim(const ResourcePath& file, SpritesheetOptions options)
+	Anim::Anim(const detail::ResourcePath& file, SpritesheetOptions options)
 	{
 		if (file.extension_matches(".gif"))
 		{
@@ -264,6 +266,7 @@ namespace oly::graphics
 			options.cols = (GLuint)idim.w;
 		else if (options.cols == 0)
 			options.cols = 1;
+
 		if (options.cell_width_override == 0)
 			options.cell_width_override = (int)(idim.w / options.cols);
 		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
@@ -273,6 +276,7 @@ namespace oly::graphics
 			options.rows = (GLuint)idim.h;
 		else if (options.rows == 0)
 			options.rows = 1;
+		
 		if (options.cell_height_override == 0)
 			options.cell_height_override = (int)(idim.h / options.rows);
 		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
@@ -288,11 +292,13 @@ namespace oly::graphics
 		GLuint minor_height = options.cell_height_override;
 		GLuint major_height = minor_height * options.rows;
 		GLuint minor_area = minor_stride * minor_height;
+
 		_buf = new unsigned char[major_stride * major_height];
 		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
 			for (GLuint r = 0; r < minor_height; ++r)
 				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
-			};
+		};
+
 		GLuint k = 0;
 		if (options.row_major)
 		{
@@ -373,22 +379,22 @@ namespace oly::graphics
 		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
 	}
 
-	AnimFrameFormat setup_anim_frame_format(const ResourcePath& texture_file, float speed, GLuint starting_frame)
+	AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed, GLuint starting_frame)
 	{
 		return setup_anim_frame_format(*context::get_anim_dimensions(texture_file), speed, starting_frame);
 	}
 
-	AnimFrameFormat setup_anim_frame_format_Single(const AnimDimensions& dim, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame)
 	{
 		return { frame, dim.frames(), 0.0f, 0.0f };
 	}
 
-	AnimFrameFormat setup_anim_frame_format_Single(const ResourcePath& texture_file, GLuint frame)
+	AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame)
 	{
-		return setup_anim_frame_format_Single(*context::get_anim_dimensions(texture_file), frame);
+		return setup_anim_frame_format_single(*context::get_anim_dimensions(texture_file), frame);
 	}
 
-	NSVGAbstract::NSVGAbstract(const ResourcePath& file, const char* units, float dpi)
+	NSVGAbstract::NSVGAbstract(const detail::ResourcePath& file, const char* units, float dpi)
 	{
 		std::string f = file.get_absolute().string();
 		i = nsvgParseFromFile(f.c_str(), units, dpi);
@@ -433,7 +439,7 @@ namespace oly::graphics
 	{
 		nsvgDeleteRasterizer(r);
 	}
-		
+	
 	NSVGContext& NSVGContext::operator=(NSVGContext&& other) noexcept
 	{
 		if (this != &other)
@@ -466,7 +472,7 @@ namespace oly::graphics
 		dim.w = std::max((int)(scale * abstract.width()), 1);
 		dim.h = std::max((int)(scale * abstract.height()), 1);
 		dim.cpp = 4;
-		int stride = dim.w * dim.cpp;
+		const int stride = dim.w * dim.cpp;
 		buf = new unsigned char[stride * dim.h];
 		nsvgRasterize(r, abstract.i, 0.0f, 0.0f, scale, buf, dim.w, dim.h, stride);
 
@@ -480,21 +486,21 @@ namespace oly::graphics
 		delete[] temp;
 	}
 
-	Texture load_nsvg_texture_2d(const VectorImageRef& image, SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
+	Texture load_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract)
 	{
-		if (generate_mipmaps == SVGMipmapGenerationMode::Manual && !abstract)
-			generate_mipmaps = SVGMipmapGenerationMode::Auto;
+		if (generate_mipmaps == detail::SVGMipmapGenerationMode::Manual && !abstract)
+			generate_mipmaps = detail::SVGMipmapGenerationMode::Auto;
 
 		Texture texture(GL_TEXTURE_2D);
 		switch (generate_mipmaps)
 		{
-		case oly::graphics::SVGMipmapGenerationMode::Auto:
+		case detail::SVGMipmapGenerationMode::Auto:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), true);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::Off:
+		case detail::SVGMipmapGenerationMode::Off:
 			tex::image_2d(texture, image.image->buf(), image.image->dim(), false);
 			break;
-		case oly::graphics::SVGMipmapGenerationMode::Manual:
+		case detail::SVGMipmapGenerationMode::Manual:
 		{
 			const ImageDimensions dim = image.image->dim();
 			const GLsizei levels = tex::mipmap_levels(dim.w, dim.h);

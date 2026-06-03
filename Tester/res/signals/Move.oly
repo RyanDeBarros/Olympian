@@ -1,50 +1,50 @@
-#meta type=signal
+#meta version=1.0 type=signal
 
-[[mapping]]
-"id" = "move"
-"signals" = ["move left", "move right", "move up", "move down"]
+[[Mapping]]
+ID = "move"
+Signals = ["move left", "move right", "move up", "move down"]
 
-[[signal]]
-id = "move left"
-binding = "key"
-req_mods = 0
-ban_mods = 0
-key = 263
+[[SigArr]]
+ID = "move left"
+Binding = 0
+ReqMods = 0
+BanMods = 0
+Key = 263
 
-[signal.modifier]
-conversion = "TO_2D"
-multiplier = [ -1.0, 0.0, 1.0,]
-invert = [ false, false, false,]
-[[signal]]
-id = "move right"
-binding = "key"
-req_mods = 0
-ban_mods = 0
-key = 262
+[SigArr.Modifier]
+Conv = 2
+Mult = [ -1.0, 0.0, 1.0,]
+Invert = [ false, false, false,]
+[[SigArr]]
+ID = "move right"
+Binding = 0
+ReqMods = 0
+BanMods = 0
+Key = 262
 
-[signal.modifier]
-conversion = "TO_2D"
-multiplier = [ 1.0, 0.0, 1.0,]
-invert = [ false, false, false,]
-[[signal]]
-id = "move up"
-binding = "key"
-req_mods = 0
-ban_mods = 0
-key = 265
+[SigArr.Modifier]
+Conv = 2
+Mult = [ 1.0, 0.0, 1.0,]
+Invert = [ false, false, false,]
+[[SigArr]]
+ID = "move up"
+Binding = 0
+ReqMods = 0
+BanMods = 0
+Key = 265
 
-[signal.modifier]
-conversion = "TO_2D"
-multiplier = [ 0.0, 1.0, 1.0,]
-invert = [ false, false, false,]
-[[signal]]
-id = "move down"
-binding = "key"
-req_mods = 0
-ban_mods = 0
-key = 264
+[SigArr.Modifier]
+Conv = 2
+Mult = [ 0.0, 1.0, 1.0,]
+Invert = [ false, false, false,]
+[[SigArr]]
+ID = "move down"
+Binding = 0
+ReqMods = 0
+BanMods = 0
+Key = 264
 
-[signal.modifier]
-conversion = "TO_2D"
-multiplier = [ 0.0, -1.0, 1.0,]
-invert = [ false, false, false,]
+[SigArr.Modifier]
+Conv = 2
+Mult = [ 0.0, -1.0, 1.0,]
+Invert = [ false, false, false,]

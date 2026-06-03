@@ -64,12 +64,6 @@ namespace oly
 		return internal::min_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(Args)>{});
 	}
 
-	template <typename T, typename... Set>
-	constexpr bool is_in(const T& v, const Set&... set)
-	{
-		return ((v == set) || ...);
-	}
-
 	template<typename T>
 	inline T dupl(const T& obj)
 	{
@@ -97,6 +91,42 @@ namespace oly
 		return from ? std::make_optional<ToOptional>((ToOptional)*from) : std::nullopt;
 	}
 
+	template<typename T>
+	inline bool set_from_optional(T& obj, const std::optional<T>& opt)
+	{
+		if (opt)
+		{
+			obj = *opt;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<typename T>
+	inline bool set_from_optional(T& obj, std::optional<T>&& opt)
+	{
+		if (opt)
+		{
+			obj = std::move(*opt);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<typename T>
+	inline T get_from_optional(const std::optional<T>& opt, T&& def)
+	{
+		return opt ? *opt : std::move(def);
+	}
+
+	template<typename T>
+	inline T get_from_optional(std::optional<T>&& opt, T&& def)
+	{
+		return opt ? std::move(*opt) : std::move(def);
+	}
+
 	template<typename From, typename To>
 	concept PointerConvertibleTo = std::convertible_to<From*, To*>;
 
@@ -108,4 +138,13 @@ namespace oly
 
 	template<typename T, typename... Candidates>
 	constexpr bool same_as_any = visiting_class_is<T, Candidates...>;
+
+	template <typename T, bool = std::is_enum_v<T>>
+	struct underlying_or_self { using type = T; };
+
+	template <typename T>
+	struct underlying_or_self<T, true> { using type = std::underlying_type_t<T>; };
+
+	template <typename T>
+	using underlying_or_self_t = typename underlying_or_self<T>::type;
 }

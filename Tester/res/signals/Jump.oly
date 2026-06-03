@@ -1,6 +1,6 @@
-#meta type=signal
+#meta version=1.0 type=signal
 
-[[signal]]
-"id"      = "jump"
-"binding" = "key"
-"key"     = 32 # space
+[[SigArr]]
+ID = "jump"
+Binding = 0
+Key = 32

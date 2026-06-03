@@ -1,73 +1,73 @@
-#meta type="raster_font"
+#meta version=1.0 type=rastfont
 
-storage = "keep"
-space_advance_width = 5.0
-line_height = 8.0
-font_scale = [32.0, 32.0]
-texture_files = ["~/fonts/PixelAlphabet.png", "~/fonts/PixelNumbers.png"]
+Storage = 1
+SAdvW = 5.0
+LineH = 8.0
+Scale = [32.0, 32.0]
+TxFiles = ["@/fonts/PixelAlphabet.png", "@/fonts/PixelNumbers.png"]
 
-[[glyphs]]
-codepoint = "A"
-texture_file = 0
-[glyphs.location]
-x1 = 0
-x2 = 4
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "A"
+TxFile = 0
+[Glyphs.Location]
+X1 = 0
+X2 = 4
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5
 
-[[glyphs]]
-codepoint = "B"
-texture_file = 0
-[glyphs.location]
-x1 = 6
-x2 = 10
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "B"
+TxFile = 0
+[Glyphs.Location]
+X1 = 6
+X2 = 10
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5
 
-[[glyphs]]
-codepoint = "C"
-texture_file = 0
-[glyphs.location]
-x1 = 12
-x2 = 16
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "C"
+TxFile = 0
+[Glyphs.Location]
+X1 = 12
+X2 = 16
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5
 
-[[glyphs]]
-codepoint = "1"
-texture_file = 1
-[glyphs.location]
-x1 = 6
-x2 = 10
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "1"
+TxFile = 1
+[Glyphs.Location]
+X1 = 6
+X2 = 10
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5
 
-[[glyphs]]
-codepoint = "2"
-texture_file = 1
-[glyphs.location]
-x1 = 12
-x2 = 16
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "2"
+TxFile = 1
+[Glyphs.Location]
+X1 = 12
+X2 = 16
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5
 
-[[glyphs]]
-codepoint = "3"
-texture_file = 1
-[glyphs.location]
-x1 = 18
-x2 = 22
-y1 = 0
-y2 = 6
-[glyphs.padding]
-uniform = 0.5
+[[Glyphs]]
+Codept = "3"
+TxFile = 1
+[Glyphs.Location]
+X1 = 18
+X2 = 22
+Y1 = 0
+Y2 = 6
+[Glyphs.Padding]
+Uniform = 0.5

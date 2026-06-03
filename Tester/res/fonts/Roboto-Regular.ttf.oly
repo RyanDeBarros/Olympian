@@ -1,19 +1,19 @@
-#meta type=font
+#meta version=1.0 import type=font
 
-[[font_atlas]]
-storage = "discard"
-"font_size" = 96
-"mag_filter" = "linear"
-"min_filter" = "linear mipmap linear"
-"generate_mipmaps" = true
-"common_buffer_preset" = "common"
+[[Atlas]]
+Storage = 0
+FontSize = 96
+MagFilt = 0x2601
+MinFilt = 0x2703
+Mipmaps = 1
+ComBP = 0
 
-[font_face]
-storage = "keep"
-[[font_face.kerning]]
-pair = [ "e", "U+78",]
-dist = 150
+[Face]
+Storage = 1
+[[Face.Kerning]]
+CodePair = [ "e", "U+78",]
+CodeDist = 150
 
-[[font_face.kerning]]
-pair = [ "H", "e",]
-dist = -200
+[[Face.Kerning]]
+CodePair = [ "H", "e",]
+CodeDist = -200

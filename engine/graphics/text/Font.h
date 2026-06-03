@@ -13,12 +13,22 @@ namespace oly::rendering
 {
 	namespace glyphs
 	{
-		static constexpr const char8_t* COMMON = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,./<>?;:\'\"\\|[]{}!@#$%^&*()-=_+`~";
-		static constexpr const char8_t* ALPHA_NUMERIC = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		static constexpr const char8_t* NUMERIC = u8"0123456789";
-		static constexpr const char8_t* ALPHABET = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		static constexpr const char8_t* ALPHABET_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
-		static constexpr const char8_t* ALPHABET_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		enum class CommonBufferPreset
+		{
+			Common,
+			AlphaNumeric,
+			Numeric,
+			Alphabet,
+			AlphabetLowercase,
+			AlphabetUppercase
+		};
+
+		constexpr const char8_t* COMMON = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,./<>?;:\'\"\\|[]{}!@#$%^&*()-=_+`~";
+		constexpr const char8_t* ALPHA_NUMERIC = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		constexpr const char8_t* NUMERIC = u8"0123456789";
+		constexpr const char8_t* ALPHABET = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		constexpr const char8_t* ALPHABET_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
+		constexpr const char8_t* ALPHABET_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	}
 
 	class FontFace
@@ -28,7 +38,7 @@ namespace oly::rendering
 		Kerning kerning;
 
 	public:
-		FontFace(const ResourcePath& font_file, Kerning&& kerning);
+		FontFace(const detail::ResourcePath& font_file, Kerning&& kerning);
 
 		float scale_for_pixel_height(float font_size) const;
 		void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;

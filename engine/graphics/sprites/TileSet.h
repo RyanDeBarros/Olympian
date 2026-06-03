@@ -2,7 +2,8 @@
 
 #include "core/types/SmartReference.h"
 #include "core/math/Shapes.h"
-#include "core/util/ResourcePath.h"
+
+#include "assets/ResourcePath.h"
 
 #include <unordered_set>
 
@@ -27,6 +28,7 @@ namespace oly::rendering
 			Rotate270 = 0b10000,
 		};
 
+	private:
 		enum class Configuration : char
 		{
 			Single,
@@ -85,9 +87,10 @@ namespace oly::rendering
 			Transformation transformation = Transformation::None;
 		};
 
+	public:
 		struct TileDesc
 		{
-			ResourcePath file;
+			detail::ResourcePath file;
 			math::UVRect uvs;
 
 			bool operator==(const TileDesc&) const = default;
@@ -100,12 +103,15 @@ namespace oly::rendering
 			Transformation transformation;
 		};
 
-		TileSet(const std::vector<Assignment>& assignments);
-
 	private:
 		std::vector<TileDesc> tiles;
 		std::unordered_map<Configuration, Tile> assignment;
 
+	public:
+		TileSet(const std::vector<Assignment>& assignments = {});
+
+	private:
+		void load_assignments(const std::vector<Assignment>& assignments);
 		bool valid_configuration(Configuration configuration) const;
 
 	public:
@@ -117,7 +123,18 @@ namespace oly::rendering
 	private:
 		Tile get_assignment(Configuration config, Transformation& transformation) const;
 		static Configuration get_configuration(PaintedTile tile);
+
+	public:
+		void overload(TOMLNode node);
+
+		static TileSet load(TOMLNode node)
+		{
+			TileSet tileset;
+			tileset.overload(node);
+			return tileset;
+		}
 	};
+
 	typedef SmartReference<TileSet> TileSetRef;
 
 	inline TileSet::Transformation operator&(TileSet::Transformation a, TileSet::Transformation b) { return (TileSet::Transformation)((char)a & (char)b); }

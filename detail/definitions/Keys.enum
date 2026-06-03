@@ -1,0 +1,250 @@
+_ =
+
+Meta_Version = version
+Meta_Import = import
+Meta_Type = type
+Meta_Exists = exists
+
+Meta_Archetype = arch
+Meta_Font = font
+Meta_FontFamily = fontfam
+Meta_ParticleSystem = psystem
+Meta_RasterFont = rastfont
+Meta_Signal = signal
+Meta_Texture = texture
+Meta_Tileset = tileset
+
+A = A
+AbstractStorage = AbsStore
+AdjacentOffset = AdjOff
+Amplitude = Amp
+Animated = Animated
+AssignmentArray = Assign
+AtlasIndex = AtlasIdx
+AutoIconify = AutoIcon
+AutoTick = AutoTick
+Axis1D = Axis1D
+Axis2D = Axis2D
+
+B = B
+BackgroundColor = BkgColor
+Binding = Binding
+Border = Border
+Bordered = Bordered
+BorderColorsArray = BrdClrs
+BorderExponent = BrdExp
+BorderInnerColor = BIClr
+BorderOuterColor = BOClr
+BorderPivot = BorderP
+BorderWidth = BorderW
+Bottom = Bottom
+Boxed = Boxed
+Button = Button
+
+C = C
+CameraInvariant = CamInv
+CellHeightOverride = CHOver
+CellWidthOverride = CWOver
+CenterCursor = CCursor
+ClearColor = ClrColor
+Codepoint = Codept
+CodepointDistance = CodeDist
+CodepointPair = CodePair
+Collision = Colsn
+ColorsArray = Colors
+Columns = Cols
+CommonBufferPreset = ComBP
+CommonBuffer = ComB
+Configuration = Config
+Context = Context
+ContextDebug = CTXDebug
+Conversion = Conv
+
+D = D
+Deadzone = Deadzone
+Debug = Debug
+Decorated = Decor
+DelayCS = DelayCS
+DelaySeconds = DelayS
+DrawBackground = DrawBkg
+Domain = Domain
+DoubleBuffer = DBuffer
+Duration = Duration
+
+Element = Element
+Enable = Enable
+Error = Error
+Expand = Expand
+
+Fatal = Fatal
+File = File
+FillColorsArray = FillClrs
+FillExponent = FillExp
+FillInnerColor = FIClr
+FillOuterColor = FOClr
+Floating = Floating
+Focused = Focused
+FocusOnShow = FocusOnS
+FontFace = Face
+FontAtlasArray = Atlas
+Font = Font
+FontIndex = FontIdx
+FontScale = Scale
+FontSize = FontSize
+ForbiddenMods = BanMods
+Format = Format
+Frame = Frame
+FrameFormat = FrmForm
+FrameLengthClip = FLenClip
+FrameRate = FrmRate
+
+GenerateMipmaps = Mipmaps
+Gamepads = Gmpds
+GlyphArray = Glyphs
+
+Height = Height
+HorizontalAlignment = HAlign
+
+ImageStorage = ImgStore
+Info = Info
+InnerOperation = InnerOp
+Invert = Invert
+ID = ID
+
+JitterOffset = JitOff
+
+K = K
+Kerning = Kerning
+Key = Key
+Klass = Klass
+
+Layers = Layers
+LayerArray = Layer
+Left = Left
+LinebreakSpacing = LineBrk
+LineHeight = LineH
+LineSpacing = LineSp
+LineYPivot = LineYPiv
+Location = Location
+Logger = Logger
+
+MagFilter = MagFilt
+MappingArray = Mapping
+MappedSignalList = Signals
+Masks = Masks
+Maximized = Maxed
+MaxHeight = MaxH
+MaxPriorLogBytes = MxPBytes
+MaxPriorLogFiles = MxPFiles
+Method = Method
+MinFilter = MinFilt
+MinSize = MinSize
+Mode = Mode
+Modifier = Modifier
+Modulation = Modul
+MousePassthrough = MousePSS
+Multiplier = Mult
+
+NumFrames = FrmCount
+NSize = NSize
+
+Offset = Offset
+Offsets = Offsets
+OpenglForwardCompat = FWCompat
+Operation = Op
+OperationArray = Ops
+OriginOffsetMode = OrigOffM
+OriginOffset = OrigOff
+
+Padding = Padding
+Pivot = Pivot
+PointsArray = Points
+Position = Position
+PositionX = PosX
+PositionY = PosY
+
+RadiusX = RadiusX
+RadiusY = RadiusY
+Raster = Raster
+Rate = Rate
+RefreshRate = RefreshR
+RequiredMods = ReqMods
+Resizable = Resize
+Right = Right
+Rotation = Rotation
+Rows = Rows
+RowMajor = RowMajor
+RowUp = RowUp
+
+Sampler = Sampler
+Scale = Scale
+ScaleFramebuffer = ScaleFB
+ScaleToMonitor = ScaleToM
+Selector = Selector
+Shearing = Shearing
+Signals = Signals
+SignalArray = SigArr
+Size = Size
+SpaceAdvanceWidth = SAdvW
+Speed = Speed
+Sprite = Sprite
+SrgbCapable = SRGBCap
+StartingFrame = FrmStart
+StartingTime = TmStart
+StaticFrame = StatFrm
+Stereo = Stereo
+Storage = Storage
+Stretch = Stretch
+Style = Style
+StyleArray = Styles
+SwapInterval = SwpInt
+Swizzle = Swizzle
+SVG = SVG
+
+TabSpaces = TabSp
+Text = Text
+Texture = Texture
+TextureArray = Texture
+TextureCoordinates = TxCoords
+TextureFile = TxFile
+TextureFileArray = TxFiles
+TextureIndex = TxIndex
+TextColor = TextClr
+TextWrap = TextWrap
+TileArray = Tiles
+TileSet = TileSet
+Tilt = Tilt
+TimeOffset = TmOff
+TimeScale = TmScale
+Title = Title
+Top = Top
+TransformationArray = TrfmArr
+Transformer = Trfmer
+TransparentFramebuffer = TrFrmbuf
+
+UseCommonBufferPreset = UseComBP
+UseConsole = UseCons
+UseLogfile = UseFile
+Uniform = Uniform
+UVvec4 = UVs
+
+Value = Value
+VectorScale = VecScale
+VerticalAlignment = VAlign
+Viewport = Viewport
+Visible = Visible
+
+Warning = Warning
+Width = Width
+Window = Window
+WindowHint = WinHint
+WrapS = WrapS
+WrapT = WrapT
+
+X1 = X1
+X2 = X2
+
+Y1 = Y1
+Y2 = Y2
+
+Z = Z

@@ -10,7 +10,7 @@
 
 namespace oly::io
 {
-	std::vector<std::string> read_file_lines(const ResourcePath& filepath)
+	std::vector<std::string> read_file_lines(const detail::ResourcePath& filepath)
 	{
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
@@ -26,7 +26,7 @@ namespace oly::io
 		return lines;
 	}
 
-	std::string read_file(const ResourcePath& filepath)
+	std::string read_file(const detail::ResourcePath& filepath)
 	{
 		std::ifstream file = filepath.get_ifstream();
 		if (!file)
@@ -40,9 +40,8 @@ namespace oly::io
 		return oss.str();
 	}
 
-	std::vector<unsigned char> read_file_uc(const ResourcePath& filepath)
+	std::vector<unsigned char> read_file_uc(const detail::ResourcePath& filepath)
 	{
-		
 		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
 		if (!file)
 		{
@@ -63,7 +62,7 @@ namespace oly::io
 		return content;
 	}
 
-	std::string read_template_file(const ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
+	std::string read_template_file(const detail::ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
 	{
 		std::string content = read_file(file);
 		for (const auto& [placeholder, value] : tmpl)

@@ -1,40 +1,40 @@
-#meta type="particle_system"
+#meta version=1.0 type=psystem
 
 [emitter0]
-	[emitter0.spawner]
-	klass = "ConstantParticleSpawner"
+	[emitter0.Spawner]
+	Klass = "ConstantParticleSpawner"
 
-	[emitter0.color]
-		[emitter0.color.domain]
-			[emitter0.color.domain.c]
-			op = "Sequence"
-				[[emitter0.color.domain.c.ops]]
-				op = "Selector"
-				selector = "R"
-					[emitter0.color.domain.c.ops.inner_op]
-					op = "SineWave1D"
-					a = 0.5
-					b = 2.0
-					k = 1.57
-					c = 0.5
-				[[emitter0.color.domain.c.ops]]
-				op = "Selector"
-				selector = "B"
-					[emitter0.color.domain.c.ops.inner_op]
-					op = "SineWave1D"
-					a = 0.5
-					b = 2.0
-					k = 0.57
-					c = 0.5
+	[emitter0.Color]
+		[emitter0.Color.Domain]
+			[emitter0.Color.Domain.C]
+			Op = 0
+				[[emitter0.Color.Domain.C.Ops]]
+				Op = 1
+				Selector = 1
+					[emitter0.Color.Domain.C.Ops.InnerOp]
+					Op = 2
+					A = 0.5
+					B = 2.0
+					K = 1.57
+					C = 0.5
+				[[emitter0.Color.Domain.C.Ops]]
+				Op = 1
+				Selector = 3
+					[emitter0.Color.Domain.C.Ops.InnerOp]
+					Op = 2
+					A = 0.5
+					B = 2.0
+					K = 0.57
+					C = 0.5
 
-	[emitter0.velocity]
-		[emitter0.velocity.domain]
-			[emitter0.velocity.domain.c]
-			op = "Polarization2D"
-			amplitude = 100.0
+	[emitter0.Velocity]
+		[emitter0.Velocity.Domain]
+			[emitter0.Velocity.Domain.C]
+			Op = 3
+			Amp = 100.0
 
 [emitter1]
-	[emitter1.color]
-		[emitter1.color.domain]
-			[emitter1.color.domain.c]
-			value = [0.0, 0.0, 1.0, 1.0]
+	[emitter1.Color]
+		[emitter1.Color.Domain]
+			[emitter1.Color.Domain.C]
+			Value = [0.0, 0.0, 1.0, 1.0]

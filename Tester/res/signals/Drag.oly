@@ -1,10 +1,10 @@
-#meta type=signal
+#meta version=1.0 type=signal
 
-mapping = []
-[[signal]]
-id = "drag"
-binding = "cursor pos"
+Mapping = []
+[[SigArr]]
+ID = "drag"
+Binding = 5
 
-[signal.modifier]
-multiplier = [ 1.0, 1.0, 1.0,]
-invert = [ false, false, false,]
+[SigArr.Modifier]
+Mult = [ 1.0, 1.0, 1.0,]
+Invert = [ false, false, false,]

@@ -1,0 +1,5 @@
+add_subdirectory(debugging)
+add_subdirectory(elements)
+add_subdirectory(methods)
+add_subdirectory(objects)
+add_subdirectory(scene)

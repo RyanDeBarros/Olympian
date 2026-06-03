@@ -1,14 +1,14 @@
-#meta type=texture
+#meta version=1.0 import type=texture
 
-[[texture]]
-storage = "discard"
-"min_filter" = "nearest"
-"mag_filter" = "nearest"
-"generate_mipmaps" = false
+[[Texture]]
+Storage = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+Mipmaps = 0
 
-[[texture]]
-storage = "discard"
-"min_filter" = "nearest"
-"mag_filter" = "nearest"
-"generate_mipmaps" = true
+[[Texture]]
+Storage = 0
+MinFilt = 0x2600
+MagFilt = 0x2600
+Mipmaps = 1
 

@@ -1,15 +1,17 @@
 # Olympian
-Olympian Engine is a game engine written with C++ OpenGL to make future graphics projects easier, faster, and safer. It consists of two major components - the game framework (located in engine/), and the editor (located in editor/), which are subject to different licenses.
+Olympian Engine is a game engine written with C++ OpenGL to make future graphics projects easier, faster, and safer. It consists of two major components - the game framework (located in `engine/`), and the editor (located in `editor/`), which are subject to different licenses.
 
-The engine/ folder contains source code for the framework, and the general public API is included in engine/Olympian.h. For specialized features, refer to the (future) web documentation for which files to include.
+The `engine/` folder contains source code for the framework, and the general public API is included in `engine/Olympian.h`. For specialized features, refer to the (future) web documentation for which files to include.
 
-To build the editor, simply run editor/Build.py. This will build an executable, editor/OlyEditor.exe. Do not move the executable from editor/.
+To build the editor, simply run `editor/Build.py`. This will build an executable, `editor/OlyEditor.exe`. Do not move the executable from `editor/`.
 
-To access the web documentation, run mkdocs/Serve.py.
+To access the web documentation, run `mkdocs/Serve.py`.
+
+The `definitions/` folder is an internal folder containing source code for CodeGen operations. CodeGen operations are executed when configuring the engine's CMake project, which auto-generates critical code used by the engine. Additionally, this CodeGen source code is used by the editor to generate its asset interfaces. Thus, the data in `definitions/` provides a strict API between the engine and the editor to interact with assets in a compatible way.
 
 ## Licensing
 
-All third-party licenses can be found in the licenses/ folder.
+All third-party licenses can be found in the `licenses/` folder.
 
 ### Engine
 
@@ -27,8 +29,14 @@ The engine uses the following libraries:
 
 The editor uses the following libraries:
 
-- **PySide6**
-- **Send2Trash**
+- **nigels-com/glew**
+- **GLFW**
+- **ocornut/imgui**
+- **aiekick/ImGuiFileDialog**
+- **g-truc/glm**
+- **nothings/stb**
+- **marzer/tomlplusplus**
+- **memononen/nanosvg**
 
 ### Documentation
 
@@ -39,6 +47,6 @@ The documentation webpage uses the following libraries:
 
 ### Other
 
-Additionally, extra assets such as fonts or images may be used. For the actual licensing information, refer to the licenses/ folder.
+Additionally, extra assets such as fonts or images may be used. For the actual licensing information, refer to the `licenses/` folder.
 
-Note that some SIL OFL fonts are licensed separately, since they are not compatible under GNU GPL v3. Dependencies are not included directly in source code, but are referenced by CMake. All source code is written by me, and is therefore under GPLv3.
+Note: some SIL OFL fonts are licensed separately, since they are not compatible under GNU GPL v3. Dependencies are not included directly in source code, but are referenced by CMake. All source code is written by me, and is therefore under GPLv3.

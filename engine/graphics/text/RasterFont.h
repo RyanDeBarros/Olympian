@@ -14,7 +14,7 @@ namespace oly::rendering
 
 	public:
 		RasterFontGlyph(const graphics::BindlessTextureRef& texture, math::IRect2D location,
-			math::TopSidePadding padding = {}, math::PositioningMode origin_offset_mode = math::PositioningMode::RELATIVE, glm::vec2 origin_offset = {});
+			math::TopSidePadding padding = {}, math::PositioningMode origin_offset_mode = math::PositioningMode::Relative, glm::vec2 origin_offset = {});
 
 		graphics::BindlessTextureRef texture() const
 		{

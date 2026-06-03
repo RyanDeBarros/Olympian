@@ -17,7 +17,7 @@ namespace oly::rendering
 			.y2 = (location.y2 + 1) / dimensions.y
 		};
 
-		if (origin_offset_mode == math::PositioningMode::RELATIVE)
+		if (origin_offset_mode == math::PositioningMode::Relative)
 		{
 			origin_offset = {
 				(location.width() + 1.0f) * origin_offset.x,

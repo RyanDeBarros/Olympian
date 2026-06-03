@@ -1,15 +1,17 @@
 #pragma once
 
 #include "external/GLM.h"
-#include "core/util/Enum.h"
+#include "external/TOML.h"
 
 #include <array>
 
 namespace oly::math
 {
-#define _PositioningModeEntryMap(X) X(ABSOLUTE, 0) X(RELATIVE, 1)
-	OLY_ENUM(PositioningMode, _PositioningModeEntryMap);
-#undef _PositioningModeEntryMap
+	enum class PositioningMode
+	{
+		Relative = 0x0,
+		Absolute = 0x1
+	};
 
 	struct Triangle2D
 	{
@@ -105,7 +107,7 @@ namespace oly::math
 		static IRect2D from_size(glm::ivec2 size) { return { .x1 = 0, .x2 = size.x, .y1 = 0, .y2 = size.y }; }
 		static IRect2D round_out(Rect2D rect) { return { .x1 = (int)floor(rect.x1), .x2 = (int)ceil(rect.x2), .y1 = (int)floor(rect.y1), .y2 = (int)ceil(rect.y2) }; }
 
-		static IRect2D load(TOMLNode node);
+		static IRect2D load(TOMLNode node, bool validate = true);
 	};
 
 	struct UVRect

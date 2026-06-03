@@ -1,12 +1,12 @@
-#meta type=font
+#meta version=1.0 import type=font
 
-[[font_atlas]]
-storage = "discard"
-"font_size" = 96
-"mag_filter" = "linear"
-"min_filter" = "linear"
-"generate_mipmaps" = false
-"common_buffer_preset" = "common"
+[[Atlas]]
+Storage = 0
+FontSize = 96
+MagFilt = 0x2601
+MinFilt = 0x2601
+Mipmaps = 0
+ComBP = 0
 
-[font_face]
-storage = "discard"
+[Face]
+Storage = 0

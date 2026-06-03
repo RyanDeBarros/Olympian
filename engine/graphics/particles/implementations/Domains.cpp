@@ -2,6 +2,8 @@
 
 #include "graphics/particles/ShaderStructs.h"
 
+#include "definitions/Keys.h"
+
 namespace oly::particles
 {
 	void ConstantDomain1D::apply(internal::Domain1D& domain) const
@@ -10,11 +12,22 @@ namespace oly::particles
 		domain.params[0] = c;
 	}
 
+	void ConstantDomain1D::overload(TOMLNode node)
+	{
+		c.overload(assets::Parser(node).field(detail::Key::C));
+	}
+
 	void LineDomain1D::apply(internal::Domain1D& domain) const
 	{
 		domain.type = internal::Domain1D::Line;
 		domain.params[0] = a;
 		domain.params[1] = b;
+	}
+
+	void LineDomain1D::overload(TOMLNode node)
+	{
+		a.overload(assets::Parser(node).field(detail::Key::A));
+		b.overload(assets::Parser(node).field(detail::Key::B));
 	}
 
 	void BiLineDomain1D::apply(internal::Domain1D& domain) const
@@ -25,11 +38,23 @@ namespace oly::particles
 		domain.params[2] = c;
 	}
 
+	void BiLineDomain1D::overload(TOMLNode node)
+	{
+		a.overload(assets::Parser(node).field(detail::Key::A));
+		b.overload(assets::Parser(node).field(detail::Key::B));
+		c.overload(assets::Parser(node).field(detail::Key::C));
+	}
+
 	void ConstantDomain2D::apply(internal::Domain2D& domain) const
 	{
 		domain.type = internal::Domain2D::Constant;
 		domain.params[0] = c[0];
 		domain.params[1] = c[1];
+	}
+
+	void ConstantDomain2D::overload(TOMLNode node)
+	{
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 
 	void ConstantDomain3D::apply(internal::Domain3D& domain) const
@@ -40,6 +65,11 @@ namespace oly::particles
 		domain.params[2] = c[2];
 	}
 
+	void ConstantDomain3D::overload(TOMLNode node)
+	{
+		c.overload(assets::Parser(node).field(detail::Key::C));
+	}
+
 	void ConstantDomain4D::apply(internal::Domain4D& domain) const
 	{
 		domain.type = internal::Domain4D::Constant;
@@ -47,5 +77,10 @@ namespace oly::particles
 		domain.params[1] = c[1];
 		domain.params[2] = c[2];
 		domain.params[3] = c[3];
+	}
+
+	void ConstantDomain4D::overload(TOMLNode node)
+	{
+		c.overload(assets::Parser(node).field(detail::Key::C));
 	}
 }
