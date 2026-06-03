@@ -77,6 +77,16 @@ namespace oly::editor
 		return id.ID();
 	}
 
+	float RasterTexture::Width() const
+	{
+		return width;
+	}
+
+	float RasterTexture::Height() const
+	{
+		return height;
+	}
+
 	GIFTexture::GIFTexture(const char* filepath, GLenum min_filter, GLenum mag_filter)
 	{
 		std::ifstream file(filepath, std::ios::binary | std::ios::ate);
@@ -113,17 +123,33 @@ namespace oly::editor
 
 	void GIFTexture::Update(float delta_seconds)
 	{
-		timer += delta_seconds;
+		const int frames = static_cast<int>(delays.size());
+		timer += delta_seconds * speed;
 		while (timer > std::max(delays[index], 0.001f))
 		{
-			timer -= delays[index];
-			index = (index + 1) % static_cast<int>(delays.size());
+			timer -= std::max(delays[index], 0.001f);
+			index = (index + 1) % frames;
+		}
+		while (timer < 0.f)
+		{
+			timer += std::max(delays[index], 0.001f);
+			index = (index - 1 + frames) % frames;
 		}
 	}
 
 	GLuint GIFTexture::ID() const
 	{
 		return ids[index].ID();
+	}
+
+	float GIFTexture::Width() const
+	{
+		return width;
+	}
+	
+	float GIFTexture::Height() const
+	{
+		return height;
 	}
 
 	SVGTexture::SVGTexture(const char* filepath, float scale, GLenum min_filter, GLenum mag_filter)
@@ -156,10 +182,24 @@ namespace oly::editor
 		return id.ID();
 	}
 
-	void Texture::Update(float delta_seconds)
+	float SVGTexture::Width() const
 	{
-		if (GIFTexture* t = std::get_if<GIFTexture>(&v))
-			t->Update(delta_seconds);
+		return width * preview_scale;
+	}
+
+	float SVGTexture::Height() const
+	{
+		return height * preview_scale;
+	}
+
+	GIFTexture* Texture::GetGIF()
+	{
+		return std::get_if<GIFTexture>(&v);
+	}
+
+	SVGTexture* Texture::GetSVG()
+	{
+		return std::get_if<SVGTexture>(&v);
 	}
 
 	GLuint Texture::ID() const
@@ -172,23 +212,28 @@ namespace oly::editor
 		}, v);
 	}
 
-	int Texture::Width() const
+	float Texture::Width() const
 	{
 		return std::visit([](const auto& t) {
 			if constexpr (std::is_same_v<std::decay_t<decltype(t)>, std::monostate>)
-				return 0;
+				return 0.f;
 			else
-				return t.width;
+				return t.Width();
 		}, v);
 	}
 
-	int Texture::Height() const
+	float Texture::Height() const
 	{
 		return std::visit([](const auto& t) {
 			if constexpr (std::is_same_v<std::decay_t<decltype(t)>, std::monostate>)
-				return 0;
+				return 0.f;
 			else
-				return t.height;
+				return t.Height();
 		}, v);
+	}
+
+	ImVec2 Texture::Size() const
+	{
+		return ImVec2(Width(), Height());
 	}
 }

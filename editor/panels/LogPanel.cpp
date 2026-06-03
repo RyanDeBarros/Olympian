@@ -12,7 +12,6 @@ namespace oly::editor
 	void LogPanel::Draw()
 	{
 		ImGui::Begin(GetTitle());
-		ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32_WHITE);
 		ImGui::BeginChild("##log-box", ImVec2(), ImGuiChildFlags_Borders);
 
 		for (const LogEntry& entry : Logger::Instance().Lines())
@@ -25,7 +24,6 @@ namespace oly::editor
 		}
 
 		ImGui::EndChild();
-		ImGui::PopStyleColor();
 		ImGui::End();
 	}
 }

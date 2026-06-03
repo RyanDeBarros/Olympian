@@ -25,8 +25,6 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		_texture.Update(ImGui::GetIO().DeltaTime);
-
 		ImGui::PushID(this);
 		if (ImGui::BeginTable("", 2))
 		{
@@ -34,8 +32,7 @@ namespace oly::editor
 			Draw(_scratch);
 
 			ImGui::TableNextColumn();
-			// TODO v7 enable scrolling over image to zoom
-			ImGui::Image(_texture.ID(), ImVec2(static_cast<float>(_texture.Width()), static_cast<float>(_texture.Height())));
+			DrawPreview();
 			ImGui::EndTable();
 		}
 		ImGui::PopID();
@@ -82,6 +79,58 @@ namespace oly::editor
 	detail::ResourcePath TextureDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();
+	}
+
+	void TextureDocument::DrawPreview()
+	{
+		// TODO v7 fix "Preview" label not showing
+		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		{
+			ImGui::Text("Preview");
+			ImGui::SameLine();
+			if (ImGui::Button("Reset"))
+				_preview_nav = PreviewNav();
+			
+			if (GIFTexture* gif = _texture.GetGIF())
+			{
+				ImGui::SameLine();
+				ImGui::Text("Speed");
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(100.0f);
+				ImGui::InputFloat("##SpeedInput", &gif->speed);
+				gif->Update(ImGui::GetIO().DeltaTime);
+			}
+
+			if (SVGTexture* svg = _texture.GetSVG())
+			{
+				ImGui::SameLine();
+				ImGui::Text("Scale");
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(100.0f);
+				ImGui::InputFloat("##ScaleInput", &svg->preview_scale);
+				ImGui::SameLine();
+				if (ImGui::Button("Refresh Scale"))
+					_texture = { SVGTexture(GetSourcePath().string().c_str(), svg->preview_scale) };
+			}
+
+			if (ImGui::IsWindowHovered())
+			{
+				_preview_nav.zoom += ImGui::GetIO().MouseWheel;
+
+				if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+					_preview_nav.pos += ImGui::GetIO().MouseDelta;
+			}
+
+			ImVec2 avail = ImGui::GetContentRegionAvail();
+			ImVec2 cursor = ImGui::GetCursorScreenPos();
+			ImVec2 size = _texture.Size() * std::pow(2.f, _preview_nav.zoom);
+			
+			ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
+			ImVec2 pos = cursor + offset;
+
+			ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
+			ImGui::EndChild();
+		}
 	}
 
 	void TextureDocument::Draw(TextureDescVariant& desc)

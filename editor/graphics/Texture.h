@@ -5,6 +5,8 @@
 #include <variant>
 #include <vector>
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	class TextureID
@@ -28,6 +30,8 @@ namespace oly::editor
 		
 		RasterTexture(const char* filepath, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
 		GLuint ID() const;
+		float Width() const;
+		float Height() const;
 	};
 
 	struct GIFTexture
@@ -37,20 +41,26 @@ namespace oly::editor
 		int width = 0, height = 0;
 		int index = 0;
 		float timer = 0.f;
+		float speed = 1.f;
 
 		GIFTexture(const char* filepath, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
 
 		void Update(float delta_seconds);
 		GLuint ID() const;
+		float Width() const;
+		float Height() const;
 	};
 
 	struct SVGTexture
 	{
 		TextureID id;
 		int width = 0, height = 0;
+		float preview_scale = 1.f;
 
 		SVGTexture(const char* filepath, float scale = 1.f, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
 		GLuint ID() const;
+		float Width() const;
+		float Height() const;
 	};
 
 	struct Texture
@@ -58,9 +68,11 @@ namespace oly::editor
 		using Variant = std::variant<std::monostate, RasterTexture, GIFTexture, SVGTexture>;
 		Variant v;
 
-		void Update(float delta_seconds);
+		GIFTexture* GetGIF();
+		SVGTexture* GetSVG();
 		GLuint ID() const;
-		int Width() const;
-		int Height() const;
+		float Width() const;
+		float Height() const;
+		ImVec2 Size() const;
 	};
 }

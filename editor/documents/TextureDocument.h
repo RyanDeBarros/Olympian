@@ -9,6 +9,12 @@
 
 namespace oly::editor
 {
+	struct PreviewNav
+	{
+		ImVec2 pos = ImVec2(0, 0);
+		float zoom = 0.f;
+	};
+
 	class TextureDocument : public IDocument
 	{
 		TextureDescVariant _scratch;
@@ -19,6 +25,7 @@ namespace oly::editor
 		int _active_slot = 0;
 		std::vector<std::string> _slot_names;
 		Texture _texture;
+		PreviewNav _preview_nav;
 
 	public:
 		using IDocument::IDocument;
@@ -31,6 +38,8 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
+		void DrawPreview();
+		
 		void Draw(TextureDescVariant& desc);
 		void Draw(RasterTextureDesc& desc);
 		void Draw(VectorTextureDesc& desc);
