@@ -4,6 +4,11 @@
 
 namespace oly::editor
 {
+	void ContentBrowserPanel::Init()
+	{
+		// TODO v8
+	}
+
 	const char* ContentBrowserPanel::GetTitle() const
 	{
 		return "Content Browser";

@@ -24,6 +24,11 @@ namespace oly::editor
 		}
 	}
 
+	void AssetEditorPanel::Init()
+	{
+		// nop
+	}
+
 	const char* AssetEditorPanel::GetTitle() const
 	{
 		return "Asset Editor";

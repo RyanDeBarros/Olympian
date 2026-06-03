@@ -7,6 +7,7 @@ namespace oly::editor
 	class ContentBrowserPanel : public IPanel
 	{
 	public:
+		void Init() override;
 		const char* GetTitle() const override;
 		void Draw() override;
 	};

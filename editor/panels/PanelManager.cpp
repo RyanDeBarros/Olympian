@@ -4,6 +4,12 @@
 
 namespace oly::editor
 {
+	void PanelManager::Init()
+	{
+		for (const auto& [_, panel] : _panels)
+			panel->Init();
+	}
+
 	void PanelManager::Draw()
 	{
 		for (const auto& [_, panel] : _panels)

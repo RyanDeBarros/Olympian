@@ -66,6 +66,7 @@ namespace oly::editor
 
         tree.SetupLayout(_dockspace_id, *_panel_manager);
 
+        _panel_manager->Init();
         _main_menu_bar->Init();
     }
 

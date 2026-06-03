@@ -13,6 +13,7 @@ namespace oly::editor
 		std::unordered_map<std::type_index, std::unique_ptr<IPanel>> _panels;
 
 	public:
+		void Init();
 		void Draw();
 
 		template<typename T>

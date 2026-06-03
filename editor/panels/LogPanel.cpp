@@ -4,6 +4,11 @@
 
 namespace oly::editor
 {
+	void LogPanel::Init()
+	{
+		// nop
+	}
+
 	const char* LogPanel::GetTitle() const
 	{
 		return "Log";
