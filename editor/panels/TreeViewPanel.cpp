@@ -126,54 +126,7 @@ namespace oly::editor
 			auto [node, indent] = process.top();
 			process.pop();
 
-			float arrow_size = ImGui::GetFrameHeight();
-
-			for (int i = 0; i < indent; ++i)
-			{
-				ImGui::Dummy(ImVec2(arrow_size, arrow_size));
-				ImGui::SameLine();
-			}
-
-			ImVec2 start = ImGui::GetCursorScreenPos();
-			ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
-
-			if (node->IsBranching())
-			{
-				ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_Header, 0.6f), 6.0f);
-
-				ImGui::PushID(node);
-				if (node->dropdown_open)
-				{
-					if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down))
-						node->CloseBranch();
-				}
-				else
-				{
-					if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right))
-						node->OpenBranch();
-				}
-				ImGui::PopID();
-				ImGui::SameLine();
-
-				local_file_index = 0;
-			}
-			else
-			{
-				// TODO v8 file icon instead of dummy
-				ImGui::Dummy(ImVec2(arrow_size, arrow_size));
-				ImGui::SameLine();
-
-				if (local_file_index % 2 == 1)
-					ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.15f));
-
-				++local_file_index;
-			}
-
-			ImGui::PushID(node);
-			ImGui::Selectable(node->DisplayName().c_str());
-			ImGui::PopID();
-			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-				node->Open();
+			DrawNode(*node, indent, local_file_index);
 
 			if (node->IsBranching() && node->dropdown_open)
 			{
@@ -183,5 +136,68 @@ namespace oly::editor
 		}
 
 		ImGui::End();
+	}
+
+	void TreeViewPanel::DrawNode(TreeViewNode& node, int indent, int& local_file_index)
+	{
+		for (int i = 0; i < indent; ++i)
+		{
+			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+			ImGui::SameLine();
+		}
+
+		DrawRowBg(node, local_file_index);
+		DrawNodePrefix(node);
+
+		ImGui::PushID(&node);
+		ImGui::Selectable(node.DisplayName().c_str());
+		ImGui::PopID();
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			node.Open();
+	}
+
+	void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)
+	{
+		if (node.IsBranching())
+		{
+			ImGui::PushID(&node);
+			if (node.dropdown_open)
+			{
+				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down))
+					node.CloseBranch();
+			}
+			else
+			{
+				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right))
+					node.OpenBranch();
+			}
+			ImGui::PopID();
+			ImGui::SameLine();
+		}
+		else
+		{
+			// TODO v8 file icon instead of dummy
+			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+			ImGui::SameLine();
+		}
+	}
+
+	void TreeViewPanel::DrawRowBg(TreeViewNode& node, int& local_file_index)
+	{
+		ImVec2 start = ImGui::GetCursorScreenPos();
+		ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
+
+		if (node.IsBranching())
+		{
+			ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_Header, 0.6f), 6.0f);
+			local_file_index = 0;
+		}
+		else
+		{
+			if (local_file_index % 2 == 1)
+				ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.15f));
+
+			++local_file_index;
+		}
 	}
 }
