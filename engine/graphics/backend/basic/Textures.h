@@ -326,5 +326,5 @@ namespace oly::graphics
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}
 
-	// TODO v9 texture streaming
+	// TODO v12 texture streaming
 }
