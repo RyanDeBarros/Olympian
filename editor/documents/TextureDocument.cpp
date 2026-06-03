@@ -9,6 +9,11 @@
 
 namespace oly::editor
 {
+	const char* TextureDocument::GetVersion()
+	{
+		return "1.0";
+	}
+
 	void TextureDocument::Init()
 	{
 		_gif = GetSourcePath().extension_matches(".gif");

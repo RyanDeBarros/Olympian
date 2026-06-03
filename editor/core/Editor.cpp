@@ -149,8 +149,11 @@ namespace oly::editor
 		case OpenAssetCode::NotResource:
 			notif.message += "asset does not exist in resource folder";
 			break;
-		case OpenAssetCode::BadMeta:
-			notif.message += "asset has corrupted meta-data";
+		case OpenAssetCode::UnsupportedAssetType:
+			notif.message += "asset type not supported";
+			break;
+		case OpenAssetCode::UnsupportedAssetVersion:
+			notif.message += "asset meta version not supported"; // TODO v8 version mismatch handling
 			break;
 		case OpenAssetCode::UnsupportedExtension:
 			notif.message += "asset has unsupported file extension";

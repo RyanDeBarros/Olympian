@@ -49,7 +49,6 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v7 use versioning for all assets and definitions. create meta tools + conversion files to convert between versions
 	// TODO v8 Random class for random properties, similar to Unity
 	// TODO v8 texture import metadata should have some additional size scale that affects any sprites using the texture
 	// TODO v8 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)

@@ -16,6 +16,7 @@ namespace oly::detail
 
 		std::optional<Key> get_type() const;
 		bool has_type(Key type) const;
+		std::string get_version() const;
 	};
 
 	struct MetaSplitter

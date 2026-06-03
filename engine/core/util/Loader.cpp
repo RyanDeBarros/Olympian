@@ -14,5 +14,6 @@ namespace oly::io
 			_OLY_ENGINE_LOG_ERROR("ASSETS") << "Cannot load TOML file " << file << LOG.nl;
 			throw Error(ErrorCode::TomlParse, err);
 		}
+		return table;
 	}
 }

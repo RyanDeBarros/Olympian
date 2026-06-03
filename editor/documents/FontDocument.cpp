@@ -2,6 +2,11 @@
 
 namespace oly::editor
 {
+	const char* FontDocument::GetVersion()
+	{
+		return "1.0";
+	}
+
 	void FontDocument::Init()
 	{
 		// TODO v7

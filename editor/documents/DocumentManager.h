@@ -13,7 +13,8 @@ namespace oly::editor
 	{
 		Success = 0,
 		NotResource,
-		BadMeta,
+		UnsupportedAssetType,
+		UnsupportedAssetVersion,
 		UnsupportedExtension,
 		DoesNotExist
 	};

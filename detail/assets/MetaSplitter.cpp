@@ -23,6 +23,12 @@ namespace oly::detail
         return it != map.end() && decode_key(it->second) == type;
     }
 
+    std::string MetaMap::get_version() const
+    {
+        auto it = map.find(Key::Meta_Version);
+        return it != map.end() ? it->second : "";
+    }
+
 	MetaMap MetaSplitter::decode_meta(const ResourcePath& filepath)
 	{
         std::ifstream file = filepath.get_ifstream();

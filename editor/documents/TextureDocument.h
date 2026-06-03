@@ -30,6 +30,8 @@ namespace oly::editor
 	public:
 		using IDocument::IDocument;
 
+		static const char* GetVersion();
+
 		void Init() override;
 		void Draw() override;
 		void Load() override;
