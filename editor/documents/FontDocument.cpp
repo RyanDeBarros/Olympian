@@ -9,22 +9,22 @@ namespace oly::editor
 
 	void FontDocument::Init()
 	{
-		// TODO v7
+		// TODO v8
 	}
 
 	void FontDocument::Draw()
 	{
-		// TODO v7
+		// TODO v8
 	}
 
 	void FontDocument::Load()
 	{
-		// TODO v7
+		// TODO v8
 	}
 
 	void FontDocument::Dump()
 	{
-		// TODO v7
+		// TODO v8
 		MarkClean();
 	}
 
