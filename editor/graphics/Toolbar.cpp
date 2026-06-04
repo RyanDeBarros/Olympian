@@ -2,14 +2,21 @@
 
 #include "core/ResourceLoader.h"
 
+#include <string>
+
 namespace oly::editor
 {
-	static void _DrawIconButton(bool& selected, ImVec2 size)
+	static bool _DrawIconButton(bool& selected, ImVec2 size)
 	{
+		bool pressed = false;
 		ImGui::PushID(&selected);
 		if (ImGui::InvisibleButton("##IconButton", size))
+		{
 			selected = !selected;
+			pressed = true;
+		}
 		ImGui::PopID();
+		return pressed;
 	}
 
 	static void _HandleIconHovered(ImVec2 pos, ImVec2 size, const char* tooltip)
@@ -31,22 +38,24 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
 	}
 
-	void Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
+	bool Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		_DrawIconButton(selected, size);
+		bool pressed = _DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
 		DrawIconImage(pos, selected ? selected_icon : deselected_icon, 1.f);
+		return pressed;
 	}
 
-	void Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
+	bool Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		_DrawIconButton(selected, size);
+		bool pressed = _DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
 		DrawIconImage(pos, icon, selected ? 1.f : 0.3f);
+		return pressed;
 	}
 
 	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, int id_counter)
@@ -73,6 +82,19 @@ namespace oly::editor
 		if (ImGui::InvisibleButton("##IconButton", size))
 			pressed = true;
 		ImGui::PopID();
+
+		_HandleIconHovered(pos, size, tooltip);
+		DrawIconImage(pos, icon, 1.f);
+		return pressed;
+	}
+
+	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, const char* label_id)
+	{
+		bool pressed = false;
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+		if (ImGui::InvisibleButton(("##" + std::string(label_id)).c_str(), size))
+			pressed = true;
 
 		_HandleIconHovered(pos, size, tooltip);
 		DrawIconImage(pos, icon, 1.f);

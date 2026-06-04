@@ -129,11 +129,20 @@ namespace oly::editor
 				}
 			}
 
-			if (SpritesheetPreview())
+			SpritesheetDesc* spritesheet_desc = SpritesheetPreview();
+
+			if (spritesheet_desc)
 			{
 				ImGui::SameLine();
 				Toolbar::DrawIconToggleButton(Resource::PreviewIcon, _preview_spritesheet, "Preview spritesheet");
+				ImGui::SameLine();
+				Toolbar::DrawIconToggleButton(Resource::PauseIcon, Resource::PlayIcon, _spritesheet_preview_data.playing, "Play/pause animation");
+				ImGui::SameLine();
+				if (Toolbar::DrawIconButton(Resource::StopIcon, "Stop animation", "StopAnimation"))
+					_spritesheet_preview_data = {};
 			}
+			else
+				_spritesheet_preview_data = {};
 
 			if (ImGui::IsWindowHovered())
 			{
@@ -143,73 +152,91 @@ namespace oly::editor
 					_preview_nav.pos += ImGui::GetIO().MouseDelta;
 			}
 
-			ImVec2 avail = ImGui::GetContentRegionAvail();
-			ImVec2 cursor = ImGui::GetCursorScreenPos();
-			ImVec2 size = _texture.Size() * std::pow(2.f, _preview_nav.zoom);
-			
-			ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
-			ImVec2 pos = cursor + offset;
+			if (_spritesheet_preview_data.playing && spritesheet_desc)
+				PlaySpritesheetAnimation(*spritesheet_desc);
+			else
+			{
+				ImVec2 avail = ImGui::GetContentRegionAvail();
+				ImVec2 cursor = ImGui::GetCursorScreenPos();
+				ImVec2 size = _texture.Size() * std::pow(2.f, _preview_nav.zoom);
 
-			ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
-			if (!_gif && _preview_spritesheet)
-				DrawSpritesheetOverlay(pos);
+				ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
+				ImVec2 pos = cursor + offset;
+
+				ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
+				if (_preview_spritesheet && spritesheet_desc)
+					DrawSpritesheetOverlay(*spritesheet_desc, pos);
+			}
 			ImGui::EndChild();
 		}
 	}
 
 	SpritesheetDesc* TextureDocument::SpritesheetPreview()
 	{
-		if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+		if (_gif)
+			return nullptr;
+		else if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
 	}
 
-	void TextureDocument::DrawSpritesheetOverlay(ImVec2 rect_start)
+	SpritesheetInfo TextureDocument::CalcSpritesheetInfo(const SpritesheetDesc& desc)
 	{
-		SpritesheetDesc* desc = SpritesheetPreview();
-		if (!desc)
-			return;
-
-		auto dl = ImGui::GetWindowDrawList();
-
 		const ImVec2 texture_size = _texture.Size() * _preview_nav.svg_scale * std::pow(2.f, _preview_nav.zoom);
 
-		int cols = desc->cols.scratch;
-		float cell_width = desc->cell_width_override.scratch;
+		int cols = desc.cols.scratch;
+		float cell_width = desc.cell_width_override.scratch;
 
-		if (desc->enable_cell_width_override.scratch)
+		if (desc.enable_cell_width_override.scratch)
 			cols = static_cast<int>(texture_size.x) / static_cast<int>(cell_width);
 		else
 			cell_width = texture_size.x / cols;
 
 		const float full_width = cols * cell_width;
 
-		int rows = desc->rows.scratch;
-		float cell_height = desc->cell_height_override.scratch;
+		int rows = desc.rows.scratch;
+		float cell_height = desc.cell_height_override.scratch;
 
-		if (desc->enable_cell_height_override.scratch)
+		if (desc.enable_cell_height_override.scratch)
 			rows = static_cast<int>(texture_size.y) / static_cast<int>(cell_height);
 		else
 			cell_height = texture_size.y / rows;
 
 		const float full_height = rows * cell_height;
 
-		std::vector<int> xpos(cols + 1);
+		return {
+			.rows = rows,
+			.cols = cols,
+			.cell_width = cell_width,
+			.cell_height = cell_height,
+			.full_width = full_width,
+			.full_height = full_height,
+			.texture_width = texture_size.x,
+			.texture_height = texture_size.y
+		};
+	}
 
-		for (int i = 0; i <= cols; ++i)
-			xpos[i] = i * full_width / cols;
+	void TextureDocument::DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start)
+	{
+		auto info = CalcSpritesheetInfo(desc);
+		auto dl = ImGui::GetWindowDrawList();
+
+		std::vector<int> xpos(info.cols + 1);
+
+		for (int i = 0; i <= info.cols; ++i)
+			xpos[i] = i * info.full_width / info.cols;
 
 		for (int x : xpos)
-			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, full_height), IM_COL32_WHITE);
+			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, info.full_height), IM_COL32_WHITE);
 
-		std::vector<int> ypos(rows + 1);
+		std::vector<int> ypos(info.rows + 1);
 
-		for (int i = 0; i <= rows; ++i)
-			ypos[i] = i * full_height / rows;
+		for (int i = 0; i <= info.rows; ++i)
+			ypos[i] = i * info.full_height / info.rows;
 
 		for (int y : ypos)
-			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(full_width, y), IM_COL32_WHITE);
+			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(info.full_width, y), IM_COL32_WHITE);
 
 		const auto DrawDigit = [dl, rect_start, &xpos, &ypos](int x, int y, int digit) {
 			const std::string d = std::to_string(digit);
@@ -224,42 +251,88 @@ namespace oly::editor
 			const float scale_y = box_size.y / text_size.y;
 			const float font_scale = (scale_x < scale_y) ? scale_x : scale_y;
 
-			dl->AddText(font, font_scale, box_start, ImGui::GetColorU32(IM_COL32_WHITE, 0.75f), d.c_str());
+			for (int dx = -1; dx <= 1; ++dx)
+			{
+				for (int dy = -1; dy <= 1; ++dy)
+				{
+					if (dx != 0 || dy != 0)
+						dl->AddText(font, font_scale, box_start + ImVec2(dx, dy) * 1.5f, IM_COL32_BLACK, d.c_str());
+				}
+			}
+
+			dl->AddText(font, font_scale, box_start, IM_COL32_WHITE, d.c_str());
 		};
 
 		int digit = 0;
-		if (desc->row_major.scratch)
+		if (desc.row_major.scratch)
 		{
-			if (desc->row_up.scratch)
+			if (desc.row_up.scratch)
 			{
-				for (int i = 0; i < rows; ++i)
-					for (int j = 0; j < cols; ++j)
+				for (int i = info.rows - 1; i >= 0; --i)
+					for (int j = 0; j < info.cols; ++j)
 						DrawDigit(j, i, digit++);
 			}
 			else
 			{
-				for (int i = rows - 1; i >= 0; --i)
-					for (int j = 0; j < cols; ++j)
+				for (int i = 0; i < info.rows; ++i)
+					for (int j = 0; j < info.cols; ++j)
 						DrawDigit(j, i, digit++);
 			}
 		}
 		else
 		{
-			if (desc->row_up.scratch)
+			if (desc.row_up.scratch)
 			{
-				for (int j = 0; j < cols; ++j)
-					for (int i = 0; i < rows; ++i)
+				for (int j = 0; j < info.cols; ++j)
+					for (int i = info.rows - 1; i >= 0; --i)
 						DrawDigit(j, i, digit++);
 			}
 			else
 			{
-				for (int j = 0; j < cols; ++j)
-					for (int i = rows - 1; i >= 0; --i)
+				for (int j = 0; j < info.cols; ++j)
+					for (int i = 0; i < info.rows; ++i)
 						DrawDigit(j, i, digit++);
 			}
 		}
+	}
 
-		// TODO v8 animate 'active' cell using delay_cs
+	void TextureDocument::PlaySpritesheetAnimation(const SpritesheetDesc& desc)
+	{
+		auto info = CalcSpritesheetInfo(desc);
+
+		_spritesheet_preview_data.timer += ImGui::GetIO().DeltaTime;
+		if (desc.delay_cs.scratch > 0.f)
+		{
+			while (_spritesheet_preview_data.timer >= desc.delay_cs.scratch * 0.01f)
+			{
+				_spritesheet_preview_data.timer -= desc.delay_cs.scratch * 0.01f;
+				++_spritesheet_preview_data.active_index;
+			}
+			_spritesheet_preview_data.active_index %= info.rows * info.cols;
+		}
+		else
+		{
+			_spritesheet_preview_data.timer = 0.f;
+			_spritesheet_preview_data.active_index = 0;
+		}
+
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		ImVec2 cursor = ImGui::GetCursorScreenPos();
+		ImVec2 size = ImVec2(info.cell_width, info.cell_height) * std::pow(2.f, _preview_nav.zoom);
+
+		ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
+		ImVec2 pos = cursor + offset;
+
+		const int active_index = _spritesheet_preview_data.active_index;
+		const int row1 = desc.row_up.scratch ? info.rows - active_index / info.cols : active_index / info.cols;
+		const int row2 = desc.row_up.scratch ? row1 - 1 : row1 + 1;
+		const int col1 = desc.row_major.scratch ? active_index % info.cols : info.cols - (active_index % info.cols);
+		const int col2 = desc.row_major.scratch ? col1 + 1 : col1 - 1;
+
+		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / info.texture_width, std::min(row1, row2) * info.cell_height / info.texture_height);
+		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / info.texture_width, std::max(row1, row2) * info.cell_height / info.texture_height);
+
+		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
 	}
 
 	void TextureDocument::Draw(TextureDescVariant& desc)

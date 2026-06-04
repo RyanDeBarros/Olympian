@@ -180,6 +180,7 @@ namespace oly::graphics
 	}
 
 	inline float anim_delay_epsilon = 1.0f;
+
 	struct AnimDimensions
 	{
 		int w = 0, h = 0, cpp = 4;
@@ -189,6 +190,7 @@ namespace oly::graphics
 	private:
 		friend class Anim;
 		int _frames = -1;
+		// TODO v8 use float and represent *seconds* not centi-seconds. will need to update texture loading, update logic here, and also the spritesheet preview in editor
 		std::vector<int> delays;
 
 	public:

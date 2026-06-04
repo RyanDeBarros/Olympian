@@ -16,6 +16,21 @@ namespace oly::editor
 		float svg_scale = 1.f;
 	};
 
+	struct SpritesheetPreviewData
+	{
+		int active_index = 0;
+		float timer = 0.f;
+		bool playing = false;
+	};
+
+	struct SpritesheetInfo
+	{
+		int rows, cols;
+		float cell_width, cell_height;
+		float full_width, full_height;
+		float texture_width, texture_height;
+	};
+
 	class TextureDocument : public IDocument
 	{
 		TextureDescVariant _scratch;
@@ -28,6 +43,7 @@ namespace oly::editor
 		Texture _texture;
 		PreviewNav _preview_nav;
 		bool _preview_spritesheet = true;
+		SpritesheetPreviewData _spritesheet_preview_data;
 
 	public:
 		using IDocument::IDocument;
@@ -44,7 +60,9 @@ namespace oly::editor
 	private:
 		void DrawPreview();
 		SpritesheetDesc* SpritesheetPreview();
-		void DrawSpritesheetOverlay(ImVec2 rect_start);
+		SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
+		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start);
+		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
 		void Draw(TextureDescVariant& desc);
 		void Draw(RasterTextureDesc& desc);

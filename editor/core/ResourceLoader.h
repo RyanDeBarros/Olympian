@@ -10,11 +10,14 @@ namespace oly::editor
 		FilterOffIcon,
 		FilterOnIcon,
 		MinusIcon,
+		PauseIcon,
+		PlayIcon,
 		PlusIcon,
 		PreviewIcon,
 		RecenterIcon,
 		RevertIcon,
 		RefreshIcon,
+		StopIcon,
 	};
 
 	struct ResourceLoader
