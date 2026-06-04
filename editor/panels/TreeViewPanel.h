@@ -22,6 +22,7 @@ namespace oly::editor
 		void OpenBranch();
 		void CloseBranch();
 		void RefreshSubnodes();
+		void CollapseAll();
 	};
 
 	struct TreeViewConfig
@@ -41,6 +42,7 @@ namespace oly::editor
 
 	private:
 		bool PassesFilter(TreeViewNode& node) const;
+
 		void DrawHeader();
 		void DrawNode(TreeViewNode& node, int indent, int& local_file_index);
 		void DrawNodePrefix(TreeViewNode& node);

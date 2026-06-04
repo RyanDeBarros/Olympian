@@ -6,6 +6,7 @@ namespace oly::editor
 {
 	enum class Resource
 	{
+		CollapseAllIcon,
 		FilterOffIcon,
 		FilterOnIcon,
 	};

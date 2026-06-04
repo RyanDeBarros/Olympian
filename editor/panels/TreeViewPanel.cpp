@@ -108,6 +108,13 @@ namespace oly::editor
 		std::ranges::sort(subnodes, {}, [](const auto& p) { return p->path; });
 	}
 
+	void TreeViewNode::CollapseAll()
+	{
+		dropdown_open = false;
+		for (auto& subnode : subnodes)
+			subnode->CollapseAll();
+	}
+
 	void TreeViewPanel::Init()
 	{
 		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
@@ -160,7 +167,11 @@ namespace oly::editor
 
 	void TreeViewPanel::DrawHeader()
 	{
-		Toolbar::DrawIcon(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports, "Ignore import files");
+		int id_counter = 0;
+		Toolbar::DrawIconToggleButton(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports, "Ignore import files");
+		ImGui::SameLine();
+		if (Toolbar::DrawIconButton(Resource::CollapseAllIcon, "Collapse all", id_counter++))
+			_root->CollapseAll();
 		ImGui::Separator();
 	}
 

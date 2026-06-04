@@ -6,7 +6,7 @@
 
 namespace oly::editor
 {
-	static void DrawIconButton(bool& selected, ImVec2 size)
+	static void _DrawIconButton(bool& selected, ImVec2 size)
 	{
 		ImGui::PushID(&selected);
 		if (ImGui::InvisibleButton("##IconButton", size))
@@ -14,7 +14,7 @@ namespace oly::editor
 		ImGui::PopID();
 	}
 
-	static void HandleIconHovered(ImVec2 pos, ImVec2 size, const char* tooltip)
+	static void _HandleIconHovered(ImVec2 pos, ImVec2 size, const char* tooltip)
 	{
 		if (ImGui::IsItemHovered())
 		{
@@ -23,7 +23,7 @@ namespace oly::editor
 		}
 	}
 
-	static void DrawIconImage(ImVec2 pos, ImVec2 size, Resource icon, float tint_alpha)
+	static void _DrawIconImage(ImVec2 pos, ImVec2 size, Resource icon, float tint_alpha)
 	{
 		const float shrink = 0.2f;
 		const ImVec2 start = pos + 0.5f * size * shrink;
@@ -32,21 +32,36 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end);
 	}
 
-	void Toolbar::DrawIcon(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
+	void Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(32, 32);
-		DrawIconButton(selected, size);
-		HandleIconHovered(pos, size, tooltip);
-		DrawIconImage(pos, size, selected ? selected_icon : deselected_icon, 1.f);
+		_DrawIconButton(selected, size);
+		_HandleIconHovered(pos, size, tooltip);
+		_DrawIconImage(pos, size, selected ? selected_icon : deselected_icon, 1.f);
 	}
 
-	void Toolbar::DrawIcon(Resource icon, bool& selected, const char* tooltip)
+	void Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(32, 32);
-		DrawIconButton(selected, size);
-		HandleIconHovered(pos, size, tooltip);
-		DrawIconImage(pos, size, icon, selected ? 1.f : 0.3f);
+		_DrawIconButton(selected, size);
+		_HandleIconHovered(pos, size, tooltip);
+		_DrawIconImage(pos, size, icon, selected ? 1.f : 0.3f);
+	}
+
+	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, int id_counter)
+	{
+		bool pressed = false;
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 size = ImVec2(32, 32);
+		ImGui::PushID(id_counter);
+		if (ImGui::InvisibleButton("##IconButton", size))
+			pressed = true;
+		ImGui::PopID();
+
+		_HandleIconHovered(pos, size, tooltip);
+		_DrawIconImage(pos, size, icon, 1.f);
+		return pressed;
 	}
 }

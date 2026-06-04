@@ -7,6 +7,7 @@
 
 namespace oly::editor
 {
+	static Texture collapse_all_icon;
 	static Texture filter_off_icon;
 	static Texture filter_on_icon;
 
@@ -15,6 +16,7 @@ namespace oly::editor
 #define RES_FOLDER "res/"
 #define ICONS_FOLDER RES_FOLDER "icons/"
 
+		collapse_all_icon = { RasterTexture(ICONS_FOLDER "CollapseAll.png")};
 		filter_off_icon = { RasterTexture(ICONS_FOLDER "FilterOff.png")};
 		filter_on_icon = { RasterTexture(ICONS_FOLDER "FilterOn.png")};
 
@@ -26,12 +28,14 @@ namespace oly::editor
 	{
 		switch (resource)
 		{
+		case Resource::CollapseAllIcon:
+			return collapse_all_icon;
 		case Resource::FilterOffIcon:
 			return filter_off_icon;
 		case Resource::FilterOnIcon:
 			return filter_on_icon;
 		}
 
-		BreakoutError::Throw(("Resource not available: " + std::to_string(static_cast<int>(resource))).c_str());
+		BreakoutError::Throw(("Texture not available for resource: " + std::to_string(static_cast<int>(resource))).c_str());
 	}
 }
