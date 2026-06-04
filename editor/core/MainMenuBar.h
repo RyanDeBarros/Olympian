@@ -9,6 +9,6 @@ namespace oly::editor
 		void Draw();
 
 	private:
-		void DrawWindowMenu();
+		void DrawViewMenu();
 	};
 }

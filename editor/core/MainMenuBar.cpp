@@ -3,6 +3,7 @@
 #include "panels/AssetEditorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/LogPanel.h"
+#include "panels/PreferencesPanel.h"
 #include "panels/TreeViewPanel.h"
 
 #include <imgui.h>
@@ -18,14 +19,14 @@ namespace oly::editor
 	{
 		if (ImGui::BeginMainMenuBar())
 		{
-			DrawWindowMenu();
+			DrawViewMenu();
 			ImGui::EndMainMenuBar();
 		}
 	}
 
-	void MainMenuBar::DrawWindowMenu()
+	void MainMenuBar::DrawViewMenu()
 	{
-		if (ImGui::BeginMenu("Window"))
+		if (ImGui::BeginMenu("View"))
 		{
 			if (ImGui::MenuItem("Asset Editor"))
 				AssetEditorPanel::Instance().Open();
@@ -35,6 +36,9 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Log"))
 				LogPanel::Instance().Open();
+
+			if (ImGui::MenuItem("Preferences", "Ctrl+,"))
+				PreferencesPanel::Instance().Open();
 
 			if (ImGui::MenuItem("Tree View"))
 				TreeViewPanel::Instance().Open();

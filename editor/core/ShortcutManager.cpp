@@ -5,6 +5,7 @@
 
 #include "panels/AssetEditorPanel.h"
 #include "panels/ContentBrowserPanel.h"
+#include "panels/PreferencesPanel.h"
 
 namespace oly::editor
 {
@@ -26,6 +27,9 @@ namespace oly::editor
             else
                 panel.Open();
         }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Comma, ImGuiInputFlags_RouteGlobal))
+            PreferencesPanel::Instance().Open();
     }
 
     void ShortcutManager::HandlePathDrop(int count, const char** paths)

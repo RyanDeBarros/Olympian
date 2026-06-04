@@ -10,6 +10,7 @@
 #include "panels/AssetEditorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/LogPanel.h"
+#include "panels/PreferencesPanel.h"
 #include "panels/TreeViewPanel.h"
 
 #include "documents/DocumentManager.h"
@@ -41,6 +42,7 @@ namespace oly::editor
         _panel_manager->Add<AssetEditorPanel>().Open();
         _panel_manager->Add<ContentBrowserPanel>().Close();
         _panel_manager->Add<LogPanel>().Open();
+        _panel_manager->Add<PreferencesPanel>().Close();
         _panel_manager->Add<TreeViewPanel>().Open();
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
@@ -53,7 +55,8 @@ namespace oly::editor
                     typeid(TreeViewPanel)
                 }),
                 DockNode::MakeLeaf({
-                    typeid(AssetEditorPanel)
+                    typeid(AssetEditorPanel),
+                    typeid(PreferencesPanel)
                 }),
                 0.2f
             ),
