@@ -41,6 +41,8 @@ namespace oly::editor
 	{
 		if (auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar))
 		{
+			PollShortcuts();
+
 			DrawTabBar();
 
 			if (_selected_tab)
@@ -62,6 +64,18 @@ namespace oly::editor
 				ImGuiFileDialog::Instance()->Close();
 			}
 		}
+	}
+
+	void AssetEditorPanel::PollShortcuts()
+	{
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
+			OpenFile();
+
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+			SaveSelectedTab();
+
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+			SaveAllTabs();
 	}
 
 	void AssetEditorPanel::DrawTabBar()

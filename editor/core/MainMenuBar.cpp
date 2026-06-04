@@ -30,7 +30,7 @@ namespace oly::editor
 			if (ImGui::MenuItem("Asset Editor"))
 				AssetEditorPanel::Instance().Open();
 
-			if (ImGui::MenuItem("Content Browser"))
+			if (ImGui::MenuItem("Content Browser", "Ctrl+SPACE"))
 				ContentBrowserPanel::Instance().Open();
 
 			if (ImGui::MenuItem("Log"))
