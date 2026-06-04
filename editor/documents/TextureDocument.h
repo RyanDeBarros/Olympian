@@ -27,6 +27,7 @@ namespace oly::editor
 		std::vector<std::string> _slot_names;
 		Texture _texture;
 		PreviewNav _preview_nav;
+		bool _preview_spritesheet = true;
 
 	public:
 		using IDocument::IDocument;
@@ -42,6 +43,7 @@ namespace oly::editor
 
 	private:
 		void DrawPreview();
+		SpritesheetDesc* SpritesheetPreview();
 		void DrawSpritesheetOverlay(ImVec2 rect_start);
 		
 		void Draw(TextureDescVariant& desc);

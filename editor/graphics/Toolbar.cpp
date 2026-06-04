@@ -2,8 +2,6 @@
 
 #include "core/ResourceLoader.h"
 
-#include <imgui.h>
-
 namespace oly::editor
 {
 	static void _DrawIconButton(bool& selected, ImVec2 size)
@@ -23,13 +21,14 @@ namespace oly::editor
 		}
 	}
 
-	static void _DrawIconImage(ImVec2 pos, ImVec2 size, Resource icon, float tint_alpha)
+	void Toolbar::DrawIconImage(ImVec2 pos, Resource icon, float tint_alpha)
 	{
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		const float shrink = 0.2f;
 		const ImVec2 start = pos + 0.5f * size * shrink;
 		const ImVec2 end = pos + size * (1.f - 0.5f * shrink);
 		ImU32 tint = ImGui::GetColorU32(ImVec4(1.f, 1.f, 1.f, tint_alpha));
-		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end);
+		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
 	}
 
 	void Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
@@ -38,7 +37,7 @@ namespace oly::editor
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		_DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
-		_DrawIconImage(pos, size, selected ? selected_icon : deselected_icon, 1.f);
+		DrawIconImage(pos, selected ? selected_icon : deselected_icon, 1.f);
 	}
 
 	void Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
@@ -47,7 +46,7 @@ namespace oly::editor
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		_DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
-		_DrawIconImage(pos, size, icon, selected ? 1.f : 0.3f);
+		DrawIconImage(pos, icon, selected ? 1.f : 0.3f);
 	}
 
 	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, int id_counter)
@@ -61,7 +60,7 @@ namespace oly::editor
 		ImGui::PopID();
 
 		_HandleIconHovered(pos, size, tooltip);
-		_DrawIconImage(pos, size, icon, 1.f);
+		DrawIconImage(pos, icon, 1.f);
 		return pressed;
 	}
 
@@ -76,7 +75,7 @@ namespace oly::editor
 		ImGui::PopID();
 
 		_HandleIconHovered(pos, size, tooltip);
-		_DrawIconImage(pos, size, icon, 1.f);
+		DrawIconImage(pos, icon, 1.f);
 		return pressed;
 	}
 }

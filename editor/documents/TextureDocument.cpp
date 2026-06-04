@@ -129,6 +129,12 @@ namespace oly::editor
 				}
 			}
 
+			if (SpritesheetPreview())
+			{
+				ImGui::SameLine();
+				Toolbar::DrawIconToggleButton(Resource::PreviewIcon, _preview_spritesheet, "Preview spritesheet");
+			}
+
 			if (ImGui::IsWindowHovered())
 			{
 				_preview_nav.zoom += ImGui::GetIO().MouseWheel;
@@ -145,24 +151,27 @@ namespace oly::editor
 			ImVec2 pos = cursor + offset;
 
 			ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
-			if (!_gif)
+			if (!_gif && _preview_spritesheet)
 				DrawSpritesheetOverlay(pos);
 			ImGui::EndChild();
 		}
 	}
 
+	SpritesheetDesc* TextureDocument::SpritesheetPreview()
+	{
+		if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+			return *d;
+		else
+			return nullptr;
+	}
+
 	void TextureDocument::DrawSpritesheetOverlay(ImVec2 rect_start)
 	{
-		SpritesheetDesc* desc = nullptr;
-		if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
-			desc = *d;
-
+		SpritesheetDesc* desc = SpritesheetPreview();
 		if (!desc)
 			return;
 
 		auto dl = ImGui::GetWindowDrawList();
-		ImU32 line_color = IM_COL32_WHITE;
-		float line_thickness = 1.f;
 
 		const ImVec2 texture_size = _texture.Size() * _preview_nav.svg_scale * std::pow(2.f, _preview_nav.zoom);
 
@@ -186,19 +195,70 @@ namespace oly::editor
 
 		const float full_height = rows * cell_height;
 
+		std::vector<int> xpos(cols + 1);
+
 		for (int i = 0; i <= cols; ++i)
-		{
-			int x = i * full_width / cols;
-			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, full_height), line_color, line_thickness);
-		}
+			xpos[i] = i * full_width / cols;
+
+		for (int x : xpos)
+			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, full_height), IM_COL32_WHITE);
+
+		std::vector<int> ypos(rows + 1);
 
 		for (int i = 0; i <= rows; ++i)
+			ypos[i] = i * full_height / rows;
+
+		for (int y : ypos)
+			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(full_width, y), IM_COL32_WHITE);
+
+		const auto DrawDigit = [dl, rect_start, &xpos, &ypos](int x, int y, int digit) {
+			const std::string d = std::to_string(digit);
+			ImFont* font = ImGui::GetFont();
+			const ImVec2 text_size = font->CalcTextSizeA(1.f, FLT_MAX, 0.f, d.c_str());
+
+			const ImVec2 box_start = rect_start + ImVec2(xpos[x], ypos[y]);
+			const ImVec2 box_end = rect_start + ImVec2(xpos[x + 1], ypos[y + 1]);
+			const ImVec2 box_size = box_end - box_start;
+
+			const float scale_x = box_size.x / text_size.x;
+			const float scale_y = box_size.y / text_size.y;
+			const float font_scale = (scale_x < scale_y) ? scale_x : scale_y;
+
+			dl->AddText(font, font_scale, box_start, ImGui::GetColorU32(IM_COL32_WHITE, 0.75f), d.c_str());
+		};
+
+		int digit = 0;
+		if (desc->row_major.scratch)
 		{
-			int y = i * full_height / rows;
-			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(full_width, y), line_color, line_thickness);
+			if (desc->row_up.scratch)
+			{
+				for (int i = 0; i < rows; ++i)
+					for (int j = 0; j < cols; ++j)
+						DrawDigit(j, i, digit++);
+			}
+			else
+			{
+				for (int i = rows - 1; i >= 0; --i)
+					for (int j = 0; j < cols; ++j)
+						DrawDigit(j, i, digit++);
+			}
+		}
+		else
+		{
+			if (desc->row_up.scratch)
+			{
+				for (int j = 0; j < cols; ++j)
+					for (int i = 0; i < rows; ++i)
+						DrawDigit(j, i, digit++);
+			}
+			else
+			{
+				for (int j = 0; j < cols; ++j)
+					for (int i = rows - 1; i >= 0; --i)
+						DrawDigit(j, i, digit++);
+			}
 		}
 
-		// TODO v8 put numbers in cell corners using row_up/row_major
 		// TODO v8 animate 'active' cell using delay_cs
 	}
 
