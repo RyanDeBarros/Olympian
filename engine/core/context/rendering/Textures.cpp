@@ -141,8 +141,10 @@ namespace oly::context
 		graphics::SpritesheetOptions options;
 		parser.optional(detail::Key::Rows)(options.rows);
 		parser.optional(detail::Key::Columns)(options.cols);
-		parser.optional(detail::Key::CellWidthOverride)(options.cell_width_override);
-		parser.optional(detail::Key::CellHeightOverride)(options.cell_height_override);
+		if (parser.defaulted(detail::Key::EnableCellWidthOverride)(false))
+			parser.optional(detail::Key::CellWidthOverride)(options.cell_width_override);
+		if (parser.defaulted(detail::Key::EnableCellHeightOverride)(false))
+			parser.optional(detail::Key::CellHeightOverride)(options.cell_height_override);
 		parser.optional(detail::Key::DelayCS)(options.delay_cs);
 		parser.optional(detail::Key::RowMajor)(options.row_major);
 		parser.optional(detail::Key::RowUp)(options.row_up);

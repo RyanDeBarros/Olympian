@@ -32,12 +32,16 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			scratch = static_cast<T>(node[detail::encode_key(key)].value_or(def));
+			if (key != detail::Key::_)
+				scratch = static_cast<T>(node[detail::encode_key(key)].value_or(def));
+			else
+				scratch = def;
 		}
 
 		void Dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), scratch);
+			if (key != detail::Key::_)
+				table.insert_or_assign(detail::encode_key(key), scratch);
 		}
 
 		void Isolate()
@@ -71,6 +75,9 @@ namespace oly::editor
 	template<OptionalPrimitive<int> Min, OptionalPrimitive<int> Max>
 	struct IntField : public PrimitiveField<int>
 	{
+		inline static OptionalPrimitive<int> Min = Min;
+		inline static OptionalPrimitive<int> Max = Max;
+
 		using PrimitiveField<int>::PrimitiveField;
 
 		bool Draw()
@@ -82,6 +89,9 @@ namespace oly::editor
 	template<OptionalPrimitive<float> Min, OptionalPrimitive<float> Max>
 	struct FloatField : public PrimitiveField<float>
 	{
+		inline static OptionalPrimitive<float> Min = Min;
+		inline static OptionalPrimitive<float> Max = Max;
+
 		using PrimitiveField<float>::PrimitiveField;
 
 		bool Draw()

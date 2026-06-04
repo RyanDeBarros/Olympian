@@ -13,8 +13,10 @@ namespace oly::editor
 	{
 		IntField<MakeOpt(1), MakeOpt<int>()> rows;
 		IntField<MakeOpt(1), MakeOpt<int>()> cols;
-		IntField<MakeOpt(0), MakeOpt<int>()> cell_width_override;
-		IntField<MakeOpt(0), MakeOpt<int>()> cell_height_override;
+		BoolField enable_cell_width_override;
+		BoolField enable_cell_height_override;
+		IntField<MakeOpt(1), MakeOpt<int>()> cell_width_override;
+		IntField<MakeOpt(1), MakeOpt<int>()> cell_height_override;
 		IntField<MakeOpt(0), MakeOpt<int>()> delay_cs;
 		BoolField row_major;
 		BoolField row_up;
@@ -28,7 +30,9 @@ namespace oly::editor
 #define SPRITESHEET_GENERATOR(M) \
 		M(rows) \
 		M(cols) \
+		M(enable_cell_width_override) \
 		M(cell_width_override) \
+		M(enable_cell_height_override) \
 		M(cell_height_override) \
 		M(delay_cs) \
 		M(row_major) \
@@ -173,10 +177,21 @@ namespace oly::editor
 			}, variant);
 		}
 
-		void Visit(size_t i, auto&& visitor)
+		auto Visit(size_t i, auto&& visitor)
 		{
-			std::visit([&visitor, i](auto& desc) {
-				visitor(*desc.array[i]);
+			return std::visit([&visitor, i](auto& desc) {
+				using T = std::invoke_result_t<decltype(visitor), decltype(*desc.array[i])>;
+				if constexpr (std::is_same_v<T, void>)
+				{
+					return visitor(*desc.array[i]);
+				}
+				else
+				{
+					if (i < desc.array.size())
+						return std::optional<T>(visitor(*desc.array[i]));
+					else
+						return std::optional<T>(std::nullopt);
+				}
 			}, variant);
 		}
 

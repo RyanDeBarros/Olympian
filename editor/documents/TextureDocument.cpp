@@ -145,11 +145,61 @@ namespace oly::editor
 			ImVec2 pos = cursor + offset;
 
 			ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
-
-			// TODO v8 draw lines/cell indexes based on spritesheet settings
-
+			if (!_gif)
+				DrawSpritesheetOverlay(pos);
 			ImGui::EndChild();
 		}
+	}
+
+	void TextureDocument::DrawSpritesheetOverlay(ImVec2 rect_start)
+	{
+		SpritesheetDesc* desc = nullptr;
+		if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+			desc = *d;
+
+		if (!desc)
+			return;
+
+		auto dl = ImGui::GetWindowDrawList();
+		ImU32 line_color = IM_COL32_WHITE;
+		float line_thickness = 1.f;
+
+		const ImVec2 texture_size = _texture.Size() * _preview_nav.svg_scale * std::pow(2.f, _preview_nav.zoom);
+
+		int cols = desc->cols.scratch;
+		float cell_width = desc->cell_width_override.scratch;
+
+		if (desc->enable_cell_width_override.scratch)
+			cols = static_cast<int>(texture_size.x) / static_cast<int>(cell_width);
+		else
+			cell_width = texture_size.x / cols;
+
+		const float full_width = cols * cell_width;
+
+		int rows = desc->rows.scratch;
+		float cell_height = desc->cell_height_override.scratch;
+
+		if (desc->enable_cell_height_override.scratch)
+			rows = static_cast<int>(texture_size.y) / static_cast<int>(cell_height);
+		else
+			cell_height = texture_size.y / rows;
+
+		const float full_height = rows * cell_height;
+
+		for (int i = 0; i <= cols; ++i)
+		{
+			int x = i * full_width / cols;
+			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, full_height), line_color, line_thickness);
+		}
+
+		for (int i = 0; i <= rows; ++i)
+		{
+			int y = i * full_height / rows;
+			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(full_width, y), line_color, line_thickness);
+		}
+
+		// TODO v8 put numbers in cell corners using row_up/row_major
+		// TODO v8 animate 'active' cell using delay_cs
 	}
 
 	void TextureDocument::Draw(TextureDescVariant& desc)
@@ -219,7 +269,24 @@ namespace oly::editor
 
 	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
-		DRAW_FIELDS(SPRITESHEET_GENERATOR);
+		DRAW_FIELD(rows);
+		DRAW_FIELD(cols);
+		
+		DRAW_FIELD(enable_cell_width_override);
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!desc.enable_cell_width_override.scratch);
+		DRAW_FIELD(cell_width_override);
+		ImGui::EndDisabled();
+		
+		DRAW_FIELD(enable_cell_height_override);
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!desc.enable_cell_height_override.scratch);
+		DRAW_FIELD(cell_height_override);
+		ImGui::EndDisabled();
+
+		DRAW_FIELD(delay_cs);
+		DRAW_FIELD(row_major);
+		DRAW_FIELD(row_up);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureDescVariant& desc)

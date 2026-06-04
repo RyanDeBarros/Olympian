@@ -9,8 +9,10 @@ namespace oly::editor
 	SpritesheetDesc::SpritesheetDesc() :
 		rows(1, detail::Key::Rows, "Rows"),
 		cols(1, detail::Key::Columns, "Columns"),
-		cell_width_override(0, detail::Key::CellWidthOverride, "Cell Width Override"),
-		cell_height_override(0, detail::Key::CellHeightOverride, "Cell Height Override"),
+		enable_cell_width_override(false, detail::Key::EnableCellWidthOverride, "Cell Width Override"),
+		enable_cell_height_override(false, detail::Key::EnableCellHeightOverride, "Cell Height Override"),
+		cell_width_override(0, detail::Key::CellWidthOverride, ""),
+		cell_height_override(0, detail::Key::CellHeightOverride, ""),
 		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")

@@ -202,8 +202,9 @@ namespace oly::graphics
 	struct SpritesheetOptions
 	{
 		GLuint rows = 1, cols = 1;
-		GLuint cell_width_override = 0, cell_height_override = 0;
+		GLuint cell_width_override = 1, cell_height_override = 1;
 		int delay_cs = 0;
+		bool enable_cell_width_override = false, enable_cell_height_override = false;
 		bool row_major = true, row_up = true;
 	};
 

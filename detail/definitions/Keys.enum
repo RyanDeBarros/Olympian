@@ -73,6 +73,8 @@ Duration = Duration
 
 Element = Element
 Enable = Enable
+EnableCellHeightOverride = EnCHOver
+EnableCellWidthOverride = EnCWOver
 Error = Error
 Expand = Expand
 

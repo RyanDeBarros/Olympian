@@ -42,6 +42,7 @@ namespace oly::editor
 
 	private:
 		void DrawPreview();
+		void DrawSpritesheetOverlay(ImVec2 rect_start);
 		
 		void Draw(TextureDescVariant& desc);
 		void Draw(RasterTextureDesc& desc);

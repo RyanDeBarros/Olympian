@@ -262,22 +262,16 @@ namespace oly::graphics
 		auto idim = image.dim();
 		_dim->cpp = idim.cpp;
 
-		if (options.cols > (GLuint)idim.w)
-			options.cols = (GLuint)idim.w;
-		else if (options.cols == 0)
-			options.cols = 1;
+		options.cols = glm::clamp(options.cols, 1u, (GLuint)idim.w);
 
-		if (options.cell_width_override == 0)
+		if (!options.enable_cell_width_override || options.cell_width_override == 0)
 			options.cell_width_override = (int)(idim.w / options.cols);
 		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
 			options.cols = (int)(idim.w / options.cell_width_override);
 
-		if (options.rows > (GLuint)idim.h)
-			options.rows = (GLuint)idim.h;
-		else if (options.rows == 0)
-			options.rows = 1;
+		options.rows = glm::clamp(options.cols, 1u, (GLuint)idim.h);
 		
-		if (options.cell_height_override == 0)
+		if (!options.enable_cell_height_override || options.cell_height_override == 0)
 			options.cell_height_override = (int)(idim.h / options.rows);
 		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
 			options.rows = (int)(idim.h / options.cell_height_override);
@@ -286,10 +280,10 @@ namespace oly::graphics
 		_dim->h = options.cell_height_override;
 		_dim->_frames = options.rows * options.cols;
 
-		GLuint minor_stride = options.cell_width_override * idim.cpp;
+		GLuint minor_stride = _dim->w * idim.cpp;
 		GLuint major_stride = minor_stride * options.cols;
 		GLuint image_major_stride = idim.w * idim.cpp;
-		GLuint minor_height = options.cell_height_override;
+		GLuint minor_height = _dim->h;
 		GLuint major_height = minor_height * options.rows;
 		GLuint minor_area = minor_stride * minor_height;
 
