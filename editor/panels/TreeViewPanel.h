@@ -12,9 +12,12 @@ namespace oly::editor
 		std::vector<std::unique_ptr<TreeViewNode>> subnodes;
 		bool dropdown_open = false;
 		bool is_import = false;
+		float timer = 0.f;
 
 		TreeViewNode(std::filesystem::path path);
 
+		void Analyse();
+		void Update();
 		std::string DisplayName() const;
 		void Validate();
 		bool IsBranching() const;

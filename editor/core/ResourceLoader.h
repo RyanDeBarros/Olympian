@@ -5,23 +5,23 @@
 namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
-	M(CollapseAllIcon) \
-	M(FilterOffIcon) \
-	M(FilterOnIcon) \
-	M(MinusIcon) \
-	M(PauseIcon) \
-	M(PlayIcon) \
-	M(PlusIcon) \
-	M(PreviewIcon) \
-	M(RecenterIcon) \
-	M(RevertIcon) \
-	M(RefreshIcon) \
-	M(StopIcon)
+	M(CollapseAll) \
+	M(FilterOff) \
+	M(FilterOn) \
+	M(Minus) \
+	M(Pause) \
+	M(Play) \
+	M(Plus) \
+	M(Preview) \
+	M(Recenter) \
+	M(Revert) \
+	M(Refresh) \
+	M(Stop)
 
 
 #define ICON_RESOURCE_ENUM(Icon) Icon,
 
-	enum class Resource
+	enum class IconResource
 	{
 		ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
 	};
@@ -30,6 +30,6 @@ namespace oly::editor
 	{
 		static void LoadAll();
 
-		static const Texture& GetTexture(Resource resource);
+		static const Texture& GetTexture(IconResource resource);
 	};
 }

@@ -18,8 +18,23 @@ namespace oly::editor
 	TreeViewNode::TreeViewNode(std::filesystem::path path)
 		: path(std::move(path))
 	{
-		// TODO v8 put in Analyse() and call every 10s, in case file changes. 10s after object creation time, to avoid big frame jumps with everything analysing at the same time
+		Analyse();
+	}
+
+	void TreeViewNode::Analyse()
+	{
 		is_import = PathInfo::IsImportFile(this->path);
+	}
+
+	void TreeViewNode::Update()
+	{
+		static const float update_interval = 10.f; // TODO v8 put in advanced settings.
+		timer += ImGui::GetIO().DeltaTime;
+		if (timer >= update_interval)
+		{
+			timer = fmod(timer, update_interval);
+			Analyse();
+		}
 	}
 
 	std::string TreeViewNode::DisplayName() const
@@ -142,6 +157,7 @@ namespace oly::editor
 		{
 			auto [node, indent] = process.top();
 			process.pop();
+			node->Update();
 
 			if (!PassesFilter(*node))
 				continue;
@@ -169,9 +185,9 @@ namespace oly::editor
 	void TreeViewPanel::DrawHeader()
 	{
 		int id_counter = 0;
-		Toolbar::DrawIconToggleButton(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports, "Ignore import files");
+		Toolbar::DrawIconToggleButton(IconResource::FilterOn, IconResource::FilterOff, _config.ignore_imports, "Ignore import files");
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(Resource::CollapseAllIcon, "Collapse all", id_counter++))
+		if (Toolbar::DrawIconButton(IconResource::CollapseAll, "Collapse all", id_counter++))
 			_root->CollapseAll();
 		ImGui::Separator();
 	}
@@ -186,8 +202,16 @@ namespace oly::editor
 		ImGui::PushID(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 		ImGui::PopID();
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-			node.Open();
+		if (ImGui::IsItemHovered())
+		{
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				node.Open();
+			
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+			{
+				// TODO v8 context menu. Include 'open' and 'show in content browser' and 'open in file browser'
+			}
+		}
 	}
 
 	void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)
@@ -210,7 +234,6 @@ namespace oly::editor
 		}
 		else
 		{
-			// TODO v8 file icon instead of dummy
 			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
 			ImGui::SameLine();
 		}

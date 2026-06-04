@@ -7,7 +7,7 @@
 
 namespace oly::editor
 {
-#define TEXTURE_DECL(Icon) static Texture Icon;
+#define TEXTURE_DECL(Icon) static Texture Icon##Icon;
 	ICON_RESOURCE_GENERATOR(TEXTURE_DECL);
 #undef TEXTURE_DECL
 
@@ -16,7 +16,7 @@ namespace oly::editor
 #define RES_FOLDER "res/"
 #define ICONS_FOLDER RES_FOLDER "icons/"
 
-#define LOAD_ICON(Icon) Icon = { RasterTexture(ICONS_FOLDER #Icon ".png") };
+#define LOAD_ICON(Icon) Icon##Icon = { RasterTexture(ICONS_FOLDER #Icon ".png") };
 		ICON_RESOURCE_GENERATOR(LOAD_ICON)
 #undef LOAD_ICON
 
@@ -24,11 +24,11 @@ namespace oly::editor
 #undef RES_FOLDER
 	}
 
-	const Texture& ResourceLoader::GetTexture(Resource resource)
+	const Texture& ResourceLoader::GetTexture(IconResource resource)
 	{
 		switch (resource)
 		{
-#define SWITCH_ICON(Icon) case Resource::Icon: return Icon;
+#define SWITCH_ICON(Icon) case IconResource::Icon: return Icon##Icon;
 			ICON_RESOURCE_GENERATOR(SWITCH_ICON)
 #undef SWITCH_ICON
 		}

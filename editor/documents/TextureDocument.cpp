@@ -101,7 +101,7 @@ namespace oly::editor
 		{
 			ImGui::Text("Preview");
 			ImGui::Separator();
-			if (Toolbar::DrawIconButton(Resource::RecenterIcon, "Reset panning/zoom", &_preview_nav))
+			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", &_preview_nav))
 			{
 				_preview_nav = {};
 				if (SVGTexture* svg = _texture.GetSVG())
@@ -128,7 +128,7 @@ namespace oly::editor
 				ImGui::InputFloat("##ScaleInput", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
 				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(Resource::RefreshIcon, "Refresh SVG scale", &svg->preview_scale))
+				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", &svg->preview_scale))
 				{
 					_preview_nav.svg_scale = scale;
 					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
@@ -140,11 +140,11 @@ namespace oly::editor
 			if (spritesheet_desc)
 			{
 				ImGui::SameLine();
-				Toolbar::DrawIconToggleButton(Resource::PreviewIcon, _preview_spritesheet, "Preview spritesheet");
+				Toolbar::DrawIconToggleButton(IconResource::Preview, _preview_spritesheet, "Preview spritesheet");
 				ImGui::SameLine();
-				Toolbar::DrawIconToggleButton(Resource::PauseIcon, Resource::PlayIcon, _spritesheet_preview_data.playing, "Play/pause animation");
+				Toolbar::DrawIconToggleButton(IconResource::Pause, IconResource::Play, _spritesheet_preview_data.playing, "Play/pause animation");
 				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(Resource::StopIcon, "Stop animation", "StopAnimation"))
+				if (Toolbar::DrawIconButton(IconResource::Stop, "Stop animation", "StopAnimation"))
 					_spritesheet_preview_data = {};
 			}
 			else
@@ -356,7 +356,7 @@ namespace oly::editor
 
 			ImGui::SameLine();
 			static const char PLUS_ID = 0;
-			if (Toolbar::DrawIconButton(Resource::PlusIcon, "New texture slot", &PLUS_ID))
+			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", &PLUS_ID))
 			{
 				_active_slot = _slot_names.size();
 				_scratch.PushBack();
@@ -365,7 +365,7 @@ namespace oly::editor
 
 			ImGui::SameLine();
 			static const char MINUS_ID = 0;
-			if (Toolbar::DrawIconButton(Resource::MinusIcon, "Remove texture slot", &MINUS_ID))
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", &MINUS_ID))
 			{
 				_scratch.Remove(_active_slot);
 				if (_scratch.Empty())

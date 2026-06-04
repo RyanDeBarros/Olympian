@@ -23,7 +23,7 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(Resource::RevertIcon, "Revert", data))
+		if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", data))
 			dirty = true;
 		return dirty;
 	}

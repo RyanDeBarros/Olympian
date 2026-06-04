@@ -28,7 +28,7 @@ namespace oly::editor
 		}
 	}
 
-	void Toolbar::DrawIconImage(ImVec2 pos, Resource icon, float tint_alpha)
+	void Toolbar::DrawIconImage(ImVec2 pos, IconResource icon, float tint_alpha)
 	{
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		const float shrink = 0.2f;
@@ -38,7 +38,7 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
 	}
 
-	bool Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
+	bool Toolbar::DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
@@ -48,7 +48,7 @@ namespace oly::editor
 		return pressed;
 	}
 
-	bool Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
+	bool Toolbar::DrawIconToggleButton(IconResource icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
@@ -58,7 +58,7 @@ namespace oly::editor
 		return pressed;
 	}
 
-	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, int id_counter)
+	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, int id_counter)
 	{
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -73,7 +73,7 @@ namespace oly::editor
 		return pressed;
 	}
 
-	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, const void* id)
+	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const void* id)
 	{
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -88,7 +88,7 @@ namespace oly::editor
 		return pressed;
 	}
 
-	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, const char* label_id)
+	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const char* label_id)
 	{
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
