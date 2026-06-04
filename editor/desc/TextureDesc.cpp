@@ -163,4 +163,18 @@ namespace oly::editor
 	{
 		std::visit([i](auto& desc) { desc.Remove(i); }, variant);
 	}
+
+	IntField<MakeOpt(1), MakeOpt<int>()>& TextureDescVariant::Size()
+	{
+		return std::visit([](auto& desc) -> IntField<MakeOpt(1), MakeOpt<int>()>&{ return desc.size; }, variant);
+	}
+
+	void TextureDescVariant::Resize(TextureDescVariant& source)
+	{
+		std::visit([this](auto& s) {
+			using T = std::decay_t<decltype(s)>;
+			variant = T();
+			std::get<T>(variant).Resize(s);
+		}, source.variant);
+	}
 }

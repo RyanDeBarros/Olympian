@@ -33,7 +33,6 @@ namespace oly::editor
 	}
 
 	// TODO v8 asset editor panel draw menu bar in document to have document-specific bars. Here, add options to save, revert fully, etc.
-	// TODO v8 revert button for slot count
 
 	void TextureDocument::Draw()
 	{
@@ -354,28 +353,44 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			ImGui::Text("Select Slot");
 
-			ImGui::SameLine();
-			static const char PLUS_ID = 0;
-			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", &PLUS_ID))
-			{
-				_active_slot = _slot_names.size();
-				_scratch.PushBack();
-				MarkDirty();
-			}
-
-			ImGui::SameLine();
-			static const char MINUS_ID = 0;
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", &MINUS_ID))
-			{
-				_scratch.Remove(_active_slot);
-				if (_scratch.Empty())
-					_scratch.PushBack();
-				MarkDirty();
-			}
-
 			GenSlotNames();
 			ImGui::TableNextColumn();
 			ImGui::Combo("##SelectSlot", &_active_slot, &DescIO::StringVectorComboGetter, &_slot_names, _slot_names.size());
+
+			ImGui::SameLine();
+			static const unsigned char PLUS_ID = 0;
+			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", &PLUS_ID))
+			{
+				_active_slot = _slot_names.size();
+				desc.PushBack();
+				MarkDirty();
+			}
+
+			ImGui::SameLine();
+			static const unsigned char MINUS_ID = 0;
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", &MINUS_ID))
+			{
+				desc.Remove(_active_slot);
+				if (desc.Empty())
+					desc.PushBack();
+				MarkDirty();
+			}
+
+			if (desc.Size().disk && desc.Size().disk->scratch != desc.Size().scratch)
+			{
+				ImGui::SameLine();
+				if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", &desc.Size()))
+				{
+					desc.Resize(_disk);
+					
+					MarkDirty();
+				}
+			}
+
+			if (desc.Empty())
+				_active_slot = 0;
+			else if (_active_slot >= desc.Count())
+				_active_slot = desc.Count() - 1;
 
 			desc.Visit(_active_slot, [this](auto& d) { Draw(d); });
 			DescIO::EndForm();
@@ -457,6 +472,8 @@ namespace oly::editor
 
 			desc.Visit(0, [this](auto& d) { Load(TOMLNode(), d); });
 		}
+
+		desc.Size().scratch = desc.Count();
 	}
 	
 	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc)

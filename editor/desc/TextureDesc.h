@@ -115,6 +115,12 @@ namespace oly::editor
 	struct TextureDesc
 	{
 		std::vector<std::unique_ptr<SlotType>> array;
+		IntField<MakeOpt(1), MakeOpt<int>()> size;
+
+		TextureDesc()
+			: size(0, detail::Key::_, "")
+		{
+		}
 
 		void Reset(TextureDesc& source)
 		{
@@ -125,29 +131,53 @@ namespace oly::editor
 				array[i] = std::make_unique<SlotType>();
 				array[i]->Reset(*source.array[i]);
 			}
+			size.Reset(source.size);
 		}
 
 		void Isolate()
 		{
 			for (auto& desc : array)
 				desc->Isolate();
+			size.Isolate();
 		}
 
 		void PushBack()
 		{
 			array.push_back(std::make_unique<SlotType>());
+			++size.scratch;
 		}
 
 		void Remove(size_t i)
 		{
 			array[i]->Isolate();
 			array.erase(array.begin() + i);
+			--size.scratch;
 		}
 
 		void Clear()
 		{
 			Isolate();
 			array.clear();
+			size.scratch = 0;
+		}
+
+		void Resize(TextureDesc& source)
+		{
+			if (array.size() < source.array.size())
+			{
+				for (size_t i = array.size(); i < source.array.size(); ++i)
+				{
+					array.push_back(std::make_unique<SlotType>());
+					array[i]->Reset(*source.array[i]);
+				}
+			}
+			else if (source.array.size() < array.size())
+			{
+				for (size_t i = source.array.size(); i < array.size(); ++i)
+					array[i]->Isolate();
+				array.erase(array.begin() + source.array.size());
+			}
+			size.Reset(source.size);
 		}
 	};
 
@@ -161,6 +191,8 @@ namespace oly::editor
 		bool Empty() const;
 		void PushBack();
 		void Remove(size_t i);
+		IntField<MakeOpt(1), MakeOpt<int>()>& Size();
+		void Resize(TextureDescVariant& source);
 
 		template<TextureSlotDesc SlotType>
 		void Clear()
