@@ -4,20 +4,26 @@
 
 namespace oly::editor
 {
+#define ICON_RESOURCE_GENERATOR(M) \
+	M(CollapseAllIcon) \
+	M(FilterOffIcon) \
+	M(FilterOnIcon) \
+	M(MinusIcon) \
+	M(PauseIcon) \
+	M(PlayIcon) \
+	M(PlusIcon) \
+	M(PreviewIcon) \
+	M(RecenterIcon) \
+	M(RevertIcon) \
+	M(RefreshIcon) \
+	M(StopIcon)
+
+
+#define ICON_RESOURCE_ENUM(Icon) Icon,
+
 	enum class Resource
 	{
-		CollapseAllIcon,
-		FilterOffIcon,
-		FilterOnIcon,
-		MinusIcon,
-		PauseIcon,
-		PlayIcon,
-		PlusIcon,
-		PreviewIcon,
-		RecenterIcon,
-		RevertIcon,
-		RefreshIcon,
-		StopIcon,
+		ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
 	};
 
 	struct ResourceLoader

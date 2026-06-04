@@ -74,6 +74,8 @@ namespace oly::editor
 			_meta.map[detail::Key::Meta_Version] = "1.0";
 			_meta.map[detail::Key::Meta_Import] = "1";
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Texture);
+
+			MarkDirty();
 		}
 
 		_scratch.Reset(_disk);
