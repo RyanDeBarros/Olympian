@@ -17,6 +17,11 @@ namespace oly::editor
 		// TODO v8
 	}
 
+	void FontDocument::DrawMenuBar()
+	{
+		// TODO v8
+	}
+
 	void FontDocument::Load()
 	{
 		// TODO v8

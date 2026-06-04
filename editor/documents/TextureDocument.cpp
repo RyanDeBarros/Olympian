@@ -32,8 +32,6 @@ namespace oly::editor
 			_texture = { RasterTexture(GetSourcePath().string().c_str()) };
 	}
 
-	// TODO v8 asset editor panel draw menu bar in document to have document-specific bars. Here, add options to save, revert fully, etc.
-
 	void TextureDocument::Draw()
 	{
 		ImGui::PushID(this);
@@ -47,6 +45,24 @@ namespace oly::editor
 			ImGui::EndTable();
 		}
 		ImGui::PopID();
+	}
+
+	void TextureDocument::DrawMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Save Asset", "Ctrl+S"))
+					Dump();
+
+				if (ImGui::MenuItem("Revert Asset"))
+					Load();
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
 	}
 
 	void TextureDocument::Load()
@@ -64,6 +80,8 @@ namespace oly::editor
 				Notification notif(LogLevel::Error, "cannot load texture - corrupted asset: " + GetSourcePath().string());
 				MainWindow::Instance().PushNotification(std::move(notif));
 			}
+
+			MarkClean();
 		}
 		else
 		{

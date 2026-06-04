@@ -26,7 +26,11 @@ namespace oly::editor
 		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
 		void DrawUnsavedChangesModal(std::vector<size_t>& closed);
 
+		void DrawDefaultMenuBar();
+
 	public:
+		void OpenFile();
+
 		void FocusTab(IDocument* doc);
 		bool IsSelected(IDocument* doc) const;
 

@@ -1,16 +1,23 @@
 #include "AssetEditorPanel.h"
 
-#include <imgui.h>
-
 #include "core/MainWindow.h"
 #include "core/Logger.h"
-#include "panels/PanelManager.h"
+#include "core/Editor.h"
+#include "core/ProjectInfo.h"
 
+#include "panels/PanelManager.h"
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
+#include <imgui.h>
+#include <ImGuiFileDialog.h>
+
 namespace oly::editor
 {
+	static const char* OPEN_FILE = "OpenFileDlg";
+
+	static std::string open_file_parent = ".";
+
 	AssetEditorPanel& AssetEditorPanel::Instance()
 	{
 		auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>();
@@ -26,7 +33,7 @@ namespace oly::editor
 
 	void AssetEditorPanel::Init()
 	{
-		// nop
+		open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
 	}
 
 	const char* AssetEditorPanel::GetTitle() const
@@ -94,6 +101,23 @@ namespace oly::editor
 			ImGui::EndTabBar();
 		}
 
+		if (_selected_tab)
+			_selected_tab->DrawMenuBar();
+		else
+			DrawDefaultMenuBar();
+
+		if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+		{
+			if (ImGuiFileDialog::Instance()->IsOk())
+			{
+				std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+				open_file_parent = path.parent_path().string();
+				Editor::Instance().OpenFile(path);
+			}
+
+			ImGuiFileDialog::Instance()->Close();
+		}
+
 		ImGui::End();
 	}
 
@@ -154,6 +178,30 @@ namespace oly::editor
 
 			ImGui::EndPopup();
 		}
+	}
+
+	void AssetEditorPanel::DrawDefaultMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Open File", "Ctrl+O"))
+					OpenFile();
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+	}
+
+	void AssetEditorPanel::OpenFile()
+	{
+		IGFD::FileDialogConfig config;
+		config.path = open_file_parent;
+		config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
+
+		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
 	}
 
 	void AssetEditorPanel::FocusTab(IDocument* doc)

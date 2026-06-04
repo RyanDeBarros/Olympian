@@ -2,7 +2,6 @@
 
 #include "core/Editor.h"
 #include "core/MainWindow.h"
-#include "core/MainMenuBar.h"
 
 #include "panels/AssetEditorPanel.h"
 
@@ -18,7 +17,7 @@ namespace oly::editor
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
         {
             if (Editor::Instance().GetAppState() == AppState::Main)
-                MainWindow::Instance().GetMainMenuBar().OpenFile();
+                AssetEditorPanel::Instance().OpenFile();
         }
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
