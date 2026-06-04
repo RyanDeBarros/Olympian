@@ -9,6 +9,7 @@
 #include "graphics/Toolbar.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace oly::editor
 {
@@ -30,6 +31,9 @@ namespace oly::editor
 		else
 			_texture = { RasterTexture(GetSourcePath().string().c_str()) };
 	}
+
+	// TODO v8 asset editor panel draw menu bar in document to have document-specific bars. Here, add options to save, revert fully, etc.
+	// TODO v8 revert button for slot count
 
 	void TextureDocument::Draw()
 	{
@@ -250,17 +254,21 @@ namespace oly::editor
 			const float scale_x = box_size.x / text_size.x;
 			const float scale_y = box_size.y / text_size.y;
 			const float font_scale = (scale_x < scale_y) ? scale_x : scale_y;
+			const float font_size = font_scale;
 
-			for (int dx = -1; dx <= 1; ++dx)
+			if (ImGui::GetRoundedFontSize(font_size) > 0)
 			{
-				for (int dy = -1; dy <= 1; ++dy)
+				for (int dx = -1; dx <= 1; ++dx)
 				{
-					if (dx != 0 || dy != 0)
-						dl->AddText(font, font_scale, box_start + ImVec2(dx, dy) * 1.5f, IM_COL32_BLACK, d.c_str());
+					for (int dy = -1; dy <= 1; ++dy)
+					{
+						if (dx != 0 || dy != 0)
+							dl->AddText(font, font_size, box_start + ImVec2(dx, dy) * 1.5f, IM_COL32_BLACK, d.c_str());
+					}
 				}
-			}
 
-			dl->AddText(font, font_scale, box_start, IM_COL32_WHITE, d.c_str());
+				dl->AddText(font, font_size, box_start, IM_COL32_WHITE, d.c_str());
+			}
 		};
 
 		int digit = 0;

@@ -11,8 +11,8 @@ namespace oly::editor
 		cols(1, detail::Key::Columns, "Columns"),
 		enable_cell_width_override(false, detail::Key::EnableCellWidthOverride, "Cell Width Override"),
 		enable_cell_height_override(false, detail::Key::EnableCellHeightOverride, "Cell Height Override"),
-		cell_width_override(0, detail::Key::CellWidthOverride, ""),
-		cell_height_override(0, detail::Key::CellHeightOverride, ""),
+		cell_width_override(1, detail::Key::CellWidthOverride, ""),
+		cell_height_override(1, detail::Key::CellHeightOverride, ""),
 		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")
@@ -73,9 +73,9 @@ namespace oly::editor
 		"Clamp To Edge (Mirrored)"
 	};
 
-	BaseTextureDesc::BaseTextureDesc() :
-		min_filter(GL_NEAREST, detail::Key::MinFilter, "Min Filter", MIN_FILTER_VALUES, MIN_FILTER_NAMES),
-		mag_filter(GL_NEAREST, detail::Key::MagFilter, "Mag Filter", MAG_FILTER_VALUES, MAG_FILTER_NAMES),
+	BaseTextureDesc::BaseTextureDesc(GLenum default_filter) :
+		min_filter(default_filter, detail::Key::MinFilter, "Min Filter", MIN_FILTER_VALUES, MIN_FILTER_NAMES),
+		mag_filter(default_filter, detail::Key::MagFilter, "Mag Filter", MAG_FILTER_VALUES, MAG_FILTER_NAMES),
 		wrap_s(GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", WRAP_VALUES, WRAP_NAMES),
 		wrap_t(GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", WRAP_VALUES, WRAP_NAMES),
 		anim(false, detail::Key::Animated, "Animated"),
@@ -94,7 +94,7 @@ namespace oly::editor
 	}
 
 	RasterTextureDesc::RasterTextureDesc() :
-		base(),
+		base(GL_NEAREST),
 		generate_mipmaps(false, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
 		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
 	{
@@ -111,7 +111,7 @@ namespace oly::editor
 	}
 
 	VectorTextureDesc::VectorTextureDesc() :
-		base(),
+		base(GL_LINEAR),
 		generate_mipmaps(detail::SVGMipmapGenerationMode::Off, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
 		image_storage(detail::StorageMode::Discard, detail::Key::ImageStorage, "Image Storage"),
 		abstract_storage(detail::StorageMode::Discard, detail::Key::AbstractStorage, "Abstract Storage"),

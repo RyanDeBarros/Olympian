@@ -17,7 +17,7 @@ namespace oly::editor
 		BoolField enable_cell_height_override;
 		IntField<MakeOpt(1), MakeOpt<int>()> cell_width_override;
 		IntField<MakeOpt(1), MakeOpt<int>()> cell_height_override;
-		IntField<MakeOpt(1), MakeOpt<int>()> delay_cs;
+		IntField<MakeOpt(0), MakeOpt<int>()> delay_cs;
 		BoolField row_major;
 		BoolField row_up;
 
@@ -47,7 +47,7 @@ namespace oly::editor
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 
-		BaseTextureDesc();
+		BaseTextureDesc(GLenum default_filter);
 
 		void Reset(BaseTextureDesc& source);
 		void Isolate();

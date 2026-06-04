@@ -1,5 +1,8 @@
 #include "DescIO.h"
 
+#include "graphics/Toolbar.h"
+#include "core/ResourceLoader.h"
+
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
 
@@ -20,11 +23,8 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		ImGui::PushID(data);
-		// TODO v8 use Toolbar::DrawIconButton()
-		if (ImGui::ArrowButton("", ImGuiDir_Left))
+		if (Toolbar::DrawIconButton(Resource::RevertIcon, "Revert", data))
 			dirty = true;
-		ImGui::PopID();
 		return dirty;
 	}
 
