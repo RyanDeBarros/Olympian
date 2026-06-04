@@ -230,17 +230,32 @@ namespace oly::editor
 
 		ImGui::PushID(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
-		ImGui::PopID();
+
+		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
+		{
+			if (ImGui::MenuItem("Open"))
+				node.Open();
+
+			if (ImGui::MenuItem("Show in Content Browser"))
+			{
+				// TODO v8
+			}
+
+			if (ImGui::MenuItem("Open in File Explorer"))
+			{
+				// TODO v8
+			}
+
+			ImGui::EndPopup();
+		}
+
 		if (ImGui::IsItemHovered())
 		{
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				node.Open();
-			
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-			{
-				// TODO v8 context menu. Include 'open' and 'show in content browser' and 'open in file browser'
-			}
 		}
+
+		ImGui::PopID();
 	}
 
 	void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)

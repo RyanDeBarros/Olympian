@@ -18,7 +18,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::Init()
 	{
-		// TODO v8 start panel floating
+		// NOP
 	}
 
 	const char* ContentBrowserPanel::GetTitle() const
