@@ -241,10 +241,8 @@ namespace oly::editor
 				// TODO v8
 			}
 
-			if (ImGui::MenuItem("Open in File Explorer"))
-			{
-				// TODO v8
-			}
+			if (ImGui::MenuItem("Reveal in Explorer"))
+				PathInfo::RevealInExplorer(node.path);
 
 			ImGui::EndPopup();
 		}

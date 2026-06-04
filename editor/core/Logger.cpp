@@ -45,8 +45,17 @@ namespace oly::editor
 
     void Logger::Log(LogLevel level, const char* msg)
     {
-        std::cerr << LogLevelPrefix(level) << ' ' << msg << std::endl;
-        _lines.push_back({ level, msg });
+        Log(level, std::string(msg));
+    }
+
+    void Logger::Log(LogLevel level, const std::string& msg)
+    {
+        Log(level, std::string(msg));
+    }
+
+    void Logger::Log(LogLevel level, std::string&& msg)
+    {
+        _lines.push_back({ level, std::move(msg) });
     }
 
     void Logger::ClearLog()
