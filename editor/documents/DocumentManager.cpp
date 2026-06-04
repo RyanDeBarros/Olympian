@@ -52,8 +52,6 @@ namespace oly::editor
 					return OpenAssetCode::UnsupportedAssetType;
 				break;
 			}
-
-			return OpenAssetCode::UnsupportedAssetVersion;
 		}
 		else if (path.exists() && path.is_file())
 		{

@@ -2,6 +2,7 @@
 
 #include "core/Editor.h"
 #include "core/Logger.h"
+#include "core/PathInfo.h"
 #include "core/ProjectInfo.h"
 #include "core/ResourceLoader.h"
 #include "graphics/Toolbar.h"
@@ -14,6 +15,12 @@
 
 namespace oly::editor
 {
+	TreeViewNode::TreeViewNode(std::filesystem::path path)
+		: path(std::move(path))
+	{
+		is_import = PathInfo::IsImportFile(this->path);
+	}
+
 	std::string TreeViewNode::DisplayName() const
 	{
 		if (path == ProjectInfo::Instance().ProjectRoot())
@@ -128,6 +135,9 @@ namespace oly::editor
 			auto [node, indent] = process.top();
 			process.pop();
 
+			if (!PassesFilter(*node))
+				continue;
+
 			DrawNode(*node, indent, local_file_index);
 
 			if (node->IsBranching() && node->dropdown_open)
@@ -140,11 +150,17 @@ namespace oly::editor
 		ImGui::End();
 	}
 
+	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
+	{
+		if (_config.ignore_imports && node.is_import)
+			return false;
+
+		return true;
+	}
+
 	void TreeViewPanel::DrawHeader()
 	{
-		// TODO v8 header with options like filters for file extensions or only showing assets (no .oly import files - enabled by default)
-
-		Toolbar::DrawIcon(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports);
+		Toolbar::DrawIcon(Resource::FilterOnIcon, Resource::FilterOffIcon, _config.ignore_imports, "Ignore import files");
 		ImGui::Separator();
 	}
 

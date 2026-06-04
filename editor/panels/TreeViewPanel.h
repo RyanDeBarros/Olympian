@@ -11,6 +11,9 @@ namespace oly::editor
 		std::filesystem::path path;
 		std::vector<std::unique_ptr<TreeViewNode>> subnodes;
 		bool dropdown_open = false;
+		bool is_import = false;
+
+		TreeViewNode(std::filesystem::path path);
 
 		std::string DisplayName() const;
 		void Validate();
@@ -37,6 +40,7 @@ namespace oly::editor
 		void Draw() override;
 
 	private:
+		bool PassesFilter(TreeViewNode& node) const;
 		void DrawHeader();
 		void DrawNode(TreeViewNode& node, int indent, int& local_file_index);
 		void DrawNodePrefix(TreeViewNode& node);
