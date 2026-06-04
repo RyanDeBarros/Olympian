@@ -1,12 +1,24 @@
 #include "ContentBrowserPanel.h"
 
+#include "core/MainWindow.h"
+#include "core/Errors.h"
+#include "panels/PanelManager.h"
+
 #include <imgui.h>
 
 namespace oly::editor
 {
+	ContentBrowserPanel& ContentBrowserPanel::Instance()
+	{
+		if (auto panel = MainWindow::Instance().GetPanelManager().Get<ContentBrowserPanel>())
+			return *panel;
+		else
+			BreakoutError::Throw("No instance of ContentBrowserPanel");
+	}
+
 	void ContentBrowserPanel::Init()
 	{
-		// TODO v8
+		// TODO v8 start panel floating
 	}
 
 	const char* ContentBrowserPanel::GetTitle() const
@@ -16,8 +28,9 @@ namespace oly::editor
 
 	void ContentBrowserPanel::Draw()
 	{
-		ImGui::Begin(GetTitle());
-		// TODO v8
-		ImGui::End();
+		if (auto window = DrawDockedWindow(ImGuiWindowFlags_None))
+		{
+			// TODO v8
+		}
 	}
 }

@@ -3,6 +3,7 @@
 #include "core/MainWindow.h"
 #include "core/Logger.h"
 #include "core/Editor.h"
+#include "core/Errors.h"
 #include "core/ProjectInfo.h"
 
 #include "panels/PanelManager.h"
@@ -20,15 +21,10 @@ namespace oly::editor
 
 	AssetEditorPanel& AssetEditorPanel::Instance()
 	{
-		auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>();
-		if (panel)
+		if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
 			return *panel;
 		else
-		{
-			std::string error = "No instance of AssetEditorPanel";
-			Logger::Instance().Log(LogLevel::Error, error.c_str());
-			throw std::runtime_error(std::move(error));
-		}
+			BreakoutError::Throw("No instance of AssetEditorPanel");
 	}
 
 	void AssetEditorPanel::Init()
@@ -43,14 +39,39 @@ namespace oly::editor
 
 	void AssetEditorPanel::Draw()
 	{
-		ImGui::Begin(GetTitle(), nullptr, ImGuiWindowFlags_MenuBar);
+		if (auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar))
+		{
+			DrawTabBar();
 
+			if (_selected_tab)
+				_selected_tab->DrawMenuBar();
+			else
+				DrawDefaultMenuBar();
+
+			ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
+
+			if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+			{
+				if (ImGuiFileDialog::Instance()->IsOk())
+				{
+					std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+					open_file_parent = path.parent_path().string();
+					Editor::Instance().OpenFile(path);
+				}
+
+				ImGuiFileDialog::Instance()->Close();
+			}
+		}
+	}
+
+	void AssetEditorPanel::DrawTabBar()
+	{
 		ImGuiTabBarFlags tab_bar_flags =
 			ImGuiTabBarFlags_AutoSelectNewTabs |
 			ImGuiTabBarFlags_DrawSelectedOverline |
 			ImGuiTabBarFlags_Reorderable;
 
-		if (ImGui::BeginTabBar("AssetTabs", tab_bar_flags))
+		if (ImGui::BeginTabBar("##AssetTabs", tab_bar_flags))
 		{
 			std::vector<size_t> closed;
 
@@ -100,25 +121,6 @@ namespace oly::editor
 			_focused_tab = nullptr;
 			ImGui::EndTabBar();
 		}
-
-		if (_selected_tab)
-			_selected_tab->DrawMenuBar();
-		else
-			DrawDefaultMenuBar();
-
-		if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
-		{
-			if (ImGuiFileDialog::Instance()->IsOk())
-			{
-				std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
-				open_file_parent = path.parent_path().string();
-				Editor::Instance().OpenFile(path);
-			}
-
-			ImGuiFileDialog::Instance()->Close();
-		}
-
-		ImGui::End();
 	}
 
 	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents)

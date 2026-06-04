@@ -26,6 +26,7 @@ namespace oly::editor
 		void CloseBranch();
 		void RefreshSubnodes();
 		void CollapseAll();
+		bool IsFullyCollapsed() const;
 	};
 
 	struct TreeViewConfig
@@ -39,6 +40,8 @@ namespace oly::editor
 		TreeViewConfig _config;
 
 	public:
+		static TreeViewPanel& Instance();
+
 		void Init() override;
 		const char* GetTitle() const override;
 		void Draw() override;

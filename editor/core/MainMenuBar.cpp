@@ -1,5 +1,10 @@
 #include "MainMenuBar.h"
 
+#include "panels/AssetEditorPanel.h"
+#include "panels/ContentBrowserPanel.h"
+#include "panels/LogPanel.h"
+#include "panels/TreeViewPanel.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -16,15 +21,23 @@ namespace oly::editor
 			DrawWindowMenu();
 			ImGui::EndMainMenuBar();
 		}
-
-		ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
 	}
 
 	void MainMenuBar::DrawWindowMenu()
 	{
 		if (ImGui::BeginMenu("Window"))
 		{
-			// TODO v8 items to open each panel
+			if (ImGui::MenuItem("Asset Editor"))
+				AssetEditorPanel::Instance().Open();
+
+			if (ImGui::MenuItem("Content Browser"))
+				ContentBrowserPanel::Instance().Open();
+
+			if (ImGui::MenuItem("Log"))
+				LogPanel::Instance().Open();
+
+			if (ImGui::MenuItem("Tree View"))
+				TreeViewPanel::Instance().Open();
 
 			ImGui::EndMenu();
 		}

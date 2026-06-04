@@ -100,15 +100,17 @@ namespace oly::editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::Begin("Main Window", nullptr, window_flags);
-        ImGui::PopStyleVar(2);
+        if (ImGui::Begin("Main Window", nullptr, window_flags))
+        {
+            ImGui::PopStyleVar(2);
 
-        _main_menu_bar->Draw();
+            _main_menu_bar->Draw();
 
-        ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-        _panel_manager->Draw();
-        DrawNotifications();
-        ImGui::End();
+            ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+            _panel_manager->Draw();
+            DrawNotifications();
+            ImGui::End();
+        }
     }
 
     PanelManager& MainWindow::GetPanelManager()

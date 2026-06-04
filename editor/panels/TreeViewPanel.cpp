@@ -1,10 +1,14 @@
 #include "TreeViewPanel.h"
 
 #include "core/Editor.h"
+#include "core/Errors.h"
 #include "core/Logger.h"
+#include "core/MainWindow.h"
 #include "core/PathInfo.h"
 #include "core/ProjectInfo.h"
 #include "core/ResourceLoader.h"
+#include "panels/PanelManager.h"
+
 #include "graphics/Toolbar.h"
 
 #include <imgui.h>
@@ -85,7 +89,11 @@ namespace oly::editor
 	void TreeViewNode::CloseBranch()
 	{
 		if (IsBranching() && dropdown_open)
+		{
 			dropdown_open = false;
+			if (IsFullyCollapsed())
+				subnodes.clear();
+		}
 	}
 
 	void TreeViewNode::RefreshSubnodes()
@@ -131,6 +139,28 @@ namespace oly::editor
 			subnode->CollapseAll();
 	}
 
+	bool TreeViewNode::IsFullyCollapsed() const
+	{
+		if (dropdown_open)
+			return false;
+
+		for (auto& subnode : subnodes)
+		{
+			if (!subnode->IsFullyCollapsed())
+				return false;
+		}
+
+		return true;
+	}
+
+	TreeViewPanel& TreeViewPanel::Instance()
+	{
+		if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
+			return *panel;
+		else
+			BreakoutError::Throw("No instance of TreeViewPanel");
+	}
+
 	void TreeViewPanel::Init()
 	{
 		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
@@ -143,35 +173,34 @@ namespace oly::editor
 
 	void TreeViewPanel::Draw()
 	{
-		ImGui::Begin(GetTitle());
-
-		DrawHeader();
-
-		_root->Validate();
-
-		std::stack<std::pair<TreeViewNode*, int>> process;
-		process.push(std::make_pair(_root.get(), 0));
-		int local_file_index = 0;
-
-		while (!process.empty())
+		if (auto window = DrawDockedWindow(ImGuiWindowFlags_None))
 		{
-			auto [node, indent] = process.top();
-			process.pop();
-			node->Update();
+			DrawHeader();
 
-			if (!PassesFilter(*node))
-				continue;
+			_root->Validate();
 
-			DrawNode(*node, indent, local_file_index);
+			std::stack<std::pair<TreeViewNode*, int>> process;
+			process.push(std::make_pair(_root.get(), 0));
+			int local_file_index = 0;
 
-			if (node->IsBranching() && node->dropdown_open)
+			while (!process.empty())
 			{
-				for (const auto& subnode : node->subnodes)
-					process.push(std::make_pair(subnode.get(), indent + 1));
+				auto [node, indent] = process.top();
+				process.pop();
+				node->Update();
+
+				if (!PassesFilter(*node))
+					continue;
+
+				DrawNode(*node, indent, local_file_index);
+
+				if (node->IsBranching() && node->dropdown_open)
+				{
+					for (const auto& subnode : node->subnodes)
+						process.push(std::make_pair(subnode.get(), indent + 1));
+				}
 			}
 		}
-
-		ImGui::End();
 	}
 
 	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const

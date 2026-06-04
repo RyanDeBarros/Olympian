@@ -23,6 +23,7 @@ namespace oly::editor
 		void Draw() override;
 
 	private:
+		void DrawTabBar();
 		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
 		void DrawUnsavedChangesModal(std::vector<size_t>& closed);
 

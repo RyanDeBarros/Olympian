@@ -13,10 +13,7 @@ namespace oly::editor
 	void PanelManager::Draw()
 	{
 		for (const auto& [_, panel] : _panels)
-		{
-			if (panel->IsOpen())
-				panel->Draw();
-		}
+			panel->Draw();
 	}
 
 	IPanel& PanelManager::Add(std::type_index index, std::unique_ptr<IPanel>&& panel)
