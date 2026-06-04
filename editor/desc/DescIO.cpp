@@ -21,6 +21,7 @@ namespace oly::editor
 		bool dirty = false;
 		ImGui::SameLine();
 		ImGui::PushID(data);
+		// TODO v8 use Toolbar::DrawIconButton()
 		if (ImGui::ArrowButton("", ImGuiDir_Left))
 			dirty = true;
 		ImGui::PopID();
@@ -59,6 +60,13 @@ namespace oly::editor
 	{
 		ImGui::EndTable();
 		ImGui::PopID();
+	}
+
+	void DescIO::FormSeparator(void* id, const char* text)
+	{
+		EndForm();
+		ImGui::SeparatorText(text);
+		BeginForm(id);
 	}
 
 	bool DescIO::Draw(const char* label, bool& data, const bool* disk)

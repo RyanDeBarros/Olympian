@@ -13,6 +13,7 @@ namespace oly::editor
 	{
 		static bool BeginForm(void* id);
 		static void EndForm();
+		static void FormSeparator(void* id, const char* text);
 
 		static bool Draw(const char* label, bool& data, const bool* disk);
 		static bool Draw(const char* label, int& data, const int* disk, std::optional<int> min, std::optional<int> max);

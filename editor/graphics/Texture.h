@@ -28,7 +28,7 @@ namespace oly::editor
 		TextureID id;
 		int width = 0, height = 0;
 		
-		RasterTexture(const char* filepath, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
+		RasterTexture(const char* filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
@@ -43,7 +43,7 @@ namespace oly::editor
 		float timer = 0.f;
 		float speed = 1.f;
 
-		GIFTexture(const char* filepath, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
+		GIFTexture(const char* filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
 
 		void Update(float delta_seconds);
 		GLuint ID() const;

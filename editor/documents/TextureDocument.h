@@ -13,6 +13,7 @@ namespace oly::editor
 	{
 		ImVec2 pos = ImVec2(0, 0);
 		float zoom = 0.f;
+		float svg_scale = 1.f;
 	};
 
 	class TextureDocument : public IDocument

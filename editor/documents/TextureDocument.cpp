@@ -5,6 +5,9 @@
 #include "core/MainWindow.h"
 #include "core/Logger.h"
 
+#include "core/ResourceLoader.h"
+#include "graphics/Toolbar.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -86,16 +89,18 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	// TODO v8 use ImGui::SeparatorText() to separate sections
-
 	void TextureDocument::DrawPreview()
 	{
 		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::Text("Preview");
 			ImGui::Separator();
-			if (ImGui::Button("Reset")) // TODO v8 use Toolbar::DrawIcon
-				_preview_nav = PreviewNav();
+			if (Toolbar::DrawIconButton(Resource::RecenterIcon, "Reset panning/zoom", &_preview_nav))
+			{
+				_preview_nav = {};
+				if (SVGTexture* svg = _texture.GetSVG())
+					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+			}
 			
 			if (GIFTexture* gif = _texture.GetGIF())
 			{
@@ -113,10 +118,15 @@ namespace oly::editor
 				ImGui::Text("Scale");
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(100.0f);
-				ImGui::InputFloat("##ScaleInput", &svg->preview_scale);
+				float scale = svg->preview_scale * _preview_nav.svg_scale;
+				ImGui::InputFloat("##ScaleInput", &scale);
+				svg->preview_scale = scale / _preview_nav.svg_scale;
 				ImGui::SameLine();
-				if (ImGui::Button("Refresh Scale")) // TODO v8 use Toolbar::DrawIcon
-					_texture = { SVGTexture(GetSourcePath().string().c_str(), svg->preview_scale) };
+				if (Toolbar::DrawIconButton(Resource::RefreshIcon, "Refresh SVG scale", &svg->preview_scale))
+				{
+					_preview_nav.svg_scale = scale;
+					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+				}
 			}
 
 			if (ImGui::IsWindowHovered())
@@ -135,20 +145,25 @@ namespace oly::editor
 			ImVec2 pos = cursor + offset;
 
 			ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
+
+			// TODO v8 draw lines/cell indexes based on spritesheet settings
+
 			ImGui::EndChild();
 		}
 	}
 
 	void TextureDocument::Draw(TextureDescVariant& desc)
 	{
-		if (DescIO::BeginForm(&desc))
+		if (DescIO::BeginForm(this))
 		{
+			DescIO::FormSeparator(this, "General");
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::Text("Select Slot");
 
 			ImGui::SameLine();
-			if (ImGui::Button("+")) // TODO v8 use Toolbar::DrawIcon
+			static const char PLUS_ID = 0;
+			if (Toolbar::DrawIconButton(Resource::PlusIcon, "New texture slot", &PLUS_ID))
 			{
 				_active_slot = _slot_names.size();
 				_scratch.PushBack();
@@ -156,7 +171,8 @@ namespace oly::editor
 			}
 
 			ImGui::SameLine();
-			if (ImGui::Button("-")) // TODO v8 use Toolbar::DrawIcon
+			static const char MINUS_ID = 0;
+			if (Toolbar::DrawIconButton(Resource::MinusIcon, "Remove texture slot", &MINUS_ID))
 			{
 				_scratch.Remove(_active_slot);
 				if (_scratch.Empty())
@@ -176,24 +192,28 @@ namespace oly::editor
 	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
 		Draw(desc.base);
+		DescIO::FormSeparator(this, "Storage");
 		DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
 		Draw(desc.base);
+		DescIO::FormSeparator(this, "Storage");
 		DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
+		DescIO::FormSeparator(this, "Parameters");
 		DRAW_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
+		DescIO::FormSeparator(this, "Animation");
 		ImGui::BeginDisabled(_gif);
 		DRAW_FIELD(anim);
 		ImGui::EndDisabled();
 
-		if (desc.anim.scratch)
+		if (desc.anim.scratch && !_gif)
 			Draw(desc.spritesheet);
 	}
 
@@ -248,9 +268,10 @@ namespace oly::editor
 		if (_gif)
 			desc.anim.scratch = true;
 		else
+		{
 			LOAD_FIELD(anim);
-
-		Load(node, desc.spritesheet);
+			Load(node, desc.spritesheet);
+		}
 	}
 
 	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
@@ -285,7 +306,7 @@ namespace oly::editor
 	{
 		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
 		DUMP_FIELD(anim);
-		if (desc.anim.scratch)
+		if (desc.anim.scratch && !_gif)
 			Dump(table, desc.spritesheet);
 	}
 

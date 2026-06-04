@@ -35,7 +35,7 @@ namespace oly::editor
 	void Toolbar::DrawIconToggleButton(Resource selected_icon, Resource deselected_icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 size = ImVec2(32, 32);
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		_DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
 		_DrawIconImage(pos, size, selected ? selected_icon : deselected_icon, 1.f);
@@ -44,7 +44,7 @@ namespace oly::editor
 	void Toolbar::DrawIconToggleButton(Resource icon, bool& selected, const char* tooltip)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 size = ImVec2(32, 32);
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		_DrawIconButton(selected, size);
 		_HandleIconHovered(pos, size, tooltip);
 		_DrawIconImage(pos, size, icon, selected ? 1.f : 0.3f);
@@ -54,8 +54,23 @@ namespace oly::editor
 	{
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 size = ImVec2(32, 32);
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 		ImGui::PushID(id_counter);
+		if (ImGui::InvisibleButton("##IconButton", size))
+			pressed = true;
+		ImGui::PopID();
+
+		_HandleIconHovered(pos, size, tooltip);
+		_DrawIconImage(pos, size, icon, 1.f);
+		return pressed;
+	}
+
+	bool Toolbar::DrawIconButton(Resource icon, const char* tooltip, const void* id)
+	{
+		bool pressed = false;
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+		ImGui::PushID(id);
 		if (ImGui::InvisibleButton("##IconButton", size))
 			pressed = true;
 		ImGui::PopID();

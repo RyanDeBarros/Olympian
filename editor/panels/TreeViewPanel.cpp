@@ -18,6 +18,7 @@ namespace oly::editor
 	TreeViewNode::TreeViewNode(std::filesystem::path path)
 		: path(std::move(path))
 	{
+		// TODO v8 put in Analyse() and call every 10s, in case file changes. 10s after object creation time, to avoid big frame jumps with everything analysing at the same time
 		is_import = PathInfo::IsImportFile(this->path);
 	}
 
