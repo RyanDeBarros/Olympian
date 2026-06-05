@@ -28,7 +28,8 @@ namespace oly::editor
 
 	void ContentBrowserPanel::Draw()
 	{
-		if (auto window = DrawDockedWindow(ImGuiWindowFlags_None))
+		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
+		if (window.IsVisible())
 		{
 			// TODO v8
 		}

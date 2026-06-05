@@ -13,7 +13,20 @@ namespace oly::editor
 	{
 		static bool BeginForm(void* id);
 		static void EndForm();
-		static void FormSeparator(void* id, const char* text);
+		static void FormSeparator(void* id, const char* label);
+
+		class CollapsingSection
+		{
+			bool _visible = false;
+
+		public:
+			CollapsingSection(void* id, const char* label);
+			CollapsingSection(const CollapsingSection&) = delete;
+			CollapsingSection(CollapsingSection&&) = delete;
+			~CollapsingSection();
+
+			operator bool() const;
+		};
 
 		static bool Draw(const char* label, bool& data, const bool* disk);
 		static bool Draw(const char* label, int& data, const int* disk, std::optional<int> min, std::optional<int> max);

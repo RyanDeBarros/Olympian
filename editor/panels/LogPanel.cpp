@@ -27,7 +27,8 @@ namespace oly::editor
 
 	void LogPanel::Draw()
 	{
-		if (auto window = DrawDockedWindow(ImGuiWindowFlags_None))
+		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
+		if (window.IsVisible())
 		{
 			if (ImGui::BeginChild("##LogBox", ImVec2(), ImGuiChildFlags_Borders))
 			{

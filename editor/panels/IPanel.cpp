@@ -2,8 +2,8 @@
 
 namespace oly::editor
 {
-	DrawDockedWindowImpl::DrawDockedWindowImpl(bool call_end, bool visible)
-		: _call_end(call_end), _visible(visible)
+	DrawDockedWindowImpl::DrawDockedWindowImpl(bool call_end, bool visible, bool request_close)
+		: _call_end(call_end), _visible(visible), _request_close(request_close)
 	{
 	}
 
@@ -13,9 +13,14 @@ namespace oly::editor
 			ImGui::End();
 	}
 
-	DrawDockedWindowImpl::operator bool() const
+	bool DrawDockedWindowImpl::IsVisible() const
 	{
 		return _visible;
+	}
+
+	bool DrawDockedWindowImpl::RequestsClose() const
+	{
+		return _request_close;
 	}
 
 	void IPanel::Open()
@@ -38,9 +43,9 @@ namespace oly::editor
 		if (_open)
 		{
 			bool visible = ImGui::Begin(GetTitle(), &_open, flags);
-			return DrawDockedWindowImpl(true, visible);
+			return DrawDockedWindowImpl(true, visible, !_open);
 		}
 		else
-			return DrawDockedWindowImpl(false, false);
+			return DrawDockedWindowImpl(false, false, false);
 	}
 }

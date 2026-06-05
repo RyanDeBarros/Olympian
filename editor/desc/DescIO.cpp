@@ -62,11 +62,29 @@ namespace oly::editor
 		ImGui::PopID();
 	}
 
-	void DescIO::FormSeparator(void* id, const char* text)
+	void DescIO::FormSeparator(void* id, const char* label)
 	{
 		EndForm();
-		ImGui::SeparatorText(text);
+		ImGui::SeparatorText(label);
 		BeginForm(id);
+	}
+
+	DescIO::CollapsingSection::CollapsingSection(void* id, const char* label)
+	{
+		EndForm();
+		_visible = ImGui::TreeNode(label);
+		BeginForm(id);
+	}
+
+	DescIO::CollapsingSection::~CollapsingSection()
+	{
+		if (_visible)
+			ImGui::TreePop();
+	}
+
+	DescIO::CollapsingSection::operator bool() const
+	{
+		return _visible;
 	}
 
 	bool DescIO::Draw(const char* label, bool& data, const bool* disk)

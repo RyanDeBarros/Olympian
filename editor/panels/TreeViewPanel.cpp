@@ -9,6 +9,8 @@
 #include "core/ResourceLoader.h"
 #include "panels/PanelManager.h"
 
+#include "panels/PreferencesPanel.h"
+
 #include "graphics/Toolbar.h"
 
 #include <imgui.h>
@@ -32,7 +34,7 @@ namespace oly::editor
 
 	void TreeViewNode::Update()
 	{
-		static const float update_interval = 10.f; // TODO v8 put in advanced settings.
+		const float update_interval = PreferencesPanel::Instance().GetSavedDesc().tree_view.advanced.analysis_interval.scratch;
 		timer += ImGui::GetIO().DeltaTime;
 		if (timer >= update_interval)
 		{
@@ -173,7 +175,8 @@ namespace oly::editor
 
 	void TreeViewPanel::Draw()
 	{
-		if (auto window = DrawDockedWindow(ImGuiWindowFlags_None))
+		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
+		if (window.IsVisible())
 		{
 			DrawHeader();
 

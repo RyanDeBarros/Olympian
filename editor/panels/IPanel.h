@@ -8,14 +8,16 @@ namespace oly::editor
 	{
 		bool _call_end;
 		bool _visible;
+		bool _request_close;
 
 	public:
-		DrawDockedWindowImpl(bool call_end, bool visible);
+		DrawDockedWindowImpl(bool call_end, bool visible, bool request_close);
 		DrawDockedWindowImpl(const DrawDockedWindowImpl&) = delete;
 		DrawDockedWindowImpl(DrawDockedWindowImpl&&) = delete;
 		~DrawDockedWindowImpl();
 
-		operator bool() const;
+		bool IsVisible() const;
+		bool RequestsClose() const;
 	};
 
 	class IPanel

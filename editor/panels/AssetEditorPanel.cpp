@@ -39,7 +39,8 @@ namespace oly::editor
 
 	void AssetEditorPanel::Draw()
 	{
-		if (auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar))
+		auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar);
+		if (window.IsVisible())
 		{
 			PollShortcuts();
 
