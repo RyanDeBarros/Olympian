@@ -3,6 +3,8 @@
 #include "panels/IPanel.h"
 #include "desc/PreferencesDesc.h"
 
+#include "graphics/Form.h"
+
 namespace oly::editor
 {
 	class PreferencesPanel : public IPanel
@@ -34,8 +36,8 @@ namespace oly::editor
 
 	private:
 		void Draw(PreferencesDesc& desc);
-		void Draw(TreeViewSettingsDesc& desc);
-		void Draw(TreeViewAdvancedSettingsDesc& desc);
+		void Draw(Form& form, TreeViewSettingsDesc& desc);
+		void Draw(Form& form, TreeViewAdvancedSettingsDesc& desc);
 
 		void Load(TOMLNode node, PreferencesDesc& desc);
 		void Load(TOMLNode node, TreeViewSettingsDesc& desc);

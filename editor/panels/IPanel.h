@@ -23,6 +23,7 @@ namespace oly::editor
 	class IPanel
 	{
 		bool _open = false;
+		static IPanel* _gain_next;
 
 	public:
 		virtual ~IPanel() = default;
@@ -34,6 +35,7 @@ namespace oly::editor
 		void Open();
 		void Close();
 		bool IsOpen() const;
+		void GainFocus();
 
 	protected:
 		DrawDockedWindowImpl DrawDockedWindow(ImGuiWindowFlags flags);

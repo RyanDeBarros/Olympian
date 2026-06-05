@@ -2,6 +2,7 @@
 
 #include "documents/IDocument.h"
 #include "graphics/Texture.h"
+#include "graphics/Form.h"
 
 #include "desc/TextureDesc.h"
 
@@ -66,10 +67,10 @@ namespace oly::editor
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
 		void Draw(TextureDescVariant& desc);
-		void Draw(RasterTextureDesc& desc);
-		void Draw(VectorTextureDesc& desc);
-		void Draw(BaseTextureDesc& desc);
-		void Draw(SpritesheetDesc& desc);
+		void Draw(Form& form, RasterTextureDesc& desc);
+		void Draw(Form& form, VectorTextureDesc& desc);
+		void Draw(Form& form, BaseTextureDesc& desc);
+		void Draw(Form& form, SpritesheetDesc& desc);
 
 		void Load(TOMLNode node, TextureDescVariant& desc);
 		void Load(TOMLNode node, RasterTextureDesc& desc);

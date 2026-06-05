@@ -8,6 +8,8 @@
 
 #include <imgui.h>
 
+#include <string>
+
 namespace oly::editor
 {
 	static void PrepareValue(const char* label, const void* data)
@@ -38,53 +40,6 @@ namespace oly::editor
 		}
 		ImGui::PopID();
 		return dirty;
-	}
-
-	bool DescIO::BeginForm(void* id)
-	{
-		ImGui::PushID(id);
-		if (ImGui::BeginTable("", 2, ImGuiTableFlags_SizingFixedFit))
-		{
-			ImGui::TableSetupColumn("");
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
-			return true;
-		}
-		else
-		{
-			ImGui::PopID();
-			return false;
-		}
-	}
-
-	void DescIO::EndForm()
-	{
-		ImGui::EndTable();
-		ImGui::PopID();
-	}
-
-	void DescIO::FormSeparator(void* id, const char* label)
-	{
-		EndForm();
-		ImGui::SeparatorText(label);
-		BeginForm(id);
-	}
-
-	DescIO::CollapsingSection::CollapsingSection(void* id, const char* label)
-	{
-		EndForm();
-		_visible = ImGui::TreeNode(label);
-		BeginForm(id);
-	}
-
-	DescIO::CollapsingSection::~CollapsingSection()
-	{
-		if (_visible)
-			ImGui::TreePop();
-	}
-
-	DescIO::CollapsingSection::operator bool() const
-	{
-		return _visible;
 	}
 
 	bool DescIO::Draw(const char* label, bool& data, const bool* disk)

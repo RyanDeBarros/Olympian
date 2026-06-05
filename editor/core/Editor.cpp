@@ -8,6 +8,7 @@
 #include "core/ResourceLoader.h"
 
 #include "documents/DocumentManager.h"
+#include "panels/AssetEditorPanel.h"
 
 #include <imgui_impl_glfw.h>
 
@@ -143,7 +144,10 @@ namespace oly::editor
 	{
 		OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
 		if (code == OpenAssetCode::Success)
+		{
+			AssetEditorPanel::Instance().GainFocus();
 			return;
+		}
 
 		Notification notif(LogLevel::Error, "cannot open " + path.generic_string() + ": ");
 		switch (code)

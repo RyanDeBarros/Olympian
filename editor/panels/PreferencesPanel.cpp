@@ -84,25 +84,25 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw(PreferencesDesc& desc)
 	{
-		if (DescIO::BeginForm(this))
+		if (auto form = Form())
 		{
-			DescIO::FormSeparator(this, "Editor Preferences");
+			if (auto pause = form.Pause())
+				ImGui::SeparatorText("Editor Preferences");
+
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
-			Draw(desc.tree_view);
-
-			DescIO::EndForm();
+			Draw(form, desc.tree_view);
 		}
 	}
 
-	void PreferencesPanel::Draw(TreeViewSettingsDesc& desc)
+	void PreferencesPanel::Draw(Form& form, TreeViewSettingsDesc& desc)
 	{
-		if (auto section = DescIO::CollapsingSection(this, "Advanced##TreeView"))
-			Draw(desc.advanced);
+		if (auto section = form.Collapse("Advanced##TreeView"))
+			Draw(form, desc.advanced);
 	}
 
-	void PreferencesPanel::Draw(TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesPanel::Draw(Form& form, TreeViewAdvancedSettingsDesc& desc)
 	{
 		DRAW_FIELDS(TREE_NODE_ADVANCED_SETTINGS_GENERATOR);
 	}

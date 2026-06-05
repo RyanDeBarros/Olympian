@@ -1,10 +1,14 @@
 #pragma once
 
 #include "desc/DescIO.h"
+#include "desc/OptionalPrimitive.h"
+
+#include "external/TOML.h"
+
+#include "assets/TranslateKey.h"
 
 namespace oly::editor
 {
-
 #define DRAW_FIELD(field) if (desc.field.Draw()) MarkDirty();
 #define DRAW_FIELDS(generator) generator(DRAW_FIELD);
 #define LOAD_FIELD(field) desc.field.Load(node);

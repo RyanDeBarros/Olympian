@@ -23,6 +23,8 @@ namespace oly::editor
 		return _request_close;
 	}
 
+	IPanel* IPanel::_gain_next = nullptr;
+
 	void IPanel::Open()
 	{
 		_open = true;
@@ -38,14 +40,28 @@ namespace oly::editor
 		return _open;
 	}
 
+	void IPanel::GainFocus()
+	{
+		_gain_next = this;
+	}
+
 	DrawDockedWindowImpl IPanel::DrawDockedWindow(ImGuiWindowFlags flags)
 	{
 		if (_open)
 		{
 			bool visible = ImGui::Begin(GetTitle(), &_open, flags);
+			if (_gain_next == this)
+			{
+				ImGui::SetWindowFocus();
+				_gain_next = nullptr;
+			}
 			return DrawDockedWindowImpl(true, visible, !_open);
 		}
 		else
+		{
+			if (_gain_next == this)
+				_gain_next = nullptr;
 			return DrawDockedWindowImpl(false, false, false);
+		}
 	}
 }

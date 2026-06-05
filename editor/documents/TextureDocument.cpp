@@ -364,9 +364,11 @@ namespace oly::editor
 
 	void TextureDocument::Draw(TextureDescVariant& desc)
 	{
-		if (DescIO::BeginForm(this))
+		if (auto form = Form())
 		{
-			DescIO::FormSeparator(this, "General");
+			if (auto pause = form.Pause())
+				ImGui::SeparatorText("General");
+
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::Text("Select Slot");
@@ -410,40 +412,43 @@ namespace oly::editor
 			else if (_active_slot >= desc.Count())
 				_active_slot = desc.Count() - 1;
 
-			desc.Visit(_active_slot, [this](auto& d) { Draw(d); });
-			DescIO::EndForm();
+			desc.Visit(_active_slot, [this, &form](auto& d) { Draw(form, d); });
 		}
 	}
 	
-	void TextureDocument::Draw(RasterTextureDesc& desc)
+	void TextureDocument::Draw(Form& form, RasterTextureDesc& desc)
 	{
-		Draw(desc.base);
-		DescIO::FormSeparator(this, "Storage");
+		Draw(form, desc.base);
+		if (auto pause = form.Pause())
+			ImGui::SeparatorText("Storage");
 		DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Draw(VectorTextureDesc& desc)
+	void TextureDocument::Draw(Form& form, VectorTextureDesc& desc)
 	{
-		Draw(desc.base);
-		DescIO::FormSeparator(this, "Storage");
+		Draw(form, desc.base);
+		if (auto pause = form.Pause())
+			ImGui::SeparatorText("Storage");
 		DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Draw(BaseTextureDesc& desc)
+	void TextureDocument::Draw(Form& form, BaseTextureDesc& desc)
 	{
-		DescIO::FormSeparator(this, "Parameters");
+		if (auto pause = form.Pause())
+			ImGui::SeparatorText("Parameters");
 		DRAW_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
-		DescIO::FormSeparator(this, "Animation");
+		if (auto pause = form.Pause())
+			ImGui::SeparatorText("Animation");
 		ImGui::BeginDisabled(_gif);
 		DRAW_FIELD(anim);
 		ImGui::EndDisabled();
 
 		if (desc.anim.scratch && !_gif)
-			Draw(desc.spritesheet);
+			Draw(form, desc.spritesheet);
 	}
 
-	void TextureDocument::Draw(SpritesheetDesc& desc)
+	void TextureDocument::Draw(Form& form, SpritesheetDesc& desc)
 	{
 		DRAW_FIELD(rows);
 		DRAW_FIELD(cols);
