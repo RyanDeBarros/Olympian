@@ -196,7 +196,7 @@ namespace oly::editor
 
 				ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
 				if (_preview_spritesheet && spritesheet_desc)
-					DrawSpritesheetOverlay(*spritesheet_desc, pos);
+					DrawSpritesheetOverlay(*spritesheet_desc, pos, size);
 			}
 			ImGui::EndChild();
 		}
@@ -214,28 +214,37 @@ namespace oly::editor
 
 	SpritesheetInfo TextureDocument::CalcSpritesheetInfo(const SpritesheetDesc& desc)
 	{
-		const ImVec2 texture_size = _texture.Size() * _preview_nav.svg_scale * std::pow(2.f, _preview_nav.zoom);
+		int xoff = _texture.Width() > 1 ? std::min(desc.col_offset_pixel.scratch, static_cast<int>(_texture.Width())) : 0;
+		int working_width = static_cast<int>(_texture.Width()) - xoff;
 
 		int cols = desc.col_type.scratch == detail::SpritesheetParamType::Index ? desc.col_value.scratch : 1;
 		float cell_width = desc.col_type.scratch == detail::SpritesheetParamType::Pixel ? desc.col_value.scratch : 1;
 
 		if (desc.col_type.scratch == detail::SpritesheetParamType::Index)
-			cell_width = texture_size.x / cols;
+			cell_width = static_cast<float>(working_width) / cols;
 		else
-			cols = static_cast<int>(texture_size.x) / static_cast<int>(cell_width);
+			cols = working_width / static_cast<int>(cell_width);
+
+		int col_offset = std::min(desc.col_offset_index.scratch, cols);
+		cols -= col_offset;
 
 		const float full_width = cols * cell_width;
+
+		int yoff = _texture.Height() > 1 ? std::min(desc.row_offset_pixel.scratch, static_cast<int>(_texture.Height())) : 0;
+		int working_height = static_cast<int>(_texture.Height()) - yoff;
 
 		int rows = desc.row_type.scratch == detail::SpritesheetParamType::Index ? desc.row_value.scratch : 1;
 		float cell_height = desc.row_type.scratch == detail::SpritesheetParamType::Pixel ? desc.row_value.scratch : 1;
 
 		if (desc.row_type.scratch == detail::SpritesheetParamType::Index)
-			cell_height = texture_size.y / rows;
+			cell_height = static_cast<float>(working_height) / rows;
 		else
-			rows = static_cast<int>(texture_size.y) / static_cast<int>(cell_height);
+			rows = working_height / static_cast<int>(cell_height);
+
+		int row_offset = std::min(desc.row_offset_index.scratch, rows);
+		rows -= row_offset;
 
 		const float full_height = rows * cell_height;
-
 		return {
 			.rows = rows,
 			.cols = cols,
@@ -243,15 +252,17 @@ namespace oly::editor
 			.cell_height = cell_height,
 			.full_width = full_width,
 			.full_height = full_height,
-			.texture_width = texture_size.x,
-			.texture_height = texture_size.y
+			.rect_offset = ImVec2(xoff + col_offset * cell_width, yoff + row_offset * cell_height)
 		};
 	}
 
-	void TextureDocument::DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start)
+	void TextureDocument::DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size)
 	{
 		auto info = CalcSpritesheetInfo(desc);
 		auto dl = ImGui::GetWindowDrawList();
+
+		ImVec2 scale = size / _texture.Size();
+		rect_start += info.rect_offset * scale;
 
 		std::vector<int> xpos(info.cols + 1);
 
@@ -259,7 +270,7 @@ namespace oly::editor
 			xpos[i] = i * info.full_width / info.cols;
 
 		for (int x : xpos)
-			dl->AddLine(rect_start + ImVec2(x, 0), rect_start + ImVec2(x, info.full_height), IM_COL32_WHITE);
+			dl->AddLine(rect_start + ImVec2(x, 0) * scale, rect_start + ImVec2(x, info.full_height) * scale, IM_COL32_WHITE);
 
 		std::vector<int> ypos(info.rows + 1);
 
@@ -267,15 +278,15 @@ namespace oly::editor
 			ypos[i] = i * info.full_height / info.rows;
 
 		for (int y : ypos)
-			dl->AddLine(rect_start + ImVec2(0, y), rect_start + ImVec2(info.full_width, y), IM_COL32_WHITE);
+			dl->AddLine(rect_start + ImVec2(0, y) * scale, rect_start + ImVec2(info.full_width, y) * scale, IM_COL32_WHITE);
 
-		const auto DrawDigit = [dl, rect_start, &xpos, &ypos](int x, int y, int digit) {
+		const auto DrawDigit = [dl, rect_start, &xpos, &ypos, scale](int x, int y, int digit) {
 			const std::string d = std::to_string(digit);
 			ImFont* font = ImGui::GetFont();
 			const ImVec2 text_size = font->CalcTextSizeA(1.f, FLT_MAX, 0.f, d.c_str());
 
-			const ImVec2 box_start = rect_start + ImVec2(xpos[x], ypos[y]);
-			const ImVec2 box_end = rect_start + ImVec2(xpos[x + 1], ypos[y + 1]);
+			const ImVec2 box_start = rect_start + ImVec2(xpos[x], ypos[y]) * scale;
+			const ImVec2 box_end = rect_start + ImVec2(xpos[x + 1], ypos[y + 1]) * scale;
 			const ImVec2 box_size = box_end - box_start;
 
 			const float scale_x = box_size.x / text_size.x;
@@ -364,8 +375,12 @@ namespace oly::editor
 		const int col1 = desc.row_major.scratch ? active_index % info.cols : info.cols - (active_index % info.cols);
 		const int col2 = desc.row_major.scratch ? col1 + 1 : col1 - 1;
 
-		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / info.texture_width, std::min(row1, row2) * info.cell_height / info.texture_height);
-		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / info.texture_width, std::max(row1, row2) * info.cell_height / info.texture_height);
+		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.Width(), std::min(row1, row2) * info.cell_height / _texture.Height());
+		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.Width(), std::max(row1, row2) * info.cell_height / _texture.Height());
+
+		ImVec2 uv_offset = info.rect_offset / _texture.Size();
+		uv_min += uv_offset;
+		uv_max += uv_offset;
 
 		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
 	}
@@ -468,6 +483,10 @@ namespace oly::editor
 		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min.Opt(), desc.row_value.Max.Opt()))
 			MarkDirty();
 
+		DRAW_FIELD(col_offset_index);
+		DRAW_FIELD(col_offset_pixel);
+		DRAW_FIELD(row_offset_index);
+		DRAW_FIELD(row_offset_pixel);
 		DRAW_FIELD(delay_cs);
 		DRAW_FIELD(row_major);
 		DRAW_FIELD(row_up);

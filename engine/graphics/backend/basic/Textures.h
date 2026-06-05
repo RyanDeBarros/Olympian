@@ -205,12 +205,17 @@ namespace oly::graphics
 	struct SpritesheetOptions
 	{
 		detail::SpritesheetParamType row_type = detail::SpritesheetParamType::Index;
-		GLuint row_value = 1;
 		detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
-		GLuint col_value = 1;
 
-		int delay_cs = 0;
 		bool row_major = true, row_up = true;
+		int delay_cs = 0;
+
+		GLuint row_value = 1;
+		GLuint col_value = 1;
+		GLuint row_offset_index = 0;
+		GLuint col_offset_index = 0;
+		GLuint row_offset_pixel = 0;
+		GLuint col_offset_pixel = 0;
 	};
 
 	class NSVGAbstract;

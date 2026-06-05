@@ -23,12 +23,12 @@ namespace oly::editor
 
 #define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
 
-	template<typename T>
+	template<typename T, typename NodeType = T>
 	struct PrimitiveField
 	{
 		T def;
 		T scratch;
-		PrimitiveField<T>* disk = nullptr;
+		PrimitiveField<T, NodeType>* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
@@ -37,7 +37,7 @@ namespace oly::editor
 		void Load(TOMLNode node)
 		{
 			if (key != detail::Key::_)
-				scratch = static_cast<T>(node[detail::encode_key(key)].value_or(def));
+				scratch = static_cast<T>(node[detail::encode_key(key)].value_or(static_cast<NodeType>(def)));
 			else
 				scratch = def;
 		}
@@ -45,7 +45,7 @@ namespace oly::editor
 		void Dump(toml::table& table) const
 		{
 			if (key != detail::Key::_)
-				table.insert_or_assign(detail::encode_key(key), scratch);
+				table.insert_or_assign(detail::encode_key(key), static_cast<NodeType>(scratch));
 		}
 
 		void Isolate()
@@ -58,7 +58,7 @@ namespace oly::editor
 			}
 		}
 
-		void Reset(PrimitiveField<T>& source)
+		void Reset(PrimitiveField<T, NodeType>& source)
 		{
 			disk = &source;
 			source.disk = this;
@@ -105,11 +105,11 @@ namespace oly::editor
 	};
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E>
+	struct EnumField : public PrimitiveField<E, int64_t>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E>::PrimitiveField;
+		using PrimitiveField<E, int64_t>::PrimitiveField;
 
 		bool Draw()
 		{

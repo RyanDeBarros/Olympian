@@ -262,21 +262,42 @@ namespace oly::graphics
 		auto idim = image.dim();
 		_dim->cpp = idim.cpp;
 
-		GLuint cols = options.col_type == detail::SpritesheetParamType::Index ? glm::clamp(options.col_value, 1u, (GLuint)idim.w) : 1u;
+
+		// Columns
+
+		GLuint xpx_offset = idim.w > 1 ? glm::min(options.col_offset_pixel, static_cast<GLuint>(idim.w)) : 0;
+		GLuint working_width = static_cast<GLuint>(idim.w) - xpx_offset;
+
+		GLuint cols = options.col_type == detail::SpritesheetParamType::Index ? glm::clamp(options.col_value, 1u, working_width) : 1u;
 		GLuint cell_width = options.col_type == detail::SpritesheetParamType::Pixel ? options.col_value : 0u;
 
 		if (options.col_type == detail::SpritesheetParamType::Index || options.col_value == 0)
-			cell_width = static_cast<int>(idim.w / cols);
-		else if (cell_width * cols > (GLuint)idim.w)
-			cols = static_cast<int>(idim.w / cell_width);
+			cell_width = static_cast<int>(working_width / cols);
+		else if (cell_width * cols > working_width)
+			cols = static_cast<int>(working_width / cell_width);
 
-		GLuint rows = options.row_type == detail::SpritesheetParamType::Index ? glm::clamp(options.row_value, 1u, (GLuint)idim.h) : 1u;
+		GLuint col_offset = glm::min(options.col_offset_index, cols);
+		cols -= col_offset;
+
+
+		// Rows
+
+		GLuint ypx_offset = idim.h > 1 ? glm::min(options.row_offset_pixel, static_cast<GLuint>(idim.h)) : 0;
+		GLuint working_height = static_cast<GLuint>(idim.h) - ypx_offset;
+
+		GLuint rows = options.row_type == detail::SpritesheetParamType::Index ? glm::clamp(options.row_value, 1u, working_height) : 1u;
 		GLuint cell_height = options.row_type == detail::SpritesheetParamType::Pixel ? options.row_value : 0u;
 
 		if (options.row_type == detail::SpritesheetParamType::Index || options.row_value == 0)
-			cell_height = static_cast<int>(idim.h / rows);
-		else if (cell_height * rows > (GLuint)idim.h)
-			rows = static_cast<int>(idim.h / cell_height);
+			cell_height = static_cast<int>(working_height / rows);
+		else if (cell_height * rows > working_height)
+			rows = static_cast<int>(working_height / cell_height);
+
+		GLuint row_offset = glm::min(options.row_offset_index, rows);
+		rows -= row_offset;
+
+
+		// Construction
 
 		_dim->w = cell_width;
 		_dim->h = cell_height;
@@ -290,9 +311,13 @@ namespace oly::graphics
 		GLuint minor_area = minor_stride * minor_height;
 
 		_buf = new unsigned char[major_stride * major_height];
-		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
+		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride,
+							xpx_offset, ypx_offset, col_offset, row_offset](GLuint i, GLuint j, GLuint k) {
+			GLuint src_x = xpx_offset + (j + col_offset) * _dim->w;
+			GLuint src_y = ypx_offset + (i + row_offset) * _dim->h;
+
 			for (GLuint r = 0; r < minor_height; ++r)
-				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
+				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + src_x * _dim->cpp + (src_y + r) * image_major_stride, minor_stride);
 		};
 
 		GLuint k = 0;

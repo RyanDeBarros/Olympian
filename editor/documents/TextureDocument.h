@@ -29,7 +29,7 @@ namespace oly::editor
 		int rows, cols;
 		float cell_width, cell_height;
 		float full_width, full_height;
-		float texture_width, texture_height;
+		ImVec2 rect_offset;
 	};
 
 	class TextureDocument : public IDocument
@@ -63,7 +63,7 @@ namespace oly::editor
 		void DrawPreview();
 		SpritesheetDesc* SpritesheetPreview();
 		SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
-		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start);
+		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
 		void Draw(TextureDescVariant& desc);

@@ -2,7 +2,7 @@
 
 namespace oly::detail
 {
-	enum class SpritesheetParamType
+	enum class SpritesheetParamType : char
 	{
 		Index = 0,
 		Pixel

@@ -7,10 +7,14 @@
 namespace oly::editor
 {
 	SpritesheetDesc::SpritesheetDesc() :
-		row_type(detail::SpritesheetParamType::Index, detail::Key::RowType, "Row Type"),
-		row_value(1, detail::Key::RowValue, ""),
 		col_type(detail::SpritesheetParamType::Index, detail::Key::ColType, "Column Type"),
 		col_value(1, detail::Key::ColValue, ""),
+		row_type(detail::SpritesheetParamType::Index, detail::Key::RowType, "Row Type"),
+		row_value(1, detail::Key::RowValue, ""),
+		col_offset_index(0, detail::Key::ColOffsetIndex, "Column offset (index)"),
+		col_offset_pixel(0, detail::Key::ColOffsetPixel, "Column offset (pixels)"),
+		row_offset_index(0, detail::Key::RowOffsetIndex, "Row offset (index)"),
+		row_offset_pixel(0, detail::Key::RowOffsetPixel, "Row offset (pixels)"),
 		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")

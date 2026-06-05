@@ -10,14 +10,16 @@
 
 namespace oly::editor
 {
-	// TODO v8 Spritesheet should have more params: max row/col, row/col offset for more configuration control
-
 	struct SpritesheetDesc
 	{
 		EnumField<detail::SpritesheetParamType> col_type;
 		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
 		EnumField<detail::SpritesheetParamType> row_type;
 		IntField<MakeOpt(1), MakeOpt<int>()> row_value;
+		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_index;
+		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_pixel;
+		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_index;
+		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_pixel;
 		IntField<MakeOpt(0), MakeOpt<int>()> delay_cs;
 		BoolField row_major;
 		BoolField row_up;
@@ -33,6 +35,10 @@ namespace oly::editor
 		M(col_value) \
 		M(row_type) \
 		M(row_value) \
+		M(col_offset_index) \
+		M(col_offset_pixel) \
+		M(row_offset_index) \
+		M(row_offset_pixel) \
 		M(delay_cs) \
 		M(row_major) \
 		M(row_up)
