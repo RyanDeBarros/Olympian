@@ -43,12 +43,15 @@ namespace oly::editor
 		}
 	}
 
+	std::filesystem::path TreeViewNode::Name() const
+	{
+		return path == ProjectInfo::Instance().ProjectRoot() ? path.parent_path().filename() : path.filename();
+	}
+
 	std::string TreeViewNode::DisplayName() const
 	{
-		if (path == ProjectInfo::Instance().ProjectRoot())
-			return path.parent_path().filename().generic_string() + " (" + path.generic_string() + ")";
-		else
-			return path.filename().generic_string();
+		std::string name = Name().generic_string();
+		return path == ProjectInfo::Instance().ProjectRoot() ? name + " (" + path.generic_string() + ")" : name;
 	}
 
 	void TreeViewNode::Validate()
@@ -131,8 +134,15 @@ namespace oly::editor
 		for (auto it = existing.begin(); it != existing.end(); ++it)
 			subnodes.push_back(std::make_unique<TreeViewNode>(*it));
 
-		// TODO v8 sorting isn't working
-		std::ranges::sort(subnodes, {}, [](const auto& p) { return p->path; });
+		std::ranges::sort(subnodes, [](const auto& a, const auto& b) {
+			const bool adir = std::filesystem::is_directory(a->path);
+			const bool bdir = std::filesystem::is_directory(b->path);
+
+			if (adir != bdir)
+				return adir > bdir;
+
+			return a->path.filename() < b->path.filename();
+		});
 	}
 
 	void TreeViewNode::CollapseAll()
@@ -200,8 +210,8 @@ namespace oly::editor
 
 				if (node->IsBranching() && node->dropdown_open)
 				{
-					for (const auto& subnode : node->subnodes)
-						process.push(std::make_pair(subnode.get(), indent + 1));
+					for (auto it = node->subnodes.rbegin(); it != node->subnodes.rend(); ++it)
+						process.push(std::make_pair(it->get(), indent + 1));
 				}
 			}
 		}
@@ -212,7 +222,8 @@ namespace oly::editor
 		if (_config.ignore_imports && node.is_import)
 			return false;
 
-		// TODO v8 if filename/folder name begins with '.', hide it
+		if (node.Name().generic_string()[0] == '.')
+			return false;
 
 		return true;
 	}
