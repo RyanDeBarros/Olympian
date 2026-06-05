@@ -25,6 +25,8 @@ namespace oly::editor
 		return "Log";
 	}
 
+	// TODO v8 log a lot more things, including warnings and successes
+
 	void LogPanel::Draw()
 	{
 		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
@@ -41,6 +43,13 @@ namespace oly::editor
 					ImGui::TextUnformatted(entry.msg.c_str());
 				}
 
+				if (ImGui::BeginPopupContextWindow("##LogContextMenu"))
+				{
+					if (ImGui::MenuItem("Clear log"))
+						Logger::Instance().ClearLog();
+
+					ImGui::EndPopup();
+				}
 			}
 
 			ImGui::EndChild();

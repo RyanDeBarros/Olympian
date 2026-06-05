@@ -53,14 +53,15 @@ namespace oly::editor
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Save Asset", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
 					Dump();
 
-				if (ImGui::MenuItem("Revert Asset"))
+				if (ImGui::MenuItem("Discard Changes"))
 					Load();
 
 				ImGui::EndMenu();
 			}
+
 			ImGui::EndMenuBar();
 		}
 	}

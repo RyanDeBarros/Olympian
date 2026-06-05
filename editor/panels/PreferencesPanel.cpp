@@ -2,6 +2,7 @@
 
 #include "core/MainWindow.h"
 #include "core/Errors.h"
+#include "core/Logger.h"
 #include "core/ProjectInfo.h"
 #include "panels/PanelManager.h"
 
@@ -31,7 +32,11 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw()
 	{
-		auto window = DrawDockedWindow(IsDirty() ? ImGuiWindowFlags_UnsavedDocument : ImGuiWindowFlags_None);
+		ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
+		if (IsDirty())
+			flags |= ImGuiWindowFlags_UnsavedDocument;
+
+		auto window = DrawDockedWindow(flags);
 		if (window.RequestsClose() && IsDirty())
 		{
 			Open();
@@ -42,6 +47,22 @@ namespace oly::editor
 		{
 			if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
 				Dump();
+
+			if (ImGui::BeginMenuBar())
+			{
+				if (ImGui::BeginMenu("File"))
+				{
+					if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
+						Dump();
+
+					if (ImGui::MenuItem("Discard Changes"))
+						Load();
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndMenuBar();
+			}
 
 			Draw(_scratch);
 		}
@@ -54,12 +75,35 @@ namespace oly::editor
 
 	void PreferencesPanel::Load()
 	{
-		// TODO v8
+		std::filesystem::path path = GetPath();
+		toml::table table;
+		if (std::filesystem::is_regular_file(path))
+		{
+			try
+			{
+				table = toml::parse_file(path.string());
+			}
+			catch (const toml::parse_error& e)
+			{
+				Logger::Instance().Log(LogLevel::Warning, "Cannot load editor preferences: " + std::string(e.what()));
+			}
+		}
+
+		Load(TOMLNode(table), _disk);
+		_scratch.Reset(_disk);
+		MarkClean();
 	}
 
 	void PreferencesPanel::Dump()
 	{
-		// TODO v8
+		toml::table table;
+		Dump(table, _scratch);
+		std::filesystem::path path = GetPath();
+		std::filesystem::create_directories(path.parent_path());
+		std::ofstream file(path);
+		file << table;
+		_disk.Reset(_scratch);
+		MarkClean();
 	}
 
 	void PreferencesPanel::MarkDirty()
@@ -132,7 +176,7 @@ namespace oly::editor
 	void PreferencesPanel::Dump(toml::table& table, TreeViewSettingsDesc& desc)
 	{
 		toml::table subtable;
-		Dump(table, desc.advanced);
+		Dump(subtable, desc.advanced);
 		table.insert_or_assign(detail::encode_key(detail::Key::Advanced), std::move(subtable));
 	}
 	
