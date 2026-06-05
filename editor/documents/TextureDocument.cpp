@@ -171,6 +171,7 @@ namespace oly::editor
 			if (ImGui::IsWindowHovered())
 			{
 				_preview_nav.zoom += ImGui::GetIO().MouseWheel;
+				// TODO v8 when zooming, adjust panning to zoom in on relative position of cursor
 
 				if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 					_preview_nav.pos += ImGui::GetIO().MouseDelta;
@@ -209,23 +210,23 @@ namespace oly::editor
 	{
 		const ImVec2 texture_size = _texture.Size() * _preview_nav.svg_scale * std::pow(2.f, _preview_nav.zoom);
 
-		int cols = desc.cols.scratch;
-		float cell_width = desc.cell_width_override.scratch;
+		int cols = desc.col_type.scratch == detail::SpritesheetParamType::Index ? desc.col_value.scratch : 1;
+		float cell_width = desc.col_type.scratch == detail::SpritesheetParamType::Pixel ? desc.col_value.scratch : 1;
 
-		if (desc.enable_cell_width_override.scratch)
-			cols = static_cast<int>(texture_size.x) / static_cast<int>(cell_width);
-		else
+		if (desc.col_type.scratch == detail::SpritesheetParamType::Index)
 			cell_width = texture_size.x / cols;
+		else
+			cols = static_cast<int>(texture_size.x) / static_cast<int>(cell_width);
 
 		const float full_width = cols * cell_width;
 
-		int rows = desc.rows.scratch;
-		float cell_height = desc.cell_height_override.scratch;
+		int rows = desc.row_type.scratch == detail::SpritesheetParamType::Index ? desc.row_value.scratch : 1;
+		float cell_height = desc.row_type.scratch == detail::SpritesheetParamType::Pixel ? desc.row_value.scratch : 1;
 
-		if (desc.enable_cell_height_override.scratch)
-			rows = static_cast<int>(texture_size.y) / static_cast<int>(cell_height);
-		else
+		if (desc.row_type.scratch == detail::SpritesheetParamType::Index)
 			cell_height = texture_size.y / rows;
+		else
+			rows = static_cast<int>(texture_size.y) / static_cast<int>(cell_height);
 
 		const float full_height = rows * cell_height;
 
@@ -451,20 +452,15 @@ namespace oly::editor
 
 	void TextureDocument::Draw(Form& form, SpritesheetDesc& desc)
 	{
-		DRAW_FIELD(rows);
-		DRAW_FIELD(cols);
-		
-		DRAW_FIELD(enable_cell_width_override);
-		ImGui::SameLine();
-		ImGui::BeginDisabled(!desc.enable_cell_width_override.scratch);
-		DRAW_FIELD(cell_width_override);
-		ImGui::EndDisabled();
-		
-		DRAW_FIELD(enable_cell_height_override);
-		ImGui::SameLine();
-		ImGui::BeginDisabled(!desc.enable_cell_height_override.scratch);
-		DRAW_FIELD(cell_height_override);
-		ImGui::EndDisabled();
+		DRAW_FIELD(col_type);
+		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
+		if (DescIO::Draw(col_label, desc.col_value.scratch, DISK_FIELD(desc.col_value.disk), desc.col_value.Min.Opt(), desc.col_value.Max.Opt()))
+			MarkDirty();
+
+		DRAW_FIELD(row_type);
+		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
+		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min.Opt(), desc.row_value.Max.Opt()))
+			MarkDirty();
 
 		DRAW_FIELD(delay_cs);
 		DRAW_FIELD(row_major);

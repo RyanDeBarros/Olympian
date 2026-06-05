@@ -139,12 +139,10 @@ namespace oly::context
 	static graphics::SpritesheetOptions parse_spritesheet_options(const assets::Parser& parser)
 	{
 		graphics::SpritesheetOptions options;
-		parser.optional(detail::Key::Rows)(options.rows);
-		parser.optional(detail::Key::Columns)(options.cols);
-		parser.optional(detail::Key::EnableCellWidthOverride)(options.enable_cell_width_override);
-		parser.optional(detail::Key::CellWidthOverride)(options.cell_width_override);
-		parser.optional(detail::Key::EnableCellHeightOverride)(options.enable_cell_height_override);
-		parser.optional(detail::Key::CellHeightOverride)(options.cell_height_override);
+		parser.optional(detail::Key::RowType)(options.row_type);
+		parser.optional(detail::Key::RowValue)(options.row_value);
+		parser.optional(detail::Key::ColType)(options.col_type);
+		parser.optional(detail::Key::ColValue)(options.col_value);
 		parser.optional(detail::Key::DelayCS)(options.delay_cs);
 		parser.optional(detail::Key::RowMajor)(options.row_major);
 		parser.optional(detail::Key::RowUp)(options.row_up);

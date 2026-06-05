@@ -262,29 +262,31 @@ namespace oly::graphics
 		auto idim = image.dim();
 		_dim->cpp = idim.cpp;
 
-		options.cols = glm::clamp(options.cols, 1u, (GLuint)idim.w);
+		GLuint cols = options.col_type == detail::SpritesheetParamType::Index ? glm::clamp(options.col_value, 1u, (GLuint)idim.w) : 1u;
+		GLuint cell_width = options.col_type == detail::SpritesheetParamType::Pixel ? options.col_value : 0u;
 
-		if (!options.enable_cell_width_override || options.cell_width_override == 0)
-			options.cell_width_override = (int)(idim.w / options.cols);
-		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
-			options.cols = (int)(idim.w / options.cell_width_override);
+		if (options.col_type == detail::SpritesheetParamType::Index || options.col_value == 0)
+			cell_width = static_cast<int>(idim.w / cols);
+		else if (cell_width * cols > (GLuint)idim.w)
+			cols = static_cast<int>(idim.w / cell_width);
 
-		options.rows = glm::clamp(options.cols, 1u, (GLuint)idim.h);
-		
-		if (!options.enable_cell_height_override || options.cell_height_override == 0)
-			options.cell_height_override = (int)(idim.h / options.rows);
-		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
-			options.rows = (int)(idim.h / options.cell_height_override);
+		GLuint rows = options.row_type == detail::SpritesheetParamType::Index ? glm::clamp(options.row_value, 1u, (GLuint)idim.h) : 1u;
+		GLuint cell_height = options.row_type == detail::SpritesheetParamType::Pixel ? options.row_value : 0u;
 
-		_dim->w = options.cell_width_override;
-		_dim->h = options.cell_height_override;
-		_dim->_frames = options.rows * options.cols;
+		if (options.row_type == detail::SpritesheetParamType::Index || options.row_value == 0)
+			cell_height = static_cast<int>(idim.h / rows);
+		else if (cell_height * rows > (GLuint)idim.h)
+			rows = static_cast<int>(idim.h / cell_height);
+
+		_dim->w = cell_width;
+		_dim->h = cell_height;
+		_dim->_frames = rows * cols;
 
 		GLuint minor_stride = _dim->w * idim.cpp;
-		GLuint major_stride = minor_stride * options.cols;
+		GLuint major_stride = minor_stride * cols;
 		GLuint image_major_stride = idim.w * idim.cpp;
 		GLuint minor_height = _dim->h;
-		GLuint major_height = minor_height * options.rows;
+		GLuint major_height = minor_height * rows;
 		GLuint minor_area = minor_stride * minor_height;
 
 		_buf = new unsigned char[major_stride * major_height];
@@ -298,14 +300,14 @@ namespace oly::graphics
 		{
 			if (options.row_up)
 			{
-				for (GLuint i = 0; i < options.rows; ++i)
-					for (GLuint j = 0; j < options.cols; ++j)
+				for (GLuint i = 0; i < rows; ++i)
+					for (GLuint j = 0; j < cols; ++j)
 						cpy(i, j, k++);
 			}
 			else
 			{
-				for (int i = options.rows - 1; i >= 0; --i)
-					for (GLuint j = 0; j < options.cols; ++j)
+				for (int i = rows - 1; i >= 0; --i)
+					for (GLuint j = 0; j < cols; ++j)
 						cpy((GLuint)i, j, k++);
 			}
 		}
@@ -313,14 +315,14 @@ namespace oly::graphics
 		{
 			if (options.row_up)
 			{
-				for (GLuint j = 0; j < options.cols; ++j)
-					for (GLuint i = 0; i < options.rows; ++i)
+				for (GLuint j = 0; j < cols; ++j)
+					for (GLuint i = 0; i < rows; ++i)
 						cpy(i, j, k++);
 			}
 			else
 			{
-				for (GLuint j = 0; j < options.cols; ++j)
-					for (int i = options.rows - 1; i >= 0; --i)
+				for (GLuint j = 0; j < cols; ++j)
+					for (int i = rows - 1; i >= 0; --i)
 						cpy((GLuint)i, j, k++);
 			}
 		}

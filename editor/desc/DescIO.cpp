@@ -125,6 +125,22 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
+	template<>
+	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType* disk)
+	{
+		bool dirty = false;
+		static const char* values[] = {
+			"Index",
+			"Pixel"
+		};
+		int index = static_cast<int>(data);
+		PrepareValue(label, &data);
+		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
+			dirty = true;
+		data = static_cast<detail::SpritesheetParamType>(index);
+		return FinishValue(dirty, data, disk);
+	}
+
 	const char* DescIO::StringVectorComboGetter(void* data, int idx)
 	{
 		auto& items = *static_cast<std::vector<std::string>*>(data);

@@ -15,6 +15,7 @@
 #include "graphics/backend/basic/Sampler.h"
 
 #include "assets/ResourcePath.h"
+#include "definitions/enums/SpritesheetParamType.h"
 
 namespace oly::graphics
 {
@@ -203,10 +204,12 @@ namespace oly::graphics
 
 	struct SpritesheetOptions
 	{
-		GLuint rows = 1, cols = 1;
-		GLuint cell_width_override = 1, cell_height_override = 1;
+		detail::SpritesheetParamType row_type = detail::SpritesheetParamType::Index;
+		GLuint row_value = 1;
+		detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
+		GLuint col_value = 1;
+
 		int delay_cs = 0;
-		bool enable_cell_width_override = false, enable_cell_height_override = false;
 		bool row_major = true, row_up = true;
 	};
 

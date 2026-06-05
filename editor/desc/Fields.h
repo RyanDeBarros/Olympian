@@ -21,7 +21,7 @@ namespace oly::editor
 #define ISOLATE_FIELD(field) field.Isolate();
 #define ISOLATE_FIELDS(generator) generator(ISOLATE_FIELD)
 
-#define DISK_FIELD (this->disk ? &this->disk->scratch : nullptr)
+#define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
 
 	template<typename T>
 	struct PrimitiveField
@@ -72,7 +72,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD);
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk));
 		}
 	};
 
@@ -86,7 +86,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD, Min.Opt(), Max.Opt());
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min.Opt(), Max.Opt());
 		}
 	};
 
@@ -100,7 +100,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD, Min.Opt(), Max.Opt());
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min.Opt(), Max.Opt());
 		}
 	};
 
@@ -113,7 +113,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, DISK_FIELD);
+			return DescIO::Draw(this->label, this->scratch, DISK_FIELD(this->disk));
 		}
 	};
 
@@ -137,7 +137,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD, names, count);
+			return DescIO::Draw(label, scratch, DISK_FIELD(disk), names, count);
 		}
 
 		void Load(TOMLNode node)

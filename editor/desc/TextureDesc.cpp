@@ -7,12 +7,10 @@
 namespace oly::editor
 {
 	SpritesheetDesc::SpritesheetDesc() :
-		rows(1, detail::Key::Rows, "Rows"),
-		cols(1, detail::Key::Columns, "Columns"),
-		enable_cell_width_override(false, detail::Key::EnableCellWidthOverride, "Cell Width Override"),
-		enable_cell_height_override(false, detail::Key::EnableCellHeightOverride, "Cell Height Override"),
-		cell_width_override(1, detail::Key::CellWidthOverride, ""),
-		cell_height_override(1, detail::Key::CellHeightOverride, ""),
+		row_type(detail::SpritesheetParamType::Index, detail::Key::RowType, "Row Type"),
+		row_value(1, detail::Key::RowValue, ""),
+		col_type(detail::SpritesheetParamType::Index, detail::Key::ColType, "Column Type"),
+		col_value(1, detail::Key::ColValue, ""),
 		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")

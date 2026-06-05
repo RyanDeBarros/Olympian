@@ -1,6 +1,7 @@
 #pragma once
 
 #include "desc/Fields.h"
+#include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/SVGMipmapGenerationMode.h"
 
@@ -9,14 +10,14 @@
 
 namespace oly::editor
 {
+	// TODO v8 Spritesheet should have more params: max row/col, row/col offset for more configuration control
+
 	struct SpritesheetDesc
 	{
-		IntField<MakeOpt(1), MakeOpt<int>()> rows;
-		IntField<MakeOpt(1), MakeOpt<int>()> cols;
-		BoolField enable_cell_width_override;
-		BoolField enable_cell_height_override;
-		IntField<MakeOpt(1), MakeOpt<int>()> cell_width_override;
-		IntField<MakeOpt(1), MakeOpt<int>()> cell_height_override;
+		EnumField<detail::SpritesheetParamType> col_type;
+		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
+		EnumField<detail::SpritesheetParamType> row_type;
+		IntField<MakeOpt(1), MakeOpt<int>()> row_value;
 		IntField<MakeOpt(0), MakeOpt<int>()> delay_cs;
 		BoolField row_major;
 		BoolField row_up;
@@ -28,12 +29,10 @@ namespace oly::editor
 	};
 
 #define SPRITESHEET_GENERATOR(M) \
-		M(rows) \
-		M(cols) \
-		M(enable_cell_width_override) \
-		M(cell_width_override) \
-		M(enable_cell_height_override) \
-		M(cell_height_override) \
+		M(col_type) \
+		M(col_value) \
+		M(row_type) \
+		M(row_value) \
 		M(delay_cs) \
 		M(row_major) \
 		M(row_up)

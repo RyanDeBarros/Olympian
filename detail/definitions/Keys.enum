@@ -46,8 +46,6 @@ Button = Button
 
 C = C
 CameraInvariant = CamInv
-CellHeightOverride = CHOver
-CellWidthOverride = CWOver
 CenterCursor = CCursor
 ClearColor = ClrColor
 Codepoint = Codept
@@ -56,6 +54,8 @@ CodepointPair = CodePair
 Collision = Colsn
 ColorsArray = Colors
 Columns = Cols
+ColType = ColType
+ColValue = ColValue
 CommonBufferPreset = ComBP
 CommonBuffer = ComB
 Configuration = Config
@@ -76,8 +76,6 @@ Duration = Duration
 
 Element = Element
 Enable = Enable
-EnableCellHeightOverride = EnCHOver
-EnableCellWidthOverride = EnCWOver
 Error = Error
 Expand = Expand
 
@@ -178,6 +176,8 @@ Resizable = Resize
 Right = Right
 Rotation = Rotation
 Rows = Rows
+RowType = RowType
+RowValue = RowValue
 RowMajor = RowMajor
 RowUp = RowUp
 

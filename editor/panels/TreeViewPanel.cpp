@@ -131,6 +131,7 @@ namespace oly::editor
 		for (auto it = existing.begin(); it != existing.end(); ++it)
 			subnodes.push_back(std::make_unique<TreeViewNode>(*it));
 
+		// TODO v8 sorting isn't working
 		std::ranges::sort(subnodes, {}, [](const auto& p) { return p->path; });
 	}
 
@@ -210,6 +211,8 @@ namespace oly::editor
 	{
 		if (_config.ignore_imports && node.is_import)
 			return false;
+
+		// TODO v8 if filename/folder name begins with '.', hide it
 
 		return true;
 	}
