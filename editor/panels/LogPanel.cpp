@@ -25,8 +25,6 @@ namespace oly::editor
 		return "Log";
 	}
 
-	// TODO v8 log a lot more things, including warnings and successes
-
 	void LogPanel::Draw()
 	{
 		auto window = DrawDockedWindow(ImGuiWindowFlags_None);

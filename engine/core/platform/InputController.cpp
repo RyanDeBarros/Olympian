@@ -80,6 +80,8 @@ namespace oly
 		}
 	}
 
+	// TODO v8 InputController should own its own signal table. It should have a load method that loads a signal resource path. Rename mapping to SignalRoute.
+
 	void InputController::bind(const StringParam& signal, Handler handler)
 	{
 		bind(context::signal_table().get(signal), handler);

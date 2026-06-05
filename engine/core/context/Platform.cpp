@@ -308,7 +308,7 @@ namespace oly::context
 		load_signal_mapping(node);
 	}
 
-	// TODO v8 revamp input signal system so that there's only one file, not multiple. Also, instead of a Tester.oly file, could do a whole .oly folder of files to keep things modular and simple for the editor - use meta fields and fixed filenames.
+	// TODO v8 revamp input signal system so that there's only one file, not multiple.
 
 	void load_signals(const detail::ResourcePath& file)
 	{

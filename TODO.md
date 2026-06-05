@@ -6,10 +6,7 @@
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
-	* Settings
-		* User editor preferences
 	* Content Browser Panel
-	* Tree View Panel
 
 # v9
 * Physics updates

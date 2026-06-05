@@ -99,8 +99,8 @@ namespace oly::rendering
 		struct Assignment
 		{
 			TileDesc desc;
-			Configuration config;
-			Transformation transformation;
+			Configuration config = Configuration::Single;
+			Transformation transformation = Transformation::None;
 		};
 
 	private:

@@ -5,6 +5,8 @@
 
 #include "definitions/Keys.h"
 
+// TODO v8 after editor implementation for tileset/tilemap asset editor, define LUTs to simplify get_assignment()/get_configuration()
+
 namespace oly::rendering
 {
 	TileSet::TileSet(const std::vector<Assignment>& assignments)
@@ -20,7 +22,7 @@ namespace oly::rendering
 			Tile tile{ .tex_index = size_t(texture_it - tiles.begin()) };
 			if (texture_it == tiles.end())
 				tiles.push_back(a.desc);
-			tile.transformation &= a.transformation;
+			tile.transformation |= a.transformation;
 			assignment[a.config] = tile;
 		}
 	}
@@ -59,7 +61,7 @@ namespace oly::rendering
 	TileSet::TileDesc TileSet::get_tile_desc(PaintedTile tile, Transformation& transformation) const
 	{
 		Tile t = get_assignment(get_configuration(tile), transformation);
-		transformation &= t.transformation;
+		transformation |= t.transformation;
 		return tiles[t.tex_index];
 	}
 
@@ -73,22 +75,22 @@ namespace oly::rendering
 		switch (config)
 		{
 			case Configuration::End2:
-				transformation &= Transformation::Rotate90;
+				transformation |= Transformation::Rotate90;
 				return assignment.find(Configuration::End1)->second;
 			case Configuration::End3:
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::End1)->second;
 			case Configuration::End4:
 			{
 				auto it = assignment.find(Configuration::End2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				else
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return assignment.find(Configuration::End1)->second;
 				}
 			}
@@ -99,7 +101,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::Corner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::CornerPrime2);
@@ -107,7 +109,7 @@ namespace oly::rendering
 					return it->second;
 				else
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return assignment.find(Configuration::CornerPrime1)->second;
 				}
 			}
@@ -116,13 +118,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::Corner2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Corner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate180;
+					transformation |= Transformation::Rotate180;
 					return it->second;
 				}
 				it = assignment.find(Configuration::CornerPrime3);
@@ -131,10 +133,10 @@ namespace oly::rendering
 				it = assignment.find(Configuration::CornerPrime2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
-				transformation &= Transformation::Rotate180;
+				transformation |= Transformation::Rotate180;
 				return assignment.find(Configuration::CornerPrime1)->second;
 			}
 			case Configuration::Corner4:
@@ -142,17 +144,17 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::Corner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::CornerPrime4);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::ReflectY;
+				transformation |= Transformation::ReflectY;
 				return assignment.find(Configuration::CornerPrime1)->second;
 			}
 			case Configuration::ILine2:
-				transformation &= Transformation::Rotate180;
+				transformation |= Transformation::Rotate180;
 				return assignment.find(Configuration::ILine1)->second;
 			case Configuration::TBone1:
 				return assignment.find(Configuration::TBonePrime1)->second;
@@ -161,13 +163,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate90;
+					transformation |= Transformation::Rotate90;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime2);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate90;
+				transformation |= Transformation::Rotate90;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBone3:
@@ -175,13 +177,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime3);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBone4:
@@ -189,43 +191,43 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime4);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate270;
+				transformation |= Transformation::Rotate270;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::Middle:
 				return assignment.find(Configuration::MiddlePrime)->second;
 			case Configuration::CornerPrime2:
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::CornerPrime1)->second;
 			case Configuration::CornerPrime3:
 			{
 				auto it = assignment.find(Configuration::CornerPrime2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				else
 				{
-					transformation &= Transformation::Rotate180;
+					transformation |= Transformation::Rotate180;
 					return assignment.find(Configuration::CornerPrime1)->second;
 				}
 			}
 			case Configuration::CornerPrime4:
-				transformation &= Transformation::ReflectY;
+				transformation |= Transformation::ReflectY;
 				return assignment.find(Configuration::CornerPrime1)->second;
 			case Configuration::TBonePlus1:
 			{
 				auto it = assignment.find(Configuration::TBoneMinus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				return assignment.find(Configuration::TBonePrime1)->second;
@@ -235,19 +237,19 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBonePlus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate90;
+					transformation |= Transformation::Rotate90;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBoneMinus2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime2);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate90;
+				transformation |= Transformation::Rotate90;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBonePlus3:
@@ -255,19 +257,19 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBonePlus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBoneMinus3);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime3);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBonePlus4:
@@ -275,19 +277,19 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBonePlus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBoneMinus4);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime4);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate270;
+				transformation |= Transformation::Rotate270;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBoneMinus1:
@@ -295,7 +297,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBonePlus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				return assignment.find(Configuration::TBonePrime1)->second;
@@ -305,19 +307,19 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBoneMinus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate90;
+					transformation |= Transformation::Rotate90;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePlus2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime2);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate90;
+				transformation |= Transformation::Rotate90;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBoneMinus3:
@@ -325,19 +327,19 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBoneMinus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePlus3);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime3);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBoneMinus4:
@@ -345,38 +347,38 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::TBoneMinus1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePlus4);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::TBonePrime4);
 				if (it != assignment.end())
 					return it->second;
-				transformation &= Transformation::Rotate270;
+				transformation |= Transformation::Rotate270;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			}
 			case Configuration::TBonePrime2:
-				transformation &= Transformation::Rotate90;
+				transformation |= Transformation::Rotate90;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			case Configuration::TBonePrime3:
-				transformation &= Transformation::ReflectX;
+				transformation |= Transformation::ReflectX;
 				return assignment.find(Configuration::TBonePrime1)->second;
 			case Configuration::TBonePrime4:
 			{
 				auto it = assignment.find(Configuration::TBonePrime2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				else
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return assignment.find(Configuration::TBonePrime1)->second;
 				}
 			}
@@ -393,7 +395,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleCorner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -407,13 +409,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleCorner2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::MiddleCorner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate180;
+					transformation |= Transformation::Rotate180;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -427,7 +429,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleCorner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -449,7 +451,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleTBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate90;
+					transformation |= Transformation::Rotate90;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -463,7 +465,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleTBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -477,13 +479,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleTBone2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::MiddleTBone1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate270;
+					transformation |= Transformation::Rotate270;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -505,7 +507,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleAcross1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -527,7 +529,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleDiagonal1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectX;
+					transformation |= Transformation::ReflectX;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -541,13 +543,13 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleCorner2);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::MiddleDiagonal1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::Rotate180;
+					transformation |= Transformation::Rotate180;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -561,7 +563,7 @@ namespace oly::rendering
 				auto it = assignment.find(Configuration::MiddleCorner1);
 				if (it != assignment.end())
 				{
-					transformation &= Transformation::ReflectY;
+					transformation |= Transformation::ReflectY;
 					return it->second;
 				}
 				it = assignment.find(Configuration::Middle);
@@ -797,9 +799,8 @@ namespace oly::rendering
 					{
 						assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
 
-						// TODO v8 throughout tileset, &= is used for transformations. verify that this is correct and that it shouldn't be |=.
 						if (auto transformation = tr_parser.optional<Transformation>(assets::NO_KEY)())
-							assignment.transformation &= *transformation;
+							assignment.transformation |= *transformation;
 
 						++tr_idx;
 					}

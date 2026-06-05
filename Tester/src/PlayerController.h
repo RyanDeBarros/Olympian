@@ -12,6 +12,8 @@ struct PlayerController : public oly::InputController
 	oly::rendering::ParagraphRef test_text = nullptr;
 	oly::physics::KinematicBodyRef rigid_body = nullptr;
 
+	PlayerController();
+
 	bool jump(oly::input::Signal signal);
 	bool click(oly::input::Signal signal);
 	bool drag(oly::input::Signal signal);
