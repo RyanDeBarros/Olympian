@@ -26,9 +26,6 @@ namespace oly::editor
 
 	OpenAssetCode DocumentManager::OpenAsset(const detail::ResourcePath& path)
 	{
-		if (!path.is_resource())
-			return OpenAssetCode::NotResource;
-
 		detail::ResourcePath oly_file = path.get_import_path();
 		if (oly_file.exists())
 		{
@@ -45,12 +42,16 @@ namespace oly::editor
 				else
 					return OpenAssetCode::UnsupportedAssetType;
 				break;
+
 			case detail::Key::Meta_Texture:
 				if (meta.get_version() == TextureDocument::GetVersion())
 					Add<TextureDocument>(std::move(oly_file));
 				else
 					return OpenAssetCode::UnsupportedAssetType;
 				break;
+
+			default:
+				return OpenAssetCode::UnsupportedAssetType;
 			}
 		}
 		else if (path.exists() && path.is_file())

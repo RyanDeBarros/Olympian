@@ -30,6 +30,12 @@ namespace oly::editor
 			_texture = { GIFTexture(GetSourcePath().string().c_str()) };
 		else
 			_texture = { RasterTexture(GetSourcePath().string().c_str()) };
+
+		if (!GetSourcePath().is_resource())
+		{
+			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
+			MainWindow::Instance().PushNotification(std::move(notif));
+		}
 	}
 
 	void TextureDocument::Draw()

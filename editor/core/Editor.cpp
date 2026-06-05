@@ -152,9 +152,6 @@ namespace oly::editor
 		Notification notif(LogLevel::Error, "cannot open " + path.generic_string() + ": ");
 		switch (code)
 		{
-		case OpenAssetCode::NotResource:
-			notif.message += "asset does not exist in resource folder";
-			break;
 		case OpenAssetCode::UnsupportedAssetType:
 			notif.message += "asset type not supported";
 			break;

@@ -1,5 +1,8 @@
 #include "FontDocument.h"
 
+#include "core/MainWindow.h"
+#include "core/Logger.h"
+
 namespace oly::editor
 {
 	const char* FontDocument::GetVersion()
@@ -10,6 +13,12 @@ namespace oly::editor
 	void FontDocument::Init()
 	{
 		// TODO v8
+
+		if (!GetSourcePath().is_resource())
+		{
+			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
+			MainWindow::Instance().PushNotification(std::move(notif));
+		}
 	}
 
 	void FontDocument::Draw()

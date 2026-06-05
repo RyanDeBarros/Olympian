@@ -12,7 +12,6 @@ namespace oly::editor
 	enum class OpenAssetCode
 	{
 		Success = 0,
-		NotResource,
 		UnsupportedAssetType,
 		UnsupportedAssetVersion,
 		UnsupportedExtension,
