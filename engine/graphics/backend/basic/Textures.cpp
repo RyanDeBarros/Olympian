@@ -208,32 +208,32 @@ namespace oly::graphics
 
 	void AnimDimensions::set_delays(int* new_delays, unsigned int num_frames)
 	{
-		delays.clear();
+		_delays.clear();
 		_frames = -1;
 		if (num_frames == 0)
 			return;
-		delays.resize(num_frames);
+		_delays.resize(num_frames);
 		bool single = true;
-		int delay = new_delays[0];
-		delays[0] = delay;
+		float delay = new_delays[0] * 0.01f;
+		_delays[0] = delay;
 		for (unsigned int i = 1; i < num_frames; ++i)
 		{
-			delays[i] = new_delays[i];
-			if (std::abs(delays[i] - delay) > anim_delay_epsilon)
+			_delays[i] = new_delays[i] * 0.01f;
+			if (std::abs(_delays[i] - delay) > anim_delay_epsilon)
 				single = false;
 		}
 		if (single)
 		{
-			delays.resize(1);
+			_delays.resize(1);
 			_frames = num_frames;
 		}
 	}
 
-	int AnimDimensions::delay(unsigned int frame) const
+	float AnimDimensions::delay(unsigned int frame) const
 	{
 		if (frame >= frames())
 			throw Error(ErrorCode::IndexOutOfRange);
-		return uniform() ? delays[0] : delays[frame];
+		return uniform() ? _delays[0] : _delays[frame];
 	}
 
 	Anim::Anim(const detail::ResourcePath& file, SpritesheetOptions options)
@@ -258,7 +258,7 @@ namespace oly::graphics
 	
 	void Anim::parse_sprite_sheet(const Image& image, SpritesheetOptions options)
 	{
-		_dim->delays = { options.delay_cs };
+		_dim->_delays = { options.delay };
 		auto idim = image.dim();
 		_dim->cpp = idim.cpp;
 
@@ -397,7 +397,7 @@ namespace oly::graphics
 	AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed, GLuint starting_frame)
 	{
 		OLY_ASSERT(dim.uniform());
-		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
+		return { starting_frame, dim.frames(), 0.0f, dim.delay() / speed };
 	}
 
 	AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed, GLuint starting_frame)

@@ -191,13 +191,12 @@ namespace oly::graphics
 	private:
 		friend class Anim;
 		int _frames = -1;
-		// TODO v8 use float and represent *seconds* not centi-seconds. will need to update texture loading, update logic here, and also the spritesheet preview in editor
-		std::vector<int> delays;
+		std::vector<float> _delays;
 
 	public:
 		bool uniform() const { return _frames >= 0; }
-		GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)delays.size(); }
-		int delay(unsigned int frame = 0) const;
+		GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)_delays.size(); }
+		float delay(unsigned int frame = 0) const;
 
 		glm::vec2 dimensions() const { return { w, h }; }
 	};
@@ -208,7 +207,7 @@ namespace oly::graphics
 		detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
 
 		bool row_major = true, row_up = true;
-		int delay_cs = 0;
+		float delay = 0.1f;
 
 		GLuint row_value = 1;
 		GLuint col_value = 1;

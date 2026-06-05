@@ -15,7 +15,7 @@ namespace oly::editor
 		col_offset_pixel(0, detail::Key::ColOffsetPixel, "Column offset (pixels)"),
 		row_offset_index(0, detail::Key::RowOffsetIndex, "Row offset (index)"),
 		row_offset_pixel(0, detail::Key::RowOffsetPixel, "Row offset (pixels)"),
-		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
+		delay(0.1f, detail::Key::Delay, "Delay (seconds)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")
 	{

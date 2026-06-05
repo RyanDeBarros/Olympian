@@ -147,7 +147,7 @@ namespace oly::context
 		parser.optional(detail::Key::RowOffsetPixel)(options.row_offset_pixel);
 		parser.optional(detail::Key::ColOffsetIndex)(options.col_offset_index);
 		parser.optional(detail::Key::ColOffsetPixel)(options.col_offset_pixel);
-		parser.optional(detail::Key::DelayCS)(options.delay_cs);
+		parser.optional(detail::Key::Delay)(options.delay);
 		parser.optional(detail::Key::RowMajor)(options.row_major);
 		parser.optional(detail::Key::RowUp)(options.row_up);
 		return options;

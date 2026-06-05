@@ -20,7 +20,7 @@ namespace oly::editor
 		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_pixel;
 		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_index;
 		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_pixel;
-		IntField<MakeOpt(0), MakeOpt<int>()> delay_cs;
+		FloatField<MakeOpt(0.f), MakeOpt<float>()> delay;
 		BoolField row_major;
 		BoolField row_up;
 
@@ -30,18 +30,21 @@ namespace oly::editor
 		void Isolate();
 	};
 
+#define SPRITESHEET_PARTIAL_GENERATOR(M) \
+		M(col_offset_index) \
+		M(col_offset_pixel) \
+		M(row_offset_index) \
+		M(row_offset_pixel) \
+		M(delay) \
+		M(row_major) \
+		M(row_up)
+
 #define SPRITESHEET_GENERATOR(M) \
 		M(col_type) \
 		M(col_value) \
 		M(row_type) \
 		M(row_value) \
-		M(col_offset_index) \
-		M(col_offset_pixel) \
-		M(row_offset_index) \
-		M(row_offset_pixel) \
-		M(delay_cs) \
-		M(row_major) \
-		M(row_up)
+		SPRITESHEET_PARTIAL_GENERATOR(M)
 
 	struct BaseTextureDesc
 	{

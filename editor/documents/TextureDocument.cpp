@@ -347,11 +347,11 @@ namespace oly::editor
 		auto info = CalcSpritesheetInfo(desc);
 
 		_spritesheet_preview_data.timer += ImGui::GetIO().DeltaTime;
-		if (desc.delay_cs.scratch > 0.f)
+		if (desc.delay.scratch > 0.f)
 		{
-			while (_spritesheet_preview_data.timer >= desc.delay_cs.scratch * 0.01f)
+			while (_spritesheet_preview_data.timer >= desc.delay.scratch)
 			{
-				_spritesheet_preview_data.timer -= desc.delay_cs.scratch * 0.01f;
+				_spritesheet_preview_data.timer -= desc.delay.scratch;
 				++_spritesheet_preview_data.active_index;
 			}
 			_spritesheet_preview_data.active_index %= info.rows * info.cols;
@@ -483,13 +483,7 @@ namespace oly::editor
 		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min.Opt(), desc.row_value.Max.Opt()))
 			MarkDirty();
 
-		DRAW_FIELD(col_offset_index);
-		DRAW_FIELD(col_offset_pixel);
-		DRAW_FIELD(row_offset_index);
-		DRAW_FIELD(row_offset_pixel);
-		DRAW_FIELD(delay_cs);
-		DRAW_FIELD(row_major);
-		DRAW_FIELD(row_up);
+		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureDescVariant& desc)

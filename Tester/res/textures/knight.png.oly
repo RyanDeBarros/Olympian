@@ -12,7 +12,7 @@ ColType = 0
 ColValue = 3
 RowType = 0
 RowValue = 2
-DelayCS = 10
+Delay = 0.1
 RowMajor = 1
 RowUp = 1
 
