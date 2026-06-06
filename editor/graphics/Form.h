@@ -9,6 +9,7 @@ namespace oly::editor
 	class Form
 	{
 		bool _draw_content = false;
+		int _id_counter = 0;
 		ImGuiTableFlags _table_flags;
 		ImGuiTableColumnFlags _value_column_flags;
 		ImGuiTableColumnFlags _key_column_flags;
@@ -17,23 +18,25 @@ namespace oly::editor
 		Form(ImGuiTableFlags table_flags = ImGuiTableFlags_SizingFixedFit,
 			ImGuiTableColumnFlags value_column_flags = ImGuiTableColumnFlags_WidthStretch,
 			ImGuiTableColumnFlags key_column_flags = ImGuiTableColumnFlags_None);
-		Form(const Form&);
-		Form(Form&&) = delete;
+		Form(const Form&) = delete;
+		Form(Form&&) noexcept;
 		~Form();
-		Form& operator=(const Form&) = delete;
+		Form& operator=(Form&&) noexcept = delete;
 
 		operator bool() const;
 
 	private:
-		bool BeginTable() const;
+		void BeginTable();
+		void EndTable();
 
+	public:
 		friend class PauseImpl;
 		class PauseImpl
 		{
-			const Form& _form;
+			Form& _form;
 
 		public:
-			PauseImpl(const Form& form);
+			PauseImpl(Form& form);
 			PauseImpl(const PauseImpl&) = delete;
 			PauseImpl(PauseImpl&&) = delete;
 			~PauseImpl();
@@ -41,26 +44,6 @@ namespace oly::editor
 			operator bool() const;
 		};
 
-	public:
-		PauseImpl Pause() const;
-
-	private:
-		class CollapsingSection
-		{
-			bool _visible = false;
-			PauseImpl _pause;
-			std::unique_ptr<Form> _form;
-
-		public:
-			CollapsingSection(const Form& form, const char* label, bool start_open);
-			CollapsingSection(const CollapsingSection&) = delete;
-			CollapsingSection(CollapsingSection&&) = delete;
-			~CollapsingSection();
-
-			operator bool() const;
-		};
-
-	public:
-		CollapsingSection Collapse(const char* label, bool start_open = false) const;
+		PauseImpl Pause();
 	};
 }

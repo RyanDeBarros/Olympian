@@ -4,6 +4,8 @@
 #include "core/Logger.h"
 #include "core/MainWindow.h"
 
+#include "graphics/Subform.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -39,6 +41,8 @@ namespace oly::editor
 
 				ImGui::EndMenu();
 			}
+
+			// TODO v12 Run menu to configure cmake, build project, and run executable
 
 			ImGui::EndMenuBar();
 		}
@@ -106,17 +110,16 @@ namespace oly::editor
 	
 	void ProjectDocument::Draw(Form& form, LoggerDesc& desc)
 	{
-		if (auto collapse = form.Collapse("Logger"))
+		if (auto subform = Subform(form, "Logger"))
 		{
 			DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
-
-			Draw(form, desc.enable);
+			Draw(subform.GetForm(), desc.enable);
 		}
 	}
 	
 	void ProjectDocument::Draw(Form& form, LoggerEnableDesc& desc)
 	{
-		if (auto collapse = form.Collapse("Enable Streams"))
+		if (auto subform = Subform(form, "Enable Streams"))
 		{
 			DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 		}

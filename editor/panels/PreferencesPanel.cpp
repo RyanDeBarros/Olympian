@@ -6,6 +6,8 @@
 #include "core/ProjectInfo.h"
 #include "panels/PanelManager.h"
 
+#include "graphics/Subform.h"
+
 #include "definitions/Keys.h"
 
 #include <imgui.h>
@@ -142,8 +144,10 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw(Form& form, TreeViewSettingsDesc& desc)
 	{
-		if (auto section = form.Collapse("Advanced##TreeView"))
-			Draw(form, desc.advanced);
+		if (auto subform = Subform(form, "Advanced##TreeView"))
+		{
+			Draw(subform.GetForm(), desc.advanced);
+		}
 	}
 
 	void PreferencesPanel::Draw(Form& form, TreeViewAdvancedSettingsDesc& desc)
