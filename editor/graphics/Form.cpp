@@ -9,6 +9,13 @@ namespace oly::editor
 		_draw_content = BeginTable();
 	}
 
+	Form::Form(const Form& other)
+		: _table_flags(other._table_flags), _value_column_flags(other._value_column_flags), _key_column_flags(other._key_column_flags)
+	{
+		ImGui::PushID(this);
+		_draw_content = BeginTable();
+	}
+
 	Form::~Form()
 	{
 		if (_draw_content)
@@ -43,7 +50,7 @@ namespace oly::editor
 
 	Form::PauseImpl::~PauseImpl()
 	{
-		ImGui::PushID(_form);
+		ImGui::PushID(&_form);
 		_form.BeginTable();
 	}
 
@@ -57,16 +64,28 @@ namespace oly::editor
 		return PauseImpl(*this);
 	}
 
-	Form::CollapsingSection::CollapsingSection(const Form& form, const char* label)
+	// TODO v8 fix flicker in collapsing section
+
+	Form::CollapsingSection::CollapsingSection(const Form& form, const char* label, bool start_open)
+		: _pause(form.Pause())
 	{
-		if (auto pause = form.Pause())
+		if (_pause)
+		{
+			if (start_open)
+				ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 			_visible = ImGui::TreeNode(label);
+			if (_visible)
+				_form = std::make_unique<Form>(form);
+		}
 	}
 
 	Form::CollapsingSection::~CollapsingSection()
 	{
 		if (_visible)
+		{
+			_form.reset();
 			ImGui::TreePop();
+		}
 	}
 
 	Form::CollapsingSection::operator bool() const
@@ -74,8 +93,8 @@ namespace oly::editor
 		return _visible;
 	}
 
-	Form::CollapsingSection Form::Collapse(const char* label) const
+	Form::CollapsingSection Form::Collapse(const char* label, bool start_open) const
 	{
-		return CollapsingSection(*this, label);
+		return CollapsingSection(*this, label, start_open);
 	}
 }

@@ -385,7 +385,7 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
 	}
 
-	void TextureDocument::Draw(TextureDescVariant& desc)
+	void TextureDocument::Draw(TextureVariantDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -486,9 +486,9 @@ namespace oly::editor
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureDescVariant& desc)
+	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc)
 	{
-		const auto Clear = [this](TextureDescVariant& desc) {
+		const auto Clear = [this](TextureVariantDesc& desc) {
 			if (_svg)
 				desc.Clear<VectorTextureDesc>();
 			else
@@ -545,7 +545,7 @@ namespace oly::editor
 		LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureDescVariant& desc)
+	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
 	{
 		toml::v3::array array;
 		desc.Visit([this, &array](auto& d) {

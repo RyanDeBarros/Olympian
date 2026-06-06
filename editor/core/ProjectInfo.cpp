@@ -17,6 +17,12 @@ namespace oly::editor
 		oly::detail::ResourcePath::set_resource_root(ResourceRoot());
 	}
 
+	std::string ProjectInfo::ProjectName() const
+	{
+		// TODO v8 this should return the filename of project file. Store _project_file instead of _project_root
+		return _project_root.filename().generic_string();
+	}
+
 	std::filesystem::path ProjectInfo::ProjectRoot() const
 	{
 		return _project_root;

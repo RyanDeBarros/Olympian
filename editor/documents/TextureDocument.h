@@ -1,8 +1,8 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "graphics/Texture.h"
 #include "graphics/Form.h"
+#include "graphics/Texture.h"
 
 #include "desc/TextureDesc.h"
 
@@ -34,8 +34,8 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		TextureDescVariant _scratch;
-		TextureDescVariant _disk;
+		TextureVariantDesc _scratch;
+		TextureVariantDesc _disk;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
@@ -66,19 +66,19 @@ namespace oly::editor
 		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
-		void Draw(TextureDescVariant& desc);
+		void Draw(TextureVariantDesc& desc);
 		void Draw(Form& form, RasterTextureDesc& desc);
 		void Draw(Form& form, VectorTextureDesc& desc);
 		void Draw(Form& form, BaseTextureDesc& desc);
 		void Draw(Form& form, SpritesheetDesc& desc);
 
-		void Load(TOMLNode node, TextureDescVariant& desc);
+		void Load(TOMLNode node, TextureVariantDesc& desc);
 		void Load(TOMLNode node, RasterTextureDesc& desc);
 		void Load(TOMLNode node, VectorTextureDesc& desc);
 		void Load(TOMLNode node, BaseTextureDesc& desc);
 		void Load(TOMLNode node, SpritesheetDesc& desc);
 
-		void Dump(toml::table& table, TextureDescVariant& desc);
+		void Dump(toml::table& table, TextureVariantDesc& desc);
 		void Dump(toml::table& table, RasterTextureDesc& desc);
 		void Dump(toml::table& table, VectorTextureDesc& desc);
 		void Dump(toml::table& table, BaseTextureDesc& desc);

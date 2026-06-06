@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 
+#include <memory>
+
 namespace oly::editor
 {
 	class Form
@@ -15,9 +17,10 @@ namespace oly::editor
 		Form(ImGuiTableFlags table_flags = ImGuiTableFlags_SizingFixedFit,
 			ImGuiTableColumnFlags value_column_flags = ImGuiTableColumnFlags_WidthStretch,
 			ImGuiTableColumnFlags key_column_flags = ImGuiTableColumnFlags_None);
-		Form(const Form&) = delete;
+		Form(const Form&);
 		Form(Form&&) = delete;
 		~Form();
+		Form& operator=(const Form&) = delete;
 
 		operator bool() const;
 
@@ -45,9 +48,11 @@ namespace oly::editor
 		class CollapsingSection
 		{
 			bool _visible = false;
+			PauseImpl _pause;
+			std::unique_ptr<Form> _form;
 
 		public:
-			CollapsingSection(const Form& form, const char* label);
+			CollapsingSection(const Form& form, const char* label, bool start_open);
 			CollapsingSection(const CollapsingSection&) = delete;
 			CollapsingSection(CollapsingSection&&) = delete;
 			~CollapsingSection();
@@ -56,6 +61,6 @@ namespace oly::editor
 		};
 
 	public:
-		CollapsingSection Collapse(const char* label) const;
+		CollapsingSection Collapse(const char* label, bool start_open = false) const;
 	};
 }

@@ -209,7 +209,7 @@ namespace oly::editor
 			if (enable_key != detail::Key::_ && value_key != detail::Key::_)
 			{
 				if (auto v = node[detail::encode_key(value_key)].value<NodeType>())
-					scratch = MakeOpt(*v);
+					scratch = MakeOpt(static_cast<T>(*v));
 
 				scratch.has_value &= node[detail::encode_key(enable_key)].value_or(false);
 			}

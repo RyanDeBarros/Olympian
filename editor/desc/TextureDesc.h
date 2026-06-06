@@ -189,19 +189,19 @@ namespace oly::editor
 		}
 	};
 
-	struct TextureDescVariant
+	struct TextureVariantDesc
 	{
 		std::variant<TextureDesc<RasterTextureDesc>, TextureDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
-		void Reset(TextureDescVariant& source);
+		void Reset(TextureVariantDesc& source);
 		void Isolate();
 		size_t Count() const;
 		bool Empty() const;
 		void PushBack();
 		void Remove(size_t i);
 		IntField<MakeOpt(1), MakeOpt<int>()>& Size();
-		void Resize(TextureDescVariant& source);
+		void Resize(TextureVariantDesc& source);
 
 		template<TextureSlotDesc SlotType>
 		void Clear()

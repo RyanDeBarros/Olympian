@@ -88,11 +88,11 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
-		dirty |= ImGui::Checkbox("", &data.has_value);
+		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
 		ImGui::BeginDisabled(!data.has_value);
 		const int og = data.value;
 		ImGui::SameLine();
-		if (ImGui::InputInt("", &data.value))
+		if (ImGui::InputInt("##Value", &data.value))
 		{
 			if (max.has_value)
 				data.value = std::min(data.value, max.value);
@@ -108,11 +108,11 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
-		dirty |= ImGui::Checkbox("", &data.has_value);
+		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
 		ImGui::BeginDisabled(!data.has_value);
 		const float og = data.value;
 		ImGui::SameLine();
-		if (ImGui::InputFloat("", &data.value))
+		if (ImGui::InputFloat("##Value", &data.value))
 		{
 			if (max.has_value)
 				data.value = std::min(data.value, max.value);
