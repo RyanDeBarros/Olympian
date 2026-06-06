@@ -19,6 +19,8 @@ namespace oly::editor
 		ISOLATE_FIELDS(TREE_NODE_ADVANCED_SETTINGS_GENERATOR);
 	}
 
+	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;
+
 	void TreeViewSettingsDesc::Reset(TreeViewSettingsDesc& source)
 	{
 		RESET_FIELD(advanced);
@@ -28,6 +30,8 @@ namespace oly::editor
 	{
 		ISOLATE_FIELD(advanced);
 	}
+
+	const detail::Key PreferencesDesc::tree_view_key = detail::Key::TreeView;
 
 	void PreferencesDesc::Reset(PreferencesDesc& source)
 	{

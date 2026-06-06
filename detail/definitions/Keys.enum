@@ -78,6 +78,8 @@ Duration = Duration
 
 Element = Element
 Enable = Enable
+EnableMaxPriorLogBytes = EnMxPBs
+EnableMaxPriorLogFiles = EnMxPFs
 Error = Error
 Expand = Expand
 

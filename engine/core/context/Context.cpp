@@ -41,8 +41,10 @@ namespace oly::context
 		{
 			logger_parser->optional(detail::Key::UseLogfile)(options.use_logfile);
 			logger_parser->optional(detail::Key::UseConsole)(options.use_console);
-			logger_parser->optional(detail::Key::MaxPriorLogFiles)(options.max_prior_log_files);
-			logger_parser->optional(detail::Key::MaxPriorLogBytes)(options.max_prior_log_bytes);
+			if (logger_parser->defaulted(detail::Key::EnableMaxPriorLogFiles)(false))
+				logger_parser->optional(detail::Key::MaxPriorLogFiles)(options.max_prior_log_files);
+			if (logger_parser->defaulted(detail::Key::EnableMaxPriorLogBytes)(false))
+				logger_parser->optional(detail::Key::MaxPriorLogBytes)(options.max_prior_log_bytes);
 			
 			if (auto enables_parser = logger_parser->optional(detail::Key::Enable).subparser())
 			{

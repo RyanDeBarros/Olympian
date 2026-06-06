@@ -153,12 +153,12 @@ namespace oly::editor
 
 	void PreferencesPanel::Load(TOMLNode node, PreferencesDesc& desc)
 	{
-		Load(node[detail::encode_key(detail::Key::TreeView)], desc.tree_view);
+		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
 	}
 	
 	void PreferencesPanel::Load(TOMLNode node, TreeViewSettingsDesc& desc)
 	{
-		Load(node[detail::encode_key(detail::Key::Advanced)], desc.advanced);
+		Load(node[detail::encode_key(desc.advanced_key)], desc.advanced);
 	}
 	
 	void PreferencesPanel::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
@@ -170,14 +170,14 @@ namespace oly::editor
 	{
 		toml::table subtable;
 		Dump(subtable, desc.tree_view);
-		table.insert_or_assign(detail::encode_key(detail::Key::TreeView), std::move(subtable));
+		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
 	}
 	
 	void PreferencesPanel::Dump(toml::table& table, TreeViewSettingsDesc& desc)
 	{
 		toml::table subtable;
 		Dump(subtable, desc.advanced);
-		table.insert_or_assign(detail::encode_key(detail::Key::Advanced), std::move(subtable));
+		table.insert_or_assign(detail::encode_key(desc.advanced_key), std::move(subtable));
 	}
 	
 	void PreferencesPanel::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)

@@ -12,6 +12,7 @@
 
 namespace oly::editor
 {
+	// TODO v8 OOP model for PrepareValue/FinishValue/DrawRevertButton
 	static void PrepareValue(const char* label, const void* data)
 	{
 		ImGui::TableNextRow();
@@ -21,7 +22,7 @@ namespace oly::editor
 		ImGui::PushID(data);
 	}
 
-	static bool DrawRevertButtonImpl(const void* data)
+	static bool DrawRevertButton(const void* data)
 	{
 		bool dirty = false;
 		ImGui::SameLine();
@@ -33,7 +34,7 @@ namespace oly::editor
 	template<typename T>
 	static bool FinishValue(bool dirty, T& desc, const T* disk)
 	{
-		if (disk && desc != *disk && DrawRevertButtonImpl(disk))
+		if (disk && desc != *disk && DrawRevertButton(disk))
 		{
 			desc = *disk;
 			dirty = true;
@@ -51,35 +52,75 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, int& data, const int* disk, std::optional<int> min, std::optional<int> max)
+	bool DescIO::Draw(const char* label, int& data, const int* disk, OptionalInt min, OptionalInt max)
 	{
 		bool dirty = false;
-		const int og = data;
 		PrepareValue(label, &data);
+		const int og = data;
 		if (ImGui::InputInt("", &data))
 		{
-			if (max)
-				data = std::min(data, *max);
-			if (min)
-				data = std::max(data, *min);
+			if (max.has_value)
+				data = std::min(data, max.value);
+			if (min.has_value)
+				data = std::max(data, min.value);
 			dirty = data != og;
 		}
 		return FinishValue(dirty, data, disk);
 	}
 
-	bool DescIO::Draw(const char* label, float& data, const float* disk, std::optional<float> min, std::optional<float> max)
+	bool DescIO::Draw(const char* label, float& data, const float* disk, OptionalFloat min, OptionalFloat max)
 	{
 		bool dirty = false;
-		const float og = data;
 		PrepareValue(label, &data);
+		const float og = data;
 		if (ImGui::InputFloat("", &data))
 		{
-			if (max)
-				data = std::min(data, *max);
-			if (min)
-				data = std::max(data, *min);
+			if (max.has_value)
+				data = std::min(data, max.value);
+			if (min.has_value)
+				data = std::max(data, min.value);
 			dirty = data != og;
 		}
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, OptionalInt& data, const OptionalInt* disk, OptionalInt min, OptionalInt max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		dirty |= ImGui::Checkbox("", &data.has_value);
+		ImGui::BeginDisabled(!data.has_value);
+		const int og = data.value;
+		ImGui::SameLine();
+		if (ImGui::InputInt("", &data.value))
+		{
+			if (max.has_value)
+				data.value = std::min(data.value, max.value);
+			if (min.has_value)
+				data.value = std::max(data.value, min.value);
+			dirty |= data.value != og;
+		}
+		ImGui::EndDisabled();
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, OptionalFloat& data, const OptionalFloat* disk, OptionalFloat min, OptionalFloat max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		dirty |= ImGui::Checkbox("", &data.has_value);
+		ImGui::BeginDisabled(!data.has_value);
+		const float og = data.value;
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &data.value))
+		{
+			if (max.has_value)
+				data.value = std::min(data.value, max.value);
+			if (min.has_value)
+				data.value = std::max(data.value, min.value);
+			dirty |= data.value != og;
+		}
+		ImGui::EndDisabled();
 		return FinishValue(dirty, data, disk);
 	}
 

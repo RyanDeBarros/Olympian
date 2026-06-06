@@ -23,12 +23,12 @@ namespace oly::editor
 
 #define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
 
-	template<typename T, typename NodeType = T>
+	template<typename T, typename Self, typename NodeType = T>
 	struct PrimitiveField
 	{
 		T def;
 		T scratch;
-		PrimitiveField<T, NodeType>* disk = nullptr;
+		Self* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
@@ -58,17 +58,17 @@ namespace oly::editor
 			}
 		}
 
-		void Reset(PrimitiveField<T, NodeType>& source)
+		void Reset(Self& source)
 		{
 			disk = &source;
-			source.disk = this;
+			source.disk = static_cast<Self*>(this);
 			scratch = source.scratch;
 		}
 	};
 
-	struct BoolField : public PrimitiveField<bool>
+	struct BoolField : public PrimitiveField<bool, BoolField>
 	{
-		using PrimitiveField<bool>::PrimitiveField;
+		using PrimitiveField<bool, BoolField>::PrimitiveField;
 
 		bool Draw()
 		{
@@ -76,40 +76,32 @@ namespace oly::editor
 		}
 	};
 
-	template<OptionalPrimitive<int> Min, OptionalPrimitive<int> Max>
-	struct IntField : public PrimitiveField<int>
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
+	struct RangeField : public PrimitiveField<T, RangeField<T, _Min, _Max>>
 	{
-		inline static OptionalPrimitive<int> Min = Min;
-		inline static OptionalPrimitive<int> Max = Max;
+		inline static const OptionalPrimitive<T> Min = _Min;
+		inline static const OptionalPrimitive<T> Max = _Max;
 
-		using PrimitiveField<int>::PrimitiveField;
+		using PrimitiveField<T, RangeField<T, _Min, _Max>>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min.Opt(), Max.Opt());
+			return DescIO::Draw(this->label, this->scratch, DISK_FIELD(this->disk), Min, Max);
 		}
 	};
 
-	template<OptionalPrimitive<float> Min, OptionalPrimitive<float> Max>
-	struct FloatField : public PrimitiveField<float>
-	{
-		inline static OptionalPrimitive<float> Min = Min;
-		inline static OptionalPrimitive<float> Max = Max;
+	template<OptionalInt Min, OptionalInt Max>
+	using IntField = RangeField<int, Min, Max>;
 
-		using PrimitiveField<float>::PrimitiveField;
-
-		bool Draw()
-		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min.Opt(), Max.Opt());
-		}
-	};
+	template<OptionalFloat Min, OptionalFloat Max>
+	using FloatField = RangeField<float, Min, Max>;
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E, int64_t>
+	struct EnumField : public PrimitiveField<E, EnumField<E>, int64_t>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E, int64_t>::PrimitiveField;
+		using PrimitiveField<E, EnumField<E>, int64_t>::PrimitiveField;
 
 		bool Draw()
 		{
@@ -193,4 +185,72 @@ namespace oly::editor
 			return -1;
 		}
 	};
+
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	struct OptionalRangeField
+	{
+		using Self = OptionalRangeField<T, _Min, _Max, NodeType>;
+		inline static const OptionalPrimitive<T> Min = _Min;
+		inline static const OptionalPrimitive<T> Max = _Max;
+
+		OptionalPrimitive<T> def;
+		OptionalPrimitive<T> scratch;
+		Self* disk = nullptr;
+		detail::Key value_key;
+		detail::Key enable_key;
+		const char* label;
+
+		OptionalRangeField(OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
+			: def(def), scratch(def), value_key(value_key), enable_key(enable_key), label(label) {}
+
+		void Load(TOMLNode node)
+		{
+			scratch = def;
+			if (enable_key != detail::Key::_ && value_key != detail::Key::_)
+			{
+				if (auto v = node[detail::encode_key(value_key)].value<NodeType>())
+					scratch = MakeOpt(*v);
+
+				scratch.has_value &= node[detail::encode_key(enable_key)].value_or(false);
+			}
+		}
+
+		void Dump(toml::table& table) const
+		{
+			if (enable_key != detail::Key::_ && value_key != detail::Key::_)
+			{
+				table.insert_or_assign(detail::encode_key(enable_key), scratch.has_value);
+				table.insert_or_assign(detail::encode_key(value_key), static_cast<NodeType>(scratch.value));
+			}
+		}
+
+		void Isolate()
+		{
+			if (disk)
+			{
+				auto d = disk;
+				disk = nullptr;
+				d->Isolate();
+			}
+		}
+
+		void Reset(Self& source)
+		{
+			disk = &source;
+			source.disk = this;
+			scratch = source.scratch;
+		}
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+		}
+	};
+
+	template<OptionalInt Min, OptionalInt Max>
+	using OptionalIntField = OptionalRangeField<int, Min, Max, int64_t>;
+
+	template<OptionalFloat Min, OptionalFloat Max>
+	using OptionalFloatField = OptionalRangeField<float, Min, Max, double>;
+
 }

@@ -475,12 +475,12 @@ namespace oly::editor
 	{
 		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		if (DescIO::Draw(col_label, desc.col_value.scratch, DISK_FIELD(desc.col_value.disk), desc.col_value.Min.Opt(), desc.col_value.Max.Opt()))
+		if (DescIO::Draw(col_label, desc.col_value.scratch, DISK_FIELD(desc.col_value.disk), desc.col_value.Min, desc.col_value.Max))
 			MarkDirty();
 
 		DRAW_FIELD(row_type);
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min.Opt(), desc.row_value.Max.Opt()))
+		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min, desc.row_value.Max))
 			MarkDirty();
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
@@ -495,7 +495,7 @@ namespace oly::editor
 				desc.Clear<RasterTextureDesc>();
 		};
 
-		TOMLArray array = node[detail::encode_key(detail::Key::TextureArray)].as_array();
+		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
 		{
 			Clear(desc);
@@ -553,7 +553,7 @@ namespace oly::editor
 			Dump(table, d);
 			array.push_back(std::move(table));
 		});
-		table.insert_or_assign(detail::encode_key(detail::Key::TextureArray), std::move(array));
+		table.insert_or_assign(detail::encode_key(desc.array_key), std::move(array));
 	}
 
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)

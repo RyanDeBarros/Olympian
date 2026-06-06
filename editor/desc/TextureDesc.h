@@ -192,6 +192,7 @@ namespace oly::editor
 	struct TextureDescVariant
 	{
 		std::variant<TextureDesc<RasterTextureDesc>, TextureDesc<VectorTextureDesc>> variant;
+		static const detail::Key array_key;
 
 		void Reset(TextureDescVariant& source);
 		void Isolate();

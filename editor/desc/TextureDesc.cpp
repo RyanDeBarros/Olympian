@@ -131,6 +131,8 @@ namespace oly::editor
 		ISOLATE_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
 	}
 
+	const detail::Key TextureDescVariant::array_key = detail::Key::TextureArray;
+
 	void TextureDescVariant::Reset(TextureDescVariant& source)
 	{
 		Isolate();

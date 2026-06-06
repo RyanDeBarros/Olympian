@@ -7,8 +7,8 @@ namespace oly::editor
 	template<typename T>
 	struct OptionalPrimitive
 	{
-		const bool has_value;
-		const T value;
+		bool has_value;
+		T value;
 
 		constexpr std::optional<T> Opt() const
 		{
@@ -17,6 +17,8 @@ namespace oly::editor
 			else
 				return std::nullopt;
 		}
+
+		bool operator==(const OptionalPrimitive<T>&) const = default;
 	};
 
 	template<typename T>
@@ -30,4 +32,7 @@ namespace oly::editor
 	{
 		return OptionalPrimitive<T>{.has_value = true, .value = value };
 	}
+
+	using OptionalInt = OptionalPrimitive<int>;
+	using OptionalFloat = OptionalPrimitive<float>;
 }
