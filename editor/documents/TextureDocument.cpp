@@ -6,6 +6,7 @@
 #include "core/Logger.h"
 
 #include "core/ResourceLoader.h"
+#include "graphics/Subform.h"
 #include "graphics/Toolbar.h"
 
 #include <imgui.h>
@@ -20,22 +21,15 @@ namespace oly::editor
 
 	void TextureDocument::Init()
 	{
-		_gif = GetSourcePath().extension_matches(".gif");
-		_svg = GetSourcePath().extension_matches(".svg");
-		Load();
-
-		if (_svg)
-			_texture = { SVGTexture(GetSourcePath().string().c_str()) };
-		else if (_gif)
-			_texture = { GIFTexture(GetSourcePath().string().c_str()) };
-		else
-			_texture = { RasterTexture(GetSourcePath().string().c_str()) };
-
 		if (!GetSourcePath().is_resource())
 		{
 			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
+
+		_gif = GetSourcePath().extension_matches(".gif");
+		_svg = GetSourcePath().extension_matches(".svg");
+		Load();
 	}
 
 	void TextureDocument::Draw()
@@ -103,6 +97,12 @@ namespace oly::editor
 		}
 
 		_scratch.Reset(_disk);
+		_active_slot = 0;
+		_preview_nav = {};
+		if (auto svg_desc = std::get_if<TextureDesc<VectorTextureDesc>>(&_scratch.variant))
+			_preview_nav.svg_scale = svg_desc->array[_active_slot]->scale.scratch;
+
+		ReloadPreviewTexture();
 	}
 
 	void TextureDocument::Dump()
@@ -117,6 +117,19 @@ namespace oly::editor
 	detail::ResourcePath TextureDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();
+	}
+
+	void TextureDocument::ReloadPreviewTexture()
+	{
+		std::optional<GLenum> min_filter = _scratch.Visit(_active_slot, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
+		std::optional<GLenum> mag_filter = _scratch.Visit(_active_slot, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+
+		if (_svg)
+			_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR) };
+		else if (_gif)
+			_texture = { GIFTexture(GetSourcePath().string().c_str(), min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST) };
+		else
+			_texture = { RasterTexture(GetSourcePath().string().c_str(), min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST) };
 	}
 
 	void TextureDocument::DrawPreview()
@@ -389,8 +402,8 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			if (auto pause = form.Pause())
-				ImGui::SeparatorText("General");
+			bool slot_changed = false;
+			const int og_slot = _active_slot;
 
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -407,6 +420,7 @@ namespace oly::editor
 				_active_slot = _slot_names.size();
 				desc.PushBack();
 				MarkDirty();
+				slot_changed = true;
 			}
 
 			ImGui::SameLine();
@@ -417,6 +431,7 @@ namespace oly::editor
 				if (desc.Empty())
 					desc.PushBack();
 				MarkDirty();
+				slot_changed = true;
 			}
 
 			if (desc.Size().disk && desc.Size().disk->scratch != desc.Size().scratch)
@@ -430,45 +445,69 @@ namespace oly::editor
 				}
 			}
 
-			if (desc.Empty())
-				_active_slot = 0;
-			else if (_active_slot >= desc.Count())
-				_active_slot = desc.Count() - 1;
+			if (!ClampActiveSlot(desc))
+			{
+				if (og_slot != _active_slot || slot_changed)
+					ReloadPreviewTexture();
+			}
 
 			desc.Visit(_active_slot, [this, &form](auto& d) { Draw(form, d); });
+
 		}
 	}
 	
 	void TextureDocument::Draw(Form& form, RasterTextureDesc& desc)
 	{
 		Draw(form, desc.base);
-		if (auto pause = form.Pause())
-			ImGui::SeparatorText("Storage");
-		DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Storage", true))
+		{
+			DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		}
 	}
 	
 	void TextureDocument::Draw(Form& form, VectorTextureDesc& desc)
 	{
 		Draw(form, desc.base);
-		if (auto pause = form.Pause())
-			ImGui::SeparatorText("Storage");
-		DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Storage", true))
+		{
+			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		}
 	}
 	
 	void TextureDocument::Draw(Form& form, BaseTextureDesc& desc)
 	{
-		if (auto pause = form.Pause())
-			ImGui::SeparatorText("Parameters");
-		DRAW_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		if (auto subform = Subform(form, "Parameters", true))
+		{
+			bool filter_changed = false;
 
-		if (auto pause = form.Pause())
-			ImGui::SeparatorText("Animation");
-		ImGui::BeginDisabled(_gif);
-		DRAW_FIELD(anim);
-		ImGui::EndDisabled();
+			if (desc.min_filter.Draw())
+			{
+				MarkDirty();
+				filter_changed = true;
+			}
 
-		if (desc.anim.scratch && !_gif)
-			Draw(form, desc.spritesheet);
+			if (desc.mag_filter.Draw())
+			{
+				MarkDirty();
+				filter_changed = true;
+			}
+
+			if (filter_changed)
+				ReloadPreviewTexture();
+
+			DRAW_FIELD(wrap_s);
+			DRAW_FIELD(wrap_t);
+		}
+
+		if (auto subform = Subform(form, "Animation", true))
+		{
+			ImGui::BeginDisabled(_gif);
+			DRAW_FIELD(anim);
+			ImGui::EndDisabled();
+
+			if (desc.anim.scratch && !_gif)
+				Draw(form, desc.spritesheet);
+		}
 	}
 
 	void TextureDocument::Draw(Form& form, SpritesheetDesc& desc)
@@ -586,10 +625,29 @@ namespace oly::editor
 		_slot_names.clear();
 		for (int i = 0; i < _scratch.Count(); ++i)
 			_slot_names.push_back("Slot " + std::to_string(i));
+		ClampActiveSlot(_scratch);
+	}
 
-		if (_scratch.Empty())
+	bool TextureDocument::ClampActiveSlot(TextureVariantDesc& desc)
+	{
+		const int og = _active_slot;
+
+		if (desc.Empty())
 			_active_slot = 0;
-		else if (_active_slot >= _scratch.Count())
-			_active_slot = _scratch.Count() - 1;
+		else if (_active_slot >= desc.Count())
+			_active_slot = desc.Count() - 1;
+
+		if (og != _active_slot)
+		{
+			OnActiveSlotChanged();
+			return true;
+		}
+		else
+			return false;
+	}
+
+	void TextureDocument::OnActiveSlotChanged()
+	{
+		ReloadPreviewTexture();
 	}
 }

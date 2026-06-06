@@ -60,6 +60,7 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
+		void ReloadPreviewTexture();
 		void DrawPreview();
 		SpritesheetDesc* SpritesheetPreview();
 		SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
@@ -85,5 +86,7 @@ namespace oly::editor
 		void Dump(toml::table& table, SpritesheetDesc& desc);
 
 		void GenSlotNames();
+		bool ClampActiveSlot(TextureVariantDesc& desc);
+		void OnActiveSlotChanged();
 	};
 }
