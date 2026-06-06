@@ -189,12 +189,26 @@ namespace oly::editor
 
 			if (ImGui::IsWindowHovered())
 			{
-				_preview_nav.zoom += ImGui::GetIO().MouseWheel;
-				// TODO v8 when zooming, adjust panning to zoom in on relative position of cursor
+				const int wheel = ImGui::GetIO().MouseWheel;
+				if (wheel != 0)
+				{
+					float scale = std::pow(2.0f, wheel);
 
-				if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-					_preview_nav.pos += ImGui::GetIO().MouseDelta;
+					ImVec2 avail = ImGui::GetContentRegionAvail();
+					ImVec2 cursor = ImGui::GetCursorScreenPos();
+					ImVec2 mouse = ImGui::GetIO().MousePos;
+					ImVec2 center = cursor + 0.5f * avail;
+					ImVec2 mouse_offset = mouse - center;
+					_preview_nav.pos = mouse_offset + scale * (_preview_nav.pos - mouse_offset);
+					_preview_nav.zoom += wheel;
+				}
 			}
+
+			ImVec2 pos = ImGui::GetCursorScreenPos();
+			ImGui::InvisibleButton("PreviewCanvas", ImGui::GetContentRegionAvail(), ImGuiButtonFlags_MouseButtonLeft);
+			if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+				_preview_nav.pos += ImGui::GetIO().MouseDelta;
+			ImGui::SetCursorScreenPos(pos);
 
 			if (_spritesheet_preview_data.playing && spritesheet_desc)
 				PlaySpritesheetAnimation(*spritesheet_desc);
