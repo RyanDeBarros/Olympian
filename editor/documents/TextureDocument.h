@@ -1,8 +1,8 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "graphics/Form.h"
-#include "graphics/Texture.h"
+#include "gui/Form.h"
+#include "gui/Texture.h"
 
 #include "desc/TextureDesc.h"
 

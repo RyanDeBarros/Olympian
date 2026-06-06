@@ -2,7 +2,7 @@
 
 #include "core/Editor.h"
 #include "core/ProjectInfo.h"
-#include "graphics/ImGuiWrapper.h"
+#include "gui/ImGuiWrapper.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"

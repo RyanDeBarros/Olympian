@@ -6,9 +6,10 @@
 #include "core/Logger.h"
 
 #include "core/ResourceLoader.h"
-#include "graphics/Subform.h"
-#include "graphics/Toolbar.h"
-#include "graphics/ImGuiWrapper.h"
+#include "gui/DisabledSection.h"
+#include "gui/Subform.h"
+#include "gui/Toolbar.h"
+#include "gui/ImGuiWrapper.h"
 
 #include <imgui_internal.h>
 
@@ -515,9 +516,10 @@ namespace oly::editor
 
 		if (auto subform = Subform(form, "Animation", true))
 		{
-			ImGui::BeginDisabled(_gif);
-			DRAW_FIELD(anim);
-			ImGui::EndDisabled();
+			if (auto disabled = DisabledSection(_gif))
+			{
+				DRAW_FIELD(anim);
+			}
 
 			if (desc.anim.scratch && !_gif)
 				Draw(form, desc.spritesheet);

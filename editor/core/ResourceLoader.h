@@ -1,7 +1,5 @@
 #pragma once
 
-#include "graphics/Texture.h"
-
 namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
@@ -25,6 +23,8 @@ namespace oly::editor
 	{
 		ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
 	};
+
+	class Texture;
 
 	struct ResourceLoader
 	{

@@ -4,7 +4,7 @@
 #include "core/Logger.h"
 #include "core/MainWindow.h"
 
-#include "graphics/Subform.h"
+#include "gui/Subform.h"
 
 #include "definitions/Keys.h"
 

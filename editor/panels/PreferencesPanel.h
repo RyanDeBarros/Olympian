@@ -3,7 +3,7 @@
 #include "panels/IPanel.h"
 #include "desc/PreferencesDesc.h"
 
-#include "graphics/Form.h"
+#include "gui/Form.h"
 
 namespace oly::editor
 {

@@ -1,7 +1,8 @@
 #include "DescIO.h"
 
-#include "graphics/Toolbar.h"
 #include "core/ResourceLoader.h"
+#include "gui/Toolbar.h"
+#include "gui/DisabledSection.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
@@ -50,19 +51,23 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
+	template<typename T>
+	static bool Clamp(T& data, const T og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	{
+		if (max.has_value)
+			data = std::min(data, max.value);
+		if (min.has_value)
+			data = std::max(data, min.value);
+		return data != og;
+	}
+
 	bool DescIO::Draw(const char* label, int& data, const int* disk, OptionalInt min, OptionalInt max)
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
 		const int og = data;
 		if (ImGui::InputInt("", &data))
-		{
-			if (max.has_value)
-				data = std::min(data, max.value);
-			if (min.has_value)
-				data = std::max(data, min.value);
-			dirty = data != og;
-		}
+			dirty |= Clamp(data, og, min, max);
 		return FinishValue(dirty, data, disk);
 	}
 
@@ -72,13 +77,7 @@ namespace oly::editor
 		PrepareValue(label, &data);
 		const float og = data;
 		if (ImGui::InputFloat("", &data))
-		{
-			if (max.has_value)
-				data = std::min(data, max.value);
-			if (min.has_value)
-				data = std::max(data, min.value);
-			dirty = data != og;
-		}
+			dirty |= Clamp(data, og, min, max);
 		return FinishValue(dirty, data, disk);
 	}
 
@@ -87,18 +86,13 @@ namespace oly::editor
 		bool dirty = false;
 		PrepareValue(label, &data);
 		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
-		ImGui::BeginDisabled(!data.has_value);
-		const int og = data.value;
-		ImGui::SameLine();
-		if (ImGui::InputInt("##Value", &data.value))
+		if (auto disabled = DisabledSection(!data.has_value))
 		{
-			if (max.has_value)
-				data.value = std::min(data.value, max.value);
-			if (min.has_value)
-				data.value = std::max(data.value, min.value);
-			dirty |= data.value != og;
+			const int og = data.value;
+			ImGui::SameLine();
+			if (ImGui::InputInt("##Value", &data.value))
+				dirty |= Clamp(data.value, og, min, max);
 		}
-		ImGui::EndDisabled();
 		return FinishValue(dirty, data, disk);
 	}
 
@@ -107,18 +101,13 @@ namespace oly::editor
 		bool dirty = false;
 		PrepareValue(label, &data);
 		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
-		ImGui::BeginDisabled(!data.has_value);
-		const float og = data.value;
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##Value", &data.value))
+		if (auto disabled = DisabledSection(!data.has_value))
 		{
-			if (max.has_value)
-				data.value = std::min(data.value, max.value);
-			if (min.has_value)
-				data.value = std::max(data.value, min.value);
-			dirty |= data.value != og;
+			const float og = data.value;
+			ImGui::SameLine();
+			if (ImGui::InputFloat("##Value", &data.value))
+				dirty |= Clamp(data.value, og, min, max);
 		}
-		ImGui::EndDisabled();
 		return FinishValue(dirty, data, disk);
 	}
 
@@ -131,52 +120,33 @@ namespace oly::editor
 		return FinishValue(dirty, data, disk);
 	}
 
+	template<typename E, size_t N>
+	static bool DrawEnum(const char* label, E& data, const E* disk, const char* const (&values)[N])
+	{
+		bool dirty = false;
+		int index = static_cast<int>(data);
+		PrepareValue(label, &data);
+		if (ImGui::Combo("", &index, values, N))
+			dirty = true;
+		data = static_cast<E>(index);
+		return FinishValue(dirty, data, disk);
+	}
+
 	template<>
 	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
 	{
-		bool dirty = false;
-		static const char* values[] = {
-			"Discard",
-			"Keep"
-		};
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
-			dirty = true;
-		data = static_cast<detail::StorageMode>(index);
-		return FinishValue(dirty, data, disk);
+		return DrawEnum(label, data, disk, { "Discard", "Keep" });
 	}
 
 	template<>
 	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
 	{
-		bool dirty = false;
-		static const char* values[] = {
-			"Auto",
-			"Off",
-			"Manual"
-		};
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
-			dirty = true;
-		data = static_cast<detail::SVGMipmapGenerationMode>(index);
-		return FinishValue(dirty, data, disk);
+		return DrawEnum(label, data, disk, { "Auto", "Off", "Manual" });
 	}
 
 	template<>
 	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType* disk)
 	{
-		bool dirty = false;
-		static const char* values[] = {
-			"Index",
-			"Pixel"
-		};
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
-			dirty = true;
-		data = static_cast<detail::SpritesheetParamType>(index);
-		return FinishValue(dirty, data, disk);
+		return DrawEnum(label, data, disk, { "Index", "Pixel" });
 	}
 }

@@ -209,7 +209,7 @@ add_subdirectory(core)
 add_subdirectory(desc)
 add_subdirectory(documents)
 add_subdirectory(external)
-add_subdirectory(graphics)
+add_subdirectory(gui)
 add_subdirectory(panels)
 
 add_custom_command(TARGET OlympianEditor POST_BUILD

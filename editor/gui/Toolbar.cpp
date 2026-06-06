@@ -1,6 +1,7 @@
 #include "Toolbar.h"
 
 #include "core/ResourceLoader.h"
+#include "gui/Texture.h"
 
 #include <string>
 

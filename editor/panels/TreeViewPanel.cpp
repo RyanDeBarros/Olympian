@@ -11,7 +11,7 @@
 
 #include "panels/PreferencesPanel.h"
 
-#include "graphics/Toolbar.h"
+#include "gui/Toolbar.h"
 
 #include <imgui.h>
 

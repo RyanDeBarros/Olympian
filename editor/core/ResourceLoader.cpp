@@ -1,6 +1,7 @@
 #include "ResourceLoader.h"
 
 #include "core/Errors.h"
+#include "gui/Texture.h"
 
 #include <memory>
 #include <string>
