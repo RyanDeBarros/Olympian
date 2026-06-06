@@ -1,24 +1,25 @@
 #include "ProjectSelectWindow.h"
 
 #include "core/Editor.h"
+#include "core/ProjectInfo.h"
+#include "graphics/ImGuiWrapper.h"
 
-#include <imgui.h>
+#include "assets/MetaSplitter.h"
+#include "definitions/Keys.h"
+
 #include <ImGuiFileDialog.h>
-
-#include <filesystem>
 
 namespace oly::editor
 {
-    static const char* OPEN_FOLDER = "OpenProjectFolder";
+    static const std::string OPEN_PROJECT_FILE = "OpenProjectFolder";
 
     void ProjectSelectWindow::Open()
     {
         Editor::Instance().SetOSWindowSize(920, 690);
 
-        // TODO v8 store project *file*, not folder
         // TODO v8 remove once recent projects group is implemented
-        _project_folder = "D:/Projects/Visual Studio/Olympian/Tester/";
-        CheckProjectFolder();
+        _project_file = "D:/Projects/Visual Studio/Olympian/Tester/OlympianTester.oly";
+        CheckProjectFile();
     }
 
 	void ProjectSelectWindow::Draw()
@@ -53,36 +54,36 @@ namespace oly::editor
         ImGui::BeginGroup();
         ImGui::Text("Open Existing Project");
 
-        ImGui::Text("Project Folder");
-        ImGui::SameLine();
-        if (ImGui::InputText("##ProjectFolder", _project_folder.data(), _project_folder.size()))
-            CheckProjectFolder();
+        ImGui::Text("Project File");
 
         ImGui::SameLine();
+        if (gui::InputText("##ProjectFile", _project_file))
+            CheckProjectFile();
 
+        ImGui::SameLine();
         if (ImGui::Button("..."))
         {
             IGFD::FileDialogConfig config;
-            config.path = _project_folder;
+            config.path = _project_file;
             config.flags = ImGuiFileDialogFlags_Modal;
 
-            ImGuiFileDialog::Instance()->OpenDialog(OPEN_FOLDER, "Select Folder", nullptr, config);
+            ImGuiFileDialog::Instance()->OpenDialog(OPEN_PROJECT_FILE, "Select Project", "Olympian files (*.oly){.oly}", config);
         }
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
 
-        if (ImGuiFileDialog::Instance()->Display(OPEN_FOLDER, ImGuiWindowFlags_NoCollapse))
+        if (ImGuiFileDialog::Instance()->Display(OPEN_PROJECT_FILE, ImGuiWindowFlags_NoCollapse))
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             {
-                _project_folder = ImGuiFileDialog::Instance()->GetCurrentPath();
-                CheckProjectFolder();
+                _project_file = ImGuiFileDialog::Instance()->GetCurrentPath();
+                CheckProjectFile();
             }
 
             ImGuiFileDialog::Instance()->Close();
         }
 
-        ImGui::BeginDisabled(!_valid_project_folder);
+        ImGui::BeginDisabled(!_valid_project_file);
         if (ImGui::Button("Open"))
             OpenProject();
         ImGui::EndDisabled();
@@ -90,14 +91,19 @@ namespace oly::editor
         ImGui::EndGroup();
     }
 
-    void ProjectSelectWindow::CheckProjectFolder()
+    void ProjectSelectWindow::CheckProjectFile()
     {
-        std::filesystem::path path = _project_folder;
-        _valid_project_folder = path.is_absolute() && std::filesystem::exists(path) && std::filesystem::is_directory(path);
+        std::filesystem::path path = _project_file;
+        _valid_project_file = path.is_absolute() && std::filesystem::is_regular_file(path);
+        if (_valid_project_file)
+        {
+            auto meta = detail::MetaSplitter::decode_meta(_project_file.c_str());
+            _valid_project_file &= meta.get_version() == ProjectInfo::GetVersion() && meta.has_type(detail::Key::Meta_Project);
+        }
     }
 
     void ProjectSelectWindow::OpenProject()
     {
-        Editor::Instance().OpenProject(_project_folder);
+        Editor::Instance().OpenProject(_project_file);
     }
 }

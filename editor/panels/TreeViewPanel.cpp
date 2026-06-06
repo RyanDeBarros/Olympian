@@ -43,14 +43,14 @@ namespace oly::editor
 		}
 	}
 
-	std::filesystem::path TreeViewNode::Name() const
+	std::string TreeViewNode::Name() const
 	{
-		return path == ProjectInfo::Instance().ProjectRoot() ? path.parent_path().filename() : path.filename();
+		return path.filename().generic_string();
 	}
 
 	std::string TreeViewNode::DisplayName() const
 	{
-		std::string name = Name().generic_string();
+		const std::string name = Name();
 		return path == ProjectInfo::Instance().ProjectRoot() ? name + " (" + path.generic_string() + ")" : name;
 	}
 
@@ -222,7 +222,7 @@ namespace oly::editor
 		if (_config.ignore_imports && node.is_import)
 			return false;
 
-		if (node.Name().generic_string()[0] == '.')
+		if (node.Name()[0] == '.')
 			return false;
 
 		return true;

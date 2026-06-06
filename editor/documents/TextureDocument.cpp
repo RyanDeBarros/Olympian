@@ -8,8 +8,8 @@
 #include "core/ResourceLoader.h"
 #include "graphics/Subform.h"
 #include "graphics/Toolbar.h"
+#include "graphics/ImGuiWrapper.h"
 
-#include <imgui.h>
 #include <imgui_internal.h>
 
 namespace oly::editor
@@ -425,7 +425,7 @@ namespace oly::editor
 
 			GenSlotNames();
 			ImGui::TableNextColumn();
-			ImGui::Combo("##SelectSlot", &_active_slot, &DescIO::StringVectorComboGetter, &_slot_names, _slot_names.size());
+			gui::Combo("##SelectSlot", _active_slot, _slot_names);
 
 			ImGui::SameLine();
 			static const unsigned char PLUS_ID = 0;

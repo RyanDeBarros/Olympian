@@ -17,7 +17,5 @@ namespace oly::editor
 
 		template<typename E> requires (std::is_enum_v<E>)
 		static bool Draw(const char* label, E& data, const E* disk);
-
-		static const char* StringVectorComboGetter(void* data, int idx);
 	};
 }

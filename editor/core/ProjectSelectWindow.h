@@ -6,8 +6,8 @@ namespace oly::editor
 {
 	class ProjectSelectWindow
 	{
-		std::string _project_folder;
-		bool _valid_project_folder = false;
+		std::string _project_file;
+		bool _valid_project_file = false;
 
 	public:
 		void Open();
@@ -16,7 +16,7 @@ namespace oly::editor
 	private:
 		void DrawOpenExistingGroup();
 
-		void CheckProjectFolder();
+		void CheckProjectFile();
 		void OpenProject();
 	};
 }

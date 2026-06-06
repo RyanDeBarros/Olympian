@@ -18,7 +18,7 @@ namespace oly::editor
 
 		void Analyse();
 		void Update();
-		std::filesystem::path Name() const;
+		std::string Name() const;
 		std::string DisplayName() const;
 		void Validate();
 		bool IsBranching() const;

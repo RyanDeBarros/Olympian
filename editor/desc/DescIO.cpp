@@ -8,8 +8,6 @@
 
 #include <imgui.h>
 
-#include <string>
-
 namespace oly::editor
 {
 	// TODO v8 OOP model for PrepareValue/FinishValue/DrawRevertButton
@@ -180,14 +178,5 @@ namespace oly::editor
 			dirty = true;
 		data = static_cast<detail::SpritesheetParamType>(index);
 		return FinishValue(dirty, data, disk);
-	}
-
-	const char* DescIO::StringVectorComboGetter(void* data, int idx)
-	{
-		auto& items = *static_cast<std::vector<std::string>*>(data);
-		if (idx < 0 || idx >= items.size())
-			return nullptr;
-		else
-			return items[idx].c_str();
 	}
 }
