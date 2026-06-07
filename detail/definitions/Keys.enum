@@ -165,6 +165,7 @@ OriginOffset = OrigOff
 
 Padding = Padding
 Pivot = Pivot
+Platform = Platform
 PointsArray = Points
 Position = Position
 PositionX = PosX

@@ -37,8 +37,10 @@ namespace oly::context
 		assets::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
 
 		platform::PlatformSetup platform_setup;
+		auto platform_toml = top_parser.required<TOMLNode>(detail::Key::Platform)();
+		assets::Parser platform_parser(platform_toml, { "(platform init)"});
 
-		auto toml_window = top_parser.required<TOMLNode>(detail::Key::Window)();
+		auto toml_window = platform_parser.required<TOMLNode>(detail::Key::Window)();
 		assets::Parser window_parser(toml_window);
 
 		window_parser.required(detail::Key::Width)(platform_setup.window_width);
@@ -73,7 +75,8 @@ namespace oly::context
 			parser.optional(detail::Key::ContextDebug)(platform_setup.window_hint.window.context_debug);
 		}
 
-		platform_setup.num_gamepads = glm::clamp(top_parser.defaulted(detail::Key::Gamepads)(0u), 0u, (unsigned int)GLFW_JOYSTICK_LAST);
+		platform_setup.num_gamepads = glm::clamp(platform_parser.defaulted(detail::Key::Gamepads)(0u), 0u, (unsigned int)GLFW_JOYSTICK_LAST);
+
 		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
 
 		internal::platform = platform::internal::create_platform(platform_setup);

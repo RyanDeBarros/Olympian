@@ -1,8 +1,9 @@
 #include "DescIO.h"
 
 #include "core/ResourceLoader.h"
-#include "gui/Toolbar.h"
 #include "gui/DisabledSection.h"
+#include "gui/ImGuiWrapper.h"
+#include "gui/Toolbar.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
@@ -11,7 +12,6 @@
 
 namespace oly::editor
 {
-	// TODO v8 OOP model for PrepareValue/FinishValue/DrawRevertButton
 	static void PrepareValue(const char* label, const void* data)
 	{
 		ImGui::TableNextRow();
@@ -129,6 +129,24 @@ namespace oly::editor
 		if (ImGui::Combo("", &index, values, N))
 			dirty = true;
 		data = static_cast<E>(index);
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, std::string& data, const std::string* disk)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		if (gui::InputText("", data))
+			dirty = true;
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::DrawColor(const char* label, glm::vec4& data, const glm::vec4* disk)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		if (ImGui::ColorEdit4("", glm::value_ptr(data)))
+			dirty = true;
 		return FinishValue(dirty, data, disk);
 	}
 

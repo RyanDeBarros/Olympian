@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/DescIO.h"
-#include "desc/OptionalPrimitive.h"
 
 #include "external/TOML.h"
 
@@ -23,6 +22,28 @@ namespace oly::editor
 
 #define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
 
+	extern bool KeyIsNull(detail::Key key);
+	extern bool KeyIsNotNull(detail::Key key);
+
+	template<typename T>
+	void IsolateField(T& obj)
+	{
+		if (obj.disk)
+		{
+			auto disk = obj.disk;
+			obj.disk = nullptr;
+			disk->Isolate();
+		}
+	}
+
+	template<typename T, typename Self>
+	void ResetField(T& obj, Self& source)
+	{
+		obj.disk = &source;
+		source.disk = static_cast<Self*>(&obj);
+		obj.scratch = source.scratch;
+	}
+
 	template<typename T, typename Self, typename NodeType = T>
 	struct PrimitiveField
 	{
@@ -36,7 +57,7 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			if (key != detail::Key::_)
+			if (KeyIsNotNull(key))
 				scratch = static_cast<T>(node[detail::encode_key(key)].value_or(static_cast<NodeType>(def)));
 			else
 				scratch = def;
@@ -44,25 +65,18 @@ namespace oly::editor
 
 		void Dump(toml::table& table) const
 		{
-			if (key != detail::Key::_)
+			if (KeyIsNotNull(key))
 				table.insert_or_assign(detail::encode_key(key), static_cast<NodeType>(scratch));
 		}
 
 		void Isolate()
 		{
-			if (disk)
-			{
-				auto d = disk;
-				disk = nullptr;
-				d->Isolate();
-			}
+			IsolateField(*this);
 		}
 
 		void Reset(Self& source)
 		{
-			disk = &source;
-			source.disk = static_cast<Self*>(this);
-			scratch = source.scratch;
+			ResetField(*this, source);
 		}
 	};
 
@@ -70,10 +84,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool, BoolField>::PrimitiveField;
 
-		bool Draw()
-		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk));
-		}
+		bool Draw();
 	};
 
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
@@ -127,63 +138,24 @@ namespace oly::editor
 			SetScratch(def);
 		}
 
-		bool Draw()
-		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(disk), names, count);
-		}
+		bool Draw();
+		void Load(TOMLNode node);
+		void Dump(toml::table& table) const;
+		void Isolate();
+		void Reset(GLenumField& source);
 
-		void Load(TOMLNode node)
-		{
-			scratch = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
-		}
+		GLenum Scratch() const;
+		void SetScratch(const GLenum val);
 
-		void Dump(toml::table& table) const
-		{
-			table.insert_or_assign(detail::encode_key(key), Scratch());
-		}
+		GLenum Value(int index) const;
+		int Index(const GLenum val) const;
+	};
+	
+	struct StringField : public PrimitiveField<std::string, StringField>
+	{
+		using PrimitiveField<std::string, StringField>::PrimitiveField;
 
-		void Isolate()
-		{
-			if (disk)
-			{
-				auto d = disk;
-				disk = nullptr;
-				d->Isolate();
-			}
-		}
-
-		void Reset(GLenumField& source)
-		{
-			disk = &source;
-			source.disk = this;
-			scratch = source.scratch;
-		}
-
-		GLenum Scratch() const
-		{
-			return Value(scratch);
-		}
-
-		void SetScratch(const GLenum val)
-		{
-			scratch = Index(val);
-		}
-
-		GLenum Value(int index) const
-		{
-			return values[index];
-		}
-
-		int Index(const GLenum val) const
-		{
-			for (size_t i = 0; i < count; ++i)
-			{
-				if (val == values[i])
-					return i;
-			}
-
-			return -1;
-		}
+		bool Draw();
 	};
 
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
@@ -201,12 +173,19 @@ namespace oly::editor
 		const char* label;
 
 		OptionalRangeField(OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
-			: def(def), scratch(def), value_key(value_key), enable_key(enable_key), label(label) {}
+			: def(def), scratch(def), value_key(value_key), enable_key(enable_key), label(label)
+		{
+		}
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+		}
 
 		void Load(TOMLNode node)
 		{
 			scratch = def;
-			if (enable_key != detail::Key::_ && value_key != detail::Key::_)
+			if (KeyIsNotNull(enable_key) && KeyIsNotNull(value_key))
 			{
 				if (auto v = node[detail::encode_key(value_key)].value<NodeType>())
 					scratch = MakeOpt(static_cast<T>(*v));
@@ -217,7 +196,7 @@ namespace oly::editor
 
 		void Dump(toml::table& table) const
 		{
-			if (enable_key != detail::Key::_ && value_key != detail::Key::_)
+			if (KeyIsNotNull(enable_key) && KeyIsNotNull(value_key))
 			{
 				table.insert_or_assign(detail::encode_key(enable_key), scratch.has_value);
 				table.insert_or_assign(detail::encode_key(value_key), static_cast<NodeType>(scratch.value));
@@ -226,24 +205,12 @@ namespace oly::editor
 
 		void Isolate()
 		{
-			if (disk)
-			{
-				auto d = disk;
-				disk = nullptr;
-				d->Isolate();
-			}
+			IsolateField(*this);
 		}
 
 		void Reset(Self& source)
 		{
-			disk = &source;
-			source.disk = this;
-			scratch = source.scratch;
-		}
-
-		bool Draw()
-		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+			ResetField(*this, source);
 		}
 	};
 
@@ -253,4 +220,77 @@ namespace oly::editor
 	template<OptionalFloat Min, OptionalFloat Max>
 	using OptionalFloatField = OptionalRangeField<float, Min, Max, double>;
 
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	struct CompactOptionalRangeField
+	{
+		using Self = CompactOptionalRangeField<T, _Min, _Max, NodeType>;
+		inline static const OptionalPrimitive<T> Min = _Min;
+		inline static const OptionalPrimitive<T> Max = _Max;
+
+		OptionalPrimitive<T> def;
+		OptionalPrimitive<T> scratch;
+		Self* disk = nullptr;
+		T nullopt;
+		detail::Key key;
+		const char* label;
+
+		CompactOptionalRangeField(OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
+			: def(def), scratch(def), nullopt(nullopt), key(key), label(label)
+		{
+		}
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+		}
+
+		void Load(TOMLNode node)
+		{
+			scratch = def;
+			if (KeyIsNotNull(key))
+			{
+				if (auto v = node[detail::encode_key(key)].value<NodeType>())
+					scratch = *v == nullopt ? MakeOpt<T>() : MakeOpt<T>(*v);
+			}
+		}
+
+		void Dump(toml::table& table) const
+		{
+			if (KeyIsNotNull(key))
+				table.insert_or_assign(detail::encode_key(key), scratch.has_value ? scratch.value : nullopt);
+		}
+
+		void Isolate()
+		{
+			IsolateField(*this);
+		}
+
+		void Reset(Self& source)
+		{
+			ResetField(*this, source);
+		}
+	};
+
+	template<OptionalInt Min, OptionalInt Max>
+	using CompactOptionalIntField = CompactOptionalRangeField<int, Min, Max, int>;
+
+	template<OptionalFloat Min, OptionalFloat Max>
+	using CompactOptionalFloatField = CompactOptionalRangeField<float, Min, Max, float>;
+
+	struct ColorField
+	{
+		glm::vec4 def;
+		glm::vec4 scratch;
+		ColorField* disk = nullptr;
+		detail::Key key;
+		const char* label;
+
+		ColorField(glm::vec4 def, detail::Key key, const char* label);
+
+		bool Draw();
+		void Load(TOMLNode node);
+		void Dump(toml::table& table) const;
+		void Isolate();
+		void Reset(ColorField& source);
+	};
 }

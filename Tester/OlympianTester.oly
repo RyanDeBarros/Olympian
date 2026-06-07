@@ -1,7 +1,6 @@
 #meta version=1.0 type="project"
 
 [Context]
-Gmpds = 1
 Signals = [ "signals/Camera.oly", "signals/Click.oly", "signals/Drag.oly", "signals/Jump.oly", "signals/Move.oly",]
 
 [Context.Colsn]
@@ -22,16 +21,19 @@ Warning = true
 Error = true
 Fatal = true
 
-[Context.Window]
+[Context.Platform]
+Gmpds = 1
+
+[Context.Platform.Window]
 Width = 1440
 Height = 1080
 Title = "Olympian Tester Project"
 
-[Context.Window.Viewport]
+[Context.Platform.Window.Viewport]
 Boxed = true
 Stretch = true
 
-[Context.Window.WinHint]
+[Context.Platform.Window.WinHint]
 Resize = true
 Visible = true
 ClrColor = [ 0.0, 0.0, 0.0, 1.0,]
@@ -52,6 +54,6 @@ SRGBCap = false
 DBuffer = true
 FWCompat = false
 CTXDebug = false
-PosX = 2147483648
-PosY = 2147483648
+PosX = 0x80000000
+PosY = 0x80000000
 RefreshR = -1

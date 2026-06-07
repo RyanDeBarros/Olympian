@@ -4,6 +4,103 @@
 
 namespace oly::editor
 {
+	struct WindowHintsDesc
+	{
+		ColorField context_clear_color;
+		IntField<MakeOpt(0), MakeOpt<int>()> context_swap_interval;
+		BoolField window_resizable;
+		BoolField window_visible;
+		BoolField window_decorated;
+		BoolField window_focused;
+		BoolField window_auto_iconify;
+		BoolField window_floating;
+		BoolField window_maximized;
+		BoolField window_center_cursor;
+		BoolField window_transparent_framebuffer;
+		BoolField window_focus_on_show;
+		BoolField window_scale_to_monitor;
+		BoolField window_scale_framebuffer;
+		BoolField window_mouse_passthrough;
+		CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()> window_position_x;
+		CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()> window_position_y;
+		CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()> window_refresh_rate;
+		BoolField window_stereo;
+		BoolField window_srgb_capable;
+		BoolField window_opengl_forward_compat;
+		BoolField window_context_debug;
+
+		WindowHintsDesc();
+
+		void Reset(WindowHintsDesc& source);
+		void Isolate();
+	};
+
+#define WINDOW_HINTS_GENERATOR(M) \
+	M(context_clear_color) \
+	M(context_swap_interval) \
+	M(window_resizable) \
+	M(window_visible) \
+	M(window_decorated) \
+	M(window_focused) \
+	M(window_auto_iconify) \
+	M(window_floating) \
+	M(window_maximized) \
+	M(window_center_cursor) \
+	M(window_transparent_framebuffer) \
+	M(window_focus_on_show) \
+	M(window_scale_to_monitor) \
+	M(window_scale_framebuffer) \
+	M(window_mouse_passthrough) \
+	M(window_position_x) \
+	M(window_position_y) \
+	M(window_refresh_rate) \
+	M(window_stereo) \
+	M(window_srgb_capable) \
+	M(window_opengl_forward_compat) \
+	M(window_context_debug)
+
+	struct WindowDesc
+	{
+		IntField<MakeOpt(1), MakeOpt<int>()> width;
+		IntField<MakeOpt(1), MakeOpt<int>()> height;
+		StringField title;
+		WindowHintsDesc window_hints;
+		static const detail::Key window_hints_key;
+
+		WindowDesc();
+
+		void Reset(WindowDesc& source);
+		void Isolate();
+	};
+
+#define WINDOW_PARTIAL_GENERATOR(M) \
+	M(width) \
+	M(height) \
+	M(title)
+
+#define WINDOW_GENERATOR(M) \
+	WINDOW_PARTIAL_GENERATOR(M) \
+	M(window_hints)
+
+	struct PlatformDesc
+	{
+		WindowDesc window;
+		static const detail::Key window_key;
+		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
+
+		PlatformDesc();
+
+		void Reset(PlatformDesc& source);
+		void Isolate();
+	};
+
+#define PLATFORM_PARTIAL_GENERATOR(M) \
+	M(gamepads)
+
+#define PLATFORM_GENERATOR(M) \
+	M(window) \
+	PLATFORM_PARTIAL_GENERATOR(M)
+
 	struct LoggerEnableDesc
 	{
 		BoolField debug;
@@ -53,6 +150,8 @@ namespace oly::editor
 
 	struct ContextDesc
 	{
+		PlatformDesc platform;
+		static const detail::Key platform_key;
 		LoggerDesc logger;
 		static const detail::Key logger_key;
 
@@ -61,6 +160,7 @@ namespace oly::editor
 	};
 
 #define CONTEXT_GENERATOR(M) \
+	M(platform) \
 	M(logger)
 
 	struct ProjectDesc

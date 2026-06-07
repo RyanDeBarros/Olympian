@@ -95,34 +95,54 @@ namespace oly::editor
 		return ProjectInfo::Instance().ProjectName();
 	}
 
+	// TODO v8 File menu in main menu bar to open project settings
+
 	void ProjectDocument::Draw(ProjectDesc& desc)
 	{
 		if (auto form = Form())
-		{
 			Draw(form, desc.context);
-		}
 	}
 	
 	void ProjectDocument::Draw(Form& form, ContextDesc& desc)
 	{
-		Draw(form, desc.logger);
+		if (auto subform = Subform(form, "Platform"))
+			Draw(subform.GetForm(), desc.platform);
+
+		if (auto subform = Subform(form, "Logger"))
+			Draw(subform.GetForm(), desc.logger);
+	}
+
+	void ProjectDocument::Draw(Form& form, PlatformDesc& desc)
+	{
+		if (auto subform = Subform(form, "Window"))
+			Draw(subform.GetForm(), desc.window);
+		
+		DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 	}
 	
+	void ProjectDocument::Draw(Form& form, WindowDesc& desc)
+	{
+		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
+
+		if (auto subform = Subform(form, "Window hints"))
+			Draw(subform.GetForm(), desc.window_hints);
+	}
+	
+	void ProjectDocument::Draw(Form& form, WindowHintsDesc& desc)
+	{
+		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
+	}
+
 	void ProjectDocument::Draw(Form& form, LoggerDesc& desc)
 	{
-		if (auto subform = Subform(form, "Logger"))
-		{
-			DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
+		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Enable Streams"))
 			Draw(subform.GetForm(), desc.enable);
-		}
 	}
 	
 	void ProjectDocument::Draw(Form& form, LoggerEnableDesc& desc)
 	{
-		if (auto subform = Subform(form, "Enable Streams"))
-		{
-			DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
-		}
+		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, ProjectDesc& desc)
@@ -132,9 +152,29 @@ namespace oly::editor
 	
 	void ProjectDocument::Load(TOMLNode node, ContextDesc& desc)
 	{
+		Load(node[detail::encode_key(desc.platform_key)], desc.platform);
 		Load(node[detail::encode_key(desc.logger_key)], desc.logger);
 	}
+
+	void ProjectDocument::Load(TOMLNode node, PlatformDesc& desc)
+	{
+		LOAD_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+
+		Load(node[detail::encode_key(desc.window_key)], desc.window);
+	}
+
+	void ProjectDocument::Load(TOMLNode node, WindowDesc& desc)
+	{
+		LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
+
+		Load(node[detail::encode_key(desc.window_hints_key)], desc.window_hints);
+	}
 	
+	void ProjectDocument::Load(TOMLNode node, WindowHintsDesc& desc)
+	{
+		LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
+	}
+
 	void ProjectDocument::Load(TOMLNode node, LoggerDesc& desc)
 	{
 		LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
@@ -157,10 +197,36 @@ namespace oly::editor
 	void ProjectDocument::Dump(toml::table& table, ContextDesc& desc)
 	{
 		toml::table subtable;
+		Dump(subtable, desc.platform);
+		table.insert_or_assign(detail::encode_key(desc.platform_key), std::move(subtable));
+		subtable.clear();
 		Dump(subtable, desc.logger);
 		table.insert_or_assign(detail::encode_key(desc.logger_key), std::move(subtable));
 	}
-	
+
+	void ProjectDocument::Dump(toml::table& table, PlatformDesc& desc)
+	{
+		DUMP_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.window);
+		table.insert_or_assign(detail::encode_key(desc.window_key), std::move(subtable));
+	}
+
+	void ProjectDocument::Dump(toml::table& table, WindowDesc& desc)
+	{
+		DUMP_FIELDS(WINDOW_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.window_hints);
+		table.insert_or_assign(detail::encode_key(desc.window_hints_key), std::move(subtable));
+	}
+
+	void ProjectDocument::Dump(toml::table& table, WindowHintsDesc& desc)
+	{
+		DUMP_FIELDS(WINDOW_HINTS_GENERATOR);
+	}
+
 	void ProjectDocument::Dump(toml::table& table, LoggerDesc& desc)
 	{
 		DUMP_FIELDS(LOGGER_PARTIAL_GENERATOR);
