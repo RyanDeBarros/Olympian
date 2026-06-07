@@ -127,10 +127,18 @@ namespace oly::editor
 	{
 		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
+		if (auto subform = Subform(form, "Viewport"))
+			Draw(subform.GetForm(), desc.viewport);
+
 		if (auto subform = Subform(form, "Window hints"))
 			Draw(subform.GetForm(), desc.window_hints);
 	}
-	
+
+	void ProjectDocument::Draw(Form& form, ViewportDesc& desc)
+	{
+		DRAW_FIELDS(VIEWPORT_GENERATOR);
+	}
+
 	void ProjectDocument::Draw(Form& form, WindowHintsDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
@@ -170,9 +178,15 @@ namespace oly::editor
 	{
 		LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
+		Load(node[detail::encode_key(desc.viewport_key)], desc.viewport);
 		Load(node[detail::encode_key(desc.window_hints_key)], desc.window_hints);
 	}
-	
+
+	void ProjectDocument::Load(TOMLNode node, ViewportDesc& desc)
+	{
+		LOAD_FIELDS(VIEWPORT_GENERATOR);
+	}
+
 	void ProjectDocument::Load(TOMLNode node, WindowHintsDesc& desc)
 	{
 		LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
@@ -221,8 +235,16 @@ namespace oly::editor
 		DUMP_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		toml::table subtable;
+		Dump(subtable, desc.viewport);
+		table.insert_or_assign(detail::encode_key(desc.viewport_key), std::move(subtable));
+		subtable.clear();
 		Dump(subtable, desc.window_hints);
 		table.insert_or_assign(detail::encode_key(desc.window_hints_key), std::move(subtable));
+	}
+
+	void ProjectDocument::Dump(toml::table& table, ViewportDesc& desc)
+	{
+		DUMP_FIELDS(VIEWPORT_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, WindowHintsDesc& desc)

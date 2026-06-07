@@ -2,14 +2,13 @@
 
 namespace oly::editor
 {
-	Form::Form(ImGuiTableFlags table_flags, ImGuiTableColumnFlags value_column_flags, ImGuiTableColumnFlags key_column_flags)
-		: _table_flags(table_flags), _value_column_flags(value_column_flags), _key_column_flags(key_column_flags)
+	Form::Form()
 	{
 		BeginTable();
 	}
 
 	Form::Form(Form&& other) noexcept
-		: _draw_content(other._draw_content), _table_flags(other._table_flags), _value_column_flags(other._value_column_flags), _key_column_flags(other._key_column_flags)
+		: _draw_content(other._draw_content)
 	{
 		other._draw_content = false;
 	}
@@ -29,10 +28,10 @@ namespace oly::editor
 	{
 		ImGui::PushID(this);
 		ImGui::PushID(_id_counter++);
-		if (ImGui::BeginTable("", 2, _table_flags))
+		if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("", _key_column_flags);
-			ImGui::TableSetupColumn("", _value_column_flags);
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
 			_draw_content = true;
 		}
 		else

@@ -61,10 +61,27 @@ namespace oly::editor
 		return data != og;
 	}
 
+	template<typename T>
+	static float GetItemComfortableWidth(OptionalPrimitive<T> num)
+	{
+		if (num.has_value)
+			return ImGui::CalcTextSize(std::to_string(num.value).c_str()).x;
+		else
+			return ImGui::CalcTextSize(std::to_string(-FLT_MAX).c_str()).x;
+	}
+
+	template<typename T>
+	static void SetItemComfortableWidth(OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	{
+		const float item_width = std::max(GetItemComfortableWidth(min), GetItemComfortableWidth(max));
+		ImGui::SetNextItemWidth(item_width);
+	}
+
 	bool DescIO::Draw(const char* label, int& data, const int* disk, OptionalInt min, OptionalInt max)
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
 		const int og = data;
 		if (ImGui::InputInt("", &data))
 			dirty |= Clamp(data, og, min, max);
@@ -75,6 +92,7 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
 		const float og = data;
 		if (ImGui::InputFloat("", &data))
 			dirty |= Clamp(data, og, min, max);
@@ -88,8 +106,9 @@ namespace oly::editor
 		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
 		if (auto disabled = DisabledSection(!data.has_value))
 		{
-			const int og = data.value;
 			ImGui::SameLine();
+			SetItemComfortableWidth(min, max);
+			const int og = data.value;
 			if (ImGui::InputInt("##Value", &data.value))
 				dirty |= Clamp(data.value, og, min, max);
 		}
@@ -103,8 +122,9 @@ namespace oly::editor
 		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
 		if (auto disabled = DisabledSection(!data.has_value))
 		{
-			const float og = data.value;
 			ImGui::SameLine();
+			SetItemComfortableWidth(min, max);
+			const float og = data.value;
 			if (ImGui::InputFloat("##Value", &data.value))
 				dirty |= Clamp(data.value, og, min, max);
 		}

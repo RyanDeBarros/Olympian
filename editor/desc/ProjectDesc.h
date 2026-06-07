@@ -4,6 +4,21 @@
 
 namespace oly::editor
 {
+	struct ViewportDesc
+	{
+		BoolField boxed;
+		BoolField stretch;
+
+		ViewportDesc();
+
+		void Reset(ViewportDesc& source);
+		void Isolate();
+	};
+
+#define VIEWPORT_GENERATOR(M) \
+	M(boxed) \
+	M(stretch)
+
 	struct WindowHintsDesc
 	{
 		ColorField context_clear_color;
@@ -64,6 +79,8 @@ namespace oly::editor
 		IntField<MakeOpt(1), MakeOpt<int>()> width;
 		IntField<MakeOpt(1), MakeOpt<int>()> height;
 		StringField title;
+		ViewportDesc viewport;
+		static const detail::Key viewport_key;
 		WindowHintsDesc window_hints;
 		static const detail::Key window_hints_key;
 
@@ -80,6 +97,7 @@ namespace oly::editor
 
 #define WINDOW_GENERATOR(M) \
 	WINDOW_PARTIAL_GENERATOR(M) \
+	M(viewport) \
 	M(window_hints)
 
 	struct PlatformDesc

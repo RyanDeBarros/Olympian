@@ -10,14 +10,9 @@ namespace oly::editor
 	{
 		bool _draw_content = false;
 		int _id_counter = 0;
-		ImGuiTableFlags _table_flags;
-		ImGuiTableColumnFlags _value_column_flags;
-		ImGuiTableColumnFlags _key_column_flags;
 
 	public:
-		Form(ImGuiTableFlags table_flags = ImGuiTableFlags_SizingFixedFit,
-			ImGuiTableColumnFlags value_column_flags = ImGuiTableColumnFlags_WidthStretch,
-			ImGuiTableColumnFlags key_column_flags = ImGuiTableColumnFlags_None);
+		Form();
 		Form(const Form&) = delete;
 		Form(Form&&) noexcept;
 		~Form();

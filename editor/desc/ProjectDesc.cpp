@@ -6,6 +6,22 @@
 
 namespace oly::editor
 {
+	ViewportDesc::ViewportDesc() :
+		boxed(true, detail::Key::Boxed, "Boxed"),
+		stretch(true, detail::Key::Stretch, "Stretch")
+	{
+	}
+
+	void ViewportDesc::Reset(ViewportDesc& source)
+	{
+		RESET_FIELDS(VIEWPORT_GENERATOR);
+	}
+	
+	void ViewportDesc::Isolate()
+	{
+		ISOLATE_FIELDS(VIEWPORT_GENERATOR);
+	}
+
 	WindowHintsDesc::WindowHintsDesc() :
 		context_clear_color({ 0.f, 0.f, 0.f, 1.f }, detail::Key::ClearColor, "Clear color"),
 		context_swap_interval(1, detail::Key::SwapInterval, "Swap interval"),
@@ -42,6 +58,7 @@ namespace oly::editor
 		ISOLATE_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
+	const detail::Key WindowDesc::viewport_key = detail::Key::Viewport;
 	const detail::Key WindowDesc::window_hints_key = detail::Key::WindowHint;
 
 	WindowDesc::WindowDesc() :
