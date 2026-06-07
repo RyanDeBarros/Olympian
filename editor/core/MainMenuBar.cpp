@@ -1,5 +1,8 @@
 #include "MainMenuBar.h"
 
+#include "documents/DocumentManager.h"
+#include "documents/ProjectDocument.h"
+
 #include "panels/AssetEditorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/LogPanel.h"
@@ -19,8 +22,20 @@ namespace oly::editor
 	{
 		if (ImGui::BeginMainMenuBar())
 		{
+			DrawFileMenu();
 			DrawViewMenu();
 			ImGui::EndMainMenuBar();
+		}
+	}
+
+	void MainMenuBar::DrawFileMenu()
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Project Settings"))
+				DocumentManager::Instance().Add<ProjectDocument>();
+
+			ImGui::EndMenu();
 		}
 	}
 

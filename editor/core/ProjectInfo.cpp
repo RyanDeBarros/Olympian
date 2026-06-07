@@ -24,12 +24,17 @@ namespace oly::editor
 
 	std::string ProjectInfo::ProjectName() const
 	{
-		return _project_file.stem().generic_string();
+		return ProjectPath().stem().generic_string();
+	}
+
+	std::filesystem::path ProjectInfo::ProjectPath() const
+	{
+		return _project_file;
 	}
 
 	std::filesystem::path ProjectInfo::ProjectRoot() const
 	{
-		return _project_file.parent_path();
+		return ProjectPath().parent_path();
 	}
 
 	std::filesystem::path ProjectInfo::EditorRoot() const

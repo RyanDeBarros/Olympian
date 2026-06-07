@@ -16,6 +16,7 @@ namespace oly::editor
 		void Init(const std::filesystem::path& project_file);
 
 		std::string ProjectName() const;
+		std::filesystem::path ProjectPath() const;
 		std::filesystem::path ProjectRoot() const;
 		std::filesystem::path EditorRoot() const;
 		std::filesystem::path ResourceRoot() const;

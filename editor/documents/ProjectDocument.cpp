@@ -15,6 +15,11 @@ namespace oly::editor
 		return "1.0";
 	}
 
+	ProjectDocument::ProjectDocument()
+		: IDocument(ProjectInfo::Instance().ProjectPath())
+	{
+	}
+
 	void ProjectDocument::Init()
 	{
 		Load();
@@ -94,8 +99,6 @@ namespace oly::editor
 	{
 		return ProjectInfo::Instance().ProjectName();
 	}
-
-	// TODO v8 File menu in main menu bar to open project settings
 
 	void ProjectDocument::Draw(ProjectDesc& desc)
 	{

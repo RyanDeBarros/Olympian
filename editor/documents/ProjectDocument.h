@@ -17,6 +17,7 @@ namespace oly::editor
 
 	public:
 		using IDocument::IDocument;
+		ProjectDocument();
 
 		static const char* GetVersion();
 
