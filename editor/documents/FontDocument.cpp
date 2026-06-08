@@ -3,6 +3,8 @@
 #include "core/MainWindow.h"
 #include "core/Logger.h"
 
+#include "gui/IDScope.h"
+
 namespace oly::editor
 {
 	const char* FontDocument::GetVersion()
@@ -23,11 +25,9 @@ namespace oly::editor
 
 	void FontDocument::Draw()
 	{
-		ImGui::PushID(this);
+		gui::IDScope scope(this);
 
 		// TODO v8
-
-		ImGui::PopID();
 	}
 
 	void FontDocument::DrawMenuBar()

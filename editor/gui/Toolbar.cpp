@@ -1,6 +1,8 @@
 #include "Toolbar.h"
 
 #include "core/ResourceLoader.h"
+
+#include "gui/IDScope.h"
 #include "gui/Texture.h"
 
 #include <string>
@@ -10,13 +12,12 @@ namespace oly::editor
 	static bool _DrawIconButton(bool& selected, ImVec2 size)
 	{
 		bool pressed = false;
-		ImGui::PushID(&selected);
+		gui::IDScope scope(&selected);
 		if (ImGui::InvisibleButton("##IconButton", size))
 		{
 			selected = !selected;
 			pressed = true;
 		}
-		ImGui::PopID();
 		return pressed;
 	}
 
@@ -64,10 +65,12 @@ namespace oly::editor
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::PushID(id_counter);
-		if (ImGui::InvisibleButton("##IconButton", size))
-			pressed = true;
-		ImGui::PopID();
+
+		if (auto scope = gui::IDScope(id_counter))
+		{
+			if (ImGui::InvisibleButton("##IconButton", size))
+				pressed = true;
+		}
 
 		_HandleIconHovered(pos, size, tooltip);
 		DrawIconImage(pos, icon, 1.f);
@@ -79,10 +82,12 @@ namespace oly::editor
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::PushID(id);
-		if (ImGui::InvisibleButton("##IconButton", size))
-			pressed = true;
-		ImGui::PopID();
+
+		if (auto scope = gui::IDScope(id))
+		{
+			if (ImGui::InvisibleButton("##IconButton", size))
+				pressed = true;
+		}
 
 		_HandleIconHovered(pos, size, tooltip);
 		DrawIconImage(pos, icon, 1.f);

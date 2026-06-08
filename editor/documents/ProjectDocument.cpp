@@ -4,6 +4,7 @@
 #include "core/Logger.h"
 #include "core/MainWindow.h"
 
+#include "gui/IDScope.h"
 #include "gui/Subform.h"
 
 #include "definitions/Keys.h"
@@ -27,9 +28,8 @@ namespace oly::editor
 
 	void ProjectDocument::Draw()
 	{
-		ImGui::PushID(this);
+		gui::IDScope scope(this);
 		Draw(_scratch);
-		ImGui::PopID();
 	}
 
 	void ProjectDocument::DrawMenuBar()

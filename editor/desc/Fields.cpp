@@ -80,14 +80,14 @@ namespace oly::editor
 		return DescIO::Draw(label, scratch, DISK_FIELD(disk));
 	}
 
-	ColorField::ColorField(glm::vec4 def, detail::Key key, const char* label)
+	ColorField::ColorField(Color def, detail::Key key, const char* label)
 		: def(def), scratch(def), key(key), label(label)
 	{
 	}
 
 	bool ColorField::Draw()
 	{
-		return DescIO::DrawColor(label, scratch, DISK_FIELD(disk));
+		return DescIO::Draw(label, scratch, DISK_FIELD(disk));
 	}
 
 	void ColorField::Load(TOMLNode node)

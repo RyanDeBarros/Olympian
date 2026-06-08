@@ -2,6 +2,7 @@ target_sources(OlympianEditor PRIVATE
 	CollapsingSection.cpp
 	DisabledSection.cpp
 	Form.cpp
+	IDScope.cpp
 	ImGuiWrapper.cpp
 	Subform.cpp
 	Texture.cpp

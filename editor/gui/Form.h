@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gui/IDScope.h"
+
 #include <imgui.h>
 
 #include <memory>
@@ -10,6 +12,7 @@ namespace oly::editor
 	{
 		bool _draw_content = false;
 		int _id_counter = 0;
+		gui::IDScope _scope;
 
 	public:
 		Form();

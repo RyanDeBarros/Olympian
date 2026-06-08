@@ -38,8 +38,7 @@ namespace oly::editor
 	{
 		ACTIVE_FORM = this;
 
-		ImGui::PushID(this);
-		ImGui::PushID(_id_counter++);
+		_scope.Push(this).Push(_id_counter++);
 		if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
@@ -56,8 +55,7 @@ namespace oly::editor
 			ImGui::EndTable();
 
 		_draw_content = false;
-		ImGui::PopID();
-		ImGui::PopID();
+		_scope.PopAll();
 
 		ACTIVE_FORM = nullptr;
 	}

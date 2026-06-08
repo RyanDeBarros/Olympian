@@ -11,4 +11,5 @@ target_sources(OlympianEditor PRIVATE
 	ProjectSelectWindow.cpp
 	ResourceLoader.cpp
 	ShortcutManager.cpp
+	Types.cpp
 )

@@ -3,6 +3,8 @@
 #include "core/MainWindow.h"
 #include "core/Logger.h"
 
+#include "gui/IDScope.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -25,7 +27,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw()
 	{
-		ImGui::PushID(this);
+		gui::IDScope scope(this);
 
 		if (ImGui::BeginTabBar(""))
 		{
@@ -43,8 +45,6 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
-
-		ImGui::PopID();
 	}
 
 	void SignalDocument::DrawMenuBar()

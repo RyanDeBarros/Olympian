@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Types.h"
+
 #include "desc/DescIO.h"
 
 #include "external/TOML.h"
@@ -304,13 +306,13 @@ namespace oly::editor
 
 	struct ColorField
 	{
-		glm::vec4 def;
-		glm::vec4 scratch;
+		Color def;
+		Color scratch;
 		ColorField* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
-		ColorField(glm::vec4 def, detail::Key key, const char* label);
+		ColorField(Color def, detail::Key key, const char* label);
 
 		bool Draw();
 		void Load(TOMLNode node);

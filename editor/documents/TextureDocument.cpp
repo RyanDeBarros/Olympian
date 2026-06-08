@@ -7,6 +7,7 @@
 
 #include "core/ResourceLoader.h"
 #include "gui/DisabledSection.h"
+#include "gui/IDScope.h"
 #include "gui/Subform.h"
 #include "gui/Toolbar.h"
 #include "gui/ImGuiWrapper.h"
@@ -35,7 +36,7 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		ImGui::PushID(this);
+		gui::IDScope scope(this);
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
@@ -45,7 +46,6 @@ namespace oly::editor
 			DrawPreview();
 			ImGui::EndTable();
 		}
-		ImGui::PopID();
 	}
 
 	void TextureDocument::DrawMenuBar()

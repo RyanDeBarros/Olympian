@@ -245,7 +245,7 @@ namespace oly::editor
 		DrawRowBg(node, local_file_index);
 		DrawNodePrefix(node);
 
-		ImGui::PushID(&node);
+		gui::IDScope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
 		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
@@ -269,15 +269,13 @@ namespace oly::editor
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				node.Open();
 		}
-
-		ImGui::PopID();
 	}
 
 	void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)
 	{
 		if (node.IsBranching())
 		{
-			ImGui::PushID(&node);
+			gui::IDScope scope(&node);
 			if (node.dropdown_open)
 			{
 				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down))
@@ -288,7 +286,6 @@ namespace oly::editor
 				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right))
 					node.OpenBranch();
 			}
-			ImGui::PopID();
 			ImGui::SameLine();
 		}
 		else

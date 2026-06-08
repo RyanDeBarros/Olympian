@@ -15,173 +15,31 @@
 
 namespace oly::editor
 {
-	static void PrepareValue(const char* label, const void* data)
+	void DescIO::PrepareValue(const char* label)
 	{
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 		ImGui::Text(label);
 		ImGui::TableNextColumn();
-		ImGui::PushID(data);
 	}
 
-	static bool DrawRevertButton(const void* data)
+	bool DescIO::DrawRevertButton(const void* ptr_id)
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", data))
+		if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", ptr_id))
 			dirty = true;
 		return dirty;
-	}
-
-	template<typename T>
-	static bool FinishValue(bool dirty, T& desc, const T* disk)
-	{
-		if (disk && desc != *disk && DrawRevertButton(disk))
-		{
-			desc = *disk;
-			dirty = true;
-		}
-		ImGui::PopID();
-		return dirty;
-	}
-
-	bool DescIO::Draw(const char* label, bool& data, const bool* disk)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		if (ImGui::Checkbox("", &data))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
-	}
-
-	template<typename T>
-	static bool Clamp(T& data, const T og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
-	{
-		if (max.has_value)
-			data = std::min(data, max.value);
-		if (min.has_value)
-			data = std::max(data, min.value);
-		return data != og;
-	}
-
-	template<typename T, glm::length_t L>
-	static bool Clamp(glm::vec<L, T>& data, const glm::vec<L, T> og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
-	{
-		bool dirty = false;
-		for (glm::length_t i = 0; i < L; ++i)
-			dirty |= Clamp(data[i], og[i], min, max);
-		return dirty;
-	}
-
-	template<typename T>
-	static float GetItemComfortableWidth(OptionalPrimitive<T> num)
-	{
-		if (num.has_value)
-			return ImGui::CalcTextSize(std::to_string(num.value).c_str()).x;
-		else
-			return ImGui::CalcTextSize(std::to_string(-FLT_MAX).c_str()).x;
-	}
-
-	template<typename T>
-	static void SetItemComfortableWidth(OptionalPrimitive<T> min, OptionalPrimitive<T> max)
-	{
-		const float item_width = std::max(GetItemComfortableWidth(min), GetItemComfortableWidth(max));
-		ImGui::SetNextItemWidth(item_width);
-	}
-
-	bool DescIO::Draw(const char* label, int& data, const int* disk, OptionalInt min, OptionalInt max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputInt("", &data))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, float& data, const float* disk, OptionalFloat min, OptionalFloat max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputFloat("", &data))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, double& data, const double* disk, OptionalDouble min, OptionalDouble max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputDouble("", &data))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, OptionalInt& data, const OptionalInt* disk, OptionalInt min, OptionalInt max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
-		if (auto disabled = DisabledSection(!data.has_value))
-		{
-			ImGui::SameLine();
-			SetItemComfortableWidth(min, max);
-			const int og = data.value;
-			if (ImGui::InputInt("##Value", &data.value))
-				dirty |= Clamp(data.value, og, min, max);
-		}
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, OptionalFloat& data, const OptionalFloat* disk, OptionalFloat min, OptionalFloat max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		dirty |= ImGui::Checkbox("##Enable", &data.has_value);
-		if (auto disabled = DisabledSection(!data.has_value))
-		{
-			ImGui::SameLine();
-			SetItemComfortableWidth(min, max);
-			const float og = data.value;
-			if (ImGui::InputFloat("##Value", &data.value))
-				dirty |= Clamp(data.value, og, min, max);
-		}
-		return FinishValue(dirty, data, disk);
 	}
 
 	bool DescIO::Draw(const char* label, int& data, const int* disk, const char** names, size_t count)
 	{
 		bool dirty = false;
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &data, names, count))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
-	}
-
-	template<typename E, size_t N>
-	static bool DrawEnum(const char* label, E& data, const E* disk, const char* const (&values)[N])
-	{
-		bool dirty = false;
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, N))
-			dirty = true;
-		data = static_cast<E>(index);
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, std::string& data, const std::string* disk)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		if (gui::InputText("", data))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
+		PrepareValue(label);
+		gui::IDScope scope(&data);
+		dirty |= gui::InputData<int>{}("", data, names, count);
+		dirty |= CheckRevertButton(data, disk);
+		return dirty;
 	}
 
 	bool DescIO::Draw(const char* label, std::string* data, const std::string* disk, size_t count)
@@ -205,43 +63,11 @@ namespace oly::editor
 			return false;
 	}
 
-	bool DescIO::Draw(const char* label, glm::vec2& data, const glm::vec2* disk, OptionalFloat min, OptionalFloat max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputFloat2(label, glm::value_ptr(data)))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-	
-	bool DescIO::Draw(const char* label, glm::vec3& data, const glm::vec3* disk, OptionalFloat min, OptionalFloat max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputFloat3(label, glm::value_ptr(data)))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-	
-	bool DescIO::Draw(const char* label, glm::vec4& data, const glm::vec4* disk, OptionalFloat min, OptionalFloat max)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		SetItemComfortableWidth(min, max);
-		const auto og = data;
-		if (ImGui::InputFloat4(label, glm::value_ptr(data)))
-			dirty |= Clamp(data, og, min, max);
-		return FinishValue(dirty, data, disk);
-	}
-
 	bool DescIO::Draw(const char* label, bool* data, const bool* disk, const char** sublabels, size_t count)
 	{
 		bool dirty = false;
-		PrepareValue(label, &data);
+		PrepareValue(label);
+		gui::IDScope scope(&data);
 
 		for (size_t i = 0; i < count; ++i)
 		{
@@ -257,17 +83,7 @@ namespace oly::editor
 				ImGui::SameLine();
 		}
 
-		ImGui::PopID();
 		return dirty;
-	}
-
-	bool DescIO::DrawColor(const char* label, glm::vec4& data, const glm::vec4* disk)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		if (ImGui::ColorEdit4("", glm::value_ptr(data)))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
 	}
 
 	template<>
