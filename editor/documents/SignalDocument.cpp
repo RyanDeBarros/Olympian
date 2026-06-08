@@ -110,36 +110,38 @@ namespace oly::editor
 
 	void SignalDocument::DrawSignals()
 	{
-		Draw(_scratch.signals);
+		// TODO v8 draw only active index
+		_scratch.signals.Visit([this](SignalDesc& desc) { Draw(desc); });
 	}
 
 	void SignalDocument::DrawRoutes()
 	{
-		Draw(_scratch.routes);
+		// TODO v8 draw only active index
+		_scratch.routes.Visit([this](RouteDesc& desc) { Draw(desc); });
 	}
 
-	void SignalDocument::Draw(SignalArrayDesc& desc)
+	void SignalDocument::Draw(SignalDesc& desc)
 	{
 		// TODO v8
 	}
 	
-	void SignalDocument::Draw(RouteArrayDesc& desc)
+	void SignalDocument::Draw(RouteDesc& desc)
 	{
 		// TODO v8
 	}
 
 	void SignalDocument::Load(TOMLNode node, SignalFullDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.signals_key)], desc.signals);
-		Load(node[detail::encode_key(desc.routes_key)], desc.routes);
+		_scratch.signals.Visit([this, subnode = node[detail::encode_key(desc.signals_key)]](SignalDesc& desc) { Load(subnode, desc); });
+		_scratch.routes.Visit([this, subnode = node[detail::encode_key(desc.routes_key)]](RouteDesc& desc) { Load(subnode, desc); });
 	}
 
-	void SignalDocument::Load(TOMLNode node, SignalArrayDesc& desc)
+	void SignalDocument::Load(TOMLNode node, SignalDesc& desc)
 	{
 		// TODO v8
 	}
 
-	void SignalDocument::Load(TOMLNode node, RouteArrayDesc& desc)
+	void SignalDocument::Load(TOMLNode node, RouteDesc& desc)
 	{
 		// TODO v8
 	}
@@ -147,20 +149,20 @@ namespace oly::editor
 	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.signals);
+		_scratch.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.routes);
+		_scratch.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(subtable));
 	}
 
-	void SignalDocument::Dump(toml::table& table, SignalArrayDesc& desc)
+	void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
 	{
 		// TODO v8
 	}
 
-	void SignalDocument::Dump(toml::table& table, RouteArrayDesc& desc)
+	void SignalDocument::Dump(toml::table& table, RouteDesc& desc)
 	{
 		// TODO v8
 	}

@@ -11,6 +11,8 @@
 
 #include <imgui.h>
 
+// TODO v8 revert button should revert to default instead of disk. Don't pass disk in any of these. Also, rename 'revert' in asset menu to 'reload'. No need for disk* pointers then or even Reset/Isolate!
+
 namespace oly::editor
 {
 	static void PrepareValue(const char* label, const void* data)
@@ -60,6 +62,15 @@ namespace oly::editor
 		if (min.has_value)
 			data = std::max(data, min.value);
 		return data != og;
+	}
+
+	template<typename T, glm::length_t L>
+	static bool Clamp(glm::vec<L, T>& data, const glm::vec<L, T> og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	{
+		bool dirty = false;
+		for (glm::length_t i = 0; i < L; ++i)
+			dirty |= Clamp(data[i], og[i], min, max);
+		return dirty;
 	}
 
 	template<typename T>
@@ -194,6 +205,62 @@ namespace oly::editor
 			return false;
 	}
 
+	bool DescIO::Draw(const char* label, glm::vec2& data, const glm::vec2* disk, OptionalFloat min, OptionalFloat max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
+		const auto og = data;
+		if (ImGui::InputFloat2(label, glm::value_ptr(data)))
+			dirty |= Clamp(data, og, min, max);
+		return FinishValue(dirty, data, disk);
+	}
+	
+	bool DescIO::Draw(const char* label, glm::vec3& data, const glm::vec3* disk, OptionalFloat min, OptionalFloat max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
+		const auto og = data;
+		if (ImGui::InputFloat3(label, glm::value_ptr(data)))
+			dirty |= Clamp(data, og, min, max);
+		return FinishValue(dirty, data, disk);
+	}
+	
+	bool DescIO::Draw(const char* label, glm::vec4& data, const glm::vec4* disk, OptionalFloat min, OptionalFloat max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
+		const auto og = data;
+		if (ImGui::InputFloat4(label, glm::value_ptr(data)))
+			dirty |= Clamp(data, og, min, max);
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, bool* data, const bool* disk, const char** sublabels, size_t count)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			dirty |= ImGui::Checkbox(sublabels[i], data + i);
+
+			if (disk && data[i] != disk[i] && DrawRevertButton(disk + i))
+			{
+				data[i] = disk[i];
+				dirty = true;
+			}
+
+			if (i + 1 < count)
+				ImGui::SameLine();
+		}
+
+		ImGui::PopID();
+		return dirty;
+	}
+
 	bool DescIO::DrawColor(const char* label, glm::vec4& data, const glm::vec4* disk)
 	{
 		bool dirty = false;
@@ -204,20 +271,56 @@ namespace oly::editor
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
+	bool DescIO::Draw(const char* label, detail::Axis0dConversion& data, const detail::Axis0dConversion* disk)
 	{
-		return DrawEnum(label, data, disk, { "Discard", "Keep" });
+		return DrawEnum(label, data, disk, { "None", "To 1D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
+	bool DescIO::Draw(const char* label, detail::Axis1dConversion& data, const detail::Axis1dConversion* disk)
 	{
-		return DrawEnum(label, data, disk, { "Auto", "Off", "Manual" });
+		return DrawEnum(label, data, disk, { "None", "To 0D", "To 2D", "To 3D" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::Axis2dConversion& data, const detail::Axis2dConversion* disk)
+	{
+		return DrawEnum(label, data, disk, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::GamepadAxis2D& data, const detail::GamepadAxis2D* disk)
+	{
+		return DrawEnum(label, data, disk, { "Left XY", "Right XY" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::SignalBindingType& data, const detail::SignalBindingType* disk)
+	{
+		return DrawEnum(label, data, disk, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
 	}
 
 	template<>
 	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType* disk)
 	{
 		return DrawEnum(label, data, disk, { "Index", "Pixel" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
+	{
+		return DrawEnum(label, data, disk, { "Discard", "Keep" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::Swizzle& data, const detail::Swizzle* disk)
+	{
+		return DrawEnum(label, data, disk, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+	}
+
+	template<>
+	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
+	{
+		return DrawEnum(label, data, disk, { "Auto", "Off", "Manual" });
 	}
 }

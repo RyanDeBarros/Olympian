@@ -152,7 +152,7 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw(Form& form, TreeViewAdvancedSettingsDesc& desc)
 	{
-		DRAW_FIELDS(TREE_NODE_ADVANCED_SETTINGS_GENERATOR);
+		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesPanel::Load(TOMLNode node, PreferencesDesc& desc)
@@ -167,7 +167,7 @@ namespace oly::editor
 	
 	void PreferencesPanel::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
 	{
-		LOAD_FIELDS(TREE_NODE_ADVANCED_SETTINGS_GENERATOR);
+		LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesPanel::Dump(toml::table& table, PreferencesDesc& desc)
@@ -186,6 +186,6 @@ namespace oly::editor
 	
 	void PreferencesPanel::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)
 	{
-		DUMP_FIELDS(TREE_NODE_ADVANCED_SETTINGS_GENERATOR);
+		DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 }

@@ -24,8 +24,13 @@ namespace oly::editor
 
 #define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
 
+#define DESC_CHAIN_METHODS(klass, generator) \
+	void Reset(klass& source) { RESET_FIELDS(generator); } \
+	void Isolate() { ISOLATE_FIELDS(generator); }
+
 	extern bool KeyIsNull(detail::Key key);
 	extern bool KeyIsNotNull(detail::Key key);
+	extern detail::Key NullKey();
 
 	template<typename T>
 	void IsolateField(T& obj)
@@ -46,6 +51,19 @@ namespace oly::editor
 		obj.scratch = source.scratch;
 	}
 
+	template<typename NodeType, typename T>
+	void LoadValue(TOMLNode node, T& obj)
+	{
+		if (auto v = node.value<NodeType>())
+			obj = static_cast<T>(*v);
+	}
+
+	template<typename T>
+	void DumpValue(toml::table& table, detail::Key key, T obj)
+	{
+		table.insert_or_assign(detail::encode_key(key), std::move(obj));
+	}
+
 	template<typename T, typename Self, typename NodeType = T>
 	struct PrimitiveField
 	{
@@ -59,16 +77,15 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
+			scratch = def;
 			if (KeyIsNotNull(key))
-				scratch = static_cast<T>(node[detail::encode_key(key)].value_or(static_cast<NodeType>(def)));
-			else
-				scratch = def;
+				LoadValue<NodeType>(node[detail::encode_key(key)], scratch);
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (KeyIsNotNull(key))
-				table.insert_or_assign(detail::encode_key(key), static_cast<NodeType>(scratch));
+				DumpValue(table, key, static_cast<NodeType>(scratch));
 		}
 
 		void Isolate()
@@ -343,6 +360,78 @@ namespace oly::editor
 		void Reset(Self& source)
 		{
 			ResetField(*this, source);
+		}
+	};
+
+	template<typename T, glm::length_t L>
+	void LoadValue(TOMLNode node, glm::vec<L, T>& obj)
+	{
+		if (auto arr = node.as_array())
+		{
+			for (glm::length_t i = 0; i < glm::min(arr->size(), L); ++i)
+			{
+				if (auto v = arr->get_as<T>(i))
+					obj[i] = *v;
+			}
+		}
+	}
+
+	template<typename T, glm::length_t L>
+	void DumpValue(toml::table& table, detail::Key key, glm::vec<L, T> obj)
+	{
+		toml::array arr;
+		arr.reserve(L);
+		for (glm::length_t i = 0; i < L; ++i)
+			arr.push_back(obj[i]);
+		table.insert_or_assign(detail::encode_key(key), std::move(arr));
+	}
+
+	//template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
+	//using VecField = RangeField<glm::vec<L, float>, Min, Max>;
+
+	//template<OptionalFloat Min, OptionalFloat Max>
+	//using Vec2Field = VecField<Min, Max, 2>;
+	//
+	//template<OptionalFloat Min, OptionalFloat Max>
+	//using Vec3Field = VecField<Min, Max, 3>;
+	//
+	//template<OptionalFloat Min, OptionalFloat Max>
+	//using Vec4Field = VecField<Min, Max, 4>;
+
+	template<typename T, size_t N>
+	void LoadValue(TOMLNode node, std::array<T, N>& obj)
+	{
+		if (auto arr = node.as_array())
+		{
+			for (size_t i = 0; i < std::min(arr->size(), N); ++i)
+			{
+				if (auto v = arr->get_as<T>(i))
+					obj[i] = *v;
+			}
+		}
+	}
+
+	template<typename T, size_t N>
+	void DumpValue(toml::table& table, detail::Key key, std::array<T, N> obj)
+	{
+		toml::array arr;
+		arr.reserve(N);
+		for (size_t i = 0; i < N; ++i)
+			arr.push_back(obj[i]);
+		table.insert_or_assign(detail::encode_key(key), std::move(arr));
+	}
+
+	template<size_t N>
+	struct BoolArrayField : public PrimitiveField<std::array<bool, N>, BoolArrayField<N>>
+	{
+		const char** sublabels;
+
+		BoolArrayField(std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: PrimitiveField<std::array<bool, N>, BoolArrayField<N>>(def, key, label), sublabels(sublabels) {}
+
+		bool Draw()
+		{
+			return DescIO::Draw(this->label, this->scratch.data(), this->disk ? this->disk->scratch.data() : nullptr, sublabels, N);
 		}
 	};
 }

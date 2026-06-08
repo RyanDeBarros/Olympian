@@ -7,6 +7,7 @@
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
+#include "definitions/enums/GamepadAxis2D.h"
 #include "definitions/enums/SignalBindingType.h"
 
 namespace oly
@@ -213,10 +214,10 @@ namespace oly
 
 	static void load_gamepad_button_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
 	{
-		int button;
+		GLenum button;
 		if (!parser.optional(detail::Key::Button)(button))
 			return;
-		input::GamepadButtonBinding b{ .button = (input::GamepadButton)button };
+		input::GamepadButtonBinding b{ .button = static_cast<input::GamepadButton>(button) };
 		b.modifier = load_modifier_0d(parser);
 
 		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
@@ -224,10 +225,10 @@ namespace oly
 
 	static void load_gamepad_axis_1d_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
 	{
-		int axis1d;
+		GLenum axis1d;
 		if (!parser.optional(detail::Key::Axis1D)(axis1d))
 			return;
-		input::GamepadAxis1DBinding b{ .axis = (input::GamepadAxis1D)axis1d };
+		input::GamepadAxis1DBinding b{ .axis = static_cast<input::GamepadAxis1D>(axis1d) };
 		parser.optional(detail::Key::Deadzone)(b.deadzone);
 		b.modifier = load_modifier_1d(parser);
 
@@ -236,10 +237,10 @@ namespace oly
 
 	static void load_gamepad_axis_2d_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
 	{
-		int axis2d;
+		detail::GamepadAxis2D axis2d;
 		if (!parser.optional(detail::Key::Axis2D)(axis2d))
 			return;
-		input::GamepadAxis2DBinding b{ .axis = (input::GamepadAxis2D)axis2d };
+		input::GamepadAxis2DBinding b{ .axis = axis2d };
 		parser.optional(detail::Key::Deadzone)(b.deadzone);
 		b.modifier = load_modifier_2d(parser);
 
@@ -266,27 +267,27 @@ namespace oly
 	{
 		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(detail::Key::ID)();
-		switch (parser.required<input::SignalBindingType>(detail::Key::Binding)())
+		switch (parser.required<detail::SignalBindingType>(detail::Key::Binding)())
 		{
-		case input::SignalBindingType::Key:
+		case detail::SignalBindingType::Key:
 			load_key_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::MouseButton:
+		case detail::SignalBindingType::MouseButton:
 			load_mouse_button_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::GamepadButton:
+		case detail::SignalBindingType::GamepadButton:
 			load_gamepad_button_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::GamepadAxis1D:
+		case detail::SignalBindingType::GamepadAxis1D:
 			load_gamepad_axis_1d_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::GamepadAxis2D:
+		case detail::SignalBindingType::GamepadAxis2D:
 			load_gamepad_axis_2d_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::CursorPos:
+		case detail::SignalBindingType::CursorPos:
 			load_cursor_pos_binding(signal_table, parser, id);
 			break;
-		case input::SignalBindingType::Scroll:
+		case detail::SignalBindingType::Scroll:
 			load_scroll_binding(signal_table, parser, id);
 			break;
 		}

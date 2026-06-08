@@ -33,7 +33,7 @@ namespace oly::input
 		value.x *= multiplier.x;
 		value.y *= multiplier.y;
 
-		if (swizzle == Swizzle::YX)
+		if (swizzle == detail::Swizzle::YX)
 			std::swap(value.x, value.y);
 
 		return value;
@@ -52,21 +52,21 @@ namespace oly::input
 
 		switch (swizzle)
 		{
-		case Swizzle::XZY:
+		case detail::Swizzle::XZY:
 			std::swap(value.y, value.z);
 			break;
-		case Swizzle::YXZ:
+		case detail::Swizzle::YXZ:
 			std::swap(value.x, value.y);
 			break;
-		case Swizzle::YZX:
+		case detail::Swizzle::YZX:
 			std::swap(value.x, value.y);
 			std::swap(value.y, value.z);
 			break;
-		case Swizzle::ZXY:
+		case detail::Swizzle::ZXY:
 			std::swap(value.y, value.z);
 			std::swap(value.x, value.y);
 			break;
-		case Swizzle::ZYX:
+		case detail::Swizzle::ZYX:
 			std::swap(value.x, value.z);
 			break;
 		}
@@ -78,13 +78,13 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::None:
+		case detail::Axis0dConversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::To1D:
+		case detail::Axis0dConversion::To1D:
 			return Signal(phase, modify(float(value)), source);
-		case Conversion::To2D:
+		case detail::Axis0dConversion::To2D:
 			return Signal(phase, modify(glm::vec2(float(value))), source);
-		case Conversion::To3D:
+		case detail::Axis0dConversion::To3D:
 			return Signal(phase, modify(glm::vec3(float(value))), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -94,13 +94,13 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::None:
+		case detail::Axis1dConversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::To0D:
+		case detail::Axis1dConversion::To0D:
 			return Signal(phase, modify(value != 0.0f), source);
-		case Conversion::To2D:
+		case detail::Axis1dConversion::To2D:
 			return Signal(phase, modify(glm::vec2(value)), source);
-		case Conversion::To3D:
+		case detail::Axis1dConversion::To3D:
 			return Signal(phase, modify(glm::vec3(value)), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -110,23 +110,23 @@ namespace oly::input
 	{
 		switch (conversion)
 		{
-		case Conversion::None:
+		case detail::Axis2dConversion::None:
 			return Signal(phase, modify(value), source);
-		case Conversion::To0D_X:
+		case detail::Axis2dConversion::To0D_X:
 			return Signal(phase, modify(value.x != 0.0f), source);
-		case Conversion::To0D_Y:
+		case detail::Axis2dConversion::To0D_Y:
 			return Signal(phase, modify(value.y != 0.0f), source);
-		case Conversion::To0D_XY:
+		case detail::Axis2dConversion::To0D_XY:
 			return Signal(phase, modify(value.x != 0.0f || value.y != 0.0f), source);
-		case Conversion::To1D_X:
+		case detail::Axis2dConversion::To1D_X:
 			return Signal(phase, modify(value.x), source);
-		case Conversion::To1D_Y:
+		case detail::Axis2dConversion::To1D_Y:
 			return Signal(phase, modify(value.y), source);
-		case Conversion::To1D_XY:
+		case detail::Axis2dConversion::To1D_XY:
 			return Signal(phase, modify(glm::length(value)), source);
-		case Conversion::To3D_0:
+		case detail::Axis2dConversion::To3D_0:
 			return Signal(phase, modify(glm::vec3(value, 0.0f)), source);
-		case Conversion::To3D_1:
+		case detail::Axis2dConversion::To3D_1:
 			return Signal(phase, modify(glm::vec3(value, 1.0f)), source);
 		}
 		throw Error(ErrorCode::UnsupportedSwitchCase);
@@ -156,7 +156,7 @@ namespace oly::input
 					poll_gamepad_axis_1d(g, i);
 
 			for (int g = 0; g < (int)gamepad_polls.size(); ++g)
-				for (int i = 0; i <= input::GamepadAxis2D::LAST; ++i)
+				for (int i = static_cast<int>(detail::GamepadAxis2D::_FIRST); i <= static_cast<int>(detail::GamepadAxis2D::_LAST); ++i)
 					poll_gamepad_axis_2d(g, i);
 		}
 
@@ -262,7 +262,7 @@ namespace oly::input
 
 		void InputBindingContext::poll_gamepad_axis_2d(int controller, int axis)
 		{
-			glm::vec2 state = context::get_platform().gamepad(controller).axis_2d_state(input::GamepadAxis2D(axis));
+			glm::vec2 state = context::get_platform().gamepad(controller).axis_2d_state(static_cast<detail::GamepadAxis2D>(axis));
 			Axis2DPoll& apoll = gamepad_polls[controller].axis_2d_polls[axis];
 			glm::vec2 prev_axis = apoll.axis;
 			apoll.axis = state;
@@ -293,7 +293,7 @@ namespace oly::input
 			{
 				for (const input::GamepadAxis2DBinding& binding : bindings)
 				{
-					std::optional<input::Signal> signal = binding.signal(phase, input::GamepadAxis2D(axis), state, controller);
+					std::optional<input::Signal> signal = binding.signal(phase, static_cast<detail::GamepadAxis2D>(axis), state, controller);
 					if (signal)
 						dispatch(id, *signal);
 				}

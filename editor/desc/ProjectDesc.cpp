@@ -12,16 +12,6 @@ namespace oly::editor
 	{
 	}
 
-	void ViewportDesc::Reset(ViewportDesc& source)
-	{
-		RESET_FIELDS(VIEWPORT_GENERATOR);
-	}
-	
-	void ViewportDesc::Isolate()
-	{
-		ISOLATE_FIELDS(VIEWPORT_GENERATOR);
-	}
-
 	WindowHintsDesc::WindowHintsDesc() :
 		context_clear_color({ 0.f, 0.f, 0.f, 1.f }, detail::Key::ClearColor, "Clear color"),
 		context_swap_interval(1, detail::Key::SwapInterval, "Swap interval"),
@@ -48,16 +38,6 @@ namespace oly::editor
 	{
 	}
 
-	void WindowHintsDesc::Reset(WindowHintsDesc& source)
-	{
-		RESET_FIELDS(WINDOW_HINTS_GENERATOR);
-	}
-	
-	void WindowHintsDesc::Isolate()
-	{
-		ISOLATE_FIELDS(WINDOW_HINTS_GENERATOR);
-	}
-
 	const detail::Key WindowDesc::viewport_key = detail::Key::Viewport;
 	const detail::Key WindowDesc::window_hints_key = detail::Key::WindowHint;
 
@@ -68,16 +48,6 @@ namespace oly::editor
 	{
 	}
 
-	void WindowDesc::Reset(WindowDesc& source)
-	{
-		RESET_FIELDS(WINDOW_GENERATOR);
-	}
-	
-	void WindowDesc::Isolate()
-	{
-		ISOLATE_FIELDS(WINDOW_GENERATOR);
-	}
-
 	const detail::Key PlatformDesc::window_key = detail::Key::Window;
 
 	PlatformDesc::PlatformDesc() :
@@ -86,30 +56,10 @@ namespace oly::editor
 	{
 	}
 
-	void PlatformDesc::Reset(PlatformDesc& source)
-	{
-		RESET_FIELDS(PLATFORM_GENERATOR);
-	}
-
-	void PlatformDesc::Isolate()
-	{
-		ISOLATE_FIELDS(PLATFORM_GENERATOR);
-	}
-
 	CollisionDesc::CollisionDesc() :
 		masks({}, detail::Key::Masks, "Masks"),
 		layers({}, detail::Key::Layers, "Layers")
 	{
-	}
-
-	void CollisionDesc::Reset(CollisionDesc& source)
-	{
-		RESET_FIELDS(COLLISION_GENERATOR);
-	}
-	
-	void CollisionDesc::Isolate()
-	{
-		ISOLATE_FIELDS(COLLISION_GENERATOR);
 	}
 
 	LoggerEnableDesc::LoggerEnableDesc() :
@@ -119,16 +69,6 @@ namespace oly::editor
 		error(true, detail::Key::Error, "Error"),
 		fatal(true, detail::Key::Fatal, "Fatal")
 	{
-	}
-
-	void LoggerEnableDesc::Reset(LoggerEnableDesc& source)
-	{
-		RESET_FIELDS(LOGGER_ENABLE_GENERATOR);
-	}
-
-	void LoggerEnableDesc::Isolate()
-	{
-		ISOLATE_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
 	const detail::Key LoggerDesc::enable_key = detail::Key::Enable;
@@ -142,30 +82,10 @@ namespace oly::editor
 	{
 	}
 
-	void LoggerDesc::Reset(LoggerDesc& source)
-	{
-		RESET_FIELDS(LOGGER_GENERATOR);
-	}
-
-	void LoggerDesc::Isolate()
-	{
-		ISOLATE_FIELDS(LOGGER_GENERATOR);
-	}
-
 	FrameRateDesc::FrameRateDesc() :
 		frame_length_clip(0.2, detail::Key::FrameLengthClip, "Frame length clip"),
 		time_scale(1.0, detail::Key::TimeScale, "Time scale")
 	{
-	}
-
-	void FrameRateDesc::Reset(FrameRateDesc& source)
-	{
-		RESET_FIELDS(FRAME_RATE_GENERATOR);
-	}
-	
-	void FrameRateDesc::Isolate()
-	{
-		ISOLATE_FIELDS(FRAME_RATE_GENERATOR);
 	}
 
 	const detail::Key ContextDesc::platform_key = detail::Key::Platform;
@@ -173,25 +93,5 @@ namespace oly::editor
 	const detail::Key ContextDesc::logger_key = detail::Key::Logger;
 	const detail::Key ContextDesc::frame_rate_key = detail::Key::FrameRate;
 
-	void ContextDesc::Reset(ContextDesc& source)
-	{
-		RESET_FIELDS(CONTEXT_GENERATOR);
-	}
-
-	void ContextDesc::Isolate()
-	{
-		ISOLATE_FIELDS(CONTEXT_GENERATOR);
-	}
-
 	const detail::Key ProjectDesc::context_key = detail::Key::Context;
-
-	void ProjectDesc::Reset(ProjectDesc& source)
-	{
-		RESET_FIELDS(PROJECT_GENERATOR);
-	}
-
-	void ProjectDesc::Isolate()
-	{
-		ISOLATE_FIELDS(PROJECT_GENERATOR);
-	}
 }

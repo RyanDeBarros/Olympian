@@ -14,6 +14,11 @@ namespace oly::editor
 		return key != detail::Key::_;
 	}
 
+	detail::Key NullKey()
+	{
+		return detail::Key::_;
+	}
+
 	bool BoolField::Draw()
 	{
 		return DescIO::Draw(label, scratch, DISK_FIELD(disk));

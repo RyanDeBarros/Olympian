@@ -90,24 +90,6 @@ namespace oly
 		inline const GamepadAxis1D GamepadAxis1D::RIGHT_Y = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_Y);
 		inline const GamepadAxis1D GamepadAxis1D::LEFT_TRIGGER = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER);
 		inline const GamepadAxis1D GamepadAxis1D::RIGHT_TRIGGER = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
-
-		struct GamepadAxis2D
-		{
-			static constexpr int LAST = 1;
-
-		private:
-			int v;
-
-		public:
-			explicit GamepadAxis2D(int v) { this->v = glm::clamp(v, 0, LAST); }
-			operator int() const { return v; }
-
-			static const GamepadAxis2D LEFT_XY;
-			static const GamepadAxis2D RIGHT_XY;
-		};
-
-		inline const GamepadAxis2D GamepadAxis2D::LEFT_XY = GamepadAxis2D(0);
-		inline const GamepadAxis2D GamepadAxis2D::RIGHT_XY = GamepadAxis2D(1);
 	}
 
 	namespace platform

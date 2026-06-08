@@ -29,15 +29,15 @@ namespace oly::editor
 		void DrawSignals();
 		void DrawRoutes();
 
-		void Draw(SignalArrayDesc& desc);
-		void Draw(RouteArrayDesc& desc);
+		void Draw(SignalDesc& desc);
+		void Draw(RouteDesc& desc);
 
 		void Load(TOMLNode node, SignalFullDesc& desc);
-		void Load(TOMLNode node, SignalArrayDesc& desc);
-		void Load(TOMLNode node, RouteArrayDesc& desc);
+		void Load(TOMLNode node, SignalDesc& desc);
+		void Load(TOMLNode node, RouteDesc& desc);
 
 		void Dump(toml::table& table, SignalFullDesc& desc);
-		void Dump(toml::table& table, SignalArrayDesc& desc);
-		void Dump(toml::table& table, RouteArrayDesc& desc);
+		void Dump(toml::table& table, SignalDesc& desc);
+		void Dump(toml::table& table, RouteDesc& desc);
 	};
 }

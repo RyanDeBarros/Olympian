@@ -101,7 +101,7 @@ namespace oly::editor
 
 		_active_slot = 0;
 		_preview_nav = {};
-		if (auto svg_desc = std::get_if<TextureDesc<VectorTextureDesc>>(&_scratch.variant))
+		if (auto svg_desc = std::get_if<ArrayDesc<VectorTextureDesc>>(&_scratch.variant))
 			_preview_nav.svg_scale = svg_desc->array[_active_slot]->scale.scratch;
 
 		ReloadPreviewTexture();

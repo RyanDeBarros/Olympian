@@ -1,6 +1,8 @@
 #pragma once
 
 #include "desc/Fields.h"
+#include "desc/ArrayDesc.h"
+
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/SVGMipmapGenerationMode.h"
@@ -10,26 +12,6 @@
 
 namespace oly::editor
 {
-	struct SpritesheetDesc
-	{
-		EnumField<detail::SpritesheetParamType> col_type;
-		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
-		EnumField<detail::SpritesheetParamType> row_type;
-		IntField<MakeOpt(1), MakeOpt<int>()> row_value;
-		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_index;
-		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_pixel;
-		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_index;
-		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_pixel;
-		FloatField<MakeOpt(0.f), MakeOpt<float>()> delay;
-		BoolField row_major;
-		BoolField row_up;
-
-		SpritesheetDesc();
-
-		void Reset(SpritesheetDesc& source);
-		void Isolate();
-	};
-
 #define SPRITESHEET_PARTIAL_GENERATOR(M) \
 		M(col_offset_index) \
 		M(col_offset_pixel) \
@@ -46,19 +28,23 @@ namespace oly::editor
 		M(row_value) \
 		SPRITESHEET_PARTIAL_GENERATOR(M)
 
-	struct BaseTextureDesc
+	struct SpritesheetDesc
 	{
-		GLenumField min_filter;
-		GLenumField mag_filter;
-		GLenumField wrap_s;
-		GLenumField wrap_t;
-		BoolField anim;
-		SpritesheetDesc spritesheet;
+		EnumField<detail::SpritesheetParamType> col_type;
+		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
+		EnumField<detail::SpritesheetParamType> row_type;
+		IntField<MakeOpt(1), MakeOpt<int>()> row_value;
+		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_index;
+		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_pixel;
+		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_index;
+		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_pixel;
+		FloatField<MakeOpt(0.f), MakeOpt<float>()> delay;
+		BoolField row_major;
+		BoolField row_up;
 
-		BaseTextureDesc(GLenum default_filter);
+		SpritesheetDesc();
 
-		void Reset(BaseTextureDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(SpritesheetDesc, SPRITESHEET_GENERATOR);
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
@@ -72,16 +58,18 @@ namespace oly::editor
 		M(anim) \
 		M(spritesheet)
 
-	struct RasterTextureDesc
+	struct BaseTextureDesc
 	{
-		BaseTextureDesc base;
-		BoolField generate_mipmaps;
-		EnumField<detail::StorageMode> storage;
+		GLenumField min_filter;
+		GLenumField mag_filter;
+		GLenumField wrap_s;
+		GLenumField wrap_t;
+		BoolField anim;
+		SpritesheetDesc spritesheet;
 
-		RasterTextureDesc();
+		BaseTextureDesc(GLenum default_filter);
 
-		void Reset(RasterTextureDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -92,18 +80,15 @@ namespace oly::editor
 		M(base) \
 		RASTER_TEXTURE_PARTIAL_GENERATOR(M)
 
-	struct VectorTextureDesc
+	struct RasterTextureDesc
 	{
 		BaseTextureDesc base;
-		EnumField<detail::SVGMipmapGenerationMode> generate_mipmaps;
-		EnumField<detail::StorageMode> image_storage;
-		EnumField<detail::StorageMode> abstract_storage;
-		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
+		BoolField generate_mipmaps;
+		EnumField<detail::StorageMode> storage;
 
-		VectorTextureDesc();
+		RasterTextureDesc();
 
-		void Reset(VectorTextureDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(RasterTextureDesc, RASTER_TEXTURE_FULL_GENERATOR);
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -116,82 +101,26 @@ namespace oly::editor
 		M(base) \
 		VECTOR_TEXTURE_PARTIAL_GENERATOR(M)
 
+	struct VectorTextureDesc
+	{
+		BaseTextureDesc base;
+		EnumField<detail::SVGMipmapGenerationMode> generate_mipmaps;
+		EnumField<detail::StorageMode> image_storage;
+		EnumField<detail::StorageMode> abstract_storage;
+		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
+
+		VectorTextureDesc();
+
+		DESC_CHAIN_METHODS(VectorTextureDesc, VECTOR_TEXTURE_FULL_GENERATOR);
+	};
+
 	template<typename T>
 	concept TextureSlotDesc = std::is_same_v<T, RasterTextureDesc> || std::is_same_v<T, VectorTextureDesc>;
 
-	template<TextureSlotDesc SlotType>
-	struct TextureDesc
-	{
-		std::vector<std::unique_ptr<SlotType>> array;
-		IntField<MakeOpt(1), MakeOpt<int>()> size;
-
-		TextureDesc()
-			: size(0, detail::Key::_, "")
-		{
-		}
-
-		void Reset(TextureDesc& source)
-		{
-			Clear();
-			array.resize(source.array.size());
-			for (size_t i = 0; i < array.size(); ++i)
-			{
-				array[i] = std::make_unique<SlotType>();
-				array[i]->Reset(*source.array[i]);
-			}
-			size.Reset(source.size);
-		}
-
-		void Isolate()
-		{
-			for (auto& desc : array)
-				desc->Isolate();
-			size.Isolate();
-		}
-
-		void PushBack()
-		{
-			array.push_back(std::make_unique<SlotType>());
-			++size.scratch;
-		}
-
-		void Remove(size_t i)
-		{
-			array[i]->Isolate();
-			array.erase(array.begin() + i);
-			--size.scratch;
-		}
-
-		void Clear()
-		{
-			Isolate();
-			array.clear();
-			size.scratch = 0;
-		}
-
-		void Resize(TextureDesc& source)
-		{
-			if (array.size() < source.array.size())
-			{
-				for (size_t i = array.size(); i < source.array.size(); ++i)
-				{
-					array.push_back(std::make_unique<SlotType>());
-					array[i]->Reset(*source.array[i]);
-				}
-			}
-			else if (source.array.size() < array.size())
-			{
-				for (size_t i = source.array.size(); i < array.size(); ++i)
-					array[i]->Isolate();
-				array.erase(array.begin() + source.array.size());
-			}
-			size.Reset(source.size);
-		}
-	};
-
 	struct TextureVariantDesc
 	{
-		std::variant<TextureDesc<RasterTextureDesc>, TextureDesc<VectorTextureDesc>> variant;
+		// TODO v8 use VariantDesc<ArrayDesc<RasterTextureDesc>, ArrayDesc<VectorTextureDesc>>
+		std::variant<ArrayDesc<RasterTextureDesc>, ArrayDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
 		void Reset(TextureVariantDesc& source);
@@ -207,15 +136,12 @@ namespace oly::editor
 		void Clear()
 		{
 			std::visit([](auto& desc) { desc.Clear(); }, variant);
-			variant = TextureDesc<SlotType>();
+			variant = ArrayDesc<SlotType>();
 		}
 
 		void Visit(auto&& visitor)
 		{
-			std::visit([&visitor](auto& desc) {
-				for (auto& d : desc.array)
-					visitor(*d);
-			}, variant);
+			std::visit([&visitor](auto& desc) { desc.Visit(visitor); }, variant);
 		}
 
 		auto Visit(size_t i, auto&& visitor)
@@ -238,10 +164,7 @@ namespace oly::editor
 
 		void VisitIndexed(auto&& visitor)
 		{
-			std::visit([&visitor](auto& desc) {
-				for (size_t i = 0; i < desc.array.size(); ++i)
-					visitor(i, *desc.array[i]);
-			}, variant);
+			std::visit([&visitor](auto& desc) { desc.VisitIndexed(visitor); }, variant);
 		}
 	};
 }

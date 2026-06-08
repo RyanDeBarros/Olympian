@@ -1,5 +1,8 @@
 #pragma once
 
+#include "definitions/enums/AxisConversions.h"
+#include "definitions/enums/GamepadAxis2D.h"
+#include "definitions/enums/SignalBindingType.h"
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/SVGMipmapGenerationMode.h"

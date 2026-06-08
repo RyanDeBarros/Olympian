@@ -21,16 +21,6 @@ namespace oly::editor
 	{
 	}
 
-	void SpritesheetDesc::Reset(SpritesheetDesc& source)
-	{
-		RESET_FIELDS(SPRITESHEET_GENERATOR);
-	}
-
-	void SpritesheetDesc::Isolate()
-	{
-		ISOLATE_FIELDS(SPRITESHEET_GENERATOR);
-	}
-
 	static const GLenum MIN_FILTER_VALUES[] = {
 		GL_NEAREST,
 		GL_LINEAR,
@@ -85,31 +75,11 @@ namespace oly::editor
 	{
 	}
 
-	void BaseTextureDesc::Reset(BaseTextureDesc& source)
-	{
-		RESET_FIELDS(BASE_TEXTURE_GENERATOR);
-	}
-
-	void BaseTextureDesc::Isolate()
-	{
-		ISOLATE_FIELDS(BASE_TEXTURE_GENERATOR);
-	}
-
 	RasterTextureDesc::RasterTextureDesc() :
 		base(GL_NEAREST),
 		generate_mipmaps(false, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
 		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
 	{
-	}
-
-	void RasterTextureDesc::Reset(RasterTextureDesc& source)
-	{
-		RESET_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
-	}
-
-	void RasterTextureDesc::Isolate()
-	{
-		ISOLATE_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
 	}
 
 	VectorTextureDesc::VectorTextureDesc() :
@@ -119,16 +89,6 @@ namespace oly::editor
 		abstract_storage(detail::StorageMode::Discard, detail::Key::AbstractStorage, "Abstract Storage"),
 		scale(1.f, detail::Key::VectorScale, "Vector Scale")
 	{
-	}
-
-	void VectorTextureDesc::Reset(VectorTextureDesc& source)
-	{
-		RESET_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
-	}
-
-	void VectorTextureDesc::Isolate()
-	{
-		ISOLATE_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
 	}
 
 	const detail::Key TextureVariantDesc::array_key = detail::Key::TextureArray;

@@ -4,6 +4,10 @@
 
 namespace oly::editor
 {
+#define VIEWPORT_GENERATOR(M) \
+	M(boxed) \
+	M(stretch)
+
 	struct ViewportDesc
 	{
 		BoolField boxed;
@@ -11,13 +15,32 @@ namespace oly::editor
 
 		ViewportDesc();
 
-		void Reset(ViewportDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(ViewportDesc, VIEWPORT_GENERATOR);
 	};
 
-#define VIEWPORT_GENERATOR(M) \
-	M(boxed) \
-	M(stretch)
+#define WINDOW_HINTS_GENERATOR(M) \
+	M(context_clear_color) \
+	M(context_swap_interval) \
+	M(window_resizable) \
+	M(window_visible) \
+	M(window_decorated) \
+	M(window_focused) \
+	M(window_auto_iconify) \
+	M(window_floating) \
+	M(window_maximized) \
+	M(window_center_cursor) \
+	M(window_transparent_framebuffer) \
+	M(window_focus_on_show) \
+	M(window_scale_to_monitor) \
+	M(window_scale_framebuffer) \
+	M(window_mouse_passthrough) \
+	M(window_position_x) \
+	M(window_position_y) \
+	M(window_refresh_rate) \
+	M(window_stereo) \
+	M(window_srgb_capable) \
+	M(window_opengl_forward_compat) \
+	M(window_context_debug)
 
 	struct WindowHintsDesc
 	{
@@ -46,33 +69,18 @@ namespace oly::editor
 
 		WindowHintsDesc();
 
-		void Reset(WindowHintsDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
 	};
 
-#define WINDOW_HINTS_GENERATOR(M) \
-	M(context_clear_color) \
-	M(context_swap_interval) \
-	M(window_resizable) \
-	M(window_visible) \
-	M(window_decorated) \
-	M(window_focused) \
-	M(window_auto_iconify) \
-	M(window_floating) \
-	M(window_maximized) \
-	M(window_center_cursor) \
-	M(window_transparent_framebuffer) \
-	M(window_focus_on_show) \
-	M(window_scale_to_monitor) \
-	M(window_scale_framebuffer) \
-	M(window_mouse_passthrough) \
-	M(window_position_x) \
-	M(window_position_y) \
-	M(window_refresh_rate) \
-	M(window_stereo) \
-	M(window_srgb_capable) \
-	M(window_opengl_forward_compat) \
-	M(window_context_debug)
+#define WINDOW_PARTIAL_GENERATOR(M) \
+	M(width) \
+	M(height) \
+	M(title)
+
+#define WINDOW_GENERATOR(M) \
+	WINDOW_PARTIAL_GENERATOR(M) \
+	M(viewport) \
+	M(window_hints)
 
 	struct WindowDesc
 	{
@@ -86,30 +94,7 @@ namespace oly::editor
 
 		WindowDesc();
 
-		void Reset(WindowDesc& source);
-		void Isolate();
-	};
-
-#define WINDOW_PARTIAL_GENERATOR(M) \
-	M(width) \
-	M(height) \
-	M(title)
-
-#define WINDOW_GENERATOR(M) \
-	WINDOW_PARTIAL_GENERATOR(M) \
-	M(viewport) \
-	M(window_hints)
-
-	struct PlatformDesc
-	{
-		WindowDesc window;
-		static const detail::Key window_key;
-		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
-
-		PlatformDesc();
-
-		void Reset(PlatformDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(WindowDesc, WINDOW_GENERATOR);
 	};
 
 #define PLATFORM_PARTIAL_GENERATOR(M) \
@@ -119,6 +104,21 @@ namespace oly::editor
 	M(window) \
 	PLATFORM_PARTIAL_GENERATOR(M)
 
+	struct PlatformDesc
+	{
+		WindowDesc window;
+		static const detail::Key window_key;
+		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
+
+		PlatformDesc();
+
+		DESC_CHAIN_METHODS(PlatformDesc, PLATFORM_GENERATOR);
+	};
+
+#define COLLISION_GENERATOR(M) \
+	M(masks) \
+	M(layers)
+
 	struct CollisionDesc
 	{
 		StringArrayField<32> masks;
@@ -126,13 +126,15 @@ namespace oly::editor
 
 		CollisionDesc();
 
-		void Reset(CollisionDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(CollisionDesc, COLLISION_GENERATOR);
 	};
 
-#define COLLISION_GENERATOR(M) \
-	M(masks) \
-	M(layers)
+#define LOGGER_ENABLE_GENERATOR(M) \
+	M(debug) \
+	M(info) \
+	M(warning) \
+	M(error) \
+	M(fatal)
 
 	struct LoggerEnableDesc
 	{
@@ -144,16 +146,18 @@ namespace oly::editor
 
 		LoggerEnableDesc();
 
-		void Reset(LoggerEnableDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
 	};
 
-#define LOGGER_ENABLE_GENERATOR(M) \
-	M(debug) \
-	M(info) \
-	M(warning) \
-	M(error) \
-	M(fatal)
+#define LOGGER_PARTIAL_GENERATOR(M) \
+	M(use_logfile) \
+	M(use_console) \
+	M(max_prior_log_files) \
+	M(max_prior_log_bytes)
+
+#define LOGGER_GENERATOR(M) \
+	LOGGER_PARTIAL_GENERATOR(M) \
+	M(enable)
 
 	struct LoggerDesc
 	{
@@ -167,19 +171,12 @@ namespace oly::editor
 
 		LoggerDesc();
 
-		void Reset(LoggerDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(LoggerDesc, LOGGER_GENERATOR);
 	};
 
-#define LOGGER_PARTIAL_GENERATOR(M) \
-	M(use_logfile) \
-	M(use_console) \
-	M(max_prior_log_files) \
-	M(max_prior_log_bytes)
-
-#define LOGGER_GENERATOR(M) \
-	LOGGER_PARTIAL_GENERATOR(M) \
-	M(enable)
+#define FRAME_RATE_GENERATOR(M) \
+	M(frame_length_clip) \
+	M(time_scale)
 
 	struct FrameRateDesc
 	{
@@ -188,13 +185,14 @@ namespace oly::editor
 
 		FrameRateDesc();
 
-		void Reset(FrameRateDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(FrameRateDesc, FRAME_RATE_GENERATOR);
 	};
 
-#define FRAME_RATE_GENERATOR(M) \
-	M(frame_length_clip) \
-	M(time_scale)
+#define CONTEXT_GENERATOR(M) \
+	M(platform) \
+	M(collision) \
+	M(logger) \
+	M(frame_rate)
 
 	struct ContextDesc
 	{
@@ -207,25 +205,17 @@ namespace oly::editor
 		FrameRateDesc frame_rate;
 		static const detail::Key frame_rate_key;
 
-		void Reset(ContextDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(ContextDesc, CONTEXT_GENERATOR);
 	};
 
-#define CONTEXT_GENERATOR(M) \
-	M(platform) \
-	M(collision) \
-	M(logger) \
-	M(frame_rate)
+#define PROJECT_GENERATOR(M) \
+	M(context)
 
 	struct ProjectDesc
 	{
 		ContextDesc context;
 		static const detail::Key context_key;
 
-		void Reset(ProjectDesc& source);
-		void Isolate();
+		DESC_CHAIN_METHODS(ProjectDesc, PROJECT_GENERATOR);
 	};
-
-#define PROJECT_GENERATOR(M) \
-	M(context)
 }
