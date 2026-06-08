@@ -21,12 +21,12 @@ namespace oly::editor
 
 	bool BoolField::Draw()
 	{
-		return DescIO::Draw(label, scratch, DISK_FIELD(disk));
+		return DescIO::Draw(label, scratch, def);
 	}
 
 	bool GLenumField::Draw()
 	{
-		return DescIO::Draw(label, scratch, DISK_FIELD(disk), names, count);
+		return DescIO::Draw(label, scratch, def_index, names, count);
 	}
 
 	void GLenumField::Load(TOMLNode node)
@@ -37,16 +37,6 @@ namespace oly::editor
 	void GLenumField::Dump(toml::table& table) const
 	{
 		table.insert_or_assign(detail::encode_key(key), Scratch());
-	}
-
-	void GLenumField::Isolate()
-	{
-		IsolateField(*this);
-	}
-
-	void GLenumField::Reset(GLenumField& source)
-	{
-		ResetField(*this, source);
 	}
 
 	GLenum GLenumField::Scratch() const
@@ -77,7 +67,7 @@ namespace oly::editor
 
 	bool StringField::Draw()
 	{
-		return DescIO::Draw(label, scratch, DISK_FIELD(disk));
+		return DescIO::Draw(label, scratch, def);
 	}
 
 	ColorField::ColorField(Color def, detail::Key key, const char* label)
@@ -87,7 +77,7 @@ namespace oly::editor
 
 	bool ColorField::Draw()
 	{
-		return DescIO::Draw(label, scratch, DISK_FIELD(disk));
+		return DescIO::Draw(label, scratch, def);
 	}
 
 	void ColorField::Load(TOMLNode node)
@@ -118,16 +108,6 @@ namespace oly::editor
 			array.push_back(scratch.a);
 			table.insert_or_assign(detail::encode_key(key), std::move(array));
 		}
-	}
-
-	void ColorField::Isolate()
-	{
-		IsolateField(*this);
-	}
-
-	void ColorField::Reset(ColorField& source)
-	{
-		ResetField(*this, source);
 	}
 
 	void LoadStringArray(TOMLNode node, std::string* strings, size_t count)

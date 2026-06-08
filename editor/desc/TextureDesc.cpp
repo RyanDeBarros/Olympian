@@ -93,29 +93,14 @@ namespace oly::editor
 
 	const detail::Key TextureVariantDesc::array_key = detail::Key::TextureArray;
 
-	void TextureVariantDesc::Reset(TextureVariantDesc& source)
+	size_t TextureVariantDesc::Size() const
 	{
-		Isolate();
-		std::visit([this](auto& s) {
-			using T = std::decay_t<decltype(s)>;
-			variant = T();
-			std::get<T>(variant).Reset(s);
-		}, source.variant);
-	}
-
-	void TextureVariantDesc::Isolate()
-	{
-		std::visit([](auto& desc) { desc.Isolate(); }, variant);
-	}
-
-	size_t TextureVariantDesc::Count() const
-	{
-		return std::visit([](const auto& desc) { return desc.array.size(); }, variant);
+		return std::visit([](const auto& desc) { return desc.Size(); }, variant);
 	}
 
 	bool TextureVariantDesc::Empty() const
 	{
-		return Count() == 0;
+		return Size() == 0;
 	}
 
 	void TextureVariantDesc::PushBack()
@@ -126,19 +111,5 @@ namespace oly::editor
 	void TextureVariantDesc::Remove(size_t i)
 	{
 		std::visit([i](auto& desc) { desc.Remove(i); }, variant);
-	}
-
-	IntField<MakeOpt(1), MakeOpt<int>()>& TextureVariantDesc::Size()
-	{
-		return std::visit([](auto& desc) -> IntField<MakeOpt(1), MakeOpt<int>()>&{ return desc.size; }, variant);
-	}
-
-	void TextureVariantDesc::Resize(TextureVariantDesc& source)
-	{
-		std::visit([this](auto& s) {
-			using T = std::decay_t<decltype(s)>;
-			variant = T();
-			std::get<T>(variant).Resize(s);
-		}, source.variant);
 	}
 }

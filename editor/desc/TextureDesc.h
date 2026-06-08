@@ -1,7 +1,7 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/ArrayDesc.h"
+#include "desc/Descriptors.h"
 
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
@@ -43,8 +43,6 @@ namespace oly::editor
 		BoolField row_up;
 
 		SpritesheetDesc();
-
-		DESC_CHAIN_METHODS(SpritesheetDesc, SPRITESHEET_GENERATOR);
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
@@ -68,8 +66,6 @@ namespace oly::editor
 		SpritesheetDesc spritesheet;
 
 		BaseTextureDesc(GLenum default_filter);
-
-		DESC_CHAIN_METHODS(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -87,8 +83,6 @@ namespace oly::editor
 		EnumField<detail::StorageMode> storage;
 
 		RasterTextureDesc();
-
-		DESC_CHAIN_METHODS(RasterTextureDesc, RASTER_TEXTURE_FULL_GENERATOR);
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -110,8 +104,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
 
 		VectorTextureDesc();
-
-		DESC_CHAIN_METHODS(VectorTextureDesc, VECTOR_TEXTURE_FULL_GENERATOR);
 	};
 
 	template<typename T>
@@ -119,24 +111,19 @@ namespace oly::editor
 
 	struct TextureVariantDesc
 	{
-		// TODO v8 use VariantDesc<ArrayDesc<RasterTextureDesc>, ArrayDesc<VectorTextureDesc>>
-		std::variant<ArrayDesc<RasterTextureDesc>, ArrayDesc<VectorTextureDesc>> variant;
+		// TODO v8 use VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>>
+		std::variant<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
-		void Reset(TextureVariantDesc& source);
-		void Isolate();
-		size_t Count() const;
+		size_t Size() const;
 		bool Empty() const;
 		void PushBack();
 		void Remove(size_t i);
-		IntField<MakeOpt(1), MakeOpt<int>()>& Size();
-		void Resize(TextureVariantDesc& source);
 
 		template<TextureSlotDesc SlotType>
 		void Clear()
 		{
-			std::visit([](auto& desc) { desc.Clear(); }, variant);
-			variant = ArrayDesc<SlotType>();
+			variant = VectorDesc<SlotType>();
 		}
 
 		void Visit(auto&& visitor)
@@ -147,15 +134,15 @@ namespace oly::editor
 		auto Visit(size_t i, auto&& visitor)
 		{
 			return std::visit([&visitor, i](auto& desc) {
-				using T = std::invoke_result_t<decltype(visitor), decltype(*desc.array[i])>;
+				using T = std::invoke_result_t<decltype(visitor), decltype(desc.vector[i])>;
 				if constexpr (std::is_same_v<T, void>)
 				{
-					return visitor(*desc.array[i]);
+					return visitor(desc.vector[i]);
 				}
 				else
 				{
-					if (i < desc.array.size())
-						return std::optional<T>(visitor(*desc.array[i]));
+					if (i < desc.Size())
+						return std::optional<T>(visitor(desc.vector[i]));
 					else
 						return std::optional<T>(std::nullopt);
 				}

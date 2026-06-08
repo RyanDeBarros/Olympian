@@ -32,17 +32,17 @@ namespace oly::editor
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, int& data, const int* disk, const char** names, size_t count)
+	bool DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
 	{
 		bool dirty = false;
 		PrepareValue(label);
 		gui::IDScope scope(&data);
 		dirty |= gui::InputData<int>{}("", data, names, count);
-		dirty |= CheckRevertButton(data, disk);
+		dirty |= CheckRevertButton(data, def);
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, std::string* data, const std::string* disk, size_t count)
+	bool DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
 	{
 		std::unique_ptr<Form> temp_form;
 		Form* form = Form::ActiveForm();
@@ -56,14 +56,14 @@ namespace oly::editor
 		{
 			bool dirty = false;
 			for (size_t i = 0; i < count; ++i)
-				dirty |= Draw(std::to_string(i).c_str(), data[i], disk ? &disk[i] : nullptr);
+				dirty |= Draw(std::to_string(i).c_str(), data[i], def[i]);
 			return dirty;
 		}
 		else
 			return false;
 	}
 
-	bool DescIO::Draw(const char* label, bool* data, const bool* disk, const char** sublabels, size_t count)
+	bool DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
 		bool dirty = false;
 		PrepareValue(label);
@@ -73,9 +73,9 @@ namespace oly::editor
 		{
 			dirty |= ImGui::Checkbox(sublabels[i], data + i);
 
-			if (disk && data[i] != disk[i] && DrawRevertButton(disk + i))
+			if (data[i] != def[i] && DrawRevertButton(def + i))
 			{
-				data[i] = disk[i];
+				data[i] = def[i];
 				dirty = true;
 			}
 
@@ -87,56 +87,56 @@ namespace oly::editor
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis0dConversion& data, const detail::Axis0dConversion* disk)
+	bool DescIO::Draw(const char* label, detail::Axis0dConversion& data, const detail::Axis0dConversion& def)
 	{
-		return DrawEnum(label, data, disk, { "None", "To 1D", "To 2D", "To 3D" });
+		return DrawEnum(label, data, def, { "None", "To 1D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis1dConversion& data, const detail::Axis1dConversion* disk)
+	bool DescIO::Draw(const char* label, detail::Axis1dConversion& data, const detail::Axis1dConversion& def)
 	{
-		return DrawEnum(label, data, disk, { "None", "To 0D", "To 2D", "To 3D" });
+		return DrawEnum(label, data, def, { "None", "To 0D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis2dConversion& data, const detail::Axis2dConversion* disk)
+	bool DescIO::Draw(const char* label, detail::Axis2dConversion& data, const detail::Axis2dConversion& def)
 	{
-		return DrawEnum(label, data, disk, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+		return DrawEnum(label, data, def, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::GamepadAxis2D& data, const detail::GamepadAxis2D* disk)
+	bool DescIO::Draw(const char* label, detail::GamepadAxis2D& data, const detail::GamepadAxis2D& def)
 	{
-		return DrawEnum(label, data, disk, { "Left XY", "Right XY" });
+		return DrawEnum(label, data, def, { "Left XY", "Right XY" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SignalBindingType& data, const detail::SignalBindingType* disk)
+	bool DescIO::Draw(const char* label, detail::SignalBindingType& data, const detail::SignalBindingType& def)
 	{
-		return DrawEnum(label, data, disk, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
+		return DrawEnum(label, data, def, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType* disk)
+	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType& def)
 	{
-		return DrawEnum(label, data, disk, { "Index", "Pixel" });
+		return DrawEnum(label, data, def, { "Index", "Pixel" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
+	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode& def)
 	{
-		return DrawEnum(label, data, disk, { "Discard", "Keep" });
+		return DrawEnum(label, data, def, { "Discard", "Keep" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Swizzle& data, const detail::Swizzle* disk)
+	bool DescIO::Draw(const char* label, detail::Swizzle& data, const detail::Swizzle& def)
 	{
-		return DrawEnum(label, data, disk, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+		return DrawEnum(label, data, def, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
+	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode& def)
 	{
-		return DrawEnum(label, data, disk, { "Auto", "Off", "Manual" });
+		return DrawEnum(label, data, def, { "Auto", "Off", "Manual" });
 	}
 }

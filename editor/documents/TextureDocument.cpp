@@ -97,12 +97,12 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch.Reset(_disk);
+		_scratch = _disk;
 
 		_active_slot = 0;
 		_preview_nav = {};
-		if (auto svg_desc = std::get_if<ArrayDesc<VectorTextureDesc>>(&_scratch.variant))
-			_preview_nav.svg_scale = svg_desc->array[_active_slot]->scale.scratch;
+		if (auto svg_desc = std::get_if<VectorDesc<VectorTextureDesc>>(&_scratch.variant))
+			_preview_nav.svg_scale = svg_desc->vector[_active_slot].scale.scratch;
 
 		ReloadPreviewTexture();
 	}
@@ -112,7 +112,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk.Reset(_scratch);
+		_disk = _scratch;
 		MarkClean();
 	}
 
@@ -450,17 +450,6 @@ namespace oly::editor
 				slot_changed = true;
 			}
 
-			if (desc.Size().disk && desc.Size().disk->scratch != desc.Size().scratch)
-			{
-				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", &desc.Size()))
-				{
-					desc.Resize(_disk);
-					
-					MarkDirty();
-				}
-			}
-
 			if (!ClampActiveSlot(desc))
 			{
 				if (og_slot != _active_slot || slot_changed)
@@ -531,12 +520,12 @@ namespace oly::editor
 	{
 		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		if (DescIO::Draw(col_label, desc.col_value.scratch, DISK_FIELD(desc.col_value.disk), desc.col_value.Min, desc.col_value.Max))
+		if (DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max))
 			MarkDirty();
 
 		DRAW_FIELD(row_type);
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		if (DescIO::Draw(row_label, desc.row_value.scratch, DISK_FIELD(desc.row_value.disk), desc.row_value.Min, desc.row_value.Max))
+		if (DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max))
 			MarkDirty();
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
@@ -567,8 +556,6 @@ namespace oly::editor
 
 			desc.Visit(0, [this](auto& d) { Load(TOMLNode(), d); });
 		}
-
-		desc.Size().scratch = desc.Count();
 	}
 	
 	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc)
@@ -640,7 +627,7 @@ namespace oly::editor
 	void TextureDocument::GenSlotNames()
 	{
 		_slot_names.clear();
-		for (int i = 0; i < _scratch.Count(); ++i)
+		for (int i = 0; i < _scratch.Size(); ++i)
 			_slot_names.push_back("Slot " + std::to_string(i));
 		ClampActiveSlot(_scratch);
 	}
@@ -651,8 +638,8 @@ namespace oly::editor
 
 		if (desc.Empty())
 			_active_slot = 0;
-		else if (_active_slot >= desc.Count())
-			_active_slot = desc.Count() - 1;
+		else if (_active_slot >= desc.Size())
+			_active_slot = desc.Size() - 1;
 
 		if (og != _active_slot)
 		{

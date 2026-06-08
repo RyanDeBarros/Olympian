@@ -14,8 +14,6 @@ namespace oly::editor
 		BoolField stretch;
 
 		ViewportDesc();
-
-		DESC_CHAIN_METHODS(ViewportDesc, VIEWPORT_GENERATOR);
 	};
 
 #define WINDOW_HINTS_GENERATOR(M) \
@@ -68,8 +66,6 @@ namespace oly::editor
 		BoolField window_context_debug;
 
 		WindowHintsDesc();
-
-		DESC_CHAIN_METHODS(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
 	};
 
 #define WINDOW_PARTIAL_GENERATOR(M) \
@@ -93,8 +89,6 @@ namespace oly::editor
 		static const detail::Key window_hints_key;
 
 		WindowDesc();
-
-		DESC_CHAIN_METHODS(WindowDesc, WINDOW_GENERATOR);
 	};
 
 #define PLATFORM_PARTIAL_GENERATOR(M) \
@@ -111,8 +105,6 @@ namespace oly::editor
 		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
 
 		PlatformDesc();
-
-		DESC_CHAIN_METHODS(PlatformDesc, PLATFORM_GENERATOR);
 	};
 
 #define COLLISION_GENERATOR(M) \
@@ -125,8 +117,6 @@ namespace oly::editor
 		StringArrayField<32> layers;
 
 		CollisionDesc();
-
-		DESC_CHAIN_METHODS(CollisionDesc, COLLISION_GENERATOR);
 	};
 
 #define LOGGER_ENABLE_GENERATOR(M) \
@@ -145,8 +135,6 @@ namespace oly::editor
 		BoolField fatal;
 
 		LoggerEnableDesc();
-
-		DESC_CHAIN_METHODS(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
 	};
 
 #define LOGGER_PARTIAL_GENERATOR(M) \
@@ -170,8 +158,6 @@ namespace oly::editor
 		static const detail::Key enable_key;
 
 		LoggerDesc();
-
-		DESC_CHAIN_METHODS(LoggerDesc, LOGGER_GENERATOR);
 	};
 
 #define FRAME_RATE_GENERATOR(M) \
@@ -184,8 +170,6 @@ namespace oly::editor
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
 
 		FrameRateDesc();
-
-		DESC_CHAIN_METHODS(FrameRateDesc, FRAME_RATE_GENERATOR);
 	};
 
 #define CONTEXT_GENERATOR(M) \
@@ -204,8 +188,6 @@ namespace oly::editor
 		static const detail::Key logger_key;
 		FrameRateDesc frame_rate;
 		static const detail::Key frame_rate_key;
-
-		DESC_CHAIN_METHODS(ContextDesc, CONTEXT_GENERATOR);
 	};
 
 #define PROJECT_GENERATOR(M) \
@@ -215,7 +197,5 @@ namespace oly::editor
 	{
 		ContextDesc context;
 		static const detail::Key context_key;
-
-		DESC_CHAIN_METHODS(ProjectDesc, PROJECT_GENERATOR);
 	};
 }

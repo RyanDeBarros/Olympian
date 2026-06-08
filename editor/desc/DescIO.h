@@ -19,11 +19,11 @@ namespace oly::editor
 		static bool DrawRevertButton(const void* ptr_id);
 
 		template<typename T>
-		static bool CheckRevertButton(T& desc, const T* disk)
+		static bool CheckRevertButton(T& desc, const T& def)
 		{
-			if (disk && desc != *disk && DrawRevertButton(disk))
+			if (desc != def && DrawRevertButton(&def))
 			{
-				desc = *disk;
+				desc = def;
 				return true;
 			}
 			else
@@ -32,37 +32,37 @@ namespace oly::editor
 
 	public:
 		template<typename T, typename U = T>
-		static bool Draw(const char* label, T& data, const T* disk, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		static bool Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{
 			bool dirty = false;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
 			dirty |= gui::InputData<T>{}("", data, min, max);
-			dirty |= CheckRevertButton(data, disk);
+			dirty |= CheckRevertButton(data, def);
 			return dirty;
 		}
 
 		template<typename T>
-		static bool Draw(const char* label, T& data, const T* disk)
+		static bool Draw(const char* label, T& data, const T& def)
 		{
 			bool dirty = false;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
 			dirty |= gui::InputData<T>{}("", data);
-			dirty |= CheckRevertButton(data, disk);
+			dirty |= CheckRevertButton(data, def);
 			return dirty;
 		}
 		
-		static bool Draw(const char* label, int& data, const int* disk, const char** names, size_t count);
-		static bool Draw(const char* label, std::string* data, const std::string* disk, size_t count);
-		static bool Draw(const char* label, bool* data, const bool* disk, const char** sublabels, size_t count);
+		static bool Draw(const char* label, int& data, const int& def, const char** names, size_t count);
+		static bool Draw(const char* label, std::string* data, const std::string* def, size_t count);
+		static bool Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static bool Draw(const char* label, E& data, const E* disk);
+		static bool Draw(const char* label, E& data, const E& def);
 
 	private:
 		template<typename E, size_t N>
-		static bool DrawEnum(const char* label, E& data, const E* disk, const char* const (&values)[N])
+		static bool DrawEnum(const char* label, E& data, const E& def, const char* const (&values)[N])
 		{
 			bool dirty = false;
 			int index = static_cast<int>(data);
@@ -70,7 +70,7 @@ namespace oly::editor
 			gui::IDScope scope(&data);
 			dirty |= ImGui::Combo("", &index, values, N);
 			data = static_cast<E>(index);
-			dirty |= CheckRevertButton(data, disk);
+			dirty |= CheckRevertButton(data, def);
 			return dirty;
 		}
 	};

@@ -12,8 +12,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.1f), MakeOpt<float>()> analysis_interval;
 
 		TreeViewAdvancedSettingsDesc();
-
-		DESC_CHAIN_METHODS(TreeViewAdvancedSettingsDesc, TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	};
 
 #define TREE_VIEW_SETTINGS_GENERATOR(M) \
@@ -23,8 +21,6 @@ namespace oly::editor
 	{
 		TreeViewAdvancedSettingsDesc advanced;
 		static const detail::Key advanced_key;
-
-		DESC_CHAIN_METHODS(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
 	};
 
 #define PREFERENCES_GENERATOR(M) \
@@ -34,7 +30,5 @@ namespace oly::editor
 	{
 		TreeViewSettingsDesc tree_view;
 		static const detail::Key tree_view_key;
-
-		DESC_CHAIN_METHODS(PreferencesDesc, PREFERENCES_GENERATOR);
 	};
 }

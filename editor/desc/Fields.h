@@ -19,39 +19,9 @@ namespace oly::editor
 #define DUMP_FIELD(field) desc.field.Dump(table);
 #define DUMP_FIELDS(generator) generator(DUMP_FIELD)
 
-#define RESET_FIELD(field) field.Reset(source.field);
-#define RESET_FIELDS(generator) Isolate(); generator(RESET_FIELD)
-#define ISOLATE_FIELD(field) field.Isolate();
-#define ISOLATE_FIELDS(generator) generator(ISOLATE_FIELD)
-
-#define DISK_FIELD(disk) (disk ? &disk->scratch : nullptr)
-
-#define DESC_CHAIN_METHODS(klass, generator) \
-	void Reset(klass& source) { RESET_FIELDS(generator); } \
-	void Isolate() { ISOLATE_FIELDS(generator); }
-
 	extern bool KeyIsNull(detail::Key key);
 	extern bool KeyIsNotNull(detail::Key key);
 	extern detail::Key NullKey();
-
-	template<typename T>
-	void IsolateField(T& obj)
-	{
-		if (obj.disk)
-		{
-			auto disk = obj.disk;
-			obj.disk = nullptr;
-			disk->Isolate();
-		}
-	}
-
-	template<typename T, typename Self>
-	void ResetField(T& obj, Self& source)
-	{
-		obj.disk = &source;
-		source.disk = static_cast<Self*>(&obj);
-		obj.scratch = source.scratch;
-	}
 
 	template<typename NodeType, typename T>
 	void LoadValue(TOMLNode node, T& obj)
@@ -66,12 +36,11 @@ namespace oly::editor
 		table.insert_or_assign(detail::encode_key(key), std::move(obj));
 	}
 
-	template<typename T, typename Self, typename NodeType = T>
+	template<typename T, typename NodeType = T>
 	struct PrimitiveField
 	{
 		T def;
 		T scratch;
-		Self* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
@@ -89,36 +58,26 @@ namespace oly::editor
 			if (KeyIsNotNull(key))
 				DumpValue(table, key, static_cast<NodeType>(scratch));
 		}
-
-		void Isolate()
-		{
-			IsolateField(*this);
-		}
-
-		void Reset(Self& source)
-		{
-			ResetField(*this, source);
-		}
 	};
 
-	struct BoolField : public PrimitiveField<bool, BoolField>
+	struct BoolField : public PrimitiveField<bool>
 	{
-		using PrimitiveField<bool, BoolField>::PrimitiveField;
+		using PrimitiveField<bool>::PrimitiveField;
 
 		bool Draw();
 	};
 
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
-	struct RangeField : public PrimitiveField<T, RangeField<T, _Min, _Max>, NodeType>
+	struct RangeField : public PrimitiveField<T, NodeType>
 	{
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
 
-		using PrimitiveField<T, RangeField<T, _Min, _Max>>::PrimitiveField;
+		using PrimitiveField<T, NodeType>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, DISK_FIELD(this->disk), Min, Max);
+			return DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
 		}
 	};
 
@@ -132,15 +91,15 @@ namespace oly::editor
 	using DoubleField = RangeField<double, Min, Max>;
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E, EnumField<E>, int64_t>
+	struct EnumField : public PrimitiveField<E, int64_t>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E, EnumField<E>, int64_t>::PrimitiveField;
+		using PrimitiveField<E, int64_t>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, DISK_FIELD(this->disk));
+			return DescIO::Draw(this->label, this->scratch, this->def);
 		}
 	};
 
@@ -148,7 +107,7 @@ namespace oly::editor
 	{
 		GLenum def;
 		int scratch;
-		GLenumField* disk = nullptr;
+		int def_index;
 		detail::Key key;
 		const char* label;
 		const GLenum* values;
@@ -160,13 +119,12 @@ namespace oly::editor
 			: def(def), key(key), label(label), values(values), names(names), count(Count)
 		{
 			SetScratch(def);
+			def_index = Index(def);
 		}
 
 		bool Draw();
 		void Load(TOMLNode node);
 		void Dump(toml::table& table) const;
-		void Isolate();
-		void Reset(GLenumField& source);
 
 		GLenum Scratch() const;
 		void SetScratch(const GLenum val);
@@ -175,9 +133,9 @@ namespace oly::editor
 		int Index(const GLenum val) const;
 	};
 	
-	struct StringField : public PrimitiveField<std::string, StringField>
+	struct StringField : public PrimitiveField<std::string>
 	{
-		using PrimitiveField<std::string, StringField>::PrimitiveField;
+		using PrimitiveField<std::string>::PrimitiveField;
 
 		bool Draw();
 	};
@@ -191,7 +149,6 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
-		Self* disk = nullptr;
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
@@ -203,7 +160,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+			return DescIO::Draw(label, scratch, this->def, Min, Max);
 		}
 
 		void Load(TOMLNode node)
@@ -226,16 +183,6 @@ namespace oly::editor
 				table.insert_or_assign(detail::encode_key(value_key), static_cast<NodeType>(scratch.value));
 			}
 		}
-
-		void Isolate()
-		{
-			IsolateField(*this);
-		}
-
-		void Reset(Self& source)
-		{
-			ResetField(*this, source);
-		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
@@ -256,7 +203,6 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
-		Self* disk = nullptr;
 		T nullopt;
 		detail::Key key;
 		const char* label;
@@ -268,7 +214,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, DISK_FIELD(this->disk), Min, Max);
+			return DescIO::Draw(label, scratch, def, Min, Max);
 		}
 
 		void Load(TOMLNode node)
@@ -286,16 +232,6 @@ namespace oly::editor
 			if (KeyIsNotNull(key))
 				table.insert_or_assign(detail::encode_key(key), scratch.has_value ? scratch.value : nullopt);
 		}
-
-		void Isolate()
-		{
-			IsolateField(*this);
-		}
-
-		void Reset(Self& source)
-		{
-			ResetField(*this, source);
-		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
@@ -308,7 +244,6 @@ namespace oly::editor
 	{
 		Color def;
 		Color scratch;
-		ColorField* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
@@ -317,8 +252,6 @@ namespace oly::editor
 		bool Draw();
 		void Load(TOMLNode node);
 		void Dump(toml::table& table) const;
-		void Isolate();
-		void Reset(ColorField& source);
 	};
 
 	extern void LoadStringArray(TOMLNode node, std::string* strings, size_t count);
@@ -327,10 +260,8 @@ namespace oly::editor
 	template<size_t N>
 	struct StringArrayField
 	{
-		using Self = StringArrayField<N>;
 		std::array<std::string, N> def;
 		std::array<std::string, N> scratch;
-		Self* disk = nullptr;
 		detail::Key key;
 		const char* label;
 
@@ -338,7 +269,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch.data(), disk ? disk->scratch.data() : nullptr, N);
+			return DescIO::Draw(label, scratch.data(), def.data(), N);
 		}
 
 		void Load(TOMLNode node)
@@ -352,16 +283,6 @@ namespace oly::editor
 		{
 			if (KeyIsNotNull(key))
 				table.insert_or_assign(detail::encode_key(key), DumpStringArray(scratch.data(), N));
-		}
-
-		void Isolate()
-		{
-			IsolateField(*this);
-		}
-
-		void Reset(Self& source)
-		{
-			ResetField(*this, source);
 		}
 	};
 
@@ -424,16 +345,16 @@ namespace oly::editor
 	}
 
 	template<size_t N>
-	struct BoolArrayField : public PrimitiveField<std::array<bool, N>, BoolArrayField<N>>
+	struct BoolArrayField : public PrimitiveField<std::array<bool, N>>
 	{
 		const char** sublabels;
 
 		BoolArrayField(std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: PrimitiveField<std::array<bool, N>, BoolArrayField<N>>(def, key, label), sublabels(sublabels) {}
+			: PrimitiveField<std::array<bool, N>>(def, key, label), sublabels(sublabels) {}
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch.data(), this->disk ? this->disk->scratch.data() : nullptr, sublabels, N);
+			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
 		}
 	};
 }

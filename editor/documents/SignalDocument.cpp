@@ -96,7 +96,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch.Reset(_disk);
+		_scratch = _disk;
 	}
 
 	void SignalDocument::Dump()
@@ -104,7 +104,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk.Reset(_scratch);
+		_disk = _scratch;
 		MarkClean();
 	}
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/ArrayDesc.h"
+#include "desc/Descriptors.h"
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
@@ -22,8 +22,6 @@ namespace oly::editor
 		BoolArrayField<3> invert;
 
 		ModifierBaseDesc();
-
-		DESC_CHAIN_METHODS(ModifierBaseDesc, MODIFIER_BASE_GENERATOR);
 	};
 
 #define MODIFIER_0D_GENERATOR(M) \
@@ -36,8 +34,6 @@ namespace oly::editor
 		EnumField<detail::Axis0dConversion> conversion;
 
 		Modifier0dDesc();
-		
-		DESC_CHAIN_METHODS(Modifier0dDesc, MODIFIER_0D_GENERATOR);
 	};
 
 #define MODIFIER_1D_GENERATOR(M) \
@@ -50,8 +46,6 @@ namespace oly::editor
 		EnumField<detail::Axis1dConversion> conversion;
 
 		Modifier1dDesc();
-
-		DESC_CHAIN_METHODS(Modifier1dDesc, MODIFIER_1D_GENERATOR);
 	};
 
 #define MODIFIER_2D_GENERATOR(M) \
@@ -64,8 +58,6 @@ namespace oly::editor
 		EnumField<detail::Axis2dConversion> conversion;
 
 		Modifier2dDesc();
-
-		DESC_CHAIN_METHODS(Modifier2dDesc, MODIFIER_2D_GENERATOR);
 	};
 
 #define KEY_GENERATOR(M) \
@@ -77,8 +69,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		KeyDesc();
-
-		DESC_CHAIN_METHODS(KeyDesc, KEY_GENERATOR);
 	};
 
 #define MOUSE_BUTTON_GENERATOR(M) \
@@ -90,8 +80,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();
-
-		DESC_CHAIN_METHODS(MouseButtonDesc, MOUSE_BUTTON_GENERATOR);
 	};
 
 #define GAMEPAD_BUTTON_GENERATOR(M) \
@@ -104,8 +92,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		GamepadButtonDesc();
-
-		DESC_CHAIN_METHODS(GamepadButtonDesc, GAMEPAD_BUTTON_GENERATOR);
 	};
 
 #define GAMEPAD_AXIS_1D_GENERATOR(M) \
@@ -120,8 +106,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
 		GamepadAxis1dDesc();
-
-		DESC_CHAIN_METHODS(GamepadAxis1dDesc, GAMEPAD_AXIS_1D_GENERATOR);
 	};
 
 #define GAMEPAD_AXIS_2D_GENERATOR(M) \
@@ -136,8 +120,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
 		GamepadAxis2dDesc();
-
-		DESC_CHAIN_METHODS(GamepadAxis2dDesc, GAMEPAD_AXIS_2D_GENERATOR);
 	};
 
 #define CURSOR_POS_GENERATOR(M) \
@@ -146,8 +128,6 @@ namespace oly::editor
 	struct CursorPosDesc
 	{
 		Modifier2dDesc modifier;
-
-		DESC_CHAIN_METHODS(CursorPosDesc, CURSOR_POS_GENERATOR);
 	};
 
 #define SCROLL_GENERATOR(M) \
@@ -156,8 +136,6 @@ namespace oly::editor
 	struct ScrollDesc
 	{
 		Modifier2dDesc modifier;
-
-		DESC_CHAIN_METHODS(ScrollDesc, SCROLL_GENERATOR);
 	};
 
 #define SIGNAL_PARTIAL_GENERATOR(M) \
@@ -176,8 +154,6 @@ namespace oly::editor
 		static const detail::Key modifier_key;
 
 		SignalDesc();
-
-		DESC_CHAIN_METHODS(SignalDesc, SIGNAL_GENERATOR);
 	};
 
 #define ROUTE_GENERATOR(M) \
@@ -190,8 +166,6 @@ namespace oly::editor
 		//StringListField signals;
 
 		RouteDesc();
-
-		DESC_CHAIN_METHODS(RouteDesc, ROUTE_GENERATOR);
 	};
 
 #define SIGNAL_FULL_GENERATOR(M) \
@@ -200,11 +174,9 @@ namespace oly::editor
 
 	struct SignalFullDesc
 	{
-		ArrayDesc<SignalDesc> signals;
+		VectorDesc<SignalDesc> signals;
 		static const detail::Key signals_key;
-		ArrayDesc<RouteDesc> routes;
+		VectorDesc<RouteDesc> routes;
 		static const detail::Key routes_key;
-		
-		DESC_CHAIN_METHODS(SignalFullDesc, SIGNAL_FULL_GENERATOR);
 	};
 }

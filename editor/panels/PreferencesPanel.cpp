@@ -92,7 +92,7 @@ namespace oly::editor
 		}
 
 		Load(TOMLNode(table), _disk);
-		_scratch.Reset(_disk);
+		_scratch = _disk;
 		MarkClean();
 	}
 
@@ -104,7 +104,7 @@ namespace oly::editor
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << table;
-		_disk.Reset(_scratch);
+		_disk = _scratch;
 		MarkClean();
 	}
 
