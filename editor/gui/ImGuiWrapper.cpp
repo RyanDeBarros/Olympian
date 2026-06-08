@@ -23,6 +23,9 @@ namespace oly::editor::gui
 		string.copy(buf.data(), buf.size());
 		bool changed = ImGui::InputText(label, buf.data(), buf.size(), flags, callback, user_data);
 		string = std::move(buf);
+		size_t n = string.find('\0');
+		if (n != std::string::npos)
+			string.resize(n);
 		return changed;
 	}
 }

@@ -6,7 +6,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		extern void init_fonts(TOMLNode);
+		extern void init_fonts();
 	}
 
 	extern rendering::FontFaceRef load_font_face(const detail::ResourcePath& file);

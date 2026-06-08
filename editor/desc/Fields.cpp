@@ -124,4 +124,25 @@ namespace oly::editor
 	{
 		ResetField(*this, source);
 	}
+
+	void LoadStringArray(TOMLNode node, std::string* strings, size_t count)
+	{
+		if (auto array = node.as_array())
+		{
+			for (size_t i = 0; i < std::min(array->size(), count); ++i)
+			{
+				if (auto s = array->get_as<std::string>(i))
+					strings[i] = s->get();
+			}
+		}
+	}
+
+	toml::array DumpStringArray(const std::string* strings, size_t count)
+	{
+		toml::array array;
+		array.reserve(count);
+		for (size_t i = 0; i < count; ++i)
+			array.push_back(strings[i]);
+		return array;
+	}
 }

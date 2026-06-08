@@ -6,6 +6,8 @@
 
 #include "assets/TranslateKey.h"
 
+#include <array>
+
 namespace oly::editor
 {
 #define DRAW_FIELD(field) if (desc.field.Draw()) MarkDirty();
@@ -292,5 +294,49 @@ namespace oly::editor
 		void Dump(toml::table& table) const;
 		void Isolate();
 		void Reset(ColorField& source);
+	};
+
+	extern void LoadStringArray(TOMLNode node, std::string* strings, size_t count);
+	extern toml::array DumpStringArray(const std::string* strings, size_t count);
+
+	template<size_t N>
+	struct StringArrayField
+	{
+		using Self = StringArrayField<N>;
+		std::array<std::string, N> def;
+		std::array<std::string, N> scratch;
+		Self* disk = nullptr;
+		detail::Key key;
+		const char* label;
+
+		StringArrayField(std::array<std::string, N>&& def, detail::Key key, const char* label) : def(def), scratch(std::move(def)), key(key), label(label) {}
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch.data(), disk ? disk->scratch.data() : nullptr, N);
+		}
+
+		void Load(TOMLNode node)
+		{
+			scratch = def;
+			if (KeyIsNotNull(key))
+				LoadStringArray(node[detail::encode_key(key)], scratch.data(), N);
+		}
+
+		void Dump(toml::table& table) const
+		{
+			if (KeyIsNotNull(key))
+				table.insert_or_assign(detail::encode_key(key), DumpStringArray(scratch.data(), N));
+		}
+
+		void Isolate()
+		{
+			IsolateField(*this);
+		}
+
+		void Reset(Self& source)
+		{
+			ResetField(*this, source);
+		}
 	};
 }

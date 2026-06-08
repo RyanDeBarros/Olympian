@@ -119,6 +119,21 @@ namespace oly::editor
 	M(window) \
 	PLATFORM_PARTIAL_GENERATOR(M)
 
+	struct CollisionDesc
+	{
+		StringArrayField<32> masks;
+		StringArrayField<32> layers;
+
+		CollisionDesc();
+
+		void Reset(CollisionDesc& source);
+		void Isolate();
+	};
+
+#define COLLISION_GENERATOR(M) \
+	M(masks) \
+	M(layers)
+
 	struct LoggerEnableDesc
 	{
 		BoolField debug;
@@ -170,6 +185,8 @@ namespace oly::editor
 	{
 		PlatformDesc platform;
 		static const detail::Key platform_key;
+		CollisionDesc collision;
+		static const detail::Key collision_key;
 		LoggerDesc logger;
 		static const detail::Key logger_key;
 
@@ -179,6 +196,7 @@ namespace oly::editor
 
 #define CONTEXT_GENERATOR(M) \
 	M(platform) \
+	M(collision) \
 	M(logger)
 
 	struct ProjectDesc

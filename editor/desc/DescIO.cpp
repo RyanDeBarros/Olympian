@@ -3,6 +3,7 @@
 #include "core/ResourceLoader.h"
 #include "gui/DisabledSection.h"
 #include "gui/ImGuiWrapper.h"
+#include "gui/Subform.h"
 #include "gui/Toolbar.h"
 
 #include "definitions/Keys.h"
@@ -159,6 +160,27 @@ namespace oly::editor
 		if (gui::InputText("", data))
 			dirty = true;
 		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, std::string* data, const std::string* disk, size_t count)
+	{
+		std::unique_ptr<Form> temp_form;
+		Form* form = Form::ActiveForm();
+		if (!form)
+		{
+			temp_form = std::make_unique<Form>();
+			form = temp_form.get();
+		}
+
+		if (auto subform = Subform(*form, label))
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < count; ++i)
+				dirty |= Draw(std::to_string(i).c_str(), data[i], disk ? &disk[i] : nullptr);
+			return dirty;
+		}
+		else
+			return false;
 	}
 
 	bool DescIO::DrawColor(const char* label, glm::vec4& data, const glm::vec4* disk)

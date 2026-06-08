@@ -111,6 +111,9 @@ namespace oly::editor
 		if (auto subform = Subform(form, "Platform"))
 			Draw(subform.GetForm(), desc.platform);
 
+		if (auto subform = Subform(form, "Collision"))
+			Draw(subform.GetForm(), desc.collision);
+
 		if (auto subform = Subform(form, "Logger"))
 			Draw(subform.GetForm(), desc.logger);
 	}
@@ -144,6 +147,11 @@ namespace oly::editor
 		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
+	void ProjectDocument::Draw(Form& form, CollisionDesc& desc)
+	{
+		DRAW_FIELDS(COLLISION_GENERATOR);
+	}
+
 	void ProjectDocument::Draw(Form& form, LoggerDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
@@ -164,6 +172,7 @@ namespace oly::editor
 	void ProjectDocument::Load(TOMLNode node, ContextDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.platform_key)], desc.platform);
+		Load(node[detail::encode_key(desc.collision_key)], desc.collision);
 		Load(node[detail::encode_key(desc.logger_key)], desc.logger);
 	}
 
@@ -192,6 +201,11 @@ namespace oly::editor
 		LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
+	void ProjectDocument::Load(TOMLNode node, CollisionDesc& desc)
+	{
+		LOAD_FIELDS(COLLISION_GENERATOR);
+	}
+
 	void ProjectDocument::Load(TOMLNode node, LoggerDesc& desc)
 	{
 		LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
@@ -216,6 +230,11 @@ namespace oly::editor
 		toml::table subtable;
 		Dump(subtable, desc.platform);
 		table.insert_or_assign(detail::encode_key(desc.platform_key), std::move(subtable));
+
+		subtable.clear();
+		Dump(subtable, desc.collision);
+		table.insert_or_assign(detail::encode_key(desc.collision_key), std::move(subtable));
+
 		subtable.clear();
 		Dump(subtable, desc.logger);
 		table.insert_or_assign(detail::encode_key(desc.logger_key), std::move(subtable));
@@ -250,6 +269,11 @@ namespace oly::editor
 	void ProjectDocument::Dump(toml::table& table, WindowHintsDesc& desc)
 	{
 		DUMP_FIELDS(WINDOW_HINTS_GENERATOR);
+	}
+
+	void ProjectDocument::Dump(toml::table& table, CollisionDesc& desc)
+	{
+		DUMP_FIELDS(COLLISION_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, LoggerDesc& desc)

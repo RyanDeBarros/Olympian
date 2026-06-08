@@ -50,7 +50,7 @@ namespace oly::context
 		}
 	};
 
-	void internal::init_fonts(TOMLNode)
+	void internal::init_fonts()
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}

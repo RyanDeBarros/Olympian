@@ -52,7 +52,7 @@ namespace oly::context
 		}
 	};
 
-	void internal::init_textures(TOMLNode)
+	void internal::init_textures()
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TexturesOnTerminate>::instance();
 	}

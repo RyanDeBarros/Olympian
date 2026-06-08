@@ -27,7 +27,7 @@ namespace oly::context
 			}
 		};
 
-		void init_vault(TOMLNode)
+		void init_vault()
 		{
 			SingletonTickService<TickPhase::None, void, TerminatePhase::Vault, VaultOnTerminate>::instance();
 		}

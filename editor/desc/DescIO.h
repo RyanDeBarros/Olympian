@@ -18,6 +18,7 @@ namespace oly::editor
 		static bool Draw(const char* label, OptionalFloat& data, const OptionalFloat* disk, OptionalFloat min, OptionalFloat max);
 		static bool Draw(const char* label, int& data, const int* disk, const char** names, size_t count);
 		static bool Draw(const char* label, std::string& data, const std::string* disk);
+		static bool Draw(const char* label, std::string* data, const std::string* disk, size_t count);
 		static bool DrawColor(const char* label, glm::vec4& data, const glm::vec4* disk);
 
 		template<typename E> requires (std::is_enum_v<E>)

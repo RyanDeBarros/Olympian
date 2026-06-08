@@ -2,6 +2,8 @@
 
 namespace oly::editor
 {
+	static Form* ACTIVE_FORM = nullptr;
+
 	Form::Form()
 	{
 		BeginTable();
@@ -11,12 +13,20 @@ namespace oly::editor
 		: _draw_content(other._draw_content)
 	{
 		other._draw_content = false;
+
+		if (&other == ACTIVE_FORM)
+			ACTIVE_FORM = this;
 	}
 
 	Form::~Form()
 	{
 		if (_draw_content)
 			EndTable();
+	}
+
+	Form* Form::ActiveForm()
+	{
+		return ACTIVE_FORM;
 	}
 
 	Form::operator bool() const
@@ -26,6 +36,8 @@ namespace oly::editor
 
 	void Form::BeginTable()
 	{
+		ACTIVE_FORM = this;
+
 		ImGui::PushID(this);
 		ImGui::PushID(_id_counter++);
 		if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
@@ -46,6 +58,8 @@ namespace oly::editor
 		_draw_content = false;
 		ImGui::PopID();
 		ImGui::PopID();
+
+		ACTIVE_FORM = nullptr;
 	}
 
 	Form::PauseImpl::PauseImpl(Form& form)

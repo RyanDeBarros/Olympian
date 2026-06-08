@@ -96,6 +96,22 @@ namespace oly::editor
 		ISOLATE_FIELDS(PLATFORM_GENERATOR);
 	}
 
+	CollisionDesc::CollisionDesc() :
+		masks({}, detail::Key::Masks, "Masks"),
+		layers({}, detail::Key::Layers, "Layers")
+	{
+	}
+
+	void CollisionDesc::Reset(CollisionDesc& source)
+	{
+		RESET_FIELDS(COLLISION_GENERATOR);
+	}
+	
+	void CollisionDesc::Isolate()
+	{
+		ISOLATE_FIELDS(COLLISION_GENERATOR);
+	}
+
 	LoggerEnableDesc::LoggerEnableDesc() :
 		debug(false, detail::Key::Debug, "Debug"),
 		info(true, detail::Key::Info, "Info"),
@@ -137,6 +153,7 @@ namespace oly::editor
 	}
 
 	const detail::Key ContextDesc::platform_key = detail::Key::Platform;
+	const detail::Key ContextDesc::collision_key = detail::Key::Collision;
 	const detail::Key ContextDesc::logger_key = detail::Key::Logger;
 
 	void ContextDesc::Reset(ContextDesc& source)

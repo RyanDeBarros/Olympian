@@ -18,6 +18,8 @@ namespace oly::editor
 		~Form();
 		Form& operator=(Form&&) noexcept = delete;
 
+		static Form* ActiveForm();
+
 		operator bool() const;
 
 	private:

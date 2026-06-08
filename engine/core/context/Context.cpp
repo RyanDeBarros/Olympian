@@ -116,11 +116,11 @@ namespace oly::context
 		autoload_signals(context_parser);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
-		internal::init_vault(toml_context);
+		internal::init_vault();
 
-		internal::init_textures(toml_context);
-		internal::init_sprites(toml_context);
-		internal::init_fonts(toml_context);
+		internal::init_textures();
+		internal::init_sprites();
+		internal::init_fonts();
 
 		oly::internal::check_errors();
 	}
