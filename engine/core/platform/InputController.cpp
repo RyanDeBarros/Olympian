@@ -24,11 +24,6 @@ namespace oly
 			binding_context.handler_map.erase(signal);
 	}
 
-	void InputController::route_signals(const StringParam& mapping_name, std::vector<std::string>&& signal_names)
-	{
-		_signal_routing_table[mapping_name.transfer()] = std::move(signal_names);
-	}
-
 	void InputController::insert_signal(input::SignalID signal) const
 	{
 		context::input_binding_context().controller_lut.find(this)->second.insert(signal);
@@ -92,53 +87,65 @@ namespace oly
 		}
 	}
 
-	// TODO v8 InputController should own its own signal table. It should have a load method that loads a signal resource path. Rename mapping to SignalRoute. SignalRoute should be its own file
+	// TODO v8 SignalRoute should be its own file
 
 	void InputController::bind(const StringParam& signal, Handler handler)
 	{
-		bind(_signal_table.get(signal), handler);
+		if (auto id = _signal_table.get(signal))
+			bind(id, handler);
+		else
+		{
+			auto it = _signal_routing_table.find(signal);
+			if (it != _signal_routing_table.end())
+			{
+				// TODO v12 handle infinite recursion
+				for (const std::string& signal : it->second)
+					bind(signal, handler);
+			}
+			else
+			{
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
+			}
+		}
 	}
 
 	void InputController::bind(const StringParam& signal, ConstHandler handler) const
 	{
-		bind(_signal_table.get(signal), handler);
+		if (auto id = _signal_table.get(signal))
+			bind(id, handler);
+		else
+		{
+			auto it = _signal_routing_table.find(signal);
+			if (it != _signal_routing_table.end())
+			{
+				// TODO v12 handle infinite recursion
+				for (const std::string& signal : it->second)
+					bind(signal, handler);
+			}
+			else
+			{
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
+			}
+		}
 	}
 
 	void InputController::unbind(const StringParam& signal) const
 	{
-		unbind(_signal_table.get(signal));
-	}
-
-	void InputController::bind_mapping(const StringParam& mapping, Handler handler)
-	{
-		auto it = _signal_routing_table.find(mapping);
-		if (it != _signal_routing_table.end())
+		if (auto id = _signal_table.get(signal))
+			unbind(id);
+		else
 		{
-			const std::vector<std::string>& signals = it->second;
-			for (const std::string& signal : signals)
-				bind(signal, handler);
-		}
-	}
-
-	void InputController::bind_mapping(const StringParam& mapping, ConstHandler handler) const
-	{
-		auto it = _signal_routing_table.find(mapping);
-		if (it != _signal_routing_table.end())
-		{
-			const std::vector<std::string>& signals = it->second;
-			for (const std::string& signal : signals)
-				bind(signal, handler);
-		}
-	}
-
-	void InputController::unbind_mapping(const StringParam& mapping) const
-	{
-		auto it = _signal_routing_table.find(mapping);
-		if (it != _signal_routing_table.end())
-		{
-			const std::vector<std::string>& signals = it->second;
-			for (const std::string& signal : signals)
-				unbind(signal);
+			auto it = _signal_routing_table.find(signal);
+			if (it != _signal_routing_table.end())
+			{
+				// TODO v12 handle infinite recursion
+				for (const std::string& signal : it->second)
+					unbind(signal);
+			}
+			else
+			{
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl; // TODO v8 don't pass LOG.nl -> log access should do a new line at the beginning, and every frame should flush log -> print any pending newlines.
+			}
 		}
 	}
 
@@ -191,7 +198,7 @@ namespace oly
 		parser.optional(detail::Key::ForbiddenMods)(b.forbidden_key_mods);
 		b.modifier = load_modifier_0d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_mouse_button_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -203,7 +210,7 @@ namespace oly
 		parser.optional(detail::Key::ForbiddenMods)(b.forbidden_button_mods);
 		b.modifier = load_modifier_0d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_gamepad_button_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -214,7 +221,7 @@ namespace oly
 		input::GamepadButtonBinding b{ .button = (input::GamepadButton)button };
 		b.modifier = load_modifier_0d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_gamepad_axis_1d_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -226,7 +233,7 @@ namespace oly
 		parser.optional(detail::Key::Deadzone)(b.deadzone);
 		b.modifier = load_modifier_1d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_gamepad_axis_2d_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -238,7 +245,7 @@ namespace oly
 		parser.optional(detail::Key::Deadzone)(b.deadzone);
 		b.modifier = load_modifier_2d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_cursor_pos_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -246,7 +253,7 @@ namespace oly
 		input::CursorPosBinding b{};
 		b.modifier = load_modifier_2d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_scroll_binding(input::SignalTable& signal_table, const assets::Parser& parser, const std::string& id)
@@ -254,7 +261,7 @@ namespace oly
 		input::ScrollBinding b{};
 		b.modifier = load_modifier_2d(parser);
 
-		context::input_binding_context().register_signal_binding(signal_table.get(id), b);
+		context::input_binding_context().register_signal_binding(signal_table.insert(id), b);
 	}
 
 	static void load_signal(input::SignalTable& signal_table, TOMLNode node)
@@ -287,7 +294,7 @@ namespace oly
 		}
 	}
 
-	static void load_signal_mapping(InputController& controller, TOMLNode node)
+	static void load_signal_mapping(input::SignalRoutingTable& routing_table, TOMLNode node)
 	{
 		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(detail::Key::ID)();
@@ -300,7 +307,7 @@ namespace oly
 			else
 				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string" << LOG.nl;
 		}
-		controller.route_signals(id, std::move(signals));
+		routing_table[id] = std::move(signals);
 	}
 
 	// TODO v8 revamp input signal system so that there's only one file, not multiple.
@@ -326,6 +333,6 @@ namespace oly
 			signals->for_each([this](auto&& node) { load_signal(_signal_table, (TOMLNode)node); });
 
 		if (auto mappings = parser.optional<TOMLArray>(detail::Key::MappingArray)())
-			mappings->for_each([this](auto&& node) { load_signal_mapping(*this, (TOMLNode)node); });
+			mappings->for_each([this](auto&& node) { load_signal_mapping(_signal_routing_table, (TOMLNode)node); });
 	}
 }

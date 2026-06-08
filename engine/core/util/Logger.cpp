@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+// TODO v8 simplify log macros -> separate prefix and always pass timestamp
+
 namespace oly
 {
 	void Logger::start_log(const LoggerOptions& options)
