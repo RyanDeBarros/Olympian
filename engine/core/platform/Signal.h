@@ -24,7 +24,8 @@ namespace oly::input
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalMappingTable;
+	// TODO v8 remove SignalRoutingTable. Just load SignalTable with multiple string keys pointing to the same signal id
+	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalRoutingTable;
 
 	enum class Phase
 	{

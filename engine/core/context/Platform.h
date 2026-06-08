@@ -18,15 +18,4 @@ namespace oly::context
 	extern platform::Platform& get_platform();
 
 	extern input::internal::InputBindingContext& input_binding_context();
-	extern input::SignalTable& signal_table();
-	extern input::SignalMappingTable& signal_mapping_table();
-
-	extern void assign_signal_mapping(const StringParam& mapping_name, std::vector<std::string>&& signal_names);
-	extern void unassign_signal_mapping(const StringParam& mapping_name);
-
-	extern void load_signal(TOMLNode node);
-	extern void load_signal(TOMLNode node, const DebugTrace& trace);
-	extern void load_signal_mapping(TOMLNode node);
-	extern void load_signal_mapping(TOMLNode node, const DebugTrace& trace);
-	extern void load_signals(const detail::ResourcePath& file);
 }

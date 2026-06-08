@@ -69,16 +69,6 @@ namespace oly::context
 		TIME.init();
 	}
 
-	static void autoload_signals(const assets::Parser& parser)
-	{
-		if (auto register_files = parser.optional<TOMLArray>(detail::Key::Signals)())
-		{
-			for (const auto& node : *register_files)
-				if (auto file = node.value<std::string>())
-					load_signals(*file);
-		}
-	}
-
 	struct TerminationFinalization
 	{
 		void operator()() const
@@ -113,7 +103,6 @@ namespace oly::context
 		init_time(context_parser);
 		graphics::internal::load_resources();
 
-		autoload_signals(context_parser);
 		internal::init_collision(toml_context);
 		internal::init_viewport(toml_context);
 		internal::init_vault();

@@ -2,6 +2,8 @@
 
 #include "core/platform/Signal.h"
 
+#include "assets/ResourcePath.h"
+
 namespace oly
 {
 	namespace input::internal
@@ -9,12 +11,18 @@ namespace oly
 		class InputBindingContext;
 	}
 
-	struct InputController
+	class InputController
 	{
+		mutable input::SignalTable _signal_table;
+		input::SignalRoutingTable _signal_routing_table;
+
+	public:
 		InputController();
 		InputController(const InputController&) = delete;
 		InputController(InputController&&) noexcept = delete;
 		virtual ~InputController();
+
+		void route_signals(const StringParam& mapping_name, std::vector<std::string>&& signal_names);
 
 	private:
 		void insert_signal(input::SignalID) const;
@@ -45,5 +53,7 @@ namespace oly
 		void bind_mapping(const StringParam& mapping, bool(Controller::* handler)(input::Signal)) { bind_mapping(mapping, static_cast<Handler>(handler)); }
 		template<std::derived_from<InputController> Controller>
 		void bind_mapping(const StringParam& mapping, bool(Controller::* handler)(input::Signal) const) const { bind_mapping(mapping, static_cast<ConstHandler>(handler)); }
+
+		void load_signals(const detail::ResourcePath& file);
 	};
 }
