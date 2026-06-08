@@ -175,12 +175,6 @@ int main()
 	oly::context::set_render_pipeline(&pipeline);
 
 	PlayerController pc;
-	pc.load_signals("@/signals/Camera.oly");
-	pc.load_signals("@/signals/Click.oly");
-	pc.load_signals("@/signals/Drag.oly");
-	pc.load_signals("@/signals/Jump.oly");
-	pc.load_signals("@/signals/Move.oly");
-
 	pc.test_text = pipeline.jumble.test_text.ref;
 
 	KeyHandler key_handler;

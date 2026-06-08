@@ -11,21 +11,17 @@ namespace oly::input
 
 	class SignalTable
 	{
-		SignalID next = 1;
-		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
+		SignalID _next = 1;
+		std::unordered_map<std::string, SignalID> _table;
+		std::unordered_map<std::string, std::vector<std::string>> _routes;
 
 	public:
-		SignalID get(const StringParam& name)
-		{
-			auto it = table.find(name);
-			if (it != table.end())
-				return it->second;
-			return table.emplace(name.transfer(), next++).first->second;
-		}
+		SignalID gen();
+		void route(std::string name, SignalID id);
+		void route(std::string name, std::string base);
+		SignalID route_new(std::string name);
+		std::vector<SignalID> get(const std::string& name) const;
 	};
-
-	// TODO v8 remove SignalRoutingTable. Just load SignalTable with multiple string keys pointing to the same signal id
-	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalRoutingTable;
 
 	enum class Phase
 	{

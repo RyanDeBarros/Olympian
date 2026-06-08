@@ -2,11 +2,17 @@
 
 PlayerController::PlayerController()
 {
+	load_signals("@/signals/Camera.oly");
+	load_signals("@/signals/Click.oly");
+	load_signals("@/signals/Drag.oly");
+	load_signals("@/signals/Jump.oly");
+	load_signals("@/signals/Move.oly");
+
 	bind("jump", &PlayerController::jump);
 	bind("click", &PlayerController::click);
 	bind("drag", &PlayerController::drag);
 	bind("zoom camera", &PlayerController::zoom_camera);
-	bind_mapping("move", &PlayerController::move);
+	bind("move", &PlayerController::move);
 }
 
 bool PlayerController::jump(oly::input::Signal signal)
