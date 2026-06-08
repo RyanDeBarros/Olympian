@@ -3,5 +3,6 @@ target_sources(OlympianEditor PRIVATE
 	FontDocument.cpp
 	IDocument.cpp
 	ProjectDocument.cpp
+	SignalDocument.cpp
 	TextureDocument.cpp
 )

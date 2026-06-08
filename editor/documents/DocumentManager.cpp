@@ -9,8 +9,9 @@
 #include "definitions/Keys.h"
 
 #include "documents/FontDocument.h"
-#include "documents/TextureDocument.h"
 #include "documents/ProjectDocument.h"
+#include "documents/SignalDocument.h"
+#include "documents/TextureDocument.h"
 
 namespace oly::editor
 {
@@ -41,21 +42,28 @@ namespace oly::editor
 				if (meta.get_version() == FontDocument::GetVersion())
 					Add<FontDocument>(std::move(oly_file));
 				else
-					return OpenAssetCode::UnsupportedAssetType;
+					return OpenAssetCode::UnsupportedAssetVersion;
 				break;
 
 			case detail::Key::Meta_Project:
 				if (meta.get_version() == ProjectDocument::GetVersion())
 					Add<ProjectDocument>(std::move(oly_file));
 				else
-					return OpenAssetCode::UnsupportedAssetType;
+					return OpenAssetCode::UnsupportedAssetVersion;
+				break;
+
+			case detail::Key::Meta_Signal:
+				if (meta.get_version() == SignalDocument::GetVersion())
+					Add<SignalDocument>(std::move(oly_file));
+				else
+					return OpenAssetCode::UnsupportedAssetVersion;
 				break;
 
 			case detail::Key::Meta_Texture:
 				if (meta.get_version() == TextureDocument::GetVersion())
 					Add<TextureDocument>(std::move(oly_file));
 				else
-					return OpenAssetCode::UnsupportedAssetType;
+					return OpenAssetCode::UnsupportedAssetVersion;
 				break;
 
 			default:

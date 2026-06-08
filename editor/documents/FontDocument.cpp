@@ -12,23 +12,41 @@ namespace oly::editor
 
 	void FontDocument::Init()
 	{
-		// TODO v8
-
 		if (!GetSourcePath().is_resource())
 		{
 			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
+
+		Load();
 	}
 
 	void FontDocument::Draw()
 	{
+		ImGui::PushID(this);
+
 		// TODO v8
+
+		ImGui::PopID();
 	}
 
 	void FontDocument::DrawMenuBar()
 	{
-		// TODO v8
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
+					Dump();
+
+				if (ImGui::MenuItem("Discard Changes"))
+					Load();
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenuBar();
+		}
 	}
 
 	void FontDocument::Load()

@@ -87,8 +87,6 @@ namespace oly
 		}
 	}
 
-	// TODO v8 SignalRoute should be its own file
-
 	void InputController::bind(const StringParam& signal, Handler handler)
 	{
 		if (auto id = _signal_table.get(signal))
@@ -294,11 +292,11 @@ namespace oly
 		}
 	}
 
-	static void load_signal_mapping(input::SignalRoutingTable& routing_table, TOMLNode node)
+	static void load_signal_routes(input::SignalRoutingTable& routing_table, TOMLNode node)
 	{
 		assets::Parser parser(node);
 		const auto id = parser.required<std::string>(detail::Key::ID)();
-		auto toml_signals = parser.required<TOMLArray>(detail::Key::MappedSignalList)();
+		auto toml_signals = parser.required<TOMLArray>(detail::Key::Signals)();
 		std::vector<std::string> signals;
 		for (size_t i = 0; i < toml_signals->size(); ++i)
 		{
@@ -309,8 +307,6 @@ namespace oly
 		}
 		routing_table[id] = std::move(signals);
 	}
-
-	// TODO v8 revamp input signal system so that there's only one file, not multiple.
 
 	void InputController::load_signals(const detail::ResourcePath& file)
 	{
@@ -332,7 +328,7 @@ namespace oly
 		if (auto signals = parser.optional<TOMLArray>(detail::Key::SignalArray)())
 			signals->for_each([this](auto&& node) { load_signal(_signal_table, (TOMLNode)node); });
 
-		if (auto mappings = parser.optional<TOMLArray>(detail::Key::MappingArray)())
-			mappings->for_each([this](auto&& node) { load_signal_mapping(_signal_routing_table, (TOMLNode)node); });
+		if (auto mappings = parser.optional<TOMLArray>(detail::Key::RoutingArray)())
+			mappings->for_each([this](auto&& node) { load_signal_routes(_signal_routing_table, (TOMLNode)node); });
 	}
 }

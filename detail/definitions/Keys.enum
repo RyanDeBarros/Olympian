@@ -136,8 +136,6 @@ Location = Location
 Logger = Logger
 
 MagFilter = MagFilt
-MappingArray = Mapping
-MappedSignalList = Signals
 Masks = Masks
 Maximized = Maxed
 MaxHeight = MaxH
@@ -180,6 +178,7 @@ RequiredMods = ReqMods
 Resizable = Resize
 Right = Right
 Rotation = Rotation
+RoutingArray = RouteArr
 Rows = Rows
 RowType = RowType
 RowOffsetIndex = ROffIdx

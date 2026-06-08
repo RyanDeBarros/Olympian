@@ -1,6 +1,6 @@
 #meta version=1.0 type=signal
 
-[[Mapping]]
+[[RouteArr]]
 ID = "move"
 Signals = ["move left", "move right", "move up", "move down"]
 

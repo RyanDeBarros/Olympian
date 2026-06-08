@@ -1,59 +1,125 @@
-#meta version=1.0 type="project"
-
-[Context]
-Signals = [ "signals/Camera.oly", "signals/Click.oly", "signals/Drag.oly", "signals/Jump.oly", "signals/Move.oly",]
-
+#meta version="1.0" type="project" 
 [Context.Colsn]
-Masks = [ "player", "obstacle", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
-Layers = [ "player", "obstacle", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",]
+Layers = [
+    'player',
+    'obstacle',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
+]
+Masks = [
+    'player',
+    'obstacle',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
+]
 
 [Context.FrmRate]
 FLenClip = 0.2
 TmScale = 1.0
 
 [Context.Logger]
+EnMxPBs = false
+EnMxPFs = false
+MxPBytes = 0
+MxPFiles = 0
 UseCons = true
+UseFile = true
 
-[Context.Logger.Enable]
-Debug = false
-Info = true
-Warning = true
-Error = true
-Fatal = true
+    [Context.Logger.Enable]
+    Debug = false
+    Error = true
+    Fatal = true
+    Info = true
+    Warning = true
 
 [Context.Platform]
 Gmpds = 1
 
-[Context.Platform.Window]
-Width = 1440
-Height = 1080
-Title = "Olympian Tester Project"
+    [Context.Platform.Window]
+    Height = 1080
+    Title = 'Olympian Tester Project'
+    Width = 1440
 
-[Context.Platform.Window.Viewport]
-Boxed = true
-Stretch = true
+        [Context.Platform.Window.Viewport]
+        Boxed = true
+        Stretch = true
 
-[Context.Platform.Window.WinHint]
-Resize = true
-Visible = true
-ClrColor = [ 0.0, 0.0, 0.0, 1.0,]
-SwpInt = 1
-Decor = true
-Focused = true
-AutoIcon = true
-Floating = false
-Maxed = false
-CCursor = true
-TrFrmbuf = false
-FocusOnS = true
-ScaleToM = false
-ScaleFB = true
-MousePSS = false
-Stereo = false
-SRGBCap = false
-DBuffer = true
-FWCompat = false
-CTXDebug = false
-PosX = 2147483648
-PosY = 2147483648
-RefreshR = -1
+        [Context.Platform.Window.WinHint]
+        AutoIcon = true
+        CCursor = true
+        CTXDebug = false
+        ClrColor = [ 0.0, 0.0, 0.0, 1.0 ]
+        Decor = true
+        FWCompat = false
+        Floating = false
+        FocusOnS = true
+        Focused = true
+        Maxed = false
+        MousePSS = false
+        PosX = -2147483648
+        PosY = -2147483648
+        RefreshR = -1
+        Resize = true
+        SRGBCap = false
+        ScaleFB = true
+        ScaleToM = false
+        Stereo = false
+        SwpInt = 1
+        TrFrmbuf = false
+        Visible = true

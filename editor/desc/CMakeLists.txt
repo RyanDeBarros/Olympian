@@ -3,5 +3,6 @@ target_sources(OlympianEditor PRIVATE
 	Fields.cpp
 	PreferencesDesc.cpp
 	ProjectDesc.cpp
+	SignalDesc.cpp
 	TextureDesc.cpp
 )

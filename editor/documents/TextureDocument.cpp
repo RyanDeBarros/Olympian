@@ -98,6 +98,7 @@ namespace oly::editor
 		}
 
 		_scratch.Reset(_disk);
+
 		_active_slot = 0;
 		_preview_nav = {};
 		if (auto svg_desc = std::get_if<TextureDesc<VectorTextureDesc>>(&_scratch.variant))
