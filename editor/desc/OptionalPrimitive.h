@@ -35,4 +35,5 @@ namespace oly::editor
 
 	using OptionalInt = OptionalPrimitive<int>;
 	using OptionalFloat = OptionalPrimitive<float>;
+	using OptionalDouble = OptionalPrimitive<double>;
 }

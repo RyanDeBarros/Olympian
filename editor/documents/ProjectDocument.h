@@ -39,6 +39,7 @@ namespace oly::editor
 		void Draw(Form& form, CollisionDesc& desc);
 		void Draw(Form& form, LoggerDesc& desc);
 		void Draw(Form& form, LoggerEnableDesc& desc);
+		void Draw(Form& form, FrameRateDesc& desc);
 
 		void Load(TOMLNode node, ProjectDesc& desc);
 		void Load(TOMLNode node, ContextDesc& desc);
@@ -49,6 +50,7 @@ namespace oly::editor
 		void Load(TOMLNode node, CollisionDesc& desc);
 		void Load(TOMLNode node, LoggerDesc& desc);
 		void Load(TOMLNode node, LoggerEnableDesc& desc);
+		void Load(TOMLNode node, FrameRateDesc& desc);
 
 		void Dump(toml::table& table, ProjectDesc& desc);
 		void Dump(toml::table& table, ContextDesc& desc);
@@ -59,5 +61,6 @@ namespace oly::editor
 		void Dump(toml::table& table, CollisionDesc& desc);
 		void Dump(toml::table& table, LoggerDesc& desc);
 		void Dump(toml::table& table, LoggerEnableDesc& desc);
+		void Dump(toml::table& table, FrameRateDesc& desc);
 	};
 }

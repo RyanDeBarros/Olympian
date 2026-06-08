@@ -77,7 +77,6 @@ namespace oly::editor
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
-			_meta.map[detail::Key::Meta_Import] = "1";
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Project);
 
 			MarkDirty();
@@ -116,6 +115,9 @@ namespace oly::editor
 
 		if (auto subform = Subform(form, "Logger"))
 			Draw(subform.GetForm(), desc.logger);
+
+		if (auto subform = Subform(form, "Frame Rate"))
+			Draw(subform.GetForm(), desc.frame_rate);
 	}
 
 	void ProjectDocument::Draw(Form& form, PlatformDesc& desc)
@@ -164,6 +166,11 @@ namespace oly::editor
 		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
+	void ProjectDocument::Draw(Form& form, FrameRateDesc& desc)
+	{
+		DRAW_FIELDS(FRAME_RATE_GENERATOR);
+	}
+
 	void ProjectDocument::Load(TOMLNode node, ProjectDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.context_key)], desc.context);
@@ -174,6 +181,7 @@ namespace oly::editor
 		Load(node[detail::encode_key(desc.platform_key)], desc.platform);
 		Load(node[detail::encode_key(desc.collision_key)], desc.collision);
 		Load(node[detail::encode_key(desc.logger_key)], desc.logger);
+		Load(node[detail::encode_key(desc.frame_rate_key)], desc.frame_rate);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, PlatformDesc& desc)
@@ -218,6 +226,11 @@ namespace oly::editor
 		LOAD_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
+	void ProjectDocument::Load(TOMLNode node, FrameRateDesc& desc)
+	{
+		LOAD_FIELDS(FRAME_RATE_GENERATOR);
+	}
+
 	void ProjectDocument::Dump(toml::table& table, ProjectDesc& desc)
 	{
 		toml::table subtable;
@@ -238,6 +251,10 @@ namespace oly::editor
 		subtable.clear();
 		Dump(subtable, desc.logger);
 		table.insert_or_assign(detail::encode_key(desc.logger_key), std::move(subtable));
+
+		subtable.clear();
+		Dump(subtable, desc.frame_rate);
+		table.insert_or_assign(detail::encode_key(desc.frame_rate_key), std::move(subtable));
 	}
 
 	void ProjectDocument::Dump(toml::table& table, PlatformDesc& desc)
@@ -288,5 +305,10 @@ namespace oly::editor
 	void ProjectDocument::Dump(toml::table& table, LoggerEnableDesc& desc)
 	{
 		DUMP_FIELDS(LOGGER_ENABLE_GENERATOR);
+	}
+
+	void ProjectDocument::Dump(toml::table& table, FrameRateDesc& desc)
+	{
+		DUMP_FIELDS(FRAME_RATE_GENERATOR);
 	}
 }

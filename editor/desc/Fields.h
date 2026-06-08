@@ -89,8 +89,8 @@ namespace oly::editor
 		bool Draw();
 	};
 
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
-	struct RangeField : public PrimitiveField<T, RangeField<T, _Min, _Max>>
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	struct RangeField : public PrimitiveField<T, RangeField<T, _Min, _Max>, NodeType>
 	{
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
@@ -108,6 +108,9 @@ namespace oly::editor
 
 	template<OptionalFloat Min, OptionalFloat Max>
 	using FloatField = RangeField<float, Min, Max>;
+
+	template<OptionalDouble Min, OptionalDouble Max>
+	using DoubleField = RangeField<double, Min, Max>;
 
 	template<typename E>
 	struct EnumField : public PrimitiveField<E, EnumField<E>, int64_t>
@@ -221,6 +224,9 @@ namespace oly::editor
 
 	template<OptionalFloat Min, OptionalFloat Max>
 	using OptionalFloatField = OptionalRangeField<float, Min, Max, double>;
+
+	template<OptionalDouble Min, OptionalDouble Max>
+	using OptionalDoubleField = OptionalRangeField<double, Min, Max, double>;
 
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
 	struct CompactOptionalRangeField

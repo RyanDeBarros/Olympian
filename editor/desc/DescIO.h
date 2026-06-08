@@ -14,6 +14,7 @@ namespace oly::editor
 		static bool Draw(const char* label, bool& data, const bool* disk);
 		static bool Draw(const char* label, int& data, const int* disk, OptionalInt min, OptionalInt max);
 		static bool Draw(const char* label, float& data, const float* disk, OptionalFloat min, OptionalFloat max);
+		static bool Draw(const char* label, double& data, const double* disk, OptionalDouble min, OptionalDouble max);
 		static bool Draw(const char* label, OptionalInt& data, const OptionalInt* disk, OptionalInt min, OptionalInt max);
 		static bool Draw(const char* label, OptionalFloat& data, const OptionalFloat* disk, OptionalFloat min, OptionalFloat max);
 		static bool Draw(const char* label, int& data, const int* disk, const char** names, size_t count);

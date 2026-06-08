@@ -83,7 +83,7 @@ namespace oly::editor
 		bool dirty = false;
 		PrepareValue(label, &data);
 		SetItemComfortableWidth(min, max);
-		const int og = data;
+		const auto og = data;
 		if (ImGui::InputInt("", &data))
 			dirty |= Clamp(data, og, min, max);
 		return FinishValue(dirty, data, disk);
@@ -94,8 +94,19 @@ namespace oly::editor
 		bool dirty = false;
 		PrepareValue(label, &data);
 		SetItemComfortableWidth(min, max);
-		const float og = data;
+		const auto og = data;
 		if (ImGui::InputFloat("", &data))
+			dirty |= Clamp(data, og, min, max);
+		return FinishValue(dirty, data, disk);
+	}
+
+	bool DescIO::Draw(const char* label, double& data, const double* disk, OptionalDouble min, OptionalDouble max)
+	{
+		bool dirty = false;
+		PrepareValue(label, &data);
+		SetItemComfortableWidth(min, max);
+		const auto og = data;
+		if (ImGui::InputDouble("", &data))
 			dirty |= Clamp(data, og, min, max);
 		return FinishValue(dirty, data, disk);
 	}

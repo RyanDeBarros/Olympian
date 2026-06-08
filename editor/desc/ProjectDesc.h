@@ -181,6 +181,21 @@ namespace oly::editor
 	LOGGER_PARTIAL_GENERATOR(M) \
 	M(enable)
 
+	struct FrameRateDesc
+	{
+		DoubleField<MakeOpt(0.0), MakeOpt<double>()> frame_length_clip;
+		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
+
+		FrameRateDesc();
+
+		void Reset(FrameRateDesc& source);
+		void Isolate();
+	};
+
+#define FRAME_RATE_GENERATOR(M) \
+	M(frame_length_clip) \
+	M(time_scale)
+
 	struct ContextDesc
 	{
 		PlatformDesc platform;
@@ -189,6 +204,8 @@ namespace oly::editor
 		static const detail::Key collision_key;
 		LoggerDesc logger;
 		static const detail::Key logger_key;
+		FrameRateDesc frame_rate;
+		static const detail::Key frame_rate_key;
 
 		void Reset(ContextDesc& source);
 		void Isolate();
@@ -197,7 +214,8 @@ namespace oly::editor
 #define CONTEXT_GENERATOR(M) \
 	M(platform) \
 	M(collision) \
-	M(logger)
+	M(logger) \
+	M(frame_rate)
 
 	struct ProjectDesc
 	{

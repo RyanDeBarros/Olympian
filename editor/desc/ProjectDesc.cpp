@@ -152,9 +152,26 @@ namespace oly::editor
 		ISOLATE_FIELDS(LOGGER_GENERATOR);
 	}
 
+	FrameRateDesc::FrameRateDesc() :
+		frame_length_clip(0.2, detail::Key::FrameLengthClip, "Frame length clip"),
+		time_scale(1.0, detail::Key::TimeScale, "Time scale")
+	{
+	}
+
+	void FrameRateDesc::Reset(FrameRateDesc& source)
+	{
+		RESET_FIELDS(FRAME_RATE_GENERATOR);
+	}
+	
+	void FrameRateDesc::Isolate()
+	{
+		ISOLATE_FIELDS(FRAME_RATE_GENERATOR);
+	}
+
 	const detail::Key ContextDesc::platform_key = detail::Key::Platform;
 	const detail::Key ContextDesc::collision_key = detail::Key::Collision;
 	const detail::Key ContextDesc::logger_key = detail::Key::Logger;
+	const detail::Key ContextDesc::frame_rate_key = detail::Key::FrameRate;
 
 	void ContextDesc::Reset(ContextDesc& source)
 	{
