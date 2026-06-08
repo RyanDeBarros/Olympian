@@ -3,7 +3,6 @@ target_sources(OlympianEngine PRIVATE
 	Gamepad.cpp
 	InputController.cpp
 	Platform.cpp
-	Signal.cpp
 	Window.cpp
 	WindowEvents.cpp
 )
