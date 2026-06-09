@@ -95,7 +95,7 @@ namespace oly::editor
 
 	size_t TextureVariantDesc::Size() const
 	{
-		return std::visit([](const auto& desc) { return desc.Size(); }, variant);
+		return variant.Visit([](const auto& desc) { return desc.Size(); });
 	}
 
 	bool TextureVariantDesc::Empty() const
@@ -105,11 +105,11 @@ namespace oly::editor
 
 	void TextureVariantDesc::PushBack()
 	{
-		std::visit([](auto& desc) { desc.PushBack(); }, variant);
+		variant.Visit([](auto& desc) { desc.PushBack(); });
 	}
 	
 	void TextureVariantDesc::Remove(size_t i)
 	{
-		std::visit([i](auto& desc) { desc.Remove(i); }, variant);
+		variant.Visit([i](auto& desc) { desc.Remove(i); });
 	}
 }

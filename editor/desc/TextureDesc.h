@@ -111,8 +111,7 @@ namespace oly::editor
 
 	struct TextureVariantDesc
 	{
-		// TODO v8 use VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>>
-		std::variant<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
+		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
 		size_t Size() const;
@@ -120,38 +119,30 @@ namespace oly::editor
 		void PushBack();
 		void Remove(size_t i);
 
-		template<TextureSlotDesc SlotType>
-		void Clear()
-		{
-			variant = VectorDesc<SlotType>();
-		}
-
-		void Visit(auto&& visitor)
-		{
-			std::visit([&visitor](auto& desc) { desc.Visit(visitor); }, variant);
-		}
-
 		auto Visit(size_t i, auto&& visitor)
 		{
-			return std::visit([&visitor, i](auto& desc) {
-				using T = std::invoke_result_t<decltype(visitor), decltype(desc.vector[i])>;
+			return variant.Visit([&visitor, i](auto& desc) {
+				using T = std::invoke_result_t<decltype(visitor), decltype(desc[i])>;
 				if constexpr (std::is_same_v<T, void>)
 				{
-					return visitor(desc.vector[i]);
+					return visitor(desc[i]);
 				}
 				else
 				{
 					if (i < desc.Size())
-						return std::optional<T>(visitor(desc.vector[i]));
+						return std::optional<T>(visitor(desc[i]));
 					else
 						return std::optional<T>(std::nullopt);
 				}
-			}, variant);
+			});
 		}
 
 		void VisitIndexed(auto&& visitor)
 		{
-			std::visit([&visitor](auto& desc) { desc.VisitIndexed(visitor); }, variant);
+			variant.Visit([&visitor](auto& desc) {
+				for (size_t i = 0; i < desc.Size(); ++i)
+					visitor(i, desc[i]);
+			});
 		}
 	};
 }

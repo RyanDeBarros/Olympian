@@ -101,7 +101,7 @@ namespace oly::editor
 
 		_active_slot = 0;
 		_preview_nav = {};
-		if (auto svg_desc = std::get_if<VectorDesc<VectorTextureDesc>>(&_scratch.variant))
+		if (auto svg_desc = _scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
 			_preview_nav.svg_scale = svg_desc->vector[_active_slot].scale.scratch;
 
 		ReloadPreviewTexture();
@@ -533,17 +533,11 @@ namespace oly::editor
 
 	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc)
 	{
-		const auto Clear = [this](TextureVariantDesc& desc) {
-			if (_svg)
-				desc.Clear<VectorTextureDesc>();
-			else
-				desc.Clear<RasterTextureDesc>();
-		};
+		desc.variant.Reset();
 
 		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
 		{
-			Clear(desc);
 			for (size_t i = 0; i < array->size(); ++i)
 				desc.PushBack();
 
@@ -551,7 +545,6 @@ namespace oly::editor
 		}
 		else
 		{
-			Clear(desc);
 			desc.PushBack();
 
 			desc.Visit(0, [this](auto& d) { Load(TOMLNode(), d); });
@@ -591,10 +584,13 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
 	{
 		toml::v3::array array;
-		desc.Visit([this, &array](auto& d) {
-			toml::table table;
-			Dump(table, d);
-			array.push_back(std::move(table));
+		desc.variant.Visit([this, &array](auto& d) {
+			for (auto& desc : d)
+			{
+				toml::table table;
+				Dump(table, desc);
+				array.push_back(std::move(table));
+			}
 		});
 		table.insert_or_assign(detail::encode_key(desc.array_key), std::move(array));
 	}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <variant>
 #include <vector>
 
 namespace oly::editor
@@ -49,6 +50,65 @@ namespace oly::editor
 		{
 			for (size_t i = 0; i < vector.size(); ++i)
 				fn(i, vector[i]);
+		}
+
+		Descriptor& operator[](size_t i)
+		{
+			return vector[i];
+		}
+
+		const Descriptor& operator[](size_t i) const
+		{
+			return vector[i];
+		}
+
+		auto begin()
+		{
+			return vector.begin();
+		}
+
+		auto end()
+		{
+			return vector.end();
+		}
+	};
+
+	template<typename... Descriptors>
+	struct VariantDesc
+	{
+		std::variant<Descriptors...> variant;
+
+		void Reset()
+		{
+			std::visit([](auto& v) { v = std::decay_t<decltype(v)>(); }, variant);
+		}
+
+		template<typename Descriptor>
+		void Set()
+		{
+			variant = Descriptor();
+		}
+
+		auto Visit(auto&& visitor)
+		{
+			return std::visit([&visitor](auto& desc) { return visitor(desc); }, variant);
+		}
+
+		auto Visit(auto&& visitor) const
+		{
+			return std::visit([&visitor](const auto& desc) { return visitor(desc); }, variant);
+		}
+
+		template<typename Descriptor>
+		Descriptor* TryGet()
+		{
+			return std::get_if<Descriptor>(&variant);
+		}
+
+		template<typename Descriptor>
+		const Descriptor* TryGet() const
+		{
+			return std::get_if<Descriptor>(&variant);
 		}
 	};
 }
