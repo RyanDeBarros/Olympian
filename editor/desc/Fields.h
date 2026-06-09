@@ -105,13 +105,13 @@ namespace oly::editor
 		}
 	};
 
-	template<size_t N>
-	struct BoolArrayField : public PrimitiveField<std::array<bool, N>>
+	template<typename T, size_t N>
+	struct ArrayField : public PrimitiveField<std::array<T, N>>
 	{
 		const char** sublabels;
 
-		BoolArrayField(std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: PrimitiveField<std::array<bool, N>>(def, key, label), sublabels(sublabels) {}
+		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: PrimitiveField<std::array<T, N>>(def, key, label), sublabels(sublabels) {}
 
 		bool Draw()
 		{
@@ -120,9 +120,12 @@ namespace oly::editor
 	};
 
 	template<size_t N>
-	struct StringArrayField : public PrimitiveField<std::array<std::string, N>>
+	using BoolArrayField = ArrayField<bool, N>;
+
+	template<typename T, size_t N>
+	struct AnonArrayField : public PrimitiveField<std::array<T, N>>
 	{
-		using PrimitiveField<std::array<std::string, N>>::PrimitiveField;
+		using PrimitiveField<std::array<T, N>>::PrimitiveField;
 
 		bool Draw()
 		{
@@ -130,14 +133,19 @@ namespace oly::editor
 		}
 	};
 
+	template<size_t N>
+	using StringArrayField = AnonArrayField<std::string, N>;
+
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
+		size_t ui_index = 0;
+
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->def);
+			return DescIO::Draw(this->label, this->scratch, this->def, ui_index);
 		}
 	};
 

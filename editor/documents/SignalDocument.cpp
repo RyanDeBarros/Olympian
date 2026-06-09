@@ -4,6 +4,7 @@
 #include "core/Logger.h"
 
 #include "gui/IDScope.h"
+#include "gui/Subform.h"
 
 #include "definitions/Keys.h"
 
@@ -110,40 +111,257 @@ namespace oly::editor
 
 	void SignalDocument::DrawSignals()
 	{
-		// TODO v8 draw only active index
-		_scratch.signals.Visit([this](SignalDesc& desc) { Draw(desc); });
+		if (auto form = Form())
+		{
+			// TODO v8 draw only active index
+			_scratch.signals.Visit([this, &form](SignalDesc& desc) { Draw(form, desc); });
+		}
 	}
 
 	void SignalDocument::DrawRoutes()
 	{
-		// TODO v8 draw only active index
-		_scratch.routes.Visit([this](RouteDesc& desc) { Draw(desc); });
+		if (auto form = Form())
+		{
+			// TODO v8 draw only active index
+			_scratch.routes.Visit([this, &form](RouteDesc& desc) { Draw(form, desc); });
+		}
 	}
 
-	void SignalDocument::Draw(SignalDesc& desc)
+	void SignalDocument::Draw(Form& form, SignalDesc& desc)
 	{
-		// TODO v8
+		DRAW_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+
+		desc.variant.Visit([this, &form](auto& desc) { Draw(form, desc); });
 	}
 	
-	void SignalDocument::Draw(RouteDesc& desc)
+	void SignalDocument::Draw(Form& form, RouteDesc& desc)
 	{
-		// TODO v8
+		DRAW_FIELDS(ROUTE_GENERATOR);
+	}
+
+	void SignalDocument::Draw(Form& form, KeyDesc& desc)
+	{
+		DRAW_FIELDS(KEY_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, MouseButtonDesc& desc)
+	{
+		DRAW_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, GamepadButtonDesc& desc)
+	{
+		DRAW_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, GamepadAxis1dDesc& desc)
+	{
+		DRAW_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, GamepadAxis2dDesc& desc)
+	{
+		DRAW_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, CursorPosDesc& desc)
+	{
+		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(Form& form, ScrollDesc& desc)
+	{
+		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
+		if (auto subform = Subform(form, "Modifiers"))
+			Draw(form, desc.modifier);
+	}
+
+	void SignalDocument::Draw(Form& form, Modifier0dDesc& desc)
+	{
+		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		Draw(form, desc.base);
+	}
+	
+	void SignalDocument::Draw(Form& form, Modifier1dDesc& desc)
+	{
+		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		Draw(form, desc.base);
+	}
+	
+	void SignalDocument::Draw(Form& form, Modifier2dDesc& desc)
+	{
+		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		Draw(form, desc.base);
+	}
+	
+	void SignalDocument::Draw(Form& form, ModifierBaseDesc& desc)
+	{
+		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 
 	void SignalDocument::Load(TOMLNode node, SignalFullDesc& desc)
 	{
-		_scratch.signals.Visit([this, subnode = node[detail::encode_key(desc.signals_key)]](SignalDesc& desc) { Load(subnode, desc); });
-		_scratch.routes.Visit([this, subnode = node[detail::encode_key(desc.routes_key)]](RouteDesc& desc) { Load(subnode, desc); });
+		TOMLArray signal_array = node[detail::encode_key(desc.signals_key)].as_array();
+		if (signal_array && !signal_array->empty())
+		{
+			for (size_t i = 0; i < signal_array->size(); ++i)
+				desc.signals.PushBack();
+
+			desc.signals.VisitIndexed([this, &signal_array](size_t i, auto& d) { Load(TOMLNode(*signal_array->get(i)), d); });
+		}
+
+		TOMLArray route_array = node[detail::encode_key(desc.routes_key)].as_array();
+		if (route_array && !route_array->empty())
+		{
+			for (size_t i = 0; i < route_array->size(); ++i)
+				desc.routes.PushBack();
+
+			desc.routes.VisitIndexed([this, &route_array](size_t i, auto& d) { Load(TOMLNode(*route_array->get(i)), d); });
+		}
 	}
 
 	void SignalDocument::Load(TOMLNode node, SignalDesc& desc)
 	{
-		// TODO v8
+		LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+
+		detail::SignalBindingType type = detail::SignalBindingType::Key;
+		if (auto v = node[detail::encode_key(desc.modifier_key)].value<int64_t>())
+			type = static_cast<detail::SignalBindingType>(*v);
+
+		switch (type)
+		{
+		case detail::SignalBindingType::Key:
+		{
+			KeyDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::MouseButton:
+		{
+			MouseButtonDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::GamepadButton:
+		{
+			GamepadButtonDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::GamepadAxis1D:
+		{
+			GamepadAxis1dDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::GamepadAxis2D:
+		{
+			GamepadAxis2dDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::CursorPos:
+		{
+			CursorPosDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		case detail::SignalBindingType::Scroll:
+		{
+			ScrollDesc subdesc;
+			Load(node, subdesc);
+			desc.variant.Set(std::move(subdesc));
+			break;
+		}
+		}
 	}
 
 	void SignalDocument::Load(TOMLNode node, RouteDesc& desc)
 	{
-		// TODO v8
+		LOAD_FIELDS(ROUTE_GENERATOR);
+	}
+
+	void SignalDocument::Load(TOMLNode node, KeyDesc& desc)
+	{
+		LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+
+	void SignalDocument::Load(TOMLNode node, MouseButtonDesc& desc)
+	{
+		LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+
+	void SignalDocument::Load(TOMLNode node, GamepadButtonDesc& desc)
+	{
+		LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, GamepadAxis1dDesc& desc)
+	{
+		LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, GamepadAxis2dDesc& desc)
+	{
+		LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, CursorPosDesc& desc)
+	{
+		LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, ScrollDesc& desc)
+	{
+		LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
+		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, Modifier0dDesc& desc)
+	{
+		LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		Load(node, desc.base);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, Modifier1dDesc& desc)
+	{
+		LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		Load(node, desc.base);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, Modifier2dDesc& desc)
+	{
+		LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		Load(node, desc.base);
+	}
+	
+	void SignalDocument::Load(TOMLNode node, ModifierBaseDesc& desc)
+	{
+		LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 
 	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)

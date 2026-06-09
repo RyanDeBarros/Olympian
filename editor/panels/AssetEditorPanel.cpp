@@ -116,7 +116,11 @@ namespace oly::editor
 				if (!open)
 				{
 					if (!doc.IsDirty())
+					{
 						closed.push_back(i);
+						if (&doc == _selected_tab)
+							_selected_tab = nullptr;
+					}
 					else if (!_pending_close_set.contains(&doc))
 					{
 						_pending_close_set.insert(&doc);

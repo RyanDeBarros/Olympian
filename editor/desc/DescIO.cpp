@@ -129,7 +129,8 @@ namespace oly::editor
 		{
 			scope.Push(static_cast<int>(i));
 
-			if (ImGui::Selectable("##Select", ui_index == i, ImGuiSelectableFlags_SpanAllColumns))
+			// TODO v8 Selectable is ugly, and clashes with overlayed text input. Use radio button or '6-dots' button on left to select. Or simply use IsItemActivated() + non-interactive highlight.
+			if (ImGui::Selectable("##Select", ui_index == i))
 				ui_index = i;
 
 			ImGui::SameLine();

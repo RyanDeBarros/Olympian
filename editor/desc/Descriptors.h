@@ -84,9 +84,16 @@ namespace oly::editor
 		}
 
 		template<typename Descriptor>
-		void Set()
+		Descriptor& Set()
 		{
 			variant = Descriptor();
+			return std::get<Descriptor>(variant);
+		}
+
+		template<typename Descriptor>
+		void Set(Descriptor&& desc)
+		{
+			variant = std::forward<Descriptor>(desc);
 		}
 
 		auto Visit(auto&& visitor)

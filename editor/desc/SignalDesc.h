@@ -23,9 +23,12 @@ namespace oly::editor
 		ModifierBaseDesc();
 	};
 
+#define MODIFIER_0D_PARTIAL_GENERATOR(M) \
+		M(conversion)
+
 #define MODIFIER_0D_GENERATOR(M) \
 		M(base) \
-		M(conversion)
+		MODIFIER_0D_PARTIAL_GENERATOR(M)
 
 	struct Modifier0dDesc
 	{
@@ -35,9 +38,12 @@ namespace oly::editor
 		Modifier0dDesc();
 	};
 
+#define MODIFIER_1D_PARTIAL_GENERATOR(M) \
+		M(conversion)
+
 #define MODIFIER_1D_GENERATOR(M) \
 		M(base) \
-		M(conversion)
+		MODIFIER_1D_PARTIAL_GENERATOR(M)
 
 	struct Modifier1dDesc
 	{
@@ -47,9 +53,12 @@ namespace oly::editor
 		Modifier1dDesc();
 	};
 
+#define MODIFIER_2D_PARTIAL_GENERATOR(M) \
+		M(conversion)
+
 #define MODIFIER_2D_GENERATOR(M) \
 		M(base) \
-		M(conversion)
+		MODIFIER_2D_PARTIAL_GENERATOR(M)
 
 	struct Modifier2dDesc
 	{
@@ -59,7 +68,10 @@ namespace oly::editor
 		Modifier2dDesc();
 	};
 
+#define KEY_PARTIAL_GENERATOR(M)
+
 #define KEY_GENERATOR(M) \
+		KEY_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
 	struct KeyDesc
@@ -70,7 +82,10 @@ namespace oly::editor
 		KeyDesc();
 	};
 
+#define MOUSE_BUTTON_PARTIAL_GENERATOR(M)
+
 #define MOUSE_BUTTON_GENERATOR(M) \
+		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
 	struct MouseButtonDesc
@@ -81,8 +96,11 @@ namespace oly::editor
 		MouseButtonDesc();
 	};
 
+#define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
+		M(button)
+
 #define GAMEPAD_BUTTON_GENERATOR(M) \
-		M(button) \
+		GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
 	struct GamepadButtonDesc
@@ -93,10 +111,13 @@ namespace oly::editor
 		GamepadButtonDesc();
 	};
 
-#define GAMEPAD_AXIS_1D_GENERATOR(M) \
+#define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
 		M(axis) \
-		M(modifier) \
 		M(deadzone)
+
+#define GAMEPAD_AXIS_1D_GENERATOR(M) \
+		GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
+		M(modifier)
 
 	struct GamepadAxis1dDesc
 	{
@@ -107,10 +128,13 @@ namespace oly::editor
 		GamepadAxis1dDesc();
 	};
 
-#define GAMEPAD_AXIS_2D_GENERATOR(M) \
+#define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
 		M(axis) \
-		M(modifier) \
 		M(deadzone)
+
+#define GAMEPAD_AXIS_2D_GENERATOR(M) \
+		GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
+		M(modifier)
 
 	struct GamepadAxis2dDesc
 	{
@@ -121,7 +145,10 @@ namespace oly::editor
 		GamepadAxis2dDesc();
 	};
 
+#define CURSOR_POS_PARTIAL_GENERATOR(M)
+
 #define CURSOR_POS_GENERATOR(M) \
+		CURSOR_POS_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
 	struct CursorPosDesc
@@ -129,7 +156,10 @@ namespace oly::editor
 		Modifier2dDesc modifier;
 	};
 
+#define SCROLL_PARTIAL_GENERATOR(M)
+
 #define SCROLL_GENERATOR(M) \
+		SCROLL_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
 	struct ScrollDesc

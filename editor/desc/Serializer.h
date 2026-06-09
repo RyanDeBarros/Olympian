@@ -143,7 +143,7 @@ namespace oly::editor
 			if (auto arr = node.as_array())
 			{
 				bool fully_loaded = true;
-				for (glm::length_t i = 0; i < glm::min(arr->size(), L); ++i)
+				for (glm::length_t i = 0; i < glm::min(static_cast<glm::length_t>(arr->size()), L); ++i)
 					fully_loaded &= Serializer<T>{}.Load(obj[i], TOMLNode(*arr->get(i)));
 				return fully_loaded;
 			}
