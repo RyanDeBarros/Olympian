@@ -196,14 +196,12 @@ namespace oly::editor::gui
 		bool operator()(const char* label, OptionalPrimitive<T>& data, OptionalPrimitive<T> min, OptionalPrimitive<T> max) const
 		{
 			bool dirty = false;
-			IDScope key_scope;
-			key_scope.Push(&key_scope); // TODO v8 remove
+			IDScope scope(&data);
 			dirty |= gui::InputData<bool>{}("", data.has_value);
 			if (auto disabled = DisabledSection(!data.has_value))
 			{
 				ImGui::SameLine();
-				IDScope value_scope;
-				value_scope.Push(&value_scope); // TODO v8 remove
+				scope.Push(1);
 				dirty |= gui::InputData<T>{}(label, data.value, min, max);
 			}
 			return dirty;

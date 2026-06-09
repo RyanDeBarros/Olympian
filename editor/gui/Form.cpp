@@ -10,9 +10,10 @@ namespace oly::editor
 	}
 
 	Form::Form(Form&& other) noexcept
-		: _draw_content(other._draw_content)
+		: _draw_content(other._draw_content), _id_counter(other._id_counter), _scope(std::move(other._scope))
 	{
 		other._draw_content = false;
+		other._id_counter = 0;
 
 		if (&other == ACTIVE_FORM)
 			ACTIVE_FORM = this;
@@ -38,7 +39,7 @@ namespace oly::editor
 	{
 		ACTIVE_FORM = this;
 
-		_scope.Push(this).Push(_id_counter++);
+		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
 		if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);

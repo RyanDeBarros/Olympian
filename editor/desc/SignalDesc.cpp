@@ -12,7 +12,7 @@ namespace oly::editor
 
 	ModifierBaseDesc::ModifierBaseDesc() :
 		swizzle(detail::Swizzle::None, detail::Key::Swizzle, "Swizzle"),
-		//multiplier(glm::vec3(1.f, 1.f, 1.f), detail::Key::Multiplier, "Multiplier"),
+		multiplier(glm::vec3(1.f, 1.f, 1.f), detail::Key::Multiplier, "Multiplier"),
 		invert({ false, false, false }, detail::Key::Invert, "Invert", MODIFIER_INVERT_SUBLABELS)
 	{
 	}

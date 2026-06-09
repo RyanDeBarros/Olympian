@@ -19,8 +19,6 @@ namespace oly::editor
 #define DUMP_FIELD(field) desc.field.Dump(table);
 #define DUMP_FIELDS(generator) generator(DUMP_FIELD)
 
-	extern bool KeyIsNull(detail::Key key);
-	extern bool KeyIsNotNull(detail::Key key);
 	extern detail::Key NullKey();
 
 	template<typename NodeType, typename T>
@@ -49,13 +47,13 @@ namespace oly::editor
 		void Load(TOMLNode node)
 		{
 			scratch = def;
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 				LoadValue<NodeType>(node[detail::encode_key(key)], scratch);
 		}
 
 		void Dump(toml::table& table) const
 		{
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 				DumpValue(table, key, static_cast<NodeType>(scratch));
 		}
 	};
@@ -67,11 +65,11 @@ namespace oly::editor
 		bool Draw();
 	};
 
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max, typename NodeType = T>
 	struct RangeField : public PrimitiveField<T, NodeType>
 	{
-		inline static const OptionalPrimitive<T> Min = _Min;
-		inline static const OptionalPrimitive<T> Max = _Max;
+		inline static const OptionalPrimitive<U> Min = _Min;
+		inline static const OptionalPrimitive<U> Max = _Max;
 
 		using PrimitiveField<T, NodeType>::PrimitiveField;
 
@@ -82,13 +80,13 @@ namespace oly::editor
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
-	using IntField = RangeField<int, Min, Max>;
+	using IntField = RangeField<int, int, Min, Max>;
 
 	template<OptionalFloat Min, OptionalFloat Max>
-	using FloatField = RangeField<float, Min, Max>;
+	using FloatField = RangeField<float, float, Min, Max>;
 
 	template<OptionalDouble Min, OptionalDouble Max>
-	using DoubleField = RangeField<double, Min, Max>;
+	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E>
 	struct EnumField : public PrimitiveField<E, int64_t>
@@ -166,7 +164,7 @@ namespace oly::editor
 		void Load(TOMLNode node)
 		{
 			scratch = def;
-			if (KeyIsNotNull(enable_key) && KeyIsNotNull(value_key))
+			if (enable_key != NullKey() && value_key != NullKey())
 			{
 				if (auto v = node[detail::encode_key(value_key)].value<NodeType>())
 					scratch = MakeOpt(static_cast<T>(*v));
@@ -177,7 +175,7 @@ namespace oly::editor
 
 		void Dump(toml::table& table) const
 		{
-			if (KeyIsNotNull(enable_key) && KeyIsNotNull(value_key))
+			if (enable_key != NullKey() && value_key != NullKey())
 			{
 				table.insert_or_assign(detail::encode_key(enable_key), scratch.has_value);
 				table.insert_or_assign(detail::encode_key(value_key), static_cast<NodeType>(scratch.value));
@@ -220,7 +218,7 @@ namespace oly::editor
 		void Load(TOMLNode node)
 		{
 			scratch = def;
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 			{
 				if (auto v = node[detail::encode_key(key)].value<NodeType>())
 					scratch = *v == nullopt ? MakeOpt<T>() : MakeOpt<T>(*v);
@@ -229,7 +227,7 @@ namespace oly::editor
 
 		void Dump(toml::table& table) const
 		{
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 				table.insert_or_assign(detail::encode_key(key), scratch.has_value ? scratch.value : nullopt);
 		}
 	};
@@ -275,13 +273,13 @@ namespace oly::editor
 		void Load(TOMLNode node)
 		{
 			scratch = def;
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 				LoadStringArray(node[detail::encode_key(key)], scratch.data(), N);
 		}
 
 		void Dump(toml::table& table) const
 		{
-			if (KeyIsNotNull(key))
+			if (key != NullKey())
 				table.insert_or_assign(detail::encode_key(key), DumpStringArray(scratch.data(), N));
 		}
 	};
@@ -309,17 +307,17 @@ namespace oly::editor
 		table.insert_or_assign(detail::encode_key(key), std::move(arr));
 	}
 
-	//template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
-	//using VecField = RangeField<glm::vec<L, float>, Min, Max>;
+	template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
+	using VecField = RangeField<glm::vec<L, float>, float, Min, Max>;
 
-	//template<OptionalFloat Min, OptionalFloat Max>
-	//using Vec2Field = VecField<Min, Max, 2>;
-	//
-	//template<OptionalFloat Min, OptionalFloat Max>
-	//using Vec3Field = VecField<Min, Max, 3>;
-	//
-	//template<OptionalFloat Min, OptionalFloat Max>
-	//using Vec4Field = VecField<Min, Max, 4>;
+	template<OptionalFloat Min, OptionalFloat Max>
+	using Vec2Field = VecField<Min, Max, 2>;
+	
+	template<OptionalFloat Min, OptionalFloat Max>
+	using Vec3Field = VecField<Min, Max, 3>;
+	
+	template<OptionalFloat Min, OptionalFloat Max>
+	using Vec4Field = VecField<Min, Max, 4>;
 
 	template<typename T, size_t N>
 	void LoadValue(TOMLNode node, std::array<T, N>& obj)

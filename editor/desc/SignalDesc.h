@@ -11,14 +11,13 @@ namespace oly::editor
 {
 #define MODIFIER_BASE_GENERATOR(M) \
 		M(swizzle) \
+		M(multiplier) \
 		M(invert)
-		//M(multiplier) \
-		//M(invert)
 
 	struct ModifierBaseDesc
 	{
 		EnumField<detail::Swizzle> swizzle;
-		//Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
+		Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
 		BoolArrayField<3> invert;
 
 		ModifierBaseDesc();

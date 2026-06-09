@@ -11,8 +11,6 @@
 
 #include <imgui.h>
 
-// TODO v8 revert button should revert to default instead of disk. Don't pass disk in any of these. Also, rename 'revert' in asset menu to 'reload'. No need for disk* pointers then or even Reset/Isolate!
-
 namespace oly::editor
 {
 	void DescIO::PrepareValue(const char* label)
@@ -27,7 +25,7 @@ namespace oly::editor
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Revert, "Revert", ptr_id))
+		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", ptr_id))
 			dirty = true;
 		return dirty;
 	}

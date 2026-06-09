@@ -4,16 +4,6 @@
 
 namespace oly::editor
 {
-	bool KeyIsNull(detail::Key key)
-	{
-		return key == detail::Key::_;
-	}
-
-	bool KeyIsNotNull(detail::Key key)
-	{
-		return key != detail::Key::_;
-	}
-
 	detail::Key NullKey()
 	{
 		return detail::Key::_;
@@ -83,7 +73,7 @@ namespace oly::editor
 	void ColorField::Load(TOMLNode node)
 	{
 		scratch = def;
-		if (KeyIsNotNull(key))
+		if (key != NullKey())
 		{
 			if (auto array = node[detail::encode_key(key)].as_array())
 			{
@@ -98,7 +88,7 @@ namespace oly::editor
 
 	void ColorField::Dump(toml::table& table) const
 	{
-		if (KeyIsNotNull(key))
+		if (key != NullKey())
 		{
 			toml::array array;
 			array.reserve(4);
