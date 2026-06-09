@@ -157,12 +157,12 @@ namespace oly::editor
 
 #define ROUTE_GENERATOR(M) \
 	M(id) \
-	//M(signals)
+	M(signals)
 
 	struct RouteDesc
 	{
 		StringField id;
-		//StringListField signals;
+		StringVectorField signals;
 
 		RouteDesc();
 	};

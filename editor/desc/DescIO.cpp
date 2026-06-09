@@ -21,11 +21,11 @@ namespace oly::editor
 		ImGui::TableNextColumn();
 	}
 
-	bool DescIO::DrawRevertButton(const void* ptr_id)
+	bool DescIO::DrawRevertButton()
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", ptr_id))
+		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
 			dirty = true;
 		return dirty;
 	}
@@ -70,15 +70,35 @@ namespace oly::editor
 		for (size_t i = 0; i < count; ++i)
 		{
 			dirty |= ImGui::Checkbox(sublabels[i], data + i);
-
-			if (data[i] != def[i] && DrawRevertButton(def + i))
-			{
-				data[i] = def[i];
-				dirty = true;
-			}
+			dirty |= CheckRevertButton(data[i], def[i]);
 
 			if (i + 1 < count)
 				ImGui::SameLine();
+		}
+
+		return dirty;
+	}
+
+	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def)
+	{
+		bool dirty = false;
+		PrepareValue(label);
+		gui::IDScope scope(&data);
+
+		// TODO v8 '+', '-', and 'X' buttons. Revert button next to them corresponding to default size
+
+		for (size_t i = 0; i < data.size(); ++i)
+		{
+			scope.Push(static_cast<int>(i));
+			dirty |= gui::InputText("##Item", data[i]);
+
+			if (i < def.size())
+				dirty |= CheckRevertButton(data[i], def[i]);
+			else
+			{
+				static const std::string empty = "";
+				dirty |= CheckRevertButton(data[i], empty);
+			}
 		}
 
 		return dirty;

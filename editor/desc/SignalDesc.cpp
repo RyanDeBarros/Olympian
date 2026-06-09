@@ -129,8 +129,8 @@ namespace oly::editor
 	}
 
 	RouteDesc::RouteDesc() :
-		id("", detail::Key::ID, "ID")//,
-		//signals({}, detail::Key::Signals, "Signals")
+		id("", detail::Key::ID, "ID"),
+		signals({}, detail::Key::Signals, "Signals")
 	{
 	}
 

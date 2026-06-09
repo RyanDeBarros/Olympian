@@ -16,12 +16,12 @@ namespace oly::editor
 	{
 	private:
 		static void PrepareValue(const char* label);
-		static bool DrawRevertButton(const void* ptr_id);
+		static bool DrawRevertButton();
 
 		template<typename T>
 		static bool CheckRevertButton(T& desc, const T& def)
 		{
-			if (desc != def && DrawRevertButton(&def))
+			if (desc != def && DrawRevertButton())
 			{
 				desc = def;
 				return true;
@@ -56,6 +56,7 @@ namespace oly::editor
 		static bool Draw(const char* label, int& data, const int& def, const char** names, size_t count);
 		static bool Draw(const char* label, std::string* data, const std::string* def, size_t count);
 		static bool Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
+		static bool Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def);
 
 		template<typename E> requires (std::is_enum_v<E>)
 		static bool Draw(const char* label, E& data, const E& def);

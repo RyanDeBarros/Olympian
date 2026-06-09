@@ -140,7 +140,7 @@ namespace oly::editor
 		{
 			ImGui::Text("Preview");
 			ImGui::Separator();
-			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", &_preview_nav))
+			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", "##Recenter"))
 			{
 				_preview_nav = {};
 				if (SVGTexture* svg = _texture.GetSVG())
@@ -167,7 +167,7 @@ namespace oly::editor
 				ImGui::InputFloat("##ScaleInput", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
 				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", &svg->preview_scale))
+				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
 				{
 					_preview_nav.svg_scale = scale;
 					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
@@ -430,8 +430,7 @@ namespace oly::editor
 			gui::Combo("##SelectSlot", _active_slot, _slot_names);
 
 			ImGui::SameLine();
-			static const unsigned char PLUS_ID = 0;
-			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", &PLUS_ID))
+			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", "##+"))
 			{
 				_active_slot = _slot_names.size();
 				desc.PushBack();
@@ -440,8 +439,7 @@ namespace oly::editor
 			}
 
 			ImGui::SameLine();
-			static const unsigned char MINUS_ID = 0;
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", &MINUS_ID))
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", "##-"))
 			{
 				desc.Remove(_active_slot);
 				if (desc.Empty())
@@ -449,6 +447,8 @@ namespace oly::editor
 				MarkDirty();
 				slot_changed = true;
 			}
+
+			// TODO v8 'Clear texture slots' button
 
 			if (!ClampActiveSlot(desc))
 			{

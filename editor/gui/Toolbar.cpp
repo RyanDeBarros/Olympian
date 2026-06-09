@@ -60,46 +60,12 @@ namespace oly::editor
 		return pressed;
 	}
 
-	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, int id_counter)
+	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const char* str_id)
 	{
 		bool pressed = false;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-
-		if (auto scope = gui::IDScope(id_counter))
-		{
-			if (ImGui::InvisibleButton("##IconButton", size))
-				pressed = true;
-		}
-
-		_HandleIconHovered(pos, size, tooltip);
-		DrawIconImage(pos, icon, 1.f);
-		return pressed;
-	}
-
-	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const void* id)
-	{
-		bool pressed = false;
-		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-
-		if (auto scope = gui::IDScope(id))
-		{
-			if (ImGui::InvisibleButton("##IconButton", size))
-				pressed = true;
-		}
-
-		_HandleIconHovered(pos, size, tooltip);
-		DrawIconImage(pos, icon, 1.f);
-		return pressed;
-	}
-
-	bool Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const char* label_id)
-	{
-		bool pressed = false;
-		const ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		if (ImGui::InvisibleButton(("##" + std::string(label_id)).c_str(), size))
+		if (ImGui::InvisibleButton(str_id, size))
 			pressed = true;
 
 		_HandleIconHovered(pos, size, tooltip);

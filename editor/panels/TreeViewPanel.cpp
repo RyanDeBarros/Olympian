@@ -230,11 +230,12 @@ namespace oly::editor
 
 	void TreeViewPanel::DrawHeader()
 	{
-		int id_counter = 0;
 		Toolbar::DrawIconToggleButton(IconResource::FilterOn, IconResource::FilterOff, _config.ignore_imports, "Ignore import files");
+		
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::CollapseAll, "Collapse all", id_counter++))
+		if (Toolbar::DrawIconButton(IconResource::CollapseAll, "Collapse all", "##CollapseAll"))
 			_root->CollapseAll();
+		
 		ImGui::Separator();
 	}
 

@@ -46,7 +46,10 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		bool Draw();
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
+		}
 	};
 
 	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
@@ -92,6 +95,16 @@ namespace oly::editor
 		bool Draw();
 	};
 
+	struct ColorField : public PrimitiveField<Color>
+	{
+		using PrimitiveField<Color>::PrimitiveField;
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
+		}
+	};
+
 	template<size_t N>
 	struct BoolArrayField : public PrimitiveField<std::array<bool, N>>
 	{
@@ -106,15 +119,29 @@ namespace oly::editor
 		}
 	};
 
-	struct ColorField : public PrimitiveField<Color>
+	template<size_t N>
+	struct StringArrayField : public PrimitiveField<std::array<std::string, N>>
 	{
-		using PrimitiveField<Color>::PrimitiveField;
+		using PrimitiveField<std::array<std::string, N>>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
 		}
 	};
+
+	template<typename T>
+	struct VectorField : public PrimitiveField<std::vector<T>>
+	{
+		using PrimitiveField<std::vector<T>>::PrimitiveField;
+
+		bool Draw()
+		{
+			return DescIO::Draw(this->label, this->scratch, this->def);
+		}
+	};
+
+	using StringVectorField = VectorField<std::string>;
 
 	struct GLenumField
 	{
@@ -243,38 +270,6 @@ namespace oly::editor
 
 	template<OptionalFloat Min, OptionalFloat Max>
 	using CompactOptionalFloatField = CompactOptionalRangeField<float, Min, Max>;
-
-	extern void LoadStringArray(TOMLNode node, std::string* strings, size_t count);
-	extern toml::array DumpStringArray(const std::string* strings, size_t count);
-
-	template<size_t N>
-	struct StringArrayField
-	{
-		std::array<std::string, N> def;
-		std::array<std::string, N> scratch;
-		detail::Key key;
-		const char* label;
-
-		StringArrayField(std::array<std::string, N>&& def, detail::Key key, const char* label) : def(def), scratch(std::move(def)), key(key), label(label) {}
-
-		bool Draw()
-		{
-			return DescIO::Draw(label, scratch.data(), def.data(), N);
-		}
-
-		void Load(TOMLNode node)
-		{
-			scratch = def;
-			if (key != NullKey())
-				LoadStringArray(node[detail::encode_key(key)], scratch.data(), N);
-		}
-
-		void Dump(toml::table& table) const
-		{
-			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), DumpStringArray(scratch.data(), N));
-		}
-	};
 
 	template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
 	using VecField = RangeField<glm::vec<L, float>, float, Min, Max>;
