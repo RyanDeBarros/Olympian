@@ -60,46 +60,6 @@ namespace oly::editor
 		return DescIO::Draw(label, scratch, def);
 	}
 
-	ColorField::ColorField(Color def, detail::Key key, const char* label)
-		: def(def), scratch(def), key(key), label(label)
-	{
-	}
-
-	bool ColorField::Draw()
-	{
-		return DescIO::Draw(label, scratch, def);
-	}
-
-	void ColorField::Load(TOMLNode node)
-	{
-		scratch = def;
-		if (key != NullKey())
-		{
-			if (auto array = node[detail::encode_key(key)].as_array())
-			{
-				for (int i = 0; i < std::min(static_cast<int>(array->size()), 4); ++i)
-				{
-					if (auto v = array->get_as<double>(i))
-						scratch[i] = v->get();
-				}
-			}
-		}
-	}
-
-	void ColorField::Dump(toml::table& table) const
-	{
-		if (key != NullKey())
-		{
-			toml::array array;
-			array.reserve(4);
-			array.push_back(scratch.r);
-			array.push_back(scratch.g);
-			array.push_back(scratch.b);
-			array.push_back(scratch.a);
-			table.insert_or_assign(detail::encode_key(key), std::move(array));
-		}
-	}
-
 	void LoadStringArray(TOMLNode node, std::string* strings, size_t count)
 	{
 		if (auto array = node.as_array())

@@ -143,13 +143,13 @@ namespace oly::editor
 
 #define SIGNAL_GENERATOR(M) \
 		SIGNAL_PARTIAL_GENERATOR(M) \
-		//M(variant)
+		M(variant)
 
 	struct SignalDesc
 	{
 		StringField id;
 		EnumField<detail::SignalBindingType> binding;
-		//VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1dDesc, GamepadAxis2dDesc, CursorPosDesc, ScrollDesc> variant;
+		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1dDesc, GamepadAxis2dDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
 		SignalDesc();

@@ -1,10 +1,7 @@
 #pragma once
 
-#include "core/Types.h"
-
 #include "desc/DescIO.h"
-
-#include "external/TOML.h"
+#include "desc/Serializer.h"
 
 #include "assets/TranslateKey.h"
 
@@ -21,20 +18,7 @@ namespace oly::editor
 
 	extern detail::Key NullKey();
 
-	template<typename NodeType, typename T>
-	void LoadValue(TOMLNode node, T& obj)
-	{
-		if (auto v = node.value<NodeType>())
-			obj = static_cast<T>(*v);
-	}
-
 	template<typename T>
-	void DumpValue(toml::table& table, detail::Key key, T obj)
-	{
-		table.insert_or_assign(detail::encode_key(key), std::move(obj));
-	}
-
-	template<typename T, typename NodeType = T>
 	struct PrimitiveField
 	{
 		T def;
@@ -48,13 +32,13 @@ namespace oly::editor
 		{
 			scratch = def;
 			if (key != NullKey())
-				LoadValue<NodeType>(node[detail::encode_key(key)], scratch);
+				Serializer<T>{}.Load(scratch, node[detail::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				DumpValue(table, key, static_cast<NodeType>(scratch));
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch));
 		}
 	};
 
@@ -65,13 +49,13 @@ namespace oly::editor
 		bool Draw();
 	};
 
-	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max, typename NodeType = T>
-	struct RangeField : public PrimitiveField<T, NodeType>
+	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
+	struct RangeField : public PrimitiveField<T>
 	{
 		inline static const OptionalPrimitive<U> Min = _Min;
 		inline static const OptionalPrimitive<U> Max = _Max;
 
-		using PrimitiveField<T, NodeType>::PrimitiveField;
+		using PrimitiveField<T>::PrimitiveField;
 
 		bool Draw()
 		{
@@ -89,15 +73,46 @@ namespace oly::editor
 	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E, int64_t>
+	struct EnumField : public PrimitiveField<E>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E, int64_t>::PrimitiveField;
+		using PrimitiveField<E>::PrimitiveField;
 
 		bool Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch, this->def);
+		}
+	};
+
+	struct StringField : public PrimitiveField<std::string>
+	{
+		using PrimitiveField<std::string>::PrimitiveField;
+
+		bool Draw();
+	};
+
+	template<size_t N>
+	struct BoolArrayField : public PrimitiveField<std::array<bool, N>>
+	{
+		const char** sublabels;
+
+		BoolArrayField(std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: PrimitiveField<std::array<bool, N>>(def, key, label), sublabels(sublabels) {}
+
+		bool Draw()
+		{
+			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
+		}
+	};
+
+	struct ColorField : public PrimitiveField<Color>
+	{
+		using PrimitiveField<Color>::PrimitiveField;
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -131,17 +146,10 @@ namespace oly::editor
 		int Index(const GLenum val) const;
 	};
 	
-	struct StringField : public PrimitiveField<std::string>
-	{
-		using PrimitiveField<std::string>::PrimitiveField;
-
-		bool Draw();
-	};
-
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
 	struct OptionalRangeField
 	{
-		using Self = OptionalRangeField<T, _Min, _Max, NodeType>;
+		using Self = OptionalRangeField<T, _Min, _Max>;
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
 
@@ -166,10 +174,8 @@ namespace oly::editor
 			scratch = def;
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				if (auto v = node[detail::encode_key(value_key)].value<NodeType>())
-					scratch = MakeOpt(static_cast<T>(*v));
-
-				scratch.has_value &= node[detail::encode_key(enable_key)].value_or(false);
+				Serializer<T>{}.Load(scratch.value, node[detail::encode_key(value_key)]);
+				Serializer<bool>{}.Load(scratch.has_value, node[detail::encode_key(enable_key)]);
 			}
 		}
 
@@ -177,25 +183,24 @@ namespace oly::editor
 		{
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				table.insert_or_assign(detail::encode_key(enable_key), scratch.has_value);
-				table.insert_or_assign(detail::encode_key(value_key), static_cast<NodeType>(scratch.value));
+				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.Dump(scratch.has_value));
+				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.Dump(scratch.value));
 			}
 		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
-	using OptionalIntField = OptionalRangeField<int, Min, Max, int64_t>;
+	using OptionalIntField = OptionalRangeField<int, Min, Max>;
 
 	template<OptionalFloat Min, OptionalFloat Max>
-	using OptionalFloatField = OptionalRangeField<float, Min, Max, double>;
+	using OptionalFloatField = OptionalRangeField<float, Min, Max>;
 
 	template<OptionalDouble Min, OptionalDouble Max>
-	using OptionalDoubleField = OptionalRangeField<double, Min, Max, double>;
+	using OptionalDoubleField = OptionalRangeField<double, Min, Max>;
 
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max, typename NodeType = T>
+	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
 	struct CompactOptionalRangeField
 	{
-		using Self = CompactOptionalRangeField<T, _Min, _Max, NodeType>;
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
 
@@ -212,6 +217,7 @@ namespace oly::editor
 
 		bool Draw()
 		{
+			scratch.has_value = scratch.value != nullopt;
 			return DescIO::Draw(label, scratch, def, Min, Max);
 		}
 
@@ -220,37 +226,23 @@ namespace oly::editor
 			scratch = def;
 			if (key != NullKey())
 			{
-				if (auto v = node[detail::encode_key(key)].value<NodeType>())
-					scratch = *v == nullopt ? MakeOpt<T>() : MakeOpt<T>(*v);
+				Serializer<T>{}.Load(scratch.value, node[detail::encode_key(key)]);
+				scratch.has_value = scratch.value != nullopt;
 			}
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), scratch.has_value ? scratch.value : nullopt);
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch.has_value ? scratch.value : nullopt));
 		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
-	using CompactOptionalIntField = CompactOptionalRangeField<int, Min, Max, int>;
+	using CompactOptionalIntField = CompactOptionalRangeField<int, Min, Max>;
 
 	template<OptionalFloat Min, OptionalFloat Max>
-	using CompactOptionalFloatField = CompactOptionalRangeField<float, Min, Max, float>;
-
-	struct ColorField
-	{
-		Color def;
-		Color scratch;
-		detail::Key key;
-		const char* label;
-
-		ColorField(Color def, detail::Key key, const char* label);
-
-		bool Draw();
-		void Load(TOMLNode node);
-		void Dump(toml::table& table) const;
-	};
+	using CompactOptionalFloatField = CompactOptionalRangeField<float, Min, Max>;
 
 	extern void LoadStringArray(TOMLNode node, std::string* strings, size_t count);
 	extern toml::array DumpStringArray(const std::string* strings, size_t count);
@@ -284,29 +276,6 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T, glm::length_t L>
-	void LoadValue(TOMLNode node, glm::vec<L, T>& obj)
-	{
-		if (auto arr = node.as_array())
-		{
-			for (glm::length_t i = 0; i < glm::min(arr->size(), L); ++i)
-			{
-				if (auto v = arr->get_as<T>(i))
-					obj[i] = *v;
-			}
-		}
-	}
-
-	template<typename T, glm::length_t L>
-	void DumpValue(toml::table& table, detail::Key key, glm::vec<L, T> obj)
-	{
-		toml::array arr;
-		arr.reserve(L);
-		for (glm::length_t i = 0; i < L; ++i)
-			arr.push_back(obj[i]);
-		table.insert_or_assign(detail::encode_key(key), std::move(arr));
-	}
-
 	template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
 	using VecField = RangeField<glm::vec<L, float>, float, Min, Max>;
 
@@ -318,41 +287,4 @@ namespace oly::editor
 	
 	template<OptionalFloat Min, OptionalFloat Max>
 	using Vec4Field = VecField<Min, Max, 4>;
-
-	template<typename T, size_t N>
-	void LoadValue(TOMLNode node, std::array<T, N>& obj)
-	{
-		if (auto arr = node.as_array())
-		{
-			for (size_t i = 0; i < std::min(arr->size(), N); ++i)
-			{
-				if (auto v = arr->get_as<T>(i))
-					obj[i] = *v;
-			}
-		}
-	}
-
-	template<typename T, size_t N>
-	void DumpValue(toml::table& table, detail::Key key, std::array<T, N> obj)
-	{
-		toml::array arr;
-		arr.reserve(N);
-		for (size_t i = 0; i < N; ++i)
-			arr.push_back(obj[i]);
-		table.insert_or_assign(detail::encode_key(key), std::move(arr));
-	}
-
-	template<size_t N>
-	struct BoolArrayField : public PrimitiveField<std::array<bool, N>>
-	{
-		const char** sublabels;
-
-		BoolArrayField(std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: PrimitiveField<std::array<bool, N>>(def, key, label), sublabels(sublabels) {}
-
-		bool Draw()
-		{
-			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
-		}
-	};
 }

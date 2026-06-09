@@ -123,8 +123,8 @@ namespace oly::editor
 
 	SignalDesc::SignalDesc() :
 		id("", detail::Key::ID, "ID"),
-		binding(detail::SignalBindingType::Key, detail::Key::Binding, "Binding")//,
-		//variant(KeyDesc())
+		binding(detail::SignalBindingType::Key, detail::Key::Binding, "Binding"),
+		variant(KeyDesc())
 	{
 	}
 
