@@ -112,4 +112,9 @@ namespace oly::editor
 	{
 		variant.Visit([i](auto& desc) { desc.Remove(i); });
 	}
+
+	void TextureVariantDesc::Clear()
+	{
+		variant.Visit([](auto& desc) { desc.Clear(); });
+	}
 }

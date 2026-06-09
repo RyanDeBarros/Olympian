@@ -79,18 +79,64 @@ namespace oly::editor
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def)
+	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, size_t& ui_index)
 	{
 		bool dirty = false;
 		PrepareValue(label);
 		gui::IDScope scope(&data);
 
-		// TODO v8 '+', '-', and 'X' buttons. Revert button next to them corresponding to default size
+		if (ui_index >= data.size() && !data.empty())
+			ui_index = data.size() - 1;
+
+		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
+		{
+			data.push_back("");
+			ui_index = data.size() - 1;
+			dirty = true;
+		}
+
+		if (auto disabled = DisabledSection(data.empty()))
+		{
+			ImGui::SameLine();
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item", "##Remove"))
+			{
+				data.erase(data.begin() + ui_index);
+				if (ui_index >= data.size())
+					ui_index = data.empty() ? 0 : data.size() - 1;
+				dirty = true;
+			}
+
+			ImGui::SameLine();
+			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
+			{
+				data.clear();
+				ui_index = 0;
+				dirty = true;
+			}
+
+			if (data.size() != def.size())
+			{
+				if (DrawRevertButton())
+				{
+					data.resize(def.size());
+					if (ui_index >= data.size())
+						ui_index = data.empty() ? 0 : data.size() - 1;
+				}
+			}
+		}
 
 		for (size_t i = 0; i < data.size(); ++i)
 		{
 			scope.Push(static_cast<int>(i));
+
+			if (ImGui::Selectable("##Select", ui_index == i, ImGuiSelectableFlags_SpanAllColumns))
+				ui_index = i;
+
+			ImGui::SameLine();
 			dirty |= gui::InputText("##Item", data[i]);
+
+			if (ImGui::IsItemActivated())
+				ui_index = i;
 
 			if (i < def.size())
 				dirty |= CheckRevertButton(data[i], def[i]);

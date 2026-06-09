@@ -173,6 +173,8 @@ namespace oly::editor
 					fully_loaded &= Serializer<T>{}.Load(obj[i], TOMLNode(*arr->get(i)));
 				return fully_loaded;
 			}
+			else
+				return false;
 		}
 
 		toml::array Dump(const std::array<T, N>& obj) const

@@ -118,6 +118,7 @@ namespace oly::editor
 		bool Empty() const;
 		void PushBack();
 		void Remove(size_t i);
+		void Clear();
 
 		auto Visit(size_t i, auto&& visitor)
 		{

@@ -4,6 +4,7 @@ namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
 	M(CollapseAll) \
+	M(Close) \
 	M(FilterOff) \
 	M(FilterOn) \
 	M(Minus) \

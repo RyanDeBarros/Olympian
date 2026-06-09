@@ -448,7 +448,15 @@ namespace oly::editor
 				slot_changed = true;
 			}
 
-			// TODO v8 'Clear texture slots' button
+			ImGui::SameLine();
+			if (Toolbar::DrawIconButton(IconResource::Close, "Clear texture slots", "##x"))
+			{
+				desc.Clear();
+				desc.PushBack();
+				_active_slot = 0;
+				MarkDirty();
+				slot_changed = true;
+			}
 
 			if (!ClampActiveSlot(desc))
 			{
