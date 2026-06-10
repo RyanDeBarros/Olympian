@@ -5,38 +5,11 @@
 
 namespace oly::editor::gui
 {
-	DynamicListState::DynamicListState()
-		: self(this)
+	struct DynamicListStatePayload
 	{
-	}
-
-	DynamicListState::DynamicListState(const DynamicListState& o)
-		: self(this), index(o.index)
-	{
-	}
-	
-	DynamicListState::DynamicListState(DynamicListState&& o) noexcept
-		: self(this), index(o.index)
-	{
-	}
-	
-	DynamicListState& DynamicListState::operator=(const DynamicListState& o)
-	{
-		if (this != &o)
-		{
-			index = o.index;
-		}
-		return *this;
-	}
-	
-	DynamicListState& DynamicListState::operator=(DynamicListState&& o) noexcept
-	{
-		if (this != &o)
-		{
-			index = o.index;
-		}
-		return *this;
-	}
+		const DynamicListState* identity;
+		size_t index;
+	};
 
 	void DynamicListState::Clamp(size_t count)
 	{
@@ -47,11 +20,6 @@ namespace oly::editor::gui
 	void DynamicListState::SetLast(size_t count)
 	{
 		index = count > 0 ? count - 1 : 0;
-	}
-
-	void DynamicListState::SendPayload(const char* type)
-	{
-		ImGui::SetDragDropPayload(type, this, sizeof(DynamicListState));
 	}
 
 	DynamicRow::DynamicRow(size_t index, const char* str_id, DynamicListState& state)
@@ -68,9 +36,12 @@ namespace oly::editor::gui
 
 			if (ImGui::BeginDragDropSource())
 			{
-				_state.index = _index;
-				_state.SendPayload(StringID(UID::DynamicRowReorder));
-				ImGui::Text("Move item");
+				DynamicListStatePayload payload{
+					.identity = &_state,
+					.index = _index
+				};
+				ImGui::SetDragDropPayload(StringID(UID::DynamicRowReorder), &payload, sizeof(DynamicListStatePayload));
+				ImGui::Text("Move row");
 				ImGui::EndDragDropSource();
 			}
 
@@ -78,8 +49,8 @@ namespace oly::editor::gui
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(StringID(UID::DynamicRowReorder)))
 				{
-					gui::DynamicListState* src = reinterpret_cast<gui::DynamicListState*>(payload->Data);
-					if (src->self == _state.self)
+					DynamicListStatePayload* src = reinterpret_cast<DynamicListStatePayload*>(payload->Data);
+					if (src->identity == &_state)
 						_dropped_src = src->index;
 				}
 

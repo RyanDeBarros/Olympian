@@ -80,7 +80,6 @@ namespace oly::editor
 		return dirty;
 	}
 
-	// TODO v8 move most of this stuff to DynamicList
 	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state)
 	{
 		bool dirty = false;

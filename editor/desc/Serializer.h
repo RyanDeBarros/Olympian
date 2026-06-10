@@ -246,7 +246,7 @@ namespace oly::editor
 		{
 			toml::array arr;
 			arr.reserve(obj.size());
-			for (T& el : obj)
+			for (const T& el : obj)
 				arr.push_back(Serializer<T>{}.Dump(el));
 			return arr;
 		}

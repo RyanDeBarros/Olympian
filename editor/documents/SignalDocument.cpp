@@ -377,11 +377,98 @@ namespace oly::editor
 
 	void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
 	{
-		// TODO v8
+		DUMP_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+		desc.variant.Visit([this, &table](auto& desc) { Dump(table, desc); });
 	}
 
 	void SignalDocument::Dump(toml::table& table, RouteDesc& desc)
 	{
-		// TODO v8
+		DUMP_FIELDS(ROUTE_GENERATOR);
+	}
+
+	void SignalDocument::Dump(toml::table& table, KeyDesc& desc)
+	{
+		DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, MouseButtonDesc& desc)
+	{
+		DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, GamepadButtonDesc& desc)
+	{
+		DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, GamepadAxis1dDesc& desc)
+	{
+		DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, GamepadAxis2dDesc& desc)
+	{
+		DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, CursorPosDesc& desc)
+	{
+		DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, ScrollDesc& desc)
+	{
+		DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, desc.modifier);
+		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+	}
+	
+	void SignalDocument::Dump(toml::table& table, Modifier0dDesc& desc)
+	{
+		DUMP_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		Dump(table, desc.base);
+	}
+	
+	void SignalDocument::Dump(toml::table& table, Modifier1dDesc& desc)
+	{
+		DUMP_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		Dump(table, desc.base);
+	}
+	
+	void SignalDocument::Dump(toml::table& table, Modifier2dDesc& desc)
+	{
+		DUMP_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		Dump(table, desc.base);
+	}
+	
+	void SignalDocument::Dump(toml::table& table, ModifierBaseDesc& desc)
+	{
+		DUMP_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 }
