@@ -1,0 +1,203 @@
+#pragma once
+
+#include <array>
+#include <memory>
+#include <vector>
+
+namespace oly::editor
+{
+	enum class ListPolicy
+	{
+		None = 0,
+		MinimumOne = 1
+	};
+
+	inline ListPolicy operator&(ListPolicy lhs, ListPolicy rhs)
+	{
+		using T = std::underlying_type_t<ListPolicy>;
+		return static_cast<ListPolicy>(static_cast<T>(lhs) & static_cast<T>(rhs));
+	}
+
+	inline ListPolicy operator|(ListPolicy lhs, ListPolicy rhs)
+	{
+		using T = std::underlying_type_t<ListPolicy>;
+		return static_cast<ListPolicy>(static_cast<T>(lhs) | static_cast<T>(rhs));
+	}
+
+	inline ListPolicy& operator|=(ListPolicy& lhs, ListPolicy rhs)
+	{
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	enum class ListOpType
+	{
+		Create,
+		Delete,
+		Resize,
+		Clear,
+		Move
+	};
+
+	struct ListOp
+	{
+		ListOpType type;
+		bool valid = true;
+
+		size_t index1 = 0;
+		size_t index2 = 0;
+
+		static ListOp MakeCreateOp();
+		static ListOp MakeDeleteOp(size_t index);
+		static ListOp MakeResizeOp(size_t new_size);
+		static ListOp MakeClearOp();
+		static ListOp MakeMoveOp(size_t src, size_t dst);
+
+		size_t GetIndex() const;
+		size_t GetSrcIndex() const;
+		size_t GetDstIndex() const;
+		size_t GetSize() const;
+
+		void Validate(bool valid);
+		bool UpdateIndex(ListPolicy policy, size_t& idx) const;
+		bool UpdateIndex(ListPolicy policy, ListOp& op) const;
+	};
+
+	struct IListAdapter
+	{
+		virtual ~IListAdapter() = default;
+
+		virtual size_t Size() const = 0;
+		virtual void PushBack() = 0;
+		virtual void Erase(size_t index) = 0;
+		virtual void Resize(size_t new_size) = 0;
+		virtual void Clear() = 0;
+		virtual void Move(size_t src, size_t dst) = 0;
+	};
+
+	class ListModel
+	{
+		size_t _active_index = 0;
+		size_t _size = 0;
+		std::vector<ListOp> _pending_ops;
+
+		// TODO v8 set to true when _active_index is modified
+		bool _active_index_changed = false;
+
+	public:
+		ListPolicy policy = ListPolicy::None;
+
+		void Init(IListAdapter& adapter);
+
+		size_t ActiveIndex() const;
+		void SetActiveIndex(size_t index);
+		size_t Size() const;
+
+	private:
+		void Clamp();
+		void SetLast();
+
+	public:
+		void DeferCreate();
+		void DeferDelete();
+		void DeferResize(size_t new_size);
+		void DeferClear();
+
+		bool ConsumeActiveIndexChanged();
+		bool ConsumeOps(IListAdapter& adapter);
+
+	private:
+		void Apply(const ListOp& op, IListAdapter& adapter);
+		void EnforcePolicy(IListAdapter& adapter);
+
+	public:
+		void Invoke(const ListOp& op, IListAdapter& adapter);
+
+		void DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+	};
+
+	template<size_t N>
+	struct MultiListAdapter : public IListAdapter
+	{
+		static_assert(N > 0);
+
+		std::array<std::unique_ptr<IListAdapter>, N> adapters;
+
+		MultiListAdapter(std::array<std::unique_ptr<IListAdapter>, N> adapters) : adapters(std::move(adapters)) {}
+
+		size_t Size() const override
+		{
+			return adapters.front()->Size();
+		}
+
+		void PushBack() override
+		{
+			for (auto& adapter : adapters)
+				adapter->PushBack();
+		}
+
+		void Erase(size_t i) override
+		{
+			for (auto& adapter : adapters)
+				adapter->Erase(i);
+		}
+
+		void Resize(size_t new_size) override
+		{
+			for (auto& adapter : adapters)
+				adapter->Resize(new_size);
+		}
+
+		void Clear() override
+		{
+			for (auto& adapter : adapters)
+				adapter->Clear();
+		}
+
+		void Move(size_t src, size_t dst) override
+		{
+			for (auto& adapter : adapters)
+				adapter->Move(src, dst);
+		}
+	};
+
+	template<typename T>
+	struct VectorAdapter : public IListAdapter
+	{
+		std::vector<T>& v;
+
+		VectorAdapter(std::vector<T>& vec) : v(vec) {}
+
+		size_t Size() const override
+		{
+			return v.size();
+		}
+
+		void PushBack() override
+		{
+			v.push_back(T{});
+		}
+
+		void Erase(size_t i) override
+		{
+			v.erase(v.begin() + i);
+		}
+
+		void Resize(size_t new_size) override
+		{
+			v.resize(new_size);
+		}
+
+		void Clear() override
+		{
+			v.clear();
+		}
+
+		void Move(size_t src, size_t dst) override
+		{
+			auto item = std::move(v[src]);
+			v.erase(v.begin() + src);
+			v.insert(v.begin() + dst, std::move(item));
+		}
+	};
+}

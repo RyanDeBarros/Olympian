@@ -9,6 +9,8 @@
 
 namespace oly::editor::gui
 {
+	// TODO v8 unify ListModel and DynamicList
+
 	struct RowOperation
 	{
 		enum class Type
@@ -38,7 +40,7 @@ namespace oly::editor::gui
 
 	struct DynamicListState
 	{
-		size_t list_size;
+		size_t list_size = 0;
 		size_t index = 0;
 		std::vector<RowOperation> row_ops;
 		std::unordered_set<size_t> simul_selected;

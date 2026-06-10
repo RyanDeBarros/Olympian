@@ -1,7 +1,8 @@
 #pragma once
 
+#include "core/ListModel.h"
+
 #include <variant>
-#include <vector>
 
 namespace oly::editor
 {
@@ -70,6 +71,11 @@ namespace oly::editor
 		auto end()
 		{
 			return vector.end();
+		}
+
+		std::unique_ptr<IListAdapter> ListAdapter()
+		{
+			return std::make_unique<VectorAdapter<Descriptor>>(vector);
 		}
 	};
 

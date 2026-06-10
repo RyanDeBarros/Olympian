@@ -39,8 +39,7 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		int _active_slot = 0;
-		std::vector<std::string> _slot_names;
+		ListModel _slots;
 		Texture _texture;
 		PreviewNav _preview_nav;
 		bool _preview_spritesheet = true;
@@ -85,8 +84,8 @@ namespace oly::editor
 		void Dump(toml::table& table, BaseTextureDesc& desc);
 		void Dump(toml::table& table, SpritesheetDesc& desc);
 
-		void GenSlotNames();
-		bool ClampActiveSlot(TextureVariantDesc& desc);
 		void OnActiveSlotChanged();
+
+		std::unique_ptr<IListAdapter> ListAdapter();
 	};
 }

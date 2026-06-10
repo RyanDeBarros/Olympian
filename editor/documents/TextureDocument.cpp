@@ -31,6 +31,7 @@ namespace oly::editor
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
+		_slots.policy = ListPolicy::MinimumOne;
 		Load();
 	}
 
@@ -99,10 +100,12 @@ namespace oly::editor
 
 		_scratch = _disk;
 
-		_active_slot = 0;
+		_slots.SetActiveIndex(0);
+		_slots.Init(*ListAdapter());
+
 		_preview_nav = {};
 		if (auto svg_desc = _scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
-			_preview_nav.svg_scale = svg_desc->vector[_active_slot].scale.scratch;
+			_preview_nav.svg_scale = svg_desc->vector[_slots.ActiveIndex()].scale.scratch;
 
 		ReloadPreviewTexture();
 	}
@@ -123,8 +126,8 @@ namespace oly::editor
 
 	void TextureDocument::ReloadPreviewTexture()
 	{
-		std::optional<GLenum> min_filter = _scratch.Visit(_active_slot, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
-		std::optional<GLenum> mag_filter = _scratch.Visit(_active_slot, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+		std::optional<GLenum> min_filter = _scratch.Visit(_slots.ActiveIndex(), [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
+		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.ActiveIndex(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
 
 		if (_svg)
 			_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR) };
@@ -235,7 +238,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _scratch.Visit(_active_slot, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _scratch.Visit(_slots.ActiveIndex(), [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -418,54 +421,20 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			bool slot_changed = false;
-			const int og_slot = _active_slot;
-
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::Text("Select Slot");
 
-			GenSlotNames();
 			ImGui::TableNextColumn();
-			gui::Combo("##SelectSlot", _active_slot, _slot_names);
+			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
 
-			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Plus, "New texture slot", "##+"))
-			{
-				_active_slot = _slot_names.size();
-				desc.PushBack();
+			desc.Visit(_slots.ActiveIndex(), [this, &form](auto& d) { Draw(form, d); });
+
+			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
-				slot_changed = true;
-			}
 
-			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove texture slot", "##-"))
-			{
-				desc.Remove(_active_slot);
-				if (desc.Empty())
-					desc.PushBack();
-				MarkDirty();
-				slot_changed = true;
-			}
-
-			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Close, "Clear texture slots", "##x"))
-			{
-				desc.Clear();
-				desc.PushBack();
-				_active_slot = 0;
-				MarkDirty();
-				slot_changed = true;
-			}
-
-			if (!ClampActiveSlot(desc))
-			{
-				if (og_slot != _active_slot || slot_changed)
-					ReloadPreviewTexture();
-			}
-
-			desc.Visit(_active_slot, [this, &form](auto& d) { Draw(form, d); });
-
+			if (_slots.ConsumeActiveIndexChanged())
+				ReloadPreviewTexture();
 		}
 	}
 	
@@ -628,34 +597,13 @@ namespace oly::editor
 		DUMP_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::GenSlotNames()
-	{
-		_slot_names.clear();
-		for (int i = 0; i < _scratch.Size(); ++i)
-			_slot_names.push_back("Slot " + std::to_string(i));
-		ClampActiveSlot(_scratch);
-	}
-
-	bool TextureDocument::ClampActiveSlot(TextureVariantDesc& desc)
-	{
-		const int og = _active_slot;
-
-		if (desc.Empty())
-			_active_slot = 0;
-		else if (_active_slot >= desc.Size())
-			_active_slot = desc.Size() - 1;
-
-		if (og != _active_slot)
-		{
-			OnActiveSlotChanged();
-			return true;
-		}
-		else
-			return false;
-	}
-
 	void TextureDocument::OnActiveSlotChanged()
 	{
 		ReloadPreviewTexture();
+	}
+
+	std::unique_ptr<IListAdapter> TextureDocument::ListAdapter()
+	{
+		return _scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
 	}
 }
