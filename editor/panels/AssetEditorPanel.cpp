@@ -174,6 +174,8 @@ namespace oly::editor
 			{
 				doc->Dump();
 				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				if (doc == _selected_tab)
+					_selected_tab = nullptr;
 				_pending_close.erase(_pending_close.begin());
 				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
@@ -184,6 +186,8 @@ namespace oly::editor
 			{
 				doc->Load();
 				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				if (doc == _selected_tab)
+					_selected_tab = nullptr;
 				_pending_close.erase(_pending_close.begin());
 				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();

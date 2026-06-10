@@ -129,12 +129,23 @@ namespace oly::editor
 		{
 			scope.Push(static_cast<int>(i));
 
-			// TODO v8 Selectable is ugly, and clashes with overlayed text input. Use radio button or '6-dots' button on left to select. Or simply use IsItemActivated() + non-interactive highlight.
-			if (ImGui::Selectable("##Select", ui_index == i))
+			bool is_selected = ui_index == i;
+
+			if (ImGui::RadioButton("##Select", is_selected))
+				ui_index = i;
+
+			if (ImGui::IsItemActivated())
 				ui_index = i;
 
 			ImGui::SameLine();
+
+			if (is_selected)
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+
 			dirty |= gui::InputText("##Item", data[i]);
+
+			if (is_selected)
+				ImGui::PopStyleColor();
 
 			if (ImGui::IsItemActivated())
 				ui_index = i;

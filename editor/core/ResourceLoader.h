@@ -7,6 +7,7 @@ namespace oly::editor
 	M(Close) \
 	M(FilterOff) \
 	M(FilterOn) \
+	M(Handle) \
 	M(Minus) \
 	M(Pause) \
 	M(Play) \
