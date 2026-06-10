@@ -2,6 +2,7 @@
 
 #include "core/ResourceLoader.h"
 #include "gui/DisabledSection.h"
+#include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/Subform.h"
 #include "gui/Toolbar.h"
@@ -79,19 +80,18 @@ namespace oly::editor
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, size_t& ui_index)
+	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state)
 	{
 		bool dirty = false;
 		PrepareValue(label);
 		gui::IDScope scope(&data);
 
-		if (ui_index >= data.size() && !data.empty())
-			ui_index = data.size() - 1;
+		ui_state.Clamp(data.size());
 
 		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
 		{
 			data.push_back("");
-			ui_index = data.size() - 1;
+			ui_state.SetLast(data.size());
 			dirty = true;
 		}
 
@@ -100,9 +100,8 @@ namespace oly::editor
 			ImGui::SameLine();
 			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item", "##Remove"))
 			{
-				data.erase(data.begin() + ui_index);
-				if (ui_index >= data.size())
-					ui_index = data.empty() ? 0 : data.size() - 1;
+				data.erase(data.begin() + ui_state.index);
+				ui_state.Clamp(data.size());
 				dirty = true;
 			}
 
@@ -110,7 +109,7 @@ namespace oly::editor
 			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
 			{
 				data.clear();
-				ui_index = 0;
+				ui_state.index = 0;
 				dirty = true;
 			}
 
@@ -119,8 +118,7 @@ namespace oly::editor
 				if (DrawRevertButton())
 				{
 					data.resize(def.size());
-					if (ui_index >= data.size())
-						ui_index = data.empty() ? 0 : data.size() - 1;
+					ui_state.Clamp(data.size());
 				}
 			}
 		}
@@ -129,33 +127,35 @@ namespace oly::editor
 		{
 			scope.Push(static_cast<int>(i));
 
-			bool is_selected = ui_index == i;
-
-			if (ImGui::RadioButton("##Select", is_selected))
-				ui_index = i;
-
-			if (ImGui::IsItemActivated())
-				ui_index = i;
-
-			ImGui::SameLine();
-
-			if (is_selected)
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
-
-			dirty |= gui::InputText("##Item", data[i]);
-
-			if (is_selected)
-				ImGui::PopStyleColor();
-
-			if (ImGui::IsItemActivated())
-				ui_index = i;
-
-			if (i < def.size())
-				dirty |= CheckRevertButton(data[i], def[i]);
-			else
+			if (auto row = gui::DynamicRow(i, "Row", ui_state))
 			{
-				static const std::string empty = "";
-				dirty |= CheckRevertButton(data[i], empty);
+				if (auto src = row.GetDroppedSource())
+				{
+					size_t dst = i;
+					if (*src != dst)
+					{
+						std::string moved = std::move(data[*src]);
+						data.erase(data.begin() + *src);
+						data.insert(data.begin() + dst, std::move(moved));
+
+						// TODO v8 with multi-selection, update selection indexes here
+						if (ui_state.index == *src)
+							ui_state.index = dst;
+					}
+				}
+
+				dirty |= gui::InputText("##Item", data[i]);
+
+				if (ImGui::IsItemActivated())
+					ui_state.index = i;
+
+				if (i < def.size())
+					dirty |= CheckRevertButton(data[i], def[i]);
+				else
+				{
+					static const std::string empty = "";
+					dirty |= CheckRevertButton(data[i], empty);
+				}
 			}
 		}
 

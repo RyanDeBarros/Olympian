@@ -5,6 +5,8 @@
 
 #include "assets/TranslateKey.h"
 
+#include "gui/DynamicList.h"
+
 #include <array>
 
 namespace oly::editor
@@ -139,13 +141,13 @@ namespace oly::editor
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
-		size_t ui_index = 0;
+		gui::DynamicListState ui_state;
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 
 		bool Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->def, ui_index);
+			return DescIO::Draw(this->label, this->scratch, this->def, ui_state);
 		}
 	};
 

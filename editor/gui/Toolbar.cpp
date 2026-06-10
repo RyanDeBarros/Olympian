@@ -72,4 +72,10 @@ namespace oly::editor
 		DrawIconImage(pos, icon, 1.f);
 		return pressed;
 	}
+
+	bool Toolbar::DrawHandle(const char* str_id)
+	{
+		DrawIconImage(ImGui::GetCursorScreenPos(), IconResource::Handle, 1.f);
+		return ImGui::InvisibleButton(str_id, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+	}
 }
