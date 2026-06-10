@@ -113,7 +113,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v8 draw only active index
+			// TODO v8 draw only active index: abstract '+'/'-'/'x' buttons + drop-down selection
 			_scratch.signals.Visit([this, &form](SignalDesc& desc) { Draw(form, desc); });
 		}
 	}
@@ -122,7 +122,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v8 draw only active index
+			// TODO v8 draw only active index: abstract '+'/'-'/'x' buttons + drop-down selection
 			_scratch.routes.Visit([this, &form](RouteDesc& desc) { Draw(form, desc); });
 		}
 	}

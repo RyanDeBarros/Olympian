@@ -86,30 +86,26 @@ namespace oly::editor
 		PrepareValue(label);
 		gui::IDScope scope(&data);
 
-		ui_state.Clamp(data.size());
+		ui_state.InitList(data.size());
 
 		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
 		{
 			data.push_back("");
-			ui_state.SetLast(data.size());
+			ui_state.OnPushBack();
 			dirty = true;
 		}
 
 		if (auto disabled = DisabledSection(data.empty()))
 		{
 			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item", "##Remove"))
-			{
-				data.erase(data.begin() + ui_state.index);
-				ui_state.Clamp(data.size());
-				dirty = true;
-			}
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item (Del)", "##Remove"))
+				ui_state.DeferDelete();
 
 			ImGui::SameLine();
 			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
 			{
 				data.clear();
-				ui_state.index = 0;
+				ui_state.OnClear();
 				dirty = true;
 			}
 
@@ -118,46 +114,57 @@ namespace oly::editor
 				if (DrawRevertButton())
 				{
 					data.resize(def.size());
-					ui_state.Clamp(data.size());
+					ui_state.OnResize(data.size());
 				}
 			}
 		}
 
-		for (size_t i = 0; i < data.size(); ++i)
+		if (ImGui::BeginChild("List"))
 		{
-			scope.Push(static_cast<int>(i));
-
-			if (auto row = gui::DynamicRow(i, "Row", ui_state))
+			for (size_t i = 0; i < data.size(); ++i)
 			{
-				if (auto src = row.GetDroppedSource())
-				{
-					size_t dst = i;
-					if (*src != dst)
-					{
-						std::string moved = std::move(data[*src]);
-						data.erase(data.begin() + *src);
-						data.insert(data.begin() + dst, std::move(moved));
+				scope.Push(static_cast<int>(i));
 
-						// TODO v8 with multi-selection, update selection indexes here
-						if (ui_state.index == *src)
-							ui_state.index = dst;
+				if (auto row = gui::DynamicRow(i, "Row", ui_state))
+				{
+					ImGui::SameLine();
+					dirty |= gui::InputText("##Item", data[i]);
+
+					if (ImGui::IsItemActivated())
+						row.OnSelect();
+
+					if (i < def.size())
+						dirty |= CheckRevertButton(data[i], def[i]);
+					else
+					{
+						static const std::string empty = "";
+						dirty |= CheckRevertButton(data[i], empty);
 					}
 				}
 
-				dirty |= gui::InputText("##Item", data[i]);
-
-				if (ImGui::IsItemActivated())
-					ui_state.index = i;
-
-				if (i < def.size())
-					dirty |= CheckRevertButton(data[i], def[i]);
-				else
-				{
-					static const std::string empty = "";
-					dirty |= CheckRevertButton(data[i], empty);
-				}
+				scope.Pop();
 			}
 		}
+
+		ImGui::EndChild();
+
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && !ImGui::GetIO().WantTextInput && ImGui::Shortcut(ImGuiKey_Delete))
+			ui_state.DeferDelete();
+
+		dirty |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+			switch (op.type)
+			{
+			case gui::RowOperation::Type::Delete:
+				data.erase(data.begin() + op.index);
+				break;
+
+			case gui::RowOperation::Type::Move:
+				std::string moved = std::move(data[op.src]);
+				data.erase(data.begin() + op.src);
+				data.insert(data.begin() + op.index, std::move(moved));
+				break;
+			}
+		});
 
 		return dirty;
 	}
