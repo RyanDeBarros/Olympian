@@ -11,7 +11,14 @@ namespace oly::editor
 
 	DisabledSection::~DisabledSection()
 	{
-		ImGui::EndDisabled();
+		if (_alive)
+			ImGui::EndDisabled();
+	}
+
+	DisabledSection::DisabledSection(DisabledSection&& o) noexcept
+		: _alive(o._alive)
+	{
+		o._alive = false;
 	}
 
 	DisabledSection::operator bool() const

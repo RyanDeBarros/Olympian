@@ -86,70 +86,29 @@ namespace oly::editor
 		PrepareValue(label);
 		gui::IDScope scope(&data);
 
-		ui_state.InitList(data.size());
+		ui_state.DrawListHeader(data.size());
 
-		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
+		if (data.size() != def.size())
 		{
-			data.push_back("");
-			ui_state.OnPushBack();
-			dirty = true;
+			if (DrawRevertButton())
+				ui_state.DeferResize(def.size());
 		}
 
-		if (auto disabled = DisabledSection(data.empty()))
-		{
+		ui_state.DrawBody([&dirty, &data, &def](gui::DynamicRow& row) {
 			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item (Del)", "##Remove"))
-				ui_state.DeferDelete();
+			dirty |= gui::InputText("##Item", data[row.Index()]);
 
-			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
+			if (ImGui::IsItemActivated())
+				row.OnSelect();
+
+			if (row.Index() < def.size())
+				dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
+			else
 			{
-				data.clear();
-				ui_state.OnClear();
-				dirty = true;
+				static const std::string empty = "";
+				dirty |= CheckRevertButton(data[row.Index()], empty);
 			}
-
-			if (data.size() != def.size())
-			{
-				if (DrawRevertButton())
-				{
-					data.resize(def.size());
-					ui_state.OnResize(data.size());
-				}
-			}
-		}
-
-		if (ImGui::BeginChild("List"))
-		{
-			for (size_t i = 0; i < data.size(); ++i)
-			{
-				scope.Push(static_cast<int>(i));
-
-				if (auto row = gui::DynamicRow(i, "Row", ui_state))
-				{
-					ImGui::SameLine();
-					dirty |= gui::InputText("##Item", data[i]);
-
-					if (ImGui::IsItemActivated())
-						row.OnSelect();
-
-					if (i < def.size())
-						dirty |= CheckRevertButton(data[i], def[i]);
-					else
-					{
-						static const std::string empty = "";
-						dirty |= CheckRevertButton(data[i], empty);
-					}
-				}
-
-				scope.Pop();
-			}
-		}
-
-		ImGui::EndChild();
-
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && !ImGui::GetIO().WantTextInput && ImGui::Shortcut(ImGuiKey_Delete))
-			ui_state.DeferDelete();
+		});
 
 		dirty |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
 			switch (op.type)
@@ -159,9 +118,19 @@ namespace oly::editor
 				break;
 
 			case gui::RowOperation::Type::Move:
+			{
 				std::string moved = std::move(data[op.src]);
 				data.erase(data.begin() + op.src);
 				data.insert(data.begin() + op.index, std::move(moved));
+				break;
+			}
+
+			case gui::RowOperation::Type::Resize:
+				data.resize(op.index);
+				break;
+
+			case gui::RowOperation::Type::PushBack:
+				data.push_back("");
 				break;
 			}
 		});

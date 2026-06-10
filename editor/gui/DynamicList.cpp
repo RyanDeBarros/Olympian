@@ -1,6 +1,10 @@
 #include "DynamicList.h"
 
+#include "core/ResourceLoader.h"
 #include "core/UID.h"
+
+#include "gui/DisabledSection.h"
+#include "gui/IDScope.h"
 #include "gui/Toolbar.h"
 
 namespace oly::editor::gui
@@ -19,6 +23,7 @@ namespace oly::editor::gui
 			break;
 
 		case Type::Move:
+		{
 			size_t min = std::min(src, index);
 			size_t max = std::max(src, index);
 
@@ -35,6 +40,16 @@ namespace oly::editor::gui
 			break;
 		}
 
+		case Type::Resize:
+			if (idx >= index)
+				return false;
+
+			break;
+
+		case Type::PushBack:
+			break;
+		}
+
 		return true;
 	}
 
@@ -48,17 +63,27 @@ namespace oly::editor::gui
 		return RowOperation{ .type = Type::Move, .index = dst, .src = src };
 	}
 
+	RowOperation RowOperation::MakeResize(size_t size)
+	{
+		return RowOperation{ .type = Type::Resize, .index = size, .src = size };
+	}
+
+	RowOperation RowOperation::MakePushBack()
+	{
+		return RowOperation{ .type = Type::PushBack, .index = 0, .src = 0 };
+	}
+
+	void RowOperation::SetValid(bool valid)
+	{
+		if (type != Type::Resize && type != Type::PushBack)
+			this->valid = valid;
+	}
+
 	struct DynamicListStatePayload
 	{
 		const DynamicListState* identity;
 		size_t index;
 	};
-
-	void DynamicListState::InitList(size_t count)
-	{
-		list_size = count;
-		Clamp();
-	}
 
 	void DynamicListState::Clamp()
 	{
@@ -71,22 +96,9 @@ namespace oly::editor::gui
 		index = list_size > 0 ? list_size - 1 : 0;
 	}
 
-	void DynamicListState::OnPushBack()
+	void DynamicListState::DeferPushBack()
 	{
-		++list_size;
-		SetLast();
-	}
-
-	void DynamicListState::OnClear()
-	{
-		list_size = 0;
-		index = 0;
-	}
-
-	void DynamicListState::OnResize(size_t count)
-	{
-		list_size = count;
-		Clamp();
+		row_ops.push_back(RowOperation::MakePushBack());
 	}
 
 	void DynamicListState::DeferDelete()
@@ -104,6 +116,11 @@ namespace oly::editor::gui
 		}
 	}
 
+	void DynamicListState::DeferResize(size_t count)
+	{
+		row_ops.push_back(RowOperation::MakeResize(count));
+	}
+
 	bool DynamicListState::VisitRowOps(std::function<void(const RowOperation& op)> fn)
 	{
 		bool any = false;
@@ -117,6 +134,25 @@ namespace oly::editor::gui
 
 			fn(*it);
 
+			switch (it->type)
+			{
+			case RowOperation::Type::Delete:
+				--list_size;
+				break;
+				
+			case RowOperation::Type::Move:
+				break;
+
+			case RowOperation::Type::Resize:
+				list_size = it->index;
+				break;
+
+			case RowOperation::Type::PushBack:
+				++list_size;
+				SetLast();
+				break;
+			}
+
 			if (!it->UpdateIndex(index))
 				Clamp();
 
@@ -129,11 +165,50 @@ namespace oly::editor::gui
 			simul_selected = std::move(keep_selected);
 
 			for (auto ut = std::next(it); ut != row_ops.end(); ++ut)
-				ut->valid = ut->valid && it->UpdateIndex(ut->index) && it->UpdateIndex(ut->src);
+				ut->SetValid(ut->valid && it->UpdateIndex(ut->index) && it->UpdateIndex(ut->src));
 		}
 
 		row_ops.clear();
 		return any;
+	}
+
+	void DynamicListState::DrawListHeader(size_t count)
+	{
+		list_size = count;
+		Clamp();
+
+		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
+			DeferPushBack();
+
+		if (auto disabled = DisabledSection(list_size == 0))
+		{
+			ImGui::SameLine();
+			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item (Del)", "##Remove"))
+				DeferDelete();
+
+			ImGui::SameLine();
+			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
+				DeferResize(0);
+		}
+	}
+
+	void DynamicListState::DrawBody(std::function<void(DynamicRow& row)> row_draw)
+	{
+		if (ImGui::BeginChild("List"))
+		{
+			for (size_t i = 0; i < list_size; ++i)
+			{
+				IDScope scope(i);
+
+				if (auto row = gui::DynamicRow(i, "Row", *this))
+					row_draw(row);
+			}
+		}
+
+		ImGui::EndChild();
+
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && !ImGui::GetIO().WantTextInput && ImGui::Shortcut(ImGuiKey_Delete))
+			DeferDelete();
 	}
 
 	DynamicRow::DynamicRow(size_t index, const char* str_id, DynamicListState& state)
@@ -151,6 +226,8 @@ namespace oly::editor::gui
 
 			if (ImGui::BeginDragDropSource())
 			{
+				OnSelect();
+
 				DynamicListStatePayload payload{
 					.identity = &_state,
 					.index = _index
@@ -203,5 +280,10 @@ namespace oly::editor::gui
 			_state.simul_selected.clear();
 
 		_state.index = _index;
+	}
+
+	size_t DynamicRow::Index() const
+	{
+		return _index;
 	}
 }

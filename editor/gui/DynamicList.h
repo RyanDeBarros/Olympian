@@ -14,7 +14,9 @@ namespace oly::editor::gui
 		enum class Type
 		{
 			Delete,
-			Move
+			Move,
+			Resize,
+			PushBack
 		};
 
 		Type type;
@@ -26,7 +28,13 @@ namespace oly::editor::gui
 
 		static RowOperation MakeDelete(size_t index);
 		static RowOperation MakeMove(size_t src, size_t dst);
+		static RowOperation MakeResize(size_t size);
+		static RowOperation MakePushBack();
+
+		void SetValid(bool valid);
 	};
+
+	class DynamicRow;
 
 	struct DynamicListState
 	{
@@ -35,17 +43,17 @@ namespace oly::editor::gui
 		std::vector<RowOperation> row_ops;
 		std::unordered_set<size_t> simul_selected;
 
-		void InitList(size_t count);
 		void Clamp();
 		void SetLast();
 
-		void OnPushBack();
-		void OnClear();
-		void OnResize(size_t count);
-		
+		void DeferPushBack();
 		void DeferDelete();
+		void DeferResize(size_t count);
 
 		bool VisitRowOps(std::function<void(const RowOperation& op)> fn);
+
+		void DrawListHeader(size_t list_size);
+		void DrawBody(std::function<void(DynamicRow& row)> row_draw);
 	};
 
 	class DynamicRow
@@ -64,5 +72,6 @@ namespace oly::editor::gui
 		operator bool() const;
 
 		void OnSelect();
+		size_t Index() const;
 	};
 }
