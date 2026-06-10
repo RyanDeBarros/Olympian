@@ -109,7 +109,7 @@ namespace oly::editor::gui
 				row_ops.push_back(RowOperation::MakeDelete(index));
 		}
 
-		for (size_t idx : simul_selected)
+		for (size_t idx : simul_selected_ordered)
 		{
 			if (idx < list_size)
 				row_ops.push_back(RowOperation::MakeDelete(idx));
@@ -157,10 +157,12 @@ namespace oly::editor::gui
 				Clamp();
 
 			std::unordered_set<size_t> keep_selected;
-			for (size_t idx : simul_selected)
+			for (auto ut = simul_selected_ordered.begin(); ut != simul_selected_ordered.end(); )
 			{
-				if (it->UpdateIndex(idx))
-					keep_selected.insert(idx);
+				if (it->UpdateIndex(*ut))
+					keep_selected.insert(*ut++);
+				else
+					ut = simul_selected_ordered.erase(ut);
 			}
 			simul_selected = std::move(keep_selected);
 
@@ -274,12 +276,56 @@ namespace oly::editor::gui
 		if (ImGui::GetIO().KeyCtrl)
 		{
 			if (_state.index != _index)
-				_state.simul_selected.insert(_state.index);
+			{
+				if (!_state.simul_selected.contains(_state.index))
+				{
+					_state.simul_selected.insert(_state.index);
+					_state.simul_selected_ordered.push_back(_state.index);
+				}
+
+				_state.index = _index;
+			}
+			else
+			{
+				if (_state.simul_selected.contains(_index))
+				{
+					_state.simul_selected.erase(_index);
+					_state.simul_selected_ordered.erase(std::find(_state.simul_selected_ordered.begin(), _state.simul_selected_ordered.end(), _index));
+				}
+				
+				if (!_state.simul_selected.empty())
+				{
+					_state.index = _state.simul_selected_ordered.back();
+					_state.simul_selected_ordered.pop_back();
+					_state.simul_selected.erase(_state.index);
+				}
+			}
+		}
+		else if (ImGui::GetIO().KeyShift)
+		{
+			size_t min = std::min(_index, _state.index);
+			size_t max = std::max(_index, _state.index);
+
+			for (size_t i = min; i <= max; ++i)
+			{
+				if (i != _index)
+				{
+					if (!_state.simul_selected.contains(i))
+					{
+						_state.simul_selected.insert(i);
+						_state.simul_selected_ordered.push_back(i);
+					}
+				}
+			}
+
+			_state.index = _index;
 		}
 		else
+		{
 			_state.simul_selected.clear();
-
-		_state.index = _index;
+			_state.simul_selected_ordered.clear();
+			_state.index = _index;
+		}
 	}
 
 	size_t DynamicRow::Index() const

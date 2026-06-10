@@ -42,6 +42,7 @@ namespace oly::editor::gui
 		size_t index = 0;
 		std::vector<RowOperation> row_ops;
 		std::unordered_set<size_t> simul_selected;
+		std::vector<size_t> simul_selected_ordered;
 
 		void Clamp();
 		void SetLast();
