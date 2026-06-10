@@ -12,4 +12,5 @@ target_sources(OlympianEditor PRIVATE
 	ResourceLoader.cpp
 	ShortcutManager.cpp
 	Types.cpp
+	UID.cpp
 )

@@ -1,9 +1,7 @@
 #include "DynamicList.h"
 
+#include "core/UID.h"
 #include "gui/Toolbar.h"
-
-// TODO v8 remove
-#include <iostream>
 
 namespace oly::editor::gui
 {
@@ -68,22 +66,17 @@ namespace oly::editor::gui
 			if (Toolbar::DrawHandle("##Drag"))
 				_state.index = _index;
 
-			// TODO v8 put in central database
-			static const char* DYNAMIC_STRING_LIST_REORDER = "DYNAMIC_STRING_LIST_REORDER";
-
 			if (ImGui::BeginDragDropSource())
 			{
 				_state.index = _index;
-				_state.SendPayload(DYNAMIC_STRING_LIST_REORDER);
+				_state.SendPayload(StringID(UID::DynamicRowReorder));
 				ImGui::Text("Move item");
 				ImGui::EndDragDropSource();
-
-				std::cout << _index << std::endl;
 			}
 
 			if (ImGui::BeginDragDropTarget())
 			{
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DYNAMIC_STRING_LIST_REORDER))
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(StringID(UID::DynamicRowReorder)))
 				{
 					gui::DynamicListState* src = reinterpret_cast<gui::DynamicListState*>(payload->Data);
 					if (src->self == _state.self)
