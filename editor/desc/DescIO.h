@@ -64,7 +64,6 @@ namespace oly::editor
 		static bool Draw(const char* label, E& data, const E& def);
 
 	private:
-		// TODO v8 just use detail namespace like with mouse button, key input, etc.
 		template<typename E, size_t N>
 		static bool DrawEnum(const char* label, E& data, const E& def, const char* const (&values)[N])
 		{

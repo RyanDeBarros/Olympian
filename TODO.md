@@ -2,7 +2,6 @@
 * Editor work
 	* Documents
 		* Font
-		* Signal
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
