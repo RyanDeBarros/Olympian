@@ -11,6 +11,36 @@ endif()
 
 
 # ====================
+#        GLFW
+# ====================
+
+set(GLFW_BUILD_DOCS off CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+	glfw
+	GIT_REPOSITORY https://github.com/glfw/glfw.git
+	GIT_TAG        3.4
+)
+
+FetchContent_MakeAvailable(glfw)
+
+
+# ====================
+#        GLEW
+# ====================
+
+FetchContent_Declare(
+    glew
+    GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
+    GIT_TAG        glew-cmake-2.2.0
+)
+
+FetchContent_MakeAvailable(glew)
+
+
+# ====================
 #        TOML++
 # ====================
 
@@ -33,7 +63,13 @@ if (MSVC)
 	target_compile_options(OlympianDetail PUBLIC /Zc:__cplusplus)
 endif()
 
+target_compile_definitions(OlympianDetail PUBLIC
+	GLEW_STATIC
+)
+
 target_link_libraries(OlympianDetail PRIVATE
+	libglew_static
+    glfw
     tomlplusplus::tomlplusplus
 )
 

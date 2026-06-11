@@ -58,10 +58,10 @@ namespace oly::editor
 
 	struct BaseTextureDesc
 	{
-		GLenumField min_filter;
-		GLenumField mag_filter;
-		GLenumField wrap_s;
-		GLenumField wrap_t;
+		DisjointEnumField<GLenum> min_filter;
+		DisjointEnumField<GLenum> mag_filter;
+		DisjointEnumField<GLenum> wrap_s;
+		DisjointEnumField<GLenum> wrap_t;
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 

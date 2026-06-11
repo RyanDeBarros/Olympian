@@ -94,7 +94,10 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::string>::PrimitiveField;
 
-		bool Draw();
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
+		}
 	};
 
 	struct ColorField : public PrimitiveField<Color>
@@ -153,34 +156,66 @@ namespace oly::editor
 
 	using StringVectorField = VectorField<std::string>;
 
-	struct GLenumField
+	template<typename E>
+	struct DisjointEnumField
 	{
-		GLenum def;
+		E def;
 		int scratch;
 		int def_index;
 		detail::Key key;
 		const char* label;
-		const GLenum* values;
+		const E* values;
 		const char** names;
 		size_t count;
 
 		template<size_t Count>
-		GLenumField(GLenum def, detail::Key key, const char* label, const GLenum(&values)[Count], const char* (&names)[Count])
+		DisjointEnumField(E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
 			: def(def), key(key), label(label), values(values), names(names), count(Count)
 		{
 			SetScratch(def);
 			def_index = Index(def);
 		}
 
-		bool Draw();
-		void Load(TOMLNode node);
-		void Dump(toml::table& table) const;
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def_index, names, count);
+		}
 
-		GLenum Scratch() const;
-		void SetScratch(const GLenum val);
+		void Load(TOMLNode node)
+		{
+			scratch = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
+		}
+		
+		void Dump(toml::table& table) const
+		{
+			table.insert_or_assign(detail::encode_key(key), Scratch());
+		}
 
-		GLenum Value(int index) const;
-		int Index(const GLenum val) const;
+		E Scratch() const
+		{
+			return Value(scratch);
+		}
+		
+		void SetScratch(const E val)
+		{
+			scratch = Index(val);
+		}
+
+		E Value(int index) const
+		{
+			return values[index];
+		}
+		
+		int Index(const E val) const
+		{
+			for (size_t i = 0; i < count; ++i)
+			{
+				if (val == values[i])
+					return i;
+			}
+
+			return -1;
+		}
 	};
 	
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>

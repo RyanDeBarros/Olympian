@@ -175,6 +175,21 @@ namespace oly::editor
 	{
 		DRAW_FIELDS(SIGNAL_PARTIAL_GENERATOR);
 
+		switch (desc.binding.scratch)
+		{
+#define SWITCH_CASE(T) \
+		case detail::SignalBindingType::T: \
+		{ \
+			if (!desc.variant.TryGet<T##Desc>()) \
+				desc.variant.Set<T##Desc>(); \
+			break; \
+		}
+
+			BINDING_TYPE_GENERATOR(SWITCH_CASE)
+
+#undef SWITCH_CASE
+		}
+
 		desc.variant.Visit([this, &form](auto& desc) { Draw(form, desc); });
 	}
 	
@@ -185,6 +200,8 @@ namespace oly::editor
 
 	void SignalDocument::Draw(Form& form, KeyDesc& desc)
 	{
+		// TODO v8 special button to listen to key input
+
 		DRAW_FIELDS(KEY_PARTIAL_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
@@ -192,6 +209,8 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(Form& form, MouseButtonDesc& desc)
 	{
+		// TODO v8 special button to listen to mouse button input
+
 		DRAW_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
@@ -204,14 +223,14 @@ namespace oly::editor
 			Draw(form, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis1dDesc& desc)
+	void SignalDocument::Draw(Form& form, GamepadAxis1DDesc& desc)
 	{
 		DRAW_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis2dDesc& desc)
+	void SignalDocument::Draw(Form& form, GamepadAxis2DDesc& desc)
 	{
 		DRAW_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
@@ -286,55 +305,18 @@ namespace oly::editor
 
 		switch (type)
 		{
-		case detail::SignalBindingType::Key:
-		{
-			KeyDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
+#define SWITCH_CASE(T) \
+		case detail::SignalBindingType::T: \
+		{ \
+			T##Desc subdesc; \
+			Load(node, subdesc); \
+			desc.variant.Set(std::move(subdesc)); \
+			break; \
 		}
-		case detail::SignalBindingType::MouseButton:
-		{
-			MouseButtonDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
-		case detail::SignalBindingType::GamepadButton:
-		{
-			GamepadButtonDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
-		case detail::SignalBindingType::GamepadAxis1D:
-		{
-			GamepadAxis1dDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
-		case detail::SignalBindingType::GamepadAxis2D:
-		{
-			GamepadAxis2dDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
-		case detail::SignalBindingType::CursorPos:
-		{
-			CursorPosDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
-		case detail::SignalBindingType::Scroll:
-		{
-			ScrollDesc subdesc;
-			Load(node, subdesc);
-			desc.variant.Set(std::move(subdesc));
-			break;
-		}
+
+			BINDING_TYPE_GENERATOR(SWITCH_CASE)
+
+#undef SWITCH_CASE
 		}
 	}
 
@@ -361,13 +343,13 @@ namespace oly::editor
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, GamepadAxis1dDesc& desc)
+	void SignalDocument::Load(TOMLNode node, GamepadAxis1DDesc& desc)
 	{
 		LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, GamepadAxis2dDesc& desc)
+	void SignalDocument::Load(TOMLNode node, GamepadAxis2DDesc& desc)
 	{
 		LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
@@ -457,7 +439,7 @@ namespace oly::editor
 		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
 	}
 	
-	void SignalDocument::Dump(toml::table& table, GamepadAxis1dDesc& desc)
+	void SignalDocument::Dump(toml::table& table, GamepadAxis1DDesc& desc)
 	{
 		DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 
@@ -466,7 +448,7 @@ namespace oly::editor
 		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
 	}
 	
-	void SignalDocument::Dump(toml::table& table, GamepadAxis2dDesc& desc)
+	void SignalDocument::Dump(toml::table& table, GamepadAxis2DDesc& desc)
 	{
 		DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 

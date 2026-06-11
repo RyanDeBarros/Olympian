@@ -41,6 +41,7 @@ namespace oly::editor
 	}
 
 	MouseButtonDesc::MouseButtonDesc() :
+		button(detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
 		modifier()
 	{
 	}
@@ -105,14 +106,14 @@ namespace oly::editor
 		"Right trigger (R2)",
 	};
 
-	GamepadAxis1dDesc::GamepadAxis1dDesc() :
+	GamepadAxis1DDesc::GamepadAxis1DDesc() :
 		axis(GLFW_GAMEPAD_AXIS_LEFT_X, detail::Key::Axis1D, "Axis", GAMEPAD_AXIS_1D_VALUES, GAMEPAD_AXIS_1D_NAMES),
 		modifier(),
 		deadzone(0.f, detail::Key::Deadzone, "Deadzone")
 	{
 	}
 
-	GamepadAxis2dDesc::GamepadAxis2dDesc() :
+	GamepadAxis2DDesc::GamepadAxis2DDesc() :
 		axis(detail::GamepadAxis2D::LeftXY, detail::Key::Axis2D, "Axis"),
 		modifier(),
 		deadzone(0.f, detail::Key::Deadzone, "Deadzone")

@@ -5,6 +5,7 @@
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
+#include "definitions/enums/MouseButton.h"
 #include "definitions/enums/SignalBindingType.h"
 
 namespace oly::editor
@@ -82,7 +83,8 @@ namespace oly::editor
 		KeyDesc();
 	};
 
-#define MOUSE_BUTTON_PARTIAL_GENERATOR(M)
+#define MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
+		M(button)
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
@@ -90,7 +92,8 @@ namespace oly::editor
 
 	struct MouseButtonDesc
 	{
-		// TODO v8 button, required_mods, forbidden_mods
+		DisjointEnumField<detail::MouseButton> button;
+		// TODO v8 required_mods, forbidden_mods
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();
@@ -105,7 +108,7 @@ namespace oly::editor
 
 	struct GamepadButtonDesc
 	{
-		GLenumField button;
+		DisjointEnumField<GLenum> button;
 		Modifier0dDesc modifier;
 
 		GamepadButtonDesc();
@@ -119,13 +122,13 @@ namespace oly::editor
 		GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
-	struct GamepadAxis1dDesc
+	struct GamepadAxis1DDesc
 	{
-		GLenumField axis;
+		DisjointEnumField<GLenum> axis;
 		Modifier1dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		GamepadAxis1dDesc();
+		GamepadAxis1DDesc();
 	};
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
@@ -136,13 +139,13 @@ namespace oly::editor
 		GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
 		M(modifier)
 
-	struct GamepadAxis2dDesc
+	struct GamepadAxis2DDesc
 	{
 		EnumField<detail::GamepadAxis2D> axis;
 		Modifier2dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		GamepadAxis2dDesc();
+		GamepadAxis2DDesc();
 	};
 
 #define CURSOR_POS_PARTIAL_GENERATOR(M)
@@ -175,11 +178,20 @@ namespace oly::editor
 		SIGNAL_PARTIAL_GENERATOR(M) \
 		M(variant)
 
+#define BINDING_TYPE_GENERATOR(M) \
+		M(Key) \
+		M(MouseButton) \
+		M(GamepadButton) \
+		M(GamepadAxis1D) \
+		M(GamepadAxis2D) \
+		M(CursorPos) \
+		M(Scroll)
+
 	struct SignalDesc
 	{
 		StringField id;
 		EnumField<detail::SignalBindingType> binding;
-		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1dDesc, GamepadAxis2dDesc, CursorPosDesc, ScrollDesc> variant;
+		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
 		SignalDesc();

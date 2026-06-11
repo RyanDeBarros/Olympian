@@ -38,8 +38,8 @@ namespace oly::editor
 		void Draw(Form& form, KeyDesc& desc);
 		void Draw(Form& form, MouseButtonDesc& desc);
 		void Draw(Form& form, GamepadButtonDesc& desc);
-		void Draw(Form& form, GamepadAxis1dDesc& desc);
-		void Draw(Form& form, GamepadAxis2dDesc& desc);
+		void Draw(Form& form, GamepadAxis1DDesc& desc);
+		void Draw(Form& form, GamepadAxis2DDesc& desc);
 		void Draw(Form& form, CursorPosDesc& desc);
 		void Draw(Form& form, ScrollDesc& desc);
 		void Draw(Form& form, Modifier0dDesc& desc);
@@ -53,8 +53,8 @@ namespace oly::editor
 		void Load(TOMLNode node, KeyDesc& desc);
 		void Load(TOMLNode node, MouseButtonDesc& desc);
 		void Load(TOMLNode node, GamepadButtonDesc& desc);
-		void Load(TOMLNode node, GamepadAxis1dDesc& desc);
-		void Load(TOMLNode node, GamepadAxis2dDesc& desc);
+		void Load(TOMLNode node, GamepadAxis1DDesc& desc);
+		void Load(TOMLNode node, GamepadAxis2DDesc& desc);
 		void Load(TOMLNode node, CursorPosDesc& desc);
 		void Load(TOMLNode node, ScrollDesc& desc);
 		void Load(TOMLNode node, Modifier0dDesc& desc);
@@ -68,8 +68,8 @@ namespace oly::editor
 		void Dump(toml::table& table, KeyDesc& desc);
 		void Dump(toml::table& table, MouseButtonDesc& desc);
 		void Dump(toml::table& table, GamepadButtonDesc& desc);
-		void Dump(toml::table& table, GamepadAxis1dDesc& desc);
-		void Dump(toml::table& table, GamepadAxis2dDesc& desc);
+		void Dump(toml::table& table, GamepadAxis1DDesc& desc);
+		void Dump(toml::table& table, GamepadAxis2DDesc& desc);
 		void Dump(toml::table& table, CursorPosDesc& desc);
 		void Dump(toml::table& table, ScrollDesc& desc);
 		void Dump(toml::table& table, Modifier0dDesc& desc);
