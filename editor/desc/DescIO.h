@@ -15,7 +15,6 @@ namespace oly::editor
 {
 	struct DescIO
 	{
-	private:
 		static void PrepareValue(const char* label);
 		static bool DrawRevertButton();
 
@@ -31,7 +30,6 @@ namespace oly::editor
 				return false;
 		}
 
-	public:
 		template<typename T, typename U = T>
 		static bool Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{
@@ -57,7 +55,54 @@ namespace oly::editor
 		static bool Draw(const char* label, int& data, const int& def, const char** names, size_t count);
 		static bool Draw(const char* label, std::string* data, const std::string* def, size_t count);
 		static bool Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
+
+		template<typename T>
+		static bool DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<bool(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		{
+			bool dirty = false;
+			DescIO::PrepareValue(label);
+			gui::IDScope scope(&data);
+
+			ui_state.DrawListHeader(data.size());
+
+			if (data.size() != def.size())
+			{
+				if (DescIO::DrawRevertButton())
+					ui_state.DeferResize(def.size());
+			}
+
+			ui_state.DrawBody([&dirty, &draw_fn](gui::DynamicRow& row) { dirty |= draw_fn(row); });
+
+			dirty |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+				switch (op.type)
+				{
+				case gui::RowOperation::Type::Delete:
+					data.erase(data.begin() + op.index);
+					break;
+
+				case gui::RowOperation::Type::Move:
+				{
+					auto moved(std::move(data[op.src]));
+					data.erase(data.begin() + op.src);
+					data.insert(data.begin() + op.index, std::move(moved));
+					break;
+				}
+
+				case gui::RowOperation::Type::Resize:
+					data.resize(op.index);
+					break;
+
+				case gui::RowOperation::Type::PushBack:
+					data.push_back(T{});
+					break;
+				}
+				});
+
+			return dirty;
+		}
+
 		static bool Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state);
+
 		static bool Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, size_t count);
 
 		template<typename E> requires (std::is_enum_v<E>)

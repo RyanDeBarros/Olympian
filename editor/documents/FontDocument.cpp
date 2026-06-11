@@ -120,10 +120,68 @@ namespace oly::editor
 
 	void FontDocument::DrawFontFace()
 	{
-		// TODO v8
+		if (auto form = Form())
+			Draw(form, _scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
+	{
+		if (auto form = Form())
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Select Route");
+
+			ImGui::TableNextColumn();
+			_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+
+			if (!_scratch.font_atlases.Empty())
+				Draw(form, _scratch.font_atlases[_atlas_slots.active_index]);
+
+			if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
+				MarkDirty();
+
+			_atlas_slots.active_index.ConsumeModified();
+		}
+	}
+
+	void FontDocument::Draw(Form& form, FontFaceDesc& desc)
+	{
+		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+
+		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc](gui::DynamicRow& row) {
+			auto& k = desc.kerning[row.Index()];
+			bool dirty = false;
+			
+			ImGui::SameLine();
+			ImGui::Text(k.pair.label); // TODO v8 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
+
+			for (size_t i = 0; i < 2; ++i)
+			{
+				ImGui::SameLine();
+				dirty |= gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
+			}
+
+			ImGui::SameLine();
+			ImGui::Text(k.distance.label);
+			ImGui::SameLine();
+			dirty |= gui::InputData<int>{}("##Distance", k.distance.scratch);
+
+			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
+			{
+				if (DescIO::DrawRevertButton())
+				{
+					k.distance.scratch = k.distance.def;
+					k.pair.scratch = k.pair.def;
+					dirty = true;
+				}
+			}
+			
+			return dirty;
+		}, desc.kerning_ui_state);
+	}
+
+	void FontDocument::Draw(Form& form, FontAtlasDesc& desc)
 	{
 		// TODO v8
 	}
@@ -150,7 +208,22 @@ namespace oly::editor
 
 	void FontDocument::Load(TOMLNode node, FontFaceDesc& desc)
 	{
-		// TODO v8
+		LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+
+		TOMLArray array = node[detail::encode_key(desc.kerning_key)].as_array();
+		if (array && !array->empty())
+		{
+			for (size_t i = 0; i < array->size(); ++i)
+			{
+				desc.kerning.PushBack();
+				Load(TOMLNode(*array->get(i)), desc.kerning.vector.back());
+			}
+		}
+	}
+
+	void FontDocument::Load(TOMLNode node, KerningDesc& desc)
+	{
+		LOAD_FIELDS(KERNING_GENERATOR);
 	}
 
 	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
@@ -164,7 +237,7 @@ namespace oly::editor
 		Dump(subtable, desc.font_face);
 		table.insert_or_assign(detail::encode_key(desc.font_face_key), std::move(subtable));
 
-		toml::v3::array array;
+		toml::array array;
 		for (auto& d : desc.font_atlases)
 		{
 			toml::table subtable;
@@ -176,7 +249,21 @@ namespace oly::editor
 
 	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
 	{
-		// TODO v8
+		DUMP_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		
+		toml::array array;
+		for (auto& d : desc.kerning)
+		{
+			toml::table subtable;
+			Dump(subtable, d);
+			array.push_back(std::move(subtable));
+		}
+		table.insert_or_assign(detail::encode_key(desc.kerning_key), std::move(array));
+	}
+
+	void FontDocument::Dump(toml::table& table, KerningDesc& desc)
+	{
+		DUMP_FIELDS(KERNING_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)

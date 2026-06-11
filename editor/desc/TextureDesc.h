@@ -72,6 +72,7 @@ namespace oly::editor
 		M(generate_mipmaps) \
 		M(storage)
 
+	// TODO v8 get rid of full generators
 #define RASTER_TEXTURE_FULL_GENERATOR(M) \
 		M(base) \
 		RASTER_TEXTURE_PARTIAL_GENERATOR(M)

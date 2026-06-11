@@ -2,6 +2,9 @@
 * Editor work
 	* Documents
 		* Font
+		* Raster Font
+		* Font Family
+		* Tileset
 	* Project manager
 		* Generate new project files
 		* Recent project manifest

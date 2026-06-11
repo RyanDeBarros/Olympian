@@ -4,7 +4,21 @@
 
 namespace oly::editor
 {
-	FontFaceDesc::FontFaceDesc()
+	const char* KERNING_SUBLABELS[2] = {
+		"##1",
+		"##2",
+	};
+
+	KerningDesc::KerningDesc() :
+		pair({ "", "" }, detail::Key::CodepointPair, "Codepoints", KERNING_SUBLABELS),
+		distance(0, detail::Key::CodepointDistance, "Distance")
+	{
+	}
+
+	const detail::Key FontFaceDesc::kerning_key = detail::Key::Kerning;
+
+	FontFaceDesc::FontFaceDesc() :
+		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
 	{
 	}
 

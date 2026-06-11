@@ -219,7 +219,7 @@ namespace oly::editor::gui
 		_cursor = ImGui::GetCursorScreenPos();
 		_size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
 
-		if (ImGui::BeginChild(str_id, _size))
+		if (ImGui::BeginChild(str_id, _size, ImGuiChildFlags_AutoResizeX))
 		{
 			_visible = true;
 

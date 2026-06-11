@@ -3,12 +3,31 @@
 #include "desc/Fields.h"
 #include "desc/Descriptors.h"
 
+#include "definitions/enums/StorageMode.h"
+
 namespace oly::editor
 {
+#define KERNING_GENERATOR(M) \
+		M(pair) \
+		M(distance)
+
+	struct KerningDesc
+	{
+		ArrayField<std::string, 2> pair;
+		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
+
+		KerningDesc();
+	};
+
+#define FONT_FACE_PARTIAL_GENERATOR(M) \
+		M(storage)
+
 	struct FontFaceDesc
 	{
-		// TODO v8 storage
-		// TODO v8 kerning
+		EnumField<detail::StorageMode> storage;
+		VectorDesc<KerningDesc> kerning;
+		static const detail::Key kerning_key;
+		gui::DynamicListState kerning_ui_state;
 
 		FontFaceDesc();
 	};

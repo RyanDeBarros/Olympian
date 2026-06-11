@@ -82,19 +82,9 @@ namespace oly::editor
 
 	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state)
 	{
-		bool dirty = false;
-		PrepareValue(label);
-		gui::IDScope scope(&data);
+		return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
+			bool dirty = false;
 
-		ui_state.DrawListHeader(data.size());
-
-		if (data.size() != def.size())
-		{
-			if (DrawRevertButton())
-				ui_state.DeferResize(def.size());
-		}
-
-		ui_state.DrawBody([&dirty, &data, &def](gui::DynamicRow& row) {
 			ImGui::SameLine();
 			dirty |= gui::InputText("##Item", data[row.Index()]);
 
@@ -108,34 +98,9 @@ namespace oly::editor
 				static const std::string empty = "";
 				dirty |= CheckRevertButton(data[row.Index()], empty);
 			}
-		});
-
-		dirty |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
-			switch (op.type)
-			{
-			case gui::RowOperation::Type::Delete:
-				data.erase(data.begin() + op.index);
-				break;
-
-			case gui::RowOperation::Type::Move:
-			{
-				std::string moved = std::move(data[op.src]);
-				data.erase(data.begin() + op.src);
-				data.insert(data.begin() + op.index, std::move(moved));
-				break;
-			}
-
-			case gui::RowOperation::Type::Resize:
-				data.resize(op.index);
-				break;
-
-			case gui::RowOperation::Type::PushBack:
-				data.push_back("");
-				break;
-			}
-		});
-
-		return dirty;
+			
+			return dirty;
+		}, ui_state);
 	}
 
 	bool DescIO::Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, size_t count)

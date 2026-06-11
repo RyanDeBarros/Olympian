@@ -559,7 +559,7 @@ namespace oly::editor
 
 	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
 	{
-		toml::v3::array array;
+		toml::array array;
 		desc.variant.Visit([this, &array](auto& d) {
 			for (auto& desc : d)
 			{

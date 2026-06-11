@@ -32,13 +32,17 @@ namespace oly::editor
 	private:
 		void DrawFontFace();
 		void DrawFontAtlases();
+		void Draw(Form& form, FontFaceDesc& desc);
+		void Draw(Form& form, FontAtlasDesc& desc);
 
 		void Load(TOMLNode node, FullFontDesc& desc);
 		void Load(TOMLNode node, FontFaceDesc& desc);
+		void Load(TOMLNode node, KerningDesc& desc);
 		void Load(TOMLNode node, FontAtlasDesc& desc);
 
 		void Dump(toml::table& table, FullFontDesc& desc);
 		void Dump(toml::table& table, FontFaceDesc& desc);
+		void Dump(toml::table& table, KerningDesc& desc);
 		void Dump(toml::table& table, FontAtlasDesc& desc);
 	};
 }
