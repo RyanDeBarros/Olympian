@@ -1,6 +1,6 @@
 #include "PathInfo.h"
 
-#include "core/Logger.h"
+#include "core/editor/Logger.h"
 #include "core/Macros.h"
 #include "assets/MetaSplitter.h"
 

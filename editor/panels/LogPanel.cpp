@@ -1,8 +1,8 @@
 #include "LogPanel.h"
 
-#include "core/MainWindow.h"
+#include "core/windows/MainWindow.h"
 #include "core/Errors.h"
-#include "core/Logger.h"
+#include "core/editor/Logger.h"
 #include "panels/PanelManager.h"
 
 namespace oly::editor

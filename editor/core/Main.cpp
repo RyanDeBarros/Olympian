@@ -1,6 +1,6 @@
-#include "core/Editor.h"
-#include "core/Logger.h"
-#include "core/ShortcutManager.h"
+#include "core/editor/Editor.h"
+#include "core/editor/Logger.h"
+#include "core/editor/ShortcutManager.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>

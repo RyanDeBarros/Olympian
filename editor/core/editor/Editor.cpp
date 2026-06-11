@@ -1,11 +1,11 @@
 #include "Editor.h"
 
-#include "core/ProjectSelectWindow.h"
-#include "core/Logger.h"
-#include "core/MainWindow.h"
-#include "core/ShortcutManager.h"
-#include "core/ProjectInfo.h"
-#include "core/ResourceLoader.h"
+#include "core/windows/ProjectSelectWindow.h"
+#include "core/editor/Logger.h"
+#include "core/windows/MainWindow.h"
+#include "core/editor/ShortcutManager.h"
+#include "core/editor/ProjectInfo.h"
+#include "core/editor/ResourceLoader.h"
 
 #include "documents/DocumentManager.h"
 #include "panels/AssetEditorPanel.h"

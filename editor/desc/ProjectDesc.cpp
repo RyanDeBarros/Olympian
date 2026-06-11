@@ -1,6 +1,6 @@
 #include "ProjectDesc.h"
 
-#include "core/ProjectInfo.h"
+#include "core/editor/ProjectInfo.h"
 
 #include "definitions/Keys.h"
 

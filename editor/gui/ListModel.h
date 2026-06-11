@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace oly::editor
+namespace oly::editor::gui
 {
 	enum class ListPolicy
 	{

@@ -1,6 +1,6 @@
 #include "Errors.h"
 
-#include "core/Logger.h"
+#include "core/editor/Logger.h"
 
 namespace oly::editor
 {

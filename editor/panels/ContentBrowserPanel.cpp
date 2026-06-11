@@ -1,6 +1,6 @@
 #include "ContentBrowserPanel.h"
 
-#include "core/MainWindow.h"
+#include "core/windows/MainWindow.h"
 #include "core/Errors.h"
 #include "panels/PanelManager.h"
 

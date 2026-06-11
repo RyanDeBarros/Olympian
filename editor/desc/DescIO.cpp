@@ -1,6 +1,6 @@
 #include "DescIO.h"
 
-#include "core/ResourceLoader.h"
+#include "core/editor/ResourceLoader.h"
 #include "gui/DisabledSection.h"
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"

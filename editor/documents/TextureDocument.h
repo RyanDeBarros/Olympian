@@ -39,7 +39,7 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		ListModel _slots;
+		gui::ListModel _slots;
 		Texture _texture;
 		PreviewNav _preview_nav;
 		bool _preview_spritesheet = true;
@@ -86,6 +86,6 @@ namespace oly::editor
 
 		void OnActiveSlotChanged();
 
-		std::unique_ptr<IListAdapter> ListAdapter();
+		std::unique_ptr<gui::IListAdapter> ListAdapter();
 	};
 }

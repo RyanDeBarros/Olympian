@@ -1,7 +1,7 @@
 #include "ProjectSelectWindow.h"
 
-#include "core/Editor.h"
-#include "core/ProjectInfo.h"
+#include "core/editor/Editor.h"
+#include "core/editor/ProjectInfo.h"
 #include "gui/ImGuiWrapper.h"
 
 #include "assets/MetaSplitter.h"

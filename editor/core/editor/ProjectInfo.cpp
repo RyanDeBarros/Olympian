@@ -1,6 +1,6 @@
 #include "ProjectInfo.h"
 
-#include "core/Editor.h"
+#include "core/editor/Editor.h"
 
 #include "assets/ResourcePath.h"
 

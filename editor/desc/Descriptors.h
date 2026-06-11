@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/ListModel.h"
+#include "gui/ListModel.h"
 
 #include <variant>
 
@@ -73,9 +73,9 @@ namespace oly::editor
 			return vector.end();
 		}
 
-		std::unique_ptr<IListAdapter> ListAdapter()
+		std::unique_ptr<gui::IListAdapter> ListAdapter()
 		{
-			return std::make_unique<VectorAdapter<Descriptor>>(vector);
+			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
 		}
 	};
 

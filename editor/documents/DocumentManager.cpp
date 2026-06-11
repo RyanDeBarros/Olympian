@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "core/MainWindow.h"
+#include "core/windows/MainWindow.h"
 #include "panels/AssetEditorPanel.h"
 
 #include "assets/MetaSplitter.h"

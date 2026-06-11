@@ -1,12 +1,12 @@
 #include "TreeViewPanel.h"
 
-#include "core/Editor.h"
+#include "core/editor/Editor.h"
 #include "core/Errors.h"
-#include "core/Logger.h"
-#include "core/MainWindow.h"
+#include "core/editor/Logger.h"
+#include "core/windows/MainWindow.h"
 #include "core/PathInfo.h"
-#include "core/ProjectInfo.h"
-#include "core/ResourceLoader.h"
+#include "core/editor/ProjectInfo.h"
+#include "core/editor/ResourceLoader.h"
 #include "panels/PanelManager.h"
 
 #include "panels/PreferencesPanel.h"

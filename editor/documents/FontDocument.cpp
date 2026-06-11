@@ -1,7 +1,7 @@
 #include "FontDocument.h"
 
-#include "core/MainWindow.h"
-#include "core/Logger.h"
+#include "core/windows/MainWindow.h"
+#include "core/editor/Logger.h"
 
 #include "gui/IDScope.h"
 

@@ -1,7 +1,7 @@
 #include "DynamicList.h"
 
-#include "core/ResourceLoader.h"
-#include "core/UID.h"
+#include "core/editor/ResourceLoader.h"
+#include "core/editor/UID.h"
 
 #include "gui/DisabledSection.h"
 #include "gui/IDScope.h"

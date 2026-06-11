@@ -1,6 +1,6 @@
 #include "Logger.h"
 
-#include "core/Editor.h"
+#include "core/editor/Editor.h"
 
 #include <iostream>
 

@@ -5,6 +5,7 @@ target_sources(OlympianEditor PRIVATE
 	Form.cpp
 	IDScope.cpp
 	ImGuiWrapper.cpp
+	ListModel.cpp
 	Subform.cpp
 	Texture.cpp
 	Toolbar.cpp

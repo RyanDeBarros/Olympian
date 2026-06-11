@@ -1,9 +1,9 @@
 #include "PreferencesPanel.h"
 
-#include "core/MainWindow.h"
+#include "core/windows/MainWindow.h"
 #include "core/Errors.h"
-#include "core/Logger.h"
-#include "core/ProjectInfo.h"
+#include "core/editor/Logger.h"
+#include "core/editor/ProjectInfo.h"
 #include "panels/PanelManager.h"
 
 #include "gui/Subform.h"

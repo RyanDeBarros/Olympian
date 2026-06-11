@@ -1,8 +1,8 @@
 #include "ProjectDocument.h"
 
-#include "core/ProjectInfo.h"
-#include "core/Logger.h"
-#include "core/MainWindow.h"
+#include "core/editor/ProjectInfo.h"
+#include "core/editor/Logger.h"
+#include "core/windows/MainWindow.h"
 
 #include "gui/IDScope.h"
 #include "gui/Subform.h"

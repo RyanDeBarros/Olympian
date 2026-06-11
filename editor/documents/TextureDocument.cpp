@@ -2,10 +2,10 @@
 
 #include "definitions/Keys.h"
 
-#include "core/MainWindow.h"
-#include "core/Logger.h"
+#include "core/windows/MainWindow.h"
+#include "core/editor/Logger.h"
 
-#include "core/ResourceLoader.h"
+#include "core/editor/ResourceLoader.h"
 #include "gui/DisabledSection.h"
 #include "gui/IDScope.h"
 #include "gui/Subform.h"
@@ -31,7 +31,7 @@ namespace oly::editor
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
-		_slots.policy = ListPolicy::MinimumOne;
+		_slots.policy = gui::ListPolicy::MinimumOne;
 		Load();
 	}
 
@@ -602,7 +602,7 @@ namespace oly::editor
 		ReloadPreviewTexture();
 	}
 
-	std::unique_ptr<IListAdapter> TextureDocument::ListAdapter()
+	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
 		return _scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
 	}

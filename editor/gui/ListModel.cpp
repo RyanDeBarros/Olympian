@@ -1,6 +1,6 @@
 #include "ListModel.h"
 
-#include "core/ResourceLoader.h"
+#include "core/editor/ResourceLoader.h"
 
 #include "gui/ImGuiWrapper.h"
 #include "gui/Toolbar.h"
@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace oly::editor
+namespace oly::editor::gui
 {
 	ListOp ListOp::MakeCreateOp()
 	{

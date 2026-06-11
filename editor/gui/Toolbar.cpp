@@ -1,6 +1,6 @@
 #include "Toolbar.h"
 
-#include "core/ResourceLoader.h"
+#include "core/editor/ResourceLoader.h"
 
 #include "gui/IDScope.h"
 #include "gui/Texture.h"

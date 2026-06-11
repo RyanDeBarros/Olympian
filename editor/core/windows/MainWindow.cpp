@@ -1,9 +1,9 @@
 #include "MainWindow.h"
 
-#include "core/Editor.h"
-#include "core/DockTree.h"
-#include "core/MainMenuBar.h"
-#include "core/Logger.h"
+#include "core/editor/Editor.h"
+#include "core/windows/DockTree.h"
+#include "core/windows/MainMenuBar.h"
+#include "core/editor/Logger.h"
 
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
