@@ -228,7 +228,7 @@ namespace oly
 				{
 					std::array<ButtonPoll, input::GamepadButton::LAST + 1> button_polls;
 					std::array<Axis1DPoll, input::GamepadAxis1D::LAST + 1> axis_1d_polls;
-					std::array<Axis2DPoll, input::GamepadAxis2D::LAST + 1> axis_2d_polls;
+					std::array<Axis2DPoll, static_cast<size_t>(detail::GamepadAxis2D::_LAST) + 1> axis_2d_polls;
 				};
 
 				FixedVector<GamepadPoll> gamepad_polls;

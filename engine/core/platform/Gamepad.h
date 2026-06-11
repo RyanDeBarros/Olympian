@@ -1,8 +1,11 @@
 #pragma once
 
 #include "core/platform/EventHandler.h"
+
 #include "external/GL.h"
 #include "external/GLM.h"
+
+#include "definitions/enums/GamepadAxis2D.h"
 
 namespace oly
 {
@@ -108,17 +111,19 @@ namespace oly
 			int controller() const { return c; }
 			bool connected() const { return glfwJoystickPresent(c); }
 			bool has_mapping() const { return glfwJoystickIsGamepad(c); }
+			
 			int button_state(input::GamepadButton button) const { return g.buttons[button]; }
 			float axis_1d_state(input::GamepadAxis1D axis) const { return g.axes[axis]; }
-			glm::vec2 axis_2d_state(input::GamepadAxis2D axis) const
+			glm::vec2 axis_2d_state(detail::GamepadAxis2D axis) const
 			{
-				if (axis == input::GamepadAxis2D::LEFT_XY)
+				if (axis == detail::GamepadAxis2D::LeftXY)
 					return { g.axes[input::GamepadAxis1D::LEFT_X], g.axes[input::GamepadAxis1D::LEFT_Y] };
-				else if (axis == input::GamepadAxis2D::RIGHT_XY)
+				else if (axis == detail::GamepadAxis2D::RightXY)
 					return { g.axes[input::GamepadAxis1D::RIGHT_X], g.axes[input::GamepadAxis1D::RIGHT_Y] };
 				else
 					return {};
 			}
+
 			const char* name() const { return glfwGetJoystickName(c); }
 			const char* identifier() const { return glfwGetJoystickGUID(c); }
 		};

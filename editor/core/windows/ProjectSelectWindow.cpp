@@ -98,8 +98,7 @@ namespace oly::editor
         if (_valid_project_file)
         {
             auto meta = detail::MetaSplitter::decode_meta(_project_file.c_str());
-            // TODO v8 to use short-circuiting with booleans, must use 'b = b && ...' over 'b &= ...' and 'b = b || ...' over 'b |= ...'
-            _valid_project_file &= meta.get_version() == ProjectInfo::GetVersion() && meta.has_type(detail::Key::Meta_Project);
+            _valid_project_file = _valid_project_file && meta.get_version() == ProjectInfo::GetVersion() && meta.has_type(detail::Key::Meta_Project);
         }
     }
 
