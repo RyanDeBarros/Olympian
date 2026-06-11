@@ -41,6 +41,11 @@ namespace oly::editor
 			return vector.size();
 		}
 
+		bool Empty() const
+		{
+			return vector.empty();
+		}
+
 		void Visit(auto&& fn)
 		{
 			for (Descriptor& desc : vector)

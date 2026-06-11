@@ -126,6 +126,7 @@ namespace oly::editor::gui
 
 	void ListModel::Init(IListAdapter& adapter)
 	{
+		active_index = 0;
 		_size = adapter.Size();
 		Clamp();
 		EnforcePolicy(adapter);
@@ -245,11 +246,16 @@ namespace oly::editor::gui
 
 	void ListModel::DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
 	{
+		DrawComboHeader([slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); }, create_tooltip, delete_tooltip, clear_tooltip);
+	}
+
+	void ListModel::DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
+	{
 		std::vector<std::string> slot_names;
 		slot_names.reserve(_size);
 		for (int i = 0; i < _size; ++i)
-			slot_names.push_back(slot_prefix + (" " + std::to_string(i)));
-	
+			slot_names.push_back(combo_getter(i));
+
 		int slot = active_index;
 		gui::Combo("##SelectSlot", slot, slot_names);
 		active_index = slot;

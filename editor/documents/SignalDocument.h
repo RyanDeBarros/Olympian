@@ -15,6 +15,8 @@ namespace oly::editor
 		SignalFullDesc _scratch;
 		SignalFullDesc _disk;
 		detail::MetaMap _meta;
+		gui::ListModel _signal_slots;
+		gui::ListModel _route_slots;
 
 	public:
 		using IDocument::IDocument;

@@ -100,7 +100,6 @@ namespace oly::editor
 
 		_scratch = _disk;
 
-		_slots.active_index = 0;
 		_slots.Init(*ListAdapter());
 
 		_preview_nav = {};

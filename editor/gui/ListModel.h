@@ -3,7 +3,9 @@
 #include "core/Modifiable.h"
 
 #include <array>
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace oly::editor::gui
@@ -112,6 +114,7 @@ namespace oly::editor::gui
 		void Invoke(const ListOp& op, IListAdapter& adapter);
 
 		void DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+		void DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
 	};
 
 	template<size_t N>

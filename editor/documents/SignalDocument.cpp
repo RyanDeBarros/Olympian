@@ -98,6 +98,8 @@ namespace oly::editor
 		}
 
 		_scratch = _disk;
+		_signal_slots.Init(*_scratch.signals.ListAdapter());
+		_route_slots.Init(*_scratch.routes.ListAdapter());
 	}
 
 	void SignalDocument::Dump()
@@ -113,8 +115,29 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v8 draw only active index: abstract '+'/'-'/'x' buttons + drop-down selection
-			_scratch.signals.Visit([this, &form](SignalDesc& desc) { Draw(form, desc); });
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Select Signal");
+
+			ImGui::TableNextColumn();
+			_signal_slots.DrawComboHeader(
+				[this](size_t i) {
+					if (i < _scratch.signals.Size())
+					{
+						std::string id = _scratch.signals[i].id.scratch;
+						if (!id.empty())
+							return id;
+					}
+					return "<Signal #" + std::to_string(i) + ">";
+				}, "New signal", "Delete signal", "Clear signals");
+
+			if (!_scratch.signals.Empty())
+				Draw(form, _scratch.signals[_signal_slots.active_index]);
+
+			if (_signal_slots.ConsumeOps(*_scratch.signals.ListAdapter()))
+				MarkDirty();
+
+			_signal_slots.active_index.ConsumeModified();
 		}
 	}
 
@@ -122,8 +145,29 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v8 draw only active index: abstract '+'/'-'/'x' buttons + drop-down selection
-			_scratch.routes.Visit([this, &form](RouteDesc& desc) { Draw(form, desc); });
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Select Route");
+
+			ImGui::TableNextColumn();
+			_route_slots.DrawComboHeader(
+				[this](size_t i) {
+					if (i < _scratch.routes.Size())
+					{
+						std::string id = _scratch.routes[i].id.scratch;
+						if (!id.empty())
+							return id;
+					}
+					return "<Route #" + std::to_string(i) + ">";
+				}, "New route", "Delete route", "Clear routes");
+
+			if (!_scratch.routes.Empty())
+				Draw(form, _scratch.routes[_route_slots.active_index]);
+
+			if (_route_slots.ConsumeOps(*_scratch.routes.ListAdapter()))
+				MarkDirty();
+
+			_route_slots.active_index.ConsumeModified();
 		}
 	}
 
