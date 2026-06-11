@@ -5,6 +5,10 @@
 
 #include "gui/IDScope.h"
 
+#include "definitions/Keys.h"
+
+// TODO v8 font preview -> use InputText and then render the input using the font
+
 namespace oly::editor
 {
 	const char* FontDocument::GetVersion()
@@ -20,6 +24,7 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
+		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
 		Load();
 	}
 
@@ -27,7 +32,22 @@ namespace oly::editor
 	{
 		gui::IDScope scope(this);
 
-		// TODO v8
+		if (ImGui::BeginTabBar(""))
+		{
+			if (ImGui::BeginTabItem("Font Face"))
+			{
+				DrawFontFace();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("Font Atlases"))
+			{
+				DrawFontAtlases();
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
 	}
 
 	void FontDocument::DrawMenuBar()
@@ -51,17 +71,116 @@ namespace oly::editor
 
 	void FontDocument::Load()
 	{
-		// TODO v8
+		if (_oly_path.exists())
+		{
+			_meta = detail::MetaSplitter::decode_meta(_oly_path);
+
+			toml::table table;
+			std::string err = _oly_path.load_toml(table);
+			if (err.empty())
+				Load(TOMLNode(table), _disk);
+			else
+			{
+				Notification notif(LogLevel::Error, "cannot load font - corrupted asset: " + GetSourcePath().string());
+				MainWindow::Instance().PushNotification(std::move(notif));
+			}
+
+			MarkClean();
+		}
+		else
+		{
+			Load(TOMLNode(), _disk);
+
+			_meta = {};
+			_meta.map[detail::Key::Meta_Version] = "1.0";
+			_meta.map[detail::Key::Meta_Import] = "1";
+			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Font);
+
+			MarkDirty();
+		}
+
+		_scratch = _disk;
+
+		_atlas_slots.Init(*_scratch.font_atlases.ListAdapter());
 	}
 
 	void FontDocument::Dump()
 	{
-		// TODO v8
+		toml::table table;
+		Dump(table, _scratch);
+		_oly_path.dump_toml(table, _meta);
+		_disk = _scratch;
 		MarkClean();
 	}
 
 	detail::ResourcePath FontDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();
+	}
+
+	void FontDocument::DrawFontFace()
+	{
+		// TODO v8
+	}
+
+	void FontDocument::DrawFontAtlases()
+	{
+		// TODO v8
+	}
+
+	void FontDocument::Load(TOMLNode node, FullFontDesc& desc)
+	{
+		Load(node[detail::encode_key(desc.font_face_key)], desc.font_face);
+
+		TOMLArray array = node[detail::encode_key(desc.font_atlas_key)].as_array();
+		if (array && !array->empty())
+		{
+			for (size_t i = 0; i < array->size(); ++i)
+			{
+				desc.font_atlases.PushBack();
+				Load(TOMLNode(*array->get(i)), desc.font_atlases.vector.back());
+			}
+		}
+		else
+		{
+			desc.font_atlases.PushBack();
+			Load(TOMLNode(), desc.font_atlases.vector.back());
+		}
+	}
+
+	void FontDocument::Load(TOMLNode node, FontFaceDesc& desc)
+	{
+		// TODO v8
+	}
+
+	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
+	{
+		// TODO v8
+	}
+
+	void FontDocument::Dump(toml::table& table, FullFontDesc& desc)
+	{
+		toml::table subtable;
+		Dump(subtable, desc.font_face);
+		table.insert_or_assign(detail::encode_key(desc.font_face_key), std::move(subtable));
+
+		toml::v3::array array;
+		for (auto& d : desc.font_atlases)
+		{
+			toml::table subtable;
+			Dump(subtable, d);
+			array.push_back(std::move(subtable));
+		}
+		table.insert_or_assign(detail::encode_key(desc.font_atlas_key), std::move(array));
+	}
+
+	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
+	{
+		// TODO v8
+	}
+
+	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
+	{
+		// TODO v8
 	}
 }

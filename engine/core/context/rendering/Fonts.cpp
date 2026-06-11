@@ -118,7 +118,7 @@ namespace oly::context
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (assets::Parser(node).defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
