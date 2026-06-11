@@ -183,7 +183,7 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			scratch = Index(static_cast<GLenum>(node[detail::encode_key(key)].value_or(def)));
+			scratch = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
 		}
 		
 		void Dump(toml::table& table) const
@@ -327,4 +327,37 @@ namespace oly::editor
 	
 	template<OptionalFloat Min, OptionalFloat Max>
 	using Vec4Field = VecField<Min, Max, 4>;
+
+	template<typename E>
+	struct BitsetField
+	{
+		E def;
+		E scratch;
+		detail::Key key;
+		const char* label;
+		const E* values;
+		const char** names;
+		size_t count;
+
+		template<size_t Count>
+		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count])
+			: def(def), scratch(def), key(key), label(label), values(values), names(names), count(Count)
+		{
+		}
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def, values, names, count);
+		}
+
+		void Load(TOMLNode node)
+		{
+			scratch = static_cast<E>(node[detail::encode_key(key)].value_or(def));
+		}
+
+		void Dump(toml::table& table) const
+		{
+			table.insert_or_assign(detail::encode_key(key), scratch);
+		}
+	};
 }

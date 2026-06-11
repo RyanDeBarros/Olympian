@@ -2,6 +2,7 @@
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
+#include "definitions/enums/InputMod.h"
 #include "definitions/enums/KeyInput.h"
 #include "definitions/enums/MouseButton.h"
 #include "definitions/enums/SignalBindingType.h"

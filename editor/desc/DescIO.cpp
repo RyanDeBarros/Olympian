@@ -138,6 +138,16 @@ namespace oly::editor
 		return dirty;
 	}
 
+	bool DescIO::Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, size_t count)
+	{
+		bool dirty = false;
+		PrepareValue(label);
+		gui::IDScope scope(&data);
+		dirty |= gui::InputData<unsigned int>{}(data, values, names, count);
+		dirty |= CheckRevertButton(data, def);
+		return dirty;
+	}
+
 	template<>
 	bool DescIO::Draw(const char* label, detail::Axis0dConversion& data, const detail::Axis0dConversion& def)
 	{

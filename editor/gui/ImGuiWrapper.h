@@ -225,4 +225,28 @@ namespace oly::editor::gui
 			return ImGui::ColorEdit4(label, data.ValuePtr());
 		}
 	};
+
+	// TODO v8 put operator()() method implementations in cpp file
+	template<>
+	struct InputData<unsigned int>
+	{
+		// TODO v8 use std::bitset instead
+		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < count; ++i)
+			{
+				bool flag = data & values[i];
+				ImGui::Checkbox(names[i], &flag);
+				if (flag)
+					data |= values[i];
+				else
+					data &= ~values[i];
+
+				if (i + 1 < count)
+					ImGui::SameLine();
+			}
+			return dirty;
+		}
+	};
 }

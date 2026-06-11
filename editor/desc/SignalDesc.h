@@ -5,6 +5,7 @@
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
+#include "definitions/enums/InputMod.h"
 #include "definitions/enums/KeyInput.h"
 #include "definitions/enums/MouseButton.h"
 #include "definitions/enums/SignalBindingType.h"
@@ -71,7 +72,9 @@ namespace oly::editor
 	};
 
 #define KEY_PARTIAL_GENERATOR(M) \
-		M(key)
+		M(key) \
+		M(required_mods) \
+		M(forbidden_mods)
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
@@ -80,14 +83,17 @@ namespace oly::editor
 	struct KeyDesc
 	{
 		DisjointEnumField<detail::KeyInput> key;
-		// TODO v8 required_mods, forbidden_mods
+		BitsetField<detail::InputMod> required_mods;
+		BitsetField<detail::InputMod> forbidden_mods;
 		Modifier0dDesc modifier;
 
 		KeyDesc();
 	};
 
 #define MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
-		M(button)
+		M(button) \
+		M(required_mods) \
+		M(forbidden_mods)
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
@@ -96,7 +102,8 @@ namespace oly::editor
 	struct MouseButtonDesc
 	{
 		DisjointEnumField<detail::MouseButton> button;
-		// TODO v8 required_mods, forbidden_mods
+		BitsetField<detail::InputMod> required_mods;
+		BitsetField<detail::InputMod> forbidden_mods;
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();
