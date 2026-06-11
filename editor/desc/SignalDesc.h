@@ -5,6 +5,7 @@
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
+#include "definitions/enums/KeyInput.h"
 #include "definitions/enums/MouseButton.h"
 #include "definitions/enums/SignalBindingType.h"
 
@@ -69,7 +70,8 @@ namespace oly::editor
 		Modifier2dDesc();
 	};
 
-#define KEY_PARTIAL_GENERATOR(M)
+#define KEY_PARTIAL_GENERATOR(M) \
+		M(key)
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
@@ -77,7 +79,8 @@ namespace oly::editor
 
 	struct KeyDesc
 	{
-		// TODO v8 key, required_mods, forbidden_mods
+		DisjointEnumField<detail::KeyInput> key;
+		// TODO v8 required_mods, forbidden_mods
 		Modifier0dDesc modifier;
 
 		KeyDesc();

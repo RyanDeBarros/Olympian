@@ -36,6 +36,7 @@ namespace oly::editor
 	}
 
 	KeyDesc::KeyDesc() :
+		key(detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
 		modifier()
 	{
 	}
