@@ -64,6 +64,14 @@ namespace oly::editor
 
 	bool ListOp::UpdateIndex(ListPolicy policy, size_t& idx) const
 	{
+		Modifiable<size_t> m(idx);
+		bool v = UpdateIndex(policy, m);
+		idx = m;
+		return v;
+	}
+
+	bool ListOp::UpdateIndex(ListPolicy policy, Modifiable<size_t>& idx) const
+	{
 		switch (type)
 		{
 		case ListOpType::Create:
@@ -74,7 +82,7 @@ namespace oly::editor
 				return false;
 
 			if (idx > GetIndex())
-				--idx;
+				idx = idx - 1;
 
 			break;
 
@@ -99,9 +107,9 @@ namespace oly::editor
 				if (idx == GetSrcIndex())
 					idx = GetDstIndex();
 				else if (GetSrcIndex() < GetDstIndex())
-					--idx;
+					idx = idx - 1;
 				else
-					++idx;
+					idx = idx + 1;
 			}
 
 			break;
@@ -123,16 +131,6 @@ namespace oly::editor
 		EnforcePolicy(adapter);
 	}
 
-	size_t ListModel::ActiveIndex() const
-	{
-		return _active_index;
-	}
-
-	void ListModel::SetActiveIndex(size_t index)
-	{
-		_active_index = index;
-	}
-
 	size_t ListModel::Size() const
 	{
 		return _size;
@@ -140,13 +138,13 @@ namespace oly::editor
 
 	void ListModel::Clamp()
 	{
-		if (_active_index >= _size)
+		if (active_index >= _size)
 			SetLast();
 	}
 	
 	void ListModel::SetLast()
 	{
-		_active_index = _size > 0 ? _size - 1 : 0;
+		active_index = _size > 0 ? _size - 1 : 0;
 	}
 
 	void ListModel::DeferCreate()
@@ -156,7 +154,7 @@ namespace oly::editor
 	
 	void ListModel::DeferDelete()
 	{
-		_pending_ops.push_back(ListOp::MakeDeleteOp(_active_index));
+		_pending_ops.push_back(ListOp::MakeDeleteOp(active_index));
 	}
 	
 	void ListModel::DeferResize(size_t new_size)
@@ -167,17 +165,6 @@ namespace oly::editor
 	void ListModel::DeferClear()
 	{
 		_pending_ops.push_back(ListOp::MakeClearOp());
-	}
-
-	bool ListModel::ConsumeActiveIndexChanged()
-	{
-		if (_active_index_changed)
-		{
-			_active_index_changed = false;
-			return true;
-		}
-		else
-			return false;
 	}
 
 	bool ListModel::ConsumeOps(IListAdapter& adapter)
@@ -236,7 +223,7 @@ namespace oly::editor
 			break;
 		}
 
-		if (!op.UpdateIndex(policy, _active_index))
+		if (!op.UpdateIndex(policy, active_index))
 			Clamp();
 
 		EnforcePolicy(adapter);
@@ -263,9 +250,9 @@ namespace oly::editor
 		for (int i = 0; i < _size; ++i)
 			slot_names.push_back(slot_prefix + (" " + std::to_string(i)));
 	
-		int slot = _active_index;
+		int slot = active_index;
 		gui::Combo("##SelectSlot", slot, slot_names);
-		SetActiveIndex(slot);
+		active_index = slot;
 
 		ImGui::SameLine();
 		if (Toolbar::DrawIconButton(IconResource::Plus, create_tooltip, "##+"))

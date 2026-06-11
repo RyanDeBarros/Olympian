@@ -100,12 +100,12 @@ namespace oly::editor
 
 		_scratch = _disk;
 
-		_slots.SetActiveIndex(0);
+		_slots.active_index = 0;
 		_slots.Init(*ListAdapter());
 
 		_preview_nav = {};
 		if (auto svg_desc = _scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
-			_preview_nav.svg_scale = svg_desc->vector[_slots.ActiveIndex()].scale.scratch;
+			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.scratch;
 
 		ReloadPreviewTexture();
 	}
@@ -126,8 +126,8 @@ namespace oly::editor
 
 	void TextureDocument::ReloadPreviewTexture()
 	{
-		std::optional<GLenum> min_filter = _scratch.Visit(_slots.ActiveIndex(), [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
-		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.ActiveIndex(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+		std::optional<GLenum> min_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
+		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
 
 		if (_svg)
 			_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR) };
@@ -238,7 +238,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _scratch.Visit(_slots.ActiveIndex(), [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -428,12 +428,12 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
 
-			desc.Visit(_slots.ActiveIndex(), [this, &form](auto& d) { Draw(form, d); });
+			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(form, d); });
 
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
 
-			if (_slots.ConsumeActiveIndexChanged())
+			if (_slots.active_index.ConsumeModified())
 				ReloadPreviewTexture();
 		}
 	}

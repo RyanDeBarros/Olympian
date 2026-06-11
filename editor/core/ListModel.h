@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Modifiable.h"
+
 #include <array>
 #include <memory>
 #include <vector>
@@ -60,6 +62,7 @@ namespace oly::editor
 
 		void Validate(bool valid);
 		bool UpdateIndex(ListPolicy policy, size_t& idx) const;
+		bool UpdateIndex(ListPolicy policy, Modifiable<size_t>& idx) const;
 		bool UpdateIndex(ListPolicy policy, ListOp& op) const;
 	};
 
@@ -77,20 +80,16 @@ namespace oly::editor
 
 	class ListModel
 	{
-		size_t _active_index = 0;
+	private:
 		size_t _size = 0;
 		std::vector<ListOp> _pending_ops;
 
-		// TODO v8 set to true when _active_index is modified
-		bool _active_index_changed = false;
-
 	public:
+		Modifiable<size_t> active_index = 0;
 		ListPolicy policy = ListPolicy::None;
 
 		void Init(IListAdapter& adapter);
 
-		size_t ActiveIndex() const;
-		void SetActiveIndex(size_t index);
 		size_t Size() const;
 
 	private:
@@ -103,7 +102,6 @@ namespace oly::editor
 		void DeferResize(size_t new_size);
 		void DeferClear();
 
-		bool ConsumeActiveIndexChanged();
 		bool ConsumeOps(IListAdapter& adapter);
 
 	private:
