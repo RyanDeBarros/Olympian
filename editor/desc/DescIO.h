@@ -106,19 +106,27 @@ namespace oly::editor
 		static bool Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, const bool* disabled, size_t count);
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static bool Draw(const char* label, E& data, const E& def);
+		static bool Draw(const char* label, E& data, const E& def)
+		{
+			bool dirty = false;
+			PrepareValue(label);
+			gui::IDScope scope(&data);
+			dirty |= DrawCombo("", data);
+			dirty |= CheckRevertButton(data, def);
+			return dirty;
+		}
+
+		template<typename E> requires (std::is_enum_v<E>)
+		static bool DrawCombo(const char* label, E& data);
 
 	private:
 		template<typename E, size_t N>
-		static bool DrawEnum(const char* label, E& data, const E& def, const char* const (&values)[N])
+		static bool DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
 			bool dirty = false;
 			int index = static_cast<int>(data);
-			PrepareValue(label);
-			gui::IDScope scope(&data);
 			dirty |= ImGui::Combo("", &index, values, N);
 			data = static_cast<E>(index);
-			dirty |= CheckRevertButton(data, def);
 			return dirty;
 		}
 	};

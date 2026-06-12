@@ -222,9 +222,8 @@ namespace oly::editor
 						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
 						{
 							_listen_mode = ListenMode::None;
-							detail::KeyInput k = KeyDesc::ConvertKey(static_cast<ImGuiKey>(key));
-							if (k != GLFW_INVALID_VALUE)
-								desc.key.SetScratch(k);
+							if (auto k = KeyDesc::ConvertKey(static_cast<ImGuiKey>(key)))
+								desc.key.SetScratch(*k);
 							else
 								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
 							break;
@@ -274,7 +273,7 @@ namespace oly::editor
 			gui::IDScope scope(&desc.button);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::Mouse)
+			if (_listen_mode == ListenMode::MouseButton)
 			{
 				ImGui::Button("Listening...");
 
@@ -283,9 +282,8 @@ namespace oly::editor
 					if (ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(mb)))
 					{
 						_listen_mode = ListenMode::None;
-						detail::MouseButton b = MouseButtonDesc::ConvertMouseButton(mb);
-						if (b != GLFW_INVALID_VALUE)
-							desc.button.SetScratch(b);
+						if (auto b = MouseButtonDesc::ConvertMouseButton(mb))
+							desc.button.SetScratch(*b);
 						else
 							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
 						break;
@@ -295,7 +293,7 @@ namespace oly::editor
 			else
 			{
 				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::Mouse;
+					_listen_mode = ListenMode::MouseButton;
 
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Listen for input");
@@ -329,21 +327,147 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(Form& form, GamepadButtonDesc& desc)
 	{
-		DRAW_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+		{
+			DescIO::PrepareValue(desc.button.label);
+			gui::IDScope scope(&desc.button);
+
+			_stop_listening = false;
+			if (_listen_mode == ListenMode::GamepadButton)
+			{
+				if (ImGui::Button("Listening..."))
+					_listen_mode = ListenMode::None;
+				else
+				{
+					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
+					{
+						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
+						{
+							_listen_mode = ListenMode::None;
+							if (auto k = GamepadButtonDesc::ConvertGamepadButton(static_cast<ImGuiKey>(key)))
+								desc.button.SetScratch(*k);
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("..."))
+					_listen_mode = ListenMode::GamepadButton;
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Listen for input");
+			}
+
+			ImGui::SameLine();
+			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
+				MarkDirty();
+
+			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
+				MarkDirty();
+		}
+
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}
 	
 	void SignalDocument::Draw(Form& form, GamepadAxis1DDesc& desc)
 	{
-		DRAW_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+		{
+			DescIO::PrepareValue(desc.axis.label);
+			gui::IDScope scope(&desc.axis);
+
+			_stop_listening = false;
+			if (_listen_mode == ListenMode::GamepadAxis1D)
+			{
+				if (ImGui::Button("Listening..."))
+					_listen_mode = ListenMode::None;
+				else
+				{
+					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
+					{
+						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
+						{
+							_listen_mode = ListenMode::None;
+							if (auto k = GamepadAxis1DDesc::ConvertGamepadAxis1D(static_cast<ImGuiKey>(key)))
+								desc.axis.SetScratch(*k);
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("..."))
+					_listen_mode = ListenMode::GamepadAxis1D;
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Listen for input");
+			}
+
+			ImGui::SameLine();
+			if (gui::InputData<int>{}("", desc.axis.scratch, desc.axis.names, desc.axis.count))
+				MarkDirty();
+
+			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def_index))
+				MarkDirty();
+		}
+
+		DRAW_FIELD(deadzone);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}
 	
 	void SignalDocument::Draw(Form& form, GamepadAxis2DDesc& desc)
 	{
-		DRAW_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+		{
+			DescIO::PrepareValue(desc.axis.label);
+			gui::IDScope scope(&desc.axis);
+
+			_stop_listening = false;
+			if (_listen_mode == ListenMode::GamepadAxis2D)
+			{
+				if (ImGui::Button("Listening..."))
+					_listen_mode = ListenMode::None;
+				else
+				{
+					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
+					{
+						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
+						{
+							_listen_mode = ListenMode::None;
+							if (auto k = GamepadAxis2DDesc::ConvertGamepadAxis2D(static_cast<ImGuiKey>(key)))
+								desc.axis.scratch = *k;
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("..."))
+					_listen_mode = ListenMode::GamepadAxis2D;
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Listen for input");
+			}
+
+			ImGui::SameLine();
+
+			if (DescIO::DrawCombo("", desc.axis.scratch))
+				MarkDirty();
+
+			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def))
+				MarkDirty();
+		}
+
+		DRAW_FIELD(deadzone);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}

@@ -114,62 +114,62 @@ namespace oly::editor
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis0dConversion& data, const detail::Axis0dConversion& def)
+	bool DescIO::DrawCombo(const char* label, detail::Axis0dConversion& data)
 	{
-		return DrawEnum(label, data, def, { "None", "To 1D", "To 2D", "To 3D" });
+		return DrawEnumCombo(label, data, { "None", "To 1D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis1dConversion& data, const detail::Axis1dConversion& def)
+	bool DescIO::DrawCombo(const char* label, detail::Axis1dConversion& data)
 	{
-		return DrawEnum(label, data, def, { "None", "To 0D", "To 2D", "To 3D" });
+		return DrawEnumCombo(label, data, { "None", "To 0D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Axis2dConversion& data, const detail::Axis2dConversion& def)
+	bool DescIO::DrawCombo(const char* label, detail::Axis2dConversion& data)
 	{
-		return DrawEnum(label, data, def, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+		return DrawEnumCombo(label, data, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::CommonBufferPreset& data, const detail::CommonBufferPreset& def)
+	bool DescIO::DrawCombo(const char* label, detail::CommonBufferPreset& data)
 	{
-		return DrawEnum(label, data, def, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
+		return DrawEnumCombo(label, data, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::GamepadAxis2D& data, const detail::GamepadAxis2D& def)
+	bool DescIO::DrawCombo(const char* label, detail::GamepadAxis2D& data)
 	{
-		return DrawEnum(label, data, def, { "Left XY", "Right XY" });
+		return DrawEnumCombo(label, data, { "Left XY", "Right XY" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SignalBindingType& data, const detail::SignalBindingType& def)
+	bool DescIO::DrawCombo(const char* label, detail::SignalBindingType& data)
 	{
-		return DrawEnum(label, data, def, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
+		return DrawEnumCombo(label, data, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SpritesheetParamType& data, const detail::SpritesheetParamType& def)
+	bool DescIO::DrawCombo(const char* label, detail::SpritesheetParamType& data)
 	{
-		return DrawEnum(label, data, def, { "Index", "Pixel" });
+		return DrawEnumCombo(label, data, { "Index", "Pixel" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode& def)
+	bool DescIO::DrawCombo(const char* label, detail::StorageMode& data)
 	{
-		return DrawEnum(label, data, def, { "Discard", "Keep" });
+		return DrawEnumCombo(label, data, { "Discard", "Keep" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::Swizzle& data, const detail::Swizzle& def)
+	bool DescIO::DrawCombo(const char* label, detail::Swizzle& data)
 	{
-		return DrawEnum(label, data, def, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+		return DrawEnumCombo(label, data, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode& def)
+	bool DescIO::DrawCombo(const char* label, detail::SVGMipmapGenerationMode& data)
 	{
-		return DrawEnum(label, data, def, { "Auto", "Off", "Manual" });
+		return DrawEnumCombo(label, data, { "Auto", "Off", "Manual" });
 	}
 }

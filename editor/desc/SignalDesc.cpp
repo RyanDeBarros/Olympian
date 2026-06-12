@@ -2,6 +2,8 @@
 
 #include "definitions/Keys.h"
 
+// TODO v8 put conversion functions in separate file.
+
 namespace oly::editor
 {
 	const char* MODIFIER_INVERT_SUBLABELS[] = {
@@ -43,7 +45,7 @@ namespace oly::editor
 	{
 	}
 
-	detail::KeyInput KeyDesc::ConvertKey(ImGuiKey key)
+	std::optional<detail::KeyInput> KeyDesc::ConvertKey(ImGuiKey key)
 	{
 		switch (key)
 		{
@@ -284,7 +286,7 @@ namespace oly::editor
 		case ImGuiKey_Oem102:
 			return GLFW_KEY_BACKSLASH;
 		default:
-			return GLFW_INVALID_VALUE;
+			return std::nullopt;
 		}
 	}
 
@@ -296,7 +298,7 @@ namespace oly::editor
 	{
 	}
 
-	detail::MouseButton MouseButtonDesc::ConvertMouseButton(ImGuiMouseButton mb)
+	std::optional<detail::MouseButton> MouseButtonDesc::ConvertMouseButton(ImGuiMouseButton mb)
 	{
 		switch (mb)
 		{
@@ -310,7 +312,7 @@ namespace oly::editor
 			return GLFW_MOUSE_BUTTON_MIDDLE;
 
 		default:
-			return GLFW_INVALID_VALUE;
+			return std::nullopt;
 		}
 	}
 
@@ -356,6 +358,43 @@ namespace oly::editor
 	{
 	}
 
+	std::optional<GLenum> GamepadButtonDesc::ConvertGamepadButton(ImGuiKey key)
+	{
+		switch (key)
+		{
+		case ImGuiKey_GamepadStart:
+			return GLFW_GAMEPAD_BUTTON_START;
+		case ImGuiKey_GamepadBack:
+			return GLFW_GAMEPAD_BUTTON_BACK;
+		case ImGuiKey_GamepadFaceLeft:
+			return GLFW_GAMEPAD_BUTTON_SQUARE;
+		case ImGuiKey_GamepadFaceRight:
+			return GLFW_GAMEPAD_BUTTON_CIRCLE;
+		case ImGuiKey_GamepadFaceUp:
+			return GLFW_GAMEPAD_BUTTON_TRIANGLE;
+		case ImGuiKey_GamepadFaceDown:
+			return GLFW_GAMEPAD_BUTTON_CROSS;
+		case ImGuiKey_GamepadDpadLeft:
+			return GLFW_GAMEPAD_BUTTON_DPAD_LEFT;
+		case ImGuiKey_GamepadDpadRight:
+			return GLFW_GAMEPAD_BUTTON_DPAD_RIGHT;
+		case ImGuiKey_GamepadDpadUp:
+			return GLFW_GAMEPAD_BUTTON_DPAD_UP;
+		case ImGuiKey_GamepadDpadDown:
+			return GLFW_GAMEPAD_BUTTON_DPAD_DOWN;
+		case ImGuiKey_GamepadL1:
+			return GLFW_GAMEPAD_BUTTON_LEFT_BUMPER;
+		case ImGuiKey_GamepadR1:
+			return GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER;
+		case ImGuiKey_GamepadL3:
+			return GLFW_GAMEPAD_BUTTON_LEFT_THUMB;
+		case ImGuiKey_GamepadR3:
+			return GLFW_GAMEPAD_BUTTON_RIGHT_THUMB;
+		default:
+			return std::nullopt;
+		}
+	}
+
 	static const GLenum GAMEPAD_AXIS_1D_VALUES[] = {
 		GLFW_GAMEPAD_AXIS_LEFT_X,
 		GLFW_GAMEPAD_AXIS_LEFT_Y,
@@ -381,11 +420,55 @@ namespace oly::editor
 	{
 	}
 
+	std::optional<GLenum> GamepadAxis1DDesc::ConvertGamepadAxis1D(ImGuiKey key)
+	{
+		switch (key)
+		{
+		case ImGuiKey_GamepadL2:
+			return GLFW_GAMEPAD_AXIS_LEFT_TRIGGER;
+		case ImGuiKey_GamepadR2:
+			return GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER;
+		case ImGuiKey_GamepadLStickLeft:
+		case ImGuiKey_GamepadLStickRight:
+			return GLFW_GAMEPAD_AXIS_LEFT_X;
+		case ImGuiKey_GamepadLStickUp:
+		case ImGuiKey_GamepadLStickDown:
+			return GLFW_GAMEPAD_AXIS_LEFT_Y;
+		case ImGuiKey_GamepadRStickLeft:
+		case ImGuiKey_GamepadRStickRight:
+			return GLFW_GAMEPAD_AXIS_RIGHT_X;
+		case ImGuiKey_GamepadRStickUp:
+		case ImGuiKey_GamepadRStickDown:
+			return GLFW_GAMEPAD_AXIS_RIGHT_Y;
+		default:
+			return std::nullopt;
+		}
+	}
+
 	GamepadAxis2DDesc::GamepadAxis2DDesc() :
 		axis(detail::GamepadAxis2D::LeftXY, detail::Key::Axis2D, "Axis"),
 		modifier(),
 		deadzone(0.f, detail::Key::Deadzone, "Deadzone")
 	{
+	}
+
+	std::optional<detail::GamepadAxis2D> GamepadAxis2DDesc::ConvertGamepadAxis2D(ImGuiKey key)
+	{
+		switch (key)
+		{
+		case ImGuiKey_GamepadLStickLeft:
+		case ImGuiKey_GamepadLStickRight:
+		case ImGuiKey_GamepadLStickUp:
+		case ImGuiKey_GamepadLStickDown:
+			return detail::GamepadAxis2D::LeftXY;
+		case ImGuiKey_GamepadRStickLeft:
+		case ImGuiKey_GamepadRStickRight:
+		case ImGuiKey_GamepadRStickUp:
+		case ImGuiKey_GamepadRStickDown:
+			return detail::GamepadAxis2D::RightXY;
+		default:
+			return std::nullopt;
+		}
 	}
 
 	const detail::Key SignalDesc::modifier_key = detail::Key::Modifier;

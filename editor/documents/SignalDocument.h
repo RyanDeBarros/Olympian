@@ -22,7 +22,10 @@ namespace oly::editor
 		{
 			None,
 			Key,
-			Mouse
+			MouseButton,
+			GamepadButton,
+			GamepadAxis1D,
+			GamepadAxis2D
 		};
 
 		ListenMode _listen_mode = ListenMode::None;

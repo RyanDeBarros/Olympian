@@ -50,12 +50,13 @@ int main()
     ImGui::StyleColorsDark();
     ImGui::GetStyle().ScaleAllSizes(monitor_scale);
 
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
     ImGuiIO& io = ImGui::GetIO();
     io.FontGlobalScale = monitor_scale;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
     oly::editor::Editor::Instance().Init(window);
 
