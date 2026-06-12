@@ -28,6 +28,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw()
 	{
+		_stop_listening = true;
 		gui::IDScope scope(this);
 
 		if (ImGui::BeginTabBar(""))
@@ -46,6 +47,9 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
+
+		if (_stop_listening)
+			_listen_mode = ListenMode::None;
 	}
 
 	void SignalDocument::DrawMenuBar()
@@ -198,20 +202,104 @@ namespace oly::editor
 		DRAW_FIELDS(ROUTE_GENERATOR);
 	}
 
+	// TODO v8 listen buttons for gamepad input as well (button/axis1d/axis2d) - abstract away the draw logic
+
 	void SignalDocument::Draw(Form& form, KeyDesc& desc)
 	{
-		// TODO v8 special button to listen to key input
+		{
+			DescIO::PrepareValue(desc.key.label);
+			gui::IDScope scope(&desc.key);
 
-		DRAW_FIELDS(KEY_PARTIAL_GENERATOR);
+			_stop_listening = false;
+			if (_listen_mode == ListenMode::Key)
+			{
+				if (ImGui::Button("Listening..."))
+					_listen_mode = ListenMode::None;
+				else
+				{
+					for (int key = ImGuiKey_Tab; key <= ImGuiKey_Oem102; ++key)
+					{
+						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
+						{
+							_listen_mode = ListenMode::None;
+							detail::KeyInput k = KeyDesc::ConvertKey(static_cast<ImGuiKey>(key));
+							if (k != GLFW_INVALID_VALUE)
+								desc.key.SetScratch(k);
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("..."))
+					_listen_mode = ListenMode::Key;
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Listen for input");
+			}
+
+			ImGui::SameLine();
+			if (gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count))
+				MarkDirty();
+
+			if (DescIO::CheckRevertButton(desc.key.scratch, desc.key.def_index))
+				MarkDirty();
+		}
+
+		DRAW_FIELDS(KEY_MODS_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}
 	
 	void SignalDocument::Draw(Form& form, MouseButtonDesc& desc)
 	{
-		// TODO v8 special button to listen to mouse button input
+		{
+			DescIO::PrepareValue(desc.button.label);
+			gui::IDScope scope(&desc.button);
 
-		DRAW_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+			_stop_listening = false;
+			if (_listen_mode == ListenMode::Mouse)
+			{
+				if (ImGui::Button("Listening..."))
+					_listen_mode = ListenMode::None;
+				else
+				{
+					for (int mb = 0; mb < ImGuiMouseButton_COUNT; ++mb)
+					{
+						if (ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(mb)))
+						{
+							_listen_mode = ListenMode::None;
+							detail::MouseButton b = MouseButtonDesc::ConvertMouseButton(mb);
+							if (b != GLFW_INVALID_VALUE)
+								desc.button.SetScratch(b);
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("..."))
+					_listen_mode = ListenMode::Mouse;
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Listen for input");
+			}
+
+			ImGui::SameLine();
+			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
+				MarkDirty();
+
+			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
+				MarkDirty();
+		}
+
+		DRAW_FIELDS(MOUSE_BUTTON_MODS_GENERATOR);
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}

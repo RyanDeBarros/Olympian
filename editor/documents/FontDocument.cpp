@@ -8,7 +8,7 @@
 
 #include "definitions/Keys.h"
 
-// TODO v8 font preview -> use InputText and then render the input using the font
+// TODO v8 font preview -> use InputText and then render the input using the font. Take into account font size and other parameters.
 
 namespace oly::editor
 {

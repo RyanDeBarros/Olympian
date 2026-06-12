@@ -18,6 +18,16 @@ namespace oly::editor
 		gui::ListModel _signal_slots;
 		gui::ListModel _route_slots;
 
+		enum class ListenMode
+		{
+			None,
+			Key,
+			Mouse
+		};
+
+		ListenMode _listen_mode = ListenMode::None;
+		bool _stop_listening = true;
+
 	public:
 		using IDocument::IDocument;
 

@@ -71,10 +71,13 @@ namespace oly::editor
 		Modifier2dDesc();
 	};
 
-#define KEY_PARTIAL_GENERATOR(M) \
-		M(key) \
+#define KEY_MODS_GENERATOR(M) \
 		M(required_mods) \
 		M(forbidden_mods)
+
+#define KEY_PARTIAL_GENERATOR(M) \
+		M(key) \
+		KEY_MODS_GENERATOR(M)
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
@@ -88,12 +91,17 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		KeyDesc();
+
+		static detail::KeyInput ConvertKey(ImGuiKey key);
 	};
+
+#define MOUSE_BUTTON_MODS_GENERATOR(M) \
+		M(required_mods) \
+		M(forbidden_mods)
 
 #define MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
 		M(button) \
-		M(required_mods) \
-		M(forbidden_mods)
+		MOUSE_BUTTON_MODS_GENERATOR(M)
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
@@ -107,6 +115,8 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();
+
+		static detail::MouseButton ConvertMouseButton(ImGuiMouseButton mb);
 	};
 
 #define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
