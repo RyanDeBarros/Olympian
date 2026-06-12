@@ -1,6 +1,7 @@
 #include "FontDesc.h"
 
 #include "definitions/Keys.h"
+#include "definitions/enums/Filters.h"
 
 namespace oly::editor
 {
@@ -22,7 +23,15 @@ namespace oly::editor
 	{
 	}
 
-	FontAtlasDesc::FontAtlasDesc()
+	FontAtlasDesc::FontAtlasDesc() :
+		font_size(36.f, detail::Key::FontSize, "Font size"),
+		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage"),
+		min_filter(GL_LINEAR, detail::Key::MinFilter, "Min filter", detail::MIN_FILTER_VALUES, detail::MIN_FILTER_NAMES),
+		mag_filter(GL_LINEAR, detail::Key::MagFilter, "Mag filter", detail::MAG_FILTER_VALUES, detail::MAG_FILTER_NAMES),
+		auto_generate_mipmaps(false, detail::Key::GenerateMipmaps, "Auto-generate mipmaps"),
+		use_common_buffer_preset(true, detail::Key::UseCommonBufferPreset, "Use preset"),
+		common_buffer_preset(detail::CommonBufferPreset::Common, detail::Key::CommonBufferPreset, "Preset"),
+		common_buffer("", detail::Key::CommonBuffer, "Buffer")
 	{
 	}
 

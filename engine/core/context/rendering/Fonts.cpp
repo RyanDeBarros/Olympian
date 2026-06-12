@@ -9,6 +9,7 @@
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
+#include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
 
 // TODO v9 put actual loading logic in load/overload methods
@@ -165,35 +166,12 @@ namespace oly::context
 		parser.required(detail::Key::MagFilter)(options.mag_filter);
 		parser.optional(detail::Key::GenerateMipmaps)(options.auto_generate_mipmaps);
 
-		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (parser.defaulted(detail::Key::UseCommonBufferPreset)(true))
-		{
-			if (auto common_buffer_preset = parser.optional<rendering::glyphs::CommonBufferPreset>(detail::Key::CommonBufferPreset)())
-			{
-				switch (*common_buffer_preset)
-				{
-				case rendering::glyphs::CommonBufferPreset::Common:
-					break; // already initialized to common
-				case rendering::glyphs::CommonBufferPreset::AlphaNumeric:
-					common_buffer = rendering::glyphs::ALPHA_NUMERIC;
-					break;
-				case rendering::glyphs::CommonBufferPreset::Numeric:
-					common_buffer = rendering::glyphs::NUMERIC;
-					break;
-				case rendering::glyphs::CommonBufferPreset::Alphabet:
-					common_buffer = rendering::glyphs::ALPHABET;
-					break;
-				case rendering::glyphs::CommonBufferPreset::AlphabetLowercase:
-					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-					break;
-				case rendering::glyphs::CommonBufferPreset::AlphabetUppercase:
-					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
-					break;
-				}
-			}
-		}
-		else if (auto _common_buffer = parser.optional<std::string>(detail::Key::CommonBuffer)())
+		utf::String common_buffer;
+		auto _common_buffer = parser.optional<std::string>(detail::Key::CommonBuffer)();
+		if (parser.defaulted(detail::Key::UseCommonBufferPreset)(false) && _common_buffer)
 			common_buffer = *_common_buffer;
+		else
+			common_buffer = detail::buffer_of(parser.defaulted(detail::Key::CommonBufferPreset)(detail::CommonBufferPreset::Common));
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)

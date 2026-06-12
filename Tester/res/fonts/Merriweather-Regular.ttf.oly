@@ -1,12 +1,14 @@
-#meta version=1.0 import type=font
+#meta version="1.0" import="exists" type="font" 
+[Face]
+Kerning = []
+Storage = 0
 
 [[Atlas]]
+ComB = 'SDdasdf'
+ComBP = 2
+FontSize = 96.0
+MagFilt = 9729
+MinFilt = 9729
+Mipmaps = false
 Storage = 0
-FontSize = 96
-MagFilt = 0x2601
-MinFilt = 0x2601
-Mipmaps = 0
-ComBP = 0
-
-[Face]
-Storage = 0
+UseComBP = true

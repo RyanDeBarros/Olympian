@@ -11,26 +11,6 @@
 
 namespace oly::rendering
 {
-	namespace glyphs
-	{
-		enum class CommonBufferPreset
-		{
-			Common,
-			AlphaNumeric,
-			Numeric,
-			Alphabet,
-			AlphabetLowercase,
-			AlphabetUppercase
-		};
-
-		constexpr const char8_t* COMMON = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,./<>?;:\'\"\\|[]{}!@#$%^&*()-=_+`~";
-		constexpr const char8_t* ALPHA_NUMERIC = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		constexpr const char8_t* NUMERIC = u8"0123456789";
-		constexpr const char8_t* ALPHABET = u8"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		constexpr const char8_t* ALPHABET_LOWERCASE = u8"abcdefghijklmnopqrstuvwxyz";
-		constexpr const char8_t* ALPHABET_UPPERCASE = u8"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	}
-
 	class FontFace
 	{
 		std::vector<unsigned char> data;
@@ -80,7 +60,7 @@ namespace oly::rendering
 	struct FontOptions
 	{
 		float font_size = 36.0f;
-		GLenum min_filter = GL_NEAREST, mag_filter = GL_NEAREST;
+		GLenum min_filter = GL_LINEAR, mag_filter = GL_LINEAR;
 		bool auto_generate_mipmaps = false;
 	};
 
@@ -98,7 +78,7 @@ namespace oly::rendering
 		graphics::BindlessTextureRef common_texture;
 
 	public:
-		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer = glyphs::COMMON);
+		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer);
 
 		const FontFaceRef& font_face() const { return font; }
 

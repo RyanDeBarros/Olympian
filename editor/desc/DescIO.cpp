@@ -132,6 +132,12 @@ namespace oly::editor
 	}
 
 	template<>
+	bool DescIO::Draw(const char* label, detail::CommonBufferPreset& data, const detail::CommonBufferPreset& def)
+	{
+		return DrawEnum(label, data, def, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
+	}
+
+	template<>
 	bool DescIO::Draw(const char* label, detail::GamepadAxis2D& data, const detail::GamepadAxis2D& def)
 	{
 		return DrawEnum(label, data, def, { "Left XY", "Right XY" });

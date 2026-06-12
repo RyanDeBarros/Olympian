@@ -3,6 +3,7 @@
 #include "desc/DescIO.h"
 
 #include "definitions/Keys.h"
+#include "definitions/enums/Filters.h"
 
 namespace oly::editor
 {
@@ -21,55 +22,11 @@ namespace oly::editor
 	{
 	}
 
-	static const GLenum MIN_FILTER_VALUES[] = {
-		GL_NEAREST,
-		GL_LINEAR,
-		GL_NEAREST_MIPMAP_NEAREST,
-		GL_LINEAR_MIPMAP_NEAREST,
-		GL_NEAREST_MIPMAP_LINEAR,
-		GL_LINEAR_MIPMAP_LINEAR
-	};
-
-	static const char* MIN_FILTER_NAMES[] = {
-		"Nearest",
-		"Linear",
-		"Nearest (Nearest Mipmap)",
-		"Linear (Nearest Mipmap)",
-		"Nearest (Linear Mipmap)",
-		"Linear (Linear Mipmap)"
-	};
-
-	static const GLenum MAG_FILTER_VALUES[] = {
-		GL_NEAREST,
-		GL_LINEAR,
-	};
-
-	static const char* MAG_FILTER_NAMES[] = {
-		"Nearest",
-		"Linear",
-	};
-
-	static const GLenum WRAP_VALUES[] = {
-		GL_CLAMP_TO_EDGE,
-		GL_CLAMP_TO_BORDER,
-		GL_MIRRORED_REPEAT,
-		GL_REPEAT,
-		GL_MIRROR_CLAMP_TO_EDGE
-	};
-
-	static const char* WRAP_NAMES[] = {
-		"Clamp To Edge",
-		"Clamp To Border",
-		"Repeat (Mirrored)",
-		"Repeat",
-		"Clamp To Edge (Mirrored)"
-	};
-
 	BaseTextureDesc::BaseTextureDesc(GLenum default_filter) :
-		min_filter(default_filter, detail::Key::MinFilter, "Min Filter", MIN_FILTER_VALUES, MIN_FILTER_NAMES),
-		mag_filter(default_filter, detail::Key::MagFilter, "Mag Filter", MAG_FILTER_VALUES, MAG_FILTER_NAMES),
-		wrap_s(GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", WRAP_VALUES, WRAP_NAMES),
-		wrap_t(GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", WRAP_VALUES, WRAP_NAMES),
+		min_filter(default_filter, detail::Key::MinFilter, "Min Filter", detail::MIN_FILTER_VALUES, detail::MIN_FILTER_NAMES),
+		mag_filter(default_filter, detail::Key::MagFilter, "Mag Filter", detail::MAG_FILTER_VALUES, detail::MAG_FILTER_NAMES),
+		wrap_s(GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", detail::WRAP_VALUES, detail::WRAP_NAMES),
+		wrap_t(GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", detail::WRAP_VALUES, detail::WRAP_NAMES),
 		anim(false, detail::Key::Animated, "Animated"),
 		spritesheet()
 	{

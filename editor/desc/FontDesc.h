@@ -3,6 +3,7 @@
 #include "desc/Fields.h"
 #include "desc/Descriptors.h"
 
+#include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
 
 namespace oly::editor
@@ -32,9 +33,30 @@ namespace oly::editor
 		FontFaceDesc();
 	};
 
+#define FONT_ATLAS_PARTIAL_GENERATOR(M) \
+		M(font_size) \
+		M(storage) \
+		M(min_filter) \
+		M(mag_filter) \
+		M(auto_generate_mipmaps)
+
+#define FONT_ATLAS_GENERATOR(M) \
+		FONT_ATLAS_PARTIAL_GENERATOR(M) \
+		M(use_common_buffer_preset) \
+		M(common_buffer_preset) \
+		M(common_buffer)
+
 	struct FontAtlasDesc
 	{
-		// TODO v8
+		FloatField<MakeOpt(1.f), MakeOpt<float>()> font_size;
+		EnumField<detail::StorageMode> storage;
+		DisjointEnumField<GLenum> min_filter;
+		DisjointEnumField<GLenum> mag_filter;
+		BoolField auto_generate_mipmaps;
+
+		BoolField use_common_buffer_preset;
+		EnumField<detail::CommonBufferPreset> common_buffer_preset;
+		StringField common_buffer;
 
 		FontAtlasDesc();
 	};

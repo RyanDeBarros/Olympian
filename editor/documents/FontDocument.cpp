@@ -4,6 +4,7 @@
 #include "core/editor/Logger.h"
 
 #include "gui/IDScope.h"
+#include "gui/Subform.h"
 
 #include "definitions/Keys.h"
 
@@ -171,6 +172,7 @@ namespace oly::editor
 			{
 				if (DescIO::DrawRevertButton())
 				{
+					// TODO v8 StructField so that there's one scratch/def
 					k.distance.scratch = k.distance.def;
 					k.pair.scratch = k.pair.def;
 					dirty = true;
@@ -183,7 +185,28 @@ namespace oly::editor
 
 	void FontDocument::Draw(Form& form, FontAtlasDesc& desc)
 	{
-		// TODO v8
+		DRAW_FIELDS(FONT_ATLAS_PARTIAL_GENERATOR);
+
+		if (auto subform = Subform(form, "Common buffer"))
+		{
+			DRAW_FIELD(use_common_buffer_preset);
+
+			bool preset = desc.use_common_buffer_preset.scratch;
+			
+			if (auto disabled = DisabledSection(!preset))
+			{
+				DRAW_FIELD(common_buffer_preset);
+
+				DescIO::PrepareValue("Preview");
+				std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
+				ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+			}
+
+			if (auto disabled = DisabledSection(preset))
+			{
+				DRAW_FIELD(common_buffer);
+			}
+		}
 	}
 
 	void FontDocument::Load(TOMLNode node, FullFontDesc& desc)
@@ -228,7 +251,7 @@ namespace oly::editor
 
 	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
 	{
-		// TODO v8
+		LOAD_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FullFontDesc& desc)
@@ -268,6 +291,6 @@ namespace oly::editor
 
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
 	{
-		// TODO v8
+		DUMP_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 }
