@@ -111,11 +111,19 @@ namespace oly::editor::gui
 
 	bool InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)
 	{
+		return (*this)(data, values, names, nullptr, count);
+	}
+
+	bool InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count)
+	{
 		bool dirty = false;
 		for (size_t i = 0; i < count; ++i)
 		{
 			bool flag = data & values[i];
-			dirty |= InputData<bool>{}(names[i], flag);
+
+			if (auto d = DisabledSection(disabled && disabled[i]))
+				dirty |= InputData<bool>{}(names[i], flag);
+
 			if (flag)
 				data |= values[i];
 			else

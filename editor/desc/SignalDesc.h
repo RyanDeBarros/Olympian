@@ -86,8 +86,8 @@ namespace oly::editor
 	struct KeyDesc
 	{
 		DisjointEnumField<detail::KeyInput> key;
-		BitsetField<detail::InputMod> required_mods;
-		BitsetField<detail::InputMod> forbidden_mods;
+		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
+		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
 		KeyDesc();
@@ -110,8 +110,8 @@ namespace oly::editor
 	struct MouseButtonDesc
 	{
 		DisjointEnumField<detail::MouseButton> button;
-		BitsetField<detail::InputMod> required_mods;
-		BitsetField<detail::InputMod> forbidden_mods;
+		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
+		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();

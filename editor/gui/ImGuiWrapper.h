@@ -175,5 +175,6 @@ namespace oly::editor::gui
 	struct InputData<unsigned int>
 	{
 		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);
+		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count);
 	};
 }

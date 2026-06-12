@@ -249,7 +249,20 @@ namespace oly::editor
 				MarkDirty();
 		}
 
-		DRAW_FIELDS(KEY_MODS_GENERATOR);
+		bool disabled_required_mods[desc.required_mods.Count]{};
+		for (size_t i = 0; i < desc.required_mods.Count; ++i)
+			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
+
+		if (desc.required_mods.Draw(disabled_required_mods))
+			MarkDirty();
+
+		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+
+		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
+			MarkDirty();
+
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}
@@ -263,22 +276,19 @@ namespace oly::editor
 			_stop_listening = false;
 			if (_listen_mode == ListenMode::Mouse)
 			{
-				if (ImGui::Button("Listening..."))
-					_listen_mode = ListenMode::None;
-				else
+				ImGui::Button("Listening...");
+
+				for (int mb = 0; mb < ImGuiMouseButton_COUNT; ++mb)
 				{
-					for (int mb = 0; mb < ImGuiMouseButton_COUNT; ++mb)
+					if (ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(mb)))
 					{
-						if (ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(mb)))
-						{
-							_listen_mode = ListenMode::None;
-							detail::MouseButton b = MouseButtonDesc::ConvertMouseButton(mb);
-							if (b != GLFW_INVALID_VALUE)
-								desc.button.SetScratch(b);
-							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-							break;
-						}
+						_listen_mode = ListenMode::None;
+						detail::MouseButton b = MouseButtonDesc::ConvertMouseButton(mb);
+						if (b != GLFW_INVALID_VALUE)
+							desc.button.SetScratch(b);
+						else
+							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+						break;
 					}
 				}
 			}
@@ -299,7 +309,20 @@ namespace oly::editor
 				MarkDirty();
 		}
 
-		DRAW_FIELDS(MOUSE_BUTTON_MODS_GENERATOR);
+		bool disabled_required_mods[desc.required_mods.Count]{};
+		for (size_t i = 0; i < desc.required_mods.Count; ++i)
+			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
+
+		if (desc.required_mods.Draw(disabled_required_mods))
+			MarkDirty();
+
+		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+
+		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
+			MarkDirty();
+		
 		if (auto subform = Subform(form, "Modifiers"))
 			Draw(form, desc.modifier);
 	}

@@ -103,7 +103,7 @@ namespace oly::editor
 
 		static bool Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state);
 
-		static bool Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, size_t count);
+		static bool Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, const bool* disabled, size_t count);
 
 		template<typename E> requires (std::is_enum_v<E>)
 		static bool Draw(const char* label, E& data, const E& def);

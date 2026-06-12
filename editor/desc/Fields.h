@@ -328,7 +328,7 @@ namespace oly::editor
 	template<OptionalFloat Min, OptionalFloat Max>
 	using Vec4Field = VecField<Min, Max, 4>;
 
-	template<typename E>
+	template<typename E, size_t Count>
 	struct BitsetField
 	{
 		E def;
@@ -337,19 +337,31 @@ namespace oly::editor
 		const char* label;
 		const E* values;
 		const char** names;
-		size_t count;
 
-		template<size_t Count>
+		static const inline size_t Count = Count;
+
 		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count])
-			: def(def), scratch(def), key(key), label(label), values(values), names(names), count(Count)
+			: def(def), scratch(def), key(key), label(label), values(values), names(names)
 		{
+		}
+
+		bool Draw(const bool (&disabled)[Count])
+		{
+			return Draw(static_cast<const bool*>(disabled));
 		}
 
 		bool Draw()
 		{
-			return DescIO::Draw(label, scratch, def, values, names, count);
+			return Draw(nullptr);
 		}
 
+	private:
+		bool Draw(const bool* disabled)
+		{
+			return DescIO::Draw(label, scratch, def, values, names, disabled, Count);
+		}
+
+	public:
 		void Load(TOMLNode node)
 		{
 			scratch = static_cast<E>(node[detail::encode_key(key)].value_or(def));
