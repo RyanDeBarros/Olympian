@@ -1,5 +1,6 @@
 target_sources(OlympianEditor PRIVATE
 	Errors.cpp
+	InputListener.cpp
 	Main.cpp
 	PathInfo.cpp
 	Types.cpp

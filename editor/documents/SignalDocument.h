@@ -4,6 +4,7 @@
 
 #include "desc/SignalDesc.h"
 
+#include "core/InputListener.h"
 #include "gui/Form.h"
 
 #include "assets/MetaSplitter.h"
@@ -17,16 +18,6 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		gui::ListModel _signal_slots;
 		gui::ListModel _route_slots;
-
-		enum class ListenMode
-		{
-			None,
-			Key,
-			MouseButton,
-			GamepadButton,
-			GamepadAxis1D,
-			GamepadAxis2D
-		};
 
 		ListenMode _listen_mode = ListenMode::None;
 		bool _stop_listening = true;

@@ -202,8 +202,6 @@ namespace oly::editor
 		DRAW_FIELDS(ROUTE_GENERATOR);
 	}
 
-	// TODO v8 listen buttons for gamepad input as well (button/axis1d/axis2d) - abstract away the draw logic
-
 	void SignalDocument::Draw(Form& form, KeyDesc& desc)
 	{
 		{
@@ -211,33 +209,13 @@ namespace oly::editor
 			gui::IDScope scope(&desc.key);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::Key)
+			if (auto key = InputListener::DrawKeyListener(_listen_mode))
 			{
-				if (ImGui::Button("Listening..."))
-					_listen_mode = ListenMode::None;
-				else
+				if (*key != desc.key.Scratch())
 				{
-					for (int key = ImGuiKey_Tab; key <= ImGuiKey_Oem102; ++key)
-					{
-						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
-						{
-							_listen_mode = ListenMode::None;
-							if (auto k = KeyDesc::ConvertKey(static_cast<ImGuiKey>(key)))
-								desc.key.SetScratch(*k);
-							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-							break;
-						}
-					}
+					desc.key.SetScratch(*key);
+					MarkDirty();
 				}
-			}
-			else
-			{
-				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::Key;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Listen for input");
 			}
 
 			ImGui::SameLine();
@@ -273,30 +251,13 @@ namespace oly::editor
 			gui::IDScope scope(&desc.button);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::MouseButton)
+			if (auto mb = InputListener::DrawMouseButtonListener(_listen_mode))
 			{
-				ImGui::Button("Listening...");
-
-				for (int mb = 0; mb < ImGuiMouseButton_COUNT; ++mb)
+				if (*mb != desc.button.Scratch())
 				{
-					if (ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(mb)))
-					{
-						_listen_mode = ListenMode::None;
-						if (auto b = MouseButtonDesc::ConvertMouseButton(mb))
-							desc.button.SetScratch(*b);
-						else
-							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-						break;
-					}
+					desc.button.SetScratch(*mb);
+					MarkDirty();
 				}
-			}
-			else
-			{
-				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::MouseButton;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Listen for input");
 			}
 
 			ImGui::SameLine();
@@ -332,33 +293,13 @@ namespace oly::editor
 			gui::IDScope scope(&desc.button);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::GamepadButton)
+			if (auto button = InputListener::DrawGamepadButtonListener(_listen_mode))
 			{
-				if (ImGui::Button("Listening..."))
-					_listen_mode = ListenMode::None;
-				else
+				if (*button != desc.button.Scratch())
 				{
-					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
-					{
-						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
-						{
-							_listen_mode = ListenMode::None;
-							if (auto k = GamepadButtonDesc::ConvertGamepadButton(static_cast<ImGuiKey>(key)))
-								desc.button.SetScratch(*k);
-							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-							break;
-						}
-					}
+					desc.button.SetScratch(*button);
+					MarkDirty();
 				}
-			}
-			else
-			{
-				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::GamepadButton;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Listen for input");
 			}
 
 			ImGui::SameLine();
@@ -380,33 +321,13 @@ namespace oly::editor
 			gui::IDScope scope(&desc.axis);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::GamepadAxis1D)
+			if (auto axis = InputListener::DrawGamepadAxis1DListener(_listen_mode))
 			{
-				if (ImGui::Button("Listening..."))
-					_listen_mode = ListenMode::None;
-				else
+				if (*axis != desc.axis.Scratch())
 				{
-					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
-					{
-						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
-						{
-							_listen_mode = ListenMode::None;
-							if (auto k = GamepadAxis1DDesc::ConvertGamepadAxis1D(static_cast<ImGuiKey>(key)))
-								desc.axis.SetScratch(*k);
-							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-							break;
-						}
-					}
+					desc.axis.SetScratch(*axis);
+					MarkDirty();
 				}
-			}
-			else
-			{
-				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::GamepadAxis1D;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Listen for input");
 			}
 
 			ImGui::SameLine();
@@ -429,33 +350,13 @@ namespace oly::editor
 			gui::IDScope scope(&desc.axis);
 
 			_stop_listening = false;
-			if (_listen_mode == ListenMode::GamepadAxis2D)
+			if (auto axis = InputListener::DrawGamepadAxis2DListener(_listen_mode))
 			{
-				if (ImGui::Button("Listening..."))
-					_listen_mode = ListenMode::None;
-				else
+				if (*axis != desc.axis.scratch)
 				{
-					for (int key = ImGuiKey_GamepadStart; key <= ImGuiKey_GamepadRStickDown; ++key)
-					{
-						if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key)))
-						{
-							_listen_mode = ListenMode::None;
-							if (auto k = GamepadAxis2DDesc::ConvertGamepadAxis2D(static_cast<ImGuiKey>(key)))
-								desc.axis.scratch = *k;
-							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
-							break;
-						}
-					}
+					desc.axis.scratch = *axis;
+					MarkDirty();
 				}
-			}
-			else
-			{
-				if (ImGui::Button("..."))
-					_listen_mode = ListenMode::GamepadAxis2D;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Listen for input");
 			}
 
 			ImGui::SameLine();

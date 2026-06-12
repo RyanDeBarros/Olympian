@@ -91,8 +91,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		KeyDesc();
-
-		static std::optional<detail::KeyInput> ConvertKey(ImGuiKey key);
 	};
 
 #define MOUSE_BUTTON_MODS_GENERATOR(M) \
@@ -115,8 +113,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		MouseButtonDesc();
-
-		static std::optional<detail::MouseButton> ConvertMouseButton(ImGuiMouseButton mb);
 	};
 
 #define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
@@ -132,8 +128,6 @@ namespace oly::editor
 		Modifier0dDesc modifier;
 
 		GamepadButtonDesc();
-
-		static std::optional<GLenum> ConvertGamepadButton(ImGuiKey key);
 	};
 
 #define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
@@ -151,8 +145,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
 		GamepadAxis1DDesc();
-
-		static std::optional<GLenum> ConvertGamepadAxis1D(ImGuiKey key);
 	};
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
@@ -170,8 +162,6 @@ namespace oly::editor
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
 		GamepadAxis2DDesc();
-
-		static std::optional<detail::GamepadAxis2D> ConvertGamepadAxis2D(ImGuiKey key);
 	};
 
 #define CURSOR_POS_PARTIAL_GENERATOR(M)
