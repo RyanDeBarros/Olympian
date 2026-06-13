@@ -97,7 +97,7 @@ namespace oly
 			auto it = _signal_routing_table.find(signal);
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v12 handle infinite recursion
+				// TODO v13 handle infinite recursion
 				for (const std::string& signal : it->second)
 					bind(signal, handler);
 			}
@@ -117,7 +117,7 @@ namespace oly
 			auto it = _signal_routing_table.find(signal);
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v12 handle infinite recursion
+				// TODO v13 handle infinite recursion
 				for (const std::string& signal : it->second)
 					bind(signal, handler);
 			}
@@ -137,7 +137,7 @@ namespace oly
 			auto it = _signal_routing_table.find(signal);
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v12 handle infinite recursion
+				// TODO v13 handle infinite recursion
 				for (const std::string& signal : it->second)
 					unbind(signal);
 			}

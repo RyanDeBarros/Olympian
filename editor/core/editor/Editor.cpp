@@ -156,7 +156,7 @@ namespace oly::editor
 			notif.message += "asset type not supported";
 			break;
 		case OpenAssetCode::UnsupportedAssetVersion:
-			notif.message += "asset meta version not supported"; // TODO v9 version mismatch handling
+			notif.message += "asset meta version not supported"; // TODO v10 version mismatch handling
 			break;
 		case OpenAssetCode::UnsupportedExtension:
 			notif.message += "asset has unsupported file extension";

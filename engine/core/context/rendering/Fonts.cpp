@@ -12,7 +12,7 @@
 #include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
 
-// TODO v9 put actual loading logic in load/overload methods
+// TODO v10 put actual loading logic in load/overload methods
 
 namespace oly::context
 {
@@ -105,7 +105,7 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
-		// TODO v9 abstract away the error handling on meta.has_type()
+		// TODO v10 abstract away the error handling on meta.has_type()
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
@@ -177,7 +177,7 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
-		// TODO v9 add Trace log level for stuff like this, that is lower than Debug
+		// TODO v10 add Trace log level for stuff like this, that is lower than Debug
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
 
 		return font_atlas;

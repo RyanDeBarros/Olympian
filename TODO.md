@@ -1,16 +1,17 @@
 # v8
-* Editor work
-	* Documents
-		* Font
-		* Raster Font
-		* Font Family
-		* Tileset
+* Editor documents
+	* Raster Font
+	* Font Family
+	* Tileset
+
+# v9
+* More editor work
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
 	* Content Browser Panel
 
-# v9
+# v10
 * Physics updates
 * Utilities
 	* TypewriterEffect
@@ -20,7 +21,7 @@
 	* Random class
 * Coroutine system
 
-# v10
+# v11
 * Assets
 	* Rigid body
 	* Material
@@ -32,20 +33,20 @@
 	* Lifetime methods
 	* Scene graph
 
-# v11
+# v12
 * Font size caching/rounding + manual mipmap generation
 * UI widget system
 * Lighting/shadow/post-processing module
 * AI: navigation, blackboard trees, etc.
 
-# v12
+# v13
 * Separation of Tester project into separate repo
 * Texture streaming
 * Shader embedding
 * Multithreading
 
-# v13
+# v14
 * Networking
 
-# v14
+# v15
 * Graphics API expansion/separation

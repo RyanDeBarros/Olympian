@@ -32,7 +32,7 @@ namespace oly::rendering
 
 	typedef SmartReference<FontFace> FontFaceRef;
 
-	// TODO v11 manual generation of mipmaps
+	// TODO v12 manual generation of mipmaps
 
 	class FontAtlas;
 	class FontGlyph

@@ -12,7 +12,7 @@ endif()
 #      Variables
 # ====================
 
-# TODO v9 this won't be the case for ENGINE_DIR when building project separately.
+# TODO v10 this won't be the case for ENGINE_DIR when building project separately.
 set(ENGINE_DIR ${CMAKE_SOURCE_DIR})
 set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
