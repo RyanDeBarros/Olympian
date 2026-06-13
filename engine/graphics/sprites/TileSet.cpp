@@ -5,7 +5,7 @@
 
 #include "definitions/Keys.h"
 
-// TODO v8 after editor implementation for tileset/tilemap asset editor, define LUTs to simplify get_assignment()/get_configuration()
+// TODO v9 after editor implementation for tileset/tilemap asset editor, define LUTs to simplify get_assignment()/get_configuration()
 
 namespace oly::rendering
 {

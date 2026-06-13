@@ -49,7 +49,7 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v8 texture import metadata should have some additional size scale that affects any sprites using the texture
+	// TODO v9 texture import metadata should have some additional size scale that affects any sprites using the texture
 	// TODO v10 Random class for random properties, similar to Unity
 	// TODO v10 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
 	// TODO v10 various utilities, including FuzzySearch
