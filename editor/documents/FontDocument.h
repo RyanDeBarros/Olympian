@@ -15,9 +15,12 @@ namespace oly::editor
 		FullFontDesc _disk;
 		detail::MetaMap _meta;
 		gui::ListModel _atlas_slots;
+		std::string _display_text;
+		ImFont* _preview_font = nullptr;
 		
 	public:
 		using IDocument::IDocument;
+		~FontDocument();
 
 		static const char* GetVersion();
 
@@ -30,8 +33,12 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
+		void ReloadFont();
+		void DestroyFont();
+
 		void DrawFontFace();
 		void DrawFontAtlases();
+		void DrawAtlasPreview();
 		void Draw(Form& form, FontFaceDesc& desc);
 		void Draw(Form& form, FontAtlasDesc& desc);
 

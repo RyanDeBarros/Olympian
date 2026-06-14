@@ -33,12 +33,15 @@ namespace oly::editor
 		FontFaceDesc();
 	};
 
-#define FONT_ATLAS_PARTIAL_GENERATOR(M) \
-		M(font_size) \
+#define FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
 		M(storage) \
 		M(min_filter) \
 		M(mag_filter) \
 		M(auto_generate_mipmaps)
+
+#define FONT_ATLAS_PARTIAL_GENERATOR(M) \
+		M(font_size) \
+		FONT_ATLAS_NONPREVIEW_GENERATOR(M)
 
 #define FONT_ATLAS_GENERATOR(M) \
 		FONT_ATLAS_PARTIAL_GENERATOR(M) \

@@ -37,6 +37,15 @@ namespace oly::editor
 		_project_select_window->Open();
 	}
 
+	void Editor::Terminate()
+	{
+		_project_select_window.reset();
+		_logger.reset();
+		_main_window.reset();
+		_shortcut_manager.reset();
+		_project_info.reset();
+	}
+
 	void Editor::Tick()
 	{
 		_shortcut_manager->PollShortcuts();

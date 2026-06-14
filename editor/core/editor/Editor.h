@@ -47,6 +47,7 @@ namespace oly::editor
 	public:
 		static Editor& Instance();
 		void Init(GLFWwindow* window);
+		void Terminate();
 		void Tick();
 
 		void SetOSWindowSize(int width, int height);

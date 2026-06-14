@@ -8,13 +8,16 @@
 
 #include "definitions/Keys.h"
 
-// TODO v8 font preview -> use InputText and then render the input using the font. Take into account font size and other parameters.
-
 namespace oly::editor
 {
 	const char* FontDocument::GetVersion()
 	{
 		return "1.0";
+	}
+
+	FontDocument::~FontDocument()
+	{
+		DestroyFont();
 	}
 
 	void FontDocument::Init()
@@ -26,6 +29,7 @@ namespace oly::editor
 		}
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
+		_display_text = "Abc 123";
 		Load();
 	}
 
@@ -119,6 +123,21 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
+	void FontDocument::ReloadFont()
+	{
+		DestroyFont();
+		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _scratch.font_atlases[_atlas_slots.active_index].font_size.scratch);
+	}
+
+	void FontDocument::DestroyFont()
+	{
+		if (_preview_font)
+		{
+			ImGui::GetIO().Fonts->RemoveFont(_preview_font);
+			_preview_font = nullptr;
+		}
+	}
+
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
@@ -127,23 +146,53 @@ namespace oly::editor
 
 	void FontDocument::DrawFontAtlases()
 	{
-		if (auto form = Form())
+		if (ImGui::BeginTable("", 2))
 		{
-			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
-			ImGui::Text("Select Route");
+			if (auto form = Form())
+			{
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("Select Route");
+
+				ImGui::TableNextColumn();
+				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+
+				if (!_scratch.font_atlases.Empty())
+					Draw(form, _scratch.font_atlases[_atlas_slots.active_index]);
+
+				if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
+					MarkDirty();
+
+				if (_atlas_slots.active_index.ConsumeModified())
+					DestroyFont();
+			}
 
 			ImGui::TableNextColumn();
-			_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+			DrawAtlasPreview();
 
-			if (!_scratch.font_atlases.Empty())
-				Draw(form, _scratch.font_atlases[_atlas_slots.active_index]);
-
-			if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
-				MarkDirty();
-
-			_atlas_slots.active_index.ConsumeModified();
+			ImGui::EndTable();
 		}
+	}
+
+	void FontDocument::DrawAtlasPreview()
+	{
+		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		{
+			ImGui::Text("Preview");
+			ImGui::Separator();
+
+			gui::InputText("Display text", _display_text);
+
+			if (!_preview_font)
+				ReloadFont();
+
+			ImGui::PushFont(_preview_font);
+			ImGui::Text(_display_text.c_str());
+			ImGui::PopFont();
+		}
+
+		ImGui::EndChild();
 	}
 
 	void FontDocument::Draw(Form& form, FontFaceDesc& desc)
@@ -185,7 +234,13 @@ namespace oly::editor
 
 	void FontDocument::Draw(Form& form, FontAtlasDesc& desc)
 	{
-		DRAW_FIELDS(FONT_ATLAS_PARTIAL_GENERATOR);
+		if (desc.font_size.Draw())
+		{
+			MarkDirty();
+			DestroyFont();
+		}
+
+		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
 		if (auto subform = Subform(form, "Common buffer"))
 		{
