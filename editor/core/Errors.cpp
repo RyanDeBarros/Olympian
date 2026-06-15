@@ -4,9 +4,14 @@
 
 namespace oly::editor
 {
+	BreakoutError::BreakoutError(const char* message)
+		: std::exception(message)
+	{
+	}
+
 	void BreakoutError::Throw(const char* message)
 	{
 		Logger::Instance().Log(LogLevel::Error, message);
-		throw BreakoutError();
+		throw BreakoutError(message);
 	}
 }

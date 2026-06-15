@@ -58,10 +58,10 @@ namespace oly::editor
 			: GL_RGBA;
 	}
 
-	RasterTexture::RasterTexture(const char* filepath, GLenum min_filter, GLenum mag_filter)
+	RasterTexture::RasterTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter)
 	{
 		int channels;
-		unsigned char* data = stbi_load(filepath, &width, &height, &channels, 0);
+		unsigned char* data = stbi_load(filepath.data(), &width, &height, &channels, 0);
 		if (!data || width <= 0 || height <= 0 || channels <= 0)
 		{
 			stbi_image_free(data);
@@ -93,9 +93,9 @@ namespace oly::editor
 		return height;
 	}
 
-	GIFTexture::GIFTexture(const char* filepath, GLenum min_filter, GLenum mag_filter)
+	GIFTexture::GIFTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter)
 	{
-		std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+		std::ifstream file(filepath.data(), std::ios::binary | std::ios::ate);
 		if (!file.is_open() || file.fail())
 			BreakoutError::Throw(("Cannot open file for reading: " + std::string(filepath)).c_str());
 
@@ -170,9 +170,9 @@ namespace oly::editor
 		return height;
 	}
 
-	SVGTexture::SVGTexture(const char* filepath, float scale, GLenum min_filter, GLenum mag_filter)
+	SVGTexture::SVGTexture(const std::string_view filepath, float scale, GLenum min_filter, GLenum mag_filter)
 	{
-		NSVGimage* image = nsvgParseFromFile(filepath, "px", 96.f);
+		NSVGimage* image = nsvgParseFromFile(filepath.data(), "px", 96.f);
 		if (!image)
 			BreakoutError::Throw(("Cannot parse svg from file: " + std::string(filepath)).c_str());
 
@@ -224,6 +224,11 @@ namespace oly::editor
 		return height * preview_scale;
 	}
 
+	bool Texture::Empty() const
+	{
+		return std::get_if<std::monostate>(&v);
+	}
+
 	GIFTexture* Texture::GetGIF()
 	{
 		return std::get_if<GIFTexture>(&v);
@@ -267,5 +272,15 @@ namespace oly::editor
 	ImVec2 Texture::Size() const
 	{
 		return ImVec2(Width(), Height());
+	}
+
+	void Texture::LoadGeneric(const std::string_view filepath)
+	{
+		if (filepath.ends_with(".svg"))
+			v = SVGTexture(filepath);
+		else if (filepath.ends_with(".gif"))
+			v = GIFTexture(filepath);
+		else
+			v = RasterTexture(filepath);
 	}
 }

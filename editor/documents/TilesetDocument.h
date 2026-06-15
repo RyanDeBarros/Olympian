@@ -5,6 +5,7 @@
 #include "desc/TilesetDesc.h"
 
 #include "gui/Form.h"
+#include "gui/Texture.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -13,6 +14,9 @@ namespace oly::editor
 	struct IndividualEditorState
 	{
 		detail::TileConfigGrid grid;
+		Texture active_texture;
+		bool texture_error = false;
+		bool stale_texture = true;
 
 		IndividualEditorState();
 	};
@@ -37,7 +41,7 @@ namespace oly::editor
 	private:
 		void DrawGroupEditor();
 		void DrawIndividualEditor();
-		void DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
+		bool DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
 		void Draw(TilesetAssignmentDesc& desc);
 
 		void Load(TOMLNode node, TilesetDesc& desc);
@@ -45,5 +49,7 @@ namespace oly::editor
 		
 		void Dump(toml::table& table, TilesetDesc& desc);
 		void Dump(toml::table& table, TilesetAssignmentDesc& desc);
+
+		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 	};
 }

@@ -2,6 +2,7 @@
 
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
+#include "core/Errors.h"
 
 #include "gui/IDScope.h"
 #include "gui/Subform.h"
@@ -13,9 +14,11 @@ namespace oly::editor
 {
 	IndividualEditorState::IndividualEditorState()
 	{
+		detail::TileConfigGrid g;
 		for (size_t y = 0; y < 3; ++y)
 			for (size_t x = 0; x < 3; ++x)
-				grid[y][x] = false;
+				g[y][x] = false;
+		grid = g;
 	}
 
 	const char* TilesetDocument::GetVersion()
@@ -132,12 +135,54 @@ namespace oly::editor
 						gui::IDScope scope;
 						scope.Push(y);
 						scope.Push(x);
+						const ImVec2 rect_start = cursor + cell_size * ImVec2(x + 1, y + 1);
+						const ImVec2 rect_end = rect_start + cell_size;
+
 						if (y == 1 && x == 1)
 						{
-							// TODO v8 draw preview if texture file is provided - else grey rect
+							if (_individual_editor.texture_error)
+								ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 255));
+							else if (_individual_editor.active_texture.Empty())
+								ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(16, 16, 16, 255));
+							else
+							{
+								const auto& tex = _individual_editor.active_texture;
+								const auto& desc = GetAssignment(_individual_editor.grid);
+
+								const float max_dimension = std::max(tex.Width(), tex.Height());
+								const float tex_scale = max_dimension > 0.0001f ? cell_width / max_dimension : 0.f;
+								const ImVec2 tex_size = tex.Size() * tex_scale;
+								const ImVec2 tex_start = rect_start + 0.5f * (cell_size - tex_size);
+
+								ImGui::GetWindowDrawList()->AddImage(tex.ID(), tex_start, tex_start + tex_size,
+									ImVec2(desc.uvs.scratch[0], desc.uvs.scratch[2]), ImVec2(desc.uvs.scratch[1], desc.uvs.scratch[3]));
+							}
 						}
 						else
-							DrawToggleCell(cursor + cell_size * ImVec2(x + 1, y + 1), cursor + cell_size * ImVec2(x + 2, y + 2), _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+							_individual_editor.stale_texture |= DrawToggleCell(rect_start, rect_end, _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+					}
+				}
+
+				if (_individual_editor.stale_texture)
+				{
+					_individual_editor.stale_texture = false;
+					_individual_editor.texture_error = false;
+					auto& desc = GetAssignment(_individual_editor.grid);
+					if (desc.texture.scratch.empty())
+						_individual_editor.active_texture = {};
+					else
+					{
+						try
+						{
+							_individual_editor.active_texture.LoadGeneric(detail::ResourcePath(desc.texture.scratch).string());
+						}
+						catch (const BreakoutError& e)
+						{
+							_individual_editor.texture_error = true;
+
+							// TODO v8 instead of passing false, remove add_to_log arg and just define a BreakoutError::NotifyScope so Throw() calls will push notifications instead of logging them
+							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, e.what()), false);
+						}
 					}
 				}
 			}
@@ -145,15 +190,17 @@ namespace oly::editor
 
 			ImGui::TableNextColumn();
 			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
-				Draw(_scratch.assignments.map[detail::tile_config_from_grid(_individual_editor.grid)]);
+				Draw(GetAssignment(_individual_editor.grid));
 			ImGui::EndChild();
 
 			ImGui::EndTable();
 		}
 	}
 
-	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
+	bool TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
 	{
+		bool grid_changed = false;
+
 		if (available)
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? IM_COL32(0, 127, 255, 255) : IM_COL32(64, 64, 64, 255));
 		else
@@ -168,11 +215,16 @@ namespace oly::editor
 		{
 			ImGui::SetCursorScreenPos(rect_start);
 			if (ImGui::InvisibleButton("##Click", rect_end - rect_start))
+			{
 				on = !on;
+				grid_changed = true;
+			}
 
 			if (ImGui::IsItemHovered())
 				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
 		}
+
+		return grid_changed;
 	}
 
 	void TilesetDocument::Draw(TilesetAssignmentDesc& desc)
@@ -228,5 +280,10 @@ namespace oly::editor
 	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)
 	{
 		DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+	}
+
+	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
+	{
+		return _scratch.assignments.map[detail::tile_config_from_grid(grid)];
 	}
 }

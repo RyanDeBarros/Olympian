@@ -2,6 +2,7 @@
 
 #include "external/GL.h"
 
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -28,7 +29,7 @@ namespace oly::editor
 		TextureID id;
 		int width = 0, height = 0;
 		
-		RasterTexture(const char* filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
+		RasterTexture(const std::string_view filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
@@ -43,7 +44,7 @@ namespace oly::editor
 		float timer = 0.f;
 		float speed = 1.f;
 
-		GIFTexture(const char* filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
+		GIFTexture(const std::string_view filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
 
 		void Update(float delta_seconds);
 		GLuint ID() const;
@@ -57,7 +58,7 @@ namespace oly::editor
 		int width = 0, height = 0;
 		float preview_scale = 1.f;
 
-		SVGTexture(const char* filepath, float scale = 1.f, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
+		SVGTexture(const std::string_view filepath, float scale = 1.f, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
@@ -68,11 +69,14 @@ namespace oly::editor
 		using Variant = std::variant<std::monostate, RasterTexture, GIFTexture, SVGTexture>;
 		Variant v;
 
+		bool Empty() const;
 		GIFTexture* GetGIF();
 		SVGTexture* GetSVG();
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
 		ImVec2 Size() const;
+
+		void LoadGeneric(const std::string_view filepath);
 	};
 }
