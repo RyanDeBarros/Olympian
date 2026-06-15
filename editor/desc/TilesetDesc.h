@@ -21,7 +21,7 @@ namespace oly::editor
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
 		EnumField<detail::TileConfiguration> config;
 		Vec4Field<MakeOpt(0.f), MakeOpt(1.f)> uvs; // TODO v8 draw with custom x1/y1/x2/y2 sublabels
-		VectorField<detail::TileTransformation> transformations;
+		BitsetField<detail::TileTransformation, detail::TILE_TRANSFORMATION_COUNT> transformations;
 
 		TilesetAssignmentDesc();
 	};

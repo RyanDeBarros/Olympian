@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Meta.h"
 #include "core/Types.h"
 #include "desc/OptionalPrimitive.h"
 
@@ -148,5 +149,35 @@ namespace oly::editor::gui
 	{
 		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);
 		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count);
+	};
+
+	template<Enum E>
+	struct InputData<E>
+	{
+		bool operator()(E& data, const E* values, const char** names, const size_t count)
+		{
+			return (*this)(data, values, names, nullptr, count);
+		}
+
+		bool operator()(E& data, const E* values, const char** names, const bool* disabled, const size_t count)
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < count; ++i)
+			{
+				bool flag = data & values[i];
+
+				if (auto d = DisabledSection(disabled && disabled[i]))
+					dirty |= InputData<bool>{}(names[i], flag);
+
+				if (flag)
+					data |= values[i];
+				else
+					data &= ~values[i];
+
+				if (i + 1 < count)
+					ImGui::SameLine();
+			}
+			return dirty;
+		}
 	};
 }

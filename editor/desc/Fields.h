@@ -371,12 +371,13 @@ namespace oly::editor
 	public:
 		void Load(TOMLNode node)
 		{
-			scratch = static_cast<E>(node[detail::encode_key(key)].value_or(def));
+			scratch = def;
+			Serializer<E>{}.Load(scratch, node[detail::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), scratch);
+			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(scratch));
 		}
 	};
 }

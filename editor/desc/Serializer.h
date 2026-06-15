@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Meta.h"
 #include "core/Types.h"
 
 #include "desc/OptionalPrimitive.h"
@@ -52,8 +53,25 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T>
-	concept Enum = std::is_enum_v<T>;
+	template<>
+	struct Serializer<unsigned int>
+	{
+		bool Load(unsigned int& obj, TOMLNode node) const
+		{
+			if (auto v = node.value<int64_t>())
+			{
+				obj = static_cast<unsigned int>(*v);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		int64_t Dump(const unsigned int obj) const
+		{
+			return static_cast<int64_t>(obj);
+		}
+	};
 
 	template<Enum E>
 	struct Serializer<E>

@@ -56,16 +56,22 @@ namespace oly::detail
 
 	enum TileTransformation : char
 	{
-		None = 0b0,
-		ReflectX = 0b1,
-		ReflectY = 0b10,
-		Rotate90 = 0b100,
-		Rotate180 = 0b1000,
-		Rotate270 = 0b10000,
+		None = 0,
+		ReflectX = 1 << 0,
+		ReflectY = 1 << 1,
+		Rotate90 = 1 << 2,
+		Rotate180 = 1 << 3,
+		Rotate270 = 1 << 4
 	};
 
 	inline TileTransformation operator&(TileTransformation a, TileTransformation b) { return static_cast<TileTransformation>(static_cast<char>(a) & static_cast<char>(b)); }
 	inline TileTransformation& operator&=(TileTransformation& a, TileTransformation b) { return a = a & b; }
 	inline TileTransformation operator|(TileTransformation a, TileTransformation b) { return static_cast<TileTransformation>(static_cast<char>(a) | static_cast<char>(b)); }
 	inline TileTransformation& operator|=(TileTransformation& a, TileTransformation b) { return a = a | b; }
+	inline TileTransformation operator~(TileTransformation a) { return static_cast<TileTransformation>(~static_cast<char>(a)); }
+
+	constexpr size_t TILE_TRANSFORMATION_COUNT = 5;
+	extern TileTransformation TILE_TRANSFORMATION_DEFAULT;
+	extern TileTransformation TILE_TRANSFORMATION_VALUES[TILE_TRANSFORMATION_COUNT];
+	extern const char* TILE_TRANSFORMATION_NAMES[TILE_TRANSFORMATION_COUNT];
 }

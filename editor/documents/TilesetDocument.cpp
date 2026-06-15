@@ -110,7 +110,11 @@ namespace oly::editor
 
 	void TilesetDocument::Draw(Form& form, TilesetAssignmentDesc& desc)
 	{
-		DRAW_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+		DRAW_FIELD(texture); // TODO v8 support dropping paths externally or from tree view / content browser
+		DRAW_FIELD(texture_index);
+		DRAW_FIELD(config); // TODO v8 should be derived from grid
+		DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
+		DRAW_FIELD(transformations); // TODO v8 should be bitflag checkbox
 	}
 
 	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)
