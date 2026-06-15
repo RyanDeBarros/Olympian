@@ -10,11 +10,17 @@
 
 namespace oly::editor
 {
+	struct IndividualEditorState
+	{
+		detail::TileConfigGrid grid;
+	};
+
 	class TilesetDocument : public IDocument
 	{
 		TilesetDesc _scratch;
 		TilesetDesc _disk;
 		detail::MetaMap _meta;
+		IndividualEditorState _individual_editor;
 
 	public:
 		using IDocument::IDocument;
@@ -27,7 +33,8 @@ namespace oly::editor
 		void Dump() override;
 
 	private:
-		void Draw(Form& form, TilesetDesc& desc);
+		void DrawGroupEditor();
+		void DrawIndividualEditor();
 		void Draw(Form& form, TilesetAssignmentDesc& desc);
 
 		void Load(TOMLNode node, TilesetDesc& desc);

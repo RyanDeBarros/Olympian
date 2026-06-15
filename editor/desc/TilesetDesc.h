@@ -11,7 +11,6 @@ namespace oly::editor
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
 		M(texture) \
 		M(texture_index) \
-		M(config) \
 		M(uvs) \
 		M(transformations)
 
@@ -19,11 +18,17 @@ namespace oly::editor
 	{
 		StringField texture;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
-		PrimitiveField<detail::TileConfig> config;
 		Vec4Field<MakeOpt(0.f), MakeOpt(1.f)> uvs; // TODO v8 draw with custom x1/y1/x2/y2 sublabels
 		BitsetField<detail::TileTransformation, detail::TILE_TRANSFORMATION_COUNT> transformations;
 
 		TilesetAssignmentDesc();
+	};
+
+	struct TilesetAssignmentMapDesc
+	{
+		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
+
+		TilesetAssignmentMapDesc();
 	};
 
 #define TILESET_PARTIAL_GENERATOR(M) \
@@ -32,7 +37,7 @@ namespace oly::editor
 	struct TilesetDesc
 	{
 		EnumField<detail::StorageMode> storage;
-		VectorDesc<TilesetAssignmentDesc> assignments;
+		TilesetAssignmentMapDesc assignments;
 		static const detail::Key assignments_key;
 
 		TilesetDesc();

@@ -7,9 +7,12 @@ namespace oly::editor
 	TilesetAssignmentDesc::TilesetAssignmentDesc() :
 		texture("", detail::Key::TextureFile, "Texture"),
 		texture_index(0, detail::Key::TextureIndex, "Texture Slot"),
-		config(detail::TileConfigIndividual::Single, detail::Key::Configuration, "Configuration"),
 		uvs({ 0.f, 1.f, 0.f, 1.f }, detail::Key::UVvec4, "Texture UVs"),
 		transformations(detail::TILE_TRANSFORMATION_DEFAULT, detail::Key::TransformationArray, "Transformations", detail::TILE_TRANSFORMATION_VALUES, detail::TILE_TRANSFORMATION_NAMES)
+	{
+	}
+
+	TilesetAssignmentMapDesc::TilesetAssignmentMapDesc()
 	{
 	}
 

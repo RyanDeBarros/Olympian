@@ -10,6 +10,7 @@
 		* Generate new project files
 		* Recent project manifest
 	* Content Browser Panel
+	* Undo, redo, and context menus on fields/forms to copy/paste properties
 
 # v10
 * Physics updates

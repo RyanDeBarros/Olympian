@@ -2,66 +2,50 @@
 
 Storage = 0
 
-[[Assign]]
-Config = 0b00000000
+[Assign.0b00000000]
 TxFile = "@/textures/grass tileset/S.png"
 
-[[Assign]]
-Config = 0b11111111
+[Assign.0b11111111]
 TxFile = "@/textures/grass tileset/M.png"
 
-[[Assign]]
-Config = 0b00001110
+[Assign.0b00001110]
 TxFile = "@/textures/grass tileset/BL.png"
 
-[[Assign]]
-Config = 0b10000011
+[Assign.0b10000011]
 TxFile = "@/textures/grass tileset/BR.png"
 
-[[Assign]]
-Config = 0b11100000
+[Assign.0b11100000]
 TxFile = "@/textures/grass tileset/TR.png"
 
-[[Assign]]
-Config = 0b00111000
+[Assign.0b00111000]
 TxFile = "@/textures/grass tileset/TL.png"
 
-[[Assign]]
-Config = 0b00111110
+[Assign.0b00111110]
 TxFile = "@/textures/grass tileset/LE.png"
 
-[[Assign]]
-Config = 0b10001111
+[Assign.0b10001111]
 TxFile = "@/textures/grass tileset/BE.png"
 
-[[Assign]]
-Config = 0b11100011
+[Assign.0b11100011]
 TxFile = "@/textures/grass tileset/RE.png"
 
-[[Assign]]
-Config = 0b11111000
+[Assign.0b11111000]
 TxFile = "@/textures/grass tileset/TE.png"
 
-[[Assign]]
-Config = 0b00001000
+[Assign.0b00001000]
 TxFile = "@/textures/grass tileset/LT.png"
 
-[[Assign]]
-Config = 0b00000010
+[Assign.0b00000010]
 TxFile = "@/textures/grass tileset/BT.png"
 
-[[Assign]]
-Config = 0b10000000
+[Assign.0b10000000]
 TxFile = "@/textures/grass tileset/RT.png"
 
-[[Assign]]
-Config = 0b00100000
+[Assign.0b00100000]
 TxFile = "@/textures/grass tileset/TT.png"
 
-[[Assign]]
-Config = 0b10001000
+[Assign.0b10001000]
 TxFile = "@/textures/grass tileset/I1.png"
 
-[[Assign]]
-Config = 0b00100010
+[Assign.0b00100010]
 TxFile = "@/textures/grass tileset/I2.png"

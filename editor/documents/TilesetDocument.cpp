@@ -7,6 +7,7 @@
 #include "gui/Subform.h"
 
 #include "definitions/Keys.h"
+#include "util/Parser.h"
 
 namespace oly::editor
 {
@@ -29,10 +30,31 @@ namespace oly::editor
 	void TilesetDocument::Draw()
 	{
 		gui::IDScope scope(this);
-		if (auto form = Form())
+
+		if (auto section = CollapsingSection("Advanced"))
 		{
-			ImGui::TableNextRow();
-			Draw(form, _scratch);
+			if (auto form = Form())
+			{
+				if (_scratch.storage.Draw())
+					MarkDirty();
+			}
+		}
+
+		if (ImGui::BeginTabBar("##Editors"))
+		{
+			if (ImGui::BeginTabItem("Group"))
+			{
+				DrawGroupEditor();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("Individual"))
+			{
+				DrawIndividualEditor();
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
 		}
 	}
 
@@ -78,14 +100,23 @@ namespace oly::editor
 		MarkClean();
 	}
 
-	// TODO v8 use visual grid -> click on cells to get actual editor of fields
-
-	void TilesetDocument::Draw(Form& form, TilesetDesc& desc)
+	void TilesetDocument::DrawGroupEditor()
 	{
-		DRAW_FIELDS(TILESET_PARTIAL_GENERATOR);
+		// TODO v8
+	}
 
-		for (auto& assignment : desc.assignments)
-			Draw(form, assignment);
+	void TilesetDocument::DrawIndividualEditor()
+	{
+		if (ImGui::BeginTable("##Table", 2))
+		{
+			ImGui::TableNextColumn();
+			// TODO v8
+
+			ImGui::TableNextColumn();
+			// TODO v8
+
+			ImGui::EndTable();
+		}
 	}
 
 	void TilesetDocument::Draw(Form& form, TilesetAssignmentDesc& desc)
@@ -101,15 +132,17 @@ namespace oly::editor
 	{
 		LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
 
-		desc.assignments.Clear();
-		if (auto array = node[detail::encode_key(desc.assignments_key)].as_array())
+		desc.assignments.map.Clear();
+		if (auto table = node[detail::encode_key(desc.assignments_key)].as_table())
 		{
-			desc.assignments.vector.reserve(array->size());
-			for (size_t i = 0; i < array->size(); ++i)
+			for (auto&& [key, node] : *table)
 			{
-				TilesetAssignmentDesc subdesc;
-				Load(TOMLNode(array->get(i)), subdesc);
-				desc.assignments.PushBack(std::move(subdesc));
+				if (auto config = detail::stoi(key.str()))
+				{
+					TilesetAssignmentDesc subdesc;
+					Load(TOMLNode(node), subdesc);
+					desc.assignments.map[*config] = std::move(subdesc);
+				}
 			}
 		}
 	}
@@ -123,15 +156,14 @@ namespace oly::editor
 	{
 		DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
 
-		toml::array array;
-		array.reserve(desc.assignments.Size());
-		for (auto& subdesc : desc.assignments)
+		toml::table subtable;
+		for (auto& [config, subdesc] : desc.assignments.map)
 		{
-			toml::table subtable;
-			Dump(subtable, subdesc);
-			array.push_back(std::move(subtable));
+			toml::table dump;
+			Dump(dump, subdesc);
+			subtable.insert_or_assign(std::to_string(config), std::move(dump));
 		}
-		table.insert_or_assign(detail::encode_key(desc.assignments_key), std::move(array));
+		table.insert_or_assign(detail::encode_key(desc.assignments_key), std::move(subtable));
 	}
 
 	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)

@@ -129,4 +129,35 @@ namespace oly::editor
 			return std::get_if<Descriptor>(&variant);
 		}
 	};
+
+	template<typename Key, typename ValueDescriptor>
+	struct MapDesc
+	{
+		std::unordered_map<Key, ValueDescriptor> map;
+
+		void Clear()
+		{
+			map.clear();
+		}
+
+		ValueDescriptor& operator[](Key key)
+		{
+			return map[key];
+		}
+
+		const ValueDescriptor& operator[](Key key) const
+		{
+			return map[key];
+		}
+
+		auto begin()
+		{
+			return map.begin();
+		}
+
+		auto end()
+		{
+			return map.end();
+		}
+	};
 }

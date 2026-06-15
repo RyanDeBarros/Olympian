@@ -4,6 +4,7 @@
 #include "core/util/Logger.h"
 
 #include "definitions/Keys.h"
+#include "util/Parser.h"
 
 namespace oly::rendering
 {
@@ -84,60 +85,66 @@ namespace oly::rendering
 
 	void TileSet::overload(TOMLNode node)
 	{
-		assets::Parser parser(node);
-		auto toml_assignments = parser.optional<TOMLArray>(detail::Key::AssignmentArray)();
-		if (!toml_assignments)
-			return;
-
-		std::vector<rendering::TileSet::Assignment> assignments;
 		tiles.clear();
-		assignments.clear();
+		this->assignments.clear();
 
-		size_t _a_idx = 0;
-		toml_assignments->for_each([&assignments, &_a_idx](auto&& node) {
-			try
+		assets::Parser parser(node);
+		auto toml_assignments = parser.optional<TOMLNode>(detail::Key::AssignmentArray)();
+		if (toml_assignments && toml_assignments->as_table())
+		{
+			std::vector<rendering::TileSet::Assignment> assignments;
+
+			size_t _a_idx = 0;
+			for (auto&& [key, node] : *toml_assignments->as_table())
 			{
-				const size_t a_idx = _a_idx++;
-				assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
-
-				const auto texture = parser.required<std::string>(detail::Key::TextureFile)();
-
-				rendering::TileSet::Assignment assignment;
-				assignment.config = parser.required<detail::TileConfig>(detail::Key::Configuration)();
-
-				assignment.desc.file = detail::ResourcePath(texture);
-				parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);
-				if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
+				try
 				{
-					assignment.desc.uvs.x1 = (*uvs)[0];
-					assignment.desc.uvs.x2 = (*uvs)[1];
-					assignment.desc.uvs.y1 = (*uvs)[2];
-					assignment.desc.uvs.y2 = (*uvs)[3];
-				}
+					const size_t a_idx = _a_idx++;
+					auto config = detail::stoi(key.str());
+					if (!config)
+						continue;
 
-				if (auto transformations = parser.optional<TOMLArray>(detail::Key::TransformationArray)())
-				{
-					size_t tr_idx = 0;
-					for (auto& trfm : *transformations)
+					assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
+
+					const auto texture = parser.required<std::string>(detail::Key::TextureFile)();
+
+					rendering::TileSet::Assignment assignment;
+					assignment.config = static_cast<detail::TileConfig>(*config);
+
+					assignment.desc.file = detail::ResourcePath(texture);
+					parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);
+					if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
 					{
-						assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
-
-						if (auto transformation = tr_parser.optional<detail::TileTransformation>(assets::NO_KEY)())
-							assignment.transformation |= *transformation;
-
-						++tr_idx;
+						assignment.desc.uvs.x1 = (*uvs)[0];
+						assignment.desc.uvs.x2 = (*uvs)[1];
+						assignment.desc.uvs.y1 = (*uvs)[2];
+						assignment.desc.uvs.y2 = (*uvs)[3];
 					}
+
+					if (auto transformations = parser.optional<TOMLArray>(detail::Key::TransformationArray)())
+					{
+						size_t tr_idx = 0;
+						for (auto& trfm : *transformations)
+						{
+							assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
+
+							if (auto transformation = tr_parser.optional<detail::TileTransformation>(assets::NO_KEY)())
+								assignment.transformation |= *transformation;
+
+							++tr_idx;
+						}
+					}
+
+					assignments.push_back(assignment);
 				}
-
-				assignments.push_back(assignment);
+				catch (const Error& e)
+				{
+					if (e.code != ErrorCode::LoadAsset)
+						throw;
+				}
 			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::LoadAsset)
-					throw;
-			}
-		});
 
-		load_assignments(assignments);
+			load_assignments(assignments);
+		}
 	}
 }

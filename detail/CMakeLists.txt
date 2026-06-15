@@ -78,3 +78,4 @@ target_include_directories(OlympianDetail PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # Add subdirectories
 add_subdirectory(assets)
 add_subdirectory(definitions)
+add_subdirectory(util)
